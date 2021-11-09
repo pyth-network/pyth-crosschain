@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+package node.v1;
+
+option go_package = "github.com/certusone/wormhole/node/pkg/proto/node/v1;nodev1";
+
+// NodePrivilegedService exposes an administrative API. It runs on a UNIX socket and is authenticated
+// using Linux filesystem permissions.
+service NodePrivilegedService {
+  // InjectGovernanceVAA injects a governance VAA into the guardian node.
+  // The node will inject the VAA into the aggregator and sign/broadcast the VAA signature.
+  //
+  // A consensus majority of nodes on the network will have to inject the VAA within the
+  // VAA timeout window for it to reach consensus.
+  //
+  rpc InjectGovernanceVAA (InjectGovernanceVAARequest) returns (InjectGovernanceVAAResponse);
+
+  // FindMissingMessages will detect message sequence gaps in the local VAA store for a
+  // specific emitter chain and address. Start and end slots are the lowest and highest
+  // sequence numbers available in the local store, respectively.
+  //
+  // An error is returned if more than 1000 gaps are found.
+  rpc FindMissingMessages (FindMissingMessagesRequest) returns (FindMissingMessagesResponse);
+}
+
+message InjectGovernanceVAARequest {
+  // Index of the current guardian set.
+  uint32 current_set_index = 1;
+
+  // List of governance VAA messages to inject.
+  repeated GovernanceMessage messages = 2;
+}
+
+message GovernanceMessage {
+  // Sequence number. This is critical for replay protection - make sure the sequence number
+  // is unique for every new manually injected governance VAA. Sequences are tracked
+  // by emitter, and manually injected VAAs all use a single hardcoded emitter.
+  //
+  // We use random sequence numbers for the manual emitter.
+  uint64 sequence = 2;
+
+  // Random nonce for disambiguation. Must be identical across all nodes.
+  uint32 nonce = 3;
+
+  oneof payload{
+    // Core module
+
+    GuardianSetUpdate guardian_set = 10;
+    ContractUpgrade contract_upgrade = 11;
+
+    // Token bridge and NFT module
+
+    BridgeRegisterChain bridge_register_chain = 12;
+    BridgeUpgradeContract bridge_contract_upgrade = 13;
+  }
+}
+
+message InjectGovernanceVAAResponse {
+  // Canonical digests of the submitted VAAs.
+  repeated bytes digests = 1;
+}
+
+// GuardianSet represents a new guardian set to be submitted to and signed by the node.
+// During the genesis procedure, this data structure will be assembled using off-chain collaborative tooling
+// like GitHub using a human-readable encoding, so readability is a concern.
+message GuardianSetUpdate {
+  // List of guardian set members.
+  message Guardian {
+    // Guardian key pubkey. Stored as hex string with 0x prefix for human readability -
+    // this is the canonical Ethereum representation.
+    string pubkey = 1;
+    // Optional descriptive name. Not stored on any chain, purely informational.
+    string name = 2;
+  };
+  repeated Guardian guardians = 3;
+}
+
+// GuardianKey specifies the on-disk format for a node's guardian key.
+message GuardianKey {
+  // data is the binary representation of the secp256k1 private key.
+  bytes data = 1;
+  // Whether this key is deterministically generated and unsuitable for production mode.
+  bool unsafe_deterministic_key = 2;
+}
+
+message BridgeRegisterChain {
+  // Module identifier of the token or NFT bridge (typically "TokenBridge" or "NFTBridge")
+  string module = 1;
+
+  // ID of the chain to be registered.
+  uint32 chain_id = 2;
+
+  // Hex-encoded emitter address to be registered (without leading 0x).
+  string emitter_address = 3;
+}
+
+// ContractUpgrade represents a Wormhole contract update to be submitted to and signed by the node.
+message ContractUpgrade {
+  // ID of the chain where the Wormhole contract should be updated (uint8).
+  uint32 chain_id = 1;
+
+  // Hex-encoded address (without leading 0x) address of the new program/contract.
+  string new_contract = 2;
+}
+
+message BridgeUpgradeContract {
+  // Module identifier of the token or NFT bridge (typically "TokenBridge" or "NFTBridge").
+  string module = 1;
+
+  // ID of the chain where the bridge contract should be updated (uint16).
+  uint32 target_chain_id = 2;
+
+  // Hex-encoded address (without leading 0x) of the new program/contract.
+  string new_contract = 3;
+}
+
+message FindMissingMessagesRequest {
+  // Emitter chain ID to iterate.
+  uint32 emitter_chain = 1;
+  // Hex-encoded (without leading 0x) emitter address to iterate.
+  string emitter_address = 2;
+}
+
+message FindMissingMessagesResponse {
+  // List of missing sequence numbers.
+  repeated string missing_messages = 1;
+
+  // Range processed
+  uint64 first_sequence = 2;
+  uint64 last_sequence = 3;
+}
