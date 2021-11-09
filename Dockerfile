@@ -9,7 +9,7 @@ ENV EMITTER_ADDRESS=$WH_EMITTER
 
 # System deps
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y \
     build-essential \
     clang \
     curl \
@@ -28,7 +28,7 @@ ENV PATH=$PATH:/root/.cargo/bin
 FROM base as base-with-node
 # Install Node
 RUN bash -c "$(curl -fsSL https://deb.nodesource.com/setup_16.x)"
-RUN apt-get install -y --no-install-recommends nodejs
+RUN apt-get install -y nodejs
 
 FROM base-with-rust as base-with-sol
 # Install Solana
@@ -45,7 +45,7 @@ RUN cargo install wasm-pack --version 0.9.1
 
 FROM base-with-sol as p2w-sol-contracts
 
-COPY solana $WH_ROOT/solana
+ADD solana $WH_ROOT/solana
 
 WORKDIR $WH_ROOT/solana/pyth2wormhole/program
 
@@ -56,7 +56,7 @@ RUN cargo build -p pyth2wormhole-client
 
 FROM base-with-wasm-pack as p2w-sol-wasm
 WORKDIR $WH_ROOT/solana
-COPY solana .
+ADD solana .
 
 # Build wasm binaries for wormhole-sdk
 WORKDIR $WH_ROOT/solana/bridge/program
@@ -69,17 +69,17 @@ RUN wasm-pack build --target bundler -d bundler -- --features wasm
 FROM p2w-sol-contracts as p2w-attest
 WORKDIR $WH_ROOT/third_party/pyth
 
-COPY third_party/pyth/p2w_autoattest.py third_party/pyth/pyth_utils.py ./
+ADD third_party/pyth/p2w_autoattest.py third_party/pyth/pyth_utils.py ./
 
 FROM base-with-node as p2w-eth-contracts
 WORKDIR $WH_ROOT/ethereum
-COPY ethereum .
+ADD ethereum .
 
 RUN npm ci && npm run build
 
 FROM p2w-eth-contracts as wormhole-sdk
 WORKDIR $WH_ROOT/sdk/js
-COPY sdk/js .
+ADD sdk/js .
 
 COPY --from=p2w-sol-wasm $WH_ROOT/solana/bridge/program/bundler src/solana/core
 
@@ -91,14 +91,12 @@ WORKDIR $WH_ROOT/third_party/pyth/p2w-sdk
 COPY --from=p2w-sol-wasm $WH_ROOT/solana/pyth2wormhole/program/bundler src/solana/p2w-core
 COPY --from=p2w-sol-wasm $WH_ROOT/solana/bridge/program/bundler src/solana/wormhole-core
 
-COPY third_party/pyth/p2w-sdk .
+ADD third_party/pyth/p2w-sdk .
 RUN npm ci && npm run build
 
 
 FROM p2w-sdk as p2w-relay
 WORKDIR $WH_ROOT/third_party/pyth/p2w-relay
 
-COPY third_party/pyth/p2w-relay .
+ADD third_party/pyth/p2w-relay .
 RUN npm ci && npm run build
-
-RUN	apt-get clean && rm -rf /var/lib/apt/lists/*
