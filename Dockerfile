@@ -38,9 +38,8 @@ RUN sh -c "$(curl -sSfL https://release.solana.com/v1.7.8/install)"
 ENV PATH=$PATH:/root/.local/share/solana/install/active_release/bin
 
 # Solana does a download at the beginning of a *first* build-bpf call. Trigger and layer-cache it explicitly.
-WORKDIR /tmp/decoy-crate
 RUN cargo init --lib /tmp/decoy-crate && \
-    cargo build-bpf && \
+    cd /tmp/decoy-crate && cargo build-bpf && \
     rm -rf /tmp/decoy-crate
 
 FROM base-with-rust as base-with-wasm-pack
