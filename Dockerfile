@@ -18,9 +18,7 @@ RUN apt-get update && \
     llvm \
     pkg-config \
     python3 \
-    zlib1g-dev \
-		&& apt-get clean \
-		&& rm -rf /var/lib/apt/lists/*
+    zlib1g-dev
 
 FROM base as base-with-rust
 # Install Rust
@@ -102,3 +100,5 @@ WORKDIR $WH_ROOT/third_party/pyth/p2w-relay
 
 COPY third_party/pyth/p2w-relay .
 RUN npm ci && npm run build
+
+RUN	apt-get clean && rm -rf /var/lib/apt/lists/*
