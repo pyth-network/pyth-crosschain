@@ -1,0 +1,133 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: guardian
+  labels:
+    app: guardian
+spec:
+  ports:
+    - port: 8999
+      name: p2p
+      protocol: UDP
+    - port: 7070
+      name: public-grpc
+      protocol: TCP
+    - port: 7071
+      name: public-rest
+      protocol: TCP
+  clusterIP: None
+  selector:
+    app: guardian
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: guardian
+spec:
+  selector:
+    matchLabels:
+      app: guardian
+  serviceName: guardian
+  replicas: 5
+  updateStrategy:
+    # The StatefulSet rolling update strategy is rather dumb, and updates one pod after another.
+    # If we want blue-green deployments, we should use a Deployment instead.
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: guardian
+    spec:
+      terminationGracePeriodSeconds: 0
+      volumes:
+        # mount shared between containers for runtime state
+        - name: node-rundir
+          emptyDir: {}
+        - name: node-keysdir
+          secret:
+            secretName: node-bigtable-key
+            optional: true
+            items:
+              - key: bigtable-key.json
+                path: bigtable-key.json
+      containers:
+        - name: guardiand
+          image: guardiand-image
+          volumeMounts:
+            - mountPath: /run/node
+              name: node-rundir
+            - mountPath: /tmp/mounted-keys
+              name: node-keysdir
+          env:
+            - name: BIGTABLE_EMULATOR_HOST
+              value: bigtable-emulator:8086
+          command:
+# Uncomment this to enable in-place debugging using dlv
+# (not suitable for regular development since the process will no longer restart on its own)
+#
+#            - /dlv
+#            - --listen=0.0.0.0:2345
+#            - --accept-multiclient
+#            - --headless=true
+#            - --api-version=2
+#            - --continue=true
+#            - exec
+            - /guardiand
+#            - --
+            - node
+            - --ethRPC
+            - ws://eth-devnet:8545
+            - --bscRPC
+            - ws://eth-devnet2:8545
+            - --polygonRPC
+            - ws://eth-devnet:8545
+            - --terraWS
+            - ws://terra-terrad:26657/websocket
+            - --terraLCD
+            - http://terra-lcd:1317
+            - --terraContract
+            - terra18vd8fpwxzck93qlwghaj6arh4p7c5n896xzem5
+            - --solanaContract
+            - Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o
+            - --solanaWS
+            - ws://solana-devnet:8900
+            - --solanaRPC
+            - http://solana-devnet:8899
+            - --unsafeDevMode
+            - --guardianKey
+            - /tmp/bridge.key
+            - --publicRPC
+            - "[::]:7070"
+            - --publicWeb
+            - "[::]:7071"
+            - --adminSocket
+            - /tmp/admin.sock
+            - --dataDir
+            - /tmp/data
+#            - --logLevel=debug
+          securityContext:
+            capabilities:
+              add:
+                # required for syscall.Mlockall
+                - IPC_LOCK
+          readinessProbe:
+            httpGet:
+              port: 6060
+              path: /readyz
+          ports:
+            - containerPort: 8999
+              name: p2p
+              protocol: UDP
+            - containerPort: 6060
+              name: pprof
+              protocol: TCP
+            - containerPort: 7070
+              name: public-grpc
+              protocol: TCP
+            - containerPort: 7071
+              name: public-grpcweb
+              protocol: TCP
+            - containerPort: 2345
+              name: debugger
+              protocol: TCP

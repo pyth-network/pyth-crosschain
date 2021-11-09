@@ -1,0 +1,33 @@
+const fs = require("fs");
+fs.copyFileSync(
+  "src/solana/core/bridge_bg.wasm",
+  "lib/solana/core/bridge_bg.wasm"
+);
+fs.copyFileSync(
+  "src/solana/core/bridge_bg.wasm.d.ts",
+  "lib/solana/core/bridge_bg.wasm.d.ts"
+);
+fs.copyFileSync(
+  "src/solana/nft/nft_bridge_bg.wasm",
+  "lib/solana/nft/nft_bridge_bg.wasm"
+);
+fs.copyFileSync(
+  "src/solana/nft/nft_bridge_bg.wasm.d.ts",
+  "lib/solana/nft/nft_bridge_bg.wasm.d.ts"
+);
+fs.copyFileSync(
+  "src/solana/token/token_bridge_bg.wasm",
+  "lib/solana/token/token_bridge_bg.wasm"
+);
+fs.copyFileSync(
+  "src/solana/token/token_bridge_bg.wasm.d.ts",
+  "lib/solana/token/token_bridge_bg.wasm.d.ts"
+);
+fs.copyFileSync(
+  "src/solana/migration/wormhole_migration_bg.wasm",
+  "lib/solana/migration/wormhole_migration_bg.wasm"
+);
+fs.copyFileSync(
+  "src/solana/migration/wormhole_migration_bg.wasm.d.ts",
+  "lib/solana/migration/wormhole_migration_bg.wasm.d.ts"
+);
