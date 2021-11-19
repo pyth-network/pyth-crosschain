@@ -108,22 +108,27 @@ ADD solana .
 # Build wasm binaries for wormhole-sdk
 WORKDIR $WH_ROOT/solana/bridge/program
 RUN wasm-pack build --target bundler -d bundler -- --features wasm
+RUN wasm-pack build --target nodejs -d nodejs -- --features wasm
 
 # Build wasm binaries for Wormhole migration
 WORKDIR $WH_ROOT/solana/migration
 RUN wasm-pack build --target bundler -d bundler -- --features wasm
+RUN wasm-pack build --target nodejs -d nodejs -- --features wasm
 
 # Build wasm binaries for NFT bridge
 WORKDIR $WH_ROOT/solana/modules/nft_bridge/program
 RUN wasm-pack build --target bundler -d bundler -- --features wasm
+RUN wasm-pack build --target nodejs -d nodejs -- --features wasm
 
 # Build wasm binaries for token bridge
 WORKDIR $WH_ROOT/solana/modules/token_bridge/program
 RUN wasm-pack build --target bundler -d bundler -- --features wasm
+RUN wasm-pack build --target nodejs -d nodejs -- --features wasm
 
 # Build wasm-binaries for p2w-sdk
 WORKDIR $WH_ROOT/solana/pyth2wormhole/program
 RUN wasm-pack build --target bundler -d bundler -- --features wasm
+RUN wasm-pack build --target nodejs -d nodejs -- --features wasm
 
 
 # Final p2w-attest target
@@ -156,6 +161,10 @@ COPY --from=p2w-sol-wasm $WH_ROOT/solana/bridge/program/bundler src/solana/core
 COPY --from=p2w-sol-wasm $WH_ROOT/solana/migration/bundler src/solana/migration
 COPY --from=p2w-sol-wasm $WH_ROOT/solana/modules/nft_bridge/program/bundler src/solana/nft
 COPY --from=p2w-sol-wasm $WH_ROOT/solana/modules/token_bridge/program/bundler src/solana/token
+COPY --from=p2w-sol-wasm $WH_ROOT/solana/bridge/program/nodejs src/solana/core-node
+COPY --from=p2w-sol-wasm $WH_ROOT/solana/migration/nodejs src/solana/migration-node
+COPY --from=p2w-sol-wasm $WH_ROOT/solana/modules/nft_bridge/program/nodejs src/solana/nft-node
+COPY --from=p2w-sol-wasm $WH_ROOT/solana/modules/token_bridge/program/nodejs src/solana/token-node
 
 RUN npm ci
 
