@@ -29,7 +29,7 @@ def run_or_die(args, die=True, **kwargs):
     sys.stderr.flush()
     ret = subprocess.run(args, text=True, **kwargs)
 
-    if ret.returncode is not 0:
+    if ret.returncode != 0:
         print(f"CMD FAIL {ret.returncode}\t{args_readable}", file=sys.stderr)
 
         out = ret.stdout if ret.stdout is not None else "<not captured>"
