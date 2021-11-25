@@ -6,10 +6,12 @@ import subprocess
 PYTH = os.environ.get("PYTH", "./pyth")
 PYTH_KEY_STORE = os.environ.get("PYTH_KEY_STORE", "/home/pyth/.pythd")
 PYTH_PROGRAM_KEYPAIR = os.environ.get(
-    "PYTH_PROGRAM_KEYPAIR", f"{PYTH_KEY_STORE}/publish_key_pair.json")
+    "PYTH_PROGRAM_KEYPAIR", f"{PYTH_KEY_STORE}/publish_key_pair.json"
+)
 PYTH_PROGRAM_SO_PATH = os.environ.get("PYTH_PROGRAM_SO", "../target/oracle.so")
 PYTH_PUBLISHER_KEYPAIR = os.environ.get(
-    "PYTH_PUBLISHER_KEYPAIR", f"{PYTH_KEY_STORE}/publish_key_pair.json")
+    "PYTH_PUBLISHER_KEYPAIR", f"{PYTH_KEY_STORE}/publish_key_pair.json"
+)
 PYTH_PUBLISHER_INTERVAL = float(os.environ.get("PYTH_PUBLISHER_INTERVAL", "5"))
 
 SOL_AIRDROP_AMT = 100
@@ -24,7 +26,7 @@ def run_or_die(args, die=True, **kwargs):
     """
     Opinionated subprocess.run() call with fancy logging
     """
-    args_readable = ' '.join(args)
+    args_readable = " ".join(args)
     print(f"CMD RUN\t{args_readable}", file=sys.stderr)
     sys.stderr.flush()
     ret = subprocess.run(args, text=True, **kwargs)
@@ -54,23 +56,21 @@ def pyth_run_or_die(subcommand, args=[], debug=False, confirm=True, **kwargs):
     Pyth boilerplate in front of run_or_die
     """
     return run_or_die(
-        [PYTH, subcommand]
-        + args
-        + (["-d"] if debug else [])
+        [PYTH, subcommand] + args + (["-d"] if debug else [])
         # Note: not all pyth subcommands accept -n
         + ([] if confirm else ["-n"])
         + ["-k", PYTH_KEY_STORE]
         + ["-r", SOL_RPC_HOST]
-        + ["-c", "finalized"], **kwargs)
+        + ["-c", "finalized"],
+        **kwargs,
+    )
 
 
 def sol_run_or_die(subcommand, args=[], **kwargs):
     """
     Solana boilerplate in front of run_or_die
     """
-    return run_or_die(["solana", subcommand]
-                      + args
-                      + ["--url", SOL_RPC_URL], **kwargs)
+    return run_or_die(["solana", subcommand] + args + ["--url", SOL_RPC_URL], **kwargs)
 
 
 class ReadinessTCPHandler(socketserver.StreamRequestHandler):
@@ -83,6 +83,8 @@ def readiness():
     """
     Accept connections from readiness probe
     """
-    with socketserver.TCPServer(("0.0.0.0", READINESS_PORT), ReadinessTCPHandler) as srv:
+    with socketserver.TCPServer(
+        ("0.0.0.0", READINESS_PORT), ReadinessTCPHandler
+    ) as srv:
         srv.serve_forever()
     # run_or_die(["nc", "-k", "-l", "-p", READINESS_PORT])
