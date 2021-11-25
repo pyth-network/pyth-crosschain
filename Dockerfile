@@ -98,7 +98,7 @@ WORKDIR $WH_ROOT/solana/pyth2wormhole/program
 RUN cargo build-bpf
 
 WORKDIR $WH_ROOT/solana/pyth2wormhole
-RUN cargo build -p pyth2wormhole-client
+RUN CARGO_TARGET_DIR=$WH_ROOT/third_party/pyth cargo build -p pyth2wormhole-client
 
 # Pyth2wormhole's Rust WebAssembly dependencies
 FROM base-with-wasm-pack as p2w-sol-wasm
