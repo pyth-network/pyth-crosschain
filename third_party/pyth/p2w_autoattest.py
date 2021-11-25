@@ -12,7 +12,9 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from pyth_utils import *
 
-P2W_ADDRESS = "P2WH424242424242424242424242424242424242424"
+P2W_ADDRESS = os.environ.get(
+    "P2W_ADDRESS", "P2WH424242424242424242424242424242424242424"
+)
 P2W_ATTEST_INTERVAL = float(os.environ.get("P2W_ATTEST_INTERVAL", 5))
 P2W_OWNER_KEYPAIR = os.environ.get(
     "P2W_OWNER_KEYPAIR", f'{"/usr/src/solana/keys/p2w_owner.json"}'
