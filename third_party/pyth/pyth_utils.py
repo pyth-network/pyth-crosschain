@@ -1,7 +1,7 @@
 import os
 import socketserver
-import sys
 import subprocess
+import sys
 
 PYTH = os.environ.get("PYTH", "./pyth")
 PYTH_KEY_STORE = os.environ.get("PYTH_KEY_STORE", "/home/pyth/.pythd")
@@ -14,10 +14,10 @@ PYTH_PUBLISHER_KEYPAIR = os.environ.get(
 )
 PYTH_PUBLISHER_INTERVAL = float(os.environ.get("PYTH_PUBLISHER_INTERVAL", "5"))
 
-SOL_AIRDROP_AMT = 100
-SOL_RPC_HOST = "solana-devnet"
-SOL_RPC_PORT = 8899
-SOL_RPC_URL = f"http://{SOL_RPC_HOST}:{str(SOL_RPC_PORT)}"
+SOL_AIRDROP_AMT = os.environ.get("SOL_AIRDROP_AMT", 100)
+SOL_RPC_HOST = os.environ.get("SOL_RPC_HOST", "solana-devnet")
+SOL_RPC_PORT = os.environ.get("SOL_RPC_PORT", 8899)
+SOL_RPC_URL = "http://{0}:{1}".format(SOL_RPC_HOST, SOL_RPC_PORT)
 
 READINESS_PORT = int(os.environ.get("READINESS_PORT", "2000"))
 
@@ -43,7 +43,7 @@ def run_or_die(args, die=True, **kwargs):
         if die:
             sys.exit(ret.returncode)
         else:
-            print(f"CMD DIE FALSE", file=sys.stderr)
+            print(f'{"CMD DIE FALSE"}', file=sys.stderr)
 
     else:
         print(f"CMD OK\t{args_readable}", file=sys.stderr)
