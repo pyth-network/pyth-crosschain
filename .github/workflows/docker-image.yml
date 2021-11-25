@@ -24,7 +24,7 @@ jobs:
         with:
           platforms: linux/amd64
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-attest
           target: p2w-attest
 
       - name: Image digest
