@@ -26,7 +26,7 @@ WORKDIR $WH_ROOT
 RUN tools/bin/buf generate --template buf.gen.web.yaml
 
 # Root image for most of the following targets
-FROM rust:1.56 as base-with-rust
+FROM ubuntu:20.04@sha256:626ffe58f6e7566e00254b638eb7e0f3b11d4da9675088f4781a50ae288f3322 as base
 ARG WH_EMITTER="11111111111111111111111111111115"
 ARG WH_BRIDGE="11111111111111111111111111111116"
 ARG WH_ROOT=/usr/src/wormhole
@@ -49,8 +49,10 @@ RUN apt-get update && \
     zlib1g-dev \
 		&& apt-get clean \
 		&& rm -rf /var/lib/apt/lists/*
+
 # Base with known good Rust toolchain via rustup
-RUN rustup toolchain install nightly-2021-08-01
+FROM base as base-with-rust
+RUN sh -c "$(curl --proto '=https' --tlsv1.2 -sSfL https://sh.rustup.rs)" -- -y --default-toolchain nightly-2021-08-01
 ENV PATH=$PATH:/root/.cargo/bin
 
 # Base with NodeJS
