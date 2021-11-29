@@ -3,6 +3,7 @@ import socketserver
 import subprocess
 import sys
 
+# Settings specific to local devnet Pyth instance
 PYTH = os.environ.get("PYTH", "./pyth")
 PYTH_KEY_STORE = os.environ.get("PYTH_KEY_STORE", "/home/pyth/.pythd")
 PYTH_PROGRAM_KEYPAIR = os.environ.get(
@@ -14,13 +15,17 @@ PYTH_PUBLISHER_KEYPAIR = os.environ.get(
 )
 PYTH_PUBLISHER_INTERVAL = float(os.environ.get("PYTH_PUBLISHER_INTERVAL", "5"))
 
-SOL_AIRDROP_AMT = os.environ.get("SOL_AIRDROP_AMT", 100)
+# 0 setting disables airdropping
+SOL_AIRDROP_AMT = int(os.environ.get("SOL_AIRDROP_AMT", 0))
+
+# SOL RPC settings
 SOL_RPC_HOST = os.environ.get("SOL_RPC_HOST", "solana-devnet")
-SOL_RPC_PORT = os.environ.get("SOL_RPC_PORT", 8899)
+SOL_RPC_PORT = int(os.environ.get("SOL_RPC_PORT", 8899))
 SOL_RPC_URL = os.environ.get(
     "SOL_RPC_URL", "{0}:{1}".format(SOL_RPC_HOST, SOL_RPC_PORT)
 )
 
+# A TCP port we open when a service is ready
 READINESS_PORT = int(os.environ.get("READINESS_PORT", "2000"))
 
 
@@ -89,4 +94,3 @@ def readiness():
         ("0.0.0.0", READINESS_PORT), ReadinessTCPHandler
     ) as srv:
         srv.serve_forever()
-    # run_or_die(["nc", "-k", "-l", "-p", READINESS_PORT])

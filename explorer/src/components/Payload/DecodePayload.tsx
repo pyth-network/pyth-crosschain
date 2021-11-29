@@ -149,7 +149,7 @@ const parseAssetMetaPayload = (arr: Buffer): AssetMetaPayload => {
     }
 }
 
-function useBase64ToBuffer(base64VAA: string) {
+function useBase64ToBuffer(base64VAA: string = "") {
     const [buf, setBuf] = useState<Buffer>()
 
     function convertbase64ToBinary(base64: string) {
@@ -177,7 +177,7 @@ function useBase64ToBuffer(base64VAA: string) {
     return buf
 }
 interface DecodePayloadProps {
-    base64VAA: string
+    base64VAA?: string
     emitterChainName: keyof ChainIDs
     emitterAddress: string
     showType?: boolean
@@ -260,7 +260,7 @@ const DecodePayload = (props: DecodePayloadProps) => {
 
                     {props.showSummary && payloadBundle ? (
                         payloadBundle.type === "assetMeta" ? (<>
-                            {chainEnums[payloadBundle.payload.tokenChain]}&nbsp; {payloadBundle.payload.symbol} {payloadBundle.payload.name}
+                            {"AssetMeta:"}&nbsp;{chainEnums[payloadBundle.payload.tokenChain]}&nbsp; {payloadBundle.payload.symbol} {payloadBundle.payload.name}
                         </>) :
                             payloadBundle.type === "tokenTransfer" ? (<>
                                 {"native "}{chainEnums[payloadBundle.payload.originChain]}{' asset -> '}{chainEnums[payloadBundle.payload.targetChain]}

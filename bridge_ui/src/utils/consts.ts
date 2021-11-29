@@ -90,8 +90,7 @@ export const CHAINS =
           logo: terraIcon,
         },
       ];
-export const BETA_CHAINS: ChainId[] =
-  CLUSTER === "mainnet" ? [CHAIN_ID_POLYGON] : [];
+export const BETA_CHAINS: ChainId[] = CLUSTER === "mainnet" ? [] : [];
 export const CHAINS_WITH_NFT_SUPPORT = CHAINS.filter(
   ({ id }) =>
     id === CHAIN_ID_BSC ||
@@ -354,7 +353,7 @@ export const WETH_ADDRESS =
   CLUSTER === "mainnet"
     ? "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
     : CLUSTER === "testnet"
-    ? ""
+    ? "0x0000000000000000000000000000000000000000"
     : "0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E";
 export const WETH_DECIMALS = 18;
 
@@ -362,7 +361,7 @@ export const WBNB_ADDRESS =
   CLUSTER === "mainnet"
     ? "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
     : CLUSTER === "testnet"
-    ? ""
+    ? "0x0000000000000000000000000000000000000000"
     : "0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E";
 export const WBNB_DECIMALS = 18;
 
@@ -370,7 +369,7 @@ export const WMATIC_ADDRESS =
   CLUSTER === "mainnet"
     ? "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270"
     : CLUSTER === "testnet"
-    ? ""
+    ? "0x0000000000000000000000000000000000000000"
     : "0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E";
 export const WMATIC_DECIMALS = 18;
 
@@ -626,6 +625,48 @@ export const VAA_EMITTER_ADDRESSES = [
   `${CHAIN_ID_TERRA}:0000000000000000000000007cf7b764e38a0a5e967972c1df77d432510564e2`, //terra
   `${CHAIN_ID_BSC}:000000000000000000000000b6f6d86a8f9879a9c87f643768d9efc38c1da6e7`, //bsc
   `${CHAIN_ID_BSC}:0000000000000000000000005a58505a96d1dbf8df91cb21b54419fc36e93fde`, //bsc nft
+  `${CHAIN_ID_POLYGON}:0000000000000000000000005a58505a96d1dbf8df91cb21b54419fc36e93fde`, //Polygon
+  `${CHAIN_ID_POLYGON}:00000000000000000000000090bbd86a6fe93d3bc3ed6335935447e75fab7fcf`, //Polygon nft
 ];
 
 export const WORMHOLE_EXPLORER_BASE = "https://wormholenetwork.com/en/explorer";
+
+export type MultiChainInfo = {
+  [key in ChainId]: { [address: string]: string };
+};
+export const MULTI_CHAIN_TOKENS: MultiChainInfo =
+  //EVM chains should format the addresses to all lowercase
+  CLUSTER === "mainnet"
+    ? ({
+        [CHAIN_ID_SOLANA]: {
+          EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: "USDC",
+          Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB: "USDT",
+        },
+        [CHAIN_ID_ETH]: {
+          "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "USDC",
+          "0xdac17f958d2ee523a2206206994597c13d831ec7": "USDT",
+        },
+        [CHAIN_ID_TERRA]: {},
+        [CHAIN_ID_BSC]: {
+          "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d": "USDC",
+          "0x55d398326f99059ff775485246999027b3197955": "USDT",
+        },
+        [CHAIN_ID_POLYGON]: {
+          "0x2791bca1f2de4661ed88a30c99a7a9449aa84174": "USDC",
+          "0xc2132d05d31c914a87c6611c10748aeb04b58e8f": "USDT",
+        },
+      } as MultiChainInfo)
+    : ({
+        [CHAIN_ID_SOLANA]: {
+          "2WDq7wSs9zYrpx2kbHDA4RUTRch2CCTP6ZWaH4GNfnQQ": "SOLT",
+        },
+        [CHAIN_ID_ETH]: {},
+        [CHAIN_ID_TERRA]: {},
+        [CHAIN_ID_BSC]: {},
+        [CHAIN_ID_POLYGON]: {},
+      } as MultiChainInfo);
+
+export const AVAILABLE_MARKETS_URL =
+  "https://docs.wormholenetwork.com/wormhole/overview-liquid-markets";
+
+export const SOLANA_SYSTEM_PROGRAM_ADDRESS = "11111111111111111111111111111111";

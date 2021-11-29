@@ -2,6 +2,7 @@ import {
   ChainId,
   CHAIN_ID_BSC,
   CHAIN_ID_ETH,
+  CHAIN_ID_POLYGON,
   CHAIN_ID_SOLANA,
   CHAIN_ID_TERRA,
 } from "@certusone/wormhole-sdk";
@@ -22,6 +23,7 @@ import {
   CHAINS_BY_ID,
   COVALENT_GET_TOKENS_URL,
   ETH_TOKEN_BRIDGE_ADDRESS,
+  POLYGON_TOKEN_BRIDGE_ADDRESS,
   SOLANA_HOST,
   SOL_CUSTODY_ADDRESS,
   TERRA_SWAPRATE_URL,
@@ -50,6 +52,10 @@ export type TVL = {
   decimals?: number;
 };
 
+const BAD_PRICES_BY_CHAIN = {
+  [CHAIN_ID_BSC]: ["0x04132bf45511d03a58afd4f1d36a29d229ccc574"],
+};
+
 const calcEvmTVL = (covalentReport: any, chainId: ChainId): TVL[] => {
   const output: TVL[] = [];
   if (!covalentReport?.data?.items?.length) {
@@ -58,13 +64,16 @@ const calcEvmTVL = (covalentReport: any, chainId: ChainId): TVL[] => {
 
   covalentReport.data.items.forEach((item: any) => {
     if (item.balance > 0 && item.contract_address) {
+      const hasUnreliablePrice = BAD_PRICES_BY_CHAIN[chainId]?.includes(
+        item.contract_address
+      );
       output.push({
         logo: item.logo_url || undefined,
         symbol: item.contract_ticker_symbol || undefined,
         name: item.contract_name || undefined,
         amount: formatUnits(item.balance, item.contract_decimals),
-        totalValue: item.quote,
-        quotePrice: item.quote_rate,
+        totalValue: hasUnreliablePrice ? 0 : item.quote,
+        quotePrice: hasUnreliablePrice ? 0 : item.quote_rate,
         assetAddress: item.contract_address,
         originChainId: chainId,
         originChain: CHAINS_BY_ID[chainId].name,
@@ -276,6 +285,11 @@ const useTVL = (): DataWrapper<TVL[]> => {
   const [bscCovalentIsLoading, setBscCovalentIsLoading] = useState(false);
   const [bscCovalentError, setBscCovalentError] = useState("");
 
+  const [polygonCovalentData, setPolygonCovalentData] = useState(undefined);
+  const [polygonCovalentIsLoading, setPolygonCovalentIsLoading] =
+    useState(false);
+  const [polygonCovalentError, setPolygonCovalentError] = useState("");
+
   const [solanaCustodyTokens, setSolanaCustodyTokens] = useState<
     { pubkey: PublicKey; account: AccountInfo<ParsedAccountData> }[] | undefined
   >(undefined);
@@ -310,6 +324,10 @@ const useTVL = (): DataWrapper<TVL[]> => {
   const bscTVL = useMemo(
     () => calcEvmTVL(bscCovalentData, CHAIN_ID_BSC),
     [bscCovalentData]
+  );
+  const polygonTVL = useMemo(
+    () => calcEvmTVL(polygonCovalentData, CHAIN_ID_POLYGON),
+    [polygonCovalentData]
   );
 
   useEffect(() => {
@@ -360,6 +378,33 @@ const useTVL = (): DataWrapper<TVL[]> => {
 
   useEffect(() => {
     let cancelled = false;
+    setPolygonCovalentIsLoading(true);
+    axios
+      .get(
+        COVALENT_GET_TOKENS_URL(
+          CHAIN_ID_POLYGON,
+          POLYGON_TOKEN_BRIDGE_ADDRESS,
+          false
+        )
+      )
+      .then(
+        (results) => {
+          if (!cancelled) {
+            setPolygonCovalentData(results.data);
+            setPolygonCovalentIsLoading(false);
+          }
+        },
+        (error) => {
+          if (!cancelled) {
+            setPolygonCovalentError("Unable to retrieve Polygon TVL.");
+            setPolygonCovalentIsLoading(false);
+          }
+        }
+      );
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
     const connection = new Connection(SOLANA_HOST, "confirmed");
     setSolanaCustodyTokensLoading(true);
     connection
@@ -385,15 +430,26 @@ const useTVL = (): DataWrapper<TVL[]> => {
   }, []);
 
   return useMemo(() => {
-    const tvlArray = [...ethTVL, ...bscTVL, ...solanaTVL, ...terraTVL];
+    const tvlArray = [
+      ...ethTVL,
+      ...bscTVL,
+      ...polygonTVL,
+      ...solanaTVL,
+      ...terraTVL,
+    ];
 
     return {
       isFetching:
         ethCovalentIsLoading ||
         bscCovalentIsLoading ||
+        polygonCovalentIsLoading ||
         solanaCustodyTokensLoading ||
         isTerraLoading,
-      error: ethCovalentError || bscCovalentError || solanaCustodyTokensError,
+      error:
+        ethCovalentError ||
+        bscCovalentError ||
+        polygonCovalentError ||
+        solanaCustodyTokensError,
       receivedAt: null,
       data: tvlArray,
     };
@@ -402,6 +458,9 @@ const useTVL = (): DataWrapper<TVL[]> => {
     ethCovalentIsLoading,
     bscCovalentError,
     bscCovalentIsLoading,
+    polygonCovalentError,
+    polygonCovalentIsLoading,
+    polygonTVL,
     ethTVL,
     bscTVL,
     solanaTVL,

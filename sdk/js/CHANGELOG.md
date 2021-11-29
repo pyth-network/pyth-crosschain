@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.0.10
+
+### Added
+
+uint8ArrayToNative utility function for converting to native addresses from the uint8 format
+
+Include node target wasms in lib
+
+## 0.0.9
+
+### Added
+
+Integration tests
+
+NodeJS target wasm
+
+Ability to update attestations on EVM chains & Terra.
+
+nativeToHexString utility function for converting native addresses into VAA hex format.
+
 ## 0.0.8
 
 ### Added
