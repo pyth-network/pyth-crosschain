@@ -12,19 +12,20 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from pyth_utils import *
 
-P2W_ADDRESS = os.environ.get(
-    "P2W_ADDRESS", "P2WH424242424242424242424242424242424242424"
-)
+P2W_SOL_ADDRESS = os.environ.get("P2W_SOL_ADDRESS", "P2WH424242424242424242424242424242424242424")
 P2W_ATTEST_INTERVAL = float(os.environ.get("P2W_ATTEST_INTERVAL", 5))
-P2W_OWNER_KEYPAIR = os.environ.get(
-    "P2W_OWNER_KEYPAIR", f'{"/usr/src/solana/keys/p2w_owner.json"}'
-)
+P2W_OWNER_KEYPAIR = os.environ.get("P2W_OWNER_KEYPAIR", "/usr/src/solana/keys/p2w_owner.json")
 P2W_ATTESTATIONS_PORT = int(os.environ.get("P2W_ATTESTATIONS_PORT", 4343))
+P2W_INITIALIZE_SOL_CONTRACT = os.environ.get("P2W_INITIALIZE_SOL_CONTRACT", None)
+
+PYTH_PRICE_ACCOUNT = os.environ.get("PYTH_PRICE_ACCOUNT", None)
+PYTH_PRODUCT_ACCOUNT = os.environ.get("PYTH_PRODUCT_ACCOUNT", None)
 
 PYTH_ACCOUNTS_HOST = "pyth"
 PYTH_ACCOUNTS_PORT = 4242
 
 WORMHOLE_ADDRESS = os.environ.get("WORMHOLE_ADDRESS", "Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o")
+
 ATTESTATIONS = {
     "pendingSeqnos": [],
 }
@@ -59,114 +60,71 @@ def serve_attestations():
     httpd = HTTPServer(server_address, P2WAutoattestStatusEndpoint)
     httpd.serve_forever()
 
+if P2W_INITIALIZE_SOL_CONTRACT is not None:
+    # Get actor pubkeys
+    P2W_OWNER_ADDRESS = sol_run_or_die(
+        "address", ["--keypair", P2W_OWNER_KEYPAIR], capture_output=True).stdout.strip()
+    PYTH_OWNER_ADDRESS = sol_run_or_die(
+        "address", ["--keypair", PYTH_PROGRAM_KEYPAIR], capture_output=True).stdout.strip()
 
-# Get actor pubkeys
-P2W_OWNER_ADDRESS = sol_run_or_die(
-    "address", ["--keypair", P2W_OWNER_KEYPAIR], capture_output=True
-).stdout.strip()
-PYTH_OWNER_ADDRESS = sol_run_or_die(
-    "address", ["--keypair", PYTH_PROGRAM_KEYPAIR], capture_output=True
-).stdout.strip()
-
-
-# Top up pyth2wormhole owner
-if SOL_AIRDROP_AMT > 0:
-    sol_run_or_die("airdrop", [
-        str(SOL_AIRDROP_AMT),
-        "--keypair",  P2W_OWNER_KEYPAIR,
-        "--commitment", "finalized",
-    ], capture_output=True)
-
-# Initialize pyth2wormhole
-init_result = run_or_die(
-    [
+    init_result = run_or_die([
         "pyth2wormhole-client",
-        "--log-level",
-        "4",
-        "--p2w-addr",
-        P2W_ADDRESS,
-        "--rpc-url",
-        SOL_RPC_URL,
-        "--payer",
-        P2W_OWNER_KEYPAIR,
+        "--log-level", "4",
+        "--p2w-addr", P2W_SOL_ADDRESS,
+        "--rpc-url", SOL_RPC_URL,
+        "--payer", P2W_OWNER_KEYPAIR,
         "init",
-        "--wh-prog",
-        WORMHOLE_ADDRESS,
-        "--owner",
-        P2W_OWNER_ADDRESS,
-        "--pyth-owner",
-        PYTH_OWNER_ADDRESS,
-    ],
-    capture_output=True,
-    die=False,
-)
+        "--wh-prog", WORMHOLE_ADDRESS,
+        "--owner", P2W_OWNER_ADDRESS,
+        "--pyth-owner", PYTH_OWNER_ADDRESS,
+    ], capture_output=True, die=False)
 
-if init_result.returncode != 0:
-    print("NOTE: pyth2wormhole-client init failed, retrying with set_config")
-    run_or_die(
-        [
+    if init_result.returncode != 0:
+        print("NOTE: pyth2wormhole-client init failed, retrying with set_config")
+        run_or_die([
             "pyth2wormhole-client",
-            "--log-level",
-            "4",
-            "--p2w-addr",
-            P2W_ADDRESS,
-            "--rpc-url",
-            SOL_RPC_URL,
-            "--payer",
-            P2W_OWNER_KEYPAIR,
+            "--log-level", "4",
+            "--p2w-addr", P2W_SOL_ADDRESS,
+            "--rpc-url", SOL_RPC_URL,
+            "--payer", P2W_OWNER_KEYPAIR,
             "set-config",
-            "--owner",
-            P2W_OWNER_KEYPAIR,
-            "--new-owner",
-            P2W_OWNER_ADDRESS,
-            "--new-wh-prog",
-            WORMHOLE_ADDRESS,
-            "--new-pyth-owner",
-            PYTH_OWNER_ADDRESS,
-        ],
-        capture_output=True,
-    )
+            "--owner", P2W_OWNER_KEYPAIR,
+            "--new-owner", P2W_OWNER_ADDRESS,
+            "--new-wh-prog", WORMHOLE_ADDRESS,
+            "--new-pyth-owner", PYTH_OWNER_ADDRESS,
+        ], capture_output=True)
 
-# Retrieve current price/product pubkeys from the pyth publisher
-conn = HTTPConnection(PYTH_ACCOUNTS_HOST, PYTH_ACCOUNTS_PORT)
+# Retrieve current price/product pubkeys from the pyth publisher if not provided in envs
+if PYTH_PRICE_ACCOUNT is None or PYTH_PRODUCT_ACCOUNT is None:
+    conn = HTTPConnection(PYTH_ACCOUNTS_HOST, PYTH_ACCOUNTS_PORT)
 
-conn.request("GET", "/")
+    conn.request("GET", "/")
 
-res = conn.getresponse()
+    res = conn.getresponse()
 
-pyth_accounts = None
+    pyth_accounts = None
 
-if res.getheader("Content-Type") == "application/json":
-    pyth_accounts = json.load(res)
-else:
-    print(f"Bad Content type {res.getheader('Content-Type')}", file=sys.stderr)
-    sys.exit(1)
+    if res.getheader("Content-Type") == "application/json":
+        pyth_accounts = json.load(res)
+    else:
+        print(f"Bad Content type {res.getheader('Content-Type')}", file=sys.stderr)
+        sys.exit(1)
 
-price_addr = pyth_accounts["price"]
-product_addr = pyth_accounts["product"]
+    PYTH_PRICE_ACCOUNT = pyth_accounts["price"]
+    PYTH_PRODUCT_ACCOUNT = pyth_accounts["product"]
 
 nonce = 0
-attest_result = run_or_die(
-    [
-        "pyth2wormhole-client",
-        "--log-level",
-        "4",
-        "--p2w-addr",
-        P2W_ADDRESS,
-        "--rpc-url",
-        SOL_RPC_URL,
-        "--payer",
-        P2W_OWNER_KEYPAIR,
-        "attest",
-        "--price",
-        price_addr,
-        "--product",
-        product_addr,
-        "--nonce",
-        str(nonce),
-    ],
-    capture_output=True,
-)
+attest_result = run_or_die([
+    "pyth2wormhole-client",
+    "--log-level", "4",
+    "--p2w-addr", P2W_SOL_ADDRESS,
+    "--rpc-url", SOL_RPC_URL,
+    "--payer", P2W_OWNER_KEYPAIR,
+    "attest",
+    "--price", PYTH_PRICE_ACCOUNT,
+    "--product", PYTH_PRODUCT_ACCOUNT,
+    "--nonce", str(nonce),
+], capture_output=True)
 
 print("p2w_autoattest ready to roll.")
 print(f"ACCOUNTS: {pyth_accounts}")
@@ -184,27 +142,17 @@ seqno_regex = re.compile(r"^Sequence number: (\d+)")
 
 nonce = 1
 while True:
-    attest_result = run_or_die(
-        [
-            "pyth2wormhole-client",
-            "--log-level",
-            "4",
-            "--p2w-addr",
-            P2W_ADDRESS,
-            "--rpc-url",
-            SOL_RPC_URL,
-            "--payer",
-            P2W_OWNER_KEYPAIR,
-            "attest",
-            "--price",
-            price_addr,
-            "--product",
-            product_addr,
-            "--nonce",
-            str(nonce),
-        ],
-        capture_output=True,
-    )
+    attest_result = run_or_die([
+        "pyth2wormhole-client",
+        "--log-level", "4",
+        "--p2w-addr", P2W_SOL_ADDRESS,
+        "--rpc-url", SOL_RPC_URL,
+        "--payer", P2W_OWNER_KEYPAIR,
+        "attest",
+        "--price", PYTH_PRICE_ACCOUNT,
+        "--product", PYTH_PRODUCT_ACCOUNT,
+        "--nonce", str(nonce),
+    ], capture_output=True)
     matches = seqno_regex.match(attest_result.stdout)
 
     if matches is not None:
