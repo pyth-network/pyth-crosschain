@@ -17,7 +17,9 @@ PYTH_PUBLISHER_INTERVAL = float(os.environ.get("PYTH_PUBLISHER_INTERVAL", "5"))
 SOL_AIRDROP_AMT = os.environ.get("SOL_AIRDROP_AMT", 100)
 SOL_RPC_HOST = os.environ.get("SOL_RPC_HOST", "solana-devnet")
 SOL_RPC_PORT = os.environ.get("SOL_RPC_PORT", 8899)
-SOL_RPC_URL = "http://{0}:{1}".format(SOL_RPC_HOST, SOL_RPC_PORT)
+SOL_RPC_URL = os.environ.get(
+    "SOL_RPC_URL", "{0}:{1}".format(SOL_RPC_HOST, SOL_RPC_PORT)
+)
 
 READINESS_PORT = int(os.environ.get("READINESS_PORT", "2000"))
 
