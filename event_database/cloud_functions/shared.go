@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"cloud.google.com/go/bigtable"
+	"github.com/certusone/wormhole/node/pkg/vaa"
 )
 
 // shared code for the various functions, primarily response formatting.
@@ -43,16 +44,42 @@ var columnFamilies = []string{"MessagePublication", "Signatures", "VAAState", "Q
 
 type (
 	Summary struct {
-		EmitterChain        string
-		EmitterAddress      string
-		Sequence            string
-		InitiatingTxID      string
-		Payload             []byte
-		GuardiansThatSigned []string
-		SignedVAABytes      []byte
-		QuorumTime          string
+		EmitterChain   string
+		EmitterAddress string
+		Sequence       string
+		InitiatingTxID string
+		Payload        []byte
+		SignedVAABytes []byte
+		QuorumTime     string
+	}
+	// Details is a Summary, with the VAA decoded as SignedVAA
+	Details struct {
+		SignedVAA      *vaa.VAA
+		EmitterChain   string
+		EmitterAddress string
+		Sequence       string
+		InitiatingTxID string
+		Payload        []byte
+		SignedVAABytes []byte
+		QuorumTime     string
 	}
 )
+
+func chainIdStringToType(chainId string) vaa.ChainID {
+	switch chainId {
+	case "1":
+		return vaa.ChainIDSolana
+	case "2":
+		return vaa.ChainIDEthereum
+	case "3":
+		return vaa.ChainIDTerra
+	case "4":
+		return vaa.ChainIDBSC
+	case "5":
+		return vaa.ChainIDPolygon
+	}
+	return vaa.ChainIDUnset
+}
 
 func makeSummary(row bigtable.Row) *Summary {
 	summary := &Summary{}
@@ -72,23 +99,43 @@ func makeSummary(row bigtable.Row) *Summary {
 				summary.Sequence = string(item.Value)
 			}
 		}
-	}
-	if _, ok := row[columnFamilies[1]]; ok {
-		for _, item := range row[columnFamilies[1]] {
-			column := strings.Split(item.Column, ":")
-			summary.GuardiansThatSigned = append(summary.GuardiansThatSigned, column[1])
+	} else {
+		// Some rows have a QuorumState, but no MessagePublication,
+		// so populate Summary values from the rowKey.
+		keyParts := strings.Split(row.Key(), ":")
+		chainId := chainIdStringToType(keyParts[0])
+		summary.EmitterChain = chainId.String()
+		summary.EmitterAddress = keyParts[1]
+		seq := strings.TrimLeft(keyParts[2], "0")
+		if seq == "" {
+			seq = "0"
 		}
+		summary.Sequence = seq
 	}
 	if _, ok := row[columnFamilies[3]]; ok {
-
-		for _, item := range row[columnFamilies[3]] {
-			if item.Column == "QuorumState:SignedVAA" {
-				summary.SignedVAABytes = item.Value
-				summary.QuorumTime = item.Timestamp.Time().String()
-			}
-		}
+		item := row[columnFamilies[3]][0]
+		summary.SignedVAABytes = item.Value
+		summary.QuorumTime = item.Timestamp.Time().String()
 	}
 	return summary
+}
+
+func makeDetails(row bigtable.Row) *Details {
+	sum := makeSummary(row)
+	deets := &Details{
+		EmitterChain:   sum.EmitterChain,
+		EmitterAddress: sum.EmitterAddress,
+		Sequence:       sum.Sequence,
+		InitiatingTxID: sum.InitiatingTxID,
+		Payload:        sum.Payload,
+		SignedVAABytes: sum.SignedVAABytes,
+		QuorumTime:     sum.QuorumTime,
+	}
+	if _, ok := row[columnFamilies[3]]; ok {
+		item := row[columnFamilies[3]][0]
+		deets.SignedVAA, _ = vaa.Unmarshal(item.Value)
+	}
+	return deets
 }
 
 var mux = newMux()

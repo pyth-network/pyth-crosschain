@@ -24,8 +24,7 @@ P2W_ATTESTATIONS_PORT = int(os.environ.get("P2W_ATTESTATIONS_PORT", 4343))
 PYTH_ACCOUNTS_HOST = "pyth"
 PYTH_ACCOUNTS_PORT = 4242
 
-WORMHOLE_ADDRESS = "Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
-
+WORMHOLE_ADDRESS = os.environ.get("WORMHOLE_ADDRESS", "Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o")
 ATTESTATIONS = {
     "pendingSeqnos": [],
 }
@@ -71,17 +70,12 @@ PYTH_OWNER_ADDRESS = sol_run_or_die(
 
 
 # Top up pyth2wormhole owner
-sol_run_or_die(
-    "airdrop",
-    [
+if SOL_AIRDROP_AMT > 0:
+    sol_run_or_die("airdrop", [
         str(SOL_AIRDROP_AMT),
-        "--keypair",
-        P2W_OWNER_KEYPAIR,
-        "--commitment",
-        "finalized",
-    ],
-    capture_output=True,
-)
+        "--keypair",  P2W_OWNER_KEYPAIR,
+        "--commitment", "finalized",
+    ], capture_output=True)
 
 # Initialize pyth2wormhole
 init_result = run_or_die(

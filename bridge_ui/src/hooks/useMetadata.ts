@@ -11,13 +11,14 @@ import { Metadata } from "../utils/metaplex";
 import useEvmMetadata, { EvmMetadata } from "./useEvmMetadata";
 import useMetaplexData from "./useMetaplexData";
 import useSolanaTokenMap from "./useSolanaTokenMap";
+import useTerraMetadata, { TerraMetadata } from "./useTerraMetadata";
 import useTerraTokenMap, { TerraTokenMap } from "./useTerraTokenMap";
 
 export type GenericMetadata = {
   symbol?: string;
   logo?: string;
   tokenName?: string;
-  decimals?: number;
+  //decimals?: number;
   //TODO more items
   raw?: any;
 };
@@ -36,9 +37,9 @@ const constructSolanaMetadata = (
     const tokenInfo = solanaTokenMap.data?.find((x) => x.address === address);
     //Both this and the token picker, at present, give priority to the tokenmap
     const obj = {
-      symbol: tokenInfo?.symbol || metaplex?.data.symbol || undefined,
-      logo: tokenInfo?.logoURI || metaplex?.data.uri || undefined, //TODO is URI on metaplex actually the logo? If not, where is it?
-      tokenName: tokenInfo?.name || metaplex?.data.name || undefined,
+      symbol: metaplex?.data?.symbol || tokenInfo?.symbol || undefined,
+      logo: tokenInfo?.logoURI || undefined, //TODO is URI on metaplex actually the logo? If not, where is it?
+      tokenName: metaplex?.data?.name || tokenInfo?.name || undefined,
       decimals: tokenInfo?.decimals || undefined, //TODO decimals are actually on the mint, not the metaplex account.
       raw: metaplex,
     };
@@ -55,19 +56,21 @@ const constructSolanaMetadata = (
 
 const constructTerraMetadata = (
   addresses: string[],
-  tokenMap: DataWrapper<TerraTokenMap>
+  tokenMap: DataWrapper<TerraTokenMap>,
+  terraMetadata: DataWrapper<Map<string, TerraMetadata>>
 ) => {
-  const isFetching = tokenMap.isFetching;
-  const error = tokenMap.error;
-  const receivedAt = tokenMap.receivedAt;
+  const isFetching = tokenMap.isFetching || terraMetadata.isFetching;
+  const error = tokenMap.error || terraMetadata.error;
+  const receivedAt = tokenMap.receivedAt && terraMetadata.receivedAt;
   const data = new Map<string, GenericMetadata>();
   addresses.forEach((address) => {
-    const meta = tokenMap.data?.mainnet[address];
+    const metadata = terraMetadata.data?.get(address);
+    const tokenInfo = tokenMap.data?.mainnet[address];
     const obj = {
-      symbol: meta?.symbol || undefined,
-      logo: meta?.icon || undefined,
-      tokenName: meta?.token || undefined,
-      decimals: undefined, //TODO find a way to get this on terra
+      symbol: metadata?.symbol || tokenInfo?.symbol || undefined,
+      logo: metadata?.logo || tokenInfo?.icon || undefined,
+      tokenName: metadata?.tokenName || tokenInfo?.token || undefined,
+      decimals: metadata?.decimals || undefined,
     };
     data.set(address, obj);
   });
@@ -125,6 +128,7 @@ export default function useMetadata(
   }, [chainId, addresses]);
 
   const metaplexData = useMetaplexData(solanaAddresses);
+  const terraMetadata = useTerraMetadata(terraAddresses);
   const ethMetadata = useEvmMetadata(ethereumAddresses, chainId);
 
   const output: DataWrapper<Map<string, GenericMetadata>> = useMemo(
@@ -134,7 +138,7 @@ export default function useMetadata(
         : isEVMChain(chainId)
         ? constructEthMetadata(ethereumAddresses, ethMetadata)
         : chainId === CHAIN_ID_TERRA
-        ? constructTerraMetadata(terraAddresses, terraTokenMap)
+        ? constructTerraMetadata(terraAddresses, terraTokenMap, terraMetadata)
         : getEmptyDataWrapper(),
     [
       chainId,
@@ -144,6 +148,7 @@ export default function useMetadata(
       ethereumAddresses,
       ethMetadata,
       terraAddresses,
+      terraMetadata,
       terraTokenMap,
     ]
   );
