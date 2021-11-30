@@ -112,6 +112,7 @@ if PYTH_PRICE_ACCOUNT is None or PYTH_PRODUCT_ACCOUNT is None:
 
     PYTH_PRICE_ACCOUNT = pyth_accounts["price"]
     PYTH_PRODUCT_ACCOUNT = pyth_accounts["product"]
+    print(f"Retrieved Pyth accounts from endpoint: {pyth_accounts}")
 
 nonce = 0
 attest_result = run_or_die([
@@ -127,7 +128,6 @@ attest_result = run_or_die([
 ], capture_output=True)
 
 print("p2w_autoattest ready to roll.")
-print(f"ACCOUNTS: {pyth_accounts}")
 print(f"Attest Interval: {P2W_ATTEST_INTERVAL}")
 
 # Serve p2w endpoint
