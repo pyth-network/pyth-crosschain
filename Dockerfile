@@ -38,18 +38,18 @@ ENV BRIDGE_ADDRESS=$WH_BRIDGE
 ENV WH_ROOT=$WH_ROOT
 # System deps
 RUN apt-get update && \
-    apt-get install -y \
-    build-essential \
-    clang \
-    curl \
-    libssl-dev \
-    libudev-dev \
-    llvm \
-    pkg-config \
-    python3 \
-    zlib1g-dev \
-		&& apt-get clean \
-		&& rm -rf /var/lib/apt/lists/*
+	apt-get install -y \
+	build-essential \
+	clang \
+	curl \
+	libssl-dev \
+	libudev-dev \
+	llvm \
+	pkg-config \
+	python3 \
+	zlib1g-dev \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Base with known good Rust toolchain via rustup
 FROM base as base-with-rust
@@ -60,9 +60,9 @@ ENV PATH=$PATH:/root/.cargo/bin
 FROM base as base-with-node
 RUN bash -c "$(curl -fsSL https://deb.nodesource.com/setup_16.x)"
 RUN apt-get update \
- && apt-get install -y nodejs \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
+	&& apt-get install -y nodejs \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Base with a known good Solana SDK distribution
 FROM base-with-rust as base-with-sol
@@ -71,8 +71,8 @@ ENV PATH=$PATH:/root/.local/share/solana/install/active_release/bin
 
 # Solana does a download at the beginning of a *first* build-bpf call. Trigger and layer-cache it explicitly.
 RUN cargo init --lib /tmp/decoy-crate && \
-    cd /tmp/decoy-crate && cargo build-bpf && \
-    rm -rf /tmp/decoy-crate
+	cd /tmp/decoy-crate && cargo build-bpf && \
+	rm -rf /tmp/decoy-crate
 
 # Base with tools for Rust WebAssembly builds
 FROM base-with-rust as base-with-wasm-pack
