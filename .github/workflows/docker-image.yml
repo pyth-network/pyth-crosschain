@@ -21,14 +21,41 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
-        id: docker_build
+        # build the main image with all required intermediate images
+      - name: Build and push main image
+        id: docker_build_main
+        uses: docker/build-push-action@v2
+        with:
+          platforms: linux/amd64
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:base
+          target: p2w-attest
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:base
+          cache-to: type=inline
+
+        # build p2w-attest using cache from previous main build
+      - name: Build and push p2w-attest
+        id: docker_build_p2w-attest
         uses: docker/build-push-action@v2
         with:
           platforms: linux/amd64
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-attest
           target: p2w-attest
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:base
+          cache-to: type=inline
+
+        # build p2w-relay using cache from previous main build
+      - name: Build and push p2w-relay
+        id: docker_build_p2w-relay
+        uses: docker/build-push-action@v2
+        with:
+          platforms: linux/amd64
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-relay
+          target: p2w-relay
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:base
+          cache-to: type=inline
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
