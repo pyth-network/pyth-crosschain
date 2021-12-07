@@ -166,5 +166,3 @@ while True:
 
     time.sleep(P2W_ATTEST_INTERVAL)
     nonce += 1
-
-    readiness_thread.join()
