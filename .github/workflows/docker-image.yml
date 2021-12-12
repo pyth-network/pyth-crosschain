@@ -29,7 +29,6 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-attest
           target: p2w-attest
-          tag_with_ref: true
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-attest
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-attest,mode=max  # export all the layers of all intermediate steps.
 
@@ -41,7 +40,6 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-relay
           target: p2w-relay
-          tag_with_ref: true
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-relay
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-relay,mode=max  # export all the layers of all intermediate steps.
 
