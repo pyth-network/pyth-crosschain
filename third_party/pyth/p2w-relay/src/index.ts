@@ -69,7 +69,7 @@ async function readinessProbeRoutine(port: number) {
 	p2w_eth = factory.attach(ETH_P2W_CONTRACT);
     }
     catch(e) {
-	console.log(`Error: Could not instantiate ETH contract:`, e);
+	console.error(`Error: Could not instantiate ETH contract:`, e);
 	throw e;
     }
 
@@ -81,7 +81,7 @@ async function readinessProbeRoutine(port: number) {
 	    agent: false
 	}, (res) => {
 	    if (res.statusCode != 200) {
-		console.log("Could not reach attestations endpoint", res);
+		console.error("Could not reach attestations endpoint", res);
 	    } else {
 		let chunks: string[] = [];
 		res.setEncoding("utf-8");
@@ -110,7 +110,7 @@ async function readinessProbeRoutine(port: number) {
 	for (let poolEntry of seqnoPool) {
 
 	    if (poolEntry[1] >= P2W_RELAY_RETRY_COUNT) {
-		console.log(`[seqno ${poolEntry}] Exceeded retry count, removing from list`);
+		console.warn(`[seqno ${poolEntry}] Exceeded retry count, removing from list`);
 		seqnoPool.delete(poolEntry[0]);
 		continue;
 	    }
@@ -127,7 +127,7 @@ async function readinessProbeRoutine(port: number) {
 		);
 	    }
 	    catch(e) {
-		console.log(`[seqno ${poolEntry}] Error: Could not call getSignedAttestation:`, e);
+		console.error(`[seqno ${poolEntry}] Error: Could not call getSignedAttestation:`, e);
 
 		seqnoPool.set(poolEntry[0], poolEntry[1] + 1);
 
@@ -149,7 +149,7 @@ async function readinessProbeRoutine(port: number) {
 		let retval = await tx.wait();
 		console.log(`[seqno ${poolEntry}] attestPrice() output:\n`, retval);
 	    } catch(e) {
-		console.log(`[seqno ${poolEntry}] Error: Could not call attestPrice() on ETH:`, e);
+		console.error(`[seqno ${poolEntry}] Error: Could not call attestPrice() on ETH:`, e);
 
 		seqnoPool.set(poolEntry[0], poolEntry[1] + 1);
 
@@ -168,7 +168,7 @@ async function readinessProbeRoutine(port: number) {
 
 		latest_attestation = await p2w_eth.latestAttestation(product_id, price_type);
 	    } catch(e) {
-		console.log(`[seqno ${poolEntry}] Error: Could not call latestAttestation() on ETH:`, e);
+		console.error(`[seqno ${poolEntry}] Error: Could not call latestAttestation() on ETH:`, e);
 
 		seqnoPool.set(poolEntry[0], poolEntry[1] + 1);
 
