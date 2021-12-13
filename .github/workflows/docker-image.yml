@@ -28,6 +28,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:base
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:base
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:base,mode=max  # export all the layers of all intermediate steps.
 
       - name: Build and push p2w-attest
