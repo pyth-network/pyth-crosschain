@@ -42,7 +42,7 @@ def run_or_die(args, die=True, **kwargs):
     ret = subprocess.run(args, text=True, **kwargs)
 
     if ret.returncode != 0:
-        logging.debug("Return code: %s", ret.returncode)
+        logging.error("Return code is: %s", ret.returncode)
         if die:
             sys.exit(ret.returncode)
         else:
