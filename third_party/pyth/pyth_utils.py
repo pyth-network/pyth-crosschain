@@ -37,19 +37,17 @@ def run_or_die(args, die=True, **kwargs):
     Opinionated subprocess.run() call with fancy logging
     """
     args_readable = " ".join(args)
-    logging.debug("CMD RUN: %s", args_readable)
-    sys.stderr.flush()
+    logging.debug(f"CMD RUN: {args_readable}")
     ret = subprocess.run(args, text=True, **kwargs)
 
     if ret.returncode != 0:
-        logging.error("Return code is: %s", ret.returncode)
+        logging.error(f"Return code is: {ret.returncode}")
         if die:
             sys.exit(ret.returncode)
         else:
             logging.warn("CMD DIE FALSE")
     else:
-        logging.debug("CMD OK: ", args_readable)
-    sys.stderr.flush()
+        logging.debug(f"CMD OK: {args_readable}")
     return ret
 
 

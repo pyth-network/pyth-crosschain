@@ -48,10 +48,10 @@ class P2WAutoattestStatusEndpoint(BaseHTTPRequestHandler):
     """
 
     def do_GET(self):
-        logging.info("Got path %s", self.path)
+        logging.info(f"Got path {self.path}")
         sys.stdout.flush()
         data = json.dumps(ATTESTATIONS).encode("utf-8")
-        logging.debug("Sending: %s", data)
+        logging.debug(f"Sending: {data}")
 
         ATTESTATIONS["pendingSeqnos"] = []
 
@@ -150,7 +150,7 @@ if PYTH_PRICE_ACCOUNT is None or PYTH_PRODUCT_ACCOUNT is None:
 
     PYTH_PRICE_ACCOUNT = pyth_accounts["price"]
     PYTH_PRODUCT_ACCOUNT = pyth_accounts["product"]
-    logging.info("Retrieved Pyth accounts from endpoint: %s", pyth_accounts)
+    logging.info(f"Retrieved Pyth accounts from endpoint: {pyth_accounts}")
 
 nonce = 0
 attest_result = run_or_die(
@@ -176,7 +176,7 @@ attest_result = run_or_die(
 )
 
 logging.info("p2w_autoattest ready to roll!")
-logging.info("Attest Interval: %s", P2W_ATTEST_INTERVAL)
+logging.info(f"Attest Interval: {P2W_ATTEST_INTERVAL}")
 
 # Serve p2w endpoint
 endpoint_thread = threading.Thread(target=serve_attestations, daemon=True)
@@ -215,7 +215,7 @@ while True:
 
     if matches is not None:
         seqno = int(matches.group(1))
-        logging.info("Got seqno: %s", seqno)
+        logging.info(f"Got seqno: {seqno}")
 
         ATTESTATIONS["pendingSeqnos"].append(seqno)
 
