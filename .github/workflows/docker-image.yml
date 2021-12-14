@@ -1,9 +1,9 @@
 name: build docker image
 
 on:
-  pull_request:
-    branches:
-      - main
+  push:
+    tags:
+      - "v*"
 
 jobs:
   docker:

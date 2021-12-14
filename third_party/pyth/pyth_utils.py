@@ -1,7 +1,10 @@
+import logging
 import os
 import socketserver
 import subprocess
 import sys
+
+log = logging.getLogger(__name__)
 
 # Settings specific to local devnet Pyth instance
 PYTH = os.environ.get("PYTH", "./pyth")
@@ -34,26 +37,18 @@ def run_or_die(args, die=True, **kwargs):
     Opinionated subprocess.run() call with fancy logging
     """
     args_readable = " ".join(args)
-    print(f"CMD RUN\t{args_readable}", file=sys.stderr)
+    logging.debug("CMD RUN: %s", args_readable)
     sys.stderr.flush()
     ret = subprocess.run(args, text=True, **kwargs)
 
     if ret.returncode != 0:
-        print(f"CMD FAIL {ret.returncode}\t{args_readable}", file=sys.stderr)
-
-        out = ret.stdout if ret.stdout is not None else "<not captured>"
-        err = ret.stderr if ret.stderr is not None else "<not captured>"
-
-        print(f"CMD STDOUT\n{out}", file=sys.stderr)
-        print(f"CMD STDERR\n{err}", file=sys.stderr)
-
+        logging.error("Return code is: %s", ret.returncode)
         if die:
             sys.exit(ret.returncode)
         else:
-            print(f'{"CMD DIE FALSE"}', file=sys.stderr)
-
+            logging.warn("CMD DIE FALSE")
     else:
-        print(f"CMD OK\t{args_readable}", file=sys.stderr)
+        logging.debug("CMD OK: ", args_readable)
     sys.stderr.flush()
     return ret
 
