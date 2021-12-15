@@ -1,0 +1,28 @@
+FROM solanalabs/solana:stable as binaries
+ARG WH_ROOT=/usr/src/wormhole
+ENV WH_ROOT=$WH_ROOT
+WORKDIR $WH_ROOT/third_party/pyth
+RUN apt-get update && \
+  apt-get install -y curl \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+RUN sh -c "$(curl --proto '=https' --tlsv1.2 -sSfL https://sh.rustup.rs)" -- -y --default-toolchain nightly-2021-08-01
+ENV PATH=$PATH:/root/.cargo/bin
+RUN cargo init --lib /tmp/decoy-crate && \
+  cd /tmp/decoy-crate && cargo build-bpf && \
+  rm -rf /tmp/decoy-crate
+COPY solana $WH_ROOT/solana
+WORKDIR $WH_ROOT/solana/pyth2wormhole/program
+RUN cargo build-bpf
+WORKDIR $WH_ROOT/solana/pyth2wormhole
+RUN cargo build -p pyth2wormhole-client
+ENV PATH "$PATH:$WH_ROOT/solana/pyth2wormhole/target/debug/"
+
+FROM python:3.8-slim
+ARG WH_ROOT=/usr/src/wormhole
+ENV WH_ROOT=$WH_ROOT
+WORKDIR $WH_ROOT/third_party/pyth
+
+COPY third_party/pyth/p2w_autoattest.py third_party/pyth/pyth_utils.py ./
+COPY --from=binaries /usr/bin/solana /usr/bin/solana
+COPY --from=binaries /usr/src/wormhole/solana/pyth2wormhole/target/debug/pyth2wormhole-client /usr/bin/pyth2wormhole-client
