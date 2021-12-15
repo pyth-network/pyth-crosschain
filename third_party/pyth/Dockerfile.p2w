@@ -1,0 +1,12 @@
+FROM solanalabs/solana:stable as solana-client
+
+FROM pythfoundation/pyth2wormhole:p2w-attest as pyth2wormhole-client
+
+FROM python:3.8-slim
+ARG WH_ROOT=/usr/src/wormhole
+ENV WH_ROOT=$WH_ROOT
+WORKDIR $WH_ROOT/third_party/pyth
+
+COPY p2w_autoattest.py pyth_utils.py ./
+COPY --from=solana-client /usr/bin/solana /usr/bin/solana
+COPY --from=pyth2wormhole-client /usr/src/wormhole/solana/pyth2wormhole/target/debug/pyth2wormhole-client /usr/bin/pyth2wormhole-client
