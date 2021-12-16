@@ -58,10 +58,8 @@ async function readinessProbeRoutine(port: number) {
     try {
 	let provider = new ethers.providers.WebSocketProvider(ETH_NODE_URL);
 	let mnemonic: string = fs.readFileSync(ETH_MNEMONIC_FILE).toString("utf-8").trim();
-	console.log(`Using ETH devnet mnemonic: ${mnemonic}`);
 	let wallet = ethers.Wallet.fromMnemonic(mnemonic, ETH_HD_WALLET_PATH);
 	console.log(`Using ETH wallet pubkey: ${wallet.publicKey}`);
-	console.log(`Using ETH wallet privkey: ${wallet.privateKey}`);
 	let signer = new ethers.Wallet(wallet.privateKey, provider);
 	let balance = await signer.getBalance();
 	console.log(`Account balance is ${balance}`);
