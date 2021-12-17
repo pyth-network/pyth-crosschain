@@ -39,9 +39,10 @@ def run_or_die(args, die=True, **kwargs):
     args_readable = " ".join(args)
     logging.debug(f"CMD RUN: {args_readable}")
     ret = subprocess.run(args, text=True, **kwargs)
-
     if ret.returncode != 0:
-        logging.error(f"Return code is: {ret.returncode}")
+        logging.error(
+            f"Return code is: {ret.returncode}\nSTDOUT: {ret.stdout}\nSTDERR: {ret.stderr}"
+        )
         if die:
             sys.exit(ret.returncode)
         else:
