@@ -76,7 +76,7 @@ RUN apt-get install -y nodejs
 # Base with a known good Solana SDK distribution
 FROM base-with-rust as base-with-sol
 
-RUN sh -c "$(curl -sSfL https://release.solana.com/v1.7.8/install)"
+RUN sh -c "$(curl -sSfL https://release.solana.com/v1.9.1/install)"
 ENV PATH=$PATH:/root/.local/share/solana/install/active_release/bin
 
 # Solana does a download at the beginning of a *first* build-bpf call. Trigger and layer-cache it explicitly.
