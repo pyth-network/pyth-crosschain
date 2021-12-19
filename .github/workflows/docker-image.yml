@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*"
+  pull_request:
 
 jobs:
   docker:
@@ -27,10 +28,10 @@ jobs:
         with:
           platforms: linux/amd64
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-attest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:${{ github.sha }}
           target: p2w-attest
-          # cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-attest
-          # cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-attest,mode=max  # export all the layers of all intermediate steps.
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-attest
+          cache-to: type=inline
 
       - name: Build and push p2w-relay
         id: docker_build_p2w-relay
@@ -38,10 +39,10 @@ jobs:
         with:
           platforms: linux/amd64
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-relay
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:${{ github.sha }}
           target: p2w-relay
-          # cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-relay
-          # cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-relay,mode=max  # export all the layers of all intermediate steps.
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-relay
+          cache-to: type=inline
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
