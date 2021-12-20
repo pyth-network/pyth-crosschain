@@ -60,6 +60,7 @@ RUN apt-get update && \
     pkg-config \
     python3 \
     zlib1g-dev
+RUN pip install pyyaml # this needs to go into a requirements file later.
 
 # Base with known good Rust toolchain via rustup
 FROM base as base-with-rust
