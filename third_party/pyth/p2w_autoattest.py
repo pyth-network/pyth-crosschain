@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # This script sets up a simple loop for periodical attestation of Pyth data
+import argparse
 import json
 import logging
-import os
 import re
 import sys
 import threading
@@ -11,31 +11,57 @@ import time
 from http.client import HTTPConnection
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+import yaml
 from pyth_utils import *
 
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s | %(module)s | %(levelname)s | %(message)s"
 )
 
-P2W_SOL_ADDRESS = os.environ.get(
-    "P2W_SOL_ADDRESS", "P2WH424242424242424242424242424242424242424"
+parser = argparse.ArgumentParser(
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    description="Pyth2Wormhole autoattest",
 )
-P2W_ATTEST_INTERVAL = float(os.environ.get("P2W_ATTEST_INTERVAL", 5))
-P2W_OWNER_KEYPAIR = os.environ.get(
+parser.add_argument(
+    "-f",
+    "--file",
+    required=True,
+    type=argparse.FileType("r"),
+    help="Pyth2wormhole config file",
+)
+args = parser.parse_args()
+config = yaml.safe_load(args.file)
+
+P2W_SOL_ADDRESS = config.get("P2W_SOL_ADDRESS", "asdas")
+P2W_ATTEST_INTERVAL = config.get("P2W_ATTEST_INTERVAL", 5)
+P2W_OWNER_KEYPAIR = config.get(
     "P2W_OWNER_KEYPAIR", "/usr/src/solana/keys/p2w_owner.json"
 )
-P2W_ATTESTATIONS_PORT = int(os.environ.get("P2W_ATTESTATIONS_PORT", 4343))
-P2W_INITIALIZE_SOL_CONTRACT = os.environ.get("P2W_INITIALIZE_SOL_CONTRACT", None)
-
-PYTH_PRICE_ACCOUNT = os.environ.get("PYTH_PRICE_ACCOUNT", None)
-PYTH_PRODUCT_ACCOUNT = os.environ.get("PYTH_PRODUCT_ACCOUNT", None)
-
+P2W_ATTESTATIONS_PORT = config.get("P2W_ATTESTATIONS_PORT", 4343)
+P2W_INITIALIZE_SOL_CONTRACT = config.get("P2W_INITIALIZE_SOL_CONTRACT", None)
+PYTH_PRICE_ACCOUNT = config.get("PYTH_PRICE_ACCOUNT", None)
+PYTH_PRODUCT_ACCOUNT = config.get("PYTH_PRODUCT_ACCOUNT", None)
 PYTH_ACCOUNTS_HOST = "pyth"
 PYTH_ACCOUNTS_PORT = 4242
-
-WORMHOLE_ADDRESS = os.environ.get(
+WORMHOLE_ADDRESS = config.get(
     "WORMHOLE_ADDRESS", "Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 )
+PYTH = config.get("PYTH", "./pythd")
+PYTH_KEY_STORE = config.get("/home/pyth/.pythd")
+PYTH_PROGRAM_KEYPAIR = config.get(
+    "PYTH_PROGRAM_KEYPAIR", f"{PYTH_KEY_STORE}/publish_key_pair.json"
+)
+PYTH_PROGRAM_SO_PATH = config.get("PYTH_PROGRAM_SO_PATH", "../target/oracle.so")
+PYTH_PUBLISHER_KEYPAIR = config.get("", f"{PYTH_KEY_STORE}/publish_key_pair.json")
+PYTH_PUBLISHER_INTERVAL = config.get("PYTH_PUBLISHER_INTERVAL", float(5))
+# 0 setting disables airdropping
+SOL_AIRDROP_AMT = config.get("SOL_AIRDROP_AMT", 0)
+# SOL RPC settings
+SOL_RPC_HOST = config.get("SOL_RPC_HOST", "solana-devnet")
+SOL_RPC_PORT = config.get("SOL_RPC_PORT", 8899)
+SOL_RPC_URL = config.get("SOL_RPC_URL", "{0}:{1}".format(SOL_RPC_HOST, SOL_RPC_PORT))
+READINESS_PORT = config.get("READINESS_PORT", 2000)
+# Settings specific to local devnet Pyth instance
 
 ATTESTATIONS = {
     "pendingSeqnos": [],
@@ -75,10 +101,12 @@ def serve_attestations():
 if P2W_INITIALIZE_SOL_CONTRACT is not None:
     # Get actor pubkeys
     P2W_OWNER_ADDRESS = sol_run_or_die(
-        "address", ["--keypair", P2W_OWNER_KEYPAIR], capture_output=True
+        [PYTH, "address"],
+        ["--keypair", P2W_OWNER_KEYPAIR, "--url", SOL_RPC_URL],
+        capture_output=True,
     ).stdout.strip()
     PYTH_OWNER_ADDRESS = sol_run_or_die(
-        "address", ["--keypair", PYTH_PROGRAM_KEYPAIR], capture_output=True
+        [PYTH, "address"], ["--keypair", PYTH_PROGRAM_KEYPAIR], capture_output=True
     ).stdout.strip()
 
     init_result = run_or_die(
@@ -183,7 +211,7 @@ endpoint_thread = threading.Thread(target=serve_attestations, daemon=True)
 endpoint_thread.start()
 
 # Let k8s know the service is up
-readiness_thread = threading.Thread(target=readiness, daemon=True)
+readiness_thread = threading.Thread(target=readiness(READINESS_PORT), daemon=True)
 readiness_thread.start()
 
 seqno_regex = re.compile(r"^Sequence number: (\d+)")
