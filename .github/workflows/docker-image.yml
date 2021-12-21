@@ -28,7 +28,7 @@ jobs:
         with:
           platforms: linux/amd64
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-attest${{ github.sha::7 }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-attest1
           target: p2w-attest
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-attest
           cache-to: type=inline
@@ -39,7 +39,7 @@ jobs:
         with:
           platforms: linux/amd64
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-relay${{ github.sha::7 }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-relay1
           target: p2w-relay
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pyth2wormhole:p2w-relay
           cache-to: type=inline
