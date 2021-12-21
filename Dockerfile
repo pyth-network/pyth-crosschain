@@ -4,186 +4,148 @@
 # Wormhole Go tools add their pinned version
 
 # Cache a build of Wormhole's Go utilities
-FROM docker.io/golang:1.17.0 as go-tools
+FROM docker.io/golang:1.17.0 as base-go
 ARG WH_ROOT=/usr/src/wormhole
 ENV WH_ROOT=$WH_ROOT
-
-ADD tools/build.sh $WH_ROOT/tools/
-ADD tools/go.* $WH_ROOT/tools/
-
+COPY tools/build.sh tools/go.* $WH_ROOT/tools/
 WORKDIR $WH_ROOT/tools
-ENV   CGO_ENABLED=0
+ENV  CGO_ENABLED=0
 RUN ./build.sh
 
 # Cache a build of TypeScript gRPC bindings
-FROM node:16-alpine@sha256:004dbac84fed48e20f9888a23e32fa7cf83c2995e174a78d41d9a9dd1e051a20 AS nodejs-proto-build
+FROM node:16-alpine@sha256:004dbac84fed48e20f9888a23e32fa7cf83c2995e174a78d41d9a9dd1e051a20 AS base-node
 ARG WH_ROOT=/usr/src/wormhole
-
+ENV WH_ROOT=$WH_ROOT
 # Copy go build artifacts
-COPY --from=go-tools $WH_ROOT/tools $WH_ROOT/tools
-
-ADD buf.* $WH_ROOT/
-ADD proto $WH_ROOT/proto
-
-ADD tools/package.json $WH_ROOT/tools/
-ADD tools/package-lock.json $WH_ROOT/tools/
-
+COPY --from=base-go $WH_ROOT/tools $WH_ROOT/tools
+COPY buf.* $WH_ROOT/
+COPY proto $WH_ROOT/proto
+COPY tools/package.json $WH_ROOT/tools/
+COPY tools/package-lock.json $WH_ROOT/tools/
 WORKDIR $WH_ROOT/tools
 RUN npm ci
-
 WORKDIR $WH_ROOT
 RUN tools/bin/buf generate --template buf.gen.web.yaml
+WORKDIR $WH_ROOT/ethereum
+COPY ethereum .
+RUN npm ci && npm run build
 
-# Root image for most of the following targets
-FROM ubuntu:20.04@sha256:626ffe58f6e7566e00254b638eb7e0f3b11d4da9675088f4781a50ae288f3322 as base
-
+# Base with known good Rust toolchain via rustup
+FROM rust:1.57-slim as base-rust
 ARG WH_EMITTER="11111111111111111111111111111115"
 ARG WH_BRIDGE="11111111111111111111111111111116"
 ARG WH_ROOT=/usr/src/wormhole
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Copy args to envs in order for them to be inherited
 ENV EMITTER_ADDRESS=$WH_EMITTER
 ENV BRIDGE_ADDRESS=$WH_BRIDGE
 ENV WH_ROOT=$WH_ROOT
-
-# System deps
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
-    apt-get install -y \
-    build-essential \
-    clang \
-    curl \
-    libssl-dev \
-    libudev-dev \
-    llvm \
-    pkg-config \
-    python3 \
-    zlib1g-dev
-
-# Base with known good Rust toolchain via rustup
-FROM base as base-with-rust
+  apt-get install -y \
+  build-essential \
+  clang \
+  curl \
+  libssl-dev \
+  libudev-dev \
+  llvm \
+  pkg-config \
+  zlib1g-dev \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+# it's doing some source somewhere. I need to sort it out
 RUN sh -c "$(curl --proto '=https' --tlsv1.2 -sSfL https://sh.rustup.rs)" -- -y --default-toolchain nightly-2021-08-01
-ENV PATH=$PATH:/root/.cargo/bin
-
-# Base with NodeJS
-FROM base as base-with-node
-
-RUN bash -c "$(curl -fsSL https://deb.nodesource.com/setup_16.x)"
-RUN apt-get update
-RUN apt-get install -y nodejs
-
-# Base with a known good Solana SDK distribution
-FROM base-with-rust as base-with-sol
-
+ENV PATH="/root/.cargo/bin:${PATH}"
 RUN sh -c "$(curl -sSfL https://release.solana.com/v1.8.1/install)"
 ENV PATH=$PATH:/root/.local/share/solana/install/active_release/bin
-
 # Solana does a download at the beginning of a *first* build-bpf call. Trigger and layer-cache it explicitly.
 RUN cargo init --lib /tmp/decoy-crate && \
-    cd /tmp/decoy-crate && cargo build-bpf && \
-    rm -rf /tmp/decoy-crate
-
-# Base with tools for Rust WebAssembly builds
-FROM base-with-rust as base-with-wasm-pack
+  cd /tmp/decoy-crate && cargo build-bpf && \
+  rm -rf /tmp/decoy-crate
 RUN cargo install wasm-pack --version 0.9.1
-
-# Solana contract and off-chain client for pyth2wormhole
-FROM base-with-sol as p2w-sol-contracts
-
-ADD solana $WH_ROOT/solana
-
+# Base with tools for Rust WebAssembly builds
+COPY solana $WH_ROOT/solana
 WORKDIR $WH_ROOT/solana/pyth2wormhole/program
-
 RUN cargo build-bpf
-
 WORKDIR $WH_ROOT/solana/pyth2wormhole
 RUN cargo build -p pyth2wormhole-client
 ENV PATH "$PATH:$WH_ROOT/solana/pyth2wormhole/target/debug/"
-
-# Pyth2wormhole's Rust WebAssembly dependencies
-FROM base-with-wasm-pack as p2w-sol-wasm
 WORKDIR $WH_ROOT/solana
-ADD solana .
-
+COPY solana .
 # Build wasm binaries for wormhole-sdk
 WORKDIR $WH_ROOT/solana/bridge/program
-RUN wasm-pack build --target bundler -d bundler -- --features wasm
-RUN wasm-pack build --target nodejs -d nodejs -- --features wasm
-
+RUN wasm-pack build --target bundler -d bundler -- --features wasm && \
+  wasm-pack build --target nodejs -d nodejs -- --features wasm
 # Build wasm binaries for Wormhole migration
 WORKDIR $WH_ROOT/solana/migration
-RUN wasm-pack build --target bundler -d bundler -- --features wasm
-RUN wasm-pack build --target nodejs -d nodejs -- --features wasm
-
+RUN wasm-pack build --target bundler -d bundler -- --features wasm && \
+  wasm-pack build --target nodejs -d nodejs -- --features wasm
 # Build wasm binaries for NFT bridge
 WORKDIR $WH_ROOT/solana/modules/nft_bridge/program
-RUN wasm-pack build --target bundler -d bundler -- --features wasm
-RUN wasm-pack build --target nodejs -d nodejs -- --features wasm
-
+RUN wasm-pack build --target bundler -d bundler -- --features wasm && \
+  wasm-pack build --target nodejs -d nodejs -- --features wasm
 # Build wasm binaries for token bridge
 WORKDIR $WH_ROOT/solana/modules/token_bridge/program
-RUN wasm-pack build --target bundler -d bundler -- --features wasm
-RUN wasm-pack build --target nodejs -d nodejs -- --features wasm
-
+RUN wasm-pack build --target bundler -d bundler -- --features wasm && \
+  wasm-pack build --target nodejs -d nodejs -- --features wasm
 # Build wasm-binaries for p2w-sdk
 WORKDIR $WH_ROOT/solana/pyth2wormhole/program
-RUN wasm-pack build --target bundler -d bundler -- --features wasm
-RUN wasm-pack build --target nodejs -d nodejs -- --features wasm
-
+RUN wasm-pack build --target bundler -d bundler -- --features wasm && \
+  wasm-pack build --target nodejs -d nodejs -- --features wasm
 
 # Final p2w-attest target
-FROM python:3.8-slim as p2w-attest
+FROM python:3.8-alpine as p2w-attest
 ARG WH_ROOT=/usr/src/wormhole
 WORKDIR $WH_ROOT/third_party/pyth
 
-RUN pip install pyyaml # this needs to go into a requirements file later.
-ADD third_party/pyth/p2w_autoattest.py third_party/pyth/pyth_utils.py ./
-COPY --from=p2w-sol-contracts /usr/bin/solana /usr/bin/solana
-COPY --from=p2w-sol-contracts /usr/src/wormhole/solana/pyth2wormhole/target/debug/pyth2wormhole-client /usr/bin/pyth2wormhole-client
+RUN pip install --no-cache-dir pyyaml==6.0
+COPY third_party/pyth/p2w_autoattest.py third_party/pyth/pyth_utils.py ./
+COPY --from=base-rust /root/.local/share/solana/install/active_release/bin/solana /usr/bin/solana
+COPY --from=base-rust /usr/src/wormhole/solana/pyth2wormhole/target/debug/pyth2wormhole-client /usr/bin/pyth2wormhole-client
+RUN addgroup -S pyth && adduser -S pyth -G pyth
+RUN chown -R pyth:pyth .
+USER pyth
+RUN echo "\n\
+export PATH=\"\${PATH}:\${HOME}/pyth-client/build\"\n\
+export PYTHONPATH=\"\${PYTHONPATH:+\$PYTHONPATH:}\${HOME}/pyth-client\"\n\
+" >> ~/profile
 
 # Solidity contracts for Pyth2Wormhole
-FROM base-with-node as p2w-eth-contracts
+FROM base-node as eth-base
 WORKDIR $WH_ROOT/ethereum
-ADD ethereum .
-
+COPY ethereum .
 RUN npm ci && npm run build
-
-# Wormhole SDK
-FROM p2w-eth-contracts as wormhole-sdk
 WORKDIR $WH_ROOT/sdk/js
-ADD sdk/js .
-
+COPY sdk/js .
 # Copy proto bindings for Wormhole SDK
-COPY --from=nodejs-proto-build $WH_ROOT/sdk/js/src/proto src/proto
-
+COPY --from=base-node $WH_ROOT/sdk/js/src/proto src/proto
 # Copy wasm artifacts for Wormhole SDK
-COPY --from=p2w-sol-wasm $WH_ROOT/solana/bridge/program/bundler src/solana/core
-COPY --from=p2w-sol-wasm $WH_ROOT/solana/migration/bundler src/solana/migration
-COPY --from=p2w-sol-wasm $WH_ROOT/solana/modules/nft_bridge/program/bundler src/solana/nft
-COPY --from=p2w-sol-wasm $WH_ROOT/solana/modules/token_bridge/program/bundler src/solana/token
-COPY --from=p2w-sol-wasm $WH_ROOT/solana/bridge/program/nodejs src/solana/core-node
-COPY --from=p2w-sol-wasm $WH_ROOT/solana/migration/nodejs src/solana/migration-node
-COPY --from=p2w-sol-wasm $WH_ROOT/solana/modules/nft_bridge/program/nodejs src/solana/nft-node
-COPY --from=p2w-sol-wasm $WH_ROOT/solana/modules/token_bridge/program/nodejs src/solana/token-node
-
+COPY --from=base-rust $WH_ROOT/solana/bridge/program/bundler src/solana/core
+COPY --from=base-rust $WH_ROOT/solana/migration/bundler src/solana/migration
+COPY --from=base-rust $WH_ROOT/solana/modules/nft_bridge/program/bundler src/solana/nft
+COPY --from=base-rust $WH_ROOT/solana/modules/token_bridge/program/bundler src/solana/token
+COPY --from=base-rust $WH_ROOT/solana/bridge/program/nodejs src/solana/core-node
+COPY --from=base-rust $WH_ROOT/solana/migration/nodejs src/solana/migration-node
+COPY --from=base-rust $WH_ROOT/solana/modules/nft_bridge/program/nodejs src/solana/nft-node
+COPY --from=base-rust $WH_ROOT/solana/modules/token_bridge/program/nodejs src/solana/token-node
 RUN npm ci
-
-# Pyth2wormhole SDK
-FROM wormhole-sdk as p2w-sdk
 WORKDIR $WH_ROOT/third_party/pyth/p2w-sdk
-
 # Copy wasm artifacts for Pyth2Wormhole SDK
-COPY --from=p2w-sol-wasm $WH_ROOT/solana/pyth2wormhole/program/bundler src/solana/p2w-core
-COPY --from=p2w-sol-wasm $WH_ROOT/solana/bridge/program/bundler src/solana/wormhole-core
-
-ADD third_party/pyth/p2w-sdk .
+COPY --from=base-rust $WH_ROOT/solana/pyth2wormhole/program/bundler src/solana/p2w-core
+COPY --from=base-rust $WH_ROOT/solana/bridge/program/bundler src/solana/wormhole-core
+COPY third_party/pyth/p2w-sdk .
 RUN npm ci && npm run build
-
-
-# Final p2w-relay target
-FROM p2w-sdk as p2w-relay
 WORKDIR $WH_ROOT/third_party/pyth/p2w-relay
-
-ADD third_party/pyth/p2w-relay .
+COPY third_party/pyth/p2w-relay .
 RUN npm ci && npm run build
+
+FROM node:16-alpine as p2w-relay
+ARG WH_ROOT=/usr/src/wormhole
+ENV WH_ROOT=$WH_ROOT
+COPY --from=eth-base $WH_ROOT $WH_ROOT
+WORKDIR $WH_ROOT/third_party/pyth/p2w-relay
+RUN addgroup -S pyth && adduser -S pyth -G pyth
+RUN chown -R pyth:pyth .
+USER pyth
+RUN echo "\n\
+export PATH=\"\${PATH}:\${HOME}/pyth-client/build\"\n\
+export PYTHONPATH=\"\${PYTHONPATH:+\$PYTHONPATH:}\${HOME}/pyth-client\"\n\
+" >> ~/profile
