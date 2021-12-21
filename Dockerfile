@@ -133,10 +133,14 @@ RUN wasm-pack build --target nodejs -d nodejs -- --features wasm
 
 
 # Final p2w-attest target
-FROM p2w-sol-contracts as p2w-attest
+FROM python:3.8-slim
+ARG WH_ROOT=/usr/src/wormhole
 WORKDIR $WH_ROOT/third_party/pyth
 
+RUN pip install pyyaml # this needs to go into a requirements file later.
 ADD third_party/pyth/p2w_autoattest.py third_party/pyth/pyth_utils.py ./
+COPY --from=p2w-sol-contracts /usr/bin/solana /usr/bin/solana
+COPY --from=p2w-sol-contracts /usr/src/wormhole/solana/pyth2wormhole/target/debug/pyth2wormhole-client /usr/bin/pyth2wormhole-client
 
 # Solidity contracts for Pyth2Wormhole
 FROM base-with-node as p2w-eth-contracts
@@ -149,10 +153,6 @@ RUN npm ci && npm run build
 FROM p2w-eth-contracts as wormhole-sdk
 WORKDIR $WH_ROOT/sdk/js
 ADD sdk/js .
-
-RUN ls -la
-RUN ls -la src
-RUN pwd
 
 # Copy proto bindings for Wormhole SDK
 COPY --from=nodejs-proto-build $WH_ROOT/sdk/js/src/proto src/proto
