@@ -15,7 +15,6 @@ RUN ./build.sh
 # Cache a build of TypeScript gRPC bindings
 FROM node:16-alpine@sha256:004dbac84fed48e20f9888a23e32fa7cf83c2995e174a78d41d9a9dd1e051a20 AS base-node
 ARG WH_ROOT=/usr/src/wormhole
-ENV WH_ROOT=$WH_ROOT
 # Copy go build artifacts
 COPY --from=base-go $WH_ROOT/tools $WH_ROOT/tools
 COPY buf.* $WH_ROOT/
@@ -37,7 +36,6 @@ ARG WH_BRIDGE="11111111111111111111111111111116"
 ARG WH_ROOT=/usr/src/wormhole
 ENV EMITTER_ADDRESS=$WH_EMITTER
 ENV BRIDGE_ADDRESS=$WH_BRIDGE
-ENV WH_ROOT=$WH_ROOT
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
   apt-get install -y \
