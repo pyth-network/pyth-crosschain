@@ -133,7 +133,7 @@ RUN wasm-pack build --target nodejs -d nodejs -- --features wasm
 
 
 # Final p2w-attest target
-FROM python:3.8-slim
+FROM python:3.8-slim as p2w-attest
 ARG WH_ROOT=/usr/src/wormhole
 WORKDIR $WH_ROOT/third_party/pyth
 
