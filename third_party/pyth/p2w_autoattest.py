@@ -220,7 +220,7 @@ while True:
         ATTESTATIONS["pendingSeqnos"].append(seqno)
 
     else:
-        logging.warn("Warning: Could not get sequence number")
+        logging.warning("Warning: Could not get sequence number")
 
     time.sleep(P2W_ATTEST_INTERVAL)
     nonce += 1
