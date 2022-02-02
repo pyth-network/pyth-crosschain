@@ -96,7 +96,7 @@ RUN pip install --no-cache-dir pyyaml==6.0
 COPY third_party/pyth/p2w_autoattest.py third_party/pyth/pyth_utils.py ./
 COPY --from=base-rust /root/.local/share/solana/install/active_release/bin/solana /usr/bin/solana
 COPY --from=base-rust /usr/src/wormhole/solana/pyth2wormhole/target/debug/pyth2wormhole-client /usr/bin/pyth2wormhole-client
-RUN groupadd -g 10001 pyth && useradd -u 10001 -g 10001 pyth
+RUN groupadd -g 10001 pyth && useradd -m -u 10001 -g 10001 pyth
 RUN chown -R pyth:pyth .
 USER pyth
 
@@ -134,6 +134,6 @@ ARG WH_ROOT=/usr/src/wormhole
 ENV WH_ROOT=${WH_ROOT}
 COPY --from=eth-base ${WH_ROOT} ${WH_ROOT}
 WORKDIR ${WH_ROOT}/third_party/pyth/p2w-relay
-RUN addgroup -S pyth -g 10001 && adduser -S pyth -G pyth -u 10001
+RUN addgroup -S pyth -g 10001 && adduser -m -S pyth -G pyth -u 10001
 RUN chown -R pyth:pyth .
 USER pyth
