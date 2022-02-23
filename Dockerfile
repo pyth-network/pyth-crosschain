@@ -48,9 +48,10 @@ RUN apt-get update && \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 # it's doing some source somewhere. I need to sort it out
-RUN sh -c "$(curl --proto '=https' --tlsv1.2 -sSfL https://sh.rustup.rs)" -- -y --default-toolchain nightly-2021-08-01
+RUN sh -c "$(curl --proto '=https' --tlsv1.2 -sSfL https://sh.rustup.rs)" -- -y && \
+  rustup default nightly && rustup update
 ENV PATH="/root/.cargo/bin:${PATH}"
-RUN sh -c "$(curl -sSfL https://release.solana.com/v1.8.1/install)"
+RUN sh -c "$(curl -sSfL https://release.solana.com/v1.8.16/install)"
 ENV PATH=$PATH:/root/.local/share/solana/install/active_release/bin
 # Solana does a download at the beginning of a *first* build-bpf call. Trigger and layer-cache it explicitly.
 RUN cargo init --lib /tmp/decoy-crate && \
@@ -94,9 +95,10 @@ ARG WH_ROOT=/usr/src/wormhole
 WORKDIR ${WH_ROOT}/third_party/pyth
 RUN pip install --no-cache-dir pyyaml==6.0
 COPY third_party/pyth/p2w_autoattest.py third_party/pyth/pyth_utils.py ./
-COPY --from=base-rust /root/.local/share/solana/install/active_release/bin/solana /usr/bin/solana
-COPY --from=base-rust /usr/src/wormhole/solana/pyth2wormhole/target/debug/pyth2wormhole-client /usr/bin/pyth2wormhole-client
-COPY --from=base-rust ${WH_ROOT}/solana/pyth2wormhole/target/deploy/pyth2wormhole.so ${WH_ROOT}/solana/pyth2wormhole/target/deploy/pyth2wormhole.so
+COPY --from=base-rust /root/.local/share/solana/install/active_release/bin/solana /usr/bin/
+COPY --from=base-rust /root/.local/share/solana/install/active_release/bin/solana-keygen /usr/bin/
+COPY --from=base-rust /usr/src/wormhole/solana/pyth2wormhole/target/debug/pyth2wormhole-client /usr/bin/
+COPY --from=base-rust ${WH_ROOT}/solana/pyth2wormhole/target/deploy/pyth2wormhole.so ${WH_ROOT}/solana/pyth2wormhole/target/deploy/
 RUN groupadd -g 10001 pyth && useradd -m -u 10001 -g 10001 pyth
 RUN chown -R pyth:pyth .
 USER pyth
