@@ -1322,7 +1322,7 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 name = "p2w-sdk"
 version = "0.1.0"
 dependencies = [
- "pyth-client 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pyth-client",
  "serde",
  "solana-program",
 ]
@@ -1433,7 +1433,6 @@ dependencies = [
  "k256",
  "lazy_static",
  "p2w-sdk",
- "pyth-client 0.5.0",
  "schemars",
  "serde",
  "serde_derive",
@@ -1443,20 +1442,6 @@ dependencies = [
  "terraswap",
  "thiserror",
  "wormhole-bridge-terra",
-]
-
-[[package]]
-name = "pyth-client"
-version = "0.5.0"
-dependencies = [
- "borsh",
- "borsh-derive",
- "bytemuck",
- "num-derive",
- "num-traits",
- "serde",
- "solana-program",
- "thiserror",
 ]
 
 [[package]]
