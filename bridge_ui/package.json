@@ -22,7 +22,7 @@
     "@solana/wallet-adapter-sollet": "^0.6.0",
     "@solana/wallet-adapter-solong": "^0.5.2",
     "@solana/wallet-adapter-torus": "^0.6.3",
-    "@solana/wallet-adapter-wallets": "^0.9.0",
+    "@solana/wallet-adapter-wallets": "^0.9.1",
     "@solana/wallet-base": "^0.0.1",
     "@solana/web3.js": "^1.24.1",
     "@terra-money/wallet-provider": "^3.8.0",
