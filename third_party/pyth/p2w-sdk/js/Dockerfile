@@ -15,8 +15,8 @@ RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
 COPY sdk/js .
 
 # Build p2w-sdk in dir preserving directory structure
-WORKDIR /usr/src/third_party/pyth/p2w-sdk
-COPY third_party/pyth/p2w-sdk/package.json third_party/pyth/p2w-sdk/package-lock.json ./
+WORKDIR /usr/src/third_party/pyth/p2w-sdk/js/
+COPY third_party/pyth/p2w-sdk/js/package.json third_party/pyth/p2w-sdk/js/package-lock.json ./
 RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
     npm ci
 COPY third_party/pyth/p2w-sdk .
