@@ -73,6 +73,11 @@ RUN --mount=type=cache,target=/root/.cache \
     cd pyth2wormhole/program \
     && /usr/local/cargo/bin/wasm-pack build --target bundler -d bundler -- --features wasm --locked
 
+RUN --mount=type=cache,target=/root/.cache \
+	--mount=type=cache,target=pyth2wormhole/target \
+    cd pyth2wormhole/program \
+    && /usr/local/cargo/bin/wasm-pack build --target nodejs -d nodejs -- --features wasm --locked
+
 FROM scratch AS export
 
 COPY --from=build /usr/src/bridge/bridge/program/bundler sdk/js/src/solana/core
