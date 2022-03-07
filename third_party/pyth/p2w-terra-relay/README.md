@@ -3,14 +3,12 @@
 To build the spy_guardian docker container:
 
 ```
-$ cd pyth_relay
 $ docker build -f Dockerfile.spy_guardian -t spy_guardian .
 ```
 
 To build the pyth_relay docker container:
 
 ```
-$ cd pyth_relay
 $ docker build -f Dockerfile.pyth_relay -t pyth_relay .
 ```
 
