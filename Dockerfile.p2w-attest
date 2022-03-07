@@ -1,0 +1,80 @@
+#syntax=docker/dockerfile:1.2
+# Target name conventions
+# base-* - targets for caching setup of dependencies
+
+# Base with known good Rust toolchain via rustup
+FROM rust:1.57-slim as base-rust
+ARG WH_EMITTER="11111111111111111111111111111115"
+ARG WH_BRIDGE="11111111111111111111111111111116"
+ARG WH_ROOT=/usr/src/wormhole
+ENV EMITTER_ADDRESS=$WH_EMITTER
+ENV BRIDGE_ADDRESS=$WH_BRIDGE
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+  apt-get install --no-install-recommends -y \
+  build-essential \
+  clang \
+  curl \
+  libssl-dev \
+  libudev-dev \
+  llvm \
+  pkg-config \
+  zlib1g-dev \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+# it's doing some source somewhere. I need to sort it out
+RUN sh -c "$(curl --proto '=https' --tlsv1.2 -sSfL https://sh.rustup.rs)" -- -y && \
+  rustup default nightly && rustup update
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN sh -c "$(curl -sSfL https://release.solana.com/v1.8.16/install)"
+ENV PATH=$PATH:/root/.local/share/solana/install/active_release/bin
+# Solana does a download at the beginning of a *first* build-bpf call. Trigger and layer-cache it explicitly.
+RUN cargo init --lib /tmp/decoy-crate && \
+  cd /tmp/decoy-crate && cargo build-bpf && \
+  rm -rf /tmp/decoy-crate
+RUN cargo install wasm-pack --version 0.9.1
+# Base with tools for Rust WebAssembly builds
+COPY solana ${WH_ROOT}/solana
+WORKDIR ${WH_ROOT}/solana/pyth2wormhole/program
+RUN cargo build-bpf
+WORKDIR ${WH_ROOT}/solana/pyth2wormhole
+RUN cargo build -p pyth2wormhole-client
+ENV PATH "$PATH:${WH_ROOT}/solana/pyth2wormhole/target/debug/"
+WORKDIR ${WH_ROOT}/solana
+COPY solana .
+# Build wasm binaries for wormhole-sdk
+WORKDIR ${WH_ROOT}/solana/bridge/program
+RUN wasm-pack build --target bundler -d bundler -- --features wasm && \
+  wasm-pack build --target nodejs -d nodejs -- --features wasm
+# Build wasm binaries for Wormhole migration
+WORKDIR ${WH_ROOT}/solana/migration
+RUN wasm-pack build --target bundler -d bundler -- --features wasm && \
+  wasm-pack build --target nodejs -d nodejs -- --features wasm
+# Build wasm binaries for NFT bridge
+WORKDIR ${WH_ROOT}/solana/modules/nft_bridge/program
+RUN wasm-pack build --target bundler -d bundler -- --features wasm && \
+  wasm-pack build --target nodejs -d nodejs -- --features wasm
+# Build wasm binaries for token bridge
+WORKDIR ${WH_ROOT}/solana/modules/token_bridge/program
+RUN wasm-pack build --target bundler -d bundler -- --features wasm && \
+  wasm-pack build --target nodejs -d nodejs -- --features wasm
+# Build wasm-binaries for p2w-sdk
+WORKDIR ${WH_ROOT}/solana/pyth2wormhole/program
+RUN wasm-pack build --target bundler -d bundler -- --features wasm && \
+  wasm-pack build --target nodejs -d nodejs -- --features wasm
+
+# Final p2w-attest target
+# can't use alpine here due to missing shared libraries
+FROM python:3.8-slim as p2w-attest
+ARG WH_ROOT=/usr/src/wormhole
+WORKDIR ${WH_ROOT}/third_party/pyth
+RUN pip install --no-cache-dir pyyaml==6.0
+COPY third_party/pyth/p2w_autoattest.py third_party/pyth/pyth_utils.py ./
+COPY --from=base-rust /root/.local/share/solana/install/active_release/bin/solana /usr/bin/
+COPY --from=base-rust /root/.local/share/solana/install/active_release/bin/solana-keygen /usr/bin/
+COPY --from=base-rust /usr/src/wormhole/solana/pyth2wormhole/target/debug/pyth2wormhole-client /usr/bin/
+COPY --from=base-rust ${WH_ROOT}/solana/pyth2wormhole/target/deploy/pyth2wormhole.so ${WH_ROOT}/solana/pyth2wormhole/target/deploy/
+RUN groupadd -g 10001 pyth && useradd -m -u 10001 -g 10001 pyth
+RUN chown -R pyth:pyth .
+USER pyth
+
