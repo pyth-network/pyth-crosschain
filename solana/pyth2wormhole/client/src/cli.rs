@@ -49,6 +49,13 @@ pub enum Action {
     Attest {
         #[clap(short = 'f', long = "--config", about = "Attestation YAML config")]
         attestation_cfg: PathBuf,
+        #[clap(
+            short = 'n',
+            long = "--retries",
+            about = "How many times to retry each batch on failure",
+            default_value = "3" 
+        )]
+        n_retries: usize,
     },
     #[clap(about = "Retrieve a pyth2wormhole program's current settings")]
     GetConfig,
