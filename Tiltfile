@@ -112,11 +112,9 @@ local_resource(
 
 local_resource(
     name = "wasm-gen",
-    deps = ["solana"],
-    dir = "solana",
-    cmd = "tilt docker build -- -f Dockerfile.wasm -o type=local,dest=.. .",
+    cmd = "tilt docker build -- -f Dockerfile.wasm -o type=local,dest=. .",
     env = {"DOCKER_BUILDKIT": "1"},
-    labels = ["solana"],
+    labels = ["wasm"],
     allow_parallel=True,
     trigger_mode = trigger_mode,
 )
