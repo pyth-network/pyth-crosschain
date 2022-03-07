@@ -50,9 +50,9 @@ pub enum Action {
         #[clap(short = 'f', long = "--config", about = "Attestation YAML config")]
         attestation_cfg: PathBuf,
     },
-    #[clap(
-        about = "Update an existing pyth2wormhole program's settings (currently set owner only)"
-    )]
+    #[clap(about = "Retrieve a pyth2wormhole program's current settings")]
+    GetConfig,
+    #[clap(about = "Update an existing pyth2wormhole program's settings")]
     SetConfig {
         /// Current owner keypair path
         #[clap(long = "owner", default_value = "~/.config/solana/id.json")]

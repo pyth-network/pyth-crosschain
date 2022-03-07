@@ -19,6 +19,7 @@ use solitaire::{
 };
 
 #[derive(Default, BorshDeserialize, BorshSerialize)]
+#[cfg_attr(feature = "client", derive(Debug))]
 pub struct Pyth2WormholeConfig {
     ///  Authority owning this contract
     pub owner: Pubkey,

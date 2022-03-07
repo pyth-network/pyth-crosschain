@@ -8,7 +8,6 @@ use serde::{
     Serializer,
 };
 use solana_program::pubkey::Pubkey;
-use solitaire::ErrBox;
 
 /// Pyth2wormhole config specific to attestation requests
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -55,6 +54,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use solitaire::ErrBox;
 
     #[test]
     fn test_sanity() -> Result<(), ErrBox> {
