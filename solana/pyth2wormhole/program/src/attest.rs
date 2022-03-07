@@ -21,6 +21,7 @@ use solana_program::{
 use p2w_sdk::{
     BatchPriceAttestation,
     PriceAttestation,
+    P2WEmitter,
 };
 
 use bridge::{
@@ -48,8 +49,6 @@ use solitaire::{
     Sysvar,
     ToInstruction,
 };
-
-pub type P2WEmitter<'b> = Derive<Info<'b>, "p2w-emitter">;
 
 /// Important: must be manually maintained until native Solitaire
 /// variable len vector support.
