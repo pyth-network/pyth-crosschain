@@ -14,6 +14,7 @@ ENV EMITTER_ADDRESS="11111111111111111111111111111115"
 ENV BRIDGE_ADDRESS="Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 
 COPY solana solana
+COPY third_party third_party
 
 # wasm-bindgen 0.2.74 generates JavaScript bindings for SystemInstruction exported from solana-program 1.9.4.
 # The generated JavaScript references a non-existent function (wasm.__wbg_systeminstruction_free) that leads
@@ -65,13 +66,13 @@ RUN --mount=type=cache,target=/root/.cache \
 
 # Compile pyth2wormhole
 RUN --mount=type=cache,target=/root/.cache \
-	--mount=type=cache,target=solana/pyth2wormhole/target \
-    cd solana/pyth2wormhole/program \
+	--mount=type=cache,target=third_party/pyth/p2w-sdk/rust/target \
+    cd third_party/pyth/p2w-sdk/rust \third_party/pyth/py \
     && /usr/local/cargo/bin/wasm-pack build --target bundler -d bundler -- --features wasm --locked
 
 RUN --mount=type=cache,target=/root/.cache \
-	--mount=type=cache,target=solana/pyth2wormhole/target \
-    cd solana/pyth2wormhole/program \
+	--mount=type=cache,target=third_party/pyth/p2w-sdk/rust/target \
+    cd third_party/pyth/p2w-sdk/rust \
     && /usr/local/cargo/bin/wasm-pack build --target nodejs -d nodejs -- --features wasm --locked
 
 FROM scratch AS export
@@ -81,7 +82,7 @@ COPY --from=build /usr/src/bridge/solana/modules/token_bridge/program/bundler sd
 COPY --from=build /usr/src/bridge/solana/migration/bundler sdk/js/src/solana/migration
 COPY --from=build /usr/src/bridge/solana/modules/nft_bridge/program/bundler sdk/js/src/solana/nft
 
-COPY --from=build /usr/src/bridge/solana/pyth2wormhole/program/bundler third_party/pyth/p2w-sdk/js/src/solana/p2w-core
+COPY --from=build /usr/src/bridge/third_party/pyth/p2w-sdk/rust/bundler third_party/pyth/p2w-sdk/js/src/solana/p2w-core
 COPY --from=build /usr/src/bridge/solana/bridge/program/bundler third_party/pyth/p2w-sdk/js/src/solana/wormhole-core
 
 COPY --from=build /usr/src/bridge/solana/bridge/program/nodejs sdk/js/src/solana/core-node
