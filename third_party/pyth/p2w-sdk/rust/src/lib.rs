@@ -18,6 +18,12 @@ use pyth_client::{
     PriceStatus,
     PriceType,
 };
+
+use solitaire::{
+    Derive,
+    Info,
+};
+
 use solana_program::clock::UnixTimestamp;
 use solana_program::pubkey::Pubkey;
 
@@ -35,6 +41,9 @@ pub const P2W_MAGIC: &'static [u8] = b"P2WH";
 pub const P2W_FORMAT_VERSION: u16 = 2;
 
 pub const PUBKEY_LEN: usize = 32;
+
+/// Emmitter Address to wormhole is a PDA with seed p2w-emmiter from attestation contract
+pub type P2WEmitter<'b> = Derive<Info<'b>, "p2w-emitter">;
 
 /// Decides the format of following bytes
 #[repr(u8)]
