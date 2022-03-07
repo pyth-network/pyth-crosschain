@@ -11,7 +11,7 @@ import sys
 import threading
 import time
 
-PYTH_TEST_SYMBOL_COUNT = int(os.environ.get("PYTH_TEST_SYMBOL_COUNT", "9"))
+PYTH_TEST_SYMBOL_COUNT = int(os.environ.get("PYTH_TEST_SYMBOL_COUNT", "3"))
 
 class PythAccEndpoint(BaseHTTPRequestHandler):
     """

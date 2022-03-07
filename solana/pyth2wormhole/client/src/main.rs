@@ -71,17 +71,15 @@ use bridge::{
 };
 
 use pyth2wormhole::{
-    attest::{
-        P2WEmitter,
-        P2W_MAX_BATCH_SIZE,
-    },
+    attest::P2W_MAX_BATCH_SIZE,
     config::P2WConfigAccount,
     initialize::InitializeAccounts,
     set_config::SetConfigAccounts,
-    types::PriceAttestation,
     AttestData,
     Pyth2WormholeConfig,
 };
+
+use p2w_sdk::P2WEmitter;
 
 use crate::attestation_cfg::AttestationConfig;
 

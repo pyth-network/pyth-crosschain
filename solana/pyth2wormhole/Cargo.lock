@@ -1601,6 +1601,7 @@ dependencies = [
  "pyth-client 0.5.0",
  "serde",
  "solana-program",
+ "solitaire",
 ]
 
 [[package]]
@@ -1796,6 +1797,7 @@ dependencies = [
  "clap 3.0.0-beta.2",
  "env_logger 0.8.4",
  "log",
+ "p2w-sdk",
  "pyth2wormhole",
  "serde",
  "serde_yaml",
