@@ -67,7 +67,7 @@ RUN --mount=type=cache,target=/root/.cache \
 # Compile pyth2wormhole
 RUN --mount=type=cache,target=/root/.cache \
 	--mount=type=cache,target=third_party/pyth/p2w-sdk/rust/target \
-    cd third_party/pyth/p2w-sdk/rust \third_party/pyth/py \
+    cd third_party/pyth/p2w-sdk/rust \
     && /usr/local/cargo/bin/wasm-pack build --target bundler -d bundler -- --features wasm --locked
 
 RUN --mount=type=cache,target=/root/.cache \
