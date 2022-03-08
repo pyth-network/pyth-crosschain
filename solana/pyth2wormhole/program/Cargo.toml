@@ -22,6 +22,7 @@ rocksalt = { path = "../../solitaire/rocksalt" }
 solana-program = "=1.9.4"
 borsh = "=0.9.1"
 pyth-client = "0.2.2"
+p2w-sdk = { path = "../../../third_party/pyth/p2w-sdk/rust" }
 serde = { version = "1", optional = true}
 serde_derive = { version = "1", optional = true}
 serde_json = { version = "1", optional = true}

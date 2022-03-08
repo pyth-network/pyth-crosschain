@@ -207,8 +207,8 @@ docker_build(
 
 docker_build(
     ref = "solana-contract",
-    context = "solana",
-    dockerfile = "solana/Dockerfile",
+    context = ".",
+    dockerfile = "Dockerfile.solana",
 )
 
 # solana local devnet
