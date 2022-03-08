@@ -10,11 +10,12 @@ description = "Pyth to Wormhole SDK"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-wasm = ["wasm-bindgen"]
+solana = ["solitaire"]
+wasm = ["wasm-bindgen", "solana"]
 
 [dependencies]
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 pyth-client = { version = "0.5.0", features = ["no-entrypoint"] }
 wasm-bindgen = { version = "0.2.74", features = ["serde-serialize"], optional = true}
-solitaire = { path = "../../../../solana/solitaire/program" }
+solitaire = { path = "../../../../solana/solitaire/program", optional = true }
 solana-program = "1.8.16"
