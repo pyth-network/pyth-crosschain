@@ -20,8 +20,8 @@ use solana_program::{
 
 use p2w_sdk::{
     BatchPriceAttestation,
-    PriceAttestation,
     P2WEmitter,
+    PriceAttestation,
 };
 
 use bridge::{
@@ -209,7 +209,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
             &*price.try_borrow_data()?,
         )
         .map_err(|e| {
-            trace!(e.to_string());
+            trace!(&e.to_string());
             ProgramError::InvalidAccountData
         })?;
 
@@ -254,7 +254,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         PostMessageData {
             nonce: 0, // Superseded by the sequence number
             payload: batch_attestation.serialize().map_err(|e| {
-                trace!(e.to_string());
+                trace!(&e.to_string());
                 ProgramError::InvalidAccountData
             })?,
             consistency_level: data.consistency_level,

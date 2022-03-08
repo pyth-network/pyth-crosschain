@@ -52,10 +52,9 @@ use pyth2wormhole::{
     Pyth2WormholeConfig,
 };
 
-pub use attestation_cfg::{
-    AttestationConfig,
-    P2WSymbol,
-};
+pub use attestation_cfg::P2WSymbol;
+
+pub use attestation_cfg::AttestationConfig;
 
 pub fn gen_init_tx(
     payer: Keypair,
