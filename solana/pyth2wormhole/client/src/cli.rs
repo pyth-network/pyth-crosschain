@@ -49,10 +49,17 @@ pub enum Action {
     Attest {
         #[clap(short = 'f', long = "--config", about = "Attestation YAML config")]
         attestation_cfg: PathBuf,
+        #[clap(
+            short = 'n',
+            long = "--retries",
+            about = "How many times to retry each batch on failure",
+            default_value = "3"
+        )]
+        n_retries: usize,
     },
-    #[clap(
-        about = "Update an existing pyth2wormhole program's settings (currently set owner only)"
-    )]
+    #[clap(about = "Retrieve a pyth2wormhole program's current settings")]
+    GetConfig,
+    #[clap(about = "Update an existing pyth2wormhole program's settings")]
     SetConfig {
         /// Current owner keypair path
         #[clap(long = "owner", default_value = "~/.config/solana/id.json")]

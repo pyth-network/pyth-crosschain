@@ -5,6 +5,10 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+name = "pyth2wormhole_client"
+src = "src/lib.rs"
+
 [features]
 default = ["pyth2wormhole/client", "wormhole-bridge-solana/client"]
 
