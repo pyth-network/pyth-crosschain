@@ -19,6 +19,7 @@ use pyth_client::{
     PriceType,
 };
 
+#[cfg(feature = "solana")]
 use solitaire::{
     Derive,
     Info,
@@ -43,6 +44,7 @@ pub const P2W_FORMAT_VERSION: u16 = 2;
 pub const PUBKEY_LEN: usize = 32;
 
 /// Emmitter Address to wormhole is a PDA with seed p2w-emmiter from attestation contract
+#[cfg(feature = "solana")]
 pub type P2WEmitter<'b> = Derive<Info<'b>, "p2w-emitter">;
 
 /// Decides the format of following bytes

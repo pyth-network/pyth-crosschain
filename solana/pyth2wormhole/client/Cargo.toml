@@ -19,7 +19,7 @@ env_logger = "0.8.4"
 log = "0.4.14"
 wormhole-bridge-solana = {path = "../../bridge/program"}
 pyth2wormhole = {path = "../program"}
-p2w-sdk = { path = "../../../third_party/pyth/p2w-sdk/rust" }
+p2w-sdk = { path = "../../../third_party/pyth/p2w-sdk/rust", features=["solana"] }
 serde = "1"
 serde_yaml = "0.8"
 shellexpand = "2.1.0"
