@@ -475,8 +475,8 @@ docker_build(
 
 docker_build(
     ref = "terra-contracts",
-    context = "./terra",
-    dockerfile = "./terra/Dockerfile",
+    context = ".",
+    dockerfile = "Dockerfile.terra",
 )
 
 k8s_yaml_with_ns("devnet/terra-devnet.yaml")
