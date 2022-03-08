@@ -28,7 +28,7 @@ use cli::{
     Cli,
 };
 
-use pyth2wormhole::attest::P2WEmitter;
+use p2w_sdk::P2WEmitter;
 
 use pyth2wormhole_client::*;
 
@@ -74,8 +74,8 @@ fn main() -> Result<(), ErrBox> {
                 payer,
                 p2w_addr,
                 read_keypair_file(&*shellexpand::tilde(&owner))?,
-		new_owner_addr,
-		new_wh_prog,
+                new_owner_addr,
+                new_wh_prog,
                 new_pyth_owner_addr,
                 latest_blockhash,
             )?;
@@ -146,7 +146,6 @@ fn handle_attest(
     // If no batches are scheduled for retry, the vector eventually drains
     while !batches.is_empty() {
         for (batch_no, symbols, attempt_no) in batches {
-            let sym_msg_keypair = Keypair::new();
             info!(
                 "Batch {}/{} contents: {:?}",
                 batch_no,

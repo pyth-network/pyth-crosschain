@@ -53,7 +53,7 @@ pub enum Action {
             short = 'n',
             long = "--retries",
             about = "How many times to retry each batch on failure",
-            default_value = "3" 
+            default_value = "3"
         )]
         n_retries: usize,
     },

@@ -8,7 +8,7 @@ var P2W_INSTANCE: any = undefined;
 export async function p2w_core(): Promise<any> {
     // Only import once if P2W wasm is needed
     if (!P2W_INSTANCE) {
-	P2W_INSTANCE = await import("./solana/p2w-core/pyth2wormhole");
+	P2W_INSTANCE = await import("./solana/p2w-core/p2w_sdk");
     }
     return P2W_INSTANCE;
 }
