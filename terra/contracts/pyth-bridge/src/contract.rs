@@ -32,8 +32,13 @@ use crate::{
         ConfigInfo,
         UpgradeContract,
     },
-    types::PriceAttestation,
 };
+
+use p2w_sdk::{
+    BatchPriceAttestation,
+    PriceAttestation,
+};
+
 use wormhole::{
     byte_utils::get_string_from_32,
     error::ContractError,
@@ -111,15 +116,15 @@ fn submit_vaa(
             return ContractError::VaaAlreadyExecuted.std_err();
         }
         vaa_archive_add(deps.storage, vaa.hash.as_slice())?;
-        
+
         return handle_governance_payload(deps, env, &data);
     }
 
     // IMPORTANT: VAA replay-protection is not implemented in this code-path
     // Sequences are used to prevent replay or price rollbacks
 
-    let message =
-        PriceAttestation::deserialize(&data[..]).map_err(|_| ContractError::InvalidVAA.std())?;
+    let message = BatchPriceAttestation::deserialize(&data[..])
+        .map_err(|_| ContractError::InvalidVAA.std())?;
     if vaa.emitter_address != state.pyth_emitter || vaa.emitter_chain != state.pyth_emitter_chain {
         return ContractError::InvalidVAA.std_err();
     }
@@ -134,11 +139,19 @@ fn submit_vaa(
     sequence(deps.storage).save(&vaa.sequence)?;
 
     // Update price
-    price_info(deps.storage).save(&message.price_id.to_bytes()[..], &data)?;
+    for price_attestation in message.price_attestations.iter() {
+        price_info(deps.storage).save(
+            &price_attestation.price_id.to_bytes()[..],
+            &price_attestation.serialize(),
+        )?;
+    }
 
     Ok(Response::new()
         .add_attribute("action", "price_update")
-        .add_attribute("price_feed", message.price_id.to_string()))
+        .add_attribute(
+            "num_price_feeds",
+            format!("{}", message.price_attestations.len()),
+        ))
 }
 
 fn handle_governance_payload(deps: DepsMut, env: Env, data: &Vec<u8>) -> StdResult<Response> {
