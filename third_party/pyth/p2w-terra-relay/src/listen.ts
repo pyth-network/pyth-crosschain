@@ -149,41 +149,38 @@ async function processVaa(vaaBytes: string) {
   // logger.debug("listen:processVaa: parsedVAA: %o", parsedVAA);
 
   if (isPyth(parsedVAA.payload)) {
-    if (parsedVAA.payload.length < helpers.PYTH_PRICE_ATTESTATION_LENGTH) {
+    if (parsedVAA.payload.length < helpers.PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH) {
       logger.error(
         "dropping vaa because the payload length is wrong: length: " +
           parsedVAA.payload.length +
-          ", expected length:",
-        helpers.PYTH_PRICE_ATTESTATION_LENGTH + ", vaa: %o",
+          ", expected length to be at least:",
+        helpers.PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH + ", vaa: %o",
         parsedVAA
       );
       return;
     }
 
-    let pa = helpers.parsePythPriceAttestation(Buffer.from(parsedVAA.payload));
-    // logger.debug("listen:processVaa: price attestation: %o", pa);
+    let batchAttestation = helpers.parsePythBatchPriceAttestation(Buffer.from(parsedVAA.payload));
+    // logger.debug("listen:processVaa: batch price attestation: %o", batchAttestation);
 
-    let key = pa.priceId;
-    let lastSeqNum = seqMap.get(key);
-    if (lastSeqNum) {
-      if (lastSeqNum >= parsedVAA.sequence) {
-        logger.debug(
-          "ignoring duplicate: emitter: [" +
-            parsedVAA.emitter_chain +
-            ":" +
-            uint8ArrayToHex(parsedVAA.emitter_address) +
-            "], productId: [" +
-            pa.productId +
-            "], priceId: [" +
-            pa.priceId +
-            "], seqNum: " +
-            parsedVAA.sequence
-        );
-        return;
-      }
+    let isAnyPriceNew = batchAttestation.priceAttestations.some(priceAttestation => {
+      const key = priceAttestation.priceId;
+      let lastSeqNum = seqMap.get(key);
+      return !lastSeqNum || parsedVAA.sequence > lastSeqNum;
+    })
+
+    if (!isAnyPriceNew) {
+      logger.debug("For all prices there exists an update with newer sequence number. batch price attestation: %o", batchAttestation);
     }
 
-    seqMap.set(key, parsedVAA.sequence);
+    for (let priceAttestation of batchAttestation.priceAttestations) {
+      const key = priceAttestation.priceId;
+
+      let lastSeqNum = seqMap.get(key);
+      if (lastSeqNum && lastSeqNum < parsedVAA.sequence) {
+        seqMap.set(key, parsedVAA.sequence);
+      }
+    }
 
     logger.info(
       "received: emitter: [" +
@@ -192,34 +189,14 @@ async function processVaa(vaaBytes: string) {
         uint8ArrayToHex(parsedVAA.emitter_address) +
         "], seqNum: " +
         parsedVAA.sequence +
-        ", productId: [" +
-        pa.productId +
-        "], priceId: [" +
-        pa.priceId +
-        "], priceType: " +
-        pa.priceType +
-        ", price: " +
-        pa.price +
-        ", exponent: " +
-        pa.exponent +
-        ", confidenceInterval: " +
-        pa.confidenceInterval +
-        ", timeStamp: " +
-        pa.timestamp +
-        ", computedPrice: " +
-        helpers.computePrice(pa.price, pa.exponent) +
-        " +/-" +
-        helpers.computePrice(pa.confidenceInterval, pa.exponent)
-      // +
-      // ", payload: [" +
-      // uint8ArrayToHex(parsedVAA.payload) +
-      // "]"
+        ", Batch Summary: " +
+        helpers.getBatchSummary(batchAttestation)
     );
 
     metrics.incIncoming();
     if (!listenOnly) {
       logger.debug("posting to worker");
-      await postEvent(vaaBytes, pa, parsedVAA.sequence, receiveTime);
+      await postEvent(vaaBytes, batchAttestation, parsedVAA.sequence, receiveTime);
     }
   } else {
     logger.debug(

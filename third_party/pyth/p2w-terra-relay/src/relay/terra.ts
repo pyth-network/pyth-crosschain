@@ -152,18 +152,12 @@ export async function relayTerra(
 
 export async function queryTerra(
   connectionData: TerraConnectionData,
-  productIdStr: string,
   priceIdStr: string
 ) {
-  const encodedProductId = fromUint8Array(hexToUint8Array(productIdStr));
   const encodedPriceId = fromUint8Array(hexToUint8Array(priceIdStr));
 
   logger.info(
-    "Querying terra for price info for productId [" +
-      productIdStr +
-      "], encoded as [" +
-      encodedProductId +
-      "], priceId [" +
+    "Querying terra for price info for priceId [" +
       priceIdStr +
       "], encoded as [" +
       encodedPriceId +
@@ -182,7 +176,6 @@ export async function queryTerra(
     connectionData.contractAddress,
     {
       price_info: {
-        product_id: encodedProductId,
         price_id: encodedPriceId,
       },
     }

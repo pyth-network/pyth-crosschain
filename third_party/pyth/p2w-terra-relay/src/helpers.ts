@@ -1,3 +1,5 @@
+import assert = require("assert");
+
 ////////////////////////////////// Start of Logger Stuff //////////////////////////////////////
 
 export let logger: any;
@@ -58,7 +60,8 @@ export function initLogger() {
 ////////////////////////////////// Start of PYTH Stuff //////////////////////////////////////
 
 /*
-  // Pyth PriceAttestation messages are defined in wormhole/ethereum/contracts/pyth/PythStructs.sol
+  // Pyth messages are defined in whitepapers/0007_pyth_over_wormhole.md
+
   // The Pyth smart contract stuff is in terra/contracts/pyth-bridge
 
   struct Ema {
@@ -108,9 +111,35 @@ export function initLogger() {
 141 u8        corpAct
 142 u64       timestamp
 
+In version 2 prices are sent in batch with the following structure:
+
+  struct BatchPriceAttestation {
+      uint32 magic; // constant "P2WH"
+      uint16 version;
+
+      // PayloadID uint8 = 2
+      uint8 payloadId;
+
+      // number of attestations 
+      uint16 nAttestations;
+
+      // attestation_size = 150
+      uint16 attestationSize;
+      
+      priceAttestations: PriceAttestation[]
+  }
+
+0   uint32    magic // constant "P2WH"
+4   u16       version
+6   u8        payloadId // 2
+7   u16       n_attestations
+9   u16       attestation_size // 150
+11  ..        price_attestation [n_attestations]
+
 */
 
 export const PYTH_PRICE_ATTESTATION_LENGTH: number = 150;
+export const PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH: number = 11 + PYTH_PRICE_ATTESTATION_LENGTH;
 
 export type PythEma = {
   value: BigInt;
@@ -134,6 +163,15 @@ export type PythPriceAttestation = {
   corpAct: number;
   timestamp: BigInt;
 };
+
+export type PythBatchPriceAttestation = {
+  magic: number;
+  version: number; 
+  payloadId: number;
+  nAttestations: number;
+  attestationSize: number;
+  priceAttestations: PythPriceAttestation[];
+}
 
 export const PYTH_MAGIC: number = 0x50325748;
 
@@ -162,6 +200,47 @@ export function parsePythPriceAttestation(arr: Buffer): PythPriceAttestation {
     corpAct: arr.readUInt32BE(141),
     timestamp: arr.readBigUInt64BE(142),
   };
+}
+
+export function parsePythBatchPriceAttestation(arr: Buffer): PythBatchPriceAttestation {
+  const magic = arr.readUInt32BE(0);
+  const version = arr.readUInt16BE(4);
+  const payloadId = arr[6];
+  const nAttestations = arr.readUInt16BE(7);
+  const attestationSize = arr.readUInt16BE(9);
+
+  assert.equal(attestationSize, PYTH_PRICE_ATTESTATION_LENGTH);
+
+  let priceAttestations: PythPriceAttestation[] = []
+
+  let offset = 11;
+  for (let i = 0; i < nAttestations; i += 1) {
+    priceAttestations.push(parsePythPriceAttestation(arr.subarray(offset, offset + PYTH_PRICE_ATTESTATION_LENGTH)));
+    offset += PYTH_PRICE_ATTESTATION_LENGTH;
+  }
+
+  return {
+      magic,
+      version,
+      payloadId,
+      nAttestations,
+      attestationSize,
+      priceAttestations
+    }
+}
+
+export function getBatchSummary(batchAttestation: PythBatchPriceAttestation): string {
+  let abstractRepresentation = {
+    "num_attestations": batchAttestation.nAttestations,
+    "prices": batchAttestation.priceAttestations.map((priceAttestion) => {
+        return {
+          "price_id": priceAttestion.priceId,
+          "price": computePrice(priceAttestion.price, priceAttestion.exponent),
+          "conf": computePrice(priceAttestion.confidenceInterval, priceAttestion.exponent)
+        }
+    })
+  }
+  return JSON.stringify(abstractRepresentation)
 }
 
 ////////////////////////////////// Start of Other Helpful Stuff //////////////////////////////////////

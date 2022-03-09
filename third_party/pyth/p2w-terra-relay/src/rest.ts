@@ -31,10 +31,9 @@ export async function run() {
     });
 
     app.get(
-      "/queryterra/:product_id/:price_id",
+      "/queryterra/:price_id",
       async (req: Request, res: Response) => {
         let result = await getPriceData(
-          req.params.product_id,
           req.params.price_id
         );
         res.json(result);
@@ -42,7 +41,7 @@ export async function run() {
     );
 
     app.get("/", (req: Request, res: Response) =>
-      res.json(["/status", "/queryterra/<product_id>/<price_id>"])
+      res.json(["/status", "/queryterra/<price_id>"])
     );
   })();
 }

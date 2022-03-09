@@ -44,13 +44,12 @@ export async function relay(
 }
 
 export async function query(
-  productIdStr: string,
   priceIdStr: string
 ): Promise<any> {
   let result: any;
   try {
     let terraData = connectToTerra();
-    result = await queryTerra(terraData, productIdStr, priceIdStr);
+    result = await queryTerra(terraData, priceIdStr);
   } catch (e) {
     logger.error("query failed: %o", e);
     result = "Error: unhandled exception";

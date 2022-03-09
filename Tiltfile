@@ -258,7 +258,7 @@ if pyth:
     k8s_resource(
         "pyth", 
         resource_deps = ["solana-devnet"], 
-        labels = ["solana"],
+        labels = ["pyth"],
         trigger_mode = trigger_mode,
     )
 
@@ -283,7 +283,7 @@ if pyth:
         "p2w-attest",
         resource_deps = ["solana-devnet", "pyth", "guardian"],
         port_forwards = [],
-        labels = ["solana"],
+        labels = ["pyth"],
         trigger_mode = trigger_mode,
     )
 
@@ -292,7 +292,25 @@ if pyth:
         "p2w-relay",
         resource_deps = ["solana-devnet", "eth-devnet", "pyth", "guardian", "p2w-attest", "proto-gen-web", "wasm-gen"],
         port_forwards = [],
+        labels = ["pyth"]
     )
+
+    # Terra relay
+    docker_build(
+        ref = "p2w-terra-relay",
+        context = "third_party/pyth/p2w-terra-relay",
+        dockerfile = "third_party/pyth/p2w-terra-relay/Dockerfile.pyth_relay",
+    )
+    k8s_yaml_with_ns("devnet/p2w-terra-relay.yaml")
+    k8s_resource(
+        "p2w-terra-relay",
+        resource_deps = ["pyth", "p2w-attest", "spy", "terra-terrad"],
+        port_forwards = [
+            port_forward(4200, name = "Rest API (Status + Query) [:4200]", host = webHost),
+            port_forward(8081, name = "Prometheus [:8081]", host = webHost)],
+        labels = ["pyth"]
+    )
+
 
 k8s_yaml_with_ns("devnet/eth-devnet.yaml")
 
