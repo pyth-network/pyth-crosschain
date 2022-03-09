@@ -149,7 +149,7 @@ fn submit_vaa(
     Ok(Response::new()
         .add_attribute("action", "price_update")
         .add_attribute(
-            "no_price_feeds",
+            "num_price_feeds",
             format!("{}", message.price_attestations.len()),
         ))
 }
