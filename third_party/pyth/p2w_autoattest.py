@@ -36,6 +36,8 @@ WORMHOLE_ADDRESS = os.environ.get(
     "WORMHOLE_ADDRESS", "Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 )
 
+P2W_EXIT_ON_ERROR = bool(os.environ.get("P2W_EXIT_ON_ERROR", None))
+
 ATTESTATIONS = {
     "pendingSeqnos": [],
 }
@@ -242,6 +244,6 @@ while True:
             P2W_ATTESTATION_CFG,
         ],
         capture_output=True,
-        die=False,
+        die=P2W_EXIT_ON_ERROR,
     )
     time.sleep(P2W_ATTEST_INTERVAL)
