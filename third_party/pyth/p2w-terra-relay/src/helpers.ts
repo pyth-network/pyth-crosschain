@@ -139,8 +139,8 @@ In version 2 prices are sent in batch with the following structure:
 
 */
 
-export const PYTH_PRICE_ATTESTATION_V2_LENGTH: number = 150;
-export const PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH: number = 11 + PYTH_PRICE_ATTESTATION_V2_LENGTH;
+export const PYTH_PRICE_ATTESTATION_MIN_LENGTH: number = 150;
+export const PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH: number = 11 + PYTH_PRICE_ATTESTATION_MIN_LENGTH;
 
 export type PythEma = {
   value: BigInt;
@@ -238,9 +238,9 @@ export function parsePythBatchPriceAttestation(arr: Buffer): PythBatchPriceAttes
   const nAttestations = arr.readUInt16BE(7);
   const attestationSize = arr.readUInt16BE(9);
 
-  if (attestationSize <= PYTH_PRICE_ATTESTATION_V2_LENGTH) {
+  if (attestationSize < PYTH_PRICE_ATTESTATION_MIN_LENGTH) {
     throw new Error(
-      `Cannot parse payload. Size of attestation ${attestationSize} is less than V2 length ${PYTH_PRICE_ATTESTATION_V2_LENGTH}`
+      `Cannot parse payload. Size of attestation ${attestationSize} is less than V2 length ${PYTH_PRICE_ATTESTATION_MIN_LENGTH}`
     );
   }
 
