@@ -61,7 +61,7 @@ def run_or_die(args, die=True, **kwargs):
 
 def pyth_run_or_die(subcommand, args=[], debug=False, **kwargs):
     """
-    Pyth boilerplate in front of run_or_die. Used for updating price.
+    Pyth boilerplate in front of run_or_die.
     """
     return run_or_die(
         [PYTH, subcommand] + args + (["-d"] if debug else [])
@@ -75,7 +75,7 @@ def pyth_run_or_die(subcommand, args=[], debug=False, **kwargs):
 
 def pyth_admin_run_or_die(subcommand, args=[], debug=False, **kwargs):
     """
-    Pyth_admin boilerplate in front of run_or_die. Used for initializations of accounts.
+    Pyth_admin boilerplate in front of run_or_die.
     """
     return run_or_die(
         [PYTH_ADMIN, subcommand] + args + (["-d"] if debug else [])
