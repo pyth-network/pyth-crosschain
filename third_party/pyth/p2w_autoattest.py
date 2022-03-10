@@ -36,7 +36,7 @@ WORMHOLE_ADDRESS = os.environ.get(
     "WORMHOLE_ADDRESS", "Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 )
 
-P2W_EXIT_ON_ERROR = os.environ.get("P2W_EXIT_ON_ERROR", True)
+P2W_EXIT_ON_ERROR = os.environ.get("P2W_EXIT_ON_ERROR", "False").lower() == "true"
 
 ATTESTATIONS = {
     "pendingSeqnos": [],
