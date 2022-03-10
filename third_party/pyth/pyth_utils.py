@@ -65,11 +65,10 @@ def pyth_run_or_die(subcommand, args=[], debug=False, **kwargs):
     """
     return run_or_die(
         [PYTH, subcommand] + args + (["-d"] if debug else [])
-        # Note: not all pyth subcommands accept -n
         + ["-k", PYTH_KEY_STORE]
         + ["-r", SOL_RPC_HOST]
         + ["-c", "finalized"]
-        + ["-x"],
+        + ["-x"], # These means to bypass transaction proxy server. In this setup it's not running and it's required to bypass
         **kwargs,
     )
 
@@ -80,8 +79,7 @@ def pyth_admin_run_or_die(subcommand, args=[], debug=False, **kwargs):
     """
     return run_or_die(
         [PYTH_ADMIN, subcommand] + args + (["-d"] if debug else [])
-        # Note: not all pyth subcommands accept -n
-        + ["-n"]
+        + ["-n"] # These commands require y/n confirmation. This bypasses that
         + ["-k", PYTH_KEY_STORE]
         + ["-r", SOL_RPC_HOST]
         + ["-c", "finalized"],
