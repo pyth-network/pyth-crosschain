@@ -5,6 +5,7 @@ import sys
 
 # Settings specific to local devnet Pyth instance
 PYTH = os.environ.get("PYTH", "./pyth")
+PYTH_ADMIN = os.environ.get("PYTH_ADMIN", "./pyth_admin")
 PYTH_KEY_STORE = os.environ.get("PYTH_KEY_STORE", "/home/pyth/.pythd")
 PYTH_PROGRAM_KEYPAIR = os.environ.get(
     "PYTH_PROGRAM_KEYPAIR", f"{PYTH_KEY_STORE}/publish_key_pair.json"
@@ -58,14 +59,29 @@ def run_or_die(args, die=True, **kwargs):
     return ret
 
 
-def pyth_run_or_die(subcommand, args=[], debug=False, confirm=True, **kwargs):
+def pyth_run_or_die(subcommand, args=[], debug=False, **kwargs):
     """
-    Pyth boilerplate in front of run_or_die
+    Pyth boilerplate in front of run_or_die. Used for updating price.
     """
     return run_or_die(
         [PYTH, subcommand] + args + (["-d"] if debug else [])
         # Note: not all pyth subcommands accept -n
-        + ([] if confirm else ["-n"])
+        + ["-k", PYTH_KEY_STORE]
+        + ["-r", SOL_RPC_HOST]
+        + ["-c", "finalized"]
+        + ["-x"],
+        **kwargs,
+    )
+
+
+def pyth_admin_run_or_die(subcommand, args=[], debug=False, **kwargs):
+    """
+    Pyth_admin boilerplate in front of run_or_die. Used for initializations of accounts.
+    """
+    return run_or_die(
+        [PYTH_ADMIN, subcommand] + args + (["-d"] if debug else [])
+        # Note: not all pyth subcommands accept -n
+        + ["-n"]
         + ["-k", PYTH_KEY_STORE]
         + ["-r", SOL_RPC_HOST]
         + ["-c", "finalized"],
