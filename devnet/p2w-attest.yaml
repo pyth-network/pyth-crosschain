@@ -40,6 +40,8 @@ spec:
           env:
           - name: P2W_INITIALIZE_SOL_CONTRACT
             value: "1"
+          - name: P2W_EXIT_ON_ERROR
+            value: True
           tty: true
           readinessProbe:
             tcpSocket:
