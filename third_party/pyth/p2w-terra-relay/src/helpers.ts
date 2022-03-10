@@ -111,8 +111,6 @@ export function initLogger() {
 141 u8        corpAct
 142 u64       timestamp
 
-Note: Price Attestation can append new fields in the future.
-
 In version 2 prices are sent in batch with the following structure:
 
   struct BatchPriceAttestation {
@@ -125,7 +123,8 @@ In version 2 prices are sent in batch with the following structure:
       // number of attestations 
       uint16 nAttestations;
 
-      // attestation_size = 150
+      // attestation_size >= 150
+      // Price Attestation can append new fields in the future. This is why attestationSize is provided in the payload.
       uint16 attestationSize;
       
       priceAttestations: PriceAttestation[]
@@ -135,7 +134,7 @@ In version 2 prices are sent in batch with the following structure:
 4   u16       version
 6   u8        payloadId // 2
 7   u16       n_attestations
-9   u16       attestation_size // >= 150, price attestation might append new fields and the library should tolerate it.
+9   u16       attestation_size // >= 150
 11  ..        price_attestation (Size: attestation_size x [n_attestations])
 
 */
