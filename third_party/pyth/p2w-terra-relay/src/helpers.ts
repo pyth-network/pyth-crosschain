@@ -111,6 +111,8 @@ export function initLogger() {
 141 u8        corpAct
 142 u64       timestamp
 
+Note: Price Attestation can append new fields in the future.
+
 In version 2 prices are sent in batch with the following structure:
 
   struct BatchPriceAttestation {
@@ -133,13 +135,13 @@ In version 2 prices are sent in batch with the following structure:
 4   u16       version
 6   u8        payloadId // 2
 7   u16       n_attestations
-9   u16       attestation_size // 150
-11  ..        price_attestation [n_attestations]
+9   u16       attestation_size // >= 150, price attestation might append new fields and the library should tolerate it.
+11  ..        price_attestation (Size: attestation_size x [n_attestations])
 
 */
 
-export const PYTH_PRICE_ATTESTATION_LENGTH: number = 150;
-export const PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH: number = 11 + PYTH_PRICE_ATTESTATION_LENGTH;
+export const PYTH_PRICE_ATTESTATION_V2_LENGTH: number = 150;
+export const PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH: number = 11 + PYTH_PRICE_ATTESTATION_V2_LENGTH;
 
 export type PythEma = {
   value: BigInt;
@@ -175,6 +177,21 @@ export type PythBatchPriceAttestation = {
 
 export const PYTH_MAGIC: number = 0x50325748;
 
+function isPyth(payload: Buffer): boolean {
+  if (payload.length < 4) return false;
+  if (
+    payload[0] === 80 &&
+    payload[1] === 50 &&
+    payload[2] === 87 &&
+    payload[3] === 72
+  ) {
+    // The numbers correspond to "P2WH"
+    return true;
+  }
+
+  return false;
+}
+
 export function parsePythPriceAttestation(arr: Buffer): PythPriceAttestation {
   return {
     magic: arr.readUInt32BE(0),
@@ -203,20 +220,37 @@ export function parsePythPriceAttestation(arr: Buffer): PythPriceAttestation {
 }
 
 export function parsePythBatchPriceAttestation(arr: Buffer): PythBatchPriceAttestation {
+  if (!isPyth(arr)) {
+    throw new Error("Cannot parse payload. Header mismatch: This is not a Pyth 2 Wormhole message");
+  }
+
+  if (arr.length < PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH) {
+    throw new Error(
+        "Cannot parse payload. Payload length is wrong: length: " +
+        arr.length +
+        ", expected length to be at least:" +
+        PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH
+    );
+  }
+
   const magic = arr.readUInt32BE(0);
   const version = arr.readUInt16BE(4);
   const payloadId = arr[6];
   const nAttestations = arr.readUInt16BE(7);
   const attestationSize = arr.readUInt16BE(9);
 
-  assert.equal(attestationSize, PYTH_PRICE_ATTESTATION_LENGTH);
+  if (attestationSize <= PYTH_PRICE_ATTESTATION_V2_LENGTH) {
+    throw new Error(
+      `Cannot parse payload. Size of attestation ${attestationSize} is less than V2 length ${PYTH_PRICE_ATTESTATION_V2_LENGTH}`
+    );
+  }
 
   let priceAttestations: PythPriceAttestation[] = []
 
   let offset = 11;
   for (let i = 0; i < nAttestations; i += 1) {
-    priceAttestations.push(parsePythPriceAttestation(arr.subarray(offset, offset + PYTH_PRICE_ATTESTATION_LENGTH)));
-    offset += PYTH_PRICE_ATTESTATION_LENGTH;
+    priceAttestations.push(parsePythPriceAttestation(arr.subarray(offset, offset + attestationSize)));
+    offset += attestationSize;
   }
 
   return {
@@ -229,14 +263,29 @@ export function parsePythBatchPriceAttestation(arr: Buffer): PythBatchPriceAttes
     }
 }
 
+// Returns a hash of all priceIds within the batch, it can be used to identify whether there is a
+// new batch with exact same symbols (and ignore the old one)
+export function getBatchAttestationHashKey(batchAttestation: PythBatchPriceAttestation): number {
+  let hash: number = 0;
+
+  for (let priceAttestation of batchAttestation.priceAttestations) {
+    for (let i = 0; i < priceAttestation.priceId.length; i++) {
+      hash = hash * 709 + priceAttestation.priceId.charCodeAt(i);
+      hash = hash & hash; //Bitwise & converts number to 32-bit integer and then result is converted back to number
+    }
+  }
+
+  return hash;
+}
+
 export function getBatchSummary(batchAttestation: PythBatchPriceAttestation): string {
   let abstractRepresentation = {
     "num_attestations": batchAttestation.nAttestations,
-    "prices": batchAttestation.priceAttestations.map((priceAttestion) => {
+    "prices": batchAttestation.priceAttestations.map((priceAttestation) => {
         return {
-          "price_id": priceAttestion.priceId,
-          "price": computePrice(priceAttestion.price, priceAttestion.exponent),
-          "conf": computePrice(priceAttestion.confidenceInterval, priceAttestion.exponent)
+          "price_id": priceAttestation.priceId,
+          "price": computePrice(priceAttestation.price, priceAttestation.exponent),
+          "conf": computePrice(priceAttestation.confidenceInterval, priceAttestation.exponent)
         }
     })
   }

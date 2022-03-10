@@ -20,10 +20,10 @@ type PendingPayload = {
   seqNum: number;
 };
 
-let pendingMap = new Map<string, PendingPayload>(); // The key to this is price_id. Note that Map maintains insertion order, not key order.
+let pendingMap = new Map<number, PendingPayload>(); // The key to this is hash of price_ids in the batch attestation. Note that Map maintains insertion order, not key order.
 
 type ProductData = {
-  key: string;
+  key: number;
   lastTimePublished: Date;
   numTimesPublished: number;
   lastBatchAttestation: helpers.PythBatchPriceAttestation;
@@ -35,7 +35,7 @@ type CurrentEntry = {
   currObj: ProductData;
 };
 
-let productMap = new Map<string, ProductData>(); // The key to this is price_id
+let productMap = new Map<number, ProductData>(); // The key to this is hash of price_ids in the batch attestation.
 
 let connectionData: main.ConnectionData;
 let metrics: PromHelper;
@@ -234,7 +234,7 @@ async function getPendingEventsAlreadyLocked(
     const first = pendingMap.entries().next();
     logger.debug("processing event with key [" + first.value[0] + "]");
     const pendingValue: PendingPayload = first.value[1];
-    let pendingKey = pendingValue.seqNum.toString();
+    let pendingKey = helpers.getBatchAttestationHashKey(pendingValue.batchAttestation);
     let currObj = productMap.get(pendingKey);
     if (currObj) {
       currObj.lastBatchAttestation = pendingValue.batchAttestation;
@@ -507,8 +507,7 @@ export async function postEvent(
     receiveTime: receiveTime,
     seqNum: sequence,
   };
-  let pendingKey = sequence.toString();
-  // pendingKey = pendingKey + ":" + sequence;
+  let pendingKey = helpers.getBatchAttestationHashKey(batchAttestation);
   await mutex.runExclusive(() => {
     logger.debug("posting event with key [" + pendingKey + "]");
     pendingMap.set(pendingKey, event);
