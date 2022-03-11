@@ -123,11 +123,15 @@ In version 2 prices are sent in batch with the following structure:
       // number of attestations 
       uint16 nAttestations;
 
+      // Length of each price attestation in bytes
+      //
+      // This field is provided for forwards compatibility. Fields in future may be added in
+      // an append-only way allowing for parsers to continue to work by parsing only up to
+      // the fields they know, leaving unread input in the buffer. Code may still need to work
+      // with the full size of the value however, such as when iterating over lists of attestations,
+      // for these use-cases the structure size is included as a field.
+      //
       // attestation_size >= 150
-      // This field is provided for forward-compatibility. It means that the code will still works if some
-      // fields are appended to PriceAttestation because it passed chunk of attestation_size to price attestation parser
-      // but only reads the first 150 fields that are defined here.
-      // This enable us to add fields without breaking existing code and eventually migrate them in an easy way.
       uint16 attestationSize;
       
       priceAttestations: PriceAttestation[]
