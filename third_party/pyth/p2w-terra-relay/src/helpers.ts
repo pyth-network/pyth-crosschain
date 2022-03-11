@@ -124,7 +124,10 @@ In version 2 prices are sent in batch with the following structure:
       uint16 nAttestations;
 
       // attestation_size >= 150
-      // Price Attestation can append new fields in the future. This is why attestationSize is provided in the payload.
+      // This field is provided for forward-compatibility. It means that the code will still works if some
+      // fields are appended to PriceAttestation because it passed chunk of attestation_size to price attestation parser
+      // but only reads the first 150 fields that are defined here.
+      // This enable us to add fields without breaking existing code and eventually migrate them in an easy way.
       uint16 attestationSize;
       
       priceAttestations: PriceAttestation[]
@@ -264,17 +267,11 @@ export function parsePythBatchPriceAttestation(arr: Buffer): PythBatchPriceAttes
 
 // Returns a hash of all priceIds within the batch, it can be used to identify whether there is a
 // new batch with exact same symbols (and ignore the old one)
-export function getBatchAttestationHashKey(batchAttestation: PythBatchPriceAttestation): number {
-  let hash: number = 0;
+export function getBatchAttestationHashKey(batchAttestation: PythBatchPriceAttestation): string {
+  const priceIds: string[] = batchAttestation.priceAttestations.map((priceAttestation) => priceAttestation.priceId);
+  priceIds.sort();
 
-  for (let priceAttestation of batchAttestation.priceAttestations) {
-    for (let i = 0; i < priceAttestation.priceId.length; i++) {
-      hash = hash * 709 + priceAttestation.priceId.charCodeAt(i);
-      hash = hash & hash; //Bitwise & converts number to 32-bit integer and then result is converted back to number
-    }
-  }
-
-  return hash;
+  return priceIds.join('#');
 }
 
 export function getBatchSummary(batchAttestation: PythBatchPriceAttestation): string {

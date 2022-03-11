@@ -158,8 +158,6 @@ async function processVaa(vaaBytes: string) {
     return;
   }
 
-  // logger.debug("listen:processVaa: batch price attestation: %o", batchAttestation);
-
   let isAnyPriceNew = batchAttestation.priceAttestations.some(priceAttestation => {
     const key = priceAttestation.priceId;
     let lastSeqNum = seqMap.get(key);

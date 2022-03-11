@@ -20,10 +20,10 @@ type PendingPayload = {
   seqNum: number;
 };
 
-let pendingMap = new Map<number, PendingPayload>(); // The key to this is hash of price_ids in the batch attestation. Note that Map maintains insertion order, not key order.
+let pendingMap = new Map<string, PendingPayload>(); // The key to this is hash of price_ids in the batch attestation. Note that Map maintains insertion order, not key order.
 
 type ProductData = {
-  key: number;
+  key: string;
   lastTimePublished: Date;
   numTimesPublished: number;
   lastBatchAttestation: helpers.PythBatchPriceAttestation;
@@ -35,7 +35,7 @@ type CurrentEntry = {
   currObj: ProductData;
 };
 
-let productMap = new Map<number, ProductData>(); // The key to this is hash of price_ids in the batch attestation.
+let productMap = new Map<string, ProductData>(); // The key to this is hash of price_ids in the batch attestation.
 
 let connectionData: main.ConnectionData;
 let metrics: PromHelper;
