@@ -40,11 +40,12 @@ def publisher_random_update(price_pubkey):
     """
     Update the specified price with random values
     """
-    value = random.randrange(1024)
-    confidence = 5
+    value = random.randrange(1000, 2000)
+    confidence = random.randrange(1, 10)
     pyth_run_or_die("upd_price_val", args=[
         price_pubkey, str(value), str(confidence), "trading"
     ])
+
     print(f"Price {price_pubkey} value updated to {str(value)}!")
 
 
@@ -61,25 +62,23 @@ def accounts_endpoint():
 def add_symbol(num: int):
     symbol_name = f"Test symbol {num}"
     # Add a product
-    prod_pubkey = pyth_run_or_die(
+    prod_pubkey = pyth_admin_run_or_die(
         "add_product", capture_output=True).stdout.strip()
 
     print(f"{symbol_name}: Added product {prod_pubkey}")
 
     # Add a price
-    price_pubkey = pyth_run_or_die(
+    price_pubkey = pyth_admin_run_or_die(
         "add_price",
         args=[prod_pubkey, "price"],
-        confirm=False,
         capture_output=True
     ).stdout.strip()
 
     print(f"{symbol_name}: Added price {price_pubkey}")
 
     # Become a publisher for the new price
-    pyth_run_or_die(
+    pyth_admin_run_or_die(
         "add_publisher", args=[publisher_pubkey, price_pubkey],
-        confirm=False,
         debug=True,
         capture_output=True)
     print(f"{symbol_name}: Added publisher {publisher_pubkey}")
@@ -108,7 +107,7 @@ sol_run_or_die("airdrop", [
 ])
 
 # Create a mapping
-pyth_run_or_die("init_mapping")
+pyth_admin_run_or_die("init_mapping")
 
 print(f"Creating {PYTH_TEST_SYMBOL_COUNT} test Pyth symbols")
 
