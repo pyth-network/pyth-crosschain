@@ -1433,6 +1433,7 @@ dependencies = [
  "k256",
  "lazy_static",
  "p2w-sdk",
+ "pyth-sdk 0.1.0 (git+https://github.com/pyth-network/pyth-sdk-rs)",
  "schemars",
  "serde",
  "serde_derive",
@@ -1457,6 +1458,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyth-sdk"
+version = "0.1.0"
+source = "git+https://github.com/pyth-network/pyth-sdk-rs#adf60e2e008fd34f7ab6fa25f2f766fb6f144bac"
+dependencies = [
+ "borsh",
+ "borsh-derive",
+ "schemars",
+ "serde",
+]
+
+[[package]]
 name = "pyth-sdk-solana"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1467,7 +1479,7 @@ dependencies = [
  "bytemuck",
  "num-derive",
  "num-traits",
- "pyth-sdk",
+ "pyth-sdk 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "solana-program",
  "thiserror",

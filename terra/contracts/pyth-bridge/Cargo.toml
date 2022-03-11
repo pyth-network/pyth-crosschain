@@ -33,6 +33,7 @@ lazy_static = "1.4.0"
 bigint = "4"
 p2w-sdk = { path = "../../../third_party/pyth/p2w-sdk/rust" }
 solana-program = "=1.8.16"
+pyth-sdk = { git = "https://github.com/pyth-network/pyth-sdk-rs" } # We should use the published version
 
 [dev-dependencies]
 cosmwasm-vm = { version = "0.16.0", default-features = false }

@@ -1,4 +1,8 @@
-use cosmwasm_std::Binary;
+use cosmwasm_std::{
+    Binary,
+    Timestamp
+};
+use pyth_sdk::Price;
 use schemars::JsonSchema;
 use serde::{
     Deserialize,
@@ -28,4 +32,11 @@ pub struct MigrateMsg {}
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     PriceInfo { price_id: Binary },
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct PriceInfoResponse {
+    pub price:        Price,
+    pub arrival_time: Timestamp,
 }

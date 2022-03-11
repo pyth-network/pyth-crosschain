@@ -1,3 +1,6 @@
+use std::time::Duration;
+
+use pyth_sdk::Price;
 use schemars::JsonSchema;
 use serde::{
     Deserialize,
@@ -7,7 +10,9 @@ use serde::{
 use cosmwasm_std::{
     StdResult,
     Storage,
+    Timestamp,
 };
+
 use cosmwasm_storage::{
     bucket,
     bucket_read,
@@ -27,12 +32,24 @@ pub static CONFIG_KEY: &[u8] = b"config";
 pub static PRICE_INFO_KEY: &[u8] = b"price_info";
 pub static SEQUENCE_KEY: &[u8] = b"sequence";
 
+/// Maximum acceptable time period before price is considered to be stale.
+pub const VALID_TIME_PERIOD: Duration = Duration::from_secs(60);
+
 // Guardian set information
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigInfo {
     pub wormhole_contract: HumanAddr,
     pub pyth_emitter: Vec<u8>,
     pub pyth_emitter_chain: u16,
+}
+
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct PriceInfo {
+    pub price:                Price,
+    pub arrival_time:         Timestamp,
+    pub attestation_time:     Timestamp,
 }
 
 pub fn config(storage: &mut dyn Storage) -> Singleton<ConfigInfo> {
@@ -43,19 +60,11 @@ pub fn config_read(storage: &dyn Storage) -> ReadonlySingleton<ConfigInfo> {
     singleton_read(storage, CONFIG_KEY)
 }
 
-pub fn sequence(storage: &mut dyn Storage) -> Singleton<u64> {
-    singleton(storage, SEQUENCE_KEY)
-}
-
-pub fn sequence_read(storage: &dyn Storage) -> ReadonlySingleton<u64> {
-    singleton_read(storage, SEQUENCE_KEY)
-}
-
-pub fn price_info(storage: &mut dyn Storage) -> Bucket<Vec<u8>> {
+pub fn price_info(storage: &mut dyn Storage) -> Bucket<PriceInfo> {
     bucket(storage, PRICE_INFO_KEY)
 }
 
-pub fn price_info_read(storage: &dyn Storage) -> ReadonlyBucket<Vec<u8>> {
+pub fn price_info_read(storage: &dyn Storage) -> ReadonlyBucket<PriceInfo> {
     bucket_read(storage, PRICE_INFO_KEY)
 }
 

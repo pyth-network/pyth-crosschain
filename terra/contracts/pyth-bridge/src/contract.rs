@@ -11,6 +11,12 @@ use cosmwasm_std::{
     StdError,
     StdResult,
     WasmQuery,
+    Timestamp,
+};
+
+use pyth_sdk::{
+    Price,
+    PriceStatus
 };
 
 use crate::{
@@ -19,21 +25,19 @@ use crate::{
         InstantiateMsg,
         MigrateMsg,
         QueryMsg,
+        PriceInfoResponse,
     },
     state::{
         config,
         config_read,
         price_info,
         price_info_read,
-        sequence,
-        sequence_read,
         ConfigInfo,
     },
 };
 
 use p2w_sdk::{
     BatchPriceAttestation,
-    PriceAttestation,
 };
 
 use wormhole::{
@@ -64,7 +68,6 @@ pub fn instantiate(
         pyth_emitter_chain: msg.pyth_emitter_chain,
     };
     config(deps.storage).save(&state)?;
-    sequence(deps.storage).save(&0)?;
 
     Ok(Response::default())
 }
@@ -107,22 +110,60 @@ fn submit_vaa(
     if vaa.emitter_address != state.pyth_emitter || vaa.emitter_chain != state.pyth_emitter_chain {
         return ContractError::InvalidVAA.std_err();
     }
+    
+    let mut new_attestations_cnt: u8 = 0;
 
-    // Check sequence
-    let last_sequence = sequence_read(deps.storage).load()?;
-    if vaa.sequence <= last_sequence && last_sequence != 0 {
-        return Err(StdError::generic_err(
-            "price sequences need to be monotonically increasing",
-        ));
-    }
-    sequence(deps.storage).save(&vaa.sequence)?;
-
-    // Update price
+    // Update prices
     for price_attestation in message.price_attestations.iter() {
-        price_info(deps.storage).save(
+        let price = Price {
+            product_id: price_attestation.product_id.to_bytes(),
+            // status: price_attestation.status, We should remove it soon when we get pyth-sdk released
+            status: pyth_sdk::PriceStatus::Trading,
+            price: price_attestation.price,
+            conf: price_attestation.confidence_interval,
+            ema_price: price_attestation.twap.val,
+            ema_conf: price_attestation.twac.val as u64,
+            expo: price_attestation.expo,
+            num_publishers: 0, // This data is currently unavailable
+            max_num_publishers: 0 // This data is currently unavailable
+        };
+
+        let attestation_time = Timestamp::from_seconds(price_attestation.timestamp as u64);
+
+        if env.block.time.seconds() - attestation_time.seconds() > VALID_TIME_PERIOD.as_secs() {
+            return Err(StdError::generic_err(
+                format!("Attestation is very old. Current timestamp: {} Attestation timestamp: {}",
+                        env.block.time.seconds(), attestation_time.seconds())
+                    )
+            );
+        }
+
+        price_info(deps.storage).update(
             &price_attestation.price_id.to_bytes()[..],
-            &price_attestation.serialize(),
-        )?;
+        |maybe_price_info| -> StdResult<PriceInfo> {
+            match maybe_price_info {
+                Some(price_info) => {
+                    if price_info.attestation_time < attestation_time {
+                        new_attestations_cnt += 1;
+                        Ok(PriceInfo {
+                            arrival_time: env.block.time,
+                            price,
+                            attestation_time
+                        })
+                    } else {
+                        Ok(price_info)
+                    }
+                },
+                None => {
+                    new_attestations_cnt += 1;
+                    Ok(PriceInfo {
+                        arrival_time: env.block.time,
+                        price,
+                        attestation_time
+                    })
+                }
+            }
+        })?;
     }
 
     Ok(Response::new()
@@ -130,24 +171,38 @@ fn submit_vaa(
         .add_attribute(
             "num_price_feeds",
             format!("{}", message.price_attestations.len()),
-        ))
+        )
+        .add_attribute(
+            "num_new_price_feeds",
+            format!("{}", new_attestations_cnt),
+        )
+    )
 }
 
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::PriceInfo { price_id } => {
-            to_binary(&query_price_info(deps, price_id.as_slice())?)
+            to_binary(&query_price_info(deps, env, price_id.as_slice())?)
         }
     }
 }
 
-pub fn query_price_info(deps: Deps, address: &[u8]) -> StdResult<PriceAttestation> {
+pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<PriceInfoResponse> {
     match price_info_read(deps.storage).load(address) {
-        Ok(data) => PriceAttestation::deserialize(&data[..]).map_err(|_| {
-            StdError::parse_err("PriceAttestation", "failed to decode price attestation")
-        }),
+        Ok(mut terra_price_info) => {
+            if env.block.time.seconds() - terra_price_info.arrival_time.seconds() > VALID_TIME_PERIOD.as_secs() {
+                terra_price_info.price.status = PriceStatus::Unknown;
+            }
+
+            Ok(
+                PriceInfoResponse {
+                    arrival_time: terra_price_info.arrival_time,
+                    price: terra_price_info.price,
+                }
+            )
+        },
         Err(_) => ContractError::AssetNotFound.std_err(),
     }
 }
