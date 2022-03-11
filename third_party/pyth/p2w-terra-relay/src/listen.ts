@@ -147,101 +147,51 @@ async function processVaa(vaaBytes: string) {
   // );
 
   // logger.debug("listen:processVaa: parsedVAA: %o", parsedVAA);
+  
+  let batchAttestation;
 
-  if (isPyth(parsedVAA.payload)) {
-    if (parsedVAA.payload.length < helpers.PYTH_PRICE_ATTESTATION_LENGTH) {
-      logger.error(
-        "dropping vaa because the payload length is wrong: length: " +
-          parsedVAA.payload.length +
-          ", expected length:",
-        helpers.PYTH_PRICE_ATTESTATION_LENGTH + ", vaa: %o",
-        parsedVAA
-      );
-      return;
-    }
+  try {
+    batchAttestation = helpers.parsePythBatchPriceAttestation(Buffer.from(parsedVAA.payload));
+  } catch (e: any) {
+    logger.error(e, e.stack);
+    logger.error("Parsing failed. Dropping vaa: %o", parsedVAA)
+    return;
+  }
 
-    let pa = helpers.parsePythPriceAttestation(Buffer.from(parsedVAA.payload));
-    // logger.debug("listen:processVaa: price attestation: %o", pa);
-
-    let key = pa.priceId;
+  let isAnyPriceNew = batchAttestation.priceAttestations.some(priceAttestation => {
+    const key = priceAttestation.priceId;
     let lastSeqNum = seqMap.get(key);
-    if (lastSeqNum) {
-      if (lastSeqNum >= parsedVAA.sequence) {
-        logger.debug(
-          "ignoring duplicate: emitter: [" +
-            parsedVAA.emitter_chain +
-            ":" +
-            uint8ArrayToHex(parsedVAA.emitter_address) +
-            "], productId: [" +
-            pa.productId +
-            "], priceId: [" +
-            pa.priceId +
-            "], seqNum: " +
-            parsedVAA.sequence
-        );
-        return;
-      }
-    }
+    return lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence;
+  })
 
-    seqMap.set(key, parsedVAA.sequence);
-
-    logger.info(
-      "received: emitter: [" +
-        parsedVAA.emitter_chain +
-        ":" +
-        uint8ArrayToHex(parsedVAA.emitter_address) +
-        "], seqNum: " +
-        parsedVAA.sequence +
-        ", productId: [" +
-        pa.productId +
-        "], priceId: [" +
-        pa.priceId +
-        "], priceType: " +
-        pa.priceType +
-        ", price: " +
-        pa.price +
-        ", exponent: " +
-        pa.exponent +
-        ", confidenceInterval: " +
-        pa.confidenceInterval +
-        ", timeStamp: " +
-        pa.timestamp +
-        ", computedPrice: " +
-        helpers.computePrice(pa.price, pa.exponent) +
-        " +/-" +
-        helpers.computePrice(pa.confidenceInterval, pa.exponent)
-      // +
-      // ", payload: [" +
-      // uint8ArrayToHex(parsedVAA.payload) +
-      // "]"
-    );
-
-    metrics.incIncoming();
-    if (!listenOnly) {
-      logger.debug("posting to worker");
-      await postEvent(vaaBytes, pa, parsedVAA.sequence, receiveTime);
-    }
-  } else {
-    logger.debug(
-      "dropping non-pyth vaa, payload type " +
-        parsedVAA.payload[0] +
-        ", vaa: %o",
-      parsedVAA
-    );
-  }
-}
-
-function isPyth(payload: Buffer): boolean {
-  if (payload.length < 4) return false;
-  if (
-    payload[0] === 80 &&
-    payload[1] === 50 &&
-    payload[2] === 87 &&
-    payload[3] === 72
-  ) {
-    // P2WH
-    return true;
+  if (!isAnyPriceNew) {
+    logger.debug("For all prices there exists an update with newer sequence number. batch price attestation: %o", batchAttestation);
+    return;
   }
 
-  return false;
+  for (let priceAttestation of batchAttestation.priceAttestations) {
+    const key = priceAttestation.priceId;
+
+    let lastSeqNum = seqMap.get(key);
+    if (lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence) {
+      seqMap.set(key, parsedVAA.sequence);
+    }
+  }
+
+  logger.info(
+    "received: emitter: [" +
+      parsedVAA.emitter_chain +
+      ":" +
+      uint8ArrayToHex(parsedVAA.emitter_address) +
+      "], seqNum: " +
+      parsedVAA.sequence +
+      ", Batch Summary: " +
+      helpers.getBatchSummary(batchAttestation)
+  );
+
+  metrics.incIncoming();
+  if (!listenOnly) {
+    logger.debug("posting to worker");
+    await postEvent(vaaBytes, batchAttestation, parsedVAA.sequence, receiveTime);
+  }
 }

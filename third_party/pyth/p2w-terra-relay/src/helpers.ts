@@ -1,3 +1,5 @@
+import assert = require("assert");
+
 ////////////////////////////////// Start of Logger Stuff //////////////////////////////////////
 
 export let logger: any;
@@ -58,7 +60,8 @@ export function initLogger() {
 ////////////////////////////////// Start of PYTH Stuff //////////////////////////////////////
 
 /*
-  // Pyth PriceAttestation messages are defined in wormhole/ethereum/contracts/pyth/PythStructs.sol
+  // Pyth messages are defined in whitepapers/0007_pyth_over_wormhole.md
+
   // The Pyth smart contract stuff is in terra/contracts/pyth-bridge
 
   struct Ema {
@@ -108,9 +111,43 @@ export function initLogger() {
 141 u8        corpAct
 142 u64       timestamp
 
+In version 2 prices are sent in batch with the following structure:
+
+  struct BatchPriceAttestation {
+      uint32 magic; // constant "P2WH"
+      uint16 version;
+
+      // PayloadID uint8 = 2
+      uint8 payloadId;
+
+      // number of attestations 
+      uint16 nAttestations;
+
+      // Length of each price attestation in bytes
+      //
+      // This field is provided for forwards compatibility. Fields in future may be added in
+      // an append-only way allowing for parsers to continue to work by parsing only up to
+      // the fields they know, leaving unread input in the buffer. Code may still need to work
+      // with the full size of the value however, such as when iterating over lists of attestations,
+      // for these use-cases the structure size is included as a field.
+      //
+      // attestation_size >= 150
+      uint16 attestationSize;
+      
+      priceAttestations: PriceAttestation[]
+  }
+
+0   uint32    magic // constant "P2WH"
+4   u16       version
+6   u8        payloadId // 2
+7   u16       n_attestations
+9   u16       attestation_size // >= 150
+11  ..        price_attestation (Size: attestation_size x [n_attestations])
+
 */
 
-export const PYTH_PRICE_ATTESTATION_LENGTH: number = 150;
+export const PYTH_PRICE_ATTESTATION_MIN_LENGTH: number = 150;
+export const PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH: number = 11 + PYTH_PRICE_ATTESTATION_MIN_LENGTH;
 
 export type PythEma = {
   value: BigInt;
@@ -135,7 +172,31 @@ export type PythPriceAttestation = {
   timestamp: BigInt;
 };
 
+export type PythBatchPriceAttestation = {
+  magic: number;
+  version: number; 
+  payloadId: number;
+  nAttestations: number;
+  attestationSize: number;
+  priceAttestations: PythPriceAttestation[];
+}
+
 export const PYTH_MAGIC: number = 0x50325748;
+
+function isPyth(payload: Buffer): boolean {
+  if (payload.length < 4) return false;
+  if (
+    payload[0] === 80 &&
+    payload[1] === 50 &&
+    payload[2] === 87 &&
+    payload[3] === 72
+  ) {
+    // The numbers correspond to "P2WH"
+    return true;
+  }
+
+  return false;
+}
 
 export function parsePythPriceAttestation(arr: Buffer): PythPriceAttestation {
   return {
@@ -162,6 +223,73 @@ export function parsePythPriceAttestation(arr: Buffer): PythPriceAttestation {
     corpAct: arr.readUInt32BE(141),
     timestamp: arr.readBigUInt64BE(142),
   };
+}
+
+export function parsePythBatchPriceAttestation(arr: Buffer): PythBatchPriceAttestation {
+  if (!isPyth(arr)) {
+    throw new Error("Cannot parse payload. Header mismatch: This is not a Pyth 2 Wormhole message");
+  }
+
+  if (arr.length < PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH) {
+    throw new Error(
+        "Cannot parse payload. Payload length is wrong: length: " +
+        arr.length +
+        ", expected length to be at least:" +
+        PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH
+    );
+  }
+
+  const magic = arr.readUInt32BE(0);
+  const version = arr.readUInt16BE(4);
+  const payloadId = arr[6];
+  const nAttestations = arr.readUInt16BE(7);
+  const attestationSize = arr.readUInt16BE(9);
+
+  if (attestationSize < PYTH_PRICE_ATTESTATION_MIN_LENGTH) {
+    throw new Error(
+      `Cannot parse payload. Size of attestation ${attestationSize} is less than V2 length ${PYTH_PRICE_ATTESTATION_MIN_LENGTH}`
+    );
+  }
+
+  let priceAttestations: PythPriceAttestation[] = []
+
+  let offset = 11;
+  for (let i = 0; i < nAttestations; i += 1) {
+    priceAttestations.push(parsePythPriceAttestation(arr.subarray(offset, offset + attestationSize)));
+    offset += attestationSize;
+  }
+
+  return {
+      magic,
+      version,
+      payloadId,
+      nAttestations,
+      attestationSize,
+      priceAttestations
+    }
+}
+
+// Returns a hash of all priceIds within the batch, it can be used to identify whether there is a
+// new batch with exact same symbols (and ignore the old one)
+export function getBatchAttestationHashKey(batchAttestation: PythBatchPriceAttestation): string {
+  const priceIds: string[] = batchAttestation.priceAttestations.map((priceAttestation) => priceAttestation.priceId);
+  priceIds.sort();
+
+  return priceIds.join('#');
+}
+
+export function getBatchSummary(batchAttestation: PythBatchPriceAttestation): string {
+  let abstractRepresentation = {
+    "num_attestations": batchAttestation.nAttestations,
+    "prices": batchAttestation.priceAttestations.map((priceAttestation) => {
+        return {
+          "price_id": priceAttestation.priceId,
+          "price": computePrice(priceAttestation.price, priceAttestation.exponent),
+          "conf": computePrice(priceAttestation.confidenceInterval, priceAttestation.exponent)
+        }
+    })
+  }
+  return JSON.stringify(abstractRepresentation)
 }
 
 ////////////////////////////////// Start of Other Helpful Stuff //////////////////////////////////////
