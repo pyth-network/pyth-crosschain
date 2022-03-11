@@ -1,30 +1,29 @@
 FROM docker.io/golang:1.17.0-alpine as builder
+RUN apk add --no-cache gcc linux-headers alpine-sdk
 
-RUN apk add --no-cache git gcc linux-headers alpine-sdk bash
+ARG APP_DIR=/app
+COPY . $APP_DIR
 
-WORKDIR /app
-RUN git clone https://github.com/certusone/wormhole.git
-
-WORKDIR /app/wormhole/tools
+WORKDIR $APP_DIR/tools
 RUN CGO_ENABLED=0 ./build.sh
 
-WORKDIR /app/wormhole
+WORKDIR $APP_DIR
 RUN tools/bin/buf lint && tools/bin/buf generate
 
-WORKDIR /app/wormhole/node/tools
+WORKDIR $APP_DIR/node/tools
 RUN go build -mod=readonly -o /dlv github.com/go-delve/delve/cmd/dlv
 
-WORKDIR /app/wormhole/node
+WORKDIR $APP_DIR/node
 RUN go build -race -gcflags="all=-N -l" -mod=readonly -o /guardiand github.com/certusone/wormhole/node
 
 FROM docker.io/golang:1.17.0-alpine
+ARG APP_DIR=/app
 
-WORKDIR /app
-COPY --from=builder /guardiand /app/guardiand
+WORKDIR $APP_DIR
+COPY --from=builder /guardiand /guardiand
 
-ENV PATH="/app:${PATH}"
-RUN addgroup -S pyth -g 10001 && adduser -S pyth -G pyth -u 10001
+RUN addgroup -S pyth -g 10001 && adduser -h $APP_DIR -S pyth -G pyth -u 10001
 RUN chown -R pyth:pyth .
 USER pyth
 
-ENTRYPOINT [ "guardiand", "spy", "--nodeKey", "/tmp/node.key" ]
+ENTRYPOINT [ "/guardiand", "spy", "--nodeKey", "/tmp/node.key" ]

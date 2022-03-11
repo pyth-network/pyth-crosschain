@@ -6,7 +6,7 @@ COPY terra/Cargo.lock /code/
 COPY terra/Cargo.toml /code/
 COPY terra/contracts /code/contracts
 COPY terra/packages /code/packages
-COPY third_party/pyth /third_party/pyth 
+COPY third_party/pyth/p2w-sdk/rust /third_party/pyth/p2w-sdk/rust 
 RUN optimize_workspace.sh
 
 # Contract deployment stage
