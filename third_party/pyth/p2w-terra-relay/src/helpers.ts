@@ -64,7 +64,7 @@ export function initLogger() {
 
   // The Pyth smart contract stuff is in terra/contracts/pyth-bridge
 
-  struct Ema {
+  struct Rational {
       int64 value;
       int64 numerator;
       int64 denominator;
@@ -85,8 +85,8 @@ export function initLogger() {
       int64 price;
       int32 exponent;
 
-      Ema twap;
-      Ema twac;
+      Rational emaPrice;
+      Rational emaConfidence;
 
       uint64 confidenceInterval;
 
@@ -96,20 +96,20 @@ export function initLogger() {
       uint64 timestamp;
   }
 
-0   uint32    magic // constant "P2WH"
-4   u16       version
-6   u8        payloadId // 1
-7   [u8; 32]  productId
-39  [u8; 32]  priceId
-71  u8        priceType
-72  i64       price
-80  i32       exponent
-84  PythEma   twap
-108 PythEma   twac
-132 u64       confidenceInterval
-140 u8        status
-141 u8        corpAct
-142 u64       timestamp
+0   uint32        magic // constant "P2WH"
+4   u16           version
+6   u8            payloadId // 1
+7   [u8; 32]      productId
+39  [u8; 32]      priceId
+71  u8            priceType
+72  i64           price
+80  i32           exponent
+84  PythRational  emaPrice
+108 PythRational  emaConfidence
+132 u64           confidenceInterval
+140 u8            status
+141 u8            corpAct
+142 u64           timestamp
 
 In version 2 prices are sent in batch with the following structure:
 
@@ -149,7 +149,7 @@ In version 2 prices are sent in batch with the following structure:
 export const PYTH_PRICE_ATTESTATION_MIN_LENGTH: number = 150;
 export const PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH: number = 11 + PYTH_PRICE_ATTESTATION_MIN_LENGTH;
 
-export type PythEma = {
+export type PythRational = {
   value: BigInt;
   numerator: BigInt;
   denominator: BigInt;
@@ -164,8 +164,8 @@ export type PythPriceAttestation = {
   priceType: number;
   price: BigInt;
   exponent: number;
-  twap: PythEma;
-  twac: PythEma;
+  emaPrice: PythRational;
+  emaConfidence: PythRational;
   confidenceInterval: BigInt;
   status: number;
   corpAct: number;
@@ -208,12 +208,12 @@ export function parsePythPriceAttestation(arr: Buffer): PythPriceAttestation {
     priceType: arr[71],
     price: arr.readBigInt64BE(72),
     exponent: arr.readInt32BE(80),
-    twap: {
+    emaPrice: {
       value: arr.readBigInt64BE(84),
       numerator: arr.readBigInt64BE(92),
       denominator: arr.readBigInt64BE(100),
     },
-    twac: {
+    emaConfidence: {
       value: arr.readBigInt64BE(108),
       numerator: arr.readBigInt64BE(116),
       denominator: arr.readBigInt64BE(124),
