@@ -199,16 +199,16 @@ impl BatchPriceAttestation {
     }
 }
 
-pub fn serialize_rational(ema: &Rational) -> Vec<u8> {
+pub fn serialize_rational(rational: &Rational) -> Vec<u8> {
     let mut v = vec![];
     // val
-    v.extend(&ema.val.to_be_bytes()[..]);
+    v.extend(&rational.val.to_be_bytes()[..]);
 
     // numer
-    v.extend(&ema.numer.to_be_bytes()[..]);
+    v.extend(&rational.numer.to_be_bytes()[..]);
 
     // denom
-    v.extend(&ema.denom.to_be_bytes()[..]);
+    v.extend(&rational.denom.to_be_bytes()[..]);
 
     v
 }
@@ -433,7 +433,7 @@ impl PriceAttestation {
 mod tests {
     use super::*;
     use pyth_sdk_solana::state::{
-        Ema,
+        Rational,
         PriceStatus,
         PriceType,
     };
@@ -446,12 +446,12 @@ mod tests {
             price_id:            Pubkey::new_from_array(price_id_bytes),
             price:               (0xdeadbeefdeadbabe as u64) as i64,
             price_type:          PriceType::Price,
-            twap:                Ema {
+            twap:                Rational {
                 val:   -42,
                 numer: 15,
                 denom: 37,
             },
-            twac:                Ema {
+            twac:                Rational {
                 val:   42,
                 numer: 1111,
                 denom: 2222,
