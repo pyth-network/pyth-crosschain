@@ -199,7 +199,7 @@ impl BatchPriceAttestation {
     }
 }
 
-pub fn serialize_ema(ema: &Rational) -> Vec<u8> {
+pub fn serialize_rational(ema: &Rational) -> Vec<u8> {
     let mut v = vec![];
     // val
     v.extend(&ema.val.to_be_bytes()[..]);
@@ -213,7 +213,7 @@ pub fn serialize_ema(ema: &Rational) -> Vec<u8> {
     v
 }
 
-pub fn deserialize_ema(mut bytes: impl Read) -> Result<Rational, ErrBox> {
+pub fn deserialize_rational(mut bytes: impl Read) -> Result<Rational, ErrBox> {
     let mut val_vec = vec![0u8; mem::size_of::<i64>()];
     bytes.read_exact(val_vec.as_mut_slice())?;
     let val = i64::from_be_bytes(val_vec.as_slice().try_into()?);
@@ -297,10 +297,10 @@ impl PriceAttestation {
         buf.extend_from_slice(&expo.to_be_bytes()[..]);
 
         // twap
-        buf.append(&mut serialize_ema(&twap));
+        buf.append(&mut serialize_rational(&twap));
 
         // twac
-        buf.append(&mut serialize_ema(&twac));
+        buf.append(&mut serialize_rational(&twac));
 
         // confidence_interval
         buf.extend_from_slice(&confidence_interval.to_be_bytes()[..]);
@@ -379,8 +379,8 @@ impl PriceAttestation {
         bytes.read_exact(expo_vec.as_mut_slice())?;
         let expo = i32::from_be_bytes(expo_vec.as_slice().try_into()?);
 
-        let twap = deserialize_ema(&mut bytes)?;
-        let twac = deserialize_ema(&mut bytes)?;
+        let twap = deserialize_rational(&mut bytes)?;
+        let twac = deserialize_rational(&mut bytes)?;
 
         println!("twac OK");
         let mut confidence_interval_vec = vec![0u8; mem::size_of::<u64>()];
