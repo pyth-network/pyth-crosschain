@@ -1322,7 +1322,7 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 name = "p2w-sdk"
 version = "0.1.0"
 dependencies = [
- "pyth-client",
+ "pyth-sdk-solana",
  "serde",
  "solana-program",
 ]
@@ -1445,16 +1445,29 @@ dependencies = [
 ]
 
 [[package]]
-name = "pyth-client"
-version = "0.5.0"
+name = "pyth-sdk"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f779e98b8c8016d0c1409247a204bd4fcdea8b67ceeef545f04e324d66c49e52"
+checksum = "446ff07d7ef3bd98214f9b4fe6a611a69e36b5aad74b18cdbad5150193c1f204"
+dependencies = [
+ "borsh",
+ "borsh-derive",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "pyth-sdk-solana"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27a648739aa69cab94edd900a0d7ca37d8a789e9c88741b23deec11fab418d16"
 dependencies = [
  "borsh",
  "borsh-derive",
  "bytemuck",
  "num-derive",
  "num-traits",
+ "pyth-sdk",
  "serde",
  "solana-program",
  "thiserror",
@@ -1691,9 +1704,9 @@ checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
 
 [[package]]
 name = "schemars"
-version = "0.8.7"
+version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "271ac0c667b8229adf70f0f957697c96fafd7486ab7481e15dc5e45e3e6a4368"
+checksum = "c6b5a3c80cea1ab61f4260238409510e814e38b4b563c06044edf91e7dc070e3"
 dependencies = [
  "dyn-clone",
  "schemars_derive",
@@ -1703,9 +1716,9 @@ dependencies = [
 
 [[package]]
 name = "schemars_derive"
-version = "0.8.7"
+version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ebda811090b257411540779860bc09bf321bc587f58d2c5864309d1566214e7"
+checksum = "41ae4dce13e8614c46ac3c38ef1c0d668b101df6ac39817aebdaa26642ddae9b"
 dependencies = [
  "proc-macro2",
  "quote",

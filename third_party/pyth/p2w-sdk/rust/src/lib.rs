@@ -12,9 +12,9 @@ use std::io::Read;
 use std::iter::Iterator;
 use std::mem;
 
-use pyth_client::{
+use pyth_sdk_solana::state::{
     CorpAction,
-    Ema,
+    Rational,
     PriceStatus,
     PriceType,
 };
@@ -68,8 +68,8 @@ pub struct PriceAttestation {
     pub price_type:          PriceType,
     pub price:               i64,
     pub expo:                i32,
-    pub twap:                Ema,
-    pub twac:                Ema,
+    pub twap:                Rational,
+    pub twac:                Rational,
     pub confidence_interval: u64,
     pub status:              PriceStatus,
     pub corp_act:            CorpAction,
@@ -199,7 +199,7 @@ impl BatchPriceAttestation {
     }
 }
 
-pub fn serialize_ema(ema: &Ema) -> Vec<u8> {
+pub fn serialize_ema(ema: &Rational) -> Vec<u8> {
     let mut v = vec![];
     // val
     v.extend(&ema.val.to_be_bytes()[..]);
@@ -213,7 +213,7 @@ pub fn serialize_ema(ema: &Ema) -> Vec<u8> {
     v
 }
 
-pub fn deserialize_ema(mut bytes: impl Read) -> Result<Ema, ErrBox> {
+pub fn deserialize_ema(mut bytes: impl Read) -> Result<Rational, ErrBox> {
     let mut val_vec = vec![0u8; mem::size_of::<i64>()];
     bytes.read_exact(val_vec.as_mut_slice())?;
     let val = i64::from_be_bytes(val_vec.as_slice().try_into()?);
@@ -226,7 +226,7 @@ pub fn deserialize_ema(mut bytes: impl Read) -> Result<Ema, ErrBox> {
     bytes.read_exact(denom_vec.as_mut_slice())?;
     let denom = i64::from_be_bytes(denom_vec.as_slice().try_into()?);
 
-    Ok(Ema { val, numer, denom })
+    Ok(Rational { val, numer, denom })
 }
 
 // On-chain data types
@@ -237,15 +237,15 @@ impl PriceAttestation {
         timestamp: UnixTimestamp,
         value: &[u8],
     ) -> Result<Self, ErrBox> {
-        let price = pyth_client::load_price(value)?;
+        let price = pyth_sdk_solana::state::load_price_account(value)?;
 
         Ok(PriceAttestation {
             product_id: Pubkey::new(&price.prod.val[..]),
             price_id,
             price_type: price.ptype,
             price: price.agg.price,
-            twap: price.twap,
-            twac: price.twac,
+            twap: price.ema_price,
+            twac: price.ema_conf,
             expo: price.expo,
             confidence_interval: price.agg.conf,
             status: price.agg.status,
@@ -432,7 +432,7 @@ impl PriceAttestation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pyth_client::{
+    use pyth_sdk_solana::state::{
         Ema,
         PriceStatus,
         PriceType,
