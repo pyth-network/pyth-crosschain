@@ -68,8 +68,8 @@ pub struct PriceAttestation {
     pub price_type:          PriceType,
     pub price:               i64,
     pub expo:                i32,
-    pub twap:                Rational,
-    pub twac:                Rational,
+    pub ema_price:           Rational,
+    pub ema_conf:            Rational,
     pub confidence_interval: u64,
     pub status:              PriceStatus,
     pub corp_act:            CorpAction,
@@ -244,8 +244,8 @@ impl PriceAttestation {
             price_id,
             price_type: price.ptype,
             price: price.agg.price,
-            twap: price.ema_price,
-            twac: price.ema_conf,
+            ema_price: price.ema_price,
+            ema_conf: price.ema_conf,
             expo: price.expo,
             confidence_interval: price.agg.conf,
             status: price.agg.status,
@@ -264,8 +264,8 @@ impl PriceAttestation {
             price_type,
             price,
             expo,
-            twap,
-            twac,
+            ema_price,
+            ema_conf,
             confidence_interval,
             status,
             corp_act,
@@ -296,11 +296,11 @@ impl PriceAttestation {
         // exponent
         buf.extend_from_slice(&expo.to_be_bytes()[..]);
 
-        // twap
-        buf.append(&mut serialize_rational(&twap));
+        // ema_price
+        buf.append(&mut serialize_rational(&ema_price));
 
-        // twac
-        buf.append(&mut serialize_rational(&twac));
+        // ema_conf
+        buf.append(&mut serialize_rational(&ema_conf));
 
         // confidence_interval
         buf.extend_from_slice(&confidence_interval.to_be_bytes()[..]);
@@ -379,8 +379,8 @@ impl PriceAttestation {
         bytes.read_exact(expo_vec.as_mut_slice())?;
         let expo = i32::from_be_bytes(expo_vec.as_slice().try_into()?);
 
-        let twap = deserialize_rational(&mut bytes)?;
-        let twac = deserialize_rational(&mut bytes)?;
+        let ema_price = deserialize_rational(&mut bytes)?;
+        let ema_conf = deserialize_rational(&mut bytes)?;
 
         println!("twac OK");
         let mut confidence_interval_vec = vec![0u8; mem::size_of::<u64>()];
@@ -419,8 +419,8 @@ impl PriceAttestation {
             price_type,
             price,
             expo,
-            twap,
-            twac,
+            ema_price,
+            ema_conf,
             confidence_interval,
             status,
             corp_act,
@@ -446,12 +446,12 @@ mod tests {
             price_id:            Pubkey::new_from_array(price_id_bytes),
             price:               (0xdeadbeefdeadbabe as u64) as i64,
             price_type:          PriceType::Price,
-            twap:                Rational {
+            ema_price:           Rational {
                 val:   -42,
                 numer: 15,
                 denom: 37,
             },
-            twac:                Rational {
+            ema_conf:            Rational {
                 val:   42,
                 numer: 1111,
                 denom: 2222,
