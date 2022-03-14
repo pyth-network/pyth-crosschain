@@ -19,8 +19,8 @@ contract("Pyth", function () {
     const testChainId = "2";
     const testGovernanceChainId = "3";
     const testGovernanceContract = "0x0000000000000000000000000000000000000000000000000000000000000004";
-    const testPyth2WormholeChainId = "5";
-    const testPyth2WormholeEmitter = "0x0000000000000000000000000000000000000000000000000000000000000006";
+    const testPyth2WormholeChainId = "1";
+    const testPyth2WormholeEmitter = "0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
 
 
     it("should be initialized with the correct signers and values", async function(){
