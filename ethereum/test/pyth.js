@@ -99,22 +99,22 @@ contract("Pyth", function () {
 
         let parsed = await initialized.methods.parsePriceAttestation(testUpdate).call();
 
-        assert.equal(parsed.magic, 1345476424);
-        assert.equal(parsed.version, 1);
-        assert.equal(parsed.payloadId, 1);
+        assert.equal(parsed.header.magic, 1345476424);
+        assert.equal(parsed.header.version, 1);
+        assert.equal(parsed.header.payloadId, 1);
         assert.equal(parsed.productId, "0x1515151515151515151515151515151515151515151515151515151515151515");
         assert.equal(parsed.priceId, "0xdededededededededededededededededededededededededededededededede");
         assert.equal(parsed.priceType, 1);
         assert.equal(parsed.price, -2401053088876217666);
         assert.equal(parsed.exponent, -3);
 
-        assert.equal(parsed.twap.value, -42);
-        assert.equal(parsed.twap.numerator, 15);
-        assert.equal(parsed.twap.denominator, 37);
+        assert.equal(parsed.emaPrice.value, -42);
+        assert.equal(parsed.emaPrice.numerator, 15);
+        assert.equal(parsed.emaPrice.denominator, 37);
 
-        assert.equal(parsed.twac.value, 42);
-        assert.equal(parsed.twac.numerator, 1111);
-        assert.equal(parsed.twac.denominator, 2222);
+        assert.equal(parsed.emaConf.value, 42);
+        assert.equal(parsed.emaConf.numerator, 1111);
+        assert.equal(parsed.emaConf.denominator, 2222);
 
         assert.equal(parsed.confidenceInterval, 101);
 
@@ -154,22 +154,22 @@ contract("Pyth", function () {
 
         let cached = await initialized.methods.latestAttestation("0x1515151515151515151515151515151515151515151515151515151515151515", 1).call();
 
-        assert.equal(cached.magic, 1345476424);
-        assert.equal(cached.version, 1);
-        assert.equal(cached.payloadId, 1);
+        assert.equal(cached.header.magic, 1345476424);
+        assert.equal(cached.header.version, 1);
+        assert.equal(cached.header.payloadId, 1);
         assert.equal(cached.productId, "0x1515151515151515151515151515151515151515151515151515151515151515");
         assert.equal(cached.priceId, "0xdededededededededededededededededededededededededededededededede");
         assert.equal(cached.priceType, 1);
         assert.equal(cached.price, -2401053088876217666);
         assert.equal(cached.exponent, -3);
 
-        assert.equal(cached.twap.value, -42);
-        assert.equal(cached.twap.numerator, 15);
-        assert.equal(cached.twap.denominator, 37);
+        assert.equal(cached.emaPrice.value, -42);
+        assert.equal(cached.emaPrice.numerator, 15);
+        assert.equal(cached.emaPrice.denominator, 37);
 
-        assert.equal(cached.twac.value, 42);
-        assert.equal(cached.twac.numerator, 1111);
-        assert.equal(cached.twac.denominator, 2222);
+        assert.equal(cached.emaConf.value, 42);
+        assert.equal(cached.emaConf.numerator, 1111);
+        assert.equal(cached.emaConf.denominator, 2222);
 
         assert.equal(cached.confidenceInterval, 101);
 
