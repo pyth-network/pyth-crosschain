@@ -117,12 +117,11 @@ fn submit_vaa(
     for price_attestation in message.price_attestations.iter() {
         let price = Price {
             product_id: price_attestation.product_id.to_bytes(),
-            // status: price_attestation.status, We should remove it soon when we get pyth-sdk released
-            status: pyth_sdk::PriceStatus::Trading,
+            status: price_attestation.status,
             price: price_attestation.price,
             conf: price_attestation.confidence_interval,
-            ema_price: price_attestation.twap.val,
-            ema_conf: price_attestation.twac.val as u64,
+            ema_price: price_attestation.ema_price.val,
+            ema_conf: price_attestation.ema_conf.val as u64,
             expo: price_attestation.expo,
             num_publishers: 0, // This data is currently unavailable
             max_num_publishers: 0 // This data is currently unavailable
