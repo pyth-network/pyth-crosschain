@@ -26,7 +26,7 @@ npm ci
 node deploy-pyth-bridge.js --network testnet --artifact ../artifacts/pyth_bridge.wasm --mnemonic "..."
 ```
 
-which will print something along the lines of
+which will print something along the lines of:
 
 ``` sh
 Storing WASM: ../artifacts/pyth_bridge.wasm (367689 bytes)
