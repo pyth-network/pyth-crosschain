@@ -124,6 +124,107 @@ contract("Pyth", function () {
         assert.equal(parsed.timestamp, 123456789);
     })
 
+    it("should parse batch price attestation correctly", async function() {
+        let rawBatchPriceAttestation = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000071dfffffffb00000000000005f70000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000622f65f4503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000440fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000622f65f4503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000609fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000622f65f45032574800020171ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bcfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000622f65f4";
+
+        const initialized = new web3.eth.Contract(P2WImplementationFullABI, PythDataBridge.address);
+
+        const magic = 1345476424;
+        const version = 2;
+
+        let parsed = await initialized.methods.parseBatchPriceAttestation(rawBatchPriceAttestation).call();
+
+        // Check the header
+        assert.equal(parsed.header.magic, magic);
+        assert.equal(parsed.header.version, version);
+        assert.equal(parsed.header.payloadId, 2);
+
+        assert.equal(parsed.nAttestations, 4);
+        assert.equal(parsed.attestationSize, 150);
+
+        assert.equal(parsed.attestations.length, 4);
+
+        // Attestation #1
+        assert.equal(parsed.attestations[0].header.magic, magic);
+        assert.equal(parsed.attestations[0].header.version, version);
+        assert.equal(parsed.attestations[0].header.payloadId, 1);
+        assert.equal(parsed.attestations[0].productId, "0xc0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73");
+        assert.equal(parsed.attestations[0].priceId, "0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e");
+        assert.equal(parsed.attestations[0].priceType, 1);
+        assert.equal(parsed.attestations[0].price, 1821);
+        assert.equal(parsed.attestations[0].exponent, -5);
+        assert.equal(parsed.attestations[0].emaPrice.value, 1527);
+        assert.equal(parsed.attestations[0].emaPrice.numerator, 5143632829);
+        assert.equal(parsed.attestations[0].emaPrice.denominator, 3368021343);
+        assert.equal(parsed.attestations[0].emaConf.value, 3);
+        assert.equal(parsed.attestations[0].emaConf.numerator, 1103607387);
+        assert.equal(parsed.attestations[0].emaConf.denominator, 3368021343);
+        assert.equal(parsed.attestations[0].confidenceInterval, 3);
+        assert.equal(parsed.attestations[0].status, 1);
+        assert.equal(parsed.attestations[0].corpAct, 0);
+        assert.equal(parsed.attestations[0].timestamp, 1647273460);
+
+        // Attestation #2
+        assert.equal(parsed.attestations[1].header.magic, magic);
+        assert.equal(parsed.attestations[1].header.version, version);
+        assert.equal(parsed.attestations[1].header.payloadId, 1);
+        assert.equal(parsed.attestations[1].productId, "0x7090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54");
+        assert.equal(parsed.attestations[1].priceId, "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
+        assert.equal(parsed.attestations[1].priceType, 1);
+        assert.equal(parsed.attestations[1].price, 1088);
+        assert.equal(parsed.attestations[1].exponent, -5);
+        assert.equal(parsed.attestations[1].emaPrice.value, 1531);
+        assert.equal(parsed.attestations[1].emaPrice.numerator, 5855153309);
+        assert.equal(parsed.attestations[1].emaPrice.denominator, 3822824063);
+        assert.equal(parsed.attestations[1].emaConf.value, 2);
+        assert.equal(parsed.attestations[1].emaConf.numerator, 1103611323);
+        assert.equal(parsed.attestations[1].emaConf.denominator, 3822824063);
+        assert.equal(parsed.attestations[1].confidenceInterval, 7);
+        assert.equal(parsed.attestations[1].status, 1);
+        assert.equal(parsed.attestations[1].corpAct, 0);
+        assert.equal(parsed.attestations[1].timestamp, 1647273460);
+
+        // Attestation #3
+        assert.equal(parsed.attestations[2].header.magic, magic);
+        assert.equal(parsed.attestations[2].header.version, version);
+        assert.equal(parsed.attestations[2].header.payloadId, 1);
+        assert.equal(parsed.attestations[2].productId, "0x2f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd");
+        assert.equal(parsed.attestations[2].priceId, "0x8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd");
+        assert.equal(parsed.attestations[2].priceType, 1);
+        assert.equal(parsed.attestations[2].price, 1545);
+        assert.equal(parsed.attestations[2].exponent, -5);
+        assert.equal(parsed.attestations[2].emaPrice.value, 1485);
+        assert.equal(parsed.attestations[2].emaPrice.numerator, 5522594237);
+        assert.equal(parsed.attestations[2].emaPrice.denominator, 3717334815);
+        assert.equal(parsed.attestations[2].emaConf.value, 2);
+        assert.equal(parsed.attestations[2].emaConf.numerator, 1103614971);
+        assert.equal(parsed.attestations[2].emaConf.denominator, 3717334815);
+        assert.equal(parsed.attestations[2].confidenceInterval, 1);
+        assert.equal(parsed.attestations[2].status, 1);
+        assert.equal(parsed.attestations[2].corpAct, 0);
+        assert.equal(parsed.attestations[2].timestamp, 1647273460);
+
+        // Attestation #4
+        assert.equal(parsed.attestations[3].header.magic, magic);
+        assert.equal(parsed.attestations[3].header.version, version);
+        assert.equal(parsed.attestations[3].header.payloadId, 1);
+        assert.equal(parsed.attestations[3].productId, "0x71ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee5");
+        assert.equal(parsed.attestations[3].priceId, "0x17fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb7");
+        assert.equal(parsed.attestations[3].priceType, 1);
+        assert.equal(parsed.attestations[3].price, 1980);
+        assert.equal(parsed.attestations[3].exponent, -5);
+        assert.equal(parsed.attestations[3].emaPrice.value, 1506);
+        assert.equal(parsed.attestations[3].emaPrice.numerator, 5598517597);
+        assert.equal(parsed.attestations[3].emaPrice.denominator, 3717166943);
+        assert.equal(parsed.attestations[3].emaConf.value, 2);
+        assert.equal(parsed.attestations[3].emaConf.numerator, 1103617947);
+        assert.equal(parsed.attestations[3].emaConf.denominator, 3717166943);
+        assert.equal(parsed.attestations[3].confidenceInterval, 3);
+        assert.equal(parsed.attestations[3].status, 1);
+        assert.equal(parsed.attestations[3].corpAct, 0);
+        assert.equal(parsed.attestations[3].timestamp, 1647273460);
+    })
+
     it("should attest price updates over wormhole", async function() {
         const initialized = new web3.eth.Contract(P2WImplementationFullABI, PythDataBridge.address);
         const accounts = await web3.eth.getAccounts();

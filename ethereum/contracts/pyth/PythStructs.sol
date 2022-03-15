@@ -8,6 +8,14 @@ import "../libraries/external/BytesLib.sol";
 contract PythStructs {
     using BytesLib for bytes;
 
+    struct BatchPriceAttestation {
+        Header header;
+
+        uint16 nAttestations;
+        uint16 attestationSize;
+        PriceAttestation[] attestations;
+    }
+
     struct Header {
         uint32 magic;
         uint16 version;
