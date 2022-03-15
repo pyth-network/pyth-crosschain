@@ -9,10 +9,6 @@ type HumanAddr = String;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
-    // governance contract details
-    pub gov_chain: u16,
-    pub gov_address: Binary,
-
     pub wormhole_contract: HumanAddr,
     pub pyth_emitter: Binary,
     pub pyth_emitter_chain: u16,

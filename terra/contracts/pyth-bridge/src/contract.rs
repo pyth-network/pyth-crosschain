@@ -2,7 +2,6 @@ use cosmwasm_std::{
     entry_point,
     to_binary,
     Binary,
-    CosmosMsg,
     Deps,
     DepsMut,
     Env,
@@ -11,7 +10,6 @@ use cosmwasm_std::{
     Response,
     StdError,
     StdResult,
-    WasmMsg,
     WasmQuery,
 };
 
@@ -30,7 +28,6 @@ use crate::{
         sequence,
         sequence_read,
         ConfigInfo,
-        UpgradeContract,
     },
 };
 
@@ -40,19 +37,13 @@ use p2w_sdk::{
 };
 
 use wormhole::{
-    byte_utils::get_string_from_32,
     error::ContractError,
     msg::QueryMsg as WormholeQueryMsg,
     state::{
-        vaa_archive_add,
-        vaa_archive_check,
-        GovernancePacket,
         ParsedVAA,
     },
 };
 
-// Chain ID of Terra
-const CHAIN_ID: u16 = 3;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
@@ -68,8 +59,6 @@ pub fn instantiate(
 ) -> StdResult<Response> {
     // Save general wormhole info
     let state = ConfigInfo {
-        gov_chain: msg.gov_chain,
-        gov_address: msg.gov_address.as_slice().to_vec(),
         wormhole_contract: msg.wormhole_contract,
         pyth_emitter: msg.pyth_emitter.as_slice().to_vec(),
         pyth_emitter_chain: msg.pyth_emitter_chain,
@@ -110,16 +99,6 @@ fn submit_vaa(
     let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
     let data = vaa.payload;
 
-    // check if vaa is from governance
-    if state.gov_chain == vaa.emitter_chain && state.gov_address == vaa.emitter_address {
-        if vaa_archive_check(deps.storage, vaa.hash.as_slice()) {
-            return ContractError::VaaAlreadyExecuted.std_err();
-        }
-        vaa_archive_add(deps.storage, vaa.hash.as_slice())?;
-
-        return handle_governance_payload(deps, env, &data);
-    }
-
     // IMPORTANT: VAA replay-protection is not implemented in this code-path
     // Sequences are used to prevent replay or price rollbacks
 
@@ -154,37 +133,6 @@ fn submit_vaa(
         ))
 }
 
-fn handle_governance_payload(deps: DepsMut, env: Env, data: &Vec<u8>) -> StdResult<Response> {
-    let gov_packet = GovernancePacket::deserialize(&data)?;
-    let module = get_string_from_32(&gov_packet.module);
-
-    if module != "PythBridge" {
-        return Err(StdError::generic_err("this is not a valid module"));
-    }
-
-    if gov_packet.chain != 0 && gov_packet.chain != CHAIN_ID {
-        return Err(StdError::generic_err(
-            "the governance VAA is for another chain",
-        ));
-    }
-
-    match gov_packet.action {
-        2u8 => handle_upgrade_contract(deps, env, &gov_packet.payload),
-        _ => ContractError::InvalidVAAAction.std_err(),
-    }
-}
-
-fn handle_upgrade_contract(_deps: DepsMut, env: Env, data: &Vec<u8>) -> StdResult<Response> {
-    let UpgradeContract { new_contract } = UpgradeContract::deserialize(&data)?;
-
-    Ok(Response::new()
-        .add_message(CosmosMsg::Wasm(WasmMsg::Migrate {
-            contract_addr: env.contract.address.to_string(),
-            new_code_id: new_contract,
-            msg: to_binary(&MigrateMsg {})?,
-        }))
-        .add_attribute("action", "contract_upgrade"))
-}
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
