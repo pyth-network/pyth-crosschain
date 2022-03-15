@@ -16,7 +16,7 @@ export const TERRA_GAS_PRICES_URL = "https://fcd.terra.dev/v1/txs/gas_prices";
 const argv = yargs(hideBin(process.argv))
   .option('network', {
     description: 'Which network to deploy to',
-    choices: ['mainnet', 'testnet', 'localterra'],
+    choices: ['mainnet', 'testnet'],
     required: true
   })
   .option('artifact', {
@@ -61,18 +61,22 @@ const terra_host =
         chainID: "columbus-5",
         name: "mainnet",
       }
-    : argv.network === "testnet"
-    ? {
+    : {
         URL: "https://bombay-lcd.terra.dev",
         chainID: "bombay-12",
         name: "testnet",
-      }
-    : {
-        URL: "http://localhost:1317",
-        chainID: "columbus-5",
-        name: "localterra",
       };
 
+const wormholeContract = 
+      argv.network == "mainnet"?
+        "terra1dq03ugtd40zu9hcgdzrsq6z2z4hwhc9tqk2uy5":
+        "terra1pd65m0q9tl3v8znnz5f5ltsfegyzah7g42cx5v";
+
+const pythEmitterAddress =
+      argv.network == "mainnet"?
+        "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25":
+        "f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0"
+  
 const lcd = new LCDClient(terra_host);
 
 const feeDenoms = ["uluna"];
@@ -160,12 +164,10 @@ if (argv.instantiate) {
     return address;
   }
 
-  const pythEmitterAddress =
-    "f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0";
   const pythChain = 1;
 
   const contractAddress = await instantiate(codeId, {
-    wormhole_contract: "terra1pd65m0q9tl3v8znnz5f5ltsfegyzah7g42cx5v",
+    wormhole_contract: wormholeContract,
     pyth_emitter: Buffer.from(pythEmitterAddress, "hex").toString(
       "base64"
     ),
