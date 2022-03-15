@@ -185,8 +185,6 @@ const pythEmitterAddress =
 const pythChain = 1;
 
 addresses["pyth_bridge.wasm"] = await instantiate("pyth_bridge.wasm", {
-  gov_chain: govChain,
-  gov_address: Buffer.from(govAddress, "hex").toString("base64"),
   wormhole_contract: addresses["wormhole.wasm"],
   pyth_emitter: Buffer.from(pythEmitterAddress, "hex").toString(
     "base64"
