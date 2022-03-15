@@ -30,10 +30,6 @@ pub static SEQUENCE_KEY: &[u8] = b"sequence";
 // Guardian set information
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigInfo {
-    // governance contract details
-    pub gov_chain: u16,
-    pub gov_address: Vec<u8>,
-
     pub wormhole_contract: HumanAddr,
     pub pyth_emitter: Vec<u8>,
     pub pyth_emitter_chain: u16,
