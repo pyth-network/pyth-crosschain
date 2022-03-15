@@ -52,7 +52,7 @@ const argv = yargs(hideBin(process.argv))
 
 const artifact = argv.artifact;
 
-/* Set up terra client & wallet */
+/* Set up terra client & wallet. It won't fail because inputs are validated with yargs */
 
 const terra_host =
       argv.network === "mainnet"
@@ -91,11 +91,8 @@ const wallet = lcd.wallet(
   })
 );
 
-await wallet.sequence();
-
 /* Deploy artifacts */
 
-let codeId;
 const contract_bytes = readFileSync(artifact);
 console.log(`Storing WASM: ${artifact} (${contract_bytes.length} bytes)`);
 
@@ -126,7 +123,7 @@ const tx = await wallet.createAndSignTx({
 
 const rs = await lcd.tx.broadcast(tx);
 const ci = /"code_id","value":"([^"]+)/gm.exec(rs.raw_log)[1];
-codeId = parseInt(ci);
+const codeId = parseInt(ci);
 
 console.log("Code ID: ", codeId);
 
@@ -153,7 +150,6 @@ if (argv.instantiate) {
             inst_msg
           ),
         ],
-        memo: "",
       })
       .then((tx) => lcd.tx.broadcast(tx))
       .then((rs) => {
@@ -199,7 +195,6 @@ if (argv.migrate) {
         { uluna: 1000 }
       ),
     ],
-    memo: "",
     feeDenoms,
     gasPrices,
   });
