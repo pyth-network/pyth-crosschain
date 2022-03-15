@@ -4,6 +4,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/external/BytesLib.sol";
+import "./PythSDK.sol";
 
 contract PythStructs {
     using BytesLib for bytes;
@@ -55,5 +56,12 @@ contract PythStructs {
         uint16 chain;
 
         address newContract;
+    }
+
+    struct PriceInfo {
+        PythSDK.Price price;
+        uint256 attestation_time;
+        uint256 arrival_time;
+        uint256 arrival_block;
     }
 }
