@@ -23,7 +23,7 @@ Code ID:  2435
 ```
 
 # New contract
-If it is the first deployment and you want to instantiate a bew contract pass `--instantiate` option to the above command. 
+If it is the first deployment and you want to instantiate a bew contract pass `--instantiate` argument to the above command. 
 
 # Migrate
-If you want to upgrade an existing contract pass `--migrate --contract terra123456xyzqwe..` argunebt to the above command.
+If you want to upgrade an existing contract pass `--migrate --contract terra123456xyzqwe..` arguments to the above command.
