@@ -15,8 +15,8 @@ use cosmwasm_std::{
 };
 
 use pyth_sdk::{
-    Price,
-    PriceStatus
+    PriceFeed,
+    PriceStatus,
 };
 
 use crate::{
@@ -33,6 +33,9 @@ use crate::{
         price_info,
         price_info_read,
         ConfigInfo,
+        PriceInfo,
+        VALID_TIME_PERIOD,
+        MAX_INGESTION_TIME_PERIOD,
     },
 };
 
@@ -115,21 +118,22 @@ fn submit_vaa(
 
     // Update prices
     for price_attestation in message.price_attestations.iter() {
-        let price = Price {
-            product_id: price_attestation.product_id.to_bytes(),
-            status: price_attestation.status,
-            price: price_attestation.price,
-            conf: price_attestation.confidence_interval,
-            ema_price: price_attestation.ema_price.val,
-            ema_conf: price_attestation.ema_conf.val as u64,
-            expo: price_attestation.expo,
-            num_publishers: 0, // This data is currently unavailable
-            max_num_publishers: 0 // This data is currently unavailable
-        };
+        let price_feed = PriceFeed::new(
+                price_attestation.price_id.to_bytes(),
+                price_attestation.status,
+                price_attestation.expo,
+                0, // max_num_publishers data is currently unavailable
+                0, // num_publishers data is currently unavailable
+                price_attestation.product_id.to_bytes(),
+                price_attestation.price,
+            price_attestation.confidence_interval,
+            price_attestation.ema_price.val,
+            price_attestation.ema_conf.val as u64,
+        );
 
         let attestation_time = Timestamp::from_seconds(price_attestation.timestamp as u64);
 
-        if env.block.time.seconds() - attestation_time.seconds() > VALID_TIME_PERIOD.as_secs() {
+        if env.block.time.seconds() - attestation_time.seconds() > MAX_INGESTION_TIME_PERIOD.as_secs() {
             return Err(StdError::generic_err(
                 format!("Attestation is very old. Current timestamp: {} Attestation timestamp: {}",
                         env.block.time.seconds(), attestation_time.seconds())
@@ -146,7 +150,8 @@ fn submit_vaa(
                         new_attestations_cnt += 1;
                         Ok(PriceInfo {
                             arrival_time: env.block.time,
-                            price,
+                            arrival_block: env.block.height,
+                            price_feed,
                             attestation_time
                         })
                     } else {
@@ -157,7 +162,8 @@ fn submit_vaa(
                     new_attestations_cnt += 1;
                     Ok(PriceInfo {
                         arrival_time: env.block.time,
-                        price,
+                        arrival_block: env.block.height,
+                        price_feed,
                         attestation_time
                     })
                 }
@@ -192,13 +198,13 @@ pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
     match price_info_read(deps.storage).load(address) {
         Ok(mut terra_price_info) => {
             if env.block.time.seconds() - terra_price_info.arrival_time.seconds() > VALID_TIME_PERIOD.as_secs() {
-                terra_price_info.price.status = PriceStatus::Unknown;
+                terra_price_info.price_feed.status = PriceStatus::Unknown;
             }
 
             Ok(
                 PriceInfoResponse {
-                    arrival_time: terra_price_info.arrival_time,
-                    price: terra_price_info.price,
+                    time: terra_price_info.attestation_time,
+                    price_feed: terra_price_info.price_feed,
                 }
             )
         },

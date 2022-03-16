@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use pyth_sdk::Price;
+use pyth_sdk::PriceFeed;
 use schemars::JsonSchema;
 use serde::{
     Deserialize,
@@ -33,7 +33,14 @@ pub static PRICE_INFO_KEY: &[u8] = b"price_info";
 pub static SEQUENCE_KEY: &[u8] = b"sequence";
 
 /// Maximum acceptable time period before price is considered to be stale.
-pub const VALID_TIME_PERIOD: Duration = Duration::from_secs(60);
+pub const VALID_TIME_PERIOD: Duration = Duration::from_secs(2*60);
+
+/// Maximum acceptable time period to accept a price attestation.
+/// 
+/// This value is long because it is comparing two different clocks:
+/// Solana Attestation time vs Terra Current Time
+pub const MAX_INGESTION_TIME_PERIOD: Duration = Duration::from_secs(5*60);
+
 
 // Guardian set information
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -47,9 +54,10 @@ pub struct ConfigInfo {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct PriceInfo {
-    pub price:                Price,
     pub arrival_time:         Timestamp,
+    pub arrival_block:        u64,
     pub attestation_time:     Timestamp,
+    pub price_feed:           PriceFeed,
 }
 
 pub fn config(storage: &mut dyn Storage) -> Singleton<ConfigInfo> {

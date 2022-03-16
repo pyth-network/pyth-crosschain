@@ -33,7 +33,7 @@ lazy_static = "1.4.0"
 bigint = "4"
 p2w-sdk = { path = "../../../third_party/pyth/p2w-sdk/rust" }
 solana-program = "=1.8.16"
-pyth-sdk = { version = "0.1.0" }
+pyth-sdk = { version = "0.2.0" }
 
 [dev-dependencies]
 cosmwasm-vm = { version = "0.16.0", default-features = false }
