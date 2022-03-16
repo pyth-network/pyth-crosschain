@@ -10,6 +10,7 @@ import { zeroPad } from "ethers/lib/utils.js";
 import axios from "axios";
 import yargs from "yargs";
 import {hideBin} from "yargs/helpers";
+import assert from "assert";
 
 export const TERRA_GAS_PRICES_URL = "https://fcd.terra.dev/v1/txs/gas_prices";
 
@@ -22,7 +23,7 @@ const argv = yargs(hideBin(process.argv))
   .option('artifact', {
     description: 'Path to Pyth artifact',
     type: 'string',
-    required: true
+    required: false
   })
   .option('mnemonic', {
     description: 'Mnemonic (private key)',
@@ -47,6 +48,11 @@ const argv = yargs(hideBin(process.argv))
     required: false,
     default: ''
   })
+  .option('code-id', {
+    description: 'Code Id, if provided this will be used for migrate/instantiate and no code will be uploaded',
+    type: 'number',
+    requred: false
+  })
   .help()
   .alias('help', 'h').argv;
 
@@ -54,30 +60,32 @@ const artifact = argv.artifact;
 
 /* Set up terra client & wallet. It won't fail because inputs are validated with yargs */
 
-const terra_host =
-      argv.network === "mainnet"
-    ? {
-        URL: "https://lcd.terra.dev",
-        chainID: "columbus-5",
-        name: "mainnet",
-      }
-    : {
-        URL: "https://bombay-lcd.terra.dev",
-        chainID: "bombay-12",
-        name: "testnet",
-      };
+const CONFIG = {
+  mainnet: {
+    terraHost: {
+      URL: "https://lcd.terra.dev",
+      chainID: "columbus-5",
+      name: "mainnet",
+    },
+    wormholeContract: "terra1dq03ugtd40zu9hcgdzrsq6z2z4hwhc9tqk2uy5",
+    pythEmitterAddress: "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25"
+  },
+  testnet: {
+    terraHost: {
+      URL: "https://bombay-lcd.terra.dev",
+      chainID: "bombay-12",
+      name: "testnet",
+    },
+    wormholeContract: "terra1pd65m0q9tl3v8znnz5f5ltsfegyzah7g42cx5v",
+    pythEmitterAddress: "f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0"
+  }
+}
 
-const wormholeContract = 
-      argv.network == "mainnet"?
-        "terra1dq03ugtd40zu9hcgdzrsq6z2z4hwhc9tqk2uy5":
-        "terra1pd65m0q9tl3v8znnz5f5ltsfegyzah7g42cx5v";
-
-const pythEmitterAddress =
-      argv.network == "mainnet"?
-        "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25":
-        "f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0"
+const terraHost = CONFIG[argv.network].terraHost;
+const wormholeContract = CONFIG[argv.network].wormholeContract;
+const pythEmitterAddress = CONFIG[argv.network].pythEmitterAddress;
   
-const lcd = new LCDClient(terra_host);
+const lcd = new LCDClient(terraHost);
 
 const feeDenoms = ["uluna"];
 
@@ -93,51 +101,64 @@ const wallet = lcd.wallet(
 
 /* Deploy artifacts */
 
-const contract_bytes = readFileSync(artifact);
-console.log(`Storing WASM: ${artifact} (${contract_bytes.length} bytes)`);
+var codeId; 
 
-const store_code = new MsgStoreCode(
-  wallet.key.accAddress,
-  contract_bytes.toString("base64")
-);
+if (argv.codeId !== undefined) {
+  codeId = argv.codeId;
+} else {
+  if (argv.artifact === undefined) {
+    console.error("Artifact is not provided. Please at least provide artifact or code id");
+    process.exit(1);
+  }
 
-const feeEstimate = await lcd.tx.estimateFee(
-  wallet.key.accAddress,
-  [store_code],
-  {
-    memo: "",
+  const contract_bytes = readFileSync(artifact);
+  console.log(`Storing WASM: ${artifact} (${contract_bytes.length} bytes)`);
+
+  const store_code = new MsgStoreCode(
+    wallet.key.accAddress,
+    contract_bytes.toString("base64")
+  );
+
+  const feeEstimate = await lcd.tx.estimateFee(
+    wallet.key.accAddress,
+    [store_code],
+    {
+      feeDenoms,
+      gasPrices,
+    }
+  );
+
+  console.log("Deploy fee: ", feeEstimate.amount.toString());
+
+  const tx = await wallet.createAndSignTx({
+    msgs: [store_code],
     feeDenoms,
     gasPrices,
+    fee: feeEstimate,
+  });
+
+  const rs = await lcd.tx.broadcast(tx);
+
+  try {
+    const ci = /"code_id","value":"([^"]+)/gm.exec(rs.raw_log)[1];
+    codeId = parseInt(ci);
+  } catch(e) {
+    console.error("Encountered an error in parsing deploy code result. Printing raw log")
+    console.error(rs.raw_log);
+    throw(e);
   }
-);
 
-console.log("Deploy fee: ", feeEstimate.amount.toString());
+  console.log("Code ID: ", codeId);
 
-const tx = await wallet.createAndSignTx({
-  msgs: [store_code],
-  memo: "",
-  feeDenoms,
-  gasPrices,
-  fee: feeEstimate,
-});
-
-const rs = await lcd.tx.broadcast(tx);
-const ci = /"code_id","value":"([^"]+)/gm.exec(rs.raw_log)[1];
-const codeId = parseInt(ci);
-
-console.log("Code ID: ", codeId);
+  if (argv.instantiate || argv.migrate) {
+    console.log("Sleeping for 10 seconds for store transaction to finalize.");
+    await sleep(10000);
+  }
+}
 
 if (argv.instantiate) {
   console.log("Instantiating a contract");
-  console.log("Sleeping for 10 seconds for store transaction to finalize.");
-  await sleep(10000);
 
-  /* Instantiate contracts.
-  *
-  * We instantiate the core contracts here (i.e. wormhole itself and the bridge contracts).
-  * The wrapped asset contracts don't need to be instantiated here, because those
-  * will be instantiated by the on-chain bridge contracts on demand.
-  * */
   async function instantiate(codeId, inst_msg) {
     var address;
     await wallet
@@ -153,8 +174,13 @@ if (argv.instantiate) {
       })
       .then((tx) => lcd.tx.broadcast(tx))
       .then((rs) => {
-        console.log(rs.raw_log);
-        address = /"contract_address","value":"([^"]+)/gm.exec(rs.raw_log)[1];
+        try {
+          address = /"contract_address","value":"([^"]+)/gm.exec(rs.raw_log)[1];
+        } catch (e) { 
+          console.error("Encountered an error in parsing instantiation result. Printing raw log")
+          console.error(rs.raw_log);
+          throw(e);
+        }
       });
     console.log(`Instantiated Pyth Bridge at ${address} (${convert_terra_address_to_hex(address)})`);
     return address;
@@ -180,8 +206,6 @@ if (argv.migrate) {
   }
 
   console.log(`Migrating contract ${argv.contract} to ${codeId}`);
-  console.log("Sleeping for 10 seconds for store transaction to finalize.");
-  await sleep(10000);
 
   const tx = await wallet.createAndSignTx({
     msgs: [
@@ -200,7 +224,17 @@ if (argv.migrate) {
   });
   
   const rs = await lcd.tx.broadcast(tx);
-  console.log(rs);
+  var resultCodeId;
+  try {
+    resultCodeId = /"code_id","value":"([^"]+)/gm.exec(rs.raw_log)[1];
+    assert.equal(codeId, resultCodeId)
+  } catch (e) {
+    console.error("Encountered an error in parsing migration result. Printing raw log")
+    console.error(rs.raw_log);
+    throw(e);
+  }
+
+  console.log(`Contract ${argv.contract} code_id successfully updated to ${resultCodeId}`);
 }
 
 // Terra addresses are "human-readable", but for cross-chain registrations, we
