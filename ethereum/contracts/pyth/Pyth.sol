@@ -13,21 +13,25 @@ import "./PythGovernance.sol";
 contract Pyth is PythGovernance {
     using BytesLib for bytes;
 
-    function attestPrice(bytes memory encodedVm) public returns (PythStructs.PriceAttestation memory pa) {
+    function attestPriceBatch(bytes memory encodedVm) public returns (PythStructs.BatchPriceAttestation memory bpa) {
         (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole().parseAndVerifyVM(encodedVm);
 
         require(valid, reason);
         require(verifyPythVM(vm), "invalid emitter");
 
-        PythStructs.PriceAttestation memory price = parsePriceAttestation(vm.payload);
+        PythStructs.BatchPriceAttestation memory batch = parseBatchPriceAttestation(vm.payload);
 
-        PythStructs.PriceInfo memory latestPrice = latestPriceInfo(pa.priceId);
+        for (uint i = 0; i < batch.attestations.length; i++) {
+            PythStructs.PriceAttestation memory attestation = batch.attestations[i];
 
-        if(price.timestamp > latestPrice.attestation_time) {
-            setLatestPriceInfo(price.priceId, newPriceInfo(price));
+            PythStructs.PriceInfo memory latestPrice = latestPriceInfo(attestation.priceId);
+
+            if(attestation.timestamp > latestPrice.attestation_time) {
+                setLatestPriceInfo(attestation.priceId, newPriceInfo(attestation));
+            }
         }
 
-        return price;
+        return batch;
     }
 
     
