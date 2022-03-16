@@ -38,7 +38,7 @@ contract PythSetters is PythState {
         _state.wormhole = payable(wh);
     }
 
-    function setLatestAttestation(bytes32 product, uint8 priceType, PythStructs.PriceAttestation memory attestation) internal {
-        _state.latestAttestations[product][priceType] = attestation;
+    function setLatestPriceInfo(bytes32 priceId, PythStructs.PriceInfo memory info) internal {
+        _state.latestPriceInfo[priceId] = info;
     }
 }

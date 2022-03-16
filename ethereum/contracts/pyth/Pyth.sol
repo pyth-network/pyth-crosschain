@@ -21,13 +21,34 @@ contract Pyth is PythGovernance {
 
         PythStructs.PriceAttestation memory price = parsePriceAttestation(vm.payload);
 
-        PythStructs.PriceAttestation memory latestPrice = latestAttestation(price.productId, price.priceType);
+        PythStructs.PriceInfo memory latestPrice = latestPriceInfo(pa.priceId);
 
-        if(price.timestamp > latestPrice.timestamp) {
-            setLatestAttestation(price.productId, price.priceType, price);
+        if(price.timestamp > latestPrice.attestation_time) {
+            setLatestPriceInfo(price.priceId, newPriceInfo(price));
         }
 
         return price;
+    }
+
+    
+    function newPriceInfo(PythStructs.PriceAttestation memory pa) private view returns (PythStructs.PriceInfo memory info) {
+        info.attestation_time = pa.timestamp;
+        info.arrival_time = block.timestamp;
+        info.arrival_block = block.number;
+        
+        info.price.id = pa.priceId;
+        info.price.price = pa.price;
+        info.price.conf = pa.confidenceInterval;
+        info.price.status = PythSDK.PriceStatus(pa.status);
+        info.price.expo = pa.exponent;
+        info.price.emaPrice = pa.emaPrice.value;
+        info.price.emaConf = uint64(pa.emaConf.value);
+        info.price.productId = pa.productId;
+
+        // These aren't sent in the wire format yet
+        info.price.numPublishers = 0;
+        info.price.maxNumPublishers = 0;
+        return info;
     }
 
     function verifyPythVM(IWormhole.VM memory vm) public view returns (bool valid) {

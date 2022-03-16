@@ -40,7 +40,7 @@ contract PythGetters is PythState {
         return _state.provider.pyth2WormholeEmitter;
     }
 
-    function latestAttestation(bytes32 product, uint8 priceType) public view returns (PythStructs.PriceAttestation memory attestation){
-        return _state.latestAttestations[product][priceType];
+    function latestPriceInfo(bytes32 priceId) public view returns (PythStructs.PriceInfo memory info){
+        return _state.latestPriceInfo[priceId];
     }
 }
