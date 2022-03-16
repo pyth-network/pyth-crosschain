@@ -14,8 +14,6 @@ export interface RelayConfig {
 
 /// Represents a target chain relay client generically.
 export interface Relay<RelayConfig> {
-    /// Contains all configurable values specific to this target chain
-    readonly config: RelayConfig;
 
     /// Relay a signed Wormhole payload to this chain
     relay(payload: string): Promise<any>;
