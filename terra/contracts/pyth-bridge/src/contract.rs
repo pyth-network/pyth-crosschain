@@ -105,9 +105,6 @@ fn submit_vaa(
     let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
     let data = vaa.payload;
 
-    // IMPORTANT: VAA replay-protection is not implemented in this code-path
-    // Sequences are used to prevent replay or price rollbacks
-
     let message = BatchPriceAttestation::deserialize(&data[..])
         .map_err(|_| ContractError::InvalidVAA.std())?;
     if vaa.emitter_address != state.pyth_emitter || vaa.emitter_chain != state.pyth_emitter_chain {
