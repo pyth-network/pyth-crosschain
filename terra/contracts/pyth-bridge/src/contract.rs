@@ -186,7 +186,7 @@ fn submit_vaa(
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::PriceFeed { price_id } => {
-            to_binary(&query_price_info(deps, env, price_id.as_slice())?)
+            to_binary(&query_price_info(deps, env, price_id.as_ref())?)
         }
     }
 }
