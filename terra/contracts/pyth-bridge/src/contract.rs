@@ -8,7 +8,6 @@ use cosmwasm_std::{
     MessageInfo,
     QueryRequest,
     Response,
-    StdError,
     StdResult,
     WasmQuery,
     Timestamp,
