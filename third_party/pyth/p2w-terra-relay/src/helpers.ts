@@ -301,3 +301,16 @@ export function sleep(ms: number) {
 export function computePrice(rawPrice: BigInt, expo: number): number {
   return Number(rawPrice) * 10 ** expo;
 }
+
+// Shorthand for optional/mandatory envs
+export function envOrErr(env: string, defaultValue?: string): string {
+    let val = process.env[env];
+    if (!val) {
+	if (!defaultValue) {
+	    throw `environment variable "${env}" must be set`;
+	} else {
+	    return defaultValue;
+	}
+    }
+    return String(process.env[env]);
+}
