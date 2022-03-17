@@ -32,14 +32,9 @@ pub static CONFIG_KEY: &[u8] = b"config";
 pub static PRICE_INFO_KEY: &[u8] = b"price_info_v2";
 
 /// Maximum acceptable time period before price is considered to be stale.
-pub const VALID_TIME_PERIOD: Duration = Duration::from_secs(2*60);
-
-/// Maximum acceptable time period to accept a price attestation.
 /// 
-/// This value is long because it is comparing two different clocks:
-/// Solana Attestation time vs Terra Current Time
-pub const MAX_INGESTION_TIME_PERIOD: Duration = Duration::from_secs(5*60);
-
+/// This value considers attestation delay which currently might up to a minute.
+pub const VALID_TIME_PERIOD: Duration = Duration::from_secs(3*60);
 
 // Guardian set information
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

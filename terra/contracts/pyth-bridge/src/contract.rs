@@ -35,7 +35,6 @@ use crate::{
         ConfigInfo,
         PriceInfo,
         VALID_TIME_PERIOD,
-        MAX_INGESTION_TIME_PERIOD,
     },
 };
 
@@ -103,13 +102,16 @@ fn submit_vaa(
     let state = config_read(deps.storage).load()?;
 
     let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
+ 
+    // This checks the emitter to be the pyth emitter in wormhole and it comes from emitter chain (Solana)
+    if vaa.emitter_address != state.pyth_emitter || vaa.emitter_chain != state.pyth_emitter_chain {
+        return ContractError::InvalidVAA.std_err();
+    }
+
     let data = vaa.payload;
 
     let message = BatchPriceAttestation::deserialize(&data[..])
         .map_err(|_| ContractError::InvalidVAA.std())?;
-    if vaa.emitter_address != state.pyth_emitter || vaa.emitter_chain != state.pyth_emitter_chain {
-        return ContractError::InvalidVAA.std_err();
-    }
     
     let mut new_attestations_cnt: u8 = 0;
 
@@ -130,19 +132,13 @@ fn submit_vaa(
 
         let attestation_time = Timestamp::from_seconds(price_attestation.timestamp as u64);
 
-        if env.block.time.seconds() - attestation_time.seconds() > MAX_INGESTION_TIME_PERIOD.as_secs() {
-            return Err(StdError::generic_err(
-                format!("Attestation is very old. Current timestamp: {} Attestation timestamp: {}",
-                        env.block.time.seconds(), attestation_time.seconds())
-                    )
-            );
-        }
-
         price_info(deps.storage).update(
             price_feed.id.as_ref(),
         |maybe_price_info| -> StdResult<PriceInfo> {
             match maybe_price_info {
                 Some(price_info) => {
+                    // This check ensures that a price won't be updated with the same or older message.
+                    // Attestation_time is guaranteed increasing in solana
                     if price_info.attestation_time < attestation_time {
                         new_attestations_cnt += 1;
                         Ok(PriceInfo {
@@ -171,11 +167,11 @@ fn submit_vaa(
     Ok(Response::new()
         .add_attribute("action", "price_update")
         .add_attribute(
-            "num_price_feeds",
+            "batch_size",
             format!("{}", message.price_attestations.len()),
         )
         .add_attribute(
-            "num_new_price_feeds",
+            "num_updates",
             format!("{}", new_attestations_cnt),
         )
     )
@@ -194,7 +190,10 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<PriceFeedResponse> {
     match price_info_read(deps.storage).load(address) {
         Ok(mut terra_price_info) => {
-            if env.block.time.seconds() - terra_price_info.arrival_time.seconds() > VALID_TIME_PERIOD.as_secs() {
+            // Attestation time is very close to the actual price time (maybe a few seconds older).
+            // This will ensure to set status unknown if the price has become very old and hasn't updated yet.
+            // Also, if a price has arrived very late to terra it will set the status to unknown.
+            if env.block.time.seconds() - terra_price_info.attestation_time.seconds() > VALID_TIME_PERIOD.as_secs() {
                 terra_price_info.price_feed.status = PriceStatus::Unknown;
             }
 
