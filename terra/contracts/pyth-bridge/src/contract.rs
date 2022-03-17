@@ -139,7 +139,7 @@ fn submit_vaa(
         }
 
         price_info(deps.storage).update(
-            &price_attestation.price_id.to_bytes()[..],
+            price_feed.id.as_ref(),
         |maybe_price_info| -> StdResult<PriceInfo> {
             match maybe_price_info {
                 Some(price_info) => {
@@ -185,8 +185,8 @@ fn submit_vaa(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::PriceFeed { price_id } => {
-            to_binary(&query_price_info(deps, env, price_id.as_ref())?)
+        QueryMsg::PriceFeed { id } => {
+            to_binary(&query_price_info(deps, env, id.as_ref())?)
         }
     }
 }
