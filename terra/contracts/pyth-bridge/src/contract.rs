@@ -25,7 +25,7 @@ use crate::{
         InstantiateMsg,
         MigrateMsg,
         QueryMsg,
-        PriceInfoResponse,
+        PriceFeedResponse,
     },
     state::{
         config,
@@ -64,7 +64,7 @@ pub fn instantiate(
     _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
-    // Save general wormhole info
+    // Save general wormhole and pyth info
     let state = ConfigInfo {
         wormhole_contract: msg.wormhole_contract,
         pyth_emitter: msg.pyth_emitter.as_slice().to_vec(),
@@ -185,13 +185,13 @@ fn submit_vaa(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::PriceInfo { price_id } => {
+        QueryMsg::PriceFeed { price_id } => {
             to_binary(&query_price_info(deps, env, price_id.as_slice())?)
         }
     }
 }
 
-pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<PriceInfoResponse> {
+pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<PriceFeedResponse> {
     match price_info_read(deps.storage).load(address) {
         Ok(mut terra_price_info) => {
             if env.block.time.seconds() - terra_price_info.arrival_time.seconds() > VALID_TIME_PERIOD.as_secs() {
@@ -199,8 +199,7 @@ pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
             }
 
             Ok(
-                PriceInfoResponse {
-                    time: terra_price_info.attestation_time,
+                PriceFeedResponse {
                     price_feed: terra_price_info.price_feed,
                 }
             )
