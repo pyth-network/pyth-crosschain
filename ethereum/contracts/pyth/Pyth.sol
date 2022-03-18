@@ -12,6 +12,18 @@ import "./PythStructs.sol";
 contract Pyth is PythGetters, PythSetters {
     using BytesLib for bytes;
 
+    function initialize(
+        uint16 chainId,
+        address wormhole,
+        uint16 pyth2WormholeChainId,
+        bytes32 pyth2WormholeEmitter
+    ) virtual public {        
+        setChainId(chainId);
+        setWormhole(wormhole);
+        setPyth2WormholeChainId(pyth2WormholeChainId);
+        setPyth2WormholeEmitter(pyth2WormholeEmitter);
+    }
+
     function attestPriceBatch(bytes memory encodedVm) public returns (PythStructs.BatchPriceAttestation memory bpa) {
         (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole().parseAndVerifyVM(encodedVm);
 
