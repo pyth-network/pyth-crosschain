@@ -8,10 +8,6 @@ import "../interfaces/IWormhole.sol";
 import "./PythState.sol";
 
 contract PythGetters is PythState {
-    function isInitialized(address impl) public view returns (bool) {
-        return _state.initializedImplementations[impl];
-    }
-
     function wormhole() public view returns (IWormhole) {
         return IWormhole(_state.wormhole);
     }

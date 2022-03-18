@@ -18,9 +18,6 @@ contract PythStorage {
 
         Provider provider;
 
-        // Mapping of initialized implementations
-        mapping(address => bool) initializedImplementations;
-
         // Mapping of cached price information
         // priceId => PriceInfo
         mapping(bytes32 => PythStructs.PriceInfo) latestPriceInfo;
