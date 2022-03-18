@@ -1433,6 +1433,7 @@ dependencies = [
  "k256",
  "lazy_static",
  "p2w-sdk",
+ "pyth-sdk",
  "schemars",
  "serde",
  "serde_derive",
