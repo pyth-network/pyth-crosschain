@@ -13,29 +13,37 @@ import { logger, envOrErr } from "../helpers";
 import { Relay, PriceId } from "./iface";
 
 export class TerraRelay implements Relay {
-  readonly nodeUrl: string = envOrErr("TERRA_NODE_URL");
-  readonly terraChainId: string = envOrErr("TERRA_CHAIN_ID");
-  readonly terraName: string = envOrErr("TERRA_NAME");
-  readonly walletPrivateKey: string = envOrErr("TERRA_PRIVATE_KEY");
-  readonly coin: string = envOrErr("TERRA_COIN");
-  readonly contractAddress: string = envOrErr("TERRA_PYTH_CONTRACT_ADDRESS");
+  readonly nodeUrl: string;
+  readonly terraChainId: string;
+  readonly walletPrivateKey: string;
+  readonly coin: string;
+  readonly contractAddress: string;
   readonly lcdConfig: LCDClientConfig;
   walletSeqNum: number = 0;
   walletAccountNum: number = 0;
 
-  constructor() {
+  constructor(cfg: {
+    nodeUrl: string;
+    terraChainId: string;
+    walletPrivateKey: string;
+    coin: string;
+    contractAddress: string;
+  }) {
+    this.nodeUrl = cfg.nodeUrl;
+    this.terraChainId = cfg.terraChainId;
+    this.walletPrivateKey = cfg.walletPrivateKey;
+    this.coin = cfg.coin;
+    this.contractAddress = cfg.contractAddress;
+
     this.lcdConfig = {
       URL: this.nodeUrl,
       chainID: this.terraChainId,
-      // name: process.env.TERRA_NAME,
     };
     logger.info(
       "Terra connection parameters: url: [" +
         this.nodeUrl +
         "], terraChainId: [" +
         this.terraChainId +
-        "], terraName: [" +
-        this.terraName +
         "], coin: [" +
         this.coin +
         "], contractAddress: [" +
@@ -71,23 +79,6 @@ export class TerraRelay implements Relay {
 
       msgs.push(msg);
     }
-
-    // logger.debug("TIME: looking up gas");
-    // //Alternate FCD methodology
-    // //let gasPrices = await axios.get("http://localhost:3060/v1/txs/gas_prices").then((result) => result.data);
-    // const gasPrices = lcdClient.config.gasPrices;
-
-    // logger.debug("TIME: estimating fees");
-    // //const walletSequence = await wallet.sequence();
-    // const feeEstimate = await lcdClient.tx.estimateFee(
-    //   wallet.key.accAddress,
-    //   msgs,
-    //   {
-    //     //TODO figure out type mismatch
-    //     feeDenoms: [this.coin],
-    //     gasPrices,
-    //   }
-    // );
 
     logger.debug(
       "TIME: creating transaction using seq number " +
@@ -183,13 +174,21 @@ export class TerraRelay implements Relay {
 export type TerraConnectionData = TerraRelay;
 
 export function connectToTerra(): TerraConnectionData {
-  return new TerraRelay();
+  return new TerraRelay({
+    nodeUrl: envOrErr("TERRA_NODE_URL"),
+    terraChainId: envOrErr("TERRA_CHAIN_ID"),
+    walletPrivateKey: envOrErr("TERRA_PRIVATE_KEY"),
+    coin: envOrErr("TERRA_COIN"),
+    contractAddress: envOrErr("TERRA_PYTH_CONTRACT_ADDRESS"),
+  });
 }
 
 export async function relayTerra(
   connectionData: TerraConnectionData,
   signedVAAs: Array<string>
-) {}
+) {
+  return connectionData.relay(signedVAAs);
+}
 
 export async function queryTerra(
   connectionData: TerraConnectionData,
