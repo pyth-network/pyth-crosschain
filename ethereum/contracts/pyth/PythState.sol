@@ -27,9 +27,9 @@ contract PythStorage {
         // Mapping of initialized implementations
         mapping(address => bool) initializedImplementations;
 
-        // Mapping of cached price attestations
-        // productId => priceType => PriceAttestation
-        mapping(bytes32 => mapping(uint8 => PythStructs.PriceAttestation)) latestAttestations;
+        // Mapping of cached price information
+        // priceId => PriceInfo
+        mapping(bytes32 => PythStructs.PriceInfo) latestPriceInfo;
     }
 }
 

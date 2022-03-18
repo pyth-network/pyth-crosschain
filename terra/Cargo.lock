@@ -1320,7 +1320,7 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
 name = "p2w-sdk"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "pyth-sdk-solana",
  "serde",
@@ -1433,6 +1433,7 @@ dependencies = [
  "k256",
  "lazy_static",
  "p2w-sdk",
+ "pyth-sdk",
  "schemars",
  "serde",
  "serde_derive",
@@ -1446,9 +1447,9 @@ dependencies = [
 
 [[package]]
 name = "pyth-sdk"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "446ff07d7ef3bd98214f9b4fe6a611a69e36b5aad74b18cdbad5150193c1f204"
+checksum = "c610102a39fc4bae29a3b5a628ee134d25afb3dca3937692f5e634f1287fe0b4"
 dependencies = [
  "borsh",
  "borsh-derive",
@@ -1458,9 +1459,9 @@ dependencies = [
 
 [[package]]
 name = "pyth-sdk-solana"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27a648739aa69cab94edd900a0d7ca37d8a789e9c88741b23deec11fab418d16"
+checksum = "b1fdc94592a28fa829b0d6fa619392b1a1744048e5b78a74a4ba93cf541eddae"
 dependencies = [
  "borsh",
  "borsh-derive",
