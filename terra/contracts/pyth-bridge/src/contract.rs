@@ -190,9 +190,14 @@ pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
     match price_info_read(deps.storage).load(address) {
         Ok(mut terra_price_info) => {
             // Attestation time is very close to the actual price time (maybe a few seconds older).
-            // This will ensure to set status unknown if the price has become very old and hasn't updated yet.
-            // Also, if a price has arrived very late to terra it will set the status to unknown.
-            if env.block.time.seconds().saturating_sub(terra_price_info.attestation_time.seconds()) > VALID_TIME_PERIOD.as_secs() {
+            // Cases that it will cover:
+            // - This will ensure to set status unknown if the price has become very old and hasn't updated yet.
+            // - If a price has arrived very late to terra it will set the status to unknown.
+            // - If a price is coming from future it's tolerated up to VALID_TIME_PERIOD seconds (using abs_diff)
+            //   but more than that is set to unknown, the reason is huge clock difference means there exists a 
+            //   problem in a either Terra or Solana blockchain and if it is Solana we don't want to propagate
+            //   Solana internal problems to Terra
+            if env.block.time.seconds().abs_diff(terra_price_info.attestation_time.seconds()) > VALID_TIME_PERIOD.as_secs() {
                 terra_price_info.price_feed.status = PriceStatus::Unknown;
             }
 
