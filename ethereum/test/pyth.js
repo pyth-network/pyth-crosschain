@@ -31,12 +31,6 @@ contract("Pyth", function () {
         const chainId = await initialized.methods.chainId().call();
         assert.equal(chainId, testChainId);
 
-        // governance
-        const governanceChainId = await initialized.methods.governanceChainId().call();
-        assert.equal(governanceChainId, testGovernanceChainId);
-        const governanceContract = await initialized.methods.governanceContract().call();
-        assert.equal(governanceContract, testGovernanceContract);
-
         // pyth2wormhole
         const pyth2wormChain = await initialized.methods.pyth2WormholeChainId().call();
         assert.equal(pyth2wormChain, testPyth2WormholeChainId);
