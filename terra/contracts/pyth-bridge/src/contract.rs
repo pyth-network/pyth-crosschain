@@ -192,7 +192,7 @@ pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
             // Attestation time is very close to the actual price time (maybe a few seconds older).
             // This will ensure to set status unknown if the price has become very old and hasn't updated yet.
             // Also, if a price has arrived very late to terra it will set the status to unknown.
-            if env.block.time.seconds() - terra_price_info.attestation_time.seconds() > VALID_TIME_PERIOD.as_secs() {
+            if env.block.time.seconds().saturating_sub(terra_price_info.attestation_time.seconds()) > VALID_TIME_PERIOD.as_secs() {
                 terra_price_info.price_feed.status = PriceStatus::Unknown;
             }
 
