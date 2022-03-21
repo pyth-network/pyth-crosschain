@@ -64,4 +64,8 @@ contract PythStructs {
         uint256 arrivalTime;
         uint256 arrivalBlock;
     }
+
+    struct PriceFeedResponse {
+        PythSDK.PriceFeed priceFeed;
+    }
 }

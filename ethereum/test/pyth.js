@@ -106,13 +106,23 @@ contract("Pyth", function () {
         await expectRevert(upgradeProxy(this.pythProxy.address, MockPythProxyUpgrade), notOwnerError);
     })
 
-    const rawBatchPriceAttestation = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000071dfffffffb00000000000005f70000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000622f65f4503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000440fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000622f65f4503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000609fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000622f65f45032574800020171ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bcfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000622f65f4";
+    const rawBatchPriceAttestation = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000071dfffffffb00000000000005f70000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000TTTTTTTT503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000440fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000TTTTTTTT503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000609fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000TTTTTTTT5032574800020171ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bcfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000TTTTTTTT";
+
+    function encodeTimestamp(timestamp) {
+        return timestamp.toString(16).padStart(8, "0");
+    }
+
+    function generateRawBatchAttestation(timestamp) {
+        return rawBatchPriceAttestation.replace(/TTTTTTTT/g, encodeTimestamp(timestamp));
+    }
 
     it("should parse batch price attestation correctly", async function() {
         const magic = 1345476424;
         const version = 2;
 
-        let parsed = await this.pythProxy.parseBatchPriceAttestation(rawBatchPriceAttestation);
+        let timestamp = 1647273460;
+        let rawBatch = generateRawBatchAttestation(timestamp); 
+        let parsed = await this.pythProxy.parseBatchPriceAttestation(rawBatch);
 
         // Check the header
         assert.equal(parsed.header.magic, magic);
@@ -142,7 +152,7 @@ contract("Pyth", function () {
         assert.equal(parsed.attestations[0].confidenceInterval, 3);
         assert.equal(parsed.attestations[0].status, 1);
         assert.equal(parsed.attestations[0].corpAct, 0);
-        assert.equal(parsed.attestations[0].timestamp, 1647273460);
+        assert.equal(parsed.attestations[0].timestamp, timestamp);
 
         // Attestation #2
         assert.equal(parsed.attestations[1].header.magic, magic);
@@ -162,7 +172,7 @@ contract("Pyth", function () {
         assert.equal(parsed.attestations[1].confidenceInterval, 7);
         assert.equal(parsed.attestations[1].status, 1);
         assert.equal(parsed.attestations[1].corpAct, 0);
-        assert.equal(parsed.attestations[1].timestamp, 1647273460);
+        assert.equal(parsed.attestations[1].timestamp, timestamp);
 
         // Attestation #3
         assert.equal(parsed.attestations[2].header.magic, magic);
@@ -182,7 +192,7 @@ contract("Pyth", function () {
         assert.equal(parsed.attestations[2].confidenceInterval, 1);
         assert.equal(parsed.attestations[2].status, 1);
         assert.equal(parsed.attestations[2].corpAct, 0);
-        assert.equal(parsed.attestations[2].timestamp, 1647273460);
+        assert.equal(parsed.attestations[2].timestamp, timestamp);
 
         // Attestation #4
         assert.equal(parsed.attestations[3].header.magic, magic);
@@ -202,7 +212,7 @@ contract("Pyth", function () {
         assert.equal(parsed.attestations[3].confidenceInterval, 3);
         assert.equal(parsed.attestations[3].status, 1);
         assert.equal(parsed.attestations[3].corpAct, 0);
-        assert.equal(parsed.attestations[3].timestamp, 1647273460);
+        assert.equal(parsed.attestations[3].timestamp, timestamp);
     })
 
     async function attest(contract, data) {
@@ -224,13 +234,16 @@ contract("Pyth", function () {
     }
 
     it("should attest price updates over wormhole", async function() {
-        await attest(this.pythProxy, rawBatchPriceAttestation);
+        let rawBatch = generateRawBatchAttestation(1647273460);
+        await attest(this.pythProxy, rawBatch);
     })
 
     it("should cache price updates", async function() {
-        await attest(this.pythProxy, rawBatchPriceAttestation);
+        let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
+        let rawBatch = generateRawBatchAttestation(currentTimestamp);
+        await attest(this.pythProxy, rawBatch);
 
-        let first = await this.pythProxy.latestPriceInfo("0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e");
+        let first = await this.pythProxy.queryPriceFeed("0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e");
         assert.equal(first.priceFeed.id, "0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e");
         assert.equal(first.priceFeed.productId, "0xc0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73");
         assert.equal(first.priceFeed.price, 1821);
@@ -241,9 +254,8 @@ contract("Pyth", function () {
         assert.equal(first.priceFeed.maxNumPublishers, 0);
         assert.equal(first.priceFeed.emaPrice, 1527);
         assert.equal(first.priceFeed.emaConf, 3);
-        assert.equal(first.attestationTime, 1647273460);
 
-        let second = await this.pythProxy.latestPriceInfo("0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
+        let second = await this.pythProxy.queryPriceFeed("0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
         assert.equal(second.priceFeed.id, "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
         assert.equal(second.priceFeed.productId, "0x7090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54");
         assert.equal(second.priceFeed.price, 1088);
@@ -254,7 +266,47 @@ contract("Pyth", function () {
         assert.equal(second.priceFeed.maxNumPublishers, 0);
         assert.equal(second.priceFeed.emaPrice, 1531);
         assert.equal(second.priceFeed.emaConf, 2);
-        assert.equal(second.attestationTime, 1647273460);
+    })
+
+    it("should fail transaction if a price is not found", async function() {
+        await expectRevert(
+            this.pythProxy.queryPriceFeed(
+                "0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e"),
+                "no price feed found for the given price id");
+    })
+
+    it("should show stale cached prices as unknown", async function() {
+        let smallestTimestamp = 1;
+        let rawBatch = generateRawBatchAttestation(smallestTimestamp);
+        await attest(this.pythProxy, rawBatch);
+
+        let all_price_ids = ["0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e",
+            "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620",
+            "0x8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd",
+            "0x17fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb7"
+        ];
+        for (var i = 0; i < all_price_ids.length; i++) {
+            const price_id = all_price_ids[i];
+            let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
+            assert.equal(priceFeedResult.priceFeed.status.toString(), PythSDK.PriceStatus.UNKNOWN.toString());
+        }
+    })
+
+    it("should show cached prices too far into the future as unknown", async function() {
+        let largestTimestamp = 4294967295;
+        let rawBatch = generateRawBatchAttestation(largestTimestamp);
+        await attest(this.pythProxy, rawBatch);
+
+        let all_price_ids = ["0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e",
+            "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620",
+            "0x8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd",
+            "0x17fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb7"
+        ];
+        for (var i = 0; i < all_price_ids.length; i++) {
+            const price_id = all_price_ids[i];
+            let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
+            assert.equal(priceFeedResult.priceFeed.status.toString(), PythSDK.PriceStatus.UNKNOWN.toString());
+        }
     })
 
     it("should only cache updates for new prices", async function() {
@@ -263,7 +315,13 @@ contract("Pyth", function () {
         // the second batch have a newer timestamp than those in the first batch, and so these 
         // are the only two which should be cached.
 
-        let secondBatchPriceAttestation = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000073dfffffffb00000000000005470000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000622f65f5503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000450fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000622f65f4503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000659fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000622f65f45032574800020181ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bDfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000622f65f5";
+        let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
+        let encodedCurrentTimestamp = encodeTimestamp(currentTimestamp);
+        let encodedNewerTimestamp = encodeTimestamp(currentTimestamp + 1);
+
+        const firstBatch = generateRawBatchAttestation(currentTimestamp);
+
+        let secondBatch = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000073dfffffffb00000000000005470000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000"+encodedNewerTimestamp+"503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000450fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000"+encodedCurrentTimestamp+"503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000659fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000"+encodedCurrentTimestamp+"5032574800020181ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bDfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000"+encodedNewerTimestamp;
 
         let all_price_ids = ["0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e",
             "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620",
@@ -272,19 +330,19 @@ contract("Pyth", function () {
         ];
 
         // Send the first batch
-        await attest(this.pythProxy, rawBatchPriceAttestation);
+        await attest(this.pythProxy, firstBatch);
         let prices_after_first_update = {};
         for (var i = 0; i < all_price_ids.length; i++) {
             const price_id = all_price_ids[i];
-            prices_after_first_update[price_id] = await this.pythProxy.latestPriceInfo(price_id);
+            prices_after_first_update[price_id] = await this.pythProxy.queryPriceFeed(price_id);
         }
 
         // Send the second batch
-        await attest(this.pythProxy, secondBatchPriceAttestation);
+        await attest(this.pythProxy, secondBatch);
         let prices_after_second_update = {};
         for (var i = 0; i < all_price_ids.length; i++) {
             const price_id = all_price_ids[i];
-            prices_after_second_update[price_id] = await this.pythProxy.latestPriceInfo(price_id);
+            prices_after_second_update[price_id] = await this.pythProxy.queryPriceFeed(price_id);
         }
 
         // Price IDs which have newer timestamps
@@ -302,7 +360,6 @@ contract("Pyth", function () {
         for (var i = 0; i < new_price_updates.length; i++) {
             const price_id = new_price_updates[i];
             assert.notEqual(prices_after_first_update[price_id].priceFeed.price, prices_after_second_update[price_id].priceFeed.price);
-            assert.notEqual(prices_after_first_update[price_id].attestationTime, prices_after_second_update[price_id].attestationTime);
         }
 
         // Check that the old price updates have been discarded
@@ -316,8 +373,6 @@ contract("Pyth", function () {
             assert.equal(prices_after_first_update[price_id].priceFeed.maxNumPublishers, prices_after_second_update[price_id].priceFeed.maxNumPublishers);
             assert.equal(prices_after_first_update[price_id].priceFeed.emaPrice, prices_after_second_update[price_id].priceFeed.emaPrice);
             assert.equal(prices_after_first_update[price_id].priceFeed.emaConf, prices_after_second_update[price_id].priceFeed.emaConf);
-            assert.equal(prices_after_first_update[price_id].attestationTime, prices_after_second_update[price_id].attestationTime);
-            assert.equal(prices_after_first_update[price_id].arrivalTime, prices_after_second_update[price_id].arrivalTime);
         }
     })
 });

@@ -161,4 +161,31 @@ contract Pyth is PythGetters, PythSetters {
             index += 8;
         }
     }
+
+    /// Maximum acceptable time period before price is considered to be stale.
+    /// 
+    /// This includes attestation delay which currently might up to a minute.
+    uint private constant VALID_TIME_PERIOD_SECS = 180;
+
+    function queryPriceFeed(bytes32 id) public view returns (PythStructs.PriceFeedResponse memory priceFeed){
+
+        // Look up the latest price info for the given ID
+        PythStructs.PriceInfo memory info = latestPriceInfo(id);
+        require(info.priceFeed.id != 0, "no price feed found for the given price id");
+
+        // Check that the price is not stale
+        if (diff(block.timestamp, info.attestationTime) > VALID_TIME_PERIOD_SECS) {
+            info.priceFeed.status = PythSDK.PriceStatus.UNKNOWN;
+        }
+        
+        return PythStructs.PriceFeedResponse({priceFeed: info.priceFeed});
+    }
+
+    function diff(uint x, uint y) private pure returns (uint) {
+        if (x > y) {
+            return x - y;
+        } else {
+            return y - x;
+        }
+    }
 }
