@@ -177,7 +177,7 @@ export class TerraRelay implements Relay {
 
     const wallet = lcdClient.wallet(mk);
 
-    const query_result = await lcdClient.wasm.contractQuery(
+    return  await lcdClient.wasm.contractQuery(
       this.contractAddress,
       {
         price_info: {
