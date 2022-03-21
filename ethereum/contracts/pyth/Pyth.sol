@@ -66,7 +66,7 @@ contract Pyth is PythGetters, PythSetters {
         return info;
     }
 
-    function verifyPythVM(IWormhole.VM memory vm) public view returns (bool valid) {
+    function verifyPythVM(IWormhole.VM memory vm) private view returns (bool valid) {
         if (vm.emitterChainId != pyth2WormholeChainId()) {
             return false;
         }
