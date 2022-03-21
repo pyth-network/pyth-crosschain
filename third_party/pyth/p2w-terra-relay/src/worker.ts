@@ -164,6 +164,9 @@ async function callBack(err: any, result: any) {
     err,
     result
   );
+
+  await updateBalance();
+
   // condition = null;
   // await helpers.sleep(10000);
   // logger.debug("done with long sleep");
@@ -200,6 +203,8 @@ async function callBack(err: any, result: any) {
           sendTime
         );
 
+        await updateBalance();
+
         if (pendingMap.size === 0) {
           logger.debug("in callback, rearming the condition.");
           done = true;
@@ -220,7 +225,9 @@ function computeTimeout(): number {
       return nextBalanceQueryTimeAsMs - now;
     }
 
-    return 0;
+    // Since a lot of time has passed, timeout in 1ms (0 means no-timeout)
+    // In most cases this line should not be reached.
+    return 1;
   }
 
   return conditionTimeout;
@@ -473,7 +480,9 @@ async function finalizeEventsAlreadyLocked(
         relayResult
     );
   }
+}
 
+async function updateBalance() {
   let now = new Date();
   if (balanceQueryInterval > 0 && now.getTime() >= nextBalanceQueryTimeAsMs) {
     let balance = await main.queryBalance(connectionData);
