@@ -8,9 +8,8 @@ import "../libraries/external/BytesLib.sol";
 import "./PythGetters.sol";
 import "./PythSetters.sol";
 import "./PythStructs.sol";
-import "./PythGovernance.sol";
 
-contract Pyth is PythGovernance {
+contract Pyth is PythGetters, PythSetters {
     using BytesLib for bytes;
 
     function attestPriceBatch(bytes memory encodedVm) public returns (PythStructs.BatchPriceAttestation memory bpa) {

@@ -44,54 +44,6 @@ contract("Pyth", function () {
         assert.equal(pyth2wormEmitter, testPyth2WormholeEmitter);
     })
 
-    it("should accept a valid upgrade", async function() {
-        const initialized = new web3.eth.Contract(P2WImplementationFullABI, PythDataBridge.address);
-        const accounts = await web3.eth.getAccounts();
-
-        const mock = await MockPythImplementation.new();
-
-        let data = [
-            "0x0000000000000000000000000000000000000000000000000000000050797468",
-            "01",
-            web3.eth.abi.encodeParameter("uint16", testChainId).substring(2 + (64 - 4)),
-            web3.eth.abi.encodeParameter("address", mock.address).substring(2),
-        ].join('')
-
-        const vm = await signAndEncodeVM(
-            1,
-            1,
-            testGovernanceChainId,
-            testGovernanceContract,
-            0,
-            data,
-            [
-                testSigner1PK
-            ],
-            0,
-            0
-        );
-
-        let before = await web3.eth.getStorageAt(PythDataBridge.address, "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc");
-
-        assert.equal(before.toLowerCase(), PythImplementation.address.toLowerCase());
-
-        await initialized.methods.upgrade("0x" + vm).send({
-            value : 0,
-            from : accounts[0],
-            gasLimit : 2000000
-        });
-
-        let after = await web3.eth.getStorageAt(PythDataBridge.address, "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc");
-
-        assert.equal(after.toLowerCase(), mock.address.toLowerCase());
-
-        const mockImpl = new web3.eth.Contract(MockPythImplementation.abi, PythDataBridge.address);
-
-        let isUpgraded = await mockImpl.methods.testNewImplementationActive().call();
-
-        assert.ok(isUpgraded);
-    })
-
     const rawBatchPriceAttestation = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000071dfffffffb00000000000005f70000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000622f65f4503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000440fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000622f65f4503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000609fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000622f65f45032574800020171ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bcfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000622f65f4";
 
     it("should parse batch price attestation correctly", async function() {
