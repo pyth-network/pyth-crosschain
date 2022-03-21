@@ -5,6 +5,8 @@ const BigNumber = require('bignumber.js');
 const PythSDK = artifacts.require("PythSDK");
 
 const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
+const {expectRevert} = require('@openzeppelin/test-helpers');
+
 const Wormhole = artifacts.require("Wormhole");
 
 const PythProxy = artifacts.require("PythProxy");
@@ -21,6 +23,7 @@ contract("Pyth", function () {
     const testGovernanceContract = "0x0000000000000000000000000000000000000000000000000000000000000004";
     const testPyth2WormholeChainId = "1";
     const testPyth2WormholeEmitter = "0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
+    const notOwnerError = "Ownable: caller is not the owner -- Reason given: Ownable: caller is not the owner.";
 
     beforeEach(async function () {
         this.pythProxy = await deployProxy(
@@ -44,6 +47,63 @@ contract("Pyth", function () {
         assert.equal(pyth2wormChain, testPyth2WormholeChainId);
         const pyth2wormEmitter = await this.pythProxy.pyth2WormholeEmitter();
         assert.equal(pyth2wormEmitter, testPyth2WormholeEmitter);
+    })
+
+    it("should allow upgrades from the owner", async function(){
+        // Check that the owner is the default account Truffle 
+        // has configured for the network. upgradeProxy will send
+        // transactions from the default account.
+        const accounts = await web3.eth.getAccounts();
+        const defaultAccount = accounts[0];
+        const owner = await this.pythProxy.owner();
+        assert.equal(owner, defaultAccount);
+
+        // Try and upgrade the proxy
+        const newImplementation = await upgradeProxy(
+            this.pythProxy.address, MockPythProxyUpgrade);
+
+        // Check that the new upgrade is successful
+        assert.equal(await newImplementation.isUpgradeActive(), true);
+        assert.equal(this.pythProxy.address, newImplementation.address);
+    })
+
+    it("should allow ownership transfer", async function(){
+        // Check that the owner is the default account Truffle 
+        // has configured for the network.
+        const accounts = await web3.eth.getAccounts();
+        const defaultAccount = accounts[0];
+        assert.equal(await this.pythProxy.owner(), defaultAccount);
+
+        // Check that another account can't transfer the ownership
+        await expectRevert(this.pythProxy.transferOwnership(accounts[1], {from: accounts[1]}), notOwnerError);
+
+        // Transfer the ownership to another account
+        await this.pythProxy.transferOwnership(accounts[2], {from: defaultAccount});
+        assert.equal(await this.pythProxy.owner(), accounts[2]);
+
+        // Check that the original account can't transfer the ownership back to itself
+        await expectRevert(this.pythProxy.transferOwnership(defaultAccount, {from: defaultAccount}), notOwnerError);
+
+        // Check that the new owner can transfer the ownership back to the original account
+        await this.pythProxy.transferOwnership(defaultAccount, {from: accounts[2]});
+        assert.equal(await this.pythProxy.owner(), defaultAccount);
+    })
+
+    it("should not allow upgrades from the another account", async function(){
+        // Check that the owner is the default account Truffle 
+        // has configured for the network.
+        const accounts = await web3.eth.getAccounts();
+        const defaultAccount = accounts[0];
+        assert.equal(await this.pythProxy.owner(), defaultAccount);
+
+        // Transfer the ownership to another account
+        const newOwnerAccount = accounts[1];
+        await this.pythProxy.transferOwnership(newOwnerAccount, {from: defaultAccount});
+        assert.equal(await this.pythProxy.owner(), newOwnerAccount);
+
+        // Try and upgrade using the default account, which will 
+        // because we are no longer the owner.
+        await expectRevert(upgradeProxy(this.pythProxy.address, MockPythProxyUpgrade), notOwnerError);
     })
 
     const rawBatchPriceAttestation = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000071dfffffffb00000000000005f70000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000622f65f4503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000440fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000622f65f4503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000609fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000622f65f45032574800020171ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bcfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000622f65f4";
