@@ -241,7 +241,7 @@ contract("Pyth", function () {
         assert.equal(first.price.maxNumPublishers, 0);
         assert.equal(first.price.emaPrice, 1527);
         assert.equal(first.price.emaConf, 3);
-        assert.equal(first.attestation_time, 1647273460);
+        assert.equal(first.attestationTime, 1647273460);
 
         let second = await this.pythProxy.latestPriceInfo("0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
         assert.equal(second.price.id, "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
@@ -254,7 +254,7 @@ contract("Pyth", function () {
         assert.equal(second.price.maxNumPublishers, 0);
         assert.equal(second.price.emaPrice, 1531);
         assert.equal(second.price.emaConf, 2);
-        assert.equal(second.attestation_time, 1647273460);
+        assert.equal(second.attestationTime, 1647273460);
     })
 
     it("should only cache updates for new prices", async function() {
@@ -302,7 +302,7 @@ contract("Pyth", function () {
         for (var i = 0; i < new_price_updates.length; i++) {
             const price_id = new_price_updates[i];
             assert.notEqual(prices_after_first_update[price_id].price.price, prices_after_second_update[price_id].price.price);
-            assert.notEqual(prices_after_first_update[price_id].attestation_time, prices_after_second_update[price_id].attestation_time);
+            assert.notEqual(prices_after_first_update[price_id].attestationTime, prices_after_second_update[price_id].attestationTime);
         }
 
         // Check that the old price updates have been discarded
@@ -316,8 +316,8 @@ contract("Pyth", function () {
             assert.equal(prices_after_first_update[price_id].price.maxNumPublishers, prices_after_second_update[price_id].price.maxNumPublishers);
             assert.equal(prices_after_first_update[price_id].price.emaPrice, prices_after_second_update[price_id].price.emaPrice);
             assert.equal(prices_after_first_update[price_id].price.emaConf, prices_after_second_update[price_id].price.emaConf);
-            assert.equal(prices_after_first_update[price_id].attestation_time, prices_after_second_update[price_id].attestation_time);
-            assert.equal(prices_after_first_update[price_id].arrival_time, prices_after_second_update[price_id].arrival_time);
+            assert.equal(prices_after_first_update[price_id].attestationTime, prices_after_second_update[price_id].attestationTime);
+            assert.equal(prices_after_first_update[price_id].arrivalTime, prices_after_second_update[price_id].arrivalTime);
         }
     })
 });

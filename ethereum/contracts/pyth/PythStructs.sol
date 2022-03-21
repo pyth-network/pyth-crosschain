@@ -60,8 +60,8 @@ contract PythStructs {
 
     struct PriceInfo {
         PythSDK.Price price;
-        uint256 attestation_time;
-        uint256 arrival_time;
-        uint256 arrival_block;
+        uint256 attestationTime;
+        uint256 arrivalTime;
+        uint256 arrivalBlock;
     }
 }

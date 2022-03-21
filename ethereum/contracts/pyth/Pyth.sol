@@ -37,7 +37,7 @@ contract Pyth is PythGetters, PythSetters {
 
             PythStructs.PriceInfo memory latestPrice = latestPriceInfo(attestation.priceId);
 
-            if(attestation.timestamp > latestPrice.attestation_time) {
+            if(attestation.timestamp > latestPrice.attestationTime) {
                 setLatestPriceInfo(attestation.priceId, newPriceInfo(attestation));
             }
         }
@@ -45,11 +45,10 @@ contract Pyth is PythGetters, PythSetters {
         return batch;
     }
 
-    
     function newPriceInfo(PythStructs.PriceAttestation memory pa) private view returns (PythStructs.PriceInfo memory info) {
-        info.attestation_time = pa.timestamp;
-        info.arrival_time = block.timestamp;
-        info.arrival_block = block.number;
+        info.attestationTime = pa.timestamp;
+        info.arrivalTime = block.timestamp;
+        info.arrivalBlock = block.number;
         
         info.price.id = pa.priceId;
         info.price.price = pa.price;
