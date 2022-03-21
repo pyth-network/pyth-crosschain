@@ -59,7 +59,7 @@ contract PythStructs {
     }
 
     struct PriceInfo {
-        PythSDK.Price price;
+        PythSDK.PriceFeed priceFeed;
         uint256 attestationTime;
         uint256 arrivalTime;
         uint256 arrivalBlock;

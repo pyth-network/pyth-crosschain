@@ -50,18 +50,18 @@ contract Pyth is PythGetters, PythSetters {
         info.arrivalTime = block.timestamp;
         info.arrivalBlock = block.number;
         
-        info.price.id = pa.priceId;
-        info.price.price = pa.price;
-        info.price.conf = pa.confidenceInterval;
-        info.price.status = PythSDK.PriceStatus(pa.status);
-        info.price.expo = pa.exponent;
-        info.price.emaPrice = pa.emaPrice.value;
-        info.price.emaConf = uint64(pa.emaConf.value);
-        info.price.productId = pa.productId;
+        info.priceFeed.id = pa.priceId;
+        info.priceFeed.price = pa.price;
+        info.priceFeed.conf = pa.confidenceInterval;
+        info.priceFeed.status = PythSDK.PriceStatus(pa.status);
+        info.priceFeed.expo = pa.exponent;
+        info.priceFeed.emaPrice = pa.emaPrice.value;
+        info.priceFeed.emaConf = uint64(pa.emaConf.value);
+        info.priceFeed.productId = pa.productId;
 
         // These aren't sent in the wire format yet
-        info.price.numPublishers = 0;
-        info.price.maxNumPublishers = 0;
+        info.priceFeed.numPublishers = 0;
+        info.priceFeed.maxNumPublishers = 0;
         return info;
     }
 

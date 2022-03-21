@@ -231,29 +231,29 @@ contract("Pyth", function () {
         await attest(this.pythProxy, rawBatchPriceAttestation);
 
         let first = await this.pythProxy.latestPriceInfo("0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e");
-        assert.equal(first.price.id, "0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e");
-        assert.equal(first.price.productId, "0xc0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73");
-        assert.equal(first.price.price, 1821);
-        assert.equal(first.price.conf, 3);
-        assert.equal(first.price.expo, -5);
-        assert.equal(first.price.status.toString(), PythSDK.PriceStatus.TRADING.toString());
-        assert.equal(first.price.numPublishers, 0);
-        assert.equal(first.price.maxNumPublishers, 0);
-        assert.equal(first.price.emaPrice, 1527);
-        assert.equal(first.price.emaConf, 3);
+        assert.equal(first.priceFeed.id, "0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e");
+        assert.equal(first.priceFeed.productId, "0xc0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73");
+        assert.equal(first.priceFeed.price, 1821);
+        assert.equal(first.priceFeed.conf, 3);
+        assert.equal(first.priceFeed.expo, -5);
+        assert.equal(first.priceFeed.status.toString(), PythSDK.PriceStatus.TRADING.toString());
+        assert.equal(first.priceFeed.numPublishers, 0);
+        assert.equal(first.priceFeed.maxNumPublishers, 0);
+        assert.equal(first.priceFeed.emaPrice, 1527);
+        assert.equal(first.priceFeed.emaConf, 3);
         assert.equal(first.attestationTime, 1647273460);
 
         let second = await this.pythProxy.latestPriceInfo("0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
-        assert.equal(second.price.id, "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
-        assert.equal(second.price.productId, "0x7090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54");
-        assert.equal(second.price.price, 1088);
-        assert.equal(second.price.conf, 7);
-        assert.equal(second.price.expo, -5);
-        assert.equal(second.price.status.toString(), PythSDK.PriceStatus.TRADING.toString());
-        assert.equal(second.price.numPublishers, 0);
-        assert.equal(second.price.maxNumPublishers, 0);
-        assert.equal(second.price.emaPrice, 1531);
-        assert.equal(second.price.emaConf, 2);
+        assert.equal(second.priceFeed.id, "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
+        assert.equal(second.priceFeed.productId, "0x7090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54");
+        assert.equal(second.priceFeed.price, 1088);
+        assert.equal(second.priceFeed.conf, 7);
+        assert.equal(second.priceFeed.expo, -5);
+        assert.equal(second.priceFeed.status.toString(), PythSDK.PriceStatus.TRADING.toString());
+        assert.equal(second.priceFeed.numPublishers, 0);
+        assert.equal(second.priceFeed.maxNumPublishers, 0);
+        assert.equal(second.priceFeed.emaPrice, 1531);
+        assert.equal(second.priceFeed.emaConf, 2);
         assert.equal(second.attestationTime, 1647273460);
     })
 
@@ -301,21 +301,21 @@ contract("Pyth", function () {
         // Check that the new price updates have been updated
         for (var i = 0; i < new_price_updates.length; i++) {
             const price_id = new_price_updates[i];
-            assert.notEqual(prices_after_first_update[price_id].price.price, prices_after_second_update[price_id].price.price);
+            assert.notEqual(prices_after_first_update[price_id].priceFeed.price, prices_after_second_update[price_id].priceFeed.price);
             assert.notEqual(prices_after_first_update[price_id].attestationTime, prices_after_second_update[price_id].attestationTime);
         }
 
         // Check that the old price updates have been discarded
         for (var i = 0; i < old_price_updates.length; i++) {
             const price_id = old_price_updates[i];
-            assert.equal(prices_after_first_update[price_id].price.price, prices_after_second_update[price_id].price.price);
-            assert.equal(prices_after_first_update[price_id].price.conf, prices_after_second_update[price_id].price.conf);
-            assert.equal(prices_after_first_update[price_id].price.expo, prices_after_second_update[price_id].price.expo);
-            assert.equal(prices_after_first_update[price_id].price.status.toString(), prices_after_second_update[price_id].price.status.toString());
-            assert.equal(prices_after_first_update[price_id].price.numPublishers, prices_after_second_update[price_id].price.numPublishers);
-            assert.equal(prices_after_first_update[price_id].price.maxNumPublishers, prices_after_second_update[price_id].price.maxNumPublishers);
-            assert.equal(prices_after_first_update[price_id].price.emaPrice, prices_after_second_update[price_id].price.emaPrice);
-            assert.equal(prices_after_first_update[price_id].price.emaConf, prices_after_second_update[price_id].price.emaConf);
+            assert.equal(prices_after_first_update[price_id].priceFeed.price, prices_after_second_update[price_id].priceFeed.price);
+            assert.equal(prices_after_first_update[price_id].priceFeed.conf, prices_after_second_update[price_id].priceFeed.conf);
+            assert.equal(prices_after_first_update[price_id].priceFeed.expo, prices_after_second_update[price_id].priceFeed.expo);
+            assert.equal(prices_after_first_update[price_id].priceFeed.status.toString(), prices_after_second_update[price_id].priceFeed.status.toString());
+            assert.equal(prices_after_first_update[price_id].priceFeed.numPublishers, prices_after_second_update[price_id].priceFeed.numPublishers);
+            assert.equal(prices_after_first_update[price_id].priceFeed.maxNumPublishers, prices_after_second_update[price_id].priceFeed.maxNumPublishers);
+            assert.equal(prices_after_first_update[price_id].priceFeed.emaPrice, prices_after_second_update[price_id].priceFeed.emaPrice);
+            assert.equal(prices_after_first_update[price_id].priceFeed.emaConf, prices_after_second_update[price_id].priceFeed.emaConf);
             assert.equal(prices_after_first_update[price_id].attestationTime, prices_after_second_update[price_id].attestationTime);
             assert.equal(prices_after_first_update[price_id].arrivalTime, prices_after_second_update[price_id].arrivalTime);
         }
