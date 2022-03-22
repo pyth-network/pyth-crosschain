@@ -1,7 +1,7 @@
 {
-    "name": "@certusone/p2w-relay",
+    "name": "@certusone/p2w-integration-observer",
     "version": "0.1.0",
-    "description": "p2w-sdk integration test; not intended for production use",
+    "description": "p2w integration observer; not intended for production use",
     "private": true,
     "types": "lib/index.d.ts",
     "main": "lib/index.js",
