@@ -9,19 +9,19 @@ export enum RelayRetcode {
   Success = 0,
   Fail, // Generic failure
   AlreadyExecuted, // TODO(2022-03-18): Terra-specific leak, remove ASAP
-  Timeout, // Our desired timeout expiredW
+  Timeout, // Our desired timeout expired
   SeqNumMismatch, // TODO(2022-03-18): Terra-specific leak, remove ASAP
   InsufficientFunds, // Payer's too poor
 }
 
 /// relay() return type
-export class RelayResult<T> {
+export class RelayResult {
   code: RelayRetcode;
-  val: T;
+  txHashes: Array<string>; /// One or more tx hashes produced by a successful relay() call
 
-  constructor(code: RelayRetcode, val: T) {
+  constructor(code: RelayRetcode, hashes: Array<string> ) {
     this.code = code;
-    this.val = val;
+    this.txHashes = hashes;
   }
 
   is_ok(): boolean {
@@ -32,7 +32,7 @@ export class RelayResult<T> {
 /// Represents a target chain relay client generically.
 export interface Relay {
   /// Relay a signed Wormhole payload to this chain
-  relay(signedVAAs: Array<string>): Promise<RelayResult<any>>;
+  relay(signedVAAs: Array<string>): Promise<RelayResult>;
 
   /// Query price data on this chain
   query(priceId: PriceId): Promise<any>;

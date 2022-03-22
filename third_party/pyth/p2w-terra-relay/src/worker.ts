@@ -273,8 +273,8 @@ const RELAY_INSUFFICIENT_FUNDS: number = 5;
 
 async function relayEventsNotLocked(
   messages: Array<string>
-): Promise<RelayResult<any>> {
-  let relayResult: RelayResult<any> | null = null;
+): Promise<RelayResult> {
+  let relayResult: RelayResult | null = null;
   let retry: boolean = false;
 
   // CAUTION(2022-03-21): The retry logic is not very efficient at
@@ -335,7 +335,7 @@ async function relayEventsNotLocked(
 
   if (!relayResult) {
     logger.error("INTERNAL: worker failed to produce a relay result.");
-    relayResult = new RelayResult(RelayRetcode.Fail, null);
+    relayResult = new RelayResult(RelayRetcode.Fail, []);
   }
 
   return relayResult;
@@ -343,7 +343,7 @@ async function relayEventsNotLocked(
 
 async function finalizeEventsAlreadyLocked(
   currObjs: Array<CurrentEntry>,
-  relayResult: RelayResult<any>,
+  relayResult: RelayResult,
   sendTime: Date
 ) {
   for (let idx = 0; idx < currObjs.length; ++idx) {

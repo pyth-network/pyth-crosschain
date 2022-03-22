@@ -19,8 +19,6 @@ export class TerraRelay implements Relay {
   readonly coin: string;
   readonly contractAddress: string;
   readonly lcdConfig: LCDClientConfig;
-  walletSeqNum: number = 0;
-  walletAccountNum: number = 0;
 
   constructor(cfg: {
     nodeUrl: string;
@@ -83,14 +81,10 @@ export class TerraRelay implements Relay {
       }
 
       const tx = await wallet.createAndSignTx({
-        sequence: await wallet.sequence(),
-        accountNumber: await wallet.accountNumber(),
         msgs: msgs,
         memo: "P2T",
         feeDenoms: [this.coin],
       });
-
-      this.walletSeqNum = this.walletSeqNum + 1;
 
       logger.debug("TIME: sending msg");
       terraRes = await lcdClient.tx.broadcastSync(tx);
@@ -107,19 +101,19 @@ export class TerraRelay implements Relay {
               ? terraRes.txhash
               : "<INTERNAL: no txhash for AlreadyExecuted>"
           );
-          return new RelayResult(RelayRetcode.AlreadyExecuted, null);
+          return new RelayResult(RelayRetcode.AlreadyExecuted, []);
         } else if (terraRes.raw_log.search("insufficient funds") >= 0) {
           logger.error(
             "relay failed due to insufficient funds: ",
             JSON.stringify(terraRes)
           );
-          return new RelayResult(RelayRetcode.InsufficientFunds, null);
+          return new RelayResult(RelayRetcode.InsufficientFunds, []);
         } else if (terraRes.raw_log.search("failed") >= 0) {
           logger.error(
             "relay seems to have failed: ",
             JSON.stringify(terraRes)
           );
-          return new RelayResult(RelayRetcode.Fail, null);
+          return new RelayResult(RelayRetcode.Fail, []);
         }
       } else {
         logger.warn("No logs were found, result: ", JSON.stringify(terraRes));
@@ -127,7 +121,7 @@ export class TerraRelay implements Relay {
 
       // Base case, no errors were detected and no exceptions were thrown
       if (terraRes.txhash) {
-        return new RelayResult(RelayRetcode.Success, terraRes.txhash);
+        return new RelayResult(RelayRetcode.Success, [terraRes.txhash]);
       }
     } catch (e: any) {
       // Act on known Terra exceptions
@@ -137,25 +131,25 @@ export class TerraRelay implements Relay {
         e.message.search("exceeded") >= 0
       ) {
         logger.error("relay timed out: %o", e);
-        return new RelayResult(RelayRetcode.Timeout, null);
+        return new RelayResult(RelayRetcode.Timeout, []);
       } else if (
         e.response?.data?.error &&
         e.response.data.error.search("VaaAlreadyExecuted") >= 0
       ) {
-        return new RelayResult(RelayRetcode.AlreadyExecuted, null);
+        return new RelayResult(RelayRetcode.AlreadyExecuted, []);
       } else if (
         e.response?.data?.message &&
         e.response.data.message.search("account sequence mismatch") >= 0
       ) {
-        return new RelayResult(RelayRetcode.SeqNumMismatch, null);
+        return new RelayResult(RelayRetcode.SeqNumMismatch, []);
       } else {
         logger.error("Unknown error:", e.toString());
-        return new RelayResult(RelayRetcode.Fail, null);
+        return new RelayResult(RelayRetcode.Fail, []);
       }
     }
 
     logger.error("INTERNAL: Terra relay() logic failed to produce a result");
-    return new RelayResult(RelayRetcode.Fail, null);
+    return new RelayResult(RelayRetcode.Fail, []);
   }
 
   async query(priceId: PriceId) {
