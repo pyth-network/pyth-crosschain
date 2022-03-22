@@ -34,36 +34,6 @@ RUN --mount=type=cache,target=/root/.cache \
 	--mount=type=cache,target=solana/bridge/target \
     cd solana/bridge/program && /usr/local/cargo/bin/wasm-pack build --target nodejs -d nodejs -- --features wasm --locked
 
-# Compile Token Bridge
-RUN --mount=type=cache,target=/root/.cache \
-	--mount=type=cache,target=solana/modules/token_bridge/target \
-    cd solana/modules/token_bridge/program && /usr/local/cargo/bin/wasm-pack build --target bundler -d bundler -- --features wasm --locked && \
-    cd bundler && sed -i $SED_REMOVE_INVALID_REFERENCE token_bridge_bg.js
-
-RUN --mount=type=cache,target=/root/.cache \
-	--mount=type=cache,target=solana/modules/token_bridge/target \
-    cd solana/modules/token_bridge/program && /usr/local/cargo/bin/wasm-pack build --target nodejs -d nodejs -- --features wasm --locked
-
-# Compile Migration
-RUN --mount=type=cache,target=/root/.cache \
-	--mount=type=cache,target=solana/migration/target \
-    cd solana/migration && /usr/local/cargo/bin/wasm-pack build --target bundler -d bundler -- --features wasm --locked && \
-    cd bundler && sed -i $SED_REMOVE_INVALID_REFERENCE wormhole_migration_bg.js
-
-RUN --mount=type=cache,target=/root/.cache \
-	--mount=type=cache,target=solana/migration/target \
-    cd solana/migration && /usr/local/cargo/bin/wasm-pack build --target nodejs -d nodejs -- --features wasm --locked
-
-# Compile NFT Bridge
-RUN --mount=type=cache,target=/root/.cache \
-	--mount=type=cache,target=solana/modules/nft_bridge/target \
-    cd solana/modules/nft_bridge/program && /usr/local/cargo/bin/wasm-pack build --target bundler -d bundler -- --features wasm --locked && \
-    cd bundler && sed -i $SED_REMOVE_INVALID_REFERENCE nft_bridge_bg.js
-
-RUN --mount=type=cache,target=/root/.cache \
-	--mount=type=cache,target=solana/modules/nft_bridge/target \
-    cd solana/modules/nft_bridge/program && /usr/local/cargo/bin/wasm-pack build --target nodejs -d nodejs -- --features wasm --locked
-
 # Compile pyth2wormhole
 RUN --mount=type=cache,target=/root/.cache \
 	--mount=type=cache,target=third_party/pyth/p2w-sdk/rust/target \
@@ -78,14 +48,8 @@ RUN --mount=type=cache,target=/root/.cache \
 FROM scratch AS export
 
 COPY --from=build /usr/src/bridge/solana/bridge/program/bundler sdk/js/src/solana/core
-COPY --from=build /usr/src/bridge/solana/modules/token_bridge/program/bundler sdk/js/src/solana/token
-COPY --from=build /usr/src/bridge/solana/migration/bundler sdk/js/src/solana/migration
-COPY --from=build /usr/src/bridge/solana/modules/nft_bridge/program/bundler sdk/js/src/solana/nft
 
 COPY --from=build /usr/src/bridge/third_party/pyth/p2w-sdk/rust/bundler third_party/pyth/p2w-sdk/js/src/solana/p2w-core
 COPY --from=build /usr/src/bridge/solana/bridge/program/bundler third_party/pyth/p2w-sdk/js/src/solana/wormhole-core
 
 COPY --from=build /usr/src/bridge/solana/bridge/program/nodejs sdk/js/src/solana/core-node
-COPY --from=build /usr/src/bridge/solana/modules/token_bridge/program/nodejs sdk/js/src/solana/token-node
-COPY --from=build /usr/src/bridge/solana/migration/nodejs sdk/js/src/solana/migration-node
-COPY --from=build /usr/src/bridge/solana/modules/nft_bridge/program/nodejs sdk/js/src/solana/nft-node
