@@ -98,7 +98,7 @@ func Run(obsvC chan *gossipv1.SignedObservation, obsvReqC chan *gossipv1.Observa
 			// Let this host use the DHT to find other hosts
 			libp2p.Routing(func(h host.Host) (routing.PeerRouting, error) {
 				// TODO(leo): Persistent data store (i.e. address book)
-				idht, err := dht.New(ctx, h, dht.Mode(dht.ModeServer),
+				idht, err := dht.New(ctx, h, dht.Mode(dht.ModeClient),
 					// This intentionally makes us incompatible with the global IPFS DHT
 					dht.ProtocolPrefix(protocol.ID("/"+networkID)),
 				)
