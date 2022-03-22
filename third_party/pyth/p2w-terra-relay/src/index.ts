@@ -7,8 +7,8 @@ import * as helpers from "./helpers";
 import { logger } from "./helpers";
 import { PromHelper } from "./promHelpers";
 
-import { Relay} from "./relay/iface";
-import { TerraRelay} from "./relay/terra";
+import { Relay } from "./relay/iface";
+import { TerraRelay } from "./relay/terra";
 
 let configFile: string = ".env";
 if (process.env.PYTH_RELAY_CONFIG) {
@@ -33,18 +33,18 @@ for (let idx = 0; idx < process.argv.length; ++idx) {
   }
 }
 
-    relayImpl = new TerraRelay({
-    nodeUrl: helpers.envOrErr("TERRA_NODE_URL"),
-    terraChainId: helpers.envOrErr("TERRA_CHAIN_ID"),
-    walletPrivateKey: helpers.envOrErr("TERRA_PRIVATE_KEY"),
-    coin: helpers.envOrErr("TERRA_COIN"),
-    contractAddress: helpers.envOrErr("TERRA_PYTH_CONTRACT_ADDRESS"),
+relayImpl = new TerraRelay({
+  nodeUrl: helpers.envOrErr("TERRA_NODE_URL"),
+  terraChainId: helpers.envOrErr("TERRA_CHAIN_ID"),
+  walletPrivateKey: helpers.envOrErr("TERRA_PRIVATE_KEY"),
+  coin: helpers.envOrErr("TERRA_COIN"),
+  contractAddress: helpers.envOrErr("TERRA_PYTH_CONTRACT_ADDRESS"),
 });
 
 if (
   !error &&
   listen.init(listenOnly) &&
-	worker.init(!listenOnly, relayImpl) &&
+  worker.init(!listenOnly, relayImpl) &&
   rest.init(!listenOnly)
 ) {
   // Start the Prometheus client with the app name and http port
