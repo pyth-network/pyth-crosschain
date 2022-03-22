@@ -18,7 +18,6 @@ const testSigner2PK = "892330666a850761e7370376430bb8c2aa1494072d3bfeaed0c4fa3d5
 contract("Pyth", function () {
     const testSigner1 = web3.eth.accounts.privateKeyToAccount(testSigner1PK);
     const testSigner2 = web3.eth.accounts.privateKeyToAccount(testSigner2PK);
-    const testChainId = "2";
     const testGovernanceChainId = "3";
     const testGovernanceContract = "0x0000000000000000000000000000000000000000000000000000000000000004";
     const testPyth2WormholeChainId = "1";
@@ -29,7 +28,6 @@ contract("Pyth", function () {
         this.pythProxy = await deployProxy(
             PythUpgradable,
             [
-                testChainId,
                 (await Wormhole.deployed()).address,
                 testPyth2WormholeChainId,
                 testPyth2WormholeEmitter,
@@ -38,10 +36,6 @@ contract("Pyth", function () {
     });
 
     it("should be initialized with the correct signers and values", async function(){
-        // chain id
-        const chainId = await this.pythProxy.chainId();
-        assert.equal(chainId, testChainId);
-
         // pyth2wormhole
         const pyth2wormChain = await this.pythProxy.pyth2WormholeChainId();
         assert.equal(pyth2wormChain, testPyth2WormholeChainId);
