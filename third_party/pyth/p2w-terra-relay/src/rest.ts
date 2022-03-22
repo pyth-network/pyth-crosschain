@@ -30,15 +30,10 @@ export async function run() {
       res.json(result);
     });
 
-    app.get(
-      "/queryterra/:price_id",
-      async (req: Request, res: Response) => {
-        let result = await getPriceData(
-          req.params.price_id
-        );
-        res.json(result);
-      }
-    );
+    app.get("/queryterra/:price_id", async (req: Request, res: Response) => {
+      let result = await getPriceData(req.params.price_id);
+      res.json(result);
+    });
 
     app.get("/", (req: Request, res: Response) =>
       res.json(["/status", "/queryterra/<price_id>"])

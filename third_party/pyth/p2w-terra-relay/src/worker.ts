@@ -116,25 +116,26 @@ export async function run(met: PromHelper) {
       balanceQueryInterval = parseInt(process.env.BAL_QUERY_INTERVAL);
     }
 
-    let { address: payerAddress, balance: payerBalance } =
-      await relayImpl.getPayerInfo();
-    if (!isNaN(payerBalance)) {
-      walletTimeStamp = new Date();
-    }
-    if (balanceQueryInterval !== 0) {
-      logger.info(
-        "initial wallet balance is " +
-          payerBalance +
-          ", will query every " +
-          balanceQueryInterval +
-          " milliseconds."
-      );
-      metrics.setWalletBalance(payerBalance);
+    try {
+      let { address: payerAddress, balance: payerBalance } =
+        await relayImpl.getPayerInfo();
+      if (balanceQueryInterval !== 0) {
+        logger.info(
+          "initial wallet balance is " +
+            payerBalance +
+            ", will query every " +
+            balanceQueryInterval +
+            " milliseconds."
+        );
+        metrics.setWalletBalance(payerBalance);
 
-      nextBalanceQueryTimeAsMs = new Date().getTime() + balanceQueryInterval;
-    } else {
-      logger.info("initial wallet balance is " + payerBalance);
-      metrics.setWalletBalance(payerBalance);
+        nextBalanceQueryTimeAsMs = new Date().getTime() + balanceQueryInterval;
+      } else {
+        logger.info("initial wallet balance is " + payerBalance);
+        metrics.setWalletBalance(payerBalance);
+      }
+    } catch (e) {
+      walletTimeStamp = new Date();
     }
 
     await condition.wait(computeTimeout(), callBack);
@@ -396,13 +397,9 @@ async function finalizeEventsAlreadyLocked(
 async function updateBalance() {
   let now = new Date();
   if (balanceQueryInterval > 0 && now.getTime() >= nextBalanceQueryTimeAsMs) {
-    let { address, balance } = await relayImpl.getPayerInfo();
-    if (isNaN(balance)) {
-      logger.error("failed to query wallet balance!");
-    } else {
-      if (!isNaN(balance)) {
-        walletTimeStamp = new Date();
-      }
+    try {
+      let { address, balance } = await relayImpl.getPayerInfo();
+      walletTimeStamp = new Date();
       logger.info(
         "wallet " +
           address +
@@ -412,6 +409,8 @@ async function updateBalance() {
           walletTimeStamp.toISOString()
       );
       metrics.setWalletBalance(balance);
+    } catch (e) {
+      logger.error("failed to query wallet balance:" + e);
     }
     nextBalanceQueryTimeAsMs = now.getTime() + balanceQueryInterval;
   }

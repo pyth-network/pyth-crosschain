@@ -37,6 +37,8 @@ export interface Relay {
   /// Query price data on this chain
   query(priceId: PriceId): Promise<any>;
 
-  /// Monitor the payer account balance
-  getPayerInfo(): Promise<{ address: string; balance: number }>;
+  /// Monitor the payer account balance. Balance is a bigint (the JS
+  /// OG implementation) to accomodate for big number impl
+  /// differences.
+  getPayerInfo(): Promise<{ address: string; balance: bigint }>;
 }

@@ -298,7 +298,7 @@ if pyth:
     # Terra relay
     docker_build(
         ref = "p2w-terra-relay",
-        context = "third_party/pyth/p2w-terra-relay",
+        context = ".",
         dockerfile = "third_party/pyth/p2w-terra-relay/Dockerfile.pyth_relay",
     )
     k8s_yaml_with_ns("devnet/p2w-terra-relay.yaml")

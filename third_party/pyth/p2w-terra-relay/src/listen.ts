@@ -147,25 +147,32 @@ async function processVaa(vaaBytes: string) {
   // );
 
   // logger.debug("listen:processVaa: parsedVAA: %o", parsedVAA);
-  
+
   let batchAttestation;
 
   try {
-    batchAttestation = helpers.parsePythBatchPriceAttestation(Buffer.from(parsedVAA.payload));
+    batchAttestation = helpers.parsePythBatchPriceAttestation(
+      Buffer.from(parsedVAA.payload)
+    );
   } catch (e: any) {
     logger.error(e, e.stack);
-    logger.error("Parsing failed. Dropping vaa: %o", parsedVAA)
+    logger.error("Parsing failed. Dropping vaa: %o", parsedVAA);
     return;
   }
 
-  let isAnyPriceNew = batchAttestation.priceAttestations.some(priceAttestation => {
-    const key = priceAttestation.priceId;
-    let lastSeqNum = seqMap.get(key);
-    return lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence;
-  })
+  let isAnyPriceNew = batchAttestation.priceAttestations.some(
+    (priceAttestation) => {
+      const key = priceAttestation.priceId;
+      let lastSeqNum = seqMap.get(key);
+      return lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence;
+    }
+  );
 
   if (!isAnyPriceNew) {
-    logger.debug("For all prices there exists an update with newer sequence number. batch price attestation: %o", batchAttestation);
+    logger.debug(
+      "For all prices there exists an update with newer sequence number. batch price attestation: %o",
+      batchAttestation
+    );
     return;
   }
 
@@ -192,6 +199,11 @@ async function processVaa(vaaBytes: string) {
   metrics.incIncoming();
   if (!listenOnly) {
     logger.debug("posting to worker");
-    await postEvent(vaaBytes, batchAttestation, parsedVAA.sequence, receiveTime);
+    await postEvent(
+      vaaBytes,
+      batchAttestation,
+      parsedVAA.sequence,
+      receiveTime
+    );
   }
 }

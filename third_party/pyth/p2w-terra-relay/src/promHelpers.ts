@@ -1,5 +1,6 @@
 import http = require("http");
 import client = require("prom-client");
+import helpers = require("./helpers");
 
 // NOTE:  To create a new metric:
 // 1) Create a private counter/gauge with appropriate name and help
@@ -109,7 +110,7 @@ export class PromHelper {
   addCompleteTime(val: number) {
     this.completeTime.observe(val);
   }
-  setWalletBalance(bal: number) {
+  setWalletBalance(bal: bigint) {
     this.walletReg.clear();
     // this.walletReg = new client.Registry();
     this.walletBalance = new client.Gauge({
@@ -120,9 +121,20 @@ export class PromHelper {
     });
     this.walletReg.registerMetric(this.walletBalance);
     let now = new Date();
-    // this.walletDate = now.toString();
-    this.walletBalance.set({ timestamp: now.toString() }, bal);
-    // this.walletBalance.set(bal);
+    let balance_converted: number | null = null;
+    // CAUTION(2022-03-22): Conversion to Number may overflow;
+    // at this time TS build fails without the conversion.
+    try {
+      balance_converted = Number(bal);
+    } catch (e) {
+      helpers.logger.error(
+        "setWalletBalance(): BigInt -> Number conversion failed"
+      );
+    }
+    // Do not crash if there's a problem with the balance value
+    if (balance_converted) {
+      this.walletBalance.set({ timestamp: now.toString() }, balance_converted);
+    }
   }
   incIncoming() {
     this.listenCounter.inc();

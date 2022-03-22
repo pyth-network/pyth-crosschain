@@ -4,7 +4,12 @@
   "description": "Pyth relayer",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build-evm && npm run build-lib",
+    "build-evm": "npm run build-evm-contract && npm run copy-evm-abis && npm run build-evm-bindings",
+    "build-lib": "tsc",
+    "build-evm-contract": "cd ../../../ethereum/ && (npm run build || npm ci && npm run build)",
+    "copy-evm-abis": "cp -r ../../../ethereum/build/contracts/* ./src/evm/abis/",
+    "build-evm-bindings": "typechain --target=ethers-v5 --out-dir=src/evm/bindings/ src/evm/abis/Pyth*.json",
     "start": "node lib/index.js",
     "listen_only": "node lib/index.js --listen_only"
   },
@@ -31,6 +36,7 @@
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.24.0",
     "@terra-money/terra.js": "^3.0.4",
+    "@typechain/ethers-v5": "^7.0.1",
     "@types/express": "^4.17.13",
     "async-mutex": "^0.3.2",
     "body-parser": "^1.19.0",
