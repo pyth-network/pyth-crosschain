@@ -10,7 +10,7 @@ import { redeemOnTerra } from "@certusone/wormhole-sdk";
 
 import { logger, envOrErr } from "../helpers";
 
-import { Relay, PriceId } from "./iface";
+import { Relay, RelayResult, RelayRetcode, PriceId } from "./iface";
 
 export class TerraRelay implements Relay {
   readonly nodeUrl: string;
@@ -19,8 +19,6 @@ export class TerraRelay implements Relay {
   readonly coin: string;
   readonly contractAddress: string;
   readonly lcdConfig: LCDClientConfig;
-  walletSeqNum: number = 0;
-  walletAccountNum: number = 0;
 
   constructor(cfg: {
     nodeUrl: string;
@@ -53,53 +51,105 @@ export class TerraRelay implements Relay {
   }
 
   async relay(signedVAAs: Array<string>) {
-    logger.debug("relaying " + signedVAAs.length + " messages to terra");
+    let terraRes;
+    try {
+      logger.debug("relaying " + signedVAAs.length + " messages to terra");
 
-    logger.debug("TIME: connecting to terra");
-    const lcdClient = new LCDClient(this.lcdConfig);
+      logger.debug("TIME: connecting to terra");
+      const lcdClient = new LCDClient(this.lcdConfig);
 
-    const mk = new MnemonicKey({
-      mnemonic: this.walletPrivateKey,
-    });
+      const mk = new MnemonicKey({
+        mnemonic: this.walletPrivateKey,
+      });
 
-    const wallet = lcdClient.wallet(mk);
+      const wallet = lcdClient.wallet(mk);
 
-    logger.debug("TIME: creating messages");
-    let msgs = new Array<MsgExecuteContract>();
-    for (let idx = 0; idx < signedVAAs.length; ++idx) {
-      const msg = new MsgExecuteContract(
-        wallet.key.accAddress,
-        this.contractAddress,
-        {
-          submit_vaa: {
-            data: Buffer.from(signedVAAs[idx], "hex").toString("base64"),
-          },
-        }
+      logger.debug("TIME: creating messages");
+      let msgs = new Array<MsgExecuteContract>();
+      for (let idx = 0; idx < signedVAAs.length; ++idx) {
+        const msg = new MsgExecuteContract(
+          wallet.key.accAddress,
+          this.contractAddress,
+          {
+            submit_vaa: {
+              data: Buffer.from(signedVAAs[idx], "hex").toString("base64"),
+            },
+          }
+        );
+
+        msgs.push(msg);
+      }
+
+      const tx = await wallet.createAndSignTx({
+        msgs: msgs,
+        memo: "P2T",
+        feeDenoms: [this.coin],
+      });
+
+      logger.debug("TIME: sending msg");
+      terraRes = await lcdClient.tx.broadcastSync(tx);
+      logger.debug(
+        `TIME:submitted to terra: terraRes: ${JSON.stringify(terraRes)}`
       );
+      // Act on known Terra errors
 
-      msgs.push(msg);
+      if (terraRes.raw_log) {
+        if (terraRes.raw_log.search("VaaAlreadyExecuted") >= 0) {
+          logger.error(
+            "Already Executed:",
+            terraRes.txhash
+              ? terraRes.txhash
+              : "<INTERNAL: no txhash for AlreadyExecuted>"
+          );
+          return new RelayResult(RelayRetcode.AlreadyExecuted, []);
+        } else if (terraRes.raw_log.search("insufficient funds") >= 0) {
+          logger.error(
+            "relay failed due to insufficient funds: ",
+            JSON.stringify(terraRes)
+          );
+          return new RelayResult(RelayRetcode.InsufficientFunds, []);
+        } else if (terraRes.raw_log.search("failed") >= 0) {
+          logger.error(
+            "relay seems to have failed: ",
+            JSON.stringify(terraRes)
+          );
+          return new RelayResult(RelayRetcode.Fail, []);
+        }
+      } else {
+        logger.warn("No logs were found, result: ", JSON.stringify(terraRes));
+      }
+
+      // Base case, no errors were detected and no exceptions were thrown
+      if (terraRes.txhash) {
+        return new RelayResult(RelayRetcode.Success, [terraRes.txhash]);
+      }
+    } catch (e: any) {
+      // Act on known Terra exceptions
+      if (
+        e.message &&
+        e.message.search("timeout") >= 0 &&
+        e.message.search("exceeded") >= 0
+      ) {
+        logger.error("relay timed out: %o", e);
+        return new RelayResult(RelayRetcode.Timeout, []);
+      } else if (
+        e.response?.data?.error &&
+        e.response.data.error.search("VaaAlreadyExecuted") >= 0
+      ) {
+        return new RelayResult(RelayRetcode.AlreadyExecuted, []);
+      } else if (
+        e.response?.data?.message &&
+        e.response.data.message.search("account sequence mismatch") >= 0
+      ) {
+        return new RelayResult(RelayRetcode.SeqNumMismatch, []);
+      } else {
+        logger.error("Unknown error:", e.toString());
+        return new RelayResult(RelayRetcode.Fail, []);
+      }
     }
 
-    logger.debug(
-      "TIME: creating transaction using seq number " +
-        this.walletSeqNum +
-        " and account number " +
-        this.walletAccountNum
-    );
-    const tx = await wallet.createAndSignTx({
-      sequence: this.walletSeqNum,
-      accountNumber: this.walletAccountNum,
-      msgs: msgs,
-      memo: "P2T",
-      feeDenoms: [this.coin],
-    });
-
-    this.walletSeqNum = this.walletSeqNum + 1;
-
-    logger.debug("TIME: sending msg");
-    const receipt = await lcdClient.tx.broadcastSync(tx);
-    logger.debug("TIME:submitted to terra: receipt: %o", receipt);
-    return receipt;
+    logger.error("INTERNAL: Terra relay() logic failed to produce a result");
+    return new RelayResult(RelayRetcode.Fail, []);
   }
 
   async query(priceId: PriceId) {
@@ -121,14 +171,11 @@ export class TerraRelay implements Relay {
 
     const wallet = lcdClient.wallet(mk);
 
-    const query_result = await lcdClient.wasm.contractQuery(
-      this.contractAddress,
-      {
-        price_info: {
-          price_id: encodedPriceId,
-        },
-      }
-    );
+    return await lcdClient.wasm.contractQuery(this.contractAddress, {
+      price_info: {
+        price_id: encodedPriceId,
+      },
+    });
   }
 
   async getPayerInfo(): Promise<{ address: string; balance: number }> {
@@ -168,66 +215,4 @@ export class TerraRelay implements Relay {
 
     return { address: wallet.key.accAddress, balance };
   }
-}
-
-// TODO(2021-03-17): Propagate the use of the interface into worker/listener logic.
-export type TerraConnectionData = TerraRelay;
-
-export function connectToTerra(): TerraConnectionData {
-  return new TerraRelay({
-    nodeUrl: envOrErr("TERRA_NODE_URL"),
-    terraChainId: envOrErr("TERRA_CHAIN_ID"),
-    walletPrivateKey: envOrErr("TERRA_PRIVATE_KEY"),
-    coin: envOrErr("TERRA_COIN"),
-    contractAddress: envOrErr("TERRA_PYTH_CONTRACT_ADDRESS"),
-  });
-}
-
-export async function relayTerra(
-  connectionData: TerraConnectionData,
-  signedVAAs: Array<string>
-) {
-  return connectionData.relay(signedVAAs);
-}
-
-export async function queryTerra(
-  connectionData: TerraConnectionData,
-  priceIdStr: string
-) {
-  let query_result = await connectionData.query(priceIdStr);
-  logger.debug("queryTerra: query returned: %o", query_result);
-  return query_result;
-}
-
-export async function queryBalanceOnTerra(connectionData: TerraConnectionData) {
-  return (await connectionData.getPayerInfo()).balance;
-}
-
-export async function setAccountNumOnTerra(
-  connectionData: TerraConnectionData
-) {
-  const lcdClient = new LCDClient(connectionData.lcdConfig);
-
-  const mk = new MnemonicKey({
-    mnemonic: process.env.TERRA_PRIVATE_KEY,
-  });
-
-  const wallet = lcdClient.wallet(mk);
-  logger.debug("getting wallet account num");
-  connectionData.walletAccountNum = await wallet.accountNumber();
-  logger.debug("wallet account num is " + connectionData.walletAccountNum);
-}
-
-export async function setSeqNumOnTerra(connectionData: TerraConnectionData) {
-  const lcdClient = new LCDClient(connectionData.lcdConfig);
-
-  const mk = new MnemonicKey({
-    mnemonic: process.env.TERRA_PRIVATE_KEY,
-  });
-
-  const wallet = lcdClient.wallet(mk);
-
-  logger.debug("getting wallet seq num");
-  connectionData.walletSeqNum = await wallet.sequence();
-  logger.debug("wallet seq num is " + connectionData.walletSeqNum);
 }
