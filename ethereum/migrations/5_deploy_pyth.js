@@ -7,8 +7,6 @@ const PythSetup = artifacts.require("PythSetup");
 const Wormhole = artifacts.require("Wormhole");
 
 const chainId = process.env.PYTH_INIT_CHAIN_ID;
-const governanceChainId = process.env.PYTH_INIT_GOV_CHAIN_ID;
-const governanceContract = process.env.PYTH_INIT_GOV_CONTRACT; // bytes32
 const pyth2WormholeChainId = process.env.PYTH_TO_WORMHOLE_CHAIN_ID;
 const pyth2WormholeEmitter = bs58.decode(process.env.PYTH_TO_WORMHOLE_EMITTER); // base58, must fit into bytes32
 
@@ -27,9 +25,6 @@ module.exports = async function (deployer) {
 
         chainId,
         (await Wormhole.deployed()).address,
-
-        governanceChainId,
-        governanceContract,
 
         pyth2WormholeChainId,
         "0x" + pyth2WormholeEmitter.toString("hex"),

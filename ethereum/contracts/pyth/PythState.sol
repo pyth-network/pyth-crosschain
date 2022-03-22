@@ -9,9 +9,6 @@ contract PythStorage {
     struct Provider {
         uint16 chainId;
 
-        uint16 governanceChainId;
-        bytes32 governanceContract;
-
         uint16 pyth2WormholeChainId;
         bytes32 pyth2WormholeEmitter;
     }
@@ -20,9 +17,6 @@ contract PythStorage {
         address payable wormhole;
 
         Provider provider;
-
-        // Mapping of consumed governance actions
-        mapping(bytes32 => bool) consumedGovernanceActions;
 
         // Mapping of initialized implementations
         mapping(address => bool) initializedImplementations;

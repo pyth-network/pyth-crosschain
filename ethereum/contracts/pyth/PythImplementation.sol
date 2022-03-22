@@ -11,15 +11,6 @@ import "./Pyth.sol";
 
 contract PythImplementation is Pyth {
     modifier initializer() {
-        address impl = ERC1967Upgrade._getImplementation();
-
-        require(
-            !isInitialized(impl),
-            "already initialized"
-        );
-
-        setInitialized(impl);
-
         _;
     }
 }
