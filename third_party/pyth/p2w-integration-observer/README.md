@@ -15,7 +15,7 @@ signatures, thus proving its validity. This activity means being
 a Wormhole **relayer**.
 
 ## How this package relays attestations
-`p2w-relay` is a Node.js relayer script targeting ETH that will
+`p2w-integration-observer` is a Node.js relayer script targeting ETH that will
 periodically query its source-chain counterpart for new sequence
 numbers to query from the guardians. Any pending sequence numbers will
 stick around in a global state until their corresponding messages are
