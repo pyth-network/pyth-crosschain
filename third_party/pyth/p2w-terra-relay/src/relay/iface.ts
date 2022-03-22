@@ -19,7 +19,7 @@ export class RelayResult {
   code: RelayRetcode;
   txHashes: Array<string>; /// One or more tx hashes produced by a successful relay() call
 
-  constructor(code: RelayRetcode, hashes: Array<string> ) {
+  constructor(code: RelayRetcode, hashes: Array<string>) {
     this.code = code;
     this.txHashes = hashes;
   }
