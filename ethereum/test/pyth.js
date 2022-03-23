@@ -3,16 +3,15 @@ const elliptic = require('elliptic');
 const BigNumber = require('bignumber.js');
 
 const PythSDK = artifacts.require("PythSDK");
+
+const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const Wormhole = artifacts.require("Wormhole");
-const PythDataBridge = artifacts.require("PythDataBridge");
-const PythImplementation = artifacts.require("PythImplementation");
-const MockPythImplementation = artifacts.require("MockPythImplementation");
+
+const PythProxy = artifacts.require("PythProxy");
+const MockPythProxyUpgrade = artifacts.require("MockPythProxyUpgrade");
 
 const testSigner1PK = "cfb12303a19cde580bb4dd771639b0d26bc68353645571a8cff516ab2ee113a0";
 const testSigner2PK = "892330666a850761e7370376430bb8c2aa1494072d3bfeaed0c4fa3d5a9135fe";
-
-const WormholeImplementationFullABI = jsonfile.readFileSync("build/contracts/Implementation.json").abi
-const P2WImplementationFullABI = jsonfile.readFileSync("build/contracts/PythImplementation.json").abi
 
 contract("Pyth", function () {
     const testSigner1 = web3.eth.accounts.privateKeyToAccount(testSigner1PK);
@@ -23,30 +22,37 @@ contract("Pyth", function () {
     const testPyth2WormholeChainId = "1";
     const testPyth2WormholeEmitter = "0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
 
+    beforeEach(async function () {
+        this.pythProxy = await deployProxy(
+            PythProxy,
+            [
+                testChainId,
+                (await Wormhole.deployed()).address,
+                testPyth2WormholeChainId,
+                testPyth2WormholeEmitter,
+            ]
+        );
+    });
 
     it("should be initialized with the correct signers and values", async function(){
-        const initialized = new web3.eth.Contract(P2WImplementationFullABI, PythDataBridge.address);
-
         // chain id
-        const chainId = await initialized.methods.chainId().call();
+        const chainId = await this.pythProxy.chainId();
         assert.equal(chainId, testChainId);
 
         // pyth2wormhole
-        const pyth2wormChain = await initialized.methods.pyth2WormholeChainId().call();
+        const pyth2wormChain = await this.pythProxy.pyth2WormholeChainId();
         assert.equal(pyth2wormChain, testPyth2WormholeChainId);
-        const pyth2wormEmitter = await initialized.methods.pyth2WormholeEmitter().call();
+        const pyth2wormEmitter = await this.pythProxy.pyth2WormholeEmitter();
         assert.equal(pyth2wormEmitter, testPyth2WormholeEmitter);
     })
 
     const rawBatchPriceAttestation = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000071dfffffffb00000000000005f70000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000622f65f4503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000440fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000622f65f4503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000609fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000622f65f45032574800020171ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bcfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000622f65f4";
 
     it("should parse batch price attestation correctly", async function() {
-        const initialized = new web3.eth.Contract(P2WImplementationFullABI, PythDataBridge.address);
-
         const magic = 1345476424;
         const version = 2;
 
-        let parsed = await initialized.methods.parseBatchPriceAttestation(rawBatchPriceAttestation).call();
+        let parsed = await this.pythProxy.parseBatchPriceAttestation(rawBatchPriceAttestation);
 
         // Check the header
         assert.equal(parsed.header.magic, magic);
@@ -140,8 +146,6 @@ contract("Pyth", function () {
     })
 
     async function attest(contract, data) {
-        const accounts = await web3.eth.getAccounts();
-
         const vm = await signAndEncodeVM(
             1,
             1,
@@ -156,25 +160,17 @@ contract("Pyth", function () {
             0
         );
 
-        let result = await contract.methods.attestPriceBatch("0x"+vm).send({
-            value : 0,
-            from : accounts[0],
-            gasLimit : 2000000
-        });
+        await contract.attestPriceBatch("0x"+vm);
     }
 
     it("should attest price updates over wormhole", async function() {
-        const initialized = new web3.eth.Contract(P2WImplementationFullABI, PythDataBridge.address);
-
-        await attest(initialized, rawBatchPriceAttestation);
+        await attest(this.pythProxy, rawBatchPriceAttestation);
     })
 
     it("should cache price updates", async function() {
-        const initialized = new web3.eth.Contract(P2WImplementationFullABI, PythDataBridge.address);
+        await attest(this.pythProxy, rawBatchPriceAttestation);
 
-        await attest(initialized, rawBatchPriceAttestation);
-
-        let first = await initialized.methods.latestPriceInfo("0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e").call();
+        let first = await this.pythProxy.latestPriceInfo("0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e");
         assert.equal(first.price.id, "0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e");
         assert.equal(first.price.productId, "0xc0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73");
         assert.equal(first.price.price, 1821);
@@ -187,7 +183,7 @@ contract("Pyth", function () {
         assert.equal(first.price.emaConf, 3);
         assert.equal(first.attestation_time, 1647273460);
 
-        let second = await initialized.methods.latestPriceInfo("0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620").call();
+        let second = await this.pythProxy.latestPriceInfo("0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
         assert.equal(second.price.id, "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
         assert.equal(second.price.productId, "0x7090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54");
         assert.equal(second.price.price, 1088);
@@ -207,8 +203,6 @@ contract("Pyth", function () {
         // the second batch have a newer timestamp than those in the first batch, and so these 
         // are the only two which should be cached.
 
-        const initialized = new web3.eth.Contract(P2WImplementationFullABI, PythDataBridge.address);
-
         let secondBatchPriceAttestation = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000073dfffffffb00000000000005470000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000622f65f5503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000450fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000622f65f4503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000659fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000622f65f45032574800020181ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bDfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000622f65f5";
 
         let all_price_ids = ["0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e",
@@ -218,19 +212,19 @@ contract("Pyth", function () {
         ];
 
         // Send the first batch
-        await attest(initialized, rawBatchPriceAttestation);
+        await attest(this.pythProxy, rawBatchPriceAttestation);
         let prices_after_first_update = {};
         for (var i = 0; i < all_price_ids.length; i++) {
             const price_id = all_price_ids[i];
-            prices_after_first_update[price_id] = await initialized.methods.latestPriceInfo(price_id).call();
+            prices_after_first_update[price_id] = await this.pythProxy.latestPriceInfo(price_id);
         }
 
         // Send the second batch
-        await attest(initialized, secondBatchPriceAttestation);
+        await attest(this.pythProxy, secondBatchPriceAttestation);
         let prices_after_second_update = {};
         for (var i = 0; i < all_price_ids.length; i++) {
             const price_id = all_price_ids[i];
-            prices_after_second_update[price_id] = await initialized.methods.latestPriceInfo(price_id).call();
+            prices_after_second_update[price_id] = await this.pythProxy.latestPriceInfo(price_id);
         }
 
         // Price IDs which have newer timestamps
