@@ -273,9 +273,9 @@ if pyth:
 
     # Automatic pyth2wormhole relay, showcasing p2w-sdk
     docker_build(
-        ref = "p2w-relay",
+        ref = "p2w-integration-observer",
 	context = ".",
-	dockerfile = "./third_party/pyth/p2w-relay/Dockerfile",
+	dockerfile = "./third_party/pyth/p2w-integration-observer/Dockerfile",
     )
 
     k8s_yaml_with_ns("devnet/p2w-attest.yaml")
@@ -287,9 +287,9 @@ if pyth:
         trigger_mode = trigger_mode,
     )
 
-    k8s_yaml_with_ns("devnet/p2w-relay.yaml")
+    k8s_yaml_with_ns("devnet/p2w-integration-observer.yaml")
     k8s_resource(
-        "p2w-relay",
+        "p2w-integration-observer",
         resource_deps = ["solana-devnet", "eth-devnet", "pyth", "guardian", "p2w-attest", "proto-gen-web", "wasm-gen"],
         port_forwards = [],
         labels = ["pyth"]

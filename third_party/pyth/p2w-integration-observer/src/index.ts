@@ -1,5 +1,4 @@
 import { NodeHttpTransport } from "@improbable-eng/grpc-web-node-http-transport";
-import {PythImplementation__factory} from "./ethers-contracts";
 
 import * as http from "http";
 import * as net from "net";
@@ -66,8 +65,6 @@ async function readinessProbeRoutine(port: number) {
 	let signer = new ethers.Wallet(wallet.privateKey, provider);
 	let balance = await signer.getBalance();
 	console.log(`Account balance is ${balance}`);
-	let factory = new PythImplementation__factory(signer);
-	p2w_eth = factory.attach(ETH_P2W_CONTRACT);
     }
     catch(e) {
 	console.error(`Error: Could not instantiate ETH contract:`, e);
