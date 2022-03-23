@@ -147,7 +147,8 @@ In version 2 prices are sent in batch with the following structure:
 */
 
 export const PYTH_PRICE_ATTESTATION_MIN_LENGTH: number = 150;
-export const PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH: number = 11 + PYTH_PRICE_ATTESTATION_MIN_LENGTH;
+export const PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH: number =
+  11 + PYTH_PRICE_ATTESTATION_MIN_LENGTH;
 
 export type PythRational = {
   value: BigInt;
@@ -174,12 +175,12 @@ export type PythPriceAttestation = {
 
 export type PythBatchPriceAttestation = {
   magic: number;
-  version: number; 
+  version: number;
   payloadId: number;
   nAttestations: number;
   attestationSize: number;
   priceAttestations: PythPriceAttestation[];
-}
+};
 
 export const PYTH_MAGIC: number = 0x50325748;
 
@@ -225,14 +226,18 @@ export function parsePythPriceAttestation(arr: Buffer): PythPriceAttestation {
   };
 }
 
-export function parsePythBatchPriceAttestation(arr: Buffer): PythBatchPriceAttestation {
+export function parsePythBatchPriceAttestation(
+  arr: Buffer
+): PythBatchPriceAttestation {
   if (!isPyth(arr)) {
-    throw new Error("Cannot parse payload. Header mismatch: This is not a Pyth 2 Wormhole message");
+    throw new Error(
+      "Cannot parse payload. Header mismatch: This is not a Pyth 2 Wormhole message"
+    );
   }
 
   if (arr.length < PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH) {
     throw new Error(
-        "Cannot parse payload. Payload length is wrong: length: " +
+      "Cannot parse payload. Payload length is wrong: length: " +
         arr.length +
         ", expected length to be at least:" +
         PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH
@@ -251,45 +256,56 @@ export function parsePythBatchPriceAttestation(arr: Buffer): PythBatchPriceAttes
     );
   }
 
-  let priceAttestations: PythPriceAttestation[] = []
+  let priceAttestations: PythPriceAttestation[] = [];
 
   let offset = 11;
   for (let i = 0; i < nAttestations; i += 1) {
-    priceAttestations.push(parsePythPriceAttestation(arr.subarray(offset, offset + attestationSize)));
+    priceAttestations.push(
+      parsePythPriceAttestation(arr.subarray(offset, offset + attestationSize))
+    );
     offset += attestationSize;
   }
 
   return {
-      magic,
-      version,
-      payloadId,
-      nAttestations,
-      attestationSize,
-      priceAttestations
-    }
+    magic,
+    version,
+    payloadId,
+    nAttestations,
+    attestationSize,
+    priceAttestations,
+  };
 }
 
 // Returns a hash of all priceIds within the batch, it can be used to identify whether there is a
 // new batch with exact same symbols (and ignore the old one)
-export function getBatchAttestationHashKey(batchAttestation: PythBatchPriceAttestation): string {
-  const priceIds: string[] = batchAttestation.priceAttestations.map((priceAttestation) => priceAttestation.priceId);
+export function getBatchAttestationHashKey(
+  batchAttestation: PythBatchPriceAttestation
+): string {
+  const priceIds: string[] = batchAttestation.priceAttestations.map(
+    (priceAttestation) => priceAttestation.priceId
+  );
   priceIds.sort();
 
-  return priceIds.join('#');
+  return priceIds.join("#");
 }
 
-export function getBatchSummary(batchAttestation: PythBatchPriceAttestation): string {
+export function getBatchSummary(
+  batchAttestation: PythBatchPriceAttestation
+): string {
   let abstractRepresentation = {
-    "num_attestations": batchAttestation.nAttestations,
-    "prices": batchAttestation.priceAttestations.map((priceAttestation) => {
-        return {
-          "price_id": priceAttestation.priceId,
-          "price": computePrice(priceAttestation.price, priceAttestation.exponent),
-          "conf": computePrice(priceAttestation.confidenceInterval, priceAttestation.exponent)
-        }
-    })
-  }
-  return JSON.stringify(abstractRepresentation)
+    num_attestations: batchAttestation.nAttestations,
+    prices: batchAttestation.priceAttestations.map((priceAttestation) => {
+      return {
+        price_id: priceAttestation.priceId,
+        price: computePrice(priceAttestation.price, priceAttestation.exponent),
+        conf: computePrice(
+          priceAttestation.confidenceInterval,
+          priceAttestation.exponent
+        ),
+      };
+    }),
+  };
+  return JSON.stringify(abstractRepresentation);
 }
 
 ////////////////////////////////// Start of Other Helpful Stuff //////////////////////////////////////
@@ -304,13 +320,13 @@ export function computePrice(rawPrice: BigInt, expo: number): number {
 
 // Shorthand for optional/mandatory envs
 export function envOrErr(env: string, defaultValue?: string): string {
-    let val = process.env[env];
-    if (!val) {
-	if (!defaultValue) {
-	    throw `environment variable "${env}" must be set`;
-	} else {
-	    return defaultValue;
-	}
+  let val = process.env[env];
+  if (!val) {
+    if (!defaultValue) {
+      throw `environment variable "${env}" must be set`;
+    } else {
+      return defaultValue;
     }
-    return String(process.env[env]);
+  }
+  return String(process.env[env]);
 }

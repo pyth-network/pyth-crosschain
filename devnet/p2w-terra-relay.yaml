@@ -45,6 +45,11 @@ spec:
               protocol: TCP
           tcpSocket:
             port: 2000
+          command:
+            - node
+            - lib/index.js
+            - "--"
+            - "--terra"
           env:
             - name: SPY_SERVICE_HOST
               value: spy:7072
@@ -70,6 +75,51 @@ spec:
               value: '60000'
             - name: READINESS_PORT
               value: '2000'
+            - name: RETRY_MAX_ATTEMPTS
+              value: '4'
+            - name: RETRY_DELAY_IN_MS
+              value: '250'
+            - name: MAX_MSGS_PER_BATCH
+              value: '1'
+            - name: LOG_LEVEL
+              value: debug
+        - name: p2w-evm-relay
+          image: p2w-terra-relay
+          ports:
+            - containerPort: 8082
+              name: prometheus
+              protocol: TCP
+            - containerPort: 4201
+              name: rest-api
+              protocol: TCP
+          tcpSocket:
+            port: 2001
+          command:
+            - node
+            - lib/index.js
+            - "--"
+            - "--evm"
+          env:
+            - name: SPY_SERVICE_HOST
+              value: spy:7072
+            - name: SPY_SERVICE_FILTERS
+              value: '[{"chain_id":1,"emitter_address":"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b"}]'
+            - name: EVM_NODE_WEBSOCKET_URL
+              value: "ws://eth-devnet:8545"
+            - name: EVM_WALLET_MNEMONIC_FILE
+              value: "./devnet_mnemonic.txt"
+            - name: EVM_HDWALLET_PATH
+              value: "m/44'/60'/0'/0/1" # Use account with idx 1
+            - name: EVM_PYTH_CONTRACT_ADDRESS
+              value: "0x0E696947A06550DEf604e82C26fd9E493e576337"
+            - name: REST_PORT
+              value: '4201'
+            - name: PROM_PORT
+              value: '8082'
+            - name: BAL_QUERY_INTERVAL
+              value: '60000'
+            - name: READINESS_PORT
+              value: '2001'
             - name: RETRY_MAX_ATTEMPTS
               value: '4'
             - name: RETRY_DELAY_IN_MS

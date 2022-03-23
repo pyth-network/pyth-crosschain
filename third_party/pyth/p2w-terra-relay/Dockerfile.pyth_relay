@@ -22,7 +22,6 @@ RUN npm ci && npm run build && npm cache clean --force
 
 RUN mkdir -p /app/pyth_relay/logs
 RUN addgroup -S pyth -g 10001 && adduser -S pyth -G pyth -u 10001
+RUN cp ${P2W_BASE_PATH}/ethereum/devnet_mnemonic.txt .
 RUN chown -R pyth:pyth .
 USER pyth
-
-CMD [ "node", "lib/index.js" ]
