@@ -6,11 +6,12 @@ import {
   MsgExecuteContract,
 } from "@terra-money/terra.js";
 import { hexToUint8Array } from "@certusone/wormhole-sdk";
-import { redeemOnTerra } from "@certusone/wormhole-sdk";
-
+import axios from "axios";
 import { logger } from "../helpers";
 
 import { Relay, RelayResult, RelayRetcode, PriceId } from "./iface";
+
+export const TERRA_GAS_PRICES_URL = "https://fcd.terra.dev/v1/txs/gas_prices";
 
 export class TerraRelay implements Relay {
   readonly nodeUrl: string;
@@ -80,10 +81,35 @@ export class TerraRelay implements Relay {
         msgs.push(msg);
       }
 
+      let gasPrices, feeEstimate;
+      try {
+       gasPrices = await axios
+        .get(TERRA_GAS_PRICES_URL)
+        .then((result) => result.data);
+        
+        feeEstimate = await lcdClient.tx.estimateFee(
+          [{
+            sequenceNumber: await wallet.sequence(),
+            publicKey: wallet.key.publicKey,
+          }],
+          {
+            msgs: [...msgs],
+            memo: "P2T",
+            feeDenoms: [this.coin],
+            gasPrices
+          }
+        )
+      } catch (e: any) {
+        logger.warn("Couldn't fetch gas price and fee estimate. Using default values");
+        logger.warn(e, e.stack);
+      }
+
       const tx = await wallet.createAndSignTx({
         msgs: msgs,
         memo: "P2T",
         feeDenoms: [this.coin],
+        gasPrices,
+        fee: feeEstimate
       });
 
       logger.debug("TIME: sending msg");
