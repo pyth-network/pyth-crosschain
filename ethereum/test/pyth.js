@@ -90,6 +90,13 @@ contract("Pyth", function () {
     })
 
     it("should not allow upgrades from the another account", async function(){
+        // This test is slightly convoluted as, due to a limitation of Truffle,
+        // we cannot specify which account upgradeProxy send transactions from:
+        // it will always use the default account.
+        //
+        // Therefore, we transfer the ownership to another account first, 
+        // and then attempt an upgrade using the default account.
+
         // Check that the owner is the default account Truffle 
         // has configured for the network.
         const accounts = await web3.eth.getAccounts();
@@ -101,7 +108,7 @@ contract("Pyth", function () {
         await this.pythProxy.transferOwnership(newOwnerAccount, {from: defaultAccount});
         assert.equal(await this.pythProxy.owner(), newOwnerAccount);
 
-        // Try and upgrade using the default account, which will 
+        // Try and upgrade using the default account, which will fail
         // because we are no longer the owner.
         await expectRevert(upgradeProxy(this.pythProxy.address, MockPythProxyUpgrade), notOwnerError);
     })
