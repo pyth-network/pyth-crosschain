@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { logger } from "./helpers";
-import { getStatus, getPriceData } from "./worker";
+import { getStatus, getPriceData, isHealthy } from "./worker";
 
 let restPort: number = 0;
 
@@ -40,8 +40,16 @@ export async function run() {
       }
     );
 
+    app.get("/health", async (req: Request, res: Response) => {
+      if (isHealthy()) {
+        res.sendStatus(200);
+      } else {
+        res.sendStatus(503);
+      }
+    });
+
     app.get("/", (req: Request, res: Response) =>
-      res.json(["/status", "/queryterra/<price_id>"])
+      res.json(["/status", "/queryterra/<price_id>", "/health"])
     );
   })();
 }

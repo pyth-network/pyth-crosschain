@@ -45,6 +45,8 @@ let walletTimeStamp: Date;
 let maxPerBatch: number = 1;
 let maxAttempts: number = 2;
 let retryDelayInMs: number = 0;
+let maxHealthyNoRelayDurationInSeconds: number = 120;
+let lastSuccessfulRelayTime: Date;
 
 export function init(runWorker: boolean, relay: Relay): boolean {
   if (!runWorker) return true;
@@ -88,6 +90,20 @@ export function init(runWorker: boolean, relay: Relay): boolean {
       "Environment variable RETRY_DELAY_IN_MS has an invalid value of " +
         retryDelayInMs +
         ", must be positive or zero."
+    );
+
+    return false;
+  }
+
+  if (process.env.MAX_HEALTHY_NO_RELAY_DURATION_IN_SECONDS) {
+    maxHealthyNoRelayDurationInSeconds = parseInt(process.env.MAX_HEALTHY_NO_RELAY_DURATION_IN_SECONDS);
+  }
+
+  if (maxHealthyNoRelayDurationInSeconds <= 0) {
+    logger.error(
+      "Environment variable MAX_HEALTHY_NO_RELAY_DURATION_IN_SECONDS has an invalid value of " +
+        maxHealthyNoRelayDurationInSeconds +
+        ", must be positive."
     );
 
     return false;
@@ -391,6 +407,10 @@ async function finalizeEventsAlreadyLocked(
         relayResult
     );
   }
+
+  if (relayResult.is_ok()) {
+    lastSuccessfulRelayTime = new Date();
+  }
 }
 
 async function updateBalance() {
@@ -474,4 +494,19 @@ export async function getPriceData(priceId: string): Promise<any> {
   // });
 
   return result;
+}
+
+export function isHealthy(): boolean {
+  if (lastSuccessfulRelayTime === undefined) {
+    return false;
+  }
+
+  const currentDate = new Date();
+  const timeDiffMs = currentDate.getTime() - lastSuccessfulRelayTime.getTime();
+
+  if (timeDiffMs > maxHealthyNoRelayDurationInSeconds * 1000) {
+    return false;
+  }
+
+  return true;
 }
