@@ -8,7 +8,7 @@ import {
 import { hexToUint8Array } from "@certusone/wormhole-sdk";
 import { redeemOnTerra } from "@certusone/wormhole-sdk";
 
-import { logger, envOrErr } from "../helpers";
+import { logger } from "../helpers";
 
 import { Relay, RelayResult, RelayRetcode, PriceId } from "./iface";
 
@@ -178,7 +178,7 @@ export class TerraRelay implements Relay {
     });
   }
 
-  async getPayerInfo(): Promise<{ address: string; balance: number }> {
+  async getPayerInfo(): Promise<{ address: string; balance: bigint }> {
     const lcdClient = new LCDClient(this.lcdConfig);
 
     const mk = new MnemonicKey({
@@ -213,6 +213,6 @@ export class TerraRelay implements Relay {
       logger.error("failed to query coin balance: %o", e);
     }
 
-    return { address: wallet.key.accAddress, balance };
+    return { address: wallet.key.accAddress, balance: BigInt(balance) };
   }
 }

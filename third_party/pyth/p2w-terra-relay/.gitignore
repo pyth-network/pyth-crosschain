@@ -1,1 +1,4 @@
 /lib
+
+# EVM artifacts
+/src/evm
