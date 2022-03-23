@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:16-alpine@sha256:72a490e7ed8aed68e16b8dc8f37b5bcc35c5b5c56ee3256effcdee63e2546f93
 
 ARG P2W_BASE_PATH=/usr/src/pyth2wormhole
 
@@ -6,7 +6,7 @@ RUN apk --no-cache --update add python3 build-base  # Needed by the Ethereum bui
 
 WORKDIR ${P2W_BASE_PATH}/ethereum
 ADD ethereum .
-RUN npm ci && npm run build
+RUN npm install && npm run build
 
 RUN apk del build-base # No longer needed after EVM build
 
@@ -15,7 +15,7 @@ ARG P2W_RELAY_REL_PATH=third_party/pyth/p2w-terra-relay
 WORKDIR ${P2W_BASE_PATH}/${P2W_RELAY_REL_PATH} 
 ADD ${P2W_RELAY_REL_PATH} .
 
-RUN npm install && npm run build && npm cache clean --force
+RUN npm ci && npm run build && npm cache clean --force
 
 # If you are building for production
 # RUN npm ci --only=production
