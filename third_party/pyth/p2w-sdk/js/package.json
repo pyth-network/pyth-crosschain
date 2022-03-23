@@ -8,11 +8,10 @@
         "lib/**/*"
     ],
     "scripts": {
-        "build": "npm run build-eth-types && npm run build-lib",
-        "build-eth-types": "node scripts/copyEthContracts.cjs && typechain --target=ethers-v5 --out-dir=src/ethers-contracts contracts/*.json",
+        "build": "npm run build-lib",
         "build-lib": "npm run copy-artifacts && tsc",
         "build-watch": "npm run copy-artifacts && tsc --watch",
-        "copy-artifacts": "node scripts/copyWasm.cjs && node scripts/copyEthersTypes.cjs",
+        "copy-artifacts": "node scripts/copyWasm.cjs",
         "lint": "tslint -p tsconfig.json",
         "postversion": "git push && git push --tags",
         "preversion": "npm run lint",
@@ -40,7 +39,7 @@
 	"@solana/web3.js": "^1.24.0"
     },
     "dependencies": {
-        "@certusone/wormhole-sdk": "file:../../../../sdk/js",
+        "@certusone/wormhole-sdk": "0.2.1",
         "@improbable-eng/grpc-web-node-http-transport": "^0.14.1"
     },
     "bugs": {

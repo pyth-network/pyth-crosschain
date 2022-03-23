@@ -9,12 +9,6 @@ ADD ethereum .
 RUN --mount=type=cache,target=/home/node/.npm \
   npm ci
 
-# Build Wormhole SDK
-WORKDIR /usr/src/sdk/js
-ADD sdk/js/ .
-RUN --mount=type=cache,target=/home/node/.npm \
-  npm ci && npm run build
-
 # Build p2w-sdk in dir preserving directory structure
 WORKDIR /usr/src/third_party/pyth/p2w-sdk/js/
 COPY third_party/pyth/p2w-sdk/js/package.json third_party/pyth/p2w-sdk/js/package-lock.json .
@@ -27,14 +21,14 @@ RUN --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=/root/.npm \
     npm run build
 
-# Build p2w-relay
-WORKDIR /usr/src/third_party/pyth/p2w-relay
-COPY third_party/pyth/p2w-relay/package.json third_party/pyth/p2w-relay/package-lock.json .
+# Build p2w-integration-observer
+WORKDIR /usr/src/third_party/pyth/p2w-integration-observer
+COPY third_party/pyth/p2w-integration-observer/package.json third_party/pyth/p2w-integration-observer/package-lock.json .
 RUN --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=/root/.npm \
     npm ci
 
-COPY third_party/pyth/p2w-relay .
+COPY third_party/pyth/p2w-integration-observer .
 RUN --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=/root/.npm \
     npm run build
