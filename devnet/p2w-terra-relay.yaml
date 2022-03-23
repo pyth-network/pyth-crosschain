@@ -55,7 +55,8 @@ spec:
             - name: TERRA_PRIVATE_KEY
               value: notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius
             - name: TERRA_PYTH_CONTRACT_ADDRESS
-              value: terra1plju286nnfj3z54wgcggd4enwaa9fgf5kgrgzl
+              value: terra16t7y0vrtpqjw2d7jvc2209yan9002339vjr96d
+              # It can change if order of terra contract creation changes or anything is added/removed in terra/tools/deploy.js
             - name: TERRA_CHAIN_ID
               value: localterra
             - name: TERRA_NAME
