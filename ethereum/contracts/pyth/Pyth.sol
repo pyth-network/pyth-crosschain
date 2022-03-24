@@ -173,7 +173,9 @@ contract Pyth is PythGetters, PythSetters {
         PythStructs.PriceInfo memory info = latestPriceInfo(id);
         require(info.priceFeed.id != 0, "no price feed found for the given price id");
 
-        // Check that the price is not stale
+        // Check that there is not a significant difference between this chain's time
+        // and the attestation time. This is a last-resort safety net, and this check
+        // will be iterated on in the future.
         if (diff(block.timestamp, info.attestationTime) > VALID_TIME_PERIOD_SECS) {
             info.priceFeed.status = PythSDK.PriceStatus.UNKNOWN;
         }
