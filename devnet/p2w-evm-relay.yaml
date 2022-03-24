@@ -37,10 +37,10 @@ spec:
         - name: p2w-evm-relay
           image: p2w-relay
           ports:
-            - containerPort: 8082
+            - containerPort: 8081
               name: prometheus
               protocol: TCP
-            - containerPort: 4201
+            - containerPort: 4200
               name: rest-api
               protocol: TCP
           readinessProbe:
@@ -66,13 +66,11 @@ spec:
             - name: EVM_PYTH_CONTRACT_ADDRESS
               value: "0xA94B7f0465E98609391C623d0560C5720a3f2D33"
             - name: REST_PORT
-              value: '4201'
+              value: '4200'
             - name: PROM_PORT
-              value: '8082'
+              value: '8081'
             - name: BAL_QUERY_INTERVAL
               value: '60000'
-            - name: READINESS_PORT
-              value: '2001'
             - name: RETRY_MAX_ATTEMPTS
               value: '4'
             - name: RETRY_DELAY_IN_MS
