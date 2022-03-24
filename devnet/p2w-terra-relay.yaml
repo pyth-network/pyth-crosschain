@@ -111,7 +111,7 @@ spec:
             - name: EVM_HDWALLET_PATH
               value: "m/44'/60'/0'/0/1" # Use account with idx 1
             - name: EVM_PYTH_CONTRACT_ADDRESS
-              value: "0x0E696947A06550DEf604e82C26fd9E493e576337"
+              value: "0xA94B7f0465E98609391C623d0560C5720a3f2D33"
             - name: REST_PORT
               value: '4201'
             - name: PROM_PORT
