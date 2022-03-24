@@ -9,8 +9,8 @@ const {expectRevert} = require('@openzeppelin/test-helpers');
 
 const Wormhole = artifacts.require("Wormhole");
 
-const PythProxy = artifacts.require("PythProxy");
-const MockPythProxyUpgrade = artifacts.require("MockPythProxyUpgrade");
+const PythUpgradable = artifacts.require("PythUpgradable");
+const MockPythUpgrade = artifacts.require("MockPythUpgrade");
 
 const testSigner1PK = "cfb12303a19cde580bb4dd771639b0d26bc68353645571a8cff516ab2ee113a0";
 const testSigner2PK = "892330666a850761e7370376430bb8c2aa1494072d3bfeaed0c4fa3d5a9135fe";
@@ -27,7 +27,7 @@ contract("Pyth", function () {
 
     beforeEach(async function () {
         this.pythProxy = await deployProxy(
-            PythProxy,
+            PythUpgradable,
             [
                 testChainId,
                 (await Wormhole.deployed()).address,
@@ -60,7 +60,7 @@ contract("Pyth", function () {
 
         // Try and upgrade the proxy
         const newImplementation = await upgradeProxy(
-            this.pythProxy.address, MockPythProxyUpgrade);
+            this.pythProxy.address, MockPythUpgrade);
 
         // Check that the new upgrade is successful
         assert.equal(await newImplementation.isUpgradeActive(), true);
@@ -110,7 +110,7 @@ contract("Pyth", function () {
 
         // Try and upgrade using the default account, which will fail
         // because we are no longer the owner.
-        await expectRevert(upgradeProxy(this.pythProxy.address, MockPythProxyUpgrade), notOwnerError);
+        await expectRevert(upgradeProxy(this.pythProxy.address, MockPythUpgrade), notOwnerError);
     })
 
     const rawBatchPriceAttestation = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000071dfffffffb00000000000005f70000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000TTTTTTTT503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000440fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000TTTTTTTT503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000609fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000TTTTTTTT5032574800020171ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bcfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000TTTTTTTT";

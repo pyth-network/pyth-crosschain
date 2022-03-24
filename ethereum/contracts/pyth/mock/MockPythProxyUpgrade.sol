@@ -3,9 +3,9 @@
 
 pragma solidity ^0.8.0;
 
-import "../PythProxy.sol";
+import "../PythUpgradable.sol";
 
-contract MockPythProxyUpgrade is PythProxy {
+contract MockPythUpgrade is PythUpgradable {
     function isUpgradeActive() external pure returns (bool) {
         return true;
     }

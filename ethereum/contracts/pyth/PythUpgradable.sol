@@ -8,7 +8,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract PythProxy is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pyth {
+contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pyth {
 
     function initialize(
         uint16 chainId,

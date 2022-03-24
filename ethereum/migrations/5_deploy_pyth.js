@@ -1,7 +1,7 @@
 require('dotenv').config({ path: "../.env" });
 const bs58 = require("bs58");
 
-const PythProxy = artifacts.require("PythProxy");
+const PythUpgradable = artifacts.require("PythUpgradable");
 const Wormhole = artifacts.require("Wormhole");
 
 const chainId = process.env.PYTH_INIT_CHAIN_ID;
@@ -14,7 +14,7 @@ console.log("Deploying Pyth with emitter", pyth2WormholeEmitter.toString("hex"))
 
 module.exports = async function (deployer) {
     // Deploy the proxy script
-    await deployProxy(PythProxy,
+    await deployProxy(PythUpgradable,
         [
             chainId,
             (await Wormhole.deployed()).address,
