@@ -3,13 +3,13 @@ import { ethers } from "ethers";
 import { logger } from "../helpers";
 
 import {
-  PythImplementation__factory,
-  PythImplementation,
+  PythUpgradable__factory,
+  PythUpgradable,
 } from "../evm/bindings/";
 
 export class EvmRelay implements Relay {
   payerWallet: ethers.Wallet;
-  p2wContract: PythImplementation;
+  p2wContract: PythUpgradable;
   async relay(signedVAAs: Array<string>): Promise<RelayResult> {
     let batchCount = signedVAAs.length;
 
@@ -17,7 +17,7 @@ export class EvmRelay implements Relay {
     let txs = [];
     for (let i = 0; i < signedVAAs.length; ++i) {
       let tx = await this.p2wContract
-        .attestPriceBatch("0x" + signedVAAs[i], { gasLimit: 1000000 })
+        .updatePriceBatchFromVm("0x" + signedVAAs[i], { gasLimit: 1000000 })
         .then(async (pending) => {
           try {
             let receipt = await pending.wait();
@@ -88,7 +88,7 @@ export class EvmRelay implements Relay {
     );
 
     this.payerWallet = new ethers.Wallet(wallet.privateKey, provider);
-    let factory = new PythImplementation__factory(this.payerWallet);
+    let factory = new PythUpgradable__factory(this.payerWallet);
     this.p2wContract = factory.attach(cfg.p2wContractAddress);
   }
 }
