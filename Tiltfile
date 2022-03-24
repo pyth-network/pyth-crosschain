@@ -272,8 +272,8 @@ if pyth:
         "p2w-evm-relay",
         resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet"],
         port_forwards = [
-            port_forward(4200, name = "Rest API (Status + Query) [:4200]", host = webHost),
-            port_forward(8081, name = "Prometheus [:8081]", host = webHost)],
+            port_forward(4201, container_port = 4200, name = "Rest API (Status + Query) [:4201]", host = webHost),
+            port_forward(8082, container_port = 8081, name = "Prometheus [:8082]", host = webHost)],
         labels = ["pyth"]
     )
 
