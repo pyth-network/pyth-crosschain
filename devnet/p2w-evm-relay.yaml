@@ -46,7 +46,7 @@ spec:
           readinessProbe:
             httpGet:
               path: '/health'
-              port: 4201
+              port: 4200
           command:
             - node
             - lib/index.js
