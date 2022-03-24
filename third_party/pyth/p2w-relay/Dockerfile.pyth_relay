@@ -10,7 +10,7 @@ RUN npm install && npm run build
 
 RUN apk del build-base # No longer needed after EVM build
 
-ARG P2W_RELAY_REL_PATH=third_party/pyth/p2w-terra-relay
+ARG P2W_RELAY_REL_PATH=third_party/pyth/p2w-relay
 
 WORKDIR ${P2W_BASE_PATH}/${P2W_RELAY_REL_PATH} 
 ADD ${P2W_RELAY_REL_PATH} .

@@ -251,11 +251,11 @@ if pyth:
         labels = ["pyth"]
     )
 
-    # Terra relay
+    # Pyth2wormhole relay
     docker_build(
-        ref = "p2w-terra-relay",
+        ref = "p2w-relay",
         context = ".",
-        dockerfile = "third_party/pyth/p2w-terra-relay/Dockerfile.pyth_relay",
+        dockerfile = "third_party/pyth/p2w-relay/Dockerfile.pyth_relay",
     )
     k8s_yaml_with_ns("devnet/p2w-terra-relay.yaml")
     k8s_resource(
@@ -263,11 +263,19 @@ if pyth:
         resource_deps = ["pyth", "p2w-attest", "spy", "terra-terrad"],
         port_forwards = [
             port_forward(4200, name = "Rest API (Status + Query) [:4200]", host = webHost),
-            port_forward(8081, name = "Prometheus Terra [:8081]", host = webHost),
-            port_forward(8082, name = "Prometheus EVM [:8082]", host = webHost)],
+            port_forward(8081, name = "Prometheus [:8081]", host = webHost)],
         labels = ["pyth"]
     )
 
+    k8s_yaml_with_ns("devnet/p2w-evm-relay.yaml")
+    k8s_resource(
+        "p2w-evm-relay",
+        resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet"],
+        port_forwards = [
+            port_forward(4200, name = "Rest API (Status + Query) [:4201]", host = webHost),
+            port_forward(8081, name = "Prometheus [:8082]", host = webHost)],
+        labels = ["pyth"]
+    )
 
 k8s_yaml_with_ns("devnet/eth-devnet.yaml")
 
