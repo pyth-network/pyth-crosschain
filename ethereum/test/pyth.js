@@ -3,16 +3,17 @@ const elliptic = require('elliptic');
 const BigNumber = require('bignumber.js');
 
 const PythSDK = artifacts.require("PythSDK");
+
+const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
+const {expectRevert} = require('@openzeppelin/test-helpers');
+
 const Wormhole = artifacts.require("Wormhole");
-const PythDataBridge = artifacts.require("PythDataBridge");
-const PythImplementation = artifacts.require("PythImplementation");
-const MockPythImplementation = artifacts.require("MockPythImplementation");
+
+const PythUpgradable = artifacts.require("PythUpgradable");
+const MockPythUpgrade = artifacts.require("MockPythUpgrade");
 
 const testSigner1PK = "cfb12303a19cde580bb4dd771639b0d26bc68353645571a8cff516ab2ee113a0";
 const testSigner2PK = "892330666a850761e7370376430bb8c2aa1494072d3bfeaed0c4fa3d5a9135fe";
-
-const WormholeImplementationFullABI = jsonfile.readFileSync("build/contracts/Implementation.json").abi
-const P2WImplementationFullABI = jsonfile.readFileSync("build/contracts/PythImplementation.json").abi
 
 contract("Pyth", function () {
     const testSigner1 = web3.eth.accounts.privateKeyToAccount(testSigner1PK);
@@ -22,31 +23,113 @@ contract("Pyth", function () {
     const testGovernanceContract = "0x0000000000000000000000000000000000000000000000000000000000000004";
     const testPyth2WormholeChainId = "1";
     const testPyth2WormholeEmitter = "0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
+    const notOwnerError = "Ownable: caller is not the owner -- Reason given: Ownable: caller is not the owner.";
 
+    beforeEach(async function () {
+        this.pythProxy = await deployProxy(
+            PythUpgradable,
+            [
+                testChainId,
+                (await Wormhole.deployed()).address,
+                testPyth2WormholeChainId,
+                testPyth2WormholeEmitter,
+            ]
+        );
+    });
 
     it("should be initialized with the correct signers and values", async function(){
-        const initialized = new web3.eth.Contract(P2WImplementationFullABI, PythDataBridge.address);
-
         // chain id
-        const chainId = await initialized.methods.chainId().call();
+        const chainId = await this.pythProxy.chainId();
         assert.equal(chainId, testChainId);
 
         // pyth2wormhole
-        const pyth2wormChain = await initialized.methods.pyth2WormholeChainId().call();
+        const pyth2wormChain = await this.pythProxy.pyth2WormholeChainId();
         assert.equal(pyth2wormChain, testPyth2WormholeChainId);
-        const pyth2wormEmitter = await initialized.methods.pyth2WormholeEmitter().call();
+        const pyth2wormEmitter = await this.pythProxy.pyth2WormholeEmitter();
         assert.equal(pyth2wormEmitter, testPyth2WormholeEmitter);
     })
 
-    const rawBatchPriceAttestation = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000071dfffffffb00000000000005f70000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000622f65f4503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000440fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000622f65f4503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000609fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000622f65f45032574800020171ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bcfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000622f65f4";
+    it("should allow upgrades from the owner", async function(){
+        // Check that the owner is the default account Truffle 
+        // has configured for the network. upgradeProxy will send
+        // transactions from the default account.
+        const accounts = await web3.eth.getAccounts();
+        const defaultAccount = accounts[0];
+        const owner = await this.pythProxy.owner();
+        assert.equal(owner, defaultAccount);
+
+        // Try and upgrade the proxy
+        const newImplementation = await upgradeProxy(
+            this.pythProxy.address, MockPythUpgrade);
+
+        // Check that the new upgrade is successful
+        assert.equal(await newImplementation.isUpgradeActive(), true);
+        assert.equal(this.pythProxy.address, newImplementation.address);
+    })
+
+    it("should allow ownership transfer", async function(){
+        // Check that the owner is the default account Truffle 
+        // has configured for the network.
+        const accounts = await web3.eth.getAccounts();
+        const defaultAccount = accounts[0];
+        assert.equal(await this.pythProxy.owner(), defaultAccount);
+
+        // Check that another account can't transfer the ownership
+        await expectRevert(this.pythProxy.transferOwnership(accounts[1], {from: accounts[1]}), notOwnerError);
+
+        // Transfer the ownership to another account
+        await this.pythProxy.transferOwnership(accounts[2], {from: defaultAccount});
+        assert.equal(await this.pythProxy.owner(), accounts[2]);
+
+        // Check that the original account can't transfer the ownership back to itself
+        await expectRevert(this.pythProxy.transferOwnership(defaultAccount, {from: defaultAccount}), notOwnerError);
+
+        // Check that the new owner can transfer the ownership back to the original account
+        await this.pythProxy.transferOwnership(defaultAccount, {from: accounts[2]});
+        assert.equal(await this.pythProxy.owner(), defaultAccount);
+    })
+
+    it("should not allow upgrades from the another account", async function(){
+        // This test is slightly convoluted as, due to a limitation of Truffle,
+        // we cannot specify which account upgradeProxy send transactions from:
+        // it will always use the default account.
+        //
+        // Therefore, we transfer the ownership to another account first, 
+        // and then attempt an upgrade using the default account.
+
+        // Check that the owner is the default account Truffle 
+        // has configured for the network.
+        const accounts = await web3.eth.getAccounts();
+        const defaultAccount = accounts[0];
+        assert.equal(await this.pythProxy.owner(), defaultAccount);
+
+        // Transfer the ownership to another account
+        const newOwnerAccount = accounts[1];
+        await this.pythProxy.transferOwnership(newOwnerAccount, {from: defaultAccount});
+        assert.equal(await this.pythProxy.owner(), newOwnerAccount);
+
+        // Try and upgrade using the default account, which will fail
+        // because we are no longer the owner.
+        await expectRevert(upgradeProxy(this.pythProxy.address, MockPythUpgrade), notOwnerError);
+    })
+
+    const rawBatchPriceAttestation = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000071dfffffffb00000000000005f70000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000TTTTTTTT503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000440fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000TTTTTTTT503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000609fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000TTTTTTTT5032574800020171ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bcfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000TTTTTTTT";
+
+    function encodeTimestamp(timestamp) {
+        return timestamp.toString(16).padStart(8, "0");
+    }
+
+    function generateRawBatchAttestation(timestamp) {
+        return rawBatchPriceAttestation.replace(/TTTTTTTT/g, encodeTimestamp(timestamp));
+    }
 
     it("should parse batch price attestation correctly", async function() {
-        const initialized = new web3.eth.Contract(P2WImplementationFullABI, PythDataBridge.address);
-
         const magic = 1345476424;
         const version = 2;
 
-        let parsed = await initialized.methods.parseBatchPriceAttestation(rawBatchPriceAttestation).call();
+        let timestamp = 1647273460;
+        let rawBatch = generateRawBatchAttestation(timestamp); 
+        let parsed = await this.pythProxy.parseBatchPriceAttestation(rawBatch);
 
         // Check the header
         assert.equal(parsed.header.magic, magic);
@@ -76,7 +159,7 @@ contract("Pyth", function () {
         assert.equal(parsed.attestations[0].confidenceInterval, 3);
         assert.equal(parsed.attestations[0].status, 1);
         assert.equal(parsed.attestations[0].corpAct, 0);
-        assert.equal(parsed.attestations[0].timestamp, 1647273460);
+        assert.equal(parsed.attestations[0].timestamp, timestamp);
 
         // Attestation #2
         assert.equal(parsed.attestations[1].header.magic, magic);
@@ -96,7 +179,7 @@ contract("Pyth", function () {
         assert.equal(parsed.attestations[1].confidenceInterval, 7);
         assert.equal(parsed.attestations[1].status, 1);
         assert.equal(parsed.attestations[1].corpAct, 0);
-        assert.equal(parsed.attestations[1].timestamp, 1647273460);
+        assert.equal(parsed.attestations[1].timestamp, timestamp);
 
         // Attestation #3
         assert.equal(parsed.attestations[2].header.magic, magic);
@@ -116,7 +199,7 @@ contract("Pyth", function () {
         assert.equal(parsed.attestations[2].confidenceInterval, 1);
         assert.equal(parsed.attestations[2].status, 1);
         assert.equal(parsed.attestations[2].corpAct, 0);
-        assert.equal(parsed.attestations[2].timestamp, 1647273460);
+        assert.equal(parsed.attestations[2].timestamp, timestamp);
 
         // Attestation #4
         assert.equal(parsed.attestations[3].header.magic, magic);
@@ -136,12 +219,10 @@ contract("Pyth", function () {
         assert.equal(parsed.attestations[3].confidenceInterval, 3);
         assert.equal(parsed.attestations[3].status, 1);
         assert.equal(parsed.attestations[3].corpAct, 0);
-        assert.equal(parsed.attestations[3].timestamp, 1647273460);
+        assert.equal(parsed.attestations[3].timestamp, timestamp);
     })
 
     async function attest(contract, data) {
-        const accounts = await web3.eth.getAccounts();
-
         const vm = await signAndEncodeVM(
             1,
             1,
@@ -156,49 +237,83 @@ contract("Pyth", function () {
             0
         );
 
-        let result = await contract.methods.attestPriceBatch("0x"+vm).send({
-            value : 0,
-            from : accounts[0],
-            gasLimit : 2000000
-        });
+        await contract.updatePriceBatchFromVm("0x"+vm);
     }
 
     it("should attest price updates over wormhole", async function() {
-        const initialized = new web3.eth.Contract(P2WImplementationFullABI, PythDataBridge.address);
-
-        await attest(initialized, rawBatchPriceAttestation);
+        let rawBatch = generateRawBatchAttestation(1647273460);
+        await attest(this.pythProxy, rawBatch);
     })
 
     it("should cache price updates", async function() {
-        const initialized = new web3.eth.Contract(P2WImplementationFullABI, PythDataBridge.address);
+        let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
+        let rawBatch = generateRawBatchAttestation(currentTimestamp);
+        await attest(this.pythProxy, rawBatch);
 
-        await attest(initialized, rawBatchPriceAttestation);
+        let first = await this.pythProxy.queryPriceFeed("0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e");
+        assert.equal(first.priceFeed.id, "0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e");
+        assert.equal(first.priceFeed.productId, "0xc0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73");
+        assert.equal(first.priceFeed.price, 1821);
+        assert.equal(first.priceFeed.conf, 3);
+        assert.equal(first.priceFeed.expo, -5);
+        assert.equal(first.priceFeed.status.toString(), PythSDK.PriceStatus.TRADING.toString());
+        assert.equal(first.priceFeed.numPublishers, 0);
+        assert.equal(first.priceFeed.maxNumPublishers, 0);
+        assert.equal(first.priceFeed.emaPrice, 1527);
+        assert.equal(first.priceFeed.emaConf, 3);
 
-        let first = await initialized.methods.latestPriceInfo("0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e").call();
-        assert.equal(first.price.id, "0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e");
-        assert.equal(first.price.productId, "0xc0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73");
-        assert.equal(first.price.price, 1821);
-        assert.equal(first.price.conf, 3);
-        assert.equal(first.price.expo, -5);
-        assert.equal(first.price.status.toString(), PythSDK.PriceStatus.TRADING.toString());
-        assert.equal(first.price.numPublishers, 0);
-        assert.equal(first.price.maxNumPublishers, 0);
-        assert.equal(first.price.emaPrice, 1527);
-        assert.equal(first.price.emaConf, 3);
-        assert.equal(first.attestation_time, 1647273460);
+        let second = await this.pythProxy.queryPriceFeed("0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
+        assert.equal(second.priceFeed.id, "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
+        assert.equal(second.priceFeed.productId, "0x7090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54");
+        assert.equal(second.priceFeed.price, 1088);
+        assert.equal(second.priceFeed.conf, 7);
+        assert.equal(second.priceFeed.expo, -5);
+        assert.equal(second.priceFeed.status.toString(), PythSDK.PriceStatus.TRADING.toString());
+        assert.equal(second.priceFeed.numPublishers, 0);
+        assert.equal(second.priceFeed.maxNumPublishers, 0);
+        assert.equal(second.priceFeed.emaPrice, 1531);
+        assert.equal(second.priceFeed.emaConf, 2);
+    })
 
-        let second = await initialized.methods.latestPriceInfo("0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620").call();
-        assert.equal(second.price.id, "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620");
-        assert.equal(second.price.productId, "0x7090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54");
-        assert.equal(second.price.price, 1088);
-        assert.equal(second.price.conf, 7);
-        assert.equal(second.price.expo, -5);
-        assert.equal(second.price.status.toString(), PythSDK.PriceStatus.TRADING.toString());
-        assert.equal(second.price.numPublishers, 0);
-        assert.equal(second.price.maxNumPublishers, 0);
-        assert.equal(second.price.emaPrice, 1531);
-        assert.equal(second.price.emaConf, 2);
-        assert.equal(second.attestation_time, 1647273460);
+    it("should fail transaction if a price is not found", async function() {
+        await expectRevert(
+            this.pythProxy.queryPriceFeed(
+                "0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e"),
+                "no price feed found for the given price id");
+    })
+
+    it("should show stale cached prices as unknown", async function() {
+        let smallestTimestamp = 1;
+        let rawBatch = generateRawBatchAttestation(smallestTimestamp);
+        await attest(this.pythProxy, rawBatch);
+
+        let all_price_ids = ["0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e",
+            "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620",
+            "0x8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd",
+            "0x17fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb7"
+        ];
+        for (var i = 0; i < all_price_ids.length; i++) {
+            const price_id = all_price_ids[i];
+            let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
+            assert.equal(priceFeedResult.priceFeed.status.toString(), PythSDK.PriceStatus.UNKNOWN.toString());
+        }
+    })
+
+    it("should show cached prices too far into the future as unknown", async function() {
+        let largestTimestamp = 4294967295;
+        let rawBatch = generateRawBatchAttestation(largestTimestamp);
+        await attest(this.pythProxy, rawBatch);
+
+        let all_price_ids = ["0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e",
+            "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620",
+            "0x8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd",
+            "0x17fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb7"
+        ];
+        for (var i = 0; i < all_price_ids.length; i++) {
+            const price_id = all_price_ids[i];
+            let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
+            assert.equal(priceFeedResult.priceFeed.status.toString(), PythSDK.PriceStatus.UNKNOWN.toString());
+        }
     })
 
     it("should only cache updates for new prices", async function() {
@@ -207,9 +322,13 @@ contract("Pyth", function () {
         // the second batch have a newer timestamp than those in the first batch, and so these 
         // are the only two which should be cached.
 
-        const initialized = new web3.eth.Contract(P2WImplementationFullABI, PythDataBridge.address);
+        let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
+        let encodedCurrentTimestamp = encodeTimestamp(currentTimestamp);
+        let encodedNewerTimestamp = encodeTimestamp(currentTimestamp + 1);
 
-        let secondBatchPriceAttestation = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000073dfffffffb00000000000005470000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000622f65f5503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000450fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000622f65f4503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000659fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000622f65f45032574800020181ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bDfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000622f65f5";
+        const firstBatch = generateRawBatchAttestation(currentTimestamp);
+
+        let secondBatch = "0x"+"503257480002020004009650325748000201c0e11df4c58a4e53f2bc059ba57a7c8f30ddada70b5bdc3753f90b824b64dd73c1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e01000000000000073dfffffffb00000000000005470000000132959bbd00000000c8bfed5f00000000000000030000000041c7b65b00000000c8bfed5f0000000000000003010000000000"+encodedNewerTimestamp+"503257480002017090c4ecf0309718d04c5a162c08aa4b78f533f688fa2f3ccd7be74c2a253a54fd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620010000000000000450fffffffb00000000000005fb000000015cfe8c9d00000000e3dbaa7f00000000000000020000000041c7c5bb00000000e3dbaa7f0000000000000007010000000000"+encodedCurrentTimestamp+"503257480002012f064374f55cb2efbbef29329de3b652013a76261876c55a1caf3a489c721ccd8c5dd422900917e8e26316fe598e8f062058d390644e0e36d42c187298420ccd010000000000000659fffffffb00000000000005cd00000001492c19bd00000000dd92071f00000000000000020000000041c7d3fb00000000dd92071f0000000000000001010000000000"+encodedCurrentTimestamp+"5032574800020181ddabd1a2c1fb6d6c4707b245b7c0ab6af0ae7b96b2ff866954a0b71124aee517fbe895e5416ddb4d5af9d83c599ee2c4f94cb25e8597f9e5978bd63a7cdcb70100000000000007bDfffffffb00000000000005e2000000014db2995d00000000dd8f775f00000000000000020000000041c7df9b00000000dd8f775f0000000000000003010000000000"+encodedNewerTimestamp;
 
         let all_price_ids = ["0xc1902e05cdf03bc089a943d921f87ccd0e3e1b774b5660d037b9f428c0d3305e",
             "0xfd4caca566fc44a9d6585420959d13897877c606477b3f0e7f247295b7275620",
@@ -218,19 +337,19 @@ contract("Pyth", function () {
         ];
 
         // Send the first batch
-        await attest(initialized, rawBatchPriceAttestation);
+        await attest(this.pythProxy, firstBatch);
         let prices_after_first_update = {};
         for (var i = 0; i < all_price_ids.length; i++) {
             const price_id = all_price_ids[i];
-            prices_after_first_update[price_id] = await initialized.methods.latestPriceInfo(price_id).call();
+            prices_after_first_update[price_id] = await this.pythProxy.queryPriceFeed(price_id);
         }
 
         // Send the second batch
-        await attest(initialized, secondBatchPriceAttestation);
+        await attest(this.pythProxy, secondBatch);
         let prices_after_second_update = {};
         for (var i = 0; i < all_price_ids.length; i++) {
             const price_id = all_price_ids[i];
-            prices_after_second_update[price_id] = await initialized.methods.latestPriceInfo(price_id).call();
+            prices_after_second_update[price_id] = await this.pythProxy.queryPriceFeed(price_id);
         }
 
         // Price IDs which have newer timestamps
@@ -247,23 +366,20 @@ contract("Pyth", function () {
         // Check that the new price updates have been updated
         for (var i = 0; i < new_price_updates.length; i++) {
             const price_id = new_price_updates[i];
-            assert.notEqual(prices_after_first_update[price_id].price.price, prices_after_second_update[price_id].price.price);
-            assert.notEqual(prices_after_first_update[price_id].attestation_time, prices_after_second_update[price_id].attestation_time);
+            assert.notEqual(prices_after_first_update[price_id].priceFeed.price, prices_after_second_update[price_id].priceFeed.price);
         }
 
         // Check that the old price updates have been discarded
         for (var i = 0; i < old_price_updates.length; i++) {
             const price_id = old_price_updates[i];
-            assert.equal(prices_after_first_update[price_id].price.price, prices_after_second_update[price_id].price.price);
-            assert.equal(prices_after_first_update[price_id].price.conf, prices_after_second_update[price_id].price.conf);
-            assert.equal(prices_after_first_update[price_id].price.expo, prices_after_second_update[price_id].price.expo);
-            assert.equal(prices_after_first_update[price_id].price.status.toString(), prices_after_second_update[price_id].price.status.toString());
-            assert.equal(prices_after_first_update[price_id].price.numPublishers, prices_after_second_update[price_id].price.numPublishers);
-            assert.equal(prices_after_first_update[price_id].price.maxNumPublishers, prices_after_second_update[price_id].price.maxNumPublishers);
-            assert.equal(prices_after_first_update[price_id].price.emaPrice, prices_after_second_update[price_id].price.emaPrice);
-            assert.equal(prices_after_first_update[price_id].price.emaConf, prices_after_second_update[price_id].price.emaConf);
-            assert.equal(prices_after_first_update[price_id].attestation_time, prices_after_second_update[price_id].attestation_time);
-            assert.equal(prices_after_first_update[price_id].arrival_time, prices_after_second_update[price_id].arrival_time);
+            assert.equal(prices_after_first_update[price_id].priceFeed.price, prices_after_second_update[price_id].priceFeed.price);
+            assert.equal(prices_after_first_update[price_id].priceFeed.conf, prices_after_second_update[price_id].priceFeed.conf);
+            assert.equal(prices_after_first_update[price_id].priceFeed.expo, prices_after_second_update[price_id].priceFeed.expo);
+            assert.equal(prices_after_first_update[price_id].priceFeed.status.toString(), prices_after_second_update[price_id].priceFeed.status.toString());
+            assert.equal(prices_after_first_update[price_id].priceFeed.numPublishers, prices_after_second_update[price_id].priceFeed.numPublishers);
+            assert.equal(prices_after_first_update[price_id].priceFeed.maxNumPublishers, prices_after_second_update[price_id].priceFeed.maxNumPublishers);
+            assert.equal(prices_after_first_update[price_id].priceFeed.emaPrice, prices_after_second_update[price_id].priceFeed.emaPrice);
+            assert.equal(prices_after_first_update[price_id].priceFeed.emaConf, prices_after_second_update[price_id].priceFeed.emaConf);
         }
     })
 });

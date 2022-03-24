@@ -6,20 +6,11 @@ pragma solidity ^0.8.0;
 import "./PythStructs.sol";
 
 contract PythStorage {
-    struct Provider {
-        uint16 chainId;
-
-        uint16 pyth2WormholeChainId;
-        bytes32 pyth2WormholeEmitter;
-    }
-
     struct State {
         address payable wormhole;
-
-        Provider provider;
-
-        // Mapping of initialized implementations
-        mapping(address => bool) initializedImplementations;
+        uint16 chainId;
+        uint16 pyth2WormholeChainId;
+        bytes32 pyth2WormholeEmitter;
 
         // Mapping of cached price information
         // priceId => PriceInfo
