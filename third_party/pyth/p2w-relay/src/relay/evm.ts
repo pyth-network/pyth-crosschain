@@ -21,7 +21,7 @@ export class EvmRelay implements Relay {
         .then(async (pending) => {
           try {
             let receipt = await pending.wait();
-            logger.info(`Batch ${i + 1}/${batchCount} tx OK`);
+            logger.info(`Batch ${i + 1}/${batchCount} tx OK, tx hash ${receipt.transactionHash}`);
             return new RelayResult(RelayRetcode.Success, [
               receipt.transactionHash,
             ]);
@@ -65,8 +65,7 @@ export class EvmRelay implements Relay {
     }
   }
   async query(priceId: PriceId): Promise<any> {
-    logger.warn("EvmRelay.query(): TODO(2021-03-22)");
-    return new RelayResult(RelayRetcode.Fail, []);
+    return await this.p2wContract.queryPriceFeed(priceId);
   }
   async getPayerInfo(): Promise<{ address: string; balance: bigint }> {
     return {
