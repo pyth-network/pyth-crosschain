@@ -24,7 +24,7 @@ contract Pyth is PythGetters, PythSetters {
         setPyth2WormholeEmitter(pyth2WormholeEmitter);
     }
 
-    function attestPriceBatch(bytes memory encodedVm) public returns (PythStructs.BatchPriceAttestation memory bpa) {
+    function updatePriceBatchFromVm(bytes memory encodedVm) public returns (PythStructs.BatchPriceAttestation memory bpa) {
         (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole().parseAndVerifyVM(encodedVm);
 
         require(valid, reason);

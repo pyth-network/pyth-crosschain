@@ -237,7 +237,7 @@ contract("Pyth", function () {
             0
         );
 
-        await contract.attestPriceBatch("0x"+vm);
+        await contract.updatePriceBatchFromVm("0x"+vm);
     }
 
     it("should attest price updates over wormhole", async function() {
