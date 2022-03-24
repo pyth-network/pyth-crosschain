@@ -6,8 +6,8 @@ import "../libraries/external/BytesLib.sol";
 
 contract PythSDK {
     
-    // Price represents a current aggregation price from pyth publisher feeds.
-    struct Price {
+    // PriceFeed represents a current aggregation price from pyth publisher feeds.
+    struct PriceFeed {
         // The price ID.
         bytes32 id;
         // Product account key.

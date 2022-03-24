@@ -12,6 +12,18 @@ import "./PythStructs.sol";
 contract Pyth is PythGetters, PythSetters {
     using BytesLib for bytes;
 
+    function initialize(
+        uint16 chainId,
+        address wormhole,
+        uint16 pyth2WormholeChainId,
+        bytes32 pyth2WormholeEmitter
+    ) virtual public {        
+        setChainId(chainId);
+        setWormhole(wormhole);
+        setPyth2WormholeChainId(pyth2WormholeChainId);
+        setPyth2WormholeEmitter(pyth2WormholeEmitter);
+    }
+
     function attestPriceBatch(bytes memory encodedVm) public returns (PythStructs.BatchPriceAttestation memory bpa) {
         (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole().parseAndVerifyVM(encodedVm);
 
@@ -25,7 +37,7 @@ contract Pyth is PythGetters, PythSetters {
 
             PythStructs.PriceInfo memory latestPrice = latestPriceInfo(attestation.priceId);
 
-            if(attestation.timestamp > latestPrice.attestation_time) {
+            if(attestation.timestamp > latestPrice.attestationTime) {
                 setLatestPriceInfo(attestation.priceId, newPriceInfo(attestation));
             }
         }
@@ -33,28 +45,27 @@ contract Pyth is PythGetters, PythSetters {
         return batch;
     }
 
-    
     function newPriceInfo(PythStructs.PriceAttestation memory pa) private view returns (PythStructs.PriceInfo memory info) {
-        info.attestation_time = pa.timestamp;
-        info.arrival_time = block.timestamp;
-        info.arrival_block = block.number;
+        info.attestationTime = pa.timestamp;
+        info.arrivalTime = block.timestamp;
+        info.arrivalBlock = block.number;
         
-        info.price.id = pa.priceId;
-        info.price.price = pa.price;
-        info.price.conf = pa.confidenceInterval;
-        info.price.status = PythSDK.PriceStatus(pa.status);
-        info.price.expo = pa.exponent;
-        info.price.emaPrice = pa.emaPrice.value;
-        info.price.emaConf = uint64(pa.emaConf.value);
-        info.price.productId = pa.productId;
+        info.priceFeed.id = pa.priceId;
+        info.priceFeed.price = pa.price;
+        info.priceFeed.conf = pa.confidenceInterval;
+        info.priceFeed.status = PythSDK.PriceStatus(pa.status);
+        info.priceFeed.expo = pa.exponent;
+        info.priceFeed.emaPrice = pa.emaPrice.value;
+        info.priceFeed.emaConf = uint64(pa.emaConf.value);
+        info.priceFeed.productId = pa.productId;
 
         // These aren't sent in the wire format yet
-        info.price.numPublishers = 0;
-        info.price.maxNumPublishers = 0;
+        info.priceFeed.numPublishers = 0;
+        info.priceFeed.maxNumPublishers = 0;
         return info;
     }
 
-    function verifyPythVM(IWormhole.VM memory vm) public view returns (bool valid) {
+    function verifyPythVM(IWormhole.VM memory vm) private view returns (bool valid) {
         if (vm.emitterChainId != pyth2WormholeChainId()) {
             return false;
         }
@@ -148,6 +159,33 @@ contract Pyth is PythGetters, PythSetters {
 
             bpa.attestations[j].timestamp = encoded.toUint64(index);
             index += 8;
+        }
+    }
+
+    /// Maximum acceptable time period before price is considered to be stale.
+    /// 
+    /// This includes attestation delay which currently might up to a minute.
+    uint private constant VALID_TIME_PERIOD_SECS = 180;
+
+    function queryPriceFeed(bytes32 id) public view returns (PythStructs.PriceFeedResponse memory priceFeed){
+
+        // Look up the latest price info for the given ID
+        PythStructs.PriceInfo memory info = latestPriceInfo(id);
+        require(info.priceFeed.id != 0, "no price feed found for the given price id");
+
+        // Check that the price is not stale
+        if (diff(block.timestamp, info.attestationTime) > VALID_TIME_PERIOD_SECS) {
+            info.priceFeed.status = PythSDK.PriceStatus.UNKNOWN;
+        }
+        
+        return PythStructs.PriceFeedResponse({priceFeed: info.priceFeed});
+    }
+
+    function diff(uint x, uint y) private pure returns (uint) {
+        if (x > y) {
+            return x - y;
+        } else {
+            return y - x;
         }
     }
 }
