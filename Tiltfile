@@ -39,11 +39,6 @@ config.define_string("webHost", False, "Public hostname for port forwards")
 
 # Components
 config.define_bool("pyth", False, "Enable Pyth-to-Wormhole component")
-config.define_bool("explorer", False, "Enable explorer component")
-config.define_bool("bridge_ui", False, "Enable bridge UI component")
-config.define_bool("e2e", False, "Enable E2E testing stack")
-config.define_bool("ci_tests", False, "Enable tests runner component")
-config.define_bool("bridge_ui_hot", False, "Enable hot loading bridge_ui")
 
 cfg = config.parse()
 num_guardians = int(cfg.get("num", "1"))
@@ -53,12 +48,7 @@ bigTableKeyPath = cfg.get("bigTableKeyPath", "./event_database/devnet_key.json")
 webHost = cfg.get("webHost", "localhost")
 ci = cfg.get("ci", False)
 pyth = cfg.get("pyth", ci)
-explorer = cfg.get("explorer", ci)
-bridge_ui = cfg.get("bridge_ui", ci)
-e2e = cfg.get("e2e", ci)
-ci_tests = cfg.get("ci_tests", ci)
 
-bridge_ui_hot = not ci
 
 if cfg.get("manual", False):
     trigger_mode = TRIGGER_MODE_MANUAL
@@ -98,16 +88,6 @@ local_resource(
     trigger_mode = trigger_mode,
 )
 
-local_resource(
-    name = "teal-gen",
-    deps = ["staging/algorand/teal"],
-    cmd = "tilt docker build -- --target teal-export -f Dockerfile.teal -o type=local,dest=. .",
-    env = {"DOCKER_BUILDKIT": "1"},
-    labels = ["algorand"],
-    allow_parallel=True,
-    trigger_mode = trigger_mode,
-)
-
 # wasm
 
 local_resource(
@@ -119,15 +99,6 @@ local_resource(
     trigger_mode = trigger_mode,
 )
 
-# node
-
-if explorer:
-    k8s_yaml_with_ns(
-        secret_yaml_generic(
-            "node-bigtable-key",
-            from_file = "bigtable-key.json=" + bigTableKeyPath,
-        ),
-    )
 
 docker_build(
     ref = "guardiand-image",
@@ -145,21 +116,6 @@ def build_node_yaml():
             if container["name"] != "guardiand":
                 fail("container 0 is not guardiand")
             container["command"] += ["--devNumGuardians", str(num_guardians)]
-
-            if explorer:
-                container["command"] += [
-                    "--bigTablePersistenceEnabled",
-                    "--bigTableInstanceName",
-                    "wormhole",
-                    "--bigTableTableName",
-                    "v2Events",
-                    "--bigTableTopicName",
-                    "new-vaa-devnet",
-                    "--bigTableKeyPath",
-                    "/tmp/mounted-keys/bigtable-key.json",
-                    "--bigTableGCPProject",
-                    gcpProject,
-                ]
 
     return encode_yaml_stream(node_yaml)
 
@@ -307,7 +263,8 @@ if pyth:
         resource_deps = ["pyth", "p2w-attest", "spy", "terra-terrad"],
         port_forwards = [
             port_forward(4200, name = "Rest API (Status + Query) [:4200]", host = webHost),
-            port_forward(8081, name = "Prometheus [:8081]", host = webHost)],
+            port_forward(8081, name = "Prometheus Terra [:8081]", host = webHost),
+            port_forward(8082, name = "Prometheus EVM [:8082]", host = webHost)],
         labels = ["pyth"]
     )
 
@@ -332,156 +289,6 @@ k8s_resource(
     trigger_mode = trigger_mode,
 )
 
-if bridge_ui:
-    entrypoint = "npm run build && /app/node_modules/.bin/serve -s build -n"
-    live_update = []
-    if bridge_ui_hot:
-        entrypoint = "npm start"
-        live_update = [
-            sync("./bridge_ui/public", "/app/public"),
-            sync("./bridge_ui/src", "/app/src"),
-        ]
-
-    docker_build(
-        ref = "bridge-ui",
-        context = ".",
-        only = ["./bridge_ui"],
-        dockerfile = "bridge_ui/Dockerfile",
-        entrypoint = entrypoint,
-        live_update = live_update,
-    )
-
-    k8s_yaml_with_ns("devnet/bridge-ui.yaml")
-
-    k8s_resource(
-        "bridge-ui",
-        resource_deps = [],
-        port_forwards = [
-            port_forward(3000, name = "Bridge UI [:3000]", host = webHost),
-        ],
-        labels = ["portal"],
-        trigger_mode = trigger_mode,
-    )
-
-if ci_tests:
-    docker_build(
-        ref = "tests-image",
-        context = ".",
-        dockerfile = "testing/Dockerfile.tests",
-        only = [],
-        live_update = [
-            sync("./spydk/js/src", "/app/spydk/js/src"),
-            sync("./sdk/js/src", "/app/sdk/js/src"),
-            sync("./testing", "/app/testing"),
-            sync("./bridge_ui/src", "/app/bridge_ui/src"),
-        ],
-    )
-
-    k8s_yaml_with_ns("devnet/tests.yaml")
-
-    k8s_resource(
-        "ci-tests",
-        resource_deps = ["proto-gen-web", "wasm-gen", "eth-devnet", "eth-devnet2", "terra-terrad", "terra-fcd", "solana-devnet", "spy", "guardian"],
-        labels = ["ci"],
-        trigger_mode = trigger_mode,
-    )
-
-# algorand
-k8s_yaml_with_ns("devnet/algorand.yaml")
-
-docker_build(
-    ref = "algorand",
-    context = "third_party/algorand",
-    dockerfile = "third_party/algorand/Dockerfile",
-)
-
-k8s_resource(
-    "algorand",
-    resource_deps = ["teal-gen"],
-    port_forwards = [
-        port_forward(4001, name = "Algorand RPC [:4001]", host = webHost),
-        port_forward(4002, name = "Algorand KMD [:4002]", host = webHost),
-    ],
-    labels = ["algorand"],
-    trigger_mode = trigger_mode,
-)
-
-# e2e
-if e2e:
-    k8s_yaml_with_ns("devnet/e2e.yaml")
-
-    docker_build(
-        ref = "e2e",
-        context = "e2e",
-        dockerfile = "e2e/Dockerfile",
-        network = "host",
-    )
-
-    k8s_resource(
-        "e2e",
-        port_forwards = [
-            port_forward(6080, name = "VNC [:6080]", host = webHost, link_path = "/vnc_auto.html"),
-        ],
-        labels = ["ci"],
-        trigger_mode = trigger_mode,
-    )
-
-# bigtable
-
-if explorer:
-
-    k8s_yaml_with_ns("devnet/bigtable.yaml")
-
-    k8s_resource(
-        "bigtable-emulator",
-        port_forwards = [port_forward(8086, name = "BigTable clients [:8086]", host = webHost)],
-        labels = ["explorer"],
-        trigger_mode = trigger_mode,
-    )
-
-    k8s_resource("pubsub-emulator",
-        port_forwards = [port_forward(8085, name = "PubSub listeners [:8085]")],
-        labels = ["explorer"],
-    )
-
-    docker_build(
-        ref = "cloud-functions",
-        context = "./event_database/cloud_functions",
-        dockerfile = "./event_database/cloud_functions/Dockerfile",
-        live_update = [
-            sync("./event_database/cloud_functions", "/app"),
-        ],
-    )
-    k8s_resource(
-        "cloud-functions",
-        resource_deps = ["proto-gen", "bigtable-emulator", "pubsub-emulator"],
-        port_forwards = [port_forward(8090, name = "Cloud Functions [:8090]")],
-        labels = ["explorer"],
-        trigger_mode = trigger_mode,
-    )
-
-    # explorer web app
-    docker_build(
-        ref = "explorer",
-        context = "./explorer",
-        dockerfile = "./explorer/Dockerfile",
-        ignore = ["./explorer/node_modules"],
-        live_update = [
-            sync("./explorer/src", "/home/node/app/src"),
-            sync("./explorer/public", "/home/node/app/public"),
-        ],
-    )
-
-    k8s_yaml_with_ns("devnet/explorer.yaml")
-
-    k8s_resource(
-        "explorer",
-        port_forwards = [
-            port_forward(8001, name = "Explorer Web UI [:8001]", host = webHost),
-        ],
-        labels = ["explorer"],
-        trigger_mode = trigger_mode,
-    )
 
 # terra devnet
 

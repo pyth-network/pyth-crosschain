@@ -43,16 +43,9 @@ RUN --mount=type=cache,target=solana/bridge/target \
     --mount=type=cache,target=solana/migration/target \
     cargo build-bpf --manifest-path "solana/bridge/program/Cargo.toml" -- --locked && \
     cargo build-bpf --manifest-path "solana/bridge/cpi_poster/Cargo.toml" -- --locked && \
-    cargo build-bpf --manifest-path "solana/modules/token_bridge/program/Cargo.toml" -- --locked && \
     cargo build-bpf --manifest-path "solana/pyth2wormhole/program/Cargo.toml" -- --locked && \
-    cargo build-bpf --manifest-path "solana/modules/nft_bridge/program/Cargo.toml" -- --locked && \
-    cargo build-bpf --manifest-path "solana/migration/Cargo.toml" -- --locked && \
     cp solana/bridge/target/deploy/bridge.so /opt/solana/deps/bridge.so && \
     cp solana/bridge/target/deploy/cpi_poster.so /opt/solana/deps/cpi_poster.so && \
-    cp solana/migration/target/deploy/wormhole_migration.so /opt/solana/deps/wormhole_migration.so && \
-    cp solana/modules/token_bridge/target/deploy/token_bridge.so /opt/solana/deps/token_bridge.so && \
-    cp solana/modules/nft_bridge/target/deploy/nft_bridge.so /opt/solana/deps/nft_bridge.so && \
-    cp solana/modules/token_bridge/token-metadata/spl_token_metadata.so /opt/solana/deps/spl_token_metadata.so && \
     cp solana/pyth2wormhole/target/deploy/pyth2wormhole.so /opt/solana/deps/pyth2wormhole.so
 
 COPY --from=pyth-oracle-copy /home/pyth/pyth-client/target/oracle.so /opt/solana/deps/pyth_oracle.so

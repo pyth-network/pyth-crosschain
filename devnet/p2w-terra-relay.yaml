@@ -43,8 +43,10 @@ spec:
             - containerPort: 4200
               name: rest-api
               protocol: TCP
-          tcpSocket:
-            port: 2000
+          readinessProbe:
+            httpGet:
+              path: '/health'
+              port: 4200
           command:
             - node
             - lib/index.js
@@ -60,7 +62,8 @@ spec:
             - name: TERRA_PRIVATE_KEY
               value: notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius
             - name: TERRA_PYTH_CONTRACT_ADDRESS
-              value: terra1plju286nnfj3z54wgcggd4enwaa9fgf5kgrgzl
+              value: terra16t7y0vrtpqjw2d7jvc2209yan9002339vjr96d
+              # It can change if order of terra contract creation changes or anything is added/removed in terra/tools/deploy.js
             - name: TERRA_CHAIN_ID
               value: localterra
             - name: TERRA_NAME
@@ -73,14 +76,14 @@ spec:
               value: '8081'
             - name: BAL_QUERY_INTERVAL
               value: '60000'
-            - name: READINESS_PORT
-              value: '2000'
             - name: RETRY_MAX_ATTEMPTS
               value: '4'
             - name: RETRY_DELAY_IN_MS
               value: '250'
             - name: MAX_MSGS_PER_BATCH
               value: '1'
+            - name: MAX_HEALTHY_NO_RELAY_DURATION_IN_SECONDS
+              value: '120'
             - name: LOG_LEVEL
               value: debug
         - name: p2w-evm-relay
@@ -92,8 +95,10 @@ spec:
             - containerPort: 4201
               name: rest-api
               protocol: TCP
-          tcpSocket:
-            port: 2001
+          readinessProbe:
+            httpGet:
+              path: '/health'
+              port: 4201
           command:
             - node
             - lib/index.js
