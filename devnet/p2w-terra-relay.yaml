@@ -72,9 +72,9 @@ spec:
             - name: BAL_QUERY_INTERVAL
               value: '60000'
             - name: RETRY_MAX_ATTEMPTS
-              value: '4'
+              value: '6'
             - name: RETRY_DELAY_IN_MS
-              value: '250'
+              value: '1000'
             - name: MAX_MSGS_PER_BATCH
               value: '1'
             - name: MAX_HEALTHY_NO_RELAY_DURATION_IN_SECONDS
