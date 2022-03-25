@@ -81,27 +81,15 @@ export class TerraRelay implements Relay {
         msgs.push(msg);
       }
 
-      let gasPrices, feeEstimate;
+      let gasPrices;
       try {
-       gasPrices = await axios
-        .get(TERRA_GAS_PRICES_URL)
-        .then((result) => result.data);
-        
-        feeEstimate = await lcdClient.tx.estimateFee(
-          [{
-            sequenceNumber: await wallet.sequence(),
-            publicKey: wallet.key.publicKey,
-          }],
-          {
-            msgs: [...msgs],
-            memo: "P2T",
-            feeDenoms: [this.coin],
-            gasPrices
-          }
-        )
+        gasPrices = await axios
+          .get(TERRA_GAS_PRICES_URL)
+          .then((result) => result.data);
       } catch (e: any) {
+        logger.warn(e);
+        logger.warn(e.stack);
         logger.warn("Couldn't fetch gas price and fee estimate. Using default values");
-        logger.warn(e, e.stack);
       }
 
       const tx = await wallet.createAndSignTx({
@@ -109,7 +97,6 @@ export class TerraRelay implements Relay {
         memo: "P2T",
         feeDenoms: [this.coin],
         gasPrices,
-        fee: feeEstimate
       });
 
       logger.debug("TIME: sending msg");
@@ -151,6 +138,8 @@ export class TerraRelay implements Relay {
       }
     } catch (e: any) {
       // Act on known Terra exceptions
+      logger.error(e);
+      logger.error(e.stack);
       if (
         e.message &&
         e.message.search("timeout") >= 0 &&
@@ -162,14 +151,19 @@ export class TerraRelay implements Relay {
         e.response?.data?.error &&
         e.response.data.error.search("VaaAlreadyExecuted") >= 0
       ) {
+        logger.error("VAA Already Executed");
+        logger.error(e.response.data.error);
         return new RelayResult(RelayRetcode.AlreadyExecuted, []);
       } else if (
         e.response?.data?.message &&
         e.response.data.message.search("account sequence mismatch") >= 0
       ) {
+        logger.error("Account sequence mismatch");
+        logger.error(e.response.data.message);
         return new RelayResult(RelayRetcode.SeqNumMismatch, []);
       } else {
-        logger.error("Unknown error:", e.toString());
+        logger.error("Unknown error:");
+        logger.error(e.toString());
         return new RelayResult(RelayRetcode.Fail, []);
       }
     }
