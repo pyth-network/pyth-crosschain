@@ -91,12 +91,12 @@ export class EvmRelay implements Relay {
             }
 
             if (no_diff_count > 0) {
-              logger.info(
-                `${no_diff_count}/${parsedBatch.nAttestations} price feeds changed`
+              logger.warn(
+                `${no_diff_count}/${parsedBatch.nAttestations} price feeds unchanged`
               );
             } else {
-              logger.warn(
-                `[Batch ${batchNo}/${batchCount}] All ${parsedBatch.nAttestations} price feeds unchanged after relay() run`
+              logger.info(
+                `[Batch ${batchNo}/${batchCount}] All ${parsedBatch.nAttestations} price feeds changed after relay() run`
               );
             }
             return new RelayResult(RelayRetcode.Success, [
