@@ -33,22 +33,14 @@ export class EvmRelay implements Relay {
         Buffer.from(parsedVAA.payload)
       );
 
-      let batch_feeds_before: any[] = [];
+      let priceIds: PriceId[] = [];
       for (let j = 0; j < parsedBatch.nAttestations; ++j) {
-        try {
-          batch_feeds_before.push(
-            await this.query("0x" + parsedBatch.priceAttestations[j].priceId)
-          );
-        } catch (e) {
-          logger.warn(
-            `Could not look up price ${j + 1} / ${
-              parsedBatch.nAttestations
-            } before tx`
-          );
-          batch_feeds_before.push("<failed query() before tx>");
-        }
+	  priceIds.push(parsedBatch.priceAttestations[j].priceId);
       }
-      let tx = await this.p2wContract
+
+      let batchFeedsBefore = await this.queryMany(priceIds);
+
+	let tx = this.p2wContract
         .updatePriceBatchFromVm("0x" + signedVAAs[i], { gasLimit: 1000000 })
         .then(async (pending) => {
           try {
@@ -61,44 +53,10 @@ export class EvmRelay implements Relay {
                 receipt
               )}`
             );
-            let no_diff_count = 0;
-            for (let j = 0; j < parsedBatch.nAttestations; ++j) {
-              let feed_before = batch_feeds_before[j];
-              let feed_after;
-              try {
-                feed_after = await this.query(
-                  "0x" + parsedBatch.priceAttestations[j].priceId
-                );
-              } catch (e) {
-                logger.warn(
-                  `Could not look up price ${j + 1} / ${
-                    parsedBatch.nAttestations
-                  } after tx`
-                );
-                feed_after = "<Failed query() after tx>";
-              }
+	    let batchFeedsAfter = await this.queryMany(priceIds);
 
-              if (feed_before != feed_after) {
-                logger.debug(
-                  `[Batch ${batchNo}/${batchCount}] price ${j}/${batch_feeds_before.length} changed:\n==== OLD ====\n${feed_before}\n==== NEW ====\n${feed_after}`
-                );
-              } else {
-                no_diff_count++;
-                logger.debug(
-                  `[Batch ${batchNo}/${batchCount}] price ${j}/${batch_feeds_before.length} unchanged`
-                );
-              }
-            }
+	      this.logFeedCmp(batchFeedsBefore, batchFeedsAfter);
 
-            if (no_diff_count > 0) {
-              logger.warn(
-                `${no_diff_count}/${parsedBatch.nAttestations} price feeds unchanged`
-              );
-            } else {
-              logger.info(
-                `[Batch ${batchNo}/${batchCount}] All ${parsedBatch.nAttestations} price feeds changed after relay() run`
-              );
-            }
             return new RelayResult(RelayRetcode.Success, [
               receipt.transactionHash,
             ]);
@@ -142,6 +100,57 @@ export class EvmRelay implements Relay {
   async query(priceId: PriceId): Promise<any> {
     return await this.p2wContract.queryPriceFeed(priceId);
   }
+    /// Query many `priceIds` in parallel, 
+    async queryMany(priceIds: Array<PriceId>): Promise<any[]> {
+    let batchFeedLookups = [];
+      for (let i = 0; i < priceIds.length; ++i) {
+	  let lookup = this.query("0x" + priceIds[i]).catch((e) => {
+	      logger.warn(
+		  `Could not look up price ${priceIds[i]}`
+	      );
+	      return `<failed query() for ${priceIds[i]}>`;
+	  });
+          batchFeedLookups.push(
+	      lookup
+            );
+      }
+
+	return Promise.all(batchFeedLookups);
+
+    }
+    /// Helpler method for relay(); compares two arrays of batch records with relevant log messages.
+    /// A comparison before and after a relay() call is a useful sanity check.
+    logFeedCmp(before: Array<any>, after: Array<any>) {
+
+	if (before.length != after.length) {
+	    logger.error("INTERNAL: logFeedCmp() before/after length mismatch");
+	    return;
+	}
+
+            let changedCount = 0;
+            for (let j = 0; j < before.length; ++j) {
+              if (before[j] != after[j]) {
+                changedCount++;
+                logger.debug(
+                  `price ${j + 1}/${before.length} changed:\n==== OLD ====\n${before[j]}\n==== NEW ====\n${after[j]}`
+                );
+              } else {
+                logger.debug(
+                  `price ${j + 1}/${before.length} unchanged`
+                );
+              }
+            }
+
+            if (changedCount > 0) {
+              logger.info(
+                `${changedCount} price feeds changed in relay() run`
+              );
+            } else {
+              logger.warn(
+                `All ${changedCount} price feeds unchanged in relay() run`
+              );
+            }
+    }
   async getPayerInfo(): Promise<{ address: string; balance: bigint }> {
     return {
       address: this.payerWallet.address,
