@@ -9,8 +9,8 @@ use cosmwasm_std::{
     QueryRequest,
     Response,
     StdResult,
-    Timestamp,
     WasmQuery,
+    Timestamp,
 };
 
 use pyth_sdk::{
@@ -23,8 +23,8 @@ use crate::{
         ExecuteMsg,
         InstantiateMsg,
         MigrateMsg,
-        PriceFeedResponse,
         QueryMsg,
+        PriceFeedResponse,
     },
     state::{
         config,
@@ -37,12 +37,16 @@ use crate::{
     },
 };
 
-use p2w_sdk::BatchPriceAttestation;
+use p2w_sdk::{
+    BatchPriceAttestation,
+};
 
 use wormhole::{
     error::ContractError,
     msg::QueryMsg as WormholeQueryMsg,
-    state::ParsedVAA,
+    state::{
+        ParsedVAA,
+    },
 };
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -194,7 +198,9 @@ fn update_price_feed_if_new(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::PriceFeed { id } => to_binary(&query_price_info(deps, env, id.as_ref())?),
+        QueryMsg::PriceFeed { id } => {
+            to_binary(&query_price_info(deps, env, id.as_ref())?)
+        }
     }
 }
 
@@ -209,20 +215,21 @@ pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
             //   but more than that is set to unknown, the reason is huge clock difference means there exists a
             //   problem in a either Terra or Solana blockchain and if it is Solana we don't want to propagate
             //   Solana internal problems to Terra
-            let time_abs_diff =
-                if env.block.time.seconds() > terra_price_info.attestation_time.seconds() {
-                    env.block.time.seconds() - terra_price_info.attestation_time.seconds()
-                } else {
-                    terra_price_info.attestation_time.seconds() - env.block.time.seconds()
-                };
+            let time_abs_diff = if env.block.time.seconds() > terra_price_info.attestation_time.seconds() {
+                env.block.time.seconds() - terra_price_info.attestation_time.seconds()
+            } else {
+                terra_price_info.attestation_time.seconds() - env.block.time.seconds()
+            };
 
             if time_abs_diff > VALID_TIME_PERIOD.as_secs() {
                 terra_price_info.price_feed.status = PriceStatus::Unknown;
             }
 
-            Ok(PriceFeedResponse {
-                price_feed: terra_price_info.price_feed,
-            })
+            Ok(
+                PriceFeedResponse {
+                    price_feed: terra_price_info.price_feed,
+                }
+            )
         }
         Err(_) => ContractError::AssetNotFound.std_err(),
     }
