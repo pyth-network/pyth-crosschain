@@ -12,10 +12,6 @@ contract PythGetters is PythState {
         return IWormhole(_state.wormhole);
     }
 
-    function chainId() public view returns (uint16){
-        return _state.chainId;
-    }
-
     function pyth2WormholeChainId() public view returns (uint16){
         return _state.pyth2WormholeChainId;
     }

@@ -11,7 +11,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pyth {
 
     function initialize(
-        uint16 chainId,
         address wormhole,
         uint16 pyth2WormholeChainId,
         bytes32 pyth2WormholeEmitter
@@ -19,7 +18,7 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
         __Ownable_init();
         __UUPSUpgradeable_init();
 
-        Pyth.initialize(chainId, wormhole, pyth2WormholeChainId, pyth2WormholeEmitter);
+        Pyth.initialize(wormhole, pyth2WormholeChainId, pyth2WormholeEmitter);
     }
 
     /// Ensures the contract cannot be uninitialized and taken over.

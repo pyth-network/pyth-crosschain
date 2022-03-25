@@ -8,7 +8,6 @@ import "./PythStructs.sol";
 contract PythStorage {
     struct State {
         address payable wormhole;
-        uint16 chainId;
         uint16 pyth2WormholeChainId;
         bytes32 pyth2WormholeEmitter;
 
