@@ -10,12 +10,24 @@ export class EvmRelay implements Relay {
   payerWallet: ethers.Wallet;
   p2wContract: PythUpgradable;
   async relay(signedVAAs: Array<string>): Promise<RelayResult> {
+    let code = await this.p2wContract.provider.getCode(
+      this.p2wContract.address
+    );
+
+    if (code == "0x") {
+      logger.error(
+        `Address ${this.p2wContract.address} does not appear to be a contract (getCode() yields 0x)`
+      );
+      return new RelayResult(RelayRetcode.Fail, []);
+    }
+
     let batchCount = signedVAAs.length;
     const { parse_vaa } = await importCoreWasm();
 
     // Schedule all received batches in parallel
     let txs = [];
     for (let i = 0; i < signedVAAs.length; ++i) {
+      let batchNo = i + 1;
       let parsedVAA = parse_vaa(hexToUint8Array(signedVAAs[i]));
       let parsedBatch = parsePythBatchPriceAttestation(
         Buffer.from(parsedVAA.payload)
@@ -42,12 +54,10 @@ export class EvmRelay implements Relay {
           try {
             let receipt = await pending.wait();
             logger.info(
-              `Batch ${i + 1}/${batchCount} tx OK, status ${
-                receipt.status
-              } tx hash ${receipt.transactionHash}`
+              `Batch ${batchNo}/${batchCount} tx OK, status ${receipt.status} tx hash ${receipt.transactionHash}`
             );
             logger.debug(
-              `Batch ${i + 1}/${batchCount} Full details ${JSON.stringify(
+              `Batch ${batchNo}/${batchCount} Full details ${JSON.stringify(
                 receipt
               )}`
             );
@@ -70,23 +80,23 @@ export class EvmRelay implements Relay {
 
               if (feed_before != feed_after) {
                 logger.debug(
-                  `[Batch ${i + 1}/${batchCount}] price ${j}/${
-                    batch_feeds_before.length
-                  } changed:\n==== OLD ====\n${feed_before}\n==== NEW ====\n${feed_after}`
+                  `[Batch ${batchNo}/${batchCount}] price ${j}/${batch_feeds_before.length} changed:\n==== OLD ====\n${feed_before}\n==== NEW ====\n${feed_after}`
                 );
               } else {
                 no_diff_count++;
                 logger.debug(
-                  `[Batch ${i + 1}/${batchCount}] price ${j}/${
-                    batch_feeds_before.length
-                  } unchanged`
+                  `[Batch ${batchNo}/${batchCount}] price ${j}/${batch_feeds_before.length} unchanged`
                 );
               }
             }
 
             if (no_diff_count > 0) {
               logger.info(
-                `${no_diff_count}/${parsedBatch.nAttestations} batches changed`
+                `${no_diff_count}/${parsedBatch.nAttestations} price feeds changed`
+              );
+            } else {
+              logger.warn(
+                `[Batch ${batchNo}/${batchCount}] All ${parsedBatch.nAttestations} price feeds unchanged after relay() run`
               );
             }
             return new RelayResult(RelayRetcode.Success, [
@@ -94,12 +104,10 @@ export class EvmRelay implements Relay {
             ]);
           } catch (e: any) {
             logger.error(
-              `Batch ${i + 1}/${batchCount} tx failed: ${
-                e.code
-              }, failed tx hash ${e.transactionHash}`
+              `Batch ${batchNo}/${batchCount} tx failed: ${e.code}, failed tx hash ${e.transactionHash}`
             );
             logger.error(
-              `Batch ${i + 1}/${batchCount} failure details: ${JSON.stringify(
+              `Batch ${batchNo}/${batchCount} failure details: ${JSON.stringify(
                 e
               )}`
             );
@@ -159,11 +167,10 @@ export class EvmRelay implements Relay {
 
     provider.getCode(cfg.p2wContractAddress).then((code) => {
       if (code == "0x") {
-	  let msg = `Address ${cfg.p2wContractAddress} does not appear to be a contract (getCode() yields 0x)`;
-	  logger.error(msg);
-	  throw msg;
+        let msg = `Address ${cfg.p2wContractAddress} does not appear to be a contract (getCode() yields 0x)`;
+        logger.error(msg);
+        throw msg;
       }
     });
-
   }
 }
