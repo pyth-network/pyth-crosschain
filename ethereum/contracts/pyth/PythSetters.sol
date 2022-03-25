@@ -6,10 +6,6 @@ pragma solidity ^0.8.0;
 import "./PythState.sol";
 
 contract PythSetters is PythState {
-    function setChainId(uint16 chainId) internal {
-        _state.chainId = chainId;
-    }
-
     function setPyth2WormholeChainId(uint16 chainId) internal {
         _state.pyth2WormholeChainId = chainId;
     }
