@@ -20,9 +20,9 @@ RUN npm ci && npm run build && npm cache clean --force
 # If you are building for production
 # RUN npm ci --only=production
 
-RUN mkdir -p /app/pyth_relay/logs
+RUN mkdir -p ${P2W_BASE_PATH}/${P2W_RELAY_REL_PATH}/logs
 RUN addgroup -S pyth -g 10001 && adduser -S pyth -G pyth -u 10001
-RUN chown -R pyth:pyth .
+RUN chown -R pyth:pyth src/ lib/ logs/
 USER pyth
 
 CMD [ "node", "lib/index.js" ]
