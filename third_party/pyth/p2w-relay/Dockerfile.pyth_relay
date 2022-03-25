@@ -4,24 +4,29 @@ ARG P2W_BASE_PATH=/usr/src/pyth2wormhole
 
 RUN apk --no-cache --update add python3 build-base  # Needed by the Ethereum build
 
+WORKDIR ${P2W_BASE_PATH}
+RUN addgroup -S pyth -g 10001 && adduser -S pyth -G pyth -u 10001
+RUN chown -R pyth:pyth .
+USER pyth
+
 WORKDIR ${P2W_BASE_PATH}/ethereum
-ADD ethereum .
+ADD --chown=pyth:pyth ethereum .
 RUN npm install && npm run build
 
+USER root
 RUN apk del build-base # No longer needed after EVM build
+
+USER pyth
 
 ARG P2W_RELAY_REL_PATH=third_party/pyth/p2w-relay
 
 WORKDIR ${P2W_BASE_PATH}/${P2W_RELAY_REL_PATH} 
-ADD ${P2W_RELAY_REL_PATH} .
+ADD --chown=pyth:pyth ${P2W_RELAY_REL_PATH} .
 
 RUN npm ci && npm run build && npm cache clean --force
 
 # If you are building for production
 # RUN npm ci --only=production
 
-RUN mkdir -p /app/pyth_relay/logs
-RUN addgroup -S pyth -g 10001 && adduser -S pyth -G pyth -u 10001
 RUN cp ${P2W_BASE_PATH}/ethereum/devnet_mnemonic.txt .
-RUN chown -R pyth:pyth .
-USER pyth
+RUN mkdir -p ${P2W_BASE_PATH}/${P2W_RELAY_REL_PATH}/logs
