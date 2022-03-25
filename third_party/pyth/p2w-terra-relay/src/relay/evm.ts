@@ -3,13 +3,13 @@ import { ethers } from "ethers";
 import { logger } from "../helpers";
 
 import {
-  PythImplementation__factory,
-  PythImplementation,
+  PythUpgradable__factory,
+  PythUpgradable,
 } from "../evm/bindings/";
 
 export class EvmRelay implements Relay {
   payerWallet: ethers.Wallet;
-  p2wContract: PythImplementation;
+  p2wContract: PythUpgradable;
   async relay(signedVAAs: Array<string>): Promise<RelayResult> {
     logger.warn("EvmRelay.relay(): TODO(2021-03-22)");
     return new RelayResult(RelayRetcode.Fail, []);
@@ -38,7 +38,7 @@ export class EvmRelay implements Relay {
     );
 
     this.payerWallet = new ethers.Wallet(wallet.privateKey, provider);
-    let factory = new PythImplementation__factory(this.payerWallet);
+    let factory = new PythUpgradable__factory(this.payerWallet);
     this.p2wContract = factory.attach(cfg.p2wContractAddress);
   }
 }
