@@ -83,24 +83,28 @@ export class TerraRelay implements Relay {
 
       let gasPrices, feeEstimate;
       try {
-       gasPrices = await axios
-        .get(TERRA_GAS_PRICES_URL)
-        .then((result) => result.data);
-        
+        gasPrices = await axios
+          .get(TERRA_GAS_PRICES_URL)
+          .then((result) => result.data);
+
         feeEstimate = await lcdClient.tx.estimateFee(
-          [{
-            sequenceNumber: await wallet.sequence(),
-            publicKey: wallet.key.publicKey,
-          }],
+          [
+            {
+              sequenceNumber: await wallet.sequence(),
+              publicKey: wallet.key.publicKey,
+            },
+          ],
           {
             msgs: [...msgs],
             memo: "P2T",
             feeDenoms: [this.coin],
-            gasPrices
+            gasPrices,
           }
-        )
+        );
       } catch (e: any) {
-        logger.warn("Couldn't fetch gas price and fee estimate. Using default values");
+        logger.warn(
+          "Couldn't fetch gas price and fee estimate. Using default values"
+        );
         logger.warn(e, e.stack);
       }
 
@@ -109,7 +113,7 @@ export class TerraRelay implements Relay {
         memo: "P2T",
         feeDenoms: [this.coin],
         gasPrices,
-        fee: feeEstimate
+        fee: feeEstimate,
       });
 
       logger.debug("TIME: sending msg");

@@ -42,6 +42,7 @@ for (let idx = 0; idx < process.argv.length; ++idx) {
     });
     logger.info("Relaying to Terra");
   } else if (process.argv[idx] === "--evm" && !relayImpl) {
+
     relayImpl = new EvmRelay({
       rpcWsUrl: helpers.envOrErr("EVM_NODE_WEBSOCKET_URL"),
       payerWalletMnemonic: fs
