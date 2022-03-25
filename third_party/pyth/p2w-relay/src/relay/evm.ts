@@ -6,9 +6,20 @@ import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 
 import { PythUpgradable__factory, PythUpgradable } from "../evm/bindings/";
 
+let WH_WASM: any = null;
+
+// Neat trick to import wormhole wasm cheaply
+async function whWasm(): Promise<any> {
+    if (!WH_WASM) {
+	WH_WASM = await importCoreWasm();
+    }
+    return WH_WASM;
+}
+
 export class EvmRelay implements Relay {
   payerWallet: ethers.Wallet;
   p2wContract: PythUpgradable;
+  // If set to true, we run query() on all prices in a batch before and after relaying and print the differences
   verifyPriceFeeds: boolean;
   async relay(signedVAAs: Array<string>): Promise<RelayResult> {
     let code = await this.p2wContract.provider.getCode(
@@ -23,7 +34,7 @@ export class EvmRelay implements Relay {
     }
 
     let batchCount = signedVAAs.length;
-    const { parse_vaa } = await importCoreWasm();
+    const { parse_vaa } = await whWasm();
 
     // Schedule all received batches in parallel
     let txs = [];
