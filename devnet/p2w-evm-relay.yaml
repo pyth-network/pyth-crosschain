@@ -65,6 +65,8 @@ spec:
               value: "m/44'/60'/0'/0/1" # Use account with idx 1
             - name: EVM_PYTH_CONTRACT_ADDRESS
               value: "0xDb56f2e9369E0D7bD191099125a3f6C370F8ed15"
+            - name: EVM_VERIFY_PRICE_FEEDS
+              value: "yes"
             - name: REST_PORT
               value: '4200'
             - name: PROM_PORT

@@ -9,6 +9,7 @@ import { PythUpgradable__factory, PythUpgradable } from "../evm/bindings/";
 export class EvmRelay implements Relay {
   payerWallet: ethers.Wallet;
   p2wContract: PythUpgradable;
+  verifyPriceFeeds: boolean;
   async relay(signedVAAs: Array<string>): Promise<RelayResult> {
     let code = await this.p2wContract.provider.getCode(
       this.p2wContract.address
@@ -38,7 +39,7 @@ export class EvmRelay implements Relay {
 	  priceIds.push(parsedBatch.priceAttestations[j].priceId);
       }
 
-      let batchFeedsBefore = await this.queryMany(priceIds);
+	let batchFeedsBefore = this.verifyPriceFeeds ? await this.queryMany(priceIds) : null;
 
 	let tx = this.p2wContract
         .updatePriceBatchFromVm("0x" + signedVAAs[i], { gasLimit: 1000000 })
@@ -53,9 +54,11 @@ export class EvmRelay implements Relay {
                 receipt
               )}`
             );
-	    let batchFeedsAfter = await this.queryMany(priceIds);
+	      let batchFeedsAfter = this.verifyPriceFeeds ? await this.queryMany(priceIds) : null;
 
+	      if (batchFeedsBefore && batchFeedsAfter) {
 	      this.logFeedCmp(batchFeedsBefore, batchFeedsAfter);
+	      }
 
             return new RelayResult(RelayRetcode.Success, [
               receipt.transactionHash,
@@ -163,6 +166,7 @@ export class EvmRelay implements Relay {
     payerWalletMnemonic: string;
     payerHDWalletPath: string;
     p2wContractAddress: string;
+      verifyPriceFeeds: boolean;
   }) {
     let provider = new ethers.providers.WebSocketProvider(cfg.rpcWsUrl);
     let wallet = ethers.Wallet.fromMnemonic(
@@ -173,6 +177,7 @@ export class EvmRelay implements Relay {
     this.payerWallet = new ethers.Wallet(wallet.privateKey, provider);
     let factory = new PythUpgradable__factory(this.payerWallet);
     this.p2wContract = factory.attach(cfg.p2wContractAddress);
+      this.verifyPriceFeeds = cfg.verifyPriceFeeds;
 
     provider.getCode(cfg.p2wContractAddress).then((code) => {
       if (code == "0x") {
