@@ -71,7 +71,7 @@
   },
   "devDependencies": {
     "@craco/craco": "^6.2.0",
-    "@truffle/hdwallet-provider": "^1.4.1",
+    "@truffle/hdwallet-provider": "^2.0.4",
     "@types/node": "^16.6.1",
     "@types/numeral": "^2.0.2",
     "@types/react-router-dom": "^5.1.8",
