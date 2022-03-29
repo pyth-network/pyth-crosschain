@@ -10,28 +10,22 @@ let WH_WASM: any = null;
 
 // Neat trick to import wormhole wasm cheaply
 async function whWasm(): Promise<any> {
-    if (!WH_WASM) {
-	WH_WASM = await importCoreWasm();
-    }
-    return WH_WASM;
+  if (!WH_WASM) {
+    WH_WASM = await importCoreWasm();
+  }
+  return WH_WASM;
 }
 
 export class EvmRelay implements Relay {
   payerWallet: ethers.Wallet;
   p2wContract: PythUpgradable;
-  // If set to true, we run query() on all prices in a batch before and after relaying and print the differences
+  // p2w contract sanity check; If set to true, we log query() results
+  // on all prices in a batch before and after relaying.
   verifyPriceFeeds: boolean;
   async relay(signedVAAs: Array<string>): Promise<RelayResult> {
     let code = await this.p2wContract.provider.getCode(
       this.p2wContract.address
     );
-
-    if (code == "0x") {
-      logger.error(
-        `Address ${this.p2wContract.address} does not appear to be a contract (getCode() yields 0x)`
-      );
-      return new RelayResult(RelayRetcode.Fail, []);
-    }
 
     let batchCount = signedVAAs.length;
     const { parse_vaa } = await whWasm();
@@ -47,12 +41,14 @@ export class EvmRelay implements Relay {
 
       let priceIds: PriceId[] = [];
       for (let j = 0; j < parsedBatch.nAttestations; ++j) {
-	  priceIds.push(parsedBatch.priceAttestations[j].priceId);
+        priceIds.push(parsedBatch.priceAttestations[j].priceId);
       }
 
-	let batchFeedsBefore = this.verifyPriceFeeds ? await this.queryMany(priceIds) : null;
+      let batchFeedsBefore = this.verifyPriceFeeds
+        ? await this.queryMany(priceIds)
+        : null;
 
-	let tx = this.p2wContract
+      let tx = this.p2wContract
         .updatePriceBatchFromVm("0x" + signedVAAs[i], { gasLimit: 1000000 })
         .then(async (pending) => {
           try {
@@ -65,11 +61,13 @@ export class EvmRelay implements Relay {
                 receipt
               )}`
             );
-	      let batchFeedsAfter = this.verifyPriceFeeds ? await this.queryMany(priceIds) : null;
+            let batchFeedsAfter = this.verifyPriceFeeds
+              ? await this.queryMany(priceIds)
+              : null;
 
-	      if (batchFeedsBefore && batchFeedsAfter) {
-	      this.logFeedCmp(batchFeedsBefore, batchFeedsAfter);
-	      }
+            if (batchFeedsBefore && batchFeedsAfter) {
+              this.logFeedCmp(batchFeedsBefore, batchFeedsAfter);
+            }
 
             return new RelayResult(RelayRetcode.Success, [
               receipt.transactionHash,
@@ -114,57 +112,48 @@ export class EvmRelay implements Relay {
   async query(priceId: PriceId): Promise<any> {
     return await this.p2wContract.queryPriceFeed(priceId);
   }
-    /// Query many `priceIds` in parallel, 
-    async queryMany(priceIds: Array<PriceId>): Promise<any[]> {
+  /// Query many `priceIds` in parallel, used internally by `relay()`
+  /// for implementing `this.verifyPriceFeeds`.
+  async queryMany(priceIds: Array<PriceId>): Promise<any[]> {
     let batchFeedLookups = [];
-      for (let i = 0; i < priceIds.length; ++i) {
-	  let lookup = this.query("0x" + priceIds[i]).catch((e) => {
-	      logger.warn(
-		  `Could not look up price ${priceIds[i]}`
-	      );
-	      return `<failed query() for ${priceIds[i]}>`;
-	  });
-          batchFeedLookups.push(
-	      lookup
-            );
+    for (let i = 0; i < priceIds.length; ++i) {
+      let lookup = this.query("0x" + priceIds[i]).catch((e) => {
+        logger.warn(`Could not look up price ${priceIds[i]}`);
+        return `<failed query() for ${priceIds[i]}>`;
+      });
+      batchFeedLookups.push(lookup);
+    }
+
+    return Promise.all(batchFeedLookups);
+  }
+  /// Helpler method for relay(); compares two arrays of batch records with relevant log messages.
+  /// A comparison before and after a relay() call is a useful sanity check.
+  logFeedCmp(before: Array<any>, after: Array<any>) {
+    if (before.length != after.length) {
+      logger.error("INTERNAL: logFeedCmp() before/after length mismatch");
+      return;
+    }
+
+    let changedCount = 0;
+    for (let j = 0; j < before.length; ++j) {
+      if (before[j] != after[j]) {
+        changedCount++;
+        logger.debug(
+          `price ${j + 1}/${before.length} changed:\n==== OLD ====\n${
+            before[j]
+          }\n==== NEW ====\n${after[j]}`
+        );
+      } else {
+        logger.debug(`price ${j + 1}/${before.length} unchanged`);
       }
-
-	return Promise.all(batchFeedLookups);
-
     }
-    /// Helpler method for relay(); compares two arrays of batch records with relevant log messages.
-    /// A comparison before and after a relay() call is a useful sanity check.
-    logFeedCmp(before: Array<any>, after: Array<any>) {
 
-	if (before.length != after.length) {
-	    logger.error("INTERNAL: logFeedCmp() before/after length mismatch");
-	    return;
-	}
-
-            let changedCount = 0;
-            for (let j = 0; j < before.length; ++j) {
-              if (before[j] != after[j]) {
-                changedCount++;
-                logger.debug(
-                  `price ${j + 1}/${before.length} changed:\n==== OLD ====\n${before[j]}\n==== NEW ====\n${after[j]}`
-                );
-              } else {
-                logger.debug(
-                  `price ${j + 1}/${before.length} unchanged`
-                );
-              }
-            }
-
-            if (changedCount > 0) {
-              logger.info(
-                `${changedCount} price feeds changed in relay() run`
-              );
-            } else {
-              logger.warn(
-                `All ${changedCount} price feeds unchanged in relay() run`
-              );
-            }
+    if (changedCount > 0) {
+      logger.info(`${changedCount} price feeds changed in relay() run`);
+    } else {
+      logger.warn(`All ${changedCount} price feeds unchanged in relay() run`);
     }
+  }
   async getPayerInfo(): Promise<{ address: string; balance: bigint }> {
     return {
       address: this.payerWallet.address,
@@ -177,7 +166,7 @@ export class EvmRelay implements Relay {
     payerWalletMnemonic: string;
     payerHDWalletPath: string;
     p2wContractAddress: string;
-      verifyPriceFeeds: boolean;
+    verifyPriceFeeds: boolean;
   }) {
     let provider = new ethers.providers.WebSocketProvider(cfg.rpcWsUrl);
     let wallet = ethers.Wallet.fromMnemonic(
@@ -188,7 +177,7 @@ export class EvmRelay implements Relay {
     this.payerWallet = new ethers.Wallet(wallet.privateKey, provider);
     let factory = new PythUpgradable__factory(this.payerWallet);
     this.p2wContract = factory.attach(cfg.p2wContractAddress);
-      this.verifyPriceFeeds = cfg.verifyPriceFeeds;
+    this.verifyPriceFeeds = cfg.verifyPriceFeeds;
 
     provider.getCode(cfg.p2wContractAddress).then((code) => {
       if (code == "0x") {

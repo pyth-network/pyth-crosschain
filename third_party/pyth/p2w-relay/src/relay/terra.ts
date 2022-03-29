@@ -89,7 +89,9 @@ export class TerraRelay implements Relay {
       } catch (e: any) {
         logger.warn(e);
         logger.warn(e.stack);
-        logger.warn("Couldn't fetch gas price and fee estimate. Using default values");
+        logger.warn(
+          "Couldn't fetch gas price and fee estimate. Using default values"
+        );
       }
 
       const tx = await wallet.createAndSignTx({

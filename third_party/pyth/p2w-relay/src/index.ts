@@ -53,7 +53,8 @@ for (let idx = 0; idx < process.argv.length; ++idx) {
         "m/44'/60'/0'/0"
       ), // ETH mainnet default
       p2wContractAddress: helpers.envOrErr("EVM_PYTH_CONTRACT_ADDRESS"),
-	verifyPriceFeeds: helpers.envOrErr("EVM_VERIFY_PRICE_FEEDS", "no") == "yes",
+      verifyPriceFeeds:
+        helpers.envOrErr("EVM_VERIFY_PRICE_FEEDS", "no") == "yes",
     });
     logger.info("Relaying to EVM.");
   }
