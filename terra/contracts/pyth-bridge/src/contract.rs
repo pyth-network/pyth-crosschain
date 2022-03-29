@@ -156,7 +156,10 @@ fn process_batch_attestation(
         .add_attribute("num_updates", format!("{}", new_attestations_cnt)))
 }
 
-/// Returns true if the price_feed is newer than the stored one
+/// Returns true if the price_feed is newer than the stored one.
+/// 
+/// This function returns error only if there be issues in ser/de when it reads from the bucket. Such an example would be 
+/// upgrades which migration is not handled carefully so the binary stored in the bucket won't be parsed.
 fn update_price_feed_if_new(
     deps: &mut DepsMut,
     env: &Env,
@@ -237,14 +240,24 @@ pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
 
 #[cfg(test)]
 mod test {
-    use cosmwasm_std::testing::{
-        mock_dependencies,
-        mock_env,
+    use cosmwasm_std::{
+        testing::{
+            mock_dependencies,
+            mock_env,
+            MockApi,
+            MockQuerier,
+            MockStorage,
+        },
+        OwnedDeps,
     };
 
     use super::*;
 
-    fn zero_vaa() -> ParsedVAA {
+    fn setup_test() -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
+        (mock_dependencies(&[]), mock_env())
+    }
+
+    fn create_zero_vaa() -> ParsedVAA {
         ParsedVAA {
             version: 0,
             guardian_set_index: 0,
@@ -260,13 +273,36 @@ mod test {
         }
     }
 
+    fn create_price_feed(expo: i32) -> PriceFeed {
+        let mut price_feed = PriceFeed::default();
+        price_feed.expo = expo;
+        price_feed
+    }
+
+    /// Updates the price feed with the given attestation time stamp and 
+    /// returns the update status (true means updated, false means ignored)
+    fn do_update_price_feed(
+        deps: &mut DepsMut,
+        env: &Env,
+        price_feed: PriceFeed,
+        attestation_time_seconds: u64,
+    ) -> bool {
+        update_price_feed_if_new(
+            deps,
+            &env,
+            price_feed,
+            Timestamp::from_seconds(attestation_time_seconds),
+        )
+        .unwrap()
+    }
+
     #[test]
     fn test_verify_vaa_sender_ok() {
         let mut config_info = ConfigInfo::default();
         config_info.pyth_emitter = vec![1u8];
         config_info.pyth_emitter_chain = 3;
 
-        let mut vaa = zero_vaa();
+        let mut vaa = create_zero_vaa();
         vaa.emitter_address = vec![1u8];
         vaa.emitter_chain = 3;
 
@@ -279,7 +315,7 @@ mod test {
         config_info.pyth_emitter = vec![1u8];
         config_info.pyth_emitter_chain = 3;
 
-        let mut vaa = zero_vaa();
+        let mut vaa = create_zero_vaa();
         vaa.emitter_address = vec![3u8, 4u8];
         vaa.emitter_chain = 3;
         assert_eq!(
@@ -287,7 +323,7 @@ mod test {
             ContractError::InvalidVAA.std_err()
         );
 
-        let mut vaa = zero_vaa();
+        let mut vaa = create_zero_vaa();
         vaa.emitter_address = vec![1u8];
         vaa.emitter_chain = 2;
         assert_eq!(
@@ -302,7 +338,7 @@ mod test {
         config_info.pyth_emitter = vec![1u8];
         config_info.pyth_emitter_chain = 3;
 
-        let mut vaa = zero_vaa();
+        let mut vaa = create_zero_vaa();
         vaa.emitter_address = vec![1u8];
         vaa.emitter_chain = 2;
         assert_eq!(
@@ -313,151 +349,82 @@ mod test {
 
     #[test]
     fn test_update_price_feed_if_new_first_price_ok() {
-        let mut deps = mock_dependencies(&[]);
+        let (mut deps, env) = setup_test();
+        let price_feed = create_price_feed(3);
 
-        let env = mock_env();
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, price_feed, 100);
+        assert!(changed);
 
-        let mut price_feed = PriceFeed::default();
-        price_feed.expo = 3;
+        let stored_price_feed = price_info(&mut deps.storage)
+            .load(price_feed.id.as_ref())
+            .unwrap()
+            .price_feed;
 
-        assert_eq!(
-            update_price_feed_if_new(
-                &mut deps.as_mut(),
-                &env,
-                price_feed,
-                Timestamp::from_seconds(100)
-            ),
-            Ok(true)
-        );
-
-        assert_eq!(
-            price_info(&mut deps.storage)
-                .load(price_feed.id.as_ref())
-                .unwrap()
-                .price_feed,
-            price_feed
-        );
+        assert_eq!(stored_price_feed, price_feed);
     }
 
     #[test]
     fn test_update_price_feed_if_new_ignore_duplicate_time() {
-        let mut deps = mock_dependencies(&[]);
+        let (mut deps, env) = setup_test();
+        let time = 100;
 
-        let env = mock_env();
+        let first_price_feed = create_price_feed(3);
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, first_price_feed, time);
+        assert!(changed);
 
-        let mut price_feed = PriceFeed::default();
-        price_feed.expo = 3;
+        let second_price_feed = create_price_feed(4);
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, second_price_feed, time);
+        assert!(!changed);
 
-        update_price_feed_if_new(
-            &mut deps.as_mut(),
-            &env,
-            price_feed,
-            Timestamp::from_seconds(100),
-        )
-        .unwrap();
-
-        let mut duplicate_time_price_feed = PriceFeed::default();
-        duplicate_time_price_feed.expo = 4;
-        assert_eq!(
-            update_price_feed_if_new(
-                &mut deps.as_mut(),
-                &env,
-                duplicate_time_price_feed,
-                Timestamp::from_seconds(100)
-            ),
-            Ok(false)
-        );
-
-        assert_eq!(
-            price_info(&mut deps.storage)
-                .load(price_feed.id.as_ref())
-                .unwrap()
-                .price_feed,
-            price_feed
-        );
+        let stored_price_feed = price_info(&mut deps.storage)
+            .load(first_price_feed.id.as_ref())
+            .unwrap()
+            .price_feed;
+        assert_eq!(stored_price_feed, first_price_feed);
     }
 
     #[test]
     fn test_update_price_feed_if_new_ignore_older() {
-        let mut deps = mock_dependencies(&[]);
+        let (mut deps, env) = setup_test();
 
-        let env = mock_env();
+        let first_price_feed = create_price_feed(3);
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, first_price_feed, 100);
+        assert!(changed);
 
-        let mut price_feed = PriceFeed::default();
-        price_feed.expo = 3;
+        let second_price_feed = create_price_feed(4);
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, second_price_feed, 90);
+        assert!(!changed);
 
-        update_price_feed_if_new(
-            &mut deps.as_mut(),
-            &env,
-            price_feed,
-            Timestamp::from_seconds(100),
-        )
-        .unwrap();
-
-        let mut old_price_feed = PriceFeed::default();
-        old_price_feed.expo = 4;
-
-        assert_eq!(
-            update_price_feed_if_new(
-                &mut deps.as_mut(),
-                &env,
-                old_price_feed,
-                Timestamp::from_seconds(100 - 10)
-            ),
-            Ok(false)
-        );
-
-        assert_eq!(
-            price_info(&mut deps.storage)
-                .load(price_feed.id.as_ref())
-                .unwrap()
-                .price_feed,
-            price_feed
-        );
+        let stored_price_feed = price_info(&mut deps.storage)
+            .load(first_price_feed.id.as_ref())
+            .unwrap()
+            .price_feed;
+        assert_eq!(stored_price_feed, first_price_feed);
     }
 
     #[test]
     fn test_update_price_feed_if_new_accept_newer() {
-        let mut deps = mock_dependencies(&[]);
+        let (mut deps, env) = setup_test();
 
-        let env = mock_env();
+        let first_price_feed = create_price_feed(3);
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, first_price_feed, 100);
+        assert!(changed);
 
-        let mut price_feed = PriceFeed::default();
-        price_feed.expo = 3;
+        let second_price_feed = create_price_feed(4);
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, second_price_feed, 110);
+        assert!(changed);
 
-        update_price_feed_if_new(
-            &mut deps.as_mut(),
-            &env,
-            price_feed,
-            Timestamp::from_seconds(100),
-        )
-        .unwrap();
-
-        let mut new_price_feed = PriceFeed::default();
-        new_price_feed.expo = 4;
-
-        assert_eq!(
-            update_price_feed_if_new(
-                &mut deps.as_mut(),
-                &env,
-                new_price_feed,
-                Timestamp::from_seconds(100 + 10)
-            ),
-            Ok(true)
-        );
-
-        assert_eq!(
-            price_info(&mut deps.storage)
-                .load(price_feed.id.as_ref())
-                .unwrap()
-                .price_feed,
-            new_price_feed
-        );
+        let stored_price_feed = price_info(&mut deps.storage)
+            .load(first_price_feed.id.as_ref())
+            .unwrap()
+            .price_feed;
+        assert_eq!(stored_price_feed, second_price_feed);
     }
 
     #[test]
     fn test_query_price_info_ok_trading() {
-        let mut deps = mock_dependencies(&[]);
+        let (mut deps, mut env) = setup_test();
+
         let address = b"123".as_ref();
 
         let mut dummy_price_info = PriceInfo::default();
@@ -468,7 +435,6 @@ mod test {
             .save(address, &dummy_price_info)
             .unwrap();
 
-        let mut env = mock_env();
         env.block.time = Timestamp::from_seconds(100);
 
         let price_feed = query_price_info(deps.as_ref(), env, address)
@@ -480,7 +446,7 @@ mod test {
 
     #[test]
     fn test_query_price_info_ok_stale_past() {
-        let mut deps = mock_dependencies(&[]);
+        let (mut deps, mut env) = setup_test();
         let address = b"123".as_ref();
 
         let mut dummy_price_info = PriceInfo::default();
@@ -491,7 +457,6 @@ mod test {
             .save(address, &dummy_price_info)
             .unwrap();
 
-        let mut env = mock_env();
         env.block.time = Timestamp::from_seconds(500 + VALID_TIME_PERIOD.as_secs() + 1);
 
         let price_feed = query_price_info(deps.as_ref(), env, address)
@@ -503,7 +468,8 @@ mod test {
 
     #[test]
     fn test_query_price_info_ok_stale_future() {
-        let mut deps = mock_dependencies(&[]);
+        let (mut deps, mut env) = setup_test();
+
         let address = b"123".as_ref();
 
         let mut dummy_price_info = PriceInfo::default();
@@ -514,7 +480,6 @@ mod test {
             .save(address, &dummy_price_info)
             .unwrap();
 
-        let mut env = mock_env();
         env.block.time = Timestamp::from_seconds(500 - VALID_TIME_PERIOD.as_secs() - 1);
 
         let price_feed = query_price_info(deps.as_ref(), env, address)
@@ -526,8 +491,7 @@ mod test {
 
     #[test]
     fn test_query_price_info_err_not_found() {
-        let env = mock_env();
-        let deps = mock_dependencies(&[]);
+        let (deps, env) = setup_test();
 
         assert_eq!(
             query_price_info(deps.as_ref(), env, b"123".as_ref()),
