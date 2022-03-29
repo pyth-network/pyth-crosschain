@@ -173,13 +173,13 @@ export class EvmRelay implements Relay {
   }
 
   constructor(cfg: {
-    rpcWsUrl: string;
+    jsonRpcUrl: string;
     payerWalletMnemonic: string;
     payerHDWalletPath: string;
     p2wContractAddress: string;
       verifyPriceFeeds: boolean;
   }) {
-    let provider = new ethers.providers.WebSocketProvider(cfg.rpcWsUrl);
+    let provider = new ethers.providers.JsonRpcProvider(cfg.jsonRpcUrl);
     let wallet = ethers.Wallet.fromMnemonic(
       cfg.payerWalletMnemonic,
       cfg.payerHDWalletPath
