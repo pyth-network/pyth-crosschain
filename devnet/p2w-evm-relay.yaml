@@ -58,7 +58,7 @@ spec:
             - name: SPY_SERVICE_FILTERS
               value: '[{"chain_id":1,"emitter_address":"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b"}]'
             - name: EVM_NODE_JSON_RPC_URL
-              value: "https://eth-devnet:8545"
+              value: "http://eth-devnet:8545"
             - name: EVM_WALLET_MNEMONIC
               value: "myth like bonus scare over problem client lizard pioneer submit female collect"
             - name: EVM_HDWALLET_PATH
