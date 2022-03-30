@@ -67,7 +67,7 @@ export class EvmRelay implements Relay {
             receipt.transactionHash,
           ]);
         })
-        .catch(async (e) => {
+        .catch((e) => {
           logger.error(
             `Batch ${batchNo}/${batchCount} tx failed: ${e.code}, failed tx hash ${e.transactionHash}`
           );
