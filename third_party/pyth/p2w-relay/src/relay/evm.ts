@@ -47,37 +47,34 @@ export class EvmRelay implements Relay {
       let tx = this.p2wContract
         .updatePriceBatchFromVm("0x" + signedVAAs[i], { gasLimit: 1000000 })
         .then(async (pending) => {
-          try {
-            let receipt = await pending.wait();
-            logger.info(
-              `Batch ${batchNo}/${batchCount} tx OK, status ${receipt.status} tx hash ${receipt.transactionHash}`
-            );
-            logger.debug(
-              `Batch ${batchNo}/${batchCount} Full details ${JSON.stringify(
-                receipt
-              )}`
-            );
-            let batchFeedsAfter = this.verifyPriceFeeds
-              ? await this.queryMany(priceIds)
-              : null;
+          let receipt = await pending.wait();
+          logger.info(
+            `Batch ${batchNo}/${batchCount} tx OK, status ${receipt.status} tx hash ${receipt.transactionHash}`
+          );
+          logger.debug(
+            `Batch ${batchNo}/${batchCount} Full details ${JSON.stringify(
+              receipt
+            )}`
+          );
+          let batchFeedsAfter = this.verifyPriceFeeds
+            ? await this.queryMany(priceIds)
+            : null;
 
-            if (batchFeedsBefore && batchFeedsAfter) {
-              this.logFeedCmp(batchFeedsBefore, batchFeedsAfter);
-            }
-
-            return new RelayResult(RelayRetcode.Success, [
-              receipt.transactionHash,
-            ]);
-          } catch (e: any) {
-            logger.error(
-              `Batch ${batchNo}/${batchCount} tx failed: ${e.code}, failed tx hash ${e.transactionHash}`
-            );
-            logger.error(
-              `Batch ${batchNo}/${batchCount} failure details: ${JSON.stringify(
-                e
-              )}`
-            );
+          if (batchFeedsBefore && batchFeedsAfter) {
+            this.logFeedCmp(batchFeedsBefore, batchFeedsAfter);
           }
+          return new RelayResult(RelayRetcode.Success, [
+            receipt.transactionHash,
+          ]);
+        })
+        .catch(async (e) => {
+          logger.error(
+            `Batch ${batchNo}/${batchCount} tx failed: ${e.code}, failed tx hash ${e.transactionHash}`
+          );
+          let detailed_msg = `Batch ${batchNo}/${batchCount} failure details: ${JSON.stringify(
+            e
+          )}`;
+          logger.debug(detailed_msg);
           return new RelayResult(RelayRetcode.Fail, []);
         });
 
@@ -180,6 +177,9 @@ export class EvmRelay implements Relay {
       if (code == "0x") {
         let msg = `Address ${cfg.p2wContractAddress} does not appear to be a contract (getCode() yields 0x)`;
         logger.error(msg);
+        // We do not expect a new EvmRelay() instance inside the
+        // top-level while(true) try-catch, this throw should reach
+        // top-level as expected.
         throw msg;
       }
     });

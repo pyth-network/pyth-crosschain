@@ -303,7 +303,14 @@ async function relayEventsNotLocked(
   for (let attempt = 0; attempt < maxAttempts; ++attempt) {
     retry = false;
 
-    relayResult = await relayImpl.relay(messages);
+    relayResult = await relayImpl.relay(messages).catch((e) => {
+      logger.error(
+        `INTERNAL: Uncaught relayImpl.relay() exception, details:\n${JSON.stringify(
+          e
+        )}`
+      );
+      return new RelayResult(RelayRetcode.Fail, []);
+    });
 
     switch (relayResult.code) {
       case RelayRetcode.Success:
@@ -407,7 +414,7 @@ async function finalizeEventsAlreadyLocked(
         ", totalSends: " +
         currObj.numTimesPublished +
         ", result: " +
-        relayResult
+        JSON.stringify(relayResult)
     );
   }
 
