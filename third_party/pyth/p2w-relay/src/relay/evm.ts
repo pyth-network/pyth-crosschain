@@ -173,13 +173,11 @@ export class EvmRelay implements Relay {
     this.p2wContract = factory.attach(cfg.p2wContractAddress);
     this.verifyPriceFeeds = cfg.verifyPriceFeeds;
 
+    // This promise and throw exist because of constructor() limitations.
     provider.getCode(cfg.p2wContractAddress).then((code) => {
       if (code == "0x") {
         let msg = `Address ${cfg.p2wContractAddress} does not appear to be a contract (getCode() yields 0x)`;
         logger.error(msg);
-        // We do not expect a new EvmRelay() instance inside the
-        // top-level while(true) try-catch, this throw should reach
-        // top-level as expected.
         throw msg;
       }
     });
