@@ -28,5 +28,4 @@ RUN npm ci && npm run build && npm cache clean --force
 # If you are building for production
 # RUN npm ci --only=production
 
-RUN cp ${P2W_BASE_PATH}/ethereum/devnet_mnemonic.txt .
 RUN mkdir -p ${P2W_BASE_PATH}/${P2W_RELAY_REL_PATH}/logs
