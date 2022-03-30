@@ -2,6 +2,7 @@ require("dotenv").config({ path: ".env" });
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 
 module.exports = {
+  migrations_directory: process.env.MIGRATIONS_DIR,
   networks: {
     development: {
       host: "127.0.0.1",
