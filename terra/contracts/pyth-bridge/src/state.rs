@@ -37,7 +37,7 @@ pub static PRICE_INFO_KEY: &[u8] = b"price_info_v2";
 pub const VALID_TIME_PERIOD: Duration = Duration::from_secs(3*60);
 
 // Guardian set information
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
 pub struct ConfigInfo {
     pub wormhole_contract: HumanAddr,
     pub pyth_emitter: Vec<u8>,
@@ -45,7 +45,7 @@ pub struct ConfigInfo {
 }
 
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct PriceInfo {
     pub arrival_time:         Timestamp,
