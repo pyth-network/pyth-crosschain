@@ -23,10 +23,6 @@ export class EvmRelay implements Relay {
   // on all prices in a batch before and after relaying.
   verifyPriceFeeds: boolean;
   async relay(signedVAAs: Array<string>): Promise<RelayResult> {
-    let code = await this.p2wContract.provider.getCode(
-      this.p2wContract.address
-    );
-
     let batchCount = signedVAAs.length;
     const { parse_vaa } = await whWasm();
 
@@ -126,7 +122,7 @@ export class EvmRelay implements Relay {
 
     return Promise.all(batchFeedLookups);
   }
-  /// Helpler method for relay(); compares two arrays of batch records with relevant log messages.
+  /// Helper method for relay(); compares two arrays of batch records with relevant log messages.
   /// A comparison before and after a relay() call is a useful sanity check.
   logFeedCmp(before: Array<any>, after: Array<any>) {
     if (before.length != after.length) {
@@ -151,6 +147,7 @@ export class EvmRelay implements Relay {
     if (changedCount > 0) {
       logger.info(`${changedCount} price feeds changed in relay() run`);
     } else {
+      // Yell louder if feeds hadn't changed
       logger.warn(`All ${changedCount} price feeds unchanged in relay() run`);
     }
   }
