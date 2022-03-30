@@ -96,7 +96,9 @@ export function init(runWorker: boolean, relay: Relay): boolean {
   }
 
   if (process.env.MAX_HEALTHY_NO_RELAY_DURATION_IN_SECONDS) {
-    maxHealthyNoRelayDurationInSeconds = parseInt(process.env.MAX_HEALTHY_NO_RELAY_DURATION_IN_SECONDS);
+    maxHealthyNoRelayDurationInSeconds = parseInt(
+      process.env.MAX_HEALTHY_NO_RELAY_DURATION_IN_SECONDS
+    );
   }
 
   if (maxHealthyNoRelayDurationInSeconds <= 0) {
