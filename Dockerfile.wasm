@@ -47,9 +47,5 @@ RUN --mount=type=cache,target=/root/.cache \
 
 FROM scratch AS export
 
-COPY --from=build /usr/src/bridge/solana/bridge/program/bundler sdk/js/src/solana/core
-
 COPY --from=build /usr/src/bridge/third_party/pyth/p2w-sdk/rust/bundler third_party/pyth/p2w-sdk/js/src/solana/p2w-core
 COPY --from=build /usr/src/bridge/solana/bridge/program/bundler third_party/pyth/p2w-sdk/js/src/solana/wormhole-core
-
-COPY --from=build /usr/src/bridge/solana/bridge/program/nodejs sdk/js/src/solana/core-node
