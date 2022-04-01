@@ -32,7 +32,7 @@ const listener = new Listener({
 
 const restAPI = new RestAPI({
   port: parseInt(envOrErr("REST_PORT"))
-});
+}, listener);
 
 listener.run();
 restAPI.run();

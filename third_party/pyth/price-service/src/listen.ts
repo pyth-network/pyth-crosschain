@@ -18,8 +18,14 @@ import { ClientReadableStream } from "@grpc/grpc-js";
 import { FilterEntry, SubscribeSignedVAAResponse } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
 import { logger } from "./logging";
 
+type VAAInfo = {
+  vaaBytes: string,
+  seqNum: number
+};
+
 export class Listener {
-  private seqMap = new Map<string, number>();
+  // Mapping of Price Feed Id to VAA
+  private priceFeedVAAMap = new Map<string, VAAInfo>();
   private promClient: PromClient;
   private spyServiceHost: string;
   private filters: FilterEntry[] = [];
@@ -127,7 +133,7 @@ export class Listener {
     let isAnyPriceNew = batchAttestation.priceAttestations.some(
       (priceAttestation) => {
         const key = priceAttestation.priceId;
-        let lastSeqNum = this.seqMap.get(key);
+        let lastSeqNum = this.priceFeedVAAMap.get(key);
         return lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence;
       }
     );
@@ -144,9 +150,9 @@ export class Listener {
     for (let priceAttestation of batchAttestation.priceAttestations) {
       const key = priceAttestation.priceId;
 
-      let lastSeqNum = this.seqMap.get(key);
+      let lastSeqNum = this.priceFeedVAAMap.get(key);
       if (lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence) {
-        this.seqMap.set(key, parsedVAA.sequence);
+        this.priceFeedVAAMap.set(key, parsedVAA.sequence);
       }
     }
 
@@ -163,4 +169,14 @@ export class Listener {
 
     this.promClient.incIncoming();
   }
+
+  getPriceFeedLatestVAA(priceFeedId: string): VAAInfo | null {
+    let latestVAAInfo = this.priceFeedVAAMap.get(priceFeedId);
+  
+    if (latestVAAInfo === undefined) {
+      return null;
+    }
+  
+    return latestVAAInfo;
+  }  
 }
