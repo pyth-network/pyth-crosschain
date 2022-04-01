@@ -77,17 +77,6 @@ local_resource(
     trigger_mode = trigger_mode,
 )
 
-local_resource(
-    name = "proto-gen-web",
-    deps = proto_deps + ["buf.gen.web.yaml"],
-    resource_deps = ["proto-gen"],
-    cmd = "tilt docker build -- --target node-export -f Dockerfile.proto -o type=local,dest=. .",
-    env = {"DOCKER_BUILDKIT": "1"},
-    labels = ["protobuf"],
-    allow_parallel=True,
-    trigger_mode = trigger_mode,
-)
-
 # wasm
 
 local_resource(
@@ -246,7 +235,7 @@ if pyth:
     k8s_yaml_with_ns("devnet/p2w-integration-observer.yaml")
     k8s_resource(
         "p2w-integration-observer",
-        resource_deps = ["solana-devnet", "eth-devnet", "pyth", "guardian", "p2w-attest", "proto-gen-web", "wasm-gen"],
+        resource_deps = ["solana-devnet", "eth-devnet", "pyth", "guardian", "p2w-attest", "wasm-gen"],
         port_forwards = [],
         labels = ["pyth"]
     )
