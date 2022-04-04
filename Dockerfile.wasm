@@ -24,16 +24,6 @@ ARG SED_REMOVE_INVALID_REFERENCE="/^\s*wasm.__wbg_systeminstruction_free(ptr);$/
 
 # TODO: it appears that wasm-pack ignores our lockfiles even with --locked
 
-# Compile Wormhole
-RUN --mount=type=cache,target=/root/.cache \
-	--mount=type=cache,target=solana/bridge/target \
-    cd solana/bridge/program && /usr/local/cargo/bin/wasm-pack build --target bundler -d bundler -- --features wasm --locked && \
-    cd bundler && sed -i $SED_REMOVE_INVALID_REFERENCE bridge_bg.js
-
-RUN --mount=type=cache,target=/root/.cache \
-	--mount=type=cache,target=solana/bridge/target \
-    cd solana/bridge/program && /usr/local/cargo/bin/wasm-pack build --target nodejs -d nodejs -- --features wasm --locked
-
 # Compile pyth2wormhole
 RUN --mount=type=cache,target=/root/.cache \
 	--mount=type=cache,target=third_party/pyth/p2w-sdk/rust/target \
@@ -48,4 +38,3 @@ RUN --mount=type=cache,target=/root/.cache \
 FROM scratch AS export
 
 COPY --from=build /usr/src/bridge/third_party/pyth/p2w-sdk/rust/bundler third_party/pyth/p2w-sdk/js/src/solana/p2w-core
-COPY --from=build /usr/src/bridge/solana/bridge/program/bundler third_party/pyth/p2w-sdk/js/src/solana/wormhole-core
