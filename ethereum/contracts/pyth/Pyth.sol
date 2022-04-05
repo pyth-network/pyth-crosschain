@@ -157,6 +157,9 @@ contract Pyth is PythGetters, PythSetters {
 
             bpa.attestations[j].timestamp = encoded.toUint64(index);
             index += 8;
+
+            bpa.attestations[j].num_publishers = encoded.toUint32(index);
+            index += 4;
         }
     }
 
