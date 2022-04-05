@@ -160,6 +160,9 @@ contract Pyth is PythGetters, PythSetters {
 
             bpa.attestations[j].num_publishers = encoded.toUint32(index);
             index += 4;
+
+            bpa.attestations[j].max_num_publishers = encoded.toUint32(index);
+            index += 4;
         }
     }
 

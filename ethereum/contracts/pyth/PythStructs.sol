@@ -42,6 +42,8 @@ contract PythStructs {
         uint8 corpAct;
 
         uint64 timestamp;
+	uint32 num_publishers;
+	uint32 max_num_publishers;
     }
 
     struct Rational {

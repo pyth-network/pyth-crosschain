@@ -131,7 +131,7 @@ fn process_batch_attestation(
             price_attestation.price_id.to_bytes(),
             price_attestation.status,
             price_attestation.expo,
-            0, // max_num_publishers data is currently unavailable
+            price_attestation.max_num_publishers, // max_num_publishers data is currently unavailable
             price_attestation.num_publishers, // num_publishers data is currently unavailable
             price_attestation.product_id.to_bytes(),
             price_attestation.price,
