@@ -32,6 +32,7 @@
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.1.4",
     "@certusone/wormhole-spydk": "^0.0.1",
+    "@certusone/p2w-sdk": "file:../p2w-sdk/js",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.24.0",
     "@terra-money/terra.js": "^3.0.4",
