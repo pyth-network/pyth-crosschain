@@ -19,3 +19,4 @@ pyth-sdk-solana = { version = "0.2.0" }
 wasm-bindgen = { version = "0.2.74", features = ["serde-serialize"], optional = true}
 solitaire = { path = "../../../../solana/solitaire/program", optional = true }
 solana-program = "1.8.16"
+schemars = "0.8.1"

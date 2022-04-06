@@ -19,6 +19,7 @@ use pyth_sdk_solana::state::{
     PriceType,
 };
 
+use schemars::JsonSchema;
 #[cfg(feature = "solana")]
 use solitaire::{
     Derive,

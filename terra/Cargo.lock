@@ -1254,6 +1254,7 @@ name = "p2w-sdk"
 version = "0.1.1"
 dependencies = [
  "pyth-sdk-solana",
+ "schemars",
  "serde",
  "solana-program",
 ]

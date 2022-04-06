@@ -8,6 +8,7 @@ import { Relay, RelayResult, RelayRetcode } from "./relay/iface";
 import * as helpers from "./helpers";
 import { logger } from "./helpers";
 import { PromHelper } from "./promHelpers";
+import { BatchPriceAttestation, getBatchAttestationHashKey, getBatchSummary } from "@certusone/p2w-sdk";
 
 const mutex = new Mutex();
 let condition = new CondVar();
@@ -15,7 +16,7 @@ let conditionTimeout = 20000;
 
 type PendingPayload = {
   vaa_bytes: string;
-  batchAttestation: helpers.PythBatchPriceAttestation;
+  batchAttestation: BatchPriceAttestation;
   receiveTime: Date;
   seqNum: number;
 };
@@ -26,7 +27,7 @@ type ProductData = {
   key: string;
   lastTimePublished: Date;
   numTimesPublished: number;
-  lastBatchAttestation: helpers.PythBatchPriceAttestation;
+  lastBatchAttestation: BatchPriceAttestation;
   lastResult: any;
 };
 
@@ -238,7 +239,7 @@ async function getPendingEventsAlreadyLocked(
     const first = pendingMap.entries().next();
     logger.debug("processing event with key [" + first.value[0] + "]");
     const pendingValue: PendingPayload = first.value[1];
-    let pendingKey = helpers.getBatchAttestationHashKey(
+    let pendingKey = getBatchAttestationHashKey(
       pendingValue.batchAttestation
     );
     let currObj = productMap.get(pendingKey);
@@ -406,7 +407,7 @@ async function finalizeEventsAlreadyLocked(
         "seqNum: " +
         currEntry.seqNum +
         ", price_ids: " +
-        helpers.getBatchSummary(currEntry.batchAttestation) +
+        getBatchSummary(currEntry.batchAttestation) +
         ", rcv2SendBegin: " +
         (sendTime.getTime() - currEntry.receiveTime.getTime()) +
         ", rcv2SendComplete: " +
@@ -447,7 +448,7 @@ async function updateBalance() {
 
 export async function postEvent(
   vaaBytes: any,
-  batchAttestation: helpers.PythBatchPriceAttestation,
+  batchAttestation: BatchPriceAttestation,
   sequence: number,
   receiveTime: Date
 ) {
@@ -457,7 +458,7 @@ export async function postEvent(
     receiveTime: receiveTime,
     seqNum: sequence,
   };
-  let pendingKey = helpers.getBatchAttestationHashKey(batchAttestation);
+  let pendingKey = getBatchAttestationHashKey(batchAttestation);
   await mutex.runExclusive(() => {
     logger.debug("posting event with key [" + pendingKey + "]");
     pendingMap.set(pendingKey, event);
@@ -480,7 +481,7 @@ export async function getStatus() {
       }
 
       let item: object = {
-        summary: helpers.getBatchSummary(value.lastBatchAttestation),
+        summary: getBatchSummary(value.lastBatchAttestation),
         num_times_published: value.numTimesPublished,
         last_time_published: value.lastTimePublished.toISOString(),
         result: value.lastResult,
