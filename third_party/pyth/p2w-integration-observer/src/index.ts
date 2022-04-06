@@ -7,7 +7,7 @@ import fs from "fs";
 
 import {ethers} from "ethers";
 
-import {getSignedAttestation, parseBatchAttestation, p2w_core, sol_addr2buf} from "@certusone/p2w-sdk";
+import {getSignedAttestation, parseBatchPriceAttestation} from "@certusone/p2w-sdk";
 
 import {setDefaultWasm, importCoreWasm} from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 
@@ -141,9 +141,9 @@ async function readinessProbeRoutine(port: number) {
 
 	    console.log(`[seqno ${poolEntry}] Parsed VAA:\n`, parsedVaa);
 
-	    let parsedAttestations = await parseBatchAttestation(parsedVaa.payload);
+	    let parsedAttestations = parseBatchPriceAttestation(Buffer.from(parsedVaa.payload));
 
-	    console.log(`[seqno ${poolEntry}] Parsed ${parsedAttestations.price_attestations.length} price attestations:\n`, parsedAttestations);
+	    console.log(`[seqno ${poolEntry}] Parsed ${parsedAttestations.nAttestations} price attestations:\n`, parsedAttestations);
 
 	    // try {
 	    // 	let tx = await p2w_eth.attestPrice(vaaResponse.vaaBytes, {gasLimit: 1000000});

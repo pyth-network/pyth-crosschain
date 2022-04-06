@@ -1,10 +1,11 @@
 import { Relay, RelayResult, RelayRetcode, PriceId } from "./iface";
 import { ethers } from "ethers";
-import { logger, parsePythBatchPriceAttestation } from "../helpers";
+import { logger } from "../helpers";
 import { hexToUint8Array } from "@certusone/wormhole-sdk";
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 
 import { PythUpgradable__factory, PythUpgradable } from "../evm/bindings/";
+import { parseBatchPriceAttestation } from "@certusone/p2w-sdk";
 
 let WH_WASM: any = null;
 
@@ -31,7 +32,7 @@ export class EvmRelay implements Relay {
     for (let i = 0; i < signedVAAs.length; ++i) {
       let batchNo = i + 1;
       let parsedVAA = parse_vaa(hexToUint8Array(signedVAAs[i]));
-      let parsedBatch = parsePythBatchPriceAttestation(
+      let parsedBatch = parseBatchPriceAttestation(
         Buffer.from(parsedVAA.payload)
       );
 
