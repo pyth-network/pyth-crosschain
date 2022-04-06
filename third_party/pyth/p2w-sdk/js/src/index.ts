@@ -4,10 +4,8 @@ import { PublicKey } from "@solana/web3.js";
 
 
 /*
-  // Pyth messages are defined in whitepapers/0007_pyth_over_wormhole.md
-
-  // The Pyth smart contract stuff is in terra/contracts/pyth-bridge
-
+  // Definitions exist in p2w-sdk/rust/
+  
   struct Rational {
       int64 value;
       int64 numerator;
