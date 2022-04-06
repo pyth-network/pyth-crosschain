@@ -14,9 +14,9 @@ use std::mem;
 
 use pyth_sdk_solana::state::{
     CorpAction,
-    Rational,
     PriceStatus,
     PriceType,
+    Rational,
 };
 
 #[cfg(feature = "solana")]
@@ -74,6 +74,8 @@ pub struct PriceAttestation {
     pub status:              PriceStatus,
     pub corp_act:            CorpAction,
     pub timestamp:           UnixTimestamp,
+    pub num_publishers:      u32,
+    pub max_num_publishers:  u32,
 }
 
 #[derive(Clone, Default, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -251,6 +253,8 @@ impl PriceAttestation {
             status: price.agg.status,
             corp_act: price.agg.corp_act,
             timestamp: timestamp,
+            num_publishers: price.num_qt,
+	    max_num_publishers: price.num,
         })
     }
 
@@ -270,6 +274,8 @@ impl PriceAttestation {
             status,
             corp_act,
             timestamp,
+            num_publishers,
+            max_num_publishers,
         } = self;
 
         // magic
@@ -313,6 +319,12 @@ impl PriceAttestation {
 
         // timestamp
         buf.extend_from_slice(&timestamp.to_be_bytes()[..]);
+
+        // num_publishers
+        buf.extend_from_slice(&num_publishers.to_be_bytes()[..]);
+
+        // max_num_publishers
+        buf.extend_from_slice(&max_num_publishers.to_be_bytes()[..]);
 
         buf
     }
@@ -413,6 +425,14 @@ impl PriceAttestation {
         bytes.read_exact(timestamp_vec.as_mut_slice())?;
         let timestamp = UnixTimestamp::from_be_bytes(timestamp_vec.as_slice().try_into()?);
 
+        let mut num_publishers_vec = vec![0u8; mem::size_of::<u32>()];
+        bytes.read_exact(num_publishers_vec.as_mut_slice())?;
+        let num_publishers = u32::from_be_bytes(num_publishers_vec.as_slice().try_into()?);
+
+        let mut max_num_publishers_vec = vec![0u8; mem::size_of::<u32>()];
+        bytes.read_exact(max_num_publishers_vec.as_mut_slice())?;
+        let max_num_publishers = u32::from_be_bytes(max_num_publishers_vec.as_slice().try_into()?);
+
         Ok(Self {
             product_id,
             price_id,
@@ -425,6 +445,8 @@ impl PriceAttestation {
             status,
             corp_act,
             timestamp,
+            num_publishers,
+	    max_num_publishers,
         })
     }
 }
@@ -433,9 +455,9 @@ impl PriceAttestation {
 mod tests {
     use super::*;
     use pyth_sdk_solana::state::{
-        Rational,
         PriceStatus,
         PriceType,
+        Rational,
     };
 
     fn mock_attestation(prod: Option<[u8; 32]>, price: Option<[u8; 32]>) -> PriceAttestation {
