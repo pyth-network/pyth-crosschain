@@ -1,10 +1,10 @@
 import { setDefaultWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 
-import * as listen from "./listen";
-import * as rest from "./rest";
-import * as helpers from "./helpers";
-import { logger } from "./helpers";
-import { PromHelper } from "./promHelpers";
+import { envOrErr } from "./helpers";
+import { Listener } from "./listen";
+import { initLogger } from "./logging";
+import { PromClient } from "./promClient";
+import { RestAPI } from "./rest";
 
 
 let configFile: string = ".env";
@@ -18,20 +18,21 @@ require("dotenv").config({ path: configFile });
 setDefaultWasm("node");
 
 // Set up the logger.
-helpers.initLogger();
+initLogger({logLevel: process.env.LOG_LEVEL});
 
-if (
-  listen.init() &&
-  rest.init()
-) {
-  // Start the Prometheus client with the app name and http port
-  let promPort = 8081;
-  if (process.env.PROM_PORT) {
-    promPort = parseInt(process.env.PROM_PORT);
-  }
-  logger.info("prometheus client listening on port " + promPort);
-  const promClient = new PromHelper("pyth_relay", promPort);
+const promClient = new PromClient({
+  name: "pyth_relay",
+  port: parseInt(envOrErr("PROM_PORT"))
+});
 
-  listen.run(promClient);
-  rest.run();
-}
+const listener = new Listener({
+  spyServiceHost: envOrErr("SPY_SERVICE_HOST"),
+  filtersRaw: process.env.SPY_SERVICE_FILTERS
+}, promClient);
+
+const restAPI = new RestAPI({
+  port: parseInt(envOrErr("REST_PORT"))
+});
+
+listener.run();
+restAPI.run();
