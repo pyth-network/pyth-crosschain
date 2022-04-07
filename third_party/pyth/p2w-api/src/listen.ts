@@ -15,6 +15,8 @@ import * as helpers from "./helpers";
 import { logger } from "./helpers";
 import { PromHelper } from "./promHelpers";
 import { getBatchSummary, parseBatchPriceAttestation } from "@certusone/p2w-sdk";
+import { ClientReadableStream } from "@grpc/grpc-js";
+import { SubscribeSignedVAAResponse } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
 
 let seqMap = new Map<string, number>();
 let metrics: PromHelper;
@@ -28,6 +30,7 @@ export function init(): boolean {
   return true;
 }
 
+// Run this function without blocking (`await`) if you want to run it async.
 export async function run(pm: PromHelper) {
   metrics = pm;
   logger.info(
@@ -35,95 +38,85 @@ export async function run(pm: PromHelper) {
       process.env.SPY_SERVICE_HOST +
       "]"
   );
+  
+  let filter = {};
+  if (process.env.SPY_SERVICE_FILTERS) {
+    const parsedJsonFilters = eval(process.env.SPY_SERVICE_FILTERS);
 
-  (async () => {
-    let filter = {};
-    if (process.env.SPY_SERVICE_FILTERS) {
-      const parsedJsonFilters = eval(process.env.SPY_SERVICE_FILTERS);
-
-      let myFilters = [];
-      for (let i = 0; i < parsedJsonFilters.length; i++) {
-        let myChainId = parseInt(parsedJsonFilters[i].chain_id) as ChainId;
-        let myEmitterAddress = parsedJsonFilters[i].emitter_address;
-        // let myEmitterAddress = await encodeEmitterAddress(
-        //   myChainId,
-        //   parsedJsonFilters[i].emitter_address
-        // );
-        let myEmitterFilter = {
-          emitterFilter: {
-            chainId: myChainId,
-            emitterAddress: myEmitterAddress,
-          },
-        };
-        logger.info(
-          "adding filter: chainId: [" +
-            myEmitterFilter.emitterFilter.chainId +
-            "], emitterAddress: [" +
-            myEmitterFilter.emitterFilter.emitterAddress +
-            "]"
-        );
-        myFilters.push(myEmitterFilter);
-      }
-
-      logger.info("setting " + myFilters.length + " filters");
-      filter = {
-        filters: myFilters,
+    let myFilters = [];
+    for (let i = 0; i < parsedJsonFilters.length; i++) {
+      let myChainId = parseInt(parsedJsonFilters[i].chain_id) as ChainId;
+      let myEmitterAddress = parsedJsonFilters[i].emitter_address;
+      let myEmitterFilter = {
+        emitterFilter: {
+          chainId: myChainId,
+          emitterAddress: myEmitterAddress,
+        },
       };
-    } else {
-      logger.info("processing all signed VAAs");
+      logger.info(
+        "adding filter: chainId: [" +
+          myEmitterFilter.emitterFilter.chainId +
+          "], emitterAddress: [" +
+          myEmitterFilter.emitterFilter.emitterAddress +
+          "]"
+      );
+      myFilters.push(myEmitterFilter);
     }
 
-    while (true) {
-      let stream: any;
-      try {
-        const client = createSpyRPCServiceClient(
-          process.env.SPY_SERVICE_HOST || ""
-        );
-        stream = await subscribeSignedVAA(client, filter);
+    logger.info("setting " + myFilters.length + " filters");
+    filter = {
+      filters: myFilters,
+    };
+  } else {
+    logger.info("No filters provided. Processing all signed VAAs");
+  }
 
-        stream.on("data", ({ vaaBytes }: { vaaBytes: string }) => {
-          processVaa(vaaBytes);
-        });
+  while (true) {
+    let stream: ClientReadableStream<SubscribeSignedVAAResponse> | undefined;
+    try {
+      const client = createSpyRPCServiceClient(
+        process.env.SPY_SERVICE_HOST || ""
+      );
+      stream = await subscribeSignedVAA(client, filter);
 
-        let connected = true;
-        stream.on("error", (err: any) => {
-          logger.error("spy service returned an error: %o", err);
-          connected = false;
-        });
+      stream!.on("data", ({ vaaBytes }: { vaaBytes: string }) => {
+        processVaa(vaaBytes);
+      });
 
-        stream.on("close", () => {
-          logger.error("spy service closed the connection!");
-          connected = false;
-        });
+      let connected = true;
+      stream!.on("error", (err: any) => {
+        logger.error("spy service returned an error: %o", err);
+        connected = false;
+      });
 
-        logger.info("connected to spy service, listening for messages");
+      stream!.on("close", () => {
+        logger.error("spy service closed the connection!");
+        connected = false;
+      });
 
-        while (connected) {
-          await helpers.sleep(1000);
-        }
-      } catch (e) {
-        logger.error("spy service threw an exception: %o", e);
+      logger.info("connected to spy service, listening for messages");
+
+      while (connected) {
+        await helpers.sleep(1000);
       }
-
-      stream.end;
-      await helpers.sleep(5 * 1000);
-      logger.info("attempting to reconnect to the spy service");
+    } catch (e) {
+      logger.error("spy service threw an exception: %o", e);
     }
-  })();
+
+    if (stream) {
+      stream.destroy();
+    }
+
+    await helpers.sleep(1000);
+    logger.info("attempting to reconnect to the spy service");
+  }
+  
 }
 
 async function processVaa(vaaBytes: string) {
-  let receiveTime = new Date();
+  logger.info("received: a new VAA");
   const { parse_vaa } = await importCoreWasm();
   const parsedVAA = parse_vaa(hexToUint8Array(vaaBytes));
-  // logger.debug(
-  //   "processVaa, vaa len: " +
-  //     vaaBytes.length +
-  //     ", payload len: " +
-  //     parsedVAA.payload.length
-  // );
-
-  // logger.debug("listen:processVaa: parsedVAA: %o", parsedVAA);
 
   let batchAttestation;
 
@@ -147,7 +140,8 @@ async function processVaa(vaaBytes: string) {
 
   if (!isAnyPriceNew) {
     logger.debug(
-      "For all prices there exists an update with newer sequence number. batch price attestation: %o",
+      "For all prices there exists an update with newer sequence number, ignoring this attestation." + 
+      "batch price attestation: %o",
       batchAttestation
     );
     return;

@@ -1,9 +1,10 @@
 ////////////////////////////////// Start of Logger Stuff //////////////////////////////////////
 
-export let logger: any;
+import * as winston from "winston";
+
+export let logger: winston.Logger;
 
 export function initLogger() {
-  const winston = require("winston");
 
   let useConsole: boolean = true;
   let logFileName: string = "";

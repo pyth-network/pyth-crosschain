@@ -13,6 +13,7 @@ export function init(): boolean {
   return true;
 }
 
+// Run this function without blocking (`await`) if you want to run it async.
 export async function run() {
   const express = require("express");
   const cors = require("cors");
@@ -23,9 +24,8 @@ export async function run() {
     logger.debug("listening on REST port " + restPort)
   );
 
-  (async () => {
-    app.get("/", (req: Request, res: Response) =>
-      res.json(["HELLO-WORLD!"])
-    );
-  })();
+  // TODO: It is a stub. It will be completed in the coming PRs.
+  app.get("/", (req: Request, res: Response) =>
+    res.json(["HELLO-WORLD!"])
+  );
 }
