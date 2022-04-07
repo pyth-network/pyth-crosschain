@@ -10,7 +10,7 @@ export function initLogger(config?: {logLevel?: string}) {
   }
 
   let transport: any;
-  console.log("pyth_relay is logging to the console at level [%s]", logLevel);
+  console.log("p2w_api is logging to the console at level [%s]", logLevel);
 
   transport = new winston.transports.Console({
     level: logLevel,
