@@ -10,7 +10,7 @@ name = "pyth2wormhole_client"
 src = "src/lib.rs"
 
 [features]
-default = ["pyth2wormhole/client", "wormhole-bridge-solana/client"]
+default = ["pyth2wormhole/client", "wormhole-bridge-solana/client", "pyth2wormhole/trace"]
 
 [dependencies]
 borsh = "=0.9.1"
@@ -29,3 +29,8 @@ solana-sdk = "=1.9.4"
 solana-transaction-status = "=1.9.4"
 solitaire-client = {path = "../../solitaire/client"}
 solitaire = {path = "../../solitaire/program"}
+
+[dev-dependencies]
+pyth-client = "0.5.0"
+solana-program-test = "=1.9.4"
+solana-sdk = "=1.9.4"

@@ -1,5 +1,6 @@
 use solana_program::pubkey::Pubkey;
 use solitaire::{
+    trace,
     AccountState,
     CreationLamports,
     ExecutionContext,
