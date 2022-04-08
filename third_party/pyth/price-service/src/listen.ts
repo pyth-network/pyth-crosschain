@@ -20,7 +20,7 @@ import { logger } from "./logging";
 
 type VAAInfo = {
   vaaBytes: string,
-  seqNum: number
+  seqNum: number;
 };
 
 export class Listener {
@@ -133,7 +133,7 @@ export class Listener {
     let isAnyPriceNew = batchAttestation.priceAttestations.some(
       (priceAttestation) => {
         const key = priceAttestation.priceId;
-        let lastSeqNum = this.priceFeedVAAMap.get(key);
+        let lastSeqNum = this.priceFeedVAAMap.get(key)?.seqNum;
         return lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence;
       }
     );
@@ -150,9 +150,12 @@ export class Listener {
     for (let priceAttestation of batchAttestation.priceAttestations) {
       const key = priceAttestation.priceId;
 
-      let lastSeqNum = this.priceFeedVAAMap.get(key);
+      let lastSeqNum = this.priceFeedVAAMap.get(key)?.seqNum;
       if (lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence) {
-        this.priceFeedVAAMap.set(key, parsedVAA.sequence);
+        this.priceFeedVAAMap.set(key, {
+          seqNum: parsedVAA.sequence,
+          vaaBytes: vaaBytes
+        });
       }
     }
 
@@ -170,13 +173,7 @@ export class Listener {
     this.promClient.incIncoming();
   }
 
-  getPriceFeedLatestVAA(priceFeedId: string): VAAInfo | null {
-    let latestVAAInfo = this.priceFeedVAAMap.get(priceFeedId);
-  
-    if (latestVAAInfo === undefined) {
-      return null;
-    }
-  
-    return latestVAAInfo;
-  }  
+  getPriceFeedLatestVAA(priceFeedId: string): VAAInfo | undefined {
+    return this.priceFeedVAAMap.get(priceFeedId);
+  }
 }
