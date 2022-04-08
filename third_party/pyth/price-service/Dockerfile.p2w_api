@@ -6,7 +6,7 @@ WORKDIR ${P2W_BASE_PATH}
 RUN addgroup -S pyth -g 10001 && adduser -S pyth -G pyth -u 10001
 USER pyth
 
-ARG P2W_API_REL_PATH=third_party/pyth/p2w-api
+ARG P2W_API_REL_PATH=third_party/pyth/price-service
 
 WORKDIR ${P2W_BASE_PATH}/${P2W_API_REL_PATH} 
 ADD --chown=pyth:pyth ${P2W_API_REL_PATH} .
