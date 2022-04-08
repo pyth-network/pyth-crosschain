@@ -1,7 +1,7 @@
 {
-  "name": "p2w_api",
+  "name": "@pythnetwork/price-service",
   "version": "1.0.0",
-  "description": "Pyth to Wormhole API",
+  "description": "Pyth Price Service",
   "main": "index.js",
   "scripts": {
     "build": "tsc",

@@ -1,4 +1,4 @@
-# Pyth 2 Wormhole API
+# Pyth Price Service
 
 This service exposes a REST api to provide latest attestation message for a price feed id.
 
@@ -10,10 +10,10 @@ To build the spy_guardian docker container:
 $ docker build -f Dockerfile.spy_guardian -t spy_guardian .
 ```
 
-To build the p2w_api docker container:
+To build the pyth_price_service docker container:
 
 ```
-$ docker build -f Dockerfile.p2w_api -t p2w_api .
+$ docker build -f Dockerfile.pyth_price_service -t pyth_price_service .
 ```
 
 Run the spy_guardian docker container in TestNet:
@@ -36,15 +36,15 @@ $ docker run --platform linux/amd64 -d --network=host spy_guardian \
 
 ```
 
-Then to run the p2w_api docker container using a config file called
-${HOME}/p2w_api/env and logging to directory ${HOME}/p2w_api/logs, do the
+Then to run the pyth_price_service docker container using a config file called
+${HOME}/pyth_price_service/env and logging to directory ${HOME}/pyth_price_service/logs, do the
 following:
 
 ```
 $ docker run \
---volume=${HOME}/p2w_api:/var/p2w_api \
--e p2w_api_CONFIG=/var/p2w_api/env \
+--volume=${HOME}/pyth_price_service:/var/pyth_price_service \
+-e pyth_price_service_CONFIG=/var/pyth_price_service/env \
 --network=host \
 -d \
-p2w_api
+pyth_price_service
 ```
