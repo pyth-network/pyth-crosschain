@@ -18,8 +18,18 @@ import { ClientReadableStream } from "@grpc/grpc-js";
 import { FilterEntry, SubscribeSignedVAAResponse } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
 import { logger } from "./logging";
 
-export class Listener {
-  private seqMap = new Map<string, number>();
+export type VaaInfo = {
+  vaaBytes: string,
+  seqNum: number;
+};
+
+export interface PriceFeedVaaInfo {
+  getLatestVaaForPriceFeed(priceFeedId: string): VaaInfo | undefined;
+}
+
+export class Listener implements PriceFeedVaaInfo {
+  // Mapping of Price Feed Id to Vaa
+  private priceFeedVaaMap = new Map<string, VaaInfo>();
   private promClient: PromClient;
   private spyServiceHost: string;
   private filters: FilterEntry[] = [];
@@ -127,7 +137,7 @@ export class Listener {
     let isAnyPriceNew = batchAttestation.priceAttestations.some(
       (priceAttestation) => {
         const key = priceAttestation.priceId;
-        let lastSeqNum = this.seqMap.get(key);
+        let lastSeqNum = this.priceFeedVaaMap.get(key)?.seqNum;
         return lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence;
       }
     );
@@ -144,9 +154,12 @@ export class Listener {
     for (let priceAttestation of batchAttestation.priceAttestations) {
       const key = priceAttestation.priceId;
 
-      let lastSeqNum = this.seqMap.get(key);
+      let lastSeqNum = this.priceFeedVaaMap.get(key)?.seqNum;
       if (lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence) {
-        this.seqMap.set(key, parsedVAA.sequence);
+        this.priceFeedVaaMap.set(key, {
+          seqNum: parsedVAA.sequence,
+          vaaBytes: vaaBytes
+        });
       }
     }
 
@@ -162,5 +175,9 @@ export class Listener {
     );
 
     this.promClient.incIncoming();
+  }
+
+  getLatestVaaForPriceFeed(priceFeedId: string): VaaInfo | undefined {
+    return this.priceFeedVaaMap.get(priceFeedId);
   }
 }
