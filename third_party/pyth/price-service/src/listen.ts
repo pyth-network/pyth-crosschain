@@ -18,14 +18,18 @@ import { ClientReadableStream } from "@grpc/grpc-js";
 import { FilterEntry, SubscribeSignedVAAResponse } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
 import { logger } from "./logging";
 
-type VAAInfo = {
+export type VaaInfo = {
   vaaBytes: string,
   seqNum: number;
 };
 
-export class Listener {
-  // Mapping of Price Feed Id to VAA
-  private priceFeedVAAMap = new Map<string, VAAInfo>();
+export interface PriceFeedVaaInfo {
+  getLatestVaaForPriceFeed(priceFeedId: string): VaaInfo | undefined;
+}
+
+export class Listener implements PriceFeedVaaInfo {
+  // Mapping of Price Feed Id to Vaa
+  private priceFeedVaaMap = new Map<string, VaaInfo>();
   private promClient: PromClient;
   private spyServiceHost: string;
   private filters: FilterEntry[] = [];
@@ -133,7 +137,7 @@ export class Listener {
     let isAnyPriceNew = batchAttestation.priceAttestations.some(
       (priceAttestation) => {
         const key = priceAttestation.priceId;
-        let lastSeqNum = this.priceFeedVAAMap.get(key)?.seqNum;
+        let lastSeqNum = this.priceFeedVaaMap.get(key)?.seqNum;
         return lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence;
       }
     );
@@ -150,9 +154,9 @@ export class Listener {
     for (let priceAttestation of batchAttestation.priceAttestations) {
       const key = priceAttestation.priceId;
 
-      let lastSeqNum = this.priceFeedVAAMap.get(key)?.seqNum;
+      let lastSeqNum = this.priceFeedVaaMap.get(key)?.seqNum;
       if (lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence) {
-        this.priceFeedVAAMap.set(key, {
+        this.priceFeedVaaMap.set(key, {
           seqNum: parsedVAA.sequence,
           vaaBytes: vaaBytes
         });
@@ -173,7 +177,7 @@ export class Listener {
     this.promClient.incIncoming();
   }
 
-  getPriceFeedLatestVAA(priceFeedId: string): VAAInfo | undefined {
-    return this.priceFeedVAAMap.get(priceFeedId);
+  getLatestVaaForPriceFeed(priceFeedId: string): VaaInfo | undefined {
+    return this.priceFeedVaaMap.get(priceFeedId);
   }
 }
