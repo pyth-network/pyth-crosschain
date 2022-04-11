@@ -1,3 +1,6 @@
+use std::time::Duration;
+
+use pyth_sdk::PriceFeed;
 use schemars::JsonSchema;
 use serde::{
     Deserialize,
@@ -7,7 +10,9 @@ use serde::{
 use cosmwasm_std::{
     StdResult,
     Storage,
+    Timestamp,
 };
+
 use cosmwasm_storage::{
     bucket,
     bucket_read,
@@ -24,19 +29,29 @@ use wormhole::byte_utils::ByteUtils;
 type HumanAddr = String;
 
 pub static CONFIG_KEY: &[u8] = b"config";
-pub static PRICE_INFO_KEY: &[u8] = b"price_info";
-pub static SEQUENCE_KEY: &[u8] = b"sequence";
+pub static PRICE_INFO_KEY: &[u8] = b"price_info_v2";
+
+/// Maximum acceptable time period before price is considered to be stale.
+/// 
+/// This value considers attestation delay which currently might up to a minute.
+pub const VALID_TIME_PERIOD: Duration = Duration::from_secs(3*60);
 
 // Guardian set information
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
 pub struct ConfigInfo {
-    // governance contract details
-    pub gov_chain: u16,
-    pub gov_address: Vec<u8>,
-
     pub wormhole_contract: HumanAddr,
     pub pyth_emitter: Vec<u8>,
     pub pyth_emitter_chain: u16,
+}
+
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct PriceInfo {
+    pub arrival_time:         Timestamp,
+    pub arrival_block:        u64,
+    pub attestation_time:     Timestamp,
+    pub price_feed:           PriceFeed,
 }
 
 pub fn config(storage: &mut dyn Storage) -> Singleton<ConfigInfo> {
@@ -47,19 +62,11 @@ pub fn config_read(storage: &dyn Storage) -> ReadonlySingleton<ConfigInfo> {
     singleton_read(storage, CONFIG_KEY)
 }
 
-pub fn sequence(storage: &mut dyn Storage) -> Singleton<u64> {
-    singleton(storage, SEQUENCE_KEY)
-}
-
-pub fn sequence_read(storage: &dyn Storage) -> ReadonlySingleton<u64> {
-    singleton_read(storage, SEQUENCE_KEY)
-}
-
-pub fn price_info(storage: &mut dyn Storage) -> Bucket<Vec<u8>> {
+pub fn price_info(storage: &mut dyn Storage) -> Bucket<PriceInfo> {
     bucket(storage, PRICE_INFO_KEY)
 }
 
-pub fn price_info_read(storage: &dyn Storage) -> ReadonlyBucket<Vec<u8>> {
+pub fn price_info_read(storage: &dyn Storage) -> ReadonlyBucket<PriceInfo> {
     bucket_read(storage, PRICE_INFO_KEY)
 }
 

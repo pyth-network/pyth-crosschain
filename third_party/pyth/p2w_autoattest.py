@@ -36,6 +36,8 @@ WORMHOLE_ADDRESS = os.environ.get(
     "WORMHOLE_ADDRESS", "Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 )
 
+P2W_EXIT_ON_ERROR = os.environ.get("P2W_EXIT_ON_ERROR", "False").lower() == "true"
+
 ATTESTATIONS = {
     "pendingSeqnos": [],
 }
@@ -70,14 +72,20 @@ def serve_attestations():
     httpd = HTTPServer(server_address, P2WAutoattestStatusEndpoint)
     httpd.serve_forever()
 
+
 if SOL_AIRDROP_AMT > 0:
     # Fund the p2w owner
-    sol_run_or_die("airdrop", [
-        str(SOL_AIRDROP_AMT),
-        "--keypair", P2W_OWNER_KEYPAIR,
-        "--commitment", "finalized",
-    ])
-    
+    sol_run_or_die(
+        "airdrop",
+        [
+            str(SOL_AIRDROP_AMT),
+            "--keypair",
+            P2W_OWNER_KEYPAIR,
+            "--commitment",
+            "finalized",
+        ],
+    )
+
 
 if P2W_INITIALIZE_SOL_CONTRACT is not None:
     # Get actor pubkeys
@@ -160,7 +168,9 @@ if P2W_ATTESTATION_CFG is None:
 ---
 symbols:"""
 
-    logging.info(f"Retrieved {len(pyth_accounts)} Pyth accounts from endpoint: {pyth_accounts}")
+    logging.info(
+        f"Retrieved {len(pyth_accounts)} Pyth accounts from endpoint: {pyth_accounts}"
+    )
 
     for acc in pyth_accounts:
 
@@ -176,7 +186,7 @@ symbols:"""
     with open(P2W_ATTESTATION_CFG, "w") as f:
         f.write(cfg_yaml)
         f.flush()
-        
+
 
 attest_result = run_or_die(
     [
@@ -191,8 +201,7 @@ attest_result = run_or_die(
         P2W_OWNER_KEYPAIR,
         "attest",
         "-f",
-        P2W_ATTESTATION_CFG
-        
+        P2W_ATTESTATION_CFG,
     ],
     capture_output=True,
 )
@@ -232,8 +241,9 @@ while True:
             P2W_OWNER_KEYPAIR,
             "attest",
             "-f",
-            P2W_ATTESTATION_CFG
+            P2W_ATTESTATION_CFG,
         ],
         capture_output=True,
+        die=P2W_EXIT_ON_ERROR,
     )
     time.sleep(P2W_ATTEST_INTERVAL)

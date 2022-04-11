@@ -4,6 +4,7 @@ RUN apt-get install -y python3
 
 ADD third_party/pyth/pyth_utils.py /usr/src/pyth/pyth_utils.py
 ADD third_party/pyth/p2w_autoattest.py /usr/src/pyth/p2w_autoattest.py
+ADD third_party/pyth/p2w-sdk/rust /usr/src/third_party/pyth/p2w-sdk/rust
 
 RUN --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=target \

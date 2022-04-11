@@ -1,24 +1,46 @@
-# Pyth2wormhole relay example
-IMPORTANT: This is not ready for production.
+# Setup Spy Guardian and Pyth Relay
 
-This package is an example Pyth2wormhole relayer implementation. The
-main focus is to provide an automated integration test that will
-perform last-mile delivery of Pyth2wormhole price attestations.
+To build the spy_guardian docker container:
 
-# How it works
-## Relayer recap
-When attesting with Wormhole, the final step consists of a query for
-the guardian-signed attestation data on the guardian public RPC,
-followed by posting the data to each desired target chain
-contract. Each target chain contract lets callers verify the payload's
-signatures, thus proving its validity. This activity means being
-a Wormhole **relayer**.
+```
+$ docker build -f Dockerfile.spy_guardian -t spy_guardian .
+```
 
-## How this package relays attestations
-`p2w-relay` is a Node.js relayer script targeting ETH that will
-periodically query its source-chain counterpart for new sequence
-numbers to query from the guardians. Any pending sequence numbers will
-stick around in a global state until their corresponding messages are
-successfully retrieved from the guardians. Later, target chain calls
-are made and a given seqno is deleted from the pool. Failed target
-chain calls will not be retried.
+To build the pyth_relay docker container:
+
+```
+$ docker build -f Dockerfile.pyth_relay -t pyth_relay .
+```
+
+Run the spy_guardian docker container in TestNet:
+
+```
+$ docker run --platform linux/amd64 -d --network=host spy_guardian \
+--bootstrap /dns4/wormhole-testnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWBY9ty9CXLBXGQzMuqkziLntsVcyz4pk1zWaJRvJn6Mmt \
+--network /wormhole/testnet/2/1 \
+--spyRPC "[::]:7073"
+```
+
+Or run the spy_guardian docker container in MainNet:
+For the MainNet gossip network parameters, see https://github.com/certusone/wormhole-networks/blob/master/mainnetv2/info.md
+
+```
+$ docker run --platform linux/amd64 -d --network=host spy_guardian \
+--bootstrap <guardianNetworkBootstrapParameterForMainNet> \
+--network <guardianNetworkPathForMainNet> \
+--spyRPC "[::]:7073"
+
+```
+
+Then to run the pyth_relay docker container using a config file called
+${HOME}/pyth_relay/env and logging to directory ${HOME}/pyth_relay/logs, do the
+following:
+
+```
+$ docker run \
+--volume=${HOME}/pyth_relay:/var/pyth_relay \
+-e PYTH_RELAY_CONFIG=/var/pyth_relay/env \
+--network=host \
+-d \
+pyth_relay
+```

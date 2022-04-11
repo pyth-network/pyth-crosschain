@@ -46,13 +46,35 @@ pub enum Action {
     #[clap(
         about = "Use an existing pyth2wormhole program to attest product price information to another chain"
     )]
+    // Note: defaults target SOL mainnet-beta conditions at implementation time
     Attest {
         #[clap(short = 'f', long = "--config", about = "Attestation YAML config")]
         attestation_cfg: PathBuf,
+        #[clap(
+            short = 'n',
+            long = "--n-retries",
+            about = "How many times to retry send_transaction() on each batch on failure",
+            default_value = "5"
+        )]
+        n_retries: usize,
+        #[clap(
+            short = 't',
+            long = "--timeout",
+            about = "How many seconds to wait before giving up on get_transaction() for each batch",
+            default_value = "40"
+        )]
+        conf_timeout_secs: u64,
+        #[clap(
+            short = 'i',
+            long = "--rpc-interval",
+            about = "How many milliseconds to waist between SOL RPC requests",
+            default_value = "200"
+        )]
+        rpc_interval_ms: u64,
     },
-    #[clap(
-        about = "Update an existing pyth2wormhole program's settings (currently set owner only)"
-    )]
+    #[clap(about = "Retrieve a pyth2wormhole program's current settings")]
+    GetConfig,
+    #[clap(about = "Update an existing pyth2wormhole program's settings")]
     SetConfig {
         /// Current owner keypair path
         #[clap(long = "owner", default_value = "~/.config/solana/id.json")]

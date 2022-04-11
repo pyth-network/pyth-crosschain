@@ -3,7 +3,6 @@ pub mod attest;
 pub mod config;
 pub mod initialize;
 pub mod set_config;
-pub mod types;
 
 use solitaire::solitaire;
 
@@ -22,12 +21,10 @@ pub use set_config::{
     SetConfig,
 };
 
+pub use pyth_client;
+
 solitaire! {
     Attest(AttestData) => attest,
     Initialize(Pyth2WormholeConfig) => initialize,
     SetConfig(Pyth2WormholeConfig) => set_config,
 }
-
-#[cfg(feature = "wasm")]
-#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-pub mod wasm;

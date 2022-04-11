@@ -4,33 +4,37 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/external/BytesLib.sol";
+import "./PythSDK.sol";
 
 contract PythStructs {
     using BytesLib for bytes;
 
-    struct Ema {
-        int64 value;
-        int64 numerator;
-        int64 denominator;
+    struct BatchPriceAttestation {
+        Header header;
+
+        uint16 nAttestations;
+        uint16 attestationSize;
+        PriceAttestation[] attestations;
+    }
+
+    struct Header {
+        uint32 magic;
+        uint16 version;
+        uint8 payloadId;
     }
 
     struct PriceAttestation {
-        uint32 magic; // constant "P2WH"
-        uint16 version;
-
-        // PayloadID uint8 = 1
-        uint8 payloadId;
+        Header header;
 
         bytes32 productId;
         bytes32 priceId;
-
         uint8 priceType;
 
         int64 price;
         int32 exponent;
 
-        Ema twap;
-        Ema twac;
+        Rational emaPrice;
+        Rational emaConf;
 
         uint64 confidenceInterval;
 
@@ -38,6 +42,14 @@ contract PythStructs {
         uint8 corpAct;
 
         uint64 timestamp;
+	uint32 num_publishers;
+	uint32 max_num_publishers;
+    }
+
+    struct Rational {
+        int64 value;
+        int64 numerator;
+        int64 denominator;
     }
 
     struct UpgradeContract {
@@ -46,5 +58,16 @@ contract PythStructs {
         uint16 chain;
 
         address newContract;
+    }
+
+    struct PriceInfo {
+        PythSDK.PriceFeed priceFeed;
+        uint256 attestationTime;
+        uint256 arrivalTime;
+        uint256 arrivalBlock;
+    }
+
+    struct PriceFeedResponse {
+        PythSDK.PriceFeed priceFeed;
     }
 }

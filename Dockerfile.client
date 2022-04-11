@@ -3,7 +3,7 @@ FROM docker.io/library/rust:1.49@sha256:a50165ea96983c21832578afb1c8c028674c965b
 
 RUN apt-get update && apt-get install -yq libssl-dev libudev-dev pkg-config zlib1g-dev llvm clang ncat
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs
-RUN curl -sSfL https://release.solana.com/v1.8.1/install | sh
+RUN curl -sSfL https://release.solana.com/v1.9.4/install | sh
 
 RUN rustup default nightly-2022-01-02
 RUN rustup component add rustfmt
@@ -41,9 +41,6 @@ ENV BRIDGE_ADDRESS="Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 
 RUN --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=bridge/target \
-    --mount=type=cache,target=modules/token_bridge/target \
 	set -xe && \
     cargo build --manifest-path ./bridge/Cargo.toml --package client --release --locked && \
-    cargo build --manifest-path ./modules/token_bridge/Cargo.toml --package client --release --locked && \
-    cp bridge/target/release/client /usr/local/bin && \
-    cp modules/token_bridge/target/release/client /usr/local/bin/token-bridge-client
+    cp bridge/target/release/client /usr/local/bin

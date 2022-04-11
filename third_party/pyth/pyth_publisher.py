@@ -3,6 +3,7 @@
 from pyth_utils import *
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import json
 import os
@@ -39,11 +40,12 @@ def publisher_random_update(price_pubkey):
     """
     Update the specified price with random values
     """
-    value = random.randrange(1024)
-    confidence = 5
+    value = random.randrange(1000, 2000)
+    confidence = random.randrange(1, 10)
     pyth_run_or_die("upd_price_val", args=[
         price_pubkey, str(value), str(confidence), "trading"
     ])
+
     print(f"Price {price_pubkey} value updated to {str(value)}!")
 
 
@@ -57,44 +59,26 @@ def accounts_endpoint():
     httpd.serve_forever()
 
 
-# Fund the publisher
-sol_run_or_die("airdrop", [
-    str(SOL_AIRDROP_AMT),
-    "--keypair", PYTH_PUBLISHER_KEYPAIR,
-    "--commitment", "finalized",
-])
-
-# Create a mapping
-pyth_run_or_die("init_mapping")
-
-print(f"Creating {PYTH_TEST_SYMBOL_COUNT} test Pyth symbols")
-
-publisher_pubkey = sol_run_or_die("address", args=[
-    "--keypair", PYTH_PUBLISHER_KEYPAIR
-], capture_output=True).stdout.strip()
-
-for i in range(PYTH_TEST_SYMBOL_COUNT):
-    symbol_name = f"Test symbol {i}"
+def add_symbol(num: int):
+    symbol_name = f"Test symbol {num}"
     # Add a product
-    prod_pubkey = pyth_run_or_die(
+    prod_pubkey = pyth_admin_run_or_die(
         "add_product", capture_output=True).stdout.strip()
 
     print(f"{symbol_name}: Added product {prod_pubkey}")
 
     # Add a price
-    price_pubkey = pyth_run_or_die(
+    price_pubkey = pyth_admin_run_or_die(
         "add_price",
         args=[prod_pubkey, "price"],
-        confirm=False,
         capture_output=True
     ).stdout.strip()
 
     print(f"{symbol_name}: Added price {price_pubkey}")
 
     # Become a publisher for the new price
-    pyth_run_or_die(
+    pyth_admin_run_or_die(
         "add_publisher", args=[publisher_pubkey, price_pubkey],
-        confirm=False,
         debug=True,
         capture_output=True)
     print(f"{symbol_name}: Added publisher {publisher_pubkey}")
@@ -111,6 +95,31 @@ for i in range(PYTH_TEST_SYMBOL_COUNT):
     TEST_SYMBOLS.append(sym)
 
     sys.stdout.flush()
+
+    return num
+
+
+# Fund the publisher
+sol_run_or_die("airdrop", [
+    str(SOL_AIRDROP_AMT),
+    "--keypair", PYTH_PUBLISHER_KEYPAIR,
+    "--commitment", "finalized",
+])
+
+# Create a mapping
+pyth_admin_run_or_die("init_mapping")
+
+print(f"Creating {PYTH_TEST_SYMBOL_COUNT} test Pyth symbols")
+
+publisher_pubkey = sol_run_or_die("address", args=[
+    "--keypair", PYTH_PUBLISHER_KEYPAIR
+], capture_output=True).stdout.strip()
+
+with ThreadPoolExecutor(max_workers=10) as executor:
+    add_symbol_futures = {executor.submit(add_symbol, sym_id) for sym_id in range(PYTH_TEST_SYMBOL_COUNT)}
+    
+    for future in as_completed(add_symbol_futures):
+        print(f"Completed {future.result()}")
 
 print(
     f"Mock updates ready to roll. Updating every {str(PYTH_PUBLISHER_INTERVAL)} seconds")

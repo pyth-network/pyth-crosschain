@@ -6,39 +6,19 @@ pragma solidity ^0.8.0;
 import "./PythState.sol";
 
 contract PythSetters is PythState {
-    function setInitialized(address implementatiom) internal {
-        _state.initializedImplementations[implementatiom] = true;
-    }
-
-    function setGovernanceActionConsumed(bytes32 hash) internal {
-        _state.consumedGovernanceActions[hash] = true;
-    }
-
-    function setChainId(uint16 chainId) internal {
-        _state.provider.chainId = chainId;
-    }
-
-    function setGovernanceChainId(uint16 chainId) internal {
-        _state.provider.governanceChainId = chainId;
-    }
-
-    function setGovernanceContract(bytes32 governanceContract) internal {
-        _state.provider.governanceContract = governanceContract;
-    }
-
     function setPyth2WormholeChainId(uint16 chainId) internal {
-        _state.provider.pyth2WormholeChainId = chainId;
+        _state.pyth2WormholeChainId = chainId;
     }
 
     function setPyth2WormholeEmitter(bytes32 emitterAddr) internal {
-        _state.provider.pyth2WormholeEmitter = emitterAddr;
+        _state.pyth2WormholeEmitter = emitterAddr;
     }
 
     function setWormhole(address wh) internal {
         _state.wormhole = payable(wh);
     }
 
-    function setLatestAttestation(bytes32 product, uint8 priceType, PythStructs.PriceAttestation memory attestation) internal {
-        _state.latestAttestations[product][priceType] = attestation;
+    function setLatestPriceInfo(bytes32 priceId, PythStructs.PriceInfo memory info) internal {
+        _state.latestPriceInfo[priceId] = info;
     }
 }
