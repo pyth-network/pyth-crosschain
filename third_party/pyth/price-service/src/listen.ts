@@ -18,6 +18,9 @@ import { ClientReadableStream } from "@grpc/grpc-js";
 import { FilterEntry, SubscribeSignedVAAResponse } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
 import { logger } from "./logging";
 
+// Timestamp (in seconds)
+type Timestamp = number;
+
 export type VaaInfo = {
   vaaBytes: string,
   seqNum: number;
@@ -27,17 +30,32 @@ export interface PriceFeedVaaInfo {
   getLatestVaaForPriceFeed(priceFeedId: string): VaaInfo | undefined;
 }
 
+type ListenerReadinessConfig = {
+  spySyncTimeSeconds: number,
+  numLoadedSymbols: number,
+};
+
+type ListenerConfig = {
+  spyServiceHost: string,
+  filtersRaw?: string,
+  readiness: ListenerReadinessConfig,
+};
+
 export class Listener implements PriceFeedVaaInfo {
   // Mapping of Price Feed Id to Vaa
   private priceFeedVaaMap = new Map<string, VaaInfo>();
   private promClient: PromClient;
   private spyServiceHost: string;
   private filters: FilterEntry[] = [];
+  private spyConnectionTime: Timestamp | null;
+  private readinessConfig: ListenerReadinessConfig;
 
-  constructor(config: { spyServiceHost: string, filtersRaw?: string; }, promClient: PromClient) {
+  constructor(config: ListenerConfig, promClient: PromClient) {
     this.promClient = promClient;
     this.spyServiceHost = config.spyServiceHost;
     this.loadFilters(config.filtersRaw);
+    this.spyConnectionTime = null;
+    this.readinessConfig = config.readiness;
   }
 
   private loadFilters(filtersRaw?: string) {
@@ -88,6 +106,8 @@ export class Listener implements PriceFeedVaaInfo {
           this.processVaa(vaaBytes);
         });
 
+        this.spyConnectionTime = (new Date()).getTime() / 1000;
+
         let connected = true;
         stream!.on("error", (err: any) => {
           logger.error("spy service returned an error: %o", err);
@@ -111,6 +131,7 @@ export class Listener implements PriceFeedVaaInfo {
       if (stream) {
         stream.destroy();
       }
+      this.spyConnectionTime = null;
 
       await sleep(1000);
       logger.info("attempting to reconnect to the spy service");
@@ -179,5 +200,17 @@ export class Listener implements PriceFeedVaaInfo {
 
   getLatestVaaForPriceFeed(priceFeedId: string): VaaInfo | undefined {
     return this.priceFeedVaaMap.get(priceFeedId);
+  }
+
+  ready(): boolean {
+    let currentTime: Timestamp = (new Date()).getTime() / 1000;
+    if (this.spyConnectionTime === null ||
+      currentTime < this.spyConnectionTime + this.readinessConfig.spySyncTimeSeconds) {
+      return false;
+    }
+    if (this.priceFeedVaaMap.size < this.readinessConfig.numLoadedSymbols) {
+      return false;
+    }
+    return true;
   }
 }

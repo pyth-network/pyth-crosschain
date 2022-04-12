@@ -266,6 +266,23 @@ if pyth:
         labels = ["pyth"]
     )
 
+    # Pyth Price service
+    docker_build(
+        ref = "pyth-price-service",
+        context = ".",
+        dockerfile = "third_party/pyth/price-service/Dockerfile.price_service",
+    )
+    k8s_yaml_with_ns("devnet/pyth-price-service.yaml")
+    k8s_resource(
+        "pyth-price-service",
+        resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet"],
+        port_forwards = [
+            port_forward(4202, container_port = 4200, name = "Rest API (Status + Query) [:4202]", host = webHost),
+            port_forward(8083, container_port = 8081, name = "Prometheus [:8083]", host = webHost)],
+        labels = ["pyth"]
+    )
+
+
 k8s_yaml_with_ns("devnet/eth-devnet.yaml")
 
 k8s_resource(
