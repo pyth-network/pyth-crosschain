@@ -47,6 +47,9 @@ spec:
             httpGet:
               path: '/ready'
               port: 4200
+            initialDelaySeconds: 10
+            periodSeconds: 1
+            failureThreshold: 1
           resources:
             limits:
               memory: "128Mi"
