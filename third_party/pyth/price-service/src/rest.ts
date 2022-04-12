@@ -8,14 +8,14 @@ import { logger } from "./logging";
 export class RestAPI {
   private port: number;
   private priceFeedVaaInfo: PriceFeedVaaInfo;
-  private readinessFn: (() => boolean) | undefined;
+  private isReady: () => boolean;
 
   constructor(config: { port: number; }, 
     priceFeedVaaInfo: PriceFeedVaaInfo,
-    readinessFn?: () => boolean) {
+    isReady: () => boolean) {
     this.port = config.port;
     this.priceFeedVaaInfo = priceFeedVaaInfo;
-    this.readinessFn = readinessFn;
+    this.isReady = isReady;
   }
 
   // Run this function without blocking (`await`) if you want to run it async.
@@ -56,16 +56,14 @@ export class RestAPI {
     });
     endpoints.push("latest_vaa_bytes/<price_feed_id>");
 
-    if (this.readinessFn !== undefined) {
-      app.get("/ready", (_, res: Response) => {
-        if (this.readinessFn!()) {
-          res.sendStatus(200);
-        } else {
-          res.sendStatus(503);
-        }
-      });
-      endpoints.push('ready');
-    }
+    app.get("/ready", (_, res: Response) => {
+      if (this.isReady!()) {
+        res.sendStatus(200);
+      } else {
+        res.sendStatus(503);
+      }
+    });
+    endpoints.push('ready');
 
     app.get("/", (_, res: Response) =>
       res.json(endpoints)

@@ -35,11 +35,11 @@ const listener = new Listener({
 }, promClient);
 
 // In future if we have more components we will modify it to include them all
-const readinessFn = () => listener.ready();
+const isReady = () => listener.isReady();
 
 const restAPI = new RestAPI({
   port: parseInt(envOrErr("REST_PORT"))
-}, listener, readinessFn);
+}, listener, isReady);
 
 listener.run();
 restAPI.run();

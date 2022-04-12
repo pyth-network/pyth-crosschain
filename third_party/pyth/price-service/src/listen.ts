@@ -47,14 +47,13 @@ export class Listener implements PriceFeedVaaInfo {
   private promClient: PromClient;
   private spyServiceHost: string;
   private filters: FilterEntry[] = [];
-  private spyConnectionTime: Timestamp | null;
+  private spyConnectionTime: Timestamp | undefined;
   private readinessConfig: ListenerReadinessConfig;
 
   constructor(config: ListenerConfig, promClient: PromClient) {
     this.promClient = promClient;
     this.spyServiceHost = config.spyServiceHost;
     this.loadFilters(config.filtersRaw);
-    this.spyConnectionTime = null;
     this.readinessConfig = config.readiness;
   }
 
@@ -131,7 +130,7 @@ export class Listener implements PriceFeedVaaInfo {
       if (stream) {
         stream.destroy();
       }
-      this.spyConnectionTime = null;
+      this.spyConnectionTime = undefined;
 
       await sleep(1000);
       logger.info("attempting to reconnect to the spy service");
@@ -202,9 +201,9 @@ export class Listener implements PriceFeedVaaInfo {
     return this.priceFeedVaaMap.get(priceFeedId);
   }
 
-  ready(): boolean {
+  isReady(): boolean {
     let currentTime: Timestamp = (new Date()).getTime() / 1000;
-    if (this.spyConnectionTime === null ||
+    if (this.spyConnectionTime === undefined ||
       currentTime < this.spyConnectionTime + this.readinessConfig.spySyncTimeSeconds) {
       return false;
     }
