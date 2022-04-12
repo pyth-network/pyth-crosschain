@@ -4,13 +4,14 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/external/BytesLib.sol";
+import "@pythnetwork/pyth-sdk-solidity/AbstractPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 import "./PythGetters.sol";
 import "./PythSetters.sol";
 import "./PythInternalStructs.sol";
 
-contract Pyth is PythGetters, PythSetters {
+contract Pyth is PythGetters, PythSetters, AbstractPyth {
     using BytesLib for bytes;
 
     function initialize(
@@ -172,7 +173,7 @@ contract Pyth is PythGetters, PythSetters {
     /// This includes attestation delay which currently might up to a minute.
     uint private constant VALID_TIME_PERIOD_SECS = 180;
 
-    function queryPriceFeed(bytes32 id) public view returns (PythStructs.PriceFeedResponse memory priceFeed){
+    function queryPriceFeed(bytes32 id) public override returns (PythStructs.PriceFeed memory priceFeed){
 
         // Look up the latest price info for the given ID
         PythInternalStructs.PriceInfo memory info = latestPriceInfo(id);
@@ -185,7 +186,7 @@ contract Pyth is PythGetters, PythSetters {
             info.priceFeed.status = PythStructs.PriceStatus.UNKNOWN;
         }
         
-        return PythStructs.PriceFeedResponse({priceFeed: info.priceFeed});
+        return info.priceFeed;
     }
 
     function diff(uint x, uint y) private pure returns (uint) {
