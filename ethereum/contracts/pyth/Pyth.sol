@@ -4,10 +4,11 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/external/BytesLib.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 import "./PythGetters.sol";
 import "./PythSetters.sol";
-import "./PythStructs.sol";
+import "./PythInternalStructs.sol";
 
 contract Pyth is PythGetters, PythSetters {
     using BytesLib for bytes;
@@ -22,18 +23,18 @@ contract Pyth is PythGetters, PythSetters {
         setPyth2WormholeEmitter(pyth2WormholeEmitter);
     }
 
-    function updatePriceBatchFromVm(bytes memory encodedVm) public returns (PythStructs.BatchPriceAttestation memory bpa) {
+    function updatePriceBatchFromVm(bytes memory encodedVm) public returns (PythInternalStructs.BatchPriceAttestation memory bpa) {
         (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole().parseAndVerifyVM(encodedVm);
 
         require(valid, reason);
         require(verifyPythVM(vm), "invalid emitter");
 
-        PythStructs.BatchPriceAttestation memory batch = parseBatchPriceAttestation(vm.payload);
+        PythInternalStructs.BatchPriceAttestation memory batch = parseBatchPriceAttestation(vm.payload);
 
         for (uint i = 0; i < batch.attestations.length; i++) {
-            PythStructs.PriceAttestation memory attestation = batch.attestations[i];
+            PythInternalStructs.PriceAttestation memory attestation = batch.attestations[i];
 
-            PythStructs.PriceInfo memory latestPrice = latestPriceInfo(attestation.priceId);
+            PythInternalStructs.PriceInfo memory latestPrice = latestPriceInfo(attestation.priceId);
 
             if(attestation.timestamp > latestPrice.attestationTime) {
                 setLatestPriceInfo(attestation.priceId, newPriceInfo(attestation));
@@ -43,7 +44,7 @@ contract Pyth is PythGetters, PythSetters {
         return batch;
     }
 
-    function newPriceInfo(PythStructs.PriceAttestation memory pa) private view returns (PythStructs.PriceInfo memory info) {
+    function newPriceInfo(PythInternalStructs.PriceAttestation memory pa) private view returns (PythInternalStructs.PriceInfo memory info) {
         info.attestationTime = pa.timestamp;
         info.arrivalTime = block.timestamp;
         info.arrivalBlock = block.number;
@@ -51,7 +52,7 @@ contract Pyth is PythGetters, PythSetters {
         info.priceFeed.id = pa.priceId;
         info.priceFeed.price = pa.price;
         info.priceFeed.conf = pa.confidenceInterval;
-        info.priceFeed.status = PythSDK.PriceStatus(pa.status);
+        info.priceFeed.status = PythStructs.PriceStatus(pa.status);
         info.priceFeed.expo = pa.exponent;
         info.priceFeed.emaPrice = pa.emaPrice.value;
         info.priceFeed.emaConf = uint64(pa.emaConf.value);
@@ -74,7 +75,7 @@ contract Pyth is PythGetters, PythSetters {
     }
 
     
-    function parseBatchPriceAttestation(bytes memory encoded) public pure returns (PythStructs.BatchPriceAttestation memory bpa) {
+    function parseBatchPriceAttestation(bytes memory encoded) public pure returns (PythInternalStructs.BatchPriceAttestation memory bpa) {
         uint index = 0;
 
         // Check header
@@ -100,7 +101,7 @@ contract Pyth is PythGetters, PythSetters {
         index += 2;
         require(encoded.length == (index + (bpa.attestationSize * bpa.nAttestations)), "invalid BatchPriceAttestation size");
 
-        bpa.attestations = new PythStructs.PriceAttestation[](bpa.nAttestations);
+        bpa.attestations = new PythInternalStructs.PriceAttestation[](bpa.nAttestations);
 
         // Deserialize each attestation
         for (uint j=0; j < bpa.nAttestations; j++) {
@@ -174,14 +175,14 @@ contract Pyth is PythGetters, PythSetters {
     function queryPriceFeed(bytes32 id) public view returns (PythStructs.PriceFeedResponse memory priceFeed){
 
         // Look up the latest price info for the given ID
-        PythStructs.PriceInfo memory info = latestPriceInfo(id);
+        PythInternalStructs.PriceInfo memory info = latestPriceInfo(id);
         require(info.priceFeed.id != 0, "no price feed found for the given price id");
 
         // Check that there is not a significant difference between this chain's time
         // and the attestation time. This is a last-resort safety net, and this check
         // will be iterated on in the future.
         if (diff(block.timestamp, info.attestationTime) > VALID_TIME_PERIOD_SECS) {
-            info.priceFeed.status = PythSDK.PriceStatus.UNKNOWN;
+            info.priceFeed.status = PythStructs.PriceStatus.UNKNOWN;
         }
         
         return PythStructs.PriceFeedResponse({priceFeed: info.priceFeed});

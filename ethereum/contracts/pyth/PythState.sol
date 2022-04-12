@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./PythStructs.sol";
+import "./PythInternalStructs.sol";
 
 contract PythStorage {
     struct State {
@@ -13,7 +13,7 @@ contract PythStorage {
 
         // Mapping of cached price information
         // priceId => PriceInfo
-        mapping(bytes32 => PythStructs.PriceInfo) latestPriceInfo;
+        mapping(bytes32 => PythInternalStructs.PriceInfo) latestPriceInfo;
     }
 }
 
