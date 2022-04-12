@@ -52,10 +52,10 @@ spec:
             failureThreshold: 1
           livenessProbe:
             httpGet:
-              path: '/'
+              path: '/live'
               port: 4200
             initialDelaySeconds: 10
-            periodSeconds: 1
+            periodSeconds: 30
           resources:
             limits:
               memory: "128Mi"

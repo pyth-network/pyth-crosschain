@@ -65,6 +65,12 @@ export class RestAPI {
     });
     endpoints.push('ready');
 
+    app.get("/live", (_, res: Response) => {
+      res.sendStatus(200);
+    });
+    endpoints.push("live");
+
+
     app.get("/", (_, res: Response) =>
       res.json(endpoints)
     );
