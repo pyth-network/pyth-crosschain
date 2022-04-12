@@ -4,9 +4,9 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/external/BytesLib.sol";
-import "./PythSDK.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
-contract PythStructs {
+contract PythInternalStructs {
     using BytesLib for bytes;
 
     struct BatchPriceAttestation {
@@ -61,13 +61,9 @@ contract PythStructs {
     }
 
     struct PriceInfo {
-        PythSDK.PriceFeed priceFeed;
+        PythStructs.PriceFeed priceFeed;
         uint256 attestationTime;
         uint256 arrivalTime;
         uint256 arrivalBlock;
-    }
-
-    struct PriceFeedResponse {
-        PythSDK.PriceFeed priceFeed;
     }
 }

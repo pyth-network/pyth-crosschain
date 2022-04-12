@@ -20,7 +20,7 @@ contract PythGetters is PythState {
         return _state.pyth2WormholeEmitter;
     }
 
-    function latestPriceInfo(bytes32 priceId) internal view returns (PythStructs.PriceInfo memory info){
+    function latestPriceInfo(bytes32 priceId) internal view returns (PythInternalStructs.PriceInfo memory info){
         return _state.latestPriceInfo[priceId];
     }
 }
