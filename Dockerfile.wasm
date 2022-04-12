@@ -24,6 +24,12 @@ ARG SED_REMOVE_INVALID_REFERENCE="/^\s*wasm.__wbg_systeminstruction_free(ptr);$/
 
 # TODO: it appears that wasm-pack ignores our lockfiles even with --locked
 
+# Run unit tests
+RUN --mount=type=cache,target=/root/.cache \
+	--mount=type=cache,target=third_party/pyth/p2w-sdk/rust/target \
+    cd third_party/pyth/p2w-sdk/rust \
+    && cargo test --locked
+
 # Compile pyth2wormhole
 RUN --mount=type=cache,target=/root/.cache \
 	--mount=type=cache,target=third_party/pyth/p2w-sdk/rust/target \

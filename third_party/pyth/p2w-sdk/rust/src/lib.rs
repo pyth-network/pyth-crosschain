@@ -466,7 +466,7 @@ mod tests {
         PriceAttestation {
             product_id:          Pubkey::new_from_array(product_id_bytes),
             price_id:            Pubkey::new_from_array(price_id_bytes),
-            price:               (0xdeadbeefdeadbabe as u64) as i64,
+            price:               0x2bad2feed7,
             price_type:          PriceType::Price,
             ema_price:           Rational {
                 val:   -42,
@@ -482,7 +482,9 @@ mod tests {
             status:              PriceStatus::Trading,
             confidence_interval: 101,
             corp_act:            CorpAction::NoCorpAct,
-            timestamp:           123456789i64,
+            timestamp:           (0xdeadbeeffadedeedu64) as i64,
+	    num_publishers: 123212u32,
+	    max_num_publishers: 321232u32
         }
     }
 
@@ -517,8 +519,8 @@ mod tests {
 
     #[test]
     fn test_batch_serde() -> Result<(), ErrBox> {
-        let attestations: Vec<_> = (0..65535)
-            .map(|i| mock_attestation(Some([(i % 256) as u8; 32]), None))
+        let attestations: Vec<_> = (1..=10)
+            .map(|i| mock_attestation(Some([(i % 256) as u8; 32]), Some([(255 - (i % 256)) as u8; 32])))
             .collect();
 
         let batch_attestation = BatchPriceAttestation {
@@ -526,6 +528,7 @@ mod tests {
         };
 
         let serialized = batch_attestation.serialize()?;
+        println!("Batch hex Bytes: {:02X?}", serialized);
 
         let deserialized: BatchPriceAttestation =
             BatchPriceAttestation::deserialize(serialized.as_slice())?;
