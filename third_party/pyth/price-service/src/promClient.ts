@@ -8,7 +8,7 @@ import { logger } from "./logging";
 // 2) Create a method to set the metric to a value (such as `incIncoming` function below)
 // 3) Register the metric using `register.registerMetric` function.
 
-const SERVICE_PREFIX = "price_service/";
+const SERVICE_PREFIX = "price_service__";
 
 export class PromClient {
   private register = new client.Registry();
