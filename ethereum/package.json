@@ -31,7 +31,7 @@
   "license": "ISC",
   "dependencies": {
     "@openzeppelin/contracts-upgradeable": "^4.5.2",
-    "@pythnetwork/pyth-sdk-solidity": "0.0.2",
+    "@pythnetwork/pyth-sdk-solidity": "0.0.3",
     "dotenv": "^10.0.0",
     "elliptic": "^6.5.2",
     "ganache-cli": "^6.12.1",
