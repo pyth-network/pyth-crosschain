@@ -21,7 +21,7 @@ setDefaultWasm("node");
 initLogger({logLevel: process.env.LOG_LEVEL});
 
 const promClient = new PromClient({
-  name: "pyth_relay",
+  name: "price_service",
   port: parseInt(envOrErr("PROM_PORT"))
 });
 

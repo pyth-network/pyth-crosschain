@@ -8,29 +8,31 @@ import { logger } from "./logging";
 // 2) Create a method to set the metric to a value (such as `incIncoming` function below)
 // 3) Register the metric using `register.registerMetric` function.
 
+const SERVICE_PREFIX = "price_service_";
+
 export class PromClient {
   private register = new client.Registry();
   private collectDefaultMetrics = client.collectDefaultMetrics;
 
   // Actual metrics
   private receivedVaaCounter = new client.Counter({
-    name: "VAAs_received",
+    name: SERVICE_PREFIX + "VAAs_received",
     help: "number of Pyth VAAs received",
   });
   private apiLatestVaaRequestsCounter = new client.Counter({
-    name: "api_latest_vaa_requests_received",
+    name: SERVICE_PREFIX + "api_latest_vaa_requests_received",
     help: "Number of requests for latest vaa of a price feed"
   });
   private apiLatestVaaNotFoundResponseCounter = new client.Counter({
-    name: "api_latest_vaa_not_found_response",
+    name: SERVICE_PREFIX + "api_latest_vaa_not_found_response",
     help: "Number of not found responses for latest vaa of a price feed request"
   });
   private apiLatestVaaSuccessResponseCounter = new client.Counter({
-    name: "api_latest_vaa_not_found",
+    name: SERVICE_PREFIX + "api_latest_vaa_not_found",
     help: "Number of successful responses for latest vaa of a price feed request"
   });
   private apiLatestVaaFreshnessHistogram = new client.Histogram({
-    name: "api_latest_vaa_freshness",
+    name: SERVICE_PREFIX + "api_latest_vaa_freshness",
     help: "Freshness time of Vaa (time difference of Vaa and request time)",
     buckets: [1, 5, 10, 15, 30, 60, 120, 180]
   });
@@ -49,7 +51,7 @@ export class PromClient {
     this.register.setDefaultLabels({
       app: config.name,
     });
-    this.collectDefaultMetrics({ register: this.register });
+    this.collectDefaultMetrics({ register: this.register, prefix: SERVICE_PREFIX });
     // Register each metric
     this.register.registerMetric(this.receivedVaaCounter);
     this.register.registerMetric(this.apiLatestVaaRequestsCounter);
