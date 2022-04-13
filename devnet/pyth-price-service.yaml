@@ -54,8 +54,9 @@ spec:
             httpGet:
               path: '/live'
               port: 4200
-            initialDelaySeconds: 10
+            initialDelaySeconds: 20
             periodSeconds: 30
+            timeoutSeconds: 30
           resources:
             limits:
               memory: "128Mi"
