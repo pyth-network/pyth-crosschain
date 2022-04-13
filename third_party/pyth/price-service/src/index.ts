@@ -21,7 +21,7 @@ setDefaultWasm("node");
 initLogger({logLevel: process.env.LOG_LEVEL});
 
 const promClient = new PromClient({
-  name: "pyth_relay",
+  name: "price_service",
   port: parseInt(envOrErr("PROM_PORT"))
 });
 
@@ -39,7 +39,7 @@ const isReady = () => listener.isReady();
 
 const restAPI = new RestAPI({
   port: parseInt(envOrErr("REST_PORT"))
-}, listener, isReady);
+}, listener, isReady, promClient);
 
 listener.run();
 restAPI.run();
