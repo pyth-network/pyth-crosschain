@@ -215,8 +215,8 @@ contract("Pyth", function () {
 
     it("should cache price updates", async function() {
         let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
-      let priceVal = 521;
-      let rawBatch = generateRawBatchAttestation(currentTimestamp, priceVal);
+        let priceVal = 521;
+        let rawBatch = generateRawBatchAttestation(currentTimestamp, priceVal);
         await attest(this.pythProxy, rawBatch);
 
         let first_prod_id = "0x" + "01".repeat(32)
@@ -242,6 +242,16 @@ contract("Pyth", function () {
         second = await this.pythProxy.queryPriceFeed(second_price_id);
         assert.equal(second.price, priceVal + 5);
 
+        // Confirm the price is *NOT* bumped after outdated attestations arrive
+        let oldTimestamp = currentTimestamp - 1;
+        let rawBatch3 = generateRawBatchAttestation(nextTimestamp, priceVal + 10);
+        await attest(this.pythProxy, rawBatch3);
+
+        first = await this.pythProxy.queryPriceFeed(first_price_id);
+        assert.notEqual(first.price, priceVal + 10);
+
+        second = await this.pythProxy.queryPriceFeed(second_price_id);
+        assert.notEqual(second.price, priceVal + 10);
     })
 
     it("should fail transaction if a price is not found", async function() {
