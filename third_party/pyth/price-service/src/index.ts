@@ -27,12 +27,19 @@ const promClient = new PromClient({
 
 const listener = new Listener({
   spyServiceHost: envOrErr("SPY_SERVICE_HOST"),
-  filtersRaw: process.env.SPY_SERVICE_FILTERS
+  filtersRaw: process.env.SPY_SERVICE_FILTERS,
+  readiness: {
+    spySyncTimeSeconds: parseInt(envOrErr("READINESS_SPY_SYNC_TIME_SECONDS")),
+    numLoadedSymbols: parseInt(envOrErr("READINESS_NUM_LOADED_SYMBOLS"))
+  }
 }, promClient);
+
+// In future if we have more components we will modify it to include them all
+const isReady = () => listener.isReady();
 
 const restAPI = new RestAPI({
   port: parseInt(envOrErr("REST_PORT"))
-}, listener);
+}, listener, isReady);
 
 listener.run();
 restAPI.run();
