@@ -3,19 +3,24 @@ import cors from "cors";
 import { Request, Response } from "express";
 import { PriceFeedVaaInfo } from "./listen";
 import { logger } from "./logging";
+import { PromClient } from "./promClient";
+import { DurationInSec } from "./helpers";
 
 
 export class RestAPI {
   private port: number;
   private priceFeedVaaInfo: PriceFeedVaaInfo;
-  private isReady: () => boolean;
+  private isReady: (() => boolean) | undefined;
+  private promClient: PromClient | undefined;
 
   constructor(config: { port: number; }, 
     priceFeedVaaInfo: PriceFeedVaaInfo,
-    isReady: () => boolean) {
+    isReady?: () => boolean,
+    promClient?: PromClient) {
     this.port = config.port;
     this.priceFeedVaaInfo = priceFeedVaaInfo;
     this.isReady = isReady;
+    this.promClient = promClient;
   }
 
   // Run this function without blocking (`await`) if you want to run it async.
@@ -27,28 +32,24 @@ export class RestAPI {
       logger.debug("listening on REST port " + this.port)
     );
 
-    app.get("/latest_vaa_bytes/:price_feed_id", (req: Request, res: Response) => {
-      let latestVaa = this.priceFeedVaaInfo.getLatestVaaForPriceFeed(req.params.price_feed_id);
-
-      if (latestVaa === undefined) {
-        res.sendStatus(404);
-        return;
-      }
-
-      res.status(200);
-      res.write(latestVaa.vaaBytes);
-      res.end();
-    });
-
     let endpoints: string[] = [];
-    
+
     app.get("/latest_vaa_bytes/:price_feed_id", (req: Request, res: Response) => {
+      this.promClient?.incApiLatestVaaRequests();
+      logger.info(`Received latest_vaa_bytes request for ${req.params.price_feed_id}`)
+
       let latestVaa = this.priceFeedVaaInfo.getLatestVaaForPriceFeed(req.params.price_feed_id);
 
       if (latestVaa === undefined) {
+        this.promClient?.incApiLatestVaaNotFoundResponse();
         res.sendStatus(404);
         return;
       }
+
+      this.promClient?.incApiLatestVaaSuccessResponse();
+
+      const freshness: DurationInSec = (new Date).getTime()/1000 - latestVaa.receiveTime;
+      this.promClient?.addApiLatestVaaFreshness(freshness);
 
       res.status(200);
       res.write(latestVaa.vaaBytes);

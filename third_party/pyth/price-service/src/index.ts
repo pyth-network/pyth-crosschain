@@ -39,7 +39,7 @@ const isReady = () => listener.isReady();
 
 const restAPI = new RestAPI({
   port: parseInt(envOrErr("REST_PORT"))
-}, listener, isReady);
+}, listener, isReady, promClient);
 
 listener.run();
 restAPI.run();
