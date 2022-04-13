@@ -451,9 +451,9 @@ impl PriceAttestation {
     }
 }
 
-/// This test suite of the format doubles as a test payload
-/// generator; print statements help provide plausible
-/// serialized data on demand.
+/// This test suite of the format doubles as a test payload generator;
+/// print statements help provide plausible serialized data on demand
+/// using `cargo test -- --nocapture`.
 #[cfg(test)]
 mod tests {
     use super::*;
