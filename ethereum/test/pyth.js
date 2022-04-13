@@ -209,7 +209,7 @@ contract("Pyth", function () {
     }
 
     it("should attest price updates over wormhole", async function() {
-      let rawBatch = generateRawBatchAttestation(1647273460, 1337);
+        let rawBatch = generateRawBatchAttestation(1647273460, 1337);
         await attest(this.pythProxy, rawBatch);
     })
 
