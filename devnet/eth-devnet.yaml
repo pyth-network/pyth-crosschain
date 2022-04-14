@@ -74,10 +74,6 @@ spec:
             - /bin/sh
             - -c
             - "npm run migrate &&
-            npx truffle exec scripts/deploy_test_token.js &&
-            npx truffle exec scripts/register_solana_chain.js &&
-            npx truffle exec scripts/register_terra_chain.js &&
-            npx truffle exec scripts/register_bsc_chain.js &&
             npx truffle test test/pyth.js 2>&1 &&
             nc -lkp 2000 0.0.0.0"
           readinessProbe:

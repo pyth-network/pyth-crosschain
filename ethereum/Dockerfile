@@ -27,3 +27,5 @@ RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
 RUN rm -rf node_modules && mv node_modules_cache node_modules
 
 ADD --chown=node:node . .
+
+RUN npm run build
