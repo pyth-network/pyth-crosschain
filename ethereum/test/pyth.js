@@ -187,6 +187,10 @@ contract("Pyth", function () {
             assert.equal(parsed.attestations[i].timestamp, timestamp);
             assert.equal(parsed.attestations[i].num_publishers, 123212);
             assert.equal(parsed.attestations[i].max_num_publishers, 321232);
+            assert.equal(parsed.attestations[i].publish_time, 0xdeadbeef);
+            assert.equal(parsed.attestations[i].prev_publish_time, 0xdeadbabe);
+            assert.equal(parsed.attestations[i].prev_price, 0xdeadfacebeef);
+            assert.equal(parsed.attestations[i].prev_conf, 0xbadbadbeef);
 
             console.debug(`attestation ${i + 1}/${parsed.attestations.length} parsed OK`);
       }
@@ -266,7 +270,7 @@ contract("Pyth", function () {
 
     it("should show stale cached prices as unknown", async function() {
         let smallestTimestamp = 1;
-      let rawBatch = generateRawBatchAttestation(smallestTimestamp, 1337);
+        let rawBatch = generateRawBatchAttestation(smallestTimestamp, 1337);
         await attest(this.pythProxy, rawBatch);
 
         for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
@@ -278,7 +282,7 @@ contract("Pyth", function () {
 
     it("should show cached prices too far into the future as unknown", async function() {
         let largestTimestamp = 4294967295;
-      let rawBatch = generateRawBatchAttestation(largestTimestamp, 1337);
+        let rawBatch = generateRawBatchAttestation(largestTimestamp, 1337);
         await attest(this.pythProxy, rawBatch);
 
         for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
