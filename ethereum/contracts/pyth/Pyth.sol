@@ -106,65 +106,87 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
         // Deserialize each attestation
         for (uint j=0; j < bpa.nAttestations; j++) {
+	    // NOTE: We don't advance the global index immediately.
+	    // attestationIndex is an attestation-local offset used
+	    // for readability and easier debugging.
+	    uint attestationIndex = 0;
+
             // Header
-            bpa.attestations[j].header.magic = encoded.toUint32(index);
-            index += 4;
+            bpa.attestations[j].header.magic = encoded.toUint32(index + attestationIndex);
+            attestationIndex += 4;
             require(bpa.attestations[j].header.magic == 0x50325748, "invalid magic value");
 
-            bpa.attestations[j].header.version = encoded.toUint16(index);
-            index += 2;
+            bpa.attestations[j].header.version = encoded.toUint16(index + attestationIndex);
+            attestationIndex += 2;
             require(bpa.attestations[j].header.version == 2, "invalid version");
 
-            bpa.attestations[j].header.payloadId = encoded.toUint8(index);
-            index += 1;
+            bpa.attestations[j].header.payloadId = encoded.toUint8(index + attestationIndex);
+            attestationIndex += 1;
             // Payload ID of 1 required for individual attestation
             require(bpa.attestations[j].header.payloadId == 1, "invalid payload ID");
 
             // Attestation
-            bpa.attestations[j].productId = encoded.toBytes32(index);
-            index += 32;
+            bpa.attestations[j].productId = encoded.toBytes32(index + attestationIndex);
+            attestationIndex += 32;
 
-            bpa.attestations[j].priceId = encoded.toBytes32(index);
-            index += 32;
-            bpa.attestations[j].priceType = encoded.toUint8(index);
-            index += 1;
+            bpa.attestations[j].priceId = encoded.toBytes32(index + attestationIndex);
+            attestationIndex += 32;
+            bpa.attestations[j].priceType = encoded.toUint8(index + attestationIndex);
+            attestationIndex += 1;
 
-            bpa.attestations[j].price = int64(encoded.toUint64(index));
-            index += 8;
+            bpa.attestations[j].price = int64(encoded.toUint64(index + attestationIndex));
+            attestationIndex += 8;
 
-            bpa.attestations[j].exponent = int32(encoded.toUint32(index));
-            index += 4;
+            bpa.attestations[j].exponent = int32(encoded.toUint32(index + attestationIndex));
+            attestationIndex += 4;
 
-            bpa.attestations[j].emaPrice.value = int64(encoded.toUint64(index));
-            index += 8;
-            bpa.attestations[j].emaPrice.numerator = int64(encoded.toUint64(index));
-            index += 8;
-            bpa.attestations[j].emaPrice.denominator = int64(encoded.toUint64(index));
-            index += 8;
+            bpa.attestations[j].emaPrice.value = int64(encoded.toUint64(index + attestationIndex));
+            attestationIndex += 8;
+            bpa.attestations[j].emaPrice.numerator = int64(encoded.toUint64(index + attestationIndex));
+            attestationIndex += 8;
+            bpa.attestations[j].emaPrice.denominator = int64(encoded.toUint64(index + attestationIndex));
+            attestationIndex += 8;
 
-            bpa.attestations[j].emaConf.value = int64(encoded.toUint64(index));
-            index += 8;
-            bpa.attestations[j].emaConf.numerator = int64(encoded.toUint64(index));
-            index += 8;
-            bpa.attestations[j].emaConf.denominator = int64(encoded.toUint64(index));
-            index += 8;
+            bpa.attestations[j].emaConf.value = int64(encoded.toUint64(index + attestationIndex));
+            attestationIndex += 8;
+            bpa.attestations[j].emaConf.numerator = int64(encoded.toUint64(index + attestationIndex));
+            attestationIndex += 8;
+            bpa.attestations[j].emaConf.denominator = int64(encoded.toUint64(index + attestationIndex));
+            attestationIndex += 8;
 
-            bpa.attestations[j].confidenceInterval = encoded.toUint64(index);
-            index += 8;
+            bpa.attestations[j].confidenceInterval = encoded.toUint64(index + attestationIndex);
+            attestationIndex += 8;
 
-            bpa.attestations[j].status = encoded.toUint8(index);
-            index += 1;
-            bpa.attestations[j].corpAct = encoded.toUint8(index);
-            index += 1;
+            bpa.attestations[j].status = encoded.toUint8(index + attestationIndex);
+            attestationIndex += 1;
+            bpa.attestations[j].corpAct = encoded.toUint8(index + attestationIndex);
+            attestationIndex += 1;
 
-            bpa.attestations[j].timestamp = encoded.toUint64(index);
-            index += 8;
+            bpa.attestations[j].timestamp = encoded.toUint64(index + attestationIndex);
+            attestationIndex += 8;
 
-            bpa.attestations[j].num_publishers = encoded.toUint32(index);
-            index += 4;
+            bpa.attestations[j].num_publishers = encoded.toUint32(index + attestationIndex);
+            attestationIndex += 4;
 
-            bpa.attestations[j].max_num_publishers = encoded.toUint32(index);
-            index += 4;
+            bpa.attestations[j].max_num_publishers = encoded.toUint32(index + attestationIndex);
+            attestationIndex += 4;
+
+            bpa.attestations[j].publish_time = encoded.toUint64(index + attestationIndex);
+            attestationIndex += 8;
+
+            bpa.attestations[j].prev_publish_time = encoded.toUint64(index + attestationIndex);
+            attestationIndex += 8;
+
+            bpa.attestations[j].prev_price = int64(encoded.toUint64(index + attestationIndex));
+            attestationIndex += 8;
+
+            bpa.attestations[j].prev_conf = encoded.toUint64(index + attestationIndex);
+            attestationIndex += 8;
+
+	    require(attestationIndex <= bpa.attestationSize, "INTERNAL: Consumed more than `attestationSize` bytes");
+
+	    // Respect specified attestation size for forward-compat
+	    index += bpa.attestationSize;
         }
     }
 

@@ -32,7 +32,6 @@ use solana_program::pubkey::Pubkey;
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 pub mod wasm;
 
-/// Quality of life type alias for wrapping up boxed errors.
 pub type ErrBox = Box<dyn std::error::Error>;
 
 /// Precedes every message implementing the p2w serialization format
@@ -73,9 +72,17 @@ pub struct PriceAttestation {
     pub confidence_interval: u64,
     pub status:              PriceStatus,
     pub corp_act:            CorpAction,
+    // TODO(2022-04-07) format v3: Rename this aptly named timestamp
+    // field to attestation_time (it's a grey area in terms of
+    // compatibility and v3 is due very soon either way)
+    /// NOTE: SOL on-chain time of attestation
     pub timestamp:           UnixTimestamp,
     pub num_publishers:      u32,
     pub max_num_publishers:  u32,
+    pub publish_time:        UnixTimestamp,
+    pub prev_publish_time:   UnixTimestamp,
+    pub prev_price:          i64,
+    pub prev_conf:           u64, 
 }
 
 #[derive(Clone, Default, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -236,7 +243,7 @@ pub fn deserialize_rational(mut bytes: impl Read) -> Result<Rational, ErrBox> {
 impl PriceAttestation {
     pub fn from_pyth_price_bytes(
         price_id: Pubkey,
-        timestamp: UnixTimestamp,
+        attestation_time: UnixTimestamp,
         value: &[u8],
     ) -> Result<Self, ErrBox> {
         let price = pyth_sdk_solana::state::load_price_account(value)?;
@@ -252,9 +259,13 @@ impl PriceAttestation {
             confidence_interval: price.agg.conf,
             status: price.agg.status,
             corp_act: price.agg.corp_act,
-            timestamp: timestamp,
+            timestamp: attestation_time,
             num_publishers: price.num_qt,
-	    max_num_publishers: price.num,
+            max_num_publishers: price.num,
+	    publish_time: price.timestamp,
+	    prev_publish_time: price.prev_timestamp,
+	    prev_price: price.prev_price,
+	    prev_conf: price.prev_conf,
         })
     }
 
@@ -276,6 +287,10 @@ impl PriceAttestation {
             timestamp,
             num_publishers,
             max_num_publishers,
+	    publish_time,
+	    prev_publish_time,
+	    prev_price,
+	    prev_conf
         } = self;
 
         // magic
@@ -325,6 +340,18 @@ impl PriceAttestation {
 
         // max_num_publishers
         buf.extend_from_slice(&max_num_publishers.to_be_bytes()[..]);
+
+	// publish_time
+        buf.extend_from_slice(&publish_time.to_be_bytes()[..]);
+
+	// prev_publish_time
+        buf.extend_from_slice(&prev_publish_time.to_be_bytes()[..]);
+
+        // prev_price
+        buf.extend_from_slice(&prev_price.to_be_bytes()[..]);
+
+	// prev_conf
+        buf.extend_from_slice(&prev_conf.to_be_bytes()[..]);
 
         buf
     }
@@ -433,6 +460,22 @@ impl PriceAttestation {
         bytes.read_exact(max_num_publishers_vec.as_mut_slice())?;
         let max_num_publishers = u32::from_be_bytes(max_num_publishers_vec.as_slice().try_into()?);
 
+        let mut publish_time_vec = vec![0u8; mem::size_of::<UnixTimestamp>()];
+        bytes.read_exact(publish_time_vec.as_mut_slice())?;
+        let publish_time = UnixTimestamp::from_be_bytes(publish_time_vec.as_slice().try_into()?);
+
+        let mut prev_publish_time_vec = vec![0u8; mem::size_of::<UnixTimestamp>()];
+        bytes.read_exact(prev_publish_time_vec.as_mut_slice())?;
+        let prev_publish_time = UnixTimestamp::from_be_bytes(prev_publish_time_vec.as_slice().try_into()?);
+
+        let mut prev_price_vec = vec![0u8; mem::size_of::<i64>()];
+        bytes.read_exact(prev_price_vec.as_mut_slice())?;
+        let prev_price = i64::from_be_bytes(prev_price_vec.as_slice().try_into()?);
+
+        let mut prev_conf_vec = vec![0u8; mem::size_of::<u64>()];
+        bytes.read_exact(prev_conf_vec.as_mut_slice())?;
+        let prev_conf = u64::from_be_bytes(prev_conf_vec.as_slice().try_into()?);
+
         Ok(Self {
             product_id,
             price_id,
@@ -446,7 +489,11 @@ impl PriceAttestation {
             corp_act,
             timestamp,
             num_publishers,
-	    max_num_publishers,
+            max_num_publishers,
+	    publish_time,
+	    prev_publish_time,
+	    prev_price,
+	    prev_conf,
         })
     }
 }
@@ -487,7 +534,11 @@ mod tests {
             corp_act:            CorpAction::NoCorpAct,
             timestamp:           (0xdeadbeeffadedeedu64) as i64,
 	    num_publishers: 123212u32,
-	    max_num_publishers: 321232u32
+	    max_num_publishers: 321232u32,
+	    publish_time: 0xdeadbeefi64,
+	    prev_publish_time: 0xdeadbabei64,
+	    prev_price: 0xdeadfacebeefi64,
+	    prev_conf: 0xbadbadbeefu64, // I could do this all day -SD
         }
     }
 

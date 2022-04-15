@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.2
 # Wormhole-specific setup for pyth
-FROM pythfoundation/pyth-client:devnet-v2.10.1
+FROM pythfoundation/pyth-client:devnet-v2.11.1
 
 USER root
 

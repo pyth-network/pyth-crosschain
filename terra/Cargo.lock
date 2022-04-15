@@ -1378,9 +1378,9 @@ dependencies = [
 
 [[package]]
 name = "pyth-sdk"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c610102a39fc4bae29a3b5a628ee134d25afb3dca3937692f5e634f1287fe0b4"
+checksum = "cb06993b8c8ad7f50042e8b6b6ae4ed2a98722495845b12efc9a12f4301b901b"
 dependencies = [
  "borsh",
  "borsh-derive",
@@ -1390,9 +1390,9 @@ dependencies = [
 
 [[package]]
 name = "pyth-sdk-solana"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1fdc94592a28fa829b0d6fa619392b1a1744048e5b78a74a4ba93cf541eddae"
+checksum = "b83f33cbdeccc350e021f6b4bc714655aa38352fac80a93b16b1902863aedb62"
 dependencies = [
  "borsh",
  "borsh-derive",
