@@ -224,6 +224,7 @@ contract("Pyth", function () {
         let second_prod_id = "0x" + "02".repeat(32)
         let second_price_id = "0x" + "fd".repeat(32)
 
+        // Confirm that previously non-existent feeds are created
         let first = await this.pythProxy.queryPriceFeed(first_price_id);
         console.debug(`first is ${JSON.stringify(first)}`);
         assert.equal(first.price, priceVal);
@@ -242,15 +243,16 @@ contract("Pyth", function () {
         second = await this.pythProxy.queryPriceFeed(second_price_id);
         assert.equal(second.price, priceVal + 5);
 
-        // Confirm the price is *NOT* bumped after outdated attestations arrive
-        let oldTimestamp = currentTimestamp - 1;
+        // Confirm that only strictly larger timestamps trigger updates
         let rawBatch3 = generateRawBatchAttestation(nextTimestamp, priceVal + 10);
         await attest(this.pythProxy, rawBatch3);
 
         first = await this.pythProxy.queryPriceFeed(first_price_id);
+        assert.equal(first.price, priceVal + 5);
         assert.notEqual(first.price, priceVal + 10);
 
         second = await this.pythProxy.queryPriceFeed(second_price_id);
+        assert.equal(second.price, priceVal + 5);
         assert.notEqual(second.price, priceVal + 10);
     })
 
