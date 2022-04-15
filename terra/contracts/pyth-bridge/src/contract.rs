@@ -130,6 +130,7 @@ fn process_batch_attestation(
         let price_feed = PriceFeed::new(
             price_attestation.price_id.to_bytes(),
             price_attestation.status,
+	    price_attestation.publish_time,
             price_attestation.expo,
             price_attestation.max_num_publishers, // max_num_publishers data is currently unavailable
             price_attestation.num_publishers, // num_publishers data is currently unavailable
@@ -138,6 +139,9 @@ fn process_batch_attestation(
             price_attestation.confidence_interval,
             price_attestation.ema_price.val,
             price_attestation.ema_conf.val as u64,
+	    price_attestation.prev_price,
+	    price_attestation.prev_conf,
+	    price_attestation.prev_publish_time,
         );
 
         let attestation_time = Timestamp::from_seconds(price_attestation.timestamp as u64);

@@ -44,6 +44,10 @@ contract PythInternalStructs {
         uint64 timestamp;
 	uint32 num_publishers;
 	uint32 max_num_publishers;
+	uint64 publish_time;
+	uint64 prev_publish_time;
+	int64 prev_price;
+	uint64 prev_conf;
     }
 
     struct Rational {
