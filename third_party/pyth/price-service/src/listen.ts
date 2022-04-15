@@ -11,19 +11,17 @@ import {
 
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 
-import { envOrErr, sleep } from "./helpers";
+import { envOrErr, sleep, TimestampInSec } from "./helpers";
 import { PromClient } from "./promClient";
 import { getBatchSummary, parseBatchPriceAttestation } from "@certusone/p2w-sdk";
 import { ClientReadableStream } from "@grpc/grpc-js";
 import { FilterEntry, SubscribeSignedVAAResponse } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
 import { logger } from "./logging";
 
-// Timestamp (in seconds)
-type Timestamp = number;
-
 export type VaaInfo = {
   vaaBytes: string,
-  seqNum: number;
+  seqNum: number,
+  receiveTime: TimestampInSec,
 };
 
 export interface PriceFeedVaaInfo {
@@ -44,13 +42,13 @@ type ListenerConfig = {
 export class Listener implements PriceFeedVaaInfo {
   // Mapping of Price Feed Id to Vaa
   private priceFeedVaaMap = new Map<string, VaaInfo>();
-  private promClient: PromClient;
+  private promClient: PromClient | undefined;
   private spyServiceHost: string;
   private filters: FilterEntry[] = [];
-  private spyConnectionTime: Timestamp | undefined;
+  private spyConnectionTime: TimestampInSec | undefined;
   private readinessConfig: ListenerReadinessConfig;
 
-  constructor(config: ListenerConfig, promClient: PromClient) {
+  constructor(config: ListenerConfig, promClient?: PromClient) {
     this.promClient = promClient;
     this.spyServiceHost = config.spyServiceHost;
     this.loadFilters(config.filtersRaw);
@@ -178,7 +176,8 @@ export class Listener implements PriceFeedVaaInfo {
       if (lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence) {
         this.priceFeedVaaMap.set(key, {
           seqNum: parsedVAA.sequence,
-          vaaBytes: vaaBytes
+          vaaBytes: vaaBytes,
+          receiveTime: (new Date()).getTime() / 1000,
         });
       }
     }
@@ -194,7 +193,7 @@ export class Listener implements PriceFeedVaaInfo {
       getBatchSummary(batchAttestation)
     );
 
-    this.promClient.incIncoming();
+    this.promClient?.incReceivedVaa();
   }
 
   getLatestVaaForPriceFeed(priceFeedId: string): VaaInfo | undefined {
@@ -202,7 +201,7 @@ export class Listener implements PriceFeedVaaInfo {
   }
 
   isReady(): boolean {
-    let currentTime: Timestamp = (new Date()).getTime() / 1000;
+    let currentTime: TimestampInSec = (new Date()).getTime() / 1000;
     if (this.spyConnectionTime === undefined ||
       currentTime < this.spyConnectionTime + this.readinessConfig.spySyncTimeSeconds) {
       return false;
