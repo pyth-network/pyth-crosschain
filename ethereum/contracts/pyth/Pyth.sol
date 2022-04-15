@@ -173,7 +173,7 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
     /// This includes attestation delay which currently might up to a minute.
     uint private constant VALID_TIME_PERIOD_SECS = 180;
 
-    function queryPriceFeed(bytes32 id) public override returns (PythStructs.PriceFeed memory priceFeed){
+    function queryPriceFeed(bytes32 id) public view override returns (PythStructs.PriceFeed memory priceFeed){
 
         // Look up the latest price info for the given ID
         PythInternalStructs.PriceInfo memory info = latestPriceInfo(id);
