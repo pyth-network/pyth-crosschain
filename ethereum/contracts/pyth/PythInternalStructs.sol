@@ -19,35 +19,28 @@ contract PythInternalStructs {
 
     struct Header {
         uint32 magic;
-        uint16 version;
+        uint16 versionMajor;
+        uint16 versionMinor;
+	uint16 hdrSize;
         uint8 payloadId;
     }
 
     struct PriceAttestation {
-        Header header;
-
         bytes32 productId;
         bytes32 priceId;
-        uint8 priceType;
-
         int64 price;
-        int32 exponent;
-
-        Rational emaPrice;
-        Rational emaConf;
-
-        uint64 confidenceInterval;
-
+        uint64 conf;
+        int32 expo;
+        int64 emaPrice;
+        uint64 emaConf;
         uint8 status;
-        uint8 corpAct;
-
-        uint64 timestamp;
-	uint32 num_publishers;
-	uint32 max_num_publishers;
-	uint64 publish_time;
-	uint64 prev_publish_time;
-	int64 prev_price;
-	uint64 prev_conf;
+	uint32 numPublishers;
+	uint32 maxNumPublishers;
+        uint64 attestationTime;
+	uint64 publishTime;
+	uint64 prevPublishTime;
+	int64 prevPrice;
+	uint64 prevConf;
     }
 
     struct Rational {
@@ -67,6 +60,7 @@ contract PythInternalStructs {
     struct PriceInfo {
         PythStructs.PriceFeed priceFeed;
         uint256 attestationTime;
+	uint256 publishTime;
         uint256 arrivalTime;
         uint256 arrivalBlock;
     }

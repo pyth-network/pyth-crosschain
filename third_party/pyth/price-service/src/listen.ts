@@ -143,7 +143,7 @@ export class Listener implements PriceFeedVaaInfo {
     let batchAttestation;
 
     try {
-      batchAttestation = parseBatchPriceAttestation(
+      batchAttestation = await parseBatchPriceAttestation(
         Buffer.from(parsedVAA.payload)
       );
     } catch (e: any) {

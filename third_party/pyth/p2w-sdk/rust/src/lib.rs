@@ -12,12 +12,7 @@ use std::io::Read;
 use std::iter::Iterator;
 use std::mem;
 
-use pyth_sdk_solana::state::{
-    CorpAction,
-    PriceStatus,
-    PriceType,
-    Rational,
-};
+use pyth_sdk_solana::state::PriceStatus;
 
 #[cfg(feature = "solana")]
 use solitaire::{
@@ -38,7 +33,15 @@ pub type ErrBox = Box<dyn std::error::Error>;
 pub const P2W_MAGIC: &'static [u8] = b"P2WH";
 
 /// Format version used and understood by this codebase
-pub const P2W_FORMAT_VERSION: u16 = 2;
+pub const P2W_FORMAT_VER_MAJOR: u16 = 3;
+
+/// Starting with v3, format introduces a minor version to mark forward-compatible iterations
+pub const P2W_FORMAT_VER_MINOR: u16 = 0;
+
+/// Starting with v3, format introduces append-only
+/// forward-compatibility to the header. This is the current number of
+/// bytes after the hdr_size field.
+pub const P2W_FORMAT_HDR_SIZE: u16 = 1;
 
 pub const PUBKEY_LEN: usize = 32;
 
@@ -62,27 +65,21 @@ pub enum PayloadId {
 /// chain logic.
 #[derive(Clone, Default, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct PriceAttestation {
-    pub product_id:          Pubkey,
-    pub price_id:            Pubkey,
-    pub price_type:          PriceType,
-    pub price:               i64,
-    pub expo:                i32,
-    pub ema_price:           Rational,
-    pub ema_conf:            Rational,
-    pub confidence_interval: u64,
-    pub status:              PriceStatus,
-    pub corp_act:            CorpAction,
-    // TODO(2022-04-07) format v3: Rename this aptly named timestamp
-    // field to attestation_time (it's a grey area in terms of
-    // compatibility and v3 is due very soon either way)
-    /// NOTE: SOL on-chain time of attestation
-    pub timestamp:           UnixTimestamp,
-    pub num_publishers:      u32,
-    pub max_num_publishers:  u32,
-    pub publish_time:        UnixTimestamp,
-    pub prev_publish_time:   UnixTimestamp,
-    pub prev_price:          i64,
-    pub prev_conf:           u64, 
+    pub product_id:         Pubkey,
+    pub price_id:           Pubkey,
+    pub price:              i64,
+    pub conf:               u64,
+    pub expo:               i32,
+    pub ema_price:          i64,
+    pub ema_conf:           u64,
+    pub status:             PriceStatus,
+    pub num_publishers:     u32,
+    pub max_num_publishers: u32,
+    pub attestation_time:   UnixTimestamp,
+    pub publish_time:       UnixTimestamp,
+    pub prev_publish_time:  UnixTimestamp,
+    pub prev_price:         i64,
+    pub prev_conf:          u64,
 }
 
 #[derive(Clone, Default, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -98,8 +95,14 @@ impl BatchPriceAttestation {
         // magic
         let mut buf = P2W_MAGIC.to_vec();
 
-        // version
-        buf.extend_from_slice(&P2W_FORMAT_VERSION.to_be_bytes()[..]);
+        // version_major
+        buf.extend_from_slice(&P2W_FORMAT_VER_MAJOR.to_be_bytes()[..]);
+
+        // version_minor
+        buf.extend_from_slice(&P2W_FORMAT_VER_MINOR.to_be_bytes()[..]);
+
+        // hdr_size
+        buf.extend_from_slice(&P2W_FORMAT_HDR_SIZE.to_be_bytes()[..]);
 
         // payload_id
         buf.push(PayloadId::PriceBatchAttestation as u8);
@@ -154,20 +157,46 @@ impl BatchPriceAttestation {
             .into());
         }
 
-        let mut version_vec = vec![0u8; mem::size_of_val(&P2W_FORMAT_VERSION)];
-        bytes.read_exact(version_vec.as_mut_slice())?;
-        let version = u16::from_be_bytes(version_vec.as_slice().try_into()?);
+        let mut version_major_vec = vec![0u8; mem::size_of_val(&P2W_FORMAT_VER_MAJOR)];
+        bytes.read_exact(version_major_vec.as_mut_slice())?;
+        let version_major = u16::from_be_bytes(version_major_vec.as_slice().try_into()?);
 
-        if version != P2W_FORMAT_VERSION {
+        // Major must match exactly
+        if version_major != P2W_FORMAT_VER_MAJOR {
             return Err(format!(
-                "Unsupported format version {}, expected {}",
-                version, P2W_FORMAT_VERSION
+                "Unsupported format version_major {}, expected {}",
+                version_major, P2W_FORMAT_VER_MAJOR
             )
             .into());
         }
 
+        let mut version_minor_vec = vec![0u8; mem::size_of_val(&P2W_FORMAT_VER_MINOR)];
+        bytes.read_exact(version_minor_vec.as_mut_slice())?;
+        let version_minor = u16::from_be_bytes(version_minor_vec.as_slice().try_into()?);
+
+        // Only older minors are not okay for this codebase
+        if version_minor < P2W_FORMAT_VER_MINOR {
+            return Err(format!(
+                "Unsupported format version_minor {}, expected {} or more",
+                version_minor, P2W_FORMAT_VER_MINOR
+            )
+            .into());
+        }
+
+        // Read header size value
+        let mut hdr_size_vec = vec![0u8; mem::size_of_val(&P2W_FORMAT_HDR_SIZE)];
+        bytes.read_exact(hdr_size_vec.as_mut_slice())?;
+        let hdr_size = u16::from_be_bytes(hdr_size_vec.as_slice().try_into()?);
+
+        // Consume the declared number of remaining header
+        // bytes. Remaining header fields must be read from hdr_buf
+        let mut hdr_buf = vec![0u8; hdr_size as usize];
+        bytes.read_exact(hdr_buf.as_mut_slice())?;
+
         let mut payload_id_vec = vec![0u8; mem::size_of::<PayloadId>()];
-        bytes.read_exact(payload_id_vec.as_mut_slice())?;
+        hdr_buf
+            .as_slice()
+            .read_exact(payload_id_vec.as_mut_slice())?;
 
         if payload_id_vec[0] != PayloadId::PriceBatchAttestation as u8 {
             return Err(format!(
@@ -178,6 +207,7 @@ impl BatchPriceAttestation {
             .into());
         }
 
+        // Header consumed, continue with remaining fields
         let mut batch_len_vec = vec![0u8; 2];
         bytes.read_exact(batch_len_vec.as_mut_slice())?;
         let batch_len = u16::from_be_bytes(batch_len_vec.as_slice().try_into()?);
@@ -191,8 +221,6 @@ impl BatchPriceAttestation {
         for i in 0..batch_len {
             let mut attestation_buf = vec![0u8; attestation_size as usize];
             bytes.read_exact(attestation_buf.as_mut_slice())?;
-
-            dbg!(&attestation_buf.len());
 
             match PriceAttestation::deserialize(attestation_buf.as_slice()) {
                 Ok(attestation) => ret.push(attestation),
@@ -208,35 +236,6 @@ impl BatchPriceAttestation {
     }
 }
 
-pub fn serialize_rational(rational: &Rational) -> Vec<u8> {
-    let mut v = vec![];
-    // val
-    v.extend(&rational.val.to_be_bytes()[..]);
-
-    // numer
-    v.extend(&rational.numer.to_be_bytes()[..]);
-
-    // denom
-    v.extend(&rational.denom.to_be_bytes()[..]);
-
-    v
-}
-
-pub fn deserialize_rational(mut bytes: impl Read) -> Result<Rational, ErrBox> {
-    let mut val_vec = vec![0u8; mem::size_of::<i64>()];
-    bytes.read_exact(val_vec.as_mut_slice())?;
-    let val = i64::from_be_bytes(val_vec.as_slice().try_into()?);
-
-    let mut numer_vec = vec![0u8; mem::size_of::<i64>()];
-    bytes.read_exact(numer_vec.as_mut_slice())?;
-    let numer = i64::from_be_bytes(numer_vec.as_slice().try_into()?);
-
-    let mut denom_vec = vec![0u8; mem::size_of::<i64>()];
-    bytes.read_exact(denom_vec.as_mut_slice())?;
-    let denom = i64::from_be_bytes(denom_vec.as_slice().try_into()?);
-
-    Ok(Rational { val, numer, denom })
-}
 
 // On-chain data types
 
@@ -251,21 +250,19 @@ impl PriceAttestation {
         Ok(PriceAttestation {
             product_id: Pubkey::new(&price.prod.val[..]),
             price_id,
-            price_type: price.ptype,
             price: price.agg.price,
-            ema_price: price.ema_price,
-            ema_conf: price.ema_conf,
+            conf: price.agg.conf,
             expo: price.expo,
-            confidence_interval: price.agg.conf,
+            ema_price: price.ema_price.val,
+            ema_conf: price.ema_conf.val as u64,
             status: price.agg.status,
-            corp_act: price.agg.corp_act,
-            timestamp: attestation_time,
             num_publishers: price.num_qt,
             max_num_publishers: price.num,
-	    publish_time: price.timestamp,
-	    prev_publish_time: price.prev_timestamp,
-	    prev_price: price.prev_price,
-	    prev_conf: price.prev_conf,
+            attestation_time,
+            publish_time: price.timestamp,
+            prev_publish_time: price.prev_timestamp,
+            prev_price: price.prev_price,
+            prev_conf: price.prev_conf,
         })
     }
 
@@ -276,31 +273,22 @@ impl PriceAttestation {
         let PriceAttestation {
             product_id,
             price_id,
-            price_type,
             price,
+            conf,
             expo,
             ema_price,
             ema_conf,
-            confidence_interval,
             status,
-            corp_act,
-            timestamp,
             num_publishers,
             max_num_publishers,
-	    publish_time,
-	    prev_publish_time,
-	    prev_price,
-	    prev_conf
+            attestation_time,
+            publish_time,
+            prev_publish_time,
+            prev_price,
+            prev_conf,
         } = self;
 
-        // magic
-        let mut buf = P2W_MAGIC.to_vec();
-
-        // version
-        buf.extend_from_slice(&P2W_FORMAT_VERSION.to_be_bytes()[..]);
-
-        // payload_id
-        buf.push(PayloadId::PriceAttestation as u8);
+        let mut buf = Vec::new();
 
         // product_id
         buf.extend_from_slice(&product_id.to_bytes()[..]);
@@ -308,32 +296,23 @@ impl PriceAttestation {
         // price_id
         buf.extend_from_slice(&price_id.to_bytes()[..]);
 
-        // price_type
-        buf.push(price_type.clone() as u8);
-
         // price
         buf.extend_from_slice(&price.to_be_bytes()[..]);
 
-        // exponent
+        // conf
+        buf.extend_from_slice(&conf.to_be_bytes()[..]);
+
+        // expo
         buf.extend_from_slice(&expo.to_be_bytes()[..]);
 
         // ema_price
-        buf.append(&mut serialize_rational(&ema_price));
+        buf.extend_from_slice(&ema_price.to_be_bytes()[..]);
 
         // ema_conf
-        buf.append(&mut serialize_rational(&ema_conf));
-
-        // confidence_interval
-        buf.extend_from_slice(&confidence_interval.to_be_bytes()[..]);
+        buf.extend_from_slice(&ema_conf.to_be_bytes()[..]);
 
         // status
         buf.push(status.clone() as u8);
-
-        // corp_act
-        buf.push(corp_act.clone() as u8);
-
-        // timestamp
-        buf.extend_from_slice(&timestamp.to_be_bytes()[..]);
 
         // num_publishers
         buf.extend_from_slice(&num_publishers.to_be_bytes()[..]);
@@ -341,57 +320,24 @@ impl PriceAttestation {
         // max_num_publishers
         buf.extend_from_slice(&max_num_publishers.to_be_bytes()[..]);
 
-	// publish_time
+        // attestation_time
+        buf.extend_from_slice(&attestation_time.to_be_bytes()[..]);
+
+        // publish_time
         buf.extend_from_slice(&publish_time.to_be_bytes()[..]);
 
-	// prev_publish_time
+        // prev_publish_time
         buf.extend_from_slice(&prev_publish_time.to_be_bytes()[..]);
 
         // prev_price
         buf.extend_from_slice(&prev_price.to_be_bytes()[..]);
 
-	// prev_conf
+        // prev_conf
         buf.extend_from_slice(&prev_conf.to_be_bytes()[..]);
 
         buf
     }
     pub fn deserialize(mut bytes: impl Read) -> Result<Self, ErrBox> {
-        let mut magic_vec = vec![0u8; P2W_MAGIC.len()];
-
-        bytes.read_exact(magic_vec.as_mut_slice())?;
-
-        if magic_vec.as_slice() != P2W_MAGIC {
-            return Err(format!(
-                "Invalid magic {:02X?}, expected {:02X?}",
-                magic_vec, P2W_MAGIC,
-            )
-            .into());
-        }
-
-        let mut version_vec = vec![0u8; mem::size_of_val(&P2W_FORMAT_VERSION)];
-        bytes.read_exact(version_vec.as_mut_slice())?;
-        let version = u16::from_be_bytes(version_vec.as_slice().try_into()?);
-
-        if version != P2W_FORMAT_VERSION {
-            return Err(format!(
-                "Unsupported format version {}, expected {}",
-                version, P2W_FORMAT_VERSION
-            )
-            .into());
-        }
-
-        let mut payload_id_vec = vec![0u8; mem::size_of::<PayloadId>()];
-        bytes.read_exact(payload_id_vec.as_mut_slice())?;
-
-        if PayloadId::PriceAttestation as u8 != payload_id_vec[0] {
-            return Err(format!(
-                "Invalid Payload ID {}, expected {}",
-                payload_id_vec[0],
-                PayloadId::PriceAttestation as u8,
-            )
-            .into());
-        }
-
         let mut product_id_vec = vec![0u8; PUBKEY_LEN];
         bytes.read_exact(product_id_vec.as_mut_slice())?;
         let product_id = Pubkey::new(product_id_vec.as_slice());
@@ -400,32 +346,25 @@ impl PriceAttestation {
         bytes.read_exact(price_id_vec.as_mut_slice())?;
         let price_id = Pubkey::new(price_id_vec.as_slice());
 
-        let mut price_type_vec = vec![0u8];
-        bytes.read_exact(price_type_vec.as_mut_slice())?;
-        let price_type = match price_type_vec[0] {
-            a if a == PriceType::Price as u8 => PriceType::Price,
-            a if a == PriceType::Unknown as u8 => PriceType::Unknown,
-            other => {
-                return Err(format!("Invalid price_type value {}", other).into());
-            }
-        };
-
         let mut price_vec = vec![0u8; mem::size_of::<i64>()];
         bytes.read_exact(price_vec.as_mut_slice())?;
         let price = i64::from_be_bytes(price_vec.as_slice().try_into()?);
+
+        let mut conf_vec = vec![0u8; mem::size_of::<u64>()];
+        bytes.read_exact(conf_vec.as_mut_slice())?;
+        let conf = u64::from_be_bytes(conf_vec.as_slice().try_into()?);
 
         let mut expo_vec = vec![0u8; mem::size_of::<i32>()];
         bytes.read_exact(expo_vec.as_mut_slice())?;
         let expo = i32::from_be_bytes(expo_vec.as_slice().try_into()?);
 
-        let ema_price = deserialize_rational(&mut bytes)?;
-        let ema_conf = deserialize_rational(&mut bytes)?;
+        let mut ema_price_vec = vec![0u8; mem::size_of::<i64>()];
+        bytes.read_exact(ema_price_vec.as_mut_slice())?;
+        let ema_price = i64::from_be_bytes(ema_price_vec.as_slice().try_into()?);
 
-        println!("twac OK");
-        let mut confidence_interval_vec = vec![0u8; mem::size_of::<u64>()];
-        bytes.read_exact(confidence_interval_vec.as_mut_slice())?;
-        let confidence_interval =
-            u64::from_be_bytes(confidence_interval_vec.as_slice().try_into()?);
+        let mut ema_conf_vec = vec![0u8; mem::size_of::<u64>()];
+        bytes.read_exact(ema_conf_vec.as_mut_slice())?;
+        let ema_conf = u64::from_be_bytes(ema_conf_vec.as_slice().try_into()?);
 
         let mut status_vec = vec![0u8];
         bytes.read_exact(status_vec.as_mut_slice())?;
@@ -439,19 +378,6 @@ impl PriceAttestation {
             }
         };
 
-        let mut corp_act_vec = vec![0u8];
-        bytes.read_exact(corp_act_vec.as_mut_slice())?;
-        let corp_act = match corp_act_vec[0] {
-            a if a == CorpAction::NoCorpAct as u8 => CorpAction::NoCorpAct,
-            other => {
-                return Err(format!("Invalid corp_act value {}", other).into());
-            }
-        };
-
-        let mut timestamp_vec = vec![0u8; mem::size_of::<UnixTimestamp>()];
-        bytes.read_exact(timestamp_vec.as_mut_slice())?;
-        let timestamp = UnixTimestamp::from_be_bytes(timestamp_vec.as_slice().try_into()?);
-
         let mut num_publishers_vec = vec![0u8; mem::size_of::<u32>()];
         bytes.read_exact(num_publishers_vec.as_mut_slice())?;
         let num_publishers = u32::from_be_bytes(num_publishers_vec.as_slice().try_into()?);
@@ -460,13 +386,19 @@ impl PriceAttestation {
         bytes.read_exact(max_num_publishers_vec.as_mut_slice())?;
         let max_num_publishers = u32::from_be_bytes(max_num_publishers_vec.as_slice().try_into()?);
 
+        let mut attestation_time_vec = vec![0u8; mem::size_of::<UnixTimestamp>()];
+        bytes.read_exact(attestation_time_vec.as_mut_slice())?;
+        let attestation_time =
+            UnixTimestamp::from_be_bytes(attestation_time_vec.as_slice().try_into()?);
+
         let mut publish_time_vec = vec![0u8; mem::size_of::<UnixTimestamp>()];
         bytes.read_exact(publish_time_vec.as_mut_slice())?;
         let publish_time = UnixTimestamp::from_be_bytes(publish_time_vec.as_slice().try_into()?);
 
         let mut prev_publish_time_vec = vec![0u8; mem::size_of::<UnixTimestamp>()];
         bytes.read_exact(prev_publish_time_vec.as_mut_slice())?;
-        let prev_publish_time = UnixTimestamp::from_be_bytes(prev_publish_time_vec.as_slice().try_into()?);
+        let prev_publish_time =
+            UnixTimestamp::from_be_bytes(prev_publish_time_vec.as_slice().try_into()?);
 
         let mut prev_price_vec = vec![0u8; mem::size_of::<i64>()];
         bytes.read_exact(prev_price_vec.as_mut_slice())?;
@@ -479,21 +411,19 @@ impl PriceAttestation {
         Ok(Self {
             product_id,
             price_id,
-            price_type,
             price,
+            conf,
             expo,
             ema_price,
             ema_conf,
-            confidence_interval,
             status,
-            corp_act,
-            timestamp,
             num_publishers,
             max_num_publishers,
-	    publish_time,
-	    prev_publish_time,
-	    prev_price,
-	    prev_conf,
+            attestation_time,
+            publish_time,
+            prev_publish_time,
+            prev_price,
+            prev_conf,
         })
     }
 }
@@ -504,41 +434,27 @@ impl PriceAttestation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pyth_sdk_solana::state::{
-        PriceStatus,
-        PriceType,
-        Rational,
-    };
+    use pyth_sdk_solana::state::PriceStatus;
 
     fn mock_attestation(prod: Option<[u8; 32]>, price: Option<[u8; 32]>) -> PriceAttestation {
         let product_id_bytes = prod.unwrap_or([21u8; 32]);
         let price_id_bytes = price.unwrap_or([222u8; 32]);
         PriceAttestation {
-            product_id:          Pubkey::new_from_array(product_id_bytes),
-            price_id:            Pubkey::new_from_array(price_id_bytes),
-            price:               0x2bad2feed7,
-            price_type:          PriceType::Price,
-            ema_price:           Rational {
-                val:   -42,
-                numer: 15,
-                denom: 37,
-            },
-            ema_conf:            Rational {
-                val:   42,
-                numer: 1111,
-                denom: 2222,
-            },
-            expo:                -3,
-            status:              PriceStatus::Trading,
-            confidence_interval: 101,
-            corp_act:            CorpAction::NoCorpAct,
-            timestamp:           (0xdeadbeeffadedeedu64) as i64,
-	    num_publishers: 123212u32,
-	    max_num_publishers: 321232u32,
-	    publish_time: 0xdeadbeefi64,
-	    prev_publish_time: 0xdeadbabei64,
-	    prev_price: 0xdeadfacebeefi64,
-	    prev_conf: 0xbadbadbeefu64, // I could do this all day -SD
+            product_id:         Pubkey::new_from_array(product_id_bytes),
+            price_id:           Pubkey::new_from_array(price_id_bytes),
+            price:              0x2bad2feed7,
+            conf:               101,
+            ema_price:          -42,
+            ema_conf:           42,
+            expo:               -3,
+            status:             PriceStatus::Trading,
+            num_publishers:     123212u32,
+            max_num_publishers: 321232u32,
+            attestation_time:   (0xdeadbeeffadedeedu64) as i64,
+            publish_time:       0xdeadbeefi64,
+            prev_publish_time:  0xdeadbabei64,
+            prev_price:         0xdeadfacebeefi64,
+            prev_conf:          0xbadbadbeefu64, // I could do this all day -SD
         }
     }
 
@@ -574,7 +490,12 @@ mod tests {
     #[test]
     fn test_batch_serde() -> Result<(), ErrBox> {
         let attestations: Vec<_> = (1..=10)
-            .map(|i| mock_attestation(Some([(i % 256) as u8; 32]), Some([(255 - (i % 256)) as u8; 32])))
+            .map(|i| {
+                mock_attestation(
+                    Some([(i % 256) as u8; 32]),
+                    Some([(255 - (i % 256)) as u8; 32]),
+                )
+            })
             .collect();
 
         let batch_attestation = BatchPriceAttestation {

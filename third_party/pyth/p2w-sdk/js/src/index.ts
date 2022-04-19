@@ -2,6 +2,20 @@ import { getSignedVAA, CHAIN_ID_SOLANA } from "@certusone/wormhole-sdk";
 import { zeroPad } from "ethers/lib/utils";
 import { PublicKey } from "@solana/web3.js";
 
+let _P2W_WASM: any = undefined;
+
+
+async function importWasm() {
+    if (!_P2W_WASM) {
+	if (typeof window === 'undefined') {
+	  _P2W_WASM = await import("./solana/p2w-core/nodejs/p2w_sdk");
+	} else {
+	  _P2W_WASM = await import("./solana/p2w-core/bundler/p2w_sdk");
+	}
+    }
+    return _P2W_WASM;
+}
+
 
 /*
   // Definitions exist in p2w-sdk/rust/
@@ -88,10 +102,6 @@ In version 2 prices are sent in batch with the following structure:
 
 */
 
-export const PYTH_PRICE_ATTESTATION_MIN_LENGTH: number = 150;
-export const PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH: number =
-    11 + PYTH_PRICE_ATTESTATION_MIN_LENGTH;
-
 export type Rational = {
     value: BigInt;
     numerator: BigInt;
@@ -99,121 +109,61 @@ export type Rational = {
 };
 
 export type PriceAttestation = {
-    magic: number;
-    version: number;
-    payloadId: number;
     productId: string;
     priceId: string;
-    priceType: number;
     price: BigInt;
-    exponent: number;
-    emaPrice: Rational;
-    emaConfidence: Rational;
-    confidenceInterval: BigInt;
+    conf: BigInt;
+    expo: number;
+    emaPrice: BigInt;
+    emaConf: BigInt;
     status: number;
-    corpAct: number;
-    timestamp: BigInt;
+    numPublishers: BigInt;
+    maxNumPublishers: BigInt;
+    attestationTime: BigInt;
+    publishTime: BigInt;
+    prevPublishTime: BigInt;
+    prevPrice: BigInt;
+    prevConf: BigInt;
 };
 
 export type BatchPriceAttestation = {
-    magic: number;
-    version: number;
-    payloadId: number;
-    nAttestations: number;
-    attestationSize: number;
     priceAttestations: PriceAttestation[];
 };
 
-export const PYTH_MAGIC: number = 0x50325748;
-
-function isPyth(payload: Buffer): boolean {
-    if (payload.length < 4) return false;
-    if (
-        payload[0] === 80 &&
-        payload[1] === 50 &&
-        payload[2] === 87 &&
-        payload[3] === 72
-    ) {
-        // The numbers correspond to "P2WH"
-        return true;
-    }
-
-    return false;
-}
-
-export function parsePriceAttestation(arr: Buffer): PriceAttestation {
+export function rawToPriceAttestation(rawVal: any): PriceAttestation {
     return {
-        magic: arr.readUInt32BE(0),
-        version: arr.readUInt16BE(4),
-        payloadId: arr[6],
-        productId: arr.slice(7, 7 + 32).toString("hex"),
-        priceId: arr.slice(39, 39 + 32).toString("hex"),
-        priceType: arr[71],
-        price: arr.readBigInt64BE(72),
-        exponent: arr.readInt32BE(80),
-        emaPrice: {
-            value: arr.readBigInt64BE(84),
-            numerator: arr.readBigInt64BE(92),
-            denominator: arr.readBigInt64BE(100),
-        },
-        emaConfidence: {
-            value: arr.readBigInt64BE(108),
-            numerator: arr.readBigInt64BE(116),
-            denominator: arr.readBigInt64BE(124),
-        },
-        confidenceInterval: arr.readBigUInt64BE(132),
-        status: arr.readUInt32BE(140),
-        corpAct: arr.readUInt32BE(141),
-        timestamp: arr.readBigUInt64BE(142),
+	productId: rawVal.product_id,
+	priceId: rawVal.price_id,
+	price: rawVal.price,
+	conf: rawVal.conf,
+	expo: rawVal.expo,
+	emaPrice: rawVal.ema_price,
+	emaConf: rawVal.ema_conf,
+	status: rawVal.status,
+	numPublishers: rawVal.num_publishers,
+	maxNumPublishers: rawVal.max_num_publishers,
+	attestationTime: rawVal.attestation_time,
+	publishTime: rawVal.publish_time,
+	prevPublishTime: rawVal.prev_publish_time,
+	prevPrice: rawVal.prev_price,
+	prevConf: rawVal.prev_conf,
     };
 }
 
-export function parseBatchPriceAttestation(
+export async function parseBatchPriceAttestation(
     arr: Buffer
-): BatchPriceAttestation {
-    if (!isPyth(arr)) {
-        throw new Error(
-            "Cannot parse payload. Header mismatch: This is not a Pyth 2 Wormhole message"
-        );
-    }
+): Promise<BatchPriceAttestation> {
+    
+    let wasm = await importWasm();
+    let rawVal = await wasm.parse_batch_attestation(arr);
 
-    if (arr.length < PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH) {
-        throw new Error(
-            "Cannot parse payload. Payload length is wrong: length: " +
-            arr.length +
-            ", expected length to be at least:" +
-            PYTH_BATCH_PRICE_ATTESTATION_MIN_LENGTH
-        );
-    }
+    let priceAttestations = [];
 
-    const magic = arr.readUInt32BE(0);
-    const version = arr.readUInt16BE(4);
-    const payloadId = arr[6];
-    const nAttestations = arr.readUInt16BE(7);
-    const attestationSize = arr.readUInt16BE(9);
-
-    if (attestationSize < PYTH_PRICE_ATTESTATION_MIN_LENGTH) {
-        throw new Error(
-            `Cannot parse payload. Size of attestation ${attestationSize} is less than V2 length ${PYTH_PRICE_ATTESTATION_MIN_LENGTH}`
-        );
-    }
-
-    let priceAttestations: PriceAttestation[] = [];
-
-    let offset = 11;
-    for (let i = 0; i < nAttestations; i += 1) {
-        priceAttestations.push(
-            parsePriceAttestation(arr.subarray(offset, offset + attestationSize))
-        );
-        offset += attestationSize;
+    for (let rawAttestation of rawVal.price_attestations) {
+	priceAttestations.push(rawToPriceAttestation(rawAttestation));
     }
 
     return {
-        magic,
-        version,
-        payloadId,
-        nAttestations,
-        attestationSize,
         priceAttestations,
     };
 }
@@ -232,17 +182,17 @@ export function getBatchAttestationHashKey(
 }
 
 export function getBatchSummary(
-    batchAttestation: BatchPriceAttestation
+    batch: BatchPriceAttestation
 ): string {
     let abstractRepresentation = {
-        num_attestations: batchAttestation.nAttestations,
-        prices: batchAttestation.priceAttestations.map((priceAttestation) => {
+        num_attestations: batch.priceAttestations.length,
+        prices: batch.priceAttestations.map((priceAttestation) => {
             return {
                 price_id: priceAttestation.priceId,
-                price: computePrice(priceAttestation.price, priceAttestation.exponent),
+                price: computePrice(priceAttestation.price, priceAttestation.expo),
                 conf: computePrice(
-                    priceAttestation.confidenceInterval,
-                    priceAttestation.exponent
+                    priceAttestation.conf,
+                    priceAttestation.expo
                 ),
             };
         }),

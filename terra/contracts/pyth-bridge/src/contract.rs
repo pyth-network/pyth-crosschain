@@ -136,15 +136,15 @@ fn process_batch_attestation(
             price_attestation.num_publishers, // num_publishers data is currently unavailable
             price_attestation.product_id.to_bytes(),
             price_attestation.price,
-            price_attestation.confidence_interval,
-            price_attestation.ema_price.val,
-            price_attestation.ema_conf.val as u64,
+            price_attestation.conf,
+            price_attestation.ema_price,
+            price_attestation.ema_conf,
 	    price_attestation.prev_price,
 	    price_attestation.prev_conf,
 	    price_attestation.prev_publish_time,
         );
 
-        let attestation_time = Timestamp::from_seconds(price_attestation.timestamp as u64);
+        let attestation_time = Timestamp::from_seconds(price_attestation.attestation_time as u64);
 
         if update_price_feed_if_new(&mut deps, &env, price_feed, attestation_time)? {
             new_attestations_cnt += 1;

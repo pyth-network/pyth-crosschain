@@ -37,7 +37,7 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
             PythInternalStructs.PriceInfo memory latestPrice = latestPriceInfo(attestation.priceId);
 
-            if(attestation.timestamp > latestPrice.attestationTime) {
+            if(attestation.attestationTime > latestPrice.attestationTime) {
                 setLatestPriceInfo(attestation.priceId, newPriceInfo(attestation));
             }
         }
@@ -46,22 +46,21 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
     }
 
     function newPriceInfo(PythInternalStructs.PriceAttestation memory pa) private view returns (PythInternalStructs.PriceInfo memory info) {
-        info.attestationTime = pa.timestamp;
+        info.attestationTime = pa.attestationTime;
+	info.publishTime = pa.publishTime;
         info.arrivalTime = block.timestamp;
         info.arrivalBlock = block.number;
         
         info.priceFeed.id = pa.priceId;
         info.priceFeed.price = pa.price;
-        info.priceFeed.conf = pa.confidenceInterval;
+        info.priceFeed.conf = pa.conf;
+        info.priceFeed.expo = pa.expo;
         info.priceFeed.status = PythStructs.PriceStatus(pa.status);
-        info.priceFeed.expo = pa.exponent;
-        info.priceFeed.emaPrice = pa.emaPrice.value;
-        info.priceFeed.emaConf = uint64(pa.emaConf.value);
+        info.priceFeed.emaPrice = pa.emaPrice;
+        info.priceFeed.emaConf = pa.emaConf;
         info.priceFeed.productId = pa.productId;
-
-        // These aren't sent in the wire format yet
-        info.priceFeed.numPublishers = 0;
-        info.priceFeed.maxNumPublishers = 0;
+        info.priceFeed.numPublishers = pa.numPublishers;
+        info.priceFeed.maxNumPublishers = pa.maxNumPublishers;
         return info;
     }
 
@@ -84,14 +83,38 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
         index += 4;
         require(bpa.header.magic == 0x50325748, "invalid magic value");
 
-        bpa.header.version = encoded.toUint16(index);
+        bpa.header.versionMajor = encoded.toUint16(index);
         index += 2;
-        require(bpa.header.version == 2, "invalid version");
+        require(bpa.header.versionMajor == 3, "invalid version major, expected 3");
+
+        bpa.header.versionMinor = encoded.toUint16(index);
+        index += 2;
+        require(bpa.header.versionMinor >= 0, "invalid version minor, expected 0 or more");
+
+	bpa.header.hdrSize = encoded.toUint16(index);
+	index += 2;
+
+	// NOTE(2022-04-19): Currently, only payloadId comes after
+	// hdrSize. Future extra header fields must be read using a
+	// separate offset to respect hdrSize, i.e.:
+        // 
+	// uint hdrIndex = 0;
+	// bpa.header.payloadId = encoded.toUint8(index + hdrIndex);
+	// hdrIndex += 1;
+        //
+	// bpa.header.someNewField = encoded.toUint32(index + hdrIndex);
+	// hdrIndex += 4;
+	//
+	// // Skip remaining unknown header bytes
+	// index += bpa.header.hdrSize;
 
         bpa.header.payloadId = encoded.toUint8(index);
-        index += 1;
-        // Payload ID of 2 required for batch header
-        require(bpa.header.payloadId == 2, "invalid payload ID");
+
+	// Skip remaining unknown header bytes
+	index += bpa.header.hdrSize;
+
+        // Payload ID of 2 required for batch headerBa
+        require(bpa.header.payloadId == 2, "invalid payload ID, expected 2 for BatchPriceAttestation");
 
         // Parse the number of attestations
         bpa.nAttestations = encoded.toUint16(index);
@@ -111,76 +134,50 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
 	    // for readability and easier debugging.
 	    uint attestationIndex = 0;
 
-            // Header
-            bpa.attestations[j].header.magic = encoded.toUint32(index + attestationIndex);
-            attestationIndex += 4;
-            require(bpa.attestations[j].header.magic == 0x50325748, "invalid magic value");
-
-            bpa.attestations[j].header.version = encoded.toUint16(index + attestationIndex);
-            attestationIndex += 2;
-            require(bpa.attestations[j].header.version == 2, "invalid version");
-
-            bpa.attestations[j].header.payloadId = encoded.toUint8(index + attestationIndex);
-            attestationIndex += 1;
-            // Payload ID of 1 required for individual attestation
-            require(bpa.attestations[j].header.payloadId == 1, "invalid payload ID");
-
             // Attestation
             bpa.attestations[j].productId = encoded.toBytes32(index + attestationIndex);
             attestationIndex += 32;
 
             bpa.attestations[j].priceId = encoded.toBytes32(index + attestationIndex);
             attestationIndex += 32;
-            bpa.attestations[j].priceType = encoded.toUint8(index + attestationIndex);
-            attestationIndex += 1;
 
             bpa.attestations[j].price = int64(encoded.toUint64(index + attestationIndex));
             attestationIndex += 8;
 
-            bpa.attestations[j].exponent = int32(encoded.toUint32(index + attestationIndex));
+            bpa.attestations[j].conf = encoded.toUint64(index + attestationIndex);
+            attestationIndex += 8;
+
+            bpa.attestations[j].expo = int32(encoded.toUint32(index + attestationIndex));
             attestationIndex += 4;
 
-            bpa.attestations[j].emaPrice.value = int64(encoded.toUint64(index + attestationIndex));
-            attestationIndex += 8;
-            bpa.attestations[j].emaPrice.numerator = int64(encoded.toUint64(index + attestationIndex));
-            attestationIndex += 8;
-            bpa.attestations[j].emaPrice.denominator = int64(encoded.toUint64(index + attestationIndex));
+            bpa.attestations[j].emaPrice = int64(encoded.toUint64(index + attestationIndex));
             attestationIndex += 8;
 
-            bpa.attestations[j].emaConf.value = int64(encoded.toUint64(index + attestationIndex));
-            attestationIndex += 8;
-            bpa.attestations[j].emaConf.numerator = int64(encoded.toUint64(index + attestationIndex));
-            attestationIndex += 8;
-            bpa.attestations[j].emaConf.denominator = int64(encoded.toUint64(index + attestationIndex));
-            attestationIndex += 8;
-
-            bpa.attestations[j].confidenceInterval = encoded.toUint64(index + attestationIndex);
+            bpa.attestations[j].emaConf = encoded.toUint64(index + attestationIndex);
             attestationIndex += 8;
 
             bpa.attestations[j].status = encoded.toUint8(index + attestationIndex);
             attestationIndex += 1;
-            bpa.attestations[j].corpAct = encoded.toUint8(index + attestationIndex);
-            attestationIndex += 1;
 
-            bpa.attestations[j].timestamp = encoded.toUint64(index + attestationIndex);
-            attestationIndex += 8;
-
-            bpa.attestations[j].num_publishers = encoded.toUint32(index + attestationIndex);
+            bpa.attestations[j].numPublishers = encoded.toUint32(index + attestationIndex);
             attestationIndex += 4;
 
-            bpa.attestations[j].max_num_publishers = encoded.toUint32(index + attestationIndex);
+            bpa.attestations[j].maxNumPublishers = encoded.toUint32(index + attestationIndex);
             attestationIndex += 4;
 
-            bpa.attestations[j].publish_time = encoded.toUint64(index + attestationIndex);
+            bpa.attestations[j].attestationTime = encoded.toUint64(index + attestationIndex);
             attestationIndex += 8;
 
-            bpa.attestations[j].prev_publish_time = encoded.toUint64(index + attestationIndex);
+            bpa.attestations[j].publishTime = encoded.toUint64(index + attestationIndex);
             attestationIndex += 8;
 
-            bpa.attestations[j].prev_price = int64(encoded.toUint64(index + attestationIndex));
+            bpa.attestations[j].prevPublishTime = encoded.toUint64(index + attestationIndex);
             attestationIndex += 8;
 
-            bpa.attestations[j].prev_conf = encoded.toUint64(index + attestationIndex);
+            bpa.attestations[j].prevPrice = int64(encoded.toUint64(index + attestationIndex));
+            attestationIndex += 8;
+
+            bpa.attestations[j].prevConf = encoded.toUint64(index + attestationIndex);
             attestationIndex += 8;
 
 	    require(attestationIndex <= bpa.attestationSize, "INTERNAL: Consumed more than `attestationSize` bytes");

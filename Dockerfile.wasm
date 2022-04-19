@@ -43,4 +43,5 @@ RUN --mount=type=cache,target=/root/.cache \
 
 FROM scratch AS export
 
-COPY --from=build /usr/src/bridge/third_party/pyth/p2w-sdk/rust/bundler third_party/pyth/p2w-sdk/js/src/solana/p2w-core
+COPY --from=build /usr/src/bridge/third_party/pyth/p2w-sdk/rust/bundler third_party/pyth/p2w-sdk/js/src/solana/p2w-core/bundler
+COPY --from=build /usr/src/bridge/third_party/pyth/p2w-sdk/rust/nodejs third_party/pyth/p2w-sdk/js/src/solana/p2w-core/nodejs
