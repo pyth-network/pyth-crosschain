@@ -36,6 +36,24 @@ export class PromClient {
     help: "Freshness time of Vaa (time difference of Vaa and request time)",
     buckets: [1, 5, 10, 15, 30, 60, 120, 180]
   });
+  private apiLatestPriceFeedRequestsCounter = new client.Counter({
+    name: `${SERVICE_PREFIX}api_latest_price_feed_requests_received`,
+    help: "Number of requests for latest Price Feed of a price feed id"
+  });
+  private apiLatestPriceFeedNotFoundResponseCounter = new client.Counter({
+    name: `${SERVICE_PREFIX}api_latest_price_feed_not_found_response`,
+    help: "Number of not found responses for latest Price Feed of a price feed id"
+  });
+  private apiLatestPriceFeedSuccessResponseCounter = new client.Counter({
+    name: `${SERVICE_PREFIX}api_latest_price_feed_success_response`,
+    help: "Number of successful responses for latest vaa of a price feed id"
+  });
+  private apiLatestPriceFeedFreshnessHistogram = new client.Histogram({
+    name: `${SERVICE_PREFIX}api_latest_price_feed_freshness`,
+    help: "Freshness time of Vaa (time difference of retrieval time and request time)",
+    buckets: [1, 5, 10, 15, 30, 60, 120, 180]
+  });
+
   // End metrics
 
   private server = http.createServer(async (req, res) => {
@@ -54,10 +72,16 @@ export class PromClient {
     this.collectDefaultMetrics({ register: this.register, prefix: SERVICE_PREFIX });
     // Register each metric
     this.register.registerMetric(this.receivedVaaCounter);
+    
     this.register.registerMetric(this.apiLatestVaaRequestsCounter);
     this.register.registerMetric(this.apiLatestVaaNotFoundResponseCounter);
     this.register.registerMetric(this.apiLatestVaaSuccessResponseCounter);
     this.register.registerMetric(this.apiLatestVaaFreshnessHistogram);
+
+    this.register.registerMetric(this.apiLatestPriceFeedRequestsCounter);
+    this.register.registerMetric(this.apiLatestPriceFeedNotFoundResponseCounter);
+    this.register.registerMetric(this.apiLatestPriceFeedSuccessResponseCounter);
+    this.register.registerMetric(this.apiLatestPriceFeedFreshnessHistogram);
     // End registering metric
 
     logger.info("prometheus client listening on port " + config.port);
@@ -82,5 +106,21 @@ export class PromClient {
 
   addApiLatestVaaFreshness(duration: DurationInSec) {
     this.apiLatestVaaFreshnessHistogram.observe(duration);
+  }
+
+  incApiLatestPriceFeedRequests() {
+    this.apiLatestPriceFeedRequestsCounter.inc();
+  }
+
+  incApiLatestPriceFeedNotFoundResponse() {
+    this.apiLatestPriceFeedNotFoundResponseCounter.inc();
+  }
+
+  incApiLatestPriceFeedSuccessResponse() {
+    this.apiLatestPriceFeedSuccessResponseCounter.inc();
+  }
+
+  addApiLatestPriceFeedFreshness(duration: DurationInSec) {
+    this.apiLatestPriceFeedFreshnessHistogram.observe(duration);
   }
 }
