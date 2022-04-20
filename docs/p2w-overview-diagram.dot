@@ -1,0 +1,36 @@
+digraph {
+    labelloc="t";
+    label = "Pyth2wormhole price update flow overview";
+    node [shape="box"];
+    subgraph cluster_sol {
+	edge [style="dashed" ];
+	label = "SOL";
+	wh_sol [label="Wormhole SOL contract"];
+	p2wa [label="Pyth2wormhole attestation contract"];
+	p2wa -> p2wa [label="sanity-checked read\nfrom specified\nPyth accounts"];
+	p2wa -> wh_sol [label="post_message()"];
+    }
+
+    subgraph cluster_wh {
+	label = "Wormhole";
+	guardians [label="Wormhole\nguardian\nnetwork"];
+    }
+
+    subgraph cluster_tc {
+	edge [style="dashed" ];
+	label = "Target chains";
+	p2w_tc [label="P2W on Terra/BSC/ETH/..."];
+	wh_tc [label="Wormhole\ntarget\nchain-specific\nsignature\nverification"];
+
+	p2w_tc:se -> wh_tc:ne [label="parseAndVerifyVM()", labelloc="b"];
+	wh_tc:nw -> p2w_tc:sw [label="Verify recency and store in cache"];
+    }
+
+    attester [label="Attester\ncrank"];
+    relay [label="Relayer\ncranks"];
+    spy [label="Spy\nguardian"];
+
+    attester -> p2wa;
+    wh_sol -> guardians;
+    guardians -> spy -> relay -> p2w_tc;
+}
