@@ -1,20 +1,19 @@
 import express from "express";
 import cors from "cors";
 import { Request, Response } from "express";
-import { PriceFeedVaaInfo } from "./listen";
+import { PriceFeedPriceInfo } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
 import { DurationInSec } from "./helpers";
 
-
 export class RestAPI {
   private port: number;
-  private priceFeedVaaInfo: PriceFeedVaaInfo;
+  private priceFeedVaaInfo: PriceFeedPriceInfo;
   private isReady: (() => boolean) | undefined;
   private promClient: PromClient | undefined;
 
   constructor(config: { port: number; }, 
-    priceFeedVaaInfo: PriceFeedVaaInfo,
+    priceFeedVaaInfo: PriceFeedPriceInfo,
     isReady?: () => boolean,
     promClient?: PromClient) {
     this.port = config.port;
@@ -38,9 +37,9 @@ export class RestAPI {
       this.promClient?.incApiLatestVaaRequests();
       logger.info(`Received latest_vaa_bytes request for ${req.params.price_feed_id}`)
 
-      let latestVaa = this.priceFeedVaaInfo.getLatestVaaForPriceFeed(req.params.price_feed_id);
+      let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(req.params.price_feed_id);
 
-      if (latestVaa === undefined) {
+      if (latestPriceInfo === undefined) {
         this.promClient?.incApiLatestVaaNotFoundResponse();
         res.sendStatus(404);
         return;
@@ -48,14 +47,38 @@ export class RestAPI {
 
       this.promClient?.incApiLatestVaaSuccessResponse();
 
-      const freshness: DurationInSec = (new Date).getTime()/1000 - latestVaa.receiveTime;
+      const freshness: DurationInSec = (new Date).getTime()/1000 - latestPriceInfo.receiveTime;
       this.promClient?.addApiLatestVaaFreshness(freshness);
 
       res.status(200);
-      res.write(latestVaa.vaaBytes);
+      res.write(latestPriceInfo.vaaBytes);
       res.end();
     });
     endpoints.push("latest_vaa_bytes/<price_feed_id>");
+
+    app.get("/latest_price_feed/:price_feed_id", (req: Request, res: Response) => {
+      this.promClient?.incApiLatestPriceFeedRequests();
+      logger.info(`Received latest_price_feed request for ${req.params.price_feed_id}`)
+
+      let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(req.params.price_feed_id);
+
+      if (latestPriceInfo === undefined) {
+        this.promClient?.incApiLatestPriceFeedNotFoundResponse();
+        res.sendStatus(404);
+        return;
+      }
+
+      this.promClient?.incApiLatestPriceFeedSuccessResponse();
+
+      const freshness: DurationInSec = (new Date).getTime()/1000 - latestPriceInfo.receiveTime;
+      this.promClient?.addApiLatestPriceFeedFreshness(freshness);
+
+      res.status(200);
+      res.write(latestPriceInfo.priceFeed.toJson());
+      res.end();
+    });
+    endpoints.push("latest_price_feed/<price_feed_id>");
+
 
     app.get("/ready", (_, res: Response) => {
       if (this.isReady!()) {
