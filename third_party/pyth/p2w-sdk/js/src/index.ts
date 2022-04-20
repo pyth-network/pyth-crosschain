@@ -273,22 +273,22 @@ export function priceAttestationToPriceFeed(priceAttestation: PriceAttestation):
         throw(new Error(`Invalid attestation status: ${priceAttestation.status}`));
     }
 
-    return new PriceFeed(
-        priceAttestation.confidenceInterval.toString(),
-        priceAttestation.emaConfidence.value.toString(),
-        priceAttestation.emaPrice.value.toString(),
-        priceAttestation.exponent,
-        priceAttestation.priceId,
-        0,
-        0,
-        "0",
-        "0",
-        0,
-        priceAttestation.price.toString(),
-        priceAttestation.productId,
-        0,
+    return new PriceFeed({
+        conf: priceAttestation.confidenceInterval.toString(),
+        emaConf: priceAttestation.emaConfidence.value.toString(),
+        emaPrice: priceAttestation.emaPrice.value.toString(),
+        expo: priceAttestation.exponent,
+        id: priceAttestation.priceId,
+        maxNumPublishers: 0,
+        numPublishers: 0,
+        prevConf: "0",
+        prevPrice: "0",
+        prevPublishTime: 0,
+        price: priceAttestation.price.toString(),
+        productId: priceAttestation.productId,
+        publishTime: 0,
         status
-    )
+    })
 }
 
 function computePrice(rawPrice: BigInt, expo: number): number {
