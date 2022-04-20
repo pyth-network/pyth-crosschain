@@ -28,7 +28,7 @@ export class PromClient {
     help: "Number of not found responses for latest vaa of a price feed request"
   });
   private apiLatestVaaSuccessResponseCounter = new client.Counter({
-    name: `${SERVICE_PREFIX}api_latest_vaa_not_found`,
+    name: `${SERVICE_PREFIX}api_latest_vaa_success_response`,
     help: "Number of successful responses for latest vaa of a price feed request"
   });
   private apiLatestVaaFreshnessHistogram = new client.Histogram({
