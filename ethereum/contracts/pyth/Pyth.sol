@@ -18,7 +18,7 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
         address wormhole,
         uint16 pyth2WormholeChainId,
         bytes32 pyth2WormholeEmitter
-    ) virtual public {        
+    ) virtual public {
         setWormhole(wormhole);
         setPyth2WormholeChainId(pyth2WormholeChainId);
         setPyth2WormholeEmitter(pyth2WormholeEmitter);
@@ -47,10 +47,10 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
     function newPriceInfo(PythInternalStructs.PriceAttestation memory pa) private view returns (PythInternalStructs.PriceInfo memory info) {
         info.attestationTime = pa.attestationTime;
-	info.publishTime = pa.publishTime;
+        info.publishTime = pa.publishTime;
         info.arrivalTime = block.timestamp;
         info.arrivalBlock = block.number;
-        
+
         info.priceFeed.id = pa.priceId;
         info.priceFeed.price = pa.price;
         info.priceFeed.conf = pa.conf;
@@ -74,7 +74,7 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
         return true;
     }
 
-    
+
     function parseBatchPriceAttestation(bytes memory encoded) public pure returns (PythInternalStructs.BatchPriceAttestation memory bpa) {
         uint index = 0;
 
@@ -91,27 +91,27 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
         index += 2;
         require(bpa.header.versionMinor >= 0, "invalid version minor, expected 0 or more");
 
-	bpa.header.hdrSize = encoded.toUint16(index);
-	index += 2;
+        bpa.header.hdrSize = encoded.toUint16(index);
+        index += 2;
 
-	// NOTE(2022-04-19): Currently, only payloadId comes after
-	// hdrSize. Future extra header fields must be read using a
-	// separate offset to respect hdrSize, i.e.:
-        // 
-	// uint hdrIndex = 0;
-	// bpa.header.payloadId = encoded.toUint8(index + hdrIndex);
-	// hdrIndex += 1;
+        // NOTE(2022-04-19): Currently, only payloadId comes after
+        // hdrSize. Future extra header fields must be read using a
+        // separate offset to respect hdrSize, i.e.:
         //
-	// bpa.header.someNewField = encoded.toUint32(index + hdrIndex);
-	// hdrIndex += 4;
-	//
-	// // Skip remaining unknown header bytes
-	// index += bpa.header.hdrSize;
+        // uint hdrIndex = 0;
+        // bpa.header.payloadId = encoded.toUint8(index + hdrIndex);
+        // hdrIndex += 1;
+        //
+        // bpa.header.someNewField = encoded.toUint32(index + hdrIndex);
+        // hdrIndex += 4;
+        //
+        // // Skip remaining unknown header bytes
+        // index += bpa.header.hdrSize;
 
         bpa.header.payloadId = encoded.toUint8(index);
 
-	// Skip remaining unknown header bytes
-	index += bpa.header.hdrSize;
+        // Skip remaining unknown header bytes
+        index += bpa.header.hdrSize;
 
         // Payload ID of 2 required for batch headerBa
         require(bpa.header.payloadId == 2, "invalid payload ID, expected 2 for BatchPriceAttestation");
@@ -129,10 +129,10 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
         // Deserialize each attestation
         for (uint j=0; j < bpa.nAttestations; j++) {
-	    // NOTE: We don't advance the global index immediately.
-	    // attestationIndex is an attestation-local offset used
-	    // for readability and easier debugging.
-	    uint attestationIndex = 0;
+            // NOTE: We don't advance the global index immediately.
+            // attestationIndex is an attestation-local offset used
+            // for readability and easier debugging.
+            uint attestationIndex = 0;
 
             // Attestation
             bpa.attestations[j].productId = encoded.toBytes32(index + attestationIndex);
@@ -180,15 +180,15 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
             bpa.attestations[j].prevConf = encoded.toUint64(index + attestationIndex);
             attestationIndex += 8;
 
-	    require(attestationIndex <= bpa.attestationSize, "INTERNAL: Consumed more than `attestationSize` bytes");
+            require(attestationIndex <= bpa.attestationSize, "INTERNAL: Consumed more than `attestationSize` bytes");
 
-	    // Respect specified attestation size for forward-compat
-	    index += bpa.attestationSize;
+            // Respect specified attestation size for forward-compat
+            index += bpa.attestationSize;
         }
     }
 
     /// Maximum acceptable time period before price is considered to be stale.
-    /// 
+    ///
     /// This includes attestation delay which currently might up to a minute.
     uint private constant VALID_TIME_PERIOD_SECS = 180;
 
@@ -204,7 +204,7 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
         if (diff(block.timestamp, info.attestationTime) > VALID_TIME_PERIOD_SECS) {
             info.priceFeed.status = PythStructs.PriceStatus.UNKNOWN;
         }
-        
+
         return info.priceFeed;
     }
 

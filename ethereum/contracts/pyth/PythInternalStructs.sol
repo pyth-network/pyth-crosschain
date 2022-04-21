@@ -21,7 +21,7 @@ contract PythInternalStructs {
         uint32 magic;
         uint16 versionMajor;
         uint16 versionMinor;
-	uint16 hdrSize;
+        uint16 hdrSize;
         uint8 payloadId;
     }
 
@@ -34,13 +34,13 @@ contract PythInternalStructs {
         int64 emaPrice;
         uint64 emaConf;
         uint8 status;
-	uint32 numPublishers;
-	uint32 maxNumPublishers;
+        uint32 numPublishers;
+        uint32 maxNumPublishers;
         uint64 attestationTime;
-	uint64 publishTime;
-	uint64 prevPublishTime;
-	int64 prevPrice;
-	uint64 prevConf;
+        uint64 publishTime;
+        uint64 prevPublishTime;
+        int64 prevPrice;
+        uint64 prevConf;
     }
 
     struct Rational {
@@ -60,7 +60,7 @@ contract PythInternalStructs {
     struct PriceInfo {
         PythStructs.PriceFeed priceFeed;
         uint256 attestationTime;
-	uint256 publishTime;
+        uint256 publishTime;
         uint256 arrivalTime;
         uint256 arrivalBlock;
     }
