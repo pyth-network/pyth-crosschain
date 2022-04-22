@@ -50,9 +50,7 @@ export class RestAPI {
       const freshness: DurationInSec = (new Date).getTime()/1000 - latestPriceInfo.receiveTime;
       this.promClient?.addApiLatestVaaFreshness(freshness);
 
-      res.status(200);
-      res.write(latestPriceInfo.vaaBytes);
-      res.end();
+      res.send(latestPriceInfo.vaaBytes);
     });
     endpoints.push("latest_vaa_bytes/<price_feed_id>");
 
@@ -62,8 +60,7 @@ export class RestAPI {
       logger.info(`Received latest_price_feed request for query: ${req.query}`);
 
       if (req.query.id === undefined) {
-        res.status(400);
-        res.end("No id is provided");
+        res.status(400).send("No id is provided");
         return;
       }
 
@@ -77,14 +74,12 @@ export class RestAPI {
           if (typeof(entry) === "string") {
             priceIds.push(entry);
           } else {
-            res.status(400);
-            res.end("id is expected to be string or an array of strings");
+            res.status(400).send("id is expected to be string or an array of strings");
             return;    
           }
         }
       } else {
-        res.status(400);
-        res.end("id is expected to be string or an array of strings");
+        res.status(400).send("id is expected to be a hex string or an array of hex strings");
         return;
       }
 
@@ -95,8 +90,7 @@ export class RestAPI {
 
         if (latestPriceInfo === undefined) {
           this.promClient?.incApiLatestPriceFeedNotFoundResponse();
-          res.status(404);
-          res.end(`Price Feed with id ${id} not found`);
+          res.status(404).send(`Price Feed with id ${id} not found`);
           return;
         }
     
@@ -108,9 +102,7 @@ export class RestAPI {
 
       this.promClient?.incApiLatestPriceFeedSuccessResponse();
 
-      res.status(200);
-      res.write(JSON.stringify(responseJson));
-      res.end();
+      res.json(responseJson);
     });
     endpoints.push("latest_price_feed/<price_feed_id>");
 
