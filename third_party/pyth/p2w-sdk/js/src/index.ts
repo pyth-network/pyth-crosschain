@@ -1,6 +1,7 @@
 import { getSignedVAA, CHAIN_ID_SOLANA } from "@certusone/wormhole-sdk";
 import { zeroPad } from "ethers/lib/utils";
 import { PublicKey } from "@solana/web3.js";
+import { PriceFeed, PriceStatus } from "@pythnetwork/pyth-sdk-js";
 
 
 /*
@@ -162,8 +163,8 @@ export function parsePriceAttestation(arr: Buffer): PriceAttestation {
             denominator: arr.readBigInt64BE(124),
         },
         confidenceInterval: arr.readBigUInt64BE(132),
-        status: arr.readUInt32BE(140),
-        corpAct: arr.readUInt32BE(141),
+        status: arr[140],
+        corpAct: arr[141],
         timestamp: arr.readBigUInt64BE(142),
     };
 }
@@ -255,6 +256,39 @@ export async function getSignedAttestation(host: string, p2w_addr: string, seque
 
     let emitterHex = sol_addr2buf(emitter).toString("hex");
     return await getSignedVAA(host, CHAIN_ID_SOLANA, emitterHex, "" + sequence, extraGrpcOpts);
+}
+
+export function priceAttestationToPriceFeed(priceAttestation: PriceAttestation): PriceFeed {
+    let status;
+    if (priceAttestation.status === 0) {
+        status = PriceStatus.Unknown;
+    } else if (priceAttestation.status === 1) {
+        status = PriceStatus.Trading;
+    } else if (priceAttestation.status === 2) {
+        status = PriceStatus.Halted;
+    } else if (priceAttestation.status === 3) {
+        status = PriceStatus.Auction;
+    } else {
+        throw(new Error(`Invalid attestation status: ${priceAttestation.status}`));
+    }
+
+    // FIXME: populate 0 fields once they are in priceAttestation
+    return new PriceFeed({
+        conf: priceAttestation.confidenceInterval.toString(),
+        emaConf: priceAttestation.emaConfidence.value.toString(),
+        emaPrice: priceAttestation.emaPrice.value.toString(),
+        expo: priceAttestation.exponent,
+        id: priceAttestation.priceId,
+        maxNumPublishers: 0,
+        numPublishers: 0,
+        prevConf: "0",
+        prevPrice: "0",
+        prevPublishTime: 0,
+        price: priceAttestation.price.toString(),
+        productId: priceAttestation.productId,
+        publishTime: 0,
+        status
+    })
 }
 
 function computePrice(rawPrice: BigInt, expo: number): number {
