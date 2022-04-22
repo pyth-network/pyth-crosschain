@@ -5,6 +5,7 @@ import { PriceFeedPriceInfo } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
 import { DurationInSec } from "./helpers";
+import { StatusCodes } from "http-status-codes";
 
 export class RestAPI {
   private port: number;
@@ -41,7 +42,7 @@ export class RestAPI {
 
       if (latestPriceInfo === undefined) {
         this.promClient?.incApiLatestVaaNotFoundResponse();
-        res.sendStatus(404);
+        res.sendStatus(StatusCodes.NOT_FOUND);
         return;
       }
 
@@ -60,11 +61,9 @@ export class RestAPI {
       logger.info(`Received latest_price_feed request for query: ${req.query}`);
 
       if (req.query.id === undefined) {
-        res.status(400).send("No id is provided");
+        res.status(StatusCodes.BAD_REQUEST).send("No id is provided");
         return;
       }
-
-      console.log(req.query);
 
       let priceIds: string[] = [];
       if (typeof(req.query.id) === "string") {
@@ -74,12 +73,12 @@ export class RestAPI {
           if (typeof(entry) === "string") {
             priceIds.push(entry);
           } else {
-            res.status(400).send("id is expected to be string or an array of strings");
+            res.status(StatusCodes.BAD_REQUEST).send("id is expected to be a hex string or an array of hex strings");
             return;    
           }
         }
       } else {
-        res.status(400).send("id is expected to be a hex string or an array of hex strings");
+        res.status(StatusCodes.BAD_REQUEST).send("id is expected to be a hex string or an array of hex strings");
         return;
       }
 
@@ -90,7 +89,7 @@ export class RestAPI {
 
         if (latestPriceInfo === undefined) {
           this.promClient?.incApiLatestPriceFeedNotFoundResponse();
-          res.status(404).send(`Price Feed with id ${id} not found`);
+          res.status(StatusCodes.NOT_FOUND).send(`Price Feed with id ${id} not found`);
           return;
         }
     
@@ -109,15 +108,15 @@ export class RestAPI {
 
     app.get("/ready", (_, res: Response) => {
       if (this.isReady!()) {
-        res.sendStatus(200);
+        res.sendStatus(StatusCodes.OK);
       } else {
-        res.sendStatus(503);
+        res.sendStatus(StatusCodes.SERVICE_UNAVAILABLE);
       }
     });
     endpoints.push('ready');
 
     app.get("/live", (_, res: Response) => {
-      res.sendStatus(200);
+      res.sendStatus(StatusCodes.OK);
     });
     endpoints.push("live");
 
