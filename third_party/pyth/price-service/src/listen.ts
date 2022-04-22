@@ -17,7 +17,7 @@ import { getBatchSummary, parseBatchPriceAttestation, priceAttestationToPriceFee
 import { ClientReadableStream } from "@grpc/grpc-js";
 import { FilterEntry, SubscribeSignedVAAResponse } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
 import { logger } from "./logging";
-import { PriceFeed } from "@pythnetwork/sdk";
+import { PriceFeed } from "@pythnetwork/pyth-sdk-js";
 
 export type PriceInfo = {
   vaaBytes: string,

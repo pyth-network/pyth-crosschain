@@ -1,7 +1,7 @@
 import { getSignedVAA, CHAIN_ID_SOLANA } from "@certusone/wormhole-sdk";
 import { zeroPad } from "ethers/lib/utils";
 import { PublicKey } from "@solana/web3.js";
-import { PriceFeed, PriceStatus } from "@pythnetwork/sdk";
+import { PriceFeed, PriceStatus } from "@pythnetwork/pyth-sdk-js";
 
 
 /*
@@ -259,7 +259,6 @@ export async function getSignedAttestation(host: string, p2w_addr: string, seque
 }
 
 export function priceAttestationToPriceFeed(priceAttestation: PriceAttestation): PriceFeed {
-    console.log(`status: ${priceAttestation.status}`);
     let status;
     if (priceAttestation.status === 0) {
         status = PriceStatus.Unknown;

@@ -74,7 +74,7 @@ export class RestAPI {
       this.promClient?.addApiLatestPriceFeedFreshness(freshness);
 
       res.status(200);
-      res.write(latestPriceInfo.priceFeed.toJson());
+      res.write(JSON.stringify(latestPriceInfo.priceFeed.toJson()));
       res.end();
     });
     endpoints.push("latest_price_feed/<price_feed_id>");
