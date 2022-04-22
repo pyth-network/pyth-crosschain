@@ -272,6 +272,7 @@ export function priceAttestationToPriceFeed(priceAttestation: PriceAttestation):
         throw(new Error(`Invalid attestation status: ${priceAttestation.status}`));
     }
 
+    // FIXME: populate 0 fields once they are in priceAttestation
     return new PriceFeed({
         conf: priceAttestation.confidenceInterval.toString(),
         emaConf: priceAttestation.emaConfidence.value.toString(),
