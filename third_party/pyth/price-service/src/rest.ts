@@ -1,11 +1,12 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
+import responseTime from "response-time";
 import { Request, Response, NextFunction } from "express";
 import { PriceFeedPriceInfo } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
-import { DurationInSec } from "./helpers";
+import { DurationInMs, DurationInSec } from "./helpers";
 import { StatusCodes } from "http-status-codes";
 
 const MORGAN_LOG_FORMAT = ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
@@ -40,6 +41,10 @@ export class RestAPI {
 
     app.use(morgan(MORGAN_LOG_FORMAT, { stream: winstonStream }));
 
+    app.use(responseTime((req: Request, res: Response, time: DurationInMs) => {
+      this.promClient?.addResponseTime(req.path, res.statusCode, time);
+    }))
+
     app.listen(this.port, () =>
       logger.debug("listening on REST port " + this.port)
     );
@@ -47,20 +52,15 @@ export class RestAPI {
     let endpoints: string[] = [];
 
     app.get("/latest_vaa_bytes/:price_feed_id", (req: Request, res: Response) => {
-      this.promClient?.incApiLatestVaaRequests();
-
       let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(req.params.price_feed_id);
 
       if (latestPriceInfo === undefined) {
-        this.promClient?.incApiLatestVaaNotFoundResponse();
         res.sendStatus(StatusCodes.NOT_FOUND);
         return;
       }
 
-      this.promClient?.incApiLatestVaaSuccessResponse();
-
       const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
-      this.promClient?.addApiLatestVaaFreshness(freshness);
+      this.promClient?.addApiRequestsPriceFreshness(req.path, freshness);
 
       res.send(latestPriceInfo.vaaBytes);
     });
@@ -68,8 +68,6 @@ export class RestAPI {
 
     // It will be called with query param `id` such as: `/latest_price_feed?id=xyz&id=abc
     app.get("/latest_price_feed", (req: Request, res: Response) => {
-      this.promClient?.incApiLatestPriceFeedRequests();
-
       if (req.query.id === undefined) {
         res.status(StatusCodes.BAD_REQUEST).send("No id is provided");
         return;
@@ -98,18 +96,15 @@ export class RestAPI {
         let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
 
         if (latestPriceInfo === undefined) {
-          this.promClient?.incApiLatestPriceFeedNotFoundResponse();
           res.status(StatusCodes.NOT_FOUND).send(`Price Feed with id ${id} not found`);
           return;
         }
 
         const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
-        this.promClient?.addApiLatestPriceFeedFreshness(freshness);
+        this.promClient?.addApiRequestsPriceFreshness(req.path, freshness);
 
         responseJson.push(latestPriceInfo.priceFeed.toJson());
       }
-
-      this.promClient?.incApiLatestPriceFeedSuccessResponse();
 
       res.json(responseJson);
     });

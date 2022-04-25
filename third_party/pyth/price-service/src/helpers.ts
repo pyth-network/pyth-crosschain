@@ -1,6 +1,7 @@
 // Time in seconds
 export type TimestampInSec = number;
 export type DurationInSec = number;
+export type DurationInMs = number;
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
