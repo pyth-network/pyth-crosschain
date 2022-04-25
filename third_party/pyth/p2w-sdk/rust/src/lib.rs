@@ -7,6 +7,7 @@
 //! the probable adversarial scenarios.
 
 use serde::{
+    Deserialize,
     Serialize,
     Serializer,
 };
@@ -35,10 +36,6 @@ pub mod wasm;
 #[cfg(feature = "wasm")]
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 use wasm_bindgen::prelude::*;
-
-pub mod utils;
-
-use utils::P2WPriceStatus;
 
 pub type ErrBox = Box<dyn std::error::Error>;
 
@@ -79,7 +76,7 @@ pub enum PayloadId {
 ///
 /// NOTE(2022-04-25): the serde attributes help prevent math errors,
 /// and no less annoying low-effort serialization override method is known.
-#[derive(Clone, Default, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Default, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PriceAttestation {
     pub product_id:         Pubkey,
@@ -93,7 +90,6 @@ pub struct PriceAttestation {
     pub ema_price:          i64,
     #[serde(serialize_with = "use_to_string")]
     pub ema_conf:           u64,
-    #[serde(with = "P2WPriceStatus")]
     pub status:             PriceStatus,
     pub num_publishers:     u32,
     pub max_num_publishers: u32,
