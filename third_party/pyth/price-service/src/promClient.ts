@@ -9,7 +9,7 @@ import { logger } from "./logging";
 // 2) Create a method to set the metric to a value (such as `incIncoming` function below)
 // 3) Register the metric using `register.registerMetric` function.
 
-const SERVICE_PREFIX = "price_service__";
+const SERVICE_PREFIX = "pyth__price_service__";
 
 export class PromClient {
   private register = new client.Registry();
@@ -31,7 +31,6 @@ export class PromClient {
     buckets: [1, 5, 10, 15, 30, 60, 120, 180],
     labelNames: ["path"]
   });
-
   // End metrics
 
   private server = http.createServer(async (req, res) => {
