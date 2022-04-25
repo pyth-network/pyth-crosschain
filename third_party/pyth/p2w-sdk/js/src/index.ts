@@ -16,92 +16,6 @@ async function importWasm() {
     return _P2W_WASM;
 }
 
-
-/*
-  // Definitions exist in p2w-sdk/rust/
-  
-  struct Rational {
-      int64 value;
-      int64 numerator;
-      int64 denominator;
-  }
-
-  struct PriceAttestation {
-      uint32 magic; // constant "P2WH"
-      uint16 version;
-
-      // PayloadID uint8 = 1
-      uint8 payloadId;
-
-      bytes32 productId;
-      bytes32 priceId;
-
-      uint8 priceType;
-
-      int64 price;
-      int32 exponent;
-
-      Rational emaPrice;
-      Rational emaConfidence;
-
-      uint64 confidenceInterval;
-
-      uint8 status;
-      uint8 corpAct;
-
-      uint64 timestamp;
-  }
-
-0   uint32        magic // constant "P2WH"
-4   u16           version
-6   u8            payloadId // 1
-7   [u8; 32]      productId
-39  [u8; 32]      priceId
-71  u8            priceType
-72  i64           price
-80  i32           exponent
-84  PythRational  emaPrice
-108 PythRational  emaConfidence
-132 u64           confidenceInterval
-140 u8            status
-141 u8            corpAct
-142 u64           timestamp
-
-In version 2 prices are sent in batch with the following structure:
-
-  struct BatchPriceAttestation {
-      uint32 magic; // constant "P2WH"
-      uint16 version;
-
-      // PayloadID uint8 = 2
-      uint8 payloadId;
-
-      // number of attestations 
-      uint16 nAttestations;
-
-      // Length of each price attestation in bytes
-      //
-      // This field is provided for forwards compatibility. Fields in future may be added in
-      // an append-only way allowing for parsers to continue to work by parsing only up to
-      // the fields they know, leaving unread input in the buffer. Code may still need to work
-      // with the full size of the value however, such as when iterating over lists of attestations,
-      // for these use-cases the structure size is included as a field.
-      //
-      // attestation_size >= 150
-      uint16 attestationSize;
-      
-      priceAttestations: PriceAttestation[]
-  }
-
-0   uint32    magic // constant "P2WH"
-4   u16       version
-6   u8        payloadId // 2
-7   u16       n_attestations
-9   u16       attestation_size // >= 150
-11  ..        price_attestation (Size: attestation_size x [n_attestations])
-
-*/
-
 export type Rational = {
     value: BigInt;
     numerator: BigInt;
@@ -157,15 +71,7 @@ export async function parseBatchPriceAttestation(
     let wasm = await importWasm();
     let rawVal = await wasm.parse_batch_attestation(arr);
 
-    let priceAttestations = [];
-
-    for (let rawAttestation of rawVal.price_attestations) {
-	priceAttestations.push(rawToPriceAttestation(rawAttestation));
-    }
-
-    return {
-        priceAttestations,
-    };
+    return rawVal;
 }
 
 // Returns a hash of all priceIds within the batch, it can be used to identify whether there is a

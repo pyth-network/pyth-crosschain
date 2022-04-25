@@ -6,6 +6,11 @@
 //! similar human-readable names and provide a failsafe for some of
 //! the probable adversarial scenarios.
 
+use serde::{
+    Serialize,
+    Serializer,
+};
+
 use std::borrow::Borrow;
 use std::convert::TryInto;
 use std::io::Read;
@@ -26,6 +31,14 @@ use solana_program::pubkey::Pubkey;
 #[cfg(feature = "wasm")]
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 pub mod wasm;
+
+#[cfg(feature = "wasm")]
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use wasm_bindgen::prelude::*;
+
+pub mod utils;
+
+use utils::P2WPriceStatus;
 
 pub type ErrBox = Box<dyn std::error::Error>;
 
@@ -63,26 +76,53 @@ pub enum PayloadId {
 /// Important: For maximum security, *both* product_id and price_id
 /// should be used as storage keys for known attestations in target
 /// chain logic.
+///
+/// NOTE(2022-04-25): the serde attributes help prevent math errors,
+/// and no less annoying low-effort serialization override method is known.
 #[derive(Clone, Default, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PriceAttestation {
     pub product_id:         Pubkey,
     pub price_id:           Pubkey,
+    #[serde(serialize_with = "use_to_string")]
     pub price:              i64,
+    #[serde(serialize_with = "use_to_string")]
     pub conf:               u64,
+    #[serde(serialize_with = "use_to_string")]
     pub expo:               i32,
+    #[serde(serialize_with = "use_to_string")]
     pub ema_price:          i64,
+    #[serde(serialize_with = "use_to_string")]
     pub ema_conf:           u64,
+    #[serde(with = "P2WPriceStatus")]
     pub status:             PriceStatus,
+    #[serde(serialize_with = "use_to_string")]
     pub num_publishers:     u32,
+    #[serde(serialize_with = "use_to_string")]
     pub max_num_publishers: u32,
+    #[serde(serialize_with = "use_to_string")]
     pub attestation_time:   UnixTimestamp,
+    #[serde(serialize_with = "use_to_string")]
     pub publish_time:       UnixTimestamp,
+    #[serde(serialize_with = "use_to_string")]
     pub prev_publish_time:  UnixTimestamp,
+    #[serde(serialize_with = "use_to_string")]
     pub prev_price:         i64,
+    #[serde(serialize_with = "use_to_string")]
     pub prev_conf:          u64,
 }
 
+/// Helper allowing ToString implementers to be serialized as strings accordingly
+pub fn use_to_string<T, S>(val: &T, s: S) -> Result<S::Ok, S::Error>
+where
+    T: ToString,
+    S: Serializer,
+{
+    s.serialize_str(&val.to_string())
+}
+
 #[derive(Clone, Default, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BatchPriceAttestation {
     pub price_attestations: Vec<PriceAttestation>,
 }
@@ -255,7 +295,7 @@ impl PriceAttestation {
             expo: price.expo,
             ema_price: price.ema_price.val,
             ema_conf: price.ema_conf.val as u64,
-            status: price.agg.status,
+            status: price.agg.status.into(),
             num_publishers: price.num_qt,
             max_num_publishers: price.num,
             attestation_time,
@@ -416,7 +456,7 @@ impl PriceAttestation {
             expo,
             ema_price,
             ema_conf,
-            status,
+            status: status.into(),
             num_publishers,
             max_num_publishers,
             attestation_time,
@@ -447,7 +487,7 @@ mod tests {
             ema_price:          -42,
             ema_conf:           42,
             expo:               -3,
-            status:             PriceStatus::Trading,
+            status:             PriceStatus::Trading.into(),
             num_publishers:     123212u32,
             max_num_publishers: 321232u32,
             attestation_time:   (0xdeadbeeffadedeedu64) as i64,
@@ -501,6 +541,7 @@ mod tests {
         let batch_attestation = BatchPriceAttestation {
             price_attestations: attestations,
         };
+        println!("Batch hex struct: {:#02X?}", batch_attestation);
 
         let serialized = batch_attestation.serialize()?;
         println!("Batch hex Bytes: {:02X?}", serialized);

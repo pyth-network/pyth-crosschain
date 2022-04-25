@@ -143,7 +143,7 @@ async function readinessProbeRoutine(port: number) {
 
 	    let parsedAttestations = (await parseBatchPriceAttestation(Buffer.from(parsedVaa.payload))).priceAttestations;
 
-	    console.log(`[seqno ${poolEntry}] Parsed ${parsedAttestations.length} price attestations:\n`, parsedAttestations);
+	    console.log(`[seqno ${poolEntry}] Parsed ${parsedAttestations.length} prices in batch:\n`, parsedAttestations);
 
 	    // try {
 	    // 	let tx = await p2w_eth.attestPrice(vaaResponse.vaaBytes, {gasLimit: 1000000});
