@@ -30,6 +30,7 @@
     "dotenv": "^10.0.0",
     "ethers": "^5.4.4",
     "express": "^4.17.2",
+    "express-validation": "^4.0.1",
     "http-status-codes": "^2.2.0",
     "morgan": "^1.10.0",
     "prom-client": "^14.0.1",
