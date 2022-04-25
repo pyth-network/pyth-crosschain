@@ -29,7 +29,7 @@ export class PromClient {
     name: `${SERVICE_PREFIX}api_requests_price_freshness_seconds`,
     help: "Freshness time of Vaa (time difference of Vaa and request time)",
     buckets: [1, 5, 10, 15, 30, 60, 120, 180],
-    labelNames: ["path"]
+    labelNames: ["path", "price_id"]
   });
   // End metrics
 
@@ -68,9 +68,10 @@ export class PromClient {
     }, duration);
   }
 
-  addApiRequestsPriceFreshness(path: string, duration: DurationInSec) {
+  addApiRequestsPriceFreshness(path: string, priceId: string, duration: DurationInSec) {
     this.apiRequestsPriceFreshnessHistogram.observe({
-      path: path
+      path: path,
+      price_id: priceId,
     }, duration);
   }
 }

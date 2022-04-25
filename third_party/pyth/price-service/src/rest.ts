@@ -77,7 +77,7 @@ export class RestAPI {
       }
 
       const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
-      this.promClient?.addApiRequestsPriceFreshness(req.path, freshness);
+      this.promClient?.addApiRequestsPriceFreshness(req.path, priceId, freshness);
 
       res.send(latestPriceInfo.vaaBytes);
     });
@@ -118,7 +118,7 @@ export class RestAPI {
         }
 
         const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
-        this.promClient?.addApiRequestsPriceFreshness(req.path, freshness);
+        this.promClient?.addApiRequestsPriceFreshness(req.path, id, freshness);
 
         responseJson.push(latestPriceInfo.priceFeed.toJson());
       }
