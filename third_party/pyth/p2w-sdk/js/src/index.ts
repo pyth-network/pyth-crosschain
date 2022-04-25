@@ -1,6 +1,7 @@
 import { getSignedVAA, CHAIN_ID_SOLANA } from "@certusone/wormhole-sdk";
 import { zeroPad } from "ethers/lib/utils";
 import { PublicKey } from "@solana/web3.js";
+import { PriceFeed, PriceStatus } from "@pythnetwork/pyth-sdk-js";
 
 let _P2W_WASM: any = undefined;
 
@@ -30,7 +31,7 @@ export type PriceAttestation = {
     expo: number;
     emaPrice: BigInt;
     emaConf: BigInt;
-    status: number;
+    status: PriceStatus;
     numPublishers: BigInt;
     maxNumPublishers: BigInt;
     attestationTime: BigInt;
@@ -43,26 +44,6 @@ export type PriceAttestation = {
 export type BatchPriceAttestation = {
     priceAttestations: PriceAttestation[];
 };
-
-export function rawToPriceAttestation(rawVal: any): PriceAttestation {
-    return {
-	productId: rawVal.product_id,
-	priceId: rawVal.price_id,
-	price: rawVal.price,
-	conf: rawVal.conf,
-	expo: rawVal.expo,
-	emaPrice: rawVal.ema_price,
-	emaConf: rawVal.ema_conf,
-	status: rawVal.status,
-	numPublishers: rawVal.num_publishers,
-	maxNumPublishers: rawVal.max_num_publishers,
-	attestationTime: rawVal.attestation_time,
-	publishTime: rawVal.publish_time,
-	prevPublishTime: rawVal.prev_publish_time,
-	prevPrice: rawVal.prev_price,
-	prevConf: rawVal.prev_conf,
-    };
-}
 
 export async function parseBatchPriceAttestation(
     arr: Buffer
@@ -111,6 +92,27 @@ export async function getSignedAttestation(host: string, p2w_addr: string, seque
 
     let emitterHex = sol_addr2buf(emitter).toString("hex");
     return await getSignedVAA(host, CHAIN_ID_SOLANA, emitterHex, "" + sequence, extraGrpcOpts);
+}
+
+export function priceAttestationToPriceFeed(priceAttestation: PriceAttestation): PriceFeed {
+    let status;
+
+    return new PriceFeed({
+        conf: priceAttestation.conf.toString(),
+        emaConf: priceAttestation.emaConf.toString(),
+        emaPrice: priceAttestation.emaPrice.toString(),
+        expo: priceAttestation.expo as any,
+        id: priceAttestation.priceId,
+        maxNumPublishers: priceAttestation.maxNumPublishers as any,
+        numPublishers: priceAttestation.numPublishers as any,
+        prevConf: priceAttestation.prevConf.toString(),
+        prevPrice: priceAttestation.prevPrice.toString(),
+        prevPublishTime: priceAttestation.prevPublishTime as any,
+        price: priceAttestation.price.toString(),
+        productId: priceAttestation.productId,
+        publishTime: priceAttestation.publishTime as any,
+        status: priceAttestation.status,
+    })
 }
 
 function computePrice(rawPrice: BigInt, expo: number): number {

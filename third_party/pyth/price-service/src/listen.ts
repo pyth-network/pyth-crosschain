@@ -13,19 +13,21 @@ import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 
 import { envOrErr, sleep, TimestampInSec } from "./helpers";
 import { PromClient } from "./promClient";
-import { getBatchSummary, parseBatchPriceAttestation } from "@certusone/p2w-sdk";
+import { getBatchSummary, parseBatchPriceAttestation, priceAttestationToPriceFeed } from "@certusone/p2w-sdk";
 import { ClientReadableStream } from "@grpc/grpc-js";
 import { FilterEntry, SubscribeSignedVAAResponse } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
 import { logger } from "./logging";
+import { PriceFeed } from "@pythnetwork/pyth-sdk-js";
 
-export type VaaInfo = {
+export type PriceInfo = {
   vaaBytes: string,
   seqNum: number,
   receiveTime: TimestampInSec,
+  priceFeed: PriceFeed
 };
 
-export interface PriceFeedVaaInfo {
-  getLatestVaaForPriceFeed(priceFeedId: string): VaaInfo | undefined;
+export interface PriceFeedPriceInfo {
+  getLatestPriceInfo(priceFeedId: string): PriceInfo | undefined;
 }
 
 type ListenerReadinessConfig = {
@@ -39,9 +41,9 @@ type ListenerConfig = {
   readiness: ListenerReadinessConfig,
 };
 
-export class Listener implements PriceFeedVaaInfo {
+export class Listener implements PriceFeedPriceInfo {
   // Mapping of Price Feed Id to Vaa
-  private priceFeedVaaMap = new Map<string, VaaInfo>();
+  private priceFeedVaaMap = new Map<string, PriceInfo>();
   private promClient: PromClient | undefined;
   private spyServiceHost: string;
   private filters: FilterEntry[] = [];
@@ -178,6 +180,7 @@ export class Listener implements PriceFeedVaaInfo {
           seqNum: parsedVAA.sequence,
           vaaBytes: vaaBytes,
           receiveTime: (new Date()).getTime() / 1000,
+          priceFeed: priceAttestationToPriceFeed(priceAttestation)
         });
       }
     }
@@ -196,7 +199,7 @@ export class Listener implements PriceFeedVaaInfo {
     this.promClient?.incReceivedVaa();
   }
 
-  getLatestVaaForPriceFeed(priceFeedId: string): VaaInfo | undefined {
+  getLatestPriceInfo(priceFeedId: string): PriceInfo | undefined {
     return this.priceFeedVaaMap.get(priceFeedId);
   }
 
