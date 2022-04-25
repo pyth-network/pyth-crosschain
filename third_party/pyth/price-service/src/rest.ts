@@ -1,11 +1,17 @@
 import express from "express";
 import cors from "cors";
-import { Request, Response } from "express";
+import morgan from "morgan";
+import responseTime from "response-time";
+import { Request, Response, NextFunction } from "express";
 import { PriceFeedPriceInfo } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
-import { DurationInSec } from "./helpers";
+import { DurationInMs, DurationInSec } from "./helpers";
 import { StatusCodes } from "http-status-codes";
+import { validate, ValidationError, Joi, schema } from "express-validation";
+
+const MORGAN_LOG_FORMAT = ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
+  ' :status :res[content-length] :response-time ms ":referrer" ":user-agent"';
 
 export class RestAPI {
   private port: number;
@@ -13,7 +19,7 @@ export class RestAPI {
   private isReady: (() => boolean) | undefined;
   private promClient: PromClient | undefined;
 
-  constructor(config: { port: number; }, 
+  constructor(config: { port: number; },
     priceFeedVaaInfo: PriceFeedPriceInfo,
     isReady?: () => boolean,
     promClient?: PromClient) {
@@ -28,82 +34,75 @@ export class RestAPI {
     const app = express();
     app.use(cors());
 
+    const winstonStream = {
+      write: (text: string) => {
+        logger.info(text);
+      }
+    };
+
+    app.use(morgan(MORGAN_LOG_FORMAT, { stream: winstonStream }));
+
+    app.use(responseTime((req: Request, res: Response, time: DurationInMs) => {
+      if (res.statusCode !== StatusCodes.NOT_FOUND) {
+        this.promClient?.addResponseTime(req.path, res.statusCode, time);
+      }
+    }))
+
     app.listen(this.port, () =>
       logger.debug("listening on REST port " + this.port)
     );
 
     let endpoints: string[] = [];
+    
+    const latestVaaBytesInputSchema: schema = {
+      query: Joi.object({
+        id: Joi.string().regex(/^[a-f0-9]{64}$/)
+      })
+    }
+    app.get("/latest_vaa_bytes", validate(latestVaaBytesInputSchema), (req: Request, res: Response) => {
+      let priceId = req.query.id as string;
 
-    app.get("/latest_vaa_bytes/:price_feed_id", (req: Request, res: Response) => {
-      this.promClient?.incApiLatestVaaRequests();
-      logger.info(`Received latest_vaa_bytes request for ${req.params.price_feed_id}`)
-
-      let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(req.params.price_feed_id);
+      let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(priceId);
 
       if (latestPriceInfo === undefined) {
-        this.promClient?.incApiLatestVaaNotFoundResponse();
-        res.sendStatus(StatusCodes.NOT_FOUND);
+        res.sendStatus(StatusCodes.BAD_REQUEST);
         return;
       }
 
-      this.promClient?.incApiLatestVaaSuccessResponse();
-
-      const freshness: DurationInSec = (new Date).getTime()/1000 - latestPriceInfo.receiveTime;
-      this.promClient?.addApiLatestVaaFreshness(freshness);
+      const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
+      this.promClient?.addApiRequestsPriceFreshness(req.path, priceId, freshness);
 
       res.send(latestPriceInfo.vaaBytes);
     });
-    endpoints.push("latest_vaa_bytes/<price_feed_id>");
+    endpoints.push("latest_vaa_bytes?id=<price_feed_id>");
 
-    // It will be called with query param `id` such as: `/latest_price_feed?id=xyz&id=abc
-    app.get("/latest_price_feed", (req: Request, res: Response) => {
-      this.promClient?.incApiLatestPriceFeedRequests();
-      logger.info(`Received latest_price_feed request for query: ${req.query}`);
+    const latestPriceFeedInputSchema: schema = {
+      query: Joi.object({
+        id: Joi.array().items(Joi.string().regex(/^[a-f0-9]{64}$/))
+      })
+    }
+    app.get("/latest_price_feed", validate(latestPriceFeedInputSchema), (req: Request, res: Response) => {
+      let priceIds = req.query.id as string[];
 
-      if (req.query.id === undefined) {
-        res.status(StatusCodes.BAD_REQUEST).send("No id is provided");
-        return;
-      }
-
-      let priceIds: string[] = [];
-      if (typeof(req.query.id) === "string") {
-        priceIds.push(req.query.id);
-      } else if (Array.isArray(req.query.id)) {
-        for (let entry of req.query.id) {
-          if (typeof(entry) === "string") {
-            priceIds.push(entry);
-          } else {
-            res.status(StatusCodes.BAD_REQUEST).send("id is expected to be a hex string or an array of hex strings");
-            return;    
-          }
-        }
-      } else {
-        res.status(StatusCodes.BAD_REQUEST).send("id is expected to be a hex string or an array of hex strings");
-        return;
-      }
-
-      let responseJson = []
+      let responseJson = [];
 
       for (let id of priceIds) {
         let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
 
         if (latestPriceInfo === undefined) {
-          this.promClient?.incApiLatestPriceFeedNotFoundResponse();
-          res.status(StatusCodes.NOT_FOUND).send(`Price Feed with id ${id} not found`);
+          res.status(StatusCodes.BAD_REQUEST).send(`Price Feed with id ${id} not found`);
           return;
         }
-    
-        const freshness: DurationInSec = (new Date).getTime()/1000 - latestPriceInfo.receiveTime;
-        this.promClient?.addApiLatestPriceFeedFreshness(freshness); 
-        
+
+        const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
+        this.promClient?.addApiRequestsPriceFreshness(req.path, id, freshness);
+
         responseJson.push(latestPriceInfo.priceFeed.toJson());
       }
 
-      this.promClient?.incApiLatestPriceFeedSuccessResponse();
-
       res.json(responseJson);
     });
-    endpoints.push("latest_price_feed/<price_feed_id>");
+    endpoints.push("latest_price_feed?id[]=<price_feed_id>&id[]=<price_feed_id_2>&..");
 
 
     app.get("/ready", (_, res: Response) => {
@@ -124,5 +123,13 @@ export class RestAPI {
     app.get("/", (_, res: Response) =>
       res.json(endpoints)
     );
+
+    app.use(function(err: any, _: Request, res: Response, next: NextFunction) {
+      if (err instanceof ValidationError) {
+        return res.status(err.statusCode).json(err);
+      }
+    
+      return next(err);
+    })
   }
 }

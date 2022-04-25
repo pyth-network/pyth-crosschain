@@ -1,6 +1,7 @@
+import { stat } from "fs";
 import http = require("http");
 import client = require("prom-client");
-import { DurationInSec } from "./helpers";
+import { DurationInMs, DurationInSec } from "./helpers";
 import { logger } from "./logging";
 
 // NOTE:  To create a new metric:
@@ -8,7 +9,7 @@ import { logger } from "./logging";
 // 2) Create a method to set the metric to a value (such as `incIncoming` function below)
 // 3) Register the metric using `register.registerMetric` function.
 
-const SERVICE_PREFIX = "price_service__";
+const SERVICE_PREFIX = "pyth__price_service__";
 
 export class PromClient {
   private register = new client.Registry();
@@ -19,41 +20,17 @@ export class PromClient {
     name: `${SERVICE_PREFIX}vaas_received`,
     help: "number of Pyth VAAs received",
   });
-  private apiLatestVaaRequestsCounter = new client.Counter({
-    name: `${SERVICE_PREFIX}api_latest_vaa_requests_received`,
-    help: "Number of requests for latest vaa of a price feed"
+  private apiResponseTimeSummary = new client.Summary({
+    name: `${SERVICE_PREFIX}api_response_time_ms`,
+    help: "Response time of a VAA",
+    labelNames: ["path", "status"]
   });
-  private apiLatestVaaNotFoundResponseCounter = new client.Counter({
-    name: `${SERVICE_PREFIX}api_latest_vaa_not_found_response`,
-    help: "Number of not found responses for latest vaa of a price feed request"
-  });
-  private apiLatestVaaSuccessResponseCounter = new client.Counter({
-    name: `${SERVICE_PREFIX}api_latest_vaa_success_response`,
-    help: "Number of successful responses for latest vaa of a price feed request"
-  });
-  private apiLatestVaaFreshnessHistogram = new client.Histogram({
-    name: `${SERVICE_PREFIX}api_latest_vaa_freshness`,
+  private apiRequestsPriceFreshnessHistogram = new client.Histogram({
+    name: `${SERVICE_PREFIX}api_requests_price_freshness_seconds`,
     help: "Freshness time of Vaa (time difference of Vaa and request time)",
-    buckets: [1, 5, 10, 15, 30, 60, 120, 180]
+    buckets: [1, 5, 10, 15, 30, 60, 120, 180],
+    labelNames: ["path", "price_id"]
   });
-  private apiLatestPriceFeedRequestsCounter = new client.Counter({
-    name: `${SERVICE_PREFIX}api_latest_price_feed_requests_received`,
-    help: "Number of requests for latest Price Feed of a price feed id"
-  });
-  private apiLatestPriceFeedNotFoundResponseCounter = new client.Counter({
-    name: `${SERVICE_PREFIX}api_latest_price_feed_not_found_response`,
-    help: "Number of not found responses for latest Price Feed of a price feed id"
-  });
-  private apiLatestPriceFeedSuccessResponseCounter = new client.Counter({
-    name: `${SERVICE_PREFIX}api_latest_price_feed_success_response`,
-    help: "Number of successful responses for latest vaa of a price feed id"
-  });
-  private apiLatestPriceFeedFreshnessHistogram = new client.Histogram({
-    name: `${SERVICE_PREFIX}api_latest_price_feed_freshness`,
-    help: "Freshness time of Vaa (time difference of retrieval time and request time)",
-    buckets: [1, 5, 10, 15, 30, 60, 120, 180]
-  });
-
   // End metrics
 
   private server = http.createServer(async (req, res) => {
@@ -72,16 +49,8 @@ export class PromClient {
     this.collectDefaultMetrics({ register: this.register, prefix: SERVICE_PREFIX });
     // Register each metric
     this.register.registerMetric(this.receivedVaaCounter);
-    
-    this.register.registerMetric(this.apiLatestVaaRequestsCounter);
-    this.register.registerMetric(this.apiLatestVaaNotFoundResponseCounter);
-    this.register.registerMetric(this.apiLatestVaaSuccessResponseCounter);
-    this.register.registerMetric(this.apiLatestVaaFreshnessHistogram);
-
-    this.register.registerMetric(this.apiLatestPriceFeedRequestsCounter);
-    this.register.registerMetric(this.apiLatestPriceFeedNotFoundResponseCounter);
-    this.register.registerMetric(this.apiLatestPriceFeedSuccessResponseCounter);
-    this.register.registerMetric(this.apiLatestPriceFeedFreshnessHistogram);
+    this.register.registerMetric(this.apiResponseTimeSummary)
+    this.register.registerMetric(this.apiRequestsPriceFreshnessHistogram);
     // End registering metric
 
     logger.info("prometheus client listening on port " + config.port);
@@ -92,35 +61,17 @@ export class PromClient {
     this.receivedVaaCounter.inc();
   }
 
-  incApiLatestVaaRequests() {
-    this.apiLatestVaaRequestsCounter.inc();
+  addResponseTime(path: string, status: number, duration: DurationInMs) {
+    this.apiResponseTimeSummary.observe({
+      path: path,
+      status: status
+    }, duration);
   }
 
-  incApiLatestVaaNotFoundResponse() {
-    this.apiLatestVaaNotFoundResponseCounter.inc();
-  }
-
-  incApiLatestVaaSuccessResponse() {
-    this.apiLatestVaaSuccessResponseCounter.inc();
-  }
-
-  addApiLatestVaaFreshness(duration: DurationInSec) {
-    this.apiLatestVaaFreshnessHistogram.observe(duration);
-  }
-
-  incApiLatestPriceFeedRequests() {
-    this.apiLatestPriceFeedRequestsCounter.inc();
-  }
-
-  incApiLatestPriceFeedNotFoundResponse() {
-    this.apiLatestPriceFeedNotFoundResponseCounter.inc();
-  }
-
-  incApiLatestPriceFeedSuccessResponse() {
-    this.apiLatestPriceFeedSuccessResponseCounter.inc();
-  }
-
-  addApiLatestPriceFeedFreshness(duration: DurationInSec) {
-    this.apiLatestPriceFeedFreshnessHistogram.observe(duration);
+  addApiRequestsPriceFreshness(path: string, priceId: string, duration: DurationInSec) {
+    this.apiRequestsPriceFreshnessHistogram.observe({
+      path: path,
+      price_id: priceId,
+    }, duration);
   }
 }
