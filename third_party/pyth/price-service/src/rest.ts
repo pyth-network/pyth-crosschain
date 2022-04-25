@@ -1,11 +1,15 @@
 import express from "express";
 import cors from "cors";
-import { Request, Response } from "express";
+import morgan from "morgan";
+import { Request, Response, NextFunction } from "express";
 import { PriceFeedPriceInfo } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
 import { DurationInSec } from "./helpers";
 import { StatusCodes } from "http-status-codes";
+
+const MORGAN_LOG_FORMAT = ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
+  ' :status :res[content-length] :response-time ms ":referrer" ":user-agent"';
 
 export class RestAPI {
   private port: number;
@@ -13,7 +17,7 @@ export class RestAPI {
   private isReady: (() => boolean) | undefined;
   private promClient: PromClient | undefined;
 
-  constructor(config: { port: number; }, 
+  constructor(config: { port: number; },
     priceFeedVaaInfo: PriceFeedPriceInfo,
     isReady?: () => boolean,
     promClient?: PromClient) {
@@ -28,6 +32,14 @@ export class RestAPI {
     const app = express();
     app.use(cors());
 
+    const winstonStream = {
+      write: (text: string) => {
+        logger.info(text);
+      }
+    };
+
+    app.use(morgan(MORGAN_LOG_FORMAT, { stream: winstonStream }));
+
     app.listen(this.port, () =>
       logger.debug("listening on REST port " + this.port)
     );
@@ -36,7 +48,6 @@ export class RestAPI {
 
     app.get("/latest_vaa_bytes/:price_feed_id", (req: Request, res: Response) => {
       this.promClient?.incApiLatestVaaRequests();
-      logger.info(`Received latest_vaa_bytes request for ${req.params.price_feed_id}`)
 
       let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(req.params.price_feed_id);
 
@@ -48,7 +59,7 @@ export class RestAPI {
 
       this.promClient?.incApiLatestVaaSuccessResponse();
 
-      const freshness: DurationInSec = (new Date).getTime()/1000 - latestPriceInfo.receiveTime;
+      const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
       this.promClient?.addApiLatestVaaFreshness(freshness);
 
       res.send(latestPriceInfo.vaaBytes);
@@ -58,7 +69,6 @@ export class RestAPI {
     // It will be called with query param `id` such as: `/latest_price_feed?id=xyz&id=abc
     app.get("/latest_price_feed", (req: Request, res: Response) => {
       this.promClient?.incApiLatestPriceFeedRequests();
-      logger.info(`Received latest_price_feed request for query: ${req.query}`);
 
       if (req.query.id === undefined) {
         res.status(StatusCodes.BAD_REQUEST).send("No id is provided");
@@ -66,15 +76,15 @@ export class RestAPI {
       }
 
       let priceIds: string[] = [];
-      if (typeof(req.query.id) === "string") {
+      if (typeof (req.query.id) === "string") {
         priceIds.push(req.query.id);
       } else if (Array.isArray(req.query.id)) {
         for (let entry of req.query.id) {
-          if (typeof(entry) === "string") {
+          if (typeof (entry) === "string") {
             priceIds.push(entry);
           } else {
             res.status(StatusCodes.BAD_REQUEST).send("id is expected to be a hex string or an array of hex strings");
-            return;    
+            return;
           }
         }
       } else {
@@ -82,7 +92,7 @@ export class RestAPI {
         return;
       }
 
-      let responseJson = []
+      let responseJson = [];
 
       for (let id of priceIds) {
         let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
@@ -92,10 +102,10 @@ export class RestAPI {
           res.status(StatusCodes.NOT_FOUND).send(`Price Feed with id ${id} not found`);
           return;
         }
-    
-        const freshness: DurationInSec = (new Date).getTime()/1000 - latestPriceInfo.receiveTime;
-        this.promClient?.addApiLatestPriceFeedFreshness(freshness); 
-        
+
+        const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
+        this.promClient?.addApiLatestPriceFeedFreshness(freshness);
+
         responseJson.push(latestPriceInfo.priceFeed.toJson());
       }
 
