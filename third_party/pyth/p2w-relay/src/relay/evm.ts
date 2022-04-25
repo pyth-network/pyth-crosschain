@@ -32,12 +32,12 @@ export class EvmRelay implements Relay {
     for (let i = 0; i < signedVAAs.length; ++i) {
       let batchNo = i + 1;
       let parsedVAA = parse_vaa(hexToUint8Array(signedVAAs[i]));
-      let parsedBatch = parseBatchPriceAttestation(
+      let parsedBatch = await parseBatchPriceAttestation(
         Buffer.from(parsedVAA.payload)
       );
 
       let priceIds: PriceId[] = [];
-      for (let j = 0; j < parsedBatch.nAttestations; ++j) {
+      for (let j = 0; j < parsedBatch.priceAttestations.length; ++j) {
         priceIds.push(parsedBatch.priceAttestations[j].priceId);
       }
 

@@ -145,7 +145,7 @@ export class Listener implements PriceFeedPriceInfo {
     let batchAttestation;
 
     try {
-      batchAttestation = parseBatchPriceAttestation(
+      batchAttestation = await parseBatchPriceAttestation(
         Buffer.from(parsedVAA.payload)
       );
     } catch (e: any) {
