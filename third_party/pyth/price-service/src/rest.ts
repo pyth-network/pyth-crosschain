@@ -55,8 +55,21 @@ export class RestAPI {
 
     let endpoints: string[] = [];
 
-    app.get("/latest_vaa_bytes/:price_feed_id", (req: Request, res: Response) => {
-      let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(req.params.price_feed_id);
+    app.get("/latest_vaa_bytes", (req: Request, res: Response) => {
+      if (req.query.id === undefined) {
+        res.status(StatusCodes.BAD_REQUEST).send("No id is provided");
+        return;
+      }
+
+      let priceId: string;
+      if (typeof (req.query.id) === "string") {
+        priceId = req.query.id;
+      } else {
+        res.status(StatusCodes.BAD_REQUEST).send("id is expected to be a hex string");
+        return;
+      }
+
+      let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(priceId);
 
       if (latestPriceInfo === undefined) {
         res.sendStatus(StatusCodes.BAD_REQUEST);
@@ -68,7 +81,7 @@ export class RestAPI {
 
       res.send(latestPriceInfo.vaaBytes);
     });
-    endpoints.push("latest_vaa_bytes/<price_feed_id>");
+    endpoints.push("latest_vaa_bytes?id=<price_feed_id>");
 
     // It will be called with query param `id` such as: `/latest_price_feed?id=xyz&id=abc
     app.get("/latest_price_feed", (req: Request, res: Response) => {
@@ -112,7 +125,7 @@ export class RestAPI {
 
       res.json(responseJson);
     });
-    endpoints.push("latest_price_feed/<price_feed_id>");
+    endpoints.push("latest_price_feed?id=<price_feed_id>&id=<price_feed_id_2>&..");
 
 
     app.get("/ready", (_, res: Response) => {
