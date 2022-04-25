@@ -88,7 +88,6 @@ pub struct PriceAttestation {
     pub price:              i64,
     #[serde(serialize_with = "use_to_string")]
     pub conf:               u64,
-    #[serde(serialize_with = "use_to_string")]
     pub expo:               i32,
     #[serde(serialize_with = "use_to_string")]
     pub ema_price:          i64,
@@ -96,15 +95,10 @@ pub struct PriceAttestation {
     pub ema_conf:           u64,
     #[serde(with = "P2WPriceStatus")]
     pub status:             PriceStatus,
-    #[serde(serialize_with = "use_to_string")]
     pub num_publishers:     u32,
-    #[serde(serialize_with = "use_to_string")]
     pub max_num_publishers: u32,
-    #[serde(serialize_with = "use_to_string")]
     pub attestation_time:   UnixTimestamp,
-    #[serde(serialize_with = "use_to_string")]
     pub publish_time:       UnixTimestamp,
-    #[serde(serialize_with = "use_to_string")]
     pub prev_publish_time:  UnixTimestamp,
     #[serde(serialize_with = "use_to_string")]
     pub prev_price:         i64,
@@ -135,10 +129,10 @@ impl BatchPriceAttestation {
         // magic
         let mut buf = P2W_MAGIC.to_vec();
 
-        // version_major
+        // major_version
         buf.extend_from_slice(&P2W_FORMAT_VER_MAJOR.to_be_bytes()[..]);
 
-        // version_minor
+        // minor_version 
         buf.extend_from_slice(&P2W_FORMAT_VER_MINOR.to_be_bytes()[..]);
 
         // hdr_size
@@ -197,28 +191,28 @@ impl BatchPriceAttestation {
             .into());
         }
 
-        let mut version_major_vec = vec![0u8; mem::size_of_val(&P2W_FORMAT_VER_MAJOR)];
-        bytes.read_exact(version_major_vec.as_mut_slice())?;
-        let version_major = u16::from_be_bytes(version_major_vec.as_slice().try_into()?);
+        let mut major_version_vec = vec![0u8; mem::size_of_val(&P2W_FORMAT_VER_MAJOR)];
+        bytes.read_exact(major_version_vec.as_mut_slice())?;
+        let major_version = u16::from_be_bytes(major_version_vec.as_slice().try_into()?);
 
         // Major must match exactly
-        if version_major != P2W_FORMAT_VER_MAJOR {
+        if major_version != P2W_FORMAT_VER_MAJOR {
             return Err(format!(
-                "Unsupported format version_major {}, expected {}",
-                version_major, P2W_FORMAT_VER_MAJOR
+                "Unsupported format major_version {}, expected {}",
+                major_version, P2W_FORMAT_VER_MAJOR
             )
             .into());
         }
 
-        let mut version_minor_vec = vec![0u8; mem::size_of_val(&P2W_FORMAT_VER_MINOR)];
-        bytes.read_exact(version_minor_vec.as_mut_slice())?;
-        let version_minor = u16::from_be_bytes(version_minor_vec.as_slice().try_into()?);
+        let mut minor_version_vec = vec![0u8; mem::size_of_val(&P2W_FORMAT_VER_MINOR)];
+        bytes.read_exact(minor_version_vec.as_mut_slice())?;
+        let minor_version = u16::from_be_bytes(minor_version_vec.as_slice().try_into()?);
 
         // Only older minors are not okay for this codebase
-        if version_minor < P2W_FORMAT_VER_MINOR {
+        if minor_version < P2W_FORMAT_VER_MINOR {
             return Err(format!(
-                "Unsupported format version_minor {}, expected {} or more",
-                version_minor, P2W_FORMAT_VER_MINOR
+                "Unsupported format minor_version {}, expected {} or more",
+                minor_version, P2W_FORMAT_VER_MINOR
             )
             .into());
         }
