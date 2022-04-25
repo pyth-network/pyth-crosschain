@@ -42,7 +42,11 @@ export class RestAPI {
     app.use(morgan(MORGAN_LOG_FORMAT, { stream: winstonStream }));
 
     app.use(responseTime((req: Request, res: Response, time: DurationInMs) => {
-      this.promClient?.addResponseTime(req.path, res.statusCode, time);
+      if (res.statusCode == StatusCodes.NOT_FOUND) {
+        this.promClient?.addResponseTime('/not_found', res.statusCode, time);
+      } else {
+        this.promClient?.addResponseTime(req.path, res.statusCode, time);
+      }
     }))
 
     app.listen(this.port, () =>
@@ -55,7 +59,7 @@ export class RestAPI {
       let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(req.params.price_feed_id);
 
       if (latestPriceInfo === undefined) {
-        res.sendStatus(StatusCodes.NOT_FOUND);
+        res.sendStatus(StatusCodes.BAD_REQUEST);
         return;
       }
 
@@ -96,7 +100,7 @@ export class RestAPI {
         let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
 
         if (latestPriceInfo === undefined) {
-          res.status(StatusCodes.NOT_FOUND).send(`Price Feed with id ${id} not found`);
+          res.status(StatusCodes.BAD_REQUEST).send(`Price Feed with id ${id} not found`);
           return;
         }
 
