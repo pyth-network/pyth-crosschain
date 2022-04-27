@@ -94,6 +94,8 @@ fn main() -> Result<(), ErrBox> {
         Action::Attest {
             ref attestation_cfg,
             n_retries,
+            daemon,
+            batch_interval_secs,
             conf_timeout_secs,
             rpc_interval_ms,
         } => {
@@ -107,6 +109,8 @@ fn main() -> Result<(), ErrBox> {
                 p2w_addr,
                 &attestation_cfg,
                 n_retries,
+                daemon,
+                Duration::from_secs(batch_interval_secs),
                 Duration::from_secs(conf_timeout_secs),
                 Duration::from_millis(rpc_interval_ms),
             )?;
@@ -129,12 +133,18 @@ pub enum BatchTxState<'a> {
         sent_at: Instant,
     },
     Success {
+        symbols: &'a [P2WSymbol],
+        occured_at: Instant,
         seqno: String,
     },
     FailedSend {
+        symbols: &'a [P2WSymbol],
+        occured_at: Instant,
         last_err: ErrBox,
     },
     FailedConfirm {
+        symbols: &'a [P2WSymbol],
+        occured_at: Instant,
         last_err: ErrBox,
     },
 }
@@ -148,6 +158,8 @@ fn handle_attest(
     p2w_addr: Pubkey,
     attestation_cfg: &AttestationConfig,
     n_retries: usize,
+    daemon: bool,
+    batch_interval: Duration,
     conf_timeout: Duration,
     rpc_interval: Duration,
 ) -> Result<(), ErrBox> {
@@ -195,6 +207,7 @@ fn handle_attest(
         })
         .collect();
 
+    // NOTE(2022-04-26): only increment this if `daemon` is false
     let mut finished_count = 0;
 
     // TODO(2021-03-09): Extract logic into helper functions
@@ -279,7 +292,11 @@ fn handle_attest(
                                     batch_count,
                                     n_retries + 1
                                 );
-                                *state = BatchTxState::FailedSend { last_err: e };
+                                *state = BatchTxState::FailedSend {
+                                    symbols,
+                                    occured_at: Instant::now(),
+                                    last_err: e,
+                                };
                             }
                         }
                     }
@@ -317,7 +334,11 @@ fn handle_attest(
                             println!("Sequence number: {}", seqno);
                             info!("Batch {}/{}: OK, seqno {}", batch_no, batch_count, seqno);
 
-                            *state = BatchTxState::Success { seqno };
+                            *state = BatchTxState::Success {
+                                symbols,
+                                seqno,
+                                occured_at: Instant::now(),
+                            };
                         }
                         Err(e) => {
                             let elapsed = sent_at.elapsed();
@@ -359,15 +380,44 @@ fn handle_attest(
                                         batch_count,
                                         n_retries + 1
                                     );
-                                    *state = BatchTxState::FailedConfirm { last_err: e };
+                                    *state = BatchTxState::FailedConfirm {
+                                        symbols,
+                                        occured_at: Instant::now(),
+                                        last_err: e,
+                                    };
                                 }
                             }
                         }
                     }
                 }
-                Success { .. } | FailedSend { .. } | FailedConfirm { .. } => {
-                    finished_count += 1; // Gather terminal states for top-level loop exit
-                    continue; // No requests were made, skip sleep
+                Success {
+                    symbols,
+                    occured_at,
+                    ..
+                }
+                | FailedSend {
+                    symbols,
+                    occured_at,
+                    ..
+                }
+                | FailedConfirm {
+                    symbols,
+                    occured_at,
+                    ..
+                } => {
+                    // We only try to re-schedule under --daemon
+                    if daemon {
+                        if occured_at.elapsed() > batch_interval {
+                            *state = BatchTxState::Sending {
+                                symbols,
+                                attempt_no: 1,
+                            };
+                        }
+                    } else {
+                        // We're not daemonized, increment towards breaking while-loop
+                        finished_count += 1;
+                    }
+                    continue; // No RPC requests are made in either case, skip sleep
                 }
             }
 
@@ -382,7 +432,7 @@ fn handle_attest(
         use BatchTxState::*;
         match state {
             Success { .. } => {}
-            FailedSend { last_err } | FailedConfirm { last_err } => {
+            FailedSend { last_err, .. } | FailedConfirm { last_err, .. } => {
                 errors.push(last_err.to_string())
             }
             other => {
