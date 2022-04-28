@@ -46,31 +46,7 @@ export async function parseBatchPriceAttestation(
     let wasm = await importWasm();
     let rawVal = await wasm.parse_batch_attestation(arr);
 
-    let batch: BatchPriceAttestation = {
-        priceAttestations: []
-    };
-
-    for (let item of rawVal.priceAttestations) {
-        batch.priceAttestations.push({
-            attestationTime: item.attestationTime,
-            conf: item.conf,
-            emaConf: item.emaConf,
-            emaPrice: item.emaPrice,
-            expo: item.expo,
-            maxNumPublishers: item.maxNumPublishers,
-            numPublishers: item.numPublishers,
-            prevConf: item.prevConf,
-            prevPrice: item.prevPrice,
-            prevPublishTime: item.prevPublishTime,
-            price: item.price,
-            priceId: Buffer.from(item.priceId).toString("hex"),
-            productId: Buffer.from(item.productId).toString("hex"),
-            publishTime: item.publishTime,
-            status: item.status,
-        })
-    }
-
-    return batch;
+    return rawVal;
 }
 
 // Returns a hash of all priceIds within the batch, it can be used to identify whether there is a
