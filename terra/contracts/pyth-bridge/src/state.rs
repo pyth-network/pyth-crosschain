@@ -29,7 +29,7 @@ use wormhole::byte_utils::ByteUtils;
 type HumanAddr = String;
 
 pub static CONFIG_KEY: &[u8] = b"config";
-pub static PRICE_INFO_KEY: &[u8] = b"price_info_v2";
+pub static PRICE_INFO_KEY: &[u8] = b"price_info_v3";
 
 /// Maximum acceptable time period before price is considered to be stale.
 /// 
