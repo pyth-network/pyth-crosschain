@@ -83,14 +83,14 @@ pub struct PriceAttestation {
     pub product_id:         Pubkey,
     #[serde(serialize_with = "pubkey_to_hex")]
     pub price_id:           Pubkey,
-    #[serde(serialize_with = "num_to_string")]
+    #[serde(serialize_with = "use_to_string")]
     pub price:              i64,
-    #[serde(serialize_with = "num_to_string")]
+    #[serde(serialize_with = "use_to_string")]
     pub conf:               u64,
     pub expo:               i32,
-    #[serde(serialize_with = "num_to_string")]
+    #[serde(serialize_with = "use_to_string")]
     pub ema_price:          i64,
-    #[serde(serialize_with = "num_to_string")]
+    #[serde(serialize_with = "use_to_string")]
     pub ema_conf:           u64,
     pub status:             PriceStatus,
     pub num_publishers:     u32,
@@ -98,14 +98,14 @@ pub struct PriceAttestation {
     pub attestation_time:   UnixTimestamp,
     pub publish_time:       UnixTimestamp,
     pub prev_publish_time:  UnixTimestamp,
-    #[serde(serialize_with = "num_to_string")]
+    #[serde(serialize_with = "use_to_string")]
     pub prev_price:         i64,
-    #[serde(serialize_with = "num_to_string")]
+    #[serde(serialize_with = "use_to_string")]
     pub prev_conf:          u64,
 }
 
 /// Helper allowing ToString implementers to be serialized as strings accordingly
-pub fn num_to_string<T, S>(val: &T, s: S) -> Result<S::Ok, S::Error>
+pub fn use_to_string<T, S>(val: &T, s: S) -> Result<S::Ok, S::Error>
 where
     T: ToString,
     S: Serializer,
