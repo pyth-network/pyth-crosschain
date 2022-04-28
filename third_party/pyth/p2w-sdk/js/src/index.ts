@@ -1,7 +1,7 @@
 import { getSignedVAA, CHAIN_ID_SOLANA } from "@certusone/wormhole-sdk";
 import { zeroPad } from "ethers/lib/utils";
 import { PublicKey } from "@solana/web3.js";
-import { PriceFeed, PriceStatus } from "@pythnetwork/pyth-sdk-js";
+import { PriceFeed, PriceStatus, UnixTimestamp } from "@pythnetwork/pyth-sdk-js";
 
 let _P2W_WASM: any = undefined;
 
@@ -17,28 +17,22 @@ async function importWasm() {
     return _P2W_WASM;
 }
 
-export type Rational = {
-    value: BigInt;
-    numerator: BigInt;
-    denominator: BigInt;
-};
-
 export type PriceAttestation = {
     productId: string;
     priceId: string;
-    price: BigInt;
-    conf: BigInt;
+    price: string;
+    conf: string;
     expo: number;
-    emaPrice: BigInt;
-    emaConf: BigInt;
+    emaPrice: string;
+    emaConf: string;
     status: PriceStatus;
-    numPublishers: BigInt;
-    maxNumPublishers: BigInt;
-    attestationTime: BigInt;
-    publishTime: BigInt;
-    prevPublishTime: BigInt;
-    prevPrice: BigInt;
-    prevConf: BigInt;
+    numPublishers: number;
+    maxNumPublishers: number;
+    attestationTime: UnixTimestamp;
+    publishTime: UnixTimestamp;
+    prevPublishTime: UnixTimestamp;
+    prevPrice: string;
+    prevConf: string;
 };
 
 export type BatchPriceAttestation = {
@@ -52,7 +46,31 @@ export async function parseBatchPriceAttestation(
     let wasm = await importWasm();
     let rawVal = await wasm.parse_batch_attestation(arr);
 
-    return rawVal;
+    let batch: BatchPriceAttestation = {
+        priceAttestations: []
+    };
+
+    for (let item of rawVal.priceAttestations) {
+        batch.priceAttestations.push({
+            attestationTime: item.attestationTime,
+            conf: item.conf,
+            emaConf: item.emaConf,
+            emaPrice: item.emaPrice,
+            expo: item.expo,
+            maxNumPublishers: item.maxNumPublishers,
+            numPublishers: item.numPublishers,
+            prevConf: item.prevConf,
+            prevPrice: item.prevPrice,
+            prevPublishTime: item.prevPublishTime,
+            price: item.price,
+            priceId: Buffer.from(item.priceId).toString("hex"),
+            productId: Buffer.from(item.productId).toString("hex"),
+            publishTime: item.publishTime,
+            status: item.status,
+        })
+    }
+
+    return batch;
 }
 
 // Returns a hash of all priceIds within the batch, it can be used to identify whether there is a
@@ -95,8 +113,6 @@ export async function getSignedAttestation(host: string, p2w_addr: string, seque
 }
 
 export function priceAttestationToPriceFeed(priceAttestation: PriceAttestation): PriceFeed {
-    let status;
-
     return new PriceFeed({
         conf: priceAttestation.conf.toString(),
         emaConf: priceAttestation.emaConf.toString(),
@@ -115,7 +131,7 @@ export function priceAttestationToPriceFeed(priceAttestation: PriceAttestation):
     })
 }
 
-function computePrice(rawPrice: BigInt, expo: number): number {
+function computePrice(rawPrice: string, expo: number): number {
     return Number(rawPrice) * 10 ** expo;
 }
 

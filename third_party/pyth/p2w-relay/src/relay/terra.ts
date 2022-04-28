@@ -175,13 +175,9 @@ export class TerraRelay implements Relay {
   }
 
   async query(priceId: PriceId) {
-    const encodedPriceId = fromUint8Array(hexToUint8Array(priceId));
-
     logger.info(
       "Querying terra for price info for priceId [" +
         priceId +
-        "], encoded as [" +
-        encodedPriceId +
         "]"
     );
 
@@ -191,11 +187,9 @@ export class TerraRelay implements Relay {
       mnemonic: this.walletPrivateKey,
     });
 
-    const wallet = lcdClient.wallet(mk);
-
     return await lcdClient.wasm.contractQuery(this.contractAddress, {
-      price_info: {
-        price_id: encodedPriceId,
+      price_feed: {
+        id: priceId,
       },
     });
   }

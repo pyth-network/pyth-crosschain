@@ -15,7 +15,7 @@ wasm = ["wasm-bindgen", "solana"]
 
 [dependencies]
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
-pyth-sdk-solana = "0.3.0"
+pyth-sdk-solana = { version = "0.4.0" }
 wasm-bindgen = { version = "0.2.74", features = ["serde-serialize"], optional = true}
 solitaire = { path = "../../../../solana/solitaire/program", optional = true }
 solana-program = "1.8.16"
