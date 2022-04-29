@@ -429,14 +429,14 @@ mod test {
         let address = b"123".as_ref();
 
         let mut dummy_price_info = PriceInfo::default();
-        dummy_price_info.attestation_time = Timestamp::from_seconds(80);
+        dummy_price_info.price_feed.publish_time = 80;
         dummy_price_info.price_feed.status = PriceStatus::Trading;
 
         price_info(&mut deps.storage)
             .save(address, &dummy_price_info)
             .unwrap();
 
-        env.block.time = Timestamp::from_seconds(100);
+        env.block.time = Timestamp::from_seconds(80 + VALID_TIME_PERIOD.as_secs());
 
         let price_feed = query_price_info(deps.as_ref(), env, address)
             .unwrap()
@@ -451,7 +451,7 @@ mod test {
         let address = b"123".as_ref();
 
         let mut dummy_price_info = PriceInfo::default();
-        dummy_price_info.attestation_time = Timestamp::from_seconds(500);
+        dummy_price_info.price_feed.publish_time = 500;
         dummy_price_info.price_feed.status = PriceStatus::Trading;
 
         price_info(&mut deps.storage)
@@ -468,13 +468,36 @@ mod test {
     }
 
     #[test]
+    fn test_query_price_info_ok_trading_future() {
+        let (mut deps, mut env) = setup_test();
+
+        let address = b"123".as_ref();
+
+        let mut dummy_price_info = PriceInfo::default();
+        dummy_price_info.price_feed.publish_time = 500;
+        dummy_price_info.price_feed.status = PriceStatus::Trading;
+
+        price_info(&mut deps.storage)
+            .save(address, &dummy_price_info)
+            .unwrap();
+
+        env.block.time = Timestamp::from_seconds(500 - VALID_TIME_PERIOD.as_secs());
+
+        let price_feed = query_price_info(deps.as_ref(), env, address)
+            .unwrap()
+            .price_feed;
+
+        assert_eq!(price_feed.status, PriceStatus::Trading);
+    }
+
+    #[test]
     fn test_query_price_info_ok_stale_future() {
         let (mut deps, mut env) = setup_test();
 
         let address = b"123".as_ref();
 
         let mut dummy_price_info = PriceInfo::default();
-        dummy_price_info.attestation_time = Timestamp::from_seconds(500);
+        dummy_price_info.price_feed.publish_time = 500;
         dummy_price_info.price_feed.status = PriceStatus::Trading;
 
         price_info(&mut deps.storage)
