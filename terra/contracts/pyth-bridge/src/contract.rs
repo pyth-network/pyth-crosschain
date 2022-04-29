@@ -16,6 +16,8 @@ use cosmwasm_std::{
 use pyth_sdk::{
     PriceFeed,
     PriceStatus,
+    PriceIdentifier,
+    ProductIdentifier,
 };
 
 use crate::{
@@ -124,13 +126,13 @@ fn process_batch_attestation(
     // Update prices
     for price_attestation in batch_attestation.price_attestations.iter() {
         let price_feed = PriceFeed::new(
-            price_attestation.price_id.to_bytes(),
+            PriceIdentifier::new(price_attestation.price_id.to_bytes()),
             price_attestation.status,
             price_attestation.publish_time,
             price_attestation.expo,
             price_attestation.max_num_publishers,
             price_attestation.num_publishers,
-            price_attestation.product_id.to_bytes(),
+            ProductIdentifier::new(price_attestation.product_id.to_bytes()),
             price_attestation.price,
             price_attestation.conf,
             price_attestation.ema_price,

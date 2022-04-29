@@ -79,7 +79,9 @@ pub enum PayloadId {
 #[derive(Clone, Default, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PriceAttestation {
+    #[serde(serialize_with = "pubkey_to_hex")]
     pub product_id:         Pubkey,
+    #[serde(serialize_with = "pubkey_to_hex")]
     pub price_id:           Pubkey,
     #[serde(serialize_with = "use_to_string")]
     pub price:              i64,
@@ -109,6 +111,13 @@ where
     S: Serializer,
 {
     s.serialize_str(&val.to_string())
+}
+
+pub fn pubkey_to_hex<S>(val: &Pubkey, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    s.serialize_str(&hex::encode(val.to_bytes()))
 }
 
 #[derive(Clone, Default, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]

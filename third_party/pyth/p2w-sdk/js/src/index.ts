@@ -1,7 +1,7 @@
 import { getSignedVAA, CHAIN_ID_SOLANA } from "@certusone/wormhole-sdk";
 import { zeroPad } from "ethers/lib/utils";
 import { PublicKey } from "@solana/web3.js";
-import { PriceFeed, PriceStatus } from "@pythnetwork/pyth-sdk-js";
+import { PriceFeed, PriceStatus, UnixTimestamp } from "@pythnetwork/pyth-sdk-js";
 
 let _P2W_WASM: any = undefined;
 
@@ -17,28 +17,22 @@ async function importWasm() {
     return _P2W_WASM;
 }
 
-export type Rational = {
-    value: BigInt;
-    numerator: BigInt;
-    denominator: BigInt;
-};
-
 export type PriceAttestation = {
     productId: string;
     priceId: string;
-    price: BigInt;
-    conf: BigInt;
+    price: string;
+    conf: string;
     expo: number;
-    emaPrice: BigInt;
-    emaConf: BigInt;
+    emaPrice: string;
+    emaConf: string;
     status: PriceStatus;
-    numPublishers: BigInt;
-    maxNumPublishers: BigInt;
-    attestationTime: BigInt;
-    publishTime: BigInt;
-    prevPublishTime: BigInt;
-    prevPrice: BigInt;
-    prevConf: BigInt;
+    numPublishers: number;
+    maxNumPublishers: number;
+    attestationTime: UnixTimestamp;
+    publishTime: UnixTimestamp;
+    prevPublishTime: UnixTimestamp;
+    prevPrice: string;
+    prevConf: string;
 };
 
 export type BatchPriceAttestation = {
@@ -95,8 +89,6 @@ export async function getSignedAttestation(host: string, p2w_addr: string, seque
 }
 
 export function priceAttestationToPriceFeed(priceAttestation: PriceAttestation): PriceFeed {
-    let status;
-
     return new PriceFeed({
         conf: priceAttestation.conf.toString(),
         emaConf: priceAttestation.emaConf.toString(),
@@ -115,7 +107,7 @@ export function priceAttestationToPriceFeed(priceAttestation: PriceAttestation):
     })
 }
 
-function computePrice(rawPrice: BigInt, expo: number): number {
+function computePrice(rawPrice: string, expo: number): number {
     return Number(rawPrice) * 10 ** expo;
 }
 
