@@ -211,7 +211,7 @@ fn handle_attest(
     let mut finished_count = 0;
 
     // TODO(2021-03-09): Extract logic into helper functions
-    while finished_count < batches.len() {
+    while daemon || finished_count < batches.len() {
         finished_count = 0;
         for (batch_no, state) in batches.iter_mut() {
             match state {
@@ -413,11 +413,11 @@ fn handle_attest(
                                 attempt_no: 1,
                             };
                         }
-                    } else {
-                        // We're not daemonized, increment towards breaking while-loop
-                        finished_count += 1;
-                    }
-                    continue; // No RPC requests are made in either case, skip sleep
+                    } 
+                    // Track the finished batches
+                    finished_count += 1;
+
+                    continue; // No RPC requests are made any of these cases, skip sleep
                 }
             }
 

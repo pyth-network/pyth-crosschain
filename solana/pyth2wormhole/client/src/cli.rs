@@ -7,7 +7,7 @@ use clap::Clap;
 #[derive(Clap)]
 #[clap(
     about = "A client for the pyth2wormhole Solana program",
-    author = "The Wormhole Project"
+    author = "Pyth Network Contributors"
 )]
 pub struct Cli {
     #[clap(
@@ -60,14 +60,15 @@ pub enum Action {
         #[clap(
             short = 'd',
             long = "--daemon",
-            about = "Do not stop attesting. In this mode, this program will behave more like a daemon and continuously attest the specified symbols."
+            about = "Do not stop attesting. In this mode, this program will behave more like a daemon and continuously attest the specified symbols.",
         )]
         daemon: bool,
         #[clap(
             short = 'b',
             long = "--batch-interval",
             about = "How often in seconds to transmit each batch. Only active with --daemon.",
-            default_value = "30"
+            default_value = "30",
+            requires = "daemon",
         )]
         batch_interval_secs: u64,
         #[clap(
