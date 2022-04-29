@@ -210,7 +210,9 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<PriceFeedResponse> {
     match price_info_read(deps.storage).load(address) {
         Ok(mut terra_price_info) => {
-            // Attestation time is very close to the actual price time (maybe a few seconds older).
+            let env_time_sec = env.block.time.seconds();
+            let price_pub_time_sec = terra_price_info.price_feed.publish_time as u64;
+
             // Cases that it will cover:
             // - This will ensure to set status unknown if the price has become very old and hasn't updated yet.
             // - If a price has arrived very late to terra it will set the status to unknown.
@@ -219,10 +221,10 @@ pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
             //   problem in a either Terra or Solana blockchain and if it is Solana we don't want to propagate
             //   Solana internal problems to Terra
             let time_abs_diff =
-                if env.block.time.seconds() > terra_price_info.attestation_time.seconds() {
-                    env.block.time.seconds() - terra_price_info.attestation_time.seconds()
+                if env_time_sec > price_pub_time_sec {
+                    env_time_sec - price_pub_time_sec
                 } else {
-                    terra_price_info.attestation_time.seconds() - env.block.time.seconds()
+                    price_pub_time_sec - env_time_sec
                 };
 
             if time_abs_diff > VALID_TIME_PERIOD.as_secs() {
