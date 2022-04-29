@@ -73,7 +73,7 @@ pub fn instantiate(
 pub fn parse_vaa(deps: DepsMut, block_time: u64, data: &Binary) -> StdResult<ParsedVAA> {
     let cfg = config_read(deps.storage).load()?;
     let vaa: ParsedVAA = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-        contract_addr: cfg.wormhole_contract.clone(),
+        contract_addr: cfg.wormhole_contract,
         msg: to_binary(&WormholeQueryMsg::VerifyVAA {
             vaa: data.clone(),
             block_time,
@@ -292,7 +292,7 @@ mod test {
     ) -> bool {
         update_price_feed_if_new(
             deps,
-            &env,
+            env,
             price_feed,
             Timestamp::from_seconds(attestation_time_seconds),
         )
@@ -301,9 +301,11 @@ mod test {
 
     #[test]
     fn test_verify_vaa_sender_ok() {
-        let mut config_info = ConfigInfo::default();
-        config_info.pyth_emitter = vec![1u8];
-        config_info.pyth_emitter_chain = 3;
+        let config_info = ConfigInfo {
+            pyth_emitter: vec![1u8],
+            pyth_emitter_chain: 3,
+            ..Default::default()
+        };
 
         let mut vaa = create_zero_vaa();
         vaa.emitter_address = vec![1u8];
@@ -314,9 +316,11 @@ mod test {
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_address() {
-        let mut config_info = ConfigInfo::default();
-        config_info.pyth_emitter = vec![1u8];
-        config_info.pyth_emitter_chain = 3;
+        let config_info = ConfigInfo {
+            pyth_emitter: vec![1u8],
+            pyth_emitter_chain: 3,
+            ..Default::default()
+        };
 
         let mut vaa = create_zero_vaa();
         vaa.emitter_address = vec![3u8, 4u8];
@@ -337,9 +341,11 @@ mod test {
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_chain() {
-        let mut config_info = ConfigInfo::default();
-        config_info.pyth_emitter = vec![1u8];
-        config_info.pyth_emitter_chain = 3;
+        let config_info = ConfigInfo {
+            pyth_emitter: vec![1u8],
+            pyth_emitter_chain: 3,
+            ..Default::default()
+        };
 
         let mut vaa = create_zero_vaa();
         vaa.emitter_address = vec![1u8];
