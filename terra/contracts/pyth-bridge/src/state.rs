@@ -8,7 +8,6 @@ use serde::{
 };
 
 use cosmwasm_std::{
-    StdResult,
     Storage,
     Timestamp,
 };
@@ -23,8 +22,6 @@ use cosmwasm_storage::{
     ReadonlySingleton,
     Singleton,
 };
-
-use wormhole::byte_utils::ByteUtils;
 
 type HumanAddr = String;
 
@@ -68,16 +65,4 @@ pub fn price_info(storage: &mut dyn Storage) -> Bucket<PriceInfo> {
 
 pub fn price_info_read(storage: &dyn Storage) -> ReadonlyBucket<PriceInfo> {
     bucket_read(storage, PRICE_INFO_KEY)
-}
-
-pub struct UpgradeContract {
-    pub new_contract: u64,
-}
-
-impl UpgradeContract {
-    pub fn deserialize(data: &Vec<u8>) -> StdResult<Self> {
-        let data = data.as_slice();
-        let new_contract = data.get_u64(24);
-        Ok(UpgradeContract { new_contract })
-    }
 }
