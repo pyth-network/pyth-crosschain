@@ -201,7 +201,7 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
         // Check that there is not a significant difference between this chain's time
         // and the attestation time. This is a last-resort safety net, and this check
         // will be iterated on in the future.
-        if (diff(block.timestamp, info.attestationTime) > VALID_TIME_PERIOD_SECS) {
+        if (diff(block.timestamp, info.publishTime) > VALID_TIME_PERIOD_SECS) {
             info.priceFeed.status = PythStructs.PriceStatus.UNKNOWN;
         }
 
