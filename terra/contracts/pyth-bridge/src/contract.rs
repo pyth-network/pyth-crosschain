@@ -324,14 +324,6 @@ mod test {
             verify_vaa_sender(&config_info, &vaa),
             ContractError::InvalidVAA.std_err()
         );
-
-        let mut vaa = create_zero_vaa();
-        vaa.emitter_address = vec![1u8];
-        vaa.emitter_chain = 2;
-        assert_eq!(
-            verify_vaa_sender(&config_info, &vaa),
-            ContractError::InvalidVAA.std_err()
-        );
     }
 
     #[test]
