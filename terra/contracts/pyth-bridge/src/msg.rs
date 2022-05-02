@@ -1,7 +1,8 @@
-use cosmwasm_std::{
-    Binary,
+use cosmwasm_std::Binary;
+use pyth_sdk::{
+    PriceFeed,
+    PriceIdentifier,
 };
-use pyth_sdk::{PriceFeed, PriceIdentifier};
 use schemars::JsonSchema;
 use serde::{
     Deserialize,
@@ -12,8 +13,8 @@ type HumanAddr = String;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
-    pub wormhole_contract: HumanAddr,
-    pub pyth_emitter: Binary,
+    pub wormhole_contract:  HumanAddr,
+    pub pyth_emitter:       Binary,
     pub pyth_emitter_chain: u16,
 }
 
@@ -37,5 +38,5 @@ pub enum QueryMsg {
 #[serde(rename_all = "snake_case")]
 pub struct PriceFeedResponse {
     /// Pyth Price Feed
-    pub price_feed:        PriceFeed,
+    pub price_feed: PriceFeed,
 }

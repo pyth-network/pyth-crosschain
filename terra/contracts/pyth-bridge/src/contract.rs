@@ -15,37 +15,33 @@ use cosmwasm_std::{
 
 use pyth_sdk::{
     PriceFeed,
-    PriceStatus,
     PriceIdentifier,
+    PriceStatus,
     ProductIdentifier,
 };
 
-use crate::{
-    msg::{
-        ExecuteMsg,
-        InstantiateMsg,
-        MigrateMsg,
-        PriceFeedResponse,
-        QueryMsg,
-    },
-    state::{
-        config,
-        config_read,
-        price_info,
-        price_info_read,
-        ConfigInfo,
-        PriceInfo,
-        VALID_TIME_PERIOD,
-    },
+use crate::msg::{
+    ExecuteMsg,
+    InstantiateMsg,
+    MigrateMsg,
+    PriceFeedResponse,
+    QueryMsg,
+};
+use crate::state::{
+    config,
+    config_read,
+    price_info,
+    price_info_read,
+    ConfigInfo,
+    PriceInfo,
+    VALID_TIME_PERIOD,
 };
 
 use p2w_sdk::BatchPriceAttestation;
 
-use wormhole::{
-    error::ContractError,
-    msg::QueryMsg as WormholeQueryMsg,
-    state::ParsedVAA,
-};
+use wormhole::error::ContractError;
+use wormhole::msg::QueryMsg as WormholeQueryMsg;
+use wormhole::state::ParsedVAA;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
@@ -61,8 +57,8 @@ pub fn instantiate(
 ) -> StdResult<Response> {
     // Save general wormhole and pyth info
     let state = ConfigInfo {
-        wormhole_contract: msg.wormhole_contract,
-        pyth_emitter: msg.pyth_emitter.as_slice().to_vec(),
+        wormhole_contract:  msg.wormhole_contract,
+        pyth_emitter:       msg.pyth_emitter.as_slice().to_vec(),
         pyth_emitter_chain: msg.pyth_emitter_chain,
     };
     config(deps.storage).save(&state)?;
@@ -73,8 +69,8 @@ pub fn instantiate(
 pub fn parse_vaa(deps: DepsMut, block_time: u64, data: &Binary) -> StdResult<ParsedVAA> {
     let cfg = config_read(deps.storage).load()?;
     let vaa: ParsedVAA = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-        contract_addr: cfg.wormhole_contract.clone(),
-        msg: to_binary(&WormholeQueryMsg::VerifyVAA {
+        contract_addr: cfg.wormhole_contract,
+        msg:           to_binary(&WormholeQueryMsg::VerifyVAA {
             vaa: data.clone(),
             block_time,
         })?,
@@ -108,7 +104,8 @@ fn submit_vaa(
     process_batch_attestation(deps, env, &batch_attestation)
 }
 
-// This checks the emitter to be the pyth emitter in wormhole and it comes from emitter chain (Solana)
+// This checks the emitter to be the pyth emitter in wormhole and it comes from emitter chain
+// (Solana)
 fn verify_vaa_sender(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
     if vaa.emitter_address != state.pyth_emitter || vaa.emitter_chain != state.pyth_emitter_chain {
         return ContractError::InvalidVAA.std_err();
@@ -160,8 +157,9 @@ fn process_batch_attestation(
 
 /// Returns true if the price_feed is newer than the stored one.
 ///
-/// This function returns error only if there be issues in ser/de when it reads from the bucket. Such an example would be
-/// upgrades which migration is not handled carefully so the binary stored in the bucket won't be parsed.
+/// This function returns error only if there be issues in ser/de when it reads from the bucket.
+/// Such an example would be upgrades which migration is not handled carefully so the binary stored
+/// in the bucket won't be parsed.
 fn update_price_feed_if_new(
     deps: &mut DepsMut,
     env: &Env,
@@ -174,8 +172,9 @@ fn update_price_feed_if_new(
         |maybe_price_info| -> StdResult<PriceInfo> {
             match maybe_price_info {
                 Some(price_info) => {
-                    // This check ensures that a price won't be updated with the same or older message.
-                    // Attestation_time is guaranteed increasing in solana
+                    // This check ensures that a price won't be updated with the same or older
+                    // message. Attestation_time is guaranteed increasing in
+                    // solana
                     if price_info.attestation_time < attestation_time {
                         Ok(PriceInfo {
                             arrival_time: env.block.time,
@@ -203,29 +202,29 @@ fn update_price_feed_if_new(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::PriceFeed { id } => to_binary(&query_price_info(deps, env, id.as_ref())?),
+        QueryMsg::PriceFeed { id } => to_binary(&query_price_feed(deps, env, id.as_ref())?),
     }
 }
 
-pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<PriceFeedResponse> {
+pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<PriceFeedResponse> {
     match price_info_read(deps.storage).load(address) {
         Ok(mut terra_price_info) => {
             let env_time_sec = env.block.time.seconds();
             let price_pub_time_sec = terra_price_info.price_feed.publish_time as u64;
 
             // Cases that it will cover:
-            // - This will ensure to set status unknown if the price has become very old and hasn't updated yet.
+            // - This will ensure to set status unknown if the price has become very old and hasn't
+            //   updated yet.
             // - If a price has arrived very late to terra it will set the status to unknown.
-            // - If a price is coming from future it's tolerated up to VALID_TIME_PERIOD seconds (using abs diff)
-            //   but more than that is set to unknown, the reason is huge clock difference means there exists a
-            //   problem in a either Terra or Solana blockchain and if it is Solana we don't want to propagate
-            //   Solana internal problems to Terra
-            let time_abs_diff =
-                if env_time_sec > price_pub_time_sec {
-                    env_time_sec - price_pub_time_sec
-                } else {
-                    price_pub_time_sec - env_time_sec
-                };
+            // - If a price is coming from future it's tolerated up to VALID_TIME_PERIOD seconds
+            //   (using abs diff) but more than that is set to unknown, the reason is huge clock
+            //   difference means there exists a problem in a either Terra or Solana blockchain and
+            //   if it is Solana we don't want to propagate Solana internal problems to Terra
+            let time_abs_diff = if env_time_sec > price_pub_time_sec {
+                env_time_sec - price_pub_time_sec
+            } else {
+                price_pub_time_sec - env_time_sec
+            };
 
             if time_abs_diff > VALID_TIME_PERIOD.as_secs() {
                 terra_price_info.price_feed.status = PriceStatus::Unknown;
@@ -241,16 +240,14 @@ pub fn query_price_info(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
 
 #[cfg(test)]
 mod test {
-    use cosmwasm_std::{
-        testing::{
-            mock_dependencies,
-            mock_env,
-            MockApi,
-            MockQuerier,
-            MockStorage,
-        },
-        OwnedDeps,
+    use cosmwasm_std::testing::{
+        mock_dependencies,
+        mock_env,
+        MockApi,
+        MockQuerier,
+        MockStorage,
     };
+    use cosmwasm_std::OwnedDeps;
 
     use super::*;
 
@@ -260,17 +257,17 @@ mod test {
 
     fn create_zero_vaa() -> ParsedVAA {
         ParsedVAA {
-            version: 0,
+            version:            0,
             guardian_set_index: 0,
-            timestamp: 0,
-            nonce: 0,
-            len_signers: 0,
-            emitter_chain: 0,
-            emitter_address: vec![],
-            sequence: 0,
-            consistency_level: 0,
-            payload: vec![],
-            hash: vec![],
+            timestamp:          0,
+            nonce:              0,
+            len_signers:        0,
+            emitter_chain:      0,
+            emitter_address:    vec![],
+            sequence:           0,
+            consistency_level:  0,
+            payload:            vec![],
+            hash:               vec![],
         }
     }
 
@@ -290,7 +287,7 @@ mod test {
     ) -> bool {
         update_price_feed_if_new(
             deps,
-            &env,
+            env,
             price_feed,
             Timestamp::from_seconds(attestation_time_seconds),
         )
@@ -299,9 +296,11 @@ mod test {
 
     #[test]
     fn test_verify_vaa_sender_ok() {
-        let mut config_info = ConfigInfo::default();
-        config_info.pyth_emitter = vec![1u8];
-        config_info.pyth_emitter_chain = 3;
+        let config_info = ConfigInfo {
+            pyth_emitter: vec![1u8],
+            pyth_emitter_chain: 3,
+            ..Default::default()
+        };
 
         let mut vaa = create_zero_vaa();
         vaa.emitter_address = vec![1u8];
@@ -312,9 +311,11 @@ mod test {
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_address() {
-        let mut config_info = ConfigInfo::default();
-        config_info.pyth_emitter = vec![1u8];
-        config_info.pyth_emitter_chain = 3;
+        let config_info = ConfigInfo {
+            pyth_emitter: vec![1u8],
+            pyth_emitter_chain: 3,
+            ..Default::default()
+        };
 
         let mut vaa = create_zero_vaa();
         vaa.emitter_address = vec![3u8, 4u8];
@@ -323,21 +324,15 @@ mod test {
             verify_vaa_sender(&config_info, &vaa),
             ContractError::InvalidVAA.std_err()
         );
-
-        let mut vaa = create_zero_vaa();
-        vaa.emitter_address = vec![1u8];
-        vaa.emitter_chain = 2;
-        assert_eq!(
-            verify_vaa_sender(&config_info, &vaa),
-            ContractError::InvalidVAA.std_err()
-        );
     }
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_chain() {
-        let mut config_info = ConfigInfo::default();
-        config_info.pyth_emitter = vec![1u8];
-        config_info.pyth_emitter_chain = 3;
+        let config_info = ConfigInfo {
+            pyth_emitter: vec![1u8],
+            pyth_emitter_chain: 3,
+            ..Default::default()
+        };
 
         let mut vaa = create_zero_vaa();
         vaa.emitter_address = vec![1u8];
@@ -438,7 +433,7 @@ mod test {
 
         env.block.time = Timestamp::from_seconds(80 + VALID_TIME_PERIOD.as_secs());
 
-        let price_feed = query_price_info(deps.as_ref(), env, address)
+        let price_feed = query_price_feed(deps.as_ref(), env, address)
             .unwrap()
             .price_feed;
 
@@ -460,7 +455,7 @@ mod test {
 
         env.block.time = Timestamp::from_seconds(500 + VALID_TIME_PERIOD.as_secs() + 1);
 
-        let price_feed = query_price_info(deps.as_ref(), env, address)
+        let price_feed = query_price_feed(deps.as_ref(), env, address)
             .unwrap()
             .price_feed;
 
@@ -483,7 +478,7 @@ mod test {
 
         env.block.time = Timestamp::from_seconds(500 - VALID_TIME_PERIOD.as_secs());
 
-        let price_feed = query_price_info(deps.as_ref(), env, address)
+        let price_feed = query_price_feed(deps.as_ref(), env, address)
             .unwrap()
             .price_feed;
 
@@ -506,7 +501,7 @@ mod test {
 
         env.block.time = Timestamp::from_seconds(500 - VALID_TIME_PERIOD.as_secs() - 1);
 
-        let price_feed = query_price_info(deps.as_ref(), env, address)
+        let price_feed = query_price_feed(deps.as_ref(), env, address)
             .unwrap()
             .price_feed;
 
@@ -518,7 +513,7 @@ mod test {
         let (deps, env) = setup_test();
 
         assert_eq!(
-            query_price_info(deps.as_ref(), env, b"123".as_ref()),
+            query_price_feed(deps.as_ref(), env, b"123".as_ref()),
             ContractError::AssetNotFound.std_err()
         );
     }
