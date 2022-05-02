@@ -10,6 +10,7 @@ import threading
 import time
 from http.client import HTTPConnection
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from subprocess import PIPE, STDOUT, Popen
 
 from pyth_utils import *
 
@@ -20,7 +21,6 @@ logging.basicConfig(
 P2W_SOL_ADDRESS = os.environ.get(
     "P2W_SOL_ADDRESS", "P2WH424242424242424242424242424242424242424"
 )
-P2W_ATTEST_INTERVAL = float(os.environ.get("P2W_ATTEST_INTERVAL", 5))
 P2W_OWNER_KEYPAIR = os.environ.get(
     "P2W_OWNER_KEYPAIR", "/usr/src/solana/keys/p2w_owner.json"
 )
@@ -36,11 +36,14 @@ WORMHOLE_ADDRESS = os.environ.get(
     "WORMHOLE_ADDRESS", "Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 )
 
-P2W_EXIT_ON_ERROR = os.environ.get("P2W_EXIT_ON_ERROR", "False").lower() == "true"
+P2W_MAX_LOG_LINES = int(os.environ.get("P2W_MAX_LOG_LINES", 1000))
 
 ATTESTATIONS = {
     "pendingSeqnos": [],
 }
+
+SEQNO_REGEX = re.compile(r"Sequence number: (\d+)")
+
 
 
 class P2WAutoattestStatusEndpoint(BaseHTTPRequestHandler):
@@ -86,6 +89,16 @@ if SOL_AIRDROP_AMT > 0:
         ],
     )
 
+def find_and_log_seqnos(s):
+    # parse seqnos
+    matches = SEQNO_REGEX.findall(s)
+
+    seqnos = list(map(lambda m: int(m), matches))
+
+    ATTESTATIONS["pendingSeqnos"] += seqnos
+
+    if len(seqnos) > 0:
+        logging.info(f"{len(seqnos)} batch seqno(s) received: {seqnos})")
 
 if P2W_INITIALIZE_SOL_CONTRACT is not None:
     # Get actor pubkeys
@@ -188,7 +201,8 @@ symbols:"""
         f.flush()
 
 
-attest_result = run_or_die(
+# Send the first attestation in one-shot mode for testing
+first_attest_result = run_or_die(
     [
         "pyth2wormhole-client",
         "--log-level",
@@ -207,7 +221,8 @@ attest_result = run_or_die(
 )
 
 logging.info("p2w_autoattest ready to roll!")
-logging.info(f"Attest Interval: {P2W_ATTEST_INTERVAL}")
+
+find_and_log_seqnos(first_attest_result.stdout)
 
 # Serve p2w endpoint
 endpoint_thread = threading.Thread(target=serve_attestations, daemon=True)
@@ -217,18 +232,12 @@ endpoint_thread.start()
 readiness_thread = threading.Thread(target=readiness, daemon=True)
 readiness_thread.start()
 
-seqno_regex = re.compile(r"Sequence number: (\d+)")
 
+# Do not exit this script if a continuous attestation stops for
+# whatever reason (this avoids k8s restart penalty)
 while True:
-    matches = seqno_regex.findall(attest_result.stdout)
-
-    seqnos = list(map(lambda m: int(m), matches))
-
-    ATTESTATIONS["pendingSeqnos"] += seqnos
-
-    logging.info(f"{len(seqnos)} batch seqno(s) received: {seqnos})")
-
-    attest_result = run_or_die(
+    # Start the child process in daemon mode
+    p2w_client_process = Popen(
         [
             "pyth2wormhole-client",
             "--log-level",
@@ -242,8 +251,32 @@ while True:
             "attest",
             "-f",
             P2W_ATTESTATION_CFG,
+            "-d",
         ],
-        capture_output=True,
-        die=P2W_EXIT_ON_ERROR,
-    )
-    time.sleep(P2W_ATTEST_INTERVAL)
+        stdout=PIPE,
+        stderr=STDOUT,
+        text=True,
+        )
+
+    saved_log_lines = []
+
+    # Keep listening for seqnos until the program exits
+    while p2w_client_process.poll() is None:
+        line = p2w_client_process.stdout.readline()
+        
+        # Always pass output to the debug level
+        logging.debug(f"pyth2wormhole-client: {line}")
+
+        find_and_log_seqnos(line)
+
+        # Extend with new line
+        saved_log_lines.append(line)
+
+        # trim back to specified maximum
+        if len(saved_log_lines) > P2W_MAX_LOG_LINES:
+            saved_log_lines.pop(0)
+        
+
+    # Yell if the supposedly non-stop attestation process exits
+    logging.warn(f"pyth2wormhole-client stopped unexpectedly with code {p2w_client_process.retcode}")
+    logging.warn(f"Last {len(saved_log_lines)} log lines:\n{(saved_log_lines)}")

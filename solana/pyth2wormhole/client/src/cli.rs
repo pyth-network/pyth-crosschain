@@ -7,7 +7,7 @@ use clap::Clap;
 #[derive(Clap)]
 #[clap(
     about = "A client for the pyth2wormhole Solana program",
-    author = "The Wormhole Project"
+    author = "Pyth Network Contributors"
 )]
 pub struct Cli {
     #[clap(
@@ -53,21 +53,35 @@ pub enum Action {
         #[clap(
             short = 'n',
             long = "--n-retries",
-            about = "How many times to retry send_transaction() on each batch on failure",
+            about = "How many times to retry send_transaction() on each batch before flagging a failure.",
             default_value = "5"
         )]
         n_retries: usize,
         #[clap(
+            short = 'd',
+            long = "--daemon",
+            about = "Do not stop attesting. In this mode, this program will behave more like a daemon and continuously attest the specified symbols.",
+        )]
+        daemon: bool,
+        #[clap(
+            short = 'b',
+            long = "--batch-interval",
+            about = "How often in seconds to transmit each batch. Only active with --daemon.",
+            default_value = "30",
+            requires_if("true", "daemon"),
+        )]
+        batch_interval_secs: u64,
+        #[clap(
             short = 't',
             long = "--timeout",
-            about = "How many seconds to wait before giving up on get_transaction() for each batch",
+            about = "How many seconds to wait before giving up on get_transaction() for tx confirmation.",
             default_value = "40"
         )]
         conf_timeout_secs: u64,
         #[clap(
             short = 'i',
             long = "--rpc-interval",
-            about = "How many milliseconds to waist between SOL RPC requests",
+            about = "How many milliseconds to wait between SOL RPC requests",
             default_value = "200"
         )]
         rpc_interval_ms: u64,
