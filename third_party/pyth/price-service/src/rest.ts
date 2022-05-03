@@ -56,23 +56,35 @@ export class RestAPI {
     
     const latestVaaBytesInputSchema: schema = {
       query: Joi.object({
-        id: Joi.string().regex(/^[a-f0-9]{64}$/)
+        id: Joi.array().items(Joi.string().regex(/^[a-f0-9]{64}$/))
       })
     }
     app.get("/latest_vaa_bytes", validate(latestVaaBytesInputSchema), (req: Request, res: Response) => {
-      let priceId = req.query.id as string;
+      let priceIds = req.query.id as string[];
 
-      let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(priceId);
+      // Multiple price ids might share same vaa, we use sequence number as
+      // key of a vaa and deduplicate using a map of seqnum to vaa bytes.
+      let vaaMap = new Map<number, string>();
 
-      if (latestPriceInfo === undefined) {
-        res.sendStatus(StatusCodes.BAD_REQUEST);
-        return;
+      for (let id of priceIds) {
+        let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
+
+        if (latestPriceInfo === undefined) {
+          res.status(StatusCodes.BAD_REQUEST).send(`Price Feed with id ${id} not found`);
+          return;
+        }
+
+        const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
+        this.promClient?.addApiRequestsPriceFreshness(req.path, id, freshness);
+
+        vaaMap.set(latestPriceInfo.seqNum, latestPriceInfo.vaaBytes);
       }
 
-      const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
-      this.promClient?.addApiRequestsPriceFreshness(req.path, priceId, freshness);
+      const jsonResponse = Array.from(vaaMap.values(),
+        vaaBytes => Buffer.from(vaaBytes, 'binary').toString('base64')
+      );
 
-      res.send(latestPriceInfo.vaaBytes);
+      res.json(jsonResponse);
     });
     endpoints.push("latest_vaa_bytes?id=<price_feed_id>");
 
