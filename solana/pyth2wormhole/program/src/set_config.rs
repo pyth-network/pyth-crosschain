@@ -48,7 +48,7 @@ pub fn set_config(
     if &cfgStruct.owner != accs.current_owner.info().key {
         msg!(
             "Current owner account mismatch (expected {:?})",
-            accs.config.0.owner
+            cfgStruct.owner
         );
         return Err(SolitaireError::InvalidSigner(
             accs.current_owner.info().key.clone(),
