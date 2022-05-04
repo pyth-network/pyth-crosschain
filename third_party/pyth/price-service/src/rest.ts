@@ -56,25 +56,44 @@ export class RestAPI {
     
     const latestVaaBytesInputSchema: schema = {
       query: Joi.object({
-        id: Joi.string().regex(/^[a-f0-9]{64}$/)
+        id: Joi.array().items(Joi.string().regex(/^[a-f0-9]{64}$/))
       })
     }
     app.get("/latest_vaa_bytes", validate(latestVaaBytesInputSchema), (req: Request, res: Response) => {
-      let priceId = req.query.id as string;
+      let priceIds = req.query.id as string[];
 
-      let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(priceId);
+      // Multiple price ids might share same vaa, we use sequence number as
+      // key of a vaa and deduplicate using a map of seqnum to vaa bytes.
+      let vaaMap = new Map<number, string>();
 
-      if (latestPriceInfo === undefined) {
-        res.sendStatus(StatusCodes.BAD_REQUEST);
+      let notFoundIds: string[] = [];
+
+      for (let id of priceIds) {
+        let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
+
+        if (latestPriceInfo === undefined) {
+          notFoundIds.push(id);
+          continue;
+        }
+
+        const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
+        this.promClient?.addApiRequestsPriceFreshness(req.path, id, freshness);
+
+        vaaMap.set(latestPriceInfo.seqNum, latestPriceInfo.vaaBytes);
+      }
+
+      if (notFoundIds.length > 0) {
+        res.status(StatusCodes.BAD_REQUEST).send(`Price Feeds with ids ${notFoundIds.join(', ')} not found`);
         return;
       }
 
-      const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
-      this.promClient?.addApiRequestsPriceFreshness(req.path, priceId, freshness);
+      const jsonResponse = Array.from(vaaMap.values(),
+        vaaBytes => Buffer.from(vaaBytes, 'binary').toString('base64')
+      );
 
-      res.send(latestPriceInfo.vaaBytes);
+      res.json(jsonResponse);
     });
-    endpoints.push("latest_vaa_bytes?id=<price_feed_id>");
+    endpoints.push("latest_vaa_bytes?id[]=<price_feed_id>&id[]=<price_feed_id_2>&..");
 
     const latestPriceFeedInputSchema: schema = {
       query: Joi.object({
