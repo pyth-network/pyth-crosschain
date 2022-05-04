@@ -179,7 +179,12 @@ if P2W_ATTESTATION_CFG is None:
 
     cfg_yaml = f"""
 ---
-symbols:"""
+symbol_groups:
+  - group_name: default
+    conditions:
+      min_freq_secs: 5
+    symbols:
+"""
 
     logging.info(
         f"Retrieved {len(pyth_accounts)} Pyth accounts from endpoint: {pyth_accounts}"
@@ -192,9 +197,9 @@ symbols:"""
         product = acc["product"]
 
         cfg_yaml += f"""
-    - name: {name}
-      price_addr: {price}
-      product_addr: {product}"""
+      - name: {name}
+        price_addr: {price}
+        product_addr: {product}"""
 
     with open(P2W_ATTESTATION_CFG, "w") as f:
         f.write(cfg_yaml)
