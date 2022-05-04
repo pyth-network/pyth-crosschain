@@ -391,6 +391,7 @@ fn handle_attest(
                             state.status = Sending { attempt_no: 1 };
                         }
                     }
+
                     // Track the finished batches
                     finished_count += 1;
 
