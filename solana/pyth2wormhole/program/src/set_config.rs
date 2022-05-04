@@ -44,7 +44,8 @@ pub fn set_config(
     accs: &mut SetConfig,
     data: Pyth2WormholeConfig,
 ) -> SoliResult<()> {
-    if &accs.config.0.owner != accs.current_owner.info().key {
+    let cfgStruct: &Pyth2WormholeConfig = &accs.config; // unpack Data via nested Deref impls
+    if &cfgStruct.owner != accs.current_owner.info().key {
         msg!(
             "Current owner account mismatch (expected {:?})",
             accs.config.0.owner
