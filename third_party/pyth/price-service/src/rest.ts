@@ -66,12 +66,14 @@ export class RestAPI {
       // key of a vaa and deduplicate using a map of seqnum to vaa bytes.
       let vaaMap = new Map<number, string>();
 
+      let notFoundIds: string[] = [];
+
       for (let id of priceIds) {
         let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
 
         if (latestPriceInfo === undefined) {
-          res.status(StatusCodes.BAD_REQUEST).send(`Price Feed with id ${id} not found`);
-          return;
+          notFoundIds.push(id);
+          continue;
         }
 
         const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
@@ -80,13 +82,18 @@ export class RestAPI {
         vaaMap.set(latestPriceInfo.seqNum, latestPriceInfo.vaaBytes);
       }
 
+      if (notFoundIds.length > 0) {
+        res.status(StatusCodes.BAD_REQUEST).send(`Price Feeds with ids ${notFoundIds.join(', ')} not found`);
+        return;
+      }
+
       const jsonResponse = Array.from(vaaMap.values(),
         vaaBytes => Buffer.from(vaaBytes, 'binary').toString('base64')
       );
 
       res.json(jsonResponse);
     });
-    endpoints.push("latest_vaa_bytes?id=<price_feed_id>");
+    endpoints.push("latest_vaa_bytes?id[]=<price_feed_id>&id[]=<price_feed_id_2>&..");
 
     const latestPriceFeedInputSchema: schema = {
       query: Joi.object({
