@@ -13,6 +13,20 @@ import { validate, ValidationError, Joi, schema } from "express-validation";
 const MORGAN_LOG_FORMAT = ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
   ' :status :res[content-length] :response-time ms ":referrer" ":user-agent"';
 
+class RestException extends Error {
+  statusCode: number;
+  message: string;
+  constructor(statusCode: number, message: string) {
+    super(message);
+    this.statusCode = statusCode;
+    this.message = message;
+  }
+
+  static PriceFeedIdNotFound(notFoundIds: string[]): RestException {
+    return new RestException(StatusCodes.BAD_REQUEST, `Price Feeds with ids ${notFoundIds.join(', ')} not found`);
+  }
+}
+
 export class RestAPI {
   private port: number;
   private priceFeedVaaInfo: PriceFeedPriceInfo;
@@ -83,8 +97,7 @@ export class RestAPI {
       }
 
       if (notFoundIds.length > 0) {
-        res.status(StatusCodes.BAD_REQUEST).send(`Price Feeds with ids ${notFoundIds.join(', ')} not found`);
-        return;
+        throw RestException.PriceFeedIdNotFound(notFoundIds);
       }
 
       const jsonResponse = Array.from(vaaMap.values(),
@@ -122,8 +135,7 @@ export class RestAPI {
       }
 
       if (notFoundIds.length > 0) {
-        res.status(StatusCodes.BAD_REQUEST).send(`Price Feeds with ids ${notFoundIds.join(', ')} not found`);
-        return;
+        throw RestException.PriceFeedIdNotFound(notFoundIds);
       }
 
       res.json(responseJson);
@@ -152,6 +164,10 @@ export class RestAPI {
 
     app.use(function(err: any, _: Request, res: Response, next: NextFunction) {
       if (err instanceof ValidationError) {
+        return res.status(err.statusCode).json(err);
+      }
+
+      if (err instanceof RestException) {
         return res.status(err.statusCode).json(err);
       }
     
