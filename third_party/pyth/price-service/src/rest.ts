@@ -64,13 +64,13 @@ export class RestAPI {
 
     let endpoints: string[] = [];
     
-    const latestVaaBytesInputSchema: schema = {
+    const latestVaasInputSchema: schema = {
       query: Joi.object({
-        id: Joi.array().items(Joi.string().regex(/^[a-f0-9]{64}$/))
+        ids: Joi.array().items(Joi.string().regex(/^[a-f0-9]{64}$/))
       })
     }
-    app.get("/latest_vaa_bytes", validate(latestVaaBytesInputSchema), (req: Request, res: Response) => {
-      let priceIds = req.query.id as string[];
+    app.get("/latest_vaas", validate(latestVaasInputSchema), (req: Request, res: Response) => {
+      let priceIds = req.query.ids as string[];
 
       // Multiple price ids might share same vaa, we use sequence number as
       // key of a vaa and deduplicate using a map of seqnum to vaa bytes.
@@ -102,15 +102,15 @@ export class RestAPI {
 
       res.json(jsonResponse);
     });
-    endpoints.push("latest_vaa_bytes?id[]=<price_feed_id>&id[]=<price_feed_id_2>&..");
+    endpoints.push("latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..");
 
-    const latestPriceFeedInputSchema: schema = {
+    const latestPriceFeedsInputSchema: schema = {
       query: Joi.object({
-        id: Joi.array().items(Joi.string().regex(/^[a-f0-9]{64}$/))
+        ids: Joi.array().items(Joi.string().regex(/^[a-f0-9]{64}$/))
       })
     }
-    app.get("/latest_price_feed", validate(latestPriceFeedInputSchema), (req: Request, res: Response) => {
-      let priceIds = req.query.id as string[];
+    app.get("/latest_price_feeds", validate(latestPriceFeedsInputSchema), (req: Request, res: Response) => {
+      let priceIds = req.query.ids as string[];
 
       let responseJson = [];
 
@@ -136,7 +136,7 @@ export class RestAPI {
 
       res.json(responseJson);
     });
-    endpoints.push("latest_price_feed?id[]=<price_feed_id>&id[]=<price_feed_id_2>&..");
+    endpoints.push("latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..");
 
 
     app.get("/ready", (_, res: Response) => {
