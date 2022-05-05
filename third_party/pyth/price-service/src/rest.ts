@@ -1,4 +1,4 @@
-import express from "express";
+import express, {Express} from "express";
 import cors from "cors";
 import morgan from "morgan";
 import responseTime from "response-time";
@@ -13,7 +13,7 @@ import { validate, ValidationError, Joi, schema } from "express-validation";
 const MORGAN_LOG_FORMAT = ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
   ' :status :res[content-length] :response-time ms ":referrer" ":user-agent"';
 
-class RestException extends Error {
+export class RestException extends Error {
   statusCode: number;
   message: string;
   constructor(statusCode: number, message: string) {
@@ -44,7 +44,7 @@ export class RestAPI {
   }
 
   // Run this function without blocking (`await`) if you want to run it async.
-  async run() {
+  async createApp() {
     const app = express();
     app.use(cors());
 
@@ -61,10 +61,6 @@ export class RestAPI {
         this.promClient?.addResponseTime(req.path, res.statusCode, time);
       }
     }))
-
-    app.listen(this.port, () =>
-      logger.debug("listening on REST port " + this.port)
-    );
 
     let endpoints: string[] = [];
     
@@ -173,5 +169,14 @@ export class RestAPI {
     
       return next(err);
     })
+
+    return app;
+  }
+
+  async run() {
+    let app = await this.createApp();
+    app.listen(this.port, () =>
+      logger.debug("listening on REST port " + this.port)
+    );
   }
 }

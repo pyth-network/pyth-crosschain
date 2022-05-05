@@ -4,15 +4,22 @@
   "description": "Pyth Price Service",
   "main": "index.js",
   "scripts": {
+    "format": "prettier --write \"src/**/*.ts\"",
     "build": "tsc",
-    "start": "node lib/index.js"
+    "start": "node lib/index.js",
+    "test": "jest"
   },
   "author": "",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/jest": "^27.5.0",
     "@types/long": "^4.0.1",
     "@types/node": "^16.6.1",
+    "@types/supertest": "^2.0.12",
+    "jest": "^28.0.3",
     "prettier": "^2.3.2",
+    "supertest": "^6.2.3",
+    "ts-jest": "^28.0.1",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.3.5"
