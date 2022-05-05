@@ -105,18 +105,25 @@ export class RestAPI {
 
       let responseJson = [];
 
+      let notFoundIds: string[] = [];
+
       for (let id of priceIds) {
         let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
 
         if (latestPriceInfo === undefined) {
-          res.status(StatusCodes.BAD_REQUEST).send(`Price Feed with id ${id} not found`);
-          return;
+          notFoundIds.push(id);
+          continue;
         }
 
         const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
         this.promClient?.addApiRequestsPriceFreshness(req.path, id, freshness);
 
         responseJson.push(latestPriceInfo.priceFeed.toJson());
+      }
+
+      if (notFoundIds.length > 0) {
+        res.status(StatusCodes.BAD_REQUEST).send(`Price Feeds with ids ${notFoundIds.join(', ')} not found`);
+        return;
       }
 
       res.json(responseJson);
