@@ -1,4 +1,4 @@
-import express from "express";
+import express, {Express} from "express";
 import cors from "cors";
 import morgan from "morgan";
 import responseTime from "response-time";
@@ -12,6 +12,20 @@ import { validate, ValidationError, Joi, schema } from "express-validation";
 
 const MORGAN_LOG_FORMAT = ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
   ' :status :res[content-length] :response-time ms ":referrer" ":user-agent"';
+
+export class RestException extends Error {
+  statusCode: number;
+  message: string;
+  constructor(statusCode: number, message: string) {
+    super(message);
+    this.statusCode = statusCode;
+    this.message = message;
+  }
+
+  static PriceFeedIdNotFound(notFoundIds: string[]): RestException {
+    return new RestException(StatusCodes.BAD_REQUEST, `Price Feeds with ids ${notFoundIds.join(', ')} not found`);
+  }
+}
 
 export class RestAPI {
   private port: number;
@@ -30,7 +44,7 @@ export class RestAPI {
   }
 
   // Run this function without blocking (`await`) if you want to run it async.
-  async run() {
+  async createApp() {
     const app = express();
     app.use(cors());
 
@@ -48,19 +62,15 @@ export class RestAPI {
       }
     }))
 
-    app.listen(this.port, () =>
-      logger.debug("listening on REST port " + this.port)
-    );
-
     let endpoints: string[] = [];
     
-    const latestVaaBytesInputSchema: schema = {
+    const latestVaasInputSchema: schema = {
       query: Joi.object({
-        id: Joi.array().items(Joi.string().regex(/^[a-f0-9]{64}$/))
+        ids: Joi.array().items(Joi.string().regex(/^[a-f0-9]{64}$/))
       })
     }
-    app.get("/latest_vaa_bytes", validate(latestVaaBytesInputSchema), (req: Request, res: Response) => {
-      let priceIds = req.query.id as string[];
+    app.get("/latest_vaas", validate(latestVaasInputSchema), (req: Request, res: Response) => {
+      let priceIds = req.query.ids as string[];
 
       // Multiple price ids might share same vaa, we use sequence number as
       // key of a vaa and deduplicate using a map of seqnum to vaa bytes.
@@ -83,8 +93,7 @@ export class RestAPI {
       }
 
       if (notFoundIds.length > 0) {
-        res.status(StatusCodes.BAD_REQUEST).send(`Price Feeds with ids ${notFoundIds.join(', ')} not found`);
-        return;
+        throw RestException.PriceFeedIdNotFound(notFoundIds);
       }
 
       const jsonResponse = Array.from(vaaMap.values(),
@@ -93,24 +102,26 @@ export class RestAPI {
 
       res.json(jsonResponse);
     });
-    endpoints.push("latest_vaa_bytes?id[]=<price_feed_id>&id[]=<price_feed_id_2>&..");
+    endpoints.push("latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..");
 
-    const latestPriceFeedInputSchema: schema = {
+    const latestPriceFeedsInputSchema: schema = {
       query: Joi.object({
-        id: Joi.array().items(Joi.string().regex(/^[a-f0-9]{64}$/))
+        ids: Joi.array().items(Joi.string().regex(/^[a-f0-9]{64}$/))
       })
     }
-    app.get("/latest_price_feed", validate(latestPriceFeedInputSchema), (req: Request, res: Response) => {
-      let priceIds = req.query.id as string[];
+    app.get("/latest_price_feeds", validate(latestPriceFeedsInputSchema), (req: Request, res: Response) => {
+      let priceIds = req.query.ids as string[];
 
       let responseJson = [];
+
+      let notFoundIds: string[] = [];
 
       for (let id of priceIds) {
         let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
 
         if (latestPriceInfo === undefined) {
-          res.status(StatusCodes.BAD_REQUEST).send(`Price Feed with id ${id} not found`);
-          return;
+          notFoundIds.push(id);
+          continue;
         }
 
         const freshness: DurationInSec = (new Date).getTime() / 1000 - latestPriceInfo.receiveTime;
@@ -119,9 +130,13 @@ export class RestAPI {
         responseJson.push(latestPriceInfo.priceFeed.toJson());
       }
 
+      if (notFoundIds.length > 0) {
+        throw RestException.PriceFeedIdNotFound(notFoundIds);
+      }
+
       res.json(responseJson);
     });
-    endpoints.push("latest_price_feed?id[]=<price_feed_id>&id[]=<price_feed_id_2>&..");
+    endpoints.push("latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..");
 
 
     app.get("/ready", (_, res: Response) => {
@@ -147,8 +162,21 @@ export class RestAPI {
       if (err instanceof ValidationError) {
         return res.status(err.statusCode).json(err);
       }
+
+      if (err instanceof RestException) {
+        return res.status(err.statusCode).json(err);
+      }
     
       return next(err);
     })
+
+    return app;
+  }
+
+  async run() {
+    let app = await this.createApp();
+    app.listen(this.port, () =>
+      logger.debug("listening on REST port " + this.port)
+    );
   }
 }

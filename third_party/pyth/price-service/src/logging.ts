@@ -1,6 +1,6 @@
 import * as winston from "winston";
 
-export let logger = winston.createLogger();
+export let logger = winston.createLogger({transports: [new winston.transports.Console()]});
 
 // Logger should be initialized before using logger
 export function initLogger(config?: {logLevel?: string}) {
