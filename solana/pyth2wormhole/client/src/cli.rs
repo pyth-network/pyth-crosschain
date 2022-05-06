@@ -64,14 +64,6 @@ pub enum Action {
         )]
         daemon: bool,
         #[clap(
-            short = 'b',
-            long = "--batch-interval",
-            about = "How often in seconds to transmit each batch. Only active with --daemon.",
-            default_value = "30",
-            requires_if("true", "daemon"),
-        )]
-        batch_interval_secs: u64,
-        #[clap(
             short = 't',
             long = "--timeout",
             about = "How many seconds to wait before giving up on get_transaction() for tx confirmation.",

@@ -15,6 +15,7 @@ use log::{
     error,
     info,
     warn,
+    trace,
     LevelFilter,
 };
 use solana_client::rpc_client::RpcClient;
@@ -95,7 +96,6 @@ fn main() -> Result<(), ErrBox> {
             ref attestation_cfg,
             n_retries,
             daemon,
-            batch_interval_secs,
             conf_timeout_secs,
             rpc_interval_ms,
         } => {
@@ -110,7 +110,6 @@ fn main() -> Result<(), ErrBox> {
                 &attestation_cfg,
                 n_retries,
                 daemon,
-                Duration::from_secs(batch_interval_secs),
                 Duration::from_secs(conf_timeout_secs),
                 Duration::from_millis(rpc_interval_ms),
             )?;
@@ -121,35 +120,43 @@ fn main() -> Result<(), ErrBox> {
 }
 
 #[derive(Debug)]
-pub enum BatchTxState<'a> {
+pub struct BatchState<'a> {
+    group_name: String,
+    symbols: &'a [P2WSymbol],
+    conditions: AttestationConditions,
+    status: BatchTxStatus,
+    status_changed_at: Instant,
+}
+
+impl BatchState<'_> {
+    /// Helps make state changes one-liners
+    pub fn set_status(&mut self, s: BatchTxStatus) {
+        self.status = s;
+        self.status_changed_at = Instant::now();
+    }
+}
+
+#[derive(Debug)]
+pub enum BatchTxStatus {
     Sending {
-        symbols: &'a [P2WSymbol],
         attempt_no: usize,
     },
     Confirming {
-        symbols: &'a [P2WSymbol],
         attempt_no: usize,
         signature: Signature,
-        sent_at: Instant,
     },
     Success {
-        symbols: &'a [P2WSymbol],
-        occured_at: Instant,
         seqno: String,
     },
     FailedSend {
-        symbols: &'a [P2WSymbol],
-        occured_at: Instant,
         last_err: ErrBox,
     },
     FailedConfirm {
-        symbols: &'a [P2WSymbol],
-        occured_at: Instant,
         last_err: ErrBox,
     },
 }
 
-use BatchTxState::*;
+use BatchTxStatus::*;
 
 /// Send a series of batch attestations for symbols of an attestation config.
 fn handle_attest(
@@ -159,7 +166,6 @@ fn handle_attest(
     attestation_cfg: &AttestationConfig,
     n_retries: usize,
     daemon: bool,
-    batch_interval: Duration,
     conf_timeout: Duration,
     rpc_interval: Duration,
 ) -> Result<(), ErrBox> {
@@ -170,42 +176,45 @@ fn handle_attest(
 
     let config = get_config_account(rpc_client, &p2w_addr)?;
 
-    let batch_count = {
-        let whole_batches = attestation_cfg.symbols.len() / config.max_batch_size as usize;
-
-        // Include  partial batch if there is a remainder
-        if attestation_cfg.symbols.len() % config.max_batch_size as usize > 0 {
-            whole_batches + 1
-        } else {
-            whole_batches
-        }
-    };
-
     debug!("Symbol config:\n{:#?}", attestation_cfg);
 
     info!(
-        "{} symbols read, max batch size {}, dividing into {} batches",
-        attestation_cfg.symbols.len(),
-        config.max_batch_size,
-        batch_count
+        "{} symbol groups read, dividing into batches",
+        attestation_cfg.symbol_groups.len(),
     );
 
     // Reused for failed batch retries
     let mut batches: Vec<_> = attestation_cfg
-        .symbols
-        .as_slice()
-        .chunks(config.max_batch_size as usize)
-        .enumerate()
-        .map(|(idx, symbols)| {
-            (
-                idx + 1,
-                BatchTxState::Sending {
-                    symbols,
-                    attempt_no: 1,
-                },
-            )
+        .symbol_groups
+        .iter()
+        .map(|g| {
+            // FIXME: The forbidden nested closure move technique (a lost art of pleasing the borrow checker)
+            let conditions4closure = g.conditions.clone();
+            let name4closure = g.group_name.clone();
+
+            info!("Group {:?}, {} symbols", g.group_name, g.symbols.len(),);
+
+            // Divide group into batches
+            g.symbols
+                .as_slice()
+                .chunks(config.max_batch_size as usize)
+                .enumerate()
+                .map(move |(idx, symbols)| {
+                    (
+                        idx + 1,
+                        BatchState {
+                            conditions: conditions4closure.clone(),
+                            group_name: name4closure.clone(),
+                            symbols,
+                            status: Sending { attempt_no: 1 },
+                            status_changed_at: Instant::now(),
+                        },
+                    )
+                })
         })
+        .flatten()
         .collect();
+    let batch_count = batches.len();
 
     // NOTE(2022-04-26): only increment this if `daemon` is false
     let mut finished_count = 0;
@@ -214,16 +223,15 @@ fn handle_attest(
     while daemon || finished_count < batches.len() {
         finished_count = 0;
         for (batch_no, state) in batches.iter_mut() {
-            match state {
-                BatchTxState::Sending {
-                    symbols,
-                    attempt_no,
-                } => {
+            match state.status {
+                Sending { attempt_no } => {
                     info!(
-                        "Batch {}/{} contents: {:?}",
+                        "Batch {}/{} contents (group {:?}): {:?}",
                         batch_no,
                         batch_count,
-                        symbols
+                        state.group_name,
+                        state
+                            .symbols
                             .iter()
                             .map(|s| s
                                 .name
@@ -241,7 +249,7 @@ fn handle_attest(
                                 p2w_addr,
                                 &config,
                                 &payer,
-                                symbols,
+                                state.symbols,
                                 &Keypair::new(),
                                 latest_blockhash,
                             )?;
@@ -255,57 +263,48 @@ fn handle_attest(
                     match res {
                         Ok(signature) => {
                             info!(
-                                "Batch {}/{} tx send: OK (Attempt {} of {})",
-                                batch_no, batch_count, attempt_no, n_retries
+                                "Batch {}/{} (group {:?}) tx send: OK (Attempt {} of {})",
+                                batch_no, batch_count, state.group_name, attempt_no, n_retries
                             );
 
-                            // Record when we've sent this tx
-
-                            *state = BatchTxState::Confirming {
-                                symbols,
-                                attempt_no: *attempt_no,
+                            state.set_status(Confirming {
+                                attempt_no,
                                 signature,
-                                sent_at: Instant::now(),
-                            }
+                            });
                         }
                         Err(e) => {
                             let msg = format!(
-                                "Batch {}/{} tx send error (attempt {} of {}): {}",
+                                "Batch {}/{} (group {:?}) tx send error (attempt {} of {}): {}",
                                 batch_no,
                                 batch_count,
+                                state.group_name,
                                 attempt_no,
                                 n_retries + 1,
                                 e.to_string()
                             );
                             warn!("{}", &msg);
 
-                            if *attempt_no < n_retries {
-                                *state = BatchTxState::Sending {
-                                    attempt_no: *attempt_no + 1,
-                                    symbols,
-                                }
+                            if attempt_no < n_retries {
+                                state.set_status(Sending {
+                                    attempt_no: attempt_no + 1,
+                                })
                             } else {
                                 // This batch failed all attempts, note the error but do not schedule for retry
                                 error!(
-                                    "Batch {}/{} tx send: All {} attempts failed",
+                                    "Batch {}/{} (group {:?}) tx send: All {} attempts failed",
+                                    state.group_name,
                                     batch_no,
                                     batch_count,
                                     n_retries + 1
                                 );
-                                *state = BatchTxState::FailedSend {
-                                    symbols,
-                                    occured_at: Instant::now(),
-                                    last_err: e,
-                                };
+                                state.set_status(FailedSend { last_err: e });
                             }
                         }
                     }
                 }
-                BatchTxState::Confirming {
-                    symbols,
+                Confirming {
                     attempt_no,
                     signature,
-                    sent_at,
                 } => {
                     let res = rpc_client
                         .get_transaction(&signature, UiTransactionEncoding::Json)
@@ -334,18 +333,15 @@ fn handle_attest(
                             println!("Sequence number: {}", seqno);
                             info!("Batch {}/{}: OK, seqno {}", batch_no, batch_count, seqno);
 
-                            *state = BatchTxState::Success {
-                                symbols,
-                                seqno,
-                                occured_at: Instant::now(),
-                            };
+                            state.set_status(Success { seqno });
                         }
                         Err(e) => {
-                            let elapsed = sent_at.elapsed();
+                            let elapsed = state.status_changed_at.elapsed();
                             let msg = format!(
-                                "Batch {}/{} tx confirmation failed ({}.{}/{}.{}): {}",
+                                "Batch {}/{} (groups {:?}) tx confirmation failed ({}.{}/{}.{}): {}",
                                 batch_no,
                                 batch_count,
+                                state.group_name,
                                 elapsed.as_secs(),
                                 elapsed.subsec_millis(),
                                 conf_timeout.as_secs(),
@@ -359,7 +355,8 @@ fn handle_attest(
                                 // note the error and schedule for a
                                 // fresh send attempt
                                 warn!(
-                                    "Batch {}/{} tx confirm: Took more than {}.{} seconds (attempt {} of {}): {}",
+                                    "Batch {}/{} (group {:?}) tx confirm: Took more than {}.{} seconds (attempt {} of {}): {}",
+                                    state.group_name,
                                     batch_no,
                                     batch_count,
                                     conf_timeout.as_secs(),
@@ -368,52 +365,46 @@ fn handle_attest(
 				    msg
                                 );
 
-                                if *attempt_no < n_retries {
-                                    *state = BatchTxState::Sending {
-                                        symbols,
-                                        attempt_no: *attempt_no + 1,
-                                    };
+                                if attempt_no < n_retries {
+                                    state.set_status(Sending {
+                                        attempt_no: attempt_no + 1,
+                                    });
                                 } else {
                                     error!(
-                                        "Batch {}/{} tx confirm: All {} attempts failed",
+                                        "Batch {}/{} (group {:?}) tx confirm: All {} attempts failed",
+                                        state.group_name,
                                         batch_no,
                                         batch_count,
                                         n_retries + 1
                                     );
-                                    *state = BatchTxState::FailedConfirm {
-                                        symbols,
-                                        occured_at: Instant::now(),
-                                        last_err: e,
-                                    };
+                                    state.set_status(FailedConfirm { last_err: e });
                                 }
                             }
                         }
                     }
                 }
-                Success {
-                    symbols,
-                    occured_at,
-                    ..
-                }
-                | FailedSend {
-                    symbols,
-                    occured_at,
-                    ..
-                }
-                | FailedConfirm {
-                    symbols,
-                    occured_at,
-                    ..
-                } => {
+                Success { .. } | FailedSend { .. } | FailedConfirm { .. } => {
                     // We only try to re-schedule under --daemon
                     if daemon {
-                        if occured_at.elapsed() > batch_interval {
-                            *state = BatchTxState::Sending {
-                                symbols,
-                                attempt_no: 1,
-                            };
+                        if state.status_changed_at.elapsed()
+                            > Duration::from_secs(state.conditions.min_freq_secs)
+                        {
+                            state.set_status(Sending { attempt_no: 1 });
+                        } else {
+                            let elapsed = state.status_changed_at.elapsed();
+                            trace!(
+                                "Batch {}/{} (group {:?}): waiting ({}.{}/{}.{})",
+                                batch_no,
+                                batch_count,
+                                state.group_name,
+                                elapsed.as_secs(),
+                                elapsed.subsec_millis(),
+                                conf_timeout.as_secs(),
+                                conf_timeout.subsec_millis()
+                            )
                         }
-                    } 
+                    }
+
                     // Track the finished batches
                     finished_count += 1;
 
@@ -429,8 +420,7 @@ fn handle_attest(
 
     // Filter out errors
     for (batch_no, state) in batches {
-        use BatchTxState::*;
-        match state {
+        match state.status {
             Success { .. } => {}
             FailedSend { last_err, .. } | FailedConfirm { last_err, .. } => {
                 errors.push(last_err.to_string())

@@ -1,4 +1,7 @@
-use std::str::FromStr;
+use std::{
+    collections::HashMap,
+    str::FromStr,
+};
 
 use serde::{
     de::Error,
@@ -12,11 +15,25 @@ use solana_program::pubkey::Pubkey;
 /// Pyth2wormhole config specific to attestation requests
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct AttestationConfig {
+    pub symbol_groups: Vec<SymbolGroup>,
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct SymbolGroup {
+    pub group_name: String,
+    /// Attestation conditions applied to all symbols in this group
+    pub conditions: AttestationConditions,
     pub symbols: Vec<P2WSymbol>,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub struct AttestationConditions {
+    /// How often to attest
+    pub min_freq_secs: u64,
+}
+
 /// Config entry for a Pyth product + price pair
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Default, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct P2WSymbol {
     /// User-defined human-readable name
     pub name: Option<String>,
@@ -59,27 +76,46 @@ mod tests {
 
     #[test]
     fn test_sanity() -> Result<(), ErrBox> {
-        let initial = AttestationConfig {
+        let fastbois = SymbolGroup {
+            group_name: "fast bois".to_owned(),
+            conditions: AttestationConditions { min_freq_secs: 5 },
             symbols: vec![
                 P2WSymbol {
-                    name: Some("ETH/USD".to_owned()),
-                    product_addr: Default::default(),
-                    price_addr: Default::default(),
+                    name: Some("ETHUSD".to_owned()),
+                    ..Default::default()
                 },
                 P2WSymbol {
-                    name: None,
-                    product_addr: Pubkey::new(&[42u8; 32]),
-                    price_addr: Default::default(),
+                    name: Some("BTCUSD".to_owned()),
+                    ..Default::default()
                 },
             ],
         };
 
-        let serialized = serde_yaml::to_string(&initial)?;
-        eprintln!("Serialized:\n{}", serialized);
+        let slowbois = SymbolGroup {
+            group_name: "slow bois".to_owned(),
+            conditions: AttestationConditions { min_freq_secs: 200 },
+            symbols: vec![
+                P2WSymbol {
+                    name: Some("CNYAUD".to_owned()),
+                    ..Default::default()
+                },
+                P2WSymbol {
+                    name: Some("INRPLN".to_owned()),
+                    ..Default::default()
+                },
+            ],
+        };
+
+        let cfg = AttestationConfig {
+            symbol_groups: vec![fastbois, slowbois],
+        };
+
+        let serialized = serde_yaml::to_string(&cfg)?;
 
         let deserialized: AttestationConfig = serde_yaml::from_str(&serialized)?;
 
-        assert_eq!(initial, deserialized);
+        assert_eq!(cfg, deserialized);
+
         Ok(())
     }
 }

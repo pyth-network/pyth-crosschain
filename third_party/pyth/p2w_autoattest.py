@@ -177,24 +177,50 @@ if P2W_ATTESTATION_CFG is None:
         logging.error("Bad Content type")
         sys.exit(1)
 
-    cfg_yaml = f"""
----
-symbols:"""
-
     logging.info(
         f"Retrieved {len(pyth_accounts)} Pyth accounts from endpoint: {pyth_accounts}"
     )
 
-    for acc in pyth_accounts:
+    cfg_yaml = """
+---
+symbol_groups:
+  - group_name: things
+    conditions:
+      min_freq_secs: 17
+    symbols:
+"""
 
-        name = acc["name"]
-        price = acc["price"]
-        product = acc["product"]
+    # integer-divide the symbols in ~half for two test
+    # groups. Assumes arr[:idx] is exclusive, and arr[idx:] is
+    # inclusive
+    half_len = len(pyth_accounts) // 2;
+
+    for thing in pyth_accounts[:half_len]:
+        name = thing["name"]
+        price = thing["price"]
+        product = thing["product"]
 
         cfg_yaml += f"""
-    - name: {name}
-      price_addr: {price}
-      product_addr: {product}"""
+      - name: {name}
+        price_addr: {price}
+        product_addr: {product}"""
+
+    cfg_yaml += f"""
+  - group_name: stuff
+    conditions:
+      min_freq_secs: 19
+    symbols:
+"""
+
+    for stuff in pyth_accounts[half_len:]:
+        name = stuff["name"]
+        price = stuff["price"]
+        product = stuff["product"]
+
+        cfg_yaml += f"""
+      - name: {name}
+        price_addr: {price}
+        product_addr: {product}"""
 
     with open(P2W_ATTESTATION_CFG, "w") as f:
         f.write(cfg_yaml)
