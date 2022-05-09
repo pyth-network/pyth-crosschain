@@ -66,7 +66,7 @@ export class RestAPI {
     
     const latestVaasInputSchema: schema = {
       query: Joi.object({
-        ids: Joi.array().items(Joi.string().regex(/^[a-f0-9]{64}$/))
+        ids: Joi.array().items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/))
       })
     }
     app.get("/latest_vaas", validate(latestVaasInputSchema), (req: Request, res: Response) => {
@@ -79,6 +79,10 @@ export class RestAPI {
       let notFoundIds: string[] = [];
 
       for (let id of priceIds) {
+        if (id.startsWith("0x")) {
+          id = id.substring(2);
+        }
+
         let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
 
         if (latestPriceInfo === undefined) {
@@ -106,7 +110,7 @@ export class RestAPI {
 
     const latestPriceFeedsInputSchema: schema = {
       query: Joi.object({
-        ids: Joi.array().items(Joi.string().regex(/^[a-f0-9]{64}$/))
+        ids: Joi.array().items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/))
       })
     }
     app.get("/latest_price_feeds", validate(latestPriceFeedsInputSchema), (req: Request, res: Response) => {
@@ -117,6 +121,10 @@ export class RestAPI {
       let notFoundIds: string[] = [];
 
       for (let id of priceIds) {
+        if (id.startsWith("0x")) {
+          id = id.substring(2);
+        }
+
         let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
 
         if (latestPriceInfo === undefined) {
