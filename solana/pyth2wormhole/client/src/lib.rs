@@ -1,4 +1,5 @@
 pub mod attestation_cfg;
+pub mod batch_state;
 
 use borsh::{
     BorshDeserialize,
@@ -53,6 +54,7 @@ use pyth2wormhole::{
 };
 
 pub use attestation_cfg::{AttestationConfig, AttestationConditions, P2WSymbol};
+pub use batch_state::{BatchState, BatchTxStatus};
 
 pub fn gen_init_tx(
     payer: Keypair,
