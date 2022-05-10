@@ -66,8 +66,8 @@ export class RestAPI {
     
     const latestVaasInputSchema: schema = {
       query: Joi.object({
-        ids: Joi.array().items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/))
-      })
+        ids: Joi.array().items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/)).required()
+      }).required()
     }
     app.get("/latest_vaas", validate(latestVaasInputSchema), (req: Request, res: Response) => {
       let priceIds = req.query.ids as string[];
@@ -110,8 +110,8 @@ export class RestAPI {
 
     const latestPriceFeedsInputSchema: schema = {
       query: Joi.object({
-        ids: Joi.array().items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/))
-      })
+        ids: Joi.array().items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/)).required()
+      }).required()
     }
     app.get("/latest_price_feeds", validate(latestPriceFeedsInputSchema), (req: Request, res: Response) => {
       let priceIds = req.query.ids as string[];
