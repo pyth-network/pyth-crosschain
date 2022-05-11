@@ -119,43 +119,6 @@ fn main() -> Result<(), ErrBox> {
     Ok(())
 }
 
-#[derive(Debug)]
-pub struct BatchState<'a> {
-    group_name: String,
-    symbols: &'a [P2WSymbol],
-    conditions: AttestationConditions,
-    status: BatchTxStatus,
-    status_changed_at: Instant,
-}
-
-impl BatchState<'_> {
-    /// Helps make state changes one-liners
-    pub fn set_status(&mut self, s: BatchTxStatus) {
-        self.status = s;
-        self.status_changed_at = Instant::now();
-    }
-}
-
-#[derive(Debug)]
-pub enum BatchTxStatus {
-    Sending {
-        attempt_no: usize,
-    },
-    Confirming {
-        attempt_no: usize,
-        signature: Signature,
-    },
-    Success {
-        seqno: String,
-    },
-    FailedSend {
-        last_err: ErrBox,
-    },
-    FailedConfirm {
-        last_err: ErrBox,
-    },
-}
-
 use BatchTxStatus::*;
 
 /// Send a series of batch attestations for symbols of an attestation config.
@@ -202,13 +165,11 @@ fn handle_attest(
                 .map(move |(idx, symbols)| {
                     (
                         idx + 1,
-                        BatchState {
-                            conditions: conditions4closure.clone(),
-                            group_name: name4closure.clone(),
+                        BatchState::new(
+                            name4closure.clone(),
                             symbols,
-                            status: Sending { attempt_no: 1 },
-                            status_changed_at: Instant::now(),
-                        },
+                            conditions4closure.clone(),
+                        ),
                     )
                 })
         })
@@ -223,7 +184,7 @@ fn handle_attest(
     while daemon || finished_count < batches.len() {
         finished_count = 0;
         for (batch_no, state) in batches.iter_mut() {
-            match state.status {
+            match state.get_status().clone() {
                 Sending { attempt_no } => {
                     info!(
                         "Batch {}/{} contents (group {:?}): {:?}",
@@ -268,7 +229,7 @@ fn handle_attest(
                             );
 
                             state.set_status(Confirming {
-                                attempt_no,
+                                attempt_no: *attempt_no,
                                 signature,
                             });
                         }
@@ -284,7 +245,7 @@ fn handle_attest(
                             );
                             warn!("{}", &msg);
 
-                            if attempt_no < n_retries {
+                            if attempt_no < &n_retries {
                                 state.set_status(Sending {
                                     attempt_no: attempt_no + 1,
                                 })
@@ -336,9 +297,9 @@ fn handle_attest(
                             state.set_status(Success { seqno });
                         }
                         Err(e) => {
-                            let elapsed = state.status_changed_at.elapsed();
+                            let elapsed = state.get_status_changed_at().elapsed();
                             let msg = format!(
-                                "Batch {}/{} (groups {:?}) tx confirmation failed ({}.{}/{}.{}): {}",
+                                "Batch {}/{} (group {:?}) tx confirmation failed ({}.{}/{}.{}): {}",
                                 batch_no,
                                 batch_count,
                                 state.group_name,
@@ -365,7 +326,7 @@ fn handle_attest(
 				    msg
                                 );
 
-                                if attempt_no < n_retries {
+                                if attempt_no < &n_retries {
                                     state.set_status(Sending {
                                         attempt_no: attempt_no + 1,
                                     });
@@ -386,12 +347,12 @@ fn handle_attest(
                 Success { .. } | FailedSend { .. } | FailedConfirm { .. } => {
                     // We only try to re-schedule under --daemon
                     if daemon {
-                        if state.status_changed_at.elapsed()
+                        if state.get_status_changed_at().elapsed()
                             > Duration::from_secs(state.conditions.min_freq_secs)
                         {
                             state.set_status(Sending { attempt_no: 1 });
                         } else {
-                            let elapsed = state.status_changed_at.elapsed();
+                            let elapsed = state.get_status_changed_at().elapsed();
                             trace!(
                                 "Batch {}/{} (group {:?}): waiting ({}.{}/{}.{})",
                                 batch_no,
@@ -420,7 +381,7 @@ fn handle_attest(
 
     // Filter out errors
     for (batch_no, state) in batches {
-        match state.status {
+        match state.get_status() {
             Success { .. } => {}
             FailedSend { last_err, .. } | FailedConfirm { last_err, .. } => {
                 errors.push(last_err.to_string())
