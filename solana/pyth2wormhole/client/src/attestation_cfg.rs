@@ -26,22 +26,28 @@ pub struct SymbolGroup {
     pub symbols: Vec<P2WSymbol>,
 }
 
+pub const fn DEFAULT_MIN_INTERVAL_SECS() -> u64 {
+    60
+}
+
 /// Spontaneous attestation triggers. Attestation is triggered if any
 /// of the active conditions is met. Option<> fields can be
-/// de-activated with None. All conditions are inactive by default.
+/// de-activated with None. All conditions are inactive by default,
+/// except for min_interval_secs set to 1 minute.
 #[derive(Clone, Default, Debug, Deserialize, Serialize, PartialEq)]
 pub struct AttestationConditions {
     /// Baseline, unconditional attestation interval. Attestation is triggered if the specified interval elapsed since last attestation.
-    #[serde(default)]
-    pub min_interval_secs: Option<u64>,
+    #[serde(default = "DEFAULT_MIN_INTERVAL_SECS")]
+    pub min_interval_secs: u64,
 
     /// Trigger attestation if price changes by the specified percentage.
     #[serde(default)]
     pub price_changed_pct: Option<f64>,
 
-    /// Trigger attestation if publish_time changes
+    /// Trigger attestation if publish_time advances at least the
+    /// specified amount.
     #[serde(default)]
-    pub publish_time_changed: bool,
+    pub publish_time_min_delta_secs: Option<u64>,
 }
 
 /// Config entry for a Pyth product + price pair
@@ -99,7 +105,7 @@ mod tests {
         let fastbois = SymbolGroup {
             group_name: "fast bois".to_owned(),
             conditions: AttestationConditions {
-                min_interval_secs: Some(5),
+                min_interval_secs: 5,
                 ..Default::default()
             },
             symbols: vec![
@@ -117,7 +123,7 @@ mod tests {
         let slowbois = SymbolGroup {
             group_name: "slow bois".to_owned(),
             conditions: AttestationConditions {
-                min_interval_secs: Some(200),
+                min_interval_secs: 200,
                 ..Default::default()
             },
             symbols: vec![

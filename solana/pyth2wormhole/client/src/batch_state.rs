@@ -94,13 +94,13 @@ impl<'a> BatchState<'a> {
         }
 
         // min interval
-        if let Some(i) = self.conditions.min_interval_secs.as_ref() {
-            if self.get_status_changed_at().elapsed() > Duration::from_secs(*i) {
-                ret = Some(format!(
-                    "minimum interval of {}s elapsed since last state change",
-                    i
-                ));
-            }
+        if self.get_status_changed_at().elapsed()
+            > Duration::from_secs(self.conditions.min_interval_secs)
+        {
+            ret = Some(format!(
+                "minimum interval of {}s elapsed since last state change",
+                self.conditions.min_interval_secs
+            ));
         }
 
         for (idx, old_new_tup) in self
@@ -109,16 +109,19 @@ impl<'a> BatchState<'a> {
             .zip(new_symbol_states.iter())
             .enumerate()
         {
-            //  Only evaluate if a triggering condition is not already met
+            //  Only evaluate this symbol if a triggering condition is not already met
             if ret.is_none() {
                 match old_new_tup {
                     (Some(old), Some(new)) => {
                         // publish_time_changed
-                        if self.conditions.publish_time_changed && new.timestamp > old.timestamp {
-                            ret = Some(format!(
-                                "publish_time advanced for {:?}",
-                                self.symbols[idx].to_string(),
-                            ))
+                        if let Some(min_delta_secs) = self.conditions.publish_time_min_delta_secs {
+                            if new.timestamp - old.timestamp > min_delta_secs as i64 {
+                                ret = Some(format!(
+                                    "publish_time advanced by at least {}s for {:?}",
+                                    min_delta_secs,
+                                    self.symbols[idx].to_string(),
+                                ))
+                            }
 
                         // price_changed_pct
                         } else if let Some(pct) = self.conditions.price_changed_pct {
@@ -148,8 +151,8 @@ impl<'a> BatchState<'a> {
                 }
             }
 
-            // Update with newer state if available, regardless of condition status
-            if old_new_tup.1.is_some() {
+            // Update with newer state if a condition was met (including this iteration, hence not in an else)
+            if ret.is_some() {
                 *old_new_tup.0 = *old_new_tup.1;
             }
         }
