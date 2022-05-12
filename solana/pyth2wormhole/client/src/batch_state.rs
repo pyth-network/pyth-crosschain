@@ -150,10 +150,18 @@ impl<'a> BatchState<'a> {
                     }
                 }
             }
+        }
 
-            // Update with newer state if a condition was met (including this iteration, hence not in an else)
-            if ret.is_some() {
-                *old_new_tup.0 = *old_new_tup.1;
+        // Update with newer state if a condition was met
+        if ret.is_some() {
+            for (old, new) in self
+                .last_known_symbol_states
+                .iter_mut()
+                .zip(new_symbol_states.into_iter())
+            {
+                if new.is_some() {
+                    *old = new;
+                }
             }
         }
 
