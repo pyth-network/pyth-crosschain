@@ -26,6 +26,7 @@ pub struct BatchState<'a> {
     pub conditions: AttestationConditions,
     status: BatchTxStatus,
     status_changed_at: Instant,
+    pub last_success_at: Option<Instant>,
 }
 
 impl<'a> BatchState<'a> {
@@ -41,6 +42,7 @@ impl<'a> BatchState<'a> {
             last_known_symbol_states: vec![None; symbols.len()],
             status: BatchTxStatus::Sending { attempt_no: 1 },
             status_changed_at: Instant::now(),
+            last_success_at: None,
         }
     }
     /// Ensure only set_status() alters the timestamp
