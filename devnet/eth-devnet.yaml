@@ -73,9 +73,9 @@ spec:
           command:
             - /bin/sh
             - -c
-            - "npm run migrate &&
-            npx truffle test test/pyth.js 2>&1 &&
-            nc -lkp 2000 0.0.0.0"
+            - "npm run migrate --network development &&
+               npx truffle test test/pyth.js 2>&1 &&
+               nc -lkp 2000 0.0.0.0"
           readinessProbe:
             periodSeconds: 1
             failureThreshold: 300

@@ -6,7 +6,7 @@ An example deployment process, for deploying to Binance Smart Chain Testnet:
 
 ```bash
 # Load the configuration environment variables for deploying to BSC Testnet.
-rm -f .env && ln -s .env.prod.binance_testnet .env & set -o allexport && source .env set && set +o allexport
+rm -f .env; ln -s .env.prod.binance_testnet .env && set -o allexport && source .env set && set +o allexport
 
 # The Secret Recovery Phrase for the wallet the contract will be deployed from.
 export MNEMONIC=...

@@ -21,7 +21,7 @@ module.exports = async function (deployer, network) {
         [
             wormholeBridgeAddress,
             pyth2WormholeChainId,
-            pyth2WormholeEmitter.toString()
+            pyth2WormholeEmitter
         ],
         { deployer });
 
