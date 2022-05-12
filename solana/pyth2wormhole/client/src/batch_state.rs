@@ -58,7 +58,7 @@ impl<'a> BatchState<'a> {
     }
 
     /// Evaluate the configured attestation conditions for this
-    /// batch. Returns Some("<reason>") if any trigger condition was
+    /// batch. RPC is used to look up current state. Returns Some("<reason>") if any trigger condition was
     /// met. Only the first encountered condition is mentioned.
     pub fn should_resend(&mut self, c: &RpcClient) -> Option<String> {
         let sym_count = self.symbols.len();
@@ -120,9 +120,10 @@ impl<'a> BatchState<'a> {
 
                         // price_changed_pct
                         } else if let Some(pct) = self.conditions.price_changed_pct {
-                            let price_pct_diff = (old.agg.price as f32 - new.agg.price as f32)
+                            let pct = pct.abs();
+                            let price_pct_diff = ((old.agg.price as f32 - new.agg.price as f32)
                                 / old.agg.price as f32
-                                * 100.0;
+                                * 100.0).abs();
 
                             if price_pct_diff > pct {
                                 ret = Some(format!(
