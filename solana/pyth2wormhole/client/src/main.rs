@@ -358,12 +358,13 @@ fn handle_attest(
                                 elapsed.subsec_millis(),
                             )
                         }
+                    } else {
+                        // Track the finished batches outside daemon mode
+                        finished_count += 1;
+
+                        // No RPC requests are made on terminal states outside daemon mode, skip sleep
+                        continue;
                     }
-
-                    // Track the finished batches
-                    finished_count += 1;
-
-                    continue; // No RPC requests are made any of these cases, skip sleep
                 }
             }
 
