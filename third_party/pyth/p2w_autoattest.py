@@ -186,7 +186,7 @@ if P2W_ATTESTATION_CFG is None:
 symbol_groups:
   - group_name: things
     conditions:
-      min_freq_secs: 17
+      min_interval_secs: 17
     symbols:
 """
 
@@ -208,7 +208,7 @@ symbol_groups:
     cfg_yaml += f"""
   - group_name: stuff
     conditions:
-      min_freq_secs: 19
+      min_interval_secs: 19
     symbols:
 """
 

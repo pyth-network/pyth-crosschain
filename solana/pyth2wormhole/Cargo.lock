@@ -1977,6 +1977,7 @@ dependencies = [
  "log",
  "p2w-sdk",
  "pyth-client 0.5.0",
+ "pyth-sdk-solana",
  "pyth2wormhole",
  "serde",
  "serde_yaml",

@@ -14,8 +14,8 @@ use log::{
     debug,
     error,
     info,
-    warn,
     trace,
+    warn,
     LevelFilter,
 };
 use solana_client::rpc_client::RpcClient;
@@ -161,19 +161,13 @@ fn handle_attest(
             g.symbols
                 .as_slice()
                 .chunks(config.max_batch_size as usize)
-                .enumerate()
-                .map(move |(idx, symbols)| {
-                    (
-                        idx + 1,
-                        BatchState::new(
-                            name4closure.clone(),
-                            symbols,
-                            conditions4closure.clone(),
-                        ),
-                    )
+                .map(move |symbols| {
+                    BatchState::new(name4closure.clone(), symbols, conditions4closure.clone())
                 })
         })
         .flatten()
+        .enumerate()
+        .map(|(idx, batch_state)| (idx + 1, batch_state))
         .collect();
     let batch_count = batches.len();
 
@@ -347,29 +341,30 @@ fn handle_attest(
                 Success { .. } | FailedSend { .. } | FailedConfirm { .. } => {
                     // We only try to re-schedule under --daemon
                     if daemon {
-                        if state.get_status_changed_at().elapsed()
-                            > Duration::from_secs(state.conditions.min_freq_secs)
-                        {
+                        if let Some(reason) = state.should_resend(rpc_client) {
+                            info!(
+                                "Batch {}/{} (group {:?}): resending (reason: {})",
+                                batch_no, batch_count, state.group_name, reason,
+                            );
                             state.set_status(Sending { attempt_no: 1 });
                         } else {
                             let elapsed = state.get_status_changed_at().elapsed();
                             trace!(
-                                "Batch {}/{} (group {:?}): waiting ({}.{}/{}.{})",
+                                "Batch {}/{} (group {:?}): waiting ({}.{}s elapsed)",
                                 batch_no,
                                 batch_count,
                                 state.group_name,
                                 elapsed.as_secs(),
                                 elapsed.subsec_millis(),
-                                conf_timeout.as_secs(),
-                                conf_timeout.subsec_millis()
                             )
                         }
+                    } else {
+                        // Track the finished batches outside daemon mode
+                        finished_count += 1;
+
+                        // No RPC requests are made on terminal states outside daemon mode, skip sleep
+                        continue;
                     }
-
-                    // Track the finished batches
-                    finished_count += 1;
-
-                    continue; // No RPC requests are made any of these cases, skip sleep
                 }
             }
 
