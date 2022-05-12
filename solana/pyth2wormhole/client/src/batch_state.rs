@@ -58,9 +58,12 @@ impl<'a> BatchState<'a> {
     }
 
     /// Evaluate the configured attestation conditions for this
-    /// batch. RPC is used to look up current state. Returns Some("<reason>") if any trigger condition was
-    /// met. Only the first encountered condition is mentioned.
+    /// batch. RPC is used to update last known state. Returns
+    /// Some("<reason>") if any trigger condition was met. Only the
+    /// first encountered condition is mentioned.
     pub fn should_resend(&mut self, c: &RpcClient) -> Option<String> {
+        let mut ret = None;
+
         let sym_count = self.symbols.len();
         let mut new_symbol_states: Vec<Option<PriceAccount>> = Vec::with_capacity(sym_count);
         for (idx, sym) in self.symbols.iter().enumerate() {
@@ -93,14 +96,13 @@ impl<'a> BatchState<'a> {
         // min interval
         if let Some(i) = self.conditions.min_interval_secs.as_ref() {
             if self.get_status_changed_at().elapsed() > Duration::from_secs(*i) {
-                return Some(format!(
+                ret = Some(format!(
                     "minimum interval of {}s elapsed since last state change",
                     i
                 ));
             }
         }
 
-        let mut ret = None;
         for (idx, old_new_tup) in self
             .last_known_symbol_states
             .iter_mut() // Borrow mutably to make the update easier
@@ -121,9 +123,10 @@ impl<'a> BatchState<'a> {
                         // price_changed_pct
                         } else if let Some(pct) = self.conditions.price_changed_pct {
                             let pct = pct.abs();
-                            let price_pct_diff = ((old.agg.price as f32 - new.agg.price as f32)
-                                / old.agg.price as f32
-                                * 100.0).abs();
+                            let price_pct_diff = ((old.agg.price as f64 - new.agg.price as f64)
+                                / old.agg.price as f64
+                                * 100.0)
+                                .abs();
 
                             if price_pct_diff > pct {
                                 ret = Some(format!(
@@ -145,7 +148,7 @@ impl<'a> BatchState<'a> {
                 }
             }
 
-            // Update with newer state if available
+            // Update with newer state if available, regardless of condition status
             if old_new_tup.1.is_some() {
                 *old_new_tup.0 = *old_new_tup.1;
             }

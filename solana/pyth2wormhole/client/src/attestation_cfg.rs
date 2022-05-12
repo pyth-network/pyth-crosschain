@@ -37,7 +37,7 @@ pub struct AttestationConditions {
 
     /// Trigger attestation if price changes by the specified percentage.
     #[serde(default)]
-    pub price_changed_pct: Option<f32>,
+    pub price_changed_pct: Option<f64>,
 
     /// Trigger attestation if publish_time changes
     #[serde(default)]
