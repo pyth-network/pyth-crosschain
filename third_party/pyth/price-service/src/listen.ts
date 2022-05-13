@@ -17,7 +17,7 @@ import { getBatchSummary, parseBatchPriceAttestation, priceAttestationToPriceFee
 import { ClientReadableStream } from "@grpc/grpc-js";
 import { FilterEntry, SubscribeSignedVAAResponse } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
 import { logger } from "./logging";
-import { PriceFeed } from "@pythnetwork/pyth-sdk-js";
+import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";
 
 export type PriceInfo = {
   vaaBytes: string,
@@ -27,7 +27,9 @@ export type PriceInfo = {
 };
 
 export interface PriceFeedPriceInfo {
-  getLatestPriceInfo(priceFeedId: string): PriceInfo | undefined;
+  getPriceIds(): Set<HexString>;
+  getLatestPriceInfo(priceFeedId: HexString): PriceInfo | undefined;
+  addUpdateListener(callback: (priceFeed: PriceFeed) => any): void;
 }
 
 type ListenerReadinessConfig = {
@@ -49,12 +51,14 @@ export class Listener implements PriceFeedPriceInfo {
   private filters: FilterEntry[] = [];
   private spyConnectionTime: TimestampInSec | undefined;
   private readinessConfig: ListenerReadinessConfig;
+  private updateCallbacks:  ((priceFeed: PriceFeed) => any)[];
 
   constructor(config: ListenerConfig, promClient?: PromClient) {
     this.promClient = promClient;
     this.spyServiceHost = config.spyServiceHost;
     this.loadFilters(config.filtersRaw);
     this.readinessConfig = config.readiness;
+    this.updateCallbacks = [];
   }
 
   private loadFilters(filtersRaw?: string) {
@@ -171,12 +175,17 @@ export class Listener implements PriceFeedPriceInfo {
 
       let lastSeqNum = this.priceFeedVaaMap.get(key)?.seqNum;
       if (lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence) {
+        const priceFeed = priceAttestationToPriceFeed(priceAttestation);
         this.priceFeedVaaMap.set(key, {
           seqNum: parsedVAA.sequence,
           vaaBytes: vaaBytes,
           receiveTime: (new Date()).getTime() / 1000,
-          priceFeed: priceAttestationToPriceFeed(priceAttestation)
+          priceFeed
         });
+
+        for (let callback of this.updateCallbacks) {
+          callback(priceFeed);
+        }
       }
     }
 
@@ -196,6 +205,14 @@ export class Listener implements PriceFeedPriceInfo {
 
   getLatestPriceInfo(priceFeedId: string): PriceInfo | undefined {
     return this.priceFeedVaaMap.get(priceFeedId);
+  }
+
+  addUpdateListener(callback: (priceFeed: PriceFeed) => any) { 
+    this.updateCallbacks.push(callback);
+  }
+
+  getPriceIds(): Set<HexString> {
+    return new Set(this.priceFeedVaaMap.keys());
   }
 
   isReady(): boolean {

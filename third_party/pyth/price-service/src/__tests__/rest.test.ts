@@ -51,7 +51,10 @@ beforeAll(async () => {
     let priceInfo: PriceFeedPriceInfo = {
         getLatestPriceInfo: (priceFeedId: string) => {
             return priceInfoMap.get(priceFeedId);
-        }
+        },
+        addUpdateListener: (_callback: (priceFeed: PriceFeed) => any) => {
+        },
+        getPriceIds: () => new Set(),
     };
 
     const api = new RestAPI(

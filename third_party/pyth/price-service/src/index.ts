@@ -5,6 +5,7 @@ import { Listener } from "./listen";
 import { initLogger } from "./logging";
 import { PromClient } from "./promClient";
 import { RestAPI } from "./rest";
+import { WebSocketAPI } from "./ws";
 
 
 let configFile: string = ".env";
@@ -41,5 +42,10 @@ const restAPI = new RestAPI({
   port: parseInt(envOrErr("REST_PORT"))
 }, listener, isReady, promClient);
 
+const wsAPI = new WebSocketAPI({
+  port: parseInt(envOrErr("WS_PORT"))
+}, listener);
+
 listener.run();
 restAPI.run();
+wsAPI.run();
