@@ -45,6 +45,12 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
         return batch;
     }
 
+    function updatePriceFeeds(bytes[] memory updateData) public override {
+        for(uint i = 0; i < updateData.length; i++) {
+            updatePriceBatchFromVm(updateData[i]);
+        }
+    }
+
     function newPriceInfo(PythInternalStructs.PriceAttestation memory pa) private view returns (PythInternalStructs.PriceInfo memory info) {
         info.attestationTime = pa.attestationTime;
         info.publishTime = pa.publishTime;

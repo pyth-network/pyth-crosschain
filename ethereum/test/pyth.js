@@ -224,32 +224,55 @@ contract("Pyth", function () {
         }
     });
 
-    async function attest(contract, data) {
-        const vm = await signAndEncodeVM(
-            1,
-            1,
-            testPyth2WormholeChainId,
-            testPyth2WormholeEmitter,
-            0,
-            data,
-            [testSigner1PK],
-            0,
-            0
-        );
-        await contract.updatePriceBatchFromVm("0x" + vm);
+    async function updatePriceFeeds(contract, batches) {
+        let updateData = []
+        for (let data of batches) {
+            const vm = await signAndEncodeVM(
+                1,
+                1,
+                testPyth2WormholeChainId,
+                testPyth2WormholeEmitter,
+                0,
+                data,
+                [testSigner1PK],
+                0,
+                0
+            );
+            updateData.push("0x" + vm)
+        }
+        await contract.updatePriceFeeds(updateData);
     }
 
     it("should attest price updates over wormhole", async function () {
         let ts = 1647273460
-      let rawBatch = generateRawBatchAttestation(ts - 5, ts, 1337);
-        await attest(this.pythProxy, rawBatch);
+        let rawBatch = generateRawBatchAttestation(ts - 5, ts, 1337);
+        await updatePriceFeeds(this.pythProxy, [rawBatch]);
     });
+
+    it("should attest price updates empty work", async function () {
+        await updatePriceFeeds(this.pythProxy, []);
+    });
+
+    it("should attest price updates with multiple batches of correct order work", async function () {
+        let ts = 1647273460
+        let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
+        let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
+        await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2]);
+    });
+
+    it("should attest price updates with multiple batches of wrong order work", async function () {
+        let ts = 1647273460
+        let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
+        let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
+        await updatePriceFeeds(this.pythProxy, [rawBatch2, rawBatch1]);
+    });
+
 
     it("should cache price updates", async function () {
         let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
         let priceVal = 521;
         let rawBatch = generateRawBatchAttestation(currentTimestamp - 5, currentTimestamp, priceVal);
-        await attest(this.pythProxy, rawBatch);
+        await updatePriceFeeds(this.pythProxy, [rawBatch]);
 
         let first_prod_id = "0x" + "01".repeat(32);
         let first_price_id = "0x" + "fe".repeat(32);
@@ -271,7 +294,7 @@ contract("Pyth", function () {
             nextTimestamp,
             priceVal + 5
         );
-        await attest(this.pythProxy, rawBatch2);
+        await updatePriceFeeds(this.pythProxy, [rawBatch2]);
 
         first = await this.pythProxy.queryPriceFeed(first_price_id);
         assert.equal(first.price, priceVal + 5);
@@ -285,7 +308,7 @@ contract("Pyth", function () {
             nextTimestamp,
             priceVal + 10
         );
-        await attest(this.pythProxy, rawBatch3);
+        await updatePriceFeeds(this.pythProxy, [rawBatch3]);
 
         first = await this.pythProxy.queryPriceFeed(first_price_id);
         assert.equal(first.price, priceVal + 5);
@@ -308,7 +331,7 @@ contract("Pyth", function () {
     it("should show stale cached prices as unknown", async function () {
         let smallestTimestamp = 1;
         let rawBatch = generateRawBatchAttestation(smallestTimestamp, smallestTimestamp + 5, 1337);
-        await attest(this.pythProxy, rawBatch);
+        await updatePriceFeeds(this.pythProxy, [rawBatch]);
 
         for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
             const price_id =
@@ -325,7 +348,7 @@ contract("Pyth", function () {
     it("should show cached prices too far into the future as unknown", async function () {
         let largestTimestamp = 4294967295;
         let rawBatch = generateRawBatchAttestation(largestTimestamp - 5, largestTimestamp, 1337);
-        await attest(this.pythProxy, rawBatch);
+        await updatePriceFeeds(this.pythProxy, [rawBatch]);
 
         for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
             const price_id =
