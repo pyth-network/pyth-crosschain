@@ -5,7 +5,7 @@ const PythUpgradable = artifacts.require("PythUpgradable");
 const Wormhole = artifacts.require("Wormhole");
 
 const pyth2WormholeChainId = process.env.PYTH_TO_WORMHOLE_CHAIN_ID;
-const pyth2WormholeEmitter = bs58.decode(process.env.PYTH_TO_WORMHOLE_EMITTER); // base58, must fit into bytes32
+const pyth2WormholeEmitter = process.env.PYTH_TO_WORMHOLE_EMITTER;
 
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 
@@ -17,7 +17,7 @@ module.exports = async function (deployer) {
         [
             (await Wormhole.deployed()).address,
             pyth2WormholeChainId,
-            "0x" + pyth2WormholeEmitter.toString("hex")
+            pyth2WormholeEmitter
         ],
         { deployer });
 };

@@ -6,7 +6,6 @@
   "devDependencies": {
     "@chainsafe/truffle-plugin-abigen": "0.0.1",
     "@openzeppelin/cli": "^2.8.2",
-    "@openzeppelin/contracts": "^4.5.0",
     "@openzeppelin/test-environment": "^0.1.9",
     "@openzeppelin/test-helpers": "^0.5.15",
     "@openzeppelin/truffle-upgrades": "^1.14.0",
@@ -16,6 +15,7 @@
     "mocha": "^8.2.1",
     "truffle": "^5.5.5",
     "truffle-assertions": "^0.9.2",
+    "truffle-deploy-registry": "^0.5.1",
     "truffle-plugin-verify": "^0.5.11"
   },
   "scripts": {
@@ -30,6 +30,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@openzeppelin/contracts": "^4.5.0",
     "@openzeppelin/contracts-upgradeable": "^4.5.2",
     "@pythnetwork/pyth-sdk-solidity": "0.0.3",
     "dotenv": "^10.0.0",
