@@ -249,18 +249,18 @@ contract("Pyth", function () {
         await updatePriceFeeds(this.pythProxy, [rawBatch]);
     });
 
-    it("should attest price updates empty work", async function () {
+    it("should attest price updates empty", async function () {
         await updatePriceFeeds(this.pythProxy, []);
     });
 
-    it("should attest price updates with multiple batches of correct order work", async function () {
+    it("should attest price updates with multiple batches of correct order", async function () {
         let ts = 1647273460
         let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
         await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2]);
     });
 
-    it("should attest price updates with multiple batches of wrong order work", async function () {
+    it("should attest price updates with multiple batches of wrong order", async function () {
         let ts = 1647273460
         let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
