@@ -50,7 +50,7 @@ fn main() -> Result<(), ErrBox> {
     init_logging(cli.log_level);
 
     let payer = read_keypair_file(&*shellexpand::tilde(&cli.payer))?;
-    let rpc_client = RpcClient::new_with_commitment(cli.rpc_url, CommitmentConfig::finalized());
+    let rpc_client = RpcClient::new_with_commitment(cli.rpc_url, CommitmentConfig::confirmed());
 
     let p2w_addr = cli.p2w_addr;
 
@@ -174,6 +174,15 @@ fn handle_attest(
     // NOTE(2022-04-26): only increment this if `daemon` is false
     let mut finished_count = 0;
 
+    // Stats
+    // TODO(2022-05-12): These should become Prometheus metrics in the future
+    let mut stats_start_time = Instant::now();
+    let mut tx_successes = 0;
+    let mut tx_send_failures = 0;
+    let mut tx_confirm_failures = 0;
+
+    let mut batch_wait_times = Duration::ZERO;
+
     // TODO(2021-03-09): Extract logic into helper functions
     while daemon || finished_count < batches.len() {
         finished_count = 0;
@@ -239,6 +248,8 @@ fn handle_attest(
                             );
                             warn!("{}", &msg);
 
+                            tx_send_failures += 1;
+
                             if attempt_no < &n_retries {
                                 state.set_status(Sending {
                                     attempt_no: attempt_no + 1,
@@ -288,6 +299,14 @@ fn handle_attest(
                             println!("Sequence number: {}", seqno);
                             info!("Batch {}/{}: OK, seqno {}", batch_no, batch_count, seqno);
 
+                            tx_successes += 1;
+
+                            // Include delay for average
+                            if let Some(t) = state.last_success_at.as_ref() {
+                                batch_wait_times += t.elapsed();
+                            }
+
+                            state.last_success_at = Some(Instant::now());
                             state.set_status(Success { seqno });
                         }
                         Err(e) => {
@@ -319,6 +338,8 @@ fn handle_attest(
 				    attempt_no, n_retries,
 				    msg
                                 );
+
+                                tx_confirm_failures += 1;
 
                                 if attempt_no < &n_retries {
                                     state.set_status(Sending {
@@ -370,6 +391,43 @@ fn handle_attest(
 
             thread::sleep(rpc_interval);
         }
+
+        // Print stats on every pass through the batches
+        let stats_seconds_elapsed = stats_start_time.elapsed().as_millis() as f64 / 1000.0;
+        let tps = tx_successes as f64 / stats_seconds_elapsed;
+        let sym_ps = tps * config.max_batch_size as f64;
+
+        let mut total = (tx_successes + tx_send_failures + tx_confirm_failures) as f64;
+        // Avoid division by 0
+        if total < 0.0001 {
+            total = 0.0001;
+        }
+
+        let successes_pct = tx_successes as f64 / total * 100.0;
+        let send_failures_pct = tx_send_failures as f64 / total * 100.0;
+        let confirm_failures_pct = tx_confirm_failures as f64 / total * 100.0;
+
+        info!(
+            "Stats since start:
+Runtime: {}s
+TPS: {:.4} tx/s ({:.4} symbols/s)
+Total attestation attempts: {}
+Successful txs: {} ({:.2})%
+Sending failures: {} ({:.2})%
+Confirmation failures: {} ({:.2})%
+Average batch resend delay: {:.2}s",
+            stats_start_time.elapsed().as_secs(),
+            tps,
+            sym_ps,
+            total,
+            tx_successes,
+            successes_pct,
+            tx_send_failures,
+            send_failures_pct,
+            tx_confirm_failures,
+            confirm_failures_pct,
+            batch_wait_times.as_secs() as f64 / (tx_successes as f64 + 0.000001),
+        );
     }
 
     let mut errors = Vec::new();
