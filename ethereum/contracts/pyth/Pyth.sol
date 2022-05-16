@@ -45,7 +45,7 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
         return batch;
     }
 
-    function updatePriceFeeds(bytes[] memory updateData) public override {
+    function updatePriceFeeds(bytes[] calldata updateData) public override {
         for(uint i = 0; i < updateData.length; i++) {
             updatePriceBatchFromVm(updateData[i]);
         }
