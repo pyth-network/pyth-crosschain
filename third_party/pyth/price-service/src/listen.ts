@@ -163,11 +163,6 @@ export class Listener implements PriceFeedPriceInfo {
     );
 
     if (!isAnyPriceNew) {
-      logger.debug(
-        "For all prices there exists an update with newer sequence number, ignoring this attestation." +
-        "batch price attestation: %o",
-        batchAttestation
-      );
       return;
     }
 
@@ -186,7 +181,7 @@ export class Listener implements PriceFeedPriceInfo {
     }
 
     logger.info(
-      "Parsed Batch Price Attestation: [" +
+      "Parsed a new Batch Price Attestation: [" +
       parsedVAA.emitter_chain +
       ":" +
       uint8ArrayToHex(parsedVAA.emitter_address) +
