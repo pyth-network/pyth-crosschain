@@ -1,30 +1,61 @@
 # Deploying Contracts to Production
 
-Running the Truffle migrations in [`migrations/prod`](migrations/prod) will deploy the contracts to production. Truffle stores the address of the deployed contracts in the build artifacts, which can make local development difficult. We use [`truffle-deploy-registry`](https://github.com/MedXProtocol/truffle-deploy-registry) to store the addresses separately from the artifacts, in the [`networks`](networks) directory. When we need to perform operations on the deployed contracts, such as performing additional migrations, we can run `apply-registry -n networks/$NETWORK` to populate the artifacts with the correct addresses.
+Running the Truffle migrations in [`migrations/prod`](migrations/prod) will deploy the contracts to production. 
 
-An example deployment process, for deploying to Binance Smart Chain Testnet:
+This is the deployment process:
 
 ```bash
-# Load the configuration environment variables for deploying to BSC Testnet.
-rm -f .env; ln -s .env.prod.binance_testnet .env && set -o allexport && source .env set && set +o allexport
+# Load the configuration environment variables for deploying your network. make sure to use right env file.
+# If it is a new chain you are deploying to, create a new env file and commit it to the repo.
+rm -f .env; ln -s .env.prod.xyz .env && set -o allexport && source .env set && set +o allexport
 
 # The Secret Recovery Phrase for the wallet the contract will be deployed from.
 export MNEMONIC=...
 
 # Ensure that we deploy a fresh build with up-to-date dependencies.
-rm -rf build .openzeppelin node_modules && npm install && npx truffle compile --all
+rm -rf build && npx truffle compile --all
 
 # Merge the network addresses into the artifacts, if some contracts are already deployed.
-npx apply-registry -n networks/$MIGRATIONS_NETWORK
+npx apply-registry
 
 # Perform the migration
 npx truffle migrate --network $MIGRATIONS_NETWORK
-
-# Running the migration will cause a JSON file to be written to the networks/
-# directory, with a filename like 1648198934288.json (the Truffle network ID).
-# To make it more obvious which network this corresponds to, move this file
-# to networks/$MIGRATIONS_NETWORK.
-mkdir -p networks/$MIGRATIONS_NETWORK && mv networks/NETWORK__ID.json networks/$MIGRATIONS_NETWORK
 ```
 
 As a sanity check, it is recommended to deploy the  migrations in `migrations/prod` to the Truffle `development` network first. You can do this by using the configuration values in [`.env.prod.development`](.env.prod.development).
+
+As a result of this process for some files (with the network id in their name) in `networks` and `.openzeppelin` directory might change which need to be committed (if they are result of a production deployment).
+
+## `networks` directory
+Truffle stores the address of the deployed contracts in the build artifacts, which can make local development difficult. We use [`truffle-deploy-registry`](https://github.com/MedXProtocol/truffle-deploy-registry) to store the addresses separately from the artifacts, in the [`networks`](networks) directory. When we need to perform operations on the deployed contracts, such as performing additional migrations, we can run `npx apply-registry` to populate the artifacts with the correct addresses.
+
+Each file in the network directory is named after the network id and contains address of Migration contract and PythUpgradable contract. If you are upgrading the contract it should not change. In case you are deploying to a new network make sure to commit this file.
+
+## `.openzeppelin` directory
+In order to handle upgrades safely this directory stores details of the contracts structure, such as implementation addresses
+and their respective storage layout in one file per network (the name contains network id). This allows truffle to 
+check whether the upgrade is causing any memory collision. Please take a look at (this doc)[https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable] 
+for more information.
+
+Changes to the files in this directory should be commited as well.
+
+# Upgrading the contract
+To upgrade the contract you should add a new migration file in the `migrations/prod` directory increasing the migration number.
+
+It looks like so:
+
+```javascript
+require('dotenv').config({ path: "../.env" });
+
+const PythUpgradable = artifacts.require("PythUpgradable");
+
+const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
+
+/**
+ * Briefly describe the changelog here.
+ */
+module.exports = async function (deployer) {
+    const instance = await PythUpgradable.deployed();
+    await upgradeProxy(instance.address, PythUpgradable, { deployer });
+}
+```
