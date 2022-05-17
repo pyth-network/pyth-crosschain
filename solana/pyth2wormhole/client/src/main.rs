@@ -9,7 +9,7 @@ use std::{
     },
 };
 
-use clap::Clap;
+use clap::Parser;
 use log::{
     debug,
     error,

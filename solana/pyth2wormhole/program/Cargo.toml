@@ -19,8 +19,8 @@ wormhole-bridge-solana = {path = "../../bridge/program"}
 solitaire = { path = "../../solitaire/program" }
 solitaire-client = { path = "../../solitaire/client", optional = true }
 rocksalt = { path = "../../solitaire/rocksalt" }
-solana-program = "=1.9.4"
-borsh = "=0.9.1"
+solana-program = "=1.10.13"
+borsh = "=0.9.3"
 pyth-client = "0.2.2"
 p2w-sdk = { path = "../../../third_party/pyth/p2w-sdk/rust", features = ["solana"] }
 serde = { version = "1", optional = true}
