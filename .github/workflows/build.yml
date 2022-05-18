@@ -34,28 +34,3 @@ jobs:
       # Clean up k8s resources
       - run: kubectl delete --namespace=$DEPLOY_NS service,statefulset,configmap,pod,job --all
         if: always()
-
-  # Verify whether the Makefile builds the node (no dependencies other than Go)
-  node:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: '1.17.5'
-      - run: make node
-
-  # Run linters, Go tests and other outside-of-Tilt things.
-  lint-and-tests:
-    # The linter is slow enough that we want to run it on the self-hosted runner
-    runs-on: tilt-kube-public
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: '1.17.5'
-      - run: make generate && ./lint.sh
-      - run: cd node && go test -v ./...

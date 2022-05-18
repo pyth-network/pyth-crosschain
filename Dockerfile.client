@@ -15,7 +15,6 @@ ENV SOLANA_BIN_PATH="/root/.local/share/solana/install/active_release/bin"
 ENV PATH="$SOLANA_BIN_PATH:$PATH"
 
 ADD solana /usr/src/solana
-ADD proto /usr/src/proto
 
 WORKDIR /usr/src/solana
 
