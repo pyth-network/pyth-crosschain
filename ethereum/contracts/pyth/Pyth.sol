@@ -53,7 +53,6 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
     function newPriceInfo(PythInternalStructs.PriceAttestation memory pa) private view returns (PythInternalStructs.PriceInfo memory info) {
         info.attestationTime = pa.attestationTime;
-        info.publishTime = pa.publishTime;
         info.arrivalTime = block.timestamp;
         info.arrivalBlock = block.number;
 
@@ -67,6 +66,10 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
         info.priceFeed.productId = pa.productId;
         info.priceFeed.numPublishers = pa.numPublishers;
         info.priceFeed.maxNumPublishers = pa.maxNumPublishers;
+        info.priceFeed.prevConf = pa.prevConf;
+        info.priceFeed.prevPublishTime = pa.prevPublishTime;
+        info.priceFeed.prevPrice = pa.prevPrice;
+        info.priceFeed.publishTime = pa.publishTime;
         return info;
     }
 
@@ -205,9 +208,8 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
         require(info.priceFeed.id != 0, "no price feed found for the given price id");
 
         // Check that there is not a significant difference between this chain's time
-        // and the attestation time. This is a last-resort safety net, and this check
-        // will be iterated on in the future.
-        if (diff(block.timestamp, info.publishTime) > VALID_TIME_PERIOD_SECS) {
+        // and the price publish time.
+        if (diff(block.timestamp, info.priceFeed.publishTime) > VALID_TIME_PERIOD_SECS) {
             info.priceFeed.status = PythStructs.PriceStatus.UNKNOWN;
         }
 

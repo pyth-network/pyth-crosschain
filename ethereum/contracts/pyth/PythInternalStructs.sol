@@ -43,25 +43,10 @@ contract PythInternalStructs {
         uint64 prevConf;
     }
 
-    struct Rational {
-        int64 value;
-        int64 numerator;
-        int64 denominator;
-    }
-
-    struct UpgradeContract {
-        bytes32 module;
-        uint8 action;
-        uint16 chain;
-
-        address newContract;
-    }
-
     struct PriceInfo {
-        PythStructs.PriceFeed priceFeed;
         uint256 attestationTime;
-        uint256 publishTime;
         uint256 arrivalTime;
         uint256 arrivalBlock;
+        PythStructs.PriceFeed priceFeed;
     }
 }
