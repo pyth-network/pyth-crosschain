@@ -142,7 +142,7 @@ k8s_resource(
 docker_build(
     ref = "bridge-client",
     context = ".",
-    only = ["./proto", "./solana", "./clients"],
+    only = ["./proto", "./solana"],
     dockerfile = "Dockerfile.client",
     # Ignore target folders from local (non-container) development.
     ignore = ["./solana/*/target"],
@@ -216,13 +216,6 @@ if pyth:
         ignore = ["./solana/*/target"],
     )
 
-    # Automatic pyth2wormhole relay, showcasing p2w-sdk
-    docker_build(
-        ref = "p2w-integration-observer",
-	context = ".",
-	dockerfile = "./third_party/pyth/p2w-integration-observer/Dockerfile",
-    )
-
     k8s_yaml_with_ns("devnet/p2w-attest.yaml")
     k8s_resource(
         "p2w-attest",
@@ -230,14 +223,6 @@ if pyth:
         port_forwards = [],
         labels = ["pyth"],
         trigger_mode = trigger_mode,
-    )
-
-    k8s_yaml_with_ns("devnet/p2w-integration-observer.yaml")
-    k8s_resource(
-        "p2w-integration-observer",
-        resource_deps = ["solana-devnet", "eth-devnet", "pyth", "guardian", "p2w-attest", "wasm-gen"],
-        port_forwards = [],
-        labels = ["pyth"]
     )
 
     # Pyth2wormhole relay
