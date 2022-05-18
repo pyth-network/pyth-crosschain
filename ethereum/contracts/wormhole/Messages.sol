@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 
 import "./Getters.sol";
 import "./Structs.sol";
-import "./libraries/external/BytesLib.sol";
+import "../libraries/external/BytesLib.sol";
 
 
 contract Messages is Getters {
