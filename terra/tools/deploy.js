@@ -16,8 +16,6 @@ import { zeroPad } from "ethers/lib/utils.js";
 */
 const artifacts = [
   "wormhole.wasm",
-  "cw20_wrapped.wasm",
-  "cw20_base.wasm",
   "pyth_bridge.wasm",
 ];
 
