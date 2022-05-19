@@ -1,7 +1,6 @@
 # Deploying Contracts to Production
 
-Running the Truffle migrations in [`migrations/prod`](migrations/prod) or [`migrations/prod-receiver`](migrations/prod-receiver/) will deploy the contracts to production. You should use Prod with Receiver when wormhole is not supporting your target chain; Hence, you should deploy a
-Wormhole Receiver contract which only verifies messages.
+Running the Truffle migrations in [`migrations/prod`](migrations/prod) or [`migrations/prod-receiver`](migrations/prod-receiver/) will deploy the contracts to production. The `prod-receiver` migrations should be used when you need to deploy to a chain that is unsupported by the Wormhole network. The Wormhole Receiver contract acts as a read-only Wormhole endpoint that can verify Wormhole messages even if the Wormhole network has not yet connected the chain.
 
 This is the deployment process:
 
@@ -22,7 +21,7 @@ npx apply-registry
 # Perform the migration
 npx truffle migrate --network $MIGRATIONS_NETWORK
 
-# On first time mainnet deployments with Wormhole Receiver. Or when guardian sets are upgraded.
+# Perform this in first time mainnet deployments with Wormhole Receiver. (Or when guardian sets are upgraded)
 npm run receiver-submit-guardian-sets -- --network $MIGRATIONS_NETWORK
 ```
 
@@ -34,7 +33,7 @@ As a result of this process for some files (with the network id in their name) i
 Truffle stores the address of the deployed contracts in the build artifacts, which can make local development difficult. We use [`truffle-deploy-registry`](https://github.com/MedXProtocol/truffle-deploy-registry) to store the addresses separately from the artifacts, in the [`networks`](networks) directory. When we need to perform operations on the deployed contracts, such as performing additional migrations, we can run `npx apply-registry` to populate the artifacts with the correct addresses.
 
 Each file in the network directory is named after the network id and contains address of Migration contract and PythUpgradable contract
-(, and Wormhole Receiver if we use `prod-receiver`). If you are upgrading the contract it should not change. In case you are deploying to a new network make sure to commit this file.
+(and Wormhole Receiver if we use `prod-receiver`). If you are upgrading the contract it should not change. In case you are deploying to a new network make sure to commit this file.
 
 ## `.openzeppelin` directory
 In order to handle upgrades safely this directory stores details of the contracts structure, such as implementation addresses

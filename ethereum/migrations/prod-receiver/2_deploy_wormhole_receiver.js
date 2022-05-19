@@ -1,5 +1,7 @@
 require("dotenv").config({ path: "../.env" });
 
+const tdr = require('truffle-deploy-registry');
+
 const ReceiverSetup = artifacts.require("ReceiverSetup");
 const ReceiverImplementation = artifacts.require("ReceiverImplementation");
 const WormholeReceiver = artifacts.require("WormholeReceiver");
@@ -9,7 +11,7 @@ const initialSigners = JSON.parse(process.env.INIT_SIGNERS);
 const governanceChainId = process.env.INIT_GOV_CHAIN_ID;
 const governanceContract = process.env.INIT_GOV_CONTRACT; // bytes32
 
-module.exports = async function (deployer) {
+module.exports = async function (deployer, network) {
   // deploy setup
   await deployer.deploy(ReceiverSetup);
 
@@ -28,5 +30,9 @@ module.exports = async function (deployer) {
     .encodeABI();
 
   // deploy proxy
-  await deployer.deploy(WormholeReceiver, ReceiverSetup.address, initData);
+  const wormholeReceiver = await deployer.deploy(WormholeReceiver, ReceiverSetup.address, initData);
+
+  if (!tdr.isDryRunNetworkName(network)) {
+    await tdr.appendInstance(wormholeReceiver);
+  }
 };
