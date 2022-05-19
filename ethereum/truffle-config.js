@@ -22,6 +22,18 @@ module.exports = {
       timeoutBlocks: 200,
       skipDryRun: false,
     },
+    ropsten: {
+      provider: () =>
+        new HDWalletProvider(
+          process.env.MNEMONIC,
+          `https://ropsten.infura.io/v3/` + process.env.INFURA_KEY
+        ),
+      network_id: 3,
+      gas: 5500000,
+      confirmations: 2,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
     rinkeby: {
       provider: () =>
         new HDWalletProvider(
@@ -45,7 +57,7 @@ module.exports = {
       gas: 4465030,
       gasPrice: 10000000000,
     },
-    binance: {
+    bnb: {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
@@ -56,7 +68,7 @@ module.exports = {
       gas: 70000000,
       gasPrice: 8000000000,
     },
-    binance_testnet: {
+    bnb_testnet: {
       provider: () => new HDWalletProvider(
         process.env.MNEMONIC,
         "https://data-seed-prebsc-1-s1.binance.org:8545"
@@ -157,6 +169,24 @@ module.exports = {
       network_id: 0xfa2,
       gas: 4465030,
       gasPrice: 300000000000,
+    },
+    celo: {
+      provider: () => {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://forno.celo.org"
+        )
+      },
+      network_id: 42220,
+    },    
+    celo_alfajores_testnet: {
+      provider: () => {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://alfajores-forno.celo-testnet.org"
+        )
+      },
+      network_id: 44787,
     },
   },
 
