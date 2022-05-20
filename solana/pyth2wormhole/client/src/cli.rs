@@ -3,7 +3,10 @@
 use solana_program::pubkey::Pubkey;
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use clap::{
+    Parser,
+    Subcommand,
+};
 
 #[derive(Parser)]
 #[clap(
@@ -26,6 +29,8 @@ pub struct Cli {
     pub payer: String,
     #[clap(short, long, default_value = "http://localhost:8899")]
     pub rpc_url: String,
+    #[clap(long, default_value = "confirmed")]
+    pub commitment: String,
     #[clap(long)]
     pub p2w_addr: Pubkey,
     #[clap(subcommand)]
@@ -54,30 +59,31 @@ pub enum Action {
         #[clap(
             short = 'n',
             long = "--n-retries",
-            help = "How many times to retry send_transaction() on each batch before flagging a failure.",
+            help = "How many times to retry send_transaction() on each batch before flagging a failure. Only active outside daemon mode",
             default_value = "5"
         )]
         n_retries: usize,
         #[clap(
+            short = 'i',
+            long = "--retry-interval",
+            help = "How long to wait between send_transaction
+            retries. Only active outside daemon mode",
+            default_value = "5"
+        )]
+        retry_interval_secs: u64,
+        #[clap(
             short = 'd',
             long = "--daemon",
-            help = "Do not stop attesting. In this mode, this program will behave more like a daemon and continuously attest the specified symbols.",
+            help = "Do not stop attesting. In this mode, this program will behave more like a daemon and continuously attest the specified symbols."
         )]
         daemon: bool,
         #[clap(
             short = 't',
             long = "--timeout",
-            help = "How many seconds to wait before giving up on get_transaction() for tx confirmation.",
-            default_value = "40"
+            help = "How many seconds to wait before giving up on  tx confirmation.",
+            default_value = "20"
         )]
-        conf_timeout_secs: u64,
-        #[clap(
-            short = 'i',
-            long = "--rpc-interval",
-            help = "How many milliseconds to wait between SOL RPC requests",
-            default_value = "200"
-        )]
-        rpc_interval_ms: u64,
+        confirmation_timeout_secs: u64,
     },
     #[clap(about = "Retrieve a pyth2wormhole program's current settings")]
     GetConfig,

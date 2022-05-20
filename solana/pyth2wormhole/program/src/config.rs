@@ -18,7 +18,7 @@ use solitaire::{
     Owned,
 };
 
-#[derive(Default, BorshDeserialize, BorshSerialize)]
+#[derive(Clone, Default, BorshDeserialize, BorshSerialize)]
 #[cfg_attr(feature = "client", derive(Debug))]
 pub struct Pyth2WormholeConfig {
     ///  Authority owning this contract

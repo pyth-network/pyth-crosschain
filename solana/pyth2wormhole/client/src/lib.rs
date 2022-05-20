@@ -5,7 +5,7 @@ use borsh::{
     BorshDeserialize,
     BorshSerialize,
 };
-use solana_client::rpc_client::RpcClient;
+use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_program::{
     hash::Hash,
     instruction::{
@@ -53,8 +53,15 @@ use pyth2wormhole::{
     Pyth2WormholeConfig,
 };
 
-pub use attestation_cfg::{AttestationConfig, AttestationConditions, P2WSymbol};
-pub use batch_state::{BatchState, BatchTxStatus};
+pub use attestation_cfg::{
+    AttestationConditions,
+    AttestationConfig,
+    P2WSymbol,
+};
+pub use batch_state::BatchState;
+
+/// Future-friendly version of solitaire::ErrBox
+pub type ErrBoxSend = Box<dyn std::error::Error + Send + Sync>;
 
 pub fn gen_init_tx(
     payer: Keypair,
@@ -131,14 +138,17 @@ pub fn gen_set_config_tx(
 }
 
 /// Get the current config account data for given p2w program address
-pub fn get_config_account(
+pub async fn get_config_account(
     rpc_client: &RpcClient,
     p2w_addr: &Pubkey,
 ) -> Result<Pyth2WormholeConfig, ErrBox> {
     let p2w_config_addr = P2WConfigAccount::<{ AccountState::Initialized }>::key(None, p2w_addr);
 
     let config = Pyth2WormholeConfig::try_from_slice(
-        rpc_client.get_account_data(&p2w_config_addr)?.as_slice(),
+        rpc_client
+            .get_account_data(&p2w_config_addr)
+            .await?
+            .as_slice(),
     )?;
 
     Ok(config)
@@ -153,7 +163,7 @@ pub fn gen_attest_tx(
     symbols: &[P2WSymbol],
     wh_msg: &Keypair,
     latest_blockhash: Hash,
-) -> Result<Transaction, ErrBox> {
+) -> Result<Transaction, ErrBoxSend> {
     let emitter_addr = P2WEmitter::key(None, &p2w_addr);
 
     let seq_addr = Sequence::key(
@@ -165,11 +175,11 @@ pub fn gen_attest_tx(
 
     let p2w_config_addr = P2WConfigAccount::<{ AccountState::Initialized }>::key(None, &p2w_addr);
     if symbols.len() > p2w_config.max_batch_size as usize {
-        return Err(format!(
+        return Err((format!(
             "Expected up to {} symbols for batch, {} were found",
             p2w_config.max_batch_size,
             symbols.len()
-        )
+        ))
         .into());
     }
     // Initial attest() accounts
@@ -239,7 +249,14 @@ pub fn gen_attest_tx(
         },
     );
 
-    let ix = Instruction::new_with_bytes(p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas);
+    let ix = Instruction::new_with_bytes(
+        p2w_addr,
+        ix_data
+            .try_to_vec()
+            .map_err(|e| -> ErrBoxSend { Box::new(e) })?
+            .as_slice(),
+        acc_metas,
+    );
 
     let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
         &[ix],

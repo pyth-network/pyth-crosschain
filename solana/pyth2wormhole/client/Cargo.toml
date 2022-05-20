@@ -29,6 +29,8 @@ solana-sdk = "=1.10.13"
 solana-transaction-status = "=1.10.13"
 solitaire-client = {path = "../../solitaire/client"}
 solitaire = {path = "../../solitaire/program"}
+tokio = {version = "1", features = ["sync", "rt", "time"]}
+futures = "0.3.21"
 
 [dev-dependencies]
 pyth-client = "0.5.0"

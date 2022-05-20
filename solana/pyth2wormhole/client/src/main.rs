@@ -2,6 +2,8 @@ pub mod cli;
 
 use std::{
     fs::File,
+    pin::Pin,
+    sync::Arc,
     thread,
     time::{
         Duration,
@@ -10,6 +12,12 @@ use std::{
 };
 
 use clap::Parser;
+use futures::future::{
+    Future,
+    FutureExt,
+    TryFuture,
+    TryFutureExt,
+};
 use log::{
     debug,
     error,
@@ -18,7 +26,10 @@ use log::{
     warn,
     LevelFilter,
 };
-use solana_client::rpc_client::RpcClient;
+use solana_client::{
+    client_error::ClientError,
+    nonblocking::rpc_client::RpcClient,
+};
 use solana_program::pubkey::Pubkey;
 use solana_sdk::{
     commitment_config::CommitmentConfig,
@@ -33,6 +44,10 @@ use solitaire::{
     ErrBox,
 };
 use solitaire_client::Keypair;
+use tokio::{
+    sync::Semaphore,
+    task::JoinHandle,
+};
 
 use cli::{
     Action,
@@ -45,16 +60,24 @@ use pyth2wormhole_client::*;
 
 pub const SEQNO_PREFIX: &'static str = "Program log: Sequence: ";
 
-fn main() -> Result<(), ErrBox> {
+#[tokio::main]
+async fn main() -> Result<(), ErrBox> {
     let cli = Cli::parse();
     init_logging(cli.log_level);
 
     let payer = read_keypair_file(&*shellexpand::tilde(&cli.payer))?;
-    let rpc_client = RpcClient::new_with_commitment(cli.rpc_url, CommitmentConfig::confirmed());
+    let commitment = match cli.commitment.as_str() {
+        "processed" => CommitmentConfig::processed(),
+        "confirmed" => CommitmentConfig::confirmed(),
+        "finalized" => CommitmentConfig::finalized(),
+        other => return Err(format!("Unrecognized commitment {:?}", other).into()),
+    };
+
+    let rpc_client = RpcClient::new_with_commitment(cli.rpc_url.clone(), commitment.clone());
 
     let p2w_addr = cli.p2w_addr;
 
-    let latest_blockhash = rpc_client.get_latest_blockhash()?;
+    let latest_blockhash = rpc_client.get_latest_blockhash().await?;
 
     match cli.action {
         Action::Init {
@@ -70,10 +93,12 @@ fn main() -> Result<(), ErrBox> {
                 pyth_owner_addr,
                 latest_blockhash,
             )?;
-            rpc_client.send_and_confirm_transaction_with_spinner(&tx)?;
+            rpc_client
+                .send_and_confirm_transaction_with_spinner(&tx)
+                .await?;
         }
         Action::GetConfig => {
-            println!("{:?}", get_config_account(&rpc_client, &p2w_addr)?);
+            println!("{:?}", get_config_account(&rpc_client, &p2w_addr).await?);
         }
         Action::SetConfig {
             ref owner,
@@ -90,54 +115,65 @@ fn main() -> Result<(), ErrBox> {
                 new_pyth_owner_addr,
                 latest_blockhash,
             )?;
-            rpc_client.send_and_confirm_transaction_with_spinner(&tx)?;
+            rpc_client
+                .send_and_confirm_transaction_with_spinner(&tx)
+                .await?;
         }
         Action::Attest {
             ref attestation_cfg,
             n_retries,
+            retry_interval_secs,
+            confirmation_timeout_secs,
             daemon,
-            conf_timeout_secs,
-            rpc_interval_ms,
         } => {
             // Load the attestation config yaml
             let attestation_cfg: AttestationConfig =
                 serde_yaml::from_reader(File::open(attestation_cfg)?)?;
 
             handle_attest(
-                &rpc_client,
+                cli.rpc_url,
+                commitment,
                 payer,
                 p2w_addr,
-                &attestation_cfg,
+                attestation_cfg,
                 n_retries,
+                Duration::from_secs(retry_interval_secs),
+                Duration::from_secs(confirmation_timeout_secs),
                 daemon,
-                Duration::from_secs(conf_timeout_secs),
-                Duration::from_millis(rpc_interval_ms),
-            )?;
+            )
+            .await?;
         }
     }
 
     Ok(())
 }
 
-use BatchTxStatus::*;
-
 /// Send a series of batch attestations for symbols of an attestation config.
-fn handle_attest(
-    rpc_client: &RpcClient,
+async fn handle_attest(
+    rpc_url: String,
+    commitment: CommitmentConfig,
     payer: Keypair,
     p2w_addr: Pubkey,
-    attestation_cfg: &AttestationConfig,
+    attestation_cfg: AttestationConfig,
     n_retries: usize,
+    retry_interval: Duration,
+    confirmation_timeout: Duration,
     daemon: bool,
-    conf_timeout: Duration,
-    rpc_interval: Duration,
 ) -> Result<(), ErrBox> {
     // Derive seeded accounts
     let emitter_addr = P2WEmitter::key(None, &p2w_addr);
 
     info!("Using emitter addr {}", emitter_addr);
 
-    let config = get_config_account(rpc_client, &p2w_addr)?;
+    let config = get_config_account(
+        &RpcClient::new_with_timeout_and_commitment(
+            rpc_url.clone(),
+            confirmation_timeout,
+            commitment.clone(),
+        ),
+        &p2w_addr,
+    )
+    .await?;
 
     debug!("Symbol config:\n{:#?}", attestation_cfg);
 
@@ -151,7 +187,6 @@ fn handle_attest(
         .symbol_groups
         .iter()
         .map(|g| {
-            // FIXME: The forbidden nested closure move technique (a lost art of pleasing the borrow checker)
             let conditions4closure = g.conditions.clone();
             let name4closure = g.group_name.clone();
 
@@ -171,301 +206,214 @@ fn handle_attest(
         .collect();
     let batch_count = batches.len();
 
-    // NOTE(2022-04-26): only increment this if `daemon` is false
-    let mut finished_count = 0;
+    // Each future schedules individual attestation attempts per
+    // batch. Without daemon mode, we return after the first job is
+    // complete on the batch. In daemon mode, we never return and
+    // resend each batch continuously according to attestation conditions.
+    let attestation_sched_futs = batches.into_iter().map(|(batch_no, b)| {
+        let config4fut = config.clone();
+        let p2w_addr4fut = p2w_addr.clone();
+        let payer4fut = Keypair::from_bytes(&payer.to_bytes()).unwrap(); // Keypair has no clone
+        let rpc_url4fut = rpc_url.clone();
+        let commitment4fut = commitment.clone();
+        let batch_count4fut = batch_count;
+        let mut b4fut = b;
+        // Enforces the max batch job count
+        let sema = Arc::new(Semaphore::new(b4fut.conditions.max_batch_jobs));
+        async move {
+            let rpc4fut = RpcClient::new_with_timeout_and_commitment(
+                rpc_url4fut.clone(),
+                confirmation_timeout.clone(),
+                commitment4fut.clone(),
+            );
+            let mut retries_left = n_retries;
+            loop {
+                let config4job = config4fut.clone();
+                let payer4job = Keypair::from_bytes(&payer4fut.to_bytes()).unwrap(); // Keypair has no clone
+                let group_name4job = b4fut.group_name.clone();
+                let symbols4job = b4fut.symbols.to_vec();
+                let rpc4job =
+                    RpcClient::new_with_commitment(rpc_url4fut.clone(), commitment4fut.clone());
+                let sema4job = sema.clone();
 
-    // Stats
-    // TODO(2022-05-12): These should become Prometheus metrics in the future
-    let mut stats_start_time = Instant::now();
-    let mut tx_successes = 0;
-    let mut tx_send_failures = 0;
-    let mut tx_confirm_failures = 0;
+                // A future for a single attempt to attest a batch on
+                // Solana.
+                let attestation_job = async move {
+                    // Will be dropped after attestation is complete
+                    let _permit = sema4job.acquire().await?;
 
-    let mut batch_wait_times = Duration::ZERO;
-
-    // TODO(2021-03-09): Extract logic into helper functions
-    while daemon || finished_count < batches.len() {
-        finished_count = 0;
-        for (batch_no, state) in batches.iter_mut() {
-            match state.get_status().clone() {
-                Sending { attempt_no } => {
-                    info!(
-                        "Batch {}/{} contents (group {:?}): {:?}",
-                        batch_no,
-                        batch_count,
-                        state.group_name,
-                        state
-                            .symbols
-                            .iter()
-                            .map(|s| s
-                                .name
-                                .clone()
-                                .unwrap_or(format!("unnamed product {:?}", s.product_addr)))
-                            .collect::<Vec<_>>()
+                    debug!(
+                        "Batch {}/{}, group {:?}: Starting attestation job",
+                        batch_no, batch_count4fut, group_name4job
                     );
-
-                    // Send the transaction
-                    let res = rpc_client
+                    let latest_blockhash = rpc4job
                         .get_latest_blockhash()
-                        .map_err(|e| -> ErrBox { e.into() })
-                        .and_then(|latest_blockhash| {
-                            let tx_signed = gen_attest_tx(
-                                p2w_addr,
-                                &config,
-                                &payer,
-                                state.symbols,
-                                &Keypair::new(),
-                                latest_blockhash,
-                            )?;
+                        .map_err(|e| -> ErrBoxSend { e.into() })
+                        .await?;
 
-                            rpc_client
-                                .send_transaction(&tx_signed)
-                                .map_err(|e| -> ErrBox { e.into() })
-                        });
-
-                    // Individual batch errors mustn't prevent other batches from being sent.
-                    match res {
-                        Ok(signature) => {
-                            info!(
-                                "Batch {}/{} (group {:?}) tx send: OK (Attempt {} of {})",
-                                batch_no, batch_count, state.group_name, attempt_no, n_retries
-                            );
-
-                            state.set_status(Confirming {
-                                attempt_no: *attempt_no,
-                                signature,
-                            });
-                        }
-                        Err(e) => {
-                            let msg = format!(
-                                "Batch {}/{} (group {:?}) tx send error (attempt {} of {}): {}",
-                                batch_no,
-                                batch_count,
-                                state.group_name,
-                                attempt_no,
-                                n_retries + 1,
-                                e.to_string()
-                            );
-                            warn!("{}", &msg);
-
-                            tx_send_failures += 1;
-
-                            if attempt_no < &n_retries {
-                                state.set_status(Sending {
-                                    attempt_no: attempt_no + 1,
-                                })
-                            } else {
-                                // This batch failed all attempts, note the error but do not schedule for retry
-                                error!(
-                                    "Batch {}/{} (group {:?}) tx send: All {} attempts failed",
-                                    state.group_name,
-                                    batch_no,
-                                    batch_count,
-                                    n_retries + 1
-                                );
-                                state.set_status(FailedSend { last_err: e });
-                            }
-                        }
-                    }
-                }
-                Confirming {
-                    attempt_no,
-                    signature,
-                } => {
-                    let res = rpc_client
-                        .get_transaction(&signature, UiTransactionEncoding::Json)
-                        .map_err(|e| -> ErrBox { e.into() })
-                        .and_then(|this_tx| {
-                            this_tx
-                                .transaction
-                                .meta
-                                .and_then(|meta| meta.log_messages)
-                                .and_then(|logs| {
-                                    let mut seqno = None;
-                                    for log in logs {
-                                        if log.starts_with(SEQNO_PREFIX) {
-                                            seqno = Some(log.replace(SEQNO_PREFIX, ""));
-                                            break;
-                                        }
-                                    }
-                                    seqno
-                                })
-                                .ok_or_else(|| format!("No seqno in program logs").into())
-                        });
-
-                    match res {
-                        Ok(seqno) => {
-                            // NOTE(2022-03-09): p2w_autoattest.py relies on parsing this println!()
-                            println!("Sequence number: {}", seqno);
-                            info!("Batch {}/{}: OK, seqno {}", batch_no, batch_count, seqno);
-
-                            tx_successes += 1;
-
-                            // Include delay for average
-                            if let Some(t) = state.last_success_at.as_ref() {
-                                batch_wait_times += t.elapsed();
-                            }
-
-                            state.last_success_at = Some(Instant::now());
-                            state.set_status(Success { seqno });
-                        }
-                        Err(e) => {
-                            let elapsed = state.get_status_changed_at().elapsed();
-                            let msg = format!(
-                                "Batch {}/{} (group {:?}) tx confirmation failed ({}.{}/{}.{}): {}",
-                                batch_no,
-                                batch_count,
-                                state.group_name,
-                                elapsed.as_secs(),
-                                elapsed.subsec_millis(),
-                                conf_timeout.as_secs(),
-                                conf_timeout.subsec_millis(),
-                                e.to_string()
-                            );
-                            debug!("{}", &msg); // Output volume usually not suitable for warn!()
-
-                            if elapsed > conf_timeout {
-                                // This batch exceeded the timeout,
-                                // note the error and schedule for a
-                                // fresh send attempt
-                                warn!(
-                                    "Batch {}/{} (group {:?}) tx confirm: Took more than {}.{} seconds (attempt {} of {}): {}",
-                                    state.group_name,
-                                    batch_no,
-                                    batch_count,
-                                    conf_timeout.as_secs(),
-                                    conf_timeout.subsec_millis(),
-				    attempt_no, n_retries,
-				    msg
-                                );
-
-                                tx_confirm_failures += 1;
-
-                                if attempt_no < &n_retries {
-                                    state.set_status(Sending {
-                                        attempt_no: attempt_no + 1,
-                                    });
-                                } else {
-                                    error!(
-                                        "Batch {}/{} (group {:?}) tx confirm: All {} attempts failed",
-                                        state.group_name,
-                                        batch_no,
-                                        batch_count,
-                                        n_retries + 1
-                                    );
-                                    state.set_status(FailedConfirm { last_err: e });
+                    let tx_res: Result<_, ErrBoxSend> = gen_attest_tx(
+                        p2w_addr4fut,
+                        &config4job,
+                        &payer4job,
+                        symbols4job.as_slice(),
+                        &Keypair::new(),
+                        latest_blockhash,
+                    );
+                    let tx = tx_res?;
+                    let sig = rpc4job
+                        .send_and_confirm_transaction(&tx)
+                        .map_err(|e| -> ErrBoxSend { e.into() })
+                        .await?;
+                    let tx_data = rpc4job
+                        .get_transaction(&sig, UiTransactionEncoding::Json)
+                        .map_err(|e| -> ErrBoxSend { e.into() })
+                        .await?;
+                    let seqno = tx_data
+                        .transaction
+                        .meta
+                        .and_then(|meta| meta.log_messages)
+                        .and_then(|logs| {
+                            let mut seqno = None;
+                            for log in logs {
+                                if log.starts_with(SEQNO_PREFIX) {
+                                    seqno = Some(log.replace(SEQNO_PREFIX, ""));
+                                    break;
                                 }
                             }
-                        }
-                    }
-                }
-                Success { .. } | FailedSend { .. } | FailedConfirm { .. } => {
-                    // We only try to re-schedule under --daemon
-                    if daemon {
-                        if let Some(reason) = state.should_resend(rpc_client) {
-                            info!(
-                                "Batch {}/{} (group {:?}): resending (reason: {})",
-                                batch_no, batch_count, state.group_name, reason,
-                            );
-                            state.set_status(Sending { attempt_no: 1 });
-                        } else {
-                            let elapsed = state.get_status_changed_at().elapsed();
-                            trace!(
-                                "Batch {}/{} (group {:?}): waiting ({}.{}s elapsed)",
-                                batch_no,
-                                batch_count,
-                                state.group_name,
-                                elapsed.as_secs(),
-                                elapsed.subsec_millis(),
-                            )
-                        }
-                    } else {
-                        // Track the finished batches outside daemon mode
-                        finished_count += 1;
+                            seqno
+                        })
+                        .ok_or_else(|| -> ErrBoxSend {
+                            format!("No seqno in program logs").into()
+                        })?;
 
-                        // No RPC requests are made on terminal states outside daemon mode, skip sleep
-                        continue;
-                    }
-                }
-            }
+                    info!(
+                        "Batch {}/{}, group {:?} OK",
+                        batch_no, batch_count4fut, group_name4job
+                    );
+                    // NOTE(2022-03-09): p2w_autoattest.py relies on parsing this println!{}
+                    println!("Sequence number: {}", seqno);
+                    Result::<(), ErrBoxSend>::Ok(())
+                };
 
-            thread::sleep(rpc_interval);
-        }
-
-        // Print stats on every pass through the batches
-        let stats_seconds_elapsed = stats_start_time.elapsed().as_millis() as f64 / 1000.0;
-        let tps = tx_successes as f64 / stats_seconds_elapsed;
-        let sym_ps = tps * config.max_batch_size as f64;
-
-        let mut total = (tx_successes + tx_send_failures + tx_confirm_failures) as f64;
-        // Avoid division by 0
-        if total < 0.0001 {
-            total = 0.0001;
-        }
-
-        let successes_pct = tx_successes as f64 / total * 100.0;
-        let send_failures_pct = tx_send_failures as f64 / total * 100.0;
-        let confirm_failures_pct = tx_confirm_failures as f64 / total * 100.0;
-
-        info!(
-            "Stats since start:
-Runtime: {}s
-TPS: {:.4} tx/s ({:.4} symbols/s)
-Total attestation attempts: {}
-Successful txs: {} ({:.2})%
-Sending failures: {} ({:.2})%
-Confirmation failures: {} ({:.2})%
-Average batch resend delay: {:.2}s",
-            stats_start_time.elapsed().as_secs(),
-            tps,
-            sym_ps,
-            total,
-            tx_successes,
-            successes_pct,
-            tx_send_failures,
-            send_failures_pct,
-            tx_confirm_failures,
-            confirm_failures_pct,
-            batch_wait_times.as_secs() as f64 / (tx_successes as f64 + 0.000001),
-        );
-    }
-
-    let mut errors = Vec::new();
-
-    // Filter out errors
-    for (batch_no, state) in batches {
-        match state.get_status() {
-            Success { .. } => {}
-            FailedSend { last_err, .. } | FailedConfirm { last_err, .. } => {
-                errors.push(last_err.to_string())
-            }
-            other => {
-                // Be loud about non-terminal states left behind
-                let msg = format!(
-                    "INTERNAL: Batch {} left in non-terminal state {:#?}",
-                    batch_no, other
+                debug!(
+                    "Batch {}/{}, group {:?}: Scheduling attestation job",
+                    batch_no, batch_count4fut, b4fut.group_name
                 );
+                if daemon {
+                    // park this routine until a resend condition is met
+                    loop {
+                        if let Some(reason) = b4fut.should_resend(&rpc4fut).await {
+                            info!(
+                                "Batch {}/{}, group {}: Resending (reason: {:?})",
+                                batch_no, batch_count4fut, b4fut.group_name, reason
+                            );
+                            break;
+                        }
+                    }
 
-                error!("{}", msg);
+                    if sema.available_permits() == 0 {
+                        warn!(
+                            "Batch {}/{}, group {:?}: Ran out of job \
+                        permits, some attestation conditions may be \
+                        delayed. For better accuracy, increase \
+                        max_batch_jobs or adjust attestation \
+                        conditions",
+                            batch_no, batch_count4fut, b4fut.group_name
+                        );
+                    }
 
-                errors.push(msg);
+                    // This short-lived permit prevents scheduling
+                    // excess attestation jobs (which could eventually
+                    // eat all memory). It is freed as soon as we
+                    // leave this code block.
+                    let _permit4sched = sema.acquire().await?;
+
+                    let batch_no4err_msg = batch_no.clone();
+                    let batch_count4err_msg = batch_count4fut.clone();
+                    let group_name4err_msg = b4fut.group_name.clone();
+
+                    // We never get to error reporting in daemon mode, attach a map_err
+                    let job_with_err_msg = attestation_job.map_err(move |e| async move {
+                        warn!(
+                            "Batch {}/{}, group {:?} ERR: {}",
+                            batch_no4err_msg,
+                            batch_count4err_msg,
+                            group_name4err_msg,
+                            e.to_string()
+                        );
+                        e
+                    });
+
+                    // Daemon mode never returns, spawn and don't wait
+                    let _detached_job: JoinHandle<_> = tokio::spawn(job_with_err_msg);
+
+                // Await and return the single result in non-daemon mode, with retries if necessary
+                } else {
+                    match attestation_job.await {
+                        Ok(_) => return Ok(()),
+                        Err(e) => {
+                            if retries_left == 0 {
+                                return Err(e);
+                            } else {
+                                retries_left -= 1;
+                                debug!(
+                                    "{}/{}, group {:?}: attestation failure: {}",
+                                    batch_no,
+                                    batch_count,
+                                    b4fut.group_name,
+                                    e.to_string()
+                                );
+                                info!(
+                                    "Batch {}/{}, group {:?}: retrying in {}.{}s, {} retries left",
+                                    batch_no,
+                                    batch_count,
+                                    b4fut.group_name,
+                                    retry_interval.as_secs(),
+                                    retry_interval.subsec_millis(),
+                                    retries_left,
+                                );
+
+                                tokio::time::sleep(retry_interval).await;
+                            }
+                        }
+                    }
+                }
+
+                b4fut.last_job_finished_at = Instant::now();
             }
         }
-    }
+    });
+
+    info!("Scheduling attestations");
+
+    let results = futures::future::join_all(attestation_sched_futs).await; // May never finish for daemon mode
+
+    info!("Got {} results", results.len());
+
+    let errors: Vec<_> = results
+        .iter()
+        .filter_map(|r| {
+            if let Err(e) = r {
+                Some(e.to_string())
+            } else {
+                None
+            }
+        })
+        .collect();
 
     if !errors.is_empty() {
-        let err_list = errors.join("\n");
-
-        Err(format!(
+        let err_lines = errors.join("\n");
+        let msg = format!(
             "{} of {} batches failed:\n{}",
             errors.len(),
             batch_count,
-            err_list
-        )
-        .into())
-    } else {
-        Ok(())
+            err_lines
+        );
+        error!("{}", msg);
+        return Err(msg.into());
     }
+
+    Ok(())
 }
 
 fn init_logging(verbosity: u32) {
