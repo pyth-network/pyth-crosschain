@@ -63,20 +63,6 @@ if not ci:
 def k8s_yaml_with_ns(objects):
     return k8s_yaml(namespace_inject(objects, namespace))
 
-# protos
-
-proto_deps = ["./proto", "buf.yaml", "buf.gen.yaml"]
-
-local_resource(
-    name = "proto-gen",
-    deps = proto_deps,
-    cmd = "tilt docker build -- --target go-export -f Dockerfile.proto -o type=local,dest=node .",
-    env = {"DOCKER_BUILDKIT": "1"},
-    labels = ["protobuf"],
-    allow_parallel=True,
-    trigger_mode = trigger_mode,
-)
-
 # wasm
 
 local_resource(
@@ -91,8 +77,8 @@ local_resource(
 
 docker_build(
     ref = "guardiand-image",
-    context = "node",
-    dockerfile = "node/Dockerfile",
+    context = ".",
+    dockerfile = "Dockerfile.guardian",
 )
 
 def build_node_yaml():
@@ -112,7 +98,7 @@ k8s_yaml_with_ns(build_node_yaml())
 
 k8s_resource(
     "guardian",
-    resource_deps = ["proto-gen", "eth-devnet", "eth-devnet2", "terra-terrad", "solana-devnet"],
+    resource_deps = ["eth-devnet", "eth-devnet2", "terra-terrad", "solana-devnet"],
     port_forwards = [
         port_forward(6060, name = "Debug/Status Server [:6060]", host = webHost),
         port_forward(7070, name = "Public gRPC [:7070]", host = webHost),
@@ -128,7 +114,7 @@ k8s_yaml_with_ns("devnet/spy.yaml")
 
 k8s_resource(
     "spy",
-    resource_deps = ["proto-gen", "guardian"],
+    resource_deps = ["guardian"],
     port_forwards = [
         port_forward(6061, container_port = 6060, name = "Debug/Status Server [:6061]", host = webHost),
         port_forward(7072, name = "Spy gRPC [:7072]", host = webHost),
@@ -142,7 +128,7 @@ k8s_resource(
 docker_build(
     ref = "bridge-client",
     context = ".",
-    only = ["./proto", "./solana", "./clients"],
+    only = ["./solana"],
     dockerfile = "Dockerfile.client",
     # Ignore target folders from local (non-container) development.
     ignore = ["./solana/*/target"],
@@ -216,13 +202,6 @@ if pyth:
         ignore = ["./solana/*/target"],
     )
 
-    # Automatic pyth2wormhole relay, showcasing p2w-sdk
-    docker_build(
-        ref = "p2w-integration-observer",
-	context = ".",
-	dockerfile = "./third_party/pyth/p2w-integration-observer/Dockerfile",
-    )
-
     k8s_yaml_with_ns("devnet/p2w-attest.yaml")
     k8s_resource(
         "p2w-attest",
@@ -230,14 +209,6 @@ if pyth:
         port_forwards = [],
         labels = ["pyth"],
         trigger_mode = trigger_mode,
-    )
-
-    k8s_yaml_with_ns("devnet/p2w-integration-observer.yaml")
-    k8s_resource(
-        "p2w-integration-observer",
-        resource_deps = ["solana-devnet", "eth-devnet", "pyth", "guardian", "p2w-attest", "wasm-gen"],
-        port_forwards = [],
-        labels = ["pyth"]
     )
 
     # Pyth2wormhole relay
