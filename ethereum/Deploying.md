@@ -63,3 +63,14 @@ module.exports = async function (deployer) {
     await upgradeProxy(instance.address, PythUpgradable, { deployer });
 }
 ```
+
+# Testing
+Using (pyth-evm-js)[https://github.com/pyth-network/pyth-js/tree/main/pyth-evm-js] relay example you can do a relaying and it should be successful. 
+
+Then to check the price feeds you can do
+
+```
+$ npx truffle console --network $MIGRATIONS_NETWORK
+> let p = await PythUpgradable.deployed()
+> p.queryPriceFeed("0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b") // BTC Testnet or any other address
+```
