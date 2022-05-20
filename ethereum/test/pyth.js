@@ -7,6 +7,7 @@ const PythStructs = artifacts.require("PythStructs");
 const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 const { expectRevert } = require("@openzeppelin/test-helpers");
 
+// Use "WormholeReceiver" if you are testing with Wormhole Receiver
 const Wormhole = artifacts.require("Wormhole");
 
 const PythUpgradable = artifacts.require("PythUpgradable");
