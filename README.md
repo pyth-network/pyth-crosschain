@@ -21,7 +21,7 @@ contract will observe the current Pyth price for selected products, and produce
 an attestation which is then relayed over Wormhole to be consumed by the
 various P2W receiver contracts.
 
-[on-chain-contract]: https://github.com/pyth-network/pyth-client
+[on-chain contract]: https://github.com/pyth-network/pyth-client
 
 ## Pyth2Wormhole Ethereum
 >  ethereum/contracts/pyth
@@ -47,6 +47,8 @@ For a guide on utilising this service in your project, see the documentation in
 the [pyth-js][] repository.
 
 [pyth-js]: https://github.com/pyth-network/pyth-js
+
+--------------------------------------------------------------------------------
 
 See [DEVELOP.md](DEVELOP.md) for instructions on how to set up a local devnet, and
 [CONTRIBUTING.md](CONTRIBUTING.md) for instructions on how to contribute to this project.
