@@ -233,7 +233,7 @@ async fn handle_attest(
                 let group_name4job = b4fut.group_name.clone();
                 let symbols4job = b4fut.symbols.to_vec();
                 let rpc4job =
-                    RpcClient::new_with_commitment(rpc_url4fut.clone(), commitment4fut.clone());
+                    RpcClient::new_with_timeout_and_commitment(rpc_url4fut.clone(),confirmation_timeout.clone(), commitment4fut.clone());
                 let sema4job = sema.clone();
 
                 // A future for a single attempt to attest a batch on
