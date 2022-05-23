@@ -76,3 +76,11 @@ $ npx truffle console --network $MIGRATIONS_NETWORK
 ```
 
 [pyth-js]: https://github.com/pyth-network/pyth-js/tree/main/pyth-evm-js#evmrelay
+
+# Manually Verifying the contract
+
+Run the following command:
+
+`npx sol-merger contracts/pyth/PythUpgradable.sol`
+
+It will create a new file `PythUpgradable_merged.sol` which you can use in etherscan to verify the implementation contract (using exact sol version and optimization flag). After verifying implementation, you can verify the proxy.
