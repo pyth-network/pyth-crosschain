@@ -228,77 +228,30 @@ async fn handle_attest(
             );
             let mut retries_left = n_retries;
             loop {
-                let config4job = config4fut.clone();
-                let payer4job = Keypair::from_bytes(&payer4fut.to_bytes()).unwrap(); // Keypair has no clone
-                let group_name4job = b4fut.group_name.clone();
-                let symbols4job = b4fut.symbols.to_vec();
-                let rpc4job =
-                    RpcClient::new_with_timeout_and_commitment(rpc_url4fut.clone(),confirmation_timeout.clone(), commitment4fut.clone());
-                let sema4job = sema.clone();
-
-                // A future for a single attempt to attest a batch on
-                // Solana.
-                let attestation_job = async move {
-                    // Will be dropped after attestation is complete
-                    let _permit = sema4job.acquire().await?;
-
-                    debug!(
-                        "Batch {}/{}, group {:?}: Starting attestation job",
-                        batch_no, batch_count4fut, group_name4job
-                    );
-                    let latest_blockhash = rpc4job
-                        .get_latest_blockhash()
-                        .map_err(|e| -> ErrBoxSend { e.into() })
-                        .await?;
-
-                    let tx_res: Result<_, ErrBoxSend> = gen_attest_tx(
-                        p2w_addr4fut,
-                        &config4job,
-                        &payer4job,
-                        symbols4job.as_slice(),
-                        &Keypair::new(),
-                        latest_blockhash,
-                    );
-                    let tx = tx_res?;
-                    let sig = rpc4job
-                        .send_and_confirm_transaction(&tx)
-                        .map_err(|e| -> ErrBoxSend { e.into() })
-                        .await?;
-                    let tx_data = rpc4job
-                        .get_transaction(&sig, UiTransactionEncoding::Json)
-                        .map_err(|e| -> ErrBoxSend { e.into() })
-                        .await?;
-                    let seqno = tx_data
-                        .transaction
-                        .meta
-                        .and_then(|meta| meta.log_messages)
-                        .and_then(|logs| {
-                            let mut seqno = None;
-                            for log in logs {
-                                if log.starts_with(SEQNO_PREFIX) {
-                                    seqno = Some(log.replace(SEQNO_PREFIX, ""));
-                                    break;
-                                }
-                            }
-                            seqno
-                        })
-                        .ok_or_else(|| -> ErrBoxSend {
-                            format!("No seqno in program logs").into()
-                        })?;
-
-                    info!(
-                        "Batch {}/{}, group {:?} OK",
-                        batch_no, batch_count4fut, group_name4job
-                    );
-                    // NOTE(2022-03-09): p2w_autoattest.py relies on parsing this println!{}
-                    println!("Sequence number: {}", seqno);
-                    Result::<(), ErrBoxSend>::Ok(())
-                };
-
                 debug!(
                     "Batch {}/{}, group {:?}: Scheduling attestation job",
                     batch_no, batch_count4fut, b4fut.group_name
                 );
+
+                let rpc4job = RpcClient::new_with_timeout_and_commitment(
+                    rpc_url4fut.clone(),
+                    confirmation_timeout.clone(),
+                    commitment4fut.clone(),
+                );
+                let payer4job = Keypair::from_bytes(&payer4fut.to_bytes()).unwrap(); // Keypair has no clone
+
+                let job = attestation_job(
+                    rpc4job,
+                    batch_no,
+                    batch_count4fut,
+                    b4fut.group_name.clone(),
+                    p2w_addr4fut,
+                    config4fut.clone(),
+                    payer4job,
+                    b4fut.symbols.to_vec(),
+                    sema.clone(),
+                );
+
                 if daemon {
                     // park this routine until a resend condition is met
                     loop {
@@ -314,10 +267,10 @@ async fn handle_attest(
                     if sema.available_permits() == 0 {
                         warn!(
                             "Batch {}/{}, group {:?}: Ran out of job \
-                        permits, some attestation conditions may be \
-                        delayed. For better accuracy, increase \
-                        max_batch_jobs or adjust attestation \
-                        conditions",
+                             permits, some attestation conditions may be \
+                             delayed. For better accuracy, increase \
+                             max_batch_jobs or adjust attestation \
+                             conditions",
                             batch_no, batch_count4fut, b4fut.group_name
                         );
                     }
@@ -333,7 +286,7 @@ async fn handle_attest(
                     let group_name4err_msg = b4fut.group_name.clone();
 
                     // We never get to error reporting in daemon mode, attach a map_err
-                    let job_with_err_msg = attestation_job.map_err(move |e| async move {
+                    let job_with_err_msg = job.map_err(move |e| async move {
                         warn!(
                             "Batch {}/{}, group {:?} ERR: {}",
                             batch_no4err_msg,
@@ -347,9 +300,9 @@ async fn handle_attest(
                     // Daemon mode never returns, spawn and don't wait
                     let _detached_job: JoinHandle<_> = tokio::spawn(job_with_err_msg);
 
-                // Await and return the single result in non-daemon mode, with retries if necessary
+                    // Await and return the single result in non-daemon mode, with retries if necessary
                 } else {
-                    match attestation_job.await {
+                    match job.await {
                         Ok(_) => return Ok(()),
                         Err(e) => {
                             if retries_left == 0 {
@@ -414,6 +367,72 @@ async fn handle_attest(
     }
 
     Ok(())
+}
+
+/// A future for a single attempt to attest a batch on Solana.
+async fn attestation_job(
+    rpc: RpcClient,
+    batch_no: usize,
+    batch_count: usize,
+    group_name: String,
+    p2w_addr: Pubkey,
+    config: Pyth2WormholeConfig,
+    payer: Keypair,
+    symbols: Vec<P2WSymbol>,
+    max_jobs_sema: Arc<Semaphore>,
+) -> Result<(), ErrBoxSend> {
+    // Will be dropped after attestation is complete
+    let _permit = max_jobs_sema.acquire().await?;
+
+    debug!(
+        "Batch {}/{}, group {:?}: Starting attestation job",
+        batch_no, batch_count, group_name
+    );
+    let latest_blockhash = rpc
+        .get_latest_blockhash()
+        .map_err(|e| -> ErrBoxSend { e.into() })
+        .await?;
+
+    let tx_res: Result<_, ErrBoxSend> = gen_attest_tx(
+        p2w_addr,
+        &config,
+        &payer,
+        symbols.as_slice(),
+        &Keypair::new(),
+        latest_blockhash,
+    );
+    let tx = tx_res?;
+    let sig = rpc
+        .send_and_confirm_transaction(&tx)
+        .map_err(|e| -> ErrBoxSend { e.into() })
+        .await?;
+    let tx_data = rpc
+        .get_transaction(&sig, UiTransactionEncoding::Json)
+        .map_err(|e| -> ErrBoxSend { e.into() })
+        .await?;
+    let seqno = tx_data
+        .transaction
+        .meta
+        .and_then(|meta| meta.log_messages)
+        .and_then(|logs| {
+            let mut seqno = None;
+            for log in logs {
+                if log.starts_with(SEQNO_PREFIX) {
+                    seqno = Some(log.replace(SEQNO_PREFIX, ""));
+                    break;
+                }
+            }
+            seqno
+        })
+        .ok_or_else(|| -> ErrBoxSend { format!("No seqno in program logs").into() })?;
+
+    info!(
+        "Batch {}/{}, group {:?} OK",
+        batch_no, batch_count, group_name
+    );
+    // NOTE(2022-03-09): p2w_autoattest.py relies on parsing this println!{}
+    println!("Sequence number: {}", seqno);
+    Result::<(), ErrBoxSend>::Ok(())
 }
 
 fn init_logging(verbosity: u32) {

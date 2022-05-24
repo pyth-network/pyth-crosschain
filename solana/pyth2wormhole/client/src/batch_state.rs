@@ -20,8 +20,8 @@ use crate::{
     P2WSymbol,
 };
 
-/// Runtime representation of a batch. It refers the original group
-/// from config and its respective attestation conditions.
+/// Runtime representation of a batch. It refers to the original group
+/// from the config.
 #[derive(Debug)]
 pub struct BatchState<'a> {
     pub group_name: String,

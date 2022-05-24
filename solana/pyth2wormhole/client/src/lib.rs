@@ -50,8 +50,9 @@ use pyth2wormhole::{
     initialize::InitializeAccounts,
     set_config::SetConfigAccounts,
     AttestData,
-    Pyth2WormholeConfig,
 };
+
+pub use pyth2wormhole::Pyth2WormholeConfig;
 
 pub use attestation_cfg::{
     AttestationConditions,
