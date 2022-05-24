@@ -259,4 +259,58 @@ describe("Client receives data", () => {
     client.close();
     await waitForSocketState(client, client.CLOSED);
   });
+
+  test("Multiple clients with different price feed works", async () => {
+    let [client1, serverMessages1] = await createSocketClient(); 
+    let [client2, serverMessages2] = await createSocketClient(); 
+
+    let message1: ClientMessage = {
+      ids: [priceFeeds[0].id],
+      type: 'subscribe'
+    };
+    
+    client1.send(JSON.stringify(message1));
+
+    let message2: ClientMessage = {
+      ids: [priceFeeds[1].id],
+      type: 'subscribe'
+    };
+    
+    client2.send(JSON.stringify(message2));
+
+    await waitForMessages(serverMessages1, 1);
+    await waitForMessages(serverMessages2, 1);
+
+    expect(serverMessages1[0]).toStrictEqual({
+      type: "response",
+      status: "success"
+    });
+
+    expect(serverMessages2[0]).toStrictEqual({
+      type: "response",
+      status: "success"
+    });
+
+    api.dispatchPriceFeedUpdate(priceFeeds[0]);
+    api.dispatchPriceFeedUpdate(priceFeeds[1]);
+
+    await waitForMessages(serverMessages1, 2);
+    await waitForMessages(serverMessages2, 2);
+
+    expect(serverMessages1[1]).toStrictEqual({
+      type: "price_update",
+      price_feed: priceFeeds[0].toJson()
+    })
+
+    expect(serverMessages2[1]).toStrictEqual({
+      type: "price_update",
+      price_feed: priceFeeds[1].toJson()
+    })
+
+    client1.close();
+    client2.close();
+
+    await waitForSocketState(client1, client1.CLOSED);
+    await waitForSocketState(client2, client2.CLOSED);
+  })
 });
