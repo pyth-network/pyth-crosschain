@@ -109,6 +109,13 @@ export class WebSocketAPI {
 
       let message = jsonData as ClientMessage;
 
+      message.ids = message.ids.map((id) => {
+        if (id.startsWith("0x")) {
+          return id.substring(2);
+        }
+        return id;
+      });
+
       const availableIds = this.priceFeedVaaInfo.getPriceIds();
       let notFoundIds = message.ids.filter((id) => !availableIds.has(id));
 
@@ -127,7 +134,7 @@ export class WebSocketAPI {
         status: "error",
         error: e.message
       };
-      
+
       logger.info(`Invalid request ${data.toString()} from client ${this.wsId.get(ws)}`);
       this.promClient?.addWebSocketInteraction("client_message", "err");
 
@@ -159,7 +166,7 @@ export class WebSocketAPI {
       this.wsCounter += 1;
 
       ws.on("message", (data: RawData) => this.handleMessage(ws, data));
-
+      
       this.aliveClients.add(ws);
 
       ws.on("pong", (_data) => {
@@ -185,7 +192,7 @@ export class WebSocketAPI {
           ws.terminate();
           return;
         }
-    
+
         this.aliveClients.delete(ws);
         ws.ping();
       });
