@@ -110,14 +110,12 @@ describe("Client receives data", () => {
 
     api.dispatchPriceFeedUpdate(priceFeeds[0]);
 
-
     await waitForMessages(serverMessages, 2);
 
     expect(serverMessages[1]).toStrictEqual({
       type: "price_update",
       price_feed: priceFeeds[0].toJson()
-    })
-
+    });
 
     api.dispatchPriceFeedUpdate(priceFeeds[1]);
 
@@ -218,7 +216,7 @@ describe("Client receives data", () => {
     message = {
       ids: [priceFeeds[0].id],
       type: 'unsubscribe',
-    }
+    };
 
     client.send(JSON.stringify(message));
 
@@ -300,12 +298,12 @@ describe("Client receives data", () => {
     expect(serverMessages1[1]).toStrictEqual({
       type: "price_update",
       price_feed: priceFeeds[0].toJson()
-    })
+    });
 
     expect(serverMessages2[1]).toStrictEqual({
       type: "price_update",
       price_feed: priceFeeds[1].toJson()
-    })
+    });
 
     client1.close();
     client2.close();
