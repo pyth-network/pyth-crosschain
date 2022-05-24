@@ -10,25 +10,25 @@ import { logger } from "./logging";
 const ClientMessageSchema: Joi.Schema = Joi.object({
   type: Joi.string().valid("subscribe", "unsubscribe").required(),
   ids: Joi.array().items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/)).required(),
-});
+}).required();
 
-type ClientMessage = {
+export type ClientMessage = {
   type: "subscribe" | "unsubscribe",
   ids: HexString[],
 }
 
-type ServerResponse = {
+export type ServerResponse = {
   type: "response",
   status: "success" | "error",
   error?: string
 }
 
-type ServerPriceUpdate = {
+export type ServerPriceUpdate = {
   type: "price_update",
-  price_feed: any[],
+  price_feed: any,
 }
 
-type ServerMessage = ServerResponse | ServerPriceUpdate;
+export type ServerMessage = ServerResponse | ServerPriceUpdate;
 
 
 export class WebSocketAPI {
@@ -59,7 +59,7 @@ export class WebSocketAPI {
     this.priceFeedClients.get(id)?.delete(ws);
   }
 
-  dispatchPriceFeedUpdates(priceFeed: PriceFeed) {
+  dispatchPriceFeedUpdate(priceFeed: PriceFeed) {
     if (this.priceFeedClients.get(priceFeed.id) === undefined) {
       return;
     }
@@ -77,7 +77,7 @@ export class WebSocketAPI {
   }
 
   clientClose(ws: WebSocket) {
-    for( let clients of this.priceFeedClients.values() ) {
+    for (let clients of this.priceFeedClients.values()) {
       if (clients.has(ws)) {
         clients.delete(ws);
       }
@@ -126,7 +126,7 @@ export class WebSocketAPI {
     ws.send(JSON.stringify(response));
   }
 
-  createServer(): http.Server {
+  run(): [WebSocketServer, http.Server] {
     const app = express();
     const server = http.createServer(app);
 
@@ -152,7 +152,10 @@ export class WebSocketAPI {
 
     const pingInterval = setInterval( () => {
       wss.clients.forEach( ws => {
-        if ( this.aliveClients.has(ws) === false) return ws.terminate();
+        if ( this.aliveClients.has(ws) === false) {
+          ws.terminate();
+          return;
+        }
     
         logger.info("A client timed out. terminating connection");
         this.aliveClients.delete(ws);
@@ -164,14 +167,10 @@ export class WebSocketAPI {
       clearInterval(pingInterval);
     });
     
-    return server;
-  }
-
-  async run() {
-    let server = this.createServer();
     server.listen(this.port, () =>
       logger.debug("listening on WS port " + this.port)
     );
-    this.priceFeedVaaInfo.addUpdateListener(this.dispatchPriceFeedUpdates.bind(this));
+    this.priceFeedVaaInfo.addUpdateListener(this.dispatchPriceFeedUpdate.bind(this));
+    return [wss, server];
   }
 }
