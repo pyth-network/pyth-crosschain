@@ -31,6 +31,11 @@ export class PromClient {
     buckets: [1, 5, 10, 15, 30, 60, 120, 180],
     labelNames: ["path", "price_id"]
   });
+  private webSocketInteractionCounter = new client.Counter({
+    name: `${SERVICE_PREFIX}websocker_interaction`,
+    help: "number of Web Socket interactions",
+    labelNames: ["type", "status"]
+  });
   // End metrics
 
   private server = http.createServer(async (req, res) => {
@@ -51,6 +56,7 @@ export class PromClient {
     this.register.registerMetric(this.receivedVaaCounter);
     this.register.registerMetric(this.apiResponseTimeSummary)
     this.register.registerMetric(this.apiRequestsPriceFreshnessHistogram);
+    this.register.registerMetric(this.webSocketInteractionCounter);
     // End registering metric
 
     logger.info("prometheus client listening on port " + config.port);
@@ -73,5 +79,12 @@ export class PromClient {
       path: path,
       price_id: priceId,
     }, duration);
+  }
+
+  addWebSocketInteraction(type: string, status: "ok" | "err") {
+    this.webSocketInteractionCounter.inc({
+      type: type,
+      status: status
+    });
   }
 }

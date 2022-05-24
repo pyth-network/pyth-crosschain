@@ -5,6 +5,7 @@ import Joi from "joi";
 import WebSocket, { RawData, WebSocketServer } from "ws";
 import { PriceFeedPriceInfo } from "./listen";
 import { logger } from "./logging";
+import { PromClient } from "./promClient";
 
 
 const ClientMessageSchema: Joi.Schema = Joi.object({
@@ -32,19 +33,26 @@ export type ServerMessage = ServerResponse | ServerPriceUpdate;
 
 
 export class WebSocketAPI {
+  private wsCounter: number;
   private port: number;
   private priceFeedClients: Map<HexString, Set<WebSocket>>;
   private aliveClients: Set<WebSocket>;
+  private wsId: Map<WebSocket, number>;
   private priceFeedVaaInfo: PriceFeedPriceInfo;
+  private promClient: PromClient | undefined;
 
   constructor(
     config: { port: number; },
-    priceFeedVaaInfo: PriceFeedPriceInfo
+    priceFeedVaaInfo: PriceFeedPriceInfo,
+    promClient?: PromClient,
   ) {
     this.port = config.port;
     this.priceFeedVaaInfo = priceFeedVaaInfo;
     this.priceFeedClients = new Map();
     this.aliveClients = new Set();
+    this.wsCounter = 0;
+    this.wsId = new Map();
+    this.promClient = promClient;
   }
 
   private addPriceFeedClient(ws: WebSocket, id: HexString) {
@@ -61,12 +69,16 @@ export class WebSocketAPI {
 
   dispatchPriceFeedUpdate(priceFeed: PriceFeed) {
     if (this.priceFeedClients.get(priceFeed.id) === undefined) {
+      logger.info(`Sending ${priceFeed.id} price update to no clients.`)
       return;
     }
 
     logger.info(`Sending ${priceFeed.id} price update to ${this.priceFeedClients.get(priceFeed.id)!.size} clients`)
 
     for (let client of this.priceFeedClients.get(priceFeed.id)!.values()) {
+      logger.info(`Sending ${priceFeed.id} price update to client ${this.wsId.get(client)}`)
+      this.promClient?.addWebSocketInteraction("server_update", "ok");
+
       let priceUpdate: ServerPriceUpdate = {
         type: "price_update",
         price_feed: priceFeed.toJson(),
@@ -82,10 +94,12 @@ export class WebSocketAPI {
         clients.delete(ws);
       }
     }
+
+    this.aliveClients.delete(ws);
+    this.wsId.delete(ws);
   }
 
   handleMessage(ws: WebSocket, data: RawData) {
-    logger.info(`Received message ${data.toString()}`);
     try {
       let jsonData = JSON.parse(data.toString());
       let validationResult = ClientMessageSchema.validate(jsonData);
@@ -114,9 +128,15 @@ export class WebSocketAPI {
         error: e.message
       };
       
+      logger.info(`Invalid request ${data.toString()} from client ${this.wsId.get(ws)}`);
+      this.promClient?.addWebSocketInteraction("client_message", "err");
+
       ws.send(JSON.stringify(response));
       return;
     }
+
+    logger.info(`Successful request ${data.toString()} from client ${this.wsId.get(ws)}`);
+    this.promClient?.addWebSocketInteraction("client_message", "ok");
 
     let response: ServerResponse = {
       type: "response",
@@ -133,7 +153,10 @@ export class WebSocketAPI {
     const wss = new WebSocketServer({ server });
 
     wss.on('connection', (ws: WebSocket, request: http.IncomingMessage) => {
-      logger.info(`Incoming ws connection from ${request}: ${ws}`)
+      logger.info(`Incoming ws connection from ${request.socket.remoteAddress}, assigned id: ${this.wsCounter}`)
+
+      this.wsId.set(ws, this.wsCounter);
+      this.wsCounter += 1;
 
       ws.on("message", (data: RawData) => this.handleMessage(ws, data));
 
@@ -144,20 +167,25 @@ export class WebSocketAPI {
       });
 
       ws.on("close", (_code: number, _reason: Buffer) => {
-        this.aliveClients.delete(ws);
+        logger.info(`client ${this.wsId.get(ws)} closed the connection.`);
+        this.promClient?.addWebSocketInteraction("close", "ok");
+
         this.clientClose(ws);
-        console.log(`Connection with a client closed`);
       });
+
+      this.promClient?.addWebSocketInteraction("connection", "ok");
     });
 
     const pingInterval = setInterval( () => {
       wss.clients.forEach( ws => {
         if ( this.aliveClients.has(ws) === false) {
+          logger.info(`client ${this.wsId.get(ws)} timed out. terminating connection`);
+          this.promClient?.addWebSocketInteraction("timeout", "ok");
+          this.clientClose(ws);
           ws.terminate();
           return;
         }
     
-        logger.info("A client timed out. terminating connection");
         this.aliveClients.delete(ws);
         ws.ping();
       });

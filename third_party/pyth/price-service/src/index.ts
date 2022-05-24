@@ -44,7 +44,7 @@ const restAPI = new RestAPI({
 
 const wsAPI = new WebSocketAPI({
   port: parseInt(envOrErr("WS_PORT"))
-}, listener);
+}, listener, promClient);
 
 listener.run();
 restAPI.run();
