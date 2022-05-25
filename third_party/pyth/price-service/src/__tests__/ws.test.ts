@@ -1,6 +1,6 @@
 import { HexString, PriceFeed, PriceStatus } from "@pythnetwork/pyth-sdk-js";
 import { PriceStore, PriceInfo } from "../listen";
-import { WebSocketAPI, ClientMessage }  from "../ws"
+import { WebSocketAPI, ClientMessage } from "../ws";
 import { Server } from "http";
 import { WebSocket, WebSocketServer } from "ws";
 import { sleep } from "../helpers";
@@ -32,11 +32,14 @@ function dummyPriceFeed(id: string): PriceFeed {
     price: "11",
     productId: "def456",
     publishTime: 13,
-    status: PriceStatus.Trading
+    status: PriceStatus.Trading,
   });
 }
 
-async function waitForSocketState(client: WebSocket, state: number): Promise<void> {
+async function waitForSocketState(
+  client: WebSocket,
+  state: number
+): Promise<void> {
   while (client.readyState !== state) {
     await sleep(10);
   }
@@ -62,50 +65,46 @@ async function createSocketClient(): Promise<[WebSocket, any[]]> {
   return [client, messages];
 }
 
-
 beforeAll(async () => {
   priceFeeds = [
-    dummyPriceFeed(expandTo64Len('abcd')),
-    dummyPriceFeed(expandTo64Len('ef01')),
-    dummyPriceFeed(expandTo64Len('2345')),
-    dummyPriceFeed(expandTo64Len('6789'))
+    dummyPriceFeed(expandTo64Len("abcd")),
+    dummyPriceFeed(expandTo64Len("ef01")),
+    dummyPriceFeed(expandTo64Len("2345")),
+    dummyPriceFeed(expandTo64Len("6789")),
   ];
 
   let priceInfo: PriceStore = {
-      getLatestPriceInfo: (_priceFeedId: string) => undefined,
-      addUpdateListener: (_callback: (priceFeed: PriceFeed) => any) => undefined,
-      getPriceIds: () => new Set(priceFeeds.map(priceFeed => priceFeed.id)),
+    getLatestPriceInfo: (_priceFeedId: string) => undefined,
+    addUpdateListener: (_callback: (priceFeed: PriceFeed) => any) => undefined,
+    getPriceIds: () => new Set(priceFeeds.map((priceFeed) => priceFeed.id)),
   };
 
-  api = new WebSocketAPI(
-      {port},
-      priceInfo,
-  );
+  api = new WebSocketAPI({ port }, priceInfo);
 
   [wss, server] = api.run();
-})
+});
 
 afterAll(async () => {
   wss.close();
   server.close();
-})
+});
 
 describe("Client receives data", () => {
   test("When subscribes with valid ids, returns correct price feed", async () => {
-    let [client, serverMessages] = await createSocketClient(); 
+    let [client, serverMessages] = await createSocketClient();
 
     let message: ClientMessage = {
       ids: [priceFeeds[0].id, priceFeeds[1].id],
-      type: 'subscribe'
+      type: "subscribe",
     };
-    
+
     client.send(JSON.stringify(message));
 
     await waitForMessages(serverMessages, 1);
 
     expect(serverMessages[0]).toStrictEqual({
       type: "response",
-      status: "success"
+      status: "success",
     });
 
     api.dispatchPriceFeedUpdate(priceFeeds[0]);
@@ -114,7 +113,7 @@ describe("Client receives data", () => {
 
     expect(serverMessages[1]).toStrictEqual({
       type: "price_update",
-      price_feed: priceFeeds[0].toJson()
+      price_feed: priceFeeds[0].toJson(),
     });
 
     api.dispatchPriceFeedUpdate(priceFeeds[1]);
@@ -123,7 +122,7 @@ describe("Client receives data", () => {
 
     expect(serverMessages[2]).toStrictEqual({
       type: "price_update",
-      price_feed: priceFeeds[1].toJson()
+      price_feed: priceFeeds[1].toJson(),
     });
 
     client.close();
@@ -131,13 +130,13 @@ describe("Client receives data", () => {
   });
 
   test("When subscribes with invalid ids, returns error", async () => {
-    let [client, serverMessages] = await createSocketClient(); 
+    let [client, serverMessages] = await createSocketClient();
 
     let message: ClientMessage = {
-      ids: [expandTo64Len('aaaa')],
-      type: 'subscribe'
+      ids: [expandTo64Len("aaaa")],
+      type: "subscribe",
     };
-    
+
     client.send(JSON.stringify(message));
 
     await waitForMessages(serverMessages, 1);
@@ -148,23 +147,23 @@ describe("Client receives data", () => {
 
     client.close();
     await waitForSocketState(client, client.CLOSED);
-  })
+  });
 
   test("When subscribes for Price Feed A, doesn't receive updates for Price Feed B", async () => {
-    let [client, serverMessages] = await createSocketClient(); 
+    let [client, serverMessages] = await createSocketClient();
 
     let message: ClientMessage = {
       ids: [priceFeeds[0].id],
-      type: 'subscribe'
+      type: "subscribe",
     };
-    
+
     client.send(JSON.stringify(message));
 
     await waitForMessages(serverMessages, 1);
 
     expect(serverMessages[0]).toStrictEqual({
       type: "response",
-      status: "success"
+      status: "success",
     });
 
     api.dispatchPriceFeedUpdate(priceFeeds[1]);
@@ -177,7 +176,7 @@ describe("Client receives data", () => {
 
     expect(serverMessages[1]).toStrictEqual({
       type: "price_update",
-      price_feed: priceFeeds[0].toJson()
+      price_feed: priceFeeds[0].toJson(),
     });
 
     await sleep(100);
@@ -188,20 +187,20 @@ describe("Client receives data", () => {
   });
 
   test("When subscribes for Price Feed A, receives updated and when unsubscribes stops receiving", async () => {
-    let [client, serverMessages] = await createSocketClient(); 
+    let [client, serverMessages] = await createSocketClient();
 
     let message: ClientMessage = {
       ids: [priceFeeds[0].id],
-      type: 'subscribe'
+      type: "subscribe",
     };
-    
+
     client.send(JSON.stringify(message));
 
     await waitForMessages(serverMessages, 1);
 
     expect(serverMessages[0]).toStrictEqual({
       type: "response",
-      status: "success"
+      status: "success",
     });
 
     api.dispatchPriceFeedUpdate(priceFeeds[0]);
@@ -210,12 +209,12 @@ describe("Client receives data", () => {
 
     expect(serverMessages[1]).toStrictEqual({
       type: "price_update",
-      price_feed: priceFeeds[0].toJson()
+      price_feed: priceFeeds[0].toJson(),
     });
 
     message = {
       ids: [priceFeeds[0].id],
-      type: 'unsubscribe',
+      type: "unsubscribe",
     };
 
     client.send(JSON.stringify(message));
@@ -224,7 +223,7 @@ describe("Client receives data", () => {
 
     expect(serverMessages[2]).toStrictEqual({
       type: "response",
-      status: "success"
+      status: "success",
     });
 
     api.dispatchPriceFeedUpdate(priceFeeds[0]);
@@ -238,20 +237,20 @@ describe("Client receives data", () => {
   });
 
   test("Unsubscribe on not subscribed price feed is ok", async () => {
-    let [client, serverMessages] = await createSocketClient(); 
+    let [client, serverMessages] = await createSocketClient();
 
     let message: ClientMessage = {
       ids: [priceFeeds[0].id],
-      type: 'unsubscribe'
+      type: "unsubscribe",
     };
-    
+
     client.send(JSON.stringify(message));
 
     await waitForMessages(serverMessages, 1);
 
     expect(serverMessages[0]).toStrictEqual({
       type: "response",
-      status: "success"
+      status: "success",
     });
 
     client.close();
@@ -259,21 +258,21 @@ describe("Client receives data", () => {
   });
 
   test("Multiple clients with different price feed works", async () => {
-    let [client1, serverMessages1] = await createSocketClient(); 
-    let [client2, serverMessages2] = await createSocketClient(); 
+    let [client1, serverMessages1] = await createSocketClient();
+    let [client2, serverMessages2] = await createSocketClient();
 
     let message1: ClientMessage = {
       ids: [priceFeeds[0].id],
-      type: 'subscribe'
+      type: "subscribe",
     };
-    
+
     client1.send(JSON.stringify(message1));
 
     let message2: ClientMessage = {
       ids: [priceFeeds[1].id],
-      type: 'subscribe'
+      type: "subscribe",
     };
-    
+
     client2.send(JSON.stringify(message2));
 
     await waitForMessages(serverMessages1, 1);
@@ -281,12 +280,12 @@ describe("Client receives data", () => {
 
     expect(serverMessages1[0]).toStrictEqual({
       type: "response",
-      status: "success"
+      status: "success",
     });
 
     expect(serverMessages2[0]).toStrictEqual({
       type: "response",
-      status: "success"
+      status: "success",
     });
 
     api.dispatchPriceFeedUpdate(priceFeeds[0]);
@@ -297,12 +296,12 @@ describe("Client receives data", () => {
 
     expect(serverMessages1[1]).toStrictEqual({
       type: "price_update",
-      price_feed: priceFeeds[0].toJson()
+      price_feed: priceFeeds[0].toJson(),
     });
 
     expect(serverMessages2[1]).toStrictEqual({
       type: "price_update",
-      price_feed: priceFeeds[1].toJson()
+      price_feed: priceFeeds[1].toJson(),
     });
 
     client1.close();
@@ -310,5 +309,5 @@ describe("Client receives data", () => {
 
     await waitForSocketState(client1, client1.CLOSED);
     await waitForSocketState(client2, client2.CLOSED);
-  })
+  });
 });
