@@ -32,7 +32,7 @@ export class PromClient {
     labelNames: ["path", "price_id"]
   });
   private webSocketInteractionCounter = new client.Counter({
-    name: `${SERVICE_PREFIX}websocker_interaction`,
+    name: `${SERVICE_PREFIX}websocket_interaction`,
     help: "number of Web Socket interactions",
     labelNames: ["type", "status"]
   });
