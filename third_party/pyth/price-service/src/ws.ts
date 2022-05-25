@@ -3,7 +3,7 @@ import express from "express";
 import * as http from 'http';
 import Joi from "joi";
 import WebSocket, { RawData, WebSocketServer } from "ws";
-import { PriceFeedPriceInfo } from "./listen";
+import { PriceStore } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
 
@@ -38,12 +38,12 @@ export class WebSocketAPI {
   private priceFeedClients: Map<HexString, Set<WebSocket>>;
   private aliveClients: Set<WebSocket>;
   private wsId: Map<WebSocket, number>;
-  private priceFeedVaaInfo: PriceFeedPriceInfo;
+  private priceFeedVaaInfo: PriceStore;
   private promClient: PromClient | undefined;
 
   constructor(
     config: { port: number; },
-    priceFeedVaaInfo: PriceFeedPriceInfo,
+    priceFeedVaaInfo: PriceStore,
     promClient?: PromClient,
   ) {
     this.port = config.port;

@@ -1,5 +1,5 @@
 import { HexString, PriceFeed, PriceStatus } from "@pythnetwork/pyth-sdk-js";
-import { PriceFeedPriceInfo, PriceInfo } from "../listen";
+import { PriceStore, PriceInfo } from "../listen";
 import {RestAPI} from "../rest"
 import { Express } from "express";
 import request from "supertest";
@@ -48,7 +48,7 @@ beforeAll(async () => {
         dummyPriceInfoPair(expandTo64Len('10101'), 3, 'bidbidbid'),
     ]);
 
-    let priceInfo: PriceFeedPriceInfo = {
+    let priceInfo: PriceStore = {
         getLatestPriceInfo: (priceFeedId: string) => {
             return priceInfoMap.get(priceFeedId);
         },

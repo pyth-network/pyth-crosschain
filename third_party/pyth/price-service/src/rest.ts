@@ -3,7 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 import responseTime from "response-time";
 import { Request, Response, NextFunction } from "express";
-import { PriceFeedPriceInfo } from "./listen";
+import { PriceStore } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
 import { DurationInMs, DurationInSec } from "./helpers";
@@ -29,12 +29,12 @@ export class RestException extends Error {
 
 export class RestAPI {
   private port: number;
-  private priceFeedVaaInfo: PriceFeedPriceInfo;
+  private priceFeedVaaInfo: PriceStore;
   private isReady: (() => boolean) | undefined;
   private promClient: PromClient | undefined;
 
   constructor(config: { port: number; },
-    priceFeedVaaInfo: PriceFeedPriceInfo,
+    priceFeedVaaInfo: PriceStore,
     isReady?: () => boolean,
     promClient?: PromClient) {
     this.port = config.port;

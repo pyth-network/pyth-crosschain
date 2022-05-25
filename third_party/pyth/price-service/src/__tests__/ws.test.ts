@@ -1,5 +1,5 @@
 import { HexString, PriceFeed, PriceStatus } from "@pythnetwork/pyth-sdk-js";
-import { PriceFeedPriceInfo, PriceInfo } from "../listen";
+import { PriceStore, PriceInfo } from "../listen";
 import { WebSocketAPI, ClientMessage }  from "../ws"
 import { Server } from "http";
 import { WebSocket, WebSocketServer } from "ws";
@@ -71,7 +71,7 @@ beforeAll(async () => {
     dummyPriceFeed(expandTo64Len('6789'))
   ];
 
-  let priceInfo: PriceFeedPriceInfo = {
+  let priceInfo: PriceStore = {
       getLatestPriceInfo: (_priceFeedId: string) => undefined,
       addUpdateListener: (_callback: (priceFeed: PriceFeed) => any) => undefined,
       getPriceIds: () => new Set(priceFeeds.map(priceFeed => priceFeed.id)),

@@ -26,7 +26,7 @@ export type PriceInfo = {
   priceFeed: PriceFeed
 };
 
-export interface PriceFeedPriceInfo {
+export interface PriceStore {
   getPriceIds(): Set<HexString>;
   getLatestPriceInfo(priceFeedId: HexString): PriceInfo | undefined;
   addUpdateListener(callback: (priceFeed: PriceFeed) => any): void;
@@ -43,7 +43,7 @@ type ListenerConfig = {
   readiness: ListenerReadinessConfig,
 };
 
-export class Listener implements PriceFeedPriceInfo {
+export class Listener implements PriceStore {
   // Mapping of Price Feed Id to Vaa
   private priceFeedVaaMap = new Map<string, PriceInfo>();
   private promClient: PromClient | undefined;
