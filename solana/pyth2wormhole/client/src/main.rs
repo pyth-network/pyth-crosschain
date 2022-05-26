@@ -209,7 +209,7 @@ async fn handle_attest(
         .collect();
     let batch_count = batches.len();
 
-    let rpc = Arc::new(RLMutex::new(RpcClient::new_with_timeout_and_commitment(rpc_url, confirmation_timeout, commitment.clone()), rpc_interval));
+    let rpc = Arc::new(RLMutex::new(RpcCfg {url: rpc_url, timeout: confirmation_timeout, commitment: commitment.clone() }, rpc_interval));
 
     // Each future schedules individual attestation attempts per
     // batch. Without daemon mode, we return after the first job is
@@ -252,7 +252,7 @@ async fn handle_attest(
                 if daemon {
                     // park this routine until a resend condition is met
                     loop {
-                        if let Some(reason) = b4fut.should_resend(&rpc4fut).await {
+                        if let Some(reason) = b4fut.should_resend(&lock_and_make_rpc(&rpc4fut).await).await {
                             info!(
                                 "Batch {}/{}, group {}: Resending (reason: {:?})",
                                 batch_no, batch_count4fut, b4fut.group_name, reason
@@ -366,9 +366,21 @@ async fn handle_attest(
     Ok(())
 }
 
+#[derive(Clone)]
+pub struct RpcCfg {
+    pub url: String,
+    pub timeout: Duration,
+    pub commitment: CommitmentConfig,
+}
+
+async fn lock_and_make_rpc(rlmtx: &RLMutex<RpcCfg>) -> RpcClient {
+    let RpcCfg {url, timeout, commitment} = rlmtx.lock().await.clone();
+    RpcClient::new_with_timeout_and_commitment(url, timeout, commitment)
+}
+
 /// A future for a single attempt to attest a batch on Solana.
 async fn attestation_job(
-    rpc: Arc<RLMutex<RpcClient>>,
+    rlmtx: Arc<RLMutex<RpcCfg>>,
     batch_no: usize,
     batch_count: usize,
     group_name: String,
@@ -385,7 +397,8 @@ async fn attestation_job(
         "Batch {}/{}, group {:?}: Starting attestation job",
         batch_no, batch_count, group_name
     );
-    let latest_blockhash = rpc.lock().await
+    let rpc = lock_and_make_rpc(&*rlmtx).await; // Reuse the same lock for the blockhash/tx/get_transaction
+    let latest_blockhash = rpc
         .get_latest_blockhash()
         .map_err(|e| -> ErrBoxSend { e.into() })
         .await?;
@@ -399,11 +412,11 @@ async fn attestation_job(
         latest_blockhash,
     );
     let tx = tx_res?;
-    let sig = rpc.lock().await
+    let sig = rpc
         .send_and_confirm_transaction(&tx)
         .map_err(|e| -> ErrBoxSend { e.into() })
         .await?;
-    let tx_data = rpc.lock().await
+    let tx_data = rpc
         .get_transaction(&sig, UiTransactionEncoding::Json)
         .map_err(|e| -> ErrBoxSend { e.into() })
         .await?;
