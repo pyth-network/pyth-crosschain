@@ -132,6 +132,7 @@ async fn main() -> Result<(), ErrBox> {
 
             handle_attest(
                 cli.rpc_url,
+                Duration::from_millis(cli.rpc_interval_ms),
                 commitment,
                 payer,
                 p2w_addr,
@@ -151,6 +152,7 @@ async fn main() -> Result<(), ErrBox> {
 /// Send a series of batch attestations for symbols of an attestation config.
 async fn handle_attest(
     rpc_url: String,
+    rpc_interval: Duration,
     commitment: CommitmentConfig,
     payer: Keypair,
     p2w_addr: Pubkey,
@@ -160,6 +162,7 @@ async fn handle_attest(
     confirmation_timeout: Duration,
     daemon: bool,
 ) -> Result<(), ErrBox> {
+
     // Derive seeded accounts
     let emitter_addr = P2WEmitter::key(None, &p2w_addr);
 
@@ -206,6 +209,8 @@ async fn handle_attest(
         .collect();
     let batch_count = batches.len();
 
+    let rpc = Arc::new(RLMutex::new(RpcClient::new_with_timeout_and_commitment(rpc_url, confirmation_timeout, commitment.clone()), rpc_interval));
+
     // Each future schedules individual attestation attempts per
     // batch. Without daemon mode, we return after the first job is
     // complete on the batch. In daemon mode, we never return and
@@ -214,18 +219,13 @@ async fn handle_attest(
         let config4fut = config.clone();
         let p2w_addr4fut = p2w_addr.clone();
         let payer4fut = Keypair::from_bytes(&payer.to_bytes()).unwrap(); // Keypair has no clone
-        let rpc_url4fut = rpc_url.clone();
+        let rpc4fut = rpc.clone();
         let commitment4fut = commitment.clone();
         let batch_count4fut = batch_count;
         let mut b4fut = b;
         // Enforces the max batch job count
         let sema = Arc::new(Semaphore::new(b4fut.conditions.max_batch_jobs));
         async move {
-            let rpc4fut = RpcClient::new_with_timeout_and_commitment(
-                rpc_url4fut.clone(),
-                confirmation_timeout.clone(),
-                commitment4fut.clone(),
-            );
             let mut retries_left = n_retries;
             loop {
                 debug!(
@@ -233,11 +233,8 @@ async fn handle_attest(
                     batch_no, batch_count4fut, b4fut.group_name
                 );
 
-                let rpc4job = RpcClient::new_with_timeout_and_commitment(
-                    rpc_url4fut.clone(),
-                    confirmation_timeout.clone(),
-                    commitment4fut.clone(),
-                );
+                let rpc4job = rpc4fut.clone(); 
+
                 let payer4job = Keypair::from_bytes(&payer4fut.to_bytes()).unwrap(); // Keypair has no clone
 
                 let job = attestation_job(
@@ -371,7 +368,7 @@ async fn handle_attest(
 
 /// A future for a single attempt to attest a batch on Solana.
 async fn attestation_job(
-    rpc: RpcClient,
+    rpc: Arc<RLMutex<RpcClient>>,
     batch_no: usize,
     batch_count: usize,
     group_name: String,
@@ -388,7 +385,7 @@ async fn attestation_job(
         "Batch {}/{}, group {:?}: Starting attestation job",
         batch_no, batch_count, group_name
     );
-    let latest_blockhash = rpc
+    let latest_blockhash = rpc.lock().await
         .get_latest_blockhash()
         .map_err(|e| -> ErrBoxSend { e.into() })
         .await?;
@@ -402,11 +399,11 @@ async fn attestation_job(
         latest_blockhash,
     );
     let tx = tx_res?;
-    let sig = rpc
+    let sig = rpc.lock().await
         .send_and_confirm_transaction(&tx)
         .map_err(|e| -> ErrBoxSend { e.into() })
         .await?;
-    let tx_data = rpc
+    let tx_data = rpc.lock().await
         .get_transaction(&sig, UiTransactionEncoding::Json)
         .map_err(|e| -> ErrBoxSend { e.into() })
         .await?;

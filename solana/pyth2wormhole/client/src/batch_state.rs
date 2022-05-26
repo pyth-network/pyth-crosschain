@@ -18,6 +18,7 @@ use crate::{
     AttestationConditions,
     ErrBox,
     P2WSymbol,
+    RLMutex,
 };
 
 /// Runtime representation of a batch. It refers to the original group
@@ -50,7 +51,7 @@ impl<'a> BatchState<'a> {
     /// batch. RPC is used to update last known state. Returns
     /// Some("<reason>") if any trigger condition was met. Only the
     /// first encountered condition is mentioned.
-    pub async fn should_resend(&mut self, c: &RpcClient) -> Option<String> {
+    pub async fn should_resend(&mut self, c: &RLMutex<RpcClient>) -> Option<String> {
         let mut ret = None;
 
         let sym_count = self.symbols.len();
@@ -58,7 +59,7 @@ impl<'a> BatchState<'a> {
         let pubkeys: Vec<_> = self.symbols.iter().map(|s| s.price_addr).collect();
 
         // Always learn the current on-chain state for each symbol
-        match c.get_multiple_accounts(&pubkeys).await {
+        match c.lock().await.get_multiple_accounts(&pubkeys).await {
             Ok(acc_opts) => {
                 new_symbol_states = acc_opts
                     .into_iter()
