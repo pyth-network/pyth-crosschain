@@ -63,3 +63,24 @@ module.exports = async function (deployer) {
     await upgradeProxy(instance.address, PythUpgradable, { deployer });
 }
 ```
+
+# Testing
+
+The [pyth-js][] repository contains an example with documentation and a code sample showing how to relay your own prices to a
+target Pyth network. Once you have relayed a price, you can verify the price feed has been updated by doing:
+
+```
+$ npx truffle console --network $MIGRATIONS_NETWORK
+> let p = await PythUpgradable.deployed()
+> p.queryPriceFeed("0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b") // BTC Testnet or any other address
+```
+
+[pyth-js]: https://github.com/pyth-network/pyth-js/tree/main/pyth-evm-js#evmrelay
+
+# Manually Verifying the contract
+
+Run the following command:
+
+`npx sol-merger contracts/pyth/PythUpgradable.sol`
+
+It will create a new file `PythUpgradable_merged.sol` which you can use in etherscan to verify the implementation contract (using exact sol version and optimization flag). After verifying implementation, you can verify the proxy.

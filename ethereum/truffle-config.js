@@ -94,7 +94,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://polygon-mumbai.infura.io/v3/" + process.env.INFURA_KEY)
+          "https://matic-mumbai.chainstacklabs.com")
       },
       network_id: "80001",
     },
