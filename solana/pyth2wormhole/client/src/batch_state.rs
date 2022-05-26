@@ -54,43 +54,30 @@ impl<'a> BatchState<'a> {
         let mut ret = None;
 
         let sym_count = self.symbols.len();
-        let mut new_symbol_states: Vec<Option<PriceAccount>> = Vec::with_capacity(sym_count);
-        let mut lookup_failures = vec![];
-        for (idx, sym) in self.symbols.iter().enumerate() {
-            let new_state = match c
-                .get_account_data(&sym.price_addr)
-                .map_err(|e| e.to_string())
-                .and_then(|bytes| async move {
-                    pyth_sdk_solana::state::load_price_account(&bytes)
-                        .map(|state| state.clone())
-                        .map_err(|e| e.to_string())
-                })
-                .await
-            {
-                Ok(state) => Some(state),
-                Err(e) => {
-                    trace!(
-                        "Symbol {:?} ({}/{}): Could not look up state: {}",
-                        sym.to_string(),
-                        idx + 1,
-                        sym_count,
-                        e.to_string()
-                    );
-                    lookup_failures.push(sym.to_string());
-                    None
-                }
-            };
+        let mut new_symbol_states: Vec<Option<PriceAccount>> = vec![None; sym_count];
+        let pubkeys: Vec<_> = self.symbols.iter().map(|s| s.price_addr).collect();
 
-            new_symbol_states.push(new_state);
-        }
-
-        if !lookup_failures.is_empty() {
-            warn!(
-                "should_resend(): {}/{} symbol state lookups failed:\n{:?}",
-                lookup_failures.len(),
-                self.symbols.len(),
-                lookup_failures
-            );
+        // Always learn the current on-chain state for each symbol
+        match c.get_multiple_accounts(&pubkeys).await {
+            Ok(acc_opts) => {
+                new_symbol_states = acc_opts
+                    .into_iter()
+                    .enumerate()
+                    .map(|(idx, opt)| {
+                        // Take each Some(acc), make it None and log on load_price_account() error
+                        opt.and_then(|acc| {
+                            pyth_sdk_solana::state::load_price_account(&acc.data)
+                                .cloned() // load_price_account() transmutes the data reference into another reference, and owning acc_opts is not enough
+                                .map_err(|e| {
+                                    warn!("Could not parse symbol {}/{}: {}", idx, sym_count, e);
+                                    e
+                                })
+                                .ok() // Err becomes None
+                        })
+                    })
+                    .collect();
+            }
+            Err(e) => warn!("Could not look up any symbols on-chain: {}", e),
         }
 
         // min interval
@@ -152,7 +139,9 @@ impl<'a> BatchState<'a> {
             }
         }
 
-        // Update with newer state if a condition was met
+        // Update with newer state only if a condition was met. We
+        // don't want to shadow changes that may happen over a larger
+        // period between state lookups.
         if ret.is_some() {
             for (old, new) in self
                 .last_known_symbol_states
