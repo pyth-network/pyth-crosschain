@@ -1,3 +1,4 @@
+
 pub mod cli;
 
 use std::{
@@ -220,7 +221,6 @@ async fn handle_attest(
         let p2w_addr4fut = p2w_addr.clone();
         let payer4fut = Keypair::from_bytes(&payer.to_bytes()).unwrap(); // Keypair has no clone
         let rpc4fut = rpc.clone();
-        let commitment4fut = commitment.clone();
         let batch_count4fut = batch_count;
         let mut b4fut = b;
         // Enforces the max batch job count
@@ -373,6 +373,7 @@ pub struct RpcCfg {
     pub commitment: CommitmentConfig,
 }
 
+/// Helper function for claiming the rate-limited mutex and constructing an RPC instance
 async fn lock_and_make_rpc(rlmtx: &RLMutex<RpcCfg>) -> RpcClient {
     let RpcCfg {url, timeout, commitment} = rlmtx.lock().await.clone();
     RpcClient::new_with_timeout_and_commitment(url, timeout, commitment)

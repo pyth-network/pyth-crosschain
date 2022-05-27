@@ -1,7 +1,9 @@
+use log::trace;
+
 use tokio::sync::{Mutex, MutexGuard};
 use std::{ops::{Deref, DerefMut}, time::{Duration, Instant}};
 
-/// Rate-limited mutex.
+/// Rate-limited mutex. Ensures there's a period of minimum rl_interval between lock acquisitions
 pub struct RLMutex<T> {
     mtx: Mutex<RLMutexState<T>>,
     rl_interval: Duration,
@@ -65,13 +67,17 @@ impl<T> RLMutex<T> {
     }
 
     pub async fn lock(&self) -> RLMutexGuard<'_, T> {
-        let elapsed = self.mtx.lock().await.last_released.elapsed();
+        let guard = self.mtx.lock().await;
+        let elapsed = guard.last_released.elapsed();
         if elapsed < self.rl_interval {
-            tokio::time::sleep(self.rl_interval - elapsed).await;
+            let sleep_time = self.rl_interval - elapsed;
+            trace!("RLMutex: Parking lock future for {}.{}s", sleep_time.as_secs(), sleep_time.subsec_millis());
+            
+            tokio::time::sleep(sleep_time).await;
         }
             
         RLMutexGuard {
-            guard: self.mtx.lock().await,
+            guard,
         }
     }
 }
