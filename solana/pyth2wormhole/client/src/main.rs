@@ -67,14 +67,8 @@ async fn main() -> Result<(), ErrBox> {
     init_logging(cli.log_level);
 
     let payer = read_keypair_file(&*shellexpand::tilde(&cli.payer))?;
-    let commitment = match cli.commitment.as_str() {
-        "processed" => CommitmentConfig::processed(),
-        "confirmed" => CommitmentConfig::confirmed(),
-        "finalized" => CommitmentConfig::finalized(),
-        other => return Err(format!("Unrecognized commitment {:?}", other).into()),
-    };
 
-    let rpc_client = RpcClient::new_with_commitment(cli.rpc_url.clone(), commitment.clone());
+    let rpc_client = RpcClient::new_with_commitment(cli.rpc_url.clone(), cli.commitment.clone());
 
     let p2w_addr = cli.p2w_addr;
 
@@ -134,7 +128,7 @@ async fn main() -> Result<(), ErrBox> {
             handle_attest(
                 cli.rpc_url,
                 Duration::from_millis(cli.rpc_interval_ms),
-                commitment,
+                cli.commitment,
                 payer,
                 p2w_addr,
                 attestation_cfg,

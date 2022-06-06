@@ -1,6 +1,7 @@
 //! CLI options
 
 use solana_program::pubkey::Pubkey;
+use solana_sdk::commitment_config::CommitmentConfig;
 use std::path::PathBuf;
 
 use clap::{
@@ -32,7 +33,7 @@ pub struct Cli {
     #[clap(long = "rpc-interval", default_value = "150", help = "Rate-limiting minimum delay between RPC requests in milliseconds")]
     pub rpc_interval_ms: u64,
     #[clap(long, default_value = "confirmed")]
-    pub commitment: String,
+    pub commitment: CommitmentConfig,
     #[clap(long)]
     pub p2w_addr: Pubkey,
     #[clap(subcommand)]
