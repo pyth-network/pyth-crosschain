@@ -206,12 +206,12 @@ async fn handle_attest(
 
     let rpc = Arc::new(RLMutex::new(RpcCfg {url: rpc_url, timeout: confirmation_timeout, commitment: commitment.clone() }, rpc_interval));
 
-    /// For each batch, we start a scheduling routine. In daemon mode,
-    /// each routine schedules attestations continuously without
-    /// returning. Between scheduled attestations, each routine waits
-    /// to meet attestation conditions of its batch. Outside daemon
-    /// mode, each routine runs a single attestation to completion
-    /// (with retries if necessary) and returns the result.
+    // For each batch, we start a scheduling routine. In daemon mode,
+    // each routine schedules attestations continuously without
+    // returning. Between scheduled attestations, each routine waits
+    // to meet attestation conditions of its batch. Outside daemon
+    // mode, each routine runs a single attestation to completion
+    // (with retries if necessary) and returns the result.
     let attestation_sched_futs = batches.into_iter().map(|(batch_no, b)| {
         let config4fut = config.clone();
         let p2w_addr4fut = p2w_addr.clone();
