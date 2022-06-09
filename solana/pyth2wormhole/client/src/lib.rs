@@ -61,7 +61,10 @@ pub use attestation_cfg::{
     P2WSymbol,
 };
 pub use batch_state::BatchState;
-pub use util::{RLMutex, RLMutexGuard};
+pub use util::{
+    RLMutex,
+    RLMutexGuard,
+};
 
 /// Future-friendly version of solitaire::ErrBox
 pub type ErrBoxSend = Box<dyn std::error::Error + Send + Sync>;

@@ -1,7 +1,19 @@
 use log::trace;
 
-use tokio::sync::{Mutex, MutexGuard};
-use std::{ops::{Deref, DerefMut}, time::{Duration, Instant}};
+use std::{
+    ops::{
+        Deref,
+        DerefMut,
+    },
+    time::{
+        Duration,
+        Instant,
+    },
+};
+use tokio::sync::{
+    Mutex,
+    MutexGuard,
+};
 
 /// Rate-limited mutex. Ensures there's a period of minimum rl_interval between lock acquisitions
 pub struct RLMutex<T> {
@@ -11,7 +23,7 @@ pub struct RLMutex<T> {
 
 /// Helper to make the last_released writes also guarded by the mutex
 pub struct RLMutexState<T> {
-    /// Helps make sure regular passage of time is subtracted from sleep duration 
+    /// Helps make sure regular passage of time is subtracted from sleep duration
     last_released: Instant,
     val: T,
 }
@@ -29,7 +41,6 @@ impl<T> DerefMut for RLMutexState<T> {
     }
 }
 
-
 /// Helper wrapper to record lock release times via Drop
 pub struct RLMutexGuard<'a, T> {
     guard: MutexGuard<'a, RLMutexState<T>>,
@@ -37,7 +48,8 @@ pub struct RLMutexGuard<'a, T> {
 
 impl<'a, T> Drop for RLMutexGuard<'a, T> {
     fn drop(&mut self) {
-        let state: &mut RLMutexState<T> = MutexGuard::<'a, RLMutexState<T>>::deref_mut(&mut self.guard);
+        let state: &mut RLMutexState<T> =
+            MutexGuard::<'a, RLMutexState<T>>::deref_mut(&mut self.guard);
         state.last_released = Instant::now();
     }
 }
@@ -60,7 +72,7 @@ impl<T> RLMutex<T> {
         Self {
             mtx: Mutex::new(RLMutexState {
                 last_released: Instant::now() - rl_interval,
-                val
+                val,
             }),
             rl_interval,
         }
@@ -71,14 +83,15 @@ impl<T> RLMutex<T> {
         let elapsed = guard.last_released.elapsed();
         if elapsed < self.rl_interval {
             let sleep_time = self.rl_interval - elapsed;
-            trace!("RLMutex: Parking lock future for {}.{}s", sleep_time.as_secs(), sleep_time.subsec_millis());
-            
+            trace!(
+                "RLMutex: Parking lock future for {}.{}s",
+                sleep_time.as_secs(),
+                sleep_time.subsec_millis()
+            );
+
             tokio::time::sleep(sleep_time).await;
         }
-            
-        RLMutexGuard {
-            guard,
-        }
+
+        RLMutexGuard { guard }
     }
 }
-

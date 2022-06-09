@@ -1,4 +1,3 @@
-
 pub mod cli;
 
 use std::{
@@ -157,7 +156,6 @@ async fn handle_attest(
     confirmation_timeout: Duration,
     daemon: bool,
 ) -> Result<(), ErrBox> {
-
     // Derive seeded accounts
     let emitter_addr = P2WEmitter::key(None, &p2w_addr);
 
@@ -204,138 +202,39 @@ async fn handle_attest(
         .collect();
     let batch_count = batches.len();
 
-    let rpc = Arc::new(RLMutex::new(RpcCfg {url: rpc_url, timeout: confirmation_timeout, commitment: commitment.clone() }, rpc_interval));
+    let rpc_cfg = Arc::new(RLMutex::new(
+        RpcCfg {
+            url: rpc_url,
+            timeout: confirmation_timeout,
+            commitment: commitment.clone(),
+        },
+        rpc_interval,
+    ));
 
-    // For each batch, we start a scheduling routine. In daemon mode,
-    // each routine schedules attestations continuously without
-    // returning. Between scheduled attestations, each routine waits
-    // to meet attestation conditions of its batch. Outside daemon
-    // mode, each routine runs a single attestation to completion
-    // (with retries if necessary) and returns the result.
-    let attestation_sched_futs = batches.into_iter().map(|(batch_no, b)| {
-        let config4fut = config.clone();
-        let p2w_addr4fut = p2w_addr.clone();
-        let payer4fut = Keypair::from_bytes(&payer.to_bytes()).unwrap(); // Keypair has no clone
-        let rpc4fut = rpc.clone();
-        let batch_count4fut = batch_count;
-        let mut b4fut = b;
-        // Enforces the max batch job count
-        let sema = Arc::new(Semaphore::new(b4fut.conditions.max_batch_jobs));
-        async move {
-            let mut retries_left = n_retries;
-            loop {
-                debug!(
-                    "Batch {}/{}, group {:?}: Scheduling attestation job",
-                    batch_no, batch_count4fut, b4fut.group_name
-                );
-
-                let rpc4job = rpc4fut.clone(); 
-
-                let payer4job = Keypair::from_bytes(&payer4fut.to_bytes()).unwrap(); // Keypair has no clone
-
-                let job = attestation_job(
-                    rpc4job,
-                    batch_no,
-                    batch_count4fut,
-                    b4fut.group_name.clone(),
-                    p2w_addr4fut,
-                    config4fut.clone(),
-                    payer4job,
-                    b4fut.symbols.to_vec(),
-                    sema.clone(),
-                );
-
-                if daemon {
-                    // park this routine until a resend condition is met
-                    loop {
-                        if let Some(reason) = b4fut.should_resend(&lock_and_make_rpc(&rpc4fut).await).await {
-                            info!(
-                                "Batch {}/{}, group {}: Resending (reason: {:?})",
-                                batch_no, batch_count4fut, b4fut.group_name, reason
-                            );
-                            break;
-                        }
-                    }
-
-                    if sema.available_permits() == 0 {
-                        warn!(
-                            "Batch {}/{}, group {:?}: Ran out of job \
-                             permits, some attestation conditions may be \
-                             delayed. For better accuracy, increase \
-                             max_batch_jobs or adjust attestation \
-                             conditions",
-                            batch_no, batch_count4fut, b4fut.group_name
-                        );
-                    }
-
-                    // This short-lived permit prevents scheduling
-                    // excess attestation jobs (which could eventually
-                    // eat all memory). It is freed as soon as we
-                    // leave this code block.
-                    let _permit4sched = sema.acquire().await?;
-
-                    let batch_no4err_msg = batch_no.clone();
-                    let batch_count4err_msg = batch_count4fut.clone();
-                    let group_name4err_msg = b4fut.group_name.clone();
-
-                    // We never get to error reporting in daemon mode, attach a map_err
-                    let job_with_err_msg = job.map_err(move |e| async move {
-                        warn!(
-                            "Batch {}/{}, group {:?} ERR: {}",
-                            batch_no4err_msg,
-                            batch_count4err_msg,
-                            group_name4err_msg,
-                            e.to_string()
-                        );
-                        e
-                    });
-
-                    // Daemon mode never returns, spawn and don't wait
-                    let _detached_job: JoinHandle<_> = tokio::spawn(job_with_err_msg);
-
-                    // Await and return the single result in non-daemon mode, with retries if necessary
-                } else {
-                    match job.await {
-                        Ok(_) => return Ok(()),
-                        Err(e) => {
-                            if retries_left == 0 {
-                                return Err(e);
-                            } else {
-                                retries_left -= 1;
-                                debug!(
-                                    "{}/{}, group {:?}: attestation failure: {}",
-                                    batch_no,
-                                    batch_count,
-                                    b4fut.group_name,
-                                    e.to_string()
-                                );
-                                info!(
-                                    "Batch {}/{}, group {:?}: retrying in {}.{}s, {} retries left",
-                                    batch_no,
-                                    batch_count,
-                                    b4fut.group_name,
-                                    retry_interval.as_secs(),
-                                    retry_interval.subsec_millis(),
-                                    retries_left,
-                                );
-
-                                tokio::time::sleep(retry_interval).await;
-                            }
-                        }
-                    }
-                }
-
-                b4fut.last_job_finished_at = Instant::now();
-            }
-        }
+    // Create attestation scheduling routines; see attestation_sched_job() for details
+    let mut attestation_sched_futs = batches.into_iter().map(|(batch_no, batch)| {
+        attestation_sched_job(
+            batch,
+            batch_no,
+            batch_count,
+            n_retries,
+            retry_interval,
+            daemon,
+            rpc_cfg.clone(),
+            p2w_addr,
+            config.clone(),
+            Keypair::from_bytes(&payer.to_bytes()).unwrap(),
+        )
     });
 
-    info!("Scheduling attestations");
+    info!("Spinning up attestation sched jobs");
 
     let results = futures::future::join_all(attestation_sched_futs).await; // May never finish for daemon mode
 
     info!("Got {} results", results.len());
 
+    // With daemon mode off, the sched jobs return from the
+    // join_all. We filter out errors and report them
     let errors: Vec<_> = results
         .iter()
         .filter_map(|r| {
@@ -371,8 +270,141 @@ pub struct RpcCfg {
 
 /// Helper function for claiming the rate-limited mutex and constructing an RPC instance
 async fn lock_and_make_rpc(rlmtx: &RLMutex<RpcCfg>) -> RpcClient {
-    let RpcCfg {url, timeout, commitment} = rlmtx.lock().await.clone();
+    let RpcCfg {
+        url,
+        timeout,
+        commitment,
+    } = rlmtx.lock().await.clone();
     RpcClient::new_with_timeout_and_commitment(url, timeout, commitment)
+}
+
+/// A future that decides how a batch is sent.
+///
+/// In daemon mode, attestations of the batch are scheduled
+/// continuously using spawn(), which means that a next attestation
+/// does not have to wait until the previous completes. Subsequent
+/// attestations are made according to the attestation_conditions
+/// field on the batch.
+///
+/// With daemon_mode off, this future attempts only one blocking
+/// attestation of the batch and returns the result.
+async fn attestation_sched_job(
+    mut batch: BatchState<'_>,
+    batch_no: usize,
+    batch_count: usize,
+    n_retries: usize,
+    retry_interval: Duration,
+    daemon: bool,
+    rpc_cfg: Arc<RLMutex<RpcCfg>>,
+    p2w_addr: Pubkey,
+    config: Pyth2WormholeConfig,
+    payer: Keypair,
+) -> Result<(), ErrBoxSend> {
+    let mut retries_left = n_retries;
+    // Enforces the max batch job count
+    let sema = Arc::new(Semaphore::new(batch.conditions.max_batch_jobs));
+    loop {
+        debug!(
+            "Batch {}/{}, group {:?}: Scheduling attestation job",
+            batch_no, batch_count, batch.group_name
+        );
+
+        let job = attestation_job(
+            rpc_cfg.clone(),
+            batch_no,
+            batch_count,
+            batch.group_name.clone(),
+            p2w_addr,
+            config.clone(),
+            Keypair::from_bytes(&payer.to_bytes()).unwrap(), // Keypair has no clone
+            batch.symbols.to_vec(),
+            sema.clone(),
+        );
+
+        if daemon {
+            // park this routine until a resend condition is met
+            loop {
+                if let Some(reason) = batch
+                    .should_resend(&lock_and_make_rpc(&rpc_cfg).await)
+                    .await
+                {
+                    info!(
+                        "Batch {}/{}, group {}: Resending (reason: {:?})",
+                        batch_no, batch_count, batch.group_name, reason
+                    );
+                    break;
+                }
+            }
+
+            if sema.available_permits() == 0 {
+                warn!(
+                    "Batch {}/{}, group {:?}: Ran out of job \
+                             permits, some attestation conditions may be \
+                             delayed. For better accuracy, increase \
+                             max_batch_jobs or adjust attestation \
+                             conditions",
+                    batch_no, batch_count, batch.group_name
+                );
+            }
+
+            // This short-lived permit prevents scheduling
+            // excess attestation jobs (which could eventually
+            // eat all memory). It is freed as soon as we
+            // leave this code block.
+            let _permit4sched = sema.acquire().await?;
+
+            let batch_no4err_msg = batch_no.clone();
+            let batch_count4err_msg = batch_count.clone();
+            let group_name4err_msg = batch.group_name.clone();
+
+            // We never get to error reporting in daemon mode, attach a map_err
+            let job_with_err_msg = job.map_err(move |e| async move {
+                warn!(
+                    "Batch {}/{}, group {:?} ERR: {}",
+                    batch_no4err_msg,
+                    batch_count4err_msg,
+                    group_name4err_msg,
+                    e.to_string()
+                );
+                e
+            });
+
+            // Spawn the job in background
+            let _detached_job: JoinHandle<_> = tokio::spawn(job_with_err_msg);
+        } else {
+            // Await and return the single result in non-daemon mode, with retries if necessary
+            match job.await {
+                Ok(_) => return Ok(()),
+                Err(e) => {
+                    if retries_left == 0 {
+                        return Err(e);
+                    } else {
+                        retries_left -= 1;
+                        debug!(
+                            "{}/{}, group {:?}: attestation failure: {}",
+                            batch_no,
+                            batch_count,
+                            batch.group_name,
+                            e.to_string()
+                        );
+                        info!(
+                            "Batch {}/{}, group {:?}: retrying in {}.{}s, {} retries left",
+                            batch_no,
+                            batch_count,
+                            batch.group_name,
+                            retry_interval.as_secs(),
+                            retry_interval.subsec_millis(),
+                            retries_left,
+                        );
+
+                        tokio::time::sleep(retry_interval).await;
+                    }
+                }
+            }
+        }
+
+        batch.last_job_finished_at = Instant::now();
+    }
 }
 
 /// A future for a single attempt to attest a batch on Solana.
