@@ -28,4 +28,10 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
     // Only allow the owner to upgrade the proxy to a new implementation.
     function _authorizeUpgrade(address) internal override onlyOwner {}
 
+    /// Alter the on-chain state of the contract (does not touch actual price feed data)
+    function setContractConfig(uint16 p2wChainId, bytes32 p2wWormholeEmitterAddr, address wormhole) public onlyOwner {
+        setPyth2WormholeChainId(p2wChainId);
+        setPyth2WormholeEmitter(p2wWormholeEmitterAddr);
+        setWormhole(wormhole);
+    }
 }
