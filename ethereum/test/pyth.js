@@ -362,6 +362,60 @@ contract("Pyth", function () {
             );
         }
     });
+
+    it("should set chain/emitter/wormhole IDs and immediately use them", async function () {
+        let attestationTime = 1647273460; // re-used for publishTime
+        let publishTime = 1647273465; // re-used for publishTime
+        let rawBatch = generateRawBatchAttestation(attestationTime, publishTime, 1337);
+
+        // Switch only chain ID to wrong value
+        await this.pythProxy.setContractConfig(testPyth2WormholeChainId + 1, testPyth2WormholeEmitter, (await Wormhole.deployed()).address);
+
+        let wrongChainIdFails = false;
+
+        try {
+            // Should result in expected failure
+            await updatePriceFeeds(this.pythProxy, [rawBatch]);
+        } catch (e) {
+            wrongChainIdFails = true;
+        }
+
+        assert.equal(wrongChainIdFails, true);
+
+        // Switch only emitter to wrong value
+        await this.pythProxy.setContractConfig(testPyth2WormholeChainId, testGovernanceContract, (await Wormhole.deployed()).address);
+
+        let wrongEmitterFails = false;
+
+        try {
+        // Should result in expected failure
+        await updatePriceFeeds(this.pythProxy, [rawBatch]);
+        } catch (e) {
+            wrongEmitterFails = true;
+        }
+
+        assert.equal(wrongEmitterFails, true);
+
+        // Switch only wormhole address to a wrong value
+        await this.pythProxy.setContractConfig(testPyth2WormholeChainId, testPyth2WormholeEmitter, testSigner2.address);
+
+        let wrongWormholeAddrFails = false;
+
+        try {
+            // Should result in expected failure
+            await updatePriceFeeds(this.pythProxy, [rawBatch]);
+        } catch (e) {
+            wrongWormholeAddrFails = true;
+        }
+
+        assert.equal(wrongWormholeAddrFails, true);
+
+        // Switch everything back to normal
+        await this.pythProxy.setContractConfig(testPyth2WormholeChainId, testPyth2WormholeEmitter, (await Wormhole.deployed()).address);
+
+        // Should be successful again
+        await updatePriceFeeds(this.pythProxy, [rawBatch]);
+    });
 });
 
 const signAndEncodeVM = async function (

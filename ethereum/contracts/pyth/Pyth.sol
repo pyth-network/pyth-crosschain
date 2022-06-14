@@ -28,7 +28,9 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
         (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole().parseAndVerifyVM(encodedVm);
 
         require(valid, reason);
-        require(verifyPythVM(vm), "invalid emitter");
+
+	(bool pythValid, string memory pythReason) = verifyPythVM(vm);
+	require(pythValid, pythReason);
 
         PythInternalStructs.BatchPriceAttestation memory batch = parseBatchPriceAttestation(vm.payload);
 
@@ -73,14 +75,14 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
         return info;
     }
 
-    function verifyPythVM(IWormhole.VM memory vm) private view returns (bool valid) {
+    function verifyPythVM(IWormhole.VM memory vm) private view returns (bool valid, string memory reason) {
         if (vm.emitterChainId != pyth2WormholeChainId()) {
-            return false;
+            return (false, "Invalid Chain ID");
         }
         if (vm.emitterAddress != pyth2WormholeEmitter()) {
-            return false;
+            return (false, "Invalid Emitter");
         }
-        return true;
+        return (true, "");
     }
 
 
