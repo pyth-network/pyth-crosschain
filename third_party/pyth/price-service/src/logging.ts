@@ -1,9 +1,11 @@
 import * as winston from "winston";
 
-export let logger = winston.createLogger({transports: [new winston.transports.Console()]});
+export let logger = winston.createLogger({
+  transports: [new winston.transports.Console()],
+});
 
 // Logger should be initialized before using logger
-export function initLogger(config?: {logLevel?: string}) {
+export function initLogger(config?: { logLevel?: string }) {
   let logLevel = "info";
   if (config?.logLevel) {
     logLevel = config.logLevel;
@@ -15,7 +17,6 @@ export function initLogger(config?: {logLevel?: string}) {
   transport = new winston.transports.Console({
     level: logLevel,
   });
-
 
   const logConfiguration = {
     transports: [transport],
