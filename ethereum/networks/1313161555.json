@@ -1,0 +1,11 @@
+[
+  {
+    "contractName": "Migrations",
+    "address": "0x1c6Cd107fB71768FBc46F8B6180Eec155C03eEb5"
+  },
+  {
+    "contractName": "PythUpgradable",
+    "address": "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
+    "transactionHash": "0xcb2ad36f327e73f0aa55c8b18fd87881c5d5d83c324fdbfe133c471759a54825"
+  }
+]
