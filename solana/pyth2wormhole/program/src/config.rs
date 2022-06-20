@@ -1,9 +1,20 @@
 //! On-chain state for the pyth2wormhole SOL contract.
 //!
-//! Important: A config init/update should be performed on every
-//! deployment/upgrade of this Solana program. Doing so prevents
-//! problems related to max batch size mismatches between config and
-//! contract logic. See attest.rs for details.
+//! Important: Changes to max batch size must be reflected in the
+//! instruction logic in attest.rs (look there for more
+//! details). Mismatches between config and contract logic may confuse
+//! attesters.
+//!
+//! How to add a new config schema:
+//! X - new config version number
+//! Y = X - 1; previous config number
+//! 1. Add a next Pyth2WormholeConfiVX struct
+//! 2. Add a P2WConfigAccountVX type alias with a unique seed str
+//! 3. Implement From<Pyth2WormholeConfigVY>
+//! 4. Advance Pyth2WormholeConfig, P2WConfigAccount,
+//! OldPyth2WormholeConfig, OldP2WConfigAccount typedefs to use the
+//! previous and new config structs.
+//! 5. Deploy and call migrate() to verify
 
 use borsh::{
     BorshDeserialize,
@@ -18,9 +29,47 @@ use solitaire::{
     Owned,
 };
 
-#[derive(Default, BorshDeserialize, BorshSerialize)]
+/// Aliases for current config schema (to migrate into)
+pub type Pyth2WormholeConfig = Pyth2WormholeConfigV2;
+pub type P2WConfigAccount<'b, const IsInitialized: AccountState> =
+    P2WConfigAccountV2<'b, IsInitialized>;
+
+impl Owned for Pyth2WormholeConfig {
+    fn owner(&self) -> AccountOwner {
+        AccountOwner::This
+    }
+}
+
+/// Aliases for previous config schema (to migrate from)
+pub type OldPyth2WormholeConfig = Pyth2WormholeConfigV1;
+pub type OldP2WConfigAccount<'b> = P2WConfigAccountV1<'b, { AccountState::Initialized }>; // Old config must always be initialized
+
+impl Owned for OldPyth2WormholeConfig {
+    fn owner(&self) -> AccountOwner {
+        AccountOwner::This
+    }
+}
+
+/// Initial config format
+#[derive(Clone, Default, BorshDeserialize, BorshSerialize)]
 #[cfg_attr(feature = "client", derive(Debug))]
-pub struct Pyth2WormholeConfig {
+pub struct Pyth2WormholeConfigV1 {
+    ///  Authority owning this contract
+    pub owner: Pubkey,
+    /// Wormhole bridge program
+    pub wh_prog: Pubkey,
+    /// Authority owning Pyth price data
+    pub pyth_owner: Pubkey,
+    pub max_batch_size: u16,
+}
+
+pub type P2WConfigAccountV1<'b, const IsInitialized: AccountState> =
+    Derive<Data<'b, Pyth2WormholeConfigV1, { IsInitialized }>, "pyth2wormhole-config">;
+
+/// Added is_active
+#[derive(Clone, Default, BorshDeserialize, BorshSerialize)]
+#[cfg_attr(feature = "client", derive(Debug))]
+pub struct Pyth2WormholeConfigV2 {
     ///  Authority owning this contract
     pub owner: Pubkey,
     /// Wormhole bridge program
@@ -33,13 +82,29 @@ pub struct Pyth2WormholeConfig {
     /// changes its expected number of symbols per batch, this config
     /// must be updated accordingly on-chain.
     pub max_batch_size: u16,
+
+    /// If set to false, attest() will reject all calls unconditionally
+    pub is_active: bool,
 }
 
-impl Owned for Pyth2WormholeConfig {
-    fn owner(&self) -> AccountOwner {
-        AccountOwner::This
+pub type P2WConfigAccountV2<'b, const IsInitialized: AccountState> =
+    Derive<Data<'b, Pyth2WormholeConfigV2, { IsInitialized }>, "pyth2wormhole-config-v2">;
+
+impl From<Pyth2WormholeConfigV1> for Pyth2WormholeConfigV2 {
+    fn from(old: Pyth2WormholeConfigV1) -> Self {
+        let Pyth2WormholeConfigV1 {
+            owner,
+            wh_prog,
+            pyth_owner,
+            max_batch_size,
+        } = old;
+
+        Self {
+            owner,
+            wh_prog,
+            pyth_owner,
+            max_batch_size,
+            is_active: true,
+        }
     }
 }
-
-pub type P2WConfigAccount<'b, const IsInitialized: AccountState> =
-    Derive<Data<'b, Pyth2WormholeConfig, { IsInitialized }>, "pyth2wormhole-config">;

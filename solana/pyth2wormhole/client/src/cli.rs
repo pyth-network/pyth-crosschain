@@ -3,7 +3,10 @@
 use solana_program::pubkey::Pubkey;
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use clap::{
+    Parser,
+    Subcommand,
+};
 
 #[derive(Parser)]
 #[clap(
@@ -61,7 +64,7 @@ pub enum Action {
         #[clap(
             short = 'd',
             long = "--daemon",
-            help = "Do not stop attesting. In this mode, this program will behave more like a daemon and continuously attest the specified symbols.",
+            help = "Do not stop attesting. In this mode, this program will behave more like a daemon and continuously attest the specified symbols."
         )]
         daemon: bool,
         #[clap(
@@ -84,14 +87,20 @@ pub enum Action {
     #[clap(about = "Update an existing pyth2wormhole program's settings")]
     SetConfig {
         /// Current owner keypair path
-        #[clap(long = "owner", default_value = "~/.config/solana/id.json")]
+        #[clap(
+            long,
+            default_value = "~/.config/solana/id.json",
+            help = "Keypair file for the current config owner"
+        )]
         owner: String,
         /// New owner to set
         #[clap(long = "new-owner")]
-        new_owner_addr: Pubkey,
+        new_owner_addr: Option<Pubkey>,
         #[clap(long = "new-wh-prog")]
-        new_wh_prog: Pubkey,
+        new_wh_prog: Option<Pubkey>,
         #[clap(long = "new-pyth-owner")]
-        new_pyth_owner_addr: Pubkey,
+        new_pyth_owner_addr: Option<Pubkey>,
+        #[clap(long = "is-active")]
+        is_active: Option<bool>,
     },
 }
