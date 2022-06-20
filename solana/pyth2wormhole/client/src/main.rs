@@ -99,7 +99,7 @@ fn main() -> Result<(), ErrBox> {
                     owner: new_owner_addr.unwrap_or(old_config.owner),
                     wh_prog: new_wh_prog.unwrap_or(old_config.wh_prog),
                     pyth_owner: new_pyth_owner_addr.unwrap_or(old_config.pyth_owner),
-                    is_active: is_active.unwrap_or(old_config.is_active), // Same intended behavior as unwrap_or()
+                    is_active: is_active.unwrap_or(old_config.is_active),
                     max_batch_size: P2W_MAX_BATCH_SIZE,
                 },
                 latest_blockhash,
