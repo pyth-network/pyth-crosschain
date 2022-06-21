@@ -8,13 +8,17 @@
 //! How to add a new config schema:
 //! X - new config version number
 //! Y = X - 1; previous config number
-//! 1. Add a next Pyth2WormholeConfiVX struct
+//! 1. Add a next Pyth2WormholeConfigVX struct,
+//! e.g. Pyth2WormholeConfigV3,
 //! 2. Add a P2WConfigAccountVX type alias with a unique seed str
-//! 3. Implement From<Pyth2WormholeConfigVY>
+//! 3. Implement From<Pyth2WormholeConfigVY> for the new struct,
+//! e.g. From<Pyth2WormholeConfigV2> for Pyth2WormholeConfigV3
 //! 4. Advance Pyth2WormholeConfig, P2WConfigAccount,
 //! OldPyth2WormholeConfig, OldP2WConfigAccount typedefs to use the
 //! previous and new config structs.
 //! 5. Deploy and call migrate() to verify
+//! 6. (optional) Remove/comment out config structs and aliases from
+//! before version Y.
 
 use borsh::{
     BorshDeserialize,
