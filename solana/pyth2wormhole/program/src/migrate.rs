@@ -30,6 +30,9 @@ use crate::config::{
 };
 
 /// Migration accounts meant to evolve with subsequent config accounts
+///
+/// NOTE: This account struct assumes Solitaire is able to validate the
+/// Uninitialized requirement on the new_config account
 #[derive(FromAccounts, ToInstruction)]
 pub struct Migrate<'b> {
     /// New config account to be populated. Must be unused.
