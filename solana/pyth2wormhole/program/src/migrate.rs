@@ -51,7 +51,7 @@ impl<'b> InstructionContext<'b> for Migrate<'b> {
 pub fn migrate(
     ctx: &ExecutionContext,
     accs: &mut Migrate,
-    data: Pyth2WormholeConfig,
+    data: (),
 ) -> SoliResult<()> {
     let old_config: &OldPyth2WormholeConfig = &accs.old_config.1;
 

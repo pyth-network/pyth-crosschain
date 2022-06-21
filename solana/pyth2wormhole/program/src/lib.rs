@@ -32,5 +32,5 @@ solitaire! {
     Attest(AttestData) => attest,
     Initialize(Pyth2WormholeConfig) => initialize,
     SetConfig(Pyth2WormholeConfig) => set_config,
-    Migrate(Pyth2WormholeConfig) => migrate,
+    Migrate(()) => migrate,
 }
