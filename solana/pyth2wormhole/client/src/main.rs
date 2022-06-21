@@ -65,6 +65,7 @@ fn main() -> Result<(), ErrBox> {
             owner_addr,
             pyth_owner_addr,
             wh_prog,
+            is_active,
         } => {
             let tx = gen_init_tx(
                 payer,
@@ -73,7 +74,7 @@ fn main() -> Result<(), ErrBox> {
                     owner: owner_addr,
                     wh_prog,
                     pyth_owner: pyth_owner_addr,
-                    is_active: true,
+                    is_active: is_active.unwrap_or(true),
                     max_batch_size: P2W_MAX_BATCH_SIZE,
                 },
                 latest_blockhash,

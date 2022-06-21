@@ -46,6 +46,9 @@ pub enum Action {
         owner_addr: Pubkey,
         #[clap(short = 'p', long = "pyth-owner")]
         pyth_owner_addr: Pubkey,
+        /// Option<> makes sure not specifying this flag does not imply "false"
+        #[clap(long = "is-active")]
+        is_active: Option<bool>,
     },
     #[clap(
         about = "Use an existing pyth2wormhole program to attest product price information to another chain"
