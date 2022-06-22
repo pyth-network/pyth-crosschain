@@ -29,7 +29,7 @@ import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";
 export type PriceInfo = {
   vaaBytes: string;
   seqNum: number;
-  receiveTime: TimestampInSec;
+  attestationTime: TimestampInSec;
   priceFeed: PriceFeed;
 };
 
@@ -168,8 +168,8 @@ export class Listener implements PriceStore {
     let isAnyPriceNew = batchAttestation.priceAttestations.some(
       (priceAttestation) => {
         const key = priceAttestation.priceId;
-        let lastSeqNum = this.priceFeedVaaMap.get(key)?.seqNum;
-        return lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence;
+        let lastAttestationTime = this.priceFeedVaaMap.get(key)?.attestationTime;
+        return lastAttestationTime === undefined || lastAttestationTime < priceAttestation.attestationTime;
       }
     );
 
@@ -180,13 +180,14 @@ export class Listener implements PriceStore {
     for (let priceAttestation of batchAttestation.priceAttestations) {
       const key = priceAttestation.priceId;
 
-      let lastSeqNum = this.priceFeedVaaMap.get(key)?.seqNum;
-      if (lastSeqNum === undefined || lastSeqNum < parsedVAA.sequence) {
+      let lastAttestationTime = this.priceFeedVaaMap.get(key)?.attestationTime;
+
+      if (lastAttestationTime === undefined || lastAttestationTime < priceAttestation.attestationTime) {
         const priceFeed = priceAttestationToPriceFeed(priceAttestation);
         this.priceFeedVaaMap.set(key, {
           seqNum: parsedVAA.sequence,
           vaaBytes: vaaBytes,
-          receiveTime: new Date().getTime() / 1000,
+          attestationTime: priceAttestation.attestationTime,
           priceFeed,
         });
 
