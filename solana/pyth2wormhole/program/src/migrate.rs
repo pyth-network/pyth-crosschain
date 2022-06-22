@@ -82,7 +82,7 @@ pub fn migrate(
     *accs.old_config.info().lamports.borrow_mut() = 0;
 
     // Credit payer with saved balance
-    (accs.payer.0)
+    accs.payer.info()
         .lamports
         .borrow_mut()
         .checked_add(old_config_balance_val)
