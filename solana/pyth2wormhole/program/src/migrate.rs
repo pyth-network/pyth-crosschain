@@ -76,7 +76,7 @@ pub fn migrate(
     // Reclaim old config lamports
 
     // Save current balance
-    let old_config_balance_val: u64 = **(accs.old_config.0).0.lamports.borrow();
+    let old_config_balance_val: u64 = accs.old_config.info().lamports();
 
     // Drain old config
     **(accs.old_config.0).0.lamports.borrow_mut() = 0;
