@@ -1,8 +1,6 @@
-use solana_program::{
-    msg,
-    pubkey::Pubkey,
-};
+use solana_program::pubkey::Pubkey;
 use solitaire::{
+    trace,
     AccountState,
     ExecutionContext,
     FromAccounts,
@@ -46,7 +44,7 @@ pub fn set_config(
 ) -> SoliResult<()> {
     let cfgStruct: &Pyth2WormholeConfig = &accs.config; // unpack Data via nested Deref impls
     if &cfgStruct.owner != accs.current_owner.info().key {
-        msg!(
+        trace!(
             "Current owner account mismatch (expected {:?})",
             cfgStruct.owner
         );

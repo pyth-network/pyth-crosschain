@@ -41,6 +41,10 @@ use cli::{
 
 use p2w_sdk::P2WEmitter;
 
+use pyth2wormhole::{
+    attest::P2W_MAX_BATCH_SIZE,
+    Pyth2WormholeConfig,
+};
 use pyth2wormhole_client::*;
 
 pub const SEQNO_PREFIX: &'static str = "Program log: Sequence: ";
@@ -61,13 +65,18 @@ fn main() -> Result<(), ErrBox> {
             owner_addr,
             pyth_owner_addr,
             wh_prog,
+            is_active,
         } => {
             let tx = gen_init_tx(
                 payer,
                 p2w_addr,
-                owner_addr,
-                wh_prog,
-                pyth_owner_addr,
+                Pyth2WormholeConfig {
+                    owner: owner_addr,
+                    wh_prog,
+                    pyth_owner: pyth_owner_addr,
+                    is_active: is_active.unwrap_or(true),
+                    max_batch_size: P2W_MAX_BATCH_SIZE,
+                },
                 latest_blockhash,
             )?;
             rpc_client.send_and_confirm_transaction_with_spinner(&tx)?;
@@ -80,17 +89,27 @@ fn main() -> Result<(), ErrBox> {
             new_owner_addr,
             new_wh_prog,
             new_pyth_owner_addr,
+            is_active,
         } => {
+            let old_config = get_config_account(&rpc_client, &p2w_addr)?;
             let tx = gen_set_config_tx(
                 payer,
                 p2w_addr,
                 read_keypair_file(&*shellexpand::tilde(&owner))?,
-                new_owner_addr,
-                new_wh_prog,
-                new_pyth_owner_addr,
+                Pyth2WormholeConfig {
+                    owner: new_owner_addr.unwrap_or(old_config.owner),
+                    wh_prog: new_wh_prog.unwrap_or(old_config.wh_prog),
+                    pyth_owner: new_pyth_owner_addr.unwrap_or(old_config.pyth_owner),
+                    is_active: is_active.unwrap_or(old_config.is_active),
+                    max_batch_size: P2W_MAX_BATCH_SIZE,
+                },
                 latest_blockhash,
             )?;
             rpc_client.send_and_confirm_transaction_with_spinner(&tx)?;
+            println!(
+                "Applied conifg:\n{:?}",
+                get_config_account(&rpc_client, &p2w_addr)?
+            );
         }
         Action::Attest {
             ref attestation_cfg,

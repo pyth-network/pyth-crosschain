@@ -52,6 +52,7 @@ async fn test_happy_path() -> Result<(), solitaire::ErrBox> {
         wh_prog: wh_fixture_program_id,
         max_batch_size: pyth2wormhole::attest::P2W_MAX_BATCH_SIZE,
         pyth_owner,
+        is_active: true,
     };
 
     let bridge_config = BridgeData {

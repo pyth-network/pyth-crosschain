@@ -2,6 +2,7 @@
 pub mod attest;
 pub mod config;
 pub mod initialize;
+pub mod migrate;
 pub mod set_config;
 
 use solitaire::solitaire;
@@ -16,6 +17,10 @@ pub use initialize::{
     initialize,
     Initialize,
 };
+pub use migrate::{
+    migrate,
+    Migrate,
+};
 pub use set_config::{
     set_config,
     SetConfig,
@@ -27,4 +32,5 @@ solitaire! {
     Attest(AttestData) => attest,
     Initialize(Pyth2WormholeConfig) => initialize,
     SetConfig(Pyth2WormholeConfig) => set_config,
+    Migrate(()) => migrate,
 }
