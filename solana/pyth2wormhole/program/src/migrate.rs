@@ -79,7 +79,7 @@ pub fn migrate(
     let old_config_balance_val: u64 = accs.old_config.info().lamports();
 
     // Drain old config
-    **(accs.old_config.0).0.lamports.borrow_mut() = 0;
+    *accs.old_config.info().lamports.borrow_mut() = 0;
 
     // Credit payer with saved balance
     (accs.payer.0)
