@@ -25,5 +25,5 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         env:
           ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}
-          ECR_REPOSITORY: price-service
+          ECR_REPOSITORY: pyth-price
           IMAGE_TAG: ${{ github.sha }}
