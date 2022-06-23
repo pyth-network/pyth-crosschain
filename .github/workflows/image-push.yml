@@ -21,7 +21,7 @@ jobs:
         id: ecr_login
       - run: |
           DOCKER_BUILDKIT=1 docker build -f Dockerfile.wasm -o type=local,dest=. .
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f third_party/pyth/price-service/Dockerfile.price_service .
+          DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f third_party/pyth/price-service/Dockerfile.price_service .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         env:
           ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}
