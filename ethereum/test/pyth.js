@@ -31,11 +31,12 @@ contract("Pyth", function () {
         "Ownable: caller is not the owner -- Reason given: Ownable: caller is not the owner.";
 
     beforeEach(async function () {
-        this.pythProxy = await deployProxy(PythUpgradable, [
+        let freshDeployed = await deployProxy(PythUpgradable, [
             (await Wormhole.deployed()).address,
             testPyth2WormholeChainId,
             testPyth2WormholeEmitter,
         ]);
+        this.pythProxy = await upgradeProxy(freshDeployed.address, PythUpgradable, { call: "migrateMultiSources"});
     });
 
     it("should be initialized with the correct signers and values", async function () {

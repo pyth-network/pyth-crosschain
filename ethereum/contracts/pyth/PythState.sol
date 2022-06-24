@@ -8,12 +8,22 @@ import "./PythInternalStructs.sol";
 contract PythStorage {
     struct State {
         address payable wormhole;
-        uint16 pyth2WormholeChainId;
-        bytes32 pyth2WormholeEmitter;
+        uint16 pyth2WormholeChainId; // Superseded by validDataSources/isValidDataSource
+        bytes32 pyth2WormholeEmitter; // Ditto
 
         // Mapping of cached price information
         // priceId => PriceInfo
         mapping(bytes32 => PythInternalStructs.PriceInfo) latestPriceInfo;
+
+        // guards if the migration to multiple sources was already performed
+        bool switchedToMultiSources;
+
+        // For tracking all active emitter/chain ID pairs
+        PythInternalStructs.DataSource[] validDataSources;
+
+        // (chainId, emitterAddress) => isValid; takes advantage of
+        // constant-time mapping lookup for VM verification
+        mapping(bytes32 => bool) isValidDataSource;
     }
 }
 
