@@ -46,7 +46,7 @@ export class EvmRelay implements Relay {
         : null;
 
       let tx = this.p2wContract
-        .updatePriceFeeds(["0x" + signedVAAs[i]], { gasLimit: 1000000 })
+        .updatePriceFeeds(["0x" + signedVAAs[i]], { gasLimit: 2000000 })
         .then(async (pending) => {
           let receipt = await pending.wait();
           logger.info(
