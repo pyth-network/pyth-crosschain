@@ -37,7 +37,11 @@ contract("Pyth", function () {
             testPyth2WormholeEmitter,
         ]);
 
-        this.pythProxy = await upgradeProxy(freshDeployed.address, PythUpgradable, { call: "migrateMultiSources"});
+        this.pythProxy = await upgradeProxy(
+            freshDeployed.address,
+            PythUpgradable,
+            { call: "migrateMultiSources" }
+        );
     });
 
     it("should be initialized with the correct signers and values", async function () {
@@ -162,12 +166,15 @@ contract("Pyth", function () {
         return timestamp.toString(16).padStart(16, "0");
     }
 
-    function generateRawBatchAttestation(publishTime, attestationTime, priceVal) {
+    function generateRawBatchAttestation(
+        publishTime,
+        attestationTime,
+        priceVal
+    ) {
         const pubTs = u64ToHex(publishTime);
         const attTs = u64ToHex(attestationTime);
         const price = u64ToHex(priceVal);
-        const replaced = RAW_BATCH
-            .replace(RAW_BATCH_PUBLISH_TIME_REGEX, pubTs)
+        const replaced = RAW_BATCH.replace(RAW_BATCH_PUBLISH_TIME_REGEX, pubTs)
             .replace(RAW_BATCH_ATTESTATION_TIME_REGEX, attTs)
             .replace(RAW_BATCH_PRICE_REGEX, price);
         return replaced;
@@ -181,7 +188,11 @@ contract("Pyth", function () {
         let attestationTime = 1647273460; // re-used for publishTime
         let publishTime = 1647273465; // re-used for publishTime
         let priceVal = 1337;
-        let rawBatch = generateRawBatchAttestation(publishTime, attestationTime, priceVal);
+        let rawBatch = generateRawBatchAttestation(
+            publishTime,
+            attestationTime,
+            priceVal
+        );
         let parsed = await this.pythProxy.parseBatchPriceAttestation(rawBatch);
 
         // Check the header
@@ -228,7 +239,7 @@ contract("Pyth", function () {
     });
 
     async function updatePriceFeeds(contract, batches) {
-        let updateData = []
+        let updateData = [];
         for (let data of batches) {
             const vm = await signAndEncodeVM(
                 1,
@@ -241,13 +252,13 @@ contract("Pyth", function () {
                 0,
                 0
             );
-            updateData.push("0x" + vm)
+            updateData.push("0x" + vm);
         }
         await contract.updatePriceFeeds(updateData);
     }
 
     it("should attest price updates over wormhole", async function () {
-        let ts = 1647273460
+        let ts = 1647273460;
         let rawBatch = generateRawBatchAttestation(ts - 5, ts, 1337);
         await updatePriceFeeds(this.pythProxy, [rawBatch]);
     });
@@ -257,24 +268,27 @@ contract("Pyth", function () {
     });
 
     it("should attest price updates with multiple batches of correct order", async function () {
-        let ts = 1647273460
+        let ts = 1647273460;
         let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
         await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2]);
     });
 
     it("should attest price updates with multiple batches of wrong order", async function () {
-        let ts = 1647273460
+        let ts = 1647273460;
         let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
         await updatePriceFeeds(this.pythProxy, [rawBatch2, rawBatch1]);
     });
 
-
     it("should cache price updates", async function () {
         let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
         let priceVal = 521;
-        let rawBatch = generateRawBatchAttestation(currentTimestamp - 5, currentTimestamp, priceVal);
+        let rawBatch = generateRawBatchAttestation(
+            currentTimestamp - 5,
+            currentTimestamp,
+            priceVal
+        );
         await updatePriceFeeds(this.pythProxy, [rawBatch]);
 
         let first_prod_id = "0x" + "01".repeat(32);
@@ -333,7 +347,11 @@ contract("Pyth", function () {
 
     it("should show stale cached prices as unknown", async function () {
         let smallestTimestamp = 1;
-        let rawBatch = generateRawBatchAttestation(smallestTimestamp, smallestTimestamp + 5, 1337);
+        let rawBatch = generateRawBatchAttestation(
+            smallestTimestamp,
+            smallestTimestamp + 5,
+            1337
+        );
         await updatePriceFeeds(this.pythProxy, [rawBatch]);
 
         for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
@@ -350,7 +368,11 @@ contract("Pyth", function () {
 
     it("should show cached prices too far into the future as unknown", async function () {
         let largestTimestamp = 4294967295;
-        let rawBatch = generateRawBatchAttestation(largestTimestamp - 5, largestTimestamp, 1337);
+        let rawBatch = generateRawBatchAttestation(
+            largestTimestamp - 5,
+            largestTimestamp,
+            1337
+        );
         await updatePriceFeeds(this.pythProxy, [rawBatch]);
 
         for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
@@ -366,18 +388,25 @@ contract("Pyth", function () {
     });
 
     it("should not allow to re-run the multi-source migration", async function () {
-      // This migration is run during test prep, tripping an on-chain flag preventing another call
-      expectRevert(this.pythProxy.migrateMultiSources(), "Already migrated to multiple data sources");
+        // This migration is run during test prep, tripping an on-chain flag preventing another call
+        expectRevert(
+            this.pythProxy.migrateMultiSources(),
+            "Already migrated to multiple data sources"
+        );
     });
 
     it("should accept a VM after adding its data source", async function () {
         let newChainId = "42424";
-        let newEmitter = testPyth2WormholeEmitter.replace('a', 'f');
+        let newEmitter = testPyth2WormholeEmitter.replace("a", "f");
 
         await this.pythProxy.addDataSource(newChainId, newEmitter);
 
         let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
-        let rawBatch = generateRawBatchAttestation(currentTimestamp - 5, currentTimestamp, 1337);
+        let rawBatch = generateRawBatchAttestation(
+            currentTimestamp - 5,
+            currentTimestamp,
+            1337
+        );
         let vm = await signAndEncodeVM(
             1,
             1,
@@ -390,17 +419,17 @@ contract("Pyth", function () {
             0
         );
 
-      await this.pythProxy.updatePriceFeeds(["0x" + vm]);
+        await this.pythProxy.updatePriceFeeds(["0x" + vm]);
     });
 
     it("should reject a VM after removing its data source", async function () {
         // Add 2 new data sources to produce a non-trivial data source state.
         let newChainId = "42424";
-        let newEmitter = testPyth2WormholeEmitter.replace('a', 'f');
+        let newEmitter = testPyth2WormholeEmitter.replace("a", "f");
         await this.pythProxy.addDataSource(newChainId, newEmitter);
 
         let newChainId2 = "42425";
-        let newEmitter2 = testPyth2WormholeEmitter.replace('a', 'e');
+        let newEmitter2 = testPyth2WormholeEmitter.replace("a", "e");
         await this.pythProxy.addDataSource(newChainId2, newEmitter2);
 
         // Remove the first one added
@@ -408,7 +437,11 @@ contract("Pyth", function () {
 
         // Sign a batch with the removed data source
         let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
-        let rawBatch = generateRawBatchAttestation(currentTimestamp - 5, currentTimestamp, 1337);
+        let rawBatch = generateRawBatchAttestation(
+            currentTimestamp - 5,
+            currentTimestamp,
+            1337
+        );
         let vm = await signAndEncodeVM(
             1,
             1,
@@ -421,7 +454,10 @@ contract("Pyth", function () {
             0
         );
 
-      await expectRevert(this.pythProxy.updatePriceFeeds(["0x" + vm]), "invalid data source chain/emitter ID");
+        await expectRevert(
+            this.pythProxy.updatePriceFeeds(["0x" + vm]),
+            "invalid data source chain/emitter ID"
+        );
     });
 });
 
