@@ -52,12 +52,15 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
         _state.isValidDataSource[keccak256(abi.encodePacked(ds.chainId, ds.emitterAddress))] = false;
 
         for (uint i = 0; i < _state.validDataSources.length;  ++i) {
-            if (_state.validDataSources[i].chainId != ds.chainId || _state.validDataSources[i].emitterAddress != ds.emitterAddress)  {
+
+            // Find the source to remove
+            if (_state.validDataSources[i].chainId == ds.chainId || _state.validDataSources[i].emitterAddress == ds.emitterAddress)  {
+
                 // Copy last element to overwrite the target data source
                 _state.validDataSources[i] = _state.validDataSources[_state.validDataSources.length - 1];
-
                 // Remove the last element we just preserved
                 _state.validDataSources.pop();
+
 
                 break;
             }

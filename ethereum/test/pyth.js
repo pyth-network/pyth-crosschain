@@ -394,15 +394,26 @@ contract("Pyth", function () {
     });
 
     it("should reject a VM after removing its data source", async function () {
-        await this.pythProxy.removeDataSource(testPyth2WormholeChainId,testPyth2WormholeEmitter);
+        // Add 2 new data sources to produce a non-trivial data source state.
+        let newChainId = "42424";
+        let newEmitter = testPyth2WormholeEmitter.replace('a', 'f');
+        await this.pythProxy.addDataSource(newChainId, newEmitter);
 
+        let newChainId2 = "42425";
+        let newEmitter2 = testPyth2WormholeEmitter.replace('a', 'e');
+        await this.pythProxy.addDataSource(newChainId2, newEmitter2);
+
+        // Remove the first one added
+        await this.pythProxy.removeDataSource(newChainId, newEmitter);
+
+        // Sign a batch with the removed data source
         let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
         let rawBatch = generateRawBatchAttestation(currentTimestamp - 5, currentTimestamp, 1337);
         let vm = await signAndEncodeVM(
             1,
             1,
-            testPyth2WormholeChainId,
-            testPyth2WormholeEmitter,
+            newChainId,
+            newEmitter,
             0,
             rawBatch,
             [testSigner1PK],
