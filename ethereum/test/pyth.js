@@ -36,6 +36,7 @@ contract("Pyth", function () {
             testPyth2WormholeChainId,
             testPyth2WormholeEmitter,
         ]);
+
         this.pythProxy = await upgradeProxy(freshDeployed.address, PythUpgradable, { call: "migrateMultiSources"});
     });
 
@@ -362,6 +363,54 @@ contract("Pyth", function () {
                 PythStructs.PriceStatus.UNKNOWN.toString()
             );
         }
+    });
+
+    it("should not allow to re-run the multi-source migration", async function () {
+      // This migration is run during test prep, tripping an on-chain flag preventing another call
+      expectRevert(this.pythProxy.migrateMultiSources(), "Already migrated to multiple data sources");
+    });
+
+    it("should accept a VM after adding its data source", async function () {
+        let newChainId = "42424";
+        let newEmitter = testPyth2WormholeEmitter.replace('a', 'f');
+
+        await this.pythProxy.addDataSource(newChainId, newEmitter);
+
+        let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
+        let rawBatch = generateRawBatchAttestation(currentTimestamp - 5, currentTimestamp, 1337);
+        let vm = await signAndEncodeVM(
+            1,
+            1,
+            newChainId,
+            newEmitter,
+            0,
+            rawBatch,
+            [testSigner1PK],
+            0,
+            0
+        );
+
+      await this.pythProxy.updatePriceFeeds(["0x" + vm]);
+    });
+
+    it("should reject a VM after removing its data source", async function () {
+        await this.pythProxy.removeDataSource(testPyth2WormholeChainId,testPyth2WormholeEmitter);
+
+        let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
+        let rawBatch = generateRawBatchAttestation(currentTimestamp - 5, currentTimestamp, 1337);
+        let vm = await signAndEncodeVM(
+            1,
+            1,
+            testPyth2WormholeChainId,
+            testPyth2WormholeEmitter,
+            0,
+            rawBatch,
+            [testSigner1PK],
+            0,
+            0
+        );
+
+      await expectRevert(this.pythProxy.updatePriceFeeds(["0x" + vm]), "invalid data source chain/emitter ID");
     });
 });
 

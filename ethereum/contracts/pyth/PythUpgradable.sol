@@ -28,14 +28,16 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
 
         require(!PythGetters.switchedToMultiSources(), "Already migrated to multiple data sources");
         
-        addDataSource(PythInternalStructs.DataSource(PythGetters.pyth2WormholeChainId(), PythGetters.pyth2WormholeEmitter()));
+        addDataSource(PythGetters.pyth2WormholeChainId(), PythGetters.pyth2WormholeEmitter());
 
         require(PythGetters.isValidDataSource(PythGetters.pyth2WormholeChainId(), PythGetters.pyth2WormholeEmitter()), "Could not confirm migrated valid data source");
+        _state.switchedToMultiSources = true;
         
     }
 
     /// Privileged function to specify additional data sources in the contract
-    function addDataSource(PythInternalStructs.DataSource memory ds) onlyOwner public {
+    function addDataSource(uint16 chainId, bytes32 emitter) onlyOwner public {
+        PythInternalStructs.DataSource memory ds = PythInternalStructs.DataSource(chainId, emitter);
         require(!PythGetters.isValidDataSource(ds.chainId, ds.emitterAddress), "Data source already added");
 
         _state.isValidDataSource[keccak256(abi.encodePacked(ds.chainId, ds.emitterAddress))] = true;
@@ -43,7 +45,8 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
     }
 
     /// Privileged fucntion to remove the specified data source. Assumes _state.validDataSources has no duplicates.
-    function removeDataSource(PythInternalStructs.DataSource memory ds) onlyOwner public {
+    function removeDataSource(uint16 chainId, bytes32 emitter) onlyOwner public {
+        PythInternalStructs.DataSource memory ds = PythInternalStructs.DataSource(chainId, emitter);
         require(PythGetters.isValidDataSource(ds.chainId, ds.emitterAddress), "Data source not found, not removing");
 
         _state.isValidDataSource[keccak256(abi.encodePacked(ds.chainId, ds.emitterAddress))] = false;
