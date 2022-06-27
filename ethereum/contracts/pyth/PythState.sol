@@ -8,7 +8,7 @@ import "./PythInternalStructs.sol";
 contract PythStorage {
     struct State {
         address payable wormhole;
-        uint16 pyth2WormholeChainId; // Superseded by validDataSources/isValidDataSource
+        uint16 pyth2WormholeChainId; // Deprecated, replaced by validDataSources/isValidDataSource
         bytes32 pyth2WormholeEmitter; // Ditto
 
         // Mapping of cached price information
