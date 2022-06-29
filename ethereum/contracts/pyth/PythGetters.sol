@@ -28,8 +28,4 @@ contract PythGetters is PythState {
     function isValidDataSource(uint16 chainId, bytes32 emitterAddress) internal view returns (bool) {
         return _state.isValidDataSource[keccak256(abi.encodePacked(chainId, emitterAddress))];
     }
-
-    function switchedToMultiSources() internal view returns (bool) {
-        return _state.switchedToMultiSources;
-    }
 }

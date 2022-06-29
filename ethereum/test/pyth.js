@@ -31,16 +31,15 @@ contract("Pyth", function () {
         "Ownable: caller is not the owner -- Reason given: Ownable: caller is not the owner.";
 
     beforeEach(async function () {
-        let freshDeployed = await deployProxy(PythUpgradable, [
+        this.pythProxy = await deployProxy(PythUpgradable, [
             (await Wormhole.deployed()).address,
             testPyth2WormholeChainId,
             testPyth2WormholeEmitter,
         ]);
 
-        this.pythProxy = await upgradeProxy(
-            freshDeployed.address,
-            PythUpgradable,
-            { call: "migrateMultiSources" }
+        await this.pythProxy.addDataSource(
+            testPyth2WormholeChainId,
+            testPyth2WormholeEmitter
         );
     });
 
@@ -385,14 +384,6 @@ contract("Pyth", function () {
                 PythStructs.PriceStatus.UNKNOWN.toString()
             );
         }
-    });
-
-    it("should not allow to re-run the multi-source migration", async function () {
-        // This migration is run during test prep, tripping an on-chain flag preventing another call
-        expectRevert(
-            this.pythProxy.migrateMultiSources(),
-            "Already migrated to multiple data sources"
-        );
     });
 
     it("should accept a VM after adding its data source", async function () {

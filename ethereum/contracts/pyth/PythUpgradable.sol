@@ -23,18 +23,6 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
         Pyth.initialize(wormhole, pyth2WormholeChainId, pyth2WormholeEmitter);
     }
 
-    // Migration call for upgrading to support the multiple price data sources feature
-    function migrateMultiSources() onlyOwner public {
-
-        require(!PythGetters.switchedToMultiSources(), "Already migrated to multiple data sources");
-        
-        addDataSource(PythGetters.pyth2WormholeChainId(), PythGetters.pyth2WormholeEmitter());
-
-        require(PythGetters.isValidDataSource(PythGetters.pyth2WormholeChainId(), PythGetters.pyth2WormholeEmitter()), "Could not confirm migrated valid data source");
-        _state.switchedToMultiSources = true;
-        
-    }
-
     /// Privileged function to specify additional data sources in the contract
     function addDataSource(uint16 chainId, bytes32 emitter) onlyOwner public {
         PythInternalStructs.DataSource memory ds = PythInternalStructs.DataSource(chainId, emitter);

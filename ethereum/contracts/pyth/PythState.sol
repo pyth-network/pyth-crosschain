@@ -15,9 +15,6 @@ contract PythStorage {
         // priceId => PriceInfo
         mapping(bytes32 => PythInternalStructs.PriceInfo) latestPriceInfo;
 
-        // guards if the migration to multiple sources was already performed
-        bool switchedToMultiSources;
-
         // For tracking all active emitter/chain ID pairs
         PythInternalStructs.DataSource[] validDataSources;
 
