@@ -99,6 +99,10 @@ async fn main() -> Result<(), ErrBox> {
             rpc_client
                 .send_and_confirm_transaction_with_spinner(&tx)
                 .await?;
+            println!(
+                "Initialized with conifg:\n{:?}",
+                get_config_account(&rpc_client, &p2w_addr).await?
+            );
         }
         Action::GetConfig => {
             println!("{:?}", get_config_account(&rpc_client, &p2w_addr).await?);
@@ -110,7 +114,7 @@ async fn main() -> Result<(), ErrBox> {
             new_pyth_owner_addr,
             is_active,
         } => {
-            let old_config = get_config_account(&rpc_client, &p2w_addr)?;
+            let old_config = get_config_account(&rpc_client, &p2w_addr).await?;
             let tx = gen_set_config_tx(
                 payer,
                 p2w_addr,
@@ -129,7 +133,7 @@ async fn main() -> Result<(), ErrBox> {
                 .await?;
             println!(
                 "Applied conifg:\n{:?}",
-                get_config_account(&rpc_client, &p2w_addr)?
+                get_config_account(&rpc_client, &p2w_addr).await?
             );
         }
         Action::Attest {
