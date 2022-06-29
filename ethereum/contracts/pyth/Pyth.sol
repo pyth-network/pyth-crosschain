@@ -39,6 +39,7 @@ contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
             if(attestation.attestationTime > latestPrice.attestationTime) {
                 setLatestPriceInfo(attestation.priceId, newPriceInfo(attestation));
+                emit PriceUpdate(attestation.priceId, attestation.publishTime);
             }
         }
 

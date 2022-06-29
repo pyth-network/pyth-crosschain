@@ -5,7 +5,7 @@ const BigNumber = require("bignumber.js");
 const PythStructs = artifacts.require("PythStructs");
 
 const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
-const { expectRevert } = require("@openzeppelin/test-helpers");
+const { expectRevert, expectEvent } = require("@openzeppelin/test-helpers");
 
 // Use "WormholeReceiver" if you are testing with Wormhole Receiver
 const Wormhole = artifacts.require("Wormhole");
@@ -253,7 +253,7 @@ contract("Pyth", function () {
             );
             updateData.push("0x" + vm);
         }
-        await contract.updatePriceFeeds(updateData);
+        return await contract.updatePriceFeeds(updateData);
     }
 
     it("should attest price updates over wormhole", async function () {
@@ -263,21 +263,24 @@ contract("Pyth", function () {
     });
 
     it("should attest price updates empty", async function () {
-        await updatePriceFeeds(this.pythProxy, []);
+        const receipt = await updatePriceFeeds(this.pythProxy, []);
+        expectEvent.notEmitted(receipt, 'PriceUpdate');
     });
 
     it("should attest price updates with multiple batches of correct order", async function () {
         let ts = 1647273460;
         let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
-        await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2]);
+        const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2]);
+        expectEvent(receipt, 'PriceUpdate');
     });
 
     it("should attest price updates with multiple batches of wrong order", async function () {
         let ts = 1647273460;
         let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
-        await updatePriceFeeds(this.pythProxy, [rawBatch2, rawBatch1]);
+        const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch2, rawBatch1]);
+        expectEvent(receipt, 'PriceUpdate');
     });
 
     it("should cache price updates", async function () {
@@ -288,7 +291,8 @@ contract("Pyth", function () {
             currentTimestamp,
             priceVal
         );
-        await updatePriceFeeds(this.pythProxy, [rawBatch]);
+        let receipt = await updatePriceFeeds(this.pythProxy, [rawBatch]);
+        expectEvent(receipt, 'PriceUpdate');
 
         let first_prod_id = "0x" + "01".repeat(32);
         let first_price_id = "0x" + "fe".repeat(32);
@@ -310,7 +314,8 @@ contract("Pyth", function () {
             nextTimestamp,
             priceVal + 5
         );
-        await updatePriceFeeds(this.pythProxy, [rawBatch2]);
+        receipt = await updatePriceFeeds(this.pythProxy, [rawBatch2]);
+        expectEvent(receipt, 'PriceUpdate');
 
         first = await this.pythProxy.queryPriceFeed(first_price_id);
         assert.equal(first.price, priceVal + 5);
@@ -324,7 +329,8 @@ contract("Pyth", function () {
             nextTimestamp,
             priceVal + 10
         );
-        await updatePriceFeeds(this.pythProxy, [rawBatch3]);
+        receipt = await updatePriceFeeds(this.pythProxy, [rawBatch3]);
+        expectEvent.notEmitted(receipt, 'PriceUpdate');
 
         first = await this.pythProxy.queryPriceFeed(first_price_id);
         assert.equal(first.price, priceVal + 5);
