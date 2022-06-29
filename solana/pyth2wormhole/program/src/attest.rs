@@ -140,6 +140,13 @@ impl<'b> InstructionContext<'b> for Attest<'b> {
 }
 
 pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> SoliResult<()> {
+    if !accs.config.is_active {
+        // msg instead of trace makes sure we're not silent about this in prod
+        solana_program::msg!("This attester program is disabled!");
+
+        return Err(SolitaireError::Custom(4242));
+    }
+
     accs.config.verify_derivation(ctx.program_id, None)?;
 
     if accs.config.wh_prog != *accs.wh_prog.key {

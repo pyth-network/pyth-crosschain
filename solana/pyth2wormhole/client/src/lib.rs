@@ -72,9 +72,7 @@ pub type ErrBoxSend = Box<dyn std::error::Error + Send + Sync>;
 pub fn gen_init_tx(
     payer: Keypair,
     p2w_addr: Pubkey,
-    new_owner_addr: Pubkey,
-    wh_prog: Pubkey,
-    pyth_owner_addr: Pubkey,
+    config: Pyth2WormholeConfig,
     latest_blockhash: Hash,
 ) -> Result<Transaction, ErrBox> {
     use AccEntry::*;
@@ -86,12 +84,6 @@ pub fn gen_init_tx(
         new_config: Derived(p2w_addr),
     };
 
-    let config = Pyth2WormholeConfig {
-        max_batch_size: P2W_MAX_BATCH_SIZE,
-        owner: new_owner_addr,
-        wh_prog: wh_prog,
-        pyth_owner: pyth_owner_addr,
-    };
     let ix_data = (pyth2wormhole::instruction::Instruction::Initialize, config);
 
     let (ix, signers) = accs.to_ix(p2w_addr, ix_data.try_to_vec()?.as_slice())?;
@@ -109,9 +101,7 @@ pub fn gen_set_config_tx(
     payer: Keypair,
     p2w_addr: Pubkey,
     owner: Keypair,
-    new_owner_addr: Pubkey,
-    new_wh_prog: Pubkey,
-    new_pyth_owner_addr: Pubkey,
+    new_config: Pyth2WormholeConfig,
     latest_blockhash: Hash,
 ) -> Result<Transaction, ErrBox> {
     use AccEntry::*;
@@ -124,13 +114,10 @@ pub fn gen_set_config_tx(
         config: Derived(p2w_addr),
     };
 
-    let config = Pyth2WormholeConfig {
-        max_batch_size: P2W_MAX_BATCH_SIZE,
-        owner: new_owner_addr,
-        wh_prog: new_wh_prog,
-        pyth_owner: new_pyth_owner_addr,
-    };
-    let ix_data = (pyth2wormhole::instruction::Instruction::SetConfig, config);
+    let ix_data = (
+        pyth2wormhole::instruction::Instruction::SetConfig,
+        new_config,
+    );
 
     let (ix, signers) = accs.to_ix(p2w_addr, ix_data.try_to_vec()?.as_slice())?;
 

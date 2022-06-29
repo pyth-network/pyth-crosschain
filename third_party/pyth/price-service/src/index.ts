@@ -5,7 +5,7 @@ import { Listener } from "./listen";
 import { initLogger } from "./logging";
 import { PromClient } from "./promClient";
 import { RestAPI } from "./rest";
-
+import { WebSocketAPI } from "./ws";
 
 let configFile: string = ".env";
 if (process.env.PYTH_RELAY_CONFIG) {
@@ -18,28 +18,45 @@ require("dotenv").config({ path: configFile });
 setDefaultWasm("node");
 
 // Set up the logger.
-initLogger({logLevel: process.env.LOG_LEVEL});
+initLogger({ logLevel: process.env.LOG_LEVEL });
 
 const promClient = new PromClient({
   name: "price_service",
-  port: parseInt(envOrErr("PROM_PORT"))
+  port: parseInt(envOrErr("PROM_PORT")),
 });
 
-const listener = new Listener({
-  spyServiceHost: envOrErr("SPY_SERVICE_HOST"),
-  filtersRaw: process.env.SPY_SERVICE_FILTERS,
-  readiness: {
-    spySyncTimeSeconds: parseInt(envOrErr("READINESS_SPY_SYNC_TIME_SECONDS")),
-    numLoadedSymbols: parseInt(envOrErr("READINESS_NUM_LOADED_SYMBOLS"))
-  }
-}, promClient);
+const listener = new Listener(
+  {
+    spyServiceHost: envOrErr("SPY_SERVICE_HOST"),
+    filtersRaw: process.env.SPY_SERVICE_FILTERS,
+    readiness: {
+      spySyncTimeSeconds: parseInt(envOrErr("READINESS_SPY_SYNC_TIME_SECONDS")),
+      numLoadedSymbols: parseInt(envOrErr("READINESS_NUM_LOADED_SYMBOLS")),
+    },
+  },
+  promClient
+);
 
 // In future if we have more components we will modify it to include them all
 const isReady = () => listener.isReady();
 
-const restAPI = new RestAPI({
-  port: parseInt(envOrErr("REST_PORT"))
-}, listener, isReady, promClient);
+const restAPI = new RestAPI(
+  {
+    port: parseInt(envOrErr("REST_PORT")),
+  },
+  listener,
+  isReady,
+  promClient
+);
+
+const wsAPI = new WebSocketAPI(
+  {
+    port: parseInt(envOrErr("WS_PORT")),
+  },
+  listener,
+  promClient
+);
 
 listener.run();
 restAPI.run();
+wsAPI.run();

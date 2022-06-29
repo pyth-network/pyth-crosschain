@@ -144,8 +144,8 @@ module.exports = {
         )
       },
       network_id: 0x4e454153,
-      gas: 70000000,
-      gasPrice: 8000000000,
+      gas: 10000000,
+      from: "0xC42e9476b0a458097087336e2395Dbf45B0BdC12", // public key
     },
     fantom: {
       provider: () => {
