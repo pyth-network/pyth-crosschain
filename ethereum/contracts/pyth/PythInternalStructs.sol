@@ -49,4 +49,9 @@ contract PythInternalStructs {
         uint256 arrivalBlock;
         PythStructs.PriceFeed priceFeed;
     }
+
+    struct DataSource {
+        uint16 chainId;
+        bytes32 emitterAddress;
+    }
 }

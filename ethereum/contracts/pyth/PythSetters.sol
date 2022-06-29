@@ -7,11 +7,11 @@ import "./PythState.sol";
 
 contract PythSetters is PythState {
     function setPyth2WormholeChainId(uint16 chainId) internal {
-        _state.pyth2WormholeChainId = chainId;
+        _state._deprecatedPyth2WormholeChainId = chainId;
     }
 
     function setPyth2WormholeEmitter(bytes32 emitterAddr) internal {
-        _state.pyth2WormholeEmitter = emitterAddr;
+        _state._deprecatedPyth2WormholeEmitter = emitterAddr;
     }
 
     function setWormhole(address wh) internal {
