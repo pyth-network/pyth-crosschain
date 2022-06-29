@@ -44,11 +44,7 @@ contract("Pyth", function () {
     });
 
     it("should be initialized with the correct signers and values", async function () {
-        // pyth2wormhole
-        const pyth2wormChain = await this.pythProxy.pyth2WormholeChainId();
-        assert.equal(pyth2wormChain, testPyth2WormholeChainId);
-        const pyth2wormEmitter = await this.pythProxy.pyth2WormholeEmitter();
-        assert.equal(pyth2wormEmitter, testPyth2WormholeEmitter);
+        await this.pythProxy.isValidDataSource(testPyth2WormholeChainId, testPyth2WormholeEmitter);
     });
 
     it("should allow upgrades from the owner", async function () {
