@@ -25,22 +25,24 @@ async function run() {
     name: "price_service",
     port: parseInt(envOrErr("PROM_PORT")),
   });
-  
+
   const listener = new Listener(
     {
       spyServiceHost: envOrErr("SPY_SERVICE_HOST"),
       filtersRaw: process.env.SPY_SERVICE_FILTERS,
       readiness: {
-        spySyncTimeSeconds: parseInt(envOrErr("READINESS_SPY_SYNC_TIME_SECONDS")),
+        spySyncTimeSeconds: parseInt(
+          envOrErr("READINESS_SPY_SYNC_TIME_SECONDS")
+        ),
         numLoadedSymbols: parseInt(envOrErr("READINESS_NUM_LOADED_SYMBOLS")),
       },
     },
     promClient
   );
-  
+
   // In future if we have more components we will modify it to include them all
   const isReady = () => listener.isReady();
-  
+
   const restAPI = new RestAPI(
     {
       port: parseInt(envOrErr("REST_PORT")),
@@ -49,12 +51,9 @@ async function run() {
     isReady,
     promClient
   );
-  
-  const wsAPI = new WebSocketAPI(
-    listener,
-    promClient
-  );
-  
+
+  const wsAPI = new WebSocketAPI(listener, promClient);
+
   listener.run();
   const server = await restAPI.run();
   wsAPI.run(server);

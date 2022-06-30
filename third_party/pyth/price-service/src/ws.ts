@@ -40,10 +40,7 @@ export class WebSocketAPI {
   private priceFeedVaaInfo: PriceStore;
   private promClient: PromClient | undefined;
 
-  constructor(
-    priceFeedVaaInfo: PriceStore,
-    promClient?: PromClient
-  ) {
+  constructor(priceFeedVaaInfo: PriceStore, promClient?: PromClient) {
     this.priceFeedVaaInfo = priceFeedVaaInfo;
     this.priceFeedClients = new Map();
     this.aliveClients = new Set();
