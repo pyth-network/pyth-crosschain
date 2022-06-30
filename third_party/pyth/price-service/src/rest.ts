@@ -9,6 +9,7 @@ import { PromClient } from "./promClient";
 import { DurationInMs, DurationInSec } from "./helpers";
 import { StatusCodes } from "http-status-codes";
 import { validate, ValidationError, Joi, schema } from "express-validation";
+import { Server } from "http";
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
@@ -80,7 +81,7 @@ export class RestAPI {
       }).required(),
     };
     app.get(
-      "/latest_vaas",
+      "/api/latest_vaas",
       validate(latestVaasInputSchema),
       (req: Request, res: Response) => {
         let priceIds = req.query.ids as string[];
@@ -126,7 +127,7 @@ export class RestAPI {
       }
     );
     endpoints.push(
-      "latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
+      "api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
     );
 
     const latestPriceFeedsInputSchema: schema = {
@@ -137,7 +138,7 @@ export class RestAPI {
       }).required(),
     };
     app.get(
-      "/latest_price_feeds",
+      "/api/latest_price_feeds",
       validate(latestPriceFeedsInputSchema),
       (req: Request, res: Response) => {
         let priceIds = req.query.ids as string[];
@@ -177,7 +178,7 @@ export class RestAPI {
       }
     );
     endpoints.push(
-      "latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
+      "api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
     );
 
     app.get("/ready", (_, res: Response) => {
@@ -193,6 +194,9 @@ export class RestAPI {
       res.sendStatus(StatusCodes.OK);
     });
     endpoints.push("live");
+
+    // Websocket endpoint
+    endpoints.push("ws");
 
     app.get("/", (_, res: Response) => res.json(endpoints));
 
@@ -211,9 +215,9 @@ export class RestAPI {
     return app;
   }
 
-  async run() {
+  async run(): Promise<Server> {
     let app = await this.createApp();
-    app.listen(this.port, () =>
+    return app.listen(this.port, () =>
       logger.debug("listening on REST port " + this.port)
     );
   }
