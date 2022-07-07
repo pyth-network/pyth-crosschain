@@ -31,7 +31,7 @@ As a result of this process for some files (with the network id in their name) i
 
 If you are deploying to a new network, please add the new contract address to consumer facing libraries and documentations.
 
-To do so, add the contract address to both [Pyth Gitbook EVM Page](https://github.com/pyth-network/pyth-gitbook/blob/main/consumers/evm.md) and [pyth-evm-js package](https://github.com/pyth-network/pyth-js/blob/main/pyth-evm-js/src/index.ts#L13). You also need to add new network address to [pyth-evm-js relaying example](https://github.com/pyth-network/pyth-js/blob/main/pyth-evm-js/src/examples/EvmRelay.ts#L47).
+To do so, add the contract address to both [Pyth Gitbook EVM Page](https://github.com/pyth-network/pyth-gitbook/blob/main/consumers/evm.md) and [pyth-evm-js package](https://github.com/pyth-network/pyth-js/blob/main/pyth-evm-js/src/index.ts#L13). You also need to add the new network address to [pyth-evm-js relaying example](https://github.com/pyth-network/pyth-js/blob/main/pyth-evm-js/src/examples/EvmRelay.ts#L47).
 
 ## `networks` directory
 Truffle stores the address of the deployed contracts in the build artifacts, which can make local development difficult. We use [`truffle-deploy-registry`](https://github.com/MedXProtocol/truffle-deploy-registry) to store the addresses separately from the artifacts, in the [`networks`](networks) directory. When we need to perform operations on the deployed contracts, such as performing additional migrations, we can run `npx apply-registry` to populate the artifacts with the correct addresses.
