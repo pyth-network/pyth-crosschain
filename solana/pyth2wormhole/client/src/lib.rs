@@ -48,6 +48,7 @@ use pyth2wormhole::{
     attest::P2W_MAX_BATCH_SIZE,
     config::P2WConfigAccount,
     initialize::InitializeAccounts,
+    migrate::MigrateAccounts,
     set_config::SetConfigAccounts,
     AttestData,
     Pyth2WormholeConfig,
@@ -111,6 +112,39 @@ pub fn gen_set_config_tx(
     let ix_data = (
         pyth2wormhole::instruction::Instruction::SetConfig,
         new_config,
+    );
+
+    let (ix, signers) = accs.to_ix(p2w_addr, ix_data.try_to_vec()?.as_slice())?;
+
+    let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
+        &[ix],
+        Some(&payer_pubkey),
+        signers.iter().collect::<Vec<_>>().as_ref(),
+        latest_blockhash,
+    );
+    Ok(tx_signed)
+}
+
+pub fn gen_migrate_tx(
+    payer: Keypair,
+    p2w_addr: Pubkey,
+    owner: Keypair,
+    latest_blockhash: Hash,
+) -> Result<Transaction, ErrBox> {
+    use AccEntry::*;
+
+    let payer_pubkey = payer.pubkey();
+
+    let accs = MigrateAccounts {
+        new_config: Derived(p2w_addr),
+        old_config: Derived(p2w_addr),
+        current_owner: Signer(owner),
+        payer: Signer(payer),
+    };
+
+    let ix_data = (
+        pyth2wormhole::instruction::Instruction::Migrate,
+        (),
     );
 
     let (ix, signers) = accs.to_ix(p2w_addr, ix_data.try_to_vec()?.as_slice())?;
