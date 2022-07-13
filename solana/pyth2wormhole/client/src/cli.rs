@@ -106,4 +106,14 @@ pub enum Action {
         #[clap(long = "is-active")]
         is_active: Option<bool>,
     },
+    #[clap(about = "Migrate existing pyth2wormhole program settings to a newer format version. Client version must match the deployed contract.")]
+    Migrate {
+        /// owner keypair path
+        #[clap(
+            long,
+            default_value = "~/.config/solana/id.json",
+            help = "Keypair file for the current config owner"
+        )]
+        owner: String,
+    },
 }
