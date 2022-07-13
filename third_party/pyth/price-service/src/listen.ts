@@ -168,8 +168,12 @@ export class Listener implements PriceStore {
     let isAnyPriceNew = batchAttestation.priceAttestations.some(
       (priceAttestation) => {
         const key = priceAttestation.priceId;
-        let lastAttestationTime = this.priceFeedVaaMap.get(key)?.attestationTime;
-        return lastAttestationTime === undefined || lastAttestationTime < priceAttestation.attestationTime;
+        let lastAttestationTime =
+          this.priceFeedVaaMap.get(key)?.attestationTime;
+        return (
+          lastAttestationTime === undefined ||
+          lastAttestationTime < priceAttestation.attestationTime
+        );
       }
     );
 
@@ -182,7 +186,10 @@ export class Listener implements PriceStore {
 
       let lastAttestationTime = this.priceFeedVaaMap.get(key)?.attestationTime;
 
-      if (lastAttestationTime === undefined || lastAttestationTime < priceAttestation.attestationTime) {
+      if (
+        lastAttestationTime === undefined ||
+        lastAttestationTime < priceAttestation.attestationTime
+      ) {
         const priceFeed = priceAttestationToPriceFeed(priceAttestation);
         this.priceFeedVaaMap.set(key, {
           seqNum: parsedVAA.sequence,

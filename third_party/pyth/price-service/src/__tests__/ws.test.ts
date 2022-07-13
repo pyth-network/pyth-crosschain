@@ -52,7 +52,7 @@ async function waitForMessages(messages: any[], cnt: number): Promise<void> {
 }
 
 async function createSocketClient(): Promise<[WebSocket, any[]]> {
-  const client = new WebSocket(`ws://localhost:${port}`);
+  const client = new WebSocket(`ws://localhost:${port}/ws`);
 
   await waitForSocketState(client, client.OPEN);
 
@@ -79,9 +79,12 @@ beforeAll(async () => {
     getPriceIds: () => new Set(priceFeeds.map((priceFeed) => priceFeed.id)),
   };
 
-  api = new WebSocketAPI({ port }, priceInfo);
+  api = new WebSocketAPI(priceInfo);
 
-  [wss, server] = api.run();
+  server = new Server();
+  server.listen(port);
+
+  wss = api.run(server);
 });
 
 afterAll(async () => {

@@ -13,9 +13,6 @@ spec:
     - port: 4200
       name: rest-api
       protocol: TCP
-    - port: 6200
-      name: wss-api
-      protocol: TCP
   clusterIP: None
   selector:
     app: pyth-price-service
@@ -71,8 +68,6 @@ spec:
               value: '[{"chain_id":1,"emitter_address":"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b"}]'
             - name: REST_PORT
               value: '4200'
-            - name: WS_PORT
-              value: '6200'
             - name: PROM_PORT
               value: '8081'
             - name: READINESS_SPY_SYNC_TIME_SECONDS

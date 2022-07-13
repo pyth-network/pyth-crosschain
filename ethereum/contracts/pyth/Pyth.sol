@@ -11,7 +11,7 @@ import "./PythGetters.sol";
 import "./PythSetters.sol";
 import "./PythInternalStructs.sol";
 
-contract Pyth is PythGetters, PythSetters, AbstractPyth {
+abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     using BytesLib for bytes;
 
     function initialize(

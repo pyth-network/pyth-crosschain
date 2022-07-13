@@ -34,19 +34,13 @@ export type ServerMessage = ServerResponse | ServerPriceUpdate;
 
 export class WebSocketAPI {
   private wsCounter: number;
-  private port: number;
   private priceFeedClients: Map<HexString, Set<WebSocket>>;
   private aliveClients: Set<WebSocket>;
   private wsId: Map<WebSocket, number>;
   private priceFeedVaaInfo: PriceStore;
   private promClient: PromClient | undefined;
 
-  constructor(
-    config: { port: number },
-    priceFeedVaaInfo: PriceStore,
-    promClient?: PromClient
-  ) {
-    this.port = config.port;
+  constructor(priceFeedVaaInfo: PriceStore, promClient?: PromClient) {
     this.priceFeedVaaInfo = priceFeedVaaInfo;
     this.priceFeedClients = new Map();
     this.aliveClients = new Set();
@@ -167,11 +161,8 @@ export class WebSocketAPI {
     ws.send(JSON.stringify(response));
   }
 
-  run(): [WebSocketServer, http.Server] {
-    const app = express();
-    const server = http.createServer(app);
-
-    const wss = new WebSocketServer({ server });
+  run(server: http.Server): WebSocketServer {
+    const wss = new WebSocketServer({ server, path: "/ws" });
 
     wss.on("connection", (ws: WebSocket, request: http.IncomingMessage) => {
       logger.info(
@@ -220,12 +211,10 @@ export class WebSocketAPI {
       clearInterval(pingInterval);
     });
 
-    server.listen(this.port, () =>
-      logger.debug("listening on WS port " + this.port)
-    );
     this.priceFeedVaaInfo.addUpdateListener(
       this.dispatchPriceFeedUpdate.bind(this)
     );
-    return [wss, server];
+
+    return wss;
   }
 }
