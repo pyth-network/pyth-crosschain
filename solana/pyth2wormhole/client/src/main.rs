@@ -136,6 +136,21 @@ async fn main() -> Result<(), ErrBox> {
                 get_config_account(&rpc_client, &p2w_addr).await?
             );
         }
+        Action::Migrate {
+            ref owner,
+        } => {
+            let tx = gen_migrate_tx(
+                payer,
+                p2w_addr,
+                read_keypair_file(&*shellexpand::tilde(&owner))?,
+                latest_blockhash,
+            )?;
+            rpc_client.send_and_confirm_transaction_with_spinner(&tx)?;
+            println!(
+                "Applied conifg:\n{:?}",
+                get_config_account(&rpc_client, &p2w_addr)?
+            );
+        }
         Action::Attest {
             ref attestation_cfg,
             n_retries,
