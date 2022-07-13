@@ -137,7 +137,7 @@ pub fn gen_migrate_tx(
 
     let accs = MigrateAccounts {
         new_config: Derived(p2w_addr),
-        old_config: Derived(p2w_addr),
+        old_config: DerivedRO(p2w_addr),
         current_owner: Signer(owner),
         payer: Signer(payer),
     };
