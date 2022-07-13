@@ -225,6 +225,9 @@ async fn handle_attest(
         .collect();
     let batch_count = batches.len();
 
+    /// Note: For global rate-limitting of RPC requests, we use a
+    /// custom Mutex wrapper which enforces a delay of rpc_interval
+    /// between RPC accesses.
     let rpc_cfg = Arc::new(RLMutex::new(
         RpcCfg {
             url: rpc_url,
@@ -260,13 +263,7 @@ async fn handle_attest(
     // join_all. We filter out errors and report them
     let errors: Vec<_> = results
         .iter()
-        .filter_map(|r| {
-            if let Err(e) = r {
-                Some(e.to_string())
-            } else {
-                None
-            }
-        })
+        .filter_map(|r| r.as_ref().err().map(|e| e.to_string()))
         .collect();
 
     if !errors.is_empty() {

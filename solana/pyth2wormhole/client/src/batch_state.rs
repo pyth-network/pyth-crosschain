@@ -55,13 +55,15 @@ impl<'a> BatchState<'a> {
         let mut ret = None;
 
         let sym_count = self.symbols.len();
-        let mut new_symbol_states: Vec<Option<PriceAccount>> = vec![None; sym_count];
         let pubkeys: Vec<_> = self.symbols.iter().map(|s| s.price_addr).collect();
 
-        // Always learn the current on-chain state for each symbol
-        match c.get_multiple_accounts(&pubkeys).await {
+        // Always learn the current on-chain state for each symbol, use None values if lookup fails
+        let mut new_symbol_states: Vec<Option<PriceAccount>> = match c
+            .get_multiple_accounts(&pubkeys)
+            .await
+        {
             Ok(acc_opts) => {
-                new_symbol_states = acc_opts
+                acc_opts
                     .into_iter()
                     .enumerate()
                     .map(|(idx, opt)| {
@@ -76,10 +78,13 @@ impl<'a> BatchState<'a> {
                                 .ok() // Err becomes None
                         })
                     })
-                    .collect();
+                    .collect()
             }
-            Err(e) => warn!("Could not look up any symbols on-chain: {}", e),
-        }
+            Err(e) => {
+                warn!("Could not look up any symbols on-chain: {}", e);
+                vec![None; sym_count]
+            }
+        };
 
         // min interval
         if self.last_job_finished_at.elapsed()

@@ -51,11 +51,7 @@ impl<'b> InstructionContext<'b> for Migrate<'b> {
     }
 }
 
-pub fn migrate(
-    ctx: &ExecutionContext,
-    accs: &mut Migrate,
-    data: (),
-) -> SoliResult<()> {
+pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResult<()> {
     let old_config: &OldPyth2WormholeConfig = &accs.old_config.1;
 
     if &old_config.owner != accs.current_owner.info().key {
@@ -82,7 +78,8 @@ pub fn migrate(
     **accs.old_config.info().lamports.borrow_mut() = 0;
 
     // Credit payer with saved balance
-    accs.payer.info()
+    accs.payer
+        .info()
         .lamports
         .borrow_mut()
         .checked_add(old_config_balance_val)
