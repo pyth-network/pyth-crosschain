@@ -302,9 +302,9 @@ async fn lock_and_make_rpc(rlmtx: &RLMutex<RpcCfg>) -> RpcClient {
 ///
 /// In daemon mode, attestations of the batch are scheduled
 /// continuously using spawn(), which means that a next attestation
-/// does not have to wait until the previous completes. Subsequent
-/// attestations are made according to the attestation_conditions
-/// field on the batch.
+/// begins immediately when a condition is met without waiting for the
+/// previous one. Subsequent attestations are made according to the
+/// attestation_conditions field on the batch.
 ///
 /// With daemon_mode off, this future attempts only one blocking
 /// attestation of the batch and returns the result.
