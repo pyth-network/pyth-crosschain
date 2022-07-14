@@ -4,9 +4,11 @@ export type PythUpdateEvent = {
   txHash: HexString,
   txFrom: HexString,
   txTo: HexString,
+  chainId: number,
+  sequenceNumber: number,
   sender: HexString, // Equal to txTo when a contract calls updatePriceFeeds and txFrom when someone calls Pyth contract directly
   block: number,
-  timestamp: number,
+  timestamp: UnixTimestamp,
   rawInput: string,
   gasUsage: number,
   txFee: number,
@@ -17,6 +19,8 @@ export type PythUpdateEvent = {
     updated: boolean,
     publishTime: UnixTimestamp,
     existingPublishTime: UnixTimestamp,
+    price: string,
+    conf: string,
   }[]
 }
 
