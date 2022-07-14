@@ -1,10 +1,7 @@
-import { Handler, PythUpdateEvent } from "../handler";
+import { PythUpdateEvent } from "../pyth-update-event";
+import { Watcher } from "../watcher";
 
-export class Logger {
-  constructor(handler: Handler) {
-    handler.subscribe(this.processEvent.bind(this));
-  }
-
+export class Logger implements Watcher {
   processEvent(event: PythUpdateEvent) {
     console.dir(event);
   }

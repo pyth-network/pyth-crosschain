@@ -13,6 +13,7 @@ const listener = new Listener({
 }, handler);
 
 // Initialize Watchers
-const logger = new Logger(handler);
+const logger = new Logger();
+handler.subscribe(logger);
 
 listener.start();
