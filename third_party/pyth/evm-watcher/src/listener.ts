@@ -47,7 +47,7 @@ export class Listener {
       gasPrice = Number(tx.gasPrice);
     }
 
-    return gasPrice * txReceipt.gasUsed / 1000000000 / 1000000000;
+    return gasPrice * txReceipt.gasUsed / Math.pow(10, 18);
   }
 
   start() {
