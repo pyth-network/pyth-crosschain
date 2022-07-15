@@ -145,10 +145,10 @@ async fn main() -> Result<(), ErrBox> {
                 read_keypair_file(&*shellexpand::tilde(&owner))?,
                 latest_blockhash,
             )?;
-            rpc_client.send_and_confirm_transaction_with_spinner(&tx)?;
+            rpc_client.send_and_confirm_transaction_with_spinner(&tx).await?;
             println!(
                 "Applied conifg:\n{:?}",
-                get_config_account(&rpc_client, &p2w_addr)?
+                get_config_account(&rpc_client, &p2w_addr).await?
             );
         }
         Action::Attest {
