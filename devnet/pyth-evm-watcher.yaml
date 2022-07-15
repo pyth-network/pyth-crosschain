@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pyth-evm-watcher
+spec:
+  selector:
+    matchLabels:
+      app: pyth-evm-watcher
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pyth-evm-watcher
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: pyth-evm-watcher
+          image: pyth-evm-watcher
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          env:
+            - name: WS_ENDPOINT
+              value: 'ws://eth-devnet:8545'
+            - name: PYTH_CONTRACT
+              value: '0xDb56f2e9369E0D7bD191099125a3f6C370F8ed15'

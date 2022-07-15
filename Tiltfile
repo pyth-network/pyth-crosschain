@@ -254,6 +254,19 @@ if pyth:
         labels = ["pyth"]
     )
 
+    # Pyth EVM Watcher
+    docker_build(
+        ref = "pyth-evm-watcher",
+        context = "third_party/pyth/evm-watcher/",
+        dockerfile = "third_party/pyth/evm-watcher/Dockerfile",
+    )
+    k8s_yaml_with_ns("devnet/pyth-evm-watcher.yaml")
+    k8s_resource(
+        "pyth-evm-watcher",
+        resource_deps = ["eth-devnet"],
+        labels = ["pyth"]
+    )
+
 
 k8s_yaml_with_ns("devnet/eth-devnet.yaml")
 
