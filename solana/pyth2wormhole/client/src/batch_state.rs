@@ -1,8 +1,10 @@
+use futures::future::TryFutureExt;
 use log::{
     debug,
+    trace,
     warn,
 };
-use solana_client::rpc_client::RpcClient;
+use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::signature::Signature;
 
 use pyth_sdk_solana::state::PriceAccount;
@@ -16,17 +18,18 @@ use crate::{
     AttestationConditions,
     ErrBox,
     P2WSymbol,
+    RLMutex,
 };
 
+/// Runtime representation of a batch. It refers to the original group
+/// from the config.
 #[derive(Debug)]
 pub struct BatchState<'a> {
     pub group_name: String,
     pub symbols: &'a [P2WSymbol],
     pub last_known_symbol_states: Vec<Option<PriceAccount>>,
     pub conditions: AttestationConditions,
-    status: BatchTxStatus,
-    status_changed_at: Instant,
-    pub last_success_at: Option<Instant>,
+    pub last_job_finished_at: Instant,
 }
 
 impl<'a> BatchState<'a> {
@@ -40,63 +43,51 @@ impl<'a> BatchState<'a> {
             symbols,
             conditions,
             last_known_symbol_states: vec![None; symbols.len()],
-            status: BatchTxStatus::Sending { attempt_no: 1 },
-            status_changed_at: Instant::now(),
-            last_success_at: None,
+            last_job_finished_at: Instant::now(),
         }
-    }
-    /// Ensure only set_status() alters the timestamp
-    pub fn get_status_changed_at(&self) -> &Instant {
-        &self.status_changed_at
-    }
-    pub fn get_status(&self) -> &BatchTxStatus {
-        &self.status
-    }
-
-    /// Ensure that status changes are accompanied by a timestamp bump
-    pub fn set_status(&mut self, s: BatchTxStatus) {
-        self.status_changed_at = Instant::now();
-        self.status = s;
     }
 
     /// Evaluate the configured attestation conditions for this
     /// batch. RPC is used to update last known state. Returns
     /// Some("<reason>") if any trigger condition was met. Only the
     /// first encountered condition is mentioned.
-    pub fn should_resend(&mut self, c: &RpcClient) -> Option<String> {
+    pub async fn should_resend(&mut self, c: &RpcClient) -> Option<String> {
         let mut ret = None;
 
         let sym_count = self.symbols.len();
-        let mut new_symbol_states: Vec<Option<PriceAccount>> = Vec::with_capacity(sym_count);
-        for (idx, sym) in self.symbols.iter().enumerate() {
-            let new_state = match c
-                .get_account_data(&sym.price_addr)
-                .map_err(|e| e.to_string())
-                .and_then(|bytes| {
-                    pyth_sdk_solana::state::load_price_account(&bytes)
-                        .map(|state| state.clone())
-                        .map_err(|e| e.to_string())
-                }) {
-                Ok(state) => Some(state),
-                Err(e) => {
-                    warn!(
-                        "Symbol {} ({}/{}): Could not look up state: {}",
-                        sym.name
-                            .as_ref()
-                            .unwrap_or(&format!("Unnamed product {}", sym.product_addr)),
-                        idx + 1,
-                        sym_count,
-                        e.to_string()
-                    );
-                    None
-                }
-            };
+        let pubkeys: Vec<_> = self.symbols.iter().map(|s| s.price_addr).collect();
 
-            new_symbol_states.push(new_state);
-        }
+        // Always learn the current on-chain state for each symbol, use None values if lookup fails
+        let mut new_symbol_states: Vec<Option<PriceAccount>> = match c
+            .get_multiple_accounts(&pubkeys)
+            .await
+        {
+            Ok(acc_opts) => {
+                acc_opts
+                    .into_iter()
+                    .enumerate()
+                    .map(|(idx, opt)| {
+                        // Take each Some(acc), make it None and log on load_price_account() error
+                        opt.and_then(|acc| {
+                            pyth_sdk_solana::state::load_price_account(&acc.data)
+                                .cloned() // load_price_account() transmutes the data reference into another reference, and owning acc_opts is not enough
+                                .map_err(|e| {
+                                    warn!("Could not parse symbol {}/{}: {}", idx, sym_count, e);
+                                    e
+                                })
+                                .ok() // Err becomes None
+                        })
+                    })
+                    .collect()
+            }
+            Err(e) => {
+                warn!("Could not look up any symbols on-chain: {}", e);
+                vec![None; sym_count]
+            }
+        };
 
         // min interval
-        if self.get_status_changed_at().elapsed()
+        if self.last_job_finished_at.elapsed()
             > Duration::from_secs(self.conditions.min_interval_secs)
         {
             ret = Some(format!(
@@ -154,7 +145,9 @@ impl<'a> BatchState<'a> {
             }
         }
 
-        // Update with newer state if a condition was met
+        // Update with newer state only if a condition was met. We
+        // don't want to shadow changes that may happen over a larger
+        // period between state lookups.
         if ret.is_some() {
             for (old, new) in self
                 .last_known_symbol_states
@@ -169,24 +162,4 @@ impl<'a> BatchState<'a> {
 
         return ret;
     }
-}
-
-#[derive(Debug)]
-pub enum BatchTxStatus {
-    Sending {
-        attempt_no: usize,
-    },
-    Confirming {
-        attempt_no: usize,
-        signature: Signature,
-    },
-    Success {
-        seqno: String,
-    },
-    FailedSend {
-        last_err: ErrBox,
-    },
-    FailedConfirm {
-        last_err: ErrBox,
-    },
 }

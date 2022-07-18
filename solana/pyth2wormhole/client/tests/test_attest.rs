@@ -37,7 +37,7 @@ use fixtures::{
 };
 
 #[tokio::test]
-async fn test_happy_path() -> Result<(), solitaire::ErrBox> {
+async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
     // Programs
     let p2w_program_id = Pubkey::new_unique();
     let wh_fixture_program_id = Pubkey::new_unique();

@@ -184,9 +184,9 @@ if P2W_ATTESTATION_CFG is None:
     cfg_yaml = """
 ---
 symbol_groups:
-  - group_name: things
+  - group_name: fast_interval_only
     conditions:
-      min_interval_secs: 17
+      min_interval_secs: 3
     symbols:
 """
 
@@ -206,9 +206,10 @@ symbol_groups:
         product_addr: {product}"""
 
     cfg_yaml += f"""
-  - group_name: stuff
+  - group_name: longer_interval_sensitive_changes
     conditions:
-      min_interval_secs: 19
+      min_interval_secs: 10
+      price_changed_pct: 3 
     symbols:
 """
 
@@ -231,8 +232,10 @@ symbol_groups:
 first_attest_result = run_or_die(
     [
         "pyth2wormhole-client",
+        "--commitment",
+        "finalized",
         "--log-level",
-        "4",
+        "3",
         "--p2w-addr",
         P2W_SOL_ADDRESS,
         "--rpc-url",
@@ -266,8 +269,10 @@ while True:
     p2w_client_process = Popen(
         [
             "pyth2wormhole-client",
+            "--commitment",
+            "finalized",
             "--log-level",
-            "4",
+            "3",
             "--p2w-addr",
             P2W_SOL_ADDRESS,
             "--rpc-url",

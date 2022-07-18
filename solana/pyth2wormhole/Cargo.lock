@@ -2153,6 +2153,7 @@ dependencies = [
  "borsh",
  "clap 3.1.18",
  "env_logger 0.8.4",
+ "futures",
  "log",
  "p2w-sdk",
  "pyth-client 0.5.1",
@@ -2168,6 +2169,7 @@ dependencies = [
  "solana-transaction-status",
  "solitaire",
  "solitaire-client",
+ "tokio",
  "wormhole-bridge-solana",
 ]
 

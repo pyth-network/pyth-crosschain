@@ -26,19 +26,29 @@ pub struct SymbolGroup {
     pub symbols: Vec<P2WSymbol>,
 }
 
-pub const fn DEFAULT_MIN_INTERVAL_SECS() -> u64 {
+pub const fn default_min_interval_secs() -> u64 {
     60
+}
+
+pub const fn default_max_batch_jobs() -> usize {
+    20
 }
 
 /// Spontaneous attestation triggers. Attestation is triggered if any
 /// of the active conditions is met. Option<> fields can be
 /// de-activated with None. All conditions are inactive by default,
-/// except for min_interval_secs set to 1 minute.
+/// except for the non-Option ones.
 #[derive(Clone, Default, Debug, Deserialize, Serialize, PartialEq)]
 pub struct AttestationConditions {
     /// Baseline, unconditional attestation interval. Attestation is triggered if the specified interval elapsed since last attestation.
-    #[serde(default = "DEFAULT_MIN_INTERVAL_SECS")]
+    #[serde(default = "default_min_interval_secs")]
     pub min_interval_secs: u64,
+
+    /// Limit concurrent attestation attempts per batch. This setting
+    /// should act only as a failsafe cap on resource consumption and is
+    /// best set well above the expected average number of jobs.
+    #[serde(default = "default_max_batch_jobs")]
+    pub max_batch_jobs: usize,
 
     /// Trigger attestation if price changes by the specified percentage.
     #[serde(default)]
@@ -51,7 +61,7 @@ pub struct AttestationConditions {
 }
 
 /// Config entry for a Pyth product + price pair
-#[derive(Default, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Clone, Default, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct P2WSymbol {
     /// User-defined human-readable name
     pub name: Option<String>,
