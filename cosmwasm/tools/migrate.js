@@ -59,7 +59,7 @@ async function main() {
       msgs: [
         new MsgMigrateContract(
           wallet.key.accAddress,
-          "terra18vd8fpwxzck93qlwghaj6arh4p7c5n896xzem5",
+          "terra14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9ssrc8au",
           codeIds["wormhole.wasm"],
           {
               "action": ""
@@ -77,7 +77,7 @@ async function main() {
       msgs: [
         new MsgMigrateContract(
           wallet.key.accAddress,
-          "terra10pyejy66429refv3g35g2t7am0was7ya7kz2a4",
+          "terra1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrquka9l6",
           codeIds["token_bridge.wasm"],
           {
               "action": ""
@@ -96,8 +96,8 @@ async function main() {
       msgs: [
         new MsgUpdateContractAdmin(
           wallet.key.accAddress,
-          "terra18vd8fpwxzck93qlwghaj6arh4p7c5n896xzem5",
-          "terra18vd8fpwxzck93qlwghaj6arh4p7c5n896xzem5"
+          "terra14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9ssrc8au",
+          "terra14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9ssrc8au"
         ),
       ],
       memo: "",
@@ -131,7 +131,7 @@ async function main() {
       msgs: [
         new MsgExecuteContract(
           wallet.key.accAddress,
-          "terra18vd8fpwxzck93qlwghaj6arh4p7c5n896xzem5",
+          "terra14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9ssrc8au",
           {
             submit_v_a_a: {
               vaa: Buffer.from(guardianUpgradeVAA, "hex").toString(
@@ -157,7 +157,7 @@ async function main() {
       msgs: [
         new MsgExecuteContract(
           wallet.key.accAddress,
-          "terra18vd8fpwxzck93qlwghaj6arh4p7c5n896xzem5",
+          "terra14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9ssrc8au",
           {
             submit_v_a_a: {
               vaa: Buffer.from(upgradeVAA, "hex").toString(
@@ -179,8 +179,8 @@ async function main() {
       msgs: [
         new MsgUpdateContractAdmin(
           wallet.key.accAddress,
-          "terra10pyejy66429refv3g35g2t7am0was7ya7kz2a4",
-          "terra10pyejy66429refv3g35g2t7am0was7ya7kz2a4"
+          "terra1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrquka9l6",
+          "terra1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrquka9l6"
         ),
       ],
       memo: "",
@@ -197,7 +197,7 @@ async function main() {
       msgs: [
         new MsgExecuteContract(
           wallet.key.accAddress,
-          "terra10pyejy66429refv3g35g2t7am0was7ya7kz2a4",
+          "terra1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrquka9l6",
           {
             submit_vaa: {
               data: Buffer.from(upgradeTokenVAA, "hex").toString(
