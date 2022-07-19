@@ -72,8 +72,8 @@ spec:
             httpGet:
               port: 26657
           resources: {}
-        - name: terra-contracts
-          image: terra-contracts
+        - name: cosmwasm-contracts
+          image: cosmwasm-contracts
           command:
             - /bin/sh
             - -c
