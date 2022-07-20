@@ -1,4 +1,4 @@
-name: Pyth Terra Contract
+name: Pyth CosmWasm Contract
 
 on:
   pull_request:

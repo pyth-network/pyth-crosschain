@@ -252,7 +252,7 @@ mod test {
     use super::*;
 
     fn setup_test() -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
-        (mock_dependencies(&[]), mock_env())
+        (mock_dependencies(), mock_env())
     }
 
     fn create_zero_vaa() -> ParsedVAA {

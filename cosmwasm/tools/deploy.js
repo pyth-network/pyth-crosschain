@@ -1,8 +1,6 @@
 import { LCDClient, MnemonicKey } from "@terra-money/terra.js";
 import {
-  StdFee,
   MsgInstantiateContract,
-  MsgExecuteContract,
   MsgStoreCode,
 } from "@terra-money/terra.js";
 import { readFileSync, readdirSync } from "fs";
@@ -110,7 +108,7 @@ const govChain = 1;
 const govAddress =
   "0000000000000000000000000000000000000000000000000000000000000004";
 
-async function instantiate(contract, inst_msg) {
+async function instantiate(contract, inst_msg, label) {
   var address;
   await wallet
     .createAndSignTx({
@@ -119,14 +117,16 @@ async function instantiate(contract, inst_msg) {
           wallet.key.accAddress,
           wallet.key.accAddress,
           codeIds[contract],
-          inst_msg
+          inst_msg,
+          undefined,
+          label
         ),
       ],
       memo: "",
     })
     .then((tx) => terra.tx.broadcast(tx))
     .then((rs) => {
-      address = /"contract_address","value":"([^"]+)/gm.exec(rs.raw_log)[1];
+      address = /"_contract_address","value":"([^"]+)/gm.exec(rs.raw_log)[1];
     });
   console.log(`Instantiated ${contract} at ${address} (${convert_terra_address_to_hex(address)})`);
   return address;
@@ -152,7 +152,7 @@ addresses["wormhole.wasm"] = await instantiate("wormhole.wasm", {
     ],
     expiration_time: 0,
   },
-});
+}, "wormhole");
 
 const pythEmitterAddress =
   "71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
@@ -164,7 +164,7 @@ addresses["pyth_bridge.wasm"] = await instantiate("pyth_bridge.wasm", {
     "base64"
   ),
   pyth_emitter_chain: pythChain,
-});
+}, "pyth");
 
 // Terra addresses are "human-readable", but for cross-chain registrations, we
 // want the "canonical" version
