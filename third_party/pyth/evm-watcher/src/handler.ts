@@ -1,4 +1,4 @@
-import { PythUpdateEvent } from "./pyth-update-event";
+import { UpdatePriceFeedsAggregateInfo } from "./events";
 import { Watcher } from "./watcher";
 
 export class Handler {
@@ -8,7 +8,7 @@ export class Handler {
     this.watchers = [];
   }
 
-  dispatchEvent(event: PythUpdateEvent) {
+  dispatchEvent(event: UpdatePriceFeedsAggregateInfo) {
     for (let watcher of this.watchers) {
       watcher.processEvent(event);
     }
