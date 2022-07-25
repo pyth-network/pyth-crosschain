@@ -34,4 +34,9 @@ contract PythGetters is PythState {
     function validDataSources() public view returns (PythInternalStructs.DataSource[] memory) {
         return _state.validDataSources;
     }
+
+
+    function singleUpdateFeeInWei() public view returns (uint) {
+        return _state.singleUpdateFeeInWei;
+    }
 }
