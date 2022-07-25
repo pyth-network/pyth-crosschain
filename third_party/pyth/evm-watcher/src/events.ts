@@ -44,5 +44,5 @@ export type UpdatePriceFeedsAggregateInfo = {
   gasUsage: number,
   gasPrice: NumberInString,
   effectiveGasPrice?: number,
-  updatePriceFeedsInfo: UpdatePriceFeedsInfo,
+  updatePriceFeedsInfo: UpdatePriceFeedsInfo, // Assuming there is only one UpdatePriceFeeds Event in a transaction
 }
