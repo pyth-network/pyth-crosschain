@@ -1,45 +1,92 @@
-# Deploy
+# Intro
 
-First build the contracts
+This folder contains pyth contract on CosmWasm and utilities to deploy it in CosmWasm chains.
 
+# Deployment
+
+Deploying a contract in terra consists of two steps:
+1. Uploading the code. This step will give you a code id.
+2. Optionally create a new contract or migrate an existing one:
+    1. Creating a new contract which has an address with a code id as its program.
+    2. Migrating an existing contract code id to the new code id.
+
+This script can do both steps at the same time. Read below for the details.
+
+## Uploading the code
+
+First build the contracts:
 
 ``` sh
-docker build -f Dockerfile.build -o artifacts .
+bash build.sh
 ```
 
-Then, for example, to deploy `token_bridge.wasm`, run in the `tools` directory
+This command will builds and saves all the contracts in the `artifact` directory.
+
+Then, for example, to deploy `pyth_bridge.wasm`, run in the `tools` directory:
 
 ``` sh
-npm ci
-node deploy_single.js --network mainnet --artifact ../artifacts/token_bridge.wasm --mnemonic "..."
+npm ci # Do it only once to install required packages
+npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_bridge.wasm --mnemonic "..."
 ```
 
-which will print something along the lines of
+which will print something along the lines of:
 
 ``` sh
-Storing WASM: ../artifacts/token_bridge.wasm (367689 bytes)
+Storing WASM: ../artifacts/pyth_bridge.wasm (367689 bytes)
 Deploy fee:  88446uluna
 Code ID:  2435
 ```
 
-# Migrate
+If you do not pass any additional arguments to the script it will only upload the code and returns the code id. If you want to create a 
+new contract or upgrade an existing contract you should pass more arguments that are described below.
 
-## Mainnet
-
-Migrations on mainnet have to go through governance. Once the guardians sign the
-upgrade VAA, the contract can be upgraded by submitting the signed VAA to the
-appropriate contract. For example, to upgrade the token bridge on mainnet,
-in `wormhole/clients/token_bridge/`:
+## Instantiating new contract
+If you want instantiate a new contract after your deployment pass `--instantiate` argument to the above command.
+It will upload the code and with the resulting code id instantiates a new pyth contract:
 
 ``` sh
-node main.js terra execute_governance_vaa <signed VAA (hex)> --rpc "https://lcd.terra.dev" --chain_id "columbus-5" --mnemonic "..." --token_bridge "terra10nmmwe8r3g99a9newtqa7a75xfgs2e8z87r2sf"
+npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_bridge.wasm --mnemonic "..." --instantiate
 ```
 
-## Testnet
+If successful, the output should look like:
+```
+Storing WASM: ../artifacts/pyth_bridge.wasm (183749 bytes)
+Deploy fee:  44682uluna
+Code ID:  53199
+Instantiating a contract
+Sleeping for 10 seconds for store transaction to finalize.
+Instantiated Pyth Bridge at terra123456789yelw23uh22nadqlyjvtl7s5527er97 (0x0000000000000000000000001234567896267ee5479752a7d683e49317ff4294)
+Deployed pyth contract at terra123456789yelw23uh22nadqlyjvtl7s5527er97
+```
 
-
-For example, to migrate the token bridge to 37262, run in `tools/`:
+## Migrating existing contract
+If you want to upgrade an existing contract pass `--migrate --contract terra123456xyzqwe..` arguments to the above command.
+It will upload the code and with the resulting code id migrates the existing contract to the new one:
 
 ``` sh
-node migrate_testnet.js --code_id 37262 --contract terra1pseddrv0yfsn76u4zxrjmtf45kdlmalswdv39a --mnemonic "..."
+npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_bridge.wasm --mnemonic "..." --migrate --contract "terra123..."
+```
+
+If successful, the output should look like:
+```
+Storing WASM: ../artifacts/pyth_bridge.wasm (183749 bytes)
+Deploy fee:  44682uluna
+Code ID:  53227
+Sleeping for 10 seconds for store transaction to finalize.
+Migrating contract terra1rhjej5gkyelw23uh22nadqlyjvtl7s5527er97 to 53227
+Contract terra1rhjej5gkyelw23uh22nadqlyjvtl7s5527er97 code_id successfully updated to 53227
+```
+
+## Notes
+
+You might encounter gateway timeout or account sequence mismatch in errors. In is good to double check with terra finder as sometimes
+transactions succeed despite being timed out.
+
+If that happens in the middle of an instantiation or migration. You can avoid re-uploading the code and use the resulting Code Id 
+by passing `--code-id <codeId>` instead of `--artifact` and it will only do the instantiation/migration part.
+
+An example is:
+
+``` sh
+npm run deploy-pyth -- --network testnet --code-id 50123 --mnemonic "..." --migrate --contract "terra123..."
 ```
