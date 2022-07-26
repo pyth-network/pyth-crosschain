@@ -1,4 +1,5 @@
 use cosmwasm_std::{
+    entry_point,
     has_coins,
     to_binary,
     BankMsg,
