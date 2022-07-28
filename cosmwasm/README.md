@@ -1,6 +1,6 @@
 # Pyth CosmWasm
 
-This directory contains pyth contract on CosmWasm and utilities to deploy it in CosmWasm chains.
+This directory contains The Pyth contract on CosmWasm and utilities to deploy it in CosmWasm chains.
 
 ## Deployment
 
@@ -20,9 +20,9 @@ First build the contracts within [the current directory](./):
 bash build.sh
 ```
 
-This command will build and save Pyth contract in the `artifact` directory.
+This command will build and save the Pyth contract in the `artifact` directory.
 
-Then, to deploy Pyth contract (`pyth_bridge.wasm`), run the following command in the `tools` directory:
+Then, to deploy the Pyth contract (`pyth_bridge.wasm`), run the following command in the `tools` directory:
 
 ``` sh
 npm ci # Do it only once to install required packages
@@ -41,8 +41,8 @@ If you do not pass any additional arguments to the script, it will only upload t
 new contract, or upgrade an existing contract you should pass more arguments that are described below.
 
 ### Instantiating new contract
-If you want instantiate a new contract after your deployment, pass `--instantiate` argument to the above command.
-This command will upload the code and with the resulting code id instantiates a new pyth contract:
+If you want instantiate a new contract after your deployment, pass `--instantiate` to the above command.
+This command will upload the code and instantiates a new Pyth contract with the resulting code id:
 
 ``` sh
 npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_bridge.wasm --mnemonic "..." --instantiate
@@ -56,12 +56,12 @@ Code ID:  53199
 Instantiating a contract
 Sleeping for 10 seconds for store transaction to finalize.
 Instantiated Pyth Bridge at terra123456789yelw23uh22nadqlyjvtl7s5527er97 (0x0000000000000000000000001234567896267ee5479752a7d683e49317ff4294)
-Deployed pyth contract at terra123456789yelw23uh22nadqlyjvtl7s5527er97
+Deployed Pyth contract at terra123456789yelw23uh22nadqlyjvtl7s5527er97
 ```
 
 ### Migrating existing contract
-If you want to upgrade an existing contract pass `--migrate --contract terra123456xyzqwe..` arguments to the above command.
-This command will upload the code and with the resulting code id migrates the existing contract to the new one:
+If you want to upgrade an existing contract pass `--migrate --contract terra123456xyzqwe..` to the above command.
+This command will upload the code, and with the resulting code id, will migrate the existing contract to the new one:
 
 ``` sh
 npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_bridge.wasm --mnemonic "..." --migrate --contract "terra123..."
