@@ -4,17 +4,17 @@ This directory contains The Pyth contract on CosmWasm and utilities to deploy it
 
 ## Deployment
 
-Deploying the cosmwasm contract has two steps:
+Deploying the CosmWasm contract has two steps:
 1. Upload the code. This step will give you a code id.
-2. Either create a new contract, or migrate an existing one:
-    1. Creating a new contract which has an address with a code id as its program.
+2. Either create a new contract or migrate an existing one:
+    1. Create a new contract that has an address with a code id as its program.
     2. Migrating an existing contract code id to the new code id.
 
 This directory includes a script to perform both steps. Read below for the details.
 
 ### Uploading the code
 
-First build the contracts within [the current directory](./):
+First, build the contracts within [the current directory](./):
 
 ``` sh
 bash build.sh
@@ -25,7 +25,7 @@ This command will build and save the Pyth contract in the `artifact` directory.
 Then, to deploy the Pyth contract (`pyth_bridge.wasm`), run the following command in the `tools` directory:
 
 ``` sh
-npm ci # Do it only once to install required packages
+npm ci # Do it only once to install the required packages
 npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_bridge.wasm --mnemonic "..."
 ```
 
@@ -38,17 +38,17 @@ Code ID:  2435
 ```
 
 If you do not pass any additional arguments to the script, it will only upload the code and return the code id. If you want to create a 
-new contract, or upgrade an existing contract you should pass more arguments that are described below.
+new contract or upgrade an existing contract you should pass more arguments that are described below.
 
 ### Instantiating new contract
-If you want instantiate a new contract after your deployment, pass `--instantiate` to the above command.
+If you want to instantiate a new contract after your deployment, pass `--instantiate` to the above command.
 This command will upload the code and instantiates a new Pyth contract with the resulting code id:
 
 ``` sh
 npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_bridge.wasm --mnemonic "..." --instantiate
 ```
 
-If successful, the output should look like:
+If successful, the output should look like so:
 ```
 Storing WASM: ../artifacts/pyth_bridge.wasm (183749 bytes)
 Deploy fee:  44682uluna
@@ -67,7 +67,7 @@ This command will upload the code, and with the resulting code id, will migrate 
 npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_bridge.wasm --mnemonic "..." --migrate --contract "terra123..."
 ```
 
-If successful, the output should look like:
+If successful, the output should look like so:
 ```
 Storing WASM: ../artifacts/pyth_bridge.wasm (183749 bytes)
 Deploy fee:  44682uluna
@@ -81,12 +81,12 @@ Contract terra1rhjej5gkyelw23uh22nadqlyjvtl7s5527er97 code_id successfully updat
 
 While running the instantiation/migration commands you might get the following errors:
 - Gateway timeout: This error means that the request timed out. It is good to double check with terra finder as sometimes transactions succeed despite being timed out.
-- Account sequence mismatch: Transactions from an account should have increasing sequence number. This error happens when a transaction from the same sender is not fully syncronized with the terra RPC and a old sequence number is used. This is likely to happen because the deploy script sends two transactions: one to submit the code, and one to do the instantiation/migration.
+- Account sequence mismatch: Transactions from an account should have an increasing sequence number. This error happens when a transaction from the same sender is not fully synchronized with the terra RPC and an old sequence number is used. This is likely to happen because the deploy script sends two transactions: one to submit the code, and one to do the instantiation/migration.
 
 You can rerun your command if you encounter any of the above errors. If an error occurs after the new code is uploaded, you can avoid re-uploading the code and use the uploaded code for instantiation/migration. You can use the printed code id in the logs 
 by passing `--code-id <codeId>` instead of `--artifact`. If you do so, the script will skip uploading the code and instantiate/migrate the contract with the given code id.
 
-An example command using code id looks like so:
+An example command using an existing code id looks like so:
 
 ``` sh
 npm run deploy-pyth -- --network testnet --code-id 50123 --mnemonic "..." --migrate --contract "terra123..."
