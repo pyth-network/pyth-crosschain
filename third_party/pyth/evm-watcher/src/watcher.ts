@@ -1,5 +1,5 @@
-import { PythUpdateEvent } from "./pyth-update-event";
+import { UpdatePriceFeedsAggregateInfo } from "./events";
 
 export interface Watcher {
-  processEvent(event: PythUpdateEvent): void;
+  processEvent(event: UpdatePriceFeedsAggregateInfo): void;
 }

@@ -1,7 +1,8 @@
 export type HexString = string;
-export type UnixTimestamp = number;
+export type UnixTimestampString = string;
+export type NumberString = string;
 
-export function sleep(ms: number) {
+export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -12,4 +13,16 @@ export function envOrErr(env: string): string {
     throw `environment variable "${env}" must be set`;
   }
   return String(process.env[env]);
+}
+
+export async function waitForCondition(cond: () => boolean, timeoutInMs: number): Promise<boolean> {
+  var timedOut = false;
+
+  setTimeout(() => {timedOut = true;}, timeoutInMs);
+
+  while(timedOut === false && !cond()) {
+    await sleep(100);
+  }
+
+  return !timedOut;
 }

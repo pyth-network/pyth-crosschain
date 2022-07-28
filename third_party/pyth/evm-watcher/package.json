@@ -38,7 +38,9 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
+    "@pythnetwork/pyth-sdk-solidity": "^0.4.0",
     "dotenv": "^16.0.1",
+    "lru-cache": "^7.13.1",
     "web3": "^1.7.4",
     "web3-eth-contract": "^1.7.4",
     "web3-providers-ws": "^1.7.4",

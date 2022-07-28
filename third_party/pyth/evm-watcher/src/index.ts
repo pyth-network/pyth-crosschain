@@ -1,7 +1,7 @@
 import { Handler } from "./handler";
 import { Listener } from "./listener";
 import { envOrErr } from "./utils";
-import { Logger } from "./watchers/logger";
+import { JsonLogger } from "./watchers/json-logger";
 
 console.log("Loading config file .env");
 require("dotenv").config();
@@ -13,7 +13,7 @@ const listener = new Listener({
 }, handler);
 
 // Initialize Watchers
-const logger = new Logger();
-handler.subscribe(logger);
+const jsonLogger = new JsonLogger();
+handler.subscribe(jsonLogger);
 
 listener.start();
