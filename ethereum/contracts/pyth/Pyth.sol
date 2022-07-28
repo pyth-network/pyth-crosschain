@@ -24,7 +24,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         setPyth2WormholeEmitter(pyth2WormholeEmitter);
     }
 
-    function updatePriceBatchFromVm(bytes memory encodedVm) public returns (PythInternalStructs.BatchPriceAttestation memory bpa) {
+    function updatePriceBatchFromVm(bytes memory encodedVm) private returns (PythInternalStructs.BatchPriceAttestation memory bpa) {
         (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole().parseAndVerifyVM(encodedVm);
 
         require(valid, reason);
@@ -32,24 +32,43 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
         PythInternalStructs.BatchPriceAttestation memory batch = parseBatchPriceAttestation(vm.payload);
 
+        uint freshPrices = 0;
+
         for (uint i = 0; i < batch.attestations.length; i++) {
             PythInternalStructs.PriceAttestation memory attestation = batch.attestations[i];
 
             PythInternalStructs.PriceInfo memory latestPrice = latestPriceInfo(attestation.priceId);
 
+            bool fresh = false;
             if(attestation.attestationTime > latestPrice.attestationTime) {
+                freshPrices += 1;
+                fresh = true;
                 setLatestPriceInfo(attestation.priceId, newPriceInfo(attestation));
-                emit PriceUpdate(attestation.priceId, attestation.publishTime);
             }
+
+            emit PriceFeedUpdate(attestation.priceId, fresh, vm.emitterChainId, vm.sequence, latestPrice.priceFeed.publishTime,
+                attestation.publishTime, attestation.price, attestation.conf);
         }
+
+        emit BatchPriceFeedUpdate(vm.emitterChainId, vm.sequence, batch.attestations.length, freshPrices);
 
         return batch;
     }
 
-    function updatePriceFeeds(bytes[] calldata updateData) public override {
+    function updatePriceFeeds(bytes[] calldata updateData) public override payable {
+        uint requiredFee = getUpdateFee(updateData.length);
+        require(msg.value >= requiredFee, "Insufficient paid fee amount");
+        payable(msg.sender).transfer(msg.value - requiredFee);
+ 
         for(uint i = 0; i < updateData.length; i++) {
             updatePriceBatchFromVm(updateData[i]);
         }
+
+        emit UpdatePriceFeeds(msg.sender, updateData.length, requiredFee);
+    }
+
+    function getUpdateFee(uint updateDataSize) public override view returns (uint feeAmount) {
+        return singleUpdateFeeInWei() * updateDataSize;
     }
 
     function newPriceInfo(PythInternalStructs.PriceAttestation memory pa) private view returns (PythInternalStructs.PriceInfo memory info) {

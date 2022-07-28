@@ -21,6 +21,8 @@ contract PythStorage {
         // (chainId, emitterAddress) => isValid; takes advantage of
         // constant-time mapping lookup for VM verification
         mapping(bytes32 => bool) isValidDataSource;
+
+        uint singleUpdateFeeInWei;
     }
 }
 

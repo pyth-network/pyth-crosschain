@@ -21,4 +21,8 @@ contract PythSetters is PythState {
     function setLatestPriceInfo(bytes32 priceId, PythInternalStructs.PriceInfo memory info) internal {
         _state.latestPriceInfo[priceId] = info;
     }
+
+    function setSingleUpdateFeeInWei(uint fee) internal {
+        _state.singleUpdateFeeInWei = fee;
+    }
 }

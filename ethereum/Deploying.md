@@ -48,7 +48,7 @@ for more information.
 Changes to the files in this directory should be commited as well.
 
 # Upgrading the contract
-To upgrade the contract you should add a new migration file in the `migrations/prod` directory increasing the migration number.
+To upgrade the contract you should add a new migration file in the `migrations/*` directories increasing the migration number.
 
 It looks like so:
 
@@ -63,8 +63,8 @@ const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
  * Briefly describe the changelog here.
  */
 module.exports = async function (deployer) {
-    const instance = await PythUpgradable.deployed();
-    await upgradeProxy(instance.address, PythUpgradable, { deployer });
+    const proxy = await PythUpgradable.deployed();
+    await upgradeProxy(proxy.address, PythUpgradable, { deployer });
 }
 ```
 

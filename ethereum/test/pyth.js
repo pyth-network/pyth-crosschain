@@ -6,6 +6,7 @@ const PythStructs = artifacts.require("PythStructs");
 
 const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 const { expectRevert, expectEvent } = require("@openzeppelin/test-helpers");
+const { assert } = require("chai");
 
 // Use "WormholeReceiver" if you are testing with Wormhole Receiver
 const Wormhole = artifacts.require("Wormhole");
@@ -29,6 +30,8 @@ contract("Pyth", function () {
         "0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
     const notOwnerError =
         "Ownable: caller is not the owner -- Reason given: Ownable: caller is not the owner.";
+    const insufficientFeeError = 
+        "Insufficient paid fee amount";
 
     beforeEach(async function () {
         this.pythProxy = await deployProxy(PythUpgradable, [
@@ -129,6 +132,38 @@ contract("Pyth", function () {
         await expectRevert(
             upgradeProxy(this.pythProxy.address, MockPythUpgrade),
             notOwnerError
+        );
+    });
+
+    it("should allow updating singleUpdateFeeInWei by owner", async function () {
+        // Check that the owner is the default account Truffle
+        // has configured for the network.
+        const accounts = await web3.eth.getAccounts();
+        const defaultAccount = accounts[0];
+        assert.equal(await this.pythProxy.owner(), defaultAccount);
+
+        // Check initial fee is zero
+        assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
+
+        // Set fee 
+        await this.pythProxy.updateSingleUpdateFeeInWei(10);
+        assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
+    });
+
+    it("should not allow updating singleUpdateFeeInWei by another account", async function () {
+        // Check that the owner is the default account Truffle
+        // has configured for the network.
+        const accounts = await web3.eth.getAccounts();
+        const defaultAccount = accounts[0];
+        assert.equal(await this.pythProxy.owner(), defaultAccount);
+
+        // Check initial fee is zero
+        assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
+
+        // Checks setting fee using another account reverts.
+        await expectRevert(
+            this.pythProxy.updateSingleUpdateFeeInWei(10, {from: accounts[1]}),
+            notOwnerError,
         );
     });
 
@@ -233,7 +268,7 @@ contract("Pyth", function () {
         }
     });
 
-    async function updatePriceFeeds(contract, batches) {
+    async function updatePriceFeeds(contract, batches, valueInWei) {
         let updateData = [];
         for (let data of batches) {
             const vm = await signAndEncodeVM(
@@ -249,7 +284,7 @@ contract("Pyth", function () {
             );
             updateData.push("0x" + vm);
         }
-        return await contract.updatePriceFeeds(updateData);
+        return await contract.updatePriceFeeds(updateData, {value: valueInWei});
     }
 
     it("should attest price updates over wormhole", async function () {
@@ -260,7 +295,11 @@ contract("Pyth", function () {
 
     it("should attest price updates empty", async function () {
         const receipt = await updatePriceFeeds(this.pythProxy, []);
-        expectEvent.notEmitted(receipt, 'PriceUpdate');
+        expectEvent.notEmitted(receipt, 'PriceFeedUpdate');
+        expectEvent.notEmitted(receipt, 'BatchPriceFeedUpdate');
+        expectEvent(receipt, 'UpdatePriceFeeds', {
+            batchCount: '0',
+        });
     });
 
     it("should attest price updates with multiple batches of correct order", async function () {
@@ -268,7 +307,16 @@ contract("Pyth", function () {
         let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
         const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2]);
-        expectEvent(receipt, 'PriceUpdate');
+        expectEvent(receipt, 'PriceFeedUpdate', {
+            fresh: true,
+        });
+        expectEvent(receipt, 'BatchPriceFeedUpdate', {
+            batchSize: '10',
+            freshPricesInBatch: '10',
+        });
+        expectEvent(receipt, 'UpdatePriceFeeds', {
+            batchCount: '2',
+        });
     });
 
     it("should attest price updates with multiple batches of wrong order", async function () {
@@ -276,7 +324,112 @@ contract("Pyth", function () {
         let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
         const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch2, rawBatch1]);
-        expectEvent(receipt, 'PriceUpdate');
+        expectEvent(receipt, 'PriceFeedUpdate', {
+            fresh: true,
+        });
+        expectEvent(receipt, 'PriceFeedUpdate', {
+            fresh: false,
+        });
+        expectEvent(receipt, 'BatchPriceFeedUpdate', {
+            batchSize: '10',
+            freshPricesInBatch: '10',
+        });
+        expectEvent(receipt, 'BatchPriceFeedUpdate', {
+            batchSize: '10',
+            freshPricesInBatch: '0',
+        });
+        expectEvent(receipt, 'UpdatePriceFeeds', {
+            batchCount: '2',
+        });
+    });
+
+    it("should not attest price updates with when required fee is not given", async function () {
+        // Check that the owner is the default account Truffle
+        // has configured for the network.
+        const accounts = await web3.eth.getAccounts();
+        const defaultAccount = accounts[0];
+        assert.equal(await this.pythProxy.owner(), defaultAccount);
+
+        // Check initial fee is zero
+        assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
+
+        // Set fee 
+        await this.pythProxy.updateSingleUpdateFeeInWei(10);
+        assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
+
+        let ts = 1647273460;
+        let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
+        let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
+
+        // Getting the fee from the contract
+        let feeInWei = await this.pythProxy.getUpdateFee(2);
+        assert.equal(feeInWei, 20);
+
+        // When a smaller fee is payed it reverts
+        await expectRevert(
+            updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2], feeInWei - 1), 
+            insufficientFeeError
+        );
+    });
+
+    it("should attest price updates with when required fee is given", async function () {
+        // Check that the owner is the default account Truffle
+        // has configured for the network.
+        const accounts = await web3.eth.getAccounts();
+        const defaultAccount = accounts[0];
+        assert.equal(await this.pythProxy.owner(), defaultAccount);
+
+        // Check initial fee is zero
+        assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
+
+        // Set fee 
+        await this.pythProxy.updateSingleUpdateFeeInWei(10);
+        assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
+
+        let ts = 1647273460;
+        let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
+        let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
+
+        // Getting the fee from the contract
+        let feeInWei = await this.pythProxy.getUpdateFee(2);
+        assert.equal(feeInWei, 20);
+
+        const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2], feeInWei);
+        expectEvent(receipt, 'UpdatePriceFeeds', {
+            fee: feeInWei
+        });
+        const pythBalance = await web3.eth.getBalance(this.pythProxy.address);
+        assert.equal(pythBalance, feeInWei);
+    });
+
+    it("should attest price updates with required fee even if more fee is given", async function () {
+        // Check that the owner is the default account Truffle
+        // has configured for the network.
+        const accounts = await web3.eth.getAccounts();
+        const defaultAccount = accounts[0];
+        assert.equal(await this.pythProxy.owner(), defaultAccount);
+
+        // Check initial fee is zero
+        assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
+
+        // Set fee 
+        await this.pythProxy.updateSingleUpdateFeeInWei(10);
+        assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
+
+        let ts = 1647273460;
+        let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
+        let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
+
+        // Getting the fee from the contract
+        let feeInWei = await this.pythProxy.getUpdateFee(2);
+        assert.equal(feeInWei, 20);
+
+        const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2], feeInWei + 10);
+        expectEvent(receipt, 'UpdatePriceFeeds', {
+            fee: feeInWei
+        });
+        const pythBalance = await web3.eth.getBalance(this.pythProxy.address);
+        assert.equal(pythBalance, feeInWei);
     });
 
     it("should cache price updates", async function () {
@@ -288,7 +441,16 @@ contract("Pyth", function () {
             priceVal
         );
         let receipt = await updatePriceFeeds(this.pythProxy, [rawBatch]);
-        expectEvent(receipt, 'PriceUpdate');
+        expectEvent(receipt, 'PriceFeedUpdate', {
+            fresh: true,
+        });
+        expectEvent(receipt, 'BatchPriceFeedUpdate', {
+            batchSize: '10',
+            freshPricesInBatch: '10',
+        });
+        expectEvent(receipt, 'UpdatePriceFeeds', {
+            batchCount: '1',
+        });
 
         let first_prod_id = "0x" + "01".repeat(32);
         let first_price_id = "0x" + "fe".repeat(32);
@@ -311,7 +473,16 @@ contract("Pyth", function () {
             priceVal + 5
         );
         receipt = await updatePriceFeeds(this.pythProxy, [rawBatch2]);
-        expectEvent(receipt, 'PriceUpdate');
+        expectEvent(receipt, 'PriceFeedUpdate', {
+            fresh: true,
+        });
+        expectEvent(receipt, 'BatchPriceFeedUpdate', {
+            batchSize: '10',
+            freshPricesInBatch: '10',
+        });
+        expectEvent(receipt, 'UpdatePriceFeeds', {
+            batchCount: '1',
+        });
 
         first = await this.pythProxy.queryPriceFeed(first_price_id);
         assert.equal(first.price, priceVal + 5);
@@ -326,7 +497,16 @@ contract("Pyth", function () {
             priceVal + 10
         );
         receipt = await updatePriceFeeds(this.pythProxy, [rawBatch3]);
-        expectEvent.notEmitted(receipt, 'PriceUpdate');
+        expectEvent(receipt, 'PriceFeedUpdate', {
+            fresh: false,
+        });
+        expectEvent(receipt, 'BatchPriceFeedUpdate', {
+            batchSize: '10',
+            freshPricesInBatch: '0',
+        });
+        expectEvent(receipt, 'UpdatePriceFeeds', {
+            batchCount: '1',
+        });
 
         first = await this.pythProxy.queryPriceFeed(first_price_id);
         assert.equal(first.price, priceVal + 5);

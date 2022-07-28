@@ -55,6 +55,11 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
         }
     }
 
+    /// Privileged function to update the price update fee
+    function updateSingleUpdateFeeInWei(uint newFee) onlyOwner public {
+        PythSetters.setSingleUpdateFeeInWei(newFee);
+    }
+
     /// Ensures the contract cannot be uninitialized and taken over.
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}

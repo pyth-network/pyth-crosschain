@@ -24,4 +24,4 @@ spec:
             - name: WS_ENDPOINT
               value: 'ws://eth-devnet:8545'
             - name: PYTH_CONTRACT
-              value: '0xDb56f2e9369E0D7bD191099125a3f6C370F8ed15'
+              value: '0xe982E462b094850F12AF94d21D470e21bE9D0E9C'
