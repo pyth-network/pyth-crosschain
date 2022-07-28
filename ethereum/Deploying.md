@@ -48,7 +48,7 @@ for more information.
 Changes to the files in this directory should be commited as well.
 
 # Upgrading the contract
-To upgrade the contract you should add a new migration file in the `migrations/prod` directory increasing the migration number.
+To upgrade the contract you should add a new migration file in the `migrations/*` directories increasing the migration number.
 
 It looks like so:
 
