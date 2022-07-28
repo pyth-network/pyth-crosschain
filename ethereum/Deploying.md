@@ -63,8 +63,8 @@ const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
  * Briefly describe the changelog here.
  */
 module.exports = async function (deployer) {
-    const instance = await PythUpgradable.deployed();
-    await upgradeProxy(instance.address, PythUpgradable, { deployer });
+    const proxy = await PythUpgradable.deployed();
+    await upgradeProxy(proxy.address, PythUpgradable, { deployer });
 }
 ```
 

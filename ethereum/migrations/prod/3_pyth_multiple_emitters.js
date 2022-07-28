@@ -8,10 +8,10 @@ const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
  * Adds multiple emitter/chain ID support
  */
 module.exports = async function (deployer) {
-    const instance = await PythUpgradable.deployed();
-    await upgradeProxy(instance.address, PythUpgradable, { deployer });
-    await instance.addDataSource(
-        instance.pyth2WormholeChainId(),
-        instance.pyth2WormholeEmitter()
+    const proxy = await PythUpgradable.deployed();
+    await upgradeProxy(proxy.address, PythUpgradable, { deployer });
+    await proxy.addDataSource(
+        proxy.pyth2WormholeChainId(),
+        proxy.pyth2WormholeEmitter()
     );
 };
