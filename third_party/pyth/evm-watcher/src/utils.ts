@@ -1,6 +1,6 @@
 export type HexString = string;
-export type UnixTimestampInString = string;
-export type NumberInString = string;
+export type UnixTimestampString = string;
+export type NumberString = string;
 
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));

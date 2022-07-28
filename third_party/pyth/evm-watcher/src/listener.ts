@@ -6,7 +6,7 @@ import { AbiItem } from "web3-utils";
 import IPythABI from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import { Handler } from "./handler";
 import LRUCache from "lru-cache";
-import { HexString, NumberInString, sleep, UnixTimestampInString, waitForCondition } from "./utils";
+import { HexString, NumberString, sleep, UnixTimestampString, waitForCondition } from "./utils";
 import { BatchPriceFeedInfo, BatchPriceFeedUpdateEventValues, PriceFeedInfo, UpdatePriceFeedsAggregateInfo, UpdatePriceFeedsEventValues, UpdatePriceFeedsInfo } from "./events";
 
 type ListenerConfig = {
@@ -15,7 +15,7 @@ type ListenerConfig = {
 };
 
 type BatchHash = string;
-function getBatchHash(chainId: NumberInString, sequenceNumber: NumberInString): BatchHash {
+function getBatchId(chainId: NumberString, sequenceNumber: NumberString): BatchHash {
   return `${chainId}-${sequenceNumber}`;
 }
 
@@ -23,7 +23,7 @@ export class Listener {
   private web3: Web3;
   private pythContract: Contract;
   private handler: Handler;
-  private blockToTimestamp: LRUCache<number, UnixTimestampInString>;
+  private blockToTimestamp: LRUCache<number, UnixTimestampString>;
   private batchPrices: LRUCache<BatchHash, PriceFeedInfo[]>;
   private txBatches: LRUCache<HexString, BatchPriceFeedInfo[]>;
 
@@ -55,11 +55,8 @@ export class Listener {
     var gasPrice: number;
 
     // In some networks such as BNB effective gas price is not provided in response.
-    if (txReceipt.effectiveGasPrice !== undefined) {
-      return txReceipt.effectiveGasPrice;
-    } else {
-      return undefined;
-    }
+    // So although typing suggests its a number, it could also be undefined.
+    return txReceipt.effectiveGasPrice;
   }
 
   start() {
@@ -67,7 +64,7 @@ export class Listener {
       this.blockToTimestamp.set(blockHeader.number, blockHeader.timestamp.toString());
     });
 
-    const priceFeedUpdateEmitter = this.pythContract.events.PriceFeedUpdate(undefined, async (_error: Error, event: EventData) => {
+    this.pythContract.events.PriceFeedUpdate(undefined, async (_error: Error, event: EventData) => {
       const priceFeedInfo: PriceFeedInfo = {
         id: event.returnValues.id,
         fresh: event.returnValues.fresh,
@@ -79,14 +76,14 @@ export class Listener {
         conf: event.returnValues.conf, 
       }
 
-      const batchHash = getBatchHash(priceFeedInfo.chainId, priceFeedInfo.sequenceNumber);
+      const batchHash = getBatchId(priceFeedInfo.chainId, priceFeedInfo.sequenceNumber);
       if (this.batchPrices.has(batchHash) === false) {
         this.batchPrices.set(batchHash, [])
       }
       this.batchPrices.get(batchHash)!.push(priceFeedInfo);
     });
 
-    const batchPriceFeedUpdateEmitter = this.pythContract.events.BatchPriceFeedUpdate(undefined, async (_error: Error, event: EventData) => {
+    this.pythContract.events.BatchPriceFeedUpdate(undefined, async (_error: Error, event: EventData) => {
       const batchValues: BatchPriceFeedUpdateEventValues = {
         chainId: event.returnValues.chainId,
         sequenceNumber: event.returnValues.sequenceNumber,
@@ -94,7 +91,7 @@ export class Listener {
         freshPricesInBatch: event.returnValues.freshPricesInBatch,
       };
 
-      const batchHash = getBatchHash(batchValues.chainId, batchValues.sequenceNumber);
+      const batchHash = getBatchId(batchValues.chainId, batchValues.sequenceNumber);
       if (this.batchPrices.has(batchHash) === false) {
         this.batchPrices.set(batchHash, [])
       }
@@ -119,7 +116,7 @@ export class Listener {
       this.txBatches.get(txHash)!.push(batchInfo);
     });
 
-    const UpdatePriceFeedsEmitter = this.pythContract.events.UpdatePriceFeeds(undefined, async (_error: Error, event: EventData) => {
+    this.pythContract.events.UpdatePriceFeeds(undefined, async (_error: Error, event: EventData) => {
       const updateValues: UpdatePriceFeedsEventValues = {
         sender: event.returnValues.sender,
         batchCount: event.returnValues.batchCount,
