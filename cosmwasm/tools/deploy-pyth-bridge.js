@@ -196,7 +196,7 @@ if (argv.instantiate) {
     pyth_emitter_chain: pythChain,
   });
 
-  console.log(`Deployed pyth contract at ${contractAddress}`);
+  console.log(`Deployed Pyth contract at ${contractAddress}`);
 }
 
 if (argv.migrate) {
