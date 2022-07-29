@@ -4,8 +4,8 @@ const bs58 = require("bs58");
 const PythUpgradable = artifacts.require("PythUpgradable");
 const Wormhole = artifacts.require("Wormhole");
 
-const pyth2WormholeChainId = process.env.PYTH_TO_WORMHOLE_CHAIN_ID;
-const pyth2WormholeEmitter = process.env.PYTH_TO_WORMHOLE_EMITTER;
+const pyth2WormholeChainId = process.env.SOLANA_CHAIN_ID;
+const pyth2WormholeEmitter = process.env.SOLANA_EMITTER;
 
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 
