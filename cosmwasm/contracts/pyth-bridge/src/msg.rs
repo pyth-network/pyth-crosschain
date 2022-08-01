@@ -9,6 +9,8 @@ use serde::{
     Serialize,
 };
 
+use crate::state::PythDataSource;
+
 type HumanAddr = String;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -22,6 +24,8 @@ pub struct InstantiateMsg {
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
     SubmitVaa { data: Binary },
+    AddDataSource { data_source: PythDataSource },
+    RemoveDataSource { data_source: PythDataSource },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
