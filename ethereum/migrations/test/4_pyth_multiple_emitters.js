@@ -9,7 +9,7 @@ const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
  */
 module.exports = async function (deployer) {
     const proxy = await PythUpgradable.deployed();
-    await upgradeProxy(proxy.address, PythUpgradable, { deployer });
+    await upgradeProxy(proxy.address, PythUpgradable, { deployer, unsafeSkipStorageCheck: true });
     await proxy.addDataSource(
         await proxy.pyth2WormholeChainId(),
         await proxy.pyth2WormholeEmitter()
