@@ -68,6 +68,24 @@ module.exports = async function (deployer) {
 }
 ```
 
+**When changing the storage, you might need to disable the storage checks because Open Zeppelin is very conservative,
+and appending to the Pyth State struct is considered illegal.** Pyth `_state` variable is a Pyth State
+struct that contains all Pyth variables inside it. It is the last variable in the contract
+and is safe to append fields inside it. However, Open Zeppelin only allows appending variables
+in the contract surface and does not allow appending in the nested structs.
+
+To disable security checks, you can add 
+`unsafeSkipStorageCheck: true` option in `upgradeProxy` call. **If you do such a thing, 
+make sure that your change to the contract won't cause any collision**. For example:
+- Renaming a variable is fine.
+- Changing a variable type to another type with the same size is ok.
+- Appending to the contract variables is ok. If the last variable is a struct, it is also fine
+  to append to that struct.
+- Appending to a mapping value is ok as the contract stores mapping values in a random (hashed) location.
+
+Anything other than the operations above will probably cause a collision. Please refer to Open Zeppelin Upgradeable
+(documentations)[https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable] for more information.
+
 # Testing
 
 The [pyth-js][] repository contains an example with documentation and a code sample showing how to relay your own prices to a

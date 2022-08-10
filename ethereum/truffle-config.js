@@ -56,6 +56,7 @@ module.exports = {
       network_id: "5",
       gas: 4465030,
       gasPrice: 10000000000,
+      skipDryRun: true,
     },
     bnb: {
       provider: () => {
@@ -94,7 +95,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://matic-mumbai.chainstacklabs.com")
+          "https://polygon-testnet-rpc.allthatnode.com:8545")
       },
       network_id: "80001",
     },
