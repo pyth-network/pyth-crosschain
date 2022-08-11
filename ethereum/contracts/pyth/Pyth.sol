@@ -210,11 +210,6 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
-    /// Maximum acceptable time period before price is considered to be stale.
-    ///
-    /// This includes attestation delay which currently might up to a minute.
-    uint private constant VALID_TIME_PERIOD_SECS = 180;
-
     function queryPriceFeed(bytes32 id) public view override returns (PythStructs.PriceFeed memory priceFeed){
 
         // Look up the latest price info for the given ID
@@ -223,7 +218,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
         // Check that there is not a significant difference between this chain's time
         // and the price publish time.
-        if (diff(block.timestamp, info.priceFeed.publishTime) > VALID_TIME_PERIOD_SECS) {
+        if (diff(block.timestamp, info.priceFeed.publishTime) > validTimePeriodSeconds()) {
             info.priceFeed.status = PythStructs.PriceStatus.UNKNOWN;
         }
 

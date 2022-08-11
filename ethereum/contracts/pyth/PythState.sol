@@ -23,6 +23,10 @@ contract PythStorage {
         mapping(bytes32 => bool) isValidDataSource;
 
         uint singleUpdateFeeInWei;
+        
+        /// Maximum acceptable time period before price is considered to be stale.
+        /// This includes attestation delay and block time.
+        uint validTimePeriodSeconds;
     }
 }
 

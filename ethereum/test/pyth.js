@@ -5,7 +5,7 @@ const BigNumber = require("bignumber.js");
 const PythStructs = artifacts.require("PythStructs");
 
 const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
-const { expectRevert, expectEvent } = require("@openzeppelin/test-helpers");
+const { expectRevert, expectEvent, time } = require("@openzeppelin/test-helpers");
 const { assert } = require("chai");
 
 // Use "WormholeReceiver" if you are testing with Wormhole Receiver
@@ -33,6 +33,7 @@ contract("Pyth", function () {
     const insufficientFeeError = 
         "Insufficient paid fee amount";
 
+    // Place all atomic operations that are done within migrations here.
     beforeEach(async function () {
         this.pythProxy = await deployProxy(PythUpgradable, [
             (await Wormhole.deployed()).address,
@@ -44,6 +45,9 @@ contract("Pyth", function () {
             testPyth2WormholeChainId,
             testPyth2WormholeEmitter
         );
+
+        // Setting the validity time to 10 seconds
+        await this.pythProxy.updateValidTimePeriodSeconds(60);
     });
 
     it("should be initialized with the correct signers and values", async function () {
@@ -157,12 +161,44 @@ contract("Pyth", function () {
         const defaultAccount = accounts[0];
         assert.equal(await this.pythProxy.owner(), defaultAccount);
 
-        // Check initial fee is zero
+        // Check initial valid time period is zero
         assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
+
+        // Checks setting valid time period using another account reverts.
+        await expectRevert(
+            this.pythProxy.updateSingleUpdateFeeInWei(10, {from: accounts[1]}),
+            notOwnerError,
+        );
+    });
+
+    it("should allow updating validTimePeriodSeconds by owner", async function () {
+        // Check that the owner is the default account Truffle
+        // has configured for the network.
+        const accounts = await web3.eth.getAccounts();
+        const defaultAccount = accounts[0];
+        assert.equal(await this.pythProxy.owner(), defaultAccount);
+
+        // Check initial valid time period is zero
+        assert.equal(await this.pythProxy.validTimePeriodSeconds(), 0);
+
+        // Set valid time period 
+        await this.pythProxy.updateValidTimePeriodSeconds(30);
+        assert.equal(await this.pythProxy.validTimePeriodSeconds(), 30);
+    });
+
+    it("should not allow updating validTimePeriodSeconds by another account", async function () {
+        // Check that the owner is the default account Truffle
+        // has configured for the network.
+        const accounts = await web3.eth.getAccounts();
+        const defaultAccount = accounts[0];
+        assert.equal(await this.pythProxy.owner(), defaultAccount);
+
+        // Check initial fee is zero
+        assert.equal(await this.pythProxy.validTimePeriodSeconds(), 0);
 
         // Checks setting fee using another account reverts.
         await expectRevert(
-            this.pythProxy.updateSingleUpdateFeeInWei(10, {from: accounts[1]}),
+            this.pythProxy.updateValidTimePeriodSeconds(30, {from: accounts[1]}),
             notOwnerError,
         );
     });
@@ -564,6 +600,62 @@ contract("Pyth", function () {
             assert.equal(
                 priceFeedResult.status.toString(),
                 PythStructs.PriceStatus.UNKNOWN.toString()
+            );
+        }
+    });
+
+    it("changing validity time works", async function() {
+        const latestTime = await time.latest();
+        let rawBatch = generateRawBatchAttestation(
+            latestTime,
+            latestTime,
+            1337
+        );
+
+        await updatePriceFeeds(this.pythProxy, [rawBatch]);
+
+        // Setting the validity time to 30 seconds
+        await this.pythProxy.updateValidTimePeriodSeconds(30);
+
+        // Then prices should be available
+        for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
+            const price_id =
+                "0x" +
+                (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
+            let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
+            assert.equal(
+                priceFeedResult.status.toString(),
+                PythStructs.PriceStatus.TRADING.toString()
+            );
+        }
+
+        // One minute passes
+        await time.increase(time.duration.minutes(1));
+
+        // The prices should become unavailable now.
+        for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
+            const price_id =
+                "0x" +
+                (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
+            let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
+            assert.equal(
+                priceFeedResult.status.toString(),
+                PythStructs.PriceStatus.UNKNOWN.toString()
+            );
+        }
+
+        // Setting the validity time to 120 seconds
+        await this.pythProxy.updateValidTimePeriodSeconds(120);
+
+        // Then prices should be available because the valid period is now 120 seconds
+        for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
+            const price_id =
+                "0x" +
+                (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
+            let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
+            assert.equal(
+                priceFeedResult.status.toString(),
+                PythStructs.PriceStatus.TRADING.toString()
             );
         }
     });
