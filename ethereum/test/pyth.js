@@ -46,7 +46,7 @@ contract("Pyth", function () {
             testPyth2WormholeEmitter
         );
 
-        // Setting the validity time to 10 seconds
+        // Setting the validity time to 60 seconds
         await this.pythProxy.updateValidTimePeriodSeconds(60);
     });
 
@@ -178,8 +178,8 @@ contract("Pyth", function () {
         const defaultAccount = accounts[0];
         assert.equal(await this.pythProxy.owner(), defaultAccount);
 
-        // Check initial valid time period is zero
-        assert.equal(await this.pythProxy.validTimePeriodSeconds(), 0);
+        // Check valid time period is 60 (set in beforeEach)
+        assert.equal(await this.pythProxy.validTimePeriodSeconds(), 60);
 
         // Set valid time period 
         await this.pythProxy.updateValidTimePeriodSeconds(30);
@@ -193,10 +193,10 @@ contract("Pyth", function () {
         const defaultAccount = accounts[0];
         assert.equal(await this.pythProxy.owner(), defaultAccount);
 
-        // Check initial fee is zero
-        assert.equal(await this.pythProxy.validTimePeriodSeconds(), 0);
+        // Check valid time period is 60 (set in beforeEach)
+        assert.equal(await this.pythProxy.validTimePeriodSeconds(), 60);
 
-        // Checks setting fee using another account reverts.
+        // Checks setting validity time using another account reverts.
         await expectRevert(
             this.pythProxy.updateValidTimePeriodSeconds(30, {from: accounts[1]}),
             notOwnerError,

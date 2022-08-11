@@ -21,5 +21,5 @@ module.exports = async function (deployer) {
     const proxy = await PythUpgradable.deployed();
     await upgradeProxy(proxy.address, PythUpgradable, { deployer, unsafeSkipStorageCheck: true });
 
-    await proxy.setValidTimePeriodSeconds(validTimePeriodSeconds);
+    await proxy.updateValidTimePeriodSeconds(validTimePeriodSeconds);
 }
