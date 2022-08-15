@@ -1,4 +1,10 @@
-use crate::config::P2WConfigAccount;
+use crate::{
+    config::P2WConfigAccount,
+    message::{
+        P2WMessage,
+        P2WMessageDrvData,
+    },
+};
 use borsh::{
     BorshDeserialize,
     BorshSerialize,
@@ -111,7 +117,7 @@ pub struct Attest<'b> {
     pub wh_bridge: Mut<Info<'b>>,
 
     /// Account to store the posted message
-    pub wh_message: Signer<Mut<Info<'b>>>,
+    pub wh_message: P2WMessage<'b>,
 
     /// Emitter of the VAA
     pub wh_emitter: P2WEmitter<'b>,
@@ -130,6 +136,7 @@ pub struct Attest<'b> {
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct AttestData {
     pub consistency_level: ConsistencyLevel,
+    pub message_account_id: u64,
 }
 
 pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> SoliResult<()> {
@@ -141,6 +148,13 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
     }
 
     accs.config.verify_derivation(ctx.program_id, None)?;
+    accs.wh_message.verify_derivation(
+        ctx.program_id,
+        &P2WMessageDrvData {
+            message_owner: accs.payer.key.clone(),
+            id: data.message_account_id,
+        },
+    )?;
 
     if accs.config.wh_prog != *accs.wh_prog.key {
         trace!(&format!(
@@ -248,15 +262,30 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
     );
     solana_program::program::invoke(&transfer_ix, ctx.accounts)?;
 
+    let payload = batch_attestation.serialize().map_err(|e| {
+        trace!(&e.to_string());
+        ProgramError::InvalidAccountData
+    })?;
+
+    // Adjust message account size if necessary
+    if !accs.wh_message.is_initialized() && accs.wh_message.payload.len() != payload.len() {
+        // Learn how much we're adjusting (Note: assuming surrounding
+        // Wormhole message type is constant-size).
+        // positive -> grow,
+        // negative -> shrink,
+        let diff = payload.len() as i64 - accs.wh_message.payload.len() as i64;
+        accs.wh_message.0 .0 .0.realloc(
+            (accs.wh_message.payload.len() as i64 + diff) as usize,
+            false,
+        )?;
+    }
+
     // Send payload
     let post_message_data = (
         bridge::instruction::Instruction::PostMessage,
         PostMessageData {
             nonce: 0, // Superseded by the sequence number
-            payload: batch_attestation.serialize().map_err(|e| {
-                trace!(&e.to_string());
-                ProgramError::InvalidAccountData
-            })?,
+            payload,
             consistency_level: data.consistency_level,
         },
     );
@@ -266,7 +295,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         post_message_data.try_to_vec()?.as_slice(),
         vec![
             AccountMeta::new(*accs.wh_bridge.key, false),
-            AccountMeta::new(*accs.wh_message.key, true),
+            AccountMeta::new(*((accs.wh_message.0).0).0.key, true),
             AccountMeta::new_readonly(*accs.wh_emitter.key, true),
             AccountMeta::new(*accs.wh_sequence.key, false),
             AccountMeta::new(*accs.payer.key, true),

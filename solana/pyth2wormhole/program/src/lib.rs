@@ -2,6 +2,7 @@
 pub mod attest;
 pub mod config;
 pub mod initialize;
+pub mod message;
 pub mod migrate;
 pub mod set_config;
 
