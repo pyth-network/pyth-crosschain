@@ -224,7 +224,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         // Check that there is not a significant difference between this chain's time
         // and the price publish time.
         if (info.priceFeed.status == PythStructs.PriceStatus.TRADING && 
-            diff(block.timestamp, info.priceFeed.publishTime) > VALID_TIME_PERIOD_SECS) {
+            absDiff(block.timestamp, info.priceFeed.publishTime) > VALID_TIME_PERIOD_SECS) {
             info.priceFeed.status = PythStructs.PriceStatus.UNKNOWN;
             info.priceFeed.prevPrice = info.priceFeed.price;
             info.priceFeed.prevConf = info.priceFeed.conf;
@@ -234,12 +234,11 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         return info.priceFeed;
     }
 
-    function diff(uint x, uint y) private pure returns (uint) {
+    function absDiff(uint x, uint y) private pure returns (uint) {
         if (x > y) {
             return x - y;
         } else {
             return y - x;
         }
     }
-
 }
