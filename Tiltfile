@@ -75,12 +75,6 @@ local_resource(
 )
 
 
-docker_build(
-    ref = "guardiand-image",
-    context = ".",
-    dockerfile = "Dockerfile.guardian",
-)
-
 def build_node_yaml():
     node_yaml = read_yaml_stream("devnet/node.yaml")
 

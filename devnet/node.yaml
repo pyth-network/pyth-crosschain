@@ -53,7 +53,7 @@ spec:
                 path: bigtable-key.json
       containers:
         - name: guardiand
-          image: guardiand-image
+          image: ghcr.io/certusone/guardiand:v2.8.8.1
           volumeMounts:
             - mountPath: /run/node
               name: node-rundir
