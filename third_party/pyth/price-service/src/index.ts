@@ -8,8 +8,8 @@ import { RestAPI } from "./rest";
 import { WebSocketAPI } from "./ws";
 
 let configFile: string = ".env";
-if (process.env.PYTH_RELAY_CONFIG) {
-  configFile = process.env.PYTH_RELAY_CONFIG;
+if (process.env.PYTH_PRICE_SERVICE_CONFIG) {
+  configFile = process.env.PYTH_PRICE_SERVICE_CONFIG;
 }
 
 console.log("Loading config file [%s]", configFile);
