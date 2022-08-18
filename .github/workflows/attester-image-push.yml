@@ -1,36 +1,32 @@
 name: Build and Push Images
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
+    tags:
+      - pyth-attester-v*
+  workflow_dispatch:
+    inputs:
+      dispatch_description:
+        description: "Dispatch description"
+        required: true
+        type: string
 permissions:
   contents: read
   id-token: write
 jobs:
-  price-service-image:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: arn:aws:iam::192824654885:role/github-actions-ecr
-          aws-region: eu-west-2
-      - uses: aws-actions/amazon-ecr-login@v1
-        id: ecr_login
-      - run: |
-          DOCKER_BUILDKIT=1 docker build -f Dockerfile.wasm -o type=local,dest=. .
-          DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f third_party/pyth/price-service/Dockerfile.price_service .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        env:
-          ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}
-          ECR_REPOSITORY: xc-server
-          IMAGE_TAG: ${{ github.sha }}
   p2w-attest-image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Set image tag to version of the git tag
+        if: ${{ startsWith(github.ref, 'refs/tags/pyth-attester-v') }}
+        run: |
+          PREFIX="refs/tags/pyth-attester-"
+          VERSION="${GITHUB_REF:${#PREFIX}}"
+          echo "IMAGE_TAG=${VERSION}" >> "${GITHUB_ENV}"
+      - name: Set image tag to the git commit hash
+        if: ${{ !startsWith(github.ref, 'refs/tags/pyth-attester-v') }}
+        run: |
+          echo "IMAGE_TAG=${{ github.sha }}" >> "${GITHUB_ENV}"
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: arn:aws:iam::192824654885:role/github-actions-ecr
