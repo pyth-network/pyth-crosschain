@@ -226,6 +226,11 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         if (info.priceFeed.status == PythStructs.PriceStatus.TRADING && 
             absDiff(block.timestamp, info.priceFeed.publishTime) > VALID_TIME_PERIOD_SECS) {
             info.priceFeed.status = PythStructs.PriceStatus.UNKNOWN;
+            // getLatestAvailablePrice* gets prevPrice when status is
+            // unknown. So, now that status is being set to unknown,
+            // we should move the current price to the previous
+            // price to ensure getLatestAvailablePrice* works
+            // as intended.
             info.priceFeed.prevPrice = info.priceFeed.price;
             info.priceFeed.prevConf = info.priceFeed.conf;
             info.priceFeed.prevPublishTime = info.priceFeed.publishTime;
