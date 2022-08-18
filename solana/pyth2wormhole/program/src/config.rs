@@ -91,8 +91,13 @@ pub struct Pyth2WormholeConfigV2 {
     pub is_active: bool,
 }
 
+/// Note: If you get stuck with a pre-existing config account
+/// (e.g. someone transfers into a PDA that we're not using yet), it's
+/// usually easier to change the seed slightly
+/// (e.g. pyth2wormhole-config-v2 -> pyth2wormhole-config-v2.1). This
+/// saves a lot of time coding around this edge case.
 pub type P2WConfigAccountV2<'b, const IsInitialized: AccountState> =
-    Derive<Data<'b, Pyth2WormholeConfigV2, { IsInitialized }>, "pyth2wormhole-config-v2">;
+    Derive<Data<'b, Pyth2WormholeConfigV2, { IsInitialized }>, "pyth2wormhole-config-v2.1">;
 
 impl From<Pyth2WormholeConfigV1> for Pyth2WormholeConfigV2 {
     fn from(old: Pyth2WormholeConfigV1) -> Self {

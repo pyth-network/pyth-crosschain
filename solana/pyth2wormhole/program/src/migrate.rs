@@ -38,7 +38,7 @@ pub struct Migrate<'b> {
     /// New config account to be populated. Must be unused.
     pub new_config: Mut<P2WConfigAccount<'b, { AccountState::Uninitialized }>>,
     /// Old config using the previous format.
-    pub old_config: OldP2WConfigAccount<'b>,
+    pub old_config: Mut<OldP2WConfigAccount<'b>>,
     /// Current owner authority of the program
     pub current_owner: Mut<Signer<Info<'b>>>,
     /// Payer account for updating the account data
@@ -78,7 +78,7 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
     **accs.old_config.info().lamports.borrow_mut() = 0;
 
     // Credit payer with saved balance
-    accs.payer
+    let new_payer_balance = accs.payer
         .info()
         .lamports
         .borrow_mut()
@@ -87,6 +87,8 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
             trace!("Overflow on payer balance increase");
             SolitaireError::ProgramError(ProgramError::Custom(0xDEADBEEF))
         })?;
+
+    **accs.payer.info().lamports.borrow_mut() = new_payer_balance;
 
     Ok(())
 }
