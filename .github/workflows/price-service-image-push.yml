@@ -1,4 +1,4 @@
-name: Build and Push Images
+name: Build and Push Price Service Image
 on:
   push:
     tags:
