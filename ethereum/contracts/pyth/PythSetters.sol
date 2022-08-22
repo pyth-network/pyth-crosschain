@@ -25,4 +25,8 @@ contract PythSetters is PythState {
     function setSingleUpdateFeeInWei(uint fee) internal {
         _state.singleUpdateFeeInWei = fee;
     }
+
+    function setValidTimePeriodSeconds(uint validTimePeriodSeconds) internal {
+        _state.validTimePeriodSeconds = validTimePeriodSeconds;
+    }
 }

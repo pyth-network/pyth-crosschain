@@ -60,6 +60,11 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
         PythSetters.setSingleUpdateFeeInWei(newFee);
     }
 
+    /// Privileged function to update the valid time period for a price.
+    function updateValidTimePeriodSeconds(uint newValidTimePeriodSeconds) onlyOwner public {
+        PythSetters.setValidTimePeriodSeconds(newValidTimePeriodSeconds);
+    }
+
     /// Ensures the contract cannot be uninitialized and taken over.
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}

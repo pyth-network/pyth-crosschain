@@ -39,4 +39,8 @@ contract PythGetters is PythState {
     function singleUpdateFeeInWei() public view returns (uint) {
         return _state.singleUpdateFeeInWei;
     }
+
+    function validTimePeriodSeconds() public view returns (uint) {
+        return _state.validTimePeriodSeconds;
+    }
 }
