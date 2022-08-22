@@ -35,12 +35,12 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
         - name: spy
-          image: guardiand-image
+          image: ghcr.io/certusone/guardiand:v2.8.8.1
           command:
             - /guardiand
             - spy
             - --nodeKey
-            - /tmp/node.key
+            - /node.key
             - --spyRPC
             - "[::]:7072"
             # Hardcoded devnet bootstrap (generated from deterministic key in guardiand)
