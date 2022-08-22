@@ -218,19 +218,27 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
         // Check that there is not a significant difference between this chain's time
         // and the price publish time.
-        if (diff(block.timestamp, info.priceFeed.publishTime) > validTimePeriodSeconds()) {
+        if (info.priceFeed.status == PythStructs.PriceStatus.TRADING && 
+            absDiff(block.timestamp, info.priceFeed.publishTime) > VALID_TIME_PERIOD_SECS) {
             info.priceFeed.status = PythStructs.PriceStatus.UNKNOWN;
+            // getLatestAvailablePrice* gets prevPrice when status is
+            // unknown. So, now that status is being set to unknown,
+            // we should move the current price to the previous
+            // price to ensure getLatestAvailablePrice* works
+            // as intended.
+            info.priceFeed.prevPrice = info.priceFeed.price;
+            info.priceFeed.prevConf = info.priceFeed.conf;
+            info.priceFeed.prevPublishTime = info.priceFeed.publishTime;
         }
 
         return info.priceFeed;
     }
 
-    function diff(uint x, uint y) private pure returns (uint) {
+    function absDiff(uint x, uint y) private pure returns (uint) {
         if (x > y) {
             return x - y;
         } else {
             return y - x;
         }
     }
-
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@pythnetwork/price-service",
+  "name": "@pythnetwork/pyth-price-service",
   "version": "1.0.0",
   "description": "Pyth Price Service",
   "main": "index.js",
