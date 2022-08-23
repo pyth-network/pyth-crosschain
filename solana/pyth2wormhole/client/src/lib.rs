@@ -272,7 +272,7 @@ pub fn gen_attest_tx(
     let ix_data = (
         pyth2wormhole::instruction::Instruction::Attest,
         AttestData {
-            consistency_level: ConsistencyLevel::Finalized,
+            consistency_level: ConsistencyLevel::Confirmed,
         },
     );
 
