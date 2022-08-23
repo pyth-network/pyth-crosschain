@@ -13,13 +13,14 @@ RUN apt-get update && \
     zlib1g-dev \
     && \
     rm -rf /var/lib/apt/lists/* && \
-    rustup component add rustfmt && \
-    rustup default nightly-2022-01-31
+    rustup component add rustfmt
 
-RUN sh -c "$(curl -sSfL https://release.solana.com/v1.10.13/install)"
+RUN sh -c "$(curl -sSfL https://release.solana.com/v1.10.31/install)"
 
 ENV PATH="/root/.local/share/solana/install/active_release/bin:$PATH"
 
+
+ADD solana/rust-toolchain /rust-toolchain
 # Solana does a questionable download at the beginning of a *first* build-bpf call. Trigger and layer-cache it explicitly.
 RUN cargo init --lib /tmp/decoy-crate && \
     cd /tmp/decoy-crate && cargo build-bpf && \
@@ -35,18 +36,20 @@ RUN mkdir -p /opt/solana/deps
 ENV EMITTER_ADDRESS="11111111111111111111111111111115"
 ENV BRIDGE_ADDRESS="Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 
+WORKDIR /usr/src/bridge/solana
+
 # Build Wormhole Solana programs
-RUN --mount=type=cache,target=solana/bridge/target \
-    --mount=type=cache,target=solana/modules/token_bridge/target \
-    --mount=type=cache,target=solana/modules/nft_bridge/target \
-    --mount=type=cache,target=solana/pyth2wormhole/target \
-    --mount=type=cache,target=solana/migration/target \
-    cargo build-bpf --manifest-path "solana/bridge/program/Cargo.toml" -- --locked && \
-    cargo build-bpf --manifest-path "solana/bridge/cpi_poster/Cargo.toml" -- --locked && \
-    cargo build-bpf --manifest-path "solana/pyth2wormhole/program/Cargo.toml" -- --locked && \
-    cp solana/bridge/target/deploy/bridge.so /opt/solana/deps/bridge.so && \
-    cp solana/bridge/target/deploy/cpi_poster.so /opt/solana/deps/cpi_poster.so && \
-    cp solana/pyth2wormhole/target/deploy/pyth2wormhole.so /opt/solana/deps/pyth2wormhole.so
+RUN --mount=type=cache,target=bridge/target \
+    --mount=type=cache,target=modules/token_bridge/target \
+    --mount=type=cache,target=modules/nft_bridge/target \
+    --mount=type=cache,target=pyth2wormhole/target \
+    --mount=type=cache,target=migration/target \
+    cargo build-bpf --manifest-path "bridge/program/Cargo.toml" -- --locked && \
+    cargo build-bpf --manifest-path "bridge/cpi_poster/Cargo.toml" -- --locked && \
+    cargo build-bpf --manifest-path "pyth2wormhole/program/Cargo.toml" -- --locked && \
+    cp bridge/target/deploy/bridge.so /opt/solana/deps/bridge.so && \
+    cp bridge/target/deploy/cpi_poster.so /opt/solana/deps/cpi_poster.so && \
+    cp pyth2wormhole/target/deploy/pyth2wormhole.so /opt/solana/deps/pyth2wormhole.so
 
 COPY --from=pyth-oracle-copy /home/pyth/pyth-client/target/oracle.so /opt/solana/deps/pyth_oracle.so
 

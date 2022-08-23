@@ -1910,7 +1910,7 @@ checksum = "2fd0db749597d91ff862fd1d55ea87f7855a744a8425a64695b6fca237d1dad1"
 
 [[package]]
 name = "solana-frozen-abi"
-version = "1.8.16"
+version = "=1.8.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "425be155319bda665dc3483f0c0267ac0fc89017812d0c5d9816b1c7a26c1532"
 dependencies = [

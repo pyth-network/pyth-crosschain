@@ -29,8 +29,8 @@ pub use set_config::{
 pub use pyth_client;
 
 solitaire! {
-    Attest(AttestData) => attest,
-    Initialize(Pyth2WormholeConfig) => initialize,
-    SetConfig(Pyth2WormholeConfig) => set_config,
-    Migrate(()) => migrate,
+    Attest => attest,
+    Initialize => initialize,
+    SetConfig => set_config,
+    Migrate => migrate,
 }

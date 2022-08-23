@@ -26,12 +26,6 @@ use solitaire::{
     AccountState,
     ErrBox,
 };
-use solitaire_client::{
-    AccEntry,
-    Keypair,
-    SolSigner,
-    ToInstruction,
-};
 
 use bridge::{
     accounts::{

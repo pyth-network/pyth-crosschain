@@ -12,14 +12,12 @@ use solitaire::{
     ExecutionContext,
     FromAccounts,
     Info,
-    InstructionContext,
     Keyed,
     Mut,
     Peel,
     Result as SoliResult,
     Signer,
     SolitaireError,
-    ToInstruction,
 };
 
 use crate::config::{
@@ -33,7 +31,7 @@ use crate::config::{
 ///
 /// NOTE: This account struct assumes Solitaire is able to validate the
 /// Uninitialized requirement on the new_config account
-#[derive(FromAccounts, ToInstruction)]
+#[derive(FromAccounts)]
 pub struct Migrate<'b> {
     /// New config account to be populated. Must be unused.
     pub new_config: Mut<P2WConfigAccount<'b, { AccountState::Uninitialized }>>,
@@ -43,12 +41,6 @@ pub struct Migrate<'b> {
     pub current_owner: Mut<Signer<Info<'b>>>,
     /// Payer account for updating the account data
     pub payer: Mut<Signer<Info<'b>>>,
-}
-
-impl<'b> InstructionContext<'b> for Migrate<'b> {
-    fn deps(&self) -> Vec<Pubkey> {
-        vec![]
-    }
 }
 
 pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResult<()> {
