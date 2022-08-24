@@ -19,7 +19,7 @@ rm -rf build && npx truffle compile --all
 npx apply-registry
 
 # Set the deploy commit hash in the contract binary (used for debugging purposes)
-sed -i 's/DEPLOY_COMMIT_HASH_PLACEHOLDER/$(git rev-parse HEAD)/g' build/contracts/Pyth.json
+sed -i "s/dead0beaf0deb10700c0331700da5d00deadbead/$(git rev-parse HEAD)/g" build/contracts/*
 
 # Perform the migration
 npx truffle migrate --network $MIGRATIONS_NETWORK
