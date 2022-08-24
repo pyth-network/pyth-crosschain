@@ -18,6 +18,9 @@ rm -rf build && npx truffle compile --all
 # Merge the network addresses into the artifacts, if some contracts are already deployed.
 npx apply-registry
 
+# Set the deploy commit hash in the contract binary (used for debugging purposes)
+sed -i 's/GIT_COMMIT_HASH_PLACEHOLDER/$(git rev-parse HEAD)/g' build/contracts/Pyth.json
+
 # Perform the migration
 npx truffle migrate --network $MIGRATIONS_NETWORK
 
