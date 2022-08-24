@@ -232,6 +232,6 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     }
 
     function deployCommitHash() public pure returns (string memory) {
-        return "GIT_COMMIT_HASH_PLACEHOLDER";
+        return "DEPLOY_COMMIT_HASH_PLACEHOLDER";
     }
 }
