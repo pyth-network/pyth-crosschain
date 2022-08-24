@@ -24,7 +24,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         setPyth2WormholeEmitter(pyth2WormholeEmitter);
     }
 
-    function updatePriceBatchFromVm(bytes memory encodedVm) private returns (PythInternalStructs.BatchPriceAttestation memory bpa) {
+    function updatePriceBatchFromVm(bytes calldata encodedVm) private returns (PythInternalStructs.BatchPriceAttestation memory bpa) {
         (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole().parseAndVerifyVM(encodedVm);
 
         require(valid, reason);
@@ -211,34 +211,19 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     }
 
     function queryPriceFeed(bytes32 id) public view override returns (PythStructs.PriceFeed memory priceFeed){
-
         // Look up the latest price info for the given ID
         PythInternalStructs.PriceInfo memory info = latestPriceInfo(id);
         require(info.priceFeed.id != 0, "no price feed found for the given price id");
 
-        // Check that there is not a significant difference between this chain's time
-        // and the price publish time.
-        if (info.priceFeed.status == PythStructs.PriceStatus.TRADING && 
-            absDiff(block.timestamp, info.priceFeed.publishTime) > validTimePeriodSeconds()) {
-            info.priceFeed.status = PythStructs.PriceStatus.UNKNOWN;
-            // getLatestAvailablePrice* gets prevPrice when status is
-            // unknown. So, now that status is being set to unknown,
-            // we should move the current price to the previous
-            // price to ensure getLatestAvailablePrice* works
-            // as intended.
-            info.priceFeed.prevPrice = info.priceFeed.price;
-            info.priceFeed.prevConf = info.priceFeed.conf;
-            info.priceFeed.prevPublishTime = info.priceFeed.publishTime;
-        }
-
         return info.priceFeed;
     }
 
-    function absDiff(uint x, uint y) private pure returns (uint) {
-        if (x > y) {
-            return x - y;
-        } else {
-            return y - x;
-        }
+    function priceFeedExists(bytes32 id) public override view returns (bool) {
+        PythInternalStructs.PriceInfo memory info = latestPriceInfo(id);
+        return (info.priceFeed.id != 0);
+    }
+
+    function getValidTimePeriod() public override view returns (uint) {
+        return validTimePeriodSeconds();
     }
 }
