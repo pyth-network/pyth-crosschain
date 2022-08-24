@@ -60,6 +60,8 @@ const PythUpgradable = artifacts.require("PythUpgradable");
 const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 
 /**
+ * Version <x.y.z>.
+ * 
  * Briefly describe the changelog here.
  */
 module.exports = async function (deployer) {
@@ -85,6 +87,10 @@ make sure that your change to the contract won't cause any collision**. For exam
 
 Anything other than the operations above will probably cause a collision. Please refer to Open Zeppelin Upgradeable
 (documentations)[https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable] for more information.
+
+## Versioning
+
+We use [Semantic Versioning](https://semver.org/) for our releases. When upgrading the contract, please update the npm package version and also the hard-coded value in `version()` method in [the Pyth contract](./contracts/pyth/Pyth.sol) to the new version. Then, after your PR is merged in main, please create a release like with tag `pyth-evm-contract-v<x.y.z>`. This will help developers to be able to track code changes easier.
 
 # Testing
 

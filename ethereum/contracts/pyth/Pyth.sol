@@ -226,4 +226,8 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     function getValidTimePeriod() public override view returns (uint) {
         return validTimePeriodSeconds();
     }
+
+    function version() public pure returns (string memory) {
+        return "0.1.0";
+    }
 }

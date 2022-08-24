@@ -1,8 +1,7 @@
 {
-  "name": "wormhole",
-  "version": "1.0.0",
+  "name": "@pythnetwork/pyth-evm-contract",
+  "version": "0.1.0",
   "description": "",
-  "main": "networks.js",
   "devDependencies": {
     "@chainsafe/truffle-plugin-abigen": "0.0.1",
     "@openzeppelin/cli": "^2.8.2",
