@@ -6,7 +6,7 @@ const PythStructs = artifacts.require("PythStructs");
 
 const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 const { expectRevert, expectEvent, time } = require("@openzeppelin/test-helpers");
-const { assert } = require("chai");
+const { assert, expect } = require("chai");
 
 // Use "WormholeReceiver" if you are testing with Wormhole Receiver
 const Wormhole = artifacts.require("Wormhole");
@@ -718,6 +718,13 @@ contract("Pyth", function () {
             this.pythProxy.updatePriceFeeds(["0x" + vm]),
             "invalid data source chain/emitter ID"
         );
+    });
+
+    it("Make sure version is the npm package version", async function () {
+        const contractVersion = await this.pythProxy.version();
+        const { version } = require('../package.json');
+
+        expect(contractVersion).equal(version);
     });
 });
 
