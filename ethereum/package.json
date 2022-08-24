@@ -1,8 +1,7 @@
 {
-  "name": "wormhole",
-  "version": "1.0.0",
+  "name": "@pythnetwork/pyth-evm-contract",
+  "version": "0.1.0",
   "description": "",
-  "main": "networks.js",
   "devDependencies": {
     "@chainsafe/truffle-plugin-abigen": "0.0.1",
     "@openzeppelin/cli": "^2.8.2",
@@ -30,7 +29,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.5.0",
     "@openzeppelin/contracts-upgradeable": "^4.5.2",
-    "@pythnetwork/pyth-sdk-solidity": "^0.5.1",
+    "@pythnetwork/pyth-sdk-solidity": "^0.5.2",
     "dotenv": "^10.0.0",
     "elliptic": "^6.5.2",
     "ganache-cli": "^6.12.1",

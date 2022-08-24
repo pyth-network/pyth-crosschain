@@ -6,7 +6,7 @@ const PythStructs = artifacts.require("PythStructs");
 
 const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 const { expectRevert, expectEvent, time } = require("@openzeppelin/test-helpers");
-const { assert } = require("chai");
+const { assert, expect } = require("chai");
 
 // Use "WormholeReceiver" if you are testing with Wormhole Receiver
 const Wormhole = artifacts.require("Wormhole");
@@ -562,7 +562,7 @@ contract("Pyth", function () {
         );
     });
 
-    it("should show stale cached prices as unknown", async function () {
+    it("should revert on getting stale current prices", async function () {
         let smallestTimestamp = 1;
         let rawBatch = generateRawBatchAttestation(
             smallestTimestamp,
@@ -575,15 +575,14 @@ contract("Pyth", function () {
             const price_id =
                 "0x" +
                 (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-            let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
-            assert.equal(
-                priceFeedResult.status.toString(),
-                PythStructs.PriceStatus.UNKNOWN.toString()
+            expectRevert(
+                this.pythProxy.getCurrentPrice(price_id),
+                "current price unavailable"
             );
         }
     });
 
-    it("should show cached prices too far into the future as unknown", async function () {
+    it("should revert on getting current prices too far into the future as they are considered unknown", async function () {
         let largestTimestamp = 4294967295;
         let rawBatch = generateRawBatchAttestation(
             largestTimestamp - 5,
@@ -596,12 +595,11 @@ contract("Pyth", function () {
             const price_id =
                 "0x" +
                 (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-            let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
-            assert.equal(
-                priceFeedResult.status.toString(),
-                PythStructs.PriceStatus.UNKNOWN.toString()
-            );
-        }
+                expectRevert(
+                    this.pythProxy.getCurrentPrice(price_id),
+                    "current price unavailable"
+                );
+            }
     });
 
     it("changing validity time works", async function() {
@@ -622,11 +620,9 @@ contract("Pyth", function () {
             const price_id =
                 "0x" +
                 (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-            let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
-            assert.equal(
-                priceFeedResult.status.toString(),
-                PythStructs.PriceStatus.TRADING.toString()
-            );
+
+            // Expect getCurrentPrice to work (not revert)
+            await this.pythProxy.getCurrentPrice(price_id);
         }
 
         // One minute passes
@@ -637,10 +633,10 @@ contract("Pyth", function () {
             const price_id =
                 "0x" +
                 (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-            let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
-            assert.equal(
-                priceFeedResult.status.toString(),
-                PythStructs.PriceStatus.UNKNOWN.toString()
+
+            expectRevert(
+                this.pythProxy.getCurrentPrice(price_id),
+                "current price unavailable"
             );
         }
 
@@ -653,10 +649,9 @@ contract("Pyth", function () {
                 "0x" +
                 (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
             let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
-            assert.equal(
-                priceFeedResult.status.toString(),
-                PythStructs.PriceStatus.TRADING.toString()
-            );
+
+            // Expect getCurrentPrice to work (not revert)
+            await this.pythProxy.getCurrentPrice(price_id);
         }
     });
 
@@ -723,6 +718,13 @@ contract("Pyth", function () {
             this.pythProxy.updatePriceFeeds(["0x" + vm]),
             "invalid data source chain/emitter ID"
         );
+    });
+
+    it("Make sure version is the npm package version", async function () {
+        const contractVersion = await this.pythProxy.version();
+        const { version } = require('../package.json');
+
+        expect(contractVersion).equal(version);
     });
 });
 

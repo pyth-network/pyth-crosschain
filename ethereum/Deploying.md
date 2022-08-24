@@ -18,6 +18,9 @@ rm -rf build && npx truffle compile --all
 # Merge the network addresses into the artifacts, if some contracts are already deployed.
 npx apply-registry
 
+# Set the deploy commit hash in the contract binary (used for debugging purposes)
+sed -i "s/dead0beaf0deb10700c0331700da5d00deadbead/$(git rev-parse HEAD)/g" build/contracts/*
+
 # Perform the migration
 npx truffle migrate --network $MIGRATIONS_NETWORK
 
@@ -60,6 +63,8 @@ const PythUpgradable = artifacts.require("PythUpgradable");
 const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 
 /**
+ * Version <x.y.z>.
+ * 
  * Briefly describe the changelog here.
  */
 module.exports = async function (deployer) {
@@ -85,6 +90,12 @@ make sure that your change to the contract won't cause any collision**. For exam
 
 Anything other than the operations above will probably cause a collision. Please refer to Open Zeppelin Upgradeable
 (documentations)[https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable] for more information.
+
+## Versioning
+
+We use [Semantic Versioning](https://semver.org/) for our releases. When upgrading the contract, update the npm package version using
+`npm version <new version number> --no-git-tag-version`. Also, modify the hard-coded value in `version()` method in
+[the `Pyth.sol` contract](./contracts/pyth/Pyth.sol) to the new version. Then, after your PR is merged in main, create a release like with tag `pyth-evm-contract-v<x.y.z>`. This will help developers to be able to track code changes easier.
 
 # Testing
 
