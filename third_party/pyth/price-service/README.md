@@ -46,7 +46,8 @@ $ docker run \
 pyth_price_service
 ```
 
-Or, run `docker compose up` in the `third_party/pyth/price-service` directory:
+Or, run docker compose in the `third_party/pyth/price-service` directory using the commands below. It will run a spy listening to the Wormhole testnet network and a price service that connects to it. Then the price service will serve the Pyth prices published to the Wormhole testnet network.
+
 
 ```
 $ cd third_party/pyth/price-service
