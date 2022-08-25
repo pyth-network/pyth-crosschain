@@ -29,7 +29,6 @@ hex = "0.4.2"
 lazy_static = "1.4.0"
 bigint = "4"
 p2w-sdk = { path = "../../../third_party/pyth/p2w-sdk/rust" }
-solana-program = "=1.10.31"
 pyth-sdk = "0.4.2"
 
 [dev-dependencies]
