@@ -3,6 +3,7 @@
 use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
+    system_program,
 };
 
 use solitaire::{
@@ -41,6 +42,8 @@ pub struct Migrate<'b> {
     pub current_owner: Mut<Signer<Info<'b>>>,
     /// Payer account for updating the account data
     pub payer: Mut<Signer<Info<'b>>>,
+    /// For creating the new config account
+    pub system_program: Info<'b>,
 }
 
 pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResult<()> {
@@ -55,6 +58,18 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
             accs.current_owner.info().key.clone(),
         ));
     }
+
+    if *accs.system_program.key != system_program::id() {
+        trace!(
+            "Invalid system program, expected {:?}), found {}",
+            system_program::id(),
+            accs.system_program.key
+        );
+        return Err(SolitaireError::InvalidSigner(
+            accs.system_program.key.clone(),
+        ));
+    }
+
 
     // Populate new config
     accs.new_config

@@ -20,7 +20,7 @@ use solana_program::{
         rent,
     },
 };
-use solana_sdk::transaction::Transaction;
+use solana_sdk::{transaction::Transaction, signer::{Signer, keypair::Keypair}};
 use solitaire::{
     processors::seeded::Seeded,
     AccountState,
@@ -41,10 +41,7 @@ use p2w_sdk::P2WEmitter;
 
 use pyth2wormhole::{
     attest::P2W_MAX_BATCH_SIZE,
-    config::P2WConfigAccount,
-    initialize::InitializeAccounts,
-    migrate::MigrateAccounts,
-    set_config::SetConfigAccounts,
+    config::{OldP2WConfigAccount, P2WConfigAccount},
     AttestData,
 };
 
@@ -70,23 +67,33 @@ pub fn gen_init_tx(
     config: Pyth2WormholeConfig,
     latest_blockhash: Hash,
 ) -> Result<Transaction, ErrBox> {
-    use AccEntry::*;
 
     let payer_pubkey = payer.pubkey();
-
-    let accs = InitializeAccounts {
-        payer: Signer(payer),
-        new_config: Derived(p2w_addr),
-    };
+    let acc_metas = vec![
+        // new_config
+        AccountMeta::new(P2WConfigAccount::<{AccountState::Uninitialized}>::key(None, &p2w_addr), false),
+        // payer
+        AccountMeta::new(payer.pubkey(), true),
+        // system_program
+        AccountMeta::new(system_program::id(), false),
+        ];
 
     let ix_data = (pyth2wormhole::instruction::Instruction::Initialize, config);
 
-    let (ix, signers) = accs.to_ix(p2w_addr, ix_data.try_to_vec()?.as_slice())?;
+    let ix = Instruction::new_with_bytes(
+        p2w_addr,
+        ix_data
+            .try_to_vec()?
+            .as_slice(),
+        acc_metas,
+    );
+
+    let signers = vec![&payer];
 
     let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
         &[ix],
         Some(&payer_pubkey),
-        signers.iter().collect::<Vec<_>>().as_ref(),
+        &signers,
         latest_blockhash,
     );
     Ok(tx_signed)
@@ -99,27 +106,35 @@ pub fn gen_set_config_tx(
     new_config: Pyth2WormholeConfig,
     latest_blockhash: Hash,
 ) -> Result<Transaction, ErrBox> {
-    use AccEntry::*;
-
     let payer_pubkey = payer.pubkey();
 
-    let accs = SetConfigAccounts {
-        payer: Signer(payer),
-        current_owner: Signer(owner),
-        config: Derived(p2w_addr),
-    };
+    let acc_metas = vec![
+        // config
+        AccountMeta::new(P2WConfigAccount::<{AccountState::Initialized}>::key(None, &p2w_addr), false),
+        // current_owner
+        AccountMeta::new(owner.pubkey(), true),
+        // payer
+        AccountMeta::new(payer.pubkey(), true),
+        ];
 
     let ix_data = (
         pyth2wormhole::instruction::Instruction::SetConfig,
         new_config,
     );
 
-    let (ix, signers) = accs.to_ix(p2w_addr, ix_data.try_to_vec()?.as_slice())?;
+    let ix = Instruction::new_with_bytes(
+        p2w_addr,
+        ix_data
+            .try_to_vec()?
+            .as_slice(),
+        acc_metas,
+    );
 
+    let signers = vec![&owner, &payer];
     let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
         &[ix],
         Some(&payer_pubkey),
-        signers.iter().collect::<Vec<_>>().as_ref(),
+        &signers,
         latest_blockhash,
     );
     Ok(tx_signed)
@@ -131,28 +146,41 @@ pub fn gen_migrate_tx(
     owner: Keypair,
     latest_blockhash: Hash,
 ) -> Result<Transaction, ErrBox> {
-    use AccEntry::*;
 
     let payer_pubkey = payer.pubkey();
 
-    let accs = MigrateAccounts {
-        new_config: Derived(p2w_addr),
-        old_config: Derived(p2w_addr),
-        current_owner: Signer(owner),
-        payer: Signer(payer),
-    };
+    let acc_metas = vec![
+        // new_config
+        AccountMeta::new(P2WConfigAccount::<{AccountState::Uninitialized}>::key(None, &p2w_addr), false),
+        // old_config
+        AccountMeta::new(OldP2WConfigAccount::key(None, &p2w_addr), false),
+        // owner
+        AccountMeta::new(owner.pubkey(), true),
+        // payer
+        AccountMeta::new(payer.pubkey(), true),
+        // system_program
+        AccountMeta::new(system_program::id(), false),
+        ];
 
     let ix_data = (
         pyth2wormhole::instruction::Instruction::Migrate,
         (),
     );
 
-    let (ix, signers) = accs.to_ix(p2w_addr, ix_data.try_to_vec()?.as_slice())?;
+    let ix = Instruction::new_with_bytes(
+        p2w_addr,
+        ix_data
+            .try_to_vec()?
+            .as_slice(),
+        acc_metas,
+    );
+
+    let signers = vec![&owner, &payer];
 
     let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
         &[ix],
         Some(&payer_pubkey),
-        signers.iter().collect::<Vec<_>>().as_ref(),
+        &signers,
         latest_blockhash,
     );
     Ok(tx_signed)
@@ -273,8 +301,7 @@ pub fn gen_attest_tx(
     let ix = Instruction::new_with_bytes(
         p2w_addr,
         ix_data
-            .try_to_vec()
-            .map_err(|e| -> ErrBoxSend { Box::new(e) })?
+            .try_to_vec()?
             .as_slice(),
         acc_metas,
     );

@@ -22,6 +22,7 @@ use crate::config::{
 pub struct Initialize<'b> {
     pub new_config: Mut<P2WConfigAccount<'b, { AccountState::Uninitialized }>>,
     pub payer: Mut<Signer<Info<'b>>>,
+    pub system_program: Info<'b>,
 }
 
 /// Must be called right after deployment

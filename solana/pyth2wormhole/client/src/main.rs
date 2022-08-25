@@ -37,13 +37,13 @@ use solana_sdk::{
         read_keypair_file,
         Signature,
     },
+    signer::keypair::Keypair,
 };
 use solana_transaction_status::UiTransactionEncoding;
 use solitaire::{
     processors::seeded::Seeded,
     ErrBox,
 };
-use solitaire_client::Keypair;
 use tokio::{
     sync::Semaphore,
     task::JoinHandle,
