@@ -181,6 +181,17 @@ export class RestAPI {
       "api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
     );
 
+    app.get(
+      "/api/price_feed_ids",
+      (req: Request, res: Response) => {
+        const availableIds = this.priceFeedVaaInfo.getPriceIds();
+        res.json([...availableIds]);
+      }
+    );
+    endpoints.push(
+      "api/price_feed_ids"
+    );
+
     app.get("/ready", (_, res: Response) => {
       if (this.isReady!()) {
         res.sendStatus(StatusCodes.OK);
