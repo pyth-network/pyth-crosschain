@@ -53,7 +53,7 @@ spec:
                 path: bigtable-key.json
       containers:
         - name: guardiand
-          image: ghcr.io/certusone/guardiand:v2.8.8.1
+          image: ghcr.io/certusone/guardiand:v2.8.9
           volumeMounts:
             - mountPath: /run/node
               name: node-rundir
@@ -77,8 +77,6 @@ spec:
             - ws://eth-devnet:8545
             - --auroraRPC
             - ws://eth-devnet:8545
-            - --celoRPC
-            - ws://eth-devnet:8545
             - --fantomRPC
             - ws://eth-devnet:8545
             - --oasisRPC
@@ -89,18 +87,40 @@ spec:
             - ws://eth-devnet:8545
             - --klaytnRPC
             - ws://eth-devnet:8545
+            - --celoRPC
+            - ws://eth-devnet:8545
+            - --moonbeamRPC
+            - ws://eth-devnet:8545
+            - --neonRPC
+            - ws://eth-devnet:8545
             - --terraWS
             - ws://terra-terrad:26657/websocket
             - --terraLCD
             - http://terra-terrad:1317
             - --terraContract
             - terra14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9ssrc8au
+            # - --terra2WS
+            # - ws://terra2-terrad:26657/websocket
+            # - --terra2LCD
+            # - http://terra2-terrad:1317
+            # - --terra2Contract
+            # - terra14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9ssrc8au
+            # - --algorandAppID
+            # - "4"
+            # - --algorandIndexerRPC
+            # - http://algorand:8980
+            # - --algorandIndexerToken
+            # - "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            # - --algorandAlgodRPC
+            # - http://algorand:4001
+            # - --algorandAlgodToken
+            # - "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
             - --solanaContract
             - Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o
-            - --solanaWS
-            - ws://solana-devnet:8900
-            - --solanaRPC
-            - http://solana-devnet:8899
+            # - --solanaWS
+            # - ws://solana-devnet:8900
+            # - --solanaRPC
+            # - http://solana-devnet:8899
             - --unsafeDevMode
             - --guardianKey
             - /tmp/bridge.key
@@ -112,7 +132,8 @@ spec:
             - /tmp/admin.sock
             - --dataDir
             - /tmp/data
-#            - --logLevel=debug
+          # - --chainGovernorEnabled=true
+          #            - --logLevel=debug
           securityContext:
             capabilities:
               add:
