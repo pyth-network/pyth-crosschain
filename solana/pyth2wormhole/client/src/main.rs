@@ -3,7 +3,7 @@ pub mod cli;
 use std::{
     fs::File,
     pin::Pin,
-    sync::Arc,
+    sync::{Arc},
     thread,
     time::{
         Duration,
@@ -45,7 +45,7 @@ use solitaire::{
     ErrBox,
 };
 use tokio::{
-    sync::Semaphore,
+    sync::{Semaphore, Mutex},
     task::JoinHandle,
 };
 
@@ -136,16 +136,16 @@ async fn main() -> Result<(), ErrBox> {
                 get_config_account(&rpc_client, &p2w_addr).await?
             );
         }
-        Action::Migrate {
-            ref owner,
-        } => {
+        Action::Migrate { ref owner } => {
             let tx = gen_migrate_tx(
                 payer,
                 p2w_addr,
                 read_keypair_file(&*shellexpand::tilde(&owner))?,
                 latest_blockhash,
             )?;
-            rpc_client.send_and_confirm_transaction_with_spinner(&tx).await?;
+            rpc_client
+                .send_and_confirm_transaction_with_spinner(&tx)
+                .await?;
             println!(
                 "Applied conifg:\n{:?}",
                 get_config_account(&rpc_client, &p2w_addr).await?
@@ -252,6 +252,8 @@ async fn handle_attest(
         rpc_interval,
     ));
 
+    let message_index_mtx = Arc::new(Mutex::new(P2WMessageIndex::new(Duration::from_secs(10))));
+
     // Create attestation scheduling routines; see attestation_sched_job() for details
     let mut attestation_sched_futs = batches.into_iter().map(|(batch_no, batch)| {
         attestation_sched_job(
@@ -265,6 +267,7 @@ async fn handle_attest(
             p2w_addr,
             config.clone(),
             Keypair::from_bytes(&payer.to_bytes()).unwrap(),
+            message_index_mtx.clone(),
         )
     });
 
@@ -337,6 +340,7 @@ async fn attestation_sched_job(
     p2w_addr: Pubkey,
     config: Pyth2WormholeConfig,
     payer: Keypair,
+    message_index_mtx: Arc<Mutex<P2WMessageIndex>>
 ) -> Result<(), ErrBoxSend> {
     let mut retries_left = n_retries;
     // Enforces the max batch job count
@@ -357,6 +361,7 @@ async fn attestation_sched_job(
             Keypair::from_bytes(&payer.to_bytes()).unwrap(), // Keypair has no clone
             batch.symbols.to_vec(),
             sema.clone(),
+            message_index_mtx.clone(),
         );
 
         if daemon {
@@ -456,6 +461,7 @@ async fn attestation_job(
     payer: Keypair,
     symbols: Vec<P2WSymbol>,
     max_jobs_sema: Arc<Semaphore>,
+    message_index_mtx: Arc<Mutex<P2WMessageIndex>>,
 ) -> Result<(), ErrBoxSend> {
     // Will be dropped after attestation is complete
     let _permit = max_jobs_sema.acquire().await?;
@@ -470,12 +476,14 @@ async fn attestation_job(
         .map_err(|e| -> ErrBoxSend { e.into() })
         .await?;
 
+    let wh_msg_id = message_index_mtx.lock().await.get_account().id;
+
     let tx_res: Result<_, ErrBoxSend> = gen_attest_tx(
         p2w_addr,
         &config,
         &payer,
+        wh_msg_id,
         symbols.as_slice(),
-        &Keypair::new(),
         latest_blockhash,
     );
     let tx = tx_res?;

@@ -1,5 +1,6 @@
 pub mod attestation_cfg;
 pub mod batch_state;
+pub mod message;
 pub mod util;
 
 use borsh::{
@@ -57,6 +58,8 @@ pub use util::{
     RLMutex,
     RLMutexGuard,
 };
+
+pub use message::P2WMessageIndex;
 
 /// Future-friendly version of solitaire::ErrBox
 pub type ErrBoxSend = Box<dyn std::error::Error + Send + Sync>;
@@ -162,10 +165,7 @@ pub fn gen_migrate_tx(
         AccountMeta::new(system_program::id(), false),
         ];
 
-    let ix_data = (
-        pyth2wormhole::instruction::Instruction::Migrate,
-        (),
-    );
+    let ix_data = (pyth2wormhole::instruction::Instruction::Migrate, ());
 
     let ix = Instruction::new_with_bytes(
         p2w_addr,
@@ -209,8 +209,8 @@ pub fn gen_attest_tx(
     p2w_addr: Pubkey,
     p2w_config: &Pyth2WormholeConfig, // Must be fresh, not retrieved inside to keep side effects away
     payer: &Keypair,
+    wh_msg_id: u64,
     symbols: &[P2WSymbol],
-    wh_msg: &Keypair,
     latest_blockhash: Hash,
 ) -> Result<Transaction, ErrBoxSend> {
     let emitter_addr = P2WEmitter::key(None, &p2w_addr);
@@ -279,7 +279,7 @@ pub fn gen_attest_tx(
             false,
         ),
         // wh_message
-        AccountMeta::new(wh_msg.pubkey(), true),
+        AccountMeta::new(P2WMessage::key(&P2WMessageDrvData { id: wh_msg_id, message_owner: payer.pubkey()  }, &p2w_addr), true),
         // wh_emitter
         AccountMeta::new_readonly(emitter_addr, false),
         // wh_sequence
@@ -295,6 +295,7 @@ pub fn gen_attest_tx(
         pyth2wormhole::instruction::Instruction::Attest,
         AttestData {
             consistency_level: ConsistencyLevel::Confirmed,
+            message_account_id: 0,
         },
     );
 
@@ -309,7 +310,7 @@ pub fn gen_attest_tx(
     let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
         &[ix],
         Some(&payer.pubkey()),
-        &vec![&payer, &wh_msg],
+        &vec![&payer],
         latest_blockhash,
     );
     Ok(tx_signed)
