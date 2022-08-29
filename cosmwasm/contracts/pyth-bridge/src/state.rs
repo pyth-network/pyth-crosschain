@@ -1,7 +1,5 @@
-use std::{
-    time::Duration,
-    collections::HashSet
-};
+use std::collections::HashSet;
+use std::time::Duration;
 
 use pyth_sdk_cw::PriceFeed;
 use schemars::JsonSchema;
@@ -11,10 +9,10 @@ use serde::{
 };
 
 use cosmwasm_std::{
+    Addr,
+    Binary,
     Storage,
     Timestamp,
-    Binary,
-    Addr,
 };
 
 use cosmwasm_storage::{
@@ -38,24 +36,24 @@ pub const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, Hash, JsonSchema)]
 pub struct PythDataSource {
-    pub emitter: Binary,
+    pub emitter:            Binary,
     pub pyth_emitter_chain: u16,
 }
 
 // Guardian set information
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct ConfigInfo {
-    pub owner: Addr,
-    pub wormhole_contract:  Addr,
-    pub data_sources: HashSet<PythDataSource>,
+    pub owner:             Addr,
+    pub wormhole_contract: Addr,
+    pub data_sources:      HashSet<PythDataSource>,
 }
 
 impl Default for ConfigInfo {
     fn default() -> Self {
         ConfigInfo {
-            owner: Addr::unchecked(String::default()),
+            owner:             Addr::unchecked(String::default()),
             wormhole_contract: Addr::unchecked(String::default()),
-            data_sources: HashSet::default()
+            data_sources:      HashSet::default(),
         }
     }
 }

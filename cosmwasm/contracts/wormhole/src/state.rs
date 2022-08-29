@@ -1,6 +1,4 @@
-use schemars::{
-    JsonSchema,
-};
+use schemars::JsonSchema;
 use serde::{
     Deserialize,
     Serialize,
@@ -25,10 +23,8 @@ use cosmwasm_storage::{
     Singleton,
 };
 
-use crate::{
-    byte_utils::ByteUtils,
-    error::ContractError,
-};
+use crate::byte_utils::ByteUtils;
+use crate::error::ContractError;
 
 use sha3::{
     Digest,
@@ -53,7 +49,7 @@ pub struct ConfigInfo {
     pub guardian_set_expirity: u64,
 
     // governance contract details
-    pub gov_chain: u16,
+    pub gov_chain:   u16,
     pub gov_address: Vec<u8>,
 
     // Message sending fee
@@ -63,17 +59,17 @@ pub struct ConfigInfo {
 // Validator Action Approval(VAA) data
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ParsedVAA {
-    pub version: u8,
+    pub version:            u8,
     pub guardian_set_index: u32,
-    pub timestamp: u32,
-    pub nonce: u32,
-    pub len_signers: u8,
+    pub timestamp:          u32,
+    pub nonce:              u32,
+    pub len_signers:        u8,
 
-    pub emitter_chain: u16,
-    pub emitter_address: Vec<u8>,
-    pub sequence: u64,
+    pub emitter_chain:     u16,
+    pub emitter_address:   Vec<u8>,
+    pub sequence:          u64,
     pub consistency_level: u8,
-    pub payload: Vec<u8>,
+    pub payload:           Vec<u8>,
 
     pub hash: Vec<u8>,
 }
@@ -195,7 +191,7 @@ impl GuardianAddress {
 // Guardian set information
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct GuardianSetInfo {
-    pub addresses: Vec<GuardianAddress>,
+    pub addresses:       Vec<GuardianAddress>,
     // List of guardian addresses
     pub expiration_time: u64, // Guardian set expiration time
 }
@@ -276,9 +272,9 @@ pub fn wrapped_asset_address_read(storage: &dyn Storage) -> ReadonlyBucket<Vec<u
 }
 
 pub struct GovernancePacket {
-    pub module: Vec<u8>,
-    pub action: u8,
-    pub chain: u16,
+    pub module:  Vec<u8>,
+    pub action:  u8,
+    pub chain:   u16,
     pub payload: Vec<u8>,
 }
 
@@ -300,23 +296,21 @@ impl GovernancePacket {
 }
 
 // action 1
-pub struct ContractUpgrade  {
+pub struct ContractUpgrade {
     pub new_contract: u64,
 }
 
 // action 2
 pub struct GuardianSetUpgrade {
     pub new_guardian_set_index: u32,
-    pub new_guardian_set: GuardianSetInfo,
+    pub new_guardian_set:       GuardianSetInfo,
 }
 
 impl ContractUpgrade {
     pub fn deserialize(data: &Vec<u8>) -> StdResult<Self> {
         let data = data.as_slice();
         let new_contract = data.get_u64(24);
-        Ok(ContractUpgrade {
-            new_contract,
-        })
+        Ok(ContractUpgrade { new_contract })
     }
 }
 
@@ -365,7 +359,7 @@ impl SetFee {
 
         let (_, amount) = data.get_u256(0);
         let fee = Coin {
-            denom: String::from(FEE_DENOMINATION),
+            denom:  String::from(FEE_DENOMINATION),
             amount: Uint128::new(amount),
         };
         Ok(SetFee { fee })
@@ -374,7 +368,7 @@ impl SetFee {
 
 // action 4
 pub struct TransferFee {
-    pub amount: Coin,
+    pub amount:    Coin,
     pub recipient: CanonicalAddr,
 }
 
@@ -385,7 +379,7 @@ impl TransferFee {
 
         let (_, amount) = data.get_u256(32);
         let amount = Coin {
-            denom: String::from(FEE_DENOMINATION),
+            denom:  String::from(FEE_DENOMINATION),
             amount: Uint128::new(amount),
         };
         Ok(TransferFee { amount, recipient })

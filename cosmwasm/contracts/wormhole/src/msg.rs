@@ -17,10 +17,10 @@ type HumanAddr = String;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
-    pub gov_chain: u16,
+    pub gov_chain:   u16,
     pub gov_address: Binary,
 
-    pub initial_guardian_set: GuardianSetInfo,
+    pub initial_guardian_set:  GuardianSetInfo,
     pub guardian_set_expirity: u64,
 }
 
@@ -33,8 +33,7 @@ pub enum ExecuteMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub struct MigrateMsg {
-}
+pub struct MigrateMsg {}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -48,8 +47,8 @@ pub enum QueryMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct GuardianSetInfoResponse {
-    pub guardian_set_index: u32,         // Current guardian set index
-    pub addresses: Vec<GuardianAddress>, // List of querdian addresses
+    pub guardian_set_index: u32, // Current guardian set index
+    pub addresses:          Vec<GuardianAddress>, // List of querdian addresses
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

@@ -17,53 +17,49 @@ use cosmwasm_std::{
     WasmMsg,
 };
 
-use crate::{
-    byte_utils::{
-        extend_address_to_32,
-        ByteUtils,
-    },
-    error::ContractError,
-    msg::{
-        ExecuteMsg,
-        GetAddressHexResponse,
-        GetStateResponse,
-        GuardianSetInfoResponse,
-        InstantiateMsg,
-        MigrateMsg,
-        QueryMsg,
-    },
-    state::{
-        config,
-        config_read,
-        guardian_set_get,
-        guardian_set_set,
-        sequence_read,
-        sequence_set,
-        vaa_archive_add,
-        vaa_archive_check,
-        ConfigInfo,
-        ContractUpgrade,
-        GovernancePacket,
-        GuardianAddress,
-        GuardianSetInfo,
-        GuardianSetUpgrade,
-        ParsedVAA,
-        SetFee,
-        TransferFee,
-    },
+use crate::byte_utils::{
+    extend_address_to_32,
+    ByteUtils,
+};
+use crate::error::ContractError;
+use crate::msg::{
+    ExecuteMsg,
+    GetAddressHexResponse,
+    GetStateResponse,
+    GuardianSetInfoResponse,
+    InstantiateMsg,
+    MigrateMsg,
+    QueryMsg,
+};
+use crate::state::{
+    config,
+    config_read,
+    guardian_set_get,
+    guardian_set_set,
+    sequence_read,
+    sequence_set,
+    vaa_archive_add,
+    vaa_archive_check,
+    ConfigInfo,
+    ContractUpgrade,
+    GovernancePacket,
+    GuardianAddress,
+    GuardianSetInfo,
+    GuardianSetUpgrade,
+    ParsedVAA,
+    SetFee,
+    TransferFee,
 };
 
-use k256::{
-    ecdsa::{
-        recoverable::{
-            Id as RecoverableId,
-            Signature as RecoverableSignature,
-        },
-        Signature,
-        VerifyingKey,
-    },
-    EncodedPoint,
+use k256::ecdsa::recoverable::{
+    Id as RecoverableId,
+    Signature as RecoverableSignature,
 };
+use k256::ecdsa::{
+    Signature,
+    VerifyingKey,
+};
+use k256::EncodedPoint;
 use sha3::{
     Digest,
     Keccak256,
@@ -95,11 +91,11 @@ pub fn instantiate(
 ) -> StdResult<Response> {
     // Save general wormhole info
     let state = ConfigInfo {
-        gov_chain: msg.gov_chain,
-        gov_address: msg.gov_address.as_slice().to_vec(),
-        guardian_set_index: 0,
+        gov_chain:             msg.gov_chain,
+        gov_address:           msg.gov_address.as_slice().to_vec(),
+        guardian_set_index:    0,
         guardian_set_expirity: msg.guardian_set_expirity,
-        fee: Coin::new(FEE_AMOUNT, FEE_DENOMINATION), // 0.01 Luna (or 10000 uluna) fee by default
+        fee:                   Coin::new(FEE_AMOUNT, FEE_DENOMINATION), /* 0.01 Luna (or 10000 uluna) fee by default */
     };
     config(deps.storage).save(&state)?;
 
@@ -289,8 +285,8 @@ fn vaa_update_contract(_deps: DepsMut, env: Env, data: &Vec<u8>) -> StdResult<Re
     Ok(Response::new()
         .add_message(CosmosMsg::Wasm(WasmMsg::Migrate {
             contract_addr: env.contract.address.to_string(),
-            new_code_id: new_contract,
-            msg: to_binary(&MigrateMsg {})?,
+            new_code_id:   new_contract,
+            msg:           to_binary(&MigrateMsg {})?,
         }))
         .add_attribute("action", "contract_upgrade"))
 }
@@ -314,7 +310,7 @@ pub fn handle_transfer_fee(deps: DepsMut, _env: Env, data: &Vec<u8>) -> StdResul
 
     Ok(Response::new().add_message(CosmosMsg::Bank(BankMsg::Send {
         to_address: deps.api.addr_humanize(&transfer_msg.recipient)?.to_string(),
-        amount: vec![transfer_msg.amount],
+        amount:     vec![transfer_msg.amount],
     })))
 }
 
@@ -365,7 +361,7 @@ pub fn query_guardian_set_info(deps: Deps) -> StdResult<GuardianSetInfoResponse>
     let guardian_set = guardian_set_get(deps.storage, state.guardian_set_index)?;
     let res = GuardianSetInfoResponse {
         guardian_set_index: state.guardian_set_index,
-        addresses: guardian_set.addresses,
+        addresses:          guardian_set.addresses,
     };
     Ok(res)
 }

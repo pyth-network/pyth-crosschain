@@ -29,6 +29,6 @@ pub enum ExecuteMsg {
 pub struct MigrateMsg {}
 
 pub use pyth_sdk_cw::{
+    PriceFeedResponse,
     QueryMsg,
-    PriceFeedResponse
 };
