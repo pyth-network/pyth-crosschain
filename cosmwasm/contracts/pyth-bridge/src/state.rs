@@ -44,7 +44,7 @@ pub struct PythDataSource {
 }
 
 // Guardian set information
-#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, JsonSchema)]
 pub struct ConfigInfo {
     pub owner: HumanAddr,
     pub wormhole_contract:  HumanAddr,
@@ -52,7 +52,7 @@ pub struct ConfigInfo {
 }
 
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct PriceInfo {
     pub arrival_time:     Timestamp,

@@ -125,8 +125,8 @@ fn add_data_source(
         return ContractError::PermissionDenied.std_err();
     }
 
-    if state.data_sources.insert(data_source.clone()) == false {
-        return Err(StdError::GenericErr { msg: format!("Data source already exists") });
+    if !state.data_sources.insert(data_source.clone()) {
+        return Err(StdError::GenericErr { msg: "Data source already exists".to_string() });
     }
 
     config(deps.storage).save(&state)?;
@@ -155,8 +155,8 @@ fn remove_data_source(
         return ContractError::PermissionDenied.std_err();
     }
 
-    if state.data_sources.remove(&data_source) == false {
-        return Err(StdError::GenericErr { msg: format!("Data source does not exist") });
+    if !state.data_sources.remove(&data_source) {
+        return Err(StdError::GenericErr { msg: "Data source does not exist".to_string() });
     }
 
     config(deps.storage).save(&state)?;
@@ -612,7 +612,7 @@ mod test {
         assert!(add_data_source(deps.as_mut(), env.clone(), mock_info("123", &[]), data_source.clone()).is_ok());
 
         // Adding an existing data source should result an error
-        assert!(add_data_source(deps.as_mut(), env.clone(), mock_info("123", &[]), data_source.clone()).is_err());
+        assert!(add_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_err());
     }
 
     #[test]
@@ -642,7 +642,7 @@ mod test {
         assert!(remove_data_source(deps.as_mut(), env.clone(), mock_info("123", &[]), data_source.clone()).is_ok());
 
         // Removing a non existent data source should result an error
-        assert!(remove_data_source(deps.as_mut(), env.clone(), mock_info("123", &[]), data_source.clone()).is_err());
+        assert!(remove_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_err());
     }
 
     #[test]
@@ -675,7 +675,7 @@ mod test {
         assert_eq!(verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa), ContractError::InvalidVAA.std_err());
 
         let data_source = PythDataSource { emitter: vec![1u8].into(), pyth_emitter_chain: 3 };
-        assert!(add_data_source(deps.as_mut(), env.clone(), mock_info("123", &[]), data_source.clone()).is_ok());
+        assert!(add_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_ok());
 
         assert_eq!(verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa), Ok(()));
     }
@@ -696,7 +696,7 @@ mod test {
         assert_eq!(verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa), Ok(()));
 
         let data_source = PythDataSource { emitter: vec![1u8].into(), pyth_emitter_chain: 3 };
-        assert!(remove_data_source(deps.as_mut(), env.clone(), mock_info("123", &[]), data_source.clone()).is_ok());
+        assert!(remove_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_ok());
 
         // Should result an error because data source should not exist anymore
         assert_eq!(verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa), ContractError::InvalidVAA.std_err());
