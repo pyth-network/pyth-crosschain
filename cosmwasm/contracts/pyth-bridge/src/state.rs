@@ -14,6 +14,7 @@ use cosmwasm_std::{
     Storage,
     Timestamp,
     Binary,
+    Addr,
 };
 
 use cosmwasm_storage::{
@@ -26,8 +27,6 @@ use cosmwasm_storage::{
     ReadonlySingleton,
     Singleton,
 };
-
-type HumanAddr = String;
 
 pub static CONFIG_KEY: &[u8] = b"config";
 pub static PRICE_INFO_KEY: &[u8] = b"price_info_v3";
@@ -44,13 +43,22 @@ pub struct PythDataSource {
 }
 
 // Guardian set information
-#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct ConfigInfo {
-    pub owner: HumanAddr,
-    pub wormhole_contract:  HumanAddr,
+    pub owner: Addr,
+    pub wormhole_contract:  Addr,
     pub data_sources: HashSet<PythDataSource>,
 }
 
+impl Default for ConfigInfo {
+    fn default() -> Self {
+        ConfigInfo {
+            owner: Addr::unchecked(String::default()),
+            wormhole_contract: Addr::unchecked(String::default()),
+            data_sources: HashSet::default()
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]

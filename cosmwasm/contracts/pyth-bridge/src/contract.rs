@@ -61,8 +61,8 @@ pub fn instantiate(
 ) -> StdResult<Response> {
     // Save general wormhole and pyth info
     let state = ConfigInfo {
-        owner: info.sender.to_string(),
-        wormhole_contract:  msg.wormhole_contract,
+        owner: info.sender,
+        wormhole_contract:  deps.api.addr_validate(msg.wormhole_contract.as_ref())?,
         data_sources: HashSet::from([PythDataSource {
             emitter: msg.pyth_emitter,
             pyth_emitter_chain: msg.pyth_emitter_chain,
@@ -76,7 +76,7 @@ pub fn instantiate(
 pub fn parse_vaa(deps: DepsMut, block_time: u64, data: &Binary) -> StdResult<ParsedVAA> {
     let cfg = config_read(deps.storage).load()?;
     let vaa: ParsedVAA = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-        contract_addr: cfg.wormhole_contract,
+        contract_addr: cfg.wormhole_contract.to_string(),
         msg:           to_binary(&WormholeQueryMsg::VerifyVAA {
             vaa: data.clone(),
             block_time,
@@ -322,7 +322,7 @@ mod test {
         MockStorage,
         mock_info,
     };
-    use cosmwasm_std::OwnedDeps;
+    use cosmwasm_std::{OwnedDeps, Addr};
 
     use super::*;
 
@@ -603,7 +603,7 @@ mod test {
     fn test_add_data_source_ok_with_owner() {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(&ConfigInfo {
-            owner: String::from("123"),
+            owner: Addr::unchecked("123"),
             ..Default::default()
         }).unwrap();
 
@@ -619,7 +619,7 @@ mod test {
     fn test_add_data_source_err_without_owner() {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(&ConfigInfo {
-            owner: String::from("123"),
+            owner: Addr::unchecked("123"),
             ..Default::default()
         }).unwrap();
 
@@ -632,7 +632,7 @@ mod test {
     fn test_remove_data_source_ok_with_owner() {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(&ConfigInfo {
-            owner: String::from("123"),
+            owner: Addr::unchecked("123"),
             data_sources: create_data_sources(vec![1u8], 1),
             ..Default::default()
         }).unwrap();
@@ -649,7 +649,7 @@ mod test {
     fn test_remove_data_source_err_without_owner() {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(&ConfigInfo {
-            owner: String::from("123"),
+            owner: Addr::unchecked("123"),
             data_sources: create_data_sources(vec![1u8], 1),
             ..Default::default()
         }).unwrap();
@@ -663,7 +663,7 @@ mod test {
     fn test_verify_vaa_works_after_adding_data_source() {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(&ConfigInfo {
-            owner: String::from("123"),
+            owner: Addr::unchecked("123"),
             ..Default::default()
         }).unwrap();
 
@@ -684,7 +684,7 @@ mod test {
     fn test_verify_vaa_err_after_removing_data_source() {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(&ConfigInfo {
-            owner: String::from("123"),
+            owner: Addr::unchecked("123"),
             data_sources: create_data_sources(vec![1u8], 3),
             ..Default::default()
         }).unwrap();
