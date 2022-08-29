@@ -16,7 +16,7 @@ use cosmwasm_std::{
     StdError,
 };
 
-use pyth_sdk::{
+use pyth_sdk_cw::{
     PriceFeed,
     PriceIdentifier,
     PriceStatus,

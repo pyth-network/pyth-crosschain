@@ -3,7 +3,7 @@ use std::{
     collections::HashSet
 };
 
-use pyth_sdk::PriceFeed;
+use pyth_sdk_cw::PriceFeed;
 use schemars::JsonSchema;
 use serde::{
     Deserialize,
