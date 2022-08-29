@@ -18,16 +18,17 @@ use std::io::Read;
 use std::iter::Iterator;
 use std::mem;
 
-use pyth_sdk_solana::state::PriceStatus;
+pub use pyth_sdk::{
+    Identifier,
+    PriceStatus,
+    UnixTimestamp,
+};
 
 #[cfg(feature = "solana")]
 use solitaire::{
     Derive,
     Info,
 };
-
-use solana_program::clock::UnixTimestamp;
-use solana_program::pubkey::Pubkey;
 
 #[cfg(feature = "wasm")]
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
@@ -66,8 +67,6 @@ pub enum PayloadId {
     PriceBatchAttestation = 2,
 }
 
-// On-chain data types
-
 /// The main attestation data type.
 ///
 /// Important: For maximum security, *both* product_id and price_id
@@ -80,9 +79,9 @@ pub enum PayloadId {
 #[serde(rename_all = "camelCase")]
 pub struct PriceAttestation {
     #[serde(serialize_with = "pubkey_to_hex")]
-    pub product_id:         Pubkey,
+    pub product_id:         Identifier,
     #[serde(serialize_with = "pubkey_to_hex")]
-    pub price_id:           Pubkey,
+    pub price_id:           Identifier,
     #[serde(serialize_with = "use_to_string")]
     pub price:              i64,
     #[serde(serialize_with = "use_to_string")]
@@ -113,7 +112,7 @@ where
     s.serialize_str(&val.to_string())
 }
 
-pub fn pubkey_to_hex<S>(val: &Pubkey, s: S) -> Result<S::Ok, S::Error>
+pub fn pubkey_to_hex<S>(val: &Identifier, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
@@ -137,7 +136,7 @@ impl BatchPriceAttestation {
         // major_version
         buf.extend_from_slice(&P2W_FORMAT_VER_MAJOR.to_be_bytes()[..]);
 
-        // minor_version 
+        // minor_version
         buf.extend_from_slice(&P2W_FORMAT_VER_MINOR.to_be_bytes()[..]);
 
         // hdr_size
@@ -279,22 +278,23 @@ impl BatchPriceAttestation {
 // On-chain data types
 
 impl PriceAttestation {
+    #[cfg(feature = "solana")]
     pub fn from_pyth_price_bytes(
-        price_id: Pubkey,
+        price_id: Identifier,
         attestation_time: UnixTimestamp,
         value: &[u8],
     ) -> Result<Self, ErrBox> {
         let price = pyth_sdk_solana::state::load_price_account(value)?;
 
         Ok(PriceAttestation {
-            product_id: Pubkey::new(&price.prod.val[..]),
+            product_id: Identifier::new(price.prod.val),
             price_id,
             price: price.agg.price,
             conf: price.agg.conf,
             expo: price.expo,
             ema_price: price.ema_price.val,
             ema_conf: price.ema_conf.val as u64,
-            status: price.agg.status.into(),
+            status: price.agg.status,
             num_publishers: price.num_qt,
             max_num_publishers: price.num,
             attestation_time,
@@ -379,11 +379,11 @@ impl PriceAttestation {
     pub fn deserialize(mut bytes: impl Read) -> Result<Self, ErrBox> {
         let mut product_id_vec = vec![0u8; PUBKEY_LEN];
         bytes.read_exact(product_id_vec.as_mut_slice())?;
-        let product_id = Pubkey::new(product_id_vec.as_slice());
+        let product_id = Identifier::new(product_id_vec.as_slice().try_into()?);
 
         let mut price_id_vec = vec![0u8; PUBKEY_LEN];
         bytes.read_exact(price_id_vec.as_mut_slice())?;
-        let price_id = Pubkey::new(price_id_vec.as_slice());
+        let price_id = Identifier::new(price_id_vec.as_slice().try_into()?);
 
         let mut price_vec = vec![0u8; mem::size_of::<i64>()];
         bytes.read_exact(price_vec.as_mut_slice())?;
@@ -479,8 +479,8 @@ mod tests {
         let product_id_bytes = prod.unwrap_or([21u8; 32]);
         let price_id_bytes = price.unwrap_or([222u8; 32]);
         PriceAttestation {
-            product_id:         Pubkey::new_from_array(product_id_bytes),
-            price_id:           Pubkey::new_from_array(price_id_bytes),
+            product_id:         Identifier::new(product_id_bytes),
+            price_id:           Identifier::new(price_id_bytes),
             price:              0x2bad2feed7,
             conf:               101,
             ema_price:          -42,

@@ -89,6 +89,8 @@ async fn test_migrate_works() -> Result<(), solitaire::ErrBox> {
     // Add system program because the contract creates an account for new configuration account
     passthrough::add_passthrough(&mut p2w_test, "system", system_program::id());
 
+    info!("System program under {}", system_program::id());
+
     info!("Before start_with_context");
     let mut ctx = p2w_test.start_with_context().await;
 

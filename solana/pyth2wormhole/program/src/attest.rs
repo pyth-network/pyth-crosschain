@@ -22,6 +22,7 @@ use p2w_sdk::{
     BatchPriceAttestation,
     P2WEmitter,
     PriceAttestation,
+    Identifier,
 };
 
 use bridge::{
@@ -38,7 +39,6 @@ use solitaire::{
     ExecutionContext,
     FromAccounts,
     Info,
-    InstructionContext,
     Keyed,
     Mut,
     Peel,
@@ -47,7 +47,6 @@ use solitaire::{
     Signer,
     SolitaireError,
     Sysvar,
-    ToInstruction,
 };
 
 /// Important: must be manually maintained until native Solitaire
@@ -59,7 +58,7 @@ use solitaire::{
 /// correct value dynamically.
 pub const P2W_MAX_BATCH_SIZE: u16 = 5;
 
-#[derive(FromAccounts, ToInstruction)]
+#[derive(FromAccounts)]
 pub struct Attest<'b> {
     // Payer also used for wormhole
     pub payer: Mut<Signer<Info<'b>>>,
@@ -131,12 +130,6 @@ pub struct Attest<'b> {
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct AttestData {
     pub consistency_level: ConsistencyLevel,
-}
-
-impl<'b> InstructionContext<'b> for Attest<'b> {
-    fn deps(&self) -> Vec<Pubkey> {
-        vec![solana_program::system_program::id()]
-    }
 }
 
 pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> SoliResult<()> {
@@ -211,7 +204,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         }
 
         let attestation = PriceAttestation::from_pyth_price_bytes(
-            price.key.clone(),
+            Identifier::new(product.key.to_bytes()),
             accs.clock.unix_timestamp,
             &*price.try_borrow_data()?,
         )
@@ -228,7 +221,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         // Failing to verify the product/price relationship could lead
         // to mismatched product/price metadata, which would result in
         // a false attestation.
-        if &attestation.product_id != product.key {
+        if attestation.product_id.to_bytes() != product.key.to_bytes() {
             trace!(&format!(
                 "Price's product_id does not match the pased account (points at {:?} instead)",
                 attestation.product_id

@@ -6,13 +6,11 @@ use solitaire::{
     ExecutionContext,
     FromAccounts,
     Info,
-    InstructionContext,
     Keyed,
     Mut,
     Peel,
     Result as SoliResult,
     Signer,
-    ToInstruction,
 };
 
 use crate::config::{
@@ -20,16 +18,11 @@ use crate::config::{
     Pyth2WormholeConfig,
 };
 
-#[derive(FromAccounts, ToInstruction)]
+#[derive(FromAccounts)]
 pub struct Initialize<'b> {
     pub new_config: Mut<P2WConfigAccount<'b, { AccountState::Uninitialized }>>,
     pub payer: Mut<Signer<Info<'b>>>,
-}
-
-impl<'b> InstructionContext<'b> for Initialize<'b> {
-    fn deps(&self) -> Vec<Pubkey> {
-        vec![]
-    }
+    pub system_program: Info<'b>,
 }
 
 /// Must be called right after deployment

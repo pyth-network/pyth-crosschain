@@ -5,6 +5,8 @@ RUN apt-get update && \
   apt-get install -y libssl-dev libudev-dev pkg-config zlib1g-dev llvm clang && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# We default an older nightly since current rust-toolchain makes the
+# wasm-pack build unhappy, we introduce it later for our code
 RUN rustup component add rustfmt && \
   rustup default nightly-2022-01-02
 

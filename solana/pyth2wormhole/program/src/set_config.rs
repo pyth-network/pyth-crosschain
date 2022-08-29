@@ -5,14 +5,12 @@ use solitaire::{
     ExecutionContext,
     FromAccounts,
     Info,
-    InstructionContext,
     Keyed,
     Mut,
     Peel,
     Result as SoliResult,
     Signer,
     SolitaireError,
-    ToInstruction,
 };
 
 use crate::config::{
@@ -20,7 +18,7 @@ use crate::config::{
     Pyth2WormholeConfig,
 };
 
-#[derive(FromAccounts, ToInstruction)]
+#[derive(FromAccounts)]
 pub struct SetConfig<'b> {
     /// Current config used by the program
     pub config: Mut<P2WConfigAccount<'b, { AccountState::Initialized }>>,
@@ -28,12 +26,6 @@ pub struct SetConfig<'b> {
     pub current_owner: Mut<Signer<Info<'b>>>,
     /// Payer account for updating the account data
     pub payer: Mut<Signer<Info<'b>>>,
-}
-
-impl<'b> InstructionContext<'b> for SetConfig<'b> {
-    fn deps(&self) -> Vec<Pubkey> {
-        vec![]
-    }
 }
 
 /// Alters the current settings of pyth2wormhole

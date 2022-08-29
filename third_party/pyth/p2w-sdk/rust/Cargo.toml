@@ -5,18 +5,23 @@ authors = ["Wormhole Contributors <contact@certus.one>"]
 edition = "2018"
 description = "Pyth to Wormhole SDK"
 
-
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [features]
-solana = ["solitaire"]
-wasm = ["wasm-bindgen", "solana"]
+default = []
+solana  = ["solitaire", "solana-program", "pyth-sdk-solana"]
+wasm    = ["wasm-bindgen", "solana"]
 
 [dependencies]
 hex = "0.4.3"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
-pyth-sdk-solana = "0.4.0"
+pyth-sdk = "*"
+pyth-sdk-solana = { version = "0.4.0", optional = true }
 wasm-bindgen = { version = "0.2.74", features = ["serde-serialize"], optional = true}
-solitaire = { path = "../../../../solana/solitaire/program", optional = true }
-solana-program = "1.8.16"
+solitaire = { git = "https://github.com/certusone/wormhole", tag = "v2.8.9", optional = true}
+solana-program = { version = "=1.10.31", optional = true }
+
+[dev-dependencies]
+solana-program = "=1.10.31"
+pyth-sdk-solana = "0.4.0"
