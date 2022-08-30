@@ -13,11 +13,19 @@ pub enum ContractError {
 
     /// Message emitter is not an accepted data source.
     #[error("InvalidUpdateMessageEmitter")]
-    InvalidUpdateMessageEmitter,
+    InvalidUpdateEmitter,
 
     /// Message payload cannot be deserialized to a batch attestation
-    #[error("InvalidUpdateMessagePayload")]
-    InvalidUpdateMessagePayload,
+    #[error("InvalidUpdatePayload")]
+    InvalidUpdatePayload,
+
+    /// Data source does not exists error (on removing data source)
+    #[error("DataSourceDoesNotExists")]
+    DataSourceDoesNotExists,
+    
+    /// Data source already exists error (on adding data source)
+    #[error("DataSourceAlreadyExists")]
+    DataSourceAlreadyExists,
 }
 
 impl ContractError {

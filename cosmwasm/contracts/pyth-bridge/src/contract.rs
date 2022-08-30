@@ -10,7 +10,6 @@ use cosmwasm_std::{
     MessageInfo,
     QueryRequest,
     Response,
-    StdError,
     StdResult,
     Timestamp,
     WasmQuery,
@@ -111,7 +110,7 @@ fn submit_vaa(
 
     let data = &vaa.payload;
     let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
-        .map_err(|_| ContractError::InvalidUpdateMessagePayload.std())?;
+        .map_err(|_| ContractError::InvalidUpdatePayload.std())?;
 
     process_batch_attestation(deps, env, &batch_attestation)
 }
@@ -129,9 +128,7 @@ fn add_data_source(
     }
 
     if !state.data_sources.insert(data_source.clone()) {
-        return Err(StdError::GenericErr {
-            msg: "Data source already exists".to_string(),
-        });
+        return ContractError::DataSourceAlreadyExists.std_err();
     }
 
     config(deps.storage).save(&state)?;
@@ -158,9 +155,7 @@ fn remove_data_source(
     }
 
     if !state.data_sources.remove(&data_source) {
-        return Err(StdError::GenericErr {
-            msg: "Data source does not exist".to_string(),
-        });
+        return ContractError::DataSourceDoesNotExists.std_err();
     }
 
     config(deps.storage).save(&state)?;
@@ -183,7 +178,7 @@ fn verify_vaa_sender(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
         pyth_emitter_chain: vaa.emitter_chain,
     };
     if !state.data_sources.contains(&vaa_data_source) {
-        return ContractError::InvalidUpdateMessageEmitter.std_err();
+        return ContractError::InvalidUpdateEmitter.std_err();
     }
     Ok(())
 }
@@ -408,7 +403,7 @@ mod test {
         vaa.emitter_chain = 3;
         assert_eq!(
             verify_vaa_sender(&config_info, &vaa),
-            ContractError::InvalidUpdateMessageEmitter.std_err()
+            ContractError::InvalidUpdateEmitter.std_err()
         );
     }
 
@@ -424,7 +419,7 @@ mod test {
         vaa.emitter_chain = 2;
         assert_eq!(
             verify_vaa_sender(&config_info, &vaa),
-            ContractError::InvalidUpdateMessageEmitter.std_err()
+            ContractError::InvalidUpdateEmitter.std_err()
         );
     }
 
@@ -716,7 +711,7 @@ mod test {
         // Should result an error because there is no data source
         assert_eq!(
             verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
-            ContractError::InvalidUpdateMessageEmitter.std_err()
+            ContractError::InvalidUpdateEmitter.std_err()
         );
 
         let data_source = PythDataSource {
@@ -760,7 +755,7 @@ mod test {
         // Should result an error because data source should not exist anymore
         assert_eq!(
             verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
-            ContractError::InvalidUpdateMessageEmitter.std_err()
+            ContractError::InvalidUpdateEmitter.std_err()
         );
     }
 }
