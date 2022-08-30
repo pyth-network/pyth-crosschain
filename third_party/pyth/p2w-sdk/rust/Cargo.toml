@@ -19,7 +19,7 @@ serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 pyth-sdk = "*"
 pyth-sdk-solana = { version = "0.5.0", optional = true }
 wasm-bindgen = { version = "0.2.74", features = ["serde-serialize"], optional = true}
-solitaire = { git = "https://github.com/certusone/wormhole", tag = "v2.8.9", optional = true}
+solitaire = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9", optional = true}
 solana-program = { version = "=1.10.31", optional = true }
 
 [dev-dependencies]

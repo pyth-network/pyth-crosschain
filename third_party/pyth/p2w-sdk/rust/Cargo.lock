@@ -856,7 +856,7 @@ dependencies = [
 [[package]]
 name = "rocksalt"
 version = "0.1.0"
-source = "git+https://github.com/certusone/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
 dependencies = [
  "byteorder",
  "proc-macro2",
@@ -1128,7 +1128,7 @@ dependencies = [
 [[package]]
 name = "solitaire"
 version = "0.1.0"
-source = "git+https://github.com/certusone/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
 dependencies = [
  "borsh",
  "byteorder",
