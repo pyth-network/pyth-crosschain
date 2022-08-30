@@ -3,7 +3,7 @@ pub mod cli;
 use std::{
     fs::File,
     pin::Pin,
-    sync::{Arc},
+    sync::Arc,
     thread,
     time::{
         Duration,
@@ -45,7 +45,10 @@ use solitaire::{
     ErrBox,
 };
 use tokio::{
-    sync::{Semaphore, Mutex},
+    sync::{
+        Mutex,
+        Semaphore,
+    },
     task::JoinHandle,
 };
 
@@ -340,7 +343,7 @@ async fn attestation_sched_job(
     p2w_addr: Pubkey,
     config: Pyth2WormholeConfig,
     payer: Keypair,
-    message_index_mtx: Arc<Mutex<P2WMessageIndex>>
+    message_index_mtx: Arc<Mutex<P2WMessageIndex>>,
 ) -> Result<(), ErrBoxSend> {
     let mut retries_left = n_retries;
     // Enforces the max batch job count
@@ -486,9 +489,8 @@ async fn attestation_job(
         symbols.as_slice(),
         latest_blockhash,
     );
-    let tx = tx_res?;
     let sig = rpc
-        .send_and_confirm_transaction(&tx)
+        .send_and_confirm_transaction(&tx_res?)
         .map_err(|e| -> ErrBoxSend { e.into() })
         .await?;
     let tx_data = rpc
