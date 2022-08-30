@@ -70,7 +70,6 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
         ));
     }
 
-
     // Populate new config
     accs.new_config
         .create(ctx, accs.payer.info().key, CreationLamports::Exempt)?;
@@ -85,7 +84,8 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
     **accs.old_config.info().lamports.borrow_mut() = 0;
 
     // Credit payer with saved balance
-    let new_payer_balance = accs.payer
+    let new_payer_balance = accs
+        .payer
         .info()
         .lamports
         .borrow_mut()

@@ -26,9 +26,9 @@ use solana_program::{
 
 use p2w_sdk::{
     BatchPriceAttestation,
+    Identifier,
     P2WEmitter,
     PriceAttestation,
-    Identifier,
 };
 
 use bridge::{
@@ -108,7 +108,7 @@ pub struct Attest<'b> {
     /// Wormhole program address - must match the config value
     pub wh_prog: Info<'b>,
 
-    // wormhole's post_message accounts
+    // wormhole's post_message_unreliable accounts
     //
     // This contract makes no attempt to exhaustively validate
     // Wormhole's account inputs. Only the wormhole contract address
@@ -147,14 +147,14 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         return Err(SolitaireError::Custom(4242));
     }
 
+    let wh_msg_drv_data = P2WMessageDrvData {
+        message_owner: accs.payer.key.clone(),
+        id: data.message_account_id,
+    };
+
     accs.config.verify_derivation(ctx.program_id, None)?;
-    accs.wh_message.verify_derivation(
-        ctx.program_id,
-        &P2WMessageDrvData {
-            message_owner: accs.payer.key.clone(),
-            id: data.message_account_id,
-        },
-    )?;
+    accs.wh_message
+        .verify_derivation(ctx.program_id, &wh_msg_drv_data)?;
 
     if accs.config.wh_prog != *accs.wh_prog.key {
         trace!(&format!(
@@ -268,47 +268,112 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
     })?;
 
     // Adjust message account size if necessary
-    if !accs.wh_message.is_initialized() && accs.wh_message.payload.len() != payload.len() {
-        // Learn how much we're adjusting (Note: assuming surrounding
-        // Wormhole message type is constant-size).
-        // positive -> grow,
-        // negative -> shrink,
-        let diff = payload.len() as i64 - accs.wh_message.payload.len() as i64;
-        accs.wh_message.0 .0 .0.realloc(
-            (accs.wh_message.payload.len() as i64 + diff) as usize,
-            false,
-        )?;
-    }
+    let ix = if accs.wh_message.is_initialized() {
+        if accs.wh_message.payload.len() != payload.len() {
+            // Learn how much we're adjusting (Note: assuming surrounding
+            // Wormhole message type is constant-size).
+            // positive -> grow,
+            // negative -> shrink,
+            let diff = payload.len() as i64 - accs.wh_message.payload.len() as i64;
+            accs.wh_message.0 .0.realloc(
+                (accs.wh_message.payload.len() as i64 + diff) as usize,
+                false,
+            )?;
+        }
+        trace!("After message size adjustment");
 
-    // Send payload
-    let post_message_data = (
-        bridge::instruction::Instruction::PostMessage,
-        PostMessageData {
-            nonce: 0, // Superseded by the sequence number
-            payload,
-            consistency_level: data.consistency_level,
-        },
-    );
+        // Send payload
+        let post_message_unreliable_data = (
+            bridge::instruction::Instruction::PostMessageUnreliable,
+            PostMessageData {
+                nonce: 0, // Superseded by the sequence number
+                payload,
+                consistency_level: data.consistency_level,
+            },
+        );
 
-    let ix = Instruction::new_with_bytes(
-        accs.config.wh_prog,
-        post_message_data.try_to_vec()?.as_slice(),
-        vec![
-            AccountMeta::new(*accs.wh_bridge.key, false),
-            AccountMeta::new(*((accs.wh_message.0).0).0.key, true),
-            AccountMeta::new_readonly(*accs.wh_emitter.key, true),
-            AccountMeta::new(*accs.wh_sequence.key, false),
-            AccountMeta::new(*accs.payer.key, true),
-            AccountMeta::new(*accs.wh_fee_collector.key, false),
-            AccountMeta::new_readonly(*accs.clock.info().key, false),
-            AccountMeta::new_readonly(solana_program::sysvar::rent::ID, false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        ],
-    );
+        trace!("Before unreliable cross-call");
 
-    trace!("Before cross-call");
+        Instruction::new_with_bytes(
+            accs.config.wh_prog,
+            post_message_unreliable_data.try_to_vec()?.as_slice(),
+            vec![
+                AccountMeta::new(*accs.wh_bridge.key, false),
+                AccountMeta::new(*(accs.wh_message.0).0.key, true),
+                AccountMeta::new_readonly(*accs.wh_emitter.key, true),
+                AccountMeta::new(*accs.wh_sequence.key, false),
+                AccountMeta::new(*accs.payer.key, true),
+                AccountMeta::new(*accs.wh_fee_collector.key, false),
+                AccountMeta::new_readonly(*accs.clock.info().key, false),
+                AccountMeta::new_readonly(solana_program::sysvar::rent::ID, false),
+                AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            ],
+        )
+    } else {
+        let post_message_data = (
+            bridge::instruction::Instruction::PostMessage,
+            PostMessageData {
+                nonce: 0,
+                payload,
+                consistency_level: data.consistency_level,
+            },
+        );
 
-    invoke_seeded(&ix, ctx, &accs.wh_emitter, None)?;
+        trace!("Before reliable cross-call");
+        Instruction::new_with_bytes(
+            accs.config.wh_prog,
+            post_message_data.try_to_vec()?.as_slice(),
+            vec![
+                AccountMeta::new(*accs.wh_bridge.key, false),
+                AccountMeta::new(*(accs.wh_message.0).0.key, true),
+                AccountMeta::new_readonly(*accs.wh_emitter.key, true),
+                AccountMeta::new(*accs.wh_sequence.key, false),
+                AccountMeta::new(*accs.payer.key, true),
+                AccountMeta::new(*accs.wh_fee_collector.key, false),
+                AccountMeta::new_readonly(*accs.clock.info().key, false),
+                AccountMeta::new_readonly(solana_program::sysvar::rent::ID, false),
+                AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            ],
+        )
+    };
+
+    solana_program::msg!(&format!(
+        "Seeds: {:?}",
+        [
+            // message seeds
+            P2WMessage::seeds(&wh_msg_drv_data)
+                .iter_mut()
+                .map(|seed| seed.as_slice())
+                .collect::<Vec<_>>()
+                .as_slice(),
+            // emitter seeds
+            P2WEmitter::seeds(None)
+                .iter_mut()
+                .map(|seed| seed.as_slice())
+                .collect::<Vec<_>>()
+                .as_slice(),
+        ]
+    ));
+
+    invoke_signed(
+        &ix,
+        ctx.accounts,
+        [
+            // message seeds
+            P2WMessage::bumped_seeds(&wh_msg_drv_data, ctx.program_id)
+                .iter_mut()
+                .map(|seed| seed.as_slice())
+                .collect::<Vec<_>>()
+                .as_slice(),
+            // emitter seeds
+            P2WEmitter::bumped_seeds(None, ctx.program_id)
+                .iter_mut()
+                .map(|seed| seed.as_slice())
+                .collect::<Vec<_>>()
+                .as_slice(),
+        ]
+        .as_slice(),
+    )?;
 
     Ok(())
 }

@@ -1,20 +1,28 @@
 //! Index-based PDA for storing unreliable wormhole message
+//!
+//! The main goal of this PDA is to take advantage of wormhole message
+//! reuse securely. This is achieved by tying the account derivation
+//! data to the payer account of the attest() instruction. Inside
+//! attest(), payer must be a signer, and the message account must be
+//! derived with their address as message_owner in
+//! `P2WMessageDrvData`.
+
 use borsh::{
     BorshDeserialize,
     BorshSerialize,
 };
-use bridge::PostedMessage;
+use bridge::PostedMessageUnreliable;
 use solana_program::pubkey::Pubkey;
 use solitaire::{
+    processors::seeded::Seeded,
     AccountState,
     Data,
-    processors::seeded::Seeded,
     Info,
-    Signer,
     Mut,
+    Signer,
 };
 
-pub type P2WMessage<'a> = Signer<Mut<PostedMessage<'a, { AccountState::MaybeInitialized }>>>;
+pub type P2WMessage<'a> = Mut<PostedMessageUnreliable<'a, { AccountState::MaybeInitialized }>>;
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct P2WMessageDrvData {
@@ -33,4 +41,3 @@ impl<'a> Seeded<&P2WMessageDrvData> for P2WMessage<'a> {
         ]
     }
 }
-
