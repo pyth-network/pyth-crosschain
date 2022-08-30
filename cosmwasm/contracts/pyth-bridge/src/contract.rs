@@ -41,9 +41,10 @@ use crate::state::{
     VALID_TIME_PERIOD,
 };
 
+use crate::error::ContractError;
+
 use p2w_sdk::BatchPriceAttestation;
 
-use wormhole::error::ContractError;
 use wormhole::msg::QueryMsg as WormholeQueryMsg;
 use wormhole::state::ParsedVAA;
 
@@ -110,7 +111,7 @@ fn submit_vaa(
 
     let data = &vaa.payload;
     let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
-        .map_err(|_| ContractError::InvalidVAA.std())?;
+        .map_err(|_| ContractError::InvalidUpdateMessagePayload.std())?;
 
     process_batch_attestation(deps, env, &batch_attestation)
 }
@@ -182,7 +183,7 @@ fn verify_vaa_sender(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
         pyth_emitter_chain: vaa.emitter_chain,
     };
     if !state.data_sources.contains(&vaa_data_source) {
-        return ContractError::InvalidVAA.std_err();
+        return ContractError::InvalidUpdateMessageEmitter.std_err();
     }
     Ok(())
 }
@@ -308,7 +309,7 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
                 price_feed: terra_price_info.price_feed,
             })
         }
-        Err(_) => ContractError::AssetNotFound.std_err(),
+        Err(_) => ContractError::PriceFeedNotFound.std_err(),
     }
 }
 
@@ -408,7 +409,7 @@ mod test {
         vaa.emitter_chain = 3;
         assert_eq!(
             verify_vaa_sender(&config_info, &vaa),
-            ContractError::InvalidVAA.std_err()
+            ContractError::InvalidUpdateMessageEmitter.std_err()
         );
     }
 
@@ -424,7 +425,7 @@ mod test {
         vaa.emitter_chain = 2;
         assert_eq!(
             verify_vaa_sender(&config_info, &vaa),
-            ContractError::InvalidVAA.std_err()
+            ContractError::InvalidUpdateMessageEmitter.std_err()
         );
     }
 
@@ -599,7 +600,7 @@ mod test {
 
         assert_eq!(
             query_price_feed(deps.as_ref(), env, b"123".as_ref()),
-            ContractError::AssetNotFound.std_err()
+            ContractError::PriceFeedNotFound.std_err()
         );
     }
 
@@ -716,7 +717,7 @@ mod test {
         // Should result an error because there is no data source
         assert_eq!(
             verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
-            ContractError::InvalidVAA.std_err()
+            ContractError::InvalidUpdateMessageEmitter.std_err()
         );
 
         let data_source = PythDataSource {
@@ -760,7 +761,7 @@ mod test {
         // Should result an error because data source should not exist anymore
         assert_eq!(
             verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
-            ContractError::InvalidVAA.std_err()
+            ContractError::InvalidUpdateMessageEmitter.std_err()
         );
     }
 }
