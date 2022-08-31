@@ -255,7 +255,7 @@ async fn handle_attest(
         rpc_interval,
     ));
 
-    let message_index_mtx = Arc::new(Mutex::new(P2WMessageIndex::new(Duration::from_secs(10))));
+    let message_index_mtx = Arc::new(Mutex::new(P2WMessageIndex::new(Duration::from_millis(attestation_cfg.min_msg_reuse_interval_ms))));
 
     // Create attestation scheduling routines; see attestation_sched_job() for details
     let mut attestation_sched_futs = batches.into_iter().map(|(batch_no, batch)| {
