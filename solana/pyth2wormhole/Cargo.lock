@@ -5016,7 +5016,3 @@ dependencies = [
  "cc",
  "libc",
 ]
-
-[[patch.unused]]
-name = "memmap2"
-version = "0.1.0"
