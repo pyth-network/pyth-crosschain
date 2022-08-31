@@ -19,7 +19,7 @@ import { zeroPad } from "ethers/lib/utils.js";
 */
 const artifacts = [
   "wormhole.wasm",
-  "pyth_bridge.wasm",
+  "pyth_cosmwasm.wasm",
 ];
 
 /* Check that the artifact folder contains all the wasm files we expect and nothing else */
@@ -165,7 +165,7 @@ const pythEmitterAddress =
   "71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
 const pythChain = 1;
 
-addresses["pyth_bridge.wasm"] = await instantiate("pyth_bridge.wasm", {
+addresses["pyth_cosmwasm.wasm"] = await instantiate("pyth_cosmwasm.wasm", {
   wormhole_contract: addresses["wormhole.wasm"],
   pyth_emitter: Buffer.from(pythEmitterAddress, "hex").toString(
     "base64"

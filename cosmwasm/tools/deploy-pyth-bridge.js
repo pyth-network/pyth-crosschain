@@ -182,7 +182,7 @@ if (argv.instantiate) {
           throw(e);
         }
       });
-    console.log(`Instantiated Pyth Bridge at ${address} (${convert_terra_address_to_hex(address)})`);
+    console.log(`Instantiated Pyth at ${address} (${convert_terra_address_to_hex(address)})`);
     return address;
   }
 
