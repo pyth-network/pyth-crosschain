@@ -1,3 +1,8 @@
+// Deploy Wormhole and Pyth contract to Tilt. If you want to 
+// test the contracts locally you need to build wormhole contract
+// as well. You can use Dockerfile.cosmwasm in the root of this repo
+// to do that.
+
 import { LCDClient, MnemonicKey } from "@terra-money/terra.js";
 import {
   MsgInstantiateContract,
@@ -152,6 +157,8 @@ addresses["wormhole.wasm"] = await instantiate("wormhole.wasm", {
     ],
     expiration_time: 0,
   },
+  chain_id: 18,
+  fee_denom: "uluna",
 }, "wormhole");
 
 const pythEmitterAddress =
