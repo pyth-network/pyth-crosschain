@@ -267,78 +267,57 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         ProgramError::InvalidAccountData
     })?;
 
-    // Adjust message account size if necessary
-    let ix = if accs.wh_message.is_initialized() {
-        if accs.wh_message.payload.len() != payload.len() {
-            // Learn how much we're adjusting (Note: assuming surrounding
-            // Wormhole message type is constant-size).
-            // positive -> grow,
-            // negative -> shrink,
-            let diff = payload.len() as i64 - accs.wh_message.payload.len() as i64;
-            accs.wh_message.0 .0.realloc(
-                (accs.wh_message.payload.len() as i64 + diff) as usize,
-                false,
-            )?;
-        }
-        trace!("After message size adjustment");
+    // Adjust message account size if necessary.
+    // NOTE: We assume that:
+    // - the rent and size values are far away from
+    // i64/u64/isize/usize overflow shenanigans (on the order of
+    // single kilobytes).
+    // - Pyth payload size change == Wormhole message size change (their metadata is constant-size)
+    if accs.wh_message.is_initialized() && accs.wh_message.payload.len() != payload.len() {
+        // NOTE: Payload =/= account size (account size includes
+        // surrounding wormhole data structure, payload is just the
+        // Pyth bytes).
 
-        // Send payload
-        let post_message_unreliable_data = (
-            bridge::instruction::Instruction::PostMessageUnreliable,
-            PostMessageData {
-                nonce: 0, // Superseded by the sequence number
-                payload,
-                consistency_level: data.consistency_level,
-            },
-        );
+        // This value will be negative if we need to shrink down
+        let old_account_size = accs.wh_message.info().data_len();
 
-        trace!("Before unreliable cross-call");
+        // How much payload size changes
+        let payload_size_diff = payload.len() as isize - old_account_size as isize;
 
-        Instruction::new_with_bytes(
-            accs.config.wh_prog,
-            post_message_unreliable_data.try_to_vec()?.as_slice(),
-            vec![
-                AccountMeta::new(*accs.wh_bridge.key, false),
-                AccountMeta::new(*(accs.wh_message.0).0.key, true),
-                AccountMeta::new_readonly(*accs.wh_emitter.key, true),
-                AccountMeta::new(*accs.wh_sequence.key, false),
-                AccountMeta::new(*accs.payer.key, true),
-                AccountMeta::new(*accs.wh_fee_collector.key, false),
-                AccountMeta::new_readonly(*accs.clock.info().key, false),
-                AccountMeta::new_readonly(solana_program::sysvar::rent::ID, false),
-                AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            ],
-        )
-    } else {
-        let post_message_data = (
-            bridge::instruction::Instruction::PostMessage,
-            PostMessageData {
-                nonce: 0,
-                payload,
-                consistency_level: data.consistency_level,
-            },
-        );
+        // How big the overall account data becomes
+        let new_account_size = (old_account_size as isize + payload_size_diff) as usize;
 
-        trace!("Before reliable cross-call");
-        Instruction::new_with_bytes(
-            accs.config.wh_prog,
-            post_message_data.try_to_vec()?.as_slice(),
-            vec![
-                AccountMeta::new(*accs.wh_bridge.key, false),
-                AccountMeta::new(*(accs.wh_message.0).0.key, true),
-                AccountMeta::new_readonly(*accs.wh_emitter.key, true),
-                AccountMeta::new(*accs.wh_sequence.key, false),
-                AccountMeta::new(*accs.payer.key, true),
-                AccountMeta::new(*accs.wh_fee_collector.key, false),
-                AccountMeta::new_readonly(*accs.clock.info().key, false),
-                AccountMeta::new_readonly(solana_program::sysvar::rent::ID, false),
-                AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            ],
-        )
-    };
+        // Adjust account size
+        accs.wh_message.info().realloc(new_account_size, false)?;
 
-    solana_program::msg!(&format!(
-        "Seeds: {:?}",
+        // Exempt balance for adjusted size
+        let new_msg_account_balance = Rent::default().minimum_balance(new_account_size);
+
+        // How the account balance changes
+        let balance_diff =
+            new_msg_account_balance as i64 - accs.wh_message.info().lamports() as i64;
+
+        // How the diff affects payer balance
+        let new_payer_balance = (accs.payer.info().lamports() as i64 - balance_diff) as u64;
+
+        **accs.wh_message.info().lamports.borrow_mut() = new_msg_account_balance;
+        **accs.payer.info().lamports.borrow_mut() = new_payer_balance;
+
+        trace!("After message size/balance adjustment");
+    }
+
+    let ix = bridge::instructions::post_message_unreliable(
+        *accs.wh_prog.info().key,
+        *accs.payer.info().key,
+        *accs.wh_emitter.info().key,
+        *accs.wh_message.info().key,
+        0,
+        payload,
+        data.consistency_level.clone(),
+    )?;
+
+    trace!(&format!(
+        "Cross-call Seeds: {:?}",
         [
             // message seeds
             P2WMessage::seeds(&wh_msg_drv_data)
@@ -355,6 +334,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         ]
     ));
 
+    trace!("attest() finished, cross-calling wormhole");
     invoke_signed(
         &ix,
         ctx.accounts,
