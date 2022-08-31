@@ -72,7 +72,7 @@ pub use util::{
     RLMutexGuard,
 };
 
-pub use message::P2WMessageIndex;
+pub use message::P2WMessageQueue;
 
 /// Future-friendly version of solitaire::ErrBox
 pub type ErrBoxSend = Box<dyn std::error::Error + Send + Sync>;

@@ -105,8 +105,6 @@ async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
     let (prod_id, price_id) = pyth::add_test_symbol(&mut p2w_test, &pyth_owner);
 
     let mut ctx = p2w_test.start_with_context().await;
-    let mut msg_idx = p2wc::message::P2WMessageIndex::new(Duration::from_secs(1));
-    let msg_id = msg_idx.get_account().id;
 
     let symbols = vec![p2wc::P2WSymbol {
         name: Some("Mock symbol".to_owned()),
@@ -118,7 +116,7 @@ async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
         p2w_program_id,
         &p2w_config,
         &ctx.payer,
-        msg_id,
+        0,
         symbols.as_slice(),
         ctx.last_blockhash,
     )?;
