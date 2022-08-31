@@ -1313,7 +1313,7 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 [[package]]
 name = "memmap2"
 version = "0.1.0"
-source = "git+https://github.com/certusone/wormhole#7a1b1344a19db22935d8532135ac249da128b4e7"
+source = "git+https://github.com/wormhole-foundation/wormhole#7a1b1344a19db22935d8532135ac249da128b4e7"
 dependencies = [
  "libc",
 ]

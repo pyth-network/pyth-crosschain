@@ -13,4 +13,4 @@ incremental = false
 overflow-checks = true
 
 [patch.crates-io]
-memmap2 = { git = "https://github.com/certusone/wormhole", package = "memmap2" }
+memmap2 = { git = "https://github.com/wormhole-foundation/wormhole", package = "memmap2" }

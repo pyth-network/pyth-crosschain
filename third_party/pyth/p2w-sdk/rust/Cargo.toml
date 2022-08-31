@@ -24,4 +24,4 @@ solana-program = { version = "=1.10.31", optional = true }
 
 [dev-dependencies]
 solana-program = "=1.10.31"
-pyth-sdk-solana = "0.4.0"
+pyth-sdk-solana = "0.5.0"

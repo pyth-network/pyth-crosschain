@@ -16,10 +16,10 @@ borsh = "=0.9.3"
 clap = {version = "3.1.18", features = ["derive"]}
 env_logger = "0.8.4"
 log = "0.4.14"
-wormhole-bridge-solana = {git = "https://github.com/certusone/wormhole", tag = "v2.8.9"}
+wormhole-bridge-solana = {git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9"}
 pyth2wormhole = {path = "../program"}
 p2w-sdk = { path = "../../../third_party/pyth/p2w-sdk/rust", features=["solana"] }
-pyth-sdk-solana = "0.4.0"
+pyth-sdk-solana = "0.5.0"
 serde = "1"
 serde_yaml = "0.8"
 shellexpand = "2.1.0"
@@ -28,7 +28,7 @@ solana-program = "=1.10.31"
 solana-sdk = "=1.10.31"
 solana-transaction-status = "=1.10.31"
 # solitaire-client = {path = "../../solitaire/client"}
-solitaire = {git = "https://github.com/certusone/wormhole", tag = "v2.8.9"}
+solitaire = {git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9"}
 tokio = {version = "1", features = ["sync", "rt", "time"]}
 futures = "0.3.21"
 

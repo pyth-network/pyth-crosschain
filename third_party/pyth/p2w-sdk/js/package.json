@@ -19,7 +19,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/certusone/wormhole.git"
+        "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
     },
     "author": "https://certus.one",
     "license": "MIT",
@@ -44,7 +44,7 @@
         "@pythnetwork/pyth-sdk-js": "^0.1.0"
     },
     "bugs": {
-        "url": "https://github.com/certusone/wormhole/issues"
+        "url": "https://github.com/pyth-network/pyth-crosschain/issues"
     },
-    "homepage": "https://github.com/certusone/wormhole#readme"
+    "homepage": "https://github.com/pyth-network/pyth-crosschain#readme"
 }

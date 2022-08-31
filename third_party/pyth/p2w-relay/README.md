@@ -22,7 +22,7 @@ $ docker run --platform linux/amd64 -d --network=host spy_guardian \
 ```
 
 Or run the spy_guardian docker container in MainNet:
-For the MainNet gossip network parameters, see https://github.com/certusone/wormhole-networks/blob/master/mainnetv2/info.md
+For the MainNet gossip network parameters, see https://github.com/wormhole-foundation/wormhole-networks/blob/master/mainnetv2/info.md
 
 ```
 $ docker run --platform linux/amd64 -d --network=host spy_guardian \
