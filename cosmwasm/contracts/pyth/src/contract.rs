@@ -110,7 +110,7 @@ fn submit_vaa(
 
     let data = &vaa.payload;
     let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
-        .map_err(|_| ContractError::InvalidUpdatePayload.std())?;
+        .map_err(|_| ContractError::InvalidUpdatePayload)?;
 
     process_batch_attestation(deps, env, &batch_attestation)
 }
@@ -124,11 +124,11 @@ fn add_data_source(
     let mut state = config_read(deps.storage).load()?;
 
     if state.owner != info.sender {
-        return ContractError::PermissionDenied.std_err();
+        return Err(ContractError::PermissionDenied)?;
     }
 
     if !state.data_sources.insert(data_source.clone()) {
-        return ContractError::DataSourceAlreadyExists.std_err();
+        return Err(ContractError::DataSourceAlreadyExists)?;
     }
 
     config(deps.storage).save(&state)?;
@@ -151,11 +151,11 @@ fn remove_data_source(
     let mut state = config_read(deps.storage).load()?;
 
     if state.owner != info.sender {
-        return ContractError::PermissionDenied.std_err();
+        return Err(ContractError::PermissionDenied)?;
     }
 
     if !state.data_sources.remove(&data_source) {
-        return ContractError::DataSourceDoesNotExists.std_err();
+        return Err(ContractError::DataSourceDoesNotExists)?;
     }
 
     config(deps.storage).save(&state)?;
@@ -178,7 +178,7 @@ fn verify_vaa_sender(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
         pyth_emitter_chain: vaa.emitter_chain,
     };
     if !state.data_sources.contains(&vaa_data_source) {
-        return ContractError::InvalidUpdateEmitter.std_err();
+        return Err(ContractError::InvalidUpdateEmitter)?;
     }
     Ok(())
 }
@@ -303,7 +303,7 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
                 price_feed: price_info.price_feed,
             })
         }
-        Err(_) => ContractError::PriceFeedNotFound.std_err(),
+        Err(_) => Err(ContractError::PriceFeedNotFound)?
     }
 }
 
@@ -403,7 +403,7 @@ mod test {
         vaa.emitter_chain = 3;
         assert_eq!(
             verify_vaa_sender(&config_info, &vaa),
-            ContractError::InvalidUpdateEmitter.std_err()
+            Err(ContractError::InvalidUpdateEmitter.into())
         );
     }
 
@@ -419,7 +419,7 @@ mod test {
         vaa.emitter_chain = 2;
         assert_eq!(
             verify_vaa_sender(&config_info, &vaa),
-            ContractError::InvalidUpdateEmitter.std_err()
+            Err(ContractError::InvalidUpdateEmitter.into())
         );
     }
 
@@ -594,7 +594,7 @@ mod test {
 
         assert_eq!(
             query_price_feed(deps.as_ref(), env, b"123".as_ref()),
-            ContractError::PriceFeedNotFound.std_err()
+            Err(ContractError::PriceFeedNotFound.into())
         );
     }
 
@@ -711,7 +711,7 @@ mod test {
         // Should result an error because there is no data source
         assert_eq!(
             verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
-            ContractError::InvalidUpdateEmitter.std_err()
+            Err(ContractError::InvalidUpdateEmitter.into())
         );
 
         let data_source = PythDataSource {
@@ -755,7 +755,7 @@ mod test {
         // Should result an error because data source should not exist anymore
         assert_eq!(
             verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
-            ContractError::InvalidUpdateEmitter.std_err()
+            Err(ContractError::InvalidUpdateEmitter.into())
         );
     }
 }

@@ -28,14 +28,10 @@ pub enum ContractError {
     DataSourceAlreadyExists,
 }
 
-impl ContractError {
-    pub fn std(&self) -> StdError {
+impl From<ContractError> for StdError {
+    fn from(other: ContractError) -> StdError {
         StdError::GenericErr {
-            msg: format!("{}", self),
+            msg: format!("{}", other),
         }
-    }
-
-    pub fn std_err<T>(&self) -> Result<T, StdError> {
-        Err(self.std())
     }
 }
