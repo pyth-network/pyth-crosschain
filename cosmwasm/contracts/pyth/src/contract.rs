@@ -344,6 +344,14 @@ mod test {
         }
     }
 
+    fn create_zero_config_info() -> ConfigInfo {
+        ConfigInfo {
+            owner:             Addr::unchecked(String::default()),
+            wormhole_contract: Addr::unchecked(String::default()),
+            data_sources:      HashSet::default(),
+        }
+    }
+
     fn create_price_feed(expo: i32) -> PriceFeed {
         let mut price_feed = PriceFeed::default();
         price_feed.expo = expo;
@@ -381,7 +389,7 @@ mod test {
     fn test_verify_vaa_sender_ok() {
         let config_info = ConfigInfo {
             data_sources: create_data_sources(vec![1u8], 3),
-            ..Default::default()
+            ..create_zero_config_info()
         };
 
         let mut vaa = create_zero_vaa();
@@ -395,7 +403,7 @@ mod test {
     fn test_verify_vaa_sender_fail_wrong_emitter_address() {
         let config_info = ConfigInfo {
             data_sources: create_data_sources(vec![1u8], 3),
-            ..Default::default()
+            ..create_zero_config_info()
         };
 
         let mut vaa = create_zero_vaa();
@@ -411,7 +419,7 @@ mod test {
     fn test_verify_vaa_sender_fail_wrong_emitter_chain() {
         let config_info = ConfigInfo {
             data_sources: create_data_sources(vec![1u8], 3),
-            ..Default::default()
+            ..create_zero_config_info()
         };
 
         let mut vaa = create_zero_vaa();
@@ -604,7 +612,7 @@ mod test {
         config(&mut deps.storage)
             .save(&ConfigInfo {
                 owner: Addr::unchecked("123"),
-                ..Default::default()
+                ..create_zero_config_info()
             })
             .unwrap();
 
@@ -631,7 +639,7 @@ mod test {
         config(&mut deps.storage)
             .save(&ConfigInfo {
                 owner: Addr::unchecked("123"),
-                ..Default::default()
+                ..create_zero_config_info()
             })
             .unwrap();
 
@@ -650,7 +658,7 @@ mod test {
             .save(&ConfigInfo {
                 owner: Addr::unchecked("123"),
                 data_sources: create_data_sources(vec![1u8], 1),
-                ..Default::default()
+                ..create_zero_config_info()
             })
             .unwrap();
 
@@ -680,7 +688,7 @@ mod test {
             .save(&ConfigInfo {
                 owner: Addr::unchecked("123"),
                 data_sources: create_data_sources(vec![1u8], 1),
-                ..Default::default()
+                ..create_zero_config_info()
             })
             .unwrap();
 
@@ -700,7 +708,7 @@ mod test {
         config(&mut deps.storage)
             .save(&ConfigInfo {
                 owner: Addr::unchecked("123"),
-                ..Default::default()
+                ..create_zero_config_info()
             })
             .unwrap();
 
@@ -733,7 +741,7 @@ mod test {
             .save(&ConfigInfo {
                 owner: Addr::unchecked("123"),
                 data_sources: create_data_sources(vec![1u8], 3),
-                ..Default::default()
+                ..create_zero_config_info()
             })
             .unwrap();
 

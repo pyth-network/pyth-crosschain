@@ -34,7 +34,7 @@ pub static PRICE_INFO_KEY: &[u8] = b"price_info_v3";
 /// This value considers attestation delay which currently might up to a minute.
 pub const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, Hash, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, JsonSchema)]
 pub struct PythDataSource {
     pub emitter:            Binary,
     pub pyth_emitter_chain: u16,
@@ -46,16 +46,6 @@ pub struct ConfigInfo {
     pub owner:             Addr,
     pub wormhole_contract: Addr,
     pub data_sources:      HashSet<PythDataSource>,
-}
-
-impl Default for ConfigInfo {
-    fn default() -> Self {
-        ConfigInfo {
-            owner:             Addr::unchecked(String::default()),
-            wormhole_contract: Addr::unchecked(String::default()),
-            data_sources:      HashSet::default(),
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, JsonSchema)]
