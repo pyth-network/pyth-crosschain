@@ -255,7 +255,7 @@ async fn handle_attest(
         rpc_interval,
     ));
 
-    let message_q_mtx = Arc::new(Mutex::new(P2WMessageQueue::new(Duration::from_millis(attestation_cfg.min_msg_reuse_interval_ms))));
+    let message_q_mtx = Arc::new(Mutex::new(P2WMessageQueue::new(Duration::from_millis(attestation_cfg.min_msg_reuse_interval_ms), attestation_cfg.max_msg_accounts as usize)));
 
     // Create attestation scheduling routines; see attestation_sched_job() for details
     let mut attestation_sched_futs = batches.into_iter().map(|(batch_no, batch)| {
@@ -479,7 +479,7 @@ async fn attestation_job(
         .map_err(|e| -> ErrBoxSend { e.into() })
         .await?;
 
-    let wh_msg_id = message_q_mtx.lock().await.get_account().id;
+    let wh_msg_id = message_q_mtx.lock().await.get_account()?.id;
 
     let tx_res: Result<_, ErrBoxSend> = gen_attest_tx(
         p2w_addr,
