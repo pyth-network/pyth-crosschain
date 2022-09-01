@@ -2,7 +2,7 @@ use cosmwasm_std::StdError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum ContractError {
+pub enum PythContractError {
     /// Message sender not permitted to execute this operation
     #[error("PermissionDenied")]
     PermissionDenied,
@@ -28,8 +28,8 @@ pub enum ContractError {
     DataSourceAlreadyExists,
 }
 
-impl From<ContractError> for StdError {
-    fn from(other: ContractError) -> StdError {
+impl From<PythContractError> for StdError {
+    fn from(other: PythContractError) -> StdError {
         StdError::GenericErr {
             msg: format!("{}", other),
         }
