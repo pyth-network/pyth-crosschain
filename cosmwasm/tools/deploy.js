@@ -1,5 +1,5 @@
 // Deploy Wormhole and Pyth contract to Tilt. If you want to 
-// test the contracts locally you need to build wormhole contract
+// test the contracts locally you need to build the wormhole contract
 // as well. You can use Dockerfile.cosmwasm in the root of this repo
 // to do that.
 
