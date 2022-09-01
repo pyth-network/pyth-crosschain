@@ -15,6 +15,10 @@ use solana_program::pubkey::Pubkey;
 /// Pyth2wormhole config specific to attestation requests
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct AttestationConfig {
+    #[serde(default = "default_min_msg_reuse_interval_ms")]
+    pub min_msg_reuse_interval_ms: u64,
+    #[serde(default = "default_max_msg_accounts")]
+    pub max_msg_accounts: u64,
     pub symbol_groups: Vec<SymbolGroup>,
 }
 
@@ -24,6 +28,14 @@ pub struct SymbolGroup {
     /// Attestation conditions applied to all symbols in this group
     pub conditions: AttestationConditions,
     pub symbols: Vec<P2WSymbol>,
+}
+
+pub const fn default_max_msg_accounts() -> u64 {
+    1_000_000
+}
+
+pub const fn default_min_msg_reuse_interval_ms() -> u64 {
+    10_000 // 10s
 }
 
 pub const fn default_min_interval_secs() -> u64 {
@@ -149,6 +161,8 @@ mod tests {
         };
 
         let cfg = AttestationConfig {
+            min_msg_reuse_interval_ms: 1000,
+            max_msg_accounts: 100_000,
             symbol_groups: vec![fastbois, slowbois],
         };
 

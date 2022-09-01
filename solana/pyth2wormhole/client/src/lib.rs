@@ -1,5 +1,6 @@
 pub mod attestation_cfg;
 pub mod batch_state;
+pub mod message;
 pub mod util;
 
 use borsh::{
@@ -20,7 +21,13 @@ use solana_program::{
         rent,
     },
 };
-use solana_sdk::{transaction::Transaction, signer::{Signer, keypair::Keypair}};
+use solana_sdk::{
+    signer::{
+        keypair::Keypair,
+        Signer,
+    },
+    transaction::Transaction,
+};
 use solitaire::{
     processors::seeded::Seeded,
     AccountState,
@@ -41,7 +48,14 @@ use p2w_sdk::P2WEmitter;
 
 use pyth2wormhole::{
     attest::P2W_MAX_BATCH_SIZE,
-    config::{OldP2WConfigAccount, P2WConfigAccount},
+    config::{
+        OldP2WConfigAccount,
+        P2WConfigAccount,
+    },
+    message::{
+        P2WMessage,
+        P2WMessageDrvData,
+    },
     AttestData,
 };
 
@@ -58,6 +72,8 @@ pub use util::{
     RLMutexGuard,
 };
 
+pub use message::P2WMessageQueue;
+
 /// Future-friendly version of solitaire::ErrBox
 pub type ErrBoxSend = Box<dyn std::error::Error + Send + Sync>;
 
@@ -67,26 +83,22 @@ pub fn gen_init_tx(
     config: Pyth2WormholeConfig,
     latest_blockhash: Hash,
 ) -> Result<Transaction, ErrBox> {
-
     let payer_pubkey = payer.pubkey();
     let acc_metas = vec![
         // new_config
-        AccountMeta::new(P2WConfigAccount::<{AccountState::Uninitialized}>::key(None, &p2w_addr), false),
+        AccountMeta::new(
+            P2WConfigAccount::<{ AccountState::Uninitialized }>::key(None, &p2w_addr),
+            false,
+        ),
         // payer
         AccountMeta::new(payer.pubkey(), true),
         // system_program
         AccountMeta::new(system_program::id(), false),
-        ];
+    ];
 
     let ix_data = (pyth2wormhole::instruction::Instruction::Initialize, config);
 
-    let ix = Instruction::new_with_bytes(
-        p2w_addr,
-        ix_data
-            .try_to_vec()?
-            .as_slice(),
-        acc_metas,
-    );
+    let ix = Instruction::new_with_bytes(p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas);
 
     let signers = vec![&payer];
 
@@ -110,25 +122,22 @@ pub fn gen_set_config_tx(
 
     let acc_metas = vec![
         // config
-        AccountMeta::new(P2WConfigAccount::<{AccountState::Initialized}>::key(None, &p2w_addr), false),
+        AccountMeta::new(
+            P2WConfigAccount::<{ AccountState::Initialized }>::key(None, &p2w_addr),
+            false,
+        ),
         // current_owner
         AccountMeta::new(owner.pubkey(), true),
         // payer
         AccountMeta::new(payer.pubkey(), true),
-        ];
+    ];
 
     let ix_data = (
         pyth2wormhole::instruction::Instruction::SetConfig,
         new_config,
     );
 
-    let ix = Instruction::new_with_bytes(
-        p2w_addr,
-        ix_data
-            .try_to_vec()?
-            .as_slice(),
-        acc_metas,
-    );
+    let ix = Instruction::new_with_bytes(p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas);
 
     let signers = vec![&owner, &payer];
     let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
@@ -146,12 +155,14 @@ pub fn gen_migrate_tx(
     owner: Keypair,
     latest_blockhash: Hash,
 ) -> Result<Transaction, ErrBox> {
-
     let payer_pubkey = payer.pubkey();
 
     let acc_metas = vec![
         // new_config
-        AccountMeta::new(P2WConfigAccount::<{AccountState::Uninitialized}>::key(None, &p2w_addr), false),
+        AccountMeta::new(
+            P2WConfigAccount::<{ AccountState::Uninitialized }>::key(None, &p2w_addr),
+            false,
+        ),
         // old_config
         AccountMeta::new(OldP2WConfigAccount::key(None, &p2w_addr), false),
         // owner
@@ -160,20 +171,11 @@ pub fn gen_migrate_tx(
         AccountMeta::new(payer.pubkey(), true),
         // system_program
         AccountMeta::new(system_program::id(), false),
-        ];
+    ];
 
-    let ix_data = (
-        pyth2wormhole::instruction::Instruction::Migrate,
-        (),
-    );
+    let ix_data = (pyth2wormhole::instruction::Instruction::Migrate, ());
 
-    let ix = Instruction::new_with_bytes(
-        p2w_addr,
-        ix_data
-            .try_to_vec()?
-            .as_slice(),
-        acc_metas,
-    );
+    let ix = Instruction::new_with_bytes(p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas);
 
     let signers = vec![&owner, &payer];
 
@@ -209,8 +211,8 @@ pub fn gen_attest_tx(
     p2w_addr: Pubkey,
     p2w_config: &Pyth2WormholeConfig, // Must be fresh, not retrieved inside to keep side effects away
     payer: &Keypair,
+    wh_msg_id: u64,
     symbols: &[P2WSymbol],
-    wh_msg: &Keypair,
     latest_blockhash: Hash,
 ) -> Result<Transaction, ErrBoxSend> {
     let emitter_addr = P2WEmitter::key(None, &p2w_addr);
@@ -279,7 +281,16 @@ pub fn gen_attest_tx(
             false,
         ),
         // wh_message
-        AccountMeta::new(wh_msg.pubkey(), true),
+        AccountMeta::new(
+            P2WMessage::key(
+                &P2WMessageDrvData {
+                    id: wh_msg_id,
+                    message_owner: payer.pubkey(),
+                },
+                &p2w_addr,
+            ),
+            false,
+        ),
         // wh_emitter
         AccountMeta::new_readonly(emitter_addr, false),
         // wh_sequence
@@ -295,21 +306,16 @@ pub fn gen_attest_tx(
         pyth2wormhole::instruction::Instruction::Attest,
         AttestData {
             consistency_level: ConsistencyLevel::Confirmed,
+            message_account_id: wh_msg_id,
         },
     );
 
-    let ix = Instruction::new_with_bytes(
-        p2w_addr,
-        ix_data
-            .try_to_vec()?
-            .as_slice(),
-        acc_metas,
-    );
+    let ix = Instruction::new_with_bytes(p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas);
 
     let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
         &[ix],
         Some(&payer.pubkey()),
-        &vec![&payer, &wh_msg],
+        &vec![&payer],
         latest_blockhash,
     );
     Ok(tx_signed)

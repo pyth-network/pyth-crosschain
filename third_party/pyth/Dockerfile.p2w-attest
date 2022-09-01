@@ -9,9 +9,9 @@ ADD third_party/pyth/p2w-sdk/rust /usr/src/third_party/pyth/p2w-sdk/rust
 RUN --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=target \
     --mount=type=cache,target=pyth2wormhole/target \
-    cargo build --manifest-path ./pyth2wormhole/Cargo.toml --package pyth2wormhole-client && \
-    cargo test --manifest-path ./pyth2wormhole/Cargo.toml --package pyth2wormhole-client && \
-    mv pyth2wormhole/target/debug/pyth2wormhole-client /usr/local/bin/pyth2wormhole-client && \
+    cargo build --package pyth2wormhole-client && \
+    cargo test --package pyth2wormhole-client && \
+    mv target/debug/pyth2wormhole-client /usr/local/bin/pyth2wormhole-client && \
     chmod a+rx /usr/src/pyth/*.py
 
 ENV P2W_OWNER_KEYPAIR="/usr/src/solana/keys/p2w_owner.json"

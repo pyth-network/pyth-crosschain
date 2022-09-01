@@ -27,8 +27,8 @@ use log::info;
 
 use pyth2wormhole::config::{
     OldP2WConfigAccount,
-    P2WConfigAccount,
     OldPyth2WormholeConfig,
+    P2WConfigAccount,
     Pyth2WormholeConfig,
 };
 use pyth2wormhole_client as p2wc;
@@ -55,7 +55,8 @@ async fn test_migrate_works() -> Result<(), solitaire::ErrBox> {
     let pyth_owner = Pubkey::new_unique();
 
     // On-chain state
-    let old_p2w_config = OldPyth2WormholeConfig {owner: p2w_owner.pubkey(),
+    let old_p2w_config = OldPyth2WormholeConfig {
+        owner: p2w_owner.pubkey(),
         wh_prog: wh_fixture_program_id,
         max_batch_size: pyth2wormhole::attest::P2W_MAX_BATCH_SIZE,
         pyth_owner,
@@ -79,8 +80,7 @@ async fn test_migrate_works() -> Result<(), solitaire::ErrBox> {
         executable: false,
         rent_epoch: 0,
     };
-    let old_p2w_config_addr =
-        OldP2WConfigAccount::key(None, &p2w_program_id);
+    let old_p2w_config_addr = OldP2WConfigAccount::key(None, &p2w_program_id);
 
     info!("Before add_account() calls");
 
@@ -94,12 +94,8 @@ async fn test_migrate_works() -> Result<(), solitaire::ErrBox> {
     info!("Before start_with_context");
     let mut ctx = p2w_test.start_with_context().await;
 
-    let migrate_tx = p2wc::gen_migrate_tx(
-        ctx.payer,
-        p2w_program_id,
-        p2w_owner,
-        ctx.last_blockhash,
-    )?;
+    let migrate_tx =
+        p2wc::gen_migrate_tx(ctx.payer, p2w_program_id, p2w_owner, ctx.last_blockhash)?;
     info!("Before process_transaction");
 
     // Migration should fail because the new config account is already initialized
@@ -107,7 +103,6 @@ async fn test_migrate_works() -> Result<(), solitaire::ErrBox> {
 
     Ok(())
 }
-
 
 #[tokio::test]
 async fn test_migrate_already_migrated() -> Result<(), solitaire::ErrBox> {
@@ -121,13 +116,15 @@ async fn test_migrate_already_migrated() -> Result<(), solitaire::ErrBox> {
     let pyth_owner = Pubkey::new_unique();
 
     // On-chain state
-    let old_p2w_config = OldPyth2WormholeConfig {owner: p2w_owner.pubkey(),
+    let old_p2w_config = OldPyth2WormholeConfig {
+        owner: p2w_owner.pubkey(),
         wh_prog: wh_fixture_program_id,
         max_batch_size: pyth2wormhole::attest::P2W_MAX_BATCH_SIZE,
         pyth_owner,
     };
 
-    let new_p2w_config = Pyth2WormholeConfig {owner: p2w_owner.pubkey(),
+    let new_p2w_config = Pyth2WormholeConfig {
+        owner: p2w_owner.pubkey(),
         wh_prog: wh_fixture_program_id,
         max_batch_size: pyth2wormhole::attest::P2W_MAX_BATCH_SIZE,
         pyth_owner,
@@ -152,8 +149,7 @@ async fn test_migrate_already_migrated() -> Result<(), solitaire::ErrBox> {
         executable: false,
         rent_epoch: 0,
     };
-    let old_p2w_config_addr =
-        OldP2WConfigAccount::key(None, &p2w_program_id);
+    let old_p2w_config_addr = OldP2WConfigAccount::key(None, &p2w_program_id);
 
     let new_p2w_config_bytes = new_p2w_config.try_to_vec()?;
     let new_p2w_config_account = Account {
@@ -164,7 +160,7 @@ async fn test_migrate_already_migrated() -> Result<(), solitaire::ErrBox> {
         rent_epoch: 0,
     };
     let new_p2w_config_addr =
-        P2WConfigAccount::<{AccountState::Initialized}>::key(None, &p2w_program_id);
+        P2WConfigAccount::<{ AccountState::Initialized }>::key(None, &p2w_program_id);
 
     info!("Before add_account() calls");
 
@@ -174,16 +170,16 @@ async fn test_migrate_already_migrated() -> Result<(), solitaire::ErrBox> {
     info!("Before start_with_context");
     let mut ctx = p2w_test.start_with_context().await;
 
-    let migrate_tx = p2wc::gen_migrate_tx(
-        ctx.payer,
-        p2w_program_id,
-        p2w_owner,
-        ctx.last_blockhash,
-    )?;
+    let migrate_tx =
+        p2wc::gen_migrate_tx(ctx.payer, p2w_program_id, p2w_owner, ctx.last_blockhash)?;
     info!("Before process_transaction");
 
     // Migration should fail because the new config account is already initialized
-    assert!(ctx.banks_client.process_transaction(migrate_tx).await.is_err());
+    assert!(ctx
+        .banks_client
+        .process_transaction(migrate_tx)
+        .await
+        .is_err());
 
     Ok(())
 }

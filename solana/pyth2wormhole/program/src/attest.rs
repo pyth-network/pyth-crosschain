@@ -1,4 +1,10 @@
-use crate::config::P2WConfigAccount;
+use crate::{
+    config::P2WConfigAccount,
+    message::{
+        P2WMessage,
+        P2WMessageDrvData,
+    },
+};
 use borsh::{
     BorshDeserialize,
     BorshSerialize,
@@ -20,9 +26,9 @@ use solana_program::{
 
 use p2w_sdk::{
     BatchPriceAttestation,
+    Identifier,
     P2WEmitter,
     PriceAttestation,
-    Identifier,
 };
 
 use bridge::{
@@ -102,7 +108,7 @@ pub struct Attest<'b> {
     /// Wormhole program address - must match the config value
     pub wh_prog: Info<'b>,
 
-    // wormhole's post_message accounts
+    // wormhole's post_message_unreliable accounts
     //
     // This contract makes no attempt to exhaustively validate
     // Wormhole's account inputs. Only the wormhole contract address
@@ -111,7 +117,7 @@ pub struct Attest<'b> {
     pub wh_bridge: Mut<Info<'b>>,
 
     /// Account to store the posted message
-    pub wh_message: Signer<Mut<Info<'b>>>,
+    pub wh_message: P2WMessage<'b>,
 
     /// Emitter of the VAA
     pub wh_emitter: P2WEmitter<'b>,
@@ -130,6 +136,7 @@ pub struct Attest<'b> {
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct AttestData {
     pub consistency_level: ConsistencyLevel,
+    pub message_account_id: u64,
 }
 
 pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> SoliResult<()> {
@@ -140,7 +147,14 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         return Err(SolitaireError::Custom(4242));
     }
 
+    let wh_msg_drv_data = P2WMessageDrvData {
+        message_owner: accs.payer.key.clone(),
+        id: data.message_account_id,
+    };
+
     accs.config.verify_derivation(ctx.program_id, None)?;
+    accs.wh_message
+        .verify_derivation(ctx.program_id, &wh_msg_drv_data)?;
 
     if accs.config.wh_prog != *accs.wh_prog.key {
         trace!(&format!(
@@ -248,38 +262,98 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
     );
     solana_program::program::invoke(&transfer_ix, ctx.accounts)?;
 
-    // Send payload
-    let post_message_data = (
-        bridge::instruction::Instruction::PostMessage,
-        PostMessageData {
-            nonce: 0, // Superseded by the sequence number
-            payload: batch_attestation.serialize().map_err(|e| {
-                trace!(&e.to_string());
-                ProgramError::InvalidAccountData
-            })?,
-            consistency_level: data.consistency_level,
-        },
-    );
+    let payload = batch_attestation.serialize().map_err(|e| {
+        trace!(&e.to_string());
+        ProgramError::InvalidAccountData
+    })?;
 
-    let ix = Instruction::new_with_bytes(
-        accs.config.wh_prog,
-        post_message_data.try_to_vec()?.as_slice(),
-        vec![
-            AccountMeta::new(*accs.wh_bridge.key, false),
-            AccountMeta::new(*accs.wh_message.key, true),
-            AccountMeta::new_readonly(*accs.wh_emitter.key, true),
-            AccountMeta::new(*accs.wh_sequence.key, false),
-            AccountMeta::new(*accs.payer.key, true),
-            AccountMeta::new(*accs.wh_fee_collector.key, false),
-            AccountMeta::new_readonly(*accs.clock.info().key, false),
-            AccountMeta::new_readonly(solana_program::sysvar::rent::ID, false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        ],
-    );
+    // Adjust message account size if necessary.
+    // NOTE: We assume that:
+    // - the rent and size values are far away from
+    // i64/u64/isize/usize overflow shenanigans (on the order of
+    // single kilobytes).
+    // - Pyth payload size change == Wormhole message size change (their metadata is constant-size)
+    if accs.wh_message.is_initialized() && accs.wh_message.payload.len() != payload.len() {
+        // NOTE: Payload =/= account size (account size includes
+        // surrounding wormhole data structure, payload is just the
+        // Pyth bytes).
 
-    trace!("Before cross-call");
+        // This value will be negative if we need to shrink down
+        let old_account_size = accs.wh_message.info().data_len();
 
-    invoke_seeded(&ix, ctx, &accs.wh_emitter, None)?;
+        // How much payload size changes
+        let payload_size_diff = payload.len() as isize - old_account_size as isize;
+
+        // How big the overall account data becomes
+        let new_account_size = (old_account_size as isize + payload_size_diff) as usize;
+
+        // Adjust account size
+        accs.wh_message.info().realloc(new_account_size, false)?;
+
+        // Exempt balance for adjusted size
+        let new_msg_account_balance = Rent::default().minimum_balance(new_account_size);
+
+        // How the account balance changes
+        let balance_diff =
+            new_msg_account_balance as i64 - accs.wh_message.info().lamports() as i64;
+
+        // How the diff affects payer balance
+        let new_payer_balance = (accs.payer.info().lamports() as i64 - balance_diff) as u64;
+
+        **accs.wh_message.info().lamports.borrow_mut() = new_msg_account_balance;
+        **accs.payer.info().lamports.borrow_mut() = new_payer_balance;
+
+        trace!("After message size/balance adjustment");
+    }
+
+    let ix = bridge::instructions::post_message_unreliable(
+        *accs.wh_prog.info().key,
+        *accs.payer.info().key,
+        *accs.wh_emitter.info().key,
+        *accs.wh_message.info().key,
+        0,
+        payload,
+        data.consistency_level.clone(),
+    )?;
+
+    trace!(&format!(
+        "Cross-call Seeds: {:?}",
+        [
+            // message seeds
+            P2WMessage::seeds(&wh_msg_drv_data)
+                .iter_mut()
+                .map(|seed| seed.as_slice())
+                .collect::<Vec<_>>()
+                .as_slice(),
+            // emitter seeds
+            P2WEmitter::seeds(None)
+                .iter_mut()
+                .map(|seed| seed.as_slice())
+                .collect::<Vec<_>>()
+                .as_slice(),
+        ]
+    ));
+
+    trace!("attest() finished, cross-calling wormhole");
+    invoke_signed(
+        &ix,
+        ctx.accounts,
+        [
+            // message seeds
+            P2WMessage::bumped_seeds(&wh_msg_drv_data, ctx.program_id)
+                .iter_mut()
+                .map(|seed| seed.as_slice())
+                .collect::<Vec<_>>()
+                .as_slice(),
+            // emitter seeds
+            P2WEmitter::bumped_seeds(None, ctx.program_id)
+                .iter_mut()
+                .map(|seed| seed.as_slice())
+                .collect::<Vec<_>>()
+                .as_slice(),
+        ]
+        .as_slice(),
+    )?;
 
     Ok(())
 }

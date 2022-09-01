@@ -31,6 +31,8 @@ use solitaire::{
     BorshSerialize,
 };
 
+use std::time::Duration;
+
 use fixtures::{
     passthrough,
     pyth,
@@ -103,7 +105,6 @@ async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
     let (prod_id, price_id) = pyth::add_test_symbol(&mut p2w_test, &pyth_owner);
 
     let mut ctx = p2w_test.start_with_context().await;
-    let msg_keypair = Keypair::new();
 
     let symbols = vec![p2wc::P2WSymbol {
         name: Some("Mock symbol".to_owned()),
@@ -115,8 +116,8 @@ async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
         p2w_program_id,
         &p2w_config,
         &ctx.payer,
+        0,
         symbols.as_slice(),
-        &msg_keypair,
         ctx.last_blockhash,
     )?;
     ctx.banks_client.process_transaction(attest_tx).await?;
