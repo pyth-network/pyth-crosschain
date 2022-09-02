@@ -16,10 +16,6 @@ spec:
       containers:
         - name: pyth-evm-watcher
           image: pyth-evm-watcher
-          resources:
-            limits:
-              memory: "128Mi"
-              cpu: "500m"
           env:
             - name: WS_ENDPOINT
               value: 'ws://eth-devnet:8545'
