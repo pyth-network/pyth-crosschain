@@ -292,17 +292,15 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         accs.wh_message.info().realloc(new_account_size, false)?;
 
         // Exempt balance for adjusted size
-        let new_msg_account_balance = Rent::get()?.minimum_balance(new_account_size);
+        let wh_msg_required_balance = Rent::get()?.minimum_balance(new_account_size);
+        let wh_msg_current_balance = accs.wh_message.info().lamports();
 
-        // How the account balance changes
-        let balance_diff =
-            new_msg_account_balance as i64 - accs.wh_message.info().lamports() as i64;
 
-        // How the diff affects payer balance
-        let new_payer_balance = (accs.payer.info().lamports() as i64 - balance_diff) as u64;
-
-        **accs.wh_message.info().lamports.borrow_mut() = new_msg_account_balance;
-        **accs.payer.info().lamports.borrow_mut() = new_payer_balance;
+        if wh_msg_current_balance < wh_msg_required_balance {
+            let required_deposit = wh_msg_required_balance - wh_msg_current_balance;
+            let transfer_ix = system_instruction::transfer(accs.payer.key, accs.wh_message.info().key, required_deposit);
+            invoke(&transfer_ix, ctx.accounts)?
+        } 
 
         trace!("After message size/balance adjustment");
     }
