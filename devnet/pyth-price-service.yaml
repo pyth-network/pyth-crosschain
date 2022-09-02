@@ -57,10 +57,6 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 30
             timeoutSeconds: 30
-          resources:
-            limits:
-              memory: "128Mi"
-              cpu: "500m"
           env:
             - name: SPY_SERVICE_HOST
               value: spy:7072
