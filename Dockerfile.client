@@ -25,5 +25,5 @@ RUN --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=/usr/local/cargo/registry,id=cargo_registry \
     --mount=type=cache,target=target,id=cargo_registry \
 	set -xe && \
-    cargo install bridge_client --git https://github.com/certusone/wormhole --tag $WORMHOLE_TAG --locked --root /usr/local && \
-    cargo install token_bridge_client --git https://github.com/certusone/wormhole --tag $WORMHOLE_TAG --locked --root /usr/local
+    cargo install bridge_client --git https://github.com/wormhole-foundation/wormhole --tag $WORMHOLE_TAG --locked --root /usr/local && \
+    cargo install token_bridge_client --git https://github.com/wormhole-foundation/wormhole --tag $WORMHOLE_TAG --locked --root /usr/local

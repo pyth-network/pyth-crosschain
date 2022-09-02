@@ -28,7 +28,7 @@ and code reviews are our most important tools to accomplish that.
   well-defined changes.
 
 Documentation for the in-the-wild deployments lives in the
-[wormhole-networks](https://github.com/certusone/wormhole-networks) repository.
+[wormhole-networks](https://github.com/wormhole-foundation/wormhole-networks) repository.
 
 See [DEVELOP.md](./DEVELOP.md) for more information on how to run the development environment.
 

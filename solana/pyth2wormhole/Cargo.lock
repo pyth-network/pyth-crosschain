@@ -2344,9 +2344,9 @@ dependencies = [
 
 [[package]]
 name = "pyth-sdk"
-version = "0.4.2"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f262b88557d8f152a247e1be786a8359d63112fac0a6e49fa41082a8ef789e8d"
+checksum = "f5c805ba3dfb5b7ed6a8ffa62ec38391f485a79c7cf6b3b11d3bd44fb0325824"
 dependencies = [
  "borsh",
  "borsh-derive",
@@ -2357,9 +2357,9 @@ dependencies = [
 
 [[package]]
 name = "pyth-sdk-solana"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb250e58d1106e47b4348af87f738b8381d6c98c33f4ad13401ab9d82300daa9"
+checksum = "286f2abd9fb718190206340f3d1f98a80b34df9d724887b907e7f6f24a31efce"
 dependencies = [
  "borsh",
  "borsh-derive",
@@ -2725,7 +2725,7 @@ dependencies = [
 [[package]]
 name = "rocksalt"
 version = "0.1.0"
-source = "git+https://github.com/certusone/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
 dependencies = [
  "byteorder",
  "proc-macro2 1.0.38",
@@ -4001,7 +4001,7 @@ dependencies = [
 [[package]]
 name = "solitaire"
 version = "0.1.0"
-source = "git+https://github.com/certusone/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
 dependencies = [
  "borsh",
  "byteorder",
@@ -4911,7 +4911,7 @@ dependencies = [
 [[package]]
 name = "wormhole-bridge-solana"
 version = "0.1.0"
-source = "git+https://github.com/certusone/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
 dependencies = [
  "borsh",
  "byteorder",
@@ -5016,7 +5016,3 @@ dependencies = [
  "cc",
  "libc",
 ]
-
-[[patch.unused]]
-name = "memmap2"
-version = "0.1.0"

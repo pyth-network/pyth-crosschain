@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./cosmwasm/contracts/pyth-bridge
+        working-directory: ./cosmwasm/contracts/pyth
     steps:
     - uses: actions/checkout@v2
     - name: Build

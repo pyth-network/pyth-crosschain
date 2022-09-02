@@ -13,10 +13,9 @@ use cosmwasm_std::{
     StdResult,
     Timestamp,
     WasmQuery,
-    StdError,
 };
 
-use pyth_sdk::{
+use pyth_sdk_cw::{
     PriceFeed,
     PriceIdentifier,
     PriceStatus,
@@ -37,13 +36,14 @@ use crate::state::{
     price_info_read,
     ConfigInfo,
     PriceInfo,
-    VALID_TIME_PERIOD,
     PythDataSource,
+    VALID_TIME_PERIOD,
 };
+
+use crate::error::PythContractError;
 
 use p2w_sdk::BatchPriceAttestation;
 
-use wormhole::error::ContractError;
 use wormhole::msg::QueryMsg as WormholeQueryMsg;
 use wormhole::state::ParsedVAA;
 
@@ -61,10 +61,10 @@ pub fn instantiate(
 ) -> StdResult<Response> {
     // Save general wormhole and pyth info
     let state = ConfigInfo {
-        owner: info.sender.to_string(),
-        wormhole_contract:  msg.wormhole_contract,
-        data_sources: HashSet::from([PythDataSource {
-            emitter: msg.pyth_emitter,
+        owner:             info.sender,
+        wormhole_contract: deps.api.addr_validate(msg.wormhole_contract.as_ref())?,
+        data_sources:      HashSet::from([PythDataSource {
+            emitter:            msg.pyth_emitter,
             pyth_emitter_chain: msg.pyth_emitter_chain,
         }]),
     };
@@ -76,7 +76,7 @@ pub fn instantiate(
 pub fn parse_vaa(deps: DepsMut, block_time: u64, data: &Binary) -> StdResult<ParsedVAA> {
     let cfg = config_read(deps.storage).load()?;
     let vaa: ParsedVAA = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-        contract_addr: cfg.wormhole_contract,
+        contract_addr: cfg.wormhole_contract.to_string(),
         msg:           to_binary(&WormholeQueryMsg::VerifyVAA {
             vaa: data.clone(),
             block_time,
@@ -89,8 +89,10 @@ pub fn parse_vaa(deps: DepsMut, block_time: u64, data: &Binary) -> StdResult<Par
 pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> StdResult<Response> {
     match msg {
         ExecuteMsg::SubmitVaa { data } => submit_vaa(deps, env, info, &data),
-        ExecuteMsg::AddDataSource { data_source } => add_data_source(deps, env, info, data_source ),
-        ExecuteMsg::RemoveDataSource { data_source } => remove_data_source(deps, env, info, data_source ),
+        ExecuteMsg::AddDataSource { data_source } => add_data_source(deps, env, info, data_source),
+        ExecuteMsg::RemoveDataSource { data_source } => {
+            remove_data_source(deps, env, info, data_source)
+        }
     }
 }
 
@@ -108,7 +110,7 @@ fn submit_vaa(
 
     let data = &vaa.payload;
     let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
-        .map_err(|_| ContractError::InvalidVAA.std())?;
+        .map_err(|_| PythContractError::InvalidUpdatePayload)?;
 
     process_batch_attestation(deps, env, &batch_attestation)
 }
@@ -122,25 +124,22 @@ fn add_data_source(
     let mut state = config_read(deps.storage).load()?;
 
     if state.owner != info.sender {
-        return ContractError::PermissionDenied.std_err();
+        return Err(PythContractError::PermissionDenied)?;
     }
 
-    if state.data_sources.insert(data_source.clone()) == false {
-        return Err(StdError::GenericErr { msg: format!("Data source already exists") });
+    if !state.data_sources.insert(data_source.clone()) {
+        return Err(PythContractError::DataSourceAlreadyExists)?;
     }
 
     config(deps.storage).save(&state)?;
 
     Ok(Response::new()
-    .add_attribute("action", "add_data_source")
-    .add_attribute(
-        "data_source_emitter",
-        format!("{}", data_source.emitter),
-    )
-    .add_attribute(
-        "data_source_emitter_chain",
-        format!("{}", data_source.pyth_emitter_chain)
-    ))
+        .add_attribute("action", "add_data_source")
+        .add_attribute("data_source_emitter", format!("{}", data_source.emitter))
+        .add_attribute(
+            "data_source_emitter_chain",
+            format!("{}", data_source.pyth_emitter_chain),
+        ))
 }
 
 fn remove_data_source(
@@ -150,27 +149,24 @@ fn remove_data_source(
     data_source: PythDataSource,
 ) -> StdResult<Response> {
     let mut state = config_read(deps.storage).load()?;
-    
+
     if state.owner != info.sender {
-        return ContractError::PermissionDenied.std_err();
+        return Err(PythContractError::PermissionDenied)?;
     }
 
-    if state.data_sources.remove(&data_source) == false {
-        return Err(StdError::GenericErr { msg: format!("Data source does not exist") });
+    if !state.data_sources.remove(&data_source) {
+        return Err(PythContractError::DataSourceDoesNotExists)?;
     }
 
     config(deps.storage).save(&state)?;
 
     Ok(Response::new()
-    .add_attribute("action", "remove_data_source")
-    .add_attribute(
-        "data_source_emitter",
-        format!("{}", data_source.emitter),
-    )
-    .add_attribute(
-        "data_source_emitter_chain",
-        format!("{}", data_source.pyth_emitter_chain)
-    ))
+        .add_attribute("action", "remove_data_source")
+        .add_attribute("data_source_emitter", format!("{}", data_source.emitter))
+        .add_attribute(
+            "data_source_emitter_chain",
+            format!("{}", data_source.pyth_emitter_chain),
+        ))
 }
 
 
@@ -178,11 +174,11 @@ fn remove_data_source(
 // (Solana)
 fn verify_vaa_sender(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
     let vaa_data_source = PythDataSource {
-        emitter: vaa.emitter_address.clone().into(),
-        pyth_emitter_chain: vaa.emitter_chain
+        emitter:            vaa.emitter_address.clone().into(),
+        pyth_emitter_chain: vaa.emitter_chain,
     };
     if !state.data_sources.contains(&vaa_data_source) {
-        return ContractError::InvalidVAA.std_err();
+        return Err(PythContractError::InvalidUpdateEmitter)?;
     }
     Ok(())
 }
@@ -282,18 +278,17 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<PriceFeedResponse> {
     match price_info_read(deps.storage).load(address) {
-        Ok(mut terra_price_info) => {
+        Ok(mut price_info) => {
             let env_time_sec = env.block.time.seconds();
-            let price_pub_time_sec = terra_price_info.price_feed.publish_time as u64;
+            let price_pub_time_sec = price_info.price_feed.publish_time as u64;
 
             // Cases that it will cover:
             // - This will ensure to set status unknown if the price has become very old and hasn't
             //   updated yet.
-            // - If a price has arrived very late to terra it will set the status to unknown.
+            // - If a price has arrived very late to this chain it will set the status to unknown.
             // - If a price is coming from future it's tolerated up to VALID_TIME_PERIOD seconds
-            //   (using abs diff) but more than that is set to unknown, the reason is huge clock
-            //   difference means there exists a problem in a either Terra or Solana blockchain and
-            //   if it is Solana we don't want to propagate Solana internal problems to Terra
+            //   (using abs diff) but more than that is set to unknown, the reason could be the 
+            //   clock time drift between the source and target chains.
             let time_abs_diff = if env_time_sec > price_pub_time_sec {
                 env_time_sec - price_pub_time_sec
             } else {
@@ -301,14 +296,14 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
             };
 
             if time_abs_diff > VALID_TIME_PERIOD.as_secs() {
-                terra_price_info.price_feed.status = PriceStatus::Unknown;
+                price_info.price_feed.status = PriceStatus::Unknown;
             }
 
             Ok(PriceFeedResponse {
-                price_feed: terra_price_info.price_feed,
+                price_feed: price_info.price_feed,
             })
         }
-        Err(_) => ContractError::AssetNotFound.std_err(),
+        Err(_) => Err(PythContractError::PriceFeedNotFound)?
     }
 }
 
@@ -317,12 +312,15 @@ mod test {
     use cosmwasm_std::testing::{
         mock_dependencies,
         mock_env,
+        mock_info,
         MockApi,
         MockQuerier,
         MockStorage,
-        mock_info,
     };
-    use cosmwasm_std::OwnedDeps;
+    use cosmwasm_std::{
+        Addr,
+        OwnedDeps,
+    };
 
     use super::*;
 
@@ -346,19 +344,28 @@ mod test {
         }
     }
 
+    fn create_zero_config_info() -> ConfigInfo {
+        ConfigInfo {
+            owner:             Addr::unchecked(String::default()),
+            wormhole_contract: Addr::unchecked(String::default()),
+            data_sources:      HashSet::default(),
+        }
+    }
+
     fn create_price_feed(expo: i32) -> PriceFeed {
         let mut price_feed = PriceFeed::default();
         price_feed.expo = expo;
         price_feed
     }
 
-    fn create_data_sources(pyth_emitter: Vec<u8>, pyth_emitter_chain: u16) -> HashSet<PythDataSource> {
-        HashSet::from([
-            PythDataSource {
-                emitter: pyth_emitter.into(),
-                pyth_emitter_chain
-            }
-        ])
+    fn create_data_sources(
+        pyth_emitter: Vec<u8>,
+        pyth_emitter_chain: u16,
+    ) -> HashSet<PythDataSource> {
+        HashSet::from([PythDataSource {
+            emitter: pyth_emitter.into(),
+            pyth_emitter_chain,
+        }])
     }
 
     /// Updates the price feed with the given attestation time stamp and
@@ -382,7 +389,7 @@ mod test {
     fn test_verify_vaa_sender_ok() {
         let config_info = ConfigInfo {
             data_sources: create_data_sources(vec![1u8], 3),
-            ..Default::default()
+            ..create_zero_config_info()
         };
 
         let mut vaa = create_zero_vaa();
@@ -396,7 +403,7 @@ mod test {
     fn test_verify_vaa_sender_fail_wrong_emitter_address() {
         let config_info = ConfigInfo {
             data_sources: create_data_sources(vec![1u8], 3),
-            ..Default::default()
+            ..create_zero_config_info()
         };
 
         let mut vaa = create_zero_vaa();
@@ -404,7 +411,7 @@ mod test {
         vaa.emitter_chain = 3;
         assert_eq!(
             verify_vaa_sender(&config_info, &vaa),
-            ContractError::InvalidVAA.std_err()
+            Err(PythContractError::InvalidUpdateEmitter.into())
         );
     }
 
@@ -412,7 +419,7 @@ mod test {
     fn test_verify_vaa_sender_fail_wrong_emitter_chain() {
         let config_info = ConfigInfo {
             data_sources: create_data_sources(vec![1u8], 3),
-            ..Default::default()
+            ..create_zero_config_info()
         };
 
         let mut vaa = create_zero_vaa();
@@ -420,7 +427,7 @@ mod test {
         vaa.emitter_chain = 2;
         assert_eq!(
             verify_vaa_sender(&config_info, &vaa),
-            ContractError::InvalidVAA.std_err()
+            Err(PythContractError::InvalidUpdateEmitter.into())
         );
     }
 
@@ -595,35 +602,51 @@ mod test {
 
         assert_eq!(
             query_price_feed(deps.as_ref(), env, b"123".as_ref()),
-            ContractError::AssetNotFound.std_err()
+            Err(PythContractError::PriceFeedNotFound.into())
         );
     }
 
     #[test]
     fn test_add_data_source_ok_with_owner() {
         let (mut deps, env) = setup_test();
-        config(&mut deps.storage).save(&ConfigInfo {
-            owner: String::from("123"),
-            ..Default::default()
-        }).unwrap();
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                owner: Addr::unchecked("123"),
+                ..create_zero_config_info()
+            })
+            .unwrap();
 
-        let data_source = PythDataSource { emitter: vec![1u8].into(), pyth_emitter_chain: 1 };
+        let data_source = PythDataSource {
+            emitter:            vec![1u8].into(),
+            pyth_emitter_chain: 1,
+        };
 
-        assert!(add_data_source(deps.as_mut(), env.clone(), mock_info("123", &[]), data_source.clone()).is_ok());
+        assert!(add_data_source(
+            deps.as_mut(),
+            env.clone(),
+            mock_info("123", &[]),
+            data_source.clone()
+        )
+        .is_ok());
 
         // Adding an existing data source should result an error
-        assert!(add_data_source(deps.as_mut(), env.clone(), mock_info("123", &[]), data_source.clone()).is_err());
+        assert!(add_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_err());
     }
 
     #[test]
     fn test_add_data_source_err_without_owner() {
         let (mut deps, env) = setup_test();
-        config(&mut deps.storage).save(&ConfigInfo {
-            owner: String::from("123"),
-            ..Default::default()
-        }).unwrap();
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                owner: Addr::unchecked("123"),
+                ..create_zero_config_info()
+            })
+            .unwrap();
 
-        let data_source = PythDataSource { emitter: vec![1u8].into(), pyth_emitter_chain: 1 };
+        let data_source = PythDataSource {
+            emitter:            vec![1u8].into(),
+            pyth_emitter_chain: 1,
+        };
 
         assert!(add_data_source(deps.as_mut(), env, mock_info("321", &[]), data_source).is_err());
     }
@@ -631,74 +654,116 @@ mod test {
     #[test]
     fn test_remove_data_source_ok_with_owner() {
         let (mut deps, env) = setup_test();
-        config(&mut deps.storage).save(&ConfigInfo {
-            owner: String::from("123"),
-            data_sources: create_data_sources(vec![1u8], 1),
-            ..Default::default()
-        }).unwrap();
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                owner: Addr::unchecked("123"),
+                data_sources: create_data_sources(vec![1u8], 1),
+                ..create_zero_config_info()
+            })
+            .unwrap();
 
-        let data_source = PythDataSource { emitter: vec![1u8].into(), pyth_emitter_chain: 1 };
+        let data_source = PythDataSource {
+            emitter:            vec![1u8].into(),
+            pyth_emitter_chain: 1,
+        };
 
-        assert!(remove_data_source(deps.as_mut(), env.clone(), mock_info("123", &[]), data_source.clone()).is_ok());
+        assert!(remove_data_source(
+            deps.as_mut(),
+            env.clone(),
+            mock_info("123", &[]),
+            data_source.clone()
+        )
+        .is_ok());
 
         // Removing a non existent data source should result an error
-        assert!(remove_data_source(deps.as_mut(), env.clone(), mock_info("123", &[]), data_source.clone()).is_err());
+        assert!(
+            remove_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_err()
+        );
     }
 
     #[test]
     fn test_remove_data_source_err_without_owner() {
         let (mut deps, env) = setup_test();
-        config(&mut deps.storage).save(&ConfigInfo {
-            owner: String::from("123"),
-            data_sources: create_data_sources(vec![1u8], 1),
-            ..Default::default()
-        }).unwrap();
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                owner: Addr::unchecked("123"),
+                data_sources: create_data_sources(vec![1u8], 1),
+                ..create_zero_config_info()
+            })
+            .unwrap();
 
-        let data_source = PythDataSource { emitter: vec![1u8].into(), pyth_emitter_chain: 1 };
+        let data_source = PythDataSource {
+            emitter:            vec![1u8].into(),
+            pyth_emitter_chain: 1,
+        };
 
-        assert!(remove_data_source(deps.as_mut(), env, mock_info("321", &[]), data_source).is_err());
+        assert!(
+            remove_data_source(deps.as_mut(), env, mock_info("321", &[]), data_source).is_err()
+        );
     }
 
     #[test]
     fn test_verify_vaa_works_after_adding_data_source() {
         let (mut deps, env) = setup_test();
-        config(&mut deps.storage).save(&ConfigInfo {
-            owner: String::from("123"),
-            ..Default::default()
-        }).unwrap();
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                owner: Addr::unchecked("123"),
+                ..create_zero_config_info()
+            })
+            .unwrap();
 
         let mut vaa = create_zero_vaa();
         vaa.emitter_address = vec![1u8];
         vaa.emitter_chain = 3;
 
         // Should result an error because there is no data source
-        assert_eq!(verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa), ContractError::InvalidVAA.std_err());
+        assert_eq!(
+            verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
+            Err(PythContractError::InvalidUpdateEmitter.into())
+        );
 
-        let data_source = PythDataSource { emitter: vec![1u8].into(), pyth_emitter_chain: 3 };
-        assert!(add_data_source(deps.as_mut(), env.clone(), mock_info("123", &[]), data_source.clone()).is_ok());
+        let data_source = PythDataSource {
+            emitter:            vec![1u8].into(),
+            pyth_emitter_chain: 3,
+        };
+        assert!(add_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_ok());
 
-        assert_eq!(verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa), Ok(()));
+        assert_eq!(
+            verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
+            Ok(())
+        );
     }
 
     #[test]
     fn test_verify_vaa_err_after_removing_data_source() {
         let (mut deps, env) = setup_test();
-        config(&mut deps.storage).save(&ConfigInfo {
-            owner: String::from("123"),
-            data_sources: create_data_sources(vec![1u8], 3),
-            ..Default::default()
-        }).unwrap();
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                owner: Addr::unchecked("123"),
+                data_sources: create_data_sources(vec![1u8], 3),
+                ..create_zero_config_info()
+            })
+            .unwrap();
 
         let mut vaa = create_zero_vaa();
         vaa.emitter_address = vec![1u8];
         vaa.emitter_chain = 3;
 
-        assert_eq!(verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa), Ok(()));
+        assert_eq!(
+            verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
+            Ok(())
+        );
 
-        let data_source = PythDataSource { emitter: vec![1u8].into(), pyth_emitter_chain: 3 };
-        assert!(remove_data_source(deps.as_mut(), env.clone(), mock_info("123", &[]), data_source.clone()).is_ok());
+        let data_source = PythDataSource {
+            emitter:            vec![1u8].into(),
+            pyth_emitter_chain: 3,
+        };
+        assert!(remove_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_ok());
 
         // Should result an error because data source should not exist anymore
-        assert_eq!(verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa), ContractError::InvalidVAA.std_err());
+        assert_eq!(
+            verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
+            Err(PythContractError::InvalidUpdateEmitter.into())
+        );
     }
 }

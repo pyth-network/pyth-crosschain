@@ -1,4 +1,4 @@
-module github.com/certusone/wormhole/third_party/abigen
+module github.com/wormhole-foundation/wormhole/third_party/abigen
 
 go 1.15
 

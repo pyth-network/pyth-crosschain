@@ -22,17 +22,17 @@ bash build.sh
 
 This command will build and save the Pyth contract in the `artifact` directory.
 
-Then, to deploy the Pyth contract (`pyth_bridge.wasm`), run the following command in the `tools` directory:
+Then, to deploy the Pyth contract (`pyth_cosmwasm.wasm`), run the following command in the `tools` directory:
 
 ``` sh
 npm ci # Do it only once to install the required packages
-npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_bridge.wasm --mnemonic "..."
+npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_cosmwasm.wasm --mnemonic "..."
 ```
 
 If successful, this command will print something along the lines of:
 
 ``` sh
-Storing WASM: ../artifacts/pyth_bridge.wasm (367689 bytes)
+Storing WASM: ../artifacts/pyth_cosmwasm.wasm (367689 bytes)
 Deploy fee:  88446uluna
 Code ID:  2435
 ```
@@ -45,17 +45,17 @@ If you want to instantiate a new contract after your deployment, pass `--instant
 This command will upload the code and instantiates a new Pyth contract with the resulting code id:
 
 ``` sh
-npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_bridge.wasm --mnemonic "..." --instantiate
+npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_cosmwasm.wasm --mnemonic "..." --instantiate
 ```
 
 If successful, the output should look like so:
 ```
-Storing WASM: ../artifacts/pyth_bridge.wasm (183749 bytes)
+Storing WASM: ../artifacts/pyth_cosmwasm.wasm (183749 bytes)
 Deploy fee:  44682uluna
 Code ID:  53199
 Instantiating a contract
 Sleeping for 10 seconds for store transaction to finalize.
-Instantiated Pyth Bridge at terra123456789yelw23uh22nadqlyjvtl7s5527er97 (0x0000000000000000000000001234567896267ee5479752a7d683e49317ff4294)
+Instantiated Pyth at terra123456789yelw23uh22nadqlyjvtl7s5527er97 (0x0000000000000000000000001234567896267ee5479752a7d683e49317ff4294)
 Deployed Pyth contract at terra123456789yelw23uh22nadqlyjvtl7s5527er97
 ```
 
@@ -64,12 +64,12 @@ If you want to upgrade an existing contract pass `--migrate --contract terra1234
 This command will upload the code, and with the resulting code id, will migrate the existing contract to the new one:
 
 ``` sh
-npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_bridge.wasm --mnemonic "..." --migrate --contract "terra123..."
+npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_cosmwasm.wasm --mnemonic "..." --migrate --contract "terra123..."
 ```
 
 If successful, the output should look like so:
 ```
-Storing WASM: ../artifacts/pyth_bridge.wasm (183749 bytes)
+Storing WASM: ../artifacts/pyth_cosmwasm.wasm (183749 bytes)
 Deploy fee:  44682uluna
 Code ID:  53227
 Sleeping for 10 seconds for store transaction to finalize.

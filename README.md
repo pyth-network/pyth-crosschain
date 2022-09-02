@@ -6,7 +6,7 @@ Pyth2Wormhole. The base repository is a fork from Certus One's reference
 for building projects based on Wormhole's various SDKs. Much of the existing
 documentation from there will also apply to this repository.
 
-[Wormhole]: https://github.com/certusone/wormhole
+[Wormhole]: https://github.com/wormhole-foundation/wormhole
 
 Within this monorepo you will find the following subprojects:
 

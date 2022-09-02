@@ -1,3 +1,8 @@
+// Deploy Wormhole and Pyth contract to Tilt. If you want to 
+// test the contracts locally you need to build the wormhole contract
+// as well. You can use Dockerfile.cosmwasm in the root of this repo
+// to do that.
+
 import { LCDClient, MnemonicKey } from "@terra-money/terra.js";
 import {
   MsgInstantiateContract,
@@ -14,7 +19,7 @@ import { zeroPad } from "ethers/lib/utils.js";
 */
 const artifacts = [
   "wormhole.wasm",
-  "pyth_bridge.wasm",
+  "pyth_cosmwasm.wasm",
 ];
 
 /* Check that the artifact folder contains all the wasm files we expect and nothing else */
@@ -152,13 +157,15 @@ addresses["wormhole.wasm"] = await instantiate("wormhole.wasm", {
     ],
     expiration_time: 0,
   },
+  chain_id: 18,
+  fee_denom: "uluna",
 }, "wormhole");
 
 const pythEmitterAddress =
   "71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
 const pythChain = 1;
 
-addresses["pyth_bridge.wasm"] = await instantiate("pyth_bridge.wasm", {
+addresses["pyth_cosmwasm.wasm"] = await instantiate("pyth_cosmwasm.wasm", {
   wormhole_contract: addresses["wormhole.wasm"],
   pyth_emitter: Buffer.from(pythEmitterAddress, "hex").toString(
     "base64"

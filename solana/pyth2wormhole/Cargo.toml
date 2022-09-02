@@ -1,4 +1,2 @@
 [workspace]
 members = ["client", "program"]
-[patch.crates-io]
-memmap2 = { path = "../memmap2-rs" }
