@@ -1,36 +1,37 @@
 import {
   ChainId,
   hexToUint8Array,
-  uint8ArrayToHex,
+  uint8ArrayToHex
 } from "@certusone/wormhole-sdk";
 
 import {
   createSpyRPCServiceClient,
-  subscribeSignedVAA,
+  subscribeSignedVAA
 } from "@certusone/wormhole-spydk";
 
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 
-import { envOrErr, sleep, TimestampInSec } from "./helpers";
-import { PromClient } from "./promClient";
 import {
   getBatchSummary,
   parseBatchPriceAttestation,
-  priceAttestationToPriceFeed,
+  priceAttestationToPriceFeed
 } from "@certusone/p2w-sdk";
-import { ClientReadableStream } from "@grpc/grpc-js";
 import {
   FilterEntry,
-  SubscribeSignedVAAResponse,
+  SubscribeSignedVAAResponse
 } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
-import { logger } from "./logging";
+import { ClientReadableStream } from "@grpc/grpc-js";
 import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";
+import { sleep, TimestampInSec } from "./helpers";
+import { logger } from "./logging";
+import { PromClient } from "./promClient";
 
 export type PriceInfo = {
   vaaBytes: string;
   seqNum: number;
   attestationTime: TimestampInSec;
   priceFeed: PriceFeed;
+  emitterChainId: number;
 };
 
 export interface PriceStore {
@@ -149,7 +150,6 @@ export class Listener implements PriceStore {
   }
 
   async processVaa(vaaBytes: string) {
-    logger.info("Received a new VAA");
     const { parse_vaa } = await importCoreWasm();
     const parsedVAA = parse_vaa(hexToUint8Array(vaaBytes));
 
@@ -196,6 +196,7 @@ export class Listener implements PriceStore {
           vaaBytes: vaaBytes,
           attestationTime: priceAttestation.attestationTime,
           priceFeed,
+          emitterChainId: parsedVAA.emitter_chain,
         });
 
         for (let callback of this.updateCallbacks) {

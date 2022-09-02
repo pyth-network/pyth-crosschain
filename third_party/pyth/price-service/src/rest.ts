@@ -1,15 +1,14 @@
-import express, { Express } from "express";
 import cors from "cors";
+import express, { NextFunction, Request, Response } from "express";
+import { Joi, schema, validate, ValidationError } from "express-validation";
+import { Server } from "http";
+import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
 import responseTime from "response-time";
-import { Request, Response, NextFunction } from "express";
+import { DurationInMs, DurationInSec } from "./helpers";
 import { PriceStore } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
-import { DurationInMs, DurationInSec } from "./helpers";
-import { StatusCodes } from "http-status-codes";
-import { validate, ValidationError, Joi, schema } from "express-validation";
-import { Server } from "http";
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
@@ -179,6 +178,51 @@ export class RestAPI {
     );
     endpoints.push(
       "api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
+    );
+
+    app.get(
+      "/api/latest_price_info",
+      validate(latestPriceFeedsInputSchema),
+      (req: Request, res: Response) => {
+        let priceIds = req.query.ids as string[];
+
+        let responseJson = [];
+
+        let notFoundIds: string[] = [];
+
+        for (let id of priceIds) {
+          if (id.startsWith("0x")) {
+            id = id.substring(2);
+          }
+
+          let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
+
+          if (latestPriceInfo === undefined) {
+            notFoundIds.push(id);
+            continue;
+          }
+
+          const freshness: DurationInSec =
+            new Date().getTime() / 1000 - latestPriceInfo.attestationTime;
+          this.promClient?.addApiRequestsPriceFreshness(
+            req.path,
+            id,
+            freshness
+          );
+
+          responseJson.push({"price_feed": latestPriceInfo.priceFeed.toJson(), "emitter_chain": latestPriceInfo.emitterChainId, "attestation_time": latestPriceInfo.attestationTime, "sequence_number": latestPriceInfo.seqNum});
+        }
+        
+
+        if (notFoundIds.length > 0) {
+          throw RestException.PriceFeedIdNotFound(notFoundIds);
+        }
+
+        res.json(responseJson);
+      }
+    );
+    endpoints.push(
+      "api/latest_price_info?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
     );
 
     app.get(
