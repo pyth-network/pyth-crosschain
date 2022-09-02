@@ -22,6 +22,7 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
+    sysvar::Sysvar,
 };
 
 use p2w_sdk::{
@@ -291,7 +292,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         accs.wh_message.info().realloc(new_account_size, false)?;
 
         // Exempt balance for adjusted size
-        let new_msg_account_balance = Rent::default().minimum_balance(new_account_size);
+        let new_msg_account_balance = Rent::get()?.minimum_balance(new_account_size);
 
         // How the account balance changes
         let balance_diff =
@@ -354,6 +355,36 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         ]
         .as_slice(),
     )?;
+
+    // This part is added to avoid rent exemption error that is introduced using
+    // a wrong implementation in solitaire
+    //
+    // This is done after the cross-contract call to get the proper account sizes
+    // and avoid breaking wormhole call.
+    //
+    // It can be removed once wormhole mitigates this problem and upgrades its contract
+
+    // Checking the message account balance
+    let wh_message_balance = accs.wh_message.info().lamports();
+    let wh_message_rent_exempt = Rent::get()?.minimum_balance(accs.wh_message.size());
+
+    if (wh_message_balance < wh_message_rent_exempt) {
+        let required_deposit = wh_message_rent_exempt - wh_message_balance;
+
+        **accs.wh_message.info().lamports.borrow_mut() += required_deposit;
+        **accs.payer.info().lamports.borrow_mut() -= required_deposit;
+    }
+
+    // Checking the sequence account balance
+    let wg_sequence_balance = accs.wh_sequence.info().lamports();
+    let wh_sequence_rent_exempt = Rent::get()?.minimum_balance(accs.wh_sequence.size());
+
+    if (wg_sequence_balance < wh_sequence_rent_exempt) {
+        let required_deposit = wh_sequence_rent_exempt - wg_sequence_balance;
+
+        **accs.wh_sequence.info().lamports.borrow_mut() += required_deposit;
+        **accs.payer.info().lamports.borrow_mut() -= required_deposit;
+    }
 
     Ok(())
 }
