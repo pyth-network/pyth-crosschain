@@ -117,7 +117,7 @@ pub struct Attest<'b> {
     pub wh_bridge: Mut<Info<'b>>,
 
     /// Account to store the posted message
-    pub wh_message: P2WMessage<'b>,
+    pub wh_message: Mut<Info<'b>>,
 
     /// Emitter of the VAA
     pub wh_emitter: P2WEmitter<'b>,
@@ -147,14 +147,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         return Err(SolitaireError::Custom(4242));
     }
 
-    let wh_msg_drv_data = P2WMessageDrvData {
-        message_owner: accs.payer.key.clone(),
-        id: data.message_account_id,
-    };
-
     accs.config.verify_derivation(ctx.program_id, None)?;
-    accs.wh_message
-        .verify_derivation(ctx.program_id, &wh_msg_drv_data)?;
 
     if accs.config.wh_prog != *accs.wh_prog.key {
         trace!(&format!(
@@ -267,44 +260,52 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         ProgramError::InvalidAccountData
     })?;
 
+    // FIXME: Resizes won't work because the account is owned by wormhole
+    //
     // Adjust message account size if necessary.
     // NOTE: We assume that:
     // - the rent and size values are far away from
     // i64/u64/isize/usize overflow shenanigans (on the order of
     // single kilobytes).
     // - Pyth payload size change == Wormhole message size change (their metadata is constant-size)
-    if accs.wh_message.is_initialized() && accs.wh_message.payload.len() != payload.len() {
-        // NOTE: Payload =/= account size (account size includes
-        // surrounding wormhole data structure, payload is just the
-        // Pyth bytes).
+    // if accs.wh_message.is_initialized() && accs.wh_message.payload.len() != payload.len() {
+    //     // NOTE: Payload =/= account size (account size includes
+    //     // surrounding wormhole data structure, payload is just the
+    //     // Pyth bytes).
 
-        // This value will be negative if we need to shrink down
-        let old_account_size = accs.wh_message.info().data_len();
+    //     // This value will be negative if we need to shrink down
+    //     let old_account_size = accs.wh_message.info().data_len();
 
-        // How much payload size changes
-        let payload_size_diff = payload.len() as isize - old_account_size as isize;
+    //     // How much payload size changes
+    //     let payload_size_diff = payload.len() as isize - old_account_size as isize;
 
-        // How big the overall account data becomes
-        let new_account_size = (old_account_size as isize + payload_size_diff) as usize;
+    //     // How big the overall account data becomes
+    //     let new_account_size = (old_account_size as isize + payload_size_diff) as usize;
 
-        // Adjust account size
-        accs.wh_message.info().realloc(new_account_size, false)?;
+    //     // Adjust account size
+    //     accs.wh_message.info().realloc(new_account_size, false)?;
 
-        // Exempt balance for adjusted size
-        let new_msg_account_balance = Rent::default().minimum_balance(new_account_size);
+    //     // Exempt balance for adjusted size
+    //     let new_msg_account_balance = Rent::default().minimum_balance(new_account_size);
 
-        // How the account balance changes
-        let balance_diff =
-            new_msg_account_balance as i64 - accs.wh_message.info().lamports() as i64;
+    //     // How the account balance changes
+    //     let balance_diff =
+    //         new_msg_account_balance as i64 - accs.wh_message.info().lamports() as i64;
 
-        // How the diff affects payer balance
-        let new_payer_balance = (accs.payer.info().lamports() as i64 - balance_diff) as u64;
+    //     // How the diff affects payer balance
+    //     let new_payer_balance = (accs.payer.info().lamports() as i64 - balance_diff) as u64;
 
-        **accs.wh_message.info().lamports.borrow_mut() = new_msg_account_balance;
-        **accs.payer.info().lamports.borrow_mut() = new_payer_balance;
+    //     **accs.wh_message.info().lamports.borrow_mut() = new_msg_account_balance;
+    //     **accs.payer.info().lamports.borrow_mut() = new_payer_balance;
 
-        trace!("After message size/balance adjustment");
-    }
+    //     trace!("After message size/balance adjustment");
+    // }
+
+    let wh_msg_drv_data = P2WMessageDrvData {
+        message_owner: accs.payer.key.clone(),
+        batch_size: batch_attestation.price_attestations.len() as u64,
+        id: data.message_account_id,
+    };
 
     let ix = bridge::instructions::post_message_unreliable(
         *accs.wh_prog.info().key,
@@ -335,6 +336,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
     ));
 
     trace!("attest() finished, cross-calling wormhole");
+
     invoke_signed(
         &ix,
         ctx.accounts,

@@ -20,6 +20,7 @@ use solitaire::{
     Info,
     Mut,
     Signer,
+    Owned,
 };
 
 pub type P2WMessage<'a> = Mut<PostedMessageUnreliable<'a, { AccountState::MaybeInitialized }>>;
@@ -28,6 +29,8 @@ pub type P2WMessage<'a> = Mut<PostedMessageUnreliable<'a, { AccountState::MaybeI
 pub struct P2WMessageDrvData {
     /// The key owning this message account
     pub message_owner: Pubkey,
+    /// Size of the batch. It is important that all messages have the same size
+    pub batch_size: u64,
     /// Index for keeping many accounts per owner
     pub id: u64,
 }
@@ -35,8 +38,9 @@ pub struct P2WMessageDrvData {
 impl<'a> Seeded<&P2WMessageDrvData> for P2WMessage<'a> {
     fn seeds(data: &P2WMessageDrvData) -> Vec<Vec<u8>> {
         vec![
-            "p2w-message".as_bytes().to_vec(),
+            "p2w-message-v1".as_bytes().to_vec(),
             data.message_owner.to_bytes().to_vec(),
+            data.batch_size.to_be_bytes().to_vec(),
             data.id.to_be_bytes().to_vec(),
         ]
     }
