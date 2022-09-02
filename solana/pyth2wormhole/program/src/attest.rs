@@ -22,7 +22,7 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
-    sysvar::Sysvar,
+    sysvar::Sysvar as SolanaSysvar,
 };
 
 use p2w_sdk::{
