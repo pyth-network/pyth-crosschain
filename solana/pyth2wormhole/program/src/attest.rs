@@ -22,7 +22,8 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
-    sysvar::Sysvar as SolanaSysvar, system_instruction,
+    system_instruction,
+    sysvar::Sysvar as SolanaSysvar,
 };
 
 use p2w_sdk::{
@@ -295,12 +296,15 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         let wh_msg_required_balance = Rent::get()?.minimum_balance(new_account_size);
         let wh_msg_current_balance = accs.wh_message.info().lamports();
 
-
         if wh_msg_current_balance < wh_msg_required_balance {
             let required_deposit = wh_msg_required_balance - wh_msg_current_balance;
-            let transfer_ix = system_instruction::transfer(accs.payer.key, accs.wh_message.info().key, required_deposit);
+            let transfer_ix = system_instruction::transfer(
+                accs.payer.key,
+                accs.wh_message.info().key,
+                required_deposit,
+            );
             invoke(&transfer_ix, ctx.accounts)?
-        } 
+        }
 
         trace!("After message size/balance adjustment");
     }
@@ -369,8 +373,11 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
     if wh_message_balance < wh_message_rent_exempt {
         let required_deposit = wh_message_rent_exempt - wh_message_balance;
 
-        let transfer_ix =
-            system_instruction::transfer(accs.payer.key, accs.wh_message.info().key, required_deposit);
+        let transfer_ix = system_instruction::transfer(
+            accs.payer.key,
+            accs.wh_message.info().key,
+            required_deposit,
+        );
         invoke(&transfer_ix, ctx.accounts)?
     }
 
