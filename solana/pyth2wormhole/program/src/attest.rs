@@ -366,7 +366,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
     let wh_message_balance = accs.wh_message.info().lamports();
     let wh_message_rent_exempt = Rent::get()?.minimum_balance(accs.wh_message.info().data_len());
 
-    if (wh_message_balance < wh_message_rent_exempt) {
+    if wh_message_balance < wh_message_rent_exempt {
         let required_deposit = wh_message_rent_exempt - wh_message_balance;
 
         let transfer_ix =
@@ -378,7 +378,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
     let wg_sequence_balance = accs.wh_sequence.info().lamports();
     let wh_sequence_rent_exempt = Rent::get()?.minimum_balance(accs.wh_sequence.data_len());
 
-    if (wg_sequence_balance < wh_sequence_rent_exempt) {
+    if wg_sequence_balance < wh_sequence_rent_exempt {
         let required_deposit = wh_sequence_rent_exempt - wg_sequence_balance;
 
         let transfer_ix =
