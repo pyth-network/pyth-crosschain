@@ -22,7 +22,7 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
-    sysvar::Sysvar as SolanaSysvar,
+    sysvar::Sysvar as SolanaSysvar, system_instruction,
 };
 
 use p2w_sdk::{
@@ -364,24 +364,26 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
 
     // Checking the message account balance
     let wh_message_balance = accs.wh_message.info().lamports();
-    let wh_message_rent_exempt = Rent::get()?.minimum_balance(accs.wh_message.size());
+    let wh_message_rent_exempt = Rent::get()?.minimum_balance(accs.wh_message.info().data_len());
 
     if (wh_message_balance < wh_message_rent_exempt) {
         let required_deposit = wh_message_rent_exempt - wh_message_balance;
 
-        **accs.wh_message.info().lamports.borrow_mut() += required_deposit;
-        **accs.payer.info().lamports.borrow_mut() -= required_deposit;
+        let transfer_ix =
+            system_instruction::transfer(accs.payer.key, accs.wh_message.info().key, required_deposit);
+        invoke(&transfer_ix, ctx.accounts)?
     }
 
     // Checking the sequence account balance
     let wg_sequence_balance = accs.wh_sequence.info().lamports();
-    let wh_sequence_rent_exempt = Rent::get()?.minimum_balance(accs.wh_sequence.size());
+    let wh_sequence_rent_exempt = Rent::get()?.minimum_balance(accs.wh_sequence.data_len());
 
     if (wg_sequence_balance < wh_sequence_rent_exempt) {
         let required_deposit = wh_sequence_rent_exempt - wg_sequence_balance;
 
-        **accs.wh_sequence.info().lamports.borrow_mut() += required_deposit;
-        **accs.payer.info().lamports.borrow_mut() -= required_deposit;
+        let transfer_ix =
+            system_instruction::transfer(accs.payer.key, accs.wh_sequence.key, required_deposit);
+        invoke(&transfer_ix, ctx.accounts)?
     }
 
     Ok(())
