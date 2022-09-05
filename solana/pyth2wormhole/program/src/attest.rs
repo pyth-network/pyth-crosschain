@@ -358,6 +358,8 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         .as_slice(),
     )?;
 
+    // NOTE: 2022-09-05
+    //
     // This part is added to avoid rent exemption error that is introduced using
     // a wrong implementation in solitaire
     //
