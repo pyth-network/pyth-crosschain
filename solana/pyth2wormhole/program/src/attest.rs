@@ -384,11 +384,11 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
     }
 
     // Checking the sequence account balance
-    let wg_sequence_balance = accs.wh_sequence.info().lamports();
+    let wh_sequence_balance = accs.wh_sequence.info().lamports();
     let wh_sequence_rent_exempt = Rent::get()?.minimum_balance(accs.wh_sequence.data_len());
 
-    if wg_sequence_balance < wh_sequence_rent_exempt {
-        let required_deposit = wh_sequence_rent_exempt - wg_sequence_balance;
+    if wh_sequence_balance < wh_sequence_rent_exempt {
+        let required_deposit = wh_sequence_rent_exempt - wh_sequence_balance;
 
         let transfer_ix =
             system_instruction::transfer(accs.payer.key, accs.wh_sequence.key, required_deposit);
