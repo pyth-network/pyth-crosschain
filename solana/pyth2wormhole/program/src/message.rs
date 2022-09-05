@@ -42,7 +42,7 @@ pub struct P2WMessageDrvData {
 impl<'a> Seeded<&P2WMessageDrvData> for P2WMessage<'a> {
     fn seeds(data: &P2WMessageDrvData) -> Vec<Vec<u8>> {
         vec![
-            // See the note on 2022-09-05 above.
+            // See the note at 2022-09-05 above.
             // Change the version in the literal whenever you change the
             // price attestation data.
             "p2w-message-v1".as_bytes().to_vec(),
