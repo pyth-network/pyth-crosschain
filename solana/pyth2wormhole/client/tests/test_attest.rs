@@ -121,7 +121,7 @@ async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
         ctx.last_blockhash,
     )?;
 
-    // Note: 2022-09-05
+    // NOTE: 2022-09-05
     // Execution of this transaction is commented out as for some unknown reasons
     // Solana test suite has some unknown behavior in this transaction. It is probably a
     // memory leak that causes either segfault or an invalid error (after a reading an unkown
