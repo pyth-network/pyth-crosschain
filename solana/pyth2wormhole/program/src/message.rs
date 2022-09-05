@@ -29,6 +29,11 @@ pub struct P2WMessageDrvData {
     /// The key owning this message account
     pub message_owner: Pubkey,
     /// Size of the batch. It is important that all messages have the same size
+    /// 
+    /// Note: 2022-09-05
+    /// Currently wormhole does not resize accounts if they have different
+    /// payload sizes; this (along with versioning the seed literal below) is
+    /// a workaround to have different PDAs for different batch sizes.
     pub batch_size: u16,
     /// Index for keeping many accounts per owner
     pub id: u64,
@@ -37,6 +42,7 @@ pub struct P2WMessageDrvData {
 impl<'a> Seeded<&P2WMessageDrvData> for P2WMessage<'a> {
     fn seeds(data: &P2WMessageDrvData) -> Vec<Vec<u8>> {
         vec![
+            // See the note on 2022-09-05 above.
             "p2w-message-v1".as_bytes().to_vec(),
             data.message_owner.to_bytes().to_vec(),
             data.batch_size.to_be_bytes().to_vec(),

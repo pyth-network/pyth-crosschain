@@ -116,7 +116,9 @@ pub struct Attest<'b> {
     /// Bridge config needed for fee calculation
     pub wh_bridge: Mut<Info<'b>>,
 
-    /// Account to store the posted message
+    /// Account to store the posted message.
+    /// This account is a PDA from the attestation contract
+    /// which is owned by the wormhole core contract.
     pub wh_message: Mut<Info<'b>>,
 
     /// Emitter of the VAA
