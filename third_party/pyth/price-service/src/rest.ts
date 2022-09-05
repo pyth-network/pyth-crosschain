@@ -134,6 +134,7 @@ export class RestAPI {
         ids: Joi.array()
           .items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/))
           .required(),
+        verbose: Joi.boolean(),
       }).required(),
     };
     app.get(
@@ -141,6 +142,8 @@ export class RestAPI {
       validate(latestPriceFeedsInputSchema),
       (req: Request, res: Response) => {
         let priceIds = req.query.ids as string[];
+        // verbose is optional, default to false
+        let verbose = req.query.verbose === "true";
 
         let responseJson = [];
 
@@ -166,7 +169,18 @@ export class RestAPI {
             freshness
           );
 
-          responseJson.push(latestPriceInfo.priceFeed.toJson());
+          if (verbose) {
+            responseJson.push({
+              ...latestPriceInfo.priceFeed.toJson(),
+              metadata: {
+                emitter_chain: latestPriceInfo.emitterChainId,
+                attestation_time: latestPriceInfo.attestationTime,
+                sequence_number: latestPriceInfo.seqNum,
+              },
+            });
+          } else {
+            responseJson.push(latestPriceInfo.priceFeed.toJson());
+          }
         }
 
         if (notFoundIds.length > 0) {
@@ -179,62 +193,15 @@ export class RestAPI {
     endpoints.push(
       "api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
     );
-
-    app.get(
-      "/api/latest_price_info",
-      validate(latestPriceFeedsInputSchema),
-      (req: Request, res: Response) => {
-        let priceIds = req.query.ids as string[];
-
-        let responseJson = [];
-
-        let notFoundIds: string[] = [];
-
-        for (let id of priceIds) {
-          if (id.startsWith("0x")) {
-            id = id.substring(2);
-          }
-
-          let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
-
-          if (latestPriceInfo === undefined) {
-            notFoundIds.push(id);
-            continue;
-          }
-
-          const freshness: DurationInSec =
-            new Date().getTime() / 1000 - latestPriceInfo.attestationTime;
-          this.promClient?.addApiRequestsPriceFreshness(
-            req.path,
-            id,
-            freshness
-          );
-
-          responseJson.push({"price_feed": latestPriceInfo.priceFeed.toJson(), "emitter_chain": latestPriceInfo.emitterChainId, "attestation_time": latestPriceInfo.attestationTime, "sequence_number": latestPriceInfo.seqNum});
-        }
-        
-
-        if (notFoundIds.length > 0) {
-          throw RestException.PriceFeedIdNotFound(notFoundIds);
-        }
-
-        res.json(responseJson);
-      }
-    );
     endpoints.push(
-      "api/latest_price_info?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
+      "api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&verbose=true"
     );
 
-    app.get(
-      "/api/price_feed_ids",
-      (req: Request, res: Response) => {
-        const availableIds = this.priceFeedVaaInfo.getPriceIds();
-        res.json([...availableIds]);
-      }
-    );
-    endpoints.push(
-      "api/price_feed_ids"
-    );
+    app.get("/api/price_feed_ids", (req: Request, res: Response) => {
+      const availableIds = this.priceFeedVaaInfo.getPriceIds();
+      res.json([...availableIds]);
+    });
+    endpoints.push("api/price_feed_ids");
 
     app.get("/ready", (_, res: Response) => {
       if (this.isReady!()) {
