@@ -268,6 +268,20 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         id: data.message_account_id,
     };
 
+    if !P2WMessage::key(&wh_msg_drv_data, ctx.program_id).eq(accs.wh_message.info().key) {
+        trace!(
+            "Invalid seeds for wh message pubkey. Expected {} with given seeds {:?}, got {}",
+            P2WMessage::key(&wh_msg_drv_data, ctx.program_id),
+            P2WMessage::seeds(&wh_msg_drv_data)
+                .iter_mut()
+                .map(|seed| seed.as_slice())
+                .collect::<Vec<_>>()
+                .as_slice(),
+            accs.wh_message.info().key
+        );
+        return Err(ProgramError::InvalidSeeds.into());
+    }
+
     let ix = bridge::instructions::post_message_unreliable(
         *accs.wh_prog.info().key,
         *accs.payer.info().key,
