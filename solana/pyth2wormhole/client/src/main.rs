@@ -70,7 +70,7 @@ pub const SEQNO_PREFIX: &'static str = "Program log: Sequence: ";
 #[tokio::main]
 async fn main() -> Result<(), ErrBox> {
     let cli = Cli::parse();
-    init_logging(cli.log_level);
+    init_logging();
 
     // All other CLI actions make rpc requests, this one's meant to be
     // off-chain explicitly
@@ -295,7 +295,8 @@ async fn handle_attest(
     // join_all. We filter out errors and report them
     let errors: Vec<_> = results
         .iter()
-        .filter_map(|r| r.as_ref().err().map(|e| e.to_string()))
+        .enumerate()
+        .filter_map(|(idx, r)| r.as_ref().err().map(|e| format!("Error {}: {:#?}\n", idx + 1, e)))
         .collect();
 
     if !errors.is_empty() {
@@ -415,13 +416,13 @@ async fn attestation_sched_job(
             let group_name4err_msg = batch.group_name.clone();
 
             // We never get to error reporting in daemon mode, attach a map_err
-            let job_with_err_msg = job.map_err(move |e| async move {
+            let job_with_err_msg = job.map_err(move |e|  {
                 warn!(
-                    "Batch {}/{}, group {:?} ERR: {}",
+                    "Batch {}/{}, group {:?} ERR: {:#?}",
                     batch_no4err_msg,
                     batch_count4err_msg,
                     group_name4err_msg,
-                    e.to_string()
+                    e
                 );
                 e
             });
@@ -533,15 +534,11 @@ async fn attestation_job(
     Result::<(), ErrBoxSend>::Ok(())
 }
 
-fn init_logging(verbosity: u32) {
-    use LevelFilter::*;
-    let filter = match verbosity {
-        0..=1 => Error,
-        2 => Warn,
-        3 => Info,
-        4 => Debug,
-        _other => Trace,
-    };
-
-    env_logger::builder().filter_level(filter).init();
+fn init_logging() {
+    if std::env::var("RUST_LOG").is_ok() {
+        env_logger::init()
+    } else {
+        // Default to info if RUST_LOG not set
+        env_logger::builder().filter_level(LevelFilter::Info).init();
+    }
 }

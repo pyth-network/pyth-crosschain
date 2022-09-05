@@ -12,7 +12,8 @@ COPY solana /usr/src/solana
 WORKDIR /usr/src/solana/pyth2wormhole
 
 RUN --mount=type=cache,target=/root/.cache \
-    cargo install --version =2.0.12 --locked spl-token-cli
+    --mount=type=cache,target=target \
+    cargo install --version =2.0.12 --locked spl-token-cli --target-dir target
 
 
 RUN solana config set --keypair "/usr/src/solana/keys/solana-devnet.json"
@@ -25,5 +26,5 @@ RUN --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=/usr/local/cargo/registry,id=cargo_registry \
     --mount=type=cache,target=target,id=cargo_registry \
 	set -xe && \
-    cargo install bridge_client --git https://github.com/wormhole-foundation/wormhole --tag $WORMHOLE_TAG --locked --root /usr/local && \
-    cargo install token_bridge_client --git https://github.com/wormhole-foundation/wormhole --tag $WORMHOLE_TAG --locked --root /usr/local
+    cargo install bridge_client --git https://github.com/wormhole-foundation/wormhole --tag $WORMHOLE_TAG --locked --root /usr/local --target-dir target && \
+    cargo install token_bridge_client --git https://github.com/wormhole-foundation/wormhole --tag $WORMHOLE_TAG --locked --root /usr/local --target-dir target
