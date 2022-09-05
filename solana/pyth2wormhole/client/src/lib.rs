@@ -285,6 +285,7 @@ pub fn gen_attest_tx(
             P2WMessage::key(
                 &P2WMessageDrvData {
                     id: wh_msg_id,
+                    batch_size: symbols.len() as u16,
                     message_owner: payer.pubkey(),
                 },
                 &p2w_addr,
