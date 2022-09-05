@@ -72,6 +72,16 @@ async fn main() -> Result<(), ErrBox> {
     let cli = Cli::parse();
     init_logging(cli.log_level);
 
+    // All other CLI actions make rpc requests, this one's meant to be
+    // off-chain explicitly
+    if let Action::GetEmitter = cli.action {
+        let emitter_addr = P2WEmitter::key(None, &cli.p2w_addr);
+        println!("{}", emitter_addr);
+
+        // Exit early
+        return Ok(());
+    }
+
     let payer = read_keypair_file(&*shellexpand::tilde(&cli.payer))?;
 
     let rpc_client = RpcClient::new_with_commitment(cli.rpc_url.clone(), cli.commitment.clone());
@@ -179,11 +189,7 @@ async fn main() -> Result<(), ErrBox> {
             )
             .await?;
         }
-        Action::GetEmitter => {
-            let emitter_addr = P2WEmitter::key(None, &p2w_addr);
-
-            println!("{}", emitter_addr);
-        }
+        Action::GetEmitter => unreachable!{}
     }
 
     Ok(())
