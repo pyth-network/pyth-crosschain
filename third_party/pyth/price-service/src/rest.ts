@@ -1,15 +1,14 @@
-import express, { Express } from "express";
 import cors from "cors";
+import express, { NextFunction, Request, Response } from "express";
+import { Joi, schema, validate, ValidationError } from "express-validation";
+import { Server } from "http";
+import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
 import responseTime from "response-time";
-import { Request, Response, NextFunction } from "express";
+import { DurationInMs, DurationInSec } from "./helpers";
 import { PriceStore } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
-import { DurationInMs, DurationInSec } from "./helpers";
-import { StatusCodes } from "http-status-codes";
-import { validate, ValidationError, Joi, schema } from "express-validation";
-import { Server } from "http";
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
@@ -135,6 +134,7 @@ export class RestAPI {
         ids: Joi.array()
           .items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/))
           .required(),
+        verbose: Joi.boolean(),
       }).required(),
     };
     app.get(
@@ -142,6 +142,8 @@ export class RestAPI {
       validate(latestPriceFeedsInputSchema),
       (req: Request, res: Response) => {
         let priceIds = req.query.ids as string[];
+        // verbose is optional, default to false
+        let verbose = req.query.verbose === "true";
 
         let responseJson = [];
 
@@ -167,7 +169,18 @@ export class RestAPI {
             freshness
           );
 
-          responseJson.push(latestPriceInfo.priceFeed.toJson());
+          if (verbose) {
+            responseJson.push({
+              ...latestPriceInfo.priceFeed.toJson(),
+              metadata: {
+                emitter_chain: latestPriceInfo.emitterChainId,
+                attestation_time: latestPriceInfo.attestationTime,
+                sequence_number: latestPriceInfo.seqNum,
+              },
+            });
+          } else {
+            responseJson.push(latestPriceInfo.priceFeed.toJson());
+          }
         }
 
         if (notFoundIds.length > 0) {
@@ -180,17 +193,15 @@ export class RestAPI {
     endpoints.push(
       "api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
     );
-
-    app.get(
-      "/api/price_feed_ids",
-      (req: Request, res: Response) => {
-        const availableIds = this.priceFeedVaaInfo.getPriceIds();
-        res.json([...availableIds]);
-      }
-    );
     endpoints.push(
-      "api/price_feed_ids"
+      "api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&verbose=true"
     );
+
+    app.get("/api/price_feed_ids", (req: Request, res: Response) => {
+      const availableIds = this.priceFeedVaaInfo.getPriceIds();
+      res.json([...availableIds]);
+    });
+    endpoints.push("api/price_feed_ids");
 
     app.get("/ready", (_, res: Response) => {
       if (this.isReady!()) {
