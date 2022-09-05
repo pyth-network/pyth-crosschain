@@ -179,6 +179,11 @@ async fn main() -> Result<(), ErrBox> {
             )
             .await?;
         }
+        Action::GetEmitter => {
+            let emitter_addr = P2WEmitter::key(None, &p2w_addr);
+
+            println!("{}", emitter_addr);
+        }
     }
 
     Ok(())

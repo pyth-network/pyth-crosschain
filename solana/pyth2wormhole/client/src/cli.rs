@@ -128,4 +128,6 @@ pub enum Action {
         )]
         owner: String,
     },
+    #[clap(about = "Print out emitter address for the specified pyth2wormhole contract")]
+    GetEmitter,
 }
