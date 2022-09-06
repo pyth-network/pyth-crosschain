@@ -233,7 +233,7 @@ first_attest_result = run_or_die(
     [
         "pyth2wormhole-client",
         "--commitment",
-        "finalized",
+        "confirmed",
         "--log-level",
         "3",
         "--p2w-addr",
@@ -270,7 +270,7 @@ while True:
         [
             "pyth2wormhole-client",
             "--commitment",
-            "finalized",
+            "confirmed",
             "--log-level",
             "3",
             "--p2w-addr",
