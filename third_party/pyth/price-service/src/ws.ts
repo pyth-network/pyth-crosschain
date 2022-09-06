@@ -97,7 +97,6 @@ export class WebSocketAPI {
           sequence_number: priceInfo?.seqNum,
         });
       }
-      console.log("This is priceFeed " + JSON.stringify(priceFeed.toJson()));
 
       let priceUpdate: ServerPriceUpdate = {
         type: "price_update",
