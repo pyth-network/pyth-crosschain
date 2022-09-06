@@ -1,5 +1,8 @@
-import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";
-import express from "express";
+import {
+  HexString,
+  PriceFeed,
+  PriceFeedMetadata,
+} from "@pythnetwork/pyth-sdk-js";
 import * as http from "http";
 import Joi from "joi";
 import WebSocket, { RawData, WebSocketServer } from "ws";
@@ -12,11 +15,13 @@ const ClientMessageSchema: Joi.Schema = Joi.object({
   ids: Joi.array()
     .items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/))
     .required(),
+  verbose: Joi.boolean(),
 }).required();
 
 export type ClientMessage = {
   type: "subscribe" | "unsubscribe";
   ids: HexString[];
+  verbose?: boolean;
 };
 
 export type ServerResponse = {
@@ -39,6 +44,7 @@ export class WebSocketAPI {
   private wsId: Map<WebSocket, number>;
   private priceFeedVaaInfo: PriceStore;
   private promClient: PromClient | undefined;
+  private verbose: boolean;
 
   constructor(priceFeedVaaInfo: PriceStore, promClient?: PromClient) {
     this.priceFeedVaaInfo = priceFeedVaaInfo;
@@ -47,6 +53,7 @@ export class WebSocketAPI {
     this.wsCounter = 0;
     this.wsId = new Map();
     this.promClient = promClient;
+    this.verbose = false;
   }
 
   private addPriceFeedClient(ws: WebSocket, id: HexString) {
@@ -80,6 +87,17 @@ export class WebSocketAPI {
         )}`
       );
       this.promClient?.addWebSocketInteraction("server_update", "ok");
+      if (this.verbose) {
+        const priceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(
+          priceFeed.id
+        );
+        priceFeed.metadata = PriceFeedMetadata.fromJson({
+          attestation_time: priceInfo?.attestationTime,
+          emitter_chain: priceInfo?.emitterChainId,
+          sequence_number: priceInfo?.seqNum,
+        });
+      }
+      console.log("This is priceFeed " + JSON.stringify(priceFeed.toJson()));
 
       let priceUpdate: ServerPriceUpdate = {
         type: "price_update",
@@ -129,8 +147,10 @@ export class WebSocketAPI {
 
       if (message.type == "subscribe") {
         message.ids.forEach((id) => this.addPriceFeedClient(ws, id));
+        this.verbose = message.verbose === true;
       } else {
         message.ids.forEach((id) => this.delPriceFeedClient(ws, id));
+        this.verbose = false;
       }
     } catch (e: any) {
       let response: ServerResponse = {
