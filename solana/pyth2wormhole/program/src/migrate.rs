@@ -70,6 +70,13 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
         ));
     }
 
+    // NOTE(2022-09-06): This instruction does not contain the temporary rent
+    // adjustment snippet necessary for PythNet compatibility. This
+    // was done to minimize the footprint of this rather hacky
+    // workaround. In case the migrate ix needs to be ran in a
+    // weird-rent environment, copy the rent due snippet and adjust it
+    // to work against `accs.new_config`.
+
     // Populate new config
     accs.new_config
         .create(ctx, accs.payer.info().key, CreationLamports::Exempt)?;
