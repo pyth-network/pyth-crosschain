@@ -29,6 +29,7 @@ use log::{
 use solana_client::{
     client_error::ClientError,
     nonblocking::rpc_client::RpcClient,
+    rpc_config::RpcTransactionConfig
 };
 use solana_program::pubkey::Pubkey;
 use solana_sdk::{
@@ -506,8 +507,14 @@ async fn attestation_job(
         .map_err(|e| -> ErrBoxSend { e.into() })
         .await?;
     let tx_data = rpc
-        .get_transaction(&sig, UiTransactionEncoding::Json)
-        .map_err(|e| -> ErrBoxSend { e.into() })
+        .get_transaction_with_config(
+            &sig,
+            RpcTransactionConfig {
+                encoding: Some(UiTransactionEncoding::Json),
+                commitment: Some(rpc.commitment()),
+                max_supported_transaction_version: None,
+            },
+        )
         .await?;
     let seqno = tx_data
         .transaction
