@@ -60,7 +60,7 @@ beforeAll(async () => {
     getLatestPriceInfo: (priceFeedId: string) => {
       return priceInfoMap.get(priceFeedId);
     },
-    addUpdateListener: (_callback: (priceFeed: PriceFeed) => any) => {},
+    addUpdateListener: (_callback: (priceInfo: PriceInfo) => any) => {},
     getPriceIds: () => new Set(),
   };
 
@@ -72,20 +72,20 @@ beforeAll(async () => {
 describe("Latest Price Feed Endpoint", () => {
   test("When called with valid ids, returns correct price feed", async () => {
     const ids = [expandTo64Len("abcd"), expandTo64Len("3456")];
-    const resp = await request(app).get("/latest_price_feeds").query({ ids });
+    const resp = await request(app).get("/api/latest_price_feeds").query({ ids });
     expect(resp.status).toBe(StatusCodes.OK);
     expect(resp.body.length).toBe(2);
     expect(resp.body).toContainEqual(dummyPriceFeed(ids[0]).toJson());
     expect(resp.body).toContainEqual(dummyPriceFeed(ids[1]).toJson());
   });
 
-  test("When called with some non-existant ids within ids, returns error mentioning non-existant ids", async () => {
+  test("When called with some non-existent ids within ids, returns error mentioning non-existent ids", async () => {
     const ids = [
       expandTo64Len("ab01"),
       expandTo64Len("3456"),
       expandTo64Len("effe"),
     ];
-    const resp = await request(app).get("/latest_price_feeds").query({ ids });
+    const resp = await request(app).get("/api/latest_price_feeds").query({ ids });
     expect(resp.status).toBe(StatusCodes.BAD_REQUEST);
     expect(resp.body.message).toContain(ids[0]);
     expect(resp.body.message).not.toContain(ids[1]);
@@ -100,7 +100,7 @@ describe("Latest Vaa Bytes Endpoint", () => {
       expandTo64Len("ef01"),
       expandTo64Len("3456"),
     ];
-    const resp = await request(app).get("/latest_vaas").query({ ids });
+    const resp = await request(app).get("/api/latest_vaas").query({ ids });
     expect(resp.status).toBe(StatusCodes.OK);
     expect(resp.body.length).toBe(2);
     expect(resp.body).toContain(
@@ -111,13 +111,13 @@ describe("Latest Vaa Bytes Endpoint", () => {
     );
   });
 
-  test("When called with some non-existant ids within ids, returns error mentioning non-existant ids", async () => {
+  test("When called with some non-existent ids within ids, returns error mentioning non-existent ids", async () => {
     const ids = [
       expandTo64Len("ab01"),
       expandTo64Len("3456"),
       expandTo64Len("effe"),
     ];
-    const resp = await request(app).get("/latest_vaas").query({ ids });
+    const resp = await request(app).get("/api/latest_vaas").query({ ids });
     expect(resp.status).toBe(StatusCodes.BAD_REQUEST);
     expect(resp.body.message).toContain(ids[0]);
     expect(resp.body.message).not.toContain(ids[1]);

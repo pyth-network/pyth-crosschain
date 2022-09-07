@@ -37,7 +37,7 @@ export type PriceInfo = {
 export interface PriceStore {
   getPriceIds(): Set<HexString>;
   getLatestPriceInfo(priceFeedId: HexString): PriceInfo | undefined;
-  addUpdateListener(callback: (priceFeed: PriceFeed) => any): void;
+  addUpdateListener(callback: (priceInfo: PriceInfo) => any): void;
 }
 
 type ListenerReadinessConfig = {
@@ -59,7 +59,7 @@ export class Listener implements PriceStore {
   private filters: FilterEntry[] = [];
   private spyConnectionTime: TimestampInSec | undefined;
   private readinessConfig: ListenerReadinessConfig;
-  private updateCallbacks: ((priceFeed: PriceFeed) => any)[];
+  private updateCallbacks: ((priceInfo: PriceInfo) => any)[];
 
   constructor(config: ListenerConfig, promClient?: PromClient) {
     this.promClient = promClient;
@@ -192,16 +192,17 @@ export class Listener implements PriceStore {
         lastAttestationTime < priceAttestation.attestationTime
       ) {
         const priceFeed = priceAttestationToPriceFeed(priceAttestation);
-        this.priceFeedVaaMap.set(key, {
+        const priceInfo = {
           seqNum: parsedVAA.sequence,
           vaaBytes: vaaBytes,
           attestationTime: priceAttestation.attestationTime,
           priceFeed,
           emitterChainId: parsedVAA.emitter_chain,
-        });
+        }
+        this.priceFeedVaaMap.set(key, priceInfo);
 
         for (let callback of this.updateCallbacks) {
-          callback(priceFeed);
+          callback(priceInfo);
         }
       }
     }
@@ -224,7 +225,7 @@ export class Listener implements PriceStore {
     return this.priceFeedVaaMap.get(priceFeedId);
   }
 
-  addUpdateListener(callback: (priceFeed: PriceFeed) => any) {
+  addUpdateListener(callback: (priceInfo: PriceInfo) => any) {
     this.updateCallbacks.push(callback);
   }
 
