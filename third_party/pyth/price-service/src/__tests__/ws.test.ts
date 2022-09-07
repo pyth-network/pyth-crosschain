@@ -122,7 +122,7 @@ afterAll(async () => {
 });
 
 describe("Client receives data", () => {
-  test("When subscribes with valid ids, returns correct price feed", async () => {
+  test("When subscribes with valid ids without verbose flag, returns correct price feed", async () => {
     let [client, serverMessages] = await createSocketClient();
 
     let message: ClientMessage = {
@@ -143,7 +143,47 @@ describe("Client receives data", () => {
 
     await waitForMessages(serverMessages, 2);
 
-    expect(serverMessages[1]).toStrictEqual({
+    expect(serverMessages[1]).toEqual({
+      type: "price_update",
+      price_feed: priceInfos[0].priceFeed.toJson(),
+    });
+
+    api.dispatchPriceFeedUpdate(priceInfos[1]);
+
+    await waitForMessages(serverMessages, 3);
+
+    expect(serverMessages[2]).toEqual({
+      type: "price_update",
+      price_feed: priceInfos[1].priceFeed.toJson(),
+    });
+
+    client.close();
+    await waitForSocketState(client, client.CLOSED);
+  });
+
+  test("When subscribes with valid ids and verbose flag set to true, returns correct price feed with metadata", async () => {
+    let [client, serverMessages] = await createSocketClient();
+
+    let message: ClientMessage = {
+      ids: [priceInfos[0].priceFeed.id, priceInfos[1].priceFeed.id],
+      type: "subscribe",
+      verbose: true,
+    };
+
+    client.send(JSON.stringify(message));
+
+    await waitForMessages(serverMessages, 1);
+
+    expect(serverMessages[0]).toStrictEqual({
+      type: "response",
+      status: "success",
+    });
+
+    api.dispatchPriceFeedUpdate(priceInfos[0]);
+
+    await waitForMessages(serverMessages, 2);
+
+    expect(serverMessages[1]).toEqual({
       type: "price_update",
       price_feed: {
         ...priceInfos[0].priceFeed.toJson(),
@@ -155,12 +195,52 @@ describe("Client receives data", () => {
 
     await waitForMessages(serverMessages, 3);
 
-    expect(serverMessages[2]).toStrictEqual({
+    expect(serverMessages[2]).toEqual({
       type: "price_update",
       price_feed: {
         ...priceInfos[1].priceFeed.toJson(),
         metadata: priceMetadata,
       },
+    });
+
+    client.close();
+    await waitForSocketState(client, client.CLOSED);
+  });
+
+  test("When subscribes with valid ids and verbose flag set to false, returns correct price feed without metadata", async () => {
+    let [client, serverMessages] = await createSocketClient();
+
+    let message: ClientMessage = {
+      ids: [priceInfos[0].priceFeed.id, priceInfos[1].priceFeed.id],
+      type: "subscribe",
+      verbose: false,
+    };
+
+    client.send(JSON.stringify(message));
+
+    await waitForMessages(serverMessages, 1);
+
+    expect(serverMessages[0]).toStrictEqual({
+      type: "response",
+      status: "success",
+    });
+
+    api.dispatchPriceFeedUpdate(priceInfos[0]);
+
+    await waitForMessages(serverMessages, 2);
+
+    expect(serverMessages[1]).toEqual({
+      type: "price_update",
+      price_feed: priceInfos[0].priceFeed.toJson(),
+    });
+
+    api.dispatchPriceFeedUpdate(priceInfos[1]);
+
+    await waitForMessages(serverMessages, 3);
+
+    expect(serverMessages[2]).toEqual({
+      type: "price_update",
+      price_feed: priceInfos[1].priceFeed.toJson(),
     });
 
     client.close();
@@ -212,12 +292,9 @@ describe("Client receives data", () => {
 
     await waitForMessages(serverMessages, 2);
 
-    expect(serverMessages[1]).toStrictEqual({
+    expect(serverMessages[1]).toEqual({
       type: "price_update",
-      price_feed: {
-        ...priceInfos[0].priceFeed.toJson(),
-        metadata: priceMetadata,
-      },
+      price_feed: priceInfos[0].priceFeed.toJson(),
     });
 
     await sleep(100);
@@ -248,12 +325,9 @@ describe("Client receives data", () => {
 
     await waitForMessages(serverMessages, 2);
 
-    expect(serverMessages[1]).toStrictEqual({
+    expect(serverMessages[1]).toEqual({
       type: "price_update",
-      price_feed: {
-        ...priceInfos[0].priceFeed.toJson(),
-        metadata: priceMetadata,
-      },
+      price_feed: priceInfos[0].priceFeed.toJson(),
     });
 
     message = {
@@ -338,20 +412,14 @@ describe("Client receives data", () => {
     await waitForMessages(serverMessages1, 2);
     await waitForMessages(serverMessages2, 2);
 
-    expect(serverMessages1[1]).toStrictEqual({
+    expect(serverMessages1[1]).toEqual({
       type: "price_update",
-      price_feed: {
-        ...priceInfos[0].priceFeed.toJson(),
-        metadata: priceMetadata,
-      },
+      price_feed: priceInfos[0].priceFeed.toJson(),
     });
 
-    expect(serverMessages2[1]).toStrictEqual({
+    expect(serverMessages2[1]).toEqual({
       type: "price_update",
-      price_feed: {
-        ...priceInfos[1].priceFeed.toJson(),
-        metadata: priceMetadata,
-      },
+      price_feed: priceInfos[1].priceFeed.toJson(),
     });
 
     client1.close();

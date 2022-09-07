@@ -35,7 +35,7 @@ export type ServerMessage = ServerResponse | ServerPriceUpdate;
 
 export class WebSocketAPI {
   private wsCounter: number;
-  private priceFeedClients: Map<HexString, Set<WebSocket>>;
+  private priceFeedClients: Map<HexString, [Set<WebSocket>, boolean]>;
   private aliveClients: Set<WebSocket>;
   private wsId: Map<WebSocket, number>;
   private priceFeedVaaInfo: PriceStore;
@@ -50,16 +50,24 @@ export class WebSocketAPI {
     this.promClient = promClient;
   }
 
-  private addPriceFeedClient(ws: WebSocket, id: HexString) {
+  private addPriceFeedClient(
+    ws: WebSocket,
+    id: HexString,
+    verbose: boolean = false
+  ) {
     if (!this.priceFeedClients.has(id)) {
-      this.priceFeedClients.set(id, new Set());
+      this.priceFeedClients.set(id, [new Set(), verbose]);
+    } else {
+      this.priceFeedClients.get(id)![1] = verbose;
     }
-
-    this.priceFeedClients.get(id)!.add(ws);
+    this.priceFeedClients.get(id)![0].add(ws);
   }
 
   private delPriceFeedClient(ws: WebSocket, id: HexString) {
-    this.priceFeedClients.get(id)?.delete(ws);
+    if (!this.priceFeedClients.has(id)) {
+      return;
+    }
+    this.priceFeedClients.get(id)![0].delete(ws);
   }
 
   dispatchPriceFeedUpdate(priceInfo: PriceInfo) {
@@ -72,12 +80,13 @@ export class WebSocketAPI {
 
     logger.info(
       `Sending ${priceInfo.priceFeed.id} price update to ${
-        this.priceFeedClients.get(priceInfo.priceFeed.id)!.size
+        this.priceFeedClients.get(priceInfo.priceFeed.id)![0].size
       } clients`
     );
 
+    let verbose = this.priceFeedClients.get(priceInfo.priceFeed.id)![1];
     for (let client of this.priceFeedClients
-      .get(priceInfo.priceFeed.id)!
+      .get(priceInfo.priceFeed.id)![0]
       .values()) {
       logger.info(
         `Sending ${
@@ -85,28 +94,23 @@ export class WebSocketAPI {
         } price update to client ${this.wsId.get(client)}`
       );
       this.promClient?.addWebSocketInteraction("server_update", "ok");
-      // if (this.verbose) {
-      //   const priceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(
-      //     priceFeed.id
-      //   );
-      //   priceFeed.metadata = PriceFeedMetadata.fromJson({
-      //     attestation_time: priceInfo?.attestationTime,
-      //     emitter_chain: priceInfo?.emitterChainId,
-      //     sequence_number: priceInfo?.seqNum,
-      //   });
-      // }
 
-      let priceUpdate: ServerPriceUpdate = {
-        type: "price_update",
-        price_feed: {
-          ...priceInfo.priceFeed.toJson(),
-          metadata: {
-            emitter_chain: priceInfo.emitterChainId,
-            attestation_time: priceInfo.attestationTime,
-            sequence_number: priceInfo.seqNum,
-          },
-        },
-      };
+      let priceUpdate: ServerPriceUpdate = verbose
+        ? {
+            type: "price_update",
+            price_feed: {
+              ...priceInfo.priceFeed.toJson(),
+              metadata: {
+                emitter_chain: priceInfo.emitterChainId,
+                attestation_time: priceInfo.attestationTime,
+                sequence_number: priceInfo.seqNum,
+              },
+            },
+          }
+        : {
+            type: "price_update",
+            price_feed: priceInfo.priceFeed.toJson(),
+          };
 
       client.send(JSON.stringify(priceUpdate));
     }
@@ -114,8 +118,8 @@ export class WebSocketAPI {
 
   clientClose(ws: WebSocket) {
     for (let clients of this.priceFeedClients.values()) {
-      if (clients.has(ws)) {
-        clients.delete(ws);
+      if (clients[0].has(ws)) {
+        clients[0].delete(ws);
       }
     }
 
@@ -150,7 +154,9 @@ export class WebSocketAPI {
       }
 
       if (message.type == "subscribe") {
-        message.ids.forEach((id) => this.addPriceFeedClient(ws, id));
+        message.ids.forEach((id) =>
+          this.addPriceFeedClient(ws, id, message.verbose === true)
+        );
       } else {
         message.ids.forEach((id) => this.delPriceFeedClient(ws, id));
       }
