@@ -13,7 +13,7 @@ rm -f .env; ln -s .env.prod.xyz .env && set -o allexport && source .env set && s
 export MNEMONIC=...
 
 # Set the deploy commit hash in the contract (used for debugging purposes)
-sed -i "s/dead0beaf0deb10700c0331700da5d00deadbead/$(git rev-parse HEAD)/g" ./contracts/pyth/Pyth.sol
+sed -i "s/__DEPLOY_COMMIT_HASH_PLACEHOLER__/$(git rev-parse HEAD)/g" ./contracts/pyth/Pyth.sol
 
 # Ensure that we deploy a fresh build with up-to-date dependencies.
 rm -rf build && npx truffle compile --all
