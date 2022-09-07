@@ -35,7 +35,8 @@ export type ServerMessage = ServerResponse | ServerPriceUpdate;
 
 export class WebSocketAPI {
   private wsCounter: number;
-  private priceFeedClients: Map<HexString, [Set<WebSocket>, boolean]>;
+  private priceFeedClients: Map<HexString, Set<WebSocket>>;
+  private priceFeedClientsVerbosity: Map<HexString, Map<WebSocket, boolean>>;
   private aliveClients: Set<WebSocket>;
   private wsId: Map<WebSocket, number>;
   private priceFeedVaaInfo: PriceStore;
@@ -44,6 +45,7 @@ export class WebSocketAPI {
   constructor(priceFeedVaaInfo: PriceStore, promClient?: PromClient) {
     this.priceFeedVaaInfo = priceFeedVaaInfo;
     this.priceFeedClients = new Map();
+    this.priceFeedClientsVerbosity = new Map();
     this.aliveClients = new Set();
     this.wsCounter = 0;
     this.wsId = new Map();
@@ -56,18 +58,20 @@ export class WebSocketAPI {
     verbose: boolean = false
   ) {
     if (!this.priceFeedClients.has(id)) {
-      this.priceFeedClients.set(id, [new Set(), verbose]);
+      this.priceFeedClients.set(id, new Set());
+      this.priceFeedClientsVerbosity.set(id, new Map([[ws, verbose]]));
     } else {
-      this.priceFeedClients.get(id)![1] = verbose;
+      this.priceFeedClientsVerbosity.get(id)!.set(ws, verbose);
     }
-    this.priceFeedClients.get(id)![0].add(ws);
+    this.priceFeedClients.get(id)!.add(ws);
   }
 
   private delPriceFeedClient(ws: WebSocket, id: HexString) {
     if (!this.priceFeedClients.has(id)) {
       return;
     }
-    this.priceFeedClients.get(id)![0].delete(ws);
+    this.priceFeedClients.get(id)!.delete(ws);
+    this.priceFeedClientsVerbosity.get(id)!.delete(ws);
   }
 
   dispatchPriceFeedUpdate(priceInfo: PriceInfo) {
@@ -80,13 +84,12 @@ export class WebSocketAPI {
 
     logger.info(
       `Sending ${priceInfo.priceFeed.id} price update to ${
-        this.priceFeedClients.get(priceInfo.priceFeed.id)![0].size
+        this.priceFeedClients.get(priceInfo.priceFeed.id)!.size
       } clients`
     );
 
-    let verbose = this.priceFeedClients.get(priceInfo.priceFeed.id)![1];
     for (let client of this.priceFeedClients
-      .get(priceInfo.priceFeed.id)![0]
+      .get(priceInfo.priceFeed.id)!
       .values()) {
       logger.info(
         `Sending ${
@@ -94,6 +97,10 @@ export class WebSocketAPI {
         } price update to client ${this.wsId.get(client)}`
       );
       this.promClient?.addWebSocketInteraction("server_update", "ok");
+
+      let verbose = this.priceFeedClientsVerbosity
+        .get(priceInfo.priceFeed.id)!
+        .get(client);
 
       let priceUpdate: ServerPriceUpdate = verbose
         ? {
@@ -118,8 +125,8 @@ export class WebSocketAPI {
 
   clientClose(ws: WebSocket) {
     for (let clients of this.priceFeedClients.values()) {
-      if (clients[0].has(ws)) {
-        clients[0].delete(ws);
+      if (clients.has(ws)) {
+        clients.delete(ws);
       }
     }
 
