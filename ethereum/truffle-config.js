@@ -62,7 +62,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://bsc-dataseed.binance.org/"
+          "https://bsc-dataseed2.binance.org"
         );
       },
       network_id: "56",
@@ -207,5 +207,6 @@ module.exports = {
 
   api_keys: {
     etherscan: process.env.ETHERSCAN_KEY,
+    bscscan: process.env.BSCSCAN_KEY,
   },
 };
