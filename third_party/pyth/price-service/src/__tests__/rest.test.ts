@@ -60,7 +60,7 @@ beforeAll(async () => {
     getLatestPriceInfo: (priceFeedId: string) => {
       return priceInfoMap.get(priceFeedId);
     },
-    addUpdateListener: (_callback: (priceFeed: PriceFeed) => any) => {},
+    addUpdateListener: (_callback: (priceInfo: PriceInfo) => any) => {},
     getPriceIds: () => new Set(),
   };
 

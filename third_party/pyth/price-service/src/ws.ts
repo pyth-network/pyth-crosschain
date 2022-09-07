@@ -1,12 +1,8 @@
-import {
-  HexString,
-  PriceFeed,
-  PriceFeedMetadata,
-} from "@pythnetwork/pyth-sdk-js";
+import { HexString } from "@pythnetwork/pyth-sdk-js";
 import * as http from "http";
 import Joi from "joi";
 import WebSocket, { RawData, WebSocketServer } from "ws";
-import { PriceStore } from "./listen";
+import { PriceInfo, PriceStore } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
 
@@ -44,7 +40,6 @@ export class WebSocketAPI {
   private wsId: Map<WebSocket, number>;
   private priceFeedVaaInfo: PriceStore;
   private promClient: PromClient | undefined;
-  private verbose: boolean;
 
   constructor(priceFeedVaaInfo: PriceStore, promClient?: PromClient) {
     this.priceFeedVaaInfo = priceFeedVaaInfo;
@@ -53,7 +48,6 @@ export class WebSocketAPI {
     this.wsCounter = 0;
     this.wsId = new Map();
     this.promClient = promClient;
-    this.verbose = false;
   }
 
   private addPriceFeedClient(ws: WebSocket, id: HexString) {
@@ -68,39 +62,50 @@ export class WebSocketAPI {
     this.priceFeedClients.get(id)?.delete(ws);
   }
 
-  dispatchPriceFeedUpdate(priceFeed: PriceFeed) {
-    if (this.priceFeedClients.get(priceFeed.id) === undefined) {
-      logger.info(`Sending ${priceFeed.id} price update to no clients.`);
+  dispatchPriceFeedUpdate(priceInfo: PriceInfo) {
+    if (this.priceFeedClients.get(priceInfo.priceFeed.id) === undefined) {
+      logger.info(
+        `Sending ${priceInfo.priceFeed.id} price update to no clients.`
+      );
       return;
     }
 
     logger.info(
-      `Sending ${priceFeed.id} price update to ${
-        this.priceFeedClients.get(priceFeed.id)!.size
+      `Sending ${priceInfo.priceFeed.id} price update to ${
+        this.priceFeedClients.get(priceInfo.priceFeed.id)!.size
       } clients`
     );
 
-    for (let client of this.priceFeedClients.get(priceFeed.id)!.values()) {
+    for (let client of this.priceFeedClients
+      .get(priceInfo.priceFeed.id)!
+      .values()) {
       logger.info(
-        `Sending ${priceFeed.id} price update to client ${this.wsId.get(
-          client
-        )}`
+        `Sending ${
+          priceInfo.priceFeed.id
+        } price update to client ${this.wsId.get(client)}`
       );
       this.promClient?.addWebSocketInteraction("server_update", "ok");
-      if (this.verbose) {
-        const priceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(
-          priceFeed.id
-        );
-        priceFeed.metadata = PriceFeedMetadata.fromJson({
-          attestation_time: priceInfo?.attestationTime,
-          emitter_chain: priceInfo?.emitterChainId,
-          sequence_number: priceInfo?.seqNum,
-        });
-      }
+      // if (this.verbose) {
+      //   const priceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(
+      //     priceFeed.id
+      //   );
+      //   priceFeed.metadata = PriceFeedMetadata.fromJson({
+      //     attestation_time: priceInfo?.attestationTime,
+      //     emitter_chain: priceInfo?.emitterChainId,
+      //     sequence_number: priceInfo?.seqNum,
+      //   });
+      // }
 
       let priceUpdate: ServerPriceUpdate = {
         type: "price_update",
-        price_feed: priceFeed.toJson(),
+        price_feed: {
+          ...priceInfo.priceFeed.toJson(),
+          metadata: {
+            emitter_chain: priceInfo.emitterChainId,
+            attestation_time: priceInfo.attestationTime,
+            sequence_number: priceInfo.seqNum,
+          },
+        },
       };
 
       client.send(JSON.stringify(priceUpdate));
@@ -146,10 +151,8 @@ export class WebSocketAPI {
 
       if (message.type == "subscribe") {
         message.ids.forEach((id) => this.addPriceFeedClient(ws, id));
-        this.verbose = message.verbose === true;
       } else {
         message.ids.forEach((id) => this.delPriceFeedClient(ws, id));
-        this.verbose = false;
       }
     } catch (e: any) {
       let response: ServerResponse = {
