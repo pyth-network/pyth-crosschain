@@ -215,7 +215,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         }
 
         let attestation = PriceAttestation::from_pyth_price_bytes(
-            Identifier::new(product.key.to_bytes()),
+            Identifier::new(price.key.to_bytes()),
             accs.clock.unix_timestamp,
             &*price.try_borrow_data()?,
         )
