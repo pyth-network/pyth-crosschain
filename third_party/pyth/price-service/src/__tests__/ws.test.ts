@@ -18,20 +18,25 @@ function expandTo64Len(id: string): string {
 }
 
 function dummyPriceFeed(id: string): PriceFeed {
-  return new PriceFeed({
+  return PriceFeed.fromJson({
     conf: "0",
-    emaConf: "1",
-    emaPrice: "2",
+    ema_conf: "1",
+    ema_price: "2",
     expo: 4,
     id,
-    maxNumPublishers: 7,
-    numPublishers: 6,
-    prevConf: "8",
-    prevPrice: "9",
-    prevPublishTime: 10,
-    price: "11",
-    productId: "def456",
-    publishTime: 13,
+    max_num_publishers: 7,
+    metadata: {
+      attestation_time: 8,
+      emitter_chain: 9,
+      sequence_number: 10,
+    },
+    num_publishers: 11,
+    prev_conf: "12",
+    prev_price: "13",
+    prev_publish_time: 14,
+    price: "15",
+    product_id: "def456",
+    publish_time: 17,
     status: PriceStatus.Trading,
   });
 }

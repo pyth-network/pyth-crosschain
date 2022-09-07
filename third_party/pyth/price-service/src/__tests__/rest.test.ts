@@ -72,7 +72,7 @@ beforeAll(async () => {
 describe("Latest Price Feed Endpoint", () => {
   test("When called with valid ids, returns correct price feed", async () => {
     const ids = [expandTo64Len("abcd"), expandTo64Len("3456")];
-    const resp = await request(app).get("/latest_price_feeds").query({ ids });
+    const resp = await request(app).get("/api/latest_price_feeds").query({ ids });
     expect(resp.status).toBe(StatusCodes.OK);
     expect(resp.body.length).toBe(2);
     expect(resp.body).toContainEqual(dummyPriceFeed(ids[0]).toJson());
@@ -85,7 +85,7 @@ describe("Latest Price Feed Endpoint", () => {
       expandTo64Len("3456"),
       expandTo64Len("effe"),
     ];
-    const resp = await request(app).get("/latest_price_feeds").query({ ids });
+    const resp = await request(app).get("/api/latest_price_feeds").query({ ids });
     expect(resp.status).toBe(StatusCodes.BAD_REQUEST);
     expect(resp.body.message).toContain(ids[0]);
     expect(resp.body.message).not.toContain(ids[1]);
@@ -100,7 +100,7 @@ describe("Latest Vaa Bytes Endpoint", () => {
       expandTo64Len("ef01"),
       expandTo64Len("3456"),
     ];
-    const resp = await request(app).get("/latest_vaas").query({ ids });
+    const resp = await request(app).get("/api/latest_vaas").query({ ids });
     expect(resp.status).toBe(StatusCodes.OK);
     expect(resp.body.length).toBe(2);
     expect(resp.body).toContain(
@@ -117,7 +117,7 @@ describe("Latest Vaa Bytes Endpoint", () => {
       expandTo64Len("3456"),
       expandTo64Len("effe"),
     ];
-    const resp = await request(app).get("/latest_vaas").query({ ids });
+    const resp = await request(app).get("/api/latest_vaas").query({ ids });
     expect(resp.status).toBe(StatusCodes.BAD_REQUEST);
     expect(resp.body.message).toContain(ids[0]);
     expect(resp.body.message).not.toContain(ids[1]);
