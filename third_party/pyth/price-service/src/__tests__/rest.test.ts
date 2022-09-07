@@ -79,7 +79,7 @@ describe("Latest Price Feed Endpoint", () => {
     expect(resp.body).toContainEqual(dummyPriceFeed(ids[1]).toJson());
   });
 
-  test("When called with some non-existant ids within ids, returns error mentioning non-existant ids", async () => {
+  test("When called with some non-existent ids within ids, returns error mentioning non-existent ids", async () => {
     const ids = [
       expandTo64Len("ab01"),
       expandTo64Len("3456"),
@@ -111,7 +111,7 @@ describe("Latest Vaa Bytes Endpoint", () => {
     );
   });
 
-  test("When called with some non-existant ids within ids, returns error mentioning non-existant ids", async () => {
+  test("When called with some non-existent ids within ids, returns error mentioning non-existent ids", async () => {
     const ids = [
       expandTo64Len("ab01"),
       expandTo64Len("3456"),
