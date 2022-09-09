@@ -17,7 +17,7 @@ module.exports = {
         ),
       network_id: 1,
       gas: 10000000,
-      gasPrice: 191000000000,
+      gasPrice: 20000000000,
       confirmations: 1,
       timeoutBlocks: 200,
       skipDryRun: false,
@@ -62,12 +62,12 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://bsc-dataseed2.binance.org"
+          "https://bsc-dataseed3.defibit.io/"
         );
       },
       network_id: "56",
       gas: 70000000,
-      gasPrice: 8000000000,
+      gasPrice: 5500000000,
     },
     bnb_testnet: {
       provider: () => new HDWalletProvider(
@@ -89,7 +89,7 @@ module.exports = {
       },
       network_id: "137",
       gas: 10000000,
-      gasPrice: 700000000000,
+      gasPrice: 33000000000,
     },
     mumbai: {
       provider: () => {
@@ -135,7 +135,9 @@ module.exports = {
           "https://mainnet.aurora.dev"
         );
       },
-      network_id: 1313161554,
+      network_id: 0x4e454152,
+      gas: 10000000,
+      from: "0xC42e9476b0a458097087336e2395Dbf45B0BdC12", // creator public key
     },
     aurora_testnet: {
       provider: () => {
@@ -148,6 +150,24 @@ module.exports = {
       gas: 10000000,
       from: "0xC42e9476b0a458097087336e2395Dbf45B0BdC12", // public key
     },
+    arbitrum: {
+      provider: () => {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://arb1.arbitrum.io/rpc"
+        );
+      },
+      network_id: 42161,
+    },
+    optimism: {
+      provider: () => {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://mainnet.optimism.io"
+        );
+      },
+      network_id: 10,
+    },
     fantom: {
       provider: () => {
         return new HDWalletProvider(
@@ -157,7 +177,7 @@ module.exports = {
       },
       network_id: 250,
       gas: 8000000,
-      gasPrice: 3000000000000,
+      gasPrice: 30000000000,
       timeoutBlocks: 15000,
     },
     fantom_testnet: {
@@ -208,5 +228,11 @@ module.exports = {
   api_keys: {
     etherscan: process.env.ETHERSCAN_KEY,
     bscscan: process.env.BSCSCAN_KEY,
+    snowtrace: process.env.SNOWTRACE_KEY,
+    ftmscan: process.env.FTMSCAN_KEY,
+    polygonscan: process.env.POLYGONSCAN_KEY,
+    optimistic_etherscan: process.env.OPTIMISTIC_ETHERSCAN_KEY,
+    aurorascan: process.env.AURORASCAN_KEY,
+    arbiscan: process.env.ARBISCAN_KEY,
   },
 };

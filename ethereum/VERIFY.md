@@ -13,37 +13,21 @@ be set in the `ETHERSCAN_KEY` environment variable for all APIs (not just
 etherscan, bit of a misnomer).
 
 Our contracts are structured as a separate proxy and an implementation. Both of
-these components need to be verified, but the proxy contract only needs this
-once, since it's not going to change. The implementation contract needs to be
-verified each time it's upgraded.
+these components need to be verified, and truffle handles it. 
 
-## Verifying the proxy contract (first time)
+## Verifying the contract
 
-The proxy contract is called `TokenBridge`. To verify it on e.g. avalanche, at contract address `0x0e082F06FF657D94310cB8cE8B0D9a04541d8052`, run
+Our contract is called `PythUpgradable`. To verify it on e.g. avalanche, at contract address `0x0e082F06FF657D94310cB8cE8B0D9a04541d8052`, run
 
 ```
-ETHERSCAN_KEY=... npm run verify --module=TokenBridge --contract_address=0x0e082F06FF657D94310cB8cE8B0D9a04541d8052 --network=avalanche
+ETHERSCAN_KEY=... npm run verify --module=PythUpgradable --contract_address=0x0e082F06FF657D94310cB8cE8B0D9a04541d8052 --network=avalanche
 ```
 
 (Note: the network name comes from the `truffle-config.json`).
 (Note: In this case, the `ETHERSCAN_KEY` is your snowtrace API key).
 
-
-## Verifying the implementation contract (on each upgrade)
-
-To verify the actual implementation, at address `0xa321448d90d4e5b0a732867c18ea198e75cac48e`, run
-
-```sh
-ETHERSCAN_KEY=... npm run verify --module=BridgeImplementation --contract_address=0xa321448d90d4e5b0a732867c18ea198e75cac48e --network=avalanche
-```
-
-As a final step, when first registering the proxy contract, we need to verify
-that it's a proxy that points to the implementation we just verified. This can
-be done on avalanche at
-https://snowtrace.io/proxyContractChecker?a=0x0e082F06FF657D94310cB8cE8B0D9a04541d8052
-
-(other evm scanner sites have an identical page).
-
+**You might need to add the the explorer api keys in [the truffle config](./truffle-config.js) `api_keys`.** Please look at
+`truffle-plugin-verify/utils.js` to find the key names.
 
 # Note
 The `npm run verify` script uses the `truffle-plugin-verify` plugin under the
