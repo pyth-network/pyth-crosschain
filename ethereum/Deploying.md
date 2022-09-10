@@ -5,10 +5,6 @@ Running the Truffle migrations in [`migrations/prod`](migrations/prod) or [`migr
 This is the deployment process:
 
 ```bash
-# Load the configuration environment variables for deploying your network. make sure to use right env file.
-# If it is a new chain you are deploying to, create a new env file and commit it to the repo.
-rm -f .env; ln -s .env.prod.xyz .env && set -o allexport && source .env set && set +o allexport
-
 # The Secret Recovery Phrase for the wallet the contract will be deployed from.
 export MNEMONIC=...
 
@@ -21,7 +17,16 @@ rm -rf build && npx truffle compile --all
 # Merge the network addresses into the artifacts, if some contracts are already deployed.
 npx apply-registry
 
+# After doing the above steps, you can run the below commands per each network.
+
+# Load the configuration environment variables for deploying your network. make sure to use right env file.
+# If it is a new chain you are deploying to, create a new env file and commit it to the repo.
+rm -f .env; ln -s .env.prod.xyz .env && set -o allexport && source .env set && set +o allexport
+
 # Perform the migration
+# You might need to repeat the steps because of busy RPCs.
+# Also, sometimes the gases are not adjusted. Please update them with the network
+# explorer gas tracker.
 npx truffle migrate --network $MIGRATIONS_NETWORK
 
 # Perform this in first time mainnet deployments with Wormhole Receiver. (Or when guardian sets are upgraded)
@@ -110,10 +115,14 @@ $ npx truffle console --network $MIGRATIONS_NETWORK
 
 [pyth-js]: https://github.com/pyth-network/pyth-js/tree/main/pyth-evm-js#evmrelay
 
-# Manually Verifying the contract
+# Verifying the contract
 
-Run the following command:
+Please first try verifying the contract using truffle as described in [VERIFY.md](./VERIFY.md). It that doesn't work
+Try to manually verify the contract using the explorer UI. You can try to upload the standard json output in `build/contracts`
+directory. If that doesn't work either, you can flatten the contract and try to verify it.
+
+To flatten the contract, run the following command:
 
 `npx sol-merger contracts/pyth/PythUpgradable.sol`
 
-It will create a new file `PythUpgradable_merged.sol` which you can use in etherscan to verify the implementation contract (using exact sol version and optimization flag). After verifying implementation, you can verify the proxy.
+It will create a new file `PythUpgradable_merged.sol` which you can use in the explorer to verify the implementation contract (using exact sol version and optimization flag). After verifying implementation, you can verify the proxy.
