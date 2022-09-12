@@ -24,6 +24,7 @@ services:
       - PROM_PORT=8081
       - READINESS_SPY_SYNC_TIME_SECONDS=60
       - READINESS_NUM_LOADED_SYMBOLS=8
+      - READINESS_FRESHNESS_TIME_SECONDS=10
       - LOG_LEVEL=debug
     healthcheck:
       test:
