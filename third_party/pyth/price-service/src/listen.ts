@@ -43,6 +43,7 @@ export interface PriceStore {
 type ListenerReadinessConfig = {
   spySyncTimeSeconds: number;
   numLoadedSymbols: number;
+  freshnessTimeSeconds: number;
 };
 
 type ListenerConfig = {
@@ -198,7 +199,7 @@ export class Listener implements PriceStore {
           attestationTime: priceAttestation.attestationTime,
           priceFeed,
           emitterChainId: parsedVAA.emitter_chain,
-        }
+        };
         this.priceFeedVaaMap.set(key, priceInfo);
 
         for (let callback of this.updateCallbacks) {
@@ -234,7 +235,7 @@ export class Listener implements PriceStore {
   }
 
   isReady(): boolean {
-    let currentTime: TimestampInSec = new Date().getTime() / 1000;
+    let currentTime: TimestampInSec = Math.floor(Date.now() / 1000);
     if (
       this.spyConnectionTime === undefined ||
       currentTime <
@@ -243,6 +244,16 @@ export class Listener implements PriceStore {
       return false;
     }
     if (this.priceFeedVaaMap.size < this.readinessConfig.numLoadedSymbols) {
+      return false;
+    }
+    let priceIds = [...this.getPriceIds()];
+    let arePricesFresh = priceIds.every(
+      (priceId) =>
+        currentTime -
+          this.priceFeedVaaMap.get(priceId)!.priceFeed.publishTime <=
+        this.readinessConfig.freshnessTimeSeconds
+    );
+    if (!arePricesFresh) {
       return false;
     }
     return true;
