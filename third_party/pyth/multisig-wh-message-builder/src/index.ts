@@ -10,7 +10,9 @@ import {
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
+  sendAndConfirmTransaction,
   SystemProgram,
+  Transaction,
 } from "@solana/web3.js";
 import Squads from "@sqds/sdk";
 import bs58 from "bs58";
@@ -28,7 +30,7 @@ program
   .command("create")
   .description("Create a new multisig transaction")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .option("-v, --vault-address <address>", "multisig vault address")
+  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option(
     "-w, --wallet <filepath>",
     "multisig wallet secret key filepath",
@@ -48,7 +50,7 @@ program
   .command("execute")
   .description("Execute a multisig transaction that is ready")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .option("-e, --emitter-address <address>", "emitter address")
+  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option(
     "-w, --wallet <filepath>",
     "multisig wallet secret key filepath",
@@ -59,12 +61,12 @@ program
     "multisig message account secret key filepath",
     "keys/message.json"
   )
-  .option("-t, --tx-pda <address>", "transaction PDA")
-  .option("-u, --rpc-url <url>", "wormhole RPC URL")
+  .requiredOption("-t, --tx-pda <address>", "transaction PDA")
+  .requiredOption("-u, --rpc-url <url>", "wormhole RPC URL")
   .action((options) => {
     executeMultisigTx(
       options.cluster,
-      new PublicKey(options.emitterAddress),
+      new PublicKey(options.vaultAddress),
       options.wallet,
       options.message,
       new PublicKey(options.txPda),
@@ -180,7 +182,7 @@ async function createMultisigTx(
 
 async function executeMultisigTx(
   cluster: string,
-  emitter: PublicKey,
+  vault: PublicKey,
   walletPath: string,
   messagePath: string,
   txPDA: PublicKey,
@@ -202,6 +204,12 @@ async function executeMultisigTx(
 
   const squads =
     cluster === "devnet" ? Squads.devnet(wallet) : Squads.mainnet(wallet);
+  const msAccount = await squads.getMultisig(vault);
+
+  const emitter = squads.getAuthorityPDA(
+    msAccount.publicKey,
+    msAccount.authorityIndex
+  );
 
   const executeIx = await squads.buildExecuteTransaction(
     txPDA,
@@ -231,22 +239,36 @@ async function executeMultisigTx(
 
   const { blockhash, lastValidBlockHeight } =
     await squads.connection.getLatestBlockhash();
-  const executeTx = new anchor.web3.Transaction({
+  // const executeTx = new anchor.web3.Transaction({
+  //   blockhash,
+  //   lastValidBlockHeight,
+  //   feePayer: wallet.payer.publicKey,
+  // });
+  // const provider = new anchor.AnchorProvider(squads.connection, wallet, {
+  //   ...anchor.AnchorProvider.defaultOptions(),
+  //   commitment: "confirmed",
+  //   preflightCommitment: "confirmed",
+  // });
+  // executeTx.add(executeIx);
+
+  const tx = new Transaction({
     blockhash,
     lastValidBlockHeight,
     feePayer: wallet.payer.publicKey,
   });
-  const provider = new anchor.AnchorProvider(squads.connection, wallet, {
-    ...anchor.AnchorProvider.defaultOptions(),
-    commitment: "confirmed",
-    preflightCommitment: "confirmed",
-  });
-  executeTx.add(executeIx);
+  tx.add(executeIx);
+  await squads.wallet.signTransaction(tx);
+  const signature = await sendAndConfirmTransaction(
+    squads.connection,
+    tx,
+    [wallet.payer, message],
+    { commitment: "confirmed" }
+  );
 
-  const signature = await provider.sendAndConfirm(executeTx, [
-    wallet.payer,
-    message,
-  ]);
+  // const signature = await provider.sendAndConfirm(executeTx, [
+  //   wallet.payer,
+  //   message,
+  // ]);
   console.log(
     `Executed tx: https://explorer.solana.com/tx/${signature}${
       cluster === "devnet" ? "?cluster=devnet" : ""
@@ -254,24 +276,33 @@ async function executeMultisigTx(
   );
 
   const txDetails = await squads.connection.getParsedTransaction(
-    "43edaJsdeYu7ZceTCWC9S7GzVwp67yVfRXgYb9TVWuHEoiWFJo95QawA8W9iWr64XspbaP7SmVjNL3mqG16KD2B4"
+    signature,
+    "confirmed"
   );
   const txLog = txDetails?.meta?.logMessages?.find((s) =>
     s.includes("Sequence")
   );
-  console.log(txLog);
+  const substr = "Sequence: ";
   const sequenceNumber = Number(
-    txLog?.substring(txLog.indexOf("Sequence: ") + 10)
+    txLog?.substring(txLog.indexOf(substr) + substr.length)
   );
   console.log(`Sequence number: ${sequenceNumber}`);
 
+  // sleep for 5 seconds
+  console.log(
+    "Sleeping for 5 seconds to allow guardians enough time to create VAA..."
+  );
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+
   // fetch VAA
+  console.log("Fetching VAA...");
   const response = await fetch(
     `${rpcUrl}/v1/signed_vaa/1/${Buffer.from(
       bs58.decode(emitter.toBase58())
     ).toString("hex")}/${sequenceNumber}`
   );
   const { vaaBytes } = await response.json();
+  console.log(`VAA (Base64): ${vaaBytes}`);
   const parsedVaa = await parse(vaaBytes);
   console.log(`Emitter chain: ${parsedVaa.emitter_chain}`);
   console.log(`Nonce: ${parsedVaa.nonce}`);
