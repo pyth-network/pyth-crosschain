@@ -239,18 +239,6 @@ async function executeMultisigTx(
 
   const { blockhash, lastValidBlockHeight } =
     await squads.connection.getLatestBlockhash();
-  // const executeTx = new anchor.web3.Transaction({
-  //   blockhash,
-  //   lastValidBlockHeight,
-  //   feePayer: wallet.payer.publicKey,
-  // });
-  // const provider = new anchor.AnchorProvider(squads.connection, wallet, {
-  //   ...anchor.AnchorProvider.defaultOptions(),
-  //   commitment: "confirmed",
-  //   preflightCommitment: "confirmed",
-  // });
-  // executeTx.add(executeIx);
-
   const tx = new Transaction({
     blockhash,
     lastValidBlockHeight,
@@ -264,11 +252,6 @@ async function executeMultisigTx(
     [wallet.payer, message],
     { commitment: "confirmed" }
   );
-
-  // const signature = await provider.sendAndConfirm(executeTx, [
-  //   wallet.payer,
-  //   message,
-  // ]);
   console.log(
     `Executed tx: https://explorer.solana.com/tx/${signature}${
       cluster === "devnet" ? "?cluster=devnet" : ""
