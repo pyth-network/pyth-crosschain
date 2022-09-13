@@ -27,14 +27,30 @@ contract PythGetters is PythState {
         return _state.latestPriceInfo[priceId];
     }
 
-    function isValidDataSource(uint16 chainId, bytes32 emitterAddress) public view returns (bool) {
-        return _state.isValidDataSource[keccak256(abi.encodePacked(chainId, emitterAddress))];
+    function isValidDataSource(uint16 dataSourceChainId, bytes32 dataSourceEmitterAddress) public view returns (bool) {
+        return _state.isValidDataSource[keccak256(abi.encodePacked(dataSourceChainId, dataSourceEmitterAddress))];
+    }
+
+    function isValidGovernanceDataSource(uint16 governanceChainId, bytes32 governanceEmitterAddress) public view returns (bool) {
+        return _state.governanceDataSource.chainId == governanceChainId &&
+            _state.governanceDataSource.emitterAddress == governanceEmitterAddress;
+    }
+
+    function chainId() public view returns (uint16) {
+        return wormhole().chainId();
+    }
+
+    function lastExecutedGovernanceSequence() public view returns (uint64) {
+        return _state.lastExecutedGovernanceSequence;
     }
 
     function validDataSources() public view returns (PythInternalStructs.DataSource[] memory) {
         return _state.validDataSources;
     }
 
+    function governanceDataSource() public view returns (PythInternalStructs.DataSource memory) {
+        return _state.governanceDataSource;
+    }
 
     function singleUpdateFeeInWei() public view returns (uint) {
         return _state.singleUpdateFeeInWei;
