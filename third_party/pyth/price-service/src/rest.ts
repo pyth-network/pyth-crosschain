@@ -5,10 +5,11 @@ import { Server } from "http";
 import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
 import responseTime from "response-time";
-import { DurationInMs, DurationInSec } from "./helpers";
+import {DurationInMs, DurationInSec, TimestampInSec} from "./helpers";
 import { PriceStore } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
+import {HexString} from "@pythnetwork/pyth-sdk-js";
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
@@ -211,6 +212,27 @@ export class RestAPI {
       }
     });
     endpoints.push("ready");
+
+    app.get("/stale_feeds", (req: Request, res: Response) => {
+      let stalenessThresholdSeconds = Number(req.query.threshold as string);
+
+      let currentTime: TimestampInSec = Math.floor(Date.now() / 1000);
+
+      let priceIds = [...this.priceFeedVaaInfo.getPriceIds()];
+      let stalePrices: Record<HexString, number> = {}
+
+      for (let priceId of priceIds) {
+        const latency = currentTime - this.priceFeedVaaInfo.getLatestPriceInfo(priceId)!.priceFeed.publishTime
+        if (latency > stalenessThresholdSeconds) {
+          stalePrices[priceId] = latency
+        }
+      }
+
+      return stalePrices;
+    })
+    endpoints.push(
+      "/stale_feeds?threshold=<staleness_threshold_seconds>"
+    );
 
     app.get("/live", (_, res: Response) => {
       res.sendStatus(StatusCodes.OK);
