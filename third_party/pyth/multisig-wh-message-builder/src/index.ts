@@ -155,8 +155,8 @@ async function createMultisigTx(
   cluster: Cluster,
   vault: PublicKey,
   ledger: boolean,
-  ledgerDerivationAccount: number,
-  ledgerDerivationChange: number,
+  ledgerDerivationAccount: number | undefined,
+  ledgerDerivationChange: number | undefined,
   walletPath: string,
   payload: string
 ) {
@@ -233,8 +233,8 @@ async function executeMultisigTx(
   cluster: string,
   vault: PublicKey,
   ledger: boolean,
-  ledgerDerivationAccount: number,
-  ledgerDerivationChange: number,
+  ledgerDerivationAccount: number | undefined,
+  ledgerDerivationChange: number | undefined,
   walletPath: string,
   messagePath: string,
   txPDA: PublicKey,

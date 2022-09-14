@@ -1,3 +1,4 @@
+// this file referenced solana's wallet adapter for ledger: https://github.com/solana-labs/wallet-adapter/blob/master/packages/wallets/ledger/src/adapter.ts
 import type { default as Transport } from "@ledgerhq/hw-transport";
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 import { Wallet } from "@project-serum/anchor/dist/cjs/provider.js";
