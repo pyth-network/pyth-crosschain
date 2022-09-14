@@ -35,7 +35,6 @@ async function run() {
           envOrErr("READINESS_SPY_SYNC_TIME_SECONDS")
         ),
         numLoadedSymbols: parseInt(envOrErr("READINESS_NUM_LOADED_SYMBOLS")),
-        freshnessTimeSeconds: parseInt(envOrErr("READINESS_FRESHNESS_TIME_SECONDS")),
       },
     },
     promClient

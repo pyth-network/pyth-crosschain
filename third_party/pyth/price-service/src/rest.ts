@@ -5,10 +5,11 @@ import { Server } from "http";
 import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
 import responseTime from "response-time";
-import { DurationInMs, DurationInSec } from "./helpers";
+import { DurationInMs, DurationInSec, TimestampInSec } from "./helpers";
 import { PriceStore } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
+import { HexString } from "@pythnetwork/pyth-sdk-js";
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
@@ -104,7 +105,7 @@ export class RestAPI {
           }
 
           const freshness: DurationInSec =
-            new Date().getTime() / 1000 - latestPriceInfo.attestationTime;
+            new Date().getTime() / 1000 - latestPriceInfo.priceFeed.publishTime;
           this.promClient?.addApiRequestsPriceFreshness(
             req.path,
             id,
@@ -162,7 +163,7 @@ export class RestAPI {
           }
 
           const freshness: DurationInSec =
-            new Date().getTime() / 1000 - latestPriceInfo.attestationTime;
+            new Date().getTime() / 1000 - latestPriceInfo.priceFeed.publishTime;
           this.promClient?.addApiRequestsPriceFreshness(
             req.path,
             id,
@@ -202,6 +203,35 @@ export class RestAPI {
       res.json([...availableIds]);
     });
     endpoints.push("api/price_feed_ids");
+
+    const staleFeedsInputSchema: schema = {
+      query: Joi.object({
+        threshold: Joi.number().required(),
+      }).required(),
+    };
+    app.get("/api/stale_feeds",
+      validate(staleFeedsInputSchema),
+      (req: Request, res: Response) => {
+        let stalenessThresholdSeconds = Number(req.query.threshold as string);
+
+        let currentTime: TimestampInSec = Math.floor(Date.now() / 1000);
+
+        let priceIds = [...this.priceFeedVaaInfo.getPriceIds()];
+        let stalePrices: Record<HexString, number> = {}
+
+        for (let priceId of priceIds) {
+          const latency = currentTime - this.priceFeedVaaInfo.getLatestPriceInfo(priceId)!.priceFeed.publishTime
+          if (latency > stalenessThresholdSeconds) {
+            stalePrices[priceId] = latency
+          }
+        }
+
+        res.json(stalePrices);
+      }
+    );
+    endpoints.push(
+      "/api/stale_feeds?threshold=<staleness_threshold_seconds>"
+    );
 
     app.get("/ready", (_, res: Response) => {
       if (this.isReady!()) {

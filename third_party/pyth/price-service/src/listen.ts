@@ -43,7 +43,6 @@ export interface PriceStore {
 type ListenerReadinessConfig = {
   spySyncTimeSeconds: number;
   numLoadedSymbols: number;
-  freshnessTimeSeconds: number;
 };
 
 type ListenerConfig = {
@@ -246,16 +245,7 @@ export class Listener implements PriceStore {
     if (this.priceFeedVaaMap.size < this.readinessConfig.numLoadedSymbols) {
       return false;
     }
-    let priceIds = [...this.getPriceIds()];
-    let arePricesFresh = priceIds.every(
-      (priceId) =>
-        currentTime -
-          this.priceFeedVaaMap.get(priceId)!.priceFeed.publishTime <=
-        this.readinessConfig.freshnessTimeSeconds
-    );
-    if (!arePricesFresh) {
-      return false;
-    }
+
     return true;
   }
 }
