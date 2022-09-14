@@ -228,7 +228,7 @@ export class RestAPI {
         }
       }
 
-      return stalePrices;
+      res.json(stalePrices);
     })
     endpoints.push(
       "/stale_feeds?threshold=<staleness_threshold_seconds>"
