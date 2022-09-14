@@ -204,21 +204,12 @@ export class RestAPI {
     });
     endpoints.push("api/price_feed_ids");
 
-    app.get("/ready", (_, res: Response) => {
-      if (this.isReady!()) {
-        res.sendStatus(StatusCodes.OK);
-      } else {
-        res.sendStatus(StatusCodes.SERVICE_UNAVAILABLE);
-      }
-    });
-    endpoints.push("ready");
-
     const staleFeedsInputSchema: schema = {
       query: Joi.object({
         threshold: Joi.number().required(),
-      })
+      }).required(),
     };
-    app.get("/stale_feeds",
+    app.get("/api/stale_feeds",
       validate(staleFeedsInputSchema),
       (req: Request, res: Response) => {
         let stalenessThresholdSeconds = Number(req.query.threshold as string);
@@ -239,8 +230,17 @@ export class RestAPI {
       }
     );
     endpoints.push(
-      "/stale_feeds?threshold=<staleness_threshold_seconds>"
+      "/api/stale_feeds?threshold=<staleness_threshold_seconds>"
     );
+
+    app.get("/ready", (_, res: Response) => {
+      if (this.isReady!()) {
+        res.sendStatus(StatusCodes.OK);
+      } else {
+        res.sendStatus(StatusCodes.SERVICE_UNAVAILABLE);
+      }
+    });
+    endpoints.push("ready");
 
     app.get("/live", (_, res: Response) => {
       res.sendStatus(StatusCodes.OK);
