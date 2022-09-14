@@ -10,14 +10,13 @@ import {
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
-  sendAndConfirmTransaction,
   SystemProgram,
-  Transaction,
 } from "@solana/web3.js";
 import Squads from "@sqds/sdk";
 import bs58 from "bs58";
 import { program } from "commander";
 import * as fs from "fs";
+import { LedgerNodeWallet } from "./wallet";
 
 setDefaultWasm("node");
 
@@ -31,6 +30,15 @@ program
   .description("Create a new multisig transaction")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
   .requiredOption("-v, --vault-address <address>", "multisig vault address")
+  .option("-l, --ledger", "use ledger")
+  .option(
+    "-lda, --ledger-derivation-account <number>",
+    "ledger derivation account to use"
+  )
+  .option(
+    "-ldc, --ledger-derivation-change <number>",
+    "ledger derivation change to use"
+  )
   .option(
     "-w, --wallet <filepath>",
     "multisig wallet secret key filepath",
@@ -41,6 +49,9 @@ program
     createMultisigTx(
       options.cluster,
       new PublicKey(options.vaultAddress),
+      options.ledger,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange,
       options.wallet,
       options.payload
     );
@@ -51,6 +62,15 @@ program
   .description("Execute a multisig transaction that is ready")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
   .requiredOption("-v, --vault-address <address>", "multisig vault address")
+  .option("-l, --ledger", "use ledger")
+  .option(
+    "-lda, --ledger-derivation-account <number>",
+    "ledger derivation account to use"
+  )
+  .option(
+    "-ldc, --ledger-derivation-change <number>",
+    "ledger derivation change to use"
+  )
   .option(
     "-w, --wallet <filepath>",
     "multisig wallet secret key filepath",
@@ -67,12 +87,17 @@ program
     executeMultisigTx(
       options.cluster,
       new PublicKey(options.vaultAddress),
+      options.ledger,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange,
       options.wallet,
       options.message,
       new PublicKey(options.txPda),
       options.rpcUrl
     );
   });
+
+// TODO: add subcommand for creating governance messages in the right format
 
 program.parse();
 
@@ -129,15 +154,28 @@ async function getWormholeMessageIx(
 async function createMultisigTx(
   cluster: Cluster,
   vault: PublicKey,
+  ledger: boolean,
+  ledgerDerivationAccount: number | undefined,
+  ledgerDerivationChange: number | undefined,
   walletPath: string,
   payload: string
 ) {
-  const wallet = new NodeWallet(
-    Keypair.fromSecretKey(
-      Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "ascii")))
-    )
-  );
-
+  let wallet: LedgerNodeWallet | NodeWallet;
+  if (ledger) {
+    console.log("Please connect to ledger...");
+    wallet = await LedgerNodeWallet.createWallet(
+      ledgerDerivationAccount,
+      ledgerDerivationChange
+    );
+    console.log(`Ledger connected! ${wallet.publicKey.toBase58()}`);
+  } else {
+    wallet = new NodeWallet(
+      Keypair.fromSecretKey(
+        Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "ascii")))
+      )
+    );
+    console.log(`Loaded wallet with address: ${wallet.publicKey.toBase58()}`);
+  }
   const squads =
     cluster === "devnet" ? Squads.devnet(wallet) : Squads.mainnet(wallet);
   const msAccount = await squads.getMultisig(vault);
@@ -148,6 +186,9 @@ async function createMultisigTx(
   );
   console.log(`Emitter Address: ${emitter.toBase58()}`);
 
+  console.log("Creating new transaction...");
+  if (ledger)
+    console.log("Please approve the transaction on your ledger device...");
   const newTx = await squads.createTransaction(
     msAccount.publicKey,
     msAccount.authorityIndex
@@ -170,12 +211,20 @@ async function createMultisigTx(
   );
   console.log("Wormhole instructions created.");
 
-  console.log("Creating transaction...");
+  console.log("Adding instruction 1/2 to transaction...");
+  if (ledger)
+    console.log("Please approve the transaction on your ledger device...");
   // transfer sol to the message account
   await squads.addInstruction(newTx.publicKey, wormholeIxs[0]);
+  console.log("Adding instruction 2/2 to transaction...");
+  if (ledger)
+    console.log("Please approve the transaction on your ledger device...");
   // wormhole post message ix
   await squads.addInstruction(newTx.publicKey, wormholeIxs[1]);
 
+  console.log("Activating transaction...");
+  if (ledger)
+    console.log("Please approve the transaction on your ledger device...");
   await squads.activateTransaction(newTx.publicKey);
   console.log("Transaction created.");
 }
@@ -183,17 +232,30 @@ async function createMultisigTx(
 async function executeMultisigTx(
   cluster: string,
   vault: PublicKey,
+  ledger: boolean,
+  ledgerDerivationAccount: number | undefined,
+  ledgerDerivationChange: number | undefined,
   walletPath: string,
   messagePath: string,
   txPDA: PublicKey,
   rpcUrl: string
 ) {
-  const wallet = new NodeWallet(
-    Keypair.fromSecretKey(
-      Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "ascii")))
-    )
-  );
-  console.log(`Loaded wallet with address: ${wallet.publicKey.toBase58()}`);
+  let wallet: LedgerNodeWallet | NodeWallet;
+  if (ledger) {
+    console.log("Please connect to ledger...");
+    wallet = await LedgerNodeWallet.createWallet(
+      ledgerDerivationAccount,
+      ledgerDerivationChange
+    );
+    console.log(`Ledger connected! ${wallet.publicKey.toBase58()}`);
+  } else {
+    wallet = new NodeWallet(
+      Keypair.fromSecretKey(
+        Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "ascii")))
+      )
+    );
+    console.log(`Loaded wallet with address: ${wallet.publicKey.toBase58()}`);
+  }
 
   const message = Keypair.fromSecretKey(
     Uint8Array.from(JSON.parse(fs.readFileSync(messagePath, "ascii")))
@@ -223,6 +285,7 @@ async function executeMultisigTx(
 
   // airdrop 0.1 SOL to emitter if on devnet
   if (cluster === "devnet") {
+    console.log("Airdropping 0.1 SOL to emitter...");
     const airdropSignature = await squads.connection.requestAirdrop(
       emitter,
       0.1 * LAMPORTS_PER_SOL
@@ -239,19 +302,22 @@ async function executeMultisigTx(
 
   const { blockhash, lastValidBlockHeight } =
     await squads.connection.getLatestBlockhash();
-  const tx = new Transaction({
+  const executeTx = new anchor.web3.Transaction({
     blockhash,
     lastValidBlockHeight,
-    feePayer: wallet.payer.publicKey,
+    feePayer: wallet.publicKey,
   });
-  tx.add(executeIx);
-  await squads.wallet.signTransaction(tx);
-  const signature = await sendAndConfirmTransaction(
-    squads.connection,
-    tx,
-    [wallet.payer, message],
-    { commitment: "confirmed" }
-  );
+  const provider = new anchor.AnchorProvider(squads.connection, wallet, {
+    commitment: "confirmed",
+    preflightCommitment: "confirmed",
+  });
+  executeTx.add(executeIx);
+
+  console.log("Sending transaction...");
+  if (ledger)
+    console.log("Please approve the transaction on your ledger device...");
+  const signature = await provider.sendAndConfirm(executeTx, [message]);
+
   console.log(
     `Executed tx: https://explorer.solana.com/tx/${signature}${
       cluster === "devnet" ? "?cluster=devnet" : ""
