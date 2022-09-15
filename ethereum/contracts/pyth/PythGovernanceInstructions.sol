@@ -32,7 +32,7 @@ contract PythGovernanceInstructions {
     }
 
     struct UpgradeContractPayload {
-        address newContract;
+        address newImplementation;
     }
 
     struct SetGovernanceDataSourcePayload {
@@ -73,7 +73,7 @@ contract PythGovernanceInstructions {
     function parseUpgradeContractPayload(bytes memory encodedPayload) public pure returns (UpgradeContractPayload memory uc) {
         uint index = 0;
 
-        uc.newContract = address(uint160(uint256(encodedPayload.toBytes32(index))));
+        uc.newImplementation = address(uint160(uint256(encodedPayload.toBytes32(index))));
         index += 32;
 
         require(encodedPayload.length == index, "invalid length for UpgradeContractPayload");

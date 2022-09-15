@@ -5,14 +5,14 @@ pragma solidity ^0.8.0;
 
 import "./PythGovernanceInstructions.sol";
 import "./PythInternalStructs.sol";
-import "./Pyth.sol";
+import "./PythUpgradable.sol";
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
 
 /**
  * @dev `Governance` defines a means to enacting changes to the Pyth contract.
  */
-abstract contract PythGovernance is Pyth, PythGovernanceInstructions {
+abstract contract PythGovernedUpgradable is PythUpgradable, PythGovernanceInstructions {
     event ContractUpgraded(address oldContract, address newContract);
     event GovernanceDataSourceSet(PythInternalStructs.DataSource oldDataSource, PythInternalStructs.DataSource newDataSource);
     event DataSourcesSet(PythInternalStructs.DataSource[] oldDataSources, PythInternalStructs.DataSource[] newDataSources);
@@ -40,8 +40,8 @@ abstract contract PythGovernance is Pyth, PythGovernanceInstructions {
         require(gi.targetChainId == chainId() || gi.targetChainId == 0, "Invalid target chain for this governance instruction");
 
         // We are explicitly checking with number as with enum there might be confusions
-        // about the numbers.
-        if (gi.action == 1) { // UpgradeContract
+        // about the actual encoded number.
+        if (gi.action == 1) {
             require(gi.targetChainId != 0, "Upgrade for all the chains does not exists");
             upgradeContract(gi.payload);
         } else if (gi.action == 2) {
@@ -61,9 +61,11 @@ abstract contract PythGovernance is Pyth, PythGovernanceInstructions {
     function upgradeContract(bytes memory encodedPayload) internal {
         UpgradeContractPayload memory payload = parseUpgradeContractPayload(encodedPayload); 
 
-        // TODO
-    }
+        address currentImplementation = _getImplementation();
+        _upgradeToAndCallUUPS(payload.newImplementation, new bytes(0), false);
 
+        emit ContractUpgraded(currentImplementation, payload.newImplementation);
+    }
 
     function setGovernanceDataSource(bytes memory encodedPayload) internal {
         SetGovernanceDataSourcePayload memory payload = parseSetGovernanceDataSourcePayload(encodedPayload);
