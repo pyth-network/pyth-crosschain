@@ -9,5 +9,5 @@ pub use api::{
 };
 
 solitaire! {
-    ExecuteVaa => execute_posted_vaa
+    ExecutePostedVaa => execute_posted_vaa
 }
