@@ -9,9 +9,9 @@ import "./PythGetters.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./PythGovernance.sol";
 
-contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pyth {
-
+contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, PythGovernance {
     function initialize(
         address wormhole,
         uint16 pyth2WormholeChainId,
@@ -72,4 +72,11 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
     // Only allow the owner to upgrade the proxy to a new implementation.
     function _authorizeUpgrade(address) internal override onlyOwner {}
 
+    // Execute a UpgradeContract governance message
+    function upgradeUpgradableContract(UpgradeContractPayload memory payload) override internal {
+        address currentImplementation = _getImplementation();
+        _upgradeToAndCallUUPS(payload.newImplementation, new bytes(0), false);
+
+        emit ContractUpgraded(currentImplementation, payload.newImplementation);
+    }
 }

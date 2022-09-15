@@ -228,7 +228,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     }
 
     function version() public pure returns (string memory) {
-        return "0.1.0";
+        return "1.0.0";
     }
 
     function deployCommitHash() public pure returns (string memory) {
