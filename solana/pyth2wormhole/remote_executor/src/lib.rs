@@ -4,10 +4,10 @@ use solitaire::solitaire;
 
 mod api;
 pub use api::{
-    ExecutePostedVaa,
-    execute_posted_vaa,
+    ExecuteVaa,
+    execute_vaa,
 };
 
 solitaire! {
-    ExecutePostedVaa => execute_posted_vaa
+    ExecuteVaa => execute_vaa
 }
