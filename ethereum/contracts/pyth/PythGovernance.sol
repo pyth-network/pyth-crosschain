@@ -86,8 +86,9 @@ abstract contract PythGovernance is Pyth, PythGovernanceInstructions {
             _state.isValidDataSource[keccak256(abi.encodePacked(oldDataSources[i].chainId, oldDataSources[i].emitterAddress))] = false;
         }
 
-        _state.validDataSources = payload.dataSources;
+        delete _state.validDataSources;
         for (uint i = 0; i < payload.dataSources.length; i++) {
+            _state.validDataSources.push(payload.dataSources[i]);
             _state.isValidDataSource[keccak256(abi.encodePacked(payload.dataSources[i].chainId, payload.dataSources[i].emitterAddress))] = true;
         }
 
