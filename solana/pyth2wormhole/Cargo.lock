@@ -378,6 +378,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
 
 [[package]]
+name = "bstr"
+version = "0.2.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba3569f383e8f1598449f1a423e72e99569137b47740b1da11ef19af3d5c3223"
+dependencies = [
+ "lazy_static",
+ "memchr",
+ "regex-automata",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2653,6 +2664,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "regex-automata"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c230d73fb8d8c1b9c0b3135c5142a8acee3a0558fb8db5cf1cb65f8d7862132"
+
+[[package]]
 name = "regex-syntax"
 version = "0.6.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2672,6 +2689,7 @@ dependencies = [
  "solana-program",
  "solitaire",
  "wormhole-bridge-solana",
+ "wormhole-sdk",
 ]
 
 [[package]]
@@ -4936,6 +4954,32 @@ dependencies = [
  "sha3 0.9.1",
  "solana-program",
  "solitaire",
+]
+
+[[package]]
+name = "wormhole-core"
+version = "0.1.0"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
+dependencies = [
+ "bstr",
+ "byteorder",
+ "hex",
+ "nom",
+ "primitive-types",
+ "sha3 0.9.1",
+]
+
+[[package]]
+name = "wormhole-sdk"
+version = "0.1.0"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
+dependencies = [
+ "borsh",
+ "nom",
+ "primitive-types",
+ "solana-program",
+ "wormhole-bridge-solana",
+ "wormhole-core",
 ]
 
 [[package]]

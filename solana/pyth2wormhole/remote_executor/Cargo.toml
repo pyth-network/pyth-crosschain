@@ -16,6 +16,7 @@ no-entrypoint = []
 
 [dependencies]
 wormhole-bridge-solana = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9" }
+wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9", features = ["solana", "mainnet"] }
 solitaire = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9"}
 rocksalt = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9"}
 solana-program = "=1.10.31"
