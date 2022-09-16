@@ -1,6 +1,7 @@
 use std::{io::Write, str::FromStr};
 use anchor_lang::prelude::*;
 
+// TO DO : Update this file to use wormhole solana once the sdk is fixed
 impl Owner for PostedVaa {
     fn owner() -> Pubkey{
         Pubkey::from_str("Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o").unwrap() // Placeholder bridge address
