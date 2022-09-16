@@ -30,7 +30,7 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
         PythInternalStructs.DataSource memory ds = PythInternalStructs.DataSource(chainId, emitter);
         require(!PythGetters.isValidDataSource(ds.chainId, ds.emitterAddress), "Data source already added");
 
-        _state.isValidDataSource[keccak256(abi.encodePacked(ds.chainId, ds.emitterAddress))] = true;
+        _state.isValidDataSource[hashDataSource(ds)] = true;
         _state.validDataSources.push(ds);
     }
 
@@ -39,7 +39,7 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
         PythInternalStructs.DataSource memory ds = PythInternalStructs.DataSource(chainId, emitter);
         require(PythGetters.isValidDataSource(ds.chainId, ds.emitterAddress), "Data source not found, not removing");
 
-        _state.isValidDataSource[keccak256(abi.encodePacked(ds.chainId, ds.emitterAddress))] = false;
+        _state.isValidDataSource[hashDataSource(ds)] = false;
 
         for (uint i = 0; i < _state.validDataSources.length;  ++i) {
 

@@ -86,13 +86,13 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
         PythInternalStructs.DataSource[] memory oldDataSources = validDataSources();
 
         for (uint i = 0; i < oldDataSources.length; i += 1) {
-            _state.isValidDataSource[keccak256(abi.encodePacked(oldDataSources[i].chainId, oldDataSources[i].emitterAddress))] = false;
+            _state.isValidDataSource[hashDataSource(oldDataSources[i])] = false;
         }
 
         delete _state.validDataSources;
         for (uint i = 0; i < payload.dataSources.length; i++) {
             _state.validDataSources.push(payload.dataSources[i]);
-            _state.isValidDataSource[keccak256(abi.encodePacked(payload.dataSources[i].chainId, payload.dataSources[i].emitterAddress))] = true;
+            _state.isValidDataSource[hashDataSource(payload.dataSources[i])] = true;
         }
 
         emit DataSourcesSet(oldDataSources, validDataSources());
