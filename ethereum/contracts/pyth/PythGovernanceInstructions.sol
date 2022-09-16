@@ -15,19 +15,19 @@ contract PythGovernanceInstructions {
     using BytesLib for bytes;
 
     enum GovernanceModule {
-        Core, // 1
-        Target, // 2
-        Attest // 3
+        Core, // 0
+        Target, // 1
+        Attest // 2
     }
 
     GovernanceModule constant MODULE = GovernanceModule.Target;
 
     enum GovernanceAction {
-        UpgradeContract, // 1
-        SetGovernanceDataSource, // 2
-        SetDataSources, // 3
-        SetFee, // 4
-        SetValidPeriod // 5
+        UpgradeContract, // 0
+        SetGovernanceDataSource, // 1
+        SetDataSources, // 2
+        SetFee, // 3
+        SetValidPeriod // 4
     }
 
     struct GovernanceInstruction {
@@ -63,16 +63,14 @@ contract PythGovernanceInstructions {
         uint index = 0;
 
         uint8 modNumber = encodedInstruction.toUint8(index);
-        require(modNumber > 0, "invalid module for GovernanceInstruction");
-        gi.module = GovernanceModule(modNumber - 1);
+        gi.module = GovernanceModule(modNumber);
 
         index += 1;
 
         require(gi.module == MODULE, "invalid module for GovernanceInstruction");
 
         uint8 actionNumber = encodedInstruction.toUint8(index);
-        require(modNumber > 0, "invalid action for GovernanceInstruction");
-        gi.action = GovernanceAction(actionNumber - 1);
+        gi.action = GovernanceAction(actionNumber);
 
         index += 1;
 
@@ -86,8 +84,8 @@ contract PythGovernanceInstructions {
     function parseUpgradeContractPayload(bytes memory encodedPayload) public pure returns (UpgradeContractPayload memory uc) {
         uint index = 0;
 
-        uc.newImplementation = address(uint160(uint256(encodedPayload.toBytes32(index))));
-        index += 32;
+        uc.newImplementation = address(encodedPayload.toAddress(index));
+        index += 20;
 
         require(encodedPayload.length == index, "invalid length for UpgradeContractPayload");
     }
