@@ -1,7 +1,11 @@
 require('dotenv').config({ path: "../.env" });
 
 const PythUpgradable = artifacts.require("PythUpgradable");
+const governanceChainId = process.env.GOVERNANCE_CHAIN_ID;
+const governanceEmitter = process.env.GOVERNANCE_EMITTER;
 
+console.log("governanceEmitter: " + governanceEmitter);
+console.log("governanceChainId: " + governanceChainId);
 
 const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 
@@ -14,5 +18,6 @@ const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 module.exports = async function (deployer) {
     const proxy = await PythUpgradable.deployed();
     await upgradeProxy(proxy.address, PythUpgradable, { deployer, unsafeSkipStorageCheck: true });
+    await proxy.updateGovernanceDataSource(governanceChainId, governanceEmitter, 0);
     await proxy.renounceOwnership();
 }

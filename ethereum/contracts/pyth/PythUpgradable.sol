@@ -67,6 +67,13 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
         PythSetters.setValidTimePeriodSeconds(newValidTimePeriodSeconds);
     }
 
+    // Privileged function to update the governance emitter
+    function updateGovernanceDataSource(uint16 chainId, bytes32 emitter, uint64 sequence) onlyOwner public {
+        PythInternalStructs.DataSource memory ds = PythInternalStructs.DataSource(chainId, emitter);
+        PythSetters.setGovernanceDataSource(ds);
+        PythSetters.setLastExecutedGovernanceSequence(sequence);
+    }
+
     /// Ensures the contract cannot be uninitialized and taken over.
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
