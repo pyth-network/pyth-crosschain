@@ -66,6 +66,7 @@ contract PythGovernanceInstructions {
 
         uint32 magic = encodedInstruction.toUint32(index);
         require(magic == MAGIC, "invalid magic for GovernanceInstruction");
+        index += 4;
 
         uint8 modNumber = encodedInstruction.toUint8(index);
         gi.module = GovernanceModule(modNumber);
