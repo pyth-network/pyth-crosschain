@@ -14,6 +14,9 @@ contract PythGovernanceInstructions {
 
     using BytesLib for bytes;
 
+    // Magic is `PTGM` encoded as a 4 byte data: Pyth Governance Message
+    uint32 constant MAGIC = 0x5054474d;
+
     enum GovernanceModule {
         Core, // 0
         Target, // 1
