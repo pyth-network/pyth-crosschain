@@ -70,14 +70,12 @@ contract PythGovernanceInstructions {
 
         uint8 modNumber = encodedInstruction.toUint8(index);
         gi.module = GovernanceModule(modNumber);
-
         index += 1;
 
         require(gi.module == MODULE, "invalid module for GovernanceInstruction");
 
         uint8 actionNumber = encodedInstruction.toUint8(index);
         gi.action = GovernanceAction(actionNumber);
-
         index += 1;
 
         gi.targetChainId = encodedInstruction.toUint16(index);

@@ -15,7 +15,7 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
  * @dev `Governance` defines a means to enacting changes to the Pyth contract.
  */
 abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInstructions {
-    event ContractUpgraded(address oldContract, address newContract);
+    event ContractUpgraded(address oldImplementation, address newImplementation);
     event GovernanceDataSourceSet(PythInternalStructs.DataSource oldDataSource, PythInternalStructs.DataSource newDataSource,
         uint64 initialSequence);
     event DataSourcesSet(PythInternalStructs.DataSource[] oldDataSources, PythInternalStructs.DataSource[] newDataSources);

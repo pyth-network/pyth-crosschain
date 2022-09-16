@@ -50,8 +50,8 @@ export class HexString32Bytes extends HexString {
 
 export class DataSource implements Serializable {
   constructor(
-    private readonly emitterAddress: HexString32Bytes,
     private readonly emitterChain: ChainId,
+    private readonly emitterAddress: HexString32Bytes,
   ) { };
 
   serialize(): Uint8Array {
@@ -165,7 +165,7 @@ export class SetValidPeriodInstruction extends TargetInstruction {
     targetChainId: ChainId,
     private newValidPeriod: bigint,
   ) {
-    super(TargetAction.SetFee, targetChainId);
+    super(TargetAction.SetValidPeriod, targetChainId);
   }
 
   protected serializePayload(): Uint8Array {
