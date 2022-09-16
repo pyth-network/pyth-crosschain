@@ -28,6 +28,7 @@ pub mod remote_executor {
         
         for instruction in payload.instructions.iter().map(Instruction::from) {
             // TO DO: We currently pass `remaining_accounts` down to the CPIs, is there a more efficient way to do it?
+            // TO DO: We don't pass ctx.accounts so executor_key needs to be both in the anchor context and in remaining accounts
             invoke_signed(&instruction, ctx.remaining_accounts, &[&[EXECUTOR_KEY_SEED.as_bytes(), &posted_vaa.emitter_address, &[*ctx.bumps.get("executor_key").unwrap()]]])?;
         }
         Ok(())
@@ -45,6 +46,7 @@ pub struct ExecutePostedVaa<'info> {
     pub posted_vaa : Account<'info, PostedVaa>,
     #[account(seeds = [EXECUTOR_KEY_SEED.as_bytes(), &posted_vaa.emitter_address], bump)]
     pub executor_key : UncheckedAccount<'info>,
+    /// The reason claim record is separated from executor_key is that executor key might need to pay in the CPI, so we want it to be a wallet
     #[account(init_if_needed, space = 8 + get_packed_len::<ClaimRecord>(), payer=payer, seeds = [CLAIM_RECORD_SEED.as_bytes(), &posted_vaa.emitter_address], bump)]
     pub claim_record : Account<'info, ClaimRecord>,
     pub system_program: Program<'info, System>
