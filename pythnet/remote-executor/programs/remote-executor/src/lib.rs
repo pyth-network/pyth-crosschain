@@ -6,10 +6,10 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod remote_executor {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+    pub fn execute_posted_vaa(ctx: Context<ExecutePostedVaa>) -> Result<()> {
         Ok(())
     }
 }
 
 #[derive(Accounts)]
-pub struct Initialize {}
+pub struct ExecutePostedVaa {}
