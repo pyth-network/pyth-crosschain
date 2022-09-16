@@ -14,7 +14,8 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
  */
 abstract contract PythGovernance is Pyth, PythGovernanceInstructions {
     event ContractUpgraded(address oldContract, address newContract);
-    event GovernanceDataSourceSet(PythInternalStructs.DataSource oldDataSource, PythInternalStructs.DataSource newDataSource);
+    event GovernanceDataSourceSet(PythInternalStructs.DataSource oldDataSource, PythInternalStructs.DataSource newDataSource,
+        uint64 initialSequence);
     event DataSourcesSet(PythInternalStructs.DataSource[] oldDataSources, PythInternalStructs.DataSource[] newDataSources);
     event FeeSet(uint oldFee, uint newFee);
     event ValidPeriodSet(uint oldValidPeriod, uint newValidPeriod);
@@ -41,30 +42,30 @@ abstract contract PythGovernance is Pyth, PythGovernanceInstructions {
 
         // We are explicitly checking with number as with enum there might be confusions
         // about the numbers.
-        if (gi.action == 1) { // UpgradeContract
+        if (gi.action == GovernanceAction.UpgradeContract) {
             require(gi.targetChainId != 0, "Upgrade for all the chains does not exists");
             upgradeContract(gi.payload);
-        } else if (gi.action == 2) {
+        } else if (gi.action == GovernanceAction.SetGovernanceDataSource) {
             setGovernanceDataSource(gi.payload);
-        } else if (gi.action == 3) {
+        } else if (gi.action == GovernanceAction.SetDataSources) {
             setDataSources(gi.payload);
-        } else if (gi.action == 4) {
+        } else if (gi.action == GovernanceAction.SetFee) {
             setFee(gi.payload);
-        } else if (gi.action == 5) {
+        } else if (gi.action == GovernanceAction.SetValidPeriod) {
             setValidPeriod(gi.payload);
         } else {
             revert("Invalid governance action");
         }
     }
 
-    // Execute a UpgradeContract governance message
     function upgradeContract(bytes memory encodedPayload) internal {
         UpgradeContractPayload memory payload = parseUpgradeContractPayload(encodedPayload); 
+        // This contract does not have enough access to execute this, it should be executed on the
+        // upgradable
         upgradeUpgradableContract(payload);
     }
 
     function upgradeUpgradableContract(UpgradeContractPayload memory payload) virtual internal;
-
 
     function setGovernanceDataSource(bytes memory encodedPayload) internal {
         SetGovernanceDataSourcePayload memory payload = parseSetGovernanceDataSourcePayload(encodedPayload);
@@ -72,9 +73,9 @@ abstract contract PythGovernance is Pyth, PythGovernanceInstructions {
         PythInternalStructs.DataSource memory oldGovernanceDatSource = governanceDataSource();
 
         setGovernanceDataSource(payload.newGovernanceDataSource);
-        setLastExecutedGovernanceSequence(0);
+        setLastExecutedGovernanceSequence(payload.initialSequence);
 
-        emit GovernanceDataSourceSet(oldGovernanceDatSource, governanceDataSource());
+        emit GovernanceDataSourceSet(oldGovernanceDatSource, governanceDataSource(), lastExecutedGovernanceSequence());
     }
 
     function setDataSources(bytes memory encodedPayload) internal {
@@ -92,7 +93,7 @@ abstract contract PythGovernance is Pyth, PythGovernanceInstructions {
             _state.isValidDataSource[keccak256(abi.encodePacked(payload.dataSources[i].chainId, payload.dataSources[i].emitterAddress))] = true;
         }
 
-        emit DataSourcesSet(oldDataSources, payload.dataSources);
+        emit DataSourcesSet(oldDataSources, validDataSources());
     }
 
     function setFee(bytes memory encodedPayload) internal {
@@ -101,7 +102,7 @@ abstract contract PythGovernance is Pyth, PythGovernanceInstructions {
         uint oldFee = singleUpdateFeeInWei();
         setSingleUpdateFeeInWei(payload.newFee);
 
-        emit FeeSet(oldFee, payload.newFee);
+        emit FeeSet(oldFee, singleUpdateFeeInWei());
     }
 
     function setValidPeriod(bytes memory encodedPayload) internal {
@@ -110,6 +111,6 @@ abstract contract PythGovernance is Pyth, PythGovernanceInstructions {
         uint oldValidPeriod = validTimePeriodSeconds();
         setValidTimePeriodSeconds(payload.newValidPeriod);
 
-        emit ValidPeriodSet(oldValidPeriod, payload.newValidPeriod);
+        emit ValidPeriodSet(oldValidPeriod, validTimePeriodSeconds());
     }
 }

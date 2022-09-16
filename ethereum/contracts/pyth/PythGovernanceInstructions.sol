@@ -11,17 +11,16 @@ import "./PythInternalStructs.sol";
  * for Pyth governance instructions.
  */
 contract PythGovernanceInstructions {
-    // module 2 corresponds to Target Chain contracts
-    uint8 constant MODULE = 2;
 
     using BytesLib for bytes;
 
-    struct GovernanceInstruction {
-        uint8 module;
-        uint8 action;
-        uint16 targetChainId;
-        bytes payload;
+    enum GovernanceModule {
+        Core, // 1
+        Target, // 2
+        Attest // 3
     }
+
+    GovernanceModule constant MODULE = GovernanceModule.Target;
 
     enum GovernanceAction {
         UpgradeContract, // 1
@@ -31,12 +30,20 @@ contract PythGovernanceInstructions {
         SetValidPeriod // 5
     }
 
+    struct GovernanceInstruction {
+        GovernanceModule module;
+        GovernanceAction action;
+        uint16 targetChainId;
+        bytes payload;
+    }
+
     struct UpgradeContractPayload {
         address newImplementation;
     }
 
     struct SetGovernanceDataSourcePayload {
         PythInternalStructs.DataSource newGovernanceDataSource;
+        uint64 initialSequence;
     }
 
     struct SetDataSourcesPayload {
@@ -55,12 +62,18 @@ contract PythGovernanceInstructions {
     function parseGovernanceInstruction(bytes memory encodedInstruction) public pure returns (GovernanceInstruction memory gi) {
         uint index = 0;
 
-        gi.module = encodedInstruction.toUint8(index);
+        uint8 modNumber = encodedInstruction.toUint8(index);
+        require(modNumber > 0, "invalid module for GovernanceInstruction");
+        gi.module = GovernanceModule(modNumber - 1);
+
         index += 1;
 
         require(gi.module == MODULE, "invalid module for GovernanceInstruction");
 
-        gi.action = encodedInstruction.toUint8(index);
+        uint8 actionNumber = encodedInstruction.toUint8(index);
+        require(modNumber > 0, "invalid action for GovernanceInstruction");
+        gi.action = GovernanceAction(actionNumber - 1);
+
         index += 1;
 
         gi.targetChainId = encodedInstruction.toUint16(index);
@@ -88,6 +101,9 @@ contract PythGovernanceInstructions {
 
         sgds.newGovernanceDataSource.emitterAddress = encodedPayload.toBytes32(index);
         index += 32;
+
+        sgds.initialSequence = encodedPayload.toUint64(index);
+        index += 8;
 
         require(encodedPayload.length == index, "invalid length for SetGovernanceDataSourcePayload");
     }

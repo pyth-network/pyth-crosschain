@@ -74,9 +74,9 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
 
     // Execute a UpgradeContract governance message
     function upgradeUpgradableContract(UpgradeContractPayload memory payload) override internal {
-        address currentImplementation = _getImplementation();
+        address oldImplementation = _getImplementation();
         _upgradeToAndCallUUPS(payload.newImplementation, new bytes(0), false);
 
-        emit ContractUpgraded(currentImplementation, payload.newImplementation);
+        emit ContractUpgraded(oldImplementation, _getImplementation());
     }
 }
