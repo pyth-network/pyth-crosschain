@@ -10,8 +10,10 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./PythGovernance.sol";
+import "./Pyth.sol";
 
-contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, PythGovernance {
+
+contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pyth, PythGovernance {
     function initialize(
         address wormhole,
         uint16 pyth2WormholeChainId,

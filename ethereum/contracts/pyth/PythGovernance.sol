@@ -5,14 +5,16 @@ pragma solidity ^0.8.0;
 
 import "./PythGovernanceInstructions.sol";
 import "./PythInternalStructs.sol";
-import "./Pyth.sol";
+import "./PythGetters.sol";
+import "./PythSetters.sol";
+
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
 
 /**
  * @dev `Governance` defines a means to enacting changes to the Pyth contract.
  */
-abstract contract PythGovernance is Pyth, PythGovernanceInstructions {
+abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInstructions {
     event ContractUpgraded(address oldContract, address newContract);
     event GovernanceDataSourceSet(PythInternalStructs.DataSource oldDataSource, PythInternalStructs.DataSource newDataSource,
         uint64 initialSequence);
