@@ -130,8 +130,13 @@ contract PythGovernanceInstructions {
     function parseSetFeePayload(bytes memory encodedPayload) public pure returns (SetFeePayload memory sf) {
         uint index = 0;
 
-        sf.newFee = encodedPayload.toUint256(index);
-        index += 32;
+        uint64 val = encodedPayload.toUint64(index);
+        index += 8;
+
+        uint64 expo = encodedPayload.toUint64(index);
+        index += 8;
+
+        sf.newFee = uint256(val) * uint256(10)**uint256(expo);
 
         require(encodedPayload.length == index, "invalid length for SetFeePayload");
     }
@@ -140,8 +145,8 @@ contract PythGovernanceInstructions {
     function parseSetValidPeriodPayload(bytes memory encodedPayload) public pure returns (SetValidPeriodPayload memory svp) {
         uint index = 0;
 
-        svp.newValidPeriod = encodedPayload.toUint256(index);
-        index += 32;
+        svp.newValidPeriod = uint256(encodedPayload.toUint64(index));
+        index += 8;
 
         require(encodedPayload.length == index, "invalid length for SetValidPeriodPayload");
     }
