@@ -18,9 +18,8 @@ contract PythGovernanceInstructions {
     uint32 constant MAGIC = 0x5054474d;
 
     enum GovernanceModule {
-        Core, // 0
-        Target, // 1
-        Attest // 2
+        Executor, // 0
+        Target // 1
     }
 
     GovernanceModule constant MODULE = GovernanceModule.Target;
@@ -64,6 +63,9 @@ contract PythGovernanceInstructions {
     /// @dev Parse a GovernanceInstruction
     function parseGovernanceInstruction(bytes memory encodedInstruction) public pure returns (GovernanceInstruction memory gi) {
         uint index = 0;
+
+        uint32 magic = encodedInstruction.toUint32(index);
+        require(magic == MAGIC, "invalid magic for GovernanceInstruction");
 
         uint8 modNumber = encodedInstruction.toUint8(index);
         gi.module = GovernanceModule(modNumber);

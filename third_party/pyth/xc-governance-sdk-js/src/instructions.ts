@@ -3,9 +3,8 @@ import { ChainId } from "@certusone/wormhole-sdk";
 import { SerializeUtils, Serializable } from "./serialize";
 
 enum Module {
-  Core = 0,
+  Executor = 0,
   Target,
-  Attest,
 }
 
 enum TargetAction {
