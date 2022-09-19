@@ -16,13 +16,13 @@ PYTH_TEST_SYMBOL_COUNT = int(os.environ.get("PYTH_TEST_SYMBOL_COUNT", "9"))
 
 class PythAccEndpoint(BaseHTTPRequestHandler):
     """
-    A dumb endpoint to respond with a JSON containing Pyth account addresses
+    A dumb endpoint to respond with a JSON containing Pyth symbol and mapping addresses
     """
 
     def do_GET(self):
         print(f"Got path {self.path}")
         sys.stdout.flush()
-        data = json.dumps(TEST_SYMBOLS).encode("utf-8")
+        data = json.dumps(HTTP_ENDPOINT_DATA).encode("utf-8")
         print(f"Sending:\n{data}")
 
         self.send_response(200)
@@ -32,8 +32,8 @@ class PythAccEndpoint(BaseHTTPRequestHandler):
         self.wfile.write(data)
         self.wfile.flush()
 
-
-TEST_SYMBOLS = []
+# Test publisher state that gets served via the HTTP endpoint. Note: the schema of this dict is extended here and there
+HTTP_ENDPOINT_DATA = {"symbols": [], "mapping_address": None}
 
 
 def publisher_random_update(price_pubkey):
@@ -92,12 +92,11 @@ def add_symbol(num: int):
         "price": price_pubkey
     }
 
-    TEST_SYMBOLS.append(sym)
+    HTTP_ENDPOINT_DATA["symbols"].append(sym)
 
     sys.stdout.flush()
 
     return num
-
 
 # Fund the publisher
 sol_run_or_die("airdrop", [
@@ -107,7 +106,15 @@ sol_run_or_die("airdrop", [
 ])
 
 # Create a mapping
-pyth_admin_run_or_die("init_mapping")
+pyth_admin_run_or_die("init_mapping", capture_output=True)
+
+mapping_addr = sol_run_or_die("address", args=[
+    "--keypair", PYTH_MAPPING_KEYPAIR
+], capture_output=True).stdout.strip()
+
+HTTP_ENDPOINT_DATA["mapping_addr"] = mapping_addr
+
+print(f"New mapping at {mapping_addr}")
 
 print(f"Creating {PYTH_TEST_SYMBOL_COUNT} test Pyth symbols")
 
@@ -134,7 +141,7 @@ readiness_thread.start()
 http_service.start()
 
 while True:
-    for sym in TEST_SYMBOLS:
+    for sym in HTTP_ENDPOINT_DATA["symbols"]:
         publisher_random_update(sym["price"])
 
     time.sleep(PYTH_PUBLISHER_INTERVAL)

@@ -176,6 +176,12 @@ async fn main() -> Result<(), ErrBox> {
             let attestation_cfg: AttestationConfig =
                 serde_yaml::from_reader(File::open(attestation_cfg)?)?;
 
+
+            if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
+            let additional_accounts = crawl_pyth_mapping(&rpc_client, mapping_addr).await?;
+            info!("Additional mapping accounts:\n{:#?}", additional_accounts);
+        }
+
             handle_attest(
                 cli.rpc_url,
                 Duration::from_millis(cli.rpc_interval_ms),

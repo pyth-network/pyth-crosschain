@@ -328,7 +328,7 @@ pub fn gen_attest_tx(
 
 /// Enumerates all products and their prices in a Pyth mapping.
 /// Returns map of: product address => [price addresses]
-pub async fn crawl_pyth_mapping(rpc_client: &RpcClient, first_mapping_addr: &Pubkey) -> Result<HashMap<Pubkey, HashSet<Pubkey>>, ErrBoxSend> {
+pub async fn crawl_pyth_mapping(rpc_client: &RpcClient, first_mapping_addr: &Pubkey) -> Result<HashMap<Pubkey, HashSet<Pubkey>>, ErrBox> {
     let mut ret = HashMap::new();
 
     let mut n_mappings = 1; // We assume the first one must be valid

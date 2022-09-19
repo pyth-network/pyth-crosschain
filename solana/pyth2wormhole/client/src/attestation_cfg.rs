@@ -19,6 +19,12 @@ pub struct AttestationConfig {
     pub min_msg_reuse_interval_ms: u64,
     #[serde(default = "default_max_msg_accounts")]
     pub max_msg_accounts: u64,
+    /// Optionally, we take a mapping account to add remaining symbols from a Pyth deployments. These symbols are processed under attestation conditions for the `default` symbol group.
+    #[serde(
+        deserialize_with = "opt_pubkey_string_de",
+        serialize_with = "opt_pubkey_string_ser"
+    )]
+    pub mapping_addr: Option<Pubkey>,
     pub symbol_groups: Vec<SymbolGroup>,
 }
 
@@ -116,6 +122,25 @@ where
     Ok(pubkey)
 }
 
+fn opt_pubkey_string_ser<S>(k_opt: &Option<Pubkey>, ser: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let k_str_opt = k_opt.clone().map(|k| k.to_string());
+
+    Option::<String>::serialize(&k_str_opt, ser)
+}
+
+fn opt_pubkey_string_de<'de, D>(de: D) -> Result<Option<Pubkey>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    match Option::<String>::deserialize(de)? {
+        Some(k) => Ok(Some(Pubkey::from_str(&k).map_err(D::Error::custom)?)),
+        None => Ok(None),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -163,6 +188,7 @@ mod tests {
         let cfg = AttestationConfig {
             min_msg_reuse_interval_ms: 1000,
             max_msg_accounts: 100_000,
+            mapping_addr: None,
             symbol_groups: vec![fastbois, slowbois],
         };
 
