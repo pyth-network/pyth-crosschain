@@ -2079,8 +2079,8 @@ name = "p2w-sdk"
 version = "0.1.1"
 dependencies = [
  "hex",
- "pyth-sdk",
- "pyth-sdk-solana",
+ "pyth-sdk 0.5.0",
+ "pyth-sdk-solana 0.5.0",
  "serde",
  "solana-program",
  "solitaire",
@@ -2356,6 +2356,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyth-sdk"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a993cc2b76d9842ee92f00d3104a67d403e8a5a745d2474caf42361b3fc815a"
+dependencies = [
+ "borsh",
+ "borsh-derive",
+ "hex",
+ "schemars",
+ "serde",
+]
+
+[[package]]
 name = "pyth-sdk-solana"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2366,7 +2379,24 @@ dependencies = [
  "bytemuck",
  "num-derive",
  "num-traits",
- "pyth-sdk",
+ "pyth-sdk 0.5.0",
+ "serde",
+ "solana-program",
+ "thiserror",
+]
+
+[[package]]
+name = "pyth-sdk-solana"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97f071fdeb5129de07a2cb70bb4f3a9e4be1e4cc6b85132bdea0967e601eb757"
+dependencies = [
+ "borsh",
+ "borsh-derive",
+ "bytemuck",
+ "num-derive",
+ "num-traits",
+ "pyth-sdk 0.6.1",
  "serde",
  "solana-program",
  "thiserror",
@@ -2399,7 +2429,7 @@ dependencies = [
  "log",
  "p2w-sdk",
  "pyth-client 0.5.1",
- "pyth-sdk-solana",
+ "pyth-sdk-solana 0.6.1",
  "pyth2wormhole",
  "serde",
  "serde_yaml",
