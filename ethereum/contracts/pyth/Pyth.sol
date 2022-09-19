@@ -227,6 +227,10 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         return validTimePeriodSeconds();
     }
 
+    function isPyth() internal pure returns (bool) {
+        return true;
+    }
+
     function version() public pure returns (string memory) {
         return "1.0.0";
     }
