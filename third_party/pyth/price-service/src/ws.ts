@@ -82,20 +82,14 @@ export class WebSocketAPI {
       return;
     }
 
+    const clients: Set<WebSocket> = this.priceFeedClients.get(priceInfo.priceFeed.id)!;
     logger.info(
       `Sending ${priceInfo.priceFeed.id} price update to ${
-        this.priceFeedClients.get(priceInfo.priceFeed.id)!.size
-      } clients`
+        clients.size
+      } clients: ${Array.from(clients.values()).map((ws, _, _) => this.wsId.get(ws))}`
     );
 
-    for (let client of this.priceFeedClients
-      .get(priceInfo.priceFeed.id)!
-      .values()) {
-      logger.info(
-        `Sending ${
-          priceInfo.priceFeed.id
-        } price update to client ${this.wsId.get(client)}`
-      );
+    for (let client of clients.values()) {
       this.promClient?.addWebSocketInteraction("server_update", "ok");
 
       let verbose = this.priceFeedClientsVerbosity
