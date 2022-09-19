@@ -86,7 +86,7 @@ export class WebSocketAPI {
     logger.info(
       `Sending ${priceInfo.priceFeed.id} price update to ${
         clients.size
-      } clients: ${Array.from(clients.values()).map((ws, _, _) => this.wsId.get(ws))}`
+      } clients: ${Array.from(clients.values()).map((ws, _idx, _arr) => this.wsId.get(ws))}`
     );
 
     for (let client of clients.values()) {
