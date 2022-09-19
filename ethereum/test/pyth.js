@@ -732,7 +732,7 @@ contract("Pyth", function () {
         // First 4 bytes of data are magic and the second byte after that is module
         const data = new governance.SetValidPeriodInstruction(governance.CHAINS.ethereum, BigInt(10)).serialize();
 
-        const wrongMagic = new Uint8Array(data);
+        const wrongMagic = Buffer.from(data);
         wrongMagic[1] = 0;
 
         const vaaWrongMagic = await createVAAFromUint8Array(wrongMagic,
@@ -746,7 +746,7 @@ contract("Pyth", function () {
             "invalid magic for GovernanceInstruction"
         );
 
-        const wrongModule = new Uint8Array(data);
+        const wrongModule = Buffer.from(data);
         wrongModule[4] = 0;
 
         const vaaWrongModule = await createVAAFromUint8Array(wrongModule,
@@ -760,7 +760,7 @@ contract("Pyth", function () {
             "invalid module for GovernanceInstruction"
         );
 
-        const outOfBoundModule = new Uint8Array(data);
+        const outOfBoundModule = Buffer.from(data);
         outOfBoundModule[4] = 20;
 
         const vaaOutOfBoundModule = await createVAAFromUint8Array(outOfBoundModule,
