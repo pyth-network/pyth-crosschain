@@ -873,10 +873,29 @@ contract("Pyth", function () {
     });
 
     // Per governance type logic
+    it("Upgrading the contract with chain id 0 is invalid", async function () {
+        const newImplementation = await PythUpgradable.new();
+
+        const data = new governance.EthereumUpgradeContractInstruction(
+            governance.CHAINS.unset, // 0
+            new governance.HexString20Bytes(newImplementation.address),
+        ).serialize();
+
+        const vaa = await createVAAFromUint8Array(data,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(vaa),
+            "upgrade with chain id 0 is not possible"
+        );
+    });
+
+
     it("Upgrading the contract should work", async function () {
         const newImplementation = await PythUpgradable.new();
-        console.log(newImplementation);
-    
         
         const data = new governance.EthereumUpgradeContractInstruction(
             governance.CHAINS.ethereum,

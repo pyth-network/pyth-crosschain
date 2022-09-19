@@ -45,7 +45,7 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
         // We are explicitly checking with number as with enum there might be confusions
         // about the numbers.
         if (gi.action == GovernanceAction.UpgradeContract) {
-            require(gi.targetChainId != 0, "Upgrade for all the chains does not exists");
+            require(gi.targetChainId != 0, "upgrade with chain id 0 is not possible");
             upgradeContract(gi.payload);
         } else if (gi.action == GovernanceAction.SetGovernanceDataSource) {
             setGovernanceDataSource(gi.payload);
