@@ -42,8 +42,6 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
 
         require(gi.targetChainId == chainId() || gi.targetChainId == 0, "invalid target chain for this governance instruction");
 
-        // We are explicitly checking with number as with enum there might be confusions
-        // about the numbers.
         if (gi.action == GovernanceAction.UpgradeContract) {
             require(gi.targetChainId != 0, "upgrade with chain id 0 is not possible");
             upgradeContract(gi.payload);
