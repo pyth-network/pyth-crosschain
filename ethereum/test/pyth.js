@@ -1180,12 +1180,12 @@ function zeroPadBytes(value, length) {
 }
 
 async function createVAAFromUint8Array(
-    dataUint8Array,
+    dataBuffer,
     emitterChainId,
     emitterAddress,
     sequence,
 ) {
-    const dataHex = "0x" + Buffer.from(dataUint8Array).toString("hex");
+    const dataHex = "0x" + dataBuffer.toString("hex");
     return "0x" + await signAndEncodeVM(
         0,
         0,

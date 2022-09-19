@@ -1,68 +1,63 @@
 export interface Serializable {
-  serialize(): Uint8Array;
+  serialize(): Buffer;
 }
 
-export class SerializeUtils {
-  static concat(...arrays: Uint8Array[]): Uint8Array {
-    const totalLength = arrays.reduce((prev, cur) => (prev + cur.length), 0);
+export class BufferBuilder {
+  private items: Buffer[];
 
-    const result = new Uint8Array(totalLength);
+  constructor() {
+    this.items = [];
+  }
+
+  addUint8(value: number): BufferBuilder {
+    const buffer = Buffer.alloc(1);
+    buffer.writeUint8(value);
+    this.items.push(buffer);
+    return this;
+  }
+
+  addUint16(value: number): BufferBuilder {
+    const buffer = Buffer.alloc(2);
+    buffer.writeUint16BE(value);
+    this.items.push(buffer);
+    return this;
+  }
+
+  addUint32(value: number): BufferBuilder {
+    const buffer = Buffer.alloc(4);
+    buffer.writeUint32BE(value);
+    this.items.push(buffer);
+    return this;
+  }
+
+  addBigUint64(value: bigint): BufferBuilder {
+    const buffer = Buffer.alloc(8);
+    buffer.writeBigInt64BE(value);
+    this.items.push(buffer);
+    return this;
+  }
+
+  addObject(obj: Serializable): BufferBuilder {
+    this.items.push(obj.serialize());
+    return this;
+  }
+
+  addBuffer(buffer: Buffer): BufferBuilder {
+    this.items.push(buffer);
+    return this;
+  }
+
+  build(): Buffer {
+    const totalLength = this.items.reduce((prev, cur) => (prev + cur.length), 0);
+
+    const result = Buffer.alloc(totalLength);
 
     let offset = 0;
-    for (const arr of arrays) {
+    for (const arr of this.items) {
       result.set(arr, offset);
       offset += arr.length;
     }
 
     return result;
-  }
-
-  static serializeUint8(value: number): Uint8Array {
-    const result = new ArrayBuffer(1);
-    const dv = new DataView(result);
-    dv.setUint8(0, value);
-    return new Uint8Array(result);
-  }
-
-  static serializeUint16(value: number): Uint8Array {
-    const result = new ArrayBuffer(2);
-    const dv = new DataView(result);
-    dv.setUint16(0, value);
-    return new Uint8Array(result);
-  }
-
-  static serializeUint32(value: number): Uint8Array {
-    const result = new ArrayBuffer(4);
-    const dv = new DataView(result);
-    dv.setUint32(0, value);
-    return new Uint8Array(result);
-  }
-
-  static serializeBigUint64(value: bigint): Uint8Array {
-    const result = new ArrayBuffer(8);
-    const dv = new DataView(result);
-    dv.setBigUint64(0, value);
-    return new Uint8Array(result);
-  }
-
-  static serializeBigUint256(value: bigint): Uint8Array {
-    const result = new ArrayBuffer(32);
-    const dv = new DataView(result);
-
-    const MASK_64_BIT = ((BigInt(1) << BigInt(64)) - BigInt(1));
-    let revOffset = 32;
-    for (let i = 0; i < 4; i++) {
-      const chunk = value & MASK_64_BIT;
-      dv.setBigUint64(revOffset - 8, chunk);
-
-      revOffset -= 8;
-      value >>= BigInt(64);
-    }
-
-    if (value !== BigInt(0)) {
-      throw new Error("Invalid 256-bit bigint");
-    }
-
-    return new Uint8Array(result);
   }
 }

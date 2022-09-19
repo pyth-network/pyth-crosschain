@@ -1,6 +1,6 @@
 import { ChainId } from "@certusone/wormhole-sdk";
 
-import { SerializeUtils, Serializable } from "./serialize";
+import {  Serializable, BufferBuilder } from "./serialize";
 
 enum Module {
   Executor = 0,
@@ -31,8 +31,8 @@ abstract class HexString implements Serializable {
     }
   }
 
-  serialize(): Uint8Array {
-    return Uint8Array.from(this.addressBuffer.values());
+  serialize(): Buffer {
+    return this.addressBuffer;
   }
 }
 
@@ -54,11 +54,11 @@ export class DataSource implements Serializable {
     private readonly emitterAddress: HexString32Bytes,
   ) { };
 
-  serialize(): Uint8Array {
-    return SerializeUtils.concat(
-      SerializeUtils.serializeUint16(Number(this.emitterChain)),
-      this.emitterAddress.serialize()
-    );
+  serialize(): Buffer {
+    return new BufferBuilder()
+      .addUint16(Number(this.emitterChain))
+      .addObject(this.emitterAddress)
+      .build();
   }
 }
 
@@ -72,19 +72,22 @@ abstract class Instruction implements Serializable {
     private targetChainId: ChainId,
   ) { };
 
-  protected abstract serializePayload(): Uint8Array;
+  protected abstract serializePayload(): Buffer;
 
-  private serializeHeader(): Uint8Array {
-    return SerializeUtils.concat(
-      SerializeUtils.serializeUint32(MAGIC),
-      SerializeUtils.serializeUint8(this.module),
-      SerializeUtils.serializeUint8(this.action),
-      SerializeUtils.serializeUint16(Number(this.targetChainId))
-    );
+  private serializeHeader(): Buffer {
+    return new BufferBuilder()
+      .addUint32(MAGIC)
+      .addUint8(this.module)
+      .addUint8(this.action)
+      .addUint16(Number(this.targetChainId))
+      .build();
   }
 
-  public serialize(): Uint8Array {
-    return SerializeUtils.concat(this.serializeHeader(), this.serializePayload());
+  public serialize(): Buffer {
+    return new BufferBuilder()
+      .addBuffer(this.serializeHeader())
+      .addBuffer(this.serializePayload())
+      .build();
   }
 }
 
@@ -105,7 +108,7 @@ export class EthereumUpgradeContractInstruction extends TargetInstruction {
     super(TargetAction.UpgradeContract, targetChainId);
   }
 
-  protected serializePayload(): Uint8Array {
+  protected serializePayload(): Buffer {
     return this.address.serialize();
   }
 }
@@ -119,11 +122,11 @@ export class SetGovernanceDataSourceInstruction extends TargetInstruction {
     super(TargetAction.SetGovernanceDataSource, targetChainId);
   }
 
-  protected serializePayload(): Uint8Array {
-    return SerializeUtils.concat(
-      this.governanceDataSource.serialize(),
-      SerializeUtils.serializeBigUint64(this.initialSequence),
-    );
+  protected serializePayload(): Buffer {
+    return new BufferBuilder()
+      .addObject(this.governanceDataSource)
+      .addBigUint64(this.initialSequence)
+      .build();
   }
 }
 
@@ -135,11 +138,11 @@ export class SetDataSourcesInstruction extends TargetInstruction {
     super(TargetAction.SetDataSources, targetChainId);
   }
 
-  protected serializePayload(): Uint8Array {
-    return SerializeUtils.concat(
-      SerializeUtils.serializeUint8(this.dataSources.length),
-      ...this.dataSources.map(ds => ds.serialize())
-    );
+  protected serializePayload(): Buffer {
+    const builder = new BufferBuilder()
+    builder.addUint8(this.dataSources.length);
+    this.dataSources.forEach(datasource => builder.addObject(datasource));
+    return builder.build();
   }
 }
 
@@ -152,11 +155,11 @@ export class SetFeeInstruction extends TargetInstruction {
     super(TargetAction.SetFee, targetChainId);
   }
 
-  protected serializePayload(): Uint8Array {
-    return SerializeUtils.concat(
-      SerializeUtils.serializeBigUint64(this.newFeeValue),
-      SerializeUtils.serializeBigUint64(this.newFeeExpo)
-    );
+  protected serializePayload(): Buffer {
+    return new BufferBuilder()
+      .addBigUint64(this.newFeeValue)
+      .addBigUint64(this.newFeeExpo)
+      .build();
   }
 }
 
@@ -168,7 +171,9 @@ export class SetValidPeriodInstruction extends TargetInstruction {
     super(TargetAction.SetValidPeriod, targetChainId);
   }
 
-  protected serializePayload(): Uint8Array {
-    return SerializeUtils.serializeBigUint64(this.newValidPeriod);
+  protected serializePayload(): Buffer {
+    return new BufferBuilder()
+      .addBigUint64(this.newValidPeriod)
+      .build();
   }
 }
