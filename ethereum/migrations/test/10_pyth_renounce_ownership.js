@@ -10,13 +10,12 @@ console.log("governanceChainId: " + governanceChainId);
 const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 
 /**
- * Version 1.0.0
+ * Version 1.0.0 - 2nd step
  * 
  * This change:
- * - Add Governance coming from the Wormhole to manage the contract.
+ * - Renounce single ownership, the contract will be managed by only the governance
  */
-module.exports = async function (deployer) {
+module.exports = async function (_deployer) {
     const proxy = await PythUpgradable.deployed();
-    await upgradeProxy(proxy.address, PythUpgradable, { deployer, unsafeSkipStorageCheck: true });
-    await proxy.updateGovernanceDataSource(governanceChainId, governanceEmitter, 0);
+    await proxy.renounceOwnership();
 }
