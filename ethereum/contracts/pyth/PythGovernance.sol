@@ -40,7 +40,7 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
 
         GovernanceInstruction memory gi = parseGovernanceInstruction(vm.payload);
 
-        require(gi.targetChainId == chainId() || gi.targetChainId == 0, "Invalid target chain for this governance instruction");
+        require(gi.targetChainId == chainId() || gi.targetChainId == 0, "invalid target chain for this governance instruction");
 
         // We are explicitly checking with number as with enum there might be confusions
         // about the numbers.
@@ -56,7 +56,7 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
         } else if (gi.action == GovernanceAction.SetValidPeriod) {
             setValidPeriod(gi.payload);
         } else {
-            revert("Invalid governance action");
+            revert("invalid governance action");
         }
     }
 

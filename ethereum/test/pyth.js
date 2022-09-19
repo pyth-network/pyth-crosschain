@@ -33,7 +33,7 @@ contract("Pyth", function () {
     const notOwnerError =
         "Ownable: caller is not the owner -- Reason given: Ownable: caller is not the owner.";
     const insufficientFeeError = 
-        "Insufficient paid fee amount";
+        "insufficient paid fee amount";
 
     // Place all atomic operations that are done within migrations here.
     beforeEach(async function () {
@@ -812,7 +812,7 @@ contract("Pyth", function () {
 
         await expectRevert(
             this.pythProxy.executeGovernanceInstruction(wrongChainVaa),
-            "Invalid target chain for this governance instruction"
+            "invalid target chain for this governance instruction"
         );
 
         const dataForAllChains = new governance.SetValidPeriodInstruction(governance.CHAINS.unset, BigInt(10)).serialize();
@@ -1049,7 +1049,7 @@ contract("Pyth", function () {
         );
         await expectRevert(
             updatePriceFeeds(this.pythProxy, [rawBatch], 0),
-            "Insufficient paid fee amount"
+            insufficientFeeError
         );
 
         const receiptUpdateFeeds = await updatePriceFeeds(this.pythProxy, [rawBatch], 5000);
