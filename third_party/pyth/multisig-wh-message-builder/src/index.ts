@@ -44,7 +44,7 @@ program
     "multisig wallet secret key filepath",
     "keys/key.json"
   )
-  .option("-p, --payload <string>", "payload to sign", "hello world")
+  .option("-p, --payload <hex-string>", "payload to sign", "0xdeadbeef")
   .action((options) => {
     createMultisigTx(
       options.cluster,
@@ -131,6 +131,10 @@ async function getWormholeMessageIx(
   const bridgeStateParsed = parse_state(bridgeAccountInfo!.data);
   const bridgeFee = bridgeStateParsed.config.fee;
 
+  if (payload.startsWith("0x")) {
+    payload = payload.substring(2);
+  }
+
   return [
     SystemProgram.transfer({
       fromPubkey: payer,
@@ -144,7 +148,7 @@ async function getWormholeMessageIx(
         emitter.toBase58(),
         message.toBase58(),
         0,
-        new TextEncoder().encode(payload),
+        Uint8Array.from(Buffer.from(payload, 'hex')),
         "CONFIRMED"
       )
     ),
@@ -355,7 +359,7 @@ async function executeMultisigTx(
   const parsedVaa = await parse(vaaBytes);
   console.log(`Emitter chain: ${parsedVaa.emitter_chain}`);
   console.log(`Nonce: ${parsedVaa.nonce}`);
-  console.log(`Payload: ${Buffer.from(parsedVaa.payload).toString()}`);
+  console.log(`Payload: ${Buffer.from(parsedVaa.payload).toString('hex')}`);
 }
 
 async function parse(data: string) {
