@@ -22,3 +22,4 @@ overflow-checks = true
 anchor-lang = {version = "0.25.0", features = ["init-if-needed"]}
 wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "gbescos/sdk-solana"}
 wormhole-core = { git = "https://github.com/guibescos/wormhole", branch = "gbescos/sdk-solana"}
+boolinator = "2.4.0"

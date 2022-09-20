@@ -8,12 +8,10 @@ use anchor_lang::{
     prelude::*,
     solana_program::instruction::Instruction,
 };
+use boolinator::Boolinator;
 use wormhole::Chain;
 
-use crate::{
-    assert_or_err,
-    error::ExecutorError,
-};
+use crate::error::ExecutorError;
 
 pub const MAGIC_NUMBER: u32 = 0x4d475450; // Reverse order of the solidity contract because borsh uses little endian numbers
 
@@ -126,21 +124,13 @@ impl ExecutorPayload {
     const ACTION: Action = Action::ExecutePostedVaa;
 
     pub fn check_header(&self) -> Result<()> {
-        assert_or_err(
-            self.header.magic_number == MAGIC_NUMBER,
-            err!(ExecutorError::GovernanceHeaderInvalidMagicNumber),
-        )?;
-        assert_or_err(
-            self.header.module == ExecutorPayload::MODULE,
-            err!(ExecutorError::GovernanceHeaderInvalidMagicNumber),
-        )?;
-        assert_or_err(
-            self.header.action == ExecutorPayload::ACTION,
-            err!(ExecutorError::GovernanceHeaderInvalidMagicNumber),
-        )?;
-        assert_or_err(
-            Chain::from(self.header.chain.value) == Chain::Pythnet,
-            err!(ExecutorError::GovernanceHeaderInvalidMagicNumber),
-        )
+        (self.header.magic_number == MAGIC_NUMBER)
+            .ok_or(error!(ExecutorError::GovernanceHeaderInvalidMagicNumber))?;
+        (self.header.module == ExecutorPayload::MODULE)
+            .ok_or(error!(ExecutorError::GovernanceHeaderInvalidMagicNumber))?;
+        (self.header.action == ExecutorPayload::ACTION)
+            .ok_or(error!(ExecutorError::GovernanceHeaderInvalidMagicNumber))?;
+        (Chain::from(self.header.chain.value) == Chain::Pythnet)
+            .ok_or(error!(ExecutorError::GovernanceHeaderInvalidMagicNumber))
     }
 }
