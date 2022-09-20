@@ -9,13 +9,13 @@ repos:
       - id: check-added-large-files
   - repo: local
     hooks:
-      - id: cargo-fmt-nightly
-        name: Cargo Fmt Nightly
+      - id: cargo-fmt-executor
+        name: Cargo format executor
         language: "rust"
-        entry: cd pythnet/ && cargo +nightly fmt
+        entry: cargo +nightly fmt --manifest-path ./pythnet/remote-executor/Cargo.toml
         pass_filenames: false
-      - id: cargo-clippy
-        name: Cargo clippy
+      - id: cargo-clippy-executor
+        name: Cargo clippy executor
         language: "rust"
-        entry: cd pythnet/ && cargo +nightly fmt && cargo +nightly clippy -- -D warnings
+        entry: cargo +nightly clippy --manifest-path ./pythnet/remote-executor/Cargo.toml -- -D warnings
         pass_filenames: false

@@ -1,9 +1,19 @@
-use std::{io::ErrorKind, mem::size_of, ops::Deref};
+use std::{
+    io::ErrorKind,
+    mem::size_of,
+    ops::Deref,
+};
 
-use anchor_lang::{prelude::*, solana_program::instruction::Instruction};
+use anchor_lang::{
+    prelude::*,
+    solana_program::instruction::Instruction,
+};
 use wormhole::Chain;
 
-use crate::{assert_or_err, error::ExecutorError};
+use crate::{
+    assert_or_err,
+    error::ExecutorError,
+};
 
 pub const MAGIC_NUMBER: u32 = 0x4d475450; // Reverse order of the solidity contract because borsh uses little endian numbers
 
@@ -14,13 +24,13 @@ pub struct ExecutorPayload {
     pub instructions: Vec<InstructionData>,
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, PartialEq)]
+#[derive(AnchorDeserialize, AnchorSerialize, PartialEq, Eq)]
 pub enum Module {
     Executor = 0,
     Target,
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, PartialEq)]
+#[derive(AnchorDeserialize, AnchorSerialize, PartialEq, Eq)]
 pub enum Action {
     ExecutePostedVaa = 0,
 }

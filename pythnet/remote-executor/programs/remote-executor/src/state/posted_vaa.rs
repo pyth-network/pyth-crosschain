@@ -29,7 +29,7 @@ impl AccountDeserialize for AnchorVaa {
 impl AccountSerialize for AnchorVaa {
     // Make this fail, this is readonly VAA it should never be serialized by this program
     fn try_serialize<W: Write>(&self, _writer: &mut W) -> Result<()> {
-        return Err(anchor_lang::error::ErrorCode::AccountDidNotSerialize.into());
+        Err(anchor_lang::error::ErrorCode::AccountDidNotSerialize.into())
     }
 }
 

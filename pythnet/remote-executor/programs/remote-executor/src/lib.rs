@@ -1,7 +1,14 @@
 #![deny(warnings)]
+#![allow(clippy::result_large_err)]
 
-use anchor_lang::{prelude::*, solana_program::borsh::get_packed_len};
-use state::{claim_record::ClaimRecord, posted_vaa::AnchorVaa};
+use anchor_lang::{
+    prelude::*,
+    solana_program::borsh::get_packed_len,
+};
+use state::{
+    claim_record::ClaimRecord,
+    posted_vaa::AnchorVaa,
+};
 
 mod error;
 mod state;
@@ -10,10 +17,19 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
 pub mod remote_executor {
-    use anchor_lang::solana_program::{instruction::Instruction, program::invoke_signed};
-    use wormhole::Chain::{self, Solana};
+    use anchor_lang::solana_program::{
+        instruction::Instruction,
+        program::invoke_signed,
+    };
+    use wormhole::Chain::{
+        self,
+        Solana,
+    };
 
-    use crate::{error::ExecutorError, state::governance_payload::ExecutorPayload};
+    use crate::{
+        error::ExecutorError,
+        state::governance_payload::ExecutorPayload,
+    };
 
     use super::*;
 
