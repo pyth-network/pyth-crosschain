@@ -155,11 +155,11 @@ k8s_resource(
 
 docker_build(
     ref = "eth-node",
-    context = "./ethereum",
-    dockerfile = "./ethereum/Dockerfile",
+    context = "./",
+    dockerfile = "./Dockerfile.ethereum",
 
     # ignore local node_modules (in case they're present)
-    ignore = ["./ethereum/node_modules"],
+    ignore = ["./ethereum/node_modules", "./third_party/pyth/xc-governance-sdk-js/node_modules"],
 
     # sync external scripts for incremental development
     # (everything else needs to be restarted from scratch for determinism)

@@ -57,7 +57,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
     function updatePriceFeeds(bytes[] calldata updateData) public override payable {
         uint requiredFee = getUpdateFee(updateData.length);
-        require(msg.value >= requiredFee, "Insufficient paid fee amount");
+        require(msg.value >= requiredFee, "insufficient paid fee amount");
         payable(msg.sender).transfer(msg.value - requiredFee);
  
         for(uint i = 0; i < updateData.length; i++) {
@@ -227,8 +227,12 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         return validTimePeriodSeconds();
     }
 
+    function isPyth() internal pure returns (bool) {
+        return true;
+    }
+
     function version() public pure returns (string memory) {
-        return "0.1.0";
+        return "1.0.0";
     }
 
     function deployCommitHash() public pure returns (string memory) {

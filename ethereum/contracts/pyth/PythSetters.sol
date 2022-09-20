@@ -29,4 +29,12 @@ contract PythSetters is PythState {
     function setValidTimePeriodSeconds(uint validTimePeriodSeconds) internal {
         _state.validTimePeriodSeconds = validTimePeriodSeconds;
     }
+
+    function setGovernanceDataSource(PythInternalStructs.DataSource memory newDataSource) internal {
+        _state.governanceDataSource = newDataSource;
+    }
+
+    function setLastExecutedGovernanceSequence(uint64 sequence) internal {
+        _state.lastExecutedGovernanceSequence = sequence;
+    }
 }

@@ -1,12 +1,14 @@
 const jsonfile = require("jsonfile");
 const elliptic = require("elliptic");
 const BigNumber = require("bignumber.js");
+const governance = require("@pythnetwork/xc-governance-sdk");
 
 const PythStructs = artifacts.require("PythStructs");
 
 const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 const { expectRevert, expectEvent, time } = require("@openzeppelin/test-helpers");
 const { assert, expect } = require("chai");
+const { deployProxyImpl } = require("@openzeppelin/truffle-upgrades/dist/utils");
 
 // Use "WormholeReceiver" if you are testing with Wormhole Receiver
 const Wormhole = artifacts.require("Wormhole");
@@ -22,16 +24,16 @@ const testSigner2PK =
 contract("Pyth", function () {
     const testSigner1 = web3.eth.accounts.privateKeyToAccount(testSigner1PK);
     const testSigner2 = web3.eth.accounts.privateKeyToAccount(testSigner2PK);
-    const testGovernanceChainId = "3";
-    const testGovernanceContract =
-        "0x0000000000000000000000000000000000000000000000000000000000000004";
+    const testGovernanceChainId = "1";
+    const testGovernanceEmitter =
+        "0x0000000000000000000000000000000000000000000000000000000000001234";
     const testPyth2WormholeChainId = "1";
     const testPyth2WormholeEmitter =
         "0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
     const notOwnerError =
         "Ownable: caller is not the owner -- Reason given: Ownable: caller is not the owner.";
     const insufficientFeeError = 
-        "Insufficient paid fee amount";
+        "insufficient paid fee amount";
 
     // Place all atomic operations that are done within migrations here.
     beforeEach(async function () {
@@ -48,6 +50,9 @@ contract("Pyth", function () {
 
         // Setting the validity time to 60 seconds
         await this.pythProxy.updateValidTimePeriodSeconds(60);
+
+        // Setting the governance data source to 0x1 (solana) and some random emitter address
+        await this.pythProxy.updateGovernanceDataSource(testGovernanceChainId, testGovernanceEmitter, 0);
     });
 
     it("should be initialized with the correct signers and values", async function () {
@@ -304,14 +309,14 @@ contract("Pyth", function () {
         }
     });
 
-    async function updatePriceFeeds(contract, batches, valueInWei) {
+    async function updatePriceFeeds(contract, batches, valueInWei, chainId, emitter) {
         let updateData = [];
         for (let data of batches) {
             const vm = await signAndEncodeVM(
                 1,
                 1,
-                testPyth2WormholeChainId,
-                testPyth2WormholeEmitter,
+                chainId || testPyth2WormholeChainId,
+                emitter || testPyth2WormholeEmitter,
                 0,
                 data,
                 [testSigner1PK],
@@ -720,6 +725,377 @@ contract("Pyth", function () {
         );
     });
 
+    // Governance
+
+    // Logics that apply to all governance messages
+    it("Make sure invalid magic and module won't work", async function () {
+        // First 4 bytes of data are magic and the second byte after that is module
+        const data = new governance.SetValidPeriodInstruction(governance.CHAINS.ethereum, BigInt(10)).serialize();
+
+        const wrongMagic = Buffer.from(data);
+        wrongMagic[1] = 0;
+
+        const vaaWrongMagic = await createVAAFromUint8Array(wrongMagic,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(vaaWrongMagic),
+            "invalid magic for GovernanceInstruction"
+        );
+
+        const wrongModule = Buffer.from(data);
+        wrongModule[4] = 0;
+
+        const vaaWrongModule = await createVAAFromUint8Array(wrongModule,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(vaaWrongModule),
+            "invalid module for GovernanceInstruction"
+        );
+
+        const outOfBoundModule = Buffer.from(data);
+        outOfBoundModule[4] = 20;
+
+        const vaaOutOfBoundModule = await createVAAFromUint8Array(outOfBoundModule,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(vaaOutOfBoundModule),
+            "Panic: Enum value out of bounds.",
+        );
+    });
+
+    it("Make sure governance with wrong sender won't work", async function () {
+        const data = new governance.SetValidPeriodInstruction(governance.CHAINS.ethereum, BigInt(10)).serialize();
+
+        const vaaWrongEmitter = await createVAAFromUint8Array(data,
+            testGovernanceChainId, 
+            "0x0000000000000000000000000000000000000000000000000000000000001111",
+            1
+        );
+
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(vaaWrongEmitter),
+            "VAA is not coming from the governance data source"
+        );
+
+        const vaaWrongChain = await createVAAFromUint8Array(data,
+            governance.CHAINS.karura, 
+            testGovernanceEmitter,
+            1
+        );
+
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(vaaWrongChain),
+            "VAA is not coming from the governance data source"
+        );
+    });
+
+    it("Make sure governance with only target chain id and 0 work", async function () {
+        const wrongChainData = new governance.SetValidPeriodInstruction(governance.CHAINS.solana, BigInt(10)).serialize();
+
+        const wrongChainVaa = await createVAAFromUint8Array(wrongChainData,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(wrongChainVaa),
+            "invalid target chain for this governance instruction"
+        );
+
+        const dataForAllChains = new governance.SetValidPeriodInstruction(governance.CHAINS.unset, BigInt(10)).serialize();
+
+        const vaaForAllChains = await createVAAFromUint8Array(dataForAllChains,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        await this.pythProxy.executeGovernanceInstruction(vaaForAllChains);
+
+        const dataForEth = new governance.SetValidPeriodInstruction(governance.CHAINS.ethereum, BigInt(10)).serialize();
+
+        const vaaForEth = await createVAAFromUint8Array(dataForEth,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            2,
+        );
+
+        await this.pythProxy.executeGovernanceInstruction(vaaForEth);
+    });
+
+    it("Make sure that governance messages are executed in order and cannot be reused", async function () {
+        const data = new governance.SetValidPeriodInstruction(governance.CHAINS.ethereum, BigInt(10)).serialize();
+
+        const vaaSeq1 = await createVAAFromUint8Array(data,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        await this.pythProxy.executeGovernanceInstruction(vaaSeq1),
+
+        // Replaying shouldn't work
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(vaaSeq1),
+            "VAA is older than the last executed governance VAA",
+        )
+
+        const vaaSeq2 = await createVAAFromUint8Array(data,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            2
+        );
+
+        await this.pythProxy.executeGovernanceInstruction(vaaSeq2),
+
+        // Replaying shouldn't work
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(vaaSeq1),
+            "VAA is older than the last executed governance VAA",
+        )
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(vaaSeq2),
+            "VAA is older than the last executed governance VAA",
+        )
+    });
+
+    // Per governance type logic
+    it("Upgrading the contract with chain id 0 is invalid", async function () {
+        const newImplementation = await PythUpgradable.new();
+
+        const data = new governance.EthereumUpgradeContractInstruction(
+            governance.CHAINS.unset, // 0
+            new governance.HexString20Bytes(newImplementation.address),
+        ).serialize();
+
+        const vaa = await createVAAFromUint8Array(data,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(vaa),
+            "upgrade with chain id 0 is not possible"
+        );
+    });
+
+
+    it("Upgrading the contract should work", async function () {
+        const newImplementation = await PythUpgradable.new();
+        
+        const data = new governance.EthereumUpgradeContractInstruction(
+            governance.CHAINS.ethereum,
+            new governance.HexString20Bytes(newImplementation.address),
+        ).serialize();
+
+        const vaa = await createVAAFromUint8Array(data,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        const receipt = await this.pythProxy.executeGovernanceInstruction(vaa);
+
+        // Couldn't get the oldImplementation address.
+        expectEvent(receipt, 'ContractUpgraded', {
+            newImplementation: newImplementation.address,
+        });
+        expectEvent(receipt, 'Upgraded', {
+            implementation: newImplementation.address
+        });
+    });
+
+    it("Setting governance data source should work", async function () {
+        const data = new governance.SetGovernanceDataSourceInstruction(
+            governance.CHAINS.ethereum,
+            new governance.DataSource(
+                governance.CHAINS.acala,
+                new governance.HexString32Bytes(
+                    "0x0000000000000000000000000000000000000000000000000000000000001111",
+                )
+            ),
+            BigInt(10)
+        ).serialize();
+
+        const vaa = await createVAAFromUint8Array(data,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        const oldGovernanceDataSource = await this.pythProxy.governanceDataSource(); 
+
+        const receipt = await this.pythProxy.executeGovernanceInstruction(vaa);
+        expectEvent(receipt, 'GovernanceDataSourceSet', {
+            oldDataSource: oldGovernanceDataSource,
+            newDataSource: await this.pythProxy.governanceDataSource(),
+        });
+
+        const newVaaFromOldGovernanceSource = await createVAAFromUint8Array(data,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            2
+        );
+
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(newVaaFromOldGovernanceSource),
+            "VAA is not coming from the governance data source"
+        );
+
+        const newVaaFromNewGovernanceOldSequence = await createVAAFromUint8Array(data,
+            governance.CHAINS.acala, 
+            "0x0000000000000000000000000000000000000000000000000000000000001111",
+            2
+        );
+
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(newVaaFromNewGovernanceOldSequence),
+            "VAA is older than the last executed governance VAA"
+        );
+
+        const newVaaFromNewGovernanceGood = await createVAAFromUint8Array(data,
+            governance.CHAINS.acala, 
+            "0x0000000000000000000000000000000000000000000000000000000000001111",
+            20
+        );
+
+        await this.pythProxy.executeGovernanceInstruction(newVaaFromNewGovernanceGood);
+    });
+
+    it("Setting data sources should work", async function () {
+        const data = new governance.SetDataSourcesInstruction(
+            governance.CHAINS.ethereum,
+            [new governance.DataSource(
+                governance.CHAINS.acala,
+                new governance.HexString32Bytes(
+                    "0x0000000000000000000000000000000000000000000000000000000000001111",
+                )
+            )],
+        ).serialize();
+
+        const vaa = await createVAAFromUint8Array(data,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        const oldDataSources = await this.pythProxy.validDataSources(); 
+
+        const receipt = await this.pythProxy.executeGovernanceInstruction(vaa);
+        expectEvent(receipt, 'DataSourcesSet', {
+            oldDataSources: oldDataSources,
+            newDataSources: await this.pythProxy.validDataSources(),
+        });
+
+        assert.isTrue(await this.pythProxy.isValidDataSource(governance.CHAINS.acala,
+            "0x0000000000000000000000000000000000000000000000000000000000001111"));
+        assert.isFalse(await this.pythProxy.isValidDataSource(testPyth2WormholeChainId,
+            testPyth2WormholeEmitter));
+
+        let rawBatch = generateRawBatchAttestation(
+            100,
+            100,
+            1337
+        );
+        await expectRevert(
+            updatePriceFeeds(this.pythProxy, [rawBatch]),
+            "invalid data source chain/emitter ID"
+        );
+
+        await updatePriceFeeds(this.pythProxy, [rawBatch], 0, governance.CHAINS.acala,
+            "0x0000000000000000000000000000000000000000000000000000000000001111");
+    });
+
+    it("Setting fee should work", async function () {
+        const data = new governance.SetFeeInstruction(
+            governance.CHAINS.ethereum,
+            BigInt(5), BigInt(3) // 5*10**3 = 5000
+        ).serialize();
+
+        const vaa = await createVAAFromUint8Array(data,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        const oldFee = await this.pythProxy.singleUpdateFeeInWei(); 
+
+        const receipt = await this.pythProxy.executeGovernanceInstruction(vaa);
+        expectEvent(receipt, 'FeeSet', {
+            oldFee: oldFee,
+            newFee: await this.pythProxy.singleUpdateFeeInWei(),
+        });
+
+        assert.equal(await this.pythProxy.singleUpdateFeeInWei(), "5000");
+
+        let rawBatch = generateRawBatchAttestation(
+            100,
+            100,
+            1337
+        );
+        await expectRevert(
+            updatePriceFeeds(this.pythProxy, [rawBatch], 0),
+            insufficientFeeError
+        );
+
+        const receiptUpdateFeeds = await updatePriceFeeds(this.pythProxy, [rawBatch], 5000);
+        expectEvent(receiptUpdateFeeds, 'UpdatePriceFeeds', {
+            fee: "5000"
+        });
+    });
+
+    it("Setting valid period should work", async function () {
+        const data = new governance.SetValidPeriodInstruction(
+            governance.CHAINS.ethereum,
+            BigInt(0),
+        ).serialize();
+
+        const vaa = await createVAAFromUint8Array(data,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        const oldValidPeriod = await this.pythProxy.validTimePeriodSeconds(); 
+
+        const receipt = await this.pythProxy.executeGovernanceInstruction(vaa);
+        expectEvent(receipt, 'ValidPeriodSet', {
+            oldValidPeriod: oldValidPeriod,
+            newValidPeriod: await this.pythProxy.validTimePeriodSeconds(),
+        });
+
+        assert.equal(await this.pythProxy.validTimePeriodSeconds(), "0");
+
+        // The behaviour of valid time period is extensively tested before,
+        // and adding it here will cause more complexity (and is not so short).
+    });
+
+    // Renounce ownership works
+    it("Renouncing ownership should work", async function () {
+        await this.pythProxy.updateValidTimePeriodSeconds(100);
+        await this.pythProxy.renounceOwnership();
+        await expectRevert(
+            this.pythProxy.updateValidTimePeriodSeconds(60),
+            "Ownable: caller is not the owner",
+        )
+    });
+
+    // Version
+
     it("Make sure version is the npm package version", async function () {
         const contractVersion = await this.pythProxy.version();
         const { version } = require('../package.json');
@@ -801,4 +1177,24 @@ function zeroPadBytes(value, length) {
         value = "0" + value;
     }
     return value;
+}
+
+async function createVAAFromUint8Array(
+    dataBuffer,
+    emitterChainId,
+    emitterAddress,
+    sequence,
+) {
+    const dataHex = "0x" + dataBuffer.toString("hex");
+    return "0x" + await signAndEncodeVM(
+        0,
+        0,
+        emitterChainId.toString(),
+        emitterAddress,
+        sequence,
+        dataHex,
+        [testSigner1PK],
+        0,
+        0
+    );
 }
