@@ -1056,7 +1056,7 @@ name = "remote-executor"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "wormhole-core",
+ "wormhole-solana",
 ]
 
 [[package]]
@@ -1481,7 +1481,7 @@ checksum = "c811ca4a8c853ef420abd8592ba53ddbbac90410fab6903b3e79972a631f7680"
 [[package]]
 name = "wormhole-core"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole?branch=reisen/sdk-cleanup#9bd450769065367bd397d90d03aa18472fdcebbc"
+source = "git+https://github.com/guibescos/wormhole?branch=gbescos/sdk-solana#daeb2c9e2f0659dc1b00391a5107467b4d993ef2"
 dependencies = [
  "borsh",
  "bstr",
@@ -1492,6 +1492,24 @@ dependencies = [
  "primitive-types",
  "sha3",
  "thiserror",
+]
+
+[[package]]
+name = "wormhole-solana"
+version = "0.1.0"
+source = "git+https://github.com/guibescos/wormhole?branch=gbescos/sdk-solana#daeb2c9e2f0659dc1b00391a5107467b4d993ef2"
+dependencies = [
+ "borsh",
+ "bstr",
+ "byteorder",
+ "hex",
+ "hex-literal",
+ "nom",
+ "primitive-types",
+ "sha3",
+ "solana-program",
+ "thiserror",
+ "wormhole-core",
 ]
 
 [[package]]

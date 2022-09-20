@@ -20,4 +20,4 @@ overflow-checks = true
 
 [dependencies]
 anchor-lang = {version = "0.25.0", features = ["init-if-needed"]}
-wormhole-core = { git = "https://github.com/wormhole-foundation/wormhole", branch = "reisen/sdk-cleanup"}
+wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "gbescos/sdk-solana"}

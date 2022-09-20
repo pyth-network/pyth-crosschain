@@ -1,7 +1,7 @@
 #![deny(warnings)]
 
 use anchor_lang::{prelude::*, solana_program::borsh::get_packed_len};
-use state::{claim_record::ClaimRecord, posted_vaa::PostedVaa};
+use state::{claim_record::ClaimRecord, posted_vaa::AnchorVaa};
 
 mod state;
 mod error;
@@ -43,7 +43,7 @@ const CLAIM_RECORD_SEED : &str = "CLAIM_RECORD";
 pub struct ExecutePostedVaa<'info> {
     #[account(mut)]
     pub payer : Signer<'info>,
-    pub posted_vaa : Account<'info, PostedVaa>,
+    pub posted_vaa : Account<'info, AnchorVaa>,
     #[account(seeds = [EXECUTOR_KEY_SEED.as_bytes(), &posted_vaa.emitter_address], bump)]
     pub executor_key : UncheckedAccount<'info>,
     /// The reason claim record is separated from executor_key is that executor key might need to pay in the CPI, so we want it to be a wallet
