@@ -11,15 +11,16 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 #[program]
 pub mod remote_executor {
     use anchor_lang::solana_program::{program::invoke_signed, instruction::Instruction};
+    use wormhole::Chain::{Solana, self};
 
-    use crate::{state::{posted_vaa::CHAIN_ID_SOLANA, governance_payload::ExecutorPayload}, error::ExecutorError};
+    use crate::{state::{governance_payload::ExecutorPayload}, error::ExecutorError};
 
     use super::*;
 
     pub fn execute_posted_vaa(ctx: Context<ExecutePostedVaa>) -> Result<()> {
         let posted_vaa = &ctx.accounts.posted_vaa;
         let claim_record = &mut ctx.accounts.claim_record;
-        assert_or_err(posted_vaa.emitter_chain == CHAIN_ID_SOLANA, err!(ExecutorError::EmitterChainNotSolana))?;
+        assert_or_err(Chain::from(posted_vaa.emitter_chain) == Solana, err!(ExecutorError::EmitterChainNotSolana))?;
         assert_or_err(posted_vaa.sequence > claim_record.sequence, err!(ExecutorError::NonIncreasingSequence))?;
         claim_record.sequence = posted_vaa.sequence;
 

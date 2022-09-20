@@ -9,8 +9,6 @@ impl Owner for AnchorVaa {
     }
 }
 
-pub const CHAIN_ID_SOLANA : u16 = 1;
-
 impl AccountDeserialize for AnchorVaa {
     // Manual implementation because this account does not have an anchor discriminator
     fn try_deserialize(buf: &mut &[u8]) -> anchor_lang::Result<Self> {
