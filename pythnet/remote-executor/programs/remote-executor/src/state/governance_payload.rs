@@ -15,7 +15,7 @@ use crate::{
     error::ExecutorError,
 };
 
-pub const MAGIC_NUMBER: u32 = 0x4d475450; // Reverse order of the solidity contract because borsh uses little endian numbers
+pub const MAGIC_NUMBER: u32 = 0x4d475450; // Reverse order of the solidity contract because borsh uses little endian numbers (the solidity contract uses 0x5054474d)
 
 #[derive(AnchorDeserialize, AnchorSerialize)]
 pub struct ExecutorPayload {
