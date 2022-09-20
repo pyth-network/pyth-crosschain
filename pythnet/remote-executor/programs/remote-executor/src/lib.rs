@@ -79,11 +79,3 @@ pub struct ExecutePostedVaa<'info> {
     pub claim_record: Account<'info, ClaimRecord>,
     pub system_program: Program<'info, System>,
 }
-
-pub fn assert_or_err(condition: bool, error: Result<()>) -> Result<()> {
-    if !condition {
-        error
-    } else {
-        Result::Ok(())
-    }
-}
