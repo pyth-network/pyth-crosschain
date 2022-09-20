@@ -6,10 +6,16 @@ use std::{
 };
 use wormhole_solana::VAA;
 
+// The current chain's wormhole bridge owns the VAA accounts
 impl Owner for AnchorVaa {
+    #[cfg(not(feature = "pythtest"))]
     fn owner() -> Pubkey {
         Pubkey::from_str("H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU").unwrap()
-        // Pythnet bridge address
+    }
+
+    #[cfg(feature = "pythtest")]
+    fn owner() -> Pubkey {
+        Pubkey::from_str("EUrRARh92Cdc54xrDn6qzaqjA77NRrCcfbr8kPwoTL4z").unwrap()
     }
 }
 
