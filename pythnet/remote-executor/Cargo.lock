@@ -334,14 +334,13 @@ checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
 
 [[package]]
 name = "bstr"
-version = "1.0.1"
+version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fca0852af221f458706eb0725c03e4ed6c46af9ac98e6a689d5e634215d594dd"
+checksum = "ba3569f383e8f1598449f1a423e72e99569137b47740b1da11ef19af3d5c3223"
 dependencies = [
+ "lazy_static",
  "memchr",
- "once_cell",
  "regex-automata",
- "serde",
 ]
 
 [[package]]
@@ -707,9 +706,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.132"
+version = "0.2.133"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8371e4e5341c3a96db127eb2465ac681ced4c433e01dd0e938adbef26ba93ba5"
+checksum = "c0f80d65747a3e43d1596c7c5492d95d5edddaabd45a7fcdb02b95f644164966"
 
 [[package]]
 name = "libsecp256k1"
@@ -1286,9 +1285,9 @@ checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
 
 [[package]]
 name = "syn"
-version = "1.0.99"
+version = "1.0.100"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58dbef6ec655055e20b86b15a8cc6d439cca19b667537ac6a1369572d151ab13"
+checksum = "52205623b1b0f064a4e71182c3b18ae902267282930c6d5462c91b859668426e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1482,7 +1481,7 @@ checksum = "c811ca4a8c853ef420abd8592ba53ddbbac90410fab6903b3e79972a631f7680"
 [[package]]
 name = "wormhole-core"
 version = "0.1.0"
-source = "git+https://github.com/guibescos/wormhole?branch=gbescos/sdk-solana#daeb2c9e2f0659dc1b00391a5107467b4d993ef2"
+source = "git+https://github.com/guibescos/wormhole?branch=gbescos/sdk-solana#2a6169c646a78d76407323d138fa4aeb09b1655a"
 dependencies = [
  "borsh",
  "bstr",
@@ -1498,7 +1497,7 @@ dependencies = [
 [[package]]
 name = "wormhole-solana"
 version = "0.1.0"
-source = "git+https://github.com/guibescos/wormhole?branch=gbescos/sdk-solana#daeb2c9e2f0659dc1b00391a5107467b4d993ef2"
+source = "git+https://github.com/guibescos/wormhole?branch=gbescos/sdk-solana#2a6169c646a78d76407323d138fa4aeb09b1655a"
 dependencies = [
  "borsh",
  "bstr",

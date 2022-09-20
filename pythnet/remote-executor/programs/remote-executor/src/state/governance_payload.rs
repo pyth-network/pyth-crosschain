@@ -1,8 +1,12 @@
+use std::{ops::Deref, mem::size_of, io::ErrorKind};
+
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction};
+use wormhole::Chain;
 
 use crate::{assert_or_err, error::ExecutorError};
 
-pub const MAGIC_NUMBER : u32 = 0x5054474d;
+pub const MAGIC_NUMBER : u32 = 0x4d475450; // Reverse order of the solidity contract because borsh uses little endian numbers
+
 #[derive(AnchorDeserialize, AnchorSerialize)]
 pub struct ExecutorPayload{
     pub header : GovernanceHeader,
@@ -21,19 +25,51 @@ pub enum Action {
     ExecutePostedVaa = 0,
 }
 
-#[repr(u16)]
-#[derive(AnchorDeserialize, AnchorSerialize, PartialEq)]
-pub enum ReceiverChain {
-    Pythnet = 26,
-}
 
-
+/// The Governance Header format for pyth governance messages is the following:
+/// - A 4 byte magic number `['P','T','G','M']`
+/// - A one byte module variant (0 for Executor and 1 for Target contracts)
+/// - A one byte action variant (for Executor only 0 is currently valid)
+/// - A bigendian 2 bytes u16 chain id
 #[derive(AnchorDeserialize, AnchorSerialize)]
 pub struct GovernanceHeader {
     pub magic_number : u32,
     pub module : Module,
     pub action : Action,
-    pub chain : ReceiverChain
+    pub chain : BigEndianU16
+}
+
+/// Hack to get Borsh to deserialize, serialize this number with big endian order
+pub struct BigEndianU16{
+    pub value : u16
+}
+
+impl AnchorDeserialize for BigEndianU16 {
+    fn deserialize(buf: &mut &[u8]) -> std::result::Result<BigEndianU16, std::io::Error> {
+        if buf.len() < size_of::<u16>() {
+            return Err(std::io::Error::new(
+                ErrorKind::InvalidInput,
+                "Unexpected length of input",
+            ));
+        }
+        let res = u16::from_be_bytes(buf[..size_of::<u16>()].try_into().unwrap());
+        *buf = &buf[size_of::<u16>()..];
+        Ok(BigEndianU16{ value:res})
+    }
+}
+
+impl AnchorSerialize for BigEndianU16 {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        writer.write_all(&self.to_be_bytes())
+    }
+}
+
+impl Deref for BigEndianU16 {
+    type Target = u16;
+
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
 }
 
 /// InstructionData wrapper. It can be removed once Borsh serialization for Instruction is supported in the SDK
@@ -79,12 +115,11 @@ impl From<&InstructionData> for Instruction {
 impl ExecutorPayload {
     const MODULE : Module = Module::Executor;
     const ACTION : Action = Action::ExecutePostedVaa;
-    const RECEIVER_CHAIN : ReceiverChain = ReceiverChain::Pythnet;
 
     pub fn check_header(&self) -> Result<()>{
         assert_or_err(self.header.magic_number == MAGIC_NUMBER, err!(ExecutorError::GovernanceHeaderInvalidMagicNumber))?;
         assert_or_err(self.header.module == ExecutorPayload::MODULE, err!(ExecutorError::GovernanceHeaderInvalidMagicNumber))?;
         assert_or_err(self.header.action == ExecutorPayload::ACTION, err!(ExecutorError::GovernanceHeaderInvalidMagicNumber))?;
-        assert_or_err(self.header.chain == ExecutorPayload::RECEIVER_CHAIN, err!(ExecutorError::GovernanceHeaderInvalidMagicNumber))
+        assert_or_err(Chain::from(self.header.chain.value) == Chain::Pythnet, err!(ExecutorError::GovernanceHeaderInvalidMagicNumber))
     }
 }
