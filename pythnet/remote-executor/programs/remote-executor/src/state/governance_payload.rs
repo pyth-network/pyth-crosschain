@@ -1,30 +1,38 @@
-use std::{ops::Deref, mem::size_of, io::ErrorKind};
+use std::{
+    io::ErrorKind,
+    mem::size_of,
+    ops::Deref,
+};
 
-use anchor_lang::{prelude::*, solana_program::instruction::Instruction};
+use anchor_lang::{
+    prelude::*,
+    solana_program::instruction::Instruction,
+};
 use wormhole::Chain;
 
-use crate::{assert_or_err, error::ExecutorError};
+use crate::{
+    assert_or_err,
+    error::ExecutorError,
+};
 
-pub const MAGIC_NUMBER : u32 = 0x4d475450; // Reverse order of the solidity contract because borsh uses little endian numbers
+pub const MAGIC_NUMBER: u32 = 0x4d475450; // Reverse order of the solidity contract because borsh uses little endian numbers
 
 #[derive(AnchorDeserialize, AnchorSerialize)]
-pub struct ExecutorPayload{
-    pub header : GovernanceHeader,
+pub struct ExecutorPayload {
+    pub header: GovernanceHeader,
     pub instructions: Vec<InstructionData>,
-
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, PartialEq)]
 pub enum Module {
     Executor = 0,
-    Target 
+    Target,
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, PartialEq)]
 pub enum Action {
     ExecutePostedVaa = 0,
 }
-
 
 /// The Governance Header format for pyth governance messages is the following:
 /// - A 4 byte magic number `['P','T','G','M']`
@@ -33,15 +41,15 @@ pub enum Action {
 /// - A bigendian 2 bytes u16 chain id
 #[derive(AnchorDeserialize, AnchorSerialize)]
 pub struct GovernanceHeader {
-    pub magic_number : u32,
-    pub module : Module,
-    pub action : Action,
-    pub chain : BigEndianU16
+    pub magic_number: u32,
+    pub module: Module,
+    pub action: Action,
+    pub chain: BigEndianU16,
 }
 
 /// Hack to get Borsh to deserialize, serialize this number with big endian order
-pub struct BigEndianU16{
-    pub value : u16
+pub struct BigEndianU16 {
+    pub value: u16,
 }
 
 impl AnchorDeserialize for BigEndianU16 {
@@ -54,7 +62,7 @@ impl AnchorDeserialize for BigEndianU16 {
         }
         let res = u16::from_be_bytes(buf[..size_of::<u16>()].try_into().unwrap());
         *buf = &buf[size_of::<u16>()..];
-        Ok(BigEndianU16{ value:res})
+        Ok(BigEndianU16 { value: res })
     }
 }
 
@@ -113,13 +121,25 @@ impl From<&InstructionData> for Instruction {
 }
 
 impl ExecutorPayload {
-    const MODULE : Module = Module::Executor;
-    const ACTION : Action = Action::ExecutePostedVaa;
+    const MODULE: Module = Module::Executor;
+    const ACTION: Action = Action::ExecutePostedVaa;
 
-    pub fn check_header(&self) -> Result<()>{
-        assert_or_err(self.header.magic_number == MAGIC_NUMBER, err!(ExecutorError::GovernanceHeaderInvalidMagicNumber))?;
-        assert_or_err(self.header.module == ExecutorPayload::MODULE, err!(ExecutorError::GovernanceHeaderInvalidMagicNumber))?;
-        assert_or_err(self.header.action == ExecutorPayload::ACTION, err!(ExecutorError::GovernanceHeaderInvalidMagicNumber))?;
-        assert_or_err(Chain::from(self.header.chain.value) == Chain::Pythnet, err!(ExecutorError::GovernanceHeaderInvalidMagicNumber))
+    pub fn check_header(&self) -> Result<()> {
+        assert_or_err(
+            self.header.magic_number == MAGIC_NUMBER,
+            err!(ExecutorError::GovernanceHeaderInvalidMagicNumber),
+        )?;
+        assert_or_err(
+            self.header.module == ExecutorPayload::MODULE,
+            err!(ExecutorError::GovernanceHeaderInvalidMagicNumber),
+        )?;
+        assert_or_err(
+            self.header.action == ExecutorPayload::ACTION,
+            err!(ExecutorError::GovernanceHeaderInvalidMagicNumber),
+        )?;
+        assert_or_err(
+            Chain::from(self.header.chain.value) == Chain::Pythnet,
+            err!(ExecutorError::GovernanceHeaderInvalidMagicNumber),
+        )
     }
 }

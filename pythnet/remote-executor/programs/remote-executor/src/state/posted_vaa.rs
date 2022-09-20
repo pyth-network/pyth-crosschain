@@ -1,10 +1,15 @@
-use std::{io::Write, str::FromStr, ops::Deref};
 use anchor_lang::prelude::*;
+use std::{
+    io::Write,
+    ops::Deref,
+    str::FromStr,
+};
 use wormhole_solana::VAA;
 
 impl Owner for AnchorVaa {
-    fn owner() -> Pubkey{
-        Pubkey::from_str("H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU").unwrap() // Pythnet bridge address
+    fn owner() -> Pubkey {
+        Pubkey::from_str("H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU").unwrap()
+        // Pythnet bridge address
     }
 }
 
@@ -15,9 +20,9 @@ impl AccountDeserialize for AnchorVaa {
     }
 
     // Manual implementation because this account does not have an anchor discriminator
-    fn try_deserialize_unchecked(buf: &mut &[u8]) -> Result<Self> {   
+    fn try_deserialize_unchecked(buf: &mut &[u8]) -> Result<Self> {
         AnchorDeserialize::deserialize(buf)
-        .map_err(|_| anchor_lang::error::ErrorCode::AccountDidNotDeserialize.into())
+            .map_err(|_| anchor_lang::error::ErrorCode::AccountDidNotDeserialize.into())
     }
 }
 
@@ -36,8 +41,7 @@ impl Deref for AnchorVaa {
     }
 }
 
-
 #[derive(Clone, AnchorDeserialize, AnchorSerialize)]
-pub struct AnchorVaa{
-    pub vaa : VAA
+pub struct AnchorVaa {
+    pub vaa: VAA,
 }

@@ -1,10 +1,14 @@
-use anchor_lang::prelude::*;
-use anchor_lang::account;
-use anchor_lang::prelude::borsh::BorshSchema;
+use anchor_lang::{
+    account,
+    prelude::{
+        borsh::BorshSchema,
+        *,
+    },
+};
 
 #[account]
 #[derive(Default, BorshSchema)]
-/// This struct records 
-pub struct ClaimRecord{
-    pub sequence : u64 
+/// This struct records
+pub struct ClaimRecord {
+    pub sequence: u64,
 }

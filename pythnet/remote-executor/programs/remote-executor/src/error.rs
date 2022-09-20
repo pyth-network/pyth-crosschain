@@ -1,4 +1,3 @@
-
 use anchor_lang::prelude::*;
 
 #[error_code]
@@ -8,5 +7,5 @@ pub enum ExecutorError {
     GovernanceHeaderInvalidMagicNumber,
     GovernanceHeaderInvalidModule,
     GovernanceHeaderInvalidAction,
-    GovernanceHeaderInvalidReceiverChain
+    GovernanceHeaderInvalidReceiverChain,
 }
