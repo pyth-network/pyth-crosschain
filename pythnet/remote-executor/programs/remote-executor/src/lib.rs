@@ -21,6 +21,7 @@ pub mod remote_executor {
         instruction::Instruction,
         program::invoke_signed,
     };
+    use boolinator::Boolinator;
     use wormhole::Chain::{
         self,
         Solana,
@@ -36,14 +37,11 @@ pub mod remote_executor {
     pub fn execute_posted_vaa(ctx: Context<ExecutePostedVaa>) -> Result<()> {
         let posted_vaa = &ctx.accounts.posted_vaa;
         let claim_record = &mut ctx.accounts.claim_record;
-        assert_or_err(
-            Chain::from(posted_vaa.emitter_chain) == Solana,
-            err!(ExecutorError::EmitterChainNotSolana),
-        )?;
-        assert_or_err(
-            posted_vaa.sequence > claim_record.sequence,
-            err!(ExecutorError::NonIncreasingSequence),
-        )?;
+
+        (Chain::from(posted_vaa.emitter_chain) == Solana)
+            .ok_or(error!(ExecutorError::EmitterChainNotSolana))?;
+        (posted_vaa.sequence > claim_record.sequence)
+            .ok_or(error!(ExecutorError::NonIncreasingSequence))?;
         claim_record.sequence = posted_vaa.sequence;
 
         let payload = ExecutorPayload::try_from_slice(&posted_vaa.payload)?;
@@ -79,12 +77,4 @@ pub struct ExecutePostedVaa<'info> {
     #[account(init_if_needed, space = 8 + get_packed_len::<ClaimRecord>(), payer=payer, seeds = [CLAIM_RECORD_SEED.as_bytes(), &posted_vaa.emitter_address], bump)]
     pub claim_record: Account<'info, ClaimRecord>,
     pub system_program: Program<'info, System>,
-}
-
-pub fn assert_or_err(condition: bool, error: Result<()>) -> Result<()> {
-    if !condition {
-        error
-    } else {
-        Result::Ok(())
-    }
 }
