@@ -28,6 +28,14 @@ contract PythStorage {
         /// This includes attestation delay, block time, and potential clock drift
         /// between the source/target chains.
         uint validTimePeriodSeconds;
+
+        // Governance data source. VAA messages from this source can change this contract
+        // state. e.g., upgrade the contract, change the valid data sources, and more.
+        PythInternalStructs.DataSource governanceDataSource;
+        // Sequence number of the last executed governance message. Any governance message
+        // with a lower or equal sequence number will be discarded. This prevents double-execution,
+        // and also makes sure that messages are executed in the right order.
+        uint64 lastExecutedGovernanceSequence;
     }
 }
 

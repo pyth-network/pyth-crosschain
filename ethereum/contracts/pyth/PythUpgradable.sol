@@ -9,9 +9,11 @@ import "./PythGetters.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./PythGovernance.sol";
+import "./Pyth.sol";
 
-contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pyth {
 
+contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pyth, PythGovernance {
     function initialize(
         address wormhole,
         uint16 pyth2WormholeChainId,
@@ -28,7 +30,7 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
         PythInternalStructs.DataSource memory ds = PythInternalStructs.DataSource(chainId, emitter);
         require(!PythGetters.isValidDataSource(ds.chainId, ds.emitterAddress), "Data source already added");
 
-        _state.isValidDataSource[keccak256(abi.encodePacked(ds.chainId, ds.emitterAddress))] = true;
+        _state.isValidDataSource[hashDataSource(ds)] = true;
         _state.validDataSources.push(ds);
     }
 
@@ -37,7 +39,7 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
         PythInternalStructs.DataSource memory ds = PythInternalStructs.DataSource(chainId, emitter);
         require(PythGetters.isValidDataSource(ds.chainId, ds.emitterAddress), "Data source not found, not removing");
 
-        _state.isValidDataSource[keccak256(abi.encodePacked(ds.chainId, ds.emitterAddress))] = false;
+        _state.isValidDataSource[hashDataSource(ds)] = false;
 
         for (uint i = 0; i < _state.validDataSources.length;  ++i) {
 
@@ -65,6 +67,13 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
         PythSetters.setValidTimePeriodSeconds(newValidTimePeriodSeconds);
     }
 
+    // Privileged function to update the governance emitter
+    function updateGovernanceDataSource(uint16 chainId, bytes32 emitter, uint64 sequence) onlyOwner public {
+        PythInternalStructs.DataSource memory ds = PythInternalStructs.DataSource(chainId, emitter);
+        PythSetters.setGovernanceDataSource(ds);
+        PythSetters.setLastExecutedGovernanceSequence(sequence);
+    }
+
     /// Ensures the contract cannot be uninitialized and taken over.
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
@@ -72,4 +81,12 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
     // Only allow the owner to upgrade the proxy to a new implementation.
     function _authorizeUpgrade(address) internal override onlyOwner {}
 
+    // Execute a UpgradeContract governance message
+    function upgradeUpgradableContract(UpgradeContractPayload memory payload) override internal {
+        address oldImplementation = _getImplementation();
+        _upgradeToAndCallUUPS(payload.newImplementation, new bytes(0), false);
+        require(isPyth(), "the new implementation is not a Pyth contract");
+
+        emit ContractUpgraded(oldImplementation, _getImplementation());
+    }
 }
