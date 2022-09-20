@@ -2,10 +2,9 @@ use std::{io::Write, str::FromStr, ops::Deref};
 use anchor_lang::prelude::*;
 use wormhole_solana::VAA;
 
-// TO DO : Update this file to use wormhole solana once the sdk is fixed
 impl Owner for AnchorVaa {
     fn owner() -> Pubkey{
-        Pubkey::from_str("Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o").unwrap() // Placeholder bridge address
+        Pubkey::from_str("H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU").unwrap() // Pythnet bridge address
     }
 }
 
