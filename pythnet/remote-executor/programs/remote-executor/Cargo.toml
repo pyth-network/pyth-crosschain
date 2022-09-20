@@ -19,5 +19,5 @@ default = []
 overflow-checks = true
 
 [dependencies]
-anchor-lang = {version = "0.24.2", features = ["init-if-needed"]}
+anchor-lang = {version = "0.25.0", features = ["init-if-needed"]}
 wormhole-core = { git = "https://github.com/wormhole-foundation/wormhole", branch = "reisen/sdk-cleanup"}
