@@ -6,7 +6,7 @@ use std::{
 };
 use wormhole_solana::VAA;
 
-// Chain wormhole bridge owns the VAA accounts
+// The current chain's wormhole bridge owns the VAA accounts
 impl Owner for AnchorVaa {
     #[cfg(not(feature = "pythtest"))]
     fn owner() -> Pubkey {
