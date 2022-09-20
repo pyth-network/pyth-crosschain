@@ -17,20 +17,20 @@ use crate::{
 
 pub const MAGIC_NUMBER: u32 = 0x4d475450; // Reverse order of the solidity contract because borsh uses little endian numbers
 
-#[derive(AnchorDeserialize, AnchorSerialize)]
+#[derive(AnchorDeserialize, AnchorSerialize, Debug, PartialEq, Eq)]
 pub struct ExecutorPayload {
     pub header: GovernanceHeader,
 
     pub instructions: Vec<InstructionData>,
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, PartialEq, Eq)]
+#[derive(AnchorDeserialize, AnchorSerialize, PartialEq, Eq, Debug)]
 pub enum Module {
     Executor = 0,
     Target,
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, PartialEq, Eq)]
+#[derive(AnchorDeserialize, AnchorSerialize, PartialEq, Eq, Debug)]
 pub enum Action {
     ExecutePostedVaa = 0,
 }
@@ -40,7 +40,7 @@ pub enum Action {
 /// - A one byte module variant (0 for Executor and 1 for Target contracts)
 /// - A one byte action variant (for Executor only 0 is currently valid)
 /// - A bigendian 2 bytes u16 chain id
-#[derive(AnchorDeserialize, AnchorSerialize)]
+#[derive(AnchorDeserialize, AnchorSerialize, Eq, PartialEq, Debug)]
 pub struct GovernanceHeader {
     pub magic_number: u32,
     pub module: Module,
@@ -49,6 +49,7 @@ pub struct GovernanceHeader {
 }
 
 /// Hack to get Borsh to deserialize, serialize this number with big endian order
+#[derive(Eq, PartialEq, Debug)]
 pub struct BigEndianU16 {
     pub value: u16,
 }
@@ -121,6 +122,24 @@ impl From<&InstructionData> for Instruction {
     }
 }
 
+impl From<&Instruction> for InstructionData {
+    fn from(instruction: &Instruction) -> Self {
+        InstructionData {
+            program_id: instruction.program_id,
+            accounts: instruction
+                .accounts
+                .iter()
+                .map(|a| AccountMetaData {
+                    pubkey: a.pubkey,
+                    is_signer: a.is_signer,
+                    is_writable: a.is_writable,
+                })
+                .collect(),
+            data: instruction.data.clone(),
+        }
+    }
+}
+
 impl ExecutorPayload {
     const MODULE: Module = Module::Executor;
     const ACTION: Action = Action::ExecutePostedVaa;
@@ -132,15 +151,135 @@ impl ExecutorPayload {
         )?;
         assert_or_err(
             self.header.module == ExecutorPayload::MODULE,
-            err!(ExecutorError::GovernanceHeaderInvalidMagicNumber),
+            err!(ExecutorError::GovernanceHeaderInvalidModule),
         )?;
         assert_or_err(
             self.header.action == ExecutorPayload::ACTION,
-            err!(ExecutorError::GovernanceHeaderInvalidMagicNumber),
+            err!(ExecutorError::GovernanceHeaderInvalidAction),
         )?;
         assert_or_err(
             Chain::from(self.header.chain.value) == Chain::Pythnet,
-            err!(ExecutorError::GovernanceHeaderInvalidMagicNumber),
+            err!(ExecutorError::GovernanceHeaderInvalidReceiverChain),
         )
+    }
+}
+
+#[cfg(test)]
+pub mod tests {
+    use crate::{
+        error,
+        error::ExecutorError,
+        state::governance_payload::InstructionData,
+    };
+
+    use super::{
+        Action,
+        BigEndianU16,
+        ExecutorPayload,
+        Module,
+        MAGIC_NUMBER,
+    };
+    use anchor_lang::{
+        prelude::Pubkey,
+        AnchorDeserialize,
+        AnchorSerialize,
+    };
+    use wormhole::Chain;
+
+    #[test]
+    fn test_check_deserialization_serialization() {
+        // No instructions
+        let payload = ExecutorPayload {
+            header: super::GovernanceHeader {
+                magic_number: MAGIC_NUMBER,
+                module: Module::Executor,
+                action: Action::ExecutePostedVaa,
+                chain: BigEndianU16 {
+                    value: Chain::Pythnet.try_into().unwrap(),
+                },
+            },
+            instructions: vec![],
+        };
+
+        assert!(payload.check_header().is_ok());
+
+        let payload_bytes = payload.try_to_vec().unwrap();
+        assert_eq!(payload_bytes, vec![80, 84, 71, 77, 0, 0, 0, 26, 0, 0, 0, 0]);
+
+        let deserialized_payload =
+            ExecutorPayload::try_from_slice(payload_bytes.as_slice()).unwrap();
+        assert_eq!(payload, deserialized_payload);
+
+        // One instruction
+        let payload = ExecutorPayload {
+            header: super::GovernanceHeader {
+                magic_number: MAGIC_NUMBER,
+                module: Module::Executor,
+                action: Action::ExecutePostedVaa,
+                chain: BigEndianU16 {
+                    value: Chain::Pythnet.try_into().unwrap(),
+                },
+            },
+            instructions: vec![InstructionData::from(
+                &anchor_lang::solana_program::system_instruction::create_account(
+                    &Pubkey::new_unique(),
+                    &Pubkey::new_unique(),
+                    1,
+                    1,
+                    &Pubkey::new_unique(),
+                ),
+            )],
+        };
+
+        assert!(payload.check_header().is_ok());
+
+        let payload_bytes = payload.try_to_vec().unwrap();
+        assert_eq!(
+            payload_bytes[..12],
+            vec![80, 84, 71, 77, 0, 0, 0, 26, 1, 0, 0, 0]
+        );
+
+        let deserialized_payload =
+            ExecutorPayload::try_from_slice(payload_bytes.as_slice()).unwrap();
+        assert_eq!(payload, deserialized_payload);
+
+        // Module outside of range
+        let payload_bytes = vec![80, 84, 71, 77, 3, 0, 0, 26, 0, 0, 0, 0, 0];
+        assert!(ExecutorPayload::try_from_slice(payload_bytes.as_slice()).is_err());
+
+        // Wrong module
+        let payload_bytes = vec![80, 84, 71, 77, 1, 0, 0, 26, 0, 0, 0, 0];
+        let deserialized_payload =
+            ExecutorPayload::try_from_slice(payload_bytes.as_slice()).unwrap();
+        assert_eq!(
+            deserialized_payload.check_header(),
+            Err(error!(ExecutorError::GovernanceHeaderInvalidModule))
+        );
+
+        // Wrong magic
+        let payload_bytes = vec![81, 84, 71, 77, 1, 0, 0, 26, 0, 0, 0, 0];
+        let deserialized_payload =
+            ExecutorPayload::try_from_slice(payload_bytes.as_slice()).unwrap();
+        assert_eq!(
+            deserialized_payload.check_header(),
+            Err(error!(ExecutorError::GovernanceHeaderInvalidMagicNumber))
+        );
+
+        // Action outside of range
+        let payload_bytes = vec![80, 84, 71, 77, 0, 1, 0, 26, 0, 0, 0, 0];
+        assert!(ExecutorPayload::try_from_slice(payload_bytes.as_slice()).is_err());
+
+        // Wrong receiver chain endianess
+        let payload_bytes = vec![80, 84, 71, 77, 0, 0, 26, 0, 0, 0, 0, 0];
+        let deserialized_payload =
+            ExecutorPayload::try_from_slice(payload_bytes.as_slice()).unwrap();
+        assert_eq!(
+            deserialized_payload.check_header(),
+            Err(error!(ExecutorError::GovernanceHeaderInvalidReceiverChain))
+        );
+
+        // Wrong vector format
+        let payload_bytes = vec![80, 84, 71, 77, 0, 0, 0, 26, 1, 0, 0, 0];
+        assert!(ExecutorPayload::try_from_slice(payload_bytes.as_slice()).is_err());
     }
 }
