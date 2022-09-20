@@ -29,7 +29,6 @@ pub mod remote_executor {
         
         for instruction in payload.instructions.iter().map(Instruction::from) {
             // TO DO: We currently pass `remaining_accounts` down to the CPIs, is there a more efficient way to do it?
-            // TO DO: We don't pass ctx.accounts so executor_key needs to be both in the anchor context and in remaining accounts
             invoke_signed(&instruction, ctx.remaining_accounts, &[&[EXECUTOR_KEY_SEED.as_bytes(), &posted_vaa.emitter_address, &[*ctx.bumps.get("executor_key").unwrap()]]])?;
         }
         Ok(())
