@@ -1,6 +1,5 @@
 #![deny(warnings)]
 #![allow(clippy::result_large_err)]
-#![allow(clippy::result_large_err)]
 
 use anchor_lang::{
     prelude::*,
