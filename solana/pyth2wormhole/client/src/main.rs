@@ -173,12 +173,13 @@ async fn main() -> Result<(), ErrBox> {
             daemon,
         } => {
             // Load the attestation config yaml
-            let attestation_cfg: AttestationConfig =
+            let mut attestation_cfg: AttestationConfig =
                 serde_yaml::from_reader(File::open(attestation_cfg)?)?;
 
             if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
                 let additional_accounts = crawl_pyth_mapping(&rpc_client, mapping_addr).await?;
                 info!("Additional mapping accounts:\n{:#?}", additional_accounts);
+                attestation_cfg.add_symbols(additional_accounts, "mapping".to_owned());
             }
 
             handle_attest(

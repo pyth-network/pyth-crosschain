@@ -29,7 +29,7 @@ pub struct P2WMessageDrvData {
     /// The key owning this message account
     pub message_owner: Pubkey,
     /// Size of the batch. It is important that all messages have the same size
-    /// 
+    ///
     /// NOTE: 2022-09-05
     /// Currently wormhole does not resize accounts if they have different
     /// payload sizes; this (along with versioning the seed literal below) is
