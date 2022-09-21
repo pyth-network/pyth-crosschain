@@ -47,6 +47,7 @@ async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
     // Authorities
     let p2w_owner = Pubkey::new_unique();
     let pyth_owner = Pubkey::new_unique();
+    let ops_owner = Pubkey::new_unique();
 
     // On-chain state
     let p2w_config = Pyth2WormholeConfig {
@@ -55,6 +56,7 @@ async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
         max_batch_size: pyth2wormhole::attest::P2W_MAX_BATCH_SIZE,
         pyth_owner,
         is_active: true,
+        ops_owner: Some(ops_owner),
     };
 
     let bridge_config = BridgeData {
