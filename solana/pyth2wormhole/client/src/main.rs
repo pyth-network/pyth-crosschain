@@ -29,7 +29,7 @@ use log::{
 use solana_client::{
     client_error::ClientError,
     nonblocking::rpc_client::RpcClient,
-    rpc_config::RpcTransactionConfig
+    rpc_config::RpcTransactionConfig,
 };
 use solana_program::pubkey::Pubkey;
 use solana_sdk::{
@@ -176,11 +176,10 @@ async fn main() -> Result<(), ErrBox> {
             let attestation_cfg: AttestationConfig =
                 serde_yaml::from_reader(File::open(attestation_cfg)?)?;
 
-
             if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
-            let additional_accounts = crawl_pyth_mapping(&rpc_client, mapping_addr).await?;
-            info!("Additional mapping accounts:\n{:#?}", additional_accounts);
-        }
+                let additional_accounts = crawl_pyth_mapping(&rpc_client, mapping_addr).await?;
+                info!("Additional mapping accounts:\n{:#?}", additional_accounts);
+            }
 
             handle_attest(
                 cli.rpc_url,
@@ -196,7 +195,7 @@ async fn main() -> Result<(), ErrBox> {
             )
             .await?;
         }
-        Action::GetEmitter => unreachable!{}
+        Action::GetEmitter => unreachable! {},
     }
 
     Ok(())
@@ -273,7 +272,10 @@ async fn handle_attest(
         rpc_interval,
     ));
 
-    let message_q_mtx = Arc::new(Mutex::new(P2WMessageQueue::new(Duration::from_millis(attestation_cfg.min_msg_reuse_interval_ms), attestation_cfg.max_msg_accounts as usize)));
+    let message_q_mtx = Arc::new(Mutex::new(P2WMessageQueue::new(
+        Duration::from_millis(attestation_cfg.min_msg_reuse_interval_ms),
+        attestation_cfg.max_msg_accounts as usize,
+    )));
 
     // Create attestation scheduling routines; see attestation_sched_job() for details
     let mut attestation_sched_futs = batches.into_iter().map(|(batch_no, batch)| {
@@ -303,7 +305,11 @@ async fn handle_attest(
     let errors: Vec<_> = results
         .iter()
         .enumerate()
-        .filter_map(|(idx, r)| r.as_ref().err().map(|e| format!("Error {}: {:#?}\n", idx + 1, e)))
+        .filter_map(|(idx, r)| {
+            r.as_ref()
+                .err()
+                .map(|e| format!("Error {}: {:#?}\n", idx + 1, e))
+        })
         .collect();
 
     if !errors.is_empty() {
@@ -423,13 +429,10 @@ async fn attestation_sched_job(
             let group_name4err_msg = batch.group_name.clone();
 
             // We never get to error reporting in daemon mode, attach a map_err
-            let job_with_err_msg = job.map_err(move |e|  {
+            let job_with_err_msg = job.map_err(move |e| {
                 warn!(
                     "Batch {}/{}, group {:?} ERR: {:#?}",
-                    batch_no4err_msg,
-                    batch_count4err_msg,
-                    group_name4err_msg,
-                    e
+                    batch_no4err_msg, batch_count4err_msg, group_name4err_msg, e
                 );
                 e
             });

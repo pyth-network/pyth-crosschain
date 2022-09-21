@@ -7,7 +7,15 @@ use borsh::{
     BorshDeserialize,
     BorshSerialize,
 };
-use log::{debug, trace};
+use log::{
+    debug,
+    trace,
+};
+use pyth_sdk_solana::state::{
+    load_mapping_account,
+    load_price_account,
+    load_product_account,
+};
 use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_program::{
     hash::Hash,
@@ -22,7 +30,6 @@ use solana_program::{
         rent,
     },
 };
-use pyth_sdk_solana::state::{load_mapping_account, load_product_account, load_price_account};
 use solana_sdk::{
     signer::{
         keypair::Keypair,
@@ -46,7 +53,10 @@ use bridge::{
     types::ConsistencyLevel,
 };
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{
+    HashMap,
+    HashSet,
+};
 
 use p2w_sdk::P2WEmitter;
 
@@ -328,7 +338,10 @@ pub fn gen_attest_tx(
 
 /// Enumerates all products and their prices in a Pyth mapping.
 /// Returns map of: product address => [price addresses]
-pub async fn crawl_pyth_mapping(rpc_client: &RpcClient, first_mapping_addr: &Pubkey) -> Result<HashMap<Pubkey, HashSet<Pubkey>>, ErrBox> {
+pub async fn crawl_pyth_mapping(
+    rpc_client: &RpcClient,
+    first_mapping_addr: &Pubkey,
+) -> Result<HashMap<Pubkey, HashSet<Pubkey>>, ErrBox> {
     let mut ret = HashMap::new();
 
     let mut n_mappings = 1; // We assume the first one must be valid
@@ -337,7 +350,7 @@ pub async fn crawl_pyth_mapping(rpc_client: &RpcClient, first_mapping_addr: &Pub
 
     let mut mapping_addr = first_mapping_addr.clone();
 
-    // loop until the last non-zero MappingAccount.next account 
+    // loop until the last non-zero MappingAccount.next account
     loop {
         let mapping_bytes = rpc_client.get_account_data(&mapping_addr).await?;
 
@@ -345,7 +358,6 @@ pub async fn crawl_pyth_mapping(rpc_client: &RpcClient, first_mapping_addr: &Pub
 
         // loop through all products in this mapping; filter out zeroed-out empty product slots
         for prod_addr in mapping.products.iter().filter(|p| *p != &Pubkey::default()) {
-
             let prod_bytes = rpc_client.get_account_data(prod_addr).await?;
             let prod = load_product_account(&prod_bytes)?;
 
@@ -357,7 +369,9 @@ pub async fn crawl_pyth_mapping(rpc_client: &RpcClient, first_mapping_addr: &Pub
                 let price = load_price_account(&price_bytes)?;
 
                 // Append to existing set or create a new map entry
-                ret.entry(prod_addr.clone()).or_insert(HashSet::new()).insert(price_addr);
+                ret.entry(prod_addr.clone())
+                    .or_insert(HashSet::new())
+                    .insert(price_addr);
 
                 n_prices += 1;
 
@@ -368,10 +382,13 @@ pub async fn crawl_pyth_mapping(rpc_client: &RpcClient, first_mapping_addr: &Pub
                 price_addr = price.next.clone();
             }
 
-            
             n_products += 1;
         }
-        trace!("Mapping {}: processed {} products", mapping_addr, n_products);
+        trace!(
+            "Mapping {}: processed {} products",
+            mapping_addr,
+            n_products
+        );
 
         // Traverse other mapping accounts if applicable
         if mapping.next == Pubkey::default() {
@@ -380,7 +397,10 @@ pub async fn crawl_pyth_mapping(rpc_client: &RpcClient, first_mapping_addr: &Pub
         mapping_addr = mapping.next.clone();
         n_mappings += 1;
     }
-    debug!("Processed {} price(s) in {} product account(s), in {} mapping account(s)", n_prices, n_products, n_mappings);
-    
+    debug!(
+        "Processed {} price(s) in {} product account(s), in {} mapping account(s)",
+        n_prices, n_products, n_mappings
+    );
+
     Ok(ret)
 }
