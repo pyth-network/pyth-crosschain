@@ -14,7 +14,7 @@ use state::{
 mod error;
 mod state;
 
-#[cfg(test)]
+#[cfg(test)] //Conditional compilation of the tests
 mod tests;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");

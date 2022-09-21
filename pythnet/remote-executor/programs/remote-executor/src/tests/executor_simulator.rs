@@ -119,7 +119,7 @@ impl ExecutorBench {
     /// Add VAA account with emitter and instructions for consumption by the remote_executor
     pub fn add_vaa_account(&mut self, emitter: &Pubkey, instructions: &Vec<Instruction>) -> Pubkey {
         let payload = ExecutorPayload {
-            header: GovernanceHeader::default(),
+            header: GovernanceHeader::executor_governance_header(),
             instructions: instructions
                 .iter()
                 .map(|x| InstructionData::from(x))

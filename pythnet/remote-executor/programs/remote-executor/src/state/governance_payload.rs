@@ -46,8 +46,9 @@ pub struct GovernanceHeader {
     pub chain: BigEndianU16,
 }
 
-impl Default for GovernanceHeader {
-    fn default() -> Self {
+impl GovernanceHeader {
+    #[allow(unused)] // Only used in tests right now
+    pub fn executor_governance_header() -> Self {
         Self {
             magic_number: MAGIC_NUMBER,
             module: Module::Executor,
@@ -186,7 +187,7 @@ pub mod tests {
     fn test_check_deserialization_serialization() {
         // No instructions
         let payload = ExecutorPayload {
-            header: super::GovernanceHeader::default(),
+            header: super::GovernanceHeader::executor_governance_header(),
             instructions: vec![],
         };
 
@@ -201,7 +202,7 @@ pub mod tests {
 
         // One instruction
         let payload = ExecutorPayload {
-            header: super::GovernanceHeader::default(),
+            header: super::GovernanceHeader::executor_governance_header(),
 
             instructions: vec![InstructionData::from(
                 &anchor_lang::solana_program::system_instruction::create_account(
