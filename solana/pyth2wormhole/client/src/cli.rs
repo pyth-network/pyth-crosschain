@@ -58,6 +58,8 @@ pub enum Action {
         /// Option<> makes sure not specifying this flag does not imply "false"
         #[clap(long = "is-active")]
         is_active: Option<bool>,
+        #[clap(long = "ops-owner")]
+        ops_owner_addr: Option<Pubkey>,
     },
     #[clap(
         about = "Use an existing pyth2wormhole program to attest product price information to another chain"
@@ -115,6 +117,10 @@ pub enum Action {
         new_pyth_owner_addr: Option<Pubkey>,
         #[clap(long = "is-active")]
         is_active: Option<bool>,
+        #[clap(long = "ops-owner")]
+        ops_owner_addr: Option<Pubkey>,
+        #[clap(long = "remove-ops-owner", conflicts_with = "ops_owner_addr")]
+        remove_ops_owner: bool,
     },
     #[clap(
         about = "Migrate existing pyth2wormhole program settings to a newer format version. Client version must match the deployed contract."
@@ -130,4 +136,21 @@ pub enum Action {
     },
     #[clap(about = "Print out emitter address for the specified pyth2wormhole contract")]
     GetEmitter,
+    #[clap(
+        about = "Set the value of is_active config as ops_owner"
+    )]
+    SetIsActive {
+        /// Current ops owner keypair path
+        #[clap(
+            long,
+            default_value = "~/.config/solana/id.json",
+            help = "Keypair file for the current config owner"
+        )]
+        ops_owner: String,
+        #[clap(
+            index = 1,
+            possible_values = ["true", "false"],
+        )]
+        new_is_active: String,
+    }
 }

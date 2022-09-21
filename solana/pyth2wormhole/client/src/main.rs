@@ -97,6 +97,7 @@ async fn main() -> Result<(), ErrBox> {
             pyth_owner_addr,
             wh_prog,
             is_active,
+            ops_owner_addr,
         } => {
             let tx = gen_init_tx(
                 payer,
@@ -107,6 +108,7 @@ async fn main() -> Result<(), ErrBox> {
                     pyth_owner: pyth_owner_addr,
                     is_active: is_active.unwrap_or(true),
                     max_batch_size: P2W_MAX_BATCH_SIZE,
+                    ops_owner: ops_owner_addr,
                 },
                 latest_blockhash,
             )?;
@@ -127,8 +129,17 @@ async fn main() -> Result<(), ErrBox> {
             new_wh_prog,
             new_pyth_owner_addr,
             is_active,
+            ops_owner_addr,
+            remove_ops_owner,
         } => {
             let old_config = get_config_account(&rpc_client, &p2w_addr).await?;
+            
+            let new_ops_owner = if remove_ops_owner {
+                None
+            } else {
+                ops_owner_addr
+            };
+
             let tx = gen_set_config_tx(
                 payer,
                 p2w_addr,
@@ -139,6 +150,7 @@ async fn main() -> Result<(), ErrBox> {
                     pyth_owner: new_pyth_owner_addr.unwrap_or(old_config.pyth_owner),
                     is_active: is_active.unwrap_or(old_config.is_active),
                     max_batch_size: P2W_MAX_BATCH_SIZE,
+                    ops_owner: new_ops_owner,
                 },
                 latest_blockhash,
             )?;
@@ -195,7 +207,23 @@ async fn main() -> Result<(), ErrBox> {
             )
             .await?;
         }
-        Action::GetEmitter => unreachable! {},
+        Action::GetEmitter => unreachable! {}, // It is handled early in this function.
+        Action::SetIsActive { ops_owner, new_is_active } => {            
+            let tx = gen_set_is_active_tx(
+                payer,
+                p2w_addr,
+                read_keypair_file(&*shellexpand::tilde(&ops_owner))?,
+                new_is_active.eq_ignore_ascii_case("true"),
+                latest_blockhash,
+            )?;
+            rpc_client
+                .send_and_confirm_transaction_with_spinner(&tx)
+                .await?;
+            println!(
+                "Applied conifg:\n{:?}",
+                get_config_account(&rpc_client, &p2w_addr).await?
+            );
+        },
     }
 
     Ok(())
