@@ -15,6 +15,9 @@ PYTH_PUBLISHER_KEYPAIR = os.environ.get(
     "PYTH_PUBLISHER_KEYPAIR", f"{PYTH_KEY_STORE}/publish_key_pair.json"
 )
 PYTH_PUBLISHER_INTERVAL = float(os.environ.get("PYTH_PUBLISHER_INTERVAL", "5"))
+PYTH_MAPPING_KEYPAIR = os.environ.get(
+    "PYTH_MAPPING_KEYPAIR", f"{PYTH_KEY_STORE}/mapping_key_pair.json"
+)
 
 # 0 setting disables airdropping
 SOL_AIRDROP_AMT = int(os.environ.get("SOL_AIRDROP_AMT", 0))

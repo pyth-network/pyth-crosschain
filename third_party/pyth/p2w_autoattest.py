@@ -169,20 +169,25 @@ if P2W_ATTESTATION_CFG is None:
 
     res = conn.getresponse()
 
-    pyth_accounts = None
+    publisher_state_map = {}
 
     if res.getheader("Content-Type") == "application/json":
-        pyth_accounts = json.load(res)
+        publisher_state_map = json.load(res)
     else:
         logging.error("Bad Content type")
         sys.exit(1)
+
+    pyth_accounts = publisher_state_map["symbols"]
 
     logging.info(
         f"Retrieved {len(pyth_accounts)} Pyth accounts from endpoint: {pyth_accounts}"
     )
 
-    cfg_yaml = """
+    mapping_addr = publisher_state_map["mapping_addr"]
+
+    cfg_yaml = f"""
 ---
+mapping_addr: {mapping_addr}
 symbol_groups:
   - group_name: fast_interval_only
     conditions:

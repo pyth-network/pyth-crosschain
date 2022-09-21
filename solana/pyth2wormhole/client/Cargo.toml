@@ -19,7 +19,7 @@ log = "0.4.14"
 wormhole-bridge-solana = {git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9"}
 pyth2wormhole = {path = "../program"}
 p2w-sdk = { path = "../../../third_party/pyth/p2w-sdk/rust", features=["solana"] }
-pyth-sdk-solana = "0.5.0"
+pyth-sdk-solana = "0.6.1"
 serde = "1"
 serde_yaml = "0.8"
 shellexpand = "2.1.0"

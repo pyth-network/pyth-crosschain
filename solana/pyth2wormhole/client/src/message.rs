@@ -37,7 +37,7 @@ impl P2WMessageQueue {
         Self {
             accounts: VecDeque::new(),
             grace_period,
-            max_accounts
+            max_accounts,
         }
     }
     /// Finds or creates an account with last_used at least grace_period in the past.
@@ -59,7 +59,11 @@ impl P2WMessageQueue {
 
                 // Make sure we're not going over the limit
                 if self.accounts.len() >= self.max_accounts {
-                    return Err(format!("Max message queue size of {} reached.", self.max_accounts).into());
+                    return Err(format!(
+                        "Max message queue size of {} reached.",
+                        self.max_accounts
+                    )
+                    .into());
                 }
 
                 debug!(
@@ -106,7 +110,7 @@ pub mod test {
 
         std::thread::sleep(Duration::from_millis(600));
 
-        // Account 0 should be in front, enough time passed 
+        // Account 0 should be in front, enough time passed
         let acc3 = q.get_account()?;
 
         assert_eq!(q.accounts.len(), 2);
