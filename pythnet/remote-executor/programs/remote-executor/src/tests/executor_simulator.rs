@@ -43,8 +43,7 @@ use crate::state::{
     posted_vaa::AnchorVaa,
 };
 
-/// Simulator for the state of the pyth program on Solana. You can run solana transactions against
-/// this struct to test how pyth instructions execute in the Solana runtime.
+/// Bench for the tests, the goal of this struct is to be able to setup solana accounts before starting the local validator
 pub struct ExecutorBench {
     program_test: ProgramTest,
     program_id: Pubkey,
@@ -93,7 +92,7 @@ impl ExecutorBench {
             rent_epoch: Epoch::default(),
         };
 
-        // Add to both accounts to program test, now the program is deployed as upgradable
+        // Add both accounts to program test, now the program is deployed as upgradable
         program_test.add_account(program_key, program_account);
         program_test.add_account(programdata_key, programdata_account);
 
@@ -104,11 +103,11 @@ impl ExecutorBench {
         };
     }
 
+    /// Start local validator based on the current bench
     pub async fn start(self) -> ExecutorSimulator {
         // Start validator
         let (banks_client, genesis_keypair, recent_blockhash) = self.program_test.start().await;
 
-        // Anchor Program
         return ExecutorSimulator {
             banks_client,
             payer: genesis_keypair,
@@ -117,6 +116,7 @@ impl ExecutorBench {
         };
     }
 
+    /// Add VAA account with emitter and instructions for consumption by the remote_executor
     pub fn add_vaa_account(&mut self, emitter: &Pubkey, instructions: &Vec<Instruction>) -> Pubkey {
         let payload = ExecutorPayload {
             header: GovernanceHeader::default(),
@@ -141,6 +141,8 @@ impl ExecutorBench {
             payload: payload_bytes,
         };
 
+        *self.seqno.entry(*emitter).or_insert(0) += 1;
+
         let vaa_bytes = vaa.try_to_vec().unwrap();
 
         let vaa_account = Account {
@@ -160,7 +162,7 @@ pub struct ExecutorSimulator {
     banks_client: BanksClient,
     payer: Keypair,
     last_blockhash: Hash,
-    pub program_id: Pubkey,
+    program_id: Pubkey,
 }
 
 impl ExecutorSimulator {
@@ -194,6 +196,7 @@ impl ExecutorSimulator {
         self.banks_client.process_transaction(transaction).await
     }
 
+    /// Execute the payload contained in the VAA at posted_vaa_address
     pub async fn execute_posted_vaa(
         &mut self,
         posted_vaa_address: &Pubkey,
@@ -203,6 +206,7 @@ impl ExecutorSimulator {
             .get_account_data_with_borsh(*posted_vaa_address)
             .await
             .unwrap();
+
         let account_metas = crate::accounts::ExecutePostedVaa::populate(
             &self.program_id,
             &self.payer.pubkey(),
@@ -210,6 +214,7 @@ impl ExecutorSimulator {
             &posted_vaa_address,
         )
         .to_account_metas(None);
+
         let instruction = Instruction {
             program_id: self.program_id,
             accounts: account_metas,
