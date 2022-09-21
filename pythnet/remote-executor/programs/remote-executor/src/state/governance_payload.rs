@@ -15,20 +15,20 @@ use crate::error::ExecutorError;
 
 pub const MAGIC_NUMBER: u32 = 0x4d475450; // Reverse order of the solidity contract because borsh uses little endian numbers (the solidity contract uses 0x5054474d)
 
-#[derive(AnchorDeserialize, AnchorSerialize, Debug, PartialEq, Eq, Debug, PartialEq, Eq)]
+#[derive(AnchorDeserialize, AnchorSerialize, Debug, PartialEq, Eq)]
 pub struct ExecutorPayload {
     pub header: GovernanceHeader,
 
     pub instructions: Vec<InstructionData>,
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, PartialEq, Eq, Debug, Debug)]
+#[derive(AnchorDeserialize, AnchorSerialize, PartialEq, Eq, Debug)]
 pub enum Module {
     Executor = 0,
     Target,
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, PartialEq, Eq, Debug, Debug)]
+#[derive(AnchorDeserialize, AnchorSerialize, PartialEq, Eq, Debug)]
 pub enum Action {
     ExecutePostedVaa = 0,
 }
@@ -60,7 +60,6 @@ impl Default for GovernanceHeader {
 }
 
 /// Hack to get Borsh to deserialize, serialize this number with big endian order
-#[derive(Eq, PartialEq, Debug)]
 #[derive(Eq, PartialEq, Debug)]
 pub struct BigEndianU16 {
     pub value: u16,
