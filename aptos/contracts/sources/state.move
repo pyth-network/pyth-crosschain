@@ -42,9 +42,14 @@ module pyth::state {
         info: Table<PriceIdentifier, PriceInfo>,
     }
 
-    /// Governance structs
+    /// The allowed data source for governance VAAs
     struct GovernanceDataSource has key {
         source: DataSource,
+    }
+
+    /// The ID of the chain this contract is deployed on
+    struct ChainID has key {
+        chain_id: u64,
     }
 
     /// The last executed governance VAA sequence number
@@ -60,10 +65,14 @@ module pyth::state {
     // Initialization
     public(friend) fun init(
         pyth: &signer,
+        chain_id: u64,
         stale_price_threshold: u64,
         update_fee: u64,
         governance_data_source: DataSource,
         signer_capability: account::SignerCapability) {
+            move_to(pyth, ChainID{
+                chain_id: chain_id,
+            });
             move_to(pyth, StalePriceThreshold{
                 threshold_secs: stale_price_threshold,
             });
