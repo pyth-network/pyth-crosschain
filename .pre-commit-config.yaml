@@ -19,8 +19,3 @@ repos:
         language: "rust"
         entry: cargo +nightly clippy --manifest-path ./pythnet/remote-executor/Cargo.toml -- -D warnings
         pass_filenames: false
-      - id: cargo-test-executor
-        name: Cargo test executor
-        language: "rust"
-        entry: cargo test --manifest-path ./pythnet/remote-executor/Cargo.toml
-        pass_filenames: false
