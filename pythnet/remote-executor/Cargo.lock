@@ -201,23 +201,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anchor-client"
-version = "0.25.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee0e630f9310a0134c92df4458890a0f9c5b662d69c305690af1c17f5cd0b3ba"
-dependencies = [
- "anchor-lang",
- "anyhow",
- "regex",
- "serde",
- "solana-account-decoder",
- "solana-client",
- "solana-sdk",
- "thiserror",
- "url",
-]
-
-[[package]]
 name = "anchor-derive-accounts"
 version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2727,7 +2710,6 @@ checksum = "a3f87b73ce11b1619a3c6332f45341e0047173771e8b8b73f87bfeefb7b56244"
 name = "remote-executor"
 version = "0.1.0"
 dependencies = [
- "anchor-client",
  "anchor-lang",
  "bincode",
  "boolinator",
