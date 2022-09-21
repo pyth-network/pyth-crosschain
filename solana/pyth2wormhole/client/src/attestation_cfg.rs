@@ -1,5 +1,9 @@
 use std::{
-    collections::HashMap,
+    collections::{
+        HashMap,
+        HashSet,
+    },
+    iter,
     str::FromStr,
 };
 
@@ -13,7 +17,7 @@ use serde::{
 use solana_program::pubkey::Pubkey;
 
 /// Pyth2wormhole config specific to attestation requests
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct AttestationConfig {
     #[serde(default = "default_min_msg_reuse_interval_ms")]
     pub min_msg_reuse_interval_ms: u64,
@@ -28,7 +32,61 @@ pub struct AttestationConfig {
     pub symbol_groups: Vec<SymbolGroup>,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+impl AttestationConfig {
+    /// Merges new symbols into the attestation config. Pre-existing
+    /// new symbols are ignored. The new_group_name group can already
+    /// exist - symbols will be appended to `symbols` field.
+    pub fn add_symbols(
+        &mut self,
+        mut new_symbols: HashMap<Pubkey, HashSet<Pubkey>>,
+        group_name: String, // Which group is extended by the new symbols
+    ) {
+        // Remove pre-existing symbols from the new symbols collection
+        for existing_group in &self.symbol_groups {
+            for existing_sym in &existing_group.symbols {
+                // Check if new symbols mention this product
+                if let Some(mut prices) = new_symbols.get_mut(&existing_sym.product_addr) {
+                    // Prune the price if exists
+                    prices.remove(&existing_sym.price_addr);
+                }
+            }
+        }
+
+        // Turn the pruned symbols into P2WSymbol structs
+        let mut new_symbols_vec = new_symbols
+            .drain() // Makes us own the elements and lets us move them
+            .map(|(prod, prices)| iter::zip(iter::repeat(prod), prices)) // Convert to iterator over flat (prod, price) tuples
+            .flatten() // Flatten the tuple iterators
+            .map(|(prod, price)| P2WSymbol {
+                name: None,
+                product_addr: prod,
+                price_addr: price,
+            })
+            .collect::<Vec<P2WSymbol>>();
+
+        // Find and extend OR create the group of specified name
+        match self
+            .symbol_groups
+            .iter_mut()
+            .find(|g| g.group_name == group_name) // Advances the iterator and returns Some(item) on first hit
+        {
+            Some(mut existing_group) => existing_group.symbols.append(&mut new_symbols_vec),
+            None if new_symbols_vec.len() != 0 => {
+                // Group does not exist, assume defaults
+                let new_group = SymbolGroup {
+                    group_name,
+                    conditions: Default::default(),
+                    symbols: new_symbols_vec,
+                };
+
+                self.symbol_groups.push(new_group);
+            }
+            None => {}
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct SymbolGroup {
     pub group_name: String,
     /// Attestation conditions applied to all symbols in this group
@@ -56,7 +114,7 @@ pub const fn default_max_batch_jobs() -> usize {
 /// of the active conditions is met. Option<> fields can be
 /// de-activated with None. All conditions are inactive by default,
 /// except for the non-Option ones.
-#[derive(Clone, Default, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct AttestationConditions {
     /// Baseline, unconditional attestation interval. Attestation is triggered if the specified interval elapsed since last attestation.
     #[serde(default = "default_min_interval_secs")]
@@ -76,6 +134,17 @@ pub struct AttestationConditions {
     /// specified amount.
     #[serde(default)]
     pub publish_time_min_delta_secs: Option<u64>,
+}
+
+impl Default for AttestationConditions {
+    fn default() -> Self {
+        Self {
+            min_interval_secs: default_min_interval_secs(),
+            max_batch_jobs: default_max_batch_jobs(),
+            price_changed_pct: None,
+            publish_time_min_delta_secs: None,
+        }
+    }
 }
 
 /// Config entry for a Pyth product + price pair
@@ -197,6 +266,47 @@ mod tests {
         let deserialized: AttestationConfig = serde_yaml::from_str(&serialized)?;
 
         assert_eq!(cfg, deserialized);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_add_symbols_works() -> Result<(), ErrBox> {
+        let empty_config = AttestationConfig {
+            min_msg_reuse_interval_ms: 1000,
+            max_msg_accounts: 100,
+            mapping_addr: None,
+            symbol_groups: vec![],
+        };
+
+        let mock_new_symbols = (0..255)
+            .map(|sym_idx| {
+                let mut mock_prod_bytes = [0u8; 32];
+                mock_prod_bytes[31] = sym_idx;
+
+                let mut mock_prices = HashSet::new();
+                for px_idx in 1..=5 {
+                    let mut mock_price_bytes = [0u8; 32];
+                    mock_price_bytes[31] = sym_idx;
+                    mock_prices.insert(Pubkey::new_from_array(mock_price_bytes));
+                }
+
+                (Pubkey::new_from_array(mock_prod_bytes), mock_prices)
+            })
+            .collect::<HashMap<Pubkey, HashSet<Pubkey>>>();
+
+        let mut config1 = empty_config.clone();
+
+        config1.add_symbols(mock_new_symbols.clone(), "default".to_owned());
+
+        let mut config2 = config1.clone();
+
+        // Should not be created because there's no new symbols to add
+        // (we're adding identical mock_new_symbols again)
+        config2.add_symbols(mock_new_symbols.clone(), "default2".to_owned());
+
+        assert_ne!(config1, empty_config); // Check that config grows from empty
+        assert_eq!(config1, config2); // Check that no changes are made if all symbols are already in there
 
         Ok(())
     }

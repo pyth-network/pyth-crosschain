@@ -198,9 +198,9 @@ symbol_groups:
     # integer-divide the symbols in ~half for two test
     # groups. Assumes arr[:idx] is exclusive, and arr[idx:] is
     # inclusive
-    half_len = len(pyth_accounts) // 2;
+    third_len = len(pyth_accounts) // 3;
 
-    for thing in pyth_accounts[:half_len]:
+    for thing in pyth_accounts[:third_len]:
         name = thing["name"]
         price = thing["price"]
         product = thing["product"]
@@ -218,7 +218,7 @@ symbol_groups:
     symbols:
 """
 
-    for stuff in pyth_accounts[half_len:]:
+    for stuff in pyth_accounts[third_len:-third_len]:
         name = stuff["name"]
         price = stuff["price"]
         product = stuff["product"]
@@ -227,6 +227,14 @@ symbol_groups:
       - name: {name}
         price_addr: {price}
         product_addr: {product}"""
+
+    cfg_yaml += f"""
+  - group_name: mapping
+    conditions:
+      min_interval_secs: 30
+      price_changed_pct: 5 
+    symbols: []
+"""
 
     with open(P2W_ATTESTATION_CFG, "w") as f:
         f.write(cfg_yaml)
