@@ -116,7 +116,7 @@ async fn main() -> Result<(), ErrBox> {
                 .send_and_confirm_transaction_with_spinner(&tx)
                 .await?;
             println!(
-                "Initialized with conifg:\n{:?}",
+                "Initialized with config:\n{:?}",
                 get_config_account(&rpc_client, &p2w_addr).await?
             );
         }
@@ -158,7 +158,7 @@ async fn main() -> Result<(), ErrBox> {
                 .send_and_confirm_transaction_with_spinner(&tx)
                 .await?;
             println!(
-                "Applied conifg:\n{:?}",
+                "Applied config:\n{:?}",
                 get_config_account(&rpc_client, &p2w_addr).await?
             );
         }
@@ -173,7 +173,7 @@ async fn main() -> Result<(), ErrBox> {
                 .send_and_confirm_transaction_with_spinner(&tx)
                 .await?;
             println!(
-                "Applied conifg:\n{:?}",
+                "Applied config:\n{:?}",
                 get_config_account(&rpc_client, &p2w_addr).await?
             );
         }
@@ -220,7 +220,7 @@ async fn main() -> Result<(), ErrBox> {
                 .send_and_confirm_transaction_with_spinner(&tx)
                 .await?;
             println!(
-                "Applied conifg:\n{:?}",
+                "Applied config:\n{:?}",
                 get_config_account(&rpc_client, &p2w_addr).await?
             );
         },
