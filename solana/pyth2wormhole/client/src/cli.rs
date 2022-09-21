@@ -144,7 +144,7 @@ pub enum Action {
         #[clap(
             long,
             default_value = "~/.config/solana/id.json",
-            help = "Keypair file for the current config owner"
+            help = "Keypair file for the current ops owner"
         )]
         ops_owner: String,
         #[clap(
