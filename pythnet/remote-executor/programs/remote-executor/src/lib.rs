@@ -4,6 +4,7 @@
 use anchor_lang::{
     prelude::*,
     solana_program::borsh::get_packed_len,
+    system_program,
 };
 use state::{
     claim_record::ClaimRecord,
@@ -12,6 +13,9 @@ use state::{
 
 mod error;
 mod state;
+
+#[cfg(test)] //Conditional compilation of the tests
+mod tests;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -77,4 +81,31 @@ pub struct ExecutePostedVaa<'info> {
     #[account(init_if_needed, space = 8 + get_packed_len::<ClaimRecord>(), payer=payer, seeds = [CLAIM_RECORD_SEED.as_bytes(), &posted_vaa.emitter_address], bump)]
     pub claim_record: Account<'info, ClaimRecord>,
     pub system_program: Program<'info, System>,
+}
+
+impl crate::accounts::ExecutePostedVaa {
+    pub fn populate(
+        program_id: &Pubkey,
+        payer: &Pubkey,
+        emitter: &Pubkey,
+        posted_vaa: &Pubkey,
+    ) -> Self {
+        let executor_key = Pubkey::find_program_address(
+            &[EXECUTOR_KEY_SEED.as_bytes(), &emitter.to_bytes()],
+            program_id,
+        )
+        .0;
+        let claim_record = Pubkey::find_program_address(
+            &[CLAIM_RECORD_SEED.as_bytes(), &emitter.to_bytes()],
+            program_id,
+        )
+        .0;
+        crate::accounts::ExecutePostedVaa {
+            payer: *payer,
+            executor_key,
+            claim_record,
+            posted_vaa: *posted_vaa,
+            system_program: system_program::ID,
+        }
+    }
 }

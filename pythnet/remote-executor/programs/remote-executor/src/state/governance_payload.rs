@@ -46,6 +46,20 @@ pub struct GovernanceHeader {
     pub chain: BigEndianU16,
 }
 
+impl GovernanceHeader {
+    #[allow(unused)] // Only used in tests right now
+    pub fn executor_governance_header() -> Self {
+        Self {
+            magic_number: MAGIC_NUMBER,
+            module: Module::Executor,
+            action: Action::ExecutePostedVaa,
+            chain: BigEndianU16 {
+                value: Chain::Pythnet.try_into().unwrap(),
+            },
+        }
+    }
+}
+
 /// Hack to get Borsh to deserialize, serialize this number with big endian order
 #[derive(Eq, PartialEq, Debug)]
 pub struct BigEndianU16 {
@@ -162,32 +176,18 @@ pub mod tests {
         state::governance_payload::InstructionData,
     };
 
-    use super::{
-        Action,
-        BigEndianU16,
-        ExecutorPayload,
-        Module,
-        MAGIC_NUMBER,
-    };
+    use super::ExecutorPayload;
     use anchor_lang::{
         prelude::Pubkey,
         AnchorDeserialize,
         AnchorSerialize,
     };
-    use wormhole::Chain;
 
     #[test]
     fn test_check_deserialization_serialization() {
         // No instructions
         let payload = ExecutorPayload {
-            header: super::GovernanceHeader {
-                magic_number: MAGIC_NUMBER,
-                module: Module::Executor,
-                action: Action::ExecutePostedVaa,
-                chain: BigEndianU16 {
-                    value: Chain::Pythnet.try_into().unwrap(),
-                },
-            },
+            header: super::GovernanceHeader::executor_governance_header(),
             instructions: vec![],
         };
 
@@ -202,14 +202,8 @@ pub mod tests {
 
         // One instruction
         let payload = ExecutorPayload {
-            header: super::GovernanceHeader {
-                magic_number: MAGIC_NUMBER,
-                module: Module::Executor,
-                action: Action::ExecutePostedVaa,
-                chain: BigEndianU16 {
-                    value: Chain::Pythnet.try_into().unwrap(),
-                },
-            },
+            header: super::GovernanceHeader::executor_governance_header(),
+
             instructions: vec![InstructionData::from(
                 &anchor_lang::solana_program::system_instruction::create_account(
                     &Pubkey::new_unique(),
