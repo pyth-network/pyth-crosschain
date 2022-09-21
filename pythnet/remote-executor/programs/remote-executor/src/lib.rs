@@ -109,11 +109,3 @@ impl crate::accounts::ExecutePostedVaa {
         }
     }
 }
-
-pub fn assert_or_err(condition: bool, error: Result<()>) -> Result<()> {
-    if !condition {
-        error
-    } else {
-        Result::Ok(())
-    }
-}
