@@ -163,6 +163,45 @@ pub fn gen_set_config_tx(
     Ok(tx_signed)
 }
 
+
+pub fn gen_set_is_active_tx(
+    payer: Keypair,
+    p2w_addr: Pubkey,
+    ops_owner: Keypair,
+    new_is_active: bool,
+    latest_blockhash: Hash,
+) -> Result<Transaction, ErrBox> {
+    let payer_pubkey = payer.pubkey();
+
+    let acc_metas = vec![
+        // config
+        AccountMeta::new(
+            P2WConfigAccount::<{ AccountState::Initialized }>::key(None, &p2w_addr),
+            false,
+        ),
+        // ops_owner
+        AccountMeta::new(ops_owner.pubkey(), true),
+        // payer
+        AccountMeta::new(payer.pubkey(), true),
+    ];
+
+    let ix_data = (
+        pyth2wormhole::instruction::Instruction::SetIsActive,
+        new_is_active,
+    );
+
+    let ix = Instruction::new_with_bytes(p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas);
+
+    let signers = vec![&ops_owner, &payer];
+    let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
+        &[ix],
+        Some(&payer_pubkey),
+        &signers,
+        latest_blockhash,
+    );
+    Ok(tx_signed)
+}
+
 pub fn gen_migrate_tx(
     payer: Keypair,
     p2w_addr: Pubkey,

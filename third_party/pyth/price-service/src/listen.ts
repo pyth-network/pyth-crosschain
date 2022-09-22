@@ -150,7 +150,6 @@ export class Listener implements PriceStore {
   }
 
   async processVaa(vaaBytes: string) {
-    logger.info("Received a new VAA");
     const { parse_vaa } = await importCoreWasm();
     const parsedVAA = parse_vaa(hexToUint8Array(vaaBytes));
 
