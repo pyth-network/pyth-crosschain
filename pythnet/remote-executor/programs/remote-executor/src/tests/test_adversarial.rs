@@ -19,6 +19,13 @@ use solana_sdk::{
 };
 
 #[tokio::test]
+/// This test file tests that the executor fails (and checks the errors to make sure it fails for the right reason) when :
+/// - The VAA has a bad format
+/// - The VAA is not owned by the bridge
+/// - The VAA was not emitted by Solana
+/// - Another account is passed in place of the system program
+/// - A claim_record account not seeded by the emitter of the VAA is passed
+
 async fn test_adversarial() {
     let mut bench = ExecutorBench::new();
     let emitter = Pubkey::new_unique();

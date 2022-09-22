@@ -25,6 +25,10 @@ use solana_sdk::{
 };
 
 #[tokio::test]
+/// This test file tests that the executor can :
+/// - Execute instructions with multiple signers
+/// - Execute multiple instructions in one call
+/// - Protect against replay attacks by updating the claim_record
 async fn test_basic_instructions() {
     let mut bench = ExecutorBench::new();
 
