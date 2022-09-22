@@ -248,7 +248,7 @@ module pyth::pyth {
         state::get_stale_price_threshold_secs()
     }
 
-    /// Get the number of AptosCoin's requried to perform one batch update
+    /// Get the number of AptosCoin's required to perform one batch update
     public fun get_update_fee(): u64 {
         state::get_update_fee()
     }
