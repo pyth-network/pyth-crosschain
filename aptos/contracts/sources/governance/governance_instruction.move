@@ -3,6 +3,7 @@ module pyth::governance_instruction {
     use pyth::deserialize;
     use pyth::error;
 
+    const MAGIC: vector<u8> = x"5054474d"; // "PTGM": Pyth Governance Message
     const MODULE: u8 = 2;
     const TARGET_CHAIN_ID: u64 = 3;
 
@@ -21,6 +22,8 @@ module pyth::governance_instruction {
  
     public fun from_byte_vec(bytes: vector<u8>): GovernanceInstruction {
         let cursor = cursor::init(bytes);
+        let magic = deserialize::deserialize_vector(&mut cursor, 4);
+        assert!(magic == MAGIC, error::invalid_governance_magic_value());
         let module_ = deserialize::deserialize_u8(&mut cursor);
         let action = deserialize::deserialize_u8(&mut cursor);
         let target_chain_id = deserialize::deserialize_u16(&mut cursor);
@@ -57,5 +60,26 @@ module pyth::governance_instruction {
             payload: payload
         } = instruction;
         payload
+    }
+
+    #[test]
+    #[expected_failure(abort_code = 65556)]
+    fun test_from_byte_vec_invalid_magic() {
+        let bytes = x"5054474eb01087a85361f738f19454e66664d3c9";
+        destroy(from_byte_vec(bytes));
+    }
+
+    #[test]
+    #[expected_failure(abort_code = 65548)]
+    fun test_from_byte_vec_invalid_module() {
+        let bytes = x"5054474db05087a85361f738f19454e66664d3c9";
+        destroy(from_byte_vec(bytes));
+    }
+
+    #[test]
+    #[expected_failure(abort_code = 65548)]
+    fun test_from_byte_vec_invalid_target_chain_id() {
+        let bytes = x"5054474db05087a85361f738f19454e66664d3c9";
+        destroy(from_byte_vec(bytes));
     }
 }
