@@ -78,4 +78,8 @@ module pyth::error {
     public fun positive_value(): u64 {
         error::invalid_state(19)
     }
+    
+   public fun invalid_governance_magic_value(): u64 {
+    error::invalid_argument(20)
+   }
 }
