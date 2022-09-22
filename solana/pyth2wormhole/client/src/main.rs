@@ -190,12 +190,6 @@ async fn main() -> Result<(), ErrBox> {
             let mut attestation_cfg: AttestationConfig =
                 serde_yaml::from_reader(File::open(attestation_cfg)?)?;
 
-            if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
-                let additional_accounts = crawl_pyth_mapping(&rpc_client, mapping_addr).await?;
-                info!("Additional mapping accounts:\n{:#?}", additional_accounts);
-                attestation_cfg.add_symbols(additional_accounts, "mapping".to_owned());
-            }
-
             handle_attest(
                 cli.rpc_url,
                 Duration::from_millis(cli.rpc_interval_ms),
@@ -239,7 +233,7 @@ async fn handle_attest(
     commitment: CommitmentConfig,
     payer: Keypair,
     p2w_addr: Pubkey,
-    attestation_cfg: AttestationConfig,
+    mut attestation_cfg: AttestationConfig,
     n_retries: usize,
     retry_interval: Duration,
     confirmation_timeout: Duration,
@@ -249,51 +243,14 @@ async fn handle_attest(
     let emitter_addr = P2WEmitter::key(None, &p2w_addr);
 
     info!("Using emitter addr {}", emitter_addr);
-
-    let config = get_config_account(
-        &RpcClient::new_with_timeout_and_commitment(
-            rpc_url.clone(),
-            confirmation_timeout,
-            commitment.clone(),
-        ),
-        &p2w_addr,
-    )
-    .await?;
-
-    debug!("Symbol config:\n{:#?}", attestation_cfg);
-
     info!(
-        "{} symbol groups read, dividing into batches",
-        attestation_cfg.symbol_groups.len(),
+        "Crawling mapping {:?} every {} minutes",
+        attestation_cfg.mapping_addr, attestation_cfg.mapping_reload_interval_mins
     );
 
-    // Reused for failed batch retries
-    let mut batches: Vec<_> = attestation_cfg
-        .symbol_groups
-        .iter()
-        .map(|g| {
-            let conditions4closure = g.conditions.clone();
-            let name4closure = g.group_name.clone();
-
-            info!("Group {:?}, {} symbols", g.group_name, g.symbols.len(),);
-
-            // Divide group into batches
-            g.symbols
-                .as_slice()
-                .chunks(config.max_batch_size as usize)
-                .map(move |symbols| {
-                    BatchState::new(name4closure.clone(), symbols, conditions4closure.clone())
-                })
-        })
-        .flatten()
-        .enumerate()
-        .map(|(idx, batch_state)| (idx + 1, batch_state))
-        .collect();
-    let batch_count = batches.len();
-
-    /// Note: For global rate-limitting of RPC requests, we use a
-    /// custom Mutex wrapper which enforces a delay of rpc_interval
-    /// between RPC accesses.
+    // Note: For global rate-limitting of RPC requests, we use a
+    // custom Mutex wrapper which enforces a delay of rpc_interval
+    // between RPC accesses.
     let rpc_cfg = Arc::new(RLMutex::new(
         RpcCfg {
             url: rpc_url,
@@ -303,56 +260,119 @@ async fn handle_attest(
         rpc_interval,
     ));
 
-    let message_q_mtx = Arc::new(Mutex::new(P2WMessageQueue::new(
-        Duration::from_millis(attestation_cfg.min_msg_reuse_interval_ms),
-        attestation_cfg.max_msg_accounts as usize,
-    )));
+    // This loop governs mapping account reloads in daemon mode. It is
+    // broken if daemon != true at the and
+    loop {
+        let config = get_config_account(&lock_and_make_rpc(&rpc_cfg).await, &p2w_addr).await?;
 
-    // Create attestation scheduling routines; see attestation_sched_job() for details
-    let mut attestation_sched_futs = batches.into_iter().map(|(batch_no, batch)| {
-        attestation_sched_job(
-            batch,
-            batch_no,
-            batch_count,
-            n_retries,
-            retry_interval,
-            daemon,
-            rpc_cfg.clone(),
-            p2w_addr,
-            config.clone(),
-            Keypair::from_bytes(&payer.to_bytes()).unwrap(),
-            message_q_mtx.clone(),
-        )
-    });
-
-    info!("Spinning up attestation sched jobs");
-
-    let results = futures::future::join_all(attestation_sched_futs).await; // May never finish for daemon mode
-
-    info!("Got {} results", results.len());
-
-    // With daemon mode off, the sched jobs return from the
-    // join_all. We filter out errors and report them
-    let errors: Vec<_> = results
-        .iter()
-        .enumerate()
-        .filter_map(|(idx, r)| {
-            r.as_ref()
-                .err()
-                .map(|e| format!("Error {}: {:#?}\n", idx + 1, e))
-        })
-        .collect();
-
-    if !errors.is_empty() {
-        let err_lines = errors.join("\n");
-        let msg = format!(
-            "{} of {} batches failed:\n{}",
-            errors.len(),
-            batch_count,
-            err_lines
+        // Use the mapping if specified
+        if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
+            // De-escalate crawling errors; A temporary failure to
+            // look up the mapping should not crash the attester
+            match crawl_pyth_mapping(&lock_and_make_rpc(&rpc_cfg).await, mapping_addr).await {
+                Ok(additional_accounts) => {
+                    debug!(
+                        "Crawled mapping {} data:\n{:#?}",
+                        mapping_addr, additional_accounts
+                    );
+                    attestation_cfg.add_symbols(additional_accounts, "mapping".to_owned());
+                }
+                Err(e) => {
+                    error!("Could not crawl mapping {}: {:?}", mapping_addr, e);
+                }
+            }
+        }
+        debug!(
+            "Attestation config (includes mapping accounts):\n{:#?}",
+            attestation_cfg
         );
-        error!("{}", msg);
-        return Err(msg.into());
+
+        info!(
+            "{} symbol groups read, dividing into batches",
+            attestation_cfg.symbol_groups.len(),
+        );
+
+        let mut batches: Vec<_> = attestation_cfg
+            .symbol_groups
+            .iter()
+            .map(|g| {
+                let conditions4closure = g.conditions.clone();
+                let name4closure = g.group_name.clone();
+
+                info!("Group {:?}, {} symbols", g.group_name, g.symbols.len(),);
+
+                // Divide group into batches
+                g.symbols
+                    .as_slice()
+                    .chunks(config.max_batch_size as usize)
+                    .map(move |symbols| {
+                        BatchState::new(name4closure.clone(), symbols, conditions4closure.clone())
+                    })
+            })
+            .flatten()
+            .enumerate()
+            .map(|(idx, batch_state)| (idx + 1, batch_state))
+            .collect();
+        let batch_count = batches.len();
+
+        // For enforcing min_msg_reuse_interval_ms, we keep a piece of
+        // state that creates or reuses accounts if enough time had
+        // passed
+        let message_q_mtx = Arc::new(Mutex::new(P2WMessageQueue::new(
+            Duration::from_millis(attestation_cfg.min_msg_reuse_interval_ms),
+            attestation_cfg.max_msg_accounts as usize,
+        )));
+
+        // Create attestation scheduling routines; see attestation_sched_job() for details
+        let mut attestation_sched_futs = batches.into_iter().map(|(batch_no, batch)| {
+            attestation_sched_job(AttestationSchedJobArgs {
+                ttl: Duration::from_secs(attestation_cfg.mapping_reload_interval_mins * 60),
+                batch,
+                batch_no,
+                batch_count,
+                n_retries,
+                retry_interval,
+                daemon,
+                rpc_cfg: rpc_cfg.clone(),
+                p2w_addr,
+                config: config.clone(),
+                payer: Keypair::from_bytes(&payer.to_bytes()).unwrap(),
+                message_q_mtx: message_q_mtx.clone(),
+            })
+        });
+
+        info!("Spinning up attestation sched jobs");
+
+        let results = futures::future::join_all(attestation_sched_futs).await; // Will finish after specified ttl in daemon mode
+
+        // After completing, we count any errors coming from the
+        // join_all.
+        let errors: Vec<_> = results
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, r)| {
+                r.as_ref()
+                    .err()
+                    .map(|e| format!("Error {}: {:?}\n", idx + 1, e))
+            })
+            .collect();
+
+        if !errors.is_empty() {
+            let err_lines = errors.join("\n");
+            let msg = format!(
+                "{} of {} batches failed:\n{}",
+                errors.len(),
+                batch_count,
+                err_lines
+            );
+            error!("{}", msg);
+            return Err(msg.into());
+        }
+
+        // Ensures just a single attestation per batch outside daemon mode
+        if !daemon {
+            break;
+        }
     }
 
     Ok(())
@@ -375,6 +395,24 @@ async fn lock_and_make_rpc(rlmtx: &RLMutex<RpcCfg>) -> RpcClient {
     RpcClient::new_with_timeout_and_commitment(url, timeout, commitment)
 }
 
+/// The argument count on attestation_sched_job got out of hand. This
+/// helps keep the correct order in check.
+pub struct AttestationSchedJobArgs<'a> {
+    /// How long before scheduled exit of the job; Time To Live
+    pub ttl: Duration,
+    pub batch: BatchState<'a>,
+    pub batch_no: usize,
+    pub batch_count: usize,
+    pub n_retries: usize,
+    pub retry_interval: Duration,
+    pub daemon: bool,
+    pub rpc_cfg: Arc<RLMutex<RpcCfg>>,
+    pub p2w_addr: Pubkey,
+    pub config: Pyth2WormholeConfig,
+    pub payer: Keypair,
+    pub message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
+}
+
 /// A future that decides how a batch is sent.
 ///
 /// In daemon mode, attestations of the batch are scheduled
@@ -388,19 +426,24 @@ async fn lock_and_make_rpc(rlmtx: &RLMutex<RpcCfg>) -> RpcClient {
 ///
 /// With daemon_mode off, this future attempts only one blocking
 /// attestation of the batch and returns the result.
-async fn attestation_sched_job(
-    mut batch: BatchState<'_>,
-    batch_no: usize,
-    batch_count: usize,
-    n_retries: usize,
-    retry_interval: Duration,
-    daemon: bool,
-    rpc_cfg: Arc<RLMutex<RpcCfg>>,
-    p2w_addr: Pubkey,
-    config: Pyth2WormholeConfig,
-    payer: Keypair,
-    message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
-) -> Result<(), ErrBoxSend> {
+async fn attestation_sched_job(mut args: AttestationSchedJobArgs<'_>) -> Result<(), ErrBoxSend> {
+    let AttestationSchedJobArgs {
+        ttl,
+        mut batch,
+        batch_no,
+        batch_count,
+        n_retries,
+        retry_interval,
+        daemon,
+        rpc_cfg,
+        p2w_addr,
+        config,
+        payer,
+        message_q_mtx,
+    } = args;
+
+    let start_time = Instant::now();
+
     let mut retries_left = n_retries;
     // Enforces the max batch job count
     let sema = Arc::new(Semaphore::new(batch.conditions.max_batch_jobs));
@@ -410,18 +453,18 @@ async fn attestation_sched_job(
             batch_no, batch_count, batch.group_name
         );
 
-        let job = attestation_job(
-            rpc_cfg.clone(),
+        let job = attestation_job(AttestationJobArgs {
+            rlmtx: rpc_cfg.clone(),
             batch_no,
             batch_count,
-            batch.group_name.clone(),
+            group_name: batch.group_name.clone(),
             p2w_addr,
-            config.clone(),
-            Keypair::from_bytes(&payer.to_bytes()).unwrap(), // Keypair has no clone
-            batch.symbols.to_vec(),
-            sema.clone(),
-            message_q_mtx.clone(),
-        );
+            config: config.clone(),
+            payer: Keypair::from_bytes(&payer.to_bytes()).unwrap(), // Keypair has no clone
+            symbols: batch.symbols.to_vec(),
+            max_jobs_sema: sema.clone(),
+            message_q_mtx: message_q_mtx.clone(),
+        });
 
         if daemon {
             // park this routine until a resend condition is met
@@ -470,6 +513,20 @@ async fn attestation_sched_job(
 
             // Spawn the job in background
             let _detached_job: JoinHandle<_> = tokio::spawn(job_with_err_msg);
+
+            // Exit the job if ttl had passed
+            let elapsed = start_time.elapsed();
+            if elapsed >= ttl {
+                warn!(
+                    "Batch {}/{}, group {:?} DONE: Scheduling job stopped after {}.{} seconds",
+                    batch_no,
+                    batch_count,
+                    batch.group_name,
+                    elapsed.as_secs(),
+                    elapsed.subsec_millis()
+                );
+                return Ok(());
+            }
         } else {
             // Await and return the single result in non-daemon mode, with retries if necessary
             match job.await {
@@ -506,19 +563,36 @@ async fn attestation_sched_job(
     }
 }
 
+/// Arguments for attestation_job(). This struct rules out same-type
+/// ordering errors due to the large argument count
+pub struct AttestationJobArgs {
+    pub rlmtx: Arc<RLMutex<RpcCfg>>,
+    pub batch_no: usize,
+    pub batch_count: usize,
+    pub group_name: String,
+    pub p2w_addr: Pubkey,
+    pub config: Pyth2WormholeConfig,
+    pub payer: Keypair,
+    pub symbols: Vec<P2WSymbol>,
+    pub max_jobs_sema: Arc<Semaphore>,
+    pub message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
+}
+
 /// A future for a single attempt to attest a batch on Solana.
-async fn attestation_job(
-    rlmtx: Arc<RLMutex<RpcCfg>>,
-    batch_no: usize,
-    batch_count: usize,
-    group_name: String,
-    p2w_addr: Pubkey,
-    config: Pyth2WormholeConfig,
-    payer: Keypair,
-    symbols: Vec<P2WSymbol>,
-    max_jobs_sema: Arc<Semaphore>,
-    message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
-) -> Result<(), ErrBoxSend> {
+async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
+    let AttestationJobArgs {
+        rlmtx,
+        batch_no,
+        batch_count,
+        group_name,
+        p2w_addr,
+        config,
+        payer,
+        symbols,
+        max_jobs_sema,
+        message_q_mtx,
+    } = args;
+
     // Will be dropped after attestation is complete
     let _permit = max_jobs_sema.acquire().await?;
 

@@ -29,6 +29,12 @@ pub struct AttestationConfig {
         serialize_with = "opt_pubkey_string_ser"
     )]
     pub mapping_addr: Option<Pubkey>,
+    /// The known symbol list will be reloaded based off this
+    /// interval, to account for mapping changes. Note: This interval
+    /// will interrupt attestation scheduling jobs regardless of
+    /// mapping_addr set/unset status.
+    #[serde(default = "default_mapping_reload_interval_mins")]
+    pub mapping_reload_interval_mins: u64,
     pub symbol_groups: Vec<SymbolGroup>,
 }
 
@@ -100,6 +106,10 @@ pub const fn default_max_msg_accounts() -> u64 {
 
 pub const fn default_min_msg_reuse_interval_ms() -> u64 {
     10_000 // 10s
+}
+
+pub const fn default_mapping_reload_interval_mins() -> u64 {
+    15
 }
 
 pub const fn default_min_interval_secs() -> u64 {
@@ -258,6 +268,7 @@ mod tests {
             min_msg_reuse_interval_ms: 1000,
             max_msg_accounts: 100_000,
             mapping_addr: None,
+            mapping_reload_interval_mins: 42,
             symbol_groups: vec![fastbois, slowbois],
         };
 
@@ -276,6 +287,7 @@ mod tests {
             min_msg_reuse_interval_ms: 1000,
             max_msg_accounts: 100,
             mapping_addr: None,
+            mapping_reload_interval_mins: 42,
             symbol_groups: vec![],
         };
 
