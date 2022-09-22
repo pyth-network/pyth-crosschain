@@ -292,6 +292,7 @@ impl ExecutorSimulator {
         )
         .to_account_metas(None);
 
+        // ExecutorAttack overrides
         match executor_attack {
             ExecutorAttack::WrongVaaAddress(key) => account_metas[1].pubkey = key,
             ExecutorAttack::WrongEmptyClaimAddress => {
@@ -321,11 +322,14 @@ impl ExecutorSimulator {
         )
         .0;
 
+        // We need to add `executor_key` to the list of accounts
         account_metas.push(AccountMeta {
             pubkey: executor_key,
             is_signer: false,
             is_writable: true,
         });
+
+        // Add the rest of `remaining_accounts` from parsing the payload
         for instruction in executor_payload.instructions {
             for account_meta in Instruction::from(&instruction).accounts {
                 if account_meta.pubkey != executor_key {
