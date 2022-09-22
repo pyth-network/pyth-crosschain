@@ -136,8 +136,10 @@ async fn main() -> Result<(), ErrBox> {
             
             let new_ops_owner = if remove_ops_owner {
                 None
+            } else if let Some(given_ops_owner) = ops_owner_addr {
+                Some(given_ops_owner)
             } else {
-                ops_owner_addr
+                old_config.ops_owner
             };
 
             let tx = gen_set_config_tx(

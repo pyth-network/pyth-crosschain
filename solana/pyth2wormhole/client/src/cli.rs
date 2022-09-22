@@ -119,7 +119,7 @@ pub enum Action {
         is_active: Option<bool>,
         #[clap(long = "ops-owner")]
         ops_owner_addr: Option<Pubkey>,
-        #[clap(long = "remove-ops-owner", conflicts_with = "ops_owner_addr")]
+        #[clap(long = "remove-ops-owner", conflicts_with = "ops-owner-addr")]
         remove_ops_owner: bool,
     },
     #[clap(
