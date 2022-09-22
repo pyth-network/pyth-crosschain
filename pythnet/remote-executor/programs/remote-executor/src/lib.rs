@@ -74,11 +74,11 @@ pub struct ExecutePostedVaa<'info> {
     pub payer: Signer<'info>,
     #[account(constraint = Chain::from(posted_vaa.emitter_chain) == Solana @ ExecutorError::EmitterChainNotSolana, constraint = posted_vaa.sequence > claim_record.sequence @ExecutorError::NonIncreasingSequence )]
     pub posted_vaa: Account<'info, AnchorVaa>,
-    /// The reason claim_record has different seeds than executor_key is that executor key might need to pay in the CPI, so we want it to be a wallet
+    /// The reason claim_record has different seeds than executor_key is that executor key might need to pay in the CPI, so we want it to be a native wallet
     #[account(init_if_needed, space = 8 + get_packed_len::<ClaimRecord>(), payer=payer, seeds = [CLAIM_RECORD_SEED.as_bytes(), &posted_vaa.emitter_address], bump)]
     pub claim_record: Account<'info, ClaimRecord>,
     pub system_program: Program<'info, System>,
-    // Additional accounts will be passed down to the CPIs. Very importantly executor_key needs to be passed as it will be the signer of the CPIs.
+    // Additional accounts passed to the instruction will be passed down to the CPIs. Very importantly executor_key needs to be passed as it will be the signer of the CPIs.
     // Below is the "anchor specification" of that account
     // #[account(seeds = [EXECUTOR_KEY_SEED.as_bytes(), &posted_vaa.emitter_address], bump)]
     // pub executor_key: UncheckedAccount<'info>,
