@@ -104,7 +104,6 @@ module pyth::batch_price_attestation {
 
         // Skip obselete field
         let _product_identifier = deserialize::deserialize_vector(cur, 32);
-
         let price_identifier = price_identifier::from_byte_vec(deserialize::deserialize_vector(cur, 32));
         let price = deserialize::deserialize_i64(cur);
         let conf = deserialize::deserialize_u64(cur);
@@ -118,20 +117,25 @@ module pyth::batch_price_attestation {
         let _max_num_publishers = deserialize::deserialize_u32(cur);
 
         let attestation_time = deserialize::deserialize_u64(cur);
-        let publish_time = deserialize::deserialize_u64(cur);
+        let publish_time = deserialize::deserialize_u64(cur); // 
         let prev_publish_time = deserialize::deserialize_u64(cur);
         let prev_price = deserialize::deserialize_i64(cur);
         let prev_conf = deserialize::deserialize_u64(cur);
+
+        // If status is trading, use the current price.
+        // If not, use the prev_ price - the last known trading price.
+        let current_price = pyth::price::new(price, conf, expo, publish_time);
+        if (status != price_status::new_trading()) {
+            current_price = pyth::price::new(prev_price, prev_conf, expo, prev_publish_time);
+        };
 
         price_info::new(
             attestation_time,
             timestamp::now_seconds(),
             price_feed::new(
                 price_identifier,
-                status,
-                pyth::price::new(price, conf, expo, publish_time),
+                current_price,
                 pyth::price::new(ema_price, ema_conf, expo, publish_time),
-                pyth::price::new(prev_price, prev_conf, expo, prev_publish_time),
             )
         )
     }
@@ -146,7 +150,8 @@ module pyth::batch_price_attestation {
         timestamp::update_global_time_for_test(1663074349 * 1000000);
 
         // A raw batch price attestation 
-        let bytes = x"5032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001";
+        // The first attestation has a status of UNKNOWN
+        let bytes = x"5032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001";
         
         let expected = BatchPriceAttestation {
             header: Header {
@@ -164,10 +169,8 @@ module pyth::batch_price_attestation {
                     arrival_time,
                     price_feed::new(
                         price_identifier::from_byte_vec(x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1"),
-                        price_status::new_trading(),
-                        price::new(i64::new(1178, false), 8, i64::new(5, true), 1663680745),
-                        price::new(i64::new(1500, false), 3, i64::new(5, true), 1663680745),
                         price::new(i64::new(1557, false), 7, i64::new(5, true), 1663680740),
+                        price::new(i64::new(1500, false), 3, i64::new(5, true), 1663680745),
                     ),
                 ),
                 price_info::new(
@@ -175,10 +178,8 @@ module pyth::batch_price_attestation {
                     arrival_time,
                     price_feed::new(
                         price_identifier::from_byte_vec(x"3b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe"),
-                        price_status::new_trading(),
                         price::new(i64::new(1050, false), 3, i64::new(5, true), 1663680745),
                         price::new(i64::new(1483, false), 3, i64::new(5, true), 1663680745),
-                        price::new(i64::new(1158, false), 7, i64::new(5, true), 1663680740),
                     ),
                 ),
                 price_info::new(
@@ -186,10 +187,8 @@ module pyth::batch_price_attestation {
                     arrival_time,
                     price_feed::new(
                         price_identifier::from_byte_vec(x"33832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d"),
-                        price_status::new_trading(),
                         price::new(i64::new(1010, false), 2, i64::new(5, true), 1663680745),
                         price::new(i64::new(1511, false), 3, i64::new(5, true), 1663680745),
-                        price::new(i64::new(1669, false), 8, i64::new(5, true), 1663680740),
                     ),
                 ),
                 price_info::new(
@@ -197,10 +196,8 @@ module pyth::batch_price_attestation {
                     arrival_time,
                     price_feed::new(
                         price_identifier::from_byte_vec(x"21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db8"),
-                        price_status::new_trading(),
                         price::new(i64::new(1739, false), 1, i64::new(5, true), 1663680745),
                         price::new(i64::new(1508, false), 3, i64::new(5, true), 1663680745),
-                        price::new(i64::new(1943, false), 1, i64::new(5, true), 1663680740),
                     ),
                 ),
             ],

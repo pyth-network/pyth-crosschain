@@ -4,13 +4,9 @@ module pyth::price_status {
     const UNKNOWN: u64 = 0;
     /// The price feed is updating as expected.
     const TRADING: u64 = 1;
-    /// The price feed is not currently updating because trading in the product has been halted.
-    const HALTED:  u64 = 2;
-    /// The price feed is not currently updating because an auction is setting the price.
-    const AUCTION: u64 = 3;
 
     /// PriceStatus represents the availability status of a price feed.
-    /// Prices should only be used if they have TRADING status.
+    /// Prices should only be used if they have a status of trading.
     struct PriceStatus has copy, drop, store {
         status: u64,
     }
@@ -34,18 +30,6 @@ module pyth::price_status {
     public fun new_trading(): PriceStatus {
         PriceStatus {
             status: TRADING,
-        }
-    }
-
-    public fun new_halted(): PriceStatus {
-        PriceStatus {
-            status: HALTED,
-        }
-    }
-
-    public fun new_auction(): PriceStatus {
-        PriceStatus {
-            status: AUCTION,
         }
     }
 }

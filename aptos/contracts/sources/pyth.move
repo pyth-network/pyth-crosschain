@@ -5,7 +5,6 @@ module pyth::pyth {
     use pyth::price_feed::{Self};
     use aptos_framework::coin::{Self, Coin, BurnCapability, MintCapability};
     use aptos_framework::aptos_coin::{Self, AptosCoin};
-    use pyth::price_status;
     use pyth::i64;
     use pyth::price::Price;
     use pyth::price;
@@ -233,16 +232,8 @@ module pyth::pyth {
     /// recent for their application. The checked get_price_no_older_than()
     /// function should be used in preference to this.
     public fun get_price_unsafe(price_identifier: PriceIdentifier): Price {
-        let price_feed = price_info::get_price_feed(&state::get_latest_price_info(price_identifier));
-        
-        // If the current price has a status of TRADING, return that
-        let is_trading = price_feed::get_status(price_feed) == price_status::new_trading();
-        if (is_trading) {
-            return price_feed::get_price(price_feed)
-        };
-
-        // Otherwise return the most recent price which has a status of TRADING
-        return price_feed::get_previous_price(price_feed)
+        price_feed::get_price(
+            price_info::get_price_feed(&state::get_latest_price_info(price_identifier)))
     }
 
     fun abs_diff(x: u64, y: u64): u64 {
@@ -307,10 +298,8 @@ module pyth::pyth {
                     1663074349,
                     price_feed::new(
                         price_identifier::from_byte_vec(x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1"),
-                        price_status::new_trading(),
-                        price::new(i64::new(1178, false), 8, i64::new(5, true), 1663680745),
-                        price::new(i64::new(1500, false), 3, i64::new(5, true), 1663680745),
                         price::new(i64::new(1557, false), 7, i64::new(5, true), 1663680740),
+                        price::new(i64::new(1500, false), 3, i64::new(5, true), 1663680745),
                     ),
                 ),
                 price_info::new(
@@ -318,10 +307,8 @@ module pyth::pyth {
                     1663074349,
                     price_feed::new(
                         price_identifier::from_byte_vec(x"3b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe"),
-                        price_status::new_trading(),
                         price::new(i64::new(1050, false), 3, i64::new(5, true), 1663680745),
                         price::new(i64::new(1483, false), 3, i64::new(5, true), 1663680745),
-                        price::new(i64::new(1158, false), 7, i64::new(5, true), 1663680740),
                     ),
                 ),
                 price_info::new(
@@ -329,10 +316,8 @@ module pyth::pyth {
                     1663074349,
                     price_feed::new(
                         price_identifier::from_byte_vec(x"33832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d"),
-                        price_status::new_trading(),
                         price::new(i64::new(1010, false), 2, i64::new(5, true), 1663680745),
                         price::new(i64::new(1511, false), 3, i64::new(5, true), 1663680745),
-                        price::new(i64::new(1669, false), 8, i64::new(5, true), 1663680740),
                     ),
                 ),
                 price_info::new(
@@ -340,10 +325,8 @@ module pyth::pyth {
                     1663074349,
                     price_feed::new(
                         price_identifier::from_byte_vec(x"21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db8"),
-                        price_status::new_trading(),
                         price::new(i64::new(1739, false), 1, i64::new(5, true), 1663680745),
                         price::new(i64::new(1508, false), 3, i64::new(5, true), 1663680745),
-                        price::new(i64::new(1943, false), 1, i64::new(5, true), 1663680740),
                     ),
                 ),
             ]
@@ -354,7 +337,7 @@ module pyth::pyth {
     /// - emitter chain ID 17
     /// - emitter address 0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b
     /// - payload corresponding to the batch price attestation of the prices returned by get_mock_price_infos()
-    const TEST_VAA: vector<u8> = x"01000000000100e000fb400939c4cb52ffbf8e91d03d749f6e00868cd056e9d0289f60428971386080d8b98e39b910bbbdeb4c8a7767a3053d1d2884c0a5e297476334d35feb8e00527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000000005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001";
+    const TEST_VAA: vector<u8> = x"0100000000010036eb563b80a24f4253bee6150eb8924e4bdf6e4fa1dfc759a6664d2e865b4b134651a7b021b7f1ce3bd078070b688b6f2e37ce2de0d9b48e6a78684561e49d5201527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000001005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001";
 
     #[test(aptos_framework = @aptos_framework)]
     #[expected_failure(abort_code = 6)]
@@ -507,16 +490,13 @@ module pyth::pyth {
         let price_identifier = price_identifier::from_byte_vec(x"baa284eaf23edf975b371ba2818772f93dbae72836bbdea28b07d40f3cf8b485");
         let price = price::new(i64::new(7648, false), 674, i64::new(8, true), timestamp);
         let ema_price = price::new(i64::new(1536, true), 869, i64::new(100, false), 1257212500);
-        let prev_price = price::new(i64::new(74637846, false), 8784, i64::new(8768, false), 1257212400);
         let update = price_info::new(
             1257278600,
             1690226180,
             price_feed::new(
                     price_identifier,
-                    price_status::new_trading(),
                     price,
                     ema_price,
-                    prev_price,
             )
         );
         update_cache(vector<PriceInfo>[update]);
@@ -532,10 +512,8 @@ module pyth::pyth {
             1690226180,
             price_feed::new(
                     price_identifier,
-                    price_status::new_trading(),
                     old_price,
                     old_ema_price,
-                    prev_price,
             )
         );
         update_cache(vector<PriceInfo>[old_update]);
@@ -552,10 +530,8 @@ module pyth::pyth {
             1690226180,
             price_feed::new(
                     price_identifier,
-                    price_status::new_trading(),
                     fresh_price,
                     fresh_ema_price,
-                    prev_price,
             )
         );
         update_cache(vector<PriceInfo>[fresh_update]);
@@ -564,53 +540,6 @@ module pyth::pyth {
         assert!(get_price(price_identifier) == fresh_price, 1);
         assert!(get_ema_price(price_identifier) == fresh_ema_price, 1);
 
-        cleanup_test(burn_capability, mint_capability);
-        coin::destroy_zero(coins);
-    }
-
-    #[test(aptos_framework = @aptos_framework)]
-    fun test_get_latest_available_price_unsafe(aptos_framework: &signer) {
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 0);
-
-        // Submit a price update with a status of trading
-        let timestamp = 1257212500;
-        let price_identifier = price_identifier::from_byte_vec(x"baa284eaf23edf975b371ba2818772f93dbae72836bbdea28b07d40f3cf8b485");
-        let price = price::new(i64::new(7648, false), 674, i64::new(8, true), timestamp);
-        let update = price_info::new(
-            1257278600,
-            1690226180,
-            price_feed::new(
-                    price_identifier,
-                    price_status::new_trading(),
-                    price,
-                    price::new(i64::new(1536, true), 869, i64::new(100, false), 1257212500),
-                    price::new(i64::new(74637846, false), 8784, i64::new(8768, false), 1257212400),
-            )
-        );
-        update_cache(vector<PriceInfo>[update]);
-        assert!(get_price_unsafe(price_identifier) == price, 1);
-
-        // Submit a second, newer, update, this time with unknown and a different "previous trading price"
-        let second_timestamp = timestamp + 50;
-        let second_price = price::new(i64::new(7648, false), 674, i64::new(8, true), second_timestamp);
-        let second_previous_price = price::new(i64::new(8794, true), 989, i64::new(10, false), second_timestamp - 100);
-        let second_update = price_info::new(
-            1257278600,
-            1690226180,
-            price_feed::new(
-                    price_identifier,
-                    price_status::new_unknown(),
-                    second_price,
-                    price::new(i64::new(87876, false), 46659, i64::new(9978, false), 1257212400),
-                    second_previous_price
-            )
-        );
-        update_cache(vector<PriceInfo>[second_update]);
-
-        // This time, the latest "unsafe" available price should be second_previous_price,
-        // because the second update had unknown status
-        assert!(get_price_unsafe(price_identifier) == second_previous_price, 1);
-    
         cleanup_test(burn_capability, mint_capability);
         coin::destroy_zero(coins);
     }
@@ -630,10 +559,8 @@ module pyth::pyth {
             1690226180,
             price_feed::new(
                     price_identifier,
-                    price_status::new_trading(),
                     price,
                     price::new(i64::new(1536, true), 869, i64::new(100, false), 1257212500),
-                    price::new(i64::new(74637846, false), 8784, i64::new(8768, false), 1257212400),
             )
         );
         update_cache(vector<PriceInfo>[update]);
