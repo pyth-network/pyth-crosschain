@@ -18,12 +18,10 @@ use wormhole::Chain::{
 mod error;
 mod state;
 
-#[cfg(test)] //Conditional compilation of the tests
+#[cfg(test)]
 mod tests;
 
-#[cfg(test)] //Conditional compilation of the tests
-mod tests;
-
+//Anchor requires the program to declare it's own id
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
