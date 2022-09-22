@@ -5,6 +5,7 @@ pub mod initialize;
 pub mod message;
 pub mod migrate;
 pub mod set_config;
+pub mod set_is_active;
 
 use solitaire::solitaire;
 
@@ -27,6 +28,11 @@ pub use set_config::{
     SetConfig,
 };
 
+pub use set_is_active::{
+    set_is_active,
+    SetIsActive,
+};
+
 pub use pyth_client;
 
 solitaire! {
@@ -34,4 +40,5 @@ solitaire! {
     Initialize => initialize,
     SetConfig => set_config,
     Migrate => migrate,
+    SetIsActive => set_is_active
 }

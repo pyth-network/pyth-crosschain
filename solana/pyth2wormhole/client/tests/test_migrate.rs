@@ -60,6 +60,7 @@ async fn test_migrate_works() -> Result<(), solitaire::ErrBox> {
         wh_prog: wh_fixture_program_id,
         max_batch_size: pyth2wormhole::attest::P2W_MAX_BATCH_SIZE,
         pyth_owner,
+        is_active: true,
     };
 
     info!("Before ProgramTest::new()");
@@ -114,6 +115,7 @@ async fn test_migrate_already_migrated() -> Result<(), solitaire::ErrBox> {
     // Authorities
     let p2w_owner = Keypair::new();
     let pyth_owner = Pubkey::new_unique();
+    let ops_owner = Keypair::new();
 
     // On-chain state
     let old_p2w_config = OldPyth2WormholeConfig {
@@ -121,6 +123,7 @@ async fn test_migrate_already_migrated() -> Result<(), solitaire::ErrBox> {
         wh_prog: wh_fixture_program_id,
         max_batch_size: pyth2wormhole::attest::P2W_MAX_BATCH_SIZE,
         pyth_owner,
+        is_active: true,
     };
 
     let new_p2w_config = Pyth2WormholeConfig {
@@ -129,6 +132,7 @@ async fn test_migrate_already_migrated() -> Result<(), solitaire::ErrBox> {
         max_batch_size: pyth2wormhole::attest::P2W_MAX_BATCH_SIZE,
         pyth_owner,
         is_active: true,
+        ops_owner: Some(ops_owner.pubkey()),
     };
 
     info!("Before ProgramTest::new()");
