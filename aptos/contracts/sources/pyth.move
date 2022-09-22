@@ -154,8 +154,7 @@ module pyth::pyth {
                 break
             };
 
-            let price_feed = price_info::get_price_feed(&state::get_latest_price_info(*price_identifier));
-            let cached_timestamp = price::get_timestamp(&price_feed::get_price(price_feed));
+            let cached_timestamp = price::get_timestamp(&get_price_unsafe(*price_identifier));
             if (cached_timestamp < *vector::borrow(&publish_times, i)) {
                 fresh_data = true;
                 break
@@ -180,8 +179,7 @@ module pyth::pyth {
         if (!price_feed_exists(*price_identifier)) {
             return true
         };
-        let cached_timestamp = price::get_timestamp(
-            &price_feed::get_price(price_info::get_price_feed(&state::get_latest_price_info(*price_identifier))));
+        let cached_timestamp = price::get_timestamp(&get_price_unsafe(*price_identifier));
         
         update_timestamp > cached_timestamp
     }
