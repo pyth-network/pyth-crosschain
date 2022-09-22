@@ -1,31 +1,19 @@
-use crate::{
-    error::ExecutorError,
-    EXECUTOR_KEY_SEED,
-};
+use crate::error::ExecutorError;
 
 use super::executor_simulator::{
     ExecutorAttack,
     ExecutorBench,
     VaaValidity,
 };
-use anchor_lang::{
-    prelude::{
-        AnchorError,
-        ErrorCode,
-        ProgramError,
-        Pubkey,
-        Rent,
-    },
-    solana_program::{
-        system_instruction::create_account,
-        system_program,
-    },
+use anchor_lang::prelude::{
+    ErrorCode,
+    ProgramError,
+    Pubkey,
+    Rent,
 };
 use solana_sdk::{
     instruction::InstructionError,
     native_token::LAMPORTS_PER_SOL,
-    signature::Keypair,
-    signer::Signer,
     system_instruction::transfer,
     transaction::TransactionError,
 };

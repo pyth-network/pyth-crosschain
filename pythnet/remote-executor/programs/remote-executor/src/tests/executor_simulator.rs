@@ -1,8 +1,6 @@
 use anchor_lang::{
     prelude::{
         AccountMeta,
-        AnchorError,
-        ErrorCode,
         ProgramError,
         Pubkey,
         Rent,
@@ -59,7 +57,6 @@ use crate::{
     CLAIM_RECORD_SEED,
     EXECUTOR_KEY_SEED,
 };
-use rand::Rng;
 
 /// Bench for the tests, the goal of this struct is to be able to setup solana accounts before starting the local validator
 pub struct ExecutorBench {
@@ -68,6 +65,10 @@ pub struct ExecutorBench {
     seqno: HashMap<Pubkey, u64>,
 }
 
+/// When passed to `add_vaa_account` modify the posted vaa in a way that makes the vaa invalid
+/// - `WrongOwner` : the owner is not the wormhole bridge
+/// - `WrongData` : data is random bytes
+/// - `WrongEmitterChain` : emitter chain of the vaa is ethereum
 pub enum VaaValidity {
     Valid,
     WrongOwner,
