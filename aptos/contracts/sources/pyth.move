@@ -299,7 +299,7 @@ module pyth::pyth {
                     price_feed::new(
                         price_identifier::from_byte_vec(x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1"),
                         price::new(i64::new(1557, false), 7, i64::new(5, true), 1663680740),
-                        price::new(i64::new(1500, false), 3, i64::new(5, true), 1663680745),
+                        price::new(i64::new(1500, false), 3, i64::new(5, true), 1663680740),
                     ),
                 ),
                 price_info::new(

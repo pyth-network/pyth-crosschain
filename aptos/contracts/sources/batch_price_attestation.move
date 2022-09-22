@@ -122,11 +122,22 @@ module pyth::batch_price_attestation {
         let prev_price = deserialize::deserialize_i64(cur);
         let prev_conf = deserialize::deserialize_u64(cur);
 
+        // Handle the case where the status is not trading. This logic will soon be moved into
+        // the attester.
+
         // If status is trading, use the current price.
-        // If not, use the prev_ price - the last known trading price.
+        // If not, use the the last known trading price.
         let current_price = pyth::price::new(price, conf, expo, publish_time);
         if (status != price_status::new_trading()) {
             current_price = pyth::price::new(prev_price, prev_conf, expo, prev_publish_time);
+        };
+
+        // If status is trading, use the timestamp of the aggregate as the timestamp for the 
+        // EMA price. If not, the EMA will have last been updated when the aggregate last had
+        // trading status, so use prev_publish_time (the time when the aggregate last had trading status).
+        let ema_timestamp = publish_time;
+        if (status != price_status::new_trading()) {
+            ema_timestamp = prev_publish_time;
         };
 
         price_info::new(
@@ -135,7 +146,7 @@ module pyth::batch_price_attestation {
             price_feed::new(
                 price_identifier,
                 current_price,
-                pyth::price::new(ema_price, ema_conf, expo, publish_time),
+                pyth::price::new(ema_price, ema_conf, expo, ema_timestamp),
             )
         )
     }
@@ -170,7 +181,7 @@ module pyth::batch_price_attestation {
                     price_feed::new(
                         price_identifier::from_byte_vec(x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1"),
                         price::new(i64::new(1557, false), 7, i64::new(5, true), 1663680740),
-                        price::new(i64::new(1500, false), 3, i64::new(5, true), 1663680745),
+                        price::new(i64::new(1500, false), 3, i64::new(5, true), 1663680740),
                     ),
                 ),
                 price_info::new(
