@@ -54,4 +54,17 @@ contract PythInternalStructs {
         uint16 chainId;
         bytes32 emitterAddress;
     }
+
+    /* PriceAttestationStatus represents the availability status of a price feed passed down in attestation.
+        UNKNOWN: The price feed is not currently updating for an unknown reason.
+        TRADING: The price feed is updating as expected.
+        HALTED: The price feed is not currently updating because trading in the product has been halted.
+        AUCTION: The price feed is not currently updating because an auction is setting the price.
+    */
+    enum PriceAttestationStatus {
+        UNKNOWN,
+        TRADING,
+        HALTED,
+        AUCTION
+    }
 }
