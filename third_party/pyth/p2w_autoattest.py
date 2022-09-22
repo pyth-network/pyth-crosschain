@@ -188,6 +188,7 @@ if P2W_ATTESTATION_CFG is None:
     cfg_yaml = f"""
 ---
 mapping_addr: {mapping_addr}
+mapping_reload_interval_mins: 1 # Very fast for testing purposes
 symbol_groups:
   - group_name: fast_interval_only
     conditions:
