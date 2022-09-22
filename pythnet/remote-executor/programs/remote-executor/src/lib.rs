@@ -22,7 +22,7 @@ mod state;
 #[cfg(test)]
 mod tests;
 
-//Anchor requires the program to declare it's own id
+//Anchor requires the program to declare its own id
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
