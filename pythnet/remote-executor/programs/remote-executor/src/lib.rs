@@ -21,6 +21,9 @@ mod state;
 #[cfg(test)] //Conditional compilation of the tests
 mod tests;
 
+#[cfg(test)] //Conditional compilation of the tests
+mod tests;
+
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
