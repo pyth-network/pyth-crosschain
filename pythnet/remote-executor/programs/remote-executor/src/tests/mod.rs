@@ -1,2 +1,3 @@
 mod executor_simulator;
-mod test_create_account;
+mod test_adversarial;
+mod test_basic_instructions;
