@@ -3,7 +3,7 @@ use crate::error::ExecutorError;
 use super::executor_simulator::{
     ExecutorAttack,
     ExecutorBench,
-    VaaValidity,
+    VaaAttack,
 };
 use anchor_lang::prelude::{
     ErrorCode,
@@ -28,6 +28,7 @@ async fn test_adversarial() {
 
     let receiver = Pubkey::new_unique();
 
+    // Setup VAAs
     let vaa_account_valid = bench.add_vaa_account(
         &emitter,
         &vec![transfer(
@@ -35,7 +36,7 @@ async fn test_adversarial() {
             &&receiver,
             Rent::default().minimum_balance(0),
         )],
-        VaaValidity::Valid,
+        VaaAttack::None,
     );
     let vaa_account_wrong_data = bench.add_vaa_account(
         &emitter,
@@ -44,7 +45,7 @@ async fn test_adversarial() {
             &&receiver,
             Rent::default().minimum_balance(0),
         )],
-        VaaValidity::WrongData,
+        VaaAttack::WrongData,
     );
     let vaa_account_wrong_owner = bench.add_vaa_account(
         &emitter,
@@ -53,7 +54,7 @@ async fn test_adversarial() {
             &&receiver,
             Rent::default().minimum_balance(0),
         )],
-        VaaValidity::WrongOwner,
+        VaaAttack::WrongOwner,
     );
     let vaa_account_wrong_emitter_chain = bench.add_vaa_account(
         &emitter,
@@ -62,14 +63,17 @@ async fn test_adversarial() {
             &&receiver,
             Rent::default().minimum_balance(0),
         )],
-        VaaValidity::WrongEmitterChain,
+        VaaAttack::WrongEmitterChain,
     );
 
-    let vaa_account_valid_2 = bench.add_vaa_account(&emitter_2, &vec![], VaaValidity::Valid);
+    // The goal of this account is creating a claim_record that the attacker is going to try to use to impersonate
+    // the right claim_record
+    let vaa_account_valid_2 = bench.add_vaa_account(&emitter_2, &vec![], VaaAttack::None);
 
     let mut sim = bench.start().await;
     sim.airdrop(&executor_key, LAMPORTS_PER_SOL).await.unwrap();
 
+    // VAA with random bytes
     assert_eq!(
         sim.execute_posted_vaa(
             &vaa_account_valid,
@@ -81,6 +85,8 @@ async fn test_adversarial() {
         .unwrap(),
         ErrorCode::AccountDidNotDeserialize.into_transation_error()
     );
+
+    // VAA not owned by the wormhole bridge
     assert_eq!(
         sim.execute_posted_vaa(&vaa_account_wrong_owner, &vec![], ExecutorAttack::None)
             .await
@@ -88,6 +94,8 @@ async fn test_adversarial() {
             .unwrap(),
         ErrorCode::AccountOwnedByWrongProgram.into_transation_error()
     );
+
+    // VAA not emitted by a soruce in Solana
     assert_eq!(
         sim.execute_posted_vaa(
             &vaa_account_wrong_emitter_chain,
@@ -100,6 +108,7 @@ async fn test_adversarial() {
         ExecutorError::EmitterChainNotSolana.into()
     );
 
+    // Claim record does not correspond to the emitter's claim record
     // Next error is privilege scalation because anchor tries to create the account at wrong address but signing with the right seeds
     assert_eq!(
         sim.execute_posted_vaa(
@@ -113,6 +122,7 @@ async fn test_adversarial() {
         InstructionError::PrivilegeEscalation.into_transation_error()
     );
 
+    // Claim record does not correspond to the emitter's claim record, but this time it is initialized
     sim.execute_posted_vaa(&vaa_account_valid_2, &vec![], ExecutorAttack::None)
         .await
         .unwrap();
@@ -128,6 +138,7 @@ async fn test_adversarial() {
         ErrorCode::ConstraintSeeds.into_transation_error()
     );
 
+    // System program impersonation
     assert_eq!(
         sim.execute_posted_vaa(
             &vaa_account_valid,
@@ -140,6 +151,7 @@ async fn test_adversarial() {
         ErrorCode::InvalidProgramId.into_transation_error()
     );
 
+    //Success!
     sim.execute_posted_vaa(&vaa_account_valid, &vec![], ExecutorAttack::None)
         .await
         .unwrap()

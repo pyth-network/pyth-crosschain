@@ -69,8 +69,8 @@ pub struct ExecutorBench {
 /// - `WrongOwner` : the owner is not the wormhole bridge
 /// - `WrongData` : data is random bytes
 /// - `WrongEmitterChain` : emitter chain of the vaa is ethereum
-pub enum VaaValidity {
-    Valid,
+pub enum VaaAttack {
+    None,
     WrongOwner,
     WrongData,
     WrongEmitterChain,
@@ -147,15 +147,15 @@ impl ExecutorBench {
         &mut self,
         emitter: &Pubkey,
         instructions: &Vec<Instruction>,
-        validity: VaaValidity,
+        validity: VaaAttack,
     ) -> Pubkey {
         let emitter_chain: u16 = match validity {
-            VaaValidity::WrongEmitterChain => Chain::Ethereum.into(),
+            VaaAttack::WrongEmitterChain => Chain::Ethereum.into(),
             _ => Chain::Solana.into(),
         };
 
         let owner: Pubkey = match validity {
-            VaaValidity::WrongOwner => Pubkey::new_unique(),
+            VaaAttack::WrongOwner => Pubkey::new_unique(),
             _ => AnchorVaa::owner(),
         };
 
@@ -187,7 +187,7 @@ impl ExecutorBench {
         let vaa_bytes = vaa.try_to_vec().unwrap();
 
         let data: Vec<u8> = match validity {
-            VaaValidity::WrongData => (0..vaa_bytes.len()).map(|_| rand::random::<u8>()).collect(),
+            VaaAttack::WrongData => (0..vaa_bytes.len()).map(|_| rand::random::<u8>()).collect(),
             _ => vaa_bytes,
         };
 
@@ -204,6 +204,7 @@ impl ExecutorBench {
         return vaa_pubkey;
     }
 
+    // Get executor key of an emitter, useful to construct instructions that will be in the VAA
     pub fn get_executor_key(&self, emitter: &Pubkey) -> Pubkey {
         Pubkey::find_program_address(
             &[EXECUTOR_KEY_SEED.as_bytes(), &emitter.to_bytes()],
@@ -212,6 +213,7 @@ impl ExecutorBench {
         .0
     }
 
+    // Get claim record of an emitter
     pub fn get_claim_record_key(&self, emitter: &Pubkey) -> Pubkey {
         Pubkey::find_program_address(
             &[CLAIM_RECORD_SEED.as_bytes(), &emitter.to_bytes()],
@@ -227,6 +229,11 @@ pub struct ExecutorSimulator {
     program_id: Pubkey,
 }
 
+/// When passed to execute_posted_vaa, try to impersonate some of the accounts
+/// - WrongVaaAddress(Pubkey) : pass the VAA address specified
+/// - WrongEmptyClaimAddress : pass a claim_record address that is a PDA of the program but with the wrong seeds and also an empty account
+/// - WrongClaimAddress(Pubkey) : pass the claim_record specified
+/// - WrongSystemProgram : pass a random pubkey as the system program
 pub enum ExecutorAttack {
     None,
     WrongVaaAddress(Pubkey),
