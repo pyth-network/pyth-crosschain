@@ -78,8 +78,8 @@ pub struct ExecutePostedVaa<'info> {
     #[account(init_if_needed, space = 8 + get_packed_len::<ClaimRecord>(), payer=payer, seeds = [CLAIM_RECORD_SEED.as_bytes(), &posted_vaa.emitter_address], bump)]
     pub claim_record: Account<'info, ClaimRecord>,
     pub system_program: Program<'info, System>,
-    // Additional accounts will be passed down to the CPIs, very importantly, executor_key needs to be passed as it will be the signer of the CPIs
-    // This is the "anchor specification" of that account
+    // Additional accounts will be passed down to the CPIs. Very importantly executor_key needs to be passed as it will be the signer of the CPIs.
+    // Below is the "anchor specification" of that account
     // #[account(seeds = [EXECUTOR_KEY_SEED.as_bytes(), &posted_vaa.emitter_address], bump)]
     // pub executor_key: UncheckedAccount<'info>,
 }
