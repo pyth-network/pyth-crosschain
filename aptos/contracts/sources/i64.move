@@ -13,6 +13,12 @@ module pyth::i64 {
     public fun new(magnitude: u64, negative: bool): I64 {
         assert!(magnitude <= MAX_MAGNITUDE, error::magnitude_too_large());
 
+        // Ensure we have a single zero representation: (0, false).
+        // (0, true) is invalid.
+        if (magnitude == 0) {
+            negative = false;
+        };
+
         I64 {
             magnitude: magnitude,
             negative: negative,
@@ -40,10 +46,9 @@ module pyth::i64 {
     public fun from_u64(from: u64): I64 {
         // Use the MSB to determine whether the number is negative or not.
         let negative = (from >> 63) == 1;
-        return I64 {
-            negative: negative,
-            magnitude: parse_magnitude(from, negative),
-        }
+        let magnitude = parse_magnitude(from, negative);
+
+        new(magnitude, negative)
     }
 
     fun parse_magnitude(from: u64, negative: bool): u64 {
@@ -104,6 +109,13 @@ module pyth::i64 {
     #[expected_failure(abort_code = 196627)]
     fun test_get_magnitude_if_negative_positive() {
         assert!(get_magnitude_if_negative(&new(7686, false)) == 7686, 1);
+    }
+
+    #[test]
+    fun test_single_zero_representation() {
+        assert!(&new(0, true) == &new(0, false), 1);
+        assert!(&new(0, true) == &from_u64(0), 1);
+        assert!(&new(0, false) == &from_u64(0), 1);
     }
 
 }
