@@ -1,6 +1,8 @@
 module pyth::i64 {
     use pyth::error;
         
+    const MAX_MAGNITUDE: u64 = (1 << 63) - 1;
+
     /// As Move does not support negative numbers natively, we use our own internal
     /// representation.
     struct I64 has copy, drop, store {
@@ -9,6 +11,8 @@ module pyth::i64 {
     }
 
     public fun new(magnitude: u64, negative: bool): I64 {
+        assert!(magnitude <= MAX_MAGNITUDE, error::magnitude_too_large());
+
         I64 {
             magnitude: magnitude,
             negative: negative,
@@ -51,6 +55,12 @@ module pyth::i64 {
         // Otherwise convert from two's complement by inverting and adding 1
         let inverted = from ^ 0xFFFFFFFFFFFFFFFF;
         inverted + 1
+    }
+
+    #[test]
+    #[expected_failure(abort_code = 65557)]
+    fun test_magnitude_too_large() {
+        new(0x8000000000000000, false);
     }
 
     #[test]

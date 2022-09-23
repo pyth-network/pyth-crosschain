@@ -80,6 +80,10 @@ module pyth::error {
     }
     
    public fun invalid_governance_magic_value(): u64 {
-    error::invalid_argument(20)
+        error::invalid_argument(20)
+   }
+
+   public fun magnitude_too_large(): u64 {
+        error::invalid_argument(21)
    }
 }
