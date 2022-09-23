@@ -258,7 +258,7 @@ contract("Pyth", function () {
         return replaced;
     }
 
-    function generateRawUknownBatchAttestation(
+    function generateRawUnknownBatchAttestation(
         publishTime,
         attestationTime,
         priceVal,
@@ -693,7 +693,7 @@ contract("Pyth", function () {
 
     it("should use prev price and timestamp on unknown attestation status", async function () {
         const latestTime = await time.latest();
-        let rawBatch = generateRawUknownBatchAttestation(
+        let rawBatch = generateRawUnknownBatchAttestation(
             latestTime,
             latestTime,
             1337, // price

@@ -102,7 +102,7 @@ function createVAAFromUint8Array(
     );
 }
 
-module.exports = function createGovernanceVaa(dataBuffer, sequence) {
+module.exports = function createLocalnetGovernanceVAA(dataBuffer, sequence) {
     return createVAAFromUint8Array(
         dataBuffer,
         testGovernanceChain,

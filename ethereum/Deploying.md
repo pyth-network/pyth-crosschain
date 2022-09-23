@@ -23,7 +23,7 @@ npx apply-registry
 # If it is a new chain you are deploying to, create a new env file and commit it to the repo.
 rm -f .env; ln -s .env.prod.xyz .env && set -o allexport && source .env set && set +o allexport
 
-# Perform the migration step by step using `--to` argument. Some steps require a governance execution to be successful.
+# Perform the migration step by step using `--to <migration file number>` argument. Some steps require a governance execution to be successful. //TODO the process.
 # You might need to repeat the steps because of busy RPCs.
 # Also, sometimes the gases are not adjusted. Please update them with the network
 # explorer gas tracker.

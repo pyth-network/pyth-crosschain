@@ -1,7 +1,7 @@
 require('dotenv').config({ path: "../.env" });
 
 const governance = require("@pythnetwork/xc-governance-sdk");
-const createGovernanceVaa = require("../../scripts/createLocalnetGovernanceVaa");
+const createLocalnetGovernanceVaa = require("../../scripts/createLocalnetGovernanceVaa");
 
 const PythUpgradable = artifacts.require("PythUpgradable");
 const governanceChainId = process.env.GOVERNANCE_CHAIN_ID;
@@ -24,7 +24,7 @@ module.exports = async function (deployer) {
     console.log(newImpl);
 
     await proxy.executeGovernanceInstruction(
-        createGovernanceVaa(
+        createLocalnetGovernanceVaa(
             new governance.EthereumUpgradeContractInstruction(
                 governance.CHAINS.ethereum,
                 new governance.HexString20Bytes(newImpl)
