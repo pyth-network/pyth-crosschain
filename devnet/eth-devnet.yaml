@@ -128,8 +128,7 @@ spec:
           command:
             - /bin/sh
             - -c
-            - "sed -i 's/CHAIN_ID=0x2/CHAIN_ID=0x4/g' .env &&
-               npm run migrate -- --network development &&
+            - "npm run migrate -- --network development &&
                nc -lkp 2000 0.0.0.0"
           readinessProbe:
             periodSeconds: 1
