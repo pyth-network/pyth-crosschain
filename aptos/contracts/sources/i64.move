@@ -1,7 +1,8 @@
 module pyth::i64 {
     use pyth::error;
         
-    const MAX_MAGNITUDE: u64 = (1 << 63) - 1;
+    const MAX_POSITIVE_MAGNITUDE: u64 = (1 << 63) - 1;
+    const MAX_NEGATIVE_MAGNITUDE: u64 = (1 << 63);
 
     /// As Move does not support negative numbers natively, we use our own internal
     /// representation.
@@ -11,7 +12,12 @@ module pyth::i64 {
     }
 
     public fun new(magnitude: u64, negative: bool): I64 {
-        assert!(magnitude <= MAX_MAGNITUDE, error::magnitude_too_large());
+        let max_magnitude = MAX_POSITIVE_MAGNITUDE;
+        if (negative) {
+            max_magnitude = MAX_NEGATIVE_MAGNITUDE;
+        };
+        assert!(magnitude <= max_magnitude, error::magnitude_too_large());
+        
 
         // Ensure we have a single zero representation: (0, false).
         // (0, true) is invalid.
@@ -63,9 +69,25 @@ module pyth::i64 {
     }
 
     #[test]
+    fun test_max_positive_magnitude() {
+        new(0x7FFFFFFFFFFFFFFF, false);
+    }
+
+    #[test]
     #[expected_failure(abort_code = 65557)]
-    fun test_magnitude_too_large() {
+    fun test_magnitude_too_large_positive() {
         new(0x8000000000000000, false);
+    }
+
+    #[test]
+    fun test_max_negative_magnitude() {
+        new(0x8000000000000000, true);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = 65557)]
+    fun test_magnitude_too_large_negative() {
+        new(0x8000000000000001, true);
     }
 
     #[test]
