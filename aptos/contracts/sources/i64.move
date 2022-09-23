@@ -71,6 +71,7 @@ module pyth::i64 {
     #[test]
     fun test_max_positive_magnitude() {
         new(0x7FFFFFFFFFFFFFFF, false);
+        assert!(&new(1<<63 - 1, false) == &from_u64(1<<63 - 1), 1);
     }
 
     #[test]
@@ -82,6 +83,7 @@ module pyth::i64 {
     #[test]
     fun test_max_negative_magnitude() {
         new(0x8000000000000000, true);
+        assert!(&new(1<<63, true) == &from_u64(1<<63), 1);
     }
 
     #[test]
