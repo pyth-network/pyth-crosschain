@@ -10,21 +10,21 @@ module pyth::contract_upgrade {
 
     const HASH_LENGTH: u64 = 32;
 
-    struct ContractUpgrade {
+    struct AuthorizeContractUpgrade {
         hash: Hash,
     }
 
     public fun execute(payload: vector<u8>) {
-        let ContractUpgrade {hash: hash} = from_byte_vec(payload);
+        let AuthorizeContractUpgrade {hash: hash} = from_byte_vec(payload);
         state::set_contract_upgrade_authorized_hash(hash)
     }
 
-    fun from_byte_vec(bytes: vector<u8>): ContractUpgrade {
+    fun from_byte_vec(bytes: vector<u8>): AuthorizeContractUpgrade {
         let cursor = cursor::init(bytes);
         let hash = contract_upgrade_hash::from_byte_vec(deserialize::deserialize_vector(&mut cursor, HASH_LENGTH));
         cursor::destroy_empty(cursor);
         
-        ContractUpgrade {
+        AuthorizeContractUpgrade {
             hash,
         }
     }
