@@ -2,10 +2,10 @@ module pyth::governance_instruction {
     use wormhole::cursor;
     use pyth::deserialize;
     use pyth::error;
+    use pyth::state;
 
     const MAGIC: vector<u8> = x"5054474d"; // "PTGM": Pyth Governance Message
-    const MODULE: u8 = 2;
-    const TARGET_CHAIN_ID: u64 = 3;
+    const MODULE: u8 = 1;
 
     struct GovernanceInstruction {
         module_: u8,
