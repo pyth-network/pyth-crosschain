@@ -17,7 +17,7 @@ module pyth::governance_instruction {
     fun validate(instruction: &GovernanceInstruction) {
         assert!(instruction.module_ == MODULE, error::invalid_governance_module());
         let target_chain_id = instruction.target_chain_id;
-        assert!(target_chain_id == TARGET_CHAIN_ID || target_chain_id == 0, error::invalid_governance_target_chain_id());
+        assert!(target_chain_id == state::get_chain_id() || target_chain_id == 0, error::invalid_governance_target_chain_id());
     }
  
     public fun from_byte_vec(bytes: vector<u8>): GovernanceInstruction {
