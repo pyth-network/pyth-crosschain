@@ -8,13 +8,15 @@ module pyth::contract_upgrade {
     use aptos_framework::code;
     use pyth::error;
 
+    friend pyth::governance;
+
     const HASH_LENGTH: u64 = 32;
 
     struct AuthorizeContractUpgrade {
         hash: Hash,
     }
 
-    public fun execute(payload: vector<u8>) {
+    public(friend) fun execute(payload: vector<u8>) {
         let AuthorizeContractUpgrade {hash: hash} = from_byte_vec(payload);
         state::set_contract_upgrade_authorized_hash(hash)
     }

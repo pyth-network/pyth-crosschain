@@ -5,13 +5,15 @@ module pyth::set_governance_data_source {
     use pyth::data_source;
     use pyth::state;
 
+    friend pyth::governance;
+
     struct SetGovernanceDataSource {
         emitter_chain_id: u64,
         emitter_address: ExternalAddress,
         initial_sequence: u64,
     }
 
-    public fun execute(payload: vector<u8>) {
+    public(friend) fun execute(payload: vector<u8>) {
         let SetGovernanceDataSource { emitter_chain_id, emitter_address, initial_sequence } = from_byte_vec(payload);
         state::set_governance_data_source(data_source::new(emitter_chain_id, emitter_address));
         state::set_last_executed_governance_sequence(initial_sequence);

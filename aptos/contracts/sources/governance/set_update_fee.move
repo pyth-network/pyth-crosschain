@@ -4,6 +4,8 @@ module pyth::set_update_fee {
     use std::math64;
     use pyth::state;
 
+    friend pyth::governance;
+
     const MAX_U64: u128 = (1 << 64) - 1;
 
     struct SetUpdateFee {
@@ -11,7 +13,7 @@ module pyth::set_update_fee {
         exponent: u64, 
     }
 
-    public fun execute(payload: vector<u8>) {
+    public(friend) fun execute(payload: vector<u8>) {
         let SetUpdateFee { mantissa, exponent } = from_byte_vec(payload);
         let fee = apply_exponent(mantissa, exponent);
         state::set_update_fee(fee);

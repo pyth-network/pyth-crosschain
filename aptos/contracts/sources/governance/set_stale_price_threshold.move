@@ -3,11 +3,13 @@ module pyth::set_stale_price_threshold {
     use pyth::deserialize;
     use pyth::state;
 
+    friend pyth::governance;
+
     struct SetStalePriceThreshold {
         threshold: u64,
     }
 
-    public fun execute(payload: vector<u8>) {
+    public(friend) fun execute(payload: vector<u8>) {
         let SetStalePriceThreshold { threshold } = from_byte_vec(payload);
         state::set_stale_price_threshold_secs(threshold);
     }

@@ -6,11 +6,13 @@ module pyth::set_data_sources {
     use pyth::state;
     use std::vector;
 
+    friend pyth::governance;
+
     struct SetDataSources {
         sources: vector<DataSource>,
     }
 
-    public fun execute(payload: vector<u8>) {
+    public(friend) fun execute(payload: vector<u8>) {
         let SetDataSources { sources } = from_byte_vec(payload);
         state::set_data_sources(sources);
     }
