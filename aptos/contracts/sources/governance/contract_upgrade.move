@@ -45,11 +45,12 @@ module pyth::contract_upgrade {
 
     fun matches_hash(code: vector<vector<u8>>, metadata_serialized: vector<u8>, hash: Hash): bool {
 
-        // code is a vector of vectors of bytes, so we need to flatten it before hashing.
+        // We compute the hash of the hashes of each component (metadata + module).
+        // code is a vector of vectors of bytes (one for each component), so we need to flatten it before hashing.
         let reversed = copy code;
         vector::reverse(&mut reversed);
         let flattened = aptos_hash::keccak256(metadata_serialized);
-        while (!vector::is_empty(&reversed)) vector::append(&mut flattened, vector::pop_back(&mut reversed));
+        while (!vector::is_empty(&reversed)) vector::append(&mut flattened, aptos_hash::keccak256(vector::pop_back(&mut reversed)));
         
         aptos_hash::keccak256(flattened) == contract_upgrade_hash::destroy(hash)
     }
