@@ -1,5 +1,5 @@
 module pyth::data_source {
-    use wormhole::external_address::{ExternalAddress};
+    use wormhole::external_address::ExternalAddress;
 
     struct DataSource has copy, drop, store {
         emitter_chain: u64,
