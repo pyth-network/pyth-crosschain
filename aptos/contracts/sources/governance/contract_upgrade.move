@@ -33,17 +33,22 @@ module pyth::contract_upgrade {
         metadata_serialized: vector<u8>,
         code: vector<vector<u8>>,
     ) {
-        // Check to see if the given code matches the authorized hash
-        let hash = state::get_contract_upgrade_authorized_hash();
-        let c = copy code;
-        vector::reverse(&mut c);
-        let a = vector::empty<u8>();
-        while (!vector::is_empty(&c)) vector::append(&mut a, vector::pop_back(&mut c));
-        assert!(aptos_hash::keccak256(a) == contract_upgrade_hash::destroy(hash), error::invalid_upgrade_hash());
-
+        // Check to see if the hash of the given code matches the authorized hash.
+        assert!(matches_hash(code, state::get_contract_upgrade_authorized_hash()), error::invalid_upgrade_hash());
         // Perform the upgrade
         let wormhole = state::pyth_signer();
         code::publish_package_txn(&wormhole, metadata_serialized, code);
+    }
+
+    fun matches_hash(code: vector<vector<u8>>, hash: Hash): bool {
+
+        // code is a vector of vectors of bytes, so we need to flatten it before hashing.
+        let reversed = copy code;
+        vector::reverse(&mut reversed);
+        let flattened = vector::empty<u8>();
+        while (!vector::is_empty(&reversed)) vector::append(&mut flattened, vector::pop_back(&mut reversed));
+        
+        aptos_hash::keccak256(flattened) == contract_upgrade_hash::destroy(hash)
     }
 }
 
