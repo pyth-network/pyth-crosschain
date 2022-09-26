@@ -6,8 +6,6 @@ module pyth::set_update_fee {
 
     const MAX_U64: u128 = (1 << 64) - 1;
 
-    const E_OVERFLOW: u64 = 15;
-
     struct SetUpdateFee {
         mantissa: u64,
         exponent: u64, 
@@ -31,13 +29,6 @@ module pyth::set_update_fee {
     }
 
     fun apply_exponent(mantissa: u64, exponent: u64): u64 {
-        let raised = mantissa * math64::pow(10, exponent);
-        check_overflow(raised);
-        raised
+        mantissa * math64::pow(10, exponent)
     }
-    
-    fun check_overflow(u: u64) {
-        assert!((u as u128) <= MAX_U64, E_OVERFLOW)
-    }
-
 }
