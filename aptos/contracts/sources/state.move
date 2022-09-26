@@ -137,6 +137,10 @@ module pyth::state {
         hash
     }
 
+    public fun get_chain_id(): u64 acquires ChainID {
+        borrow_global<ChainID>(@pyth).chain_id
+    }
+
     // Setters
     public(friend) fun set_data_sources(new_sources: vector<DataSource>) acquires DataSources {
         let sources = &mut borrow_global_mut<DataSources>(@pyth).sources;
