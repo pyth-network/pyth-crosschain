@@ -199,7 +199,8 @@ module pyth::pyth {
     /// no older than the stale price threshold.
     /// 
     /// Important: it is recommended to call update_price_feeds() to update the cached data
-    /// before calling this function.
+    /// before calling this function, as get_price() will abort if the cached price is older 
+    /// than the stale price threshold.
     public fun get_price(price_identifier: PriceIdentifier): Price {
         get_price_no_older_than(price_identifier, state::get_stale_price_threshold_secs())
     }
