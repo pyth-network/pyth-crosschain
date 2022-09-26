@@ -195,34 +195,26 @@ module pyth::pyth {
         state::price_info_cached(price_identifier)
     }
 
-    /// Get the latest cached data for the given price identifier, if that data is 
+    /// Get the latest available price cached for the given price identifier, if that price is 
     /// no older than the stale price threshold.
     /// 
-    /// Important: it is recommended to call update_price_feeds() to update the cached data
+    /// Important: it is recommended to call update_price_feeds() to update the cached price
     /// before calling this function, as get_price() will abort if the cached price is older 
     /// than the stale price threshold.
     public fun get_price(price_identifier: PriceIdentifier): Price {
         get_price_no_older_than(price_identifier, state::get_stale_price_threshold_secs())
     }
 
-    /// Get the latest cached data for the given price identifier, if that data is 
+    /// Get the latest available price cached for the given price identifier, if that price is 
     /// no older than the given age.
     public fun get_price_no_older_than(price_identifier: PriceIdentifier, max_age_secs: u64): Price {
         let price = get_price_unsafe(price_identifier);
-        let age = abs_diff(timestamp::now_seconds(), price::get_timestamp(&price));
-
-        assert!(age < max_age_secs, error::stale_price_update());
+        check_price_is_fresh(&price, max_age_secs);
 
         price
     }
 
-    /// Get the latest cached exponential moving average price for the given price_identifier.
-    public fun get_ema_price(price_identifier: PriceIdentifier): Price {
-        price_feed::get_ema_price(
-            price_info::get_price_feed(&state::get_latest_price_info(price_identifier)))
-    }
-
-    /// Get the latest available price for the given price identifier.
+    /// Get the latest available price cached for the given price identifier.
     /// 
     /// WARNING: the returned price can be from arbitrarily far in the past.
     /// This function makes no guarantees that the returned price is recent or
@@ -244,9 +236,46 @@ module pyth::pyth {
     }
 
     /// Get the stale price threshold: the amount of time after which a cached price
-    /// is considered stale and no longer returned by get_price().
+    /// is considered stale and no longer returned by get_price()/get_ema_price().
     public fun get_stale_price_threshold_secs(): u64 {
         state::get_stale_price_threshold_secs()
+    }
+
+    fun check_price_is_fresh(price: &Price, max_age_secs: u64) {
+        let age = abs_diff(timestamp::now_seconds(), price::get_timestamp(price));
+        assert!(age < max_age_secs, error::stale_price_update());
+    }
+
+    /// Get the latest available exponentially moving average price cached for the given 
+    /// price identifier, if that price is no older than the stale price threshold.
+    /// 
+    /// Important: it is recommended to call update_price_feeds() to update the cached EMA price
+    /// before calling this function, as get_ema_price() will abort if the cached EMA price is older 
+    /// than the stale price threshold.
+    public fun get_ema_price(price_identifier: PriceIdentifier): Price {
+        get_ema_price_no_older_than(price_identifier, state::get_stale_price_threshold_secs())
+    }
+
+    /// Get the latest available exponentially moving average price cached for the given price identifier,
+    /// if that price is no older than the given age.
+    public fun get_ema_price_no_older_than(price_identifier: PriceIdentifier, max_age_secs: u64): Price {
+        let price = get_ema_price_unsafe(price_identifier);
+        check_price_is_fresh(&price, max_age_secs);
+
+        price
+    } 
+
+    /// Get the latest available exponentially moving average price cached for the given price identifier.
+    /// 
+    /// WARNING: the returned price can be from arbitrarily far in the past.
+    /// This function makes no guarantees that the returned price is recent or
+    /// useful for any particular application. Users of this function should check
+    /// the returned timestamp to ensure that the returned price is sufficiently 
+    /// recent for their application. The checked get_ema_price_no_older_than()
+    /// function should be used in preference to this.
+    public fun get_ema_price_unsafe(price_identifier: PriceIdentifier): Price {
+        price_feed::get_ema_price(
+            price_info::get_price_feed(&state::get_latest_price_info(price_identifier)))
     }
 
     /// Get the number of AptosCoin's required to perform one batch update
@@ -482,13 +511,13 @@ module pyth::pyth {
 
     #[test(aptos_framework = @aptos_framework)]
     fun test_update_cache_old_update(aptos_framework: &signer) {
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 0);
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 1000, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 0);
         
         // Submit a price update
         let timestamp = 1663680700;
         let price_identifier = price_identifier::from_byte_vec(x"baa284eaf23edf975b371ba2818772f93dbae72836bbdea28b07d40f3cf8b485");
         let price = price::new(i64::new(7648, false), 674, i64::new(8, true), timestamp);
-        let ema_price = price::new(i64::new(1536, true), 869, i64::new(100, false), 1257212500);
+        let ema_price = price::new(i64::new(1536, true), 869, i64::new(100, false), timestamp);
         let update = price_info::new(
             1257278600,
             1690226180,
@@ -575,6 +604,45 @@ module pyth::pyth {
 
         // However, retrieving the latest price fails
         assert!(get_price(price_identifier) == price, 1);
+
+        cleanup_test(burn_capability, mint_capability);
+        coin::destroy_zero(coins);
+    }
+
+    #[test(aptos_framework = @aptos_framework)]
+    #[expected_failure(abort_code = 524292)]
+    fun test_stale_price_threshold_exceeded_ema(aptos_framework: &signer) {
+        let stale_price_threshold = 500;
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, stale_price_threshold, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 0);
+
+        // Submit a price update
+        let current_timestamp = timestamp::now_seconds();
+        let price_identifier = price_identifier::from_byte_vec(x"baa284eaf23edf975b371ba2818772f93dbae72836bbdea28b07d40f3cf8b485");
+        let ema_price = price::new(i64::new(1536, true), 869, i64::new(100, false), current_timestamp);
+        let update = price_info::new(
+            1257278600,
+            1690226180,
+            price_feed::new(
+                    price_identifier,
+                    price::new(i64::new(7648, false), 674, i64::new(8, true), 1257212500),
+                    ema_price,
+            )
+        );
+        update_cache(vector<PriceInfo>[update]);
+
+        // Check that the EMA price has been updated
+        assert!(get_ema_price(price_identifier) == ema_price, 1);
+
+        // Now advance the clock on the target chain, until the age of the cached update exceeds the
+        // stale_price_threshold.
+        timestamp::update_global_time_for_test_secs(current_timestamp + stale_price_threshold);
+
+        // Check that we can access the EMA price if we increase the threshold by 1
+        assert!(get_ema_price_no_older_than(
+            price_identifier, get_stale_price_threshold_secs() + 1) == ema_price, 1);
+
+        // However, retrieving the latest EMA price fails
+        assert!(get_ema_price(price_identifier) == ema_price, 1);
 
         cleanup_test(burn_capability, mint_capability);
         coin::destroy_zero(coins);
