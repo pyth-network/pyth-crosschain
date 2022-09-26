@@ -61,12 +61,12 @@ pub fn set_config(
     let old_size = accs.config.info().data_len();
     let new_size = data.try_to_vec()?.len();
 
-    accs.config.1 = data;
-
     // Realloc if mismatched
     if old_size != new_size {
         accs.config.info().realloc(new_size, false)?;
     }
+
+    accs.config.1 = data;
 
     // Adjust lamports
     let mut acc_lamports = accs.config.info().lamports();
