@@ -23,15 +23,15 @@ module pyth::governance {
 
         // Dispatch the instruction to the appropiate handler
         let action = governance_instruction::get_action(&instruction);
-        if (action == governance_action::destroy(governance_action::new_contract_upgrade())) {
+        if (action == governance_action::new_contract_upgrade()) {
             contract_upgrade::execute(governance_instruction::destroy(instruction));
-        } else if (action == governance_action::destroy(governance_action::new_set_governance_data_source())) {
+        } else if (action == governance_action::new_set_governance_data_source()) {
             set_governance_data_source::execute(governance_instruction::destroy(instruction));
-        } else if (action == governance_action::destroy(governance_action::new_set_data_sources())) {
+        } else if (action == governance_action::new_set_data_sources()) {
             set_data_sources::execute(governance_instruction::destroy(instruction));
-        } else if (action == governance_action::destroy(governance_action::new_set_update_fee())) {
+        } else if (action == governance_action::new_set_update_fee()) {
             set_update_fee::execute(governance_instruction::destroy(instruction));
-        } else if (action == governance_action::destroy(governance_action::new_set_stale_price_threshold())) {
+        } else if (action == governance_action::new_set_stale_price_threshold()) {
             set_stale_price_threshold::execute(governance_instruction::destroy(instruction));
         } else {
             governance_instruction::destroy(instruction);
