@@ -144,6 +144,8 @@ pub fn gen_set_config_tx(
         AccountMeta::new(owner.pubkey(), true),
         // payer
         AccountMeta::new(payer.pubkey(), true),
+        // system_program
+        AccountMeta::new(system_program::id(), false),
     ];
 
     let ix_data = (
@@ -162,7 +164,6 @@ pub fn gen_set_config_tx(
     );
     Ok(tx_signed)
 }
-
 
 pub fn gen_set_is_active_tx(
     payer: Keypair,
