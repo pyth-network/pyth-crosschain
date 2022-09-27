@@ -17,13 +17,13 @@ use wormhole::Chain::{
 };
 
 mod error;
-mod state;
+pub mod state;
 
 #[cfg(test)]
 mod tests;
 
 //Anchor requires the program to declare its own id
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("exe6S3AxPVNmy46L4Nj6HrnnAVQUhwyYzMSNcnRn3qq");
 
 #[program]
 pub mod remote_executor {
@@ -72,7 +72,7 @@ const CLAIM_RECORD_SEED: &str = "CLAIM_RECORD";
 pub struct ExecutePostedVaa<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-    #[account(constraint = Chain::from(posted_vaa.emitter_chain) == Solana @ ExecutorError::EmitterChainNotSolana, constraint = posted_vaa.sequence > claim_record.sequence @ExecutorError::NonIncreasingSequence )]
+    #[account(constraint = Chain::from(posted_vaa.emitter_chain) == Solana @ ExecutorError::EmitterChainNotSolana, constraint = posted_vaa.sequence > claim_record.sequence @ExecutorError::NonIncreasingSequence, constraint = (&posted_vaa.magic == b"vaa" || &posted_vaa.magic == b"msg" || &posted_vaa.magic == b"msu") @ExecutorError::PostedVaaHeaderWrongMagicNumber )]
     pub posted_vaa: Account<'info, AnchorVaa>,
     /// The reason claim_record has different seeds than executor_key is that executor key might need to pay in the CPI, so we want it to be a native wallet
     #[account(init_if_needed, space = 8 + get_packed_len::<ClaimRecord>(), payer=payer, seeds = [CLAIM_RECORD_SEED.as_bytes(), &posted_vaa.emitter_address], bump)]
