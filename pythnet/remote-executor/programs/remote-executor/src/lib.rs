@@ -65,8 +65,8 @@ pub mod remote_executor {
     }
 }
 
-const EXECUTOR_KEY_SEED: &str = "EXECUTOR_KEY";
-const CLAIM_RECORD_SEED: &str = "CLAIM_RECORD";
+pub const EXECUTOR_KEY_SEED: &str = "EXECUTOR_KEY";
+pub const CLAIM_RECORD_SEED: &str = "CLAIM_RECORD";
 
 #[derive(Accounts)]
 pub struct ExecutePostedVaa<'info> {
