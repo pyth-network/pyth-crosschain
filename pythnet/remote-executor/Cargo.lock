@@ -2799,8 +2799,8 @@ dependencies = [
  "solana-program-test",
  "solana-sdk",
  "tokio",
- "wormhole-core",
- "wormhole-solana",
+ "wormhole-core 0.1.0 (git+https://github.com/guibescos/wormhole?branch=reisen/sdk-solana)",
+ "wormhole-solana 0.1.0 (git+https://github.com/guibescos/wormhole?branch=reisen/sdk-solana)",
 ]
 
 [[package]]
@@ -2809,14 +2809,15 @@ version = "0.1.0"
 dependencies = [
  "anchor-client",
  "anyhow",
+ "base64 0.13.0",
  "clap 3.2.22",
  "remote-executor",
  "shellexpand",
  "solana-client",
  "solana-program",
  "solana-sdk",
- "wormhole-core",
- "wormhole-solana",
+ "wormhole-core 0.1.0",
+ "wormhole-solana 0.1.0",
 ]
 
 [[package]]
@@ -5025,6 +5026,21 @@ dependencies = [
 [[package]]
 name = "wormhole-core"
 version = "0.1.0"
+dependencies = [
+ "borsh",
+ "bstr",
+ "byteorder",
+ "hex",
+ "hex-literal",
+ "nom",
+ "primitive-types",
+ "sha3 0.10.5",
+ "thiserror",
+]
+
+[[package]]
+name = "wormhole-core"
+version = "0.1.0"
 source = "git+https://github.com/guibescos/wormhole?branch=reisen/sdk-solana#650f59f0524487b03ef917d91da4fe5dc5f0ea6c"
 dependencies = [
  "borsh",
@@ -5036,6 +5052,23 @@ dependencies = [
  "primitive-types",
  "sha3 0.10.5",
  "thiserror",
+]
+
+[[package]]
+name = "wormhole-solana"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "bstr",
+ "byteorder",
+ "hex",
+ "hex-literal",
+ "nom",
+ "primitive-types",
+ "sha3 0.10.5",
+ "solana-program",
+ "thiserror",
+ "wormhole-core 0.1.0",
 ]
 
 [[package]]
@@ -5053,7 +5086,7 @@ dependencies = [
  "sha3 0.10.5",
  "solana-program",
  "thiserror",
- "wormhole-core",
+ "wormhole-core 0.1.0 (git+https://github.com/guibescos/wormhole?branch=reisen/sdk-solana)",
 ]
 
 [[package]]

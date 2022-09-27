@@ -16,13 +16,6 @@ use wormhole_solana;
 pub struct Cli {
     #[clap(long, default_value = "confirmed")]
     pub commitment: CommitmentConfig,
-    #[clap(
-        short = 'k',
-        long = "keypair",
-        default_value = "~/.config/solana/id.json",
-        help = "Keypair file the funder of the transaction"
-    )]
-    pub keypair: String,
     #[clap(subcommand)]
     pub action: Action,
 
@@ -36,10 +29,21 @@ pub enum Action {
             short = 'v',
             long = "vaa",
         )]
-        vaa : String
+        vaa : String,
+        #[clap(
+            long,
+            default_value = "~/.config/solana/id.json",
+            help = "Keypair file the funder of the transaction"
+        )]
+        keypair: String
     },
     #[clap(about = "Send test VAA from solana")]
     SendTestVAA {
-
+        #[clap(
+            long,
+            default_value = "~/.config/solana/id.json",
+            help = "Keypair file the funder of the transaction"
+        )]
+        keypair: String,
     }
 }
