@@ -17,7 +17,7 @@ use wormhole::Chain::{
 };
 
 mod error;
-mod state;
+pub mod state;
 
 #[cfg(test)]
 mod tests;
