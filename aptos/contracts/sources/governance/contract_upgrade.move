@@ -39,8 +39,8 @@ module pyth::contract_upgrade {
         // The aptos framework does no validation of the metadata, so we include it in the hash.
         assert!(matches_hash(code, metadata_serialized, state::get_contract_upgrade_authorized_hash()), error::invalid_upgrade_hash());
         // Perform the upgrade
-        let wormhole = state::pyth_signer();
-        code::publish_package_txn(&wormhole, metadata_serialized, code);
+        let pyth = state::pyth_signer();
+        code::publish_package_txn(&pyth, metadata_serialized, code);
     }
 
     fun matches_hash(code: vector<vector<u8>>, metadata_serialized: vector<u8>, hash: Hash): bool {
