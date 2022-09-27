@@ -32,6 +32,7 @@ npx truffle migrate --network $MIGRATIONS_NETWORK --to <step>
 # Some steps require executing a governance instruction to be successful, you can use the multisig message builder tool in 
 # `third_party/pyth` of this repo root to create multisig transaction and execute it to create the VAA.
 # Then you can use the VAA (in hex) to execute the governance instruction. To do so, run:
+$ npx apply-registry # apparently a deployProxyImpl messes up with correct address of proxy
 $ npx truffle console --network $MIGRATIONS_NETWORK
 > let p = await PythUpgradable.deployed()
 > await p.executeGovernanceInstruction("<VAA in hex like: 0x123002342352>");
