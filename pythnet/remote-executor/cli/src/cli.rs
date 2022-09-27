@@ -6,7 +6,7 @@ use clap::{
 };
 use solana_sdk::commitment_config::CommitmentConfig;
 use solana_program::pubkey::Pubkey;
-use wormhole_solana; 
+use wormhole_solana;
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -42,5 +42,3 @@ pub enum Action {
 
     }
 }
-
-

@@ -45,7 +45,7 @@ fn main() -> Result<()>{
                 "https://pythnet.rpcpool.com/".to_string(),
                 "ws://pythnet.rpcpool.com/".to_string(),
             );
-            
+
             let rpc_client = Client::new_with_options(RPC_URL, Rc::new(payer), cli.commitment);
 
             let program = rpc_client.program(remote_executor::id());
@@ -53,7 +53,7 @@ fn main() -> Result<()>{
             program.request();
             Ok(())
 
-            
+
         },
         Action::SendTestVAA{} => {
             let rpc_client = RpcClient::new_with_commitment("https://api.mainnet-beta.solana.com", cli.commitment);
@@ -71,20 +71,20 @@ fn main() -> Result<()>{
 
             let transfer_instruction = system_instruction::transfer(&payer.pubkey(), &fee_collector_key, wormhole_config.params.fee);
             let post_vaa_instruction = post_message_unreliable(wormhole_bridge_key,
-             payer.pubkey(), 
+             payer.pubkey(),
              payer.pubkey(), message_keypair.pubkey(), 0,payload.as_slice(), 0)?;
-            
+
             let mut transaction =
             Transaction::new_with_payer(&[transfer_instruction, post_vaa_instruction], Some(&payer.pubkey()));
 
             transaction.sign(&[&message_keypair, &payer], rpc_client.get_latest_blockhash()?);
-            
+
             rpc_client.send_and_confirm_transaction_with_spinner(&transaction)?;
             Ok(())
         },
 
     }
-    
-    
-    
+
+
+
 }
