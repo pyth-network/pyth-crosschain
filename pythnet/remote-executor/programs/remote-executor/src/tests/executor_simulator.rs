@@ -74,6 +74,7 @@ pub enum VaaAttack {
     WrongOwner,
     WrongData,
     WrongEmitterChain,
+    WrongVaaMagic
 }
 
 impl ExecutorBench {
@@ -154,6 +155,11 @@ impl ExecutorBench {
             _ => Chain::Solana.into(),
         };
 
+        let vaa_magic = match validity {
+            VaaAttack::WrongVaaMagic => b"xxx",
+            _ => b"vaa",
+        };
+
         let owner: Pubkey = match validity {
             VaaAttack::WrongOwner => Pubkey::new_unique(),
             _ => AnchorVaa::owner(),
@@ -169,17 +175,20 @@ impl ExecutorBench {
 
         let payload_bytes = payload.try_to_vec().unwrap();
 
-        let vaa = VAA {
-            vaa_version: 0,
-            consistency_level: 0,
-            vaa_time: 0,
-            vaa_signature_account: Pubkey::new_unique(),
-            submission_time: 0,
-            nonce: 0,
-            sequence: self.seqno.get(&emitter).unwrap_or(&0) + 1,
-            emitter_chain,
-            emitter_address: emitter.to_bytes(),
-            payload: payload_bytes,
+        let vaa = AnchorVaa {
+            magic: *vaa_magic,
+            vaa: VAA {
+                vaa_version: 0,
+                consistency_level: 0,
+                vaa_time: 0,
+                vaa_signature_account: Pubkey::new_unique(),
+                submission_time: 0,
+                nonce: 0,
+                sequence: self.seqno.get(&emitter).unwrap_or(&0) + 1,
+                emitter_chain,
+                emitter_address: emitter.to_bytes(),
+                payload: payload_bytes,
+            },
         };
 
         *self.seqno.entry(*emitter).or_insert(0) += 1;
@@ -278,7 +287,7 @@ impl ExecutorSimulator {
         signers: &Vec<&Keypair>,
         executor_attack: ExecutorAttack,
     ) -> Result<(), BanksClientError> {
-        let posted_vaa_data: VAA = self
+        let posted_vaa_data: AnchorVaa = self
             .banks_client
             .get_account_data_with_borsh(*posted_vaa_address)
             .await
