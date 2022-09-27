@@ -14,8 +14,6 @@ use wormhole_solana;
     author = "Pyth Network Contributors"
 )]
 pub struct Cli {
-    #[clap(subcommand)]
-    pub action: Action,
     #[clap(long, default_value = "confirmed")]
     pub commitment: CommitmentConfig,
     #[clap(
@@ -25,6 +23,9 @@ pub struct Cli {
         help = "Keypair file the funder of the transaction"
     )]
     pub keypair: String,
+    #[clap(subcommand)]
+    pub action: Action,
+
 }
 
 #[derive(Subcommand, Debug)]
