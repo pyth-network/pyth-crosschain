@@ -74,7 +74,7 @@ pub enum VaaAttack {
     WrongOwner,
     WrongData,
     WrongEmitterChain,
-    WrongVaaMagic
+    WrongVaaMagic,
 }
 
 impl ExecutorBench {

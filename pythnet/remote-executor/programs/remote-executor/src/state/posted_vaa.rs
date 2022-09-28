@@ -27,7 +27,8 @@ impl AccountDeserialize for AnchorVaa {
 
     // Manual implementation because this account does not have an anchor discriminator
     fn try_deserialize_unchecked(buf: &mut &[u8]) -> Result<Self> {
-        AnchorDeserialize::deserialize(buf).map_err(|_| anchor_lang::error::ErrorCode::AccountDidNotDeserialize.into())
+        AnchorDeserialize::deserialize(buf)
+            .map_err(|_| anchor_lang::error::ErrorCode::AccountDidNotDeserialize.into())
     }
 }
 
@@ -48,6 +49,6 @@ impl Deref for AnchorVaa {
 
 #[derive(Clone, AnchorDeserialize, AnchorSerialize)]
 pub struct AnchorVaa {
-    pub magic : [u8; 3],
+    pub magic: [u8; 3],
     pub vaa: VAA,
 }
