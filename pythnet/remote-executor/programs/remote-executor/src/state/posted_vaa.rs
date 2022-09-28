@@ -49,5 +49,6 @@ impl Deref for AnchorVaa {
 
 #[derive(Clone, AnchorDeserialize, AnchorSerialize)]
 pub struct AnchorVaa {
+    pub magic: [u8; 3],
     pub vaa: VAA,
 }

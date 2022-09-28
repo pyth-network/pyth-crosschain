@@ -8,4 +8,5 @@ pub enum ExecutorError {
     GovernanceHeaderInvalidModule,
     GovernanceHeaderInvalidAction,
     GovernanceHeaderInvalidReceiverChain,
+    PostedVaaHeaderWrongMagicNumber,
 }

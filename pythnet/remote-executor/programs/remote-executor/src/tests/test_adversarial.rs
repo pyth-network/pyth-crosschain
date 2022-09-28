@@ -73,6 +73,16 @@ async fn test_adversarial() {
         VaaAttack::WrongEmitterChain,
     );
 
+    let vaa_account_wrong_vaa_magic = bench.add_vaa_account(
+        &emitter,
+        &vec![transfer(
+            &executor_key,
+            &&receiver,
+            Rent::default().minimum_balance(0),
+        )],
+        VaaAttack::WrongVaaMagic,
+    );
+
     // The goal of this account is creating a claim_record that the attacker is going to try to use to impersonate
     // the right claim_record
     let vaa_account_valid_2 = bench.add_vaa_account(&emitter_2, &vec![], VaaAttack::None);
@@ -113,6 +123,15 @@ async fn test_adversarial() {
         .unwrap_err()
         .unwrap(),
         ExecutorError::EmitterChainNotSolana.into()
+    );
+
+    // VAA has wrong magic number
+    assert_eq!(
+        sim.execute_posted_vaa(&vaa_account_wrong_vaa_magic, &vec![], ExecutorAttack::None)
+            .await
+            .unwrap_err()
+            .unwrap(),
+        ExecutorError::PostedVaaHeaderWrongMagicNumber.into()
     );
 
     // Claim record does not correspond to the emitter's claim record
