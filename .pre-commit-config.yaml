@@ -12,7 +12,7 @@ repos:
       - id: cargo-fmt-executor
         name: Cargo format executor
         language: "rust"
-        entry: cargo +nightly fmt --manifest-path ./pythnet/remote-executor/Cargo.toml
+        entry: cargo +nightly fmt --manifest-path ./pythnet/remote-executor/Cargo.toml --all
         pass_filenames: false
       - id: cargo-clippy-executor
         name: Cargo clippy executor
