@@ -12,7 +12,7 @@ import {
   PublicKey,
   SystemProgram,
 } from "@solana/web3.js";
-import Squads from "@sqds/sdk";
+import Squads from "@sqds/mesh";
 import bs58 from "bs58";
 import { program } from "commander";
 import * as fs from "fs";
@@ -180,11 +180,11 @@ async function createMultisigTx(
     );
     console.log(`Loaded wallet with address: ${wallet.publicKey.toBase58()}`);
   }
-  const squads =
+  const squad =
     cluster === "devnet" ? Squads.devnet(wallet) : Squads.mainnet(wallet);
-  const msAccount = await squads.getMultisig(vault);
+  const msAccount = await squad.getMultisig(vault);
 
-  const emitter = squads.getAuthorityPDA(
+  const emitter = squad.getAuthorityPDA(
     msAccount.publicKey,
     msAccount.authorityIndex
   );
@@ -193,7 +193,7 @@ async function createMultisigTx(
   console.log("Creating new transaction...");
   if (ledger)
     console.log("Please approve the transaction on your ledger device...");
-  const newTx = await squads.createTransaction(
+  const newTx = await squad.createTransaction(
     msAccount.publicKey,
     msAccount.authorityIndex
   );
@@ -210,7 +210,7 @@ async function createMultisigTx(
     emitter,
     emitter,
     message.publicKey,
-    squads.connection,
+    squad.connection,
     payload
   );
   console.log("Wormhole instructions created.");
@@ -219,17 +219,17 @@ async function createMultisigTx(
   if (ledger)
     console.log("Please approve the transaction on your ledger device...");
   // transfer sol to the message account
-  await squads.addInstruction(newTx.publicKey, wormholeIxs[0]);
+  await squad.addInstruction(newTx.publicKey, wormholeIxs[0]);
   console.log("Adding instruction 2/2 to transaction...");
   if (ledger)
     console.log("Please approve the transaction on your ledger device...");
   // wormhole post message ix
-  await squads.addInstruction(newTx.publicKey, wormholeIxs[1]);
+  await squad.addInstruction(newTx.publicKey, wormholeIxs[1]);
 
   console.log("Activating transaction...");
   if (ledger)
     console.log("Please approve the transaction on your ledger device...");
-  await squads.activateTransaction(newTx.publicKey);
+  await squad.activateTransaction(newTx.publicKey);
   console.log("Transaction created.");
 }
 
@@ -268,16 +268,16 @@ async function executeMultisigTx(
     `Loaded message account with address: ${message.publicKey.toBase58()}`
   );
 
-  const squads =
+  const squad =
     cluster === "devnet" ? Squads.devnet(wallet) : Squads.mainnet(wallet);
-  const msAccount = await squads.getMultisig(vault);
+  const msAccount = await squad.getMultisig(vault);
 
-  const emitter = squads.getAuthorityPDA(
+  const emitter = squad.getAuthorityPDA(
     msAccount.publicKey,
     msAccount.authorityIndex
   );
 
-  const executeIx = await squads.buildExecuteTransaction(
+  const executeIx = await squad.buildExecuteTransaction(
     txPDA,
     wallet.publicKey
   );
@@ -290,13 +290,13 @@ async function executeMultisigTx(
   // airdrop 0.1 SOL to emitter if on devnet
   if (cluster === "devnet") {
     console.log("Airdropping 0.1 SOL to emitter...");
-    const airdropSignature = await squads.connection.requestAirdrop(
+    const airdropSignature = await squad.connection.requestAirdrop(
       emitter,
       0.1 * LAMPORTS_PER_SOL
     );
     const { blockhash, lastValidBlockHeight } =
-      await squads.connection.getLatestBlockhash();
-    await squads.connection.confirmTransaction({
+      await squad.connection.getLatestBlockhash();
+    await squad.connection.confirmTransaction({
       blockhash,
       lastValidBlockHeight,
       signature: airdropSignature,
@@ -305,13 +305,13 @@ async function executeMultisigTx(
   }
 
   const { blockhash, lastValidBlockHeight } =
-    await squads.connection.getLatestBlockhash();
+    await squad.connection.getLatestBlockhash();
   const executeTx = new anchor.web3.Transaction({
     blockhash,
     lastValidBlockHeight,
     feePayer: wallet.publicKey,
   });
-  const provider = new anchor.AnchorProvider(squads.connection, wallet, {
+  const provider = new anchor.AnchorProvider(squad.connection, wallet, {
     commitment: "confirmed",
     preflightCommitment: "confirmed",
   });
@@ -328,7 +328,7 @@ async function executeMultisigTx(
     }`
   );
 
-  const txDetails = await squads.connection.getParsedTransaction(
+  const txDetails = await squad.connection.getParsedTransaction(
     signature,
     "confirmed"
   );
