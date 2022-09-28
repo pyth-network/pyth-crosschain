@@ -146,7 +146,7 @@ fn main() -> Result<()> {
                     signature_set_keypair.pubkey(),
                     post_vaa_data,
                 )?],
-                &vec![&payer, &signature_set_keypair],
+                &vec![&payer],
             )?;
 
             // Now execute
@@ -204,7 +204,7 @@ fn main() -> Result<()> {
             process_transaction(
                 &rpc_client,
                 vec![transfer_instruction, post_vaa_instruction],
-                &vec![&payer],
+                &vec![&payer, &message_keypair],
             )
         }
     }
