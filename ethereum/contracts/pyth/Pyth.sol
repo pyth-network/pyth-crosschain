@@ -36,18 +36,19 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
         for (uint i = 0; i < batch.attestations.length; i++) {
             PythInternalStructs.PriceAttestation memory attestation = batch.attestations[i];
-
+    
+            PythInternalStructs.PriceInfo memory newPriceInfo = createNewPriceInfo(attestation);
             PythInternalStructs.PriceInfo memory latestPrice = latestPriceInfo(attestation.priceId);
 
             bool fresh = false;
-            if(attestation.attestationTime > latestPrice.attestationTime) {
+            if(newPriceInfo.priceFeed.price.publishTime > latestPrice.priceFeed.price.publishTime) {
                 freshPrices += 1;
                 fresh = true;
-                setLatestPriceInfo(attestation.priceId, newPriceInfo(attestation));
+                setLatestPriceInfo(attestation.priceId, newPriceInfo);
             }
 
-            emit PriceFeedUpdate(attestation.priceId, fresh, vm.emitterChainId, vm.sequence, latestPrice.priceFeed.publishTime,
-                attestation.publishTime, attestation.price, attestation.conf);
+            emit PriceFeedUpdate(attestation.priceId, fresh, vm.emitterChainId, vm.sequence, latestPrice.priceFeed.price.publishTime,
+                newPriceInfo.priceFeed.price.publishTime, newPriceInfo.priceFeed.price.price, newPriceInfo.priceFeed.price.conf);
         }
 
         emit BatchPriceFeedUpdate(vm.emitterChainId, vm.sequence, batch.attestations.length, freshPrices);
@@ -71,25 +72,33 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         return singleUpdateFeeInWei() * updateDataSize;
     }
 
-    function newPriceInfo(PythInternalStructs.PriceAttestation memory pa) private view returns (PythInternalStructs.PriceInfo memory info) {
+    function createNewPriceInfo(PythInternalStructs.PriceAttestation memory pa) private view returns (PythInternalStructs.PriceInfo memory info) {
         info.attestationTime = pa.attestationTime;
         info.arrivalTime = block.timestamp;
         info.arrivalBlock = block.number;
-
         info.priceFeed.id = pa.priceId;
-        info.priceFeed.price = pa.price;
-        info.priceFeed.conf = pa.conf;
-        info.priceFeed.expo = pa.expo;
-        info.priceFeed.status = PythStructs.PriceStatus(pa.status);
-        info.priceFeed.emaPrice = pa.emaPrice;
-        info.priceFeed.emaConf = pa.emaConf;
-        info.priceFeed.productId = pa.productId;
-        info.priceFeed.numPublishers = pa.numPublishers;
-        info.priceFeed.maxNumPublishers = pa.maxNumPublishers;
-        info.priceFeed.prevConf = pa.prevConf;
-        info.priceFeed.prevPublishTime = pa.prevPublishTime;
-        info.priceFeed.prevPrice = pa.prevPrice;
-        info.priceFeed.publishTime = pa.publishTime;
+
+        PythInternalStructs.PriceAttestationStatus status = PythInternalStructs.PriceAttestationStatus(pa.status);
+        if (status == PythInternalStructs.PriceAttestationStatus.TRADING) {
+            info.priceFeed.price.price = pa.price;
+            info.priceFeed.price.conf = pa.conf;
+            info.priceFeed.price.publishTime = pa.publishTime;
+            info.priceFeed.emaPrice.publishTime = pa.publishTime;
+        } else {
+            info.priceFeed.price.price = pa.prevPrice;
+            info.priceFeed.price.conf = pa.prevConf;
+            info.priceFeed.price.publishTime = pa.prevPublishTime;
+
+            // The EMA is last updated when the aggregate had trading status,
+            // so, we use prev_publish_time (the time when the aggregate last had trading status).
+            info.priceFeed.emaPrice.publishTime = pa.prevPublishTime;
+        }
+
+        info.priceFeed.price.expo = pa.expo;
+        info.priceFeed.emaPrice.price = pa.emaPrice;
+        info.priceFeed.emaPrice.conf = pa.emaConf;
+        info.priceFeed.emaPrice.expo = pa.expo;
+
         return info;
     }
 
@@ -232,12 +241,12 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     }
 
     function version() public pure returns (string memory) {
-        return "1.0.0";
+        return "1.1.0";
     }
 
     function deployCommitHash() public pure returns (string memory) {
         // This is a place holder for the commit hash and will be replaced
         // with the commit hash upon deployment.
-        return "__DEPLOY_COMMIT_HASH_PLACEHOLER__";
+        return "9a285cf799ea09eac71704afafc382fc889b0849";
     }
 }

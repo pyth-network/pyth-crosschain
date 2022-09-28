@@ -225,11 +225,18 @@ contract("Pyth", function () {
     const RAW_BATCH_ATTESTATION_TIME_REGEX = /DEADBEEFFADEDEED/g;
     const RAW_BATCH_PUBLISH_TIME_REGEX = /00000000DADEBEEF/g;
     const RAW_BATCH_PRICE_REGEX = /0000002BAD2FEED7/g;
+    const RAW_BATCH_PREV_PRICE_REGEX = /0000DEADFACEBEEF/g;
+    const RAW_BATCH_PREV_PUBLISH_TIME_REGEX = /00000000DEADBABE/g;
+    const RAW_BATCH_EMA_PRICE_REGEX  = /FFFFFFFFFFFFFFD6/g;
     const RAW_PRICE_ATTESTATION_SIZE = 149;
     const RAW_BATCH_ATTESTATION_COUNT = 10;
     const RAW_BATCH =
         "0x" +
         "5032574800030000000102000A00950101010101010101010101010101010101010101010101010101010101010101FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0202020202020202020202020202020202020202020202020202020202020202FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0303030303030303030303030303030303030303030303030303030303030303FCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFC0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0404040404040404040404040404040404040404040404040404040404040404FBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFB0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0505050505050505050505050505050505050505050505050505050505050505FAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFA0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0606060606060606060606060606060606060606060606060606060606060606F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F90000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0707070707070707070707070707070707070707070707070707070707070707F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F80000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0808080808080808080808080808080808080808080808080808080808080808F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F70000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0909090909090909090909090909090909090909090909090909090909090909F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F60000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0AF5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F50000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A010001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF";
+    const RAW_UNKNOWN_BATCH_ATTESTATION_COUNT = 3;
+    const RAW_UNKNOWN_BATCH =
+        "0x" +  
+        "5032574800030000000102000300950101010101010101010101010101010101010101010101010101010101010101FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A000001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0202020202020202020202020202020202020202020202020202020202020202FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A000001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF0303030303030303030303030303030303030303030303030303030303030303FCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFC0000002BAD2FEED70000000000000065FFFFFFFDFFFFFFFFFFFFFFD6000000000000002A000001E14C0004E6D0DEADBEEFFADEDEED00000000DADEBEEF00000000DEADBABE0000DEADFACEBEEF000000BADBADBEEF";
 
     // Takes an unsigned 64-bit integer, converts it to hex with 0-padding
     function u64ToHex(timestamp) {
@@ -248,6 +255,30 @@ contract("Pyth", function () {
         const replaced = RAW_BATCH.replace(RAW_BATCH_PUBLISH_TIME_REGEX, pubTs)
             .replace(RAW_BATCH_ATTESTATION_TIME_REGEX, attTs)
             .replace(RAW_BATCH_PRICE_REGEX, price);
+        return replaced;
+    }
+
+    function generateRawUnknownBatchAttestation(
+        publishTime,
+        attestationTime,
+        priceVal,
+        emaPriceVal,
+        prevPublishTime,
+        prevPriceVal,
+    ) {
+        const pubTs = u64ToHex(publishTime);
+        const attTs = u64ToHex(attestationTime);
+        const price = u64ToHex(priceVal);
+        const emaPrice = u64ToHex(emaPriceVal);
+        const prevPubTs = u64ToHex(prevPublishTime);
+        const prevPrice = u64ToHex(prevPriceVal);
+
+        const replaced = RAW_UNKNOWN_BATCH.replace(RAW_BATCH_PUBLISH_TIME_REGEX, pubTs)
+            .replace(RAW_BATCH_ATTESTATION_TIME_REGEX, attTs)
+            .replace(RAW_BATCH_PRICE_REGEX, price)
+            .replace(RAW_BATCH_EMA_PRICE_REGEX, emaPrice)
+            .replace(RAW_BATCH_PREV_PUBLISH_TIME_REGEX, prevPubTs)
+            .replace(RAW_BATCH_PREV_PRICE_REGEX, prevPrice);
         return replaced;
     }
 
@@ -501,10 +532,10 @@ contract("Pyth", function () {
         // Confirm that previously non-existent feeds are created
         let first = await this.pythProxy.queryPriceFeed(first_price_id);
         console.debug(`first is ${JSON.stringify(first)}`);
-        assert.equal(first.price, priceVal);
+        assert.equal(first.price.price, priceVal);
 
         let second = await this.pythProxy.queryPriceFeed(second_price_id);
-        assert.equal(second.price, priceVal);
+        assert.equal(second.price.price, priceVal);
 
         // Confirm the price is bumped after a new attestation updates each record
         let nextTimestamp = currentTimestamp + 1;
@@ -526,10 +557,10 @@ contract("Pyth", function () {
         });
 
         first = await this.pythProxy.queryPriceFeed(first_price_id);
-        assert.equal(first.price, priceVal + 5);
+        assert.equal(first.price.price, priceVal + 5);
 
         second = await this.pythProxy.queryPriceFeed(second_price_id);
-        assert.equal(second.price, priceVal + 5);
+        assert.equal(second.price.price, priceVal + 5);
 
         // Confirm that only strictly larger timestamps trigger updates
         let rawBatch3 = generateRawBatchAttestation(
@@ -550,12 +581,12 @@ contract("Pyth", function () {
         });
 
         first = await this.pythProxy.queryPriceFeed(first_price_id);
-        assert.equal(first.price, priceVal + 5);
-        assert.notEqual(first.price, priceVal + 10);
+        assert.equal(first.price.price, priceVal + 5);
+        assert.notEqual(first.price.price, priceVal + 10);
 
         second = await this.pythProxy.queryPriceFeed(second_price_id);
-        assert.equal(second.price, priceVal + 5);
-        assert.notEqual(second.price, priceVal + 10);
+        assert.equal(second.price.price, priceVal + 5);
+        assert.notEqual(second.price.price, priceVal + 10);
     });
 
     it("should fail transaction if a price is not found", async function () {
@@ -581,8 +612,8 @@ contract("Pyth", function () {
                 "0x" +
                 (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
             expectRevert(
-                this.pythProxy.getCurrentPrice(price_id),
-                "current price unavailable"
+                this.pythProxy.getPrice(price_id),
+                "no price available which is recent enough"
             );
         }
     });
@@ -601,8 +632,8 @@ contract("Pyth", function () {
                 "0x" +
                 (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
                 expectRevert(
-                    this.pythProxy.getCurrentPrice(price_id),
-                    "current price unavailable"
+                    this.pythProxy.getPrice(price_id),
+                    "no price available which is recent enough"
                 );
             }
     });
@@ -626,8 +657,8 @@ contract("Pyth", function () {
                 "0x" +
                 (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
 
-            // Expect getCurrentPrice to work (not revert)
-            await this.pythProxy.getCurrentPrice(price_id);
+            // Expect getPrice to work (not revert)
+            await this.pythProxy.getPrice(price_id);
         }
 
         // One minute passes
@@ -640,8 +671,8 @@ contract("Pyth", function () {
                 (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
 
             expectRevert(
-                this.pythProxy.getCurrentPrice(price_id),
-                "current price unavailable"
+                this.pythProxy.getPrice(price_id),
+                "no price available which is recent enough"
             );
         }
 
@@ -655,8 +686,40 @@ contract("Pyth", function () {
                 (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
             let priceFeedResult = await this.pythProxy.queryPriceFeed(price_id);
 
-            // Expect getCurrentPrice to work (not revert)
-            await this.pythProxy.getCurrentPrice(price_id);
+            // Expect getPrice to work (not revert)
+            await this.pythProxy.getPrice(price_id);
+        }
+    });
+
+    it("should use prev price and timestamp on unknown attestation status", async function () {
+        const latestTime = await time.latest();
+        let rawBatch = generateRawUnknownBatchAttestation(
+            latestTime,
+            latestTime,
+            1337, // price
+            1500, // ema price
+            latestTime - 10,
+            1000, // prev price
+        );
+
+        const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch]);
+        expectEvent(receipt, 'PriceFeedUpdate', {
+            price: "1000",
+        });
+
+        // Then prices should be available because the valid period is now 120 seconds
+        for (var i = 1; i <= RAW_UNKNOWN_BATCH_ATTESTATION_COUNT; i++) {
+            const price_id =
+                "0x" +
+                (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
+
+            const price = await this.pythProxy.getPrice(price_id);
+            assert.equal(price.price, "1000");
+            assert.equal(price.publishTime, (latestTime - 10).toString());
+
+            const emaPrice = await this.pythProxy.getEmaPrice(price_id);
+            assert.equal(emaPrice.price, "1500");
+            assert.equal(emaPrice.publishTime, (latestTime - 10).toString());
         }
     });
 

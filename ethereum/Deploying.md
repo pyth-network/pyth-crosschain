@@ -23,11 +23,19 @@ npx apply-registry
 # If it is a new chain you are deploying to, create a new env file and commit it to the repo.
 rm -f .env; ln -s .env.prod.xyz .env && set -o allexport && source .env set && set +o allexport
 
-# Perform the migration
+# Perform the migration step by step using `--to <migration file number>` argument. Some steps require a governance execution to be successful. //TODO the process.
 # You might need to repeat the steps because of busy RPCs.
 # Also, sometimes the gases are not adjusted. Please update them with the network
 # explorer gas tracker.
-npx truffle migrate --network $MIGRATIONS_NETWORK
+npx truffle migrate --network $MIGRATIONS_NETWORK --to <step>
+
+# Some steps require executing a governance instruction to be successful, you can use the multisig message builder tool in 
+# `third_party/pyth` of this repo root to create multisig transaction and execute it to create the VAA.
+# Then you can use the VAA (in hex) to execute the governance instruction. To do so, run:
+$ npx apply-registry # apparently a deployProxyImpl messes up with correct address of proxy
+$ npx truffle console --network $MIGRATIONS_NETWORK
+> let p = await PythUpgradable.deployed()
+> await p.executeGovernanceInstruction("<VAA in hex like: 0x123002342352>");
 
 # Perform this in first time mainnet deployments with Wormhole Receiver. (Or when guardian sets are upgraded)
 npm run receiver-submit-guardian-sets -- --network $MIGRATIONS_NETWORK

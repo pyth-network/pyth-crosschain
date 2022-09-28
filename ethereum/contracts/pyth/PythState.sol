@@ -11,9 +11,8 @@ contract PythStorage {
         uint16 _deprecatedPyth2WormholeChainId; // Replaced by validDataSources/isValidDataSource
         bytes32 _deprecatedPyth2WormholeEmitter; // Ditto
 
-        // Mapping of cached price information
-        // priceId => PriceInfo
-        mapping(bytes32 => PythInternalStructs.PriceInfo) latestPriceInfo;
+        // After a backward-incompatible change in PriceFeed this mapping got deprecated.
+        mapping(bytes32 => PythInternalStructs.PriceInfo) _deprecatedLatestPriceInfo;
 
         // For tracking all active emitter/chain ID pairs
         PythInternalStructs.DataSource[] validDataSources;
@@ -36,6 +35,10 @@ contract PythStorage {
         // with a lower or equal sequence number will be discarded. This prevents double-execution,
         // and also makes sure that messages are executed in the right order.
         uint64 lastExecutedGovernanceSequence;
+
+        // Mapping of cached price information
+        // priceId => PriceInfo
+        mapping(bytes32 => PythInternalStructs.PriceInfo) latestPriceInfo;
     }
 }
 

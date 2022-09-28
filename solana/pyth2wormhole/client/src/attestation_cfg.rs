@@ -26,7 +26,8 @@ pub struct AttestationConfig {
     /// Optionally, we take a mapping account to add remaining symbols from a Pyth deployments. These symbols are processed under attestation conditions for the `default` symbol group.
     #[serde(
         deserialize_with = "opt_pubkey_string_de",
-        serialize_with = "opt_pubkey_string_ser"
+        serialize_with = "opt_pubkey_string_ser",
+        default // Uses Option::default() which is None
     )]
     pub mapping_addr: Option<Pubkey>,
     pub symbol_groups: Vec<SymbolGroup>,
