@@ -18,3 +18,4 @@ anyhow = "1.0.65"
 base64 = "0.13.0"
 wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
 wormhole-core = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
+hex = "0.4.3"

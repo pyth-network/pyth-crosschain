@@ -2811,6 +2811,7 @@ dependencies = [
  "anyhow",
  "base64 0.13.0",
  "clap 3.2.22",
+ "hex",
  "remote-executor",
  "shellexpand",
  "solana-client",
