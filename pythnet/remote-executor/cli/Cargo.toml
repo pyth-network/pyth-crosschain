@@ -3,9 +3,6 @@ name = "remote-executor-cli"
 version = "0.1.0"
 edition = "2018"
 
-[lib]
-name = "remote_executor_cli"
-
 [dependencies]
 clap = {version ="3.2.22", features = ["derive"]}
 remote-executor = {path = "../programs/remote-executor/"}
