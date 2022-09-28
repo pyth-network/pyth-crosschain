@@ -27,10 +27,6 @@ contract PythGetters is PythState {
         return _state.latestPriceInfo[priceId];
     }
 
-    function hashDataSource(PythInternalStructs.DataSource memory ds) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(ds.chainId, ds.emitterAddress));
-    }
-
     function isValidDataSource(uint16 dataSourceChainId, bytes32 dataSourceEmitterAddress) public view returns (bool) {
         return _state.isValidDataSource[keccak256(abi.encodePacked(dataSourceChainId, dataSourceEmitterAddress))];
     }
@@ -44,8 +40,8 @@ contract PythGetters is PythState {
         return wormhole().chainId();
     }
 
-    function lastExecutedGovernanceSequence() public view returns (uint64) {
-        return _state.lastExecutedGovernanceSequence;
+    function lastExecutedGovernanceSequence(bytes32 dataSourceHash) public view returns (uint64) {
+        return _state.lastExecutedGovernanceSequencePerDataSource[dataSourceHash];
     }
 
     function validDataSources() public view returns (PythInternalStructs.DataSource[] memory) {

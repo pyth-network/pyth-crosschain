@@ -1019,6 +1019,14 @@ contract("Pyth", function () {
             "VAA is not coming from the governance data source"
         );
 
+        const newVaaFromNewGovernanceGood = await createVAAFromUint8Array(data,
+            governance.CHAINS.acala, 
+            "0x0000000000000000000000000000000000000000000000000000000000001111",
+            20
+        );
+
+        await this.pythProxy.executeGovernanceInstruction(newVaaFromNewGovernanceGood);
+
         const newVaaFromNewGovernanceOldSequence = await createVAAFromUint8Array(data,
             governance.CHAINS.acala, 
             "0x0000000000000000000000000000000000000000000000000000000000001111",
@@ -1029,14 +1037,6 @@ contract("Pyth", function () {
             this.pythProxy.executeGovernanceInstruction(newVaaFromNewGovernanceOldSequence),
             "VAA is older than the last executed governance VAA"
         );
-
-        const newVaaFromNewGovernanceGood = await createVAAFromUint8Array(data,
-            governance.CHAINS.acala, 
-            "0x0000000000000000000000000000000000000000000000000000000000001111",
-            20
-        );
-
-        await this.pythProxy.executeGovernanceInstruction(newVaaFromNewGovernanceGood);
     });
 
     it("Setting data sources should work", async function () {

@@ -31,14 +31,17 @@ contract PythStorage {
         // Governance data source. VAA messages from this source can change this contract
         // state. e.g., upgrade the contract, change the valid data sources, and more.
         PythInternalStructs.DataSource governanceDataSource;
-        // Sequence number of the last executed governance message. Any governance message
-        // with a lower or equal sequence number will be discarded. This prevents double-execution,
-        // and also makes sure that messages are executed in the right order.
-        uint64 lastExecutedGovernanceSequence;
+        uint64 _deprecatedLastExecutedGovernanceSequence;
 
         // Mapping of cached price information
         // priceId => PriceInfo
         mapping(bytes32 => PythInternalStructs.PriceInfo) latestPriceInfo;
+
+        // Mapping of hash of governance data source to the sequence number of the last 
+        // last executed governance message. Any governance message with a lower or equal
+        // sequence number for that data source will be discarded. This prevents double-execution,
+        // and also makes sure that messages are executed in the right order.
+        mapping(bytes32 => uint64) lastExecutedGovernanceSequencePerDataSource;
     }
 }
 

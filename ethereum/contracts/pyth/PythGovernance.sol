@@ -28,9 +28,11 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
         require(valid, reason);
         require(isValidGovernanceDataSource(vm.emitterChainId, vm.emitterAddress), "VAA is not coming from the governance data source");
 
-        require(vm.sequence > lastExecutedGovernanceSequence(), "VAA is older than the last executed governance VAA");
-
-        setLastExecutedGovernanceSequence(vm.sequence);
+        bytes32 dataSourceHash = hashDataSource(
+            PythInternalStructs.DataSource({chainId: vm.emitterChainId, emitterAddress: vm.emitterAddress}));
+        
+        require(vm.sequence > lastExecutedGovernanceSequence(dataSourceHash), "VAA is older than the last executed governance VAA");
+        setLastExecutedGovernanceSequence(dataSourceHash, vm.sequence);
 
         return vm;
     }
@@ -72,10 +74,12 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
 
         PythInternalStructs.DataSource memory oldGovernanceDatSource = governanceDataSource();
 
-        setGovernanceDataSource(payload.newGovernanceDataSource);
-        setLastExecutedGovernanceSequence(payload.initialSequence);
+        setGovernanceDataSource(payload.newGovernanceDataSource);        
 
-        emit GovernanceDataSourceSet(oldGovernanceDatSource, governanceDataSource(), lastExecutedGovernanceSequence());
+        emit GovernanceDataSourceSet(
+            oldGovernanceDatSource,
+            governanceDataSource(),
+            lastExecutedGovernanceSequence(hashDataSource(payload.newGovernanceDataSource)));
     }
 
     function setDataSources(bytes memory encodedPayload) internal {
@@ -112,5 +116,9 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
         setValidTimePeriodSeconds(payload.newValidPeriod);
 
         emit ValidPeriodSet(oldValidPeriod, validTimePeriodSeconds());
+    }
+
+    function hashDataSource(PythInternalStructs.DataSource memory ds) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(ds.chainId, ds.emitterAddress));
     }
 }

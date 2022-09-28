@@ -34,7 +34,7 @@ contract PythSetters is PythState {
         _state.governanceDataSource = newDataSource;
     }
 
-    function setLastExecutedGovernanceSequence(uint64 sequence) internal {
-        _state.lastExecutedGovernanceSequence = sequence;
+    function setLastExecutedGovernanceSequence(bytes32 dataSourceHash, uint64 sequence) internal {
+        _state.lastExecutedGovernanceSequencePerDataSource[dataSourceHash] = sequence;
     }
 }
