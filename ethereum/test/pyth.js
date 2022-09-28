@@ -990,8 +990,7 @@ contract("Pyth", function () {
                 new governance.HexString32Bytes(
                     "0x0000000000000000000000000000000000000000000000000000000000001111",
                 )
-            ),
-            BigInt(10)
+            )
         ).serialize();
 
         const vaa = await createVAAFromUint8Array(data,

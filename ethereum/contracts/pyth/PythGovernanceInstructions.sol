@@ -45,7 +45,6 @@ contract PythGovernanceInstructions {
 
     struct SetGovernanceDataSourcePayload {
         PythInternalStructs.DataSource newGovernanceDataSource;
-        uint64 initialSequence;
     }
 
     struct SetDataSourcesPayload {
@@ -103,9 +102,6 @@ contract PythGovernanceInstructions {
 
         sgds.newGovernanceDataSource.emitterAddress = encodedPayload.toBytes32(index);
         index += 32;
-
-        sgds.initialSequence = encodedPayload.toUint64(index);
-        index += 8;
 
         require(encodedPayload.length == index, "invalid length for SetGovernanceDataSourcePayload");
     }

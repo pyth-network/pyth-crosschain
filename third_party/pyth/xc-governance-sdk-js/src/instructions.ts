@@ -117,7 +117,6 @@ export class SetGovernanceDataSourceInstruction extends TargetInstruction {
   constructor(
     targetChainId: ChainId,
     private governanceDataSource: DataSource,
-    private initialSequence: bigint,
   ) {
     super(TargetAction.SetGovernanceDataSource, targetChainId);
   }
@@ -125,7 +124,6 @@ export class SetGovernanceDataSourceInstruction extends TargetInstruction {
   protected serializePayload(): Buffer {
     return new BufferBuilder()
       .addObject(this.governanceDataSource)
-      .addBigUint64(this.initialSequence)
       .build();
   }
 }
