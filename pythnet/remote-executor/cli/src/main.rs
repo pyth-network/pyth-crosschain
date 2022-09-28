@@ -230,13 +230,12 @@ pub fn get_execute_instruction(
     payer_pubkey: &Pubkey,
 ) -> Result<Instruction> {
     let anchor_vaa =
-        AnchorVaa::try_deserialize(&mut rpc_client.get_account_data(&posted_vaa_key)?.as_slice())?;
+        AnchorVaa::try_deserialize(&mut rpc_client.get_account_data(posted_vaa_key)?.as_slice())?;
     let emitter = Pubkey::new(&anchor_vaa.emitter_address);
 
     // First accounts from the anchor context
-    let mut account_metas =
-        ExecutePostedVaa::populate(&ID, &payer_pubkey, &emitter, &posted_vaa_key)
-            .to_account_metas(None);
+    let mut account_metas = ExecutePostedVaa::populate(&ID, payer_pubkey, &emitter, posted_vaa_key)
+        .to_account_metas(None);
 
     // Look at the payload
     let executor_payload: ExecutorPayload =

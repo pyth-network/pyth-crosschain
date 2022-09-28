@@ -125,12 +125,12 @@ async fn test_adversarial() {
         ExecutorError::EmitterChainNotSolana.into()
     );
 
-    // VAA has wrong magic number 
+    // VAA has wrong magic number
     assert_eq!(
         sim.execute_posted_vaa(&vaa_account_wrong_vaa_magic, &vec![], ExecutorAttack::None)
-        .await
-        .unwrap_err()
-        .unwrap(),
+            .await
+            .unwrap_err()
+            .unwrap(),
         ExecutorError::PostedVaaHeaderWrongMagicNumber.into()
     );
 
