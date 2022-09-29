@@ -11,7 +11,8 @@ import {
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
-  SystemProgram, TransactionInstruction,
+  SystemProgram,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import Squads from "@sqds/mesh";
 import bs58 from "bs58";
@@ -47,7 +48,13 @@ program
   )
   .option("-p, --payload <hex-string>", "payload to sign", "0xdeadbeef")
   .action(async (options) => {
-    const squad = await getSquadsClient(options.cluster, options.ledger, options.ledgerDerivationAccount, options.ledgerDerivationChange, options.wallet);
+    const squad = await getSquadsClient(
+      options.cluster,
+      options.ledger,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange,
+      options.wallet
+    );
     await createWormholeMsgMultisigTx(
       options.cluster,
       squad,
@@ -59,7 +66,9 @@ program
 
 program
   .command("set-is-active")
-  .description("Create a new multisig transaction to set the attester is-active flag")
+  .description(
+    "Create a new multisig transaction to set the attester is-active flag"
+  )
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
   .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option("-l, --ledger", "use ledger")
@@ -77,17 +86,38 @@ program
     "keys/key.json"
   )
   .option("-a, --attester <program id>")
-  .option("-i, --is-active <true/false>", "set the isActive field to this value", true)
+  .option(
+    "-i, --is-active <true/false>",
+    "set the isActive field to this value",
+    true
+  )
   .action(async (options) => {
-    const squad = await getSquadsClient(options.cluster, options.ledger, options.ledgerDerivationAccount, options.ledgerDerivationChange, options.wallet);
+    const squad = await getSquadsClient(
+      options.cluster,
+      options.ledger,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange,
+      options.wallet
+    );
     const msAccount = await squad.getMultisig(options.vaultAddress);
     const vaultAuthority = squad.getAuthorityPDA(
       msAccount.publicKey,
       msAccount.authorityIndex
     );
     const attesterProgramId = new PublicKey(options.attester);
-    const txKey = await createTx(squad, options.ledger, new PublicKey(options.vaultAddress));
-    const instructions = [await setIsActiveIx(vaultAuthority, vaultAuthority, attesterProgramId, options.active)];
+    const txKey = await createTx(
+      squad,
+      options.ledger,
+      new PublicKey(options.vaultAddress)
+    );
+    const instructions = [
+      await setIsActiveIx(
+        vaultAuthority,
+        vaultAuthority,
+        attesterProgramId,
+        options.active
+      ),
+    ];
     await addInstructionsToTx(squad, options.ledger, txKey, instructions);
   });
 
@@ -146,11 +176,12 @@ const solanaClusterMappingToWormholeNetwork: Record<Cluster, WormholeNetwork> =
     "mainnet-beta": "MAINNET",
   };
 
-async function getSquadsClient(cluster: Cluster,
-                               ledger: boolean,
-                               ledgerDerivationAccount: number | undefined,
-                               ledgerDerivationChange: number | undefined,
-                               walletPath: string,
+async function getSquadsClient(
+  cluster: Cluster,
+  ledger: boolean,
+  ledgerDerivationAccount: number | undefined,
+  ledgerDerivationChange: number | undefined,
+  walletPath: string
 ) {
   let wallet: LedgerNodeWallet | NodeWallet;
   if (ledger) {
@@ -176,7 +207,7 @@ async function getSquadsClient(cluster: Cluster,
 async function createTx(
   squad: Squads,
   ledger: boolean,
-  vault: PublicKey,
+  vault: PublicKey
 ): Promise<PublicKey> {
   const msAccount = await squad.getMultisig(vault);
 
@@ -201,7 +232,9 @@ async function addInstructionsToTx(
   instructions: TransactionInstruction[]
 ) {
   for (let i = 0; i < instructions.length; i++) {
-    console.log(`Adding instruction ${i}/${instructions.length} to transaction...`);
+    console.log(
+      `Adding instruction ${i}/${instructions.length} to transaction...`
+    );
     if (ledger) {
       console.log("Please approve the transaction on your ledger device...");
     }
@@ -221,33 +254,36 @@ async function setIsActiveIx(
   attesterProgramId: PublicKey,
   isActive: boolean
 ): Promise<TransactionInstruction> {
-  const configKey = PublicKey.createProgramAddressSync([Buffer.from("pyth2wormhole-config-v3")], attesterProgramId)
+  const configKey = PublicKey.createProgramAddressSync(
+    [Buffer.from("pyth2wormhole-config-v3")],
+    attesterProgramId
+  );
   const config: AccountMeta = {
     pubkey: configKey,
     isSigner: false,
     isWritable: true,
-  }
+  };
 
   const opsOwner: AccountMeta = {
     pubkey: opsOwnerKey,
     isSigner: true,
     isWritable: true,
-  }
+  };
   const payer: AccountMeta = {
     pubkey: payerKey,
     isSigner: true,
     isWritable: true,
-  }
+  };
 
-  const isActiveInt = (isActive === true) ? 1 : 0;
+  const isActiveInt = isActive === true ? 1 : 0;
   // first byte is the isActive instruction, second byte is true/false
-  const data = new Buffer([4, isActiveInt])
+  const data = new Buffer([4, isActiveInt]);
 
   return {
     keys: [config, opsOwner, payer],
     programId: attesterProgramId,
     data: data,
-  }
+  };
 }
 
 async function getWormholeMessageIx(
@@ -286,7 +322,7 @@ async function getWormholeMessageIx(
         emitter.toBase58(),
         message.toBase58(),
         0,
-        Uint8Array.from(Buffer.from(payload, 'hex')),
+        Uint8Array.from(Buffer.from(payload, "hex")),
         "CONFIRMED"
       )
     ),
@@ -312,9 +348,12 @@ async function createWormholeMsgMultisigTx(
 
   const message = Keypair.generate();
 
-  fs.mkdirSync('keys', {recursive: true});
+  fs.mkdirSync("keys", { recursive: true });
   // save message to Uint8 array keypair file called mesage.json
-  fs.writeFileSync(`keys/message-${txKey.toBase58()}.json`, `[${message.secretKey.toString()}]`);
+  fs.writeFileSync(
+    `keys/message-${txKey.toBase58()}.json`,
+    `[${message.secretKey.toString()}]`
+  );
   console.log(`Message Address: ${message.publicKey.toBase58()}`);
 
   console.log("Creating wormhole instructions...");
@@ -431,7 +470,6 @@ async function executeMultisigTx(
   );
   await new Promise((resolve) => setTimeout(resolve, 10000));
 
-
   const txDetails = await squad.connection.getParsedTransaction(
     signature,
     "confirmed"
@@ -460,10 +498,10 @@ async function executeMultisigTx(
   const { vaaBytes } = await response.json();
   console.log(`VAA (Base64): ${vaaBytes}`);
   const parsedVaa = await parse(vaaBytes);
-  console.log(`VAA (Hex): ${Buffer.from(vaaBytes).toString('hex')}`)
+  console.log(`VAA (Hex): ${Buffer.from(vaaBytes).toString("hex")}`);
   console.log(`Emitter chain: ${parsedVaa.emitter_chain}`);
   console.log(`Nonce: ${parsedVaa.nonce}`);
-  console.log(`Payload: ${Buffer.from(parsedVaa.payload).toString('hex')}`);
+  console.log(`Payload: ${Buffer.from(parsedVaa.payload).toString("hex")}`);
 }
 
 async function parse(data: string) {
