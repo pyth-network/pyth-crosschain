@@ -260,7 +260,6 @@ async function getWormholeMessageIx(
 ) {
   const wormholeNetwork: WormholeNetwork =
     solanaClusterMappingToWormholeNetwork[cluster];
-  console.log("Wormhole network: ")
   const wormholeAddress = wormholeUtils.CONTRACTS[wormholeNetwork].solana.core;
   const { post_message_ix, fee_collector_address, state_address, parse_state } =
     await importCoreWasm();
@@ -313,7 +312,7 @@ async function createWormholeMsgMultisigTx(
 
   const message = Keypair.generate();
 
-  fs.mkdirSync('keys');
+  fs.mkdirSync('keys', {recursive: true});
   // save message to Uint8 array keypair file called mesage.json
   fs.writeFileSync(`keys/message-${txKey.toBase58()}.json`, `[${message.secretKey.toString()}]`);
   console.log(`Message Address: ${message.publicKey.toBase58()}`);
