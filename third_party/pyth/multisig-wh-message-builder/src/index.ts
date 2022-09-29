@@ -7,10 +7,11 @@ import {
 import * as anchor from "@project-serum/anchor";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import {
+  AccountMeta,
   Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
-  SystemProgram,
+  SystemProgram, TransactionInstruction,
 } from "@solana/web3.js";
 import Squads from "@sqds/mesh";
 import bs58 from "bs58";
@@ -45,16 +46,48 @@ program
     "keys/key.json"
   )
   .option("-p, --payload <hex-string>", "payload to sign", "0xdeadbeef")
-  .action((options) => {
-    createMultisigTx(
+  .action(async (options) => {
+    const squad = await getSquadsClient(options.cluster, options.ledger, options.ledgerDerivationAccount, options.ledgerDerivationChange, options.wallet);
+    createWormholeMsgMultisigTx(
       options.cluster,
-      new PublicKey(options.vaultAddress),
+      squad,
       options.ledger,
-      options.ledgerDerivationAccount,
-      options.ledgerDerivationChange,
-      options.wallet,
+      new PublicKey(options.vaultAddress),
       options.payload
     );
+  });
+
+program
+  .command("set-is-active")
+  .description("Create a new multisig transaction to set the attester is-active flag")
+  .option("-c, --cluster <network>", "solana cluster to use", "devnet")
+  .requiredOption("-v, --vault-address <address>", "multisig vault address")
+  .option("-l, --ledger", "use ledger")
+  .option(
+    "-lda, --ledger-derivation-account <number>",
+    "ledger derivation account to use"
+  )
+  .option(
+    "-ldc, --ledger-derivation-change <number>",
+    "ledger derivation change to use"
+  )
+  .option(
+    "-w, --wallet <filepath>",
+    "multisig wallet secret key filepath",
+    "keys/key.json"
+  )
+  .option("-a, --attester <program id>")
+  .option("-i, --is-active <true/false>", "set the isActive field to this value", true)
+  .action(async (options) => {
+    const squad = await getSquadsClient(options.cluster, options.ledger, options.ledgerDerivationAccount, options.ledgerDerivationChange, options.wallet);
+    const msAccount = await squad.getMultisig(options.vaultAddress);
+    const vaultAuthority = squad.getAuthorityPDA(
+      msAccount.publicKey,
+      msAccount.authorityIndex
+    );
+    const attesterProgramId = new PublicKey(options.attester);
+    const instructions = [await setIsActiveIx(vaultAuthority, vaultAuthority, attesterProgramId, options.active)];
+    createMultisigTx(squad, options.ledger, new PublicKey(options.vaultAddress), instructions);
   });
 
 program
@@ -112,6 +145,101 @@ const solanaClusterMappingToWormholeNetwork: Record<Cluster, WormholeNetwork> =
     "mainnet-beta": "MAINNET",
   };
 
+async function getSquadsClient(cluster: Cluster,
+                               ledger: boolean,
+                               ledgerDerivationAccount: number | undefined,
+                               ledgerDerivationChange: number | undefined,
+                               walletPath: string,
+) {
+  let wallet: LedgerNodeWallet | NodeWallet;
+  if (ledger) {
+    console.log("Please connect to ledger...");
+    wallet = await LedgerNodeWallet.createWallet(
+      ledgerDerivationAccount,
+      ledgerDerivationChange
+    );
+    console.log(`Ledger connected! ${wallet.publicKey.toBase58()}`);
+  } else {
+    wallet = new NodeWallet(
+      Keypair.fromSecretKey(
+        Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "ascii")))
+      )
+    );
+    console.log(`Loaded wallet with address: ${wallet.publicKey.toBase58()}`);
+  }
+  const squad =
+    cluster === "devnet" ? Squads.devnet(wallet) : Squads.mainnet(wallet);
+  return squad;
+}
+
+async function createMultisigTx(
+  squad: Squads,
+  ledger: boolean,
+  vault: PublicKey,
+  instructions: TransactionInstruction[]
+) {
+  const msAccount = await squad.getMultisig(vault);
+
+  console.log("Creating new transaction...");
+  if (ledger) {
+    console.log("Please approve the transaction on your ledger device...");
+  }
+  const newTx = await squad.createTransaction(
+    msAccount.publicKey,
+    msAccount.authorityIndex
+  );
+  console.log(`Tx Address: ${newTx.publicKey.toBase58()}`);
+
+  for (let i = 0; i < instructions.length; i++) {
+    console.log(`Adding instruction ${i}/${instructions.length} to transaction...`);
+    if (ledger) {
+      console.log("Please approve the transaction on your ledger device...");
+    }
+    await squad.addInstruction(newTx.publicKey, instructions[i]);
+  }
+
+  console.log("Activating transaction...");
+  if (ledger)
+    console.log("Please approve the transaction on your ledger device...");
+  await squad.activateTransaction(newTx.publicKey);
+  console.log("Transaction created.");
+}
+
+async function setIsActiveIx(
+  payerKey: PublicKey,
+  opsOwnerKey: PublicKey,
+  attesterProgramId: PublicKey,
+  isActive: boolean
+): Promise<TransactionInstruction> {
+  const configKey = PublicKey.createProgramAddressSync([Buffer.from("pyth2wormhole-config-v3")], attesterProgramId)
+  const config: AccountMeta = {
+    pubkey: configKey,
+    isSigner: false,
+    isWritable: true,
+  }
+
+  const opsOwner: AccountMeta = {
+    pubkey: opsOwnerKey,
+    isSigner: true,
+    isWritable: true,
+  }
+  const payer: AccountMeta = {
+    pubkey: payerKey,
+    isSigner: true,
+    isWritable: true,
+  }
+
+  const isActiveInt = (isActive === true) ? 1 : 0;
+  // first byte is the isActive instruction, second byte is true/false
+  const data = new Buffer([4, isActiveInt])
+
+  return {
+    keys: [config, opsOwner, payer],
+    programId: attesterProgramId,
+    data: data,
+  }
+}
+
 async function getWormholeMessageIx(
   cluster: Cluster,
   payer: PublicKey,
@@ -122,6 +250,7 @@ async function getWormholeMessageIx(
 ) {
   const wormholeNetwork: WormholeNetwork =
     solanaClusterMappingToWormholeNetwork[cluster];
+  console.log("Wormhole network: ")
   const wormholeAddress = wormholeUtils.CONTRACTS[wormholeNetwork].solana.core;
   const { post_message_ix, fee_collector_address, state_address, parse_state } =
     await importCoreWasm();
@@ -155,33 +284,13 @@ async function getWormholeMessageIx(
   ];
 }
 
-async function createMultisigTx(
+async function createWormholeMsgMultisigTx(
   cluster: Cluster,
-  vault: PublicKey,
+  squad: Squads,
   ledger: boolean,
-  ledgerDerivationAccount: number | undefined,
-  ledgerDerivationChange: number | undefined,
-  walletPath: string,
+  vault: PublicKey,
   payload: string
 ) {
-  let wallet: LedgerNodeWallet | NodeWallet;
-  if (ledger) {
-    console.log("Please connect to ledger...");
-    wallet = await LedgerNodeWallet.createWallet(
-      ledgerDerivationAccount,
-      ledgerDerivationChange
-    );
-    console.log(`Ledger connected! ${wallet.publicKey.toBase58()}`);
-  } else {
-    wallet = new NodeWallet(
-      Keypair.fromSecretKey(
-        Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "ascii")))
-      )
-    );
-    console.log(`Loaded wallet with address: ${wallet.publicKey.toBase58()}`);
-  }
-  const squad =
-    cluster === "devnet" ? Squads.devnet(wallet) : Squads.mainnet(wallet);
   const msAccount = await squad.getMultisig(vault);
 
   const emitter = squad.getAuthorityPDA(
@@ -190,17 +299,9 @@ async function createMultisigTx(
   );
   console.log(`Emitter Address: ${emitter.toBase58()}`);
 
-  console.log("Creating new transaction...");
-  if (ledger)
-    console.log("Please approve the transaction on your ledger device...");
-  const newTx = await squad.createTransaction(
-    msAccount.publicKey,
-    msAccount.authorityIndex
-  );
-  console.log(`Tx Address: ${newTx.publicKey.toBase58()}`);
-
   const message = Keypair.generate();
-  // save message to Uint8 array keypair file called mesage.json
+  // save message to Uint8 array keypair file called message.json
+  fs.mkdirSync('keys');
   fs.writeFileSync(`keys/message.json`, `[${message.secretKey.toString()}]`);
   console.log(`Message Address: ${message.publicKey.toBase58()}`);
 
@@ -215,22 +316,7 @@ async function createMultisigTx(
   );
   console.log("Wormhole instructions created.");
 
-  console.log("Adding instruction 1/2 to transaction...");
-  if (ledger)
-    console.log("Please approve the transaction on your ledger device...");
-  // transfer sol to the message account
-  await squad.addInstruction(newTx.publicKey, wormholeIxs[0]);
-  console.log("Adding instruction 2/2 to transaction...");
-  if (ledger)
-    console.log("Please approve the transaction on your ledger device...");
-  // wormhole post message ix
-  await squad.addInstruction(newTx.publicKey, wormholeIxs[1]);
-
-  console.log("Activating transaction...");
-  if (ledger)
-    console.log("Please approve the transaction on your ledger device...");
-  await squad.activateTransaction(newTx.publicKey);
-  console.log("Transaction created.");
+  await createMultisigTx(squad, ledger, vault, wormholeIxs);
 }
 
 async function executeMultisigTx(
@@ -328,6 +414,12 @@ async function executeMultisigTx(
     }`
   );
 
+  console.log(
+    "Sleeping for 10 seconds to allow guardians enough time to get the sequence number..."
+  );
+  await new Promise((resolve) => setTimeout(resolve, 10000));
+
+
   const txDetails = await squad.connection.getParsedTransaction(
     signature,
     "confirmed"
@@ -341,11 +433,10 @@ async function executeMultisigTx(
   );
   console.log(`Sequence number: ${sequenceNumber}`);
 
-  // sleep for 5 seconds
   console.log(
-    "Sleeping for 5 seconds to allow guardians enough time to create VAA..."
+    "Sleeping for 10 seconds to allow guardians enough time to create VAA..."
   );
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await new Promise((resolve) => setTimeout(resolve, 10000));
 
   // fetch VAA
   console.log("Fetching VAA...");
@@ -357,6 +448,7 @@ async function executeMultisigTx(
   const { vaaBytes } = await response.json();
   console.log(`VAA (Base64): ${vaaBytes}`);
   const parsedVaa = await parse(vaaBytes);
+  console.log(`VAA (Hex): ${Buffer.from(vaaBytes).toString('hex')}`)
   console.log(`Emitter chain: ${parsedVaa.emitter_chain}`);
   console.log(`Nonce: ${parsedVaa.nonce}`);
   console.log(`Payload: ${Buffer.from(parsedVaa.payload).toString('hex')}`);
