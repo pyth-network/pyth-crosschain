@@ -1,6 +1,5 @@
 #![deny(warnings)]
 pub mod cli;
-
 use std::str::FromStr;
 
 use anchor_client::{
@@ -280,8 +279,16 @@ pub fn process_transaction(
     let mut transaction =
         Transaction::new_with_payer(instructions.as_slice(), Some(&signers[0].pubkey()));
     transaction.sign(signers, rpc_client.get_latest_blockhash()?);
-    let transaction_signature =
-        rpc_client.send_and_confirm_transaction_with_spinner(&transaction)?;
+    let transaction_signature = rpc_client.send_transaction_with_config(
+        &transaction,
+        solana_client::rpc_config::RpcSendTransactionConfig {
+            skip_preflight: true,
+            preflight_commitment: None,
+            encoding: None,
+            max_retries: None,
+            min_context_slot: None,
+        },
+    )?;
     println!("Transaction successful : {:?}", transaction_signature);
     Ok(())
 }
@@ -318,6 +325,13 @@ pub fn get_execute_instruction(
 
     // Add the rest of `remaining_accounts` from the payload
     for instruction in executor_payload.instructions {
+        // Push program_id
+        account_metas.push(AccountMeta {
+            pubkey: instruction.program_id,
+            is_signer: false,
+            is_writable: false,
+        });
+        // Push other accounts
         for account_meta in Instruction::from(&instruction).accounts {
             if account_meta.pubkey != executor_key {
                 account_metas.push(account_meta.clone());

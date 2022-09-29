@@ -340,6 +340,13 @@ impl ExecutorSimulator {
 
         // Add the rest of `remaining_accounts` from parsing the payload
         for instruction in executor_payload.instructions {
+            // Push program_id
+            account_metas.push(AccountMeta {
+                pubkey: instruction.program_id,
+                is_signer: false,
+                is_writable: false,
+            });
+            // Push other accounts
             for account_meta in Instruction::from(&instruction).accounts {
                 if account_meta.pubkey != executor_key {
                     account_metas.push(account_meta.clone());
