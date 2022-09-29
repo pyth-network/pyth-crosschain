@@ -48,7 +48,7 @@ program
   .option("-p, --payload <hex-string>", "payload to sign", "0xdeadbeef")
   .action(async (options) => {
     const squad = await getSquadsClient(options.cluster, options.ledger, options.ledgerDerivationAccount, options.ledgerDerivationChange, options.wallet);
-    createWormholeMsgMultisigTx(
+    await createWormholeMsgMultisigTx(
       options.cluster,
       squad,
       options.ledger,
@@ -86,8 +86,9 @@ program
       msAccount.authorityIndex
     );
     const attesterProgramId = new PublicKey(options.attester);
+    const txKey = await createTx(squad, options.ledger, new PublicKey(options.vaultAddress));
     const instructions = [await setIsActiveIx(vaultAuthority, vaultAuthority, attesterProgramId, options.active)];
-    createMultisigTx(squad, options.ledger, new PublicKey(options.vaultAddress), instructions);
+    await addInstructionsToTx(squad, options.ledger, txKey, instructions);
   });
 
 program
@@ -172,12 +173,11 @@ async function getSquadsClient(cluster: Cluster,
   return squad;
 }
 
-async function createMultisigTx(
+async function createTx(
   squad: Squads,
   ledger: boolean,
   vault: PublicKey,
-  instructions: TransactionInstruction[]
-) {
+): Promise<PublicKey> {
   const msAccount = await squad.getMultisig(vault);
 
   console.log("Creating new transaction...");
@@ -190,18 +190,28 @@ async function createMultisigTx(
   );
   console.log(`Tx Address: ${newTx.publicKey.toBase58()}`);
 
+  return newTx.publicKey;
+}
+
+/** Adds the given instructions to the squads transaction at `txKey` and activates the transaction (makes it ready for signing). */
+async function addInstructionsToTx(
+  squad: Squads,
+  ledger: boolean,
+  txKey: PublicKey,
+  instructions: TransactionInstruction[]
+) {
   for (let i = 0; i < instructions.length; i++) {
     console.log(`Adding instruction ${i}/${instructions.length} to transaction...`);
     if (ledger) {
       console.log("Please approve the transaction on your ledger device...");
     }
-    await squad.addInstruction(newTx.publicKey, instructions[i]);
+    await squad.addInstruction(txKey, instructions[i]);
   }
 
   console.log("Activating transaction...");
   if (ledger)
     console.log("Please approve the transaction on your ledger device...");
-  await squad.activateTransaction(newTx.publicKey);
+  await squad.activateTransaction(txKey);
   console.log("Transaction created.");
 }
 
@@ -299,10 +309,13 @@ async function createWormholeMsgMultisigTx(
   );
   console.log(`Emitter Address: ${emitter.toBase58()}`);
 
+  const txKey = await createTx(squad, ledger, vault);
+
   const message = Keypair.generate();
-  // save message to Uint8 array keypair file called message.json
+
   fs.mkdirSync('keys');
-  fs.writeFileSync(`keys/message.json`, `[${message.secretKey.toString()}]`);
+  // save message to Uint8 array keypair file called mesage.json
+  fs.writeFileSync(`keys/message-${txKey.toBase58()}.json`, `[${message.secretKey.toString()}]`);
   console.log(`Message Address: ${message.publicKey.toBase58()}`);
 
   console.log("Creating wormhole instructions...");
@@ -316,7 +329,7 @@ async function createWormholeMsgMultisigTx(
   );
   console.log("Wormhole instructions created.");
 
-  await createMultisigTx(squad, ledger, vault, wormholeIxs);
+  await addInstructionsToTx(squad, ledger, txKey, wormholeIxs);
 }
 
 async function executeMultisigTx(
