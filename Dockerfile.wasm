@@ -17,6 +17,7 @@ ENV EMITTER_ADDRESS="11111111111111111111111111111115"
 ENV BRIDGE_ADDRESS="Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 
 COPY solana solana
+COPY pythnet pythnet
 COPY third_party third_party
 
 # wasm-bindgen 0.2.74 generates JavaScript bindings for SystemInstruction exported from solana-program 1.9.4.
