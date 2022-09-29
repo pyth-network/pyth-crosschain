@@ -54,8 +54,8 @@ module.exports = {
         );
       },
       network_id: "5",
-      gas: 4465030,
-      gasPrice: 10000000000,
+      gas: 8465030,
+      gasPrice: 15000000000,
       skipDryRun: true,
     },
     bnb: {
@@ -89,7 +89,7 @@ module.exports = {
       },
       network_id: "137",
       gas: 10000000,
-      gasPrice: 33000000000,
+      gasPrice: 50000000000,
     },
     mumbai: {
       provider: () => {
@@ -108,7 +108,7 @@ module.exports = {
       },
       network_id: "43114",
       gas: 8000000,
-      gasPrice: 26000000000,
+      gasPrice: 30000000000,
     },
     fuji: {
       provider: () => new HDWalletProvider(
@@ -138,6 +138,8 @@ module.exports = {
       network_id: 0x4e454152,
       gas: 10000000,
       from: "0xC42e9476b0a458097087336e2395Dbf45B0BdC12", // creator public key
+      networkCheckTimeout: 1000000,
+      timeoutBlocks: 1000,
     },
     aurora_testnet: {
       provider: () => {
@@ -163,7 +165,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://mainnet.optimism.io"
+          "https://1rpc.io/op"
         );
       },
       network_id: 10,
@@ -177,7 +179,7 @@ module.exports = {
       },
       network_id: 250,
       gas: 8000000,
-      gasPrice: 30000000000,
+      gasPrice: 3000000000,
       timeoutBlocks: 15000,
     },
     fantom_testnet: {
@@ -188,7 +190,7 @@ module.exports = {
         )
       },
       network_id: 0xfa2,
-      gas: 4465030,
+      gas: 8000000,
       gasPrice: 300000000000,
     },
     celo: {
