@@ -138,7 +138,7 @@ module pyth::pyth {
     /// price for price_identifiers[i] is older than publish_times[i].
     public entry fun update_price_feeds_if_fresh(
         vaa_bytes: vector<u8>,
-        price_identifiers: vector<PriceIdentifier>,
+        price_identifiers: vector<vector<u8>>,
         publish_times: vector<u64>,
         fee: Coin<AptosCoin>) {
 
@@ -148,13 +148,14 @@ module pyth::pyth {
         let fresh_data = false;
         let i = 0;
         while (i < vector::length(&publish_times)) {
-            let price_identifier = vector::borrow(&price_identifiers, i);
-            if (!state::price_info_cached(*price_identifier)) {
+            let price_identifier = price_identifier::from_byte_vec(
+                *vector::borrow(&price_identifiers, i));
+            if (!state::price_info_cached(price_identifier)) {
                 fresh_data = true;
                 break
             };
 
-            let cached_timestamp = price::get_timestamp(&get_price_unsafe(*price_identifier));
+            let cached_timestamp = price::get_timestamp(&get_price_unsafe(price_identifier));
             if (cached_timestamp < *vector::borrow(&publish_times, i)) {
                 fresh_data = true;
                 break
@@ -656,9 +657,9 @@ module pyth::pyth {
         // Update the price feeds 
         let bytes = vector[0u8, 1u8, 2u8];
         let price_identifiers = vector[
-            price_identifier::from_byte_vec(x"baa284eaf23edf975b371ba2818772f93dbae72836bbdea28b07d40f3cf8b485"),
-            price_identifier::from_byte_vec(x"c9d5fe0d836688f4c88c221415d23e4bcabee21a6a21124bfcc9a5410a297818"),
-            price_identifier::from_byte_vec(x"eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a"),
+            x"baa284eaf23edf975b371ba2818772f93dbae72836bbdea28b07d40f3cf8b485",
+            x"c9d5fe0d836688f4c88c221415d23e4bcabee21a6a21124bfcc9a5410a297818",
+            x"eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
         ];
         let publish_times = vector[
             734639463
@@ -676,10 +677,10 @@ module pyth::pyth {
         // Update the price feeds 
         let bytes = TEST_VAA;
         let price_identifiers = vector[
-            price_identifier::from_byte_vec(x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1"),
-            price_identifier::from_byte_vec(x"3b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe"),
-            price_identifier::from_byte_vec(x"33832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d"),
-            price_identifier::from_byte_vec(x"21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db8"),
+            x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1",
+            x"3b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe",
+            x"33832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d",
+            x"21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db8",
         ];
         let publish_times = vector[
             1663680745, 1663680730, 1663680760, 1663680720
@@ -706,10 +707,10 @@ module pyth::pyth {
         // This should abort with error::no_fresh_data()
         let bytes = TEST_VAA;
         let price_identifiers = vector[
-            price_identifier::from_byte_vec(x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1"),
-            price_identifier::from_byte_vec(x"3b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe"),
-            price_identifier::from_byte_vec(x"33832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d"),
-            price_identifier::from_byte_vec(x"21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db8"),
+            x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1",
+            x"3b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe",
+            x"33832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d",
+            x"21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db8",
         ];
         let publish_times = vector[
             67, 35, 26, 64
