@@ -36,6 +36,7 @@ RUN mv wormhole-${WORMHOLE_REV} wormhole
 
 
 ADD solana solana
+ADD pythnet pythnet
 ADD third_party/pyth/p2w-sdk/rust third_party/pyth/p2w-sdk/rust
 RUN mkdir -p /opt/solana/deps
 

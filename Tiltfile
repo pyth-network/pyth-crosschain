@@ -191,7 +191,7 @@ if pyth:
     docker_build(
         ref = "p2w-attest",
         context = ".",
-        only = ["./solana", "./third_party"],
+        only = ["./solana", "./third_party", "./pythnet"],
         dockerfile = "./third_party/pyth/Dockerfile.p2w-attest",
         ignore = ["./solana/*/target"],
     )

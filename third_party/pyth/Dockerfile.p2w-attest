@@ -4,6 +4,7 @@ FROM ghcr.io/certusone/solana:1.10.31@sha256:d31e8db926a1d3fbaa9d9211d9979023692
 RUN apt-get update && apt-get install -yq python3 libudev-dev ncat
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs
 
+ADD pythnet/remote-executor /usr/src/pythnet/remote-executor
 ADD third_party/pyth/pyth_utils.py /usr/src/pyth/pyth_utils.py
 ADD third_party/pyth/p2w_autoattest.py /usr/src/pyth/p2w_autoattest.py
 ADD third_party/pyth/p2w-sdk/rust /usr/src/third_party/pyth/p2w-sdk/rust
