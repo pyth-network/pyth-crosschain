@@ -125,9 +125,12 @@ pub fn gen_init_tx(
     Ok(tx_signed)
 }
 
-pub fn get_set_config_ix  (
-    p2w_addr: &Pubkey, owner_pubkey : &Pubkey, payer_pubkey : &Pubkey, new_config: Pyth2WormholeConfig
-) -> Result<Instruction, ErrBox>{
+pub fn get_set_config_ix(
+    p2w_addr: &Pubkey,
+    owner_pubkey: &Pubkey,
+    payer_pubkey: &Pubkey,
+    new_config: Pyth2WormholeConfig,
+) -> Result<Instruction, ErrBox> {
     let acc_metas = vec![
         // config
         AccountMeta::new(
@@ -145,7 +148,11 @@ pub fn get_set_config_ix  (
         pyth2wormhole::instruction::Instruction::SetConfig,
         new_config,
     );
-    Ok(Instruction::new_with_bytes(*p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas))
+    Ok(Instruction::new_with_bytes(
+        *p2w_addr,
+        ix_data.try_to_vec()?.as_slice(),
+        acc_metas,
+    ))
 }
 
 pub fn gen_set_config_tx(
@@ -167,9 +174,12 @@ pub fn gen_set_config_tx(
     Ok(tx_signed)
 }
 
-pub fn get_set_is_active_ix  (
-    p2w_addr: &Pubkey, ops_owner_pubkey : &Pubkey, payer_pubkey : &Pubkey, new_is_active: bool
-) -> Result<Instruction, ErrBox>{
+pub fn get_set_is_active_ix(
+    p2w_addr: &Pubkey,
+    ops_owner_pubkey: &Pubkey,
+    payer_pubkey: &Pubkey,
+    new_is_active: bool,
+) -> Result<Instruction, ErrBox> {
     let acc_metas = vec![
         // config
         AccountMeta::new(
@@ -186,7 +196,11 @@ pub fn get_set_is_active_ix  (
         pyth2wormhole::instruction::Instruction::SetIsActive,
         new_is_active,
     );
-    Ok(Instruction::new_with_bytes(*p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas))
+    Ok(Instruction::new_with_bytes(
+        *p2w_addr,
+        ix_data.try_to_vec()?.as_slice(),
+        acc_metas,
+    ))
 }
 
 pub fn gen_set_is_active_tx(
@@ -196,8 +210,12 @@ pub fn gen_set_is_active_tx(
     new_is_active: bool,
     latest_blockhash: Hash,
 ) -> Result<Transaction, ErrBox> {
-
-    let ix = get_set_is_active_ix(&p2w_addr, &ops_owner.pubkey(), &payer.pubkey(), new_is_active)?;
+    let ix = get_set_is_active_ix(
+        &p2w_addr,
+        &ops_owner.pubkey(),
+        &payer.pubkey(),
+        new_is_active,
+    )?;
 
     let signers = vec![&ops_owner, &payer];
     let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
