@@ -16,6 +16,7 @@ module pyth::pyth {
     use wormhole::u16;
     use wormhole::external_address;
     use std::account;
+    use std::signer;
     use deployer::deployer;
     use pyth::error;
 
@@ -88,15 +89,12 @@ module pyth::pyth {
 // Update the cached prices
 
     /// Update the cached price feeds with the data in the given vaa_bytes payload.
-    /// The given fee must contain a sufficient number of coins to pay the update fee:
-    /// this amount can be queried by calling get_update_fee().
-    public entry fun update_price_feeds(vaa_bytes: vector<u8>, fee: Coin<AptosCoin>) {
+    /// 
+    /// The given fee must contain a sufficient number of coins to pay the update fee.
+    /// The update fee amount can be queried by calling get_update_fee().
+    public fun update_price_feeds(vaa_bytes: vector<u8>, fee: Coin<AptosCoin>) {
         // Deserialize the VAA
         let vaa = vaa::parse_and_verify(vaa_bytes);
-
-        // Charge the message update fee
-        assert!(state::get_update_fee() <= coin::value(&fee), error::insufficient_fee());
-        coin::deposit(@pyth, fee);
 
         // Check that the VAA is from a valid data source (emitter)
         assert!(
@@ -109,6 +107,27 @@ module pyth::pyth {
         // Deserialize the batch price attestation
         update_cache(batch_price_attestation::destroy(
                 batch_price_attestation::deserialize(vaa::destroy(vaa))));
+
+        // Charge the message update fee
+        assert!(get_update_fee() <= coin::value(&fee), error::insufficient_fee());
+        coin::deposit(@pyth, fee);
+    }
+
+    /// Update the cached price feeds with the data in the given vaa_bytes payload. This is a 
+    /// convienence wrapper around update_price_feeds(), which allows you to update the price feeds
+    /// using an entry function.
+    /// 
+    /// If possible, it is recommended to use update_price_feeds() instead, which avoids the need
+    /// to pass a signer account. update_price_feeds_with_funder() should only be used when
+    /// you need to call an entry function.
+    /// 
+    /// WARNING: this function will charge an update fee, transferring some AptosCoin's
+    /// from the given funder account to the Pyth contract. The amount of coins transferred can be
+    /// queried with get_update_fee(). The signer must have sufficient account balance to
+    /// pay this fee, otherwise the transaction will abort.
+    public entry fun update_price_feeds_with_funder(funder: &signer, vaa_bytes: vector<u8>) {
+        let coins = coin::withdraw<AptosCoin>(funder, get_update_fee());
+        update_price_feeds(vaa_bytes, coins);
     }
 
     /// Update the cache with given price updates, if they are newer than the ones currently cached.
@@ -431,14 +450,7 @@ module pyth::pyth {
             50,
             // Coins provided to update < update fee
             20);
-
-        // Set some valid data sources, excluding our test VAA's source
-        state::set_data_sources(vector<DataSource>[
-            data_source::new(
-                1, external_address::from_bytes(x"0000000000000000000000000000000000000000000000000000000000000004")),
-                data_source::new(
-                5, external_address::from_bytes(x"0000000000000000000000000000000000000000000000000000000000007637"))
-        ]);
+        set_data_source_for_test_vaa();
 
         update_price_feeds(TEST_VAA, coins);
 
@@ -457,6 +469,62 @@ module pyth::pyth {
         // Check that the cache has been updated
         let expected = get_mock_price_infos();
         check_price_feeds_cached(&expected);
+
+        cleanup_test(burn_capability, mint_capability);
+    }
+
+    #[test(aptos_framework = @aptos_framework)]
+    fun test_update_price_feeds_with_funder(aptos_framework: &signer) {
+        let update_fee = 50;
+        let initial_balance = 75;
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", update_fee, initial_balance);
+
+        // Create a test funder account and register it to store funds
+        let funder_addr = @0xbfbffd8e2af9a3e3ce20d2d2b22bd640;
+        let funder = account::create_account_for_test(funder_addr);
+        coin::register<AptosCoin>(&funder);
+        coin::deposit(funder_addr, coins);
+
+        assert!(get_update_fee() == update_fee, 1);
+        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
+        assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
+
+        // Update the price feeds using the funder 
+        set_data_source_for_test_vaa();
+        update_price_feeds_with_funder(&funder, TEST_VAA);
+
+        // Check that the price feeds are now cached
+        check_price_feeds_cached(&get_mock_price_infos());
+
+        // Check that the funder's balance has decreased by the update_fee amount
+        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance - get_update_fee(), 1);
+
+        // Check that the amount has been transferred to the Pyth contract
+        assert!(coin::balance<AptosCoin>(@pyth) == get_update_fee(), 1);
+
+        cleanup_test(burn_capability, mint_capability);
+    }
+
+    #[test(aptos_framework = @aptos_framework)]
+    #[expected_failure(abort_code = 65542)]
+    fun test_update_price_feeds_with_funder_insufficient_balance(aptos_framework: &signer) {
+        let update_fee = 50;
+        let initial_balance = 25;
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", update_fee, initial_balance);
+
+        // Create a test funder account and register it to store funds
+        let funder_addr = @0xbfbffd8e2af9a3e3ce20d2d2b22bd640;
+        let funder = account::create_account_for_test(funder_addr);
+        coin::register<AptosCoin>(&funder);
+        coin::deposit(funder_addr, coins);
+
+        assert!(get_update_fee() == update_fee, 1);
+        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
+        assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
+
+        // Update the price feeds using the funder 
+        set_data_source_for_test_vaa();
+        update_price_feeds_with_funder(&funder, TEST_VAA);
 
         cleanup_test(burn_capability, mint_capability);
     }
