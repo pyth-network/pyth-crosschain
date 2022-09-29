@@ -279,16 +279,8 @@ pub fn process_transaction(
     let mut transaction =
         Transaction::new_with_payer(instructions.as_slice(), Some(&signers[0].pubkey()));
     transaction.sign(signers, rpc_client.get_latest_blockhash()?);
-    let transaction_signature = rpc_client.send_transaction_with_config(
-        &transaction,
-        solana_client::rpc_config::RpcSendTransactionConfig {
-            skip_preflight: true,
-            preflight_commitment: None,
-            encoding: None,
-            max_retries: None,
-            min_context_slot: None,
-        },
-    )?;
+    let transaction_signature =
+        rpc_client.send_and_confirm_transaction_with_spinner(&transaction)?;
     println!("Transaction successful : {:?}", transaction_signature);
     Ok(())
 }
