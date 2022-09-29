@@ -3,9 +3,6 @@ name = "remote-executor-cli"
 version = "0.1.0"
 edition = "2018"
 
-[lib]
-name = "remote_executor_cli"
-
 [dependencies]
 clap = {version ="3.2.22", features = ["derive"]}
 remote-executor = {path = "../programs/remote-executor/"}
@@ -18,3 +15,4 @@ anyhow = "1.0.65"
 base64 = "0.13.0"
 wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
 wormhole-core = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
+hex = "0.4.3"

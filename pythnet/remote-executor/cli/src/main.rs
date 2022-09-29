@@ -3,13 +3,16 @@ pub mod cli;
 
 use std::str::FromStr;
 
-use anchor_client::anchor_lang::{
-    AccountDeserialize,
-    AnchorDeserialize,
-    AnchorSerialize,
-    InstructionData,
-    Owner,
-    ToAccountMetas,
+use anchor_client::{
+    anchor_lang::{
+        AccountDeserialize,
+        AnchorDeserialize,
+        AnchorSerialize,
+        InstructionData as AnchorInstructionData,
+        Owner,
+        ToAccountMetas,
+    },
+    solana_sdk::bpf_loader_upgradeable,
 };
 use clap::Parser;
 use cli::{
@@ -20,6 +23,7 @@ use cli::{
 use anyhow::Result;
 use remote_executor::{
     accounts::ExecutePostedVaa,
+    state::governance_payload::InstructionData,
     EXECUTOR_KEY_SEED,
     ID,
 };
@@ -206,6 +210,64 @@ fn main() -> Result<()> {
                 vec![transfer_instruction, post_vaa_instruction],
                 &vec![&payer, &message_keypair],
             )
+        }
+        Action::GetTestPayload {} => {
+            let payload = ExecutorPayload {
+                header: GovernanceHeader::executor_governance_header(),
+                instructions: vec![],
+            }
+            .try_to_vec()?;
+            println!("Test payload : {:?}", hex::encode(payload));
+            Ok(())
+        }
+        Action::MapKey { pubkey } => {
+            let executor_key = Pubkey::find_program_address(
+                &[EXECUTOR_KEY_SEED.as_bytes(), &pubkey.to_bytes()],
+                &ID,
+            )
+            .0;
+            println!("{:?} maps to {:?}", pubkey, executor_key);
+            Ok(())
+        }
+
+        Action::GetSetUpgradeAuthorityPayload {
+            current,
+            new,
+            program_id,
+        } => {
+            let mut instruction =
+                bpf_loader_upgradeable::set_upgrade_authority(&program_id, &current, Some(&new));
+            instruction.accounts[2].is_signer = true; // Require signature of new authority for safety
+            println!("New authority : {:}", instruction.accounts[2].pubkey);
+            let payload = ExecutorPayload {
+                header: GovernanceHeader::executor_governance_header(),
+                instructions: vec![InstructionData::from(&instruction)],
+            }
+            .try_to_vec()?;
+            println!("Set upgrade authority payload : {:?}", hex::encode(payload));
+            Ok(())
+        }
+
+        Action::GetUpgradeProgramPayload {
+            program_id,
+            authority,
+            new_buffer,
+            spill,
+        } => {
+            let instruction =
+                bpf_loader_upgradeable::upgrade(&program_id, &new_buffer, &authority, &spill);
+            println!("New buffer : {:}", instruction.accounts[2].pubkey);
+            println!(
+                "Extra PGAS will be sent to : {:}",
+                instruction.accounts[3].pubkey
+            );
+            let payload = ExecutorPayload {
+                header: GovernanceHeader::executor_governance_header(),
+                instructions: vec![InstructionData::from(&instruction)],
+            }
+            .try_to_vec()?;
+            println!("Upgrade program payload : {:?}", hex::encode(payload));
+            Ok(())
         }
     }
 }
