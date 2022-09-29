@@ -80,7 +80,9 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
         .create(ctx, accs.payer.info().key, CreationLamports::Exempt)?;
     accs.new_config.1 = Pyth2WormholeConfig::from(old_config.clone());
 
-    // Adjust lamports
+    // Adjust new config lamports 
+    // NOTE(2022-09-29): Necessary due to PythNet rent calculation
+    // differences, remove when solitaire supports Rent::get()?
     let mut acc_lamports = accs.new_config.info().lamports();
 
     let new_lamports = Rent::get()?.minimum_balance(accs.new_config.size());
