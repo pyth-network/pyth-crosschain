@@ -220,7 +220,7 @@ export class RestAPI {
         let stalePrices: Record<HexString, number> = {}
 
         for (let priceId of priceIds) {
-          const latency = currentTime - this.priceFeedVaaInfo.getLatestPriceInfo(priceId)!.priceFeed.publishTime
+          const latency = currentTime - this.priceFeedVaaInfo.getLatestPriceInfo(priceId)!.attestationTime
           if (latency > stalenessThresholdSeconds) {
             stalePrices[priceId] = latency
           }
