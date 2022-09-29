@@ -125,15 +125,9 @@ pub fn gen_init_tx(
     Ok(tx_signed)
 }
 
-pub fn gen_set_config_tx(
-    payer: Keypair,
-    p2w_addr: Pubkey,
-    owner: Keypair,
-    new_config: Pyth2WormholeConfig,
-    latest_blockhash: Hash,
-) -> Result<Transaction, ErrBox> {
-    let payer_pubkey = payer.pubkey();
-
+pub fn get_set_config_ix  (
+    p2w_addr: &Pubkey, owner_pubkey : &Pubkey, payer_pubkey : &Pubkey, new_config: Pyth2WormholeConfig
+) -> Result<Instruction, ErrBox>{
     let acc_metas = vec![
         // config
         AccountMeta::new(
@@ -141,28 +135,58 @@ pub fn gen_set_config_tx(
             false,
         ),
         // current_owner
-        AccountMeta::new(owner.pubkey(), true),
+        AccountMeta::new(*owner_pubkey, true),
         // payer
-        AccountMeta::new(payer.pubkey(), true),
+        AccountMeta::new(*payer_pubkey, true),
         // system_program
         AccountMeta::new(system_program::id(), false),
     ];
-
     let ix_data = (
         pyth2wormhole::instruction::Instruction::SetConfig,
         new_config,
     );
+    Ok(Instruction::new_with_bytes(*p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas))
+}
 
-    let ix = Instruction::new_with_bytes(p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas);
+pub fn gen_set_config_tx(
+    payer: Keypair,
+    p2w_addr: Pubkey,
+    owner: Keypair,
+    new_config: Pyth2WormholeConfig,
+    latest_blockhash: Hash,
+) -> Result<Transaction, ErrBox> {
+    let ix = get_set_config_ix(&p2w_addr, &owner.pubkey(), &payer.pubkey(), new_config)?;
 
     let signers = vec![&owner, &payer];
     let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
         &[ix],
-        Some(&payer_pubkey),
+        Some(&payer.pubkey()),
         &signers,
         latest_blockhash,
     );
     Ok(tx_signed)
+}
+
+pub fn get_set_is_active_ix  (
+    p2w_addr: &Pubkey, ops_owner_pubkey : &Pubkey, payer_pubkey : &Pubkey, new_is_active: bool
+) -> Result<Instruction, ErrBox>{
+    let acc_metas = vec![
+        // config
+        AccountMeta::new(
+            P2WConfigAccount::<{ AccountState::Initialized }>::key(None, &p2w_addr),
+            false,
+        ),
+        // ops_owner
+        AccountMeta::new(*ops_owner_pubkey, true),
+        // payer
+        AccountMeta::new(*payer_pubkey, true),
+    ];
+
+    let ix_data = (
+        pyth2wormhole::instruction::Instruction::SetIsActive,
+        new_is_active,
+    );
+    Ok(Instruction::new_with_bytes(*p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas))
 }
 
 pub fn gen_set_is_active_tx(
@@ -172,31 +196,13 @@ pub fn gen_set_is_active_tx(
     new_is_active: bool,
     latest_blockhash: Hash,
 ) -> Result<Transaction, ErrBox> {
-    let payer_pubkey = payer.pubkey();
 
-    let acc_metas = vec![
-        // config
-        AccountMeta::new(
-            P2WConfigAccount::<{ AccountState::Initialized }>::key(None, &p2w_addr),
-            false,
-        ),
-        // ops_owner
-        AccountMeta::new(ops_owner.pubkey(), true),
-        // payer
-        AccountMeta::new(payer.pubkey(), true),
-    ];
-
-    let ix_data = (
-        pyth2wormhole::instruction::Instruction::SetIsActive,
-        new_is_active,
-    );
-
-    let ix = Instruction::new_with_bytes(p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas);
+    let ix = get_set_is_active_ix(&p2w_addr, &ops_owner.pubkey(), &payer.pubkey(), new_is_active)?;
 
     let signers = vec![&ops_owner, &payer];
     let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
         &[ix],
-        Some(&payer_pubkey),
+        Some(&payer.pubkey()),
         &signers,
         latest_blockhash,
     );

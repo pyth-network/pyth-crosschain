@@ -16,7 +16,7 @@ wasm    = ["wasm-bindgen", "solana"]
 [dependencies]
 hex = "0.4.3"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
-pyth-sdk = "*"
+pyth-sdk = {version = "0.5.0"}
 pyth-sdk-solana = { version = "0.5.0", optional = true }
 wasm-bindgen = { version = "0.2.74", features = ["serde-serialize"], optional = true}
 solitaire = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9", optional = true}
