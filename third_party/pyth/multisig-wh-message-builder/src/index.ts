@@ -99,7 +99,10 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
-    const msAccount = await squad.getMultisig(options.vaultAddress);
+    console.log(options.vaultAddress)
+    const msAccount = await squad.getMultisig(new PublicKey(options.vaultAddress));
+    console.log(`acc: ${msAccount.publicKey.toBase58()}`);
+
     const vaultAuthority = squad.getAuthorityPDA(
       msAccount.publicKey,
       msAccount.authorityIndex
