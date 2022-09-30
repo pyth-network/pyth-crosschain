@@ -115,13 +115,26 @@ module pyth::pyth {
 // -----------------------------------------------------------------------------
 // Update the cached prices
 
-    /// Update the cached price feeds with the data in the given vaa_bytes payload.
+
+    /// Update the cached price feeds with the data in the given VAAs.
+    /// The vaas argument is a vector of VAAs encoded as bytes.
     /// 
     /// The given fee must contain a sufficient number of coins to pay the update fee.
     /// The update fee amount can be queried by calling get_update_fee().
-    public fun update_price_feeds(vaa_bytes: vector<u8>, fee: Coin<AptosCoin>) {
+    public fun update_price_feeds(vaas: vector<vector<u8>>, fee: Coin<AptosCoin>) {
+        // Update the price feed from each VAA
+        while (!vector::is_empty(&vaas)) {
+            update_price_feed_from_single_vaa(vector::pop_back(&mut vaas));
+        };
+
+        // Charge the message update fee
+        assert!(get_update_fee() <= coin::value(&fee), error::insufficient_fee());
+        coin::deposit(@pyth, fee);
+    }
+
+    fun update_price_feed_from_single_vaa(vaa: vector<u8>) {
         // Deserialize the VAA
-        let vaa = vaa::parse_and_verify(vaa_bytes);
+        let vaa = vaa::parse_and_verify(vaa);
 
         // Check that the VAA is from a valid data source (emitter)
         assert!(
@@ -132,13 +145,7 @@ module pyth::pyth {
             error::invalid_data_source());
 
         // Deserialize the batch price attestation
-        update_cache(batch_price_attestation::destroy(
-                batch_price_attestation::deserialize(vaa::destroy(vaa))));
-
-        // Charge the message update fee
-        assert!(get_update_fee() <= coin::value(&fee), error::insufficient_fee());
-        coin::deposit(@pyth, fee);
-    }
+        update_cache(batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::destroy(vaa))));
 
     /// Update the cached price feeds with the data in the given vaa_bytes payload. This is a 
     /// convienence wrapper around update_price_feeds(), which allows you to update the price feeds
@@ -173,17 +180,17 @@ module pyth::pyth {
         vector::destroy_empty(updates);
     }
 
-    /// Update the cached price feeds with the data in the given vaa_bytes payload, using
+    /// Update the cached price feeds with the data in the given VAAs, using
     /// update_price_feeds(). However, this function will only have an effect if any of the
     /// prices in the update are fresh. The price_identifiers and publish_times paramaters
     /// are used to determine if the update is fresh without doing any serialisation or verification
-    /// of the VAA, potentially saving time and gas. If the update contains no fresh data, this function
+    /// of the VAAs, potentially saving time and gas. If the update contains no fresh data, this function
     /// will revert with error::no_fresh_data(). 
     /// 
     /// For a given price update i in the batch, that price is considered fresh if the current cached 
     /// price for price_identifiers[i] is older than publish_times[i].
     public entry fun update_price_feeds_if_fresh(
-        vaa_bytes: vector<u8>,
+        vaas: vector<vector<u8>>,
         price_identifiers: vector<vector<u8>>,
         publish_times: vector<u64>,
         fee: Coin<AptosCoin>) {
@@ -211,7 +218,7 @@ module pyth::pyth {
         };
 
         assert!(fresh_data, error::no_fresh_data());
-        update_price_feeds(vaa_bytes, fee);
+        update_price_feeds(vaas, fee);
     }
 
     /// Determine if the given price update is "fresh": we have nothing newer already cached for that
@@ -409,11 +416,11 @@ module pyth::pyth {
     }
 
     #[test_only]
-    /// A VAA with:
+    /// A vector containing a single VAA with:
     /// - emitter chain ID 17
     /// - emitter address 0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b
     /// - payload corresponding to the batch price attestation of the prices returned by get_mock_price_infos()
-    const TEST_VAA: vector<u8> = x"0100000000010036eb563b80a24f4253bee6150eb8924e4bdf6e4fa1dfc759a6664d2e865b4b134651a7b021b7f1ce3bd078070b688b6f2e37ce2de0d9b48e6a78684561e49d5201527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000001005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001";
+    const TEST_VAAS: vector<vector<u8>> = vector[x"0100000000010036eb563b80a24f4253bee6150eb8924e4bdf6e4fa1dfc759a6664d2e865b4b134651a7b021b7f1ce3bd078070b688b6f2e37ce2de0d9b48e6a78684561e49d5201527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000001005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001"];
 
     #[test(aptos_framework = @aptos_framework)]
     #[expected_failure(abort_code = 6)]
@@ -422,18 +429,7 @@ module pyth::pyth {
 
         // Pass in a corrupt VAA, which should fail deseriaizing
         let corrupt_vaa = x"90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
-        update_price_feeds(corrupt_vaa, coins);
-
-        cleanup_test(burn_capability, mint_capability);
-    }
-
-    #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 65539)]
-    fun test_update_price_feeds_invalid_data_source_initially(aptos_framework: &signer) {
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 100);
-        
-        // Without setting any valid data source, the check should fail
-        update_price_feeds(TEST_VAA, coins);
+        update_price_feeds(vector[corrupt_vaa], coins);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -450,7 +446,7 @@ module pyth::pyth {
         ];
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, 50, 100);
 
-        update_price_feeds(TEST_VAA, coins);
+        update_price_feeds(TEST_VAAS, coins);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -479,7 +475,7 @@ module pyth::pyth {
             // Coins provided to update < update fee
             20);
 
-        update_price_feeds(TEST_VAA, coins);
+        update_price_feeds(TEST_VAAS, coins);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -489,7 +485,7 @@ module pyth::pyth {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 100);
     
         // Update the price feeds from the VAA
-        update_price_feeds(TEST_VAA, coins);
+        update_price_feeds(TEST_VAAS, coins);
 
         // Check that the cache has been updated
         let expected = get_mock_price_infos();
@@ -515,8 +511,7 @@ module pyth::pyth {
         assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
 
         // Update the price feeds using the funder 
-        set_data_source_for_test_vaa();
-        update_price_feeds_with_funder(&funder, TEST_VAA);
+        update_price_feeds_with_funder(&funder, TEST_VAAS);
 
         // Check that the price feeds are now cached
         check_price_feeds_cached(&get_mock_price_infos());
@@ -747,7 +742,7 @@ module pyth::pyth {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 0);
         
         // Update the price feeds 
-        let bytes = vector[0u8, 1u8, 2u8];
+        let bytes = vector[vector[0u8, 1u8, 2u8]];
         let price_identifiers = vector[
             x"baa284eaf23edf975b371ba2818772f93dbae72836bbdea28b07d40f3cf8b485",
             x"c9d5fe0d836688f4c88c221415d23e4bcabee21a6a21124bfcc9a5410a297818",
@@ -766,7 +761,7 @@ module pyth::pyth {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 50);
         
         // Update the price feeds 
-        let bytes = TEST_VAA;
+        let bytes = TEST_VAAS;
         let price_identifiers = vector[
             x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1",
             x"3b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe",
@@ -795,7 +790,7 @@ module pyth::pyth {
         
         // Now attempt to update the price feeds with publish_times that are older than those we have cached
         // This should abort with error::no_fresh_data()
-        let bytes = TEST_VAA;
+        let bytes = TEST_VAAS;
         let price_identifiers = vector[
             x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1",
             x"3b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe",
