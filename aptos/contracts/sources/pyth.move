@@ -29,6 +29,8 @@ module pyth::pyth {
         stale_price_threshold: u64,
         governance_emitter_chain_id: u64,
         governance_emitter_address: vector<u8>,
+        data_sources_emitter_chain_ids: vector<u64>,
+        data_sources_emitter_addresses: vector<vector<u8>>,
         update_fee: u64,
     ) {
         // Claim the signer capability from the deployer. Note that this is a one-time operation,
@@ -40,6 +42,10 @@ module pyth::pyth {
             stale_price_threshold,
             governance_emitter_chain_id,
             governance_emitter_address,
+            parse_data_sources(
+                data_sources_emitter_chain_ids,
+                data_sources_emitter_addresses,
+            ),
             update_fee
         )
     }
@@ -50,6 +56,7 @@ module pyth::pyth {
         stale_price_threshold: u64,
         governance_emitter_chain_id: u64,
         governance_emitter_address: vector<u8>,
+        data_sources: vector<DataSource>,
         update_fee: u64) {
         let pyth = account::create_signer_with_capability(&signer_capability);
         state::init(
@@ -60,9 +67,27 @@ module pyth::pyth {
             data_source::new(
                 governance_emitter_chain_id,
                 external_address::from_bytes(governance_emitter_address)),
+            data_sources,
             signer_capability
         );
         coin::register<AptosCoin>(&pyth);
+    }
+
+    fun parse_data_sources(
+        emitter_chain_ids: vector<u64>,
+        emitter_addresses: vector<vector<u8>>): vector<DataSource> {
+        let sources = vector::empty();
+        let i = 0;
+        while (i < vector::length(&emitter_chain_ids)) {
+            vector::push_back(&mut sources, data_source::new(
+                *vector::borrow(&emitter_chain_ids, i),
+                external_address::from_bytes(*vector::borrow(&emitter_addresses, i))
+            ));
+
+            i = i + 1;
+        };
+
+        sources
     }
 
     #[test_only]
@@ -73,6 +98,7 @@ module pyth::pyth {
         stale_price_threshold: u64,
         governance_emitter_chain_id: u64,
         governance_emitter_address: vector<u8>,
+        data_sources: vector<DataSource>,
         update_fee: u64,
     ) {
         init_internal(
@@ -81,6 +107,7 @@ module pyth::pyth {
             stale_price_threshold,
             governance_emitter_chain_id,
             governance_emitter_address,
+            data_sources,
             update_fee
         )
     }
@@ -313,6 +340,7 @@ module pyth::pyth {
         stale_price_threshold: u64,
         governance_emitter_chain_id: u64,
         governance_emitter_address: vector<u8>,
+        data_sources: vector<DataSource>,
         update_fee: u64,
         to_mint: u64): (BurnCapability<AptosCoin>, MintCapability<AptosCoin>, Coin<AptosCoin>) {
         // Initialize wormhole with a large message collection fee
@@ -325,7 +353,7 @@ module pyth::pyth {
         let deployer = account::create_signer_with_capability(&
             account::create_test_signer_cap(@0x277fa055b6a73c42c0662d5236c65c864ccbf2d4abd21f174a30c8b786eab84b));
         let (_pyth, signer_capability) = account::create_resource_account(&deployer, b"pyth");
-        init_test(signer_capability, chain_id, stale_price_threshold, governance_emitter_chain_id, governance_emitter_address, update_fee);
+        init_test(signer_capability, chain_id, stale_price_threshold, governance_emitter_chain_id, governance_emitter_address, data_sources, update_fee);
     
         let (burn_capability, mint_capability) = aptos_coin::initialize_for_test(aptos_framework);
         let coins = coin::mint(to_mint, &mint_capability);
@@ -390,7 +418,7 @@ module pyth::pyth {
     #[test(aptos_framework = @aptos_framework)]
     #[expected_failure(abort_code = 6)]
     fun test_update_price_feeds_corrupt_vaa(aptos_framework: &signer) {
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 100);
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 50, 100);
 
         // Pass in a corrupt VAA, which should fail deseriaizing
         let corrupt_vaa = x"90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
@@ -413,15 +441,14 @@ module pyth::pyth {
     #[test(aptos_framework = @aptos_framework)]
     #[expected_failure(abort_code = 65539)]
     fun test_update_price_feeds_invalid_data_source(aptos_framework: &signer) {
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 100);
-        
-        // Set some valid data sources, excluding our test VAA's source
-        state::set_data_sources(vector<DataSource>[
+        // Initialize the contract with some valid data sources, excluding our test VAA's source
+        let data_sources = vector<DataSource>[
             data_source::new(
                 4, external_address::from_bytes(x"0000000000000000000000000000000000000000000000000000000000007742")),
                 data_source::new(
                 5, external_address::from_bytes(x"0000000000000000000000000000000000000000000000000000000000007637"))
-        ]);
+        ];
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, 50, 100);
 
         update_price_feeds(TEST_VAA, coins);
 
@@ -429,16 +456,16 @@ module pyth::pyth {
     }
 
     #[test_only]
-    fun set_data_source_for_test_vaa() {
+    fun data_sources_for_test_vaa(): vector<DataSource> {
         // Set some valid data sources, including our test VAA's source
-        state::set_data_sources(vector<DataSource>[
+        vector<DataSource>[
             data_source::new(
                 1, external_address::from_bytes(x"0000000000000000000000000000000000000000000000000000000000000004")),
                 data_source::new(
                 5, external_address::from_bytes(x"0000000000000000000000000000000000000000000000000000000000007637")),
                 data_source::new(
                 17, external_address::from_bytes(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b"))
-        ]);
+        ]
     }
 
     #[test(aptos_framework = @aptos_framework)]
@@ -446,11 +473,11 @@ module pyth::pyth {
     fun test_update_price_feeds_insufficient_fee(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1,
             x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92",
+            data_sources_for_test_vaa(),
             // Update fee
             50,
             // Coins provided to update < update fee
             20);
-        set_data_source_for_test_vaa();
 
         update_price_feeds(TEST_VAA, coins);
 
@@ -459,9 +486,7 @@ module pyth::pyth {
 
     #[test(aptos_framework = @aptos_framework)]
     fun test_update_price_feeds_success(aptos_framework: &signer) {
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 100);
-
-        set_data_source_for_test_vaa();
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 100);
     
         // Update the price feeds from the VAA
         update_price_feeds(TEST_VAA, coins);
@@ -477,7 +502,7 @@ module pyth::pyth {
     fun test_update_price_feeds_with_funder(aptos_framework: &signer) {
         let update_fee = 50;
         let initial_balance = 75;
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", update_fee, initial_balance);
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), update_fee, initial_balance);
 
         // Create a test funder account and register it to store funds
         let funder_addr = @0xbfbffd8e2af9a3e3ce20d2d2b22bd640;
@@ -510,7 +535,7 @@ module pyth::pyth {
     fun test_update_price_feeds_with_funder_insufficient_balance(aptos_framework: &signer) {
         let update_fee = 50;
         let initial_balance = 25;
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", update_fee, initial_balance);
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), update_fee, initial_balance);
 
         // Create a test funder account and register it to store funds
         let funder_addr = @0xbfbffd8e2af9a3e3ce20d2d2b22bd640;
@@ -523,8 +548,7 @@ module pyth::pyth {
         assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
 
         // Update the price feeds using the funder 
-        set_data_source_for_test_vaa();
-        update_price_feeds_with_funder(&funder, TEST_VAA);
+        update_price_feeds_with_funder(&funder, TEST_VAAS);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -556,7 +580,7 @@ module pyth::pyth {
 
     #[test(aptos_framework = @aptos_framework)]
     fun test_update_cache(aptos_framework: &signer) {
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 0);
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 0);
 
         let updates = get_mock_price_infos();
 
@@ -580,7 +604,7 @@ module pyth::pyth {
 
     #[test(aptos_framework = @aptos_framework)]
     fun test_update_cache_old_update(aptos_framework: &signer) {
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 1000, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 0);
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 1000, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 0);
         
         // Submit a price update
         let timestamp = 1663680700;
@@ -645,7 +669,7 @@ module pyth::pyth {
     #[expected_failure(abort_code = 524292)]
     fun test_stale_price_threshold_exceeded(aptos_framework: &signer) {
         let stale_price_threshold = 500;
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, stale_price_threshold, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 0);
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, stale_price_threshold, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 0);
 
         // Submit a price update
         let current_timestamp = timestamp::now_seconds();
@@ -682,7 +706,7 @@ module pyth::pyth {
     #[expected_failure(abort_code = 524292)]
     fun test_stale_price_threshold_exceeded_ema(aptos_framework: &signer) {
         let stale_price_threshold = 500;
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, stale_price_threshold, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 0);
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, stale_price_threshold, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 0);
 
         // Submit a price update
         let current_timestamp = timestamp::now_seconds();
@@ -720,7 +744,7 @@ module pyth::pyth {
     #[test(aptos_framework = @aptos_framework)]
     #[expected_failure(abort_code = 65541)]
     fun test_update_price_feeds_if_fresh_invalid_length(aptos_framework: &signer) {
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 0);
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 0);
         
         // Update the price feeds 
         let bytes = vector[0u8, 1u8, 2u8];
@@ -739,8 +763,7 @@ module pyth::pyth {
 
     #[test(aptos_framework = @aptos_framework)]
     fun test_update_price_feeds_if_fresh_fresh_data(aptos_framework: &signer) {
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 50);
-        set_data_source_for_test_vaa();
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 50);
         
         // Update the price feeds 
         let bytes = TEST_VAA;
@@ -765,8 +788,7 @@ module pyth::pyth {
     #[test(aptos_framework = @aptos_framework)]
     #[expected_failure(abort_code = 524295)]
     fun test_update_price_feeds_if_fresh_stale_data(aptos_framework: &signer) {
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", 50, 50);
-        set_data_source_for_test_vaa();
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 27, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 50);
 
         // First populate the cache
         update_cache(get_mock_price_infos());

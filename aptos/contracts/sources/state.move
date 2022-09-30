@@ -69,6 +69,7 @@ module pyth::state {
         stale_price_threshold: u64,
         update_fee: u64,
         governance_data_source: DataSource,
+        data_sources: vector<DataSource>,
         signer_capability: account::SignerCapability) {
             move_to(pyth, ChainID{
                 chain_id: chain_id,
@@ -79,8 +80,12 @@ module pyth::state {
             move_to(pyth, UpdateFee{
                 fee: update_fee,
             });
+            let sources = set::new<DataSource>();
+            while (!vector::is_empty(&data_sources)) {
+                set::add(&mut sources, vector::pop_back(&mut data_sources));
+            };
             move_to(pyth, DataSources{
-                sources: set::new<DataSource>(),
+                sources,
             });
             move_to(pyth, GovernanceDataSource{
                 source: governance_data_source,
@@ -93,7 +98,7 @@ module pyth::state {
             });
             move_to(pyth, LatestPriceInfo{
                 info: table::new<PriceIdentifier, PriceInfo>(),
-            })
+            });
     }
 
     // Accessors
