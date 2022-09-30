@@ -27,6 +27,7 @@ rm -f .env; ln -s .env.prod.xyz .env && set -o allexport && source .env set && s
 # You might need to repeat the steps because of busy RPCs.
 # Also, sometimes the gases are not adjusted. Please update them with the network
 # explorer gas tracker.
+# Tips in Troubleshooting section below can help in case of any error.
 npx truffle migrate --network $MIGRATIONS_NETWORK --to <step>
 
 # Some steps require executing a governance instruction to be successful, you can use the multisig message builder tool in 
@@ -134,3 +135,13 @@ To flatten the contract, run the following command:
 `npx sol-merger contracts/pyth/PythUpgradable.sol`
 
 It will create a new file `PythUpgradable_merged.sol` which you can use in the explorer to verify the implementation contract (using exact sol version and optimization flag). After verifying implementation, you can verify the proxy.
+
+# Troubleshooting
+
+- Sometimes the truffle might fail during the dry-run (e.g., in Ethereum). It is because openzeppelin does not have the required metadata for forking. To fix it please
+follow the suggestion [here](https://github.com/OpenZeppelin/openzeppelin-upgrades/issues/241#issuecomment-1192657444).
+
+- Sometimes due to rpc problems or insufficient gas the migration is not executed completely. It is better to avoid doing multiple transactions in one
+migration. However, if it happens, you can comment out the part that is already ran (you can double check in the explorer), and re-run the migration.
+You can avoid gas problems by choosing a much higher gas than what is showed on the network gas tracker. Also, you can find rpc nodes from
+[here](https://chainlist.org/)

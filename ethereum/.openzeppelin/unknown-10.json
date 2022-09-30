@@ -248,6 +248,224 @@
           }
         }
       }
+    },
+    "393dfc4eaf39560aaf6b6bacc1845309d94c8363abcd2c6970ae8b9979724638": {
+      "address": "0xbf2C77Dd0627a1963991b1C7a04438cde94f96aC",
+      "txHash": "0xb8d3060c143fa8227afd8d6f4340a2d29fa04f6ef23ea934756304ed54314436",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:87"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:211"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:107"
+          },
+          {
+            "contract": "PythState",
+            "label": "_state",
+            "type": "t_struct(State)5138_storage",
+            "src": "../project:/contracts/pyth/PythState.sol:46"
+          }
+        ],
+        "types": {
+          "t_struct(State)5138_storage": {
+            "label": "struct PythStorage.State",
+            "members": [
+              {
+                "label": "wormhole",
+                "type": "t_address"
+              },
+              {
+                "label": "_deprecatedPyth2WormholeChainId",
+                "type": "t_uint16"
+              },
+              {
+                "label": "_deprecatedPyth2WormholeEmitter",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "_deprecatedLatestPriceInfo",
+                "type": "t_mapping(t_bytes32,t_struct(PriceInfo)4978_storage)"
+              },
+              {
+                "label": "validDataSources",
+                "type": "t_array(t_struct(DataSource)4983_storage)dyn_storage"
+              },
+              {
+                "label": "isValidDataSource",
+                "type": "t_mapping(t_bytes32,t_bool)"
+              },
+              {
+                "label": "singleUpdateFeeInWei",
+                "type": "t_uint256"
+              },
+              {
+                "label": "validTimePeriodSeconds",
+                "type": "t_uint256"
+              },
+              {
+                "label": "governanceDataSource",
+                "type": "t_struct(DataSource)4983_storage"
+              },
+              {
+                "label": "lastExecutedGovernanceSequence",
+                "type": "t_uint64"
+              },
+              {
+                "label": "latestPriceInfo",
+                "type": "t_mapping(t_bytes32,t_struct(PriceInfo)4978_storage)"
+              }
+            ]
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint16": {
+            "label": "uint16"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_mapping(t_bytes32,t_struct(PriceInfo)4978_storage)": {
+            "label": "mapping(bytes32 => struct PythInternalStructs.PriceInfo)"
+          },
+          "t_struct(PriceInfo)4978_storage": {
+            "label": "struct PythInternalStructs.PriceInfo",
+            "members": [
+              {
+                "label": "attestationTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "arrivalTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "arrivalBlock",
+                "type": "t_uint256"
+              },
+              {
+                "label": "priceFeed",
+                "type": "t_struct(PriceFeed)2423_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(DataSource)4983_storage)dyn_storage": {
+            "label": "struct PythInternalStructs.DataSource[]"
+          },
+          "t_struct(DataSource)4983_storage": {
+            "label": "struct PythInternalStructs.DataSource",
+            "members": [
+              {
+                "label": "chainId",
+                "type": "t_uint16"
+              },
+              {
+                "label": "emitterAddress",
+                "type": "t_bytes32"
+              }
+            ]
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_uint64": {
+            "label": "uint64"
+          },
+          "t_struct(PriceFeed)2423_storage": {
+            "label": "struct PythStructs.PriceFeed",
+            "members": [
+              {
+                "label": "id",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "price",
+                "type": "t_struct(Price)2414_storage"
+              },
+              {
+                "label": "emaPrice",
+                "type": "t_struct(Price)2414_storage"
+              }
+            ]
+          },
+          "t_struct(Price)2414_storage": {
+            "label": "struct PythStructs.Price",
+            "members": [
+              {
+                "label": "price",
+                "type": "t_int64"
+              },
+              {
+                "label": "conf",
+                "type": "t_uint64"
+              },
+              {
+                "label": "expo",
+                "type": "t_int32"
+              },
+              {
+                "label": "publishTime",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_int64": {
+            "label": "int64"
+          },
+          "t_int32": {
+            "label": "int32"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          }
+        }
+      }
     }
   }
 }
