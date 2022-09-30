@@ -89,7 +89,7 @@ program
   .option(
     "-i, --is-active <true/false>",
     "set the isActive field to this value",
-    true
+    "true"
   )
   .action(async (options) => {
     const squad = await getSquadsClient(
@@ -113,13 +113,23 @@ program
       options.ledger,
       new PublicKey(options.vaultAddress)
     );
+
+    let isActive = undefined;
+    if (options.isActive === 'true') {
+      isActive = true;
+    } else if (options.isActive === 'false') {
+      isActive = false;
+    } else {
+      throw new Error(`Illegal argument for --is-active. Expected "true" or "false", got "${options.isActive}"`)
+    }
+
     const squadIxs: SquadInstruction[] = [
       {
         instruction: await setIsActiveIx(
           vaultAuthority,
           vaultAuthority,
           attesterProgramId,
-          options.active
+          isActive
         ),
       },
     ];
@@ -307,7 +317,7 @@ async function setIsActiveIx(
     isWritable: true,
   };
 
-  const isActiveInt = isActive === true ? 1 : 0;
+  const isActiveInt = isActive ? 1 : 0;
   // first byte is the isActive instruction, second byte is true/false
   const data = Buffer.from([4, isActiveInt]);
 
