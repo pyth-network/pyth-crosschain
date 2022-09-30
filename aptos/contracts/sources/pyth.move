@@ -19,6 +19,7 @@ module pyth::pyth {
     use std::signer;
     use deployer::deployer;
     use pyth::error;
+    use pyth::event;
 
 // -----------------------------------------------------------------------------
 // Initialisation functions
@@ -70,6 +71,7 @@ module pyth::pyth {
             data_sources,
             signer_capability
         );
+        event::init(&pyth);
         coin::register<AptosCoin>(&pyth);
     }
 
@@ -169,12 +171,13 @@ module pyth::pyth {
         while (!vector::is_empty(&updates)) {
             let update = vector::pop_back(&mut updates);
             if (is_fresh_update(&update)) {
-                let price_feed = price_info::get_price_feed(&update);
-                let price_identifier = price_feed::get_price_identifier(price_feed);
+                let price_feed = *price_info::get_price_feed(&update);
+                let price_identifier = price_feed::get_price_identifier(&price_feed);
                 state::set_latest_price_info(
                     *price_identifier,
                     update,
-                )
+                );
+                event::emit_price_feed_update(price_feed, timestamp::now_microseconds());
             }
         };
         vector::destroy_empty(updates);
