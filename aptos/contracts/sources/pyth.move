@@ -115,6 +115,22 @@ module pyth::pyth {
 // -----------------------------------------------------------------------------
 // Update the cached prices
 
+    /// Update the cached price feeds with the data in the given VAAs. This is a 
+    /// convienence wrapper around update_price_feeds(), which allows you to update the price feeds
+    /// using an entry function.
+    /// 
+    /// If possible, it is recommended to use update_price_feeds() instead, which avoids the need
+    /// to pass a signer account. update_price_feeds_with_funder() should only be used when
+    /// you need to call an entry function.
+    /// 
+    /// WARNING: this function will charge an update fee, transferring some AptosCoin's
+    /// from the given funder account to the Pyth contract. The amount of coins transferred can be
+    /// queried with get_update_fee(). The signer must have sufficient account balance to
+    /// pay this fee, otherwise the transaction will abort.
+    public entry fun update_price_feeds_with_funder(account: &signer, vaas: vector<vector<u8>>) {
+        let coins = coin::withdraw<AptosCoin>(account, get_update_fee());
+        update_price_feeds(vaas, coins);
+    }
 
     /// Update the cached price feeds with the data in the given VAAs.
     /// The vaas argument is a vector of VAAs encoded as bytes.
@@ -146,22 +162,6 @@ module pyth::pyth {
 
         // Deserialize the batch price attestation
         update_cache(batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::destroy(vaa))));
-
-    /// Update the cached price feeds with the data in the given vaa_bytes payload. This is a 
-    /// convienence wrapper around update_price_feeds(), which allows you to update the price feeds
-    /// using an entry function.
-    /// 
-    /// If possible, it is recommended to use update_price_feeds() instead, which avoids the need
-    /// to pass a signer account. update_price_feeds_with_funder() should only be used when
-    /// you need to call an entry function.
-    /// 
-    /// WARNING: this function will charge an update fee, transferring some AptosCoin's
-    /// from the given funder account to the Pyth contract. The amount of coins transferred can be
-    /// queried with get_update_fee(). The signer must have sufficient account balance to
-    /// pay this fee, otherwise the transaction will abort.
-    public entry fun update_price_feeds_with_funder(funder: &signer, vaa_bytes: vector<u8>) {
-        let coins = coin::withdraw<AptosCoin>(funder, get_update_fee());
-        update_price_feeds(vaa_bytes, coins);
     }
 
     /// Update the cache with given price updates, if they are newer than the ones currently cached.
