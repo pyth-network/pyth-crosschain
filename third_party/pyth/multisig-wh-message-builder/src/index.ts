@@ -285,10 +285,11 @@ async function setIsActiveIx(
   attesterProgramId: PublicKey,
   isActive: boolean
 ): Promise<TransactionInstruction> {
-  const configKey = PublicKey.createProgramAddressSync(
+  const [configKey, _bump] = PublicKey.findProgramAddressSync(
     [Buffer.from("pyth2wormhole-config-v3")],
     attesterProgramId
   );
+
   const config: AccountMeta = {
     pubkey: configKey,
     isSigner: false,
