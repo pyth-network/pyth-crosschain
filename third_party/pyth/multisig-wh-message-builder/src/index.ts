@@ -15,6 +15,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import Squads from "@sqds/mesh";
+import { getIxAuthorityPDA } from "@sqds/mesh";
 import bs58 from "bs58";
 import { program } from "commander";
 import * as fs from "fs";
@@ -99,7 +100,9 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
-    const msAccount = await squad.getMultisig(new PublicKey(options.vaultAddress));
+    const msAccount = await squad.getMultisig(
+      new PublicKey(options.vaultAddress)
+    );
 
     const vaultAuthority = squad.getAuthorityPDA(
       msAccount.publicKey,
@@ -113,12 +116,14 @@ program
     );
 
     let isActive = undefined;
-    if (options.isActive === 'true') {
+    if (options.isActive === "true") {
       isActive = true;
-    } else if (options.isActive === 'false') {
+    } else if (options.isActive === "false") {
       isActive = false;
     } else {
-      throw new Error(`Illegal argument for --is-active. Expected "true" or "false", got "${options.isActive}"`)
+      throw new Error(
+        `Illegal argument for --is-active. Expected "true" or "false", got "${options.isActive}"`
+      );
     }
 
     const squadIxs: SquadInstruction[] = [
@@ -369,22 +374,6 @@ async function getWormholeMessageIx(
   ];
 }
 
-const getIxAuthority = async (
-  txPda: anchor.web3.PublicKey,
-  index: anchor.BN,
-  programId: anchor.web3.PublicKey
-) => {
-  return anchor.web3.PublicKey.findProgramAddress(
-    [
-      anchor.utils.bytes.utf8.encode("squad"),
-      txPda.toBuffer(),
-      index.toArrayLike(Buffer, "le", 4),
-      anchor.utils.bytes.utf8.encode("ix_authority"),
-    ],
-    programId
-  );
-};
-
 async function createWormholeMsgMultisigTx(
   cluster: Cluster,
   squad: Squads,
@@ -401,7 +390,7 @@ async function createWormholeMsgMultisigTx(
 
   const txKey = await createTx(squad, ledger, vault);
 
-  const [messagePDA, messagePdaBump] = await getIxAuthority(
+  const [messagePDA, messagePdaBump] = getIxAuthorityPDA(
     txKey,
     new anchor.BN(1),
     squad.multisigProgramId
