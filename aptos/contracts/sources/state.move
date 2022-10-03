@@ -47,7 +47,7 @@ module pyth::state {
         source: DataSource,
     }
 
-    /// The ID of the chain this contract is deployed on
+    /// The Wormhole Chain ID of the chain this contract is deployed on
     struct ChainID has key {
         chain_id: u64,
     }
