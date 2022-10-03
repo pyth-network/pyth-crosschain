@@ -2,8 +2,8 @@ module pyth::governance_instruction {
     use wormhole::cursor;
     use pyth::deserialize;
     use pyth::error;
-    use pyth::state;
     use pyth::governance_action::{Self, GovernanceAction};
+    use wormhole::u16;
 
     const MAGIC: vector<u8> = x"5054474d"; // "PTGM": Pyth Governance Message
     const MODULE: u8 = 1;
@@ -18,7 +18,7 @@ module pyth::governance_instruction {
     fun validate(instruction: &GovernanceInstruction) {
         assert!(instruction.module_ == MODULE, error::invalid_governance_module());
         let target_chain_id = instruction.target_chain_id;
-        assert!(target_chain_id == state::get_chain_id() || target_chain_id == 0, error::invalid_governance_target_chain_id());
+        assert!(target_chain_id == u16::to_u64(wormhole::state::get_chain_id()) || target_chain_id == 0, error::invalid_governance_target_chain_id());
     }
  
     public fun from_byte_vec(bytes: vector<u8>): GovernanceInstruction {

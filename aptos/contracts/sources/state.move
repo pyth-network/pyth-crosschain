@@ -47,11 +47,6 @@ module pyth::state {
         source: DataSource,
     }
 
-    /// The Wormhole Chain ID of the chain this contract is deployed on
-    struct ChainID has key {
-        chain_id: u64,
-    }
-
     /// The last executed governance VAA sequence number
     struct LastExecutedGovernanceSequence has key {
         sequence: u64,
@@ -65,15 +60,11 @@ module pyth::state {
     // Initialization
     public(friend) fun init(
         pyth: &signer,
-        chain_id: u64,
         stale_price_threshold: u64,
         update_fee: u64,
         governance_data_source: DataSource,
         data_sources: vector<DataSource>,
         signer_capability: account::SignerCapability) {
-            move_to(pyth, ChainID{
-                chain_id: chain_id,
-            });
             move_to(pyth, StalePriceThreshold{
                 threshold_secs: stale_price_threshold,
             });
@@ -140,10 +131,6 @@ module pyth::state {
         assert!(exists<ContractUpgradeAuthorized>(@pyth), error::unauthorized_upgrade());
         let ContractUpgradeAuthorized { hash } = move_from<ContractUpgradeAuthorized>(@pyth);
         hash
-    }
-
-    public fun get_chain_id(): u64 acquires ChainID {
-        borrow_global<ChainID>(@pyth).chain_id
     }
 
     // Setters

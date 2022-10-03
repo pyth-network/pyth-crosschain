@@ -62,7 +62,6 @@ module pyth::governance {
 
     #[test_only]
     fun setup_test(
-        chain_id: u64,
         stale_price_threshold: u64,
         governance_emitter_chain_id: u64,
         governance_emitter_address: vector<u8>,
@@ -75,13 +74,13 @@ module pyth::governance {
         let deployer = account::create_signer_with_capability(&
             account::create_test_signer_cap(@0x277fa055b6a73c42c0662d5236c65c864ccbf2d4abd21f174a30c8b786eab84b));
         let (_pyth, signer_capability) = account::create_resource_account(&deployer, b"pyth");
-        pyth::init_test(signer_capability, chain_id, stale_price_threshold, governance_emitter_chain_id, governance_emitter_address, vector[], update_fee);
+        pyth::init_test(signer_capability, stale_price_threshold, governance_emitter_chain_id, governance_emitter_address, vector[], update_fee);
     }
 
     #[test]
     #[expected_failure(abort_code = 6)]
     fun test_execute_governance_instruction_invalid_vaa() {
-        setup_test(27, 50, 24, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
+        setup_test(50, 24, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
         let vaa_bytes = x"6c436741b108";
         execute_governance_instruction(vaa_bytes);
     }
@@ -89,7 +88,7 @@ module pyth::governance {
     #[test]
     #[expected_failure(abort_code = 65550)]
     fun test_execute_governance_instruction_invalid_data_source() {
-        setup_test(27, 100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
+        setup_test(100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
 
         // A VAA with:
         // - Emitter chain ID of 20
@@ -101,7 +100,7 @@ module pyth::governance {
     #[test]
     #[expected_failure(abort_code = 65551)]
     fun test_execute_governance_instruction_invalid_sequence_number_0() {
-        setup_test(27, 100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
+        setup_test(100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
         assert!(state::get_last_executed_governance_sequence() == 0, 1);
 
         // A VAA with:
@@ -115,7 +114,7 @@ module pyth::governance {
     #[test]
     #[expected_failure(abort_code = 65556)]
     fun test_execute_governance_instruction_invalid_instruction_magic() {
-        setup_test(27, 100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
+        setup_test(100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
 
         // A VAA with:
         // - Emitter chain ID 50
@@ -129,7 +128,7 @@ module pyth::governance {
     #[test]
     #[expected_failure(abort_code = 65548)]
     fun test_execute_governance_instruction_invalid_module() {
-        setup_test(27, 100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
+        setup_test(100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
 
         // A VAA with:
         // - Emitter chain ID 50
@@ -144,8 +143,7 @@ module pyth::governance {
     #[test]
     #[expected_failure(abort_code = 65549)]
     fun test_execute_governance_instruction_invalid_target_chain() {
-        let chain_id = 27;
-        setup_test(chain_id, 100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
+        setup_test(100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
 
         // A VAA with:
         // - Emitter chain ID 50
@@ -153,7 +151,7 @@ module pyth::governance {
         // - Sequence number 1
         // - A payload representing a governance instruction with: 
         //   - Module number 1
-        //   - Target chain 17
+        //   - Target chain 17 != wormhole test chain ID 22
         let vaa_bytes = x"010000000001001ed81e10f8e52e6a7daeca12bf0859c14e8dabed737eaed9a1f8227190a9d11c48d58856713243c5d7de08ed49de4aa1efe7c5e6020c11056802e2d702aa4b2e00527e4f9b000000010032f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf0000000000000001005054474d0102001103001793a28e2e5b4cb88f69e96fb29a8287a88b23f0e99f5502f81744e904da8e3b4d000c9a4066ce1fa26da1c102a3e268abd3ca58e3b3c25f250e6ad9a3525066fbf8b00012f7778ca023d5cbe37449bab2faa2a133fe02b056c2c25605950320df08750f35";
         execute_governance_instruction(vaa_bytes);
     }
@@ -161,7 +159,7 @@ module pyth::governance {
     #[test]
     #[expected_failure(abort_code = 65552)]
     fun test_execute_governance_instruction_invalid_action() {
-        setup_test(22, 100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
+        setup_test(100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
 
         // A VAA with:
         // - Emitter chain ID 50
@@ -177,7 +175,7 @@ module pyth::governance {
 
     #[test]
     fun test_execute_governance_instruction_upgrade_contract() {
-        setup_test(22, 100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
+        setup_test(100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
 
         // A VAA with:
         // - Emitter chain ID 50
@@ -201,7 +199,7 @@ module pyth::governance {
     #[test]
     #[expected_failure(abort_code = 65558)]
     fun test_execute_governance_instruction_upgrade_contract_chain_id_zero() {
-        setup_test(22, 100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
+        setup_test(100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
 
         // A VAA with:
         // - Emitter chain ID 50
@@ -226,7 +224,7 @@ module pyth::governance {
     fun test_execute_governance_instruction_set_governance_data_source() {
         let initial_governance_emitter_chain_id = 50;
         let initial_governance_emitter_address = x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf";
-        setup_test(22, 100, initial_governance_emitter_chain_id, initial_governance_emitter_address, 100);
+        setup_test(100, initial_governance_emitter_chain_id, initial_governance_emitter_address, 100);
 
         state::set_last_executed_governance_sequence(25);
         
@@ -279,7 +277,7 @@ module pyth::governance {
     fun test_execute_governance_instruction_set_governance_data_source_old_source_invalid() {
         let initial_governance_emitter_chain_id = 50;
         let initial_governance_emitter_address = x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf";
-        setup_test(22, 100, initial_governance_emitter_chain_id, initial_governance_emitter_address, 100);
+        setup_test(100, initial_governance_emitter_chain_id, initial_governance_emitter_address, 100);
 
         state::set_last_executed_governance_sequence(25);
         
@@ -321,7 +319,7 @@ module pyth::governance {
     #[test]
     fun test_execute_governance_instruction_set_update_fee() {
         let initial_update_fee = 325;
-        setup_test(22, 100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", initial_update_fee);
+        setup_test(100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", initial_update_fee);
         assert!(state::get_update_fee() == initial_update_fee, 1);
 
         // A VAA with:
@@ -347,7 +345,7 @@ module pyth::governance {
     #[test]
     fun test_execute_governance_instruction_set_stale_price_threshold() {
         let initial_stale_price_threshold = 125;
-        setup_test(22, initial_stale_price_threshold, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
+        setup_test(initial_stale_price_threshold, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
         assert!(state::get_stale_price_threshold_secs() == initial_stale_price_threshold, 1);
 
         // A VAA with:
@@ -370,7 +368,7 @@ module pyth::governance {
 
     #[test]
     fun test_execute_governance_instruction_set_data_sources() {
-        setup_test(22, 100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
+        setup_test(100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
 
         // A VAA with:
         // - Emitter chain ID 50
