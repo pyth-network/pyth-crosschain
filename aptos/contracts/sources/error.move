@@ -94,4 +94,8 @@ module pyth::error {
    public fun invalid_price_status(): u64 {
         error::invalid_argument(23)
    }
+
+   public fun invalid_attestation_magic_value(): u64 {
+        error::invalid_argument(24)
+   }
 }
