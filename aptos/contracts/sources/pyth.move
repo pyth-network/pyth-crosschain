@@ -185,7 +185,7 @@ module pyth::pyth {
 
     /// Update the cached price feeds with the data in the given VAAs, using
     /// update_price_feeds(). However, this function will only have an effect if any of the
-    /// prices in the update are fresh. The price_identifiers and publish_times paramaters
+    /// prices in the update are fresh. The price_identifiers and publish_times parameters
     /// are used to determine if the update is fresh without doing any serialisation or verification
     /// of the VAAs, potentially saving time and gas. If the update contains no fresh data, this function
     /// will revert with error::no_fresh_data(). 
