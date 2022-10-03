@@ -35,10 +35,6 @@ module pyth::i64 {
         i.negative
     }
 
-    public fun get_magnitude(in: &I64): u64 {
-        in.magnitude
-    }
-
     public fun get_magnitude_if_positive(in: &I64): u64 {
         assert!(!in.negative, error::negative_value());
         in.magnitude
@@ -106,11 +102,6 @@ module pyth::i64 {
     fun test_get_is_negative() {
         assert!(get_is_negative(&new(234, true)) == true, 1);
         assert!(get_is_negative(&new(767, false)) == false, 1);
-    }
-
-    #[test]
-    fun test_get_magnitude() {
-        assert!(get_magnitude(&new(234, false)) == 234, 1);
     }
 
     #[test]
