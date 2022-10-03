@@ -86,4 +86,8 @@ module pyth::error {
    public fun magnitude_too_large(): u64 {
         error::invalid_argument(21)
    }
+
+   public fun governance_contract_upgrade_chain_id_zero(): u64 {
+        error::invalid_argument(22)
+   }
 }

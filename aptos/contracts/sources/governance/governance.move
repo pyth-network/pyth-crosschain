@@ -24,6 +24,8 @@ module pyth::governance {
         // Dispatch the instruction to the appropiate handler
         let action = governance_instruction::get_action(&instruction);
         if (action == governance_action::new_contract_upgrade()) {
+            assert!(governance_instruction::get_target_chain_id(&instruction) != 0,
+                error::governance_contract_upgrade_chain_id_zero());
             contract_upgrade::execute(governance_instruction::destroy(instruction));
         } else if (action == governance_action::new_set_governance_data_source()) {
             set_governance_data_source::execute(governance_instruction::destroy(instruction));
@@ -188,6 +190,30 @@ module pyth::governance {
         //         hash: 0xa381a47fd0e97f34c71ef491c82208f58cd0080e784c697e65966d2a25d20d56,
         //     }
         let vaa_bytes = x"010000000001002242229aec7d320a437cb241672dacfbc34c9155c02f60cd806bbfcd69bb7ba667fc069e372ae0443a7f3e08eaad61930b00784faeb2b72ecf5d1b0f0fa486a101527e4f9b000000010032f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf0000000000000005005054474d01000016a381a47fd0e97f34c71ef491c82208f58cd0080e784c697e65966d2a25d20d56";
+       
+        execute_governance_instruction(vaa_bytes);
+        assert!(state::get_last_executed_governance_sequence() == 5, 1);
+
+        assert!(state::get_contract_upgrade_authorized_hash() ==
+            contract_upgrade_hash::from_byte_vec(x"a381a47fd0e97f34c71ef491c82208f58cd0080e784c697e65966d2a25d20d56"), 1);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = 65558)]
+    fun test_execute_governance_instruction_upgrade_contract_chain_id_zero() {
+        setup_test(22, 100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", 100);
+
+        // A VAA with:
+        // - Emitter chain ID 50
+        // - Emitter address 0xf06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf
+        // - Sequence number 5
+        // - A payload representing a governance instruction with: 
+        //   - Module number 1
+        //   - Target chain 0
+        //   - AuthorizeContractUpgrade {
+        //         hash: 0xa381a47fd0e97f34c71ef491c82208f58cd0080e784c697e65966d2a25d20d56,
+        //     }
+        let vaa_bytes = x"01000000000100303c10020c537205ed0322b7ec9d9b296f4e3e12e39ebde985ed4ef4c8f5565256cfc6f90800c4683dba62b577cc994e2ca9135d32b955040b94718cdcb5527600527e4f9b000000010032f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf0000000000000005005054474d01000000a381a47fd0e97f34c71ef491c82208f58cd0080e784c697e65966d2a25d20d56";
        
         execute_governance_instruction(vaa_bytes);
         assert!(state::get_last_executed_governance_sequence() == 5, 1);
