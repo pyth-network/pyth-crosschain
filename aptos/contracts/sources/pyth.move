@@ -125,7 +125,7 @@ module pyth::pyth {
     /// to pass a signer account. update_price_feeds_with_funder() should only be used when
     /// you need to call an entry function.
     /// 
-    /// WARNING: this function will charge an update fee, transferring some AptosCoin's
+    /// This function will charge an update fee, transferring some AptosCoin's
     /// from the given funder account to the Pyth contract. The amount of coins transferred can be
     /// queried with get_update_fee(). The signer must have sufficient account balance to
     /// pay this fee, otherwise the transaction will abort.
