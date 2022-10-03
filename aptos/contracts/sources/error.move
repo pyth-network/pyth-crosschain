@@ -90,4 +90,8 @@ module pyth::error {
    public fun governance_contract_upgrade_chain_id_zero(): u64 {
         error::invalid_argument(22)
    }
+
+   public fun invalid_price_status(): u64 {
+        error::invalid_argument(23)
+   }
 }

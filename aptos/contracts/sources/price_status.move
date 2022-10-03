@@ -1,4 +1,5 @@
 module pyth::price_status {
+    use pyth::error;
     
     /// The price feed is not currently updating for an unknown reason.
     const UNKNOWN: u64 = 0;
@@ -12,6 +13,7 @@ module pyth::price_status {
     }
 
     public fun from_u64(status: u64): PriceStatus {
+        assert!(status <= TRADING, error::invalid_price_status());
         PriceStatus {
             status: status
         }
@@ -31,5 +33,21 @@ module pyth::price_status {
         PriceStatus {
             status: TRADING,
         }
+    }
+
+    #[test]
+    fun test_unknown_status() {
+        assert!(PriceStatus{ status: UNKNOWN } == from_u64(0), 1);
+    }
+
+    #[test]
+    fun test_trading_status() {
+        assert!(PriceStatus{ status: TRADING } == from_u64(1), 1);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = 65559)]
+    fun test_invalid_price_status() {
+        from_u64(3);
     }
 }
