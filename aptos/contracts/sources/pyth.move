@@ -118,7 +118,7 @@ module pyth::pyth {
 // Update the cached prices
 
     /// Update the cached price feeds with the data in the given VAAs. This is a 
-    /// convienence wrapper around update_price_feeds(), which allows you to update the price feeds
+    /// convenience wrapper around update_price_feeds(), which allows you to update the price feeds
     /// using an entry function.
     /// 
     /// If possible, it is recommended to use update_price_feeds() instead, which avoids the need
