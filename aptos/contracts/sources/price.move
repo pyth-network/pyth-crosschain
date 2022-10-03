@@ -16,7 +16,6 @@ module pyth::price {
         /// The exponent
         expo: I64,
         /// Unix timestamp of when this price was computed
-        // can get current timestamp with std::timestamp
         timestamp: u64,
     }
 
