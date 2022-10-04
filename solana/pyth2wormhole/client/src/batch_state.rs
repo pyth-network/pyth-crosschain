@@ -24,23 +24,23 @@ use crate::{
 /// Runtime representation of a batch. It refers to the original group
 /// from the config.
 #[derive(Debug)]
-pub struct BatchState<'a> {
+pub struct BatchState {
     pub group_name: String,
-    pub symbols: &'a [P2WSymbol],
+    pub symbols: Vec<P2WSymbol>,
     pub last_known_symbol_states: Vec<Option<PriceAccount>>,
     pub conditions: AttestationConditions,
     pub last_job_finished_at: Instant,
 }
 
-impl<'a> BatchState<'a> {
+impl<'a> BatchState {
     pub fn new(
         group_name: String,
-        symbols: &'a [P2WSymbol],
+        symbols: &[P2WSymbol],
         conditions: AttestationConditions,
     ) -> Self {
         Self {
             group_name,
-            symbols,
+            symbols: symbols.to_vec(),
             conditions,
             last_known_symbol_states: vec![None; symbols.len()],
             last_job_finished_at: Instant::now(),
@@ -116,9 +116,9 @@ impl<'a> BatchState<'a> {
                                 ))
                             }
 
-                        // price_changed_pct
-                        } else if let Some(pct) = self.conditions.price_changed_pct {
-                            let pct = pct.abs();
+                        // price_changed_ppt
+                        } else if let Some(ppt) = self.conditions.price_changed_ppt {
+                            let pct = ppt as f64 / 10.0;
                             let price_pct_diff = ((old.agg.price as f64 - new.agg.price as f64)
                                 / old.agg.price as f64
                                 * 100.0)

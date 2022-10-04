@@ -1,7 +1,12 @@
 pub mod cli;
 
 use std::{
+    collections::hash_map::DefaultHasher,
     fs::File,
+    hash::{
+        Hash,
+        Hasher,
+    },
     pin::Pin,
     sync::Arc,
     thread,
@@ -12,11 +17,17 @@ use std::{
 };
 
 use clap::Parser;
-use futures::future::{
-    Future,
-    FutureExt,
-    TryFuture,
-    TryFutureExt,
+use futures::{
+    channel::oneshot::{
+        self,
+        Receiver,
+    },
+    future::{
+        Future,
+        FutureExt,
+        TryFuture,
+        TryFutureExt,
+    },
 };
 use log::{
     debug,
@@ -133,7 +144,7 @@ async fn main() -> Result<(), ErrBox> {
             remove_ops_owner,
         } => {
             let old_config = get_config_account(&rpc_client, &p2w_addr).await?;
-            
+
             let new_ops_owner = if remove_ops_owner {
                 None
             } else if let Some(given_ops_owner) = ops_owner_addr {
@@ -205,7 +216,10 @@ async fn main() -> Result<(), ErrBox> {
             .await?;
         }
         Action::GetEmitter => unreachable! {}, // It is handled early in this function.
-        Action::SetIsActive { ops_owner, new_is_active } => {            
+        Action::SetIsActive {
+            ops_owner,
+            new_is_active,
+        } => {
             let tx = gen_set_is_active_tx(
                 payer,
                 p2w_addr,
@@ -220,7 +234,7 @@ async fn main() -> Result<(), ErrBox> {
                 "Applied config:\n{:?}",
                 get_config_account(&rpc_client, &p2w_addr).await?
             );
-        },
+        }
     }
 
     Ok(())
@@ -260,9 +274,18 @@ async fn handle_attest(
         rpc_interval,
     ));
 
+    // The loop below attempts to crank attestations without
+    // interruption. This is achieved by spinning up an up-to-date
+    // symbol set before letting go of the previous one. This Option
+    // preserves the state of potential ongoing scheduling jobs. The
+    // hash is sensitive to both attestation_cfg and on-chain config
+    // changes.
+    let mut old_sched_futs_state: Option<(JoinHandle<_>, u64)> = None; // (old_futs_handle, old_config_hash)
+
     // This loop governs mapping account reloads in daemon mode. It is
     // broken if daemon != true at the and
     loop {
+        let start_time = Instant::now();
         let config = get_config_account(&lock_and_make_rpc(&rpc_cfg).await, &p2w_addr).await?;
 
         // Use the mapping if specified
@@ -294,6 +317,7 @@ async fn handle_attest(
 
         let mut batches: Vec<_> = attestation_cfg
             .symbol_groups
+            .clone()
             .iter()
             .map(|g| {
                 let conditions4closure = g.conditions.clone();
@@ -326,7 +350,6 @@ async fn handle_attest(
         // Create attestation scheduling routines; see attestation_sched_job() for details
         let mut attestation_sched_futs = batches.into_iter().map(|(batch_no, batch)| {
             attestation_sched_job(AttestationSchedJobArgs {
-                ttl: Duration::from_secs(attestation_cfg.mapping_reload_interval_mins * 60),
                 batch,
                 batch_no,
                 batch_count,
@@ -341,38 +364,90 @@ async fn handle_attest(
             })
         });
 
+        let joined_sched_futs = futures::future::join_all(attestation_sched_futs);
+
         info!("Spinning up attestation sched jobs");
+        if daemon {
+            let mut hasher = DefaultHasher::new();
 
-        let results = futures::future::join_all(attestation_sched_futs).await; // Will finish after specified ttl in daemon mode
+            (&attestation_cfg, &config).hash(&mut hasher);
 
-        // After completing, we count any errors coming from the
-        // join_all.
-        let errors: Vec<_> = results
-            .iter()
-            .enumerate()
-            .filter_map(|(idx, r)| {
-                r.as_ref()
-                    .err()
-                    .map(|e| format!("Error {}: {:?}\n", idx + 1, e))
-            })
-            .collect();
+            let new_cfg_hash = hasher.finish();
 
-        if !errors.is_empty() {
-            let err_lines = errors.join("\n");
-            let msg = format!(
-                "{} of {} batches failed:\n{}",
-                errors.len(),
-                batch_count,
-                err_lines
+            // Handle old sched futures data if present
+            if let Some((old_handle, old_cfg_hash)) = old_sched_futs_state.as_ref() {
+                // Keep the old futures if no config changes are detected
+                if &new_cfg_hash == old_cfg_hash {
+                    info!("Note: Attestation config and on-chain config unchanged, not stopping existing attestation sched jobs");
+                } else {
+                    // Start the new sched futures
+                    let new_sched_futs_handle = tokio::spawn(joined_sched_futs);
+
+                    // Dismiss the old futures handle (does not interrupt spawned attestation_job() futures)
+                    old_handle.abort();
+
+                    // The just started futures become the on-going attestation state
+                    old_sched_futs_state = Some((new_sched_futs_handle, new_cfg_hash));
+                }
+            } else {
+                old_sched_futs_state = Some((tokio::spawn(joined_sched_futs), new_cfg_hash));
+            }
+        } else {
+            // Non-daemon sched futs finish after single attempt per
+            // batch which means we should wait for them instead of
+            // spawning them in background
+            let results = joined_sched_futs.await;
+
+            // After completing, we count any errors coming from the sched
+            // futs.
+            let errors: Vec<_> = results
+                .iter()
+                .enumerate()
+                .filter_map(|(idx, r)| {
+                    r.as_ref()
+                        .err()
+                        .map(|e| format!("Error {}: {:?}\n", idx + 1, e))
+                })
+                .collect();
+
+            if !errors.is_empty() {
+                let err_lines = errors.join("\n");
+                let msg = format!(
+                    "{} of {} batches failed:\n{}",
+                    errors.len(),
+                    batch_count,
+                    err_lines
+                );
+                error!("{}", msg);
+                return Err(msg.into());
+            }
+            break; // non-daemon mode handling ends with breaking this loop
+        }
+
+        // Sum up elapsed time, wait for next run accurately
+        let target = Duration::from_secs(attestation_cfg.mapping_reload_interval_mins * 60);
+        let elapsed = start_time.elapsed();
+
+        let remaining = target.saturating_sub(elapsed);
+
+        if remaining == Duration::from_secs(0) {
+            warn!(
+                "Processing took more than desired mapping lookup interval of {} seconds, not sleeping. Consider increasing {}", 
+                target.as_secs(),
+                // stringify prints the up-to-date setting name automatically
+                stringify!(attestation_cfg.mapping_reload_interval_mins)
             );
-            error!("{}", msg);
-            return Err(msg.into());
+        } else {
+            info!(
+                "Processing new mapping took {}.{}s, next config/mapping refresh in {}.{}s",
+                elapsed.as_secs(),
+                elapsed.subsec_millis(),
+                remaining.as_secs(),
+                remaining.subsec_millis()
+            );
         }
 
-        // Ensures just a single attestation per batch outside daemon mode
-        if !daemon {
-            break;
-        }
+        tokio::time::sleep(remaining).await;
     }
 
     Ok(())
@@ -397,10 +472,9 @@ async fn lock_and_make_rpc(rlmtx: &RLMutex<RpcCfg>) -> RpcClient {
 
 /// The argument count on attestation_sched_job got out of hand. This
 /// helps keep the correct order in check.
-pub struct AttestationSchedJobArgs<'a> {
-    /// How long before scheduled exit of the job; Time To Live
-    pub ttl: Duration,
-    pub batch: BatchState<'a>,
+pub struct AttestationSchedJobArgs {
+    /// If a message appears, the job will exit
+    pub batch: BatchState,
     pub batch_no: usize,
     pub batch_count: usize,
     pub n_retries: usize,
@@ -426,9 +500,8 @@ pub struct AttestationSchedJobArgs<'a> {
 ///
 /// With daemon_mode off, this future attempts only one blocking
 /// attestation of the batch and returns the result.
-async fn attestation_sched_job(mut args: AttestationSchedJobArgs<'_>) -> Result<(), ErrBoxSend> {
+async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrBoxSend> {
     let AttestationSchedJobArgs {
-        ttl,
         mut batch,
         batch_no,
         batch_count,
@@ -441,8 +514,6 @@ async fn attestation_sched_job(mut args: AttestationSchedJobArgs<'_>) -> Result<
         payer,
         message_q_mtx,
     } = args;
-
-    let start_time = Instant::now();
 
     let mut retries_left = n_retries;
     // Enforces the max batch job count
@@ -513,20 +584,6 @@ async fn attestation_sched_job(mut args: AttestationSchedJobArgs<'_>) -> Result<
 
             // Spawn the job in background
             let _detached_job: JoinHandle<_> = tokio::spawn(job_with_err_msg);
-
-            // Exit the job if ttl had passed
-            let elapsed = start_time.elapsed();
-            if elapsed >= ttl {
-                warn!(
-                    "Batch {}/{}, group {:?} DONE: Scheduling job stopped after {}.{} seconds",
-                    batch_no,
-                    batch_count,
-                    batch.group_name,
-                    elapsed.as_secs(),
-                    elapsed.subsec_millis()
-                );
-                return Ok(());
-            }
         } else {
             // Await and return the single result in non-daemon mode, with retries if necessary
             match job.await {

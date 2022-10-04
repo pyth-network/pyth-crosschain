@@ -38,7 +38,6 @@ pub type Pyth2WormholeConfig = Pyth2WormholeConfigV3;
 pub type P2WConfigAccount<'b, const IsInitialized: AccountState> =
     P2WConfigAccountV3<'b, IsInitialized>;
 
-
 impl Owned for Pyth2WormholeConfig {
     fn owner(&self) -> AccountOwner {
         AccountOwner::This
@@ -120,7 +119,7 @@ impl From<Pyth2WormholeConfigV1> for Pyth2WormholeConfigV2 {
 }
 
 // Added ops_owner which can toggle the is_active field
-#[derive(Clone, Default, BorshDeserialize, BorshSerialize)]
+#[derive(Clone, Default, Hash, BorshDeserialize, BorshSerialize, PartialEq)]
 #[cfg_attr(feature = "client", derive(Debug))]
 pub struct Pyth2WormholeConfigV3 {
     ///  Authority owning this contract
@@ -162,7 +161,7 @@ impl From<Pyth2WormholeConfigV2> for Pyth2WormholeConfigV3 {
             pyth_owner,
             max_batch_size,
             is_active: true,
-            ops_owner: None
+            ops_owner: None,
         }
     }
 }

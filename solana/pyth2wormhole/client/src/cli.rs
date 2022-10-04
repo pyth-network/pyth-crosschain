@@ -136,9 +136,7 @@ pub enum Action {
     },
     #[clap(about = "Print out emitter address for the specified pyth2wormhole contract")]
     GetEmitter,
-    #[clap(
-        about = "Set the value of is_active config as ops_owner"
-    )]
+    #[clap(about = "Set the value of is_active config as ops_owner")]
     SetIsActive {
         /// Current ops owner keypair path
         #[clap(
@@ -152,5 +150,5 @@ pub enum Action {
             possible_values = ["true", "false"],
         )]
         new_is_active: String,
-    }
+    },
 }

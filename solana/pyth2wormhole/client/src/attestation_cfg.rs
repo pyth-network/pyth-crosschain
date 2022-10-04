@@ -17,7 +17,7 @@ use serde::{
 use solana_program::pubkey::Pubkey;
 
 /// Pyth2wormhole config specific to attestation requests
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
 pub struct AttestationConfig {
     #[serde(default = "default_min_msg_reuse_interval_ms")]
     pub min_msg_reuse_interval_ms: u64,
@@ -93,7 +93,7 @@ impl AttestationConfig {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
 pub struct SymbolGroup {
     pub group_name: String,
     /// Attestation conditions applied to all symbols in this group
@@ -125,7 +125,7 @@ pub const fn default_max_batch_jobs() -> usize {
 /// of the active conditions is met. Option<> fields can be
 /// de-activated with None. All conditions are inactive by default,
 /// except for the non-Option ones.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
 pub struct AttestationConditions {
     /// Baseline, unconditional attestation interval. Attestation is triggered if the specified interval elapsed since last attestation.
     #[serde(default = "default_min_interval_secs")]
@@ -137,9 +137,10 @@ pub struct AttestationConditions {
     #[serde(default = "default_max_batch_jobs")]
     pub max_batch_jobs: usize,
 
-    /// Trigger attestation if price changes by the specified percentage.
+    /// Trigger attestation if price changes by the specified
+    /// percentage, expressed in integer parts per thousand.
     #[serde(default)]
-    pub price_changed_pct: Option<f64>,
+    pub price_changed_ppt: Option<u64>,
 
     /// Trigger attestation if publish_time advances at least the
     /// specified amount.
@@ -152,14 +153,14 @@ impl Default for AttestationConditions {
         Self {
             min_interval_secs: default_min_interval_secs(),
             max_batch_jobs: default_max_batch_jobs(),
-            price_changed_pct: None,
+            price_changed_ppt: None,
             publish_time_min_delta_secs: None,
         }
     }
 }
 
 /// Config entry for a Pyth product + price pair
-#[derive(Clone, Default, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Clone, Default, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct P2WSymbol {
     /// User-defined human-readable name
     pub name: Option<String>,
