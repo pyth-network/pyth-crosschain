@@ -3,12 +3,17 @@
 use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
+    rent::Rent,
+    system_instruction,
     system_program,
+    sysvar::Sysvar,
+    program::invoke,
 };
 
 use solitaire::{
     trace,
     AccountState,
+    AccountSize,
     CreationLamports,
     ExecutionContext,
     FromAccounts,
@@ -70,17 +75,29 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
         ));
     }
 
-    // NOTE(2022-09-06): This instruction does not contain the temporary rent
-    // adjustment snippet necessary for PythNet compatibility. This
-    // was done to minimize the footprint of this rather hacky
-    // workaround. In case the migrate ix needs to be ran in a
-    // weird-rent environment, copy the rent due snippet and adjust it
-    // to work against `accs.new_config`.
-
     // Populate new config
     accs.new_config
         .create(ctx, accs.payer.info().key, CreationLamports::Exempt)?;
     accs.new_config.1 = Pyth2WormholeConfig::from(old_config.clone());
+
+    // Adjust new config lamports 
+    // NOTE(2022-09-29): Necessary due to PythNet rent calculation
+    // differences, remove when solitaire supports Rent::get()?
+    let mut acc_lamports = accs.new_config.info().lamports();
+
+    let new_lamports = Rent::get()?.minimum_balance(accs.new_config.size());
+
+    let diff_lamports: u64 = (acc_lamports as i64 - new_lamports as i64).abs() as u64;
+
+    if acc_lamports < new_lamports {
+        // Less than enough lamports, debit the payer
+        let transfer_ix = system_instruction::transfer(
+            accs.payer.info().key,
+            accs.new_config.info().key,
+            diff_lamports,
+        );
+        invoke(&transfer_ix, ctx.accounts)?;
+    }
 
     // Reclaim old config lamports
 
