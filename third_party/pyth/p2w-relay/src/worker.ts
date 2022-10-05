@@ -8,7 +8,7 @@ import { Relay, RelayResult, RelayRetcode } from "./relay/iface";
 import * as helpers from "./helpers";
 import { logger } from "./helpers";
 import { PromHelper } from "./promHelpers";
-import { BatchPriceAttestation, getBatchAttestationHashKey, getBatchSummary } from "@certusone/p2w-sdk";
+import { BatchPriceAttestation, getBatchAttestationHashKey, getBatchSummary } from "@pythnetwork/p2w-sdk-js";
 
 const mutex = new Mutex();
 let condition = new CondVar();

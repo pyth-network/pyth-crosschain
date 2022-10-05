@@ -14,7 +14,7 @@ import {
   subscribeSignedVAA,
 } from "@certusone/wormhole-spydk";
 
-import { parseBatchPriceAttestation, getBatchSummary } from "@certusone/p2w-sdk";
+import { parseBatchPriceAttestation, getBatchSummary } from "@pythnetwork/p2w-sdk-js";
 
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 

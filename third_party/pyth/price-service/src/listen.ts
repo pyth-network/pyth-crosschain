@@ -15,7 +15,7 @@ import {
   getBatchSummary,
   parseBatchPriceAttestation,
   priceAttestationToPriceFeed,
-} from "@certusone/p2w-sdk";
+} from "@pythnetwork/p2w-sdk-js";
 import {
   FilterEntry,
   SubscribeSignedVAAResponse,
