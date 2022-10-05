@@ -12,7 +12,9 @@ if (process.env.PYTH_PRICE_SERVICE_CONFIG) {
   configFile = process.env.PYTH_PRICE_SERVICE_CONFIG;
 }
 
+// tslint:disable:no-console
 console.log("Loading config file [%s]", configFile);
+// tslint:disable:no-var-requires
 require("dotenv").config({ path: configFile });
 
 setDefaultWasm("node");
@@ -23,7 +25,7 @@ initLogger({ logLevel: process.env.LOG_LEVEL });
 async function run() {
   const promClient = new PromClient({
     name: "price_service",
-    port: parseInt(envOrErr("PROM_PORT")),
+    port: parseInt(envOrErr("PROM_PORT"), 10),
   });
 
   const listener = new Listener(
@@ -32,9 +34,13 @@ async function run() {
       filtersRaw: process.env.SPY_SERVICE_FILTERS,
       readiness: {
         spySyncTimeSeconds: parseInt(
-          envOrErr("READINESS_SPY_SYNC_TIME_SECONDS")
+          envOrErr("READINESS_SPY_SYNC_TIME_SECONDS"),
+          10
         ),
-        numLoadedSymbols: parseInt(envOrErr("READINESS_NUM_LOADED_SYMBOLS")),
+        numLoadedSymbols: parseInt(
+          envOrErr("READINESS_NUM_LOADED_SYMBOLS"),
+          10
+        ),
       },
     },
     promClient
@@ -45,7 +51,7 @@ async function run() {
 
   const restAPI = new RestAPI(
     {
-      port: parseInt(envOrErr("REST_PORT")),
+      port: parseInt(envOrErr("REST_PORT"), 10),
     },
     listener,
     isReady,

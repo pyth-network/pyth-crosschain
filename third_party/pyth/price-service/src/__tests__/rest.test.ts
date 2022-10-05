@@ -20,7 +20,7 @@ function dummyPriceFeed(id: string): PriceFeed {
       price: "3",
       publishTime: 4,
     }),
-    id: id,
+    id,
     price: new Price({
       conf: "5",
       expo: 6,
@@ -55,11 +55,11 @@ beforeAll(async () => {
     dummyPriceInfoPair(expandTo64Len("10101"), 3, "bidbidbid"),
   ]);
 
-  let priceInfo: PriceStore = {
+  const priceInfo: PriceStore = {
     getLatestPriceInfo: (priceFeedId: string) => {
       return priceInfoMap.get(priceFeedId);
     },
-    addUpdateListener: (_callback: (priceInfo: PriceInfo) => any) => {},
+    addUpdateListener: (_callback: (priceInfo: PriceInfo) => any) => undefined,
     getPriceIds: () => new Set(),
   };
 

@@ -33,12 +33,12 @@ function dummyPriceMetadata(
 function dummyPriceInfo(
   id: HexString,
   vaa: HexString,
-  priceMetadata: any
+  dummyPriceMetadataValue: any
 ): PriceInfo {
   return {
-    seqNum: priceMetadata.sequence_number,
-    attestationTime: priceMetadata.attestation_time,
-    emitterChainId: priceMetadata.emitter_chain,
+    seqNum: dummyPriceMetadataValue.sequence_number,
+    attestationTime: dummyPriceMetadataValue.attestation_time,
+    emitterChainId: dummyPriceMetadataValue.emitter_chain,
     priceFeed: dummyPriceFeed(id),
     vaaBytes: Buffer.from(vaa, "hex").toString("binary"),
   };
@@ -52,7 +52,7 @@ function dummyPriceFeed(id: string): PriceFeed {
       price: "3",
       publish_time: 4,
     },
-    id: id,
+    id,
     price: {
       conf: "5",
       expo: 6,
@@ -100,11 +100,10 @@ beforeAll(async () => {
     dummyPriceInfo(expandTo64Len("6789"), "bidbidbid", priceMetadata),
   ];
 
-  let priceInfo: PriceStore = {
+  const priceInfo: PriceStore = {
     getLatestPriceInfo: (_priceFeedId: string) => undefined,
     addUpdateListener: (_callback: (priceInfo: PriceInfo) => any) => undefined,
-    getPriceIds: () =>
-      new Set(priceInfos.map((priceInfo) => priceInfo.priceFeed.id)),
+    getPriceIds: () => new Set(priceInfos.map((info) => info.priceFeed.id)),
   };
 
   api = new WebSocketAPI(priceInfo);
@@ -122,9 +121,9 @@ afterAll(async () => {
 
 describe("Client receives data", () => {
   test("When subscribes with valid ids without verbose flag, returns correct price feed", async () => {
-    let [client, serverMessages] = await createSocketClient();
+    const [client, serverMessages] = await createSocketClient();
 
-    let message: ClientMessage = {
+    const message: ClientMessage = {
       ids: [priceInfos[0].priceFeed.id, priceInfos[1].priceFeed.id],
       type: "subscribe",
     };
@@ -161,9 +160,9 @@ describe("Client receives data", () => {
   });
 
   test("When subscribes with valid ids and verbose flag set to true, returns correct price feed with metadata", async () => {
-    let [client, serverMessages] = await createSocketClient();
+    const [client, serverMessages] = await createSocketClient();
 
-    let message: ClientMessage = {
+    const message: ClientMessage = {
       ids: [priceInfos[0].priceFeed.id, priceInfos[1].priceFeed.id],
       type: "subscribe",
       verbose: true,
@@ -207,9 +206,9 @@ describe("Client receives data", () => {
   });
 
   test("When subscribes with valid ids and verbose flag set to false, returns correct price feed without metadata", async () => {
-    let [client, serverMessages] = await createSocketClient();
+    const [client, serverMessages] = await createSocketClient();
 
-    let message: ClientMessage = {
+    const message: ClientMessage = {
       ids: [priceInfos[0].priceFeed.id, priceInfos[1].priceFeed.id],
       type: "subscribe",
       verbose: false,
@@ -247,9 +246,9 @@ describe("Client receives data", () => {
   });
 
   test("When subscribes with invalid ids, returns error", async () => {
-    let [client, serverMessages] = await createSocketClient();
+    const [client, serverMessages] = await createSocketClient();
 
-    let message: ClientMessage = {
+    const message: ClientMessage = {
       ids: [expandTo64Len("aaaa")],
       type: "subscribe",
     };
@@ -267,9 +266,9 @@ describe("Client receives data", () => {
   });
 
   test("When subscribes for Price Feed A, doesn't receive updates for Price Feed B", async () => {
-    let [client, serverMessages] = await createSocketClient();
+    const [client, serverMessages] = await createSocketClient();
 
-    let message: ClientMessage = {
+    const message: ClientMessage = {
       ids: [priceInfos[0].priceFeed.id],
       type: "subscribe",
     };
@@ -304,7 +303,7 @@ describe("Client receives data", () => {
   });
 
   test("When subscribes for Price Feed A, receives updated and when unsubscribes stops receiving", async () => {
-    let [client, serverMessages] = await createSocketClient();
+    const [client, serverMessages] = await createSocketClient();
 
     let message: ClientMessage = {
       ids: [priceInfos[0].priceFeed.id],
@@ -354,9 +353,9 @@ describe("Client receives data", () => {
   });
 
   test("Unsubscribe on not subscribed price feed is ok", async () => {
-    let [client, serverMessages] = await createSocketClient();
+    const [client, serverMessages] = await createSocketClient();
 
-    let message: ClientMessage = {
+    const message: ClientMessage = {
       ids: [priceInfos[0].priceFeed.id],
       type: "unsubscribe",
     };
@@ -375,17 +374,17 @@ describe("Client receives data", () => {
   });
 
   test("Multiple clients with different price feed works", async () => {
-    let [client1, serverMessages1] = await createSocketClient();
-    let [client2, serverMessages2] = await createSocketClient();
+    const [client1, serverMessages1] = await createSocketClient();
+    const [client2, serverMessages2] = await createSocketClient();
 
-    let message1: ClientMessage = {
+    const message1: ClientMessage = {
       ids: [priceInfos[0].priceFeed.id],
       type: "subscribe",
     };
 
     client1.send(JSON.stringify(message1));
 
-    let message2: ClientMessage = {
+    const message2: ClientMessage = {
       ids: [priceInfos[1].priceFeed.id],
       type: "subscribe",
     };
