@@ -5,9 +5,6 @@ upgrade_policy = "compatible"
 
 [dependencies]
 Pyth = { git = "https://github.com/pyth-network/pyth-crosschain.git", subdir = "aptos/contracts", rev = "main" }
-MoveStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/move-stdlib/", rev = "main" }
-AptosStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-stdlib/", rev = "main" }
-AptosToken = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-token/", rev = "main" }
 
 [addresses]
 example = "0xac74082dfffb80824955aaefb2b0a98634b1368e37f42cbff14564ea430b97dc"
