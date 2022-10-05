@@ -50,15 +50,15 @@ function dummyPriceFeed(id: string): PriceFeed {
       conf: "1",
       expo: 2,
       price: "3",
-      publish_time: 4
+      publish_time: 4,
     },
     id: id,
     price: {
       conf: "5",
       expo: 6,
       price: "7",
-      publish_time: 8
-    }
+      publish_time: 8,
+    },
   });
 }
 

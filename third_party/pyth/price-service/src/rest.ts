@@ -105,7 +105,8 @@ export class RestAPI {
           }
 
           const freshness: DurationInSec =
-            new Date().getTime() / 1000 - latestPriceInfo.priceFeed.getPriceUnchecked().publishTime;
+            new Date().getTime() / 1000 -
+            latestPriceInfo.priceFeed.getPriceUnchecked().publishTime;
           this.promClient?.addApiRequestsPriceFreshness(
             req.path,
             id,
@@ -163,7 +164,8 @@ export class RestAPI {
           }
 
           const freshness: DurationInSec =
-            new Date().getTime() / 1000 - latestPriceInfo.priceFeed.getEmaPriceUnchecked().publishTime;
+            new Date().getTime() / 1000 -
+            latestPriceInfo.priceFeed.getEmaPriceUnchecked().publishTime;
           this.promClient?.addApiRequestsPriceFreshness(
             req.path,
             id,
@@ -209,7 +211,8 @@ export class RestAPI {
         threshold: Joi.number().required(),
       }).required(),
     };
-    app.get("/api/stale_feeds",
+    app.get(
+      "/api/stale_feeds",
       validate(staleFeedsInputSchema),
       (req: Request, res: Response) => {
         let stalenessThresholdSeconds = Number(req.query.threshold as string);
@@ -217,21 +220,21 @@ export class RestAPI {
         let currentTime: TimestampInSec = Math.floor(Date.now() / 1000);
 
         let priceIds = [...this.priceFeedVaaInfo.getPriceIds()];
-        let stalePrices: Record<HexString, number> = {}
+        let stalePrices: Record<HexString, number> = {};
 
         for (let priceId of priceIds) {
-          const latency = currentTime - this.priceFeedVaaInfo.getLatestPriceInfo(priceId)!.attestationTime
+          const latency =
+            currentTime -
+            this.priceFeedVaaInfo.getLatestPriceInfo(priceId)!.attestationTime;
           if (latency > stalenessThresholdSeconds) {
-            stalePrices[priceId] = latency
+            stalePrices[priceId] = latency;
           }
         }
 
         res.json(stalePrices);
       }
     );
-    endpoints.push(
-      "/api/stale_feeds?threshold=<staleness_threshold_seconds>"
-    );
+    endpoints.push("/api/stale_feeds?threshold=<staleness_threshold_seconds>");
 
     app.get("/ready", (_, res: Response) => {
       if (this.isReady!()) {

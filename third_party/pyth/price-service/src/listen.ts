@@ -1,12 +1,12 @@
 import {
   ChainId,
   hexToUint8Array,
-  uint8ArrayToHex
+  uint8ArrayToHex,
 } from "@certusone/wormhole-sdk";
 
 import {
   createSpyRPCServiceClient,
-  subscribeSignedVAA
+  subscribeSignedVAA,
 } from "@certusone/wormhole-spydk";
 
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
@@ -14,11 +14,11 @@ import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 import {
   getBatchSummary,
   parseBatchPriceAttestation,
-  priceAttestationToPriceFeed
+  priceAttestationToPriceFeed,
 } from "@certusone/p2w-sdk";
 import {
   FilterEntry,
-  SubscribeSignedVAAResponse
+  SubscribeSignedVAAResponse,
 } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
 import { ClientReadableStream } from "@grpc/grpc-js";
 import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";

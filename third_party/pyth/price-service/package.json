@@ -1,13 +1,16 @@
 {
   "name": "@pythnetwork/pyth-price-service",
-  "version": "1.4.1",
+  "version": "2.0.0",
   "description": "Pyth Price Service",
   "main": "index.js",
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\"",
     "build": "tsc",
     "start": "node lib/index.js",
-    "test": "jest src/"
+    "test": "jest src/",
+    "lint": "tslint -p tsconfig.json",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src"
   },
   "author": "",
   "license": "Apache-2.0",

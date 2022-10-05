@@ -82,11 +82,15 @@ export class WebSocketAPI {
       return;
     }
 
-    const clients: Set<WebSocket> = this.priceFeedClients.get(priceInfo.priceFeed.id)!;
+    const clients: Set<WebSocket> = this.priceFeedClients.get(
+      priceInfo.priceFeed.id
+    )!;
     logger.info(
       `Sending ${priceInfo.priceFeed.id} price update to ${
         clients.size
-      } clients: ${Array.from(clients.values()).map((ws, _idx, _arr) => this.wsId.get(ws))}`
+      } clients: ${Array.from(clients.values()).map((ws, _idx, _arr) =>
+        this.wsId.get(ws)
+      )}`
     );
 
     for (let client of clients.values()) {
