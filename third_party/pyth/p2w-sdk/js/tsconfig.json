@@ -13,5 +13,5 @@
     },
     "types": [],
     "include": ["src", "types"],
-    "exclude": ["node_modules", "**/__tests__/*", "src/solana/**"]
+    "exclude": ["node_modules", "**/__tests__/*"]
 }
