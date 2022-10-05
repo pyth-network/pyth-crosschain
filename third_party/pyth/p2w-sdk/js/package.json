@@ -1,6 +1,6 @@
 {
-    "name": "@certusone/p2w-sdk",
-    "version": "0.1.0",
+    "name": "@pythnetwork/p2w-sdk-js",
+    "version": "1.0.0",
     "description": "TypeScript library for interacting with Pyth2Wormhole",
     "types": "lib/index.d.ts",
     "main": "lib/index.js",
@@ -11,6 +11,7 @@
         "build": "npm run build-lib",
         "build-lib": "npm run copy-artifacts && tsc",
         "build-watch": "npm run copy-artifacts && tsc --watch",
+        "format": "prettier --write \"src/**/*.ts\"",
         "copy-artifacts": "node scripts/copyWasm.cjs",
         "lint": "tslint -p tsconfig.json",
         "postversion": "git push && git push --tags",
