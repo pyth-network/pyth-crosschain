@@ -1,4 +1,4 @@
-import { HexString, PriceFeed, PriceStatus } from "@pythnetwork/pyth-sdk-js";
+import { HexString, PriceFeed, Price } from "@pythnetwork/pyth-sdk-js";
 import { PriceStore, PriceInfo } from "../listen";
 import { RestAPI } from "../rest";
 import { Express } from "express";
@@ -14,21 +14,20 @@ function expandTo64Len(id: string): string {
 
 function dummyPriceFeed(id: string): PriceFeed {
   return new PriceFeed({
-    conf: "0",
-    emaConf: "1",
-    emaPrice: "2",
-    expo: 4,
-    id,
-    maxNumPublishers: 7,
-    numPublishers: 6,
-    prevConf: "8",
-    prevPrice: "9",
-    prevPublishTime: 10,
-    price: "11",
-    productId: "def456",
-    publishTime: 13,
-    status: PriceStatus.Trading,
-  });
+    emaPrice: new Price({
+      conf: "1",
+      expo: 2,
+      price: "3",
+      publishTime: 4,
+    }),
+    id: id,
+    price: new Price({
+      conf: "5",
+      expo: 6,
+      price: "7",
+      publishTime: 8,
+    })
+  })
 }
 
 function dummyPriceInfoPair(

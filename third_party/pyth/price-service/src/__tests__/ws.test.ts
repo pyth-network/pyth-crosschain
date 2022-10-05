@@ -1,4 +1,4 @@
-import { HexString, PriceFeed, PriceStatus } from "@pythnetwork/pyth-sdk-js";
+import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";
 import { Server } from "http";
 import { WebSocket, WebSocketServer } from "ws";
 import { sleep } from "../helpers";
@@ -46,20 +46,19 @@ function dummyPriceInfo(
 
 function dummyPriceFeed(id: string): PriceFeed {
   return PriceFeed.fromJson({
-    conf: "0",
-    ema_conf: "1",
-    ema_price: "2",
-    expo: 3,
-    id,
-    max_num_publishers: 5,
-    num_publishers: 6,
-    prev_conf: "7",
-    prev_price: "8",
-    prev_publish_time: 9,
-    price: "10",
-    product_id: "def456",
-    publish_time: 12,
-    status: PriceStatus.Trading,
+    ema_price: {
+      conf: "1",
+      expo: 2,
+      price: "3",
+      publish_time: 4
+    },
+    id: id,
+    price: {
+      conf: "5",
+      expo: 6,
+      price: "7",
+      publish_time: 8
+    }
   });
 }
 

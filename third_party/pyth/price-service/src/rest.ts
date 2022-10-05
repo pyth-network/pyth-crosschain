@@ -105,7 +105,7 @@ export class RestAPI {
           }
 
           const freshness: DurationInSec =
-            new Date().getTime() / 1000 - latestPriceInfo.priceFeed.publishTime;
+            new Date().getTime() / 1000 - latestPriceInfo.priceFeed.getPriceUnchecked().publishTime;
           this.promClient?.addApiRequestsPriceFreshness(
             req.path,
             id,
@@ -163,7 +163,7 @@ export class RestAPI {
           }
 
           const freshness: DurationInSec =
-            new Date().getTime() / 1000 - latestPriceInfo.priceFeed.publishTime;
+            new Date().getTime() / 1000 - latestPriceInfo.priceFeed.getEmaPriceUnchecked().publishTime;
           this.promClient?.addApiRequestsPriceFreshness(
             req.path,
             id,
