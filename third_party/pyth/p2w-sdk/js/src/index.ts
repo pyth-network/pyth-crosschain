@@ -1,7 +1,7 @@
 import { getSignedVAA, CHAIN_ID_SOLANA } from "@certusone/wormhole-sdk";
 import { zeroPad } from "ethers/lib/utils";
 import { PublicKey } from "@solana/web3.js";
-import { PriceFeed, PriceStatus, UnixTimestamp } from "@pythnetwork/pyth-sdk-js";
+import { PriceFeed, Price, UnixTimestamp } from "@pythnetwork/pyth-sdk-js";
 
 let _P2W_WASM: any = undefined;
 
@@ -25,7 +25,7 @@ export type PriceAttestation = {
     expo: number;
     emaPrice: string;
     emaConf: string;
-    status: PriceStatus;
+    status: number;
     numPublishers: number;
     maxNumPublishers: number;
     attestationTime: UnixTimestamp;
@@ -68,13 +68,11 @@ export function getBatchSummary(
     let abstractRepresentation = {
         num_attestations: batch.priceAttestations.length,
         prices: batch.priceAttestations.map((priceAttestation) => {
+            const priceFeed = priceAttestationToPriceFeed(priceAttestation);
             return {
-                price_id: priceAttestation.priceId,
-                price: computePrice(priceAttestation.price, priceAttestation.expo),
-                conf: computePrice(
-                    priceAttestation.conf,
-                    priceAttestation.expo
-                ),
+                price_id: priceFeed.id,
+                price: priceFeed.getPriceUnchecked().getPriceAsNumberUnchecked(),
+                conf: priceFeed.getEmaPriceUnchecked().getConfAsNumberUnchecked(),
             };
         }),
     };
@@ -89,21 +87,39 @@ export async function getSignedAttestation(host: string, p2w_addr: string, seque
 }
 
 export function priceAttestationToPriceFeed(priceAttestation: PriceAttestation): PriceFeed {
+    let emaPrice: Price = new Price({
+        conf: priceAttestation.emaConf,
+        expo: priceAttestation.expo,
+        price: priceAttestation.emaPrice,
+        publishTime: priceAttestation.publishTime,
+    });
+
+    let price: Price;
+    
+    if (priceAttestation.status === 1) { // 1 means trading
+        price = new Price({
+            conf: priceAttestation.conf,
+            expo: priceAttestation.expo,
+            price: priceAttestation.price,
+            publishTime: priceAttestation.publishTime
+        });
+    }else {
+        price = new Price({
+            conf: priceAttestation.prevConf,
+            expo: priceAttestation.expo,
+            price: priceAttestation.prevPrice,
+            publishTime: priceAttestation.prevPublishTime
+        });
+
+        // emaPrice won't get updated if the status is unknown and hence it uses
+        // the previous publish time
+        emaPrice.publishTime = priceAttestation.prevPublishTime;
+    }
+
     return new PriceFeed({
-        conf: priceAttestation.conf.toString(),
-        emaConf: priceAttestation.emaConf.toString(),
-        emaPrice: priceAttestation.emaPrice.toString(),
-        expo: priceAttestation.expo as any,
+        emaPrice: emaPrice,
         id: priceAttestation.priceId,
-        maxNumPublishers: priceAttestation.maxNumPublishers as any,
-        numPublishers: priceAttestation.numPublishers as any,
-        prevConf: priceAttestation.prevConf.toString(),
-        prevPrice: priceAttestation.prevPrice.toString(),
-        prevPublishTime: priceAttestation.prevPublishTime as any,
-        price: priceAttestation.price.toString(),
-        productId: priceAttestation.productId,
-        publishTime: priceAttestation.publishTime as any,
-        status: priceAttestation.status,
+        price: price,
     })
 }
 
