@@ -24,7 +24,7 @@ const PYTH_MODULE =
   "0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541";
 const PYTH_TABLE_HANDLE =
   "0x21b2122f77d3f9f944456c0ca8ffa6a13c541476433e64ab6ae81d48277a1181"; //The prices are stored in this table
-const MINT_NFT_MODULE = "0x4a28d903b3fa8ffa0b479f0a497b101a377150b07dcb288911d23064f475f552";
+const MINT_NFT_MODULE = "_";
 
 function App() {
   const [isConnected, setIsConnected] = React.useState<boolean>(false);
