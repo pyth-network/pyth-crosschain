@@ -30,6 +30,9 @@ pub struct AttestationConfig {
         default // Uses Option::default() which is None
     )]
     pub mapping_addr: Option<Pubkey>,
+    #[serde(default = "default_min_rpc_interval_ms")]
+    /// Rate-limiting minimum delay between RPC requests in milliseconds"
+    pub min_rpc_interval_ms: u64,
     pub symbol_groups: Vec<SymbolGroup>,
 }
 
@@ -101,6 +104,10 @@ pub const fn default_max_msg_accounts() -> u64 {
 
 pub const fn default_min_msg_reuse_interval_ms() -> u64 {
     10_000 // 10s
+}
+
+pub const fn default_min_rpc_interval_ms() -> u64 {
+    150
 }
 
 pub const fn default_min_interval_secs() -> u64 {
@@ -258,6 +265,7 @@ mod tests {
         let cfg = AttestationConfig {
             min_msg_reuse_interval_ms: 1000,
             max_msg_accounts: 100_000,
+            min_rpc_interval_ms: 2123,
             mapping_addr: None,
             symbol_groups: vec![fastbois, slowbois],
         };
@@ -276,6 +284,7 @@ mod tests {
         let empty_config = AttestationConfig {
             min_msg_reuse_interval_ms: 1000,
             max_msg_accounts: 100,
+            min_rpc_interval_ms: 42422,
             mapping_addr: None,
             symbol_groups: vec![],
         };

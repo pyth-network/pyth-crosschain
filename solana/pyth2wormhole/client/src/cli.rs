@@ -30,12 +30,6 @@ pub struct Cli {
     pub payer: String,
     #[clap(short, long, default_value = "http://localhost:8899")]
     pub rpc_url: String,
-    #[clap(
-        long = "rpc-interval",
-        default_value = "150",
-        help = "Rate-limiting minimum delay between RPC requests in milliseconds"
-    )]
-    pub rpc_interval_ms: u64,
     #[clap(long, default_value = "confirmed")]
     pub commitment: CommitmentConfig,
     #[clap(long)]
