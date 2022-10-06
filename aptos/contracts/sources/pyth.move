@@ -177,6 +177,21 @@ module pyth::pyth {
         vector::destroy_empty(updates);
     }
 
+    /// A convenience wrapper around update_price_feeds_if_fresh(), allowing you to conditionally
+    /// update the price feeds using an entry function.
+    /// 
+    /// If possible, it is recommended to use update_price_feeds_if_fresh() instead, which avoids the need
+    /// to pass a signer account. update_price_feeds_if_fresh_with_funder() should only be used when
+    /// you need to call an entry function.
+    public entry fun update_price_feeds_if_fresh_with_funder(
+        account: &signer,
+        vaas: vector<vector<u8>>,
+        price_identifiers: vector<vector<u8>>,
+        publish_times: vector<u64>) {
+        let coins = coin::withdraw<AptosCoin>(account, get_update_fee());
+        update_price_feeds_if_fresh(vaas, price_identifiers, publish_times, coins);
+    }
+
     /// Update the cached price feeds with the data in the given VAAs, using
     /// update_price_feeds(). However, this function will only have an effect if any of the
     /// prices in the update are fresh. The price_identifiers and publish_times parameters
@@ -777,6 +792,47 @@ module pyth::pyth {
     }
 
     #[test(aptos_framework = @aptos_framework)]
+    fun test_update_price_feeds_if_fresh_with_funder_fresh_data(aptos_framework: &signer) {
+        let update_fee = 50;
+        let initial_balance = 75;
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), update_fee, initial_balance);
+
+        // Create a test funder account and register it to store funds
+        let funder_addr = @0xbfbffd8e2af9a3e3ce20d2d2b22bd640;
+        let funder = account::create_account_for_test(funder_addr);
+        coin::register<AptosCoin>(&funder);
+        coin::deposit(funder_addr, coins);
+
+        assert!(get_update_fee() == update_fee, 1);
+        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
+        assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
+
+        // Update the price feeds using the funder 
+        let bytes = TEST_VAAS;
+        let price_identifiers = vector[
+            x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1",
+            x"3b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe",
+            x"33832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d",
+            x"21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db8",
+        ];
+        let publish_times = vector[
+            1663680790, 1663680730, 1663680760, 1663680720
+        ];
+        update_price_feeds_if_fresh_with_funder(&funder, bytes, price_identifiers, publish_times);
+
+        // Check that the price feeds are now cached
+        check_price_feeds_cached(&get_mock_price_infos());
+
+        // Check that the funder's balance has decreased by the update_fee amount
+        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance - get_update_fee(), 1);
+
+        // Check that the amount has been transferred to the Pyth contract
+        assert!(coin::balance<AptosCoin>(@pyth) == get_update_fee(), 1);
+
+        cleanup_test(burn_capability, mint_capability);
+    }
+
+    #[test(aptos_framework = @aptos_framework)]
     #[expected_failure(abort_code = 524295)]
     fun test_update_price_feeds_if_fresh_stale_data(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 50);
@@ -797,6 +853,43 @@ module pyth::pyth {
             67, 35, 26, 64
         ];
         update_price_feeds_if_fresh(bytes, price_identifiers, publish_times, coins);
+
+        cleanup_test(burn_capability, mint_capability);
+    }
+
+    #[test(aptos_framework = @aptos_framework)]
+    #[expected_failure(abort_code = 524295)]
+    fun test_update_price_feeds_if_fresh_with_funder_stale_data(aptos_framework: &signer) {
+        let update_fee = 50;
+        let initial_balance = 75;
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), update_fee, initial_balance);
+
+        // Create a test funder account and register it to store funds
+        let funder_addr = @0xbfbffd8e2af9a3e3ce20d2d2b22bd640;
+        let funder = account::create_account_for_test(funder_addr);
+        coin::register<AptosCoin>(&funder);
+        coin::deposit(funder_addr, coins);
+
+        assert!(get_update_fee() == update_fee, 1);
+        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
+        assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
+
+        // First populate the cache
+        update_cache(get_mock_price_infos());
+
+        // Now attempt to update the price feeds with publish_times that are older than those we have cached
+        // This should abort with error::no_fresh_data()
+        let bytes = TEST_VAAS;
+        let price_identifiers = vector[
+            x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1",
+            x"3b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe",
+            x"33832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d",
+            x"21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db8",
+        ];
+        let publish_times = vector[
+            100, 76, 29, 64
+        ];
+        update_price_feeds_if_fresh_with_funder(&funder, bytes, price_identifiers, publish_times);
 
         cleanup_test(burn_capability, mint_capability);
     }
