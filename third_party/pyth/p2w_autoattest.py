@@ -188,10 +188,12 @@ if P2W_ATTESTATION_CFG is None:
     cfg_yaml = f"""
 ---
 mapping_addr: {mapping_addr}
+min_rpc_interval_ms: 0 # RIP RPC
+max_batch_jobs: 1000 # Where we're going there's no oomkiller
 symbol_groups:
   - group_name: fast_interval_only
     conditions:
-      min_interval_secs: 3
+      min_interval_secs: 1
     symbols:
 """
 
@@ -209,6 +211,8 @@ symbol_groups:
       - name: {name}
         price_addr: {price}
         product_addr: {product}"""
+
+    # End of fast_interval_only
 
     cfg_yaml += f"""
   - group_name: longer_interval_sensitive_changes
