@@ -112,8 +112,6 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
     init_result = run_or_die(
         [
             "pyth2wormhole-client",
-            "--log-level",
-            "4",
             "--p2w-addr",
             P2W_SOL_ADDRESS,
             "--rpc-url",
@@ -139,8 +137,6 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
         run_or_die(
             [
                 "pyth2wormhole-client",
-                "--log-level",
-                "4",
                 "--p2w-addr",
                 P2W_SOL_ADDRESS,
                 "--rpc-url",
@@ -241,14 +237,16 @@ symbol_groups:
         f.flush()
 
 
+# Set helpfully chatty logging default, filtering especially annoying
+# modules like async HTTP requests and tokio runtime logs
+os.environ["RUST_LOG"] = os.environ.get("RUST_LOG", "pyth2wormhole_client,solana_client,main,pyth_sdk_solana=trace")
+
 # Send the first attestation in one-shot mode for testing
 first_attest_result = run_or_die(
     [
         "pyth2wormhole-client",
         "--commitment",
         "confirmed",
-        "--log-level",
-        "3",
         "--p2w-addr",
         P2W_SOL_ADDRESS,
         "--rpc-url",
@@ -274,7 +272,6 @@ endpoint_thread.start()
 readiness_thread = threading.Thread(target=readiness, daemon=True)
 readiness_thread.start()
 
-
 # Do not exit this script if a continuous attestation stops for
 # whatever reason (this avoids k8s restart penalty)
 while True:
@@ -284,8 +281,6 @@ while True:
             "pyth2wormhole-client",
             "--commitment",
             "confirmed",
-            "--log-level",
-            "3",
             "--p2w-addr",
             P2W_SOL_ADDRESS,
             "--rpc-url",
