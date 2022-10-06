@@ -474,7 +474,6 @@ async fn lock_and_make_rpc(rlmtx: &RLMutex<RpcCfg>) -> RpcClient {
 /// The argument count on attestation_sched_job got out of hand. This
 /// helps keep the correct order in check.
 pub struct AttestationSchedJobArgs {
-    /// If a message appears, the job will exit
     pub batch: BatchState,
     pub batch_no: usize,
     pub batch_count: usize,
