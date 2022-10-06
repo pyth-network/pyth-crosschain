@@ -392,6 +392,31 @@ async fn handle_attest(
             } else {
                 old_sched_futs_state = Some((tokio::spawn(joined_sched_futs), new_cfg_hash));
             }
+
+        // Sum up elapsed time, wait for next run accurately
+        let target = Duration::from_secs(attestation_cfg.mapping_reload_interval_mins * 60);
+        let elapsed = start_time.elapsed();
+
+        let remaining = target.saturating_sub(elapsed);
+
+        if remaining == Duration::from_secs(0) {
+            warn!(
+                "Processing took more than desired mapping lookup interval of {} seconds, not sleeping. Consider increasing {}", 
+                target.as_secs(),
+                // stringify prints the up-to-date setting name automatically
+                stringify!(attestation_cfg.mapping_reload_interval_mins)
+            );
+        } else {
+            info!(
+                "Processing new mapping took {}.{}s, next config/mapping refresh in {}.{}s",
+                elapsed.as_secs(),
+                elapsed.subsec_millis(),
+                remaining.as_secs(),
+                remaining.subsec_millis()
+            );
+        }
+
+        tokio::time::sleep(remaining).await;
         } else {
             // Non-daemon sched futs finish after single attempt per
             // batch which means we should wait for them instead of
@@ -424,30 +449,6 @@ async fn handle_attest(
             break; // non-daemon mode handling ends with breaking this loop
         }
 
-        // Sum up elapsed time, wait for next run accurately
-        let target = Duration::from_secs(attestation_cfg.mapping_reload_interval_mins * 60);
-        let elapsed = start_time.elapsed();
-
-        let remaining = target.saturating_sub(elapsed);
-
-        if remaining == Duration::from_secs(0) {
-            warn!(
-                "Processing took more than desired mapping lookup interval of {} seconds, not sleeping. Consider increasing {}", 
-                target.as_secs(),
-                // stringify prints the up-to-date setting name automatically
-                stringify!(attestation_cfg.mapping_reload_interval_mins)
-            );
-        } else {
-            info!(
-                "Processing new mapping took {}.{}s, next config/mapping refresh in {}.{}s",
-                elapsed.as_secs(),
-                elapsed.subsec_millis(),
-                remaining.as_secs(),
-                remaining.subsec_millis()
-            );
-        }
-
-        tokio::time::sleep(remaining).await;
     }
 
     Ok(())
