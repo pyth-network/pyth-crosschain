@@ -68,7 +68,7 @@ use pyth2wormhole_client::*;
 
 pub const SEQNO_PREFIX: &'static str = "Program log: Sequence: ";
 
-#[tokio::main]
+#[tokio::main(flavor = "multi_thread")]
 async fn main() -> Result<(), ErrBox> {
     let cli = Cli::parse();
     init_logging();
