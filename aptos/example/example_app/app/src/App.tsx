@@ -9,7 +9,7 @@ const MAINNET_PRICE_SERVICE = "https://xc-mainnet.pyth.network";
 const TESTNET_PRICE_SERVICE = "https://xc-testnet.pyth.network";
 const APTOS_TESTNET_RPC = "https://testnet.aptoslabs.com/";
 
-const mainnetConnection = new PriceServiceConnection(MAINNET_PRICE_SERVICE); // Mainnet price service client to get visualize high frequency prices in the app
+const mainnetConnection = new PriceServiceConnection(MAINNET_PRICE_SERVICE, {logger: console}); // Mainnet price service client to get visualize high frequency prices in the app
 const testnetConnection = new AptosPriceServiceConnection(
   TESTNET_PRICE_SERVICE
 ); // Price service client used to retrieve the offchain VAAs used to update the onchain price
@@ -63,7 +63,7 @@ function App() {
     [ETH_USD_MAINNET_PRICE_ID],
     (priceFeed: PriceFeed) => {
       setPythOffChainPrice(
-        priceFeed.getCurrentPrice()?.getPriceAsNumberUnchecked() || 0
+        priceFeed.getPriceUnchecked()?.getPriceAsNumberUnchecked() || 0
       );
     }
   );
