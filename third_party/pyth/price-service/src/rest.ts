@@ -71,7 +71,7 @@ export class RestAPI {
       })
     );
 
-    let endpoints: string[] = [];
+    const endpoints: string[] = [];
 
     const latestVaasInputSchema: schema = {
       query: Joi.object({
@@ -84,20 +84,20 @@ export class RestAPI {
       "/api/latest_vaas",
       validate(latestVaasInputSchema),
       (req: Request, res: Response) => {
-        let priceIds = req.query.ids as string[];
+        const priceIds = req.query.ids as string[];
 
         // Multiple price ids might share same vaa, we use sequence number as
         // key of a vaa and deduplicate using a map of seqnum to vaa bytes.
-        let vaaMap = new Map<number, string>();
+        const vaaMap = new Map<number, string>();
 
-        let notFoundIds: string[] = [];
+        const notFoundIds: string[] = [];
 
         for (let id of priceIds) {
           if (id.startsWith("0x")) {
             id = id.substring(2);
           }
 
-          let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
+          const latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
 
           if (latestPriceInfo === undefined) {
             notFoundIds.push(id);
@@ -105,7 +105,8 @@ export class RestAPI {
           }
 
           const freshness: DurationInSec =
-            new Date().getTime() / 1000 - latestPriceInfo.priceFeed.publishTime;
+            new Date().getTime() / 1000 -
+            latestPriceInfo.priceFeed.getPriceUnchecked().publishTime;
           this.promClient?.addApiRequestsPriceFreshness(
             req.path,
             id,
@@ -142,20 +143,20 @@ export class RestAPI {
       "/api/latest_price_feeds",
       validate(latestPriceFeedsInputSchema),
       (req: Request, res: Response) => {
-        let priceIds = req.query.ids as string[];
+        const priceIds = req.query.ids as string[];
         // verbose is optional, default to false
-        let verbose = req.query.verbose === "true";
+        const verbose = req.query.verbose === "true";
 
-        let responseJson = [];
+        const responseJson = [];
 
-        let notFoundIds: string[] = [];
+        const notFoundIds: string[] = [];
 
         for (let id of priceIds) {
           if (id.startsWith("0x")) {
             id = id.substring(2);
           }
 
-          let latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
+          const latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
 
           if (latestPriceInfo === undefined) {
             notFoundIds.push(id);
@@ -163,7 +164,8 @@ export class RestAPI {
           }
 
           const freshness: DurationInSec =
-            new Date().getTime() / 1000 - latestPriceInfo.priceFeed.publishTime;
+            new Date().getTime() / 1000 -
+            latestPriceInfo.priceFeed.getEmaPriceUnchecked().publishTime;
           this.promClient?.addApiRequestsPriceFreshness(
             req.path,
             id,
@@ -209,29 +211,30 @@ export class RestAPI {
         threshold: Joi.number().required(),
       }).required(),
     };
-    app.get("/api/stale_feeds",
+    app.get(
+      "/api/stale_feeds",
       validate(staleFeedsInputSchema),
       (req: Request, res: Response) => {
-        let stalenessThresholdSeconds = Number(req.query.threshold as string);
+        const stalenessThresholdSeconds = Number(req.query.threshold as string);
 
-        let currentTime: TimestampInSec = Math.floor(Date.now() / 1000);
+        const currentTime: TimestampInSec = Math.floor(Date.now() / 1000);
 
-        let priceIds = [...this.priceFeedVaaInfo.getPriceIds()];
-        let stalePrices: Record<HexString, number> = {}
+        const priceIds = [...this.priceFeedVaaInfo.getPriceIds()];
+        const stalePrices: Record<HexString, number> = {};
 
-        for (let priceId of priceIds) {
-          const latency = currentTime - this.priceFeedVaaInfo.getLatestPriceInfo(priceId)!.attestationTime
+        for (const priceId of priceIds) {
+          const latency =
+            currentTime -
+            this.priceFeedVaaInfo.getLatestPriceInfo(priceId)!.attestationTime;
           if (latency > stalenessThresholdSeconds) {
-            stalePrices[priceId] = latency
+            stalePrices[priceId] = latency;
           }
         }
 
         res.json(stalePrices);
       }
     );
-    endpoints.push(
-      "/api/stale_feeds?threshold=<staleness_threshold_seconds>"
-    );
+    endpoints.push("/api/stale_feeds?threshold=<staleness_threshold_seconds>");
 
     app.get("/ready", (_, res: Response) => {
       if (this.isReady!()) {
@@ -252,7 +255,7 @@ export class RestAPI {
 
     app.get("/", (_, res: Response) => res.json(endpoints));
 
-    app.use(function (err: any, _: Request, res: Response, next: NextFunction) {
+    app.use((err: any, _: Request, res: Response, next: NextFunction) => {
       if (err instanceof ValidationError) {
         return res.status(err.statusCode).json(err);
       }
@@ -268,7 +271,7 @@ export class RestAPI {
   }
 
   async run(): Promise<Server> {
-    let app = await this.createApp();
+    const app = await this.createApp();
     return app.listen(this.port, () =>
       logger.debug("listening on REST port " + this.port)
     );
