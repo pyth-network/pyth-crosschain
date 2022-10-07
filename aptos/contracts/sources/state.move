@@ -38,6 +38,10 @@ module pyth::state {
     }
 
     /// Mapping of cached price information
+    /// 
+    /// WARNING: do not directly read out of this table, instead use 
+    /// the checked `pyth::get_price` method. This ensures that the price
+    /// is recent enough.
     struct LatestPriceInfo has key {
         info: Table<PriceIdentifier, PriceInfo>,
     }
