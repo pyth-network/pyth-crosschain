@@ -268,6 +268,9 @@ module pyth::pyth {
     /// Get the latest available price cached for the given price identifier, if that price is 
     /// no older than the stale price threshold.
     /// 
+    /// Please refer to the documentation at https://docs.pyth.network/consumers/best-practices for
+    /// how to how this price safely.
+    /// 
     /// Important: it is recommended to call update_price_feeds() to update the cached price
     /// before calling this function, as get_price() will abort if the cached price is older 
     /// than the stale price threshold.
