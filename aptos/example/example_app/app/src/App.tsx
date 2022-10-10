@@ -1,29 +1,29 @@
 import React from "react";
 import logo from "./logo.svg";
 import "./App.css";
-import { PriceServiceConnection, PriceFeed } from "@pythnetwork/pyth-common-js";
+import { PriceFeed } from "@pythnetwork/pyth-common-js";
 import { AptosClient } from "aptos";
 import { AptosPriceServiceConnection } from "@pythnetwork/pyth-aptos-js";
 
-const MAINNET_PRICE_SERVICE = "https://xc-mainnet.pyth.network";
+// Rpc endpoints
 const TESTNET_PRICE_SERVICE = "https://xc-testnet.pyth.network";
 const APTOS_TESTNET_RPC = "https://testnet.aptoslabs.com/";
 
-const mainnetConnection = new PriceServiceConnection(MAINNET_PRICE_SERVICE, {logger: console}); // Mainnet price service client to get visualize high frequency prices in the app
+// Connections
 const testnetConnection = new AptosPriceServiceConnection(
   TESTNET_PRICE_SERVICE
-); // Price service client used to retrieve the offchain VAAs used to update the onchain price
+); // Price service client used to retrieve the offchain VAAs to update the onchain price
 const aptosClient = new AptosClient(APTOS_TESTNET_RPC); // Aptos client is used to retrieve onchain prices
 
-// Account addresses
-const ETH_USD_MAINNET_PRICE_ID =
-  "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace";
+// Price id : this is not an aptos account but instead an opaque identifier for each price
 const ETH_USD_TESTNET_PRICE_ID =
   "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6";
+
+// Aptos accounts
 const PYTH_MODULE =
   "0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541";
 const PYTH_TABLE_HANDLE =
-  "0x21b2122f77d3f9f944456c0ca8ffa6a13c541476433e64ab6ae81d48277a1181"; //The prices are stored in this table
+  "0x21b2122f77d3f9f944456c0ca8ffa6a13c541476433e64ab6ae81d48277a1181"; //The prices are stored in this table. Consumers should not access this table and should instead get the prices from the price service.
 const MINT_NFT_MODULE = "_";
 
 function App() {
@@ -39,12 +39,12 @@ function App() {
   const fetchOnChainPrice = async () => {
     let data = await aptosClient.getTableItem(PYTH_TABLE_HANDLE, {
       key_type:
-        "0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541::price_identifier::PriceIdentifier",
+        `${PYTH_MODULE}::price_identifier::PriceIdentifier`,
       value_type:
-        "0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541::price_info::PriceInfo",
+      `${PYTH_MODULE}::price_info::PriceInfo`,
       key: {
         bytes:
-          "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6",
+        ETH_USD_TESTNET_PRICE_ID,
       },
     });
     setPythOnChainPrice(
@@ -59,8 +59,8 @@ function App() {
   }, []);
 
   // Subscribe to offchain prices
-  mainnetConnection.subscribePriceFeedUpdates(
-    [ETH_USD_MAINNET_PRICE_ID],
+  testnetConnection.subscribePriceFeedUpdates(
+    [ETH_USD_TESTNET_PRICE_ID],
     (priceFeed: PriceFeed) => {
       setPythOffChainPrice(
         priceFeed.getPriceUnchecked()?.getPriceAsNumberUnchecked() || 0
@@ -143,6 +143,7 @@ async function sendRefreshPriceTransaction() {
   const priceFeedUpdateData = await testnetConnection.getPriceFeedsUpdateData([
     ETH_USD_TESTNET_PRICE_ID,
   ]);
+
   const priceRefreshInstruction = {
     type: "entry_function_payload",
     function: PYTH_MODULE + `::pyth::update_price_feeds_with_funder`,
