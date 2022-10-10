@@ -16,13 +16,6 @@ use clap::{
 )]
 pub struct Cli {
     #[clap(
-        short,
-        long,
-        default_value = "3",
-        help = "Logging level, where 0..=1 RUST_LOG=error and 5.. is RUST_LOG=trace"
-    )]
-    pub log_level: u32,
-    #[clap(
         long,
         help = "Identity JSON file for the entity meant to cover transaction costs",
         default_value = "~/.config/solana/id.json"
