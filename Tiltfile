@@ -171,95 +171,94 @@ docker_build(
     ],
 )
 
-if pyth:
-    # pyth autopublisher
-    docker_build(
-        ref = "pyth",
-        context = ".",
-        dockerfile = "third_party/pyth/Dockerfile.pyth",
-    )
-    k8s_yaml_with_ns("./devnet/pyth.yaml")
+# pyth autopublisher
+docker_build(
+    ref = "pyth",
+    context = ".",
+    dockerfile = "third_party/pyth/Dockerfile.pyth",
+)
+k8s_yaml_with_ns("./devnet/pyth.yaml")
 
-    k8s_resource(
-        "pyth", 
-        resource_deps = ["solana-devnet"], 
-        labels = ["pyth"],
-        trigger_mode = trigger_mode,
-    )
+k8s_resource(
+    "pyth", 
+    resource_deps = ["solana-devnet"], 
+    labels = ["pyth"],
+    trigger_mode = trigger_mode,
+)
 
-    # pyth2wormhole client autoattester
-    docker_build(
-        ref = "p2w-attest",
-        context = ".",
-        only = ["./solana", "./third_party", "./pythnet"],
-        dockerfile = "./third_party/pyth/Dockerfile.p2w-attest",
-        ignore = ["./solana/*/target"],
-    )
+# pyth2wormhole client autoattester
+docker_build(
+    ref = "p2w-attest",
+    context = ".",
+    only = ["./solana", "./third_party", "./pythnet"],
+    dockerfile = "./third_party/pyth/Dockerfile.p2w-attest",
+    ignore = ["./solana/*/target"],
+)
 
-    k8s_yaml_with_ns("devnet/p2w-attest.yaml")
-    k8s_resource(
-        "p2w-attest",
-        resource_deps = ["solana-devnet", "pyth", "guardian"],
-        port_forwards = [],
-        labels = ["pyth"],
-        trigger_mode = trigger_mode,
-    )
+k8s_yaml_with_ns("devnet/p2w-attest.yaml")
+k8s_resource(
+    "p2w-attest",
+    resource_deps = ["solana-devnet", "pyth", "guardian"],
+    port_forwards = [],
+    labels = ["pyth"],
+    trigger_mode = trigger_mode,
+)
 
-    # Pyth2wormhole relay
-    docker_build(
-        ref = "p2w-relay",
-        context = ".",
-        dockerfile = "third_party/pyth/p2w-relay/Dockerfile.pyth_relay",
-    )
-    k8s_yaml_with_ns("devnet/p2w-terra-relay.yaml")
-    k8s_resource(
-        "p2w-terra-relay",
-        resource_deps = ["pyth", "p2w-attest", "spy", "terra-terrad", "wasm-gen"],
-        port_forwards = [
-            port_forward(4200, name = "Rest API (Status + Query) [:4200]", host = webHost),
-            port_forward(8081, name = "Prometheus [:8081]", host = webHost)],
-        labels = ["pyth"]
-    )
+# Pyth2wormhole relay
+docker_build(
+    ref = "p2w-relay",
+    context = ".",
+    dockerfile = "third_party/pyth/p2w-relay/Dockerfile.pyth_relay",
+)
+k8s_yaml_with_ns("devnet/p2w-terra-relay.yaml")
+k8s_resource(
+    "p2w-terra-relay",
+    resource_deps = ["pyth", "p2w-attest", "spy", "terra-terrad", "wasm-gen"],
+    port_forwards = [
+        port_forward(4200, name = "Rest API (Status + Query) [:4200]", host = webHost),
+        port_forward(8081, name = "Prometheus [:8081]", host = webHost)],
+    labels = ["pyth"]
+)
 
-    k8s_yaml_with_ns("devnet/p2w-evm-relay.yaml")
-    k8s_resource(
-        "p2w-evm-relay",
-        resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet", "wasm-gen"],
-        port_forwards = [
-            port_forward(4201, container_port = 4200, name = "Rest API (Status + Query) [:4201]", host = webHost),
-            port_forward(8082, container_port = 8081, name = "Prometheus [:8082]", host = webHost)],
-        labels = ["pyth"]
-    )
+k8s_yaml_with_ns("devnet/p2w-evm-relay.yaml")
+k8s_resource(
+    "p2w-evm-relay",
+    resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet", "wasm-gen"],
+    port_forwards = [
+        port_forward(4201, container_port = 4200, name = "Rest API (Status + Query) [:4201]", host = webHost),
+        port_forward(8082, container_port = 8081, name = "Prometheus [:8082]", host = webHost)],
+    labels = ["pyth"]
+)
 
-    # Pyth Price service
-    docker_build(
-        ref = "pyth-price-service",
-        context = ".",
-        dockerfile = "third_party/pyth/price-service/Dockerfile.price_service",
-    )
-    k8s_yaml_with_ns("devnet/pyth-price-service.yaml")
-    k8s_resource(
-        "pyth-price-service",
-        resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet", "wasm-gen"],
-        port_forwards = [
-            port_forward(4202, container_port = 4200, name = "Rest API (Status + Query) [:4202]", host = webHost),
-            port_forward(6202, container_port = 6200, name = "WSS API [:6202]", host = webHost),
-            port_forward(8083, container_port = 8081, name = "Prometheus [:8083]", host = webHost)],
-        labels = ["pyth"]
-    )
+# Pyth Price service
+docker_build(
+    ref = "pyth-price-service",
+    context = ".",
+    dockerfile = "third_party/pyth/price-service/Dockerfile.price_service",
+)
+k8s_yaml_with_ns("devnet/pyth-price-service.yaml")
+k8s_resource(
+    "pyth-price-service",
+    resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet", "wasm-gen"],
+    port_forwards = [
+        port_forward(4202, container_port = 4200, name = "Rest API (Status + Query) [:4202]", host = webHost),
+        port_forward(6202, container_port = 6200, name = "WSS API [:6202]", host = webHost),
+        port_forward(8083, container_port = 8081, name = "Prometheus [:8083]", host = webHost)],
+    labels = ["pyth"]
+)
 
-    # Pyth EVM Watcher
-    docker_build(
-        ref = "pyth-evm-watcher",
-        context = "third_party/pyth/evm-watcher/",
-        dockerfile = "third_party/pyth/evm-watcher/Dockerfile",
-    )
-    k8s_yaml_with_ns("devnet/pyth-evm-watcher.yaml")
-    k8s_resource(
-        "pyth-evm-watcher",
-        resource_deps = ["eth-devnet"],
-        labels = ["pyth"]
-    )
+# Pyth EVM Watcher
+docker_build(
+    ref = "pyth-evm-watcher",
+    context = "third_party/pyth/evm-watcher/",
+    dockerfile = "third_party/pyth/evm-watcher/Dockerfile",
+)
+k8s_yaml_with_ns("devnet/pyth-evm-watcher.yaml")
+k8s_resource(
+    "pyth-evm-watcher",
+    resource_deps = ["eth-devnet"],
+    labels = ["pyth"]
+)
 
 
 k8s_yaml_with_ns("devnet/eth-devnet.yaml")
