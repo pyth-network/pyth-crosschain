@@ -67,37 +67,36 @@ impl<'a> BatchState<'a> {
             ));
         }
 
-        let mut new_symbol_states: Vec<Option<PriceAccount>> = vec![None; sym_count];
-
         // Only lookup and compare symbols if the conditions require
         if self.conditions.is_onchain() {
-            new_symbol_states = match c.get_multiple_accounts(&pubkeys).await {
-                Ok(acc_opts) => {
-                    acc_opts
-                        .into_iter()
-                        .enumerate()
-                        .map(|(idx, opt)| {
-                            // Take each Some(acc), make it None and log on load_price_account() error
-                            opt.and_then(|acc| {
-                                pyth_sdk_solana::state::load_price_account(&acc.data)
-                                    .cloned() // load_price_account() transmutes the data reference into another reference, and owning acc_opts is not enough
-                                    .map_err(|e| {
-                                        warn!(
-                                            "Could not parse symbol {}/{}: {}",
-                                            idx, sym_count, e
-                                        );
-                                        e
-                                    })
-                                    .ok() // Err becomes None
+            let mut new_symbol_states: Vec<Option<PriceAccount>> =
+                match c.get_multiple_accounts(&pubkeys).await {
+                    Ok(acc_opts) => {
+                        acc_opts
+                            .into_iter()
+                            .enumerate()
+                            .map(|(idx, opt)| {
+                                // Take each Some(acc), make it None and log on load_price_account() error
+                                opt.and_then(|acc| {
+                                    pyth_sdk_solana::state::load_price_account(&acc.data)
+                                        .cloned() // load_price_account() transmutes the data reference into another reference, and owning acc_opts is not enough
+                                        .map_err(|e| {
+                                            warn!(
+                                                "Could not parse symbol {}/{}: {}",
+                                                idx, sym_count, e
+                                            );
+                                            e
+                                        })
+                                        .ok() // Err becomes None
+                                })
                             })
-                        })
-                        .collect()
-                }
-                Err(e) => {
-                    warn!("Could not look up any symbols on-chain: {}", e);
-                    vec![None; sym_count]
-                }
-            };
+                            .collect()
+                    }
+                    Err(e) => {
+                        warn!("Could not look up any symbols on-chain: {}", e);
+                        vec![None; sym_count]
+                    }
+                };
 
             for (idx, old_new_tup) in self
                 .last_known_symbol_states
@@ -148,19 +147,18 @@ impl<'a> BatchState<'a> {
                     }
                 }
             }
-        }
-
-        // Update with newer state only if a condition was met. We
-        // don't want to shadow changes that may happen over a larger
-        // period between state lookups.
-        if ret.is_some() {
-            for (old, new) in self
-                .last_known_symbol_states
-                .iter_mut()
-                .zip(new_symbol_states.into_iter())
-            {
-                if new.is_some() {
-                    *old = new;
+            // Update with newer state only if a condition was met. We
+            // don't want to shadow changes that may happen over a larger
+            // period between state lookups.
+            if ret.is_some() {
+                for (old, new) in self
+                    .last_known_symbol_states
+                    .iter_mut()
+                    .zip(new_symbol_states.into_iter())
+                {
+                    if new.is_some() {
+                        *old = new;
+                    }
                 }
             }
         }
