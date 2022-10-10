@@ -15,7 +15,7 @@ const testnetConnection = new AptosPriceServiceConnection(
 ); // Price service client used to retrieve the offchain VAAs to update the onchain price
 const aptosClient = new AptosClient(APTOS_TESTNET_RPC); // Aptos client is used to retrieve onchain prices
 
-// Price id : this is not an aptos account but instead an opaque identifier for each price
+// Price id : this is not an aptos account but instead an opaque identifier for each price https://pyth.network/developers/price-feed-ids/#pyth-cross-chain-testnet
 const ETH_USD_TESTNET_PRICE_ID =
   "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6";
 
@@ -38,13 +38,10 @@ function App() {
 
   const fetchOnChainPrice = async () => {
     let data = await aptosClient.getTableItem(PYTH_TABLE_HANDLE, {
-      key_type:
-        `${PYTH_MODULE}::price_identifier::PriceIdentifier`,
-      value_type:
-      `${PYTH_MODULE}::price_info::PriceInfo`,
+      key_type: `${PYTH_MODULE}::price_identifier::PriceIdentifier`,
+      value_type: `${PYTH_MODULE}::price_info::PriceInfo`,
       key: {
-        bytes:
-        ETH_USD_TESTNET_PRICE_ID,
+        bytes: ETH_USD_TESTNET_PRICE_ID,
       },
     });
     setPythOnChainPrice(
