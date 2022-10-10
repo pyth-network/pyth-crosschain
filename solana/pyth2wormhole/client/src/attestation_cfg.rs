@@ -146,7 +146,7 @@ pub struct AttestationConditions {
 
 impl AttestationConditions {
     /// Used by should_resend() to check if it needs to make the expensive RPC request
-    pub fn is_onchain(&self) -> bool {
+    pub fn need_onchain_lookup(&self) -> bool {
         // Bug trap for new fields that also need to be included in
         // the returned expression
         let AttestationConditions {
