@@ -23,7 +23,7 @@ const ETH_USD_TESTNET_PRICE_ID =
 const PYTH_MODULE =
   "0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541";
 const PYTH_TABLE_HANDLE =
-  "0x21b2122f77d3f9f944456c0ca8ffa6a13c541476433e64ab6ae81d48277a1181"; //The prices are stored in this table. Consumers should not access this table and should instead get the prices from the price service.
+  "0x21b2122f77d3f9f944456c0ca8ffa6a13c541476433e64ab6ae81d48277a1181"; // The prices are stored in this table. WARNING : Consumers should not access this table in frontend code and should instead get the prices from the price service.
 const MINT_NFT_MODULE = "_";
 
 function App() {
@@ -130,7 +130,7 @@ async function sendMintTransaction() {
   const mintTransaction = {
     type: "entry_function_payload",
     function: MINT_NFT_MODULE + `::minting::mint_nft`,
-    arguments: [priceFeedUpdateData],
+    arguments: [priceFeedUpdateData], // Minting requires updating the price first, so we are passing the VAA containing the verifiable price as an argument
     type_arguments: [],
   };
   await window.aptos.signAndSubmitTransaction(mintTransaction);
@@ -144,7 +144,7 @@ async function sendRefreshPriceTransaction() {
   const priceRefreshInstruction = {
     type: "entry_function_payload",
     function: PYTH_MODULE + `::pyth::update_price_feeds_with_funder`,
-    arguments: [priceFeedUpdateData],
+    arguments: [priceFeedUpdateData], // VAA to update and verify the price
     type_arguments: [],
   };
   await window.aptos.signAndSubmitTransaction(priceRefreshInstruction);

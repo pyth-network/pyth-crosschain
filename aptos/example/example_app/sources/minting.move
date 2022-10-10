@@ -44,7 +44,7 @@ module mint_nft::minting {
         let token_uri = string::utf8(b"https://pbs.twimg.com/media/FeVw9JPWYAAsiI6?format=jpg&name=medium");
 
         // Create the resource account that we'll use to create tokens
-        let (resource_signer, resource_signer_cap) = account::create_resource_account(resource_account, b"hello");
+        let (resource_signer, resource_signer_cap) = account::create_resource_account(resource_account, b"candy-machine");
 
         // Create the nft collection
         let maximum_supply = 1; // There's only 1 NFT in the collection
