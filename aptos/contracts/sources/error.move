@@ -98,4 +98,8 @@ module pyth::error {
    public fun invalid_attestation_magic_value(): u64 {
         error::invalid_argument(24)
    }
+
+   public fun data_source_emitter_address_and_chain_ids_different_lengths(): u64 {
+        error::invalid_argument(25)
+   }
 }

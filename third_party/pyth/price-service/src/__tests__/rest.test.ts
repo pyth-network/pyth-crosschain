@@ -1,4 +1,4 @@
-import { HexString, PriceFeed, PriceStatus } from "@pythnetwork/pyth-sdk-js";
+import { HexString, PriceFeed, Price } from "@pythnetwork/pyth-sdk-js";
 import { PriceStore, PriceInfo } from "../listen";
 import { RestAPI } from "../rest";
 import { Express } from "express";
@@ -14,20 +14,19 @@ function expandTo64Len(id: string): string {
 
 function dummyPriceFeed(id: string): PriceFeed {
   return new PriceFeed({
-    conf: "0",
-    emaConf: "1",
-    emaPrice: "2",
-    expo: 4,
+    emaPrice: new Price({
+      conf: "1",
+      expo: 2,
+      price: "3",
+      publishTime: 4,
+    }),
     id,
-    maxNumPublishers: 7,
-    numPublishers: 6,
-    prevConf: "8",
-    prevPrice: "9",
-    prevPublishTime: 10,
-    price: "11",
-    productId: "def456",
-    publishTime: 13,
-    status: PriceStatus.Trading,
+    price: new Price({
+      conf: "5",
+      expo: 6,
+      price: "7",
+      publishTime: 8,
+    }),
   });
 }
 
@@ -56,11 +55,11 @@ beforeAll(async () => {
     dummyPriceInfoPair(expandTo64Len("10101"), 3, "bidbidbid"),
   ]);
 
-  let priceInfo: PriceStore = {
+  const priceInfo: PriceStore = {
     getLatestPriceInfo: (priceFeedId: string) => {
       return priceInfoMap.get(priceFeedId);
     },
-    addUpdateListener: (_callback: (priceInfo: PriceInfo) => any) => {},
+    addUpdateListener: (_callback: (priceInfo: PriceInfo) => any) => undefined,
     getPriceIds: () => new Set(),
   };
 
@@ -72,7 +71,9 @@ beforeAll(async () => {
 describe("Latest Price Feed Endpoint", () => {
   test("When called with valid ids, returns correct price feed", async () => {
     const ids = [expandTo64Len("abcd"), expandTo64Len("3456")];
-    const resp = await request(app).get("/api/latest_price_feeds").query({ ids });
+    const resp = await request(app)
+      .get("/api/latest_price_feeds")
+      .query({ ids });
     expect(resp.status).toBe(StatusCodes.OK);
     expect(resp.body.length).toBe(2);
     expect(resp.body).toContainEqual(dummyPriceFeed(ids[0]).toJson());
@@ -85,7 +86,9 @@ describe("Latest Price Feed Endpoint", () => {
       expandTo64Len("3456"),
       expandTo64Len("effe"),
     ];
-    const resp = await request(app).get("/api/latest_price_feeds").query({ ids });
+    const resp = await request(app)
+      .get("/api/latest_price_feeds")
+      .query({ ids });
     expect(resp.status).toBe(StatusCodes.BAD_REQUEST);
     expect(resp.body.message).toContain(ids[0]);
     expect(resp.body.message).not.toContain(ids[1]);

@@ -82,21 +82,25 @@ export class WebSocketAPI {
       return;
     }
 
-    const clients: Set<WebSocket> = this.priceFeedClients.get(priceInfo.priceFeed.id)!;
+    const clients: Set<WebSocket> = this.priceFeedClients.get(
+      priceInfo.priceFeed.id
+    )!;
     logger.info(
       `Sending ${priceInfo.priceFeed.id} price update to ${
         clients.size
-      } clients: ${Array.from(clients.values()).map((ws, _idx, _arr) => this.wsId.get(ws))}`
+      } clients: ${Array.from(clients.values()).map((ws, _idx, _arr) =>
+        this.wsId.get(ws)
+      )}`
     );
 
-    for (let client of clients.values()) {
+    for (const client of clients.values()) {
       this.promClient?.addWebSocketInteraction("server_update", "ok");
 
-      let verbose = this.priceFeedClientsVerbosity
+      const verbose = this.priceFeedClientsVerbosity
         .get(priceInfo.priceFeed.id)!
         .get(client);
 
-      let priceUpdate: ServerPriceUpdate = verbose
+      const priceUpdate: ServerPriceUpdate = verbose
         ? {
             type: "price_update",
             price_feed: {
@@ -118,7 +122,7 @@ export class WebSocketAPI {
   }
 
   clientClose(ws: WebSocket) {
-    for (let clients of this.priceFeedClients.values()) {
+    for (const clients of this.priceFeedClients.values()) {
       if (clients.has(ws)) {
         clients.delete(ws);
       }
@@ -130,13 +134,13 @@ export class WebSocketAPI {
 
   handleMessage(ws: WebSocket, data: RawData) {
     try {
-      let jsonData = JSON.parse(data.toString());
-      let validationResult = ClientMessageSchema.validate(jsonData);
+      const jsonData = JSON.parse(data.toString());
+      const validationResult = ClientMessageSchema.validate(jsonData);
       if (validationResult.error !== undefined) {
         throw validationResult.error;
       }
 
-      let message = jsonData as ClientMessage;
+      const message = jsonData as ClientMessage;
 
       message.ids = message.ids.map((id) => {
         if (id.startsWith("0x")) {
@@ -146,7 +150,7 @@ export class WebSocketAPI {
       });
 
       const availableIds = this.priceFeedVaaInfo.getPriceIds();
-      let notFoundIds = message.ids.filter((id) => !availableIds.has(id));
+      const notFoundIds = message.ids.filter((id) => !availableIds.has(id));
 
       if (notFoundIds.length > 0) {
         throw new Error(
@@ -154,7 +158,7 @@ export class WebSocketAPI {
         );
       }
 
-      if (message.type == "subscribe") {
+      if (message.type === "subscribe") {
         message.ids.forEach((id) =>
           this.addPriceFeedClient(ws, id, message.verbose === true)
         );
@@ -162,7 +166,7 @@ export class WebSocketAPI {
         message.ids.forEach((id) => this.delPriceFeedClient(ws, id));
       }
     } catch (e: any) {
-      let response: ServerResponse = {
+      const errorResponse: ServerResponse = {
         type: "response",
         status: "error",
         error: e.message,
@@ -173,7 +177,7 @@ export class WebSocketAPI {
       );
       this.promClient?.addWebSocketInteraction("client_message", "err");
 
-      ws.send(JSON.stringify(response));
+      ws.send(JSON.stringify(errorResponse));
       return;
     }
 
@@ -182,7 +186,7 @@ export class WebSocketAPI {
     );
     this.promClient?.addWebSocketInteraction("client_message", "ok");
 
-    let response: ServerResponse = {
+    const response: ServerResponse = {
       type: "response",
       status: "success",
     };

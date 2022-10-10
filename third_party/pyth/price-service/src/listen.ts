@@ -1,12 +1,12 @@
 import {
   ChainId,
   hexToUint8Array,
-  uint8ArrayToHex
+  uint8ArrayToHex,
 } from "@certusone/wormhole-sdk";
 
 import {
   createSpyRPCServiceClient,
-  subscribeSignedVAA
+  subscribeSignedVAA,
 } from "@certusone/wormhole-spydk";
 
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
@@ -14,11 +14,11 @@ import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 import {
   getBatchSummary,
   parseBatchPriceAttestation,
-  priceAttestationToPriceFeed
-} from "@certusone/p2w-sdk";
+  priceAttestationToPriceFeed,
+} from "@pythnetwork/p2w-sdk-js";
 import {
   FilterEntry,
-  SubscribeSignedVAAResponse
+  SubscribeSignedVAAResponse,
 } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
 import { ClientReadableStream } from "@grpc/grpc-js";
 import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";
@@ -75,12 +75,12 @@ export class Listener implements PriceStore {
       return;
     }
 
-    const parsedJsonFilters = eval(filtersRaw);
+    const parsedJsonFilters = JSON.parse(filtersRaw);
 
-    for (let i = 0; i < parsedJsonFilters.length; i++) {
-      let myChainId = parseInt(parsedJsonFilters[i].chain_id) as ChainId;
-      let myEmitterAddress = parsedJsonFilters[i].emitter_address;
-      let myEmitterFilter: FilterEntry = {
+    for (const filter of parsedJsonFilters) {
+      const myChainId = parseInt(filter.chain_id, 10) as ChainId;
+      const myEmitterAddress = filter.emitter_address;
+      const myEmitterFilter: FilterEntry = {
         emitterFilter: {
           chainId: myChainId,
           emitterAddress: myEmitterAddress,
@@ -165,10 +165,10 @@ export class Listener implements PriceStore {
       return;
     }
 
-    let isAnyPriceNew = batchAttestation.priceAttestations.some(
+    const isAnyPriceNew = batchAttestation.priceAttestations.some(
       (priceAttestation) => {
         const key = priceAttestation.priceId;
-        let lastAttestationTime =
+        const lastAttestationTime =
           this.priceFeedVaaMap.get(key)?.attestationTime;
         return (
           lastAttestationTime === undefined ||
@@ -181,10 +181,11 @@ export class Listener implements PriceStore {
       return;
     }
 
-    for (let priceAttestation of batchAttestation.priceAttestations) {
+    for (const priceAttestation of batchAttestation.priceAttestations) {
       const key = priceAttestation.priceId;
 
-      let lastAttestationTime = this.priceFeedVaaMap.get(key)?.attestationTime;
+      const lastAttestationTime =
+        this.priceFeedVaaMap.get(key)?.attestationTime;
 
       if (
         lastAttestationTime === undefined ||
@@ -193,14 +194,14 @@ export class Listener implements PriceStore {
         const priceFeed = priceAttestationToPriceFeed(priceAttestation);
         const priceInfo = {
           seqNum: parsedVAA.sequence,
-          vaaBytes: vaaBytes,
+          vaaBytes,
           attestationTime: priceAttestation.attestationTime,
           priceFeed,
           emitterChainId: parsedVAA.emitter_chain,
         };
         this.priceFeedVaaMap.set(key, priceInfo);
 
-        for (let callback of this.updateCallbacks) {
+        for (const callback of this.updateCallbacks) {
           callback(priceInfo);
         }
       }
@@ -233,7 +234,7 @@ export class Listener implements PriceStore {
   }
 
   isReady(): boolean {
-    let currentTime: TimestampInSec = Math.floor(Date.now() / 1000);
+    const currentTime: TimestampInSec = Math.floor(Date.now() / 1000);
     if (
       this.spyConnectionTime === undefined ||
       currentTime <

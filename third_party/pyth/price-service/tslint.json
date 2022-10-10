@@ -1,0 +1,9 @@
+
+{
+  "extends": ["tslint:recommended", "tslint-config-prettier"],
+  "rules": {
+    "max-classes-per-file": {
+      "severity": "off"
+    }
+  }
+}
