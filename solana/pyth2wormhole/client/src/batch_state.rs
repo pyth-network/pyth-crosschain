@@ -68,7 +68,7 @@ impl<'a> BatchState<'a> {
         }
 
         // Only lookup and compare symbols if the conditions require
-        if self.conditions.needs_onchain_lookup() {
+        if self.conditions.need_onchain_lookup() {
             let mut new_symbol_states: Vec<Option<PriceAccount>> =
                 match c.get_multiple_accounts(&pubkeys).await {
                     Ok(acc_opts) => {
