@@ -88,15 +88,19 @@ module mint_nft::minting {
         let token_id = token::mint_token(&resource_signer, collection_token_minter.token_data_id, 1); // Mint the NFT
         token::direct_transfer(&resource_signer, receiver, token_id, 1); // Transfer the NFT to the caller
 
-        let coins = coin::withdraw<aptos_coin::AptosCoin>(receiver, pyth::get_update_fee()); // Get coins to pay for the update
-        pyth::update_price_feeds(vaa, coins); // Update price feed with the provided VAA
-
-        let price = pyth::get_price(price_identifier::from_byte_vec(APTOS_USD_PRICE_FEED_IDENTIFIER)); // Get recent price (will fail if price is too old)     
+        let price = update_and_fetch_price(receiver, vaa);
         let price_positive = i64::get_magnitude_if_positive(&price::get_price(&price)); // This will fail if the price is negative
         let expo_magnitude = i64::get_magnitude_if_negative(&price::get_expo(&price)); // This will fail if the exponent is positive
 
         let price_in_aptos_coin =  (100 * OCTAS_PER_APTOS * pow(10, expo_magnitude)) / price_positive; // 100 USD in AptosCoin
 
         coin::transfer<aptos_coin::AptosCoin>(receiver, @mint_nft, price_in_aptos_coin); // Pay for the NFT
+    }
+
+    fun update_and_fetch_price(receiver : &signer,  vaa : vector<vector<u8>>) :pyth::price::Price {
+            let coins = coin::withdraw<aptos_coin::AptosCoin>(receiver, pyth::get_update_fee()); // Get coins to pay for the update
+            pyth::update_price_feeds(vaa, coins); // Update price feed with the provided VAA
+            pyth::get_price(price_identifier::from_byte_vec(APTOS_USD_PRICE_FEED_IDENTIFIER)) // Get recent price (will fail if price is too old)   
+
     }
 }
