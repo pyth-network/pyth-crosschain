@@ -19,7 +19,7 @@ const aptosClient = new AptosClient(APTOS_TESTNET_RPC); // Aptos client is used 
 const ETH_USD_TESTNET_PRICE_ID =
   "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6";
 
-// Aptos accounts
+// Aptos accounts : These are testnet addresses https://docs.pyth.network/consume-data/aptos#addresses
 const PYTH_MODULE =
   "0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541";
 const PYTH_TABLE_HANDLE =
