@@ -74,6 +74,10 @@ module pyth::pyth {
     fun parse_data_sources(
         emitter_chain_ids: vector<u64>,
         emitter_addresses: vector<vector<u8>>): vector<DataSource> {
+
+        assert!(vector::length(&emitter_chain_ids) == vector::length(&emitter_addresses),
+            error::data_source_emitter_address_and_chain_ids_different_lengths());
+
         let sources = vector::empty();
         let i = 0;
         while (i < vector::length(&emitter_chain_ids)) {
