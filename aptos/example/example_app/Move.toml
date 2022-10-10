@@ -9,7 +9,7 @@ AptosToken = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "a
 Pyth = { git = "https://github.com/pyth-network/pyth-crosschain.git", subdir = "aptos/contracts", rev = "aptos" }
 
 [addresses]
-# These are testnet addresses
+# These are testnet addresses https://docs.pyth.network/consume-data/aptos#addresses
 aptos_framework = "0x1"
 mint_nft = "_"
 pyth = "0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541"
