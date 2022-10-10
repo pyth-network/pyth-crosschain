@@ -144,6 +144,22 @@ pub struct AttestationConditions {
     pub publish_time_min_delta_secs: Option<u64>,
 }
 
+impl AttestationConditions {
+    /// Used by should_resend() to check if it needs to make the expensive RPC request
+    pub fn need_onchain_lookup(&self) -> bool {
+        // Bug trap for new fields that also need to be included in
+        // the returned expression
+        let AttestationConditions {
+            min_interval_secs: _min_interval_secs,
+            max_batch_jobs: _max_batch_jobs,
+            price_changed_pct,
+            publish_time_min_delta_secs,
+        } = self;
+
+        price_changed_pct.is_some() || publish_time_min_delta_secs.is_some()
+    }
+}
+
 impl Default for AttestationConditions {
     fn default() -> Self {
         Self {
