@@ -68,7 +68,9 @@ module pyth::pyth {
             signer_capability
         );
         event::init(&pyth);
-        coin::register<AptosCoin>(&pyth);
+        if (!coin::is_account_registered<AptosCoin>(signer::address_of(&pyth))) {
+            coin::register<AptosCoin>(&pyth);
+        }
     }
 
     fun parse_data_sources(
