@@ -363,7 +363,7 @@ module pyth::pyth {
 
     /// Get the number of AptosCoin's required to perform the given price updates.
     public fun get_update_fee(update_data: &vector<vector<u8>>): u64 {
-        state::get_update_fee() * vector::length(update_data)
+        state::get_base_update_fee() * vector::length(update_data)
     }
 
 // -----------------------------------------------------------------------------

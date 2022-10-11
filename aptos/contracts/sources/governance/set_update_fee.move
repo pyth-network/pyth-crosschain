@@ -16,7 +16,7 @@ module pyth::set_update_fee {
     public(friend) fun execute(payload: vector<u8>) {
         let SetUpdateFee { mantissa, exponent } = from_byte_vec(payload);
         let fee = apply_exponent(mantissa, exponent);
-        state::set_update_fee(fee);
+        state::set_base_update_fee(fee);
     }
 
     fun from_byte_vec(bytes: vector<u8>): SetUpdateFee {
