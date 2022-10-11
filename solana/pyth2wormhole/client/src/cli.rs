@@ -16,13 +16,6 @@ use clap::{
 )]
 pub struct Cli {
     #[clap(
-        short,
-        long,
-        default_value = "3",
-        help = "Logging level, where 0..=1 RUST_LOG=error and 5.. is RUST_LOG=trace"
-    )]
-    pub log_level: u32,
-    #[clap(
         long,
         help = "Identity JSON file for the entity meant to cover transaction costs",
         default_value = "~/.config/solana/id.json"
@@ -30,12 +23,6 @@ pub struct Cli {
     pub payer: String,
     #[clap(short, long, default_value = "http://localhost:8899")]
     pub rpc_url: String,
-    #[clap(
-        long = "rpc-interval",
-        default_value = "150",
-        help = "Rate-limiting minimum delay between RPC requests in milliseconds"
-    )]
-    pub rpc_interval_ms: u64,
     #[clap(long, default_value = "confirmed")]
     pub commitment: CommitmentConfig,
     #[clap(long)]

@@ -23,7 +23,6 @@ WORKDIR /home/node/ethereum
 # Only invalidate the npm install step if package.json changed
 ADD --chown=node:node ethereum/package.json .
 ADD --chown=node:node ethereum/package-lock.json .
-ADD --chown=node:node ethereum/.env.test .env
 
 # We want to cache node_modules *and* incorporate it into the final image.
 RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
@@ -37,4 +36,4 @@ RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
 RUN rm -rf node_modules && mv node_modules_cache node_modules
 
 ADD --chown=node:node ethereum/ .
-
+ADD --chown=node:node ethereum/.env.test .env

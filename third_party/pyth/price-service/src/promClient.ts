@@ -73,8 +73,8 @@ export class PromClient {
   addResponseTime(path: string, status: number, duration: DurationInMs) {
     this.apiResponseTimeSummary.observe(
       {
-        path: path,
-        status: status,
+        path,
+        status,
       },
       duration
     );
@@ -87,7 +87,7 @@ export class PromClient {
   ) {
     this.apiRequestsPriceFreshnessHistogram.observe(
       {
-        path: path,
+        path,
         price_id: priceId,
       },
       duration
@@ -96,8 +96,8 @@ export class PromClient {
 
   addWebSocketInteraction(type: string, status: "ok" | "err") {
     this.webSocketInteractionCounter.inc({
-      type: type,
-      status: status,
+      type,
+      status,
     });
   }
 }

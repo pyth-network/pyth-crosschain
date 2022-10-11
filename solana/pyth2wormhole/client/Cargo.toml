@@ -29,7 +29,7 @@ solana-sdk = "=1.10.31"
 solana-transaction-status = "=1.10.31"
 # solitaire-client = {path = "../../solitaire/client"}
 solitaire = {git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9"}
-tokio = {version = "1", features = ["sync", "rt", "time"]}
+tokio = {version = "1", features = ["sync", "rt-multi-thread", "time"]}
 futures = "0.3.21"
 
 [dev-dependencies]

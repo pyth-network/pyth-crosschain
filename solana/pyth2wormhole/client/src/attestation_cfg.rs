@@ -36,6 +36,9 @@ pub struct AttestationConfig {
     /// mapping_addr set/unset status.
     #[serde(default = "default_mapping_reload_interval_mins")]
     pub mapping_reload_interval_mins: u64,
+    #[serde(default = "default_min_rpc_interval_ms")]
+    /// Rate-limiting minimum delay between RPC requests in milliseconds"
+    pub min_rpc_interval_ms: u64,
     pub symbol_groups: Vec<SymbolGroup>,
 }
 
@@ -113,6 +116,10 @@ pub const fn default_mapping_reload_interval_mins() -> u64 {
     15
 }
 
+pub const fn default_min_rpc_interval_ms() -> u64 {
+    150
+}
+
 pub const fn default_min_interval_secs() -> u64 {
     60
 }
@@ -146,6 +153,22 @@ pub struct AttestationConditions {
     /// specified amount.
     #[serde(default)]
     pub publish_time_min_delta_secs: Option<u64>,
+}
+
+impl AttestationConditions {
+    /// Used by should_resend() to check if it needs to make the expensive RPC request
+    pub fn need_onchain_lookup(&self) -> bool {
+        // Bug trap for new fields that also need to be included in
+        // the returned expression
+        let AttestationConditions {
+            min_interval_secs: _min_interval_secs,
+            max_batch_jobs: _max_batch_jobs,
+            price_changed_pct,
+            publish_time_min_delta_secs,
+        } = self;
+
+        price_changed_pct.is_some() || publish_time_min_delta_secs.is_some()
+    }
 }
 
 impl Default for AttestationConditions {
@@ -269,6 +292,7 @@ mod tests {
         let cfg = AttestationConfig {
             min_msg_reuse_interval_ms: 1000,
             max_msg_accounts: 100_000,
+            min_rpc_interval_ms: 2123,
             mapping_addr: None,
             mapping_reload_interval_mins: 42,
             symbol_groups: vec![fastbois, slowbois],
@@ -288,6 +312,7 @@ mod tests {
         let empty_config = AttestationConfig {
             min_msg_reuse_interval_ms: 1000,
             max_msg_accounts: 100,
+            min_rpc_interval_ms: 42422,
             mapping_addr: None,
             mapping_reload_interval_mins: 42,
             symbol_groups: vec![],

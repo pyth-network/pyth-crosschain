@@ -14,7 +14,18 @@ PYTH_PROGRAM_SO_PATH = os.environ.get("PYTH_PROGRAM_SO", "../target/oracle.so")
 PYTH_PUBLISHER_KEYPAIR = os.environ.get(
     "PYTH_PUBLISHER_KEYPAIR", f"{PYTH_KEY_STORE}/publish_key_pair.json"
 )
-PYTH_PUBLISHER_INTERVAL = float(os.environ.get("PYTH_PUBLISHER_INTERVAL", "5"))
+# How long to sleep between mock Pyth price updates
+PYTH_PUBLISHER_INTERVAL_SECS = float(os.environ.get("PYTH_PUBLISHER_INTERVAL_SECS", "5"))
+PYTH_TEST_SYMBOL_COUNT = int(os.environ.get("PYTH_TEST_SYMBOL_COUNT", "9"))
+
+# If above 0, adds a new test symbol periodically, waiting at least
+# the given number of seconds in between
+# 
+# NOTE: the new symbols are added in the HTTP endpoint used by the
+# p2w-attest service in Tilt. You may need to wait to see p2w-attest
+# pick up brand new symbols
+PYTH_NEW_SYMBOL_INTERVAL_SECS = int(os.environ.get("PYTH_NEW_SYMBOL_INTERVAL_SECS", "120"))
+
 PYTH_MAPPING_KEYPAIR = os.environ.get(
     "PYTH_MAPPING_KEYPAIR", f"{PYTH_KEY_STORE}/mapping_key_pair.json"
 )

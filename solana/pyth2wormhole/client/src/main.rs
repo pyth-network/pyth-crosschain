@@ -79,7 +79,7 @@ use pyth2wormhole_client::*;
 
 pub const SEQNO_PREFIX: &'static str = "Program log: Sequence: ";
 
-#[tokio::main]
+#[tokio::main(flavor = "multi_thread")]
 async fn main() -> Result<(), ErrBox> {
     let cli = Cli::parse();
     init_logging();
@@ -203,7 +203,6 @@ async fn main() -> Result<(), ErrBox> {
 
             handle_attest(
                 cli.rpc_url,
-                Duration::from_millis(cli.rpc_interval_ms),
                 cli.commitment,
                 payer,
                 p2w_addr,
@@ -243,7 +242,6 @@ async fn main() -> Result<(), ErrBox> {
 /// Send a series of batch attestations for symbols of an attestation config.
 async fn handle_attest(
     rpc_url: String,
-    rpc_interval: Duration,
     commitment: CommitmentConfig,
     payer: Keypair,
     p2w_addr: Pubkey,
@@ -271,7 +269,7 @@ async fn handle_attest(
             timeout: confirmation_timeout,
             commitment: commitment.clone(),
         },
-        rpc_interval,
+        Duration::from_millis(attestation_cfg.min_rpc_interval_ms),
     ));
 
     // The loop below attempts to crank attestations without

@@ -112,8 +112,6 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
     init_result = run_or_die(
         [
             "pyth2wormhole-client",
-            "--log-level",
-            "4",
             "--p2w-addr",
             P2W_SOL_ADDRESS,
             "--rpc-url",
@@ -139,8 +137,6 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
         run_or_die(
             [
                 "pyth2wormhole-client",
-                "--log-level",
-                "4",
                 "--p2w-addr",
                 P2W_SOL_ADDRESS,
                 "--rpc-url",
@@ -189,10 +185,12 @@ if P2W_ATTESTATION_CFG is None:
 ---
 mapping_addr: {mapping_addr}
 mapping_reload_interval_mins: 1 # Very fast for testing purposes
+min_rpc_interval_ms: 0 # RIP RPC
+max_batch_jobs: 1000 # Where we're going there's no oomkiller
 symbol_groups:
   - group_name: fast_interval_only
     conditions:
-      min_interval_secs: 3
+      min_interval_secs: 1
     symbols:
 """
 
@@ -210,6 +208,8 @@ symbol_groups:
       - name: {name}
         price_addr: {price}
         product_addr: {product}"""
+
+    # End of fast_interval_only
 
     cfg_yaml += f"""
   - group_name: longer_interval_sensitive_changes
@@ -242,14 +242,16 @@ symbol_groups:
         f.flush()
 
 
+# Set helpfully chatty logging default, filtering especially annoying
+# modules like async HTTP requests and tokio runtime logs
+os.environ["RUST_LOG"] = os.environ.get("RUST_LOG", "pyth2wormhole_client,solana_client,main,pyth_sdk_solana=trace")
+
 # Send the first attestation in one-shot mode for testing
 first_attest_result = run_or_die(
     [
         "pyth2wormhole-client",
         "--commitment",
         "confirmed",
-        "--log-level",
-        "3",
         "--p2w-addr",
         P2W_SOL_ADDRESS,
         "--rpc-url",
@@ -275,7 +277,6 @@ endpoint_thread.start()
 readiness_thread = threading.Thread(target=readiness, daemon=True)
 readiness_thread.start()
 
-
 # Do not exit this script if a continuous attestation stops for
 # whatever reason (this avoids k8s restart penalty)
 while True:
@@ -285,8 +286,6 @@ while True:
             "pyth2wormhole-client",
             "--commitment",
             "confirmed",
-            "--log-level",
-            "3",
             "--p2w-addr",
             P2W_SOL_ADDRESS,
             "--rpc-url",
