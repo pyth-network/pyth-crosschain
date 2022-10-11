@@ -47,7 +47,6 @@ gcpProject = cfg.get("gcpProject", "local-dev")
 bigTableKeyPath = cfg.get("bigTableKeyPath", "./event_database/devnet_key.json")
 webHost = cfg.get("webHost", "localhost")
 ci = cfg.get("ci", False)
-pyth = cfg.get("pyth", ci)
 
 
 if cfg.get("manual", False):
