@@ -5,6 +5,8 @@ import { PriceFeed } from "@pythnetwork/pyth-common-js";
 import { AptosClient } from "aptos";
 import { AptosPriceServiceConnection } from "@pythnetwork/pyth-aptos-js";
 
+// Please read https://docs.pyth.network/consume-data before building on Pyth
+
 // Rpc endpoints
 const TESTNET_PRICE_SERVICE = "https://xc-testnet.pyth.network";
 const APTOS_TESTNET_RPC = "https://testnet.aptoslabs.com/";
@@ -36,6 +38,8 @@ function App() {
   const [pythOffChainPrice, setPythOffChainPrice] = React.useState<number>(0);
   const [pythOnChainPrice, setPythOnChainPrice] = React.useState<number>(0);
 
+  // Reading directly from the table should never be done by a consumer, as this bypasses our recency checks
+  // We're doing it here to highlight the inner workings of Pyth
   const fetchOnChainPrice = async () => {
     let data = await aptosClient.getTableItem(PYTH_TABLE_HANDLE, {
       key_type: `${PYTH_MODULE}::price_identifier::PriceIdentifier`,
