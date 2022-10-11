@@ -3,9 +3,8 @@ module pyth::pyth {
     use pyth::price_identifier::{Self, PriceIdentifier};
     use pyth::price_info::{Self, PriceInfo};
     use pyth::price_feed::{Self};
-    use aptos_framework::coin::{Self, Coin, BurnCapability, MintCapability};
-    use aptos_framework::aptos_coin::{Self, AptosCoin};
-    use pyth::i64;
+    use aptos_framework::coin::{Self, Coin};
+    use aptos_framework::aptos_coin::{AptosCoin};
     use pyth::price::Price;
     use pyth::price;
     use pyth::data_source::{Self, DataSource};
@@ -117,14 +116,14 @@ module pyth::pyth {
 // -----------------------------------------------------------------------------
 // Update the cached prices
 
-    /// Update the cached price feeds with the data in the given VAAs. This is a 
+    /// Update the cached price feeds with the data in the given VAAs. This is a
     /// convenience wrapper around update_price_feeds(), which allows you to update the price feeds
     /// using an entry function.
-    /// 
+    ///
     /// If possible, it is recommended to use update_price_feeds() instead, which avoids the need
     /// to pass a signer account. update_price_feeds_with_funder() should only be used when
     /// you need to call an entry function.
-    /// 
+    ///
     /// This function will charge an update fee, transferring some AptosCoin's
     /// from the given funder account to the Pyth contract. The amount of coins transferred can be
     /// queried with get_update_fee(). The signer must have sufficient account balance to
@@ -136,11 +135,11 @@ module pyth::pyth {
 
     /// Update the cached price feeds with the data in the given VAAs.
     /// The vaas argument is a vector of VAAs encoded as bytes.
-    /// 
+    ///
     /// The javascript https://github.com/pyth-network/pyth-js/tree/main/pyth-aptos-js package
     /// should be used to fetch these VAAs from the Price Service. More information about this
     /// process can be found at https://docs.pyth.network/consume-data.
-    /// 
+    ///
     /// The given fee must contain a sufficient number of coins to pay the update fee.
     /// The update fee amount can be queried by calling get_update_fee().
     public fun update_price_feeds(vaas: vector<vector<u8>>, fee: Coin<AptosCoin>) {
@@ -189,7 +188,7 @@ module pyth::pyth {
 
     /// A convenience wrapper around update_price_feeds_if_fresh(), allowing you to conditionally
     /// update the price feeds using an entry function.
-    /// 
+    ///
     /// If possible, it is recommended to use update_price_feeds_if_fresh() instead, which avoids the need
     /// to pass a signer account. update_price_feeds_if_fresh_with_funder() should only be used when
     /// you need to call an entry function.
@@ -207,9 +206,9 @@ module pyth::pyth {
     /// prices in the update are fresh. The price_identifiers and publish_times parameters
     /// are used to determine if the update is fresh without doing any serialisation or verification
     /// of the VAAs, potentially saving time and gas. If the update contains no fresh data, this function
-    /// will revert with error::no_fresh_data(). 
-    /// 
-    /// For a given price update i in the batch, that price is considered fresh if the current cached 
+    /// will revert with error::no_fresh_data().
+    ///
+    /// For a given price update i in the batch, that price is considered fresh if the current cached
     /// price for price_identifiers[i] is older than publish_times[i].
     public entry fun update_price_feeds_if_fresh(
         vaas: vector<vector<u8>>,
@@ -256,7 +255,7 @@ module pyth::pyth {
             return true
         };
         let cached_timestamp = price::get_timestamp(&get_price_unsafe(*price_identifier));
-        
+
         update_timestamp > cached_timestamp
     }
 
@@ -271,16 +270,16 @@ module pyth::pyth {
         state::price_info_cached(price_identifier)
     }
 
-    /// Get the latest available price cached for the given price identifier, if that price is 
+    /// Get the latest available price cached for the given price identifier, if that price is
     /// no older than the stale price threshold.
-    /// 
+    ///
     /// Please refer to the documentation at https://docs.pyth.network/consumers/best-practices for
     /// how to how this price safely.
-    /// 
+    ///
     /// Important: it is recommended to call update_price_feeds() to update the cached price
-    /// before calling this function, as get_price() will abort if the cached price is older 
+    /// before calling this function, as get_price() will abort if the cached price is older
     /// than the stale price threshold.
-    /// 
+    ///
     /// Note that the price_identifier does not correspond to a seperate Aptos account:
     /// all price feeds are stored in the single pyth account. The price identifier is an
     /// opaque identifier for a price feed.
@@ -288,7 +287,7 @@ module pyth::pyth {
         get_price_no_older_than(price_identifier, state::get_stale_price_threshold_secs())
     }
 
-    /// Get the latest available price cached for the given price identifier, if that price is 
+    /// Get the latest available price cached for the given price identifier, if that price is
     /// no older than the given age.
     public fun get_price_no_older_than(price_identifier: PriceIdentifier, max_age_secs: u64): Price {
         let price = get_price_unsafe(price_identifier);
@@ -298,11 +297,11 @@ module pyth::pyth {
     }
 
     /// Get the latest available price cached for the given price identifier.
-    /// 
+    ///
     /// WARNING: the returned price can be from arbitrarily far in the past.
     /// This function makes no guarantees that the returned price is recent or
     /// useful for any particular application. Users of this function should check
-    /// the returned timestamp to ensure that the returned price is sufficiently 
+    /// the returned timestamp to ensure that the returned price is sufficiently
     /// recent for their application. The checked get_price_no_older_than()
     /// function should be used in preference to this.
     public fun get_price_unsafe(price_identifier: PriceIdentifier): Price {
@@ -329,11 +328,11 @@ module pyth::pyth {
         assert!(age < max_age_secs, error::stale_price_update());
     }
 
-    /// Get the latest available exponentially moving average price cached for the given 
+    /// Get the latest available exponentially moving average price cached for the given
     /// price identifier, if that price is no older than the stale price threshold.
-    /// 
+    ///
     /// Important: it is recommended to call update_price_feeds() to update the cached EMA price
-    /// before calling this function, as get_ema_price() will abort if the cached EMA price is older 
+    /// before calling this function, as get_ema_price() will abort if the cached EMA price is older
     /// than the stale price threshold.
     public fun get_ema_price(price_identifier: PriceIdentifier): Price {
         get_ema_price_no_older_than(price_identifier, state::get_stale_price_threshold_secs())
@@ -346,14 +345,14 @@ module pyth::pyth {
         check_price_is_fresh(&price, max_age_secs);
 
         price
-    } 
+    }
 
     /// Get the latest available exponentially moving average price cached for the given price identifier.
-    /// 
+    ///
     /// WARNING: the returned price can be from arbitrarily far in the past.
     /// This function makes no guarantees that the returned price is recent or
     /// useful for any particular application. Users of this function should check
-    /// the returned timestamp to ensure that the returned price is sufficiently 
+    /// the returned timestamp to ensure that the returned price is sufficiently
     /// recent for their application. The checked get_ema_price_no_older_than()
     /// function should be used in preference to this.
     public fun get_ema_price_unsafe(price_identifier: PriceIdentifier): Price {
@@ -389,7 +388,7 @@ module pyth::pyth {
             account::create_test_signer_cap(@0x277fa055b6a73c42c0662d5236c65c864ccbf2d4abd21f174a30c8b786eab84b));
         let (_pyth, signer_capability) = account::create_resource_account(&deployer, b"pyth");
         init_test(signer_capability, stale_price_threshold, governance_emitter_chain_id, governance_emitter_address, data_sources, update_fee);
-    
+
         let (burn_capability, mint_capability) = aptos_coin::initialize_for_test(aptos_framework);
         let coins = coin::mint(to_mint, &mint_capability);
         (burn_capability, mint_capability, coins)
@@ -511,7 +510,7 @@ module pyth::pyth {
     #[test(aptos_framework = @aptos_framework)]
     fun test_update_price_feeds_success(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 100);
-    
+
         // Update the price feeds from the VAA
         update_price_feeds(TEST_VAAS, coins);
 
@@ -538,7 +537,7 @@ module pyth::pyth {
         assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
         assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
 
-        // Update the price feeds using the funder 
+        // Update the price feeds using the funder
         update_price_feeds_with_funder(&funder, TEST_VAAS);
 
         // Check that the price feeds are now cached
@@ -570,7 +569,7 @@ module pyth::pyth {
         assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
         assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
 
-        // Update the price feeds using the funder 
+        // Update the price feeds using the funder
         update_price_feeds_with_funder(&funder, TEST_VAAS);
 
         cleanup_test(burn_capability, mint_capability);
@@ -614,7 +613,7 @@ module pyth::pyth {
             assert!(!price_feed_exists(*price_feed::get_price_identifier(price_feed)), 1);
             i = i + 1;
         };
-        
+
         // Submit the updates
         update_cache(updates);
 
@@ -628,7 +627,7 @@ module pyth::pyth {
     #[test(aptos_framework = @aptos_framework)]
     fun test_update_cache_old_update(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 1000, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 0);
-        
+
         // Submit a price update
         let timestamp = 1663680700;
         let price_identifier = price_identifier::from_byte_vec(x"baa284eaf23edf975b371ba2818772f93dbae72836bbdea28b07d40f3cf8b485");
@@ -666,7 +665,7 @@ module pyth::pyth {
         assert!(get_price(price_identifier) == price, 1);
         assert!(get_ema_price(price_identifier) == ema_price, 1);
 
-        // Update the cache with a fresh update 
+        // Update the cache with a fresh update
         let fresh_price = price::new(i64::new(4857, true), 9979, i64::new(243, false), timestamp + 200);
         let fresh_ema_price = price::new(i64::new(74637, false), 9979, i64::new(1433, false), timestamp + 1);
         let fresh_update = price_info::new(
@@ -768,8 +767,8 @@ module pyth::pyth {
     #[expected_failure(abort_code = 65541)]
     fun test_update_price_feeds_if_fresh_invalid_length(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 0);
-        
-        // Update the price feeds 
+
+        // Update the price feeds
         let bytes = vector[vector[0u8, 1u8, 2u8]];
         let price_identifiers = vector[
             x"baa284eaf23edf975b371ba2818772f93dbae72836bbdea28b07d40f3cf8b485",
@@ -787,8 +786,8 @@ module pyth::pyth {
     #[test(aptos_framework = @aptos_framework)]
     fun test_update_price_feeds_if_fresh_fresh_data(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 50);
-        
-        // Update the price feeds 
+
+        // Update the price feeds
         let bytes = TEST_VAAS;
         let price_identifiers = vector[
             x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1",
@@ -824,7 +823,7 @@ module pyth::pyth {
         assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
         assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
 
-        // Update the price feeds using the funder 
+        // Update the price feeds using the funder
         let bytes = TEST_VAAS;
         let price_identifiers = vector[
             x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1",
@@ -856,7 +855,7 @@ module pyth::pyth {
 
         // First populate the cache
         update_cache(get_mock_price_infos());
-        
+
         // Now attempt to update the price feeds with publish_times that are older than those we have cached
         // This should abort with error::no_fresh_data()
         let bytes = TEST_VAAS;
