@@ -17,6 +17,9 @@ module pyth::state {
     friend pyth::set_stale_price_threshold;
     friend pyth::set_data_sources;
 
+    #[test_only]
+    friend pyth::governance_test;
+
     /// The valid data sources an attestation VAA can be emitted from
     struct DataSources has key {
         sources: Set<DataSource>,

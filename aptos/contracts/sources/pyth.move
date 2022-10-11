@@ -3,9 +3,8 @@ module pyth::pyth {
     use pyth::price_identifier::{Self, PriceIdentifier};
     use pyth::price_info::{Self, PriceInfo};
     use pyth::price_feed::{Self};
-    use aptos_framework::coin::{Self, Coin, BurnCapability, MintCapability};
-    use aptos_framework::aptos_coin::{Self, AptosCoin};
-    use pyth::i64;
+    use aptos_framework::coin::{Self, Coin};
+    use aptos_framework::aptos_coin::{AptosCoin};
     use pyth::price::Price;
     use pyth::price;
     use pyth::data_source::{Self, DataSource};
@@ -20,6 +19,9 @@ module pyth::pyth {
     use deployer::deployer;
     use pyth::error;
     use pyth::event;
+
+    #[test_only]
+    friend pyth::pyth_test;
 
 // -----------------------------------------------------------------------------
 // Initialisation functions
@@ -171,7 +173,7 @@ module pyth::pyth {
     }
 
     /// Update the cache with given price updates, if they are newer than the ones currently cached.
-    fun update_cache(updates: vector<PriceInfo>) {
+    public(friend) fun update_cache(updates: vector<PriceInfo>) {
         while (!vector::is_empty(&updates)) {
             let update = vector::pop_back(&mut updates);
             if (is_fresh_update(&update)) {
@@ -365,9 +367,26 @@ module pyth::pyth {
     public fun get_update_fee(update_data: &vector<vector<u8>>): u64 {
         state::get_base_update_fee() * vector::length(update_data)
     }
+}
 
 // -----------------------------------------------------------------------------
 // Tests
+#[test_only]
+module pyth::pyth_test {
+    use pyth::pyth;
+    use pyth::price_identifier::{Self};
+    use pyth::price_info::{Self, PriceInfo};
+    use pyth::price_feed::{Self};
+    use aptos_framework::coin::{Self, Coin, BurnCapability, MintCapability};
+    use aptos_framework::aptos_coin::{Self, AptosCoin};
+    use pyth::i64;
+    use pyth::price;
+    use pyth::data_source::{Self, DataSource};
+    use aptos_framework::timestamp;
+    use std::vector;
+    use wormhole::external_address;
+    use std::account;
+    use std::signer;
 
     #[test_only]
     fun setup_test(
@@ -388,7 +407,7 @@ module pyth::pyth {
         let deployer = account::create_signer_with_capability(&
             account::create_test_signer_cap(@0x277fa055b6a73c42c0662d5236c65c864ccbf2d4abd21f174a30c8b786eab84b));
         let (_pyth, signer_capability) = account::create_resource_account(&deployer, b"pyth");
-        init_test(signer_capability, stale_price_threshold, governance_emitter_chain_id, governance_emitter_address, data_sources, update_fee);
+        pyth::init_test(signer_capability, stale_price_threshold, governance_emitter_chain_id, governance_emitter_address, data_sources, update_fee);
     
         let (burn_capability, mint_capability) = aptos_coin::initialize_for_test(aptos_framework);
         let coins = coin::mint(to_mint, &mint_capability);
@@ -456,12 +475,12 @@ module pyth::pyth {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 50, 0);
 
         // Pass in a single VAA
-        assert!(get_update_fee(&vector[
+        assert!(pyth::get_update_fee(&vector[
             x"fb1543888001083cf2e6ef3afdcf827e89b11efd87c563638df6e1995ada9f93",
         ]) == single_update_fee, 1);
 
         // Pass in multiple VAAs
-        assert!(get_update_fee(&vector[
+        assert!(pyth::get_update_fee(&vector[
             x"4ee17a1a4524118de513fddcf82b77454e51be5d6fc9e29fc72dd6c204c0e4fa",
             x"c72fdf81cfc939d4286c93fbaaae2eec7bae28a5926fa68646b43a279846ccc1",
             x"d9a8123a793529c31200339820a3210059ecace6c044f81ecad62936e47ca049",
@@ -480,7 +499,7 @@ module pyth::pyth {
 
         // Pass in a corrupt VAA, which should fail deseriaizing
         let corrupt_vaa = x"90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
-        update_price_feeds(vector[corrupt_vaa], coins);
+        pyth::update_price_feeds(vector[corrupt_vaa], coins);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -497,7 +516,7 @@ module pyth::pyth {
         ];
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, 50, 100);
 
-        update_price_feeds(TEST_VAAS, coins);
+        pyth::update_price_feeds(TEST_VAAS, coins);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -526,7 +545,7 @@ module pyth::pyth {
             // Coins provided to update < update fee
             20);
 
-        update_price_feeds(TEST_VAAS, coins);
+        pyth::update_price_feeds(TEST_VAAS, coins);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -536,7 +555,7 @@ module pyth::pyth {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 100);
     
         // Update the price feeds from the VAA
-        update_price_feeds(TEST_VAAS, coins);
+        pyth::update_price_feeds(TEST_VAAS, coins);
 
         // Check that the cache has been updated
         let expected = get_mock_price_infos();
@@ -557,21 +576,21 @@ module pyth::pyth {
         coin::register<AptosCoin>(&funder);
         coin::deposit(funder_addr, coins);
 
-        assert!(get_update_fee(&TEST_VAAS) == update_fee, 1);
+        assert!(pyth::get_update_fee(&TEST_VAAS) == update_fee, 1);
         assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
         assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
 
         // Update the price feeds using the funder 
-        update_price_feeds_with_funder(&funder, TEST_VAAS);
+        pyth::update_price_feeds_with_funder(&funder, TEST_VAAS);
 
         // Check that the price feeds are now cached
         check_price_feeds_cached(&get_mock_price_infos());
 
         // Check that the funder's balance has decreased by the update_fee amount
-        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance - get_update_fee(&TEST_VAAS), 1);
+        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance - pyth::get_update_fee(&TEST_VAAS), 1);
 
         // Check that the amount has been transferred to the Pyth contract
-        assert!(coin::balance<AptosCoin>(@pyth) == get_update_fee(&TEST_VAAS), 1);
+        assert!(coin::balance<AptosCoin>(@pyth) == pyth::get_update_fee(&TEST_VAAS), 1);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -589,12 +608,12 @@ module pyth::pyth {
         coin::register<AptosCoin>(&funder);
         coin::deposit(funder_addr, coins);
 
-        assert!(get_update_fee(&TEST_VAAS) == update_fee, 1);
+        assert!(pyth::get_update_fee(&TEST_VAAS) == update_fee, 1);
         assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
         assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
 
         // Update the price feeds using the funder 
-        update_price_feeds_with_funder(&funder, TEST_VAAS);
+        pyth::update_price_feeds_with_funder(&funder, TEST_VAAS);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -609,13 +628,13 @@ module pyth::pyth {
             let price = price_feed::get_price(price_feed);
 
             let price_identifier = *price_feed::get_price_identifier(price_feed);
-            assert!(price_feed_exists(price_identifier), 1);
-            let cached_price = get_price(price_identifier);
+            assert!(pyth::price_feed_exists(price_identifier), 1);
+            let cached_price = pyth::get_price(price_identifier);
 
             assert!(cached_price == price, 1);
 
             let ema_price = price_feed::get_ema_price(price_feed);
-            let cached_ema_price = get_ema_price(price_identifier);
+            let cached_ema_price = pyth::get_ema_price(price_identifier);
 
             assert!(cached_ema_price == ema_price, 1);
 
@@ -634,12 +653,12 @@ module pyth::pyth {
         let i = 0;
         while (i < vector::length(&updates)) {
             let price_feed = price_info::get_price_feed(vector::borrow(&updates, i));
-            assert!(!price_feed_exists(*price_feed::get_price_identifier(price_feed)), 1);
+            assert!(!pyth::price_feed_exists(*price_feed::get_price_identifier(price_feed)), 1);
             i = i + 1;
         };
         
         // Submit the updates
-        update_cache(updates);
+        pyth::update_cache(updates);
 
         // Check that the price feeds are now cached
         check_price_feeds_cached(&updates);
@@ -666,10 +685,10 @@ module pyth::pyth {
                     ema_price,
             )
         );
-        update_cache(vector<PriceInfo>[update]);
+        pyth::update_cache(vector<PriceInfo>[update]);
 
         // Check that we can retrieve the current price
-        assert!(get_price(price_identifier) == price, 1);
+        assert!(pyth::get_price(price_identifier) == price, 1);
 
         // Attempt to update the price with an update older than the current cached one
         let old_price = price::new(i64::new(1243, true), 9802, i64::new(6, false), timestamp - 200);
@@ -683,11 +702,11 @@ module pyth::pyth {
                     old_ema_price,
             )
         );
-        update_cache(vector<PriceInfo>[old_update]);
+        pyth::update_cache(vector<PriceInfo>[old_update]);
 
         // Confirm that the current price and ema price didn't change
-        assert!(get_price(price_identifier) == price, 1);
-        assert!(get_ema_price(price_identifier) == ema_price, 1);
+        assert!(pyth::get_price(price_identifier) == price, 1);
+        assert!(pyth::get_ema_price(price_identifier) == ema_price, 1);
 
         // Update the cache with a fresh update 
         let fresh_price = price::new(i64::new(4857, true), 9979, i64::new(243, false), timestamp + 200);
@@ -701,11 +720,11 @@ module pyth::pyth {
                     fresh_ema_price,
             )
         );
-        update_cache(vector<PriceInfo>[fresh_update]);
+        pyth::update_cache(vector<PriceInfo>[fresh_update]);
 
         // Confirm that the current price was updated
-        assert!(get_price(price_identifier) == fresh_price, 1);
-        assert!(get_ema_price(price_identifier) == fresh_ema_price, 1);
+        assert!(pyth::get_price(price_identifier) == fresh_price, 1);
+        assert!(pyth::get_ema_price(price_identifier) == fresh_ema_price, 1);
 
         cleanup_test(burn_capability, mint_capability);
         coin::destroy_zero(coins);
@@ -730,19 +749,19 @@ module pyth::pyth {
                     price::new(i64::new(1536, true), 869, i64::new(100, false), 1257212500),
             )
         );
-        update_cache(vector<PriceInfo>[update]);
-        assert!(get_price(price_identifier) == price, 1);
+        pyth::update_cache(vector<PriceInfo>[update]);
+        assert!(pyth::get_price(price_identifier) == price, 1);
 
         // Now advance the clock on the target chain, until the age of the cached update exceeds the
         // stale_price_threshold.
         timestamp::update_global_time_for_test_secs(current_timestamp + stale_price_threshold);
 
         // Check that we can access the price if we increase the threshold by 1
-        assert!(get_price_no_older_than(
-            price_identifier, get_stale_price_threshold_secs() + 1) == price, 1);
+        assert!(pyth::get_price_no_older_than(
+            price_identifier, pyth::get_stale_price_threshold_secs() + 1) == price, 1);
 
         // However, retrieving the latest price fails
-        assert!(get_price(price_identifier) == price, 1);
+        assert!(pyth::get_price(price_identifier) == price, 1);
 
         cleanup_test(burn_capability, mint_capability);
         coin::destroy_zero(coins);
@@ -767,21 +786,21 @@ module pyth::pyth {
                     ema_price,
             )
         );
-        update_cache(vector<PriceInfo>[update]);
+        pyth::update_cache(vector<PriceInfo>[update]);
 
         // Check that the EMA price has been updated
-        assert!(get_ema_price(price_identifier) == ema_price, 1);
+        assert!(pyth::get_ema_price(price_identifier) == ema_price, 1);
 
         // Now advance the clock on the target chain, until the age of the cached update exceeds the
         // stale_price_threshold.
         timestamp::update_global_time_for_test_secs(current_timestamp + stale_price_threshold);
 
         // Check that we can access the EMA price if we increase the threshold by 1
-        assert!(get_ema_price_no_older_than(
-            price_identifier, get_stale_price_threshold_secs() + 1) == ema_price, 1);
+        assert!(pyth::get_ema_price_no_older_than(
+            price_identifier, pyth::get_stale_price_threshold_secs() + 1) == ema_price, 1);
 
         // However, retrieving the latest EMA price fails
-        assert!(get_ema_price(price_identifier) == ema_price, 1);
+        assert!(pyth::get_ema_price(price_identifier) == ema_price, 1);
 
         cleanup_test(burn_capability, mint_capability);
         coin::destroy_zero(coins);
@@ -802,7 +821,7 @@ module pyth::pyth {
         let publish_times = vector[
             734639463
         ];
-        update_price_feeds_if_fresh(bytes, price_identifiers, publish_times, coins);
+        pyth::update_price_feeds_if_fresh(bytes, price_identifiers, publish_times, coins);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -822,7 +841,7 @@ module pyth::pyth {
         let publish_times = vector[
             1663680745, 1663680730, 1663680760, 1663680720
         ];
-        update_price_feeds_if_fresh(bytes, price_identifiers, publish_times, coins);
+        pyth::update_price_feeds_if_fresh(bytes, price_identifiers, publish_times, coins);
 
         // Check that the cache has been updated
         let expected = get_mock_price_infos();
@@ -843,7 +862,7 @@ module pyth::pyth {
         coin::register<AptosCoin>(&funder);
         coin::deposit(funder_addr, coins);
 
-        assert!(get_update_fee(&TEST_VAAS) == update_fee, 1);
+        assert!(pyth::get_update_fee(&TEST_VAAS) == update_fee, 1);
         assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
         assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
 
@@ -858,16 +877,16 @@ module pyth::pyth {
         let publish_times = vector[
             1663680790, 1663680730, 1663680760, 1663680720
         ];
-        update_price_feeds_if_fresh_with_funder(&funder, bytes, price_identifiers, publish_times);
+        pyth::update_price_feeds_if_fresh_with_funder(&funder, bytes, price_identifiers, publish_times);
 
         // Check that the price feeds are now cached
         check_price_feeds_cached(&get_mock_price_infos());
 
         // Check that the funder's balance has decreased by the update_fee amount
-        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance - get_update_fee(&TEST_VAAS), 1);
+        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance - pyth::get_update_fee(&TEST_VAAS), 1);
 
         // Check that the amount has been transferred to the Pyth contract
-        assert!(coin::balance<AptosCoin>(@pyth) == get_update_fee(&TEST_VAAS), 1);
+        assert!(coin::balance<AptosCoin>(@pyth) == pyth::get_update_fee(&TEST_VAAS), 1);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -878,7 +897,7 @@ module pyth::pyth {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 50);
 
         // First populate the cache
-        update_cache(get_mock_price_infos());
+        pyth::update_cache(get_mock_price_infos());
         
         // Now attempt to update the price feeds with publish_times that are older than those we have cached
         // This should abort with error::no_fresh_data()
@@ -892,7 +911,7 @@ module pyth::pyth {
         let publish_times = vector[
             67, 35, 26, 64
         ];
-        update_price_feeds_if_fresh(bytes, price_identifiers, publish_times, coins);
+        pyth::update_price_feeds_if_fresh(bytes, price_identifiers, publish_times, coins);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -910,12 +929,12 @@ module pyth::pyth {
         coin::register<AptosCoin>(&funder);
         coin::deposit(funder_addr, coins);
 
-        assert!(get_update_fee(&TEST_VAAS) == update_fee, 1);
+        assert!(pyth::get_update_fee(&TEST_VAAS) == update_fee, 1);
         assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
         assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
 
         // First populate the cache
-        update_cache(get_mock_price_infos());
+        pyth::update_cache(get_mock_price_infos());
 
         // Now attempt to update the price feeds with publish_times that are older than those we have cached
         // This should abort with error::no_fresh_data()
@@ -929,7 +948,7 @@ module pyth::pyth {
         let publish_times = vector[
             100, 76, 29, 64
         ];
-        update_price_feeds_if_fresh_with_funder(&funder, bytes, price_identifiers, publish_times);
+        pyth::update_price_feeds_if_fresh_with_funder(&funder, bytes, price_identifiers, publish_times);
 
         cleanup_test(burn_capability, mint_capability);
     }
