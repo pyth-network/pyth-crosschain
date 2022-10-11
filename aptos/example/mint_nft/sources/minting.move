@@ -11,10 +11,9 @@ module mint_nft::minting {
     use pyth::pyth;
     use pyth::price_identifier;
     use pyth::i64;
-    use pyth::price;
+    use pyth::price::{Self,Price};
 
     use aptos_std::math64::pow;
-
     use aptos_token::token::{Self, TokenDataId};
 
     const APTOS_USD_PRICE_FEED_IDENTIFIER : vector<u8> = x"ca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6"; // This is actually the ETH/USD while APT is not listed
@@ -97,7 +96,8 @@ module mint_nft::minting {
         coin::transfer<aptos_coin::AptosCoin>(receiver, @mint_nft, price_in_aptos_coin); // Pay for the NFT
     }
 
-    fun update_and_fetch_price(receiver : &signer,  vaa : vector<vector<u8>>) :pyth::price::Price {
+    /// Please read https://docs.pyth.network/consume-data/best-practices before using a `Price` in your application
+    fun update_and_fetch_price(receiver : &signer,  vaa : vector<vector<u8>>) : Price {
             let coins = coin::withdraw<aptos_coin::AptosCoin>(receiver, pyth::get_update_fee()); // Get coins to pay for the update
             pyth::update_price_feeds(vaa, coins); // Update price feed with the provided VAA
             pyth::get_price(price_identifier::from_byte_vec(APTOS_USD_PRICE_FEED_IDENTIFIER)) // Get recent price (will fail if price is too old)   
