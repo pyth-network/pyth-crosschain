@@ -320,7 +320,7 @@ module pyth::governance {
     fun test_execute_governance_instruction_set_update_fee() {
         let initial_update_fee = 325;
         setup_test(100, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", initial_update_fee);
-        assert!(state::get_update_fee() == initial_update_fee, 1);
+        assert!(state::get_base_update_fee() == initial_update_fee, 1);
 
         // A VAA with:
         // - Emitter chain ID 50
@@ -339,7 +339,7 @@ module pyth::governance {
         assert!(state::get_last_executed_governance_sequence() == 1, 1);
 
         let expected = 17000;
-        assert!(state::get_update_fee() == expected, 1);
+        assert!(state::get_base_update_fee() == expected, 1);
     }
 
     #[test]

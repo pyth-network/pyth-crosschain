@@ -27,8 +27,8 @@ module pyth::state {
         threshold_secs: u64,
     }
 
-    /// The fee charged per batch update
-    struct UpdateFee has key {
+    /// The update fee charged per VAA
+    struct BaseUpdateFee has key {
         fee: u64,
     }
 
@@ -72,7 +72,7 @@ module pyth::state {
             move_to(pyth, StalePriceThreshold{
                 threshold_secs: stale_price_threshold,
             });
-            move_to(pyth, UpdateFee{
+            move_to(pyth, BaseUpdateFee{
                 fee: update_fee,
             });
             let sources = set::new<DataSource>();
@@ -101,8 +101,8 @@ module pyth::state {
         borrow_global<StalePriceThreshold>(@pyth).threshold_secs
     }
 
-    public fun get_update_fee(): u64 acquires UpdateFee {
-        borrow_global<UpdateFee>(@pyth).fee
+    public fun get_base_update_fee(): u64 acquires BaseUpdateFee {
+        borrow_global<BaseUpdateFee>(@pyth).fee
     }
 
     public fun is_valid_data_source(data_source: DataSource): bool acquires DataSources {
@@ -173,8 +173,8 @@ module pyth::state {
         valid_governance_data_source.source = source;
     }
 
-    public(friend) fun set_update_fee(fee: u64) acquires UpdateFee {
-        let update_fee = borrow_global_mut<UpdateFee>(@pyth);
+    public(friend) fun set_base_update_fee(fee: u64) acquires BaseUpdateFee {
+        let update_fee = borrow_global_mut<BaseUpdateFee>(@pyth);
         update_fee.fee = fee
     }
 
