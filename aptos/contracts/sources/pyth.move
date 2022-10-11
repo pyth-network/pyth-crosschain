@@ -126,11 +126,11 @@ module pyth::pyth {
     /// you need to call an entry function.
     /// 
     /// This function will charge an update fee, transferring some AptosCoin's
-    /// from the given funder account to the Pyth contract. The amount of coins transferred can be
-    /// queried with get_update_fee(). The signer must have sufficient account balance to
-    /// pay this fee, otherwise the transaction will abort.
+    /// from the given funder account to the Pyth contract. The amount of coins that will be transferred
+    /// to perform this update can be queried with get_update_fee(&vaas). The signer must have sufficient 
+    /// account balance to pay this fee, otherwise the transaction will abort.
     public entry fun update_price_feeds_with_funder(account: &signer, vaas: vector<vector<u8>>) {
-        let coins = coin::withdraw<AptosCoin>(account, get_update_fee());
+        let coins = coin::withdraw<AptosCoin>(account, get_update_fee(&vaas));
         update_price_feeds(vaas, coins);
     }
 
@@ -141,17 +141,17 @@ module pyth::pyth {
     /// should be used to fetch these VAAs from the Price Service. More information about this
     /// process can be found at https://docs.pyth.network/consume-data.
     /// 
-    /// The given fee must contain a sufficient number of coins to pay the update fee.
-    /// The update fee amount can be queried by calling get_update_fee().
+    /// The given fee must contain a sufficient number of coins to pay the update fee for the given vaas.
+    /// The update fee amount can be queried by calling get_update_fee(&vaas).
     public fun update_price_feeds(vaas: vector<vector<u8>>, fee: Coin<AptosCoin>) {
+        // Charge the message update fee
+        assert!(get_update_fee(&vaas) <= coin::value(&fee), error::insufficient_fee());
+        coin::deposit(@pyth, fee);
+
         // Update the price feed from each VAA
         while (!vector::is_empty(&vaas)) {
             update_price_feed_from_single_vaa(vector::pop_back(&mut vaas));
         };
-
-        // Charge the message update fee
-        assert!(get_update_fee() <= coin::value(&fee), error::insufficient_fee());
-        coin::deposit(@pyth, fee);
     }
 
     fun update_price_feed_from_single_vaa(vaa: vector<u8>) {
@@ -198,7 +198,7 @@ module pyth::pyth {
         vaas: vector<vector<u8>>,
         price_identifiers: vector<vector<u8>>,
         publish_times: vector<u64>) {
-        let coins = coin::withdraw<AptosCoin>(account, get_update_fee());
+        let coins = coin::withdraw<AptosCoin>(account, get_update_fee(&vaas));
         update_price_feeds_if_fresh(vaas, price_identifiers, publish_times, coins);
     }
 
@@ -361,9 +361,9 @@ module pyth::pyth {
             price_info::get_price_feed(&state::get_latest_price_info(price_identifier)))
     }
 
-    /// Get the number of AptosCoin's required to perform one batch update
-    public fun get_update_fee(): u64 {
-        state::get_update_fee()
+    /// Get the number of AptosCoin's required to perform the given price updates.
+    public fun get_update_fee(update_data: &vector<vector<u8>>): u64 {
+        state::get_update_fee() * vector::length(update_data)
     }
 
 // -----------------------------------------------------------------------------
@@ -451,6 +451,29 @@ module pyth::pyth {
     const TEST_VAAS: vector<vector<u8>> = vector[x"0100000000010036eb563b80a24f4253bee6150eb8924e4bdf6e4fa1dfc759a6664d2e865b4b134651a7b021b7f1ce3bd078070b688b6f2e37ce2de0d9b48e6a78684561e49d5201527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000001005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001"];
 
     #[test(aptos_framework = @aptos_framework)]
+    fun test_get_update_fee(aptos_framework: &signer) {
+        let single_update_fee = 50;
+        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 50, 0);
+
+        // Pass in a single VAA
+        assert!(get_update_fee(&vector[
+            x"fb1543888001083cf2e6ef3afdcf827e89b11efd87c563638df6e1995ada9f93",
+        ]) == single_update_fee, 1);
+
+        // Pass in multiple VAAs
+        assert!(get_update_fee(&vector[
+            x"4ee17a1a4524118de513fddcf82b77454e51be5d6fc9e29fc72dd6c204c0e4fa",
+            x"c72fdf81cfc939d4286c93fbaaae2eec7bae28a5926fa68646b43a279846ccc1",
+            x"d9a8123a793529c31200339820a3210059ecace6c044f81ecad62936e47ca049",
+            x"84e4f21b3e65cef47fda25d15b4eddda1edf720a1d062ccbf441d6396465fbe6",
+            x"9e73f9041476a93701a0b9c7501422cc2aa55d16100bec628cf53e0281b6f72f"
+        ]) == 250, 1);
+
+        coin::destroy_zero(coins);
+        cleanup_test(burn_capability, mint_capability);
+    }
+
+    #[test(aptos_framework = @aptos_framework)]
     #[expected_failure(abort_code = 6)]
     fun test_update_price_feeds_corrupt_vaa(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 50, 100);
@@ -534,7 +557,7 @@ module pyth::pyth {
         coin::register<AptosCoin>(&funder);
         coin::deposit(funder_addr, coins);
 
-        assert!(get_update_fee() == update_fee, 1);
+        assert!(get_update_fee(&TEST_VAAS) == update_fee, 1);
         assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
         assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
 
@@ -545,10 +568,10 @@ module pyth::pyth {
         check_price_feeds_cached(&get_mock_price_infos());
 
         // Check that the funder's balance has decreased by the update_fee amount
-        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance - get_update_fee(), 1);
+        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance - get_update_fee(&TEST_VAAS), 1);
 
         // Check that the amount has been transferred to the Pyth contract
-        assert!(coin::balance<AptosCoin>(@pyth) == get_update_fee(), 1);
+        assert!(coin::balance<AptosCoin>(@pyth) == get_update_fee(&TEST_VAAS), 1);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -566,7 +589,7 @@ module pyth::pyth {
         coin::register<AptosCoin>(&funder);
         coin::deposit(funder_addr, coins);
 
-        assert!(get_update_fee() == update_fee, 1);
+        assert!(get_update_fee(&TEST_VAAS) == update_fee, 1);
         assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
         assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
 
@@ -820,7 +843,7 @@ module pyth::pyth {
         coin::register<AptosCoin>(&funder);
         coin::deposit(funder_addr, coins);
 
-        assert!(get_update_fee() == update_fee, 1);
+        assert!(get_update_fee(&TEST_VAAS) == update_fee, 1);
         assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
         assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
 
@@ -841,10 +864,10 @@ module pyth::pyth {
         check_price_feeds_cached(&get_mock_price_infos());
 
         // Check that the funder's balance has decreased by the update_fee amount
-        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance - get_update_fee(), 1);
+        assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance - get_update_fee(&TEST_VAAS), 1);
 
         // Check that the amount has been transferred to the Pyth contract
-        assert!(coin::balance<AptosCoin>(@pyth) == get_update_fee(), 1);
+        assert!(coin::balance<AptosCoin>(@pyth) == get_update_fee(&TEST_VAAS), 1);
 
         cleanup_test(burn_capability, mint_capability);
     }
@@ -887,7 +910,7 @@ module pyth::pyth {
         coin::register<AptosCoin>(&funder);
         coin::deposit(funder_addr, coins);
 
-        assert!(get_update_fee() == update_fee, 1);
+        assert!(get_update_fee(&TEST_VAAS) == update_fee, 1);
         assert!(coin::balance<AptosCoin>(signer::address_of(&funder)) == initial_balance, 1);
         assert!(coin::balance<AptosCoin>(@pyth) == 0, 1);
 

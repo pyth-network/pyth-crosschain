@@ -27,7 +27,7 @@ module pyth::state {
         threshold_secs: u64,
     }
 
-    /// The fee charged per batch update
+    /// The fee charged per batch update (VAA)
     struct UpdateFee has key {
         fee: u64,
     }
