@@ -7,23 +7,19 @@ import { AptosPriceServiceConnection } from "@pythnetwork/pyth-aptos-js";
 
 // Please read https://docs.pyth.network/consume-data before building on Pyth
 
-// Rpc endpoints
+// Rpc endpoint
 const TESTNET_PRICE_SERVICE = "https://xc-testnet.pyth.network";
-const APTOS_TESTNET_RPC = "https://testnet.aptoslabs.com/";
 
-// Connections
+// Connection
 const testnetConnection = new AptosPriceServiceConnection(
   TESTNET_PRICE_SERVICE
 ); // Price service client used to retrieve the offchain VAAs to update the onchain price
-const aptosClient = new AptosClient(APTOS_TESTNET_RPC); // Aptos client is used to retrieve onchain info. WARNING: Reading prices directly from aptos blockchain should never be done by a customer, as the price might be stale.
 
 // Price id : this is not an aptos account but instead an opaque identifier for each price https://pyth.network/developers/price-feed-ids/#pyth-cross-chain-testnet
 const ETH_USD_TESTNET_PRICE_ID =
   "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6";
 
-// Aptos accounts : These are testnet addresses https://docs.pyth.network/consume-data/aptos#addresses
-const PYTH_MODULE =
-  "0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541";
+// Aptos modules : These are testnet addresses https://docs.pyth.network/consume-data/aptos#addresses
 const MINT_NFT_MODULE = "_";
 
 /// React component that shows the offchain price and confidence interval
@@ -54,12 +50,7 @@ function PriceText(props: { price: Price | undefined }) {
       </div>
     );
   } else {
-    return (
-      <span style={{ color: "red" }}>
-        {" "}
-        Failed to fetch price or price outdated{" "}
-      </span>
-    );
+    return <span style={{ color: "red" }}> Failed to fetch price </span>;
   }
 }
 
@@ -74,28 +65,12 @@ function App() {
   const [pythOffChainPrice, setPythOffChainPrice] = React.useState<
     Price | undefined
   >(undefined);
-  const [pythRecencyThreshold, setRecencyThreshold] = React.useState<number>(0);
-
-  const getRecencyThreshold = async () => {
-    let data = await aptosClient.getAccountResource(
-      PYTH_MODULE,
-      `${PYTH_MODULE}::state::StalePriceThreshold`
-    );
-    setRecencyThreshold((data.data as any).threshold_secs);
-  };
-
-  // Fetch onchain recency threshold when you land on the website. When an onchain module calls `pyth::get_price` the pyth module will abort if the price is older than `pythRecencyThreshold` seconds.
-  // We want the frontend to detect whether the VAAs that are provided by the price service will be deemed invalid by the onchain modules, so we will use `pythRecencyThreshold` to validate VAAs and
-  // will make sure to display only prices that come from VAAs that the onchain functions will accept.
-  React.useEffect(() => {
-    getRecencyThreshold();
-  }, []);
 
   // Subscribe to offchain prices. These are the prices that a typical frontend will want to show.
   testnetConnection.subscribePriceFeedUpdates(
     [ETH_USD_TESTNET_PRICE_ID],
     (priceFeed: PriceFeed) => {
-      const price = priceFeed.getPriceNoOlderThan(pythRecencyThreshold); // This method validates that the current VAA from the subscription will be accepted by onchain modules (because it is recent enough)
+      const price = priceFeed.getPriceUnchecked(); // Fine to use unchecked (not checking for staleness) because this must be a recent price given that it comes from a websocket subscription.
       setPythOffChainPrice(price);
     }
   );
