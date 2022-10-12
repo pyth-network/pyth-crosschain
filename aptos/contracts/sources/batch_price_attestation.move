@@ -1,16 +1,20 @@
 module pyth::batch_price_attestation {
     use pyth::price_feed::{Self};
-    use pyth::price;
     use pyth::error;
-    use pyth::i64;
     use pyth::price_info::{Self, PriceInfo};
     use pyth::price_identifier::{Self};
     use pyth::price_status;
     use pyth::deserialize::{Self};
-    use aptos_framework::account;
     use aptos_framework::timestamp;
     use wormhole::cursor::{Self, Cursor};
     use std::vector::{Self};
+
+    #[test_only]
+    use pyth::price;
+    #[test_only]
+    use pyth::i64;
+    #[test_only]
+    use aptos_framework::account;
 
     const MAGIC: u64 = 0x50325748; // "P2WH" (Pyth2Wormhole) raw ASCII bytes
 
