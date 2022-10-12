@@ -26,6 +26,7 @@ const PYTH_MODULE =
   "0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541";
 const MINT_NFT_MODULE = "_";
 
+/// React component that shows the offchain price and confidence interval
 function PriceText(props: { price: Price | undefined }) {
   let price = props.price;
   if (price) {
@@ -83,7 +84,9 @@ function App() {
     setRecencyThreshold((data.data as any).threshold_secs);
   };
 
-  // Fetch onchain recency threshold when you land on the website. When using `pyth::get_price` the pyth module will abort if the price is older than `pythRecencyThreshold` seconds
+  // Fetch onchain recency threshold when you land on the website. When an onchain module calls `pyth::get_price` the pyth module will abort if the price is older than `pythRecencyThreshold` seconds.
+  // We want the frontend to detect whether the VAAs that are provided by the price service will be deemed invalid by the onchain modules, so we will use `pythRecencyThreshold` to validate VAAs and
+  // will make sure to display only prices that come from VAAs that the onchain functions will accept.
   React.useEffect(() => {
     getRecencyThreshold();
   }, []);
@@ -92,7 +95,7 @@ function App() {
   testnetConnection.subscribePriceFeedUpdates(
     [ETH_USD_TESTNET_PRICE_ID],
     (priceFeed: PriceFeed) => {
-      const price = priceFeed.getPriceNoOlderThan(pythRecencyThreshold); //This will return undefined if the offchain price is too old.
+      const price = priceFeed.getPriceNoOlderThan(pythRecencyThreshold); // This method validates that the current VAA from the subscription will be accepted by onchain modules (because it is recent enough)
       setPythOffChainPrice(price);
     }
   );
@@ -147,7 +150,7 @@ async function sendMintTransaction() {
   const mintTransaction = {
     type: "entry_function_payload",
     function: MINT_NFT_MODULE + `::minting::mint_nft`,
-    arguments: [priceFeedUpdateData], // Minting requires updating the price first, so we are passing the VAA containing the verifiable price as an argument. The mint_nft module will call pyth::pyth::update_price_feeds to update the price before paying the right amount for the mint.
+    arguments: [priceFeedUpdateData], // Minting requires updating the price first, so we are passing the VAA containing the verifiable price as an argument. The `mint_nft` module use the VAA to update the Pyth price before the caller pays for the mint.
     type_arguments: [],
   };
   await window.aptos.signAndSubmitTransaction(mintTransaction);

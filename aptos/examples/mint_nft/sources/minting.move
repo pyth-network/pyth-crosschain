@@ -18,6 +18,7 @@ module mint_nft::minting {
 
     // WARNING This is actually the ETH/USD while APT is not listed
     // For the entire list of price_ids head to https://pyth.network/developers/price-feed-ids/#pyth-cross-chain-testnet
+    // TODO : Update to the real APT/USD when it's out
     const APTOS_USD_PRICE_FEED_IDENTIFIER : vector<u8> = x"ca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6"; 
 
     // This event stores the receiver of the NFT and the TokenDataId of the NFT
