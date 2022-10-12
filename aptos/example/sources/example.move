@@ -13,7 +13,7 @@ module example::example {
     public fun get_btc_usd_price(user: &signer, pyth_update_data: vector<vector<u8>>): Price {
 
         // First update the Pyth price feeds
-        let coins = coin::withdraw(user, pyth::get_update_fee());
+        let coins = coin::withdraw(user, pyth::get_update_fee(&pyth_update_data));
         pyth::update_price_feeds(pyth_update_data, coins);
 
         // Price Feed Identifier of BTC/USD in Testnet
