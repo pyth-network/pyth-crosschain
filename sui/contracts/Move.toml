@@ -1,0 +1,11 @@
+[package]
+name = "pyth"
+version = "0.1.0"
+
+[dependencies]
+# TODO: pin dependencies
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "main" }
+
+[addresses]
+# TODO: correct these
+pyth = "0x0"
