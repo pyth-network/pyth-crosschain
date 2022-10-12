@@ -1,4 +1,9 @@
-require('dotenv').config({ path: "../.env" });
+const dotenv = require("dotenv")
+dotenv.config({ path: "../../.env" });
+
+if (process.env.CLUSTER !== undefined) {
+  dotenv.config({ path: `../../.env.cluster.${process.env.CLUSTER}`});
+}
 
 const governance = require("@pythnetwork/xc-governance-sdk");
 const createLocalnetGovernanceVaa = require("../../scripts/createLocalnetGovernanceVaa");
