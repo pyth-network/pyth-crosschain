@@ -288,9 +288,8 @@ module pyth::pyth {
     /// 
     /// Important: Pyth uses an on-demand update model, where consumers need to update the 
     /// cached prices before using them. Please read more about this at https://docs.pyth.network/consume-data/on-demand.
-    /// It is therefore recommended to call update_price_feeds() to update the cached price
-    /// before calling get_price(), as get_price() will abort if the cached price is older 
-    /// than the stale price threshold.
+    /// get_price() is likely to abort unless you call update_price_feeds() to update the cached price
+    /// beforehand, as the cached prices may be older than the stale price threshold.
     /// 
     /// Note that the price_identifier does not correspond to a seperate Aptos account:
     /// all price feeds are stored in the single pyth account. The price identifier is an
@@ -345,9 +344,8 @@ module pyth::pyth {
     /// 
     /// Important: Pyth uses an on-demand update model, where consumers need to update the 
     /// cached prices before using them. Please read more about this at https://docs.pyth.network/consume-data/on-demand.
-    /// It is therefore recommended to call update_price_feeds() to update the cached price
-    /// before calling get_ema_price(), as get_ema_price() will abort if the cached price is older 
-    /// than the stale price threshold.
+    /// get_ema_price() is likely to abort unless you call update_price_feeds() to update the cached price
+    /// beforehand, as the cached prices may be older than the stale price threshold.
     public fun get_ema_price(price_identifier: PriceIdentifier): Price {
         get_ema_price_no_older_than(price_identifier, state::get_stale_price_threshold_secs())
     }
