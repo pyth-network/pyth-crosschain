@@ -541,7 +541,7 @@ async function executeMultisigTx(
   );
   const { vaaBytes } = await response.json();
   console.log(`VAA (Base64): ${vaaBytes}`);
-  console.log(`VAA (Hex): ${Buffer.from(vaaBytes).toString("hex")}`);
+  console.log(`VAA (Hex): ${Buffer.from(vaaBytes, "base64").toString("hex")}`);
   const parsedVaa = await parse(vaaBytes);
   console.log(`Emitter chain: ${parsedVaa.emitter_chain}`);
   console.log(`Nonce: ${parsedVaa.nonce}`);

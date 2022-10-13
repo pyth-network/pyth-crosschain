@@ -2,8 +2,11 @@ module pyth::deserialize {
     use wormhole::deserialize;
     use wormhole::u16;
     use wormhole::u32;
-    use wormhole::cursor::{Self, Cursor};
+    use wormhole::cursor::{Cursor};
     use pyth::i64::{Self, I64};
+
+    #[test_only]
+    use wormhole::cursor::{Self};
 
     public fun deserialize_vector(cur: &mut Cursor<u8>, n: u64): vector<u8> {
         deserialize::deserialize_vector(cur, n)
