@@ -131,6 +131,8 @@ module pyth::pyth {
     /// from the given funder account to the Pyth contract. The amount of coins that will be transferred
     /// to perform this update can be queried with get_update_fee(&vaas). The signer must have sufficient 
     /// account balance to pay this fee, otherwise the transaction will abort.
+    /// 
+    /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public entry fun update_price_feeds_with_funder(account: &signer, vaas: vector<vector<u8>>) {
         let coins = coin::withdraw<AptosCoin>(account, get_update_fee(&vaas));
         update_price_feeds(vaas, coins);
@@ -145,6 +147,8 @@ module pyth::pyth {
     /// 
     /// The given fee must contain a sufficient number of coins to pay the update fee for the given vaas.
     /// The update fee amount can be queried by calling get_update_fee(&vaas).
+    /// 
+    /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public fun update_price_feeds(vaas: vector<vector<u8>>, fee: Coin<AptosCoin>) {
         // Charge the message update fee
         assert!(get_update_fee(&vaas) <= coin::value(&fee), error::insufficient_fee());
@@ -364,6 +368,8 @@ module pyth::pyth {
     }
 
     /// Get the number of AptosCoin's required to perform the given price updates.
+    /// 
+    /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public fun get_update_fee(update_data: &vector<vector<u8>>): u64 {
         state::get_base_update_fee() * vector::length(update_data)
     }
