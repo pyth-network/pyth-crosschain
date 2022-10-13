@@ -8,11 +8,16 @@ This is the deployment process:
 # The Secret Recovery Phrase for the wallet the contract will be deployed from.
 export MNEMONIC=...
 
-# Perform the migration
+# Deploy the changes
 # You might need to repeat this script because of busy RPCs. Repeating would not cause any problem even
 # if the changes are already made. Also, sometimes the gases are not adjusted. Please update them with
 # the network explorer gas tracker. Tips in Troubleshooting section below can help in case of any error.
 ./deploy.sh <network_a> <network_b> <...>
+# Example: Deploying to some testnet networks
+# ./deploy.sh bnb_testnet fantom_testnet mumbai
+#
+# Example: Deploying to some mainnet networks
+# ./deploy.sh ethereum bnb avalanche
 
 # Perform this in first time mainnet deployments with Wormhole Receiver. (Or when guardian sets are upgraded)
 npm run receiver-submit-guardian-sets -- --network $MIGRATIONS_NETWORK

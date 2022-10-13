@@ -1,4 +1,14 @@
 #!/bin/bash
+#
+# This script deploys changes to given networks. Usage:
+# $ ./deploy.sh <network_a> <network_a> <...> 
+# Network names are defined in `truffle-config.js`.
+#
+# Example: Deploying to some testnet networks
+# $ ./deploy.sh bnb_testnet fantom_testnet mumbai
+#
+# Example: Deploying to some mainnet networks
+# $ ./deploy.sh ethereum bnb avalanche
 set -euo pipefail
 
 echo "=========== Compiling ==========="
