@@ -1,9 +1,5 @@
-const dotenv = require("dotenv")
-dotenv.config({ path: "../../.env" });
-
-if (process.env.CLUSTER !== undefined) {
-  dotenv.config({ path: `../../.env.cluster.${process.env.CLUSTER}`});
-}
+const loadEnv = require("../../scripts/loadEnv");
+loadEnv("../../");
 
 const setFeeVaa = process.env.MIGRATION_12_SET_FEE_VAA;
 console.log("Set fee vaa: ", setFeeVaa);

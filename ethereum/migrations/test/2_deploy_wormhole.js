@@ -1,9 +1,5 @@
-const dotenv = require("dotenv")
-dotenv.config({ path: "../../.env" });
-
-if (process.env.CLUSTER !== undefined) {
-  dotenv.config({ path: `../../.env.cluster.${process.env.CLUSTER}`});
-}
+const loadEnv = require("../../scripts/loadEnv");
+loadEnv("../../");
 
 const Setup = artifacts.require("Setup");
 const Implementation = artifacts.require("Implementation");

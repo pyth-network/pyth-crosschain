@@ -1,5 +1,5 @@
-const dotenv = require("dotenv")
-dotenv.config({ path: "../../.env" });
+const loadEnv = require("../../scripts/loadEnv");
+loadEnv("../../");
 
 if (process.env.CLUSTER !== undefined) {
   dotenv.config({ path: `../../.env.cluster.${process.env.CLUSTER}`});
