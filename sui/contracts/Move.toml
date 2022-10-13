@@ -4,7 +4,8 @@ version = "0.1.0"
 
 [dependencies]
 # TODO: pin dependencies
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "main" }
+# pin to 
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "61d920a" }
 
 [addresses]
 # TODO: correct these
