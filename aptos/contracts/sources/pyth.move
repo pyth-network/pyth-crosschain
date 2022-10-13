@@ -118,6 +118,9 @@ module pyth::pyth {
 
 // -----------------------------------------------------------------------------
 // Update the cached prices
+//
+// Pyth uses an uses an on-demand update model, where consumers need to update the 
+/// cached prices before using them. Please read more about this at https://docs.pyth.network/consume-data/on-demand.
 
     /// Update the cached price feeds with the data in the given VAAs. This is a 
     /// convenience wrapper around update_price_feeds(), which allows you to update the price feeds
@@ -283,8 +286,10 @@ module pyth::pyth {
     /// Please refer to the documentation at https://docs.pyth.network/consumers/best-practices for
     /// how to how this price safely.
     /// 
-    /// Important: it is recommended to call update_price_feeds() to update the cached price
-    /// before calling this function, as get_price() will abort if the cached price is older 
+    /// Important: Pyth uses an on-demand update model, where consumers need to update the 
+    /// cached prices before using them. Please read more about this at https://docs.pyth.network/consume-data/on-demand.
+    /// It is therefore recommended to call update_price_feeds() to update the cached price
+    /// before calling get_price(), as get_price() will abort if the cached price is older 
     /// than the stale price threshold.
     /// 
     /// Note that the price_identifier does not correspond to a seperate Aptos account:
@@ -338,8 +343,10 @@ module pyth::pyth {
     /// Get the latest available exponentially moving average price cached for the given 
     /// price identifier, if that price is no older than the stale price threshold.
     /// 
-    /// Important: it is recommended to call update_price_feeds() to update the cached EMA price
-    /// before calling this function, as get_ema_price() will abort if the cached EMA price is older 
+    /// Important: Pyth uses an on-demand update model, where consumers need to update the 
+    /// cached prices before using them. Please read more about this at https://docs.pyth.network/consume-data/on-demand.
+    /// It is therefore recommended to call update_price_feeds() to update the cached price
+    /// before calling get_ema_price(), as get_ema_price() will abort if the cached price is older 
     /// than the stale price threshold.
     public fun get_ema_price(price_identifier: PriceIdentifier): Price {
         get_ema_price_no_older_than(price_identifier, state::get_stale_price_threshold_secs())
