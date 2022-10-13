@@ -3,6 +3,11 @@
 The goal of this contract is managing an NFT mint where the mint is paid in native currency but the cost of one NFT is always 100$.
 This example is intended to be run on Aptos testnet because it depends on Pyth and Wormhole existing onchain.
 
+### Important files : 
+- `./sources/minting.move` has the smart contract logic (the code that will run onchain)
+- `./app/src/App.tsx` has the React application. The core logic of how the frontend will interact with the wallet and the blockchain.
+Both combined contain the key pieces of code needed to make an Aptos fullstack app using Pyth!
+
 ### How to deploy the smart contract :
 
 - Use `aptos init` with rest_url : `https://testnet.aptoslabs.com/` and faucet `https://faucet.testnet.aptoslabs.com`  to generate a new keypair.
