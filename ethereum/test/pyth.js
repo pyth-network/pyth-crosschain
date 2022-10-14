@@ -595,7 +595,7 @@ contract("Pyth", function () {
             this.pythProxy.queryPriceFeed(
                 "0xdeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeed"
             ),
-            "no price feed found for the given price id"
+            "price feed for the given id is not pushed or does not exist"
         );
     });
 

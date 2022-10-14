@@ -222,7 +222,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     function queryPriceFeed(bytes32 id) public view override returns (PythStructs.PriceFeed memory priceFeed){
         // Look up the latest price info for the given ID
         PythInternalStructs.PriceInfo memory info = latestPriceInfo(id);
-        require(info.priceFeed.id != 0, "no price feed found for the given price id");
+        require(info.priceFeed.id != 0, "price feed for the given id is not pushed or does not exist");
 
         return info.priceFeed;
     }
