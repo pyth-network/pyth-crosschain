@@ -239,10 +239,4 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     function version() public pure returns (string memory) {
         return "1.1.0";
     }
-
-    function deployCommitHash() public pure returns (string memory) {
-        // This is a place holder for the commit hash and will be replaced
-        // with the commit hash upon deployment.
-        return "__DEPLOY_COMMIT_HASH_PLACEHOLER__";
-    }
 }
