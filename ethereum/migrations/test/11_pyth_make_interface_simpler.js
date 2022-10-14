@@ -1,4 +1,5 @@
-require('dotenv').config({ path: "../.env" });
+const loadEnv = require("../../scripts/loadEnv");
+loadEnv("../../");
 
 const governance = require("@pythnetwork/xc-governance-sdk");
 const createLocalnetGovernanceVaa = require("../../scripts/createLocalnetGovernanceVaa");

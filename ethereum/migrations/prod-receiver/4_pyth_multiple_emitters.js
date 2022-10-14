@@ -1,4 +1,5 @@
-require("dotenv").config({ path: "../.env" });
+const loadEnv = require("../../scripts/loadEnv");
+loadEnv("../../");
 
 const PythUpgradable = artifacts.require("PythUpgradable");
 
