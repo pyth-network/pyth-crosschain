@@ -14,11 +14,11 @@ import "./PythInternalStructs.sol";
 abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     using BytesLib for bytes;
 
-    function initialize(
+    function _initialize(
         address wormhole,
         uint16 pyth2WormholeChainId,
         bytes32 pyth2WormholeEmitter
-    ) virtual public {
+    ) internal {
         setWormhole(wormhole);
         setPyth2WormholeChainId(pyth2WormholeChainId);
         setPyth2WormholeEmitter(pyth2WormholeEmitter);

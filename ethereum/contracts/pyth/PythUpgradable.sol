@@ -18,11 +18,11 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
         address wormhole,
         uint16 pyth2WormholeChainId,
         bytes32 pyth2WormholeEmitter
-    ) initializer override public {
+    ) initializer public {
         __Ownable_init();
         __UUPSUpgradeable_init();
 
-        Pyth.initialize(wormhole, pyth2WormholeChainId, pyth2WormholeEmitter);
+        Pyth._initialize(wormhole, pyth2WormholeChainId, pyth2WormholeEmitter);
     }
 
     /// Privileged function to specify additional data sources in the contract
