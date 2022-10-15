@@ -5,12 +5,13 @@ Running the Truffle migrations in [`migrations/prod`](migrations/prod) or [`migr
 This is the deployment process:
 
 ```bash
-# The Secret Recovery Phrase for the wallet the contract will be deployed from.
+# The Secret Recovery Phrase for our deployment account.
 export MNEMONIC=...
 
 # Deploy the changes
 # You might need to repeat this script because of busy RPCs. Repeating would not cause any problem even
-# if the changes are already made. Also, sometimes the gases are not adjusted. Please update them with
+# if the changes are already made. Also, sometimes the gases are not adjusted and it will cause the tx to
+# remain on the mempool for a long time (so there is no progress until timeout). Please update them with
 # the network explorer gas tracker. Tips in Troubleshooting section below can help in case of any error.
 ./deploy.sh <network_a> <network_b> <...>
 # Example: Deploying to some testnet networks
