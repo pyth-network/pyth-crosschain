@@ -118,6 +118,9 @@ module pyth::pyth {
 
 // -----------------------------------------------------------------------------
 // Update the cached prices
+//
+// Pyth uses an uses an on-demand update model, where consumers need to update the 
+/// cached prices before using them. Please read more about this at https://docs.pyth.network/consume-data/on-demand.
 
     /// Update the cached price feeds with the data in the given VAAs. This is a 
     /// convenience wrapper around update_price_feeds(), which allows you to update the price feeds
@@ -131,6 +134,8 @@ module pyth::pyth {
     /// from the given funder account to the Pyth contract. The amount of coins that will be transferred
     /// to perform this update can be queried with get_update_fee(&vaas). The signer must have sufficient 
     /// account balance to pay this fee, otherwise the transaction will abort.
+    /// 
+    /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public entry fun update_price_feeds_with_funder(account: &signer, vaas: vector<vector<u8>>) {
         let coins = coin::withdraw<AptosCoin>(account, get_update_fee(&vaas));
         update_price_feeds(vaas, coins);
@@ -145,6 +150,8 @@ module pyth::pyth {
     /// 
     /// The given fee must contain a sufficient number of coins to pay the update fee for the given vaas.
     /// The update fee amount can be queried by calling get_update_fee(&vaas).
+    /// 
+    /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public fun update_price_feeds(vaas: vector<vector<u8>>, fee: Coin<AptosCoin>) {
         // Charge the message update fee
         assert!(get_update_fee(&vaas) <= coin::value(&fee), error::insufficient_fee());
@@ -279,9 +286,10 @@ module pyth::pyth {
     /// Please refer to the documentation at https://docs.pyth.network/consumers/best-practices for
     /// how to how this price safely.
     /// 
-    /// Important: it is recommended to call update_price_feeds() to update the cached price
-    /// before calling this function, as get_price() will abort if the cached price is older 
-    /// than the stale price threshold.
+    /// Important: Pyth uses an on-demand update model, where consumers need to update the 
+    /// cached prices before using them. Please read more about this at https://docs.pyth.network/consume-data/on-demand.
+    /// get_price() is likely to abort unless you call update_price_feeds() to update the cached price
+    /// beforehand, as the cached prices may be older than the stale price threshold.
     /// 
     /// Note that the price_identifier does not correspond to a seperate Aptos account:
     /// all price feeds are stored in the single pyth account. The price identifier is an
@@ -334,9 +342,10 @@ module pyth::pyth {
     /// Get the latest available exponentially moving average price cached for the given 
     /// price identifier, if that price is no older than the stale price threshold.
     /// 
-    /// Important: it is recommended to call update_price_feeds() to update the cached EMA price
-    /// before calling this function, as get_ema_price() will abort if the cached EMA price is older 
-    /// than the stale price threshold.
+    /// Important: Pyth uses an on-demand update model, where consumers need to update the 
+    /// cached prices before using them. Please read more about this at https://docs.pyth.network/consume-data/on-demand.
+    /// get_ema_price() is likely to abort unless you call update_price_feeds() to update the cached price
+    /// beforehand, as the cached prices may be older than the stale price threshold.
     public fun get_ema_price(price_identifier: PriceIdentifier): Price {
         get_ema_price_no_older_than(price_identifier, state::get_stale_price_threshold_secs())
     }
@@ -364,6 +373,8 @@ module pyth::pyth {
     }
 
     /// Get the number of AptosCoin's required to perform the given price updates.
+    /// 
+    /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public fun get_update_fee(update_data: &vector<vector<u8>>): u64 {
         state::get_base_update_fee() * vector::length(update_data)
     }
