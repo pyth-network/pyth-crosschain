@@ -15,6 +15,7 @@ const Wormhole = artifacts.require("Wormhole");
 
 const PythUpgradable = artifacts.require("PythUpgradable");
 const MockPythUpgrade = artifacts.require("MockPythUpgrade");
+const MockUpgradeableProxy = artifacts.require("MockUpgradeableProxy");
 
 const testSigner1PK =
     "cfb12303a19cde580bb4dd771639b0d26bc68353645571a8cff516ab2ee113a0";
@@ -594,7 +595,7 @@ contract("Pyth", function () {
             this.pythProxy.queryPriceFeed(
                 "0xdeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeed"
             ),
-            "no price feed found for the given price id"
+            "price feed for the given id is not pushed or does not exist"
         );
     });
 
@@ -980,6 +981,27 @@ contract("Pyth", function () {
         expectEvent(receipt, 'Upgraded', {
             implementation: newImplementation.address
         });
+    });
+
+    it("Upgrading the contract to a non-pyth contract won't work", async function () {
+        const newImplementation = await MockUpgradeableProxy.new();
+        
+        const data = new governance.EthereumUpgradeContractInstruction(
+            governance.CHAINS.ethereum,
+            new governance.HexString20Bytes(newImplementation.address),
+        ).serialize();
+
+        const vaa = await createVAAFromUint8Array(data,
+            testGovernanceChainId, 
+            testGovernanceEmitter,
+            1
+        );
+
+        // Calling a non-existing method will cause a revert with no explanation.
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(vaa),
+            "revert"
+        );
     });
 
     it("Setting governance data source should work", async function () {

@@ -13,10 +13,6 @@ set -euo pipefail
 
 echo "=========== Compiling ==========="
 
-echo "Replacing the deploy commit hash..."
-# Set the deploy commit hash in the contract (used for debugging purposes)
-sed -i "s/__DEPLOY_COMMIT_HASH_PLACEHOLER__/$(git rev-parse HEAD)/g" ./contracts/pyth/Pyth.sol
-
 echo "Building the contract..."
 # Ensure that we deploy a fresh build with up-to-date dependencies.
 rm -rf build && npx truffle compile --all
@@ -41,6 +37,4 @@ while [[ $# -ne 0 ]]; do
     echo "Deployment to $NETWORK finished successfully"
 done
 
-echo "=========== Cleaning up ==========="
-echo "Reverting back the deploy commit hash..."
-sed -i "s/$(git rev-parse HEAD)/__DEPLOY_COMMIT_HASH_PLACEHOLER__/g" ./contracts/pyth/Pyth.sol
+echo "=========== Finished ==========="
