@@ -1,5 +1,6 @@
 export {
   DataSource,
+  AptosAuthorizeUpgradeContractInstruction,
   EthereumUpgradeContractInstruction,
   HexString20Bytes,
   HexString32Bytes,
