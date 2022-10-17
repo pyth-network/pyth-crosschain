@@ -88,8 +88,8 @@ module.exports = {
         );
       },
       network_id: "137",
-      gas: 10000000,
-      gasPrice: 50000000000,
+      gas: 20000000,
+      gasPrice: 300000000000,
     },
     mumbai: {
       provider: () => {
