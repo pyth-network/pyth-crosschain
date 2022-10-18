@@ -12,9 +12,9 @@ Pyth = { git = "https://github.com/pyth-network/pyth-crosschain.git", subdir = "
 # These are testnet addresses https://docs.pyth.network/consume-data/aptos#addresses
 aptos_framework = "0x1"
 mint_nft = "_"
-pyth = "0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541"
-deployer = "0xb138581594ebd7763cfa3c3e455050139b7304c6d41e7094a1c78da4e6761ed8"
-wormhole = "0x1b1752e26b65fc24971ee5ec9718d2ccdd36bf20486a10b2973ea6dedc6cd197"
+pyth = "0xa1c1e6ec8eca84d93d0c0d2708b840c16895389e6e55c31a6447c97c9257d069"
+deployer = "0xb31e712b26fd295357355f6845e77c888298636609e93bc9b05f0f604049f434"
+wormhole = "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625"
 
 [dev-addresses]
 mint_nft = "0xb138581594ebd7763cfa3c3e455050139b7304c6d41e7094a1c78da4e6761ed8"
