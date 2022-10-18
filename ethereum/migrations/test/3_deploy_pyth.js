@@ -1,4 +1,6 @@
-require('dotenv').config({ path: "../.env" });
+const loadEnv = require("../../scripts/loadEnv");
+loadEnv("../../");
+
 const bs58 = require("bs58");
 
 const PythUpgradable = artifacts.require("PythUpgradable");

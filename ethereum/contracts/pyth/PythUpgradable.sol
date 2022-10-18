@@ -18,11 +18,11 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
         address wormhole,
         uint16 pyth2WormholeChainId,
         bytes32 pyth2WormholeEmitter
-    ) initializer override public {
+    ) initializer public {
         __Ownable_init();
         __UUPSUpgradeable_init();
 
-        Pyth.initialize(wormhole, pyth2WormholeChainId, pyth2WormholeEmitter);
+        Pyth._initialize(wormhole, pyth2WormholeChainId, pyth2WormholeEmitter);
     }
 
     /// Privileged function to specify additional data sources in the contract
@@ -81,11 +81,18 @@ contract PythUpgradable is Initializable, OwnableUpgradeable, UUPSUpgradeable, P
     // Only allow the owner to upgrade the proxy to a new implementation.
     function _authorizeUpgrade(address) internal override onlyOwner {}
 
+    function pythUpgradableMagic() public pure returns (uint32) {
+        return 0x97a6f304;
+    }
+
     // Execute a UpgradeContract governance message
     function upgradeUpgradableContract(UpgradeContractPayload memory payload) override internal {
         address oldImplementation = _getImplementation();
         _upgradeToAndCallUUPS(payload.newImplementation, new bytes(0), false);
-        require(isPyth(), "the new implementation is not a Pyth contract");
+
+        // Calling a method using `this.<method>` will cause a contract call that will use
+        // the new contract.
+        require(this.pythUpgradableMagic() == 0x97a6f304, "the new implementation is not a Pyth contract");
 
         emit ContractUpgraded(oldImplementation, _getImplementation());
     }

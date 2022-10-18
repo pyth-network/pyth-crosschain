@@ -1,4 +1,5 @@
-require('dotenv').config({ path: "../.env" });
+const loadEnv = require("../../scripts/loadEnv");
+loadEnv("../../");
 
 const PythUpgradable = artifacts.require("PythUpgradable");
 const governanceChainId = process.env.GOVERNANCE_CHAIN_ID;

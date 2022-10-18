@@ -9,7 +9,7 @@ module.exports = {
       port: 8545,
       network_id: "*",
     },
-    mainnet: {
+    ethereum: {
       provider: () =>
         new HDWalletProvider(
           process.env.MNEMONIC,
@@ -88,8 +88,8 @@ module.exports = {
         );
       },
       network_id: "137",
-      gas: 10000000,
-      gasPrice: 50000000000,
+      gas: 20000000,
+      gasPrice: 300000000000,
     },
     mumbai: {
       provider: () => {
@@ -151,6 +151,8 @@ module.exports = {
       network_id: 0x4e454153,
       gas: 10000000,
       from: "0xC42e9476b0a458097087336e2395Dbf45B0BdC12", // public key
+      networkCheckTimeout: 1000000,
+      timeoutBlocks: 1000,
     },
     arbitrum: {
       provider: () => {

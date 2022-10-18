@@ -100,6 +100,19 @@ abstract class TargetInstruction extends Instruction {
   }
 }
 
+export class AptosAuthorizeUpgradeContractInstruction extends TargetInstruction {
+  constructor(
+    targetChainId: ChainId,
+    private hash: HexString32Bytes,
+  ) {
+    super(TargetAction.UpgradeContract, targetChainId);
+  }
+
+  protected serializePayload(): Buffer {
+    return this.hash.serialize();
+  }
+}
+
 export class EthereumUpgradeContractInstruction extends TargetInstruction {
   constructor(
     targetChainId: ChainId,
