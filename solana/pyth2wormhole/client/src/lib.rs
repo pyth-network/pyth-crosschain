@@ -427,6 +427,17 @@ pub async fn crawl_pyth_mapping(
 
             let mut price_addr = prod.px_acc.clone();
 
+            // the product might have no price, can happen in tilt due to race-condition, failed tx to add price, ...
+            if price_addr == Pubkey::default() {
+                debug!(
+                    "Found product with addr {} that has no prices. \
+                    This should not happen in a production enviornment.",
+                    prod_addr
+                );
+
+                continue;
+            }
+
             // loop until the last non-zero PriceAccount.next account
             loop {
                 let price_bytes = rpc_client.get_account_data(&price_addr).await?;
