@@ -427,7 +427,7 @@ pub async fn crawl_pyth_mapping(
 
             let mut price_addr = prod.px_acc.clone();
 
-            // The product might have no price, due to race-condition, ...
+            // the product might have no price, can happen in tilt due to race-condition, failed tx to add price, ...
             if price_addr == Pubkey::default() {
                 continue;
             }
