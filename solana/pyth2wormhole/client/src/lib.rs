@@ -430,9 +430,9 @@ pub async fn crawl_pyth_mapping(
             // the product might have no price, can happen in tilt due to race-condition, failed tx to add price, ...
             if price_addr == Pubkey::default() {
                 debug!(
-                    "Found product with addr {} that has no prices. \ 
+                    "Found product with addr {} that has no prices. \
                     This should not happen in a production enviornment.",
-                    product_addr
+                    prod_addr
                 );
 
                 continue;
