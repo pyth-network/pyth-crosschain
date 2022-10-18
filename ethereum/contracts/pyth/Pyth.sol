@@ -57,7 +57,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     }
 
     function updatePriceFeeds(bytes[] calldata updateData) public override payable {
-        uint requiredFee = getUpdateFee(updateData.length);
+        uint requiredFee = getUpdateFee(updateData);
         require(msg.value >= requiredFee, "insufficient paid fee amount");
         payable(msg.sender).transfer(msg.value - requiredFee);
  
@@ -68,8 +68,8 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         emit UpdatePriceFeeds(msg.sender, updateData.length, requiredFee);
     }
 
-    function getUpdateFee(uint updateDataSize) public override view returns (uint feeAmount) {
-        return singleUpdateFeeInWei() * updateDataSize;
+    function getUpdateFee(bytes[] calldata updateData) public override view returns (uint feeAmount) {
+        return singleUpdateFeeInWei() * updateData.length;
     }
 
     function createNewPriceInfo(PythInternalStructs.PriceAttestation memory pa) private view returns (PythInternalStructs.PriceInfo memory info) {
