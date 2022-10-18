@@ -45,8 +45,10 @@ export class EvmRelay implements Relay {
         ? await this.queryMany(priceIds)
         : null;
 
+      const updateFee = await this.p2wContract.getUpdateFee(1);
+
       let tx = this.p2wContract
-        .updatePriceFeeds(["0x" + signedVAAs[i]], { gasLimit: 2000000 })
+        .updatePriceFeeds(["0x" + signedVAAs[i]], { gasLimit: 2000000, value: updateFee })
         .then(async (pending) => {
           let receipt = await pending.wait();
           logger.info(
