@@ -6,8 +6,9 @@ export {
   HexString32Bytes,
   SetDataSourcesInstruction,
   SetFeeInstruction,
-  SetGovernanceDataSourceInstruction,
-  SetValidPeriodInstruction
+  SetValidPeriodInstruction,
+  TransferGovernanceDataSourceClaimInstruction,
+  TransferGovernanceDataSourceInstruction
 } from "./instructions"
 
 export {

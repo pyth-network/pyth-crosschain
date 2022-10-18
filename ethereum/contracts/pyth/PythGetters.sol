@@ -63,4 +63,8 @@ contract PythGetters is PythState {
     function validTimePeriodSeconds() public view returns (uint) {
         return _state.validTimePeriodSeconds;
     }
+
+    function governanceDataSourceIndex() public view returns (uint32) {
+        return _state.governanceDataSourceIndex;
+    }
 }

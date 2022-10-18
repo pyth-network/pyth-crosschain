@@ -26,10 +26,11 @@ contract PythGovernanceInstructions {
 
     enum GovernanceAction {
         UpgradeContract, // 0
-        SetGovernanceDataSource, // 1
+        TransferGovernanceDataSource, // 1
         SetDataSources, // 2
         SetFee, // 3
-        SetValidPeriod // 4
+        SetValidPeriod, // 4
+        TransferGovernanceDataSourceClaim // 5
     }
 
     struct GovernanceInstruction {
@@ -43,9 +44,15 @@ contract PythGovernanceInstructions {
         address newImplementation;
     }
 
-    struct SetGovernanceDataSourcePayload {
-        PythInternalStructs.DataSource newGovernanceDataSource;
-        uint64 initialSequence;
+    struct TransferGovernanceDataSourcePayload {
+        // claimVaa is a VAA with TransferGovernanceDataSourceClaimOwnership
+        // governance instruction (header + payload) that is created from
+        // the second multisig
+        bytes claimVaa;
+    }
+
+    struct TransferGovernanceDataSourceClaimPayload {
+        uint32 governanceDataSourceIndex;
     }
 
     struct SetDataSourcesPayload {
@@ -94,20 +101,21 @@ contract PythGovernanceInstructions {
         require(encodedPayload.length == index, "invalid length for UpgradeContractPayload");
     }
 
-    /// @dev Parse a SetGovernanceDataSourcePayload (action 2) with minimal validation
-    function parseSetGovernanceDataSourcePayload(bytes memory encodedPayload) public pure returns (SetGovernanceDataSourcePayload memory sgds) {
+    /// @dev Parse a TransferGovernanceDataSourcePayload (action 2) with minimal validation
+    function parseTransferGovernanceDataSourcePayload(bytes memory encodedPayload) public pure returns (TransferGovernanceDataSourcePayload memory sgds) {
+        sgds.claimVaa = encodedPayload;
+    }
+
+    /// @dev Parse a TransferGovernanceDataSourcePayload (action 2) with minimal validation
+    function parseTransferGovernanceDataSourceClaimPayload(bytes memory encodedPayload) public pure
+        returns (TransferGovernanceDataSourceClaimPayload memory sgdsClaim) {
+
         uint index = 0;
 
-        sgds.newGovernanceDataSource.chainId = encodedPayload.toUint16(index);
-        index += 2;
+        sgdsClaim.governanceDataSourceIndex = encodedPayload.toUint32(index);
+        index += 4;
 
-        sgds.newGovernanceDataSource.emitterAddress = encodedPayload.toBytes32(index);
-        index += 32;
-
-        sgds.initialSequence = encodedPayload.toUint64(index);
-        index += 8;
-
-        require(encodedPayload.length == index, "invalid length for SetGovernanceDataSourcePayload");
+        require(encodedPayload.length == index, "invalid length for TransferGovernanceDataSourceClaimPayload");
     }
 
     /// @dev Parse a SetDataSourcesPayload (action 3) with minimal validation
