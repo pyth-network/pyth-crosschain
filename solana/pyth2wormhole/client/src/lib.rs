@@ -427,6 +427,11 @@ pub async fn crawl_pyth_mapping(
 
             let mut price_addr = prod.px_acc.clone();
 
+            // The product might have no price, due to race-condition, ...
+            if price_addr == Pubkey::default() {
+                continue;
+            }
+
             // loop until the last non-zero PriceAccount.next account
             loop {
                 let price_bytes = rpc_client.get_account_data(&price_addr).await?;
