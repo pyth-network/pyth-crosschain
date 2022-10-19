@@ -46,7 +46,7 @@ export class EvmRelay implements Relay {
         : null;
 
       const updateData = ["0x" + signedVAAs[i]];
-      const updateFee = await this.p2wContract.getUpdateFee(updateData);
+      const updateFee = await this.p2wContract["getUpdateFee(bytes[])"](updateData);
 
       let tx = this.p2wContract
         .updatePriceFeeds(updateData, { gasLimit: 2000000, value: updateFee })
