@@ -45,13 +45,15 @@ contract PythGovernanceInstructions {
     }
 
     struct TransferGovernanceDataSourcePayload {
-        // claimVaa is a VAA with TransferGovernanceDataSourceClaimOwnership
-        // governance instruction (header + payload) that is created from
-        // the second multisig
+        // Transfer governance control over this contract to another data source.
+        // The claimVaa field is a VAA created by the new data source; using a VAA prevents mistakes
+        // in the handoff by ensuring that the new data source can send VAAs (i.e., is not an invalid address).
         bytes claimVaa;
     }
 
     struct TransferGovernanceDataSourceClaimPayload {
+        // Governance data source index is used to prevent replay attacks
+        // So a claimVaa cannot be used twice.
         uint32 governanceDataSourceIndex;
     }
 

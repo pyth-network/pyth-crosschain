@@ -77,7 +77,10 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
 
         TransferGovernanceDataSourcePayload memory payload = parseTransferGovernanceDataSourcePayload(encodedPayload);
 
-        // Make sure the VAA is valid
+        // Make sure the claimVaa is a valid VAA with TransferGovernanceDataSourceClaim governance message
+        // If it's valid then its emitter can take over the governance from the current emitter.
+        // The VAA is checked here to ensure that the new governance data source is valid and can send message
+        // through wormhole.
         (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole().parseAndVerifyVM(payload.claimVaa);
         require(valid, reason);
 
@@ -88,6 +91,7 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
 
         TransferGovernanceDataSourceClaimPayload memory claimPayload = parseTransferGovernanceDataSourceClaimPayload(gi.payload);
 
+        // Governance data source index is used to prevent replay attacks, so a claimVaa cannot be used twice.
         require(governanceDataSourceIndex() < claimPayload.governanceDataSourceIndex, 
             "cannot upgrade to an older governance data source");
 
@@ -96,6 +100,8 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
         PythInternalStructs.DataSource memory newGovernanceDS = PythInternalStructs.DataSource(vm.emitterChainId, vm.emitterAddress);
 
         setGovernanceDataSource(newGovernanceDS);
+
+        // Setting the last executed governance to the claimVaa sequence to avoid using older sequences.
         setLastExecutedGovernanceSequence(vm.sequence);
 
         emit GovernanceDataSourceSet(oldGovernanceDatSource, governanceDataSource(), lastExecutedGovernanceSequence());
