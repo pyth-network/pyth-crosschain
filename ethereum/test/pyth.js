@@ -493,7 +493,7 @@ contract("Pyth", function () {
         let rawBatch1 = generateRawBatchAttestation(ts - 5, ts, 1337);
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
 
-        // Getting the fee from the contract
+        // Paying the fee works and extra fee is not paid back.
         let feeInWei = await this.pythProxy.getUpdateFee([rawBatch1, rawBatch2]);
         assert.equal(feeInWei, 20);
 
@@ -502,7 +502,7 @@ contract("Pyth", function () {
             fee: feeInWei
         });
         const pythBalance = await web3.eth.getBalance(this.pythProxy.address);
-        assert.equal(pythBalance, feeInWei);
+        assert.equal(pythBalance, feeInWei + 10);
     });
 
     it("should cache price updates", async function () {
