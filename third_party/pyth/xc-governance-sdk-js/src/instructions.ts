@@ -129,9 +129,10 @@ export class EthereumUpgradeContractInstruction extends TargetInstruction {
 
 export class TransferGovernanceDataSourceInstruction extends TargetInstruction {
   constructor(
+    targetChainId: ChainId,
     private claimVaa: Buffer,
   ) {
-    super(TargetAction.TransferGovernanceDataSource, CHAINS.unset);
+    super(TargetAction.TransferGovernanceDataSource, targetChainId);
   }
 
   protected serializePayload(): Buffer {
@@ -189,9 +190,10 @@ export class SetValidPeriodInstruction extends TargetInstruction {
 
 export class TransferGovernanceDataSourceClaimInstruction extends TargetInstruction {
   constructor(
+    targetChainId: ChainId,
     private governanceDataSourceIndex: number,
   ) {
-    super(TargetAction.TransferGovernanceDataSourceClaim, CHAINS.unset);
+    super(TargetAction.TransferGovernanceDataSourceClaim, targetChainId);
   }
 
   protected serializePayload(): Buffer {

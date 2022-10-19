@@ -46,7 +46,6 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
             require(gi.targetChainId != 0, "upgrade with chain id 0 is not possible");
             upgradeContract(gi.payload);
         } else if (gi.action == GovernanceAction.TransferGovernanceDataSource) {
-            require(gi.targetChainId == 0, "governance data source change should be applied to all chains");
             transferGovernanceDataSource(gi.payload);
         } else if (gi.action == GovernanceAction.SetDataSources) {
             setDataSources(gi.payload);
@@ -85,7 +84,7 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
         require(valid, reason);
 
         GovernanceInstruction memory gi = parseGovernanceInstruction(vm.payload);
-        require(gi.targetChainId == 0, "governance data source change claim vaa should be applied to all chains");
+        require(gi.targetChainId == chainId() || gi.targetChainId == 0, "invalid target chain for this governance instruction");
         require(gi.action == GovernanceAction.TransferGovernanceDataSourceClaim,
             "governance data source change inner vaa is not of claim action type");
 

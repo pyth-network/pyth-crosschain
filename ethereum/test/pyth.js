@@ -1009,6 +1009,7 @@ contract("Pyth", function () {
         const newEmitterChain = governance.CHAINS.acala;
 
         const claimInstructionData = new governance.TransferGovernanceDataSourceClaimInstruction(
+            governance.CHAINS.unset,
             1
         ).serialize();
 
@@ -1027,6 +1028,7 @@ contract("Pyth", function () {
         const claimVaa = Buffer.from(claimVaaHexString.substring(2), 'hex');
 
         const data = new governance.TransferGovernanceDataSourceInstruction(
+            governance.CHAINS.unset,
             claimVaa
         ).serialize();
 
@@ -1059,6 +1061,7 @@ contract("Pyth", function () {
         // Make sure a claim vaa does not get executed
 
         const claimLonely = new governance.TransferGovernanceDataSourceClaimInstruction(
+            governance.CHAINS.unset,
             2
         ).serialize();
 
@@ -1079,6 +1082,7 @@ contract("Pyth", function () {
 
         // A wrong vaa that does not move the governance index
         const transferBackClaimInstructionDataWrong = new governance.TransferGovernanceDataSourceClaimInstruction(
+            governance.CHAINS.unset,
             1 // The same governance data source index => Should fail
         ).serialize();
 
@@ -1092,6 +1096,7 @@ contract("Pyth", function () {
         const transferBackClaimVaaWrong = Buffer.from(transferBackClaimVaaHexStringWrong.substring(2), 'hex');
 
         const transferBackDataWrong = new governance.TransferGovernanceDataSourceInstruction(
+            governance.CHAINS.unset,
             transferBackClaimVaaWrong
         ).serialize();
 
