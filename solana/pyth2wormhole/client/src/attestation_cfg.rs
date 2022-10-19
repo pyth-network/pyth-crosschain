@@ -163,11 +163,11 @@ impl AttestationConditions {
         let AttestationConditions {
             min_interval_secs: _min_interval_secs,
             max_batch_jobs: _max_batch_jobs,
-            price_changed_pct,
+            price_changed_ppt,
             publish_time_min_delta_secs,
         } = self;
 
-        price_changed_pct.is_some() || publish_time_min_delta_secs.is_some()
+        price_changed_ppt.is_some() || publish_time_min_delta_secs.is_some()
     }
 }
 
