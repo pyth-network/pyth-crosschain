@@ -9,11 +9,11 @@ enum Module {
 
 enum TargetAction {
   UpgradeContract = 0,
-  TransferGovernanceDataSource,
+  TransferGovernanceDataSourceAuthorize,
   SetDataSources,
   SetFee,
   SetValidPeriod,
-  TransferGovernanceDataSourceClaim,
+  TransferGovernanceDataSourceRequest,
 }
 
 abstract class HexString implements Serializable {
@@ -127,12 +127,12 @@ export class EthereumUpgradeContractInstruction extends TargetInstruction {
   }
 }
 
-export class TransferGovernanceDataSourceInstruction extends TargetInstruction {
+export class TransferGovernanceDataSourceAuthorizeInstruction extends TargetInstruction {
   constructor(
     targetChainId: ChainId,
     private claimVaa: Buffer,
   ) {
-    super(TargetAction.TransferGovernanceDataSource, targetChainId);
+    super(TargetAction.TransferGovernanceDataSourceAuthorize, targetChainId);
   }
 
   protected serializePayload(): Buffer {
@@ -188,12 +188,12 @@ export class SetValidPeriodInstruction extends TargetInstruction {
   }
 }
 
-export class TransferGovernanceDataSourceClaimInstruction extends TargetInstruction {
+export class TransferGovernanceDataSourceRequestInstruction extends TargetInstruction {
   constructor(
     targetChainId: ChainId,
     private governanceDataSourceIndex: number,
   ) {
-    super(TargetAction.TransferGovernanceDataSourceClaim, targetChainId);
+    super(TargetAction.TransferGovernanceDataSourceRequest, targetChainId);
   }
 
   protected serializePayload(): Buffer {

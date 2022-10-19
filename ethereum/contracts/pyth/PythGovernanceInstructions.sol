@@ -26,11 +26,11 @@ contract PythGovernanceInstructions {
 
     enum GovernanceAction {
         UpgradeContract, // 0
-        TransferGovernanceDataSource, // 1
+        TransferGovernanceDataSourceAuthorize, // 1
         SetDataSources, // 2
         SetFee, // 3
         SetValidPeriod, // 4
-        TransferGovernanceDataSourceClaim // 5
+        TransferGovernanceDataSourceRequest // 5
     }
 
     struct GovernanceInstruction {
@@ -44,14 +44,14 @@ contract PythGovernanceInstructions {
         address newImplementation;
     }
 
-    struct TransferGovernanceDataSourcePayload {
+    struct TransferGovernanceDataSourceAuthorizePayload {
         // Transfer governance control over this contract to another data source.
         // The claimVaa field is a VAA created by the new data source; using a VAA prevents mistakes
         // in the handoff by ensuring that the new data source can send VAAs (i.e., is not an invalid address).
         bytes claimVaa;
     }
 
-    struct TransferGovernanceDataSourceClaimPayload {
+    struct TransferGovernanceDataSourceRequestPayload {
         // Governance data source index is used to prevent replay attacks
         // So a claimVaa cannot be used twice.
         uint32 governanceDataSourceIndex;
@@ -103,21 +103,21 @@ contract PythGovernanceInstructions {
         require(encodedPayload.length == index, "invalid length for UpgradeContractPayload");
     }
 
-    /// @dev Parse a TransferGovernanceDataSourcePayload (action 2) with minimal validation
-    function parseTransferGovernanceDataSourcePayload(bytes memory encodedPayload) public pure returns (TransferGovernanceDataSourcePayload memory sgds) {
+    /// @dev Parse a TransferGovernanceDataSourceAuthorizePayload (action 2) with minimal validation
+    function parseTransferGovernanceDataSourceAuthorizePayload(bytes memory encodedPayload) public pure returns (TransferGovernanceDataSourceAuthorizePayload memory sgds) {
         sgds.claimVaa = encodedPayload;
     }
 
-    /// @dev Parse a TransferGovernanceDataSourcePayload (action 2) with minimal validation
-    function parseTransferGovernanceDataSourceClaimPayload(bytes memory encodedPayload) public pure
-        returns (TransferGovernanceDataSourceClaimPayload memory sgdsClaim) {
+    /// @dev Parse a TransferGovernanceDataSourceAuthorizePayload (action 2) with minimal validation
+    function parseTransferGovernanceDataSourceRequestPayload(bytes memory encodedPayload) public pure
+        returns (TransferGovernanceDataSourceRequestPayload memory sgdsClaim) {
 
         uint index = 0;
 
         sgdsClaim.governanceDataSourceIndex = encodedPayload.toUint32(index);
         index += 4;
 
-        require(encodedPayload.length == index, "invalid length for TransferGovernanceDataSourceClaimPayload");
+        require(encodedPayload.length == index, "invalid length for TransferGovernanceDataSourceRequestPayload");
     }
 
     /// @dev Parse a SetDataSourcesPayload (action 3) with minimal validation
