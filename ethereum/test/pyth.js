@@ -435,7 +435,7 @@ contract("Pyth", function () {
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
 
         // Getting the fee from the contract
-        let feeInWei = await this.pythProxy.getUpdateFee([rawBatch1, rawBatch2]);
+        let feeInWei = await this.pythProxy.methods["getUpdateFee(bytes[])"]([rawBatch1, rawBatch2]);
         assert.equal(feeInWei, 20);
 
         // When a smaller fee is payed it reverts
@@ -464,7 +464,7 @@ contract("Pyth", function () {
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
 
         // Getting the fee from the contract
-        let feeInWei = await this.pythProxy.getUpdateFee([rawBatch1, rawBatch2]);
+        let feeInWei = await this.pythProxy.methods["getUpdateFee(bytes[])"]([rawBatch1, rawBatch2]);
         assert.equal(feeInWei, 20);
 
         const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2], feeInWei);
@@ -494,7 +494,7 @@ contract("Pyth", function () {
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
 
         // Paying the fee works and extra fee is not paid back.
-        let feeInWei = await this.pythProxy.getUpdateFee([rawBatch1, rawBatch2]);
+        let feeInWei = await this.pythProxy.methods["getUpdateFee(bytes[])"]([rawBatch1, rawBatch2]);
         assert.equal(feeInWei, 20);
 
         const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2], feeInWei + 10);
