@@ -26,11 +26,11 @@ contract PythGovernanceInstructions {
 
     enum GovernanceAction {
         UpgradeContract, // 0
-        TransferGovernanceDataSourceAuthorize, // 1
+        AuthorizeGovernanceDataSourceTransfer, // 1
         SetDataSources, // 2
         SetFee, // 3
         SetValidPeriod, // 4
-        TransferGovernanceDataSourceRequest // 5
+        RequestGovernanceDataSourceTransfer // 5
     }
 
     struct GovernanceInstruction {
@@ -44,14 +44,14 @@ contract PythGovernanceInstructions {
         address newImplementation;
     }
 
-    struct TransferGovernanceDataSourceAuthorizePayload {
+    struct AuthorizeGovernanceDataSourceTransferPayload {
         // Transfer governance control over this contract to another data source.
         // The claimVaa field is a VAA created by the new data source; using a VAA prevents mistakes
         // in the handoff by ensuring that the new data source can send VAAs (i.e., is not an invalid address).
         bytes claimVaa;
     }
 
-    struct TransferGovernanceDataSourceRequestPayload {
+    struct RequestGovernanceDataSourceTransferPayload {
         // Governance data source index is used to prevent replay attacks
         // So a claimVaa cannot be used twice.
         uint32 governanceDataSourceIndex;
@@ -103,21 +103,21 @@ contract PythGovernanceInstructions {
         require(encodedPayload.length == index, "invalid length for UpgradeContractPayload");
     }
 
-    /// @dev Parse a TransferGovernanceDataSourceAuthorizePayload (action 2) with minimal validation
-    function parseTransferGovernanceDataSourceAuthorizePayload(bytes memory encodedPayload) public pure returns (TransferGovernanceDataSourceAuthorizePayload memory sgds) {
+    /// @dev Parse a AuthorizeGovernanceDataSourceTransferPayload (action 2) with minimal validation
+    function parseAuthorizeGovernanceDataSourceTransferPayload(bytes memory encodedPayload) public pure returns (AuthorizeGovernanceDataSourceTransferPayload memory sgds) {
         sgds.claimVaa = encodedPayload;
     }
 
-    /// @dev Parse a TransferGovernanceDataSourceAuthorizePayload (action 2) with minimal validation
-    function parseTransferGovernanceDataSourceRequestPayload(bytes memory encodedPayload) public pure
-        returns (TransferGovernanceDataSourceRequestPayload memory sgdsClaim) {
+    /// @dev Parse a AuthorizeGovernanceDataSourceTransferPayload (action 2) with minimal validation
+    function parseRequestGovernanceDataSourceTransferPayload(bytes memory encodedPayload) public pure
+        returns (RequestGovernanceDataSourceTransferPayload memory sgdsClaim) {
 
         uint index = 0;
 
         sgdsClaim.governanceDataSourceIndex = encodedPayload.toUint32(index);
         index += 4;
 
-        require(encodedPayload.length == index, "invalid length for TransferGovernanceDataSourceRequestPayload");
+        require(encodedPayload.length == index, "invalid length for RequestGovernanceDataSourceTransferPayload");
     }
 
     /// @dev Parse a SetDataSourcesPayload (action 3) with minimal validation

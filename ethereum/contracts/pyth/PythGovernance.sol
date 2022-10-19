@@ -45,16 +45,16 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
         if (gi.action == GovernanceAction.UpgradeContract) {
             require(gi.targetChainId != 0, "upgrade with chain id 0 is not possible");
             upgradeContract(gi.payload);
-        } else if (gi.action == GovernanceAction.TransferGovernanceDataSourceAuthorize) {
-            TransferGovernanceDataSourceAuthorize(gi.payload);
+        } else if (gi.action == GovernanceAction.AuthorizeGovernanceDataSourceTransfer) {
+            AuthorizeGovernanceDataSourceTransfer(gi.payload);
         } else if (gi.action == GovernanceAction.SetDataSources) {
             setDataSources(gi.payload);
         } else if (gi.action == GovernanceAction.SetFee) {
             setFee(gi.payload);
         } else if (gi.action == GovernanceAction.SetValidPeriod) {
             setValidPeriod(gi.payload);
-        } else if (gi.action == GovernanceAction.TransferGovernanceDataSourceRequest) {
-            revert("TransferGovernanceDataSourceRequest can be only part of TransferGovernanceDataSourceAuthorize message");
+        } else if (gi.action == GovernanceAction.RequestGovernanceDataSourceTransfer) {
+            revert("RequestGovernanceDataSourceTransfer can be only part of AuthorizeGovernanceDataSourceTransfer message");
         } else {
             revert("invalid governance action");
         }
@@ -71,12 +71,12 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
 
     // Transfer the governance data source to a new value with sanity checks
     // to ensure the new governance data source can manage the contract.
-    function TransferGovernanceDataSourceAuthorize(bytes memory encodedPayload) internal {
+    function AuthorizeGovernanceDataSourceTransfer(bytes memory encodedPayload) internal {
         PythInternalStructs.DataSource memory oldGovernanceDatSource = governanceDataSource();
 
-        TransferGovernanceDataSourceAuthorizePayload memory payload = parseTransferGovernanceDataSourceAuthorizePayload(encodedPayload);
+        AuthorizeGovernanceDataSourceTransferPayload memory payload = parseAuthorizeGovernanceDataSourceTransferPayload(encodedPayload);
 
-        // Make sure the claimVaa is a valid VAA with TransferGovernanceDataSourceRequest governance message
+        // Make sure the claimVaa is a valid VAA with RequestGovernanceDataSourceTransfer governance message
         // If it's valid then its emitter can take over the governance from the current emitter.
         // The VAA is checked here to ensure that the new governance data source is valid and can send message
         // through wormhole.
@@ -85,10 +85,10 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
 
         GovernanceInstruction memory gi = parseGovernanceInstruction(vm.payload);
         require(gi.targetChainId == chainId() || gi.targetChainId == 0, "invalid target chain for this governance instruction");
-        require(gi.action == GovernanceAction.TransferGovernanceDataSourceRequest,
+        require(gi.action == GovernanceAction.RequestGovernanceDataSourceTransfer,
             "governance data source change inner vaa is not of claim action type");
 
-        TransferGovernanceDataSourceRequestPayload memory claimPayload = parseTransferGovernanceDataSourceRequestPayload(gi.payload);
+        RequestGovernanceDataSourceTransferPayload memory claimPayload = parseRequestGovernanceDataSourceTransferPayload(gi.payload);
 
         // Governance data source index is used to prevent replay attacks, so a claimVaa cannot be used twice.
         require(governanceDataSourceIndex() < claimPayload.governanceDataSourceIndex, 

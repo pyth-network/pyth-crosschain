@@ -8,7 +8,7 @@ export {
   SetFeeInstruction,
   SetValidPeriodInstruction,
   TransferGovernanceDataSourceRequestInstruction,
-  TransferGovernanceDataSourceAuthorizeInstruction
+  AuthorizeGovernanceDataSourceTransferInstruction
 } from "./instructions"
 
 export {
