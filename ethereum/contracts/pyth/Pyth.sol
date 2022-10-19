@@ -67,6 +67,11 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         emit UpdatePriceFeeds(msg.sender, updateData.length, requiredFee);
     }
 
+    /// This method is deprecated, please use the `getUpdateFee(bytes[])` instead.
+    function getUpdateFee(uint updateDataSize) public view returns (uint feeAmount) {
+        return singleUpdateFeeInWei() * updateDataSize;
+    }
+
     function getUpdateFee(bytes[] calldata updateData) public override view returns (uint feeAmount) {
         return singleUpdateFeeInWei() * updateData.length;
     }
