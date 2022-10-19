@@ -473,6 +473,8 @@ pub async fn crawl_pyth_mapping(
                     .or_insert(HashSet::new())
                     .insert(price_addr);
 
+                n_prod_prices += 1;
+
                 if price.next == Pubkey::default() {
                     trace!(
                         "Product {}: processed {} price(s)",
@@ -482,7 +484,6 @@ pub async fn crawl_pyth_mapping(
                     break;
                 }
 
-                n_prod_prices += 1;
                 price_addr = price.next.clone();
             }
 
