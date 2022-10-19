@@ -1009,7 +1009,6 @@ contract("Pyth", function () {
         const newEmitterChain = governance.CHAINS.acala;
 
         const claimInstructionData = new governance.TransferGovernanceDataSourceClaimInstruction(
-            governance.CHAINS.unset,
             1
         ).serialize();
 
@@ -1026,25 +1025,8 @@ contract("Pyth", function () {
         );
 
         const claimVaa = Buffer.from(claimVaaHexString.substring(2), 'hex');
-        
-        const wrongData = new governance.TransferGovernanceDataSourceInstruction(
-            governance.CHAINS.ethereum, // Target chain should be all chains so it's wrong
-            claimVaa
-        ).serialize();
-
-        const wrongVaa = await createVAAFromUint8Array(wrongData,
-            testGovernanceChainId, 
-            testGovernanceEmitter,
-            1
-        );
-
-        await expectRevert(
-            this.pythProxy.executeGovernanceInstruction(wrongVaa),
-            "governance data source change should be applied to all chains"
-        );
 
         const data = new governance.TransferGovernanceDataSourceInstruction(
-            governance.CHAINS.unset,
             claimVaa
         ).serialize();
 
@@ -1068,6 +1050,7 @@ contract("Pyth", function () {
         expect(newGovernanceDataSource.chainId).equal(newEmitterChain.toString());
         expect(newGovernanceDataSource.emitterAddress).equal(newEmitterAddress);
 
+        // Verifies the data source has changed.
         await expectRevert(
             this.pythProxy.executeGovernanceInstruction(vaa),
             "VAA is not coming from the governance data source"
@@ -1076,7 +1059,6 @@ contract("Pyth", function () {
         // Make sure a claim vaa does not get executed
 
         const claimLonely = new governance.TransferGovernanceDataSourceClaimInstruction(
-            governance.CHAINS.unset,
             2
         ).serialize();
 
@@ -1097,7 +1079,6 @@ contract("Pyth", function () {
 
         // A wrong vaa that does not move the governance index
         const transferBackClaimInstructionDataWrong = new governance.TransferGovernanceDataSourceClaimInstruction(
-            governance.CHAINS.unset,
             1 // The same governance data source index => Should fail
         ).serialize();
 
@@ -1111,7 +1092,6 @@ contract("Pyth", function () {
         const transferBackClaimVaaWrong = Buffer.from(transferBackClaimVaaHexStringWrong.substring(2), 'hex');
 
         const transferBackDataWrong = new governance.TransferGovernanceDataSourceInstruction(
-            governance.CHAINS.unset,
             transferBackClaimVaaWrong
         ).serialize();
 

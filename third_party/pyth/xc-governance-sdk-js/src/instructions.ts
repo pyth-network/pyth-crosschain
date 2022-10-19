@@ -1,4 +1,4 @@
-import { ChainId } from "@certusone/wormhole-sdk";
+import { ChainId, CHAINS } from "@certusone/wormhole-sdk";
 
 import {  Serializable, BufferBuilder } from "./serialize";
 
@@ -129,10 +129,9 @@ export class EthereumUpgradeContractInstruction extends TargetInstruction {
 
 export class TransferGovernanceDataSourceInstruction extends TargetInstruction {
   constructor(
-    targetChainId: ChainId,
     private claimVaa: Buffer,
   ) {
-    super(TargetAction.TransferGovernanceDataSource, targetChainId);
+    super(TargetAction.TransferGovernanceDataSource, CHAINS.unset);
   }
 
   protected serializePayload(): Buffer {
@@ -190,10 +189,9 @@ export class SetValidPeriodInstruction extends TargetInstruction {
 
 export class TransferGovernanceDataSourceClaimInstruction extends TargetInstruction {
   constructor(
-    targetChainId: ChainId,
     private governanceDataSourceIndex: number,
   ) {
-    super(TargetAction.TransferGovernanceDataSourceClaim, targetChainId);
+    super(TargetAction.TransferGovernanceDataSourceClaim, CHAINS.unset);
   }
 
   protected serializePayload(): Buffer {
