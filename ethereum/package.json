@@ -27,6 +27,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@certusone/wormhole-sdk-wasm": "^0.0.1",
     "@openzeppelin/contracts": "^4.5.0",
     "@openzeppelin/contracts-upgradeable": "^4.5.2",
     "@pythnetwork/pyth-sdk-solidity": "^1.0.1",
