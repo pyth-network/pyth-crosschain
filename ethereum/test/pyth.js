@@ -1004,16 +1004,32 @@ contract("Pyth", function () {
         );
     });
 
-    it("Setting governance data source should work", async function () {
-        const data = new governance.SetGovernanceDataSourceInstruction(
-            governance.CHAINS.ethereum,
-            new governance.DataSource(
-                governance.CHAINS.acala,
-                new governance.HexString32Bytes(
-                    "0x0000000000000000000000000000000000000000000000000000000000001111",
-                )
-            ),
-            BigInt(10)
+    it("Transferring governance data source should work", async function () {
+        const newEmitterAddress = "0x0000000000000000000000000000000000000000000000000000000000001111";
+        const newEmitterChain = governance.CHAINS.acala;
+
+        const claimInstructionData = new governance.RequestGovernanceDataSourceTransferInstruction(
+            governance.CHAINS.unset,
+            1
+        ).serialize();
+
+        const claimVaaHexString = await createVAAFromUint8Array(
+            claimInstructionData,
+            newEmitterChain, 
+            newEmitterAddress,
+            1
+        );
+
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(claimVaaHexString),
+            "VAA is not coming from the governance data source"
+        );
+
+        const claimVaa = Buffer.from(claimVaaHexString.substring(2), 'hex');
+
+        const data = new governance.AuthorizeGovernanceDataSourceTransferInstruction(
+            governance.CHAINS.unset,
+            claimVaa
         ).serialize();
 
         const vaa = await createVAAFromUint8Array(data,
@@ -1025,40 +1041,75 @@ contract("Pyth", function () {
         const oldGovernanceDataSource = await this.pythProxy.governanceDataSource(); 
 
         const receipt = await this.pythProxy.executeGovernanceInstruction(vaa);
+        
+        const newGovernanceDataSource = await this.pythProxy.governanceDataSource();
+
         expectEvent(receipt, 'GovernanceDataSourceSet', {
             oldDataSource: oldGovernanceDataSource,
-            newDataSource: await this.pythProxy.governanceDataSource(),
+            newDataSource: newGovernanceDataSource,
         });
 
-        const newVaaFromOldGovernanceSource = await createVAAFromUint8Array(data,
+        expect(newGovernanceDataSource.chainId).equal(newEmitterChain.toString());
+        expect(newGovernanceDataSource.emitterAddress).equal(newEmitterAddress);
+
+        // Verifies the data source has changed.
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(vaa),
+            "VAA is not coming from the governance data source"
+        );
+
+        // Make sure a claim vaa does not get executed
+
+        const claimLonely = new governance.RequestGovernanceDataSourceTransferInstruction(
+            governance.CHAINS.unset,
+            2
+        ).serialize();
+
+        const claimLonelyVaa = await createVAAFromUint8Array(
+            claimLonely,
+            newEmitterChain, 
+            newEmitterAddress,
+            2
+        );
+        
+        await expectRevert(
+            this.pythProxy.executeGovernanceInstruction(claimLonelyVaa),
+            "RequestGovernanceDataSourceTransfer can be only part of AuthorizeGovernanceDataSourceTransfer message"
+        );
+
+        // Transfer back the ownership to the old governance data source without increasing
+        // the governance index should not work
+
+        // A wrong vaa that does not move the governance index
+        const transferBackClaimInstructionDataWrong = new governance.RequestGovernanceDataSourceTransferInstruction(
+            governance.CHAINS.unset,
+            1 // The same governance data source index => Should fail
+        ).serialize();
+
+        const transferBackClaimVaaHexStringWrong = await createVAAFromUint8Array(
+            transferBackClaimInstructionDataWrong,
             testGovernanceChainId, 
             testGovernanceEmitter,
             2
         );
 
-        await expectRevert(
-            this.pythProxy.executeGovernanceInstruction(newVaaFromOldGovernanceSource),
-            "VAA is not coming from the governance data source"
-        );
+        const transferBackClaimVaaWrong = Buffer.from(transferBackClaimVaaHexStringWrong.substring(2), 'hex');
 
-        const newVaaFromNewGovernanceOldSequence = await createVAAFromUint8Array(data,
-            governance.CHAINS.acala, 
-            "0x0000000000000000000000000000000000000000000000000000000000001111",
+        const transferBackDataWrong = new governance.AuthorizeGovernanceDataSourceTransferInstruction(
+            governance.CHAINS.unset,
+            transferBackClaimVaaWrong
+        ).serialize();
+
+        const transferBackVaaWrong = await createVAAFromUint8Array(transferBackDataWrong,
+            newEmitterChain, 
+            newEmitterAddress,
             2
         );
 
         await expectRevert(
-            this.pythProxy.executeGovernanceInstruction(newVaaFromNewGovernanceOldSequence),
-            "VAA is older than the last executed governance VAA"
+            this.pythProxy.executeGovernanceInstruction(transferBackVaaWrong),
+            "cannot upgrade to an older governance data source"
         );
-
-        const newVaaFromNewGovernanceGood = await createVAAFromUint8Array(data,
-            governance.CHAINS.acala, 
-            "0x0000000000000000000000000000000000000000000000000000000000001111",
-            20
-        );
-
-        await this.pythProxy.executeGovernanceInstruction(newVaaFromNewGovernanceGood);
     });
 
     it("Setting data sources should work", async function () {
