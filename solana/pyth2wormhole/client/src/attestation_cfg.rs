@@ -170,9 +170,9 @@ pub struct AttestationConditions {
     pub max_batch_jobs: usize,
 
     /// Trigger attestation if price changes by the specified
-    /// percentage, expressed in integer parts per thousand.
+    /// percentage, expressed in integer base points (1bp = 0.01%)
     #[serde(default)]
-    pub price_changed_ppt: Option<u64>,
+    pub price_changed_bp: Option<u64>,
 
     /// Trigger attestation if publish_time advances at least the
     /// specified amount.
@@ -188,11 +188,11 @@ impl AttestationConditions {
         let AttestationConditions {
             min_interval_secs: _min_interval_secs,
             max_batch_jobs: _max_batch_jobs,
-            price_changed_ppt,
+            price_changed_bp,
             publish_time_min_delta_secs,
         } = self;
 
-        price_changed_ppt.is_some() || publish_time_min_delta_secs.is_some()
+        price_changed_bp.is_some() || publish_time_min_delta_secs.is_some()
     }
 }
 
@@ -201,7 +201,7 @@ impl Default for AttestationConditions {
         Self {
             min_interval_secs: default_min_interval_secs(),
             max_batch_jobs: default_max_batch_jobs(),
-            price_changed_ppt: None,
+            price_changed_bp: None,
             publish_time_min_delta_secs: None,
         }
     }

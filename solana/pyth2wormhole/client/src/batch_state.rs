@@ -115,9 +115,9 @@ impl<'a> BatchState {
                                 ))
                             }
 
-                        // price_changed_ppt
-                        } else if let Some(ppt) = self.conditions.price_changed_ppt {
-                            let pct = ppt as f64 / 10.0;
+                        // price_changed_bp
+                        } else if let Some(bp) = self.conditions.price_changed_bp {
+                            let pct = bp as f64 / 100.0;
                             let price_pct_diff = ((old.agg.price as f64 - new.agg.price as f64)
                                 / old.agg.price as f64
                                 * 100.0)
