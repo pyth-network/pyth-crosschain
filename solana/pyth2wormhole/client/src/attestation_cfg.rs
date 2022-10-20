@@ -36,8 +36,11 @@ pub struct AttestationConfig {
     pub mapping_addr: Option<Pubkey>,
     /// The known symbol list will be reloaded based off this
     /// interval, to account for mapping changes. Note: This interval
-    /// will interrupt attestation scheduling jobs regardless of
-    /// mapping_addr set/unset status.
+    /// will only work if the mapping address is defined. Whenever
+    /// it's time to look up the mapping, new attestation jobs are
+    /// started lazily, only if mapping contents affected the known
+    /// symbol list, and before stopping the pre-existing obsolete
+    /// jobs to maintain uninterrupted cranking.
     #[serde(default = "default_mapping_reload_interval_mins")]
     pub mapping_reload_interval_mins: u64,
     #[serde(default = "default_min_rpc_interval_ms")]
