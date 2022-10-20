@@ -180,6 +180,117 @@ program
     );
   });
 
+program
+  .command("change-threshold")
+  .description("Change threshold of multisig")
+  .option("-c, --cluster <network>", "solana cluster to use", "devnet")
+  .requiredOption("-v, --vault-address <address>", "multisig vault address")
+  .option("-l, --ledger", "use ledger")
+  .option(
+    "-lda, --ledger-derivation-account <number>",
+    "ledger derivation account to use"
+  )
+  .option(
+    "-ldc, --ledger-derivation-change <number>",
+    "ledger derivation change to use"
+  )
+  .option(
+    "-w, --wallet <filepath>",
+    "multisig wallet secret key filepath",
+    "keys/key.json"
+  )
+  .option("-t, --threshold <number>", "new threshold")
+  .action(async (options) => {
+    const squad = await getSquadsClient(
+      options.cluster,
+      options.ledger,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange,
+      options.wallet
+    );
+    await changeThreshold(
+      options.cluster,
+      squad,
+      options.ledger,
+      new PublicKey(options.vaultAddress),
+      options.threshold
+    );
+  });
+
+program
+  .command("add-member")
+  .description("Add member to multisig")
+  .option("-c, --cluster <network>", "solana cluster to use", "devnet")
+  .requiredOption("-v, --vault-address <address>", "multisig vault address")
+  .option("-l, --ledger", "use ledger")
+  .option(
+    "-lda, --ledger-derivation-account <number>",
+    "ledger derivation account to use"
+  )
+  .option(
+    "-ldc, --ledger-derivation-change <number>",
+    "ledger derivation change to use"
+  )
+  .option(
+    "-w, --wallet <filepath>",
+    "multisig wallet secret key filepath",
+    "keys/key.json"
+  )
+  .option("-m, --member <address>", "new member address")
+  .action(async (options) => {
+    const squad = await getSquadsClient(
+      options.cluster,
+      options.ledger,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange,
+      options.wallet
+    );
+    await addMember(
+      options.cluster,
+      squad,
+      options.ledger,
+      new PublicKey(options.vaultAddress),
+      new PublicKey(options.member)
+    );
+  });
+
+program
+  .command("remove-member")
+  .description("Remove member from multisig")
+  .option("-c, --cluster <network>", "solana cluster to use", "devnet")
+  .requiredOption("-v, --vault-address <address>", "multisig vault address")
+  .option("-l, --ledger", "use ledger")
+  .option(
+    "-lda, --ledger-derivation-account <number>",
+    "ledger derivation account to use"
+  )
+  .option(
+    "-ldc, --ledger-derivation-change <number>",
+    "ledger derivation change to use"
+  )
+  .option(
+    "-w, --wallet <filepath>",
+    "multisig wallet secret key filepath",
+    "keys/key.json"
+  )
+  .option("-m, --member <address>", "old member address")
+  .action(async (options) => {
+    const squad = await getSquadsClient(
+      options.cluster,
+      options.ledger,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange,
+      options.wallet
+    );
+    await removeMember(
+      options.cluster,
+      squad,
+      options.ledger,
+      new PublicKey(options.vaultAddress),
+      new PublicKey(options.member)
+    );
+  });
+
 // TODO: add subcommand for creating governance messages in the right format
 
 program.parse();
@@ -546,6 +657,84 @@ async function executeMultisigTx(
   console.log(`Emitter chain: ${parsedVaa.emitter_chain}`);
   console.log(`Nonce: ${parsedVaa.nonce}`);
   console.log(`Payload: ${Buffer.from(parsedVaa.payload).toString("hex")}`);
+}
+
+async function changeThreshold(
+  cluster: Cluster,
+  squad: Squads,
+  ledger: boolean,
+  vault: PublicKey,
+  threshold: number
+) {
+  const msAccount = await squad.getMultisig(vault);
+  const txKey = await createTx(squad, ledger, vault);
+  const ix = await squad.buildChangeThresholdMember(
+    msAccount.publicKey,
+    msAccount.externalAuthority,
+    threshold
+  );
+
+  const squadIxs: SquadInstruction[] = [{ instruction: ix }];
+  await addInstructionsToTx(
+    cluster,
+    squad,
+    ledger,
+    msAccount.publicKey,
+    txKey,
+    squadIxs
+  );
+}
+
+async function addMember(
+  cluster: Cluster,
+  squad: Squads,
+  ledger: boolean,
+  vault: PublicKey,
+  member: PublicKey
+) {
+  const msAccount = await squad.getMultisig(vault);
+  const txKey = await createTx(squad, ledger, vault);
+  const ix = await squad.buildAddMember(
+    msAccount.publicKey,
+    msAccount.externalAuthority,
+    member
+  );
+
+  const squadIxs: SquadInstruction[] = [{ instruction: ix }];
+  await addInstructionsToTx(
+    cluster,
+    squad,
+    ledger,
+    msAccount.publicKey,
+    txKey,
+    squadIxs
+  );
+}
+
+async function removeMember(
+  cluster: Cluster,
+  squad: Squads,
+  ledger: boolean,
+  vault: PublicKey,
+  member: PublicKey
+) {
+  const msAccount = await squad.getMultisig(vault);
+  const txKey = await createTx(squad, ledger, vault);
+  const ix = await squad.buildRemoveMember(
+    msAccount.publicKey,
+    msAccount.externalAuthority,
+    member
+  );
+
+  const squadIxs: SquadInstruction[] = [{ instruction: ix }];
+  await addInstructionsToTx(
+    cluster,
+    squad,
+    ledger,
+    msAccount.publicKey,
+    txKey,
+    squadIxs
+  );
 }
 
 async function parse(data: string) {

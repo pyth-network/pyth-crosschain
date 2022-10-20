@@ -46,8 +46,10 @@ ENV BRIDGE_ADDRESS="Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 WORKDIR /usr/src/bridge/solana
 
 # Build Wormhole Solana programs
-RUN --mount=type=cache,target=../wormhole/solana/target \
-    --mount=type=cache,target=pyth2wormhole/target \
+RUN --mount=type=cache,target=/usr/src/bridge/wormhole/solana/target \
+    --mount=type=cache,target=/usr/src/bridge/solana/pyth2wormhole/target \
+    --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/root/.cache \
     cargo build-bpf --manifest-path "../wormhole/solana/bridge/program/Cargo.toml" -- --locked && \
     cargo build-bpf --manifest-path "../wormhole/solana/bridge/cpi_poster/Cargo.toml" -- --locked && \
     cargo build-bpf --manifest-path "pyth2wormhole/program/Cargo.toml" -- --locked && \
