@@ -7,6 +7,8 @@ use std::{
     str::FromStr,
 };
 
+use log::info;
+
 use serde::{
     de::Error,
     Deserialize,
@@ -15,6 +17,8 @@ use serde::{
     Serializer,
 };
 use solana_program::pubkey::Pubkey;
+
+use crate::BatchState;
 
 /// Pyth2wormhole config specific to attestation requests
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
@@ -55,7 +59,7 @@ impl AttestationConfig {
         for existing_group in &self.symbol_groups {
             for existing_sym in &existing_group.symbols {
                 // Check if new symbols mention this product
-                if let Some(mut prices) = new_symbols.get_mut(&existing_sym.product_addr) {
+                if let Some(prices) = new_symbols.get_mut(&existing_sym.product_addr) {
                     // Prune the price if exists
                     prices.remove(&existing_sym.price_addr);
                 }
@@ -80,7 +84,7 @@ impl AttestationConfig {
             .iter_mut()
             .find(|g| g.group_name == group_name) // Advances the iterator and returns Some(item) on first hit
         {
-            Some(mut existing_group) => existing_group.symbols.append(&mut new_symbols_vec),
+            Some(existing_group) => existing_group.symbols.append(&mut new_symbols_vec),
             None if new_symbols_vec.len() != 0 => {
                 // Group does not exist, assume defaults
                 let new_group = SymbolGroup {
@@ -93,6 +97,27 @@ impl AttestationConfig {
             }
             None => {}
         }
+    }
+
+    pub fn as_batches(&self, max_batch_size: usize) -> Vec<BatchState> {
+        self.symbol_groups
+            .iter()
+            .map(move |g| {
+                let conditions4closure = g.conditions.clone();
+                let name4closure = g.group_name.clone();
+
+                info!("Group {:?}, {} symbols", g.group_name, g.symbols.len(),);
+
+                // Divide group into batches
+                g.symbols
+                    .as_slice()
+                    .chunks(max_batch_size.clone())
+                    .map(move |symbols| {
+                        BatchState::new(name4closure.clone(), symbols, conditions4closure.clone())
+                    })
+            })
+            .flatten()
+            .collect()
     }
 }
 

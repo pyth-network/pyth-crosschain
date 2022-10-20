@@ -1,7 +1,6 @@
 //! Re-usable message scheme for pyth2wormhole
 
 use log::debug;
-use solana_program::system_instruction;
 use std::{
     collections::VecDeque,
     time::{
@@ -89,6 +88,7 @@ impl P2WMessageQueue {
     }
 }
 
+#[cfg(test)]
 pub mod test {
     use super::*;
 

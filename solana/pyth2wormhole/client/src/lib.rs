@@ -62,7 +62,6 @@ use std::collections::{
 use p2w_sdk::P2WEmitter;
 
 use pyth2wormhole::{
-    attest::P2W_MAX_BATCH_SIZE,
     config::{
         OldP2WConfigAccount,
         P2WConfigAccount,

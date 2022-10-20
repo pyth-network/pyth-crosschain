@@ -1,11 +1,8 @@
-use futures::future::TryFutureExt;
 use log::{
     debug,
-    trace,
     warn,
 };
 use solana_client::nonblocking::rpc_client::RpcClient;
-use solana_sdk::signature::Signature;
 
 use pyth_sdk_solana::state::PriceAccount;
 
@@ -16,9 +13,7 @@ use std::time::{
 
 use crate::{
     AttestationConditions,
-    ErrBox,
     P2WSymbol,
-    RLMutex,
 };
 
 /// Runtime representation of a batch. It refers to the original group
@@ -69,7 +64,7 @@ impl<'a> BatchState {
 
         // Only lookup and compare symbols if the conditions require
         if self.conditions.need_onchain_lookup() {
-            let mut new_symbol_states: Vec<Option<PriceAccount>> =
+            let new_symbol_states: Vec<Option<PriceAccount>> =
                 match c.get_multiple_accounts(&pubkeys).await {
                     Ok(acc_opts) => {
                         acc_opts
