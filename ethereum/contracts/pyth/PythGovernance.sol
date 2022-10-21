@@ -44,15 +44,15 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
 
         if (gi.action == GovernanceAction.UpgradeContract) {
             require(gi.targetChainId != 0, "upgrade with chain id 0 is not possible");
-            upgradeContract(gi.payload);
+            upgradeContract(parseUpgradeContractPayload(gi.payload));
         } else if (gi.action == GovernanceAction.AuthorizeGovernanceDataSourceTransfer) {
-            AuthorizeGovernanceDataSourceTransfer(gi.payload);
+            AuthorizeGovernanceDataSourceTransfer(parseAuthorizeGovernanceDataSourceTransferPayload(gi.payload));
         } else if (gi.action == GovernanceAction.SetDataSources) {
-            setDataSources(gi.payload);
+            setDataSources(parseSetDataSourcesPayload(gi.payload));
         } else if (gi.action == GovernanceAction.SetFee) {
-            setFee(gi.payload);
+            setFee(parseSetFeePayload(gi.payload));
         } else if (gi.action == GovernanceAction.SetValidPeriod) {
-            setValidPeriod(gi.payload);
+            setValidPeriod(parseSetValidPeriodPayload(gi.payload));
         } else if (gi.action == GovernanceAction.RequestGovernanceDataSourceTransfer) {
             revert("RequestGovernanceDataSourceTransfer can be only part of AuthorizeGovernanceDataSourceTransfer message");
         } else {
@@ -60,10 +60,9 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
         }
     }
 
-    function upgradeContract(bytes memory encodedPayload) internal {
-        UpgradeContractPayload memory payload = parseUpgradeContractPayload(encodedPayload); 
-        // This contract does not have enough access to execute this, it should be executed on the
-        // upgradable
+    function upgradeContract(UpgradeContractPayload memory payload) internal {
+        // This method on this contract does not have enough access to execute this, it should be executed on the
+        // upgradable contract.
         upgradeUpgradableContract(payload);
     }
 
@@ -71,10 +70,8 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
 
     // Transfer the governance data source to a new value with sanity checks
     // to ensure the new governance data source can manage the contract.
-    function AuthorizeGovernanceDataSourceTransfer(bytes memory encodedPayload) internal {
+    function AuthorizeGovernanceDataSourceTransfer(AuthorizeGovernanceDataSourceTransferPayload memory payload) internal {
         PythInternalStructs.DataSource memory oldGovernanceDatSource = governanceDataSource();
-
-        AuthorizeGovernanceDataSourceTransferPayload memory payload = parseAuthorizeGovernanceDataSourceTransferPayload(encodedPayload);
 
         // Make sure the claimVaa is a valid VAA with RequestGovernanceDataSourceTransfer governance message
         // If it's valid then its emitter can take over the governance from the current emitter.
@@ -106,9 +103,7 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
         emit GovernanceDataSourceSet(oldGovernanceDatSource, governanceDataSource(), lastExecutedGovernanceSequence());
     }
 
-    function setDataSources(bytes memory encodedPayload) internal {
-        SetDataSourcesPayload memory payload = parseSetDataSourcesPayload(encodedPayload);
-
+    function setDataSources(SetDataSourcesPayload memory payload) internal {
         PythInternalStructs.DataSource[] memory oldDataSources = validDataSources();
 
         for (uint i = 0; i < oldDataSources.length; i += 1) {
@@ -124,18 +119,14 @@ abstract contract PythGovernance is PythGetters, PythSetters, PythGovernanceInst
         emit DataSourcesSet(oldDataSources, validDataSources());
     }
 
-    function setFee(bytes memory encodedPayload) internal {
-        SetFeePayload memory payload = parseSetFeePayload(encodedPayload);
-
+    function setFee(SetFeePayload memory payload) internal {
         uint oldFee = singleUpdateFeeInWei();
         setSingleUpdateFeeInWei(payload.newFee);
 
         emit FeeSet(oldFee, singleUpdateFeeInWei());
     }
 
-    function setValidPeriod(bytes memory encodedPayload) internal {
-        SetValidPeriodPayload memory payload = parseSetValidPeriodPayload(encodedPayload);
-
+    function setValidPeriod(SetValidPeriodPayload memory payload) internal {
         uint oldValidPeriod = validTimePeriodSeconds();
         setValidTimePeriodSeconds(payload.newValidPeriod);
 
