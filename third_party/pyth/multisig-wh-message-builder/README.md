@@ -15,7 +15,6 @@ Note:
 - Node.js v17.15.0 or higher is required as it [introduces support for fetch API](https://nodejs.org/tr/blog/release/v17.5.0/).
 - When using with Ledger, please enable [blind signing](https://www.ledger.com/academy/enable-blind-signing-why-when-and-how-to-stay-safe) in the Solana app settings. TLDR: When you enable blind signing, you enable your device to approve a smart contract transaction, even though it hasn’t been able to display full contract data to you. In other words, you’re agreeing to trust, instead of verify, the transaction. You still have to manually approve each transactions.
 - Information about ledger derivation can be found [here](https://github.com/LedgerHQ/ledger-live-common/blob/master/docs/derivation.md).
-- RPC URLs can be found [here](https://book.wormhole.com/reference/rpcnodes.html).
 
 ### Create a multisig transaction
 
