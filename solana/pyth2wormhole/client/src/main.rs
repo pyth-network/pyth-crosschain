@@ -264,6 +264,16 @@ async fn handle_attest_daemon_mode(
     let mut hasher = Sha3_256::new();
     let mut old_sched_futs_state: Option<(JoinHandle<_>, GenericArray<u8, _>)> = None; // (old_futs_handle, old_config_hash)
 
+    // For enforcing min_msg_reuse_interval_ms, we keep a piece of
+    // state that creates or reuses accounts if enough time had
+    // passed. It is crucial that this queue is reused across mapping
+    // lookups, so that previous symbol set's messages have enough
+    // time to be picked up by Wormhole guardians.
+    let message_q_mtx = Arc::new(Mutex::new(P2WMessageQueue::new(
+        Duration::from_millis(attestation_cfg.min_msg_reuse_interval_ms),
+        attestation_cfg.max_msg_accounts as usize,
+    )));
+
     // This loop cranks attestations without interruption. This is
     // achieved by spinning up a new up-to-date symbol set before
     // letting go of the previous one. Additionally, hash of on-chain
@@ -316,6 +326,7 @@ async fn handle_attest_daemon_mode(
                     &rpc_cfg,
                     &p2w_addr,
                     &payer,
+                    message_q_mtx.clone()
                 ));
 
                 // Quit old sched futures
@@ -333,6 +344,7 @@ async fn handle_attest_daemon_mode(
                     &rpc_cfg,
                     &p2w_addr,
                     &payer,
+                    message_q_mtx.clone()
                 )),
                 new_cfg_hash,
             ));
@@ -474,6 +486,7 @@ fn prepare_attestation_sched_jobs(
     rpc_cfg: &Arc<RLMutex<RpcCfg>>,
     p2w_addr: &Pubkey,
     payer: &Keypair,
+    message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
 ) -> futures::future::JoinAll<impl Future<Output = Result<(), ErrBoxSend>>> {
     info!(
         "{} symbol groups read, dividing into batches",
@@ -485,13 +498,6 @@ fn prepare_attestation_sched_jobs(
 
     let batch_count = batches.len();
 
-    // For enforcing min_msg_reuse_interval_ms, we keep a piece of
-    // state that creates or reuses accounts if enough time had
-    // passed
-    let message_q_mtx = Arc::new(Mutex::new(P2WMessageQueue::new(
-        Duration::from_millis(attestation_cfg.min_msg_reuse_interval_ms),
-        attestation_cfg.max_msg_accounts as usize,
-    )));
 
     // Create attestation scheduling routines; see attestation_sched_job() for details
     let attestation_sched_futs = batches.into_iter().enumerate().map(|(idx, batch)| {
