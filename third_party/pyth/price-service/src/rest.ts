@@ -179,7 +179,8 @@ export class RestAPI {
                 emitter_chain: latestPriceInfo.emitterChainId,
                 attestation_time: latestPriceInfo.attestationTime,
                 sequence_number: latestPriceInfo.seqNum,
-                price_service_receive_time: latestPriceInfo.priceServiceReceiveTime,
+                price_service_receive_time:
+                  latestPriceInfo.priceServiceReceiveTime,
               },
             });
           } else {

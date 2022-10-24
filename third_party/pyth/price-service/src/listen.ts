@@ -199,7 +199,7 @@ export class Listener implements PriceStore {
           attestationTime: priceAttestation.attestationTime,
           priceFeed,
           emitterChainId: parsedVAA.emitter_chain,
-          priceServiceReceiveTime: Math.floor((new Date()).getTime() / 1000),
+          priceServiceReceiveTime: Math.floor(new Date().getTime() / 1000),
         };
         this.priceFeedVaaMap.set(key, priceInfo);
 
