@@ -7,6 +7,8 @@ use std::{
     str::FromStr,
 };
 
+use log::info;
+
 use serde::{
     de::Error,
     Deserialize,
@@ -16,8 +18,10 @@ use serde::{
 };
 use solana_program::pubkey::Pubkey;
 
+use crate::BatchState;
+
 /// Pyth2wormhole config specific to attestation requests
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
 pub struct AttestationConfig {
     #[serde(default = "default_min_msg_reuse_interval_ms")]
     pub min_msg_reuse_interval_ms: u64,
@@ -30,6 +34,15 @@ pub struct AttestationConfig {
         default // Uses Option::default() which is None
     )]
     pub mapping_addr: Option<Pubkey>,
+    /// The known symbol list will be reloaded based off this
+    /// interval, to account for mapping changes. Note: This interval
+    /// will only work if the mapping address is defined. Whenever
+    /// it's time to look up the mapping, new attestation jobs are
+    /// started lazily, only if mapping contents affected the known
+    /// symbol list, and before stopping the pre-existing obsolete
+    /// jobs to maintain uninterrupted cranking.
+    #[serde(default = "default_mapping_reload_interval_mins")]
+    pub mapping_reload_interval_mins: u64,
     #[serde(default = "default_min_rpc_interval_ms")]
     /// Rate-limiting minimum delay between RPC requests in milliseconds"
     pub min_rpc_interval_ms: u64,
@@ -49,7 +62,7 @@ impl AttestationConfig {
         for existing_group in &self.symbol_groups {
             for existing_sym in &existing_group.symbols {
                 // Check if new symbols mention this product
-                if let Some(mut prices) = new_symbols.get_mut(&existing_sym.product_addr) {
+                if let Some(prices) = new_symbols.get_mut(&existing_sym.product_addr) {
                     // Prune the price if exists
                     prices.remove(&existing_sym.price_addr);
                 }
@@ -74,7 +87,7 @@ impl AttestationConfig {
             .iter_mut()
             .find(|g| g.group_name == group_name) // Advances the iterator and returns Some(item) on first hit
         {
-            Some(mut existing_group) => existing_group.symbols.append(&mut new_symbols_vec),
+            Some(existing_group) => existing_group.symbols.append(&mut new_symbols_vec),
             None if new_symbols_vec.len() != 0 => {
                 // Group does not exist, assume defaults
                 let new_group = SymbolGroup {
@@ -88,9 +101,30 @@ impl AttestationConfig {
             None => {}
         }
     }
+
+    pub fn as_batches(&self, max_batch_size: usize) -> Vec<BatchState> {
+        self.symbol_groups
+            .iter()
+            .map(move |g| {
+                let conditions4closure = g.conditions.clone();
+                let name4closure = g.group_name.clone();
+
+                info!("Group {:?}, {} symbols", g.group_name, g.symbols.len(),);
+
+                // Divide group into batches
+                g.symbols
+                    .as_slice()
+                    .chunks(max_batch_size.clone())
+                    .map(move |symbols| {
+                        BatchState::new(name4closure.clone(), symbols, conditions4closure.clone())
+                    })
+            })
+            .flatten()
+            .collect()
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
 pub struct SymbolGroup {
     pub group_name: String,
     /// Attestation conditions applied to all symbols in this group
@@ -104,6 +138,10 @@ pub const fn default_max_msg_accounts() -> u64 {
 
 pub const fn default_min_msg_reuse_interval_ms() -> u64 {
     10_000 // 10s
+}
+
+pub const fn default_mapping_reload_interval_mins() -> u64 {
+    15
 }
 
 pub const fn default_min_rpc_interval_ms() -> u64 {
@@ -122,7 +160,7 @@ pub const fn default_max_batch_jobs() -> usize {
 /// of the active conditions is met. Option<> fields can be
 /// de-activated with None. All conditions are inactive by default,
 /// except for the non-Option ones.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
 pub struct AttestationConditions {
     /// Baseline, unconditional attestation interval. Attestation is triggered if the specified interval elapsed since last attestation.
     #[serde(default = "default_min_interval_secs")]
@@ -134,9 +172,10 @@ pub struct AttestationConditions {
     #[serde(default = "default_max_batch_jobs")]
     pub max_batch_jobs: usize,
 
-    /// Trigger attestation if price changes by the specified percentage.
+    /// Trigger attestation if price changes by the specified
+    /// percentage, expressed in integer basis points (1bps = 0.01%)
     #[serde(default)]
-    pub price_changed_pct: Option<f64>,
+    pub price_changed_bps: Option<u64>,
 
     /// Trigger attestation if publish_time advances at least the
     /// specified amount.
@@ -152,11 +191,11 @@ impl AttestationConditions {
         let AttestationConditions {
             min_interval_secs: _min_interval_secs,
             max_batch_jobs: _max_batch_jobs,
-            price_changed_pct,
+            price_changed_bps,
             publish_time_min_delta_secs,
         } = self;
 
-        price_changed_pct.is_some() || publish_time_min_delta_secs.is_some()
+        price_changed_bps.is_some() || publish_time_min_delta_secs.is_some()
     }
 }
 
@@ -165,14 +204,14 @@ impl Default for AttestationConditions {
         Self {
             min_interval_secs: default_min_interval_secs(),
             max_batch_jobs: default_max_batch_jobs(),
-            price_changed_pct: None,
+            price_changed_bps: None,
             publish_time_min_delta_secs: None,
         }
     }
 }
 
 /// Config entry for a Pyth product + price pair
-#[derive(Clone, Default, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Clone, Default, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct P2WSymbol {
     /// User-defined human-readable name
     pub name: Option<String>,
@@ -283,6 +322,7 @@ mod tests {
             max_msg_accounts: 100_000,
             min_rpc_interval_ms: 2123,
             mapping_addr: None,
+            mapping_reload_interval_mins: 42,
             symbol_groups: vec![fastbois, slowbois],
         };
 
@@ -302,6 +342,7 @@ mod tests {
             max_msg_accounts: 100,
             min_rpc_interval_ms: 42422,
             mapping_addr: None,
+            mapping_reload_interval_mins: 42,
             symbol_groups: vec![],
         };
 

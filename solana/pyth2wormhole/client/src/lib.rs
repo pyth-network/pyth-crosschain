@@ -10,6 +10,7 @@ use borsh::{
 use log::{
     debug,
     trace,
+    warn,
 };
 use pyth_sdk_solana::state::{
     load_mapping_account,
@@ -61,7 +62,6 @@ use std::collections::{
 use p2w_sdk::P2WEmitter;
 
 use pyth2wormhole::{
-    attest::P2W_MAX_BATCH_SIZE,
     config::{
         OldP2WConfigAccount,
         P2WConfigAccount,
@@ -409,23 +409,41 @@ pub async fn crawl_pyth_mapping(
     let mut ret = HashMap::new();
 
     let mut n_mappings = 1; // We assume the first one must be valid
-    let mut n_products = 0;
-    let mut n_prices = 0;
+    let mut n_products_total = 0; // Grand total products in all mapping accounts
+    let mut n_prices_total = 0; // Grand total prices in all product accounts in all mapping accounts
 
     let mut mapping_addr = first_mapping_addr.clone();
 
     // loop until the last non-zero MappingAccount.next account
     loop {
         let mapping_bytes = rpc_client.get_account_data(&mapping_addr).await?;
+        let mapping = match load_mapping_account(&mapping_bytes) {
+            Ok(p) => p,
+            Err(e) => {
+                warn!(
+                    "Mapping: Could not parse account {} as a Pyth mapping, crawling terminated. Error: {:?}",
+                    mapping_addr, e
+                );
+                continue;
+            }
+        };
 
-        let mapping = load_mapping_account(&mapping_bytes)?;
+        // Products in this mapping account
+        let mut n_mapping_products = 0;
 
         // loop through all products in this mapping; filter out zeroed-out empty product slots
         for prod_addr in mapping.products.iter().filter(|p| *p != &Pubkey::default()) {
             let prod_bytes = rpc_client.get_account_data(prod_addr).await?;
-            let prod = load_product_account(&prod_bytes)?;
+            let prod = match load_product_account(&prod_bytes) {
+                Ok(p) => p,
+                Err(e) => {
+                    warn!("Mapping {}: Could not parse account {} as a Pyth product, skipping to next product. Error: {:?}", mapping_addr, prod_addr, e);
+                    continue;
+                }
+            };
 
             let mut price_addr = prod.px_acc.clone();
+            let mut n_prod_prices = 0;
 
             // the product might have no price, can happen in tilt due to race-condition, failed tx to add price, ...
             if price_addr == Pubkey::default() {
@@ -441,32 +459,46 @@ pub async fn crawl_pyth_mapping(
             // loop until the last non-zero PriceAccount.next account
             loop {
                 let price_bytes = rpc_client.get_account_data(&price_addr).await?;
-                let price = load_price_account(&price_bytes)?;
+                let price = match load_price_account(&price_bytes) {
+                    Ok(p) => p,
+                    Err(e) => {
+                        warn!("Product {}: Could not parse account {} as a Pyth price, skipping to next product. Error: {:?}", prod_addr, price_addr, e);
+                        break;
+                    }
+                };
 
                 // Append to existing set or create a new map entry
                 ret.entry(prod_addr.clone())
                     .or_insert(HashSet::new())
                     .insert(price_addr);
 
-                n_prices += 1;
+                n_prod_prices += 1;
 
                 if price.next == Pubkey::default() {
-                    trace!("Product {}: processed {} prices", prod_addr, n_prices);
+                    trace!(
+                        "Product {}: processed {} price(s)",
+                        prod_addr,
+                        n_prod_prices
+                    );
                     break;
                 }
+
                 price_addr = price.next.clone();
             }
 
-            n_products += 1;
+            n_prices_total += n_prod_prices;
         }
-        trace!(
-            "Mapping {}: processed {} products",
-            mapping_addr,
-            n_products
-        );
+        n_mapping_products += 1;
+        n_products_total += n_mapping_products;
 
         // Traverse other mapping accounts if applicable
         if mapping.next == Pubkey::default() {
+            trace!(
+                "Mapping {}: processed {} products",
+                mapping_addr,
+                n_mapping_products
+            );
+
             break;
         }
         mapping_addr = mapping.next.clone();
@@ -474,7 +506,7 @@ pub async fn crawl_pyth_mapping(
     }
     debug!(
         "Processed {} price(s) in {} product account(s), in {} mapping account(s)",
-        n_prices, n_products, n_mappings
+        n_prices_total, n_products_total, n_mappings
     );
 
     Ok(ret)

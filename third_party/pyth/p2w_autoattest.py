@@ -184,6 +184,7 @@ if P2W_ATTESTATION_CFG is None:
     cfg_yaml = f"""
 ---
 mapping_addr: {mapping_addr}
+mapping_reload_interval_mins: 1 # Very fast for testing purposes
 min_rpc_interval_ms: 0 # RIP RPC
 max_batch_jobs: 1000 # Where we're going there's no oomkiller
 symbol_groups:
@@ -214,7 +215,7 @@ symbol_groups:
   - group_name: longer_interval_sensitive_changes
     conditions:
       min_interval_secs: 10
-      price_changed_pct: 3 
+      price_changed_bps: 300
     symbols:
 """
 
@@ -232,7 +233,7 @@ symbol_groups:
   - group_name: mapping
     conditions:
       min_interval_secs: 30
-      price_changed_pct: 5 
+      price_changed_bps: 500
     symbols: []
 """
 

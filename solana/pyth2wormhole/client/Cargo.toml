@@ -31,6 +31,8 @@ solana-transaction-status = "=1.10.31"
 solitaire = {git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9"}
 tokio = {version = "1", features = ["sync", "rt-multi-thread", "time"]}
 futures = "0.3.21"
+sha3 = "0.10.6"
+generic-array = "0.14.6"
 
 [dev-dependencies]
 pyth-client = "0.5.0"
