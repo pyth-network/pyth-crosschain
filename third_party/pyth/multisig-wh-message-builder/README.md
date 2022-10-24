@@ -20,27 +20,27 @@ Note:
 ### Create a multisig transaction
 
 ```
-npm start -- create -c <CLUSTER> -v <VAULT_ADDRESS> -l -lda <LEDGER_DERIVATION_ACCOUNT> -ldc <LEDGER_DERIVATION_CHANGE> -w <WALLET_SECRET_KEY_FILEPATH> -p <PAYLOAD>
+npm start -- create -c <CLUSTER: [mainnet|devnet]> -l -lda <LEDGER_DERIVATION_ACCOUNT> -ldc <LEDGER_DERIVATION_CHANGE> -w <WALLET_SECRET_KEY_FILEPATH> -p <PAYLOAD>
 ```
 
 To use ledger with default derivation account and change:
 
 ```
-npm start -- create -c devnet -v HezRVdwZmKpdKbksxFytKnHTQVztiTmL3GHdNadMFYui -l -p hello
+npm start -- create -c devnet -l -p hello
 ```
 
 To use ledger with custom derivation account and/or change:
 
 ```
-npm start -- create -c devnet -v HezRVdwZmKpdKbksxFytKnHTQVztiTmL3GHdNadMFYui -l -lda 0 -p hello
+npm start -- create -c devnet -l -lda 0 -p hello
 
-npm start -- create -c devnet -v HezRVdwZmKpdKbksxFytKnHTQVztiTmL3GHdNadMFYui -l -lda 0 -ldc 1 -p hello
+npm start -- create -c devnet -l -lda 0 -ldc 1 -p hello
 ```
 
 To use hot wallet :
 
 ```
-npm start -- create -c devnet -v HezRVdwZmKpdKbksxFytKnHTQVztiTmL3GHdNadMFYui -w keys/key.json -p hello
+npm start -- create -c devnet -w keys/key.json -p hello
 ```
 
 ---
@@ -48,27 +48,27 @@ npm start -- create -c devnet -v HezRVdwZmKpdKbksxFytKnHTQVztiTmL3GHdNadMFYui -w
 ### Execute a multisig transaction
 
 ```
-npm start -- execute -c <CLUSTER> -v <VAULT_ADDRESS> -w <WALLET_SECRET_KEY_FILEPATH> -m <MESSAGE_SECRET_KEY_FILEPATH> -t <TX_ID> -u <RPC_URL>
+npm start -- execute -c <CLUSTER: [mainnet|devnet]> -w <WALLET_SECRET_KEY_FILEPATH> -t <TX_ID>
 ```
 
 To use ledger with default derivation account and change:
 
 ```
-npm start -- execute -c devnet -v HezRVdwZmKpdKbksxFytKnHTQVztiTmL3GHdNadMFYui -l -m keys/message.json -t GSC8r7Qsi9pc698fckaQgzHufG6LqVq3vZijyu5KsXLh -u https://wormhole-v2-testnet-api.certus.one/
+npm start -- execute -c devnet -l -m keys/message.json -t GSC8r7Qsi9pc698fckaQgzHufG6LqVq3vZijyu5KsXLh
 ```
 
 To use ledger with custom derivation account and/or change:
 
 ```
-npm start -- execute -c devnet -v HezRVdwZmKpdKbksxFytKnHTQVztiTmL3GHdNadMFYui -l -lda 0 -m keys/message.json -t GSC8r7Qsi9pc698fckaQgzHufG6LqVq3vZijyu5KsXLh -u https://wormhole-v2-testnet-api.certus.one/
+npm start -- execute -c devnet -l -lda 0 -m keys/message.json -t GSC8r7Qsi9pc698fckaQgzHufG6LqVq3vZijyu5KsXLh
 
-npm start -- execute -c devnet -v HezRVdwZmKpdKbksxFytKnHTQVztiTmL3GHdNadMFYui -l -lda 0 -ldc 1 -m keys/message.json -t GSC8r7Qsi9pc698fckaQgzHufG6LqVq3vZijyu5KsXLh -u https://wormhole-v2-testnet-api.certus.one/
+npm start -- execute -c devnet -l -lda 0 -ldc 1 -m keys/message.json -t GSC8r7Qsi9pc698fckaQgzHufG6LqVq3vZijyu5KsXLh
 ```
 
 Example:
 
 ```
-npm start -- execute -c devnet -v HezRVdwZmKpdKbksxFytKnHTQVztiTmL3GHdNadMFYui -w keys/key.json -m keys/message.json -t GSC8r7Qsi9pc698fckaQgzHufG6LqVq3vZijyu5KsXLh -u https://wormhole-v2-testnet-api.certus.one/
+npm start -- execute -c devnet -w keys/key.json -m keys/message.json -t GSC8r7Qsi9pc698fckaQgzHufG6LqVq3vZijyu5KsXLh
 ```
 
 https://github.com/LedgerHQ/ledger-live/wiki/LLC:derivation

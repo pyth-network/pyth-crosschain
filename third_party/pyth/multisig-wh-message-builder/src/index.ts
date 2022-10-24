@@ -23,6 +23,28 @@ import { LedgerNodeWallet } from "./wallet";
 
 setDefaultWasm("node");
 
+type Cluster = "devnet" | "mainnet";
+type WormholeNetwork = "TESTNET" | "MAINNET";
+
+type Config = {
+  wormholeClusterName: WormholeNetwork,
+  wormholeRpcEndpoint: string,
+  vault: PublicKey,
+};
+
+const CONFIG: Record<Cluster, Config> = {
+  devnet: {
+    wormholeClusterName: "TESTNET",
+    vault: new PublicKey("6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3"),
+    wormholeRpcEndpoint: "https://wormhole-v2-testnet-api.certus.one"
+  },
+  mainnet: {
+    wormholeClusterName: "MAINNET",
+    vault: new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
+    wormholeRpcEndpoint: "https://wormhole-v2-mainnet-api.certus.one"
+  }
+};
+
 program
   .name("pyth-multisig")
   .description("CLI to creating and executing multisig transactions for pyth")
@@ -32,7 +54,6 @@ program
   .command("create")
   .description("Create a new multisig transaction")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option("-l, --ledger", "use ledger")
   .option(
     "-lda, --ledger-derivation-account <number>",
@@ -49,8 +70,9 @@ program
   )
   .option("-p, --payload <hex-string>", "payload to sign", "0xdeadbeef")
   .action(async (options) => {
+    const cluster: Cluster = options.cluster;
     const squad = await getSquadsClient(
-      options.cluster,
+      cluster,
       options.ledger,
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
@@ -60,7 +82,7 @@ program
       options.cluster,
       squad,
       options.ledger,
-      new PublicKey(options.vaultAddress),
+      CONFIG[cluster].vault,
       options.payload
     );
   });
@@ -71,7 +93,6 @@ program
     "Create a new multisig transaction to set the attester is-active flag"
   )
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option("-l, --ledger", "use ledger")
   .option(
     "-lda, --ledger-derivation-account <number>",
@@ -93,16 +114,16 @@ program
     "true"
   )
   .action(async (options) => {
+    const cluster = options.cluster as Cluster;
     const squad = await getSquadsClient(
-      options.cluster,
+      cluster,
       options.ledger,
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
       options.wallet
     );
-    const msAccount = await squad.getMultisig(
-      new PublicKey(options.vaultAddress)
-    );
+    const vaultPubkey = CONFIG[cluster].vault;
+    const msAccount = await squad.getMultisig(vaultPubkey);
 
     const vaultAuthority = squad.getAuthorityPDA(
       msAccount.publicKey,
@@ -112,7 +133,7 @@ program
     const txKey = await createTx(
       squad,
       options.ledger,
-      new PublicKey(options.vaultAddress)
+      vaultPubkey
     );
 
     let isActive = undefined;
@@ -150,7 +171,6 @@ program
   .command("execute")
   .description("Execute a multisig transaction that is ready")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option("-l, --ledger", "use ledger")
   .option(
     "-lda, --ledger-derivation-account <number>",
@@ -166,17 +186,17 @@ program
     "keys/key.json"
   )
   .requiredOption("-t, --tx-pda <address>", "transaction PDA")
-  .requiredOption("-u, --rpc-url <url>", "wormhole RPC URL")
   .action((options) => {
+    const cluster: Cluster = options.cluster;
     executeMultisigTx(
-      options.cluster,
-      new PublicKey(options.vaultAddress),
+      cluster,
+      CONFIG[cluster].vault,
       options.ledger,
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
       options.wallet,
       new PublicKey(options.txPda),
-      options.rpcUrl
+      CONFIG[cluster].wormholeRpcEndpoint
     );
   });
 
@@ -184,7 +204,6 @@ program
   .command("change-threshold")
   .description("Change threshold of multisig")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option("-l, --ledger", "use ledger")
   .option(
     "-lda, --ledger-derivation-account <number>",
@@ -201,8 +220,9 @@ program
   )
   .option("-t, --threshold <number>", "new threshold")
   .action(async (options) => {
+    const cluster: Cluster = options.cluster;
     const squad = await getSquadsClient(
-      options.cluster,
+      cluster,
       options.ledger,
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
@@ -212,7 +232,7 @@ program
       options.cluster,
       squad,
       options.ledger,
-      new PublicKey(options.vaultAddress),
+      CONFIG[cluster].vault,
       options.threshold
     );
   });
@@ -221,7 +241,6 @@ program
   .command("add-member")
   .description("Add member to multisig")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option("-l, --ledger", "use ledger")
   .option(
     "-lda, --ledger-derivation-account <number>",
@@ -238,8 +257,9 @@ program
   )
   .option("-m, --member <address>", "new member address")
   .action(async (options) => {
+    const cluster: Cluster = options.cluster;
     const squad = await getSquadsClient(
-      options.cluster,
+      cluster,
       options.ledger,
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
@@ -249,7 +269,7 @@ program
       options.cluster,
       squad,
       options.ledger,
-      new PublicKey(options.vaultAddress),
+      CONFIG[cluster].vault,
       new PublicKey(options.member)
     );
   });
@@ -258,7 +278,6 @@ program
   .command("remove-member")
   .description("Remove member from multisig")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option("-l, --ledger", "use ledger")
   .option(
     "-lda, --ledger-derivation-account <number>",
@@ -275,8 +294,9 @@ program
   )
   .option("-m, --member <address>", "old member address")
   .action(async (options) => {
+    const cluster: Cluster = options.cluster;
     const squad = await getSquadsClient(
-      options.cluster,
+      cluster,
       options.ledger,
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
@@ -286,7 +306,7 @@ program
       options.cluster,
       squad,
       options.ledger,
-      new PublicKey(options.vaultAddress),
+      CONFIG[cluster].vault,
       new PublicKey(options.member)
     );
   });
@@ -294,17 +314,6 @@ program
 // TODO: add subcommand for creating governance messages in the right format
 
 program.parse();
-
-// custom solana cluster type
-type Cluster = "devnet" | "mainnet";
-type WormholeNetwork = "TESTNET" | "MAINNET";
-
-// solana cluster mapping to wormhole cluster
-const solanaClusterMappingToWormholeNetwork: Record<Cluster, WormholeNetwork> =
-  {
-    devnet: "TESTNET",
-    mainnet: "MAINNET",
-  };
 
 async function getSquadsClient(
   cluster: Cluster,
@@ -450,9 +459,9 @@ async function getWormholeMessageIx(
   connection: anchor.web3.Connection,
   payload: string
 ) {
-  const wormholeNetwork: WormholeNetwork =
-    solanaClusterMappingToWormholeNetwork[cluster];
-  const wormholeAddress = wormholeUtils.CONTRACTS[wormholeNetwork].solana.core;
+  const wormholeClusterName: WormholeNetwork =
+    CONFIG[cluster].wormholeClusterName;
+  const wormholeAddress = wormholeUtils.CONTRACTS[wormholeClusterName].solana.core;
   const { post_message_ix, fee_collector_address, state_address, parse_state } =
     await importCoreWasm();
   const feeCollector = new PublicKey(fee_collector_address(wormholeAddress));
