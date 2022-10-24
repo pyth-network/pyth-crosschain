@@ -32,6 +32,7 @@ export type PriceInfo = {
   attestationTime: TimestampInSec;
   priceFeed: PriceFeed;
   emitterChainId: number;
+  priceServiceReceiveTime: number;
 };
 
 export interface PriceStore {
@@ -198,6 +199,7 @@ export class Listener implements PriceStore {
           attestationTime: priceAttestation.attestationTime,
           priceFeed,
           emitterChainId: parsedVAA.emitter_chain,
+          priceServiceReceiveTime: Math.floor((new Date()).getTime() / 1000),
         };
         this.priceFeedVaaMap.set(key, priceInfo);
 

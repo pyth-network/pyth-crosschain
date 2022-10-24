@@ -42,7 +42,7 @@
     "dependencies": {
         "@certusone/wormhole-sdk": "0.2.1",
         "@improbable-eng/grpc-web-node-http-transport": "^0.14.1",
-        "@pythnetwork/pyth-sdk-js": "^1.0.0"
+        "@pythnetwork/pyth-sdk-js": "^1.1.0"
     },
     "bugs": {
         "url": "https://github.com/pyth-network/pyth-crosschain/issues"
