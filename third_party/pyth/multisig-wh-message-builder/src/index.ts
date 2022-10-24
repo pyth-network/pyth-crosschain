@@ -186,14 +186,20 @@ program
     "keys/key.json"
   )
   .requiredOption("-t, --tx-pda <address>", "transaction PDA")
-  .action((options) => {
+  .action(async (options) => {
     const cluster: Cluster = options.cluster;
-    executeMultisigTx(
+    const squad = await getSquadsClient(
       cluster,
-      CONFIG[cluster].vault,
       options.ledger,
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
+      options.wallet
+    );
+    executeMultisigTx(
+      cluster,
+      squad,
+      CONFIG[cluster].vault,
+      options.ledger,
       options.wallet,
       new PublicKey(options.txPda),
       CONFIG[cluster].wormholeRpcEndpoint
@@ -539,33 +545,13 @@ async function createWormholeMsgMultisigTx(
 
 async function executeMultisigTx(
   cluster: string,
+  squad: Squads,
   vault: PublicKey,
   ledger: boolean,
-  ledgerDerivationAccount: number | undefined,
-  ledgerDerivationChange: number | undefined,
   walletPath: string,
   txPDA: PublicKey,
   rpcUrl: string
 ) {
-  let wallet: LedgerNodeWallet | NodeWallet;
-  if (ledger) {
-    console.log("Please connect to ledger...");
-    wallet = await LedgerNodeWallet.createWallet(
-      ledgerDerivationAccount,
-      ledgerDerivationChange
-    );
-    console.log(`Ledger connected! ${wallet.publicKey.toBase58()}`);
-  } else {
-    wallet = new NodeWallet(
-      Keypair.fromSecretKey(
-        Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "ascii")))
-      )
-    );
-    console.log(`Loaded wallet with address: ${wallet.publicKey.toBase58()}`);
-  }
-
-  const squad =
-    cluster === "devnet" ? Squads.devnet(wallet) : Squads.mainnet(wallet);
   const msAccount = await squad.getMultisig(vault);
 
   const emitter = squad.getAuthorityPDA(
@@ -575,7 +561,7 @@ async function executeMultisigTx(
 
   const executeIx = await squad.buildExecuteTransaction(
     txPDA,
-    wallet.publicKey
+    squad.wallet.publicKey
   );
 
   // airdrop 0.1 SOL to emitter if on devnet
@@ -600,9 +586,9 @@ async function executeMultisigTx(
   const executeTx = new anchor.web3.Transaction({
     blockhash,
     lastValidBlockHeight,
-    feePayer: wallet.publicKey,
+    feePayer: squad.wallet.publicKey,
   });
-  const provider = new anchor.AnchorProvider(squad.connection, wallet, {
+  const provider = new anchor.AnchorProvider(squad.connection, squad.wallet, {
     commitment: "confirmed",
     preflightCommitment: "confirmed",
   });
