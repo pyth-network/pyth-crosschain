@@ -81,7 +81,6 @@ program
     await createWormholeMsgMultisigTx(
       options.cluster,
       squad,
-      options.ledger,
       CONFIG[cluster].vault,
       options.payload
     );
@@ -132,7 +131,6 @@ program
     const attesterProgramId = new PublicKey(options.attester);
     const txKey = await createTx(
       squad,
-      options.ledger,
       vaultPubkey
     );
 
@@ -160,7 +158,6 @@ program
     await addInstructionsToTx(
       options.cluster,
       squad,
-      options.ledger,
       msAccount.publicKey,
       txKey,
       squadIxs
@@ -199,8 +196,6 @@ program
       cluster,
       squad,
       CONFIG[cluster].vault,
-      options.ledger,
-      options.wallet,
       new PublicKey(options.txPda),
       CONFIG[cluster].wormholeRpcEndpoint
     );
@@ -237,7 +232,6 @@ program
     await changeThreshold(
       options.cluster,
       squad,
-      options.ledger,
       CONFIG[cluster].vault,
       options.threshold
     );
@@ -274,7 +268,6 @@ program
     await addMember(
       options.cluster,
       squad,
-      options.ledger,
       CONFIG[cluster].vault,
       new PublicKey(options.member)
     );
@@ -311,7 +304,6 @@ program
     await removeMember(
       options.cluster,
       squad,
-      options.ledger,
       CONFIG[cluster].vault,
       new PublicKey(options.member)
     );
@@ -351,7 +343,6 @@ async function getSquadsClient(
 
 async function createTx(
   squad: Squads,
-  ledger: boolean,
   vault: PublicKey
 ): Promise<PublicKey> {
   const msAccount = await squad.getMultisig(vault);
@@ -377,7 +368,6 @@ type SquadInstruction = {
 async function addInstructionsToTx(
   cluster: Cluster,
   squad: Squads,
-  ledger: boolean,
   vault: PublicKey,
   txKey: PublicKey,
   instructions: SquadInstruction[]
@@ -493,7 +483,6 @@ async function getWormholeMessageIx(
 async function createWormholeMsgMultisigTx(
   cluster: Cluster,
   squad: Squads,
-  ledger: boolean,
   vault: PublicKey,
   payload: string
 ) {
@@ -504,7 +493,7 @@ async function createWormholeMsgMultisigTx(
   );
   console.log(`Emitter Address: ${emitter.toBase58()}`);
 
-  const txKey = await createTx(squad, ledger, vault);
+  const txKey = await createTx(squad, vault);
 
   const [messagePDA, messagePdaBump] = getIxAuthorityPDA(
     txKey,
@@ -536,7 +525,6 @@ async function createWormholeMsgMultisigTx(
   await addInstructionsToTx(
     cluster,
     squad,
-    ledger,
     msAccount.publicKey,
     txKey,
     squadIxs
@@ -547,8 +535,6 @@ async function executeMultisigTx(
   cluster: string,
   squad: Squads,
   vault: PublicKey,
-  ledger: boolean,
-  walletPath: string,
   txPDA: PublicKey,
   rpcUrl: string
 ) {
@@ -645,12 +631,11 @@ async function executeMultisigTx(
 async function changeThreshold(
   cluster: Cluster,
   squad: Squads,
-  ledger: boolean,
   vault: PublicKey,
   threshold: number
 ) {
   const msAccount = await squad.getMultisig(vault);
-  const txKey = await createTx(squad, ledger, vault);
+  const txKey = await createTx(squad, vault);
   const ix = await squad.buildChangeThresholdMember(
     msAccount.publicKey,
     msAccount.externalAuthority,
@@ -661,7 +646,6 @@ async function changeThreshold(
   await addInstructionsToTx(
     cluster,
     squad,
-    ledger,
     msAccount.publicKey,
     txKey,
     squadIxs
@@ -671,12 +655,11 @@ async function changeThreshold(
 async function addMember(
   cluster: Cluster,
   squad: Squads,
-  ledger: boolean,
   vault: PublicKey,
   member: PublicKey
 ) {
   const msAccount = await squad.getMultisig(vault);
-  const txKey = await createTx(squad, ledger, vault);
+  const txKey = await createTx(squad, vault);
   const ix = await squad.buildAddMember(
     msAccount.publicKey,
     msAccount.externalAuthority,
@@ -687,7 +670,6 @@ async function addMember(
   await addInstructionsToTx(
     cluster,
     squad,
-    ledger,
     msAccount.publicKey,
     txKey,
     squadIxs
@@ -697,12 +679,11 @@ async function addMember(
 async function removeMember(
   cluster: Cluster,
   squad: Squads,
-  ledger: boolean,
   vault: PublicKey,
   member: PublicKey
 ) {
   const msAccount = await squad.getMultisig(vault);
-  const txKey = await createTx(squad, ledger, vault);
+  const txKey = await createTx(squad, vault);
   const ix = await squad.buildRemoveMember(
     msAccount.publicKey,
     msAccount.externalAuthority,
@@ -713,7 +694,6 @@ async function removeMember(
   await addInstructionsToTx(
     cluster,
     squad,
-    ledger,
     msAccount.publicKey,
     txKey,
     squadIxs
