@@ -1,12 +1,7 @@
 pub mod cli;
 
 use std::{
-    collections::hash_map::DefaultHasher,
     fs::File,
-    hash::{
-        Hash,
-        Hasher,
-    },
     sync::Arc,
     time::{
         Duration,
@@ -21,6 +16,7 @@ use futures::{
         TryFutureExt,
     },
 };
+use generic_array::GenericArray;
 use log::{
     debug,
     error,
@@ -28,6 +24,7 @@ use log::{
     warn,
     LevelFilter,
 };
+use sha3::{Digest, Sha3_256};
 use solana_client::{
     nonblocking::rpc_client::RpcClient,
     rpc_config::RpcTransactionConfig,
@@ -263,7 +260,9 @@ async fn handle_attest_daemon_mode(
         attestation_cfg.mapping_addr, attestation_cfg.mapping_reload_interval_mins
     );
 
-    let mut old_sched_futs_state: Option<(JoinHandle<_>, u64)> = None; // (old_futs_handle, old_config_hash)
+    // Used for easier detection of config changes
+    let mut hasher = Sha3_256::new();
+    let mut old_sched_futs_state: Option<(JoinHandle<_>, GenericArray<u8, _>)> = None; // (old_futs_handle, old_config_hash)
 
     // This loop cranks attestations without interruption. This is
     // achieved by spinning up a new up-to-date symbol set before
@@ -298,10 +297,10 @@ async fn handle_attest_daemon_mode(
         );
 
         // Hash currently known config
-        let mut hasher = DefaultHasher::new();
-        (&attestation_cfg, &config).hash(&mut hasher);
+        hasher.update(serde_yaml::to_vec(&attestation_cfg)?);
+        hasher.update(borsh::to_vec(&config)?);
 
-        let new_cfg_hash = hasher.finish();
+        let new_cfg_hash = hasher.finalize_reset();
 
         if let Some((old_handle, old_cfg_hash)) = old_sched_futs_state.as_ref() {
             // Ignore unchanged configs

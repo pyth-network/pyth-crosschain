@@ -215,7 +215,7 @@ symbol_groups:
   - group_name: longer_interval_sensitive_changes
     conditions:
       min_interval_secs: 10
-      price_changed_bp: 300
+      price_changed_bps: 300
     symbols:
 """
 
@@ -233,7 +233,7 @@ symbol_groups:
   - group_name: mapping
     conditions:
       min_interval_secs: 30
-      price_changed_bp: 500
+      price_changed_bps: 500
     symbols: []
 """
 
