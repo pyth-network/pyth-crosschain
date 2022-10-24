@@ -43,6 +43,7 @@ function dummyPriceInfoPair(
       seqNum,
       vaaBytes: Buffer.from(vaa, "hex").toString("binary"),
       emitterChainId: 0,
+      priceServiceReceiveTime: 0,
     },
   ];
 }

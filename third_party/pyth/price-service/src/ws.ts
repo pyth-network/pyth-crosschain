@@ -109,6 +109,7 @@ export class WebSocketAPI {
                 emitter_chain: priceInfo.emitterChainId,
                 attestation_time: priceInfo.attestationTime,
                 sequence_number: priceInfo.seqNum,
+                price_service_receive_time: priceInfo.priceServiceReceiveTime,
               },
             },
           }

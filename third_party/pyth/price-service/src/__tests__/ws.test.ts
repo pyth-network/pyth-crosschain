@@ -1,5 +1,6 @@
 import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";
 import { Server } from "http";
+import { number } from "joi";
 import { WebSocket, WebSocketServer } from "ws";
 import { sleep } from "../helpers";
 import { PriceInfo, PriceStore } from "../listen";
@@ -21,12 +22,14 @@ function expandTo64Len(id: string): string {
 function dummyPriceMetadata(
   attestationTime: number,
   emitterChainId: number,
-  seqNum: number
+  seqNum: number,
+  priceServiceReceiveTime: number
 ): any {
   return {
     attestation_time: attestationTime,
     emitter_chain: emitterChainId,
     sequence_number: seqNum,
+    price_service_receive_time: priceServiceReceiveTime,
   };
 }
 
@@ -41,6 +44,7 @@ function dummyPriceInfo(
     emitterChainId: dummyPriceMetadataValue.emitter_chain,
     priceFeed: dummyPriceFeed(id),
     vaaBytes: Buffer.from(vaa, "hex").toString("binary"),
+    priceServiceReceiveTime: dummyPriceMetadataValue.price_service_receive_time,
   };
 }
 
@@ -92,7 +96,7 @@ async function createSocketClient(): Promise<[WebSocket, any[]]> {
 }
 
 beforeAll(async () => {
-  priceMetadata = dummyPriceMetadata(0, 0, 0);
+  priceMetadata = dummyPriceMetadata(0, 0, 0, 0);
   priceInfos = [
     dummyPriceInfo(expandTo64Len("abcd"), "a1b2c3d4", priceMetadata),
     dummyPriceInfo(expandTo64Len("ef01"), "a1b2c3d4", priceMetadata),
