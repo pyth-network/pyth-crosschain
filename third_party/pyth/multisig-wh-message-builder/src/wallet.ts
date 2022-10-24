@@ -34,6 +34,7 @@ export class LedgerNodeWallet implements Wallet {
   }
 
   async signTransaction(transaction: Transaction): Promise<Transaction> {
+    console.log("Please approve the transaction on your ledger device...");
     const transport = this._transport;
     const publicKey = this.publicKey;
 

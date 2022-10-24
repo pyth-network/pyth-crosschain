@@ -351,9 +351,6 @@ async function createTx(
   const msAccount = await squad.getMultisig(vault);
 
   console.log("Creating new transaction...");
-  if (ledger) {
-    console.log("Please approve the transaction on your ledger device...");
-  }
   const newTx = await squad.createTransaction(
     msAccount.publicKey,
     msAccount.authorityIndex
@@ -383,9 +380,6 @@ async function addInstructionsToTx(
     console.log(
       `Adding instruction ${i + 1}/${instructions.length} to transaction...`
     );
-    if (ledger) {
-      console.log("Please approve the transaction on your ledger device...");
-    }
     await squad.addInstruction(
       txKey,
       instructions[i].instruction,
@@ -396,13 +390,9 @@ async function addInstructionsToTx(
   }
 
   console.log("Activating transaction...");
-  if (ledger)
-    console.log("Please approve the transaction on your ledger device...");
   await squad.activateTransaction(txKey);
   console.log("Transaction created.");
   console.log("Approving transaction...");
-  if (ledger)
-    console.log("Please approve the transaction on your ledger device...");
   await squad.approveTransaction(txKey);
   console.log("Transaction approved.");
   console.log(
@@ -619,8 +609,6 @@ async function executeMultisigTx(
   executeTx.add(executeIx);
 
   console.log("Sending transaction...");
-  if (ledger)
-    console.log("Please approve the transaction on your ledger device...");
   const signature = await provider.sendAndConfirm(executeTx);
 
   console.log(
