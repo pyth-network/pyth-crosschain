@@ -23,6 +23,28 @@ import { LedgerNodeWallet } from "./wallet";
 
 setDefaultWasm("node");
 
+type Cluster = "devnet" | "mainnet";
+type WormholeNetwork = "TESTNET" | "MAINNET";
+
+type Config = {
+  wormholeClusterName: WormholeNetwork,
+  wormholeRpcEndpoint: string,
+  vault: PublicKey,
+};
+
+const CONFIG: Record<Cluster, Config> = {
+  devnet: {
+    wormholeClusterName: "TESTNET",
+    vault: new PublicKey("6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3"),
+    wormholeRpcEndpoint: "https://wormhole-v2-testnet-api.certus.one"
+  },
+  mainnet: {
+    wormholeClusterName: "MAINNET",
+    vault: new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
+    wormholeRpcEndpoint: "https://wormhole-v2-mainnet-api.certus.one"
+  }
+};
+
 program
   .name("pyth-multisig")
   .description("CLI to creating and executing multisig transactions for pyth")
@@ -32,7 +54,6 @@ program
   .command("create")
   .description("Create a new multisig transaction")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option("-l, --ledger", "use ledger")
   .option(
     "-lda, --ledger-derivation-account <number>",
@@ -49,8 +70,9 @@ program
   )
   .option("-p, --payload <hex-string>", "payload to sign", "0xdeadbeef")
   .action(async (options) => {
+    const cluster: Cluster = options.cluster;
     const squad = await getSquadsClient(
-      options.cluster,
+      cluster,
       options.ledger,
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
@@ -59,8 +81,7 @@ program
     await createWormholeMsgMultisigTx(
       options.cluster,
       squad,
-      options.ledger,
-      new PublicKey(options.vaultAddress),
+      CONFIG[cluster].vault,
       options.payload
     );
   });
@@ -71,7 +92,6 @@ program
     "Create a new multisig transaction to set the attester is-active flag"
   )
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option("-l, --ledger", "use ledger")
   .option(
     "-lda, --ledger-derivation-account <number>",
@@ -93,16 +113,16 @@ program
     "true"
   )
   .action(async (options) => {
+    const cluster = options.cluster as Cluster;
     const squad = await getSquadsClient(
-      options.cluster,
+      cluster,
       options.ledger,
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
       options.wallet
     );
-    const msAccount = await squad.getMultisig(
-      new PublicKey(options.vaultAddress)
-    );
+    const vaultPubkey = CONFIG[cluster].vault;
+    const msAccount = await squad.getMultisig(vaultPubkey);
 
     const vaultAuthority = squad.getAuthorityPDA(
       msAccount.publicKey,
@@ -111,8 +131,7 @@ program
     const attesterProgramId = new PublicKey(options.attester);
     const txKey = await createTx(
       squad,
-      options.ledger,
-      new PublicKey(options.vaultAddress)
+      vaultPubkey
     );
 
     let isActive = undefined;
@@ -139,7 +158,6 @@ program
     await addInstructionsToTx(
       options.cluster,
       squad,
-      options.ledger,
       msAccount.publicKey,
       txKey,
       squadIxs
@@ -150,7 +168,6 @@ program
   .command("execute")
   .description("Execute a multisig transaction that is ready")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option("-l, --ledger", "use ledger")
   .option(
     "-lda, --ledger-derivation-account <number>",
@@ -166,17 +183,21 @@ program
     "keys/key.json"
   )
   .requiredOption("-t, --tx-pda <address>", "transaction PDA")
-  .requiredOption("-u, --rpc-url <url>", "wormhole RPC URL")
-  .action((options) => {
-    executeMultisigTx(
-      options.cluster,
-      new PublicKey(options.vaultAddress),
+  .action(async (options) => {
+    const cluster: Cluster = options.cluster;
+    const squad = await getSquadsClient(
+      cluster,
       options.ledger,
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
-      options.wallet,
+      options.wallet
+    );
+    executeMultisigTx(
+      cluster,
+      squad,
+      CONFIG[cluster].vault,
       new PublicKey(options.txPda),
-      options.rpcUrl
+      CONFIG[cluster].wormholeRpcEndpoint
     );
   });
 
@@ -184,7 +205,6 @@ program
   .command("change-threshold")
   .description("Change threshold of multisig")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option("-l, --ledger", "use ledger")
   .option(
     "-lda, --ledger-derivation-account <number>",
@@ -201,8 +221,9 @@ program
   )
   .option("-t, --threshold <number>", "new threshold")
   .action(async (options) => {
+    const cluster: Cluster = options.cluster;
     const squad = await getSquadsClient(
-      options.cluster,
+      cluster,
       options.ledger,
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
@@ -211,8 +232,7 @@ program
     await changeThreshold(
       options.cluster,
       squad,
-      options.ledger,
-      new PublicKey(options.vaultAddress),
+      CONFIG[cluster].vault,
       options.threshold
     );
   });
@@ -221,7 +241,6 @@ program
   .command("add-member")
   .description("Add member to multisig")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option("-l, --ledger", "use ledger")
   .option(
     "-lda, --ledger-derivation-account <number>",
@@ -238,8 +257,9 @@ program
   )
   .option("-m, --member <address>", "new member address")
   .action(async (options) => {
+    const cluster: Cluster = options.cluster;
     const squad = await getSquadsClient(
-      options.cluster,
+      cluster,
       options.ledger,
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
@@ -248,8 +268,7 @@ program
     await addMember(
       options.cluster,
       squad,
-      options.ledger,
-      new PublicKey(options.vaultAddress),
+      CONFIG[cluster].vault,
       new PublicKey(options.member)
     );
   });
@@ -258,7 +277,6 @@ program
   .command("remove-member")
   .description("Remove member from multisig")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .requiredOption("-v, --vault-address <address>", "multisig vault address")
   .option("-l, --ledger", "use ledger")
   .option(
     "-lda, --ledger-derivation-account <number>",
@@ -275,8 +293,9 @@ program
   )
   .option("-m, --member <address>", "old member address")
   .action(async (options) => {
+    const cluster: Cluster = options.cluster;
     const squad = await getSquadsClient(
-      options.cluster,
+      cluster,
       options.ledger,
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
@@ -285,8 +304,7 @@ program
     await removeMember(
       options.cluster,
       squad,
-      options.ledger,
-      new PublicKey(options.vaultAddress),
+      CONFIG[cluster].vault,
       new PublicKey(options.member)
     );
   });
@@ -294,17 +312,6 @@ program
 // TODO: add subcommand for creating governance messages in the right format
 
 program.parse();
-
-// custom solana cluster type
-type Cluster = "devnet" | "mainnet";
-type WormholeNetwork = "TESTNET" | "MAINNET";
-
-// solana cluster mapping to wormhole cluster
-const solanaClusterMappingToWormholeNetwork: Record<Cluster, WormholeNetwork> =
-  {
-    devnet: "TESTNET",
-    mainnet: "MAINNET",
-  };
 
 async function getSquadsClient(
   cluster: Cluster,
@@ -336,15 +343,11 @@ async function getSquadsClient(
 
 async function createTx(
   squad: Squads,
-  ledger: boolean,
   vault: PublicKey
 ): Promise<PublicKey> {
   const msAccount = await squad.getMultisig(vault);
 
   console.log("Creating new transaction...");
-  if (ledger) {
-    console.log("Please approve the transaction on your ledger device...");
-  }
   const newTx = await squad.createTransaction(
     msAccount.publicKey,
     msAccount.authorityIndex
@@ -365,7 +368,6 @@ type SquadInstruction = {
 async function addInstructionsToTx(
   cluster: Cluster,
   squad: Squads,
-  ledger: boolean,
   vault: PublicKey,
   txKey: PublicKey,
   instructions: SquadInstruction[]
@@ -374,9 +376,6 @@ async function addInstructionsToTx(
     console.log(
       `Adding instruction ${i + 1}/${instructions.length} to transaction...`
     );
-    if (ledger) {
-      console.log("Please approve the transaction on your ledger device...");
-    }
     await squad.addInstruction(
       txKey,
       instructions[i].instruction,
@@ -387,13 +386,9 @@ async function addInstructionsToTx(
   }
 
   console.log("Activating transaction...");
-  if (ledger)
-    console.log("Please approve the transaction on your ledger device...");
   await squad.activateTransaction(txKey);
   console.log("Transaction created.");
   console.log("Approving transaction...");
-  if (ledger)
-    console.log("Please approve the transaction on your ledger device...");
   await squad.approveTransaction(txKey);
   console.log("Transaction approved.");
   console.log(
@@ -450,9 +445,9 @@ async function getWormholeMessageIx(
   connection: anchor.web3.Connection,
   payload: string
 ) {
-  const wormholeNetwork: WormholeNetwork =
-    solanaClusterMappingToWormholeNetwork[cluster];
-  const wormholeAddress = wormholeUtils.CONTRACTS[wormholeNetwork].solana.core;
+  const wormholeClusterName: WormholeNetwork =
+    CONFIG[cluster].wormholeClusterName;
+  const wormholeAddress = wormholeUtils.CONTRACTS[wormholeClusterName].solana.core;
   const { post_message_ix, fee_collector_address, state_address, parse_state } =
     await importCoreWasm();
   const feeCollector = new PublicKey(fee_collector_address(wormholeAddress));
@@ -488,7 +483,6 @@ async function getWormholeMessageIx(
 async function createWormholeMsgMultisigTx(
   cluster: Cluster,
   squad: Squads,
-  ledger: boolean,
   vault: PublicKey,
   payload: string
 ) {
@@ -499,7 +493,7 @@ async function createWormholeMsgMultisigTx(
   );
   console.log(`Emitter Address: ${emitter.toBase58()}`);
 
-  const txKey = await createTx(squad, ledger, vault);
+  const txKey = await createTx(squad, vault);
 
   const [messagePDA, messagePdaBump] = getIxAuthorityPDA(
     txKey,
@@ -531,7 +525,6 @@ async function createWormholeMsgMultisigTx(
   await addInstructionsToTx(
     cluster,
     squad,
-    ledger,
     msAccount.publicKey,
     txKey,
     squadIxs
@@ -540,33 +533,11 @@ async function createWormholeMsgMultisigTx(
 
 async function executeMultisigTx(
   cluster: string,
+  squad: Squads,
   vault: PublicKey,
-  ledger: boolean,
-  ledgerDerivationAccount: number | undefined,
-  ledgerDerivationChange: number | undefined,
-  walletPath: string,
   txPDA: PublicKey,
   rpcUrl: string
 ) {
-  let wallet: LedgerNodeWallet | NodeWallet;
-  if (ledger) {
-    console.log("Please connect to ledger...");
-    wallet = await LedgerNodeWallet.createWallet(
-      ledgerDerivationAccount,
-      ledgerDerivationChange
-    );
-    console.log(`Ledger connected! ${wallet.publicKey.toBase58()}`);
-  } else {
-    wallet = new NodeWallet(
-      Keypair.fromSecretKey(
-        Uint8Array.from(JSON.parse(fs.readFileSync(walletPath, "ascii")))
-      )
-    );
-    console.log(`Loaded wallet with address: ${wallet.publicKey.toBase58()}`);
-  }
-
-  const squad =
-    cluster === "devnet" ? Squads.devnet(wallet) : Squads.mainnet(wallet);
   const msAccount = await squad.getMultisig(vault);
 
   const emitter = squad.getAuthorityPDA(
@@ -576,7 +547,7 @@ async function executeMultisigTx(
 
   const executeIx = await squad.buildExecuteTransaction(
     txPDA,
-    wallet.publicKey
+    squad.wallet.publicKey
   );
 
   // airdrop 0.1 SOL to emitter if on devnet
@@ -601,17 +572,15 @@ async function executeMultisigTx(
   const executeTx = new anchor.web3.Transaction({
     blockhash,
     lastValidBlockHeight,
-    feePayer: wallet.publicKey,
+    feePayer: squad.wallet.publicKey,
   });
-  const provider = new anchor.AnchorProvider(squad.connection, wallet, {
+  const provider = new anchor.AnchorProvider(squad.connection, squad.wallet, {
     commitment: "confirmed",
     preflightCommitment: "confirmed",
   });
   executeTx.add(executeIx);
 
   console.log("Sending transaction...");
-  if (ledger)
-    console.log("Please approve the transaction on your ledger device...");
   const signature = await provider.sendAndConfirm(executeTx);
 
   console.log(
@@ -662,12 +631,11 @@ async function executeMultisigTx(
 async function changeThreshold(
   cluster: Cluster,
   squad: Squads,
-  ledger: boolean,
   vault: PublicKey,
   threshold: number
 ) {
   const msAccount = await squad.getMultisig(vault);
-  const txKey = await createTx(squad, ledger, vault);
+  const txKey = await createTx(squad, vault);
   const ix = await squad.buildChangeThresholdMember(
     msAccount.publicKey,
     msAccount.externalAuthority,
@@ -678,7 +646,6 @@ async function changeThreshold(
   await addInstructionsToTx(
     cluster,
     squad,
-    ledger,
     msAccount.publicKey,
     txKey,
     squadIxs
@@ -688,12 +655,11 @@ async function changeThreshold(
 async function addMember(
   cluster: Cluster,
   squad: Squads,
-  ledger: boolean,
   vault: PublicKey,
   member: PublicKey
 ) {
   const msAccount = await squad.getMultisig(vault);
-  const txKey = await createTx(squad, ledger, vault);
+  const txKey = await createTx(squad, vault);
   const ix = await squad.buildAddMember(
     msAccount.publicKey,
     msAccount.externalAuthority,
@@ -704,7 +670,6 @@ async function addMember(
   await addInstructionsToTx(
     cluster,
     squad,
-    ledger,
     msAccount.publicKey,
     txKey,
     squadIxs
@@ -714,12 +679,11 @@ async function addMember(
 async function removeMember(
   cluster: Cluster,
   squad: Squads,
-  ledger: boolean,
   vault: PublicKey,
   member: PublicKey
 ) {
   const msAccount = await squad.getMultisig(vault);
-  const txKey = await createTx(squad, ledger, vault);
+  const txKey = await createTx(squad, vault);
   const ix = await squad.buildRemoveMember(
     msAccount.publicKey,
     msAccount.externalAuthority,
@@ -730,7 +694,6 @@ async function removeMember(
   await addInstructionsToTx(
     cluster,
     squad,
-    ledger,
     msAccount.publicKey,
     txKey,
     squadIxs
