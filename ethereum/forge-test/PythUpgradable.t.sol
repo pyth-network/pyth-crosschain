@@ -10,6 +10,7 @@ contract TestPythUpgradable is Test {
 
     function setUp() public {
         pyth = new PythUpgradable();
+        // The values below are just dummy values and this test does nothing.
         pyth.initialize(
             address(0x0000000000000000000000000000000000000000000000000000000000000000),
             0,
