@@ -1,0 +1,4 @@
+lib/*
+!lib/README.md
+out
+cache
