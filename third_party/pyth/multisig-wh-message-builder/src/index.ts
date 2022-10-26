@@ -15,11 +15,13 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import Squads from "@sqds/mesh";
-import { getIxAuthorityPDA } from "@sqds/mesh";
+import { getIxAuthorityPDA, getIxPDA } from "@sqds/mesh";
+import { InstructionAccount } from "@sqds/mesh/lib/types";
 import bs58 from "bs58";
 import { program } from "commander";
 import * as fs from "fs";
 import { LedgerNodeWallet } from "./wallet";
+import loadash from "lodash";
 
 setDefaultWasm("node");
 
@@ -83,6 +85,44 @@ program
       squad,
       CONFIG[cluster].vault,
       options.payload
+    );
+  });
+
+program
+  .command("verify")
+  .description("Verify given wormhole transaction has the given payload")
+  .option("-c, --cluster <network>", "solana cluster to use", "devnet")
+  .option("-l, --ledger", "use ledger")
+  .option(
+    "-lda, --ledger-derivation-account <number>",
+    "ledger derivation account to use"
+  )
+  .option(
+    "-ldc, --ledger-derivation-change <number>",
+    "ledger derivation change to use"
+  )
+  .option(
+    "-w, --wallet <filepath>",
+    "multisig wallet secret key filepath",
+    "keys/key.json"
+  )
+  .requiredOption("-p, --payload <hex-string>", "expected payload")
+  .requiredOption("-t, --tx-pda <address>", "transaction PDA")
+  .action(async (options) => {
+    const cluster: Cluster = options.cluster;
+    const squad = await getSquadsClient(
+      cluster,
+      options.ledger,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange,
+      options.wallet
+    );
+    await verifyWormholePayload(
+      options.cluster,
+      squad,
+      CONFIG[cluster].vault,
+      new PublicKey(options.txPda),
+      options.payload,
     );
   });
 
@@ -392,8 +432,7 @@ async function addInstructionsToTx(
   await squad.approveTransaction(txKey);
   console.log("Transaction approved.");
   console.log(
-    `Tx URL: https://mesh${
-      cluster === "devnet" ? "-devnet" : ""
+    `Tx URL: https://mesh${cluster === "devnet" ? "-devnet" : ""
     }.squads.so/transactions/${vault.toBase58()}/tx/${txKey.toBase58()}`
   );
 }
@@ -531,6 +570,79 @@ async function createWormholeMsgMultisigTx(
   );
 }
 
+async function verifyWormholePayload(
+  cluster: Cluster,
+  squad: Squads,
+  vault: PublicKey,
+  txPubkey: PublicKey,
+  payload: string,
+) {
+  const msAccount = await squad.getMultisig(vault);
+  const emitter = squad.getAuthorityPDA(
+    msAccount.publicKey,
+    msAccount.authorityIndex
+  );
+  console.log(`Emitter Address: ${emitter.toBase58()}`);
+
+  const tx = await squad.getTransaction(txPubkey);
+
+  if (tx.instructionIndex !== 2) {
+    throw new Error(`Expected 2 instructions in the transaction, found ${tx.instructionIndex + 1}`)
+  }
+
+  const [ix1PubKey,] = getIxPDA(txPubkey, new anchor.BN(1), squad.multisigProgramId);
+  const [ix2PubKey,] = getIxPDA(txPubkey, new anchor.BN(2), squad.multisigProgramId);
+
+  const onChainInstructions = await squad.getInstructions([ix1PubKey, ix2PubKey]);
+
+  console.log(onChainInstructions[0]);
+  console.log(onChainInstructions[1]);
+
+  const [messagePDA,] = getIxAuthorityPDA(
+    txPubkey,
+    new anchor.BN(1),
+    squad.multisigProgramId
+  );
+
+  const wormholeIxs = await getWormholeMessageIx(
+    cluster,
+    emitter,
+    emitter,
+    messagePDA,
+    squad.connection,
+    payload
+  );
+
+  console.log("Checking equality of the 1st instruction...");
+  verifyOnChainInstruction(wormholeIxs[0], onChainInstructions[0] as InstructionAccount);
+
+  console.log("Checking equality of the 2nd instruction...");
+  verifyOnChainInstruction(wormholeIxs[1], onChainInstructions[1] as InstructionAccount);
+
+  console.log("✅ The transaction is verified to be created with the given payload.");
+}
+
+function verifyOnChainInstruction(instruction: TransactionInstruction, onChainInstruction: InstructionAccount) {
+  if (!instruction.programId.equals(onChainInstruction.programId)) {
+    throw new Error(
+      `Program id mismatch: Expected ${instruction.programId.toBase58()}, found ${onChainInstruction.programId.toBase58()}`
+    );
+  }
+
+  if (!loadash.isEqual(instruction.keys, onChainInstruction.keys)) {
+    throw new Error(
+      `Instruction accounts mismatch. Expected ${instruction.keys}, found ${onChainInstruction.keys}`
+    );
+  }
+
+  const onChainData = onChainInstruction.data as Buffer;
+  if (!instruction.data.equals(onChainData)) {
+    throw new Error(
+      `Instruction data mismatch. Expected ${instruction.data.toString('hex')}, Found ${onChainData.toString('hex')}`
+    )
+  }
+}
+
 async function executeMultisigTx(
   cluster: string,
   squad: Squads,
@@ -584,8 +696,7 @@ async function executeMultisigTx(
   const signature = await provider.sendAndConfirm(executeTx);
 
   console.log(
-    `Executed tx: https://explorer.solana.com/tx/${signature}${
-      cluster === "devnet" ? "?cluster=devnet" : ""
+    `Executed tx: https://explorer.solana.com/tx/${signature}${cluster === "devnet" ? "?cluster=devnet" : ""
     }`
   );
 

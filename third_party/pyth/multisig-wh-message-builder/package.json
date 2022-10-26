@@ -44,8 +44,10 @@
     "@project-serum/anchor": "^0.25.0",
     "@solana/web3.js": "^1.53.0",
     "@sqds/mesh": "^1.0.6",
+    "@types/lodash": "^4.14.186",
     "bs58": "^5.0.0",
     "commander": "^9.4.0",
-    "ethers": "^5.7.0"
+    "ethers": "^5.7.0",
+    "lodash": "^4.17.21"
   }
 }
