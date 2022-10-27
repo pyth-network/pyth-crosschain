@@ -1,6 +1,6 @@
-# Example Full-Stack App: 100$ USD Mint
+# Example Full-Stack App: 1$ Mint
 
-The goal of this contract is managing an NFT mint where the mint is paid in native currency but the cost of one NFT is always 100$.
+The goal of this contract is managing an NFT mint where the mint is paid in native currency but the cost of one NFT is always 1$.
 This example is intended to be run on Aptos testnet because it depends on Pyth and Wormhole existing onchain.
 
 ### Important files : 

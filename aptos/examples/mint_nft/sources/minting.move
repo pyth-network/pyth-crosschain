@@ -16,10 +16,8 @@ module mint_nft::minting {
     use aptos_std::math64::pow;
     use aptos_token::token::{Self, TokenDataId};
 
-    // WARNING This is actually the ETH/USD while APT is not listed
     // For the entire list of price_ids head to https://pyth.network/developers/price-feed-ids/#pyth-cross-chain-testnet
-    // TODO : Update to the real APT/USD when it's out
-    const APTOS_USD_PRICE_FEED_IDENTIFIER : vector<u8> = x"ca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6"; 
+    const APTOS_USD_PRICE_FEED_IDENTIFIER : vector<u8> = x"44a93dddd8effa54ea51076c4e851b6cbbfd938e82eb90197de38fe8876bb66e"; 
 
     // This event stores the receiver of the NFT and the TokenDataId of the NFT
     struct TokenMintingEvent has drop, store {
@@ -81,7 +79,7 @@ module mint_nft::minting {
         });
     }
 
-    /// Mint an edition of the Pythian NFT pay 100 USD in native APT
+    /// Mint an edition of the Pythian NFT pay 1 USD in native APT
     public entry fun mint_nft(receiver : &signer, vaas : vector<vector<u8>>) acquires CollectionTokenMinter{
         // Fetch the signer capability to mint the NFT
         let collection_token_minter = borrow_global_mut<CollectionTokenMinter>(@mint_nft); 
@@ -94,7 +92,7 @@ module mint_nft::minting {
         let price_positive = i64::get_magnitude_if_positive(&price::get_price(&price)); // This will fail if the price is negative
         let expo_magnitude = i64::get_magnitude_if_negative(&price::get_expo(&price)); // This will fail if the exponent is positive
 
-        let price_in_aptos_coin =  (100 * OCTAS_PER_APTOS * pow(10, expo_magnitude)) / price_positive; // 100 USD in AptosCoin
+        let price_in_aptos_coin =  (OCTAS_PER_APTOS * pow(10, expo_magnitude)) / price_positive; // 1 USD in APT
 
         coin::transfer<aptos_coin::AptosCoin>(receiver, @mint_nft, price_in_aptos_coin); // Pay for the NFT
     }
