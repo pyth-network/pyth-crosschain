@@ -6,7 +6,7 @@ const governance = require("@pythnetwork/xc-governance-sdk");
 const PythUpgradable = artifacts.require("PythUpgradable");
 const wormholeChainName = process.env.WORMHOLE_CHAIN_NAME;
 
-const { deployProxyImpl } = require('@openzeppelin/truffle-upgrades/dist/utils');
+const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 const { assert } = require('chai');
 
 /**

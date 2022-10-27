@@ -1,10 +1,6 @@
 const loadEnv = require("../../scripts/loadEnv");
 loadEnv("../../");
 
-if (process.env.CLUSTER !== undefined) {
-  dotenv.config({ path: `../../.env.cluster.${process.env.CLUSTER}`});
-}
-
 const PythUpgradable = artifacts.require("PythUpgradable");
 
 const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
