@@ -3,18 +3,28 @@ loadEnv("../../");
 
 const PythUpgradable = artifacts.require("PythUpgradable");
 
-const wormholeBridgeAddress = process.env.WORMHOLE_BRIDGE_ADDRESS;
 const pyth2WormholeChainId = process.env.SOLANA_CHAIN_ID;
 const pyth2WormholeEmitter = process.env.SOLANA_EMITTER;
 
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 const tdr = require('truffle-deploy-registry');
+const { CONTRACTS } = require('@certusone/wormhole-sdk');
+const { assert } = require("chai");
 
-console.log("Wormhole bridge address: " + wormholeBridgeAddress)
 console.log("pyth2WormholeEmitter: " + pyth2WormholeEmitter)
 console.log("pyth2WormholeChainId: " + pyth2WormholeChainId)
 
 module.exports = async function (deployer, network) {
+    const cluster = process.env.CLUSTER;
+    const chainName = process.env.WORMHOLE_CHAIN_NAME;
+
+    assert(cluster !== undefined && chainName !== undefined);
+
+    const wormholeBridgeAddress = CONTRACTS[cluster.toUpperCase()][chainName].core;
+    assert(wormholeBridgeAddress !== undefined);
+
+    console.log("Wormhole bridge address: " + wormholeBridgeAddress)
+
     // Deploy the proxy. This will return an instance of PythUpgradable,
     // with the address field corresponding to the fronting ERC1967Proxy.
     let proxyInstance = await deployProxy(PythUpgradable,

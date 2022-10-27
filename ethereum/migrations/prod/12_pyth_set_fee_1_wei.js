@@ -1,4 +1,3 @@
-const { assert } = require("chai");
 const governance = require("@pythnetwork/xc-governance-sdk");
 const assertVaaPayloadEquals = require("../../scripts/assertVaaPayloadEquals");
 const { assert } = require("chai");

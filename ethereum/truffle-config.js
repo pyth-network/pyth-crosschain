@@ -172,6 +172,15 @@ module.exports = {
       },
       network_id: 10,
     },
+    optimism_goerli: {
+      provider: () => {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://opt-goerli.g.alchemy.com/v2/demo"
+        );
+      },
+      network_id: 420,
+    },
     fantom: {
       provider: () => {
         return new HDWalletProvider(

@@ -28,6 +28,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@certusone/wormhole-sdk": "^0.8.0",
     "@certusone/wormhole-sdk-wasm": "^0.0.1",
     "@openzeppelin/contracts": "^4.5.0",
     "@openzeppelin/contracts-upgradeable": "^4.5.2",
@@ -35,6 +36,7 @@
     "@pythnetwork/xc-governance-sdk": "file:../third_party/pyth/xc-governance-sdk-js",
     "dotenv": "^10.0.0",
     "elliptic": "^6.5.2",
+    "ethers": "^5.6.8",
     "ganache-cli": "^6.12.1",
     "jsonfile": "^4.0.0",
     "solc": "^0.8.4",
