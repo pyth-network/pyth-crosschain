@@ -60,12 +60,12 @@ pub fn start_cli_interactive(mut cli: Cli) -> Result<(), ErrBox> {
 /// is assumed to already be detected at top-level in main, making it an invalid action.
 pub fn handle_action_noninteractive(cli: &Cli) -> Result<(), ErrBox> {
     match &cli.action {
-        // It makes no sense starting interactive already inside it
+        // Interactive is an invalid action here
         Action::Interactive => {
             return Err(format!("Bruh...?").into());
         }
-        Action::PingAll => {
-            println!("Pinging all blockchains...");
+        Action::QueryAll => {
+            println!("Querying all world state...");
         }
     }
     Ok(())

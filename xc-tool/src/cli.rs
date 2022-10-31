@@ -26,8 +26,8 @@ pub struct CliInteractive {
 
 #[derive(Subcommand, PartialEq)]
 pub enum Action {
-    #[clap(about = "Attempt sanity-check access for all known blockchains")]
-    PingAll,
+    #[clap(about = "Retrieve all known data")]
+    QueryAll,
     #[clap(about = "Fires up a repl letting user directly perform all other actions")]
     Interactive,
 }
