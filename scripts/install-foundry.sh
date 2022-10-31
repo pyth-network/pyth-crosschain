@@ -13,7 +13,7 @@ if [ ! -f foundry.toml ]; then
 fi
 
 # Read compiler version from foundry.toml
-SOLC_VERSION=$(grep solc_version foundry.toml | cut -d'=' -f2 | tr -d '" ') || true
+SOLC_VERSION=$(grep solc_version foundry.toml | cut -d'=' -f2 | tr -d "' ") || true
 
 if [ -z "$SOLC_VERSION" ]; then
   echo "solc_version not found in foundry.toml." >& 2
