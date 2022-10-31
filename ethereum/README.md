@@ -34,3 +34,17 @@ npm run install-forge-deps
 
 After installing the dependencies. Run `forge build` to build the contracts and `forge test` to
 test the contracts using tests in `forge-test` directory.
+
+### Gas Benchmark
+
+You can use foundry to run benchmark tests written in [`forge-test/GasBenchmark.t.sol`](./forge-test/GasBenchmark.t.sol). To run the tests with gas report
+you can run `forge test --gas-report --match-contract GasBenchmark`. However, as there are multiple benchmarks, this might not be useful. You can run a
+specific benchmark test by passing the test name using `--match-test`. A full command to run `testBenchmarkUpdatePriceFeedsFresh` benchmark test is like this:
+
+```
+forge test --gas-report --match-contract GasBenchmark --match-test testBenchmarkUpdatePriceFeedsFresh
+```
+
+If you like to optimize the contract and measure the gas optimization you can get gas snapshots using `forge snapshot` and evaluate your
+optimization with it. For more information, please refer to [Gas Snapshots documentation](https://book.getfoundry.sh/forge/gas-snapshots).
+Once you optimized the code, please share the snapshot difference (generated using `forge snapshot --diff <old-snapshot>`) in the PR too.
