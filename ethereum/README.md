@@ -45,6 +45,9 @@ specific benchmark test by passing the test name using `--match-test`. A full co
 forge test --gas-report --match-contract GasBenchmark --match-test testBenchmarkUpdatePriceFeedsFresh
 ```
 
+For most of the methods, the median gas usage is an indication of our desired gas usage. Because the calls that store something in the storage
+for the first time use significantly more gas.
+
 If you like to optimize the contract and measure the gas optimization you can get gas snapshots using `forge snapshot` and evaluate your
 optimization with it. For more information, please refer to [Gas Snapshots documentation](https://book.getfoundry.sh/forge/gas-snapshots).
 Once you optimized the code, please share the snapshot difference (generated using `forge snapshot --diff <old-snapshot>`) in the PR too.
