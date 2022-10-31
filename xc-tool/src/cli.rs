@@ -1,4 +1,6 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand};
+
+use crate::protocol::Net;
 
 #[derive(Parser)]
 #[clap(
@@ -32,10 +34,3 @@ pub enum Action {
     Interactive,
 }
 
-/// For most chains, we pick a production blockchain network and a
-/// testing one, closely following Wormhole's choices.
-#[derive(ValueEnum, Clone)]
-pub enum Net {
-    Mainnet,
-    Testnet,
-}

@@ -1,4 +1,7 @@
+#![feature(adt_const_params)]
+
 mod cli;
+mod protocol;
 mod util;
 
 use clap::Parser;
