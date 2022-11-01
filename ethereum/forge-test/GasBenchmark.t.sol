@@ -14,7 +14,9 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     // 19, current mainnet number of guardians, is used to have gas estimates
     // close to our mainnet transactions.
     uint8 constant NUM_GUARDIANS = 19;
-    uint8 constant NUM_SIGNERS = 13;
+    // 2/3 of the guardians should sign a message for a VAA which is 13 out of 19 guardians.
+    // It is possible to have more signers but the median seems to be 13.
+    uint8 constant NUM_GUARDIAN_SIGNERS = 13;
 
     // We use 5 prices to form a batch of 5 prices, close to our mainnet transactions.
     uint8 constant NO_PRICES = 5;
@@ -59,7 +61,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
             priceIds,
             prices,
             sequence,
-            NUM_SIGNERS
+            NUM_GUARDIAN_SIGNERS
         );
 
         ++sequence;
