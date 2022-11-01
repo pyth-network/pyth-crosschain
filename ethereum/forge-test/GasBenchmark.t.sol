@@ -132,8 +132,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         vm.warp(prices[0].publishTime);
 
         for (uint i = 0; i < BENCHMARK_ITERATIONS; ++i) {
-            PythStructs.Price memory price = pyth.getPrice(priceIds[i % NO_PRICES]);
-            emit log_named_int("price", price.price);
+            pyth.getPrice(priceIds[i % NO_PRICES]);
         }
     }
 }
