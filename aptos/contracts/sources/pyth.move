@@ -482,7 +482,7 @@ module pyth::pyth_test {
 
     /// Allow anyone to update the cache with given updates. For testing purpose only.
     #[test_only]
-    public fun update_cache_test(updates: vector<PriceUpdate>) {
+    public fun update_cache_for_test(updates: vector<PriceUpdate>) {
         pyth::update_cache(updates);
     }
     
