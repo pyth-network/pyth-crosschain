@@ -16,5 +16,5 @@ As these 3rd party audits are completed and issues are sufficiently addressed, w
     - **Scope**: *pyth-crosschain (formerly known as pyth2wormhole))*
 - **[October 10, 2022 - OtterSec](https://github.com/pyth-network/audit-reports/tree/main/2022_10_10)**
     - **Scope**: *pyth-aptos contracts)*
-- **[November 01, 2022 - Zellic](https://github.com/pyth-network/audit-reports/blob/zellic/pyth-evm/2022_11_01/pyth.pdf)**
+- **[November 01, 2022 - Zellic](https://github.com/pyth-network/audit-reports/tree/main/2022_11_01)**
     - **Scope**: *pyth-evm contracts)*
