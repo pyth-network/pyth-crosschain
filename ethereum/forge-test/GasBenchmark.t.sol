@@ -13,13 +13,13 @@ import "./utils/PythTestUtils.t.sol";
 contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     // 19, current mainnet number of guardians, is used to have gas estimates
     // close to our mainnet transactions.
-    uint8 constant NO_GUARDIANS = 19;
-    uint8 constant NO_SIGNERS = 13;
+    uint8 constant NUM_GUARDIANS = 19;
+    uint8 constant NUM_SIGNERS = 13;
 
     // We use 5 prices to form a batch of 5 prices, close to our mainnet transactions.
     uint8 constant NO_PRICES = 5;
 
-    uint constant BENCHMARK_ITERATIONS = 50;
+    uint constant BENCHMARK_ITERATIONS = 1000;
 
     IPyth public pyth;
     
@@ -28,7 +28,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     uint64 sequence;
 
     function setUp() public {
-        pyth = IPyth(setUpPyth(setUpWormhole(NO_GUARDIANS)));
+        pyth = IPyth(setUpPyth(setUpWormhole(NUM_GUARDIANS)));
 
         priceIds = new bytes32[](NO_PRICES);
         priceIds[0] = bytes32(0x1000000000000000000000000000000000000000000000000000000000000f00);
@@ -59,7 +59,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
             priceIds,
             prices,
             sequence,
-            NO_SIGNERS
+            NUM_SIGNERS
         );
 
         ++sequence;

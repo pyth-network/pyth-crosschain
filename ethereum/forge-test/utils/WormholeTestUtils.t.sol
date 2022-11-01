@@ -10,15 +10,15 @@ import "../../contracts/wormhole/interfaces/IWormhole.sol";
 import "forge-std/Test.sol";
 
 abstract contract WormholeTestUtils is Test {
-    function setUpWormhole(uint8 noGuardians) public returns (address) {
+    function setUpWormhole(uint8 numGuardians) public returns (address) {
         Implementation wormholeImpl = new Implementation();
         Setup wormholeSetup = new Setup();
 
         Wormhole wormhole = new Wormhole(address(wormholeSetup), new bytes(0));
 
-        address[] memory initSigners = new address[](noGuardians);
+        address[] memory initSigners = new address[](numGuardians);
 
-        for (uint256 i = 0; i < noGuardians; ++i) {
+        for (uint256 i = 0; i < numGuardians; ++i) {
             initSigners[i] = vm.addr(i + 1); // i+1 is the private key for the i-th signer.
         }
 
@@ -41,7 +41,7 @@ abstract contract WormholeTestUtils is Test {
         bytes32 emitterAddress,
         uint64 sequence,
         bytes memory payload,
-        uint8 noSigners
+        uint8 numSigners
     ) public returns (bytes memory vaa) {
         bytes memory body = abi.encodePacked(
             timestamp,
@@ -57,7 +57,7 @@ abstract contract WormholeTestUtils is Test {
 
         bytes memory signatures = new bytes(0);
 
-        for (uint256 i = 0; i < noSigners; ++i) {
+        for (uint256 i = 0; i < numSigners; ++i) {
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(i + 1, hash);
             // encodePacked uses padding for arrays and we don't want it, so we manually concat them.
             signatures = abi.encodePacked(
@@ -72,7 +72,7 @@ abstract contract WormholeTestUtils is Test {
         vaa = abi.encodePacked(
             uint8(1), // Version
             uint32(0), // Guardian set index. it is initialized by 0
-            noSigners,
+            numSigners,
             signatures,
             body
         );

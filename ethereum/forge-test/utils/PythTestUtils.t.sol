@@ -112,7 +112,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
         bytes32[] memory priceIds,
         PythStructs.Price[] memory prices,
         uint64 sequence,
-        uint8 noSigners
+        uint8 numSigners
     ) public returns (bytes memory vaa) {
         bytes memory payload = generatePriceFeedUpdatePayload(
             priceIds,
@@ -125,7 +125,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
             SOURCE_EMITTER_ADDRESS,
             sequence,
             payload,
-            noSigners
+            numSigners
         );
     }
 }
