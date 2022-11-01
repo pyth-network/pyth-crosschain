@@ -19,7 +19,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     uint8 constant NUM_GUARDIAN_SIGNERS = 13;
 
     // We use 5 prices to form a batch of 5 prices, close to our mainnet transactions.
-    uint8 constant NO_PRICES = 5;
+    uint8 constant NUM_PRICES = 5;
 
     uint constant BENCHMARK_ITERATIONS = 1000;
 
@@ -33,13 +33,13 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     function setUp() public {
         pyth = IPyth(setUpPyth(setUpWormhole(NUM_GUARDIANS)));
 
-        priceIds = new bytes32[](NO_PRICES);
+        priceIds = new bytes32[](NUM_PRICES);
         priceIds[0] = bytes32(0x1000000000000000000000000000000000000000000000000000000000000f00);
-        for (uint i = 1; i < NO_PRICES; ++i) {
+        for (uint i = 1; i < NUM_PRICES; ++i) {
             priceIds[i] = bytes32(uint256(priceIds[i-1])+1);
         }
 
-        for (uint i = 0; i < NO_PRICES; ++i) {
+        for (uint i = 0; i < NUM_PRICES; ++i) {
             prices.push(PythStructs.Price(
                 int64(uint64(getRand() % 1000)), // Price
                 uint64(getRand() % 100), // Confidence
@@ -55,7 +55,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     }
 
     function advancePrices() internal {
-        for (uint i = 0; i < NO_PRICES; ++i) {
+        for (uint i = 0; i < NUM_PRICES; ++i) {
             prices[i].price = int64(uint64(getRand() % 1000));
             prices[i].conf = uint64(getRand() % 100);
             prices[i].publishTime += getRand() % 10;
@@ -98,9 +98,9 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         for (uint i = 0; i < BENCHMARK_ITERATIONS; ++i) {
             advancePrices();
 
-            uint64[] memory publishTimes = new uint64[](NO_PRICES);
+            uint64[] memory publishTimes = new uint64[](NUM_PRICES);
             
-            for (uint j = 0; j < NO_PRICES; ++j) {
+            for (uint j = 0; j < NUM_PRICES; ++j) {
                 publishTimes[j] = uint64(prices[j].publishTime);
             }
 
@@ -114,9 +114,9 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
 
     function testBenchmarkUpdatePriceFeedsIfNecessaryNotFresh() public {
         for (uint i = 0; i < BENCHMARK_ITERATIONS; ++i) {
-            uint64[] memory publishTimes = new uint64[](NO_PRICES);
+            uint64[] memory publishTimes = new uint64[](NUM_PRICES);
             
-            for (uint j = 0; j < NO_PRICES; ++j) {
+            for (uint j = 0; j < NUM_PRICES; ++j) {
                 publishTimes[j] = uint64(prices[j].publishTime);
             }
 
@@ -140,7 +140,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         vm.warp(prices[0].publishTime);
 
         for (uint i = 0; i < BENCHMARK_ITERATIONS; ++i) {
-            pyth.getPrice(priceIds[getRand() % NO_PRICES]);
+            pyth.getPrice(priceIds[getRand() % NUM_PRICES]);
         }
     }
 }
