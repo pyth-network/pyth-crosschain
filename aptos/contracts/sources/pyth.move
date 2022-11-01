@@ -179,6 +179,12 @@ module pyth::pyth {
         update_cache(batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::destroy(vaa))));
     }
 
+    /// Allow anyone to update the cache with given updates. For testing purpose only.
+    #[test_only]
+    public fun update_cache_test(updates: vector<PriceUpdate>) {
+        update_cache(updates);
+    }
+
     /// Update the cache with given price updates, if they are newer than the ones currently cached.
     public(friend) fun update_cache(updates: vector<PriceInfo>) {
         while (!vector::is_empty(&updates)) {
