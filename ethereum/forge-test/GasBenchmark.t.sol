@@ -21,8 +21,6 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     // We use 5 prices to form a batch of 5 prices, close to our mainnet transactions.
     uint8 constant NUM_PRICES = 5;
 
-    uint constant BENCHMARK_ITERATIONS = 1000;
-
     IPyth public pyth;
     
     bytes32[] priceIds;
@@ -47,6 +45,10 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
                 getRand() % 10 // publishTime
             ));
         }
+
+        // Populate the contract with the initial prices
+        (bytes[] memory updateData, uint updateFee) = generateUpdateDataAndFee();
+        pyth.updatePriceFeeds{value: updateFee}(updateData);
     }
 
     function getRand() internal returns (uint val) {
@@ -79,68 +81,53 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     }
 
     function testBenchmarkUpdatePriceFeedsFresh() public {
-        for (uint i = 0; i < BENCHMARK_ITERATIONS; ++i) {
-            advancePrices();
+        advancePrices();
 
-            (bytes[] memory updateData, uint updateFee) = generateUpdateDataAndFee();
-            pyth.updatePriceFeeds{value: updateFee}(updateData);
-        }
+        (bytes[] memory updateData, uint updateFee) = generateUpdateDataAndFee();
+        pyth.updatePriceFeeds{value: updateFee}(updateData);
     }
 
     function testBenchmarkUpdatePriceFeedsNotFresh() public {
-        for (uint i = 0; i < BENCHMARK_ITERATIONS; ++i) {
-            (bytes[] memory updateData, uint updateFee) = generateUpdateDataAndFee();
-            pyth.updatePriceFeeds{value: updateFee}(updateData);
-        }
+        (bytes[] memory updateData, uint updateFee) = generateUpdateDataAndFee();
+        pyth.updatePriceFeeds{value: updateFee}(updateData);
     }
 
     function testBenchmarkUpdatePriceFeedsIfNecessaryFresh() public {
-        for (uint i = 0; i < BENCHMARK_ITERATIONS; ++i) {
-            advancePrices();
+        advancePrices();
 
-            uint64[] memory publishTimes = new uint64[](NUM_PRICES);
-            
-            for (uint j = 0; j < NUM_PRICES; ++j) {
-                publishTimes[j] = uint64(prices[j].publishTime);
-            }
-
-            (bytes[] memory updateData, uint updateFee) = generateUpdateDataAndFee();
-
-            // Since the prices have advanced, the publishTimes are newer than one in
-            // the contract and hence, the call should succeed.
-            pyth.updatePriceFeedsIfNecessary{value: updateFee}(updateData, priceIds, publishTimes);
+        uint64[] memory publishTimes = new uint64[](NUM_PRICES);
+        
+        for (uint j = 0; j < NUM_PRICES; ++j) {
+            publishTimes[j] = uint64(prices[j].publishTime);
         }
+
+        (bytes[] memory updateData, uint updateFee) = generateUpdateDataAndFee();
+
+        // Since the prices have advanced, the publishTimes are newer than one in
+        // the contract and hence, the call should succeed.
+        pyth.updatePriceFeedsIfNecessary{value: updateFee}(updateData, priceIds, publishTimes);
     }
 
     function testBenchmarkUpdatePriceFeedsIfNecessaryNotFresh() public {
-        for (uint i = 0; i < BENCHMARK_ITERATIONS; ++i) {
-            uint64[] memory publishTimes = new uint64[](NUM_PRICES);
-            
-            for (uint j = 0; j < NUM_PRICES; ++j) {
-                publishTimes[j] = uint64(prices[j].publishTime);
-            }
-
-            (bytes[] memory updateData, uint updateFee) = generateUpdateDataAndFee();
-
-            // Since the price is not advanced, the publishTimes are the same as the
-            // ones in the contract except the first update.
-            if (i > 0) {
-                vm.expectRevert(bytes("no prices in the submitted batch have fresh prices, so this update will have no effect"));
-            }
-    
-            pyth.updatePriceFeedsIfNecessary{value: updateFee}(updateData, priceIds, publishTimes);
+        uint64[] memory publishTimes = new uint64[](NUM_PRICES);
+        
+        for (uint j = 0; j < NUM_PRICES; ++j) {
+            publishTimes[j] = uint64(prices[j].publishTime);
         }
+
+        (bytes[] memory updateData, uint updateFee) = generateUpdateDataAndFee();
+
+        // Since the price is not advanced, the publishTimes are the same as the
+        // ones in the contract.
+        vm.expectRevert(bytes("no prices in the submitted batch have fresh prices, so this update will have no effect"));
+
+        pyth.updatePriceFeedsIfNecessary{value: updateFee}(updateData, priceIds, publishTimes);
     }
 
     function testBenchmarkGetPrice() public {
-        (bytes[] memory updateData, uint updateFee) = generateUpdateDataAndFee();
-        pyth.updatePriceFeeds{value: updateFee}(updateData);
-
         // Set the block timestamp to the publish time, so getPrice work as expected.
         vm.warp(prices[0].publishTime);
 
-        for (uint i = 0; i < BENCHMARK_ITERATIONS; ++i) {
-            pyth.getPrice(priceIds[getRand() % NUM_PRICES]);
-        }
+        pyth.getPrice(priceIds[getRand() % NUM_PRICES]);
     }
 }
