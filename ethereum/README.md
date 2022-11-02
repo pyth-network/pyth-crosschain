@@ -59,17 +59,19 @@ A gas report should have a couple of tables like this:
 ├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┤
 │ .............                                                                             ┆ .....           ┆ .....  ┆ .....  ┆ .....   ┆ ..      │
 ├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┤
-│ parseAndVerifyVM                                                                          ┆ 90292           ┆ 91262  ┆ 90292  ┆ 138792  ┆ 50      │
-├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┤
-│ updatePriceFeeds                                                                          ┆ 187385          ┆ 206005 ┆ 187385 ┆ 1118385 ┆ 50      │
+│ updatePriceFeeds                                                                          ┆ 383169          ┆ 724277 ┆ 187385 ┆ 1065385 ┆ 2       │
 ├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┤
 │ .............                                                                             ┆ .....           ┆ .....  ┆ .....  ┆ .....   ┆ ...     │
 ╰───────────────────────────────────────────────────────────────────────────────────────────┴─────────────────┴────────┴────────┴─────────┴─────────╯
 ```
 
-For most of the methods, the median gas usage is an indication of our desired gas usage. Because the calls that store something in the storage
-for the first time use significantly more gas.
+For most of the methods, the minimum gas usage is an indication of our desired gas usage. Because the calls that store something in the storage
+for the first time in `setUp` use significantly more gas. For example, in the above table, there are two calls to `updatePriceFeeds`. The first
+call has happend in the `setUp` method and costed over a million gas and is not intended for our Benchmark. So our desired value is the
+minimum value which is around 380k gas.
 
 If you like to optimize the contract and measure the gas optimization you can get gas snapshots using `forge snapshot` and evaluate your
 optimization with it. For more information, please refer to [Gas Snapshots documentation](https://book.getfoundry.sh/forge/gas-snapshots).
 Once you optimized the code, please share the snapshot difference (generated using `forge snapshot --diff <old-snapshot>`) in the PR too.
+This snapshot gas value also includes an initial transaction cost as well as reading from the contract storage itself. You can get the
+most accurate result by looking at the gas report or the gas shown in the call trace with `-vvvv` argument to `forge test`.
