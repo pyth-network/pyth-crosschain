@@ -147,18 +147,22 @@ next_new_symbol_id = PYTH_TEST_SYMBOL_COUNT
 last_new_sym_added_at = time.monotonic()
 
 with ThreadPoolExecutor() as executor: # Used for async adding of products and prices
+    dynamicly_added_symbols = 0
     while True:
         for sym in HTTP_ENDPOINT_DATA["symbols"]:
             publisher_random_update(sym["price"])
 
-        # Add a symbol if new symbol interval configured
-        if PYTH_NEW_SYMBOL_INTERVAL_SECS > 0:
+        # Add a symbol if new symbol interval configured. This will add a new symbol if PYTH_NEW_SYMBOL_INTERVAL_SECS
+        # is passed since adding the previous symbol. The second constraint ensures that
+        # at most PYTH_TEST_SYMBOL_COUNT new price symbols are created.
+        if PYTH_NEW_SYMBOL_INTERVAL_SECS > 0 and dynamicly_added_symbols > PYTH_TEST_SYMBOL_COUNT:
             # Do it if enough time passed
             now = time.monotonic()
             if (now - last_new_sym_added_at) >= PYTH_NEW_SYMBOL_INTERVAL_SECS:
                 executor.submit(add_symbol, next_new_symbol_id) # Returns immediately, runs in background
                 last_sym_added_at = now
                 next_new_symbol_id += 1
+                dynamicly_added_symbols += 1
 
         time.sleep(PYTH_PUBLISHER_INTERVAL_SECS)
         sys.stdout.flush()
