@@ -127,7 +127,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         // is set to 60 seconds, the getPrice should work as expected.
         vm.warp(0);
 
-        pyth.getPrice(priceIds[getRand() % NUM_PRICES]);
+        pyth.getPrice(priceIds[0]);
     }
 
     function testBenchmarkGetUpdateFee() public view {
