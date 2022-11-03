@@ -1,4 +1,6 @@
+mod bindings_evm;
 mod cli;
+mod evm;
 mod util;
 
 use clap::Parser;
@@ -42,16 +44,18 @@ pub fn start_cli_interactive(mut cli: Cli) -> Result<(), ErrBox> {
                 let mut with_name = vec!["".to_owned()];
                 with_name.append(&mut shell_split);
                 Ok(CliInteractive::try_parse_from(with_name)?)
-            })
-            .and_then(|cmd| {
-                // We just swap out the action, preserving the top-level arguments
-                cli.action = cmd.action;
-                Ok(handle_action_noninteractive(&cli)?)
             }) {
             Err(e) => {
                 println!("Could not understand that! Error:\n{}", e.to_string());
             }
-            Ok(()) => {}
+            Ok(cmd) => {
+                // We just swap out the action, preserving the top-level arguments
+                cli.action = cmd.action;
+
+                handle_action_noninteractive(&cli).unwrap_or_else(|e| {
+                    println!("Could not perform command! Error:\n{}", e.to_string());
+                });
+            }
         };
     }
 }
@@ -66,6 +70,10 @@ pub fn handle_action_noninteractive(cli: &Cli) -> Result<(), ErrBox> {
         }
         Action::PingAll => {
             println!("Pinging all blockchains...");
+
+            let addr = vec![];
+            let rpc_url = "localhost:8545".to_owned();
+            evm::query_pyth_receiver_evm(addr, rpc_url)?;
         }
     }
     Ok(())
