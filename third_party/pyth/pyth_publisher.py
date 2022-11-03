@@ -162,7 +162,7 @@ with ThreadPoolExecutor() as executor: # Used for async adding of products and p
                 executor.submit(add_symbol, next_new_symbol_id) # Returns immediately, runs in background
                 last_sym_added_at = now
                 next_new_symbol_id += 1
-                dynamicly_added_symbols += 1
+                dynamically_added_symbols += 1
 
         time.sleep(PYTH_PUBLISHER_INTERVAL_SECS)
         sys.stdout.flush()
