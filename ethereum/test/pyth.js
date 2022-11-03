@@ -284,10 +284,6 @@ contract("Pyth", function () {
     }
 
     it("should parse batch price attestation correctly", async function () {
-        const magic = 0x50325748;
-        const versionMajor = 3;
-        const versionMinor = 0;
-
         let attestationTime = 1647273460; // re-used for publishTime
         let publishTime = 1647273465; // re-used for publishTime
         let priceVal = 1337;
@@ -298,45 +294,27 @@ contract("Pyth", function () {
         );
         let parsed = await this.pythProxy.parseBatchPriceAttestation(rawBatch);
 
-        // Check the header
-        assert.equal(parsed.header.magic, magic);
-        assert.equal(parsed.header.versionMajor, versionMajor);
-        assert.equal(parsed.header.versionMinor, versionMinor);
-        assert.equal(parsed.header.payloadId, 2);
+        assert.equal(parsed.length, RAW_BATCH_ATTESTATION_COUNT);
 
-        assert.equal(parsed.nAttestations, RAW_BATCH_ATTESTATION_COUNT);
-        assert.equal(parsed.attestationSize, RAW_PRICE_ATTESTATION_SIZE);
-
-        assert.equal(parsed.attestations.length, parsed.nAttestations);
-
-        for (var i = 0; i < parsed.attestations.length; ++i) {
-            const prodId =
-                "0x" + (i + 1).toString(16).padStart(2, "0").repeat(32);
+        for (var i = 0; i < parsed.length; ++i) {
             const priceByte = 255 - ((i + 1) % 256);
             const priceId =
                 "0x" + priceByte.toString(16).padStart(2, "0").repeat(32);
 
-            assert.equal(parsed.attestations[i].productId, prodId);
-            assert.equal(parsed.attestations[i].priceId, priceId);
-            assert.equal(parsed.attestations[i].price, priceVal);
-            assert.equal(parsed.attestations[i].conf, 101);
-            assert.equal(parsed.attestations[i].expo, -3);
-            assert.equal(parsed.attestations[i].emaPrice, -42);
-            assert.equal(parsed.attestations[i].emaConf, 42);
-            assert.equal(parsed.attestations[i].status, 1);
-            assert.equal(parsed.attestations[i].numPublishers, 123212);
-            assert.equal(parsed.attestations[i].maxNumPublishers, 321232);
-            assert.equal(
-                parsed.attestations[i].attestationTime,
-                attestationTime
-            );
-            assert.equal(parsed.attestations[i].publishTime, publishTime);
-            assert.equal(parsed.attestations[i].prevPublishTime, 0xdeadbabe);
-            assert.equal(parsed.attestations[i].prevPrice, 0xdeadfacebeef);
-            assert.equal(parsed.attestations[i].prevConf, 0xbadbadbeef);
+            assert.equal(parsed[i].priceId, priceId);
+            assert.equal(parsed[i].priceInfo.price.price, priceVal);
+            assert.equal(parsed[i].priceInfo.price.conf, 101);
+            assert.equal(parsed[i].priceInfo.price.expo, -3);
+            assert.equal(parsed[i].priceInfo.emaPrice.expo, -3);
+
+            assert.equal(parsed[i].priceInfo.emaPrice.price, -42);
+            assert.equal(parsed[i].priceInfo.emaPrice.conf, 42);
+
+            assert.equal(parsed[i].priceInfo.emaPrice.publishTime, publishTime);
+            assert.equal(parsed[i].priceInfo.price.publishTime, publishTime);
 
             console.debug(
-                `attestation ${i + 1}/${parsed.attestations.length} parsed OK`
+                `attestation ${i + 1}/${parsed.length} parsed OK`
             );
         }
     });
