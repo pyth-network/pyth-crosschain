@@ -147,7 +147,7 @@ next_new_symbol_id = PYTH_TEST_SYMBOL_COUNT
 last_new_sym_added_at = time.monotonic()
 
 with ThreadPoolExecutor() as executor: # Used for async adding of products and prices
-    dynamicly_added_symbols = 0
+    dynamically_added_symbols = 0
     while True:
         for sym in HTTP_ENDPOINT_DATA["symbols"]:
             publisher_random_update(sym["price"])
