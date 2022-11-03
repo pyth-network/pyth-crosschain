@@ -229,7 +229,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         priceFeed.price.expo = info.price.expo;
         priceFeed.price.publishTime = uint(info.price.publishTime);
 
-        priceFeed.emaPrice.price = info.price.price;
+        priceFeed.emaPrice.price = info.emaPrice.price;
         priceFeed.emaPrice.conf = info.emaPrice.conf;
         priceFeed.emaPrice.expo = info.emaPrice.expo;
         priceFeed.emaPrice.publishTime = uint(info.emaPrice.publishTime);
