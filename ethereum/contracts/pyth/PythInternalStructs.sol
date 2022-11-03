@@ -43,11 +43,18 @@ contract PythInternalStructs {
         uint64 prevConf;
     }
 
-    struct PriceInfo {
-        uint256 attestationTime;
-        uint256 arrivalTime;
-        uint256 arrivalBlock;
-        PythStructs.PriceFeed priceFeed;
+ struct PriceInfo {
+        // slot 1
+        int64 price;
+        uint64 conf;
+        uint64 publishTime;
+        int32 expo;
+
+        // slot 2
+        int64 emaPrice;
+        uint64 emaConf;
+        uint64 emaPublishTime;
+        int32 emaExpo;
     }
 
     struct DataSource {

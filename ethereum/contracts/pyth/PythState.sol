@@ -38,11 +38,15 @@ contract PythStorage {
 
         // Mapping of cached price information
         // priceId => PriceInfo
-        mapping(bytes32 => PythInternalStructs.PriceInfo) latestPriceInfo;
+        mapping(bytes32 => PythInternalStructs.PriceInfo) _anotherDeprecatedLatestPriceInfo;
 
         // Index of the governance data source, increased each time the governance data source
         // changes.        
         uint32 governanceDataSourceIndex;
+
+        // Mapping of cached price information
+        // priceId => PriceInfo
+        mapping(bytes32 => PythInternalStructs.PriceInfo) latestPriceInfo;
     }
 }
 
