@@ -4,6 +4,7 @@
 pragma solidity ^0.8.0;
 
 import "./PythInternalStructs.sol";
+import "./PythDeprecatedStructs.sol";
 
 contract PythStorage {
     struct State {
@@ -12,7 +13,7 @@ contract PythStorage {
         bytes32 _deprecatedPyth2WormholeEmitter; // Ditto
 
         // After a backward-incompatible change in PriceFeed this mapping got deprecated.
-        mapping(bytes32 => PythInternalStructs.PriceInfo) _deprecatedLatestPriceInfoV1;
+        mapping(bytes32 => PythDeprecatedStructs.DeprecatedPriceInfoV2) _deprecatedLatestPriceInfoV1;
 
         // For tracking all active emitter/chain ID pairs
         PythInternalStructs.DataSource[] validDataSources;
@@ -38,7 +39,7 @@ contract PythStorage {
 
         // Mapping of cached price information
         // priceId => PriceInfo
-        mapping(bytes32 => PythInternalStructs.PriceInfo) _deprecatedLatestPriceInfoV2;
+        mapping(bytes32 => PythDeprecatedStructs.DeprecatedPriceInfoV2) _deprecatedLatestPriceInfoV2;
 
         // Index of the governance data source, increased each time the governance data source
         // changes.        
