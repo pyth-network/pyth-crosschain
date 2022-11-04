@@ -195,16 +195,16 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
             index += attestationSize;
 
             // Store the attestation
-            PythInternalStructs.PriceInfo memory latestPrice = latestPriceInfo(priceId);
+            uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
 
             bool fresh = false;
-            if(info.price.publishTime > latestPrice.price.publishTime) {
+            if(info.price.publishTime > latestPublishTime) {
                 freshPrices += 1;
                 fresh = true;
                 setLatestPriceInfo(priceId, info);
             }
 
-            emit PriceFeedUpdate(priceId, fresh, vm.emitterChainId, vm.sequence, latestPrice.price.publishTime,
+            emit PriceFeedUpdate(priceId, fresh, vm.emitterChainId, vm.sequence, latestPublishTime,
                 info.price.publishTime, info.price.price, info.price.conf);
         }
 
@@ -230,8 +230,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     }
 
     function priceFeedExists(bytes32 id) public override view returns (bool) {
-        PythInternalStructs.PriceInfo memory info = latestPriceInfo(id);
-        return (info.price.publishTime != 0);
+        return (latestPriceInfoPublishTime(id) != 0);
     }
 
     function getValidTimePeriod() public override view returns (uint) {
