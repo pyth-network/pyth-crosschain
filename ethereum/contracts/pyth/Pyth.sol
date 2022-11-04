@@ -37,8 +37,10 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         uint requiredFee = getUpdateFee(updateData);
         require(msg.value >= requiredFee, "insufficient paid fee amount");
  
-        for(uint i = 0; i < updateData.length; i++) {
+        for(uint i = 0; i < updateData.length; ) {
             updatePriceBatchFromVm(updateData[i]);
+
+            unchecked { i++; }
         }
 
         emit UpdatePriceFeeds(msg.sender, updateData.length, requiredFee);
