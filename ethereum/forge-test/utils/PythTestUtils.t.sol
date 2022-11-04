@@ -80,7 +80,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
             // Breaking this in two encodePackes because of the limited EVM stack.
             attestations = abi.encodePacked(
                 attestations,
-                uint8(PythInternalStructs.PriceAttestationStatus.TRADING),
+                uint8(1), // status = 1 = Trading
                 uint32(5), // Number of publishers. This field is not used.
                 uint32(10), // Maximum number of publishers. This field is not used.
                 uint64(prices[i].publishTime), // Attestation time. This field is not used.

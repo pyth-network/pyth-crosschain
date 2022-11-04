@@ -248,14 +248,17 @@ contract("Pyth", function () {
     function generateRawBatchAttestation(
         publishTime,
         attestationTime,
-        priceVal
+        priceVal,
+        emaPriceVal,
     ) {
         const pubTs = u64ToHex(publishTime);
         const attTs = u64ToHex(attestationTime);
         const price = u64ToHex(priceVal);
+        const emaPrice = u64ToHex(emaPriceVal || priceVal);
         const replaced = RAW_BATCH.replace(RAW_BATCH_PUBLISH_TIME_REGEX, pubTs)
             .replace(RAW_BATCH_ATTESTATION_TIME_REGEX, attTs)
-            .replace(RAW_BATCH_PRICE_REGEX, price);
+            .replace(RAW_BATCH_PRICE_REGEX, price)
+            .replace(RAW_BATCH_EMA_PRICE_REGEX, emaPrice);
         return replaced;
     }
 
@@ -283,61 +286,40 @@ contract("Pyth", function () {
         return replaced;
     }
 
-    it("should parse batch price attestation correctly", async function () {
-        const magic = 0x50325748;
-        const versionMajor = 3;
-        const versionMinor = 0;
-
+    it.only("should parse batch price attestation correctly", async function () {
         let attestationTime = 1647273460; // re-used for publishTime
         let publishTime = 1647273465; // re-used for publishTime
         let priceVal = 1337;
+        let emaPriceVal = 2022;
         let rawBatch = generateRawBatchAttestation(
             publishTime,
             attestationTime,
-            priceVal
+            priceVal,
+            emaPriceVal
         );
-        let parsed = await this.pythProxy.parseBatchPriceAttestation(rawBatch);
 
-        // Check the header
-        assert.equal(parsed.header.magic, magic);
-        assert.equal(parsed.header.versionMajor, versionMajor);
-        assert.equal(parsed.header.versionMinor, versionMinor);
-        assert.equal(parsed.header.payloadId, 2);
+        const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch]);
 
-        assert.equal(parsed.nAttestations, RAW_BATCH_ATTESTATION_COUNT);
-        assert.equal(parsed.attestationSize, RAW_PRICE_ATTESTATION_SIZE);
+        expectEvent(receipt, 'PriceFeedUpdate', {
+            price: "1337",
+        });
 
-        assert.equal(parsed.attestations.length, parsed.nAttestations);
+        for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
+            const price_id =
+                "0x" +
+                (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
 
-        for (var i = 0; i < parsed.attestations.length; ++i) {
-            const prodId =
-                "0x" + (i + 1).toString(16).padStart(2, "0").repeat(32);
-            const priceByte = 255 - ((i + 1) % 256);
-            const priceId =
-                "0x" + priceByte.toString(16).padStart(2, "0").repeat(32);
+            const price = await this.pythProxy.getPriceUnsafe(price_id);
+            assert.equal(price.price, priceVal.toString());
+            assert.equal(price.conf, "101"); // The value is hardcoded in the RAW_BATCH.
+            assert.equal(price.publishTime, publishTime.toString());
+            assert.equal(price.expo, "-3"); // The value is hardcoded in the RAW_BATCH.
 
-            assert.equal(parsed.attestations[i].productId, prodId);
-            assert.equal(parsed.attestations[i].priceId, priceId);
-            assert.equal(parsed.attestations[i].price, priceVal);
-            assert.equal(parsed.attestations[i].conf, 101);
-            assert.equal(parsed.attestations[i].expo, -3);
-            assert.equal(parsed.attestations[i].emaPrice, -42);
-            assert.equal(parsed.attestations[i].emaConf, 42);
-            assert.equal(parsed.attestations[i].status, 1);
-            assert.equal(parsed.attestations[i].numPublishers, 123212);
-            assert.equal(parsed.attestations[i].maxNumPublishers, 321232);
-            assert.equal(
-                parsed.attestations[i].attestationTime,
-                attestationTime
-            );
-            assert.equal(parsed.attestations[i].publishTime, publishTime);
-            assert.equal(parsed.attestations[i].prevPublishTime, 0xdeadbabe);
-            assert.equal(parsed.attestations[i].prevPrice, 0xdeadfacebeef);
-            assert.equal(parsed.attestations[i].prevConf, 0xbadbadbeef);
-
-            console.debug(
-                `attestation ${i + 1}/${parsed.attestations.length} parsed OK`
-            );
+            const emaPrice = await this.pythProxy.getEmaPriceUnsafe(price_id);
+            assert.equal(emaPrice.price, emaPriceVal.toString());
+            assert.equal(emaPrice.conf, "42"); // The value is hardcoded in the RAW_BATCH.
+            assert.equal(emaPrice.publishTime, publishTime.toString());
+            assert.equal(emaPrice.expo, "-3"); // The value is hardcoded in the RAW_BATCH.
         }
     });
 
