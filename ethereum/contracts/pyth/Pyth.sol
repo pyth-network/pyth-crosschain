@@ -41,14 +41,14 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
             PythInternalStructs.PriceInfo memory latestPrice = latestPriceInfo(attestation.priceId);
 
             bool fresh = false;
-            if(newPriceInfo.priceFeed.price.publishTime > latestPrice.priceFeed.price.publishTime) {
+            if(newPriceInfo.price.publishTime > latestPrice.price.publishTime) {
                 freshPrices += 1;
                 fresh = true;
                 setLatestPriceInfo(attestation.priceId, newPriceInfo);
             }
 
-            emit PriceFeedUpdate(attestation.priceId, fresh, vm.emitterChainId, vm.sequence, latestPrice.priceFeed.price.publishTime,
-                newPriceInfo.priceFeed.price.publishTime, newPriceInfo.priceFeed.price.price, newPriceInfo.priceFeed.price.conf);
+            emit PriceFeedUpdate(attestation.priceId, fresh, vm.emitterChainId, vm.sequence, latestPrice.price.publishTime,
+                newPriceInfo.price.publishTime, newPriceInfo.price.price, newPriceInfo.price.conf);
         }
 
         emit BatchPriceFeedUpdate(vm.emitterChainId, vm.sequence, batch.attestations.length, freshPrices);
@@ -76,32 +76,27 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         return singleUpdateFeeInWei() * updateData.length;
     }
 
-    function createNewPriceInfo(PythInternalStructs.PriceAttestation memory pa) private view returns (PythInternalStructs.PriceInfo memory info) {
-        info.attestationTime = pa.attestationTime;
-        info.arrivalTime = block.timestamp;
-        info.arrivalBlock = block.number;
-        info.priceFeed.id = pa.priceId;
-
+    function createNewPriceInfo(PythInternalStructs.PriceAttestation memory pa) private pure returns (PythInternalStructs.PriceInfo memory info) {
         PythInternalStructs.PriceAttestationStatus status = PythInternalStructs.PriceAttestationStatus(pa.status);
         if (status == PythInternalStructs.PriceAttestationStatus.TRADING) {
-            info.priceFeed.price.price = pa.price;
-            info.priceFeed.price.conf = pa.conf;
-            info.priceFeed.price.publishTime = pa.publishTime;
-            info.priceFeed.emaPrice.publishTime = pa.publishTime;
+            info.price.price = pa.price;
+            info.price.conf = pa.conf;
+            info.price.publishTime = pa.publishTime;
+            info.emaPrice.publishTime = pa.publishTime;
         } else {
-            info.priceFeed.price.price = pa.prevPrice;
-            info.priceFeed.price.conf = pa.prevConf;
-            info.priceFeed.price.publishTime = pa.prevPublishTime;
+            info.price.price = pa.prevPrice;
+            info.price.conf = pa.prevConf;
+            info.price.publishTime = pa.prevPublishTime;
 
             // The EMA is last updated when the aggregate had trading status,
             // so, we use prev_publish_time (the time when the aggregate last had trading status).
-            info.priceFeed.emaPrice.publishTime = pa.prevPublishTime;
+            info.emaPrice.publishTime = pa.prevPublishTime;
         }
 
-        info.priceFeed.price.expo = pa.expo;
-        info.priceFeed.emaPrice.price = pa.emaPrice;
-        info.priceFeed.emaPrice.conf = pa.emaConf;
-        info.priceFeed.emaPrice.expo = pa.expo;
+        info.price.expo = pa.expo;
+        info.emaPrice.price = pa.emaPrice;
+        info.emaPrice.conf = pa.emaConf;
+        info.emaPrice.expo = pa.expo;
 
         return info;
     }
@@ -226,14 +221,23 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     function queryPriceFeed(bytes32 id) public view override returns (PythStructs.PriceFeed memory priceFeed){
         // Look up the latest price info for the given ID
         PythInternalStructs.PriceInfo memory info = latestPriceInfo(id);
-        require(info.priceFeed.id != 0, "price feed for the given id is not pushed or does not exist");
+        require(info.price.publishTime != 0, "price feed for the given id is not pushed or does not exist");
 
-        return info.priceFeed;
+        priceFeed.id = id;
+        priceFeed.price.price = info.price.price;
+        priceFeed.price.conf = info.price.conf;
+        priceFeed.price.expo = info.price.expo;
+        priceFeed.price.publishTime = uint(info.price.publishTime);
+
+        priceFeed.emaPrice.price = info.emaPrice.price;
+        priceFeed.emaPrice.conf = info.emaPrice.conf;
+        priceFeed.emaPrice.expo = info.emaPrice.expo;
+        priceFeed.emaPrice.publishTime = uint(info.emaPrice.publishTime);
     }
 
     function priceFeedExists(bytes32 id) public override view returns (bool) {
         PythInternalStructs.PriceInfo memory info = latestPriceInfo(id);
-        return (info.priceFeed.id != 0);
+        return (info.price.publishTime != 0);
     }
 
     function getValidTimePeriod() public override view returns (uint) {
