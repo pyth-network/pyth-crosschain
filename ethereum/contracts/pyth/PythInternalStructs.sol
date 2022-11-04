@@ -9,19 +9,16 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 contract PythInternalStructs {
     using BytesLib for bytes;
 
-    struct InternalPrice {
-        int64 price;
-        uint64 conf;
-        uint64 publishTime;
-        int32 expo;
-    }
-
     struct PriceInfo {
         // slot 1
-        InternalPrice price;
+        uint64 publishTime;
+        int32 expo;
+        int64 price;
+        uint64 conf;
 
         // slot 2
-        InternalPrice emaPrice;
+        int64 emaPrice;
+        uint64 emaConf;
     }
 
     struct DataSource {

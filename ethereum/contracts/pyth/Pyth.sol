@@ -137,20 +137,19 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                 priceId = encoded.toBytes32(index + attestationIndex);
                 attestationIndex += 32;
 
-                info.price.price = int64(encoded.toUint64(index + attestationIndex));
+                info.price = int64(encoded.toUint64(index + attestationIndex));
                 attestationIndex += 8;
 
-                info.price.conf = encoded.toUint64(index + attestationIndex);
+                info.conf = encoded.toUint64(index + attestationIndex);
                 attestationIndex += 8;
 
-                info.price.expo = int32(encoded.toUint32(index + attestationIndex));
-                info.emaPrice.expo = info.price.expo;
+                info.expo = int32(encoded.toUint32(index + attestationIndex));
                 attestationIndex += 4;
 
-                info.emaPrice.price = int64(encoded.toUint64(index + attestationIndex));
+                info.emaPrice = int64(encoded.toUint64(index + attestationIndex));
                 attestationIndex += 8;
 
-                info.emaPrice.conf = encoded.toUint64(index + attestationIndex);
+                info.emaConf = encoded.toUint64(index + attestationIndex);
                 attestationIndex += 8;
 
                 {
@@ -171,8 +170,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                     // Unused uint64 attestationTime
                     attestationIndex += 8;
 
-                    info.price.publishTime = encoded.toUint64(index + attestationIndex);
-                    info.emaPrice.publishTime = info.price.publishTime;
+                    info.publishTime = encoded.toUint64(index + attestationIndex);
                     attestationIndex += 8;
 
                     if (status == 1) { // status == TRADING
@@ -182,20 +180,16 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                         // the previous price info that are passed here.
 
                         // Previous publish time
-                        info.price.publishTime = encoded.toUint64(index + attestationIndex);
+                        info.publishTime = encoded.toUint64(index + attestationIndex);
                         attestationIndex += 8;
 
                         // Previous price
-                        info.price.price = int64(encoded.toUint64(index + attestationIndex));
+                        info.price = int64(encoded.toUint64(index + attestationIndex));
                         attestationIndex += 8;
 
                         // Previous confidence
-                        info.price.conf = encoded.toUint64(index + attestationIndex);
+                        info.conf = encoded.toUint64(index + attestationIndex);
                         attestationIndex += 8;
-
-                        // The EMA is last updated when the aggregate had trading status,
-                        // so, we use previous publish time here too.
-                        info.emaPrice.publishTime = info.price.publishTime;
                     }
                 }
 
@@ -209,14 +203,14 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                 uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
 
                 bool fresh = false;
-                if(info.price.publishTime > latestPublishTime) {
+                if(info.publishTime > latestPublishTime) {
                     freshPrices += 1;
                     fresh = true;
                     setLatestPriceInfo(priceId, info);
                 }
 
                 emit PriceFeedUpdate(priceId, fresh, vm.emitterChainId, vm.sequence, latestPublishTime,
-                    info.price.publishTime, info.price.price, info.price.conf);
+                    info.publishTime, info.price, info.conf);
             }
 
 
@@ -227,18 +221,18 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     function queryPriceFeed(bytes32 id) public view override returns (PythStructs.PriceFeed memory priceFeed){
         // Look up the latest price info for the given ID
         PythInternalStructs.PriceInfo memory info = latestPriceInfo(id);
-        require(info.price.publishTime != 0, "price feed for the given id is not pushed or does not exist");
+        require(info.publishTime != 0, "price feed for the given id is not pushed or does not exist");
 
         priceFeed.id = id;
-        priceFeed.price.price = info.price.price;
-        priceFeed.price.conf = info.price.conf;
-        priceFeed.price.expo = info.price.expo;
-        priceFeed.price.publishTime = uint(info.price.publishTime);
+        priceFeed.price.price = info.price;
+        priceFeed.price.conf = info.conf;
+        priceFeed.price.expo = info.expo;
+        priceFeed.price.publishTime = uint(info.publishTime);
 
-        priceFeed.emaPrice.price = info.emaPrice.price;
-        priceFeed.emaPrice.conf = info.emaPrice.conf;
-        priceFeed.emaPrice.expo = info.emaPrice.expo;
-        priceFeed.emaPrice.publishTime = uint(info.emaPrice.publishTime);
+        priceFeed.emaPrice.price = info.emaPrice;
+        priceFeed.emaPrice.conf = info.emaConf;
+        priceFeed.emaPrice.expo = info.expo;
+        priceFeed.emaPrice.publishTime = uint(info.publishTime);
     }
 
     function priceFeedExists(bytes32 id) public override view returns (bool) {
