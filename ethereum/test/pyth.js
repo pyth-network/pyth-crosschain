@@ -304,7 +304,6 @@ contract("Pyth", function () {
             price: "1337",
         });
 
-        // Then prices should be available because the valid period is now 120 seconds
         for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
             const price_id =
                 "0x" +
@@ -312,15 +311,15 @@ contract("Pyth", function () {
 
             const price = await this.pythProxy.getPriceUnsafe(price_id);
             assert.equal(price.price, priceVal.toString());
-            assert.equal(price.conf, "101"); // Fixed in the fixture.
+            assert.equal(price.conf, "101"); // The value is hardcoded in the RAW_BATCH.
             assert.equal(price.publishTime, publishTime.toString());
-            assert.equal(price.expo, "-3"); // Fixed in the fixture.
+            assert.equal(price.expo, "-3"); // The value is hardcoded in the RAW_BATCH.
 
             const emaPrice = await this.pythProxy.getEmaPriceUnsafe(price_id);
             assert.equal(emaPrice.price, emaPriceVal.toString());
-            assert.equal(emaPrice.conf, "42"); // Fixed in the fixture.
+            assert.equal(emaPrice.conf, "42"); // The value is hardcoded in the RAW_BATCH.
             assert.equal(emaPrice.publishTime, publishTime.toString());
-            assert.equal(emaPrice.expo, "-3"); // Fixed in the fixture.
+            assert.equal(emaPrice.expo, "-3"); // The value is hardcoded in the RAW_BATCH.
         }
     });
 
