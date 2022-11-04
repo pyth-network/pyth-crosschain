@@ -248,14 +248,17 @@ contract("Pyth", function () {
     function generateRawBatchAttestation(
         publishTime,
         attestationTime,
-        priceVal
+        priceVal,
+        emaPriceVal,
     ) {
         const pubTs = u64ToHex(publishTime);
         const attTs = u64ToHex(attestationTime);
         const price = u64ToHex(priceVal);
+        const emaPrice = u64ToHex(emaPriceVal || priceVal);
         const replaced = RAW_BATCH.replace(RAW_BATCH_PUBLISH_TIME_REGEX, pubTs)
             .replace(RAW_BATCH_ATTESTATION_TIME_REGEX, attTs)
-            .replace(RAW_BATCH_PRICE_REGEX, price);
+            .replace(RAW_BATCH_PRICE_REGEX, price)
+            .replace(RAW_BATCH_EMA_PRICE_REGEX, emaPrice);
         return replaced;
     }
 
@@ -283,39 +286,41 @@ contract("Pyth", function () {
         return replaced;
     }
 
-    it("should parse batch price attestation correctly", async function () {
+    it.only("should parse batch price attestation correctly", async function () {
         let attestationTime = 1647273460; // re-used for publishTime
         let publishTime = 1647273465; // re-used for publishTime
         let priceVal = 1337;
+        let emaPriceVal = 2022;
         let rawBatch = generateRawBatchAttestation(
             publishTime,
             attestationTime,
-            priceVal
+            priceVal,
+            emaPriceVal
         );
-        let parsed = await this.pythProxy.parseBatchPriceAttestation(rawBatch);
 
-        assert.equal(parsed.length, RAW_BATCH_ATTESTATION_COUNT);
+        const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch]);
 
-        for (var i = 0; i < parsed.length; ++i) {
-            const priceByte = 255 - ((i + 1) % 256);
-            const priceId =
-                "0x" + priceByte.toString(16).padStart(2, "0").repeat(32);
+        expectEvent(receipt, 'PriceFeedUpdate', {
+            price: "1337",
+        });
 
-            assert.equal(parsed[i].priceId, priceId);
-            assert.equal(parsed[i].priceInfo.price.price, priceVal);
-            assert.equal(parsed[i].priceInfo.price.conf, 101);
-            assert.equal(parsed[i].priceInfo.price.expo, -3);
-            assert.equal(parsed[i].priceInfo.emaPrice.expo, -3);
+        // Then prices should be available because the valid period is now 120 seconds
+        for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
+            const price_id =
+                "0x" +
+                (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
 
-            assert.equal(parsed[i].priceInfo.emaPrice.price, -42);
-            assert.equal(parsed[i].priceInfo.emaPrice.conf, 42);
+            const price = await this.pythProxy.getPriceUnsafe(price_id);
+            assert.equal(price.price, priceVal.toString());
+            assert.equal(price.conf, "101"); // Fixed in the fixture.
+            assert.equal(price.publishTime, publishTime.toString());
+            assert.equal(price.expo, "-3"); // Fixed in the fixture.
 
-            assert.equal(parsed[i].priceInfo.emaPrice.publishTime, publishTime);
-            assert.equal(parsed[i].priceInfo.price.publishTime, publishTime);
-
-            console.debug(
-                `attestation ${i + 1}/${parsed.length} parsed OK`
-            );
+            const emaPrice = await this.pythProxy.getEmaPriceUnsafe(price_id);
+            assert.equal(emaPrice.price, emaPriceVal.toString());
+            assert.equal(emaPrice.conf, "42"); // Fixed in the fixture.
+            assert.equal(emaPrice.publishTime, publishTime.toString());
+            assert.equal(emaPrice.expo, "-3"); // Fixed in the fixture.
         }
     });
 
