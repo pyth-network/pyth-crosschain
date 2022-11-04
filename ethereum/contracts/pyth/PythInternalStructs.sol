@@ -9,11 +9,6 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 contract PythInternalStructs {
     using BytesLib for bytes;
 
-    struct PriceAttestation {
-        PriceInfo priceInfo;
-        bytes32 priceId;
-    }
-
     struct InternalPrice {
         int64 price;
         uint64 conf;
