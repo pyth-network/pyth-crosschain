@@ -13,7 +13,7 @@ contract PythStorage {
         bytes32 _deprecatedPyth2WormholeEmitter; // Ditto
 
         // After a backward-incompatible change in PriceFeed this mapping got deprecated.
-        mapping(bytes32 => PythDeprecatedStructs.DeprecatedPriceInfoV2) _deprecatedLatestPriceInfoV1;
+        mapping(bytes32 => PythDeprecatedStructs.DeprecatedPriceInfoV1) _deprecatedLatestPriceInfoV1;
 
         // For tracking all active emitter/chain ID pairs
         PythInternalStructs.DataSource[] validDataSources;
