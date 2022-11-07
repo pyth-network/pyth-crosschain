@@ -28,7 +28,7 @@ contract PythGetters is PythState {
     }
 
     function latestPriceInfoPublishTime(bytes32 priceId) public view returns (uint64) {
-        return _state.latestPriceInfo[priceId].price.publishTime;
+        return _state.latestPriceInfo[priceId].publishTime;
     }
 
     function hashDataSource(PythInternalStructs.DataSource memory ds) public pure returns (bytes32) {
