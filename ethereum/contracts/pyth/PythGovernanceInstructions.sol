@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.0;
 
-import "../libraries/external/OptimizedBytesLib.sol";
+import "../libraries/external/BytesLib.sol";
 import "./PythInternalStructs.sol";
 
 /**
@@ -12,7 +12,7 @@ import "./PythInternalStructs.sol";
  */
 contract PythGovernanceInstructions {
 
-    using OptimizedBytesLib for bytes;
+    using BytesLib for bytes;
 
     // Magic is `PTGM` encoded as a 4 byte data: Pyth Governance Message
     uint32 constant MAGIC = 0x5054474d;
