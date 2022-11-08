@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.0;
 
-import "../libraries/external/BytesLib.sol";
+import "../libraries/external/OptimizedBytesLib.sol";
 import "@pythnetwork/pyth-sdk-solidity/AbstractPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
@@ -12,7 +12,7 @@ import "./PythSetters.sol";
 import "./PythInternalStructs.sol";
 
 abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
-    using BytesLib for bytes;
+    using OptimizedBytesLib for bytes;
 
     function _initialize(
         address wormhole,

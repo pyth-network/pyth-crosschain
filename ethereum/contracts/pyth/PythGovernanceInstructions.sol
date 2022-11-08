@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.0;
 
-import "../libraries/external/BytesLib.sol";
+import "../libraries/external/OptimizedBytesLib.sol";
 import "./PythInternalStructs.sol";
 
 /**
@@ -12,7 +12,7 @@ import "./PythInternalStructs.sol";
  */
 contract PythGovernanceInstructions {
 
-    using BytesLib for bytes;
+    using OptimizedBytesLib for bytes;
 
     // Magic is `PTGM` encoded as a 4 byte data: Pyth Governance Message
     uint32 constant MAGIC = 0x5054474d;
@@ -90,6 +90,9 @@ contract PythGovernanceInstructions {
         gi.targetChainId = encodedInstruction.toUint16(index);
         index += 2;
 
+        // As solidity performs math operations in a checked mode
+        // if the length of the encoded instruction be smaller than index
+        // it will revert. So we don't need any extra check.
         gi.payload = encodedInstruction.slice(index, encodedInstruction.length - index);
     }
 
