@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.0;
 
-import "../libraries/external/OptimizedBytesLib.sol";
+import "../libraries/external/UnsafeBytesLib.sol";
 import "@pythnetwork/pyth-sdk-solidity/AbstractPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
@@ -12,8 +12,6 @@ import "./PythSetters.sol";
 import "./PythInternalStructs.sol";
 
 abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
-    using OptimizedBytesLib for bytes;
-
     function _initialize(
         address wormhole,
         uint16 pyth2WormholeChainId,
@@ -70,19 +68,19 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
             // Check header
             {
-                uint32 magic = encoded.toUint32(index);
+                uint32 magic = UnsafeBytesLib.toUint32(encoded, index);
                 index += 4;
                 require(magic == 0x50325748, "invalid magic value");
 
-                uint16 versionMajor = encoded.toUint16(index);
+                uint16 versionMajor = UnsafeBytesLib.toUint16(encoded, index);
                 index += 2;
                 require(versionMajor == 3, "invalid version major, expected 3");
 
-                uint16 versionMinor = encoded.toUint16(index);
+                uint16 versionMinor = UnsafeBytesLib.toUint16(encoded, index);
                 index += 2;
                 require(versionMinor >= 0, "invalid version minor, expected 0 or more");
 
-                uint16 hdrSize = encoded.toUint16(index);
+                uint16 hdrSize = UnsafeBytesLib.toUint16(encoded, index);
                 index += 2;
 
                 // NOTE(2022-04-19): Currently, only payloadId comes after
@@ -90,16 +88,16 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                 // separate offset to respect hdrSize, i.e.:
                 //
                 // uint hdrIndex = 0;
-                // bpa.header.payloadId = encoded.toUint8(index + hdrIndex);
+                // bpa.header.payloadId = UnsafeBytesLib.toUint8(encoded, index + hdrIndex);
                 // hdrIndex += 1;
                 //
-                // bpa.header.someNewField = encoded.toUint32(index + hdrIndex);
+                // bpa.header.someNewField = UnsafeBytesLib.toUint32(encoded, index + hdrIndex);
                 // hdrIndex += 4;
                 //
                 // // Skip remaining unknown header bytes
                 // index += bpa.header.hdrSize;
 
-                uint8 payloadId = encoded.toUint8(index);
+                uint8 payloadId = UnsafeBytesLib.toUint8(encoded, index);
 
                 // Skip remaining unknown header bytes
                 index += hdrSize;
@@ -109,11 +107,11 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
             }
 
             // Parse the number of attestations
-            uint16 nAttestations = encoded.toUint16(index);
+            uint16 nAttestations = UnsafeBytesLib.toUint16(encoded, index);
             index += 2;
 
             // Parse the attestation size
-            uint16 attestationSize = encoded.toUint16(index);
+            uint16 attestationSize = UnsafeBytesLib.toUint16(encoded, index);
             index += 2;
 
             // Given the message is valid the arithmetic below should not overflow, and
@@ -134,22 +132,22 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                 // Unused bytes32 product id
                 attestationIndex += 32;
 
-                priceId = encoded.toBytes32(index + attestationIndex);
+                priceId = UnsafeBytesLib.toBytes32(encoded, index + attestationIndex);
                 attestationIndex += 32;
 
-                info.price = int64(encoded.toUint64(index + attestationIndex));
+                info.price = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
                 attestationIndex += 8;
 
-                info.conf = encoded.toUint64(index + attestationIndex);
+                info.conf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
                 attestationIndex += 8;
 
-                info.expo = int32(encoded.toUint32(index + attestationIndex));
+                info.expo = int32(UnsafeBytesLib.toUint32(encoded, index + attestationIndex));
                 attestationIndex += 4;
 
-                info.emaPrice = int64(encoded.toUint64(index + attestationIndex));
+                info.emaPrice = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
                 attestationIndex += 8;
 
-                info.emaConf = encoded.toUint64(index + attestationIndex);
+                info.emaConf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
                 attestationIndex += 8;
 
                 {
@@ -158,7 +156,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                     // 1 = TRADING: The price feed is updating as expected.
                     // 2 = HALTED: The price feed is not currently updating because trading in the product has been halted.
                     // 3 = AUCTION: The price feed is not currently updating because an auction is setting the price.
-                    uint8 status = encoded.toUint8(index + attestationIndex);
+                    uint8 status = UnsafeBytesLib.toUint8(encoded, index + attestationIndex);
                     attestationIndex += 1;
 
                     // Unused uint32 numPublishers
@@ -170,7 +168,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                     // Unused uint64 attestationTime
                     attestationIndex += 8;
 
-                    info.publishTime = encoded.toUint64(index + attestationIndex);
+                    info.publishTime = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
                     attestationIndex += 8;
 
                     if (status == 1) { // status == TRADING
@@ -180,15 +178,15 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                         // the previous price info that are passed here.
 
                         // Previous publish time
-                        info.publishTime = encoded.toUint64(index + attestationIndex);
+                        info.publishTime = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
                         attestationIndex += 8;
 
                         // Previous price
-                        info.price = int64(encoded.toUint64(index + attestationIndex));
+                        info.price = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
                         attestationIndex += 8;
 
                         // Previous confidence
-                        info.conf = encoded.toUint64(index + attestationIndex);
+                        info.conf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
                         attestationIndex += 8;
                     }
                 }

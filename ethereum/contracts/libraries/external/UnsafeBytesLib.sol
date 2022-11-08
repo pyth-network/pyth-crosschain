@@ -5,11 +5,14 @@
  *
  * @dev Bytes tightly packed arrays utility library for ethereum contracts written in Solidity.
  *      The library lets you concatenate, slice and type cast bytes arrays both in memory and storage.
+ *
+ * @notice This is the **unsafe** version of BytesLib which removed all the checks (out of bound, ...)
+ * to be more gas efficient.
  */
 pragma solidity >=0.8.0 <0.9.0;
 
 
-library OptimizedBytesLib {
+library UnsafeBytesLib {
     function concat(
         bytes memory _preBytes,
         bytes memory _postBytes
