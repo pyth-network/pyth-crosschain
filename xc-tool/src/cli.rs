@@ -1,4 +1,6 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand};
+
+use crate::network::NetKind;
 
 #[derive(Parser)]
 #[clap(
@@ -8,9 +10,10 @@ use clap::{Parser, Subcommand, ValueEnum};
 pub struct Cli {
     #[clap(subcommand)]
     pub action: Action,
-    /// Mainnet/testnet
-    #[clap(default_value = "testnet")]
-    pub net: Net,
+    #[clap(help = "Network kind to act against")]
+    pub net: NetKind,
+    #[clap(short, help = "Optional config YAML overriding the defaults")]
+    pub config_file: Option<String>,
 }
 
 /// This struct helps reuse action parsing logic for interactive mode.
@@ -28,14 +31,7 @@ pub struct CliInteractive {
 pub enum Action {
     #[clap(about = "Attempt sanity-check access for all known blockchains")]
     PingAll,
-    #[clap(about = "Fires up a repl letting user directly perform all other actions")]
+    #[clap(about = "Fires up a repl letting user directly perform all other actions. Warning: Do not call already in interactive mode.")]
     Interactive,
 }
 
-/// For most chains, we pick a production blockchain network and a
-/// testing one, closely following Wormhole's choices.
-#[derive(ValueEnum, Clone)]
-pub enum Net {
-    Mainnet,
-    Testnet,
-}

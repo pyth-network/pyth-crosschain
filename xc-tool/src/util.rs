@@ -1,1 +1,1 @@
-pub type ErrBox = Box<dyn std::error::Error>;
+pub type ErrBoxSend = Box<dyn std::error::Error + Send + Sync>;
