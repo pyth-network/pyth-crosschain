@@ -90,6 +90,9 @@ contract PythGovernanceInstructions {
         gi.targetChainId = encodedInstruction.toUint16(index);
         index += 2;
 
+        // As solidity performs math operations in a checked mode
+        // if the length of the encoded instruction be smaller than index
+        // it will revert. So we don't need any extra check.
         gi.payload = encodedInstruction.slice(index, encodedInstruction.length - index);
     }
 
