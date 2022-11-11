@@ -38,6 +38,9 @@ WORMHOLE_ADDRESS = os.environ.get(
 
 P2W_MAX_LOG_LINES = int(os.environ.get("P2W_MAX_LOG_LINES", 1000))
 
+# attester needs string, but we validate as int first
+P2W_RPC_TIMEOUT_SECS = str(int(os.environ.get("P2W_RPC_TIMEOUT_SECS", "20")))
+
 ATTESTATIONS = {
     "pendingSeqnos": [],
 }
@@ -118,6 +121,8 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
             SOL_RPC_URL,
             "--payer",
             P2W_OWNER_KEYPAIR,
+            "--timeout",
+            P2W_RPC_TIMEOUT_SECS,
             "init",
             "--wh-prog",
             WORMHOLE_ADDRESS,
@@ -141,6 +146,8 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
                 P2W_SOL_ADDRESS,
                 "--rpc-url",
                 SOL_RPC_URL,
+                "--timeout",
+                P2W_RPC_TIMEOUT_SECS,
                 "--payer",
                 P2W_OWNER_KEYPAIR,
                 "set-config",
