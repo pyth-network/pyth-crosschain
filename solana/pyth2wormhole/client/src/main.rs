@@ -551,6 +551,11 @@ async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrB
         message_q_mtx,
     } = args;
 
+    // Stagger this sched job by batch_no * 10 milliseconds. It
+    // mitigates uneven distribution of tx requests which may resolve
+    // RPC timeouts on larger interval-based symbol groups.
+    tokio::time::sleep(Duration::from_millis(batch_no as u64 * 10)).await;
+
     // Enforces the max batch job count
     let sema = Arc::new(Semaphore::new(batch.conditions.max_batch_jobs));
     loop {
