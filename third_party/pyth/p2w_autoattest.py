@@ -296,6 +296,7 @@ while True:
             "-f",
             P2W_ATTESTATION_CFG,
             "-d",
+
         ],
         stdout=PIPE,
         stderr=STDOUT,

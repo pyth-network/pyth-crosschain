@@ -1,0 +1,27 @@
+{
+  "name": "pyth-xc-tool",
+  "version": "0.1.0",
+  "description": "Cross-chain admin tool for Pyth",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run build-evm && npm run build-lib",
+    "build-evm": "npm run build-evm-contract && npm run copy-evm-abis && npm run build-evm-bindings",
+    "build-lib": "tsc",
+    "build-evm-contract": "cd ../ethereum/ && (npm run build || npm ci && npm run build)",
+    "copy-evm-abis": "mkdir -p ./src/evm/abis && cp -r ../ethereum/build/contracts/* ./src/evm/abis/",
+    "build-evm-bindings": "mkdir -p ./src/evm/bindings/ && typechain --target=ethers-v5 --out-dir=src/evm/bindings/ src/evm/abis/Pyth*.json"
+  },
+  "author": "Pyth Network Contributors",
+  "license": "SEE LICENSE IN ../LICENSE",
+  "devDependencies": {
+    "@types/node": "^18.11.9",
+    "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "@typechain/ethers-v5": "^7.0.1",
+    "commander": "^9.4.1",
+    "ethers": "^5.7.2",
+    "@pythnetwork/p2w-sdk-js": "file:../third_party/pyth/p2w-sdk/js"
+  }
+}

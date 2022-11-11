@@ -14,6 +14,7 @@ use futures::{
     future::{
         Future,
         TryFutureExt,
+        FutureExt,
     },
 };
 use generic_array::GenericArray;
@@ -602,19 +603,25 @@ async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrB
         // eat all memory). It is freed as soon as we
         // leave this code block.
         let _permit4sched = sema.acquire().await?;
-
-        let batch_no4err_msg = batch_no.clone();
-        let batch_count4err_msg = batch_count.clone();
+        
         let group_name4err_msg = batch.group_name.clone();
 
         // We never get to error reporting in daemon mode, attach a map_err
-        let job_with_err_msg = job.map_err(move |e| {
-            warn!(
-                "Batch {}/{}, group {:?} ERR: {:#?}",
-                batch_no4err_msg, batch_count4err_msg, group_name4err_msg, e
-            );
-            e
-        });
+        let job_with_err_msg = job.then(move |res| {
+            let batch_no4err_msg = batch_no.clone();
+            let batch_count4err_msg = batch_count.clone();
+            let group_name4err_msg = group_name4err_msg;
+            async move {
+                   res.map_err(|e| {
+                warn!(
+                    "Batch {}/{}, group {:?} ERR: {:#?}",
+                    batch_no4err_msg, batch_count4err_msg, group_name4err_msg, e
+                );
+                       e
+                   }
+                    }
+                return res;
+        }});
 
         // Spawn the job in background
         let _detached_job: JoinHandle<_> = tokio::spawn(job_with_err_msg);
