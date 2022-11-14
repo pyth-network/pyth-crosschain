@@ -21,7 +21,7 @@ const testnetConnection = new EvmPriceServiceConnection(
 const ETH_USD_TESTNET_PRICE_ID =
   "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6";
 
-const PYTH_EXAMPLE_ADDRESS = "0xa31F4c0eF2935Af25370D9AE275169CCd9793DA3";
+const PYTH_EXAMPLE_ADDRESS = "0x7B4b667F9B792054565e10656d1A08ECF50aa31C";
 const PYTH_CONTRACT = "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C";
 
 /// React component that shows the offchain price and confidence interval
@@ -41,10 +41,10 @@ function PriceText(props: { price: Price | undefined }) {
               price.getConfAsNumberUnchecked().toFixed(3)}{" "}
           </span>
           <br/>
-          $5000 is worth
+          $5 is worth
           <span style={{ color: "red" }}>
             {" "}
-            {(5000/price.getPriceAsNumberUnchecked()).toFixed(10)}
+            {(5/price.getPriceAsNumberUnchecked()).toFixed(10)}
             {" "}ETH
           </span>
           
@@ -86,7 +86,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-        <p>Send $5000 worth of ETH to a friend</p>
+        <p>Send $5 worth of ETH to a friend</p>
         <PriceText price={pythOffChainPrice} />
 
         <div>
@@ -143,7 +143,7 @@ async function sendToFriend(sender: string, friendAddress: string, web3: Web3) {
   );
 
   const updateFee = await pythContract.methods
-  .getUpdateFee(priceFeedUpdateData)
+  .getUpdateFee(priceFeedUpdateData.length)
   .call();
 
   console.log(updateFee);
@@ -153,12 +153,12 @@ async function sendToFriend(sender: string, friendAddress: string, web3: Web3) {
     PYTH_EXAMPLE_ADDRESS
   );
 
-  const estimatedWei = Math.ceil((6000*10**18)/priceFeed.getPriceUnchecked().getPriceAsNumberUnchecked());
+  const estimatedWei = Math.ceil((5*10**18)/priceFeed.getPriceUnchecked().getPriceAsNumberUnchecked() + Number(updateFee));
 
   console.log(estimatedWei);
 
   await pythExampleContract.methods
-  .sendToFriend(friendAddress, 5000, priceFeedUpdateData)
+  .sendToFriend(friendAddress, 5, priceFeedUpdateData)
   .send({ value: Number(updateFee) + estimatedWei, from: sender });
 }
 

@@ -42,4 +42,7 @@ contract PythExample {
 
         emit Transfer(msg.sender, to, amountUsd, amountWei);
     }
+
+    receive() external payable {
+    }
 }
