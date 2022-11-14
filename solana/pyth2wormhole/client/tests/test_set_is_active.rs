@@ -78,15 +78,20 @@ async fn test_setting_is_active_works() -> Result<(), p2wc::ErrBoxSend> {
         clone_keypair(&ops_owner),
         false,
         ctx.last_blockhash,
-    ).map_err(|e| e.to_string())?;
+    )
+    .map_err(|e| e.to_string())?;
 
-    ctx.banks_client.process_transaction(set_is_active_false_tx).await?;
+    ctx.banks_client
+        .process_transaction(set_is_active_false_tx)
+        .await?;
 
-    let config = ctx.banks_client.
-        get_account_data_with_borsh::<Pyth2WormholeConfig>(p2w_config_addr).await?;
-    
+    let config = ctx
+        .banks_client
+        .get_account_data_with_borsh::<Pyth2WormholeConfig>(p2w_config_addr)
+        .await?;
+
     assert!(!config.is_active);
-    
+
     // Setting to true should work
     let set_is_active_true_tx = p2wc::gen_set_is_active_tx(
         clone_keypair(&ctx.payer),
@@ -94,13 +99,18 @@ async fn test_setting_is_active_works() -> Result<(), p2wc::ErrBoxSend> {
         clone_keypair(&ops_owner),
         true,
         ctx.last_blockhash,
-    ).map_err(|e| e.to_string())?;
+    )
+    .map_err(|e| e.to_string())?;
 
-    ctx.banks_client.process_transaction(set_is_active_true_tx).await?;
+    ctx.banks_client
+        .process_transaction(set_is_active_true_tx)
+        .await?;
 
-    let config = ctx.banks_client.
-        get_account_data_with_borsh::<Pyth2WormholeConfig>(p2w_config_addr).await?;
-    
+    let config = ctx
+        .banks_client
+        .get_account_data_with_borsh::<Pyth2WormholeConfig>(p2w_config_addr)
+        .await?;
+
     assert!(config.is_active);
 
     // A wrong signer cannot handle it
@@ -111,9 +121,14 @@ async fn test_setting_is_active_works() -> Result<(), p2wc::ErrBoxSend> {
         clone_keypair(&ctx.payer),
         true,
         ctx.last_blockhash,
-    ).map_err(|e| e.to_string())?;
+    )
+    .map_err(|e| e.to_string())?;
 
-    assert!(ctx.banks_client.process_transaction(set_is_active_true_tx).await.is_err());
+    assert!(ctx
+        .banks_client
+        .process_transaction(set_is_active_true_tx)
+        .await
+        .is_err());
 
     Ok(())
 }
@@ -161,7 +176,7 @@ async fn test_setting_is_active_does_not_work_without_ops_owner() -> Result<(), 
 
     let mut ctx = p2w_test.start_with_context().await;
 
-    // No one could should be able to handle 
+    // No one could should be able to handle
     // For example pyth_owner is used here.
     let set_is_active_true_tx = p2wc::gen_set_is_active_tx(
         clone_keypair(&ctx.payer),
@@ -169,9 +184,14 @@ async fn test_setting_is_active_does_not_work_without_ops_owner() -> Result<(), 
         pyth_owner,
         true,
         ctx.last_blockhash,
-    ).map_err(|e| e.to_string())?;
+    )
+    .map_err(|e| e.to_string())?;
 
-    assert!(ctx.banks_client.process_transaction(set_is_active_true_tx).await.is_err());
+    assert!(ctx
+        .banks_client
+        .process_transaction(set_is_active_true_tx)
+        .await
+        .is_err());
 
     Ok(())
 }

@@ -133,7 +133,7 @@ async fn main() -> Result<(), ErrBox> {
             remove_ops_owner,
         } => {
             let old_config = get_config_account(&rpc_client, &p2w_addr).await?;
-            
+
             let new_ops_owner = if remove_ops_owner {
                 None
             } else if let Some(given_ops_owner) = ops_owner_addr {
@@ -210,7 +210,10 @@ async fn main() -> Result<(), ErrBox> {
             .await?;
         }
         Action::GetEmitter => unreachable! {}, // It is handled early in this function.
-        Action::SetIsActive { ops_owner, new_is_active } => {            
+        Action::SetIsActive {
+            ops_owner,
+            new_is_active,
+        } => {
             let tx = gen_set_is_active_tx(
                 payer,
                 p2w_addr,
@@ -225,7 +228,7 @@ async fn main() -> Result<(), ErrBox> {
                 "Applied config:\n{:?}",
                 get_config_account(&rpc_client, &p2w_addr).await?
             );
-        },
+        }
     }
 
     Ok(())
