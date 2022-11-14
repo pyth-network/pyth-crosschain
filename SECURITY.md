@@ -1,10 +1,21 @@
 # Security
 
-## Bug Bounty Program (*work in progress*)
+## Bug Bounty Program
 
-We are in the process of designing a **bug bounty program** for Pyth.
+Pyth operates a self hosted [bug bounty program](https://pyth.network/bounty) to financially incentivize independent researchers (with up to $1,000,000 USDC) for finding and responsibly disclosing security issues.
 
-In the mean-time, if you find a security issue in Pyth, we ask that you reach out to our team via **[Discord](https://discord.com/invite/pythnetwork)**.
+- **Scopes**
+    - [Pyth Oracle](https://github.com/pyth-network/pyth-client/tree/main/program)
+    - [Pyth Crosschain Ethereum](https://github.com/pyth-network/pyth-crosschain/tree/main/ethereum/contracts/pyth)
+    - [Pyth Crosschain Aptos](https://github.com/pyth-network/pyth-crosschain/tree/main/aptos/contracts)
+    - [Pyth Governance](https://github.com/pyth-network/governance/tree/master/staking/programs/staking)
+- **Rewards**
+    - Critical: Up to $1,000,000
+    - High: Up to $100,000
+
+If you find a security issue in Pyth, please [report the issue](https://yyyf63zqhtu.typeform.com/to/dBV4qcP0) immediately to our security team.
+
+If there is a duplicate report, either the same reporter or different reporters, the first of the two by timestamp will be accepted as the official bug report and will be subject to the specific terms of the submitting program.
 
 ## 3rd Party Security Audits
 
@@ -18,3 +29,27 @@ As these 3rd party audits are completed and issues are sufficiently addressed, w
     - **Scope**: *pyth-aptos contracts*
 - **[November 01, 2022 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2022_11_01/pyth.pdf)**
     - **Scope**: *pyth-evm contracts*
+
+## Social Media Monitoring
+
+The Pyth project maintains a social media monitoring program to stay abreast of important ecosystem developments.
+
+These developments include monitoring services like Twitter for key phrases and patterns such that the Pyth project is informed of a compromise or vulnerability in a dependancy that could negatively affect Pyth or its users.
+
+In the case of a large ecosystem development that requires response, the Pyth project will engage its security incident response program.
+
+## Incident Response
+
+The Pyth project maintains an incident response program to respond to vulnerabilities or active threats to Pyth, its users, or the ecosystems it's connected to. Pyth can be made aware about a security event from a variety of different sources (eg. bug bounty program, audit finding, security monitoring, social media, etc.)
+
+When a Pyth project contributor becomes aware of a security event, that contributor immediately holds the role of [incident commander](https://en.wikipedia.org/wiki/Incident_commander) for the issue until they hand off to a more appropriate incident commander.  A contributor does not need to be a "security person" or have any special priviledges to hold the role of incident commander, they simply need to be responsible, communicate effectively, and maintain the following obligations to manage the incident to completion.
+
+The role of the incident commander for Pyth includes the following minimum obligations:
+
+- Understand what is going on, the severity, and advance the state of the incident.
+- Identify and contact the relevant responders needed to address the issue.
+- Identify what actions are needed for containment (eg. security patch, contracts deployed, governance ceremony).
+- Establish a dedicated real-time communication channel for responders to coordinate (eg. Slack, Telegram, Signal, or Zoom).
+- Establish a private incident document, where the problem, timeline, actions, artifacts, lessons learned, etc. can be tracked and shared with responders.
+- When an incident is over, host a [retrospective](https://en.wikipedia.org/wiki/Retrospective) with key responders to understand how things could be handled better in the future (this is a no blame session, the goal is objectively about improving Pyth's readiness and response capability in the future).
+- Create issues in relevant ticket trackers for actions based on lessons learned.
