@@ -424,7 +424,7 @@ pub async fn crawl_pyth_mapping(
                     "Mapping: Could not parse account {} as a Pyth mapping, crawling terminated. Error: {:?}",
                     mapping_addr, e
                 );
-                continue;
+                break;
             }
         };
 
