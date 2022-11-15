@@ -216,6 +216,15 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
+    function parsePriceFeedUpdates(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minPublishTime,
+        uint64 maxPublishTime
+    ) external payable override returns (PythStructs.PriceFeed[] memory priceFeeds) {
+        // TODO: To be implemented soon.
+    }
+
     function queryPriceFeed(bytes32 id) public view override returns (PythStructs.PriceFeed memory priceFeed){
         // Look up the latest price info for the given ID
         PythInternalStructs.PriceInfo memory info = latestPriceInfo(id);
