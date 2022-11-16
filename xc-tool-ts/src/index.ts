@@ -1,103 +1,5 @@
-import { PythUpgradable, PythUpgradable__factory } from "./evm/bindings/";
-
-import * as ethers from "ethers";
-
-interface Config {
-  mainnet: MainnetConfig;
-  testnet: TestnetConfig;
-  localDevnet: LocalDevnetConfig;
-}
-
-interface NetworkConfig {
-  getEvmConfigs(): EvmConfig[];
-  getSolConfigs(): SolConfig[];
-}
-
-class MainnetConfig implements NetworkConfig {
-  getEvmConfigs(): EvmConfig[] {
-    return [];
-  }
-
-  getSolConfigs(): SolConfig[] {
-    return [];
-  }
-}
-
-class LocalDevnetConfig implements NetworkConfig {
-  ethereum: EvmConfig;
-  solana: SolConfig;
-  constructor(arg: { ethereum: EvmConfig; solana: SolConfig }) {
-    this.ethereum = arg.ethereum;
-    this.solana = arg.solana;
-  }
-
-  getEvmConfigs(): EvmConfig[] {
-    return [this.ethereum];
-  }
-
-  getSolConfigs(): SolConfig[] {
-    return [this.solana];
-  }
-}
-
-class TestnetConfig implements NetworkConfig {
-  ethereum: EvmConfig;
-  aurora: EvmConfig;
-  bnb: EvmConfig;
-  solana: SolConfig;
-  pythtest: SolConfig;
-  constructor(
-    arg: {
-      ethereum: EvmConfig;
-      aurora: EvmConfig;
-      bnb: EvmConfig;
-      solana: SolConfig;
-      pythtest: SolConfig;
-    },
-  ) {
-    this.ethereum = arg.ethereum;
-    this.aurora = arg.aurora;
-    this.bnb = arg.bnb;
-    this.solana = arg.solana;
-    this.pythtest = arg.pythtest;
-  }
-
-  getEvmConfigs(): EvmConfig[] {
-    return [this.ethereum, this.aurora, this.bnb];
-  }
-
-  getSolConfigs(): SolConfig[] {
-    return [this.solana, this.pythtest];
-  }
-}
-
-interface EvmConfig {
-  rpcUrl: string;
-  targetChainContract: string;
-}
-
-async function getEvmDataSources(cfg: EvmConfig): Promise<any[]> {
-  let provider = new ethers.providers.JsonRpcProvider(cfg.rpcUrl);
-
-  let signer = new ethers.VoidSigner("0x01");
-
-  let factory = new PythUpgradable__factory(signer);
-
-  let contract = factory.attach(cfg.targetChainContract);
-
-  return await contract.validDataSources();
-}
-
-interface SolConfig {
-  rpcUrl: string;
-  attesterContract: string;
-}
-
-async function getSolAttesterConfig(cfg: SolConfig): Promise<any> {
-    l
-    
-}
-
+import {MainnetConfig, TestnetConfig, AttesterConfigState, LocalDevnetConfig, getEvmDataSources, getAttesterConfig, Config} from "./config";
+import {PublicKey} from "@solana/web3.js";
 const DEFAULTS: Config = {
   mainnet: new MainnetConfig(),
   testnet: new TestnetConfig(
@@ -116,11 +18,15 @@ const DEFAULTS: Config = {
       },
       solana: {
         rpcUrl: "https://api.devnet.solana.com",
-        attesterContract: "dnSeccJXMXPw3KQSodXRzN9oJQNj6rrU6Ztroean2Wq",
+        attesterContract: new PublicKey(
+          "dnSeccJXMXPw3KQSodXRzN9oJQNj6rrU6Ztroean2Wq",
+        ),
       },
       pythtest: {
         rpcUrl: "https://api.devnet.solana.com",
-        attesterContract: "dnSeccJXMXPw3KQSodXRzN9oJQNj6rrU6Ztroean2Wq",
+        attesterContract: new PublicKey(
+          "dnSeccJXMXPw3KQSodXRzN9oJQNj6rrU6Ztroean2Wq",
+        ),
       },
     },
   ),
@@ -131,7 +37,18 @@ const DEFAULTS: Config = {
     },
     solana: {
       rpcUrl: "http://localhost:8899",
-      attesterContract: "P2WH424242424242424242424242424242424242424",
+      attesterContract: new PublicKey(
+        "P2WH424242424242424242424242424242424242424",
+      ),
     },
   }),
 };
+
+// Main routine
+(async () => {
+  let dataSources = await getEvmDataSources(DEFAULTS.testnet.ethereum);
+  console.log("Ethereum data sources: ", dataSources);
+  let attesterCfg = await getAttesterConfig(DEFAULTS.testnet.solana);
+
+  console.log("Attester config: ", attesterCfg);
+})();
