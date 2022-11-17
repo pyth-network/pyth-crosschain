@@ -40,8 +40,6 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
             unchecked { i++; }
         }
-
-        emit UpdatePriceFeeds(msg.sender, updateData.length, requiredFee);
     }
 
     /// This method is deprecated, please use the `getUpdateFee(bytes[])` instead.
@@ -120,7 +118,6 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
             PythInternalStructs.PriceInfo memory info;
             bytes32 priceId;
-            uint freshPrices = 0;
             
             // Deserialize each attestation
             for (uint j=0; j < nAttestations; j++) {
@@ -200,20 +197,24 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                 // Store the attestation
                 uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
 
-                bool fresh = false;
                 if(info.publishTime > latestPublishTime) {
-                    freshPrices += 1;
-                    fresh = true;
                     setLatestPriceInfo(priceId, info);
+                    emit PriceFeedUpdate(priceId, info.publishTime, info.price, info.conf);
                 }
-
-                emit PriceFeedUpdate(priceId, fresh, vm.emitterChainId, vm.sequence, latestPublishTime,
-                    info.publishTime, info.price, info.conf);
             }
 
-
-            emit BatchPriceFeedUpdate(vm.emitterChainId, vm.sequence, nAttestations, freshPrices);
+            emit BatchPriceFeedUpdate(vm.emitterChainId, vm.sequence);
         }
+    }
+
+    function parsePriceFeedUpdates(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minPublishTime,
+        uint64 maxPublishTime
+    ) external payable override returns (PythStructs.PriceFeed[] memory priceFeeds) {
+        // TODO: To be implemented soon.
+        revert("unimplemented");
     }
 
     function queryPriceFeed(bytes32 id) public view override returns (PythStructs.PriceFeed memory priceFeed){

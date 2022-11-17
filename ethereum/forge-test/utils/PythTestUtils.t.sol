@@ -6,6 +6,7 @@ import "../../contracts/pyth/PythUpgradable.sol";
 import "../../contracts/pyth/PythInternalStructs.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+import "@pythnetwork/pyth-sdk-solidity/IPythEvents.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 
 
@@ -130,10 +131,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
     }
 }
 
-contract PythTestUtilsTest is Test, WormholeTestUtils, PythTestUtils {
-    // TODO: It is better to have a PythEvents contract that be extendable. 
-    event PriceFeedUpdate(bytes32 indexed id, bool indexed fresh, uint16 chainId, uint64 sequenceNumber, uint lastPublishTime, uint publishTime, int64 price, uint64 conf);
-
+contract PythTestUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
     function testGeneratePriceFeedUpdateVAAWorks() public {
         IPyth pyth = IPyth(setUpPyth(setUpWormhole(
             1 // Number of guardians
@@ -163,7 +161,7 @@ contract PythTestUtilsTest is Test, WormholeTestUtils, PythTestUtils {
         uint updateFee = pyth.getUpdateFee(updateData);
 
         vm.expectEmit(true, true, false, true);
-        emit PriceFeedUpdate(priceIds[0], true, SOURCE_EMITTER_CHAIN_ID, 1, 0, 1, 100, 10);
+        emit PriceFeedUpdate(priceIds[0], 1, 100, 10);
 
         pyth.updatePriceFeeds{value: updateFee}(updateData);
     }
