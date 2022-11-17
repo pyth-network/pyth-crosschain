@@ -214,6 +214,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         uint64 maxPublishTime
     ) external payable override returns (PythStructs.PriceFeed[] memory priceFeeds) {
         // TODO: To be implemented soon.
+        revert("unimplemented");
     }
 
     function queryPriceFeed(bytes32 id) public view override returns (PythStructs.PriceFeed memory priceFeed){
