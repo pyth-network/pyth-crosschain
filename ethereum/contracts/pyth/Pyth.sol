@@ -207,6 +207,34 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
+    // This is an overwrite of the same method in AbstractPyth.sol
+    // to be more gas efficient.
+    function updatePriceFeedsIfNecessary(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64[] calldata publishTimes
+    ) external payable override {
+        require(
+            priceIds.length == publishTimes.length,
+            "priceIds and publishTimes arrays should have same length"
+        );
+
+        for (uint i = 0; i < priceIds.length;) {
+            // If the price does not exist, then the publish time is zero and
+            // this condition will work fine.
+            if (latestPriceInfoPublishTime(priceIds[i]) < publishTimes[i]) {
+                updatePriceFeeds(updateData);
+                return;
+            }
+
+            unchecked { i++; }
+        }
+
+        revert(
+            "no prices in the submitted batch have fresh prices, so this update will have no effect"
+        );
+    }
+
     function parsePriceFeedUpdates(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
