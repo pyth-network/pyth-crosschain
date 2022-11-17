@@ -286,7 +286,7 @@ contract("Pyth", function () {
         return replaced;
     }
 
-    it.only("should parse batch price attestation correctly", async function () {
+    it("should parse batch price attestation correctly", async function () {
         let attestationTime = 1647273460; // re-used for publishTime
         let publishTime = 1647273465; // re-used for publishTime
         let priceVal = 1337;
@@ -300,9 +300,9 @@ contract("Pyth", function () {
 
         const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch]);
 
-        expectEvent(receipt, 'PriceFeedUpdate', {
+        expectEventMultipleTimes(receipt, 'PriceFeedUpdate', {
             price: "1337",
-        });
+        }, 10);
 
         for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
             const price_id =
@@ -352,9 +352,6 @@ contract("Pyth", function () {
         const receipt = await updatePriceFeeds(this.pythProxy, []);
         expectEvent.notEmitted(receipt, 'PriceFeedUpdate');
         expectEvent.notEmitted(receipt, 'BatchPriceFeedUpdate');
-        expectEvent(receipt, 'UpdatePriceFeeds', {
-            batchCount: '0',
-        });
     });
 
     it("should attest price updates with multiple batches of correct order", async function () {
@@ -363,15 +360,12 @@ contract("Pyth", function () {
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
         const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2]);
         expectEvent(receipt, 'PriceFeedUpdate', {
-            fresh: true,
+            publishTime: (ts - 5).toString(),
         });
-        expectEvent(receipt, 'BatchPriceFeedUpdate', {
-            batchSize: '10',
-            freshPricesInBatch: '10',
+        expectEvent(receipt, 'PriceFeedUpdate', {
+            publishTime: (ts + 5).toString(),
         });
-        expectEvent(receipt, 'UpdatePriceFeeds', {
-            batchCount: '2',
-        });
+        expectEventMultipleTimes(receipt, 'BatchPriceFeedUpdate', {}, 2);
     });
 
     it("should attest price updates with multiple batches of wrong order", async function () {
@@ -380,21 +374,11 @@ contract("Pyth", function () {
         let rawBatch2 = generateRawBatchAttestation(ts + 5, ts + 10, 1338);
         const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch2, rawBatch1]);
         expectEvent(receipt, 'PriceFeedUpdate', {
-            fresh: true,
+            publishTime: (ts + 5).toString(),
         });
-        expectEvent(receipt, 'PriceFeedUpdate', {
-            fresh: false,
-        });
-        expectEvent(receipt, 'BatchPriceFeedUpdate', {
-            batchSize: '10',
-            freshPricesInBatch: '10',
-        });
-        expectEvent(receipt, 'BatchPriceFeedUpdate', {
-            batchSize: '10',
-            freshPricesInBatch: '0',
-        });
-        expectEvent(receipt, 'UpdatePriceFeeds', {
-            batchCount: '2',
+        expectEventMultipleTimes(receipt, 'BatchPriceFeedUpdate', {}, 2);
+        expectEventNotEmittedWithArgs(receipt, 'PriceFeedUpdate', {
+            publishTime: (ts - 5).toString(),
         });
     });
 
@@ -449,10 +433,7 @@ contract("Pyth", function () {
         let feeInWei = await this.pythProxy.methods["getUpdateFee(bytes[])"]([rawBatch1, rawBatch2]);
         assert.equal(feeInWei, 20);
 
-        const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2], feeInWei);
-        expectEvent(receipt, 'UpdatePriceFeeds', {
-            fee: feeInWei
-        });
+        await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2], feeInWei);
         const pythBalance = await web3.eth.getBalance(this.pythProxy.address);
         assert.equal(pythBalance, feeInWei);
     });
@@ -479,10 +460,7 @@ contract("Pyth", function () {
         let feeInWei = await this.pythProxy.methods["getUpdateFee(bytes[])"]([rawBatch1, rawBatch2]);
         assert.equal(feeInWei, 20);
 
-        const receipt = await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2], feeInWei + 10);
-        expectEvent(receipt, 'UpdatePriceFeeds', {
-            fee: feeInWei
-        });
+        await updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2], feeInWei + 10);
         const pythBalance = await web3.eth.getBalance(this.pythProxy.address);
         assert.equal(pythBalance, feeInWei + 10);
     });
@@ -497,15 +475,11 @@ contract("Pyth", function () {
         );
         let receipt = await updatePriceFeeds(this.pythProxy, [rawBatch]);
         expectEvent(receipt, 'PriceFeedUpdate', {
-            fresh: true,
+            price: priceVal.toString(),
+            publishTime: (currentTimestamp - 5).toString()
         });
-        expectEvent(receipt, 'BatchPriceFeedUpdate', {
-            batchSize: '10',
-            freshPricesInBatch: '10',
-        });
-        expectEvent(receipt, 'UpdatePriceFeeds', {
-            batchCount: '1',
-        });
+        expectEvent(receipt, 'BatchPriceFeedUpdate');
+
 
         let first_prod_id = "0x" + "01".repeat(32);
         let first_price_id = "0x" + "fe".repeat(32);
@@ -529,15 +503,10 @@ contract("Pyth", function () {
         );
         receipt = await updatePriceFeeds(this.pythProxy, [rawBatch2]);
         expectEvent(receipt, 'PriceFeedUpdate', {
-            fresh: true,
+            price: (priceVal+5).toString(),
+            publishTime: (nextTimestamp - 5).toString()
         });
-        expectEvent(receipt, 'BatchPriceFeedUpdate', {
-            batchSize: '10',
-            freshPricesInBatch: '10',
-        });
-        expectEvent(receipt, 'UpdatePriceFeeds', {
-            batchCount: '1',
-        });
+        expectEvent(receipt, 'BatchPriceFeedUpdate');
 
         first = await this.pythProxy.queryPriceFeed(first_price_id);
         assert.equal(first.price.price, priceVal + 5);
@@ -552,16 +521,8 @@ contract("Pyth", function () {
             priceVal + 10
         );
         receipt = await updatePriceFeeds(this.pythProxy, [rawBatch3]);
-        expectEvent(receipt, 'PriceFeedUpdate', {
-            fresh: false,
-        });
-        expectEvent(receipt, 'BatchPriceFeedUpdate', {
-            batchSize: '10',
-            freshPricesInBatch: '0',
-        });
-        expectEvent(receipt, 'UpdatePriceFeeds', {
-            batchCount: '1',
-        });
+        expectEvent.notEmitted(receipt, 'PriceFeedUpdate');
+        expectEvent(receipt, 'BatchPriceFeedUpdate');
 
         first = await this.pythProxy.queryPriceFeed(first_price_id);
         assert.equal(first.price.price, priceVal + 5);
@@ -1170,10 +1131,7 @@ contract("Pyth", function () {
             insufficientFeeError
         );
 
-        const receiptUpdateFeeds = await updatePriceFeeds(this.pythProxy, [rawBatch], 5000);
-        expectEvent(receiptUpdateFeeds, 'UpdatePriceFeeds', {
-            fee: "5000"
-        });
+        await updatePriceFeeds(this.pythProxy, [rawBatch], 5000);
     });
 
     it("Setting valid period should work", async function () {
@@ -1315,4 +1273,36 @@ async function createVAAFromUint8Array(
         0,
         0
     );
+}
+
+// There is no way to check event with given args has not emitted with expectEvent
+// or how many times an event was emitted. This function is implemented to count
+// the matching events and is used for the mentioned purposes.
+function getNumMatchingEvents(receipt, eventName, args) {
+    let matchCnt = 0;
+    for (let log of receipt.logs) {
+        if (log.event === eventName) {
+            let match = true;
+            for (let argKey in args) {
+                if (log.args[argKey].toString() !== args[argKey].toString()) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                matchCnt ++; 
+            }
+        }
+    }
+    return matchCnt;
+}
+
+function expectEventNotEmittedWithArgs(receipt, eventName, args) {
+    const matches = getNumMatchingEvents(receipt, eventName, args);
+    assert(matches === 0, `Expected no matching emitted event. But found ${matches}.`);
+}
+
+function expectEventMultipleTimes(receipt, eventName, args, cnt) {
+    const matches = getNumMatchingEvents(receipt, eventName, args);
+    assert(matches === cnt, `Expected ${cnt} event matches, found ${matches}.`);
 }
