@@ -2642,7 +2642,7 @@ dependencies = [
 
 [[package]]
 name = "pyth2wormhole-client"
-version = "0.1.0"
+version = "1.0.0-rc3"
 dependencies = [
  "borsh",
  "clap 3.1.18",

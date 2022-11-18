@@ -38,6 +38,9 @@ WORMHOLE_ADDRESS = os.environ.get(
 
 P2W_MAX_LOG_LINES = int(os.environ.get("P2W_MAX_LOG_LINES", 1000))
 
+# attester needs string, but we validate as int first
+P2W_RPC_TIMEOUT_SECS = str(int(os.environ.get("P2W_RPC_TIMEOUT_SECS", "20")))
+
 ATTESTATIONS = {
     "pendingSeqnos": [],
 }
@@ -261,6 +264,8 @@ first_attest_result = run_or_die(
         "attest",
         "-f",
         P2W_ATTESTATION_CFG,
+        "--timeout",
+        P2W_RPC_TIMEOUT_SECS,
     ],
     capture_output=True,
 )
@@ -296,6 +301,8 @@ while True:
             "-f",
             P2W_ATTESTATION_CFG,
             "-d",
+            "--timeout",
+            P2W_RPC_TIMEOUT_SECS,
         ],
         stdout=PIPE,
         stderr=STDOUT,
