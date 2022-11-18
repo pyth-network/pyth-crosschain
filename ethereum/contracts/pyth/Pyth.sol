@@ -244,6 +244,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     ) public view override returns (PythStructs.Price memory price) {
         PythInternalStructs.PriceInfo storage info = _state.latestPriceInfo[id];
         price.publishTime = info.publishTime;
+        price.expo = info.expo;
         price.price = info.price;
         price.conf = info.conf;
 
@@ -259,6 +260,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     ) public view override returns (PythStructs.Price memory price) {
         PythInternalStructs.PriceInfo storage info = _state.latestPriceInfo[id];
         price.publishTime = info.publishTime;
+        price.expo = info.expo;
         price.price = info.emaPrice;
         price.conf = info.emaConf;
 
