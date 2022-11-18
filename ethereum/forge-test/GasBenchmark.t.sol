@@ -130,6 +130,15 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         pyth.getPrice(priceIds[0]);
     }
 
+
+    function testBenchmarkGetEmaPrice() public {
+        // Set the block timestamp to 0. As prices have < 10 timestamp and staleness 
+        // is set to 60 seconds, the getPrice should work as expected.
+        vm.warp(0);
+
+        pyth.getEmaPrice(priceIds[0]);
+    }
+
     function testBenchmarkGetUpdateFee() public view {
         pyth.getUpdateFee(freshPricesUpdateData);
     }

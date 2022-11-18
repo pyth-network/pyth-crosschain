@@ -235,6 +235,36 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         );
     }
 
+    // This is an overwrite of the same method in AbstractPyth.sol
+    // to be more gas efficient. It cannot move to PythGetters as it
+    // is overwriting the interface. Even indirect calling of a similar
+    // method from PythGetter has some gas overhead.
+    function getPriceUnsafe(
+        bytes32 id
+    ) public view override returns (PythStructs.Price memory price) {
+        PythInternalStructs.PriceInfo storage info = _state.latestPriceInfo[id];
+        price.publishTime = info.publishTime;
+        price.price = info.price;
+        price.conf = info.conf;
+
+        require(price.publishTime != 0, "price feed for the given id is not pushed or does not exist");
+    }
+
+    // This is an overwrite of the same method in AbstractPyth.sol
+    // to be more gas efficient. It cannot move to PythGetters as it
+    // is overwriting the interface. Even indirect calling of a similar
+    // method from PythGetter has some gas overhead.
+    function getEmaPriceUnsafe(
+        bytes32 id
+    ) public view override returns (PythStructs.Price memory price) {
+        PythInternalStructs.PriceInfo storage info = _state.latestPriceInfo[id];
+        price.publishTime = info.publishTime;
+        price.price = info.emaPrice;
+        price.conf = info.emaConf;
+
+        require(price.publishTime != 0, "price feed for the given id is not pushed or does not exist");
+    }
+
     function parsePriceFeedUpdates(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
