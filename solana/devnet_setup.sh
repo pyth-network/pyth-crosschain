@@ -21,7 +21,7 @@ retry () {
 }
 
 # Fund our account (as defined in solana/keys/solana-devnet.json).
-retry solana airdrop 1000
+retry solana airdrop 10000
 
 # Create the bridge contract at a known address
 # OK to fail on subsequent attempts (already created).

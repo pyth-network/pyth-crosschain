@@ -53,6 +53,11 @@ program
   .version("0.1.0");
 
 program
+  .command("initialize")
+  .description("Initialize a new multisig vault")
+  .option("-c --cluster <network>", "solana cluster to use", "devnet");
+
+program
   .command("create")
   .description("Create a new multisig transaction")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")

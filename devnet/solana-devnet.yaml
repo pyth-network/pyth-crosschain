@@ -50,6 +50,9 @@ spec:
             - --bpf-program
             - P2WH424242424242424242424242424242424242424
             - /opt/solana/deps/pyth2wormhole.so
+            - --bpf-program
+            - F8EjfTktFf2kZNJYz3qig47UnhxhQo7aMuSmAeejyyT1 # derived from solana/keys/squads_program.json
+            - /opt/solana/deps/squads_mpl.so
             - --log
           ports:
             - containerPort: 8001

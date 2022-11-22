@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
     "declaration": true,
-    "target": "es2016",
+    "target": "es6",
     "module": "commonjs",
-    "outDir": "lib",
+    "outDir": "dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "noErrorTruncation": true
+    "noErrorTruncation": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*.ts"]
 }

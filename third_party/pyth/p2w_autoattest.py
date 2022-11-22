@@ -79,19 +79,6 @@ def serve_attestations():
     httpd.serve_forever()
 
 
-if SOL_AIRDROP_AMT > 0:
-    # Fund the p2w owner
-    sol_run_or_die(
-        "airdrop",
-        [
-            str(SOL_AIRDROP_AMT),
-            "--keypair",
-            P2W_OWNER_KEYPAIR,
-            "--commitment",
-            "finalized",
-        ],
-    )
-
 def find_and_log_seqnos(s):
     # parse seqnos
     matches = SEQNO_REGEX.findall(s)
