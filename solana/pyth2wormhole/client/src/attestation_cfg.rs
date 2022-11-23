@@ -34,6 +34,8 @@ pub struct AttestationConfig {
         default // Uses Option::default() which is None
     )]
     pub mapping_addr: Option<Pubkey>,
+    /// Collection of symbols identified by symbol name (e.g., "Crypto.BTC/USD")
+    /// These symbols are only active if `mapping_addr` is set.
     pub mapping_groups: Vec<NameGroup>,
     /// The known symbol list will be reloaded based off this
     /// interval, to account for mapping changes. Note: This interval
@@ -84,7 +86,7 @@ pub struct NameGroup {
     /// TODO: make optional?
     pub conditions: AttestationConditions,
     /// The names of the symbols to include in this group
-    pub symbols: Vec<String>,
+    pub symbol_names: Vec<String>,
 }
 
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]

@@ -282,7 +282,14 @@ async fn handle_attest_daemon_mode(
         let start_time = Instant::now(); // Helps timekeep mapping lookups accurately
 
         let config = get_config_account(&lock_and_make_rpc(&rpc_cfg).await, &p2w_addr).await?;
-        batch_cfg = attestation_config_to_batches(&rpc_cfg, &attestation_cfg, config.max_batch_size as usize).await.unwrap_or(batch_cfg);
+        batch_cfg = match attestation_config_to_batches(&rpc_cfg, &attestation_cfg, config.max_batch_size as usize).await {
+            Ok(config) => config,
+            Err(err) => {
+                // If we cannot query the mapping account, retain the existing batch configuration.
+                error!("Could not crawl mapping {}: {:?}", attestation_cfg.mapping_addr.unwrap_or_default(), e);
+                batch_cfg
+            }
+        };
 
         // Hash currently known config
         hasher.update(serde_yaml::to_vec(&batch_cfg)?);
@@ -436,12 +443,6 @@ async fn handle_attest_non_daemon_mode(
     Ok(())
 }
 
-// TODO: log failures here
-//             // De-escalate crawling errors; A temporary failure to
-//             // look up the mapping should not crash the attester
-//             Err(e) => {
-//                 error!("Could not crawl mapping {}: {:?}", mapping_addr, e);
-//             }
 async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestation_cfg: &AttestationConfig, max_batch_size: usize) -> Result<Vec<SymbolGroup>, ErrBox> {
     // Use the mapping if specified
     if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
@@ -467,7 +468,7 @@ async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestati
 
             let mut mapping_batches: Vec<SymbolGroup> = vec![];
             for group in &attestation_cfg.mapping_groups {
-                let batch_items: Vec<P2WSymbol> = group.symbols.iter().flat_map(|symbol| name_to_symbols.get(symbol).into_iter().flat_map(|x| x.into_iter())).map(|x| x.clone()).collect();
+                let batch_items: Vec<P2WSymbol> = group.symbol_names.iter().flat_map(|symbol| name_to_symbols.get(symbol).into_iter().flat_map(|x| x.into_iter())).map(|x| x.clone()).collect();
                 mapping_batches.extend(partition_into_batches(&group.group_name, max_batch_size, &group.conditions, batch_items))
             }
 
