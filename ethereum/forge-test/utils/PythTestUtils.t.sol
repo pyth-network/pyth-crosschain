@@ -53,44 +53,63 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
         return address(pyth);
     }
 
-    // Generates byte-encoded payload for the given prices. It sets the emaPrice the same
-    // as the given price. You can use this to mock wormhole call using `vm.mockCall` and
-    // return a VM struct with this payload.
+    /// Utilities to help generating price attestations and VAAs for them
+
+    enum PriceAttestationStatus {
+        Unknown,
+        Trading
+    }
+
+    struct PriceAttestation {
+        bytes32 productId;
+        bytes32 priceId;
+        int64 price;
+        uint64 conf;
+        int32 expo;
+        int64 emaPrice;
+        uint64 emaConf;
+        PriceAttestationStatus status;
+        uint32 numPublishers;
+        uint32 maxNumPublishers;
+        uint64 attestationTime;
+        uint64 publishTime;
+        uint64 prevPublishTime;
+        int64 prevPrice;
+        uint64 prevConf;
+    }
+
+    // Generates byte-encoded payload for the given price attestations. You can use this to mock wormhole
+    // call using `vm.mockCall` and return a VM struct with this payload.
     // You can use generatePriceFeedUpdateVAA to generate a VAA for a price update.
     function generatePriceFeedUpdatePayload(
-        bytes32[] memory priceIds,
-        PythStructs.Price[] memory prices
-    ) public returns (bytes memory payload) {
-        assertEq(priceIds.length, prices.length);
+        PriceAttestation[] memory attestations
+    ) public pure returns (bytes memory payload) {
+        bytes memory encodedAttestations = new bytes(0);
 
-        bytes memory attestations = new bytes(0);
-
-        for (uint i = 0; i < prices.length; ++i) {
+        for (uint i = 0; i < attestations.length; ++i) {
             // encodePacked uses padding for arrays and we don't want it, so we manually concat them.
-            attestations = abi.encodePacked(
-                attestations,
-                priceIds[i], // Product ID, we use the same price Id. This field is not used.
-                priceIds[i], // Price ID,
-                prices[i].price, // Price
-                prices[i].conf, // Confidence
-                prices[i].expo, // Exponent
-                prices[i].price, // EMA price
-                prices[i].conf // EMA confidence
+            encodedAttestations = abi.encodePacked(
+                encodedAttestations,
+                attestations[i].productId,
+                attestations[i].priceId,
+                attestations[i].price,
+                attestations[i].conf,
+                attestations[i].expo,
+                attestations[i].emaPrice,
+                attestations[i].emaConf
             );
 
             // Breaking this in two encodePackes because of the limited EVM stack.
-            attestations = abi.encodePacked(
-                attestations,
-                uint8(1), // status = 1 = Trading
-                uint32(5), // Number of publishers. This field is not used.
-                uint32(10), // Maximum number of publishers. This field is not used.
-                uint64(prices[i].publishTime), // Attestation time. This field is not used.
-                uint64(prices[i].publishTime), // Publish time.
-                // Previous values are unused as status is trading. We use the same value
-                // to make sure the test is irrelevant of the logic of which price is chosen.
-                uint64(prices[i].publishTime), // Previous publish time.
-                prices[i].price, // Previous price
-                prices[i].conf // Previous confidence
+            encodedAttestations = abi.encodePacked(
+                encodedAttestations,
+                uint8(attestations[i].status),
+                attestations[i].numPublishers,
+                attestations[i].maxNumPublishers,
+                attestations[i].attestationTime,
+                attestations[i].publishTime,
+                attestations[i].prevPublishTime,
+                attestations[i].prevPrice,
+                attestations[i].prevConf
             );
         }
 
@@ -100,24 +119,22 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
             uint16(0), // Minor version
             uint16(1), // Header size of 1 byte as it only contains payloadId
             uint8(2), // Payload ID 2 means it's a batch price attestation
-            uint16(prices.length), // Number of attestations
-            uint16(attestations.length / prices.length), // Size of a single price attestation.
-            attestations
+            uint16(attestations.length), // Number of attestations
+            uint16(encodedAttestations.length / attestations.length), // Size of a single price attestation.
+            encodedAttestations
         );
     }
 
-    // Generates a VAA for the given prices.
+    // Generates a VAA for the given attestations.
     // This method calls generatePriceFeedUpdatePayload and then creates a VAA with it.
     // The VAAs generated from this method use block timestamp as their timestamp.
     function generatePriceFeedUpdateVAA(
-        bytes32[] memory priceIds,
-        PythStructs.Price[] memory prices,
+        PriceAttestation[] memory attestations,
         uint64 sequence,
         uint8 numSigners
     ) public returns (bytes memory vaa) {
         bytes memory payload = generatePriceFeedUpdatePayload(
-            priceIds,
-            prices
+            attestations
         );
         
         vaa = generateVaa(
@@ -128,6 +145,36 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
             payload,
             numSigners
         );
+    }
+
+    function pricesToPriceAttestations(
+        bytes32[] memory priceIds,
+        PythStructs.Price[] memory prices
+    ) public returns (PriceAttestation[] memory attestations) {
+        assertEq(priceIds.length, prices.length);
+        attestations = new PriceAttestation[](prices.length);
+
+        for (uint i = 0; i < prices.length; ++i) {
+            // Product ID, we use the same price Id. This field is not used.
+            attestations[i].productId = priceIds[i];
+            attestations[i].priceId = priceIds[i];
+            attestations[i].price = prices[i].price;
+            attestations[i].conf = prices[i].conf;
+            attestations[i].expo = prices[i].expo;
+            // Same price and conf is used for emaPrice and emaConf
+            attestations[i].emaPrice = prices[i].price;
+            attestations[i].emaConf = prices[i].conf;
+            attestations[i].status = PriceAttestationStatus.Trading;
+            attestations[i].numPublishers = 5; // This field is not used
+            attestations[i].maxNumPublishers = 10; // This field is not used
+            attestations[i].attestationTime = uint64(prices[i].publishTime); // This field is not used
+            attestations[i].publishTime = uint64(prices[i].publishTime);
+            // Fields below are not used when status is Trading. just setting them to
+            // the same value as the prices.
+            attestations[i].prevPublishTime = uint64(prices[i].publishTime);
+            attestations[i].prevPrice = prices[i].price;
+            attestations[i].prevConf = prices[i].conf;
+        }
     }
 }
 
@@ -149,8 +196,7 @@ contract PythTestUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvent
         );
 
         bytes memory vaa = generatePriceFeedUpdateVAA(
-            priceIds,
-            prices,
+            pricesToPriceAttestations(priceIds, prices),
             1, // Sequence
             1 // No. Signers
         );
