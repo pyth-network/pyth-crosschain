@@ -61,80 +61,9 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
             (uint index, uint nAttestations, uint attestationSize) = 
                 parseBatchAttestationHeader(encoded);
 
-            PythInternalStructs.PriceInfo memory info;
-            bytes32 priceId;
-            
             // Deserialize each attestation
             for (uint j=0; j < nAttestations; j++) {
-                // NOTE: We don't advance the global index immediately.
-                // attestationIndex is an attestation-local offset used
-                // for readability and easier debugging.
-                uint attestationIndex = 0;
-
-                // Unused bytes32 product id
-                attestationIndex += 32;
-
-                priceId = UnsafeBytesLib.toBytes32(encoded, index + attestationIndex);
-                attestationIndex += 32;
-
-                info.price = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
-                attestationIndex += 8;
-
-                info.conf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
-                attestationIndex += 8;
-
-                info.expo = int32(UnsafeBytesLib.toUint32(encoded, index + attestationIndex));
-                attestationIndex += 4;
-
-                info.emaPrice = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
-                attestationIndex += 8;
-
-                info.emaConf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
-                attestationIndex += 8;
-
-                {
-                    // Status is an enum (encoded as uint8) with the following values:
-                    // 0 = UNKNOWN: The price feed is not currently updating for an unknown reason.
-                    // 1 = TRADING: The price feed is updating as expected.
-                    // 2 = HALTED: The price feed is not currently updating because trading in the product has been halted.
-                    // 3 = AUCTION: The price feed is not currently updating because an auction is setting the price.
-                    uint8 status = UnsafeBytesLib.toUint8(encoded, index + attestationIndex);
-                    attestationIndex += 1;
-
-                    // Unused uint32 numPublishers
-                    attestationIndex += 4;
-
-                    // Unused uint32 numPublishers
-                    attestationIndex += 4;
-
-                    // Unused uint64 attestationTime
-                    attestationIndex += 8;
-
-                    info.publishTime = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
-                    attestationIndex += 8;
-
-                    if (status == 1) { // status == TRADING
-                        attestationIndex += 24;
-                    } else {
-                        // If status is not trading then the latest available price is
-                        // the previous price info that are passed here.
-
-                        // Previous publish time
-                        info.publishTime = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
-                        attestationIndex += 8;
-
-                        // Previous price
-                        info.price = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
-                        attestationIndex += 8;
-
-                        // Previous confidence
-                        info.conf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
-                        attestationIndex += 8;
-                    }
-                }
-
-
-                require(attestationIndex <= attestationSize, "INTERNAL: Consumed more than `attestationSize` bytes");
+                (PythInternalStructs.PriceInfo memory info, bytes32 priceId) = parseSingleAttestationFromBatch(encoded, index, attestationSize);
 
                 // Respect specified attestation size for forward-compat
                 index += attestationSize;
@@ -149,6 +78,86 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
             }
 
             emit BatchPriceFeedUpdate(vm.emitterChainId, vm.sequence);
+        }
+    }
+
+    function parseSingleAttestationFromBatch(
+        bytes memory encoded,
+        uint index,
+        uint attestationSize
+    ) internal pure returns (
+        PythInternalStructs.PriceInfo memory info,
+        bytes32 priceId
+    ) {
+        unchecked {
+            // NOTE: We don't advance the global index immediately.
+            // attestationIndex is an attestation-local offset used
+            // for readability and easier debugging.
+            uint attestationIndex = 0;
+
+            // Unused bytes32 product id
+            attestationIndex += 32;
+
+            priceId = UnsafeBytesLib.toBytes32(encoded, index + attestationIndex);
+            attestationIndex += 32;
+
+            info.price = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
+            attestationIndex += 8;
+
+            info.conf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
+            attestationIndex += 8;
+
+            info.expo = int32(UnsafeBytesLib.toUint32(encoded, index + attestationIndex));
+            attestationIndex += 4;
+
+            info.emaPrice = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
+            attestationIndex += 8;
+
+            info.emaConf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
+            attestationIndex += 8;
+
+            {
+                // Status is an enum (encoded as uint8) with the following values:
+                // 0 = UNKNOWN: The price feed is not currently updating for an unknown reason.
+                // 1 = TRADING: The price feed is updating as expected.
+                // 2 = HALTED: The price feed is not currently updating because trading in the product has been halted.
+                // 3 = AUCTION: The price feed is not currently updating because an auction is setting the price.
+                uint8 status = UnsafeBytesLib.toUint8(encoded, index + attestationIndex);
+                attestationIndex += 1;
+
+                // Unused uint32 numPublishers
+                attestationIndex += 4;
+
+                // Unused uint32 numPublishers
+                attestationIndex += 4;
+
+                // Unused uint64 attestationTime
+                attestationIndex += 8;
+
+                info.publishTime = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
+                attestationIndex += 8;
+
+                if (status == 1) { // status == TRADING
+                    attestationIndex += 24;
+                } else {
+                    // If status is not trading then the latest available price is
+                    // the previous price info that are passed here.
+
+                    // Previous publish time
+                    info.publishTime = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
+                    attestationIndex += 8;
+
+                    // Previous price
+                    info.price = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
+                    attestationIndex += 8;
+
+                    // Previous confidence
+                    info.conf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
+                    attestationIndex += 8;
+                }
+            }
+
+            require(attestationIndex <= attestationSize, "INTERNAL: Consumed more than `attestationSize` bytes");
         }
     }
 
@@ -316,8 +325,6 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                 (uint index, uint nAttestations, uint attestationSize) = 
                     parseBatchAttestationHeader(encoded);
 
-                bytes32 priceId;
-
                 // Deserialize each attestation
                 for (uint j=0; j < nAttestations; j++) {
                     // NOTE: We don't advance the global index immediately.
@@ -328,7 +335,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                     // Unused bytes32 product id
                     attestationIndex += 32;
 
-                    priceId = UnsafeBytesLib.toBytes32(encoded, index + attestationIndex);
+                    bytes32 priceId = UnsafeBytesLib.toBytes32(encoded, index + attestationIndex);
 
                     // Check whether the caller requested for this data.
                     uint k = 0;
@@ -345,67 +352,18 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                         continue;
                     }
 
+                    (PythInternalStructs.PriceInfo memory info, ) = parseSingleAttestationFromBatch(encoded, index, attestationSize);
+                    require(info.publishTime != 0, "price feed for the given id is not pushed or does not exist");
+
                     priceFeeds[k].id = priceId;
-                    attestationIndex += 32;
-
-                    priceFeeds[k].price.price = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
-                    attestationIndex += 8;
-
-                    priceFeeds[k].price.conf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
-                    attestationIndex += 8;
-
-                    priceFeeds[k].price.expo = int32(UnsafeBytesLib.toUint32(encoded, index + attestationIndex));
-                    priceFeeds[k].emaPrice.expo = priceFeeds[k].price.expo;
-                    attestationIndex += 4;
-
-                    priceFeeds[k].emaPrice.price = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
-                    attestationIndex += 8;
-
-                    priceFeeds[k].emaPrice.conf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
-                    attestationIndex += 8;
-
-                    {
-                        // Status is an enum (encoded as uint8) with the following values:
-                        // 0 = UNKNOWN: The price feed is not currently updating for an unknown reason.
-                        // 1 = TRADING: The price feed is updating as expected.
-                        // 2 = HALTED: The price feed is not currently updating because trading in the product has been halted.
-                        // 3 = AUCTION: The price feed is not currently updating because an auction is setting the price.
-                        uint8 status = UnsafeBytesLib.toUint8(encoded, index + attestationIndex);
-                        attestationIndex += 1;
-
-                        // Unused uint32 numPublishers
-                        attestationIndex += 4;
-
-                        // Unused uint32 numPublishers
-                        attestationIndex += 4;
-
-                        // Unused uint64 attestationTime
-                        attestationIndex += 8;
-
-                        priceFeeds[k].price.publishTime = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
-                        priceFeeds[k].emaPrice.publishTime = priceFeeds[k].price.publishTime;
-                        attestationIndex += 8;
-
-                        if (status == 1) { // status == TRADING
-                            attestationIndex += 24;
-                        } else {
-                            // If status is not trading then the latest available price is
-                            // the previous price info that are passed here.
-
-                            // Previous publish time
-                            priceFeeds[k].price.publishTime = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
-                            priceFeeds[k].emaPrice.publishTime = priceFeeds[k].price.publishTime;
-                            attestationIndex += 8;
-
-                            // Previous price
-                            priceFeeds[k].price.price = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
-                            attestationIndex += 8;
-
-                            // Previous confidence
-                            priceFeeds[k].price.conf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
-                            attestationIndex += 8;
-                        }
-                    }
+                    priceFeeds[k].price.price = info.price;
+                    priceFeeds[k].price.conf = info.conf;
+                    priceFeeds[k].price.expo = info.expo;
+                    priceFeeds[k].price.publishTime = uint(info.publishTime);
+                    priceFeeds[k].emaPrice.price = info.emaPrice;
+                    priceFeeds[k].emaPrice.conf = info.emaConf;
+                    priceFeeds[k].emaPrice.expo = info.expo;
+                    priceFeeds[k].emaPrice.publishTime = uint(info.publishTime);
 
                     // Check the publish time of the price is within the given range
                     // if it is not, then set the id to 0 to indicate that this price id
@@ -415,8 +373,6 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                         priceFeeds[k].price.publishTime > maxPublishTime) {
                             priceFeeds[k].id = 0;
                         }
-
-                    require(attestationIndex <= attestationSize, "INTERNAL: Consumed more than `attestationSize` bytes");
 
                     index += attestationSize;
                 }
