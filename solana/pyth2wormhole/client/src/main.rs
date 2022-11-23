@@ -3,19 +3,19 @@ pub mod cli;
 use std::{
     fs::File,
     sync::Arc,
+    iter,
     time::{
         Duration,
         Instant,
     },
 };
+use std::collections::HashSet;
 
 use clap::Parser;
-use futures::{
-    future::{
-        Future,
-        TryFutureExt,
-    },
-};
+use futures::{future::{
+    Future,
+    TryFutureExt,
+}, SinkExt, StreamExt};
 use generic_array::GenericArray;
 use log::{
     debug,
@@ -251,7 +251,7 @@ async fn handle_attest_daemon_mode(
     rpc_cfg: Arc<RLMutex<RpcCfg>>,
     payer: Keypair,
     p2w_addr: Pubkey,
-    mut attestation_cfg: AttestationConfig,
+    attestation_cfg: AttestationConfig,
 ) -> Result<(), ErrBox> {
     info!(
         "Crawling mapping {:?} every {} minutes",
@@ -272,6 +272,7 @@ async fn handle_attest_daemon_mode(
         attestation_cfg.max_msg_accounts as usize,
     )));
 
+    let mut batch_cfg = vec![];
     // This loop cranks attestations without interruption. This is
     // achieved by spinning up a new up-to-date symbol set before
     // letting go of the previous one. Additionally, hash of on-chain
@@ -281,7 +282,7 @@ async fn handle_attest_daemon_mode(
         let start_time = Instant::now(); // Helps timekeep mapping lookups accurately
 
         let config = get_config_account(&lock_and_make_rpc(&rpc_cfg).await, &p2w_addr).await?;
-        let batch_cfg = attestation_config_to_batches(&rpc_cfg, &attestation_cfg, config.max_batch_size as usize).await;
+        batch_cfg = attestation_config_to_batches(&rpc_cfg, &attestation_cfg, config.max_batch_size as usize).await.unwrap_or(batch_cfg);
 
         // Hash currently known config
         hasher.update(serde_yaml::to_vec(&batch_cfg)?);
@@ -375,7 +376,7 @@ async fn lock_and_make_rpc(rlmtx: &RLMutex<RpcCfg>) -> RpcClient {
 
 /// Non-daemon attestation scheduling
 async fn handle_attest_non_daemon_mode(
-    mut attestation_cfg: AttestationConfig,
+    attestation_cfg: AttestationConfig,
     rpc_cfg: Arc<RLMutex<RpcCfg>>,
     p2w_addr: Pubkey,
     payer: Keypair,
@@ -384,7 +385,7 @@ async fn handle_attest_non_daemon_mode(
 ) -> Result<(), ErrBox> {
     let p2w_cfg = get_config_account(&lock_and_make_rpc(&rpc_cfg).await, &p2w_addr).await?;
 
-    let batch_config = attestation_config_to_batches(&rpc_cfg, &attestation_cfg, p2w_cfg.max_batch_size as usize).await;
+    let batch_config = attestation_config_to_batches(&rpc_cfg, &attestation_cfg, p2w_cfg.max_batch_size as usize).await?;
     let batches: Vec<_> = batch_config.into_iter().map(|x| { BatchState::new(&x) }).collect();
     let batch_count = batches.len();
 
@@ -435,32 +436,60 @@ async fn handle_attest_non_daemon_mode(
     Ok(())
 }
 
-async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestation_cfg: &AttestationConfig, max_batch_size: usize) -> Vec<BatchConfig> {
-    let mut attestation_cfg_copy = attestation_cfg.clone();
-
+// TODO: log failures here
+//             // De-escalate crawling errors; A temporary failure to
+//             // look up the mapping should not crash the attester
+//             Err(e) => {
+//                 error!("Could not crawl mapping {}: {:?}", mapping_addr, e);
+//             }
+async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestation_cfg: &AttestationConfig, max_batch_size: usize) -> Result<Vec<BatchConfig>, ErrBox> {
+    let existing_price_accounts: HashSet<Pubkey> = attestation_cfg.symbol_groups.iter().flat_map(|x| x.symbols.iter().map(|y| y.price_addr.clone())).collect();
     // Use the mapping if specified
-    if let Some(mapping_addr) = attestation_cfg_copy.mapping_addr.as_ref() {
-        match crawl_pyth_mapping(&lock_and_make_rpc(&rpc_cfg).await, mapping_addr).await {
-            Ok(additional_accounts) => {
-                debug!(
-                        "Crawled mapping {} data:\n{:#?}",
-                        mapping_addr, additional_accounts
-                    );
-                attestation_cfg_copy.add_symbols(additional_accounts, "mapping".to_owned());
-            }
-            // De-escalate crawling errors; A temporary failure to
-            // look up the mapping should not crash the attester
-            Err(e) => {
-                error!("Could not crawl mapping {}: {:?}", mapping_addr, e);
-            }
-        }
+    if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
+        crawl_pyth_mapping(&lock_and_make_rpc(&rpc_cfg).await, mapping_addr).await.map(|mut additional_accounts| {
+            debug!(
+                "Crawled mapping {} data:\n{:#?}",
+                mapping_addr, additional_accounts
+            );
+
+            // Turn the pruned symbols into P2WSymbol structs
+            let new_symbols_vec = additional_accounts
+              .drain() // Makes us own the elements and lets us move them
+              .map(|(prod, prices)| iter::zip(iter::repeat(prod), prices)) // Convert to iterator over flat (prod, price) tuples
+              .flatten() // Flatten the tuple iterators
+              .filter(|(_, price)| !existing_price_accounts.contains(price))
+              .map(|(prod, price)| P2WSymbol {
+                  name: None,
+                  product_addr: prod,
+                  price_addr: price,
+              })
+              .collect::<Vec<P2WSymbol>>();
+
+            let attestation_cfg_batches: Vec<BatchConfig> = attestation_cfg.as_batches(max_batch_size);
+            let new_batches: Vec<BatchConfig> = new_symbols_vec
+              .as_slice()
+              .chunks(max_batch_size)
+              .map(move |symbols| {
+                  BatchConfig {
+                      group_name: "mapping".to_owned(),
+                      symbols: symbols.to_vec(),
+                      conditions: Default::default(),
+                  }
+              }).collect();
+
+            attestation_cfg_batches.into_iter().chain(new_batches.into_iter()).collect::<Vec<BatchConfig>>()
+        })
+    } else {
+        Ok(attestation_cfg.as_batches(max_batch_size))
     }
+    /*
     debug!(
             "Attestation config (includes mapping accounts):\n{:#?}",
             attestation_cfg_copy
         );
 
     attestation_cfg_copy.as_batches(max_batch_size)
+     */
 }
 
 /// Constructs attestation scheduling jobs from attestation config.
