@@ -287,6 +287,7 @@ mod tests {
             max_msg_accounts: 100_000,
             min_rpc_interval_ms: 2123,
             mapping_addr: None,
+            mapping_groups: vec![],
             mapping_reload_interval_mins: 42,
             symbol_groups: vec![fastbois, slowbois],
         };
