@@ -492,7 +492,7 @@ pub async fn crawl_pyth_mapping(
             }
             ret.push(P2WProductAccount {
                 key: prod_addr.clone(),
-                name: prod_name.to_owned(), // FIXME
+                name: prod_name.to_owned(),
                 price_account_keys: price_accounts,
             });
 
