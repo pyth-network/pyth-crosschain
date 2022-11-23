@@ -59,7 +59,7 @@ use p2w_sdk::P2WEmitter;
 
 use pyth2wormhole::{attest, attest::P2W_MAX_BATCH_SIZE, Pyth2WormholeConfig};
 use pyth2wormhole_client::*;
-use pyth2wormhole_client::attestation_cfg::BatchConfig;
+use pyth2wormhole_client::attestation_cfg::SymbolGroup;
 
 pub const SEQNO_PREFIX: &'static str = "Program log: Sequence: ";
 
@@ -442,7 +442,7 @@ async fn handle_attest_non_daemon_mode(
 //             Err(e) => {
 //                 error!("Could not crawl mapping {}: {:?}", mapping_addr, e);
 //             }
-async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestation_cfg: &AttestationConfig, max_batch_size: usize) -> Result<Vec<BatchConfig>, ErrBox> {
+async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestation_cfg: &AttestationConfig, max_batch_size: usize) -> Result<Vec<SymbolGroup>, ErrBox> {
     // Use the mapping if specified
     if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
         crawl_pyth_mapping(&lock_and_make_rpc(&rpc_cfg).await, mapping_addr).await.map(|additional_accounts| {
@@ -465,13 +465,13 @@ async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestati
                 }
             }
 
-            let mut mapping_batches: Vec<BatchConfig> = vec![];
+            let mut mapping_batches: Vec<SymbolGroup> = vec![];
             for group in &attestation_cfg.mapping_groups {
                 let batch_items: Vec<P2WSymbol> = group.symbols.iter().flat_map(|symbol| name_to_symbols.get(symbol).into_iter().flat_map(|x| x.into_iter())).map(|x| x.clone()).collect();
                 mapping_batches.extend(partition_into_batches(&group.group_name, max_batch_size, &group.conditions, batch_items))
             }
 
-            let attestation_cfg_batches: Vec<BatchConfig> = attestation_cfg.as_batches(max_batch_size);
+            let attestation_cfg_batches: Vec<SymbolGroup> = attestation_cfg.as_batches(max_batch_size);
 
             // Find any accounts not included in existing batches and group them into a remainder batch
             let existing_price_accounts: HashSet<Pubkey> = mapping_batches.iter().flat_map(|batch| batch.symbols.iter().map(|symbol| symbol.price_addr.clone())).chain(
@@ -496,19 +496,19 @@ async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestati
             attestation_cfg_batches.into_iter()
               .chain(mapping_batches.into_iter())
               .chain(default_batches.into_iter())
-              .collect::<Vec<BatchConfig>>()
+              .collect::<Vec<SymbolGroup>>()
         })
     } else {
         Ok(attestation_cfg.as_batches(max_batch_size))
     }
 }
 
-fn partition_into_batches(batch_name: &String, max_batch_size: usize, conditions: &AttestationConditions, symbols: Vec<P2WSymbol>) -> Vec<BatchConfig> {
+fn partition_into_batches(batch_name: &String, max_batch_size: usize, conditions: &AttestationConditions, symbols: Vec<P2WSymbol>) -> Vec<SymbolGroup> {
     symbols
       .as_slice()
       .chunks(max_batch_size)
       .map(move |batch_symbols| {
-          BatchConfig {
+          SymbolGroup {
               group_name: batch_name.to_owned(),
               symbols: batch_symbols.to_vec(),
               conditions: conditions.clone(),
@@ -518,7 +518,7 @@ fn partition_into_batches(batch_name: &String, max_batch_size: usize, conditions
 
 /// Constructs attestation scheduling jobs from attestation config.
 fn prepare_attestation_sched_jobs(
-    batch_cfg: &Vec<BatchConfig>,
+    batch_cfg: &Vec<SymbolGroup>,
     p2w_cfg: &Pyth2WormholeConfig,
     rpc_cfg: &Arc<RLMutex<RpcCfg>>,
     p2w_addr: &Pubkey,

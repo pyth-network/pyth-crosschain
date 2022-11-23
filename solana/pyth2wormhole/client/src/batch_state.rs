@@ -15,13 +15,12 @@ use crate::{
     AttestationConditions,
     P2WSymbol,
 };
-use crate::attestation_cfg::BatchConfig;
+use crate::attestation_cfg::SymbolGroup;
 
 /// Runtime representation of a batch. It refers to the original group
 /// from the config.
 #[derive(Debug)]
 pub struct BatchState {
-    // TODO: replace with BatchConfig
     pub group_name: String,
     pub symbols: Vec<P2WSymbol>,
     pub last_known_symbol_states: Vec<Option<PriceAccount>>,
@@ -31,13 +30,13 @@ pub struct BatchState {
 
 impl<'a> BatchState {
     pub fn new(
-        config: &BatchConfig
+        group: &SymbolGroup
     ) -> Self {
         Self {
-            group_name: config.group_name.clone(),
-            symbols: config.symbols.clone(),
-            conditions: config.conditions.clone(),
-            last_known_symbol_states: vec![None; config.symbols.len()],
+            group_name: group.group_name.clone(),
+            symbols: group.symbols.clone(),
+            conditions: group.conditions.clone(),
+            last_known_symbol_states: vec![None; group.symbols.len()],
             last_job_finished_at: Instant::now(),
         }
     }
