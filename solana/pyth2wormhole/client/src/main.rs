@@ -57,11 +57,9 @@ use cli::{
 
 use p2w_sdk::P2WEmitter;
 
-use pyth2wormhole::{
-    attest::P2W_MAX_BATCH_SIZE,
-    Pyth2WormholeConfig,
-};
+use pyth2wormhole::{attest, attest::P2W_MAX_BATCH_SIZE, Pyth2WormholeConfig};
 use pyth2wormhole_client::*;
+use pyth2wormhole_client::attestation_cfg::BatchConfig;
 
 pub const SEQNO_PREFIX: &'static str = "Program log: Sequence: ";
 
@@ -283,31 +281,10 @@ async fn handle_attest_daemon_mode(
         let start_time = Instant::now(); // Helps timekeep mapping lookups accurately
 
         let config = get_config_account(&lock_and_make_rpc(&rpc_cfg).await, &p2w_addr).await?;
-
-        // Use the mapping if specified
-        if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
-            match crawl_pyth_mapping(&lock_and_make_rpc(&rpc_cfg).await, mapping_addr).await {
-                Ok(additional_accounts) => {
-                    debug!(
-                        "Crawled mapping {} data:\n{:#?}",
-                        mapping_addr, additional_accounts
-                    );
-                    attestation_cfg.add_symbols(additional_accounts, "mapping".to_owned());
-                }
-                // De-escalate crawling errors; A temporary failure to
-                // look up the mapping should not crash the attester
-                Err(e) => {
-                    error!("Could not crawl mapping {}: {:?}", mapping_addr, e);
-                }
-            }
-        }
-        debug!(
-            "Attestation config (includes mapping accounts):\n{:#?}",
-            attestation_cfg
-        );
+        let batch_cfg = attestation_config_to_batches(&rpc_cfg, &attestation_cfg, config.max_batch_size as usize).await;
 
         // Hash currently known config
-        hasher.update(serde_yaml::to_vec(&attestation_cfg)?);
+        hasher.update(serde_yaml::to_vec(&batch_cfg)?);
         hasher.update(borsh::to_vec(&config)?);
 
         let new_cfg_hash = hasher.finalize_reset();
@@ -321,7 +298,7 @@ async fn handle_attest_daemon_mode(
                 info!("Spinning up attestation sched jobs");
                 // Start the new sched futures
                 let new_sched_futs_handle = tokio::spawn(prepare_attestation_sched_jobs(
-                    &attestation_cfg,
+                    &batch_cfg,
                     &config,
                     &rpc_cfg,
                     &p2w_addr,
@@ -339,7 +316,7 @@ async fn handle_attest_daemon_mode(
             // Base case for first attestation attempt
             old_sched_futs_state = Some((
                 tokio::spawn(prepare_attestation_sched_jobs(
-                    &attestation_cfg,
+                    &batch_cfg,
                     &config,
                     &rpc_cfg,
                     &p2w_addr,
@@ -407,29 +384,8 @@ async fn handle_attest_non_daemon_mode(
 ) -> Result<(), ErrBox> {
     let p2w_cfg = get_config_account(&lock_and_make_rpc(&rpc_cfg).await, &p2w_addr).await?;
 
-    // Use the mapping if specified
-    if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
-        match crawl_pyth_mapping(&lock_and_make_rpc(&rpc_cfg).await, mapping_addr).await {
-            Ok(additional_accounts) => {
-                debug!(
-                    "Crawled mapping {} data:\n{:#?}",
-                    mapping_addr, additional_accounts
-                );
-                attestation_cfg.add_symbols(additional_accounts, "mapping".to_owned());
-            }
-            // De-escalate crawling errors; A temporary failure to
-            // look up the mapping should not crash the attester
-            Err(e) => {
-                error!("Could not crawl mapping {}: {:?}", mapping_addr, e);
-            }
-        }
-    }
-    debug!(
-        "Attestation config (includes mapping accounts):\n{:#?}",
-        attestation_cfg
-    );
-
-    let batches = attestation_cfg.as_batches(p2w_cfg.max_batch_size as usize);
+    let batch_config = attestation_config_to_batches(&rpc_cfg, &attestation_cfg, p2w_cfg.max_batch_size as usize).await;
+    let batches: Vec<_> = batch_config.into_iter().map(|x| { BatchState::new(&x) }).collect();
     let batch_count = batches.len();
 
     // For enforcing min_msg_reuse_interval_ms, we keep a piece of
@@ -479,22 +435,45 @@ async fn handle_attest_non_daemon_mode(
     Ok(())
 }
 
+async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestation_cfg: &AttestationConfig, max_batch_size: usize) -> Vec<BatchConfig> {
+    let mut attestation_cfg_copy = attestation_cfg.clone();
+
+    // Use the mapping if specified
+    if let Some(mapping_addr) = attestation_cfg_copy.mapping_addr.as_ref() {
+        match crawl_pyth_mapping(&lock_and_make_rpc(&rpc_cfg).await, mapping_addr).await {
+            Ok(additional_accounts) => {
+                debug!(
+                        "Crawled mapping {} data:\n{:#?}",
+                        mapping_addr, additional_accounts
+                    );
+                attestation_cfg_copy.add_symbols(additional_accounts, "mapping".to_owned());
+            }
+            // De-escalate crawling errors; A temporary failure to
+            // look up the mapping should not crash the attester
+            Err(e) => {
+                error!("Could not crawl mapping {}: {:?}", mapping_addr, e);
+            }
+        }
+    }
+    debug!(
+            "Attestation config (includes mapping accounts):\n{:#?}",
+            attestation_cfg_copy
+        );
+
+    attestation_cfg_copy.as_batches(max_batch_size)
+}
+
 /// Constructs attestation scheduling jobs from attestation config.
 fn prepare_attestation_sched_jobs(
-    attestation_cfg: &AttestationConfig,
+    batch_cfg: &Vec<BatchConfig>,
     p2w_cfg: &Pyth2WormholeConfig,
     rpc_cfg: &Arc<RLMutex<RpcCfg>>,
     p2w_addr: &Pubkey,
     payer: &Keypair,
     message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
 ) -> futures::future::JoinAll<impl Future<Output = Result<(), ErrBoxSend>>> {
-    info!(
-        "{} symbol groups read, dividing into batches",
-        attestation_cfg.symbol_groups.len(),
-    );
-
     // Flatten attestation config into a plain list of batches
-    let batches: Vec<_> = attestation_cfg.as_batches(p2w_cfg.max_batch_size as usize);
+    let batches: Vec<_> = batch_cfg.into_iter().map(|x| { BatchState::new(&x)}).collect();
 
     let batch_count = batches.len();
 

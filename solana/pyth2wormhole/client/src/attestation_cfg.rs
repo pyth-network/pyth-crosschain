@@ -102,7 +102,7 @@ impl AttestationConfig {
         }
     }
 
-    pub fn as_batches(&self, max_batch_size: usize) -> Vec<BatchState> {
+    pub fn as_batches(&self, max_batch_size: usize) -> Vec<BatchConfig> {
         self.symbol_groups
             .iter()
             .map(move |g| {
@@ -116,12 +116,25 @@ impl AttestationConfig {
                     .as_slice()
                     .chunks(max_batch_size.clone())
                     .map(move |symbols| {
-                        BatchState::new(name4closure.clone(), symbols, conditions4closure.clone())
+                        BatchConfig {
+                            group_name: name4closure.clone(),
+                            symbols: symbols.to_vec(),
+                            conditions: conditions4closure.clone()
+                        }
                     })
             })
             .flatten()
             .collect()
     }
+}
+
+/// Configuration for a single batch to send.
+/// A valid batch config requires that `symbols.len() < max_batch_size`.
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
+pub struct BatchConfig {
+    pub group_name: String,
+    pub symbols: Vec<P2WSymbol>,
+    pub conditions: AttestationConditions,
 }
 
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
