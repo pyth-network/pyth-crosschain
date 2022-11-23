@@ -309,7 +309,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
         );
     }
 
-    function testParsePriceFeedUpdatesRevertsIfUpdateVAAIsInavlid(uint seed) public {
+    function testParsePriceFeedUpdatesRevertsIfUpdateVAAIsInvalid(uint seed) public {
         setRandSeed(seed);
         uint numAttestations = 1 + getRandUint() % 10;
         (bytes32[] memory priceIds, PriceAttestation[] memory attestations) =
@@ -333,7 +333,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
         );
     }
 
-    function testParsePriceFeedUpdatesRevertsIfUpdateSourceChainIsInavlid() public {
+    function testParsePriceFeedUpdatesRevertsIfUpdateSourceChainIsInvalid() public {
         uint numAttestations = 10;
         (bytes32[] memory priceIds, PriceAttestation[] memory attestations) =
             generateRandomPriceAttestations(numAttestations);
@@ -359,7 +359,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
         );
     }
 
-    function testParsePriceFeedUpdatesRevertsIfUpdateSourceAddressIsInavlid() public {
+    function testParsePriceFeedUpdatesRevertsIfUpdateSourceAddressIsInvalid() public {
         uint numAttestations = 10;
         (bytes32[] memory priceIds, PriceAttestation[] memory attestations) =
             generateRandomPriceAttestations(numAttestations);
