@@ -23,12 +23,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     }
 
     function updatePriceBatchFromVm(bytes calldata encodedVm) private {
-        (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole().parseAndVerifyVM(encodedVm);
-
-        require(valid, reason);
-        require(verifyPythVM(vm), "invalid data source chain/emitter ID");
-
-        parseAndProcessBatchPriceAttestation(vm);
+        parseAndProcessBatchPriceAttestation(parseAndVerifyBatchAttestationVM(encodedVm));
     }
 
     function updatePriceFeeds(bytes[] calldata updateData) public override payable {
@@ -61,60 +56,10 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         // a comment explaining why it is safe. Also, byteslib
         // operations have proper require.
         unchecked {
-            bytes memory encoded = vm.payload;    
-            uint index = 0;
+            bytes memory encoded = vm.payload;
 
-            // Check header
-            {
-                uint32 magic = UnsafeBytesLib.toUint32(encoded, index);
-                index += 4;
-                require(magic == 0x50325748, "invalid magic value");
-
-                uint16 versionMajor = UnsafeBytesLib.toUint16(encoded, index);
-                index += 2;
-                require(versionMajor == 3, "invalid version major, expected 3");
-
-                uint16 versionMinor = UnsafeBytesLib.toUint16(encoded, index);
-                index += 2;
-                require(versionMinor >= 0, "invalid version minor, expected 0 or more");
-
-                uint16 hdrSize = UnsafeBytesLib.toUint16(encoded, index);
-                index += 2;
-
-                // NOTE(2022-04-19): Currently, only payloadId comes after
-                // hdrSize. Future extra header fields must be read using a
-                // separate offset to respect hdrSize, i.e.:
-                //
-                // uint hdrIndex = 0;
-                // bpa.header.payloadId = UnsafeBytesLib.toUint8(encoded, index + hdrIndex);
-                // hdrIndex += 1;
-                //
-                // bpa.header.someNewField = UnsafeBytesLib.toUint32(encoded, index + hdrIndex);
-                // hdrIndex += 4;
-                //
-                // // Skip remaining unknown header bytes
-                // index += bpa.header.hdrSize;
-
-                uint8 payloadId = UnsafeBytesLib.toUint8(encoded, index);
-
-                // Skip remaining unknown header bytes
-                index += hdrSize;
-
-                // Payload ID of 2 required for batch headerBa
-                require(payloadId == 2, "invalid payload ID, expected 2 for BatchPriceAttestation");
-            }
-
-            // Parse the number of attestations
-            uint16 nAttestations = UnsafeBytesLib.toUint16(encoded, index);
-            index += 2;
-
-            // Parse the attestation size
-            uint16 attestationSize = UnsafeBytesLib.toUint16(encoded, index);
-            index += 2;
-
-            // Given the message is valid the arithmetic below should not overflow, and
-            // even if it overflows then the require would fail.
-            require(encoded.length == (index + (attestationSize * nAttestations)), "invalid BatchPriceAttestation size");
+            (uint index, uint nAttestations, uint attestationSize) = 
+                parseBatchAttestationHeader(encoded);
 
             PythInternalStructs.PriceInfo memory info;
             bytes32 priceId;
@@ -267,6 +212,85 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         require(price.publishTime != 0, "price feed for the given id is not pushed or does not exist");
     }
 
+    function parseBatchAttestationHeader(
+        bytes memory encoded
+    ) internal pure returns (
+        uint index,
+        uint nAttestations,
+        uint attestationSize
+    ) {
+        unchecked {
+            index = 0;
+
+            // Check header
+            {
+                uint32 magic = UnsafeBytesLib.toUint32(encoded, index);
+                index += 4;
+                require(magic == 0x50325748, "invalid magic value");
+
+                uint16 versionMajor = UnsafeBytesLib.toUint16(encoded, index);
+                index += 2;
+                require(versionMajor == 3, "invalid version major, expected 3");
+
+                uint16 versionMinor = UnsafeBytesLib.toUint16(encoded, index);
+                index += 2;
+                require(versionMinor >= 0, "invalid version minor, expected 0 or more");
+
+                uint16 hdrSize = UnsafeBytesLib.toUint16(encoded, index);
+                index += 2;
+
+                // NOTE(2022-04-19): Currently, only payloadId comes after
+                // hdrSize. Future extra header fields must be read using a
+                // separate offset to respect hdrSize, i.e.:
+                //
+                // uint hdrIndex = 0;
+                // bpa.header.payloadId = UnsafeBytesLib.toUint8(encoded, index + hdrIndex);
+                // hdrIndex += 1;
+                //
+                // bpa.header.someNewField = UnsafeBytesLib.toUint32(encoded, index + hdrIndex);
+                // hdrIndex += 4;
+                //
+                // // Skip remaining unknown header bytes
+                // index += bpa.header.hdrSize;
+
+                uint8 payloadId = UnsafeBytesLib.toUint8(encoded, index);
+
+                // Skip remaining unknown header bytes
+                index += hdrSize;
+
+                // Payload ID of 2 required for batch headerBa
+                require(payloadId == 2, "invalid payload ID, expected 2 for BatchPriceAttestation");
+            }
+
+            // Parse the number of attestations
+            nAttestations = UnsafeBytesLib.toUint16(encoded, index);
+            index += 2;
+
+            // Parse the attestation size
+            attestationSize = UnsafeBytesLib.toUint16(encoded, index);
+            index += 2;
+
+            // Given the message is valid the arithmetic below should not overflow, and
+            // even if it overflows then the require would fail.
+            require(encoded.length == (index + (attestationSize * nAttestations)), "invalid BatchPriceAttestation size");
+        }
+    }
+
+    function parseAndVerifyBatchAttestationVM(
+        bytes calldata encodedVm
+    ) internal view returns (
+        IWormhole.VM memory vm
+    ) {
+        {
+            bool valid;
+            string memory reason;
+            (vm, valid, reason) = wormhole().parseAndVerifyVM(encodedVm);
+            require(valid, reason);
+        }
+
+        require(verifyPythVM(vm), "invalid data source chain/emitter ID");
+    }
+
     function parsePriceFeedUpdates(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
@@ -282,72 +306,15 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
             priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
 
             for(uint i = 0; i < updateData.length; i++) {
-                IWormhole.VM memory vm;
+                bytes memory encoded;
 
                 {
-                    bool valid;
-                    string memory reason;
-                    (vm, valid, reason) = wormhole().parseAndVerifyVM(updateData[i]);
-                    require(valid, reason);
+                    IWormhole.VM memory vm = parseAndVerifyBatchAttestationVM(updateData[i]);    
+                    encoded = vm.payload;
                 }
 
-                require(verifyPythVM(vm), "invalid data source chain/emitter ID");
-
-
-                bytes memory encoded = vm.payload;    
-                uint index = 0;
-
-                // Check header
-                {
-                    uint32 magic = UnsafeBytesLib.toUint32(encoded, index);
-                    index += 4;
-                    require(magic == 0x50325748, "invalid magic value");
-
-                    uint16 versionMajor = UnsafeBytesLib.toUint16(encoded, index);
-                    index += 2;
-                    require(versionMajor == 3, "invalid version major, expected 3");
-
-                    uint16 versionMinor = UnsafeBytesLib.toUint16(encoded, index);
-                    index += 2;
-                    require(versionMinor >= 0, "invalid version minor, expected 0 or more");
-
-                    uint16 hdrSize = UnsafeBytesLib.toUint16(encoded, index);
-                    index += 2;
-
-                    // NOTE(2022-04-19): Currently, only payloadId comes after
-                    // hdrSize. Future extra header fields must be read using a
-                    // separate offset to respect hdrSize, i.e.:
-                    //
-                    // uint hdrIndex = 0;
-                    // bpa.header.payloadId = UnsafeBytesLib.toUint8(encoded, index + hdrIndex);
-                    // hdrIndex += 1;
-                    //
-                    // bpa.header.someNewField = UnsafeBytesLib.toUint32(encoded, index + hdrIndex);
-                    // hdrIndex += 4;
-                    //
-                    // // Skip remaining unknown header bytes
-                    // index += bpa.header.hdrSize;
-
-                    uint8 payloadId = UnsafeBytesLib.toUint8(encoded, index);
-
-                    // Skip remaining unknown header bytes
-                    index += hdrSize;
-
-                    // Payload ID of 2 required for batch headerBa
-                    require(payloadId == 2, "invalid payload ID, expected 2 for BatchPriceAttestation");
-                }
-
-                // Parse the number of attestations
-                uint16 nAttestations = UnsafeBytesLib.toUint16(encoded, index);
-                index += 2;
-
-                // Parse the attestation size
-                uint16 attestationSize = UnsafeBytesLib.toUint16(encoded, index);
-                index += 2;
-
-                // Given the message is valid the arithmetic below should not overflow, and
-                // even if it overflows then the require would fail.
-                require(encoded.length == (index + (attestationSize * nAttestations)), "invalid BatchPriceAttestation size");
+                (uint index, uint nAttestations, uint attestationSize) = 
+                    parseBatchAttestationHeader(encoded);
 
                 bytes32 priceId;
 
