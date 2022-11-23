@@ -86,8 +86,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
 
     function generateUpdateDataAndFee(PythStructs.Price[] memory prices) internal returns (bytes[] memory updateData, uint updateFee) {
         bytes memory vaa = generatePriceFeedUpdateVAA(
-            priceIds,
-            prices,
+            pricesToPriceAttestations(priceIds, prices),
             sequence,
             NUM_GUARDIAN_SIGNERS
         );
@@ -120,6 +119,29 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         vm.expectRevert(bytes("no prices in the submitted batch have fresh prices, so this update will have no effect"));
 
         pyth.updatePriceFeedsIfNecessary{value: cachedPricesUpdateFee}(cachedPricesUpdateData, priceIds, cachedPricesPublishTimes);
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForOnePriceFeed() public {
+        bytes32[] memory ids = new bytes32[](1);
+        ids[0] = priceIds[0];
+
+        pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee}(freshPricesUpdateData, ids, 0, 50);
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForTwoPriceFeed() public {
+        bytes32[] memory ids = new bytes32[](2);
+        ids[0] = priceIds[0];
+        ids[1] = priceIds[1];
+
+        pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee}(freshPricesUpdateData, ids, 0, 50);
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForOnePriceFeedNotWithinRange() public {
+        bytes32[] memory ids = new bytes32[](1);
+        ids[0] = priceIds[0];
+
+        vm.expectRevert(bytes("1 or more price feeds are not found in the updateData or they are out of the given time range"));
+        pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee}(freshPricesUpdateData, ids, 50, 100);
     }
 
     function testBenchmarkGetPrice() public {
