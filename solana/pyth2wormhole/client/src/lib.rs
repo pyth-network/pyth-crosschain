@@ -405,8 +405,8 @@ pub fn gen_attest_tx(
 pub async fn crawl_pyth_mapping(
     rpc_client: &RpcClient,
     first_mapping_addr: &Pubkey,
-) -> Result<HashMap<Pubkey, HashSet<Pubkey>>, ErrBox> {
-    let mut ret = HashMap::new();
+) -> Result<Vec<P2WProductAccount>, ErrBox> {
+    let mut ret: Vec<P2WProductAccount> = vec![];
 
     let mut n_mappings = 1; // We assume the first one must be valid
     let mut n_products_total = 0; // Grand total products in all mapping accounts
@@ -442,6 +442,13 @@ pub async fn crawl_pyth_mapping(
                 }
             };
 
+            let mut prod_name = "";
+            for (key, val) in prod.iter() {
+                if key.eq_ignore_ascii_case("symbol") {
+                    prod_name = val;
+                }
+            }
+
             let mut price_addr = prod.px_acc.clone();
             let mut n_prod_prices = 0;
 
@@ -457,6 +464,7 @@ pub async fn crawl_pyth_mapping(
             }
 
             // loop until the last non-zero PriceAccount.next account
+            let mut price_accounts: HashSet<Pubkey> = HashSet::new();
             loop {
                 let price_bytes = rpc_client.get_account_data(&price_addr).await?;
                 let price = match load_price_account(&price_bytes) {
@@ -468,10 +476,7 @@ pub async fn crawl_pyth_mapping(
                 };
 
                 // Append to existing set or create a new map entry
-                ret.entry(prod_addr.clone())
-                    .or_insert(HashSet::new())
-                    .insert(price_addr);
-
+                price_accounts.insert(price_addr);
                 n_prod_prices += 1;
 
                 if price.next == Pubkey::default() {
@@ -485,6 +490,11 @@ pub async fn crawl_pyth_mapping(
 
                 price_addr = price.next.clone();
             }
+            ret.push(P2WProductAccount {
+                key: prod_addr.clone(),
+                name: prod_name.to_owned(), // FIXME
+                price_account_keys: price_accounts,
+            });
 
             n_prices_total += n_prod_prices;
         }
@@ -510,4 +520,11 @@ pub async fn crawl_pyth_mapping(
     );
 
     Ok(ret)
+}
+
+#[derive(Clone, Debug)]
+pub struct P2WProductAccount {
+    pub key: Pubkey,
+    pub name: String,
+    pub price_account_keys: HashSet<Pubkey>,
 }

@@ -34,6 +34,7 @@ pub struct AttestationConfig {
         default // Uses Option::default() which is None
     )]
     pub mapping_addr: Option<Pubkey>,
+    pub mapping_groups: Vec<NameGroup>,
     /// The known symbol list will be reloaded based off this
     /// interval, to account for mapping changes. Note: This interval
     /// will only work if the mapping address is defined. Whenever
@@ -76,13 +77,23 @@ impl AttestationConfig {
     }
 }
 
+// TODO: cleanup with below
 /// Configuration for a single batch to send.
-/// A valid batch config requires that `symbols.len() < max_batch_size`.
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
 pub struct BatchConfig {
     pub group_name: String,
     pub symbols: Vec<P2WSymbol>,
     pub conditions: AttestationConditions,
+}
+
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
+pub struct NameGroup {
+    pub group_name: String,
+    /// Attestation conditions applied to all symbols in this group
+    /// TODO: make optional?
+    pub conditions: AttestationConditions,
+    /// The names of the symbols to include in this group
+    pub symbols: Vec<String>,
 }
 
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]

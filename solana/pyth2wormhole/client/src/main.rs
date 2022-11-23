@@ -453,17 +453,21 @@ async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestati
             );
 
             // Turn the pruned symbols into P2WSymbol structs
-            let new_symbols_vec = additional_accounts
-              .drain() // Makes us own the elements and lets us move them
-              .map(|(prod, prices)| iter::zip(iter::repeat(prod), prices)) // Convert to iterator over flat (prod, price) tuples
-              .flatten() // Flatten the tuple iterators
-              .filter(|(_, price)| !existing_price_accounts.contains(price))
-              .map(|(prod, price)| P2WSymbol {
-                  name: None,
-                  product_addr: prod,
-                  price_addr: price,
-              })
-              .collect::<Vec<P2WSymbol>>();
+            let mut new_symbols_vec = vec![];
+            for product_account in additional_accounts {
+                for price_account_key in product_account.price_account_keys {
+                    if !existing_price_accounts.contains(&price_account_key) {
+                        let symbol = P2WSymbol {
+                            name: Some(product_account.name.clone()),
+                            product_addr: product_account.key,
+                            price_addr: price_account_key,
+                        };
+                        new_symbols_vec.push(symbol);
+                    }
+                }
+            }
+
+            // TODO: group into batches using attestation_cfg.mapping_groups
 
             let attestation_cfg_batches: Vec<BatchConfig> = attestation_cfg.as_batches(max_batch_size);
             let new_batches: Vec<BatchConfig> = new_symbols_vec
