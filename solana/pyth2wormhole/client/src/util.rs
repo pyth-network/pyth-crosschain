@@ -1,6 +1,26 @@
-use log::trace;
+use http::status::StatusCode;
+use log::{
+    error,
+    trace,
+};
+use prometheus::{
+    Encoder,
+    TextEncoder,
+};
+use tokio::sync::{
+    Mutex,
+    MutexGuard,
+};
+use warp::{
+    reply,
+    Filter,
+    Rejection,
+    Reply,
+};
 
+use solitaire::ErrBox;
 use std::{
+    net::SocketAddr,
     ops::{
         Deref,
         DerefMut,
@@ -10,10 +30,8 @@ use std::{
         Instant,
     },
 };
-use tokio::sync::{
-    Mutex,
-    MutexGuard,
-};
+
+use crate::ATTESTER_METRICS_SUBPAGE;
 
 /// Rate-limited mutex. Ensures there's a period of minimum rl_interval between lock acquisitions
 pub struct RLMutex<T> {
@@ -94,4 +112,26 @@ impl<T> RLMutex<T> {
 
         RLMutexGuard { guard }
     }
+}
+
+async fn metrics_handler() -> Result<impl Reply, Rejection> {
+    let encoder = TextEncoder::new();
+    match encoder.encode_to_string(&prometheus::gather()) {
+        Ok(encoded_metrics) => Ok(reply::with_status(encoded_metrics, StatusCode::OK)),
+        Err(e) => {
+            error!("Could not serve metrics: {}", e.to_string());
+            Ok(reply::with_status(
+                "".to_string(),
+                StatusCode::INTERNAL_SERVER_ERROR,
+            ))
+        }
+    }
+}
+
+pub async fn start_metrics_server(addr: impl Into<SocketAddr> + 'static, metrics_subpage: String) {
+    let metrics_route = warp::path(metrics_subpage)
+        .and(warp::path::end())
+        .and_then(metrics_handler);
+
+    warp::serve(metrics_route).bind(addr).await;
 }

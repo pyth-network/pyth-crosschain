@@ -2,6 +2,7 @@ pub mod cli;
 
 use std::{
     fs::File,
+    net::SocketAddr,
     sync::Arc,
     time::{
         Duration,
@@ -15,12 +16,19 @@ use futures::future::{
     TryFutureExt,
 };
 use generic_array::GenericArray;
+use lazy_static::lazy_static;
 use log::{
     debug,
     error,
     info,
     warn,
     LevelFilter,
+};
+use prometheus::{
+    register_int_counter,
+    register_int_gauge,
+    IntCounter,
+    IntGauge,
 };
 use sha3::{
     Digest,
@@ -63,6 +71,18 @@ use pyth2wormhole::{
 use pyth2wormhole_client::*;
 
 pub const SEQNO_PREFIX: &'static str = "Program log: Sequence: ";
+
+lazy_static! {
+    static ref ATTESTATIONS_OK_CNT: IntCounter =
+        register_int_counter!("attestations_ok", "Number of successful attestations").unwrap();
+    static ref ATTESTATIONS_ERR_CNT: IntCounter =
+        register_int_counter!("attestations_err", "Number of failed attestations").unwrap();
+    static ref LAST_SEQNO_GAUGE: IntGauge = register_int_gauge!(
+        "last_seqno",
+        "Latest sequence number produced by this attester"
+    )
+    .unwrap();
+}
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> Result<(), ErrBox> {
@@ -180,6 +200,8 @@ async fn main() -> Result<(), ErrBox> {
             n_retries,
             retry_interval_secs,
             confirmation_timeout_secs,
+            metrics_bind_addr,
+            metrics_subpage,
             daemon,
         } => {
             // Load the attestation config yaml
@@ -203,7 +225,15 @@ async fn main() -> Result<(), ErrBox> {
             ));
 
             if daemon {
-                handle_attest_daemon_mode(rpc_cfg, payer, p2w_addr, attestation_cfg).await?;
+                handle_attest_daemon_mode(
+                    rpc_cfg,
+                    payer,
+                    p2w_addr,
+                    attestation_cfg,
+                    metrics_bind_addr,
+                    metrics_subpage,
+                )
+                .await?;
             } else {
                 handle_attest_non_daemon_mode(
                     attestation_cfg,
@@ -247,7 +277,16 @@ async fn handle_attest_daemon_mode(
     payer: Keypair,
     p2w_addr: Pubkey,
     mut attestation_cfg: AttestationConfig,
+    metrics_bind_addr: SocketAddr,
+    metrics_subpage: String,
 ) -> Result<(), ErrBox> {
+    tokio::spawn(start_metrics_server(metrics_bind_addr, metrics_subpage));
+
+    info!(
+        "Started serving metrics on {}/{}",
+        metrics_bind_addr, ATTESTER_METRICS_SUBPAGE
+    );
+
     info!(
         "Crawling mapping {:?} every {} minutes",
         attestation_cfg.mapping_addr, attestation_cfg.mapping_reload_interval_mins
@@ -270,12 +309,21 @@ async fn handle_attest_daemon_mode(
     // This loop cranks attestations without interruption. This is
     // achieved by spinning up a new up-to-date symbol set before
     // letting go of the previous one. Additionally, hash of on-chain
-    // and attestation configs is used to prevent needless reloads of
+    // and attestation configs is used to prevent needless reloads of"Ad"Address to use for serving Prometheus metrics. Note: served on ""Address to use for serving Prometheus metrics. Note: served on ""Address to use for serving Prometheus metrics. Note: served on "dress to use for serving Prometheus metrics. Note: served on "
     // an unchanged symbol set.
     loop {
         let start_time = Instant::now(); // Helps timekeep mapping lookups accurately
 
-        let config = get_config_account(&lock_and_make_rpc(&rpc_cfg).await, &p2w_addr).await?;
+        let config = match get_config_account(&lock_and_make_rpc(&rpc_cfg).await, &p2w_addr).await {
+            Ok(c) => c,
+            Err(e) => {
+                error!(
+                    "Could not look up latest on-chain config in top-level loop: {:?}",
+                    e
+                );
+                continue;
+            }
+        };
 
         // Use the mapping if specified
         if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
@@ -368,8 +416,6 @@ async fn handle_attest_daemon_mode(
 
         tokio::time::sleep(remaining).await;
     }
-
-    Ok(())
 }
 
 #[derive(Clone)]
@@ -769,8 +815,10 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
         "Batch {}/{}, group {:?} OK",
         batch_no, batch_count, group_name
     );
+    ATTESTATIONS_OK_CNT.inc();
     // NOTE(2022-03-09): p2w_autoattest.py relies on parsing this println!{}
     println!("Sequence number: {}", seqno);
+    LAST_SEQNO_GAUGE.set(seqno.parse::<i64>()?);
     Result::<(), ErrBoxSend>::Ok(())
 }
 
