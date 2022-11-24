@@ -21,13 +21,21 @@ contract PythUpgradable is
 {
     function initialize(
         address wormhole,
-        uint16 pyth2WormholeChainId,
-        bytes32 pyth2WormholeEmitter
+        uint16[] calldata dataSourceEmitterChainIds,
+        bytes32[] calldata dataSourceEmitterAddresses,
+        uint validTimePeriodSeconds,
+        uint singleUpdateFeeInWei
     ) public initializer {
         __Ownable_init();
         __UUPSUpgradeable_init();
 
-        Pyth._initialize(wormhole, pyth2WormholeChainId, pyth2WormholeEmitter);
+        Pyth._initialize(
+            wormhole,
+            dataSourceEmitterChainIds,
+            dataSourceEmitterAddresses,
+            validTimePeriodSeconds,
+            singleUpdateFeeInWei
+        );
     }
 
     /// Privileged function to specify additional data sources in the contract

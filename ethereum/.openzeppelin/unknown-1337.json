@@ -1,0 +1,897 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0x4bf749ec68270027C5910220CEAB30Cc284c7BA2",
+      "txHash": "0xdcfe27b744d676673df12c79a4fbee41dbd66e3837d8edbc17f7f4c416f1c211",
+      "kind": "uups"
+    },
+    {
+      "address": "0x5b9b42d6e4B2e4Bf8d42Eba32D46918e10899B66",
+      "txHash": "0xb03a812c59e386a410e922e31ead4d47a2aa91847d0da7efb28a2c0608e12691",
+      "kind": "uups"
+    },
+    {
+      "address": "0xEC5d4F247aF81A843612eb1371CBCfa88b762119",
+      "txHash": "0x3bf14f07e0248e2a48d248f580a7b61a0fc27f55d2a3bf44f1046a196c3bcbdd",
+      "kind": "uups"
+    },
+    {
+      "address": "0x7414e38377D6DAf6045626EC8a8ABB8a1BC4B97a",
+      "txHash": "0xc611c4b0fa0c2b827d3c4efc8917312770c18026472d2c76da6b1a9737b4b4b1",
+      "kind": "uups"
+    },
+    {
+      "address": "0x4339316e04CFfB5961D1c41fEF8E44bfA2A7fBd1",
+      "txHash": "0xa071144d6abff1c8ed93cdfa578a8b05343a17fde96d2ab6233103dd7e713b1c",
+      "kind": "uups"
+    },
+    {
+      "address": "0xc0b3B62DD0400E4baa721DdEc9B8A384147b23fF",
+      "txHash": "0x36a7ac21f20ba77fe242e5e80870bbc39226f2cd91eda1c8f52115980521516d",
+      "kind": "uups"
+    },
+    {
+      "address": "0x988B6CFBf3332FF98FFBdED665b1F53a61f92612",
+      "txHash": "0x18df81af5f7f3bb5ef0f3d563d08238353086317cfca527e3f769e4f14069e60",
+      "kind": "uups"
+    },
+    {
+      "address": "0xc34175A79ACca40392bECD22ff10fAeBFE780Ae7",
+      "txHash": "0xdc1b696ae17c01e248d8cd5da1d8d001ecdf149a0f75e8765b3ea9ae535f2f5f",
+      "kind": "uups"
+    },
+    {
+      "address": "0xD13ebb5C39fB00C06122827E1cbD389930C9E0E3",
+      "txHash": "0x6c033dca8bb93245893b5ed3d28ed3c6a6630a9c4d9910f931fc81d64d993123",
+      "kind": "uups"
+    },
+    {
+      "address": "0x7231ECd1355a60251eE56Bf81f987969fc9bAe29",
+      "txHash": "0x6aeb22c4d02c16871ec21dfc66b2cb81787c5959a3b899f8bd557a25fbdbce33",
+      "kind": "uups"
+    },
+    {
+      "address": "0x2f3efA6bbDC5fAf4dC1a600765c7B7829e47bE10",
+      "txHash": "0x4fa50916ee1cb79c1e18fb3f674472157bdbb6eafca22a261fd9eb6bf507e013",
+      "kind": "uups"
+    },
+    {
+      "address": "0xdFccc9C59c7361307d47c558ffA75840B32DbA29",
+      "txHash": "0x2e5f968c39ab500bf557ec01082ae535cc7d94776f548648dee2946c1136218f",
+      "kind": "uups"
+    },
+    {
+      "address": "0xb4fFe5983B0B748124577Af4d16953bd096b6897",
+      "txHash": "0x64d483b412ae1701c3f9353c10c461df3093ce3fd3caeb757ee6659774b6edeb",
+      "kind": "uups"
+    },
+    {
+      "address": "0xC5aFE31AE505594B190AC71EA689B58139d1C354",
+      "txHash": "0xe7b28702a1eb40d446f4c2528c481d11d03164ce9bc48d3534d4c30460d9d7c6",
+      "kind": "uups"
+    },
+    {
+      "address": "0xd611F1AF9D056f00F49CB036759De2753EfA82c2",
+      "txHash": "0x425e4f3a8a429289e406881e4b568a131f281e3022bb292889b2d1d1a236bb81",
+      "kind": "uups"
+    },
+    {
+      "address": "0x9ce4cd6D7f5e8b14c7a3e8e6A257A86Bd5a6EeA0",
+      "txHash": "0x29453b882095e71917b5b56bafc454ca3a4fc2fb506630ca1bdba14c794345ba",
+      "kind": "uups"
+    },
+    {
+      "address": "0xd45A464a2412A2f83498d13635698a041b9dBe9b",
+      "txHash": "0x11aa6e93cbc2aa8e937066c0ba56465d2360965d085ba82666bb40455796b519",
+      "kind": "uups"
+    },
+    {
+      "address": "0x0d3C71782055bD88A71b611972152d6e984EDF79",
+      "txHash": "0x88441bc131f70782bb064d16d2dc28da97ce8ab7f0492fe633d9c7682fce9583",
+      "kind": "uups"
+    },
+    {
+      "address": "0xC3Ef4965B788cc4b905084d01F2eb7D4b6E93ABF",
+      "txHash": "0x30dedc8a0bf71bd29d336558dc77eb84fcdb9443801730e5cddf8cbfb04add18",
+      "kind": "uups"
+    },
+    {
+      "address": "0xb111Ded3F2e4012C0B85D930Fda298693D0DA0B2",
+      "txHash": "0x31308cb3314a0e0834ed17c19b35dc6a71ab0a6cf07313a09591325bf3c7fd30",
+      "kind": "uups"
+    },
+    {
+      "address": "0x71e7EC880873af0FE33Ad988F862bE200FdD85cC",
+      "txHash": "0x47e771f48c0a6fbc2c05964e693399af242a80b058a213f9af56eb8af5429f5f",
+      "kind": "uups"
+    },
+    {
+      "address": "0xe6dA6E31540239b4a09eC574f147004D50f1b140",
+      "txHash": "0x290277034f7a5656b0f52ed638d1db9fcd237e1e82b817a92a4380ecfc64b815",
+      "kind": "uups"
+    },
+    {
+      "address": "0xd99748782d7643b00C36a4Bb296C4A099dF98Ff3",
+      "txHash": "0xadaa1cb1b2bea4e76daa3bdd0360b704cc2a1ba052abf6629581e9a40c027418",
+      "kind": "uups"
+    },
+    {
+      "address": "0x180D179Bbf473A30183Fe858E8416351D2170Fd2",
+      "txHash": "0xc46800c9e24cdf4c3022e81e13b527bfdec87536782c8fae73844a4140368549",
+      "kind": "uups"
+    },
+    {
+      "address": "0xC045C7B6B976d24728872d2117073c893d0B09C2",
+      "txHash": "0x399e88e67d67f5d71e447165590883e5381f689259ba0ce632acf06b23ad6ec7",
+      "kind": "uups"
+    },
+    {
+      "address": "0xcCf27643fa6C4FC844a8945b7c2F8bd562153649",
+      "txHash": "0x0a09620acae1aae3d64160ef033afbcb36b34c9cbe29cb405a90b59e9d45d12a",
+      "kind": "uups"
+    },
+    {
+      "address": "0xe5608e4945998aB5E4548Bc95b421E188095DA8E",
+      "txHash": "0xd6a9d2a42f5a0d94972e093d0cc508aa799f0e3d6dff6054ad6437c9d85acfab",
+      "kind": "uups"
+    },
+    {
+      "address": "0xFd6e1d4eaDbc80322F62e7148AD223596A005238",
+      "txHash": "0x289e0da405540255db501c7f10739ea59dd2a281350f668955df302ccfb0658e",
+      "kind": "uups"
+    },
+    {
+      "address": "0x8E7a8d3CAeEbbe9A92faC4db19424218aE6791a3",
+      "txHash": "0x7b15ad948cdfa28c14895c697ef49d60d92eeee0d094159e94d85bb8c20e326c",
+      "kind": "uups"
+    },
+    {
+      "address": "0x29fa1c214B7242b704063F2Ec52494f4639A9cc3",
+      "txHash": "0x90ed64ee4cbec876e210d170d45f4699bd7f588b3fac92a747959c3378379be8",
+      "kind": "uups"
+    },
+    {
+      "address": "0x40b13914f9886E234E1e00435E76D558FA8cf5ba",
+      "txHash": "0x81b2ef38aa9c0248aeb0ca7720e18e9cff60c5bd92e7f93ba559fa209587d706",
+      "kind": "uups"
+    },
+    {
+      "address": "0x97bd553f21B175F7CC00819cC6494a7FbA344180",
+      "txHash": "0x5f38b1e9123338264c5ae167c701c5c0ec6dd06100e9361d19eb6de0f5035e71",
+      "kind": "uups"
+    },
+    {
+      "address": "0x439D0306A0EBD39771781AFB74c1Ae8De29E97Fa",
+      "txHash": "0x91093be9142b2db16e79148d77112e4a3dfe1d7f32c6106f5f6737635fc58283",
+      "kind": "uups"
+    },
+    {
+      "address": "0xe3eEC5619ec9189E5d27F258Ca68A5c85136E4A6",
+      "txHash": "0xe0997862ca1fe5a77a3c8c30cdca96943faa05a45f69ad2e9aad07ad1e8ae52f",
+      "kind": "uups"
+    },
+    {
+      "address": "0xE39caEcB7ed0E02194727aA60cF5d8A0fc6b273c",
+      "txHash": "0xf55e35411406f1efdd1a243c83996361156183bc529be46b8299477041084495",
+      "kind": "uups"
+    },
+    {
+      "address": "0x8ab4aFFe16B8986f4e049F24A7F67701312E2B8D",
+      "txHash": "0x89a6c565fe0bbd2872c447a8d6c8a4f5280bf26a2f1a817760fb9c8e7e8a6512",
+      "kind": "uups"
+    },
+    {
+      "address": "0x0a8c20aadDDDF50AFD1d431342Aaf28E4e757884",
+      "txHash": "0x7b3f81133f7fb8a42b812aa3d5d44a6a6b9942f901c34b0f8f1421a637e22062",
+      "kind": "uups"
+    },
+    {
+      "address": "0x4c8cF69bfd3361Dcf1795354afB32Ec4a26212F8",
+      "txHash": "0xae7a72745035a31a21a53b7831b2311267e4f0466f70f3c931b71644799e0235",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "23e6d79dcc9ce6379da93801726427e52a0a985801d6672bf949eb464b1d9af8": {
+      "address": "0xD86C8F0327494034F60e25074420BcCF560D5610",
+      "txHash": "0x5409bbd1860702070ace553ba323f47c44cc53544223f0cc87091a3e1a437710",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:87"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:211"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:107"
+          },
+          {
+            "contract": "PythState",
+            "label": "_state",
+            "type": "t_struct(State)5747_storage",
+            "src": "../project:/contracts/pyth/PythState.sol:46"
+          }
+        ],
+        "types": {
+          "t_struct(State)5747_storage": {
+            "label": "struct PythStorage.State",
+            "members": [
+              {
+                "label": "wormhole",
+                "type": "t_address"
+              },
+              {
+                "label": "_deprecatedPyth2WormholeChainId",
+                "type": "t_uint16"
+              },
+              {
+                "label": "_deprecatedPyth2WormholeEmitter",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "_deprecatedLatestPriceInfoV1",
+                "type": "t_mapping(t_bytes32,t_struct(DeprecatedPriceInfoV1)4418_storage)"
+              },
+              {
+                "label": "validDataSources",
+                "type": "t_array(t_struct(DataSource)5601_storage)dyn_storage"
+              },
+              {
+                "label": "isValidDataSource",
+                "type": "t_mapping(t_bytes32,t_bool)"
+              },
+              {
+                "label": "singleUpdateFeeInWei",
+                "type": "t_uint256"
+              },
+              {
+                "label": "validTimePeriodSeconds",
+                "type": "t_uint256"
+              },
+              {
+                "label": "governanceDataSource",
+                "type": "t_struct(DataSource)5601_storage"
+              },
+              {
+                "label": "lastExecutedGovernanceSequence",
+                "type": "t_uint64"
+              },
+              {
+                "label": "_deprecatedLatestPriceInfoV2",
+                "type": "t_mapping(t_bytes32,t_struct(DeprecatedPriceInfoV2)4446_storage)"
+              },
+              {
+                "label": "governanceDataSourceIndex",
+                "type": "t_uint32"
+              },
+              {
+                "label": "latestPriceInfo",
+                "type": "t_mapping(t_bytes32,t_struct(PriceInfo)5596_storage)"
+              }
+            ]
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint16": {
+            "label": "uint16"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_mapping(t_bytes32,t_struct(DeprecatedPriceInfoV1)4418_storage)": {
+            "label": "mapping(bytes32 => struct PythDeprecatedStructs.DeprecatedPriceInfoV1)"
+          },
+          "t_struct(DeprecatedPriceInfoV1)4418_storage": {
+            "label": "struct PythDeprecatedStructs.DeprecatedPriceInfoV1",
+            "members": [
+              {
+                "label": "attestationTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "arrivalTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "arrivalBlock",
+                "type": "t_uint256"
+              },
+              {
+                "label": "priceFeed",
+                "type": "t_struct(DeprecatedPriceFeedV1)4408_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(DataSource)5601_storage)dyn_storage": {
+            "label": "struct PythInternalStructs.DataSource[]"
+          },
+          "t_struct(DataSource)5601_storage": {
+            "label": "struct PythInternalStructs.DataSource",
+            "members": [
+              {
+                "label": "chainId",
+                "type": "t_uint16"
+              },
+              {
+                "label": "emitterAddress",
+                "type": "t_bytes32"
+              }
+            ]
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_uint64": {
+            "label": "uint64"
+          },
+          "t_mapping(t_bytes32,t_struct(DeprecatedPriceInfoV2)4446_storage)": {
+            "label": "mapping(bytes32 => struct PythDeprecatedStructs.DeprecatedPriceInfoV2)"
+          },
+          "t_struct(DeprecatedPriceInfoV2)4446_storage": {
+            "label": "struct PythDeprecatedStructs.DeprecatedPriceInfoV2",
+            "members": [
+              {
+                "label": "attestationTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "arrivalTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "arrivalBlock",
+                "type": "t_uint256"
+              },
+              {
+                "label": "priceFeed",
+                "type": "t_struct(DeprecatedPriceFeedV2)4436_storage"
+              }
+            ]
+          },
+          "t_uint32": {
+            "label": "uint32"
+          },
+          "t_mapping(t_bytes32,t_struct(PriceInfo)5596_storage)": {
+            "label": "mapping(bytes32 => struct PythInternalStructs.PriceInfo)"
+          },
+          "t_struct(PriceInfo)5596_storage": {
+            "label": "struct PythInternalStructs.PriceInfo",
+            "members": [
+              {
+                "label": "publishTime",
+                "type": "t_uint64"
+              },
+              {
+                "label": "expo",
+                "type": "t_int32"
+              },
+              {
+                "label": "price",
+                "type": "t_int64"
+              },
+              {
+                "label": "conf",
+                "type": "t_uint64"
+              },
+              {
+                "label": "emaPrice",
+                "type": "t_int64"
+              },
+              {
+                "label": "emaConf",
+                "type": "t_uint64"
+              }
+            ]
+          },
+          "t_struct(DeprecatedPriceFeedV1)4408_storage": {
+            "label": "struct PythDeprecatedStructs.DeprecatedPriceFeedV1",
+            "members": [
+              {
+                "label": "id",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "productId",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "price",
+                "type": "t_int64"
+              },
+              {
+                "label": "conf",
+                "type": "t_uint64"
+              },
+              {
+                "label": "expo",
+                "type": "t_int32"
+              },
+              {
+                "label": "status",
+                "type": "t_enum(DeprecatedPriceStatusV1)4378"
+              },
+              {
+                "label": "maxNumPublishers",
+                "type": "t_uint32"
+              },
+              {
+                "label": "numPublishers",
+                "type": "t_uint32"
+              },
+              {
+                "label": "emaPrice",
+                "type": "t_int64"
+              },
+              {
+                "label": "emaConf",
+                "type": "t_uint64"
+              },
+              {
+                "label": "publishTime",
+                "type": "t_uint64"
+              },
+              {
+                "label": "prevPrice",
+                "type": "t_int64"
+              },
+              {
+                "label": "prevConf",
+                "type": "t_uint64"
+              },
+              {
+                "label": "prevPublishTime",
+                "type": "t_uint64"
+              }
+            ]
+          },
+          "t_struct(DeprecatedPriceFeedV2)4436_storage": {
+            "label": "struct PythDeprecatedStructs.DeprecatedPriceFeedV2",
+            "members": [
+              {
+                "label": "id",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "price",
+                "type": "t_struct(DeprecatedPriceV2)4427_storage"
+              },
+              {
+                "label": "emaPrice",
+                "type": "t_struct(DeprecatedPriceV2)4427_storage"
+              }
+            ]
+          },
+          "t_int32": {
+            "label": "int32"
+          },
+          "t_int64": {
+            "label": "int64"
+          },
+          "t_enum(DeprecatedPriceStatusV1)4378": {
+            "label": "enum PythDeprecatedStructs.DeprecatedPriceStatusV1",
+            "members": ["UNKNOWN", "TRADING", "HALTED", "AUCTION"]
+          },
+          "t_struct(DeprecatedPriceV2)4427_storage": {
+            "label": "struct PythDeprecatedStructs.DeprecatedPriceV2",
+            "members": [
+              {
+                "label": "price",
+                "type": "t_int64"
+              },
+              {
+                "label": "conf",
+                "type": "t_uint64"
+              },
+              {
+                "label": "expo",
+                "type": "t_int32"
+              },
+              {
+                "label": "publishTime",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          }
+        }
+      }
+    },
+    "5ba555ba1add20535aa278dd0e35a56682cfb0075d9f205ebcb7309255b317d1": {
+      "address": "0x1b88Bdb8269A1aB1372459F5a4eC3663D6f5cCc4",
+      "txHash": "0xa5fe9a91feda37fb57c664c7b4564878dd5c947ade7824a552a2f7066963b5d8",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:87"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:211"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:107"
+          },
+          {
+            "contract": "PythState",
+            "label": "_state",
+            "type": "t_struct(State)5747_storage",
+            "src": "../project:/contracts/pyth/PythState.sol:46"
+          }
+        ],
+        "types": {
+          "t_struct(State)5747_storage": {
+            "label": "struct PythStorage.State",
+            "members": [
+              {
+                "label": "wormhole",
+                "type": "t_address"
+              },
+              {
+                "label": "_deprecatedPyth2WormholeChainId",
+                "type": "t_uint16"
+              },
+              {
+                "label": "_deprecatedPyth2WormholeEmitter",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "_deprecatedLatestPriceInfoV1",
+                "type": "t_mapping(t_bytes32,t_struct(DeprecatedPriceInfoV1)4418_storage)"
+              },
+              {
+                "label": "validDataSources",
+                "type": "t_array(t_struct(DataSource)5601_storage)dyn_storage"
+              },
+              {
+                "label": "isValidDataSource",
+                "type": "t_mapping(t_bytes32,t_bool)"
+              },
+              {
+                "label": "singleUpdateFeeInWei",
+                "type": "t_uint256"
+              },
+              {
+                "label": "validTimePeriodSeconds",
+                "type": "t_uint256"
+              },
+              {
+                "label": "governanceDataSource",
+                "type": "t_struct(DataSource)5601_storage"
+              },
+              {
+                "label": "lastExecutedGovernanceSequence",
+                "type": "t_uint64"
+              },
+              {
+                "label": "_deprecatedLatestPriceInfoV2",
+                "type": "t_mapping(t_bytes32,t_struct(DeprecatedPriceInfoV2)4446_storage)"
+              },
+              {
+                "label": "governanceDataSourceIndex",
+                "type": "t_uint32"
+              },
+              {
+                "label": "latestPriceInfo",
+                "type": "t_mapping(t_bytes32,t_struct(PriceInfo)5596_storage)"
+              }
+            ]
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint16": {
+            "label": "uint16"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_mapping(t_bytes32,t_struct(DeprecatedPriceInfoV1)4418_storage)": {
+            "label": "mapping(bytes32 => struct PythDeprecatedStructs.DeprecatedPriceInfoV1)"
+          },
+          "t_struct(DeprecatedPriceInfoV1)4418_storage": {
+            "label": "struct PythDeprecatedStructs.DeprecatedPriceInfoV1",
+            "members": [
+              {
+                "label": "attestationTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "arrivalTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "arrivalBlock",
+                "type": "t_uint256"
+              },
+              {
+                "label": "priceFeed",
+                "type": "t_struct(DeprecatedPriceFeedV1)4408_storage"
+              }
+            ]
+          },
+          "t_array(t_struct(DataSource)5601_storage)dyn_storage": {
+            "label": "struct PythInternalStructs.DataSource[]"
+          },
+          "t_struct(DataSource)5601_storage": {
+            "label": "struct PythInternalStructs.DataSource",
+            "members": [
+              {
+                "label": "chainId",
+                "type": "t_uint16"
+              },
+              {
+                "label": "emitterAddress",
+                "type": "t_bytes32"
+              }
+            ]
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_uint64": {
+            "label": "uint64"
+          },
+          "t_mapping(t_bytes32,t_struct(DeprecatedPriceInfoV2)4446_storage)": {
+            "label": "mapping(bytes32 => struct PythDeprecatedStructs.DeprecatedPriceInfoV2)"
+          },
+          "t_struct(DeprecatedPriceInfoV2)4446_storage": {
+            "label": "struct PythDeprecatedStructs.DeprecatedPriceInfoV2",
+            "members": [
+              {
+                "label": "attestationTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "arrivalTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "arrivalBlock",
+                "type": "t_uint256"
+              },
+              {
+                "label": "priceFeed",
+                "type": "t_struct(DeprecatedPriceFeedV2)4436_storage"
+              }
+            ]
+          },
+          "t_uint32": {
+            "label": "uint32"
+          },
+          "t_mapping(t_bytes32,t_struct(PriceInfo)5596_storage)": {
+            "label": "mapping(bytes32 => struct PythInternalStructs.PriceInfo)"
+          },
+          "t_struct(PriceInfo)5596_storage": {
+            "label": "struct PythInternalStructs.PriceInfo",
+            "members": [
+              {
+                "label": "publishTime",
+                "type": "t_uint64"
+              },
+              {
+                "label": "expo",
+                "type": "t_int32"
+              },
+              {
+                "label": "price",
+                "type": "t_int64"
+              },
+              {
+                "label": "conf",
+                "type": "t_uint64"
+              },
+              {
+                "label": "emaPrice",
+                "type": "t_int64"
+              },
+              {
+                "label": "emaConf",
+                "type": "t_uint64"
+              }
+            ]
+          },
+          "t_struct(DeprecatedPriceFeedV1)4408_storage": {
+            "label": "struct PythDeprecatedStructs.DeprecatedPriceFeedV1",
+            "members": [
+              {
+                "label": "id",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "productId",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "price",
+                "type": "t_int64"
+              },
+              {
+                "label": "conf",
+                "type": "t_uint64"
+              },
+              {
+                "label": "expo",
+                "type": "t_int32"
+              },
+              {
+                "label": "status",
+                "type": "t_enum(DeprecatedPriceStatusV1)4378"
+              },
+              {
+                "label": "maxNumPublishers",
+                "type": "t_uint32"
+              },
+              {
+                "label": "numPublishers",
+                "type": "t_uint32"
+              },
+              {
+                "label": "emaPrice",
+                "type": "t_int64"
+              },
+              {
+                "label": "emaConf",
+                "type": "t_uint64"
+              },
+              {
+                "label": "publishTime",
+                "type": "t_uint64"
+              },
+              {
+                "label": "prevPrice",
+                "type": "t_int64"
+              },
+              {
+                "label": "prevConf",
+                "type": "t_uint64"
+              },
+              {
+                "label": "prevPublishTime",
+                "type": "t_uint64"
+              }
+            ]
+          },
+          "t_struct(DeprecatedPriceFeedV2)4436_storage": {
+            "label": "struct PythDeprecatedStructs.DeprecatedPriceFeedV2",
+            "members": [
+              {
+                "label": "id",
+                "type": "t_bytes32"
+              },
+              {
+                "label": "price",
+                "type": "t_struct(DeprecatedPriceV2)4427_storage"
+              },
+              {
+                "label": "emaPrice",
+                "type": "t_struct(DeprecatedPriceV2)4427_storage"
+              }
+            ]
+          },
+          "t_int32": {
+            "label": "int32"
+          },
+          "t_int64": {
+            "label": "int64"
+          },
+          "t_enum(DeprecatedPriceStatusV1)4378": {
+            "label": "enum PythDeprecatedStructs.DeprecatedPriceStatusV1",
+            "members": ["UNKNOWN", "TRADING", "HALTED", "AUCTION"]
+          },
+          "t_struct(DeprecatedPriceV2)4427_storage": {
+            "label": "struct PythDeprecatedStructs.DeprecatedPriceV2",
+            "members": [
+              {
+                "label": "price",
+                "type": "t_int64"
+              },
+              {
+                "label": "conf",
+                "type": "t_uint64"
+              },
+              {
+                "label": "expo",
+                "type": "t_int32"
+              },
+              {
+                "label": "publishTime",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          }
+        }
+      }
+    }
+  }
+}

@@ -13,16 +13,6 @@ contract PythGetters is PythState {
         return IWormhole(_state.wormhole);
     }
 
-    /// Deprecated, use `validDataSources` instead
-    function pyth2WormholeChainId() public view returns (uint16) {
-        return _state._deprecatedPyth2WormholeChainId;
-    }
-
-    /// Deprecated, use `validDataSources` instead
-    function pyth2WormholeEmitter() public view returns (bytes32) {
-        return _state._deprecatedPyth2WormholeEmitter;
-    }
-
     function latestPriceInfo(
         bytes32 priceId
     ) internal view returns (PythInternalStructs.PriceInfo memory info) {
