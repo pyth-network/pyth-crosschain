@@ -18,6 +18,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Build XC-governance sdk
+        run: npm ci
+        working-directory: third_party/pyth/xc-governance-sdk-js
+
       - name: Install contract npm dependencies
         run: npm ci
 
