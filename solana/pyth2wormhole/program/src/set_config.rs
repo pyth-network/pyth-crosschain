@@ -1,42 +1,41 @@
-use borsh::BorshSerialize;
-
-use solana_program::{
-    program::invoke,
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    rent::Rent,
-    system_instruction,
-    sysvar::Sysvar,
+use {
+    crate::config::{
+        P2WConfigAccount,
+        Pyth2WormholeConfig,
+    },
+    borsh::BorshSerialize,
+    solana_program::{
+        program::invoke,
+        program_error::ProgramError,
+        pubkey::Pubkey,
+        rent::Rent,
+        system_instruction,
+        sysvar::Sysvar,
+    },
+    solitaire::{
+        trace,
+        AccountState,
+        ExecutionContext,
+        FromAccounts,
+        Info,
+        Keyed,
+        Mut,
+        Peel,
+        Result as SoliResult,
+        Signer,
+        SolitaireError,
+    },
+    std::cmp::Ordering,
 };
-use solitaire::{
-    trace,
-    AccountState,
-    ExecutionContext,
-    FromAccounts,
-    Info,
-    Keyed,
-    Mut,
-    Peel,
-    Result as SoliResult,
-    Signer,
-    SolitaireError,
-};
-
-use crate::config::{
-    P2WConfigAccount,
-    Pyth2WormholeConfig,
-};
-
-use std::cmp::Ordering;
 
 #[derive(FromAccounts)]
 pub struct SetConfig<'b> {
     /// Current config used by the program
-    pub config: Mut<P2WConfigAccount<'b, { AccountState::Initialized }>>,
+    pub config:         Mut<P2WConfigAccount<'b, { AccountState::Initialized }>>,
     /// Current owner authority of the program
-    pub current_owner: Mut<Signer<Info<'b>>>,
+    pub current_owner:  Mut<Signer<Info<'b>>>,
     /// Payer account for updating the account data
-    pub payer: Mut<Signer<Info<'b>>>,
+    pub payer:          Mut<Signer<Info<'b>>>,
     /// Used for rent adjustment transfer
     pub system_program: Info<'b>,
 }

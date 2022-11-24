@@ -1,19 +1,21 @@
 #![deny(warnings)]
 #![allow(clippy::result_large_err)]
 
-use anchor_lang::{
-    prelude::*,
-    solana_program::borsh::get_packed_len,
-    system_program,
-};
-use error::ExecutorError;
-use state::{
-    claim_record::ClaimRecord,
-    posted_vaa::AnchorVaa,
-};
-use wormhole::Chain::{
-    self,
-    Solana,
+use {
+    anchor_lang::{
+        prelude::*,
+        solana_program::borsh::get_packed_len,
+        system_program,
+    },
+    error::ExecutorError,
+    state::{
+        claim_record::ClaimRecord,
+        posted_vaa::AnchorVaa,
+    },
+    wormhole::Chain::{
+        self,
+        Solana,
+    },
 };
 
 mod error;
@@ -27,14 +29,14 @@ declare_id!("exe6S3AxPVNmy46L4Nj6HrnnAVQUhwyYzMSNcnRn3qq");
 
 #[program]
 pub mod remote_executor {
-    use anchor_lang::solana_program::{
-        instruction::Instruction,
-        program::invoke_signed,
+    use {
+        super::*,
+        crate::state::governance_payload::ExecutorPayload,
+        anchor_lang::solana_program::{
+            instruction::Instruction,
+            program::invoke_signed,
+        },
     };
-
-    use crate::state::governance_payload::ExecutorPayload;
-
-    use super::*;
 
     pub fn execute_posted_vaa(ctx: Context<ExecutePostedVaa>) -> Result<()> {
         let posted_vaa = &ctx.accounts.posted_vaa;
@@ -71,12 +73,12 @@ pub const CLAIM_RECORD_SEED: &str = "CLAIM_RECORD";
 #[derive(Accounts)]
 pub struct ExecutePostedVaa<'info> {
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub payer:          Signer<'info>,
     #[account(constraint = Chain::from(posted_vaa.emitter_chain) == Solana @ ExecutorError::EmitterChainNotSolana, constraint = posted_vaa.sequence > claim_record.sequence @ExecutorError::NonIncreasingSequence, constraint = (&posted_vaa.magic == b"vaa" || &posted_vaa.magic == b"msg" || &posted_vaa.magic == b"msu") @ExecutorError::PostedVaaHeaderWrongMagicNumber )]
-    pub posted_vaa: Account<'info, AnchorVaa>,
+    pub posted_vaa:     Account<'info, AnchorVaa>,
     /// The reason claim_record has different seeds than executor_key is that executor key might need to pay in the CPI, so we want it to be a native wallet
     #[account(init_if_needed, space = 8 + get_packed_len::<ClaimRecord>(), payer=payer, seeds = [CLAIM_RECORD_SEED.as_bytes(), &posted_vaa.emitter_address], bump)]
-    pub claim_record: Account<'info, ClaimRecord>,
+    pub claim_record:   Account<'info, ClaimRecord>,
     pub system_program: Program<'info, System>,
     // Additional accounts passed to the instruction will be passed down to the CPIs. Very importantly executor_key needs to be passed as it will be the signer of the CPIs.
     // Below is the "anchor specification" of that account

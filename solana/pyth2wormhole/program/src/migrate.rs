@@ -1,36 +1,36 @@
 //! Instruction used to migrate on-chain configuration from an older format
 
-use solana_program::{
-    program::invoke,
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    rent::Rent,
-    system_instruction,
-    system_program,
-    sysvar::Sysvar,
-};
-
-use solitaire::{
-    trace,
-    AccountSize,
-    AccountState,
-    CreationLamports,
-    ExecutionContext,
-    FromAccounts,
-    Info,
-    Keyed,
-    Mut,
-    Peel,
-    Result as SoliResult,
-    Signer,
-    SolitaireError,
-};
-
-use crate::config::{
-    OldP2WConfigAccount,
-    OldPyth2WormholeConfig,
-    P2WConfigAccount,
-    Pyth2WormholeConfig,
+use {
+    crate::config::{
+        OldP2WConfigAccount,
+        OldPyth2WormholeConfig,
+        P2WConfigAccount,
+        Pyth2WormholeConfig,
+    },
+    solana_program::{
+        program::invoke,
+        program_error::ProgramError,
+        pubkey::Pubkey,
+        rent::Rent,
+        system_instruction,
+        system_program,
+        sysvar::Sysvar,
+    },
+    solitaire::{
+        trace,
+        AccountSize,
+        AccountState,
+        CreationLamports,
+        ExecutionContext,
+        FromAccounts,
+        Info,
+        Keyed,
+        Mut,
+        Peel,
+        Result as SoliResult,
+        Signer,
+        SolitaireError,
+    },
 };
 
 /// Migration accounts meant to evolve with subsequent config accounts
@@ -40,13 +40,13 @@ use crate::config::{
 #[derive(FromAccounts)]
 pub struct Migrate<'b> {
     /// New config account to be populated. Must be unused.
-    pub new_config: Mut<P2WConfigAccount<'b, { AccountState::Uninitialized }>>,
+    pub new_config:     Mut<P2WConfigAccount<'b, { AccountState::Uninitialized }>>,
     /// Old config using the previous format.
-    pub old_config: Mut<OldP2WConfigAccount<'b>>,
+    pub old_config:     Mut<OldP2WConfigAccount<'b>>,
     /// Current owner authority of the program
-    pub current_owner: Mut<Signer<Info<'b>>>,
+    pub current_owner:  Mut<Signer<Info<'b>>>,
     /// Payer account for updating the account data
-    pub payer: Mut<Signer<Info<'b>>>,
+    pub payer:          Mut<Signer<Info<'b>>>,
     /// For creating the new config account
     pub system_program: Info<'b>,
 }

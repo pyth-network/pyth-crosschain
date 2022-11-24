@@ -1,68 +1,69 @@
-use anchor_lang::{
-    prelude::{
-        AccountMeta,
-        ProgramError,
-        Pubkey,
-        Rent,
-        UpgradeableLoaderState,
-    },
-    solana_program::hash::Hash,
-    AccountDeserialize,
-    AnchorDeserialize,
-    AnchorSerialize,
-    InstructionData as AnchorInstructionData,
-    Key,
-    Owner,
-    ToAccountMetas,
-};
-use solana_program_test::{
-    find_file,
-    read_file,
-    BanksClient,
-    BanksClientError,
-    ProgramTest,
-    ProgramTestBanksClientExt,
-};
-use solana_sdk::{
-    account::Account,
-    bpf_loader_upgradeable,
-    instruction::{
-        Instruction,
-        InstructionError,
-    },
-    signature::Keypair,
-    signer::Signer,
-    stake_history::Epoch,
-    system_instruction,
-    transaction::{
-        Transaction,
-        TransactionError,
-    },
-};
-use std::collections::HashMap;
-use wormhole::Chain;
-use wormhole_solana::VAA;
-
-use crate::{
-    error::ExecutorError,
-    state::{
-        claim_record::ClaimRecord,
-        governance_payload::{
-            ExecutorPayload,
-            GovernanceHeader,
-            InstructionData,
+use {
+    crate::{
+        error::ExecutorError,
+        state::{
+            claim_record::ClaimRecord,
+            governance_payload::{
+                ExecutorPayload,
+                GovernanceHeader,
+                InstructionData,
+            },
+            posted_vaa::AnchorVaa,
         },
-        posted_vaa::AnchorVaa,
+        CLAIM_RECORD_SEED,
+        EXECUTOR_KEY_SEED,
     },
-    CLAIM_RECORD_SEED,
-    EXECUTOR_KEY_SEED,
+    anchor_lang::{
+        prelude::{
+            AccountMeta,
+            ProgramError,
+            Pubkey,
+            Rent,
+            UpgradeableLoaderState,
+        },
+        solana_program::hash::Hash,
+        AccountDeserialize,
+        AnchorDeserialize,
+        AnchorSerialize,
+        InstructionData as AnchorInstructionData,
+        Key,
+        Owner,
+        ToAccountMetas,
+    },
+    solana_program_test::{
+        find_file,
+        read_file,
+        BanksClient,
+        BanksClientError,
+        ProgramTest,
+        ProgramTestBanksClientExt,
+    },
+    solana_sdk::{
+        account::Account,
+        bpf_loader_upgradeable,
+        instruction::{
+            Instruction,
+            InstructionError,
+        },
+        signature::Keypair,
+        signer::Signer,
+        stake_history::Epoch,
+        system_instruction,
+        transaction::{
+            Transaction,
+            TransactionError,
+        },
+    },
+    std::collections::HashMap,
+    wormhole::Chain,
+    wormhole_solana::VAA,
 };
 
 /// Bench for the tests, the goal of this struct is to be able to setup solana accounts before starting the local validator
 pub struct ExecutorBench {
     program_test: ProgramTest,
-    program_id: Pubkey,
-    seqno: HashMap<Pubkey, u64>,
+    program_id:   Pubkey,
+    seqno:        HashMap<Pubkey, u64>,
 }
 
 /// When passed to `add_vaa_account` modify the posted vaa in a way that makes the vaa invalid
@@ -94,7 +95,7 @@ impl ExecutorBench {
             programdata_address: programdata_key,
         };
         let programdata_deserialized = UpgradeableLoaderState::ProgramData {
-            slot: 1,
+            slot:                      1,
             upgrade_authority_address: Some(upgrade_authority_keypair.pubkey()),
         };
 
@@ -105,16 +106,16 @@ impl ExecutorBench {
         programdata_vec.append(&mut bpf_data);
 
         let program_account = Account {
-            lamports: Rent::default().minimum_balance(program_vec.len()),
-            data: program_vec,
-            owner: bpf_loader_upgradeable::ID,
+            lamports:   Rent::default().minimum_balance(program_vec.len()),
+            data:       program_vec,
+            owner:      bpf_loader_upgradeable::ID,
             executable: true,
             rent_epoch: Epoch::default(),
         };
         let programdata_account = Account {
-            lamports: Rent::default().minimum_balance(programdata_vec.len()),
-            data: programdata_vec,
-            owner: bpf_loader_upgradeable::ID,
+            lamports:   Rent::default().minimum_balance(programdata_vec.len()),
+            data:       programdata_vec,
+            owner:      bpf_loader_upgradeable::ID,
             executable: false,
             rent_epoch: Epoch::default(),
         };
@@ -166,7 +167,7 @@ impl ExecutorBench {
         };
 
         let payload = ExecutorPayload {
-            header: GovernanceHeader::executor_governance_header(),
+            header:       GovernanceHeader::executor_governance_header(),
             instructions: instructions
                 .iter()
                 .map(|x| InstructionData::from(x))
@@ -177,7 +178,7 @@ impl ExecutorBench {
 
         let vaa = AnchorVaa {
             magic: *vaa_magic,
-            vaa: VAA {
+            vaa:   VAA {
                 vaa_version: 0,
                 consistency_level: 0,
                 vaa_time: 0,
@@ -232,10 +233,10 @@ impl ExecutorBench {
     }
 }
 pub struct ExecutorSimulator {
-    banks_client: BanksClient,
-    payer: Keypair,
+    banks_client:   BanksClient,
+    payer:          Keypair,
     last_blockhash: Hash,
-    program_id: Pubkey,
+    program_id:     Pubkey,
 }
 
 /// When passed to execute_posted_vaa, try to impersonate some of the accounts
@@ -333,8 +334,8 @@ impl ExecutorSimulator {
 
         // We need to add `executor_key` to the list of accounts
         account_metas.push(AccountMeta {
-            pubkey: executor_key,
-            is_signer: false,
+            pubkey:      executor_key,
+            is_signer:   false,
             is_writable: true,
         });
 
@@ -342,8 +343,8 @@ impl ExecutorSimulator {
         for instruction in executor_payload.instructions {
             // Push program_id
             account_metas.push(AccountMeta {
-                pubkey: instruction.program_id,
-                is_signer: false,
+                pubkey:      instruction.program_id,
+                is_signer:   false,
                 is_writable: false,
             });
             // Push other accounts
@@ -356,8 +357,8 @@ impl ExecutorSimulator {
 
         let instruction = Instruction {
             program_id: self.program_id,
-            accounts: account_metas,
-            data: crate::instruction::ExecutePostedVaa.data(),
+            accounts:   account_metas,
+            data:       crate::instruction::ExecutePostedVaa.data(),
         };
 
         self.process_ix(instruction, signers).await

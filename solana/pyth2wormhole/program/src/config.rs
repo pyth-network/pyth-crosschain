@@ -20,17 +20,19 @@
 //! 6. (optional) Remove/comment out config structs and aliases from
 //! before version Y.
 
-use borsh::{
-    BorshDeserialize,
-    BorshSerialize,
-};
-use solana_program::pubkey::Pubkey;
-use solitaire::{
-    processors::seeded::AccountOwner,
-    AccountState,
-    Data,
-    Derive,
-    Owned,
+use {
+    borsh::{
+        BorshDeserialize,
+        BorshSerialize,
+    },
+    solana_program::pubkey::Pubkey,
+    solitaire::{
+        processors::seeded::AccountOwner,
+        AccountState,
+        Data,
+        Derive,
+        Owned,
+    },
 };
 
 /// Aliases for current config schema (to migrate into)
@@ -59,11 +61,11 @@ impl Owned for OldPyth2WormholeConfig {
 #[cfg_attr(feature = "client", derive(Debug))]
 pub struct Pyth2WormholeConfigV1 {
     ///  Authority owning this contract
-    pub owner: Pubkey,
+    pub owner:          Pubkey,
     /// Wormhole bridge program
-    pub wh_prog: Pubkey,
+    pub wh_prog:        Pubkey,
     /// Authority owning Pyth price data
-    pub pyth_owner: Pubkey,
+    pub pyth_owner:     Pubkey,
     pub max_batch_size: u16,
 }
 
@@ -75,11 +77,11 @@ pub type P2WConfigAccountV1<'b, const IsInitialized: AccountState> =
 #[cfg_attr(feature = "client", derive(Debug))]
 pub struct Pyth2WormholeConfigV2 {
     ///  Authority owning this contract
-    pub owner: Pubkey,
+    pub owner:          Pubkey,
     /// Wormhole bridge program
-    pub wh_prog: Pubkey,
+    pub wh_prog:        Pubkey,
     /// Authority owning Pyth price data
-    pub pyth_owner: Pubkey,
+    pub pyth_owner:     Pubkey,
     /// How many product/price pairs can be sent and attested at once
     ///
     /// Important: Whenever the corresponding logic in attest.rs
@@ -123,11 +125,11 @@ impl From<Pyth2WormholeConfigV1> for Pyth2WormholeConfigV2 {
 #[cfg_attr(feature = "client", derive(Debug))]
 pub struct Pyth2WormholeConfigV3 {
     ///  Authority owning this contract
-    pub owner: Pubkey,
+    pub owner:          Pubkey,
     /// Wormhole bridge program
-    pub wh_prog: Pubkey,
+    pub wh_prog:        Pubkey,
     /// Authority owning Pyth price data
-    pub pyth_owner: Pubkey,
+    pub pyth_owner:     Pubkey,
     /// How many product/price pairs can be sent and attested at once
     ///
     /// Important: Whenever the corresponding logic in attest.rs

@@ -1,21 +1,22 @@
 //! Re-usable message scheme for pyth2wormhole
 
-use log::debug;
-use std::{
-    collections::VecDeque,
-    time::{
-        Duration,
-        Instant,
+use {
+    crate::ErrBoxSend,
+    log::debug,
+    std::{
+        collections::VecDeque,
+        time::{
+            Duration,
+            Instant,
+        },
     },
 };
-
-use crate::ErrBoxSend;
 
 /// One of the accounts tracked by the attestation client.
 #[derive(Clone, Debug)]
 pub struct P2WMessageAccount {
     /// Unique ID that lets us derive unique accounts for use on-chain
-    pub id: u64,
+    pub id:        u64,
     /// Last time we've posted a message to wormhole with this account
     pub last_used: Instant,
 }
@@ -24,7 +25,7 @@ pub struct P2WMessageAccount {
 #[derive(Clone, Debug)]
 pub struct P2WMessageQueue {
     /// The tracked accounts. Sorted from oldest to newest, as guaranteed by get_account()
-    accounts: VecDeque<P2WMessageAccount>,
+    accounts:     VecDeque<P2WMessageAccount>,
     /// How much time needs to pass between reuses
     grace_period: Duration,
     /// A hard cap on how many accounts will be created.
@@ -72,13 +73,13 @@ impl P2WMessageQueue {
 
                 // Use a new account instead
                 P2WMessageAccount {
-                    id: self.accounts.len() as u64,
+                    id:        self.accounts.len() as u64,
                     last_used: Instant::now(),
                 }
             }
             // Base case: Queue is empty, use a new account
             None => P2WMessageAccount {
-                id: self.accounts.len() as u64,
+                id:        self.accounts.len() as u64,
                 last_used: Instant::now(),
             },
         };

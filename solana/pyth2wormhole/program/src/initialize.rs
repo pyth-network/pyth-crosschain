@@ -1,33 +1,34 @@
-use solana_program::{
-    program::invoke,
-    pubkey::Pubkey,
-    rent::Rent,
-    system_instruction,
-    sysvar::Sysvar,
-};
-use solitaire::{
-    trace,
-    AccountState,
-    CreationLamports,
-    ExecutionContext,
-    FromAccounts,
-    Info,
-    Keyed,
-    Mut,
-    Peel,
-    Result as SoliResult,
-    Signer,
-};
-
-use crate::config::{
-    P2WConfigAccount,
-    Pyth2WormholeConfig,
+use {
+    crate::config::{
+        P2WConfigAccount,
+        Pyth2WormholeConfig,
+    },
+    solana_program::{
+        program::invoke,
+        pubkey::Pubkey,
+        rent::Rent,
+        system_instruction,
+        sysvar::Sysvar,
+    },
+    solitaire::{
+        trace,
+        AccountState,
+        CreationLamports,
+        ExecutionContext,
+        FromAccounts,
+        Info,
+        Keyed,
+        Mut,
+        Peel,
+        Result as SoliResult,
+        Signer,
+    },
 };
 
 #[derive(FromAccounts)]
 pub struct Initialize<'b> {
-    pub new_config: Mut<P2WConfigAccount<'b, { AccountState::Uninitialized }>>,
-    pub payer: Mut<Signer<Info<'b>>>,
+    pub new_config:     Mut<P2WConfigAccount<'b, { AccountState::Uninitialized }>>,
+    pub payer:          Mut<Signer<Info<'b>>>,
     pub system_program: Info<'b>,
 }
 

@@ -6,28 +6,29 @@
 //! similar human-readable names and provide a failsafe for some of
 //! the probable adversarial scenarios.
 
-use serde::{
-    Deserialize,
-    Serialize,
-    Serializer,
-};
-
-use std::borrow::Borrow;
-use std::convert::TryInto;
-use std::io::Read;
-use std::iter::Iterator;
-use std::mem;
-
 pub use pyth_sdk::{
     Identifier,
     PriceStatus,
     UnixTimestamp,
 };
-
 #[cfg(feature = "solana")]
 use solitaire::{
     Derive,
     Info,
+};
+use {
+    serde::{
+        Deserialize,
+        Serialize,
+        Serializer,
+    },
+    std::{
+        borrow::Borrow,
+        convert::TryInto,
+        io::Read,
+        iter::Iterator,
+        mem,
+    },
 };
 
 #[cfg(feature = "wasm")]
@@ -472,8 +473,10 @@ impl PriceAttestation {
 /// using `cargo test -- --nocapture`.
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use pyth_sdk_solana::state::PriceStatus;
+    use {
+        super::*,
+        pyth_sdk_solana::state::PriceStatus,
+    };
 
     fn mock_attestation(prod: Option<[u8; 32]>, price: Option<[u8; 32]>) -> PriceAttestation {
         let product_id_bytes = prod.unwrap_or([21u8; 32]);
