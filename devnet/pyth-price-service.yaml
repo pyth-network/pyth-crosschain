@@ -45,14 +45,14 @@ spec:
               protocol: TCP
           readinessProbe:
             httpGet:
-              path: '/ready'
+              path: "/ready"
               port: 4200
             initialDelaySeconds: 10
             periodSeconds: 1
             failureThreshold: 1
           livenessProbe:
             httpGet:
-              path: '/live'
+              path: "/live"
               port: 4200
             initialDelaySeconds: 20
             periodSeconds: 30
@@ -63,12 +63,12 @@ spec:
             - name: SPY_SERVICE_FILTERS
               value: '[{"chain_id":1,"emitter_address":"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b"}]'
             - name: REST_PORT
-              value: '4200'
+              value: "4200"
             - name: PROM_PORT
-              value: '8081'
+              value: "8081"
             - name: READINESS_SPY_SYNC_TIME_SECONDS
-              value: '5'
+              value: "5"
             - name: READINESS_NUM_LOADED_SYMBOLS
-              value: '6'
+              value: "6"
             - name: LOG_LEVEL
               value: debug

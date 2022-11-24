@@ -97,7 +97,10 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
 
         assertEq(vm.timestamp, 112);
         assertEq(vm.emitterChainId, 7);
-        assertEq(vm.emitterAddress, 0x0000000000000000000000000000000000000000000000000000000000000bad);
+        assertEq(
+            vm.emitterAddress,
+            0x0000000000000000000000000000000000000000000000000000000000000bad
+        );
         assertEq(vm.payload, hex"deadbeaf");
         assertEq(vm.signatures.length, 4);
     }

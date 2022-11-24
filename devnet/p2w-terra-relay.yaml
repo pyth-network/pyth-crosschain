@@ -45,7 +45,7 @@ spec:
               protocol: TCP
           readinessProbe:
             httpGet:
-              path: '/health'
+              path: "/health"
               port: 4200
           command:
             - node
@@ -71,18 +71,18 @@ spec:
             - name: TERRA_COIN
               value: uluna
             - name: REST_PORT
-              value: '4200'
+              value: "4200"
             - name: PROM_PORT
-              value: '8081'
+              value: "8081"
             - name: BAL_QUERY_INTERVAL
-              value: '60000'
+              value: "60000"
             - name: RETRY_MAX_ATTEMPTS
-              value: '6'
+              value: "6"
             - name: RETRY_DELAY_IN_MS
-              value: '1000'
+              value: "1000"
             - name: MAX_MSGS_PER_BATCH
-              value: '1'
+              value: "1"
             - name: MAX_HEALTHY_NO_RELAY_DURATION_IN_SECONDS
-              value: '120'
+              value: "120"
             - name: LOG_LEVEL
               value: debug

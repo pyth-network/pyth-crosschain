@@ -19,7 +19,8 @@ const APT_USD_TESTNET_PRICE_ID =
   "0x44a93dddd8effa54ea51076c4e851b6cbbfd938e82eb90197de38fe8876bb66e";
 
 // Aptos modules : These are testnet addresses https://docs.pyth.network/consume-data/aptos#addresses
-const MINT_NFT_MODULE = "0x19f8503273cdb5aa93ffe4539277684615242127aa2e65ef91424136a316c9c7";
+const MINT_NFT_MODULE =
+  "0x19f8503273cdb5aa93ffe4539277684615242127aa2e65ef91424136a316c9c7";
 
 /// React component that shows the offchain price and confidence interval
 function PriceText(props: { price: Price | undefined }) {

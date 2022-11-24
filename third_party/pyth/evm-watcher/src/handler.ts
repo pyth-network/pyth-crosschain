@@ -2,7 +2,7 @@ import { UpdatePriceFeedsAggregateInfo } from "./events";
 import { Watcher } from "./watcher";
 
 export class Handler {
-  private watchers: Watcher[]; 
+  private watchers: Watcher[];
 
   constructor() {
     this.watchers = [];

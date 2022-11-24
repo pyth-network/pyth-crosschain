@@ -26,7 +26,7 @@ module pyth::deserialize {
 
     public fun deserialize_i32(cur: &mut Cursor<u8>): I64 {
         let deserialized = deserialize_u32(cur);
-        
+
         // If negative, pad the value
         let negative = (deserialized >> 31) == 1;
         if (negative) {
@@ -49,7 +49,7 @@ module pyth::deserialize {
     fun test_deserialize_u8() {
         let input = x"48258963";
         let cursor = cursor::init(input);
-        
+
         let result = deserialize_u8(&mut cursor);
         assert!(result == 0x48, 1);
 
@@ -61,7 +61,7 @@ module pyth::deserialize {
     fun test_deserialize_u16() {
         let input = x"48258963";
         let cursor = cursor::init(input);
-        
+
         let result = deserialize_u16(&mut cursor);
         assert!(result == 0x4825, 1);
 
@@ -73,7 +73,7 @@ module pyth::deserialize {
     fun test_deserialize_u32() {
         let input = x"4825896349741695";
         let cursor = cursor::init(input);
-        
+
         let result = deserialize_u32(&mut cursor);
         assert!(result == 0x48258963, 1);
 
@@ -85,7 +85,7 @@ module pyth::deserialize {
     fun test_deserialize_i32_positive() {
         let input = x"4825896349741695";
         let cursor = cursor::init(input);
-        
+
         let result = deserialize_i32(&mut cursor);
         assert!(result == i64::from_u64(0x48258963), 1);
 
@@ -97,7 +97,7 @@ module pyth::deserialize {
     fun test_deserialize_i32_negative() {
         let input = x"FFFFFDC349741695";
         let cursor = cursor::init(input);
-        
+
         let result = deserialize_i32(&mut cursor);
         assert!(result == i64::from_u64(0xFFFFFFFFFFFFFDC3), 1);
 
@@ -109,7 +109,7 @@ module pyth::deserialize {
     fun test_deserialize_u64() {
         let input = x"48258963497416957497253486";
         let cursor = cursor::init(input);
-        
+
         let result = deserialize_u64(&mut cursor);
         assert!(result == 0x4825896349741695, 1);
 
@@ -121,7 +121,7 @@ module pyth::deserialize {
     fun test_deserialize_i64_positive() {
         let input = x"48258963497416957497253486";
         let cursor = cursor::init(input);
-        
+
         let result = deserialize_i64(&mut cursor);
         assert!(result == i64::from_u64(0x4825896349741695), 1);
 
@@ -133,7 +133,7 @@ module pyth::deserialize {
     fun test_deserialize_i64_negative() {
         let input = x"FFFFFFFFFFFFFDC37497253486";
         let cursor = cursor::init(input);
-        
+
         let result = deserialize_i64(&mut cursor);
         assert!(result == i64::from_u64(0xFFFFFFFFFFFFFDC3), 1);
 

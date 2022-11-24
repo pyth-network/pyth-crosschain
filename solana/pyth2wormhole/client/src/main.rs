@@ -10,11 +10,9 @@ use std::{
 };
 
 use clap::Parser;
-use futures::{
-    future::{
-        Future,
-        TryFutureExt,
-    },
+use futures::future::{
+    Future,
+    TryFutureExt,
 };
 use generic_array::GenericArray;
 use log::{
@@ -24,7 +22,10 @@ use log::{
     warn,
     LevelFilter,
 };
-use sha3::{Digest, Sha3_256};
+use sha3::{
+    Digest,
+    Sha3_256,
+};
 use solana_client::{
     nonblocking::rpc_client::RpcClient,
     rpc_config::RpcTransactionConfig,
@@ -32,9 +33,7 @@ use solana_client::{
 use solana_program::pubkey::Pubkey;
 use solana_sdk::{
     commitment_config::CommitmentConfig,
-    signature::{
-        read_keypair_file,
-    },
+    signature::read_keypair_file,
     signer::keypair::Keypair,
 };
 use solana_transaction_status::UiTransactionEncoding;
@@ -204,13 +203,7 @@ async fn main() -> Result<(), ErrBox> {
             ));
 
             if daemon {
-                handle_attest_daemon_mode(
-                    rpc_cfg,
-                    payer,
-                    p2w_addr,
-                    attestation_cfg,
-                )
-                .await?;
+                handle_attest_daemon_mode(rpc_cfg, payer, p2w_addr, attestation_cfg).await?;
             } else {
                 handle_attest_non_daemon_mode(
                     attestation_cfg,
@@ -326,7 +319,7 @@ async fn handle_attest_daemon_mode(
                     &rpc_cfg,
                     &p2w_addr,
                     &payer,
-                    message_q_mtx.clone()
+                    message_q_mtx.clone(),
                 ));
 
                 // Quit old sched futures
@@ -344,7 +337,7 @@ async fn handle_attest_daemon_mode(
                     &rpc_cfg,
                     &p2w_addr,
                     &payer,
-                    message_q_mtx.clone()
+                    message_q_mtx.clone(),
                 )),
                 new_cfg_hash,
             ));
@@ -358,7 +351,7 @@ async fn handle_attest_daemon_mode(
 
         if remaining == Duration::from_secs(0) {
             warn!(
-                "Processing took more than desired mapping lookup interval of {} seconds, not sleeping. Consider increasing {}", 
+                "Processing took more than desired mapping lookup interval of {} seconds, not sleeping. Consider increasing {}",
                 target.as_secs(),
                 // stringify prints the up-to-date setting name automatically
                 stringify!(attestation_cfg.mapping_reload_interval_mins)
@@ -497,7 +490,6 @@ fn prepare_attestation_sched_jobs(
     let batches: Vec<_> = attestation_cfg.as_batches(p2w_cfg.max_batch_size as usize);
 
     let batch_count = batches.len();
-
 
     // Create attestation scheduling routines; see attestation_sched_job() for details
     let attestation_sched_futs = batches.into_iter().enumerate().map(|(idx, batch)| {

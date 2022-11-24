@@ -9,19 +9,20 @@ Run the following command to install required dependencies for the contract:
 ```
 # xc-governance-sdk-js is a local dependency that should be built
 # it is used in deployment (truffle migrations) to generate/sanity check
-# the governance VAAs 
+# the governance VAAs
 pushd third_party/pyth/xc-governance-sdk-js && npm ci && popd
 npm ci
 ```
 
 ## Deployment
+
 Please refer to [Deploying.md](./Deploying.md) for more information.
 
 ## Foundry
 
 Foundry can be installed by the official installer, or by running our helper script which will automatically pull the correct installation script individually for Foundry and the Solidity compiler for your current OS. This may work better if you are running into networking/firewall issues using Foundry's Solidity installer. To use helper script, run the command below from this directory:
 
-``` sh
+```sh
 pyth-crosschain/ethereum $ bash ../scripts/install-foundry.sh
 ```
 

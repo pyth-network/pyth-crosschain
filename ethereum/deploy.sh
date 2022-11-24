@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # This script deploys changes to given networks. Usage:
-# $ ./deploy.sh <network_a> <network_a> <...> 
+# $ ./deploy.sh <network_a> <network_a> <...>
 # Network names are defined in `truffle-config.js`.
 #
 # Example: Deploying to some testnet networks

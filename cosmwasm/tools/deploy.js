@@ -1,13 +1,10 @@
-// Deploy Wormhole and Pyth contract to Tilt. If you want to 
+// Deploy Wormhole and Pyth contract to Tilt. If you want to
 // test the contracts locally you need to build the wormhole contract
 // as well. You can use Dockerfile.cosmwasm in the root of this repo
 // to do that.
 
 import { LCDClient, MnemonicKey } from "@terra-money/terra.js";
-import {
-  MsgInstantiateContract,
-  MsgStoreCode,
-} from "@terra-money/terra.js";
+import { MsgInstantiateContract, MsgStoreCode } from "@terra-money/terra.js";
 import { readFileSync, readdirSync } from "fs";
 import { Bech32, toHex } from "@cosmjs/encoding";
 import { zeroPad } from "ethers/lib/utils.js";
@@ -17,10 +14,7 @@ import { zeroPad } from "ethers/lib/utils.js";
   contracts must be imported in a deterministic order so their addresses remain
   deterministic.
 */
-const artifacts = [
-  "wormhole.wasm",
-  "pyth_cosmwasm.wasm",
-];
+const artifacts = ["wormhole.wasm", "pyth_cosmwasm.wasm"];
 
 /* Check that the artifact folder contains all the wasm files we expect and nothing else */
 
@@ -133,7 +127,11 @@ async function instantiate(contract, inst_msg, label) {
     .then((rs) => {
       address = /"_contract_address","value":"([^"]+)/gm.exec(rs.raw_log)[1];
     });
-  console.log(`Instantiated ${contract} at ${address} (${convert_terra_address_to_hex(address)})`);
+  console.log(
+    `Instantiated ${contract} at ${address} (${convert_terra_address_to_hex(
+      address
+    )})`
+  );
   return address;
 }
 
@@ -142,36 +140,42 @@ async function instantiate(contract, inst_msg, label) {
 
 const addresses = {};
 
-addresses["wormhole.wasm"] = await instantiate("wormhole.wasm", {
-  gov_chain: govChain,
-  gov_address: Buffer.from(govAddress, "hex").toString("base64"),
-  guardian_set_expirity: 86400,
-  initial_guardian_set: {
-    addresses: [
-      {
-        bytes: Buffer.from(
-          "beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe",
-          "hex"
-        ).toString("base64"),
-      },
-    ],
-    expiration_time: 0,
+addresses["wormhole.wasm"] = await instantiate(
+  "wormhole.wasm",
+  {
+    gov_chain: govChain,
+    gov_address: Buffer.from(govAddress, "hex").toString("base64"),
+    guardian_set_expirity: 86400,
+    initial_guardian_set: {
+      addresses: [
+        {
+          bytes: Buffer.from(
+            "beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe",
+            "hex"
+          ).toString("base64"),
+        },
+      ],
+      expiration_time: 0,
+    },
+    chain_id: 18,
+    fee_denom: "uluna",
   },
-  chain_id: 18,
-  fee_denom: "uluna",
-}, "wormhole");
+  "wormhole"
+);
 
 const pythEmitterAddress =
   "71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
 const pythChain = 1;
 
-addresses["pyth_cosmwasm.wasm"] = await instantiate("pyth_cosmwasm.wasm", {
-  wormhole_contract: addresses["wormhole.wasm"],
-  pyth_emitter: Buffer.from(pythEmitterAddress, "hex").toString(
-    "base64"
-  ),
-  pyth_emitter_chain: pythChain,
-}, "pyth");
+addresses["pyth_cosmwasm.wasm"] = await instantiate(
+  "pyth_cosmwasm.wasm",
+  {
+    wormhole_contract: addresses["wormhole.wasm"],
+    pyth_emitter: Buffer.from(pythEmitterAddress, "hex").toString("base64"),
+    pyth_emitter_chain: pythChain,
+  },
+  "pyth"
+);
 
 // Terra addresses are "human-readable", but for cross-chain registrations, we
 // want the "canonical" version

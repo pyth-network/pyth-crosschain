@@ -11,24 +11,24 @@ console.log("Set fee vaa: ", setFeeVaa);
 const PythUpgradable = artifacts.require("PythUpgradable");
 
 /**
- * 
+ *
  * This change:
  * - Executes the VAA to set the fee to 1 wei
  */
 module.exports = async function (_deployer) {
-    const proxy = await PythUpgradable.deployed();
+  const proxy = await PythUpgradable.deployed();
 
-    const setFeeInstruction = new governance.SetFeeInstruction(
-        governance.CHAINS.unset, // All the chains
-        BigInt(1),
-        BigInt(0),
-    ).serialize();
+  const setFeeInstruction = new governance.SetFeeInstruction(
+    governance.CHAINS.unset, // All the chains
+    BigInt(1),
+    BigInt(0)
+  ).serialize();
 
-    console.log("SetFeeInstruction: 0x", setFeeInstruction.toString('hex'));
+  console.log("SetFeeInstruction: 0x", setFeeInstruction.toString("hex"));
 
-    assertVaaPayloadEquals(setFeeVaa, setFeeInstruction);
+  assertVaaPayloadEquals(setFeeVaa, setFeeInstruction);
 
-    await proxy.executeGovernanceInstruction(setFeeVaa);
+  await proxy.executeGovernanceInstruction(setFeeVaa);
 
-    assert.equal((await proxy.singleUpdateFeeInWei()).toString(), "1");
-}
+  assert.equal((await proxy.singleUpdateFeeInWei()).toString(), "1");
+};

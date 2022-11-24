@@ -175,11 +175,7 @@ export class TerraRelay implements Relay {
   }
 
   async query(priceId: PriceId) {
-    logger.info(
-      "Querying terra for price info for priceId [" +
-        priceId +
-        "]"
-    );
+    logger.info("Querying terra for price info for priceId [" + priceId + "]");
 
     const lcdClient = new LCDClient(this.lcdConfig);
 

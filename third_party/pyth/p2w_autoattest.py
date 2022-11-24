@@ -314,7 +314,7 @@ while True:
     # Keep listening for seqnos until the program exits
     while p2w_client_process.poll() is None:
         line = p2w_client_process.stdout.readline()
-        
+
         # Always pass output to the debug level
         logging.debug(f"pyth2wormhole-client: {line}")
 
@@ -326,7 +326,7 @@ while True:
         # trim back to specified maximum
         if len(saved_log_lines) > P2W_MAX_LOG_LINES:
             saved_log_lines.pop(0)
-        
+
 
     # Yell if the supposedly non-stop attestation process exits
     logging.warn(f"pyth2wormhole-client stopped unexpectedly with code {p2w_client_process.retcode}")

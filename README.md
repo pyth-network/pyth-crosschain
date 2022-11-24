@@ -6,13 +6,13 @@ Pyth2Wormhole. The base repository is a fork from Certus One's reference
 for building projects based on Wormhole's various SDKs. Much of the existing
 documentation from there will also apply to this repository.
 
-[Wormhole]: https://github.com/wormhole-foundation/wormhole
+[wormhole]: https://github.com/wormhole-foundation/wormhole
 
 Within this monorepo you will find the following subprojects:
 
 ## Pyth2Wormhole Solana
->  solana/pyth2wormhole
 
+> solana/pyth2wormhole
 
 The main Pyth implementation currently exists as an [on-chain contract][] on
 Solana. In order to expose these prices cross-chain, the Pyth2Wormhole Solana
@@ -24,7 +24,8 @@ various P2W receiver contracts.
 [on-chain contract]: https://github.com/pyth-network/pyth-client
 
 ## Pyth2Wormhole Ethereum
->  ethereum/contracts/pyth
+
+> ethereum/contracts/pyth
 
 The Ethereum P2W contract acts as a receiver for Pyth prices relayed from the
 P2W Solana contract. It also provides a public API for other Ethereum contracts
@@ -35,7 +36,8 @@ examples.
 [pyth-evm-sdk]: https://github.com/pyth-network/pyth-sdk-solidity
 
 ## Pyth2Wormhole Price Service
->  third_party/pyth
+
+> third_party/pyth
 
 The P2W Price Service is an off-chain service which constantly observes the
 Wormhole network watching for price attestations emitted from the Pyth Solana
@@ -48,7 +50,7 @@ the [pyth-js][] repository.
 
 [pyth-js]: https://github.com/pyth-network/pyth-js
 
---------------------------------------------------------------------------------
+---
 
 See [DEVELOP.md](DEVELOP.md) for instructions on how to set up a local devnet, and
 [CONTRIBUTING.md](CONTRIBUTING.md) for instructions on how to contribute to this project.
@@ -60,3 +62,15 @@ implied. See the License for the specific language governing permissions and lim
 spoken - this is a very complex piece of software which targets a bleeding-edge, experimental smart contract runtime.
 Mistakes happen, and no matter how hard you try and whether you pay someone to audit it, it may eat your tokens, set
 your printer on fire or startle your cat. Cryptocurrencies are a high-risk investment, no matter how fancy.
+
+## Development
+
+### Releases
+
+We use [Semantic Versioning](https://semver.org/) for our releases.
+
+### pre-commit hooks
+
+pre-commit is a tool that checks and fixes simple issues (formatting, ...) before each commit. You can install it by following [their website](https://pre-commit.com/). In order to enable checks for this repo run `pre-commit install` from command-line in the root of this repo.
+
+The checks are also performed in the CI to ensure the code follows consistent formatting.

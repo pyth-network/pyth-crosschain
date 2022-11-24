@@ -18,12 +18,13 @@ contract ReceiverGovernanceStructs {
         bytes32 module;
         uint8 action;
         uint16 chain;
-
         ReceiverStructs.GuardianSet newGuardianSet;
         uint32 newGuardianSetIndex;
     }
 
-    function parseGuardianSetUpgrade(bytes memory encodedUpgrade) public pure returns (GuardianSetUpgrade memory gsu) {
+    function parseGuardianSetUpgrade(
+        bytes memory encodedUpgrade
+    ) public pure returns (GuardianSetUpgrade memory gsu) {
         uint index = 0;
 
         gsu.module = encodedUpgrade.toBytes32(index);
@@ -44,16 +45,15 @@ contract ReceiverGovernanceStructs {
         index += 1;
 
         gsu.newGuardianSet = ReceiverStructs.GuardianSet({
-            keys : new address[](guardianLength),
-            expirationTime : 0
+            keys: new address[](guardianLength),
+            expirationTime: 0
         });
 
-        for(uint i = 0; i < guardianLength; i++) {
+        for (uint i = 0; i < guardianLength; i++) {
             gsu.newGuardianSet.keys[i] = encodedUpgrade.toAddress(index);
             index += 20;
         }
 
         require(encodedUpgrade.length == index, "invalid GuardianSetUpgrade");
     }
-
 }

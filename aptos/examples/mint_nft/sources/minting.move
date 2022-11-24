@@ -17,7 +17,7 @@ module mint_nft::minting {
     use aptos_token::token::{Self, TokenDataId};
 
     // For the entire list of price_ids head to https://pyth.network/developers/price-feed-ids/#pyth-cross-chain-testnet
-    const APTOS_USD_PRICE_FEED_IDENTIFIER : vector<u8> = x"44a93dddd8effa54ea51076c4e851b6cbbfd938e82eb90197de38fe8876bb66e"; 
+    const APTOS_USD_PRICE_FEED_IDENTIFIER : vector<u8> = x"44a93dddd8effa54ea51076c4e851b6cbbfd938e82eb90197de38fe8876bb66e";
 
     // This event stores the receiver of the NFT and the TokenDataId of the NFT
     struct TokenMintingEvent has drop, store {
@@ -82,7 +82,7 @@ module mint_nft::minting {
     /// Mint an edition of the Pythian NFT pay 1 USD in native APT
     public entry fun mint_nft(receiver : &signer, vaas : vector<vector<u8>>) acquires CollectionTokenMinter{
         // Fetch the signer capability to mint the NFT
-        let collection_token_minter = borrow_global_mut<CollectionTokenMinter>(@mint_nft); 
+        let collection_token_minter = borrow_global_mut<CollectionTokenMinter>(@mint_nft);
         let resource_signer = account::create_signer_with_capability(&collection_token_minter.signer_cap);
 
         let token_id = token::mint_token(&resource_signer, collection_token_minter.token_data_id, 1); // Mint the NFT
@@ -101,7 +101,7 @@ module mint_nft::minting {
     fun update_and_fetch_price(receiver : &signer,  vaas : vector<vector<u8>>) : Price {
             let coins = coin::withdraw<aptos_coin::AptosCoin>(receiver, pyth::get_update_fee(&vaas)); // Get coins to pay for the update
             pyth::update_price_feeds(vaas, coins); // Update price feed with the provided vaas
-            pyth::get_price(price_identifier::from_byte_vec(APTOS_USD_PRICE_FEED_IDENTIFIER)) // Get recent price (will fail if price is too old)   
+            pyth::get_price(price_identifier::from_byte_vec(APTOS_USD_PRICE_FEED_IDENTIFIER)) // Get recent price (will fail if price is too old)
 
     }
 }

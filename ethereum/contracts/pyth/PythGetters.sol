@@ -14,34 +14,56 @@ contract PythGetters is PythState {
     }
 
     /// Deprecated, use `validDataSources` instead
-    function pyth2WormholeChainId() public view returns (uint16){
+    function pyth2WormholeChainId() public view returns (uint16) {
         return _state._deprecatedPyth2WormholeChainId;
     }
 
     /// Deprecated, use `validDataSources` instead
-    function pyth2WormholeEmitter() public view returns (bytes32){
+    function pyth2WormholeEmitter() public view returns (bytes32) {
         return _state._deprecatedPyth2WormholeEmitter;
     }
 
-    function latestPriceInfo(bytes32 priceId) internal view returns (PythInternalStructs.PriceInfo memory info){
+    function latestPriceInfo(
+        bytes32 priceId
+    ) internal view returns (PythInternalStructs.PriceInfo memory info) {
         return _state.latestPriceInfo[priceId];
     }
 
-    function latestPriceInfoPublishTime(bytes32 priceId) public view returns (uint64) {
+    function latestPriceInfoPublishTime(
+        bytes32 priceId
+    ) public view returns (uint64) {
         return _state.latestPriceInfo[priceId].publishTime;
     }
 
-    function hashDataSource(PythInternalStructs.DataSource memory ds) public pure returns (bytes32) {
+    function hashDataSource(
+        PythInternalStructs.DataSource memory ds
+    ) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(ds.chainId, ds.emitterAddress));
     }
 
-    function isValidDataSource(uint16 dataSourceChainId, bytes32 dataSourceEmitterAddress) public view returns (bool) {
-        return _state.isValidDataSource[keccak256(abi.encodePacked(dataSourceChainId, dataSourceEmitterAddress))];
+    function isValidDataSource(
+        uint16 dataSourceChainId,
+        bytes32 dataSourceEmitterAddress
+    ) public view returns (bool) {
+        return
+            _state.isValidDataSource[
+                keccak256(
+                    abi.encodePacked(
+                        dataSourceChainId,
+                        dataSourceEmitterAddress
+                    )
+                )
+            ];
     }
 
-    function isValidGovernanceDataSource(uint16 governanceChainId, bytes32 governanceEmitterAddress) public view returns (bool) {
-        return _state.governanceDataSource.chainId == governanceChainId &&
-            _state.governanceDataSource.emitterAddress == governanceEmitterAddress;
+    function isValidGovernanceDataSource(
+        uint16 governanceChainId,
+        bytes32 governanceEmitterAddress
+    ) public view returns (bool) {
+        return
+            _state.governanceDataSource.chainId == governanceChainId &&
+            _state.governanceDataSource.emitterAddress ==
+            governanceEmitterAddress;
     }
 
     function chainId() public view returns (uint16) {
@@ -52,11 +74,19 @@ contract PythGetters is PythState {
         return _state.lastExecutedGovernanceSequence;
     }
 
-    function validDataSources() public view returns (PythInternalStructs.DataSource[] memory) {
+    function validDataSources()
+        public
+        view
+        returns (PythInternalStructs.DataSource[] memory)
+    {
         return _state.validDataSources;
     }
 
-    function governanceDataSource() public view returns (PythInternalStructs.DataSource memory) {
+    function governanceDataSource()
+        public
+        view
+        returns (PythInternalStructs.DataSource memory)
+    {
         return _state.governanceDataSource;
     }
 

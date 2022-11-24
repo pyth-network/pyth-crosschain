@@ -14,7 +14,10 @@ import {
   subscribeSignedVAA,
 } from "@certusone/wormhole-spydk";
 
-import { parseBatchPriceAttestation, getBatchSummary } from "@pythnetwork/p2w-sdk-js";
+import {
+  parseBatchPriceAttestation,
+  getBatchSummary,
+} from "@pythnetwork/p2w-sdk-js";
 
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 
@@ -153,7 +156,7 @@ async function processVaa(vaaBytes: string) {
   let batchAttestation;
 
   try {
-      batchAttestation = await parseBatchPriceAttestation(
+    batchAttestation = await parseBatchPriceAttestation(
       Buffer.from(parsedVAA.payload)
     );
   } catch (e: any) {

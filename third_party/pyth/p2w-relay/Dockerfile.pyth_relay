@@ -29,7 +29,7 @@ RUN npm ci && npm run build && npm cache clean --force
 # Add the code and compile
 ARG P2W_RELAY_REL_PATH=third_party/pyth/p2w-relay
 
-WORKDIR ${P2W_BASE_PATH}/${P2W_RELAY_REL_PATH} 
+WORKDIR ${P2W_BASE_PATH}/${P2W_RELAY_REL_PATH}
 ADD --chown=pyth:pyth ${P2W_RELAY_REL_PATH} .
 
 RUN npm ci && npm run build && npm cache clean --force

@@ -41,5 +41,5 @@ module pyth::set {
     }
 
     // TODO: destroy_empty, but this is tricky because std::table doesn't
-    // have this functionality. 
+    // have this functionality.
 }

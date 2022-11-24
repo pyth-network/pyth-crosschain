@@ -48,7 +48,7 @@ export class BufferBuilder {
   }
 
   build(): Buffer {
-    const totalLength = this.items.reduce((prev, cur) => (prev + cur.length), 0);
+    const totalLength = this.items.reduce((prev, cur) => prev + cur.length, 0);
 
     const result = Buffer.alloc(totalLength);
 

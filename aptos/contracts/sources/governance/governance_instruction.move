@@ -20,7 +20,7 @@ module pyth::governance_instruction {
         let target_chain_id = instruction.target_chain_id;
         assert!(target_chain_id == u16::to_u64(wormhole::state::get_chain_id()) || target_chain_id == 0, error::invalid_governance_target_chain_id());
     }
- 
+
     public fun from_byte_vec(bytes: vector<u8>): GovernanceInstruction {
         let cursor = cursor::init(bytes);
         let magic = deserialize::deserialize_vector(&mut cursor, 4);

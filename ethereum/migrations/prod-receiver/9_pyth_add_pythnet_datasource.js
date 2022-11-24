@@ -14,9 +14,6 @@ console.log("pythnetChainId: " + pythnetChainId);
  * - Adds PythNet data source.
  */
 module.exports = async function (_deployer) {
-    const proxy = await PythUpgradable.deployed();
-    await proxy.addDataSource(
-        pythnetChainId,
-        pythnetEmitter,
-    );
-}
+  const proxy = await PythUpgradable.deployed();
+  await proxy.addDataSource(pythnetChainId, pythnetEmitter);
+};

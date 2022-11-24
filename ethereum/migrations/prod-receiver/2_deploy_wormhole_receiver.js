@@ -1,7 +1,7 @@
 const loadEnv = require("../../scripts/loadEnv");
 loadEnv("../../");
 
-const tdr = require('truffle-deploy-registry');
+const tdr = require("truffle-deploy-registry");
 
 const ReceiverSetup = artifacts.require("ReceiverSetup");
 const ReceiverImplementation = artifacts.require("ReceiverImplementation");
@@ -31,7 +31,11 @@ module.exports = async function (deployer, network) {
     .encodeABI();
 
   // deploy proxy
-  const wormholeReceiver = await deployer.deploy(WormholeReceiver, ReceiverSetup.address, initData);
+  const wormholeReceiver = await deployer.deploy(
+    WormholeReceiver,
+    ReceiverSetup.address,
+    initData
+  );
 
   if (!tdr.isDryRunNetworkName(network)) {
     await tdr.appendInstance(wormholeReceiver);

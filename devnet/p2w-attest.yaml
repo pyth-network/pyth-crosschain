@@ -38,10 +38,10 @@ spec:
             - python3
             - /usr/src/pyth/p2w_autoattest.py
           env:
-          - name: P2W_INITIALIZE_SOL_CONTRACT
-            value: "1"
-          - name: P2W_EXIT_ON_ERROR
-            value: "true"
+            - name: P2W_INITIALIZE_SOL_CONTRACT
+              value: "1"
+            - name: P2W_EXIT_ON_ERROR
+              value: "true"
           tty: true
           readinessProbe:
             tcpSocket:
