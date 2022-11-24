@@ -8,7 +8,7 @@ ARG WORMHOLE_TAG=v2.8.9
 RUN apt-get update && apt-get install -yq libudev-dev ncat
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs
 
-COPY solana /usr/src/solana 
+COPY solana /usr/src/solana
 WORKDIR /usr/src/solana/pyth2wormhole
 
 RUN --mount=type=cache,target=/root/.cache \

@@ -1,4 +1,3 @@
-
 // contracts/PythDeprecatedStructs.sol
 // SPDX-License-Identifier: Apache 2
 
@@ -20,7 +19,7 @@ contract PythDeprecatedStructs {
     }
 
     struct DeprecatedPriceFeedV1 {
-                // The price ID.
+        // The price ID.
         bytes32 id;
         // Product account key.
         bytes32 productId;
@@ -78,7 +77,6 @@ contract PythDeprecatedStructs {
         // Latest available exponentially-weighted moving average price
         DeprecatedPriceV2 emaPrice;
     }
-
 
     struct DeprecatedPriceInfoV2 {
         uint256 attestationTime;

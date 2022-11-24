@@ -11,7 +11,6 @@ import "./PythInternalStructs.sol";
  * for Pyth governance instructions.
  */
 contract PythGovernanceInstructions {
-
     using BytesLib for bytes;
 
     // Magic is `PTGM` encoded as a 4 byte data: Pyth Governance Message
@@ -70,7 +69,9 @@ contract PythGovernanceInstructions {
     }
 
     /// @dev Parse a GovernanceInstruction
-    function parseGovernanceInstruction(bytes memory encodedInstruction) public pure returns (GovernanceInstruction memory gi) {
+    function parseGovernanceInstruction(
+        bytes memory encodedInstruction
+    ) public pure returns (GovernanceInstruction memory gi) {
         uint index = 0;
 
         uint32 magic = encodedInstruction.toUint32(index);
@@ -81,7 +82,10 @@ contract PythGovernanceInstructions {
         gi.module = GovernanceModule(modNumber);
         index += 1;
 
-        require(gi.module == MODULE, "invalid module for GovernanceInstruction");
+        require(
+            gi.module == MODULE,
+            "invalid module for GovernanceInstruction"
+        );
 
         uint8 actionNumber = encodedInstruction.toUint8(index);
         gi.action = GovernanceAction(actionNumber);
@@ -93,46 +97,71 @@ contract PythGovernanceInstructions {
         // As solidity performs math operations in a checked mode
         // if the length of the encoded instruction be smaller than index
         // it will revert. So we don't need any extra check.
-        gi.payload = encodedInstruction.slice(index, encodedInstruction.length - index);
+        gi.payload = encodedInstruction.slice(
+            index,
+            encodedInstruction.length - index
+        );
     }
 
     /// @dev Parse a UpgradeContractPayload (action 1) with minimal validation
-    function parseUpgradeContractPayload(bytes memory encodedPayload) public pure returns (UpgradeContractPayload memory uc) {
+    function parseUpgradeContractPayload(
+        bytes memory encodedPayload
+    ) public pure returns (UpgradeContractPayload memory uc) {
         uint index = 0;
 
         uc.newImplementation = address(encodedPayload.toAddress(index));
         index += 20;
 
-        require(encodedPayload.length == index, "invalid length for UpgradeContractPayload");
+        require(
+            encodedPayload.length == index,
+            "invalid length for UpgradeContractPayload"
+        );
     }
 
     /// @dev Parse a AuthorizeGovernanceDataSourceTransferPayload (action 2) with minimal validation
-    function parseAuthorizeGovernanceDataSourceTransferPayload(bytes memory encodedPayload) public pure returns (AuthorizeGovernanceDataSourceTransferPayload memory sgds) {
+    function parseAuthorizeGovernanceDataSourceTransferPayload(
+        bytes memory encodedPayload
+    )
+        public
+        pure
+        returns (AuthorizeGovernanceDataSourceTransferPayload memory sgds)
+    {
         sgds.claimVaa = encodedPayload;
     }
 
     /// @dev Parse a AuthorizeGovernanceDataSourceTransferPayload (action 2) with minimal validation
-    function parseRequestGovernanceDataSourceTransferPayload(bytes memory encodedPayload) public pure
-        returns (RequestGovernanceDataSourceTransferPayload memory sgdsClaim) {
-
+    function parseRequestGovernanceDataSourceTransferPayload(
+        bytes memory encodedPayload
+    )
+        public
+        pure
+        returns (RequestGovernanceDataSourceTransferPayload memory sgdsClaim)
+    {
         uint index = 0;
 
         sgdsClaim.governanceDataSourceIndex = encodedPayload.toUint32(index);
         index += 4;
 
-        require(encodedPayload.length == index, "invalid length for RequestGovernanceDataSourceTransferPayload");
+        require(
+            encodedPayload.length == index,
+            "invalid length for RequestGovernanceDataSourceTransferPayload"
+        );
     }
 
     /// @dev Parse a SetDataSourcesPayload (action 3) with minimal validation
-    function parseSetDataSourcesPayload(bytes memory encodedPayload) public pure returns (SetDataSourcesPayload memory sds) {
+    function parseSetDataSourcesPayload(
+        bytes memory encodedPayload
+    ) public pure returns (SetDataSourcesPayload memory sds) {
         uint index = 0;
 
         uint8 dataSourcesLength = encodedPayload.toUint8(index);
         index += 1;
 
-        sds.dataSources = new PythInternalStructs.DataSource[](dataSourcesLength);
+        sds.dataSources = new PythInternalStructs.DataSource[](
+            dataSourcesLength
+        );
 
-        for(uint i = 0; i < dataSourcesLength; i++) {
+        for (uint i = 0; i < dataSourcesLength; i++) {
             sds.dataSources[i].chainId = encodedPayload.toUint16(index);
             index += 2;
 
@@ -140,11 +169,16 @@ contract PythGovernanceInstructions {
             index += 32;
         }
 
-        require(encodedPayload.length == index, "invalid length for SetDataSourcesPayload");
+        require(
+            encodedPayload.length == index,
+            "invalid length for SetDataSourcesPayload"
+        );
     }
 
     /// @dev Parse a SetFeePayload (action 4) with minimal validation
-    function parseSetFeePayload(bytes memory encodedPayload) public pure returns (SetFeePayload memory sf) {
+    function parseSetFeePayload(
+        bytes memory encodedPayload
+    ) public pure returns (SetFeePayload memory sf) {
         uint index = 0;
 
         uint64 val = encodedPayload.toUint64(index);
@@ -153,18 +187,26 @@ contract PythGovernanceInstructions {
         uint64 expo = encodedPayload.toUint64(index);
         index += 8;
 
-        sf.newFee = uint256(val) * uint256(10)**uint256(expo);
+        sf.newFee = uint256(val) * uint256(10) ** uint256(expo);
 
-        require(encodedPayload.length == index, "invalid length for SetFeePayload");
+        require(
+            encodedPayload.length == index,
+            "invalid length for SetFeePayload"
+        );
     }
 
     /// @dev Parse a SetValidPeriodPayload (action 5) with minimal validation
-    function parseSetValidPeriodPayload(bytes memory encodedPayload) public pure returns (SetValidPeriodPayload memory svp) {
+    function parseSetValidPeriodPayload(
+        bytes memory encodedPayload
+    ) public pure returns (SetValidPeriodPayload memory svp) {
         uint index = 0;
 
         svp.newValidPeriod = uint256(encodedPayload.toUint64(index));
         index += 8;
 
-        require(encodedPayload.length == index, "invalid length for SetValidPeriodPayload");
+        require(
+            encodedPayload.length == index,
+            "invalid length for SetValidPeriodPayload"
+        );
     }
 }

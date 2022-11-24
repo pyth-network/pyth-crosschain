@@ -179,8 +179,8 @@ docker_build(
 k8s_yaml_with_ns("./devnet/pyth.yaml")
 
 k8s_resource(
-    "pyth", 
-    resource_deps = ["solana-devnet"], 
+    "pyth",
+    resource_deps = ["solana-devnet"],
     labels = ["pyth"],
     trigger_mode = trigger_mode,
 )

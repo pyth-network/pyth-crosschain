@@ -18,7 +18,10 @@ contract PythSetters is PythState {
         _state.wormhole = payable(wh);
     }
 
-    function setLatestPriceInfo(bytes32 priceId, PythInternalStructs.PriceInfo memory info) internal {
+    function setLatestPriceInfo(
+        bytes32 priceId,
+        PythInternalStructs.PriceInfo memory info
+    ) internal {
         _state.latestPriceInfo[priceId] = info;
     }
 
@@ -30,7 +33,9 @@ contract PythSetters is PythState {
         _state.validTimePeriodSeconds = validTimePeriodSeconds;
     }
 
-    function setGovernanceDataSource(PythInternalStructs.DataSource memory newDataSource) internal {
+    function setGovernanceDataSource(
+        PythInternalStructs.DataSource memory newDataSource
+    ) internal {
         _state.governanceDataSource = newDataSource;
     }
 

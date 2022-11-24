@@ -12,11 +12,14 @@ const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 
 /**
  * Version 1.1.0
- * 
+ *
  * This change:
  * - Use pyth-sdk-solidity 1.0.0 which simplifies the PriceFeed interface
  */
 module.exports = async function (deployer) {
-    const proxy = await PythUpgradable.deployed();
-    await upgradeProxy(proxy.address, PythUpgradable, { deployer, unsafeSkipStorageCheck: true });
-}
+  const proxy = await PythUpgradable.deployed();
+  await upgradeProxy(proxy.address, PythUpgradable, {
+    deployer,
+    unsafeSkipStorageCheck: true,
+  });
+};

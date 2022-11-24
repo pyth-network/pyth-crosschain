@@ -1,6 +1,6 @@
 module pyth::price_status {
     use pyth::error;
-    
+
     /// The price feed is not currently updating for an unknown reason.
     const UNKNOWN: u64 = 0;
     /// The price feed is updating as expected.

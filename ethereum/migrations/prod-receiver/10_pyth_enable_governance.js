@@ -12,12 +12,19 @@ const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 
 /**
  * Version 1.0.0
- * 
+ *
  * This change:
  * - Add Governance coming from the Wormhole to manage the contract.
  */
 module.exports = async function (deployer) {
-    const proxy = await PythUpgradable.deployed();
-    await upgradeProxy(proxy.address, PythUpgradable, { deployer, unsafeSkipStorageCheck: true });
-    await proxy.updateGovernanceDataSource(governanceChainId, governanceEmitter, 0);
-}
+  const proxy = await PythUpgradable.deployed();
+  await upgradeProxy(proxy.address, PythUpgradable, {
+    deployer,
+    unsafeSkipStorageCheck: true,
+  });
+  await proxy.updateGovernanceDataSource(
+    governanceChainId,
+    governanceEmitter,
+    0
+  );
+};

@@ -19,10 +19,8 @@ contract ReceiverSetup is ReceiverSetters, ERC1967Upgrade {
 
         setOwner(msg.sender);
 
-        ReceiverStructs.GuardianSet memory initialGuardianSet = ReceiverStructs.GuardianSet({
-            keys : initialGuardians,
-            expirationTime : 0
-        });
+        ReceiverStructs.GuardianSet memory initialGuardianSet = ReceiverStructs
+            .GuardianSet({keys: initialGuardians, expirationTime: 0});
 
         storeGuardianSet(initialGuardianSet, 0);
         // initial guardian set index is 0, which is the default value of the storage slot anyways

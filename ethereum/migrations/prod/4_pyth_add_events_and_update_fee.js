@@ -12,6 +12,9 @@ const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
  *   the contract activity.
  */
 module.exports = async function (deployer) {
-    const proxy = await PythUpgradable.deployed();
-    await upgradeProxy(proxy.address, PythUpgradable, { deployer, unsafeSkipStorageCheck: true });
-}
+  const proxy = await PythUpgradable.deployed();
+  await upgradeProxy(proxy.address, PythUpgradable, {
+    deployer,
+    unsafeSkipStorageCheck: true,
+  });
+};

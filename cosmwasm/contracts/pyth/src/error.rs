@@ -22,7 +22,7 @@ pub enum PythContractError {
     /// Data source does not exists error (on removing data source)
     #[error("DataSourceDoesNotExists")]
     DataSourceDoesNotExists,
-    
+
     /// Data source already exists error (on adding data source)
     #[error("DataSourceAlreadyExists")]
     DataSourceAlreadyExists,

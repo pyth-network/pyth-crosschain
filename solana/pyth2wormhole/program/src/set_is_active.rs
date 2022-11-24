@@ -34,7 +34,7 @@ pub fn set_is_active(
     new_is_active: bool,
 ) -> SoliResult<()> {
     let cfg_struct: &mut Pyth2WormholeConfig = &mut accs.config; // unpack Data via nested Deref impls
-    match &cfg_struct.ops_owner { 
+    match &cfg_struct.ops_owner {
         None => Err(SolitaireError::InvalidOwner(*accs.ops_owner.info().key)),
         Some(current_ops_owner) => {
             if current_ops_owner != accs.ops_owner.info().key {
@@ -42,13 +42,11 @@ pub fn set_is_active(
                     "Ops owner account mismatch (expected {:?})",
                     current_ops_owner
                 );
-                return Err(SolitaireError::InvalidOwner(
-                    *accs.ops_owner.info().key,
-                ));
+                return Err(SolitaireError::InvalidOwner(*accs.ops_owner.info().key));
             }
-        
+
             cfg_struct.is_active = new_is_active;
-        
+
             Ok(())
         }
     }

@@ -18,6 +18,6 @@ spec:
           image: pyth-evm-watcher
           env:
             - name: WS_ENDPOINT
-              value: 'ws://eth-devnet:8545'
+              value: "ws://eth-devnet:8545"
             - name: PYTH_CONTRACT
-              value: '0xe982E462b094850F12AF94d21D470e21bE9D0E9C'
+              value: "0xe982E462b094850F12AF94d21D470e21bE9D0E9C"

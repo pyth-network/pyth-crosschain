@@ -287,7 +287,7 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
             //   updated yet.
             // - If a price has arrived very late to this chain it will set the status to unknown.
             // - If a price is coming from future it's tolerated up to VALID_TIME_PERIOD seconds
-            //   (using abs diff) but more than that is set to unknown, the reason could be the 
+            //   (using abs diff) but more than that is set to unknown, the reason could be the
             //   clock time drift between the source and target chains.
             let time_abs_diff = if env_time_sec > price_pub_time_sec {
                 env_time_sec - price_pub_time_sec

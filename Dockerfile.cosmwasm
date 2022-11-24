@@ -20,7 +20,7 @@ FROM cosmwasm/workspace-optimizer:0.12.6@sha256:e6565a5e87c830ef3e8775a9035006b3
 COPY cosmwasm/Cargo.lock /code/
 COPY cosmwasm/Cargo.toml /code/
 COPY cosmwasm/contracts /code/contracts
-COPY third_party/pyth/p2w-sdk/rust /third_party/pyth/p2w-sdk/rust 
+COPY third_party/pyth/p2w-sdk/rust /third_party/pyth/p2w-sdk/rust
 RUN --mount=type=cache,target=/code/target,id=cosmwasm_pyth_target --mount=type=cache,target=/usr/local/cargo/registry optimize_workspace.sh
 
 # Contract deployment stage

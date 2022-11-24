@@ -70,10 +70,11 @@ module.exports = {
       gasPrice: 5500000000,
     },
     bnb_testnet: {
-      provider: () => new HDWalletProvider(
-        process.env.MNEMONIC,
-        "https://data-seed-prebsc-1-s1.binance.org:8545"
-      ),
+      provider: () =>
+        new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://data-seed-prebsc-1-s1.binance.org:8545"
+        ),
       network_id: "97",
       confirmations: 10,
       networkCheckTimeout: 1000000,
@@ -95,7 +96,8 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://polygon-testnet-rpc.allthatnode.com:8545")
+          "https://polygon-testnet-rpc.allthatnode.com:8545"
+        );
       },
       network_id: "80001",
     },
@@ -111,10 +113,11 @@ module.exports = {
       gasPrice: 30000000000,
     },
     fuji: {
-      provider: () => new HDWalletProvider(
-        process.env.MNEMONIC,
-        "https://api.avax-test.network/ext/bc/C/rpc"
-      ),
+      provider: () =>
+        new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://api.avax-test.network/ext/bc/C/rpc"
+        ),
       network_id: "43113",
     },
     oasis: {
@@ -146,7 +149,7 @@ module.exports = {
         return new HDWalletProvider(
           process.env.MNEMONIC,
           "https://testnet.aurora.dev"
-        )
+        );
       },
       network_id: 0x4e454153,
       gas: 10000000,
@@ -165,10 +168,7 @@ module.exports = {
     },
     optimism: {
       provider: () => {
-        return new HDWalletProvider(
-          process.env.MNEMONIC,
-          "https://1rpc.io/op"
-        );
+        return new HDWalletProvider(process.env.MNEMONIC, "https://1rpc.io/op");
       },
       network_id: 10,
     },
@@ -186,7 +186,7 @@ module.exports = {
         return new HDWalletProvider(
           process.env.MNEMONIC,
           "https://rpc.ftm.tools/"
-        )
+        );
       },
       network_id: 250,
       gas: 8000000,
@@ -198,7 +198,7 @@ module.exports = {
         return new HDWalletProvider(
           process.env.MNEMONIC,
           "https://rpc.testnet.fantom.network/"
-        )
+        );
       },
       network_id: 0xfa2,
       gas: 8000000,
@@ -209,16 +209,16 @@ module.exports = {
         return new HDWalletProvider(
           process.env.MNEMONIC,
           "https://forno.celo.org"
-        )
+        );
       },
       network_id: 42220,
-    },    
+    },
     celo_alfajores_testnet: {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
           "https://alfajores-forno.celo-testnet.org"
-        )
+        );
       },
       network_id: 44787,
     },

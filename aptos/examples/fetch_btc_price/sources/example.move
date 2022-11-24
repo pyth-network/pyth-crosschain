@@ -3,11 +3,11 @@ module example::example {
     use pyth::price::Price;
     use pyth::price_identifier;
     use aptos_framework::coin;
-    
-    /// Updates the Pyth price feeds using the given pyth_update_data, and then returns 
+
+    /// Updates the Pyth price feeds using the given pyth_update_data, and then returns
     /// the BTC/USD price.
-    /// 
-    /// https://github.com/pyth-network/pyth-js/tree/main/pyth-aptos-js should be used to 
+    ///
+    /// https://github.com/pyth-network/pyth-js/tree/main/pyth-aptos-js should be used to
     /// fetch the pyth_update_data off-chain and pass it in. More information about how this
     /// works can be found at https://docs.pyth.network/consume-data
     public fun get_btc_usd_price(user: &signer, pyth_update_data: vector<vector<u8>>): Price {

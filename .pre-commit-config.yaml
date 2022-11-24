@@ -3,19 +3,36 @@ repos:
     rev: v3.2.0
     hooks:
       - id: trailing-whitespace
-        files: pythnet/
       - id: end-of-file-fixer
-        files: pythnet/
       - id: check-added-large-files
+  # Hook to format many type of files in the repo
+  # including solidity contracts.
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: "v2.7.1"
+    hooks:
+      - id: prettier
+        additional_dependencies:
+          - "prettier@2.7.1"
+          - "prettier-plugin-solidity@1.0.0-rc.1"
   - repo: local
     hooks:
+      # Hooks for the remote executor
       - id: cargo-fmt-executor
         name: Cargo format executor
         language: "rust"
         entry: cargo +nightly fmt --manifest-path ./pythnet/remote-executor/Cargo.toml --all
         pass_filenames: false
+        files: pythnet/remote-executor/
       - id: cargo-clippy-executor
         name: Cargo clippy executor
         language: "rust"
         entry: cargo +nightly clippy --manifest-path ./pythnet/remote-executor/Cargo.toml -- -D warnings
         pass_filenames: false
+        files: pythnet/remote-executor/
+      # Hooks for the attester
+      - id: cargo-fmt-executor
+        name: Cargo format executor
+        language: "rust"
+        entry: cargo +nightly fmt --manifest-path ./solana/pyth2wormhole/Cargo.toml --all
+        pass_filenames: false
+        files: solana/pyth2wormhole/

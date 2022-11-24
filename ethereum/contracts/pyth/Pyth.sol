@@ -23,34 +23,48 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     }
 
     function updatePriceBatchFromVm(bytes calldata encodedVm) private {
-        parseAndProcessBatchPriceAttestation(parseAndVerifyBatchAttestationVM(encodedVm));
+        parseAndProcessBatchPriceAttestation(
+            parseAndVerifyBatchAttestationVM(encodedVm)
+        );
     }
 
-    function updatePriceFeeds(bytes[] calldata updateData) public override payable {
+    function updatePriceFeeds(
+        bytes[] calldata updateData
+    ) public payable override {
         uint requiredFee = getUpdateFee(updateData);
         require(msg.value >= requiredFee, "insufficient paid fee amount");
- 
-        for(uint i = 0; i < updateData.length; ) {
+
+        for (uint i = 0; i < updateData.length; ) {
             updatePriceBatchFromVm(updateData[i]);
 
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
     }
 
     /// This method is deprecated, please use the `getUpdateFee(bytes[])` instead.
-    function getUpdateFee(uint updateDataSize) public view returns (uint feeAmount) {
+    function getUpdateFee(
+        uint updateDataSize
+    ) public view returns (uint feeAmount) {
         return singleUpdateFeeInWei() * updateDataSize;
     }
 
-    function getUpdateFee(bytes[] calldata updateData) public override view returns (uint feeAmount) {
+    function getUpdateFee(
+        bytes[] calldata updateData
+    ) public view override returns (uint feeAmount) {
         return singleUpdateFeeInWei() * updateData.length;
     }
 
-    function verifyPythVM(IWormhole.VM memory vm) private view returns (bool valid) {
-        return isValidDataSource(vm.emitterChainId, vm.emitterAddress); 
+    function verifyPythVM(
+        IWormhole.VM memory vm
+    ) private view returns (bool valid) {
+        return isValidDataSource(vm.emitterChainId, vm.emitterAddress);
     }
 
-    function parseAndProcessBatchPriceAttestation(IWormhole.VM memory vm) internal {
+    function parseAndProcessBatchPriceAttestation(
+        IWormhole.VM memory vm
+    ) internal {
         // Most of the math operations below are simple additions.
         // In the places that there is more complex operation there is
         // a comment explaining why it is safe. Also, byteslib
@@ -58,12 +72,22 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         unchecked {
             bytes memory encoded = vm.payload;
 
-            (uint index, uint nAttestations, uint attestationSize) = 
-                parseBatchAttestationHeader(encoded);
+            (
+                uint index,
+                uint nAttestations,
+                uint attestationSize
+            ) = parseBatchAttestationHeader(encoded);
 
             // Deserialize each attestation
-            for (uint j=0; j < nAttestations; j++) {
-                (PythInternalStructs.PriceInfo memory info, bytes32 priceId) = parseSingleAttestationFromBatch(encoded, index, attestationSize);
+            for (uint j = 0; j < nAttestations; j++) {
+                (
+                    PythInternalStructs.PriceInfo memory info,
+                    bytes32 priceId
+                ) = parseSingleAttestationFromBatch(
+                        encoded,
+                        index,
+                        attestationSize
+                    );
 
                 // Respect specified attestation size for forward-compat
                 index += attestationSize;
@@ -71,9 +95,14 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                 // Store the attestation
                 uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
 
-                if(info.publishTime > latestPublishTime) {
+                if (info.publishTime > latestPublishTime) {
                     setLatestPriceInfo(priceId, info);
-                    emit PriceFeedUpdate(priceId, info.publishTime, info.price, info.conf);
+                    emit PriceFeedUpdate(
+                        priceId,
+                        info.publishTime,
+                        info.price,
+                        info.conf
+                    );
                 }
             }
 
@@ -85,10 +114,11 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         bytes memory encoded,
         uint index,
         uint attestationSize
-    ) internal pure returns (
-        PythInternalStructs.PriceInfo memory info,
-        bytes32 priceId
-    ) {
+    )
+        internal
+        pure
+        returns (PythInternalStructs.PriceInfo memory info, bytes32 priceId)
+    {
         unchecked {
             // NOTE: We don't advance the global index immediately.
             // attestationIndex is an attestation-local offset used
@@ -98,22 +128,37 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
             // Unused bytes32 product id
             attestationIndex += 32;
 
-            priceId = UnsafeBytesLib.toBytes32(encoded, index + attestationIndex);
+            priceId = UnsafeBytesLib.toBytes32(
+                encoded,
+                index + attestationIndex
+            );
             attestationIndex += 32;
 
-            info.price = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
+            info.price = int64(
+                UnsafeBytesLib.toUint64(encoded, index + attestationIndex)
+            );
             attestationIndex += 8;
 
-            info.conf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
+            info.conf = UnsafeBytesLib.toUint64(
+                encoded,
+                index + attestationIndex
+            );
             attestationIndex += 8;
 
-            info.expo = int32(UnsafeBytesLib.toUint32(encoded, index + attestationIndex));
+            info.expo = int32(
+                UnsafeBytesLib.toUint32(encoded, index + attestationIndex)
+            );
             attestationIndex += 4;
 
-            info.emaPrice = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
+            info.emaPrice = int64(
+                UnsafeBytesLib.toUint64(encoded, index + attestationIndex)
+            );
             attestationIndex += 8;
 
-            info.emaConf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
+            info.emaConf = UnsafeBytesLib.toUint64(
+                encoded,
+                index + attestationIndex
+            );
             attestationIndex += 8;
 
             {
@@ -122,7 +167,10 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                 // 1 = TRADING: The price feed is updating as expected.
                 // 2 = HALTED: The price feed is not currently updating because trading in the product has been halted.
                 // 3 = AUCTION: The price feed is not currently updating because an auction is setting the price.
-                uint8 status = UnsafeBytesLib.toUint8(encoded, index + attestationIndex);
+                uint8 status = UnsafeBytesLib.toUint8(
+                    encoded,
+                    index + attestationIndex
+                );
                 attestationIndex += 1;
 
                 // Unused uint32 numPublishers
@@ -134,30 +182,48 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                 // Unused uint64 attestationTime
                 attestationIndex += 8;
 
-                info.publishTime = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
+                info.publishTime = UnsafeBytesLib.toUint64(
+                    encoded,
+                    index + attestationIndex
+                );
                 attestationIndex += 8;
 
-                if (status == 1) { // status == TRADING
+                if (status == 1) {
+                    // status == TRADING
                     attestationIndex += 24;
                 } else {
                     // If status is not trading then the latest available price is
                     // the previous price info that are passed here.
 
                     // Previous publish time
-                    info.publishTime = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
+                    info.publishTime = UnsafeBytesLib.toUint64(
+                        encoded,
+                        index + attestationIndex
+                    );
                     attestationIndex += 8;
 
                     // Previous price
-                    info.price = int64(UnsafeBytesLib.toUint64(encoded, index + attestationIndex));
+                    info.price = int64(
+                        UnsafeBytesLib.toUint64(
+                            encoded,
+                            index + attestationIndex
+                        )
+                    );
                     attestationIndex += 8;
 
                     // Previous confidence
-                    info.conf = UnsafeBytesLib.toUint64(encoded, index + attestationIndex);
+                    info.conf = UnsafeBytesLib.toUint64(
+                        encoded,
+                        index + attestationIndex
+                    );
                     attestationIndex += 8;
                 }
             }
 
-            require(attestationIndex <= attestationSize, "INTERNAL: Consumed more than `attestationSize` bytes");
+            require(
+                attestationIndex <= attestationSize,
+                "INTERNAL: Consumed more than `attestationSize` bytes"
+            );
         }
     }
 
@@ -173,7 +239,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
             "priceIds and publishTimes arrays should have same length"
         );
 
-        for (uint i = 0; i < priceIds.length;) {
+        for (uint i = 0; i < priceIds.length; ) {
             // If the price does not exist, then the publish time is zero and
             // this condition will work fine.
             if (latestPriceInfoPublishTime(priceIds[i]) < publishTimes[i]) {
@@ -181,7 +247,9 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                 return;
             }
 
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
 
         revert(
@@ -202,7 +270,10 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         price.price = info.price;
         price.conf = info.conf;
 
-        require(price.publishTime != 0, "price feed for the given id is not pushed or does not exist");
+        require(
+            price.publishTime != 0,
+            "price feed for the given id is not pushed or does not exist"
+        );
     }
 
     // This is an overwrite of the same method in AbstractPyth.sol
@@ -218,16 +289,19 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         price.price = info.emaPrice;
         price.conf = info.emaConf;
 
-        require(price.publishTime != 0, "price feed for the given id is not pushed or does not exist");
+        require(
+            price.publishTime != 0,
+            "price feed for the given id is not pushed or does not exist"
+        );
     }
 
     function parseBatchAttestationHeader(
         bytes memory encoded
-    ) internal pure returns (
-        uint index,
-        uint nAttestations,
-        uint attestationSize
-    ) {
+    )
+        internal
+        pure
+        returns (uint index, uint nAttestations, uint attestationSize)
+    {
         unchecked {
             index = 0;
 
@@ -243,7 +317,10 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
                 uint16 versionMinor = UnsafeBytesLib.toUint16(encoded, index);
                 index += 2;
-                require(versionMinor >= 0, "invalid version minor, expected 0 or more");
+                require(
+                    versionMinor >= 0,
+                    "invalid version minor, expected 0 or more"
+                );
 
                 uint16 hdrSize = UnsafeBytesLib.toUint16(encoded, index);
                 index += 2;
@@ -268,7 +345,10 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                 index += hdrSize;
 
                 // Payload ID of 2 required for batch headerBa
-                require(payloadId == 2, "invalid payload ID, expected 2 for BatchPriceAttestation");
+                require(
+                    payloadId == 2,
+                    "invalid payload ID, expected 2 for BatchPriceAttestation"
+                );
             }
 
             // Parse the number of attestations
@@ -281,15 +361,16 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
             // Given the message is valid the arithmetic below should not overflow, and
             // even if it overflows then the require would fail.
-            require(encoded.length == (index + (attestationSize * nAttestations)), "invalid BatchPriceAttestation size");
+            require(
+                encoded.length == (index + (attestationSize * nAttestations)),
+                "invalid BatchPriceAttestation size"
+            );
         }
     }
 
     function parseAndVerifyBatchAttestationVM(
         bytes calldata encodedVm
-    ) internal view returns (
-        IWormhole.VM memory vm
-    ) {
+    ) internal view returns (IWormhole.VM memory vm) {
         {
             bool valid;
             string memory reason;
@@ -305,28 +386,41 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         bytes32[] calldata priceIds,
         uint64 minPublishTime,
         uint64 maxPublishTime
-    ) external payable override returns (PythStructs.PriceFeed[] memory priceFeeds) {
+    )
+        external
+        payable
+        override
+        returns (PythStructs.PriceFeed[] memory priceFeeds)
+    {
         unchecked {
             {
                 uint requiredFee = getUpdateFee(updateData);
-                require(msg.value >= requiredFee, "insufficient paid fee amount");
+                require(
+                    msg.value >= requiredFee,
+                    "insufficient paid fee amount"
+                );
             }
 
             priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
 
-            for(uint i = 0; i < updateData.length; i++) {
+            for (uint i = 0; i < updateData.length; i++) {
                 bytes memory encoded;
 
                 {
-                    IWormhole.VM memory vm = parseAndVerifyBatchAttestationVM(updateData[i]);    
+                    IWormhole.VM memory vm = parseAndVerifyBatchAttestationVM(
+                        updateData[i]
+                    );
                     encoded = vm.payload;
                 }
 
-                (uint index, uint nAttestations, uint attestationSize) = 
-                    parseBatchAttestationHeader(encoded);
+                (
+                    uint index,
+                    uint nAttestations,
+                    uint attestationSize
+                ) = parseBatchAttestationHeader(encoded);
 
                 // Deserialize each attestation
-                for (uint j=0; j < nAttestations; j++) {
+                for (uint j = 0; j < nAttestations; j++) {
                     // NOTE: We don't advance the global index immediately.
                     // attestationIndex is an attestation-local offset used
                     // for readability and easier debugging.
@@ -335,11 +429,14 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                     // Unused bytes32 product id
                     attestationIndex += 32;
 
-                    bytes32 priceId = UnsafeBytesLib.toBytes32(encoded, index + attestationIndex);
+                    bytes32 priceId = UnsafeBytesLib.toBytes32(
+                        encoded,
+                        index + attestationIndex
+                    );
 
                     // Check whether the caller requested for this data.
                     uint k = 0;
-                    for(; k < priceIds.length; k++) {
+                    for (; k < priceIds.length; k++) {
                         if (priceIds[k] == priceId) {
                             break;
                         }
@@ -352,8 +449,18 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                         continue;
                     }
 
-                    (PythInternalStructs.PriceInfo memory info, ) = parseSingleAttestationFromBatch(encoded, index, attestationSize);
-                    require(info.publishTime != 0, "price feed for the given id is not pushed or does not exist");
+                    (
+                        PythInternalStructs.PriceInfo memory info,
+
+                    ) = parseSingleAttestationFromBatch(
+                            encoded,
+                            index,
+                            attestationSize
+                        );
+                    require(
+                        info.publishTime != 0,
+                        "price feed for the given id is not pushed or does not exist"
+                    );
 
                     priceFeeds[k].id = priceId;
                     priceFeeds[k].price.price = info.price;
@@ -369,26 +476,35 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                     // if it is not, then set the id to 0 to indicate that this price id
                     // still does not have a valid price feed. This will allow other updates
                     // for this price id to be processed.
-                    if (priceFeeds[k].price.publishTime < minPublishTime ||
-                        priceFeeds[k].price.publishTime > maxPublishTime) {
-                            priceFeeds[k].id = 0;
-                        }
+                    if (
+                        priceFeeds[k].price.publishTime < minPublishTime ||
+                        priceFeeds[k].price.publishTime > maxPublishTime
+                    ) {
+                        priceFeeds[k].id = 0;
+                    }
 
                     index += attestationSize;
                 }
             }
 
             for (uint k = 0; k < priceIds.length; k++) {
-                require(priceFeeds[k].id != 0,
-                    "1 or more price feeds are not found in the updateData or they are out of the given time range");
+                require(
+                    priceFeeds[k].id != 0,
+                    "1 or more price feeds are not found in the updateData or they are out of the given time range"
+                );
             }
         }
     }
 
-    function queryPriceFeed(bytes32 id) public view override returns (PythStructs.PriceFeed memory priceFeed){
+    function queryPriceFeed(
+        bytes32 id
+    ) public view override returns (PythStructs.PriceFeed memory priceFeed) {
         // Look up the latest price info for the given ID
         PythInternalStructs.PriceInfo memory info = latestPriceInfo(id);
-        require(info.publishTime != 0, "price feed for the given id is not pushed or does not exist");
+        require(
+            info.publishTime != 0,
+            "price feed for the given id is not pushed or does not exist"
+        );
 
         priceFeed.id = id;
         priceFeed.price.price = info.price;
@@ -402,11 +518,11 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         priceFeed.emaPrice.publishTime = uint(info.publishTime);
     }
 
-    function priceFeedExists(bytes32 id) public override view returns (bool) {
+    function priceFeedExists(bytes32 id) public view override returns (bool) {
         return (latestPriceInfoPublishTime(id) != 0);
     }
 
-    function getValidTimePeriod() public override view returns (uint) {
+    function getValidTimePeriod() public view override returns (uint) {
         return validTimePeriodSeconds();
     }
 

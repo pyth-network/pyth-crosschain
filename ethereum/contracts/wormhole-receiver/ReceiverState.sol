@@ -21,22 +21,16 @@ contract ReceiverEvents {
 contract ReceiverStorage {
     struct WormholeState {
         ReceiverStructs.Provider provider;
-
         // contract deployer
         address owner;
-
         // Mapping of guardian_set_index => guardian set
         mapping(uint32 => ReceiverStructs.GuardianSet) guardianSets;
-
         // Current active guardian set index
         uint32 guardianSetIndex;
-
         // Period for which a guardian set stays active after it has been replaced
         uint32 guardianSetExpiry;
-
         // Mapping of consumed governance actions
         mapping(bytes32 => bool) consumedGovernanceActions;
-
         // Mapping of initialized implementations
         mapping(address => bool) initializedImplementations;
     }

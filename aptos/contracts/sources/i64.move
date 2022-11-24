@@ -1,12 +1,12 @@
 module pyth::i64 {
     use pyth::error;
-        
+
     const MAX_POSITIVE_MAGNITUDE: u64 = (1 << 63) - 1;
     const MAX_NEGATIVE_MAGNITUDE: u64 = (1 << 63);
 
     /// As Move does not support negative numbers natively, we use our own internal
-    /// representation. 
-    /// 
+    /// representation.
+    ///
     /// To consume these values, first call `get_is_negative()` to determine if the I64
     /// represents a negative or positive value. Then call `get_magnitude_if_positive()` or
     /// `get_magnitude_if_negative()` to get the magnitude of the number in unsigned u64 format.
@@ -22,7 +22,7 @@ module pyth::i64 {
             max_magnitude = MAX_NEGATIVE_MAGNITUDE;
         };
         assert!(magnitude <= max_magnitude, error::magnitude_too_large());
-        
+
 
         // Ensure we have a single zero representation: (0, false).
         // (0, true) is invalid.

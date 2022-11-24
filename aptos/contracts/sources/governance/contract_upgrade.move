@@ -25,7 +25,7 @@ module pyth::contract_upgrade {
         let cursor = cursor::init(bytes);
         let hash = contract_upgrade_hash::from_byte_vec(deserialize::deserialize_vector(&mut cursor, HASH_LENGTH));
         cursor::destroy_empty(cursor);
-        
+
         AuthorizeContractUpgrade {
             hash,
         }
@@ -51,7 +51,7 @@ module pyth::contract_upgrade {
         vector::reverse(&mut reversed);
         let flattened = aptos_hash::keccak256(metadata_serialized);
         while (!vector::is_empty(&reversed)) vector::append(&mut flattened, aptos_hash::keccak256(vector::pop_back(&mut reversed)));
-        
+
         aptos_hash::keccak256(flattened) == contract_upgrade_hash::destroy(hash)
     }
 }
