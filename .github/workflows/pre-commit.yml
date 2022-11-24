@@ -15,5 +15,5 @@ jobs:
         with:
           profile: minimal
           toolchain: nightly
-          components: rustfmt
+          components: rustfmt, clippy
       - uses: pre-commit/action@v2.0.3
