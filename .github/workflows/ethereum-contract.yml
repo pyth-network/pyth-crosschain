@@ -1,10 +1,14 @@
 on:
   pull_request:
-    # paths: [ethereum/**]
+    paths: 
+    - ethereum/**
+    - third_party/pyth/xc-governance-sdk-js/**
   push:
     branches:
       - main
-    # paths: [ethereum/**]
+    paths: 
+    - ethereum/**
+    - third_party/pyth/xc-governance-sdk-js/**
 
 name: Ethereum Contract
 
@@ -18,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Build XC-governance sdk
+      - name: Install XC-governance sdk dependencies
         run: npm ci
         working-directory: third_party/pyth/xc-governance-sdk-js
 
