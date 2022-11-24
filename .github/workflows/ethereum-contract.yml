@@ -12,15 +12,22 @@ jobs:
   check:
     name: Foundry tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ethereum/
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
+
+      - name: Install contract npm dependencies
+        run: npm ci
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+      
+      - name: Install Forge dependencies
+        run: npm run install-forge-deps
 
       - name: Run tests
         run: forge test -vvv
