@@ -3,14 +3,14 @@ name: Pyth CosmWasm Contract
 on:
   pull_request:
     paths: 
-    - cosmwasm/**
-    - third_party/pyth/p2w-sdk/rust/**
+      - cosmwasm/**
+      - third_party/pyth/p2w-sdk/rust/**
   push:
     branches:
       - main
     paths: 
-    - cosmwasm/**
-    - third_party/pyth/p2w-sdk/rust/**
+      - cosmwasm/**
+      - third_party/pyth/p2w-sdk/rust/**
 
 env:
   CARGO_TERM_COLOR: always
