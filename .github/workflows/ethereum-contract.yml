@@ -1,14 +1,14 @@
 on:
   pull_request:
-    paths: 
-    - ethereum/**
-    - third_party/pyth/xc-governance-sdk-js/**
+    paths:
+      - ethereum/**
+      - third_party/pyth/xc-governance-sdk-js/**
   push:
     branches:
       - main
-    paths: 
-    - ethereum/**
-    - third_party/pyth/xc-governance-sdk-js/**
+    paths:
+      - ethereum/**
+      - third_party/pyth/xc-governance-sdk-js/**
 
 name: Ethereum Contract
 
@@ -33,7 +33,7 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
-      
+
       - name: Install Forge dependencies
         run: npm run install-forge-deps
 
