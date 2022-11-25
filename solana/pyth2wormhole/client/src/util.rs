@@ -3,10 +3,7 @@ use log::{
     error,
     trace,
 };
-use prometheus::{
-    Encoder,
-    TextEncoder,
-};
+use prometheus::TextEncoder;
 use tokio::sync::{
     Mutex,
     MutexGuard,
@@ -18,7 +15,6 @@ use warp::{
     Reply,
 };
 
-use solitaire::ErrBox;
 use std::{
     net::SocketAddr,
     ops::{
