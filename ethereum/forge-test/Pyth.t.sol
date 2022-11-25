@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
 
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
@@ -364,7 +365,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
         // Since attestations are not empty the fee should be at least 1
         assertGe(updateFee, 1);
 
-        vm.expectRevert(bytes("insufficient paid fee amount"));
+        vm.expectRevert(PythErrors.InsufficientFee.selector);
 
         pyth.parsePriceFeedUpdates{value: updateFee - 1}(
             updateData,
@@ -395,7 +396,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
         updateData[0][mutPos] = bytes1(uint8(updateData[0][mutPos]) ^ 1);
 
         // It might revert due to different wormhole errors
-        vm.expectRevert();
+        vm.expectRevert(PythErrors.InvalidWormholeVaa.selector);
         pyth.parsePriceFeedUpdates{value: updateFee}(
             updateData,
             priceIds,
@@ -425,7 +426,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
 
         uint updateFee = pyth.getUpdateFee(updateData);
 
-        vm.expectRevert(bytes("invalid data source chain/emitter ID"));
+        vm.expectRevert(PythErrors.InvalidUpdateDataSource.selector);
         pyth.parsePriceFeedUpdates{value: updateFee}(
             updateData,
             priceIds,
@@ -455,7 +456,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
 
         uint updateFee = pyth.getUpdateFee(updateData);
 
-        vm.expectRevert(bytes("invalid data source chain/emitter ID"));
+        vm.expectRevert(PythErrors.InvalidUpdateDataSource.selector);
         pyth.parsePriceFeedUpdates{value: updateFee}(
             updateData,
             priceIds,
@@ -480,11 +481,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
         bytes32[] memory priceIds = new bytes32[](1);
         priceIds[0] = bytes32(uint(2));
 
-        vm.expectRevert(
-            bytes(
-                "1 or more price feeds are not found in the updateData or they are out of the given time range"
-            )
-        );
+        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
         pyth.parsePriceFeedUpdates{value: updateFee}(
             updateData,
             priceIds,
@@ -520,11 +517,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
         );
 
         // Request for parse after the time range should revert.
-        vm.expectRevert(
-            bytes(
-                "1 or more price feeds are not found in the updateData or they are out of the given time range"
-            )
-        );
+        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
         pyth.parsePriceFeedUpdates{value: updateFee}(
             updateData,
             priceIds,

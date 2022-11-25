@@ -39,7 +39,6 @@ contract("Pyth", function () {
     "0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
   const notOwnerError =
     "Ownable: caller is not the owner -- Reason given: Ownable: caller is not the owner.";
-  const insufficientFeeError = "insufficient paid fee amount";
 
   // Place all atomic operations that are done within migrations here.
   beforeEach(async function () {
@@ -433,9 +432,9 @@ contract("Pyth", function () {
     assert.equal(feeInWei, 20);
 
     // When a smaller fee is payed it reverts
-    await expectRevert(
+    await expectRevertCustomError(
       updatePriceFeeds(this.pythProxy, [rawBatch1, rawBatch2], feeInWei - 1),
-      insufficientFeeError
+      "InsufficientFee"
     );
   });
 
@@ -571,11 +570,11 @@ contract("Pyth", function () {
   });
 
   it("should fail transaction if a price is not found", async function () {
-    await expectRevert(
+    await expectRevertCustomError(
       this.pythProxy.queryPriceFeed(
         "0xdeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeeddeadfeed"
       ),
-      "price feed for the given id is not pushed or does not exist"
+      "PriceFeedNotFound"
     );
   });
 
@@ -591,10 +590,7 @@ contract("Pyth", function () {
     for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
       const price_id =
         "0x" + (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-      expectRevert(
-        this.pythProxy.getPrice(price_id),
-        "no price available which is recent enough"
-      );
+      expectRevertCustomError(this.pythProxy.getPrice(price_id), "StalePrice");
     }
   });
 
@@ -610,10 +606,7 @@ contract("Pyth", function () {
     for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
       const price_id =
         "0x" + (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-      expectRevert(
-        this.pythProxy.getPrice(price_id),
-        "no price available which is recent enough"
-      );
+      expectRevertCustomError(this.pythProxy.getPrice(price_id), "StalePrice");
     }
   });
 
@@ -643,10 +636,7 @@ contract("Pyth", function () {
       const price_id =
         "0x" + (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
 
-      expectRevert(
-        this.pythProxy.getPrice(price_id),
-        "no price available which is recent enough"
-      );
+      expectRevertCustomError(this.pythProxy.getPrice(price_id), "StalePrice");
     }
 
     // Setting the validity time to 120 seconds
@@ -753,9 +743,9 @@ contract("Pyth", function () {
       0
     );
 
-    await expectRevert(
+    await expectRevertCustomError(
       this.pythProxy.updatePriceFeeds(["0x" + vm]),
-      "invalid data source chain/emitter ID"
+      "InvalidUpdateDataSource"
     );
   });
 
@@ -779,9 +769,9 @@ contract("Pyth", function () {
       1
     );
 
-    await expectRevert(
+    await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaaWrongMagic),
-      "invalid magic for GovernanceInstruction"
+      "InvalidGovernanceMessage"
     );
 
     const wrongModule = Buffer.from(data);
@@ -794,9 +784,9 @@ contract("Pyth", function () {
       1
     );
 
-    await expectRevert(
+    await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaaWrongModule),
-      "invalid module for GovernanceInstruction"
+      "InvalidGovernanceTarget"
     );
 
     const outOfBoundModule = Buffer.from(data);
@@ -828,9 +818,9 @@ contract("Pyth", function () {
       1
     );
 
-    await expectRevert(
+    await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaaWrongEmitter),
-      "VAA is not coming from the governance data source"
+      "InvalidGovernanceDataSource"
     );
 
     const vaaWrongChain = await createVAAFromUint8Array(
@@ -840,9 +830,9 @@ contract("Pyth", function () {
       1
     );
 
-    await expectRevert(
+    await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaaWrongChain),
-      "VAA is not coming from the governance data source"
+      "InvalidGovernanceDataSource"
     );
   });
 
@@ -859,9 +849,9 @@ contract("Pyth", function () {
       1
     );
 
-    await expectRevert(
+    await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(wrongChainVaa),
-      "invalid target chain for this governance instruction"
+      "InvalidGovernanceTarget"
     );
 
     const dataForAllChains = new governance.SetValidPeriodInstruction(
@@ -908,9 +898,9 @@ contract("Pyth", function () {
 
     await this.pythProxy.executeGovernanceInstruction(vaaSeq1),
       // Replaying shouldn't work
-      await expectRevert(
+      await expectRevertCustomError(
         this.pythProxy.executeGovernanceInstruction(vaaSeq1),
-        "VAA is older than the last executed governance VAA"
+        "OldGovernanceMessage"
       );
 
     const vaaSeq2 = await createVAAFromUint8Array(
@@ -922,13 +912,13 @@ contract("Pyth", function () {
 
     await this.pythProxy.executeGovernanceInstruction(vaaSeq2),
       // Replaying shouldn't work
-      await expectRevert(
+      await expectRevertCustomError(
         this.pythProxy.executeGovernanceInstruction(vaaSeq1),
-        "VAA is older than the last executed governance VAA"
+        "OldGovernanceMessage"
       );
-    await expectRevert(
+    await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaaSeq2),
-      "VAA is older than the last executed governance VAA"
+      "OldGovernanceMessage"
     );
   });
 
@@ -948,9 +938,9 @@ contract("Pyth", function () {
       1
     );
 
-    await expectRevert(
+    await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaa),
-      "upgrade with chain id 0 is not possible"
+      "InvalidGovernanceTarget"
     );
   });
 
@@ -1020,9 +1010,9 @@ contract("Pyth", function () {
       1
     );
 
-    await expectRevert(
+    await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(claimVaaHexString),
-      "VAA is not coming from the governance data source"
+      "InvalidGovernanceDataSource"
     );
 
     const claimVaa = Buffer.from(claimVaaHexString.substring(2), "hex");
@@ -1055,9 +1045,9 @@ contract("Pyth", function () {
     expect(newGovernanceDataSource.emitterAddress).equal(newEmitterAddress);
 
     // Verifies the data source has changed.
-    await expectRevert(
+    await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(vaa),
-      "VAA is not coming from the governance data source"
+      "InvalidGovernanceDataSource"
     );
 
     // Make sure a claim vaa does not get executed
@@ -1075,9 +1065,9 @@ contract("Pyth", function () {
       2
     );
 
-    await expectRevert(
+    await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(claimLonelyVaa),
-      "RequestGovernanceDataSourceTransfer can be only part of AuthorizeGovernanceDataSourceTransfer message"
+      "InvalidGovernanceMessage"
     );
 
     // Transfer back the ownership to the old governance data source without increasing
@@ -1115,9 +1105,15 @@ contract("Pyth", function () {
       2
     );
 
-    await expectRevert(
-      this.pythProxy.executeGovernanceInstruction(transferBackVaaWrong),
-      "cannot upgrade to an older governance data source"
+    // Strangely this test was failing without the hard coded gas limit.
+    // It will failing randomly on a place that it shouldn't without any message due to
+    // gas limit if the value is not hard-coded.
+    // Gas value 6.7m gas is very high and close to the ganache limit.
+    await expectRevertCustomError(
+      this.pythProxy.executeGovernanceInstruction(transferBackVaaWrong, {
+        gas: 6700000,
+      }),
+      "OldGovernanceMessage"
     );
   });
 
@@ -1163,9 +1159,9 @@ contract("Pyth", function () {
     );
 
     let rawBatch = generateRawBatchAttestation(100, 100, 1337);
-    await expectRevert(
+    await expectRevertCustomError(
       updatePriceFeeds(this.pythProxy, [rawBatch]),
-      "invalid data source chain/emitter ID"
+      "InvalidUpdateDataSource"
     );
 
     await updatePriceFeeds(
@@ -1202,9 +1198,9 @@ contract("Pyth", function () {
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), "5000");
 
     let rawBatch = generateRawBatchAttestation(100, 100, 1337);
-    await expectRevert(
+    await expectRevertCustomError(
       updatePriceFeeds(this.pythProxy, [rawBatch], 0),
-      insufficientFeeError
+      "InsufficientFee"
     );
 
     await updatePriceFeeds(this.pythProxy, [rawBatch], 5000);
@@ -1384,4 +1380,20 @@ function expectEventNotEmittedWithArgs(receipt, eventName, args) {
 function expectEventMultipleTimes(receipt, eventName, args, cnt) {
   const matches = getNumMatchingEvents(receipt, eventName, args);
   assert(matches === cnt, `Expected ${cnt} event matches, found ${matches}.`);
+}
+
+async function expectRevertCustomError(promise, reason) {
+  try {
+    await promise;
+    expect.fail("Expected promise to throw but it didn't");
+  } catch (revert) {
+    if (reason) {
+      // expect(revert.message).to.include(reason);
+      const reasonId = web3.utils.keccak256(reason + "()").substr(0, 10);
+      expect(
+        JSON.stringify(revert),
+        `Expected custom error ${reason} (${reasonId})`
+      ).to.include(reasonId);
+    }
+  }
 }

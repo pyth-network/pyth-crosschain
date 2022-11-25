@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
 
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
@@ -139,11 +140,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     function testBenchmarkUpdatePriceFeedsIfNecessaryNotFresh() public {
         // Since the price is not advanced, the publishTimes are the same as the
         // ones in the contract.
-        vm.expectRevert(
-            bytes(
-                "no prices in the submitted batch have fresh prices, so this update will have no effect"
-            )
-        );
+        vm.expectRevert(PythErrors.NoFreshUpdate.selector);
 
         pyth.updatePriceFeedsIfNecessary{value: cachedPricesUpdateFee}(
             cachedPricesUpdateData,
@@ -183,11 +180,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         bytes32[] memory ids = new bytes32[](1);
         ids[0] = priceIds[0];
 
-        vm.expectRevert(
-            bytes(
-                "1 or more price feeds are not found in the updateData or they are out of the given time range"
-            )
-        );
+        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
         pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee}(
             freshPricesUpdateData,
             ids,
