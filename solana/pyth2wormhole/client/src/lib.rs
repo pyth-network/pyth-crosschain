@@ -92,9 +92,6 @@ pub use message::P2WMessageQueue;
 /// Future-friendly version of solitaire::ErrBox
 pub type ErrBoxSend = Box<dyn std::error::Error + Send + Sync>;
 
-/// Affects metrics endpoint: http://<metrics_bind_addr>/<ATTESTER_METRICS_SUBPAGE>.
-pub static ATTESTER_METRICS_SUBPAGE: &'static str = "metrics";
-
 pub fn gen_init_tx(
     payer: Keypair,
     p2w_addr: Pubkey,

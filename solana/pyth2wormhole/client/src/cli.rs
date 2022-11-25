@@ -12,8 +12,6 @@ use clap::{
     Subcommand,
 };
 
-use crate::ATTESTER_METRICS_SUBPAGE;
-
 #[derive(Parser)]
 #[clap(
     about = "A client for the pyth2wormhole Solana program",
@@ -95,12 +93,6 @@ pub enum Action {
             default_value = "[::]:3000"
         )]
         metrics_bind_addr: SocketAddr,
-        #[clap(
-            long,
-            help = "Subpage name for serving Prometheus metrics on http://<metrics_bind_addr>/<metrics_subpage>",
-            default_value = "metrics"
-        )]
-        metrics_subpage: String,
     },
     #[clap(about = "Retrieve a pyth2wormhole program's current settings")]
     GetConfig,

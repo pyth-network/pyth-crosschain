@@ -10,7 +10,7 @@ spec:
     - port: 4343
       name: p2w-attest
       protocol: TCP
-    - port: 9090
+    - port: 3000
       name: metrics
   clusterIP: None
   selector:
@@ -54,6 +54,6 @@ spec:
             - containerPort: 4343
               name: p2w-attest
               protocol: TCP
-            - containerPort: 9090
+            - containerPort: 3000
               name: metrics
               protocol: TCP

@@ -201,7 +201,6 @@ async fn main() -> Result<(), ErrBox> {
             retry_interval_secs,
             confirmation_timeout_secs,
             metrics_bind_addr,
-            metrics_subpage,
             daemon,
         } => {
             // Load the attestation config yaml
@@ -231,7 +230,6 @@ async fn main() -> Result<(), ErrBox> {
                     p2w_addr,
                     attestation_cfg,
                     metrics_bind_addr,
-                    metrics_subpage,
                 )
                 .await?;
             } else {
@@ -278,14 +276,10 @@ async fn handle_attest_daemon_mode(
     p2w_addr: Pubkey,
     mut attestation_cfg: AttestationConfig,
     metrics_bind_addr: SocketAddr,
-    metrics_subpage: String,
 ) -> Result<(), ErrBox> {
-    tokio::spawn(start_metrics_server(metrics_bind_addr, metrics_subpage));
+    tokio::spawn(start_metrics_server(metrics_bind_addr));
 
-    info!(
-        "Started serving metrics on {}/{}",
-        metrics_bind_addr, ATTESTER_METRICS_SUBPAGE
-    );
+    info!("Started serving metrics on {}", metrics_bind_addr);
 
     info!(
         "Crawling mapping {:?} every {} minutes",

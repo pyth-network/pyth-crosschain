@@ -31,8 +31,6 @@ use std::{
     },
 };
 
-use crate::ATTESTER_METRICS_SUBPAGE;
-
 /// Rate-limited mutex. Ensures there's a period of minimum rl_interval between lock acquisitions
 pub struct RLMutex<T> {
     mtx: Mutex<RLMutexState<T>>,
@@ -128,8 +126,8 @@ async fn metrics_handler() -> Result<impl Reply, Rejection> {
     }
 }
 
-pub async fn start_metrics_server(addr: impl Into<SocketAddr> + 'static, metrics_subpage: String) {
-    let metrics_route = warp::path(metrics_subpage)
+pub async fn start_metrics_server(addr: impl Into<SocketAddr> + 'static) {
+    let metrics_route = warp::path("metrics") // The metrics subpage is standardized to always be /metrics
         .and(warp::path::end())
         .and_then(metrics_handler);
 
