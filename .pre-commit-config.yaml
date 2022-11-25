@@ -26,7 +26,7 @@ repos:
       - id: cargo-clippy-remote-executor
         name: Cargo clippy for remote executor
         language: "rust"
-        entry: cargo +nightly clippy --manifest-path ./pythnet/remote-executor/Cargo.toml -- -D warnings
+        entry: cargo +nightly clippy --manifest-path ./pythnet/remote-executor/Cargo.toml --fix --allow-staged -- -D warnings
         pass_filenames: false
         files: pythnet/remote-executor/
       # Hooks for the attester
@@ -39,7 +39,7 @@ repos:
       - id: cargo-clippy-attester
         name: Cargo clippy for attester
         language: "rust"
-        entry: cargo +nightly clippy --manifest-path ./solana/pyth2wormhole/Cargo.toml -- -D warnings
+        entry: cargo +nightly clippy --manifest-path ./solana/pyth2wormhole/Cargo.toml --fix --allow-staged -- -D warnings
         pass_filenames: false
         files: solana/pyth2wormhole/
       # Hooks for cosmwasm contract
@@ -47,5 +47,11 @@ repos:
         name: Cargo format for cosmwasm contract
         language: "rust"
         entry: cargo +nightly fmt --manifest-path ./cosmwasm/Cargo.toml --all -- --config-path rustfmt.toml
+        pass_filenames: false
+        files: cosmwasm/
+      - id: cargo-clippy-cosmwasm
+        name: Cargo clippy for cosmwasm contract
+        language: "rust"
+        entry: cargo +nightly clippy --manifest-path ./cosmwasm/Cargo.toml --fix --allow-staged -- -D warnings
         pass_filenames: false
         files: cosmwasm/

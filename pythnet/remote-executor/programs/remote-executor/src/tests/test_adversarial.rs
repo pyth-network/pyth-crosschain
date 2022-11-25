@@ -41,7 +41,7 @@ async fn test_adversarial() {
         &emitter,
         &vec![transfer(
             &executor_key,
-            &&receiver,
+            &receiver,
             Rent::default().minimum_balance(0),
         )],
         VaaAttack::None,
@@ -50,7 +50,7 @@ async fn test_adversarial() {
         &emitter,
         &vec![transfer(
             &executor_key,
-            &&receiver,
+            &receiver,
             Rent::default().minimum_balance(0),
         )],
         VaaAttack::WrongData,
@@ -59,7 +59,7 @@ async fn test_adversarial() {
         &emitter,
         &vec![transfer(
             &executor_key,
-            &&receiver,
+            &receiver,
             Rent::default().minimum_balance(0),
         )],
         VaaAttack::WrongOwner,
@@ -68,7 +68,7 @@ async fn test_adversarial() {
         &emitter,
         &vec![transfer(
             &executor_key,
-            &&receiver,
+            &receiver,
             Rent::default().minimum_balance(0),
         )],
         VaaAttack::WrongEmitterChain,
@@ -78,7 +78,7 @@ async fn test_adversarial() {
         &emitter,
         &vec![transfer(
             &executor_key,
-            &&receiver,
+            &receiver,
             Rent::default().minimum_balance(0),
         )],
         VaaAttack::WrongVaaMagic,
