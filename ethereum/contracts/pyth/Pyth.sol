@@ -482,10 +482,6 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
                             index,
                             attestationSize
                         );
-                    require(
-                        info.publishTime != 0,
-                        "price feed for the given id is not pushed or does not exist"
-                    );
 
                     priceFeeds[k].id = priceId;
                     priceFeeds[k].price.price = info.price;
