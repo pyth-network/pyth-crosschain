@@ -39,6 +39,5 @@ warp = "0.3.3"
 http = "0.2.8"
 
 [dev-dependencies]
-pyth-client = "0.5.0"
 solana-program-test = "=1.10.31"
 solana-sdk = "=1.10.31"
