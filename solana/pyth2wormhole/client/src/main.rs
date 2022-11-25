@@ -303,7 +303,7 @@ async fn handle_attest_daemon_mode(
     // This loop cranks attestations without interruption. This is
     // achieved by spinning up a new up-to-date symbol set before
     // letting go of the previous one. Additionally, hash of on-chain
-    // and attestation configs is used to prevent needless reloads of"Ad"Address to use for serving Prometheus metrics. Note: served on ""Address to use for serving Prometheus metrics. Note: served on ""Address to use for serving Prometheus metrics. Note: served on "dress to use for serving Prometheus metrics. Note: served on "
+    // and attestation configs is used to prevent needless reloads of
     // an unchanged symbol set.
     loop {
         let start_time = Instant::now(); // Helps timekeep mapping lookups accurately
