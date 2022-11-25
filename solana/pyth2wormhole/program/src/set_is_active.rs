@@ -1,30 +1,31 @@
-use solitaire::{
-    trace,
-    AccountState,
-    ExecutionContext,
-    FromAccounts,
-    Info,
-    Keyed,
-    Mut,
-    Peel,
-    Result as SoliResult,
-    Signer,
-    SolitaireError,
-};
-
-use crate::config::{
-    P2WConfigAccount,
-    Pyth2WormholeConfig,
+use {
+    crate::config::{
+        P2WConfigAccount,
+        Pyth2WormholeConfig,
+    },
+    solitaire::{
+        trace,
+        AccountState,
+        ExecutionContext,
+        FromAccounts,
+        Info,
+        Keyed,
+        Mut,
+        Peel,
+        Result as SoliResult,
+        Signer,
+        SolitaireError,
+    },
 };
 
 #[derive(FromAccounts)]
 pub struct SetIsActive<'b> {
     /// Current config used by the program
-    pub config: Mut<P2WConfigAccount<'b, { AccountState::Initialized }>>,
+    pub config:    Mut<P2WConfigAccount<'b, { AccountState::Initialized }>>,
     /// Current owner authority of the program
     pub ops_owner: Mut<Signer<Info<'b>>>,
     /// Payer account for updating the account data
-    pub payer: Mut<Signer<Info<'b>>>,
+    pub payer:     Mut<Signer<Info<'b>>>,
 }
 
 /// Alters the current settings of pyth2wormhole

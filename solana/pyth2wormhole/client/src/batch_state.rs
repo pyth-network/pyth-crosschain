@@ -1,30 +1,29 @@
-use log::{
-    debug,
-    warn,
-};
-use solana_client::nonblocking::rpc_client::RpcClient;
-
-use pyth_sdk_solana::state::PriceAccount;
-
-use std::time::{
-    Duration,
-    Instant,
-};
-
-use crate::{
-    AttestationConditions,
-    P2WSymbol,
+use {
+    crate::{
+        AttestationConditions,
+        P2WSymbol,
+    },
+    log::{
+        debug,
+        warn,
+    },
+    pyth_sdk_solana::state::PriceAccount,
+    solana_client::nonblocking::rpc_client::RpcClient,
+    std::time::{
+        Duration,
+        Instant,
+    },
 };
 
 /// Runtime representation of a batch. It refers to the original group
 /// from the config.
 #[derive(Debug)]
 pub struct BatchState {
-    pub group_name: String,
-    pub symbols: Vec<P2WSymbol>,
+    pub group_name:               String,
+    pub symbols:                  Vec<P2WSymbol>,
     pub last_known_symbol_states: Vec<Option<PriceAccount>>,
-    pub conditions: AttestationConditions,
-    pub last_job_finished_at: Instant,
+    pub conditions:               AttestationConditions,
+    pub last_job_finished_at:     Instant,
 }
 
 impl<'a> BatchState {

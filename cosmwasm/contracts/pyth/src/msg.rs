@@ -1,11 +1,12 @@
-use cosmwasm_std::Binary;
-use schemars::JsonSchema;
-use serde::{
-    Deserialize,
-    Serialize,
+use {
+    crate::state::PythDataSource,
+    cosmwasm_std::Binary,
+    schemars::JsonSchema,
+    serde::{
+        Deserialize,
+        Serialize,
+    },
 };
-
-use crate::state::PythDataSource;
 
 type HumanAddr = String;
 

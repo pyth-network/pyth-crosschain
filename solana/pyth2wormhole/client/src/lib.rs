@@ -3,91 +3,88 @@ pub mod batch_state;
 pub mod message;
 pub mod util;
 
-use borsh::{
-    BorshDeserialize,
-    BorshSerialize,
-};
-use log::{
-    debug,
-    trace,
-    warn,
-};
-use pyth_sdk_solana::state::{
-    load_mapping_account,
-    load_price_account,
-    load_product_account,
-};
-use solana_client::nonblocking::rpc_client::RpcClient;
-use solana_program::{
-    hash::Hash,
-    instruction::{
-        AccountMeta,
-        Instruction,
+pub use {
+    attestation_cfg::{
+        AttestationConditions,
+        AttestationConfig,
+        P2WSymbol,
     },
-    pubkey::Pubkey,
-    system_program,
-    sysvar::{
-        clock,
-        rent,
+    batch_state::BatchState,
+    message::P2WMessageQueue,
+    pyth2wormhole::Pyth2WormholeConfig,
+    util::{
+        start_metrics_server,
+        RLMutex,
+        RLMutexGuard,
     },
 };
-use solana_sdk::{
-    signer::{
-        keypair::Keypair,
-        Signer,
+use {
+    borsh::{
+        BorshDeserialize,
+        BorshSerialize,
     },
-    transaction::Transaction,
-};
-use solitaire::{
-    processors::seeded::Seeded,
-    AccountState,
-    ErrBox,
-};
-
-use bridge::{
-    accounts::{
-        Bridge,
-        FeeCollector,
-        Sequence,
-        SequenceDerivationData,
+    bridge::{
+        accounts::{
+            Bridge,
+            FeeCollector,
+            Sequence,
+            SequenceDerivationData,
+        },
+        types::ConsistencyLevel,
     },
-    types::ConsistencyLevel,
-};
-
-use std::collections::{
-    HashMap,
-    HashSet,
-};
-
-use p2w_sdk::P2WEmitter;
-
-use pyth2wormhole::{
-    config::{
-        OldP2WConfigAccount,
-        P2WConfigAccount,
+    log::{
+        debug,
+        trace,
+        warn,
     },
-    message::{
-        P2WMessage,
-        P2WMessageDrvData,
+    p2w_sdk::P2WEmitter,
+    pyth2wormhole::{
+        config::{
+            OldP2WConfigAccount,
+            P2WConfigAccount,
+        },
+        message::{
+            P2WMessage,
+            P2WMessageDrvData,
+        },
+        AttestData,
     },
-    AttestData,
+    pyth_sdk_solana::state::{
+        load_mapping_account,
+        load_price_account,
+        load_product_account,
+    },
+    solana_client::nonblocking::rpc_client::RpcClient,
+    solana_program::{
+        hash::Hash,
+        instruction::{
+            AccountMeta,
+            Instruction,
+        },
+        pubkey::Pubkey,
+        system_program,
+        sysvar::{
+            clock,
+            rent,
+        },
+    },
+    solana_sdk::{
+        signer::{
+            keypair::Keypair,
+            Signer,
+        },
+        transaction::Transaction,
+    },
+    solitaire::{
+        processors::seeded::Seeded,
+        AccountState,
+        ErrBox,
+    },
+    std::collections::{
+        HashMap,
+        HashSet,
+    },
 };
-
-pub use pyth2wormhole::Pyth2WormholeConfig;
-
-pub use attestation_cfg::{
-    AttestationConditions,
-    AttestationConfig,
-    P2WSymbol,
-};
-pub use batch_state::BatchState;
-pub use util::{
-    start_metrics_server,
-    RLMutex,
-    RLMutexGuard,
-};
-
-pub use message::P2WMessageQueue;
 
 /// Future-friendly version of solitaire::ErrBox
 pub type ErrBoxSend = Box<dyn std::error::Error + Send + Sync>;
@@ -363,8 +360,8 @@ pub fn gen_attest_tx(
         AccountMeta::new(
             P2WMessage::key(
                 &P2WMessageDrvData {
-                    id: wh_msg_id,
-                    batch_size: symbols.len() as u16,
+                    id:            wh_msg_id,
+                    batch_size:    symbols.len() as u16,
                     message_owner: payer.pubkey(),
                 },
                 &p2w_addr,
@@ -385,7 +382,7 @@ pub fn gen_attest_tx(
     let ix_data = (
         pyth2wormhole::instruction::Instruction::Attest,
         AttestData {
-            consistency_level: ConsistencyLevel::Confirmed,
+            consistency_level:  ConsistencyLevel::Confirmed,
             message_account_id: wh_msg_id,
         },
     );

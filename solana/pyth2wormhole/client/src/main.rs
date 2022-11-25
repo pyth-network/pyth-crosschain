@@ -1,74 +1,72 @@
 pub mod cli;
 
-use std::{
-    fs::File,
-    net::SocketAddr,
-    sync::Arc,
-    time::{
-        Duration,
-        Instant,
+use {
+    clap::Parser,
+    cli::{
+        Action,
+        Cli,
+    },
+    futures::future::{
+        Future,
+        TryFutureExt,
+    },
+    generic_array::GenericArray,
+    lazy_static::lazy_static,
+    log::{
+        debug,
+        error,
+        info,
+        warn,
+        LevelFilter,
+    },
+    p2w_sdk::P2WEmitter,
+    prometheus::{
+        register_int_counter,
+        register_int_gauge,
+        IntCounter,
+        IntGauge,
+    },
+    pyth2wormhole::{
+        attest::P2W_MAX_BATCH_SIZE,
+        Pyth2WormholeConfig,
+    },
+    pyth2wormhole_client::*,
+    sha3::{
+        Digest,
+        Sha3_256,
+    },
+    solana_client::{
+        nonblocking::rpc_client::RpcClient,
+        rpc_config::RpcTransactionConfig,
+    },
+    solana_program::pubkey::Pubkey,
+    solana_sdk::{
+        commitment_config::CommitmentConfig,
+        signature::read_keypair_file,
+        signer::keypair::Keypair,
+    },
+    solana_transaction_status::UiTransactionEncoding,
+    solitaire::{
+        processors::seeded::Seeded,
+        ErrBox,
+    },
+    std::{
+        fs::File,
+        net::SocketAddr,
+        sync::Arc,
+        time::{
+            Duration,
+            Instant,
+        },
+    },
+    tokio::{
+        sync::{
+            Mutex,
+            Semaphore,
+        },
+        task::JoinHandle,
     },
 };
-
-use clap::Parser;
-use futures::future::{
-    Future,
-    TryFutureExt,
-};
-use generic_array::GenericArray;
-use lazy_static::lazy_static;
-use log::{
-    debug,
-    error,
-    info,
-    warn,
-    LevelFilter,
-};
-use prometheus::{
-    register_int_counter,
-    register_int_gauge,
-    IntCounter,
-    IntGauge,
-};
-use sha3::{
-    Digest,
-    Sha3_256,
-};
-use solana_client::{
-    nonblocking::rpc_client::RpcClient,
-    rpc_config::RpcTransactionConfig,
-};
-use solana_program::pubkey::Pubkey;
-use solana_sdk::{
-    commitment_config::CommitmentConfig,
-    signature::read_keypair_file,
-    signer::keypair::Keypair,
-};
-use solana_transaction_status::UiTransactionEncoding;
-use solitaire::{
-    processors::seeded::Seeded,
-    ErrBox,
-};
-use tokio::{
-    sync::{
-        Mutex,
-        Semaphore,
-    },
-    task::JoinHandle,
-};
-
-use cli::{
-    Action,
-    Cli,
-};
-
-use p2w_sdk::P2WEmitter;
-
-use pyth2wormhole::{
-    attest::P2W_MAX_BATCH_SIZE,
-    Pyth2WormholeConfig,
-};
-use pyth2wormhole_client::*;
 
 pub const SEQNO_PREFIX: &'static str = "Program log: Sequence: ";
 
@@ -163,12 +161,12 @@ async fn main() -> Result<(), ErrBox> {
                 p2w_addr,
                 read_keypair_file(&*shellexpand::tilde(&owner))?,
                 Pyth2WormholeConfig {
-                    owner: new_owner_addr.unwrap_or(old_config.owner),
-                    wh_prog: new_wh_prog.unwrap_or(old_config.wh_prog),
-                    pyth_owner: new_pyth_owner_addr.unwrap_or(old_config.pyth_owner),
-                    is_active: is_active.unwrap_or(old_config.is_active),
+                    owner:          new_owner_addr.unwrap_or(old_config.owner),
+                    wh_prog:        new_wh_prog.unwrap_or(old_config.wh_prog),
+                    pyth_owner:     new_pyth_owner_addr.unwrap_or(old_config.pyth_owner),
+                    is_active:      is_active.unwrap_or(old_config.is_active),
                     max_batch_size: P2W_MAX_BATCH_SIZE,
-                    ops_owner: new_ops_owner,
+                    ops_owner:      new_ops_owner,
                 },
                 latest_blockhash,
             )?;
@@ -216,8 +214,8 @@ async fn main() -> Result<(), ErrBox> {
             // between RPC accesses.
             let rpc_cfg = Arc::new(RLMutex::new(
                 RpcCfg {
-                    url: cli.rpc_url,
-                    timeout: Duration::from_secs(confirmation_timeout_secs),
+                    url:        cli.rpc_url,
+                    timeout:    Duration::from_secs(confirmation_timeout_secs),
                     commitment: cli.commitment.clone(),
                 },
                 Duration::from_millis(attestation_cfg.min_rpc_interval_ms),
@@ -414,8 +412,8 @@ async fn handle_attest_daemon_mode(
 
 #[derive(Clone)]
 pub struct RpcCfg {
-    pub url: String,
-    pub timeout: Duration,
+    pub url:        String,
+    pub timeout:    Duration,
     pub commitment: CommitmentConfig,
 }
 
@@ -551,13 +549,13 @@ fn prepare_attestation_sched_jobs(
 /// The argument count on attestation_sched_job got out of hand. This
 /// helps keep the correct order in check.
 pub struct AttestationSchedJobArgs {
-    pub batch: BatchState,
-    pub batch_no: usize,
-    pub batch_count: usize,
-    pub rpc_cfg: Arc<RLMutex<RpcCfg>>,
-    pub p2w_addr: Pubkey,
-    pub config: Pyth2WormholeConfig,
-    pub payer: Keypair,
+    pub batch:         BatchState,
+    pub batch_no:      usize,
+    pub batch_count:   usize,
+    pub rpc_cfg:       Arc<RLMutex<RpcCfg>>,
+    pub p2w_addr:      Pubkey,
+    pub config:        Pyth2WormholeConfig,
+    pub payer:         Keypair,
     pub message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
 }
 
@@ -661,17 +659,17 @@ async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrB
 }
 
 pub struct AttestationRetryJobArgs {
-    pub batch_no: usize,
-    pub batch_count: usize,
-    pub group_name: String,
-    pub symbols: Vec<P2WSymbol>,
-    pub n_retries: usize,
+    pub batch_no:       usize,
+    pub batch_count:    usize,
+    pub group_name:     String,
+    pub symbols:        Vec<P2WSymbol>,
+    pub n_retries:      usize,
     pub retry_interval: Duration,
-    pub rpc_cfg: Arc<RLMutex<RpcCfg>>,
-    pub p2w_addr: Pubkey,
-    pub p2w_config: Pyth2WormholeConfig,
-    pub payer: Keypair,
-    pub message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
+    pub rpc_cfg:        Arc<RLMutex<RpcCfg>>,
+    pub p2w_addr:       Pubkey,
+    pub p2w_config:     Pyth2WormholeConfig,
+    pub payer:          Keypair,
+    pub message_q_mtx:  Arc<Mutex<P2WMessageQueue>>,
 }
 
 /// A future that cranks a batch up to n_retries times, pausing for
@@ -725,14 +723,14 @@ async fn attestation_retry_job(args: AttestationRetryJobArgs) -> Result<(), ErrB
 /// Arguments for attestation_job(). This struct rules out same-type
 /// ordering errors due to the large argument count
 pub struct AttestationJobArgs {
-    pub rlmtx: Arc<RLMutex<RpcCfg>>,
-    pub batch_no: usize,
-    pub batch_count: usize,
-    pub group_name: String,
-    pub p2w_addr: Pubkey,
-    pub config: Pyth2WormholeConfig,
-    pub payer: Keypair,
-    pub symbols: Vec<P2WSymbol>,
+    pub rlmtx:         Arc<RLMutex<RpcCfg>>,
+    pub batch_no:      usize,
+    pub batch_count:   usize,
+    pub group_name:    String,
+    pub p2w_addr:      Pubkey,
+    pub config:        Pyth2WormholeConfig,
+    pub payer:         Keypair,
+    pub symbols:       Vec<P2WSymbol>,
     pub max_jobs_sema: Arc<Semaphore>,
     pub message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
 }
@@ -783,8 +781,8 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
         .get_transaction_with_config(
             &sig,
             RpcTransactionConfig {
-                encoding: Some(UiTransactionEncoding::Json),
-                commitment: Some(rpc.commitment()),
+                encoding:                          Some(UiTransactionEncoding::Json),
+                commitment:                        Some(rpc.commitment()),
                 max_supported_transaction_version: None,
             },
         )

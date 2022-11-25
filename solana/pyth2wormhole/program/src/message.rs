@@ -7,19 +7,21 @@
 //! derived with their address as message_owner in
 //! `P2WMessageDrvData`.
 
-use borsh::{
-    BorshDeserialize,
-    BorshSerialize,
-};
-use bridge::PostedMessageUnreliable;
-use solana_program::pubkey::Pubkey;
-use solitaire::{
-    processors::seeded::Seeded,
-    AccountState,
-    Data,
-    Info,
-    Mut,
-    Signer,
+use {
+    borsh::{
+        BorshDeserialize,
+        BorshSerialize,
+    },
+    bridge::PostedMessageUnreliable,
+    solana_program::pubkey::Pubkey,
+    solitaire::{
+        processors::seeded::Seeded,
+        AccountState,
+        Data,
+        Info,
+        Mut,
+        Signer,
+    },
 };
 
 pub type P2WMessage<'a> = Mut<PostedMessageUnreliable<'a, { AccountState::MaybeInitialized }>>;
@@ -34,9 +36,9 @@ pub struct P2WMessageDrvData {
     /// Currently wormhole does not resize accounts if they have different
     /// payload sizes; this (along with versioning the seed literal below) is
     /// a workaround to have different PDAs for different batch sizes.
-    pub batch_size: u16,
+    pub batch_size:    u16,
     /// Index for keeping many accounts per owner
-    pub id: u64,
+    pub id:            u64,
 }
 
 impl<'a> Seeded<&P2WMessageDrvData> for P2WMessage<'a> {

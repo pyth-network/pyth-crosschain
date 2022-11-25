@@ -17,7 +17,6 @@ jobs:
           profile: minimal
           toolchain: nightly
           components: rustfmt, clippy
-      - uses: pre-commit/action@v2.0.3
       - name: Install Solana
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/stable/install)"

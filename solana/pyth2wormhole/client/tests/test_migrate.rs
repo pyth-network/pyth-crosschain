@@ -2,45 +2,43 @@
 
 pub mod fixtures;
 
-use solana_program::system_program;
-use solana_program_test::*;
-use solana_sdk::{
-    account::Account,
-    instruction::{
-        AccountMeta,
-        Instruction,
+use {
+    bridge::accounts::{
+        Bridge,
+        BridgeConfig,
+        BridgeData,
     },
-    pubkey::Pubkey,
-    rent::Rent,
-    signature::Signer,
-    signer::keypair::Keypair,
-    transaction::Transaction,
-};
-
-use bridge::accounts::{
-    Bridge,
-    BridgeConfig,
-    BridgeData,
-};
-
-use log::info;
-
-use pyth2wormhole::config::{
-    OldP2WConfigAccount,
-    OldPyth2WormholeConfig,
-    P2WConfigAccount,
-    Pyth2WormholeConfig,
-};
-use pyth2wormhole_client as p2wc;
-use solitaire::{
-    processors::seeded::Seeded,
-    AccountState,
-    BorshSerialize,
-};
-
-use fixtures::{
-    passthrough,
-    pyth,
+    fixtures::{
+        passthrough,
+        pyth,
+    },
+    log::info,
+    pyth2wormhole::config::{
+        OldP2WConfigAccount,
+        OldPyth2WormholeConfig,
+        P2WConfigAccount,
+        Pyth2WormholeConfig,
+    },
+    pyth2wormhole_client as p2wc,
+    solana_program::system_program,
+    solana_program_test::*,
+    solana_sdk::{
+        account::Account,
+        instruction::{
+            AccountMeta,
+            Instruction,
+        },
+        pubkey::Pubkey,
+        rent::Rent,
+        signature::Signer,
+        signer::keypair::Keypair,
+        transaction::Transaction,
+    },
+    solitaire::{
+        processors::seeded::Seeded,
+        AccountState,
+        BorshSerialize,
+    },
 };
 
 #[tokio::test]
@@ -75,9 +73,9 @@ async fn test_migrate_works() -> Result<(), solitaire::ErrBox> {
     // Plant filled config accounts
     let old_p2w_config_bytes = old_p2w_config.try_to_vec()?;
     let old_p2w_config_account = Account {
-        lamports: Rent::default().minimum_balance(old_p2w_config_bytes.len()),
-        data: old_p2w_config_bytes,
-        owner: p2w_program_id,
+        lamports:   Rent::default().minimum_balance(old_p2w_config_bytes.len()),
+        data:       old_p2w_config_bytes,
+        owner:      p2w_program_id,
         executable: false,
         rent_epoch: 0,
     };
@@ -147,9 +145,9 @@ async fn test_migrate_already_migrated() -> Result<(), solitaire::ErrBox> {
     // Plant filled config accounts
     let old_p2w_config_bytes = old_p2w_config.try_to_vec()?;
     let old_p2w_config_account = Account {
-        lamports: Rent::default().minimum_balance(old_p2w_config_bytes.len()),
-        data: old_p2w_config_bytes,
-        owner: p2w_program_id,
+        lamports:   Rent::default().minimum_balance(old_p2w_config_bytes.len()),
+        data:       old_p2w_config_bytes,
+        owner:      p2w_program_id,
         executable: false,
         rent_epoch: 0,
     };
@@ -157,9 +155,9 @@ async fn test_migrate_already_migrated() -> Result<(), solitaire::ErrBox> {
 
     let new_p2w_config_bytes = new_p2w_config.try_to_vec()?;
     let new_p2w_config_account = Account {
-        lamports: Rent::default().minimum_balance(new_p2w_config_bytes.len()),
-        data: new_p2w_config_bytes,
-        owner: p2w_program_id,
+        lamports:   Rent::default().minimum_balance(new_p2w_config_bytes.len()),
+        data:       new_p2w_config_bytes,
+        owner:      p2w_program_id,
         executable: false,
         rent_epoch: 0,
     };

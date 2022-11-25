@@ -1,21 +1,21 @@
 //! This module contains test fixtures for instantiating plausible
 //! Pyth accounts for testing purposes.
-use solana_program_test::*;
-
-use solana_sdk::{
-    account::Account,
-    pubkey::Pubkey,
-    rent::Rent,
-};
-
-use pyth_client::{
-    AccKey,
-    AccountType,
-    Price,
-    Product,
-    MAGIC,
-    PROD_ATTR_SIZE,
-    VERSION,
+use {
+    pyth_client::{
+        AccKey,
+        AccountType,
+        Price,
+        Product,
+        MAGIC,
+        PROD_ATTR_SIZE,
+        VERSION,
+    },
+    solana_program_test::*,
+    solana_sdk::{
+        account::Account,
+        pubkey::Pubkey,
+        rent::Rent,
+    },
 };
 
 /// Create a pair of brand new product/price accounts that point at each other
@@ -27,14 +27,14 @@ pub fn add_test_symbol(pt: &mut ProgramTest, owner: &Pubkey) -> (Pubkey, Pubkey)
     // Instantiate
     let prod = {
         Product {
-            magic: MAGIC,
-            ver: VERSION,
-            atype: AccountType::Product as u32,
-            size: 0,
+            magic:  MAGIC,
+            ver:    VERSION,
+            atype:  AccountType::Product as u32,
+            size:   0,
             px_acc: AccKey {
                 val: price_id.to_bytes(),
             },
-            attr: [0u8; PROD_ATTR_SIZE],
+            attr:   [0u8; PROD_ATTR_SIZE],
         }
     };
 
@@ -66,16 +66,16 @@ pub fn add_test_symbol(pt: &mut ProgramTest, owner: &Pubkey) -> (Pubkey, Pubkey)
 
     // Populate the accounts
     let mut prod_acc = Account {
-        lamports: prod_lamports,
-        data: (*prod_bytes).to_vec(),
-        owner: owner.clone(),
+        lamports:   prod_lamports,
+        data:       (*prod_bytes).to_vec(),
+        owner:      owner.clone(),
         rent_epoch: 0,
         executable: false,
     };
     let mut price_acc = Account {
-        lamports: price_lamports,
-        data: (*price_bytes).to_vec(),
-        owner: owner.clone(),
+        lamports:   price_lamports,
+        data:       (*price_bytes).to_vec(),
+        owner:      owner.clone(),
         rent_epoch: 0,
         executable: false,
     };

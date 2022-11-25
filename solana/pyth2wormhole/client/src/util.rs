@@ -1,35 +1,36 @@
-use http::status::StatusCode;
-use log::{
-    error,
-    trace,
-};
-use prometheus::TextEncoder;
-use tokio::sync::{
-    Mutex,
-    MutexGuard,
-};
-use warp::{
-    reply,
-    Filter,
-    Rejection,
-    Reply,
-};
-
-use std::{
-    net::SocketAddr,
-    ops::{
-        Deref,
-        DerefMut,
+use {
+    http::status::StatusCode,
+    log::{
+        error,
+        trace,
     },
-    time::{
-        Duration,
-        Instant,
+    prometheus::TextEncoder,
+    std::{
+        net::SocketAddr,
+        ops::{
+            Deref,
+            DerefMut,
+        },
+        time::{
+            Duration,
+            Instant,
+        },
+    },
+    tokio::sync::{
+        Mutex,
+        MutexGuard,
+    },
+    warp::{
+        reply,
+        Filter,
+        Rejection,
+        Reply,
     },
 };
 
 /// Rate-limited mutex. Ensures there's a period of minimum rl_interval between lock acquisitions
 pub struct RLMutex<T> {
-    mtx: Mutex<RLMutexState<T>>,
+    mtx:         Mutex<RLMutexState<T>>,
     rl_interval: Duration,
 }
 
@@ -37,7 +38,7 @@ pub struct RLMutex<T> {
 pub struct RLMutexState<T> {
     /// Helps make sure regular passage of time is subtracted from sleep duration
     last_released: Instant,
-    val: T,
+    val:           T,
 }
 
 impl<T> Deref for RLMutexState<T> {

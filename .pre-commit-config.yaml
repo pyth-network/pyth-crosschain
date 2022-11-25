@@ -17,10 +17,10 @@ repos:
   - repo: local
     hooks:
       # Hooks for the remote executor
-      - id: cargo-fmt-executor
-        name: Cargo format executor
+      - id: cargo-fmt-executor-remote-executor
+        name: Cargo format executor for remote executor
         language: "rust"
-        entry: cargo +nightly fmt --manifest-path ./pythnet/remote-executor/Cargo.toml --all
+        entry: cargo +nightly fmt --manifest-path ./pythnet/remote-executor/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: pythnet/remote-executor/
       - id: cargo-clippy-executor
@@ -30,9 +30,16 @@ repos:
         pass_filenames: false
         files: pythnet/remote-executor/
       # Hooks for the attester
-      - id: cargo-fmt-executor
-        name: Cargo format executor
+      - id: cargo-fmt-executor-attester
+        name: Cargo format executor for attester
         language: "rust"
-        entry: cargo +nightly fmt --manifest-path ./solana/pyth2wormhole/Cargo.toml --all
+        entry: cargo +nightly fmt --manifest-path ./solana/pyth2wormhole/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: solana/pyth2wormhole/
+      # Hooks for cosmwasm contract
+      - id: cargo-fmt-executor-cosmwasm
+        name: Cargo format executor form cosmwasm contract
+        language: "rust"
+        entry: cargo +nightly fmt --manifest-path ./cosmwasm/Cargo.toml --all -- --config-path rustfmt.toml
+        pass_filenames: false
+        files: cosmwasm/
