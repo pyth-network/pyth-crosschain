@@ -13,6 +13,7 @@ pub use {
     message::P2WMessageQueue,
     pyth2wormhole::Pyth2WormholeConfig,
     util::{
+        start_metrics_server,
         RLMutex,
         RLMutexGuard,
     },
