@@ -1,10 +1,12 @@
-use anchor_lang::prelude::*;
-use std::{
-    io::Write,
-    ops::Deref,
-    str::FromStr,
+use {
+    anchor_lang::prelude::*,
+    std::{
+        io::Write,
+        ops::Deref,
+        str::FromStr,
+    },
+    wormhole_solana::VAA,
 };
-use wormhole_solana::VAA;
 
 // The current chain's wormhole bridge owns the VAA accounts
 impl Owner for AnchorVaa {
@@ -50,5 +52,5 @@ impl Deref for AnchorVaa {
 #[derive(Clone, AnchorDeserialize, AnchorSerialize)]
 pub struct AnchorVaa {
     pub magic: [u8; 3],
-    pub vaa: VAA,
+    pub vaa:   VAA,
 }

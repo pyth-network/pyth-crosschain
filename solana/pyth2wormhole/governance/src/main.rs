@@ -1,20 +1,21 @@
-use anyhow::Result;
-use clap::Parser;
-use cli::{
-    Action,
-    Cli,
-};
-use pyth2wormhole_client::{
-    get_set_config_ix,
-    Pyth2WormholeConfig,
-};
-
-use borsh::BorshSerialize;
-use pyth2wormhole_client::get_set_is_active_ix;
-use remote_executor::state::governance_payload::{
-    ExecutorPayload,
-    GovernanceHeader,
-    InstructionData,
+use {
+    anyhow::Result,
+    borsh::BorshSerialize,
+    clap::Parser,
+    cli::{
+        Action,
+        Cli,
+    },
+    pyth2wormhole_client::{
+        get_set_config_ix,
+        get_set_is_active_ix,
+        Pyth2WormholeConfig,
+    },
+    remote_executor::state::governance_payload::{
+        ExecutorPayload,
+        GovernanceHeader,
+        InstructionData,
+    },
 };
 
 mod cli;
@@ -43,7 +44,7 @@ fn main() -> Result<()> {
             };
             let ix = get_set_config_ix(&program_id, &owner, &payer, new_config).unwrap();
             let payload = ExecutorPayload {
-                header: GovernanceHeader::executor_governance_header(),
+                header:       GovernanceHeader::executor_governance_header(),
                 instructions: vec![InstructionData::from(&ix)],
             }
             .try_to_vec()?;
@@ -58,7 +59,7 @@ fn main() -> Result<()> {
         } => {
             let ix = get_set_is_active_ix(&program_id, &ops_owner, &payer, is_active).unwrap();
             let payload = ExecutorPayload {
-                header: GovernanceHeader::executor_governance_header(),
+                header:       GovernanceHeader::executor_governance_header(),
                 instructions: vec![InstructionData::from(&ix)],
             }
             .try_to_vec()?;

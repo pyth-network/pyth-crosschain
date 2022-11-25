@@ -1,10 +1,11 @@
 //! CLI options
-use clap::{
-    Parser,
-    Subcommand,
+use {
+    clap::{
+        Parser,
+        Subcommand,
+    },
+    solana_sdk::pubkey::Pubkey,
 };
-
-use solana_sdk::pubkey::Pubkey;
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -21,33 +22,33 @@ pub enum Action {
     #[clap(about = "Get set upgrade authority payload for squads-cli")]
     GetSetConfig {
         #[clap(long, help = "Program id")]
-        program_id: Pubkey,
+        program_id:     Pubkey,
         #[clap(long, help = "Current owner")]
-        owner: Pubkey,
+        owner:          Pubkey,
         #[clap(long, help = "Payer")]
-        payer: Pubkey,
+        payer:          Pubkey,
         #[clap(long, help = "Config : New owner")]
-        new_owner: Pubkey,
+        new_owner:      Pubkey,
         #[clap(long, help = "Config : Wormhole program id")]
-        wormhole: Pubkey,
+        wormhole:       Pubkey,
         #[clap(long, help = "Config : Pyth program id")]
-        pyth_owner: Pubkey,
+        pyth_owner:     Pubkey,
         #[clap(long, help = "Config : Max batch size")]
         max_batch_size: u16,
         #[clap(long, help = "Config : Is active")]
-        is_active: bool,
+        is_active:      bool,
         #[clap(long, help = "Config : Ops owner")]
-        ops_owner: Option<Pubkey>,
+        ops_owner:      Option<Pubkey>,
     },
     #[clap(about = "Get upgrade program payload for squads-cli")]
     GetSetIsActive {
         #[clap(long, help = "Program id")]
         program_id: Pubkey,
         #[clap(long, help = "Current ops owner")]
-        ops_owner: Pubkey,
+        ops_owner:  Pubkey,
         #[clap(long, help = "Payer")]
-        payer: Pubkey,
+        payer:      Pubkey,
         #[clap(long, help = "Config : Is active")]
-        is_active: bool,
+        is_active:  bool,
     },
 }

@@ -1,60 +1,59 @@
-use crate::{
-    config::P2WConfigAccount,
-    message::{
-        P2WMessage,
-        P2WMessageDrvData,
+use {
+    crate::{
+        config::P2WConfigAccount,
+        message::{
+            P2WMessage,
+            P2WMessageDrvData,
+        },
     },
-};
-use borsh::{
-    BorshDeserialize,
-    BorshSerialize,
-};
-use solana_program::{
-    clock::Clock,
-    instruction::{
-        AccountMeta,
-        Instruction,
+    borsh::{
+        BorshDeserialize,
+        BorshSerialize,
     },
-    program::{
-        invoke,
-        invoke_signed,
+    bridge::{
+        accounts::BridgeData,
+        types::ConsistencyLevel,
+        PostMessageData,
     },
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    rent::Rent,
-    system_instruction,
-    sysvar::Sysvar as SolanaSysvar,
-};
-
-use p2w_sdk::{
-    BatchPriceAttestation,
-    Identifier,
-    P2WEmitter,
-    PriceAttestation,
-};
-
-use bridge::{
-    accounts::BridgeData,
-    types::ConsistencyLevel,
-    PostMessageData,
-};
-
-use solitaire::{
-    invoke_seeded,
-    trace,
-    AccountState,
-    Derive,
-    ExecutionContext,
-    FromAccounts,
-    Info,
-    Keyed,
-    Mut,
-    Peel,
-    Result as SoliResult,
-    Seeded,
-    Signer,
-    SolitaireError,
-    Sysvar,
+    p2w_sdk::{
+        BatchPriceAttestation,
+        Identifier,
+        P2WEmitter,
+        PriceAttestation,
+    },
+    solana_program::{
+        clock::Clock,
+        instruction::{
+            AccountMeta,
+            Instruction,
+        },
+        program::{
+            invoke,
+            invoke_signed,
+        },
+        program_error::ProgramError,
+        pubkey::Pubkey,
+        rent::Rent,
+        system_instruction,
+        sysvar::Sysvar as SolanaSysvar,
+    },
+    solitaire::{
+        invoke_seeded,
+        trace,
+        AccountState,
+        Derive,
+        ExecutionContext,
+        FromAccounts,
+        Info,
+        Keyed,
+        Mut,
+        Peel,
+        Result as SoliResult,
+        Seeded,
+        Signer,
+        SolitaireError,
+        Sysvar,
+    },
 };
 
 /// Important: must be manually maintained until native Solitaire
@@ -69,26 +68,26 @@ pub const P2W_MAX_BATCH_SIZE: u16 = 5;
 #[derive(FromAccounts)]
 pub struct Attest<'b> {
     // Payer also used for wormhole
-    pub payer: Mut<Signer<Info<'b>>>,
+    pub payer:          Mut<Signer<Info<'b>>>,
     pub system_program: Info<'b>,
-    pub config: P2WConfigAccount<'b, { AccountState::Initialized }>,
+    pub config:         P2WConfigAccount<'b, { AccountState::Initialized }>,
 
     // Hardcoded product/price pairs, bypassing Solitaire's variable-length limitations
     // Any change to the number of accounts must include an appropriate change to P2W_MAX_BATCH_SIZE
     pub pyth_product: Info<'b>,
-    pub pyth_price: Info<'b>,
+    pub pyth_price:   Info<'b>,
 
     pub pyth_product2: Option<Info<'b>>,
-    pub pyth_price2: Option<Info<'b>>,
+    pub pyth_price2:   Option<Info<'b>>,
 
     pub pyth_product3: Option<Info<'b>>,
-    pub pyth_price3: Option<Info<'b>>,
+    pub pyth_price3:   Option<Info<'b>>,
 
     pub pyth_product4: Option<Info<'b>>,
-    pub pyth_price4: Option<Info<'b>>,
+    pub pyth_price4:   Option<Info<'b>>,
 
     pub pyth_product5: Option<Info<'b>>,
-    pub pyth_price5: Option<Info<'b>>,
+    pub pyth_price5:   Option<Info<'b>>,
 
     // Did you read the comment near `pyth_product`?
     // pub pyth_product6: Option<Info<'b>>,
@@ -139,7 +138,7 @@ pub struct Attest<'b> {
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct AttestData {
-    pub consistency_level: ConsistencyLevel,
+    pub consistency_level:  ConsistencyLevel,
     pub message_account_id: u64,
 }
 
@@ -266,8 +265,8 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
 
     let wh_msg_drv_data = P2WMessageDrvData {
         message_owner: accs.payer.key.clone(),
-        batch_size: batch_attestation.price_attestations.len() as u16,
-        id: data.message_account_id,
+        batch_size:    batch_attestation.price_attestations.len() as u16,
+        id:            data.message_account_id,
     };
 
     if !P2WMessage::key(&wh_msg_drv_data, ctx.program_id).eq(accs.wh_message.info().key) {

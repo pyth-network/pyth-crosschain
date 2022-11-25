@@ -1,23 +1,24 @@
-use log::trace;
-
-use std::{
-    ops::{
-        Deref,
-        DerefMut,
+use {
+    log::trace,
+    std::{
+        ops::{
+            Deref,
+            DerefMut,
+        },
+        time::{
+            Duration,
+            Instant,
+        },
     },
-    time::{
-        Duration,
-        Instant,
+    tokio::sync::{
+        Mutex,
+        MutexGuard,
     },
-};
-use tokio::sync::{
-    Mutex,
-    MutexGuard,
 };
 
 /// Rate-limited mutex. Ensures there's a period of minimum rl_interval between lock acquisitions
 pub struct RLMutex<T> {
-    mtx: Mutex<RLMutexState<T>>,
+    mtx:         Mutex<RLMutexState<T>>,
     rl_interval: Duration,
 }
 
@@ -25,7 +26,7 @@ pub struct RLMutex<T> {
 pub struct RLMutexState<T> {
     /// Helps make sure regular passage of time is subtracted from sleep duration
     last_released: Instant,
-    val: T,
+    val:           T,
 }
 
 impl<T> Deref for RLMutexState<T> {
