@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 
 interface ReceiverStructs {
     struct Provider {
+        uint16 chainId;
         uint16 governanceChainId;
         bytes32 governanceContract;
     }

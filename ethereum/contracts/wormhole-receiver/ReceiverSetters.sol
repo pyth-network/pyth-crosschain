@@ -6,10 +6,6 @@ pragma solidity ^0.8.0;
 import "./ReceiverState.sol";
 
 contract ReceiverSetters is ReceiverState {
-    function setOwner(address owner_) internal {
-        _state.owner = owner_;
-    }
-
     function updateGuardianSetIndex(uint32 newIndex) internal {
         _state.guardianSetIndex = newIndex;
     }
@@ -33,6 +29,10 @@ contract ReceiverSetters is ReceiverState {
 
     function setGovernanceActionConsumed(bytes32 hash) internal {
         _state.consumedGovernanceActions[hash] = true;
+    }
+
+    function setChainId(uint16 chainId) internal {
+        _state.provider.chainId = chainId;
     }
 
     function setGovernanceChainId(uint16 chainId) internal {
