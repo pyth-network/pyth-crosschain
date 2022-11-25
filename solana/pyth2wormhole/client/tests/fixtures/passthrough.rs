@@ -12,7 +12,7 @@ use {
 pub fn passthrough_entrypoint(
     program_id: &Pubkey,
     account_infos: &[AccountInfo],
-    data: &[u8],
+    _data: &[u8],
 ) -> Result<(), ProgramError> {
     msg!(&format!("Program {}", program_id));
     msg!(&format!("account_infos {:?}", account_infos));

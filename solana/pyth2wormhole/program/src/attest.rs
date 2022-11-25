@@ -13,7 +13,6 @@ use {
     bridge::{
         accounts::BridgeData,
         types::ConsistencyLevel,
-        PostMessageData,
     },
     p2w_sdk::{
         BatchPriceAttestation,
@@ -23,25 +22,18 @@ use {
     },
     solana_program::{
         clock::Clock,
-        instruction::{
-            AccountMeta,
-            Instruction,
-        },
         program::{
             invoke,
             invoke_signed,
         },
         program_error::ProgramError,
-        pubkey::Pubkey,
         rent::Rent,
         system_instruction,
         sysvar::Sysvar as SolanaSysvar,
     },
     solitaire::{
-        invoke_seeded,
         trace,
         AccountState,
-        Derive,
         ExecutionContext,
         FromAccounts,
         Info,
@@ -185,7 +177,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         // accs.pyth_price10.as_ref(),
     ];
 
-    let price_pairs: Vec<_> = price_pair_opts.into_iter().filter_map(|acc| *acc).collect();
+    let price_pairs: Vec<_> = price_pair_opts.iter().filter_map(|acc| *acc).collect();
 
     if price_pairs.len() % 2 != 0 {
         trace!(&format!(
@@ -210,13 +202,13 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
 		product, price,
             accs.config.pyth_owner, product.owner, price.owner
         ));
-            return Err(SolitaireError::InvalidOwner(accs.pyth_price.owner.clone()).into());
+            return Err(SolitaireError::InvalidOwner(*accs.pyth_price.owner));
         }
 
         let attestation = PriceAttestation::from_pyth_price_bytes(
             Identifier::new(price.key.to_bytes()),
             accs.clock.unix_timestamp,
-            &*price.try_borrow_data()?,
+            &price.try_borrow_data()?,
         )
         .map_err(|e| {
             trace!(&e.to_string());
@@ -264,7 +256,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
     })?;
 
     let wh_msg_drv_data = P2WMessageDrvData {
-        message_owner: accs.payer.key.clone(),
+        message_owner: *accs.payer.key,
         batch_size:    batch_attestation.price_attestations.len() as u16,
         id:            data.message_account_id,
     };
@@ -290,7 +282,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         *accs.wh_message.info().key,
         0,
         payload,
-        data.consistency_level.clone(),
+        data.consistency_level,
     )?;
 
     trace!(&format!(

@@ -1,8 +1,6 @@
 pub mod fixtures;
 
 use {
-    borsh::BorshDeserialize,
-    p2wc::get_config_account,
     pyth2wormhole::config::{
         P2WConfigAccount,
         Pyth2WormholeConfig,

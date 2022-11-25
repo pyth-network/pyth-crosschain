@@ -10,7 +10,6 @@ use {
     solana_program::{
         program::invoke,
         program_error::ProgramError,
-        pubkey::Pubkey,
         rent::Rent,
         system_instruction,
         system_program,
@@ -51,7 +50,7 @@ pub struct Migrate<'b> {
     pub system_program: Info<'b>,
 }
 
-pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResult<()> {
+pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, _data: ()) -> SoliResult<()> {
     let old_config: &OldPyth2WormholeConfig = &accs.old_config.1;
 
     if &old_config.owner != accs.current_owner.info().key {
@@ -60,7 +59,7 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
             old_config.owner
         );
         return Err(SolitaireError::InvalidSigner(
-            accs.current_owner.info().key.clone(),
+            *accs.current_owner.info().key,
         ));
     }
 
@@ -70,9 +69,7 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
             system_program::id(),
             accs.system_program.key
         );
-        return Err(SolitaireError::InvalidSigner(
-            accs.system_program.key.clone(),
-        ));
+        return Err(SolitaireError::InvalidSigner(*accs.system_program.key));
     }
 
     // Populate new config
@@ -83,11 +80,11 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
     // Adjust new config lamports
     // NOTE(2022-09-29): Necessary due to PythNet rent calculation
     // differences, remove when solitaire supports Rent::get()?
-    let mut acc_lamports = accs.new_config.info().lamports();
+    let acc_lamports = accs.new_config.info().lamports();
 
     let new_lamports = Rent::get()?.minimum_balance(accs.new_config.size());
 
-    let diff_lamports: u64 = (acc_lamports as i64 - new_lamports as i64).abs() as u64;
+    let diff_lamports: u64 = (acc_lamports as i64 - new_lamports as i64).unsigned_abs();
 
     if acc_lamports < new_lamports {
         // Less than enough lamports, debit the payer

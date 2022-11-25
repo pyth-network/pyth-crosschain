@@ -38,7 +38,7 @@ pub fn add_test_symbol(pt: &mut ProgramTest, owner: &Pubkey) -> (Pubkey, Pubkey)
         }
     };
 
-    let mut price = Price {
+    let price = Price {
         magic: MAGIC,
         ver: VERSION,
         atype: AccountType::Price as u32,
@@ -65,17 +65,17 @@ pub fn add_test_symbol(pt: &mut ProgramTest, owner: &Pubkey) -> (Pubkey, Pubkey)
     let price_lamports = Rent::default().minimum_balance(price_bytes.len());
 
     // Populate the accounts
-    let mut prod_acc = Account {
+    let prod_acc = Account {
         lamports:   prod_lamports,
         data:       (*prod_bytes).to_vec(),
-        owner:      owner.clone(),
+        owner:      *owner,
         rent_epoch: 0,
         executable: false,
     };
-    let mut price_acc = Account {
+    let price_acc = Account {
         lamports:   price_lamports,
         data:       (*price_bytes).to_vec(),
-        owner:      owner.clone(),
+        owner:      *owner,
         rent_epoch: 0,
         executable: false,
     };
