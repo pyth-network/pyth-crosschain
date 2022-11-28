@@ -215,7 +215,7 @@ name_groups:
     # End of fast_interval_only
 
     cfg_yaml += f"""
-symbol_groups:    
+symbol_groups:
   - group_name: longer_interval_sensitive_changes
     conditions:
       min_interval_secs: 10

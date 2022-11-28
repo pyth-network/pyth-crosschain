@@ -1,5 +1,4 @@
 use {
-    crate::BatchState,
     log::info,
     serde::{
         de::Error,
@@ -9,30 +8,23 @@ use {
         Serializer,
     },
     solana_program::pubkey::Pubkey,
-    std::{
-        collections::{
-            HashMap,
-            HashSet,
-        },
-        iter,
-        str::FromStr,
-    },
+    std::str::FromStr,
 };
 
 /// Pyth2wormhole config specific to attestation requests
-#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct AttestationConfig {
     #[serde(default = "default_min_msg_reuse_interval_ms")]
-    pub min_msg_reuse_interval_ms:    u64,
+    pub min_msg_reuse_interval_ms:      u64,
     #[serde(default = "default_max_msg_accounts")]
-    pub max_msg_accounts:             u64,
+    pub max_msg_accounts:               u64,
     /// Optionally, we take a mapping account to add remaining symbols from a Pyth deployments. These symbols are processed under attestation conditions for the `default` symbol group.
     #[serde(
         deserialize_with = "opt_pubkey_string_de",
         serialize_with = "opt_pubkey_string_ser",
         default // Uses Option::default() which is None
     )]
-    pub mapping_addr:                 Option<Pubkey>,
+    pub mapping_addr:                   Option<Pubkey>,
     /// The known symbol list will be reloaded based off this
     /// interval, to account for mapping changes. Note: This interval
     /// will only work if the mapping address is defined. Whenever
@@ -41,10 +33,10 @@ pub struct AttestationConfig {
     /// symbol list, and before stopping the pre-existing obsolete
     /// jobs to maintain uninterrupted cranking.
     #[serde(default = "default_mapping_reload_interval_mins")]
-    pub mapping_reload_interval_mins: u64,
+    pub mapping_reload_interval_mins:   u64,
     #[serde(default = "default_min_rpc_interval_ms")]
     /// Rate-limiting minimum delay between RPC requests in milliseconds
-    pub min_rpc_interval_ms: u64,
+    pub min_rpc_interval_ms:            u64,
     /// Attestation conditions that will be used for any symbols included in the mapping
     /// that aren't explicitly in one of the groups below.
     pub default_attestation_conditions: AttestationConditions,
@@ -72,29 +64,27 @@ impl AttestationConfig {
                 g.symbols
                     .as_slice()
                     .chunks(max_batch_size)
-                    .map(move |symbols| {
-                        SymbolGroup {
-                            group_name: name4closure.clone(),
-                            symbols: symbols.to_vec(),
-                            conditions: conditions4closure.clone()
-                        }
+                    .map(move |symbols| SymbolGroup {
+                        group_name: name4closure.clone(),
+                        symbols:    symbols.to_vec(),
+                        conditions: conditions4closure.clone(),
                     })
             })
             .collect()
     }
 }
 
-#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct NameGroup {
-    pub group_name: String,
+    pub group_name:   String,
     /// Attestation conditions applied to all symbols in this group.
     /// If not provided, use the default attestation conditions from `AttestationConfig`.
-    pub conditions: Option<AttestationConditions>,
+    pub conditions:   Option<AttestationConditions>,
     /// The names of the symbols to include in this group
     pub symbol_names: Vec<String>,
 }
 
-#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct SymbolGroup {
     pub group_name: String,
     /// Attestation conditions applied to all symbols in this group
@@ -130,7 +120,7 @@ pub const fn default_max_batch_jobs() -> usize {
 /// of the active conditions is met. Option<> fields can be
 /// de-activated with None. All conditions are inactive by default,
 /// except for the non-Option ones.
-#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct AttestationConditions {
     /// Baseline, unconditional attestation interval. Attestation is triggered if the specified interval elapsed since last attestation.
     #[serde(default = "default_min_interval_secs")]
@@ -289,14 +279,14 @@ mod tests {
         };
 
         let cfg = AttestationConfig {
-            min_msg_reuse_interval_ms:    1000,
-            max_msg_accounts:             100_000,
-            min_rpc_interval_ms:          2123,
-            mapping_addr:                 None,
-            mapping_reload_interval_mins: 42,
+            min_msg_reuse_interval_ms:      1000,
+            max_msg_accounts:               100_000,
+            min_rpc_interval_ms:            2123,
+            mapping_addr:                   None,
+            mapping_reload_interval_mins:   42,
             default_attestation_conditions: AttestationConditions::default(),
-            name_groups: vec![],
-            symbol_groups:                vec![fastbois, slowbois],
+            name_groups:                    vec![],
+            symbol_groups:                  vec![fastbois, slowbois],
         };
 
         let serialized = serde_yaml::to_string(&cfg)?;

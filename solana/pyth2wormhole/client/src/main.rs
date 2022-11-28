@@ -14,21 +14,24 @@ use {
         debug,
         error,
         info,
-        LevelFilter,
         warn,
+        LevelFilter,
     },
     p2w_sdk::P2WEmitter,
     prometheus::{
-        IntCounter,
-        IntGauge,
         register_int_counter,
         register_int_gauge,
+        IntCounter,
+        IntGauge,
     },
     pyth2wormhole::{
         attest::P2W_MAX_BATCH_SIZE,
         Pyth2WormholeConfig,
     },
-    pyth2wormhole_client::*,
+    pyth2wormhole_client::{
+        attestation_cfg::SymbolGroup,
+        *,
+    },
     sha3::{
         Digest,
         Sha3_256,
@@ -45,10 +48,14 @@ use {
     },
     solana_transaction_status::UiTransactionEncoding,
     solitaire::{
-        ErrBox,
         processors::seeded::Seeded,
+        ErrBox,
     },
     std::{
+        collections::{
+            HashMap,
+            HashSet,
+        },
         fs::File,
         net::SocketAddr,
         sync::Arc,
@@ -56,10 +63,6 @@ use {
             Duration,
             Instant,
         },
-        collections::{
-            HashMap,
-            HashSet,
-        }
     },
     tokio::{
         sync::{
@@ -69,7 +72,6 @@ use {
         task::JoinHandle,
     },
 };
-use pyth2wormhole_client::attestation_cfg::SymbolGroup;
 
 pub mod cli;
 
@@ -324,11 +326,21 @@ async fn handle_attest_daemon_mode(
         };
 
         // Use the mapping if specified
-        batch_cfg = match attestation_config_to_batches(&rpc_cfg, &attestation_cfg, config.max_batch_size as usize).await {
+        batch_cfg = match attestation_config_to_batches(
+            &rpc_cfg,
+            &attestation_cfg,
+            config.max_batch_size as usize,
+        )
+        .await
+        {
             Ok(config) => config,
             Err(err) => {
                 // If we cannot query the mapping account, retain the existing batch configuration.
-                error!("Could not crawl mapping {}: {:?}", attestation_cfg.mapping_addr.unwrap_or_default(), err);
+                error!(
+                    "Could not crawl mapping {}: {:?}",
+                    attestation_cfg.mapping_addr.unwrap_or_default(),
+                    err
+                );
                 batch_cfg
             }
         };
@@ -432,8 +444,13 @@ async fn handle_attest_non_daemon_mode(
 ) -> Result<(), ErrBox> {
     let p2w_cfg = get_config_account(&lock_and_make_rpc(&rpc_cfg).await, &p2w_addr).await?;
 
-    let batch_config = attestation_config_to_batches(&rpc_cfg, &attestation_cfg, p2w_cfg.max_batch_size as usize).await?;
-    let batches: Vec<_> = batch_config.into_iter().map(|x| { BatchState::new(&x) }).collect();
+    let batch_config =
+        attestation_config_to_batches(&rpc_cfg, &attestation_cfg, p2w_cfg.max_batch_size as usize)
+            .await?;
+    let batches: Vec<_> = batch_config
+        .into_iter()
+        .map(|x| BatchState::new(&x))
+        .collect();
     let batch_count = batches.len();
 
     // For enforcing min_msg_reuse_interval_ms, we keep a piece of
@@ -483,68 +500,104 @@ async fn handle_attest_non_daemon_mode(
     Ok(())
 }
 
-async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestation_cfg: &AttestationConfig, max_batch_size: usize) -> Result<Vec<SymbolGroup>, ErrBox> {
+async fn attestation_config_to_batches(
+    rpc_cfg: &Arc<RLMutex<RpcCfg>>,
+    attestation_cfg: &AttestationConfig,
+    max_batch_size: usize,
+) -> Result<Vec<SymbolGroup>, ErrBox> {
     // Use the mapping if specified
     if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
-        crawl_pyth_mapping(&lock_and_make_rpc(&rpc_cfg).await, mapping_addr).await.map(|additional_accounts| {
-            debug!(
-                "Crawled mapping {} data:\n{:#?}",
-                mapping_addr, additional_accounts
-            );
+        crawl_pyth_mapping(&lock_and_make_rpc(rpc_cfg).await, mapping_addr)
+            .await
+            .map(|additional_accounts| {
+                debug!(
+                    "Crawled mapping {} data:\n{:#?}",
+                    mapping_addr, additional_accounts
+                );
 
-            // Construct batches from the named groups in the attestation config
-            let mut name_to_symbols: HashMap<String, Vec<P2WSymbol>> = HashMap::new();
-            for product_account in &additional_accounts {
-                for price_account_key in &product_account.price_account_keys {
-                    let symbol = P2WSymbol {
-                        name: Some(product_account.name.clone()),
-                        product_addr: product_account.key,
-                        price_addr: price_account_key.clone(),
-                    };
-
-                    name_to_symbols.entry(product_account.name.clone()).or_insert(vec![]).push(symbol);
-                }
-            }
-
-            let mut mapping_batches: Vec<SymbolGroup> = vec![];
-            for group in &attestation_cfg.name_groups {
-                let batch_items: Vec<P2WSymbol> = group.symbol_names.iter().flat_map(
-                    |symbol| name_to_symbols.get(symbol).into_iter().flat_map(
-                        |x| x.into_iter()
-                    )
-                ).map(|x| x.clone()).collect();
-                let group_conditions = group.conditions.as_ref().unwrap_or(&attestation_cfg.default_attestation_conditions);
-                mapping_batches.extend(partition_into_batches(&group.group_name, max_batch_size, group_conditions, batch_items))
-            }
-
-            // Construct batches that are explicitly provided in the AttestationConfig
-            let attestation_cfg_batches: Vec<SymbolGroup> = attestation_cfg.as_batches(max_batch_size);
-
-            // Find any accounts not included in existing batches and group them into a remainder batch
-            let existing_price_accounts: HashSet<Pubkey> = mapping_batches.iter().flat_map(|batch| batch.symbols.iter().map(|symbol| symbol.price_addr.clone())).chain(
-                attestation_cfg_batches.iter().flat_map(|batch| batch.symbols.iter().map(|symbol| symbol.price_addr.clone()))
-            ).collect();
-
-            let mut remaining_symbols: Vec<P2WSymbol> = vec![];
-            for product_account in additional_accounts {
-                for price_account_key in product_account.price_account_keys {
-                    if !existing_price_accounts.contains(&price_account_key) {
+                // Construct batches from the named groups in the attestation config
+                let mut name_to_symbols: HashMap<String, Vec<P2WSymbol>> = HashMap::new();
+                for product_account in &additional_accounts {
+                    for price_account_key in &product_account.price_account_keys {
                         let symbol = P2WSymbol {
-                            name: Some(product_account.name.clone()),
+                            name:         Some(product_account.name.clone()),
                             product_addr: product_account.key,
-                            price_addr: price_account_key,
+                            price_addr:   *price_account_key,
                         };
-                        remaining_symbols.push(symbol);
+
+                        name_to_symbols
+                            .entry(product_account.name.clone())
+                            .or_insert(vec![])
+                            .push(symbol);
                     }
                 }
-            }
-            let remaining_batches = partition_into_batches(&"mapping".to_owned(), max_batch_size, &attestation_cfg.default_attestation_conditions, remaining_symbols);
 
-            attestation_cfg_batches.into_iter()
-              .chain(mapping_batches.into_iter())
-              .chain(remaining_batches.into_iter())
-              .collect::<Vec<SymbolGroup>>()
-        })
+                let mut mapping_batches: Vec<SymbolGroup> = vec![];
+                for group in &attestation_cfg.name_groups {
+                    let batch_items: Vec<P2WSymbol> = group
+                        .symbol_names
+                        .iter()
+                        .flat_map(|symbol| {
+                            name_to_symbols
+                                .get(symbol)
+                                .into_iter()
+                                .flat_map(|x| x.iter())
+                        })
+                        .cloned()
+                        .collect();
+                    let group_conditions = group
+                        .conditions
+                        .as_ref()
+                        .unwrap_or(&attestation_cfg.default_attestation_conditions);
+                    mapping_batches.extend(partition_into_batches(
+                        &group.group_name,
+                        max_batch_size,
+                        group_conditions,
+                        batch_items,
+                    ))
+                }
+
+                // Construct batches that are explicitly provided in the AttestationConfig
+                let attestation_cfg_batches: Vec<SymbolGroup> =
+                    attestation_cfg.as_batches(max_batch_size);
+
+                // Find any accounts not included in existing batches and group them into a remainder batch
+                let existing_price_accounts: HashSet<Pubkey> = mapping_batches
+                    .iter()
+                    .flat_map(|batch| batch.symbols.iter().map(|symbol| symbol.price_addr))
+                    .chain(
+                        attestation_cfg_batches
+                            .iter()
+                            .flat_map(|batch| batch.symbols.iter().map(|symbol| symbol.price_addr)),
+                    )
+                    .collect();
+
+                let mut remaining_symbols: Vec<P2WSymbol> = vec![];
+                for product_account in additional_accounts {
+                    for price_account_key in product_account.price_account_keys {
+                        if !existing_price_accounts.contains(&price_account_key) {
+                            let symbol = P2WSymbol {
+                                name:         Some(product_account.name.clone()),
+                                product_addr: product_account.key,
+                                price_addr:   price_account_key,
+                            };
+                            remaining_symbols.push(symbol);
+                        }
+                    }
+                }
+                let remaining_batches = partition_into_batches(
+                    &"mapping".to_owned(),
+                    max_batch_size,
+                    &attestation_cfg.default_attestation_conditions,
+                    remaining_symbols,
+                );
+
+                attestation_cfg_batches
+                    .into_iter()
+                    .chain(mapping_batches.into_iter())
+                    .chain(remaining_batches.into_iter())
+                    .collect::<Vec<SymbolGroup>>()
+            })
     } else {
         Ok(attestation_cfg.as_batches(max_batch_size))
     }
@@ -552,22 +605,26 @@ async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestati
 
 /// Partition symbols into a collection of batches, each of which contains no more than
 /// `max_batch_size` symbols.
-fn partition_into_batches(batch_name: &String, max_batch_size: usize, conditions: &AttestationConditions, symbols: Vec<P2WSymbol>) -> Vec<SymbolGroup> {
+fn partition_into_batches(
+    batch_name: &String,
+    max_batch_size: usize,
+    conditions: &AttestationConditions,
+    symbols: Vec<P2WSymbol>,
+) -> Vec<SymbolGroup> {
     symbols
-      .as_slice()
-      .chunks(max_batch_size)
-      .map(move |batch_symbols| {
-          SymbolGroup {
-              group_name: batch_name.to_owned(),
-              symbols: batch_symbols.to_vec(),
-              conditions: conditions.clone(),
-          }
-      }).collect()
+        .as_slice()
+        .chunks(max_batch_size)
+        .map(move |batch_symbols| SymbolGroup {
+            group_name: batch_name.to_owned(),
+            symbols:    batch_symbols.to_vec(),
+            conditions: conditions.clone(),
+        })
+        .collect()
 }
 
 /// Constructs attestation scheduling jobs from attestation config.
 fn prepare_attestation_sched_jobs(
-    batch_cfg: &Vec<SymbolGroup>,
+    batch_cfg: &[SymbolGroup],
     p2w_cfg: &Pyth2WormholeConfig,
     rpc_cfg: &Arc<RLMutex<RpcCfg>>,
     p2w_addr: &Pubkey,
@@ -575,7 +632,7 @@ fn prepare_attestation_sched_jobs(
     message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
 ) -> futures::future::JoinAll<impl Future<Output = Result<(), ErrBoxSend>>> {
     // Flatten attestation config into a plain list of batches
-    let batches: Vec<_> = batch_cfg.into_iter().map(|x| { BatchState::new(&x)}).collect();
+    let batches: Vec<_> = batch_cfg.iter().map(BatchState::new).collect();
 
     let batch_count = batches.len();
 

@@ -1,5 +1,6 @@
 use {
     crate::{
+        attestation_cfg::SymbolGroup,
         AttestationConditions,
         P2WSymbol,
     },
@@ -14,7 +15,6 @@ use {
         Instant,
     },
 };
-use crate::attestation_cfg::SymbolGroup;
 
 /// Runtime representation of a batch. It refers to the original group
 /// from the config.
@@ -28,15 +28,13 @@ pub struct BatchState {
 }
 
 impl<'a> BatchState {
-    pub fn new(
-        group: &SymbolGroup
-    ) -> Self {
+    pub fn new(group: &SymbolGroup) -> Self {
         Self {
-            group_name: group.group_name.clone(),
-            symbols: group.symbols.clone(),
-            conditions: group.conditions.clone(),
+            group_name:               group.group_name.clone(),
+            symbols:                  group.symbols.clone(),
+            conditions:               group.conditions.clone(),
             last_known_symbol_states: vec![None; group.symbols.len()],
-            last_job_finished_at: Instant::now(),
+            last_job_finished_at:     Instant::now(),
         }
     }
 

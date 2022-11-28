@@ -80,9 +80,7 @@ use {
         AccountState,
         ErrBox,
     },
-    std::collections::{
-        HashSet,
-    },
+    std::collections::HashSet,
 };
 
 /// Future-friendly version of solitaire::ErrBox
@@ -445,7 +443,7 @@ pub async fn crawl_pyth_mapping(
                 }
             }
 
-            let mut price_addr = prod.px_acc.clone();
+            let mut price_addr = prod.px_acc;
             let mut n_prod_prices = 0;
 
             // the product might have no price, can happen in tilt due to race-condition, failed tx to add price, ...
@@ -486,8 +484,8 @@ pub async fn crawl_pyth_mapping(
                 price_addr = price.next;
             }
             ret.push(P2WProductAccount {
-                key: prod_addr.clone(),
-                name: prod_name.to_owned(),
+                key:                *prod_addr,
+                name:               prod_name.to_owned(),
                 price_account_keys: price_accounts,
             });
 
@@ -519,7 +517,7 @@ pub async fn crawl_pyth_mapping(
 
 #[derive(Clone, Debug)]
 pub struct P2WProductAccount {
-    pub key: Pubkey,
-    pub name: String,
+    pub key:                Pubkey,
+    pub name:               String,
     pub price_account_keys: HashSet<Pubkey>,
 }
