@@ -190,31 +190,32 @@ mapping_addr: {mapping_addr}
 mapping_reload_interval_mins: 1 # Very fast for testing purposes
 min_rpc_interval_ms: 0 # RIP RPC
 max_batch_jobs: 1000 # Where we're going there's no oomkiller
-symbol_groups:
+default_attestation_conditions:
+  min_interval_secs: 30
+  price_changed_bps: 500
+name_groups:
   - group_name: fast_interval_only
     conditions:
       min_interval_secs: 1
-    symbols:
+    symbol_names:
 """
 
-    # integer-divide the symbols in ~half for two test
-    # groups. Assumes arr[:idx] is exclusive, and arr[idx:] is
-    # inclusive
-    third_len = len(pyth_accounts) // 3;
+    # integer-divide the symbols in ~thirds for three test groups:
+    # a fast group that is specified by symbol name only,
+    # a slower group that is specified with full account details,
+    # and a default group that is read from the mapping account without being explicitly configured.
+    third_len = len(pyth_accounts) // 3
 
     for thing in pyth_accounts[:third_len]:
         name = thing["name"]
-        price = thing["price"]
-        product = thing["product"]
 
         cfg_yaml += f"""
-      - name: {name}
-        price_addr: {price}
-        product_addr: {product}"""
+      - {name}"""
 
     # End of fast_interval_only
 
     cfg_yaml += f"""
+symbol_groups:    
   - group_name: longer_interval_sensitive_changes
     conditions:
       min_interval_secs: 10
@@ -231,14 +232,6 @@ symbol_groups:
       - name: {name}
         price_addr: {price}
         product_addr: {product}"""
-
-    cfg_yaml += f"""
-  - group_name: mapping
-    conditions:
-      min_interval_secs: 30
-      price_changed_bps: 500
-    symbols: []
-"""
 
     with open(P2W_ATTESTATION_CFG, "w") as f:
         f.write(cfg_yaml)

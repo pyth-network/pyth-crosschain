@@ -463,13 +463,14 @@ async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestati
             }
 
             let mut mapping_batches: Vec<SymbolGroup> = vec![];
-            for group in &attestation_cfg.mapping_groups {
+            for group in &attestation_cfg.name_groups {
                 let batch_items: Vec<P2WSymbol> = group.symbol_names.iter().flat_map(
                     |symbol| name_to_symbols.get(symbol).into_iter().flat_map(
                         |x| x.into_iter()
                     )
                 ).map(|x| x.clone()).collect();
-                mapping_batches.extend(partition_into_batches(&group.group_name, max_batch_size, &group.conditions, batch_items))
+                let group_conditions = group.conditions.as_ref().unwrap_or(&attestation_cfg.default_attestation_conditions);
+                mapping_batches.extend(partition_into_batches(&group.group_name, max_batch_size, group_conditions, batch_items))
             }
 
             // Construct batches that are explicitly provided in the AttestationConfig
@@ -493,7 +494,7 @@ async fn attestation_config_to_batches(rpc_cfg: &Arc<RLMutex<RpcCfg>>, attestati
                     }
                 }
             }
-            let remaining_batches = partition_into_batches(&"mapping".to_owned(), max_batch_size, &AttestationConditions::default(), remaining_symbols);
+            let remaining_batches = partition_into_batches(&"mapping".to_owned(), max_batch_size, &attestation_cfg.default_attestation_conditions, remaining_symbols);
 
             attestation_cfg_batches.into_iter()
               .chain(mapping_batches.into_iter())

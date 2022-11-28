@@ -34,9 +34,6 @@ pub struct AttestationConfig {
         default // Uses Option::default() which is None
     )]
     pub mapping_addr: Option<Pubkey>,
-    /// Collection of symbols identified by symbol name (e.g., "Crypto.BTC/USD")
-    /// These symbols are only active if `mapping_addr` is set.
-    pub mapping_groups: Vec<NameGroup>,
     /// The known symbol list will be reloaded based off this
     /// interval, to account for mapping changes. Note: This interval
     /// will only work if the mapping address is defined. Whenever
@@ -49,6 +46,14 @@ pub struct AttestationConfig {
     #[serde(default = "default_min_rpc_interval_ms")]
     /// Rate-limiting minimum delay between RPC requests in milliseconds"
     pub min_rpc_interval_ms: u64,
+    /// Attestation conditions that will be used for any symbols included in the mapping
+    /// that aren't explicitly in one of the groups below.
+    pub default_attestation_conditions: AttestationConditions,
+
+    /// Collection of symbols identified by symbol name (e.g., "Crypto.BTC/USD")
+    /// These symbols are only active if `mapping_addr` is set.
+    pub name_groups: Vec<NameGroup>,
+
     /// Collection of symbols identified by their full account addresses.
     /// These symbols will be published regardless of whether or not `mapping_addr` is provided.
     pub symbol_groups: Vec<SymbolGroup>,
@@ -84,9 +89,9 @@ impl AttestationConfig {
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
 pub struct NameGroup {
     pub group_name: String,
-    /// Attestation conditions applied to all symbols in this group
-    /// TODO: make optional?
-    pub conditions: AttestationConditions,
+    /// Attestation conditions applied to all symbols in this group.
+    /// If not provided, use the default attestation conditions from `AttestationConfig`.
+    pub conditions: Option<AttestationConditions>,
     /// The names of the symbols to include in this group
     pub symbol_names: Vec<String>,
 }
