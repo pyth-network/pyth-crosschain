@@ -1,21 +1,20 @@
 //! This module contains test fixtures for instantiating plausible
 //! Pyth accounts for testing purposes.
-use solana_program_test::*;
-
-use solana_sdk::{
-    account::Account,
-    pubkey::Pubkey,
-    rent::Rent,
-};
-
-use pyth_client::{
-    AccKey,
-    AccountType,
-    Price,
-    Product,
-    MAGIC,
-    PROD_ATTR_SIZE,
-    VERSION,
+use {
+    pyth_sdk_solana::state::{
+        AccountType,
+        PriceAccount,
+        ProductAccount,
+        MAGIC,
+        PROD_ATTR_SIZE,
+        VERSION,
+    },
+    solana_program_test::*,
+    solana_sdk::{
+        account::Account,
+        pubkey::Pubkey,
+        rent::Rent,
+    },
 };
 
 /// Create a pair of brand new product/price accounts that point at each other
@@ -26,25 +25,21 @@ pub fn add_test_symbol(pt: &mut ProgramTest, owner: &Pubkey) -> (Pubkey, Pubkey)
 
     // Instantiate
     let prod = {
-        Product {
-            magic: MAGIC,
-            ver: VERSION,
-            atype: AccountType::Product as u32,
-            size: 0,
-            px_acc: AccKey {
-                val: price_id.to_bytes(),
-            },
-            attr: [0u8; PROD_ATTR_SIZE],
+        ProductAccount {
+            magic:  MAGIC,
+            ver:    VERSION,
+            atype:  AccountType::Product as u32,
+            size:   0,
+            px_acc: price_id,
+            attr:   [0u8; PROD_ATTR_SIZE],
         }
     };
 
-    let mut price = Price {
+    let price = PriceAccount {
         magic: MAGIC,
         ver: VERSION,
         atype: AccountType::Price as u32,
-        prod: AccKey {
-            val: prod_id.to_bytes(),
-        },
+        prod: prod_id,
         ..Default::default()
     };
 
@@ -65,17 +60,17 @@ pub fn add_test_symbol(pt: &mut ProgramTest, owner: &Pubkey) -> (Pubkey, Pubkey)
     let price_lamports = Rent::default().minimum_balance(price_bytes.len());
 
     // Populate the accounts
-    let mut prod_acc = Account {
-        lamports: prod_lamports,
-        data: (*prod_bytes).to_vec(),
-        owner: owner.clone(),
+    let prod_acc = Account {
+        lamports:   prod_lamports,
+        data:       (*prod_bytes).to_vec(),
+        owner:      *owner,
         rent_epoch: 0,
         executable: false,
     };
-    let mut price_acc = Account {
-        lamports: price_lamports,
-        data: (*price_bytes).to_vec(),
-        owner: owner.clone(),
+    let price_acc = Account {
+        lamports:   price_lamports,
+        data:       (*price_bytes).to_vec(),
+        owner:      *owner,
         rent_epoch: 0,
         executable: false,
     };

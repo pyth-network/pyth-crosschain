@@ -84,7 +84,7 @@ def add_symbol(num: int):
         capture_output=True)
     print(f"{symbol_name}: Added publisher {publisher_pubkey}")
 
-    # Update the prices as the newly added publisher 
+    # Update the prices as the newly added publisher
     publisher_random_update(price_pubkey)
 
     sym = {
@@ -127,7 +127,7 @@ publisher_pubkey = sol_run_or_die("address", args=[
 
 with ThreadPoolExecutor(max_workers=PYTH_TEST_SYMBOL_COUNT) as executor:
     add_symbol_futures = {executor.submit(add_symbol, sym_id) for sym_id in range(PYTH_TEST_SYMBOL_COUNT)}
-    
+
     for future in as_completed(add_symbol_futures):
         print(f"Completed {future.result()}")
 

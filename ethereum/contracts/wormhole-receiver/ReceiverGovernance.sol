@@ -10,12 +10,24 @@ import "./ReceiverSetters.sol";
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
 
-abstract contract ReceiverGovernance is ReceiverGovernanceStructs, ReceiverMessages, ReceiverSetters, ERC1967Upgrade {
-    event ContractUpgraded(address indexed oldContract, address indexed newContract);
-    event OwnershipTransfered(address indexed oldOwner, address indexed newOwner);
+abstract contract ReceiverGovernance is
+    ReceiverGovernanceStructs,
+    ReceiverMessages,
+    ReceiverSetters,
+    ERC1967Upgrade
+{
+    event ContractUpgraded(
+        address indexed oldContract,
+        address indexed newContract
+    );
+    event OwnershipTransfered(
+        address indexed oldOwner,
+        address indexed newOwner
+    );
 
     // "Core" (left padded)
-    bytes32 constant module = 0x00000000000000000000000000000000000000000000000000000000436f7265;
+    bytes32 constant module =
+        0x00000000000000000000000000000000000000000000000000000000436f7265;
 
     function submitNewGuardianSet(bytes memory _vm) public {
         ReceiverStructs.VM memory vm = parseVM(_vm);
@@ -23,12 +35,19 @@ abstract contract ReceiverGovernance is ReceiverGovernanceStructs, ReceiverMessa
         (bool isValid, string memory reason) = verifyGovernanceVM(vm);
         require(isValid, reason);
 
-        ReceiverGovernanceStructs.GuardianSetUpgrade memory upgrade = parseGuardianSetUpgrade(vm.payload);
+        ReceiverGovernanceStructs.GuardianSetUpgrade
+            memory upgrade = parseGuardianSetUpgrade(vm.payload);
 
         require(upgrade.module == module, "invalid Module");
 
-        require(upgrade.newGuardianSet.keys.length > 0, "new guardian set is empty");
-        require(upgrade.newGuardianSetIndex == getCurrentGuardianSetIndex() + 1, "index must increase in steps of 1");
+        require(
+            upgrade.newGuardianSet.keys.length > 0,
+            "new guardian set is empty"
+        );
+        require(
+            upgrade.newGuardianSetIndex == getCurrentGuardianSetIndex() + 1,
+            "index must increase in steps of 1"
+        );
 
         setGovernanceActionConsumed(vm.hash);
 
@@ -43,17 +62,21 @@ abstract contract ReceiverGovernance is ReceiverGovernanceStructs, ReceiverMessa
         _upgradeTo(newImplementation);
 
         // Call initialize function of the new implementation
-        (bool success, bytes memory reason) = newImplementation.delegatecall(abi.encodeWithSignature("initialize()"));
+        (bool success, bytes memory reason) = newImplementation.delegatecall(
+            abi.encodeWithSignature("initialize()")
+        );
 
         require(success, string(reason));
 
         emit ContractUpgraded(currentImplementation, newImplementation);
     }
 
-    function verifyGovernanceVM(ReceiverStructs.VM memory vm) internal view returns (bool, string memory){
+    function verifyGovernanceVM(
+        ReceiverStructs.VM memory vm
+    ) internal view returns (bool, string memory) {
         // validate vm
         (bool isValid, string memory reason) = verifyVM(vm);
-        if (!isValid){
+        if (!isValid) {
             return (false, reason);
         }
 
@@ -71,7 +94,7 @@ abstract contract ReceiverGovernance is ReceiverGovernanceStructs, ReceiverMessa
         }
 
         // prevent re-entry
-        if (governanceActionIsConsumed(vm.hash)){
+        if (governanceActionIsConsumed(vm.hash)) {
             return (false, "governance action already consumed");
         }
 
@@ -82,7 +105,7 @@ abstract contract ReceiverGovernance is ReceiverGovernanceStructs, ReceiverMessa
         require(newOwner != address(0), "new owner cannot be the zero address");
 
         address currentOwner = owner();
-        
+
         setOwner(newOwner);
 
         emit OwnershipTransfered(currentOwner, newOwner);

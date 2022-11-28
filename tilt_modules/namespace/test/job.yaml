@@ -8,7 +8,7 @@ spec:
   template:
     spec:
       containers:
-      - name: namespace-test-verify
-        image: curlimages/curl
-        command: ["curl",  "-fsSL", "http://namespace-test-busybox:8000/"]
+        - name: namespace-test-verify
+          image: curlimages/curl
+          command: ["curl", "-fsSL", "http://namespace-test-busybox:8000/"]
       restartPolicy: Never

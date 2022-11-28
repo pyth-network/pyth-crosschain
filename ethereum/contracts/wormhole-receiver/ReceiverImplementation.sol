@@ -9,21 +9,21 @@ import "./ReceiverGovernance.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
 
 contract ReceiverImplementation is ReceiverGovernance {
-
     modifier initializer() {
         address implementation = ERC1967Upgrade._getImplementation();
 
-        require(
-            !isInitialized(implementation),
-            "already initialized"
-        );
+        require(!isInitialized(implementation), "already initialized");
 
         setInitialized(implementation);
 
         _;
     }
 
-    fallback() external payable {revert("unsupported");}
+    fallback() external payable {
+        revert("unsupported");
+    }
 
-    receive() external payable {revert("the Wormhole Receiver contract does not accept assets");}
+    receive() external payable {
+        revert("the Wormhole Receiver contract does not accept assets");
+    }
 }

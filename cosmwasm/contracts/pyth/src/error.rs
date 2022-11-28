@@ -1,5 +1,7 @@
-use cosmwasm_std::StdError;
-use thiserror::Error;
+use {
+    cosmwasm_std::StdError,
+    thiserror::Error,
+};
 
 #[derive(Error, Debug)]
 pub enum PythContractError {
@@ -22,7 +24,7 @@ pub enum PythContractError {
     /// Data source does not exists error (on removing data source)
     #[error("DataSourceDoesNotExists")]
     DataSourceDoesNotExists,
-    
+
     /// Data source already exists error (on adding data source)
     #[error("DataSourceAlreadyExists")]
     DataSourceAlreadyExists,

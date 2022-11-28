@@ -9,20 +9,24 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPythEvents.sol";
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 
-
 import "forge-std/Test.sol";
 import "./WormholeTestUtils.t.sol";
 
 abstract contract PythTestUtils is Test, WormholeTestUtils {
     uint16 constant SOURCE_EMITTER_CHAIN_ID = 0x1;
-    bytes32 constant SOURCE_EMITTER_ADDRESS = 0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b;
+    bytes32 constant SOURCE_EMITTER_ADDRESS =
+        0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b;
 
     uint16 constant GOVERNANCE_EMITTER_CHAIN_ID = 0x1;
-    bytes32 constant GOVERNANCE_EMITTER_ADDRESS = 0x0000000000000000000000000000000000000000000000000000000000000011;
+    bytes32 constant GOVERNANCE_EMITTER_ADDRESS =
+        0x0000000000000000000000000000000000000000000000000000000000000011;
 
     function setUpPyth(address wormhole) public returns (address) {
         PythUpgradable implementation = new PythUpgradable();
-        ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), new bytes(0));
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(implementation),
+            new bytes(0)
+        );
         PythUpgradable pyth = PythUpgradable(address(proxy));
         pyth.initialize(
             wormhole,
@@ -31,18 +35,11 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
         );
 
         // TODO: All the logic below should be moved to the initializer
-        pyth.addDataSource(
-            SOURCE_EMITTER_CHAIN_ID,
-            SOURCE_EMITTER_ADDRESS
-        );
+        pyth.addDataSource(SOURCE_EMITTER_CHAIN_ID, SOURCE_EMITTER_ADDRESS);
 
-        pyth.updateSingleUpdateFeeInWei(
-            1
-        );
+        pyth.updateSingleUpdateFeeInWei(1);
 
-        pyth.updateValidTimePeriodSeconds(
-            60
-        );
+        pyth.updateValidTimePeriodSeconds(60);
 
         pyth.updateGovernanceDataSource(
             GOVERNANCE_EMITTER_CHAIN_ID,
@@ -133,10 +130,8 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
         uint64 sequence,
         uint8 numSigners
     ) public returns (bytes memory vaa) {
-        bytes memory payload = generatePriceFeedUpdatePayload(
-            attestations
-        );
-        
+        bytes memory payload = generatePriceFeedUpdatePayload(attestations);
+
         vaa = generateVaa(
             uint32(block.timestamp),
             SOURCE_EMITTER_CHAIN_ID,
@@ -178,14 +173,25 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
     }
 }
 
-contract PythTestUtilsTest is Test, WormholeTestUtils, PythTestUtils, IPythEvents {
+contract PythTestUtilsTest is
+    Test,
+    WormholeTestUtils,
+    PythTestUtils,
+    IPythEvents
+{
     function testGeneratePriceFeedUpdateVAAWorks() public {
-        IPyth pyth = IPyth(setUpPyth(setUpWormhole(
-            1 // Number of guardians
-        )));
+        IPyth pyth = IPyth(
+            setUpPyth(
+                setUpWormhole(
+                    1 // Number of guardians
+                )
+            )
+        );
 
         bytes32[] memory priceIds = new bytes32[](1);
-        priceIds[0] = 0x0000000000000000000000000000000000000000000000000000000000000222;
+        priceIds[
+            0
+        ] = 0x0000000000000000000000000000000000000000000000000000000000000222;
 
         PythStructs.Price[] memory prices = new PythStructs.Price[](1);
         prices[0] = PythStructs.Price(

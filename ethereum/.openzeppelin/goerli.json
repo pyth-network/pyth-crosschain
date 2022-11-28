@@ -192,12 +192,7 @@
           },
           "t_enum(PriceStatus)2233": {
             "label": "enum PythStructs.PriceStatus",
-            "members": [
-              "UNKNOWN",
-              "TRADING",
-              "HALTED",
-              "AUCTION"
-            ]
+            "members": ["UNKNOWN", "TRADING", "HALTED", "AUCTION"]
           },
           "t_uint32": {
             "label": "uint32"
@@ -435,12 +430,7 @@
           },
           "t_enum(PriceStatus)2280": {
             "label": "enum PythStructs.PriceStatus",
-            "members": [
-              "UNKNOWN",
-              "TRADING",
-              "HALTED",
-              "AUCTION"
-            ]
+            "members": ["UNKNOWN", "TRADING", "HALTED", "AUCTION"]
           },
           "t_uint32": {
             "label": "uint32"
@@ -676,12 +666,7 @@
           },
           "t_enum(PriceStatus)2468": {
             "label": "enum PythStructs.PriceStatus",
-            "members": [
-              "UNKNOWN",
-              "TRADING",
-              "HALTED",
-              "AUCTION"
-            ]
+            "members": ["UNKNOWN", "TRADING", "HALTED", "AUCTION"]
           },
           "t_uint32": {
             "label": "uint32"

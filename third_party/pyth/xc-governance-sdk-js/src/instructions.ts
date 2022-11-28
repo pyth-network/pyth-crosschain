@@ -1,6 +1,6 @@
 import { ChainId, CHAINS } from "@certusone/wormhole-sdk";
 
-import {  Serializable, BufferBuilder } from "./serialize";
+import { Serializable, BufferBuilder } from "./serialize";
 
 enum Module {
   Executor = 0,
@@ -24,7 +24,9 @@ abstract class HexString implements Serializable {
       address = address.substring(2);
     }
     if (address.length !== 2 * byteLen) {
-      throw new Error(`Expected address of length ${2 * byteLen}, found ${address.length}`);
+      throw new Error(
+        `Expected address of length ${2 * byteLen}, found ${address.length}`
+      );
     }
     this.addressBuffer = Buffer.from(address, "hex");
     if (this.addressBuffer.length === 0) {
@@ -52,8 +54,8 @@ export class HexString32Bytes extends HexString {
 export class DataSource implements Serializable {
   constructor(
     private readonly emitterChain: ChainId,
-    private readonly emitterAddress: HexString32Bytes,
-  ) { };
+    private readonly emitterAddress: HexString32Bytes
+  ) {}
 
   serialize(): Buffer {
     return new BufferBuilder()
@@ -70,8 +72,8 @@ abstract class Instruction implements Serializable {
   constructor(
     private module: Module,
     private action: number,
-    private targetChainId: ChainId,
-  ) { };
+    private targetChainId: ChainId
+  ) {}
 
   protected abstract serializePayload(): Buffer;
 
@@ -93,19 +95,13 @@ abstract class Instruction implements Serializable {
 }
 
 abstract class TargetInstruction extends Instruction {
-  constructor(
-    action: TargetAction,
-    targetChainId: ChainId
-  ) {
+  constructor(action: TargetAction, targetChainId: ChainId) {
     super(Module.Target, Number(action), targetChainId);
   }
 }
 
 export class AptosAuthorizeUpgradeContractInstruction extends TargetInstruction {
-  constructor(
-    targetChainId: ChainId,
-    private hash: HexString32Bytes,
-  ) {
+  constructor(targetChainId: ChainId, private hash: HexString32Bytes) {
     super(TargetAction.UpgradeContract, targetChainId);
   }
 
@@ -115,10 +111,7 @@ export class AptosAuthorizeUpgradeContractInstruction extends TargetInstruction 
 }
 
 export class EthereumUpgradeContractInstruction extends TargetInstruction {
-  constructor(
-    targetChainId: ChainId,
-    private address: HexString20Bytes,
-  ) {
+  constructor(targetChainId: ChainId, private address: HexString20Bytes) {
     super(TargetAction.UpgradeContract, targetChainId);
   }
 
@@ -128,10 +121,7 @@ export class EthereumUpgradeContractInstruction extends TargetInstruction {
 }
 
 export class AuthorizeGovernanceDataSourceTransferInstruction extends TargetInstruction {
-  constructor(
-    targetChainId: ChainId,
-    private claimVaa: Buffer,
-  ) {
+  constructor(targetChainId: ChainId, private claimVaa: Buffer) {
     super(TargetAction.AuthorizeGovernanceDataSourceTransfer, targetChainId);
   }
 
@@ -141,17 +131,14 @@ export class AuthorizeGovernanceDataSourceTransferInstruction extends TargetInst
 }
 
 export class SetDataSourcesInstruction extends TargetInstruction {
-  constructor(
-    targetChainId: ChainId,
-    private dataSources: DataSource[],
-  ) {
+  constructor(targetChainId: ChainId, private dataSources: DataSource[]) {
     super(TargetAction.SetDataSources, targetChainId);
   }
 
   protected serializePayload(): Buffer {
-    const builder = new BufferBuilder()
+    const builder = new BufferBuilder();
     builder.addUint8(this.dataSources.length);
-    this.dataSources.forEach(datasource => builder.addObject(datasource));
+    this.dataSources.forEach((datasource) => builder.addObject(datasource));
     return builder.build();
   }
 }
@@ -160,7 +147,7 @@ export class SetFeeInstruction extends TargetInstruction {
   constructor(
     targetChainId: ChainId,
     private newFeeValue: bigint,
-    private newFeeExpo: bigint,
+    private newFeeExpo: bigint
   ) {
     super(TargetAction.SetFee, targetChainId);
   }
@@ -174,24 +161,19 @@ export class SetFeeInstruction extends TargetInstruction {
 }
 
 export class SetValidPeriodInstruction extends TargetInstruction {
-  constructor(
-    targetChainId: ChainId,
-    private newValidPeriod: bigint,
-  ) {
+  constructor(targetChainId: ChainId, private newValidPeriod: bigint) {
     super(TargetAction.SetValidPeriod, targetChainId);
   }
 
   protected serializePayload(): Buffer {
-    return new BufferBuilder()
-      .addBigUint64(this.newValidPeriod)
-      .build();
+    return new BufferBuilder().addBigUint64(this.newValidPeriod).build();
   }
 }
 
 export class RequestGovernanceDataSourceTransferInstruction extends TargetInstruction {
   constructor(
     targetChainId: ChainId,
-    private governanceDataSourceIndex: number,
+    private governanceDataSourceIndex: number
   ) {
     super(TargetAction.RequestGovernanceDataSourceTransfer, targetChainId);
   }

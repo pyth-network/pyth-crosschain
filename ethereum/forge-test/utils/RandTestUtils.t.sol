@@ -13,10 +13,12 @@ contract RandTestUtils is Test {
     }
 
     function getRandBytes32() internal returns (bytes32) {
-        unchecked { randSeed++; }
+        unchecked {
+            randSeed++;
+        }
         return keccak256(abi.encode(randSeed));
     }
-    
+
     function getRandUint() internal returns (uint) {
         return uint(getRandBytes32());
     }

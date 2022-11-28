@@ -7,10 +7,13 @@ console.log("Loading config file .env");
 require("dotenv").config();
 
 const handler = new Handler();
-const listener = new Listener({
-  wsEndpoint: envOrErr('WS_ENDPOINT'),
-  pythContract: envOrErr('PYTH_CONTRACT'),
-}, handler);
+const listener = new Listener(
+  {
+    wsEndpoint: envOrErr("WS_ENDPOINT"),
+    pythContract: envOrErr("PYTH_CONTRACT"),
+  },
+  handler
+);
 
 // Initialize Watchers
 const jsonLogger = new JsonLogger();

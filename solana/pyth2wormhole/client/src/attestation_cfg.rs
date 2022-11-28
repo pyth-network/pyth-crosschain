@@ -1,39 +1,38 @@
-use std::{
-    collections::{
-        HashMap,
-        HashSet,
+use {
+    crate::BatchState,
+    log::info,
+    serde::{
+        de::Error,
+        Deserialize,
+        Deserializer,
+        Serialize,
+        Serializer,
     },
-    iter,
-    str::FromStr,
+    solana_program::pubkey::Pubkey,
+    std::{
+        collections::{
+            HashMap,
+            HashSet,
+        },
+        iter,
+        str::FromStr,
+    },
 };
-
-use log::info;
-
-use serde::{
-    de::Error,
-    Deserialize,
-    Deserializer,
-    Serialize,
-    Serializer,
-};
-use solana_program::pubkey::Pubkey;
-
-use crate::BatchState;
 
 /// Pyth2wormhole config specific to attestation requests
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
 pub struct AttestationConfig {
     #[serde(default = "default_min_msg_reuse_interval_ms")]
-    pub min_msg_reuse_interval_ms: u64,
+    pub min_msg_reuse_interval_ms:    u64,
     #[serde(default = "default_max_msg_accounts")]
-    pub max_msg_accounts: u64,
+    pub max_msg_accounts:             u64,
     /// Optionally, we take a mapping account to add remaining symbols from a Pyth deployments. These symbols are processed under attestation conditions for the `default` symbol group.
     #[serde(
         deserialize_with = "opt_pubkey_string_de",
         serialize_with = "opt_pubkey_string_ser",
         default // Uses Option::default() which is None
     )]
-    pub mapping_addr: Option<Pubkey>,
+    pub mapping_addr:                 Option<Pubkey>,
     /// The known symbol list will be reloaded based off this
     /// interval, to account for mapping changes. Note: This interval
     /// will only work if the mapping address is defined. Whenever
@@ -44,7 +43,7 @@ pub struct AttestationConfig {
     #[serde(default = "default_mapping_reload_interval_mins")]
     pub mapping_reload_interval_mins: u64,
     #[serde(default = "default_min_rpc_interval_ms")]
-    /// Rate-limiting minimum delay between RPC requests in milliseconds"
+    /// Rate-limiting minimum delay between RPC requests in milliseconds
     pub min_rpc_interval_ms: u64,
     /// Attestation conditions that will be used for any symbols included in the mapping
     /// that aren't explicitly in one of the groups below.
@@ -63,7 +62,7 @@ impl AttestationConfig {
     pub fn as_batches(&self, max_batch_size: usize) -> Vec<SymbolGroup> {
         self.symbol_groups
             .iter()
-            .map(move |g| {
+            .flat_map(move |g| {
                 let conditions4closure = g.conditions.clone();
                 let name4closure = g.group_name.clone();
 
@@ -72,7 +71,7 @@ impl AttestationConfig {
                 // Divide group into batches
                 g.symbols
                     .as_slice()
-                    .chunks(max_batch_size.clone())
+                    .chunks(max_batch_size)
                     .map(move |symbols| {
                         SymbolGroup {
                             group_name: name4closure.clone(),
@@ -81,7 +80,6 @@ impl AttestationConfig {
                         }
                     })
             })
-            .flatten()
             .collect()
     }
 }
@@ -101,7 +99,7 @@ pub struct SymbolGroup {
     pub group_name: String,
     /// Attestation conditions applied to all symbols in this group
     pub conditions: AttestationConditions,
-    pub symbols: Vec<P2WSymbol>,
+    pub symbols:    Vec<P2WSymbol>,
 }
 
 pub const fn default_max_msg_accounts() -> u64 {
@@ -174,9 +172,9 @@ impl AttestationConditions {
 impl Default for AttestationConditions {
     fn default() -> Self {
         Self {
-            min_interval_secs: default_min_interval_secs(),
-            max_batch_jobs: default_max_batch_jobs(),
-            price_changed_bps: None,
+            min_interval_secs:           default_min_interval_secs(),
+            max_batch_jobs:              default_max_batch_jobs(),
+            price_changed_bps:           None,
             publish_time_min_delta_secs: None,
         }
     }
@@ -197,7 +195,7 @@ pub struct P2WSymbol {
         deserialize_with = "pubkey_string_de",
         serialize_with = "pubkey_string_ser"
     )]
-    pub price_addr: Pubkey,
+    pub price_addr:   Pubkey,
 }
 
 impl ToString for P2WSymbol {
@@ -230,7 +228,7 @@ fn opt_pubkey_string_ser<S>(k_opt: &Option<Pubkey>, ser: S) -> Result<S::Ok, S::
 where
     S: Serializer,
 {
-    let k_str_opt = k_opt.clone().map(|k| k.to_string());
+    let k_str_opt = (*k_opt).map(|k| k.to_string());
 
     Option::<String>::serialize(&k_str_opt, ser)
 }
@@ -247,9 +245,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    use solitaire::ErrBox;
+    use {
+        super::*,
+        solitaire::ErrBox,
+    };
 
     #[test]
     fn test_sanity() -> Result<(), ErrBox> {
@@ -259,7 +258,7 @@ mod tests {
                 min_interval_secs: 5,
                 ..Default::default()
             },
-            symbols: vec![
+            symbols:    vec![
                 P2WSymbol {
                     name: Some("ETHUSD".to_owned()),
                     ..Default::default()
@@ -277,7 +276,7 @@ mod tests {
                 min_interval_secs: 200,
                 ..Default::default()
             },
-            symbols: vec![
+            symbols:    vec![
                 P2WSymbol {
                     name: Some("CNYAUD".to_owned()),
                     ..Default::default()
@@ -290,13 +289,14 @@ mod tests {
         };
 
         let cfg = AttestationConfig {
-            min_msg_reuse_interval_ms: 1000,
-            max_msg_accounts: 100_000,
-            min_rpc_interval_ms: 2123,
-            mapping_addr: None,
-            mapping_groups: vec![],
+            min_msg_reuse_interval_ms:    1000,
+            max_msg_accounts:             100_000,
+            min_rpc_interval_ms:          2123,
+            mapping_addr:                 None,
             mapping_reload_interval_mins: 42,
-            symbol_groups: vec![fastbois, slowbois],
+            default_attestation_conditions: AttestationConditions::default(),
+            name_groups: vec![],
+            symbol_groups:                vec![fastbois, slowbois],
         };
 
         let serialized = serde_yaml::to_string(&cfg)?;

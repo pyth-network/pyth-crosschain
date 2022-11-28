@@ -18,7 +18,7 @@ module pyth::price_info {
     public fun get_price_feed(price_info: &PriceInfo): &PriceFeed {
         &price_info.price_feed
     }
-    
+
     public fun get_attestation_time(price_info: &PriceInfo): u64 {
         price_info.attestation_time
     }

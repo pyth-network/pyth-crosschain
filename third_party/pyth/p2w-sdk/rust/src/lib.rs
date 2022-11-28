@@ -6,28 +6,29 @@
 //! similar human-readable names and provide a failsafe for some of
 //! the probable adversarial scenarios.
 
-use serde::{
-    Deserialize,
-    Serialize,
-    Serializer,
-};
-
-use std::borrow::Borrow;
-use std::convert::TryInto;
-use std::io::Read;
-use std::iter::Iterator;
-use std::mem;
-
 pub use pyth_sdk::{
     Identifier,
     PriceStatus,
     UnixTimestamp,
 };
-
 #[cfg(feature = "solana")]
 use solitaire::{
     Derive,
     Info,
+};
+use {
+    serde::{
+        Deserialize,
+        Serialize,
+        Serializer,
+    },
+    std::{
+        borrow::Borrow,
+        convert::TryInto,
+        io::Read,
+        iter::Iterator,
+        mem,
+    },
 };
 
 #[cfg(feature = "wasm")]
@@ -41,7 +42,7 @@ use wasm_bindgen::prelude::*;
 pub type ErrBox = Box<dyn std::error::Error>;
 
 /// Precedes every message implementing the p2w serialization format
-pub const P2W_MAGIC: &'static [u8] = b"P2WH";
+pub const P2W_MAGIC: &[u8] = b"P2WH";
 
 /// Format version used and understood by this codebase
 pub const P2W_FORMAT_VER_MAJOR: u16 = 3;
@@ -351,7 +352,7 @@ impl PriceAttestation {
         buf.extend_from_slice(&ema_conf.to_be_bytes()[..]);
 
         // status
-        buf.push(status.clone() as u8);
+        buf.push(*status as u8);
 
         // num_publishers
         buf.extend_from_slice(&num_publishers.to_be_bytes()[..]);
@@ -455,7 +456,7 @@ impl PriceAttestation {
             expo,
             ema_price,
             ema_conf,
-            status: status.into(),
+            status,
             num_publishers,
             max_num_publishers,
             attestation_time,
@@ -472,8 +473,10 @@ impl PriceAttestation {
 /// using `cargo test -- --nocapture`.
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use pyth_sdk_solana::state::PriceStatus;
+    use {
+        super::*,
+        pyth_sdk_solana::state::PriceStatus,
+    };
 
     fn mock_attestation(prod: Option<[u8; 32]>, price: Option<[u8; 32]>) -> PriceAttestation {
         let product_id_bytes = prod.unwrap_or([21u8; 32]);
@@ -486,7 +489,7 @@ mod tests {
             ema_price:          -42,
             ema_conf:           42,
             expo:               -3,
-            status:             PriceStatus::Trading.into(),
+            status:             PriceStatus::Trading,
             num_publishers:     123212u32,
             max_num_publishers: 321232u32,
             attestation_time:   (0xdeadbeeffadedeedu64) as i64,

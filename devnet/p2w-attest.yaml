@@ -10,6 +10,8 @@ spec:
     - port: 4343
       name: p2w-attest
       protocol: TCP
+    - port: 3000
+      name: metrics
   clusterIP: None
   selector:
     app: p2w-attest
@@ -38,10 +40,10 @@ spec:
             - python3
             - /usr/src/pyth/p2w_autoattest.py
           env:
-          - name: P2W_INITIALIZE_SOL_CONTRACT
-            value: "1"
-          - name: P2W_EXIT_ON_ERROR
-            value: "true"
+            - name: P2W_INITIALIZE_SOL_CONTRACT
+              value: "1"
+            - name: P2W_EXIT_ON_ERROR
+              value: "true"
           tty: true
           readinessProbe:
             tcpSocket:
@@ -51,4 +53,7 @@ spec:
           ports:
             - containerPort: 4343
               name: p2w-attest
+              protocol: TCP
+            - containerPort: 3000
+              name: metrics
               protocol: TCP

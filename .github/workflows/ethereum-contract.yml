@@ -1,0 +1,44 @@
+on:
+  pull_request:
+    paths:
+      - ethereum/**
+      - third_party/pyth/xc-governance-sdk-js/**
+  push:
+    branches:
+      - main
+    paths:
+      - ethereum/**
+      - third_party/pyth/xc-governance-sdk-js/**
+
+name: Ethereum Contract
+
+jobs:
+  check:
+    name: Foundry tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ethereum/
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install XC-governance sdk dependencies
+        run: npm ci
+        working-directory: third_party/pyth/xc-governance-sdk-js
+
+      - name: Install contract npm dependencies
+        run: npm ci
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install Forge dependencies
+        run: npm run install-forge-deps
+
+      - name: Run tests
+        run: forge test -vvv
+
+      - name: Run snapshot
+        run: NO_COLOR=1 forge snapshot --match-contract GasBenchmark >> $GITHUB_STEP_SUMMARY

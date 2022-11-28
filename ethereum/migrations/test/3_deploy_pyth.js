@@ -11,15 +11,20 @@ const pyth2WormholeEmitter = process.env.SOLANA_EMITTER;
 
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 
-console.log("Deploying Pyth with emitter", pyth2WormholeEmitter.toString("hex"))
+console.log(
+  "Deploying Pyth with emitter",
+  pyth2WormholeEmitter.toString("hex")
+);
 
 module.exports = async function (deployer) {
-    // Deploy the proxy script
-    await deployProxy(PythUpgradable,
-        [
-            (await Wormhole.deployed()).address,
-            pyth2WormholeChainId,
-            pyth2WormholeEmitter
-        ],
-        { deployer });
+  // Deploy the proxy script
+  await deployProxy(
+    PythUpgradable,
+    [
+      (await Wormhole.deployed()).address,
+      pyth2WormholeChainId,
+      pyth2WormholeEmitter,
+    ],
+    { deployer }
+  );
 };

@@ -1,63 +1,89 @@
-use std::{
-    fs::File,
-    iter,
-    sync::Arc,
-    time::{
-        Duration,
-        Instant,
+use {
+    clap::Parser,
+    cli::{
+        Action,
+        Cli,
+    },
+    futures::future::{
+        Future,
+        TryFutureExt,
+    },
+    generic_array::GenericArray,
+    lazy_static::lazy_static,
+    log::{
+        debug,
+        error,
+        info,
+        LevelFilter,
+        warn,
+    },
+    p2w_sdk::P2WEmitter,
+    prometheus::{
+        IntCounter,
+        IntGauge,
+        register_int_counter,
+        register_int_gauge,
+    },
+    pyth2wormhole::{
+        attest::P2W_MAX_BATCH_SIZE,
+        Pyth2WormholeConfig,
+    },
+    pyth2wormhole_client::*,
+    sha3::{
+        Digest,
+        Sha3_256,
+    },
+    solana_client::{
+        nonblocking::rpc_client::RpcClient,
+        rpc_config::RpcTransactionConfig,
+    },
+    solana_program::pubkey::Pubkey,
+    solana_sdk::{
+        commitment_config::CommitmentConfig,
+        signature::read_keypair_file,
+        signer::keypair::Keypair,
+    },
+    solana_transaction_status::UiTransactionEncoding,
+    solitaire::{
+        ErrBox,
+        processors::seeded::Seeded,
+    },
+    std::{
+        fs::File,
+        net::SocketAddr,
+        sync::Arc,
+        time::{
+            Duration,
+            Instant,
+        },
+        HashMap,
+        HashSet,
+    },
+    tokio::{
+        sync::{
+            Mutex,
+            Semaphore,
+        },
+        task::JoinHandle,
     },
 };
-use std::collections::{HashMap, HashSet};
-
-use clap::Parser;
-use futures::{future::{
-    Future,
-    TryFutureExt,
-}, SinkExt, StreamExt};
-use generic_array::GenericArray;
-use log::{
-    debug,
-    error,
-    info,
-    LevelFilter,
-    warn,
-};
-use p2w_sdk::P2WEmitter;
-use sha3::{Digest, Sha3_256};
-use solana_client::{
-    nonblocking::rpc_client::RpcClient,
-    rpc_config::RpcTransactionConfig,
-};
-use solana_program::pubkey::Pubkey;
-use solana_sdk::{
-    commitment_config::CommitmentConfig,
-    signature::read_keypair_file,
-    signer::keypair::Keypair,
-};
-use solana_transaction_status::UiTransactionEncoding;
-use solitaire::{
-    ErrBox,
-    processors::seeded::Seeded,
-};
-use tokio::{
-    sync::{
-        Mutex,
-        Semaphore,
-    },
-    task::JoinHandle,
-};
-
-use cli::{
-    Action,
-    Cli,
-};
-use pyth2wormhole::{attest, attest::P2W_MAX_BATCH_SIZE, Pyth2WormholeConfig};
-use pyth2wormhole_client::*;
 use pyth2wormhole_client::attestation_cfg::SymbolGroup;
 
 pub mod cli;
 
-pub const SEQNO_PREFIX: &'static str = "Program log: Sequence: ";
+pub const SEQNO_PREFIX: &str = "Program log: Sequence: ";
+
+lazy_static! {
+    static ref ATTESTATIONS_OK_CNT: IntCounter =
+        register_int_counter!("attestations_ok", "Number of successful attestations").unwrap();
+    static ref ATTESTATIONS_ERR_CNT: IntCounter =
+        register_int_counter!("attestations_err", "Number of failed attestations").unwrap();
+    static ref LAST_SEQNO_GAUGE: IntGauge = register_int_gauge!(
+        "last_seqno",
+        "Latest sequence number produced by this attester"
+    )
+    .unwrap();
+}
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> Result<(), ErrBox> {
@@ -76,7 +102,7 @@ async fn main() -> Result<(), ErrBox> {
 
     let payer = read_keypair_file(&*shellexpand::tilde(&cli.payer))?;
 
-    let rpc_client = RpcClient::new_with_commitment(cli.rpc_url.clone(), cli.commitment.clone());
+    let rpc_client = RpcClient::new_with_commitment(cli.rpc_url.clone(), cli.commitment);
 
     let p2w_addr = cli.p2w_addr;
 
@@ -138,12 +164,12 @@ async fn main() -> Result<(), ErrBox> {
                 p2w_addr,
                 read_keypair_file(&*shellexpand::tilde(&owner))?,
                 Pyth2WormholeConfig {
-                    owner: new_owner_addr.unwrap_or(old_config.owner),
-                    wh_prog: new_wh_prog.unwrap_or(old_config.wh_prog),
-                    pyth_owner: new_pyth_owner_addr.unwrap_or(old_config.pyth_owner),
-                    is_active: is_active.unwrap_or(old_config.is_active),
+                    owner:          new_owner_addr.unwrap_or(old_config.owner),
+                    wh_prog:        new_wh_prog.unwrap_or(old_config.wh_prog),
+                    pyth_owner:     new_pyth_owner_addr.unwrap_or(old_config.pyth_owner),
+                    is_active:      is_active.unwrap_or(old_config.is_active),
                     max_batch_size: P2W_MAX_BATCH_SIZE,
-                    ops_owner: new_ops_owner,
+                    ops_owner:      new_ops_owner,
                 },
                 latest_blockhash,
             )?;
@@ -175,6 +201,7 @@ async fn main() -> Result<(), ErrBox> {
             n_retries,
             retry_interval_secs,
             confirmation_timeout_secs,
+            metrics_bind_addr,
             daemon,
         } => {
             // Load the attestation config yaml
@@ -190,9 +217,9 @@ async fn main() -> Result<(), ErrBox> {
             // between RPC accesses.
             let rpc_cfg = Arc::new(RLMutex::new(
                 RpcCfg {
-                    url: cli.rpc_url,
-                    timeout: Duration::from_secs(confirmation_timeout_secs),
-                    commitment: cli.commitment.clone(),
+                    url:        cli.rpc_url,
+                    timeout:    Duration::from_secs(confirmation_timeout_secs),
+                    commitment: cli.commitment,
                 },
                 Duration::from_millis(attestation_cfg.min_rpc_interval_ms),
             ));
@@ -203,6 +230,7 @@ async fn main() -> Result<(), ErrBox> {
                     payer,
                     p2w_addr,
                     attestation_cfg,
+                    metrics_bind_addr,
                 )
                 .await?;
             } else {
@@ -248,7 +276,12 @@ async fn handle_attest_daemon_mode(
     payer: Keypair,
     p2w_addr: Pubkey,
     attestation_cfg: AttestationConfig,
+    metrics_bind_addr: SocketAddr,
 ) -> Result<(), ErrBox> {
+    tokio::spawn(start_metrics_server(metrics_bind_addr));
+
+    info!("Started serving metrics on {}", metrics_bind_addr);
+
     info!(
         "Crawling mapping {:?} every {} minutes",
         attestation_cfg.mapping_addr, attestation_cfg.mapping_reload_interval_mins
@@ -277,7 +310,18 @@ async fn handle_attest_daemon_mode(
     loop {
         let start_time = Instant::now(); // Helps timekeep mapping lookups accurately
 
-        let config = get_config_account(&lock_and_make_rpc(&rpc_cfg).await, &p2w_addr).await?;
+        let config = match get_config_account(&lock_and_make_rpc(&rpc_cfg).await, &p2w_addr).await {
+            Ok(c) => c,
+            Err(e) => {
+                error!(
+                    "Could not look up latest on-chain config in top-level loop: {:?}",
+                    e
+                );
+                continue;
+            }
+        };
+
+        // Use the mapping if specified
         batch_cfg = match attestation_config_to_batches(&rpc_cfg, &attestation_cfg, config.max_batch_size as usize).await {
             Ok(config) => config,
             Err(err) => {
@@ -307,7 +351,7 @@ async fn handle_attest_daemon_mode(
                     &rpc_cfg,
                     &p2w_addr,
                     &payer,
-                    message_q_mtx.clone()
+                    message_q_mtx.clone(),
                 ));
 
                 // Quit old sched futures
@@ -325,7 +369,7 @@ async fn handle_attest_daemon_mode(
                     &rpc_cfg,
                     &p2w_addr,
                     &payer,
-                    message_q_mtx.clone()
+                    message_q_mtx.clone(),
                 )),
                 new_cfg_hash,
             ));
@@ -339,7 +383,7 @@ async fn handle_attest_daemon_mode(
 
         if remaining == Duration::from_secs(0) {
             warn!(
-                "Processing took more than desired mapping lookup interval of {} seconds, not sleeping. Consider increasing {}", 
+                "Processing took more than desired mapping lookup interval of {} seconds, not sleeping. Consider increasing {}",
                 target.as_secs(),
                 // stringify prints the up-to-date setting name automatically
                 stringify!(attestation_cfg.mapping_reload_interval_mins)
@@ -356,14 +400,12 @@ async fn handle_attest_daemon_mode(
 
         tokio::time::sleep(remaining).await;
     }
-
-    Ok(())
 }
 
 #[derive(Clone)]
 pub struct RpcCfg {
-    pub url: String,
-    pub timeout: Duration,
+    pub url:        String,
+    pub timeout:    Duration,
     pub commitment: CommitmentConfig,
 }
 
@@ -403,13 +445,13 @@ async fn handle_attest_non_daemon_mode(
     let retry_jobs = batches.into_iter().enumerate().map(|(idx, batch_state)| {
         attestation_retry_job(AttestationRetryJobArgs {
             batch_no: idx + 1,
-            batch_count: batch_count.clone(),
+            batch_count,
             group_name: batch_state.group_name,
-            symbols: batch_state.symbols.clone(),
+            symbols: batch_state.symbols,
             n_retries,
-            retry_interval: retry_interval.clone(),
+            retry_interval,
             rpc_cfg: rpc_cfg.clone(),
-            p2w_addr: p2w_addr.clone(),
+            p2w_addr,
             p2w_config: p2w_cfg.clone(),
             payer: Keypair::from_bytes(&payer.to_bytes()).unwrap(),
             message_q_mtx: message_q_mtx.clone(),
@@ -535,7 +577,6 @@ fn prepare_attestation_sched_jobs(
 
     let batch_count = batches.len();
 
-
     // Create attestation scheduling routines; see attestation_sched_job() for details
     let attestation_sched_futs = batches.into_iter().enumerate().map(|(idx, batch)| {
         attestation_sched_job(AttestationSchedJobArgs {
@@ -543,7 +584,7 @@ fn prepare_attestation_sched_jobs(
             batch_no: idx + 1,
             batch_count,
             rpc_cfg: rpc_cfg.clone(),
-            p2w_addr: p2w_addr.clone(),
+            p2w_addr: *p2w_addr,
             config: p2w_cfg.clone(),
             payer: Keypair::from_bytes(&payer.to_bytes()).unwrap(),
             message_q_mtx: message_q_mtx.clone(),
@@ -556,13 +597,13 @@ fn prepare_attestation_sched_jobs(
 /// The argument count on attestation_sched_job got out of hand. This
 /// helps keep the correct order in check.
 pub struct AttestationSchedJobArgs {
-    pub batch: BatchState,
-    pub batch_no: usize,
-    pub batch_count: usize,
-    pub rpc_cfg: Arc<RLMutex<RpcCfg>>,
-    pub p2w_addr: Pubkey,
-    pub config: Pyth2WormholeConfig,
-    pub payer: Keypair,
+    pub batch:         BatchState,
+    pub batch_no:      usize,
+    pub batch_count:   usize,
+    pub rpc_cfg:       Arc<RLMutex<RpcCfg>>,
+    pub p2w_addr:      Pubkey,
+    pub config:        Pyth2WormholeConfig,
+    pub payer:         Keypair,
     pub message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
 }
 
@@ -645,8 +686,8 @@ async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrB
         // leave this code block.
         let _permit4sched = sema.acquire().await?;
 
-        let batch_no4err_msg = batch_no.clone();
-        let batch_count4err_msg = batch_count.clone();
+        let batch_no4err_msg = batch_no;
+        let batch_count4err_msg = batch_count;
         let group_name4err_msg = batch.group_name.clone();
 
         // We never get to error reporting in daemon mode, attach a map_err
@@ -666,17 +707,17 @@ async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrB
 }
 
 pub struct AttestationRetryJobArgs {
-    pub batch_no: usize,
-    pub batch_count: usize,
-    pub group_name: String,
-    pub symbols: Vec<P2WSymbol>,
-    pub n_retries: usize,
+    pub batch_no:       usize,
+    pub batch_count:    usize,
+    pub group_name:     String,
+    pub symbols:        Vec<P2WSymbol>,
+    pub n_retries:      usize,
     pub retry_interval: Duration,
-    pub rpc_cfg: Arc<RLMutex<RpcCfg>>,
-    pub p2w_addr: Pubkey,
-    pub p2w_config: Pyth2WormholeConfig,
-    pub payer: Keypair,
-    pub message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
+    pub rpc_cfg:        Arc<RLMutex<RpcCfg>>,
+    pub p2w_addr:       Pubkey,
+    pub p2w_config:     Pyth2WormholeConfig,
+    pub payer:          Keypair,
+    pub message_q_mtx:  Arc<Mutex<P2WMessageQueue>>,
 }
 
 /// A future that cranks a batch up to n_retries times, pausing for
@@ -696,10 +737,11 @@ async fn attestation_retry_job(args: AttestationRetryJobArgs) -> Result<(), ErrB
         message_q_mtx,
     } = args;
 
-    let mut res = Err(format!(
+    let mut res = Err(
         "attestation_retry_job INTERNAL: Could not get a single attestation job result"
-    )
-    .into());
+            .to_string()
+            .into(),
+    );
 
     for _i in 0..=n_retries {
         res = attestation_job(AttestationJobArgs {
@@ -730,14 +772,14 @@ async fn attestation_retry_job(args: AttestationRetryJobArgs) -> Result<(), ErrB
 /// Arguments for attestation_job(). This struct rules out same-type
 /// ordering errors due to the large argument count
 pub struct AttestationJobArgs {
-    pub rlmtx: Arc<RLMutex<RpcCfg>>,
-    pub batch_no: usize,
-    pub batch_count: usize,
-    pub group_name: String,
-    pub p2w_addr: Pubkey,
-    pub config: Pyth2WormholeConfig,
-    pub payer: Keypair,
-    pub symbols: Vec<P2WSymbol>,
+    pub rlmtx:         Arc<RLMutex<RpcCfg>>,
+    pub batch_no:      usize,
+    pub batch_count:   usize,
+    pub group_name:    String,
+    pub p2w_addr:      Pubkey,
+    pub config:        Pyth2WormholeConfig,
+    pub payer:         Keypair,
+    pub symbols:       Vec<P2WSymbol>,
     pub max_jobs_sema: Arc<Semaphore>,
     pub message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
 }
@@ -764,7 +806,7 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
         "Batch {}/{}, group {:?}: Starting attestation job",
         batch_no, batch_count, group_name
     );
-    let rpc = lock_and_make_rpc(&*rlmtx).await; // Reuse the same lock for the blockhash/tx/get_transaction
+    let rpc = lock_and_make_rpc(&rlmtx).await; // Reuse the same lock for the blockhash/tx/get_transaction
     let latest_blockhash = rpc
         .get_latest_blockhash()
         .map_err(|e| -> ErrBoxSend { e.into() })
@@ -788,8 +830,8 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
         .get_transaction_with_config(
             &sig,
             RpcTransactionConfig {
-                encoding: Some(UiTransactionEncoding::Json),
-                commitment: Some(rpc.commitment()),
+                encoding:                          Some(UiTransactionEncoding::Json),
+                commitment:                        Some(rpc.commitment()),
                 max_supported_transaction_version: None,
             },
         )
@@ -808,14 +850,16 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
             }
             seqno
         })
-        .ok_or_else(|| -> ErrBoxSend { format!("No seqno in program logs").into() })?;
+        .ok_or_else(|| -> ErrBoxSend { "No seqno in program logs".to_string().into() })?;
 
     info!(
         "Batch {}/{}, group {:?} OK",
         batch_no, batch_count, group_name
     );
+    ATTESTATIONS_OK_CNT.inc();
     // NOTE(2022-03-09): p2w_autoattest.py relies on parsing this println!{}
     println!("Sequence number: {}", seqno);
+    LAST_SEQNO_GAUGE.set(seqno.parse::<i64>()?);
     Result::<(), ErrBoxSend>::Ok(())
 }
 

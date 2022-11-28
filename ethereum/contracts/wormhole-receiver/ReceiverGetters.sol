@@ -8,9 +8,11 @@ import "./ReceiverState.sol";
 contract ReceiverGetters is ReceiverState {
     function owner() public view returns (address) {
         return _state.owner;
-    } 
-    
-    function getGuardianSet(uint32 index) public view returns (ReceiverStructs.GuardianSet memory) {
+    }
+
+    function getGuardianSet(
+        uint32 index
+    ) public view returns (ReceiverStructs.GuardianSet memory) {
         return _state.guardianSets[index];
     }
 
@@ -22,7 +24,9 @@ contract ReceiverGetters is ReceiverState {
         return _state.guardianSetExpiry;
     }
 
-    function governanceActionIsConsumed(bytes32 hash) public view returns (bool) {
+    function governanceActionIsConsumed(
+        bytes32 hash
+    ) public view returns (bool) {
         return _state.consumedGovernanceActions[hash];
     }
 
@@ -30,11 +34,11 @@ contract ReceiverGetters is ReceiverState {
         return _state.initializedImplementations[impl];
     }
 
-    function governanceChainId() public view returns (uint16){
+    function governanceChainId() public view returns (uint16) {
         return _state.provider.governanceChainId;
     }
 
-    function governanceContract() public view returns (bytes32){
+    function governanceContract() public view returns (bytes32) {
         return _state.provider.governanceContract;
     }
 }

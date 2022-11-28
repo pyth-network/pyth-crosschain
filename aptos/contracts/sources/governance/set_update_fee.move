@@ -10,7 +10,7 @@ module pyth::set_update_fee {
 
     struct SetUpdateFee {
         mantissa: u64,
-        exponent: u64, 
+        exponent: u64,
     }
 
     public(friend) fun execute(payload: vector<u8>) {

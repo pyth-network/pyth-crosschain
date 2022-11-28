@@ -20,7 +20,7 @@ RUN sh -c "$(curl -sSfL https://release.solana.com/v1.10.31/install)"
 ENV PATH="/root/.local/share/solana/install/active_release/bin:$PATH"
 
 
-ADD solana/rust-toolchain /rust-toolchain
+ADD solana/pyth2wormhole/rust-toolchain /rust-toolchain
 # Solana does a questionable download at the beginning of a *first* build-bpf call. Trigger and layer-cache it explicitly.
 RUN cargo init --lib /tmp/decoy-crate && \
     cd /tmp/decoy-crate && cargo build-bpf && \

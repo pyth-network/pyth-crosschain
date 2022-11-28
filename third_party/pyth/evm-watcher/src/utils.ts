@@ -15,12 +15,17 @@ export function envOrErr(env: string): string {
   return String(process.env[env]);
 }
 
-export async function waitForCondition(cond: () => boolean, timeoutInMs: number): Promise<boolean> {
+export async function waitForCondition(
+  cond: () => boolean,
+  timeoutInMs: number
+): Promise<boolean> {
   var timedOut = false;
 
-  setTimeout(() => {timedOut = true;}, timeoutInMs);
+  setTimeout(() => {
+    timedOut = true;
+  }, timeoutInMs);
 
-  while(timedOut === false && !cond()) {
+  while (timedOut === false && !cond()) {
     await sleep(100);
   }
 

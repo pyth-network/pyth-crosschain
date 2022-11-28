@@ -179,8 +179,8 @@ docker_build(
 k8s_yaml_with_ns("./devnet/pyth.yaml")
 
 k8s_resource(
-    "pyth", 
-    resource_deps = ["solana-devnet"], 
+    "pyth",
+    resource_deps = ["solana-devnet"],
     labels = ["pyth"],
     trigger_mode = trigger_mode,
 )
@@ -198,7 +198,7 @@ k8s_yaml_with_ns("devnet/p2w-attest.yaml")
 k8s_resource(
     "p2w-attest",
     resource_deps = ["solana-devnet", "pyth", "guardian"],
-    port_forwards = [],
+    port_forwards = [port_forward(3000, name = "metrics", host = webHost)],
     labels = ["pyth"],
     trigger_mode = trigger_mode,
 )
@@ -318,5 +318,20 @@ k8s_resource(
     resource_deps = ["terra-terrad", "terra-postgres"],
     port_forwards = [port_forward(3060, name = "Terra FCD [:3060]", host = webHost)],
     labels = ["terra"],
+    trigger_mode = trigger_mode,
+)
+
+docker_build(
+    ref = "prometheus",
+    context = ".",
+    dockerfile = "Dockerfile.prometheus",
+)
+
+k8s_yaml_with_ns("devnet/prometheus.yaml")
+
+k8s_resource(
+    "prometheus",
+    port_forwards = [port_forward(9090, name = "Prometheus dashboard", host = webHost)],
+    labels = ["prometheus"],
     trigger_mode = trigger_mode,
 )

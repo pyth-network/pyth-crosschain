@@ -1,51 +1,51 @@
-use std::collections::HashSet;
-
-use cosmwasm_std::{
-    entry_point,
-    to_binary,
-    Binary,
-    Deps,
-    DepsMut,
-    Env,
-    MessageInfo,
-    QueryRequest,
-    Response,
-    StdResult,
-    Timestamp,
-    WasmQuery,
+use {
+    crate::{
+        error::PythContractError,
+        msg::{
+            ExecuteMsg,
+            InstantiateMsg,
+            MigrateMsg,
+            PriceFeedResponse,
+            QueryMsg,
+        },
+        state::{
+            config,
+            config_read,
+            price_info,
+            price_info_read,
+            ConfigInfo,
+            PriceInfo,
+            PythDataSource,
+            VALID_TIME_PERIOD,
+        },
+    },
+    cosmwasm_std::{
+        entry_point,
+        to_binary,
+        Binary,
+        Deps,
+        DepsMut,
+        Env,
+        MessageInfo,
+        QueryRequest,
+        Response,
+        StdResult,
+        Timestamp,
+        WasmQuery,
+    },
+    p2w_sdk::BatchPriceAttestation,
+    pyth_sdk_cw::{
+        PriceFeed,
+        PriceIdentifier,
+        PriceStatus,
+        ProductIdentifier,
+    },
+    std::collections::HashSet,
+    wormhole::{
+        msg::QueryMsg as WormholeQueryMsg,
+        state::ParsedVAA,
+    },
 };
-
-use pyth_sdk_cw::{
-    PriceFeed,
-    PriceIdentifier,
-    PriceStatus,
-    ProductIdentifier,
-};
-
-use crate::msg::{
-    ExecuteMsg,
-    InstantiateMsg,
-    MigrateMsg,
-    PriceFeedResponse,
-    QueryMsg,
-};
-use crate::state::{
-    config,
-    config_read,
-    price_info,
-    price_info_read,
-    ConfigInfo,
-    PriceInfo,
-    PythDataSource,
-    VALID_TIME_PERIOD,
-};
-
-use crate::error::PythContractError;
-
-use p2w_sdk::BatchPriceAttestation;
-
-use wormhole::msg::QueryMsg as WormholeQueryMsg;
-use wormhole::state::ParsedVAA;
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
@@ -287,7 +287,7 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
             //   updated yet.
             // - If a price has arrived very late to this chain it will set the status to unknown.
             // - If a price is coming from future it's tolerated up to VALID_TIME_PERIOD seconds
-            //   (using abs diff) but more than that is set to unknown, the reason could be the 
+            //   (using abs diff) but more than that is set to unknown, the reason could be the
             //   clock time drift between the source and target chains.
             let time_abs_diff = if env_time_sec > price_pub_time_sec {
                 env_time_sec - price_pub_time_sec
@@ -303,26 +303,27 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
                 price_feed: price_info.price_feed,
             })
         }
-        Err(_) => Err(PythContractError::PriceFeedNotFound)?
+        Err(_) => Err(PythContractError::PriceFeedNotFound)?,
     }
 }
 
 #[cfg(test)]
 mod test {
-    use cosmwasm_std::testing::{
-        mock_dependencies,
-        mock_env,
-        mock_info,
-        MockApi,
-        MockQuerier,
-        MockStorage,
+    use {
+        super::*,
+        cosmwasm_std::{
+            testing::{
+                mock_dependencies,
+                mock_env,
+                mock_info,
+                MockApi,
+                MockQuerier,
+                MockStorage,
+            },
+            Addr,
+            OwnedDeps,
+        },
     };
-    use cosmwasm_std::{
-        Addr,
-        OwnedDeps,
-    };
-
-    use super::*;
 
     fn setup_test() -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
         (mock_dependencies(), mock_env())

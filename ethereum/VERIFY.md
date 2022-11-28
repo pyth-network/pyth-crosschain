@@ -13,7 +13,7 @@ be set in the `ETHERSCAN_KEY` environment variable for all APIs (not just
 etherscan, bit of a misnomer).
 
 Our contracts are structured as a separate proxy and an implementation. Both of
-these components need to be verified, and truffle handles it. 
+these components need to be verified, and truffle handles it.
 
 ## Verifying the contract
 
@@ -30,12 +30,12 @@ ETHERSCAN_KEY=... npm run verify --module=PythUpgradable --contract_address=0x0e
 `truffle-plugin-verify/utils.js` to find the key names.
 
 # Note
+
 The `npm run verify` script uses the `truffle-plugin-verify` plugin under the
-hood.  The version of `truffle-plugin-verify` pinned in the repo (`^0.5.11` at
+hood. The version of `truffle-plugin-verify` pinned in the repo (`^0.5.11` at
 the time of writing) doesn't support the avalanche RPC. In later versions of the
 plugin, support was added, but other stuff has changed as well in the transitive
 dependencies, so it fails to parse the `HDWallet` arguments in our
 `truffle-config.json`. As a quick workaround, we backport the patch to `0.5.11`
-by applying the `truffle-verify-constants.patch` file, which the `npm run
-verify` script does transparently. Once the toolchain has been upgraded and the
+by applying the `truffle-verify-constants.patch` file, which the `npm run verify` script does transparently. Once the toolchain has been upgraded and the
 errors fixed, this patch can be removed.

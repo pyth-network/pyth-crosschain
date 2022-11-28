@@ -1,17 +1,17 @@
-use std::{
-    io::ErrorKind,
-    mem::size_of,
-    ops::Deref,
+use {
+    crate::error::ExecutorError,
+    anchor_lang::{
+        prelude::*,
+        solana_program::instruction::Instruction,
+    },
+    boolinator::Boolinator,
+    std::{
+        io::ErrorKind,
+        mem::size_of,
+        ops::Deref,
+    },
+    wormhole::Chain,
 };
-
-use anchor_lang::{
-    prelude::*,
-    solana_program::instruction::Instruction,
-};
-use boolinator::Boolinator;
-use wormhole::Chain;
-
-use crate::error::ExecutorError;
 
 pub const MAGIC_NUMBER: u32 = 0x4d475450; // Reverse order of the solidity contract because borsh uses little endian numbers (the solidity contract uses 0x5054474d)
 
@@ -41,9 +41,9 @@ pub enum Action {
 #[derive(AnchorDeserialize, AnchorSerialize, Eq, PartialEq, Debug)]
 pub struct GovernanceHeader {
     pub magic_number: u32,
-    pub module: Module,
-    pub action: Action,
-    pub chain: BigEndianU16,
+    pub module:       Module,
+    pub action:       Action,
+    pub chain:        BigEndianU16,
 }
 
 impl GovernanceHeader {
@@ -51,9 +51,9 @@ impl GovernanceHeader {
     pub fn executor_governance_header() -> Self {
         Self {
             magic_number: MAGIC_NUMBER,
-            module: Module::Executor,
-            action: Action::ExecutePostedVaa,
-            chain: BigEndianU16 {
+            module:       Module::Executor,
+            action:       Action::ExecutePostedVaa,
+            chain:        BigEndianU16 {
                 value: Chain::Pythnet.try_into().unwrap(),
             },
         }
@@ -100,18 +100,18 @@ pub struct InstructionData {
     /// Pubkey of the instruction processor that executes this instruction
     pub program_id: Pubkey,
     /// Metadata for what accounts should be passed to the instruction processor
-    pub accounts: Vec<AccountMetaData>,
+    pub accounts:   Vec<AccountMetaData>,
     /// Opaque data passed to the instruction processor
-    pub data: Vec<u8>,
+    pub data:       Vec<u8>,
 }
 
 /// Account metadata used to define Instructions
 #[derive(Clone, Debug, PartialEq, Eq, AnchorDeserialize, AnchorSerialize)]
 pub struct AccountMetaData {
     /// An account's public key
-    pub pubkey: Pubkey,
+    pub pubkey:      Pubkey,
     /// True if an Instruction requires a Transaction signature matching `pubkey`.
-    pub is_signer: bool,
+    pub is_signer:   bool,
     /// True if the `pubkey` can be loaded as a read-write account.
     pub is_writable: bool,
 }
@@ -120,16 +120,16 @@ impl From<&InstructionData> for Instruction {
     fn from(instruction: &InstructionData) -> Self {
         Instruction {
             program_id: instruction.program_id,
-            accounts: instruction
+            accounts:   instruction
                 .accounts
                 .iter()
                 .map(|a| AccountMeta {
-                    pubkey: a.pubkey,
-                    is_signer: a.is_signer,
+                    pubkey:      a.pubkey,
+                    is_signer:   a.is_signer,
                     is_writable: a.is_writable,
                 })
                 .collect(),
-            data: instruction.data.clone(),
+            data:       instruction.data.clone(),
         }
     }
 }
@@ -138,16 +138,16 @@ impl From<&Instruction> for InstructionData {
     fn from(instruction: &Instruction) -> Self {
         InstructionData {
             program_id: instruction.program_id,
-            accounts: instruction
+            accounts:   instruction
                 .accounts
                 .iter()
                 .map(|a| AccountMetaData {
-                    pubkey: a.pubkey,
-                    is_signer: a.is_signer,
+                    pubkey:      a.pubkey,
+                    is_signer:   a.is_signer,
                     is_writable: a.is_writable,
                 })
                 .collect(),
-            data: instruction.data.clone(),
+            data:       instruction.data.clone(),
         }
     }
 }
@@ -170,24 +170,25 @@ impl ExecutorPayload {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::{
-        error,
-        error::ExecutorError,
-        state::governance_payload::InstructionData,
-    };
-
-    use super::ExecutorPayload;
-    use anchor_lang::{
-        prelude::Pubkey,
-        AnchorDeserialize,
-        AnchorSerialize,
+    use {
+        super::ExecutorPayload,
+        crate::{
+            error,
+            error::ExecutorError,
+            state::governance_payload::InstructionData,
+        },
+        anchor_lang::{
+            prelude::Pubkey,
+            AnchorDeserialize,
+            AnchorSerialize,
+        },
     };
 
     #[test]
     fn test_check_deserialization_serialization() {
         // No instructions
         let payload = ExecutorPayload {
-            header: super::GovernanceHeader::executor_governance_header(),
+            header:       super::GovernanceHeader::executor_governance_header(),
             instructions: vec![],
         };
 

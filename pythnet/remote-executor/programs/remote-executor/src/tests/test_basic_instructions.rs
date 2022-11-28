@@ -1,27 +1,28 @@
-use crate::{
-    error::ExecutorError,
-    tests::executor_simulator::{
-        ExecutorAttack,
-        VaaAttack,
+use {
+    super::executor_simulator::ExecutorBench,
+    crate::{
+        error::ExecutorError,
+        tests::executor_simulator::{
+            ExecutorAttack,
+            VaaAttack,
+        },
     },
-};
-
-use super::executor_simulator::ExecutorBench;
-use anchor_lang::{
-    prelude::{
-        Pubkey,
-        Rent,
+    anchor_lang::{
+        prelude::{
+            Pubkey,
+            Rent,
+        },
+        solana_program::{
+            system_instruction::create_account,
+            system_program,
+        },
     },
-    solana_program::{
-        system_instruction::create_account,
-        system_program,
+    solana_sdk::{
+        native_token::LAMPORTS_PER_SOL,
+        signature::Keypair,
+        signer::Signer,
+        system_instruction::transfer,
     },
-};
-use solana_sdk::{
-    native_token::LAMPORTS_PER_SOL,
-    signature::Keypair,
-    signer::Signer,
-    system_instruction::transfer,
 };
 
 #[tokio::test]

@@ -29,22 +29,22 @@ type Cluster = "devnet" | "mainnet";
 type WormholeNetwork = "TESTNET" | "MAINNET";
 
 type Config = {
-  wormholeClusterName: WormholeNetwork,
-  wormholeRpcEndpoint: string,
-  vault: PublicKey,
+  wormholeClusterName: WormholeNetwork;
+  wormholeRpcEndpoint: string;
+  vault: PublicKey;
 };
 
 const CONFIG: Record<Cluster, Config> = {
   devnet: {
     wormholeClusterName: "TESTNET",
     vault: new PublicKey("6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3"),
-    wormholeRpcEndpoint: "https://wormhole-v2-testnet-api.certus.one"
+    wormholeRpcEndpoint: "https://wormhole-v2-testnet-api.certus.one",
   },
   mainnet: {
     wormholeClusterName: "MAINNET",
     vault: new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
-    wormholeRpcEndpoint: "https://wormhole-v2-mainnet-api.certus.one"
-  }
+    wormholeRpcEndpoint: "https://wormhole-v2-mainnet-api.certus.one",
+  },
 };
 
 program
@@ -122,7 +122,7 @@ program
       squad,
       CONFIG[cluster].vault,
       new PublicKey(options.txPda),
-      options.payload,
+      options.payload
     );
   });
 
@@ -169,10 +169,7 @@ program
       msAccount.authorityIndex
     );
     const attesterProgramId = new PublicKey(options.attester);
-    const txKey = await createTx(
-      squad,
-      vaultPubkey
-    );
+    const txKey = await createTx(squad, vaultPubkey);
 
     let isActive = undefined;
     if (options.isActive === "true") {
@@ -381,10 +378,7 @@ async function getSquadsClient(
   return squad;
 }
 
-async function createTx(
-  squad: Squads,
-  vault: PublicKey
-): Promise<PublicKey> {
+async function createTx(squad: Squads, vault: PublicKey): Promise<PublicKey> {
   const msAccount = await squad.getMultisig(vault);
 
   console.log("Creating new transaction...");
@@ -432,7 +426,8 @@ async function addInstructionsToTx(
   await squad.approveTransaction(txKey);
   console.log("Transaction approved.");
   console.log(
-    `Tx URL: https://mesh${cluster === "devnet" ? "-devnet" : ""
+    `Tx URL: https://mesh${
+      cluster === "devnet" ? "-devnet" : ""
     }.squads.so/transactions/${vault.toBase58()}/tx/${txKey.toBase58()}`
   );
 }
@@ -486,7 +481,8 @@ async function getWormholeMessageIx(
 ) {
   const wormholeClusterName: WormholeNetwork =
     CONFIG[cluster].wormholeClusterName;
-  const wormholeAddress = wormholeUtils.CONTRACTS[wormholeClusterName].solana.core;
+  const wormholeAddress =
+    wormholeUtils.CONTRACTS[wormholeClusterName].solana.core;
   const { post_message_ix, fee_collector_address, state_address, parse_state } =
     await importCoreWasm();
   const feeCollector = new PublicKey(fee_collector_address(wormholeAddress));
@@ -575,7 +571,7 @@ async function verifyWormholePayload(
   squad: Squads,
   vault: PublicKey,
   txPubkey: PublicKey,
-  payload: string,
+  payload: string
 ) {
   const msAccount = await squad.getMultisig(vault);
   const emitter = squad.getAuthorityPDA(
@@ -587,18 +583,33 @@ async function verifyWormholePayload(
   const tx = await squad.getTransaction(txPubkey);
 
   if (tx.instructionIndex !== 2) {
-    throw new Error(`Expected 2 instructions in the transaction, found ${tx.instructionIndex + 1}`)
+    throw new Error(
+      `Expected 2 instructions in the transaction, found ${
+        tx.instructionIndex + 1
+      }`
+    );
   }
 
-  const [ix1PubKey,] = getIxPDA(txPubkey, new anchor.BN(1), squad.multisigProgramId);
-  const [ix2PubKey,] = getIxPDA(txPubkey, new anchor.BN(2), squad.multisigProgramId);
+  const [ix1PubKey] = getIxPDA(
+    txPubkey,
+    new anchor.BN(1),
+    squad.multisigProgramId
+  );
+  const [ix2PubKey] = getIxPDA(
+    txPubkey,
+    new anchor.BN(2),
+    squad.multisigProgramId
+  );
 
-  const onChainInstructions = await squad.getInstructions([ix1PubKey, ix2PubKey]);
+  const onChainInstructions = await squad.getInstructions([
+    ix1PubKey,
+    ix2PubKey,
+  ]);
 
   console.log(onChainInstructions[0]);
   console.log(onChainInstructions[1]);
 
-  const [messagePDA,] = getIxAuthorityPDA(
+  const [messagePDA] = getIxAuthorityPDA(
     txPubkey,
     new anchor.BN(1),
     squad.multisigProgramId
@@ -614,15 +625,26 @@ async function verifyWormholePayload(
   );
 
   console.log("Checking equality of the 1st instruction...");
-  verifyOnChainInstruction(wormholeIxs[0], onChainInstructions[0] as InstructionAccount);
+  verifyOnChainInstruction(
+    wormholeIxs[0],
+    onChainInstructions[0] as InstructionAccount
+  );
 
   console.log("Checking equality of the 2nd instruction...");
-  verifyOnChainInstruction(wormholeIxs[1], onChainInstructions[1] as InstructionAccount);
+  verifyOnChainInstruction(
+    wormholeIxs[1],
+    onChainInstructions[1] as InstructionAccount
+  );
 
-  console.log("✅ The transaction is verified to be created with the given payload.");
+  console.log(
+    "✅ The transaction is verified to be created with the given payload."
+  );
 }
 
-function verifyOnChainInstruction(instruction: TransactionInstruction, onChainInstruction: InstructionAccount) {
+function verifyOnChainInstruction(
+  instruction: TransactionInstruction,
+  onChainInstruction: InstructionAccount
+) {
   if (!instruction.programId.equals(onChainInstruction.programId)) {
     throw new Error(
       `Program id mismatch: Expected ${instruction.programId.toBase58()}, found ${onChainInstruction.programId.toBase58()}`
@@ -638,8 +660,10 @@ function verifyOnChainInstruction(instruction: TransactionInstruction, onChainIn
   const onChainData = onChainInstruction.data as Buffer;
   if (!instruction.data.equals(onChainData)) {
     throw new Error(
-      `Instruction data mismatch. Expected ${instruction.data.toString('hex')}, Found ${onChainData.toString('hex')}`
-    )
+      `Instruction data mismatch. Expected ${instruction.data.toString(
+        "hex"
+      )}, Found ${onChainData.toString("hex")}`
+    );
   }
 }
 
@@ -696,7 +720,8 @@ async function executeMultisigTx(
   const signature = await provider.sendAndConfirm(executeTx);
 
   console.log(
-    `Executed tx: https://explorer.solana.com/tx/${signature}${cluster === "devnet" ? "?cluster=devnet" : ""
+    `Executed tx: https://explorer.solana.com/tx/${signature}${
+      cluster === "devnet" ? "?cluster=devnet" : ""
     }`
   );
 

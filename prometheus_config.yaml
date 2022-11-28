@@ -1,0 +1,5 @@
+scrape_configs:
+  - job_name: p2w_attest
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["p2w-attest:3000"]

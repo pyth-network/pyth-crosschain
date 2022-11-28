@@ -8,7 +8,11 @@ import { Relay, RelayResult, RelayRetcode } from "./relay/iface";
 import * as helpers from "./helpers";
 import { logger } from "./helpers";
 import { PromHelper } from "./promHelpers";
-import { BatchPriceAttestation, getBatchAttestationHashKey, getBatchSummary } from "@pythnetwork/p2w-sdk-js";
+import {
+  BatchPriceAttestation,
+  getBatchAttestationHashKey,
+  getBatchSummary,
+} from "@pythnetwork/p2w-sdk-js";
 
 const mutex = new Mutex();
 let condition = new CondVar();
@@ -239,9 +243,7 @@ async function getPendingEventsAlreadyLocked(
     const first = pendingMap.entries().next();
     logger.debug("processing event with key [" + first.value[0] + "]");
     const pendingValue: PendingPayload = first.value[1];
-    let pendingKey = getBatchAttestationHashKey(
-      pendingValue.batchAttestation
-    );
+    let pendingKey = getBatchAttestationHashKey(pendingValue.batchAttestation);
     let currObj = productMap.get(pendingKey);
     if (currObj) {
       currObj.lastBatchAttestation = pendingValue.batchAttestation;

@@ -35,5 +35,5 @@ module pyth::event {
                 timestamp,
             }
         );
-    } 
+    }
 }

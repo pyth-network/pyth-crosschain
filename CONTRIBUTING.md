@@ -10,18 +10,18 @@ and code reviews are our most important tools to accomplish that.
   complex features, it can be useful to submit a [formal design document](design/template.md).
 
 - Development happens on a long-lived development branch (`dev.v2` and `dev.v1`).
-  Every change going into a development branch is reviewed individually (see below). Release branches may be used 
+  Every change going into a development branch is reviewed individually (see below). Release branches may be used
   to support in-the-wild releases of Wormhole. We aim to support at most two release
   branches at the same time. Changes can be cherry-picked from the development branch to release branches, but
   never from release branches to a development branch.
-  
+
 - Releases are first tested on a testnet.
 
 - Commits should be small and have a meaningful commit message. One commit should, roughly, be "one idea" and
   be as atomic as possible. A feature can consist of many such commits.
-  
+
 - Feature flags and interface evolution are better than breaking changes and long-lived feature branches.
-  
+
 - We optimize for reading, not for writing - over its lifetime, code is read much more often than written.
   Small commits, meaningful commit messages and useful comments make it easier to review code and improve the
   quality of code review as well as review turnaround times. It's much easier to spot mistakes in small,
@@ -42,12 +42,12 @@ The answer is... maybe? The following things are needed in order to fully suppor
   a node or light client for every chain supported by Wormhole. This adds up, and the barrier to support new
   chains is pretty high. Your proposal should clearly outline the value proposition of supporting the new chain.
   **Convincing the DAO to run nodes for your chain is the first step in supporting a new chain.**
-  
+
 - The chain needs to support smart contracts capable of verifying 19 individual secp256k1 signatures.
 
 - The smart contract needs to be built and audited. In some cases, existing contracts can be used, like with
   EVM-compatible chains.
-  
+
 - Support for observing the chain needs to be added to guardiand.
 
 - Web wallet integration needs to be built to actually interact with Wormhole.

@@ -8,10 +8,7 @@ export {
   SetFeeInstruction,
   SetValidPeriodInstruction,
   RequestGovernanceDataSourceTransferInstruction,
-  AuthorizeGovernanceDataSourceTransferInstruction
-} from "./instructions"
+  AuthorizeGovernanceDataSourceTransferInstruction,
+} from "./instructions";
 
-export {
-  CHAINS,
-  ChainId
-} from "@certusone/wormhole-sdk"
+export { CHAINS, ChainId } from "@certusone/wormhole-sdk";

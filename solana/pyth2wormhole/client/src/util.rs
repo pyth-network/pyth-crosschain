@@ -1,23 +1,36 @@
-use log::trace;
-
-use std::{
-    ops::{
-        Deref,
-        DerefMut,
+use {
+    http::status::StatusCode,
+    log::{
+        error,
+        trace,
     },
-    time::{
-        Duration,
-        Instant,
+    prometheus::TextEncoder,
+    std::{
+        net::SocketAddr,
+        ops::{
+            Deref,
+            DerefMut,
+        },
+        time::{
+            Duration,
+            Instant,
+        },
     },
-};
-use tokio::sync::{
-    Mutex,
-    MutexGuard,
+    tokio::sync::{
+        Mutex,
+        MutexGuard,
+    },
+    warp::{
+        reply,
+        Filter,
+        Rejection,
+        Reply,
+    },
 };
 
 /// Rate-limited mutex. Ensures there's a period of minimum rl_interval between lock acquisitions
 pub struct RLMutex<T> {
-    mtx: Mutex<RLMutexState<T>>,
+    mtx:         Mutex<RLMutexState<T>>,
     rl_interval: Duration,
 }
 
@@ -25,7 +38,7 @@ pub struct RLMutex<T> {
 pub struct RLMutexState<T> {
     /// Helps make sure regular passage of time is subtracted from sleep duration
     last_released: Instant,
-    val: T,
+    val:           T,
 }
 
 impl<T> Deref for RLMutexState<T> {
@@ -71,7 +84,7 @@ impl<T> RLMutex<T> {
     pub fn new(val: T, rl_interval: Duration) -> Self {
         Self {
             mtx: Mutex::new(RLMutexState {
-                last_released: Instant::now() - rl_interval,
+                last_released: Instant::now().checked_sub(rl_interval).unwrap(),
                 val,
             }),
             rl_interval,
@@ -94,4 +107,26 @@ impl<T> RLMutex<T> {
 
         RLMutexGuard { guard }
     }
+}
+
+async fn metrics_handler() -> Result<impl Reply, Rejection> {
+    let encoder = TextEncoder::new();
+    match encoder.encode_to_string(&prometheus::gather()) {
+        Ok(encoded_metrics) => Ok(reply::with_status(encoded_metrics, StatusCode::OK)),
+        Err(e) => {
+            error!("Could not serve metrics: {}", e.to_string());
+            Ok(reply::with_status(
+                "".to_string(),
+                StatusCode::INTERNAL_SERVER_ERROR,
+            ))
+        }
+    }
+}
+
+pub async fn start_metrics_server(addr: impl Into<SocketAddr> + 'static) {
+    let metrics_route = warp::path("metrics") // The metrics subpage is standardized to always be /metrics
+        .and(warp::path::end())
+        .and_then(metrics_handler);
+
+    warp::serve(metrics_route).bind(addr).await;
 }

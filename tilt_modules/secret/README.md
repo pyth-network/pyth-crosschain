@@ -14,8 +14,8 @@ secret_yaml_generic(name: str, namespace: str = "", from_file: Union[str, List] 
 
 Returns YAML for a generic secret.
 
-* `from_file` ( str ) – equivalent to `kubectl create secret --from-file`
-* `secret_type` ( str ) - equivalent to `kubectl create secret --type`
+- `from_file` ( str ) – equivalent to `kubectl create secret --from-file`
+- `secret_type` ( str ) - equivalent to `kubectl create secret --type`
 
 ### secret_create_generic
 

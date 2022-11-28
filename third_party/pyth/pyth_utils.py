@@ -20,7 +20,7 @@ PYTH_TEST_SYMBOL_COUNT = int(os.environ.get("PYTH_TEST_SYMBOL_COUNT", "11"))
 
 # If above 0, adds a new test symbol periodically, waiting at least
 # the given number of seconds in between
-# 
+#
 # NOTE: the new symbols are added in the HTTP endpoint used by the
 # p2w-attest service in Tilt. You may need to wait to see p2w-attest
 # pick up brand new symbols

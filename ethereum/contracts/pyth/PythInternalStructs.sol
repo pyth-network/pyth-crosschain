@@ -15,7 +15,6 @@ contract PythInternalStructs {
         int32 expo;
         int64 price;
         uint64 conf;
-
         // slot 2
         int64 emaPrice;
         uint64 emaConf;
