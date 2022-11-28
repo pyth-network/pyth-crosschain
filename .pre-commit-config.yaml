@@ -17,29 +17,56 @@ repos:
   - repo: local
     hooks:
       # Hooks for the remote executor
-      - id: cargo-fmt-executor-remote-executor
-        name: Cargo format executor for remote executor
+      - id: cargo-fmt-remote-executor
+        name: Cargo format for remote executor
         language: "rust"
         entry: cargo +nightly fmt --manifest-path ./pythnet/remote-executor/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: pythnet/remote-executor/
-      - id: cargo-clippy-executor
-        name: Cargo clippy executor
+      - id: cargo-clippy-remote-executor
+        name: Cargo clippy for remote executor
         language: "rust"
-        entry: cargo +nightly clippy --manifest-path ./pythnet/remote-executor/Cargo.toml -- -D warnings
+        entry: cargo +nightly clippy --manifest-path ./pythnet/remote-executor/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: pythnet/remote-executor/
       # Hooks for the attester
-      - id: cargo-fmt-executor-attester
-        name: Cargo format executor for attester
+      - id: cargo-fmt-attester
+        name: Cargo format for attester
         language: "rust"
         entry: cargo +nightly fmt --manifest-path ./solana/pyth2wormhole/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: solana/pyth2wormhole/
+      - id: cargo-clippy-attester
+        name: Cargo clippy for attester
+        language: "rust"
+        entry: |
+          bash -c 'EMITTER_ADDRESS=0 BRIDGE_ADDRESS=0 cargo +nightly clippy --manifest-path \
+            ./solana/pyth2wormhole/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings'
+        pass_filenames: false
+        files: solana/pyth2wormhole/
       # Hooks for cosmwasm contract
-      - id: cargo-fmt-executor-cosmwasm
-        name: Cargo format executor form cosmwasm contract
+      - id: cargo-fmt-cosmwasm
+        name: Cargo format for cosmwasm contract
         language: "rust"
         entry: cargo +nightly fmt --manifest-path ./cosmwasm/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: cosmwasm/
+      - id: cargo-clippy-cosmwasm
+        name: Cargo clippy for cosmwasm contract
+        language: "rust"
+        entry: cargo +nightly clippy --manifest-path ./cosmwasm/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        pass_filenames: false
+        files: cosmwasm/
+      # Hooks for p2w-sdk/rust
+      - id: cargo-fmt-p2w-sdk
+        name: Cargo format for p2w-sdk
+        language: "rust"
+        entry: cargo +nightly fmt --manifest-path ./third_party/pyth/p2w-sdk/rust/Cargo.toml --all -- --config-path rustfmt.toml
+        pass_filenames: false
+        files: third_party/pyth/p2w-sdk/rust/
+      - id: cargo-clippy-p2w-sdk
+        name: Cargo clippy for p2w-sdk
+        language: "rust"
+        entry: cargo +nightly clippy --manifest-path ./third_party/pyth/p2w-sdk/rust/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        pass_filenames: false
+        files: third_party/pyth/p2w-sdk/rust/

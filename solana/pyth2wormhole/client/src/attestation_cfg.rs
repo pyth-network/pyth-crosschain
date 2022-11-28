@@ -71,8 +71,7 @@ impl AttestationConfig {
         // Turn the pruned symbols into P2WSymbol structs
         let mut new_symbols_vec = new_symbols
             .drain() // Makes us own the elements and lets us move them
-            .map(|(prod, prices)| iter::zip(iter::repeat(prod), prices)) // Convert to iterator over flat (prod, price) tuples
-            .flatten() // Flatten the tuple iterators
+            .flat_map(|(prod, prices)| iter::zip(iter::repeat(prod), prices)) // Flatten the tuple iterators
             .map(|(prod, price)| P2WSymbol {
                 name:         None,
                 product_addr: prod,
@@ -87,7 +86,7 @@ impl AttestationConfig {
             .find(|g| g.group_name == group_name) // Advances the iterator and returns Some(item) on first hit
         {
             Some(existing_group) => existing_group.symbols.append(&mut new_symbols_vec),
-            None if new_symbols_vec.len() != 0 => {
+            None if !new_symbols_vec.is_empty() => {
                 // Group does not exist, assume defaults
                 let new_group = SymbolGroup {
                     group_name,
@@ -104,7 +103,7 @@ impl AttestationConfig {
     pub fn as_batches(&self, max_batch_size: usize) -> Vec<BatchState> {
         self.symbol_groups
             .iter()
-            .map(move |g| {
+            .flat_map(move |g| {
                 let conditions4closure = g.conditions.clone();
                 let name4closure = g.group_name.clone();
 
@@ -113,12 +112,11 @@ impl AttestationConfig {
                 // Divide group into batches
                 g.symbols
                     .as_slice()
-                    .chunks(max_batch_size.clone())
+                    .chunks(max_batch_size)
                     .map(move |symbols| {
                         BatchState::new(name4closure.clone(), symbols, conditions4closure.clone())
                     })
             })
-            .flatten()
             .collect()
     }
 }
@@ -257,7 +255,7 @@ fn opt_pubkey_string_ser<S>(k_opt: &Option<Pubkey>, ser: S) -> Result<S::Ok, S::
 where
     S: Serializer,
 {
-    let k_str_opt = k_opt.clone().map(|k| k.to_string());
+    let k_str_opt = (*k_opt).map(|k| k.to_string());
 
     Option::<String>::serialize(&k_str_opt, ser)
 }
@@ -352,7 +350,7 @@ mod tests {
                 mock_prod_bytes[31] = sym_idx;
 
                 let mut mock_prices = HashSet::new();
-                for px_idx in 1..=5 {
+                for _px_idx in 1..=5 {
                     let mut mock_price_bytes = [0u8; 32];
                     mock_price_bytes[31] = sym_idx;
                     mock_prices.insert(Pubkey::new_from_array(mock_price_bytes));
@@ -370,7 +368,7 @@ mod tests {
 
         // Should not be created because there's no new symbols to add
         // (we're adding identical mock_new_symbols again)
-        config2.add_symbols(mock_new_symbols.clone(), "default2".to_owned());
+        config2.add_symbols(mock_new_symbols, "default2".to_owned());
 
         assert_ne!(config1, empty_config); // Check that config grows from empty
         assert_eq!(config1, config2); // Check that no changes are made if all symbols are already in there

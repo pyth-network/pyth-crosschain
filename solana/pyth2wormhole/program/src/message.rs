@@ -17,10 +17,7 @@ use {
     solitaire::{
         processors::seeded::Seeded,
         AccountState,
-        Data,
-        Info,
         Mut,
-        Signer,
     },
 };
 

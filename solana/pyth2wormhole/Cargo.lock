@@ -2633,22 +2633,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "44de48029c54ec1ca570786b5baeb906b0fc2409c8e0145585e287ee7a526c72"
 
 [[package]]
-name = "pyth-client"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "398f9e51e126a13903254c56f75b3201583db075d0fbb77e931f7515af9b3d16"
-dependencies = [
- "borsh",
- "borsh-derive",
- "bytemuck",
- "num-derive",
- "num-traits",
- "serde",
- "solana-program",
- "thiserror",
-]
-
-[[package]]
 name = "pyth-sdk"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2714,7 +2698,7 @@ version = "0.1.0"
 dependencies = [
  "borsh",
  "p2w-sdk",
- "pyth-client 0.2.2",
+ "pyth-client",
  "rocksalt",
  "serde",
  "serde_derive",
@@ -2738,7 +2722,6 @@ dependencies = [
  "log",
  "p2w-sdk",
  "prometheus",
- "pyth-client 0.5.1",
  "pyth-sdk-solana 0.6.1",
  "pyth2wormhole",
  "serde",

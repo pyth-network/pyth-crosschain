@@ -84,7 +84,7 @@ impl<T> RLMutex<T> {
     pub fn new(val: T, rl_interval: Duration) -> Self {
         Self {
             mtx: Mutex::new(RLMutexState {
-                last_released: Instant::now() - rl_interval,
+                last_released: Instant::now().checked_sub(rl_interval).unwrap(),
                 val,
             }),
             rl_interval,

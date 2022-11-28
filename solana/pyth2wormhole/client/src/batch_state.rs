@@ -157,6 +157,6 @@ impl<'a> BatchState {
             }
         }
 
-        return ret;
+        ret
     }
 }

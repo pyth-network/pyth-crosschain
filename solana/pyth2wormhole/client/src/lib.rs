@@ -132,7 +132,7 @@ pub fn get_set_config_ix(
     let acc_metas = vec![
         // config
         AccountMeta::new(
-            P2WConfigAccount::<{ AccountState::Initialized }>::key(None, &p2w_addr),
+            P2WConfigAccount::<{ AccountState::Initialized }>::key(None, p2w_addr),
             false,
         ),
         // current_owner
@@ -181,7 +181,7 @@ pub fn get_set_is_active_ix(
     let acc_metas = vec![
         // config
         AccountMeta::new(
-            P2WConfigAccount::<{ AccountState::Initialized }>::key(None, &p2w_addr),
+            P2WConfigAccount::<{ AccountState::Initialized }>::key(None, p2w_addr),
             false,
         ),
         // ops_owner
@@ -323,13 +323,12 @@ pub fn gen_attest_tx(
     let mut padded_symbols = {
         let mut not_padded: Vec<_> = symbols
             .iter()
-            .map(|s| {
+            .flat_map(|s| {
                 vec![
                     AccountMeta::new_readonly(s.product_addr, false),
                     AccountMeta::new_readonly(s.price_addr, false),
                 ]
             })
-            .flatten()
             .collect();
 
         // Align to max batch size with null accounts
@@ -392,7 +391,7 @@ pub fn gen_attest_tx(
     let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
         &[ix],
         Some(&payer.pubkey()),
-        &vec![&payer],
+        &vec![payer],
         latest_blockhash,
     );
     Ok(tx_signed)
@@ -410,7 +409,7 @@ pub async fn crawl_pyth_mapping(
     let mut n_products_total = 0; // Grand total products in all mapping accounts
     let mut n_prices_total = 0; // Grand total prices in all product accounts in all mapping accounts
 
-    let mut mapping_addr = first_mapping_addr.clone();
+    let mut mapping_addr = *first_mapping_addr;
 
     // loop until the last non-zero MappingAccount.next account
     loop {
@@ -440,7 +439,7 @@ pub async fn crawl_pyth_mapping(
                 }
             };
 
-            let mut price_addr = prod.px_acc.clone();
+            let mut price_addr = prod.px_acc;
             let mut n_prod_prices = 0;
 
             // the product might have no price, can happen in tilt due to race-condition, failed tx to add price, ...
@@ -466,7 +465,7 @@ pub async fn crawl_pyth_mapping(
                 };
 
                 // Append to existing set or create a new map entry
-                ret.entry(prod_addr.clone())
+                ret.entry(*prod_addr)
                     .or_insert(HashSet::new())
                     .insert(price_addr);
 
@@ -481,7 +480,7 @@ pub async fn crawl_pyth_mapping(
                     break;
                 }
 
-                price_addr = price.next.clone();
+                price_addr = price.next;
             }
 
             n_prices_total += n_prod_prices;
@@ -499,7 +498,7 @@ pub async fn crawl_pyth_mapping(
 
             break;
         }
-        mapping_addr = mapping.next.clone();
+        mapping_addr = mapping.next;
         n_mappings += 1;
     }
     debug!(

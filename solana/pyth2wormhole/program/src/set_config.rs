@@ -6,8 +6,6 @@ use {
     borsh::BorshSerialize,
     solana_program::{
         program::invoke,
-        program_error::ProgramError,
-        pubkey::Pubkey,
         rent::Rent,
         system_instruction,
         sysvar::Sysvar,
@@ -25,7 +23,6 @@ use {
         Signer,
         SolitaireError,
     },
-    std::cmp::Ordering,
 };
 
 #[derive(FromAccounts)]
@@ -46,14 +43,14 @@ pub fn set_config(
     accs: &mut SetConfig,
     data: Pyth2WormholeConfig,
 ) -> SoliResult<()> {
-    let cfgStruct: &Pyth2WormholeConfig = &accs.config; // unpack Data via nested Deref impls
-    if &cfgStruct.owner != accs.current_owner.info().key {
+    let cfg_struct: &Pyth2WormholeConfig = &accs.config; // unpack Data via nested Deref impls
+    if &cfg_struct.owner != accs.current_owner.info().key {
         trace!(
             "Current owner account mismatch (expected {:?})",
-            cfgStruct.owner
+            cfg_struct.owner
         );
         return Err(SolitaireError::InvalidSigner(
-            accs.current_owner.info().key.clone(),
+            *accs.current_owner.info().key,
         ));
     }
 
@@ -68,11 +65,11 @@ pub fn set_config(
     accs.config.1 = data;
 
     // Adjust lamports
-    let mut acc_lamports = accs.config.info().lamports();
+    let acc_lamports = accs.config.info().lamports();
 
     let new_lamports = Rent::get()?.minimum_balance(new_size);
 
-    let diff_lamports: u64 = (acc_lamports as i64 - new_lamports as i64).abs() as u64;
+    let diff_lamports: u64 = (acc_lamports as i64 - new_lamports as i64).unsigned_abs();
 
     if acc_lamports < new_lamports {
         // Less than enough lamports, debit the payer

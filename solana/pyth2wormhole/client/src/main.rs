@@ -68,7 +68,7 @@ use {
     },
 };
 
-pub const SEQNO_PREFIX: &'static str = "Program log: Sequence: ";
+pub const SEQNO_PREFIX: &str = "Program log: Sequence: ";
 
 lazy_static! {
     static ref ATTESTATIONS_OK_CNT: IntCounter =
@@ -99,7 +99,7 @@ async fn main() -> Result<(), ErrBox> {
 
     let payer = read_keypair_file(&*shellexpand::tilde(&cli.payer))?;
 
-    let rpc_client = RpcClient::new_with_commitment(cli.rpc_url.clone(), cli.commitment.clone());
+    let rpc_client = RpcClient::new_with_commitment(cli.rpc_url.clone(), cli.commitment);
 
     let p2w_addr = cli.p2w_addr;
 
@@ -216,7 +216,7 @@ async fn main() -> Result<(), ErrBox> {
                 RpcCfg {
                     url:        cli.rpc_url,
                     timeout:    Duration::from_secs(confirmation_timeout_secs),
-                    commitment: cli.commitment.clone(),
+                    commitment: cli.commitment,
                 },
                 Duration::from_millis(attestation_cfg.min_rpc_interval_ms),
             ));
@@ -474,13 +474,13 @@ async fn handle_attest_non_daemon_mode(
     let retry_jobs = batches.into_iter().enumerate().map(|(idx, batch_state)| {
         attestation_retry_job(AttestationRetryJobArgs {
             batch_no: idx + 1,
-            batch_count: batch_count.clone(),
+            batch_count,
             group_name: batch_state.group_name,
-            symbols: batch_state.symbols.clone(),
+            symbols: batch_state.symbols,
             n_retries,
-            retry_interval: retry_interval.clone(),
+            retry_interval,
             rpc_cfg: rpc_cfg.clone(),
-            p2w_addr: p2w_addr.clone(),
+            p2w_addr,
             p2w_config: p2w_cfg.clone(),
             payer: Keypair::from_bytes(&payer.to_bytes()).unwrap(),
             message_q_mtx: message_q_mtx.clone(),
@@ -536,7 +536,7 @@ fn prepare_attestation_sched_jobs(
             batch_no: idx + 1,
             batch_count,
             rpc_cfg: rpc_cfg.clone(),
-            p2w_addr: p2w_addr.clone(),
+            p2w_addr: *p2w_addr,
             config: p2w_cfg.clone(),
             payer: Keypair::from_bytes(&payer.to_bytes()).unwrap(),
             message_q_mtx: message_q_mtx.clone(),
@@ -638,8 +638,8 @@ async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrB
         // leave this code block.
         let _permit4sched = sema.acquire().await?;
 
-        let batch_no4err_msg = batch_no.clone();
-        let batch_count4err_msg = batch_count.clone();
+        let batch_no4err_msg = batch_no;
+        let batch_count4err_msg = batch_count;
         let group_name4err_msg = batch.group_name.clone();
 
         // We never get to error reporting in daemon mode, attach a map_err
@@ -689,10 +689,11 @@ async fn attestation_retry_job(args: AttestationRetryJobArgs) -> Result<(), ErrB
         message_q_mtx,
     } = args;
 
-    let mut res = Err(format!(
+    let mut res = Err(
         "attestation_retry_job INTERNAL: Could not get a single attestation job result"
-    )
-    .into());
+            .to_string()
+            .into(),
+    );
 
     for _i in 0..=n_retries {
         res = attestation_job(AttestationJobArgs {
@@ -757,7 +758,7 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
         "Batch {}/{}, group {:?}: Starting attestation job",
         batch_no, batch_count, group_name
     );
-    let rpc = lock_and_make_rpc(&*rlmtx).await; // Reuse the same lock for the blockhash/tx/get_transaction
+    let rpc = lock_and_make_rpc(&rlmtx).await; // Reuse the same lock for the blockhash/tx/get_transaction
     let latest_blockhash = rpc
         .get_latest_blockhash()
         .map_err(|e| -> ErrBoxSend { e.into() })
@@ -801,7 +802,7 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
             }
             seqno
         })
-        .ok_or_else(|| -> ErrBoxSend { format!("No seqno in program logs").into() })?;
+        .ok_or_else(|| -> ErrBoxSend { "No seqno in program logs".to_string().into() })?;
 
     info!(
         "Batch {}/{}, group {:?} OK",

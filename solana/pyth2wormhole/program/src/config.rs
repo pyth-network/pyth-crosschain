@@ -37,8 +37,8 @@ use {
 
 /// Aliases for current config schema (to migrate into)
 pub type Pyth2WormholeConfig = Pyth2WormholeConfigV3;
-pub type P2WConfigAccount<'b, const IsInitialized: AccountState> =
-    P2WConfigAccountV3<'b, IsInitialized>;
+pub type P2WConfigAccount<'b, const IS_INITIALIZED: AccountState> =
+    P2WConfigAccountV3<'b, IS_INITIALIZED>;
 
 impl Owned for Pyth2WormholeConfig {
     fn owner(&self) -> AccountOwner {
@@ -69,8 +69,8 @@ pub struct Pyth2WormholeConfigV1 {
     pub max_batch_size: u16,
 }
 
-pub type P2WConfigAccountV1<'b, const IsInitialized: AccountState> =
-    Derive<Data<'b, Pyth2WormholeConfigV1, { IsInitialized }>, "pyth2wormhole-config">;
+pub type P2WConfigAccountV1<'b, const IS_INITIALIZED: AccountState> =
+    Derive<Data<'b, Pyth2WormholeConfigV1, { IS_INITIALIZED }>, "pyth2wormhole-config">;
 
 /// Added is_active
 #[derive(Clone, Default, BorshDeserialize, BorshSerialize)]
@@ -98,8 +98,8 @@ pub struct Pyth2WormholeConfigV2 {
 /// usually easier to change the seed slightly
 /// (e.g. pyth2wormhole-config-v2 -> pyth2wormhole-config-v2.1). This
 /// saves a lot of time coding around this edge case.
-pub type P2WConfigAccountV2<'b, const IsInitialized: AccountState> =
-    Derive<Data<'b, Pyth2WormholeConfigV2, { IsInitialized }>, "pyth2wormhole-config-v2.1">;
+pub type P2WConfigAccountV2<'b, const IS_INITIALIZED: AccountState> =
+    Derive<Data<'b, Pyth2WormholeConfigV2, { IS_INITIALIZED }>, "pyth2wormhole-config-v2.1">;
 
 impl From<Pyth2WormholeConfigV1> for Pyth2WormholeConfigV2 {
     fn from(old: Pyth2WormholeConfigV1) -> Self {
@@ -144,8 +144,8 @@ pub struct Pyth2WormholeConfigV3 {
     pub ops_owner: Option<Pubkey>,
 }
 
-pub type P2WConfigAccountV3<'b, const IsInitialized: AccountState> =
-    Derive<Data<'b, Pyth2WormholeConfigV3, { IsInitialized }>, "pyth2wormhole-config-v3">;
+pub type P2WConfigAccountV3<'b, const IS_INITIALIZED: AccountState> =
+    Derive<Data<'b, Pyth2WormholeConfigV3, { IS_INITIALIZED }>, "pyth2wormhole-config-v3">;
 
 impl From<Pyth2WormholeConfigV2> for Pyth2WormholeConfigV3 {
     fn from(old: Pyth2WormholeConfigV2) -> Self {
@@ -154,7 +154,7 @@ impl From<Pyth2WormholeConfigV2> for Pyth2WormholeConfigV3 {
             wh_prog,
             pyth_owner,
             max_batch_size,
-            is_active,
+            is_active: _,
         } = old;
 
         Self {
