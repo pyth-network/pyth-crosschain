@@ -11,6 +11,13 @@ import { logger } from "./logging";
 
 const SERVICE_PREFIX = "pyth__price_service__";
 
+type WebSocketInteractionType =
+  | "connection"
+  | "close"
+  | "timeout"
+  | "server_update"
+  | "client_message";
+
 export class PromClient {
   private register = new client.Registry();
   private collectDefaultMetrics = client.collectDefaultMetrics;
@@ -20,16 +27,15 @@ export class PromClient {
     name: `${SERVICE_PREFIX}vaas_received`,
     help: "number of Pyth VAAs received",
   });
+  private priceUpdatesGapHistogram = new client.Histogram({
+    name: `${SERVICE_PREFIX}price_updates_gap_seconds`,
+    help: "Summary of gaps between price updates",
+    buckets: [1, 3, 5, 10, 15, 30, 60, 120],
+  });
   private apiResponseTimeSummary = new client.Summary({
     name: `${SERVICE_PREFIX}api_response_time_ms`,
     help: "Response time of a VAA",
-    labelNames: ["path", "status"],
-  });
-  private apiRequestsPriceFreshnessHistogram = new client.Histogram({
-    name: `${SERVICE_PREFIX}api_requests_price_freshness_seconds`,
-    help: "Freshness time of Vaa (time difference of Vaa and request time)",
-    buckets: [1, 5, 10, 15, 30, 60, 120, 180],
-    labelNames: ["path", "price_id"],
+    labelNames: ["status"],
   });
   private webSocketInteractionCounter = new client.Counter({
     name: `${SERVICE_PREFIX}websocket_interaction`,
@@ -51,14 +57,10 @@ export class PromClient {
     this.register.setDefaultLabels({
       app: config.name,
     });
-    this.collectDefaultMetrics({
-      register: this.register,
-      prefix: SERVICE_PREFIX,
-    });
     // Register each metric
     this.register.registerMetric(this.receivedVaaCounter);
+    this.register.registerMetric(this.priceUpdatesGapHistogram);
     this.register.registerMetric(this.apiResponseTimeSummary);
-    this.register.registerMetric(this.apiRequestsPriceFreshnessHistogram);
     this.register.registerMetric(this.webSocketInteractionCounter);
     // End registering metric
 
@@ -70,31 +72,25 @@ export class PromClient {
     this.receivedVaaCounter.inc();
   }
 
-  addResponseTime(path: string, status: number, duration: DurationInMs) {
+  addPriceUpdatesGap(gap: DurationInSec) {
+    this.priceUpdatesGapHistogram.observe(gap);
+  }
+
+  // We have multiple paths and for the time being it is not important for us
+  // to capture it. We might consider capturing it in the future.
+  addResponseTime(_path: string, status: number, duration: DurationInMs) {
     this.apiResponseTimeSummary.observe(
       {
-        path,
         status,
       },
       duration
     );
   }
 
-  addApiRequestsPriceFreshness(
-    path: string,
-    priceId: string,
-    duration: DurationInSec
+  addWebSocketInteraction(
+    type: WebSocketInteractionType,
+    status: "ok" | "err"
   ) {
-    this.apiRequestsPriceFreshnessHistogram.observe(
-      {
-        path,
-        price_id: priceId,
-      },
-      duration
-    );
-  }
-
-  addWebSocketInteraction(type: string, status: "ok" | "err") {
     this.webSocketInteractionCounter.inc({
       type,
       status,
