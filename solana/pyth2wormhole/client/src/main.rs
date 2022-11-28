@@ -56,8 +56,10 @@ use {
             Duration,
             Instant,
         },
-        HashMap,
-        HashSet,
+        collections::{
+            HashMap,
+            HashSet,
+        }
     },
     tokio::{
         sync::{
