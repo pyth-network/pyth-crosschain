@@ -49,6 +49,8 @@ pub struct AttestationConfig {
     #[serde(default = "default_min_rpc_interval_ms")]
     /// Rate-limiting minimum delay between RPC requests in milliseconds"
     pub min_rpc_interval_ms: u64,
+    /// Collection of symbols identified by their full account addresses.
+    /// These symbols will be published regardless of whether or not `mapping_addr` is provided.
     pub symbol_groups: Vec<SymbolGroup>,
 }
 
