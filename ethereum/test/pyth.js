@@ -1105,10 +1105,10 @@ contract("Pyth", function () {
       2
     );
 
-    // Strangely this test was failing without the hard coded gas limit.
-    // It will failing randomly on a place that it shouldn't without any message due to
-    // gas limit if the value is not hard-coded.
-    // Gas value 6.7m gas is very high and close to the ganache limit.
+    // This test fails without the hard coded gas limit.
+    // Without gas limit, it fails on a random place (in wormhole sig verification) which
+    // is probably because truffle cannot estimate the gas usage correctly. So the gas is
+    // hard-coded to a high value of 6.7m gas (close to ganache limit).
     await expectRevertCustomError(
       this.pythProxy.executeGovernanceInstruction(transferBackVaaWrong, {
         gas: 6700000,
@@ -1388,7 +1388,6 @@ async function expectRevertCustomError(promise, reason) {
     expect.fail("Expected promise to throw but it didn't");
   } catch (revert) {
     if (reason) {
-      // expect(revert.message).to.include(reason);
       const reasonId = web3.utils.keccak256(reason + "()").substr(0, 10);
       expect(
         JSON.stringify(revert),
