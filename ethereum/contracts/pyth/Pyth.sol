@@ -17,6 +17,9 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         address wormhole,
         uint16[] calldata dataSourceEmitterChainIds,
         bytes32[] calldata dataSourceEmitterAddresses,
+        uint16 governanceEmitterChainId,
+        bytes32 governanceEmitterAddress,
+        uint64 governanceInitialSequence,
         uint validTimePeriodSeconds,
         uint singleUpdateFeeInWei
     ) internal {
@@ -39,6 +42,15 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
 
             _state.isValidDataSource[hashDataSource(ds)] = true;
             _state.validDataSources.push(ds);
+        }
+
+        {
+            PythInternalStructs.DataSource memory ds = PythInternalStructs
+                .DataSource(governanceEmitterChainId, governanceEmitterAddress);
+            PythSetters.setGovernanceDataSource(ds);
+            PythSetters.setLastExecutedGovernanceSequence(
+                governanceInitialSequence
+            );
         }
 
         PythSetters.setValidTimePeriodSeconds(validTimePeriodSeconds);
