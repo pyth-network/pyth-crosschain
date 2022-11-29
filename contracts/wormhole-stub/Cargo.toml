@@ -1,0 +1,19 @@
+[package]
+name    = "wormhole-stub"
+version = "0.1.0"
+authors = ["Reisen"]
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+near-sdk     = { version = "4.1.1" }
+
+[profile.release]
+codegen-units   = 1
+opt-level       = "z"
+lto             = true
+debug           = false
+panic           = "abort"
+overflow-checks = true
