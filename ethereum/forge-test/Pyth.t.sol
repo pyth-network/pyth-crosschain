@@ -396,7 +396,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
         updateData[0][mutPos] = bytes1(uint8(updateData[0][mutPos]) ^ 1);
 
         // It might revert due to different wormhole errors
-        vm.expectRevert(PythErrors.InvalidWormholeVaa.selector);
+        vm.expectRevert();
         pyth.parsePriceFeedUpdates{value: updateFee}(
             updateData,
             priceIds,
