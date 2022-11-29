@@ -1,4 +1,3 @@
-import { stat } from "fs";
 import http = require("http");
 import client = require("prom-client");
 import { DurationInMs, DurationInSec } from "./helpers";
@@ -20,7 +19,6 @@ type WebSocketInteractionType =
 
 export class PromClient {
   private register = new client.Registry();
-  private collectDefaultMetrics = client.collectDefaultMetrics;
 
   // Actual metrics
   private receivedVaaCounter = new client.Counter({
@@ -40,7 +38,7 @@ export class PromClient {
   private apiResponseTimeSummary = new client.Summary({
     name: `${SERVICE_PREFIX}api_response_time_ms`,
     help: "Response time of a VAA",
-    labelNames: ["status"],
+    labelNames: ["path", "status"],
   });
   private webSocketInteractionCounter = new client.Counter({
     name: `${SERVICE_PREFIX}websocket_interaction`,
@@ -86,11 +84,10 @@ export class PromClient {
     this.priceUpdatesAttestationTimeGapHistogram.observe(gap);
   }
 
-  // We have multiple paths and for the time being it is not important for us
-  // to capture it. We might consider capturing it in the future.
-  addResponseTime(_path: string, status: number, duration: DurationInMs) {
+  addResponseTime(path: string, status: number, duration: DurationInMs) {
     this.apiResponseTimeSummary.observe(
       {
+        path,
         status,
       },
       duration
