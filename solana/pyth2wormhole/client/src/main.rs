@@ -31,6 +31,7 @@ use {
     pyth2wormhole_client::{
         attestation_cfg::SymbolBatch,
         crawl_pyth_mapping,
+        gen_attest_tx,
         gen_init_tx,
         gen_migrate_tx,
         gen_set_config_tx,
@@ -446,9 +447,9 @@ async fn handle_attest_non_daemon_mode(
     let batch_config =
         attestation_config_to_batches(&rpc_cfg, &attestation_cfg, p2w_cfg.max_batch_size as usize)
             .await
-            .unwrap_or(
-                attestation_cfg.instantiate_batches(&vec![], p2w_cfg.max_batch_size as usize),
-            );
+            .unwrap_or_else(|_| {
+                attestation_cfg.instantiate_batches(&[], p2w_cfg.max_batch_size as usize)
+            });
 
     let batches: Vec<_> = batch_config
         .into_iter()
@@ -513,15 +514,12 @@ async fn attestation_config_to_batches(
         let product_accounts_res =
             crawl_pyth_mapping(&lock_and_make_rpc(rpc_cfg).await, mapping_addr).await;
 
-        match product_accounts_res {
-            Err(err) => {
-                error!(
-                    "Could not crawl mapping {}: {:?}",
-                    attestation_cfg.mapping_addr.unwrap_or_default(),
-                    err
-                );
-            }
-            _ => {}
+        if let Err(err) = &product_accounts_res {
+            error!(
+                "Could not crawl mapping {}: {:?}",
+                attestation_cfg.mapping_addr.unwrap_or_default(),
+                err
+            );
         }
 
         product_accounts_res?

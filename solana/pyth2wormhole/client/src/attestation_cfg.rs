@@ -448,6 +448,4 @@ mod tests {
 
         Ok(())
     }
-
-    // FIXME: add merging unit test
 }
