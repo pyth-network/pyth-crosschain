@@ -124,11 +124,11 @@ impl ExecutorBench {
         program_test.add_account(program_key, program_account);
         program_test.add_account(programdata_key, programdata_account);
 
-        return ExecutorBench {
+        ExecutorBench {
             program_test,
             program_id: program_key.key(),
             seqno: HashMap::<Pubkey, u64>::new(),
-        };
+        }
     }
 
     /// Start local validator based on the current bench
@@ -136,12 +136,12 @@ impl ExecutorBench {
         // Start validator
         let (banks_client, genesis_keypair, recent_blockhash) = self.program_test.start().await;
 
-        return ExecutorSimulator {
+        ExecutorSimulator {
             banks_client,
             payer: genesis_keypair,
             last_blockhash: recent_blockhash,
             program_id: self.program_id,
-        };
+        }
     }
 
     /// Add VAA account with emitter and instructions for consumption by the remote_executor
@@ -168,10 +168,7 @@ impl ExecutorBench {
 
         let payload = ExecutorPayload {
             header:       GovernanceHeader::executor_governance_header(),
-            instructions: instructions
-                .iter()
-                .map(|x| InstructionData::from(x))
-                .collect(),
+            instructions: instructions.iter().map(InstructionData::from).collect(),
         };
 
         let payload_bytes = payload.try_to_vec().unwrap();
@@ -185,7 +182,7 @@ impl ExecutorBench {
                 vaa_signature_account: Pubkey::new_unique(),
                 submission_time: 0,
                 nonce: 0,
-                sequence: self.seqno.get(&emitter).unwrap_or(&0) + 1,
+                sequence: self.seqno.get(emitter).unwrap_or(&0) + 1,
                 emitter_chain,
                 emitter_address: emitter.to_bytes(),
                 payload: payload_bytes,
@@ -211,7 +208,7 @@ impl ExecutorBench {
 
         let vaa_pubkey = Pubkey::new_unique();
         self.program_test.add_account(vaa_pubkey, vaa_account);
-        return vaa_pubkey;
+        vaa_pubkey
     }
 
     // Get executor key of an emitter, useful to construct instructions that will be in the VAA
@@ -298,7 +295,7 @@ impl ExecutorSimulator {
             &self.program_id,
             &self.payer.pubkey(),
             &Pubkey::new(&posted_vaa_data.emitter_address),
-            &posted_vaa_address,
+            posted_vaa_address,
         )
         .to_account_metas(None);
 
@@ -383,12 +380,12 @@ impl ExecutorSimulator {
     }
 }
 
-impl Into<TransactionError> for ExecutorError {
-    fn into(self) -> TransactionError {
+impl From<ExecutorError> for TransactionError {
+    fn from(val: ExecutorError) -> Self {
         TransactionError::InstructionError(
             0,
             InstructionError::try_from(u64::from(ProgramError::from(
-                anchor_lang::prelude::Error::from(self),
+                anchor_lang::prelude::Error::from(val),
             )))
             .unwrap(),
         )

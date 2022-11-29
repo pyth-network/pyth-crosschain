@@ -45,17 +45,11 @@ contract("Pyth", function () {
   beforeEach(async function () {
     this.pythProxy = await deployProxy(PythUpgradable, [
       (await Wormhole.deployed()).address,
-      testPyth2WormholeChainId,
-      testPyth2WormholeEmitter,
+      [testPyth2WormholeChainId],
+      [testPyth2WormholeEmitter],
+      60, // Validity time in seconds
+      0, // single update fee in wei
     ]);
-
-    await this.pythProxy.addDataSource(
-      testPyth2WormholeChainId,
-      testPyth2WormholeEmitter
-    );
-
-    // Setting the validity time to 60 seconds
-    await this.pythProxy.updateValidTimePeriodSeconds(60);
 
     // Setting the governance data source to 0x1 (solana) and some random emitter address
     await this.pythProxy.updateGovernanceDataSource(

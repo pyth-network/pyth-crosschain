@@ -18,22 +18,14 @@ use {
     solana_program_test::*,
     solana_sdk::{
         account::Account,
-        instruction::{
-            AccountMeta,
-            Instruction,
-        },
         pubkey::Pubkey,
         rent::Rent,
-        signature::Signer,
-        signer::keypair::Keypair,
-        transaction::Transaction,
     },
     solitaire::{
         processors::seeded::Seeded,
         AccountState,
         BorshSerialize,
     },
-    std::time::Duration,
 };
 
 #[tokio::test]
@@ -104,7 +96,7 @@ async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
     passthrough::add_passthrough(&mut p2w_test, "wormhole", wh_fixture_program_id);
     let (prod_id, price_id) = pyth::add_test_symbol(&mut p2w_test, &pyth_owner);
 
-    let mut ctx = p2w_test.start_with_context().await;
+    let ctx = p2w_test.start_with_context().await;
 
     let symbols = vec![p2wc::P2WSymbol {
         name:         Some("Mock symbol".to_owned()),
@@ -112,7 +104,7 @@ async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
         price_addr:   price_id,
     }];
 
-    let attest_tx = p2wc::gen_attest_tx(
+    let _attest_tx = p2wc::gen_attest_tx(
         p2w_program_id,
         &p2w_config,
         &ctx.payer,

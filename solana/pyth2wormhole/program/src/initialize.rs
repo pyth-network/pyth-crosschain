@@ -5,7 +5,6 @@ use {
     },
     solana_program::{
         program::invoke,
-        pubkey::Pubkey,
         rent::Rent,
         system_instruction,
         sysvar::Sysvar,

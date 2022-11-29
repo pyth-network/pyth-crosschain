@@ -2,17 +2,26 @@ const loadEnv = require("../../scripts/loadEnv");
 loadEnv("../../");
 
 const PythUpgradable = artifacts.require("PythUpgradable");
-
-const pyth2WormholeChainId = process.env.SOLANA_CHAIN_ID;
-const pyth2WormholeEmitter = process.env.SOLANA_EMITTER;
-
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 const tdr = require("truffle-deploy-registry");
 const { CONTRACTS } = require("@certusone/wormhole-sdk");
 const { assert } = require("chai");
 
-console.log("pyth2WormholeEmitter: " + pyth2WormholeEmitter);
-console.log("pyth2WormholeChainId: " + pyth2WormholeChainId);
+const emitterChainIds = [
+  process.env.SOLANA_CHAIN_ID,
+  process.env.PYTHNET_CHAIN_ID,
+];
+const emitterAddresses = [
+  process.env.SOLANA_EMITTER,
+  process.env.PYTHNET_EMITTER,
+];
+const validTimePeriodSeconds = Number(process.env.VALID_TIME_PERIOD_SECONDS);
+const singleUpdateFeeInWei = Number(process.env.SINGLE_UPDATE_FEE_IN_WEI);
+
+console.log("emitterChainIds: " + emitterChainIds);
+console.log("emitterAddresses: " + emitterAddresses);
+console.log("validTimePeriodSeconds: " + validTimePeriodSeconds);
+console.log("singleUpdateFeeInWei: " + singleUpdateFeeInWei);
 
 module.exports = async function (deployer, network) {
   const cluster = process.env.CLUSTER;
@@ -30,7 +39,13 @@ module.exports = async function (deployer, network) {
   // with the address field corresponding to the fronting ERC1967Proxy.
   let proxyInstance = await deployProxy(
     PythUpgradable,
-    [wormholeBridgeAddress, pyth2WormholeChainId, pyth2WormholeEmitter],
+    [
+      wormholeBridgeAddress,
+      emitterChainIds,
+      emitterAddresses,
+      validTimePeriodSeconds,
+      singleUpdateFeeInWei,
+    ],
     { deployer }
   );
 

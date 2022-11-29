@@ -42,7 +42,7 @@ use wasm_bindgen::prelude::*;
 pub type ErrBox = Box<dyn std::error::Error>;
 
 /// Precedes every message implementing the p2w serialization format
-pub const P2W_MAGIC: &'static [u8] = b"P2WH";
+pub const P2W_MAGIC: &[u8] = b"P2WH";
 
 /// Format version used and understood by this codebase
 pub const P2W_FORMAT_VER_MAJOR: u16 = 3;
@@ -352,7 +352,7 @@ impl PriceAttestation {
         buf.extend_from_slice(&ema_conf.to_be_bytes()[..]);
 
         // status
-        buf.push(status.clone() as u8);
+        buf.push(*status as u8);
 
         // num_publishers
         buf.extend_from_slice(&num_publishers.to_be_bytes()[..]);
@@ -456,7 +456,7 @@ impl PriceAttestation {
             expo,
             ema_price,
             ema_conf,
-            status: status.into(),
+            status,
             num_publishers,
             max_num_publishers,
             attestation_time,
@@ -489,7 +489,7 @@ mod tests {
             ema_price:          -42,
             ema_conf:           42,
             expo:               -3,
-            status:             PriceStatus::Trading.into(),
+            status:             PriceStatus::Trading,
             num_publishers:     123212u32,
             max_num_publishers: 321232u32,
             attestation_time:   (0xdeadbeeffadedeedu64) as i64,

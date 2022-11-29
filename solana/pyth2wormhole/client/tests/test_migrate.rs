@@ -3,15 +3,7 @@
 pub mod fixtures;
 
 use {
-    bridge::accounts::{
-        Bridge,
-        BridgeConfig,
-        BridgeData,
-    },
-    fixtures::{
-        passthrough,
-        pyth,
-    },
+    fixtures::passthrough,
     log::info,
     pyth2wormhole::config::{
         OldP2WConfigAccount,
@@ -24,15 +16,10 @@ use {
     solana_program_test::*,
     solana_sdk::{
         account::Account,
-        instruction::{
-            AccountMeta,
-            Instruction,
-        },
         pubkey::Pubkey,
         rent::Rent,
         signature::Signer,
         signer::keypair::Keypair,
-        transaction::Transaction,
     },
     solitaire::{
         processors::seeded::Seeded,

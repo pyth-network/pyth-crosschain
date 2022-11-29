@@ -19,10 +19,6 @@ const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
  */
 module.exports = async function (deployer) {
   const proxy = await PythUpgradable.deployed();
-  await upgradeProxy(proxy.address, PythUpgradable, {
-    deployer,
-    unsafeSkipStorageCheck: true,
-  });
   await proxy.updateGovernanceDataSource(
     governanceChainId,
     governanceEmitter,

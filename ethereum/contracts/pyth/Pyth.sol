@@ -14,12 +14,37 @@ import "./PythInternalStructs.sol";
 abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     function _initialize(
         address wormhole,
-        uint16 pyth2WormholeChainId,
-        bytes32 pyth2WormholeEmitter
+        uint16[] calldata dataSourceEmitterChainIds,
+        bytes32[] calldata dataSourceEmitterAddresses,
+        uint validTimePeriodSeconds,
+        uint singleUpdateFeeInWei
     ) internal {
         setWormhole(wormhole);
-        setPyth2WormholeChainId(pyth2WormholeChainId);
-        setPyth2WormholeEmitter(pyth2WormholeEmitter);
+
+        require(
+            dataSourceEmitterChainIds.length ==
+                dataSourceEmitterAddresses.length,
+            "data source arguments should have the same length"
+        );
+
+        for (uint i = 0; i < dataSourceEmitterChainIds.length; i++) {
+            PythInternalStructs.DataSource memory ds = PythInternalStructs
+                .DataSource(
+                    dataSourceEmitterChainIds[i],
+                    dataSourceEmitterAddresses[i]
+                );
+
+            require(
+                !PythGetters.isValidDataSource(ds.chainId, ds.emitterAddress),
+                "Data source already added"
+            );
+
+            _state.isValidDataSource[hashDataSource(ds)] = true;
+            _state.validDataSources.push(ds);
+        }
+
+        PythSetters.setValidTimePeriodSeconds(validTimePeriodSeconds);
+        PythSetters.setSingleUpdateFeeInWei(singleUpdateFeeInWei);
     }
 
     function updatePriceBatchFromVm(bytes calldata encodedVm) private {

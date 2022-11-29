@@ -7,7 +7,10 @@ use {
     },
     solana_program::pubkey::Pubkey,
     solana_sdk::commitment_config::CommitmentConfig,
-    std::path::PathBuf,
+    std::{
+        net::SocketAddr,
+        path::PathBuf,
+    },
 };
 
 #[derive(Parser)]
@@ -84,6 +87,13 @@ pub enum Action {
             default_value = "20"
         )]
         confirmation_timeout_secs: u64,
+        #[clap(
+            short = 'm',
+            long,
+            help = "Address to use for serving Prometheus metrics.",
+            default_value = "[::]:3000"
+        )]
+        metrics_bind_addr:         SocketAddr,
     },
     #[clap(about = "Retrieve a pyth2wormhole program's current settings")]
     GetConfig,

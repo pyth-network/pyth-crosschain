@@ -1,6 +1,6 @@
 [package]
 name = "pyth2wormhole-client"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -33,8 +33,11 @@ tokio = {version = "1", features = ["sync", "rt-multi-thread", "time"]}
 futures = "0.3.21"
 sha3 = "0.10.6"
 generic-array = "0.14.6"
+lazy_static = "1.4.0"
+prometheus = "0.13.3"
+warp = "0.3.3"
+http = "0.2.8"
 
 [dev-dependencies]
-pyth-client = "0.5.0"
 solana-program-test = "=1.10.31"
 solana-sdk = "=1.10.31"
