@@ -1,8 +1,4 @@
-import {
-  ChainId,
-  hexToUint8Array,
-  uint8ArrayToHex,
-} from "@certusone/wormhole-sdk";
+import { ChainId, uint8ArrayToHex } from "@certusone/wormhole-sdk";
 
 import {
   createSpyRPCServiceClient,
@@ -10,6 +6,8 @@ import {
 } from "@certusone/wormhole-spydk";
 
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
+
+import { createHash } from "crypto";
 
 import {
   getBatchSummary,
@@ -53,7 +51,7 @@ type ListenerConfig = {
   readiness: ListenerReadinessConfig;
 };
 
-type VaaKey = string;
+type VaaHash = string;
 
 export class Listener implements PriceStore {
   // Mapping of Price Feed Id to Vaa
@@ -64,7 +62,7 @@ export class Listener implements PriceStore {
   private spyConnectionTime: TimestampInSec | undefined;
   private readinessConfig: ListenerReadinessConfig;
   private updateCallbacks: ((priceInfo: PriceInfo) => any)[];
-  private observedVaas: LRUCache<VaaKey, boolean>;
+  private observedVaas: LRUCache<VaaHash, boolean>;
 
   constructor(config: ListenerConfig, promClient?: PromClient) {
     this.promClient = promClient;
@@ -161,12 +159,13 @@ export class Listener implements PriceStore {
   async processVaa(vaa: Buffer) {
     const { parse_vaa } = await importCoreWasm();
 
-    const vaaString = vaa.toString("hex");
-    if (this.observedVaas.has(vaaString)) {
+    const vaaHash: VaaHash = createHash("md5").update(vaa).digest("base64");
+
+    if (this.observedVaas.has(vaaHash)) {
       return;
     }
 
-    this.observedVaas.set(vaaString, true);
+    this.observedVaas.set(vaaHash, true);
     this.promClient?.incReceivedVaa();
 
     const parsedVaa = parse_vaa(vaa);
