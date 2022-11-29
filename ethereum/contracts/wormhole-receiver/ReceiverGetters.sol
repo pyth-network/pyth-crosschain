@@ -6,10 +6,6 @@ pragma solidity ^0.8.0;
 import "./ReceiverState.sol";
 
 contract ReceiverGetters is ReceiverState {
-    function owner() public view returns (address) {
-        return _state.owner;
-    }
-
     function getGuardianSet(
         uint32 index
     ) public view returns (ReceiverStructs.GuardianSet memory) {
@@ -32,6 +28,10 @@ contract ReceiverGetters is ReceiverState {
 
     function isInitialized(address impl) public view returns (bool) {
         return _state.initializedImplementations[impl];
+    }
+
+    function chainId() public view returns (uint16) {
+        return _state.provider.chainId;
     }
 
     function governanceChainId() public view returns (uint16) {

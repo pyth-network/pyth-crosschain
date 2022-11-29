@@ -56,21 +56,6 @@ abstract contract ReceiverGovernance is
         updateGuardianSetIndex(upgrade.newGuardianSetIndex);
     }
 
-    function upgradeImplementation(address newImplementation) public onlyOwner {
-        address currentImplementation = _getImplementation();
-
-        _upgradeTo(newImplementation);
-
-        // Call initialize function of the new implementation
-        (bool success, bytes memory reason) = newImplementation.delegatecall(
-            abi.encodeWithSignature("initialize()")
-        );
-
-        require(success, string(reason));
-
-        emit ContractUpgraded(currentImplementation, newImplementation);
-    }
-
     function verifyGovernanceVM(
         ReceiverStructs.VM memory vm
     ) internal view returns (bool, string memory) {
@@ -99,20 +84,5 @@ abstract contract ReceiverGovernance is
         }
 
         return (true, "");
-    }
-
-    function transferOwnership(address newOwner) public onlyOwner {
-        require(newOwner != address(0), "new owner cannot be the zero address");
-
-        address currentOwner = owner();
-
-        setOwner(newOwner);
-
-        emit OwnershipTransfered(currentOwner, newOwner);
-    }
-
-    modifier onlyOwner() {
-        require(owner() == msg.sender, "caller is not the owner");
-        _;
     }
 }
