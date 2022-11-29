@@ -396,16 +396,16 @@ mod tests {
     fn test_sanity() -> Result<(), ErrBox> {
         let fastbois = SymbolGroup {
             group_name: "fast bois".to_owned(),
-            conditions: AttestationConditions {
+            conditions: Some(AttestationConditions {
                 min_interval_secs: 5,
                 ..Default::default()
-            },
+            }),
             symbols:    vec![
-                P2WSymbol {
+                SymbolConfig {
                     name: Some("ETHUSD".to_owned()),
                     ..Default::default()
                 },
-                P2WSymbol {
+                SymbolConfig {
                     name: Some("BTCUSD".to_owned()),
                     ..Default::default()
                 },
@@ -414,16 +414,16 @@ mod tests {
 
         let slowbois = SymbolGroup {
             group_name: "slow bois".to_owned(),
-            conditions: AttestationConditions {
+            conditions: Some(AttestationConditions {
                 min_interval_secs: 200,
                 ..Default::default()
-            },
+            }),
             symbols:    vec![
-                P2WSymbol {
+                SymbolConfig {
                     name: Some("CNYAUD".to_owned()),
                     ..Default::default()
                 },
-                P2WSymbol {
+                SymbolConfig {
                     name: Some("INRPLN".to_owned()),
                     ..Default::default()
                 },
@@ -437,7 +437,6 @@ mod tests {
             mapping_addr:                   None,
             mapping_reload_interval_mins:   42,
             default_attestation_conditions: AttestationConditions::default(),
-            name_groups:                    vec![],
             symbol_groups:                  vec![fastbois, slowbois],
         };
 
