@@ -230,13 +230,17 @@ module.exports = {
       settings: {
         optimizer: {
           enabled: true,
-          runs: 5000,
+          runs: 1000,
         },
       },
     },
   },
 
-  plugins: ["@chainsafe/truffle-plugin-abigen", "truffle-plugin-verify"],
+  plugins: [
+    "@chainsafe/truffle-plugin-abigen",
+    "truffle-plugin-verify",
+    "truffle-contract-size",
+  ],
 
   api_keys: {
     etherscan: process.env.ETHERSCAN_KEY,

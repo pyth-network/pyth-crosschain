@@ -8,6 +8,8 @@ const Wormhole = artifacts.require("Wormhole");
 
 const pyth2WormholeChainId = process.env.SOLANA_CHAIN_ID;
 const pyth2WormholeEmitter = process.env.SOLANA_EMITTER;
+const validTimePeriodSeconds = Number(process.env.VALID_TIME_PERIOD_SECONDS);
+const singleUpdateFeeInWei = Number(process.env.SINGLE_UPDATE_FEE_IN_WEI);
 
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 
@@ -22,8 +24,10 @@ module.exports = async function (deployer) {
     PythUpgradable,
     [
       (await Wormhole.deployed()).address,
-      pyth2WormholeChainId,
-      pyth2WormholeEmitter,
+      [pyth2WormholeChainId],
+      [pyth2WormholeEmitter],
+      validTimePeriodSeconds,
+      singleUpdateFeeInWei,
     ],
     { deployer }
   );

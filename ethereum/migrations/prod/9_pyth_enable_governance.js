@@ -8,8 +8,6 @@ const governanceEmitter = process.env.GOVERNANCE_EMITTER;
 console.log("governanceEmitter: " + governanceEmitter);
 console.log("governanceChainId: " + governanceChainId);
 
-const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
-
 /**
  * Version 1.0.0 - 1st step
  *
@@ -19,10 +17,6 @@ const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
  */
 module.exports = async function (deployer) {
   const proxy = await PythUpgradable.deployed();
-  await upgradeProxy(proxy.address, PythUpgradable, {
-    deployer,
-    unsafeSkipStorageCheck: true,
-  });
   await proxy.updateGovernanceDataSource(
     governanceChainId,
     governanceEmitter,
