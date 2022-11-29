@@ -11,6 +11,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./PythGovernance.sol";
 import "./Pyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
 
 contract PythUpgradable is
     Initializable,
@@ -126,11 +127,10 @@ contract PythUpgradable is
         _upgradeToAndCallUUPS(payload.newImplementation, new bytes(0), false);
 
         // Calling a method using `this.<method>` will cause a contract call that will use
-        // the new contract.
-        require(
-            this.pythUpgradableMagic() == 0x97a6f304,
-            "the new implementation is not a Pyth contract"
-        );
+        // the new contract. This call will fail if the method does not exists or the magic
+        // is different.
+        if (this.pythUpgradableMagic() != 0x97a6f304)
+            revert PythErrors.InvalidGovernanceMessage();
 
         emit ContractUpgraded(oldImplementation, _getImplementation());
     }

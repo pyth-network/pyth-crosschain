@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 
 import "../libraries/external/BytesLib.sol";
 import "./PythInternalStructs.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
 
 /**
  * @dev `PythGovernanceInstructions` defines a set of structs and parsing functions
@@ -75,17 +76,16 @@ contract PythGovernanceInstructions {
         uint index = 0;
 
         uint32 magic = encodedInstruction.toUint32(index);
-        require(magic == MAGIC, "invalid magic for GovernanceInstruction");
+
+        if (magic != MAGIC) revert PythErrors.InvalidGovernanceMessage();
+
         index += 4;
 
         uint8 modNumber = encodedInstruction.toUint8(index);
         gi.module = GovernanceModule(modNumber);
         index += 1;
 
-        require(
-            gi.module == MODULE,
-            "invalid module for GovernanceInstruction"
-        );
+        if (gi.module != MODULE) revert PythErrors.InvalidGovernanceTarget();
 
         uint8 actionNumber = encodedInstruction.toUint8(index);
         gi.action = GovernanceAction(actionNumber);
@@ -112,10 +112,8 @@ contract PythGovernanceInstructions {
         uc.newImplementation = address(encodedPayload.toAddress(index));
         index += 20;
 
-        require(
-            encodedPayload.length == index,
-            "invalid length for UpgradeContractPayload"
-        );
+        if (encodedPayload.length != index)
+            revert PythErrors.InvalidGovernanceMessage();
     }
 
     /// @dev Parse a AuthorizeGovernanceDataSourceTransferPayload (action 2) with minimal validation
@@ -142,10 +140,8 @@ contract PythGovernanceInstructions {
         sgdsClaim.governanceDataSourceIndex = encodedPayload.toUint32(index);
         index += 4;
 
-        require(
-            encodedPayload.length == index,
-            "invalid length for RequestGovernanceDataSourceTransferPayload"
-        );
+        if (encodedPayload.length != index)
+            revert PythErrors.InvalidGovernanceMessage();
     }
 
     /// @dev Parse a SetDataSourcesPayload (action 3) with minimal validation
@@ -169,10 +165,8 @@ contract PythGovernanceInstructions {
             index += 32;
         }
 
-        require(
-            encodedPayload.length == index,
-            "invalid length for SetDataSourcesPayload"
-        );
+        if (encodedPayload.length != index)
+            revert PythErrors.InvalidGovernanceMessage();
     }
 
     /// @dev Parse a SetFeePayload (action 4) with minimal validation
@@ -189,10 +183,8 @@ contract PythGovernanceInstructions {
 
         sf.newFee = uint256(val) * uint256(10) ** uint256(expo);
 
-        require(
-            encodedPayload.length == index,
-            "invalid length for SetFeePayload"
-        );
+        if (encodedPayload.length != index)
+            revert PythErrors.InvalidGovernanceMessage();
     }
 
     /// @dev Parse a SetValidPeriodPayload (action 5) with minimal validation
@@ -204,9 +196,7 @@ contract PythGovernanceInstructions {
         svp.newValidPeriod = uint256(encodedPayload.toUint64(index));
         index += 8;
 
-        require(
-            encodedPayload.length == index,
-            "invalid length for SetValidPeriodPayload"
-        );
+        if (encodedPayload.length != index)
+            revert PythErrors.InvalidGovernanceMessage();
     }
 }
