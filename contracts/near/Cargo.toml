@@ -1,0 +1,37 @@
+[package]
+name    = "pyth-near"
+version = "0.1.0"
+authors = ["Reisen"]
+edition = "2021"
+
+[lib]
+name       = "pyth"
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+hex          = { version = "0.4.3" }
+near-sdk     = { version = "4.1.1" }
+p2w-sdk      = { path = "../../third_party/pyth/p2w-sdk/rust" }
+structs      = { git = "https://github.com/wormhole-foundation/wormhole", branch = "pr/jynnantonix/vaa-structs" }
+thiserror    = { version = "1.0.37" }
+uint         = { version = "0.9.4", default-features = false }
+vaa-payload  = { git = "https://github.com/wormhole-foundation/wormhole", branch = "pr/jynnantonix/vaa-structs" }
+wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", branch = "pr/jynnantonix/vaa-structs" }
+
+[dev-dependencies]
+lazy_static  = { version = "1.4.0" }
+serde_json   = { version = "1.0.89" }
+serde        = { version = "1.0.148", features = ["derive"] }
+structs      = { git = "https://github.com/wormhole-foundation/wormhole", branch = "pr/jynnantonix/vaa-structs" }
+tokio        = { version = "1.22.0", features = ["full"] }
+vaa-payload  = { git = "https://github.com/wormhole-foundation/wormhole", branch = "pr/jynnantonix/vaa-structs" }
+workspaces   = { version = "0.6.1" }
+wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", branch = "pr/jynnantonix/vaa-structs" }
+
+[profile.release]
+codegen-units   = 1
+opt-level       = "z"
+lto             = true
+debug           = false
+panic           = "abort"
+overflow-checks = true
