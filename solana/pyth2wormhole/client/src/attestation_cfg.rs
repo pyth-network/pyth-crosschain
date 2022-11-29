@@ -1,5 +1,9 @@
 use {
-    log::info,
+    crate::P2WProductAccount,
+    log::{
+        info,
+        warn,
+    },
     serde::{
         de::Error,
         Deserialize,
@@ -8,7 +12,13 @@ use {
         Serializer,
     },
     solana_program::pubkey::Pubkey,
-    std::str::FromStr,
+    std::{
+        collections::{
+            HashMap,
+            HashSet,
+        },
+        str::FromStr,
+    },
 };
 
 /// Pyth2wormhole config specific to attestation requests
@@ -38,12 +48,9 @@ pub struct AttestationConfig {
     /// Rate-limiting minimum delay between RPC requests in milliseconds
     pub min_rpc_interval_ms:            u64,
     /// Attestation conditions that will be used for any symbols included in the mapping
-    /// that aren't explicitly in one of the groups below.
+    /// that aren't explicitly in one of the groups below, and any groups without explicitly
+    /// configured attestation conditions.
     pub default_attestation_conditions: AttestationConditions,
-
-    /// Collection of symbols identified by symbol name (e.g., "Crypto.BTC/USD")
-    /// These symbols are only active if `mapping_addr` is set.
-    pub name_groups: Vec<NameGroup>,
 
     /// Collection of symbols identified by their full account addresses.
     /// These symbols will be published regardless of whether or not `mapping_addr` is provided.
@@ -51,41 +58,159 @@ pub struct AttestationConfig {
 }
 
 impl AttestationConfig {
-    pub fn as_batches(&self, max_batch_size: usize) -> Vec<SymbolGroup> {
-        self.symbol_groups
+    pub fn instantiate_batches(
+        &self,
+        product_accounts: &[P2WProductAccount],
+        max_batch_size: usize,
+    ) -> Vec<SymbolBatch> {
+        // Construct mapping from the name of each product account to its corresponding symbols
+        let mut name_to_symbols: HashMap<String, Vec<P2WSymbol>> = HashMap::new();
+        for product_account in product_accounts {
+            for price_account_key in &product_account.price_account_keys {
+                let symbol = P2WSymbol {
+                    name:         Some(product_account.name.clone()),
+                    product_addr: product_account.key,
+                    price_addr:   *price_account_key,
+                };
+
+                name_to_symbols
+                    .entry(product_account.name.clone())
+                    .or_insert(vec![])
+                    .push(symbol);
+            }
+        }
+
+        // Instantiate batches from the configured symbol groups.
+        let mut configured_batches: Vec<SymbolBatch> = vec![];
+        for group in &self.symbol_groups {
+            let group_symbols: Vec<P2WSymbol> = group
+                .symbols
+                .iter()
+                .flat_map(|symbol| {
+                    match (&symbol.name, &symbol.price_addr, &symbol.product_addr) {
+                        (maybe_name, Some(price_addr), Some(product_addr)) => {
+                            vec![P2WSymbol {
+                                name:         maybe_name.clone(),
+                                product_addr: *product_addr,
+                                price_addr:   *price_addr,
+                            }]
+                        }
+                        (Some(name), None, None) => {
+                            let maybe_matched_symbols: Option<&Vec<P2WSymbol>> =
+                                name_to_symbols.get(name);
+                            if let Some(matched_symbols) = maybe_matched_symbols {
+                                matched_symbols.clone()
+                            } else {
+                                warn!(
+                                    "Could not find product account for configured symbol {}",
+                                    name
+                                );
+                                vec![]
+                            }
+                        }
+                        _ => {
+                            // FIXME
+                            panic!("Bad config");
+                        }
+                    }
+                })
+                .collect();
+
+            let group_conditions = group
+                .conditions
+                .as_ref()
+                .unwrap_or(&self.default_attestation_conditions);
+            configured_batches.extend(AttestationConfig::partition_into_batches(
+                &group.group_name,
+                max_batch_size,
+                group_conditions,
+                group_symbols,
+            ))
+        }
+
+        // Find any accounts not included in existing batches and group them into a remainder batch
+        let existing_price_accounts: HashSet<Pubkey> = configured_batches
             .iter()
-            .flat_map(move |g| {
-                let conditions4closure = g.conditions.clone();
-                let name4closure = g.group_name.clone();
+            .flat_map(|batch| batch.symbols.iter().map(|symbol| symbol.price_addr))
+            .chain(
+                configured_batches
+                    .iter()
+                    .flat_map(|batch| batch.symbols.iter().map(|symbol| symbol.price_addr)),
+            )
+            .collect();
 
-                info!("Group {:?}, {} symbols", g.group_name, g.symbols.len(),);
+        let mut remaining_symbols: Vec<P2WSymbol> = vec![];
+        for product_account in product_accounts {
+            for price_account_key in &product_account.price_account_keys {
+                if !existing_price_accounts.contains(price_account_key) {
+                    let symbol = P2WSymbol {
+                        name:         Some(product_account.name.clone()),
+                        product_addr: product_account.key,
+                        price_addr:   *price_account_key,
+                    };
+                    remaining_symbols.push(symbol);
+                }
+            }
+        }
+        let remaining_batches = AttestationConfig::partition_into_batches(
+            &"mapping".to_owned(),
+            max_batch_size,
+            &self.default_attestation_conditions,
+            remaining_symbols,
+        );
 
-                // Divide group into batches
-                g.symbols
-                    .as_slice()
-                    .chunks(max_batch_size)
-                    .map(move |symbols| SymbolGroup {
-                        group_name: name4closure.clone(),
-                        symbols:    symbols.to_vec(),
-                        conditions: conditions4closure.clone(),
-                    })
+        let all_batches = configured_batches
+            .into_iter()
+            .chain(remaining_batches.into_iter())
+            .collect::<Vec<SymbolBatch>>();
+
+        for batch in &all_batches {
+            info!(
+                "Batch {:?}, {} symbols",
+                batch.group_name,
+                batch.symbols.len(),
+            );
+        }
+
+        all_batches
+    }
+
+    /// Partition symbols into a collection of batches, each of which contains no more than
+    /// `max_batch_size` symbols.
+    fn partition_into_batches(
+        batch_name: &String,
+        max_batch_size: usize,
+        conditions: &AttestationConditions,
+        symbols: Vec<P2WSymbol>,
+    ) -> Vec<SymbolBatch> {
+        symbols
+            .as_slice()
+            .chunks(max_batch_size)
+            .map(move |batch_symbols| SymbolBatch {
+                group_name: batch_name.to_owned(),
+                symbols:    batch_symbols.to_vec(),
+                conditions: conditions.clone(),
             })
             .collect()
     }
 }
 
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
-pub struct NameGroup {
-    pub group_name:   String,
-    /// Attestation conditions applied to all symbols in this group.
+pub struct SymbolGroup {
+    pub group_name: String,
+    /// Attestation conditions applied to all symbols in this group
     /// If not provided, use the default attestation conditions from `AttestationConfig`.
-    pub conditions:   Option<AttestationConditions>,
-    /// The names of the symbols to include in this group
-    pub symbol_names: Vec<String>,
+    pub conditions: Option<AttestationConditions>,
+
+    /// FIXME
+    /// Collection of symbols identified by their full account addresses.
+    /// These symbols will be published regardless of whether or not `mapping_addr` is provided in the
+    /// `AttestationConfig`.
+    pub symbols: Vec<SymbolConfig>,
 }
 
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
-pub struct SymbolGroup {
+pub struct SymbolBatch {
     pub group_name: String,
     /// Attestation conditions applied to all symbols in this group
     pub conditions: AttestationConditions,
@@ -171,6 +296,33 @@ impl Default for AttestationConditions {
 }
 
 /// Config entry for a Pyth product + price pair
+#[derive(Clone, Default, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
+pub struct SymbolConfig {
+    /// On-chain symbol name
+    pub name: Option<String>,
+
+    #[serde(
+        deserialize_with = "opt_pubkey_string_de",
+        serialize_with = "opt_pubkey_string_ser"
+    )]
+    pub product_addr: Option<Pubkey>,
+    #[serde(
+        deserialize_with = "opt_pubkey_string_de",
+        serialize_with = "opt_pubkey_string_ser"
+    )]
+    pub price_addr:   Option<Pubkey>,
+}
+
+impl ToString for SymbolConfig {
+    // FIXME the default is bad
+    fn to_string(&self) -> String {
+        self.name.clone().unwrap_or(format!(
+            "Unnamed product {}",
+            self.product_addr.unwrap_or_default()
+        ))
+    }
+}
+
 #[derive(Clone, Default, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct P2WSymbol {
     /// User-defined human-readable name
@@ -297,4 +449,6 @@ mod tests {
 
         Ok(())
     }
+
+    // FIXME: add merging unit test
 }

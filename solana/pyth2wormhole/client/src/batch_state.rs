@@ -1,6 +1,6 @@
 use {
     crate::{
-        attestation_cfg::SymbolGroup,
+        attestation_cfg::SymbolBatch,
         AttestationConditions,
         P2WSymbol,
     },
@@ -28,7 +28,7 @@ pub struct BatchState {
 }
 
 impl<'a> BatchState {
-    pub fn new(group: &SymbolGroup) -> Self {
+    pub fn new(group: &SymbolBatch) -> Self {
         Self {
             group_name:               group.group_name.clone(),
             symbols:                  group.symbols.clone(),
