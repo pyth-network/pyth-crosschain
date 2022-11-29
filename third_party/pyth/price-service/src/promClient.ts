@@ -27,9 +27,14 @@ export class PromClient {
     name: `${SERVICE_PREFIX}vaas_received`,
     help: "number of Pyth VAAs received",
   });
-  private priceUpdatesGapHistogram = new client.Histogram({
-    name: `${SERVICE_PREFIX}price_updates_gap_seconds`,
-    help: "Summary of gaps between price updates",
+  private priceUpdatesPublishTimeGapHistogram = new client.Histogram({
+    name: `${SERVICE_PREFIX}price_updates_publish_time_gap_seconds`,
+    help: "Summary of publish time gaps between price updates",
+    buckets: [1, 3, 5, 10, 15, 30, 60, 120],
+  });
+  private priceUpdatesAttestationTimeGapHistogram = new client.Histogram({
+    name: `${SERVICE_PREFIX}price_updates_attestation_time_gap_seconds`,
+    help: "Summary of attestation time gaps between price updates",
     buckets: [1, 3, 5, 10, 15, 30, 60, 120],
   });
   private apiResponseTimeSummary = new client.Summary({
@@ -59,7 +64,8 @@ export class PromClient {
     });
     // Register each metric
     this.register.registerMetric(this.receivedVaaCounter);
-    this.register.registerMetric(this.priceUpdatesGapHistogram);
+    this.register.registerMetric(this.priceUpdatesPublishTimeGapHistogram);
+    this.register.registerMetric(this.priceUpdatesAttestationTimeGapHistogram);
     this.register.registerMetric(this.apiResponseTimeSummary);
     this.register.registerMetric(this.webSocketInteractionCounter);
     // End registering metric
@@ -72,8 +78,12 @@ export class PromClient {
     this.receivedVaaCounter.inc();
   }
 
-  addPriceUpdatesGap(gap: DurationInSec) {
-    this.priceUpdatesGapHistogram.observe(gap);
+  addPriceUpdatesPublishTimeGap(gap: DurationInSec) {
+    this.priceUpdatesPublishTimeGapHistogram.observe(gap);
+  }
+
+  addPriceUpdatesAttestationTimeGap(gap: DurationInSec) {
+    this.priceUpdatesAttestationTimeGapHistogram.observe(gap);
   }
 
   // We have multiple paths and for the time being it is not important for us

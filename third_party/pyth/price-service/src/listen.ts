@@ -28,6 +28,7 @@ import LRUCache from "lru-cache";
 export type PriceInfo = {
   vaa: Buffer;
   seqNum: number;
+  publishTime: TimestampInSec;
   attestationTime: TimestampInSec;
   priceFeed: PriceFeed;
   emitterChainId: number;
@@ -212,6 +213,7 @@ export class Listener implements PriceStore {
         const priceInfo = {
           seqNum: parsedVaa.sequence,
           vaa,
+          publishTime: priceAttestation.publishTime,
           attestationTime: priceAttestation.attestationTime,
           priceFeed,
           emitterChainId: parsedVaa.emitter_chain,
@@ -220,8 +222,16 @@ export class Listener implements PriceStore {
         this.priceFeedVaaMap.set(key, priceInfo);
 
         if (lastAttestationTime !== undefined) {
-          this.promClient?.addPriceUpdatesGap(
+          this.promClient?.addPriceUpdatesAttestationTimeGap(
             priceAttestation.attestationTime - lastAttestationTime
+          );
+        }
+
+        const lastPublishTime = this.priceFeedVaaMap.get(key)?.publishTime;
+
+        if (lastPublishTime !== undefined) {
+          this.promClient?.addPriceUpdatesPublishTimeGap(
+            priceAttestation.publishTime - lastPublishTime
           );
         }
 
