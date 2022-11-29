@@ -1,60 +1,51 @@
-use crate::{
-    config::P2WConfigAccount,
-    message::{
-        P2WMessage,
-        P2WMessageDrvData,
+use {
+    crate::{
+        config::P2WConfigAccount,
+        message::{
+            P2WMessage,
+            P2WMessageDrvData,
+        },
     },
-};
-use borsh::{
-    BorshDeserialize,
-    BorshSerialize,
-};
-use solana_program::{
-    clock::Clock,
-    instruction::{
-        AccountMeta,
-        Instruction,
+    borsh::{
+        BorshDeserialize,
+        BorshSerialize,
     },
-    program::{
-        invoke,
-        invoke_signed,
+    bridge::{
+        accounts::BridgeData,
+        types::ConsistencyLevel,
     },
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    rent::Rent,
-    system_instruction,
-    sysvar::Sysvar as SolanaSysvar,
-};
-
-use p2w_sdk::{
-    BatchPriceAttestation,
-    Identifier,
-    P2WEmitter,
-    PriceAttestation,
-};
-
-use bridge::{
-    accounts::BridgeData,
-    types::ConsistencyLevel,
-    PostMessageData,
-};
-
-use solitaire::{
-    invoke_seeded,
-    trace,
-    AccountState,
-    Derive,
-    ExecutionContext,
-    FromAccounts,
-    Info,
-    Keyed,
-    Mut,
-    Peel,
-    Result as SoliResult,
-    Seeded,
-    Signer,
-    SolitaireError,
-    Sysvar,
+    p2w_sdk::{
+        BatchPriceAttestation,
+        Identifier,
+        P2WEmitter,
+        PriceAttestation,
+    },
+    solana_program::{
+        clock::Clock,
+        program::{
+            invoke,
+            invoke_signed,
+        },
+        program_error::ProgramError,
+        rent::Rent,
+        system_instruction,
+        sysvar::Sysvar as SolanaSysvar,
+    },
+    solitaire::{
+        trace,
+        AccountState,
+        ExecutionContext,
+        FromAccounts,
+        Info,
+        Keyed,
+        Mut,
+        Peel,
+        Result as SoliResult,
+        Seeded,
+        Signer,
+        SolitaireError,
+        Sysvar,
+    },
 };
 
 /// Important: must be manually maintained until native Solitaire
@@ -69,26 +60,26 @@ pub const P2W_MAX_BATCH_SIZE: u16 = 5;
 #[derive(FromAccounts)]
 pub struct Attest<'b> {
     // Payer also used for wormhole
-    pub payer: Mut<Signer<Info<'b>>>,
+    pub payer:          Mut<Signer<Info<'b>>>,
     pub system_program: Info<'b>,
-    pub config: P2WConfigAccount<'b, { AccountState::Initialized }>,
+    pub config:         P2WConfigAccount<'b, { AccountState::Initialized }>,
 
     // Hardcoded product/price pairs, bypassing Solitaire's variable-length limitations
     // Any change to the number of accounts must include an appropriate change to P2W_MAX_BATCH_SIZE
     pub pyth_product: Info<'b>,
-    pub pyth_price: Info<'b>,
+    pub pyth_price:   Info<'b>,
 
     pub pyth_product2: Option<Info<'b>>,
-    pub pyth_price2: Option<Info<'b>>,
+    pub pyth_price2:   Option<Info<'b>>,
 
     pub pyth_product3: Option<Info<'b>>,
-    pub pyth_price3: Option<Info<'b>>,
+    pub pyth_price3:   Option<Info<'b>>,
 
     pub pyth_product4: Option<Info<'b>>,
-    pub pyth_price4: Option<Info<'b>>,
+    pub pyth_price4:   Option<Info<'b>>,
 
     pub pyth_product5: Option<Info<'b>>,
-    pub pyth_price5: Option<Info<'b>>,
+    pub pyth_price5:   Option<Info<'b>>,
 
     // Did you read the comment near `pyth_product`?
     // pub pyth_product6: Option<Info<'b>>,
@@ -139,7 +130,7 @@ pub struct Attest<'b> {
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct AttestData {
-    pub consistency_level: ConsistencyLevel,
+    pub consistency_level:  ConsistencyLevel,
     pub message_account_id: u64,
 }
 
@@ -186,7 +177,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         // accs.pyth_price10.as_ref(),
     ];
 
-    let price_pairs: Vec<_> = price_pair_opts.into_iter().filter_map(|acc| *acc).collect();
+    let price_pairs: Vec<_> = price_pair_opts.iter().filter_map(|acc| *acc).collect();
 
     if price_pairs.len() % 2 != 0 {
         trace!(&format!(
@@ -211,13 +202,13 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
 		product, price,
             accs.config.pyth_owner, product.owner, price.owner
         ));
-            return Err(SolitaireError::InvalidOwner(accs.pyth_price.owner.clone()).into());
+            return Err(SolitaireError::InvalidOwner(*accs.pyth_price.owner));
         }
 
         let attestation = PriceAttestation::from_pyth_price_bytes(
             Identifier::new(price.key.to_bytes()),
             accs.clock.unix_timestamp,
-            &*price.try_borrow_data()?,
+            &price.try_borrow_data()?,
         )
         .map_err(|e| {
             trace!(&e.to_string());
@@ -265,9 +256,9 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
     })?;
 
     let wh_msg_drv_data = P2WMessageDrvData {
-        message_owner: accs.payer.key.clone(),
-        batch_size: batch_attestation.price_attestations.len() as u16,
-        id: data.message_account_id,
+        message_owner: *accs.payer.key,
+        batch_size:    batch_attestation.price_attestations.len() as u16,
+        id:            data.message_account_id,
     };
 
     if !P2WMessage::key(&wh_msg_drv_data, ctx.program_id).eq(accs.wh_message.info().key) {
@@ -291,7 +282,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         *accs.wh_message.info().key,
         0,
         payload,
-        data.consistency_level.clone(),
+        data.consistency_level,
     )?;
 
     trace!(&format!(

@@ -8,9 +8,9 @@ pub struct Config {
 pub struct P2WSymbol {
     /// Optional human-readable name, never used on-chain; makes
     /// attester logs and the config easier to understand
-    name: Option<String>,
+    name:    Option<String>,
     product: Pubkey,
-    price: Pubkey,
+    price:   Pubkey,
 }
 
 #[testmod]

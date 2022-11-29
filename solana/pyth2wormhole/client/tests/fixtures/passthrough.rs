@@ -1,17 +1,18 @@
 //! Trivial program for mocking other programs easily
-use solana_program::{
-    account_info::AccountInfo,
-    msg,
-    program_error::ProgramError,
+use {
+    solana_program::{
+        account_info::AccountInfo,
+        msg,
+        program_error::ProgramError,
+    },
+    solana_program_test::*,
+    solana_sdk::pubkey::Pubkey,
 };
-use solana_sdk::pubkey::Pubkey;
-
-use solana_program_test::*;
 
 pub fn passthrough_entrypoint(
     program_id: &Pubkey,
     account_infos: &[AccountInfo],
-    data: &[u8],
+    _data: &[u8],
 ) -> Result<(), ProgramError> {
     msg!(&format!("Program {}", program_id));
     msg!(&format!("account_infos {:?}", account_infos));

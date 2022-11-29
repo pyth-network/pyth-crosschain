@@ -3,90 +3,88 @@ pub mod batch_state;
 pub mod message;
 pub mod util;
 
-use borsh::{
-    BorshDeserialize,
-    BorshSerialize,
-};
-use log::{
-    debug,
-    trace,
-    warn,
-};
-use pyth_sdk_solana::state::{
-    load_mapping_account,
-    load_price_account,
-    load_product_account,
-};
-use solana_client::nonblocking::rpc_client::RpcClient;
-use solana_program::{
-    hash::Hash,
-    instruction::{
-        AccountMeta,
-        Instruction,
+pub use {
+    attestation_cfg::{
+        AttestationConditions,
+        AttestationConfig,
+        P2WSymbol,
     },
-    pubkey::Pubkey,
-    system_program,
-    sysvar::{
-        clock,
-        rent,
+    batch_state::BatchState,
+    message::P2WMessageQueue,
+    pyth2wormhole::Pyth2WormholeConfig,
+    util::{
+        start_metrics_server,
+        RLMutex,
+        RLMutexGuard,
     },
 };
-use solana_sdk::{
-    signer::{
-        keypair::Keypair,
-        Signer,
+use {
+    borsh::{
+        BorshDeserialize,
+        BorshSerialize,
     },
-    transaction::Transaction,
-};
-use solitaire::{
-    processors::seeded::Seeded,
-    AccountState,
-    ErrBox,
-};
-
-use bridge::{
-    accounts::{
-        Bridge,
-        FeeCollector,
-        Sequence,
-        SequenceDerivationData,
+    bridge::{
+        accounts::{
+            Bridge,
+            FeeCollector,
+            Sequence,
+            SequenceDerivationData,
+        },
+        types::ConsistencyLevel,
     },
-    types::ConsistencyLevel,
-};
-
-use std::collections::{
-    HashMap,
-    HashSet,
-};
-
-use p2w_sdk::P2WEmitter;
-
-use pyth2wormhole::{
-    config::{
-        OldP2WConfigAccount,
-        P2WConfigAccount,
+    log::{
+        debug,
+        trace,
+        warn,
     },
-    message::{
-        P2WMessage,
-        P2WMessageDrvData,
+    p2w_sdk::P2WEmitter,
+    pyth2wormhole::{
+        config::{
+            OldP2WConfigAccount,
+            P2WConfigAccount,
+        },
+        message::{
+            P2WMessage,
+            P2WMessageDrvData,
+        },
+        AttestData,
     },
-    AttestData,
+    pyth_sdk_solana::state::{
+        load_mapping_account,
+        load_price_account,
+        load_product_account,
+    },
+    solana_client::nonblocking::rpc_client::RpcClient,
+    solana_program::{
+        hash::Hash,
+        instruction::{
+            AccountMeta,
+            Instruction,
+        },
+        pubkey::Pubkey,
+        system_program,
+        sysvar::{
+            clock,
+            rent,
+        },
+    },
+    solana_sdk::{
+        signer::{
+            keypair::Keypair,
+            Signer,
+        },
+        transaction::Transaction,
+    },
+    solitaire::{
+        processors::seeded::Seeded,
+        AccountState,
+        ErrBox,
+    },
+    std::collections::{
+        HashMap,
+        HashSet,
+    },
 };
-
-pub use pyth2wormhole::Pyth2WormholeConfig;
-
-pub use attestation_cfg::{
-    AttestationConditions,
-    AttestationConfig,
-    P2WSymbol,
-};
-pub use batch_state::BatchState;
-pub use util::{
-    RLMutex,
-    RLMutexGuard,
-};
-
-pub use message::P2WMessageQueue;
 
 /// Future-friendly version of solitaire::ErrBox
 pub type ErrBoxSend = Box<dyn std::error::Error + Send + Sync>;
@@ -134,7 +132,7 @@ pub fn get_set_config_ix(
     let acc_metas = vec![
         // config
         AccountMeta::new(
-            P2WConfigAccount::<{ AccountState::Initialized }>::key(None, &p2w_addr),
+            P2WConfigAccount::<{ AccountState::Initialized }>::key(None, p2w_addr),
             false,
         ),
         // current_owner
@@ -183,7 +181,7 @@ pub fn get_set_is_active_ix(
     let acc_metas = vec![
         // config
         AccountMeta::new(
-            P2WConfigAccount::<{ AccountState::Initialized }>::key(None, &p2w_addr),
+            P2WConfigAccount::<{ AccountState::Initialized }>::key(None, p2w_addr),
             false,
         ),
         // ops_owner
@@ -325,13 +323,12 @@ pub fn gen_attest_tx(
     let mut padded_symbols = {
         let mut not_padded: Vec<_> = symbols
             .iter()
-            .map(|s| {
+            .flat_map(|s| {
                 vec![
                     AccountMeta::new_readonly(s.product_addr, false),
                     AccountMeta::new_readonly(s.price_addr, false),
                 ]
             })
-            .flatten()
             .collect();
 
         // Align to max batch size with null accounts
@@ -362,8 +359,8 @@ pub fn gen_attest_tx(
         AccountMeta::new(
             P2WMessage::key(
                 &P2WMessageDrvData {
-                    id: wh_msg_id,
-                    batch_size: symbols.len() as u16,
+                    id:            wh_msg_id,
+                    batch_size:    symbols.len() as u16,
                     message_owner: payer.pubkey(),
                 },
                 &p2w_addr,
@@ -384,7 +381,7 @@ pub fn gen_attest_tx(
     let ix_data = (
         pyth2wormhole::instruction::Instruction::Attest,
         AttestData {
-            consistency_level: ConsistencyLevel::Confirmed,
+            consistency_level:  ConsistencyLevel::Confirmed,
             message_account_id: wh_msg_id,
         },
     );
@@ -394,7 +391,7 @@ pub fn gen_attest_tx(
     let tx_signed = Transaction::new_signed_with_payer::<Vec<&Keypair>>(
         &[ix],
         Some(&payer.pubkey()),
-        &vec![&payer],
+        &vec![payer],
         latest_blockhash,
     );
     Ok(tx_signed)
@@ -412,7 +409,7 @@ pub async fn crawl_pyth_mapping(
     let mut n_products_total = 0; // Grand total products in all mapping accounts
     let mut n_prices_total = 0; // Grand total prices in all product accounts in all mapping accounts
 
-    let mut mapping_addr = first_mapping_addr.clone();
+    let mut mapping_addr = *first_mapping_addr;
 
     // loop until the last non-zero MappingAccount.next account
     loop {
@@ -442,7 +439,7 @@ pub async fn crawl_pyth_mapping(
                 }
             };
 
-            let mut price_addr = prod.px_acc.clone();
+            let mut price_addr = prod.px_acc;
             let mut n_prod_prices = 0;
 
             // the product might have no price, can happen in tilt due to race-condition, failed tx to add price, ...
@@ -468,7 +465,7 @@ pub async fn crawl_pyth_mapping(
                 };
 
                 // Append to existing set or create a new map entry
-                ret.entry(prod_addr.clone())
+                ret.entry(*prod_addr)
                     .or_insert(HashSet::new())
                     .insert(price_addr);
 
@@ -483,7 +480,7 @@ pub async fn crawl_pyth_mapping(
                     break;
                 }
 
-                price_addr = price.next.clone();
+                price_addr = price.next;
             }
 
             n_prices_total += n_prod_prices;
@@ -501,7 +498,7 @@ pub async fn crawl_pyth_mapping(
 
             break;
         }
-        mapping_addr = mapping.next.clone();
+        mapping_addr = mapping.next;
         n_mappings += 1;
     }
     debug!(

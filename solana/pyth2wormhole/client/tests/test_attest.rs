@@ -1,41 +1,31 @@
 pub mod fixtures;
 
-use solana_program_test::*;
-use solana_sdk::{
-    account::Account,
-    instruction::{
-        AccountMeta,
-        Instruction,
+use {
+    bridge::accounts::{
+        Bridge,
+        BridgeConfig,
+        BridgeData,
     },
-    pubkey::Pubkey,
-    rent::Rent,
-    signature::Signer,
-    signer::keypair::Keypair,
-    transaction::Transaction,
-};
-
-use bridge::accounts::{
-    Bridge,
-    BridgeConfig,
-    BridgeData,
-};
-
-use pyth2wormhole::config::{
-    P2WConfigAccount,
-    Pyth2WormholeConfig,
-};
-use pyth2wormhole_client as p2wc;
-use solitaire::{
-    processors::seeded::Seeded,
-    AccountState,
-    BorshSerialize,
-};
-
-use std::time::Duration;
-
-use fixtures::{
-    passthrough,
-    pyth,
+    fixtures::{
+        passthrough,
+        pyth,
+    },
+    pyth2wormhole::config::{
+        P2WConfigAccount,
+        Pyth2WormholeConfig,
+    },
+    pyth2wormhole_client as p2wc,
+    solana_program_test::*,
+    solana_sdk::{
+        account::Account,
+        pubkey::Pubkey,
+        rent::Rent,
+    },
+    solitaire::{
+        processors::seeded::Seeded,
+        AccountState,
+        BorshSerialize,
+    },
 };
 
 #[tokio::test]
@@ -77,9 +67,9 @@ async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
     // Plant a filled config account
     let p2w_config_bytes = p2w_config.try_to_vec()?;
     let p2w_config_account = Account {
-        lamports: Rent::default().minimum_balance(p2w_config_bytes.len()),
-        data: p2w_config_bytes,
-        owner: p2w_program_id,
+        lamports:   Rent::default().minimum_balance(p2w_config_bytes.len()),
+        data:       p2w_config_bytes,
+        owner:      p2w_program_id,
         executable: false,
         rent_epoch: 0,
     };
@@ -91,9 +81,9 @@ async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
     // Plant a bridge config
     let bridge_config_bytes = bridge_config.try_to_vec()?;
     let wh_bridge_config_account = Account {
-        lamports: Rent::default().minimum_balance(bridge_config_bytes.len()),
-        data: bridge_config_bytes,
-        owner: wh_fixture_program_id,
+        lamports:   Rent::default().minimum_balance(bridge_config_bytes.len()),
+        data:       bridge_config_bytes,
+        owner:      wh_fixture_program_id,
         executable: false,
         rent_epoch: 0,
     };
@@ -106,15 +96,15 @@ async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
     passthrough::add_passthrough(&mut p2w_test, "wormhole", wh_fixture_program_id);
     let (prod_id, price_id) = pyth::add_test_symbol(&mut p2w_test, &pyth_owner);
 
-    let mut ctx = p2w_test.start_with_context().await;
+    let ctx = p2w_test.start_with_context().await;
 
     let symbols = vec![p2wc::P2WSymbol {
-        name: Some("Mock symbol".to_owned()),
+        name:         Some("Mock symbol".to_owned()),
         product_addr: prod_id,
-        price_addr: price_id,
+        price_addr:   price_id,
     }];
 
-    let attest_tx = p2wc::gen_attest_tx(
+    let _attest_tx = p2wc::gen_attest_tx(
         p2w_program_id,
         &p2w_config,
         &ctx.payer,

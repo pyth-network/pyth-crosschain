@@ -1,36 +1,35 @@
 //! Instruction used to migrate on-chain configuration from an older format
 
-use solana_program::{
-    program::invoke,
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    rent::Rent,
-    system_instruction,
-    system_program,
-    sysvar::Sysvar,
-};
-
-use solitaire::{
-    trace,
-    AccountSize,
-    AccountState,
-    CreationLamports,
-    ExecutionContext,
-    FromAccounts,
-    Info,
-    Keyed,
-    Mut,
-    Peel,
-    Result as SoliResult,
-    Signer,
-    SolitaireError,
-};
-
-use crate::config::{
-    OldP2WConfigAccount,
-    OldPyth2WormholeConfig,
-    P2WConfigAccount,
-    Pyth2WormholeConfig,
+use {
+    crate::config::{
+        OldP2WConfigAccount,
+        OldPyth2WormholeConfig,
+        P2WConfigAccount,
+        Pyth2WormholeConfig,
+    },
+    solana_program::{
+        program::invoke,
+        program_error::ProgramError,
+        rent::Rent,
+        system_instruction,
+        system_program,
+        sysvar::Sysvar,
+    },
+    solitaire::{
+        trace,
+        AccountSize,
+        AccountState,
+        CreationLamports,
+        ExecutionContext,
+        FromAccounts,
+        Info,
+        Keyed,
+        Mut,
+        Peel,
+        Result as SoliResult,
+        Signer,
+        SolitaireError,
+    },
 };
 
 /// Migration accounts meant to evolve with subsequent config accounts
@@ -40,18 +39,18 @@ use crate::config::{
 #[derive(FromAccounts)]
 pub struct Migrate<'b> {
     /// New config account to be populated. Must be unused.
-    pub new_config: Mut<P2WConfigAccount<'b, { AccountState::Uninitialized }>>,
+    pub new_config:     Mut<P2WConfigAccount<'b, { AccountState::Uninitialized }>>,
     /// Old config using the previous format.
-    pub old_config: Mut<OldP2WConfigAccount<'b>>,
+    pub old_config:     Mut<OldP2WConfigAccount<'b>>,
     /// Current owner authority of the program
-    pub current_owner: Mut<Signer<Info<'b>>>,
+    pub current_owner:  Mut<Signer<Info<'b>>>,
     /// Payer account for updating the account data
-    pub payer: Mut<Signer<Info<'b>>>,
+    pub payer:          Mut<Signer<Info<'b>>>,
     /// For creating the new config account
     pub system_program: Info<'b>,
 }
 
-pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResult<()> {
+pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, _data: ()) -> SoliResult<()> {
     let old_config: &OldPyth2WormholeConfig = &accs.old_config.1;
 
     if &old_config.owner != accs.current_owner.info().key {
@@ -60,7 +59,7 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
             old_config.owner
         );
         return Err(SolitaireError::InvalidSigner(
-            accs.current_owner.info().key.clone(),
+            *accs.current_owner.info().key,
         ));
     }
 
@@ -70,9 +69,7 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
             system_program::id(),
             accs.system_program.key
         );
-        return Err(SolitaireError::InvalidSigner(
-            accs.system_program.key.clone(),
-        ));
+        return Err(SolitaireError::InvalidSigner(*accs.system_program.key));
     }
 
     // Populate new config
@@ -83,11 +80,11 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, data: ()) -> SoliResu
     // Adjust new config lamports
     // NOTE(2022-09-29): Necessary due to PythNet rent calculation
     // differences, remove when solitaire supports Rent::get()?
-    let mut acc_lamports = accs.new_config.info().lamports();
+    let acc_lamports = accs.new_config.info().lamports();
 
     let new_lamports = Rent::get()?.minimum_balance(accs.new_config.size());
 
-    let diff_lamports: u64 = (acc_lamports as i64 - new_lamports as i64).abs() as u64;
+    let diff_lamports: u64 = (acc_lamports as i64 - new_lamports as i64).unsigned_abs();
 
     if acc_lamports < new_lamports {
         // Less than enough lamports, debit the payer

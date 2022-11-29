@@ -1,13 +1,13 @@
-use solana_program::pubkey::Pubkey;
-use solitaire::Seeded;
-use std::str::FromStr;
-use wasm_bindgen::prelude::*;
-
-
-use crate::{
-    BatchPriceAttestation,
-    P2WEmitter,
-    PriceAttestation,
+use {
+    crate::{
+        BatchPriceAttestation,
+        P2WEmitter,
+        PriceAttestation,
+    },
+    solana_program::pubkey::Pubkey,
+    solitaire::Seeded,
+    std::str::FromStr,
+    wasm_bindgen::prelude::*,
 };
 
 #[wasm_bindgen]

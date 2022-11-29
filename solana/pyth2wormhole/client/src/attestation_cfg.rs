@@ -1,39 +1,38 @@
-use std::{
-    collections::{
-        HashMap,
-        HashSet,
+use {
+    crate::BatchState,
+    log::info,
+    serde::{
+        de::Error,
+        Deserialize,
+        Deserializer,
+        Serialize,
+        Serializer,
     },
-    iter,
-    str::FromStr,
+    solana_program::pubkey::Pubkey,
+    std::{
+        collections::{
+            HashMap,
+            HashSet,
+        },
+        iter,
+        str::FromStr,
+    },
 };
-
-use log::info;
-
-use serde::{
-    de::Error,
-    Deserialize,
-    Deserializer,
-    Serialize,
-    Serializer,
-};
-use solana_program::pubkey::Pubkey;
-
-use crate::BatchState;
 
 /// Pyth2wormhole config specific to attestation requests
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
 pub struct AttestationConfig {
     #[serde(default = "default_min_msg_reuse_interval_ms")]
-    pub min_msg_reuse_interval_ms: u64,
+    pub min_msg_reuse_interval_ms:    u64,
     #[serde(default = "default_max_msg_accounts")]
-    pub max_msg_accounts: u64,
+    pub max_msg_accounts:             u64,
     /// Optionally, we take a mapping account to add remaining symbols from a Pyth deployments. These symbols are processed under attestation conditions for the `default` symbol group.
     #[serde(
         deserialize_with = "opt_pubkey_string_de",
         serialize_with = "opt_pubkey_string_ser",
         default // Uses Option::default() which is None
     )]
-    pub mapping_addr: Option<Pubkey>,
+    pub mapping_addr:                 Option<Pubkey>,
     /// The known symbol list will be reloaded based off this
     /// interval, to account for mapping changes. Note: This interval
     /// will only work if the mapping address is defined. Whenever
@@ -45,8 +44,8 @@ pub struct AttestationConfig {
     pub mapping_reload_interval_mins: u64,
     #[serde(default = "default_min_rpc_interval_ms")]
     /// Rate-limiting minimum delay between RPC requests in milliseconds"
-    pub min_rpc_interval_ms: u64,
-    pub symbol_groups: Vec<SymbolGroup>,
+    pub min_rpc_interval_ms:          u64,
+    pub symbol_groups:                Vec<SymbolGroup>,
 }
 
 impl AttestationConfig {
@@ -72,12 +71,11 @@ impl AttestationConfig {
         // Turn the pruned symbols into P2WSymbol structs
         let mut new_symbols_vec = new_symbols
             .drain() // Makes us own the elements and lets us move them
-            .map(|(prod, prices)| iter::zip(iter::repeat(prod), prices)) // Convert to iterator over flat (prod, price) tuples
-            .flatten() // Flatten the tuple iterators
+            .flat_map(|(prod, prices)| iter::zip(iter::repeat(prod), prices)) // Flatten the tuple iterators
             .map(|(prod, price)| P2WSymbol {
-                name: None,
+                name:         None,
                 product_addr: prod,
-                price_addr: price,
+                price_addr:   price,
             })
             .collect::<Vec<P2WSymbol>>();
 
@@ -88,7 +86,7 @@ impl AttestationConfig {
             .find(|g| g.group_name == group_name) // Advances the iterator and returns Some(item) on first hit
         {
             Some(existing_group) => existing_group.symbols.append(&mut new_symbols_vec),
-            None if new_symbols_vec.len() != 0 => {
+            None if !new_symbols_vec.is_empty() => {
                 // Group does not exist, assume defaults
                 let new_group = SymbolGroup {
                     group_name,
@@ -105,7 +103,7 @@ impl AttestationConfig {
     pub fn as_batches(&self, max_batch_size: usize) -> Vec<BatchState> {
         self.symbol_groups
             .iter()
-            .map(move |g| {
+            .flat_map(move |g| {
                 let conditions4closure = g.conditions.clone();
                 let name4closure = g.group_name.clone();
 
@@ -114,12 +112,11 @@ impl AttestationConfig {
                 // Divide group into batches
                 g.symbols
                     .as_slice()
-                    .chunks(max_batch_size.clone())
+                    .chunks(max_batch_size)
                     .map(move |symbols| {
                         BatchState::new(name4closure.clone(), symbols, conditions4closure.clone())
                     })
             })
-            .flatten()
             .collect()
     }
 }
@@ -129,7 +126,7 @@ pub struct SymbolGroup {
     pub group_name: String,
     /// Attestation conditions applied to all symbols in this group
     pub conditions: AttestationConditions,
-    pub symbols: Vec<P2WSymbol>,
+    pub symbols:    Vec<P2WSymbol>,
 }
 
 pub const fn default_max_msg_accounts() -> u64 {
@@ -202,9 +199,9 @@ impl AttestationConditions {
 impl Default for AttestationConditions {
     fn default() -> Self {
         Self {
-            min_interval_secs: default_min_interval_secs(),
-            max_batch_jobs: default_max_batch_jobs(),
-            price_changed_bps: None,
+            min_interval_secs:           default_min_interval_secs(),
+            max_batch_jobs:              default_max_batch_jobs(),
+            price_changed_bps:           None,
             publish_time_min_delta_secs: None,
         }
     }
@@ -225,7 +222,7 @@ pub struct P2WSymbol {
         deserialize_with = "pubkey_string_de",
         serialize_with = "pubkey_string_ser"
     )]
-    pub price_addr: Pubkey,
+    pub price_addr:   Pubkey,
 }
 
 impl ToString for P2WSymbol {
@@ -258,7 +255,7 @@ fn opt_pubkey_string_ser<S>(k_opt: &Option<Pubkey>, ser: S) -> Result<S::Ok, S::
 where
     S: Serializer,
 {
-    let k_str_opt = k_opt.clone().map(|k| k.to_string());
+    let k_str_opt = (*k_opt).map(|k| k.to_string());
 
     Option::<String>::serialize(&k_str_opt, ser)
 }
@@ -275,9 +272,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    use solitaire::ErrBox;
+    use {
+        super::*,
+        solitaire::ErrBox,
+    };
 
     #[test]
     fn test_sanity() -> Result<(), ErrBox> {
@@ -287,7 +285,7 @@ mod tests {
                 min_interval_secs: 5,
                 ..Default::default()
             },
-            symbols: vec![
+            symbols:    vec![
                 P2WSymbol {
                     name: Some("ETHUSD".to_owned()),
                     ..Default::default()
@@ -305,7 +303,7 @@ mod tests {
                 min_interval_secs: 200,
                 ..Default::default()
             },
-            symbols: vec![
+            symbols:    vec![
                 P2WSymbol {
                     name: Some("CNYAUD".to_owned()),
                     ..Default::default()
@@ -318,12 +316,12 @@ mod tests {
         };
 
         let cfg = AttestationConfig {
-            min_msg_reuse_interval_ms: 1000,
-            max_msg_accounts: 100_000,
-            min_rpc_interval_ms: 2123,
-            mapping_addr: None,
+            min_msg_reuse_interval_ms:    1000,
+            max_msg_accounts:             100_000,
+            min_rpc_interval_ms:          2123,
+            mapping_addr:                 None,
             mapping_reload_interval_mins: 42,
-            symbol_groups: vec![fastbois, slowbois],
+            symbol_groups:                vec![fastbois, slowbois],
         };
 
         let serialized = serde_yaml::to_string(&cfg)?;
@@ -338,12 +336,12 @@ mod tests {
     #[test]
     fn test_add_symbols_works() -> Result<(), ErrBox> {
         let empty_config = AttestationConfig {
-            min_msg_reuse_interval_ms: 1000,
-            max_msg_accounts: 100,
-            min_rpc_interval_ms: 42422,
-            mapping_addr: None,
+            min_msg_reuse_interval_ms:    1000,
+            max_msg_accounts:             100,
+            min_rpc_interval_ms:          42422,
+            mapping_addr:                 None,
             mapping_reload_interval_mins: 42,
-            symbol_groups: vec![],
+            symbol_groups:                vec![],
         };
 
         let mock_new_symbols = (0..255)
@@ -352,7 +350,7 @@ mod tests {
                 mock_prod_bytes[31] = sym_idx;
 
                 let mut mock_prices = HashSet::new();
-                for px_idx in 1..=5 {
+                for _px_idx in 1..=5 {
                     let mut mock_price_bytes = [0u8; 32];
                     mock_price_bytes[31] = sym_idx;
                     mock_prices.insert(Pubkey::new_from_array(mock_price_bytes));
@@ -370,7 +368,7 @@ mod tests {
 
         // Should not be created because there's no new symbols to add
         // (we're adding identical mock_new_symbols again)
-        config2.add_symbols(mock_new_symbols.clone(), "default2".to_owned());
+        config2.add_symbols(mock_new_symbols, "default2".to_owned());
 
         assert_ne!(config1, empty_config); // Check that config grows from empty
         assert_eq!(config1, config2); // Check that no changes are made if all symbols are already in there

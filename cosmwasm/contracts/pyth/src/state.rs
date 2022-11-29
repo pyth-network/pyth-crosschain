@@ -1,29 +1,30 @@
-use std::collections::HashSet;
-use std::time::Duration;
-
-use pyth_sdk_cw::PriceFeed;
-use schemars::JsonSchema;
-use serde::{
-    Deserialize,
-    Serialize,
-};
-
-use cosmwasm_std::{
-    Addr,
-    Binary,
-    Storage,
-    Timestamp,
-};
-
-use cosmwasm_storage::{
-    bucket,
-    bucket_read,
-    singleton,
-    singleton_read,
-    Bucket,
-    ReadonlyBucket,
-    ReadonlySingleton,
-    Singleton,
+use {
+    cosmwasm_std::{
+        Addr,
+        Binary,
+        Storage,
+        Timestamp,
+    },
+    cosmwasm_storage::{
+        bucket,
+        bucket_read,
+        singleton,
+        singleton_read,
+        Bucket,
+        ReadonlyBucket,
+        ReadonlySingleton,
+        Singleton,
+    },
+    pyth_sdk_cw::PriceFeed,
+    schemars::JsonSchema,
+    serde::{
+        Deserialize,
+        Serialize,
+    },
+    std::{
+        collections::HashSet,
+        time::Duration,
+    },
 };
 
 pub static CONFIG_KEY: &[u8] = b"config";

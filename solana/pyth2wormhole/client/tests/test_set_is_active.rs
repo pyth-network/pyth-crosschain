@@ -1,25 +1,24 @@
 pub mod fixtures;
 
-use borsh::BorshDeserialize;
-use p2wc::get_config_account;
-use solana_program_test::*;
-use solana_sdk::{
-    account::Account,
-    pubkey::Pubkey,
-    rent::Rent,
-    signature::Signer,
-    signer::keypair::Keypair,
-};
-
-use pyth2wormhole::config::{
-    P2WConfigAccount,
-    Pyth2WormholeConfig,
-};
-use pyth2wormhole_client as p2wc;
-use solitaire::{
-    processors::seeded::Seeded,
-    AccountState,
-    BorshSerialize,
+use {
+    pyth2wormhole::config::{
+        P2WConfigAccount,
+        Pyth2WormholeConfig,
+    },
+    pyth2wormhole_client as p2wc,
+    solana_program_test::*,
+    solana_sdk::{
+        account::Account,
+        pubkey::Pubkey,
+        rent::Rent,
+        signature::Signer,
+        signer::keypair::Keypair,
+    },
+    solitaire::{
+        processors::seeded::Seeded,
+        AccountState,
+        BorshSerialize,
+    },
 };
 
 fn clone_keypair(keypair: &Keypair) -> Keypair {
@@ -58,9 +57,9 @@ async fn test_setting_is_active_works() -> Result<(), p2wc::ErrBoxSend> {
     // Plant a filled config account
     let p2w_config_bytes = p2w_config.try_to_vec()?;
     let p2w_config_account = Account {
-        lamports: Rent::default().minimum_balance(p2w_config_bytes.len()),
-        data: p2w_config_bytes,
-        owner: p2w_program_id,
+        lamports:   Rent::default().minimum_balance(p2w_config_bytes.len()),
+        data:       p2w_config_bytes,
+        owner:      p2w_program_id,
         executable: false,
         rent_epoch: 0,
     };
@@ -145,12 +144,12 @@ async fn test_setting_is_active_does_not_work_without_ops_owner() -> Result<(), 
 
     // On-chain state
     let p2w_config = Pyth2WormholeConfig {
-        owner: p2w_owner,
-        wh_prog: wh_fixture_program_id,
+        owner:          p2w_owner,
+        wh_prog:        wh_fixture_program_id,
         max_batch_size: pyth2wormhole::attest::P2W_MAX_BATCH_SIZE,
-        pyth_owner: pyth_owner.pubkey(),
-        is_active: true,
-        ops_owner: None,
+        pyth_owner:     pyth_owner.pubkey(),
+        is_active:      true,
+        ops_owner:      None,
     };
 
     // Populate test environment
@@ -163,9 +162,9 @@ async fn test_setting_is_active_does_not_work_without_ops_owner() -> Result<(), 
     // Plant a filled config account
     let p2w_config_bytes = p2w_config.try_to_vec()?;
     let p2w_config_account = Account {
-        lamports: Rent::default().minimum_balance(p2w_config_bytes.len()),
-        data: p2w_config_bytes,
-        owner: p2w_program_id,
+        lamports:   Rent::default().minimum_balance(p2w_config_bytes.len()),
+        data:       p2w_config_bytes,
+        owner:      p2w_program_id,
         executable: false,
         rent_epoch: 0,
     };
