@@ -68,7 +68,7 @@ export class DataSource implements Serializable {
 // Magic is `PTGM` encoded as a 4 byte data: Pyth Governance Message
 const MAGIC: number = 0x5054474d;
 
-abstract class Instruction implements Serializable {
+export abstract class Instruction implements Serializable {
   constructor(
     private module: Module,
     private action: number,

@@ -219,6 +219,28 @@ contract("Pyth", function () {
     return await contract.updatePriceFeeds(updateData, { value: valueInWei });
   }
 
+  /**
+   * Create a governance instruction VAA from the Instruction object. Then
+   * Submit and execute it on the contract.
+   * @param contract Pyth contract
+   * @param {governance.Instruction} governanceInstruction
+   * @param {number} sequence
+   */
+  async function createAndThenSubmitGovernanceInstructionVaa(
+    contract,
+    governanceInstruction,
+    sequence
+  ) {
+    await contract.executeGovernanceInstruction(
+      await createVAAFromUint8Array(
+        governanceInstruction.serialize(),
+        testGovernanceChainId,
+        testGovernanceEmitter,
+        sequence
+      )
+    );
+  }
+
   it("should attest price updates over wormhole", async function () {
     let ts = 1647273460;
     let rawBatch = generateRawBatchAttestation(ts - 5, ts, 1337);
@@ -265,23 +287,30 @@ contract("Pyth", function () {
     });
   });
 
+  /**
+   * Set fee to `newFee` by creating and submitting a governance instruction for it.
+   * @param contarct Pyth contract
+   * @param {number} newFee
+   * @param {number=} governanceSequence Sequence number of the governance instruction. Defaults to 1.
+   */
+  async function setFeeTo(contract, newFee, governanceSequence) {
+    await createAndThenSubmitGovernanceInstructionVaa(
+      contract,
+      new governance.SetFeeInstruction(
+        governance.CHAINS.ethereum,
+        BigInt(newFee),
+        BigInt(0)
+      ),
+      governanceSequence ?? 1
+    );
+  }
+
   it("should not attest price updates with when required fee is not given", async function () {
     // Check initial fee is zero
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
 
     // Set fee to 10
-    await this.pythProxy.executeGovernanceInstruction(
-      await createVAAFromUint8Array(
-        new governance.SetFeeInstruction(
-          governance.CHAINS.ethereum,
-          BigInt(10),
-          BigInt(0)
-        ).serialize(),
-        testGovernanceChainId,
-        testGovernanceEmitter,
-        1
-      )
-    );
+    await setFeeTo(this.pythProxy, 10);
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
 
     let ts = 1647273460;
@@ -307,18 +336,7 @@ contract("Pyth", function () {
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
 
     // Set fee to 10
-    await this.pythProxy.executeGovernanceInstruction(
-      await createVAAFromUint8Array(
-        new governance.SetFeeInstruction(
-          governance.CHAINS.ethereum,
-          BigInt(10),
-          BigInt(0)
-        ).serialize(),
-        testGovernanceChainId,
-        testGovernanceEmitter,
-        1
-      )
-    );
+    await setFeeTo(this.pythProxy, 10);
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
 
     let ts = 1647273460;
@@ -342,18 +360,7 @@ contract("Pyth", function () {
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
 
     // Set fee to 10
-    await this.pythProxy.executeGovernanceInstruction(
-      await createVAAFromUint8Array(
-        new governance.SetFeeInstruction(
-          governance.CHAINS.ethereum,
-          BigInt(10),
-          BigInt(0)
-        ).serialize(),
-        testGovernanceChainId,
-        testGovernanceEmitter,
-        1
-      )
-    );
+    await setFeeTo(this.pythProxy, 10);
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
 
     let ts = 1647273460;
@@ -490,6 +497,28 @@ contract("Pyth", function () {
     }
   });
 
+  /**
+   * Set valid time period to `newValidPeriod` by creating and submitting a
+   * governance instruction for it.
+   * @param contract Pyth contract
+   * @param {number} newValidPeriod
+   * @param {number=} governanceSequence Sequence number of the governance instruction. Defaults to 1.
+   */
+  async function setValidPeriodTo(
+    contract,
+    newValidPeriod,
+    governanceSequence
+  ) {
+    await createAndThenSubmitGovernanceInstructionVaa(
+      contract,
+      new governance.SetValidPeriodInstruction(
+        governance.CHAINS.ethereum,
+        BigInt(newValidPeriod)
+      ),
+      governanceSequence ?? 1
+    );
+  }
+
   it("changing validity time works", async function () {
     const latestTime = await time.latest();
     let rawBatch = generateRawBatchAttestation(latestTime, latestTime, 1337);
@@ -497,17 +526,7 @@ contract("Pyth", function () {
     await updatePriceFeeds(this.pythProxy, [rawBatch]);
 
     // Setting the validity time to 30 seconds
-    await this.pythProxy.executeGovernanceInstruction(
-      await createVAAFromUint8Array(
-        new governance.SetValidPeriodInstruction(
-          governance.CHAINS.ethereum,
-          BigInt(30)
-        ).serialize(),
-        testGovernanceChainId,
-        testGovernanceEmitter,
-        1
-      )
-    );
+    await setValidPeriodTo(this.pythProxy, 30, 1);
     assert.equal(await this.pythProxy.validTimePeriodSeconds(), 30);
 
     // Then prices should be available
@@ -534,17 +553,7 @@ contract("Pyth", function () {
     }
 
     // Setting the validity time to 120 seconds
-    await this.pythProxy.executeGovernanceInstruction(
-      await createVAAFromUint8Array(
-        new governance.SetValidPeriodInstruction(
-          governance.CHAINS.ethereum,
-          BigInt(120)
-        ).serialize(),
-        testGovernanceChainId,
-        testGovernanceEmitter,
-        2
-      )
-    );
+    await setValidPeriodTo(this.pythProxy, 120, 2);
     assert.equal(await this.pythProxy.validTimePeriodSeconds(), 120);
 
     // Then prices should be available because the valid period is now 120 seconds
