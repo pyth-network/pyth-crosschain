@@ -39,14 +39,11 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
             wormhole,
             emitterChainIds,
             emitterAddresses,
-            60, // Valid time period in seconds
-            1 // single update fee in wei
-        );
-
-        pyth.updateGovernanceDataSource(
             GOVERNANCE_EMITTER_CHAIN_ID,
             GOVERNANCE_EMITTER_ADDRESS,
-            0
+            0, // Initial governance sequence
+            60, // Valid time period in seconds
+            1 // single update fee in wei
         );
 
         return address(pyth);

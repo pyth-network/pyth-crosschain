@@ -15,34 +15,36 @@ const emitterAddresses = [
   process.env.SOLANA_EMITTER,
   process.env.PYTHNET_EMITTER,
 ];
+const governanceChainId = process.env.GOVERNANCE_CHAIN_ID;
+const governanceEmitter = process.env.GOVERNANCE_EMITTER;
+// Default value for this field is 0
+const governanceInitialSequence = Number(
+  process.env.GOVERNANCE_INITIAL_SEQUENCE ?? "0"
+);
+
 const validTimePeriodSeconds = Number(process.env.VALID_TIME_PERIOD_SECONDS);
 const singleUpdateFeeInWei = Number(process.env.SINGLE_UPDATE_FEE_IN_WEI);
 
 console.log("emitterChainIds: " + emitterChainIds);
 console.log("emitterAddresses: " + emitterAddresses);
+console.log("governanceEmitter: " + governanceEmitter);
+console.log("governanceChainId: " + governanceChainId);
+console.log("governanceInitialSequence: " + governanceInitialSequence);
 console.log("validTimePeriodSeconds: " + validTimePeriodSeconds);
 console.log("singleUpdateFeeInWei: " + singleUpdateFeeInWei);
 
 module.exports = async function (deployer, network) {
-  const cluster = process.env.CLUSTER;
-  const chainName = process.env.WORMHOLE_CHAIN_NAME;
-
-  assert(cluster !== undefined && chainName !== undefined);
-
-  const wormholeBridgeAddress =
-    CONTRACTS[cluster.toUpperCase()][chainName].core;
-  assert(wormholeBridgeAddress !== undefined);
-
-  console.log("Wormhole bridge address: " + wormholeBridgeAddress);
-
   // Deploy the proxy. This will return an instance of PythUpgradable,
   // with the address field corresponding to the fronting ERC1967Proxy.
   let proxyInstance = await deployProxy(
     PythUpgradable,
     [
-      wormholeBridgeAddress,
+      (await WormholeReceiver.deployed()).address,
       emitterChainIds,
       emitterAddresses,
+      governanceChainId,
+      governanceEmitter,
+      governanceInitialSequence,
       validTimePeriodSeconds,
       singleUpdateFeeInWei,
     ],

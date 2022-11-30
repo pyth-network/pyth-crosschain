@@ -37,8 +37,6 @@ contract("Pyth", function () {
   const testPyth2WormholeChainId = "1";
   const testPyth2WormholeEmitter =
     "0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
-  const notOwnerError =
-    "Ownable: caller is not the owner -- Reason given: Ownable: caller is not the owner.";
 
   // Place all atomic operations that are done within migrations here.
   beforeEach(async function () {
@@ -46,16 +44,12 @@ contract("Pyth", function () {
       (await Wormhole.deployed()).address,
       [testPyth2WormholeChainId],
       [testPyth2WormholeEmitter],
+      testGovernanceChainId,
+      testGovernanceEmitter,
+      0, // Initial governance sequence
       60, // Validity time in seconds
       0, // single update fee in wei
     ]);
-
-    // Setting the governance data source to 0x1 (solana) and some random emitter address
-    await this.pythProxy.updateGovernanceDataSource(
-      testGovernanceChainId,
-      testGovernanceEmitter,
-      0
-    );
   });
 
   it("should be initialized with the correct signers and values", async function () {
@@ -65,152 +59,17 @@ contract("Pyth", function () {
     );
   });
 
-  it("should allow upgrades from the owner", async function () {
-    // Check that the owner is the default account Truffle
-    // has configured for the network. upgradeProxy will send
-    // transactions from the default account.
-    const accounts = await web3.eth.getAccounts();
-    const defaultAccount = accounts[0];
+  it("there should be no owner", async function () {
+    // Check that the ownership is renounced.
     const owner = await this.pythProxy.owner();
-    assert.equal(owner, defaultAccount);
-
-    // Try and upgrade the proxy
-    const newImplementation = await upgradeProxy(
-      this.pythProxy.address,
-      MockPythUpgrade
-    );
-
-    // Check that the new upgrade is successful
-    assert.equal(await newImplementation.isUpgradeActive(), true);
-    assert.equal(this.pythProxy.address, newImplementation.address);
+    assert.equal(owner, "0x0000000000000000000000000000000000000000");
   });
 
-  it("should allow ownership transfer", async function () {
-    // Check that the owner is the default account Truffle
-    // has configured for the network.
-    const accounts = await web3.eth.getAccounts();
-    const defaultAccount = accounts[0];
-    assert.equal(await this.pythProxy.owner(), defaultAccount);
-
-    // Check that another account can't transfer the ownership
-    await expectRevert(
-      this.pythProxy.transferOwnership(accounts[1], {
-        from: accounts[1],
-      }),
-      notOwnerError
-    );
-
-    // Transfer the ownership to another account
-    await this.pythProxy.transferOwnership(accounts[2], {
-      from: defaultAccount,
-    });
-    assert.equal(await this.pythProxy.owner(), accounts[2]);
-
-    // Check that the original account can't transfer the ownership back to itself
-    await expectRevert(
-      this.pythProxy.transferOwnership(defaultAccount, {
-        from: defaultAccount,
-      }),
-      notOwnerError
-    );
-
-    // Check that the new owner can transfer the ownership back to the original account
-    await this.pythProxy.transferOwnership(defaultAccount, {
-      from: accounts[2],
-    });
-    assert.equal(await this.pythProxy.owner(), defaultAccount);
-  });
-
-  it("should not allow upgrades from the another account", async function () {
-    // This test is slightly convoluted as, due to a limitation of Truffle,
-    // we cannot specify which account upgradeProxy send transactions from:
-    // it will always use the default account.
-    //
-    // Therefore, we transfer the ownership to another account first,
-    // and then attempt an upgrade using the default account.
-
-    // Check that the owner is the default account Truffle
-    // has configured for the network.
-    const accounts = await web3.eth.getAccounts();
-    const defaultAccount = accounts[0];
-    assert.equal(await this.pythProxy.owner(), defaultAccount);
-
-    // Transfer the ownership to another account
-    const newOwnerAccount = accounts[1];
-    await this.pythProxy.transferOwnership(newOwnerAccount, {
-      from: defaultAccount,
-    });
-    assert.equal(await this.pythProxy.owner(), newOwnerAccount);
-
-    // Try and upgrade using the default account, which will fail
-    // because we are no longer the owner.
+  it("deployer cannot upgrade the contract", async function () {
+    // upgrade proxy should fail
     await expectRevert(
       upgradeProxy(this.pythProxy.address, MockPythUpgrade),
-      notOwnerError
-    );
-  });
-
-  it("should allow updating singleUpdateFeeInWei by owner", async function () {
-    // Check that the owner is the default account Truffle
-    // has configured for the network.
-    const accounts = await web3.eth.getAccounts();
-    const defaultAccount = accounts[0];
-    assert.equal(await this.pythProxy.owner(), defaultAccount);
-
-    // Check initial fee is zero
-    assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
-
-    // Set fee
-    await this.pythProxy.updateSingleUpdateFeeInWei(10);
-    assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
-  });
-
-  it("should not allow updating singleUpdateFeeInWei by another account", async function () {
-    // Check that the owner is the default account Truffle
-    // has configured for the network.
-    const accounts = await web3.eth.getAccounts();
-    const defaultAccount = accounts[0];
-    assert.equal(await this.pythProxy.owner(), defaultAccount);
-
-    // Check initial valid time period is zero
-    assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
-
-    // Checks setting valid time period using another account reverts.
-    await expectRevert(
-      this.pythProxy.updateSingleUpdateFeeInWei(10, { from: accounts[1] }),
-      notOwnerError
-    );
-  });
-
-  it("should allow updating validTimePeriodSeconds by owner", async function () {
-    // Check that the owner is the default account Truffle
-    // has configured for the network.
-    const accounts = await web3.eth.getAccounts();
-    const defaultAccount = accounts[0];
-    assert.equal(await this.pythProxy.owner(), defaultAccount);
-
-    // Check valid time period is 60 (set in beforeEach)
-    assert.equal(await this.pythProxy.validTimePeriodSeconds(), 60);
-
-    // Set valid time period
-    await this.pythProxy.updateValidTimePeriodSeconds(30);
-    assert.equal(await this.pythProxy.validTimePeriodSeconds(), 30);
-  });
-
-  it("should not allow updating validTimePeriodSeconds by another account", async function () {
-    // Check that the owner is the default account Truffle
-    // has configured for the network.
-    const accounts = await web3.eth.getAccounts();
-    const defaultAccount = accounts[0];
-    assert.equal(await this.pythProxy.owner(), defaultAccount);
-
-    // Check valid time period is 60 (set in beforeEach)
-    assert.equal(await this.pythProxy.validTimePeriodSeconds(), 60);
-
-    // Checks setting validity time using another account reverts.
-    await expectRevert(
-      this.pythProxy.updateValidTimePeriodSeconds(30, { from: accounts[1] }),
-      notOwnerError
+      "Ownable: caller is not the owner."
     );
   });
 
@@ -360,6 +219,28 @@ contract("Pyth", function () {
     return await contract.updatePriceFeeds(updateData, { value: valueInWei });
   }
 
+  /**
+   * Create a governance instruction VAA from the Instruction object. Then
+   * Submit and execute it on the contract.
+   * @param contract Pyth contract
+   * @param {governance.Instruction} governanceInstruction
+   * @param {number} sequence
+   */
+  async function createAndThenSubmitGovernanceInstructionVaa(
+    contract,
+    governanceInstruction,
+    sequence
+  ) {
+    await contract.executeGovernanceInstruction(
+      await createVAAFromUint8Array(
+        governanceInstruction.serialize(),
+        testGovernanceChainId,
+        testGovernanceEmitter,
+        sequence
+      )
+    );
+  }
+
   it("should attest price updates over wormhole", async function () {
     let ts = 1647273460;
     let rawBatch = generateRawBatchAttestation(ts - 5, ts, 1337);
@@ -406,18 +287,30 @@ contract("Pyth", function () {
     });
   });
 
-  it("should not attest price updates with when required fee is not given", async function () {
-    // Check that the owner is the default account Truffle
-    // has configured for the network.
-    const accounts = await web3.eth.getAccounts();
-    const defaultAccount = accounts[0];
-    assert.equal(await this.pythProxy.owner(), defaultAccount);
+  /**
+   * Set fee to `newFee` by creating and submitting a governance instruction for it.
+   * @param contarct Pyth contract
+   * @param {number} newFee
+   * @param {number=} governanceSequence Sequence number of the governance instruction. Defaults to 1.
+   */
+  async function setFeeTo(contract, newFee, governanceSequence) {
+    await createAndThenSubmitGovernanceInstructionVaa(
+      contract,
+      new governance.SetFeeInstruction(
+        governance.CHAINS.ethereum,
+        BigInt(newFee),
+        BigInt(0)
+      ),
+      governanceSequence ?? 1
+    );
+  }
 
+  it("should not attest price updates with when required fee is not given", async function () {
     // Check initial fee is zero
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
 
-    // Set fee
-    await this.pythProxy.updateSingleUpdateFeeInWei(10);
+    // Set fee to 10
+    await setFeeTo(this.pythProxy, 10);
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
 
     let ts = 1647273460;
@@ -439,17 +332,11 @@ contract("Pyth", function () {
   });
 
   it("should attest price updates with when required fee is given", async function () {
-    // Check that the owner is the default account Truffle
-    // has configured for the network.
-    const accounts = await web3.eth.getAccounts();
-    const defaultAccount = accounts[0];
-    assert.equal(await this.pythProxy.owner(), defaultAccount);
-
     // Check initial fee is zero
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
 
-    // Set fee
-    await this.pythProxy.updateSingleUpdateFeeInWei(10);
+    // Set fee to 10
+    await setFeeTo(this.pythProxy, 10);
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
 
     let ts = 1647273460;
@@ -469,17 +356,11 @@ contract("Pyth", function () {
   });
 
   it("should attest price updates with required fee even if more fee is given", async function () {
-    // Check that the owner is the default account Truffle
-    // has configured for the network.
-    const accounts = await web3.eth.getAccounts();
-    const defaultAccount = accounts[0];
-    assert.equal(await this.pythProxy.owner(), defaultAccount);
-
     // Check initial fee is zero
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 0);
 
-    // Set fee
-    await this.pythProxy.updateSingleUpdateFeeInWei(10);
+    // Set fee to 10
+    await setFeeTo(this.pythProxy, 10);
     assert.equal(await this.pythProxy.singleUpdateFeeInWei(), 10);
 
     let ts = 1647273460;
@@ -590,7 +471,10 @@ contract("Pyth", function () {
     for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
       const price_id =
         "0x" + (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-      expectRevertCustomError(this.pythProxy.getPrice(price_id), "StalePrice");
+      await expectRevertCustomError(
+        this.pythProxy.getPrice(price_id),
+        "StalePrice"
+      );
     }
   });
 
@@ -606,9 +490,34 @@ contract("Pyth", function () {
     for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
       const price_id =
         "0x" + (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
-      expectRevertCustomError(this.pythProxy.getPrice(price_id), "StalePrice");
+      await expectRevertCustomError(
+        this.pythProxy.getPrice(price_id),
+        "StalePrice"
+      );
     }
   });
+
+  /**
+   * Set valid time period to `newValidPeriod` by creating and submitting a
+   * governance instruction for it.
+   * @param contract Pyth contract
+   * @param {number} newValidPeriod
+   * @param {number=} governanceSequence Sequence number of the governance instruction. Defaults to 1.
+   */
+  async function setValidPeriodTo(
+    contract,
+    newValidPeriod,
+    governanceSequence
+  ) {
+    await createAndThenSubmitGovernanceInstructionVaa(
+      contract,
+      new governance.SetValidPeriodInstruction(
+        governance.CHAINS.ethereum,
+        BigInt(newValidPeriod)
+      ),
+      governanceSequence ?? 1
+    );
+  }
 
   it("changing validity time works", async function () {
     const latestTime = await time.latest();
@@ -617,7 +526,8 @@ contract("Pyth", function () {
     await updatePriceFeeds(this.pythProxy, [rawBatch]);
 
     // Setting the validity time to 30 seconds
-    await this.pythProxy.updateValidTimePeriodSeconds(30);
+    await setValidPeriodTo(this.pythProxy, 30, 1);
+    assert.equal(await this.pythProxy.validTimePeriodSeconds(), 30);
 
     // Then prices should be available
     for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
@@ -636,11 +546,15 @@ contract("Pyth", function () {
       const price_id =
         "0x" + (255 - (i % 256)).toString(16).padStart(2, "0").repeat(32);
 
-      expectRevertCustomError(this.pythProxy.getPrice(price_id), "StalePrice");
+      await expectRevertCustomError(
+        this.pythProxy.getPrice(price_id),
+        "StalePrice"
+      );
     }
 
     // Setting the validity time to 120 seconds
-    await this.pythProxy.updateValidTimePeriodSeconds(120);
+    await setValidPeriodTo(this.pythProxy, 120, 2);
+    assert.equal(await this.pythProxy.validTimePeriodSeconds(), 120);
 
     // Then prices should be available because the valid period is now 120 seconds
     for (var i = 1; i <= RAW_BATCH_ATTESTATION_COUNT; i++) {
@@ -682,71 +596,6 @@ contract("Pyth", function () {
       assert.equal(emaPrice.price, "1500");
       assert.equal(emaPrice.publishTime, (latestTime - 10).toString());
     }
-  });
-
-  it("should accept a VM after adding its data source", async function () {
-    let newChainId = "42424";
-    let newEmitter = testPyth2WormholeEmitter.replace("a", "f");
-
-    await this.pythProxy.addDataSource(newChainId, newEmitter);
-
-    let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
-    let rawBatch = generateRawBatchAttestation(
-      currentTimestamp - 5,
-      currentTimestamp,
-      1337
-    );
-    let vm = await signAndEncodeVM(
-      1,
-      1,
-      newChainId,
-      newEmitter,
-      0,
-      rawBatch,
-      [testSigner1PK],
-      0,
-      0
-    );
-
-    await this.pythProxy.updatePriceFeeds(["0x" + vm]);
-  });
-
-  it("should reject a VM after removing its data source", async function () {
-    // Add 2 new data sources to produce a non-trivial data source state.
-    let newChainId = "42424";
-    let newEmitter = testPyth2WormholeEmitter.replace("a", "f");
-    await this.pythProxy.addDataSource(newChainId, newEmitter);
-
-    let newChainId2 = "42425";
-    let newEmitter2 = testPyth2WormholeEmitter.replace("a", "e");
-    await this.pythProxy.addDataSource(newChainId2, newEmitter2);
-
-    // Remove the first one added
-    await this.pythProxy.removeDataSource(newChainId, newEmitter);
-
-    // Sign a batch with the removed data source
-    let currentTimestamp = (await web3.eth.getBlock("latest")).timestamp;
-    let rawBatch = generateRawBatchAttestation(
-      currentTimestamp - 5,
-      currentTimestamp,
-      1337
-    );
-    let vm = await signAndEncodeVM(
-      1,
-      1,
-      newChainId,
-      newEmitter,
-      0,
-      rawBatch,
-      [testSigner1PK],
-      0,
-      0
-    );
-
-    await expectRevertCustomError(
-      this.pythProxy.updatePriceFeeds(["0x" + vm]),
-      "InvalidUpdateDataSource"
-    );
   });
 
   // Governance
@@ -1231,16 +1080,6 @@ contract("Pyth", function () {
 
     // The behaviour of valid time period is extensively tested before,
     // and adding it here will cause more complexity (and is not so short).
-  });
-
-  // Renounce ownership works
-  it("Renouncing ownership should work", async function () {
-    await this.pythProxy.updateValidTimePeriodSeconds(100);
-    await this.pythProxy.renounceOwnership();
-    await expectRevert(
-      this.pythProxy.updateValidTimePeriodSeconds(60),
-      "Ownable: caller is not the owner"
-    );
   });
 
   // Version
