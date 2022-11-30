@@ -35,11 +35,6 @@ export class PromClient {
     help: "Summary of attestation time gaps between price updates",
     buckets: [1, 3, 5, 10, 15, 30, 60, 120],
   });
-  private apiResponseTimeSummary = new client.Summary({
-    name: `${SERVICE_PREFIX}api_response_time_ms`,
-    help: "Response time of a VAA",
-    labelNames: ["path", "status"],
-  });
   private webSocketInteractionCounter = new client.Counter({
     name: `${SERVICE_PREFIX}websocket_interaction`,
     help: "number of Web Socket interactions",
@@ -64,7 +59,6 @@ export class PromClient {
     this.register.registerMetric(this.receivedVaaCounter);
     this.register.registerMetric(this.priceUpdatesPublishTimeGapHistogram);
     this.register.registerMetric(this.priceUpdatesAttestationTimeGapHistogram);
-    this.register.registerMetric(this.apiResponseTimeSummary);
     this.register.registerMetric(this.webSocketInteractionCounter);
     // End registering metric
 
@@ -82,16 +76,6 @@ export class PromClient {
 
   addPriceUpdatesAttestationTimeGap(gap: DurationInSec) {
     this.priceUpdatesAttestationTimeGapHistogram.observe(gap);
-  }
-
-  addResponseTime(path: string, status: number, duration: DurationInMs) {
-    this.apiResponseTimeSummary.observe(
-      {
-        path,
-        status,
-      },
-      duration
-    );
   }
 
   addWebSocketInteraction(

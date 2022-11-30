@@ -63,14 +63,6 @@ export class RestAPI {
 
     app.use(morgan(MORGAN_LOG_FORMAT, { stream: winstonStream }));
 
-    app.use(
-      responseTime((req: Request, res: Response, time: DurationInMs) => {
-        if (res.statusCode !== StatusCodes.NOT_FOUND) {
-          this.promClient?.addResponseTime(req.path, res.statusCode, time);
-        }
-      })
-    );
-
     const endpoints: string[] = [];
 
     const latestVaasInputSchema: schema = {
