@@ -247,7 +247,7 @@ while True:
         ]
     )
 
-    # Keep listening for seqnos until the program exits
+    # Wait for an unexpected process exit
     while p2w_client_process.poll() is None:
         pass
 
