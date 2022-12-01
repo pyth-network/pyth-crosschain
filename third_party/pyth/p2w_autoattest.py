@@ -155,7 +155,7 @@ symbol_groups:
         product = thing["product"]
 
         cfg_yaml += f"""
-      - type: name
+      - type: key
         name: {name}
         price_addr: {price}
         product_addr: {product}"""
@@ -176,7 +176,7 @@ symbol_groups:
         product = stuff["product"]
 
         cfg_yaml += f"""
-      - type: name
+      - type: key
         name: {name}
         price_addr: {price}
         product_addr: {product}"""
