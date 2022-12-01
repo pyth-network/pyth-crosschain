@@ -208,7 +208,8 @@ symbol_groups:
         product = thing["product"]
 
         cfg_yaml += f"""
-      - name: {name}
+      - type: name
+        name: {name}
         price_addr: {price}
         product_addr: {product}"""
 
@@ -228,7 +229,8 @@ symbol_groups:
         product = stuff["product"]
 
         cfg_yaml += f"""
-      - name: {name}
+      - type: name
+        name: {name}
         price_addr: {price}
         product_addr: {product}"""
 
