@@ -7,9 +7,7 @@ import os
 import re
 import sys
 import threading
-import time
 from http.client import HTTPConnection
-from http.server import BaseHTTPRequestHandler, HTTPServer
 from subprocess import PIPE, STDOUT, Popen
 
 from pyth_utils import *
@@ -36,48 +34,8 @@ WORMHOLE_ADDRESS = os.environ.get(
     "WORMHOLE_ADDRESS", "Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 )
 
-P2W_MAX_LOG_LINES = int(os.environ.get("P2W_MAX_LOG_LINES", 1000))
-
 # attester needs string, but we validate as int first
 P2W_RPC_TIMEOUT_SECS = str(int(os.environ.get("P2W_RPC_TIMEOUT_SECS", "20")))
-
-ATTESTATIONS = {
-    "pendingSeqnos": [],
-}
-
-SEQNO_REGEX = re.compile(r"Sequence number: (\d+)")
-
-
-
-class P2WAutoattestStatusEndpoint(BaseHTTPRequestHandler):
-    """
-    A dumb endpoint for last attested price metadata.
-    """
-
-    def do_GET(self):
-        logging.info(f"Got path {self.path}")
-        sys.stdout.flush()
-        data = json.dumps(ATTESTATIONS).encode("utf-8")
-        logging.debug(f"Sending: {data}")
-
-        ATTESTATIONS["pendingSeqnos"] = []
-
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(data)))
-        self.end_headers()
-        self.wfile.write(data)
-        self.wfile.flush()
-
-
-def serve_attestations():
-    """
-    Run a barebones HTTP server to share Pyth2wormhole attestation history
-    """
-    server_address = ("", P2W_ATTESTATIONS_PORT)
-    httpd = HTTPServer(server_address, P2WAutoattestStatusEndpoint)
-    httpd.serve_forever()
-
 
 if SOL_AIRDROP_AMT > 0:
     # Fund the p2w owner
@@ -91,17 +49,6 @@ if SOL_AIRDROP_AMT > 0:
             "finalized",
         ],
     )
-
-def find_and_log_seqnos(s):
-    # parse seqnos
-    matches = SEQNO_REGEX.findall(s)
-
-    seqnos = list(map(lambda m: int(m), matches))
-
-    ATTESTATIONS["pendingSeqnos"] += seqnos
-
-    if len(seqnos) > 0:
-        logging.info(f"{len(seqnos)} batch seqno(s) received: {seqnos})")
 
 if P2W_INITIALIZE_SOL_CONTRACT is not None:
     # Get actor pubkeys
@@ -274,12 +221,6 @@ first_attest_result = run_or_die(
 
 logging.info("p2w_autoattest ready to roll!")
 
-find_and_log_seqnos(first_attest_result.stdout)
-
-# Serve p2w endpoint
-endpoint_thread = threading.Thread(target=serve_attestations, daemon=True)
-endpoint_thread.start()
-
 # Let k8s know the service is up
 readiness_thread = threading.Thread(target=readiness, daemon=True)
 readiness_thread.start()
@@ -305,31 +246,12 @@ while True:
             "-d",
             "--timeout",
             P2W_RPC_TIMEOUT_SECS,
-        ],
-        stdout=PIPE,
-        stderr=STDOUT,
-        text=True,
-        )
+        ]
+    )
 
-    saved_log_lines = []
-
-    # Keep listening for seqnos until the program exits
+    # Wait for an unexpected process exit
     while p2w_client_process.poll() is None:
-        line = p2w_client_process.stdout.readline()
-
-        # Always pass output to the debug level
-        logging.debug(f"pyth2wormhole-client: {line}")
-
-        find_and_log_seqnos(line)
-
-        # Extend with new line
-        saved_log_lines.append(line)
-
-        # trim back to specified maximum
-        if len(saved_log_lines) > P2W_MAX_LOG_LINES:
-            saved_log_lines.pop(0)
-
+        pass
 
     # Yell if the supposedly non-stop attestation process exits
     logging.warn(f"pyth2wormhole-client stopped unexpectedly with code {p2w_client_process.retcode}")
-    logging.warn(f"Last {len(saved_log_lines)} log lines:\n{(saved_log_lines)}")

@@ -9,6 +9,7 @@ const WormholeReceiver = artifacts.require("WormholeReceiver");
 
 // CONFIG
 const initialSigners = JSON.parse(process.env.INIT_SIGNERS);
+const wormholeReceiverChainId = process.env.WORMHOLE_RECEIVER_CHAIN_ID;
 const governanceChainId = process.env.INIT_GOV_CHAIN_ID;
 const governanceContract = process.env.INIT_GOV_CONTRACT; // bytes32
 
@@ -25,6 +26,7 @@ module.exports = async function (deployer, network) {
     .setup(
       ReceiverImplementation.address,
       initialSigners,
+      wormholeReceiverChainId,
       governanceChainId,
       governanceContract
     )

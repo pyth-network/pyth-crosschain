@@ -11,6 +11,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./PythGovernance.sol";
 import "./Pyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
 
 contract PythUpgradable is
     Initializable,
@@ -21,82 +22,29 @@ contract PythUpgradable is
 {
     function initialize(
         address wormhole,
-        uint16 pyth2WormholeChainId,
-        bytes32 pyth2WormholeEmitter
+        uint16[] calldata dataSourceEmitterChainIds,
+        bytes32[] calldata dataSourceEmitterAddresses,
+        uint16 governanceEmitterChainId,
+        bytes32 governanceEmitterAddress,
+        uint64 governanceInitialSequence,
+        uint validTimePeriodSeconds,
+        uint singleUpdateFeeInWei
     ) public initializer {
         __Ownable_init();
         __UUPSUpgradeable_init();
 
-        Pyth._initialize(wormhole, pyth2WormholeChainId, pyth2WormholeEmitter);
-    }
-
-    /// Privileged function to specify additional data sources in the contract
-    function addDataSource(uint16 chainId, bytes32 emitter) public onlyOwner {
-        PythInternalStructs.DataSource memory ds = PythInternalStructs
-            .DataSource(chainId, emitter);
-        require(
-            !PythGetters.isValidDataSource(ds.chainId, ds.emitterAddress),
-            "Data source already added"
+        Pyth._initialize(
+            wormhole,
+            dataSourceEmitterChainIds,
+            dataSourceEmitterAddresses,
+            governanceEmitterChainId,
+            governanceEmitterAddress,
+            governanceInitialSequence,
+            validTimePeriodSeconds,
+            singleUpdateFeeInWei
         );
 
-        _state.isValidDataSource[hashDataSource(ds)] = true;
-        _state.validDataSources.push(ds);
-    }
-
-    /// Privileged fucntion to remove the specified data source. Assumes _state.validDataSources has no duplicates.
-    function removeDataSource(
-        uint16 chainId,
-        bytes32 emitter
-    ) public onlyOwner {
-        PythInternalStructs.DataSource memory ds = PythInternalStructs
-            .DataSource(chainId, emitter);
-        require(
-            PythGetters.isValidDataSource(ds.chainId, ds.emitterAddress),
-            "Data source not found, not removing"
-        );
-
-        _state.isValidDataSource[hashDataSource(ds)] = false;
-
-        for (uint i = 0; i < _state.validDataSources.length; ++i) {
-            // Find the source to remove
-            if (
-                _state.validDataSources[i].chainId == ds.chainId ||
-                _state.validDataSources[i].emitterAddress == ds.emitterAddress
-            ) {
-                // Copy last element to overwrite the target data source
-                _state.validDataSources[i] = _state.validDataSources[
-                    _state.validDataSources.length - 1
-                ];
-                // Remove the last element we just preserved
-                _state.validDataSources.pop();
-
-                break;
-            }
-        }
-    }
-
-    /// Privileged function to update the price update fee
-    function updateSingleUpdateFeeInWei(uint newFee) public onlyOwner {
-        PythSetters.setSingleUpdateFeeInWei(newFee);
-    }
-
-    /// Privileged function to update the valid time period for a price.
-    function updateValidTimePeriodSeconds(
-        uint newValidTimePeriodSeconds
-    ) public onlyOwner {
-        PythSetters.setValidTimePeriodSeconds(newValidTimePeriodSeconds);
-    }
-
-    // Privileged function to update the governance emitter
-    function updateGovernanceDataSource(
-        uint16 chainId,
-        bytes32 emitter,
-        uint64 sequence
-    ) public onlyOwner {
-        PythInternalStructs.DataSource memory ds = PythInternalStructs
-            .DataSource(chainId, emitter);
-        PythSetters.setGovernanceDataSource(ds);
-        PythSetters.setLastExecutedGovernanceSequence(sequence);
+        renounceOwnership();
     }
 
     /// Ensures the contract cannot be uninitialized and taken over.
@@ -104,6 +52,8 @@ contract PythUpgradable is
     constructor() initializer {}
 
     // Only allow the owner to upgrade the proxy to a new implementation.
+    // The contract has no owner so this function will always revert
+    // but UUPSUpgradeable expects this method to be implemented.
     function _authorizeUpgrade(address) internal override onlyOwner {}
 
     function pythUpgradableMagic() public pure returns (uint32) {
@@ -118,11 +68,10 @@ contract PythUpgradable is
         _upgradeToAndCallUUPS(payload.newImplementation, new bytes(0), false);
 
         // Calling a method using `this.<method>` will cause a contract call that will use
-        // the new contract.
-        require(
-            this.pythUpgradableMagic() == 0x97a6f304,
-            "the new implementation is not a Pyth contract"
-        );
+        // the new contract. This call will fail if the method does not exists or the magic
+        // is different.
+        if (this.pythUpgradableMagic() != 0x97a6f304)
+            revert PythErrors.InvalidGovernanceMessage();
 
         emit ContractUpgraded(oldImplementation, _getImplementation());
     }

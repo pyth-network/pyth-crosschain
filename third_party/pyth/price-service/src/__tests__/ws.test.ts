@@ -40,10 +40,11 @@ function dummyPriceInfo(
 ): PriceInfo {
   return {
     seqNum: dummyPriceMetadataValue.sequence_number,
+    publishTime: 0,
     attestationTime: dummyPriceMetadataValue.attestation_time,
     emitterChainId: dummyPriceMetadataValue.emitter_chain,
     priceFeed: dummyPriceFeed(id),
-    vaaBytes: Buffer.from(vaa, "hex").toString("binary"),
+    vaa: Buffer.from(vaa, "hex"),
     priceServiceReceiveTime: dummyPriceMetadataValue.price_service_receive_time,
   };
 }

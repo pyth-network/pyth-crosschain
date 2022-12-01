@@ -28,23 +28,22 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
             new bytes(0)
         );
         PythUpgradable pyth = PythUpgradable(address(proxy));
+
+        uint16[] memory emitterChainIds = new uint16[](1);
+        emitterChainIds[0] = SOURCE_EMITTER_CHAIN_ID;
+
+        bytes32[] memory emitterAddresses = new bytes32[](1);
+        emitterAddresses[0] = SOURCE_EMITTER_ADDRESS;
+
         pyth.initialize(
             wormhole,
-            SOURCE_EMITTER_CHAIN_ID,
-            SOURCE_EMITTER_ADDRESS
-        );
-
-        // TODO: All the logic below should be moved to the initializer
-        pyth.addDataSource(SOURCE_EMITTER_CHAIN_ID, SOURCE_EMITTER_ADDRESS);
-
-        pyth.updateSingleUpdateFeeInWei(1);
-
-        pyth.updateValidTimePeriodSeconds(60);
-
-        pyth.updateGovernanceDataSource(
+            emitterChainIds,
+            emitterAddresses,
             GOVERNANCE_EMITTER_CHAIN_ID,
             GOVERNANCE_EMITTER_ADDRESS,
-            0
+            0, // Initial governance sequence
+            60, // Valid time period in seconds
+            1 // single update fee in wei
         );
 
         return address(pyth);

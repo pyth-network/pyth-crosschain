@@ -7,6 +7,7 @@ import "./PythGovernanceInstructions.sol";
 import "./PythInternalStructs.sol";
 import "./PythGetters.sol";
 import "./PythSetters.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
 
@@ -37,19 +38,17 @@ abstract contract PythGovernance is
     function verifyGovernanceVM(
         bytes memory encodedVM
     ) internal returns (IWormhole.VM memory parsedVM) {
-        (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole()
-            .parseAndVerifyVM(encodedVM);
-
-        require(valid, reason);
-        require(
-            isValidGovernanceDataSource(vm.emitterChainId, vm.emitterAddress),
-            "VAA is not coming from the governance data source"
+        (IWormhole.VM memory vm, bool valid, ) = wormhole().parseAndVerifyVM(
+            encodedVM
         );
 
-        require(
-            vm.sequence > lastExecutedGovernanceSequence(),
-            "VAA is older than the last executed governance VAA"
-        );
+        if (!valid) revert PythErrors.InvalidWormholeVaa();
+
+        if (!isValidGovernanceDataSource(vm.emitterChainId, vm.emitterAddress))
+            revert PythErrors.InvalidGovernanceDataSource();
+
+        if (vm.sequence <= lastExecutedGovernanceSequence())
+            revert PythErrors.OldGovernanceMessage();
 
         setLastExecutedGovernanceSequence(vm.sequence);
 
@@ -63,16 +62,12 @@ abstract contract PythGovernance is
             vm.payload
         );
 
-        require(
-            gi.targetChainId == chainId() || gi.targetChainId == 0,
-            "invalid target chain for this governance instruction"
-        );
+        if (gi.targetChainId != chainId() && gi.targetChainId != 0)
+            revert PythErrors.InvalidGovernanceTarget();
 
         if (gi.action == GovernanceAction.UpgradeContract) {
-            require(
-                gi.targetChainId != 0,
-                "upgrade with chain id 0 is not possible"
-            );
+            if (gi.targetChainId == 0)
+                revert PythErrors.InvalidGovernanceTarget();
             upgradeContract(parseUpgradeContractPayload(gi.payload));
         } else if (
             gi.action == GovernanceAction.AuthorizeGovernanceDataSourceTransfer
@@ -89,11 +84,10 @@ abstract contract PythGovernance is
         } else if (
             gi.action == GovernanceAction.RequestGovernanceDataSourceTransfer
         ) {
-            revert(
-                "RequestGovernanceDataSourceTransfer can be only part of AuthorizeGovernanceDataSourceTransfer message"
-            );
+            // RequestGovernanceDataSourceTransfer can be only part of AuthorizeGovernanceDataSourceTransfer message
+            revert PythErrors.InvalidGovernanceMessage();
         } else {
-            revert("invalid governance action");
+            revert PythErrors.InvalidGovernanceMessage();
         }
     }
 
@@ -119,21 +113,19 @@ abstract contract PythGovernance is
         // If it's valid then its emitter can take over the governance from the current emitter.
         // The VAA is checked here to ensure that the new governance data source is valid and can send message
         // through wormhole.
-        (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole()
-            .parseAndVerifyVM(payload.claimVaa);
-        require(valid, reason);
+        (IWormhole.VM memory vm, bool valid, ) = wormhole().parseAndVerifyVM(
+            payload.claimVaa
+        );
+        if (!valid) revert PythErrors.InvalidWormholeVaa();
 
         GovernanceInstruction memory gi = parseGovernanceInstruction(
             vm.payload
         );
-        require(
-            gi.targetChainId == chainId() || gi.targetChainId == 0,
-            "invalid target chain for this governance instruction"
-        );
-        require(
-            gi.action == GovernanceAction.RequestGovernanceDataSourceTransfer,
-            "governance data source change inner vaa is not of claim action type"
-        );
+        if (gi.targetChainId != chainId() && gi.targetChainId != 0)
+            revert PythErrors.InvalidGovernanceTarget();
+
+        if (gi.action != GovernanceAction.RequestGovernanceDataSourceTransfer)
+            revert PythErrors.InvalidGovernanceMessage();
 
         RequestGovernanceDataSourceTransferPayload
             memory claimPayload = parseRequestGovernanceDataSourceTransferPayload(
@@ -141,11 +133,10 @@ abstract contract PythGovernance is
             );
 
         // Governance data source index is used to prevent replay attacks, so a claimVaa cannot be used twice.
-        require(
-            governanceDataSourceIndex() <
-                claimPayload.governanceDataSourceIndex,
-            "cannot upgrade to an older governance data source"
-        );
+        if (
+            governanceDataSourceIndex() >=
+            claimPayload.governanceDataSourceIndex
+        ) revert PythErrors.OldGovernanceMessage();
 
         setGovernanceDataSourceIndex(claimPayload.governanceDataSourceIndex);
 

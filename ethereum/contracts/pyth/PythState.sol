@@ -30,8 +30,7 @@ contract PythStorage {
         // with a lower or equal sequence number will be discarded. This prevents double-execution,
         // and also makes sure that messages are executed in the right order.
         uint64 lastExecutedGovernanceSequence;
-        // Mapping of cached price information
-        // priceId => PriceInfo
+        // After a backward-incompatible change in PriceFeed this mapping got deprecated.
         mapping(bytes32 => PythDeprecatedStructs.DeprecatedPriceInfoV2) _deprecatedLatestPriceInfoV2;
         // Index of the governance data source, increased each time the governance data source
         // changes.

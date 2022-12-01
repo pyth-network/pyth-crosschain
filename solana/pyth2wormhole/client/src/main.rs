@@ -820,12 +820,10 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
         .ok_or_else(|| -> ErrBoxSend { "No seqno in program logs".to_string().into() })?;
 
     info!(
-        "Batch {}/{}, group {:?} OK",
-        batch_no, batch_count, group_name
+        "Batch {}/{}, group {:?} OK. Sequence: {}",
+        batch_no, batch_count, group_name, seqno
     );
     ATTESTATIONS_OK_CNT.inc();
-    // NOTE(2022-03-09): p2w_autoattest.py relies on parsing this println!{}
-    println!("Sequence number: {}", seqno);
     LAST_SEQNO_GAUGE.set(seqno.parse::<i64>()?);
     Result::<(), ErrBoxSend>::Ok(())
 }

@@ -32,7 +32,7 @@
     "@certusone/wormhole-sdk-wasm": "^0.0.1",
     "@openzeppelin/contracts": "^4.5.0",
     "@openzeppelin/contracts-upgradeable": "^4.5.2",
-    "@pythnetwork/pyth-sdk-solidity": "^2.1.0",
+    "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
     "@pythnetwork/xc-governance-sdk": "file:../third_party/pyth/xc-governance-sdk-js",
     "dotenv": "^10.0.0",
     "elliptic": "^6.5.2",
@@ -40,6 +40,7 @@
     "ganache-cli": "^6.12.1",
     "jsonfile": "^4.0.0",
     "solc": "^0.8.4",
+    "truffle-contract-size": "^2.0.1",
     "web3": "^1.2.2",
     "web3-eth-abi": "^1.2.2",
     "web3-utils": "^1.2.2"
