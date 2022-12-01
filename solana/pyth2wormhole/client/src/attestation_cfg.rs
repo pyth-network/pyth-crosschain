@@ -502,7 +502,7 @@ mod tests {
         let products = vec![P2WProductAccount {
             name:               "ETHUSD".to_owned(),
             key:                eth_product_key,
-            price_account_keys: HashSet::from([eth_price_key_1, eth_price_key_2]),
+            price_account_keys: vec![eth_price_key_1, eth_price_key_2],
         }];
 
         let group1 = SymbolGroupConfig {

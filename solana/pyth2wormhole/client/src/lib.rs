@@ -80,7 +80,6 @@ use {
         AccountState,
         ErrBox,
     },
-    std::collections::HashSet,
 };
 
 /// Future-friendly version of solitaire::ErrBox
@@ -458,7 +457,7 @@ pub async fn crawl_pyth_mapping(
             }
 
             // loop until the last non-zero PriceAccount.next account
-            let mut price_accounts: HashSet<Pubkey> = HashSet::new();
+            let mut price_accounts: Vec<Pubkey> = vec![];
             loop {
                 let price_bytes = rpc_client.get_account_data(&price_addr).await?;
                 let price = match load_price_account(&price_bytes) {
@@ -469,7 +468,7 @@ pub async fn crawl_pyth_mapping(
                     }
                 };
 
-                price_accounts.insert(price_addr);
+                price_accounts.push(price_addr);
                 n_prod_prices += 1;
 
                 if price.next == Pubkey::default() {
@@ -519,5 +518,5 @@ pub async fn crawl_pyth_mapping(
 pub struct P2WProductAccount {
     pub key:                Pubkey,
     pub name:               String,
-    pub price_account_keys: HashSet<Pubkey>,
+    pub price_account_keys: Vec<Pubkey>,
 }
