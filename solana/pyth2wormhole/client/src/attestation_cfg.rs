@@ -1,7 +1,7 @@
 use {
     crate::{
         attestation_cfg::SymbolConfig::{
-            Address,
+            Key,
             Name,
         },
         P2WProductAccount,
@@ -31,10 +31,12 @@ use {
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct AttestationConfig {
     #[serde(default = "default_min_msg_reuse_interval_ms")]
-    pub min_msg_reuse_interval_ms:      u64,
+    pub min_msg_reuse_interval_ms: u64,
     #[serde(default = "default_max_msg_accounts")]
-    pub max_msg_accounts:               u64,
-    /// Optionally, we take a mapping account to add remaining symbols from a Pyth deployments. These symbols are processed under attestation conditions for the `default` symbol group.
+    pub max_msg_accounts:          u64,
+
+    /// Optionally, we take a mapping account to add remaining symbols from a Pyth deployments.
+    /// These symbols are processed under `default_attestation_conditions`.
     #[serde(
         deserialize_with = "opt_pubkey_string_de",
         serialize_with = "opt_pubkey_string_ser",
@@ -59,10 +61,12 @@ pub struct AttestationConfig {
     pub default_attestation_conditions: AttestationConditions,
 
     /// Groups of symbols to publish.
-    pub symbol_groups: Vec<SymbolGroup>,
+    pub symbol_groups: Vec<SymbolGroupConfig>,
 }
 
 impl AttestationConfig {
+    /// Instantiate the batches of symbols to attest by matching the config against the collection
+    /// of on-chain product accounts.
     pub fn instantiate_batches(
         &self,
         product_accounts: &[P2WProductAccount],
@@ -92,7 +96,7 @@ impl AttestationConfig {
                 .symbols
                 .iter()
                 .flat_map(|symbol| match &symbol {
-                    Address {
+                    Key {
                         name,
                         product,
                         price,
@@ -109,6 +113,11 @@ impl AttestationConfig {
                         if let Some(matched_symbols) = maybe_matched_symbols {
                             matched_symbols.clone()
                         } else {
+                            // It's slightly unfortunate that this is a warning, but it seems better than crashing.
+                            // The data in the mapping account can change while the attester is running and trigger this case,
+                            // which means that it is not necessarily a configuration problem.
+                            // Note that any named symbols in the config which fail to match will still be included
+                            // in the remaining_symbols group below.
                             warn!(
                                 "Could not find product account for configured symbol {}",
                                 name
@@ -199,7 +208,7 @@ impl AttestationConfig {
 }
 
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
-pub struct SymbolGroup {
+pub struct SymbolGroupConfig {
     pub group_name: String,
     /// Attestation conditions applied to all symbols in this group
     /// If not provided, use the default attestation conditions from `AttestationConfig`.
@@ -207,6 +216,54 @@ pub struct SymbolGroup {
 
     /// The symbols to publish in this group.
     pub symbols: Vec<SymbolConfig>,
+}
+
+/// Config entry for a symbol to attest.
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum SymbolConfig {
+    /// A symbol specified by its product name.
+    Name {
+        /// The name of the symbol. This name is matched against the product account metadata.
+        name: String,
+    },
+    /// A symbol specified by its product and price account keys.
+    Key {
+        /// Optional human-readable name for the symbol (for logging purposes).
+        /// This field does not need to match the on-chain data for the product.
+        name: Option<String>,
+
+        #[serde(
+            deserialize_with = "pubkey_string_de",
+            serialize_with = "pubkey_string_ser"
+        )]
+        product: Pubkey,
+        #[serde(
+            deserialize_with = "pubkey_string_de",
+            serialize_with = "pubkey_string_ser"
+        )]
+        price:   Pubkey,
+    },
+}
+
+impl ToString for SymbolConfig {
+    fn to_string(&self) -> String {
+        match &self {
+            Name { name } => name.clone(),
+            Key {
+                name: Some(name),
+                product: _,
+                price: _,
+            } => name.clone(),
+            Key {
+                name: None,
+                product,
+                price: _,
+            } => {
+                format!("Unnamed product {}", product)
+            }
+        }
+    }
 }
 
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
@@ -295,49 +352,6 @@ impl Default for AttestationConditions {
     }
 }
 
-/// Config entry for a symbol to publish.
-/// Symbols can be configured in two ways:
-/// 1. Provide the address of both the product and price account. In this case, a name may be optionally
-///    specified to improve human-readability.
-/// 2. Provide the name of the feed in the product account. This will be matched against a list of
-///    all symbol names generated from the mapping account (assuming `mapping_addr` is set in the
-///    parent `AttestationConfig`).
-#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(tag = "type", rename_all = "snake_case")]
-pub enum SymbolConfig {
-    Name {
-        name: String,
-    },
-    Address {
-        name: Option<String>,
-
-        #[serde(
-            deserialize_with = "pubkey_string_de",
-            serialize_with = "pubkey_string_ser"
-        )]
-        product: Pubkey,
-        #[serde(
-            deserialize_with = "pubkey_string_de",
-            serialize_with = "pubkey_string_ser"
-        )]
-        price:   Pubkey,
-    },
-}
-
-impl ToString for SymbolConfig {
-    // FIXME the default is bad
-    fn to_string(&self) -> String {
-        "".to_owned()
-
-        /*
-        self.name.clone().unwrap_or(format!(
-            "Unnamed product {}",
-            self.product_addr.unwrap_or_default()
-        ))
-           */
-    }
-}
-
 #[derive(Clone, Default, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct P2WSymbol {
     /// User-defined human-readable name
@@ -405,7 +419,7 @@ mod tests {
     use {
         super::*,
         crate::attestation_cfg::SymbolConfig::{
-            Address,
+            Key,
             Name,
         },
         solitaire::ErrBox,
@@ -413,7 +427,7 @@ mod tests {
 
     #[test]
     fn test_sanity() -> Result<(), ErrBox> {
-        let fastbois = SymbolGroup {
+        let fastbois = SymbolGroupConfig {
             group_name: "fast bois".to_owned(),
             conditions: Some(AttestationConditions {
                 min_interval_secs: 5,
@@ -423,7 +437,7 @@ mod tests {
                 Name {
                     name: "ETHUSD".to_owned(),
                 },
-                Address {
+                Key {
                     name:    Some("BTCUSD".to_owned()),
                     product: Pubkey::new_unique(),
                     price:   Pubkey::new_unique(),
@@ -431,7 +445,7 @@ mod tests {
             ],
         };
 
-        let slowbois = SymbolGroup {
+        let slowbois = SymbolGroupConfig {
             group_name: "slow bois".to_owned(),
             conditions: Some(AttestationConditions {
                 min_interval_secs: 200,
@@ -441,7 +455,7 @@ mod tests {
                 Name {
                     name: "CNYAUD".to_owned(),
                 },
-                Address {
+                Key {
                     name:    None,
                     product: Pubkey::new_unique(),
                     price:   Pubkey::new_unique(),
@@ -491,11 +505,11 @@ mod tests {
             price_account_keys: HashSet::from([eth_price_key_1, eth_price_key_2]),
         }];
 
-        let group1 = SymbolGroup {
+        let group1 = SymbolGroupConfig {
             group_name: "group 1".to_owned(),
             conditions: Some(attestation_conditions_1.clone()),
             symbols:    vec![
-                Address {
+                Key {
                     name:    Some("BTCUSD".to_owned()),
                     price:   btc_price_key,
                     product: btc_product_key,
@@ -506,10 +520,10 @@ mod tests {
             ],
         };
 
-        let group2 = SymbolGroup {
+        let group2 = SymbolGroupConfig {
             group_name: "group 2".to_owned(),
             conditions: None,
-            symbols:    vec![Address {
+            symbols:    vec![Key {
                 name:    Some("ETHUSD".to_owned()),
                 price:   eth_dup_price_key,
                 product: eth_dup_product_key,
