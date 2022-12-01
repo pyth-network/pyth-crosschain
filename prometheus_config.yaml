@@ -3,3 +3,7 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
       - targets: ["p2w-attest:3000"]
+  - job_name: price_service
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["pyth-price-service:8081"]

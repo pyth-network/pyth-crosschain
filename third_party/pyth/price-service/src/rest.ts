@@ -63,14 +63,6 @@ export class RestAPI {
 
     app.use(morgan(MORGAN_LOG_FORMAT, { stream: winstonStream }));
 
-    app.use(
-      responseTime((req: Request, res: Response, time: DurationInMs) => {
-        if (res.statusCode !== StatusCodes.NOT_FOUND) {
-          this.promClient?.addResponseTime(req.path, res.statusCode, time);
-        }
-      })
-    );
-
     const endpoints: string[] = [];
 
     const latestVaasInputSchema: schema = {
@@ -88,7 +80,7 @@ export class RestAPI {
 
         // Multiple price ids might share same vaa, we use sequence number as
         // key of a vaa and deduplicate using a map of seqnum to vaa bytes.
-        const vaaMap = new Map<number, string>();
+        const vaaMap = new Map<number, Buffer>();
 
         const notFoundIds: string[] = [];
 
@@ -104,24 +96,15 @@ export class RestAPI {
             continue;
           }
 
-          const freshness: DurationInSec =
-            new Date().getTime() / 1000 -
-            latestPriceInfo.priceFeed.getPriceUnchecked().publishTime;
-          this.promClient?.addApiRequestsPriceFreshness(
-            req.path,
-            id,
-            freshness
-          );
-
-          vaaMap.set(latestPriceInfo.seqNum, latestPriceInfo.vaaBytes);
+          vaaMap.set(latestPriceInfo.seqNum, latestPriceInfo.vaa);
         }
 
         if (notFoundIds.length > 0) {
           throw RestException.PriceFeedIdNotFound(notFoundIds);
         }
 
-        const jsonResponse = Array.from(vaaMap.values(), (vaaBytes) =>
-          Buffer.from(vaaBytes, "binary").toString("base64")
+        const jsonResponse = Array.from(vaaMap.values(), (vaa) =>
+          vaa.toString("base64")
         );
 
         res.json(jsonResponse);
@@ -162,15 +145,6 @@ export class RestAPI {
             notFoundIds.push(id);
             continue;
           }
-
-          const freshness: DurationInSec =
-            new Date().getTime() / 1000 -
-            latestPriceInfo.priceFeed.getEmaPriceUnchecked().publishTime;
-          this.promClient?.addApiRequestsPriceFreshness(
-            req.path,
-            id,
-            freshness
-          );
 
           if (verbose) {
             responseJson.push({

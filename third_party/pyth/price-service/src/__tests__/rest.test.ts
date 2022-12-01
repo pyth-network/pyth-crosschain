@@ -39,9 +39,10 @@ function dummyPriceInfoPair(
     id,
     {
       priceFeed: dummyPriceFeed(id),
+      publishTime: 0,
       attestationTime: 0,
       seqNum,
-      vaaBytes: Buffer.from(vaa, "hex").toString("binary"),
+      vaa: Buffer.from(vaa, "hex"),
       emitterChainId: 0,
       priceServiceReceiveTime: 0,
     },
