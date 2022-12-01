@@ -52,8 +52,7 @@ pub struct AttestationConfig {
     /// configured attestation conditions.
     pub default_attestation_conditions: AttestationConditions,
 
-    /// Collection of symbols identified by their full account addresses.
-    /// These symbols will be published regardless of whether or not `mapping_addr` is provided.
+    /// Groups of symbols to publish.
     pub symbol_groups: Vec<SymbolGroup>,
 }
 
@@ -202,10 +201,7 @@ pub struct SymbolGroup {
     /// If not provided, use the default attestation conditions from `AttestationConfig`.
     pub conditions: Option<AttestationConditions>,
 
-    /// FIXME
-    /// Collection of symbols identified by their full account addresses.
-    /// These symbols will be published regardless of whether or not `mapping_addr` is provided in the
-    /// `AttestationConfig`.
+    /// The symbols to publish in this group.
     pub symbols: Vec<SymbolConfig>,
 }
 
@@ -295,7 +291,13 @@ impl Default for AttestationConditions {
     }
 }
 
-/// Config entry for a Pyth product + price pair
+/// Config entry for a symbol to publish.
+/// Symbols can be configured in two ways:
+/// 1. Provide the address of both the product and price account. In this case, a name may be optionally
+///    specified to improve human-readability.
+/// 2. Provide the name of the feed in the product account. This will be matched against a list of
+///    all symbol names generated from the mapping account (assuming `mapping_addr` is set in the
+///    parent `AttestationConfig`).
 #[derive(Clone, Default, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct SymbolConfig {
     /// On-chain symbol name
