@@ -157,8 +157,8 @@ symbol_groups:
         cfg_yaml += f"""
       - type: key
         name: {name}
-        price_addr: {price}
-        product_addr: {product}"""
+        price: {price}
+        product: {product}"""
 
     # End of fast_interval_only
 
@@ -178,8 +178,8 @@ symbol_groups:
         cfg_yaml += f"""
       - type: key
         name: {name}
-        price_addr: {price}
-        product_addr: {product}"""
+        price: {price}
+        product: {product}"""
 
     cfg_yaml += f"""
   - group_name: mapping
