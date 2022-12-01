@@ -1,5 +1,11 @@
 use {
-    crate::P2WProductAccount,
+    crate::{
+        attestation_cfg::SymbolConfig::{
+            Address,
+            Name,
+        },
+        P2WProductAccount,
+    },
     log::{
         info,
         warn,
@@ -85,31 +91,29 @@ impl AttestationConfig {
             let group_symbols: Vec<P2WSymbol> = group
                 .symbols
                 .iter()
-                .flat_map(|symbol| {
-                    match (&symbol.name, &symbol.price_addr, &symbol.product_addr) {
-                        (maybe_name, Some(price_addr), Some(product_addr)) => {
-                            vec![P2WSymbol {
-                                name:         maybe_name.clone(),
-                                product_addr: *product_addr,
-                                price_addr:   *price_addr,
-                            }]
-                        }
-                        (Some(name), None, None) => {
-                            let maybe_matched_symbols: Option<&Vec<P2WSymbol>> =
-                                name_to_symbols.get(name);
-                            if let Some(matched_symbols) = maybe_matched_symbols {
-                                matched_symbols.clone()
-                            } else {
-                                warn!(
-                                    "Could not find product account for configured symbol {}",
-                                    name
-                                );
-                                vec![]
-                            }
-                        }
-                        _ => {
-                            // FIXME
-                            panic!("Bad config");
+                .flat_map(|symbol| match &symbol {
+                    Address {
+                        name,
+                        product,
+                        price,
+                    } => {
+                        vec![P2WSymbol {
+                            name:         name.clone(),
+                            product_addr: *product,
+                            price_addr:   *price,
+                        }]
+                    }
+                    Name { name } => {
+                        let maybe_matched_symbols: Option<&Vec<P2WSymbol>> =
+                            name_to_symbols.get(name);
+                        if let Some(matched_symbols) = maybe_matched_symbols {
+                            matched_symbols.clone()
+                        } else {
+                            warn!(
+                                "Could not find product account for configured symbol {}",
+                                name
+                            );
+                            vec![]
                         }
                     }
                 })
@@ -298,30 +302,39 @@ impl Default for AttestationConditions {
 /// 2. Provide the name of the feed in the product account. This will be matched against a list of
 ///    all symbol names generated from the mapping account (assuming `mapping_addr` is set in the
 ///    parent `AttestationConfig`).
-#[derive(Clone, Default, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
-pub struct SymbolConfig {
-    /// On-chain symbol name
-    pub name: Option<String>,
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum SymbolConfig {
+    Name {
+        name: String,
+    },
+    Address {
+        name: Option<String>,
 
-    #[serde(
-        deserialize_with = "opt_pubkey_string_de",
-        serialize_with = "opt_pubkey_string_ser"
-    )]
-    pub product_addr: Option<Pubkey>,
-    #[serde(
-        deserialize_with = "opt_pubkey_string_de",
-        serialize_with = "opt_pubkey_string_ser"
-    )]
-    pub price_addr:   Option<Pubkey>,
+        #[serde(
+            deserialize_with = "pubkey_string_de",
+            serialize_with = "pubkey_string_ser"
+        )]
+        product: Pubkey,
+        #[serde(
+            deserialize_with = "pubkey_string_de",
+            serialize_with = "pubkey_string_ser"
+        )]
+        price:   Pubkey,
+    },
 }
 
 impl ToString for SymbolConfig {
     // FIXME the default is bad
     fn to_string(&self) -> String {
+        "".to_owned()
+
+        /*
         self.name.clone().unwrap_or(format!(
             "Unnamed product {}",
             self.product_addr.unwrap_or_default()
         ))
+           */
     }
 }
 
@@ -391,6 +404,10 @@ where
 mod tests {
     use {
         super::*,
+        crate::attestation_cfg::SymbolConfig::{
+            Address,
+            Name,
+        },
         solitaire::ErrBox,
     };
 
@@ -403,13 +420,13 @@ mod tests {
                 ..Default::default()
             }),
             symbols:    vec![
-                SymbolConfig {
-                    name: Some("ETHUSD".to_owned()),
-                    ..Default::default()
+                Name {
+                    name: "ETHUSD".to_owned(),
                 },
-                SymbolConfig {
-                    name: Some("BTCUSD".to_owned()),
-                    ..Default::default()
+                Address {
+                    name:    Some("BTCUSD".to_owned()),
+                    product: Pubkey::new_unique(),
+                    price:   Pubkey::new_unique(),
                 },
             ],
         };
@@ -421,13 +438,13 @@ mod tests {
                 ..Default::default()
             }),
             symbols:    vec![
-                SymbolConfig {
-                    name: Some("CNYAUD".to_owned()),
-                    ..Default::default()
+                Name {
+                    name: "CNYAUD".to_owned(),
                 },
-                SymbolConfig {
-                    name: Some("INRPLN".to_owned()),
-                    ..Default::default()
+                Address {
+                    name:    None,
+                    product: Pubkey::new_unique(),
+                    price:   Pubkey::new_unique(),
                 },
             ],
         };
@@ -447,6 +464,114 @@ mod tests {
         let deserialized: AttestationConfig = serde_yaml::from_str(&serialized)?;
 
         assert_eq!(cfg, deserialized);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_instantiate_batches() -> Result<(), ErrBox> {
+        let btc_product_key = Pubkey::new_unique();
+        let btc_price_key = Pubkey::new_unique();
+
+        let eth_product_key = Pubkey::new_unique();
+        let eth_price_key_1 = Pubkey::new_unique();
+        let eth_price_key_2 = Pubkey::new_unique();
+
+        let eth_dup_product_key = Pubkey::new_unique();
+        let eth_dup_price_key = Pubkey::new_unique();
+
+        let attestation_conditions_1 = AttestationConditions {
+            min_interval_secs: 5,
+            ..Default::default()
+        };
+
+        let products = vec![P2WProductAccount {
+            name:               "ETHUSD".to_owned(),
+            key:                eth_product_key,
+            price_account_keys: HashSet::from([eth_price_key_1, eth_price_key_2]),
+        }];
+
+        let group1 = SymbolGroup {
+            group_name: "group 1".to_owned(),
+            conditions: Some(attestation_conditions_1.clone()),
+            symbols:    vec![
+                Address {
+                    name:    Some("BTCUSD".to_owned()),
+                    price:   btc_price_key,
+                    product: btc_product_key,
+                },
+                Name {
+                    name: "ETHUSD".to_owned(),
+                },
+            ],
+        };
+
+        let group2 = SymbolGroup {
+            group_name: "group 2".to_owned(),
+            conditions: None,
+            symbols:    vec![Address {
+                name:    Some("ETHUSD".to_owned()),
+                price:   eth_dup_price_key,
+                product: eth_dup_product_key,
+            }],
+        };
+
+        let default_attestation_conditions = AttestationConditions {
+            min_interval_secs: 1,
+            ..Default::default()
+        };
+
+        let cfg = AttestationConfig {
+            min_msg_reuse_interval_ms:      1000,
+            max_msg_accounts:               100_000,
+            min_rpc_interval_ms:            2123,
+            mapping_addr:                   None,
+            mapping_reload_interval_mins:   42,
+            default_attestation_conditions: default_attestation_conditions.clone(),
+            symbol_groups:                  vec![group1, group2],
+        };
+
+        let batches = cfg.instantiate_batches(&products, 2);
+
+        assert_eq!(
+            batches,
+            vec![
+                SymbolBatch {
+                    group_name: "group 1".to_owned(),
+                    conditions: attestation_conditions_1.clone(),
+                    symbols:    vec![
+                        P2WSymbol {
+                            name:         Some("BTCUSD".to_owned()),
+                            product_addr: btc_product_key,
+                            price_addr:   btc_price_key,
+                        },
+                        P2WSymbol {
+                            name:         Some("ETHUSD".to_owned()),
+                            product_addr: eth_product_key,
+                            price_addr:   eth_price_key_1,
+                        }
+                    ],
+                },
+                SymbolBatch {
+                    group_name: "group 1".to_owned(),
+                    conditions: attestation_conditions_1,
+                    symbols:    vec![P2WSymbol {
+                        name:         Some("ETHUSD".to_owned()),
+                        product_addr: eth_product_key,
+                        price_addr:   eth_price_key_2,
+                    }],
+                },
+                SymbolBatch {
+                    group_name: "group 2".to_owned(),
+                    conditions: default_attestation_conditions,
+                    symbols:    vec![P2WSymbol {
+                        name:         Some("ETHUSD".to_owned()),
+                        product_addr: eth_dup_product_key,
+                        price_addr:   eth_dup_price_key,
+                    }],
+                },
+            ]
+        );
 
         Ok(())
     }
