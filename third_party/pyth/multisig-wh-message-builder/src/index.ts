@@ -425,6 +425,7 @@ async function addInstructionsToTx(
   console.log("Approving transaction...");
   await squad.approveTransaction(txKey);
   console.log("Transaction approved.");
+  console.log(`Tx key: ${txKey}`);
   console.log(
     `Tx URL: https://mesh${
       cluster === "devnet" ? "-devnet" : ""
@@ -680,6 +681,16 @@ async function executeMultisigTx(
     msAccount.publicKey,
     msAccount.authorityIndex
   );
+
+  const tx = await squad.getTransaction(txPDA);
+  if ((tx.status as any).executeReady === undefined) {
+    console.log(
+      `Transaction is either executed or not ready yet. Status: ${JSON.stringify(
+        tx.status
+      )}`
+    );
+    return;
+  }
 
   const executeIx = await squad.buildExecuteTransaction(
     txPDA,
