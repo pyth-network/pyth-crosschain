@@ -435,10 +435,10 @@ pub async fn crawl_pyth_mapping(
                 }
             };
 
-            let mut prod_name = "";
+            let mut prod_name = None;
             for (key, val) in prod.iter() {
                 if key.eq_ignore_ascii_case("symbol") {
-                    prod_name = val;
+                    prod_name = Some(val.to_owned());
                 }
             }
 
@@ -484,7 +484,7 @@ pub async fn crawl_pyth_mapping(
             }
             ret.push(P2WProductAccount {
                 key:                *prod_addr,
-                name:               prod_name.to_owned(),
+                name:               prod_name.clone(),
                 price_account_keys: price_accounts,
             });
 
@@ -517,6 +517,6 @@ pub async fn crawl_pyth_mapping(
 #[derive(Clone, Debug)]
 pub struct P2WProductAccount {
     pub key:                Pubkey,
-    pub name:               String,
+    pub name:               Option<String>,
     pub price_account_keys: Vec<Pubkey>,
 }

@@ -76,16 +76,18 @@ impl AttestationConfig {
         let mut name_to_symbols: HashMap<String, Vec<P2WSymbol>> = HashMap::new();
         for product_account in product_accounts {
             for price_account_key in &product_account.price_account_keys {
-                let symbol = P2WSymbol {
-                    name:         Some(product_account.name.clone()),
-                    product_addr: product_account.key,
-                    price_addr:   *price_account_key,
-                };
+                if let Some(name) = &product_account.name {
+                    let symbol = P2WSymbol {
+                        name:         Some(name.clone()),
+                        product_addr: product_account.key,
+                        price_addr:   *price_account_key,
+                    };
 
-                name_to_symbols
-                    .entry(product_account.name.clone())
-                    .or_insert(vec![])
-                    .push(symbol);
+                    name_to_symbols
+                        .entry(name.clone())
+                        .or_insert(vec![])
+                        .push(symbol);
+                }
             }
         }
 
@@ -156,7 +158,7 @@ impl AttestationConfig {
             for price_account_key in &product_account.price_account_keys {
                 if !existing_price_accounts.contains(price_account_key) {
                     let symbol = P2WSymbol {
-                        name:         Some(product_account.name.clone()),
+                        name:         product_account.name.clone(),
                         product_addr: product_account.key,
                         price_addr:   *price_account_key,
                     };
@@ -224,7 +226,10 @@ pub struct SymbolGroupConfig {
 pub enum SymbolConfig {
     /// A symbol specified by its product name.
     Name {
-        /// The name of the symbol. This name is matched against the product account metadata.
+        /// The name of the symbol. This name is matched against the "symbol" field in the product
+        /// account metadata. If multiple price accounts have this name (either because 2 product
+        /// accounts have the same symbol or a single product account has multiple price accounts),
+        /// it matches *all* of them and puts them into this group.
         name: String,
     },
     /// A symbol specified by its product and price account keys.
@@ -266,6 +271,8 @@ impl ToString for SymbolConfig {
     }
 }
 
+/// A batch of symbols that's ready to be attested. Includes all necessary information
+/// (such as price/product account keys).
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct SymbolBatch {
     pub group_name: String,
@@ -491,6 +498,9 @@ mod tests {
         let eth_price_key_1 = Pubkey::new_unique();
         let eth_price_key_2 = Pubkey::new_unique();
 
+        let unk_product_key = Pubkey::new_unique();
+        let unk_price_key = Pubkey::new_unique();
+
         let eth_dup_product_key = Pubkey::new_unique();
         let eth_dup_price_key = Pubkey::new_unique();
 
@@ -499,11 +509,18 @@ mod tests {
             ..Default::default()
         };
 
-        let products = vec![P2WProductAccount {
-            name:               "ETHUSD".to_owned(),
-            key:                eth_product_key,
-            price_account_keys: vec![eth_price_key_1, eth_price_key_2],
-        }];
+        let products = vec![
+            P2WProductAccount {
+                name:               Some("ETHUSD".to_owned()),
+                key:                eth_product_key,
+                price_account_keys: vec![eth_price_key_1, eth_price_key_2],
+            },
+            P2WProductAccount {
+                name:               None,
+                key:                unk_product_key,
+                price_account_keys: vec![unk_price_key],
+            },
+        ];
 
         let group1 = SymbolGroupConfig {
             group_name: "group 1".to_owned(),
@@ -577,13 +594,22 @@ mod tests {
                 },
                 SymbolBatch {
                     group_name: "group 2".to_owned(),
-                    conditions: default_attestation_conditions,
+                    conditions: default_attestation_conditions.clone(),
                     symbols:    vec![P2WSymbol {
                         name:         Some("ETHUSD".to_owned()),
                         product_addr: eth_dup_product_key,
                         price_addr:   eth_dup_price_key,
                     }],
                 },
+                SymbolBatch {
+                    group_name: "mapping".to_owned(),
+                    conditions: default_attestation_conditions,
+                    symbols:    vec![P2WSymbol {
+                        name:         None,
+                        product_addr: unk_product_key,
+                        price_addr:   unk_price_key,
+                    }],
+                }
             ]
         );
 

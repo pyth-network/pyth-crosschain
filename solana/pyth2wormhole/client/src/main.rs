@@ -504,6 +504,8 @@ async fn handle_attest_non_daemon_mode(
     Ok(())
 }
 
+/// Generate batches to attest by retrieving the on-chain product account data and grouping it
+/// according to the configuration in `attestation_cfg`.
 async fn attestation_config_to_batches(
     rpc_cfg: &Arc<RLMutex<RpcCfg>>,
     attestation_cfg: &AttestationConfig,
