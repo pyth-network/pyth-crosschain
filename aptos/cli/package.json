@@ -1,0 +1,32 @@
+{
+  "name": "@pythnetwork/aptos-cli",
+  "version": "1.0.0",
+  "description": "Utilities for managing the Pyth Target Chain contract on Aptos",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc && pkg . --targets node14-linux-x64 --output build/pyth"
+  },
+  "author": "",
+  "license": "ISC",
+  "bin": {
+    "aptos": "./build/cli.js"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.21",
+    "@types/yargs": "^17.0.13",
+    "pkg": "^5.8.0",
+    "prettier": "2.8.0",
+    "typescript": "^4.8.3"
+  },
+  "dependencies": {
+    "@pythnetwork/pyth-aptos-js": "^0.2.0",
+    "aptos": "^1.3.14",
+    "ethers": "^5.7.1",
+    "js-sha3": "^0.8.0",
+    "yargs": "^17.5.1"
+  },
+  "pkg": {
+    "scripts": "build/**/*.js"
+  }
+}
