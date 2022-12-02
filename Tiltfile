@@ -285,8 +285,8 @@ k8s_resource(
 
 docker_build(
     ref = "terra-image",
-    context = "./cosmwasm/devnet",
-    dockerfile = "cosmwasm/devnet/Dockerfile",
+    context = "./contracts/cosmwasm/devnet",
+    dockerfile = "contracts/cosmwasm/devnet/Dockerfile",
 )
 
 docker_build(
