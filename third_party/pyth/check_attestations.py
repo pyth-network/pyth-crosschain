@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+
+# This script is a CI test in tilt that verifies that prices are flowing through the entire system properly.
+# It checks that all prices being published by the pyth publisher are showing up at the price service.
+import logging
+import time
+from pyth_utils import *
+
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s | %(module)s | %(levelname)s | %(message)s"
+)
+
+# Where to read the set of accounts from
+PYTH_TEST_ACCOUNTS_HOST = "pyth"
+PYTH_TEST_ACCOUNTS_PORT = 4242
+
+PRICE_SERVICE_HOST = "pyth-price-service" # FIXME
+PRICE_SERVICE_PORT = 4200 # FIXME
+
+all_prices_attested = False
+while not all_prices_attested:
+    publisher_state_map = get_pyth_accounts(PYTH_TEST_ACCOUNTS_HOST, PYTH_TEST_ACCOUNTS_PORT)
+    pyth_price_account_ids = sorted([x["price"] for x in publisher_state_map["symbols"]])
+    price_ids = sorted(get_json(PRICE_SERVICE_HOST, "/api/price_feed_ids", PRICE_SERVICE_PORT))
+
+    if price_ids == pyth_price_account_ids:
+        all_prices_attested = True
+    else:
+        logging.info("Price ids do not match")
+        logging.info(f"published ids: {pyth_price_account_ids}")
+        logging.info(f"attested ids: {price_ids}")
+
+    time.sleep(10)
+
+# Let k8s know the service is up
+readiness()

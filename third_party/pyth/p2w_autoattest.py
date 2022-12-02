@@ -109,20 +109,7 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
 # Retrieve available symbols from the test pyth publisher if not provided in envs
 if P2W_ATTESTATION_CFG is None:
     P2W_ATTESTATION_CFG = "./attestation_cfg_test.yaml"
-    conn = HTTPConnection(PYTH_TEST_ACCOUNTS_HOST, PYTH_TEST_ACCOUNTS_PORT)
-
-    conn.request("GET", "/")
-
-    res = conn.getresponse()
-
-    publisher_state_map = {}
-
-    if res.getheader("Content-Type") == "application/json":
-        publisher_state_map = json.load(res)
-    else:
-        logging.error("Bad Content type")
-        sys.exit(1)
-
+    publisher_state_map = get_pyth_accounts(PYTH_TEST_ACCOUNTS_HOST, PYTH_TEST_ACCOUNTS_PORT)
     pyth_accounts = publisher_state_map["symbols"]
 
     logging.info(

@@ -1,7 +1,10 @@
+import logging
 import os
+import json
 import socketserver
 import subprocess
 import sys
+from http.client import HTTPConnection
 
 # Settings specific to local devnet Pyth instance
 PYTH = os.environ.get("PYTH", "./pyth")
@@ -107,6 +110,20 @@ def sol_run_or_die(subcommand, args=[], **kwargs):
     """
     return run_or_die(["solana", subcommand] + args + ["--url", SOL_RPC_URL], **kwargs)
 
+
+def get_json(host, path, port):
+    conn = HTTPConnection(host, port)
+    conn.request("GET", path)
+    res = conn.getresponse()
+
+    if res.getheader("Content-Type") == "application/json":
+        return json.load(res)
+    else:
+        logging.error("Bad Content type")
+        sys.exit(1)
+
+def get_pyth_accounts(host, port):
+    return get_json(host, "/", port)
 
 class ReadinessTCPHandler(socketserver.StreamRequestHandler):
     def handle(self):

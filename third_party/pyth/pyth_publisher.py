@@ -30,6 +30,7 @@ class PythAccEndpoint(BaseHTTPRequestHandler):
         self.wfile.write(data)
         self.wfile.flush()
 
+# FIXME: separate out the initial set of symbols from dynamically added symbols
 # Test publisher state that gets served via the HTTP endpoint. Note: the schema of this dict is extended here and there
 HTTP_ENDPOINT_DATA = {"symbols": [], "mapping_address": None}
 
