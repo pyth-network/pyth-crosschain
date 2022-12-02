@@ -1,6 +1,15 @@
 use {
-    crate::BatchState,
-    log::info,
+    crate::{
+        attestation_cfg::SymbolConfig::{
+            Key,
+            Name,
+        },
+        P2WProductAccount,
+    },
+    log::{
+        info,
+        warn,
+    },
     serde::{
         de::Error,
         Deserialize,
@@ -14,25 +23,26 @@ use {
             HashMap,
             HashSet,
         },
-        iter,
         str::FromStr,
     },
 };
 
 /// Pyth2wormhole config specific to attestation requests
-#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct AttestationConfig {
     #[serde(default = "default_min_msg_reuse_interval_ms")]
-    pub min_msg_reuse_interval_ms:    u64,
+    pub min_msg_reuse_interval_ms: u64,
     #[serde(default = "default_max_msg_accounts")]
-    pub max_msg_accounts:             u64,
-    /// Optionally, we take a mapping account to add remaining symbols from a Pyth deployments. These symbols are processed under attestation conditions for the `default` symbol group.
+    pub max_msg_accounts:          u64,
+
+    /// Optionally, we take a mapping account to add remaining symbols from a Pyth deployments.
+    /// These symbols are processed under `default_attestation_conditions`.
     #[serde(
         deserialize_with = "opt_pubkey_string_de",
         serialize_with = "opt_pubkey_string_ser",
         default // Uses Option::default() which is None
     )]
-    pub mapping_addr:                 Option<Pubkey>,
+    pub mapping_addr:                   Option<Pubkey>,
     /// The known symbol list will be reloaded based off this
     /// interval, to account for mapping changes. Note: This interval
     /// will only work if the mapping address is defined. Whenever
@@ -41,88 +51,230 @@ pub struct AttestationConfig {
     /// symbol list, and before stopping the pre-existing obsolete
     /// jobs to maintain uninterrupted cranking.
     #[serde(default = "default_mapping_reload_interval_mins")]
-    pub mapping_reload_interval_mins: u64,
+    pub mapping_reload_interval_mins:   u64,
     #[serde(default = "default_min_rpc_interval_ms")]
-    /// Rate-limiting minimum delay between RPC requests in milliseconds"
-    pub min_rpc_interval_ms:          u64,
-    pub symbol_groups:                Vec<SymbolGroup>,
+    /// Rate-limiting minimum delay between RPC requests in milliseconds
+    pub min_rpc_interval_ms:            u64,
+    /// Attestation conditions that will be used for any symbols included in the mapping
+    /// that aren't explicitly in one of the groups below, and any groups without explicitly
+    /// configured attestation conditions.
+    pub default_attestation_conditions: AttestationConditions,
+
+    /// Groups of symbols to publish.
+    pub symbol_groups: Vec<SymbolGroupConfig>,
 }
 
 impl AttestationConfig {
-    /// Merges new symbols into the attestation config. Pre-existing
-    /// new symbols are ignored. The new_group_name group can already
-    /// exist - symbols will be appended to `symbols` field.
-    pub fn add_symbols(
-        &mut self,
-        mut new_symbols: HashMap<Pubkey, HashSet<Pubkey>>,
-        group_name: String, // Which group is extended by the new symbols
-    ) {
-        // Remove pre-existing symbols from the new symbols collection
-        for existing_group in &self.symbol_groups {
-            for existing_sym in &existing_group.symbols {
-                // Check if new symbols mention this product
-                if let Some(prices) = new_symbols.get_mut(&existing_sym.product_addr) {
-                    // Prune the price if exists
-                    prices.remove(&existing_sym.price_addr);
+    /// Instantiate the batches of symbols to attest by matching the config against the collection
+    /// of on-chain product accounts.
+    pub fn instantiate_batches(
+        &self,
+        product_accounts: &[P2WProductAccount],
+        max_batch_size: usize,
+    ) -> Vec<SymbolBatch> {
+        // Construct mapping from the name of each product account to its corresponding symbols
+        let mut name_to_symbols: HashMap<String, Vec<P2WSymbol>> = HashMap::new();
+        for product_account in product_accounts {
+            for price_account_key in &product_account.price_account_keys {
+                if let Some(name) = &product_account.name {
+                    let symbol = P2WSymbol {
+                        name:         Some(name.clone()),
+                        product_addr: product_account.key,
+                        price_addr:   *price_account_key,
+                    };
+
+                    name_to_symbols
+                        .entry(name.clone())
+                        .or_insert(vec![])
+                        .push(symbol);
                 }
             }
         }
 
-        // Turn the pruned symbols into P2WSymbol structs
-        let mut new_symbols_vec = new_symbols
-            .drain() // Makes us own the elements and lets us move them
-            .flat_map(|(prod, prices)| iter::zip(iter::repeat(prod), prices)) // Flatten the tuple iterators
-            .map(|(prod, price)| P2WSymbol {
-                name:         None,
-                product_addr: prod,
-                price_addr:   price,
-            })
-            .collect::<Vec<P2WSymbol>>();
+        // Instantiate batches from the configured symbol groups.
+        let mut configured_batches: Vec<SymbolBatch> = vec![];
+        for group in &self.symbol_groups {
+            let group_symbols: Vec<P2WSymbol> = group
+                .symbols
+                .iter()
+                .flat_map(|symbol| match &symbol {
+                    Key {
+                        name,
+                        product,
+                        price,
+                    } => {
+                        vec![P2WSymbol {
+                            name:         name.clone(),
+                            product_addr: *product,
+                            price_addr:   *price,
+                        }]
+                    }
+                    Name { name } => {
+                        let maybe_matched_symbols: Option<&Vec<P2WSymbol>> =
+                            name_to_symbols.get(name);
+                        if let Some(matched_symbols) = maybe_matched_symbols {
+                            matched_symbols.clone()
+                        } else {
+                            // It's slightly unfortunate that this is a warning, but it seems better than crashing.
+                            // The data in the mapping account can change while the attester is running and trigger this case,
+                            // which means that it is not necessarily a configuration problem.
+                            // Note that any named symbols in the config which fail to match will still be included
+                            // in the remaining_symbols group below.
+                            warn!(
+                                "Could not find product account for configured symbol {}",
+                                name
+                            );
+                            vec![]
+                        }
+                    }
+                })
+                .collect();
 
-        // Find and extend OR create the group of specified name
-        match self
-            .symbol_groups
-            .iter_mut()
-            .find(|g| g.group_name == group_name) // Advances the iterator and returns Some(item) on first hit
-        {
-            Some(existing_group) => existing_group.symbols.append(&mut new_symbols_vec),
-            None if !new_symbols_vec.is_empty() => {
-                // Group does not exist, assume defaults
-                let new_group = SymbolGroup {
-                    group_name,
-                    conditions: Default::default(),
-                    symbols: new_symbols_vec,
-                };
-
-                self.symbol_groups.push(new_group);
-            }
-            None => {}
+            let group_conditions = group
+                .conditions
+                .as_ref()
+                .unwrap_or(&self.default_attestation_conditions);
+            configured_batches.extend(AttestationConfig::partition_into_batches(
+                &group.group_name,
+                max_batch_size,
+                group_conditions,
+                group_symbols,
+            ))
         }
+
+        // Find any accounts not included in existing batches and group them into a remainder batch
+        let existing_price_accounts: HashSet<Pubkey> = configured_batches
+            .iter()
+            .flat_map(|batch| batch.symbols.iter().map(|symbol| symbol.price_addr))
+            .chain(
+                configured_batches
+                    .iter()
+                    .flat_map(|batch| batch.symbols.iter().map(|symbol| symbol.price_addr)),
+            )
+            .collect();
+
+        let mut remaining_symbols: Vec<P2WSymbol> = vec![];
+        for product_account in product_accounts {
+            for price_account_key in &product_account.price_account_keys {
+                if !existing_price_accounts.contains(price_account_key) {
+                    let symbol = P2WSymbol {
+                        name:         product_account.name.clone(),
+                        product_addr: product_account.key,
+                        price_addr:   *price_account_key,
+                    };
+                    remaining_symbols.push(symbol);
+                }
+            }
+        }
+        let remaining_batches = AttestationConfig::partition_into_batches(
+            &"mapping".to_owned(),
+            max_batch_size,
+            &self.default_attestation_conditions,
+            remaining_symbols,
+        );
+
+        let all_batches = configured_batches
+            .into_iter()
+            .chain(remaining_batches.into_iter())
+            .collect::<Vec<SymbolBatch>>();
+
+        for batch in &all_batches {
+            info!(
+                "Batch {:?}, {} symbols",
+                batch.group_name,
+                batch.symbols.len(),
+            );
+        }
+
+        all_batches
     }
 
-    pub fn as_batches(&self, max_batch_size: usize) -> Vec<BatchState> {
-        self.symbol_groups
-            .iter()
-            .flat_map(move |g| {
-                let conditions4closure = g.conditions.clone();
-                let name4closure = g.group_name.clone();
-
-                info!("Group {:?}, {} symbols", g.group_name, g.symbols.len(),);
-
-                // Divide group into batches
-                g.symbols
-                    .as_slice()
-                    .chunks(max_batch_size)
-                    .map(move |symbols| {
-                        BatchState::new(name4closure.clone(), symbols, conditions4closure.clone())
-                    })
+    /// Partition symbols into a collection of batches, each of which contains no more than
+    /// `max_batch_size` symbols.
+    fn partition_into_batches(
+        batch_name: &String,
+        max_batch_size: usize,
+        conditions: &AttestationConditions,
+        symbols: Vec<P2WSymbol>,
+    ) -> Vec<SymbolBatch> {
+        symbols
+            .as_slice()
+            .chunks(max_batch_size)
+            .map(move |batch_symbols| SymbolBatch {
+                group_name: batch_name.to_owned(),
+                symbols:    batch_symbols.to_vec(),
+                conditions: conditions.clone(),
             })
             .collect()
     }
 }
 
-#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
-pub struct SymbolGroup {
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
+pub struct SymbolGroupConfig {
+    pub group_name: String,
+    /// Attestation conditions applied to all symbols in this group
+    /// If not provided, use the default attestation conditions from `AttestationConfig`.
+    pub conditions: Option<AttestationConditions>,
+
+    /// The symbols to publish in this group.
+    pub symbols: Vec<SymbolConfig>,
+}
+
+/// Config entry for a symbol to attest.
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum SymbolConfig {
+    /// A symbol specified by its product name.
+    Name {
+        /// The name of the symbol. This name is matched against the "symbol" field in the product
+        /// account metadata. If multiple price accounts have this name (either because 2 product
+        /// accounts have the same symbol or a single product account has multiple price accounts),
+        /// it matches *all* of them and puts them into this group.
+        name: String,
+    },
+    /// A symbol specified by its product and price account keys.
+    Key {
+        /// Optional human-readable name for the symbol (for logging purposes).
+        /// This field does not need to match the on-chain data for the product.
+        name: Option<String>,
+
+        #[serde(
+            deserialize_with = "pubkey_string_de",
+            serialize_with = "pubkey_string_ser"
+        )]
+        product: Pubkey,
+        #[serde(
+            deserialize_with = "pubkey_string_de",
+            serialize_with = "pubkey_string_ser"
+        )]
+        price:   Pubkey,
+    },
+}
+
+impl ToString for SymbolConfig {
+    fn to_string(&self) -> String {
+        match &self {
+            Name { name } => name.clone(),
+            Key {
+                name: Some(name),
+                product: _,
+                price: _,
+            } => name.clone(),
+            Key {
+                name: None,
+                product,
+                price: _,
+            } => {
+                format!("Unnamed product {}", product)
+            }
+        }
+    }
+}
+
+/// A batch of symbols that's ready to be attested. Includes all necessary information
+/// (such as price/product account keys).
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
+pub struct SymbolBatch {
     pub group_name: String,
     /// Attestation conditions applied to all symbols in this group
     pub conditions: AttestationConditions,
@@ -157,7 +309,7 @@ pub const fn default_max_batch_jobs() -> usize {
 /// of the active conditions is met. Option<> fields can be
 /// de-activated with None. All conditions are inactive by default,
 /// except for the non-Option ones.
-#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct AttestationConditions {
     /// Baseline, unconditional attestation interval. Attestation is triggered if the specified interval elapsed since last attestation.
     #[serde(default = "default_min_interval_secs")]
@@ -207,7 +359,6 @@ impl Default for AttestationConditions {
     }
 }
 
-/// Config entry for a Pyth product + price pair
 #[derive(Clone, Default, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct P2WSymbol {
     /// User-defined human-readable name
@@ -274,54 +425,59 @@ where
 mod tests {
     use {
         super::*,
+        crate::attestation_cfg::SymbolConfig::{
+            Key,
+            Name,
+        },
         solitaire::ErrBox,
     };
 
     #[test]
     fn test_sanity() -> Result<(), ErrBox> {
-        let fastbois = SymbolGroup {
+        let fastbois = SymbolGroupConfig {
             group_name: "fast bois".to_owned(),
-            conditions: AttestationConditions {
+            conditions: Some(AttestationConditions {
                 min_interval_secs: 5,
                 ..Default::default()
-            },
+            }),
             symbols:    vec![
-                P2WSymbol {
-                    name: Some("ETHUSD".to_owned()),
-                    ..Default::default()
+                Name {
+                    name: "ETHUSD".to_owned(),
                 },
-                P2WSymbol {
-                    name: Some("BTCUSD".to_owned()),
-                    ..Default::default()
+                Key {
+                    name:    Some("BTCUSD".to_owned()),
+                    product: Pubkey::new_unique(),
+                    price:   Pubkey::new_unique(),
                 },
             ],
         };
 
-        let slowbois = SymbolGroup {
+        let slowbois = SymbolGroupConfig {
             group_name: "slow bois".to_owned(),
-            conditions: AttestationConditions {
+            conditions: Some(AttestationConditions {
                 min_interval_secs: 200,
                 ..Default::default()
-            },
+            }),
             symbols:    vec![
-                P2WSymbol {
-                    name: Some("CNYAUD".to_owned()),
-                    ..Default::default()
+                Name {
+                    name: "CNYAUD".to_owned(),
                 },
-                P2WSymbol {
-                    name: Some("INRPLN".to_owned()),
-                    ..Default::default()
+                Key {
+                    name:    None,
+                    product: Pubkey::new_unique(),
+                    price:   Pubkey::new_unique(),
                 },
             ],
         };
 
         let cfg = AttestationConfig {
-            min_msg_reuse_interval_ms:    1000,
-            max_msg_accounts:             100_000,
-            min_rpc_interval_ms:          2123,
-            mapping_addr:                 None,
-            mapping_reload_interval_mins: 42,
-            symbol_groups:                vec![fastbois, slowbois],
+            min_msg_reuse_interval_ms:      1000,
+            max_msg_accounts:               100_000,
+            min_rpc_interval_ms:            2123,
+            mapping_addr:                   None,
+            mapping_reload_interval_mins:   42,
+            default_attestation_conditions: AttestationConditions::default(),
+            symbol_groups:                  vec![fastbois, slowbois],
         };
 
         let serialized = serde_yaml::to_string(&cfg)?;
@@ -334,44 +490,128 @@ mod tests {
     }
 
     #[test]
-    fn test_add_symbols_works() -> Result<(), ErrBox> {
-        let empty_config = AttestationConfig {
-            min_msg_reuse_interval_ms:    1000,
-            max_msg_accounts:             100,
-            min_rpc_interval_ms:          42422,
-            mapping_addr:                 None,
-            mapping_reload_interval_mins: 42,
-            symbol_groups:                vec![],
+    fn test_instantiate_batches() -> Result<(), ErrBox> {
+        let btc_product_key = Pubkey::new_unique();
+        let btc_price_key = Pubkey::new_unique();
+
+        let eth_product_key = Pubkey::new_unique();
+        let eth_price_key_1 = Pubkey::new_unique();
+        let eth_price_key_2 = Pubkey::new_unique();
+
+        let unk_product_key = Pubkey::new_unique();
+        let unk_price_key = Pubkey::new_unique();
+
+        let eth_dup_product_key = Pubkey::new_unique();
+        let eth_dup_price_key = Pubkey::new_unique();
+
+        let attestation_conditions_1 = AttestationConditions {
+            min_interval_secs: 5,
+            ..Default::default()
         };
 
-        let mock_new_symbols = (0..255)
-            .map(|sym_idx| {
-                let mut mock_prod_bytes = [0u8; 32];
-                mock_prod_bytes[31] = sym_idx;
+        let products = vec![
+            P2WProductAccount {
+                name:               Some("ETHUSD".to_owned()),
+                key:                eth_product_key,
+                price_account_keys: vec![eth_price_key_1, eth_price_key_2],
+            },
+            P2WProductAccount {
+                name:               None,
+                key:                unk_product_key,
+                price_account_keys: vec![unk_price_key],
+            },
+        ];
 
-                let mut mock_prices = HashSet::new();
-                for _px_idx in 1..=5 {
-                    let mut mock_price_bytes = [0u8; 32];
-                    mock_price_bytes[31] = sym_idx;
-                    mock_prices.insert(Pubkey::new_from_array(mock_price_bytes));
+        let group1 = SymbolGroupConfig {
+            group_name: "group 1".to_owned(),
+            conditions: Some(attestation_conditions_1.clone()),
+            symbols:    vec![
+                Key {
+                    name:    Some("BTCUSD".to_owned()),
+                    price:   btc_price_key,
+                    product: btc_product_key,
+                },
+                Name {
+                    name: "ETHUSD".to_owned(),
+                },
+            ],
+        };
+
+        let group2 = SymbolGroupConfig {
+            group_name: "group 2".to_owned(),
+            conditions: None,
+            symbols:    vec![Key {
+                name:    Some("ETHUSD".to_owned()),
+                price:   eth_dup_price_key,
+                product: eth_dup_product_key,
+            }],
+        };
+
+        let default_attestation_conditions = AttestationConditions {
+            min_interval_secs: 1,
+            ..Default::default()
+        };
+
+        let cfg = AttestationConfig {
+            min_msg_reuse_interval_ms:      1000,
+            max_msg_accounts:               100_000,
+            min_rpc_interval_ms:            2123,
+            mapping_addr:                   None,
+            mapping_reload_interval_mins:   42,
+            default_attestation_conditions: default_attestation_conditions.clone(),
+            symbol_groups:                  vec![group1, group2],
+        };
+
+        let batches = cfg.instantiate_batches(&products, 2);
+
+        assert_eq!(
+            batches,
+            vec![
+                SymbolBatch {
+                    group_name: "group 1".to_owned(),
+                    conditions: attestation_conditions_1.clone(),
+                    symbols:    vec![
+                        P2WSymbol {
+                            name:         Some("BTCUSD".to_owned()),
+                            product_addr: btc_product_key,
+                            price_addr:   btc_price_key,
+                        },
+                        P2WSymbol {
+                            name:         Some("ETHUSD".to_owned()),
+                            product_addr: eth_product_key,
+                            price_addr:   eth_price_key_1,
+                        }
+                    ],
+                },
+                SymbolBatch {
+                    group_name: "group 1".to_owned(),
+                    conditions: attestation_conditions_1,
+                    symbols:    vec![P2WSymbol {
+                        name:         Some("ETHUSD".to_owned()),
+                        product_addr: eth_product_key,
+                        price_addr:   eth_price_key_2,
+                    }],
+                },
+                SymbolBatch {
+                    group_name: "group 2".to_owned(),
+                    conditions: default_attestation_conditions.clone(),
+                    symbols:    vec![P2WSymbol {
+                        name:         Some("ETHUSD".to_owned()),
+                        product_addr: eth_dup_product_key,
+                        price_addr:   eth_dup_price_key,
+                    }],
+                },
+                SymbolBatch {
+                    group_name: "mapping".to_owned(),
+                    conditions: default_attestation_conditions,
+                    symbols:    vec![P2WSymbol {
+                        name:         None,
+                        product_addr: unk_product_key,
+                        price_addr:   unk_price_key,
+                    }],
                 }
-
-                (Pubkey::new_from_array(mock_prod_bytes), mock_prices)
-            })
-            .collect::<HashMap<Pubkey, HashSet<Pubkey>>>();
-
-        let mut config1 = empty_config.clone();
-
-        config1.add_symbols(mock_new_symbols.clone(), "default".to_owned());
-
-        let mut config2 = config1.clone();
-
-        // Should not be created because there's no new symbols to add
-        // (we're adding identical mock_new_symbols again)
-        config2.add_symbols(mock_new_symbols, "default2".to_owned());
-
-        assert_ne!(config1, empty_config); // Check that config grows from empty
-        assert_eq!(config1, config2); // Check that no changes are made if all symbols are already in there
+            ]
+        );
 
         Ok(())
     }

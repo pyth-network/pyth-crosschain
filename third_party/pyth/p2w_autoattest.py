@@ -137,6 +137,8 @@ mapping_addr: {mapping_addr}
 mapping_reload_interval_mins: 1 # Very fast for testing purposes
 min_rpc_interval_ms: 0 # RIP RPC
 max_batch_jobs: 1000 # Where we're going there's no oomkiller
+default_attestation_conditions:
+  min_interval_secs: 60
 symbol_groups:
   - group_name: fast_interval_only
     conditions:
@@ -155,9 +157,10 @@ symbol_groups:
         product = thing["product"]
 
         cfg_yaml += f"""
-      - name: {name}
-        price_addr: {price}
-        product_addr: {product}"""
+      - type: key
+        name: {name}
+        price: {price}
+        product: {product}"""
 
     # End of fast_interval_only
 
@@ -175,9 +178,10 @@ symbol_groups:
         product = stuff["product"]
 
         cfg_yaml += f"""
-      - name: {name}
-        price_addr: {price}
-        product_addr: {product}"""
+      - type: key
+        name: {name}
+        price: {price}
+        product: {product}"""
 
     cfg_yaml += f"""
   - group_name: mapping

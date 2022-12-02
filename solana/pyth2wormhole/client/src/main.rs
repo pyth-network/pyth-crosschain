@@ -1,5 +1,3 @@
-pub mod cli;
-
 use {
     clap::Parser,
     cli::{
@@ -30,7 +28,23 @@ use {
         attest::P2W_MAX_BATCH_SIZE,
         Pyth2WormholeConfig,
     },
-    pyth2wormhole_client::*,
+    pyth2wormhole_client::{
+        attestation_cfg::SymbolBatch,
+        crawl_pyth_mapping,
+        gen_attest_tx,
+        gen_init_tx,
+        gen_migrate_tx,
+        gen_set_config_tx,
+        gen_set_is_active_tx,
+        get_config_account,
+        start_metrics_server,
+        AttestationConfig,
+        BatchState,
+        ErrBoxSend,
+        P2WMessageQueue,
+        P2WSymbol,
+        RLMutex,
+    },
     sha3::{
         Digest,
         Sha3_256,
@@ -67,6 +81,8 @@ use {
         task::JoinHandle,
     },
 };
+
+pub mod cli;
 
 pub const SEQNO_PREFIX: &str = "Program log: Sequence: ";
 
@@ -272,7 +288,7 @@ async fn handle_attest_daemon_mode(
     rpc_cfg: Arc<RLMutex<RpcCfg>>,
     payer: Keypair,
     p2w_addr: Pubkey,
-    mut attestation_cfg: AttestationConfig,
+    attestation_cfg: AttestationConfig,
     metrics_bind_addr: SocketAddr,
 ) -> Result<(), ErrBox> {
     tokio::spawn(start_metrics_server(metrics_bind_addr));
@@ -298,6 +314,7 @@ async fn handle_attest_daemon_mode(
         attestation_cfg.max_msg_accounts as usize,
     )));
 
+    let mut batch_cfg = vec![];
     // This loop cranks attestations without interruption. This is
     // achieved by spinning up a new up-to-date symbol set before
     // letting go of the previous one. Additionally, hash of on-chain
@@ -318,29 +335,18 @@ async fn handle_attest_daemon_mode(
         };
 
         // Use the mapping if specified
-        if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
-            match crawl_pyth_mapping(&lock_and_make_rpc(&rpc_cfg).await, mapping_addr).await {
-                Ok(additional_accounts) => {
-                    debug!(
-                        "Crawled mapping {} data:\n{:#?}",
-                        mapping_addr, additional_accounts
-                    );
-                    attestation_cfg.add_symbols(additional_accounts, "mapping".to_owned());
-                }
-                // De-escalate crawling errors; A temporary failure to
-                // look up the mapping should not crash the attester
-                Err(e) => {
-                    error!("Could not crawl mapping {}: {:?}", mapping_addr, e);
-                }
-            }
-        }
-        debug!(
-            "Attestation config (includes mapping accounts):\n{:#?}",
-            attestation_cfg
-        );
+        // If we cannot query the mapping account, retain the existing batch configuration.
+        batch_cfg = attestation_config_to_batches(
+            &rpc_cfg,
+            &attestation_cfg,
+            config.max_batch_size as usize,
+        )
+        .await
+        .unwrap_or(batch_cfg);
+
 
         // Hash currently known config
-        hasher.update(serde_yaml::to_vec(&attestation_cfg)?);
+        hasher.update(serde_yaml::to_vec(&batch_cfg)?);
         hasher.update(borsh::to_vec(&config)?);
 
         let new_cfg_hash = hasher.finalize_reset();
@@ -354,7 +360,7 @@ async fn handle_attest_daemon_mode(
                 info!("Spinning up attestation sched jobs");
                 // Start the new sched futures
                 let new_sched_futs_handle = tokio::spawn(prepare_attestation_sched_jobs(
-                    &attestation_cfg,
+                    &batch_cfg,
                     &config,
                     &rpc_cfg,
                     &p2w_addr,
@@ -372,7 +378,7 @@ async fn handle_attest_daemon_mode(
             // Base case for first attestation attempt
             old_sched_futs_state = Some((
                 tokio::spawn(prepare_attestation_sched_jobs(
-                    &attestation_cfg,
+                    &batch_cfg,
                     &config,
                     &rpc_cfg,
                     &p2w_addr,
@@ -429,7 +435,7 @@ async fn lock_and_make_rpc(rlmtx: &RLMutex<RpcCfg>) -> RpcClient {
 
 /// Non-daemon attestation scheduling
 async fn handle_attest_non_daemon_mode(
-    mut attestation_cfg: AttestationConfig,
+    attestation_cfg: AttestationConfig,
     rpc_cfg: Arc<RLMutex<RpcCfg>>,
     p2w_addr: Pubkey,
     payer: Keypair,
@@ -438,29 +444,17 @@ async fn handle_attest_non_daemon_mode(
 ) -> Result<(), ErrBox> {
     let p2w_cfg = get_config_account(&lock_and_make_rpc(&rpc_cfg).await, &p2w_addr).await?;
 
-    // Use the mapping if specified
-    if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
-        match crawl_pyth_mapping(&lock_and_make_rpc(&rpc_cfg).await, mapping_addr).await {
-            Ok(additional_accounts) => {
-                debug!(
-                    "Crawled mapping {} data:\n{:#?}",
-                    mapping_addr, additional_accounts
-                );
-                attestation_cfg.add_symbols(additional_accounts, "mapping".to_owned());
-            }
-            // De-escalate crawling errors; A temporary failure to
-            // look up the mapping should not crash the attester
-            Err(e) => {
-                error!("Could not crawl mapping {}: {:?}", mapping_addr, e);
-            }
-        }
-    }
-    debug!(
-        "Attestation config (includes mapping accounts):\n{:#?}",
-        attestation_cfg
-    );
+    let batch_config =
+        attestation_config_to_batches(&rpc_cfg, &attestation_cfg, p2w_cfg.max_batch_size as usize)
+            .await
+            .unwrap_or_else(|_| {
+                attestation_cfg.instantiate_batches(&[], p2w_cfg.max_batch_size as usize)
+            });
 
-    let batches = attestation_cfg.as_batches(p2w_cfg.max_batch_size as usize);
+    let batches: Vec<_> = batch_config
+        .into_iter()
+        .map(|x| BatchState::new(&x))
+        .collect();
     let batch_count = batches.len();
 
     // For enforcing min_msg_reuse_interval_ms, we keep a piece of
@@ -510,22 +504,45 @@ async fn handle_attest_non_daemon_mode(
     Ok(())
 }
 
+/// Generate batches to attest by retrieving the on-chain product account data and grouping it
+/// according to the configuration in `attestation_cfg`.
+async fn attestation_config_to_batches(
+    rpc_cfg: &Arc<RLMutex<RpcCfg>>,
+    attestation_cfg: &AttestationConfig,
+    max_batch_size: usize,
+) -> Result<Vec<SymbolBatch>, ErrBox> {
+    // Use the mapping if specified
+    let products = if let Some(mapping_addr) = attestation_cfg.mapping_addr.as_ref() {
+        let product_accounts_res =
+            crawl_pyth_mapping(&lock_and_make_rpc(rpc_cfg).await, mapping_addr).await;
+
+        if let Err(err) = &product_accounts_res {
+            error!(
+                "Could not crawl mapping {}: {:?}",
+                attestation_cfg.mapping_addr.unwrap_or_default(),
+                err
+            );
+        }
+
+        product_accounts_res?
+    } else {
+        vec![]
+    };
+
+    Ok(attestation_cfg.instantiate_batches(&products, max_batch_size))
+}
+
 /// Constructs attestation scheduling jobs from attestation config.
 fn prepare_attestation_sched_jobs(
-    attestation_cfg: &AttestationConfig,
+    batch_cfg: &[SymbolBatch],
     p2w_cfg: &Pyth2WormholeConfig,
     rpc_cfg: &Arc<RLMutex<RpcCfg>>,
     p2w_addr: &Pubkey,
     payer: &Keypair,
     message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
 ) -> futures::future::JoinAll<impl Future<Output = Result<(), ErrBoxSend>>> {
-    info!(
-        "{} symbol groups read, dividing into batches",
-        attestation_cfg.symbol_groups.len(),
-    );
-
     // Flatten attestation config into a plain list of batches
-    let batches: Vec<_> = attestation_cfg.as_batches(p2w_cfg.max_batch_size as usize);
+    let batches: Vec<_> = batch_cfg.iter().map(BatchState::new).collect();
 
     let batch_count = batches.len();
 

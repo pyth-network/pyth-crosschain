@@ -1,5 +1,6 @@
 use {
     crate::{
+        attestation_cfg::SymbolBatch,
         AttestationConditions,
         P2WSymbol,
     },
@@ -27,17 +28,13 @@ pub struct BatchState {
 }
 
 impl<'a> BatchState {
-    pub fn new(
-        group_name: String,
-        symbols: &[P2WSymbol],
-        conditions: AttestationConditions,
-    ) -> Self {
+    pub fn new(group: &SymbolBatch) -> Self {
         Self {
-            group_name,
-            symbols: symbols.to_vec(),
-            conditions,
-            last_known_symbol_states: vec![None; symbols.len()],
-            last_job_finished_at: Instant::now(),
+            group_name:               group.group_name.clone(),
+            symbols:                  group.symbols.clone(),
+            conditions:               group.conditions.clone(),
+            last_known_symbol_states: vec![None; group.symbols.len()],
+            last_job_finished_at:     Instant::now(),
         }
     }
 

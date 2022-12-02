@@ -121,7 +121,7 @@ impl From<Pyth2WormholeConfigV1> for Pyth2WormholeConfigV2 {
 }
 
 // Added ops_owner which can toggle the is_active field
-#[derive(Clone, Default, Hash, BorshDeserialize, BorshSerialize, PartialEq)]
+#[derive(Clone, Default, Hash, BorshDeserialize, BorshSerialize, PartialEq, Eq)]
 #[cfg_attr(feature = "client", derive(Debug))]
 pub struct Pyth2WormholeConfigV3 {
     ///  Authority owning this contract
