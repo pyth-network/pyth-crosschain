@@ -62,7 +62,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://bsc-dataseed3.defibit.io/"
+          "https://rpc.ankr.com/bsc"
         );
       },
       network_id: "56",
@@ -73,7 +73,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://data-seed-prebsc-1-s1.binance.org:8545"
+          "https://rpc.ankr.com/bsc_testnet_chapel"
         ),
       network_id: "97",
       confirmations: 10,
@@ -168,7 +168,10 @@ module.exports = {
     },
     optimism: {
       provider: () => {
-        return new HDWalletProvider(process.env.MNEMONIC, "https://1rpc.io/op");
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://rpc.ankr.com/optimism"
+        );
       },
       network_id: 10,
     },
@@ -176,7 +179,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://opt-goerli.g.alchemy.com/v2/demo"
+          "https://rpc.ankr.com/optimism_testnet"
         );
       },
       network_id: 420,
@@ -185,7 +188,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://rpc.ftm.tools/"
+          "https://rpc.ankr.com/fantom"
         );
       },
       network_id: 250,
@@ -197,7 +200,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://rpc.testnet.fantom.network/"
+          "https://rpc.ankr.com/fantom_testnet"
         );
       },
       network_id: 0xfa2,
