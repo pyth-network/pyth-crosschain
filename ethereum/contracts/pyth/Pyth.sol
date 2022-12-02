@@ -536,6 +536,6 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     }
 
     function version() public pure returns (string memory) {
-        return "1.1.0";
+        return "1.2.0";
     }
 }
