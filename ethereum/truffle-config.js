@@ -17,7 +17,7 @@ module.exports = {
         ),
       network_id: 1,
       gas: 10000000,
-      gasPrice: 20000000000,
+      gasPrice: 17000000000,
       confirmations: 1,
       timeoutBlocks: 200,
       skipDryRun: false,
@@ -193,7 +193,7 @@ module.exports = {
       },
       network_id: 250,
       gas: 8000000,
-      gasPrice: 3000000000,
+      gasPrice: 50000000000,
       timeoutBlocks: 15000,
     },
     fantom_testnet: {
