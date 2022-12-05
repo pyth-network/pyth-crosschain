@@ -154,7 +154,7 @@ symbol_groups:
     cfg_yaml += f"""
   - group_name: longer_interval_sensitive_changes
     conditions:
-      min_interval_secs: 10
+      min_interval_secs: 3
       price_changed_bps: 300
     symbols:
 """
@@ -173,7 +173,7 @@ symbol_groups:
     cfg_yaml += f"""
   - group_name: mapping
     conditions:
-      min_interval_secs: 30
+      min_interval_secs: 10
       price_changed_bps: 500
     symbols: []
 """

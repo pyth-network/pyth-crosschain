@@ -155,8 +155,8 @@ with ThreadPoolExecutor() as executor: # Used for async adding of products and p
 
         # Add a symbol if new symbol interval configured. This will add a new symbol if PYTH_NEW_SYMBOL_INTERVAL_SECS
         # is passed since adding the previous symbol. The second constraint ensures that
-        # at most PYTH_TEST_SYMBOL_COUNT new price symbols are created.
-        if PYTH_NEW_SYMBOL_INTERVAL_SECS > 0 and dynamically_added_symbols  < PYTH_TEST_SYMBOL_COUNT:
+        # at most PYTH_DYNAMIC_SYMBOL_COUNT new price symbols are created.
+        if PYTH_NEW_SYMBOL_INTERVAL_SECS > 0 and dynamically_added_symbols  < PYTH_DYNAMIC_SYMBOL_COUNT:
             # Do it if enough time passed
             now = time.monotonic()
             if (now - last_new_sym_added_at) >= PYTH_NEW_SYMBOL_INTERVAL_SECS:
