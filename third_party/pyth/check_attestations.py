@@ -14,8 +14,8 @@ logging.basicConfig(
 PYTH_TEST_ACCOUNTS_HOST = "pyth"
 PYTH_TEST_ACCOUNTS_PORT = 4242
 
-PRICE_SERVICE_HOST = "pyth-price-service" # FIXME
-PRICE_SERVICE_PORT = 4200 # FIXME
+PRICE_SERVICE_HOST = "pyth-price-service"
+PRICE_SERVICE_PORT = 4202
 
 all_prices_attested = False
 while not all_prices_attested:
