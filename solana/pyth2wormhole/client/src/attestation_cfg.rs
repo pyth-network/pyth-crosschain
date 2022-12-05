@@ -265,7 +265,7 @@ impl ToString for SymbolConfig {
                 product,
                 price: _,
             } => {
-                format!("Unnamed product {}", product)
+                format!("Unnamed product {product}")
             }
         }
     }

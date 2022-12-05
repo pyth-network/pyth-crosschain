@@ -33,7 +33,7 @@ pub enum PythContractError {
 impl From<PythContractError> for StdError {
     fn from(other: PythContractError) -> StdError {
         StdError::GenericErr {
-            msg: format!("{}", other),
+            msg: format!("{other}"),
         }
     }
 }
