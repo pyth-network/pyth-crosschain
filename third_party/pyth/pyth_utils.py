@@ -119,7 +119,7 @@ def get_json(host, path, port):
     if res.getheader("Content-Type") == "application/json":
         return json.load(res)
     else:
-        logging.error(f"Error getting {host}:{port}{path}: Content-Type was not application/json")
+        logging.error(f"Error getting {host}:{port}{path} : Content-Type was not application/json")
         logging.error(f"HTTP response code: {res.getcode()}")
         logging.error(f"HTTP headers: {res.getheaders()}")
         logging.error(f"Message: {res.msg}")
