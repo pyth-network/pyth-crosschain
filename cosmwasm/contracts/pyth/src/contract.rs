@@ -222,7 +222,7 @@ fn process_batch_attestation(
             "batch_size",
             format!("{}", batch_attestation.price_attestations.len()),
         )
-        .add_attribute("num_updates", format!("{}", new_attestations_cnt)))
+        .add_attribute("num_updates", format!("{new_attestations_cnt}")))
 }
 
 /// Returns true if the price_feed is newer than the stored one.

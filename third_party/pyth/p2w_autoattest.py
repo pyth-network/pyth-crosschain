@@ -239,8 +239,7 @@ while True:
     )
 
     # Wait for an unexpected process exit
-    while p2w_client_process.poll() is None:
-        pass
+    retcode = p2w_client_process.wait()
 
     # Yell if the supposedly non-stop attestation process exits
-    logging.warn(f"pyth2wormhole-client stopped unexpectedly with code {p2w_client_process.retcode}")
+    logging.warn(f"pyth2wormhole-client stopped unexpectedly with code {retcode}")
