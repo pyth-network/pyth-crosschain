@@ -214,7 +214,7 @@ docker_build(
 k8s_yaml_with_ns("devnet/check-attestations.yaml")
 k8s_resource(
     "check-attestations",
-    resource_deps = ["pyth-price-service", "pyth"],
+    resource_deps = ["pyth-price-service", "pyth", "p2w-attest"],
     labels = ["pyth"],
     trigger_mode = trigger_mode,
 )
