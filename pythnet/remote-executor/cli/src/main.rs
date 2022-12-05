@@ -226,7 +226,7 @@ fn main() -> Result<()> {
                 &ID,
             )
             .0;
-            println!("{:?} maps to {:?}", pubkey, executor_key);
+            println!("{pubkey:?} maps to {executor_key:?}");
             Ok(())
         }
 
@@ -282,7 +282,7 @@ pub fn process_transaction(
     transaction.sign(signers, rpc_client.get_latest_blockhash()?);
     let transaction_signature =
         rpc_client.send_and_confirm_transaction_with_spinner(&transaction)?;
-    println!("Transaction successful : {:?}", transaction_signature);
+    println!("Transaction successful : {transaction_signature:?}");
     Ok(())
 }
 

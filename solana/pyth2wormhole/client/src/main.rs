@@ -107,7 +107,7 @@ async fn main() -> Result<(), ErrBox> {
     // off-chain explicitly
     if let Action::GetEmitter = cli.action {
         let emitter_addr = P2WEmitter::key(None, &cli.p2w_addr);
-        println!("{}", emitter_addr);
+        println!("{emitter_addr}");
 
         // Exit early
         return Ok(());
