@@ -8,7 +8,7 @@ metadata:
 spec:
   clusterIP: None
   selector:
-    app: p2w-attest
+    app: check-attestations
 ---
 apiVersion: apps/v1
 kind: StatefulSet

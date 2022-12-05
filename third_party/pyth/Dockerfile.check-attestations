@@ -7,3 +7,5 @@ ADD third_party/pyth/pyth_utils.py /usr/src/pyth/pyth_utils.py
 ADD third_party/pyth/check_attestations.py /usr/src/pyth/check_attestations.py
 
 RUN chmod a+rx /usr/src/pyth/*.py
+
+ENV READINESS_PORT=2000
