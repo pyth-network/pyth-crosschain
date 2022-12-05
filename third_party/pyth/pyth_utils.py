@@ -20,7 +20,7 @@ PYTH_PUBLISHER_KEYPAIR = os.environ.get(
 # How long to sleep between mock Pyth price updates
 PYTH_PUBLISHER_INTERVAL_SECS = float(os.environ.get("PYTH_PUBLISHER_INTERVAL_SECS", "5"))
 PYTH_TEST_SYMBOL_COUNT = int(os.environ.get("PYTH_TEST_SYMBOL_COUNT", "11"))
-PYTH_DYNAMIC_SYMBOL_COUNT = int(os.environ.get("PYTH_DYNAMIC_SYMBOL_COUNT", "2"))
+PYTH_DYNAMIC_SYMBOL_COUNT = int(os.environ.get("PYTH_DYNAMIC_SYMBOL_COUNT", "3"))
 
 # If above 0, adds a new test symbol periodically, waiting at least
 # the given number of seconds in between

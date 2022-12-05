@@ -30,9 +30,8 @@ class PythAccEndpoint(BaseHTTPRequestHandler):
         self.wfile.write(data)
         self.wfile.flush()
 
-# FIXME: separate out the initial set of symbols from dynamically added symbols
 # Test publisher state that gets served via the HTTP endpoint. Note: the schema of this dict is extended here and there
-HTTP_ENDPOINT_DATA = {"symbols": [], "mapping_address": None}
+HTTP_ENDPOINT_DATA = {"symbols": [], "mapping_address": None, "all_symbols_added": False}
 
 
 def publisher_random_update(price_pubkey):
@@ -164,6 +163,9 @@ with ThreadPoolExecutor() as executor: # Used for async adding of products and p
                 last_sym_added_at = now
                 next_new_symbol_id += 1
                 dynamically_added_symbols += 1
+
+        if dynamically_added_symbols >= PYTH_DYNAMIC_SYMBOL_COUNT:
+            HTTP_ENDPOINT_DATA["all_symbols_added"] = True
 
         time.sleep(PYTH_PUBLISHER_INTERVAL_SECS)
         sys.stdout.flush()

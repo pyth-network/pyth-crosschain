@@ -29,8 +29,11 @@ while not all_prices_attested:
     price_ids = sorted(get_json(PRICE_SERVICE_HOST, "/api/price_feed_ids", PRICE_SERVICE_PORT))
 
     if price_ids == pyth_price_account_ids:
-        logging.info("Price ids match! Enabling readiness probe")
-        all_prices_attested = True
+        if publisher_state_map["all_symbols_added"]:
+            logging.info("Price ids match and all symbols added. Enabling readiness probe")
+            all_prices_attested = True
+        else:
+            logging.info("Price ids match but still waiting for more symbols to come online.")
     else:
         logging.info("Price ids do not match")
         logging.info(f"published ids: {pyth_price_account_ids}")
