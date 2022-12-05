@@ -19,8 +19,8 @@ PRICE_SERVICE_HOST = "pyth-price-service"
 PRICE_SERVICE_PORT = 4200
 
 def base58_to_hex(base58_string):
-    asc_string = base58.b58decode_check(base58_string)
-    return asc_string.hex().upper()
+    asc_string = base58.b58decode(base58_string)
+    return asc_string.hex()
 
 all_prices_attested = False
 while not all_prices_attested:
