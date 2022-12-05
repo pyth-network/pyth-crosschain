@@ -116,7 +116,8 @@ def get_json(host, path, port):
     conn.request("GET", path)
     res = conn.getresponse()
 
-    if res.getheader("Content-Type") == "application/json":
+    # starstwith because the header value may include optional fields after (like charset)
+    if res.getheader("Content-Type").startswith("application/json"):
         return json.load(res)
     else:
         logging.error(f"Error getting {host}:{port}{path} : Content-Type was not application/json")
