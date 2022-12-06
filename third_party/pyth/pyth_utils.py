@@ -1,7 +1,10 @@
+import logging
 import os
+import json
 import socketserver
 import subprocess
 import sys
+from http.client import HTTPConnection
 
 # Settings specific to local devnet Pyth instance
 PYTH = os.environ.get("PYTH", "./pyth")
@@ -17,6 +20,7 @@ PYTH_PUBLISHER_KEYPAIR = os.environ.get(
 # How long to sleep between mock Pyth price updates
 PYTH_PUBLISHER_INTERVAL_SECS = float(os.environ.get("PYTH_PUBLISHER_INTERVAL_SECS", "5"))
 PYTH_TEST_SYMBOL_COUNT = int(os.environ.get("PYTH_TEST_SYMBOL_COUNT", "11"))
+PYTH_DYNAMIC_SYMBOL_COUNT = int(os.environ.get("PYTH_DYNAMIC_SYMBOL_COUNT", "3"))
 
 # If above 0, adds a new test symbol periodically, waiting at least
 # the given number of seconds in between
@@ -24,7 +28,7 @@ PYTH_TEST_SYMBOL_COUNT = int(os.environ.get("PYTH_TEST_SYMBOL_COUNT", "11"))
 # NOTE: the new symbols are added in the HTTP endpoint used by the
 # p2w-attest service in Tilt. You may need to wait to see p2w-attest
 # pick up brand new symbols
-PYTH_NEW_SYMBOL_INTERVAL_SECS = int(os.environ.get("PYTH_NEW_SYMBOL_INTERVAL_SECS", "120"))
+PYTH_NEW_SYMBOL_INTERVAL_SECS = int(os.environ.get("PYTH_NEW_SYMBOL_INTERVAL_SECS", "30"))
 
 PYTH_MAPPING_KEYPAIR = os.environ.get(
     "PYTH_MAPPING_KEYPAIR", f"{PYTH_KEY_STORE}/mapping_key_pair.json"
@@ -107,6 +111,24 @@ def sol_run_or_die(subcommand, args=[], **kwargs):
     """
     return run_or_die(["solana", subcommand] + args + ["--url", SOL_RPC_URL], **kwargs)
 
+
+def get_json(host, port, path):
+    conn = HTTPConnection(host, port)
+    conn.request("GET", path)
+    res = conn.getresponse()
+
+    # starstwith because the header value may include optional fields after (like charset)
+    if res.getheader("Content-Type").startswith("application/json"):
+        return json.load(res)
+    else:
+        logging.error(f"Error getting {host}:{port}{path} : Content-Type was not application/json")
+        logging.error(f"HTTP response code: {res.getcode()}")
+        logging.error(f"HTTP headers: {res.getheaders()}")
+        logging.error(f"Message: {res.msg}")
+        sys.exit(1)
+
+def get_pyth_accounts(host, port):
+    return get_json(host, port, "/")
 
 class ReadinessTCPHandler(socketserver.StreamRequestHandler):
     def handle(self):

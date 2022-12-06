@@ -31,7 +31,9 @@ class PythAccEndpoint(BaseHTTPRequestHandler):
         self.wfile.flush()
 
 # Test publisher state that gets served via the HTTP endpoint. Note: the schema of this dict is extended here and there
-HTTP_ENDPOINT_DATA = {"symbols": [], "mapping_address": None}
+# all_symbols_added is set to True once all dynamically-created symbols are added to the on-chain program. This
+# flag allows the integration test in check_attestations.py to determine that every on-chain symbol is being attested.
+HTTP_ENDPOINT_DATA = {"symbols": [], "mapping_address": None, "all_symbols_added": False}
 
 
 def publisher_random_update(price_pubkey):
@@ -154,8 +156,8 @@ with ThreadPoolExecutor() as executor: # Used for async adding of products and p
 
         # Add a symbol if new symbol interval configured. This will add a new symbol if PYTH_NEW_SYMBOL_INTERVAL_SECS
         # is passed since adding the previous symbol. The second constraint ensures that
-        # at most PYTH_TEST_SYMBOL_COUNT new price symbols are created.
-        if PYTH_NEW_SYMBOL_INTERVAL_SECS > 0 and dynamically_added_symbols  < PYTH_TEST_SYMBOL_COUNT:
+        # at most PYTH_DYNAMIC_SYMBOL_COUNT new price symbols are created.
+        if PYTH_NEW_SYMBOL_INTERVAL_SECS > 0 and dynamically_added_symbols  < PYTH_DYNAMIC_SYMBOL_COUNT:
             # Do it if enough time passed
             now = time.monotonic()
             if (now - last_new_sym_added_at) >= PYTH_NEW_SYMBOL_INTERVAL_SECS:
@@ -163,6 +165,9 @@ with ThreadPoolExecutor() as executor: # Used for async adding of products and p
                 last_sym_added_at = now
                 next_new_symbol_id += 1
                 dynamically_added_symbols += 1
+
+        if dynamically_added_symbols >= PYTH_DYNAMIC_SYMBOL_COUNT:
+            HTTP_ENDPOINT_DATA["all_symbols_added"] = True
 
         time.sleep(PYTH_PUBLISHER_INTERVAL_SECS)
         sys.stdout.flush()

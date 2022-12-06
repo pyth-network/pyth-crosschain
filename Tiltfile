@@ -203,6 +203,22 @@ k8s_resource(
     trigger_mode = trigger_mode,
 )
 
+# attestations checking script
+docker_build(
+    ref = "check-attestations",
+    context = ".",
+    only = ["./third_party"],
+    dockerfile = "./third_party/pyth/Dockerfile.check-attestations",
+)
+
+k8s_yaml_with_ns("devnet/check-attestations.yaml")
+k8s_resource(
+    "check-attestations",
+    resource_deps = ["pyth-price-service", "pyth", "p2w-attest"],
+    labels = ["pyth"],
+    trigger_mode = trigger_mode,
+)
+
 # Pyth2wormhole relay
 docker_build(
     ref = "p2w-relay",
