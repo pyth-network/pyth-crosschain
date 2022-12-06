@@ -21,7 +21,7 @@ import bs58 from "bs58";
 import { program } from "commander";
 import * as fs from "fs";
 import { LedgerNodeWallet } from "./wallet";
-import loadash from "lodash";
+import lodash from "lodash";
 
 setDefaultWasm("node");
 
@@ -651,7 +651,7 @@ function verifyOnChainInstruction(
     );
   }
 
-  if (!loadash.isEqual(instruction.keys, onChainInstruction.keys)) {
+  if (!lodash.isEqual(instruction.keys, onChainInstruction.keys)) {
     throw new Error(
       `Instruction accounts mismatch. Expected ${instruction.keys}, found ${onChainInstruction.keys}`
     );
