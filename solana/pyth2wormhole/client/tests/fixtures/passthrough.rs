@@ -14,8 +14,8 @@ pub fn passthrough_entrypoint(
     account_infos: &[AccountInfo],
     _data: &[u8],
 ) -> Result<(), ProgramError> {
-    msg!(&format!("Program {}", program_id));
-    msg!(&format!("account_infos {:?}", account_infos));
+    msg!(&format!("Program {program_id}"));
+    msg!(&format!("account_infos {account_infos:?}"));
     Ok(())
 }
 
