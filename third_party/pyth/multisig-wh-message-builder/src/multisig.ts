@@ -11,10 +11,10 @@ export async function getActiveProposals(
     const msAccount = await squad.getMultisig(vault);  
     let txKeys = loadash.range(1, msAccount.transactionIndex + 1).map(i => getTxPDA(vault, new BN(i), DEFAULT_MULTISIG_PROGRAM_ID)[0]);
     let msTransactions = await squad.getTransactions(txKeys);
-    return msTransactions.filter((x : (TransactionAccount | null)) : x is TransactionAccount => x != null).filter(x => loadash.isEqual(x.status, {"executed" : {}}))
+    return msTransactions.filter((x : (TransactionAccount | null)) : x is TransactionAccount => x != null).filter(x => loadash.isEqual(x.status, {"active" : {}}))
   }
   
-  export async function getAllProposalsInstructions(
+  export async function getManyProposalsInstructions(
     squad: Squads,
     txAccounts: (TransactionAccount)[],
   ) : Promise<InstructionAccount[][]> {

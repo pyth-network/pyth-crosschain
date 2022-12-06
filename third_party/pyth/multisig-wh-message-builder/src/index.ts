@@ -22,7 +22,7 @@ import { program } from "commander";
 import * as fs from "fs";
 import { LedgerNodeWallet } from "./wallet";
 import loadash from "lodash";
-import {getActiveProposals, getAllProposalsInstructions, getProposalInstructions} from "./multisig"
+import {getActiveProposals, getManyProposalsInstructions, getProposalInstructions} from "./multisig"
 
 setDefaultWasm("node");
 
@@ -70,7 +70,7 @@ program
       CONFIG["mainnet"].vault,
     ));
 
-    const ixs = await getAllProposalsInstructions(squad, txs);
+    const ixs = await getManyProposalsInstructions(squad, txs);
     console.log(ixs.length);
     console.log(ixs.flat().length);
   });
