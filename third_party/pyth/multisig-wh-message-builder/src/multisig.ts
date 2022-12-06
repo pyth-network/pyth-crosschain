@@ -6,14 +6,14 @@ import Squads, {
 } from "@sqds/mesh";
 import { InstructionAccount, TransactionAccount } from "@sqds/mesh/lib/types";
 import BN from "bn.js";
-import loadash from "lodash";
+import lodash from "lodash";
 
 export async function getActiveProposals(
   squad: Squads,
   vault: PublicKey
 ): Promise<TransactionAccount[]> {
   const msAccount = await squad.getMultisig(vault);
-  let txKeys = loadash
+  let txKeys = lodash
     .range(1, msAccount.transactionIndex + 1)
     .map((i) => getTxPDA(vault, new BN(i), DEFAULT_MULTISIG_PROGRAM_ID)[0]);
   let msTransactions = await squad.getTransactions(txKeys);
@@ -21,7 +21,7 @@ export async function getActiveProposals(
     .filter(
       (x: TransactionAccount | null): x is TransactionAccount => x != null
     )
-    .filter((x) => loadash.isEqual(x.status, { active: {} }));
+    .filter((x) => lodash.isEqual(x.status, { active: {} }));
 }
 
 export async function getManyProposalsInstructions(
@@ -31,7 +31,7 @@ export async function getManyProposalsInstructions(
   let allIxsKeys = [];
   let ownerTransaction = [];
   for (let [index, txAccount] of txAccounts.entries()) {
-    let ixKeys = loadash
+    let ixKeys = lodash
       .range(1, txAccount.instructionIndex + 1)
       .map(
         (i) =>
@@ -66,7 +66,7 @@ export async function getProposalInstructions(
   squad: Squads,
   txAccount: TransactionAccount
 ): Promise<InstructionAccount[]> {
-  let ixKeys = loadash
+  let ixKeys = lodash
     .range(1, txAccount.instructionIndex + 1)
     .map(
       (i) =>
