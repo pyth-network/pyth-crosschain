@@ -22,7 +22,6 @@ import { program } from "commander";
 import * as fs from "fs";
 import { LedgerNodeWallet } from "./wallet";
 import loadash from "lodash";
-import {getActiveProposals, getManyProposalsInstructions, getProposalInstructions} from "./multisig"
 
 setDefaultWasm("node");
 
@@ -52,28 +51,6 @@ program
   .name("pyth-multisig")
   .description("CLI to creating and executing multisig transactions for pyth")
   .version("0.1.0");
-
-program
-  .command("get-state")
-  .action(async (options) => {
-
-    let squad = Squads.mainnet(new NodeWallet(new Keypair()));
-
-    // await getQueuedMessages(
-    //   cluster,
-    //   squad,
-    //   CONFIG[cluster].vault,
-    // );
-
-    let txs = (await getActiveProposals(
-      squad,
-      CONFIG["mainnet"].vault,
-    ));
-
-    const ixs = await getManyProposalsInstructions(squad, txs);
-    console.log(ixs.length);
-    console.log(ixs.flat().length);
-  });
 
 program
   .command("create")
@@ -433,7 +410,6 @@ async function addInstructionsToTx(
     console.log(
       `Adding instruction ${i + 1}/${instructions.length} to transaction...`
     );
-
     await squad.addInstruction(
       txKey,
       instructions[i].instruction,
