@@ -28,7 +28,7 @@ PYTH_DYNAMIC_SYMBOL_COUNT = int(os.environ.get("PYTH_DYNAMIC_SYMBOL_COUNT", "3")
 # NOTE: the new symbols are added in the HTTP endpoint used by the
 # p2w-attest service in Tilt. You may need to wait to see p2w-attest
 # pick up brand new symbols
-PYTH_NEW_SYMBOL_INTERVAL_SECS = int(os.environ.get("PYTH_NEW_SYMBOL_INTERVAL_SECS", "60"))
+PYTH_NEW_SYMBOL_INTERVAL_SECS = int(os.environ.get("PYTH_NEW_SYMBOL_INTERVAL_SECS", "30"))
 
 PYTH_MAPPING_KEYPAIR = os.environ.get(
     "PYTH_MAPPING_KEYPAIR", f"{PYTH_KEY_STORE}/mapping_key_pair.json"
@@ -112,7 +112,7 @@ def sol_run_or_die(subcommand, args=[], **kwargs):
     return run_or_die(["solana", subcommand] + args + ["--url", SOL_RPC_URL], **kwargs)
 
 
-def get_json(host, path, port):
+def get_json(host, port, path):
     conn = HTTPConnection(host, port)
     conn.request("GET", path)
     res = conn.getresponse()
@@ -128,7 +128,7 @@ def get_json(host, path, port):
         sys.exit(1)
 
 def get_pyth_accounts(host, port):
-    return get_json(host, "/", port)
+    return get_json(host, port, "/")
 
 class ReadinessTCPHandler(socketserver.StreamRequestHandler):
     def handle(self):

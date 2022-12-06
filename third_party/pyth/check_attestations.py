@@ -26,7 +26,7 @@ all_prices_attested = False
 while not all_prices_attested:
     publisher_state_map = get_pyth_accounts(PYTH_TEST_ACCOUNTS_HOST, PYTH_TEST_ACCOUNTS_PORT)
     pyth_price_account_ids = sorted([base58_to_hex(x["price"]) for x in publisher_state_map["symbols"]])
-    price_ids = sorted(get_json(PRICE_SERVICE_HOST, "/api/price_feed_ids", PRICE_SERVICE_PORT))
+    price_ids = sorted(get_json(PRICE_SERVICE_HOST, PRICE_SERVICE_PORT, "/api/price_feed_ids"))
 
     if price_ids == pyth_price_account_ids:
         if publisher_state_map["all_symbols_added"]:

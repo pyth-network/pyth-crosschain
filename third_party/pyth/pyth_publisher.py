@@ -31,6 +31,8 @@ class PythAccEndpoint(BaseHTTPRequestHandler):
         self.wfile.flush()
 
 # Test publisher state that gets served via the HTTP endpoint. Note: the schema of this dict is extended here and there
+# all_symbols_added is set to True once all dynamically-created symbols are added to the on-chain program. This
+# flag allows the integration test in check_attestations.py to determine that every on-chain symbol is being attested.
 HTTP_ENDPOINT_DATA = {"symbols": [], "mapping_address": None, "all_symbols_added": False}
 
 
