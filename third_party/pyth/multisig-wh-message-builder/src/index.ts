@@ -15,13 +15,15 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import Squads from "@sqds/mesh";
-import { getIxAuthorityPDA, getIxPDA } from "@sqds/mesh";
-import { InstructionAccount } from "@sqds/mesh/lib/types";
+import { getTxPDA } from "@sqds/mesh";
+import { getIxAuthorityPDA, getIxPDA, DEFAULT_MULTISIG_PROGRAM_ID } from "@sqds/mesh";
+import { InstructionAccount, TransactionAccount } from "@sqds/mesh/lib/types";
 import bs58 from "bs58";
 import { program } from "commander";
 import * as fs from "fs";
 import { LedgerNodeWallet } from "./wallet";
 import loadash from "lodash";
+import { BN } from "bn.js";
 
 setDefaultWasm("node");
 
@@ -51,6 +53,30 @@ program
   .name("pyth-multisig")
   .description("CLI to creating and executing multisig transactions for pyth")
   .version("0.1.0");
+
+program
+  .command("get-state")
+  .action(async (options) => {
+
+    let squad = Squads.mainnet(new NodeWallet(new Keypair()));
+
+    // await getQueuedMessages(
+    //   cluster,
+    //   squad,
+    //   CONFIG[cluster].vault,
+    // );
+
+    let txs = (await getActiveProposals(
+      squad,
+      CONFIG["mainnet"].vault,
+    ));
+
+    console.log("Fetched all transactions: ", txs.length);
+
+    const ixs = await getAllProposalsInstructions(squad, txs);
+    console.log(ixs.length);
+    console.log(ixs);
+  });
 
 program
   .command("create")
@@ -410,6 +436,7 @@ async function addInstructionsToTx(
     console.log(
       `Adding instruction ${i + 1}/${instructions.length} to transaction...`
     );
+
     await squad.addInstruction(
       txKey,
       instructions[i].instruction,
@@ -787,6 +814,53 @@ async function changeThreshold(
     squadIxs
   );
 }
+
+async function getActiveProposals(
+  squad: Squads,
+  vault: PublicKey,
+) : Promise<(TransactionAccount)[]>{
+  const msAccount = await squad.getMultisig(vault);  
+  let txKeys = loadash.range(1, msAccount.transactionIndex + 1).map(i => getTxPDA(vault, new BN(i), DEFAULT_MULTISIG_PROGRAM_ID)[0]);
+  let msTransactions = await squad.getTransactions(txKeys);
+  return msTransactions.filter((x : (TransactionAccount | null)) : x is TransactionAccount => x != null).filter(x => loadash.isEqual(x.status, {"executed" : {}}))
+}
+
+async function getAllProposalsInstructions(
+  squad: Squads,
+  txAccounts: (TransactionAccount)[],
+) : Promise<InstructionAccount[][]> {
+  let allIxsKeys = [];
+  let ownerTransaction = []
+  for (let [index, txAccount] of txAccounts.entries()) {
+    let ixKeys = loadash.range(1, txAccount.instructionIndex + 1).map(i => getIxPDA(txAccount.publicKey, new BN(i), DEFAULT_MULTISIG_PROGRAM_ID)[0]);
+    for (let ixKey of ixKeys){
+      allIxsKeys.push(ixKey);
+      ownerTransaction.push(index)
+    }
+  }
+  let allTxIxsAcccounts = await squad.getInstructions(allIxsKeys);
+  let ixAccountsByTx : InstructionAccount[][] = (new Array(txAccounts.length)).fill(new Array()); 
+  console.log(ixAccountsByTx[0]);
+
+  for (let i = 0; i<= allTxIxsAcccounts.length; i++) {
+    const toAdd = allTxIxsAcccounts[i];
+    if (toAdd) {
+      ixAccountsByTx[ownerTransaction[i]].push(toAdd)
+    } 
+  }
+  return ixAccountsByTx
+}
+
+async function getProposalInstructions(
+  squad: Squads,
+  txAccount : TransactionAccount
+) : Promise<InstructionAccount[]>
+{
+  let ixKeys = loadash.range(1, txAccount.instructionIndex + 1).map(i => getIxPDA(txAccount.publicKey, new BN(i), DEFAULT_MULTISIG_PROGRAM_ID)[0]);
+  let txIxs = await squad.getInstructions(ixKeys);
+  return txIxs.filter((x : (InstructionAccount | null)) : x is InstructionAccount => x != null)
+}
+
 
 async function addMember(
   cluster: Cluster,
