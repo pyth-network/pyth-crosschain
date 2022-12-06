@@ -1,6 +1,6 @@
-# Pyth CosmWasm
+l# Pyth CosmWasm
 
-This directory contains The Pyth contract on CosmWasm and utilities to deploy it in CosmWasm chains.
+This directory contains the Pyth contract for CosmWasm and utilities to deploy it on CosmWasm chains.
 
 ## Deployment
 

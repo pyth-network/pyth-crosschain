@@ -28,6 +28,14 @@ pub enum PythContractError {
     /// Data source already exists error (on adding data source)
     #[error("DataSourceAlreadyExists")]
     DataSourceAlreadyExists,
+
+    /// Message emitter is not an accepted source of governance instructions.
+    #[error("InvalidGovernanceEmitter")]
+    InvalidGovernanceEmitter,
+
+    /// Message payload cannot be deserialized as a valid governance instruction.
+    #[error("InvalidGovernancePayload")]
+    InvalidGovernancePayload,
 }
 
 impl From<PythContractError> for StdError {

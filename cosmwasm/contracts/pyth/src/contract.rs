@@ -88,7 +88,11 @@ pub fn parse_vaa(deps: DepsMut, block_time: u64, data: &Binary) -> StdResult<Par
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> StdResult<Response> {
     match msg {
-        ExecuteMsg::SubmitVaa { data } => submit_vaa(deps, env, info, &data),
+        ExecuteMsg::UpdatePriceFeeds { data } => update_price_feeds(deps, env, info, &data),
+        ExecuteMsg::ExecuteGovernanceInstruction { data } => {
+            execute_governance_instruction(deps, env, info, &data)
+        }
+        // TODO: remove these and invoke via governance
         ExecuteMsg::AddDataSource { data_source } => add_data_source(deps, env, info, data_source),
         ExecuteMsg::RemoveDataSource { data_source } => {
             remove_data_source(deps, env, info, data_source)
@@ -96,7 +100,7 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
     }
 }
 
-fn submit_vaa(
+fn update_price_feeds(
     mut deps: DepsMut,
     env: Env,
     _info: MessageInfo,
@@ -106,13 +110,42 @@ fn submit_vaa(
 
     let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
 
-    verify_vaa_sender(&state, &vaa)?;
+    verify_vaa_from_data_source(&state, &vaa)?;
 
     let data = &vaa.payload;
     let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
         .map_err(|_| PythContractError::InvalidUpdatePayload)?;
 
     process_batch_attestation(deps, env, &batch_attestation)
+}
+
+fn execute_governance_instruction(
+    mut deps: DepsMut,
+    _env: Env,
+    _info: MessageInfo,
+    data: &Binary,
+) -> StdResult<Response> {
+    let state = config_read(deps.storage).load()?;
+    let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
+
+    verify_vaa_from_governance_source(&state, &vaa)?;
+
+    let data = &vaa.payload;
+    let instruction = GovernanceInstruction::deserialize(&data[..])
+        .map_err(|_| PythContractError::InvalidGovernancePayload)?;
+
+    if instruction.target_chain_id != state.chain_id && instruction.target_chain_id != 0 {
+        return Err(PythContractError::InvalidGovernanceTarget);
+    }
+
+    match instruction.action {
+        // upgrade contract
+        // authorize governance source transfer
+        // set data sources
+        // set fee
+        // set valid period
+        // request governance data source transfer
+    }
 }
 
 fn add_data_source(
@@ -170,14 +203,25 @@ fn remove_data_source(
 }
 
 
-// This checks the emitter to be the pyth emitter in wormhole and it comes from emitter chain
-// (Solana)
-fn verify_vaa_sender(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
+/// Check that `vaa` is from a valid data source (and hence is a legitimate price update message).
+fn verify_vaa_from_data_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
     let vaa_data_source = PythDataSource {
         emitter:            vaa.emitter_address.clone().into(),
         pyth_emitter_chain: vaa.emitter_chain,
     };
     if !state.data_sources.contains(&vaa_data_source) {
+        return Err(PythContractError::InvalidUpdateEmitter)?;
+    }
+    Ok(())
+}
+
+/// Check that `vaa` is from a valid data source (and hence is a legitimate price update message).
+fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
+    let vaa_data_source = PythDataSource {
+        emitter:            vaa.emitter_address.clone().into(),
+        pyth_emitter_chain: vaa.emitter_chain,
+    };
+    if !*state.governance_source == vaa_data_source {
         return Err(PythContractError::InvalidUpdateEmitter)?;
     }
     Ok(())
@@ -273,6 +317,8 @@ fn update_price_feed_if_new(
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::PriceFeed { id } => to_binary(&query_price_feed(deps, env, id.as_ref())?),
+        // QueryMsg::GetUpdateFee { data: bytes[] } => ???,
+        // QueryMsg::GetValidTimePeriod => ???
     }
 }
 
@@ -397,7 +443,7 @@ mod test {
         vaa.emitter_address = vec![1u8];
         vaa.emitter_chain = 3;
 
-        assert_eq!(verify_vaa_sender(&config_info, &vaa), Ok(()));
+        assert_eq!(verify_vaa_from_data_source(&config_info, &vaa), Ok(()));
     }
 
     #[test]
@@ -411,7 +457,7 @@ mod test {
         vaa.emitter_address = vec![3u8, 4u8];
         vaa.emitter_chain = 3;
         assert_eq!(
-            verify_vaa_sender(&config_info, &vaa),
+            verify_vaa_from_data_source(&config_info, &vaa),
             Err(PythContractError::InvalidUpdateEmitter.into())
         );
     }
@@ -427,7 +473,7 @@ mod test {
         vaa.emitter_address = vec![1u8];
         vaa.emitter_chain = 2;
         assert_eq!(
-            verify_vaa_sender(&config_info, &vaa),
+            verify_vaa_from_data_source(&config_info, &vaa),
             Err(PythContractError::InvalidUpdateEmitter.into())
         );
     }
@@ -719,7 +765,7 @@ mod test {
 
         // Should result an error because there is no data source
         assert_eq!(
-            verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
+            verify_vaa_from_data_source(&config_read(&deps.storage).load().unwrap(), &vaa),
             Err(PythContractError::InvalidUpdateEmitter.into())
         );
 
@@ -730,7 +776,7 @@ mod test {
         assert!(add_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_ok());
 
         assert_eq!(
-            verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
+            verify_vaa_from_data_source(&config_read(&deps.storage).load().unwrap(), &vaa),
             Ok(())
         );
     }
@@ -751,7 +797,7 @@ mod test {
         vaa.emitter_chain = 3;
 
         assert_eq!(
-            verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
+            verify_vaa_from_data_source(&config_read(&deps.storage).load().unwrap(), &vaa),
             Ok(())
         );
 
@@ -763,7 +809,7 @@ mod test {
 
         // Should result an error because data source should not exist anymore
         assert_eq!(
-            verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
+            verify_vaa_from_data_source(&config_read(&deps.storage).load().unwrap(), &vaa),
             Err(PythContractError::InvalidUpdateEmitter.into())
         );
     }
