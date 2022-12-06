@@ -17,7 +17,7 @@ module.exports = {
         ),
       network_id: 1,
       gas: 10000000,
-      gasPrice: 20000000000,
+      gasPrice: 17000000000,
       confirmations: 1,
       timeoutBlocks: 200,
       skipDryRun: false,
@@ -62,7 +62,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://bsc-dataseed3.defibit.io/"
+          "https://rpc.ankr.com/bsc"
         );
       },
       network_id: "56",
@@ -73,7 +73,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://data-seed-prebsc-1-s1.binance.org:8545"
+          "https://rpc.ankr.com/bsc_testnet_chapel"
         ),
       network_id: "97",
       confirmations: 10,
@@ -168,7 +168,10 @@ module.exports = {
     },
     optimism: {
       provider: () => {
-        return new HDWalletProvider(process.env.MNEMONIC, "https://1rpc.io/op");
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://rpc.ankr.com/optimism"
+        );
       },
       network_id: 10,
     },
@@ -176,7 +179,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://opt-goerli.g.alchemy.com/v2/demo"
+          "https://rpc.ankr.com/optimism_testnet"
         );
       },
       network_id: 420,
@@ -185,19 +188,19 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://rpc.ftm.tools/"
+          "https://rpc.ankr.com/fantom"
         );
       },
       network_id: 250,
       gas: 8000000,
-      gasPrice: 3000000000,
+      gasPrice: 50000000000,
       timeoutBlocks: 15000,
     },
     fantom_testnet: {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
-          "https://rpc.testnet.fantom.network/"
+          "https://rpc.ankr.com/fantom_testnet"
         );
       },
       network_id: 0xfa2,

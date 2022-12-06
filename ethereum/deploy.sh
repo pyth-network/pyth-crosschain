@@ -25,7 +25,7 @@ while [[ $# -ne 0 ]]; do
     NETWORK=$1
     shift
 
-    echo "=========== Deploying to ${NETWORK} ==========="
+    echo "=========== Deploying to ${NETWORK} (if not deployed) ==========="
 
     # Load the configuration environment variables for deploying your network. make sure to use right env file.
     # If it is a new chain you are deploying to, create a new env file and commit it to the repo.
@@ -35,6 +35,9 @@ while [[ $# -ne 0 ]]; do
     npx truffle migrate --network $MIGRATIONS_NETWORK
 
     echo "Deployment to $NETWORK finished successfully"
+
+    echo "=========== Syncing contract state ==========="
+    npx truffle exec scripts/syncPythState.js --network $MIGRATIONS_NETWORK || echo "Syncing failed/incomplete.. skipping"
 done
 
 echo "=========== Finished ==========="
