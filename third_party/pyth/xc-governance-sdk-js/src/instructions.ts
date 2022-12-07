@@ -1,4 +1,4 @@
-import { ChainId, CHAINS } from "@certusone/wormhole-sdk";
+import { ChainId } from "./chains";
 
 import { Serializable, BufferBuilder } from "./serialize";
 
