@@ -53,7 +53,7 @@ export async function getManyProposalsInstructions(
     () => []
   );
 
-  for (let i = 0; i <= allTxIxsAcccounts.length; i++) {
+  for (let i = 0; i < allTxIxsAcccounts.length; i++) {
     const toAdd = allTxIxsAcccounts[i];
     if (toAdd) {
       ixAccountsByTx[ownerTransaction[i]].push(toAdd);
