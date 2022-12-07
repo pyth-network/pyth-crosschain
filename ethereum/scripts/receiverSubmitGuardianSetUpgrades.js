@@ -3,7 +3,7 @@
 const jsonfile = require("jsonfile");
 const WormholeReceiver = artifacts.require("WormholeReceiver");
 const WormholeReceiverImplementationFullABI = jsonfile.readFileSync(
-  "../build/contracts/wormhole-receiver/ReceiverImplementation.json"
+  "../build/contracts/ReceiverImplementation.json"
 ).abi;
 
 const GUARDIAN_SET_UPGRADE_1_VAA =
