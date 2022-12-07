@@ -10,11 +10,12 @@ import lodash from "lodash";
 
 export async function getActiveProposals(
   squad: Squads,
-  vault: PublicKey
+  vault: PublicKey,
+  offset: number = 1
 ): Promise<TransactionAccount[]> {
   const msAccount = await squad.getMultisig(vault);
   let txKeys = lodash
-    .range(1, msAccount.transactionIndex + 1)
+    .range(offset, msAccount.transactionIndex + 1)
     .map((i) => getTxPDA(vault, new BN(i), DEFAULT_MULTISIG_PROGRAM_ID)[0]);
   let msTransactions = await squad.getTransactions(txKeys);
   return msTransactions
