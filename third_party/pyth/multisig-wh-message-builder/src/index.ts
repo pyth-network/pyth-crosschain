@@ -26,7 +26,21 @@ import { getActiveProposals, getProposalInstructions } from "./multisig";
 
 setDefaultWasm("node");
 
-type Cluster = "devnet" | "mainnet" | "localnet";
+// NOTE(2022-11-30): Naming disambiguation:
+// - "mainnet" - always means a public production environment
+//
+// - "testnet" in Wormhole context - a collection of public testnets
+//   of the supported blockchain
+// - "testnet" in Solana context - Never used here; The public solana
+//   cluster called "testnet" at https://api.testnet.solana.com
+//
+// - "devnet" in Wormhole context - local Tilt devnet
+// - "devnet" in Solana context - The "devnet" public Solana cluster
+//   at https://api.devnet.solana.com
+//
+// - "localdevnet" - always means the Tilt devnet
+
+type Cluster = "devnet" | "mainnet" | "localdevnet";
 type WormholeNetwork = "TESTNET" | "MAINNET" | "DEVNET";
 
 type Config = {
@@ -46,10 +60,10 @@ const CONFIG: Record<Cluster, Config> = {
     vault: new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
     wormholeRpcEndpoint: "https://wormhole-v2-mainnet-api.certus.one",
   },
-  localnet: {
+  localdevnet: {
     wormholeClusterName: "DEVNET",
-    vault: new PublicKey("2VVHgWVHi32P1aoMjHmL3e1Hf6yi7uERahXF1T5n6EHx"), // Placeholder
-    wormholeRpcEndpoint: "https://wormhole-v2-mainnet-api.certus.one", // Placeholder
+    vault: new PublicKey([]),
+    wormholeRpcEndpoint: "http://guardian:7071",
   },
 };
 
@@ -57,6 +71,84 @@ program
   .name("pyth-multisig")
   .description("CLI to creating and executing multisig transactions for pyth")
   .version("0.1.0");
+
+program
+  .command("init-vault")
+  .description(
+    "Initialize a new multisig vault. NOTE: It's unlikely that you need run this manually. Primarily used in the Tilt local devnet"
+  )
+  .requiredOption(
+    "-k --create-key <address>",
+    "Vault create key. It's a pubkey used to seed the vault's address"
+  )
+  .requiredOption(
+    "-m --mesh-program <address>",
+    "Mesh multisig program address"
+  )
+  .requiredOption(
+    "-x --external-authority <address>",
+    "External authority address"
+  )
+  .option("-c --cluster <network>", "solana cluster to use", "devnet")
+  .option("-p --payer <filepath>", "payer keypair file")
+  .option(
+    "-t --threshold <threshold_number>",
+    "Approval quorum threshold for the vault",
+    "2"
+  )
+  .requiredOption(
+    "-i --initial-members <comma_separated_members>",
+    "comma-separated list of initial multisig members, without spaces"
+  )
+  .option("-r --solana-rpc <url>", "Solana RPC address to use")
+  .action(async (options: any) => {
+    let cluster: Cluster = options.cluster;
+    let createKeyAddr: PublicKey = new PublicKey(options.createKey);
+    let extAuthorityAddr: PublicKey = new PublicKey(options.externalAuthority);
+    let meshProgramAddr: PublicKey = new PublicKey(options.meshProgram);
+
+    let threshold: number = parseInt(options.threshold, 10);
+
+    let initialMembers = options.initialMembers
+      .split(",")
+      .map((m: string) => new PublicKey(m));
+
+    let mesh = await getSquadsClient(
+      cluster,
+      options.ledger,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange,
+      options.payer,
+      cluster == "localdevnet" ? options.solanaRpc : undefined,
+      cluster == "localdevnet" ? meshProgramAddr : undefined
+    );
+
+    // The vault key is a PDA and the create key is only an ingredient for it
+    let [vaultAddr, bump] = await PublicKey.findProgramAddress(
+      [Buffer.from("squad"), createKeyAddr.toBuffer(), Buffer.from("multisig")],
+      meshProgramAddr
+    );
+
+    console.log("Creating new vault at", vaultAddr.toString());
+
+    try {
+      let _multisig = await mesh.getMultisig(vaultAddr);
+
+      // NOTE(2022-12-08): If this check prevents you from iterating dev
+      // work in tilt, restart solana-devnet.
+      console.log(
+        "Reached an existing vault under the address, refusing to create."
+      );
+      process.exit(17); // EEXIST
+    } catch (e: any) {}
+    console.log("No existing vault found, creating...");
+    await mesh.createMultisig(
+      extAuthorityAddr,
+      threshold,
+      createKeyAddr,
+      initialMembers
+    );
+  });
 
 program
   .command("create")
@@ -235,6 +327,9 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
+    if (!squad) {
+      console.log("Could not instantiate Squads object!");
+    }
     executeMultisigTx(
       cluster,
       squad,
@@ -272,6 +367,9 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
+    if (!squad) {
+      console.log("Could not instantiate Squads object!");
+    }
     await changeThreshold(
       options.cluster,
       squad,
@@ -308,6 +406,10 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
+
+    if (!squad) {
+      console.log("Could not instantiate Squads object!");
+    }
     await addMember(
       options.cluster,
       squad,
@@ -361,7 +463,9 @@ async function getSquadsClient(
   ledger: boolean,
   ledgerDerivationAccount: number | undefined,
   ledgerDerivationChange: number | undefined,
-  walletPath: string
+  walletPath: string,
+  solRpcUrl?: string,
+  multisigProgramId?: PublicKey
 ) {
   let wallet: LedgerNodeWallet | NodeWallet;
   if (ledger) {
@@ -379,13 +483,30 @@ async function getSquadsClient(
     );
     console.log(`Loaded wallet with address: ${wallet.publicKey.toBase58()}`);
   }
-  const squad =
-    cluster === "devnet"
-      ? Squads.devnet(wallet)
-      : cluster == "mainnet"
-      ? Squads.mainnet(wallet)
-      : Squads.endpoint("http://127.0.0.1:8899", wallet);
-  return squad;
+  switch (cluster) {
+    case "devnet": {
+      return Squads.devnet(wallet);
+      break;
+    }
+    case "mainnet": {
+      return Squads.mainnet(wallet);
+      break;
+    }
+    case "localdevnet": {
+      if (solRpcUrl && multisigProgramId) {
+        return Squads.endpoint(solRpcUrl, wallet, {
+          multisigProgramId,
+        });
+      } else {
+        console.log("rpc:", solRpcUrl);
+        console.log("multisig program ID:", multisigProgramId);
+        throw `ERROR: solRpcUrl or multisigProgramId was not specified for localdevnet!`;
+      }
+    }
+    default: {
+      throw `ERROR: unrecognized cluster ${cluster}`;
+    }
+  }
 }
 
 async function createTx(squad: Squads, vault: PublicKey): Promise<PublicKey> {
