@@ -225,6 +225,60 @@ module.exports = {
       },
       network_id: 44787,
     },
+    kcc: {
+      provider: () => {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://rpc-mainnet.kcc.network"
+        );
+      },
+      network_id: 321,
+    },
+    kcc_testnet: {
+      provider: () => {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://rpc-testnet.kcc.network"
+        );
+      },
+      network_id: 322,
+    },
+    zksync: {
+      provider: () => {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://zksync2-mainnet.zksync.io"
+        );
+      },
+      network_id: 324,
+    },
+    zksync_testnet: {
+      provider: () => {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://zksync2-testnet.zksync.dev"
+        );
+      },
+      network_id: 280,
+    },
+    cronos: {
+      provider: () => {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://cronosrpc-1.xstaking.sg"
+        );
+      },
+      network_id: 25,
+    },
+    cronos_testnet: {
+      provider: () => {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://evm-t3.cronos.org"
+        );
+      },
+      network_id: 338,
+    },
   },
 
   compilers: {

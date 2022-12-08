@@ -2,10 +2,9 @@ const loadEnv = require("../../scripts/loadEnv");
 loadEnv("../../");
 
 const PythUpgradable = artifacts.require("PythUpgradable");
+const WormholeReceiver = artifacts.require("WormholeReceiver");
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 const tdr = require("truffle-deploy-registry");
-const { CONTRACTS } = require("@certusone/wormhole-sdk");
-const { assert } = require("chai");
 
 const emitterChainIds = [
   process.env.SOLANA_CHAIN_ID,

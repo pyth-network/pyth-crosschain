@@ -12,4 +12,4 @@ export {
   Instruction,
 } from "./instructions";
 
-export { CHAINS, ChainId } from "@certusone/wormhole-sdk";
+export { CHAINS, ChainId, ChainName } from "./chains";
