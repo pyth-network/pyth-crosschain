@@ -26,7 +26,7 @@ import { getActiveProposals, getProposalInstructions } from "./multisig";
 
 setDefaultWasm("node");
 
-type Cluster = "devnet" | "mainnet" | "localnet" ;
+type Cluster = "devnet" | "mainnet" | "localnet";
 type WormholeNetwork = "TESTNET" | "MAINNET" | "DEVNET";
 
 type Config = {
@@ -48,8 +48,8 @@ const CONFIG: Record<Cluster, Config> = {
   },
   localnet: {
     wormholeClusterName: "DEVNET",
-    vault: new PublicKey("2VVHgWVHi32P1aoMjHmL3e1Hf6yi7uERahXF1T5n6EHx"), // TO DO ADD TILT ADDRESS
-    wormholeRpcEndpoint: "https://wormhole-v2-mainnet-api.certus.one", // TO DO ADD TILT ADDRESS
+    vault: new PublicKey("2VVHgWVHi32P1aoMjHmL3e1Hf6yi7uERahXF1T5n6EHx"), // Placeholder
+    wormholeRpcEndpoint: "https://wormhole-v2-mainnet-api.certus.one", // Placeholder
   },
 };
 
@@ -112,7 +112,11 @@ program
     "multisig wallet secret key filepath",
     "keys/key.json"
   )
-  .requiredOption("-p, --payload <hex-string>", "expected payload", "0xdeadbeef")
+  .requiredOption(
+    "-p, --payload <hex-string>",
+    "expected payload",
+    "0xdeadbeef"
+  )
   .requiredOption("-t, --tx-pda <address>", "transaction PDA")
   .action(async (options) => {
     const cluster: Cluster = options.cluster;
@@ -380,7 +384,11 @@ async function getSquadsClient(
     console.log(`Loaded wallet with address: ${wallet.publicKey.toBase58()}`);
   }
   const squad =
-    cluster === "devnet" ? Squads.devnet(wallet) : cluster == "mainnet" ? Squads.mainnet(wallet) : Squads.endpoint("http://127.0.0.1:8899", wallet);
+    cluster === "devnet"
+      ? Squads.devnet(wallet)
+      : cluster == "mainnet"
+      ? Squads.mainnet(wallet)
+      : Squads.endpoint("http://127.0.0.1:8899", wallet);
   return squad;
 }
 
