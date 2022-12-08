@@ -670,6 +670,16 @@ async function executeMultisigTx(
     msAccount.authorityIndex
   );
 
+  const tx = await squad.getTransaction(txPDA);
+  if ((tx.status as any).executeReady === undefined) {
+    console.log(
+      `Transaction is either executed or not ready yet. Status: ${JSON.stringify(
+        tx.status
+      )}`
+    );
+    return;
+  }
+
   const executeIx = await squad.buildExecuteTransaction(
     txPDA,
     squad.wallet.publicKey
