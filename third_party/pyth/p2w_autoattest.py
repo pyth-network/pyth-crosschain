@@ -37,18 +37,6 @@ WORMHOLE_ADDRESS = os.environ.get(
 # attester needs string, but we validate as int first
 P2W_RPC_TIMEOUT_SECS = str(int(os.environ.get("P2W_RPC_TIMEOUT_SECS", "20")))
 
-if SOL_AIRDROP_AMT > 0:
-    # Fund the p2w owner
-    sol_run_or_die(
-        "airdrop",
-        [
-            str(SOL_AIRDROP_AMT),
-            "--keypair",
-            P2W_OWNER_KEYPAIR,
-            "--commitment",
-            "finalized",
-        ],
-    )
 
 if P2W_INITIALIZE_SOL_CONTRACT is not None:
     # Get actor pubkeys
@@ -56,7 +44,7 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
         "address", ["--keypair", P2W_OWNER_KEYPAIR], capture_output=True
     ).stdout.strip()
     PYTH_OWNER_ADDRESS = sol_run_or_die(
-        "address", ["--keypair", PYTH_PROGRAM_KEYPAIR], capture_output=True
+        "address", ["--keypair", PYTH_PROGRAM_KEYPAIR], capture_output=True,
     ).stdout.strip()
 
     init_result = run_or_die(
@@ -67,7 +55,7 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
             "--rpc-url",
             SOL_RPC_URL,
             "--payer",
-            P2W_OWNER_KEYPAIR,
+            SOL_PAYER_KEYPAIR,
             "init",
             "--wh-prog",
             WORMHOLE_ADDRESS,
@@ -77,6 +65,7 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
             PYTH_OWNER_ADDRESS,
         ],
         capture_output=True,
+        debug=True,
         die=False,
     )
 
@@ -92,7 +81,7 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
                 "--rpc-url",
                 SOL_RPC_URL,
                 "--payer",
-                P2W_OWNER_KEYPAIR,
+                SOL_PAYER_KEYPAIR,
                 "set-config",
                 "--owner",
                 P2W_OWNER_KEYPAIR,
@@ -190,7 +179,7 @@ first_attest_result = run_or_die(
         "--rpc-url",
         SOL_RPC_URL,
         "--payer",
-        P2W_OWNER_KEYPAIR,
+        SOL_PAYER_KEYPAIR,
         "attest",
         "-f",
         P2W_ATTESTATION_CFG,
@@ -220,7 +209,7 @@ while True:
             "--rpc-url",
             SOL_RPC_URL,
             "--payer",
-            P2W_OWNER_KEYPAIR,
+            SOL_PAYER_KEYPAIR,
             "attest",
             "-f",
             P2W_ATTESTATION_CFG,
