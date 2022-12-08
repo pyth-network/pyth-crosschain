@@ -50,6 +50,9 @@ spec:
             - --bpf-program
             - P2WH424242424242424242424242424242424242424
             - /opt/solana/deps/pyth2wormhole.so
+            - --bpf-program
+            - SMPLVC8MxZ5Bf5EfF7PaMiTCxoBAcmkbM2vkrvMK8ho # copied from squads-mpl/programs/mesh/src/lib.rs
+            - /opt/solana/deps/mesh.so
             - --log
           ports:
             - containerPort: 8001
