@@ -170,14 +170,6 @@ symbol_groups:
         price: {price}
         product: {product}"""
 
-    cfg_yaml += f"""
-  - group_name: mapping
-    conditions:
-      min_interval_secs: 10
-      price_changed_bps: 500
-    symbols: []
-"""
-
     with open(P2W_ATTESTATION_CFG, "w") as f:
         f.write(cfg_yaml)
         f.flush()
