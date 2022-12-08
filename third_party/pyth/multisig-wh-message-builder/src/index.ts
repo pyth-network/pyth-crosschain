@@ -22,11 +22,12 @@ import { program } from "commander";
 import * as fs from "fs";
 import { LedgerNodeWallet } from "./wallet";
 import lodash from "lodash";
+import { getActiveProposals, getProposalInstructions } from "./multisig";
 
 setDefaultWasm("node");
 
-type Cluster = "devnet" | "mainnet";
-type WormholeNetwork = "TESTNET" | "MAINNET";
+type Cluster = "devnet" | "mainnet" | "localnet";
+type WormholeNetwork = "TESTNET" | "MAINNET" | "DEVNET";
 
 type Config = {
   wormholeClusterName: WormholeNetwork;
@@ -44,6 +45,11 @@ const CONFIG: Record<Cluster, Config> = {
     wormholeClusterName: "MAINNET",
     vault: new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
     wormholeRpcEndpoint: "https://wormhole-v2-mainnet-api.certus.one",
+  },
+  localnet: {
+    wormholeClusterName: "DEVNET",
+    vault: new PublicKey("2VVHgWVHi32P1aoMjHmL3e1Hf6yi7uERahXF1T5n6EHx"), // Placeholder
+    wormholeRpcEndpoint: "https://wormhole-v2-mainnet-api.certus.one", // Placeholder
   },
 };
 
@@ -374,7 +380,11 @@ async function getSquadsClient(
     console.log(`Loaded wallet with address: ${wallet.publicKey.toBase58()}`);
   }
   const squad =
-    cluster === "devnet" ? Squads.devnet(wallet) : Squads.mainnet(wallet);
+    cluster === "devnet"
+      ? Squads.devnet(wallet)
+      : cluster == "mainnet"
+      ? Squads.mainnet(wallet)
+      : Squads.endpoint("http://127.0.0.1:8899", wallet);
   return squad;
 }
 
@@ -582,33 +592,15 @@ async function verifyWormholePayload(
   console.log(`Emitter Address: ${emitter.toBase58()}`);
 
   const tx = await squad.getTransaction(txPubkey);
+  const onChainInstructions = await getProposalInstructions(squad, tx);
 
-  if (tx.instructionIndex !== 2) {
+  if (onChainInstructions.length !== 2) {
     throw new Error(
       `Expected 2 instructions in the transaction, found ${
         tx.instructionIndex + 1
       }`
     );
   }
-
-  const [ix1PubKey] = getIxPDA(
-    txPubkey,
-    new anchor.BN(1),
-    squad.multisigProgramId
-  );
-  const [ix2PubKey] = getIxPDA(
-    txPubkey,
-    new anchor.BN(2),
-    squad.multisigProgramId
-  );
-
-  const onChainInstructions = await squad.getInstructions([
-    ix1PubKey,
-    ix2PubKey,
-  ]);
-
-  console.log(onChainInstructions[0]);
-  console.log(onChainInstructions[1]);
 
   const [messagePDA] = getIxAuthorityPDA(
     txPubkey,
