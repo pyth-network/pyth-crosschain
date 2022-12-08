@@ -112,11 +112,7 @@ program
     "multisig wallet secret key filepath",
     "keys/key.json"
   )
-  .requiredOption(
-    "-p, --payload <hex-string>",
-    "expected payload",
-    "0xdeadbeef"
-  )
+  .requiredOption("-p, --payload <hex-string>", "expected payload")
   .requiredOption("-t, --tx-pda <address>", "transaction PDA")
   .action(async (options) => {
     const cluster: Cluster = options.cluster;
