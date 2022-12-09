@@ -465,7 +465,7 @@ mod test {
             chain_id:                   0,
             valid_time_period:          Duration::new(0, 0),
             fee:                        0,
-            fee_denom:                  "ATOM".into(),
+            fee_denom:                  "".into(),
         }
     }
 
