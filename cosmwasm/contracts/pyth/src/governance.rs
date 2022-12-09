@@ -3,6 +3,7 @@ use {
     byteorder::{
         BigEndian,
         ReadBytesExt,
+        WriteBytesExt,
     },
     cosmwasm_std::Binary,
     p2w_sdk::ErrBox,
@@ -11,7 +12,10 @@ use {
         Deserialize,
         Serialize,
     },
-    std::io::Read,
+    std::io::{
+        Read,
+        Write,
+    },
 };
 
 type HumanAddr = String;
@@ -36,6 +40,13 @@ impl GovernanceModule {
             _ => Err(format!("Invalid governance module: {x}",).into()),
         }
     }
+
+    pub fn to_u8(&self) -> u8 {
+        match &self {
+            Executor => 0,
+            Target => 1,
+        }
+    }
 }
 
 /// The action to perform to change the state of the target chain contract.
@@ -46,7 +57,7 @@ pub enum GovernanceAction {
     AuthorizeGovernanceDataSourceTransfer, // 1
     SetDataSources,                        // 2
     // Note that in governance messages, the fee is actually 256 bits
-    SetFee { new_fee: u128 } = 3, // 3
+    SetFee { new_fee: u128 }, // 3
     // Note that in governance messages, new_valid_period is actually 256 bits
     SetValidPeriod { new_valid_period: u128 }, // 4
     RequestGovernanceDataSourceTransfer,       // 5
@@ -83,7 +94,6 @@ impl GovernanceInstruction {
         let target_chain_id: u16 = bytes.read_u16::<BigEndian>()?;
 
         let action: Result<GovernanceAction, String> = match action_type {
-            0 => Ok(GovernanceAction::UpgradeContract),
             3 => {
                 let high = bytes.read_u128::<BigEndian>()?;
                 let low = bytes.read_u128::<BigEndian>()?;
@@ -93,6 +103,7 @@ impl GovernanceInstruction {
                     Ok(GovernanceAction::SetFee { new_fee: low })
                 }
             }
+            // TODO: add parsing for additional actions
             _ => Err(format!("Bad governance action {action_type}",)),
         };
 
@@ -101,6 +112,50 @@ impl GovernanceInstruction {
             action: action?,
             target_chain_id,
         })
+    }
+
+    pub fn serialize(&self) -> Result<Vec<u8>, ErrBox> {
+        let mut buf = vec![];
+
+        buf.write(PYTH_GOVERNANCE_MAGIC)?;
+        buf.write_u8(self.module.to_u8())?;
+
+        match &self.action {
+            GovernanceAction::UpgradeContract => {
+                buf.write_u8(0)?;
+                buf.write_u16::<BigEndian>(self.target_chain_id)?;
+            }
+            GovernanceAction::AuthorizeGovernanceDataSourceTransfer => {
+                buf.write_u8(1)?;
+                buf.write_u16::<BigEndian>(self.target_chain_id)?;
+            }
+            GovernanceAction::SetDataSources => {
+                buf.write_u8(2)?;
+                buf.write_u16::<BigEndian>(self.target_chain_id)?;
+            }
+            GovernanceAction::SetFee { new_fee } => {
+                buf.write_u8(3)?;
+                buf.write_u16::<BigEndian>(self.target_chain_id)?;
+
+                // FIXME
+                buf.write_u128::<BigEndian>(0);
+                buf.write_u128::<BigEndian>(*new_fee);
+            }
+            GovernanceAction::SetValidPeriod { new_valid_period } => {
+                buf.write_u8(4)?;
+                buf.write_u16::<BigEndian>(self.target_chain_id)?;
+
+                // FIXME
+                buf.write_u128::<BigEndian>(0);
+                buf.write_u128::<BigEndian>(*new_valid_period);
+            }
+            GovernanceAction::RequestGovernanceDataSourceTransfer => {
+                buf.write_u8(5)?;
+                buf.write_u16::<BigEndian>(self.target_chain_id)?;
+            }
+        }
+
+        Ok(buf)
     }
 }
 
@@ -117,6 +172,7 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub struct MigrateMsg {}
 
+use crate::governance::GovernanceModule::Executor;
 pub use pyth_sdk_cw::{
     PriceFeedResponse,
     QueryMsg,

@@ -72,7 +72,7 @@ export class TerraRelay implements Relay {
           wallet.key.accAddress,
           this.contractAddress,
           {
-            submit_vaa: {
+            update_price_feeds: {
               data: Buffer.from(signedVAAs[idx], "hex").toString("base64"),
             },
           }

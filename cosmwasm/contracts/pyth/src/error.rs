@@ -36,6 +36,10 @@ pub enum PythContractError {
     /// Message payload cannot be deserialized as a valid governance instruction.
     #[error("InvalidGovernancePayload")]
     InvalidGovernancePayload,
+
+    /// The sequence number of the governance message is too old.
+    #[error("OldGovernanceMessage")]
+    OldGovernanceMessage,
 }
 
 impl From<PythContractError> for StdError {
