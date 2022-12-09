@@ -163,7 +163,7 @@ export class Listener implements PriceStore {
     const parsedVaa = parse_vaa(vaa);
 
     const vaaHash: VaaHash = createHash("md5")
-      .update(parsedVaa.payload)
+      .update(Buffer.from(parsedVaa.payload))
       .digest("base64");
 
     if (this.observedVaas.has(vaaHash)) {
