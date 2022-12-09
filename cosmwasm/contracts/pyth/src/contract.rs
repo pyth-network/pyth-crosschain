@@ -45,7 +45,6 @@ use {
     },
     std::{
         collections::HashSet,
-        time::Duration,
     },
     wormhole::{
         msg::QueryMsg as WormholeQueryMsg,
@@ -73,15 +72,14 @@ pub fn instantiate(
             emitter:            msg.pyth_emitter,
             pyth_emitter_chain: msg.pyth_emitter_chain,
         }]),
-        // FIXME: everything below here is wrong
-        chain_id:                   0,
+        chain_id:                   msg.chain_id,
         governance_source:          PythDataSource {
-            emitter:            Binary(vec![]),
-            pyth_emitter_chain: 0,
+            emitter:            msg.governance_emitter,
+            pyth_emitter_chain: msg.governance_emitter_chain,
         },
-        governance_sequence_number: 0,
-        valid_time_period:          Duration::new(0, 0),
-        fee:                        0,
+        governance_sequence_number: msg.governance_sequence_number,
+        valid_time_period:          msg.valid_time_period,
+        fee:                        msg.fee,
     };
     config(deps.storage).save(&state)?;
 
@@ -159,7 +157,6 @@ fn execute_governance_instruction(
             new_config.fee = new_fee;
             config(deps.storage).save(&new_config);
 
-            // FIXME: adjust these attributes
             Ok(Response::new()
                 .add_attribute("action", "set_fee")
                 .add_attribute("new_fee", format!("{new_fee}")))
@@ -235,7 +232,7 @@ fn verify_vaa_from_data_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult
     Ok(())
 }
 
-/// Check that `vaa` is from a valid data source (and hence is a legitimate price update message).
+/// Check that `vaa` is from a valid governance source (and hence is a legitimate governance instruction).
 fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
     let vaa_data_source = PythDataSource {
         emitter:            vaa.emitter_address.clone().into(),
@@ -337,6 +334,7 @@ fn update_price_feed_if_new(
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::PriceFeed { id } => to_binary(&query_price_feed(deps, env, id.as_ref())?),
+        // TODO: implement queries for the update fee and valid time period along the following lines:
         // QueryMsg::GetUpdateFee { data: bytes[] } => ???,
         // QueryMsg::GetValidTimePeriod => ???
     }
@@ -397,7 +395,13 @@ mod test {
     const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
 
     fn setup_test() -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
-        (mock_dependencies(), mock_env())
+        let mut dependencies = mock_dependencies();
+        let mut config = config(dependencies.as_mut().storage);
+        config.save(&ConfigInfo {
+            valid_time_period: VALID_TIME_PERIOD,
+            ..create_zero_config_info()
+        });
+        (dependencies, mock_env())
     }
 
     fn create_zero_vaa() -> ParsedVAA {

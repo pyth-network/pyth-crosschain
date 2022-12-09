@@ -6,15 +6,24 @@ use {
         Deserialize,
         Serialize,
     },
+    std::time::Duration,
 };
 
 type HumanAddr = String;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct InstantiateMsg {
-    pub wormhole_contract:  HumanAddr,
-    pub pyth_emitter:       Binary,
-    pub pyth_emitter_chain: u16,
+    pub wormhole_contract:          HumanAddr,
+    pub pyth_emitter:               Binary,
+    pub pyth_emitter_chain:         u16,
+    pub governance_emitter:         Binary,
+    pub governance_emitter_chain:   u16,
+    pub governance_sequence_number: u64,
+    pub chain_id:                   u16,
+    pub valid_time_period:          Duration,
+
+    // TODO: fix the type
+    pub fee: u128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

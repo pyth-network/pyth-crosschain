@@ -18,10 +18,13 @@ type HumanAddr = String;
 
 const PYTH_GOVERNANCE_MAGIC: &[u8] = b"PTGM";
 
+/// The type of contract that can accept a governance instruction.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u8)]
 pub enum GovernanceModule {
+    /// The PythNet executor contract
     Executor = 0,
+    /// A target chain contract (like this one!)
     Target   = 1,
 }
 
@@ -35,15 +38,16 @@ impl GovernanceModule {
     }
 }
 
+/// The action to perform to change the state of the target chain contract.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u8)]
 pub enum GovernanceAction {
     UpgradeContract,                       // 0
     AuthorizeGovernanceDataSourceTransfer, // 1
     SetDataSources,                        // 2
-    // fee is actually 256 bits
+    // Note that in governance messages, the fee is actually 256 bits
     SetFee { new_fee: u128 } = 3, // 3
-    // new_valid_period is actually 256 bits
+    // Note that in governance messages, new_valid_period is actually 256 bits
     SetValidPeriod { new_valid_period: u128 }, // 4
     RequestGovernanceDataSourceTransfer,       // 5
 }
@@ -67,7 +71,12 @@ impl GovernanceInstruction {
             .into());
         }
 
-        let module = GovernanceModule::from_u8(bytes.read_u8()?)?;
+        let module_num = bytes.read_u8()?;
+        let module = GovernanceModule::from_u8(module_num)?;
+
+        if module != GovernanceModule::Target {
+            return Err(format!("Invalid governance module {module_num}",).into());
+        }
 
         // TODO: check endianness
         let action_type: u8 = bytes.read_u8()?;

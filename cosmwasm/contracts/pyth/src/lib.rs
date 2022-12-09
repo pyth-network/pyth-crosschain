@@ -1,4 +1,3 @@
-#![feature(arbitrary_enum_discriminant)]
 #[cfg(test)]
 extern crate lazy_static;
 
