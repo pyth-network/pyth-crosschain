@@ -413,6 +413,7 @@ mod test {
         },
         std::time::Duration,
     };
+    use crate::governance::GovernanceModule::Executor;
 
     /// Default valid time period for testing purposes.
     const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
@@ -874,79 +875,122 @@ mod test {
         );
     }
 
-    #[test]
-    fn test_governance_unauthorized() {
+    fn apply_governance_vaa(
+        initial_config: &ConfigInfo,
+        vaa: &ParsedVAA,
+    ) -> StdResult<(Response, ConfigInfo)> {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage)
-            .save(&ConfigInfo {
-                governance_source: PythDataSource {
-                    emitter:            Binary(vec![1u8, 2u8]),
-                    pyth_emitter_chain: 3,
-                },
-                governance_sequence_number: 4,
-                chain_id: 5,
-                ..create_zero_config_info()
-            })
-            .unwrap();
+          .save(initial_config)
+          .unwrap();
 
         let info = mock_info("123", &[]);
 
-        // First check that a valid VAA is accepted (to ensure that no one accidentally breaks the following test cases).
+        let result = execute_governance_instruction_from_vaa(
+            deps.as_mut(),
+            env.clone(),
+            info.clone(),
+            &vaa
+        );
+
+        result.and_then(|response| config_read(&mut deps.storage).load().map(|c| (response, c)))
+    }
+
+    fn governance_test_config() -> ConfigInfo {
+        ConfigInfo {
+            governance_source: PythDataSource {
+                emitter:            Binary(vec![1u8, 2u8]),
+                pyth_emitter_chain: 3,
+            },
+            governance_sequence_number: 4,
+            chain_id: 5,
+            ..create_zero_config_info()
+        }
+    }
+
+    fn governance_vaa(instruction: &GovernanceInstruction) -> ParsedVAA {
         let mut vaa = create_zero_vaa();
         vaa.emitter_address = vec![1u8, 2u8];
         vaa.emitter_chain = 3;
         vaa.sequence = 7;
-        vaa.payload = GovernanceInstruction {
+        vaa.payload = instruction.serialize().unwrap();
+
+        vaa
+    }
+
+    #[test]
+    fn test_governance_authorization() {
+        let test_config = governance_test_config();
+
+        let test_instruction = GovernanceInstruction {
             module:          Target,
             target_chain_id: 5,
             action:          SetFee { new_fee: 6 },
-        }
-        .serialize()
-        .unwrap();
+        };
+        let mut test_vaa = governance_vaa(&test_instruction);
 
-        assert!(execute_governance_instruction_from_vaa(
-            deps.as_mut(),
-            env.clone(),
-            info.clone(),
-            &vaa
-        )
-        .is_ok());
+        // First check that a valid VAA is accepted (to ensure that no one accidentally breaks the following test cases).
+        assert!(apply_governance_vaa(&test_config, &test_vaa).is_ok());
 
         // Wrong emitter address
-        vaa.emitter_address = vec![2u8, 3u8];
-        assert!(execute_governance_instruction_from_vaa(
-            deps.as_mut(),
-            env.clone(),
-            info.clone(),
-            &vaa
-        )
-        .is_err());
-        vaa.emitter_address = vec![1u8, 2u8];
+        let mut vaa_copy = test_vaa.clone();
+        vaa_copy.emitter_address = vec![2u8, 3u8];
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
-        /*
         // wrong source chain
-        vaa.emitter_address = vec![1u8, 2u8];
-        vaa.emitter_chain = 4;
-        vaa.sequence = 7;
-        assert!(execute_governance_instruction_from_vaa(deps.as_mut(), env.clone(), info.clone(), &vaa).is_err());
+        let mut vaa_copy = test_vaa.clone();
+        vaa_copy.emitter_chain = 4;
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
         // sequence number too low
-        vaa.emitter_address = vec![1u8, 2u8];
-        vaa.emitter_chain = 3;
-        vaa.sequence = 4;
-        assert!(execute_governance_instruction_from_vaa(deps.as_mut(), env.clone(), info.clone(), &vaa).is_err());
+        let mut vaa_copy = test_vaa.clone();
+        vaa_copy.sequence = 4;
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
-         */
         // wrong magic number
+        let mut vaa_copy = test_vaa.clone();
+        vaa_copy.payload[0] = 0;
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
         // wrong target chain
+        let mut instruction_copy = test_instruction.clone();
+        instruction_copy.target_chain_id = 6;
+        let mut vaa_copy = test_vaa.clone();
+        vaa_copy.payload = instruction_copy.serialize().unwrap();
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
+
+        // target chain == 0 is allowed
+        let mut instruction_copy = test_instruction.clone();
+        instruction_copy.target_chain_id = 0;
+        let mut vaa_copy = test_vaa.clone();
+        vaa_copy.payload = instruction_copy.serialize().unwrap();
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_ok());
 
         // wrong module
+        let mut instruction_copy = test_instruction.clone();
+        instruction_copy.module = Executor;
+        let mut vaa_copy = test_vaa.clone();
+        vaa_copy.payload = instruction_copy.serialize().unwrap();
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
-        // invalid payload
+        // invalid action index
+        let mut instruction_copy = test_instruction.clone();
+        vaa_copy.payload[9] = 100;
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
     }
 
     #[test]
     fn test_set_fee() {
+        let mut test_config = governance_test_config();
+        test_config.fee = 1;
+
+        let test_instruction = GovernanceInstruction {
+            module:          Target,
+            target_chain_id: 5,
+            action:          SetFee { new_fee: 6 },
+        };
+        let mut test_vaa = governance_vaa(&test_instruction);
+
+        assert_eq!(apply_governance_vaa(&test_config, &test_vaa).map(|(r, c)| c.fee), Ok(6))
     }
 }
