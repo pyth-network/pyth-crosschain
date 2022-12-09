@@ -15,7 +15,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import Squads from "@sqds/mesh";
-import { getIxAuthorityPDA, getIxPDA } from "@sqds/mesh";
+import { getIxAuthorityPDA, getIxPDA, getMsPDA } from "@sqds/mesh";
 import { InstructionAccount } from "@sqds/mesh/lib/types";
 import bs58 from "bs58";
 import { program } from "commander";
@@ -124,10 +124,7 @@ program
     );
 
     // The vault key is a PDA and the create key is only an ingredient for it
-    let [vaultAddr, bump] = await PublicKey.findProgramAddress(
-      [Buffer.from("squad"), createKeyAddr.toBuffer(), Buffer.from("multisig")],
-      meshProgramAddr
-    );
+    let [vaultAddr, bump] = getMsPDA(createKeyAddr, meshProgramAddr);
 
     console.log("Creating new vault at", vaultAddr.toString());
 
