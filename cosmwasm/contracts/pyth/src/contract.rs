@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use {
     crate::{
         error::PythContractError,
@@ -78,6 +79,7 @@ pub fn instantiate(
         governance_sequence_number: msg.governance_sequence_number,
         valid_time_period:          msg.valid_time_period,
         fee:                        msg.fee,
+        fee_denom: msg.fee_denom,
     };
     config(deps.storage).save(&state)?;
 
@@ -169,12 +171,12 @@ fn execute_governance_instruction_from_vaa(
     }
 
     let response = match instruction.action {
-        SetFee { new_fee } => {
-            updated_config.fee = new_fee;
+        SetFee { val, expo } => {
+            updated_config.fee = (val as u128).checked_mul((10 as u128).checked_pow(expo as u32).ok_or(PythContractError::InvalidGovernancePayload)?).ok_or(PythContractError::InvalidGovernancePayload)?;
 
             Response::new()
                 .add_attribute("action", "set_fee")
-                .add_attribute("new_fee", format!("{new_fee}"))
+                .add_attribute("new_fee", format!("{}", updated_config.fee))
         }
         _ => Err(PythContractError::InvalidGovernancePayload)?,
     };
@@ -457,6 +459,7 @@ mod test {
             chain_id:                   0,
             valid_time_period:          Duration::new(0, 0),
             fee:                        0,
+            fee_denom: "ATOM".into(),
         }
     }
 
@@ -875,6 +878,8 @@ mod test {
         );
     }
 
+    /// Initialize the contract with `initial_config` then execute `vaa` as a governance instruction
+    /// against it. Returns the response of the governance instruction along with the resulting config.
     fn apply_governance_vaa(
         initial_config: &ConfigInfo,
         vaa: &ParsedVAA,
@@ -925,7 +930,7 @@ mod test {
         let test_instruction = GovernanceInstruction {
             module:          Target,
             target_chain_id: 5,
-            action:          SetFee { new_fee: 6 },
+            action:          SetFee { val: 6, expo: 0 },
         };
         let mut test_vaa = governance_vaa(&test_instruction);
 
@@ -987,10 +992,19 @@ mod test {
         let test_instruction = GovernanceInstruction {
             module:          Target,
             target_chain_id: 5,
-            action:          SetFee { new_fee: 6 },
+            action:          SetFee { val: 6, expo: 1 },
         };
         let mut test_vaa = governance_vaa(&test_instruction);
 
-        assert_eq!(apply_governance_vaa(&test_config, &test_vaa).map(|(r, c)| c.fee), Ok(6))
+        assert_eq!(apply_governance_vaa(&test_config, &test_vaa).map(|(r, c)| c.fee), Ok(60));
+
+        let test_instruction = GovernanceInstruction {
+            module:          Target,
+            target_chain_id: 5,
+            action:          SetFee { val: 6, expo: 0 },
+        };
+        let mut test_vaa = governance_vaa(&test_instruction);
+
+        assert_eq!(apply_governance_vaa(&test_config, &test_vaa).map(|(r, c)| c.fee), Ok(6));
     }
 }

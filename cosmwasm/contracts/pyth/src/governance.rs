@@ -56,10 +56,10 @@ pub enum GovernanceAction {
     UpgradeContract,                       // 0
     AuthorizeGovernanceDataSourceTransfer, // 1
     SetDataSources,                        // 2
-    // Note that in governance messages, the fee is actually 256 bits
-    SetFee { new_fee: u128 }, // 3
-    // Note that in governance messages, new_valid_period is actually 256 bits
-    SetValidPeriod { new_valid_period: u128 }, // 4
+    // Set the fee to val * (10 ** expo)
+    SetFee { val: u64, expo: u64 }, // 3
+    // Set the default valid period to the provided number of seconds
+    SetValidPeriod { valid_seconds: u64 }, // 4
     RequestGovernanceDataSourceTransfer,       // 5
 }
 
@@ -95,13 +95,9 @@ impl GovernanceInstruction {
 
         let action: Result<GovernanceAction, String> = match action_type {
             3 => {
-                let high = bytes.read_u128::<BigEndian>()?;
-                let low = bytes.read_u128::<BigEndian>()?;
-                if high != 0 {
-                    Err(format!("Fee is too big {high} {low}",))
-                } else {
-                    Ok(GovernanceAction::SetFee { new_fee: low })
-                }
+                let val = bytes.read_u64::<BigEndian>()?;
+                let expo = bytes.read_u64::<BigEndian>()?;
+                Ok(GovernanceAction::SetFee { val, expo })
             }
             // TODO: add parsing for additional actions
             _ => Err(format!("Bad governance action {action_type}",)),
@@ -133,21 +129,18 @@ impl GovernanceInstruction {
                 buf.write_u8(2)?;
                 buf.write_u16::<BigEndian>(self.target_chain_id)?;
             }
-            GovernanceAction::SetFee { new_fee } => {
+            GovernanceAction::SetFee { val, expo } => {
                 buf.write_u8(3)?;
                 buf.write_u16::<BigEndian>(self.target_chain_id)?;
 
-                // FIXME
-                buf.write_u128::<BigEndian>(0);
-                buf.write_u128::<BigEndian>(*new_fee);
+                buf.write_u64::<BigEndian>(*val);
+                buf.write_u64::<BigEndian>(*expo);
             }
-            GovernanceAction::SetValidPeriod { new_valid_period } => {
+            GovernanceAction::SetValidPeriod { valid_seconds: new_valid_period } => {
                 buf.write_u8(4)?;
                 buf.write_u16::<BigEndian>(self.target_chain_id)?;
 
-                // FIXME
-                buf.write_u128::<BigEndian>(0);
-                buf.write_u128::<BigEndian>(*new_valid_period);
+                buf.write_u64::<BigEndian>(*new_valid_period);
             }
             GovernanceAction::RequestGovernanceDataSourceTransfer => {
                 buf.write_u8(5)?;

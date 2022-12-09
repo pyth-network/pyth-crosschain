@@ -22,8 +22,8 @@ pub struct InstantiateMsg {
     pub chain_id:                   u16,
     pub valid_time_period:          Duration,
 
-    // TODO: fix the type
     pub fee: u128,
+    pub fee_denom: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

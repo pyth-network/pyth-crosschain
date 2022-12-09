@@ -1,3 +1,4 @@
+use cosmwasm_std::Coin;
 use {
     cosmwasm_std::{
         Addr,
@@ -47,8 +48,9 @@ pub struct ConfigInfo {
     pub chain_id:                   u16,
     pub valid_time_period:          Duration,
 
-    // TODO: what type?
+    // The fee to pay, denominated in fee_denom (typically, the chain's native token)
     pub fee: u128,
+    pub fee_denom: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, JsonSchema)]
