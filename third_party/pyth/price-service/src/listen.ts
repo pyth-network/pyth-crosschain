@@ -160,7 +160,11 @@ export class Listener implements PriceStore {
   async processVaa(vaa: Buffer) {
     const { parse_vaa } = await importCoreWasm();
 
-    const vaaHash: VaaHash = createHash("md5").update(vaa).digest("base64");
+    const parsedVaa = parse_vaa(vaa);
+
+    const vaaHash: VaaHash = createHash("md5")
+      .update(parsedVaa.payload)
+      .digest("base64");
 
     if (this.observedVaas.has(vaaHash)) {
       return;
@@ -168,8 +172,6 @@ export class Listener implements PriceStore {
 
     this.observedVaas.set(vaaHash, true);
     this.promClient?.incReceivedVaa();
-
-    const parsedVaa = parse_vaa(vaa);
 
     let batchAttestation;
 
