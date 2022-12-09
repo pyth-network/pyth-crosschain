@@ -7,8 +7,6 @@ import {
 
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 
-import { createHash } from "crypto";
-
 import {
   getBatchSummary,
   parseBatchPriceAttestation,
@@ -52,7 +50,7 @@ type ListenerConfig = {
   readiness: ListenerReadinessConfig;
 };
 
-type VaaHash = string;
+type VaaKey = string;
 
 export class Listener implements PriceStore {
   // Mapping of Price Feed Id to Vaa
@@ -63,7 +61,7 @@ export class Listener implements PriceStore {
   private spyConnectionTime: TimestampInSec | undefined;
   private readinessConfig: ListenerReadinessConfig;
   private updateCallbacks: ((priceInfo: PriceInfo) => any)[];
-  private observedVaas: LRUCache<VaaHash, boolean>;
+  private observedVaas: LRUCache<VaaKey, boolean>;
 
   constructor(config: ListenerConfig, promClient?: PromClient) {
     this.promClient = promClient;
@@ -162,15 +160,16 @@ export class Listener implements PriceStore {
 
     const parsedVaa = parse_vaa(vaa);
 
-    const vaaHash: VaaHash = createHash("md5")
-      .update(Buffer.from(parsedVaa.payload))
-      .digest("base64");
+    const vaaEmitterAddressHex = Buffer.from(
+      parsedVaa.emitter_address
+    ).toString("hex");
+    const vaaKey: VaaKey = `${parsedVaa.emitter_chain}#${vaaEmitterAddressHex}#${parsedVaa.sequence}`;
 
-    if (this.observedVaas.has(vaaHash)) {
+    if (this.observedVaas.has(vaaKey)) {
       return;
     }
 
-    this.observedVaas.set(vaaHash, true);
+    this.observedVaas.set(vaaKey, true);
     this.promClient?.incReceivedVaa();
 
     let batchAttestation;
