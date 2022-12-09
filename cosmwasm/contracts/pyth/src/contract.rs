@@ -1,6 +1,10 @@
 use {
     crate::{
         error::PythContractError,
+        governance::{
+            GovernanceAction::SetFee,
+            GovernanceInstruction,
+        },
         msg::{
             ExecuteMsg,
             InstantiateMsg,
@@ -16,7 +20,6 @@ use {
             ConfigInfo,
             PriceInfo,
             PythDataSource,
-            VALID_TIME_PERIOD,
         },
     },
     cosmwasm_std::{
@@ -40,7 +43,10 @@ use {
         PriceStatus,
         ProductIdentifier,
     },
-    std::collections::HashSet,
+    std::{
+        collections::HashSet,
+        time::Duration,
+    },
     wormhole::{
         msg::QueryMsg as WormholeQueryMsg,
         state::ParsedVAA,
@@ -61,12 +67,21 @@ pub fn instantiate(
 ) -> StdResult<Response> {
     // Save general wormhole and pyth info
     let state = ConfigInfo {
-        owner:             info.sender,
-        wormhole_contract: deps.api.addr_validate(msg.wormhole_contract.as_ref())?,
-        data_sources:      HashSet::from([PythDataSource {
+        owner:                      info.sender,
+        wormhole_contract:          deps.api.addr_validate(msg.wormhole_contract.as_ref())?,
+        data_sources:               HashSet::from([PythDataSource {
             emitter:            msg.pyth_emitter,
             pyth_emitter_chain: msg.pyth_emitter_chain,
         }]),
+        // FIXME: everything below here is wrong
+        chain_id:                   0,
+        governance_source:          PythDataSource {
+            emitter:            Binary(vec![]),
+            pyth_emitter_chain: 0,
+        },
+        governance_sequence_number: 0,
+        valid_time_period:          Duration::new(0, 0),
+        fee:                        0,
     };
     config(deps.storage).save(&state)?;
 
@@ -121,7 +136,7 @@ fn update_price_feeds(
 
 fn execute_governance_instruction(
     mut deps: DepsMut,
-    _env: Env,
+    env: Env,
     _info: MessageInfo,
     data: &Binary,
 ) -> StdResult<Response> {
@@ -135,16 +150,21 @@ fn execute_governance_instruction(
         .map_err(|_| PythContractError::InvalidGovernancePayload)?;
 
     if instruction.target_chain_id != state.chain_id && instruction.target_chain_id != 0 {
-        return Err(PythContractError::InvalidGovernanceTarget);
+        return Err(PythContractError::InvalidGovernancePayload)?;
     }
 
     match instruction.action {
-        // upgrade contract
-        // authorize governance source transfer
-        // set data sources
-        // set fee
-        // set valid period
-        // request governance data source transfer
+        SetFee { new_fee } => {
+            let mut new_config = state;
+            new_config.fee = new_fee;
+            config(deps.storage).save(&new_config);
+
+            // FIXME: adjust these attributes
+            Ok(Response::new()
+                .add_attribute("action", "set_fee")
+                .add_attribute("new_fee", format!("{new_fee}")))
+        }
+        _ => Err(PythContractError::InvalidGovernancePayload)?,
     }
 }
 
@@ -221,7 +241,7 @@ fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> Std
         emitter:            vaa.emitter_address.clone().into(),
         pyth_emitter_chain: vaa.emitter_chain,
     };
-    if !*state.governance_source == vaa_data_source {
+    if state.governance_source != vaa_data_source {
         return Err(PythContractError::InvalidUpdateEmitter)?;
     }
     Ok(())
@@ -323,6 +343,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<PriceFeedResponse> {
+    let config = config_read(deps.storage).load()?;
     match price_info_read(deps.storage).load(address) {
         Ok(mut price_info) => {
             let env_time_sec = env.block.time.seconds();
@@ -341,7 +362,7 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
                 price_pub_time_sec - env_time_sec
             };
 
-            if time_abs_diff > VALID_TIME_PERIOD.as_secs() {
+            if time_abs_diff > config.valid_time_period.as_secs() {
                 price_info.price_feed.status = PriceStatus::Unknown;
             }
 
@@ -369,7 +390,11 @@ mod test {
             Addr,
             OwnedDeps,
         },
+        std::time::Duration,
     };
+
+    /// Default valid time period for testing purposes.
+    const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
 
     fn setup_test() -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
         (mock_dependencies(), mock_env())
@@ -393,9 +418,17 @@ mod test {
 
     fn create_zero_config_info() -> ConfigInfo {
         ConfigInfo {
-            owner:             Addr::unchecked(String::default()),
-            wormhole_contract: Addr::unchecked(String::default()),
-            data_sources:      HashSet::default(),
+            owner:                      Addr::unchecked(String::default()),
+            wormhole_contract:          Addr::unchecked(String::default()),
+            data_sources:               HashSet::default(),
+            governance_source:          PythDataSource {
+                emitter:            Binary(vec![]),
+                pyth_emitter_chain: 0,
+            },
+            governance_sequence_number: 0,
+            chain_id:                   0,
+            valid_time_period:          Duration::new(0, 0),
+            fee:                        0,
         }
     }
 

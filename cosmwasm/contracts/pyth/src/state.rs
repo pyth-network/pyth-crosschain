@@ -30,12 +30,6 @@ use {
 pub static CONFIG_KEY: &[u8] = b"config";
 pub static PRICE_INFO_KEY: &[u8] = b"price_info_v3";
 
-/// Maximum acceptable time period before price is considered to be stale.
-///
-/// This value considers attestation delay which currently might up to a minute.
-/// FIXME: needs to be configurable
-// pub const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, JsonSchema)]
 pub struct PythDataSource {
     pub emitter:            Binary,
@@ -50,7 +44,11 @@ pub struct ConfigInfo {
     pub data_sources:               HashSet<PythDataSource>,
     pub governance_source:          PythDataSource,
     pub governance_sequence_number: u64,
-    // pub valid_time_period: Duration,
+    pub chain_id:                   u16,
+    pub valid_time_period:          Duration,
+
+    // TODO: what type?
+    pub fee: u128,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, JsonSchema)]
