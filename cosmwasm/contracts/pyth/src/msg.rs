@@ -22,7 +22,7 @@ pub struct InstantiateMsg {
     pub chain_id:                   u16,
     pub valid_time_period:          Duration,
 
-    pub fee: u128,
+    pub fee:       u128,
     pub fee_denom: String,
 }
 

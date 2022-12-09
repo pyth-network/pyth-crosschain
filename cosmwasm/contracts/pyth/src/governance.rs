@@ -12,13 +12,8 @@ use {
         Deserialize,
         Serialize,
     },
-    std::io::{
-        Read,
-        Write,
-    },
+    std::io::Write,
 };
-
-type HumanAddr = String;
 
 const PYTH_GOVERNANCE_MAGIC: &[u8] = b"PTGM";
 
@@ -43,8 +38,8 @@ impl GovernanceModule {
 
     pub fn to_u8(&self) -> u8 {
         match &self {
-            Executor => 0,
-            Target => 1,
+            GovernanceModule::Executor => 0,
+            GovernanceModule::Target => 1,
         }
     }
 }
@@ -60,7 +55,7 @@ pub enum GovernanceAction {
     SetFee { val: u64, expo: u64 }, // 3
     // Set the default valid period to the provided number of seconds
     SetValidPeriod { valid_seconds: u64 }, // 4
-    RequestGovernanceDataSourceTransfer,       // 5
+    RequestGovernanceDataSourceTransfer,   // 5
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -73,7 +68,7 @@ pub struct GovernanceInstruction {
 impl GovernanceInstruction {
     pub fn deserialize(mut bytes: impl ReadBytesExt) -> Result<Self, ErrBox> {
         let mut magic_vec = vec![0u8; PYTH_GOVERNANCE_MAGIC.len()];
-        bytes.read_exact(magic_vec.as_mut_slice());
+        bytes.read_exact(magic_vec.as_mut_slice())?;
 
         if magic_vec.as_slice() != PYTH_GOVERNANCE_MAGIC {
             return Err(format!(
@@ -113,7 +108,7 @@ impl GovernanceInstruction {
     pub fn serialize(&self) -> Result<Vec<u8>, ErrBox> {
         let mut buf = vec![];
 
-        buf.write(PYTH_GOVERNANCE_MAGIC)?;
+        buf.write_all(PYTH_GOVERNANCE_MAGIC)?;
         buf.write_u8(self.module.to_u8())?;
 
         match &self.action {
@@ -133,14 +128,16 @@ impl GovernanceInstruction {
                 buf.write_u8(3)?;
                 buf.write_u16::<BigEndian>(self.target_chain_id)?;
 
-                buf.write_u64::<BigEndian>(*val);
-                buf.write_u64::<BigEndian>(*expo);
+                buf.write_u64::<BigEndian>(*val)?;
+                buf.write_u64::<BigEndian>(*expo)?;
             }
-            GovernanceAction::SetValidPeriod { valid_seconds: new_valid_period } => {
+            GovernanceAction::SetValidPeriod {
+                valid_seconds: new_valid_period,
+            } => {
                 buf.write_u8(4)?;
                 buf.write_u16::<BigEndian>(self.target_chain_id)?;
 
-                buf.write_u64::<BigEndian>(*new_valid_period);
+                buf.write_u64::<BigEndian>(*new_valid_period)?;
             }
             GovernanceAction::RequestGovernanceDataSourceTransfer => {
                 buf.write_u8(5)?;
@@ -165,7 +162,6 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub struct MigrateMsg {}
 
-use crate::governance::GovernanceModule::Executor;
 pub use pyth_sdk_cw::{
     PriceFeedResponse,
     QueryMsg,

@@ -1,4 +1,3 @@
-use cosmwasm_std::Coin;
 use {
     cosmwasm_std::{
         Addr,
@@ -49,7 +48,7 @@ pub struct ConfigInfo {
     pub valid_time_period:          Duration,
 
     // The fee to pay, denominated in fee_denom (typically, the chain's native token)
-    pub fee: u128,
+    pub fee:       u128,
     pub fee_denom: String,
 }
 

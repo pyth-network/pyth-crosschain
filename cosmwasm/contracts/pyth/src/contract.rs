@@ -1,4 +1,3 @@
-use std::convert::TryInto;
 use {
     crate::{
         error::PythContractError,
@@ -79,7 +78,7 @@ pub fn instantiate(
         governance_sequence_number: msg.governance_sequence_number,
         valid_time_period:          msg.valid_time_period,
         fee:                        msg.fee,
-        fee_denom: msg.fee_denom,
+        fee_denom:                  msg.fee_denom,
     };
     config(deps.storage).save(&state)?;
 
@@ -145,7 +144,7 @@ fn execute_governance_instruction(
 
 /// Helper function to improve testability of governance instructions (so we can unit test without wormhole).
 fn execute_governance_instruction_from_vaa(
-    mut deps: DepsMut,
+    deps: DepsMut,
     _env: Env,
     _info: MessageInfo,
     vaa: &ParsedVAA,
@@ -154,7 +153,7 @@ fn execute_governance_instruction_from_vaa(
 
     // store updates to the config as a result of this action in here.
     let mut updated_config: ConfigInfo = state.clone();
-    verify_vaa_from_governance_source(&state, &vaa)?;
+    verify_vaa_from_governance_source(&state, vaa)?;
 
     if vaa.sequence <= state.governance_sequence_number {
         return Err(PythContractError::OldGovernanceMessage)?;
@@ -172,7 +171,13 @@ fn execute_governance_instruction_from_vaa(
 
     let response = match instruction.action {
         SetFee { val, expo } => {
-            updated_config.fee = (val as u128).checked_mul((10 as u128).checked_pow(expo as u32).ok_or(PythContractError::InvalidGovernancePayload)?).ok_or(PythContractError::InvalidGovernancePayload)?;
+            updated_config.fee = (val as u128)
+                .checked_mul(
+                    10_u128
+                        .checked_pow(expo as u32)
+                        .ok_or(PythContractError::InvalidGovernancePayload)?,
+                )
+                .ok_or(PythContractError::InvalidGovernancePayload)?;
 
             Response::new()
                 .add_attribute("action", "set_fee")
@@ -397,9 +402,9 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
 mod test {
     use {
         super::*,
-        crate::governance::{
-            GovernanceAction,
-            GovernanceModule::Target,
+        crate::governance::GovernanceModule::{
+            Executor,
+            Target,
         },
         cosmwasm_std::{
             testing::{
@@ -415,7 +420,6 @@ mod test {
         },
         std::time::Duration,
     };
-    use crate::governance::GovernanceModule::Executor;
 
     /// Default valid time period for testing purposes.
     const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
@@ -423,10 +427,12 @@ mod test {
     fn setup_test() -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
         let mut dependencies = mock_dependencies();
         let mut config = config(dependencies.as_mut().storage);
-        config.save(&ConfigInfo {
-            valid_time_period: VALID_TIME_PERIOD,
-            ..create_zero_config_info()
-        });
+        config
+            .save(&ConfigInfo {
+                valid_time_period: VALID_TIME_PERIOD,
+                ..create_zero_config_info()
+            })
+            .unwrap();
         (dependencies, mock_env())
     }
 
@@ -459,7 +465,7 @@ mod test {
             chain_id:                   0,
             valid_time_period:          Duration::new(0, 0),
             fee:                        0,
-            fee_denom: "ATOM".into(),
+            fee_denom:                  "ATOM".into(),
         }
     }
 
@@ -885,20 +891,13 @@ mod test {
         vaa: &ParsedVAA,
     ) -> StdResult<(Response, ConfigInfo)> {
         let (mut deps, env) = setup_test();
-        config(&mut deps.storage)
-          .save(initial_config)
-          .unwrap();
+        config(&mut deps.storage).save(initial_config).unwrap();
 
         let info = mock_info("123", &[]);
 
-        let result = execute_governance_instruction_from_vaa(
-            deps.as_mut(),
-            env.clone(),
-            info.clone(),
-            &vaa
-        );
+        let result = execute_governance_instruction_from_vaa(deps.as_mut(), env, info, vaa);
 
-        result.and_then(|response| config_read(&mut deps.storage).load().map(|c| (response, c)))
+        result.and_then(|response| config_read(&deps.storage).load().map(|c| (response, c)))
     }
 
     fn governance_test_config() -> ConfigInfo {
@@ -932,7 +931,7 @@ mod test {
             target_chain_id: 5,
             action:          SetFee { val: 6, expo: 0 },
         };
-        let mut test_vaa = governance_vaa(&test_instruction);
+        let test_vaa = governance_vaa(&test_instruction);
 
         // First check that a valid VAA is accepted (to ensure that no one accidentally breaks the following test cases).
         assert!(apply_governance_vaa(&test_config, &test_vaa).is_ok());
@@ -974,12 +973,12 @@ mod test {
         // wrong module
         let mut instruction_copy = test_instruction.clone();
         instruction_copy.module = Executor;
-        let mut vaa_copy = test_vaa.clone();
+        let mut vaa_copy = test_vaa;
         vaa_copy.payload = instruction_copy.serialize().unwrap();
         assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
 
         // invalid action index
-        let mut instruction_copy = test_instruction.clone();
+        let _instruction_copy = test_instruction;
         vaa_copy.payload[9] = 100;
         assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
     }
@@ -994,17 +993,23 @@ mod test {
             target_chain_id: 5,
             action:          SetFee { val: 6, expo: 1 },
         };
-        let mut test_vaa = governance_vaa(&test_instruction);
+        let test_vaa = governance_vaa(&test_instruction);
 
-        assert_eq!(apply_governance_vaa(&test_config, &test_vaa).map(|(r, c)| c.fee), Ok(60));
+        assert_eq!(
+            apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.fee),
+            Ok(60)
+        );
 
         let test_instruction = GovernanceInstruction {
             module:          Target,
             target_chain_id: 5,
             action:          SetFee { val: 6, expo: 0 },
         };
-        let mut test_vaa = governance_vaa(&test_instruction);
+        let test_vaa = governance_vaa(&test_instruction);
 
-        assert_eq!(apply_governance_vaa(&test_config, &test_vaa).map(|(r, c)| c.fee), Ok(6));
+        assert_eq!(
+            apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.fee),
+            Ok(6)
+        );
     }
 }
