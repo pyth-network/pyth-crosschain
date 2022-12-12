@@ -180,7 +180,7 @@ addresses["pyth_cosmwasm.wasm"] = await instantiate(
       "hex"
     ).toString("base64"),
     governance_emitter_chain: pythChain,
-    governance_sequence_number: 0,
+    governance_sequence_number: "0",
     chain_id: 3,
     valid_time_period_secs: 60,
     fee: "1",
