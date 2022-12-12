@@ -359,3 +359,10 @@ docker_build(
 )
 
 k8s_yaml_with_ns("devnet/multisig.yaml")
+
+k8s_resource(
+    "multisig",
+    resource_deps = ["solana-devnet"],
+    labels = ["solana"],
+    trigger_mode = trigger_mode,
+)

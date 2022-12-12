@@ -62,7 +62,7 @@ const CONFIG: Record<Cluster, Config> = {
   },
   localdevnet: {
     wormholeClusterName: "DEVNET",
-    vault: new PublicKey([]),
+    vault: new PublicKey("DFkA5ubJSETKiFnniAsm8qRXUa7RrnnE7U9awTzbcrJF"),
     wormholeRpcEndpoint: "http://guardian:7071",
   },
 };
@@ -82,10 +82,6 @@ program
     "Vault create key. It's a pubkey used to seed the vault's address"
   )
   .requiredOption(
-    "-m --mesh-program <address>",
-    "Mesh multisig program address"
-  )
-  .requiredOption(
     "-x --external-authority <address>",
     "External authority address"
   )
@@ -100,12 +96,15 @@ program
     "-i --initial-members <comma_separated_members>",
     "comma-separated list of initial multisig members, without spaces"
   )
-  .option("-r --solana-rpc <url>", "Solana RPC address to use")
+  .option(
+    "-r --solana-rpc <url>",
+    "Solana RPC address to use",
+    "http://localhost:8899"
+  )
   .action(async (options: any) => {
     let cluster: Cluster = options.cluster;
     let createKeyAddr: PublicKey = new PublicKey(options.createKey);
     let extAuthorityAddr: PublicKey = new PublicKey(options.externalAuthority);
-    let meshProgramAddr: PublicKey = new PublicKey(options.meshProgram);
 
     let threshold: number = parseInt(options.threshold, 10);
 
@@ -119,13 +118,10 @@ program
       options.ledgerDerivationAccount,
       options.ledgerDerivationChange,
       options.payer,
-      cluster == "localdevnet" ? options.solanaRpc : undefined,
-      cluster == "localdevnet" ? meshProgramAddr : undefined
+      cluster == "localdevnet" ? options.solanaRpc : undefined
     );
 
-    // The vault key is a PDA and the create key is only an ingredient for it
-    let [vaultAddr, bump] = getMsPDA(createKeyAddr, meshProgramAddr);
-
+    let vaultAddr = CONFIG[cluster].vault;
     console.log("Creating new vault at", vaultAddr.toString());
 
     try {
@@ -324,9 +320,6 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
-    if (!squad) {
-      console.log("Could not instantiate Squads object!");
-    }
     executeMultisigTx(
       cluster,
       squad,
@@ -364,9 +357,6 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
-    if (!squad) {
-      console.log("Could not instantiate Squads object!");
-    }
     await changeThreshold(
       options.cluster,
       squad,
@@ -404,9 +394,6 @@ program
       options.wallet
     );
 
-    if (!squad) {
-      console.log("Could not instantiate Squads object!");
-    }
     await addMember(
       options.cluster,
       squad,
@@ -461,8 +448,7 @@ async function getSquadsClient(
   ledgerDerivationAccount: number | undefined,
   ledgerDerivationChange: number | undefined,
   walletPath: string,
-  solRpcUrl?: string,
-  multisigProgramId?: PublicKey
+  solRpcUrl?: string
 ) {
   let wallet: LedgerNodeWallet | NodeWallet;
   if (ledger) {
@@ -490,14 +476,11 @@ async function getSquadsClient(
       break;
     }
     case "localdevnet": {
-      if (solRpcUrl && multisigProgramId) {
-        return Squads.endpoint(solRpcUrl, wallet, {
-          multisigProgramId,
-        });
+      if (solRpcUrl) {
+        return Squads.endpoint(solRpcUrl, wallet);
       } else {
         console.log("rpc:", solRpcUrl);
-        console.log("multisig program ID:", multisigProgramId);
-        throw `ERROR: solRpcUrl or multisigProgramId was not specified for localdevnet!`;
+        throw `ERROR: solRpcUrl was not specified for localdevnet!`;
       }
     }
     default: {

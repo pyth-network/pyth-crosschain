@@ -39,13 +39,12 @@ res = msg_builder_run_or_die([
                         "-k", create_key_addr,
                         "-x", ext_authority_addr,
                         "-p", SOL_PAYER_KEYPAIR,
-                        "-m", MESH_PROGRAM_ADDR,
                         "-c", "localdevnet",
                         "-r", SOL_RPC_URL,
-                        "-i", f"{alice_addr},{bob_addr}", # Skip Carol intentionally
-                        "-t", "1",
+                        "-i", f"{alice_addr},{bob_addr},{carol_addr}",
+                        "-t", "2", # 2/3 threshold
                         ],
-                             capture_output=True, debug=False, die=False)
+                             capture_output=True, debug=True, die=False)
 
 if res.returncode == errno.EEXIST:
     print("WARNING: Skipping vault creation and testing, received EEXIST from script", file=sys.stderr)
