@@ -378,6 +378,7 @@ async function syncGovernanceDataSource(proxy) {
         `${desiredGovDataSource}\n` +
         `Cannot upgrade governance data source automatically. Please upgrade it manually`
     );
+    throw new Error("Governance data source is not in sync.");
   }
 }
 
