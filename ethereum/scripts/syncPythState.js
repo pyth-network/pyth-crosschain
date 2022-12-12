@@ -5,6 +5,7 @@ const { assert } = require("chai");
 const util = require("node:util");
 const exec = util.promisify(require("node:child_process").exec);
 const fs = require("fs");
+const lodash = require("lodash");
 
 const loadEnv = require("./loadEnv");
 loadEnv("../");
@@ -134,10 +135,16 @@ async function createVaaFromPayloadThroughMultiSig(payload) {
 /**
  * Create a VAA from Payload through multisig.
  *
+ * @param {} proxy
  * @param {Buffer} payload
+ * @param {boolean|undefined} keepVaaCache
  * @returns {Promise<void>}
  */
-async function createAndExecuteVaaFromPayloadThroughMultiSig(payload) {
+async function createAndExecuteVaaFromPayloadThroughMultiSig(
+  proxy,
+  payload,
+  keepVaaCache
+) {
   const vaa = await createVaaFromPayloadThroughMultiSig(payload);
 
   assertVaaPayloadEquals(vaa, payload);
@@ -145,7 +152,9 @@ async function createAndExecuteVaaFromPayloadThroughMultiSig(payload) {
   console.log(`Executing the VAA...`);
   await proxy.executeGovernanceInstruction("0x" + vaa);
 
-  cleanUpVaaCache(payload);
+  if (keepVaaCache !== true) {
+    cleanUpVaaCache(payload);
+  }
 }
 
 async function enesureWormholeAddrAndChainIdIsCorrect(proxy) {
@@ -183,7 +192,7 @@ async function ensureThereIsNoOwner(proxy) {
  * @param {} proxy
  * @param {string} desiredVersion
  */
-async function govUpgradeContract(proxy, desiredVersion) {
+async function upgradeContract(proxy, desiredVersion) {
   const implCachePath = `.${network}.new_impl`;
   let newImplementationAddress;
   if (fs.existsSync(implCachePath)) {
@@ -207,7 +216,7 @@ async function govUpgradeContract(proxy, desiredVersion) {
 
   const upgradePayloadHex = upgradePayload.toString("hex");
 
-  await createAndExecuteVaaFromPayloadThroughMultiSig(upgradePayload);
+  await createAndExecuteVaaFromPayloadThroughMultiSig(proxy, upgradePayload);
 
   fs.rmSync(implCachePath);
   cleanUpVaaCache(upgradePayloadHex);
@@ -215,7 +224,7 @@ async function govUpgradeContract(proxy, desiredVersion) {
   const newVersion = await proxy.version();
   assert(desiredVersion == newVersion, "New contract version is not a match");
 
-  console.log(`✅ Contract upgraded successfully`);
+  console.log(`✅ Upgraded the contract successfully.`);
 }
 
 async function syncContractCode(proxy) {
@@ -228,28 +237,8 @@ async function syncContractCode(proxy) {
     console.log(
       `❌ On-chain contract is outdated. Deployed version: ${onchainVersion}, desired version: ${desiredVersion}. Upgrading...`
     );
-    await govUpgradeContract(proxy, desiredVersion);
+    await upgradeContract(proxy, desiredVersion);
   }
-}
-
-/**
- *
- * @param {} proxy
- * @param {string} desiredUpdateFee
- */
-async function govSetFee(proxy, desiredUpdateFee) {
-  const setFeePayload = new governance.SetFeeInstruction(
-    governance.CHAINS[chainName],
-    BigInt(desiredUpdateFee),
-    BigInt(0)
-  ).serialize();
-
-  await createAndExecuteVaaFromPayloadThroughMultiSig(setFeePayload);
-
-  const onchainUpdateFee = (await proxy.singleUpdateFeeInWei()).toString();
-  assert(onchainUpdateFee == desiredUpdateFee);
-
-  console.log(`✅ New update fee set successfully`);
 }
 
 async function syncUpdateFee(proxy) {
@@ -260,9 +249,135 @@ async function syncUpdateFee(proxy) {
     console.log(`✅ Contract update fee is in sync: ${desiredUpdateFee}`);
   } else {
     console.log(
-      `❌ Update fee is not in sync. on-chain update fee: ${onchainUpdateFee}, desired update fee: ${desiredUpdateFee}. Updating...`
+      `❌ Update fee is not in sync. on-chain update fee: ${onchainUpdateFee}, ` +
+        `desired update fee: ${desiredUpdateFee}. Updating...`
     );
-    await govSetFee(proxy, desiredUpdateFee);
+
+    const setFeePayload = new governance.SetFeeInstruction(
+      governance.CHAINS[chainName],
+      BigInt(desiredUpdateFee),
+      BigInt(0)
+    ).serialize();
+
+    await createAndExecuteVaaFromPayloadThroughMultiSig(proxy, setFeePayload);
+
+    const newOnchainUpdateFee = (await proxy.singleUpdateFeeInWei()).toString();
+    assert(newOnchainUpdateFee == desiredUpdateFee);
+
+    console.log(`✅ Set the new update fee successfully.`);
+  }
+}
+
+async function syncValidTimePeriod(proxy) {
+  const desiredValidTimePeriod = process.env.VALID_TIME_PERIOD_SECONDS;
+  const onchainValidTimePeriod = (
+    await proxy.validTimePeriodSeconds()
+  ).toString();
+
+  if (onchainValidTimePeriod == desiredValidTimePeriod) {
+    console.log(
+      `✅ Contract valid time period is in sync: ${desiredValidTimePeriod}s`
+    );
+  } else {
+    console.log(
+      `❌ Valid time period is not in sync. on-chain valid time period: ${onchainValidTimePeriod}s, ` +
+        `desired valid time period: ${desiredValidTimePeriod}s. Updating...`
+    );
+
+    const setValidPeriodPayload = new governance.SetValidPeriodInstruction(
+      governance.CHAINS[chainName],
+      BigInt(desiredValidTimePeriod)
+    ).serialize();
+
+    await createAndExecuteVaaFromPayloadThroughMultiSig(
+      proxy,
+      setValidPeriodPayload
+    );
+
+    const newOnchainValidTimePeriod = (
+      await proxy.validTimePeriodSeconds()
+    ).toString();
+    assert(newOnchainValidTimePeriod == desiredValidTimePeriod);
+
+    console.log(`✅ Set the new valid time period successfully.`);
+  }
+}
+
+async function syncDataSources(proxy) {
+  const desiredDataSources = new Set([
+    [
+      Number(process.env.SOLANA_CHAIN_ID).toString(),
+      process.env.SOLANA_EMITTER,
+    ],
+    [
+      Number(process.env.PYTHNET_CHAIN_ID).toString(),
+      process.env.PYTHNET_EMITTER,
+    ],
+  ]);
+
+  const onchainDataSources = new Set(await proxy.validDataSources());
+
+  if (lodash.isEqual(desiredDataSources, onchainDataSources)) {
+    console.log(
+      `✅ Contract data sources are in sync:\n` +
+        `${JSON.stringify([...desiredDataSources])}`
+    );
+  } else {
+    console.log(
+      `❌ Data sources are not in sync. on-chain data sources:\n` +
+        `${JSON.stringify([...onchainDataSources])}\n` +
+        `desired data sources:\n` +
+        `${JSON.stringify([...desiredDataSources])}\n` +
+        `Updating...`
+    );
+
+    // Usually this change is universal, so the Payload is generated for all
+    // the chains.
+    const setDataSourcesPayload = new governance.SetDataSourcesInstruction(
+      governance.CHAINS.unset,
+      Array.from(desiredDataSources).map(
+        (ds) =>
+          new governance.DataSource(
+            Number(ds[0]),
+            new governance.HexString32Bytes(ds[1])
+          )
+      )
+    ).serialize();
+
+    // 3rd argument keeps the VAA to be used in the other contracts.
+    await createAndExecuteVaaFromPayloadThroughMultiSig(
+      proxy,
+      setDataSourcesPayload,
+      true
+    );
+
+    const newOnchainDataSources = new Set(await proxy.validDataSources());
+    assert(lodash.isEqual(desiredDataSources, newOnchainDataSources));
+
+    console.log(`✅ Set the new data sources successfully.`);
+  }
+}
+
+async function syncGovernanceDataSource(proxy) {
+  const desiredGovDataSource = [
+    Number(process.env.GOVERNANCE_CHAIN_ID).toString(),
+    process.env.GOVERNANCE_EMITTER,
+  ];
+
+  const onchainGovDataSource = Array.from(await proxy.governanceDataSource());
+
+  if (lodash.isEqual(desiredGovDataSource, onchainGovDataSource)) {
+    console.log(
+      `✅ Contract data sources are in sync:\n` + `${desiredGovDataSource}`
+    );
+  } else {
+    console.log(
+      `❌ Governance data source is not in sync. on-chain governance data source:\n` +
+        `${onchainGovDataSource}\n` +
+        `desired governance data source:\n` +
+        `${desiredGovDataSource}\n` +
+        `Cannot upgrade governance data source automatically. Please upgrade it manually`
+    );
   }
 }
 
@@ -276,9 +391,9 @@ module.exports = async function (callback) {
 
     await syncContractCode(proxy);
     await syncUpdateFee(proxy);
-    // await syncValidTimePeriod(proxy);
-    // await syncGovernanceDataSource(proxy);
-    // await syncDataSources(proxy);
+    await syncValidTimePeriod(proxy);
+    await syncDataSources(proxy);
+    await syncGovernanceDataSource(proxy);
 
     callback();
   } catch (e) {
