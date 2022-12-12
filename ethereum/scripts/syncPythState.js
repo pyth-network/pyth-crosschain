@@ -1,4 +1,5 @@
 const governance = require("@pythnetwork/xc-governance-sdk");
+const wormhole = require("@certusone/wormhole-sdk");
 const assertVaaPayloadEquals = require("./assertVaaPayloadEquals");
 const { assert } = require("chai");
 const util = require("node:util");
@@ -76,27 +77,37 @@ async function executeMultisigTxAndGetVaa(txKey) {
 
 /**
  *
- * @param {string} payload
+ * @param {Buffer} payload
+ */
+function cleanUpVaaCache(payload) {
+  fs.rmSync(`.${network}.ms_vaa_${payload.toString("hex")}`);
+}
+
+/**
+ *
+ * @param {Buffer} payload
  * @returns {Promise<string>} VAA for the tx as hex (without leading 0x).
  */
-async function createVaaFromPayload(payload) {
-  const msVaaCachePath = `.${network}.ms_vaa_${payload}`;
+async function createVaaFromPayloadThroughMultiSig(payload) {
+  const payloadHex = payload.toString("hex");
+
+  const msVaaCachePath = `.${network}.ms_vaa_${payloadHex}`;
   let vaa;
   if (fs.existsSync(msVaaCachePath)) {
     vaa = fs.readFileSync(msVaaCachePath).toString().trim();
     console.log(`VAA already exists: ${vaa}`);
     return vaa;
   } else {
-    const msTxCachePath = `.${network}.ms_tx_${payload}`;
+    const msTxCachePath = `.${network}.ms_tx_${payloadHex}`;
 
     let txKey;
     if (fs.existsSync(msTxCachePath)) {
       txKey = fs.readFileSync(msTxCachePath).toString();
     } else {
       console.log(
-        `Creating multisig to send VAA with this payload: ${payload} ...`
+        `Creating multisig to send VAA with this payload: ${payloadHex} ...`
       );
-      txKey = await createMultisigTx(payload);
+      txKey = await createMultisigTx(payloadHex);
       fs.writeFileSync(msTxCachePath, txKey);
       throw new Error(
         "Contract not sync yet. Run the script again once the multisig transaction is ready to be executed."
@@ -104,29 +115,75 @@ async function createVaaFromPayload(payload) {
     }
 
     try {
-      vaa = await executeMultisigTxAndGetVaa(txKey, payload);
+      vaa = await executeMultisigTxAndGetVaa(txKey, payloadHex);
     } catch (e) {
       console.error(e);
       throw new Error(
         "Could not execute multisig tx. If the transaction is executed please get the VAA manually " +
-          `and put it on .${network}.ms_vaa_${payload}. Then execute the script again.`
+          `and put it on .${network}.ms_vaa_${payloadHex}. Then execute the script again.`
       );
     }
 
     fs.writeFileSync(msVaaCachePath, vaa);
-    fs.rmSync(`.${network}.ms_tx_${payload}`);
+    fs.rmSync(`.${network}.ms_tx_${payloadHex}`);
   }
 
   return vaa;
 }
 
-function cleanUpVaaCache(payload) {
-  fs.rmSync(`.${network}.ms_vaa_${payload}`);
+/**
+ * Create a VAA from Payload through multisig.
+ *
+ * @param {Buffer} payload
+ * @returns {Promise<void>}
+ */
+async function createAndExecuteVaaFromPayloadThroughMultiSig(payload) {
+  const vaa = await createVaaFromPayloadThroughMultiSig(payload);
+
+  assertVaaPayloadEquals(vaa, payload);
+
+  console.log(`Executing the VAA...`);
+  await proxy.executeGovernanceInstruction("0x" + vaa);
+
+  cleanUpVaaCache(payload);
 }
 
-async function upgradeContract(proxy) {
-  console.log("Upgrading the contract...");
+async function enesureWormholeAddrAndChainIdIsCorrect(proxy) {
+  let desiredWormholeAddr;
+  if (governance.RECEIVER_CHAINS[chainName] !== undefined) {
+    const WormholeReceiver = artifacts.require("WormholeReceiver");
+    desiredWormholeAddr = (await WormholeReceiver.deployed()).address;
+  } else {
+    desiredWormholeAddr =
+      wormhole.CONTRACTS[cluster.toUpperCase()][chainName].core;
+  }
 
+  assert(desiredWormholeAddr !== undefined);
+
+  const onchainWormholeAddr = await proxy.wormhole();
+  assert(desiredWormholeAddr == onchainWormholeAddr);
+
+  const desiredChainId = governance.CHAINS[chainName];
+  const onchainChainId = await proxy.chainId();
+  assert(desiredChainId == onchainChainId);
+
+  console.log(
+    `✅ Wormhole address and chain id is correct: ${desiredWormholeAddr} chainId: ${desiredChainId}`
+  );
+}
+
+async function ensureThereIsNoOwner(proxy) {
+  const onchainOwner = await proxy.owner();
+  assert(onchainOwner == "0x0000000000000000000000000000000000000000");
+  console.log("✅ There is no owner");
+}
+
+/**
+ *
+ * @param {} proxy
+ * @param {string} desiredVersion
+ */
+async function govUpgradeContract(proxy, desiredVersion) {
   const implCachePath = `.${network}.new_impl`;
   let newImplementationAddress;
   if (fs.existsSync(implCachePath)) {
@@ -150,35 +207,62 @@ async function upgradeContract(proxy) {
 
   const upgradePayloadHex = upgradePayload.toString("hex");
 
-  const vaa = await createVaaFromPayload(upgradePayloadHex);
-  assertVaaPayloadEquals(vaa, upgradePayload);
-
-  console.log(`Executing the VAA...`);
-
-  await proxy.executeGovernanceInstruction("0x" + vaa);
-
-  const newVersion = await proxy.version();
-  const { version: targetVersion } = require("../package.json");
-  assert(targetVersion == newVersion, "New contract version is not a match");
+  await createAndExecuteVaaFromPayloadThroughMultiSig(upgradePayload);
 
   fs.rmSync(implCachePath);
   cleanUpVaaCache(upgradePayloadHex);
 
-  console.log(`Contract upgraded successfully`);
+  const newVersion = await proxy.version();
+  assert(desiredVersion == newVersion, "New contract version is not a match");
+
+  console.log(`✅ Contract upgraded successfully`);
 }
 
 async function syncContractCode(proxy) {
-  let deployedVersion = await proxy.version();
-  const { version: targetVersion } = require("../package.json");
+  const onchainVersion = await proxy.version();
+  const { version: desiredVersion } = require("../package.json");
 
-  if (deployedVersion === targetVersion) {
-    console.log("Contract version up to date");
-    return;
+  if (onchainVersion === desiredVersion) {
+    console.log(`✅ Contract version is up to date: ${desiredVersion}`);
   } else {
     console.log(
-      `Deployed version: ${deployedVersion}, target version: ${targetVersion}. On-chain contract is outdated.`
+      `❌ On-chain contract is outdated. Deployed version: ${onchainVersion}, desired version: ${desiredVersion}. Upgrading...`
     );
-    await upgradeContract(proxy);
+    await govUpgradeContract(proxy, desiredVersion);
+  }
+}
+
+/**
+ *
+ * @param {} proxy
+ * @param {string} desiredUpdateFee
+ */
+async function govSetFee(proxy, desiredUpdateFee) {
+  const setFeePayload = new governance.SetFeeInstruction(
+    governance.CHAINS[chainName],
+    BigInt(desiredUpdateFee),
+    BigInt(0)
+  ).serialize();
+
+  await createAndExecuteVaaFromPayloadThroughMultiSig(setFeePayload);
+
+  const onchainUpdateFee = (await proxy.singleUpdateFeeInWei()).toString();
+  assert(onchainUpdateFee == desiredUpdateFee);
+
+  console.log(`✅ New update fee set successfully`);
+}
+
+async function syncUpdateFee(proxy) {
+  const desiredUpdateFee = process.env.SINGLE_UPDATE_FEE_IN_WEI;
+  const onchainUpdateFee = (await proxy.singleUpdateFeeInWei()).toString();
+
+  if (onchainUpdateFee == desiredUpdateFee) {
+    console.log(`✅ Contract update fee is in sync: ${desiredUpdateFee}`);
+  } else {
+    console.log(
+      `❌ Update fee is not in sync. on-chain update fee: ${onchainUpdateFee}, desired update fee: ${desiredUpdateFee}. Updating...`
+    );
+    await govSetFee(proxy, desiredUpdateFee);
   }
 }
 
@@ -186,7 +270,15 @@ module.exports = async function (callback) {
   try {
     const proxy = await PythUpgradable.deployed();
     console.log(`Syncing Pyth contract deployed on ${proxy.address}...`);
+
+    await ensureThereIsNoOwner(proxy);
+    await enesureWormholeAddrAndChainIdIsCorrect(proxy);
+
     await syncContractCode(proxy);
+    await syncUpdateFee(proxy);
+    // await syncValidTimePeriod(proxy);
+    // await syncGovernanceDataSource(proxy);
+    // await syncDataSources(proxy);
 
     callback();
   } catch (e) {

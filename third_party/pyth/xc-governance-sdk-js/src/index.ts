@@ -12,4 +12,10 @@ export {
   Instruction,
 } from "./instructions";
 
-export { CHAINS, ChainId, ChainName } from "./chains";
+export {
+  WORMHOLE_CHAINS,
+  RECEIVER_CHAINS,
+  CHAINS,
+  ChainId,
+  ChainName,
+} from "./chains";
