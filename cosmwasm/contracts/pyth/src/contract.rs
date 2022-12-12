@@ -43,7 +43,10 @@ use {
         PriceStatus,
         ProductIdentifier,
     },
-    std::collections::HashSet,
+    std::{
+        collections::HashSet,
+        time::Duration,
+    },
     wormhole::{
         msg::QueryMsg as WormholeQueryMsg,
         state::ParsedVAA,
@@ -76,7 +79,7 @@ pub fn instantiate(
             pyth_emitter_chain: msg.governance_emitter_chain,
         },
         governance_sequence_number: msg.governance_sequence_number,
-        valid_time_period:          msg.valid_time_period,
+        valid_time_period:          Duration::from_secs(msg.valid_time_period_secs as u64),
         fee:                        msg.fee,
         fee_denom:                  msg.fee_denom,
     };

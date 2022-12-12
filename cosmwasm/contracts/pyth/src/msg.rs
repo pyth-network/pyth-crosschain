@@ -6,7 +6,6 @@ use {
         Deserialize,
         Serialize,
     },
-    std::time::Duration,
 };
 
 type HumanAddr = String;
@@ -20,7 +19,7 @@ pub struct InstantiateMsg {
     pub governance_emitter_chain:   u16,
     pub governance_sequence_number: u64,
     pub chain_id:                   u16,
-    pub valid_time_period:          Duration,
+    pub valid_time_period_secs:     u16,
 
     pub fee:       u128,
     pub fee_denom: String,
