@@ -155,6 +155,28 @@ export class Listener implements PriceStore {
     }
   }
 
+  isNewPriceInfo(
+    cachedInfo: PriceInfo | undefined,
+    observedInfo: PriceInfo
+  ): boolean {
+    if (cachedInfo === undefined) {
+      return true;
+    }
+
+    if (cachedInfo.attestationTime < observedInfo.attestationTime) {
+      return true;
+    }
+
+    if (
+      cachedInfo.attestationTime === observedInfo.attestationTime &&
+      cachedInfo.seqNum < observedInfo.seqNum
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
   async processVaa(vaa: Buffer) {
     const { parse_vaa } = await importCoreWasm();
 
@@ -184,55 +206,31 @@ export class Listener implements PriceStore {
       return;
     }
 
-    const isAnyPriceNew = batchAttestation.priceAttestations.some(
-      (priceAttestation) => {
-        const key = priceAttestation.priceId;
-        const lastAttestationTime =
-          this.priceFeedVaaMap.get(key)?.attestationTime;
-        return (
-          lastAttestationTime === undefined ||
-          lastAttestationTime < priceAttestation.attestationTime
-        );
-      }
-    );
-
-    if (!isAnyPriceNew) {
-      return;
-    }
-
     for (const priceAttestation of batchAttestation.priceAttestations) {
       const key = priceAttestation.priceId;
 
-      const lastAttestationTime =
-        this.priceFeedVaaMap.get(key)?.attestationTime;
+      const priceFeed = priceAttestationToPriceFeed(priceAttestation);
+      const priceInfo = {
+        seqNum: parsedVaa.sequence,
+        vaa,
+        publishTime: priceAttestation.publishTime,
+        attestationTime: priceAttestation.attestationTime,
+        priceFeed,
+        emitterChainId: parsedVaa.emitter_chain,
+        priceServiceReceiveTime: Math.floor(new Date().getTime() / 1000),
+      };
 
-      if (
-        lastAttestationTime === undefined ||
-        lastAttestationTime < priceAttestation.attestationTime
-      ) {
-        const priceFeed = priceAttestationToPriceFeed(priceAttestation);
-        const priceInfo = {
-          seqNum: parsedVaa.sequence,
-          vaa,
-          publishTime: priceAttestation.publishTime,
-          attestationTime: priceAttestation.attestationTime,
-          priceFeed,
-          emitterChainId: parsedVaa.emitter_chain,
-          priceServiceReceiveTime: Math.floor(new Date().getTime() / 1000),
-        };
+      const cachedPriceInfo = this.priceFeedVaaMap.get(key);
+
+      if (this.isNewPriceInfo(cachedPriceInfo, priceInfo)) {
         this.priceFeedVaaMap.set(key, priceInfo);
 
-        if (lastAttestationTime !== undefined) {
+        if (cachedPriceInfo !== undefined) {
           this.promClient?.addPriceUpdatesAttestationTimeGap(
-            priceAttestation.attestationTime - lastAttestationTime
+            priceAttestation.attestationTime - cachedPriceInfo.attestationTime
           );
-        }
-
-        const lastPublishTime = this.priceFeedVaaMap.get(key)?.publishTime;
-
-        if (lastPublishTime !== undefined) {
           this.promClient?.addPriceUpdatesPublishTimeGap(
-            priceAttestation.publishTime - lastPublishTime
+            priceAttestation.publishTime - cachedPriceInfo.publishTime
           );
         }
 
