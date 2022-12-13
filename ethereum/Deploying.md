@@ -7,11 +7,12 @@ This is the deployment process:
 ```bash
 # 1. Follow the installation instructions on README.md
 
-# 2. Export the secret recovery phrase for our deployment account.
+# 2. Export the secret recovery phrase for the deployment account.
 export MNEMONIC=$(cat path/to/mnemonic)
 
 # 3. Make sure that third_party/pyth/multisig-wh-message-builder/keys/key.json
-# has the proper operational key for interacting with the multisig.
+# has the proper operational key for interacting with the multisig. Please follow
+# the corresponding notion doc for more information about the keys.
 
 # 4. Deploy the changes
 # You might need to repeat this script because of busy RPCs. Repeating would not cause any problem even

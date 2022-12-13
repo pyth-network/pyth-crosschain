@@ -1,3 +1,16 @@
+/**
+ * This is a truffle script that syncs the on-chain contract with
+ * the reference implementation and state in this repo. Please execute
+ * this script using `deploy.sh` as described in `Deploying.md` file.
+ *
+ * This script is a statefull and fully automated. It will invoke the multisig
+ * cli in the `../third_party/pyth/multisig-wh-message-builder`
+ * to create governed instructions to change on-chain contracts.
+ * As multisig instructions require multiple people approval, this script
+ * will create some cache files to store the last step and continues from
+ * the previous step in the next run.
+ */
+
 const governance = require("@pythnetwork/xc-governance-sdk");
 const wormhole = require("@certusone/wormhole-sdk");
 const assertVaaPayloadEquals = require("./assertVaaPayloadEquals");
