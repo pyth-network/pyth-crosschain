@@ -334,7 +334,7 @@ async function syncDataSources(proxy) {
     // Usually this change is universal, so the Payload is generated for all
     // the chains.
     const setDataSourcesPayload = new governance.SetDataSourcesInstruction(
-      governance.CHAINS.unset,
+      governance.CHAINS[chainName],
       Array.from(desiredDataSources).map(
         (ds) =>
           new governance.DataSource(
@@ -343,12 +343,9 @@ async function syncDataSources(proxy) {
           )
       )
     ).serialize();
-
-    // 3rd argument keeps the VAA to be used in the other contracts.
     await createAndExecuteVaaFromPayloadThroughMultiSig(
       proxy,
-      setDataSourcesPayload,
-      true
+      setDataSourcesPayload
     );
 
     const newOnchainDataSources = new Set(await proxy.validDataSources());
