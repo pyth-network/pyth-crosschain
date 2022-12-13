@@ -1,6 +1,7 @@
 import { CHAINS as WORMHOLE_CHAINS } from "@certusone/wormhole-sdk";
 
-const RECEIVER_CHAINS = {
+export { CHAINS as WORMHOLE_CHAINS } from "@certusone/wormhole-sdk";
+export const RECEIVER_CHAINS = {
   cronos: 60001,
   kcc: 60002,
   zksync: 60003,

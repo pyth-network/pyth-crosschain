@@ -5,10 +5,16 @@ Running the Truffle migrations in [`migrations/prod`](migrations/prod) or [`migr
 This is the deployment process:
 
 ```bash
-# The Secret Recovery Phrase for our deployment account.
-export MNEMONIC=...
+# 1. Follow the installation instructions on README.md
 
-# Deploy the changes
+# 2. Export the secret recovery phrase for the deployment account.
+export MNEMONIC=$(cat path/to/mnemonic)
+
+# 3. Make sure that third_party/pyth/multisig-wh-message-builder/keys/key.json
+# has the proper operational key for interacting with the multisig. Please follow
+# the corresponding notion doc for more information about the keys.
+
+# 4. Deploy the changes
 # You might need to repeat this script because of busy RPCs. Repeating would not cause any problem even
 # if the changes are already made. Also, sometimes the gases are not adjusted and it will cause the tx to
 # remain on the mempool for a long time (so there is no progress until timeout). Please update them with
@@ -50,37 +56,10 @@ Changes to the files in this directory should be commited as well.
 
 # Upgrading the contract
 
-To upgrade the contract you should add a new migration file in the `migrations/*` directories increasing the migration number.
+To upgrade the contract you should bump the version of the contract and the npm package to the new version and run the deployment
+process described above. Please bump the version properly as described in [the section below](#versioning).
 
-It looks like so:
-
-```javascript
-require("dotenv").config({ path: "../.env" });
-
-const PythUpgradable = artifacts.require("PythUpgradable");
-
-const { upgradeProxy } = require("@openzeppelin/truffle-upgrades");
-
-/**
- * Version <x.y.z>.
- *
- * Briefly describe the changelog here.
- */
-module.exports = async function (deployer) {
-  const proxy = await PythUpgradable.deployed();
-  await upgradeProxy(proxy.address, PythUpgradable, { deployer });
-};
-```
-
-**When changing the storage, you might need to disable the storage checks because Open Zeppelin is very conservative,
-and appending to the Pyth State struct is considered illegal.** Pyth `_state` variable is a Pyth State
-struct that contains all Pyth variables inside it. It is the last variable in the contract
-and is safe to append fields inside it. However, Open Zeppelin only allows appending variables
-in the contract surface and does not allow appending in the nested structs.
-
-To disable security checks, you can add
-`unsafeSkipStorageCheck: true` option in `upgradeProxy` call. **If you do such a thing,
-make sure that your change to the contract won't cause any collision**. For example:
+**When you are making changes to the storage, please make sure that your change to the contract won't cause any collision**. For example:
 
 - Renaming a variable is fine.
 - Changing a variable type to another type with the same size is ok.
