@@ -159,7 +159,7 @@ export class Listener implements PriceStore {
     cachedInfo: PriceInfo | undefined,
     observedInfo: PriceInfo
   ): boolean {
-    if (cachedInfo == undefined) {
+    if (cachedInfo === undefined) {
       return true;
     }
 
@@ -168,7 +168,7 @@ export class Listener implements PriceStore {
     }
 
     if (
-      cachedInfo.attestationTime == observedInfo.attestationTime &&
+      cachedInfo.attestationTime === observedInfo.attestationTime &&
       cachedInfo.seqNum < observedInfo.seqNum
     ) {
       return true;
