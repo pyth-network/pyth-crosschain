@@ -157,7 +157,7 @@ async function createAndExecuteVaaFromPayloadThroughMultiSig(
   }
 }
 
-async function enesureWormholeAddrAndChainIdIsCorrect(proxy) {
+async function ensureWormholeAddrAndChainIdIsCorrect(proxy) {
   let desiredWormholeAddr;
   if (governance.RECEIVER_CHAINS[chainName] !== undefined) {
     const WormholeReceiver = artifacts.require("WormholeReceiver");
@@ -385,7 +385,7 @@ module.exports = async function (callback) {
     console.log(`Syncing Pyth contract deployed on ${proxy.address}...`);
 
     await ensureThereIsNoOwner(proxy);
-    await enesureWormholeAddrAndChainIdIsCorrect(proxy);
+    await ensureWormholeAddrAndChainIdIsCorrect(proxy);
 
     await syncContractCode(proxy);
     await syncUpdateFee(proxy);
