@@ -1,11 +1,9 @@
 use {
-    crate::state::PythDataSource,
     byteorder::{
         BigEndian,
         ReadBytesExt,
         WriteBytesExt,
     },
-    cosmwasm_std::Binary,
     p2w_sdk::ErrBox,
     schemars::JsonSchema,
     serde::{
@@ -84,7 +82,6 @@ impl GovernanceInstruction {
             return Err(format!("Invalid governance module {module_num}",).into());
         }
 
-        // TODO: check endianness
         let action_type: u8 = bytes.read_u8()?;
         let target_chain_id: u16 = bytes.read_u16::<BigEndian>()?;
 
@@ -148,21 +145,3 @@ impl GovernanceInstruction {
         Ok(buf)
     }
 }
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum ExecuteMsg {
-    UpdatePriceFeeds { data: Binary },
-    AddDataSource { data_source: PythDataSource },
-    RemoveDataSource { data_source: PythDataSource },
-    ExecuteGovernanceInstruction { data: Binary },
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub struct MigrateMsg {}
-
-pub use pyth_sdk_cw::{
-    PriceFeedResponse,
-    QueryMsg,
-};

@@ -34,6 +34,7 @@ use {
         Response,
         StdResult,
         Timestamp,
+        Uint128,
         WasmQuery,
     },
     p2w_sdk::BatchPriceAttestation,
@@ -45,6 +46,7 @@ use {
     },
     std::{
         collections::HashSet,
+        convert::TryFrom,
         time::Duration,
     },
     wormhole::{
@@ -174,13 +176,18 @@ fn execute_governance_instruction_from_vaa(
 
     let response = match instruction.action {
         SetFee { val, expo } => {
-            updated_config.fee = (val as u128)
-                .checked_mul(
-                    10_u128
-                        .checked_pow(expo as u32)
-                        .ok_or(PythContractError::InvalidGovernancePayload)?,
-                )
-                .ok_or(PythContractError::InvalidGovernancePayload)?;
+            updated_config.fee = Uint128::new(
+                (val as u128)
+                    .checked_mul(
+                        10_u128
+                            .checked_pow(
+                                u32::try_from(expo)
+                                    .map_err(|_| PythContractError::InvalidGovernancePayload)?,
+                            )
+                            .ok_or(PythContractError::InvalidGovernancePayload)?,
+                    )
+                    .ok_or(PythContractError::InvalidGovernancePayload)?,
+            );
 
             Response::new()
                 .add_attribute("action", "set_fee")
@@ -467,7 +474,7 @@ mod test {
             governance_sequence_number: 0,
             chain_id:                   0,
             valid_time_period:          Duration::new(0, 0),
-            fee:                        0,
+            fee:                        Uint128::new(0),
             fee_denom:                  "".into(),
         }
     }
@@ -989,7 +996,7 @@ mod test {
     #[test]
     fn test_set_fee() {
         let mut test_config = governance_test_config();
-        test_config.fee = 1;
+        test_config.fee = Uint128::new(1);
 
         let test_instruction = GovernanceInstruction {
             module:          Target,
@@ -1000,7 +1007,7 @@ mod test {
 
         assert_eq!(
             apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.fee),
-            Ok(60)
+            Ok(Uint128::new(60))
         );
 
         let test_instruction = GovernanceInstruction {
@@ -1012,7 +1019,7 @@ mod test {
 
         assert_eq!(
             apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.fee),
-            Ok(6)
+            Ok(Uint128::new(6))
         );
     }
 }
