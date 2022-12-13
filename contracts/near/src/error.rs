@@ -1,9 +1,12 @@
 use {
-    near_sdk::serde::Serialize,
+    near_sdk::{
+        serde::Serialize,
+        FunctionError,
+    },
     thiserror::Error,
 };
 
-#[derive(Error, Debug, Serialize)]
+#[derive(Error, Debug, Serialize, FunctionError)]
 #[serde(crate = "near_sdk::serde")]
 pub enum Error {
     #[error("A hex argument could not be decoded.")]
@@ -17,10 +20,4 @@ pub enum Error {
 
     #[error("Unauthorized Upgrade")]
     UnauthorizedUpgrade,
-}
-
-impl near_sdk::FunctionError for Error {
-    fn panic(&self) -> ! {
-        near_sdk::env::panic_str(&self.to_string())
-    }
 }
