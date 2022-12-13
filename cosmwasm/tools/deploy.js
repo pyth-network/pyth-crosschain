@@ -165,6 +165,8 @@ addresses["wormhole.wasm"] = await instantiate(
 
 const pythEmitterAddress =
   "71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
+const pythGovernanceEmitterAddress =
+  "0000000000000000000000000000000000000000000000000000000000001234";
 const pythChain = 1;
 
 addresses["pyth_cosmwasm.wasm"] = await instantiate(
@@ -173,6 +175,16 @@ addresses["pyth_cosmwasm.wasm"] = await instantiate(
     wormhole_contract: addresses["wormhole.wasm"],
     pyth_emitter: Buffer.from(pythEmitterAddress, "hex").toString("base64"),
     pyth_emitter_chain: pythChain,
+    governance_emitter: Buffer.from(
+      pythGovernanceEmitterAddress,
+      "hex"
+    ).toString("base64"),
+    governance_emitter_chain: pythChain,
+    governance_sequence_number: 0,
+    chain_id: 3,
+    valid_time_period_secs: 60,
+    fee: "1",
+    fee_denom: "uluna",
   },
   "pyth"
 );

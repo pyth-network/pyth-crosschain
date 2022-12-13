@@ -4,6 +4,7 @@ use {
         Binary,
         Storage,
         Timestamp,
+        Uint128,
     },
     cosmwasm_storage::{
         bucket,
@@ -30,11 +31,6 @@ use {
 pub static CONFIG_KEY: &[u8] = b"config";
 pub static PRICE_INFO_KEY: &[u8] = b"price_info_v3";
 
-/// Maximum acceptable time period before price is considered to be stale.
-///
-/// This value considers attestation delay which currently might up to a minute.
-pub const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, JsonSchema)]
 pub struct PythDataSource {
     pub emitter:            Binary,
@@ -44,9 +40,19 @@ pub struct PythDataSource {
 // Guardian set information
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct ConfigInfo {
-    pub owner:             Addr,
-    pub wormhole_contract: Addr,
-    pub data_sources:      HashSet<PythDataSource>,
+    pub owner:                      Addr,
+    pub wormhole_contract:          Addr,
+    pub data_sources:               HashSet<PythDataSource>,
+    pub governance_source:          PythDataSource,
+    pub governance_sequence_number: u64,
+    // FIXME: This id needs to agree with the wormhole chain id.
+    // We should read this directly from wormhole.
+    pub chain_id:                   u16,
+    pub valid_time_period:          Duration,
+
+    // The fee to pay, denominated in fee_denom (typically, the chain's native token)
+    pub fee:       Uint128,
+    pub fee_denom: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, JsonSchema)]

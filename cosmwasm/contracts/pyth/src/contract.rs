@@ -1,6 +1,10 @@
 use {
     crate::{
         error::PythContractError,
+        governance::{
+            GovernanceAction::SetFee,
+            GovernanceInstruction,
+        },
         msg::{
             ExecuteMsg,
             InstantiateMsg,
@@ -16,7 +20,6 @@ use {
             ConfigInfo,
             PriceInfo,
             PythDataSource,
-            VALID_TIME_PERIOD,
         },
     },
     cosmwasm_std::{
@@ -31,6 +34,7 @@ use {
         Response,
         StdResult,
         Timestamp,
+        Uint128,
         WasmQuery,
     },
     p2w_sdk::BatchPriceAttestation,
@@ -40,7 +44,11 @@ use {
         PriceStatus,
         ProductIdentifier,
     },
-    std::collections::HashSet,
+    std::{
+        collections::HashSet,
+        convert::TryFrom,
+        time::Duration,
+    },
     wormhole::{
         msg::QueryMsg as WormholeQueryMsg,
         state::ParsedVAA,
@@ -61,12 +69,21 @@ pub fn instantiate(
 ) -> StdResult<Response> {
     // Save general wormhole and pyth info
     let state = ConfigInfo {
-        owner:             info.sender,
-        wormhole_contract: deps.api.addr_validate(msg.wormhole_contract.as_ref())?,
-        data_sources:      HashSet::from([PythDataSource {
+        owner:                      info.sender,
+        wormhole_contract:          deps.api.addr_validate(msg.wormhole_contract.as_ref())?,
+        data_sources:               HashSet::from([PythDataSource {
             emitter:            msg.pyth_emitter,
             pyth_emitter_chain: msg.pyth_emitter_chain,
         }]),
+        chain_id:                   msg.chain_id,
+        governance_source:          PythDataSource {
+            emitter:            msg.governance_emitter,
+            pyth_emitter_chain: msg.governance_emitter_chain,
+        },
+        governance_sequence_number: msg.governance_sequence_number,
+        valid_time_period:          Duration::from_secs(msg.valid_time_period_secs as u64),
+        fee:                        msg.fee,
+        fee_denom:                  msg.fee_denom,
     };
     config(deps.storage).save(&state)?;
 
@@ -88,7 +105,11 @@ pub fn parse_vaa(deps: DepsMut, block_time: u64, data: &Binary) -> StdResult<Par
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> StdResult<Response> {
     match msg {
-        ExecuteMsg::SubmitVaa { data } => submit_vaa(deps, env, info, &data),
+        ExecuteMsg::UpdatePriceFeeds { data } => update_price_feeds(deps, env, info, &data),
+        ExecuteMsg::ExecuteGovernanceInstruction { data } => {
+            execute_governance_instruction(deps, env, info, &data)
+        }
+        // TODO: remove these and invoke via governance
         ExecuteMsg::AddDataSource { data_source } => add_data_source(deps, env, info, data_source),
         ExecuteMsg::RemoveDataSource { data_source } => {
             remove_data_source(deps, env, info, data_source)
@@ -96,7 +117,7 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
     }
 }
 
-fn submit_vaa(
+fn update_price_feeds(
     mut deps: DepsMut,
     env: Env,
     _info: MessageInfo,
@@ -106,13 +127,78 @@ fn submit_vaa(
 
     let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
 
-    verify_vaa_sender(&state, &vaa)?;
+    verify_vaa_from_data_source(&state, &vaa)?;
 
     let data = &vaa.payload;
     let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
         .map_err(|_| PythContractError::InvalidUpdatePayload)?;
 
     process_batch_attestation(deps, env, &batch_attestation)
+}
+
+fn execute_governance_instruction(
+    mut deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    data: &Binary,
+) -> StdResult<Response> {
+    let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
+
+    execute_governance_instruction_from_vaa(deps, env, info, &vaa)
+}
+
+/// Helper function to improve testability of governance instructions (so we can unit test without wormhole).
+fn execute_governance_instruction_from_vaa(
+    deps: DepsMut,
+    _env: Env,
+    _info: MessageInfo,
+    vaa: &ParsedVAA,
+) -> StdResult<Response> {
+    let state = config_read(deps.storage).load()?;
+
+    // store updates to the config as a result of this action in here.
+    let mut updated_config: ConfigInfo = state.clone();
+    verify_vaa_from_governance_source(&state, vaa)?;
+
+    if vaa.sequence <= state.governance_sequence_number {
+        return Err(PythContractError::OldGovernanceMessage)?;
+    } else {
+        updated_config.governance_sequence_number = vaa.sequence;
+    }
+
+    let data = &vaa.payload;
+    let instruction = GovernanceInstruction::deserialize(&data[..])
+        .map_err(|_| PythContractError::InvalidGovernancePayload)?;
+
+    if instruction.target_chain_id != state.chain_id && instruction.target_chain_id != 0 {
+        return Err(PythContractError::InvalidGovernancePayload)?;
+    }
+
+    let response = match instruction.action {
+        SetFee { val, expo } => {
+            updated_config.fee = Uint128::new(
+                (val as u128)
+                    .checked_mul(
+                        10_u128
+                            .checked_pow(
+                                u32::try_from(expo)
+                                    .map_err(|_| PythContractError::InvalidGovernancePayload)?,
+                            )
+                            .ok_or(PythContractError::InvalidGovernancePayload)?,
+                    )
+                    .ok_or(PythContractError::InvalidGovernancePayload)?,
+            );
+
+            Response::new()
+                .add_attribute("action", "set_fee")
+                .add_attribute("new_fee", format!("{}", updated_config.fee))
+        }
+        _ => Err(PythContractError::InvalidGovernancePayload)?,
+    };
+
+    config(deps.storage).save(&updated_config)?;
+
+    Ok(response)
 }
 
 fn add_data_source(
@@ -170,14 +256,25 @@ fn remove_data_source(
 }
 
 
-// This checks the emitter to be the pyth emitter in wormhole and it comes from emitter chain
-// (Solana)
-fn verify_vaa_sender(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
+/// Check that `vaa` is from a valid data source (and hence is a legitimate price update message).
+fn verify_vaa_from_data_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
     let vaa_data_source = PythDataSource {
         emitter:            vaa.emitter_address.clone().into(),
         pyth_emitter_chain: vaa.emitter_chain,
     };
     if !state.data_sources.contains(&vaa_data_source) {
+        return Err(PythContractError::InvalidUpdateEmitter)?;
+    }
+    Ok(())
+}
+
+/// Check that `vaa` is from a valid governance source (and hence is a legitimate governance instruction).
+fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
+    let vaa_data_source = PythDataSource {
+        emitter:            vaa.emitter_address.clone().into(),
+        pyth_emitter_chain: vaa.emitter_chain,
+    };
+    if state.governance_source != vaa_data_source {
         return Err(PythContractError::InvalidUpdateEmitter)?;
     }
     Ok(())
@@ -273,10 +370,14 @@ fn update_price_feed_if_new(
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::PriceFeed { id } => to_binary(&query_price_feed(deps, env, id.as_ref())?),
+        // TODO: implement queries for the update fee and valid time period along the following lines:
+        // QueryMsg::GetUpdateFee { data: bytes[] } => ???,
+        // QueryMsg::GetValidTimePeriod => ???
     }
 }
 
 pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<PriceFeedResponse> {
+    let config = config_read(deps.storage).load()?;
     match price_info_read(deps.storage).load(address) {
         Ok(mut price_info) => {
             let env_time_sec = env.block.time.seconds();
@@ -295,7 +396,7 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
                 price_pub_time_sec - env_time_sec
             };
 
-            if time_abs_diff > VALID_TIME_PERIOD.as_secs() {
+            if time_abs_diff > config.valid_time_period.as_secs() {
                 price_info.price_feed.status = PriceStatus::Unknown;
             }
 
@@ -311,6 +412,10 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
 mod test {
     use {
         super::*,
+        crate::governance::GovernanceModule::{
+            Executor,
+            Target,
+        },
         cosmwasm_std::{
             testing::{
                 mock_dependencies,
@@ -323,10 +428,22 @@ mod test {
             Addr,
             OwnedDeps,
         },
+        std::time::Duration,
     };
 
+    /// Default valid time period for testing purposes.
+    const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
+
     fn setup_test() -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
-        (mock_dependencies(), mock_env())
+        let mut dependencies = mock_dependencies();
+        let mut config = config(dependencies.as_mut().storage);
+        config
+            .save(&ConfigInfo {
+                valid_time_period: VALID_TIME_PERIOD,
+                ..create_zero_config_info()
+            })
+            .unwrap();
+        (dependencies, mock_env())
     }
 
     fn create_zero_vaa() -> ParsedVAA {
@@ -347,9 +464,18 @@ mod test {
 
     fn create_zero_config_info() -> ConfigInfo {
         ConfigInfo {
-            owner:             Addr::unchecked(String::default()),
-            wormhole_contract: Addr::unchecked(String::default()),
-            data_sources:      HashSet::default(),
+            owner:                      Addr::unchecked(String::default()),
+            wormhole_contract:          Addr::unchecked(String::default()),
+            data_sources:               HashSet::default(),
+            governance_source:          PythDataSource {
+                emitter:            Binary(vec![]),
+                pyth_emitter_chain: 0,
+            },
+            governance_sequence_number: 0,
+            chain_id:                   0,
+            valid_time_period:          Duration::new(0, 0),
+            fee:                        Uint128::new(0),
+            fee_denom:                  "".into(),
         }
     }
 
@@ -397,7 +523,7 @@ mod test {
         vaa.emitter_address = vec![1u8];
         vaa.emitter_chain = 3;
 
-        assert_eq!(verify_vaa_sender(&config_info, &vaa), Ok(()));
+        assert_eq!(verify_vaa_from_data_source(&config_info, &vaa), Ok(()));
     }
 
     #[test]
@@ -411,7 +537,7 @@ mod test {
         vaa.emitter_address = vec![3u8, 4u8];
         vaa.emitter_chain = 3;
         assert_eq!(
-            verify_vaa_sender(&config_info, &vaa),
+            verify_vaa_from_data_source(&config_info, &vaa),
             Err(PythContractError::InvalidUpdateEmitter.into())
         );
     }
@@ -427,7 +553,7 @@ mod test {
         vaa.emitter_address = vec![1u8];
         vaa.emitter_chain = 2;
         assert_eq!(
-            verify_vaa_sender(&config_info, &vaa),
+            verify_vaa_from_data_source(&config_info, &vaa),
             Err(PythContractError::InvalidUpdateEmitter.into())
         );
     }
@@ -719,7 +845,7 @@ mod test {
 
         // Should result an error because there is no data source
         assert_eq!(
-            verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
+            verify_vaa_from_data_source(&config_read(&deps.storage).load().unwrap(), &vaa),
             Err(PythContractError::InvalidUpdateEmitter.into())
         );
 
@@ -730,7 +856,7 @@ mod test {
         assert!(add_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_ok());
 
         assert_eq!(
-            verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
+            verify_vaa_from_data_source(&config_read(&deps.storage).load().unwrap(), &vaa),
             Ok(())
         );
     }
@@ -751,7 +877,7 @@ mod test {
         vaa.emitter_chain = 3;
 
         assert_eq!(
-            verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
+            verify_vaa_from_data_source(&config_read(&deps.storage).load().unwrap(), &vaa),
             Ok(())
         );
 
@@ -763,8 +889,137 @@ mod test {
 
         // Should result an error because data source should not exist anymore
         assert_eq!(
-            verify_vaa_sender(&config_read(&deps.storage).load().unwrap(), &vaa),
+            verify_vaa_from_data_source(&config_read(&deps.storage).load().unwrap(), &vaa),
             Err(PythContractError::InvalidUpdateEmitter.into())
+        );
+    }
+
+    /// Initialize the contract with `initial_config` then execute `vaa` as a governance instruction
+    /// against it. Returns the response of the governance instruction along with the resulting config.
+    fn apply_governance_vaa(
+        initial_config: &ConfigInfo,
+        vaa: &ParsedVAA,
+    ) -> StdResult<(Response, ConfigInfo)> {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage).save(initial_config).unwrap();
+
+        let info = mock_info("123", &[]);
+
+        let result = execute_governance_instruction_from_vaa(deps.as_mut(), env, info, vaa);
+
+        result.and_then(|response| config_read(&deps.storage).load().map(|c| (response, c)))
+    }
+
+    fn governance_test_config() -> ConfigInfo {
+        ConfigInfo {
+            governance_source: PythDataSource {
+                emitter:            Binary(vec![1u8, 2u8]),
+                pyth_emitter_chain: 3,
+            },
+            governance_sequence_number: 4,
+            chain_id: 5,
+            ..create_zero_config_info()
+        }
+    }
+
+    fn governance_vaa(instruction: &GovernanceInstruction) -> ParsedVAA {
+        let mut vaa = create_zero_vaa();
+        vaa.emitter_address = vec![1u8, 2u8];
+        vaa.emitter_chain = 3;
+        vaa.sequence = 7;
+        vaa.payload = instruction.serialize().unwrap();
+
+        vaa
+    }
+
+    #[test]
+    fn test_governance_authorization() {
+        let test_config = governance_test_config();
+
+        let test_instruction = GovernanceInstruction {
+            module:          Target,
+            target_chain_id: 5,
+            action:          SetFee { val: 6, expo: 0 },
+        };
+        let test_vaa = governance_vaa(&test_instruction);
+
+        // First check that a valid VAA is accepted (to ensure that no one accidentally breaks the following test cases).
+        assert!(apply_governance_vaa(&test_config, &test_vaa).is_ok());
+
+        // Wrong emitter address
+        let mut vaa_copy = test_vaa.clone();
+        vaa_copy.emitter_address = vec![2u8, 3u8];
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
+
+        // wrong source chain
+        let mut vaa_copy = test_vaa.clone();
+        vaa_copy.emitter_chain = 4;
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
+
+        // sequence number too low
+        let mut vaa_copy = test_vaa.clone();
+        vaa_copy.sequence = 4;
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
+
+        // wrong magic number
+        let mut vaa_copy = test_vaa.clone();
+        vaa_copy.payload[0] = 0;
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
+
+        // wrong target chain
+        let mut instruction_copy = test_instruction.clone();
+        instruction_copy.target_chain_id = 6;
+        let mut vaa_copy = test_vaa.clone();
+        vaa_copy.payload = instruction_copy.serialize().unwrap();
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
+
+        // target chain == 0 is allowed
+        let mut instruction_copy = test_instruction.clone();
+        instruction_copy.target_chain_id = 0;
+        let mut vaa_copy = test_vaa.clone();
+        vaa_copy.payload = instruction_copy.serialize().unwrap();
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_ok());
+
+        // wrong module
+        let mut instruction_copy = test_instruction.clone();
+        instruction_copy.module = Executor;
+        let mut vaa_copy = test_vaa;
+        vaa_copy.payload = instruction_copy.serialize().unwrap();
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
+
+        // invalid action index
+        let _instruction_copy = test_instruction;
+        vaa_copy.payload[9] = 100;
+        assert!(apply_governance_vaa(&test_config, &vaa_copy).is_err());
+    }
+
+    #[test]
+    fn test_set_fee() {
+        let mut test_config = governance_test_config();
+        test_config.fee = Uint128::new(1);
+
+        let test_instruction = GovernanceInstruction {
+            module:          Target,
+            target_chain_id: 5,
+            action:          SetFee { val: 6, expo: 1 },
+        };
+        let test_vaa = governance_vaa(&test_instruction);
+
+        assert_eq!(
+            apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.fee),
+            Ok(Uint128::new(60))
+        );
+
+        let test_instruction = GovernanceInstruction {
+            module:          Target,
+            target_chain_id: 5,
+            action:          SetFee { val: 6, expo: 0 },
+        };
+        let test_vaa = governance_vaa(&test_instruction);
+
+        assert_eq!(
+            apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.fee),
+            Ok(Uint128::new(6))
         );
     }
 }

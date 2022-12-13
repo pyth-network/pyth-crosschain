@@ -1239,6 +1239,7 @@ name = "pyth-cosmwasm"
 version = "0.1.0"
 dependencies = [
  "bigint",
+ "byteorder",
  "cosmwasm-std",
  "cosmwasm-storage",
  "cosmwasm-vm",
