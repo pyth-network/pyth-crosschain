@@ -6,6 +6,12 @@ import subprocess
 import sys
 from http.client import HTTPConnection
 
+
+# A generic unprivileged payer account with funds
+SOL_PAYER_KEYPAIR = os.environ.get(
+    "SOL_PAYER_KEYPAIR", "/usr/src/solana/keys/solana-devnet.json"
+)
+
 # Settings specific to local devnet Pyth instance
 PYTH = os.environ.get("PYTH", "./pyth")
 PYTH_ADMIN = os.environ.get("PYTH_ADMIN", "./pyth_admin")
@@ -17,6 +23,7 @@ PYTH_PROGRAM_SO_PATH = os.environ.get("PYTH_PROGRAM_SO", "../target/oracle.so")
 PYTH_PUBLISHER_KEYPAIR = os.environ.get(
     "PYTH_PUBLISHER_KEYPAIR", f"{PYTH_KEY_STORE}/publish_key_pair.json"
 )
+
 # How long to sleep between mock Pyth price updates
 PYTH_PUBLISHER_INTERVAL_SECS = float(os.environ.get("PYTH_PUBLISHER_INTERVAL_SECS", "5"))
 PYTH_TEST_SYMBOL_COUNT = int(os.environ.get("PYTH_TEST_SYMBOL_COUNT", "11"))
@@ -34,9 +41,6 @@ PYTH_MAPPING_KEYPAIR = os.environ.get(
     "PYTH_MAPPING_KEYPAIR", f"{PYTH_KEY_STORE}/mapping_key_pair.json"
 )
 
-# 0 setting disables airdropping
-SOL_AIRDROP_AMT = int(os.environ.get("SOL_AIRDROP_AMT", 0))
-
 # SOL RPC settings
 SOL_RPC_HOST = os.environ.get("SOL_RPC_HOST", "solana-devnet")
 SOL_RPC_PORT = int(os.environ.get("SOL_RPC_PORT", 8899))
@@ -48,7 +52,7 @@ SOL_RPC_URL = os.environ.get(
 READINESS_PORT = int(os.environ.get("READINESS_PORT", "2000"))
 
 
-def run_or_die(args, die=True, **kwargs):
+def run_or_die(args, die=True, debug=False, **kwargs):
     """
     Opinionated subprocess.run() call with fancy logging
     """
@@ -57,23 +61,29 @@ def run_or_die(args, die=True, **kwargs):
     sys.stderr.flush()
     ret = subprocess.run(args, text=True, **kwargs)
 
-    if ret.returncode != 0:
+    if ret.returncode == 0:
+        print(f"CMD OK\t{args_readable}", file=sys.stderr)
+    else:
         print(f"CMD FAIL {ret.returncode}\t{args_readable}", file=sys.stderr)
 
+    if debug:
         out = ret.stdout if ret.stdout is not None else "<not captured>"
         err = ret.stderr if ret.stderr is not None else "<not captured>"
 
         print(f"CMD STDOUT\n{out}", file=sys.stderr)
         print(f"CMD STDERR\n{err}", file=sys.stderr)
 
+    sys.stderr.flush()
+
+    if ret.returncode != 0:
         if die:
             sys.exit(ret.returncode)
         else:
             print(f'{"CMD DIE FALSE"}', file=sys.stderr)
+            sys.stderr.flush()
 
-    else:
-        print(f"CMD OK\t{args_readable}", file=sys.stderr)
-    sys.stderr.flush()
+
+
     return ret
 
 
@@ -143,4 +153,5 @@ def readiness():
     with socketserver.TCPServer(
         ("0.0.0.0", READINESS_PORT), ReadinessTCPHandler
     ) as srv:
+        print(f"Opening port {READINESS_PORT} for readiness TCP probe")
         srv.serve_forever()

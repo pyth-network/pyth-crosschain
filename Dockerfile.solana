@@ -34,6 +34,15 @@ RUN tar -xvf v${WORMHOLE_REV}.tar.gz
 RUN mv wormhole-${WORMHOLE_REV} wormhole
 # RUN mkdir -p /usr/src/bridge/wormhole/solana/target
 
+WORKDIR /usr/src/squads
+
+ARG SQUADS_REV=1.2.0
+ADD https://github.com/Squads-Protocol/squads-mpl/archive/refs/tags/v${SQUADS_REV}.tar.gz .
+
+RUN tar -xvf v${SQUADS_REV}.tar.gz
+RUN mv squads-mpl-${SQUADS_REV} squads-mpl
+
+WORKDIR /usr/src/bridge
 
 ADD solana solana
 ADD pythnet pythnet
@@ -48,14 +57,17 @@ WORKDIR /usr/src/bridge/solana
 # Build Wormhole Solana programs
 RUN --mount=type=cache,target=/usr/src/bridge/wormhole/solana/target \
     --mount=type=cache,target=/usr/src/bridge/solana/pyth2wormhole/target \
+    --mount=type=cache,target=/usr/src/squads/squads-mpl/target \
     --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/root/.cache \
     cargo build-bpf --manifest-path "../wormhole/solana/bridge/program/Cargo.toml" -- --locked && \
     cargo build-bpf --manifest-path "../wormhole/solana/bridge/cpi_poster/Cargo.toml" -- --locked && \
     cargo build-bpf --manifest-path "pyth2wormhole/program/Cargo.toml" -- --locked && \
+    cargo build-bpf --manifest-path "/usr/src/squads/squads-mpl/programs/mesh/Cargo.toml" -- --locked && \
     cp ../wormhole/solana/target/deploy/bridge.so /opt/solana/deps/bridge.so && \
     cp ../wormhole/solana/target/deploy/cpi_poster.so /opt/solana/deps/cpi_poster.so && \
-    cp pyth2wormhole/target/deploy/pyth2wormhole.so /opt/solana/deps/pyth2wormhole.so
+    cp pyth2wormhole/target/deploy/pyth2wormhole.so /opt/solana/deps/pyth2wormhole.so && \
+    cp /usr/src/squads/squads-mpl/target/deploy/mesh.so /opt/solana/deps/mesh.so
 
 COPY --from=pyth-oracle-copy /home/pyth/pyth-client/target/oracle.so /opt/solana/deps/pyth_oracle.so
 

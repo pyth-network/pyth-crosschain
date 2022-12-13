@@ -12,6 +12,11 @@ import sys
 import threading
 import time
 
+# The mock publisher needs to fund the publisher identity account,
+# unable to use a separate payer
+SOL_AIRDROP_AMT = int(os.environ.get("SOL_AIRDROP_AMT", 0))
+
+
 class PythAccEndpoint(BaseHTTPRequestHandler):
     """
     A dumb endpoint to respond with a JSON containing Pyth symbol and mapping addresses
