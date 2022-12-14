@@ -1,9 +1,4 @@
-import {
-  importCoreWasm,
-  ixFromRust,
-  setDefaultWasm,
-  utils as wormholeUtils,
-} from "@certusone/wormhole-sdk";
+import { ixFromRust, setDefaultWasm } from "@certusone/wormhole-sdk";
 import * as anchor from "@project-serum/anchor";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import {
@@ -27,7 +22,12 @@ import {
   getManyProposalsInstructions,
   getProposalInstructions,
 } from "./multisig";
-import { WormholeNetwork, loadWormholeTools, WormholeTools } from "./wormhole";
+import {
+  WormholeNetwork,
+  loadWormholeTools,
+  WormholeTools,
+  parse,
+} from "./wormhole";
 
 setDefaultWasm("node");
 
@@ -267,7 +267,7 @@ program
     if (
       await hasWormholePayload(
         squad,
-        CONFIG[cluster].vault,
+        emitter,
         new PublicKey(options.txPda),
         options.payload,
         onChainInstructions,
@@ -666,8 +666,8 @@ function getWormholeMessageIx(
       lamports: wormholeTools.bridgeFee,
     }),
     ixFromRust(
-      wormholeTools.wasm.post_message_ix(
-        wormholeTools.wormholeAddress,
+      wormholeTools.post_message_ix(
+        wormholeTools.wormholeAddress.toBase58(),
         payer.toBase58(),
         emitter.toBase58(),
         message.toBase58(),
@@ -903,7 +903,7 @@ async function executeMultisigTx(
   const { vaaBytes } = await response.json();
   console.log(`VAA (Base64): ${vaaBytes}`);
   console.log(`VAA (Hex): ${Buffer.from(vaaBytes, "base64").toString("hex")}`);
-  const parsedVaa = wormholeTools.wasm.parse(vaaBytes);
+  const parsedVaa = parse(vaaBytes, wormholeTools);
   console.log(`Emitter chain: ${parsedVaa.emitter_chain}`);
   console.log(`Nonce: ${parsedVaa.nonce}`);
   console.log(`Payload: ${Buffer.from(parsedVaa.payload).toString("hex")}`);
