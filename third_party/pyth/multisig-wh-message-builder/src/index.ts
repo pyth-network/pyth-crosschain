@@ -1,9 +1,4 @@
-import {
-  importCoreWasm,
-  ixFromRust,
-  setDefaultWasm,
-  utils as wormholeUtils,
-} from "@certusone/wormhole-sdk";
+import { ixFromRust, setDefaultWasm } from "@certusone/wormhole-sdk";
 import * as anchor from "@project-serum/anchor";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import {
@@ -15,7 +10,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import Squads from "@sqds/mesh";
-import { getIxAuthorityPDA, getIxPDA, getMsPDA } from "@sqds/mesh";
+import { getIxAuthorityPDA } from "@sqds/mesh";
 import { InstructionAccount } from "@sqds/mesh/lib/types";
 import bs58 from "bs58";
 import { program } from "commander";
@@ -27,6 +22,12 @@ import {
   getManyProposalsInstructions,
   getProposalInstructions,
 } from "./multisig";
+import {
+  WormholeNetwork,
+  loadWormholeTools,
+  WormholeTools,
+  parse,
+} from "./wormhole";
 
 setDefaultWasm("node");
 
@@ -44,8 +45,7 @@ setDefaultWasm("node");
 //
 // - "localdevnet" - always means the Tilt devnet
 
-type Cluster = "devnet" | "mainnet" | "localdevnet";
-type WormholeNetwork = "TESTNET" | "MAINNET" | "DEVNET";
+export type Cluster = "devnet" | "mainnet" | "localdevnet";
 
 type Config = {
   wormholeClusterName: WormholeNetwork;
@@ -53,7 +53,7 @@ type Config = {
   vault: PublicKey;
 };
 
-const CONFIG: Record<Cluster, Config> = {
+export const CONFIG: Record<Cluster, Config> = {
   devnet: {
     wormholeClusterName: "TESTNET",
     vault: new PublicKey("6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3"),
@@ -176,6 +176,7 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
+    const wormholeTools = await loadWormholeTools(cluster, squad.connection);
 
     if (!options.skipDuplicateCheck) {
       const activeProposals = await getActiveProposals(
@@ -187,15 +188,21 @@ program
         activeProposals
       );
 
+      const msAccount = await squad.getMultisig(CONFIG[cluster].vault);
+      const emitter = squad.getAuthorityPDA(
+        msAccount.publicKey,
+        msAccount.authorityIndex
+      );
+
       for (let i = 0; i < activeProposals.length; i++) {
         if (
-          await hasWorholePayload(
-            cluster,
+          hasWormholePayload(
             squad,
-            CONFIG[cluster].vault,
+            emitter,
             activeProposals[i].publicKey,
             options.payload,
-            activeInstructions[i]
+            activeInstructions[i],
+            wormholeTools
           )
         ) {
           console.log(
@@ -210,7 +217,8 @@ program
       options.cluster,
       squad,
       CONFIG[cluster].vault,
-      options.payload
+      options.payload,
+      wormholeTools
     );
   });
 
@@ -243,19 +251,27 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
+    const wormholeTools = await loadWormholeTools(cluster, squad.connection);
 
     let onChainInstructions = await getProposalInstructions(
       squad,
       await squad.getTransaction(new PublicKey(options.txPda))
     );
+
+    const msAccount = await squad.getMultisig(CONFIG[cluster].vault);
+    const emitter = squad.getAuthorityPDA(
+      msAccount.publicKey,
+      msAccount.authorityIndex
+    );
+
     if (
-      await hasWorholePayload(
-        options.cluster,
+      hasWormholePayload(
         squad,
-        CONFIG[cluster].vault,
+        emitter,
         new PublicKey(options.txPda),
         options.payload,
-        onChainInstructions
+        onChainInstructions,
+        wormholeTools
       )
     ) {
       console.log(
@@ -374,7 +390,8 @@ program
       squad,
       CONFIG[cluster].vault,
       new PublicKey(options.txPda),
-      CONFIG[cluster].wormholeRpcEndpoint
+      CONFIG[cluster].wormholeRpcEndpoint,
+      await loadWormholeTools(cluster, squad.connection)
     );
   });
 
@@ -631,26 +648,13 @@ async function setIsActiveIx(
   };
 }
 
-async function getWormholeMessageIx(
-  cluster: Cluster,
+function getWormholeMessageIx(
   payer: PublicKey,
   emitter: PublicKey,
   message: PublicKey,
-  connection: anchor.web3.Connection,
-  payload: string
+  payload: string,
+  wormholeTools: WormholeTools
 ) {
-  const wormholeClusterName: WormholeNetwork =
-    CONFIG[cluster].wormholeClusterName;
-  const wormholeAddress =
-    wormholeUtils.CONTRACTS[wormholeClusterName].solana.core;
-  const { post_message_ix, fee_collector_address, state_address, parse_state } =
-    await importCoreWasm();
-  const feeCollector = new PublicKey(fee_collector_address(wormholeAddress));
-  const bridgeState = new PublicKey(state_address(wormholeAddress));
-  const bridgeAccountInfo = await connection.getAccountInfo(bridgeState);
-  const bridgeStateParsed = parse_state(bridgeAccountInfo!.data);
-  const bridgeFee = bridgeStateParsed.config.fee;
-
   if (payload.startsWith("0x")) {
     payload = payload.substring(2);
   }
@@ -658,12 +662,12 @@ async function getWormholeMessageIx(
   return [
     SystemProgram.transfer({
       fromPubkey: payer,
-      toPubkey: feeCollector,
-      lamports: bridgeFee,
+      toPubkey: wormholeTools.feeCollector,
+      lamports: wormholeTools.bridgeFee,
     }),
     ixFromRust(
-      post_message_ix(
-        wormholeAddress,
+      wormholeTools.post_message_ix(
+        wormholeTools.wormholeAddress.toBase58(),
         payer.toBase58(),
         emitter.toBase58(),
         message.toBase58(),
@@ -679,7 +683,8 @@ async function createWormholeMsgMultisigTx(
   cluster: Cluster,
   squad: Squads,
   vault: PublicKey,
-  payload: string
+  payload: string,
+  wormholeTools: WormholeTools
 ) {
   const msAccount = await squad.getMultisig(vault);
   const emitter = squad.getAuthorityPDA(
@@ -697,13 +702,12 @@ async function createWormholeMsgMultisigTx(
   );
 
   console.log("Creating wormhole instructions...");
-  const wormholeIxs = await getWormholeMessageIx(
-    cluster,
+  const wormholeIxs = getWormholeMessageIx(
     emitter,
     emitter,
     messagePDA,
-    squad.connection,
-    payload
+    payload,
+    wormholeTools
   );
   console.log("Wormhole instructions created.");
 
@@ -726,20 +730,14 @@ async function createWormholeMsgMultisigTx(
   );
 }
 
-async function hasWorholePayload(
-  cluster: Cluster,
+function hasWormholePayload(
   squad: Squads,
-  vault: PublicKey,
+  emitter: PublicKey,
   txPubkey: PublicKey,
   payload: string,
-  onChainInstructions: InstructionAccount[]
-): Promise<boolean> {
-  const msAccount = await squad.getMultisig(vault);
-  const emitter = squad.getAuthorityPDA(
-    msAccount.publicKey,
-    msAccount.authorityIndex
-  );
-
+  onChainInstructions: InstructionAccount[],
+  wormholeTools: WormholeTools
+): boolean {
   if (onChainInstructions.length !== 2) {
     console.debug(
       `Expected 2 instructions in the transaction, found ${onChainInstructions.length}`
@@ -753,13 +751,12 @@ async function hasWorholePayload(
     squad.multisigProgramId
   );
 
-  const wormholeIxs = await getWormholeMessageIx(
-    cluster,
+  const wormholeIxs = getWormholeMessageIx(
     emitter,
     emitter,
     messagePDA,
-    squad.connection,
-    payload
+    payload,
+    wormholeTools
   );
 
   return (
@@ -809,7 +806,8 @@ async function executeMultisigTx(
   squad: Squads,
   vault: PublicKey,
   txPDA: PublicKey,
-  rpcUrl: string
+  rpcUrl: string,
+  wormholeTools: WormholeTools
 ) {
   const msAccount = await squad.getMultisig(vault);
 
@@ -905,7 +903,7 @@ async function executeMultisigTx(
   const { vaaBytes } = await response.json();
   console.log(`VAA (Base64): ${vaaBytes}`);
   console.log(`VAA (Hex): ${Buffer.from(vaaBytes, "base64").toString("hex")}`);
-  const parsedVaa = await parse(vaaBytes);
+  const parsedVaa = parse(vaaBytes, wormholeTools);
   console.log(`Emitter chain: ${parsedVaa.emitter_chain}`);
   console.log(`Nonce: ${parsedVaa.nonce}`);
   console.log(`Payload: ${Buffer.from(parsedVaa.payload).toString("hex")}`);
@@ -981,9 +979,4 @@ async function removeMember(
     txKey,
     squadIxs
   );
-}
-
-async function parse(data: string) {
-  const { parse_vaa } = await importCoreWasm();
-  return parse_vaa(Uint8Array.from(Buffer.from(data, "base64")));
 }
