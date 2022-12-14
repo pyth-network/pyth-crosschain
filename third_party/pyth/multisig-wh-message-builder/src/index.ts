@@ -27,7 +27,6 @@ import {
   getManyProposalsInstructions,
   getProposalInstructions,
 } from "./multisig";
-import { option } from "yargs";
 
 setDefaultWasm("node");
 
@@ -200,7 +199,7 @@ program
           )
         ) {
           console.log(
-            `❌ Skipping, matches instructions at ${activeProposals[i].publicKey}`
+            `❌ Skipping, payload ${options.payload} matches instructions at ${activeProposals[i].publicKey}`
           );
           return;
         }
