@@ -196,7 +196,7 @@ program
 
       for (let i = 0; i < activeProposals.length; i++) {
         if (
-          await hasWormholePayload(
+          hasWormholePayload(
             squad,
             emitter,
             activeProposals[i].publicKey,
@@ -265,7 +265,7 @@ program
     );
 
     if (
-      await hasWormholePayload(
+      hasWormholePayload(
         squad,
         emitter,
         new PublicKey(options.txPda),
@@ -730,14 +730,14 @@ async function createWormholeMsgMultisigTx(
   );
 }
 
-async function hasWormholePayload(
+function hasWormholePayload(
   squad: Squads,
   emitter: PublicKey,
   txPubkey: PublicKey,
   payload: string,
   onChainInstructions: InstructionAccount[],
   wormholeTools: WormholeTools
-): Promise<boolean> {
+): boolean {
   if (onChainInstructions.length !== 2) {
     console.debug(
       `Expected 2 instructions in the transaction, found ${onChainInstructions.length}`
