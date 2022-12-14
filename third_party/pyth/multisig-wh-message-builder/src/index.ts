@@ -22,7 +22,12 @@ import { program } from "commander";
 import * as fs from "fs";
 import { LedgerNodeWallet } from "./wallet";
 import lodash from "lodash";
-import { getActiveProposals, getProposalInstructions } from "./multisig";
+import {
+  getActiveProposals,
+  getManyProposalsInstructions,
+  getProposalInstructions,
+} from "./multisig";
+import { option } from "yargs";
 
 setDefaultWasm("node");
 
@@ -162,6 +167,7 @@ program
     "keys/key.json"
   )
   .option("-p, --payload <hex-string>", "payload to sign", "0xdeadbeef")
+  .option("-s, --skip-duplicate-check", "Skip checking duplicates")
   .action(async (options) => {
     const cluster: Cluster = options.cluster;
     const squad = await getSquadsClient(
@@ -171,6 +177,36 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
+
+    if (!options.skipDuplicateCheck) {
+      const activeProposals = await getActiveProposals(
+        squad,
+        CONFIG[cluster].vault
+      );
+      const activeInstructions = await getManyProposalsInstructions(
+        squad,
+        activeProposals
+      );
+
+      for (let i = 0; i < activeProposals.length; i++) {
+        if (
+          await hasWorholePayload(
+            cluster,
+            squad,
+            CONFIG[cluster].vault,
+            activeProposals[i].publicKey,
+            options.payload,
+            activeInstructions[i]
+          )
+        ) {
+          console.log(
+            `❌ Skipping, matches instructions at ${activeProposals[i].publicKey}`
+          );
+          return;
+        }
+      }
+    }
+
     await createWormholeMsgMultisigTx(
       options.cluster,
       squad,
@@ -208,13 +244,27 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
-    await verifyWormholePayload(
-      options.cluster,
+
+    let onChainInstructions = await getProposalInstructions(
       squad,
-      CONFIG[cluster].vault,
-      new PublicKey(options.txPda),
-      options.payload
+      await squad.getTransaction(new PublicKey(options.txPda))
     );
+    if (
+      await hasWorholePayload(
+        options.cluster,
+        squad,
+        CONFIG[cluster].vault,
+        new PublicKey(options.txPda),
+        options.payload,
+        onChainInstructions
+      )
+    ) {
+      console.log(
+        "✅ This proposal is verified to be created with the given payload."
+      );
+    } else {
+      console.log("❌ This proposal does not match the given payload.");
+    }
   });
 
 program
@@ -479,8 +529,7 @@ async function getSquadsClient(
       if (solRpcUrl) {
         return Squads.endpoint(solRpcUrl, wallet);
       } else {
-        console.log("rpc:", solRpcUrl);
-        throw `ERROR: solRpcUrl was not specified for localdevnet!`;
+        return Squads.localnet(wallet);
       }
     }
     default: {
@@ -678,29 +727,25 @@ async function createWormholeMsgMultisigTx(
   );
 }
 
-async function verifyWormholePayload(
+async function hasWorholePayload(
   cluster: Cluster,
   squad: Squads,
   vault: PublicKey,
   txPubkey: PublicKey,
-  payload: string
-) {
+  payload: string,
+  onChainInstructions: InstructionAccount[]
+): Promise<boolean> {
   const msAccount = await squad.getMultisig(vault);
   const emitter = squad.getAuthorityPDA(
     msAccount.publicKey,
     msAccount.authorityIndex
   );
-  console.log(`Emitter Address: ${emitter.toBase58()}`);
-
-  const tx = await squad.getTransaction(txPubkey);
-  const onChainInstructions = await getProposalInstructions(squad, tx);
 
   if (onChainInstructions.length !== 2) {
-    throw new Error(
-      `Expected 2 instructions in the transaction, found ${
-        tx.instructionIndex + 1
-      }`
+    console.debug(
+      `Expected 2 instructions in the transaction, found ${onChainInstructions.length}`
     );
+    return false;
   }
 
   const [messagePDA] = getIxAuthorityPDA(
@@ -718,47 +763,46 @@ async function verifyWormholePayload(
     payload
   );
 
-  console.log("Checking equality of the 1st instruction...");
-  verifyOnChainInstruction(
-    wormholeIxs[0],
-    onChainInstructions[0] as InstructionAccount
-  );
-
-  console.log("Checking equality of the 2nd instruction...");
-  verifyOnChainInstruction(
-    wormholeIxs[1],
-    onChainInstructions[1] as InstructionAccount
-  );
-
-  console.log(
-    "✅ The transaction is verified to be created with the given payload."
+  return (
+    isEqualOnChainInstruction(
+      wormholeIxs[0],
+      onChainInstructions[0] as InstructionAccount
+    ) &&
+    isEqualOnChainInstruction(
+      wormholeIxs[1],
+      onChainInstructions[1] as InstructionAccount
+    )
   );
 }
 
-function verifyOnChainInstruction(
+function isEqualOnChainInstruction(
   instruction: TransactionInstruction,
   onChainInstruction: InstructionAccount
-) {
+): boolean {
   if (!instruction.programId.equals(onChainInstruction.programId)) {
-    throw new Error(
+    console.debug(
       `Program id mismatch: Expected ${instruction.programId.toBase58()}, found ${onChainInstruction.programId.toBase58()}`
     );
+    return false;
   }
 
   if (!lodash.isEqual(instruction.keys, onChainInstruction.keys)) {
-    throw new Error(
+    console.debug(
       `Instruction accounts mismatch. Expected ${instruction.keys}, found ${onChainInstruction.keys}`
     );
+    return false;
   }
 
   const onChainData = onChainInstruction.data as Buffer;
   if (!instruction.data.equals(onChainData)) {
-    throw new Error(
+    console.debug(
       `Instruction data mismatch. Expected ${instruction.data.toString(
         "hex"
       )}, Found ${onChainData.toString("hex")}`
     );
+    return false;
   }
+  return true;
 }
 
 async function executeMultisigTx(
