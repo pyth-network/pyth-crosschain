@@ -1,9 +1,4 @@
-import {
-  importCoreWasm,
-  ixFromRust,
-  setDefaultWasm,
-  utils as wormholeUtils,
-} from "@certusone/wormhole-sdk";
+import { ixFromRust, setDefaultWasm } from "@certusone/wormhole-sdk";
 import * as anchor from "@project-serum/anchor";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import {
@@ -15,14 +10,24 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import Squads from "@sqds/mesh";
-import { getIxAuthorityPDA, getIxPDA, getMsPDA } from "@sqds/mesh";
+import { getIxAuthorityPDA } from "@sqds/mesh";
 import { InstructionAccount } from "@sqds/mesh/lib/types";
 import bs58 from "bs58";
 import { program } from "commander";
 import * as fs from "fs";
 import { LedgerNodeWallet } from "./wallet";
 import lodash from "lodash";
-import { getActiveProposals, getProposalInstructions } from "./multisig";
+import {
+  getActiveProposals,
+  getManyProposalsInstructions,
+  getProposalInstructions,
+} from "./multisig";
+import {
+  WormholeNetwork,
+  loadWormholeTools,
+  WormholeTools,
+  parse,
+} from "./wormhole";
 
 setDefaultWasm("node");
 
@@ -40,8 +45,7 @@ setDefaultWasm("node");
 //
 // - "localdevnet" - always means the Tilt devnet
 
-type Cluster = "devnet" | "mainnet" | "localdevnet";
-type WormholeNetwork = "TESTNET" | "MAINNET" | "DEVNET";
+export type Cluster = "devnet" | "mainnet" | "localdevnet";
 
 type Config = {
   wormholeClusterName: WormholeNetwork;
@@ -49,7 +53,7 @@ type Config = {
   vault: PublicKey;
 };
 
-const CONFIG: Record<Cluster, Config> = {
+export const CONFIG: Record<Cluster, Config> = {
   devnet: {
     wormholeClusterName: "TESTNET",
     vault: new PublicKey("6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3"),
@@ -162,6 +166,7 @@ program
     "keys/key.json"
   )
   .option("-p, --payload <hex-string>", "payload to sign", "0xdeadbeef")
+  .option("-s, --skip-duplicate-check", "Skip checking duplicates")
   .action(async (options) => {
     const cluster: Cluster = options.cluster;
     const squad = await getSquadsClient(
@@ -171,11 +176,49 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
+    const wormholeTools = await loadWormholeTools(cluster, squad.connection);
+
+    if (!options.skipDuplicateCheck) {
+      const activeProposals = await getActiveProposals(
+        squad,
+        CONFIG[cluster].vault
+      );
+      const activeInstructions = await getManyProposalsInstructions(
+        squad,
+        activeProposals
+      );
+
+      const msAccount = await squad.getMultisig(CONFIG[cluster].vault);
+      const emitter = squad.getAuthorityPDA(
+        msAccount.publicKey,
+        msAccount.authorityIndex
+      );
+
+      for (let i = 0; i < activeProposals.length; i++) {
+        if (
+          hasWormholePayload(
+            squad,
+            emitter,
+            activeProposals[i].publicKey,
+            options.payload,
+            activeInstructions[i],
+            wormholeTools
+          )
+        ) {
+          console.log(
+            `❌ Skipping, payload ${options.payload} matches instructions at ${activeProposals[i].publicKey}`
+          );
+          return;
+        }
+      }
+    }
+
     await createWormholeMsgMultisigTx(
       options.cluster,
       squad,
       CONFIG[cluster].vault,
-      options.payload
+      options.payload,
+      wormholeTools
     );
   });
 
@@ -208,13 +251,35 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
-    await verifyWormholePayload(
-      options.cluster,
+    const wormholeTools = await loadWormholeTools(cluster, squad.connection);
+
+    let onChainInstructions = await getProposalInstructions(
       squad,
-      CONFIG[cluster].vault,
-      new PublicKey(options.txPda),
-      options.payload
+      await squad.getTransaction(new PublicKey(options.txPda))
     );
+
+    const msAccount = await squad.getMultisig(CONFIG[cluster].vault);
+    const emitter = squad.getAuthorityPDA(
+      msAccount.publicKey,
+      msAccount.authorityIndex
+    );
+
+    if (
+      hasWormholePayload(
+        squad,
+        emitter,
+        new PublicKey(options.txPda),
+        options.payload,
+        onChainInstructions,
+        wormholeTools
+      )
+    ) {
+      console.log(
+        "✅ This proposal is verified to be created with the given payload."
+      );
+    } else {
+      console.log("❌ This proposal does not match the given payload.");
+    }
   });
 
 program
@@ -325,7 +390,8 @@ program
       squad,
       CONFIG[cluster].vault,
       new PublicKey(options.txPda),
-      CONFIG[cluster].wormholeRpcEndpoint
+      CONFIG[cluster].wormholeRpcEndpoint,
+      await loadWormholeTools(cluster, squad.connection)
     );
   });
 
@@ -479,8 +545,7 @@ async function getSquadsClient(
       if (solRpcUrl) {
         return Squads.endpoint(solRpcUrl, wallet);
       } else {
-        console.log("rpc:", solRpcUrl);
-        throw `ERROR: solRpcUrl was not specified for localdevnet!`;
+        return Squads.localnet(wallet);
       }
     }
     default: {
@@ -583,26 +648,13 @@ async function setIsActiveIx(
   };
 }
 
-async function getWormholeMessageIx(
-  cluster: Cluster,
+function getWormholeMessageIx(
   payer: PublicKey,
   emitter: PublicKey,
   message: PublicKey,
-  connection: anchor.web3.Connection,
-  payload: string
+  payload: string,
+  wormholeTools: WormholeTools
 ) {
-  const wormholeClusterName: WormholeNetwork =
-    CONFIG[cluster].wormholeClusterName;
-  const wormholeAddress =
-    wormholeUtils.CONTRACTS[wormholeClusterName].solana.core;
-  const { post_message_ix, fee_collector_address, state_address, parse_state } =
-    await importCoreWasm();
-  const feeCollector = new PublicKey(fee_collector_address(wormholeAddress));
-  const bridgeState = new PublicKey(state_address(wormholeAddress));
-  const bridgeAccountInfo = await connection.getAccountInfo(bridgeState);
-  const bridgeStateParsed = parse_state(bridgeAccountInfo!.data);
-  const bridgeFee = bridgeStateParsed.config.fee;
-
   if (payload.startsWith("0x")) {
     payload = payload.substring(2);
   }
@@ -610,12 +662,12 @@ async function getWormholeMessageIx(
   return [
     SystemProgram.transfer({
       fromPubkey: payer,
-      toPubkey: feeCollector,
-      lamports: bridgeFee,
+      toPubkey: wormholeTools.feeCollector,
+      lamports: wormholeTools.bridgeFee,
     }),
     ixFromRust(
-      post_message_ix(
-        wormholeAddress,
+      wormholeTools.post_message_ix(
+        wormholeTools.wormholeAddress.toBase58(),
         payer.toBase58(),
         emitter.toBase58(),
         message.toBase58(),
@@ -631,7 +683,8 @@ async function createWormholeMsgMultisigTx(
   cluster: Cluster,
   squad: Squads,
   vault: PublicKey,
-  payload: string
+  payload: string,
+  wormholeTools: WormholeTools
 ) {
   const msAccount = await squad.getMultisig(vault);
   const emitter = squad.getAuthorityPDA(
@@ -649,13 +702,12 @@ async function createWormholeMsgMultisigTx(
   );
 
   console.log("Creating wormhole instructions...");
-  const wormholeIxs = await getWormholeMessageIx(
-    cluster,
+  const wormholeIxs = getWormholeMessageIx(
     emitter,
     emitter,
     messagePDA,
-    squad.connection,
-    payload
+    payload,
+    wormholeTools
   );
   console.log("Wormhole instructions created.");
 
@@ -678,29 +730,19 @@ async function createWormholeMsgMultisigTx(
   );
 }
 
-async function verifyWormholePayload(
-  cluster: Cluster,
+function hasWormholePayload(
   squad: Squads,
-  vault: PublicKey,
+  emitter: PublicKey,
   txPubkey: PublicKey,
-  payload: string
-) {
-  const msAccount = await squad.getMultisig(vault);
-  const emitter = squad.getAuthorityPDA(
-    msAccount.publicKey,
-    msAccount.authorityIndex
-  );
-  console.log(`Emitter Address: ${emitter.toBase58()}`);
-
-  const tx = await squad.getTransaction(txPubkey);
-  const onChainInstructions = await getProposalInstructions(squad, tx);
-
+  payload: string,
+  onChainInstructions: InstructionAccount[],
+  wormholeTools: WormholeTools
+): boolean {
   if (onChainInstructions.length !== 2) {
-    throw new Error(
-      `Expected 2 instructions in the transaction, found ${
-        tx.instructionIndex + 1
-      }`
+    console.debug(
+      `Expected 2 instructions in the transaction, found ${onChainInstructions.length}`
     );
+    return false;
   }
 
   const [messagePDA] = getIxAuthorityPDA(
@@ -709,56 +751,54 @@ async function verifyWormholePayload(
     squad.multisigProgramId
   );
 
-  const wormholeIxs = await getWormholeMessageIx(
-    cluster,
+  const wormholeIxs = getWormholeMessageIx(
     emitter,
     emitter,
     messagePDA,
-    squad.connection,
-    payload
+    payload,
+    wormholeTools
   );
 
-  console.log("Checking equality of the 1st instruction...");
-  verifyOnChainInstruction(
-    wormholeIxs[0],
-    onChainInstructions[0] as InstructionAccount
-  );
-
-  console.log("Checking equality of the 2nd instruction...");
-  verifyOnChainInstruction(
-    wormholeIxs[1],
-    onChainInstructions[1] as InstructionAccount
-  );
-
-  console.log(
-    "✅ The transaction is verified to be created with the given payload."
+  return (
+    isEqualOnChainInstruction(
+      wormholeIxs[0],
+      onChainInstructions[0] as InstructionAccount
+    ) &&
+    isEqualOnChainInstruction(
+      wormholeIxs[1],
+      onChainInstructions[1] as InstructionAccount
+    )
   );
 }
 
-function verifyOnChainInstruction(
+function isEqualOnChainInstruction(
   instruction: TransactionInstruction,
   onChainInstruction: InstructionAccount
-) {
+): boolean {
   if (!instruction.programId.equals(onChainInstruction.programId)) {
-    throw new Error(
+    console.debug(
       `Program id mismatch: Expected ${instruction.programId.toBase58()}, found ${onChainInstruction.programId.toBase58()}`
     );
+    return false;
   }
 
   if (!lodash.isEqual(instruction.keys, onChainInstruction.keys)) {
-    throw new Error(
+    console.debug(
       `Instruction accounts mismatch. Expected ${instruction.keys}, found ${onChainInstruction.keys}`
     );
+    return false;
   }
 
   const onChainData = onChainInstruction.data as Buffer;
   if (!instruction.data.equals(onChainData)) {
-    throw new Error(
+    console.debug(
       `Instruction data mismatch. Expected ${instruction.data.toString(
         "hex"
       )}, Found ${onChainData.toString("hex")}`
     );
+    return false;
   }
+  return true;
 }
 
 async function executeMultisigTx(
@@ -766,7 +806,8 @@ async function executeMultisigTx(
   squad: Squads,
   vault: PublicKey,
   txPDA: PublicKey,
-  rpcUrl: string
+  rpcUrl: string,
+  wormholeTools: WormholeTools
 ) {
   const msAccount = await squad.getMultisig(vault);
 
@@ -862,7 +903,7 @@ async function executeMultisigTx(
   const { vaaBytes } = await response.json();
   console.log(`VAA (Base64): ${vaaBytes}`);
   console.log(`VAA (Hex): ${Buffer.from(vaaBytes, "base64").toString("hex")}`);
-  const parsedVaa = await parse(vaaBytes);
+  const parsedVaa = parse(vaaBytes, wormholeTools);
   console.log(`Emitter chain: ${parsedVaa.emitter_chain}`);
   console.log(`Nonce: ${parsedVaa.nonce}`);
   console.log(`Payload: ${Buffer.from(parsedVaa.payload).toString("hex")}`);
@@ -938,9 +979,4 @@ async function removeMember(
     txKey,
     squadIxs
   );
-}
-
-async function parse(data: string) {
-  const { parse_vaa } = await importCoreWasm();
-  return parse_vaa(Uint8Array.from(Buffer.from(data, "base64")));
 }
