@@ -1,3 +1,5 @@
+pub mod cli;
+
 use {
     clap::Parser,
     cli::{
@@ -44,6 +46,7 @@ use {
         P2WMessageQueue,
         P2WSymbol,
         RLMutex,
+        HEALTHCHECK_STATE,
     },
     sha3::{
         Digest,
@@ -82,20 +85,20 @@ use {
     },
 };
 
-pub mod cli;
-
 pub const SEQNO_PREFIX: &str = "Program log: Sequence: ";
 
 lazy_static! {
     static ref ATTESTATIONS_OK_CNT: IntCounter =
-        register_int_counter!("attestations_ok", "Number of successful attestations").unwrap();
+        register_int_counter!("attestations_ok", "Number of successful attestations")
+            .expect("FATAL: Could not instantiate ATTESTATIONS_OK_CNT");
     static ref ATTESTATIONS_ERR_CNT: IntCounter =
-        register_int_counter!("attestations_err", "Number of failed attestations").unwrap();
+        register_int_counter!("attestations_err", "Number of failed attestations")
+            .expect("FATAL: Could not instantiate ATTESTATIONS_ERR_CNT");
     static ref LAST_SEQNO_GAUGE: IntGauge = register_int_gauge!(
         "last_seqno",
         "Latest sequence number produced by this attester"
     )
-    .unwrap();
+    .expect("FATAL: Could not instantiate LAST_SEQNO_GAUGE");
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -291,6 +294,16 @@ async fn handle_attest_daemon_mode(
     attestation_cfg: AttestationConfig,
     metrics_bind_addr: SocketAddr,
 ) -> Result<(), ErrBox> {
+    // Update healthcheck window size from config
+    {
+        let mut hc = HEALTHCHECK_STATE.lock().await;
+        hc.max_window_size = attestation_cfg.healthcheck_window_size as usize;
+
+        if hc.max_window_size == 0 {
+            warn!("WARNING: Healthcheck is disabled");
+        }
+    }
+
     tokio::spawn(start_metrics_server(metrics_bind_addr));
 
     info!("Started serving metrics on {}", metrics_bind_addr);
@@ -660,12 +673,13 @@ async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrB
         let group_name4err_msg = batch.group_name.clone();
 
         // We never get to error reporting in daemon mode, attach a map_err
-        let job_with_err_msg = job.map_err(move |e| {
+        let job_with_err_msg = job.or_else(move |e| async move {
             warn!(
                 "Batch {}/{}, group {:?} ERR: {:#?}",
                 batch_no4err_msg, batch_count4err_msg, group_name4err_msg, e
             );
-            e
+            HEALTHCHECK_STATE.lock().await.add_result(false); // Report this job as failed to healthcheck
+            Err(e)
         });
 
         // Spawn the job in background
@@ -826,6 +840,7 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
         batch_no, batch_count, group_name, seqno
     );
     ATTESTATIONS_OK_CNT.inc();
+    HEALTHCHECK_STATE.lock().await.add_result(true); // Report this job as successful to healthcheck
     LAST_SEQNO_GAUGE.set(seqno.parse::<i64>()?);
     Result::<(), ErrBoxSend>::Ok(())
 }

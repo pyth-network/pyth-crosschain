@@ -1,4 +1,5 @@
 use {
+    crate::HEALTHCHECK_STATE,
     http::status::StatusCode,
     log::{
         error,
@@ -123,10 +124,58 @@ async fn metrics_handler() -> Result<impl Reply, Rejection> {
     }
 }
 
+/// Shares healthcheck result via HTTP status codes. The idea is to
+/// get a yes/no health answer using a plain HTTP request. Note: Curl
+/// does not treat 3xx statuses as errors by default.
+async fn healthcheck_handler() -> Result<impl Reply, Rejection> {
+    let hc_state = HEALTHCHECK_STATE.lock().await;
+    match hc_state.is_healthy() {
+        // Healthy - 200 OK
+        Some(true) => {
+            let ok_count = hc_state
+                .window
+                .iter()
+                .fold(0usize, |acc, val| if *val { acc + 1 } else { acc });
+            let msg = format!(
+                "healthy, {} of {} last attestations OK",
+                ok_count, hc_state.max_window_size
+            );
+            Ok(reply::with_status(msg, StatusCode::OK))
+        }
+        // Unhealthy - 503 Service Unavailable
+        Some(false) => {
+            let msg = format!(
+                "unhealthy, all of {} latest attestations returned error",
+                hc_state.max_window_size
+            );
+            Ok(reply::with_status(msg, StatusCode::SERVICE_UNAVAILABLE))
+        }
+        // No data - 307 Temporary Redirect
+        None => {
+            let msg = if hc_state.max_window_size > 0 {
+                format!(
+                    "Not enough data in window, {} of {} min attempts made",
+                    hc_state.window.len(),
+                    hc_state.max_window_size
+                )
+            } else {
+                "Healthcheck disabled (window size is 0)".to_string()
+            };
+            Ok(reply::with_status(msg, StatusCode::TEMPORARY_REDIRECT))
+        }
+    }
+}
+
+/// Serves Prometheus metrics and the result of the healthcheck
 pub async fn start_metrics_server(addr: impl Into<SocketAddr> + 'static) {
-    let metrics_route = warp::path("metrics") // The metrics subpage is standardized to always be /metrics
+    let metrics_route = warp::path("metrics") // The Prometheus metrics subpage is standardized to always be /metrics
         .and(warp::path::end())
         .and_then(metrics_handler);
+    let healthcheck_route = warp::path("healthcheck")
+        .and(warp::path::end())
+        .and_then(healthcheck_handler);
 
-    warp::serve(metrics_route).bind(addr).await;
+    warp::serve(metrics_route.or(healthcheck_route))
+        .bind(addr)
+        .await;
 }
