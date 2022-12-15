@@ -165,7 +165,8 @@ program
     "multisig wallet secret key filepath",
     "keys/key.json"
   )
-  .option("-p, --payload <hex-string>", "payload to sign", "0xdeadbeef")
+  .option("-f, --file <filepath>", "Path to a json file with instructions")
+  .option("-p, --payload <hex-string>", "Wormhole VAA payload")
   .option("-s, --skip-duplicate-check", "Skip checking duplicates")
   .action(async (options) => {
     const cluster: Cluster = options.cluster;
@@ -176,55 +177,103 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
-    const wormholeTools = await loadWormholeTools(cluster, squad.connection);
 
-    if (!options.skipDuplicateCheck) {
-      const activeProposals = await getActiveProposals(
-        squad,
-        CONFIG[cluster].vault
-      );
-      const activeInstructions = await getManyProposalsInstructions(
-        squad,
-        activeProposals
-      );
-
-      const msAccount = await squad.getMultisig(CONFIG[cluster].vault);
-      const emitter = squad.getAuthorityPDA(
-        msAccount.publicKey,
-        msAccount.authorityIndex
-      );
-
-      for (let i = 0; i < activeProposals.length; i++) {
-        if (
-          hasWormholePayload(
-            squad,
-            emitter,
-            activeProposals[i].publicKey,
-            options.payload,
-            activeInstructions[i],
-            wormholeTools
-          )
-        ) {
-          console.log(
-            `❌ Skipping, payload ${options.payload} matches instructions at ${activeProposals[i].publicKey}`
-          );
-          return;
-        }
-      }
+    if (options.payload && options.file) {
+      console.log("Only one of --payload or --file must be provided");
+      return;
     }
 
-    await createWormholeMsgMultisigTx(
-      options.cluster,
-      squad,
-      CONFIG[cluster].vault,
-      options.payload,
-      wormholeTools
-    );
+    if (options.payload) {
+      const wormholeTools = await loadWormholeTools(cluster, squad.connection);
+
+      if (!options.skipDuplicateCheck) {
+        const activeProposals = await getActiveProposals(
+          squad,
+          CONFIG[cluster].vault
+        );
+        const activeInstructions = await getManyProposalsInstructions(
+          squad,
+          activeProposals
+        );
+
+        const msAccount = await squad.getMultisig(CONFIG[cluster].vault);
+        const emitter = squad.getAuthorityPDA(
+          msAccount.publicKey,
+          msAccount.authorityIndex
+        );
+
+        for (let i = 0; i < activeProposals.length; i++) {
+          if (
+            hasWormholePayload(
+              squad,
+              emitter,
+              activeProposals[i].publicKey,
+              options.payload,
+              activeInstructions[i],
+              wormholeTools
+            )
+          ) {
+            console.log(
+              `❌ Skipping, payload ${options.payload} matches instructions at ${activeProposals[i].publicKey}`
+            );
+            return;
+          }
+        }
+      }
+
+      await createWormholeMsgMultisigTx(
+        options.cluster,
+        squad,
+        CONFIG[cluster].vault,
+        options.payload,
+        wormholeTools
+      );
+    }
+
+    if (options.file) {
+      const instructions: SquadInstruction[] = loadInstructionsFromJson(
+        options.file
+      );
+
+      if (!options.skipDuplicateCheck) {
+        const activeProposals = await getActiveProposals(
+          squad,
+          CONFIG[cluster].vault
+        );
+        const activeInstructions = await getManyProposalsInstructions(
+          squad,
+          activeProposals
+        );
+
+        for (let i = 0; i < activeProposals.length; i++) {
+          if (
+            areEqualOnChainInstructions(
+              instructions.map((ix) => ix.instruction),
+              activeInstructions[i]
+            )
+          ) {
+            console.log(
+              `❌ Skipping, instructions from ${options.file} match instructions at ${activeProposals[i].publicKey}`
+            );
+            return;
+          }
+        }
+      }
+
+      const txKey = await createTx(squad, CONFIG[cluster].vault);
+      await addInstructionsToTx(
+        cluster,
+        squad,
+        CONFIG[cluster].vault,
+        txKey,
+        instructions
+      );
+    }
   });
 
 program
   .command("verify")
-  .description("Verify given wormhole transaction has the given payload")
+  .description("Verify given proposal matches a payload")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
   .option("-l, --ledger", "use ledger")
   .option(
@@ -240,7 +289,8 @@ program
     "multisig wallet secret key filepath",
     "keys/key.json"
   )
-  .requiredOption("-p, --payload <hex-string>", "expected payload")
+  .option("-p, --payload <hex-string>", "expected wormhole payload")
+  .option("-f, --file <filepath>", "Path to a json file with instructions")
   .requiredOption("-t, --tx-pda <address>", "transaction PDA")
   .action(async (options) => {
     const cluster: Cluster = options.cluster;
@@ -251,6 +301,12 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
+
+    if (options.payload && options.file) {
+      console.log("Only one of --payload or --file must be provided");
+      return;
+    }
+
     const wormholeTools = await loadWormholeTools(cluster, squad.connection);
 
     let onChainInstructions = await getProposalInstructions(
@@ -264,21 +320,42 @@ program
       msAccount.authorityIndex
     );
 
-    if (
-      hasWormholePayload(
-        squad,
-        emitter,
-        new PublicKey(options.txPda),
-        options.payload,
-        onChainInstructions,
-        wormholeTools
-      )
-    ) {
-      console.log(
-        "✅ This proposal is verified to be created with the given payload."
+    if (options.payload) {
+      if (
+        hasWormholePayload(
+          squad,
+          emitter,
+          new PublicKey(options.txPda),
+          options.payload,
+          onChainInstructions,
+          wormholeTools
+        )
+      ) {
+        console.log(
+          "✅ This proposal is verified to be created with the given payload."
+        );
+      } else {
+        console.log("❌ This proposal does not match the given payload.");
+      }
+    }
+
+    if (options.file) {
+      const instructions: SquadInstruction[] = loadInstructionsFromJson(
+        options.file
       );
-    } else {
-      console.log("❌ This proposal does not match the given payload.");
+
+      if (
+        areEqualOnChainInstructions(
+          instructions.map((ix) => ix.instruction),
+          onChainInstructions
+        )
+      ) {
+        console.log(
+          "✅ This proposal is verified to be created with the given instructions."
+        );
+      } else {
+        console.log("❌ This proposal does not match the given instructions.");
+      }
     }
   });
 
@@ -730,6 +807,24 @@ async function createWormholeMsgMultisigTx(
   );
 }
 
+function areEqualOnChainInstructions(
+  instructions: TransactionInstruction[],
+  onChainInstructions: InstructionAccount[]
+): boolean {
+  if (instructions.length != onChainInstructions.length) {
+    console.debug(
+      `Proposals have a different number of instructions ${instructions.length} vs ${onChainInstructions.length}`
+    );
+    return false;
+  } else {
+    return lodash
+      .range(0, instructions.length)
+      .every((i) =>
+        isEqualOnChainInstruction(instructions[i], onChainInstructions[i])
+      );
+  }
+}
+
 function hasWormholePayload(
   squad: Squads,
   emitter: PublicKey,
@@ -979,4 +1074,26 @@ async function removeMember(
     txKey,
     squadIxs
   );
+}
+
+function loadInstructionsFromJson(path: string): SquadInstruction[] {
+  const inputInstructions = JSON.parse(fs.readFileSync(path).toString());
+  const instructions: SquadInstruction[] = inputInstructions.map(
+    (ix: any): SquadInstruction => {
+      return {
+        instruction: new TransactionInstruction({
+          programId: new PublicKey(ix.program_id),
+          keys: ix.accounts.map((acc: any) => {
+            return {
+              pubkey: new PublicKey(acc.pubkey),
+              isSigner: acc.is_signer,
+              isWritable: acc.is_writable,
+            };
+          }),
+          data: Buffer.from(ix.data, "hex"),
+        }),
+      };
+    }
+  );
+  return instructions;
 }
