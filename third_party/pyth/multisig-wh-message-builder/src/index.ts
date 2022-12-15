@@ -166,7 +166,7 @@ program
     "keys/key.json"
   )
   .option("-f, --file <filepath>", "Path to a json file with instructions")
-  .option("-p, --payload <hex-string>", "VAA payload")
+  .option("-p, --payload <hex-string>", "Wormhole VAA payload")
   .option("-s, --skip-duplicate-check", "Skip checking duplicates")
   .action(async (options) => {
     const cluster: Cluster = options.cluster;
@@ -177,6 +177,11 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
+
+    if (options.payload && options.file) {
+      console.log("Only one of --payload or --file must be provided");
+      return;
+    }
 
     if (options.payload) {
       const wormholeTools = await loadWormholeTools(cluster, squad.connection);
@@ -285,7 +290,7 @@ program
 
 program
   .command("verify")
-  .description("Verify given wormhole transaction has the given payload")
+  .description("Verify given proposals matches a payload")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
   .option("-l, --ledger", "use ledger")
   .option(
@@ -301,7 +306,8 @@ program
     "multisig wallet secret key filepath",
     "keys/key.json"
   )
-  .requiredOption("-p, --payload <hex-string>", "expected payload")
+  .option("-p, --payload <hex-string>", "expected wormhole payload")
+  .option("-f, --file <filepath>", "Path to a json file with instructions")
   .requiredOption("-t, --tx-pda <address>", "transaction PDA")
   .action(async (options) => {
     const cluster: Cluster = options.cluster;
@@ -312,6 +318,12 @@ program
       options.ledgerDerivationChange,
       options.wallet
     );
+
+    if (options.payload && options.file) {
+      console.log("Only one of --payload or --file must be provided");
+      return;
+    }
+
     const wormholeTools = await loadWormholeTools(cluster, squad.connection);
 
     let onChainInstructions = await getProposalInstructions(
@@ -325,21 +337,59 @@ program
       msAccount.authorityIndex
     );
 
-    if (
-      hasWormholePayload(
-        squad,
-        emitter,
-        new PublicKey(options.txPda),
-        options.payload,
-        onChainInstructions,
-        wormholeTools
-      )
-    ) {
-      console.log(
-        "✅ This proposal is verified to be created with the given payload."
+    if (options.payload) {
+      if (
+        hasWormholePayload(
+          squad,
+          emitter,
+          new PublicKey(options.txPda),
+          options.payload,
+          onChainInstructions,
+          wormholeTools
+        )
+      ) {
+        console.log(
+          "✅ This proposal is verified to be created with the given payload."
+        );
+      } else {
+        console.log("❌ This proposal does not match the given payload.");
+      }
+    }
+
+    if (options.file) {
+      const inputInstructions = JSON.parse(
+        fs.readFileSync(options.file).toString()
       );
-    } else {
-      console.log("❌ This proposal does not match the given payload.");
+      const instructions: SquadInstruction[] = inputInstructions.map(
+        (ix: any): SquadInstruction => {
+          return {
+            instruction: new TransactionInstruction({
+              programId: new PublicKey(ix.program_id),
+              keys: ix.accounts.map((acc: any) => {
+                return {
+                  pubkey: new PublicKey(acc.pubkey),
+                  isSigner: acc.is_signer,
+                  isWritable: acc.is_writable,
+                };
+              }),
+              data: Buffer.from(ix.data, "hex"),
+            }),
+          };
+        }
+      );
+
+      if (
+        areEqualOnChainInstructions(
+          instructions.map((ix) => ix.instruction),
+          onChainInstructions
+        )
+      ) {
+        console.log(
+          "✅ This proposal is verified to be created with the given instructions."
+        );
+      } else {
+        console.log("❌ This proposal does not match the given instructions.");
+      }
     }
   });
 
