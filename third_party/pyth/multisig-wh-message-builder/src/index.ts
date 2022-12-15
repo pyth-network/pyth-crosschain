@@ -231,25 +231,8 @@ program
     }
 
     if (options.file) {
-      const inputInstructions = JSON.parse(
-        fs.readFileSync(options.file).toString()
-      );
-      const instructions: SquadInstruction[] = inputInstructions.map(
-        (ix: any): SquadInstruction => {
-          return {
-            instruction: new TransactionInstruction({
-              programId: new PublicKey(ix.program_id),
-              keys: ix.accounts.map((acc: any) => {
-                return {
-                  pubkey: new PublicKey(acc.pubkey),
-                  isSigner: acc.is_signer,
-                  isWritable: acc.is_writable,
-                };
-              }),
-              data: Buffer.from(ix.data, "hex"),
-            }),
-          };
-        }
+      const instructions: SquadInstruction[] = loadInstructionsFromJson(
+        options.file
       );
 
       if (!options.skipDuplicateCheck) {
@@ -357,25 +340,8 @@ program
     }
 
     if (options.file) {
-      const inputInstructions = JSON.parse(
-        fs.readFileSync(options.file).toString()
-      );
-      const instructions: SquadInstruction[] = inputInstructions.map(
-        (ix: any): SquadInstruction => {
-          return {
-            instruction: new TransactionInstruction({
-              programId: new PublicKey(ix.program_id),
-              keys: ix.accounts.map((acc: any) => {
-                return {
-                  pubkey: new PublicKey(acc.pubkey),
-                  isSigner: acc.is_signer,
-                  isWritable: acc.is_writable,
-                };
-              }),
-              data: Buffer.from(ix.data, "hex"),
-            }),
-          };
-        }
+      const instructions: SquadInstruction[] = loadInstructionsFromJson(
+        options.file
       );
 
       if (
@@ -1108,4 +1074,26 @@ async function removeMember(
     txKey,
     squadIxs
   );
+}
+
+function loadInstructionsFromJson(path: string): SquadInstruction[] {
+  const inputInstructions = JSON.parse(fs.readFileSync(path).toString());
+  const instructions: SquadInstruction[] = inputInstructions.map(
+    (ix: any): SquadInstruction => {
+      return {
+        instruction: new TransactionInstruction({
+          programId: new PublicKey(ix.program_id),
+          keys: ix.accounts.map((acc: any) => {
+            return {
+              pubkey: new PublicKey(acc.pubkey),
+              isSigner: acc.is_signer,
+              isWritable: acc.is_writable,
+            };
+          }),
+          data: Buffer.from(ix.data, "hex"),
+        }),
+      };
+    }
+  );
+  return instructions;
 }
