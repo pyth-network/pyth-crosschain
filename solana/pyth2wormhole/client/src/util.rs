@@ -152,14 +152,14 @@ async fn healthcheck_handler() -> Result<impl Reply, Rejection> {
         }
         // No data - 307 Temporary Redirect
         None => {
-            let msg = if hc_state.max_window_size > 0 {
+            let msg = if hc_state.enable {
                 format!(
                     "Not enough data in window, {} of {} min attempts made",
                     hc_state.window.len(),
                     hc_state.max_window_size
                 )
             } else {
-                "Healthcheck disabled (window size is 0)".to_string()
+                "Healthcheck disabled (enable_healthcheck is false)".to_string()
             };
             Ok(reply::with_status(msg, StatusCode::TEMPORARY_REDIRECT))
         }

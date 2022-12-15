@@ -7,32 +7,35 @@ use {
 };
 
 lazy_static::lazy_static! {
-    pub static ref HEALTHCHECK_STATE: Arc<Mutex<HealthCheckState>> = Arc::new(Mutex::new(HealthCheckState::new(0)));
+    pub static ref HEALTHCHECK_STATE: Arc<Mutex<HealthCheckState>> = Arc::new(Mutex::new(HealthCheckState::new(1, false)));
 }
 
 /// Helper structure for deciding service health
 pub struct HealthCheckState {
+    /// Whether to report the healthy/unhealthy status
+    pub enable:          bool,
     /// Sliding LIFO window over last `max_window_size` attestation results (true = ok, false = error)
     pub window:          VecDeque<bool>,
-    /// Window size; 0 disables the healthcheck, causing it to always return None
+    /// Window size
     pub max_window_size: usize,
 }
 
 
 impl HealthCheckState {
-    pub fn new(max_window_size: usize) -> Self {
+    pub fn new(max_window_size: usize, enable: bool) -> Self {
         Self {
+            enable,
             window: VecDeque::with_capacity(max_window_size),
             max_window_size,
         }
     }
     /// Check service health, return None if not enough data is present
     pub fn is_healthy(&self) -> Option<bool> {
-        if self.window.len() >= self.max_window_size && self.max_window_size > 0 {
+        if self.window.len() >= self.max_window_size && self.enable {
             // If all results are false, return false (unhealthy).
             Some(self.window.iter().any(|entry| *entry))
         } else {
-            // The window isn't big enough yet or the size is 0
+            // The window isn't big enough yet or the healthcheck is disabled
             None
         }
     }
