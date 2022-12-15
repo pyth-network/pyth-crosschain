@@ -270,7 +270,7 @@ program
             )
           ) {
             console.log(
-              `❌ Skipping, payload ${options.payload} matches instructions at ${activeProposals[i].publicKey}`
+              `❌ Skipping, instructions from ${options.file} match instructions at ${activeProposals[i].publicKey}`
             );
             return;
           }
@@ -290,7 +290,7 @@ program
 
 program
   .command("verify")
-  .description("Verify given proposals matches a payload")
+  .description("Verify given proposal matches a payload")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
   .option("-l, --ledger", "use ledger")
   .option(
