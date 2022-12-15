@@ -35,6 +35,14 @@ pub struct AttestationConfig {
     #[serde(default = "default_max_msg_accounts")]
     pub max_msg_accounts:          u64,
 
+    /// How many consecutive attestation failures cause the service to
+    /// report as unhealthy.
+    #[serde(default = "default_healthcheck_window_size")]
+    pub healthcheck_window_size: u64,
+
+    #[serde(default = "default_enable_healthcheck")]
+    pub enable_healthcheck: bool,
+
     /// Optionally, we take a mapping account to add remaining symbols from a Pyth deployments.
     /// These symbols are processed under `default_attestation_conditions`.
     #[serde(
@@ -85,7 +93,7 @@ impl AttestationConfig {
 
                     name_to_symbols
                         .entry(name.clone())
-                        .or_insert(vec![])
+                        .or_default()
                         .push(symbol);
                 }
             }
@@ -289,6 +297,14 @@ pub const fn default_min_msg_reuse_interval_ms() -> u64 {
     10_000 // 10s
 }
 
+pub const fn default_healthcheck_window_size() -> u64 {
+    100
+}
+
+pub const fn default_enable_healthcheck() -> bool {
+    true
+}
+
 pub const fn default_mapping_reload_interval_mins() -> u64 {
     15
 }
@@ -473,6 +489,8 @@ mod tests {
         let cfg = AttestationConfig {
             min_msg_reuse_interval_ms:      1000,
             max_msg_accounts:               100_000,
+            enable_healthcheck:             true,
+            healthcheck_window_size:        100,
             min_rpc_interval_ms:            2123,
             mapping_addr:                   None,
             mapping_reload_interval_mins:   42,
@@ -555,6 +573,8 @@ mod tests {
         let cfg = AttestationConfig {
             min_msg_reuse_interval_ms:      1000,
             max_msg_accounts:               100_000,
+            healthcheck_window_size:        100,
+            enable_healthcheck:             true,
             min_rpc_interval_ms:            2123,
             mapping_addr:                   None,
             mapping_reload_interval_mins:   42,

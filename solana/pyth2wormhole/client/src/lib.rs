@@ -1,5 +1,6 @@
 pub mod attestation_cfg;
 pub mod batch_state;
+pub mod healthcheck;
 pub mod message;
 pub mod util;
 
@@ -10,6 +11,10 @@ pub use {
         P2WSymbol,
     },
     batch_state::BatchState,
+    healthcheck::{
+        HealthCheckState,
+        HEALTHCHECK_STATE,
+    },
     message::P2WMessageQueue,
     pyth2wormhole::Pyth2WormholeConfig,
     util::{

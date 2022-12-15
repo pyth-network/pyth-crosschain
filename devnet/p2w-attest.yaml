@@ -45,11 +45,35 @@ spec:
             - name: P2W_EXIT_ON_ERROR
               value: "true"
           tty: true
-          readinessProbe:
-            tcpSocket:
-              port: 2000
-            periodSeconds: 1
-            failureThreshold: 300
+          # Probes, in order of appearance https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+          #
+          # Startup probe - delays other probes until it gets its first success
+          startupProbe:
+            httpGet:
+              path: /healthcheck
+              port: 3000
+            failureThreshold: 100 # up to 100 * 10 seconds to report initial healthy status
+            periodSeconds: 10
+          # Readiness probe - Used to tell load balancers to
+          # start/stop sending traffic to the container, *without*
+          # restarting it. The attester does not accept any traffic as
+          # part of its workflow, which means this isn't very useful.
+          # readinessProbe:
+          # httpGet:
+          #   path: /healthcheck
+          #   port: 3000
+          # failureThreshold: 1
+          # periodSeconds: 10
+          #
+          # Liveness probe - decides restarts for misbehaving
+          # containers
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 3000
+            failureThreshold: 1 # If the attester healthcheck fails once,
+            periodSeconds: 10
+
           ports:
             - containerPort: 4343
               name: p2w-attest

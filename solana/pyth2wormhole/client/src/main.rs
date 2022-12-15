@@ -1,3 +1,5 @@
+pub mod cli;
+
 use {
     clap::Parser,
     cli::{
@@ -44,6 +46,7 @@ use {
         P2WMessageQueue,
         P2WSymbol,
         RLMutex,
+        HEALTHCHECK_STATE,
     },
     sha3::{
         Digest,
@@ -82,20 +85,20 @@ use {
     },
 };
 
-pub mod cli;
-
 pub const SEQNO_PREFIX: &str = "Program log: Sequence: ";
 
 lazy_static! {
     static ref ATTESTATIONS_OK_CNT: IntCounter =
-        register_int_counter!("attestations_ok", "Number of successful attestations").unwrap();
+        register_int_counter!("attestations_ok", "Number of successful attestations")
+            .expect("FATAL: Could not instantiate ATTESTATIONS_OK_CNT");
     static ref ATTESTATIONS_ERR_CNT: IntCounter =
-        register_int_counter!("attestations_err", "Number of failed attestations").unwrap();
+        register_int_counter!("attestations_err", "Number of failed attestations")
+            .expect("FATAL: Could not instantiate ATTESTATIONS_ERR_CNT");
     static ref LAST_SEQNO_GAUGE: IntGauge = register_int_gauge!(
         "last_seqno",
         "Latest sequence number produced by this attester"
     )
-    .unwrap();
+    .expect("FATAL: Could not instantiate LAST_SEQNO_GAUGE");
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -291,6 +294,21 @@ async fn handle_attest_daemon_mode(
     attestation_cfg: AttestationConfig,
     metrics_bind_addr: SocketAddr,
 ) -> Result<(), ErrBox> {
+    // Update healthcheck window size from config
+    if attestation_cfg.enable_healthcheck {
+        if attestation_cfg.healthcheck_window_size == 0 {
+            return Err(format!(
+                "{} must be above 0",
+                stringify!(attestation_cfg.healthcheck_window_size)
+            )
+            .into());
+        }
+        let mut hc = HEALTHCHECK_STATE.lock().await;
+        hc.max_window_size = attestation_cfg.healthcheck_window_size as usize;
+    } else {
+        warn!("WARNING: Healthcheck is disabled");
+    }
+
     tokio::spawn(start_metrics_server(metrics_bind_addr));
 
     info!("Started serving metrics on {}", metrics_bind_addr);
@@ -611,19 +629,6 @@ async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrB
             batch_no, batch_count, batch.group_name
         );
 
-        let job = attestation_job(AttestationJobArgs {
-            rlmtx: rpc_cfg.clone(),
-            batch_no,
-            batch_count,
-            group_name: batch.group_name.clone(),
-            p2w_addr,
-            config: config.clone(),
-            payer: Keypair::from_bytes(&payer.to_bytes()).unwrap(), // Keypair has no clone
-            symbols: batch.symbols.to_vec(),
-            max_jobs_sema: sema.clone(),
-            message_q_mtx: message_q_mtx.clone(),
-        });
-
         // park this routine until a resend condition is met
         loop {
             if let Some(reason) = batch
@@ -649,27 +654,27 @@ async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrB
             );
         }
 
-        // This short-lived permit prevents scheduling
-        // excess attestation jobs (which could eventually
-        // eat all memory). It is freed as soon as we
-        // leave this code block.
-        let _permit4sched = sema.acquire().await?;
-
-        let batch_no4err_msg = batch_no;
-        let batch_count4err_msg = batch_count;
-        let group_name4err_msg = batch.group_name.clone();
-
-        // We never get to error reporting in daemon mode, attach a map_err
-        let job_with_err_msg = job.map_err(move |e| {
-            warn!(
-                "Batch {}/{}, group {:?} ERR: {:#?}",
-                batch_no4err_msg, batch_count4err_msg, group_name4err_msg, e
-            );
-            e
+        let job = attestation_job(AttestationJobArgs {
+            rlmtx: rpc_cfg.clone(),
+            batch_no,
+            batch_count,
+            group_name: batch.group_name.clone(),
+            p2w_addr,
+            config: config.clone(),
+            payer: Keypair::from_bytes(&payer.to_bytes()).unwrap(), // Keypair has no clone
+            symbols: batch.symbols.to_vec(),
+            max_jobs_sema: sema.clone(),
+            message_q_mtx: message_q_mtx.clone(),
         });
 
+        // This short-lived permit prevents scheduling excess
+        // attestation jobs hanging on the max jobs semaphore (which could
+        // eventually eat all memory). It is freed as soon as we leave
+        // this code block.
+        let _permit4sched = sema.acquire().await?;
+
         // Spawn the job in background
-        let _detached_job: JoinHandle<_> = tokio::spawn(job_with_err_msg);
+        let _detached_job: JoinHandle<_> = tokio::spawn(job);
 
         batch.last_job_finished_at = Instant::now();
     }
@@ -767,67 +772,103 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
         max_jobs_sema,
         message_q_mtx,
     } = args;
+    let batch_no4err_msg = batch_no;
+    let batch_count4err_msg = batch_count;
+    let group_name4err_msg = group_name.clone();
 
-    // Will be dropped after attestation is complete
-    let _permit = max_jobs_sema.acquire().await?;
+    // The following async block is just wrapping the job in a log
+    // statement and err counter increase in case the job fails. It is
+    // done by using the or_else() future method. No other actions are
+    // performed and the error is propagated up the stack.
+    //
+    // This is necessary to learn about errors in jobs started with
+    // tokio::spawn() because in this package spawned futures are
+    // never explicitly awaited on.
+    //
+    // Previously, the or_else() existed in attestation_sched_job()
+    // which schedules this future. It was moved here for readability,
+    // after introduction of Prometheus metrics and the healthcheck,
+    // which helped keep metrics updates closer together.
+    let job_with_err_msg = (async move {
+        // Will be dropped after attestation is complete
+        let _permit = max_jobs_sema.acquire().await?;
 
-    debug!(
-        "Batch {}/{}, group {:?}: Starting attestation job",
-        batch_no, batch_count, group_name
-    );
-    let rpc = lock_and_make_rpc(&rlmtx).await; // Reuse the same lock for the blockhash/tx/get_transaction
-    let latest_blockhash = rpc
-        .get_latest_blockhash()
-        .map_err(|e| -> ErrBoxSend { e.into() })
-        .await?;
+        debug!(
+            "Batch {}/{}, group {:?}: Starting attestation job",
+            batch_no, batch_count, group_name
+        );
+        let rpc = lock_and_make_rpc(&rlmtx).await; // Reuse the same lock for the blockhash/tx/get_transaction
+        let latest_blockhash = rpc
+            .get_latest_blockhash()
+            .map_err(|e| -> ErrBoxSend { e.into() })
+            .await?;
 
-    let wh_msg_id = message_q_mtx.lock().await.get_account()?.id;
+        let wh_msg_id = message_q_mtx.lock().await.get_account()?.id;
 
-    let tx_res: Result<_, ErrBoxSend> = gen_attest_tx(
-        p2w_addr,
-        &config,
-        &payer,
-        wh_msg_id,
-        symbols.as_slice(),
-        latest_blockhash,
-    );
-    let sig = rpc
-        .send_and_confirm_transaction(&tx_res?)
-        .map_err(|e| -> ErrBoxSend { e.into() })
-        .await?;
-    let tx_data = rpc
-        .get_transaction_with_config(
-            &sig,
-            RpcTransactionConfig {
-                encoding:                          Some(UiTransactionEncoding::Json),
-                commitment:                        Some(rpc.commitment()),
-                max_supported_transaction_version: None,
-            },
-        )
-        .await?;
-    let seqno = tx_data
-        .transaction
-        .meta
-        .and_then(|meta| meta.log_messages)
-        .and_then(|logs| {
-            let mut seqno = None;
-            for log in logs {
-                if log.starts_with(SEQNO_PREFIX) {
-                    seqno = Some(log.replace(SEQNO_PREFIX, ""));
-                    break;
+        let tx_res: Result<_, ErrBoxSend> = gen_attest_tx(
+            p2w_addr,
+            &config,
+            &payer,
+            wh_msg_id,
+            symbols.as_slice(),
+            latest_blockhash,
+        );
+        let sig = rpc
+            .send_and_confirm_transaction(&tx_res?)
+            .map_err(|e| -> ErrBoxSend { e.into() })
+            .await?;
+        let tx_data = rpc
+            .get_transaction_with_config(
+                &sig,
+                RpcTransactionConfig {
+                    encoding:                          Some(UiTransactionEncoding::Json),
+                    commitment:                        Some(rpc.commitment()),
+                    max_supported_transaction_version: None,
+                },
+            )
+            .await?;
+        let seqno = tx_data
+            .transaction
+            .meta
+            .and_then(|meta| meta.log_messages)
+            .and_then(|logs| {
+                let mut seqno = None;
+                for log in logs {
+                    if log.starts_with(SEQNO_PREFIX) {
+                        seqno = Some(log.replace(SEQNO_PREFIX, ""));
+                        break;
+                    }
                 }
-            }
-            seqno
-        })
-        .ok_or_else(|| -> ErrBoxSend { "No seqno in program logs".to_string().into() })?;
+                seqno
+            })
+            .ok_or_else(|| -> ErrBoxSend { "No seqno in program logs".to_string().into() })?;
 
-    info!(
-        "Batch {}/{}, group {:?} OK. Sequence: {}",
-        batch_no, batch_count, group_name, seqno
-    );
-    ATTESTATIONS_OK_CNT.inc();
-    LAST_SEQNO_GAUGE.set(seqno.parse::<i64>()?);
-    Result::<(), ErrBoxSend>::Ok(())
+        info!(
+            "Batch {}/{}, group {:?} OK. Sequence: {}",
+            batch_no, batch_count, group_name, seqno
+        );
+        ATTESTATIONS_OK_CNT.inc();
+        LAST_SEQNO_GAUGE.set(seqno.parse::<i64>()?);
+
+        HEALTHCHECK_STATE.lock().await.add_result(true); // Report this job as successful to healthcheck
+        Result::<(), ErrBoxSend>::Ok(())
+    })
+    .or_else(move |e| async move {
+        // log any errors coming from the job
+        warn!(
+            "Batch {}/{}, group {:?} ERR: {:#?}",
+            batch_no4err_msg, batch_count4err_msg, group_name4err_msg, e
+        );
+
+        // Bump counters
+        ATTESTATIONS_ERR_CNT.inc();
+
+        HEALTHCHECK_STATE.lock().await.add_result(false); // Report this job as failed to healthcheck
+
+        Err(e)
+    });
+
+    job_with_err_msg.await
 }
 
 fn init_logging() {
