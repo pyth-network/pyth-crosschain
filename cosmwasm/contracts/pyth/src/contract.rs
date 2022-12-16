@@ -423,6 +423,10 @@ mod test {
             Executor,
             Target,
         },
+        byteorder::{
+            BigEndian,
+            WriteBytesExt,
+        },
         cosmwasm_std::{
             from_binary,
             testing::{
@@ -440,7 +444,11 @@ mod test {
             SystemError,
             SystemResult,
         },
-        std::time::Duration,
+        serde::Serialize,
+        std::{
+            io,
+            time::Duration,
+        },
     };
 
     /// Default valid time period for testing purposes.
@@ -503,6 +511,31 @@ mod test {
         }
     }
 
+    fn serialize_vaa(vaa: &ParsedVAA) -> Result<Binary, io::Error> {
+        let mut data: Vec<u8> = vec![];
+        data.write_u8(vaa.version)?;
+        data.write_u32::<BigEndian>(vaa.guardian_set_index)?;
+        data.write_u8(vaa.len_signers)?;
+
+        for _i in 0..((vaa.len_signers as usize) * ParsedVAA::SIGNATURE_LEN) {
+            data.write_u8(0)?;
+        }
+
+        data.write_u32::<BigEndian>(vaa.timestamp)?;
+        data.write_u32::<BigEndian>(vaa.nonce)?;
+        data.write_u16::<BigEndian>(vaa.emitter_chain)?;
+
+        // The wormhole VAA deserialization code expects this condition to be true.
+        // Check this at serialization time to make errors easier to debug.
+        assert_eq!(vaa.emitter_address.len(), 32);
+        data.extend_from_slice(vaa.emitter_address.as_slice());
+        data.write_u64::<BigEndian>(vaa.sequence)?;
+        data.write_u8(vaa.consistency_level)?;
+        data.extend_from_slice(vaa.payload.as_slice());
+
+        Ok(Binary(data))
+    }
+
     fn create_zero_vaa() -> ParsedVAA {
         ParsedVAA {
             version:            0,
@@ -511,7 +544,7 @@ mod test {
             nonce:              0,
             len_signers:        0,
             emitter_chain:      0,
-            emitter_address:    vec![],
+            emitter_address:    vec![0; 32],
             sequence:           0,
             consistency_level:  0,
             payload:            vec![],
@@ -567,6 +600,37 @@ mod test {
             Timestamp::from_seconds(attestation_time_seconds),
         )
         .unwrap()
+    }
+
+    #[test]
+    fn vaa_roundtrip() {
+        let mut emitter_address = vec![0; 32];
+        emitter_address[0] = 7;
+        emitter_address[31] = 8;
+
+        let mut payload = vec![0; 10];
+        payload[0] = 11;
+        payload[4] = 12;
+
+        let vaa = ParsedVAA {
+            version:            1,
+            guardian_set_index: 2,
+            timestamp:          3,
+            nonce:              4,
+            len_signers:        5,
+            emitter_chain:      6,
+            emitter_address:    emitter_address.clone(),
+            sequence:           9,
+            consistency_level:  10,
+            payload:            payload.clone(),
+            hash:               vec![],
+        };
+
+        let actual = ParsedVAA::deserialize(serialize_vaa(&vaa).unwrap().as_slice()).unwrap();
+        let mut expected = vaa;
+        // Hash doesn't round trip (it's computed by the deserialization code)
+        expected.hash = actual.hash.clone();
+        assert_eq!(expected, actual);
     }
 
     #[test]
