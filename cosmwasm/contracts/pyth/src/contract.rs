@@ -127,15 +127,19 @@ fn update_price_feeds(
 ) -> StdResult<Response> {
     let state = config_read(deps.storage).load()?;
 
+    println!("Checking fee");
     let fee = Coin::new(state.fee.u128(), state.fee_denom.clone());
     if fee.amount.u128() > 0 && !has_coins(info.funds.as_ref(), &fee) {
         return Err(PythContractError::FeeTooLow.into());
     }
 
+    println!("Parsing VAA");
     let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
 
+    println!("checking data source");
     verify_vaa_from_data_source(&state, &vaa)?;
 
+    println!("processing batch attestation");
     let data = &vaa.payload;
     let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
         .map_err(|_| PythContractError::InvalidUpdatePayload)?;
@@ -454,6 +458,14 @@ mod test {
     /// Default valid time period for testing purposes.
     const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
     const WORMHOLE_ADDR: &str = "Wormhole";
+    const EMITTER_CHAIN: u16 = 3;
+
+    fn default_emitter_addr() -> Vec<u8> {
+        let mut addr_vec: Vec<u8> = vec![0; 32];
+        addr_vec[0] = 77;
+        addr_vec[12] = 80;
+        addr_vec
+    }
 
     fn setup_test() -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
         let mut dependencies = mock_dependencies();
@@ -476,7 +488,14 @@ mod test {
                 match query_msg {
                     Ok(WormholeQueryMsg::VerifyVAA { vaa, .. }) => {
                         match ParsedVAA::deserialize(&vaa) {
-                            Ok(_) => SystemResult::Ok(ContractResult::Ok(vaa)),
+                            Ok(parsed_vaa) => match to_binary(&parsed_vaa) {
+                                Ok(parsed_vaa_binary) => {
+                                    SystemResult::Ok(ContractResult::Ok(parsed_vaa_binary))
+                                }
+                                Err(_e) => SystemResult::Ok(ContractResult::Err(
+                                    "could not convert VAA to binary".into(),
+                                )),
+                            },
                             Err(_contract_err) => SystemResult::Err(SystemError::InvalidRequest {
                                 error:   "Invalid vaa".into(),
                                 request: msg.clone(),
@@ -552,6 +571,31 @@ mod test {
         }
     }
 
+    fn create_price_update_msg(emitter_address: &[u8], emitter_chain: u16) -> Binary {
+        /*
+        feeds.iter().map(|feed: PriceFeed| {
+            let price = feed.get_current_price_unchecked();
+            let prev_price = feed.get_
+
+            PriceAttestation {
+                product_id: feed.product_id.clone(),
+                price_id: feed.id.clone(),
+                price:
+            }
+        })
+         */
+        let batch_attestation = BatchPriceAttestation {
+            price_attestations: vec![], // todo
+        };
+
+        let mut vaa = create_zero_vaa();
+        vaa.emitter_address = emitter_address.to_vec();
+        vaa.emitter_chain = emitter_chain;
+        vaa.payload = batch_attestation.serialize().unwrap();
+
+        serialize_vaa(&vaa).unwrap()
+    }
+
     fn create_zero_config_info() -> ConfigInfo {
         ConfigInfo {
             owner:                      Addr::unchecked(String::default()),
@@ -602,6 +646,7 @@ mod test {
         .unwrap()
     }
 
+    /// Test that the vaa serialization code for testing deserializes properly.
     #[test]
     fn vaa_roundtrip() {
         let mut emitter_address = vec![0; 32];
@@ -633,50 +678,37 @@ mod test {
         assert_eq!(expected, actual);
     }
 
-    #[test]
-    fn test_verify_vaa_sender_ok() {
+    fn apply_price_update(emitter_address: &[u8], emitter_chain: u16) -> StdResult<Response> {
+        let (mut deps, env) = setup_test();
         let config_info = ConfigInfo {
-            data_sources: create_data_sources(vec![1u8], 3),
+            wormhole_contract: Addr::unchecked(WORMHOLE_ADDR),
+            data_sources: create_data_sources(default_emitter_addr(), EMITTER_CHAIN),
             ..create_zero_config_info()
         };
+        config(&mut deps.storage).save(&config_info).unwrap();
 
-        let mut vaa = create_zero_vaa();
-        vaa.emitter_address = vec![1u8];
-        vaa.emitter_chain = 3;
+        let info = mock_info("123", &[]);
+        let msg = create_price_update_msg(emitter_address, emitter_chain);
+        update_price_feeds(deps.as_mut(), env, info, &msg)
+    }
 
-        assert_eq!(verify_vaa_from_data_source(&config_info, &vaa), Ok(()));
+    #[test]
+    fn test_verify_vaa_sender_ok() {
+        let result = apply_price_update(default_emitter_addr().as_slice(), EMITTER_CHAIN);
+        assert!(result.is_ok());
     }
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_address() {
-        let config_info = ConfigInfo {
-            data_sources: create_data_sources(vec![1u8], 3),
-            ..create_zero_config_info()
-        };
-
-        let mut vaa = create_zero_vaa();
-        vaa.emitter_address = vec![3u8, 4u8];
-        vaa.emitter_chain = 3;
-        assert_eq!(
-            verify_vaa_from_data_source(&config_info, &vaa),
-            Err(PythContractError::InvalidUpdateEmitter.into())
-        );
+        let emitter_address = [0; 32];
+        let result = apply_price_update(emitter_address.as_slice(), EMITTER_CHAIN);
+        assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
     }
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_chain() {
-        let config_info = ConfigInfo {
-            data_sources: create_data_sources(vec![1u8], 3),
-            ..create_zero_config_info()
-        };
-
-        let mut vaa = create_zero_vaa();
-        vaa.emitter_address = vec![1u8];
-        vaa.emitter_chain = 2;
-        assert_eq!(
-            verify_vaa_from_data_source(&config_info, &vaa),
-            Err(PythContractError::InvalidUpdateEmitter.into())
-        );
+        let result = apply_price_update(default_emitter_addr().as_slice(), EMITTER_CHAIN + 1);
+        assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
     }
 
     #[test]
