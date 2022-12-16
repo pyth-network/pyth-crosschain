@@ -127,19 +127,14 @@ fn update_price_feeds(
 ) -> StdResult<Response> {
     let state = config_read(deps.storage).load()?;
 
-    println!("Checking fee");
     let fee = Coin::new(state.fee.u128(), state.fee_denom.clone());
     if fee.amount.u128() > 0 && !has_coins(info.funds.as_ref(), &fee) {
         return Err(PythContractError::InsufficientFee.into());
     }
 
-    println!("Parsing VAA");
     let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
-
-    println!("checking data source");
     verify_vaa_from_data_source(&state, &vaa)?;
 
-    println!("processing batch attestation");
     let data = &vaa.payload;
     let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
         .map_err(|_| PythContractError::InvalidUpdatePayload)?;
@@ -517,7 +512,7 @@ mod test {
             nonce:              0,
             len_signers:        0,
             emitter_chain:      0,
-            emitter_address:    vec![0; 32],
+            emitter_address:    vec![],
             sequence:           0,
             consistency_level:  0,
             payload:            vec![],
