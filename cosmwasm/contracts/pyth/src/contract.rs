@@ -427,10 +427,6 @@ mod test {
             Executor,
             Target,
         },
-        byteorder::{
-            BigEndian,
-            WriteBytesExt,
-        },
         cosmwasm_std::{
             coins,
             from_binary,
@@ -449,11 +445,7 @@ mod test {
             SystemError,
             SystemResult,
         },
-        serde::Serialize,
-        std::{
-            io,
-            time::Duration,
-        },
+        std::time::Duration,
     };
 
     /// Default valid time period for testing purposes.
@@ -490,26 +482,18 @@ mod test {
         (dependencies, mock_env())
     }
 
+    /// Mock handler for wormhole queries.
+    /// Warning: the interface for the `VerifyVAA` action is slightly different than the real wormhole contract.
+    /// In the mock, you pass in a binary-encoded `ParsedVAA`, and that exact vaa will be returned by wormhole.
+    /// The real contract uses a different binary VAA format (see `ParsedVAA::deserialize`) which includes
+    /// the guardian signatures.
     fn handle_wasm_query(wasm_query: &WasmQuery) -> QuerierResult {
         match wasm_query {
             WasmQuery::Smart { contract_addr, msg } if *contract_addr == WORMHOLE_ADDR => {
                 let query_msg = from_binary::<WormholeQueryMsg>(msg);
                 match query_msg {
                     Ok(WormholeQueryMsg::VerifyVAA { vaa, .. }) => {
-                        match ParsedVAA::deserialize(&vaa) {
-                            Ok(parsed_vaa) => match to_binary(&parsed_vaa) {
-                                Ok(parsed_vaa_binary) => {
-                                    SystemResult::Ok(ContractResult::Ok(parsed_vaa_binary))
-                                }
-                                Err(_e) => SystemResult::Ok(ContractResult::Err(
-                                    "could not convert VAA to binary".into(),
-                                )),
-                            },
-                            Err(_contract_err) => SystemResult::Err(SystemError::InvalidRequest {
-                                error:   "Invalid vaa".into(),
-                                request: msg.clone(),
-                            }),
-                        }
+                        SystemResult::Ok(ContractResult::Ok(vaa))
                     }
                     Err(_e) => SystemResult::Err(SystemError::InvalidRequest {
                         error:   "Invalid message".into(),
@@ -539,31 +523,6 @@ mod test {
         }
     }
 
-    fn serialize_vaa(vaa: &ParsedVAA) -> Result<Binary, io::Error> {
-        let mut data: Vec<u8> = vec![];
-        data.write_u8(vaa.version)?;
-        data.write_u32::<BigEndian>(vaa.guardian_set_index)?;
-        data.write_u8(vaa.len_signers)?;
-
-        for _i in 0..((vaa.len_signers as usize) * ParsedVAA::SIGNATURE_LEN) {
-            data.write_u8(0)?;
-        }
-
-        data.write_u32::<BigEndian>(vaa.timestamp)?;
-        data.write_u32::<BigEndian>(vaa.nonce)?;
-        data.write_u16::<BigEndian>(vaa.emitter_chain)?;
-
-        // The wormhole VAA deserialization code expects this condition to be true.
-        // Check this at serialization time to make errors easier to debug.
-        assert_eq!(vaa.emitter_address.len(), 32);
-        data.extend_from_slice(vaa.emitter_address.as_slice());
-        data.write_u64::<BigEndian>(vaa.sequence)?;
-        data.write_u8(vaa.consistency_level)?;
-        data.extend_from_slice(vaa.payload.as_slice());
-
-        Ok(Binary(data))
-    }
-
     fn create_zero_vaa() -> ParsedVAA {
         ParsedVAA {
             version:            0,
@@ -581,20 +540,9 @@ mod test {
     }
 
     fn create_price_update_msg(emitter_address: &[u8], emitter_chain: u16) -> Binary {
-        /*
-        feeds.iter().map(|feed: PriceFeed| {
-            let price = feed.get_current_price_unchecked();
-            let prev_price = feed.get_
-
-            PriceAttestation {
-                product_id: feed.product_id.clone(),
-                price_id: feed.id.clone(),
-                price:
-            }
-        })
-         */
         let batch_attestation = BatchPriceAttestation {
-            price_attestations: vec![], // todo
+            // TODO: pass these in
+            price_attestations: vec![],
         };
 
         let mut vaa = create_zero_vaa();
@@ -602,7 +550,7 @@ mod test {
         vaa.emitter_chain = emitter_chain;
         vaa.payload = batch_attestation.serialize().unwrap();
 
-        serialize_vaa(&vaa).unwrap()
+        to_binary(&vaa).unwrap()
     }
 
     fn create_zero_config_info() -> ConfigInfo {
@@ -653,38 +601,6 @@ mod test {
             Timestamp::from_seconds(attestation_time_seconds),
         )
         .unwrap()
-    }
-
-    /// Test that the vaa serialization code for testing deserializes properly.
-    #[test]
-    fn vaa_roundtrip() {
-        let mut emitter_address = vec![0; 32];
-        emitter_address[0] = 7;
-        emitter_address[31] = 8;
-
-        let mut payload = vec![0; 10];
-        payload[0] = 11;
-        payload[4] = 12;
-
-        let vaa = ParsedVAA {
-            version:            1,
-            guardian_set_index: 2,
-            timestamp:          3,
-            nonce:              4,
-            len_signers:        5,
-            emitter_chain:      6,
-            emitter_address:    emitter_address.clone(),
-            sequence:           9,
-            consistency_level:  10,
-            payload:            payload.clone(),
-            hash:               vec![],
-        };
-
-        let actual = ParsedVAA::deserialize(serialize_vaa(&vaa).unwrap().as_slice()).unwrap();
-        let mut expected = vaa;
-        // Hash doesn't round trip (it's computed by the deserialization code)
-        expected.hash = actual.hash.clone();
-        assert_eq!(expected, actual);
     }
 
     fn apply_price_update(
