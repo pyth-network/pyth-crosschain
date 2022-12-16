@@ -24,8 +24,10 @@ use {
     },
     cosmwasm_std::{
         entry_point,
+        has_coins,
         to_binary,
         Binary,
+        Coin,
         Deps,
         DepsMut,
         Env,
@@ -120,10 +122,15 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
 fn update_price_feeds(
     mut deps: DepsMut,
     env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     data: &Binary,
 ) -> StdResult<Response> {
     let state = config_read(deps.storage).load()?;
+
+    let fee = Coin::new(state.fee.u128(), state.fee_denom.clone());
+    if fee.amount.u128() > 0 && !has_coins(info.funds.as_ref(), &fee) {
+        return Err(PythContractError::FeeTooLow.into());
+    }
 
     let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
 
@@ -417,6 +424,7 @@ mod test {
             Target,
         },
         cosmwasm_std::{
+            from_binary,
             testing::{
                 mock_dependencies,
                 mock_env,
@@ -426,16 +434,23 @@ mod test {
                 MockStorage,
             },
             Addr,
+            ContractResult,
             OwnedDeps,
+            QuerierResult,
+            SystemError,
+            SystemResult,
         },
         std::time::Duration,
     };
 
     /// Default valid time period for testing purposes.
     const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
+    const WORMHOLE_ADDR: &str = "Wormhole";
 
     fn setup_test() -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
         let mut dependencies = mock_dependencies();
+        dependencies.querier.update_wasm(handle_wasm_query);
+
         let mut config = config(dependencies.as_mut().storage);
         config
             .save(&ConfigInfo {
@@ -444,6 +459,48 @@ mod test {
             })
             .unwrap();
         (dependencies, mock_env())
+    }
+
+    fn handle_wasm_query(wasm_query: &WasmQuery) -> QuerierResult {
+        match wasm_query {
+            WasmQuery::Smart { contract_addr, msg } if *contract_addr == WORMHOLE_ADDR => {
+                let query_msg = from_binary::<WormholeQueryMsg>(msg);
+                match query_msg {
+                    Ok(WormholeQueryMsg::VerifyVAA { vaa, .. }) => {
+                        match ParsedVAA::deserialize(&vaa) {
+                            Ok(_) => SystemResult::Ok(ContractResult::Ok(vaa)),
+                            Err(_contract_err) => SystemResult::Err(SystemError::InvalidRequest {
+                                error:   "Invalid vaa".into(),
+                                request: msg.clone(),
+                            }),
+                        }
+                    }
+                    Err(_e) => SystemResult::Err(SystemError::InvalidRequest {
+                        error:   "Invalid message".into(),
+                        request: msg.clone(),
+                    }),
+                    _ => SystemResult::Err(SystemError::NoSuchContract {
+                        addr: contract_addr.clone(),
+                    }),
+                }
+            }
+            WasmQuery::Smart { contract_addr, .. } => {
+                SystemResult::Err(SystemError::NoSuchContract {
+                    addr: contract_addr.clone(),
+                })
+            }
+            WasmQuery::Raw { contract_addr, .. } => {
+                SystemResult::Err(SystemError::NoSuchContract {
+                    addr: contract_addr.clone(),
+                })
+            }
+            WasmQuery::ContractInfo { contract_addr, .. } => {
+                SystemResult::Err(SystemError::NoSuchContract {
+                    addr: contract_addr.clone(),
+                })
+            }
+            _ => unreachable!(),
+        }
     }
 
     fn create_zero_vaa() -> ParsedVAA {

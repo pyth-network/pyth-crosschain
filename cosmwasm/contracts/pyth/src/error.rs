@@ -40,6 +40,10 @@ pub enum PythContractError {
     /// The sequence number of the governance message is too old.
     #[error("OldGovernanceMessage")]
     OldGovernanceMessage,
+
+    /// The message did not include a sufficient fee.
+    #[error("FeeTooLow")]
+    FeeTooLow,
 }
 
 impl From<PythContractError> for StdError {
