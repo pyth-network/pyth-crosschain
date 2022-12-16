@@ -23,13 +23,17 @@ use {
         },
     },
     cosmwasm_std::{
+        coin,
         entry_point,
         to_binary,
         Binary,
+        Coin,
         Deps,
         DepsMut,
         Env,
         MessageInfo,
+        OverflowError,
+        OverflowOperation,
         QueryRequest,
         Response,
         StdResult,
@@ -370,9 +374,8 @@ fn update_price_feed_if_new(
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::PriceFeed { id } => to_binary(&query_price_feed(deps, env, id.as_ref())?),
-        // TODO: implement queries for the update fee and valid time period along the following lines:
-        // QueryMsg::GetUpdateFee { data: bytes[] } => ???,
-        // QueryMsg::GetValidTimePeriod => ???
+        QueryMsg::GetUpdateFee { vaas } => to_binary(&get_update_fee(deps, &vaas)?),
+        QueryMsg::GetValidTimePeriod => to_binary(&get_valid_time_period(deps)?),
     }
 }
 
@@ -406,6 +409,26 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
         }
         Err(_) => Err(PythContractError::PriceFeedNotFound)?,
     }
+}
+
+pub fn get_update_fee(deps: Deps, vaas: &Vec<Binary>) -> StdResult<Coin> {
+    let config = config_read(deps.storage).load()?;
+    Ok(coin(
+        config
+            .fee
+            .u128()
+            .checked_mul(vaas.len() as u128)
+            .ok_or(OverflowError::new(
+                OverflowOperation::Mul,
+                config.fee,
+                vaas.len(),
+            ))?,
+        config.fee_denom,
+    ))
+}
+
+pub fn get_valid_time_period(deps: Deps) -> StdResult<Duration> {
+    Ok(config_read(deps.storage).load()?.valid_time_period)
 }
 
 #[cfg(test)]

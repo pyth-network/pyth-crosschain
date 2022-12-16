@@ -4,6 +4,10 @@ use {
         Binary,
         Uint128,
     },
+    pyth_sdk_cw::{
+        PriceFeed,
+        PriceIdentifier,
+    },
     schemars::JsonSchema,
     serde::{
         Deserialize,
@@ -14,6 +18,7 @@ use {
 type HumanAddr = String;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
 pub struct InstantiateMsg {
     pub wormhole_contract:          HumanAddr,
     // TODO: this should support multiple emitters
@@ -43,7 +48,17 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub struct MigrateMsg {}
 
-pub use pyth_sdk_cw::{
-    PriceFeedResponse,
-    QueryMsg,
-};
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum QueryMsg {
+    PriceFeed { id: PriceIdentifier },
+    GetUpdateFee { vaas: Vec<Binary> },
+    GetValidTimePeriod,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct PriceFeedResponse {
+    pub price_feed: PriceFeed,
+}
