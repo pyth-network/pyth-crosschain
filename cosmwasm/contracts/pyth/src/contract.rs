@@ -150,26 +150,15 @@ fn update_price_feeds(
 fn execute_governance_instruction(
     mut deps: DepsMut,
     env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     data: &Binary,
 ) -> StdResult<Response> {
     let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
-
-    execute_governance_instruction_from_vaa(deps, env, info, &vaa)
-}
-
-/// Helper function to improve testability of governance instructions (so we can unit test without wormhole).
-fn execute_governance_instruction_from_vaa(
-    deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
-    vaa: &ParsedVAA,
-) -> StdResult<Response> {
     let state = config_read(deps.storage).load()?;
 
     // store updates to the config as a result of this action in here.
     let mut updated_config: ConfigInfo = state.clone();
-    verify_vaa_from_governance_source(&state, vaa)?;
+    verify_vaa_from_governance_source(&state, &vaa)?;
 
     if vaa.sequence <= state.governance_sequence_number {
         return Err(PythContractError::OldGovernanceMessage)?;
@@ -454,10 +443,7 @@ mod test {
     const EMITTER_CHAIN: u16 = 3;
 
     fn default_emitter_addr() -> Vec<u8> {
-        let mut addr_vec: Vec<u8> = vec![0; 32];
-        addr_vec[0] = 77;
-        addr_vec[12] = 80;
-        addr_vec
+        vec![0, 1, 80]
     }
 
     fn default_config_info() -> ConfigInfo {
@@ -630,7 +616,7 @@ mod test {
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_address() {
-        let emitter_address = [0; 32];
+        let emitter_address = [17, 23, 14];
         let result = apply_price_update(
             &default_config_info(),
             emitter_address.as_slice(),
@@ -1037,13 +1023,14 @@ mod test {
 
         let info = mock_info("123", &[]);
 
-        let result = execute_governance_instruction_from_vaa(deps.as_mut(), env, info, vaa);
+        let result = execute_governance_instruction(deps.as_mut(), env, info, &to_binary(&vaa)?);
 
         result.and_then(|response| config_read(&deps.storage).load().map(|c| (response, c)))
     }
 
     fn governance_test_config() -> ConfigInfo {
         ConfigInfo {
+            wormhole_contract: Addr::unchecked(WORMHOLE_ADDR),
             governance_source: PythDataSource {
                 emitter:            Binary(vec![1u8, 2u8]),
                 pyth_emitter_chain: 3,
