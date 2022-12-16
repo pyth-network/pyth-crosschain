@@ -42,8 +42,8 @@ pub enum PythContractError {
     OldGovernanceMessage,
 
     /// The message did not include a sufficient fee.
-    #[error("FeeTooLow")]
-    FeeTooLow,
+    #[error("InsufficientFee")]
+    InsufficientFee,
 }
 
 impl From<PythContractError> for StdError {

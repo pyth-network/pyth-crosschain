@@ -130,7 +130,7 @@ fn update_price_feeds(
     println!("Checking fee");
     let fee = Coin::new(state.fee.u128(), state.fee_denom.clone());
     if fee.amount.u128() > 0 && !has_coins(info.funds.as_ref(), &fee) {
-        return Err(PythContractError::FeeTooLow.into());
+        return Err(PythContractError::InsufficientFee.into());
     }
 
     println!("Parsing VAA");
@@ -432,6 +432,7 @@ mod test {
             WriteBytesExt,
         },
         cosmwasm_std::{
+            coins,
             from_binary,
             testing::{
                 mock_dependencies,
@@ -459,12 +460,22 @@ mod test {
     const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
     const WORMHOLE_ADDR: &str = "Wormhole";
     const EMITTER_CHAIN: u16 = 3;
+    const FEE_DENOM: &str = "foo";
+    const DEFAULT_FEE: Uint128 = Uint128::new(100);
 
     fn default_emitter_addr() -> Vec<u8> {
         let mut addr_vec: Vec<u8> = vec![0; 32];
         addr_vec[0] = 77;
         addr_vec[12] = 80;
         addr_vec
+    }
+
+    fn default_config_info() -> ConfigInfo {
+        ConfigInfo {
+            wormhole_contract: Addr::unchecked(WORMHOLE_ADDR),
+            data_sources: create_data_sources(default_emitter_addr(), EMITTER_CHAIN),
+            ..create_zero_config_info()
+        }
     }
 
     fn setup_test() -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
@@ -678,37 +689,91 @@ mod test {
         assert_eq!(expected, actual);
     }
 
-    fn apply_price_update(emitter_address: &[u8], emitter_chain: u16) -> StdResult<Response> {
+    fn apply_price_update(
+        config_info: &ConfigInfo,
+        emitter_address: &[u8],
+        emitter_chain: u16,
+        funds: &[Coin],
+    ) -> StdResult<Response> {
         let (mut deps, env) = setup_test();
-        let config_info = ConfigInfo {
-            wormhole_contract: Addr::unchecked(WORMHOLE_ADDR),
-            data_sources: create_data_sources(default_emitter_addr(), EMITTER_CHAIN),
-            ..create_zero_config_info()
-        };
-        config(&mut deps.storage).save(&config_info).unwrap();
+        config(&mut deps.storage).save(config_info).unwrap();
 
-        let info = mock_info("123", &[]);
+        let info = mock_info("123", funds);
         let msg = create_price_update_msg(emitter_address, emitter_chain);
         update_price_feeds(deps.as_mut(), env, info, &msg)
     }
 
     #[test]
     fn test_verify_vaa_sender_ok() {
-        let result = apply_price_update(default_emitter_addr().as_slice(), EMITTER_CHAIN);
+        let result = apply_price_update(
+            &default_config_info(),
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN,
+            &[],
+        );
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_address() {
         let emitter_address = [0; 32];
-        let result = apply_price_update(emitter_address.as_slice(), EMITTER_CHAIN);
+        let result = apply_price_update(
+            &default_config_info(),
+            emitter_address.as_slice(),
+            EMITTER_CHAIN,
+            &[],
+        );
         assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
     }
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_chain() {
-        let result = apply_price_update(default_emitter_addr().as_slice(), EMITTER_CHAIN + 1);
+        let result = apply_price_update(
+            &default_config_info(),
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN + 1,
+            &[],
+        );
         assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
+    }
+
+    #[test]
+    fn test_update_price_feeds_insufficient_fee() {
+        let mut config_info = default_config_info();
+        config_info.fee = Uint128::new(100);
+        config_info.fee_denom = "foo".into();
+
+        let result = apply_price_update(
+            &config_info,
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN,
+            &[],
+        );
+        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
+
+        let result = apply_price_update(
+            &config_info,
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN,
+            coins(100, "foo").as_slice(),
+        );
+        assert!(result.is_ok());
+
+        let result = apply_price_update(
+            &config_info,
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN,
+            coins(99, "foo").as_slice(),
+        );
+        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
+
+        let result = apply_price_update(
+            &config_info,
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN,
+            coins(100, "bar").as_slice(),
+        );
+        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
     }
 
     #[test]
