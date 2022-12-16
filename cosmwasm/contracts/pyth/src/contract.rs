@@ -460,8 +460,6 @@ mod test {
     const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
     const WORMHOLE_ADDR: &str = "Wormhole";
     const EMITTER_CHAIN: u16 = 3;
-    const FEE_DENOM: &str = "foo";
-    const DEFAULT_FEE: Uint128 = Uint128::new(100);
 
     fn default_emitter_addr() -> Vec<u8> {
         let mut addr_vec: Vec<u8> = vec![0; 32];
