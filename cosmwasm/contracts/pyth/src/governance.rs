@@ -12,7 +12,6 @@ use {
     },
     std::io::Write,
 };
-use crate::state::PythDataSource;
 
 const PYTH_GOVERNANCE_MAGIC: &[u8] = b"PTGM";
 
@@ -87,17 +86,6 @@ impl GovernanceInstruction {
         let target_chain_id: u16 = bytes.read_u16::<BigEndian>()?;
 
         let action: Result<GovernanceAction, String> = match action_type {
-            2 => {
-                let num_data_sources = bytes.read_u8()?;
-                let data_sources: Vec<PythDataSource> = vec![];
-                for i in 0..num_data_sources {
-                    let chain_id = bytes.read_u16::<BigEndian>()?;
-                    let emitter_address = bytes.;
-                }
-
-
-                Ok(GovernanceAction::SetDataSources { })
-            },
             3 => {
                 let val = bytes.read_u64::<BigEndian>()?;
                 let expo = bytes.read_u64::<BigEndian>()?;
