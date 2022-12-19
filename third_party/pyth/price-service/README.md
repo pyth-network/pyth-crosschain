@@ -40,6 +40,7 @@ docker-compose up -f docker-compose.mainnet.yaml
 
 The compose files use a public release of Pyth price service and spy. If you wish to change the
 price service you should:
+
 1. Build an image for using it first according to the section below.
 2. Change the price service image to your local docker image (e.g., `pyth_price_service`)
 
