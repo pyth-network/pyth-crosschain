@@ -1,5 +1,6 @@
 import { fromUint8Array } from "js-base64";
 import {
+  Coin,
   LCDClient,
   LCDClientConfig,
   MnemonicKey,
@@ -17,7 +18,7 @@ export class TerraRelay implements Relay {
   readonly nodeUrl: string;
   readonly terraChainId: string;
   readonly walletPrivateKey: string;
-  readonly coin: string;
+  readonly coinDenom: string;
   readonly contractAddress: string;
   readonly lcdConfig: LCDClientConfig;
 
@@ -25,13 +26,13 @@ export class TerraRelay implements Relay {
     nodeUrl: string;
     terraChainId: string;
     walletPrivateKey: string;
-    coin: string;
+    coinDenom: string;
     contractAddress: string;
   }) {
     this.nodeUrl = cfg.nodeUrl;
     this.terraChainId = cfg.terraChainId;
     this.walletPrivateKey = cfg.walletPrivateKey;
-    this.coin = cfg.coin;
+    this.coinDenom = cfg.coinDenom;
     this.contractAddress = cfg.contractAddress;
 
     this.lcdConfig = {
@@ -44,7 +45,7 @@ export class TerraRelay implements Relay {
         "], terraChainId: [" +
         this.terraChainId +
         "], coin: [" +
-        this.coin +
+        this.coinDenom +
         "], contractAddress: [" +
         this.contractAddress +
         "]"
@@ -75,7 +76,9 @@ export class TerraRelay implements Relay {
             update_price_feeds: {
               data: Buffer.from(signedVAAs[idx], "hex").toString("base64"),
             },
-          }
+          },
+          // TODO: Query the fee before
+          [new Coin(this.coinDenom, 1)]
         );
 
         msgs.push(msg);
@@ -97,7 +100,7 @@ export class TerraRelay implements Relay {
       const tx = await wallet.createAndSignTx({
         msgs: msgs,
         memo: "P2T",
-        feeDenoms: [this.coin],
+        feeDenoms: [this.coinDenom],
         gasPrices,
       });
 
@@ -207,13 +210,13 @@ export class TerraRelay implements Relay {
       [coins, pagnation] = await lcdClient.bank.balance(wallet.key.accAddress);
       logger.debug("wallet query returned: %o", coins);
       if (coins) {
-        let coin = coins.get(this.coin);
+        let coin = coins.get(this.coinDenom);
         if (coin) {
           balance = parseInt(coin.toData().amount);
         } else {
           logger.error(
             "failed to query coin balance, coin [" +
-              this.coin +
+              this.coinDenom +
               "] is not in the wallet, coins: %o",
             coins
           );
