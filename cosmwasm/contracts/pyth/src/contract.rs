@@ -25,6 +25,7 @@ use {
     cosmwasm_std::{
         coin,
         entry_point,
+        has_coins,
         to_binary,
         Binary,
         Coin,
@@ -124,13 +125,17 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
 fn update_price_feeds(
     mut deps: DepsMut,
     env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     data: &Binary,
 ) -> StdResult<Response> {
     let state = config_read(deps.storage).load()?;
 
-    let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
+    let fee = Coin::new(state.fee.u128(), state.fee_denom.clone());
+    if fee.amount.u128() > 0 && !has_coins(info.funds.as_ref(), &fee) {
+        return Err(PythContractError::InsufficientFee.into());
+    }
 
+    let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
     verify_vaa_from_data_source(&state, &vaa)?;
 
     let data = &vaa.payload;
@@ -143,26 +148,15 @@ fn update_price_feeds(
 fn execute_governance_instruction(
     mut deps: DepsMut,
     env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     data: &Binary,
 ) -> StdResult<Response> {
     let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
-
-    execute_governance_instruction_from_vaa(deps, env, info, &vaa)
-}
-
-/// Helper function to improve testability of governance instructions (so we can unit test without wormhole).
-fn execute_governance_instruction_from_vaa(
-    deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
-    vaa: &ParsedVAA,
-) -> StdResult<Response> {
     let state = config_read(deps.storage).load()?;
 
     // store updates to the config as a result of this action in here.
     let mut updated_config: ConfigInfo = state.clone();
-    verify_vaa_from_governance_source(&state, vaa)?;
+    verify_vaa_from_governance_source(&state, &vaa)?;
 
     if vaa.sequence <= state.governance_sequence_number {
         return Err(PythContractError::OldGovernanceMessage)?;
@@ -440,6 +434,8 @@ mod test {
             Target,
         },
         cosmwasm_std::{
+            coins,
+            from_binary,
             testing::{
                 mock_dependencies,
                 mock_env,
@@ -449,16 +445,36 @@ mod test {
                 MockStorage,
             },
             Addr,
+            ContractResult,
             OwnedDeps,
+            QuerierResult,
+            SystemError,
+            SystemResult,
         },
         std::time::Duration,
     };
 
     /// Default valid time period for testing purposes.
     const VALID_TIME_PERIOD: Duration = Duration::from_secs(3 * 60);
+    const WORMHOLE_ADDR: &str = "Wormhole";
+    const EMITTER_CHAIN: u16 = 3;
+
+    fn default_emitter_addr() -> Vec<u8> {
+        vec![0, 1, 80]
+    }
+
+    fn default_config_info() -> ConfigInfo {
+        ConfigInfo {
+            wormhole_contract: Addr::unchecked(WORMHOLE_ADDR),
+            data_sources: create_data_sources(default_emitter_addr(), EMITTER_CHAIN),
+            ..create_zero_config_info()
+        }
+    }
 
     fn setup_test() -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
         let mut dependencies = mock_dependencies();
+        dependencies.querier.update_wasm(handle_wasm_query);
+
         let mut config = config(dependencies.as_mut().storage);
         config
             .save(&ConfigInfo {
@@ -467,6 +483,47 @@ mod test {
             })
             .unwrap();
         (dependencies, mock_env())
+    }
+
+    /// Mock handler for wormhole queries.
+    /// Warning: the interface for the `VerifyVAA` action is slightly different than the real wormhole contract.
+    /// In the mock, you pass in a binary-encoded `ParsedVAA`, and that exact vaa will be returned by wormhole.
+    /// The real contract uses a different binary VAA format (see `ParsedVAA::deserialize`) which includes
+    /// the guardian signatures.
+    fn handle_wasm_query(wasm_query: &WasmQuery) -> QuerierResult {
+        match wasm_query {
+            WasmQuery::Smart { contract_addr, msg } if *contract_addr == WORMHOLE_ADDR => {
+                let query_msg = from_binary::<WormholeQueryMsg>(msg);
+                match query_msg {
+                    Ok(WormholeQueryMsg::VerifyVAA { vaa, .. }) => {
+                        SystemResult::Ok(ContractResult::Ok(vaa))
+                    }
+                    Err(_e) => SystemResult::Err(SystemError::InvalidRequest {
+                        error:   "Invalid message".into(),
+                        request: msg.clone(),
+                    }),
+                    _ => SystemResult::Err(SystemError::NoSuchContract {
+                        addr: contract_addr.clone(),
+                    }),
+                }
+            }
+            WasmQuery::Smart { contract_addr, .. } => {
+                SystemResult::Err(SystemError::NoSuchContract {
+                    addr: contract_addr.clone(),
+                })
+            }
+            WasmQuery::Raw { contract_addr, .. } => {
+                SystemResult::Err(SystemError::NoSuchContract {
+                    addr: contract_addr.clone(),
+                })
+            }
+            WasmQuery::ContractInfo { contract_addr, .. } => {
+                SystemResult::Err(SystemError::NoSuchContract {
+                    addr: contract_addr.clone(),
+                })
+            }
+            _ => unreachable!(),
+        }
     }
 
     fn create_zero_vaa() -> ParsedVAA {
@@ -483,6 +540,20 @@ mod test {
             payload:            vec![],
             hash:               vec![],
         }
+    }
+
+    fn create_price_update_msg(emitter_address: &[u8], emitter_chain: u16) -> Binary {
+        let batch_attestation = BatchPriceAttestation {
+            // TODO: pass these in
+            price_attestations: vec![],
+        };
+
+        let mut vaa = create_zero_vaa();
+        vaa.emitter_address = emitter_address.to_vec();
+        vaa.emitter_chain = emitter_chain;
+        vaa.payload = batch_attestation.serialize().unwrap();
+
+        to_binary(&vaa).unwrap()
     }
 
     fn create_zero_config_info() -> ConfigInfo {
@@ -535,50 +606,91 @@ mod test {
         .unwrap()
     }
 
+    fn apply_price_update(
+        config_info: &ConfigInfo,
+        emitter_address: &[u8],
+        emitter_chain: u16,
+        funds: &[Coin],
+    ) -> StdResult<Response> {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage).save(config_info).unwrap();
+
+        let info = mock_info("123", funds);
+        let msg = create_price_update_msg(emitter_address, emitter_chain);
+        update_price_feeds(deps.as_mut(), env, info, &msg)
+    }
+
     #[test]
     fn test_verify_vaa_sender_ok() {
-        let config_info = ConfigInfo {
-            data_sources: create_data_sources(vec![1u8], 3),
-            ..create_zero_config_info()
-        };
-
-        let mut vaa = create_zero_vaa();
-        vaa.emitter_address = vec![1u8];
-        vaa.emitter_chain = 3;
-
-        assert_eq!(verify_vaa_from_data_source(&config_info, &vaa), Ok(()));
+        let result = apply_price_update(
+            &default_config_info(),
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN,
+            &[],
+        );
+        assert!(result.is_ok());
     }
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_address() {
-        let config_info = ConfigInfo {
-            data_sources: create_data_sources(vec![1u8], 3),
-            ..create_zero_config_info()
-        };
-
-        let mut vaa = create_zero_vaa();
-        vaa.emitter_address = vec![3u8, 4u8];
-        vaa.emitter_chain = 3;
-        assert_eq!(
-            verify_vaa_from_data_source(&config_info, &vaa),
-            Err(PythContractError::InvalidUpdateEmitter.into())
+        let emitter_address = [17, 23, 14];
+        let result = apply_price_update(
+            &default_config_info(),
+            emitter_address.as_slice(),
+            EMITTER_CHAIN,
+            &[],
         );
+        assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
     }
 
     #[test]
     fn test_verify_vaa_sender_fail_wrong_emitter_chain() {
-        let config_info = ConfigInfo {
-            data_sources: create_data_sources(vec![1u8], 3),
-            ..create_zero_config_info()
-        };
-
-        let mut vaa = create_zero_vaa();
-        vaa.emitter_address = vec![1u8];
-        vaa.emitter_chain = 2;
-        assert_eq!(
-            verify_vaa_from_data_source(&config_info, &vaa),
-            Err(PythContractError::InvalidUpdateEmitter.into())
+        let result = apply_price_update(
+            &default_config_info(),
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN + 1,
+            &[],
         );
+        assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
+    }
+
+    #[test]
+    fn test_update_price_feeds_insufficient_fee() {
+        let mut config_info = default_config_info();
+        config_info.fee = Uint128::new(100);
+        config_info.fee_denom = "foo".into();
+
+        let result = apply_price_update(
+            &config_info,
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN,
+            &[],
+        );
+        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
+
+        let result = apply_price_update(
+            &config_info,
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN,
+            coins(100, "foo").as_slice(),
+        );
+        assert!(result.is_ok());
+
+        let result = apply_price_update(
+            &config_info,
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN,
+            coins(99, "foo").as_slice(),
+        );
+        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
+
+        let result = apply_price_update(
+            &config_info,
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN,
+            coins(100, "bar").as_slice(),
+        );
+        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
     }
 
     #[test]
@@ -928,13 +1040,14 @@ mod test {
 
         let info = mock_info("123", &[]);
 
-        let result = execute_governance_instruction_from_vaa(deps.as_mut(), env, info, vaa);
+        let result = execute_governance_instruction(deps.as_mut(), env, info, &to_binary(&vaa)?);
 
         result.and_then(|response| config_read(&deps.storage).load().map(|c| (response, c)))
     }
 
     fn governance_test_config() -> ConfigInfo {
         ConfigInfo {
+            wormhole_contract: Addr::unchecked(WORMHOLE_ADDR),
             governance_source: PythDataSource {
                 emitter:            Binary(vec![1u8, 2u8]),
                 pyth_emitter_chain: 3,

@@ -37,7 +37,7 @@ for (let idx = 0; idx < process.argv.length; ++idx) {
       nodeUrl: helpers.envOrErr("TERRA_NODE_URL"),
       terraChainId: helpers.envOrErr("TERRA_CHAIN_ID"),
       walletPrivateKey: helpers.envOrErr("TERRA_PRIVATE_KEY"),
-      coin: helpers.envOrErr("TERRA_COIN"),
+      coinDenom: helpers.envOrErr("TERRA_COIN"),
       contractAddress: helpers.envOrErr("TERRA_PYTH_CONTRACT_ADDRESS"),
     });
     logger.info("Relaying to Terra");
