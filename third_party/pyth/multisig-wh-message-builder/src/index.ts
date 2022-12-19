@@ -833,13 +833,6 @@ function hasWormholePayload(
   onChainInstructions: InstructionAccount[],
   wormholeTools: WormholeTools
 ): boolean {
-  if (onChainInstructions.length !== 2) {
-    console.debug(
-      `Expected 2 instructions in the transaction, found ${onChainInstructions.length}`
-    );
-    return false;
-  }
-
   const [messagePDA] = getIxAuthorityPDA(
     txPubkey,
     new anchor.BN(1),
@@ -854,16 +847,7 @@ function hasWormholePayload(
     wormholeTools
   );
 
-  return (
-    isEqualOnChainInstruction(
-      wormholeIxs[0],
-      onChainInstructions[0] as InstructionAccount
-    ) &&
-    isEqualOnChainInstruction(
-      wormholeIxs[1],
-      onChainInstructions[1] as InstructionAccount
-    )
-  );
+  return areEqualOnChainInstructions(wormholeIxs, onChainInstructions);
 }
 
 function isEqualOnChainInstruction(
