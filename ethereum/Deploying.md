@@ -1,52 +1,109 @@
 # Deploying Contracts to Production
 
-Running the Truffle migrations in [`migrations/prod`](migrations/prod) or [`migrations/prod-receiver`](migrations/prod-receiver/) will deploy the contracts to production. The `prod-receiver` migrations should be used when you need to deploy to a chain that is unsupported by the Wormhole network. The Wormhole Receiver contract acts as a read-only Wormhole endpoint that can verify Wormhole messages even if the Wormhole network has not yet connected the chain.
+## EVM network configurations
+
+Each network that Pyth is deployed on has some configurations stored on this repo as described below:
+
+1. [`truffle-config.js`](./truffle-config.js) contains list of different networks with their configurations that includes:
+   - `provider`: It is the network provider which is an HDWalletProvider with mnemonic stored on $MNEMONIC
+     environment variable and the RPC URL of the network.
+   - `network_id`: Network ID of the chain.
+   - `gas`, `gasPrice` (optional): Usually RPCs estimate gas and gas price efficiently. Although some networks are not
+     good at it and you need to specify them manually.
+   - `timeoutBlocks` (optional): Number of blocks to wait for a transaction to make it to a block. If you specify a low
+     gas price the transaction will be sent but it will never get in a block. Sometimes the network gas price is volatile
+     (like Ethereum) and you need to wait longer than the default timeout.
+   - `networkCheckTimeout` (optional): RPC timeout for requests. Some RPCs might be very slow and you need to have this.
+   - `confirmations` (optional): Number of blocks to wait to consider the transaction final.
+   - `from` (optional): Public address of the mnemonic. Although it can be derived from `provider` some networks that
+     are not entirely EVM based need it.
+2. `.env.prod.<network>` contains the contract specific configurations for each network. It contains:
+   - `MIGRATIONS_DIR`: This is either [`./migrations/prod`](./migrations/prod) or
+     [`./migrations/prod-receiver`](./migrations/prod-receiver). The `prod-receiver` migrations should be used when you
+     need to deploy to a chain that is unsupported by the Wormhole network. The Wormhole Receiver contract acts as a
+     read-only Wormhole endpoint that can verify Wormhole messages even if the Wormhole network has not yet connected
+     the chain.
+   - `MIGRATIONS_NETWORK`: Network name in the [`truffle-config.js`](./truffle-config.js) file.
+   - `WORMHOLE_CHAIN_NAME`: Chain name in Wormhole. It is either defined in the
+     [Wormhole SDK constants](https://github.com/wormhole-foundation/wormhole/blob/dev.v2/sdk/js/src/utils/consts.ts)
+     or is defined in [Wormhole Receiver names](../third_party/pyth/xc-governance-sdk-js/src/chains.ts). If the new
+     network requires a Receiver contract you need to update the latter file and add the network there.
+   - `CLUSTER`: Cluster of this network. It is either `testnet` or `mainnet`. There are some cluster specific
+     configurations that are loaded from [`.env.cluster.testnet`](./.env.cluster.testnet) or
+     [`.env.cluster.mainnet`](./.env.cluster.mainnet) such as data and governance sources. It is also used to get
+     the wormhole contract address. You can override those variable in the network environment file.
+   - `VALID_TIME_PERIOD_SECONDS`: The period that we consider a price to be still valid since its `publishTime`
+     on Pythnet. For the time being, set this value to at least 60 seconds. If the network block time or transaction
+     landing time is high please increase this value accordingly. For example, Ethereum has the value of 120 seconds.
+     It is good to keep this value the same in testnet and mainnet clusters of the same network.
+     Please look at similar networks when you want to add a new network.
+
+If you wish to deploy to a new network you need to add the above confiugrations. You can find `network_id` and public
+RPCs of most of the networks in [ChainList](https://chainlist.org/). Rest of the parameters are optional and avoid
+adding them unless it is necessary. Wormhole's
+[truffle-config.js](https://github.com/wormhole-foundation/wormhole/blob/main/ethereum/truffle-config.js)
+is a good reference too.
+
+## Deployment
 
 This is the deployment process:
 
-```bash
-# 1. Follow the installation instructions on README.md
+1. Follow the installation instructions on [README.md](./README.md).
+2. As a sanity check on deploying changes for the first time, it is recommended to deploy the migrations
+   in `migrations/prod` to the Truffle `development` network first. You can do this by using the configuration
+   values in [`.env.prod.development`](.env.prod.development).
+3. If you have changed the contract make sure that:
+   - The change is not breaking the storage.
+   - If it is making a backward incomptabile change, the legacy methods/storages are still used. For example,
+     if the PriceInfos are now stored in a separate storage slot, the old PriceInfo should be accessible when
+     the new one is not populated.
+   - the contract version is updated both in [`Pyth.sol`](./contracts/pyth/Pyth.sol) and [`package.json`](./package.json).
+     Make sure to read the [Upgrading the contract](#upgrading-the-contract) and [Versioning](#versioning)
+     sections below.
+4. Prepare the required keys for deployment. You can find more information about them on notion. Then:
+   - Export the secret recovery phrase for the deployment account. Please store it in a file and read
+     the file into `MNEMONIC` environment variable like so: `export MNEMONIC=$(cat path/to/mnemonic)`.
+   - If you are modifying an existing contract, make sure that the multisig-cli has the operational
+     key stored in `third_party/pyth/multisig-wh-message-builder/keys/key.json`.
+   - export the Infura RPC API key to `INFURA_KEY` if you are deploying to a network that uses an Infura RPC.
+5. Make sure the deployment account has proper balance on this network and top it up if needed. Search
+   for testnet faucets if it is a testnet network. Sometimes you need to bridge the network token (e.g., L2s).
+6. Deploy the new contract or changes using the [`deploy.sh`](./deploy.sh) script.
+   You might need to repeat this script because of busy RPCs. Repeating would not cause any problem even
+   if the changes are already made. Also, sometimes the gases are not adjusted and it will cause the tx to
+   remain on the mempool for a long time (so there is no progress until timeout). Please update them with
+   the network explorer gas tracker. Tips in the [Troubleshooting](#troubleshooting) section below can help
+   in case of any error. Run the script like this: `./deploy.sh <network_a> <network_b> <...>`. For example
+   to deploy changes to testnet networks you can run:
+   ```bash
+   ./deploy.sh bnb_testnet fantom_testnet mumbai
+   ```
+   Upon contract upgrade/state change the script needs to be run a couple of times as the multisig owners
+   need to approve the created transactions. Links to the multisig transactions are printed during the
+   script execution and you can use them. You need to run the script when the transactions are approved.
+   If the deployment script runs successfully you should see many ✅s and no ❌s with a successful message.
+7. On first time deployments for a network with Wormhole Receiver contract, run this command:
+   ```bash
+   npm run receiver-submit-guardian-sets -- --network <network>
+   ```
+8. As a result of this process for some files (with the network id in their name) in `networks` and directory might change
+   which need to be committed (if they are result of a production deployment). Create a PR for them.
+9. If you are deploying to a new network, please add the new contract address to consumer facing libraries
+   and documentations. Please update the following resources:
+   - [Pyth Gitbook EVM Page](https://github.com/pyth-network/pyth-gitbook/blob/main/pythnet-price-feeds/evm.md#networks)
+   - [pyth-evm-js package](https://github.com/pyth-network/pyth-js/blob/main/pyth-evm-js/src/index.ts#L13)
+10. (Optional) You can test the deployed contract by sending and fetching a price update as described in the
+    [Testing](#testing) section below.
+11. (Optional) Verify the contract as described in the [Verifying the contract](#verifying-the-contract) section.
 
-# 2. Export the secret recovery phrase for the deployment account.
-export MNEMONIC=$(cat path/to/mnemonic)
-
-
-# 3. If you are modifying an existing contract, make sure that third_party/pyth/multisig-wh-message-builder/keys/key.json
-# has the proper operational key for interacting with the multisig. Please follow
-# the corresponding notion doc for more information about the keys.
-
-# 4. Deploy the changes
-# You might need to repeat this script because of busy RPCs. Repeating would not cause any problem even
-# if the changes are already made. Also, sometimes the gases are not adjusted and it will cause the tx to
-# remain on the mempool for a long time (so there is no progress until timeout). Please update them with
-# the network explorer gas tracker. Tips in Troubleshooting section below can help in case of any error.
-./deploy.sh <network_a> <network_b> <...>
-# Example: Deploying to some testnet networks
-# ./deploy.sh bnb_testnet fantom_testnet mumbai
-#
-# Example: Deploying to some mainnet networks
-# ./deploy.sh ethereum bnb avalanche
-
-# Perform this in first time mainnet deployments with Wormhole Receiver. (Or when guardian sets are upgraded)
-npm run receiver-submit-guardian-sets -- --network $MIGRATIONS_NETWORK
-```
-
-As a sanity check, it is recommended to deploy the migrations in `migrations/prod` to the Truffle `development` network first. You can do this by using the configuration values in [`.env.prod.development`](.env.prod.development).
-
-As a result of this process for some files (with the network id in their name) in `networks` and `.openzeppelin` directory might change which need to be committed (if they are result of a production deployment).
-
-If you are deploying to a new network, please add the new contract address to consumer facing libraries and documentations.
-
-To do so, add the contract address to both [Pyth Gitbook EVM Page](https://github.com/pyth-network/pyth-gitbook/blob/main/consumers/evm.md) and [pyth-evm-js package](https://github.com/pyth-network/pyth-js/blob/main/pyth-evm-js/src/index.ts#L13). You also need to add the new network address to [pyth-evm-js relaying example](https://github.com/pyth-network/pyth-js/blob/main/pyth-evm-js/src/examples/EvmRelay.ts#L47).
-
-## `networks` directory
+### `networks` directory
 
 Truffle stores the address of the deployed contracts in the build artifacts, which can make local development difficult. We use [`truffle-deploy-registry`](https://github.com/MedXProtocol/truffle-deploy-registry) to store the addresses separately from the artifacts, in the [`networks`](networks) directory. When we need to perform operations on the deployed contracts, such as performing additional migrations, we can run `npx apply-registry` to populate the artifacts with the correct addresses.
 
 Each file in the network directory is named after the network id and contains address of Migration contract and PythUpgradable contract
 (and Wormhole Receiver if we use `prod-receiver`). If you are upgrading the contract it should not change. In case you are deploying to a new network make sure to commit this file.
 
-# Upgrading the contract
+### Upgrading the contract
 
 To upgrade the contract you should bump the version of the contract and the npm package to the new version and run the deployment
 process described above. Please bump the version properly as described in [the section below](#versioning).
@@ -62,7 +119,7 @@ process described above. Please bump the version properly as described in [the s
 Anything other than the operations above will probably cause a collision. Please refer to Open Zeppelin Upgradeable
 (documentations)[https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable] for more information.
 
-## Versioning
+### Versioning
 
 We use [Semantic Versioning](https://semver.org/) for our releases. When upgrading the contract, update the npm package version using
 `npm version <new version number> --no-git-tag-version`. Also, modify the hard-coded value in `version()` method in
@@ -95,10 +152,11 @@ It will create a new file `PythUpgradable_merged.sol` which you can use in the e
 
 # Troubleshooting
 
+- You get `digital envelope routines::unsupported` error. The current truffle version is old and if you are using a new Node version you might need
+  to use the legacy openssl implementation by running this command: `export NODE_OPTIONS=--openssl-legacy-provider`.
 - Sometimes the truffle might fail during the dry-run (e.g., in Ethereum). It is because openzeppelin does not have the required metadata for forking. To fix it please
   follow the suggestion [here](https://github.com/OpenZeppelin/openzeppelin-upgrades/issues/241#issuecomment-1192657444).
-
 - Sometimes due to rpc problems or insufficient gas the migration is not executed completely. It is better to avoid doing multiple transactions in one
   migration. However, if it happens, you can comment out the part that is already ran (you can double check in the explorer), and re-run the migration.
-  You can avoid gas problems by choosing a much higher gas than what is showed on the network gas tracker. Also, you can find rpc nodes from
+  You can avoid gas problems by choosing a much higher gas than what is showed on the network gas tracker. Also, you can find other rpc nodes from
   [here](https://chainlist.org/)
