@@ -3,3 +3,5 @@ lib/*
 out
 cache
 .openzeppelin
+*mnemonic*
+!devnet-mnemonic.txt
