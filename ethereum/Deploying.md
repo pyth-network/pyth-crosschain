@@ -10,7 +10,8 @@ This is the deployment process:
 # 2. Export the secret recovery phrase for the deployment account.
 export MNEMONIC=$(cat path/to/mnemonic)
 
-# 3. Make sure that third_party/pyth/multisig-wh-message-builder/keys/key.json
+
+# 3. If you are modifying an existing contract, make sure that third_party/pyth/multisig-wh-message-builder/keys/key.json
 # has the proper operational key for interacting with the multisig. Please follow
 # the corresponding notion doc for more information about the keys.
 

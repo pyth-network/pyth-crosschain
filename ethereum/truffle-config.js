@@ -166,6 +166,15 @@ module.exports = {
       },
       network_id: 42161,
     },
+    arbitrum_testnet: {
+      provider: () => {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://goerli-rollup.arbitrum.io/rpc"
+        );
+      },
+      network_id: 421613,
+    },
     optimism: {
       provider: () => {
         return new HDWalletProvider(
