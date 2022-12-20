@@ -331,12 +331,7 @@
           },
           "t_enum(DeprecatedPriceStatusV1)4445": {
             "label": "enum PythDeprecatedStructs.DeprecatedPriceStatusV1",
-            "members": [
-              "UNKNOWN",
-              "TRADING",
-              "HALTED",
-              "AUCTION"
-            ]
+            "members": ["UNKNOWN", "TRADING", "HALTED", "AUCTION"]
           },
           "t_struct(DeprecatedPriceV2)4494_storage": {
             "label": "struct PythDeprecatedStructs.DeprecatedPriceV2",
