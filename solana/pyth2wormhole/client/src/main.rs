@@ -21,8 +21,10 @@ use {
     },
     p2w_sdk::P2WEmitter,
     prometheus::{
+        register_histogram,
         register_int_counter,
         register_int_gauge,
+        Histogram,
         IntCounter,
         IntGauge,
     },
@@ -99,6 +101,13 @@ lazy_static! {
         "Latest sequence number produced by this attester"
     )
     .expect("FATAL: Could not instantiate LAST_SEQNO_GAUGE");
+    static ref SOL_RPC_TX_PROCESSING_HIST: Histogram = register_histogram!(
+        "sol_rpc_tx_processing",
+        "How long in milliseconds it takes to send a transaction to the Solana RPC",
+        prometheus::exponential_buckets(0.016, 2.0, 13) // 0.016s, 0.032s, 0.064s, [...], 65.536s
+            .expect("FATAL: Could not instantiate buckets for SOL_RPC_TX_PROCESSING_HIST")
+    )
+    .expect("FATAL: Could not instantiate SOL_RPC_TX_PROCESSING_HIST");
 }
 
 #[tokio::main(flavor = "multi_thread")]
@@ -813,6 +822,9 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
             symbols.as_slice(),
             latest_blockhash,
         );
+
+        let tx_processing_start_time = Instant::now();
+
         let sig = rpc
             .send_and_confirm_transaction(&tx_res?)
             .map_err(|e| -> ErrBoxSend { e.into() })
@@ -827,6 +839,15 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
                 },
             )
             .await?;
+
+        let tx_processing_duration = tx_processing_start_time.elapsed();
+
+        // Manually insert the value into histogram. NOTE: We're not
+        // using the start_timer() method because it would record
+        // durations even for early returns in error conditions which
+        // would look weird in monitoring.
+        SOL_RPC_TX_PROCESSING_HIST.observe(tx_processing_duration.as_secs_f64());
+
         let seqno = tx_data
             .transaction
             .meta
