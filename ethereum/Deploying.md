@@ -46,15 +46,6 @@ Truffle stores the address of the deployed contracts in the build artifacts, whi
 Each file in the network directory is named after the network id and contains address of Migration contract and PythUpgradable contract
 (and Wormhole Receiver if we use `prod-receiver`). If you are upgrading the contract it should not change. In case you are deploying to a new network make sure to commit this file.
 
-## `.openzeppelin` directory
-
-In order to handle upgrades safely this directory stores details of the contracts structure, such as implementation addresses
-and their respective storage layout in one file per network (the name contains network id). This allows truffle to
-check whether the upgrade is causing any memory collision. Please take a look at (this doc)[https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable]
-for more information.
-
-Changes to the files in this directory should be commited as well.
-
 # Upgrading the contract
 
 To upgrade the contract you should bump the version of the contract and the npm package to the new version and run the deployment
