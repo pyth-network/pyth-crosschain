@@ -29,7 +29,6 @@ import {
   parse,
 } from "./wormhole";
 import { fetchData } from "@project-serum/anchor/dist/cjs/utils/registry";
-import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 
 const BPF_UPGRADABLE_LOADER = new PublicKey(
   "BPFLoaderUpgradeab1e11111111111111111111111"
@@ -62,7 +61,7 @@ type Config = {
 export const CONFIG: Record<Cluster, Config> = {
   devnet: {
     wormholeClusterName: "TESTNET",
-    vault: new PublicKey("GPB6tCnEP7NUFvXJSstQJQavDjg3SG39a32Bhuk9E73v"),
+    vault: new PublicKey("6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3"),
     wormholeRpcEndpoint: "https://wormhole-v2-testnet-api.certus.one",
   },
   mainnet: {
@@ -588,7 +587,7 @@ program
   });
 
 program
-  .command("transfer-authority")
+  .command("take-upgrade-authority")
   .description("Transfer authority of a program to the multisig")
   .option("-p --program-id <address>", "program id to transfer to the multisig")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
@@ -616,7 +615,7 @@ program
       options.wallet
     );
 
-    await transferAuthority(
+    await takeUpgradeAuthority(
       cluster,
       squad,
       CONFIG[cluster].vault,
@@ -1103,7 +1102,7 @@ async function removeMember(
   );
 }
 
-async function transferAuthority(
+async function takeUpgradeAuthority(
   cluster: Cluster,
   squad: Squads,
   vault: PublicKey,
@@ -1117,11 +1116,12 @@ async function transferAuthority(
 
   const currentUpgradeAuthority = (await fetchData(squad.connection, programId))
     .upgradeAuthorityAddress!;
-  const programDataKey = findProgramAddressSync(
+  const programDataKey = PublicKey.findProgramAddressSync(
     [programId.toBuffer()],
     BPF_UPGRADABLE_LOADER
   )[0];
 
+  // Both the current and the new authority need to sign
   const transferIx: TransactionInstruction = {
     keys: [
       { isSigner: false, isWritable: true, pubkey: programDataKey },
