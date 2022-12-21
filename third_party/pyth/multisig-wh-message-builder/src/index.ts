@@ -9,7 +9,7 @@ import {
   SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
-import Squads from "@sqds/mesh";
+import Squads, { DEFAULT_MULTISIG_PROGRAM_ID, getMsPDA } from "@sqds/mesh";
 import { getIxAuthorityPDA } from "@sqds/mesh";
 import { InstructionAccount } from "@sqds/mesh/lib/types";
 import bs58 from "bs58";
@@ -125,7 +125,7 @@ program
       cluster == "localdevnet" ? options.solanaRpc : undefined
     );
 
-    let vaultAddr = CONFIG[cluster].vault;
+    let vaultAddr = getMsPDA(createKeyAddr, DEFAULT_MULTISIG_PROGRAM_ID)[0];
     console.log("Creating new vault at", vaultAddr.toString());
 
     try {
