@@ -28,6 +28,11 @@ import {
   WormholeTools,
   parse,
 } from "./wormhole";
+import { fetchData } from "@project-serum/anchor/dist/cjs/utils/registry";
+
+const BPF_UPGRADABLE_LOADER = new PublicKey(
+  "BPFLoaderUpgradeab1e11111111111111111111111"
+);
 
 setDefaultWasm("node");
 
@@ -581,6 +586,43 @@ program
     );
   });
 
+program
+  .command("take-upgrade-authority")
+  .description("Transfer authority of a program to the multisig")
+  .option("-p --program-id <address>", "program id to transfer to the multisig")
+  .option("-c, --cluster <network>", "solana cluster to use", "devnet")
+  .option("-l, --ledger", "use ledger")
+  .option(
+    "-lda, --ledger-derivation-account <number>",
+    "ledger derivation account to use"
+  )
+  .option(
+    "-ldc, --ledger-derivation-change <number>",
+    "ledger derivation change to use"
+  )
+  .option(
+    "-w, --wallet <filepath>",
+    "multisig wallet secret key filepath",
+    "keys/key.json"
+  )
+  .action(async (options) => {
+    const cluster: Cluster = options.cluster;
+    const squad = await getSquadsClient(
+      cluster,
+      options.ledger,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange,
+      options.wallet
+    );
+
+    await takeUpgradeAuthority(
+      cluster,
+      squad,
+      CONFIG[cluster].vault,
+      new PublicKey(options.programId)
+    );
+  });
+
 // TODO: add subcommand for creating governance messages in the right format
 
 program.parse();
@@ -1051,6 +1093,48 @@ async function removeMember(
   );
 
   const squadIxs: SquadInstruction[] = [{ instruction: ix }];
+  await addInstructionsToTx(
+    cluster,
+    squad,
+    msAccount.publicKey,
+    txKey,
+    squadIxs
+  );
+}
+
+async function takeUpgradeAuthority(
+  cluster: Cluster,
+  squad: Squads,
+  vault: PublicKey,
+  programId: PublicKey
+) {
+  const msAccount = await squad.getMultisig(vault);
+  const multiSigAuthority = squad.getAuthorityPDA(
+    msAccount.publicKey,
+    msAccount.authorityIndex
+  );
+
+  const currentUpgradeAuthority = (await fetchData(squad.connection, programId))
+    .upgradeAuthorityAddress!;
+  const programDataKey = PublicKey.findProgramAddressSync(
+    [programId.toBuffer()],
+    BPF_UPGRADABLE_LOADER
+  )[0];
+
+  // Both the current and the new authority need to sign
+  const transferIx: TransactionInstruction = {
+    keys: [
+      { isSigner: false, isWritable: true, pubkey: programDataKey },
+      { isSigner: true, isWritable: false, pubkey: currentUpgradeAuthority },
+      { isSigner: true, isWritable: false, pubkey: multiSigAuthority },
+    ],
+    programId: BPF_UPGRADABLE_LOADER,
+    data: Buffer.from([4, 0, 0, 0]),
+  };
+
+  const txKey = await createTx(squad, vault);
+
+  const squadIxs: SquadInstruction[] = [{ instruction: transferIx }];
   await addInstructionsToTx(
     cluster,
     squad,
