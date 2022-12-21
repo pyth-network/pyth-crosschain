@@ -2,3 +2,6 @@ lib/*
 !lib/README.md
 out
 cache
+.openzeppelin
+*mnemonic*
+!devnet-mnemonic.txt
