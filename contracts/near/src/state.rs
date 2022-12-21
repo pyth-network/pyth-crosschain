@@ -15,6 +15,7 @@ use {
         PriceAttestation,
         PriceStatus,
     },
+    structs::Chain as WormholeChain,
 };
 
 /// The PriceFeed structure is stored in the contract under a Price Feed Identifier.
@@ -75,6 +76,30 @@ impl From<&PriceAttestation> for PriceFeed {
     }
 }
 
+/// A wrapper around a 16bit chain identifier. We can't use Chain from the Wormhole SDK as it does
+/// not provide borsh serialization but we can re-wrap it here relying on the validation from
+/// `wormhole::Chain`.
+#[derive(
+    BorshDeserialize,
+    BorshSerialize,
+    Clone,
+    Default,
+    Deserialize,
+    Eq,
+    Hash,
+    PartialEq,
+    PartialOrd,
+    Serialize,
+)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Chain(pub u16);
+
+impl From<WormholeChain> for Chain {
+    fn from(chain: WormholeChain) -> Self {
+        Self(chain as u16)
+    }
+}
+
 /// A `Source` describes an origin chain from which Pyth attestations are allowed.
 ///
 /// This allows for example Pyth prices to be sent from either Pythnet or Solana, but can be used
@@ -94,5 +119,37 @@ impl From<&PriceAttestation> for PriceFeed {
 #[serde(crate = "near_sdk::serde")]
 pub struct Source {
     pub emitter:            [u8; 32],
-    pub pyth_emitter_chain: u16,
+    pub pyth_emitter_chain: Chain,
+}
+
+/// A local `Vaa` type converted to from the Wormhole definition, this helps catch any upstream
+/// changes to the Wormhole VAA format.
+pub struct Vaa<P> {
+    pub version:            u8,
+    pub guardian_set_index: u32,
+    pub signatures:         Vec<[u8; 65]>,
+    pub timestamp:          u32, // Seconds since UNIX epoch
+    pub nonce:              u32,
+    pub emitter_chain:      Chain,
+    pub emitter_address:    [u8; 32],
+    pub sequence:           u64,
+    pub consistency_level:  u8,
+    pub payload:            P,
+}
+
+impl<P> From<structs::Vaa<P>> for Vaa<P> {
+    fn from(vaa: structs::Vaa<P>) -> Self {
+        Self {
+            version:            vaa.version,
+            guardian_set_index: vaa.guardian_set_index,
+            signatures:         vaa.signatures.iter().map(|s| s.signature).collect(),
+            timestamp:          vaa.timestamp,
+            nonce:              vaa.nonce,
+            emitter_chain:      vaa.emitter_chain.into(),
+            emitter_address:    vaa.emitter_address.0,
+            sequence:           vaa.sequence,
+            consistency_level:  vaa.consistency_level,
+            payload:            vaa.payload,
+        }
+    }
 }

@@ -2,6 +2,7 @@
 
 use {
     error::Error,
+    ext::ext_wormhole,
     near_sdk::{
         borsh::{
             self,
@@ -22,6 +23,7 @@ use {
         Gas,
         PanicOnDefault,
         Promise,
+        StorageUsage,
     },
     p2w_sdk::{
         BatchPriceAttestation,
@@ -31,12 +33,14 @@ use {
     state::{
         PriceFeed,
         Source,
+        Vaa,
     },
     std::io::Cursor,
 };
 
 pub mod error;
 pub mod ext;
+pub mod governance;
 pub mod state;
 
 const _GAS_FOR_VERIFY_VAA: Gas = Gas(10_000_000_000_000);
@@ -60,6 +64,9 @@ pub struct Pyth {
 
     /// The Governance Source.
     pub gov_source: Source,
+
+    /// The last executed sequence number for governance actions.
+    pub last_gov_seq: u64,
 
     /// A Mapping from PriceFeed ID to Price Info.
     pub prices: UnorderedMap<Identifier, PriceFeed>,
@@ -107,9 +114,9 @@ impl Pyth {
         // Add an initial Source so that the contract can be used.
         let mut sources = UnorderedSet::new(StorageKeys::Source);
         sources.insert(&initial_source);
-
         Self {
             prices: UnorderedMap::new(StorageKeys::Prices),
+            last_gov_seq: 0,
             stale_threshold,
             gov_source,
             sources,
@@ -119,41 +126,86 @@ impl Pyth {
         }
     }
 
-    /// Replace the accepted attestation Sources with a new set of Sources.
+    #[init(ignore_state)]
+    pub fn migrate() -> Self {
+        let state: Self = env::state_read().expect("Failed to read state");
+        state
+    }
+
+    /// Instruction for processing VAA's relayed via Wormhole.
+    ///
+    /// Note that VAA verification requires calling Wormhole so processing of the VAA itself is
+    /// done in a callback handler, see `process_vaa_callback`.
+    #[payable]
+    #[handle_result]
+    pub fn update_price_feeds(&mut self, vaas: Vec<String>) -> Result<(), Error> {
+        for vaa_hex in vaas {
+            // We Verify the VAA is coming from a trusted source chain before attempting to verify
+            // VAA signatures. Avoids a cross-contract call early.
+            let vaa = hex::decode(&vaa_hex).map_err(|_| Error::InvalidHex)?;
+            let vaa = vaa_payload::from_slice_with_payload::<structs::Vaa<()>>(&vaa);
+            let vaa = vaa.map_err(|_| Error::InvalidVaa)?;
+            let (vaa, _rest) = vaa;
+
+            // Convert to local VAA type to catch APi changes.
+            let vaa = Vaa::from(vaa);
+
+            if self.sources.contains(&Source {
+                emitter:            vaa.emitter_address,
+                pyth_emitter_chain: vaa.emitter_chain,
+            }) {
+                return Err(Error::UnknownSource);
+            }
+
+            // Verify VAA and refund the caller in case of failure.
+            ext_wormhole::ext(env::current_account_id())
+                .with_static_gas(Gas(30_000_000_000_000))
+                .verify_vaa(vaa_hex.clone())
+                .then(
+                    Self::ext(env::current_account_id())
+                        .with_static_gas(Gas(30_000_000_000_000))
+                        .with_attached_deposit(env::attached_deposit())
+                        .verify_vaa_callback(env::predecessor_account_id(), vaa_hex),
+                )
+                .then(
+                    Self::ext(env::current_account_id())
+                        .with_static_gas(Gas(30_000_000_000_000))
+                        .refund_vaa(env::predecessor_account_id(), env::attached_deposit()),
+                );
+        }
+
+        Ok(())
+    }
+
     #[private]
-    pub fn set_sources(&mut self, sources: Vec<Source>) {
+    #[handle_result]
+    pub fn verify_vaa_callback(
+        &mut self,
+        account_id: AccountId,
+        vaa: String,
+        #[callback_result] _result: Result<u32, near_sdk::PromiseError>,
+    ) -> Result<(), Error> {
+        if !is_promise_success() {
+            return Err(Error::VaaVerificationFailed);
+        }
+
         // Get Storage Usage before execution.
         let storage = env::storage_usage();
 
-        self.sources.clear();
-        sources.iter().for_each(|s| {
-            self.sources.insert(s);
-        });
+        // Deserialize VAA, note that we already deserialized and verified the VAA in `process_vaa`
+        // at this point so we only care about the `rest` component which contains bytes we can
+        // deserialize into an Action.
+        let vaa = hex::decode(&vaa).unwrap();
+        let (_, rest): (structs::Vaa<()>, _) = vaa_payload::from_slice_with_payload(&vaa).unwrap();
 
-        // Refund Storage Difference to `account_id` after storage execution.
-        let storage_diff = Balance::from(env::storage_usage().checked_sub(storage).unwrap());
-        let storage_diff = storage_diff * env::storage_byte_cost();
-        Promise::new(env::current_account_id()).transfer(storage_diff);
-    }
-
-    pub fn get_sources(&self) -> Vec<Source> {
-        self.sources.iter().collect()
-    }
-
-    /// Process a Batch of Price Attestations.
-    ///
-    /// This receives price updates, verifies them, and stores the attestations in the contract
-    /// state allowing other contracts to query them.
-    #[private]
-    pub fn attest_prices(&mut self, batch: Vec<u8>) {
         // Attempt to deserialize the Batch of Price Attestations.
-        let bytes = &mut Cursor::new(batch);
+        let bytes = &mut Cursor::new(rest);
         let batch = BatchPriceAttestation::deserialize(bytes).unwrap();
 
         // Verify the PriceAttestation's are new enough, and if so, store them.
         let mut count_updates = 0;
         for price_attestation in &batch.price_attestations {
-            if update_price_feed_if_new(&mut self.prices, PriceFeed::from(price_attestation)) {
+            if self.update_price_feed_if_new(PriceFeed::from(price_attestation)) {
                 count_updates += 1;
             }
         }
@@ -171,6 +223,52 @@ impl Pyth {
         "#,
             count_updates
         );
+
+        // Refund storage difference to `account_id` after storage execution.
+        self.refund_storage_usage(
+            account_id,
+            storage,
+            env::storage_usage(),
+            env::attached_deposit(),
+        )
+    }
+
+    /// Process a Batch of Price Attestations.
+    ///
+    /// This receives price updates, verifies them, and stores the attestations in the contract
+    /// state allowing other contracts to query them.
+    #[private]
+    pub fn attest_prices(&mut self, batch: Vec<u8>) {
+        // Attempt to deserialize the Batch of Price Attestations.
+        let bytes = &mut Cursor::new(batch);
+        let batch = BatchPriceAttestation::deserialize(bytes).unwrap();
+
+        // Verify the PriceAttestation's are new enough, and if so, store them.
+        let mut count_updates = 0;
+        for price_attestation in &batch.price_attestations {
+            if self.update_price_feed_if_new(PriceFeed::from(price_attestation)) {
+                count_updates += 1;
+            }
+        }
+
+        log!(
+            r#"
+            {{
+                "standard": "pyth",
+                "version":  "1.0",
+                "event":    "BatchAttest",
+                "data":     {{
+                    "count": {}
+                }}
+            }}
+        "#,
+            count_updates
+        );
+    }
+
+    /// Read the list of accepted `Source` chains for a price attestation.
+    pub fn get_sources(&self) -> Vec<Source> {
+        self.sources.iter().collect()
     }
 
     /// Read the current Price for a given Price Feed.
@@ -192,166 +290,57 @@ impl Pyth {
             Some(price)
         })
     }
-
-    /// Instruction for processing VAA's relayed via Wormhole.
-    ///
-    /// Note that VAA verification requires calling Wormhole so processing of the VAA itself is
-    /// done in a callback handler, see `process_vaa_callback`.
-    #[payable]
-    #[handle_result]
-    pub fn process_vaa(&mut self, vaa: String) -> Result<(), Error> {
-        // Verify the VAA is coming from a trusted source chain.
-        {
-            let vaa = hex::decode(&vaa).map_err(|_| Error::InvalidHex)?;
-            let vaa = vaa_payload::from_slice_with_payload::<structs::Vaa<()>>(&vaa);
-            let vaa = vaa.map_err(|_| Error::InvalidVaa)?;
-
-            if !self.sources.contains(&Source {
-                emitter:            vaa.0.emitter_address.0,
-                pyth_emitter_chain: vaa.0.emitter_chain as u16,
-            }) {
-                return Err(Error::UnknownSource);
-            }
-        }
-
-        // Verify VAA and refund the caller in case of failure.
-        ext::ext_wormhole::ext(env::current_account_id())
-            .with_static_gas(Gas(30_000_000_000_000))
-            .verify_vaa(vaa.clone())
-            .then(
-                Self::ext(env::current_account_id())
-                    .with_static_gas(Gas(30_000_000_000_000))
-                    .with_attached_deposit(env::attached_deposit())
-                    .process_vaa_callback(env::predecessor_account_id(), vaa),
-            )
-            .then(
-                Self::ext(env::current_account_id())
-                    .with_static_gas(Gas(30_000_000_000_000))
-                    .refund_vaa(env::predecessor_account_id(), env::attached_deposit()),
-            );
-
-        Ok(())
-    }
-
-    /// If submitting an action fails then this callback will refund the caller.
-    #[private]
-    pub fn refund_vaa(&mut self, account_id: AccountId, amount: u128) {
-        if !is_promise_success() {
-            Promise::new(account_id).transfer(amount);
-        }
-    }
-
-    #[private]
-    pub fn set_upgrade_hash(&mut self, codehash: [u8; 32]) {
-        self.codehash = codehash;
-    }
-
-    #[private]
-    pub fn set_gov_source(&mut self, source: Source) {
-        self.gov_source = source;
-    }
-
-    #[private]
-    pub fn set_stale_price_threshold(&mut self, threshold: u64) {
-        self.stale_threshold = threshold;
-    }
-
-    #[private]
-    pub fn set_update_fee(&mut self, fee: Balance) {
-        self.update_fee = fee;
-    }
-
-    /// Invoke handler upon successful verification of a VAA action.
-    #[private]
-    pub fn process_vaa_callback(
-        &mut self,
-        account_id: AccountId,
-        vaa: String,
-        #[callback_result] _result: Result<u32, near_sdk::PromiseError>,
-    ) {
-        if !is_promise_success() {
-            return;
-        }
-
-        // Get Storage Usage before executed.
-        let storage = env::storage_usage();
-
-        // Deserialize VAA, note that we already deserialized and verified the VAA in `process_vaa`
-        // at this point so we only care about the `rest` component which contains bytes we can
-        // deserialize into an Action.
-        let vaa = hex::decode(&vaa).unwrap();
-        let (_, rest): (structs::Vaa<()>, _) = vaa_payload::from_slice_with_payload(&vaa).unwrap();
-
-        match Action::try_from_slice(rest).unwrap() {
-            Action::ContractUpgrade(codehash) => self.set_upgrade_hash(codehash),
-            Action::SetDataSources(sources) => self.set_sources(sources),
-            Action::SetGovernanceSource(source) => self.set_gov_source(source),
-            Action::SetStalePriceThreshold(threshold) => self.set_stale_price_threshold(threshold),
-            Action::SetUpdateFee(fee) => self.set_update_fee(fee),
-            Action::BatchAttest(batch) => self.attest_prices(batch),
-        }
-
-        // Refund storage difference to `account_id` after storage execution.
-        let storage_diff = Balance::from(env::storage_usage().checked_sub(storage).unwrap());
-        let storage_diff = storage_diff * env::storage_byte_cost();
-        Promise::new(account_id).transfer(storage_diff);
-    }
-
-    /// This method allows self-upgrading the contract to a new implementation.
-    ///
-    /// This function is open to call by anyone, but to perform an authorized upgrade a VAA
-    /// containing the hash of the `new_code` must have previously been relayed to this contract's
-    /// `process_vaa` endpoint. otherwise the upgrade will fail.
-    ///
-    /// NOTE: This function is not pub so that it can only be called by the `upgrade_contract`
-    /// method, this is much much cheaper than serializing a Vec<u8> to call this method as a
-    /// normal public method.
-    #[handle_result]
-    fn upgrade(&mut self, new_code: Vec<u8>) -> Result<Promise, Error> {
-        let signature = env::sha256(&new_code);
-
-        if signature != self.codehash {
-            return Err(Error::UnauthorizedUpgrade);
-        }
-
-        Ok(Promise::new(env::current_account_id())
-            .deploy_contract(new_code)
-            .then(Self::ext(env::current_account_id()).refund_upgrade(
-                env::predecessor_account_id(),
-                env::attached_deposit(),
-                env::storage_usage(),
-            )))
-    }
-
-    /// This method is called after the upgrade to refund the caller for the storage used by the
-    /// old contract.
-    #[private]
-    pub fn refund_upgrade(&mut self, account_id: AccountId, amount: u128, storage: u64) {
-        let refund = Balance::from(env::storage_usage().checked_sub(storage).unwrap());
-        let refund = refund * env::storage_byte_cost();
-        let refund = amount.checked_sub(refund).unwrap();
-        Promise::new(account_id).transfer(refund);
-    }
 }
 
-/// Updates the Price Feed only if it is newer than the current one. This function never fails and
-/// will either update in-place or not update at all. The return value indicates whether the update
-/// was performed or not.
-fn update_price_feed_if_new(
-    prices: &mut UnorderedMap<Identifier, PriceFeed>,
-    price_feed: PriceFeed,
-) -> bool {
-    match prices.get(&price_feed.id) {
-        Some(stored_price_feed) => {
-            let update = price_feed.publish_time > stored_price_feed.publish_time;
-            update.then(|| prices.insert(&price_feed.id, &price_feed));
-            update
+impl Pyth {
+    /// Updates the Price Feed only if it is newer than the current one. This function never fails
+    /// and will either update in-place or not update at all. The return value indicates whether
+    /// the update was performed or not.
+    fn update_price_feed_if_new(&mut self, price_feed: PriceFeed) -> bool {
+        match self.prices.get(&price_feed.id) {
+            Some(stored_price_feed) => {
+                let update = price_feed.publish_time > stored_price_feed.publish_time;
+                update.then(|| self.prices.insert(&price_feed.id, &price_feed));
+                update
+            }
+
+            None => {
+                self.prices.insert(&price_feed.id, &price_feed);
+                true
+            }
+        }
+    }
+
+    /// Checks storage usage invariants and additionally refunds the caller if they overpay.
+    fn refund_storage_usage(
+        &self,
+        refunder: AccountId,
+        before: StorageUsage,
+        after: StorageUsage,
+        deposit: Balance,
+    ) -> Result<(), Error> {
+        if let Some(diff) = after.checked_sub(before) {
+            // Handle storage increases if checked_sub succeeds.
+            let cost = Balance::from(diff);
+            let cost = cost * env::storage_byte_cost();
+
+            // If the cost is higher than the deposit we bail.
+            if cost > deposit {
+                return Err(Error::InsufficientDeposit);
+            }
+
+            // Otherwise we refund whatever is left over.
+            if deposit - cost > 0 {
+                Promise::new(refunder).transfer(cost);
+            }
+        } else {
+            // Handle storage decrease if checked_sub fails. We know storage used now is <=
+            let refund = Balance::from(before - after);
+            let refund = refund * env::storage_byte_cost();
+            Promise::new(refunder).transfer(refund);
         }
 
-        None => {
-            prices.insert(&price_feed.id, &price_feed);
-            true
-        }
+        Ok(())
     }
 }
 

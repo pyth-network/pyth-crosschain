@@ -20,4 +20,10 @@ pub enum Error {
 
     #[error("Unauthorized Upgrade")]
     UnauthorizedUpgrade,
+
+    #[error("Insufficient tokens deposited to cover storage.")]
+    InsufficientDeposit,
+
+    #[error("VAA verification failed.")]
+    VaaVerificationFailed,
 }
