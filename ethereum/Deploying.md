@@ -1,11 +1,11 @@
 # Deploying Contracts to Production
 
-## EVM network configurations
+## EVM network configuration
 
-Each network that Pyth is deployed on has some configurations stored on this repo as described below:
+Each network that Pyth is deployed on has some configuration stored on this repo as described below:
 
-1. [`truffle-config.js`](./truffle-config.js) contains list of different networks with their configurations that includes:
-   - `provider`: It is the network provider which is an HDWalletProvider with mnemonic stored on $MNEMONIC
+1. [`truffle-config.js`](./truffle-config.js) contains list of different networks with their configuration that includes:
+   - `provider`: The network provider is an HDWalletProvider with mnemonic stored in the $MNEMONIC
      environment variable and the RPC URL of the network.
    - `network_id`: Network ID of the chain.
    - `gas`, `gasPrice` (optional): Usually RPCs estimate gas and gas price efficiently. Although some networks are not
@@ -17,7 +17,7 @@ Each network that Pyth is deployed on has some configurations stored on this rep
    - `confirmations` (optional): Number of blocks to wait to consider the transaction final.
    - `from` (optional): Public address of the mnemonic. Although it can be derived from `provider` some networks that
      are not entirely EVM based need it.
-2. `.env.prod.<network>` contains the contract specific configurations for each network. It contains:
+2. `.env.prod.<network>` contains the contract specific configuration for each network. It contains:
    - `MIGRATIONS_DIR`: This is either [`./migrations/prod`](./migrations/prod) or
      [`./migrations/prod-receiver`](./migrations/prod-receiver). The `prod-receiver` migrations should be used when you
      need to deploy to a chain that is unsupported by the Wormhole network. The Wormhole Receiver contract acts as a
@@ -29,7 +29,7 @@ Each network that Pyth is deployed on has some configurations stored on this rep
      or is defined in [Wormhole Receiver names](../third_party/pyth/xc-governance-sdk-js/src/chains.ts). If the new
      network requires a Receiver contract you need to update the latter file and add the network there.
    - `CLUSTER`: Cluster of this network. It is either `testnet` or `mainnet`. There are some cluster specific
-     configurations that are loaded from [`.env.cluster.testnet`](./.env.cluster.testnet) or
+     configuration that are loaded from [`.env.cluster.testnet`](./.env.cluster.testnet) or
      [`.env.cluster.mainnet`](./.env.cluster.mainnet) such as data and governance sources. It is also used to get
      the wormhole contract address. You can override those variable in the network environment file.
    - `VALID_TIME_PERIOD_SECONDS`: The period that we consider a price to be still valid since its `publishTime`
@@ -48,7 +48,7 @@ is a good reference too.
 
 This is the deployment process:
 
-1. Follow the installation instructions on [README.md](./README.md).
+1. Follow the installation instructions in the [README.md](./README.md).
 2. As a sanity check on deploying changes for the first time, it is recommended to deploy the migrations
    in `migrations/prod` to the Truffle `development` network first. You can do this by using the configuration
    values in [`.env.prod.development`](.env.prod.development).
@@ -152,8 +152,9 @@ It will create a new file `PythUpgradable_merged.sol` which you can use in the e
 
 # Troubleshooting
 
-- You get `digital envelope routines::unsupported` error. The current truffle version is old and if you are using a new Node version you might need
-  to use the legacy openssl implementation by running this command: `export NODE_OPTIONS=--openssl-legacy-provider`.
+- If you get `digital envelope routines::unsupported` error, it means you are using a new Node version and it does not work because
+  the truffle dependency is old. As a workaround, you can use the legacy openssl implementation by running this command:
+  `export NODE_OPTIONS=--openssl-legacy-provider`.
 - Sometimes the truffle might fail during the dry-run (e.g., in Ethereum). It is because openzeppelin does not have the required metadata for forking. To fix it please
   follow the suggestion [here](https://github.com/OpenZeppelin/openzeppelin-upgrades/issues/241#issuecomment-1192657444).
 - Sometimes due to rpc problems or insufficient gas the migration is not executed completely. It is better to avoid doing multiple transactions in one
