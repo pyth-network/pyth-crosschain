@@ -84,15 +84,9 @@ pub fn instantiate(
     let state = ConfigInfo {
         owner:                      info.sender,
         wormhole_contract:          deps.api.addr_validate(msg.wormhole_contract.as_ref())?,
-        data_sources:               HashSet::from([PythDataSource {
-            emitter:            msg.pyth_emitter,
-            pyth_emitter_chain: msg.pyth_emitter_chain,
-        }]),
+        data_sources:               msg.data_sources.iter().cloned().collect(),
         chain_id:                   msg.chain_id,
-        governance_source:          PythDataSource {
-            emitter:            msg.governance_emitter,
-            pyth_emitter_chain: msg.governance_emitter_chain,
-        },
+        governance_source:          msg.governance_data_source.clone(),
         governance_source_index:    msg.governance_source_index,
         governance_sequence_number: msg.governance_sequence_number,
         valid_time_period:          Duration::from_secs(msg.valid_time_period_secs as u64),
@@ -130,7 +124,7 @@ fn update_price_feeds(
     mut deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    data: &Binary,
+    data: &[Binary],
 ) -> StdResult<Response> {
     let state = config_read(deps.storage).load()?;
 
@@ -139,14 +133,26 @@ fn update_price_feeds(
         return Err(PythContractError::InsufficientFee.into());
     }
 
-    let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
-    verify_vaa_from_data_source(&state, &vaa)?;
+    let mut total_attestations: usize = 0;
+    let mut new_attestations: usize = 0;
+    for datum in data {
+        let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), datum)?;
+        verify_vaa_from_data_source(&state, &vaa)?;
 
-    let data = &vaa.payload;
-    let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
-        .map_err(|_| PythContractError::InvalidUpdatePayload)?;
+        let data = &vaa.payload;
+        let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
+            .map_err(|_| PythContractError::InvalidUpdatePayload)?;
 
-    process_batch_attestation(deps, env, &batch_attestation)
+        let (num_updates, num_new) =
+            process_batch_attestation(&mut deps, &env, &batch_attestation)?;
+        total_attestations += num_updates;
+        new_attestations += num_new;
+    }
+
+    Ok(Response::new()
+        .add_attribute("action", "update_price_feeds")
+        .add_attribute("num_attestations", format!("{total_attestations}"))
+        .add_attribute("num_updated", format!("{new_attestations}")))
 }
 
 fn execute_governance_instruction(
@@ -203,8 +209,8 @@ fn execute_governance_instruction(
 
                     updated_config.governance_source_index = governance_data_source_index;
                     let new_governance_source = PythDataSource {
-                        emitter:            Binary::from(parsed_claim_vaa.emitter_address.clone()),
-                        pyth_emitter_chain: parsed_claim_vaa.emitter_chain,
+                        emitter:  Binary::from(parsed_claim_vaa.emitter_address.clone()),
+                        chain_id: parsed_claim_vaa.emitter_chain,
                     };
                     updated_config.governance_source = new_governance_source;
                     updated_config.governance_sequence_number = parsed_claim_vaa.sequence;
@@ -274,8 +280,8 @@ fn execute_governance_instruction(
 /// Check that `vaa` is from a valid data source (and hence is a legitimate price update message).
 fn verify_vaa_from_data_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
     let vaa_data_source = PythDataSource {
-        emitter:            vaa.emitter_address.clone().into(),
-        pyth_emitter_chain: vaa.emitter_chain,
+        emitter:  vaa.emitter_address.clone().into(),
+        chain_id: vaa.emitter_chain,
     };
     if !state.data_sources.contains(&vaa_data_source) {
         return Err(PythContractError::InvalidUpdateEmitter)?;
@@ -286,8 +292,8 @@ fn verify_vaa_from_data_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult
 /// Check that `vaa` is from a valid governance source (and hence is a legitimate governance instruction).
 fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
     let vaa_data_source = PythDataSource {
-        emitter:            vaa.emitter_address.clone().into(),
-        pyth_emitter_chain: vaa.emitter_chain,
+        emitter:  vaa.emitter_address.clone().into(),
+        chain_id: vaa.emitter_chain,
     };
     if state.governance_source != vaa_data_source {
         return Err(PythContractError::InvalidUpdateEmitter)?;
@@ -296,11 +302,11 @@ fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> Std
 }
 
 fn process_batch_attestation(
-    mut deps: DepsMut,
-    env: Env,
+    deps: &mut DepsMut,
+    env: &Env,
     batch_attestation: &BatchPriceAttestation,
-) -> StdResult<Response> {
-    let mut new_attestations_cnt: u8 = 0;
+) -> StdResult<(usize, usize)> {
+    let mut new_attestations_cnt: usize = 0;
 
     // Update prices
     for price_attestation in batch_attestation.price_attestations.iter() {
@@ -323,18 +329,15 @@ fn process_batch_attestation(
 
         let attestation_time = Timestamp::from_seconds(price_attestation.attestation_time as u64);
 
-        if update_price_feed_if_new(&mut deps, &env, price_feed, attestation_time)? {
+        if update_price_feed_if_new(deps, env, price_feed, attestation_time)? {
             new_attestations_cnt += 1;
         }
     }
 
-    Ok(Response::new()
-        .add_attribute("action", "price_update")
-        .add_attribute(
-            "batch_size",
-            format!("{}", batch_attestation.price_attestations.len()),
-        )
-        .add_attribute("num_updates", format!("{new_attestations_cnt}")))
+    Ok((
+        batch_attestation.price_attestations.len(),
+        new_attestations_cnt,
+    ))
 }
 
 /// Returns true if the price_feed is newer than the stored one.
@@ -579,8 +582,8 @@ mod test {
             wormhole_contract:          Addr::unchecked(String::default()),
             data_sources:               HashSet::default(),
             governance_source:          PythDataSource {
-                emitter:            Binary(vec![]),
-                pyth_emitter_chain: 0,
+                emitter:  Binary(vec![]),
+                chain_id: 0,
             },
             governance_source_index:    0,
             governance_sequence_number: 0,
@@ -602,8 +605,8 @@ mod test {
         pyth_emitter_chain: u16,
     ) -> HashSet<PythDataSource> {
         HashSet::from([PythDataSource {
-            emitter: pyth_emitter.into(),
-            pyth_emitter_chain,
+            emitter:  pyth_emitter.into(),
+            chain_id: pyth_emitter_chain,
         }])
     }
 
@@ -635,7 +638,7 @@ mod test {
 
         let info = mock_info("123", funds);
         let msg = create_price_update_msg(emitter_address, emitter_chain);
-        update_price_feeds(deps.as_mut(), env, info, &msg)
+        update_price_feeds(deps.as_mut(), env, info, &[msg])
     }
 
     #[test]
@@ -965,8 +968,8 @@ mod test {
         ConfigInfo {
             wormhole_contract: Addr::unchecked(WORMHOLE_ADDR),
             governance_source: PythDataSource {
-                emitter:            Binary(vec![1u8, 2u8]),
-                pyth_emitter_chain: 3,
+                emitter:  Binary(vec![1u8, 2u8]),
+                chain_id: 3,
             },
             governance_sequence_number: 4,
             chain_id: 5,
@@ -1048,8 +1051,8 @@ mod test {
     #[test]
     fn test_authorize_governance_transfer_success() {
         let source_2 = PythDataSource {
-            emitter:            Binary::from([2u8; 32]),
-            pyth_emitter_chain: 4,
+            emitter:  Binary::from([2u8; 32]),
+            chain_id: 4,
         };
 
         let test_config = governance_test_config();
@@ -1059,7 +1062,7 @@ mod test {
             action:          AuthorizeGovernanceDataSourceTransfer {
                 claim_vaa: to_binary(&ParsedVAA {
                     emitter_address: source_2.emitter.to_vec(),
-                    emitter_chain: source_2.pyth_emitter_chain,
+                    emitter_chain: source_2.chain_id,
                     sequence: 12,
                     payload: GovernanceInstruction {
                         module:          Target,
@@ -1086,8 +1089,8 @@ mod test {
     #[test]
     fn test_authorize_governance_transfer_bad_source_index() {
         let source_2 = PythDataSource {
-            emitter:            Binary::from([2u8; 32]),
-            pyth_emitter_chain: 4,
+            emitter:  Binary::from([2u8; 32]),
+            chain_id: 4,
         };
 
         let mut test_config = governance_test_config();
@@ -1098,7 +1101,7 @@ mod test {
             action:          AuthorizeGovernanceDataSourceTransfer {
                 claim_vaa: to_binary(&ParsedVAA {
                     emitter_address: source_2.emitter.to_vec(),
-                    emitter_chain: source_2.pyth_emitter_chain,
+                    emitter_chain: source_2.chain_id,
                     sequence: 12,
                     payload: GovernanceInstruction {
                         module:          Target,
@@ -1125,8 +1128,8 @@ mod test {
     #[test]
     fn test_authorize_governance_transfer_bad_target_chain() {
         let source_2 = PythDataSource {
-            emitter:            Binary::from([2u8; 32]),
-            pyth_emitter_chain: 4,
+            emitter:  Binary::from([2u8; 32]),
+            chain_id: 4,
         };
 
         let test_config = governance_test_config();
@@ -1136,7 +1139,7 @@ mod test {
             action:          AuthorizeGovernanceDataSourceTransfer {
                 claim_vaa: to_binary(&ParsedVAA {
                     emitter_address: source_2.emitter.to_vec(),
-                    emitter_chain: source_2.pyth_emitter_chain,
+                    emitter_chain: source_2.chain_id,
                     sequence: 12,
                     payload: GovernanceInstruction {
                         module:          Target,
@@ -1163,16 +1166,16 @@ mod test {
     #[test]
     fn test_set_data_sources() {
         let source_1 = PythDataSource {
-            emitter:            Binary::from([1u8; 32]),
-            pyth_emitter_chain: 2,
+            emitter:  Binary::from([1u8; 32]),
+            chain_id: 2,
         };
         let source_2 = PythDataSource {
-            emitter:            Binary::from([2u8; 32]),
-            pyth_emitter_chain: 4,
+            emitter:  Binary::from([2u8; 32]),
+            chain_id: 4,
         };
         let source_3 = PythDataSource {
-            emitter:            Binary::from([3u8; 32]),
-            pyth_emitter_chain: 6,
+            emitter:  Binary::from([3u8; 32]),
+            chain_id: 6,
         };
 
         let mut test_config = governance_test_config();

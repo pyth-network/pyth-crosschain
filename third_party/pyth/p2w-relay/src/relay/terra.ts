@@ -3,6 +3,7 @@ import {
   LCDClient,
   LCDClientConfig,
   MnemonicKey,
+  Msg,
   MsgExecuteContract,
 } from "@terra-money/terra.js";
 import axios from "axios";
@@ -68,21 +69,22 @@ export class TerraRelay implements Relay {
       let fee: Coin = await this.getUpdateFee(signedVAAs);
 
       logger.debug("TIME: creating messages");
-      let msgs = new Array<MsgExecuteContract>();
-      for (let idx = 0; idx < signedVAAs.length; ++idx) {
-        const msg = new MsgExecuteContract(
-          wallet.key.accAddress,
-          this.contractAddress,
-          {
-            update_price_feeds: {
-              data: Buffer.from(signedVAAs[idx], "hex").toString("base64"),
-            },
-          },
-          [fee]
-        );
 
-        msgs.push(msg);
+      let base64VAAs = [];
+      for (let idx = 0; idx < signedVAAs.length; ++idx) {
+        base64VAAs.push(Buffer.from(signedVAAs[idx], "hex").toString("base64"));
       }
+
+      let msg = new MsgExecuteContract(
+        wallet.key.accAddress,
+        this.contractAddress,
+        {
+          update_price_feeds: {
+            data: base64VAAs,
+          },
+        },
+        [fee]
+      );
 
       let gasPrices;
       try {
@@ -98,7 +100,7 @@ export class TerraRelay implements Relay {
       }
 
       const tx = await wallet.createAndSignTx({
-        msgs: msgs,
+        msgs: [msg],
         memo: "P2T",
         feeDenoms: [this.coinDenom],
         gasPrices,

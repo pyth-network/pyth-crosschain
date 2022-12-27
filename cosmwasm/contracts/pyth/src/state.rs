@@ -33,8 +33,8 @@ pub static PRICE_INFO_KEY: &[u8] = b"price_info_v3";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, JsonSchema)]
 pub struct PythDataSource {
-    pub emitter:            Binary,
-    pub pyth_emitter_chain: u16,
+    pub emitter:  Binary,
+    pub chain_id: u16,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
