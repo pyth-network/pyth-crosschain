@@ -66,6 +66,7 @@ export class TerraRelay implements Relay {
 
       logger.debug("TIME: Querying fee");
       let fee: Coin = await this.getUpdateFee(signedVAAs);
+      logger.debug(JSON.stringify(fee));
 
       logger.debug("TIME: creating messages");
       let msgs = new Array<MsgExecuteContract>();
