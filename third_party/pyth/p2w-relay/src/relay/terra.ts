@@ -66,7 +66,6 @@ export class TerraRelay implements Relay {
 
       logger.debug("TIME: Querying fee");
       let fee: Coin = await this.getUpdateFee(signedVAAs);
-      logger.debug(JSON.stringify(fee));
 
       logger.debug("TIME: creating messages");
       let msgs = new Array<MsgExecuteContract>();
@@ -197,11 +196,16 @@ export class TerraRelay implements Relay {
       base64VAAs.push(Buffer.from(hexVAAs[idx], "hex").toString("base64"));
     }
 
-    return await lcdClient.wasm.contractQuery<Coin>(this.contractAddress, {
-      get_update_fee: {
-        vaas: base64VAAs,
-      },
-    });
+    let result = await lcdClient.wasm.contractQuery<Coin.Data>(
+      this.contractAddress,
+      {
+        get_update_fee: {
+          vaas: base64VAAs,
+        },
+      }
+    );
+
+    return Coin.fromData(result);
   }
 
   async getPayerInfo(): Promise<{ address: string; balance: bigint }> {
