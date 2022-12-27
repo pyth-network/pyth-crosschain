@@ -1,4 +1,3 @@
-import { fromUint8Array } from "js-base64";
 import {
   Coin,
   LCDClient,
@@ -6,7 +5,6 @@ import {
   MnemonicKey,
   MsgExecuteContract,
 } from "@terra-money/terra.js";
-import { hexToUint8Array } from "@certusone/wormhole-sdk";
 import axios from "axios";
 import { logger } from "../helpers";
 
@@ -66,6 +64,9 @@ export class TerraRelay implements Relay {
 
       const wallet = lcdClient.wallet(mk);
 
+      logger.debug("TIME: Querying fee");
+      let fee: Coin = await this.getUpdateFee(signedVAAs);
+
       logger.debug("TIME: creating messages");
       let msgs = new Array<MsgExecuteContract>();
       for (let idx = 0; idx < signedVAAs.length; ++idx) {
@@ -77,8 +78,7 @@ export class TerraRelay implements Relay {
               data: Buffer.from(signedVAAs[idx], "hex").toString("base64"),
             },
           },
-          // TODO: Query the fee before
-          [new Coin(this.coinDenom, 1)]
+          [fee]
         );
 
         msgs.push(msg);
@@ -181,14 +181,24 @@ export class TerraRelay implements Relay {
     logger.info("Querying terra for price info for priceId [" + priceId + "]");
 
     const lcdClient = new LCDClient(this.lcdConfig);
-
-    const mk = new MnemonicKey({
-      mnemonic: this.walletPrivateKey,
-    });
-
     return await lcdClient.wasm.contractQuery(this.contractAddress, {
       price_feed: {
         id: priceId,
+      },
+    });
+  }
+
+  async getUpdateFee(hexVAAs: Array<string>): Promise<Coin> {
+    const lcdClient = new LCDClient(this.lcdConfig);
+
+    let base64VAAs = [];
+    for (let idx = 0; idx < hexVAAs.length; ++idx) {
+      base64VAAs.push(Buffer.from(hexVAAs[idx], "hex").toString("base64"));
+    }
+
+    return await lcdClient.wasm.contractQuery<Coin>(this.contractAddress, {
+      get_update_fee: {
+        vaas: base64VAAs,
       },
     });
   }
