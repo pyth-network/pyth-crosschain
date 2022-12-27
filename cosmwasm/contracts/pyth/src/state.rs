@@ -2,9 +2,9 @@ use {
     cosmwasm_std::{
         Addr,
         Binary,
+        Coin,
         Storage,
         Timestamp,
-        Uint128,
     },
     cosmwasm_storage::{
         bucket,
@@ -37,7 +37,7 @@ pub struct PythDataSource {
     pub chain_id: u16,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigInfo {
     pub owner:                      Addr,
     pub wormhole_contract:          Addr,
@@ -60,8 +60,7 @@ pub struct ConfigInfo {
     pub valid_time_period:          Duration,
 
     // The fee to pay, denominated in fee_denom (typically, the chain's native token)
-    pub fee:       Uint128,
-    pub fee_denom: String,
+    pub fee: Coin,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, JsonSchema)]
