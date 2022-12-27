@@ -23,6 +23,7 @@ use {
         },
     },
     cosmwasm_std::{
+        coin,
         entry_point,
         has_coins,
         to_binary,
@@ -32,6 +33,8 @@ use {
         DepsMut,
         Env,
         MessageInfo,
+        OverflowError,
+        OverflowOperation,
         QueryRequest,
         Response,
         StdResult,
@@ -365,9 +368,8 @@ fn update_price_feed_if_new(
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::PriceFeed { id } => to_binary(&query_price_feed(deps, env, id.as_ref())?),
-        // TODO: implement queries for the update fee and valid time period along the following lines:
-        // QueryMsg::GetUpdateFee { data: bytes[] } => ???,
-        // QueryMsg::GetValidTimePeriod => ???
+        QueryMsg::GetUpdateFee { vaas } => to_binary(&get_update_fee(deps, &vaas)?),
+        QueryMsg::GetValidTimePeriod => to_binary(&get_valid_time_period(deps)?),
     }
 }
 
@@ -401,6 +403,26 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
         }
         Err(_) => Err(PythContractError::PriceFeedNotFound)?,
     }
+}
+
+pub fn get_update_fee(deps: Deps, vaas: &[Binary]) -> StdResult<Coin> {
+    let config = config_read(deps.storage).load()?;
+    Ok(coin(
+        config
+            .fee
+            .u128()
+            .checked_mul(vaas.len() as u128)
+            .ok_or(OverflowError::new(
+                OverflowOperation::Mul,
+                config.fee,
+                vaas.len(),
+            ))?,
+        config.fee_denom,
+    ))
+}
+
+pub fn get_valid_time_period(deps: Deps) -> StdResult<Duration> {
+    Ok(config_read(deps.storage).load()?.valid_time_period)
 }
 
 #[cfg(test)]
@@ -843,6 +865,65 @@ mod test {
         assert_eq!(
             query_price_feed(deps.as_ref(), env, b"123".as_ref()),
             Err(PythContractError::PriceFeedNotFound.into())
+        );
+    }
+
+    #[test]
+    fn test_get_update_fee() {
+        let (mut deps, _env) = setup_test();
+        let fee_denom: String = "test".into();
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                fee: Uint128::new(10),
+                fee_denom: fee_denom.clone(),
+                ..create_zero_config_info()
+            })
+            .unwrap();
+
+        let updates = vec![Binary::from([1u8]), Binary::from([2u8])];
+
+        assert_eq!(
+            get_update_fee(deps.as_ref(), &updates[0..0]),
+            Ok(Coin::new(0, fee_denom.clone()))
+        );
+        assert_eq!(
+            get_update_fee(deps.as_ref(), &updates[0..1]),
+            Ok(Coin::new(10, fee_denom.clone()))
+        );
+        assert_eq!(
+            get_update_fee(deps.as_ref(), &updates[0..2]),
+            Ok(Coin::new(20, fee_denom.clone()))
+        );
+
+        let big_fee: Uint128 = Uint128::from((u128::MAX / 4) * 3);
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                fee: big_fee,
+                fee_denom: fee_denom.clone(),
+                ..create_zero_config_info()
+            })
+            .unwrap();
+
+        assert_eq!(
+            get_update_fee(deps.as_ref(), &updates[0..1]),
+            Ok(Coin::new(big_fee.u128(), fee_denom))
+        );
+        assert!(get_update_fee(deps.as_ref(), &updates[0..2]).is_err());
+    }
+
+    #[test]
+    fn test_get_valid_time_period() {
+        let (mut deps, _env) = setup_test();
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                valid_time_period: Duration::from_secs(10),
+                ..create_zero_config_info()
+            })
+            .unwrap();
+
+        assert_eq!(
+            get_valid_time_period(deps.as_ref()),
+            Ok(Duration::from_secs(10))
         );
     }
 
