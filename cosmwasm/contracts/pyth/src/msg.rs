@@ -26,6 +26,7 @@ pub struct InstantiateMsg {
     pub pyth_emitter_chain:         u16,
     pub governance_emitter:         Binary,
     pub governance_emitter_chain:   u16,
+    pub governance_source_index:    u32,
     pub governance_sequence_number: u64,
     pub chain_id:                   u16,
     pub valid_time_period_secs:     u16,

@@ -44,6 +44,9 @@ pub struct ConfigInfo {
     pub wormhole_contract:          Addr,
     pub data_sources:               HashSet<PythDataSource>,
     pub governance_source:          PythDataSource,
+    // Incrementing index for the number of times the governance data source has been changed
+    pub governance_source_index:    u32,
+    // The wormhole sequence number for governance messages
     pub governance_sequence_number: u64,
     // FIXME: This id needs to agree with the wormhole chain id.
     // We should read this directly from wormhole.

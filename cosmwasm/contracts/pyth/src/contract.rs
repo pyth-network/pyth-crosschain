@@ -2,7 +2,14 @@ use {
     crate::{
         error::PythContractError,
         governance::{
-            GovernanceAction::SetFee,
+            GovernanceAction::{
+                AuthorizeGovernanceDataSourceTransfer,
+                RequestGovernanceDataSourceTransfer,
+                SetDataSources,
+                SetFee,
+                SetValidPeriod,
+                UpgradeContract,
+            },
             GovernanceInstruction,
         },
         msg::{
@@ -52,6 +59,7 @@ use {
     std::{
         collections::HashSet,
         convert::TryFrom,
+        iter::FromIterator,
         time::Duration,
     },
     wormhole::{
@@ -85,6 +93,7 @@ pub fn instantiate(
             emitter:            msg.governance_emitter,
             pyth_emitter_chain: msg.governance_emitter_chain,
         },
+        governance_source_index:    msg.governance_source_index,
         governance_sequence_number: msg.governance_sequence_number,
         valid_time_period:          Duration::from_secs(msg.valid_time_period_secs as u64),
         fee:                        msg.fee,
@@ -173,6 +182,62 @@ fn execute_governance_instruction(
     }
 
     let response = match instruction.action {
+        UpgradeContract { .. } => {
+            // FIXME: implement this
+            Err(PythContractError::InvalidGovernancePayload)?
+        }
+        AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
+            let parsed_claim_vaa = parse_vaa(deps.branch(), env.block.time.seconds(), &claim_vaa)?;
+            let claim_vaa_instruction = GovernanceInstruction::deserialize(vaa.payload.as_slice())
+                .map_err(|_| PythContractError::InvalidGovernancePayload)?;
+
+            if claim_vaa_instruction.target_chain_id != state.chain_id
+                && claim_vaa_instruction.target_chain_id != 0
+            {
+                Err(PythContractError::InvalidGovernancePayload)?
+            }
+
+            match claim_vaa_instruction.action {
+                RequestGovernanceDataSourceTransfer {
+                    governance_data_source_index,
+                } => {
+                    if state.governance_source_index >= governance_data_source_index {
+                        Err(PythContractError::OldGovernanceMessage)?
+                    }
+
+                    updated_config.governance_source_index = governance_data_source_index;
+                    let new_governance_source = PythDataSource {
+                        emitter:            Binary::from(parsed_claim_vaa.emitter_address.clone()),
+                        pyth_emitter_chain: parsed_claim_vaa.emitter_chain,
+                    };
+                    updated_config.governance_source = new_governance_source;
+                    updated_config.governance_sequence_number = parsed_claim_vaa.sequence;
+
+                    Response::new()
+                        .add_attribute("action", "authorize_governance_data_source_transfer")
+                        .add_attribute(
+                            "new_governance_emitter_address",
+                            format!("{:?}", parsed_claim_vaa.emitter_address),
+                        )
+                        .add_attribute(
+                            "new_governance_emitter_chain",
+                            format!("{}", parsed_claim_vaa.emitter_chain),
+                        )
+                        .add_attribute(
+                            "new_governance_sequence_number",
+                            format!("{}", parsed_claim_vaa.sequence),
+                        )
+                }
+                _ => Err(PythContractError::InvalidGovernancePayload)?,
+            }
+        }
+        SetDataSources { data_sources } => {
+            updated_config.data_sources = HashSet::from_iter(data_sources.iter().cloned());
+
+            Response::new()
+                .add_attribute("action", "set_data_sources")
+                .add_attribute("new_data_sources", format!("{data_sources:?}"))
+        }
         SetFee { val, expo } => {
             updated_config.fee = Uint128::new(
                 (val as u128)
@@ -191,7 +256,18 @@ fn execute_governance_instruction(
                 .add_attribute("action", "set_fee")
                 .add_attribute("new_fee", format!("{}", updated_config.fee))
         }
-        _ => Err(PythContractError::InvalidGovernancePayload)?,
+        SetValidPeriod { valid_seconds } => {
+            updated_config.valid_time_period = Duration::from_secs(valid_seconds);
+
+            Response::new()
+                .add_attribute("action", "set_valid_period")
+                .add_attribute("new_valid_seconds", format!("{valid_seconds}"))
+        }
+        RequestGovernanceDataSourceTransfer { .. } => {
+            // RequestGovernanceDataSourceTransfer can only be part of the
+            // AuthorizeGovernanceDataSourceTransfer message.
+            Err(PythContractError::InvalidGovernancePayload)?
+        }
     };
 
     config(deps.storage).save(&updated_config)?;
@@ -565,6 +641,7 @@ mod test {
                 emitter:            Binary(vec![]),
                 pyth_emitter_chain: 0,
             },
+            governance_source_index:    0,
             governance_sequence_number: 0,
             chain_id:                   0,
             valid_time_period:          Duration::new(0, 0),
