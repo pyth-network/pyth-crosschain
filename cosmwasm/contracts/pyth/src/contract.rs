@@ -91,7 +91,6 @@ pub fn instantiate(
         governance_sequence_number: msg.governance_sequence_number,
         valid_time_period:          Duration::from_secs(msg.valid_time_period_secs as u64),
         fee:                        msg.fee,
-        fee_denom:                  msg.fee_denom,
     };
     config(deps.storage).save(&state)?;
 
@@ -128,8 +127,7 @@ fn update_price_feeds(
 ) -> StdResult<Response> {
     let state = config_read(deps.storage).load()?;
 
-    let fee = Coin::new(state.fee.u128(), state.fee_denom.clone());
-    if fee.amount.u128() > 0 && !has_coins(info.funds.as_ref(), &fee) {
+    if state.fee.amount.u128() > 0 && !has_coins(info.funds.as_ref(), &state.fee) {
         return Err(PythContractError::InsufficientFee.into());
     }
 
@@ -241,18 +239,18 @@ fn execute_governance_instruction(
                 .add_attribute("new_data_sources", format!("{data_sources:?}"))
         }
         SetFee { val, expo } => {
-            updated_config.fee = Uint128::new(
-                (val as u128)
-                    .checked_mul(
-                        10_u128
-                            .checked_pow(
-                                u32::try_from(expo)
-                                    .map_err(|_| PythContractError::InvalidGovernancePayload)?,
-                            )
-                            .ok_or(PythContractError::InvalidGovernancePayload)?,
-                    )
-                    .ok_or(PythContractError::InvalidGovernancePayload)?,
-            );
+            let new_fee_amount: u128 = (val as u128)
+                .checked_mul(
+                    10_u128
+                        .checked_pow(
+                            u32::try_from(expo)
+                                .map_err(|_| PythContractError::InvalidGovernancePayload)?,
+                        )
+                        .ok_or(PythContractError::InvalidGovernancePayload)?,
+                )
+                .ok_or(PythContractError::InvalidGovernancePayload)?;
+
+            updated_config.fee = Coin::new(new_fee_amount, updated_config.fee.denom.clone());
 
             Response::new()
                 .add_attribute("action", "set_fee")
@@ -427,17 +425,19 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
 
 pub fn get_update_fee(deps: Deps, vaas: &[Binary]) -> StdResult<Coin> {
     let config = config_read(deps.storage).load()?;
+
     Ok(coin(
         config
             .fee
+            .amount
             .u128()
             .checked_mul(vaas.len() as u128)
             .ok_or(OverflowError::new(
                 OverflowOperation::Mul,
-                config.fee,
+                config.fee.amount,
                 vaas.len(),
             ))?,
-        config.fee_denom,
+        config.fee.denom,
     ))
 }
 
@@ -589,8 +589,7 @@ mod test {
             governance_sequence_number: 0,
             chain_id:                   0,
             valid_time_period:          Duration::new(0, 0),
-            fee:                        Uint128::new(0),
-            fee_denom:                  "".into(),
+            fee:                        Coin::new(0, ""),
         }
     }
 
@@ -678,8 +677,7 @@ mod test {
     #[test]
     fn test_update_price_feeds_insufficient_fee() {
         let mut config_info = default_config_info();
-        config_info.fee = Uint128::new(100);
-        config_info.fee_denom = "foo".into();
+        config_info.fee = Coin::new(100, "foo");
 
         let result = apply_price_update(
             &config_info,
@@ -895,8 +893,7 @@ mod test {
         let fee_denom: String = "test".into();
         config(&mut deps.storage)
             .save(&ConfigInfo {
-                fee: Uint128::new(10),
-                fee_denom: fee_denom.clone(),
+                fee: Coin::new(10, fee_denom.clone()),
                 ..create_zero_config_info()
             })
             .unwrap();
@@ -916,18 +913,17 @@ mod test {
             Ok(Coin::new(20, fee_denom.clone()))
         );
 
-        let big_fee: Uint128 = Uint128::from((u128::MAX / 4) * 3);
+        let big_fee: u128 = (u128::MAX / 4) * 3;
         config(&mut deps.storage)
             .save(&ConfigInfo {
-                fee: big_fee,
-                fee_denom: fee_denom.clone(),
+                fee: Coin::new(big_fee, fee_denom.clone()),
                 ..create_zero_config_info()
             })
             .unwrap();
 
         assert_eq!(
             get_update_fee(deps.as_ref(), &updates[0..1]),
-            Ok(Coin::new(big_fee.u128(), fee_denom))
+            Ok(Coin::new(big_fee, fee_denom))
         );
         assert!(get_update_fee(deps.as_ref(), &updates[0..2]).is_err());
     }
@@ -1211,7 +1207,7 @@ mod test {
     #[test]
     fn test_set_fee() {
         let mut test_config = governance_test_config();
-        test_config.fee = Uint128::new(1);
+        test_config.fee = Coin::new(1, "foo");
 
         let test_instruction = GovernanceInstruction {
             module:          Target,
@@ -1221,7 +1217,7 @@ mod test {
         let test_vaa = governance_vaa(&test_instruction);
 
         assert_eq!(
-            apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.fee),
+            apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.fee.amount),
             Ok(Uint128::new(60))
         );
 
@@ -1233,7 +1229,7 @@ mod test {
         let test_vaa = governance_vaa(&test_instruction);
 
         assert_eq!(
-            apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.fee),
+            apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.fee.amount),
             Ok(Uint128::new(6))
         );
     }

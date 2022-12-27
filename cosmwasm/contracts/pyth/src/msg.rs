@@ -2,7 +2,7 @@ use {
     crate::state::PythDataSource,
     cosmwasm_std::{
         Binary,
-        Uint128,
+        Coin,
     },
     pyth_sdk_cw::{
         PriceFeed,
@@ -17,7 +17,7 @@ use {
 
 type HumanAddr = String;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct InstantiateMsg {
     pub wormhole_contract: HumanAddr,
@@ -30,8 +30,7 @@ pub struct InstantiateMsg {
     pub chain_id:               u16,
     pub valid_time_period_secs: u16,
 
-    pub fee:       Uint128,
-    pub fee_denom: String,
+    pub fee: Coin,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
