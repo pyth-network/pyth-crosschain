@@ -155,7 +155,6 @@ fn execute_governance_instruction(
     _info: MessageInfo,
     data: &Binary,
 ) -> StdResult<Response> {
-    println!("here");
     let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
     let state = config_read(deps.storage).load()?;
 
@@ -168,13 +167,10 @@ fn execute_governance_instruction(
     } else {
         updated_config.governance_sequence_number = vaa.sequence;
     }
-    println!("trying to deserialize payload");
 
     let data = &vaa.payload;
     let instruction = GovernanceInstruction::deserialize(&data[..])
         .map_err(|_| PythContractError::InvalidGovernancePayload)?;
-
-    println!("Deserialized {instruction:?}");
 
     if instruction.target_chain_id != state.chain_id && instruction.target_chain_id != 0 {
         return Err(PythContractError::InvalidGovernancePayload)?;
@@ -190,8 +186,6 @@ fn execute_governance_instruction(
             let claim_vaa_instruction =
                 GovernanceInstruction::deserialize(parsed_claim_vaa.payload.as_slice())
                     .map_err(|_| PythContractError::InvalidGovernancePayload)?;
-
-            println!("claim VAA instruction: {claim_vaa_instruction:?}");
 
             if claim_vaa_instruction.target_chain_id != state.chain_id
                 && claim_vaa_instruction.target_chain_id != 0
@@ -234,8 +228,6 @@ fn execute_governance_instruction(
             }
         }
         SetDataSources { data_sources } => {
-            println!("setting data sources");
-
             updated_config.data_sources = HashSet::from_iter(data_sources.iter().cloned());
 
             Response::new()
