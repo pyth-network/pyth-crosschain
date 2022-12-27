@@ -405,7 +405,7 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
     }
 }
 
-pub fn get_update_fee(deps: Deps, vaas: &Vec<Binary>) -> StdResult<Coin> {
+pub fn get_update_fee(deps: Deps, vaas: &[Binary]) -> StdResult<Coin> {
     let config = config_read(deps.storage).load()?;
     Ok(coin(
         config
@@ -865,6 +865,65 @@ mod test {
         assert_eq!(
             query_price_feed(deps.as_ref(), env, b"123".as_ref()),
             Err(PythContractError::PriceFeedNotFound.into())
+        );
+    }
+
+    #[test]
+    fn test_get_update_fee() {
+        let (mut deps, _env) = setup_test();
+        let fee_denom: String = "test".into();
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                fee: Uint128::new(10),
+                fee_denom: fee_denom.clone(),
+                ..create_zero_config_info()
+            })
+            .unwrap();
+
+        let updates = vec![Binary::from([1u8]), Binary::from([2u8])];
+
+        assert_eq!(
+            get_update_fee(deps.as_ref(), &updates[0..0]),
+            Ok(Coin::new(0, fee_denom.clone()))
+        );
+        assert_eq!(
+            get_update_fee(deps.as_ref(), &updates[0..1]),
+            Ok(Coin::new(10, fee_denom.clone()))
+        );
+        assert_eq!(
+            get_update_fee(deps.as_ref(), &updates[0..2]),
+            Ok(Coin::new(20, fee_denom.clone()))
+        );
+
+        let big_fee: Uint128 = Uint128::from((u128::MAX / 4) * 3);
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                fee: big_fee,
+                fee_denom: fee_denom.clone(),
+                ..create_zero_config_info()
+            })
+            .unwrap();
+
+        assert_eq!(
+            get_update_fee(deps.as_ref(), &updates[0..1]),
+            Ok(Coin::new(big_fee.u128(), fee_denom))
+        );
+        assert!(get_update_fee(deps.as_ref(), &updates[0..2]).is_err());
+    }
+
+    #[test]
+    fn test_get_valid_time_period() {
+        let (mut deps, _env) = setup_test();
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                valid_time_period: Duration::from_secs(10),
+                ..create_zero_config_info()
+            })
+            .unwrap();
+
+        assert_eq!(
+            get_valid_time_period(deps.as_ref()),
+            Ok(Duration::from_secs(10))
         );
     }
 
