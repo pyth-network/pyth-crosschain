@@ -171,8 +171,16 @@ impl GovernanceInstruction {
                 buf.write_u8(2)?;
                 buf.write_u16::<BigEndian>(self.target_chain_id)?;
                 buf.write_u8(u8::try_from(data_sources.len())?)?;
-                for data_source in &data_sources {
+                for data_source in data_sources {
                     buf.write_u16::<BigEndian>(data_source.pyth_emitter_chain)?;
+
+                    // The message format expects emitter addresses to be 32 bytes.
+                    // However, we don't maintain this invariant in the rust code (and we violate it in the tests).
+                    // This check gives you a reasonable error message if you happen to violate it in the tests.
+                    if data_source.emitter.len() != 32 {
+                        Err("Emitter addresses must be 32 bytes")?
+                    }
+
                     buf.write_all(data_source.emitter.as_slice())?;
                 }
             }

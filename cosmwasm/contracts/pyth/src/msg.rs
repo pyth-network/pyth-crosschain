@@ -1,5 +1,4 @@
 use {
-    crate::state::PythDataSource,
     cosmwasm_std::{
         Binary,
         Uint128,
@@ -40,8 +39,6 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     // TODO: add UpdatePriceFeeds if necessary
     UpdatePriceFeeds { data: Binary },
-    AddDataSource { data_source: PythDataSource },
-    RemoveDataSource { data_source: PythDataSource },
     ExecuteGovernanceInstruction { data: Binary },
 }
 
