@@ -129,7 +129,7 @@ if (argv.codeId !== undefined) {
   const feeEstimate = await lcd.tx.estimateFee([wallet.key.accAddress], {
     msgs: [store_code],
     feeDenoms,
-    gasPrices,
+    //    gasPrices,
   });
 
   console.log("Deploy fee: ", feeEstimate.amount.toString());
@@ -137,7 +137,7 @@ if (argv.codeId !== undefined) {
   const tx = await wallet.createAndSignTx({
     msgs: [store_code],
     feeDenoms,
-    gasPrices,
+    //    gasPrices,
     fee: feeEstimate,
   });
 
@@ -232,7 +232,7 @@ if (argv.migrate) {
       ),
     ],
     feeDenoms,
-    gasPrices,
+    //    gasPrices,
   });
 
   const rs = await lcd.tx.broadcast(tx);
