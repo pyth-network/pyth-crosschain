@@ -184,7 +184,7 @@ if (argv.codeId !== undefined) {
 if (argv.instantiate) {
   console.log("Instantiating a contract");
 
-  async function instantiate(codeId, inst_msg) {
+  async function instantiate(codeId, inst_msg, label) {
     var address;
     await wallet
       .createAndSignTx({
@@ -194,6 +194,8 @@ if (argv.instantiate) {
             wallet.key.accAddress,
             codeId,
             inst_msg,
+            undefined,
+            label
           ),
         ],
       })
@@ -217,7 +219,7 @@ if (argv.instantiate) {
     return address;
   }
 
-  const contractAddress = await instantiate(codeId, pythConfig);
+  const contractAddress = await instantiate(codeId, pythConfig, "pyth");
 
   console.log(`Deployed Pyth contract at ${contractAddress}`);
 }
