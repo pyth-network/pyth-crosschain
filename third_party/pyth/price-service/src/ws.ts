@@ -12,12 +12,14 @@ const ClientMessageSchema: Joi.Schema = Joi.object({
     .items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/))
     .required(),
   verbose: Joi.boolean(),
+  binary: Joi.boolean(),
 }).required();
 
 export type ClientMessage = {
   type: "subscribe" | "unsubscribe";
   ids: HexString[];
   verbose?: boolean;
+  binary?: boolean;
 };
 
 export type ServerResponse = {
@@ -37,6 +39,7 @@ export class WebSocketAPI {
   private wsCounter: number;
   private priceFeedClients: Map<HexString, Set<WebSocket>>;
   private priceFeedClientsVerbosity: Map<HexString, Map<WebSocket, boolean>>;
+  private priceFeedClientsParsed: Map<HexString, Map<WebSocket, boolean>>;
   private aliveClients: Set<WebSocket>;
   private wsId: Map<WebSocket, number>;
   private priceFeedVaaInfo: PriceStore;
@@ -46,6 +49,7 @@ export class WebSocketAPI {
     this.priceFeedVaaInfo = priceFeedVaaInfo;
     this.priceFeedClients = new Map();
     this.priceFeedClientsVerbosity = new Map();
+    this.priceFeedClientsParsed = new Map();
     this.aliveClients = new Set();
     this.wsCounter = 0;
     this.wsId = new Map();
@@ -55,13 +59,16 @@ export class WebSocketAPI {
   private addPriceFeedClient(
     ws: WebSocket,
     id: HexString,
-    verbose: boolean = false
+    verbose: boolean = false,
+    binary: boolean = false
   ) {
     if (!this.priceFeedClients.has(id)) {
       this.priceFeedClients.set(id, new Set());
       this.priceFeedClientsVerbosity.set(id, new Map([[ws, verbose]]));
+      this.priceFeedClientsParsed.set(id, new Map([[ws, binary]]));
     } else {
       this.priceFeedClientsVerbosity.get(id)!.set(ws, verbose);
+      this.priceFeedClientsParsed.set(id, new Map([[ws, binary]]));
     }
     this.priceFeedClients.get(id)!.add(ws);
   }
@@ -72,6 +79,7 @@ export class WebSocketAPI {
     }
     this.priceFeedClients.get(id)!.delete(ws);
     this.priceFeedClientsVerbosity.get(id)!.delete(ws);
+    this.priceFeedClientsParsed.get(id)!.delete(ws);
   }
 
   dispatchPriceFeedUpdate(priceInfo: PriceInfo) {
@@ -100,23 +108,27 @@ export class WebSocketAPI {
         .get(priceInfo.priceFeed.id)!
         .get(client);
 
-      const priceUpdate: ServerPriceUpdate = verbose
-        ? {
-            type: "price_update",
-            price_feed: {
-              ...priceInfo.priceFeed.toJson(),
-              metadata: {
-                emitter_chain: priceInfo.emitterChainId,
-                attestation_time: priceInfo.attestationTime,
-                sequence_number: priceInfo.seqNum,
-                price_service_receive_time: priceInfo.priceServiceReceiveTime,
-              },
+      const binary = this.priceFeedClientsParsed
+        .get(priceInfo.priceFeed.id)!
+        .get(client);
+
+      const priceUpdate: ServerPriceUpdate = {
+        type: "price_update",
+        price_feed: {
+          ...priceInfo.priceFeed.toJson(),
+          ...(verbose && {
+            metadata: {
+              emitter_chain: priceInfo.emitterChainId,
+              attestation_time: priceInfo.attestationTime,
+              sequence_number: priceInfo.seqNum,
+              price_service_receive_time: priceInfo.priceServiceReceiveTime,
             },
-          }
-        : {
-            type: "price_update",
-            price_feed: priceInfo.priceFeed.toJson(),
-          };
+          }),
+          ...(binary && {
+            vaa: priceInfo.vaa.toString("base64"),
+          }),
+        },
+      };
 
       client.send(JSON.stringify(priceUpdate));
     }
@@ -161,7 +173,12 @@ export class WebSocketAPI {
 
       if (message.type === "subscribe") {
         message.ids.forEach((id) =>
-          this.addPriceFeedClient(ws, id, message.verbose === true)
+          this.addPriceFeedClient(
+            ws,
+            id,
+            message.verbose === true,
+            message.binary === true
+          )
         );
       } else {
         message.ids.forEach((id) => this.delPriceFeedClient(ws, id));
