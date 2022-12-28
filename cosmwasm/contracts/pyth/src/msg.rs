@@ -23,7 +23,7 @@ pub struct InstantiateMsg {
     pub wormhole_contract: HumanAddr,
     pub data_sources:      Vec<PythDataSource>,
 
-    pub governance_data_source:     PythDataSource,
+    pub governance_source:          PythDataSource,
     pub governance_source_index:    u32,
     pub governance_sequence_number: u64,
 
