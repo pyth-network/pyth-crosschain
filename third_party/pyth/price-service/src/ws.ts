@@ -39,7 +39,7 @@ export class WebSocketAPI {
   private wsCounter: number;
   private priceFeedClients: Map<HexString, Set<WebSocket>>;
   private priceFeedClientsVerbosity: Map<HexString, Map<WebSocket, boolean>>;
-  private priceFeedClientsParsed: Map<HexString, Map<WebSocket, boolean>>;
+  private priceFeedClientsBinary: Map<HexString, Map<WebSocket, boolean>>;
   private aliveClients: Set<WebSocket>;
   private wsId: Map<WebSocket, number>;
   private priceFeedVaaInfo: PriceStore;
@@ -49,7 +49,7 @@ export class WebSocketAPI {
     this.priceFeedVaaInfo = priceFeedVaaInfo;
     this.priceFeedClients = new Map();
     this.priceFeedClientsVerbosity = new Map();
-    this.priceFeedClientsParsed = new Map();
+    this.priceFeedClientsBinary = new Map();
     this.aliveClients = new Set();
     this.wsCounter = 0;
     this.wsId = new Map();
@@ -65,10 +65,10 @@ export class WebSocketAPI {
     if (!this.priceFeedClients.has(id)) {
       this.priceFeedClients.set(id, new Set());
       this.priceFeedClientsVerbosity.set(id, new Map([[ws, verbose]]));
-      this.priceFeedClientsParsed.set(id, new Map([[ws, binary]]));
+      this.priceFeedClientsBinary.set(id, new Map([[ws, binary]]));
     } else {
       this.priceFeedClientsVerbosity.get(id)!.set(ws, verbose);
-      this.priceFeedClientsParsed.set(id, new Map([[ws, binary]]));
+      this.priceFeedClientsBinary.set(id, new Map([[ws, binary]]));
     }
     this.priceFeedClients.get(id)!.add(ws);
   }
@@ -79,7 +79,7 @@ export class WebSocketAPI {
     }
     this.priceFeedClients.get(id)!.delete(ws);
     this.priceFeedClientsVerbosity.get(id)!.delete(ws);
-    this.priceFeedClientsParsed.get(id)!.delete(ws);
+    this.priceFeedClientsBinary.get(id)!.delete(ws);
   }
 
   dispatchPriceFeedUpdate(priceInfo: PriceInfo) {
@@ -108,7 +108,7 @@ export class WebSocketAPI {
         .get(priceInfo.priceFeed.id)!
         .get(client);
 
-      const binary = this.priceFeedClientsParsed
+      const binary = this.priceFeedClientsBinary
         .get(priceInfo.priceFeed.id)!
         .get(client);
 
