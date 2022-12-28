@@ -126,7 +126,7 @@ if (argv.codeId !== undefined) {
     contract_bytes.toString("base64")
   );
 
-  const feeEstimate = await lcd.tx.estimateFee([wallet.key.accAddress], {
+  const feeEstimate = await lcd.tx.estimateFee([], {
     msgs: [store_code],
     feeDenoms,
     //    gasPrices,
