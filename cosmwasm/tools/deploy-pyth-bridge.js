@@ -134,7 +134,7 @@ if (argv.codeId !== undefined) {
   });
    */
 
-  console.log("Deploy fee: ", feeEstimate.amount.toString());
+  // console.log("Deploy fee: ", feeEstimate.amount.toString());
 
   const tx = await wallet.createAndSignTx({
     msgs: [store_code],
