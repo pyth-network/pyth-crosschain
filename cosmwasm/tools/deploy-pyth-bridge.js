@@ -126,11 +126,13 @@ if (argv.codeId !== undefined) {
     contract_bytes.toString("base64")
   );
 
-  const feeEstimate = await lcd.tx.estimateFee([], {
+  /*
+  const feeEstimate = await lcd.tx.estimateFee([wallet.key.accAddress], {
     msgs: [store_code],
     feeDenoms,
     //    gasPrices,
   });
+   */
 
   console.log("Deploy fee: ", feeEstimate.amount.toString());
 
@@ -138,7 +140,7 @@ if (argv.codeId !== undefined) {
     msgs: [store_code],
     feeDenoms,
     //    gasPrices,
-    fee: feeEstimate,
+    // fee: feeEstimate,
   });
 
   const rs = await lcd.tx.broadcast(tx);
