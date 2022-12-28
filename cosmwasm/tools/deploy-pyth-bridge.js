@@ -125,7 +125,7 @@ if (argv.codeId !== undefined) {
   );
 
   const feeEstimate = await lcd.tx.estimateFee(
-    wallet.key.accAddress,
+    [wallet.key.accAddress],
     [store_code],
     {
       feeDenoms,
