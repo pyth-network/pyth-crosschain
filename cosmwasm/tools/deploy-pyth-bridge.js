@@ -64,21 +64,23 @@ const artifact = argv.artifact;
 const CONFIG = {
   mainnet: {
     terraHost: {
-      URL: "https://lcd.terra.dev",
-      chainID: "columbus-5",
+      URL: "https://phoenix-lcd.terra.dev",
+      chainID: "phoenix-1",
       name: "mainnet",
     },
-    wormholeContract: "terra1dq03ugtd40zu9hcgdzrsq6z2z4hwhc9tqk2uy5",
+    wormholeContract:
+      "terra12mrnzvhx3rpej6843uge2yyfppfyd3u9c3uq223q8sl48huz9juqffcnh",
     pythEmitterAddress:
       "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
   },
   testnet: {
     terraHost: {
-      URL: "https://bombay-lcd.terra.dev",
-      chainID: "bombay-12",
+      URL: "https://pisco-lcd.terra.dev",
+      chainID: "pisco-1",
       name: "testnet",
     },
-    wormholeContract: "terra1pd65m0q9tl3v8znnz5f5ltsfegyzah7g42cx5v",
+    wormholeContract:
+      "terra19nv3xr5lrmmr7egvrk2kqgw4kcn43xrtd5g0mpgwwvhetusk4k7s66jyv0",
     pythEmitterAddress:
       "f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0",
   },
