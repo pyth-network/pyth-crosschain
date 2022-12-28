@@ -79,17 +79,34 @@ const CONFIG = {
       chainID: "pisco-1",
       name: "testnet",
     },
-    wormholeContract:
-      "terra19nv3xr5lrmmr7egvrk2kqgw4kcn43xrtd5g0mpgwwvhetusk4k7s66jyv0",
-    pythEmitterAddress:
-      "f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0",
+    pyth_config: {
+      wormhole_contract: "terra19nv3xr5lrmmr7egvrk2kqgw4kcn43xrtd5g0mpgwwvhetusk4k7s66jyv0",
+      data_sources: [
+        {
+          emitter: Buffer.from("f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0", "hex").toString("base64"),
+          chain_id: 1,
+        },
+      ],
+      governance_source: {
+        emitter: Buffer.from("63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385", "hex").toString(
+          "base64"
+        ),
+        chain_id: 1,
+      },
+      governance_source_index: 0,
+      governance_sequence_number: 0,
+      chain_id: 18,
+      valid_time_period_secs: 60,
+      fee: {
+        amount: "1",
+        denom: "uluna",
+      },
+    },
   },
 };
 
 const terraHost = CONFIG[argv.network].terraHost;
-const wormholeContract = CONFIG[argv.network].wormholeContract;
-const pythEmitterAddress = CONFIG[argv.network].pythEmitterAddress;
-
+const pythConfig = CONFIG[argv.network].pyth_config;
 const lcd = new LCDClient(terraHost);
 
 const feeDenoms = ["uluna"];
@@ -176,7 +193,7 @@ if (argv.instantiate) {
             wallet.key.accAddress,
             wallet.key.accAddress,
             codeId,
-            inst_msg
+            inst_msg,
           ),
         ],
       })
@@ -200,13 +217,7 @@ if (argv.instantiate) {
     return address;
   }
 
-  const pythChain = 1;
-
-  const contractAddress = await instantiate(codeId, {
-    wormhole_contract: wormholeContract,
-    pyth_emitter: Buffer.from(pythEmitterAddress, "hex").toString("base64"),
-    pyth_emitter_chain: pythChain,
-  });
+  const contractAddress = await instantiate(codeId, pythConfig);
 
   console.log(`Deployed Pyth contract at ${contractAddress}`);
 }
