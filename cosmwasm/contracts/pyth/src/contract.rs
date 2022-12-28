@@ -29,6 +29,10 @@ use {
             PythDataSource,
         },
     },
+    byteorder::{
+        BigEndian,
+        ReadBytesExt,
+    },
     cosmwasm_std::{
         coin,
         entry_point,
@@ -36,6 +40,7 @@ use {
         to_binary,
         Binary,
         Coin,
+        CosmosMsg,
         Deps,
         DepsMut,
         Env,
@@ -47,6 +52,7 @@ use {
         StdResult,
         Timestamp,
         Uint128,
+        WasmMsg,
         WasmQuery,
     },
     p2w_sdk::BatchPriceAttestation,
@@ -68,9 +74,21 @@ use {
     },
 };
 
+/// Migration code that runs once when the contract is upgraded. On upgrade, the migrate
+/// function in the *new* code version is run, which allows the new code to update the on-chain
+/// state before any of its other functions are invoked.
+///
+/// After the upgrade is complete, the code in this function can be deleted (and replaced with
+/// different code for the next migration).
+///
+/// Most upgrades won't require any special migration logic. In those cases,
+/// this function can safely be implemented as:
+/// ```ignore
+/// Ok(Response::default())
+/// ```
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
-    Ok(Response::new())
+    Ok(Response::default())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -181,9 +199,12 @@ fn execute_governance_instruction(
     }
 
     let response = match instruction.action {
-        UpgradeContract { .. } => {
-            // FIXME: implement this
-            Err(PythContractError::InvalidGovernancePayload)?
+        UpgradeContract { address } => {
+            if instruction.target_chain_id == 0 {
+                Err(PythContractError::InvalidGovernancePayload)?
+            }
+
+            upgrade_contract(&deps, &env, &address)?
         }
         AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
             let parsed_claim_vaa = parse_vaa(deps.branch(), env.block.time.seconds(), &claim_vaa)?;
@@ -273,6 +294,23 @@ fn execute_governance_instruction(
     config(deps.storage).save(&updated_config)?;
 
     Ok(response)
+}
+
+fn upgrade_contract(_deps: &DepsMut, env: &Env, address: &[u8; 20]) -> StdResult<Response> {
+    // FIXME: this should be encoded in the instruction enum
+    let new_code_id: u64 = address
+        .as_slice()
+        .read_u64::<BigEndian>()
+        .map_err(|_| PythContractError::InvalidGovernancePayload)?;
+
+    Ok(Response::new()
+        .add_message(CosmosMsg::Wasm(WasmMsg::Migrate {
+            contract_addr: env.contract.address.to_string(),
+            new_code_id,
+            msg: to_binary(&MigrateMsg {})?,
+        }))
+        .add_attribute("action", "upgrade_contract")
+        .add_attribute("new_code_id", format!("{new_code_id}")))
 }
 
 /// Check that `vaa` is from a valid data source (and hence is a legitimate price update message).
