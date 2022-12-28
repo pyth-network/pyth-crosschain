@@ -86,7 +86,7 @@ pub fn instantiate(
         wormhole_contract:          deps.api.addr_validate(msg.wormhole_contract.as_ref())?,
         data_sources:               msg.data_sources.iter().cloned().collect(),
         chain_id:                   msg.chain_id,
-        governance_source:          msg.governance_data_source.clone(),
+        governance_source:          msg.governance_source.clone(),
         governance_source_index:    msg.governance_source_index,
         governance_sequence_number: msg.governance_sequence_number,
         valid_time_period:          Duration::from_secs(msg.valid_time_period_secs as u64),
