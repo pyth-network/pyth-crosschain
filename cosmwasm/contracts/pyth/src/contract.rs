@@ -38,6 +38,7 @@ use {
         entry_point,
         has_coins,
         to_binary,
+        Addr,
         Binary,
         Coin,
         CosmosMsg,
@@ -205,7 +206,13 @@ fn execute_governance_instruction(
                 Err(PythContractError::InvalidGovernancePayload)?
             }
 
-            upgrade_contract(&deps, &env, &address)?
+            // Hack: We're using the first 8 bytes of the address field as the new code id.
+            let new_code_id: u64 = address
+                .as_slice()
+                .read_u64::<BigEndian>()
+                .map_err(|_| PythContractError::InvalidGovernancePayload)?;
+
+            upgrade_contract(&env.contract.address, new_code_id)?
         }
         AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
             let parsed_claim_vaa = parse_vaa(deps.branch(), env.block.time.seconds(), &claim_vaa)?;
@@ -306,16 +313,14 @@ fn transfer_governance(
         _ => Err(PythContractError::InvalidGovernancePayload)?,
     }
 }
-fn upgrade_contract(_deps: &DepsMut, env: &Env, address: &[u8; 20]) -> StdResult<Response> {
-    // FIXME: this should be encoded in the instruction enum
-    let new_code_id: u64 = address
-        .as_slice()
-        .read_u64::<BigEndian>()
-        .map_err(|_| PythContractError::InvalidGovernancePayload)?;
 
+/// Upgrades the contract at `address` to `new_code_id` (by sending a `Migrate` message). The
+/// migration will fail unless this contract is the admin of the contract being upgraded.
+/// (Typically, `address` is this contract's address, and the contract is its own admin.)
+fn upgrade_contract(address: &Addr, new_code_id: u64) -> StdResult<Response> {
     Ok(Response::new()
         .add_message(CosmosMsg::Wasm(WasmMsg::Migrate {
-            contract_addr: env.contract.address.to_string(),
+            contract_addr: address.to_string(),
             new_code_id,
             msg: to_binary(&MigrateMsg {})?,
         }))
