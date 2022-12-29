@@ -120,6 +120,7 @@ export class RestAPI {
           .items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/))
           .required(),
         verbose: Joi.boolean(),
+        binary: Joi.boolean(),
       }).required(),
     };
     app.get(
@@ -129,6 +130,8 @@ export class RestAPI {
         const priceIds = req.query.ids as string[];
         // verbose is optional, default to false
         const verbose = req.query.verbose === "true";
+        // binary is optional, default to false
+        const binary = req.query.binary === "true";
 
         const responseJson = [];
 
@@ -146,20 +149,20 @@ export class RestAPI {
             continue;
           }
 
-          if (verbose) {
-            responseJson.push({
-              ...latestPriceInfo.priceFeed.toJson(),
+          responseJson.push({
+            ...latestPriceInfo.priceFeed.toJson(),
+            ...(verbose && {
               metadata: {
                 emitter_chain: latestPriceInfo.emitterChainId,
                 attestation_time: latestPriceInfo.attestationTime,
                 sequence_number: latestPriceInfo.seqNum,
-                price_service_receive_time:
-                  latestPriceInfo.priceServiceReceiveTime,
+                price_service_receive_time: latestPriceInfo.priceServiceReceiveTime,
               },
-            });
-          } else {
-            responseJson.push(latestPriceInfo.priceFeed.toJson());
-          }
+            }),
+            ...(binary && {
+              vaa: latestPriceInfo.vaa.toString("base64"),
+            }),
+          })
         }
 
         if (notFoundIds.length > 0) {
@@ -174,6 +177,9 @@ export class RestAPI {
     );
     endpoints.push(
       "api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&verbose=true"
+    );
+    endpoints.push(
+      "api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&verbose=true&binary=true"
     );
 
     app.get("/api/price_feed_ids", (req: Request, res: Response) => {
