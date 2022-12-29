@@ -1,11 +1,5 @@
 use {
-    crate::{
-        governance::GovernanceAction::{
-            RequestGovernanceDataSourceTransfer,
-            SetValidPeriod,
-        },
-        state::PythDataSource,
-    },
+    crate::state::PythDataSource,
     byteorder::{
         BigEndian,
         ReadBytesExt,
@@ -132,11 +126,11 @@ impl GovernanceInstruction {
             }
             4 => {
                 let valid_seconds = bytes.read_u64::<BigEndian>()?;
-                Ok(SetValidPeriod { valid_seconds })
+                Ok(GovernanceAction::SetValidPeriod { valid_seconds })
             }
             5 => {
                 let governance_data_source_index = bytes.read_u32::<BigEndian>()?;
-                Ok(RequestGovernanceDataSourceTransfer {
+                Ok(GovernanceAction::RequestGovernanceDataSourceTransfer {
                     governance_data_source_index,
                 })
             }

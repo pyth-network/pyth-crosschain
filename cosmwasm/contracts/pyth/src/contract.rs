@@ -46,7 +46,6 @@ use {
         Response,
         StdResult,
         Timestamp,
-        Uint128,
         WasmQuery,
     },
     p2w_sdk::BatchPriceAttestation,
@@ -187,49 +186,7 @@ fn execute_governance_instruction(
         }
         AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
             let parsed_claim_vaa = parse_vaa(deps.branch(), env.block.time.seconds(), &claim_vaa)?;
-            let claim_vaa_instruction =
-                GovernanceInstruction::deserialize(parsed_claim_vaa.payload.as_slice())
-                    .map_err(|_| PythContractError::InvalidGovernancePayload)?;
-
-            if claim_vaa_instruction.target_chain_id != state.chain_id
-                && claim_vaa_instruction.target_chain_id != 0
-            {
-                Err(PythContractError::InvalidGovernancePayload)?
-            }
-
-            match claim_vaa_instruction.action {
-                RequestGovernanceDataSourceTransfer {
-                    governance_data_source_index,
-                } => {
-                    if state.governance_source_index >= governance_data_source_index {
-                        Err(PythContractError::OldGovernanceMessage)?
-                    }
-
-                    updated_config.governance_source_index = governance_data_source_index;
-                    let new_governance_source = PythDataSource {
-                        emitter:  Binary::from(parsed_claim_vaa.emitter_address.clone()),
-                        chain_id: parsed_claim_vaa.emitter_chain,
-                    };
-                    updated_config.governance_source = new_governance_source;
-                    updated_config.governance_sequence_number = parsed_claim_vaa.sequence;
-
-                    Response::new()
-                        .add_attribute("action", "authorize_governance_data_source_transfer")
-                        .add_attribute(
-                            "new_governance_emitter_address",
-                            format!("{:?}", parsed_claim_vaa.emitter_address),
-                        )
-                        .add_attribute(
-                            "new_governance_emitter_chain",
-                            format!("{}", parsed_claim_vaa.emitter_chain),
-                        )
-                        .add_attribute(
-                            "new_governance_sequence_number",
-                            format!("{}", parsed_claim_vaa.sequence),
-                        )
-                }
-                _ => Err(PythContractError::InvalidGovernancePayload)?,
-            }
+            transfer_governance(&mut updated_config, &state, &parsed_claim_vaa)?
         }
         SetDataSources { data_sources } => {
             updated_config.data_sources = HashSet::from_iter(data_sources.iter().cloned());
@@ -273,6 +230,58 @@ fn execute_governance_instruction(
     config(deps.storage).save(&updated_config)?;
 
     Ok(response)
+}
+
+/// Transfers governance to the data source provided in `parsed_claim_vaa`. Stores the new
+/// governance parameters in `next_config`.
+fn transfer_governance(
+    next_config: &mut ConfigInfo,
+    current_config: &ConfigInfo,
+    parsed_claim_vaa: &ParsedVAA,
+) -> StdResult<Response> {
+    let claim_vaa_instruction =
+        GovernanceInstruction::deserialize(parsed_claim_vaa.payload.as_slice())
+            .map_err(|_| PythContractError::InvalidGovernancePayload)?;
+
+    if claim_vaa_instruction.target_chain_id != current_config.chain_id
+        && claim_vaa_instruction.target_chain_id != 0
+    {
+        Err(PythContractError::InvalidGovernancePayload)?
+    }
+
+    match claim_vaa_instruction.action {
+        RequestGovernanceDataSourceTransfer {
+            governance_data_source_index,
+        } => {
+            if current_config.governance_source_index >= governance_data_source_index {
+                Err(PythContractError::OldGovernanceMessage)?
+            }
+
+            next_config.governance_source_index = governance_data_source_index;
+            let new_governance_source = PythDataSource {
+                emitter:  Binary::from(parsed_claim_vaa.emitter_address.clone()),
+                chain_id: parsed_claim_vaa.emitter_chain,
+            };
+            next_config.governance_source = new_governance_source;
+            next_config.governance_sequence_number = parsed_claim_vaa.sequence;
+
+            Ok(Response::new()
+                .add_attribute("action", "authorize_governance_data_source_transfer")
+                .add_attribute(
+                    "new_governance_emitter_address",
+                    format!("{:?}", parsed_claim_vaa.emitter_address),
+                )
+                .add_attribute(
+                    "new_governance_emitter_chain",
+                    format!("{}", parsed_claim_vaa.emitter_chain),
+                )
+                .add_attribute(
+                    "new_governance_sequence_number",
+                    format!("{}", parsed_claim_vaa.sequence),
+                ))
+        }
+        _ => Err(PythContractError::InvalidGovernancePayload)?,
+    }
 }
 
 /// Check that `vaa` is from a valid data source (and hence is a legitimate price update message).
@@ -470,6 +479,7 @@ mod test {
             QuerierResult,
             SystemError,
             SystemResult,
+            Uint128,
         },
         std::time::Duration,
     };
