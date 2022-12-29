@@ -1,3 +1,4 @@
+#![feature(option_result_contains)]
 #[cfg(test)]
 extern crate lazy_static;
 

@@ -137,6 +137,14 @@ impl GovernanceInstruction {
             _ => Err(format!("Unknown governance action type: {action_type}",)),
         };
 
+        // Check that we're at the end of the buffer (to ensure that this contract knows how to
+        // interpret every field in the governance message). The logic is a little janky
+        // but seems to be the simplest way to check that the reader is at EOF.
+        let mut next_byte = [0_u8; 1];
+        if !bytes.read(&mut next_byte).contains(&0) {
+            Err("Governance action had an unexpectedly long payload.".to_string())?
+        }
+
         Ok(GovernanceInstruction {
             module,
             action: action?,
@@ -203,5 +211,39 @@ impl GovernanceInstruction {
         }
 
         Ok(buf)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::governance::{
+        GovernanceAction,
+        GovernanceInstruction,
+        GovernanceModule,
+    };
+
+    #[test]
+    fn test_payload_wrong_size() {
+        let instruction = GovernanceInstruction {
+            module:          GovernanceModule::Target,
+            action:          GovernanceAction::SetFee {
+                val:  100,
+                expo: 200,
+            },
+            target_chain_id: 7,
+        };
+
+        let mut buf: Vec<u8> = instruction.serialize().unwrap();
+
+        let result = GovernanceInstruction::deserialize(buf.as_slice());
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), instruction);
+
+        buf.push(0);
+        let result = GovernanceInstruction::deserialize(buf.as_slice());
+        assert!(result.is_err());
+
+        let result = GovernanceInstruction::deserialize(&buf[0..buf.len() - 2]);
+        assert!(result.is_err());
     }
 }
