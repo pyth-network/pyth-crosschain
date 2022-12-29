@@ -33,13 +33,20 @@ export type ServerPriceUpdate = {
   price_feed: any;
 };
 
+export type PriceFeedConfig = {
+  verbose: boolean;
+  binary: boolean;
+};
+
 export type ServerMessage = ServerResponse | ServerPriceUpdate;
 
 export class WebSocketAPI {
   private wsCounter: number;
   private priceFeedClients: Map<HexString, Set<WebSocket>>;
-  private priceFeedClientsVerbosity: Map<HexString, Map<WebSocket, boolean>>;
-  private priceFeedClientsBinary: Map<HexString, Map<WebSocket, boolean>>;
+  private priceFeedClientsConfig: Map<
+    HexString,
+    Map<WebSocket, PriceFeedConfig>
+  >;
   private aliveClients: Set<WebSocket>;
   private wsId: Map<WebSocket, number>;
   private priceFeedVaaInfo: PriceStore;
@@ -48,8 +55,7 @@ export class WebSocketAPI {
   constructor(priceFeedVaaInfo: PriceStore, promClient?: PromClient) {
     this.priceFeedVaaInfo = priceFeedVaaInfo;
     this.priceFeedClients = new Map();
-    this.priceFeedClientsVerbosity = new Map();
-    this.priceFeedClientsBinary = new Map();
+    this.priceFeedClientsConfig = new Map();
     this.aliveClients = new Set();
     this.wsCounter = 0;
     this.wsId = new Map();
@@ -64,11 +70,9 @@ export class WebSocketAPI {
   ) {
     if (!this.priceFeedClients.has(id)) {
       this.priceFeedClients.set(id, new Set());
-      this.priceFeedClientsVerbosity.set(id, new Map([[ws, verbose]]));
-      this.priceFeedClientsBinary.set(id, new Map([[ws, binary]]));
+      this.priceFeedClientsConfig.set(id, new Map([[ws, { verbose, binary }]]));
     } else {
-      this.priceFeedClientsVerbosity.get(id)!.set(ws, verbose);
-      this.priceFeedClientsBinary.set(id, new Map([[ws, binary]]));
+      this.priceFeedClientsConfig.get(id)!.set(ws, { verbose, binary });
     }
     this.priceFeedClients.get(id)!.add(ws);
   }
@@ -78,8 +82,7 @@ export class WebSocketAPI {
       return;
     }
     this.priceFeedClients.get(id)!.delete(ws);
-    this.priceFeedClientsVerbosity.get(id)!.delete(ws);
-    this.priceFeedClientsBinary.get(id)!.delete(ws);
+    this.priceFeedClientsConfig.get(id)!.delete(ws);
   }
 
   dispatchPriceFeedUpdate(priceInfo: PriceInfo) {
@@ -104,13 +107,12 @@ export class WebSocketAPI {
     for (const client of clients.values()) {
       this.promClient?.addWebSocketInteraction("server_update", "ok");
 
-      const verbose = this.priceFeedClientsVerbosity
+      const config = this.priceFeedClientsConfig
         .get(priceInfo.priceFeed.id)!
         .get(client);
 
-      const binary = this.priceFeedClientsBinary
-        .get(priceInfo.priceFeed.id)!
-        .get(client);
+      const verbose = config?.verbose;
+      const binary = config?.binary;
 
       const priceUpdate: ServerPriceUpdate = {
         type: "price_update",
