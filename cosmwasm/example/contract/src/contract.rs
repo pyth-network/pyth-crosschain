@@ -47,10 +47,14 @@ pub fn instantiate(
     _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
-    // Save general wormhole and pyth info
     let state = ConfigInfo {
-        pyth_contract:   msg.pyth_contract,
-        price_feed_id:   msg.price_feed_id,
+        // Store the pyth contract address and the id of the desired price feed in the config.
+        // These fields will be used to query the pyth contract when we need the price.
+        pyth_contract: msg.pyth_contract,
+        price_feed_id: msg.price_feed_id,
+
+        // TODO: fix the docs
+        // Store the price of the token in usd.
         price_in_usd:    msg.price_in_usd,
         target_exponent: msg.target_exponent,
     };
@@ -71,7 +75,7 @@ pub fn execute(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         // user wants to purchase `quantity` of the token. They need to pay
         QueryMsg::GetPrice { quantity } => {
@@ -82,7 +86,13 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
                 expo:  0,
             };
 
-            let feed = read_pyth_price(&deps, &env)?;
+            // Call the query_price_feed function from the Pyth SDK to get the current value of the
+            // configured price feed.
+            // FIXME: this function on the sdk needs some &'s to prevent copying
+            let feed =
+                query_price_feed(&deps.querier, cfg.pyth_contract.clone(), cfg.price_feed_id)?
+                    .price_feed;
+
             // Value of token in USD, e.g, 1BTC = $10k
             let current_token_price = feed
                 .get_current_price()
@@ -100,11 +110,6 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
             })
         }
     }
-}
-
-pub fn read_pyth_price(deps: &Deps, _env: &Env) -> StdResult<PriceFeed> {
-    let cfg = config_read(deps.storage).load()?;
-    query_price_feed(&deps.querier, cfg.pyth_contract, cfg.price_feed_id).map(|r| r.price_feed)
 }
 
 #[cfg(test)]
@@ -127,7 +132,7 @@ mod test {
             SystemError,
             SystemResult,
         },
-        p2w_sdk::PriceStatus,
+        pyth_sdk_cw::PriceStatus,
     };
 
     // TODO: point to documentation

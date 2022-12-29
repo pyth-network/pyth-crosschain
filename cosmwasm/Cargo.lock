@@ -1272,7 +1272,6 @@ dependencies = [
  "hex",
  "k256 0.9.6",
  "lazy_static",
- "p2w-sdk",
  "pyth-sdk-cw",
  "schemars",
  "serde",
@@ -1281,7 +1280,6 @@ dependencies = [
  "sha3",
  "terraswap",
  "thiserror",
- "wormhole-bridge-terra-2",
 ]
 
 [[package]]
