@@ -1,6 +1,5 @@
 import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";
 import { Server } from "http";
-import { number } from "joi";
 import { WebSocket, WebSocketServer } from "ws";
 import { sleep } from "../helpers";
 import { PriceInfo, PriceStore } from "../listen";
@@ -217,6 +216,89 @@ describe("Client receives data", () => {
       ids: [priceInfos[0].priceFeed.id, priceInfos[1].priceFeed.id],
       type: "subscribe",
       verbose: false,
+    };
+
+    client.send(JSON.stringify(message));
+
+    await waitForMessages(serverMessages, 1);
+
+    expect(serverMessages[0]).toStrictEqual({
+      type: "response",
+      status: "success",
+    });
+
+    api.dispatchPriceFeedUpdate(priceInfos[0]);
+
+    await waitForMessages(serverMessages, 2);
+
+    expect(serverMessages[1]).toEqual({
+      type: "price_update",
+      price_feed: priceInfos[0].priceFeed.toJson(),
+    });
+
+    api.dispatchPriceFeedUpdate(priceInfos[1]);
+
+    await waitForMessages(serverMessages, 3);
+
+    expect(serverMessages[2]).toEqual({
+      type: "price_update",
+      price_feed: priceInfos[1].priceFeed.toJson(),
+    });
+
+    client.close();
+    await waitForSocketState(client, client.CLOSED);
+  });
+
+  test("When subscribes with valid ids and binary flag set to true, returns correct price feed with vaa", async () => {
+    const [client, serverMessages] = await createSocketClient();
+
+    const message: ClientMessage = {
+      ids: [priceInfos[0].priceFeed.id, priceInfos[1].priceFeed.id],
+      type: "subscribe",
+      binary: true,
+    };
+
+    client.send(JSON.stringify(message));
+
+    await waitForMessages(serverMessages, 1);
+
+    expect(serverMessages[0]).toStrictEqual({
+      type: "response",
+      status: "success",
+    });
+
+    api.dispatchPriceFeedUpdate(priceInfos[0]);
+
+    await waitForMessages(serverMessages, 2);
+
+    expect(serverMessages[1]).toEqual({
+      type: "price_update",
+      price_feed: priceInfos[0].priceFeed.toJson(),
+    });
+
+    api.dispatchPriceFeedUpdate(priceInfos[1]);
+
+    await waitForMessages(serverMessages, 3);
+
+    expect(serverMessages[2]).toEqual({
+      type: "price_update",
+      price_feed: {
+        ...priceInfos[1].priceFeed.toJson(),
+        vaa: priceInfos[1].vaa.toString("base64"),
+      },
+    });
+
+    client.close();
+    await waitForSocketState(client, client.CLOSED);
+  });
+
+  test("When subscribes with valid ids and binary flag set to false, returns correct price feed without vaa", async () => {
+    const [client, serverMessages] = await createSocketClient();
+
+    const message: ClientMessage = {
+      ids: [priceInfos[0].priceFeed.id, priceInfos[1].priceFeed.id],
+      type: "subscribe",
+      binary: false,
     };
 
     client.send(JSON.stringify(message));
