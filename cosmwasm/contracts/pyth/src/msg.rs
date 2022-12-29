@@ -1,5 +1,4 @@
 use {
-    crate::state::PythDataSource,
     cosmwasm_std::{
         Binary,
         Uint128,
@@ -26,6 +25,7 @@ pub struct InstantiateMsg {
     pub pyth_emitter_chain:         u16,
     pub governance_emitter:         Binary,
     pub governance_emitter_chain:   u16,
+    pub governance_source_index:    u32,
     pub governance_sequence_number: u64,
     pub chain_id:                   u16,
     pub valid_time_period_secs:     u16,
@@ -39,8 +39,6 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     // TODO: add UpdatePriceFeeds if necessary
     UpdatePriceFeeds { data: Binary },
-    AddDataSource { data_source: PythDataSource },
-    RemoveDataSource { data_source: PythDataSource },
     ExecuteGovernanceInstruction { data: Binary },
 }
 

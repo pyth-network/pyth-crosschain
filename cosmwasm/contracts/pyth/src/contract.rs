@@ -2,7 +2,14 @@ use {
     crate::{
         error::PythContractError,
         governance::{
-            GovernanceAction::SetFee,
+            GovernanceAction::{
+                AuthorizeGovernanceDataSourceTransfer,
+                RequestGovernanceDataSourceTransfer,
+                SetDataSources,
+                SetFee,
+                SetValidPeriod,
+                UpgradeContract,
+            },
             GovernanceInstruction,
         },
         msg::{
@@ -52,6 +59,7 @@ use {
     std::{
         collections::HashSet,
         convert::TryFrom,
+        iter::FromIterator,
         time::Duration,
     },
     wormhole::{
@@ -85,6 +93,7 @@ pub fn instantiate(
             emitter:            msg.governance_emitter,
             pyth_emitter_chain: msg.governance_emitter_chain,
         },
+        governance_source_index:    msg.governance_source_index,
         governance_sequence_number: msg.governance_sequence_number,
         valid_time_period:          Duration::from_secs(msg.valid_time_period_secs as u64),
         fee:                        msg.fee,
@@ -113,11 +122,6 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
         ExecuteMsg::UpdatePriceFeeds { data } => update_price_feeds(deps, env, info, &data),
         ExecuteMsg::ExecuteGovernanceInstruction { data } => {
             execute_governance_instruction(deps, env, info, &data)
-        }
-        // TODO: remove these and invoke via governance
-        ExecuteMsg::AddDataSource { data_source } => add_data_source(deps, env, info, data_source),
-        ExecuteMsg::RemoveDataSource { data_source } => {
-            remove_data_source(deps, env, info, data_source)
         }
     }
 }
@@ -173,6 +177,63 @@ fn execute_governance_instruction(
     }
 
     let response = match instruction.action {
+        UpgradeContract { .. } => {
+            // FIXME: implement this
+            Err(PythContractError::InvalidGovernancePayload)?
+        }
+        AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
+            let parsed_claim_vaa = parse_vaa(deps.branch(), env.block.time.seconds(), &claim_vaa)?;
+            let claim_vaa_instruction =
+                GovernanceInstruction::deserialize(parsed_claim_vaa.payload.as_slice())
+                    .map_err(|_| PythContractError::InvalidGovernancePayload)?;
+
+            if claim_vaa_instruction.target_chain_id != state.chain_id
+                && claim_vaa_instruction.target_chain_id != 0
+            {
+                Err(PythContractError::InvalidGovernancePayload)?
+            }
+
+            match claim_vaa_instruction.action {
+                RequestGovernanceDataSourceTransfer {
+                    governance_data_source_index,
+                } => {
+                    if state.governance_source_index >= governance_data_source_index {
+                        Err(PythContractError::OldGovernanceMessage)?
+                    }
+
+                    updated_config.governance_source_index = governance_data_source_index;
+                    let new_governance_source = PythDataSource {
+                        emitter:            Binary::from(parsed_claim_vaa.emitter_address.clone()),
+                        pyth_emitter_chain: parsed_claim_vaa.emitter_chain,
+                    };
+                    updated_config.governance_source = new_governance_source;
+                    updated_config.governance_sequence_number = parsed_claim_vaa.sequence;
+
+                    Response::new()
+                        .add_attribute("action", "authorize_governance_data_source_transfer")
+                        .add_attribute(
+                            "new_governance_emitter_address",
+                            format!("{:?}", parsed_claim_vaa.emitter_address),
+                        )
+                        .add_attribute(
+                            "new_governance_emitter_chain",
+                            format!("{}", parsed_claim_vaa.emitter_chain),
+                        )
+                        .add_attribute(
+                            "new_governance_sequence_number",
+                            format!("{}", parsed_claim_vaa.sequence),
+                        )
+                }
+                _ => Err(PythContractError::InvalidGovernancePayload)?,
+            }
+        }
+        SetDataSources { data_sources } => {
+            updated_config.data_sources = HashSet::from_iter(data_sources.iter().cloned());
+
+            Response::new()
+                .add_attribute("action", "set_data_sources")
+                .add_attribute("new_data_sources", format!("{data_sources:?}"))
+        }
         SetFee { val, expo } => {
             updated_config.fee = Uint128::new(
                 (val as u128)
@@ -191,68 +252,24 @@ fn execute_governance_instruction(
                 .add_attribute("action", "set_fee")
                 .add_attribute("new_fee", format!("{}", updated_config.fee))
         }
-        _ => Err(PythContractError::InvalidGovernancePayload)?,
+        SetValidPeriod { valid_seconds } => {
+            updated_config.valid_time_period = Duration::from_secs(valid_seconds);
+
+            Response::new()
+                .add_attribute("action", "set_valid_period")
+                .add_attribute("new_valid_seconds", format!("{valid_seconds}"))
+        }
+        RequestGovernanceDataSourceTransfer { .. } => {
+            // RequestGovernanceDataSourceTransfer can only be part of the
+            // AuthorizeGovernanceDataSourceTransfer message.
+            Err(PythContractError::InvalidGovernancePayload)?
+        }
     };
 
     config(deps.storage).save(&updated_config)?;
 
     Ok(response)
 }
-
-fn add_data_source(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-    data_source: PythDataSource,
-) -> StdResult<Response> {
-    let mut state = config_read(deps.storage).load()?;
-
-    if state.owner != info.sender {
-        return Err(PythContractError::PermissionDenied)?;
-    }
-
-    if !state.data_sources.insert(data_source.clone()) {
-        return Err(PythContractError::DataSourceAlreadyExists)?;
-    }
-
-    config(deps.storage).save(&state)?;
-
-    Ok(Response::new()
-        .add_attribute("action", "add_data_source")
-        .add_attribute("data_source_emitter", format!("{}", data_source.emitter))
-        .add_attribute(
-            "data_source_emitter_chain",
-            format!("{}", data_source.pyth_emitter_chain),
-        ))
-}
-
-fn remove_data_source(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-    data_source: PythDataSource,
-) -> StdResult<Response> {
-    let mut state = config_read(deps.storage).load()?;
-
-    if state.owner != info.sender {
-        return Err(PythContractError::PermissionDenied)?;
-    }
-
-    if !state.data_sources.remove(&data_source) {
-        return Err(PythContractError::DataSourceDoesNotExists)?;
-    }
-
-    config(deps.storage).save(&state)?;
-
-    Ok(Response::new()
-        .add_attribute("action", "remove_data_source")
-        .add_attribute("data_source_emitter", format!("{}", data_source.emitter))
-        .add_attribute(
-            "data_source_emitter_chain",
-            format!("{}", data_source.pyth_emitter_chain),
-        ))
-}
-
 
 /// Check that `vaa` is from a valid data source (and hence is a legitimate price update message).
 fn verify_vaa_from_data_source(state: &ConfigInfo, vaa: &ParsedVAA) -> StdResult<()> {
@@ -565,6 +582,7 @@ mod test {
                 emitter:            Binary(vec![]),
                 pyth_emitter_chain: 0,
             },
+            governance_source_index:    0,
             governance_sequence_number: 0,
             chain_id:                   0,
             valid_time_period:          Duration::new(0, 0),
@@ -927,167 +945,6 @@ mod test {
         );
     }
 
-    #[test]
-    fn test_add_data_source_ok_with_owner() {
-        let (mut deps, env) = setup_test();
-        config(&mut deps.storage)
-            .save(&ConfigInfo {
-                owner: Addr::unchecked("123"),
-                ..create_zero_config_info()
-            })
-            .unwrap();
-
-        let data_source = PythDataSource {
-            emitter:            vec![1u8].into(),
-            pyth_emitter_chain: 1,
-        };
-
-        assert!(add_data_source(
-            deps.as_mut(),
-            env.clone(),
-            mock_info("123", &[]),
-            data_source.clone()
-        )
-        .is_ok());
-
-        // Adding an existing data source should result an error
-        assert!(add_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_err());
-    }
-
-    #[test]
-    fn test_add_data_source_err_without_owner() {
-        let (mut deps, env) = setup_test();
-        config(&mut deps.storage)
-            .save(&ConfigInfo {
-                owner: Addr::unchecked("123"),
-                ..create_zero_config_info()
-            })
-            .unwrap();
-
-        let data_source = PythDataSource {
-            emitter:            vec![1u8].into(),
-            pyth_emitter_chain: 1,
-        };
-
-        assert!(add_data_source(deps.as_mut(), env, mock_info("321", &[]), data_source).is_err());
-    }
-
-    #[test]
-    fn test_remove_data_source_ok_with_owner() {
-        let (mut deps, env) = setup_test();
-        config(&mut deps.storage)
-            .save(&ConfigInfo {
-                owner: Addr::unchecked("123"),
-                data_sources: create_data_sources(vec![1u8], 1),
-                ..create_zero_config_info()
-            })
-            .unwrap();
-
-        let data_source = PythDataSource {
-            emitter:            vec![1u8].into(),
-            pyth_emitter_chain: 1,
-        };
-
-        assert!(remove_data_source(
-            deps.as_mut(),
-            env.clone(),
-            mock_info("123", &[]),
-            data_source.clone()
-        )
-        .is_ok());
-
-        // Removing a non existent data source should result an error
-        assert!(
-            remove_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_err()
-        );
-    }
-
-    #[test]
-    fn test_remove_data_source_err_without_owner() {
-        let (mut deps, env) = setup_test();
-        config(&mut deps.storage)
-            .save(&ConfigInfo {
-                owner: Addr::unchecked("123"),
-                data_sources: create_data_sources(vec![1u8], 1),
-                ..create_zero_config_info()
-            })
-            .unwrap();
-
-        let data_source = PythDataSource {
-            emitter:            vec![1u8].into(),
-            pyth_emitter_chain: 1,
-        };
-
-        assert!(
-            remove_data_source(deps.as_mut(), env, mock_info("321", &[]), data_source).is_err()
-        );
-    }
-
-    #[test]
-    fn test_verify_vaa_works_after_adding_data_source() {
-        let (mut deps, env) = setup_test();
-        config(&mut deps.storage)
-            .save(&ConfigInfo {
-                owner: Addr::unchecked("123"),
-                ..create_zero_config_info()
-            })
-            .unwrap();
-
-        let mut vaa = create_zero_vaa();
-        vaa.emitter_address = vec![1u8];
-        vaa.emitter_chain = 3;
-
-        // Should result an error because there is no data source
-        assert_eq!(
-            verify_vaa_from_data_source(&config_read(&deps.storage).load().unwrap(), &vaa),
-            Err(PythContractError::InvalidUpdateEmitter.into())
-        );
-
-        let data_source = PythDataSource {
-            emitter:            vec![1u8].into(),
-            pyth_emitter_chain: 3,
-        };
-        assert!(add_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_ok());
-
-        assert_eq!(
-            verify_vaa_from_data_source(&config_read(&deps.storage).load().unwrap(), &vaa),
-            Ok(())
-        );
-    }
-
-    #[test]
-    fn test_verify_vaa_err_after_removing_data_source() {
-        let (mut deps, env) = setup_test();
-        config(&mut deps.storage)
-            .save(&ConfigInfo {
-                owner: Addr::unchecked("123"),
-                data_sources: create_data_sources(vec![1u8], 3),
-                ..create_zero_config_info()
-            })
-            .unwrap();
-
-        let mut vaa = create_zero_vaa();
-        vaa.emitter_address = vec![1u8];
-        vaa.emitter_chain = 3;
-
-        assert_eq!(
-            verify_vaa_from_data_source(&config_read(&deps.storage).load().unwrap(), &vaa),
-            Ok(())
-        );
-
-        let data_source = PythDataSource {
-            emitter:            vec![1u8].into(),
-            pyth_emitter_chain: 3,
-        };
-        assert!(remove_data_source(deps.as_mut(), env, mock_info("123", &[]), data_source).is_ok());
-
-        // Should result an error because data source should not exist anymore
-        assert_eq!(
-            verify_vaa_from_data_source(&config_read(&deps.storage).load().unwrap(), &vaa),
-            Err(PythContractError::InvalidUpdateEmitter.into())
-        );
-    }
-
     /// Initialize the contract with `initial_config` then execute `vaa` as a governance instruction
     /// against it. Returns the response of the governance instruction along with the resulting config.
     fn apply_governance_vaa(
@@ -1189,6 +1046,166 @@ mod test {
     }
 
     #[test]
+    fn test_authorize_governance_transfer_success() {
+        let source_2 = PythDataSource {
+            emitter:            Binary::from([2u8; 32]),
+            pyth_emitter_chain: 4,
+        };
+
+        let test_config = governance_test_config();
+        let test_instruction = GovernanceInstruction {
+            module:          Target,
+            target_chain_id: test_config.chain_id,
+            action:          AuthorizeGovernanceDataSourceTransfer {
+                claim_vaa: to_binary(&ParsedVAA {
+                    emitter_address: source_2.emitter.to_vec(),
+                    emitter_chain: source_2.pyth_emitter_chain,
+                    sequence: 12,
+                    payload: GovernanceInstruction {
+                        module:          Target,
+                        target_chain_id: test_config.chain_id,
+                        action:          RequestGovernanceDataSourceTransfer {
+                            governance_data_source_index: 11,
+                        },
+                    }
+                    .serialize()
+                    .unwrap(),
+                    ..create_zero_vaa()
+                })
+                .unwrap(),
+            },
+        };
+
+        let test_vaa = governance_vaa(&test_instruction);
+        let (_response, result_config) = apply_governance_vaa(&test_config, &test_vaa).unwrap();
+        assert_eq!(result_config.governance_source, source_2);
+        assert_eq!(result_config.governance_source_index, 11);
+        assert_eq!(result_config.governance_sequence_number, 12);
+    }
+
+    #[test]
+    fn test_authorize_governance_transfer_bad_source_index() {
+        let source_2 = PythDataSource {
+            emitter:            Binary::from([2u8; 32]),
+            pyth_emitter_chain: 4,
+        };
+
+        let mut test_config = governance_test_config();
+        test_config.governance_source_index = 10;
+        let test_instruction = GovernanceInstruction {
+            module:          Target,
+            target_chain_id: test_config.chain_id,
+            action:          AuthorizeGovernanceDataSourceTransfer {
+                claim_vaa: to_binary(&ParsedVAA {
+                    emitter_address: source_2.emitter.to_vec(),
+                    emitter_chain: source_2.pyth_emitter_chain,
+                    sequence: 12,
+                    payload: GovernanceInstruction {
+                        module:          Target,
+                        target_chain_id: test_config.chain_id,
+                        action:          RequestGovernanceDataSourceTransfer {
+                            governance_data_source_index: 10,
+                        },
+                    }
+                    .serialize()
+                    .unwrap(),
+                    ..create_zero_vaa()
+                })
+                .unwrap(),
+            },
+        };
+
+        let test_vaa = governance_vaa(&test_instruction);
+        assert_eq!(
+            apply_governance_vaa(&test_config, &test_vaa),
+            Err(PythContractError::OldGovernanceMessage.into())
+        );
+    }
+
+    #[test]
+    fn test_authorize_governance_transfer_bad_target_chain() {
+        let source_2 = PythDataSource {
+            emitter:            Binary::from([2u8; 32]),
+            pyth_emitter_chain: 4,
+        };
+
+        let test_config = governance_test_config();
+        let test_instruction = GovernanceInstruction {
+            module:          Target,
+            target_chain_id: test_config.chain_id,
+            action:          AuthorizeGovernanceDataSourceTransfer {
+                claim_vaa: to_binary(&ParsedVAA {
+                    emitter_address: source_2.emitter.to_vec(),
+                    emitter_chain: source_2.pyth_emitter_chain,
+                    sequence: 12,
+                    payload: GovernanceInstruction {
+                        module:          Target,
+                        target_chain_id: test_config.chain_id + 1,
+                        action:          RequestGovernanceDataSourceTransfer {
+                            governance_data_source_index: 11,
+                        },
+                    }
+                    .serialize()
+                    .unwrap(),
+                    ..create_zero_vaa()
+                })
+                .unwrap(),
+            },
+        };
+
+        let test_vaa = governance_vaa(&test_instruction);
+        assert_eq!(
+            apply_governance_vaa(&test_config, &test_vaa),
+            Err(PythContractError::InvalidGovernancePayload.into())
+        );
+    }
+
+    #[test]
+    fn test_set_data_sources() {
+        let source_1 = PythDataSource {
+            emitter:            Binary::from([1u8; 32]),
+            pyth_emitter_chain: 2,
+        };
+        let source_2 = PythDataSource {
+            emitter:            Binary::from([2u8; 32]),
+            pyth_emitter_chain: 4,
+        };
+        let source_3 = PythDataSource {
+            emitter:            Binary::from([3u8; 32]),
+            pyth_emitter_chain: 6,
+        };
+
+        let mut test_config = governance_test_config();
+        test_config.data_sources = HashSet::from([source_1]);
+
+        let test_instruction = GovernanceInstruction {
+            module:          Target,
+            target_chain_id: test_config.chain_id,
+            action:          SetDataSources {
+                data_sources: vec![source_2.clone(), source_3.clone()],
+            },
+        };
+        let test_vaa = governance_vaa(&test_instruction);
+        assert_eq!(
+            apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.data_sources),
+            Ok([source_2, source_3].iter().cloned().collect())
+        );
+
+        let test_instruction = GovernanceInstruction {
+            module:          Target,
+            target_chain_id: test_config.chain_id,
+            action:          SetDataSources {
+                data_sources: vec![],
+            },
+        };
+        let test_vaa = governance_vaa(&test_instruction);
+        assert_eq!(
+            apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.data_sources),
+            Ok(HashSet::new())
+        );
+    }
+
+    #[test]
     fn test_set_fee() {
         let mut test_config = governance_test_config();
         test_config.fee = Uint128::new(1);
@@ -1216,5 +1233,39 @@ mod test {
             apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.fee),
             Ok(Uint128::new(6))
         );
+    }
+
+    #[test]
+    fn test_set_valid_period() {
+        let mut test_config = governance_test_config();
+        test_config.valid_time_period = Duration::from_secs(10);
+
+        let test_instruction = GovernanceInstruction {
+            module:          Target,
+            target_chain_id: 5,
+            action:          SetValidPeriod { valid_seconds: 20 },
+        };
+        let test_vaa = governance_vaa(&test_instruction);
+
+        assert_eq!(
+            apply_governance_vaa(&test_config, &test_vaa).map(|(_r, c)| c.valid_time_period),
+            Ok(Duration::from_secs(20))
+        );
+    }
+
+    #[test]
+    fn test_request_governance_transfer() {
+        let test_config = governance_test_config();
+
+        let test_instruction = GovernanceInstruction {
+            module:          Target,
+            target_chain_id: test_config.chain_id,
+            action:          RequestGovernanceDataSourceTransfer {
+                governance_data_source_index: 7,
+            },
+        };
+        let test_vaa = governance_vaa(&test_instruction);
+
+        assert!(apply_governance_vaa(&test_config, &test_vaa).is_err());
     }
 }
