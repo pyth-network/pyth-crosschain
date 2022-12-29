@@ -141,8 +141,10 @@ impl GovernanceInstruction {
         // interpret every field in the governance message). The logic is a little janky
         // but seems to be the simplest way to check that the reader is at EOF.
         let mut next_byte = [0_u8; 1];
-        if !bytes.read(&mut next_byte).contains(&0) {
-            Err("Governance action had an unexpectedly long payload.".to_string())?
+        let read_result = bytes.read(&mut next_byte);
+        match read_result {
+            Ok(0) => (),
+            _ => Err("Governance action had an unexpectedly long payload.".to_string())?,
         }
 
         Ok(GovernanceInstruction {
