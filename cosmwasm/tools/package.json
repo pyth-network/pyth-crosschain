@@ -5,9 +5,7 @@
   "main": "deploy.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-      "generate-mnemonic": "node generate-mnemonic.js",
-      "deploy-pyth": "node deploy-pyth-bridge.js"
+    "deploy-pyth": "node deploy-pyth-bridge.js"
   },
   "author": "",
   "license": "ISC",
