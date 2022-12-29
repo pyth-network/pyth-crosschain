@@ -9,7 +9,9 @@ use {
         ReadonlySingleton,
         Singleton,
     },
-    pyth_sdk_cw::PriceIdentifier,
+    pyth_sdk_cw::{
+        PriceIdentifier,
+    },
     schemars::JsonSchema,
     serde::{
         Deserialize,

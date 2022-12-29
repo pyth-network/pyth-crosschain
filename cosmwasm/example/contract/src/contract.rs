@@ -29,8 +29,6 @@ use {
     pyth_sdk_cw::{
         query_price_feed,
         Price,
-        PriceFeed,
-        PriceFeedResponse,
         PriceIdentifier,
     },
 };
@@ -116,6 +114,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 mod test {
     use {
         super::*,
+        crate::test_utils::{
+            make_feed,
+            MockPyth,
+        },
         cosmwasm_std::{
             from_binary,
             testing::{
@@ -126,13 +128,11 @@ mod test {
                 MockStorage,
             },
             Addr,
-            ContractResult,
             OwnedDeps,
             QuerierResult,
             SystemError,
             SystemResult,
         },
-        pyth_sdk_cw::PriceStatus,
     };
 
     // TODO: point to documentation
@@ -154,54 +154,25 @@ mod test {
     }
 
     fn setup_test(config_info: &ConfigInfo) -> (OwnedDeps<MockStorage, MockApi, MockQuerier>, Env) {
+        let mock_pyth = MockPyth::new(&[make_feed(
+            PriceIdentifier::from_hex(PRICE_ID).unwrap(),
+        )]);
+
         let mut dependencies = mock_dependencies();
-        dependencies.querier.update_wasm(handle_wasm_query);
+        dependencies
+            .querier
+            .update_wasm(move |x| handle_wasm_query(&mock_pyth, x));
 
         let mut config = config(dependencies.as_mut().storage);
         config.save(config_info).unwrap();
         (dependencies, mock_env())
     }
 
-    fn handle_wasm_query(wasm_query: &WasmQuery) -> QuerierResult {
+
+    fn handle_wasm_query(pyth: &MockPyth, wasm_query: &WasmQuery) -> QuerierResult {
         match wasm_query {
             WasmQuery::Smart { contract_addr, msg } if *contract_addr == PYTH_CONTRACT_ADDR => {
-                let query_msg = from_binary::<pyth_sdk_cw::QueryMsg>(msg);
-                match query_msg {
-                    Ok(pyth_sdk_cw::QueryMsg::PriceFeed { id }) => {
-                        if id.to_hex() == PRICE_ID {
-                            let price_feed = PriceFeed::new(
-                                id,
-                                PriceStatus::Trading,
-                                100,
-                                -2,
-                                32,
-                                3,
-                                id,
-                                100 * 100,
-                                100,
-                                75 * 100,
-                                100,
-                                99 * 100,
-                                100,
-                                99,
-                            );
-
-                            SystemResult::Ok(ContractResult::Ok(
-                                to_binary(&PriceFeedResponse { price_feed }).unwrap(),
-                            ))
-                        } else {
-                            SystemResult::Ok(ContractResult::Err("unknown price feed".into()))
-                        }
-                    }
-                    Err(_e) => SystemResult::Err(SystemError::InvalidRequest {
-                        error:   "Invalid message".into(),
-                        request: msg.clone(),
-                    }),
-                    // TODO: this error isn't right
-                    _ => SystemResult::Err(SystemError::NoSuchContract {
-                        addr: contract_addr.clone(),
-                    }),
-                }
+                pyth.handle_wasm_query(msg)
             }
             WasmQuery::Smart { contract_addr, .. } => {
                 SystemResult::Err(SystemError::NoSuchContract {
