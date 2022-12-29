@@ -126,7 +126,9 @@ fn update_price_feeds(
 ) -> StdResult<Response> {
     let state = config_read(deps.storage).load()?;
 
-    if state.fee.amount.u128() > 0 && !has_coins(info.funds.as_ref(), &state.fee) {
+    if state.fee.amount.u128() > 0
+        && !has_coins(info.funds.as_ref(), &get_update_fee(&deps.as_ref(), data)?)
+    {
         return Err(PythContractError::InsufficientFee.into());
     }
 
@@ -394,13 +396,13 @@ fn update_price_feed_if_new(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::PriceFeed { id } => to_binary(&query_price_feed(deps, env, id.as_ref())?),
-        QueryMsg::GetUpdateFee { vaas } => to_binary(&get_update_fee(deps, &vaas)?),
-        QueryMsg::GetValidTimePeriod => to_binary(&get_valid_time_period(deps)?),
+        QueryMsg::PriceFeed { id } => to_binary(&query_price_feed(&deps, env, id.as_ref())?),
+        QueryMsg::GetUpdateFee { vaas } => to_binary(&get_update_fee(&deps, &vaas)?),
+        QueryMsg::GetValidTimePeriod => to_binary(&get_valid_time_period(&deps)?),
     }
 }
 
-pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<PriceFeedResponse> {
+pub fn query_price_feed(deps: &Deps, env: Env, address: &[u8]) -> StdResult<PriceFeedResponse> {
     let config = config_read(deps.storage).load()?;
     match price_info_read(deps.storage).load(address) {
         Ok(mut price_info) => {
@@ -432,7 +434,7 @@ pub fn query_price_feed(deps: Deps, env: Env, address: &[u8]) -> StdResult<Price
     }
 }
 
-pub fn get_update_fee(deps: Deps, vaas: &[Binary]) -> StdResult<Coin> {
+pub fn get_update_fee(deps: &Deps, vaas: &[Binary]) -> StdResult<Coin> {
     let config = config_read(deps.storage).load()?;
 
     Ok(coin(
@@ -450,7 +452,7 @@ pub fn get_update_fee(deps: Deps, vaas: &[Binary]) -> StdResult<Coin> {
     ))
 }
 
-pub fn get_valid_time_period(deps: Deps) -> StdResult<Duration> {
+pub fn get_valid_time_period(deps: &Deps) -> StdResult<Duration> {
     Ok(config_read(deps.storage).load()?.valid_time_period)
 }
 
@@ -812,7 +814,7 @@ mod test {
 
         env.block.time = Timestamp::from_seconds(80 + VALID_TIME_PERIOD.as_secs());
 
-        let price_feed = query_price_feed(deps.as_ref(), env, address)
+        let price_feed = query_price_feed(&deps.as_ref(), env, address)
             .unwrap()
             .price_feed;
 
@@ -834,7 +836,7 @@ mod test {
 
         env.block.time = Timestamp::from_seconds(500 + VALID_TIME_PERIOD.as_secs() + 1);
 
-        let price_feed = query_price_feed(deps.as_ref(), env, address)
+        let price_feed = query_price_feed(&deps.as_ref(), env, address)
             .unwrap()
             .price_feed;
 
@@ -857,7 +859,7 @@ mod test {
 
         env.block.time = Timestamp::from_seconds(500 - VALID_TIME_PERIOD.as_secs());
 
-        let price_feed = query_price_feed(deps.as_ref(), env, address)
+        let price_feed = query_price_feed(&deps.as_ref(), env, address)
             .unwrap()
             .price_feed;
 
@@ -880,7 +882,7 @@ mod test {
 
         env.block.time = Timestamp::from_seconds(500 - VALID_TIME_PERIOD.as_secs() - 1);
 
-        let price_feed = query_price_feed(deps.as_ref(), env, address)
+        let price_feed = query_price_feed(&deps.as_ref(), env, address)
             .unwrap()
             .price_feed;
 
@@ -892,7 +894,7 @@ mod test {
         let (deps, env) = setup_test();
 
         assert_eq!(
-            query_price_feed(deps.as_ref(), env, b"123".as_ref()),
+            query_price_feed(&deps.as_ref(), env, b"123".as_ref()),
             Err(PythContractError::PriceFeedNotFound.into())
         );
     }
@@ -911,15 +913,15 @@ mod test {
         let updates = vec![Binary::from([1u8]), Binary::from([2u8])];
 
         assert_eq!(
-            get_update_fee(deps.as_ref(), &updates[0..0]),
+            get_update_fee(&deps.as_ref(), &updates[0..0]),
             Ok(Coin::new(0, fee_denom.clone()))
         );
         assert_eq!(
-            get_update_fee(deps.as_ref(), &updates[0..1]),
+            get_update_fee(&deps.as_ref(), &updates[0..1]),
             Ok(Coin::new(10, fee_denom.clone()))
         );
         assert_eq!(
-            get_update_fee(deps.as_ref(), &updates[0..2]),
+            get_update_fee(&deps.as_ref(), &updates[0..2]),
             Ok(Coin::new(20, fee_denom.clone()))
         );
 
@@ -932,10 +934,10 @@ mod test {
             .unwrap();
 
         assert_eq!(
-            get_update_fee(deps.as_ref(), &updates[0..1]),
+            get_update_fee(&deps.as_ref(), &updates[0..1]),
             Ok(Coin::new(big_fee, fee_denom))
         );
-        assert!(get_update_fee(deps.as_ref(), &updates[0..2]).is_err());
+        assert!(get_update_fee(&deps.as_ref(), &updates[0..2]).is_err());
     }
 
     #[test]
@@ -949,7 +951,7 @@ mod test {
             .unwrap();
 
         assert_eq!(
-            get_valid_time_period(deps.as_ref()),
+            get_valid_time_period(&deps.as_ref()),
             Ok(Duration::from_secs(10))
         );
     }
