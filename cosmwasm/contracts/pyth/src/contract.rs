@@ -29,10 +29,6 @@ use {
             PythDataSource,
         },
     },
-    byteorder::{
-        BigEndian,
-        ReadBytesExt,
-    },
     cosmwasm_std::{
         coin,
         entry_point,
@@ -83,9 +79,7 @@ use {
 ///
 /// Most upgrades won't require any special migration logic. In those cases,
 /// this function can safely be implemented as:
-/// ```ignore
-/// Ok(Response::default())
-/// ```
+/// `Ok(Response::default())`
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
     Ok(Response::default())
@@ -201,18 +195,11 @@ fn execute_governance_instruction(
     }
 
     let response = match instruction.action {
-        UpgradeContract { address } => {
+        UpgradeContract { code_id } => {
             if instruction.target_chain_id == 0 {
                 Err(PythContractError::InvalidGovernancePayload)?
             }
-
-            // Hack: We're using the first 8 bytes of the address field as the new code id.
-            let new_code_id: u64 = address
-                .as_slice()
-                .read_u64::<BigEndian>()
-                .map_err(|_| PythContractError::InvalidGovernancePayload)?;
-
-            upgrade_contract(&env.contract.address, new_code_id)?
+            upgrade_contract(&env.contract.address, code_id)?
         }
         AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
             let parsed_claim_vaa = parse_vaa(deps.branch(), env.block.time.seconds(), &claim_vaa)?;

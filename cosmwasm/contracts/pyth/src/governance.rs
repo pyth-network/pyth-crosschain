@@ -51,9 +51,9 @@ impl GovernanceModule {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u8)]
 pub enum GovernanceAction {
-    UpgradeContract { address: [u8; 20] }, // 0
+    UpgradeContract { code_id: u64 },                            // 0
     AuthorizeGovernanceDataSourceTransfer { claim_vaa: Binary }, // 1
-    SetDataSources { data_sources: Vec<PythDataSource> }, // 2
+    SetDataSources { data_sources: Vec<PythDataSource> },        // 2
     // Set the fee to val * (10 ** expo)
     SetFee { val: u64, expo: u64 }, // 3
     // Set the default valid period to the provided number of seconds
@@ -92,9 +92,8 @@ impl GovernanceInstruction {
 
         let action: Result<GovernanceAction, String> = match action_type {
             0 => {
-                let mut address: [u8; 20] = [0; 20];
-                bytes.read_exact(&mut address)?;
-                Ok(GovernanceAction::UpgradeContract { address })
+                let code_id = bytes.read_u64::<BigEndian>()?;
+                Ok(GovernanceAction::UpgradeContract { code_id })
             }
             1 => {
                 let mut payload: Vec<u8> = vec![];
@@ -151,10 +150,10 @@ impl GovernanceInstruction {
         buf.write_u8(self.module.to_u8())?;
 
         match &self.action {
-            GovernanceAction::UpgradeContract { address } => {
+            GovernanceAction::UpgradeContract { code_id } => {
                 buf.write_u8(0)?;
                 buf.write_u16::<BigEndian>(self.target_chain_id)?;
-                buf.write_all(address)?;
+                buf.write_u64::<BigEndian>(*code_id)?;
             }
             GovernanceAction::AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
                 buf.write_u8(1)?;
