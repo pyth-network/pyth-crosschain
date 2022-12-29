@@ -1,11 +1,5 @@
 use {
-    crate::{
-        governance::GovernanceAction::{
-            RequestGovernanceDataSourceTransfer,
-            SetValidPeriod,
-        },
-        state::PythDataSource,
-    },
+    crate::state::PythDataSource,
     byteorder::{
         BigEndian,
         ReadBytesExt,
@@ -118,8 +112,8 @@ impl GovernanceInstruction {
                     bytes.read_exact(&mut emitter_address)?;
 
                     data_sources.push(PythDataSource {
-                        emitter:            Binary::from(&emitter_address),
-                        pyth_emitter_chain: chain_id,
+                        emitter: Binary::from(&emitter_address),
+                        chain_id,
                     });
                 }
 
@@ -132,11 +126,11 @@ impl GovernanceInstruction {
             }
             4 => {
                 let valid_seconds = bytes.read_u64::<BigEndian>()?;
-                Ok(SetValidPeriod { valid_seconds })
+                Ok(GovernanceAction::SetValidPeriod { valid_seconds })
             }
             5 => {
                 let governance_data_source_index = bytes.read_u32::<BigEndian>()?;
-                Ok(RequestGovernanceDataSourceTransfer {
+                Ok(GovernanceAction::RequestGovernanceDataSourceTransfer {
                     governance_data_source_index,
                 })
             }
@@ -172,7 +166,7 @@ impl GovernanceInstruction {
                 buf.write_u16::<BigEndian>(self.target_chain_id)?;
                 buf.write_u8(u8::try_from(data_sources.len())?)?;
                 for data_source in data_sources {
-                    buf.write_u16::<BigEndian>(data_source.pyth_emitter_chain)?;
+                    buf.write_u16::<BigEndian>(data_source.chain_id)?;
 
                     // The message format expects emitter addresses to be 32 bytes.
                     // However, we don't maintain this invariant in the rust code (and we violate it in the tests).
