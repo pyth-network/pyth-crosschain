@@ -1,5 +1,5 @@
 [workspace]
-members = ["contracts/pyth"]
+members = ["contracts/pyth", "example/contract"]
 
 [profile.release]
 opt-level = 3

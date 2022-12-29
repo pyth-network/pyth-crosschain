@@ -1260,6 +1260,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyth-cosmwasm-example"
+version = "0.1.0"
+dependencies = [
+ "bigint",
+ "byteorder",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cosmwasm-vm",
+ "generic-array",
+ "hex",
+ "k256 0.9.6",
+ "lazy_static",
+ "p2w-sdk",
+ "pyth-sdk-cw",
+ "schemars",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "sha3",
+ "terraswap",
+ "thiserror",
+ "wormhole-bridge-terra-2",
+]
+
+[[package]]
 name = "pyth-sdk"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
