@@ -7,12 +7,9 @@ import {
 import { readFileSync } from "fs";
 import { Bech32, toHex } from "@cosmjs/encoding";
 import { zeroPad } from "ethers/lib/utils.js";
-import axios from "axios";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import assert from "assert";
-
-export const TERRA_GAS_PRICES_URL = "https://fcd.terra.dev/v1/txs/gas_prices";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {
@@ -64,37 +61,95 @@ const artifact = argv.artifact;
 const CONFIG = {
   mainnet: {
     terraHost: {
-      URL: "https://lcd.terra.dev",
-      chainID: "columbus-5",
+      URL: "https://phoenix-lcd.terra.dev",
+      chainID: "phoenix-1",
       name: "mainnet",
     },
-    wormholeContract: "terra1dq03ugtd40zu9hcgdzrsq6z2z4hwhc9tqk2uy5",
-    pythEmitterAddress:
-      "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
+    pyth_config: {
+      wormhole_contract:
+        "terra12mrnzvhx3rpej6843uge2yyfppfyd3u9c3uq223q8sl48huz9juqffcnh",
+      data_sources: [
+        {
+          emitter: Buffer.from(
+            "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
+            "hex"
+          ).toString("base64"),
+          chain_id: 1,
+        },
+        {
+          emitter: Buffer.from(
+            "f8cd23c2ab91237730770bbea08d61005cdda0984348f3f6eecb559638c0bba0",
+            "hex"
+          ).toString("base64"),
+          chain_id: 26,
+        },
+      ],
+      governance_source: {
+        emitter: Buffer.from(
+          "5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e",
+          "hex"
+        ).toString("base64"),
+        chain_id: 1,
+      },
+      governance_source_index: 0,
+      governance_sequence_number: 0,
+      chain_id: 18,
+      valid_time_period_secs: 60,
+      fee: {
+        amount: "1",
+        denom: "uluna",
+      },
+    },
   },
   testnet: {
     terraHost: {
-      URL: "https://bombay-lcd.terra.dev",
-      chainID: "bombay-12",
+      URL: "https://pisco-lcd.terra.dev",
+      chainID: "pisco-1",
       name: "testnet",
     },
-    wormholeContract: "terra1pd65m0q9tl3v8znnz5f5ltsfegyzah7g42cx5v",
-    pythEmitterAddress:
-      "f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0",
+    pyth_config: {
+      wormhole_contract:
+        "terra19nv3xr5lrmmr7egvrk2kqgw4kcn43xrtd5g0mpgwwvhetusk4k7s66jyv0",
+      data_sources: [
+        {
+          emitter: Buffer.from(
+            "f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0",
+            "hex"
+          ).toString("base64"),
+          chain_id: 1,
+        },
+        {
+          emitter: Buffer.from(
+            "a27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6",
+            "hex"
+          ).toString("base64"),
+          chain_id: 26,
+        },
+      ],
+      governance_source: {
+        emitter: Buffer.from(
+          "63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385",
+          "hex"
+        ).toString("base64"),
+        chain_id: 1,
+      },
+      governance_source_index: 0,
+      governance_sequence_number: 0,
+      chain_id: 18,
+      valid_time_period_secs: 60,
+      fee: {
+        amount: "1",
+        denom: "uluna",
+      },
+    },
   },
 };
 
 const terraHost = CONFIG[argv.network].terraHost;
-const wormholeContract = CONFIG[argv.network].wormholeContract;
-const pythEmitterAddress = CONFIG[argv.network].pythEmitterAddress;
-
+const pythConfig = CONFIG[argv.network].pyth_config;
 const lcd = new LCDClient(terraHost);
 
 const feeDenoms = ["uluna"];
-
-const gasPrices = await axios
-  .get(TERRA_GAS_PRICES_URL)
-  .then((result) => result.data);
 
 const wallet = lcd.wallet(
   new MnemonicKey({
@@ -124,22 +179,9 @@ if (argv.codeId !== undefined) {
     contract_bytes.toString("base64")
   );
 
-  const feeEstimate = await lcd.tx.estimateFee(
-    wallet.key.accAddress,
-    [store_code],
-    {
-      feeDenoms,
-      gasPrices,
-    }
-  );
-
-  console.log("Deploy fee: ", feeEstimate.amount.toString());
-
   const tx = await wallet.createAndSignTx({
     msgs: [store_code],
     feeDenoms,
-    gasPrices,
-    fee: feeEstimate,
   });
 
   const rs = await lcd.tx.broadcast(tx);
@@ -166,7 +208,7 @@ if (argv.codeId !== undefined) {
 if (argv.instantiate) {
   console.log("Instantiating a contract");
 
-  async function instantiate(codeId, inst_msg) {
+  async function instantiate(codeId, inst_msg, label) {
     var address;
     await wallet
       .createAndSignTx({
@@ -175,7 +217,9 @@ if (argv.instantiate) {
             wallet.key.accAddress,
             wallet.key.accAddress,
             codeId,
-            inst_msg
+            inst_msg,
+            undefined,
+            label
           ),
         ],
       })
@@ -199,13 +243,7 @@ if (argv.instantiate) {
     return address;
   }
 
-  const pythChain = 1;
-
-  const contractAddress = await instantiate(codeId, {
-    wormhole_contract: wormholeContract,
-    pyth_emitter: Buffer.from(pythEmitterAddress, "hex").toString("base64"),
-    pyth_emitter_chain: pythChain,
-  });
+  const contractAddress = await instantiate(codeId, pythConfig, "pyth");
 
   console.log(`Deployed Pyth contract at ${contractAddress}`);
 }
@@ -233,7 +271,6 @@ if (argv.migrate) {
       ),
     ],
     feeDenoms,
-    gasPrices,
   });
 
   const rs = await lcd.tx.broadcast(tx);

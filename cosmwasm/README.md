@@ -21,7 +21,7 @@ First, build the contracts within [the current directory](./):
 bash build.sh
 ```
 
-This command will build and save the Pyth contract in the `artifact` directory.
+This command will build and save the Pyth contract in the `artifacts` directory.
 
 Then, to deploy the Pyth contract (`pyth_cosmwasm.wasm`), run the following command in the `tools` directory:
 
