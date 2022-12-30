@@ -6,6 +6,7 @@ use near_sdk::{
         BorshDeserialize,
         BorshSerialize,
     },
+    log,
     near_bindgen,
     PanicOnDefault,
 };
@@ -23,7 +24,21 @@ impl State {
     }
 
     #[payable]
-    pub fn verify_vaa(&mut self, _vaa: String) -> u32 {
+    pub fn verify_vaa(&mut self, vaa: String) -> u32 {
+        log!(
+            r#"
+            {{
+                "standard": "pyth",
+                "version":  "1.0",
+                "event":    "Wormhole::verify_vaa",
+                "data":     {{
+                    "vaa": "{}"
+                }}
+            }}
+        "#,
+            vaa,
+        );
+
         0
     }
 }

@@ -15,6 +15,9 @@ pub enum Error {
     #[error("A VAA could not be deserialized.")]
     InvalidVaa,
 
+    #[error("A VAA payload could not be deserialized.")]
+    InvalidPayload,
+
     #[error("Source for attestation is not allowed.")]
     UnknownSource,
 
@@ -26,4 +29,15 @@ pub enum Error {
 
     #[error("VAA verification failed.")]
     VaaVerificationFailed,
+
+    #[error("Fee is too large.")]
+    FeeTooLarge,
+}
+
+/// Convert IO errors into Payload errors, the only I/O we do is parsing with `Cursor` so this is a
+/// reasonable conversion.
+impl From<std::io::Error> for Error {
+    fn from(_: std::io::Error) -> Self {
+        Error::InvalidPayload
+    }
 }

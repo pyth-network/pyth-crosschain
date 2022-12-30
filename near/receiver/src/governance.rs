@@ -12,6 +12,11 @@ use {
         Pyth,
         PythExt,
     },
+    byteorder::{
+        BigEndian,
+        ReadBytesExt,
+        WriteBytesExt,
+    },
     near_sdk::{
         borsh::{
             self,
@@ -21,89 +26,170 @@ use {
         env,
         is_promise_success,
         near_bindgen,
+        serde::{
+            Deserialize,
+            Serialize,
+        },
         AccountId,
-        Balance,
         Gas,
         Promise,
     },
     std::io::Read,
-    structs::Chain as WormholeChain,
-    uint::byteorder::{
-        LittleEndian,
-        ReadBytesExt,
-    },
+    wormhole::Chain as WormholeChain,
 };
+
+/// Magic Header for identifying Governance VAAs.
+const GOVERNANCE_MAGIC: [u8; 4] = [0x50, 0x54, 0x47, 0x4d];
+
+/// ID for the module this contract identifies as: Pyth Receiver (0x1).
+const GOVERNANCE_MODULE: u8 = 0x01;
+
+/// Enumeration of IDs for different governance actions.
+#[repr(u8)]
+pub enum ActionId {
+    ContractUpgrade        = 0,
+    SetDataSources         = 1,
+    SetGovernanceSource    = 2,
+    SetStalePriceThreshold = 3,
+    SetUpdateFee           = 4,
+}
+
+impl TryInto<ActionId> for u8 {
+    type Error = Error;
+    fn try_into(self) -> Result<ActionId, Error> {
+        match self {
+            0 => Ok(ActionId::ContractUpgrade),
+            1 => Ok(ActionId::SetDataSources),
+            2 => Ok(ActionId::SetGovernanceSource),
+            3 => Ok(ActionId::SetStalePriceThreshold),
+            4 => Ok(ActionId::SetUpdateFee),
+            _ => Err(Error::InvalidPayload),
+        }
+    }
+}
+
+impl From<ActionId> for u8 {
+    fn from(val: ActionId) -> Self {
+        val as u8
+    }
+}
 
 /// A `GovernanceAction` represents the different actions that can be voted on and executed by the
 /// governance system.
-#[derive(BorshDeserialize, BorshSerialize)]
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
 pub enum GovernanceAction {
     ContractUpgrade([u8; 32]),
     SetDataSources(Vec<Source>),
     SetGovernanceSource(Source),
     SetStalePriceThreshold(u64),
-    SetUpdateFee(Balance),
+    SetUpdateFee(u64),
 }
 
-const GOVERNANCE_MAGIC: &[u8] = b"5054474d";
-const GOVERNANCE_MODULE: u8 = 0x01;
-
 impl GovernanceAction {
-    fn deserialize(data: &[u8]) -> Self {
+    pub fn id(&self) -> ActionId {
+        match self {
+            GovernanceAction::ContractUpgrade(_) => ActionId::ContractUpgrade,
+            GovernanceAction::SetDataSources(_) => ActionId::SetDataSources,
+            GovernanceAction::SetGovernanceSource(_) => ActionId::SetGovernanceSource,
+            GovernanceAction::SetStalePriceThreshold(_) => ActionId::SetStalePriceThreshold,
+            GovernanceAction::SetUpdateFee(_) => ActionId::SetUpdateFee,
+        }
+    }
+
+    pub fn deserialize(data: &[u8]) -> Result<Self, Error> {
         let mut cursor = std::io::Cursor::new(data);
-        let magic = cursor.read_u32::<LittleEndian>().unwrap();
-        let module: u8 = cursor.read_u8().unwrap();
-        let action: u8 = cursor.read_u8().unwrap();
-        let target: u16 = cursor.read_u16::<LittleEndian>().unwrap();
+        let magic = cursor.read_u32::<BigEndian>()?;
+        let module = cursor.read_u8()?;
+        let action = cursor.read_u8()?.try_into()?;
+        let target = cursor.read_u16::<BigEndian>()?;
 
-        assert!(magic == u32::from_le_bytes(GOVERNANCE_MAGIC.try_into().unwrap()));
         assert!(module == GOVERNANCE_MODULE);
-        assert!(target == 0 || target == WormholeChain::Near as u16);
+        assert!(target == 0 || target == u16::from(WormholeChain::Near));
+        assert!(magic == u32::from_le_bytes(GOVERNANCE_MAGIC));
 
-        match action {
-            0 => {
+        Ok(match action {
+            ActionId::ContractUpgrade => {
                 let mut hash = [0u8; 32];
-                cursor.read_exact(&mut hash).unwrap();
+                cursor.read_exact(&mut hash)?;
                 Self::ContractUpgrade(hash)
             }
 
-            1 => {
+            ActionId::SetDataSources => {
                 let mut sources = Vec::new();
-                let count = cursor.read_u32::<LittleEndian>().unwrap();
+                let count = cursor.read_u8()?;
+
                 for _ in 0..count {
                     let mut emitter = [0u8; 32];
-                    cursor.read_exact(&mut emitter).unwrap();
-                    let pyth_emitter_chain = Chain::from(WormholeChain::Solana);
+                    cursor.read_exact(&mut emitter)?;
                     sources.push(Source {
                         emitter,
-                        pyth_emitter_chain,
+                        pyth_emitter_chain: Chain::from(WormholeChain::from(
+                            cursor.read_u16::<BigEndian>()?,
+                        )),
                     });
                 }
+
                 Self::SetDataSources(sources)
             }
 
-            2 => {
+            ActionId::SetGovernanceSource => {
                 let mut emitter = [0u8; 32];
-                cursor.read_exact(&mut emitter).unwrap();
-                let pyth_emitter_chain = Chain(cursor.read_u16::<LittleEndian>().unwrap());
+                cursor.read_exact(&mut emitter)?;
                 Self::SetGovernanceSource(Source {
                     emitter,
-                    pyth_emitter_chain,
+                    pyth_emitter_chain: Chain(cursor.read_u16::<BigEndian>()?),
                 })
             }
 
-            3 => {
-                let stale_price_threshold = cursor.read_u64::<LittleEndian>().unwrap();
+            ActionId::SetStalePriceThreshold => {
+                let stale_price_threshold = cursor.read_u64::<BigEndian>()?;
                 Self::SetStalePriceThreshold(stale_price_threshold)
             }
 
-            4 => {
-                let update_fee = cursor.read_u128::<LittleEndian>().unwrap();
+            ActionId::SetUpdateFee => {
+                let update_fee = cursor.read_u64::<BigEndian>()?;
                 Self::SetUpdateFee(update_fee)
             }
+        })
+    }
 
-            _ => unreachable!(),
+    pub fn serialize(&self) -> Vec<u8> {
+        let mut data = Vec::new();
+        let magic = u32::from_le_bytes(GOVERNANCE_MAGIC);
+        data.write_u32::<BigEndian>(magic).unwrap();
+        data.push(GOVERNANCE_MODULE);
+        data.push(self.id() as u8);
+        data.extend_from_slice(&0u16.to_le_bytes());
+
+        match self {
+            Self::ContractUpgrade(hash) => {
+                data.extend_from_slice(hash);
+            }
+
+            Self::SetDataSources(sources) => {
+                data.push(sources.len() as u8);
+                for source in sources {
+                    data.extend_from_slice(&source.emitter);
+                    data.extend_from_slice(&source.pyth_emitter_chain.0.to_le_bytes());
+                }
+            }
+
+            Self::SetGovernanceSource(source) => {
+                data.extend_from_slice(&source.emitter);
+                data.extend_from_slice(&source.pyth_emitter_chain.0.to_le_bytes());
+            }
+
+            Self::SetStalePriceThreshold(stale_price_threshold) => {
+                data.extend_from_slice(&stale_price_threshold.to_le_bytes());
+            }
+
+            Self::SetUpdateFee(update_fee) => {
+                data.extend_from_slice(&update_fee.to_le_bytes());
+            }
         }
+
+        data
     }
 }
 
@@ -120,19 +206,19 @@ impl Pyth {
         // signatures. Avoids a cross-contract call early.
         {
             let vaa = hex::decode(&vaa).map_err(|_| Error::InvalidHex)?;
-            let vaa = vaa_payload::from_slice_with_payload::<structs::Vaa<()>>(&vaa);
+            let vaa = serde_wormhole::from_slice_with_payload::<wormhole::Vaa<()>>(&vaa);
             let vaa = vaa.map_err(|_| Error::InvalidVaa)?;
             let (vaa, _rest) = vaa;
 
             // Convert to local VAA type to catch APi changes.
             let vaa = Vaa::from(vaa);
 
-            if vaa.sequence <= self.last_gov_seq {
+            // Prevent VAA re-execution.
+            if self.executed_gov_sequences.contains(&vaa.sequence) {
                 return Err(Error::VaaVerificationFailed);
             }
 
-            self.last_gov_seq = vaa.sequence;
-
+            // Confirm the VAA is coming from a trusted source chain.
             if self.gov_source
                 != (Source {
                     emitter:            vaa.emitter_address,
@@ -141,10 +227,15 @@ impl Pyth {
             {
                 return Err(Error::UnknownSource);
             }
+
+            // Insert before calling Wormhole to prevent re-execution. If we wait until after the
+            // Wormhole call we could end up with multiple VAA's with the same sequence being
+            // executed in parallel.
+            self.executed_gov_sequences.insert(&vaa.sequence);
         }
 
         // Verify VAA and refund the caller in case of failure.
-        ext_wormhole::ext(env::current_account_id())
+        ext_wormhole::ext(self.wormhole.clone())
             .with_static_gas(Gas(30_000_000_000_000))
             .verify_vaa(vaa.clone())
             .then(
@@ -163,6 +254,7 @@ impl Pyth {
     }
 
     /// Invoke handler upon successful verification of a VAA action.
+    #[payable]
     #[private]
     #[handle_result]
     pub fn verify_gov_vaa_callback(
@@ -184,9 +276,10 @@ impl Pyth {
         // at this point so we only care about the `rest` component which contains bytes we can
         // deserialize into an Action.
         let vaa = hex::decode(&vaa).unwrap();
-        let (_, rest): (structs::Vaa<()>, _) = vaa_payload::from_slice_with_payload(&vaa).unwrap();
+        let (_, rest): (wormhole::Vaa<()>, _) =
+            serde_wormhole::from_slice_with_payload(&vaa).map_err(|_| Error::InvalidPayload)?;
 
-        match GovernanceAction::deserialize(rest) {
+        match GovernanceAction::deserialize(rest)? {
             ContractUpgrade(codehash) => self.set_upgrade_hash(codehash),
             SetDataSources(sources) => self.set_sources(sources),
             SetGovernanceSource(source) => self.set_gov_source(source),
@@ -201,6 +294,16 @@ impl Pyth {
             env::storage_usage(),
             env::attached_deposit(),
         )
+    }
+
+    /// If submitting an action fails then this callback will refund the caller.
+    #[private]
+    pub fn refund_vaa(&mut self, account_id: AccountId, amount: u128) {
+        if !is_promise_success() {
+            // No calculations needed as deposit size will have not changed. Can just refund the
+            // whole deposit amount.
+            Promise::new(account_id).transfer(amount);
+        }
     }
 
     #[private]
@@ -219,7 +322,7 @@ impl Pyth {
     }
 
     #[private]
-    pub fn set_update_fee(&mut self, fee: Balance) {
+    pub fn set_update_fee(&mut self, fee: u64) {
         self.update_fee = fee;
     }
 
@@ -230,16 +333,6 @@ impl Pyth {
         sources.iter().for_each(|s| {
             self.sources.insert(s);
         });
-    }
-
-    /// If submitting an action fails then this callback will refund the caller.
-    #[private]
-    pub fn refund_vaa(&mut self, account_id: AccountId, amount: u128) {
-        if !is_promise_success() {
-            // No calculations needed as deposit size will have not changed. Can just refund the
-            // whole deposit amount.
-            Promise::new(account_id).transfer(amount);
-        }
     }
 
     /// This method allows self-upgrading the contract to a new implementation.

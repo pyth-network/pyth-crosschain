@@ -10,68 +10,73 @@ use {
             Serialize,
         },
     },
-    p2w_sdk::{
-        Identifier,
-        PriceAttestation,
-        PriceStatus,
-    },
-    structs::Chain as WormholeChain,
+    p2w_sdk::PriceAttestation,
+    wormhole::Chain as WormholeChain,
 };
+
+/// Type alias for Wormhole's compact Signature format.
+pub type WormholeSignature = [u8; 65];
+
+/// Type alias for Wormhole's cross-chain 32-byte address.
+pub type WormholeAddress = [u8; 32];
+
+#[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize)]
+#[serde(crate = "near_sdk::serde")]
+#[repr(transparent)]
+pub struct PriceIdentifier(pub [u8; 32]);
+
+/// A price with a degree of uncertainty, represented as a price +- a confidence interval.
+///
+/// The confidence interval roughly corresponds to the standard error of a normal distribution.
+/// Both the price and confidence are stored in a fixed-point numeric representation,
+/// `x * (10^expo)`, where `expo` is the exponent.
+//
+/// Please refer to the documentation at https://docs.pyth.network/consumers/best-practices for how
+/// to how this price safely.
+#[derive(BorshDeserialize, BorshSerialize, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Price {
+    pub price:     i64,
+    /// Confidence interval around the price
+    pub conf:      u64,
+    /// The exponent
+    pub expo:      i32,
+    /// Unix timestamp of when this price was computed
+    pub timestamp: u64,
+}
 
 /// The PriceFeed structure is stored in the contract under a Price Feed Identifier.
 ///
 /// This structure matches the layout of the PriceFeed structure in other Pyth receiver contracts
 /// but uses types that are native to NEAR.
-#[derive(BorshDeserialize, BorshSerialize, Serialize)]
+#[derive(BorshDeserialize, BorshSerialize, Deserialize, Serialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct PriceFeed {
     /// Unique identifier for this price.
-    pub id:                 Identifier,
-    /// Status of price (Trading is valid).
-    pub status:             PriceStatus,
-    /// Current price aggregation publish time
-    pub publish_time:       i64,
-    /// Price exponent.
-    pub expo:               i32,
-    /// Maximum number of allowed publishers that can contribute to a price.
-    pub max_num_publishers: u32,
-    /// Number of publishers that made up current aggregate.
-    pub num_publishers:     u32,
-    /// Product account key.
-    pub product_id:         Identifier,
+    pub id:        PriceIdentifier,
     /// The current aggregation price.
-    price:                  i64,
-    /// Confidence interval around the current aggregation price.
-    conf:                   u64,
+    pub price:     Price,
     /// Exponentially moving average price.
-    ema_price:              i64,
-    /// Exponentially moving average confidence interval.
-    ema_conf:               u64,
-    /// Price of previous aggregate with Trading status.
-    prev_price:             i64,
-    /// Confidence interval of previous aggregate with Trading status.
-    prev_conf:              u64,
-    /// Publish time of previous aggregate with Trading status.
-    prev_publish_time:      u64,
+    pub ema_price: Price,
 }
 
+// TODO: Source the Timestamp
 impl From<&PriceAttestation> for PriceFeed {
     fn from(price_attestation: &PriceAttestation) -> Self {
         Self {
-            id:                 price_attestation.price_id,
-            status:             price_attestation.status,
-            publish_time:       price_attestation.publish_time,
-            expo:               price_attestation.expo,
-            max_num_publishers: price_attestation.max_num_publishers,
-            num_publishers:     price_attestation.num_publishers,
-            product_id:         price_attestation.product_id,
-            price:              price_attestation.price,
-            conf:               price_attestation.conf,
-            ema_price:          price_attestation.ema_price,
-            ema_conf:           price_attestation.ema_conf,
-            prev_price:         price_attestation.prev_price,
-            prev_conf:          price_attestation.prev_conf,
-            prev_publish_time:  price_attestation.prev_publish_time.try_into().unwrap(),
+            id:        PriceIdentifier(price_attestation.price_id.to_bytes()),
+            price:     Price {
+                price:     price_attestation.price,
+                conf:      price_attestation.conf,
+                expo:      price_attestation.expo,
+                timestamp: price_attestation.publish_time.try_into().unwrap(),
+            },
+            ema_price: Price {
+                price:     price_attestation.ema_price,
+                conf:      price_attestation.ema_conf,
+                expo:      price_attestation.expo,
+                timestamp: price_attestation.publish_time.try_into().unwrap(),
+            },
         }
     }
 }
@@ -83,6 +88,7 @@ impl From<&PriceAttestation> for PriceFeed {
     BorshDeserialize,
     BorshSerialize,
     Clone,
+    Debug,
     Default,
     Deserialize,
     Eq,
@@ -92,11 +98,12 @@ impl From<&PriceAttestation> for PriceFeed {
     Serialize,
 )]
 #[serde(crate = "near_sdk::serde")]
+#[repr(transparent)]
 pub struct Chain(pub u16);
 
 impl From<WormholeChain> for Chain {
     fn from(chain: WormholeChain) -> Self {
-        Self(chain as u16)
+        Self(u16::from(chain))
     }
 }
 
@@ -108,6 +115,7 @@ impl From<WormholeChain> for Chain {
     BorshDeserialize,
     BorshSerialize,
     Clone,
+    Debug,
     Default,
     Deserialize,
     Eq,
@@ -118,7 +126,7 @@ impl From<WormholeChain> for Chain {
 )]
 #[serde(crate = "near_sdk::serde")]
 pub struct Source {
-    pub emitter:            [u8; 32],
+    pub emitter:            WormholeAddress,
     pub pyth_emitter_chain: Chain,
 }
 
@@ -127,18 +135,18 @@ pub struct Source {
 pub struct Vaa<P> {
     pub version:            u8,
     pub guardian_set_index: u32,
-    pub signatures:         Vec<[u8; 65]>,
+    pub signatures:         Vec<WormholeSignature>,
     pub timestamp:          u32, // Seconds since UNIX epoch
     pub nonce:              u32,
     pub emitter_chain:      Chain,
-    pub emitter_address:    [u8; 32],
+    pub emitter_address:    WormholeAddress,
     pub sequence:           u64,
     pub consistency_level:  u8,
     pub payload:            P,
 }
 
-impl<P> From<structs::Vaa<P>> for Vaa<P> {
-    fn from(vaa: structs::Vaa<P>) -> Self {
+impl<P> From<wormhole::Vaa<P>> for Vaa<P> {
+    fn from(vaa: wormhole::Vaa<P>) -> Self {
         Self {
             version:            vaa.version,
             guardian_set_index: vaa.guardian_set_index,
