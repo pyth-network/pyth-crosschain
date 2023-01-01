@@ -1,15 +1,14 @@
+import { HexString } from "@pythnetwork/pyth-sdk-js";
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import { Joi, schema, validate, ValidationError } from "express-validation";
 import { Server } from "http";
 import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
-import responseTime from "response-time";
-import { DurationInMs, DurationInSec, TimestampInSec } from "./helpers";
+import { TimestampInSec } from "./helpers";
 import { PriceStore } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
-import { HexString } from "@pythnetwork/pyth-sdk-js";
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
@@ -156,13 +155,14 @@ export class RestAPI {
                 emitter_chain: latestPriceInfo.emitterChainId,
                 attestation_time: latestPriceInfo.attestationTime,
                 sequence_number: latestPriceInfo.seqNum,
-                price_service_receive_time: latestPriceInfo.priceServiceReceiveTime,
+                price_service_receive_time:
+                  latestPriceInfo.priceServiceReceiveTime,
               },
             }),
             ...(binary && {
               vaa: latestPriceInfo.vaa.toString("base64"),
             }),
-          })
+          });
         }
 
         if (notFoundIds.length > 0) {
