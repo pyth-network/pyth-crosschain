@@ -43,6 +43,11 @@ use {
         warn,
     },
     p2w_sdk::P2WEmitter,
+    pyth_sdk_solana::state::{
+        load_mapping_account,
+        load_price_account,
+        load_product_account,
+    },
     pyth_wormhole_attester::{
         config::{
             OldP2WConfigAccount,
@@ -53,11 +58,6 @@ use {
             P2WMessageDrvData,
         },
         AttestData,
-    },
-    pyth_sdk_solana::state::{
-        load_mapping_account,
-        load_price_account,
-        load_product_account,
     },
     solana_client::nonblocking::rpc_client::RpcClient,
     solana_program::{
@@ -109,7 +109,10 @@ pub fn gen_init_tx(
         AccountMeta::new(system_program::id(), false),
     ];
 
-    let ix_data = (pyth_wormhole_attester::instruction::Instruction::Initialize, config);
+    let ix_data = (
+        pyth_wormhole_attester::instruction::Instruction::Initialize,
+        config,
+    );
 
     let ix = Instruction::new_with_bytes(p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas);
 
@@ -250,7 +253,10 @@ pub fn gen_migrate_tx(
         AccountMeta::new(system_program::id(), false),
     ];
 
-    let ix_data = (pyth_wormhole_attester::instruction::Instruction::Migrate, ());
+    let ix_data = (
+        pyth_wormhole_attester::instruction::Instruction::Migrate,
+        (),
+    );
 
     let ix = Instruction::new_with_bytes(p2w_addr, ix_data.try_to_vec()?.as_slice(), acc_metas);
 

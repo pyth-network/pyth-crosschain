@@ -10,7 +10,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install
 
 ADD rust-toolchain /rust-toolchain
 ADD wormhole-attester/ /usr/src/wormhole-attester
-WORKDIR /usr/src/wormhole-attester 
+WORKDIR /usr/src/wormhole-attester
 
 RUN --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=/usr/local/cargo/registry,id=cargo_registry \
