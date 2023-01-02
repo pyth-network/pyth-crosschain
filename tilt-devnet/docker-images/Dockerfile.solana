@@ -3,17 +3,16 @@ FROM pythfoundation/pyth-client:devnet-v2.12.0 as pyth-oracle-copy
 
 FROM docker.io/library/rust:1.49@sha256:a50165ea96983c21832578afb1c8c028674c965bc1ed43b607871b1f362e06a5 as build
 
-RUN apt-get update && \
-    apt-get install -y \
+RUN apt-get update\
+    && apt-get install -y \
     clang \
     libssl-dev \
     libudev-dev \
     llvm \
     pkg-config \
     zlib1g-dev \
-    && \
-    rm -rf /var/lib/apt/lists/* && \
-    rustup component add rustfmt
+    && rm -rf /var/lib/apt/lists/* \
+    && rustup component add rustfmt
 
 RUN sh -c "$(curl -sSfL https://release.solana.com/v1.10.31/install)"
 
