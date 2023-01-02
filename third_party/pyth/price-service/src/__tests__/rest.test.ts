@@ -1,9 +1,9 @@
-import { HexString, PriceFeed, Price } from "@pythnetwork/pyth-sdk-js";
-import { PriceStore, PriceInfo } from "../listen";
-import { RestAPI } from "../rest";
+import { HexString, PriceFeed, PriceStatus } from "@pythnetwork/pyth-sdk-js";
 import { Express } from "express";
-import request from "supertest";
 import { StatusCodes } from "http-status-codes";
+import request from "supertest";
+import { PriceInfo, PriceStore } from "../listen";
+import { RestAPI } from "../rest";
 
 let app: Express;
 let priceInfoMap: Map<string, PriceInfo>;
@@ -13,20 +13,21 @@ function expandTo64Len(id: string): string {
 }
 
 function dummyPriceFeed(id: string): PriceFeed {
-  return new PriceFeed({
-    emaPrice: new Price({
-      conf: "1",
-      expo: 2,
-      price: "3",
-      publishTime: 4,
-    }),
+  return PriceFeed.fromJson({
+    conf: "1",
+    ema_conf: "2",
+    ema_price: "3",
+    expo: 4,
     id,
-    price: new Price({
-      conf: "5",
-      expo: 6,
-      price: "7",
-      publishTime: 8,
-    }),
+    num_publishers: 5,
+    max_num_publishers: 6,
+    price: "7",
+    publish_time: 8,
+    prev_conf: "9",
+    prev_price: "10",
+    prev_publish_time: 11,
+    product_id: id,
+    status: PriceStatus.Trading,
   });
 }
 
@@ -80,6 +81,23 @@ describe("Latest Price Feed Endpoint", () => {
     expect(resp.body.length).toBe(2);
     expect(resp.body).toContainEqual(dummyPriceFeed(ids[0]).toJson());
     expect(resp.body).toContainEqual(dummyPriceFeed(ids[1]).toJson());
+  });
+
+  test("When called with valid ids and binary flag set to true, returns correct price feed with binary vaa", async () => {
+    const ids = [expandTo64Len("abcd"), expandTo64Len("3456")];
+    const resp = await request(app)
+      .get("/api/latest_price_feeds")
+      .query({ ids, binary: true });
+    expect(resp.status).toBe(StatusCodes.OK);
+    expect(resp.body.length).toBe(2);
+    expect(resp.body).toContainEqual({
+      ...priceInfoMap.get(ids[0])!.priceFeed.toJson(),
+      vaa: priceInfoMap.get(ids[0])!.vaa.toString("base64"),
+    });
+    expect(resp.body).toContainEqual({
+      ...priceInfoMap.get(ids[1])!.priceFeed.toJson(),
+      vaa: priceInfoMap.get(ids[1])!.vaa.toString("base64"),
+    });
   });
 
   test("When called with some non-existent ids within ids, returns error mentioning non-existent ids", async () => {
