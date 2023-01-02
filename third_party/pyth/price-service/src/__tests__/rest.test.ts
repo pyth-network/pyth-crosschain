@@ -1,9 +1,9 @@
-import { HexString, PriceFeed, Price } from "@pythnetwork/pyth-sdk-js";
-import { PriceStore, PriceInfo } from "../listen";
-import { RestAPI } from "../rest";
+import { HexString, Price, PriceFeed } from "@pythnetwork/pyth-sdk-js";
 import { Express } from "express";
-import request from "supertest";
 import { StatusCodes } from "http-status-codes";
+import request from "supertest";
+import { PriceInfo, PriceStore } from "../listen";
+import { RestAPI } from "../rest";
 
 let app: Express;
 let priceInfoMap: Map<string, PriceInfo>;
@@ -80,6 +80,23 @@ describe("Latest Price Feed Endpoint", () => {
     expect(resp.body.length).toBe(2);
     expect(resp.body).toContainEqual(dummyPriceFeed(ids[0]).toJson());
     expect(resp.body).toContainEqual(dummyPriceFeed(ids[1]).toJson());
+  });
+
+  test("When called with valid ids and binary flag set to true, returns correct price feed with binary vaa", async () => {
+    const ids = [expandTo64Len("abcd"), expandTo64Len("3456")];
+    const resp = await request(app)
+      .get("/api/latest_price_feeds")
+      .query({ ids, binary: true });
+    expect(resp.status).toBe(StatusCodes.OK);
+    expect(resp.body.length).toBe(2);
+    expect(resp.body).toContainEqual({
+      ...priceInfoMap.get(ids[0])!.priceFeed.toJson(),
+      vaa: priceInfoMap.get(ids[0])!.vaa.toString("base64"),
+    });
+    expect(resp.body).toContainEqual({
+      ...priceInfoMap.get(ids[1])!.priceFeed.toJson(),
+      vaa: priceInfoMap.get(ids[1])!.vaa.toString("base64"),
+    });
   });
 
   test("When called with some non-existent ids within ids, returns error mentioning non-existent ids", async () => {
