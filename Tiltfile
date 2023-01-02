@@ -66,16 +66,16 @@ def k8s_yaml_with_ns(objects):
 
 local_resource(
     name = "wasm-gen",
-    cmd = "tilt docker build -- -f Dockerfile.wasm -o type=local,dest=. .",
+    cmd = "tilt docker build -- -f tilt-devnet/docker-images/Dockerfile.wasm -o type=local,dest=. .",
     env = {"DOCKER_BUILDKIT": "1"},
+    deps = "./wormhole-attester",
     labels = ["wasm"],
     allow_parallel=True,
     trigger_mode = trigger_mode,
 )
 
-
 def build_node_yaml():
-    node_yaml = read_yaml_stream("devnet/node.yaml")
+    node_yaml = read_yaml_stream("tilt-devnet/k8s/node.yaml")
 
     for obj in node_yaml:
         if obj["kind"] == "StatefulSet" and obj["metadata"]["name"] == "guardian":
@@ -103,7 +103,7 @@ k8s_resource(
 )
 
 # spy
-k8s_yaml_with_ns("devnet/spy.yaml")
+k8s_yaml_with_ns("tilt-devnet/k8s/spy.yaml")
 
 k8s_resource(
     "spy",
@@ -121,10 +121,7 @@ k8s_resource(
 docker_build(
     ref = "bridge-client",
     context = ".",
-    only = ["./solana"],
-    dockerfile = "Dockerfile.client",
-    # Ignore target folders from local (non-container) development.
-    ignore = ["./solana/*/target"],
+    dockerfile = "tilt-devnet/docker-images/Dockerfile.client",
 )
 
 # solana smart contract
@@ -132,12 +129,12 @@ docker_build(
 docker_build(
     ref = "solana-contract",
     context = ".",
-    dockerfile = "Dockerfile.solana",
+    dockerfile = "tilt-devnet/docker-images/Dockerfile.solana",
 )
 
 # solana local devnet
 
-k8s_yaml_with_ns("devnet/solana-devnet.yaml")
+k8s_yaml_with_ns("tilt-devnet/k8s/solana-devnet.yaml")
 
 k8s_resource(
     "solana-devnet",
@@ -155,10 +152,7 @@ k8s_resource(
 docker_build(
     ref = "eth-node",
     context = "./",
-    dockerfile = "./Dockerfile.ethereum",
-
-    # ignore local node_modules (in case they're present)
-    ignore = ["./ethereum/node_modules", "./third_party/pyth/xc-governance-sdk-js/node_modules"],
+    dockerfile = "tilt-devnet/docker-images/Dockerfile.ethereum",
 
     # sync external scripts for incremental development
     # (everything else needs to be restarted from scratch for determinism)
@@ -176,7 +170,7 @@ docker_build(
     context = ".",
     dockerfile = "third_party/pyth/Dockerfile.pyth",
 )
-k8s_yaml_with_ns("./devnet/pyth.yaml")
+k8s_yaml_with_ns("./tilt-devnet/k8s/pyth.yaml")
 
 k8s_resource(
     "pyth",
@@ -189,12 +183,10 @@ k8s_resource(
 docker_build(
     ref = "p2w-attest",
     context = ".",
-    only = ["./solana", "./third_party", "./pythnet"],
     dockerfile = "./third_party/pyth/Dockerfile.p2w-attest",
-    ignore = ["./solana/*/target"],
 )
 
-k8s_yaml_with_ns("devnet/p2w-attest.yaml")
+k8s_yaml_with_ns("tilt-devnet/k8s/p2w-attest.yaml")
 k8s_resource(
     "p2w-attest",
     resource_deps = ["solana-devnet", "pyth", "guardian"],
@@ -211,7 +203,7 @@ docker_build(
     dockerfile = "./third_party/pyth/Dockerfile.check-attestations",
 )
 
-k8s_yaml_with_ns("devnet/check-attestations.yaml")
+k8s_yaml_with_ns("tilt-devnet/k8s/check-attestations.yaml")
 k8s_resource(
     "check-attestations",
     resource_deps = ["pyth-price-service", "pyth", "p2w-attest"],
@@ -225,7 +217,7 @@ docker_build(
     context = ".",
     dockerfile = "third_party/pyth/p2w-relay/Dockerfile.pyth_relay",
 )
-k8s_yaml_with_ns("devnet/p2w-terra-relay.yaml")
+k8s_yaml_with_ns("tilt-devnet/k8s/p2w-terra-relay.yaml")
 k8s_resource(
     "p2w-terra-relay",
     resource_deps = ["pyth", "p2w-attest", "spy", "terra-terrad", "wasm-gen"],
@@ -235,7 +227,7 @@ k8s_resource(
     labels = ["pyth"]
 )
 
-k8s_yaml_with_ns("devnet/p2w-evm-relay.yaml")
+k8s_yaml_with_ns("tilt-devnet/k8s/p2w-evm-relay.yaml")
 k8s_resource(
     "p2w-evm-relay",
     resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet", "wasm-gen"],
@@ -251,7 +243,7 @@ docker_build(
     context = ".",
     dockerfile = "third_party/pyth/price-service/Dockerfile.price_service",
 )
-k8s_yaml_with_ns("devnet/pyth-price-service.yaml")
+k8s_yaml_with_ns("tilt-devnet/k8s/pyth-price-service.yaml")
 k8s_resource(
     "pyth-price-service",
     resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet", "wasm-gen"],
@@ -268,7 +260,7 @@ docker_build(
     context = "third_party/pyth/evm-watcher/",
     dockerfile = "third_party/pyth/evm-watcher/Dockerfile",
 )
-k8s_yaml_with_ns("devnet/pyth-evm-watcher.yaml")
+k8s_yaml_with_ns("tilt-devnet/k8s/pyth-evm-watcher.yaml")
 k8s_resource(
     "pyth-evm-watcher",
     resource_deps = ["eth-devnet"],
@@ -276,7 +268,7 @@ k8s_resource(
 )
 
 
-k8s_yaml_with_ns("devnet/eth-devnet.yaml")
+k8s_yaml_with_ns("tilt-devnet/k8s/eth-devnet.yaml")
 
 k8s_resource(
     "eth-devnet",
@@ -301,17 +293,17 @@ k8s_resource(
 
 docker_build(
     ref = "terra-image",
-    context = "./cosmwasm/devnet",
-    dockerfile = "cosmwasm/devnet/Dockerfile",
+    context = "./target-chains/cosmwasm/devnet",
+    dockerfile = "./target-chains/cosmwasm/devnet/Dockerfile",
 )
 
 docker_build(
     ref = "cosmwasm-contracts",
     context = ".",
-    dockerfile = "Dockerfile.cosmwasm",
+    dockerfile = "tilt-devnet/docker-images/Dockerfile.cosmwasm",
 )
 
-k8s_yaml_with_ns("devnet/terra-devnet.yaml")
+k8s_yaml_with_ns("tilt-devnet/k8s/terra-devnet.yaml")
 
 k8s_resource(
     "terra-terrad",
@@ -340,10 +332,10 @@ k8s_resource(
 docker_build(
     ref = "prometheus",
     context = ".",
-    dockerfile = "Dockerfile.prometheus",
+    dockerfile = "tilt-devnet/docker-images/Dockerfile.prometheus",
 )
 
-k8s_yaml_with_ns("devnet/prometheus.yaml")
+k8s_yaml_with_ns("tilt-devnet/k8s/prometheus.yaml")
 
 k8s_resource(
     "prometheus",
@@ -355,10 +347,10 @@ k8s_resource(
 docker_build(
     ref = "multisig",
     context = ".",
-    dockerfile = "Dockerfile.multisig",
+    dockerfile = "tilt-devnet/docker-images/Dockerfile.multisig",
 )
 
-k8s_yaml_with_ns("devnet/multisig.yaml")
+k8s_yaml_with_ns("tilt-devnet/k8s/multisig.yaml")
 
 k8s_resource(
     "multisig",

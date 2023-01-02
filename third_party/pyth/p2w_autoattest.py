@@ -20,7 +20,7 @@ P2W_SOL_ADDRESS = os.environ.get(
     "P2W_SOL_ADDRESS", "P2WH424242424242424242424242424242424242424"
 )
 P2W_OWNER_KEYPAIR = os.environ.get(
-    "P2W_OWNER_KEYPAIR", "/usr/src/solana/keys/p2w_owner.json"
+    "P2W_OWNER_KEYPAIR", "/solana-secrets/p2w_owner.json"
 )
 P2W_ATTESTATIONS_PORT = int(os.environ.get("P2W_ATTESTATIONS_PORT", 4343))
 P2W_INITIALIZE_SOL_CONTRACT = os.environ.get("P2W_INITIALIZE_SOL_CONTRACT", None)
@@ -49,7 +49,7 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
 
     init_result = run_or_die(
         [
-            "pyth2wormhole-client",
+            "pwhac",
             "--p2w-addr",
             P2W_SOL_ADDRESS,
             "--rpc-url",
@@ -71,11 +71,11 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
 
     if init_result.returncode != 0:
         logging.error(
-            "NOTE: pyth2wormhole-client init failed, retrying with set_config"
+            "NOTE: pwhac init failed, retrying with set_config"
         )
         run_or_die(
             [
-                "pyth2wormhole-client",
+                "pwhac",
                 "--p2w-addr",
                 P2W_SOL_ADDRESS,
                 "--rpc-url",
@@ -166,12 +166,12 @@ symbol_groups:
 
 # Set helpfully chatty logging default, filtering especially annoying
 # modules like async HTTP requests and tokio runtime logs
-os.environ["RUST_LOG"] = os.environ.get("RUST_LOG", "pyth2wormhole_client,solana_client,main,pyth_sdk_solana=trace")
+os.environ["RUST_LOG"] = os.environ.get("RUST_LOG", "pyth_wormhole_attester_client,solana_client,main,pyth_sdk_solana=trace")
 
 # Send the first attestation in one-shot mode for testing
 first_attest_result = run_or_die(
     [
-        "pyth2wormhole-client",
+        "pwhac",
         "--commitment",
         "confirmed",
         "--p2w-addr",
@@ -199,9 +199,9 @@ readiness_thread.start()
 # whatever reason (this avoids k8s restart penalty)
 while True:
     # Start the child process in daemon mode
-    p2w_client_process = Popen(
+    pwhac_process = Popen(
         [
-            "pyth2wormhole-client",
+            "pwhac",
             "--commitment",
             "confirmed",
             "--p2w-addr",
@@ -220,7 +220,7 @@ while True:
     )
 
     # Wait for an unexpected process exit
-    retcode = p2w_client_process.wait()
+    retcode = pwhac_process.wait()
 
     # Yell if the supposedly non-stop attestation process exits
-    logging.warn(f"pyth2wormhole-client stopped unexpectedly with code {retcode}")
+    logging.warn(f"pwhac stopped unexpectedly with code {retcode}")

@@ -9,15 +9,15 @@ USER root
 RUN apt-get install -y netcat-openbsd python3 && \
     rm -rf /var/lib/apt/lists/*
 
-ADD solana/keys /opt/solana/keys
+ADD tilt-devnet/secrets/solana/ /solana-secrets
 
 ENV PYTH_KEY_STORE=/home/pyth/.pythd
 
 # Prepare keys
 WORKDIR $PYTH_KEY_STORE
 
-RUN cp /opt/solana/keys/pyth_publisher.json publish_key_pair.json && \
-    cp /opt/solana/keys/pyth_program.json program_key_pair.json && \
+RUN cp /solana-secrets/pyth_publisher.json publish_key_pair.json && \
+    cp /solana-secrets/pyth_program.json program_key_pair.json && \
     chown pyth:pyth -R . && \
     chmod go-rwx -R .
 

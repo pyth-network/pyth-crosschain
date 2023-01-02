@@ -10,7 +10,7 @@ RUN chown -R pyth:pyth .
 USER pyth
 
 WORKDIR ${P2W_BASE_PATH}/ethereum
-ADD --chown=pyth:pyth ethereum .
+ADD --chown=pyth:pyth target-chains/ethereum .
 RUN npm install && npm run build
 
 USER root
