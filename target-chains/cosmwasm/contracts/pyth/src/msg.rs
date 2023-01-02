@@ -4,6 +4,10 @@ use {
         Binary,
         Coin,
     },
+    pyth_sdk_cw::{
+        PriceFeed,
+        PriceIdentifier,
+    },
     schemars::JsonSchema,
     serde::{
         Deserialize,
@@ -41,7 +45,17 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub struct MigrateMsg {}
 
-pub use pyth_sdk_cw::{
-    PriceFeedResponse,
-    QueryMsg,
-};
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum QueryMsg {
+    PriceFeed { id: PriceIdentifier },
+    GetUpdateFee { vaas: Vec<Binary> },
+    GetValidTimePeriod,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct PriceFeedResponse {
+    pub price_feed: PriceFeed,
+}

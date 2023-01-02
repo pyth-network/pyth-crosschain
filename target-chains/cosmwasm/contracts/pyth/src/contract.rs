@@ -30,6 +30,7 @@ use {
         },
     },
     cosmwasm_std::{
+        coin,
         entry_point,
         has_coins,
         to_binary,
@@ -41,6 +42,8 @@ use {
         DepsMut,
         Env,
         MessageInfo,
+        OverflowError,
+        OverflowOperation,
         QueryRequest,
         Response,
         StdResult,
