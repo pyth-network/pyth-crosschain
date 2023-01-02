@@ -215,7 +215,18 @@ async function upgradeContract(proxy, desiredVersion) {
     );
   } else {
     console.log("Deploying a new implementation...");
-    const newImplementation = await PythUpgradable.new();
+
+    let newImplementation;
+    try {
+      newImplementation = await PythUpgradable.new();
+    } catch (e) {
+      console.error(
+        "Could not deploy the new contract. Please try again. If this is a zkSync " +
+          "network truffle cannot it and you need to deploy it manually (as described in Deploying.md) "`and store the address on ${implCachePath} file. Then rerun the script.`
+      );
+      throw e;
+    }
+
     console.log(`Tx hash:  ${newImplementation.transactionHash}`);
     console.log(`New implementation address: ${newImplementation.address}`);
     fs.writeFileSync(implCachePath, newImplementation.address);
