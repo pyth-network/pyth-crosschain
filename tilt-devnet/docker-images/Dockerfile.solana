@@ -6,8 +6,8 @@ FROM docker.io/library/rust:1.49@sha256:a50165ea96983c21832578afb1c8c028674c965b
 RUN apt-get update\
     && apt-get install -y \
     clang \
-    libssl-dev \
     libudev-dev \
+    libssl-dev \
     llvm \
     pkg-config \
     zlib1g-dev \
