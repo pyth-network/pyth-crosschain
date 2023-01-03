@@ -24,8 +24,10 @@ ADD rust-toolchain /rust-toolchain
 USER root
 # Solana does a questionable download at the beginning of a *first* build-bpf call. Trigger and layer-cache it explicitly.
 RUN cargo init --lib /tmp/decoy-crate && \
-    cd /tmp/decoy-crate && cargo build-bpf && \
-    rm -rf /tmp/decoy-crate
+    cd /tmp/decoy-crate \
+    && echo '[lib]\nname=decoy_crate\ncrate-type=["cdylib"]' >> /tmp/decoy-crate/Cargo.toml # Make a more plausible decoy crate with real cdylib target \
+    && cargo build-bpf \
+    && rm -rf /tmp/decoy-crate
 
 WORKDIR /usr/src/bridge
 
