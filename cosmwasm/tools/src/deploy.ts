@@ -69,7 +69,7 @@ await wallet.sequence();
 
 /* Deploy artifacts */
 
-const codeIds = {};
+const codeIds: Record<string, number> = {};
 for (const file of artifacts) {
   const contract_bytes = readFileSync(`../artifacts/${file}`);
   console.log(`Storing WASM: ${file} (${contract_bytes.length} bytes)`);
@@ -86,7 +86,8 @@ for (const file of artifacts) {
     });
 
     const rs = await terra.tx.broadcast(tx);
-    const ci = /"code_id","value":"([^"]+)/gm.exec(rs.raw_log)[1];
+    // @ts-ignore
+    const ci: string = /"code_id","value":"([^"]+)/gm.exec(rs.raw_log)[1];
     codeIds[file] = parseInt(ci);
   } catch (e) {
     console.log(`${e}`);
@@ -107,8 +108,12 @@ const govChain = 1;
 const govAddress =
   "0000000000000000000000000000000000000000000000000000000000000004";
 
-async function instantiate(contract, inst_msg, label) {
-  var address;
+async function instantiate(
+  contract: string,
+  inst_msg: string | object,
+  label: string
+): Promise<string> {
+  var address: string = "";
   await wallet
     .createAndSignTx({
       msgs: [
@@ -125,6 +130,7 @@ async function instantiate(contract, inst_msg, label) {
     })
     .then((tx) => terra.tx.broadcast(tx))
     .then((rs) => {
+      // @ts-ignore
       address = /"_contract_address","value":"([^"]+)/gm.exec(rs.raw_log)[1];
     });
   console.log(
@@ -138,7 +144,7 @@ async function instantiate(contract, inst_msg, label) {
 // Instantiate contracts.  NOTE: Only append at the end, the ordering must be
 // deterministic for the addresses to work
 
-const addresses = {};
+const addresses: Record<string, string> = {};
 
 addresses["wormhole.wasm"] = await instantiate(
   "wormhole.wasm",
@@ -199,6 +205,6 @@ addresses["pyth_cosmwasm.wasm"] = await instantiate(
 
 // Terra addresses are "human-readable", but for cross-chain registrations, we
 // want the "canonical" version
-function convert_terra_address_to_hex(human_addr) {
+function convert_terra_address_to_hex(human_addr: string) {
   return "0x" + toHex(zeroPad(Bech32.decode(human_addr).data, 32));
 }

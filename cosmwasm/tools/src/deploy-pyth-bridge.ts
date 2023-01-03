@@ -9,6 +9,7 @@ import { Bech32, toHex } from "@cosmjs/encoding";
 import { zeroPad } from "ethers/lib/utils.js";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+// @ts-ignore
 import assert from "assert";
 
 const argv = yargs(hideBin(process.argv))
@@ -52,9 +53,10 @@ const argv = yargs(hideBin(process.argv))
     requred: false,
   })
   .help()
-  .alias("help", "h").argv;
+  .alias("help", "h")
+  .parseSync();
 
-const artifact = argv.artifact;
+const artifact = argv.artifact!;
 
 /* Set up terra client & wallet. It won't fail because inputs are validated with yargs */
 
@@ -145,7 +147,9 @@ const CONFIG = {
   },
 };
 
+// @ts-ignore
 const terraHost = CONFIG[argv.network].terraHost;
+// @ts-ignore
 const pythConfig = CONFIG[argv.network].pyth_config;
 const lcd = new LCDClient(terraHost);
 
@@ -187,6 +191,7 @@ if (argv.codeId !== undefined) {
   const rs = await lcd.tx.broadcast(tx);
 
   try {
+    // @ts-ignore
     const ci = /"code_id","value":"([^"]+)/gm.exec(rs.raw_log)[1];
     codeId = parseInt(ci);
   } catch (e) {
@@ -208,8 +213,12 @@ if (argv.codeId !== undefined) {
 if (argv.instantiate) {
   console.log("Instantiating a contract");
 
-  async function instantiate(codeId, inst_msg, label) {
-    var address;
+  async function instantiate(
+    codeId: number,
+    inst_msg: string | object,
+    label: string
+  ) {
+    var address: string = "";
     await wallet
       .createAndSignTx({
         msgs: [
@@ -226,6 +235,7 @@ if (argv.instantiate) {
       .then((tx) => lcd.tx.broadcast(tx))
       .then((rs) => {
         try {
+          // @ts-ignore
           address = /"contract_address","value":"([^"]+)/gm.exec(rs.raw_log)[1];
         } catch (e) {
           console.error(
@@ -260,15 +270,9 @@ if (argv.migrate) {
 
   const tx = await wallet.createAndSignTx({
     msgs: [
-      new MsgMigrateContract(
-        wallet.key.accAddress,
-        argv.contract,
-        codeId,
-        {
-          action: "",
-        },
-        { uluna: 1000 }
-      ),
+      new MsgMigrateContract(wallet.key.accAddress, argv.contract, codeId, {
+        action: "",
+      }),
     ],
     feeDenoms,
   });
@@ -276,8 +280,9 @@ if (argv.migrate) {
   const rs = await lcd.tx.broadcast(tx);
   var resultCodeId;
   try {
+    // @ts-ignore
     resultCodeId = /"code_id","value":"([^"]+)/gm.exec(rs.raw_log)[1];
-    assert.equal(codeId, resultCodeId);
+    assert.strictEqual(codeId, resultCodeId);
   } catch (e) {
     console.error(
       "Encountered an error in parsing migration result. Printing raw log"
@@ -293,10 +298,10 @@ if (argv.migrate) {
 
 // Terra addresses are "human-readable", but for cross-chain registrations, we
 // want the "canonical" version
-function convert_terra_address_to_hex(human_addr) {
+function convert_terra_address_to_hex(human_addr: string) {
   return "0x" + toHex(zeroPad(Bech32.decode(human_addr).data, 32));
 }
 
-function sleep(ms) {
+function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
