@@ -51,9 +51,9 @@ impl GovernanceModule {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u8)]
 pub enum GovernanceAction {
-    UpgradeContract { address: [u8; 20] }, // 0
+    UpgradeContract { code_id: u64 },                            // 0
     AuthorizeGovernanceDataSourceTransfer { claim_vaa: Binary }, // 1
-    SetDataSources { data_sources: Vec<PythDataSource> }, // 2
+    SetDataSources { data_sources: Vec<PythDataSource> },        // 2
     // Set the fee to val * (10 ** expo)
     SetFee { val: u64, expo: u64 }, // 3
     // Set the default valid period to the provided number of seconds
@@ -92,9 +92,8 @@ impl GovernanceInstruction {
 
         let action: Result<GovernanceAction, String> = match action_type {
             0 => {
-                let mut address: [u8; 20] = [0; 20];
-                bytes.read_exact(&mut address)?;
-                Ok(GovernanceAction::UpgradeContract { address })
+                let code_id = bytes.read_u64::<BigEndian>()?;
+                Ok(GovernanceAction::UpgradeContract { code_id })
             }
             1 => {
                 let mut payload: Vec<u8> = vec![];
@@ -137,6 +136,16 @@ impl GovernanceInstruction {
             _ => Err(format!("Unknown governance action type: {action_type}",)),
         };
 
+        // Check that we're at the end of the buffer (to ensure that this contract knows how to
+        // interpret every field in the governance message). The logic is a little janky
+        // but seems to be the simplest way to check that the reader is at EOF.
+        let mut next_byte = [0_u8; 1];
+        let read_result = bytes.read(&mut next_byte);
+        match read_result {
+            Ok(0) => (),
+            _ => Err("Governance action had an unexpectedly long payload.".to_string())?,
+        }
+
         Ok(GovernanceInstruction {
             module,
             action: action?,
@@ -151,10 +160,10 @@ impl GovernanceInstruction {
         buf.write_u8(self.module.to_u8())?;
 
         match &self.action {
-            GovernanceAction::UpgradeContract { address } => {
+            GovernanceAction::UpgradeContract { code_id } => {
                 buf.write_u8(0)?;
                 buf.write_u16::<BigEndian>(self.target_chain_id)?;
-                buf.write_all(address)?;
+                buf.write_u64::<BigEndian>(*code_id)?;
             }
             GovernanceAction::AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
                 buf.write_u8(1)?;
@@ -203,5 +212,39 @@ impl GovernanceInstruction {
         }
 
         Ok(buf)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::governance::{
+        GovernanceAction,
+        GovernanceInstruction,
+        GovernanceModule,
+    };
+
+    #[test]
+    fn test_payload_wrong_size() {
+        let instruction = GovernanceInstruction {
+            module:          GovernanceModule::Target,
+            action:          GovernanceAction::SetFee {
+                val:  100,
+                expo: 200,
+            },
+            target_chain_id: 7,
+        };
+
+        let mut buf: Vec<u8> = instruction.serialize().unwrap();
+
+        let result = GovernanceInstruction::deserialize(buf.as_slice());
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), instruction);
+
+        buf.push(0);
+        let result = GovernanceInstruction::deserialize(buf.as_slice());
+        assert!(result.is_err());
+
+        let result = GovernanceInstruction::deserialize(&buf[0..buf.len() - 2]);
+        assert!(result.is_err());
     }
 }

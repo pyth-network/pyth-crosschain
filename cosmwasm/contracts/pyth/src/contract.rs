@@ -34,8 +34,10 @@ use {
         entry_point,
         has_coins,
         to_binary,
+        Addr,
         Binary,
         Coin,
+        CosmosMsg,
         Deps,
         DepsMut,
         Env,
@@ -46,6 +48,7 @@ use {
         Response,
         StdResult,
         Timestamp,
+        WasmMsg,
         WasmQuery,
     },
     p2w_sdk::BatchPriceAttestation,
@@ -67,9 +70,19 @@ use {
     },
 };
 
+/// Migration code that runs once when the contract is upgraded. On upgrade, the migrate
+/// function in the *new* code version is run, which allows the new code to update the on-chain
+/// state before any of its other functions are invoked.
+///
+/// After the upgrade is complete, the code in this function can be deleted (and replaced with
+/// different code for the next migration).
+///
+/// Most upgrades won't require any special migration logic. In those cases,
+/// this function can safely be implemented as:
+/// `Ok(Response::default())`
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
-    Ok(Response::new())
+    Ok(Response::default())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -181,9 +194,11 @@ fn execute_governance_instruction(
     }
 
     let response = match instruction.action {
-        UpgradeContract { .. } => {
-            // FIXME: implement this
-            Err(PythContractError::InvalidGovernancePayload)?
+        UpgradeContract { code_id } => {
+            if instruction.target_chain_id == 0 {
+                Err(PythContractError::InvalidGovernancePayload)?
+            }
+            upgrade_contract(&env.contract.address, code_id)?
         }
         AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
             let parsed_claim_vaa = parse_vaa(deps.branch(), env.block.time.seconds(), &claim_vaa)?;
@@ -283,6 +298,20 @@ fn transfer_governance(
         }
         _ => Err(PythContractError::InvalidGovernancePayload)?,
     }
+}
+
+/// Upgrades the contract at `address` to `new_code_id` (by sending a `Migrate` message). The
+/// migration will fail unless this contract is the admin of the contract being upgraded.
+/// (Typically, `address` is this contract's address, and the contract is its own admin.)
+fn upgrade_contract(address: &Addr, new_code_id: u64) -> StdResult<Response> {
+    Ok(Response::new()
+        .add_message(CosmosMsg::Wasm(WasmMsg::Migrate {
+            contract_addr: address.to_string(),
+            new_code_id,
+            msg: to_binary(&MigrateMsg {})?,
+        }))
+        .add_attribute("action", "upgrade_contract")
+        .add_attribute("new_code_id", format!("{new_code_id}")))
 }
 
 /// Check that `vaa` is from a valid data source (and hence is a legitimate price update message).
