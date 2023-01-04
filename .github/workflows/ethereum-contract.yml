@@ -1,13 +1,13 @@
 on:
   pull_request:
     paths:
-      - ethereum/**
+      - target-chains/ethereum/**
       - third_party/pyth/xc-governance-sdk-js/**
   push:
     branches:
       - main
     paths:
-      - ethereum/**
+      - target-chains/ethereum/**
       - third_party/pyth/xc-governance-sdk-js/**
 
 name: Ethereum Contract
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ethereum/
+        working-directory: target-chains/ethereum/
     steps:
       - uses: actions/checkout@v3
 

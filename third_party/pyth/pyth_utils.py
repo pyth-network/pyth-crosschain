@@ -9,7 +9,7 @@ from http.client import HTTPConnection
 
 # A generic unprivileged payer account with funds
 SOL_PAYER_KEYPAIR = os.environ.get(
-    "SOL_PAYER_KEYPAIR", "/usr/src/solana/keys/solana-devnet.json"
+    "SOL_PAYER_KEYPAIR", "/solana-secrets/solana-devnet.json"
 )
 
 # Settings specific to local devnet Pyth instance

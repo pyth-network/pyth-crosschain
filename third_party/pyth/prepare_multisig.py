@@ -9,7 +9,7 @@ from pyth_utils import *
 MULTISIG_SCRIPT_CMD_PREFIX = "npm run start --".split(" ")
 MULTISIG_SCRIPT_DIR = os.environ.get("MULTISIG_SCRIPT_DIR", "/root/pyth/multisig-wh-message-builder")
 
-MESH_KEY_DIR = "/usr/src/solana/keys/squads/"
+MESH_KEY_DIR = "/solana-secrets/squads/"
 MESH_PROGRAM_ADDR = "SMPLVC8MxZ5Bf5EfF7PaMiTCxoBAcmkbM2vkrvMK8ho"
 MESH_CREATE_KEY_PATH = MESH_KEY_DIR + "create_key.json"
 MESH_VAULT_EXT_AUTHORITY_KEY_PATH = MESH_KEY_DIR + "external_authority.json"
