@@ -41,4 +41,4 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         env:
           ECR_REGISTRY: public.ecr.aws
-          ECR_REPOSITORY: pyth-network/pyth-wormhole-attester-client
+          ECR_REPOSITORY: pyth-network/xc-attest
