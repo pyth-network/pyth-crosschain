@@ -28,6 +28,7 @@ import {
   WormholeTools,
   parse,
 } from "./wormhole";
+import { getPythProgramKeyForCluster } from "@pythnetwork/client";
 
 setDefaultWasm("node");
 
@@ -51,6 +52,7 @@ type Config = {
   wormholeClusterName: WormholeNetwork;
   wormholeRpcEndpoint: string;
   vault: PublicKey;
+  pythOracleSolana: PublicKey;
 };
 
 export const CONFIG: Record<Cluster, Config> = {
@@ -58,16 +60,21 @@ export const CONFIG: Record<Cluster, Config> = {
     wormholeClusterName: "TESTNET",
     vault: new PublicKey("6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3"),
     wormholeRpcEndpoint: "https://wormhole-v2-testnet-api.certus.one",
+    pythOracleSolana: getPythProgramKeyForCluster("devnet"),
   },
   mainnet: {
     wormholeClusterName: "MAINNET",
     vault: new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
     wormholeRpcEndpoint: "https://wormhole-v2-mainnet-api.certus.one",
+    pythOracleSolana: getPythProgramKeyForCluster("mainnet-beta"),
   },
   localdevnet: {
     wormholeClusterName: "DEVNET",
     vault: new PublicKey("DFkA5ubJSETKiFnniAsm8qRXUa7RrnnE7U9awTzbcrJF"),
     wormholeRpcEndpoint: "http://guardian:7071",
+    pythOracleSolana: new PublicKey(
+      "gMYYig2utAxVoXnM9UhtTWrt8e7x2SVBZqsWZJeT5Gw"
+    ),
   },
 };
 
