@@ -6,6 +6,19 @@ use {
     thiserror::Error,
 };
 
+/// Small macro for throwing errors in the contract when a boolean condition is not met.
+///
+/// It would be nice to have anyhow::ensure!() here, but the contract acts as a library and a
+/// concrete error type is a better API for this case.
+#[macro_export]
+macro_rules! ensure {
+    ($cond:expr, $err:expr) => {
+        if !$cond {
+            return Err($err);
+        }
+    };
+}
+
 #[derive(Error, Debug, Serialize, FunctionError)]
 #[serde(crate = "near_sdk::serde")]
 pub enum Error {
@@ -18,10 +31,16 @@ pub enum Error {
     #[error("A VAA payload could not be deserialized.")]
     InvalidPayload,
 
+    #[error("Governance Module ID not valid.")]
+    InvalidGovernanceModule,
+
+    #[error("Governance Module Action not valid.")]
+    InvalidGovernanceAction,
+
     #[error("Source for attestation is not allowed.")]
     UnknownSource,
 
-    #[error("Unauthorized Upgrade")]
+    #[error("Unauthorized Upgrade.")]
     UnauthorizedUpgrade,
 
     #[error("Insufficient tokens deposited to cover storage.")]
@@ -32,12 +51,25 @@ pub enum Error {
 
     #[error("Fee is too large.")]
     FeeTooLarge,
+
+    #[error("Arithmetic overflow.")]
+    ArithmeticOverflow,
+
+    #[error("Unknown error.")]
+    Unknown,
 }
 
 /// Convert IO errors into Payload errors, the only I/O we do is parsing with `Cursor` so this is a
 /// reasonable conversion.
 impl From<std::io::Error> for Error {
     fn from(_: std::io::Error) -> Self {
+        Error::InvalidPayload
+    }
+}
+
+/// Convert `nom` errors into local crate `InvalidPayload` errors.
+impl From<nom::Err<nom::error::Error<&[u8]>>> for Error {
+    fn from(_: nom::Err<nom::error::Error<&[u8]>>) -> Self {
         Error::InvalidPayload
     }
 }

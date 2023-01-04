@@ -2,7 +2,11 @@
 
 use {
     crate::{
-        error::Error,
+        ensure,
+        error::Error::{
+            self,
+            *,
+        },
         ext::ext_wormhole,
         state::{
             Chain,
@@ -11,11 +15,6 @@ use {
         },
         Pyth,
         PythExt,
-    },
-    byteorder::{
-        BigEndian,
-        ReadBytesExt,
-        WriteBytesExt,
     },
     near_sdk::{
         borsh::{
@@ -34,162 +33,218 @@ use {
         Gas,
         Promise,
     },
-    std::io::Read,
+    num_traits::FromPrimitive,
+    strum::EnumDiscriminants,
     wormhole::Chain as WormholeChain,
 };
 
 /// Magic Header for identifying Governance VAAs.
-const GOVERNANCE_MAGIC: [u8; 4] = [0x50, 0x54, 0x47, 0x4d];
+const GOVERNANCE_MAGIC: [u8; 4] = *b"PTGM";
 
-/// ID for the module this contract identifies as: Pyth Receiver (0x1).
-const GOVERNANCE_MODULE: u8 = 0x01;
-
-/// Enumeration of IDs for different governance actions.
+/// The type of contract that can accept a governance instruction.
+#[derive(
+    BorshDeserialize,
+    BorshSerialize,
+    Clone,
+    Copy,
+    Debug,
+    Deserialize,
+    Eq,
+    PartialEq,
+    Serialize,
+    num_derive::FromPrimitive,
+    num_derive::ToPrimitive,
+)]
+#[serde(crate = "near_sdk::serde")]
 #[repr(u8)]
-pub enum ActionId {
-    ContractUpgrade        = 0,
-    SetDataSources         = 1,
-    SetGovernanceSource    = 2,
-    SetStalePriceThreshold = 3,
-    SetUpdateFee           = 4,
-}
-
-impl TryInto<ActionId> for u8 {
-    type Error = Error;
-    fn try_into(self) -> Result<ActionId, Error> {
-        match self {
-            0 => Ok(ActionId::ContractUpgrade),
-            1 => Ok(ActionId::SetDataSources),
-            2 => Ok(ActionId::SetGovernanceSource),
-            3 => Ok(ActionId::SetStalePriceThreshold),
-            4 => Ok(ActionId::SetUpdateFee),
-            _ => Err(Error::InvalidPayload),
-        }
-    }
-}
-
-impl From<ActionId> for u8 {
-    fn from(val: ActionId) -> Self {
-        val as u8
-    }
+pub enum GovernanceModule {
+    /// The PythNet executor contract
+    Executor = 0,
+    /// A target chain contract (like this one!)
+    Target   = 1,
 }
 
 /// A `GovernanceAction` represents the different actions that can be voted on and executed by the
 /// governance system.
-#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize)]
+///
+/// [ref:chain_structure] This type uses a [u8; 32] for contract upgrades which differs from other
+/// chains, see the reference for more details.
+///
+/// [ref:action_discriminants] The discriminants for this enum are duplicated into a separate enum
+/// containing only the discriminants with no fields called `GovernanceActionId`. This allow for
+/// type-safe matching IDs during deserialization. When new actions are added, this will force the
+/// developer to update the parser.
+#[derive(
+    BorshDeserialize,
+    BorshSerialize,
+    Debug,
+    Deserialize,
+    EnumDiscriminants,
+    Eq,
+    PartialEq,
+    Serialize,
+)]
+#[strum_discriminants(derive(num_derive::ToPrimitive, num_derive::FromPrimitive))]
+#[strum_discriminants(name(GovernanceActionId))]
 #[serde(crate = "near_sdk::serde")]
 pub enum GovernanceAction {
-    ContractUpgrade([u8; 32]),
-    SetDataSources(Vec<Source>),
-    SetGovernanceSource(Source),
-    SetStalePriceThreshold(u64),
-    SetUpdateFee(u64),
+    UpgradeContract { codehash: [u8; 32] },
+    AuthorizeGovernanceDataSourceTransfer { claim_vaa: Vec<u8> },
+    SetDataSources { data_sources: Vec<Source> },
+    SetFee { base: u64, expo: u64 },
+    SetValidPeriod { valid_seconds: u64 },
+    RequestGovernanceDataSourceTransfer { governance_data_source_index: u32 },
 }
 
-impl GovernanceAction {
-    pub fn id(&self) -> ActionId {
-        match self {
-            GovernanceAction::ContractUpgrade(_) => ActionId::ContractUpgrade,
-            GovernanceAction::SetDataSources(_) => ActionId::SetDataSources,
-            GovernanceAction::SetGovernanceSource(_) => ActionId::SetGovernanceSource,
-            GovernanceAction::SetStalePriceThreshold(_) => ActionId::SetStalePriceThreshold,
-            GovernanceAction::SetUpdateFee(_) => ActionId::SetUpdateFee,
-        }
-    }
+#[derive(BorshDeserialize, BorshSerialize, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct GovernanceInstruction {
+    pub module: GovernanceModule,
+    pub action: GovernanceAction,
+    pub target: Chain,
+}
 
-    pub fn deserialize(data: &[u8]) -> Result<Self, Error> {
-        let mut cursor = std::io::Cursor::new(data);
-        let magic = cursor.read_u32::<BigEndian>()?;
-        let module = cursor.read_u8()?;
-        let action = cursor.read_u8()?.try_into()?;
-        let target = cursor.read_u16::<BigEndian>()?;
+impl GovernanceInstruction {
+    /// Implements a `deserialize` method for the `GovernanceAction` enum using `nom` to
+    /// deserialize the payload. The use of `nom` gives us parser safety, error handling, full
+    /// buffer consumption, and a more readable implementation while staying efficient.
+    pub fn deserialize(input: impl AsRef<[u8]>) -> Result<Self, Error> {
+        use nom::{
+            bytes::complete::take,
+            combinator::all_consuming,
+            multi::length_count,
+            number::complete::{
+                be_u16,
+                be_u32,
+                be_u64,
+                be_u8,
+            },
+        };
 
-        assert!(module == GOVERNANCE_MODULE);
-        assert!(target == 0 || target == u16::from(WormholeChain::Near));
-        assert!(magic == u32::from_le_bytes(GOVERNANCE_MAGIC));
+        let input = input.as_ref();
 
-        Ok(match action {
-            ActionId::ContractUpgrade => {
-                let mut hash = [0u8; 32];
-                cursor.read_exact(&mut hash)?;
-                Self::ContractUpgrade(hash)
-            }
+        // Verify Governance header is as expected so we can bail to avoid more parsing.
+        let (input, magic) = take(4usize)(input)?;
+        let (input, module) = be_u8(input)?;
+        let (input, action) = be_u8(input)?;
+        let (input, chain) = be_u16(input)?;
+        let module = GovernanceModule::from_u8(module).ok_or(InvalidGovernanceModule)?;
+        let chain = Chain::from(WormholeChain::from(chain));
 
-            ActionId::SetDataSources => {
-                let mut sources = Vec::new();
-                let count = cursor.read_u8()?;
+        // Safely parse the action ID. [ref:action_discriminants]
+        let action = GovernanceActionId::from_u8(action).ok_or(InvalidGovernanceAction)?;
 
-                for _ in 0..count {
-                    let mut emitter = [0u8; 32];
-                    cursor.read_exact(&mut emitter)?;
-                    sources.push(Source {
-                        emitter,
-                        pyth_emitter_chain: Chain::from(WormholeChain::from(
-                            cursor.read_u16::<BigEndian>()?,
-                        )),
-                    });
+        ensure!(magic == GOVERNANCE_MAGIC, InvalidGovernanceModule);
+        ensure!(module == GovernanceModule::Target, InvalidGovernanceModule);
+
+        Ok(GovernanceInstruction {
+            module,
+            target: chain,
+            action: match action {
+                GovernanceActionId::UpgradeContract => {
+                    let (_input, bytes) = all_consuming(take(32usize))(input)?;
+                    let mut codehash = [0u8; 32];
+                    codehash.copy_from_slice(bytes);
+                    GovernanceAction::UpgradeContract { codehash }
                 }
 
-                Self::SetDataSources(sources)
-            }
+                GovernanceActionId::AuthorizeGovernanceDataSourceTransfer => {
+                    let (_input, claim_vaa) = all_consuming(take(input.len()))(input)?;
+                    GovernanceAction::AuthorizeGovernanceDataSourceTransfer {
+                        claim_vaa: claim_vaa.to_vec(),
+                    }
+                }
 
-            ActionId::SetGovernanceSource => {
-                let mut emitter = [0u8; 32];
-                cursor.read_exact(&mut emitter)?;
-                Self::SetGovernanceSource(Source {
-                    emitter,
-                    pyth_emitter_chain: Chain(cursor.read_u16::<BigEndian>()?),
-                })
-            }
+                GovernanceActionId::SetDataSources => {
+                    let (_input, data_sources) = all_consuming(length_count(be_u8, |input| {
+                        let (input, chain) = be_u16(input)?;
+                        let (input, bytes) = take(32usize)(input)?;
+                        let chain = Chain::from(WormholeChain::from(chain));
+                        let mut emitter = [0u8; 32];
+                        emitter.copy_from_slice(bytes);
+                        Ok((input, Source { chain, emitter }))
+                    }))(input)?;
+                    GovernanceAction::SetDataSources { data_sources }
+                }
 
-            ActionId::SetStalePriceThreshold => {
-                let stale_price_threshold = cursor.read_u64::<BigEndian>()?;
-                Self::SetStalePriceThreshold(stale_price_threshold)
-            }
+                GovernanceActionId::SetFee => {
+                    let (_input, (val, expo)) = all_consuming(|input| {
+                        let (input, val) = be_u64(input)?;
+                        let (input, expo) = be_u64(input)?;
+                        Ok((input, (val, expo)))
+                    })(input)?;
+                    GovernanceAction::SetFee { base: val, expo }
+                }
 
-            ActionId::SetUpdateFee => {
-                let update_fee = cursor.read_u64::<BigEndian>()?;
-                Self::SetUpdateFee(update_fee)
-            }
+                GovernanceActionId::SetValidPeriod => {
+                    let (_input, valid_seconds) = all_consuming(be_u64)(input)?;
+                    GovernanceAction::SetValidPeriod { valid_seconds }
+                }
+
+                GovernanceActionId::RequestGovernanceDataSourceTransfer => {
+                    let (_input, governance_data_source_index) = all_consuming(be_u32)(input)?;
+                    GovernanceAction::RequestGovernanceDataSourceTransfer {
+                        governance_data_source_index,
+                    }
+                }
+            },
         })
     }
 
-    pub fn serialize(&self) -> Vec<u8> {
-        let mut data = Vec::new();
-        let magic = u32::from_le_bytes(GOVERNANCE_MAGIC);
-        data.write_u32::<BigEndian>(magic).unwrap();
-        data.push(GOVERNANCE_MODULE);
-        data.push(self.id() as u8);
-        data.extend_from_slice(&0u16.to_le_bytes());
+    /// Implements a `serialize` method for the `GovernanceAction` enum. The `nom` library doesn't
+    /// provide serialization but serialization is a safer operation, so we can just use a simple
+    /// push buffer to serialize.
+    pub fn serialize(&self) -> Result<Vec<u8>, Error> {
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&GOVERNANCE_MAGIC);
+        buf.push(self.module as u8);
 
-        match self {
-            Self::ContractUpgrade(hash) => {
-                data.extend_from_slice(hash);
+        match &self.action {
+            GovernanceAction::UpgradeContract { codehash } => {
+                buf.push(GovernanceActionId::UpgradeContract as u8);
+                buf.extend_from_slice(&u16::from(self.target).to_be_bytes());
+                buf.extend_from_slice(codehash);
             }
 
-            Self::SetDataSources(sources) => {
-                data.push(sources.len() as u8);
-                for source in sources {
-                    data.extend_from_slice(&source.emitter);
-                    data.extend_from_slice(&source.pyth_emitter_chain.0.to_le_bytes());
+            GovernanceAction::AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
+                buf.push(GovernanceActionId::AuthorizeGovernanceDataSourceTransfer as u8);
+                buf.extend_from_slice(&u16::from(self.target).to_be_bytes());
+                buf.extend_from_slice(claim_vaa);
+            }
+
+            GovernanceAction::SetDataSources { data_sources } => {
+                buf.push(GovernanceActionId::SetDataSources as u8);
+                buf.extend_from_slice(&u16::from(self.target).to_be_bytes());
+                buf.push(u8::try_from(data_sources.len()).map_err(|_| InvalidPayload)?);
+                for source in data_sources {
+                    buf.extend_from_slice(&(u16::from(source.chain).to_be_bytes()));
+                    buf.extend_from_slice(&source.emitter);
                 }
             }
 
-            Self::SetGovernanceSource(source) => {
-                data.extend_from_slice(&source.emitter);
-                data.extend_from_slice(&source.pyth_emitter_chain.0.to_le_bytes());
+            GovernanceAction::SetFee { base: val, expo } => {
+                buf.push(GovernanceActionId::SetFee as u8);
+                buf.extend_from_slice(&u16::from(self.target).to_be_bytes());
+                buf.extend_from_slice(&val.to_be_bytes());
+                buf.extend_from_slice(&expo.to_be_bytes());
             }
 
-            Self::SetStalePriceThreshold(stale_price_threshold) => {
-                data.extend_from_slice(&stale_price_threshold.to_le_bytes());
+            GovernanceAction::SetValidPeriod { valid_seconds } => {
+                buf.push(GovernanceActionId::SetValidPeriod as u8);
+                buf.extend_from_slice(&u16::from(self.target).to_be_bytes());
+                buf.extend_from_slice(&valid_seconds.to_be_bytes());
             }
 
-            Self::SetUpdateFee(update_fee) => {
-                data.extend_from_slice(&update_fee.to_le_bytes());
+            GovernanceAction::RequestGovernanceDataSourceTransfer {
+                governance_data_source_index,
+            } => {
+                buf.push(GovernanceActionId::RequestGovernanceDataSourceTransfer as u8);
+                buf.extend_from_slice(&u16::from(self.target).to_be_bytes());
+                buf.extend_from_slice(&governance_data_source_index.to_be_bytes());
             }
         }
 
-        data
+        Ok(buf)
     }
 }
 
@@ -205,33 +260,34 @@ impl Pyth {
         // Verify the VAA is coming from a trusted source chain before attempting to verify VAA
         // signatures. Avoids a cross-contract call early.
         {
-            let vaa = hex::decode(&vaa).map_err(|_| Error::InvalidHex)?;
+            let vaa = hex::decode(&vaa).map_err(|_| InvalidHex)?;
             let vaa = serde_wormhole::from_slice_with_payload::<wormhole::Vaa<()>>(&vaa);
-            let vaa = vaa.map_err(|_| Error::InvalidVaa)?;
+            let vaa = vaa.map_err(|_| InvalidVaa)?;
             let (vaa, _rest) = vaa;
 
-            // Convert to local VAA type to catch APi changes.
+            // Convert to local VAA type to catch API changes.
             let vaa = Vaa::from(vaa);
 
             // Prevent VAA re-execution.
-            if self.executed_gov_sequences.contains(&vaa.sequence) {
-                return Err(Error::VaaVerificationFailed);
-            }
+            ensure!(
+                self.executed_governance_vaa < vaa.sequence,
+                VaaVerificationFailed
+            );
 
             // Confirm the VAA is coming from a trusted source chain.
-            if self.gov_source
-                != (Source {
-                    emitter:            vaa.emitter_address,
-                    pyth_emitter_chain: vaa.emitter_chain,
-                })
-            {
-                return Err(Error::UnknownSource);
-            }
+            ensure!(
+                self.gov_source
+                    == (Source {
+                        emitter: vaa.emitter_address,
+                        chain:   vaa.emitter_chain,
+                    }),
+                UnknownSource
+            );
 
-            // Insert before calling Wormhole to prevent re-execution. If we wait until after the
+            // Update before calling Wormhole to prevent re-execution. If we wait until after the
             // Wormhole call we could end up with multiple VAA's with the same sequence being
             // executed in parallel.
-            self.executed_gov_sequences.insert(&vaa.sequence);
+            self.executed_governance_vaa = vaa.sequence;
         }
 
         // Verify VAA and refund the caller in case of failure.
@@ -265,9 +321,7 @@ impl Pyth {
     ) -> Result<(), Error> {
         use GovernanceAction::*;
 
-        if !is_promise_success() {
-            return Err(Error::VaaVerificationFailed);
-        }
+        ensure!(is_promise_success(), VaaVerificationFailed);
 
         // Get Storage Usage before execution.
         let storage = env::storage_usage();
@@ -275,16 +329,19 @@ impl Pyth {
         // Deserialize VAA, note that we already deserialized and verified the VAA in `process_vaa`
         // at this point so we only care about the `rest` component which contains bytes we can
         // deserialize into an Action.
-        let vaa = hex::decode(&vaa).unwrap();
+        let vaa = hex::decode(vaa).map_err(|_| InvalidPayload)?;
         let (_, rest): (wormhole::Vaa<()>, _) =
-            serde_wormhole::from_slice_with_payload(&vaa).map_err(|_| Error::InvalidPayload)?;
+            serde_wormhole::from_slice_with_payload(&vaa).map_err(|_| InvalidPayload)?;
 
-        match GovernanceAction::deserialize(rest)? {
-            ContractUpgrade(codehash) => self.set_upgrade_hash(codehash),
-            SetDataSources(sources) => self.set_sources(sources),
-            SetGovernanceSource(source) => self.set_gov_source(source),
-            SetStalePriceThreshold(threshold) => self.set_stale_price_threshold(threshold),
-            SetUpdateFee(fee) => self.set_update_fee(fee),
+        match GovernanceInstruction::deserialize(rest)?.action {
+            UpgradeContract { codehash } => self.set_upgrade_hash(codehash),
+            SetDataSources { data_sources } => self.set_sources(data_sources),
+            SetFee { base, expo } => self.set_update_fee(base, expo)?,
+            SetValidPeriod { valid_seconds } => self.set_valid_period(valid_seconds),
+            RequestGovernanceDataSourceTransfer { .. } => Err(InvalidPayload)?,
+            AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
+                self.authorize_gov_source_transfer(claim_vaa)?
+            }
         }
 
         // Refund storage difference to `account_id` after storage execution.
@@ -312,18 +369,64 @@ impl Pyth {
     }
 
     #[private]
-    pub fn set_gov_source(&mut self, source: Source) {
-        self.gov_source = source;
+    #[handle_result]
+    pub fn authorize_gov_source_transfer(&mut self, claim_vaa: Vec<u8>) -> Result<(), Error> {
+        let (vaa, rest): (wormhole::Vaa<()>, _) =
+            serde_wormhole::from_slice_with_payload(&claim_vaa).expect("Failed to deserialize VAA");
+
+        // Convert to local VAA type to catch API changes.
+        let vaa = Vaa::from(vaa);
+
+        // Parse GovernanceInstruction from Payload.
+        let instruction =
+            GovernanceInstruction::deserialize(rest).expect("Failed to deserialize action");
+
+        // Confirm action is destined for NEAR.
+        ensure!(
+            instruction.target == Chain::from(WormholeChain::Near),
+            Unknown
+        );
+
+        // Execute the embedded VAA action.
+        match instruction.action {
+            GovernanceAction::RequestGovernanceDataSourceTransfer {
+                governance_data_source_index,
+            } => {
+                ensure!(
+                    self.executed_governance_change_vaa < governance_data_source_index as u64,
+                    Unknown
+                );
+
+                // Update Governance Source
+                self.gov_source = Source {
+                    emitter: vaa.emitter_address,
+                    chain:   vaa.emitter_chain,
+                };
+            }
+
+            _ => Err(Unknown)?,
+        }
+
+        Ok(())
     }
 
     #[private]
-    pub fn set_stale_price_threshold(&mut self, threshold: u64) {
+    pub fn set_valid_period(&mut self, threshold: u64) {
         self.stale_threshold = threshold;
     }
 
     #[private]
-    pub fn set_update_fee(&mut self, fee: u64) {
-        self.update_fee = fee;
+    #[handle_result]
+    pub fn set_update_fee(&mut self, fee: u64, expo: u64) -> Result<(), Error> {
+        self.update_fee = (fee as u128)
+            .checked_mul(
+                10_u128
+                    .checked_pow(u32::try_from(expo).map_err(|_| ArithmeticOverflow)?)
+                    .ok_or(ArithmeticOverflow)?,
+            )
+            .ok_or(ArithmeticOverflow)?;
+
+        Ok(())
     }
 
     #[private]
@@ -347,10 +450,7 @@ impl Pyth {
     #[handle_result]
     pub(crate) fn upgrade(&mut self, new_code: Vec<u8>) -> Result<Promise, Error> {
         let signature = env::sha256(&new_code);
-
-        if signature != self.codehash {
-            return Err(Error::UnauthorizedUpgrade);
-        }
+        ensure!(signature == self.codehash, UnauthorizedUpgrade);
 
         Ok(Promise::new(env::current_account_id())
             .deploy_contract(new_code)
@@ -380,6 +480,223 @@ impl Pyth {
     fn is_valid_governance_source(&self, source: &Source) -> Result<(), Error> {
         (self.gov_source == *source)
             .then_some(())
-            .ok_or(Error::UnknownSource)
+            .ok_or(UnknownSource)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use {
+        super::*,
+        crate::governance::GovernanceActionId,
+        near_sdk::{
+            test_utils::{
+                accounts,
+                VMContextBuilder,
+            },
+            testing_env,
+        },
+        std::io::{
+            Cursor,
+            Write,
+        },
+    };
+
+    fn get_context() -> VMContextBuilder {
+        let mut context = VMContextBuilder::new();
+        context
+            .current_account_id(accounts(0))
+            .signer_account_id(accounts(0))
+            .predecessor_account_id(accounts(0))
+            .attached_deposit(0)
+            .is_view(false);
+        context
+    }
+
+    #[test]
+    fn test_upgrade() {
+        let mut context = get_context();
+        context.is_view(false);
+        testing_env!(context.build());
+
+        let mut contract = Pyth::new(
+            near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
+            [0; 32],
+            Source::default(),
+            Source::default(),
+            0.into(),
+            32,
+        );
+
+        contract.codehash = env::sha256(&[1, 2, 3]).try_into().unwrap();
+        contract.upgrade(vec![1, 2, 3]).expect("Upgrade failed");
+    }
+
+    #[test]
+    #[should_panic(expected = "UnauthorizedUpgrade")]
+    fn test_upgrade_fail() {
+        let mut context = get_context();
+        context.is_view(false);
+        testing_env!(context.build());
+
+        let mut contract = Pyth::new(
+            near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
+            [0; 32],
+            Source::default(),
+            Source::default(),
+            0.into(),
+            32,
+        );
+
+        contract.codehash = env::sha256(&[1, 2, 3]).try_into().unwrap();
+        contract.upgrade(vec![1, 2, 3, 4]).expect("Upgrade failed");
+    }
+
+    #[test]
+    fn test_set_valid_period() {
+        let mut context = get_context();
+        context.is_view(false);
+        testing_env!(context.build());
+
+        let mut contract = Pyth::new(
+            near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
+            [0; 32],
+            Source::default(),
+            Source::default(),
+            0.into(),
+            32,
+        );
+
+        contract.set_valid_period(100);
+        assert_eq!(contract.stale_threshold, 100);
+    }
+
+    #[test]
+    fn test_set_update_fee() {
+        let mut context = get_context();
+        context.is_view(false);
+        testing_env!(context.build());
+
+        let mut contract = Pyth::new(
+            near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
+            [0; 32],
+            Source::default(),
+            Source::default(),
+            0.into(),
+            32,
+        );
+
+        contract.set_update_fee(100, 0).expect("Failed to set fee");
+        assert_eq!(contract.update_fee, 100);
+    }
+
+    #[test]
+    fn test_governance_serialize_matches_deserialize() {
+        // We match on the GovernanceActionId so that when new variants are added the test is
+        // forced to be updated. There's nothing special about SetFee we just need a concrete value
+        // to match on.
+        match GovernanceActionId::SetFee {
+            GovernanceActionId::SetValidPeriod => {
+                let instruction = GovernanceInstruction {
+                    module: GovernanceModule::Target,
+                    target: Chain::from(WormholeChain::Near),
+                    action: GovernanceAction::SetValidPeriod { valid_seconds: 100 },
+                };
+
+                assert_eq!(
+                    instruction,
+                    GovernanceInstruction::deserialize(instruction.serialize().unwrap()).unwrap()
+                );
+            }
+
+            GovernanceActionId::SetDataSources => {
+                let instruction = GovernanceInstruction {
+                    module: GovernanceModule::Target,
+                    target: Chain::from(WormholeChain::Near),
+                    action: GovernanceAction::SetDataSources {
+                        data_sources: vec![Source::default()],
+                    },
+                };
+
+                assert_eq!(
+                    instruction,
+                    GovernanceInstruction::deserialize(instruction.serialize().unwrap()).unwrap()
+                );
+            }
+
+            GovernanceActionId::SetFee => {
+                let instruction = GovernanceInstruction {
+                    module: GovernanceModule::Target,
+                    target: Chain::from(WormholeChain::Near),
+                    action: GovernanceAction::SetFee {
+                        base: 100,
+                        expo: 100,
+                    },
+                };
+
+                assert_eq!(
+                    instruction,
+                    GovernanceInstruction::deserialize(instruction.serialize().unwrap()).unwrap()
+                );
+            }
+
+            GovernanceActionId::UpgradeContract => {
+                let instruction = GovernanceInstruction {
+                    module: GovernanceModule::Target,
+                    target: Chain::from(WormholeChain::Near),
+                    action: GovernanceAction::UpgradeContract { codehash: [1; 32] },
+                };
+
+                assert_eq!(
+                    instruction,
+                    GovernanceInstruction::deserialize(instruction.serialize().unwrap()).unwrap()
+                );
+            }
+
+            GovernanceActionId::AuthorizeGovernanceDataSourceTransfer => {
+                let vaa = {
+                    let vaa = wormhole::Vaa {
+                        emitter_chain: wormhole::Chain::Any,
+                        emitter_address: wormhole::Address([0; 32]),
+                        sequence: 1,
+                        payload: (),
+                        ..Default::default()
+                    };
+
+                    let mut cur = Cursor::new(Vec::new());
+                    serde_wormhole::to_writer(&mut cur, &vaa).expect("Failed to serialize VAA");
+                    cur.write_all(
+                        &GovernanceInstruction {
+                            target: Chain::from(WormholeChain::Near),
+                            module: GovernanceModule::Target,
+                            action: GovernanceAction::RequestGovernanceDataSourceTransfer {
+                                governance_data_source_index: 1,
+                            },
+                        }
+                        .serialize()
+                        .unwrap(),
+                    )
+                    .expect("Failed to write Payload");
+                    cur.into_inner()
+                };
+
+                let instruction = GovernanceInstruction {
+                    module: GovernanceModule::Target,
+                    target: Chain::from(WormholeChain::Near),
+                    action: GovernanceAction::AuthorizeGovernanceDataSourceTransfer {
+                        claim_vaa: vaa,
+                    },
+                };
+
+                assert_eq!(
+                    instruction,
+                    GovernanceInstruction::deserialize(instruction.serialize().unwrap()).unwrap()
+                );
+            }
+
+            GovernanceActionId::RequestGovernanceDataSourceTransfer => {
+                unimplemented!()
+            }
+        }
     }
 }

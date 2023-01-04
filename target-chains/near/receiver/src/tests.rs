@@ -19,7 +19,7 @@ mod tests {
             [0; 32],
             Source::default(),
             Source::default(),
-            1,
+            1.into(),
             32,
         )
     }

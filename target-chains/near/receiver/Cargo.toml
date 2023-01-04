@@ -13,9 +13,13 @@ crate-type      = ["cdylib", "lib"]
 byteorder       = { version = "1.4.3" }
 hex             = { version = "0.4.3" }
 near-sdk        = { version = "4.1.1" }
-p2w-sdk         = { path = "../../third_party/pyth/p2w-sdk/rust" }
+nom             = { version = "7.1.2" }
+num-traits      = { version = "0.2.15" }
+num-derive      = { version = "0.3.3" }
+p2w-sdk         = { path = "../../../third_party/pyth/p2w-sdk/rust" }
 pyth-sdk        = { version = "0.7.0" }
 serde_wormhole  = { git = "https://github.com/wormhole-foundation/wormhole" }
+strum           = { version = "0.24.1", features = ["derive"] }
 thiserror       = { version = "1.0.38" }
 wormhole-core   = { git = "https://github.com/wormhole-foundation/wormhole" }
 
