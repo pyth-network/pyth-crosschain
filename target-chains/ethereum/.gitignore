@@ -5,3 +5,5 @@ cache
 .openzeppelin
 *mnemonic*
 !devnet-mnemonic.txt
+cache-zk
+artifacts-zk

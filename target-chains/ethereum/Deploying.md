@@ -82,6 +82,8 @@ This is the deployment process:
    need to approve the created transactions. Links to the multisig transactions are printed during the
    script execution and you can use them. You need to run the script when the transactions are approved.
    If the deployment script runs successfully you should see many ✅s and no ❌s with a successful message.
+   Please note that if you need to deploy/upgrade a zkSync network contract, you should deploy/upgrade it manually first
+   as described below.
 7. On first time deployments for a network with Wormhole Receiver contract, run this command:
    ```bash
    npm run receiver-submit-guardian-sets -- --network <network>
@@ -161,3 +163,17 @@ It will create a new file `PythUpgradable_merged.sol` which you can use in the e
   migration. However, if it happens, you can comment out the part that is already ran (you can double check in the explorer), and re-run the migration.
   You can avoid gas problems by choosing a much higher gas than what is showed on the network gas tracker. Also, you can find other rpc nodes from
   [here](https://chainlist.org/)
+
+# Deploy/Upgrade on zkSync networks
+
+Although zkSync is EVM compatible, their binary format is different than solc output. So, we need to use their libraries to
+compile it to their binary format (zk-solc) and deploy it. As of this writing they only support hardhat. To deploy a fresh
+contract or a new contract do the following steps in addition to the steps described above:
+
+1. Update the [`hardhad.config.ts`](./hardhat.config.ts) file.
+2. Add the configuration files to `truffle-config.js` and `.env.prod.<network>` file as described above. Truffle
+   config is required as the above deployment script still works in changing the contract (except upgrades).
+3. Run `npx hardhat compile` to compile the contracts.
+4. If you wish to deploy the contract run `npx hardhat deploy-zksync --script deploy/zkSyncDeploy` to deploy it to the new network. Otherwise
+   run `npx hardhat deploy-zksync --script deploy/zkSyncDeployNewPythImpl.ts` to get a new implementation address. Then put it in
+   `.<network>.new_impl` file and run the deployment script to handle the rest of the changes.

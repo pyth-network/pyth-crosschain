@@ -261,7 +261,7 @@ module.exports = {
       },
       network_id: 324,
     },
-    zksync_testnet: {
+    zksync_goerli: {
       provider: () => {
         return new HDWalletProvider(
           process.env.MNEMONIC,
