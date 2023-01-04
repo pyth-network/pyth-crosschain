@@ -1,3 +1,0 @@
-FROM prom/prometheus
-
-ADD --chown=nobody:nobody ./prometheus_config.yaml .
