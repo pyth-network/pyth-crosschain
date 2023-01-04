@@ -1,4 +1,5 @@
 use {
+    crate::attestation_cfg,
     std::{
         collections::VecDeque,
         sync::Arc,
@@ -7,7 +8,7 @@ use {
 };
 
 lazy_static::lazy_static! {
-    pub static ref HEALTHCHECK_STATE: Arc<Mutex<HealthCheckState>> = Arc::new(Mutex::new(HealthCheckState::new(1, false)));
+    pub static ref HEALTHCHECK_STATE: Arc<Mutex<HealthCheckState>> = Arc::new(Mutex::new(HealthCheckState::new(attestation_cfg::default_healthcheck_window_size as usize, attestation_cfg::default_enable_healthcheck())));
 }
 
 /// Helper structure for deciding service health

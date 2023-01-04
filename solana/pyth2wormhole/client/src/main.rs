@@ -41,6 +41,7 @@ use {
         gen_set_config_tx,
         gen_set_is_active_tx,
         get_config_account,
+        healthcheck::HealthCheckState,
         start_metrics_server,
         AttestationConfig,
         BatchState,
@@ -304,17 +305,20 @@ async fn handle_attest_daemon_mode(
     metrics_bind_addr: SocketAddr,
 ) -> Result<(), ErrBox> {
     // Update healthcheck window size from config
-    if attestation_cfg.enable_healthcheck {
-        if attestation_cfg.healthcheck_window_size == 0 {
-            return Err(format!(
-                "{} must be above 0",
-                stringify!(attestation_cfg.healthcheck_window_size)
-            )
-            .into());
-        }
-        let mut hc = HEALTHCHECK_STATE.lock().await;
-        hc.max_window_size = attestation_cfg.healthcheck_window_size as usize;
-    } else {
+    if attestation_cfg.healthcheck_window_size == 0 {
+        return Err(format!(
+            "{} must be above 0",
+            stringify!(attestation_cfg.healthcheck_window_size)
+        )
+        .into());
+    }
+    let mut hc = HEALTHCHECK_STATE.lock().await;
+    *hc = HealthCheckState::new(
+        attestation_cfg.healthcheck_window_size as usize,
+        attestation_cfg.enable_healthcheck,
+    );
+
+    if !attestation_cfg.enable_healthcheck {
         warn!("WARNING: Healthcheck is disabled");
     }
 
