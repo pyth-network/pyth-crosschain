@@ -1,16 +1,10 @@
 import { LCDClient, MnemonicKey } from "@terra-money/terra.js";
-import {
-  MsgInstantiateContract,
-  MsgMigrateContract,
-  MsgStoreCode,
-} from "@terra-money/terra.js";
-import { readFileSync } from "fs";
-import { Bech32, toHex } from "@cosmjs/encoding";
-import { zeroPad } from "ethers/lib/utils.js";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-// @ts-ignore
-import assert from "assert";
+import { TerraDeployer } from "./terra";
+import { InjectiveDeployer } from "./injective";
+import { Network } from "@injectivelabs/networks";
+import { PrivateKey } from "@injectivelabs/sdk-ts";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {
@@ -58,10 +52,9 @@ const argv = yargs(hideBin(process.argv))
 
 const artifact = argv.artifact!;
 
-/* Set up terra client & wallet. It won't fail because inputs are validated with yargs */
-
 const CONFIG = {
-  mainnet: {
+  terra_mainnet: {
+    type: "terra",
     terraHost: {
       URL: "https://phoenix-lcd.terra.dev",
       chainID: "phoenix-1",
@@ -103,7 +96,8 @@ const CONFIG = {
       },
     },
   },
-  testnet: {
+  terra_testnet: {
+    type: "terra",
     terraHost: {
       URL: "https://pisco-lcd.terra.dev",
       chainID: "pisco-1",
@@ -145,25 +139,74 @@ const CONFIG = {
       },
     },
   },
+  injective_testnet: {
+    type: "injective",
+    injectiveHost: {
+      network: Network.Testnet,
+    },
+    pythConfig: {
+      wormhole_contract: "inj1xx3aupmgv3ce537c0yce8zzd3sz567syuyedpg",
+      data_sources: [
+        {
+          emitter: Buffer.from(
+            "f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0",
+            "hex"
+          ).toString("base64"),
+          chain_id: 1,
+        },
+        {
+          emitter: Buffer.from(
+            "a27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6",
+            "hex"
+          ).toString("base64"),
+          chain_id: 26,
+        },
+      ],
+      governance_source: {
+        emitter: Buffer.from(
+          "63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385",
+          "hex"
+        ).toString("base64"),
+        chain_id: 1,
+      },
+      governance_source_index: 0,
+      governance_sequence_number: 0,
+      chain_id: 19,
+      valid_time_period_secs: 60,
+      fee: {
+        amount: "1",
+        // FIXME ??
+        denom: "inj",
+      },
+    },
+  },
 };
 
 // @ts-ignore
-const terraHost = CONFIG[argv.network].terraHost;
+var pythConfig = CONFIG[argv.network].pyth_config;
 // @ts-ignore
-const pythConfig = CONFIG[argv.network].pyth_config;
-const lcd = new LCDClient(terraHost);
+var deployer: Deployer;
 
-const feeDenoms = ["uluna"];
-
-const wallet = lcd.wallet(
-  new MnemonicKey({
-    mnemonic: argv.mnemonic,
-  })
-);
+// @ts-ignore
+const config: any = CONFIG[argv.network];
+if (config.type == "terra") {
+  const lcd = new LCDClient(config.terraHost);
+  const wallet = lcd.wallet(
+    new MnemonicKey({
+      mnemonic: argv.mnemonic,
+    })
+  );
+  deployer = new TerraDeployer(wallet);
+} else if (config.type == "injective") {
+  deployer = new InjectiveDeployer(
+    config.injectiveHost.network,
+    PrivateKey.fromMnemonic(argv.mnemonic)
+  );
+}
 
 /* Deploy artifacts */
 
-var codeId;
+var codeId: number;
 
 if (argv.codeId !== undefined) {
   codeId = argv.codeId;
@@ -175,33 +218,7 @@ if (argv.codeId !== undefined) {
     process.exit(1);
   }
 
-  const contract_bytes = readFileSync(artifact);
-  console.log(`Storing WASM: ${artifact} (${contract_bytes.length} bytes)`);
-
-  const store_code = new MsgStoreCode(
-    wallet.key.accAddress,
-    contract_bytes.toString("base64")
-  );
-
-  const tx = await wallet.createAndSignTx({
-    msgs: [store_code],
-    feeDenoms,
-  });
-
-  const rs = await lcd.tx.broadcast(tx);
-
-  try {
-    // @ts-ignore
-    const ci = /"code_id","value":"([^"]+)/gm.exec(rs.raw_log)[1];
-    codeId = parseInt(ci);
-  } catch (e) {
-    console.error(
-      "Encountered an error in parsing deploy code result. Printing raw log"
-    );
-    console.error(rs.raw_log);
-    throw e;
-  }
-
+  codeId = await deployer.deployArtifact(artifact);
   console.log("Code ID: ", codeId);
 
   if (argv.instantiate || argv.migrate) {
@@ -212,49 +229,11 @@ if (argv.codeId !== undefined) {
 
 if (argv.instantiate) {
   console.log("Instantiating a contract");
-
-  async function instantiate(
-    codeId: number,
-    inst_msg: string | object,
-    label: string
-  ) {
-    var address: string = "";
-    await wallet
-      .createAndSignTx({
-        msgs: [
-          new MsgInstantiateContract(
-            wallet.key.accAddress,
-            wallet.key.accAddress,
-            codeId,
-            inst_msg,
-            undefined,
-            label
-          ),
-        ],
-      })
-      .then((tx) => lcd.tx.broadcast(tx))
-      .then((rs) => {
-        try {
-          // @ts-ignore
-          address = /"contract_address","value":"([^"]+)/gm.exec(rs.raw_log)[1];
-        } catch (e) {
-          console.error(
-            "Encountered an error in parsing instantiation result. Printing raw log"
-          );
-          console.error(rs.raw_log);
-          throw e;
-        }
-      });
-    console.log(
-      `Instantiated Pyth at ${address} (${convert_terra_address_to_hex(
-        address
-      )})`
-    );
-    return address;
-  }
-
-  const contractAddress = await instantiate(codeId, pythConfig, "pyth");
-
+  const contractAddress = await deployer.instantiate(
+    codeId,
+    pythConfig,
+    "pyth"
+  );
   console.log(`Deployed Pyth contract at ${contractAddress}`);
 }
 
@@ -268,38 +247,11 @@ if (argv.migrate) {
 
   console.log(`Migrating contract ${argv.contract} to ${codeId}`);
 
-  const tx = await wallet.createAndSignTx({
-    msgs: [
-      new MsgMigrateContract(wallet.key.accAddress, argv.contract, codeId, {
-        action: "",
-      }),
-    ],
-    feeDenoms,
-  });
-
-  const rs = await lcd.tx.broadcast(tx);
-  var resultCodeId;
-  try {
-    // @ts-ignore
-    resultCodeId = /"code_id","value":"([^"]+)/gm.exec(rs.raw_log)[1];
-    assert.strictEqual(codeId, resultCodeId);
-  } catch (e) {
-    console.error(
-      "Encountered an error in parsing migration result. Printing raw log"
-    );
-    console.error(rs.raw_log);
-    throw e;
-  }
+  const resultCodeId = deployer.migrate(argv.contract, codeId);
 
   console.log(
     `Contract ${argv.contract} code_id successfully updated to ${resultCodeId}`
   );
-}
-
-// Terra addresses are "human-readable", but for cross-chain registrations, we
-// want the "canonical" version
-function convert_terra_address_to_hex(human_addr: string) {
-  return "0x" + toHex(zeroPad(Bech32.decode(human_addr).data, 32));
 }
 
 function sleep(ms: number) {
