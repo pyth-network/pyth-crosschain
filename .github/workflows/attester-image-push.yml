@@ -20,7 +20,7 @@ jobs:
       - name: Set image tag to version of the git tag
         if: ${{ startsWith(github.ref, 'refs/tags/pyth-wormhole-attester-v') }}
         run: |
-          PREFIX="refs/tags/pyth-attester-"
+          PREFIX="refs/tags/pyth-wormhole-attester-"
           VERSION="${GITHUB_REF:${#PREFIX}}"
           echo "IMAGE_TAG=${VERSION}" >> "${GITHUB_ENV}"
       - name: Set image tag to the git commit hash
