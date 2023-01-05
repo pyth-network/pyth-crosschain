@@ -105,8 +105,7 @@ lazy_static! {
     static ref SOL_RPC_TX_PROCESSING_HIST: Histogram = register_histogram!(
         "sol_rpc_tx_processing",
         "How long in milliseconds it takes to send a transaction to the Solana RPC",
-        prometheus::exponential_buckets(0.016, 2.0, 13) // 0.016s, 0.032s, 0.064s, [...], 65.536s
-            .expect("FATAL: Could not instantiate buckets for SOL_RPC_TX_PROCESSING_HIST")
+        vec![0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0, 10.0, 20.0, 30.0, 60.0] // Buckets, 1.0 = 1 second
     )
     .expect("FATAL: Could not instantiate SOL_RPC_TX_PROCESSING_HIST");
 }
