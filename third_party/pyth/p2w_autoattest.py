@@ -166,7 +166,7 @@ symbol_groups:
 
 # Set helpfully chatty logging default, filtering especially annoying
 # modules like async HTTP requests and tokio runtime logs
-os.environ["RUST_LOG"] = os.environ.get("RUST_LOG", "pyth_wormhole_attester_client,solana_client,main,pyth_sdk_solana=trace")
+os.environ["RUST_LOG"] = os.environ.get("RUST_LOG", "info")
 
 # Send the first attestation in one-shot mode for testing
 first_attest_result = run_or_die(
