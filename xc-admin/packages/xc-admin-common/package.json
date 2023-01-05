@@ -12,5 +12,8 @@
   },
   "bugs": {
     "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  },
+  "dependencies": {
+    "typescript": "^4.9.4"
   }
 }
