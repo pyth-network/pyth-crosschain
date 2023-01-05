@@ -9,12 +9,11 @@ RUN apt-get update && apt-get install -yq libudev-dev ncat
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs
 
 ADD rust-toolchain /rust-toolchain
-ADD wormhole-attester/ /usr/src/wormhole-attester
-WORKDIR /usr/src/wormhole-attester
+WORKDIR /usr/src/bridge-client
 
 RUN --mount=type=cache,target=/root/.cache \
-    --mount=type=cache,target=/usr/local/cargo/registry,id=cargo_registry \
-    --mount=type=cache,target=/usr/src/solana/pyth2wormhole/target,id=p2w_cargo_build \
+    --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=target \
     cargo install --version =2.0.12 --locked spl-token-cli --target-dir target
 
 
@@ -26,7 +25,7 @@ ENV BRIDGE_ADDRESS="Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 
 RUN --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/usr/src/solana/pyth2wormhole/target \
+    --mount=type=cache,target=target \
 	set -xe && \
     cargo install bridge_client --git https://github.com/wormhole-foundation/wormhole --tag $WORMHOLE_TAG --locked --root /usr/local --target-dir target && \
     cargo install token_bridge_client --git https://github.com/wormhole-foundation/wormhole --tag $WORMHOLE_TAG --locked --root /usr/local --target-dir target
