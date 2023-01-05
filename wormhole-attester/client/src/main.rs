@@ -312,8 +312,8 @@ async fn handle_attest_daemon_mode(
         )
         .into());
     }
-    let mut hc = HEALTHCHECK_STATE.lock().await;
-    *hc = HealthCheckState::new(
+
+    *HEALTHCHECK_STATE.lock().await = HealthCheckState::new(
         attestation_cfg.healthcheck_window_size as usize,
         attestation_cfg.enable_healthcheck,
     );
