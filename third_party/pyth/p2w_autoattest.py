@@ -187,6 +187,7 @@ first_attest_result = run_or_die(
         P2W_RPC_TIMEOUT_SECS,
     ],
     capture_output=True,
+    debug = True,
 )
 
 logging.info("p2w_autoattest ready to roll!")
