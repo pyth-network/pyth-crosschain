@@ -2,13 +2,14 @@ use {
     crate::attestation_cfg,
     std::{
         collections::VecDeque,
+        convert::TryInto,
         sync::Arc,
     },
     tokio::sync::Mutex,
 };
 
 lazy_static::lazy_static! {
-    pub static ref HEALTHCHECK_STATE: Arc<Mutex<HealthCheckState>> = Arc::new(Mutex::new(HealthCheckState::new(attestation_cfg::default_healthcheck_window_size as usize, attestation_cfg::default_enable_healthcheck())));
+    pub static ref HEALTHCHECK_STATE: Arc<Mutex<HealthCheckState>> = Arc::new(Mutex::new(HealthCheckState::new(attestation_cfg::default_healthcheck_window_size().try_into().expect("could not convert window size to usize"), attestation_cfg::default_enable_healthcheck())));
 }
 
 /// Helper structure for deciding service health
