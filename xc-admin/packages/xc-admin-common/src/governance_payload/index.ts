@@ -102,4 +102,4 @@ export function verifyHeader(
   }
 }
 
-export {decodeExecutePostedVaa} from "./ExecutePostedVaa"
+export { decodeExecutePostedVaa } from "./ExecutePostedVaa";
