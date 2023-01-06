@@ -8,6 +8,13 @@ import { InstructionAccount, TransactionAccount } from "@sqds/mesh/lib/types";
 import BN from "bn.js";
 import lodash from "lodash";
 
+/**
+ * Find all active proposals for vault `vault` using Squads client `squad`
+ * @param squad Squads client
+ * @param vault vault public key. It needs to exist in the instance of squads that `squad` is targeting
+ * @param offset (optional) ignore all proposals with `proposal_index < offset`
+ * @returns All the proposal accounts as `TransactionAccount`
+ */
 export async function getActiveProposals(
   squad: Squads,
   vault: PublicKey,
@@ -25,6 +32,12 @@ export async function getActiveProposals(
     .filter((x) => lodash.isEqual(x.status, { active: {} }));
 }
 
+/**
+ * Get all the instructions for many proposals in one RPC call
+ * @param squad Squads client
+ * @param txAccounts transaction (proposal) accounts
+ * @returns `InstructionAccount[][]`, `result[0]` is the array of all the instructions from proposal 0
+ */
 export async function getManyProposalsInstructions(
   squad: Squads,
   txAccounts: TransactionAccount[]
@@ -48,14 +61,14 @@ export async function getManyProposalsInstructions(
     }
   }
 
-  let allTxIxsAcccounts = await squad.getInstructions(allIxsKeys);
+  let allTxIxsAccounts = await squad.getInstructions(allIxsKeys);
   let ixAccountsByTx: InstructionAccount[][] = Array.from(
     Array(txAccounts.length),
     () => []
   );
 
-  for (let i = 0; i < allTxIxsAcccounts.length; i++) {
-    const toAdd = allTxIxsAcccounts[i];
+  for (let i = 0; i < allTxIxsAccounts.length; i++) {
+    const toAdd = allTxIxsAccounts[i];
     if (toAdd) {
       ixAccountsByTx[ownerTransaction[i]].push(toAdd);
     }
@@ -63,6 +76,12 @@ export async function getManyProposalsInstructions(
   return ixAccountsByTx;
 }
 
+/**
+ * Get all the instructions for one proposal
+ * @param squad Squads client
+ * @param txAccount transaction (proposal) account
+ * @returns All the instructions of the proposal
+ */
 export async function getProposalInstructions(
   squad: Squads,
   txAccount: TransactionAccount
