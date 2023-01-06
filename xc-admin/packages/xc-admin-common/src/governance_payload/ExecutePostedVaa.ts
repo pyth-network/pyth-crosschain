@@ -1,6 +1,14 @@
 import { ChainId } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
-import { governanceHeaderLayout, PythGovernanceHeader, verifyHeader } from ".";
+import {
+  encodeHeader,
+  ExecutorAction,
+  governanceHeaderLayout,
+  MAGIC_NUMBER,
+  MODULE_EXECUTOR,
+  PythGovernanceHeader,
+  verifyHeader,
+} from ".";
 import { Layout } from "@solana/buffer-layout";
 import {
   AccountMeta,
@@ -21,10 +29,11 @@ class Vector<T> extends Layout<T[]> {
     return BufferLayout.seq(this.element, length).decode(b, (offset || 0) + 4);
   }
   encode(src: T[], b: Uint8Array, offset?: number | undefined): number {
-    return BufferLayout.struct<Readonly<{ length: number; src: T[] }>>([
+    let res = BufferLayout.struct<Readonly<{ length: number; elements: T[] }>>([
       BufferLayout.u32("length"),
       BufferLayout.seq(this.element, src.length, "elements"),
-    ]).encode({ length: src.length, src }, b, offset);
+    ]).encode({ length: src.length, elements: src }, b, offset);
+    return res;
   }
 
   getSpan(b: Buffer, offset?: number): number {
@@ -104,4 +113,32 @@ export function decodeExecutePostedVaa(
   );
 
   return { header, instructions };
+}
+
+/** Encode ExecutePostedVaaArgs */
+export function encodeExecutePostedVaa(
+  src: ExecutePostedVaaArgs,
+  buffer: Buffer
+): number {
+  const offset = encodeHeader(src.header, buffer);
+  let instructions: InstructionData[] = src.instructions.map((ix) => {
+    let programId = ix.programId.toBytes();
+    let accounts: AccountMetadata[] = ix.keys.map((acc) => {
+      return {
+        pubkey: acc.pubkey.toBytes(),
+        isSigner: acc.isSigner ? 1 : 0,
+        isWritable: acc.isWritable ? 1 : 0,
+      };
+    });
+    let data = [...ix.data];
+    return { programId, accounts, data };
+  });
+  return (
+    offset +
+    new Vector<InstructionData>(instructionDataLayout, "instructions").encode(
+      instructions,
+      buffer,
+      offset
+    )
+  );
 }

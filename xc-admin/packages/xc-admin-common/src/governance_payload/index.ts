@@ -1,18 +1,23 @@
-import { ChainId, ChainName, toChainName } from "@certusone/wormhole-sdk";
+import {
+  ChainId,
+  ChainName,
+  toChainId,
+  toChainName,
+} from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
 
-export declare const ExecutorAction: {
-  readonly ExecutePostedVaa: 0;
-};
+export const ExecutorAction = {
+  ExecutePostedVaa: 0,
+} as const;
 
-export declare const TargetAction: {
-  readonly UpgradeContract: 0;
-  readonly AuthorizeGovernanceDataSourceTransfer: 1;
-  readonly SetDataSources: 2;
-  readonly SetFee: 3;
-  readonly SetValidPeriod: 4;
-  readonly RequestGovernanceDataSourceTransfer: 5;
-};
+export const TargetAction = {
+  UpgradeContract: 0,
+  AuthorizeGovernanceDataSourceTransfer: 1,
+  SetDataSources: 2,
+  SetFee: 3,
+  SetValidPeriod: 4,
+  RequestGovernanceDataSourceTransfer: 5,
+} as const;
 
 export function toActionName(
   deserialized: Readonly<{ moduleId: number; actionId: number }>
@@ -73,6 +78,30 @@ export function governanceHeaderLayout(): BufferLayout.Structure<
 export function decodeHeader(data: Buffer): PythGovernanceHeader | undefined {
   let deserialized = governanceHeaderLayout().decode(data);
   return verifyHeader(deserialized);
+}
+
+export function encodeHeader(
+  src: PythGovernanceHeader,
+  buffer: Buffer
+): number {
+  let module: number;
+  let action: number;
+  if (src.action in ExecutorAction) {
+    module = MODULE_EXECUTOR;
+    action = ExecutorAction[src.action as keyof typeof ExecutorAction];
+  } else {
+    module = MODULE_TARGET;
+    action = TargetAction[src.action as keyof typeof TargetAction];
+  }
+  return governanceHeaderLayout().encode(
+    {
+      magicNumber: MAGIC_NUMBER,
+      module,
+      action,
+      chain: toChainId(src.targetChainId),
+    },
+    buffer
+  );
 }
 
 export function verifyHeader(
