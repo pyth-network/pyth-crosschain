@@ -40,24 +40,24 @@ class Vector<T> extends Layout<T[]> {
 
 export type InstructionData = {
   programId: Uint8Array;
-  accounts: AccountMetaData[];
+  accounts: AccountMetadata[];
   data: number[];
 };
 
-export type AccountMetaData = {
+export type AccountMetadata = {
   pubkey: Uint8Array;
   isSigner: number;
   isWritable: number;
 };
 
-export const accountMetaLayout = BufferLayout.struct<AccountMetaData>([
+export const accountMetaLayout = BufferLayout.struct<AccountMetadata>([
   BufferLayout.blob(32, "pubkey"),
   BufferLayout.u8("isSigner"),
   BufferLayout.u8("isWritable"),
 ]);
 export const instructionDataLayout = BufferLayout.struct<InstructionData>([
   BufferLayout.blob(32, "programId"),
-  new Vector<AccountMetaData>(accountMetaLayout, "accounts"),
+  new Vector<AccountMetadata>(accountMetaLayout, "accounts"),
   new Vector<number>(BufferLayout.u8(), "data"),
 ]);
 
