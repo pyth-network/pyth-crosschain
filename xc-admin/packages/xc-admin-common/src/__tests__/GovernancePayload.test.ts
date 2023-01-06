@@ -1,4 +1,4 @@
-import { decodeHeader } from "..";
+import { decodeExecutePostedVaa, decodeHeader } from "..";
 
 test("GovernancePayload", (done) => {
   jest.setTimeout(60000);
@@ -38,6 +38,16 @@ test("GovernancePayload", (done) => {
     Buffer.from([80, 84, 71, 77, 0, 1, 0, 26, 0, 0, 0, 0])
   );
   expect(governanceHeader).toBeUndefined();
+
+  // Decode executePostVaa
+  let executePostedVaaArgs = decodeExecutePostedVaa(
+    Buffer.from([80, 84, 71, 77, 0, 0, 0, 26, 0, 0, 0, 0])
+  );
+  expect(executePostedVaaArgs?.header.targetChainId).toBe("pythnet");
+  expect(executePostedVaaArgs?.header.action).toBe("ExecutePostedVaa");
+  expect(executePostedVaaArgs?.instructions.length).toBe(0);
+
+  
 
   done();
 });
