@@ -23,7 +23,7 @@ class Vector<T> extends Layout<T[]> {
 
   decode(b: Uint8Array, offset?: number | undefined): T[] {
     const length = BufferLayout.u32().decode(b, offset);
-    return BufferLayout.seq(this.element, length).decode(b, offset || 0 + 4);
+    return BufferLayout.seq(this.element, length).decode(b, (offset || 0) + 4);
   }
   encode(src: T[], b: Uint8Array, offset?: number | undefined): number {
     return BufferLayout.struct<Readonly<{ lenght: number; src: T[] }>>([
@@ -32,9 +32,9 @@ class Vector<T> extends Layout<T[]> {
     ]).encode({ lenght: src.length, src }, b, offset);
   }
 
-  getSpan(b: Buffer, offset?: number): number{ 
+  getSpan(b: Buffer, offset?: number): number {
     const length = BufferLayout.u32().decode(b, offset);
-    return 4 + this.element.span * length
+    return 4 + this.element.span * length;
   }
 }
 
@@ -46,14 +46,14 @@ export type InstructionData = {
 
 export type AccountMetaData = {
   pubkey: Uint8Array;
-  isSigner: boolean;
-  isWritable: boolean;
+  isSigner: number;
+  isWritable: number;
 };
 
 export const accountMetaLayout = BufferLayout.struct<AccountMetaData>([
-  BufferLayout.blob(32, "programId"),
-  BufferLayout.blob(1, "isSigner"),
-  BufferLayout.blob(1, "isWritable"),
+  BufferLayout.blob(32, "pubkey"),
+  BufferLayout.u8("isSigner"),
+  BufferLayout.u8("isWritable"),
 ]);
 export const instructionDataLayout = BufferLayout.struct<InstructionData>([
   BufferLayout.blob(32, "programId"),
@@ -87,14 +87,12 @@ export function decodeExecutePostedVaa(
 ): ExecutePostedVaaArgs | undefined {
   let deserialized = executePostedVaaLayout.decode(data);
 
-  console.log(deserialized);
-
   let header = verifyHeader(deserialized.header);
 
   if (!header) {
     return undefined;
   }
-  
+
   let instructions: TransactionInstruction[] = deserialized.instructions.map(
     (ix) => {
       let programId: PublicKey = new PublicKey(ix.programId);
