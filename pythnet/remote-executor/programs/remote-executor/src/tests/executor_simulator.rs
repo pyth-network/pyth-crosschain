@@ -172,7 +172,6 @@ impl ExecutorBench {
         };
 
         let payload_bytes = payload.try_to_vec().unwrap();
-        print!("{:?}", payload_bytes);
 
         let vaa = AnchorVaa {
             magic: *vaa_magic,
