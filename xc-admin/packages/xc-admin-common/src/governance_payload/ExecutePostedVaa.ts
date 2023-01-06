@@ -142,3 +142,31 @@ export function encodeExecutePostedVaa(src: ExecutePostedVaaArgs): Buffer {
     );
   return buffer.subarray(0, span);
 }
+
+/** Encode ExecutePostedVaaArgs */
+export function encodeExecutePostedVaa(
+  src: ExecutePostedVaaArgs,
+  buffer: Buffer
+): number {
+  const offset = encodeHeader(src.header, buffer);
+  let instructions: InstructionData[] = src.instructions.map((ix) => {
+    let programId = ix.programId.toBytes();
+    let accounts: AccountMetadata[] = ix.keys.map((acc) => {
+      return {
+        pubkey: acc.pubkey.toBytes(),
+        isSigner: acc.isSigner ? 1 : 0,
+        isWritable: acc.isWritable ? 1 : 0,
+      };
+    });
+    let data = [...ix.data];
+    return { programId, accounts, data };
+  });
+  return (
+    offset +
+    new Vector<InstructionData>(instructionDataLayout, "instructions").encode(
+      instructions,
+      buffer,
+      offset
+    )
+  );
+}
