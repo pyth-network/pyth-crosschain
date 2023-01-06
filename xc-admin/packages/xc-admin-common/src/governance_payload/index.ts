@@ -1,8 +1,11 @@
 import { ChainId, ChainName, toChainName } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
 
-export declare const Action: {
+export declare const ExecutorAction: {
   readonly ExecutePostedVaa: 0;
+};
+
+export declare const TargetAction: {
   readonly UpgradeContract: 0;
   readonly AuthorizeGovernanceDataSourceTransfer: 1;
   readonly SetDataSources: 2;
@@ -12,7 +15,7 @@ export declare const Action: {
 };
 
 export function toActionName(
-  deserialized: Readonly<{ moduleId: number; actionId: ActionId }>
+  deserialized: Readonly<{ moduleId: number; actionId: number }>
 ): ActionName {
   if (deserialized.moduleId == MODULE_EXECUTOR && deserialized.actionId == 0) {
     return "ExecutePostedVaa";
@@ -31,12 +34,12 @@ export function toActionName(
       case 5:
         return "RequestGovernanceDataSourceTransfer";
     }
-  } else {
-    throw new Error("Invalid header, action doesn't match module");
   }
+  throw new Error("Invalid header, action doesn't match module");
 }
-export declare type ActionName = keyof typeof Action;
-export declare type ActionId = typeof Action[ActionName];
+export declare type ActionName =
+  | keyof typeof ExecutorAction
+  | keyof typeof TargetAction;
 
 export type PythGovernanceHeader = {
   targetChainId: ChainName;
@@ -51,7 +54,7 @@ export function governanceHeaderLayout(): BufferLayout.Structure<
   Readonly<{
     magicNumber: number;
     module: number;
-    action: ActionId;
+    action: number;
     chain: ChainId;
   }>
 > {
@@ -76,7 +79,7 @@ export function verifyHeader(
   deserialized: Readonly<{
     magicNumber: number;
     module: number;
-    action: ActionId;
+    action: number;
     chain: ChainId;
   }>
 ) {
