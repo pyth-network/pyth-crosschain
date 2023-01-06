@@ -1,0 +1,19 @@
+{
+  "name": "xc-admin-common",
+  "version": "0.0.0",
+  "description": "",
+  "author": "",
+  "homepage": "https://github.com/pyth-network/pyth-crosschain",
+  "license": "ISC",
+  "main": "src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  },
+  "dependencies": {
+    "typescript": "^4.9.4"
+  }
+}
