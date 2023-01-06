@@ -19,7 +19,7 @@ RUN sh -c "$(curl -sSfL https://release.solana.com/v1.10.31/install)"
 ENV PATH="/root/.local/share/solana/install/active_release/bin:$PATH"
 
 
-ADD rust-toolchain /rust-toolchain
+ADD wormhole-attester/rust-toolchain /rust-toolchain
 
 USER root
 # Solana does a questionable download at the beginning of a *first* build-bpf call. Trigger and layer-cache it explicitly.
