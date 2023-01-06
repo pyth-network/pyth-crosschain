@@ -1,11 +1,6 @@
 import { ChainId } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
-import {
-  ActionId,
-  governanceHeaderLayout,
-  PythGovernanceHeader,
-  verifyHeader,
-} from ".";
+import { governanceHeaderLayout, PythGovernanceHeader, verifyHeader } from ".";
 import { Layout } from "@solana/buffer-layout";
 import {
   AccountMeta,
@@ -66,7 +61,7 @@ export const executePostedVaaLayout: BufferLayout.Structure<
     header: Readonly<{
       magicNumber: number;
       module: number;
-      action: ActionId;
+      action: number;
       chain: ChainId;
     }>;
     instructions: InstructionData[];
