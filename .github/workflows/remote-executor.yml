@@ -2,10 +2,8 @@ name: Check Remote Executor
 
 on:
   pull_request:
-    paths: [pythnet/remote-executor/**]
   push:
     branches: [main]
-    paths: [pythnet/remote-executor/**]
 jobs:
   test:
     runs-on: ubuntu-latest
