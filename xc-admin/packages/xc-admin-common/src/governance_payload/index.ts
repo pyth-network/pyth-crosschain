@@ -69,7 +69,17 @@ export function governanceHeaderLayout(): BufferLayout.Structure<
 /** Decode Pyth Governance Header and return undefined if the header is invalid */
 export function decodeHeader(data: Buffer): PythGovernanceHeader | undefined {
   let deserialized = governanceHeaderLayout().decode(data);
-  console.log(deserialized);
+  return verifyHeader(deserialized);
+}
+
+export function verifyHeader(
+  deserialized: Readonly<{
+    magicNumber: number;
+    module: number;
+    action: ActionId;
+    chain: ChainId;
+  }>
+) {
   if (deserialized.magicNumber !== MAGIC_NUMBER) {
     return undefined;
   }
@@ -91,3 +101,5 @@ export function decodeHeader(data: Buffer): PythGovernanceHeader | undefined {
     return undefined;
   }
 }
+
+export {decodeExecutePostedVaa} from "./ExecutePostedVaa"
