@@ -2,7 +2,7 @@
   "compilerOptions": {
     "declaration": true,
     "target": "es2020",
-    "module": "es2022",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "outDir": "lib",
     "esModuleInterop": true,
@@ -11,7 +11,7 @@
     "skipLibCheck": true,
     "noErrorTruncation": true,
     "sourceMap": true,
-    "lib": ["es2021"]
+    "lib": ["es2021"],
   },
   "include": ["src/**/*.ts"]
 }

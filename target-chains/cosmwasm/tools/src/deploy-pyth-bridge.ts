@@ -9,7 +9,7 @@ import { PrivateKey } from "@injectivelabs/sdk-ts";
 const argv = yargs(hideBin(process.argv))
   .option("network", {
     description: "Which network to deploy to",
-    choices: ["mainnet", "testnet"],
+    choices: ["mainnet", "testnet", "injective_testnet"],
     required: true,
   })
   .option("artifact", {
@@ -183,7 +183,7 @@ const CONFIG = {
 };
 
 // @ts-ignore
-var pythConfig = CONFIG[argv.network].pyth_config;
+var pythConfig = CONFIG[argv.network].pythConfig;
 // @ts-ignore
 var deployer: Deployer;
 
@@ -208,51 +208,53 @@ if (config.type == "terra") {
 
 var codeId: number;
 
-if (argv.codeId !== undefined) {
-  codeId = argv.codeId;
-} else {
-  if (argv.artifact === undefined) {
-    console.error(
-      "Artifact is not provided. Please at least provide artifact or code id"
+(async () => {
+  if (argv.codeId !== undefined) {
+    codeId = argv.codeId;
+  } else {
+    if (argv.artifact === undefined) {
+      console.error(
+        "Artifact is not provided. Please at least provide artifact or code id"
+      );
+      process.exit(1);
+    }
+  
+    codeId = await deployer.deployArtifact(artifact);
+    console.log("Code ID: ", codeId);
+  
+    if (argv.instantiate || argv.migrate) {
+      console.log("Sleeping for 10 seconds for store transaction to finalize.");
+      await sleep(10000);
+    }
+  }
+  
+  if (argv.instantiate) {
+    console.log("Instantiating a contract");
+    const contractAddress = await deployer.instantiate(
+      codeId,
+      pythConfig,
+      "pyth"
     );
-    process.exit(1);
+    console.log(`Deployed Pyth contract at ${contractAddress}`);
   }
-
-  codeId = await deployer.deployArtifact(artifact);
-  console.log("Code ID: ", codeId);
-
-  if (argv.instantiate || argv.migrate) {
-    console.log("Sleeping for 10 seconds for store transaction to finalize.");
-    await sleep(10000);
-  }
-}
-
-if (argv.instantiate) {
-  console.log("Instantiating a contract");
-  const contractAddress = await deployer.instantiate(
-    codeId,
-    pythConfig,
-    "pyth"
-  );
-  console.log(`Deployed Pyth contract at ${contractAddress}`);
-}
-
-if (argv.migrate) {
-  if (argv.contract === "") {
-    console.error(
-      "Contract address is not provided. Provide it using --contract"
+  
+  if (argv.migrate) {
+    if (argv.contract === "") {
+      console.error(
+        "Contract address is not provided. Provide it using --contract"
+      );
+      process.exit(1);
+    }
+  
+    console.log(`Migrating contract ${argv.contract} to ${codeId}`);
+  
+    const resultCodeId = await deployer.migrate(argv.contract, codeId);
+  
+    console.log(
+      `Contract ${argv.contract} code_id successfully updated to ${resultCodeId}`
     );
-    process.exit(1);
   }
-
-  console.log(`Migrating contract ${argv.contract} to ${codeId}`);
-
-  const resultCodeId = deployer.migrate(argv.contract, codeId);
-
-  console.log(
-    `Contract ${argv.contract} code_id successfully updated to ${resultCodeId}`
-  );
-}
+}) ()
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));

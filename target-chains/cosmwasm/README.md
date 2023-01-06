@@ -28,6 +28,15 @@ Then, to deploy the Pyth contract (`pyth_cosmwasm.wasm`), run the following comm
 ```sh
 npm ci # Do it only once to install the required packages
 npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_cosmwasm.wasm --mnemonic "..."
+
+npm run deploy-pyth -- --network injective_testnet --artifact ../artifacts/pyth_cosmwasm-aarch64.wasm --mnemonic "prison glue section frog author urge disease honey vocal grow speak negative"
+
+node ./lib/deploy-pyth-bridge.js --network injective_testnet --artifact ../artifacts/pyth_cosmwasm-aarch64.wasm --mnemonic "prison glue section frog author urge disease honey vocal grow speak negative"
+
+npm run deploy-pyth -- --network injective_testnet --code-id 291 --mnemonic "prison glue section frog author urge disease honey vocal grow speak negative" --instantiate
+
+npm run deploy-pyth -- --network injective_testnet --code-id 292 --mnemonic "prison glue section frog author urge disease honey vocal grow speak negative" --migrate --contract "inj19ledet2rkvtj3zdr8l88eaqq7qmv47p8tlg2qu"
+
 ```
 
 If successful, this command will print something along the lines of:

@@ -11,15 +11,21 @@ import {
   createTransaction,
   DEFAULT_STD_FEE,
   MsgStoreCode,
+  MsgInstantiateContract,
   PrivateKey,
   TxGrpcClient,
+  TxResponse,
+  Msgs,
+  MsgMigrateContract,
+  createTransactionForAddressAndMsg,
+  createFee
 } from "@injectivelabs/sdk-ts";
 import {
   BigNumberInBase,
   DEFAULT_BLOCK_TIMEOUT_HEIGHT,
 } from "@injectivelabs/utils";
 import { Deployer } from "./deployer";
-
+import { Tx } from '@injectivelabs/chain-api/cosmos/tx/v1beta1/tx_pb'
 export class InjectiveDeployer extends Deployer {
   network: Network;
   wallet: PrivateKey;
@@ -35,56 +41,57 @@ export class InjectiveDeployer extends Deployer {
     return this.wallet.toBech32();
   }
 
-  private async getBaseAccount(): Promise<BaseAccount> {
-    /** Account Details **/
-    const chainRestAuthApi = new ChainRestAuthApi(
-      (await getNetworkInfo(this.network)).rest
-    );
-    const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
-      this.injectiveAddress()
-    );
-    return BaseAccount.fromRestApi(accountDetailsResponse);
-  }
+  // private async getBaseAccount(): Promise<BaseAccount> {
+  //   /** Account Details **/
+  //   const chainRestAuthApi = new ChainRestAuthApi(
+  //     (await getNetworkInfo(this.network)).rest
+  //   );
+  //   const accountDetailsResponse = await chainRestAuthApi.fetchAccount(
+  //     this.injectiveAddress()
+  //   );
+  //   return BaseAccount.fromRestApi(accountDetailsResponse);
+  // }
 
-  private async getTimeoutHeight(): Promise<BigNumberInBase> {
-    /** Block Details */
-    const chainRestTendermintApi = new ChainRestTendermintApi(
-      (await getNetworkInfo(this.network)).rest
-    );
-    const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
-    const latestHeight = latestBlock.header.height;
+  // private async getTimeoutHeight(): Promise<BigNumberInBase> {
+  //   /** Block Details */
+  //   const chainRestTendermintApi = new ChainRestTendermintApi(
+  //     (await getNetworkInfo(this.network)).rest
+  //   );
+  //   const latestBlock = await chainRestTendermintApi.fetchLatestBlock();
+  //   const latestHeight = latestBlock.header.height;
 
-    return new BigNumberInBase(latestHeight).plus(DEFAULT_BLOCK_TIMEOUT_HEIGHT);
-  }
+  //   return new BigNumberInBase(latestHeight).plus(DEFAULT_BLOCK_TIMEOUT_HEIGHT);
+  // }
 
-  async deployArtifact(artifact: string): Promise<number> {
-    const contract_bytes = readFileSync(artifact);
-    console.log(`Storing WASM: ${artifact} (${contract_bytes.length} bytes)`);
+  private async signAndBroadcastMsg(msg: Msgs | MsgMigrateContract, fee = DEFAULT_STD_FEE): Promise<TxResponse> {
+    // const baseAccount = await this.getBaseAccount();
+    const networkInfo = getNetworkInfo(this.network);
 
-    const store_code = MsgStoreCode.fromJSON({
-      sender: this.injectiveAddress(),
-      wasmBytes: contract_bytes.toString("base64"),
-    });
-
-    const baseAccount = await this.getBaseAccount();
-    const networkInfo = await getNetworkInfo(this.network);
-
-    const { signBytes, txRaw } = createTransaction({
-      pubKey: this.injectiveAddress(),
+    const { signBytes, txRaw } = await createTransactionForAddressAndMsg({
+      // @ts-ignore
+      message: msg,
+      address: this.injectiveAddress(),
+      endpoint: networkInfo.rest,
       chainId: networkInfo.chainId,
-      fee: DEFAULT_STD_FEE,
-      message: store_code.toDirectSign(),
-      sequence: baseAccount.sequence,
-      timeoutHeight: (await this.getTimeoutHeight()).toNumber(),
-      accountNumber: baseAccount.accountNumber,
-    });
+      fee,
+      pubKey: this.wallet.toPublicKey().toBase64(),
+    })
+    // const { signBytes, txRaw } = createTransaction({
+    //   pubKey: this.wallet.toPublicKey().toBase64(),
+    //   chainId: networkInfo.chainId,
+    //   fee: DEFAULT_STD_FEE,
+    //   message: msg.toDirectSign(),
+    //   sequence: baseAccount.sequence,
+    //   timeoutHeight: (await this.getTimeoutHeight()).toNumber(),
+    //   accountNumber: baseAccount.accountNumber,
+    // });
 
     const sig = await this.wallet.sign(Buffer.from(signBytes));
 
     /** Append Signatures */
     txRaw.setSignaturesList([sig]);
+    console.log(Tx.deserializeBinary(txRaw.serializeBinary()))
 
-    var codeId: number;
     const txService = new TxGrpcClient(networkInfo.grpc);
     const txResponse = await txService.broadcast(txRaw);
     console.log("txResponse", txResponse);
@@ -97,8 +104,31 @@ export class InjectiveDeployer extends Deployer {
       );
     }
 
+    return txResponse
+  }
+
+  async deployArtifact(artifact: string): Promise<number> {
+    const contract_bytes = readFileSync(artifact);
+    console.log(`Storing WASM: ${artifact} (${contract_bytes.length} bytes)`);
+
+    console.log(this.injectiveAddress())
+    const store_code = MsgStoreCode.fromJSON({
+      sender: this.injectiveAddress(),
+      wasmBytes: contract_bytes,
+    });
+
+
+    const txResponse = await this.signAndBroadcastMsg(store_code, {
+      amount: [{
+        amount: String(500000000 * 5000000),
+        denom: 'inj',
+      }],
+      gas: '5000000'
+    })
+
+    var codeId: number;
     try {
-      // @ts-ignore
+      // @ts-ignore //TODO correct this
       const ci = /"code_id","value":"([^"]+)/gm.exec(txResponse.rawLog)[1];
       codeId = parseInt(ci);
     } catch (e) {
@@ -114,74 +144,68 @@ export class InjectiveDeployer extends Deployer {
 
   async instantiate(
     codeId: number,
-    inst_msg: string | object,
+    inst_msg: object,
     label: string
   ): Promise<string> {
-    throw new Error("Not implemented");
-    /*
-    var address: string = "";
-    await this.wallet
-      .createAndSignTx({
-        msgs: [
-          new MsgInstantiateContract(
-            this.wallet.key.accAddress,
-            this.wallet.key.accAddress,
-            codeId,
-            inst_msg,
-            undefined,
-            label
-          ),
-        ],
-      })
-      .then((tx) => this.wallet.lcd.tx.broadcast(tx))
-      .then((rs) => {
-        try {
-          // @ts-ignore
-          address = /"contract_address","value":"([^"]+)/gm.exec(rs.raw_log)[1];
-        } catch (e) {
-          console.error(
-            "Encountered an error in parsing instantiation result. Printing raw log"
-          );
-          console.error(rs.raw_log);
-          throw e;
-        }
-      });
+
+    const instantiate_msg = MsgInstantiateContract.fromJSON({
+      sender: this.injectiveAddress(),
+      admin: this.injectiveAddress(),
+      codeId,
+      label,
+      msg: inst_msg,
+    })
+
+    console.log(instantiate_msg)
+
+    const txResponse = await this.signAndBroadcastMsg(instantiate_msg)
+
+    let address: string = ''
+    try {
+      // @ts-ignore // TODO: fix this
+      address = /"contract_address","value":"([^"]+)/gm.exec(txResponse.raw_log)[1];
+    } catch (e) {
+      console.error(
+        "Encountered an error in parsing instantiation result. Printing raw log"
+      );
+      console.error(txResponse.rawLog);
+      throw e;
+    }
+
     console.log(
       `Instantiated Pyth at ${address} (${convert_terra_address_to_hex(
         address
       )})`
     );
+
     return address;
-     */
   }
 
   async migrate(contract: string, codeId: number): Promise<void> {
-    throw new Error("Not implemented");
 
-    /*
-    const tx = await this.wallet.createAndSignTx({
-      msgs: [
-        new MsgMigrateContract(this.wallet.key.accAddress, contract, codeId, {
-          action: "",
-        }),
-      ],
-      feeDenoms: this.feeDenoms,
-    });
+    const migrate_msg = MsgMigrateContract.fromJSON({
+      sender: this.injectiveAddress(),
+      contract,
+      codeId,
+      msg: {
+        action: "",
+      },
+    })
 
-    const rs = await this.wallet.lcd.tx.broadcast(tx);
-    var resultCodeId: number;
+    const txResponse = await this.signAndBroadcastMsg(migrate_msg)
+
+    let result_code_id: string = ''
     try {
       // @ts-ignore
       resultCodeId = /"code_id","value":"([^"]+)/gm.exec(rs.raw_log)[1];
-      assert.strictEqual(codeId, resultCodeId);
+      assert.strictEqual(codeId, result_code_id);
     } catch (e) {
       console.error(
         "Encountered an error in parsing migration result. Printing raw log"
       );
-      console.error(rs.raw_log);
+      console.error(txResponse.rawLog);
       throw e;
     }
-     */
   }
 }
 
