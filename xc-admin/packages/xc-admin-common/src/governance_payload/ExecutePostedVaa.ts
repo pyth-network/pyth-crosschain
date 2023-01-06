@@ -26,10 +26,10 @@ class Vector<T> extends Layout<T[]> {
     return BufferLayout.seq(this.element, length).decode(b, (offset || 0) + 4);
   }
   encode(src: T[], b: Uint8Array, offset?: number | undefined): number {
-    return BufferLayout.struct<Readonly<{ lenght: number; src: T[] }>>([
+    return BufferLayout.struct<Readonly<{ length: number; src: T[] }>>([
       BufferLayout.u32("length"),
       BufferLayout.seq(this.element, src.length, "elements"),
-    ]).encode({ lenght: src.length, src }, b, offset);
+    ]).encode({ length: src.length, src }, b, offset);
   }
 
   getSpan(b: Buffer, offset?: number): number {
