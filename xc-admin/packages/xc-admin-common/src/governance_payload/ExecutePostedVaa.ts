@@ -2,10 +2,7 @@ import { ChainId } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
 import {
   encodeHeader,
-  ExecutorAction,
   governanceHeaderLayout,
-  MAGIC_NUMBER,
-  MODULE_EXECUTOR,
   PythGovernanceHeader,
   verifyHeader,
 } from ".";
@@ -29,11 +26,10 @@ class Vector<T> extends Layout<T[]> {
     return BufferLayout.seq(this.element, length).decode(b, (offset || 0) + 4);
   }
   encode(src: T[], b: Uint8Array, offset?: number | undefined): number {
-    let res = BufferLayout.struct<Readonly<{ length: number; elements: T[] }>>([
+    return BufferLayout.struct<Readonly<{ length: number; elements: T[] }>>([
       BufferLayout.u32("length"),
       BufferLayout.seq(this.element, src.length, "elements"),
     ]).encode({ length: src.length, elements: src }, b, offset);
-    return res;
   }
 
   getSpan(b: Buffer, offset?: number): number {
