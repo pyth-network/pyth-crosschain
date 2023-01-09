@@ -9,6 +9,7 @@ import {
 import { Layout } from "@solana/buffer-layout";
 import {
   AccountMeta,
+  PACKET_DATA_SIZE,
   PublicKey,
   TransactionInstruction,
 } from "@solana/web3.js";
@@ -112,10 +113,9 @@ export function decodeExecutePostedVaa(
 }
 
 /** Encode ExecutePostedVaaArgs */
-export function encodeExecutePostedVaa(
-  src: ExecutePostedVaaArgs,
-  buffer: Buffer
-): number {
+export function encodeExecutePostedVaa(src: ExecutePostedVaaArgs): Buffer {
+  // PACKET_DATA_SIZE is the maximum transactin size of Solana, so our serialized payload will never be bigger than that
+  const buffer = Buffer.alloc(PACKET_DATA_SIZE);
   const offset = encodeHeader(src.header, buffer);
   let instructions: InstructionData[] = src.instructions.map((ix) => {
     let programId = ix.programId.toBytes();
@@ -129,12 +129,13 @@ export function encodeExecutePostedVaa(
     let data = [...ix.data];
     return { programId, accounts, data };
   });
-  return (
+
+  const span =
     offset +
     new Vector<InstructionData>(instructionDataLayout, "instructions").encode(
       instructions,
       buffer,
       offset
-    )
-  );
+    );
+  return buffer.subarray(0, span);
 }
