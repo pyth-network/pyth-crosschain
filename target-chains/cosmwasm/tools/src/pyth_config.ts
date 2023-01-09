@@ -23,7 +23,7 @@ export type Fee = {
 
 type Config = Record<NETWORKS, PythConfig>;
 
-export const PythConfig: Config = {
+export const CONFIG: Config = {
   [NETWORKS.TERRA_MAINNET]: {
     wormhole_contract:
       "terra12mrnzvhx3rpej6843uge2yyfppfyd3u9c3uq223q8sl48huz9juqffcnh",

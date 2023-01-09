@@ -2,7 +2,8 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Deployer, DeployerFactory } from "./deployer";
 import { NETWORKS_OPTIONS } from "./network";
-import { PythConfig } from "./pyth_config";
+import { CONFIG as PythConfig } from "./pyth_config";
+import { CONFIG as NetworkConfig } from "./deployer/config";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {
@@ -58,7 +59,8 @@ const {
   contract,
 } = argv;
 const pythConfig = PythConfig[network];
-const deployer: Deployer = DeployerFactory.create(network, mnemonic);
+const networkConfig = NetworkConfig[network];
+const deployer: Deployer = DeployerFactory.create(networkConfig, mnemonic);
 
 // checks
 if (inputCodeId === undefined && artifact === undefined)

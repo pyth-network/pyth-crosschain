@@ -1,4 +1,4 @@
-import { CONFIG, CONFIG_TYPE } from "./config";
+import { CONFIG, CONFIG_TYPE, NetworkConfig } from "./config";
 import { TerraDeployer } from "./terra";
 import { InjectiveDeployer } from "./injective";
 import { NETWORKS } from "../network";
@@ -14,10 +14,7 @@ export interface Deployer {
 }
 
 export class DeployerFactory {
-  static create(network: NETWORKS, mnemonic: string): Deployer {
-    const config = CONFIG[network];
-    if (config === undefined) throw new Error("Invalid Network Name");
-
+  static create(config: NetworkConfig, mnemonic: string): Deployer {
     switch (config.type) {
       case CONFIG_TYPE.TERRA:
         return TerraDeployer.fromHostAndMnemonic(config.host, mnemonic);
