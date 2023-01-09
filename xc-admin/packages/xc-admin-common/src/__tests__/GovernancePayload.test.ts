@@ -59,15 +59,6 @@ test("GovernancePayload ser/de", (done) => {
   expect(governanceHeader?.targetChainId).toBe("solana");
   expect(governanceHeader?.action).toBe("SetFee");
 
-  buffer = Buffer.alloc(1000);
-  span = encodeHeader(expectedGovernanceHeader, buffer);
-  expect(
-    buffer.subarray(0, span).equals(Buffer.from([80, 84, 71, 77, 1, 3, 0, 1]))
-  ).toBeTruthy();
-  governanceHeader = decodeHeader(buffer.subarray(0, span));
-  expect(governanceHeader?.targetChainId).toBe("solana");
-  expect(governanceHeader?.action).toBe("SetFee");
-
   // Wrong magic number
   governanceHeader = decodeHeader(
     Buffer.from([0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0])

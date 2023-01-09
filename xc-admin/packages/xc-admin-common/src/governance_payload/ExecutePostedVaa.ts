@@ -142,31 +142,3 @@ export function encodeExecutePostedVaa(src: ExecutePostedVaaArgs): Buffer {
     );
   return buffer.subarray(0, span);
 }
-
-/** Encode ExecutePostedVaaArgs */
-export function encodeExecutePostedVaa(src: ExecutePostedVaaArgs): Buffer {
-  // PACKET_DATA_SIZE is the maximum transactin size of Solana, so our serialized payload will never be bigger than that
-  const buffer = Buffer.alloc(PACKET_DATA_SIZE);
-  const offset = encodeHeader(src.header, buffer);
-  let instructions: InstructionData[] = src.instructions.map((ix) => {
-    let programId = ix.programId.toBytes();
-    let accounts: AccountMetadata[] = ix.keys.map((acc) => {
-      return {
-        pubkey: acc.pubkey.toBytes(),
-        isSigner: acc.isSigner ? 1 : 0,
-        isWritable: acc.isWritable ? 1 : 0,
-      };
-    });
-    let data = [...ix.data];
-    return { programId, accounts, data };
-  });
-
-  const span =
-    offset +
-    new Vector<InstructionData>(instructionDataLayout, "instructions").encode(
-      instructions,
-      buffer,
-      offset
-    );
-  return buffer.subarray(0, span);
-}
