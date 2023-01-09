@@ -4,6 +4,9 @@
   "workspaces": [
     "packages/*"
   ],
+  "scripts": {
+    "test": "cd packages/xc-admin-common && npm run test"
+  },
   "devDependencies": {
     "lerna": "^6.3.0"
   }
