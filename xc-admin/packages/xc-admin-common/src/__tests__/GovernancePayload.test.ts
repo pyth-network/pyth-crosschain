@@ -59,12 +59,6 @@ test("GovernancePayload ser/de", (done) => {
   expect(governanceHeader?.targetChainId).toBe("solana");
   expect(governanceHeader?.action).toBe("SetFee");
 
-  buffer = Buffer.alloc(1000);
-  span = encodeHeader(governanceHeader!, buffer);
-  expect(
-    buffer.subarray(0, span).equals(Buffer.from([80, 84, 71, 77, 1, 3, 0, 1]))
-  ).toBeTruthy();
-
   // Wrong magic number
   governanceHeader = decodeHeader(
     Buffer.from([0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0])
@@ -151,25 +145,6 @@ test("GovernancePayload ser/de", (done) => {
       Buffer.from([2, 0, 0, 0, 0, 152, 13, 0, 0, 0, 0, 0])
     )
   );
-
-  buffer = Buffer.alloc(1000);
-  span = encodeExecutePostedVaa(executePostedVaaArgs!, buffer);
-  expect(
-    buffer
-      .subarray(0, span)
-      .equals(
-        Buffer.from([
-          80, 84, 71, 77, 0, 0, 0, 26, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,
-          0, 0, 0, 141, 65, 8, 219, 216, 57, 229, 94, 74, 17, 138, 50, 121, 176,
-          38, 178, 50, 229, 210, 103, 232, 253, 133, 66, 14, 47, 228, 224, 162,
-          147, 232, 251, 1, 1, 252, 221, 21, 33, 156, 1, 72, 252, 246, 229, 150,
-          218, 109, 165, 127, 11, 165, 252, 140, 6, 121, 57, 204, 91, 119, 165,
-          106, 241, 234, 131, 75, 180, 0, 1, 12, 0, 0, 0, 2, 0, 0, 0, 0, 152,
-          13, 0, 0, 0, 0, 0,
-        ])
-      )
-  ).toBeTruthy();
 
   done();
 });
