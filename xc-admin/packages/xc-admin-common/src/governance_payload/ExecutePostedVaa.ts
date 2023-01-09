@@ -1,9 +1,15 @@
-import { ChainId } from "@certusone/wormhole-sdk";
+import { ChainId, ChainName } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
-import { governanceHeaderLayout, PythGovernanceHeader, verifyHeader } from ".";
+import {
+  encodeHeader,
+  governanceHeaderLayout,
+  PythGovernanceHeader,
+  verifyHeader,
+} from ".";
 import { Layout } from "@solana/buffer-layout";
 import {
   AccountMeta,
+  PACKET_DATA_SIZE,
   PublicKey,
   TransactionInstruction,
 } from "@solana/web3.js";
@@ -21,10 +27,10 @@ class Vector<T> extends Layout<T[]> {
     return BufferLayout.seq(this.element, length).decode(b, (offset || 0) + 4);
   }
   encode(src: T[], b: Uint8Array, offset?: number | undefined): number {
-    return BufferLayout.struct<Readonly<{ length: number; src: T[] }>>([
+    return BufferLayout.struct<Readonly<{ length: number; elements: T[] }>>([
       BufferLayout.u32("length"),
       BufferLayout.seq(this.element, src.length, "elements"),
-    ]).encode({ length: src.length, src }, b, offset);
+    ]).encode({ length: src.length, elements: src }, b, offset);
   }
 
   getSpan(b: Buffer, offset?: number): number {
@@ -72,7 +78,7 @@ export const executePostedVaaLayout: BufferLayout.Structure<
 ]);
 
 export type ExecutePostedVaaArgs = {
-  header: PythGovernanceHeader;
+  targetChainId: ChainName;
   instructions: TransactionInstruction[];
 };
 
@@ -103,5 +109,36 @@ export function decodeExecutePostedVaa(
     }
   );
 
-  return { header, instructions };
+  return { targetChainId: header.targetChainId, instructions };
+}
+
+/** Encode ExecutePostedVaaArgs */
+export function encodeExecutePostedVaa(src: ExecutePostedVaaArgs): Buffer {
+  // PACKET_DATA_SIZE is the maximum transactin size of Solana, so our serialized payload will never be bigger than that
+  const buffer = Buffer.alloc(PACKET_DATA_SIZE);
+  const offset = encodeHeader(
+    { action: "ExecutePostedVaa", targetChainId: src.targetChainId },
+    buffer
+  );
+  let instructions: InstructionData[] = src.instructions.map((ix) => {
+    let programId = ix.programId.toBytes();
+    let accounts: AccountMetadata[] = ix.keys.map((acc) => {
+      return {
+        pubkey: acc.pubkey.toBytes(),
+        isSigner: acc.isSigner ? 1 : 0,
+        isWritable: acc.isWritable ? 1 : 0,
+      };
+    });
+    let data = [...ix.data];
+    return { programId, accounts, data };
+  });
+
+  const span =
+    offset +
+    new Vector<InstructionData>(instructionDataLayout, "instructions").encode(
+      instructions,
+      buffer,
+      offset
+    );
+  return buffer.subarray(0, span);
 }
