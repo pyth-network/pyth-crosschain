@@ -20,11 +20,19 @@ type SquadInstruction = {
   authorityType?: string;
 };
 
+/**
+ * Propose an array of `TransactionInstructions` as a proposal
+ * @param squad Squads client
+ * @param vault vault public key (the id of the multisig where these instructions should be proposed)
+ * @param instructions instructions that will be proposed
+ * @param remote whether the instructions should be executed in the chain of the multisig or remotely on Pythnet
+ * @returns the newly created proposal's pubkey
+ */
 export async function proposeInstructions(
   squad: Squads,
   vault: PublicKey,
-  chain: "solana",
   instructions: TransactionInstruction[],
+  remote: boolean,
   wormholeAddress?: PublicKey
 ): Promise<PublicKey> {
   const msAccount = await squad.getMultisig(vault);
@@ -44,20 +52,7 @@ export async function proposeInstructions(
   )[0];
   txToSend.push(createProposal);
 
-  if (chain == "solana") {
-    for (let i = 0; i < instructions.length; i++) {
-      txToSend.push(
-        new Transaction().add(
-          await squad.buildAddInstruction(
-            vault,
-            newProposalAddress,
-            instructions[i],
-            i
-          )
-        )
-      );
-    }
-  } else {
+  if (remote) {
     if (!wormholeAddress) {
       throw new Error("Need wormhole address");
     }
@@ -80,6 +75,19 @@ export async function proposeInstructions(
             squadIx.authorityIndex,
             squadIx.authorityBump,
             squadIx.authorityType
+          )
+        )
+      );
+    }
+  } else {
+    for (let i = 0; i < instructions.length; i++) {
+      txToSend.push(
+        new Transaction().add(
+          await squad.buildAddInstruction(
+            vault,
+            newProposalAddress,
+            instructions[i],
+            i
           )
         )
       );
@@ -134,8 +142,7 @@ export async function wrapAsRemoteInstruction(
     wormholeAddress,
     provider
   );
-  const buffer = Buffer.alloc(PACKET_DATA_SIZE);
-  const span = encodeExecutePostedVaa({
+  const buffer = encodeExecutePostedVaa({
     targetChainId: "pythnet",
     instructions: [instruction],
   });
