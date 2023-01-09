@@ -95,9 +95,8 @@ export class InjectiveDeployer implements Deployer {
 
     var codeId: number;
     try {
-      const ci = /"code_id","value":"\\"([^\\"]+)/gm.exec(
-        txResponse.rawLog
-      )![1];
+      // {"key":"code_id","value":"\"14\""}
+      const ci = extractFromRawLog(txResponse.rawLog, "code_id");
       codeId = parseInt(ci);
     } catch (e) {
       console.error(
@@ -127,9 +126,7 @@ export class InjectiveDeployer implements Deployer {
 
     let address: string = "";
     try {
-      address = /"contract_address","value":"\\"([^\\"]+)/gm.exec(
-        txResponse.rawLog
-      )![1];
+      address = extractFromRawLog(txResponse.rawLog, "contract_address");
     } catch (e) {
       console.error(
         "Encountered an error in parsing instantiation result. Printing raw log"
@@ -161,9 +158,7 @@ export class InjectiveDeployer implements Deployer {
 
     let resultCodeId: number;
     try {
-      resultCodeId = parseInt(
-        /"code_id","value":"\\"([^\\"]+)/gm.exec(txResponse.rawLog)![1]
-      );
+      resultCodeId = parseInt(extractFromRawLog(txResponse.rawLog, "code_id"));
       assert.strictEqual(codeId, resultCodeId);
     } catch (e) {
       console.error(
@@ -184,4 +179,10 @@ export class InjectiveDeployer implements Deployer {
 // want the "canonical" version
 function convert_injective_address_to_hex(human_addr: string) {
   return "0x" + toHex(zeroPad(Bech32.decode(human_addr).data, 32));
+}
+
+// enter key of what to extract
+function extractFromRawLog(rawLog: string, key: string): string {
+  const rx = new RegExp(`"${key}","value":"\\\\"([^\\\\"]+)`, "gm");
+  return rx.exec(rawLog)![1];
 }
