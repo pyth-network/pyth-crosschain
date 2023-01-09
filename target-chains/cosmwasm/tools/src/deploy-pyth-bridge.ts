@@ -62,13 +62,13 @@ const deployer: Deployer = DeployerFactory.create(network, mnemonic);
 
 // checks
 if (inputCodeId === undefined && artifact === undefined)
-  RaiseCLError("Please provide either artifact or code id");
+  raiseCLError("Please provide either artifact or code id");
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function RaiseCLError(message: string) {
+function raiseCLError(message: string) {
   console.error(message);
   process.exit(1);
 }
@@ -98,7 +98,7 @@ async function run() {
   }
   if (migrate) {
     if (contract === "")
-      RaiseCLError(
+      raiseCLError(
         "Contract address is not provided. Provide it using --contract"
       );
 
