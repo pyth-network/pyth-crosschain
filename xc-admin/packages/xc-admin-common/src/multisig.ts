@@ -15,10 +15,11 @@ import lodash from "lodash";
  * @param offset (optional) ignore all proposals with `proposal_index < offset`
  * @returns All the proposal accounts as `TransactionAccount`
  */
-export async function getActiveProposals(
+export async function getProposals(
   squad: Squads,
   vault: PublicKey,
-  offset: number = 1
+  offset: number = 1,
+  state: "active" | "executeReady" | "executed" | "all"
 ): Promise<TransactionAccount[]> {
   const msAccount = await squad.getMultisig(vault);
   let txKeys = lodash
@@ -29,7 +30,9 @@ export async function getActiveProposals(
     .filter(
       (x: TransactionAccount | null): x is TransactionAccount => x != null
     )
-    .filter((x) => lodash.isEqual(x.status, { active: {} }));
+    .filter((x) =>
+      state === "all" ? true : lodash.isEqual(x.status, { [state]: {} })
+    );
 }
 
 /**
