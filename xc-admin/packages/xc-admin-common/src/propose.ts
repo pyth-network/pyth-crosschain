@@ -1,6 +1,5 @@
 import Squads, { getIxAuthorityPDA, getTxPDA } from "@sqds/mesh";
 import {
-  PACKET_DATA_SIZE,
   PublicKey,
   Transaction,
   TransactionInstruction,
@@ -117,6 +116,16 @@ export async function proposeInstructions(
   return newProposalAddress;
 }
 
+/**
+ * Wrap `instruction` in a Wormhole message for remote execution
+ * @param squad Squads client
+ * @param vault vault public key (the id of the multisig where these instructions should be proposed)
+ * @param proposalAddress address of the proposal
+ * @param instruction instruction to be wrapped in a Wormhole message
+ * @param instructionIndex index of the instruction within the proposal
+ * @param wormholeAddress address of the Wormhole bridge
+ * @returns an instruction to be proposed
+ */
 export async function wrapAsRemoteInstruction(
   squad: Squads,
   vault: PublicKey,
@@ -125,13 +134,13 @@ export async function wrapAsRemoteInstruction(
   instructionIndex: number,
   wormholeAddress: PublicKey
 ): Promise<SquadInstruction> {
+  const emitter = squad.getAuthorityPDA(vault, 0);
+
   const [messagePDA, messagePdaBump] = getIxAuthorityPDA(
     proposalAddress,
     new BN(instructionIndex),
     squad.multisigProgramId
   );
-
-  const emitter = squad.getAuthorityPDA(vault, 0);
 
   const provider = new AnchorProvider(
     squad.connection,
@@ -142,6 +151,7 @@ export async function wrapAsRemoteInstruction(
     wormholeAddress,
     provider
   );
+
   const buffer = encodeExecutePostedVaa({
     targetChainId: "pythnet",
     instructions: [instruction],
@@ -153,6 +163,7 @@ export async function wrapAsRemoteInstruction(
     emitter,
     messagePDA
   );
+
   return {
     instruction: await wormholeProgram.methods
       .postMessage(0, buffer, 0)
