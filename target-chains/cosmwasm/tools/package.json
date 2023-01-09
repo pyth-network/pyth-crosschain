@@ -2,7 +2,7 @@
   "name": "tools",
   "version": "1.0.0",
   "description": "",
-  "main": "deploy.ts",
+  "main": "deploy-pyth-bridge.ts",
   "scripts": {
     "build": "tsc",
     "deploy-pyth": "ts-node ./src/deploy-pyth-bridge.ts"
