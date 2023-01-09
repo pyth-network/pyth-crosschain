@@ -1,5 +1,6 @@
 import { ChainName } from "@certusone/wormhole-sdk";
 import {
+  PACKET_DATA_SIZE,
   PublicKey,
   SystemProgram,
   TransactionInstruction,
@@ -20,7 +21,7 @@ test("GovernancePayload ser/de", (done) => {
     targetChainId: "pythnet" as ChainName,
     action: "ExecutePostedVaa" as ActionName,
   };
-  let buffer = Buffer.alloc(1000);
+  let buffer = Buffer.alloc(PACKET_DATA_SIZE);
   let span = encodeHeader(expectedGovernanceHeader, buffer);
   expect(
     buffer.subarray(0, span).equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 26]))
@@ -35,7 +36,7 @@ test("GovernancePayload ser/de", (done) => {
     targetChainId: "unset" as ChainName,
     action: "ExecutePostedVaa" as ActionName,
   };
-  buffer = Buffer.alloc(1000);
+  buffer = Buffer.alloc(PACKET_DATA_SIZE);
   span = encodeHeader(expectedGovernanceHeader, buffer);
   expect(
     buffer.subarray(0, span).equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 0]))
@@ -49,7 +50,7 @@ test("GovernancePayload ser/de", (done) => {
     targetChainId: "solana" as ChainName,
     action: "SetFee" as ActionName,
   };
-  buffer = Buffer.alloc(1000);
+  buffer = Buffer.alloc(PACKET_DATA_SIZE);
   span = encodeHeader(expectedGovernanceHeader, buffer);
   expect(
     buffer.subarray(0, span).equals(Buffer.from([80, 84, 71, 77, 1, 3, 0, 1]))
@@ -78,10 +79,7 @@ test("GovernancePayload ser/de", (done) => {
 
   // Decode executePostVaa with empty instructions
   let expectedExecuteVaaArgs = {
-    header: {
-      targetChainId: "pythnet" as ChainName,
-      action: "ExecutePostedVaa" as ActionName,
-    },
+    targetChainId: "pythnet" as ChainName,
     instructions: [] as TransactionInstruction[],
   };
   buffer = encodeExecutePostedVaa(expectedExecuteVaaArgs);
@@ -89,16 +87,12 @@ test("GovernancePayload ser/de", (done) => {
     buffer.equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 26, 0, 0, 0, 0]))
   ).toBeTruthy();
   let executePostedVaaArgs = decodeExecutePostedVaa(buffer);
-  expect(executePostedVaaArgs?.header.targetChainId).toBe("pythnet");
-  expect(executePostedVaaArgs?.header.action).toBe("ExecutePostedVaa");
+  expect(executePostedVaaArgs?.targetChainId).toBe("pythnet");
   expect(executePostedVaaArgs?.instructions.length).toBe(0);
 
   // Decode executePostVaa with one system instruction
   expectedExecuteVaaArgs = {
-    header: {
-      targetChainId: "pythnet" as ChainName,
-      action: "ExecutePostedVaa" as ActionName,
-    },
+    targetChainId: "pythnet" as ChainName,
     instructions: [
       SystemProgram.transfer({
         fromPubkey: new PublicKey(
@@ -125,8 +119,7 @@ test("GovernancePayload ser/de", (done) => {
     )
   ).toBeTruthy();
   executePostedVaaArgs = decodeExecutePostedVaa(buffer);
-  expect(executePostedVaaArgs?.header.targetChainId).toBe("pythnet");
-  expect(executePostedVaaArgs?.header.action).toBe("ExecutePostedVaa");
+  expect(executePostedVaaArgs?.targetChainId).toBe("pythnet");
   expect(executePostedVaaArgs?.instructions.length).toBe(1);
   expect(
     executePostedVaaArgs?.instructions[0].programId.equals(

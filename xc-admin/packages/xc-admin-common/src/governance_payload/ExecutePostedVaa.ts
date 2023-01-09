@@ -1,4 +1,4 @@
-import { ChainId } from "@certusone/wormhole-sdk";
+import { ChainId, ChainName } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
 import {
   encodeHeader,
@@ -78,7 +78,7 @@ export const executePostedVaaLayout: BufferLayout.Structure<
 ]);
 
 export type ExecutePostedVaaArgs = {
-  header: PythGovernanceHeader;
+  targetChainId: ChainName;
   instructions: TransactionInstruction[];
 };
 
@@ -109,14 +109,17 @@ export function decodeExecutePostedVaa(
     }
   );
 
-  return { header, instructions };
+  return { targetChainId: header.targetChainId, instructions };
 }
 
 /** Encode ExecutePostedVaaArgs */
 export function encodeExecutePostedVaa(src: ExecutePostedVaaArgs): Buffer {
   // PACKET_DATA_SIZE is the maximum transactin size of Solana, so our serialized payload will never be bigger than that
   const buffer = Buffer.alloc(PACKET_DATA_SIZE);
-  const offset = encodeHeader(src.header, buffer);
+  const offset = encodeHeader(
+    { action: "ExecutePostedVaa", targetChainId: src.targetChainId },
+    buffer
+  );
   let instructions: InstructionData[] = src.instructions.map((ix) => {
     let programId = ix.programId.toBytes();
     let accounts: AccountMetadata[] = ix.keys.map((acc) => {
