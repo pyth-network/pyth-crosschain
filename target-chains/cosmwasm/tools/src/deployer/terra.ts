@@ -31,10 +31,13 @@ export class TerraDeployer implements Deployer {
   }
 
   private async signAndBroadcastMsg(msg: Msg): Promise<WaitTxBroadcastResult> {
-    const tx = await this.wallet.createAndSignTx({msgs: [msg], feeDenoms: this.feeDenoms})
-    const res = await this.wallet.lcd.tx.broadcast(tx)
+    const tx = await this.wallet.createAndSignTx({
+      msgs: [msg],
+      feeDenoms: this.feeDenoms,
+    });
+    const res = await this.wallet.lcd.tx.broadcast(tx);
 
-    if(isTxError(res)) {
+    if (isTxError(res)) {
       console.error(`Transaction failed: ${res.raw_log}`);
     } else {
       console.log(
@@ -54,7 +57,7 @@ export class TerraDeployer implements Deployer {
       contract_bytes.toString("base64")
     );
 
-    const rs = await this.signAndBroadcastMsg(store_code)
+    const rs = await this.signAndBroadcastMsg(store_code);
 
     var codeId: number;
     try {
@@ -76,7 +79,6 @@ export class TerraDeployer implements Deployer {
     inst_msg: string | object,
     label: string
   ): Promise<string> {
-
     const instMsg = new MsgInstantiateContract(
       this.wallet.key.accAddress,
       this.wallet.key.accAddress,
@@ -84,8 +86,8 @@ export class TerraDeployer implements Deployer {
       inst_msg,
       undefined,
       label
-    )
-    const rs = await this.signAndBroadcastMsg(instMsg)
+    );
+    const rs = await this.signAndBroadcastMsg(instMsg);
 
     var address: string = "";
 
@@ -108,14 +110,21 @@ export class TerraDeployer implements Deployer {
   }
 
   async migrate(contract: string, codeId: number): Promise<void> {
-    const migrateMsg = new MsgMigrateContract(this.wallet.key.accAddress, contract, codeId, {
-      action: "",
-    })
+    const migrateMsg = new MsgMigrateContract(
+      this.wallet.key.accAddress,
+      contract,
+      codeId,
+      {
+        action: "",
+      }
+    );
 
-    const rs = await this.signAndBroadcastMsg(migrateMsg)
-    
+    const rs = await this.signAndBroadcastMsg(migrateMsg);
+
     try {
-      let resultCodeId = parseInt(/"code_id","value":"([^"]+)/gm.exec(rs.raw_log)![1]);
+      let resultCodeId = parseInt(
+        /"code_id","value":"([^"]+)/gm.exec(rs.raw_log)![1]
+      );
       assert.strictEqual(codeId, resultCodeId);
     } catch (e) {
       console.error(

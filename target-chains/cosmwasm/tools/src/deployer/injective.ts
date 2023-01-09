@@ -89,7 +89,9 @@ export class InjectiveDeployer implements Deployer {
 
     var codeId: number;
     try {
-      const ci = /"code_id","value":"\\"([^\\"]+)/gm.exec(txResponse.rawLog)![1];
+      const ci = /"code_id","value":"\\"([^\\"]+)/gm.exec(
+        txResponse.rawLog
+      )![1];
       codeId = parseInt(ci);
     } catch (e) {
       console.error(
@@ -153,7 +155,9 @@ export class InjectiveDeployer implements Deployer {
 
     let resultCodeId: number;
     try {
-      resultCodeId = parseInt(/"code_id","value":"\\"([^\\"]+)/gm.exec(txResponse.rawLog)![1]);
+      resultCodeId = parseInt(
+        /"code_id","value":"\\"([^\\"]+)/gm.exec(txResponse.rawLog)![1]
+      );
       assert.strictEqual(codeId, resultCodeId);
     } catch (e) {
       console.error(
