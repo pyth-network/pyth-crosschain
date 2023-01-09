@@ -64,30 +64,6 @@ const deployer: Deployer = DeployerFactory.create(network, mnemonic);
 if (inputCodeId === undefined && artifact === undefined)
   RaiseCLError("Please provide either artifact or code id");
 
-async function deployArtifacts(artifact: string): Promise<number> {
-  let codeId = await deployer.deployArtifact(artifact);
-  return codeId;
-}
-
-async function instantiateContract(
-  codeId: number,
-  pythConfig: PythConfig
-): Promise<string> {
-  const contractAddress = await deployer.instantiate(
-    codeId,
-    pythConfig,
-    "pyth"
-  );
-  return contractAddress;
-}
-
-async function migrateContract(
-  codeId: number,
-  contract: string
-): Promise<void> {
-  await deployer.migrate(contract, codeId);
-}
-
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -101,7 +77,7 @@ async function run() {
   let codeId: number;
   if (inputCodeId === undefined) {
     console.log("Deploying artifact");
-    codeId = await deployArtifacts(artifact!);
+    codeId = await deployer.deployArtifact(artifact!);
     console.log("Deployed Code ID: ", codeId);
 
     // sleep only when a new artifact is deployed
@@ -113,7 +89,11 @@ async function run() {
 
   if (instantiate) {
     console.log("Instantiating a contract");
-    const contractAddress = await instantiateContract(codeId, pythConfig);
+    const contractAddress = await deployer.instantiate(
+      codeId,
+      pythConfig,
+      "pyth"
+    );
     console.log(`Deployed Pyth contract at ${contractAddress}`);
   }
   if (migrate) {
@@ -123,7 +103,7 @@ async function run() {
       );
 
     console.log(`Migrating contract ${contract} to ${codeId}`);
-    await migrateContract(codeId, contract);
+    await deployer.migrate(contract, codeId);
     console.log(
       `Contract ${contract} code_id successfully updated to ${codeId}`
     );
