@@ -2,10 +2,12 @@ import { Network } from "@injectivelabs/networks";
 import { TerraHost } from "./terra";
 import { InjectiveHost } from "./injective";
 import { NETWORKS } from "../network";
+import { OsmosisHost } from "./osmosis";
 
 export enum CONFIG_TYPE {
   TERRA = "terra",
   INJECTIVE = "injective",
+  OSMOSIS = "osmosis",
 }
 
 export const CONFIG: Config = {
@@ -31,6 +33,12 @@ export const CONFIG: Config = {
       network: Network.Testnet,
     },
   },
+  [NETWORKS.OSMOSIS_LOCAL]: {
+    type: CONFIG_TYPE.OSMOSIS,
+    host: {
+      endpoint: "http://localhost:26657",
+    },
+  },
 };
 
 export type Config = Record<NETWORKS, NetworkConfig>;
@@ -43,4 +51,8 @@ export type NetworkConfig =
   | {
       type: CONFIG_TYPE.INJECTIVE;
       host: InjectiveHost;
+    }
+  | {
+      type: CONFIG_TYPE.OSMOSIS;
+      host: OsmosisHost;
     };

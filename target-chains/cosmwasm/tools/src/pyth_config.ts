@@ -128,4 +128,41 @@ export const CONFIG: Config = {
       denom: "inj",
     },
   },
+  // this details below are invalid and random
+  // they are to be used only for for testing purposes
+  [NETWORKS.OSMOSIS_LOCAL]: {
+    wormhole_contract:
+      "osmo1mypljhatv0prfr9cjzzvamxdf2ctg34xkt50sudxads9zhqnyneqjuvy26",
+    data_sources: [
+      {
+        emitter: Buffer.from(
+          "f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0",
+          "hex"
+        ).toString("base64"),
+        chain_id: 1,
+      },
+      {
+        emitter: Buffer.from(
+          "a27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6",
+          "hex"
+        ).toString("base64"),
+        chain_id: 26,
+      },
+    ],
+    governance_source: {
+      emitter: Buffer.from(
+        "63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385",
+        "hex"
+      ).toString("base64"),
+      chain_id: 1,
+    },
+    governance_source_index: 0,
+    governance_sequence_number: 0,
+    chain_id: 19,
+    valid_time_period_secs: 60,
+    fee: {
+      amount: "1",
+      denom: "uosmo",
+    },
+  },
 };

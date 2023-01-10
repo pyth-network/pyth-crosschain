@@ -149,12 +149,12 @@ export class TerraDeployer implements Deployer {
 
 // Terra addresses are "human-readable", but for cross-chain registrations, we
 // want the "canonical" version
-function convert_terra_address_to_hex(human_addr: string) {
+export function convert_terra_address_to_hex(human_addr: string) {
   return "0x" + toHex(zeroPad(Bech32.decode(human_addr).data, 32));
 }
 
 // enter key of what to extract
-function extractFromRawLog(rawLog: string, key: string): string {
+export function extractFromRawLog(rawLog: string, key: string): string {
   const rx = new RegExp(`"${key}","value":"([^"]+)`, "gm");
   return rx.exec(rawLog)![1];
 }

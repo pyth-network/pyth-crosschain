@@ -2,6 +2,7 @@ import { CONFIG, CONFIG_TYPE, NetworkConfig } from "./config";
 import { TerraDeployer } from "./terra";
 import { InjectiveDeployer } from "./injective";
 import { NETWORKS } from "../network";
+import { OsmosisDeployer } from "./osmosis";
 
 export interface Deployer {
   deployArtifact(artifact: string): Promise<number>;
@@ -21,6 +22,9 @@ export class DeployerFactory {
 
       case CONFIG_TYPE.INJECTIVE:
         return InjectiveDeployer.fromHostAndMnemonic(config.host, mnemonic);
+
+      case CONFIG_TYPE.OSMOSIS:
+        return OsmosisDeployer.fromHostAndMnemonic(config.host, mnemonic);
 
       default:
         throw new Error("Invalid config type");
