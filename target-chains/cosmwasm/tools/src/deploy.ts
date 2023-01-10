@@ -3,13 +3,13 @@
 // as well. You can use Dockerfile.cosmwasm in the root of this repo
 // to do that.
 
-import { LCDClient, MnemonicKey } from "@terra-money/terra.js";
-import { MsgInstantiateContract, MsgStoreCode } from "@terra-money/terra.js";
-import { readFileSync, readdirSync } from "fs";
-import { Bech32, toHex } from "@cosmjs/encoding";
-import { zeroPad } from "ethers/lib/utils.js";
+import { readdirSync } from "fs";
+import { DeployerFactory } from "./deployer";
+import { CONFIG_TYPE, NetworkConfig } from "./deployer/config";
 
-(async () => {
+const ARTIFACT_DIR = "../artifacts/";
+
+async function deploy() {
   /*
   NOTE: Only append to this array: keeping the ordering is crucial, as the
   contracts must be imported in a deterministic order so their addresses remain
@@ -19,7 +19,7 @@ import { zeroPad } from "ethers/lib/utils.js";
 
   /* Check that the artifact folder contains all the wasm files we expect and nothing else */
 
-  const actual_artifacts = readdirSync("../../artifacts/").filter((a) =>
+  const actual_artifacts = readdirSync("../artifacts/").filter((a) =>
     a.endsWith(".wasm")
   );
 
@@ -52,49 +52,26 @@ import { zeroPad } from "ethers/lib/utils.js";
     process.exit(1);
   }
 
-  /* Set up terra client & wallet */
-
-  const terra = new LCDClient({
-    URL: "http://localhost:1317",
-    chainID: "localterra",
-  });
-
-  const wallet = terra.wallet(
-    new MnemonicKey({
-      mnemonic:
-        "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius",
-    })
+  /* Set up terra deployer */
+  const networkConfig: NetworkConfig = {
+    type: CONFIG_TYPE.TERRA,
+    host: {
+      URL: "http://localhost:1317",
+      chainID: "localterra",
+      name: "localterra",
+    },
+  };
+  const deployer = DeployerFactory.create(
+    networkConfig,
+    "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius"
   );
 
-  await wallet.sequence();
-
   /* Deploy artifacts */
-
   const codeIds: Record<string, number> = {};
   for (const file of artifacts) {
-    const contract_bytes = readFileSync(`../artifacts/${file}`);
-    console.log(`Storing WASM: ${file} (${contract_bytes.length} bytes)`);
-
-    const store_code = new MsgStoreCode(
-      wallet.key.accAddress,
-      contract_bytes.toString("base64")
-    );
-
-    try {
-      const tx = await wallet.createAndSignTx({
-        msgs: [store_code],
-        memo: "",
-      });
-
-      const rs = await terra.tx.broadcast(tx);
-      // @ts-ignore
-      const ci: string = /"code_id","value":"([^"]+)/gm.exec(rs.raw_log)[1];
-      codeIds[file] = parseInt(ci);
-    } catch (e) {
-      console.log(`${e}`);
-    }
+    const codeId = await deployer.deployArtifact(`../artifacts/${file}`);
+    codeIds[file] = codeId;
   }
-
   console.log(codeIds);
 
   /* Instantiate contracts.
@@ -104,71 +81,44 @@ import { zeroPad } from "ethers/lib/utils.js";
    * will be instantiated by the on-chain bridge contracts on demand.
    * */
 
-  // Governance constants defined by the Wormhole spec.
-  const govChain = 1;
-  const govAddress =
-    "0000000000000000000000000000000000000000000000000000000000000004";
-
-  async function instantiate(
-    contract: string,
-    inst_msg: string | object,
-    label: string
-  ): Promise<string> {
-    var address: string = "";
-    await wallet
-      .createAndSignTx({
-        msgs: [
-          new MsgInstantiateContract(
-            wallet.key.accAddress,
-            wallet.key.accAddress,
-            codeIds[contract],
-            inst_msg,
-            undefined,
-            label
-          ),
-        ],
-        memo: "",
-      })
-      .then((tx) => terra.tx.broadcast(tx))
-      .then((rs) => {
-        // @ts-ignore
-        address = /"_contract_address","value":"([^"]+)/gm.exec(rs.raw_log)[1];
-      });
-    console.log(
-      `Instantiated ${contract} at ${address} (${convert_terra_address_to_hex(
-        address
-      )})`
-    );
-    return address;
-  }
-
   // Instantiate contracts.  NOTE: Only append at the end, the ordering must be
   // deterministic for the addresses to work
 
   const addresses: Record<string, string> = {};
 
-  addresses["wormhole.wasm"] = await instantiate(
-    "wormhole.wasm",
-    {
-      gov_chain: govChain,
-      gov_address: Buffer.from(govAddress, "hex").toString("base64"),
-      guardian_set_expirity: 86400,
-      initial_guardian_set: {
-        addresses: [
-          {
-            bytes: Buffer.from(
-              "beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe",
-              "hex"
-            ).toString("base64"),
-          },
-        ],
-        expiration_time: 0,
-      },
-      chain_id: 18,
-      fee_denom: "uluna",
+  let contract = "wormhole.wasm";
+
+  // Governance constants defined by the Wormhole spec.
+  const govChain = 1;
+  const govAddress =
+    "0000000000000000000000000000000000000000000000000000000000000004";
+
+  let inst_msg: Object = {
+    gov_chain: govChain,
+    gov_address: Buffer.from(govAddress, "hex").toString("base64"),
+    guardian_set_expirity: 86400,
+    initial_guardian_set: {
+      addresses: [
+        {
+          bytes: Buffer.from(
+            "beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe",
+            "hex"
+          ).toString("base64"),
+        },
+      ],
+      expiration_time: 0,
     },
+    chain_id: 18,
+    fee_denom: "uluna",
+  };
+  console.log("Instantiating Wormhole contract");
+  addresses[contract] = await deployer.instantiate(
+    codeIds[contract],
+    inst_msg,
     "wormhole"
   );
+
+  contract = "pyth_cosmwasm.wasm";
 
   const pythEmitterAddress =
     "71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
@@ -176,36 +126,36 @@ import { zeroPad } from "ethers/lib/utils.js";
     "0000000000000000000000000000000000000000000000000000000000001234";
   const pythChain = 1;
 
-  addresses["pyth_cosmwasm.wasm"] = await instantiate(
-    "pyth_cosmwasm.wasm",
-    {
-      wormhole_contract: addresses["wormhole.wasm"],
-      data_sources: [
-        {
-          emitter: Buffer.from(pythEmitterAddress, "hex").toString("base64"),
-          chain_id: pythChain,
-        },
-      ],
-      governance_source: {
-        emitter: Buffer.from(pythGovernanceEmitterAddress, "hex").toString(
-          "base64"
-        ),
+  inst_msg = {
+    wormhole_contract: addresses["wormhole.wasm"],
+    data_sources: [
+      {
+        emitter: Buffer.from(pythEmitterAddress, "hex").toString("base64"),
         chain_id: pythChain,
       },
-      governance_source_index: 0,
-      governance_sequence_number: 0,
-      chain_id: 3,
-      valid_time_period_secs: 60,
-      fee: {
-        amount: "1",
-        denom: "uluna",
-      },
+    ],
+    governance_source: {
+      emitter: Buffer.from(pythGovernanceEmitterAddress, "hex").toString(
+        "base64"
+      ),
+      chain_id: pythChain,
     },
+    governance_source_index: 0,
+    governance_sequence_number: 0,
+    chain_id: 3,
+    valid_time_period_secs: 60,
+    fee: {
+      amount: "1",
+      denom: "uluna",
+    },
+  };
+
+  console.log("Instantiating Pyth contract");
+  addresses[contract] = await deployer.instantiate(
+    codeIds[contract],
+    inst_msg,
     "pyth"
   );
-})();
-// Terra addresses are "human-readable", but for cross-chain registrations, we
-// want the "canonical" version
-function convert_terra_address_to_hex(human_addr: string) {
-  return "0x" + toHex(zeroPad(Bech32.decode(human_addr).data, 32));
 }
+
+deploy();

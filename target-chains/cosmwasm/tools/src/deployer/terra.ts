@@ -104,7 +104,7 @@ export class TerraDeployer implements Deployer {
     }
 
     console.log(
-      `Instantiated Pyth at ${address} (${convert_terra_address_to_hex(
+      `Instantiated ${label} at ${address} (${convert_terra_address_to_hex(
         address
       )})`
     );
