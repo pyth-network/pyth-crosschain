@@ -1,5 +1,5 @@
-import Link from "next/link";
-import SocialLinks from "../common/SocialLinks";
+import Link from 'next/link'
+import SocialLinks from '../common/SocialLinks'
 
 const Footer = () => {
   return (
@@ -11,12 +11,12 @@ const Footer = () => {
         <div className="py-10 lg:py-0">
           <Link href="https://pyth.network/">
             <a target="_blank">Pyth Network</a>
-          </Link>{" "}
+          </Link>{' '}
         </div>
         <SocialLinks />
       </div>
     </footer>
-  );
-};
+  )
+}
 
-export default Footer;
+export default Footer

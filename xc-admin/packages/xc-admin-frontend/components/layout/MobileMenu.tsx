@@ -1,55 +1,55 @@
-import { gsap } from "gsap";
-import Image from "next/legacy/image";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useContext, useEffect, useRef } from "react";
-import { ClusterContext, DEFAULT_CLUSTER } from "../../contexts/ClusterContext";
-import { BurgerState } from "./Header";
+import { gsap } from 'gsap'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { useContext, useEffect, useRef } from 'react'
+import { ClusterContext, DEFAULT_CLUSTER } from '../../contexts/ClusterContext'
+import { BurgerState } from './Header'
 
-import orb from "../../images/index/burger.png";
+import orb from '../../images/burger.png'
 
 interface MenuProps {
-  headerState: BurgerState;
-  setHeaderState: Function;
+  headerState: BurgerState
+  setHeaderState: Function
 }
 
 const MobileMenu = ({ headerState, setHeaderState }: MenuProps) => {
-  let burgerMenu = useRef(null);
-  const router = useRouter();
-  const { cluster } = useContext(ClusterContext);
+  let burgerMenu = useRef(null)
+  const router = useRouter()
+  const { cluster } = useContext(ClusterContext)
 
   const navigation = [
     {
-      name: "Main",
-      href: `/${cluster === DEFAULT_CLUSTER ? "" : `?cluster=${cluster}`}`,
-      target: "_self",
+      name: 'Main',
+      href: `/${cluster === DEFAULT_CLUSTER ? '' : `?cluster=${cluster}`}`,
+      target: '_self',
     },
     {
-      name: "Pyth Network",
-      href: "https://pyth.network/",
-      target: "_blank",
+      name: 'Pyth Network',
+      href: 'https://pyth.network/',
+      target: '_blank',
     },
-  ];
+  ]
 
   useEffect(() => {
     // close menu
     if (!headerState.opened) {
       gsap.to(burgerMenu.current, {
         duration: 0.3,
-        ease: "power4.out",
-        css: { right: "-100%" },
-      });
-      gsap.set(document.body, { overflow: "initial" });
+        ease: 'power4.out',
+        css: { right: '-100%' },
+      })
+      gsap.set(document.body, { overflow: 'initial' })
     } else {
       // show menu
       gsap.to(burgerMenu.current, {
         duration: 0.3,
-        ease: "power4.out",
-        css: { right: "0" },
-      });
-      gsap.set(document.body, { overflow: "hidden" });
+        ease: 'power4.out',
+        css: { right: '0' },
+      })
+      gsap.set(document.body, { overflow: 'hidden' })
     }
-  }, [headerState]);
+  }, [headerState])
 
   return (
     <div
@@ -74,7 +74,7 @@ const MobileMenu = ({ headerState, setHeaderState }: MenuProps) => {
                       target={item.target}
                       className=" inline-block font-body  text-4xl leading-none tracking-wide transition-colors hover:text-white"
                       aria-current={
-                        router.pathname === item.href ? "page" : undefined
+                        router.pathname === item.href ? 'page' : undefined
                       }
                     >
                       {item.name}
@@ -87,7 +87,7 @@ const MobileMenu = ({ headerState, setHeaderState }: MenuProps) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default MobileMenu;
+export default MobileMenu
