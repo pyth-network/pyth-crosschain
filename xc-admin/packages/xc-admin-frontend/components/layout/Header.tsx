@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import React, { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { ClusterContext, DEFAULT_CLUSTER } from '../../contexts/ClusterContext'
 import Pyth from '../../images/logomark.inline.svg'
 import MobileMenu from './MobileMenu'
@@ -18,9 +18,7 @@ function Header() {
   const navigation = [
     {
       name: 'Main',
-      href: `/${
-        cluster === DEFAULT_CLUSTER ? '' : `?cluster=${cluster}`
-      }`,
+      href: `/${cluster === DEFAULT_CLUSTER ? '' : `?cluster=${cluster}`}`,
       target: '_self',
     },
     {
@@ -64,11 +62,6 @@ function Header() {
     }
   }
 
-  const brandAssetsLink = (e: React.MouseEvent<HTMLElement>) => {
-    e.preventDefault()
-    router.push('/brand')
-  }
-
   return (
     <>
       <header
@@ -94,7 +87,6 @@ function Header() {
                 headerState.opened &&
                 'fixed left-5 top-3 sm:relative sm:left-0 sm:top-0'
               }`}
-              onContextMenu={brandAssetsLink}
             >
               <Pyth />
             </a>
