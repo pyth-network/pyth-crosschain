@@ -104,9 +104,11 @@ export async function proposeInstructions(
     )
   );
 
-  await new AnchorProvider(squad.connection, squad.wallet, {
-    skipPreflight: true,
-  }).sendAll(
+  await new AnchorProvider(
+    squad.connection,
+    squad.wallet,
+    AnchorProvider.defaultOptions()
+  ).sendAll(
     txToSend.map((tx) => {
       return { tx, signers: [] };
     })
