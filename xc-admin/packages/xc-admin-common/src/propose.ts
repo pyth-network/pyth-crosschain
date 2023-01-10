@@ -104,8 +104,6 @@ export async function proposeInstructions(
     )
   );
 
-  console.log(txToSend);
-
   await new AnchorProvider(squad.connection, squad.wallet, {
     skipPreflight: true,
   }).sendAll(
