@@ -125,7 +125,6 @@ export const CONFIG: Config = {
     valid_time_period_secs: 60,
     fee: {
       amount: "1",
-      // FIXME ??
       denom: "inj",
     },
   },
