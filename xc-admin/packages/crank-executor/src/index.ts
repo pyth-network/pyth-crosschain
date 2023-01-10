@@ -3,6 +3,7 @@ import {
   Connection,
   Keypair,
   PublicKey,
+  SendTransactionError,
   Transaction,
 } from "@solana/web3.js";
 import SquadsMesh, { DEFAULT_MULTISIG_PROGRAM_ID, getIxPDA } from "@sqds/mesh";
@@ -45,7 +46,11 @@ async function run() {
   for (const proposal of proposals) {
     // If we have previously cancelled because the proposal was failing, don't attempt
     if (proposal.cancelled.length == 0) {
-      for (let i = proposal.executedIndex; i < proposal.instructionIndex; i++) {
+      for (
+        let i = proposal.executedIndex + 1;
+        i <= proposal.instructionIndex;
+        i++
+      ) {
         const transaction = new Transaction().add(
           await squad.buildExecuteInstruction(
             proposal.publicKey,
@@ -57,10 +62,12 @@ async function run() {
           await new AnchorProvider(squad.connection, squad.wallet, {
             commitment: COMMITMENT,
             preflightCommitment: COMMITMENT,
-          }).sendAndConfirm(transaction, [KEYPAIR]);
+          }).sendAndConfirm(transaction, []);
         } catch (error) {
           // Mark the transaction as cancelled if we failed to run it
-          await squad.cancelTransaction(proposal.publicKey);
+          if (error instanceof SendTransactionError) {
+            await squad.cancelTransaction(proposal.publicKey);
+          }
           break;
         }
       }
