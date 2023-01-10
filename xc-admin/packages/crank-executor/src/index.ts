@@ -11,6 +11,10 @@ import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import { getProposals } from "xc-admin-common";
 import BN from "bn.js";
 import { AnchorProvider } from "@project-serum/anchor";
+import {
+  getPythClusterApiUrl,
+  PythCluster,
+} from "@pythnetwork/client/lib/cluster";
 
 export function envOrErr(env: string): string {
   const val = process.env[env];
@@ -20,32 +24,24 @@ export function envOrErr(env: string): string {
   return String(process.env[env]);
 }
 
-const SOLANA_CLUSTER_URL: string = envOrErr("SOLANA_RPC_URL");
-const SOLANA_CONNECTION_COMMITMENT: Commitment =
-  (process.env.SOLANA_CONNECTION_COMMITMENT as Commitment) ?? "confirmed";
-const MULTISIG_VAULT: PublicKey = new PublicKey(envOrErr("SOLANA_RPC_URL"));
+const CLUSTER: string = envOrErr("CLUSTER");
+const COMMITMENT: Commitment =
+  (process.env.COMMITMENT as Commitment) ?? "confirmed";
+const VAULT: PublicKey = new PublicKey(envOrErr("VAULT"));
 const KEYPAIR: Keypair = Keypair.fromSecretKey(
-  Uint8Array.from(
-    JSON.parse(fs.readFileSync(envOrErr("KEYPAIR_PATH"), "ascii"))
-  )
+  Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii")))
 );
 
 async function run() {
   const squad = new SquadsMesh({
     connection: new Connection(
-      SOLANA_CLUSTER_URL,
-      SOLANA_CONNECTION_COMMITMENT
+      getPythClusterApiUrl(CLUSTER as PythCluster),
+      COMMITMENT
     ),
     wallet: new NodeWallet(KEYPAIR),
     multisigProgramId: DEFAULT_MULTISIG_PROGRAM_ID,
   });
-  const proposals = await getProposals(
-    squad,
-    MULTISIG_VAULT,
-    undefined,
-    "executeReady"
-  );
-
+  const proposals = await getProposals(squad, VAULT, undefined, "executeReady");
   for (const proposal of proposals) {
     // If we have previously cancelled because the proposal was failing, don't attempt
     if (proposal.cancelled.length == 0) {
@@ -59,8 +55,8 @@ async function run() {
 
         try {
           await new AnchorProvider(squad.connection, squad.wallet, {
-            commitment: SOLANA_CONNECTION_COMMITMENT,
-            preflightCommitment: SOLANA_CONNECTION_COMMITMENT,
+            commitment: COMMITMENT,
+            preflightCommitment: COMMITMENT,
           }).sendAndConfirm(transaction, [KEYPAIR]);
         } catch (error) {
           // Mark the transaction as cancelled if we failed to run it
