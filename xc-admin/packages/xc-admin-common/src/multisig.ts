@@ -9,16 +9,18 @@ import BN from "bn.js";
 import lodash from "lodash";
 
 /**
- * Find all active proposals for vault `vault` using Squads client `squad`
+ * Find all proposals for vault `vault` using Squads client `squad`
  * @param squad Squads client
  * @param vault vault public key. It needs to exist in the instance of squads that `squad` is targeting
  * @param offset (optional) ignore all proposals with `proposal_index < offset`
+ * @param state filter by status
  * @returns All the proposal accounts as `TransactionAccount`
  */
-export async function getActiveProposals(
+export async function getProposals(
   squad: Squads,
   vault: PublicKey,
-  offset: number = 1
+  offset: number = 1,
+  state: "active" | "executeReady" | "executed" | "all" = "all"
 ): Promise<TransactionAccount[]> {
   const msAccount = await squad.getMultisig(vault);
   let txKeys = lodash
@@ -29,7 +31,9 @@ export async function getActiveProposals(
     .filter(
       (x: TransactionAccount | null): x is TransactionAccount => x != null
     )
-    .filter((x) => lodash.isEqual(x.status, { active: {} }));
+    .filter((x) =>
+      state === "all" ? true : lodash.isEqual(x.status, { [state]: {} })
+    );
 }
 
 /**

@@ -5,6 +5,7 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-added-large-files
+        exclude: package-lock.json
   # Hook to format many type of files in the repo
   # including solidity contracts.
   - repo: https://github.com/pre-commit/mirrors-prettier
