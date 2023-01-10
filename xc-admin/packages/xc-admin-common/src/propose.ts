@@ -70,7 +70,7 @@ export async function proposeInstructions(
             vault,
             newProposalAddress,
             squadIx.instruction,
-            i,
+            i + 1,
             squadIx.authorityIndex,
             squadIx.authorityBump,
             squadIx.authorityType
@@ -86,7 +86,7 @@ export async function proposeInstructions(
             vault,
             newProposalAddress,
             instructions[i],
-            i
+            i + 1
           )
         )
       );
