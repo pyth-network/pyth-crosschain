@@ -70,7 +70,7 @@ export async function proposeInstructions(
             vault,
             newProposalAddress,
             squadIx.instruction,
-            i,
+            i + 1,
             squadIx.authorityIndex,
             squadIx.authorityBump,
             squadIx.authorityType
@@ -86,7 +86,7 @@ export async function proposeInstructions(
             vault,
             newProposalAddress,
             instructions[i],
-            i
+            i + 1
           )
         )
       );
@@ -104,11 +104,11 @@ export async function proposeInstructions(
     )
   );
 
-  await new AnchorProvider(
-    squad.connection,
-    squad.wallet,
-    AnchorProvider.defaultOptions()
-  ).sendAll(
+  console.log(txToSend);
+
+  await new AnchorProvider(squad.connection, squad.wallet, {
+    skipPreflight: true,
+  }).sendAll(
     txToSend.map((tx) => {
       return { tx, signers: [] };
     })
