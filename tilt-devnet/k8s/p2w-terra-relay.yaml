@@ -63,7 +63,7 @@ spec:
               value: notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius
             - name: TERRA_PYTH_CONTRACT_ADDRESS
               value: terra1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrquka9l6
-              # ^^ It can change if order of terra contract creation changes or anything is added/removed in terra/tools/deploy.js
+              # ^^ It can change if order of terra contract creation changes or anything is added/removed in terra/tools/deploy.ts
             - name: TERRA_CHAIN_ID
               value: localterra
             - name: TERRA_NAME

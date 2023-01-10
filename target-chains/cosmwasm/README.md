@@ -27,7 +27,7 @@ Then, to deploy the Pyth contract (`pyth_cosmwasm.wasm`), run the following comm
 
 ```sh
 npm ci # Do it only once to install the required packages
-npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_cosmwasm.wasm --mnemonic "..."
+npm run deploy-pyth -- --network terra_testnet --artifact ../artifacts/pyth_cosmwasm.wasm --mnemonic "..."
 ```
 
 If successful, this command will print something along the lines of:

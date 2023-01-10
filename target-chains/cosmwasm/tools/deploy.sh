@@ -10,4 +10,4 @@ done
 
 sleep 2
 
-node deploy.js
+npm run deploy
