@@ -14,16 +14,24 @@ const PROGRAM_AUTHORITY_ESCROW = new PublicKey(
 const BPF_UPGRADABLE_LOADER = new PublicKey(
   "BPFLoaderUpgradeab1e11111111111111111111111"
 );
+
+const mutlisigCommand = (name: string, description: string) =>
+  program
+    .command(name)
+    .description(description)
+    .requiredOption("-c, --cluster <network>", "solana cluster to use")
+    .requiredOption("-w, --wallet <filepath>", "path to the operations key")
+    .requiredOption("-v, --vault <pubkey>", "multisig address");
+
 program
   .name("xc-admin-cli")
   .description("CLI for interacting with Pyth's xc-admin")
   .version("0.1.0");
 
-program
-  .command("accept-authority")
-  .description("Accept authority from the program authority escrow")
-  .requiredOption("-c, --cluster <network>", "solana cluster to use")
-  .requiredOption("-w, --wallet <filepath>", "path to the operations key")
+mutlisigCommand(
+  "accept-authority",
+  "Accept authority from the program authority escrow"
+)
   .requiredOption(
     "-p, --program-id <pubkey>",
     "program whose authority we want to transfer"
@@ -32,7 +40,7 @@ program
     "-a, --current <pubkey>",
     "current authority (before the transfer)"
   )
-  .requiredOption("-v, --vault <pubkey>", "multisig address")
+
   .action(async (options: any) => {
     const wallet = new NodeWallet(
       Keypair.fromSecretKey(
