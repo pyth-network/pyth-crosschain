@@ -132,8 +132,8 @@ async fn test_set_sources() {
         .expect("Failed to submit VAA")
         .await
         .unwrap()
-        .into_result()
-        .is_ok());
+        .failures()
+        .is_empty());
 
     // There should now be a two sources in the contract state.
     assert_eq!(
@@ -197,7 +197,9 @@ async fn test_set_governance_source() {
             &GovernanceInstruction {
                 target: Chain::from(WormholeChain::Near),
                 module: GovernanceModule::Target,
-                action: GovernanceAction::AuthorizeGovernanceDataSourceTransfer { claim_vaa: request_vaa },
+                action: GovernanceAction::AuthorizeGovernanceDataSourceTransfer {
+                    claim_vaa: request_vaa,
+                },
             }
             .serialize()
             .unwrap(),
@@ -218,8 +220,8 @@ async fn test_set_governance_source() {
         .expect("Failed to submit VAA")
         .await
         .unwrap()
-        .into_result()
-        .is_ok());
+        .failures()
+        .is_empty());
 
     // An action from the new source should now be accepted.
     let vaa = wormhole::Vaa {
@@ -266,8 +268,8 @@ async fn test_set_governance_source() {
         .expect("Failed to submit VAA")
         .await
         .unwrap()
-        .into_result()
-        .is_ok());
+        .failures()
+        .is_empty());
 
     // But not from the old source.
     let vaa = wormhole::Vaa {
@@ -394,8 +396,8 @@ async fn test_stale_threshold() {
         .expect("Failed to submit VAA")
         .await
         .unwrap()
-        .into_result()
-        .is_ok());
+        .failures()
+        .is_empty());
 
     // Despite succeeding, assert Price cannot be requested, 60 seconds in the past should be
     // considered stale. [tag:failed_price_check]
@@ -465,8 +467,8 @@ async fn test_stale_threshold() {
         .expect("Failed to submit VAA")
         .await
         .unwrap()
-        .into_result()
-        .is_ok());
+        .failures()
+        .is_empty());
 
     // The price however should _not_ have updated and if we check the unsafe stored price the
     // timestamp and price should be unchanged.
@@ -525,8 +527,8 @@ async fn test_stale_threshold() {
         .expect("Failed to submit VAA")
         .await
         .unwrap()
-        .into_result()
-        .is_ok());
+        .failures()
+        .is_empty());
 
     // It should now be possible to request the price that previously returned None.
     // [ref:failed_price_check]
@@ -609,8 +611,8 @@ async fn test_contract_fees() {
         .expect("Failed to submit VAA")
         .await
         .unwrap()
-        .into_result()
-        .is_ok());
+        .failures()
+        .is_empty());
 
     // Check the state has actually changed before we try and execute another VAA.
     assert_ne!(
@@ -681,8 +683,8 @@ async fn test_contract_fees() {
         .expect("Failed to submit VAA")
         .await
         .unwrap()
-        .into_result()
-        .is_ok());
+        .failures()
+        .is_empty());
 
     // Submitting a Price should have failed because the fee was not enough.
     assert_eq!(
@@ -743,11 +745,11 @@ async fn test_same_governance_sequence_fails() {
         .expect("Failed to submit VAA")
         .await
         .unwrap()
-        .into_result()
-        .is_ok());
+        .failures()
+        .is_empty());
 
     // Attempt to run the same VAA again.
-    assert!(contract
+    assert!(!contract
         .call("execute_governance_instruction")
         .gas(300_000_000_000_000)
         .deposit(300_000_000_000_000_000_000_000)
@@ -759,8 +761,8 @@ async fn test_same_governance_sequence_fails() {
         .expect("Failed to submit VAA")
         .await
         .unwrap()
-        .into_result()
-        .is_err());
+        .failures()
+        .is_empty());
 }
 
 // A test that attempts to SetFee twice with the same governance action, the first should succeed,
@@ -807,8 +809,8 @@ async fn test_out_of_order_sequences_fail() {
         .expect("Failed to submit VAA")
         .await
         .unwrap()
-        .into_result()
-        .is_ok());
+        .failures()
+        .is_empty());
 
     // Generate another VAA with sequence 3.
     let vaa = wormhole::Vaa {
@@ -848,8 +850,8 @@ async fn test_out_of_order_sequences_fail() {
         .expect("Failed to submit VAA")
         .await
         .unwrap()
-        .into_result()
-        .is_ok());
+        .failures()
+        .is_empty());
 
     // Generate another VAA with sequence 2.
     let vaa = wormhole::Vaa {
@@ -877,7 +879,7 @@ async fn test_out_of_order_sequences_fail() {
     };
 
     // This should fail due to being out of order.
-    assert!(contract
+    assert!(!contract
         .call("execute_governance_instruction")
         .gas(300_000_000_000_000)
         .deposit(300_000_000_000_000_000_000_000)
@@ -889,6 +891,52 @@ async fn test_out_of_order_sequences_fail() {
         .expect("Failed to submit VAA")
         .await
         .unwrap()
-        .into_result()
-        .is_err());
+        .failures()
+        .is_empty());
+}
+
+// A test that fails if the governance action payload target is not NEAR.
+#[tokio::test]
+async fn test_governance_target_fails_if_not_near() {
+    let (_, contract, _) = initialize_chain().await;
+
+    let vaa = wormhole::Vaa {
+        emitter_chain: wormhole::Chain::Any,
+        emitter_address: wormhole::Address([0; 32]),
+        payload: (),
+        sequence: 1,
+        ..Default::default()
+    };
+
+    let vaa = {
+        let mut cur = Cursor::new(Vec::new());
+        serde_wormhole::to_writer(&mut cur, &vaa).unwrap();
+        cur.write_all(
+            &GovernanceInstruction {
+                target: Chain::from(WormholeChain::Solana),
+                module: GovernanceModule::Target,
+                action: GovernanceAction::SetFee { base: 128, expo: 8 },
+            }
+            .serialize()
+            .unwrap(),
+        )
+        .unwrap();
+        hex::encode(cur.into_inner())
+    };
+
+    // This should fail as the target is Solana, when Near is expected.
+    assert!(!contract
+        .call("execute_governance_instruction")
+        .gas(300_000_000_000_000)
+        .deposit(300_000_000_000_000_000_000_000)
+        .args_json(&json!({
+            "vaa": vaa,
+        }))
+        .transact_async()
+        .await
+        .expect("Failed to submit VAA")
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
 }
