@@ -1,14 +1,13 @@
-import { getSigningOsmosisClient } from "osmojs";
+import { getSigningOsmosisClient, cosmwasm, estimateOsmoFee } from "osmojs";
 import { getOfflineSignerProto as getOfflineSigner } from "cosmjs-utils";
 import { chains } from "chain-registry";
 import { Chain } from "@chain-registry/types";
 import { readFileSync } from "fs";
-import { cosmwasm, estimateOsmoFee } from "osmojs";
-import { DeliverTxResponse } from "@cosmjs/stargate";
+import { DeliverTxResponse, calculateFee } from "@cosmjs/stargate";
 import { wasmTypes } from "@cosmjs/cosmwasm-stargate/build/modules/wasm/messages";
 import assert from "assert";
 
-import { Deployer } from ".";
+import { ContractInfo, Deployer } from ".";
 import { convert_terra_address_to_hex, extractFromRawLog } from "./terra";
 import { EncodeObject } from "@cosmjs/proto-signing";
 import Long from "long";
@@ -51,7 +50,22 @@ export class OsmosisDeployer implements Deployer {
     });
 
     const address = await this.getAccountAddress();
-    const fee = await estimateOsmoFee(client, address, [msg], "estimate fee");
+    const { gas } = await estimateOsmoFee(
+      client,
+      address,
+      [msg],
+      "estimate fee"
+    );
+
+    // libraries output more gas than simulated by multiplying with a constant
+    // osmojs multiplies by 1.3
+    // which seems to be not enough
+    // hence again multiplying by 1.3
+    const fee = calculateFee(
+      parseInt((parseInt(gas) * 1.3).toFixed()),
+      "0.025uosmo"
+    );
+
     const rs = await client.signAndBroadcast(address, [msg], fee);
 
     if (rs.code !== 0) {
@@ -164,6 +178,55 @@ export class OsmosisDeployer implements Deployer {
       console.error(rs.rawLog);
       throw e;
     }
+  }
+
+  async updateAdmin(newAdmin: string, contract: string): Promise<void> {
+    const currAdmin = await this.getAccountAddress();
+    const updateAdminMsg =
+      cosmwasm.wasm.v1.MessageComposer.withTypeUrl.updateAdmin({
+        sender: currAdmin,
+        newAdmin,
+        contract,
+      });
+
+    const rs = await this.signAndBroadcast(updateAdminMsg);
+    if (rs.rawLog === undefined)
+      throw new Error("error parsing raw logs: rawLog undefined");
+
+    try {
+      // {"key":"code_id","value":"13"}
+      // let resultCodeId = parseInt(extractFromRawLog(rs.rawLog, "code_id"));
+      // assert.strictEqual(codeId, resultCodeId);
+      console.log(rs.rawLog);
+    } catch (e) {
+      console.error(
+        "Encountered an error in parsing migration result. Printing raw log"
+      );
+      console.error(rs.rawLog);
+      throw e;
+    }
+
+    console.log(await this.getContractInfo(contract));
+  }
+
+  async getContractInfo(contract: string): Promise<ContractInfo> {
+    const { createRPCQueryClient } = cosmwasm.ClientFactory;
+    const client = await createRPCQueryClient({ rpcEndpoint: this.endpoint });
+    const { address, contractInfo } =
+      await client.cosmwasm.wasm.v1.contractInfo({ address: contract });
+
+    if (contractInfo === undefined)
+      throw new Error("error fetching contract info");
+
+    const { codeId, creator, admin } = contractInfo;
+
+    return {
+      codeId: codeId.toNumber(),
+      address: address,
+      creator: creator,
+      admin: admin,
+      initMsg: undefined,
+    };
   }
 
   static fromHostAndMnemonic(host: OsmosisHost, mnemonic: string) {
