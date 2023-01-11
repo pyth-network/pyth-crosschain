@@ -9,7 +9,7 @@ import { ExecutePostedVaa } from "./ExecutePostedVaa";
 
 export interface PythGovernanceAction {}
 
-class PythUnknownGovernanceAction {
+class UnknownGovernanceAction {
   readonly data: Buffer;
 
   constructor(data: Buffer) {
@@ -147,7 +147,7 @@ export function decodeGovernancePayload(data: Buffer): PythGovernanceAction {
     case "ExecutePostedVaa":
       return ExecutePostedVaa.decode(data);
     default:
-      return new PythUnknownGovernanceAction(data);
+      return new UnknownGovernanceAction(data);
   }
 }
 
