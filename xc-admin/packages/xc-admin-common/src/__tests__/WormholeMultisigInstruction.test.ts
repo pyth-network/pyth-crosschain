@@ -15,8 +15,8 @@ import {
   MultisigInstructionProgram,
   MultisigParser,
   WORMHOLE_ADDRESS,
+  ExecutePostedVaa,
 } from "..";
-import { ExecutePostedVaa } from "../governance_payload/ExecutePostedVaa";
 import { WormholeMultisigInstruction } from "../multisig_transaction/WormholeMultisigInstruction";
 
 test("Wormhole multisig instruction parse: send message without governance payload", (done) => {

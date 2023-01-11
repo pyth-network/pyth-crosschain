@@ -1,7 +1,6 @@
 import { ChainName } from "@certusone/wormhole-sdk";
 import { PACKET_DATA_SIZE, PublicKey, SystemProgram } from "@solana/web3.js";
-import { ActionName, decodeHeader, encodeHeader } from "..";
-import { ExecutePostedVaa } from "../governance_payload/ExecutePostedVaa";
+import { ActionName, decodeHeader, encodeHeader, ExecutePostedVaa } from "..";
 
 test("GovernancePayload ser/de", (done) => {
   jest.setTimeout(60000);

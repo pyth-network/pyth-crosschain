@@ -150,3 +150,5 @@ export function decodeGovernancePayload(data: Buffer): PythGovernanceAction {
       return new PythUnknownGovernanceAction(data);
   }
 }
+
+export { ExecutePostedVaa } from "./ExecutePostedVaa";
