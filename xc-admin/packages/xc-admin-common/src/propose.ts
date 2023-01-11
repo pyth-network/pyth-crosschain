@@ -152,7 +152,9 @@ export async function wrapAsRemoteInstruction(
     provider
   );
 
-  const buffer = new ExecutePostedVaa("pythnet", [instruction]);
+  const buffer: Buffer = new ExecutePostedVaa("pythnet", [
+    instruction,
+  ]).encode();
 
   const accounts = getPostMessageAccounts(
     wormholeAddress,
