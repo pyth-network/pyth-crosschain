@@ -1,6 +1,11 @@
 import { ChainId, ChainName } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
-import { encodeHeader, governanceHeaderLayout, verifyHeader } from ".";
+import {
+  encodeHeader,
+  governanceHeaderLayout,
+  PythGovernanceAction,
+  verifyHeader,
+} from ".";
 import { Layout } from "@solana/buffer-layout";
 import {
   AccountMeta,
@@ -72,7 +77,7 @@ export const executePostedVaaLayout: BufferLayout.Structure<
   new Vector<InstructionData>(instructionDataLayout, "instructions"),
 ]);
 
-export class ExecutePostedVaa {
+export class ExecutePostedVaa implements PythGovernanceAction {
   readonly targetChainId: ChainName;
   readonly instructions: TransactionInstruction[];
 

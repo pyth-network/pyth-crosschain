@@ -7,14 +7,9 @@ import {
 import * as BufferLayout from "@solana/buffer-layout";
 import { ExecutePostedVaa } from "./ExecutePostedVaa";
 
-export interface PythGovernanceAction {}
-
-class UnknownGovernanceAction {
-  readonly data: Buffer;
-
-  constructor(data: Buffer) {
-    this.data = data;
-  }
+export interface PythGovernanceAction {
+  readonly targetChainId: ChainName;
+  encode(): Buffer;
 }
 
 export const ExecutorAction = {
@@ -147,7 +142,7 @@ export function decodeGovernancePayload(data: Buffer): PythGovernanceAction {
     case "ExecutePostedVaa":
       return ExecutePostedVaa.decode(data);
     default:
-      return new UnknownGovernanceAction(data);
+      throw "Not supported";
   }
 }
 
