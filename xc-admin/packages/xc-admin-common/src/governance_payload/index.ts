@@ -76,6 +76,7 @@ export class PythGovernanceHeader {
     ],
     "header"
   );
+  static span = 8;
 
   constructor(targetChainId: ChainName, action: ActionName) {
     this.targetChainId = targetChainId;
@@ -84,18 +85,6 @@ export class PythGovernanceHeader {
   /** Decode Pyth Governance Header */
   static decode(data: Buffer): PythGovernanceHeader {
     let deserialized = this.layout.decode(data);
-    return this.verify(deserialized);
-  }
-
-  /** Verify header fields, takes in a raw deserialized header  */
-  static verify(
-    deserialized: Readonly<{
-      magicNumber: number;
-      module: number;
-      action: number;
-      chain: ChainId;
-    }>
-  ): PythGovernanceHeader {
     if (deserialized.magicNumber !== MAGIC_NUMBER) {
       throw new Error("Wrong magic number");
     }

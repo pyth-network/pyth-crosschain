@@ -9,6 +9,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
+/** Borsh type vector with a 4 byte vector length and then the serialized elements */
 class Vector<T> extends Layout<T[]> {
   private element: Layout<T>;
 
@@ -34,23 +35,28 @@ class Vector<T> extends Layout<T[]> {
   }
 }
 
-export type InstructionData = {
-  programId: Uint8Array;
-  accounts: AccountMetadata[];
-  data: number[];
-};
-
+/** Version of `AccountMeta` that works with buffer-layout */
 export type AccountMetadata = {
   pubkey: Uint8Array;
   isSigner: number;
   isWritable: number;
 };
 
+/** Version of `TransactionInstruction` that works with buffer-layout */
+export type InstructionData = {
+  programId: Uint8Array;
+  accounts: AccountMetadata[];
+  data: number[];
+};
+
+/** Layout for `AccountMetadata` */
 export const accountMetaLayout = BufferLayout.struct<AccountMetadata>([
   BufferLayout.blob(32, "pubkey"),
   BufferLayout.u8("isSigner"),
   BufferLayout.u8("isWritable"),
 ]);
+
+/** Layout for `InstructionData` */
 export const instructionDataLayout = BufferLayout.struct<InstructionData>([
   BufferLayout.blob(32, "programId"),
   new Vector<AccountMetadata>(accountMetaLayout, "accounts"),
@@ -60,20 +66,10 @@ export const instructionDataLayout = BufferLayout.struct<InstructionData>([
 export class ExecutePostedVaa implements PythGovernanceAction {
   readonly targetChainId: ChainName;
   readonly instructions: TransactionInstruction[];
-  static layout: BufferLayout.Structure<
-    Readonly<{
-      header: Readonly<{
-        magicNumber: number;
-        module: number;
-        action: number;
-        chain: ChainId;
-      }>;
-      instructions: InstructionData[];
-    }>
-  > = BufferLayout.struct([
-    PythGovernanceHeader.layout,
-    new Vector<InstructionData>(instructionDataLayout, "instructions"),
-  ]);
+  static layout: Vector<InstructionData> = new Vector<InstructionData>(
+    instructionDataLayout,
+    "instructions"
+  );
 
   constructor(
     targetChainId: ChainName,
@@ -85,23 +81,22 @@ export class ExecutePostedVaa implements PythGovernanceAction {
 
   /** Decode ExecutePostedVaaArgs */
   static decode(data: Buffer): ExecutePostedVaa {
-    let deserialized = this.layout.decode(data);
-    let header = PythGovernanceHeader.verify(deserialized.header);
-
-    let instructions: TransactionInstruction[] = deserialized.instructions.map(
-      (ix) => {
-        let programId: PublicKey = new PublicKey(ix.programId);
-        let keys: AccountMeta[] = ix.accounts.map((acc) => {
-          return {
-            pubkey: new PublicKey(acc.pubkey),
-            isSigner: Boolean(acc.isSigner),
-            isWritable: Boolean(acc.isWritable),
-          };
-        });
-        let data: Buffer = Buffer.from(ix.data);
-        return { programId, keys, data };
-      }
+    let header = PythGovernanceHeader.decode(data);
+    let deserialized = this.layout.decode(
+      data.subarray(PythGovernanceHeader.span)
     );
+    let instructions: TransactionInstruction[] = deserialized.map((ix) => {
+      let programId: PublicKey = new PublicKey(ix.programId);
+      let keys: AccountMeta[] = ix.accounts.map((acc) => {
+        return {
+          pubkey: new PublicKey(acc.pubkey),
+          isSigner: Boolean(acc.isSigner),
+          isWritable: Boolean(acc.isWritable),
+        };
+      });
+      let data: Buffer = Buffer.from(ix.data);
+      return { programId, keys, data };
+    });
     return new ExecutePostedVaa(header.targetChainId, instructions);
   }
 
