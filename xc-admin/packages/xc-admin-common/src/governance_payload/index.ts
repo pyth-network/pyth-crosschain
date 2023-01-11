@@ -5,6 +5,10 @@ import {
   toChainName,
 } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
+import {
+  decodeExecutePostedVaa,
+  ExecutePostedVaaArgs,
+} from "./ExecutePostedVaa";
 
 export const ExecutorAction = {
   ExecutePostedVaa: 0,
@@ -128,6 +132,19 @@ export function verifyHeader(
     }),
   };
   return governanceHeader;
+}
+
+export function decodeGovernancePayload(data: Buffer): {
+  name: string;
+  args: ExecutePostedVaaArgs;
+} {
+  const header = decodeHeader(data);
+  switch (header.action) {
+    case "ExecutePostedVaa":
+      return { name: "ExecutePostedVaa", args: decodeExecutePostedVaa(data) };
+    default:
+      throw "Not supported";
+  }
 }
 
 export { decodeExecutePostedVaa } from "./ExecutePostedVaa";
