@@ -39,9 +39,18 @@ export class MultisigParser {
   readonly pythOracleAddress: PublicKey;
   readonly wormholeBridgeAddress: PublicKey | undefined;
 
-  constructor(cluster: PythCluster) {
-    this.pythOracleAddress = getPythProgramKeyForCluster(cluster);
-    this.wormholeBridgeAddress = WORMHOLE_ADDRESS[cluster];
+  constructor(
+    pythOracleAddress: PublicKey,
+    wormholeBridgeAddress: PublicKey | undefined
+  ) {
+    this.pythOracleAddress = pythOracleAddress;
+    this.wormholeBridgeAddress = wormholeBridgeAddress;
+  }
+  static fromCluster(cluster: PythCluster): MultisigParser {
+    return new MultisigParser(
+      getPythProgramKeyForCluster(cluster),
+      WORMHOLE_ADDRESS[cluster]
+    );
   }
 
   parseInstruction(instruction: TransactionInstruction): MultisigInstruction {

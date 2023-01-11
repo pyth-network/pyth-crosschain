@@ -35,7 +35,7 @@ test("Wormhole multisig instruction parse: send message without governance paylo
       AnchorProvider.defaultOptions()
     )
   );
-  const parser = new MultisigParser(cluster);
+  const parser = MultisigParser.fromCluster(cluster);
 
   wormholeProgram.methods
     .postMessage(1, Buffer.from([0]), 1)
@@ -182,7 +182,7 @@ test("Wormhole multisig instruction parse: send message with governance payload"
       AnchorProvider.defaultOptions()
     )
   );
-  const parser = new MultisigParser(cluster);
+  const parser = MultisigParser.fromCluster(cluster);
 
   const executePostedVaaArgs: ExecutePostedVaaArgs = {
     targetChainId: "pythnet" as ChainName,
