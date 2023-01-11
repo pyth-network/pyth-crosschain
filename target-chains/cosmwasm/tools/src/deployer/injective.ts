@@ -42,7 +42,6 @@ export class InjectiveDeployer implements Deployer {
     const networkInfo = getNetworkInfo(this.network);
 
     const { signBytes, txRaw } = await createTransactionForAddressAndMsg({
-      // @ts-ignore
       message: msg,
       address: this.injectiveAddress(),
       endpoint: networkInfo.rest,
@@ -180,18 +179,7 @@ export class InjectiveDeployer implements Deployer {
       contract,
     });
 
-    const txResponse = await this.signAndBroadcastMsg(updateAdminMsg);
-
-    try {
-      console.log(txResponse.rawLog);
-    } catch (e) {
-      console.error(
-        "Encountered an error in parsing migration result. Printing raw log"
-      );
-      console.error(txResponse.rawLog);
-      throw e;
-    }
-
+    await this.signAndBroadcastMsg(updateAdminMsg);
     console.log(await this.getContractInfo(contract));
   }
 

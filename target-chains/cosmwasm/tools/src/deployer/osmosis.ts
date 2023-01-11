@@ -192,20 +192,6 @@ export class OsmosisDeployer implements Deployer {
     const rs = await this.signAndBroadcast(updateAdminMsg);
     if (rs.rawLog === undefined)
       throw new Error("error parsing raw logs: rawLog undefined");
-
-    try {
-      // {"key":"code_id","value":"13"}
-      // let resultCodeId = parseInt(extractFromRawLog(rs.rawLog, "code_id"));
-      // assert.strictEqual(codeId, resultCodeId);
-      console.log(rs.rawLog);
-    } catch (e) {
-      console.error(
-        "Encountered an error in parsing migration result. Printing raw log"
-      );
-      console.error(rs.rawLog);
-      throw e;
-    }
-
     console.log(await this.getContractInfo(contract));
   }
 

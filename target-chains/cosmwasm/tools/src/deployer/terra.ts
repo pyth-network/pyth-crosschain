@@ -144,20 +144,7 @@ export class TerraDeployer implements Deployer {
       contract
     );
 
-    const rs = await this.signAndBroadcastMsg(updateAdminMsg);
-    try {
-      // {"key":"code_id","value":"13"}
-      console.log(rs.raw_log);
-      // let resultCodeId = parseInt(extractFromRawLog(rs.raw_log, "code_id"));
-      // assert.strictEqual(codeId, resultCodeId);
-    } catch (e) {
-      console.error(
-        "Encountered an error in parsing migration result. Printing raw log"
-      );
-      console.error(rs.raw_log);
-      throw e;
-    }
-
+    await this.signAndBroadcastMsg(updateAdminMsg);
     console.log(await this.getContractInfo(contract));
   }
 
