@@ -4,6 +4,7 @@ import {
 } from "@pythnetwork/client/lib/cluster";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { WORMHOLE_ADDRESS } from "../wormhole";
+import { PythMultisigInstruction } from "./PythMultisigInstruction";
 import { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
 
 export enum MultisigInstructionProgram {
@@ -30,11 +31,6 @@ export class UnrecognizedProgram implements MultisigInstruction {
     return new UnrecognizedProgram(instruction);
   }
 }
-
-export class PythMultisigInstruction implements MultisigInstruction {
-  readonly program = MultisigInstructionProgram.PythOracle;
-}
-
 export class MultisigParser {
   readonly pythOracleAddress: PublicKey;
   readonly wormholeBridgeAddress: PublicKey | undefined;
@@ -61,6 +57,8 @@ export class MultisigParser {
       return WormholeMultisigInstruction.fromTransactionInstruction(
         instruction
       );
+    } else if (instruction.programId.equals(this.pythOracleAddress)) {
+      return PythMultisigInstruction.fromTransactionInstruction(instruction);
     } else {
       return UnrecognizedProgram.fromTransactionInstruction(instruction);
     }
