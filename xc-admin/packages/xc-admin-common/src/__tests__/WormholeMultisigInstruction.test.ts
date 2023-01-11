@@ -12,7 +12,11 @@ import {
   SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
-import { MultisigParser, WORMHOLE_ADDRESS } from "..";
+import {
+  MultisigInstructionProgram,
+  MultisigParser,
+  WORMHOLE_ADDRESS,
+} from "..";
 import {
   encodeExecutePostedVaa,
   ExecutePostedVaaArgs,
@@ -50,7 +54,9 @@ test("Wormhole multisig instruction parse: send message without governance paylo
         parsedInstruction instanceof WormholeMultisigInstruction
       ).toBeTruthy();
       if (parsedInstruction instanceof WormholeMultisigInstruction) {
-        expect(parsedInstruction.program).toBe("Wormhole Bridge");
+        expect(parsedInstruction.program).toBe(
+          MultisigInstructionProgram.WormholeBridge
+        );
         expect(parsedInstruction.name).toBe("postMessage");
         expect(
           parsedInstruction.accounts.named["bridge"].pubkey.equals(
@@ -206,7 +212,9 @@ test("Wormhole multisig instruction parse: send message with governance payload"
         expect(
           parsedInstruction instanceof WormholeMultisigInstruction
         ).toBeTruthy();
-        expect(parsedInstruction.program).toBe("Wormhole Bridge");
+        expect(parsedInstruction.program).toBe(
+          MultisigInstructionProgram.WormholeBridge
+        );
         expect(parsedInstruction.name).toBe("postMessage");
         expect(
           parsedInstruction.accounts.named["bridge"].pubkey.equals(

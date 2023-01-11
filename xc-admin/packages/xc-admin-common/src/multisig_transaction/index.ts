@@ -6,21 +6,33 @@ import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { WORMHOLE_ADDRESS } from "../wormhole";
 import { WormholeMultisigInstruction } from "./WormholeInstruction";
 
+export enum MultisigInstructionProgram {
+  PythOracle,
+  WormholeBridge,
+  UnrecognizedProgram,
+}
+
 export interface MultisigInstruction {
-  readonly program: string;
+  readonly program: MultisigInstructionProgram;
 }
 
 export class UnrecognizedProgram implements MultisigInstruction {
-  readonly program = "Unknown program";
-  private instruction: TransactionInstruction;
+  readonly program = MultisigInstructionProgram.UnrecognizedProgram;
+  readonly instruction: TransactionInstruction;
 
   constructor(instruction: TransactionInstruction) {
     this.instruction = instruction;
   }
+
+  static fromTransactionInstruction(
+    instruction: TransactionInstruction
+  ): UnrecognizedProgram {
+    return new UnrecognizedProgram(instruction);
+  }
 }
 
 export class PythMultisigInstruction implements MultisigInstruction {
-  readonly program = "Pyth Oracle";
+  readonly program = MultisigInstructionProgram.PythOracle;
 }
 
 export class MultisigParser {
@@ -37,9 +49,11 @@ export class MultisigParser {
       this.wormholeBridgeAddress &&
       instruction.programId.equals(this.wormholeBridgeAddress)
     ) {
-      return new WormholeMultisigInstruction(instruction);
+      return WormholeMultisigInstruction.fromTransactionInstruction(
+        instruction
+      );
     } else {
-      return new UnrecognizedProgram(instruction);
+      return UnrecognizedProgram.fromTransactionInstruction(instruction);
     }
   }
 }
