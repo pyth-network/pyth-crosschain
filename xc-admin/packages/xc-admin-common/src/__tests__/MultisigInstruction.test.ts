@@ -375,13 +375,17 @@ test("Multisig instruction parser: send message with governance payload", (done)
         (parsedInstruction as WormholeInstruction).args.consistencyLevel
       ).toBe(0);
 
-      console.log(parsedInstruction);
       expect(
-        (parsedInstruction as WormholeInstruction).args.targetChainId
+        (parsedInstruction as WormholeInstruction).args.governanceName
+      ).toBe("ExecutePostedVaa");
+
+      expect(
+        (parsedInstruction as WormholeInstruction).args.governanceArgs
+          .targetChainId
       ).toBe("pythnet");
 
       (
-        (parsedInstruction as WormholeInstruction).args
+        (parsedInstruction as WormholeInstruction).args.governanceArgs
           .instructions as TransactionInstruction[]
       ).forEach((instruction, i) => {
         expect(

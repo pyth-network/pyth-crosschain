@@ -134,15 +134,16 @@ export function verifyHeader(
   return governanceHeader;
 }
 
-export function decodeGovernancePayload(
-  data: Buffer
-): { name: string; args: ExecutePostedVaaArgs | undefined } | undefined {
+export function decodeGovernancePayload(data: Buffer): {
+  name: string;
+  args: ExecutePostedVaaArgs;
+} {
   const header = decodeHeader(data);
-  switch (header?.action) {
+  switch (header.action) {
     case "ExecutePostedVaa":
       return { name: "ExecutePostedVaa", args: decodeExecutePostedVaa(data) };
     default:
-      return undefined;
+      throw "Not supported";
   }
 }
 

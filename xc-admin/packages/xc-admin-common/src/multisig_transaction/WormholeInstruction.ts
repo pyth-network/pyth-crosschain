@@ -15,15 +15,14 @@ export class WormholeInstruction implements MultisigInstruction {
   constructor(instruction: TransactionInstruction) {
     const wormholeProgram = createReadOnlyWormholeProgramInterface(
       instruction.programId,
-      new Connection(getPythClusterApiUrl("devnet"))
+      new Connection(getPythClusterApiUrl("devnet")) // Hack to get a decoder, this connection won't actually be used
     );
+
     const deserializedData = (
       wormholeProgram.coder.instruction as WormholeInstructionCoder
     ).decode(instruction.data);
-    if (!deserializedData) {
-      (this.name = "Unrecognized"), (this.args = {});
-      this.accounts = { named: {}, remaining: instruction.keys };
-    } else {
+
+    if (deserializedData) {
       this.name = deserializedData.name;
       this.args = deserializedData.data;
       this.accounts = resolveAccountNames(
@@ -35,13 +34,17 @@ export class WormholeInstruction implements MultisigInstruction {
       if (this.name === "postMessage") {
         try {
           const decoded = decodeGovernancePayload(this.args.payload);
-          this.args.governanceName = decoded?.name;
-          this.args.governanceArgs = decoded?.args;
+          this.args.governanceName = decoded.name;
+          this.args.governanceArgs = decoded.args;
         } catch {
-          this.args.governanceName = undefined;
-          this.args.governanceArgs = undefined;
+          this.args.governanceName = "Unrecognized governance message";
+          this.args.governanceArgs = {};
         }
       }
+    } else {
+      this.name = "Unrecognized instruction";
+      this.args = {};
+      this.accounts = { named: {}, remaining: instruction.keys };
     }
   }
 }

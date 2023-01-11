@@ -6,16 +6,22 @@ import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { WORMHOLE_ADDRESS } from "../wormhole";
 import { WormholeInstruction } from "./WormholeInstruction";
 
-export interface MultisigInstruction {}
+export interface MultisigInstruction {
+  readonly program: string;
+}
 
 export class UnrecognizedInstruction implements MultisigInstruction {
+  readonly program = "Unknown program";
   private instruction: TransactionInstruction;
+
   constructor(instruction: TransactionInstruction) {
     this.instruction = instruction;
   }
 }
 
-export class PythInstruction implements MultisigInstruction {}
+export class PythInstruction implements MultisigInstruction {
+  readonly program = "Pyth Oracle";
+}
 
 export class MultisigParser {
   readonly pythOracleAddress: PublicKey;
