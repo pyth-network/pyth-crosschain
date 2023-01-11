@@ -4,7 +4,7 @@ import {
 } from "@pythnetwork/client/lib/cluster";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { WORMHOLE_ADDRESS } from "../wormhole";
-import { WormholeMultisigInstruction } from "./WormholeInstruction";
+import { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
 
 export enum MultisigInstructionProgram {
   PythOracle,

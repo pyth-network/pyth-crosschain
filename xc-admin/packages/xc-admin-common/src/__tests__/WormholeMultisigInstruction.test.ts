@@ -21,7 +21,7 @@ import {
   encodeExecutePostedVaa,
   ExecutePostedVaaArgs,
 } from "../governance_payload/ExecutePostedVaa";
-import { WormholeMultisigInstruction } from "../multisig_transaction/WormholeInstruction";
+import { WormholeMultisigInstruction } from "../multisig_transaction/WormholeMultisigInstruction";
 
 test("Wormhole multisig instruction parse: send message without governance payload", (done) => {
   jest.setTimeout(60000);
