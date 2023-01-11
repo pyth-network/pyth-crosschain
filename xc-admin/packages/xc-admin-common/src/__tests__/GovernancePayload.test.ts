@@ -1,6 +1,5 @@
-import { ChainName } from "@certusone/wormhole-sdk";
-import { PACKET_DATA_SIZE, PublicKey, SystemProgram } from "@solana/web3.js";
-import { ActionName, PythGovernanceHeader, ExecutePostedVaa } from "..";
+import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { PythGovernanceHeader, ExecutePostedVaa } from "..";
 
 test("GovernancePayload ser/de", (done) => {
   jest.setTimeout(60000);

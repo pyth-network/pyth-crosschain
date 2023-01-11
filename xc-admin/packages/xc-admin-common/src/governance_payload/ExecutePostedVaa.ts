@@ -131,7 +131,7 @@ export class ExecutePostedVaa implements PythGovernanceAction {
     const span = new Vector<InstructionData>(
       instructionDataLayout,
       "instructions"
-    ).encode(instructions, buffer, PythGovernanceHeader.span);
+    ).encode(instructions, buffer);
     return Buffer.concat([headerBuffer, buffer.subarray(0, span)]);
   }
 }

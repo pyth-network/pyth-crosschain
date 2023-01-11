@@ -76,7 +76,6 @@ export class PythGovernanceHeader {
     ],
     "header"
   );
-  static span: 8;
 
   constructor(targetChainId: ChainName, action: ActionName) {
     this.targetChainId = targetChainId;
