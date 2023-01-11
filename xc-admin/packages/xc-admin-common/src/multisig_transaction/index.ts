@@ -4,7 +4,7 @@ import {
 } from "@pythnetwork/client/lib/cluster";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { WORMHOLE_ADDRESS } from "../wormhole";
-import { WormholeInstruction } from "./WormholeInstruction";
+import { WormholeMultisigInstruction } from "./WormholeInstruction";
 
 export interface MultisigInstruction {
   readonly program: string;
@@ -19,7 +19,7 @@ export class UnrecognizedProgram implements MultisigInstruction {
   }
 }
 
-export class PythInstruction implements MultisigInstruction {
+export class PythMultisigInstruction implements MultisigInstruction {
   readonly program = "Pyth Oracle";
 }
 
@@ -37,7 +37,7 @@ export class MultisigParser {
       this.wormholeBridgeAddress &&
       instruction.programId.equals(this.wormholeBridgeAddress)
     ) {
-      return new WormholeInstruction(instruction);
+      return new WormholeMultisigInstruction(instruction);
     } else {
       return new UnrecognizedProgram(instruction);
     }

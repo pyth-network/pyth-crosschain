@@ -6,7 +6,7 @@ import { MultisigInstruction } from ".";
 import { decodeGovernancePayload } from "../governance_payload";
 import { AnchorAccounts, resolveAccountNames } from "./anchor";
 
-export class WormholeInstruction implements MultisigInstruction {
+export class WormholeMultisigInstruction implements MultisigInstruction {
   readonly program = "Wormhole Bridge";
   readonly name: string;
   readonly args: { [key: string]: any };
