@@ -10,7 +10,7 @@ export interface MultisigInstruction {
   readonly program: string;
 }
 
-export class UnrecognizedInstruction implements MultisigInstruction {
+export class UnrecognizedProgram implements MultisigInstruction {
   readonly program = "Unknown program";
   private instruction: TransactionInstruction;
 
@@ -39,7 +39,7 @@ export class MultisigParser {
     ) {
       return new WormholeInstruction(instruction);
     } else {
-      return new UnrecognizedInstruction(instruction);
+      return new UnrecognizedProgram(instruction);
     }
   }
 }
