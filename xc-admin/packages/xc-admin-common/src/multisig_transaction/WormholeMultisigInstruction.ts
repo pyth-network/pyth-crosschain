@@ -3,7 +3,10 @@ import { WormholeInstructionCoder } from "@certusone/wormhole-sdk/lib/cjs/solana
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
 import { Connection, TransactionInstruction } from "@solana/web3.js";
 import { MultisigInstruction, MultisigInstructionProgram } from ".";
-import { decodeGovernancePayload } from "../governance_payload";
+import {
+  decodeGovernancePayload,
+  PythGovernanceAction,
+} from "../governance_payload";
 import { AnchorAccounts, resolveAccountNames } from "./anchor";
 
 export class WormholeMultisigInstruction implements MultisigInstruction {
@@ -47,12 +50,12 @@ export class WormholeMultisigInstruction implements MultisigInstruction {
 
       if (result.name === "postMessage") {
         try {
-          const decoded = decodeGovernancePayload(result.args.payload);
-          result.args.governanceName = decoded.name;
-          result.args.governanceArgs = decoded.args;
+          const decoded: PythGovernanceAction = decodeGovernancePayload(
+            result.args.payload
+          );
+          result.args.governanceAction = decoded;
         } catch {
-          result.args.governanceName = "Unrecognized governance message";
-          result.args.governanceArgs = {};
+          result.args.governanceAction = {};
         }
       }
       return result;

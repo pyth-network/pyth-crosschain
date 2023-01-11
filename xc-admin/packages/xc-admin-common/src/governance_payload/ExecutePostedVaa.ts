@@ -1,11 +1,6 @@
 import { ChainId, ChainName } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
-import {
-  encodeHeader,
-  governanceHeaderLayout,
-  PythGovernanceHeader,
-  verifyHeader,
-} from ".";
+import { encodeHeader, governanceHeaderLayout, verifyHeader } from ".";
 import { Layout } from "@solana/buffer-layout";
 import {
   AccountMeta,
@@ -77,62 +72,69 @@ export const executePostedVaaLayout: BufferLayout.Structure<
   new Vector<InstructionData>(instructionDataLayout, "instructions"),
 ]);
 
-export type ExecutePostedVaaArgs = {
-  targetChainId: ChainName;
-  instructions: TransactionInstruction[];
-};
+export class ExecutePostedVaa {
+  readonly targetChainId: ChainName;
+  readonly instructions: TransactionInstruction[];
 
-/** Decode ExecutePostedVaaArgs and return undefined if it failed */
-export function decodeExecutePostedVaa(data: Buffer): ExecutePostedVaaArgs {
-  let deserialized = executePostedVaaLayout.decode(data);
+  constructor(
+    targetChainId: ChainName,
+    instructions: TransactionInstruction[]
+  ) {
+    this.targetChainId = targetChainId;
+    this.instructions = instructions;
+  }
 
-  let header = verifyHeader(deserialized.header);
+  /** Decode ExecutePostedVaaArgs */
+  static decode(data: Buffer): ExecutePostedVaa {
+    let deserialized = executePostedVaaLayout.decode(data);
 
-  let instructions: TransactionInstruction[] = deserialized.instructions.map(
-    (ix) => {
-      let programId: PublicKey = new PublicKey(ix.programId);
-      let keys: AccountMeta[] = ix.accounts.map((acc) => {
+    let header = verifyHeader(deserialized.header);
+
+    let instructions: TransactionInstruction[] = deserialized.instructions.map(
+      (ix) => {
+        let programId: PublicKey = new PublicKey(ix.programId);
+        let keys: AccountMeta[] = ix.accounts.map((acc) => {
+          return {
+            pubkey: new PublicKey(acc.pubkey),
+            isSigner: Boolean(acc.isSigner),
+            isWritable: Boolean(acc.isWritable),
+          };
+        });
+        let data: Buffer = Buffer.from(ix.data);
+        return { programId, keys, data };
+      }
+    );
+    return new ExecutePostedVaa(header.targetChainId, instructions);
+  }
+
+  /** Encode ExecutePostedVaaArgs */
+  encode(): Buffer {
+    // PACKET_DATA_SIZE is the maximum transaction size of Solana, so our serialized payload will never be bigger than that
+    const buffer = Buffer.alloc(PACKET_DATA_SIZE);
+    const offset = encodeHeader(
+      { action: "ExecutePostedVaa", targetChainId: this.targetChainId },
+      buffer
+    );
+    let instructions: InstructionData[] = this.instructions.map((ix) => {
+      let programId = ix.programId.toBytes();
+      let accounts: AccountMetadata[] = ix.keys.map((acc) => {
         return {
-          pubkey: new PublicKey(acc.pubkey),
-          isSigner: Boolean(acc.isSigner),
-          isWritable: Boolean(acc.isWritable),
+          pubkey: acc.pubkey.toBytes(),
+          isSigner: acc.isSigner ? 1 : 0,
+          isWritable: acc.isWritable ? 1 : 0,
         };
       });
-      let data: Buffer = Buffer.from(ix.data);
-      return { programId, keys, data };
-    }
-  );
-
-  return { targetChainId: header.targetChainId, instructions };
-}
-
-/** Encode ExecutePostedVaaArgs */
-export function encodeExecutePostedVaa(src: ExecutePostedVaaArgs): Buffer {
-  // PACKET_DATA_SIZE is the maximum transactin size of Solana, so our serialized payload will never be bigger than that
-  const buffer = Buffer.alloc(PACKET_DATA_SIZE);
-  const offset = encodeHeader(
-    { action: "ExecutePostedVaa", targetChainId: src.targetChainId },
-    buffer
-  );
-  let instructions: InstructionData[] = src.instructions.map((ix) => {
-    let programId = ix.programId.toBytes();
-    let accounts: AccountMetadata[] = ix.keys.map((acc) => {
-      return {
-        pubkey: acc.pubkey.toBytes(),
-        isSigner: acc.isSigner ? 1 : 0,
-        isWritable: acc.isWritable ? 1 : 0,
-      };
+      let data = [...ix.data];
+      return { programId, accounts, data };
     });
-    let data = [...ix.data];
-    return { programId, accounts, data };
-  });
 
-  const span =
-    offset +
-    new Vector<InstructionData>(instructionDataLayout, "instructions").encode(
-      instructions,
-      buffer,
-      offset
-    );
-  return buffer.subarray(0, span);
+    const span =
+      offset +
+      new Vector<InstructionData>(instructionDataLayout, "instructions").encode(
+        instructions,
+        buffer,
+        offset
+      );
+    return buffer.subarray(0, span);
+  }
 }

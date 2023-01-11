@@ -5,10 +5,17 @@ import {
   toChainName,
 } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
-import {
-  decodeExecutePostedVaa,
-  ExecutePostedVaaArgs,
-} from "./ExecutePostedVaa";
+import { ExecutePostedVaa } from "./ExecutePostedVaa";
+
+export interface PythGovernanceAction {}
+
+class PythUnknownGovernanceAction {
+  readonly data: Buffer;
+
+  constructor(data: Buffer) {
+    this.data = data;
+  }
+}
 
 export const ExecutorAction = {
   ExecutePostedVaa: 0,
@@ -134,17 +141,12 @@ export function verifyHeader(
   return governanceHeader;
 }
 
-export function decodeGovernancePayload(data: Buffer): {
-  name: string;
-  args: ExecutePostedVaaArgs;
-} {
+export function decodeGovernancePayload(data: Buffer): PythGovernanceAction {
   const header = decodeHeader(data);
   switch (header.action) {
     case "ExecutePostedVaa":
-      return { name: "ExecutePostedVaa", args: decodeExecutePostedVaa(data) };
+      return ExecutePostedVaa.decode(data);
     default:
-      throw "Not supported";
+      return new PythUnknownGovernanceAction(data);
   }
 }
-
-export { decodeExecutePostedVaa } from "./ExecutePostedVaa";
