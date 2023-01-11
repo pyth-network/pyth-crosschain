@@ -102,6 +102,21 @@ export const CONFIG: Config = {
     },
     ...PYTH_SOURCES_TESTNET,
   },
+  [NETWORKS.TERRA_LOCAL]: {
+    // random contract for local testing
+    wormhole_contract:
+      "terra19nv3xr5lrmmr7egvrk2kqgw4kcn43xrtd5g0mpgwwvhetusk4k7s66jyv0",
+    governance_source_index: 0,
+    governance_sequence_number: 0,
+    chain_id: 18,
+    valid_time_period_secs: 60,
+    fee: {
+      amount: "1",
+      denom: "uluna",
+    },
+    // invalid contract info for local testing
+    ...PYTH_SOURCES_TESTNET,
+  },
   [NETWORKS.INJECTIVE_TESTNET]: {
     wormhole_contract: "inj1xx3aupmgv3ce537c0yce8zzd3sz567syuyedpg",
     governance_source_index: 0,

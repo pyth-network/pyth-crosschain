@@ -5,7 +5,8 @@
 
 import { readdirSync } from "fs";
 import { DeployerFactory } from "./deployer";
-import { CONFIG_TYPE, NetworkConfig } from "./deployer/config";
+import { CONFIG as NetworkConfig } from "./deployer/config";
+import { NETWORKS } from "./network";
 
 const ARTIFACT_DIR = "../artifacts/";
 
@@ -53,16 +54,8 @@ async function deploy() {
   }
 
   /* Set up terra deployer */
-  const networkConfig: NetworkConfig = {
-    type: CONFIG_TYPE.TERRA,
-    host: {
-      URL: "http://localhost:1317",
-      chainID: "localterra",
-      name: "localterra",
-    },
-  };
   const deployer = DeployerFactory.create(
-    networkConfig,
+    NetworkConfig[NETWORKS.TERRA_LOCAL],
     "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius"
   );
 
