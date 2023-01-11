@@ -67,12 +67,12 @@ test("GovernancePayload ser/de", (done) => {
   // Wrong chain
   expect(() =>
     decodeHeader(Buffer.from([80, 84, 71, 77, 0, 0, 255, 255, 0, 0, 0, 0]))
-  ).toThrow();
+  ).toThrow("Chain Id not found");
 
   // Wrong module/action combination
   expect(() =>
     decodeHeader(Buffer.from([80, 84, 71, 77, 0, 1, 0, 26, 0, 0, 0, 0]))
-  ).toThrow();
+  ).toThrow("Invalid header, action doesn't match module");
 
   // Decode executePostVaa with empty instructions
   let expectedExecuteVaaArgs = {
