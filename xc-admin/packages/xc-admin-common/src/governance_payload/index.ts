@@ -5,6 +5,7 @@ import {
   toChainName,
 } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
+import { PACKET_DATA_SIZE } from "@solana/web3.js";
 import { ExecutePostedVaa } from "./ExecutePostedVaa";
 
 export interface PythGovernanceAction {
@@ -52,24 +53,21 @@ export declare type ActionName =
   | keyof typeof ExecutorAction
   | keyof typeof TargetAction;
 
-export type PythGovernanceHeader = {
-  targetChainId: ChainName;
-  action: ActionName;
-};
-
 export const MAGIC_NUMBER = 0x4d475450;
 export const MODULE_EXECUTOR = 0;
 export const MODULE_TARGET = 1;
 
-export function governanceHeaderLayout(): BufferLayout.Structure<
-  Readonly<{
-    magicNumber: number;
-    module: number;
-    action: number;
-    chain: ChainId;
-  }>
-> {
-  return BufferLayout.struct(
+export class PythGovernanceHeader {
+  readonly targetChainId: ChainName;
+  readonly action: ActionName;
+  static layout: BufferLayout.Structure<
+    Readonly<{
+      magicNumber: number;
+      module: number;
+      action: number;
+      chain: ChainId;
+    }>
+  > = BufferLayout.struct(
     [
       BufferLayout.u32("magicNumber"),
       BufferLayout.u8("module"),
@@ -78,66 +76,71 @@ export function governanceHeaderLayout(): BufferLayout.Structure<
     ],
     "header"
   );
-}
+  static span: 8;
 
-/** Decode Pyth Governance Header and return undefined if the header is invalid */
-export function decodeHeader(data: Buffer): PythGovernanceHeader {
-  let deserialized = governanceHeaderLayout().decode(data);
-  return verifyHeader(deserialized);
-}
-
-export function encodeHeader(
-  src: PythGovernanceHeader,
-  buffer: Buffer
-): number {
-  let module: number;
-  let action: number;
-  if (src.action in ExecutorAction) {
-    module = MODULE_EXECUTOR;
-    action = ExecutorAction[src.action as keyof typeof ExecutorAction];
-  } else {
-    module = MODULE_TARGET;
-    action = TargetAction[src.action as keyof typeof TargetAction];
+  constructor(targetChainId: ChainName, action: ActionName) {
+    this.targetChainId = targetChainId;
+    this.action = action;
   }
-  return governanceHeaderLayout().encode(
-    {
-      magicNumber: MAGIC_NUMBER,
-      module,
-      action,
-      chain: toChainId(src.targetChainId),
-    },
-    buffer
-  );
-}
-
-export function verifyHeader(
-  deserialized: Readonly<{
-    magicNumber: number;
-    module: number;
-    action: number;
-    chain: ChainId;
-  }>
-): PythGovernanceHeader {
-  if (deserialized.magicNumber !== MAGIC_NUMBER) {
-    throw new Error("Wrong magic number");
+  /** Decode Pyth Governance Header */
+  static decode(data: Buffer): PythGovernanceHeader {
+    let deserialized = this.layout.decode(data);
+    return this.verify(deserialized);
   }
 
-  if (!toChainName(deserialized.chain)) {
-    throw new Error("Chain Id not found");
+  /** Verify header fields, takes in a raw deserialized header  */
+  static verify(
+    deserialized: Readonly<{
+      magicNumber: number;
+      module: number;
+      action: number;
+      chain: ChainId;
+    }>
+  ): PythGovernanceHeader {
+    if (deserialized.magicNumber !== MAGIC_NUMBER) {
+      throw new Error("Wrong magic number");
+    }
+
+    if (!toChainName(deserialized.chain)) {
+      throw new Error("Chain Id not found");
+    }
+
+    return new PythGovernanceHeader(
+      toChainName(deserialized.chain),
+      toActionName({
+        actionId: deserialized.action,
+        moduleId: deserialized.module,
+      })
+    );
   }
 
-  let governanceHeader: PythGovernanceHeader = {
-    targetChainId: toChainName(deserialized.chain),
-    action: toActionName({
-      actionId: deserialized.action,
-      moduleId: deserialized.module,
-    }),
-  };
-  return governanceHeader;
+  encode(): Buffer {
+    // The code will crash if the payload is actually bigger than PACKET_DATA_SIZE. But PACKET_DATA_SIZE is the maximum transaction size of Solana, so our serialized payload should never be bigger than this anyway
+    const buffer = Buffer.alloc(PACKET_DATA_SIZE);
+    let module: number;
+    let action: number;
+    if (this.action in ExecutorAction) {
+      module = MODULE_EXECUTOR;
+      action = ExecutorAction[this.action as keyof typeof ExecutorAction];
+    } else {
+      module = MODULE_TARGET;
+      action = TargetAction[this.action as keyof typeof TargetAction];
+    }
+    const span = PythGovernanceHeader.layout.encode(
+      {
+        magicNumber: MAGIC_NUMBER,
+        module,
+        action,
+        chain: toChainId(this.targetChainId),
+      },
+      buffer
+    );
+    return buffer.subarray(0, span);
+  }
 }
 
 export function decodeGovernancePayload(data: Buffer): PythGovernanceAction {
-  const header = decodeHeader(data);
+  const header = PythGovernanceHeader.decode(data);
   switch (header.action) {
     case "ExecutePostedVaa":
       return ExecutePostedVaa.decode(data);

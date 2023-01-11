@@ -1,11 +1,6 @@
 import { ChainId, ChainName } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
-import {
-  encodeHeader,
-  governanceHeaderLayout,
-  PythGovernanceAction,
-  verifyHeader,
-} from ".";
+import { PythGovernanceAction, PythGovernanceHeader } from ".";
 import { Layout } from "@solana/buffer-layout";
 import {
   AccountMeta,
@@ -73,7 +68,7 @@ export const executePostedVaaLayout: BufferLayout.Structure<
     instructions: InstructionData[];
   }>
 > = BufferLayout.struct([
-  governanceHeaderLayout(),
+  PythGovernanceHeader.layout,
   new Vector<InstructionData>(instructionDataLayout, "instructions"),
 ]);
 
@@ -92,8 +87,7 @@ export class ExecutePostedVaa implements PythGovernanceAction {
   /** Decode ExecutePostedVaaArgs */
   static decode(data: Buffer): ExecutePostedVaa {
     let deserialized = executePostedVaaLayout.decode(data);
-
-    let header = verifyHeader(deserialized.header);
+    let header = PythGovernanceHeader.verify(deserialized.header);
 
     let instructions: TransactionInstruction[] = deserialized.instructions.map(
       (ix) => {
@@ -114,12 +108,13 @@ export class ExecutePostedVaa implements PythGovernanceAction {
 
   /** Encode ExecutePostedVaaArgs */
   encode(): Buffer {
-    // PACKET_DATA_SIZE is the maximum transaction size of Solana, so our serialized payload will never be bigger than that
+    const headerBuffer = new PythGovernanceHeader(
+      this.targetChainId,
+      "ExecutePostedVaa"
+    ).encode();
+
+    // The code will crash if the payload is actually bigger than PACKET_DATA_SIZE. But PACKET_DATA_SIZE is the maximum transaction size of Solana, so our serialized payload should never be bigger than this anyway
     const buffer = Buffer.alloc(PACKET_DATA_SIZE);
-    const offset = encodeHeader(
-      { action: "ExecutePostedVaa", targetChainId: this.targetChainId },
-      buffer
-    );
     let instructions: InstructionData[] = this.instructions.map((ix) => {
       let programId = ix.programId.toBytes();
       let accounts: AccountMetadata[] = ix.keys.map((acc) => {
@@ -133,13 +128,10 @@ export class ExecutePostedVaa implements PythGovernanceAction {
       return { programId, accounts, data };
     });
 
-    const span =
-      offset +
-      new Vector<InstructionData>(instructionDataLayout, "instructions").encode(
-        instructions,
-        buffer,
-        offset
-      );
-    return buffer.subarray(0, span);
+    const span = new Vector<InstructionData>(
+      instructionDataLayout,
+      "instructions"
+    ).encode(instructions, buffer, PythGovernanceHeader.span);
+    return Buffer.concat([headerBuffer, buffer.subarray(0, span)]);
   }
 }
