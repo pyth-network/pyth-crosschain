@@ -119,16 +119,7 @@ const argv = yargs(hideBin(process.argv))
   .help()
   .alias("help", "h")
   .wrap(yargs.terminalWidth())
-  //@ts-ignore
-  .parse("", (err, argv, output) => {
-    if (output) {
-      const newOutput = output.replaceAll(
-        "deploy-pyth-bridge.ts",
-        "npm run deploy-pyth -- "
-      );
-      console.log(newOutput);
-    }
-  });
+  .parse();
 
 function getDeployer(network: NETWORKS, mnemonic: string): Deployer {
   const networkConfig = NetworkConfig[network];
