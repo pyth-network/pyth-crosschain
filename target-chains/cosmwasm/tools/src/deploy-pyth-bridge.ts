@@ -1,115 +1,190 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Deployer, DeployerFactory } from "./deployer";
-import { NETWORKS_OPTIONS } from "./network";
+import { NETWORKS, NETWORKS_OPTIONS } from "./network";
 import { CONFIG as PythConfig } from "./pyth_config";
 import { CONFIG as NetworkConfig } from "./deployer/config";
 
-const argv = yargs(hideBin(process.argv))
-  .option("network", {
-    description: "Which network to deploy to",
+const sharedOptions: { [key: string]: yargs.Options } = {
+  network: {
+    describe: "Which network to deploy to",
     choices: NETWORKS_OPTIONS,
-    required: true,
-  })
-  .option("artifact", {
-    description: "Path to Pyth artifact",
+    demandOption: true,
+  },
+  mnemonic: {
     type: "string",
-    required: false,
-  })
-  .option("mnemonic", {
-    description: "Mnemonic (private key)",
-    type: "string",
-    required: true,
-  })
-  .option("instantiate", {
-    description: "Instantiate contract if set (default: disabled)",
-    type: "boolean",
-    default: false,
-    required: false,
-  })
-  .option("migrate", {
-    description: "Migrate an existing contract if set (default: disabled)",
-    type: "boolean",
-    default: false,
-    required: false,
-  })
-  .option("contract", {
-    description: "Contract address, used only for migration",
-    type: "string",
-    required: false,
-    default: "",
-  })
-  .option("code-id", {
-    description:
-      "Code Id, if provided this will be used for migrate/instantiate and no code will be uploaded",
-    type: "number",
-    requred: false,
-  })
+    demandOption: true,
+    describe: "Mnemonic (private key)",
+  },
+};
+
+const argv = yargs(hideBin(process.argv))
+  .usage("USAGE: npm run deploy-pyth -- <command>")
+  .command(
+    "deploy-artifact",
+    "to deploy artifacts (.wasm files)",
+    {
+      artifact: {
+        type: "string",
+        demandOption: true,
+        describe: "Path to contract artifact",
+      },
+      ...sharedOptions,
+    },
+    deployArtifactHandler
+  )
+  .example(
+    'npm run deploy-pyth -- deploy-artifact --network osmosis_local --mnemonic "online prefer ..." --artifact "../artifacts/pyth_cosmwasm.wasm"',
+    ""
+  )
+  .command(
+    "instantiate",
+    "to instantiate contract",
+    {
+      "code-id": {
+        describe: "code-id requred to instantiate contract",
+        type: "number",
+        demandOption: true,
+      },
+      ...sharedOptions,
+    },
+    instantiateHandler
+  )
+  .example(
+    'npm run deploy-pyth -- instantiate --network osmosis_local --code-id 10 --mnemonic "online prefer ..."',
+    ""
+  )
+  .command(
+    "migrate",
+    "to migrate given contract",
+    {
+      "code-id": {
+        describe: "code-id to which to migrate contract",
+        type: "number",
+        demandOption: true,
+      },
+      contract: {
+        description: "contract address is required",
+        type: "string",
+        demandOption: true,
+      },
+      ...sharedOptions,
+    },
+    migrateHandler
+  )
+  .example(
+    'npm run deploy-pyth -- migrate --network osmosis_local --code-id 9 --contract osmo1.. --mnemonic "online prefer ..."',
+    ""
+  )
+  .command(
+    "update-admin",
+    "to update a contract's admin",
+    {
+      "new-admin": {
+        description: "please input he new admin address",
+        type: "string",
+        demandOption: true,
+      },
+      contract: {
+        description: "contract address is required",
+        type: "string",
+        demandOption: true,
+      },
+      ...sharedOptions,
+    },
+    updateAdminHandler
+  )
+  .example(
+    'npm run deploy-pyth -- update-admin --network osmosis_local --new-admin osmo1.. --contract osmo1... --mnemonic "online prefer ..."',
+    ""
+  )
+  .command(
+    "get-contract-info",
+    "get a contract info",
+    {
+      contract: {
+        description: "contract address is required",
+        type: "string",
+        demandOption: true,
+      },
+      ...sharedOptions,
+    },
+    getContractInfoHandler
+  )
+  .example(
+    'npm run deploy-pyth -- get-contract-info --network osmosis_local --contract osmo1... --mnemonic "online prefer ..."',
+    ""
+  )
+  .demandCommand()
   .help()
   .alias("help", "h")
-  .parseSync();
-
-const {
-  artifact,
-  network,
-  mnemonic,
-  codeId: inputCodeId,
-  instantiate,
-  migrate,
-  contract,
-} = argv;
-const pythConfig = PythConfig[network];
-const networkConfig = NetworkConfig[network];
-const deployer: Deployer = DeployerFactory.create(networkConfig, mnemonic);
-
-// checks
-if (inputCodeId === undefined && artifact === undefined)
-  raiseCLError("Please provide either artifact or code id");
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function raiseCLError(message: string) {
-  console.error(message);
-  process.exit(1);
-}
-
-async function run() {
-  let codeId: number;
-  if (inputCodeId === undefined) {
-    console.log("Deploying artifact");
-    codeId = await deployer.deployArtifact(artifact!);
-    console.log("Deployed Code ID: ", codeId);
-
-    // sleep only when a new artifact is deployed
-    if (instantiate || migrate) {
-      console.log("Sleeping for 10 seconds for store transaction to finalize.");
-      await sleep(10000);
-    }
-  } else codeId = inputCodeId;
-
-  if (instantiate) {
-    console.log("Instantiating a contract");
-    const contractAddress = await deployer.instantiate(
-      codeId,
-      pythConfig,
-      "pyth"
-    );
-    console.log(`Deployed Pyth contract at ${contractAddress}`);
-  }
-  if (migrate) {
-    if (contract === "")
-      raiseCLError(
-        "Contract address is not provided. Provide it using --contract"
+  .wrap(yargs.terminalWidth())
+  //@ts-ignore
+  .parse("", (err, argv, output) => {
+    if (output) {
+      const newOutput = output.replaceAll(
+        "deploy-pyth-bridge.ts",
+        "npm run deploy-pyth -- "
       );
+      console.log(newOutput);
+    }
+  });
 
-    console.log(`Migrating contract ${contract} to ${codeId}`);
-    await deployer.migrate(contract, codeId);
-    console.log(
-      `Contract ${contract} code_id successfully updated to ${codeId}`
-    );
-  }
+function getDeployer(network: NETWORKS, mnemonic: string): Deployer {
+  const networkConfig = NetworkConfig[network];
+  return DeployerFactory.create(networkConfig, mnemonic);
 }
 
-run();
+async function deployArtifactHandler(argv: any) {
+  const { network, mnemonic, artifact } = argv;
+  console.log("Deploying artifact");
+  const codeId = await getDeployer(
+    network as NETWORKS,
+    mnemonic as string
+  ).deployArtifact(artifact);
+  console.log("Deployed Code ID: ", codeId);
+}
+
+async function instantiateHandler(argv: any) {
+  const { network, mnemonic, codeId } = argv;
+  const pythConfig = PythConfig[network as NETWORKS];
+  console.log("Instantiating a contract");
+  const contractAddress = await getDeployer(
+    network as NETWORKS,
+    mnemonic as string
+  ).instantiate(codeId, pythConfig, "pyth");
+  console.log(`Deployed Pyth contract at ${contractAddress}`);
+}
+
+async function migrateHandler(argv: any) {
+  const { network, mnemonic, codeId, contract } = argv;
+
+  console.log(`Migrating contract ${contract} to ${codeId}`);
+  await getDeployer(network as NETWORKS, mnemonic as string).migrate(
+    contract,
+    codeId
+  );
+  console.log(`Contract ${contract} code_id successfully updated to ${codeId}`);
+}
+
+async function updateAdminHandler(argv: any) {
+  const { network, mnemonic, newAdmin, contract } = argv;
+  console.log("Updating contract's admin");
+  await getDeployer(network as NETWORKS, mnemonic as string).updateAdmin(
+    newAdmin,
+    contract
+  );
+  console.log("Contract's admin successfully updates");
+}
+
+async function getContractInfoHandler(argv: any) {
+  const { network, mnemonic, contract } = argv;
+
+  console.log(`Fetching contract info for: ${contract}`);
+  const info = await getDeployer(
+    network as NETWORKS,
+    mnemonic as string
+  ).getContractInfo(contract);
+  console.log(`Fetched contract info for: ${contract}`);
+  console.log(info);
+}
