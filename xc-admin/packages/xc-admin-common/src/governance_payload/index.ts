@@ -75,7 +75,7 @@ export function governanceHeaderLayout(): BufferLayout.Structure<
 }
 
 /** Decode Pyth Governance Header and return undefined if the header is invalid */
-export function decodeHeader(data: Buffer): PythGovernanceHeader | undefined {
+export function decodeHeader(data: Buffer): PythGovernanceHeader {
   let deserialized = governanceHeaderLayout().decode(data);
   return verifyHeader(deserialized);
 }
@@ -111,27 +111,23 @@ export function verifyHeader(
     action: number;
     chain: ChainId;
   }>
-) {
+): PythGovernanceHeader {
   if (deserialized.magicNumber !== MAGIC_NUMBER) {
-    return undefined;
+    throw new Error("Wrong magic number");
   }
 
   if (!toChainName(deserialized.chain)) {
-    return undefined;
+    throw new Error("Chain Id not found");
   }
 
-  try {
-    let governanceHeader: PythGovernanceHeader = {
-      targetChainId: toChainName(deserialized.chain),
-      action: toActionName({
-        actionId: deserialized.action,
-        moduleId: deserialized.module,
-      }),
-    };
-    return governanceHeader;
-  } catch {
-    return undefined;
-  }
+  let governanceHeader: PythGovernanceHeader = {
+    targetChainId: toChainName(deserialized.chain),
+    action: toActionName({
+      actionId: deserialized.action,
+      moduleId: deserialized.module,
+    }),
+  };
+  return governanceHeader;
 }
 
 export { decodeExecutePostedVaa } from "./ExecutePostedVaa";

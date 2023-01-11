@@ -60,22 +60,19 @@ test("GovernancePayload ser/de", (done) => {
   expect(governanceHeader?.action).toBe("SetFee");
 
   // Wrong magic number
-  governanceHeader = decodeHeader(
-    Buffer.from([0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0])
-  );
-  expect(governanceHeader).toBeUndefined();
+  expect(() =>
+    decodeHeader(Buffer.from([0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0]))
+  ).toThrow("Wrong magic number");
 
   // Wrong chain
-  governanceHeader = decodeHeader(
-    Buffer.from([80, 84, 71, 77, 0, 0, 255, 255, 0, 0, 0, 0])
-  );
-  expect(governanceHeader).toBeUndefined();
+  expect(() =>
+    decodeHeader(Buffer.from([80, 84, 71, 77, 0, 0, 255, 255, 0, 0, 0, 0]))
+  ).toThrow("Chain Id not found");
 
   // Wrong module/action combination
-  governanceHeader = decodeHeader(
-    Buffer.from([80, 84, 71, 77, 0, 1, 0, 26, 0, 0, 0, 0])
-  );
-  expect(governanceHeader).toBeUndefined();
+  expect(() =>
+    decodeHeader(Buffer.from([80, 84, 71, 77, 0, 1, 0, 26, 0, 0, 0, 0]))
+  ).toThrow("Invalid header, action doesn't match module");
 
   // Decode executePostVaa with empty instructions
   let expectedExecuteVaaArgs = {

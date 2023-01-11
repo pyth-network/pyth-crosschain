@@ -83,16 +83,10 @@ export type ExecutePostedVaaArgs = {
 };
 
 /** Decode ExecutePostedVaaArgs and return undefined if it failed */
-export function decodeExecutePostedVaa(
-  data: Buffer
-): ExecutePostedVaaArgs | undefined {
+export function decodeExecutePostedVaa(data: Buffer): ExecutePostedVaaArgs {
   let deserialized = executePostedVaaLayout.decode(data);
 
   let header = verifyHeader(deserialized.header);
-
-  if (!header) {
-    return undefined;
-  }
 
   let instructions: TransactionInstruction[] = deserialized.instructions.map(
     (ix) => {
