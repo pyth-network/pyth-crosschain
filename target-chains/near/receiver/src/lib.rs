@@ -168,10 +168,17 @@ impl Pyth {
 
     /// Return the deposit required to update a price feed. This is the upper limit for an update
     /// call and any remaining deposit not consumed for storage will be refunded.
-    pub fn get_update_fee_estimate(&self) -> U128 {
+    #[allow(unused_variables)]
+    pub fn get_update_fee_estimate(&self, vaa: String) -> U128 {
         let byte_cost = env::storage_byte_cost();
         let data_cost = byte_cost * std::mem::size_of::<PriceFeed>() as u128;
-        (4u128 * data_cost + self.update_fee).into()
+
+        // The const multiplications here are to provide additional headway for any unexpected data
+        // costs in NEAR's storage calculations.
+        //
+        // 5 is the upper limit for PriceFeed amount in a single update.
+        // 4 is the value obtained through testing for headway.
+        (5u128 * 4u128 * data_cost + self.update_fee).into()
     }
 
     #[payable]

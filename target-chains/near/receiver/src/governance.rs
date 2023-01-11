@@ -268,7 +268,6 @@ impl Pyth {
             // Convert to local VAA type to catch API changes.
             let vaa = Vaa::from(vaa);
 
-            // Prevent VAA re-execution.
             ensure!(
                 self.executed_governance_vaa < vaa.sequence,
                 VaaVerificationFailed
@@ -283,11 +282,6 @@ impl Pyth {
                     }),
                 UnknownSource
             );
-
-            // Update before calling Wormhole to prevent re-execution. If we wait until after the
-            // Wormhole call we could end up with multiple VAA's with the same sequence being
-            // executed in parallel.
-            self.executed_governance_vaa = vaa.sequence;
         }
 
         // Verify VAA and refund the caller in case of failure.
@@ -310,6 +304,10 @@ impl Pyth {
     }
 
     /// Invoke handler upon successful verification of a VAA action.
+    ///
+    /// IMPORTANT: These functions should be idempotent otherwise NEAR's async model would allow
+    /// for two VAA's to run in parallel before the sequence is updated. Another fix for this would
+    /// be to pass the previous index and update during failure.
     #[payable]
     #[private]
     #[handle_result]
@@ -330,11 +328,19 @@ impl Pyth {
         // at this point so we only care about the `rest` component which contains bytes we can
         // deserialize into an Action.
         let vaa = hex::decode(vaa).map_err(|_| InvalidPayload)?;
-        let (_, rest): (wormhole::Vaa<()>, _) =
+        let (vaa, rest): (wormhole::Vaa<()>, _) =
             serde_wormhole::from_slice_with_payload(&vaa).map_err(|_| InvalidPayload)?;
 
+        // Deserialize and verify the action is destined for this chain.
+        let instruction = GovernanceInstruction::deserialize(rest)?;
+
+        ensure!(
+            instruction.target == Chain::from(WormholeChain::Near)
+                || instruction.target == Chain::from(WormholeChain::Any),
+            InvalidPayload
+        );
+
         match GovernanceInstruction::deserialize(rest)?.action {
-            UpgradeContract { codehash } => self.set_upgrade_hash(codehash),
             SetDataSources { data_sources } => self.set_sources(data_sources),
             SetFee { base, expo } => self.set_update_fee(base, expo)?,
             SetValidPeriod { valid_seconds } => self.set_valid_period(valid_seconds),
@@ -342,7 +348,18 @@ impl Pyth {
             AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
                 self.authorize_gov_source_transfer(claim_vaa)?
             }
+            UpgradeContract { codehash } => {
+                // Additionally restrict to only Near for upgrades. This is a safety measure to
+                // prevent accidental upgrades to the wrong contract.
+                ensure!(
+                    instruction.target == Chain::from(WormholeChain::Near),
+                    InvalidPayload
+                );
+                self.set_upgrade_hash(codehash)
+            }
         }
+
+        self.executed_governance_vaa = vaa.sequence;
 
         // Refund storage difference to `account_id` after storage execution.
         self.refund_storage_usage(
@@ -381,12 +398,6 @@ impl Pyth {
         let instruction =
             GovernanceInstruction::deserialize(rest).expect("Failed to deserialize action");
 
-        // Confirm action is destined for NEAR.
-        ensure!(
-            instruction.target == Chain::from(WormholeChain::Near),
-            Unknown
-        );
-
         // Execute the embedded VAA action.
         match instruction.action {
             GovernanceAction::RequestGovernanceDataSourceTransfer {
@@ -396,6 +407,15 @@ impl Pyth {
                     self.executed_governance_change_vaa < governance_data_source_index as u64,
                     Unknown
                 );
+
+                // Additionally restrict to only Near for Authorizations.
+                ensure!(
+                    instruction.target == Chain::from(WormholeChain::Near)
+                        || instruction.target == Chain::from(WormholeChain::Any),
+                    InvalidPayload
+                );
+
+                self.executed_governance_change_vaa = governance_data_source_index as u64;
 
                 // Update Governance Source
                 self.gov_source = Source {
@@ -586,8 +606,8 @@ mod tests {
             32,
         );
 
-        contract.set_update_fee(100, 0).expect("Failed to set fee");
-        assert_eq!(contract.update_fee, 100);
+        contract.set_update_fee(100, 2).expect("Failed to set fee");
+        assert_eq!(contract.update_fee, 10000);
     }
 
     #[test]
