@@ -57,24 +57,23 @@ export const instructionDataLayout = BufferLayout.struct<InstructionData>([
   new Vector<number>(BufferLayout.u8(), "data"),
 ]);
 
-export const executePostedVaaLayout: BufferLayout.Structure<
-  Readonly<{
-    header: Readonly<{
-      magicNumber: number;
-      module: number;
-      action: number;
-      chain: ChainId;
-    }>;
-    instructions: InstructionData[];
-  }>
-> = BufferLayout.struct([
-  PythGovernanceHeader.layout,
-  new Vector<InstructionData>(instructionDataLayout, "instructions"),
-]);
-
 export class ExecutePostedVaa implements PythGovernanceAction {
   readonly targetChainId: ChainName;
   readonly instructions: TransactionInstruction[];
+  static layout: BufferLayout.Structure<
+    Readonly<{
+      header: Readonly<{
+        magicNumber: number;
+        module: number;
+        action: number;
+        chain: ChainId;
+      }>;
+      instructions: InstructionData[];
+    }>
+  > = BufferLayout.struct([
+    PythGovernanceHeader.layout,
+    new Vector<InstructionData>(instructionDataLayout, "instructions"),
+  ]);
 
   constructor(
     targetChainId: ChainName,
@@ -86,7 +85,7 @@ export class ExecutePostedVaa implements PythGovernanceAction {
 
   /** Decode ExecutePostedVaaArgs */
   static decode(data: Buffer): ExecutePostedVaa {
-    let deserialized = executePostedVaaLayout.decode(data);
+    let deserialized = this.layout.decode(data);
     let header = PythGovernanceHeader.verify(deserialized.header);
 
     let instructions: TransactionInstruction[] = deserialized.instructions.map(
