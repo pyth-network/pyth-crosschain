@@ -10,14 +10,14 @@ MULTISIG_SCRIPT_CMD_PREFIX = "npm run start --".split(" ")
 MULTISIG_SCRIPT_DIR = os.environ.get("MULTISIG_SCRIPT_DIR", "/root/pyth/multisig-wh-message-builder")
 
 MESH_KEY_DIR = "/solana-secrets/squads/"
-MESH_PROGRAM_ADDR = "73UuSY2yXat7h7T49MMGg8TiHPqJJKKVc33DmC4b41Hf"
+MESH_PROGRAM_ADDR = "SMPLVC8MxZ5Bf5EfF7PaMiTCxoBAcmkbM2vkrvMK8ho"
 MESH_VAULT_EXT_AUTHORITY_KEY_PATH = MESH_KEY_DIR + "external_authority.json"
 
 ALICE_KEY_PATH = MESH_KEY_DIR + "member_alice.json"
 BOB_KEY_PATH = MESH_KEY_DIR + "member_bob.json"
 CAROL_KEY_PATH = MESH_KEY_DIR + "member_carol.json"
 
-create_key_addr = ""
+create_key_addr = "73UuSY2yXat7h7T49MMGg8TiHPqJJKKVc33DmC4b41Hf"
 ext_authority_addr = sol_run_or_die("address", ["--keypair", MESH_VAULT_EXT_AUTHORITY_KEY_PATH], capture_output=True).stdout.strip()
 
 alice_addr = sol_run_or_die("address", ["--keypair", ALICE_KEY_PATH], capture_output=True).stdout.strip()
