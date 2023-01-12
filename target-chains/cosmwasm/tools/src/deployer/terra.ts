@@ -136,6 +136,10 @@ export class TerraDeployer implements Deployer {
     }
   }
 
+  /**
+   * update Admin assumes that the deployer instance is the owner of this contract
+   * and may result in error if this isn't the case
+   */
   async updateAdmin(newAdmin: string, contract: string): Promise<void> {
     const currAdmin = this.wallet.key.accAddress;
     const updateAdminMsg = new MsgUpdateContractAdmin(
