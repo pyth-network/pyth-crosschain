@@ -37,6 +37,10 @@ services:
       READINESS_SPY_SYNC_TIME_SECONDS: "20"
       READINESS_NUM_LOADED_SYMBOLS: "50"
       LOG_LEVEL: warning
+      CLUSTER: pythnet
+      REMOVE_EXPIRED_VALUES_INTERVAL_SECONDS: "60"
+      PYTH_WRITER_INSERT_LATENCY_SECONDS: "30"
+      CACHE_TTL_SECONDS: "300"
     healthcheck:
       test:
         [
