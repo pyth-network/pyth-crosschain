@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 
 P2W_SOL_ADDRESS = os.environ.get(
-    "P2W_SOL_ADDRESS", "Bca8V1z69142rGcoxEo5j3xrVT1QYZewwX57tkamqgLQ"
+    "P2W_SOL_ADDRESS", "P2WH424242424242424242424242424242424242424"
 )
 P2W_OWNER_KEYPAIR = os.environ.get(
     "P2W_OWNER_KEYPAIR", "/solana-secrets/p2w_owner.json"
