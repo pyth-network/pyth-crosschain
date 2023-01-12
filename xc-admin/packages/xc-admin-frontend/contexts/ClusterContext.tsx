@@ -1,8 +1,7 @@
-import { Cluster } from '@solana/web3.js'
+import { PythCluster } from '@pythnetwork/client/lib/cluster'
 import { createContext, useMemo, useState } from 'react'
 import { isValidCluster } from '../utils/isValidCluster'
 
-export type PythCluster = Cluster | 'pythtest' | 'pythnet'
 export const DEFAULT_CLUSTER: PythCluster = 'pythnet'
 
 export const ClusterContext = createContext<{
@@ -19,8 +18,7 @@ export const ClusterProvider = (props: any) => {
     () => ({
       cluster,
       setCluster: (cluster: PythCluster) => {
-        const setCl = isValidCluster(cluster) ? cluster : DEFAULT_CLUSTER
-        setCluster(setCl)
+        setCluster(cluster)
       },
     }),
     [cluster]

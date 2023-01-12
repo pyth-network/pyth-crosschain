@@ -1,6 +1,6 @@
 import { PythCluster } from '@pythnetwork/client/lib/cluster'
 
-const CLUSTER_URLS = {
+const CLUSTER_URLS: Record<PythCluster, any> = {
   'mainnet-beta': [
     {
       rpcUrl:
@@ -45,6 +45,12 @@ const CLUSTER_URLS = {
     {
       rpcUrl: 'https://pythnet.rpcpool.com/',
       wsUrl: 'wss://pythnet.rpcpool.com/',
+    },
+  ],
+  localnet: [
+    {
+      rpcUrl: 'http://localhost:8899/',
+      wsUrl: 'ws://localhost:8900/',
     },
   ],
 }
