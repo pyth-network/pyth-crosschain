@@ -65,9 +65,9 @@ function Header() {
   return (
     <>
       <header
-        className={`left-0 top-0 z-40 w-full px-1 transition-all lg:px-10 
-        ${isSticky || headerState.opened ? 'fixed ' : 'absolute'} 
-        ${isSticky && !headerState.opened ? 'bg-darkGray shadow-black' : ''} 
+        className={`left-0 top-0 z-40 w-full px-1 transition-all lg:px-10
+        ${isSticky || headerState.opened ? 'fixed ' : 'absolute'}
+        ${isSticky && !headerState.opened ? 'bg-darkGray shadow-black' : ''}
         `}
       >
         <div
