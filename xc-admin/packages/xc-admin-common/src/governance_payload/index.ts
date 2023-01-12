@@ -76,6 +76,7 @@ export class PythGovernanceHeader {
     ],
     "header"
   );
+  /** Span of the serialized governance header */
   static span = 8;
 
   constructor(targetChainId: ChainName, action: ActionName) {
