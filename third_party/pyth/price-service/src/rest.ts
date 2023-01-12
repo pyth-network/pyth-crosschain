@@ -125,7 +125,6 @@ export class RestAPI {
         id: Joi.string()
           .regex(/^(0x)?[a-f0-9]{64}$/)
           .required(),
-        // publishTime is of UNIX timestamp type
         publish_time: Joi.number().required(),
       }).required(),
     };
