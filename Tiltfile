@@ -1,4 +1,4 @@
-# This Tiltfile contains the deployment and build config for the Pyth Crosschain localnet.
+# This Tiltfile contains the deployment and build config for the Pyth Crosschain development environment.
 #
 #  We use Buildkit cache mounts and careful layering to avoid unnecessary rebuilds - almost
 #  all source code changes result in small, incremental rebuilds. Dockerfiles are written such
