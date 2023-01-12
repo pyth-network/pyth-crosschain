@@ -157,7 +157,10 @@ export class RestAPI {
             });
         } else {
           // cache hit
-          const processedVaa = {publishTime: new Date(vaa.publishTime), vaa: vaa.vaa}
+          const processedVaa = {
+            publishTime: new Date(vaa.publishTime),
+            vaa: vaa.vaa,
+          };
           res.json(processedVaa);
         }
       }

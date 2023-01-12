@@ -2,20 +2,20 @@ import { ChainId, uint8ArrayToHex } from "@certusone/wormhole-sdk";
 
 import {
   createSpyRPCServiceClient,
-  subscribeSignedVAA
+  subscribeSignedVAA,
 } from "@certusone/wormhole-spydk";
 
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 
 import {
   FilterEntry,
-  SubscribeSignedVAAResponse
+  SubscribeSignedVAAResponse,
 } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
 import { ClientReadableStream } from "@grpc/grpc-js";
 import {
   getBatchSummary,
   parseBatchPriceAttestation,
-  priceAttestationToPriceFeed
+  priceAttestationToPriceFeed,
 } from "@pythnetwork/p2w-sdk-js";
 import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";
 import LRUCache from "lru-cache";
