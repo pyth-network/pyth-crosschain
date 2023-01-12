@@ -123,10 +123,7 @@ export class ExecutePostedVaa implements PythGovernanceAction {
       return { programId, accounts, data };
     });
 
-    const span = new Vector<InstructionData>(
-      instructionDataLayout,
-      "instructions"
-    ).encode(instructions, buffer);
+    const span = ExecutePostedVaa.layout.encode(instructions, buffer);
     return Buffer.concat([headerBuffer, buffer.subarray(0, span)]);
   }
 }
