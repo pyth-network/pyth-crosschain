@@ -46,9 +46,6 @@ test("Wormhole multisig instruction parse: send message without governance paylo
     .instruction()
     .then((instruction) => {
       const parsedInstruction = parser.parseInstruction(instruction);
-      expect(
-        parsedInstruction instanceof WormholeMultisigInstruction
-      ).toBeTruthy();
       if (parsedInstruction instanceof WormholeMultisigInstruction) {
         expect(parsedInstruction.program).toBe(
           MultisigInstructionProgram.WormholeBridge
@@ -161,7 +158,7 @@ test("Wormhole multisig instruction parse: send message without governance paylo
         expect(parsedInstruction.args.targetChain).toBeUndefined();
         done();
       } else {
-        done("Not instance of WormholeInstruction");
+        done("Not instance of WormholeMultisigInstruction");
       }
     });
 });
@@ -354,7 +351,7 @@ test("Wormhole multisig instruction parse: send message with governance payload"
           done("Not instance of ExecutePostedVaa");
         }
       } else {
-        done("Not instance of WormholeInstruction");
+        done("Not instance of WormholeMultisigInstruction");
       }
     });
 });
