@@ -43,6 +43,9 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
     P2W_OWNER_ADDRESS = sol_run_or_die(
         "address", ["--keypair", P2W_OWNER_KEYPAIR], capture_output=True
     ).stdout.strip()
+    PYTH_OWNER_ADDRESS = sol_run_or_die(
+        "address", ["--keypair", PYTH_PROGRAM_KEYPAIR], capture_output=True,
+    ).stdout.strip()
 
     init_result = run_or_die(
         [
