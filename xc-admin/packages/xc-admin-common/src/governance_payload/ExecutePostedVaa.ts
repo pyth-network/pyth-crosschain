@@ -9,7 +9,6 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
-/** Borsh type vector with a 4 byte vector length and then the serialized elements */
 class Vector<T> extends Layout<T[]> {
   private element: Layout<T>;
 
@@ -35,35 +34,30 @@ class Vector<T> extends Layout<T[]> {
   }
 }
 
-/** Version of `AccountMeta` that works with buffer-layout */
-export type AccountMetadata = {
-  pubkey: Uint8Array;
-  isSigner: number;
-  isWritable: number;
-};
-
-/** Version of `TransactionInstruction` that works with buffer-layout */
 export type InstructionData = {
   programId: Uint8Array;
   accounts: AccountMetadata[];
   data: number[];
 };
 
-/** Layout for `AccountMetadata` */
+export type AccountMetadata = {
+  pubkey: Uint8Array;
+  isSigner: number;
+  isWritable: number;
+};
+
 export const accountMetaLayout = BufferLayout.struct<AccountMetadata>([
   BufferLayout.blob(32, "pubkey"),
   BufferLayout.u8("isSigner"),
   BufferLayout.u8("isWritable"),
 ]);
 
-/** Layout for `InstructionData` */
 export const instructionDataLayout = BufferLayout.struct<InstructionData>([
   BufferLayout.blob(32, "programId"),
   new Vector<AccountMetadata>(accountMetaLayout, "accounts"),
   new Vector<number>(BufferLayout.u8(), "data"),
 ]);
 
-/** A governance action used for executing remote instructions in Pythnet */
 export class ExecutePostedVaa implements PythGovernanceAction {
   readonly targetChainId: ChainName;
   readonly instructions: TransactionInstruction[];
