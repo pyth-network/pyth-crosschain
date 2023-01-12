@@ -62,7 +62,7 @@ const getMultipleAccounts = async (
   return { keys, array }
 }
 
-export const ORACLE_PUBLIC_KEYS = {
+export const ORACLE_PUBLIC_KEYS: { [key: string]: string } = {
   devnet: 'BmA9Z6FjioHJPpjT39QazZyhDRUdZy2ezwx4GiDdE2u2',
   testnet: 'AFmdnt9ng1uVxqCmqwQJDAYC5cKTkw8gJKSM5PnzuF6z',
   'mainnet-beta': 'AHtgzX45WTKfkPG53L6WYhGEXwQkN1BVknET3sVsLL8J',
