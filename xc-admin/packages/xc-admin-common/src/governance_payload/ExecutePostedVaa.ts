@@ -75,11 +75,21 @@ export class ExecutePostedVaa implements PythGovernanceAction {
   }
 
   /** Decode ExecutePostedVaa */
-  static decode(data: Buffer): ExecutePostedVaa {
+  static decode(data: Buffer): ExecutePostedVaa | undefined {
     let header = PythGovernanceHeader.decode(data);
-    let deserialized = this.layout.decode(
-      data.subarray(PythGovernanceHeader.span)
-    );
+    if (!header) {
+      return undefined;
+    }
+
+    let deserialized;
+    try {
+      deserialized = this.layout.decode(
+        data.subarray(PythGovernanceHeader.span)
+      );
+    } catch {
+      return undefined;
+    }
+
     let instructions: TransactionInstruction[] = deserialized.map((ix) => {
       let programId: PublicKey = new PublicKey(ix.programId);
       let keys: AccountMeta[] = ix.accounts.map((acc) => {

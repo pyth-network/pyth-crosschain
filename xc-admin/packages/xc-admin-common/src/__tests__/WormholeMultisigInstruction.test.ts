@@ -199,9 +199,6 @@ test("Wormhole multisig instruction parse: send message with governance payload"
     .then((instruction) => {
       const parsedInstruction = parser.parseInstruction(instruction);
       if (parsedInstruction instanceof WormholeMultisigInstruction) {
-        expect(
-          parsedInstruction instanceof WormholeMultisigInstruction
-        ).toBeTruthy();
         expect(parsedInstruction.program).toBe(
           MultisigInstructionProgram.WormholeBridge
         );
@@ -313,15 +310,13 @@ test("Wormhole multisig instruction parse: send message with governance payload"
         );
         expect(parsedInstruction.args.consistencyLevel).toBe(0);
 
-        if (
-          parsedInstruction.args.governanceAction instanceof ExecutePostedVaa
-        ) {
-          expect(parsedInstruction.args.governanceAction.targetChainId).toBe(
+        if (parsedInstruction.governanceAction instanceof ExecutePostedVaa) {
+          expect(parsedInstruction.governanceAction.targetChainId).toBe(
             "pythnet"
           );
 
           (
-            parsedInstruction.args.governanceAction
+            parsedInstruction.governanceAction
               .instructions as TransactionInstruction[]
           ).forEach((instruction, i) => {
             expect(

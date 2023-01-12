@@ -7,6 +7,7 @@ import { WORMHOLE_ADDRESS } from "../wormhole";
 import { PythMultisigInstruction } from "./PythMultisigInstruction";
 import { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
 
+export const UNRECOGNIZED_INSTRUCTION = "unrecognizedInstruction";
 export enum MultisigInstructionProgram {
   PythOracle,
   WormholeBridge,
