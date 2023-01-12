@@ -17,7 +17,7 @@ PYTH = os.environ.get("PYTH", "./pyth")
 PYTH_ADMIN = os.environ.get("PYTH_ADMIN", "./pyth_admin")
 PYTH_KEY_STORE = os.environ.get("PYTH_KEY_STORE", "/home/pyth/.pythd")
 PYTH_OWNER_ADDRESS = os.environ.get(
-    "PYTH_PROGRAM_ADDRESS", "DgpbK8SiypiUHBkBTAunMnwRWF3McGGR4iKxTrTfTXq4"
+    "PYTH_PROGRAM_ADDRESS", "FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH"
 )
 PYTH_PROGRAM_SO_PATH = os.environ.get("PYTH_PROGRAM_SO", "../target/oracle.so")
 PYTH_PUBLISHER_KEYPAIR = os.environ.get(
