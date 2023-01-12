@@ -15,7 +15,7 @@ export function resolveAccountNames(
 ): { named: NamedAccounts; remaining: RemainingAccounts } {
   const ix = idl.instructions.find((ix) => ix.name == name);
   if (!ix) {
-    throw Error("Instruction name not found");
+    return { named: {}, remaining: instruction.keys };
   }
   const named: NamedAccounts = {};
   const remaining: RemainingAccounts = [];

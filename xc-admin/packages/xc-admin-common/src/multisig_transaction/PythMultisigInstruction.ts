@@ -1,4 +1,8 @@
-import { MultisigInstruction, MultisigInstructionProgram } from ".";
+import {
+  MultisigInstruction,
+  MultisigInstructionProgram,
+  UNRECOGNIZED_INSTRUCTION,
+} from ".";
 import { AnchorAccounts, resolveAccountNames } from "./anchor";
 import { pythIdl, pythOracleCoder } from "@pythnetwork/client";
 import { TransactionInstruction } from "@solana/web3.js";
@@ -35,8 +39,8 @@ export class PythMultisigInstruction implements MultisigInstruction {
       );
     } else {
       return new PythMultisigInstruction(
-        "Unrecognized instruction",
-        {},
+        UNRECOGNIZED_INSTRUCTION,
+        { data: instruction.data },
         { named: {}, remaining: instruction.keys }
       );
     }
