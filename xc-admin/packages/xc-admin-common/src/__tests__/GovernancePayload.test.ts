@@ -1,66 +1,60 @@
-import { ChainName } from "@certusone/wormhole-sdk";
-import { PACKET_DATA_SIZE, PublicKey, SystemProgram } from "@solana/web3.js";
-import { ActionName, decodeHeader, encodeHeader, ExecutePostedVaa } from "..";
+import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { PythGovernanceHeader, ExecutePostedVaa } from "..";
 
 test("GovernancePayload ser/de", (done) => {
   jest.setTimeout(60000);
 
   // Valid header 1
-  let expectedGovernanceHeader = {
-    targetChainId: "pythnet" as ChainName,
-    action: "ExecutePostedVaa" as ActionName,
-  };
-  let buffer = Buffer.alloc(PACKET_DATA_SIZE);
-  let span = encodeHeader(expectedGovernanceHeader, buffer);
+  let expectedGovernanceHeader = new PythGovernanceHeader(
+    "pythnet",
+    "ExecutePostedVaa"
+  );
+  let buffer = expectedGovernanceHeader.encode();
   expect(
-    buffer.subarray(0, span).equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 26]))
+    buffer.equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 26]))
   ).toBeTruthy();
-
-  let governanceHeader = decodeHeader(buffer.subarray(0, span));
-  expect(governanceHeader?.targetChainId).toBe("pythnet");
-  expect(governanceHeader?.action).toBe("ExecutePostedVaa");
+  let governanceHeader = PythGovernanceHeader.decode(buffer);
+  expect(governanceHeader.targetChainId).toBe("pythnet");
+  expect(governanceHeader.action).toBe("ExecutePostedVaa");
 
   // Valid header 2
-  expectedGovernanceHeader = {
-    targetChainId: "unset" as ChainName,
-    action: "ExecutePostedVaa" as ActionName,
-  };
-  buffer = Buffer.alloc(PACKET_DATA_SIZE);
-  span = encodeHeader(expectedGovernanceHeader, buffer);
-  expect(
-    buffer.subarray(0, span).equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 0]))
-  ).toBeTruthy();
-  governanceHeader = decodeHeader(buffer.subarray(0, span));
+  expectedGovernanceHeader = new PythGovernanceHeader(
+    "unset",
+    "ExecutePostedVaa"
+  );
+  buffer = expectedGovernanceHeader.encode();
+  expect(buffer.equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 0]))).toBeTruthy();
+  governanceHeader = PythGovernanceHeader.decode(buffer);
   expect(governanceHeader?.targetChainId).toBe("unset");
   expect(governanceHeader?.action).toBe("ExecutePostedVaa");
 
   // Valid header 3
-  expectedGovernanceHeader = {
-    targetChainId: "solana" as ChainName,
-    action: "SetFee" as ActionName,
-  };
-  buffer = Buffer.alloc(PACKET_DATA_SIZE);
-  span = encodeHeader(expectedGovernanceHeader, buffer);
-  expect(
-    buffer.subarray(0, span).equals(Buffer.from([80, 84, 71, 77, 1, 3, 0, 1]))
-  ).toBeTruthy();
-  governanceHeader = decodeHeader(buffer.subarray(0, span));
+  expectedGovernanceHeader = new PythGovernanceHeader("solana", "SetFee");
+  buffer = expectedGovernanceHeader.encode();
+  expect(buffer.equals(Buffer.from([80, 84, 71, 77, 1, 3, 0, 1]))).toBeTruthy();
+  governanceHeader = PythGovernanceHeader.decode(buffer);
   expect(governanceHeader?.targetChainId).toBe("solana");
   expect(governanceHeader?.action).toBe("SetFee");
 
   // Wrong magic number
   expect(() =>
-    decodeHeader(Buffer.from([0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0]))
+    PythGovernanceHeader.decode(
+      Buffer.from([0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0])
+    )
   ).toThrow("Wrong magic number");
 
   // Wrong chain
   expect(() =>
-    decodeHeader(Buffer.from([80, 84, 71, 77, 0, 0, 255, 255, 0, 0, 0, 0]))
+    PythGovernanceHeader.decode(
+      Buffer.from([80, 84, 71, 77, 0, 0, 255, 255, 0, 0, 0, 0])
+    )
   ).toThrow("Chain Id not found");
 
   // Wrong module/action combination
   expect(() =>
-    decodeHeader(Buffer.from([80, 84, 71, 77, 0, 1, 0, 26, 0, 0, 0, 0]))
+    PythGovernanceHeader.decode(
+      Buffer.from([80, 84, 71, 77, 0, 1, 0, 26, 0, 0, 0, 0])
+    )
   ).toThrow("Invalid header, action doesn't match module");
 
   // Decode executePostVaa with empty instructions

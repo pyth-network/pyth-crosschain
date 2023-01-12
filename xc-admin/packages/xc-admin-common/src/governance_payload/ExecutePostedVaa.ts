@@ -1,11 +1,6 @@
 import { ChainId, ChainName } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
-import {
-  encodeHeader,
-  governanceHeaderLayout,
-  PythGovernanceAction,
-  verifyHeader,
-} from ".";
+import { PythGovernanceAction, PythGovernanceHeader } from ".";
 import { Layout } from "@solana/buffer-layout";
 import {
   AccountMeta,
@@ -56,30 +51,20 @@ export const accountMetaLayout = BufferLayout.struct<AccountMetadata>([
   BufferLayout.u8("isSigner"),
   BufferLayout.u8("isWritable"),
 ]);
+
 export const instructionDataLayout = BufferLayout.struct<InstructionData>([
   BufferLayout.blob(32, "programId"),
   new Vector<AccountMetadata>(accountMetaLayout, "accounts"),
   new Vector<number>(BufferLayout.u8(), "data"),
 ]);
 
-export const executePostedVaaLayout: BufferLayout.Structure<
-  Readonly<{
-    header: Readonly<{
-      magicNumber: number;
-      module: number;
-      action: number;
-      chain: ChainId;
-    }>;
-    instructions: InstructionData[];
-  }>
-> = BufferLayout.struct([
-  governanceHeaderLayout(),
-  new Vector<InstructionData>(instructionDataLayout, "instructions"),
-]);
-
 export class ExecutePostedVaa implements PythGovernanceAction {
   readonly targetChainId: ChainName;
   readonly instructions: TransactionInstruction[];
+  static layout: Vector<InstructionData> = new Vector<InstructionData>(
+    instructionDataLayout,
+    "instructions"
+  );
 
   constructor(
     targetChainId: ChainName,
@@ -89,37 +74,36 @@ export class ExecutePostedVaa implements PythGovernanceAction {
     this.instructions = instructions;
   }
 
-  /** Decode ExecutePostedVaaArgs */
+  /** Decode ExecutePostedVaa */
   static decode(data: Buffer): ExecutePostedVaa {
-    let deserialized = executePostedVaaLayout.decode(data);
-
-    let header = verifyHeader(deserialized.header);
-
-    let instructions: TransactionInstruction[] = deserialized.instructions.map(
-      (ix) => {
-        let programId: PublicKey = new PublicKey(ix.programId);
-        let keys: AccountMeta[] = ix.accounts.map((acc) => {
-          return {
-            pubkey: new PublicKey(acc.pubkey),
-            isSigner: Boolean(acc.isSigner),
-            isWritable: Boolean(acc.isWritable),
-          };
-        });
-        let data: Buffer = Buffer.from(ix.data);
-        return { programId, keys, data };
-      }
+    let header = PythGovernanceHeader.decode(data);
+    let deserialized = this.layout.decode(
+      data.subarray(PythGovernanceHeader.span)
     );
+    let instructions: TransactionInstruction[] = deserialized.map((ix) => {
+      let programId: PublicKey = new PublicKey(ix.programId);
+      let keys: AccountMeta[] = ix.accounts.map((acc) => {
+        return {
+          pubkey: new PublicKey(acc.pubkey),
+          isSigner: Boolean(acc.isSigner),
+          isWritable: Boolean(acc.isWritable),
+        };
+      });
+      let data: Buffer = Buffer.from(ix.data);
+      return { programId, keys, data };
+    });
     return new ExecutePostedVaa(header.targetChainId, instructions);
   }
 
-  /** Encode ExecutePostedVaaArgs */
+  /** Encode ExecutePostedVaa */
   encode(): Buffer {
-    // PACKET_DATA_SIZE is the maximum transaction size of Solana, so our serialized payload will never be bigger than that
+    const headerBuffer = new PythGovernanceHeader(
+      this.targetChainId,
+      "ExecutePostedVaa"
+    ).encode();
+
+    // The code will crash if the payload is actually bigger than PACKET_DATA_SIZE. But PACKET_DATA_SIZE is the maximum transaction size of Solana, so our serialized payload should never be bigger than this anyway
     const buffer = Buffer.alloc(PACKET_DATA_SIZE);
-    const offset = encodeHeader(
-      { action: "ExecutePostedVaa", targetChainId: this.targetChainId },
-      buffer
-    );
     let instructions: InstructionData[] = this.instructions.map((ix) => {
       let programId = ix.programId.toBytes();
       let accounts: AccountMetadata[] = ix.keys.map((acc) => {
@@ -133,13 +117,7 @@ export class ExecutePostedVaa implements PythGovernanceAction {
       return { programId, accounts, data };
     });
 
-    const span =
-      offset +
-      new Vector<InstructionData>(instructionDataLayout, "instructions").encode(
-        instructions,
-        buffer,
-        offset
-      );
-    return buffer.subarray(0, span);
+    const span = ExecutePostedVaa.layout.encode(instructions, buffer);
+    return Buffer.concat([headerBuffer, buffer.subarray(0, span)]);
   }
 }
