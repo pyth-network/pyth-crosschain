@@ -108,6 +108,7 @@ beforeAll(async () => {
     getLatestPriceInfo: (_priceFeedId: string) => undefined,
     addUpdateListener: (_callback: (priceInfo: PriceInfo) => any) => undefined,
     getPriceIds: () => new Set(priceInfos.map((info) => info.priceFeed.id)),
+    getVaa: (_vaasCacheKey: string) => null,
   };
 
   api = new WebSocketAPI(priceInfo);

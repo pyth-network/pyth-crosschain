@@ -61,6 +61,7 @@ async function run() {
   const wsAPI = new WebSocketAPI(listener, promClient);
 
   listener.run();
+  listener.removeExpiredValuesFromVaasCache();
   const server = await restAPI.run();
   wsAPI.run(server);
 }

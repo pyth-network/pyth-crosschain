@@ -1,14 +1,21 @@
 import { HexString } from "@pythnetwork/pyth-sdk-js";
 import cors from "cors";
+import * as dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
 import express, { NextFunction, Request, Response } from "express";
 import { Joi, schema, validate, ValidationError } from "express-validation";
 import { Server } from "http";
 import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
-import { TimestampInSec } from "./helpers";
+import fetch from "node-fetch";
+import { envOrErr, TimestampInSec } from "./helpers";
 import { PriceStore } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
+dotenv.config();
+
+const PYTH_WRITER_INSERT_LATENCY_SECONDS = Number(
+  envOrErr("PYTH_WRITER_INSERT_LATENCY_SECONDS")
+);
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
@@ -111,6 +118,52 @@ export class RestAPI {
     );
     endpoints.push(
       "api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
+    );
+
+    const getVaaInputSchema: schema = {
+      query: Joi.object({
+        id: Joi.string()
+          .regex(/^(0x)?[a-f0-9]{64}$/)
+          .required(),
+        // publishTime is of UNIX timestamp type
+        publish_time: Joi.number().required(),
+      }).required(),
+    };
+    app.get(
+      "/api/get_vaa",
+      validate(getVaaInputSchema),
+      (req: Request, res: Response) => {
+        const priceFeedId = req.query.id as string;
+        const publishTime = Number(req.query.publish_time as string);
+        const vaa = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
+        // if publishTime is older than cache ttl or vaa is not found, fetch from db
+        if (
+          publishTime <
+            Math.floor(Date.now() / 1000) -
+              PYTH_WRITER_INSERT_LATENCY_SECONDS ||
+          !vaa
+        ) {
+          // cache miss
+          fetch(
+            `https://web-api.pyth.network/vaa?id=${priceFeedId}&publishTime=${publishTime}&cluster=pythnet`
+          )
+            .then((r: any) => r.json())
+            .then((arr: any) => {
+              if (arr.length > 0 && arr[0]) {
+                res.json(arr[0]);
+              } else {
+                res.status(404).send("VAA not found");
+              }
+            });
+        } else {
+          // cache hit
+          const processedVaa = {publishTime: new Date(vaa.publishTime), vaa: vaa.vaa}
+          res.json(processedVaa);
+        }
+      }
+    );
+    endpoints.push(
+      "api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>"
     );
 
     const latestPriceFeedsInputSchema: schema = {

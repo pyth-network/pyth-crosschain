@@ -2,11 +2,12 @@ import { HexString, Price, PriceFeed } from "@pythnetwork/pyth-sdk-js";
 import { Express } from "express";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
-import { PriceInfo, PriceStore } from "../listen";
+import { PriceInfo, PriceStore, VaaCache } from "../listen";
 import { RestAPI } from "../rest";
 
 let app: Express;
 let priceInfoMap: Map<string, PriceInfo>;
+let vaasCache: VaaCache;
 
 function expandTo64Len(id: string): string {
   return id.repeat(64).substring(0, 64);
@@ -56,6 +57,12 @@ beforeAll(async () => {
     dummyPriceInfoPair(expandTo64Len("3456"), 2, "bad01bad"),
     dummyPriceInfoPair(expandTo64Len("10101"), 3, "bidbidbid"),
   ]);
+  vaasCache = new VaaCache();
+  vaasCache.set(
+    expandTo64Len("abcd"),
+    1,
+    Buffer.from("a1b2c3d4", "hex").toString("base64")
+  );
 
   const priceInfo: PriceStore = {
     getLatestPriceInfo: (priceFeedId: string) => {
@@ -63,6 +70,9 @@ beforeAll(async () => {
     },
     addUpdateListener: (_callback: (priceInfo: PriceInfo) => any) => undefined,
     getPriceIds: () => new Set(),
+    getVaa: (vaasCacheKey: string, publishTime: number) => {
+      return vaasCache.get(vaasCacheKey, publishTime);
+    },
   };
 
   const api = new RestAPI({ port: 8889 }, priceInfo, () => true);
@@ -146,3 +156,17 @@ describe("Latest Vaa Bytes Endpoint", () => {
     expect(resp.body.message).toContain(ids[2]);
   });
 });
+
+// describe("Get Vaa Endpoint", () => {
+//   test("When called with valid id and publish_time, returns vaa string if cached", async () => {
+//     const id = expandTo64Len("abcd");
+//     const resp = await request(app)
+//       .get("/api/get_vaa")
+//       .query({ id, publish_time: 1 });
+//     expect(resp.status).toBe(StatusCodes.OK);
+//     expect(resp.body.length).toBe(8);
+//     expect(resp.body).toContain(
+//       Buffer.from("a1b2c3d4", "hex").toString("base64")
+//     );
+//   });
+// });
