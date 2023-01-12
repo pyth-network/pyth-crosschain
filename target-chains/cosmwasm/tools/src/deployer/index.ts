@@ -1,8 +1,15 @@
-import { CONFIG, CONFIG_TYPE, NetworkConfig } from "./config";
+import { CONFIG_TYPE, NetworkConfig } from "./config";
 import { TerraDeployer } from "./terra";
 import { InjectiveDeployer } from "./injective";
-import { NETWORKS } from "../network";
 import { OsmosisDeployer } from "./osmosis";
+
+export type ContractInfo = {
+  codeId: number;
+  address: string;
+  creator: string;
+  admin: string | undefined;
+  initMsg: any;
+};
 
 export interface Deployer {
   deployArtifact(artifact: string): Promise<number>;
@@ -12,6 +19,8 @@ export interface Deployer {
     label: string
   ): Promise<string>;
   migrate(contract: string, codeId: number): Promise<void>;
+  updateAdmin(newAdmin: string, contract: string): Promise<void>;
+  getContractInfo(contract: string): Promise<ContractInfo>;
 }
 
 export class DeployerFactory {

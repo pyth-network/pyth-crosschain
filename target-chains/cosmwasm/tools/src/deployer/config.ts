@@ -27,6 +27,14 @@ export const CONFIG: Config = {
       name: "testnet",
     },
   },
+  [NETWORKS.TERRA_LOCAL]: {
+    type: CONFIG_TYPE.TERRA,
+    host: {
+      URL: "http://localhost:1317",
+      chainID: "localterra",
+      name: "localterra",
+    },
+  },
   [NETWORKS.INJECTIVE_TESTNET]: {
     type: CONFIG_TYPE.INJECTIVE,
     host: {

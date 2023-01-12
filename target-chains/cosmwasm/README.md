@@ -4,18 +4,19 @@ This directory contains the Pyth contract for CosmWasm and utilities to deploy i
 
 ## Deployment
 
-Deploying the CosmWasm contract has two steps:
+Deploying the CosmWasm contract has three steps:
 
 1. Upload the code. This step will give you a code id.
 2. Either create a new contract or migrate an existing one:
    1. Create a new contract that has an address with a code id as its program.
    2. Migrating an existing contract code id to the new code id.
+3. Update contract's admin to itself.
 
-This directory includes a script to perform both steps. Read below for the details.
+This directory contains the code to perform all the steps. Read below for the details.
 
 ### Uploading the code
 
-First, build the contracts within [the current directory](./):
+First, build the contracts within [the current directory](./). You must have Docker installed.
 
 ```sh
 bash build.sh
@@ -27,59 +28,95 @@ Then, to deploy the Pyth contract (`pyth_cosmwasm.wasm`), run the following comm
 
 ```sh
 npm ci # Do it only once to install the required packages
-npm run deploy-pyth -- --network terra_testnet --artifact ../artifacts/pyth_cosmwasm.wasm --mnemonic "..."
+npm run deploy-pyth -- deploy-artifact --network osmosis_local --mnemonic "online prefer ..." --artifact "../artifacts/pyth_cosmwasm.wasm"
 ```
 
 If successful, this command will print something along the lines of:
 
 ```sh
-Storing WASM: ../artifacts/pyth_cosmwasm.wasm (367689 bytes)
-Deploy fee:  88446uluna
-Code ID:  2435
+Deploying artifact
+Storing WASM: ../artifacts/pyth_cosmwasm.wasm (230813 bytes)
+Broadcasted transaction hash: "BBD2E5DF5046B24287E63C53852D251D4F7DDD7755E663C9EB67A9B5560DFE4C"
+Deployed Code ID:  11
 ```
-
-If you do not pass any additional arguments to the script, it will only upload the code and return the code id. If you want to create a
-new contract or upgrade an existing contract you should pass more arguments that are described below.
 
 ### Instantiating new contract
 
-If you want to instantiate a new contract after your deployment, pass `--instantiate` to the above command.
-This command will upload the code and instantiates a new Pyth contract with the resulting code id:
+This command will upload the code and instantiates a new Pyth contract with the given code id:
 
 ```sh
-npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_cosmwasm.wasm --mnemonic "..." --instantiate
+npm run deploy-pyth -- instantiate --network osmosis_local --code-id 10 --mnemonic "online prefer ..."
 ```
 
 If successful, the output should look like so:
 
 ```
-Storing WASM: ../artifacts/pyth_cosmwasm.wasm (183749 bytes)
-Deploy fee:  44682uluna
-Code ID:  53199
 Instantiating a contract
-Sleeping for 10 seconds for store transaction to finalize.
-Instantiated Pyth at terra123456789yelw23uh22nadqlyjvtl7s5527er97 (0x0000000000000000000000001234567896267ee5479752a7d683e49317ff4294)
-Deployed Pyth contract at terra123456789yelw23uh22nadqlyjvtl7s5527er97
+Broadcasted transaction hash: "5F9689ACEB5A57868F9B305A211962DEA826B1C47900904D39D61449A095ADE1"
+Instantiated pyth at osmo1hzz0s0ucrhdp6tue2lxk3c03nj6f60qy463we7lgx0wudd72ctms64096d (0xb884f83f981dda1d2f9957cd68e1f19cb49d3c04aea2ecfbe833ddc6b7cac2f7)
+Deployed Pyth contract at osmo1hzz0s0ucrhdp6tue2lxk3c03nj6f60qy463we7lgx0wudd72ctms64096d
 ```
 
 ### Migrating existing contract
 
-If you want to upgrade an existing contract pass `--migrate --contract terra123456xyzqwe..` to the above command.
-This command will upload the code, and with the resulting code id, will migrate the existing contract to the new one:
+If you want to upgrade an existing contract pass use the `migrate` command as follows.
+This command will upload the code, and with the given code id, will migrate the existing contract to the new one:
 
 ```sh
-npm run deploy-pyth -- --network testnet --artifact ../artifacts/pyth_cosmwasm.wasm --mnemonic "..." --migrate --contract "terra123..."
+npm run deploy-pyth -- migrate --network osmosis_local --code-id 9 --contract osmo1.. --mnemonic "online prefer ..."
 ```
 
 If successful, the output should look like so:
 
 ```
-Storing WASM: ../artifacts/pyth_cosmwasm.wasm (183749 bytes)
-Deploy fee:  44682uluna
-Code ID:  53227
-Sleeping for 10 seconds for store transaction to finalize.
-Migrating contract terra1rhjej5gkyelw23uh22nadqlyjvtl7s5527er97 to 53227
-Contract terra1rhjej5gkyelw23uh22nadqlyjvtl7s5527er97 code_id successfully updated to 53227
+Migrating contract osmo1hzz0s0ucrhdp6tue2lxk3c03nj6f60qy463we7lgx0wudd72ctms64096d to 9
+Broadcasted transaction hash: "8CF74A7FDBA4264DC58418289D6A256DEA3BBFB89ABD6C0D74C0CEBC29418E52"
+Contract osmo1hzz0s0ucrhdp6tue2lxk3c03nj6f60qy463we7lgx0wudd72ctms64096d code_id successfully updated to 9
+```
+
+### Updating contract's admin
+
+Pyth contracts are owner of their own. To update a smart contract's admin use the following command.
+
+```sh
+npm run deploy-pyth -- update-admin --network osmosis_local --new-admin osmo1.. --contract osmo1... --mnemonic "online prefer ..."
+```
+
+The output should be like.
+
+```
+Updating contract's admin
+Broadcasted transaction hash: "B8AA9E25F3AF28858464622AFABA0C0157BD0CB1814C6DB62ACDD2D240E5B973"
+{
+  codeId: 9,
+  address: 'osmo1hzz0s0ucrhdp6tue2lxk3c03nj6f60qy463we7lgx0wudd72ctms64096d',
+  creator: 'osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks',
+  admin: 'osmo1hzz0s0ucrhdp6tue2lxk3c03nj6f60qy463we7lgx0wudd72ctms64096d',
+  initMsg: undefined
+}
+Contract's admin successfully updates
+```
+
+### Getting contract's info
+
+If you want to check a contract details, use the following command.
+
+```sh
+npm run deploy-pyth -- get-contract-info --network osmosis_local --contract osmo1... --mnemonic "online prefer ..."
+```
+
+The output should be like:
+
+```
+Fetching contract info for: osmo1v6qjx5smfdxnh5gr8vprswl60rstyprj3wh4gz5mg7gcl7mtl5xqkm7gje
+Fetched contract info for: osmo1v6qjx5smfdxnh5gr8vprswl60rstyprj3wh4gz5mg7gcl7mtl5xqkm7gje
+{
+  codeId: 9,
+  address: 'osmo1v6qjx5smfdxnh5gr8vprswl60rstyprj3wh4gz5mg7gcl7mtl5xqkm7gje',
+  creator: 'osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks',
+  admin: 'osmo1v6qjx5smfdxnh5gr8vprswl60rstyprj3wh4gz5mg7gcl7mtl5xqkm7gje',
+  initMsg: undefined
+}
 ```
 
 ### Common Errors
@@ -89,11 +126,4 @@ While running the instantiation/migration commands you might get the following e
 - Gateway timeout: This error means that the request timed out. It is good to double check with terra finder as sometimes transactions succeed despite being timed out.
 - Account sequence mismatch: Transactions from an account should have an increasing sequence number. This error happens when a transaction from the same sender is not fully synchronized with the terra RPC and an old sequence number is used. This is likely to happen because the deploy script sends two transactions: one to submit the code, and one to do the instantiation/migration.
 
-You can rerun your command if you encounter any of the above errors. If an error occurs after the new code is uploaded, you can avoid re-uploading the code and use the uploaded code for instantiation/migration. You can use the printed code id in the logs
-by passing `--code-id <codeId>` instead of `--artifact`. If you do so, the script will skip uploading the code and instantiate/migrate the contract with the given code id.
-
-An example command using an existing code id looks like so:
-
-```sh
-npm run deploy-pyth -- --network testnet --code-id 50123 --mnemonic "..." --migrate --contract "terra123..."
-```
+Sometimes the output might have some node.js warning. But if you see a similar output as mentioned above. Transaction was successful.

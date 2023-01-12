@@ -5,6 +5,7 @@ import {
   MsgInstantiateContract,
   MsgMigrateContract,
   MsgStoreCode,
+  MsgUpdateContractAdmin,
   WaitTxBroadcastResult,
   Wallet,
   isTxError,
@@ -13,7 +14,7 @@ import { readFileSync } from "fs";
 import { Bech32, toHex } from "@cosmjs/encoding";
 import { zeroPad } from "ethers/lib/utils.js";
 import assert from "assert";
-import { Deployer } from ".";
+import { ContractInfo, Deployer } from ".";
 
 export type TerraHost = {
   URL: string;
@@ -133,6 +134,34 @@ export class TerraDeployer implements Deployer {
       console.error(rs.raw_log);
       throw e;
     }
+  }
+
+  /**
+   * update Admin assumes that the deployer instance is the owner of this contract
+   * and may result in error if this isn't the case
+   */
+  async updateAdmin(newAdmin: string, contract: string): Promise<void> {
+    const currAdmin = this.wallet.key.accAddress;
+    const updateAdminMsg = new MsgUpdateContractAdmin(
+      currAdmin,
+      newAdmin,
+      contract
+    );
+
+    await this.signAndBroadcastMsg(updateAdminMsg);
+  }
+
+  async getContractInfo(contract: string): Promise<ContractInfo> {
+    const { code_id, address, creator, admin, init_msg } =
+      await this.wallet.lcd.wasm.contractInfo(contract);
+
+    return {
+      codeId: code_id,
+      address: address ?? contract,
+      creator: creator,
+      admin: admin,
+      initMsg: init_msg,
+    };
   }
 
   static fromHostAndMnemonic(host: TerraHost, mnemonic: string) {

@@ -12,9 +12,11 @@ import {
   TxResponse,
   Msgs,
   MsgMigrateContract,
+  MsgUpdateAdmin,
   createTransactionForAddressAndMsg,
+  ChainGrpcWasmApi,
 } from "@injectivelabs/sdk-ts";
-import { Deployer } from ".";
+import { ContractInfo, Deployer } from ".";
 
 export type InjectiveHost = {
   network: Network;
@@ -34,13 +36,12 @@ export class InjectiveDeployer implements Deployer {
   }
 
   private async signAndBroadcastMsg(
-    msg: Msgs | MsgMigrateContract,
+    msg: Msgs,
     fee = DEFAULT_STD_FEE
   ): Promise<TxResponse> {
     const networkInfo = getNetworkInfo(this.network);
 
     const { signBytes, txRaw } = await createTransactionForAddressAndMsg({
-      // @ts-ignore
       message: msg,
       address: this.injectiveAddress(),
       endpoint: networkInfo.rest,
@@ -167,6 +168,37 @@ export class InjectiveDeployer implements Deployer {
       console.error(txResponse.rawLog);
       throw e;
     }
+  }
+
+  async updateAdmin(newAdmin: string, contract: string): Promise<void> {
+    const currAdmin = this.injectiveAddress();
+
+    const updateAdminMsg = new MsgUpdateAdmin({
+      sender: currAdmin,
+      newAdmin,
+      contract,
+    });
+
+    await this.signAndBroadcastMsg(updateAdminMsg);
+  }
+
+  async getContractInfo(contract: string): Promise<ContractInfo> {
+    const { grpc } = getNetworkInfo(this.network);
+    const api = new ChainGrpcWasmApi(grpc);
+    const contractInfo = await api.fetchContractInfo(contract);
+
+    if (contractInfo === undefined)
+      throw new Error("error fetching contract info");
+
+    const { codeId, creator, admin } = contractInfo;
+
+    return {
+      codeId,
+      address: contract,
+      creator: creator,
+      admin: admin,
+      initMsg: undefined,
+    };
   }
 
   static fromHostAndMnemonic(host: InjectiveHost, mnemonic: string) {
