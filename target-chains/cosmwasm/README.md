@@ -12,7 +12,7 @@ Deploying the CosmWasm contract has three steps:
    2. Migrating an existing contract code id to the new code id.
 3. Update contract's admin to itself.
 
-This directory contians the code to perform all the steps. Read below for the details.
+This directory contains the code to perform all the steps. Read below for the details.
 
 ### Uploading the code
 
