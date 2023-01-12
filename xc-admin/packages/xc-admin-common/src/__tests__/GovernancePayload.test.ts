@@ -1,17 +1,6 @@
 import { ChainName } from "@certusone/wormhole-sdk";
-import {
-  PACKET_DATA_SIZE,
-  PublicKey,
-  SystemProgram,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import {
-  ActionName,
-  decodeExecutePostedVaa,
-  decodeHeader,
-  encodeHeader,
-} from "..";
-import { encodeExecutePostedVaa } from "../governance_payload/ExecutePostedVaa";
+import { PACKET_DATA_SIZE, PublicKey, SystemProgram } from "@solana/web3.js";
+import { ActionName, decodeHeader, encodeHeader, ExecutePostedVaa } from "..";
 
 test("GovernancePayload ser/de", (done) => {
   jest.setTimeout(60000);
@@ -75,32 +64,25 @@ test("GovernancePayload ser/de", (done) => {
   ).toThrow("Invalid header, action doesn't match module");
 
   // Decode executePostVaa with empty instructions
-  let expectedExecuteVaaArgs = {
-    targetChainId: "pythnet" as ChainName,
-    instructions: [] as TransactionInstruction[],
-  };
-  buffer = encodeExecutePostedVaa(expectedExecuteVaaArgs);
+  let expectedExecutePostedVaa = new ExecutePostedVaa("pythnet", []);
+  buffer = expectedExecutePostedVaa.encode();
   expect(
     buffer.equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 26, 0, 0, 0, 0]))
   ).toBeTruthy();
-  let executePostedVaaArgs = decodeExecutePostedVaa(buffer);
+  let executePostedVaaArgs = ExecutePostedVaa.decode(buffer);
   expect(executePostedVaaArgs?.targetChainId).toBe("pythnet");
   expect(executePostedVaaArgs?.instructions.length).toBe(0);
 
   // Decode executePostVaa with one system instruction
-  expectedExecuteVaaArgs = {
-    targetChainId: "pythnet" as ChainName,
-    instructions: [
-      SystemProgram.transfer({
-        fromPubkey: new PublicKey(
-          "AWQ18oKzd187aM2oMB4YirBcdgX1FgWfukmqEX91BRES"
-        ),
-        toPubkey: new PublicKey("J25GT2knN8V2Wvg9jNrYBuj9SZdsLnU6bK7WCGrL7daj"),
-        lamports: 890880,
-      }),
-    ] as TransactionInstruction[],
-  };
-  buffer = encodeExecutePostedVaa(expectedExecuteVaaArgs);
+  expectedExecutePostedVaa = new ExecutePostedVaa("pythnet", [
+    SystemProgram.transfer({
+      fromPubkey: new PublicKey("AWQ18oKzd187aM2oMB4YirBcdgX1FgWfukmqEX91BRES"),
+      toPubkey: new PublicKey("J25GT2knN8V2Wvg9jNrYBuj9SZdsLnU6bK7WCGrL7daj"),
+      lamports: 890880,
+    }),
+  ]);
+
+  buffer = expectedExecutePostedVaa.encode();
   expect(
     buffer.equals(
       Buffer.from([
@@ -115,7 +97,7 @@ test("GovernancePayload ser/de", (done) => {
       ])
     )
   ).toBeTruthy();
-  executePostedVaaArgs = decodeExecutePostedVaa(buffer);
+  executePostedVaaArgs = ExecutePostedVaa.decode(buffer);
   expect(executePostedVaaArgs?.targetChainId).toBe("pythnet");
   expect(executePostedVaaArgs?.instructions.length).toBe(1);
   expect(

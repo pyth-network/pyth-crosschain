@@ -10,7 +10,7 @@ import {
   createWormholeProgramInterface,
   getPostMessageAccounts,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { encodeExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
+import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
 
 type SquadInstruction = {
   instruction: TransactionInstruction;
@@ -152,10 +152,9 @@ export async function wrapAsRemoteInstruction(
     provider
   );
 
-  const buffer = encodeExecutePostedVaa({
-    targetChainId: "pythnet",
-    instructions: [instruction],
-  });
+  const buffer: Buffer = new ExecutePostedVaa("pythnet", [
+    instruction,
+  ]).encode();
 
   const accounts = getPostMessageAccounts(
     wormholeAddress,

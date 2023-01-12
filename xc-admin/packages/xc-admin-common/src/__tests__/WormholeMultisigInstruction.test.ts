@@ -1,4 +1,3 @@
-import { ChainName } from "@certusone/wormhole-sdk";
 import { createWormholeProgramInterface } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { AnchorProvider, Wallet } from "@project-serum/anchor";
 import {
@@ -16,11 +15,8 @@ import {
   MultisigInstructionProgram,
   MultisigParser,
   WORMHOLE_ADDRESS,
+  ExecutePostedVaa,
 } from "..";
-import {
-  encodeExecutePostedVaa,
-  ExecutePostedVaaArgs,
-} from "../governance_payload/ExecutePostedVaa";
 import { WormholeMultisigInstruction } from "../multisig_transaction/WormholeMultisigInstruction";
 
 test("Wormhole multisig instruction parse: send message without governance payload", (done) => {
@@ -184,19 +180,16 @@ test("Wormhole multisig instruction parse: send message with governance payload"
   );
   const parser = MultisigParser.fromCluster(cluster);
 
-  const executePostedVaaArgs: ExecutePostedVaaArgs = {
-    targetChainId: "pythnet" as ChainName,
-    instructions: [
-      SystemProgram.transfer({
-        fromPubkey: PublicKey.unique(),
-        toPubkey: PublicKey.unique(),
-        lamports: 890880,
-      }),
-    ],
-  };
+  const executePostedVaa: ExecutePostedVaa = new ExecutePostedVaa("pythnet", [
+    SystemProgram.transfer({
+      fromPubkey: PublicKey.unique(),
+      toPubkey: PublicKey.unique(),
+      lamports: 890880,
+    }),
+  ]);
 
   wormholeProgram.methods
-    .postMessage(0, encodeExecutePostedVaa(executePostedVaaArgs), 0)
+    .postMessage(0, executePostedVaa.encode(), 0)
     .accounts({
       bridge: PublicKey.unique(),
       message: PublicKey.unique(),
@@ -319,45 +312,47 @@ test("Wormhole multisig instruction parse: send message with governance payload"
 
         expect(parsedInstruction.args.nonce).toBe(0);
         expect(
-          parsedInstruction.args.payload.equals(
-            encodeExecutePostedVaa(executePostedVaaArgs)
-          )
+          parsedInstruction.args.payload.equals(executePostedVaa.encode())
         );
         expect(parsedInstruction.args.consistencyLevel).toBe(0);
 
-        expect(parsedInstruction.args.governanceName).toBe("ExecutePostedVaa");
-
-        expect(parsedInstruction.args.governanceArgs.targetChainId).toBe(
-          "pythnet"
-        );
-
-        (
-          parsedInstruction.args.governanceArgs
-            .instructions as TransactionInstruction[]
-        ).forEach((instruction, i) => {
-          expect(
-            instruction.programId.equals(
-              executePostedVaaArgs.instructions[i].programId
-            )
+        if (
+          parsedInstruction.args.governanceAction instanceof ExecutePostedVaa
+        ) {
+          expect(parsedInstruction.args.governanceAction.targetChainId).toBe(
+            "pythnet"
           );
-          expect(
-            instruction.data.equals(executePostedVaaArgs.instructions[i].data)
-          );
-          instruction.keys.forEach((account, j) => {
+
+          (
+            parsedInstruction.args.governanceAction
+              .instructions as TransactionInstruction[]
+          ).forEach((instruction, i) => {
             expect(
-              account.pubkey.equals(
-                executePostedVaaArgs.instructions[i].keys[j].pubkey
+              instruction.programId.equals(
+                executePostedVaa.instructions[i].programId
               )
-            ).toBeTruthy();
-            expect(account.isSigner).toBe(
-              executePostedVaaArgs.instructions[i].keys[j].isSigner
             );
-            expect(account.isWritable).toBe(
-              executePostedVaaArgs.instructions[i].keys[j].isWritable
+            expect(
+              instruction.data.equals(executePostedVaa.instructions[i].data)
             );
+            instruction.keys.forEach((account, j) => {
+              expect(
+                account.pubkey.equals(
+                  executePostedVaa.instructions[i].keys[j].pubkey
+                )
+              ).toBeTruthy();
+              expect(account.isSigner).toBe(
+                executePostedVaa.instructions[i].keys[j].isSigner
+              );
+              expect(account.isWritable).toBe(
+                executePostedVaa.instructions[i].keys[j].isWritable
+              );
+            });
           });
-        });
-        done();
+          done();
+        } else {
+          done("Not instance of ExecutePostedVaa");
+        }
       } else {
         done("Not instance of WormholeInstruction");
       }
