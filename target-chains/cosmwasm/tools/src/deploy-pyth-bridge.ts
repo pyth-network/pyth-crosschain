@@ -161,10 +161,10 @@ async function migrateHandler(argv: any) {
 async function updateAdminHandler(argv: any) {
   const { network, mnemonic, newAdmin, contract } = argv;
   console.log("Updating contract's admin");
-  await getDeployer(network as NETWORKS, mnemonic as string).updateAdmin(
-    newAdmin,
-    contract
-  );
+  const deployer = getDeployer(network as NETWORKS, mnemonic as string);
+  await deployer.updateAdmin(newAdmin, contract);
+  const info = await deployer.getContractInfo(contract);
+  console.log(info);
   console.log("Contract's admin successfully updates");
 }
 

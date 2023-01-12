@@ -192,7 +192,6 @@ export class OsmosisDeployer implements Deployer {
     const rs = await this.signAndBroadcast(updateAdminMsg);
     if (rs.rawLog === undefined)
       throw new Error("error parsing raw logs: rawLog undefined");
-    console.log(await this.getContractInfo(contract));
   }
 
   async getContractInfo(contract: string): Promise<ContractInfo> {

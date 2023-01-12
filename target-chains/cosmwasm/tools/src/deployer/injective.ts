@@ -180,7 +180,6 @@ export class InjectiveDeployer implements Deployer {
     });
 
     await this.signAndBroadcastMsg(updateAdminMsg);
-    console.log(await this.getContractInfo(contract));
   }
 
   async getContractInfo(contract: string): Promise<ContractInfo> {
