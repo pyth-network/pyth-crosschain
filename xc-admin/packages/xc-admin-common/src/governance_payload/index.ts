@@ -13,17 +13,11 @@ export interface PythGovernanceAction {
   encode(): Buffer;
 }
 
-/** Magic number */
-export const MAGIC_NUMBER = 0x4d475450;
-
-export const MODULE_EXECUTOR = 0;
 /** Each of the actions that can be directed to the Executor Module */
 export const ExecutorAction = {
   ExecutePostedVaa: 0,
 } as const;
 
-/** Each of the actions that can be directed to the Target Module */
-export const MODULE_TARGET = 1;
 export const TargetAction = {
   UpgradeContract: 0,
   AuthorizeGovernanceDataSourceTransfer: 1,
@@ -32,10 +26,6 @@ export const TargetAction = {
   SetValidPeriod: 4,
   RequestGovernanceDataSourceTransfer: 5,
 } as const;
-
-export declare type ActionName =
-  | keyof typeof ExecutorAction
-  | keyof typeof TargetAction;
 
 /** Helper to get the ActionName from a (moduleId, actionId) tuple*/
 export function toActionName(
@@ -61,6 +51,10 @@ export function toActionName(
   }
   throw new Error("Invalid header, action doesn't match module");
 }
+
+export declare type ActionName =
+  | keyof typeof ExecutorAction
+  | keyof typeof TargetAction;
 
 /** Governance header that should be in every Pyth crosschain governance message*/
 export class PythGovernanceHeader {
@@ -134,6 +128,10 @@ export class PythGovernanceHeader {
     return buffer.subarray(0, span);
   }
 }
+
+export const MAGIC_NUMBER = 0x4d475450;
+export const MODULE_EXECUTOR = 0;
+export const MODULE_TARGET = 1;
 
 /** Decode a governance payload */
 export function decodeGovernancePayload(data: Buffer): PythGovernanceAction {
