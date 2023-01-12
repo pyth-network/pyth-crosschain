@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 
 P2W_SOL_ADDRESS = os.environ.get(
-    "P2W_SOL_ADDRESS", "P2WH424242424242424242424242424242424242424"
+    "P2W_SOL_ADDRESS", "Bca8V1z69142rGcoxEo5j3xrVT1QYZewwX57tkamqgLQ"
 )
 P2W_OWNER_KEYPAIR = os.environ.get(
     "P2W_OWNER_KEYPAIR", "/solana-secrets/p2w_owner.json"
@@ -42,9 +42,6 @@ if P2W_INITIALIZE_SOL_CONTRACT is not None:
     # Get actor pubkeys
     P2W_OWNER_ADDRESS = sol_run_or_die(
         "address", ["--keypair", P2W_OWNER_KEYPAIR], capture_output=True
-    ).stdout.strip()
-    PYTH_OWNER_ADDRESS = sol_run_or_die(
-        "address", ["--keypair", PYTH_PROGRAM_KEYPAIR], capture_output=True,
     ).stdout.strip()
 
     init_result = run_or_die(

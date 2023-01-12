@@ -45,7 +45,7 @@ spec:
             - FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH
             - /opt/solana/deps/pyth_oracle.so
             - --bpf-program
-            - P2WH424242424242424242424242424242424242424
+            - Bca8V1z69142rGcoxEo5j3xrVT1QYZewwX57tkamqgLQ
             - /opt/solana/deps/pyth_wormhole_attester.so
             - --bpf-program
             - SMPLVC8MxZ5Bf5EfF7PaMiTCxoBAcmkbM2vkrvMK8ho # copied from squads-mpl/programs/mesh/src/lib.rs
