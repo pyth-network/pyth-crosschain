@@ -66,7 +66,7 @@ export const CONFIG: Record<Cluster, Config> = {
   },
   localdevnet: {
     wormholeClusterName: "DEVNET",
-    vault: new PublicKey("DFkA5ubJSETKiFnniAsm8qRXUa7RrnnE7U9awTzbcrJF"),
+    vault: new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
     wormholeRpcEndpoint: "http://guardian:7071",
   },
 };
