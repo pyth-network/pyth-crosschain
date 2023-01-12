@@ -63,11 +63,9 @@ RUN --mount=type=cache,target=/usr/src/bridge/wormhole/solana/target \
     --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/root/.cache \
     cargo build-bpf --manifest-path "bridge/wormhole/solana/bridge/program/Cargo.toml" -- --locked && \
-    cargo build-bpf --manifest-path "bridge/wormhole/solana/bridge/cpi_poster/Cargo.toml" -- --locked && \
     cargo build-bpf --manifest-path "wormhole-attester/program/Cargo.toml" -- --locked && \
     cargo build-bpf --manifest-path "squads/squads-mpl/programs/mesh/Cargo.toml" -- --locked && \
     cp bridge/wormhole/solana/target/deploy/bridge.so /opt/solana/deps/bridge.so && \
-    cp bridge/wormhole/solana/target/deploy/cpi_poster.so /opt/solana/deps/cpi_poster.so && \
     cp wormhole-attester/target/deploy/pyth_wormhole_attester.so /opt/solana/deps/pyth_wormhole_attester.so && \
     cp squads/squads-mpl/target/deploy/mesh.so /opt/solana/deps/mesh.so
 
