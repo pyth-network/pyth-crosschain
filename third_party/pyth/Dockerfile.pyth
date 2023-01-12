@@ -17,7 +17,6 @@ ENV PYTH_KEY_STORE=/home/pyth/.pythd
 WORKDIR $PYTH_KEY_STORE
 
 RUN cp /solana-secrets/pyth_publisher.json publish_key_pair.json && \
-    cp /solana-secrets/pyth_program.json program_key_pair.json && \
     chown pyth:pyth -R . && \
     chmod go-rwx -R .
 

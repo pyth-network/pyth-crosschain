@@ -16,8 +16,8 @@ SOL_PAYER_KEYPAIR = os.environ.get(
 PYTH = os.environ.get("PYTH", "./pyth")
 PYTH_ADMIN = os.environ.get("PYTH_ADMIN", "./pyth_admin")
 PYTH_KEY_STORE = os.environ.get("PYTH_KEY_STORE", "/home/pyth/.pythd")
-PYTH_PROGRAM_KEYPAIR = os.environ.get(
-    "PYTH_PROGRAM_KEYPAIR", f"{PYTH_KEY_STORE}/publish_key_pair.json"
+PYTH_OWNER_ADDRESS = os.environ.get(
+    "PYTH_PROGRAM_ADDRESS", "DgpbK8SiypiUHBkBTAunMnwRWF3McGGR4iKxTrTfTXq4"
 )
 PYTH_PROGRAM_SO_PATH = os.environ.get("PYTH_PROGRAM_SO", "../target/oracle.so")
 PYTH_PUBLISHER_KEYPAIR = os.environ.get(
