@@ -63,6 +63,7 @@ export const instructionDataLayout = BufferLayout.struct<InstructionData>([
   new Vector<number>(BufferLayout.u8(), "data"),
 ]);
 
+/** A governance action used for executing remote instructions in Pythnet */
 export class ExecutePostedVaa implements PythGovernanceAction {
   readonly targetChainId: ChainName;
   readonly instructions: TransactionInstruction[];
@@ -79,7 +80,7 @@ export class ExecutePostedVaa implements PythGovernanceAction {
     this.instructions = instructions;
   }
 
-  /** Decode ExecutePostedVaaArgs */
+  /** Decode ExecutePostedVaa */
   static decode(data: Buffer): ExecutePostedVaa {
     let header = PythGovernanceHeader.decode(data);
     let deserialized = this.layout.decode(
@@ -100,7 +101,7 @@ export class ExecutePostedVaa implements PythGovernanceAction {
     return new ExecutePostedVaa(header.targetChainId, instructions);
   }
 
-  /** Encode ExecutePostedVaaArgs */
+  /** Encode ExecutePostedVaa */
   encode(): Buffer {
     const headerBuffer = new PythGovernanceHeader(
       this.targetChainId,

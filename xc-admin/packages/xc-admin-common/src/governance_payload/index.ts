@@ -13,10 +13,17 @@ export interface PythGovernanceAction {
   encode(): Buffer;
 }
 
+/** Magic number */
+export const MAGIC_NUMBER = 0x4d475450;
+
+export const MODULE_EXECUTOR = 0;
+/** Each of the actions that can be directed to the Executor Module */
 export const ExecutorAction = {
   ExecutePostedVaa: 0,
 } as const;
 
+/** Each of the actions that can be directed to the Target Module */
+export const MODULE_TARGET = 1;
 export const TargetAction = {
   UpgradeContract: 0,
   AuthorizeGovernanceDataSourceTransfer: 1,
@@ -26,6 +33,11 @@ export const TargetAction = {
   RequestGovernanceDataSourceTransfer: 5,
 } as const;
 
+export declare type ActionName =
+  | keyof typeof ExecutorAction
+  | keyof typeof TargetAction;
+
+/** Helper to get the ActionName from a (moduleId, actionId) tuple*/
 export function toActionName(
   deserialized: Readonly<{ moduleId: number; actionId: number }>
 ): ActionName {
@@ -49,14 +61,8 @@ export function toActionName(
   }
   throw new Error("Invalid header, action doesn't match module");
 }
-export declare type ActionName =
-  | keyof typeof ExecutorAction
-  | keyof typeof TargetAction;
 
-export const MAGIC_NUMBER = 0x4d475450;
-export const MODULE_EXECUTOR = 0;
-export const MODULE_TARGET = 1;
-
+/** Governance header that should be in every Pyth crosschain governance message*/
 export class PythGovernanceHeader {
   readonly targetChainId: ChainName;
   readonly action: ActionName;
@@ -103,6 +109,7 @@ export class PythGovernanceHeader {
     );
   }
 
+  /** Encode Pyth Governance Header */
   encode(): Buffer {
     // The code will crash if the payload is actually bigger than PACKET_DATA_SIZE. But PACKET_DATA_SIZE is the maximum transaction size of Solana, so our serialized payload should never be bigger than this anyway
     const buffer = Buffer.alloc(PACKET_DATA_SIZE);
@@ -128,6 +135,7 @@ export class PythGovernanceHeader {
   }
 }
 
+/** Decode a governance payload */
 export function decodeGovernancePayload(data: Buffer): PythGovernanceAction {
   const header = PythGovernanceHeader.decode(data);
   switch (header.action) {
