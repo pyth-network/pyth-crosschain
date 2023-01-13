@@ -8,4 +8,5 @@ export const WORMHOLE_ADDRESS: Record<PythCluster, PublicKey | undefined> = {
   pythnet: new PublicKey("H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU"),
   localnet: new PublicKey("gMYYig2utAxVoXnM9UhtTWrt8e7x2SVBZqsWZJeT5Gw"),
   testnet: undefined,
+  localnet: new PublicKey("gMYYig2utAxVoXnM9UhtTWrt8e7x2SVBZqsWZJeT5Gw"),
 };
