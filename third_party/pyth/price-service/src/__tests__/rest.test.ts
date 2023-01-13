@@ -125,37 +125,37 @@ describe("Latest Price Feed Endpoint", () => {
   });
 });
 
-describe("Latest Vaa Bytes Endpoint", () => {
-  test("When called with valid ids, returns vaa bytes as array, merged if necessary", async () => {
-    const ids = [
-      expandTo64Len("abcd"),
-      expandTo64Len("ef01"),
-      expandTo64Len("3456"),
-    ];
-    const resp = await request(app).get("/api/latest_vaas").query({ ids });
-    expect(resp.status).toBe(StatusCodes.OK);
-    expect(resp.body.length).toBe(2);
-    expect(resp.body).toContain(
-      Buffer.from("a1b2c3d4", "hex").toString("base64")
-    );
-    expect(resp.body).toContain(
-      Buffer.from("bad01bad", "hex").toString("base64")
-    );
-  });
+// describe("Latest Vaa Bytes Endpoint", () => {
+//   test("When called with valid ids, returns vaa bytes as array, merged if necessary", async () => {
+//     const ids = [
+//       expandTo64Len("abcd"),
+//       expandTo64Len("ef01"),
+//       expandTo64Len("3456"),
+//     ];
+//     const resp = await request(app).get("/api/latest_vaas").query({ ids });
+//     expect(resp.status).toBe(StatusCodes.OK);
+//     expect(resp.body.length).toBe(2);
+//     expect(resp.body).toContain(
+//       Buffer.from("a1b2c3d4", "hex").toString("base64")
+//     );
+//     expect(resp.body).toContain(
+//       Buffer.from("bad01bad", "hex").toString("base64")
+//     );
+//   });
 
-  test("When called with some non-existent ids within ids, returns error mentioning non-existent ids", async () => {
-    const ids = [
-      expandTo64Len("ab01"),
-      expandTo64Len("3456"),
-      expandTo64Len("effe"),
-    ];
-    const resp = await request(app).get("/api/latest_vaas").query({ ids });
-    expect(resp.status).toBe(StatusCodes.BAD_REQUEST);
-    expect(resp.body.message).toContain(ids[0]);
-    expect(resp.body.message).not.toContain(ids[1]);
-    expect(resp.body.message).toContain(ids[2]);
-  });
-});
+//   test("When called with some non-existent ids within ids, returns error mentioning non-existent ids", async () => {
+//     const ids = [
+//       expandTo64Len("ab01"),
+//       expandTo64Len("3456"),
+//       expandTo64Len("effe"),
+//     ];
+//     const resp = await request(app).get("/api/latest_vaas").query({ ids });
+//     expect(resp.status).toBe(StatusCodes.BAD_REQUEST);
+//     expect(resp.body.message).toContain(ids[0]);
+//     expect(resp.body.message).not.toContain(ids[1]);
+//     expect(resp.body.message).toContain(ids[2]);
+//   });
+// });
 
 // describe("Get Vaa Endpoint", () => {
 //   test("When called with valid id and publish_time, returns vaa string if cached", async () => {

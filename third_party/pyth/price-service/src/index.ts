@@ -52,6 +52,8 @@ async function run() {
   const restAPI = new RestAPI(
     {
       port: parseInt(envOrErr("REST_PORT"), 10),
+      dbApiEndpoint: process.env.DB_API_ENDPOINT,
+      dbApiCluster: process.env.DB_API_CLUSTER,
     },
     listener,
     isReady,

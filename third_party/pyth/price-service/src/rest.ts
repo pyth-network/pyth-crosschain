@@ -13,10 +13,6 @@ import { logger } from "./logging";
 import { PromClient } from "./promClient";
 dotenv.config();
 
-const PYTH_WRITER_INSERT_LATENCY_SECONDS = Number(
-  envOrErr("PYTH_WRITER_INSERT_LATENCY_SECONDS")
-);
-
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
   ' :status :res[content-length] :response-time ms ":referrer" ":user-agent"';
@@ -43,14 +39,18 @@ export class RestAPI {
   private priceFeedVaaInfo: PriceStore;
   private isReady: (() => boolean) | undefined;
   private promClient: PromClient | undefined;
+  private dbApiEndpoint?: string;
+  private dbApiCluster?: string;
 
   constructor(
-    config: { port: number },
+    config: { port: number, dbApiEndpoint?: string, dbApiCluster?: string },
     priceFeedVaaInfo: PriceStore,
     isReady?: () => boolean,
-    promClient?: PromClient
+    promClient?: PromClient,
   ) {
     this.port = config.port;
+    this.dbApiEndpoint = config.dbApiEndpoint;
+    this.dbApiCluster = config.dbApiCluster;
     this.priceFeedVaaInfo = priceFeedVaaInfo;
     this.isReady = isReady;
     this.promClient = promClient;
@@ -136,16 +136,11 @@ export class RestAPI {
         const publishTime = Number(req.query.publish_time as string);
         const vaa = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
         // if publishTime is older than cache ttl or vaa is not found, fetch from db
-        if (
-          publishTime <
-            Math.floor(Date.now() / 1000) -
-              PYTH_WRITER_INSERT_LATENCY_SECONDS ||
-          !vaa
-        ) {
+        if (!vaa) {
           // cache miss
-          if (process.env["WEB_API_ENDPOINT"]) {
+          if (this.dbApiEndpoint && this.dbApiCluster) {
             fetch(
-              `${process.env["WEB_API_ENDPOINT"]}/vaa?id=${priceFeedId}&publishTime=${publishTime}&cluster=pythnet`
+              `${this.dbApiEndpoint}/vaa?id=${priceFeedId}&publishTime=${publishTime}&cluster=${this.dbApiCluster}`
             )
               .then((r: any) => r.json())
               .then((arr: any) => {

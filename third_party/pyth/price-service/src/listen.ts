@@ -49,6 +49,8 @@ type ListenerConfig = {
   spyServiceHost: string;
   filtersRaw?: string;
   readiness: ListenerReadinessConfig;
+  webApiEndpoint?: string;
+  webApiCluster?: string;
 };
 
 type VaaKey = string;
@@ -85,6 +87,9 @@ export class VaaCache {
   }
 
   find(arr: VaaConfig[], publishTime: number): VaaConfig | undefined {
+    if (arr.length === 0 || publishTime < arr[0].publishTime) {
+      return undefined;
+    }
     let left = 0;
     let right = arr.length - 1;
     let nextLargest = -1;

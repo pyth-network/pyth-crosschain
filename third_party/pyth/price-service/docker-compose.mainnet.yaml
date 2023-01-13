@@ -37,11 +37,10 @@ services:
       READINESS_SPY_SYNC_TIME_SECONDS: "20"
       READINESS_NUM_LOADED_SYMBOLS: "50"
       LOG_LEVEL: warning
-      CLUSTER: pythnet
+      DB_API_CLUSTER: pythnet
       REMOVE_EXPIRED_VALUES_INTERVAL_SECONDS: "60"
-      PYTH_WRITER_INSERT_LATENCY_SECONDS: "30"
       CACHE_TTL_SECONDS: "300"
-      WEB_API_ENDPOINT: "https://web-api.pyth.network"
+      DB_API_ENDPOINT: "https://web-api.pyth.network"
     healthcheck:
       test:
         [
