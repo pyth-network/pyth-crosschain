@@ -169,7 +169,7 @@ export class Listener implements PriceStore {
     logger.info("loaded " + this.filters.length + " filters");
   }
 
-  async removeExpiredValuesFromVaasCache() {
+  async runCacheCleanupLoop() {
     const REMOVE_EXPIRED_VALUES_INTERVAL_SECONDS = Number(
       envOrErr("REMOVE_EXPIRED_VALUES_INTERVAL_SECONDS")
     );
