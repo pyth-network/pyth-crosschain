@@ -85,20 +85,13 @@ export class PythGovernanceHeader {
   }
   /** Decode Pyth Governance Header */
   static decode(data: Buffer): PythGovernanceHeader | undefined {
-    let deserialized;
-    try {
-      deserialized = this.layout.decode(data);
-    } catch {
-      return undefined;
-    }
+    const deserialized = safeLayoutDecode(this.layout, data);
 
-    if (deserialized.magicNumber !== MAGIC_NUMBER) {
-      return undefined;
-    }
+    if (!deserialized) return undefined;
 
-    if (!toChainName(deserialized.chain)) {
-      return undefined;
-    }
+    if (deserialized.magicNumber !== MAGIC_NUMBER) return undefined;
+
+    if (!toChainName(deserialized.chain)) return undefined;
 
     const actionName = toActionName({
       actionId: deserialized.action,
@@ -150,15 +143,24 @@ export function decodeGovernancePayload(
   data: Buffer
 ): PythGovernanceAction | undefined {
   const header = PythGovernanceHeader.decode(data);
-  if (!header) {
-    return undefined;
-  }
+  if (!header) return undefined;
 
   switch (header.action) {
     case "ExecutePostedVaa":
       return ExecutePostedVaa.decode(data);
     default:
       return undefined;
+  }
+}
+
+export function safeLayoutDecode<T>(
+  layout: BufferLayout.Layout<T>,
+  data: Buffer
+): T | undefined {
+  try {
+    return layout.decode(data);
+  } catch {
+    return undefined;
   }
 }
 

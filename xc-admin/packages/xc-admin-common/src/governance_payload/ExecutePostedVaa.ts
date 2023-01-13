@@ -1,6 +1,10 @@
 import { ChainId, ChainName } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
-import { PythGovernanceAction, PythGovernanceHeader } from ".";
+import {
+  PythGovernanceAction,
+  PythGovernanceHeader,
+  safeLayoutDecode,
+} from ".";
 import { Layout } from "@solana/buffer-layout";
 import {
   AccountMeta,
@@ -76,19 +80,14 @@ export class ExecutePostedVaa implements PythGovernanceAction {
 
   /** Decode ExecutePostedVaa */
   static decode(data: Buffer): ExecutePostedVaa | undefined {
-    let header = PythGovernanceHeader.decode(data);
-    if (!header) {
-      return undefined;
-    }
+    const header = PythGovernanceHeader.decode(data);
+    if (!header) return undefined;
 
-    let deserialized;
-    try {
-      deserialized = this.layout.decode(
-        data.subarray(PythGovernanceHeader.span)
-      );
-    } catch {
-      return undefined;
-    }
+    const deserialized = safeLayoutDecode(
+      this.layout,
+      data.subarray(PythGovernanceHeader.span)
+    );
+    if (!deserialized) return undefined;
 
     let instructions: TransactionInstruction[] = deserialized.map((ix) => {
       let programId: PublicKey = new PublicKey(ix.programId);
