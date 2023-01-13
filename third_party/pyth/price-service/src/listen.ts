@@ -170,7 +170,7 @@ export class Listener implements PriceStore {
   }
 
   async runCacheCleanupLoop(interval: number = 60) {
-    setInterval(this.vaasCache.removeExpiredValues, interval * 1000)
+    setInterval(this.vaasCache.removeExpiredValues, interval * 1000);
   }
 
   async run() {
