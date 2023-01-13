@@ -5,6 +5,7 @@ import { Joi, schema, validate, ValidationError } from "express-validation";
 import { Server } from "http";
 import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
+import fetch from "node-fetch";
 import { TimestampInSec } from "./helpers";
 import { PriceStore } from "./listen";
 import { logger } from "./logging";
@@ -36,14 +37,18 @@ export class RestAPI {
   private priceFeedVaaInfo: PriceStore;
   private isReady: (() => boolean) | undefined;
   private promClient: PromClient | undefined;
+  private dbApiEndpoint?: string;
+  private dbApiCluster?: string;
 
   constructor(
-    config: { port: number },
+    config: { port: number; dbApiEndpoint?: string; dbApiCluster?: string },
     priceFeedVaaInfo: PriceStore,
     isReady?: () => boolean,
     promClient?: PromClient
   ) {
     this.port = config.port;
+    this.dbApiEndpoint = config.dbApiEndpoint;
+    this.dbApiCluster = config.dbApiCluster;
     this.priceFeedVaaInfo = priceFeedVaaInfo;
     this.isReady = isReady;
     this.promClient = promClient;
@@ -111,6 +116,51 @@ export class RestAPI {
     );
     endpoints.push(
       "api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
+    );
+
+    const getVaaInputSchema: schema = {
+      query: Joi.object({
+        id: Joi.string()
+          .regex(/^(0x)?[a-f0-9]{64}$/)
+          .required(),
+        publish_time: Joi.number().required(),
+      }).required(),
+    };
+    app.get(
+      "/api/get_vaa",
+      validate(getVaaInputSchema),
+      (req: Request, res: Response) => {
+        const priceFeedId = req.query.id as string;
+        const publishTime = Number(req.query.publish_time as string);
+        const vaa = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
+        // if publishTime is older than cache ttl or vaa is not found, fetch from db
+        if (!vaa) {
+          // cache miss
+          if (this.dbApiEndpoint && this.dbApiCluster) {
+            fetch(
+              `${this.dbApiEndpoint}/vaa?id=${priceFeedId}&publishTime=${publishTime}&cluster=${this.dbApiCluster}`
+            )
+              .then((r: any) => r.json())
+              .then((arr: any) => {
+                if (arr.length > 0 && arr[0]) {
+                  res.json(arr[0]);
+                } else {
+                  res.status(StatusCodes.NOT_FOUND).send("VAA not found");
+                }
+              });
+          }
+        } else {
+          // cache hit
+          const processedVaa = {
+            publishTime: new Date(vaa.publishTime),
+            vaa: vaa.vaa,
+          };
+          res.json(processedVaa);
+        }
+      }
+    );
+    endpoints.push(
+      "api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>"
     );
 
     const latestPriceFeedsInputSchema: schema = {

@@ -8,20 +8,20 @@ import {
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 
 import {
-  getBatchSummary,
-  parseBatchPriceAttestation,
-  priceAttestationToPriceFeed,
-} from "@pythnetwork/p2w-sdk-js";
-import {
   FilterEntry,
   SubscribeSignedVAAResponse,
 } from "@certusone/wormhole-spydk/lib/cjs/proto/spy/v1/spy";
 import { ClientReadableStream } from "@grpc/grpc-js";
+import {
+  getBatchSummary,
+  parseBatchPriceAttestation,
+  priceAttestationToPriceFeed,
+} from "@pythnetwork/p2w-sdk-js";
 import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";
+import LRUCache from "lru-cache";
 import { sleep, TimestampInSec } from "./helpers";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
-import LRUCache from "lru-cache";
 
 export type PriceInfo = {
   vaa: Buffer;
@@ -37,6 +37,7 @@ export interface PriceStore {
   getPriceIds(): Set<HexString>;
   getLatestPriceInfo(priceFeedId: HexString): PriceInfo | undefined;
   addUpdateListener(callback: (priceInfo: PriceInfo) => any): void;
+  getVaa(priceFeedId: string, publishTime: number): VaaConfig | undefined;
 }
 
 type ListenerReadinessConfig = {
@@ -48,9 +49,73 @@ type ListenerConfig = {
   spyServiceHost: string;
   filtersRaw?: string;
   readiness: ListenerReadinessConfig;
+  webApiEndpoint?: string;
+  webApiCluster?: string;
 };
 
 type VaaKey = string;
+
+type VaaConfig = {
+  publishTime: number;
+  vaa: string;
+};
+
+export class VaaCache {
+  private cache: Map<string, VaaConfig[]>;
+  private ttl: number;
+
+  constructor(ttl: number = 300) {
+    this.cache = new Map();
+    this.ttl = ttl;
+  }
+
+  set(key: VaaKey, publishTime: number, vaa: string): void {
+    if (this.cache.has(key)) {
+      this.cache.get(key)!.push({ publishTime, vaa });
+    } else {
+      this.cache.set(key, [{ publishTime, vaa }]);
+    }
+  }
+
+  get(key: VaaKey, publishTime: number): VaaConfig | undefined {
+    if (!this.cache.has(key)) {
+      return undefined;
+    } else {
+      const vaaConf = this.find(this.cache.get(key)!, publishTime);
+      return vaaConf;
+    }
+  }
+
+  find(arr: VaaConfig[], publishTime: number): VaaConfig | undefined {
+    if (arr.length === 0 || publishTime < arr[0].publishTime) {
+      return undefined;
+    }
+    let left = 0;
+    let right = arr.length - 1;
+    let nextLargest = -1;
+
+    while (left <= right) {
+      const middle = Math.floor((left + right) / 2);
+      if (arr[middle].publishTime === publishTime) {
+        return arr[middle];
+      } else if (arr[middle].publishTime < publishTime) {
+        left = middle + 1;
+      } else {
+        nextLargest = middle;
+        right = middle - 1;
+      }
+    }
+
+    return nextLargest !== -1 ? arr[nextLargest] : undefined;
+  }
+
+  async removeExpiredValues() {
+    const now = Math.floor(Date.now() / 1000);
+    for (const arr of this.cache.values()) {
+      arr.filter((vaaConf) => now - vaaConf.publishTime < this.ttl);
+    }
+  }
+}
 
 export class Listener implements PriceStore {
   // Mapping of Price Feed Id to Vaa
@@ -62,6 +127,7 @@ export class Listener implements PriceStore {
   private readinessConfig: ListenerReadinessConfig;
   private updateCallbacks: ((priceInfo: PriceInfo) => any)[];
   private observedVaas: LRUCache<VaaKey, boolean>;
+  private vaasCache: VaaCache;
 
   constructor(config: ListenerConfig, promClient?: PromClient) {
     this.promClient = promClient;
@@ -73,6 +139,7 @@ export class Listener implements PriceStore {
       max: 10000, // At most 10000 items
       ttl: 60 * 1000, // 60 seconds
     });
+    this.vaasCache = new VaaCache();
   }
 
   private loadFilters(filtersRaw?: string) {
@@ -103,6 +170,10 @@ export class Listener implements PriceStore {
     }
 
     logger.info("loaded " + this.filters.length + " filters");
+  }
+
+  async runCacheCleanupLoop(interval: number = 60) {
+    setInterval(this.vaasCache.removeExpiredValues, interval * 1000);
   }
 
   async run() {
@@ -185,13 +256,13 @@ export class Listener implements PriceStore {
     const vaaEmitterAddressHex = Buffer.from(
       parsedVaa.emitter_address
     ).toString("hex");
-    const vaaKey: VaaKey = `${parsedVaa.emitter_chain}#${vaaEmitterAddressHex}#${parsedVaa.sequence}`;
+    const observedVaasKey: VaaKey = `${parsedVaa.emitter_chain}#${vaaEmitterAddressHex}#${parsedVaa.sequence}`;
 
-    if (this.observedVaas.has(vaaKey)) {
+    if (this.observedVaas.has(observedVaasKey)) {
       return;
     }
 
-    this.observedVaas.set(vaaKey, true);
+    this.observedVaas.set(observedVaasKey, true);
     this.promClient?.incReceivedVaa();
 
     let batchAttestation;
@@ -223,6 +294,11 @@ export class Listener implements PriceStore {
       const cachedPriceInfo = this.priceFeedVaaMap.get(key);
 
       if (this.isNewPriceInfo(cachedPriceInfo, priceInfo)) {
+        this.vaasCache.set(
+          priceInfo.priceFeed.id,
+          priceInfo.publishTime,
+          priceInfo.vaa.toString("base64")
+        );
         this.priceFeedVaaMap.set(key, priceInfo);
 
         if (cachedPriceInfo !== undefined) {
@@ -250,6 +326,10 @@ export class Listener implements PriceStore {
         ", Batch Summary: " +
         getBatchSummary(batchAttestation)
     );
+  }
+
+  getVaa(priceFeedId: string, publishTime: number): VaaConfig | undefined {
+    return this.vaasCache.get(priceFeedId, publishTime);
   }
 
   getLatestPriceInfo(priceFeedId: string): PriceInfo | undefined {
