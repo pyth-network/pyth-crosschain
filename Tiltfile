@@ -241,7 +241,7 @@ k8s_resource(
 docker_build(
     ref = "pyth-price-service",
     context = ".",
-    dockerfile = "third_party/pyth/price-service/Dockerfile.price_service",
+    dockerfile = "price-service/Dockerfile.price_service",
 )
 k8s_yaml_with_ns("tilt-devnet/k8s/pyth-price-service.yaml")
 k8s_resource(
@@ -249,7 +249,6 @@ k8s_resource(
     resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet", "wasm-gen"],
     port_forwards = [
         port_forward(4202, container_port = 4200, name = "Rest API (Status + Query) [:4202]", host = webHost),
-        port_forward(6202, container_port = 6200, name = "WSS API [:6202]", host = webHost),
         port_forward(8083, container_port = 8081, name = "Prometheus [:8083]", host = webHost)],
     labels = ["pyth"]
 )
