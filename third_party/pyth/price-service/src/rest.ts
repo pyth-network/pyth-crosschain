@@ -1,17 +1,15 @@
 import { HexString } from "@pythnetwork/pyth-sdk-js";
 import cors from "cors";
-import * as dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
 import express, { NextFunction, Request, Response } from "express";
 import { Joi, schema, validate, ValidationError } from "express-validation";
 import { Server } from "http";
 import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
 import fetch from "node-fetch";
-import { envOrErr, TimestampInSec } from "./helpers";
+import { TimestampInSec } from "./helpers";
 import { PriceStore } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
-dotenv.config();
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
