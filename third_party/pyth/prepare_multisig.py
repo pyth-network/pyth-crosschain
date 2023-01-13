@@ -11,14 +11,13 @@ MULTISIG_SCRIPT_DIR = os.environ.get("MULTISIG_SCRIPT_DIR", "/root/pyth/multisig
 
 MESH_KEY_DIR = "/solana-secrets/squads/"
 MESH_PROGRAM_ADDR = "SMPLVC8MxZ5Bf5EfF7PaMiTCxoBAcmkbM2vkrvMK8ho"
-MESH_CREATE_KEY_PATH = MESH_KEY_DIR + "create_key.json"
 MESH_VAULT_EXT_AUTHORITY_KEY_PATH = MESH_KEY_DIR + "external_authority.json"
 
 ALICE_KEY_PATH = MESH_KEY_DIR + "member_alice.json"
 BOB_KEY_PATH = MESH_KEY_DIR + "member_bob.json"
 CAROL_KEY_PATH = MESH_KEY_DIR + "member_carol.json"
 
-create_key_addr = sol_run_or_die("address", ["--keypair", MESH_CREATE_KEY_PATH], capture_output=True).stdout.strip()
+create_key_addr = "73UuSY2yXat7h7T49MMGg8TiHPqJJKKVc33DmC4b41Hf" # The person that instantiated the multisig on mainnet used this create key, it never needs to sign but we're using it to match mainnet
 ext_authority_addr = sol_run_or_die("address", ["--keypair", MESH_VAULT_EXT_AUTHORITY_KEY_PATH], capture_output=True).stdout.strip()
 
 alice_addr = sol_run_or_die("address", ["--keypair", ALICE_KEY_PATH], capture_output=True).stdout.strip()

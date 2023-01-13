@@ -42,9 +42,6 @@ spec:
             - Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o
             - /opt/solana/deps/bridge.so
             - --bpf-program
-            - CP1co2QMMoDPbsmV7PGcUTLFwyhgCgTXt25gLQ5LewE1
-            - /opt/solana/deps/cpi_poster.so
-            - --bpf-program
             - gMYYig2utAxVoXnM9UhtTWrt8e7x2SVBZqsWZJeT5Gw # Derived from pyth_program.json
             - /opt/solana/deps/pyth_oracle.so
             - --bpf-program
