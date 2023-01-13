@@ -151,7 +151,7 @@ export class RestAPI {
               if (arr.length > 0 && arr[0]) {
                 res.json(arr[0]);
               } else {
-                res.status(404).send("VAA not found");
+                res.status(StatusCodes.NOT_FOUND).send("VAA not found");
               }
             });
         } else {
