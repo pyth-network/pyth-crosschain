@@ -143,17 +143,19 @@ export class RestAPI {
           !vaa
         ) {
           // cache miss
-          fetch(
-            `https://web-api.pyth.network/vaa?id=${priceFeedId}&publishTime=${publishTime}&cluster=pythnet`
-          )
-            .then((r: any) => r.json())
-            .then((arr: any) => {
-              if (arr.length > 0 && arr[0]) {
-                res.json(arr[0]);
-              } else {
-                res.status(StatusCodes.NOT_FOUND).send("VAA not found");
-              }
-            });
+          if (process.env["WEB_API_ENDPOINT"]) {
+            fetch(
+              `https://web-api.pyth.network/vaa?id=${priceFeedId}&publishTime=${publishTime}&cluster=pythnet`
+            )
+              .then((r: any) => r.json())
+              .then((arr: any) => {
+                if (arr.length > 0 && arr[0]) {
+                  res.json(arr[0]);
+                } else {
+                  res.status(StatusCodes.NOT_FOUND).send("VAA not found");
+                }
+              });
+          }
         } else {
           // cache hit
           const processedVaa = {

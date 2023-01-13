@@ -80,3 +80,5 @@ spec:
               value: "30"
             - name: CACHE_TTL_SECONDS
               value: "300"
+            - name: WEB_API_ENDPOINT
+              value: https://web-api.pyth.network
