@@ -60,7 +60,6 @@ pub struct PriceFeed {
     pub ema_price: Price,
 }
 
-// TODO: Source the Timestamp
 impl From<&PriceAttestation> for PriceFeed {
     fn from(price_attestation: &PriceAttestation) -> Self {
         Self {
@@ -88,6 +87,7 @@ impl From<&PriceAttestation> for PriceFeed {
     BorshDeserialize,
     BorshSerialize,
     Clone,
+    Copy,
     Debug,
     Default,
     Deserialize,
@@ -99,11 +99,19 @@ impl From<&PriceAttestation> for PriceFeed {
 )]
 #[serde(crate = "near_sdk::serde")]
 #[repr(transparent)]
-pub struct Chain(pub u16);
+pub struct Chain(u16);
 
+/// Converts from a WormholeChain, rather than a u16. This lets us rely on Wormhole's SDK to
+/// validate the chain identifier.
 impl From<WormholeChain> for Chain {
     fn from(chain: WormholeChain) -> Self {
         Self(u16::from(chain))
+    }
+}
+
+impl From<Chain> for u16 {
+    fn from(chain: Chain) -> Self {
+        chain.0
     }
 }
 
@@ -126,8 +134,8 @@ impl From<WormholeChain> for Chain {
 )]
 #[serde(crate = "near_sdk::serde")]
 pub struct Source {
-    pub emitter:            WormholeAddress,
-    pub pyth_emitter_chain: Chain,
+    pub emitter: WormholeAddress,
+    pub chain:   Chain,
 }
 
 /// A local `Vaa` type converted to from the Wormhole definition, this helps catch any upstream

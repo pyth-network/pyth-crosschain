@@ -7,8 +7,13 @@ use {
         PriceStatus,
     },
     pyth::{
-        governance::GovernanceAction,
+        governance::{
+            GovernanceAction,
+            GovernanceInstruction,
+            GovernanceModule,
+        },
         state::{
+            Chain,
             Price,
             PriceIdentifier,
             Source,
@@ -19,6 +24,7 @@ use {
         Cursor,
         Write,
     },
+    wormhole::Chain as WormholeChain,
 };
 
 async fn initialize_chain() -> (
@@ -44,19 +50,20 @@ async fn initialize_chain() -> (
         .expect("Failed to deploy wormhole_stub.wasm");
 
     // Initialize Wormhole.
-    wormhole
+    let _ = wormhole
         .call("new")
         .args_json(&json!({}))
         .gas(300_000_000_000_000)
-        .transact()
+        .transact_async()
         .await
         .expect("Failed to initialize Wormhole")
+        .await
         .unwrap();
 
     // Initialize Pyth, one time operation that sets the Wormhole contract address.
     let codehash = [0u8; 32];
 
-    contract
+    let _ = contract
         .call("new")
         .args_json(&json!({
             "wormhole":        wormhole.id(),
@@ -67,22 +74,24 @@ async fn initialize_chain() -> (
             "stale_threshold": 32,
         }))
         .gas(300_000_000_000_000)
-        .transact()
+        .transact_async()
         .await
         .expect("Failed to initialize Pyth")
+        .await
         .unwrap();
 
     (worker, contract, wormhole)
 }
 
 #[tokio::test]
-async fn test_source_add() {
+async fn test_set_sources() {
     let (_, contract, _) = initialize_chain().await;
 
     // Submit a new Source to the contract, this will trigger a cross-contract call to wormhole
     let vaa = wormhole::Vaa {
         emitter_chain: wormhole::Chain::Any,
         emitter_address: wormhole::Address([0; 32]),
+        sequence: 1,
         payload: (),
         ..Default::default()
     };
@@ -91,14 +100,21 @@ async fn test_source_add() {
         let mut cur = Cursor::new(Vec::new());
         serde_wormhole::to_writer(&mut cur, &vaa).expect("Failed to serialize VAA");
         cur.write_all(
-            &GovernanceAction::SetDataSources(vec![
-                Source::default(),
-                Source {
-                    emitter:            [1; 32],
-                    pyth_emitter_chain: pyth::state::Chain(1),
+            &GovernanceInstruction {
+                target: Chain::from(WormholeChain::Any),
+                module: GovernanceModule::Target,
+                action: GovernanceAction::SetDataSources {
+                    data_sources: vec![
+                        Source::default(),
+                        Source {
+                            emitter: [1; 32],
+                            chain:   Chain::from(WormholeChain::Solana),
+                        },
+                    ],
                 },
-            ])
-            .serialize(),
+            }
+            .serialize()
+            .unwrap(),
         )
         .expect("Failed to write Payload");
         hex::encode(cur.into_inner())
@@ -111,11 +127,13 @@ async fn test_source_add() {
         .args_json(&json!({
             "vaa": vaa,
         }))
-        .transact()
+        .transact_async()
         .await
         .expect("Failed to submit VAA")
-        .outcome()
-        .is_success());
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
 
     // There should now be a two sources in the contract state.
     assert_eq!(
@@ -124,8 +142,8 @@ async fn test_source_add() {
         &[
             Source::default(),
             Source {
-                emitter:            [1; 32],
-                pyth_emitter_chain: pyth::state::Chain(1),
+                emitter: [1; 32],
+                chain:   Chain::from(WormholeChain::Solana),
             },
         ]
     );
@@ -140,18 +158,51 @@ async fn test_set_governance_source() {
         emitter_chain: wormhole::Chain::Any,
         emitter_address: wormhole::Address([0; 32]),
         payload: (),
+        sequence: 2,
         ..Default::default()
     };
 
     let vaa = {
+        let request_vaa = wormhole::Vaa {
+            emitter_chain: wormhole::Chain::Solana,
+            emitter_address: wormhole::Address([1; 32]),
+            payload: (),
+            sequence: 1,
+            ..Default::default()
+        };
+
+        // Data Source Upgrades are submitted with an embedded VAA, generate that one here first
+        // before we embed it.
+        let request_vaa = {
+            let mut cur = Cursor::new(Vec::new());
+            serde_wormhole::to_writer(&mut cur, &request_vaa).expect("Failed to serialize VAA");
+            cur.write_all(
+                &GovernanceInstruction {
+                    target: Chain::from(WormholeChain::Near),
+                    module: GovernanceModule::Target,
+                    action: GovernanceAction::RequestGovernanceDataSourceTransfer {
+                        governance_data_source_index: 1,
+                    },
+                }
+                .serialize()
+                .unwrap(),
+            )
+            .expect("Failed to write Payload");
+            cur.into_inner()
+        };
+
         let mut cur = Cursor::new(Vec::new());
         serde_wormhole::to_writer(&mut cur, &vaa).expect("Failed to serialize VAA");
         cur.write_all(
-            &GovernanceAction::SetGovernanceSource(Source {
-                emitter:            [1; 32],
-                pyth_emitter_chain: pyth::state::Chain(1),
-            })
-            .serialize(),
+            &GovernanceInstruction {
+                target: Chain::from(WormholeChain::Near),
+                module: GovernanceModule::Target,
+                action: GovernanceAction::AuthorizeGovernanceDataSourceTransfer {
+                    claim_vaa: request_vaa,
+                },
+            }
+            .serialize()
+            .unwrap(),
         )
         .expect("Failed to write Payload");
         hex::encode(cur.into_inner())
@@ -164,15 +215,17 @@ async fn test_set_governance_source() {
         .args_json(&json!({
             "vaa": vaa,
         }))
-        .transact()
+        .transact_async()
         .await
         .expect("Failed to submit VAA")
-        .outcome()
-        .is_success());
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
 
     // An action from the new source should now be accepted.
     let vaa = wormhole::Vaa {
-        sequence: 1, // NOTE: Incremented Governance Sequence
+        sequence: 3, // NOTE: Incremented Governance Sequence
         emitter_chain: wormhole::Chain::Solana,
         emitter_address: wormhole::Address([1; 32]),
         payload: (),
@@ -183,14 +236,21 @@ async fn test_set_governance_source() {
         let mut cur = Cursor::new(Vec::new());
         serde_wormhole::to_writer(&mut cur, &vaa).expect("Failed to serialize VAA");
         cur.write_all(
-            &GovernanceAction::SetDataSources(vec![
-                Source::default(),
-                Source {
-                    emitter:            [2; 32],
-                    pyth_emitter_chain: pyth::state::Chain(2),
+            &GovernanceInstruction {
+                target: Chain::from(WormholeChain::Near),
+                module: GovernanceModule::Target,
+                action: GovernanceAction::SetDataSources {
+                    data_sources: vec![
+                        Source::default(),
+                        Source {
+                            emitter: [2; 32],
+                            chain:   Chain::from(WormholeChain::Solana),
+                        },
+                    ],
                 },
-            ])
-            .serialize(),
+            }
+            .serialize()
+            .unwrap(),
         )
         .expect("Failed to write Payload");
         hex::encode(cur.into_inner())
@@ -203,15 +263,17 @@ async fn test_set_governance_source() {
         .args_json(&json!({
             "vaa": vaa,
         }))
-        .transact()
+        .transact_async()
         .await
         .expect("Failed to submit VAA")
-        .outcome()
-        .is_success());
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
 
     // But not from the old source.
     let vaa = wormhole::Vaa {
-        sequence: 1, // NOTE: Incremented Governance Sequence
+        sequence: 4, // NOTE: Incremented Governance Sequence
         emitter_chain: wormhole::Chain::Any,
         emitter_address: wormhole::Address([0; 32]),
         payload: (),
@@ -222,31 +284,40 @@ async fn test_set_governance_source() {
         let mut cur = Cursor::new(Vec::new());
         serde_wormhole::to_writer(&mut cur, &vaa).expect("Failed to serialize VAA");
         cur.write_all(
-            &GovernanceAction::SetDataSources(vec![
-                Source::default(),
-                Source {
-                    emitter:            [2; 32],
-                    pyth_emitter_chain: pyth::state::Chain(2),
+            &GovernanceInstruction {
+                target: Chain::from(WormholeChain::Near),
+                module: GovernanceModule::Target,
+                action: GovernanceAction::SetDataSources {
+                    data_sources: vec![
+                        Source::default(),
+                        Source {
+                            emitter: [2; 32],
+                            chain:   Chain::from(WormholeChain::Solana),
+                        },
+                    ],
                 },
-            ])
-            .serialize(),
+            }
+            .serialize()
+            .unwrap(),
         )
         .expect("Failed to write Payload");
         hex::encode(cur.into_inner())
     };
 
-    assert!(!contract
+    assert!(contract
         .call("execute_governance_instruction")
         .gas(300_000_000_000_000)
         .deposit(300_000_000_000_000_000_000_000)
         .args_json(&json!({
             "vaa": vaa,
         }))
-        .transact()
+        .transact_async()
         .await
         .expect("Failed to submit VAA")
+        .await
+        .unwrap()
         .outcome()
-        .is_failure());
+        .is_success());
 }
 
 #[tokio::test]
@@ -258,6 +329,7 @@ async fn test_stale_threshold() {
         emitter_chain: wormhole::Chain::Any,
         emitter_address: wormhole::Address([0; 32]),
         payload: (),
+        sequence: 1,
         ..Default::default()
     };
 
@@ -302,13 +374,16 @@ async fn test_stale_threshold() {
     let update_fee = serde_json::from_slice::<U128>(
         &contract
             .view("get_update_fee_estimate")
-            .args(vec![])
+            .args_json(&json!({
+                "vaa": vaa,
+            }))
             .await
             .unwrap()
             .result,
     )
     .unwrap();
 
+    // Submit price. As there are no prices this should succeed despite being old.
     assert!(contract
         .call("update_price_feed")
         .gas(300_000_000_000_000)
@@ -316,14 +391,16 @@ async fn test_stale_threshold() {
         .args_json(&json!({
             "vaa_hex": vaa,
         }))
-        .transact()
+        .transact_async()
         .await
         .expect("Failed to submit VAA")
-        .outcome()
-        .is_success());
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
 
-    // Assert Price cannot be requested, 60 seconds in the past should be considered stale.
-    // [tag:failed_price_check]
+    // Despite succeeding, assert Price cannot be requested, 60 seconds in the past should be
+    // considered stale. [tag:failed_price_check]
     assert_eq!(
         None,
         serde_json::from_slice::<Option<Price>>(
@@ -337,11 +414,12 @@ async fn test_stale_threshold() {
         .unwrap(),
     );
 
-    // Submit another Price Attestation to the contract with an even older timestamp.
+    // Submit another Price Attestation to the contract with an even older timestamp. Which
+    // should now fail due to the existing newer price.
     let vaa = wormhole::Vaa {
         emitter_chain: wormhole::Chain::Any,
         emitter_address: wormhole::Address([0; 32]),
-        sequence: 1,
+        sequence: 2,
         payload: (),
         ..Default::default()
     };
@@ -376,7 +454,7 @@ async fn test_stale_threshold() {
         hex::encode(cur.into_inner())
     };
 
-    // The update handler should succeed even if price is old, but simply not update the price.
+    // The update handler should now succeed even if price is old, but simply not update the price.
     assert!(contract
         .call("update_price_feed")
         .gas(300_000_000_000_000)
@@ -384,11 +462,13 @@ async fn test_stale_threshold() {
         .args_json(&json!({
             "vaa_hex": vaa,
         }))
-        .transact()
+        .transact_async()
         .await
         .expect("Failed to submit VAA")
-        .outcome()
-        .is_success());
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
 
     // The price however should _not_ have updated and if we check the unsafe stored price the
     // timestamp and price should be unchanged.
@@ -414,7 +494,7 @@ async fn test_stale_threshold() {
     let vaa = wormhole::Vaa {
         emitter_chain: wormhole::Chain::Any,
         emitter_address: wormhole::Address([0; 32]),
-        sequence: 2,
+        sequence: 3,
         payload: (),
         ..Default::default()
     };
@@ -422,8 +502,16 @@ async fn test_stale_threshold() {
     let vaa = {
         let mut cur = Cursor::new(Vec::new());
         serde_wormhole::to_writer(&mut cur, &vaa).unwrap();
-        cur.write_all(&GovernanceAction::SetStalePriceThreshold(256).serialize())
-            .unwrap();
+        cur.write_all(
+            &GovernanceInstruction {
+                target: Chain::from(WormholeChain::Near),
+                module: GovernanceModule::Target,
+                action: GovernanceAction::SetValidPeriod { valid_seconds: 256 },
+            }
+            .serialize()
+            .unwrap(),
+        )
+        .unwrap();
         hex::encode(cur.into_inner())
     };
 
@@ -434,11 +522,13 @@ async fn test_stale_threshold() {
         .args_json(&json!({
             "vaa": vaa,
         }))
-        .transact()
+        .transact_async()
         .await
         .expect("Failed to submit VAA")
-        .outcome()
-        .is_success());
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
 
     // It should now be possible to request the price that previously returned None.
     // [ref:failed_price_check]
@@ -470,34 +560,45 @@ async fn test_contract_fees() {
         .expect("Failed to get UNIX timestamp")
         .as_secs();
 
-    // Fetch Update fee before changing it.
-    let update_fee = serde_json::from_slice::<U128>(
-        &contract
-            .view("get_update_fee_estimate")
-            .args(vec![])
-            .await
-            .unwrap()
-            .result,
-    )
-    .unwrap();
-
     // Set a high fee for the contract needed to submit a price.
     let vaa = wormhole::Vaa {
         emitter_chain: wormhole::Chain::Any,
         emitter_address: wormhole::Address([0; 32]),
         payload: (),
+        sequence: 1,
         ..Default::default()
     };
 
     let vaa = {
         let mut cur = Cursor::new(Vec::new());
         serde_wormhole::to_writer(&mut cur, &vaa).unwrap();
-        cur.write_all(&GovernanceAction::SetUpdateFee(u64::MAX).serialize())
-            .unwrap();
+        cur.write_all(
+            &GovernanceInstruction {
+                target: Chain::from(WormholeChain::Near),
+                module: GovernanceModule::Target,
+                action: GovernanceAction::SetFee { base: 128, expo: 8 },
+            }
+            .serialize()
+            .unwrap(),
+        )
+        .unwrap();
         hex::encode(cur.into_inner())
     };
 
-    // Now set the update_fee too high for the deposit to cover.
+    // Fetch Update fee before changing it.
+    let update_fee = serde_json::from_slice::<U128>(
+        &contract
+            .view("get_update_fee_estimate")
+            .args_json(&json!({
+                "vaa": vaa,
+            }))
+            .await
+            .unwrap()
+            .result,
+    )
+    .unwrap();
+
+    // Now set the update_fee so that it is too high for the deposit to cover.
     assert!(contract
         .call("execute_governance_instruction")
         .gas(300_000_000_000_000)
@@ -505,30 +606,37 @@ async fn test_contract_fees() {
         .args_json(&json!({
             "vaa": vaa,
         }))
-        .transact()
+        .transact_async()
         .await
         .expect("Failed to submit VAA")
-        .outcome()
-        .is_success());
-
-    assert_ne!(
-        update_fee,
-        serde_json::from_slice::<U128>(
-            &contract
-                .view("get_update_fee_estimate")
-                .args(vec![])
-                .await
-                .unwrap()
-                .result,
-        )
+        .await
         .unwrap()
+        .failures()
+        .is_empty());
+
+    // Check the state has actually changed before we try and execute another VAA.
+    assert_ne!(
+        u128::from(update_fee),
+        u128::from(
+            serde_json::from_slice::<U128>(
+                &contract
+                    .view("get_update_fee_estimate")
+                    .args_json(&json!({
+                        "vaa": vaa,
+                    }))
+                    .await
+                    .unwrap()
+                    .result,
+            )
+            .unwrap()
+        )
     );
 
     // Attempt to update the price feed with a now too low deposit.
     let vaa = wormhole::Vaa {
         emitter_chain: wormhole::Chain::Any,
         emitter_address: wormhole::Address([0; 32]),
-        sequence: 1,
+        sequence: 2,
         payload: (),
         ..Default::default()
     };
@@ -570,11 +678,13 @@ async fn test_contract_fees() {
         .args_json(&json!({
             "vaa_hex": vaa,
         }))
-        .transact()
+        .transact_async()
         .await
         .expect("Failed to submit VAA")
-        .outcome()
-        .is_success());
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
 
     // Submitting a Price should have failed because the fee was not enough.
     assert_eq!(
@@ -589,4 +699,244 @@ async fn test_contract_fees() {
         )
         .unwrap(),
     );
+}
+
+// A test that attempts to SetFee twice with the same governance action, the first should succeed,
+// the second should fail.
+#[tokio::test]
+async fn test_same_governance_sequence_fails() {
+    let (_, contract, _) = initialize_chain().await;
+
+    // Set a high fee for the contract needed to submit a price.
+    let vaa = wormhole::Vaa {
+        emitter_chain: wormhole::Chain::Any,
+        emitter_address: wormhole::Address([0; 32]),
+        payload: (),
+        sequence: 1,
+        ..Default::default()
+    };
+
+    let vaa = {
+        let mut cur = Cursor::new(Vec::new());
+        serde_wormhole::to_writer(&mut cur, &vaa).unwrap();
+        cur.write_all(
+            &GovernanceInstruction {
+                target: Chain::from(WormholeChain::Near),
+                module: GovernanceModule::Target,
+                action: GovernanceAction::SetFee { base: 128, expo: 8 },
+            }
+            .serialize()
+            .unwrap(),
+        )
+        .unwrap();
+        hex::encode(cur.into_inner())
+    };
+
+    // Attempt our first SetFee.
+    assert!(contract
+        .call("execute_governance_instruction")
+        .gas(300_000_000_000_000)
+        .deposit(300_000_000_000_000_000_000_000)
+        .args_json(&json!({
+            "vaa": vaa,
+        }))
+        .transact_async()
+        .await
+        .expect("Failed to submit VAA")
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
+
+    // Attempt to run the same VAA again.
+    assert!(!contract
+        .call("execute_governance_instruction")
+        .gas(300_000_000_000_000)
+        .deposit(300_000_000_000_000_000_000_000)
+        .args_json(&json!({
+            "vaa": vaa,
+        }))
+        .transact_async()
+        .await
+        .expect("Failed to submit VAA")
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
+}
+
+// A test that attempts to SetFee twice with the same governance action, the first should succeed,
+// the second should fail.
+#[tokio::test]
+async fn test_out_of_order_sequences_fail() {
+    let (_, contract, _) = initialize_chain().await;
+
+    // Set a high fee for the contract needed to submit a price.
+    let vaa = wormhole::Vaa {
+        emitter_chain: wormhole::Chain::Any,
+        emitter_address: wormhole::Address([0; 32]),
+        payload: (),
+        sequence: 1,
+        ..Default::default()
+    };
+
+    let vaa = {
+        let mut cur = Cursor::new(Vec::new());
+        serde_wormhole::to_writer(&mut cur, &vaa).unwrap();
+        cur.write_all(
+            &GovernanceInstruction {
+                target: Chain::from(WormholeChain::Near),
+                module: GovernanceModule::Target,
+                action: GovernanceAction::SetFee { base: 128, expo: 8 },
+            }
+            .serialize()
+            .unwrap(),
+        )
+        .unwrap();
+        hex::encode(cur.into_inner())
+    };
+
+    // Attempt our first SetFee.
+    assert!(contract
+        .call("execute_governance_instruction")
+        .gas(300_000_000_000_000)
+        .deposit(300_000_000_000_000_000_000_000)
+        .args_json(&json!({
+            "vaa": vaa,
+        }))
+        .transact_async()
+        .await
+        .expect("Failed to submit VAA")
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
+
+    // Generate another VAA with sequence 3.
+    let vaa = wormhole::Vaa {
+        emitter_chain: wormhole::Chain::Any,
+        emitter_address: wormhole::Address([0; 32]),
+        payload: (),
+        sequence: 3,
+        ..Default::default()
+    };
+
+    let vaa = {
+        let mut cur = Cursor::new(Vec::new());
+        serde_wormhole::to_writer(&mut cur, &vaa).unwrap();
+        cur.write_all(
+            &GovernanceInstruction {
+                target: Chain::from(WormholeChain::Near),
+                module: GovernanceModule::Target,
+                action: GovernanceAction::SetFee { base: 128, expo: 8 },
+            }
+            .serialize()
+            .unwrap(),
+        )
+        .unwrap();
+        hex::encode(cur.into_inner())
+    };
+
+    // This should succeed.
+    assert!(contract
+        .call("execute_governance_instruction")
+        .gas(300_000_000_000_000)
+        .deposit(300_000_000_000_000_000_000_000)
+        .args_json(&json!({
+            "vaa": vaa,
+        }))
+        .transact_async()
+        .await
+        .expect("Failed to submit VAA")
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
+
+    // Generate another VAA with sequence 2.
+    let vaa = wormhole::Vaa {
+        emitter_chain: wormhole::Chain::Any,
+        emitter_address: wormhole::Address([0; 32]),
+        payload: (),
+        sequence: 2,
+        ..Default::default()
+    };
+
+    let vaa = {
+        let mut cur = Cursor::new(Vec::new());
+        serde_wormhole::to_writer(&mut cur, &vaa).unwrap();
+        cur.write_all(
+            &GovernanceInstruction {
+                target: Chain::from(WormholeChain::Near),
+                module: GovernanceModule::Target,
+                action: GovernanceAction::SetFee { base: 128, expo: 8 },
+            }
+            .serialize()
+            .unwrap(),
+        )
+        .unwrap();
+        hex::encode(cur.into_inner())
+    };
+
+    // This should fail due to being out of order.
+    assert!(!contract
+        .call("execute_governance_instruction")
+        .gas(300_000_000_000_000)
+        .deposit(300_000_000_000_000_000_000_000)
+        .args_json(&json!({
+            "vaa": vaa,
+        }))
+        .transact_async()
+        .await
+        .expect("Failed to submit VAA")
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
+}
+
+// A test that fails if the governance action payload target is not NEAR.
+#[tokio::test]
+async fn test_governance_target_fails_if_not_near() {
+    let (_, contract, _) = initialize_chain().await;
+
+    let vaa = wormhole::Vaa {
+        emitter_chain: wormhole::Chain::Any,
+        emitter_address: wormhole::Address([0; 32]),
+        payload: (),
+        sequence: 1,
+        ..Default::default()
+    };
+
+    let vaa = {
+        let mut cur = Cursor::new(Vec::new());
+        serde_wormhole::to_writer(&mut cur, &vaa).unwrap();
+        cur.write_all(
+            &GovernanceInstruction {
+                target: Chain::from(WormholeChain::Solana),
+                module: GovernanceModule::Target,
+                action: GovernanceAction::SetFee { base: 128, expo: 8 },
+            }
+            .serialize()
+            .unwrap(),
+        )
+        .unwrap();
+        hex::encode(cur.into_inner())
+    };
+
+    // This should fail as the target is Solana, when Near is expected.
+    assert!(!contract
+        .call("execute_governance_instruction")
+        .gas(300_000_000_000_000)
+        .deposit(300_000_000_000_000_000_000_000)
+        .args_json(&json!({
+            "vaa": vaa,
+        }))
+        .transact_async()
+        .await
+        .expect("Failed to submit VAA")
+        .await
+        .unwrap()
+        .failures()
+        .is_empty());
 }

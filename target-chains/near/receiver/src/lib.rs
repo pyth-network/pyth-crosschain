@@ -15,6 +15,7 @@ use {
         },
         env,
         is_promise_success,
+        json_types::U128,
         log,
         near_bindgen,
         AccountId,
@@ -47,7 +48,6 @@ pub mod tests;
 enum StorageKeys {
     Source,
     Prices,
-    Governance,
 }
 
 /// The `State` contains all persisted state for the contract. This includes runtime configuration.
@@ -63,8 +63,11 @@ pub struct Pyth {
     /// The Governance Source.
     gov_source: Source,
 
-    /// The last executed sequence number for governance actions.
-    executed_gov_sequences: UnorderedSet<u64>,
+    /// The last executed sequence number for all governance actions.
+    executed_governance_vaa: u64,
+
+    /// The last executed sequence number only for governance change actions.
+    executed_governance_change_vaa: u64,
 
     /// A Mapping from PriceFeed ID to Price Info.
     prices: UnorderedMap<PriceIdentifier, PriceFeed>,
@@ -83,7 +86,7 @@ pub struct Pyth {
     stale_threshold: Duration,
 
     /// Fee for updating price.
-    update_fee: u64,
+    update_fee: u128,
 }
 
 #[near_bindgen]
@@ -95,7 +98,7 @@ impl Pyth {
         codehash: [u8; 32],
         initial_source: Source,
         gov_source: Source,
-        update_fee: u64,
+        update_fee: U128,
         stale_threshold: u64,
     ) -> Self {
         // Add an initial Source so that the contract can be used.
@@ -103,13 +106,14 @@ impl Pyth {
         sources.insert(&initial_source);
         Self {
             prices: UnorderedMap::new(StorageKeys::Prices),
-            executed_gov_sequences: UnorderedSet::new(StorageKeys::Governance),
+            executed_governance_vaa: 0,
+            executed_governance_change_vaa: 0,
             stale_threshold,
             gov_source,
             sources,
             wormhole,
             codehash,
-            update_fee,
+            update_fee: update_fee.into(),
         }
     }
 
@@ -137,8 +141,8 @@ impl Pyth {
         let vaa = Vaa::from(vaa);
 
         if !self.sources.contains(&Source {
-            emitter:            vaa.emitter_address,
-            pyth_emitter_chain: vaa.emitter_chain,
+            emitter: vaa.emitter_address,
+            chain:   vaa.emitter_chain,
         }) {
             return Err(Error::UnknownSource);
         }
@@ -162,11 +166,19 @@ impl Pyth {
         Ok(())
     }
 
-    /// Return the deposit required to update a price feed.
-    pub fn get_update_fee_estimate(&self) -> u64 {
+    /// Return the deposit required to update a price feed. This is the upper limit for an update
+    /// call and any remaining deposit not consumed for storage will be refunded.
+    #[allow(unused_variables)]
+    pub fn get_update_fee_estimate(&self, vaa: String) -> U128 {
         let byte_cost = env::storage_byte_cost();
         let data_cost = byte_cost * std::mem::size_of::<PriceFeed>() as u128;
-        4u64 * u64::try_from(data_cost).unwrap() + self.update_fee
+
+        // The const multiplications here are to provide additional headway for any unexpected data
+        // costs in NEAR's storage calculations.
+        //
+        // 5 is the upper limit for PriceFeed amount in a single update.
+        // 4 is the value obtained through testing for headway.
+        (5u128 * 4u128 * data_cost + self.update_fee).into()
     }
 
     #[payable]
@@ -183,10 +195,17 @@ impl Pyth {
         }
 
         // Get Storage Usage before execution, subtracting the fee from the deposit has the effect
-        // forces the caller to add the required fee to the deposit.
-        let storage = env::storage_usage()
-            .checked_sub(self.update_fee)
-            .ok_or(Error::InsufficientDeposit)?;
+        // forces the caller to add the required fee to the deposit. The protocol defines the fee
+        // as a u128, but storage is a u64, so we need to check that the fee does not overflow the
+        // storage cost as well.
+        let storage = (env::storage_usage() as u128)
+            .checked_sub(
+                self.update_fee
+                    .checked_div(env::storage_byte_cost())
+                    .ok_or(Error::ArithmeticOverflow)?,
+            )
+            .ok_or(Error::InsufficientDeposit)
+            .and_then(|s| u64::try_from(s).map_err(|_| Error::ArithmeticOverflow))?;
 
         // Deserialize VAA, note that we already deserialized and verified the VAA in `process_vaa`
         // at this point so we only care about the `rest` component which contains bytes we can

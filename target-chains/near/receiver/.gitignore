@@ -1,0 +1,2 @@
+# Ignore *wasm build artifacts which may enter the directory for workspaces tests.
+*.wasm
