@@ -17,7 +17,7 @@ ALICE_KEY_PATH = MESH_KEY_DIR + "member_alice.json"
 BOB_KEY_PATH = MESH_KEY_DIR + "member_bob.json"
 CAROL_KEY_PATH = MESH_KEY_DIR + "member_carol.json"
 
-create_key_addr = "73UuSY2yXat7h7T49MMGg8TiHPqJJKKVc33DmC4b41Hf"
+create_key_addr = "73UuSY2yXat7h7T49MMGg8TiHPqJJKKVc33DmC4b41Hf" # The person that instantiated the multisig on mainnet used this create key, it never needs to sign but we're using it to match mainnet
 ext_authority_addr = sol_run_or_die("address", ["--keypair", MESH_VAULT_EXT_AUTHORITY_KEY_PATH], capture_output=True).stdout.strip()
 
 alice_addr = sol_run_or_die("address", ["--keypair", ALICE_KEY_PATH], capture_output=True).stdout.strip()
