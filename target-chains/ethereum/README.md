@@ -10,7 +10,7 @@ Run the following command to install required dependencies for the contract:
 # xc-governance-sdk-js is a local dependency that should be built
 # it is used in deployment (truffle migrations) to generate/sanity check
 # the governance VAAs
-pushd ../third_party/pyth/xc-governance-sdk-js && npm ci && popd
+pushd ../../governance/xc-governance-sdk-js && npm ci && popd
 npm ci
 ```
 

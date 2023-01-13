@@ -1,16 +1,16 @@
 name: Check Xc Admin
 on:
   pull_request:
-    paths: [xc-admin/**]
+    paths: [governance/xc-admin/**]
   push:
     branches: [main]
-    paths: [xc-admin/**]
+    paths: [governance/xc-admin/**]
 jobs:
   test:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: xc-admin/
+        working-directory: governance/xc-admin/
     steps:
       - uses: actions/checkout@v2
       - name: Run xc-admin tests

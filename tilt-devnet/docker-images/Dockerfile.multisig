@@ -15,7 +15,7 @@ ENV MULTISIG_SCRIPT_DIR=/root/pyth/multisig-wh-message-builder
 
 WORKDIR $MULTISIG_SCRIPT_DIR
 
-ENV LOCAL_MULTISIG_SCRIPT_DIR=third_party/pyth/multisig-wh-message-builder
+ENV LOCAL_MULTISIG_SCRIPT_DIR=governance/multisig-wh-message-builder
 
 # Add a barebones representation of our deps for Docker layer caching
 ADD $LOCAL_MULTISIG_SCRIPT_DIR/package.json \
