@@ -37,7 +37,7 @@ export interface PriceStore {
   getPriceIds(): Set<HexString>;
   getLatestPriceInfo(priceFeedId: HexString): PriceInfo | undefined;
   addUpdateListener(callback: (priceInfo: PriceInfo) => any): void;
-  getVaa(priceFeedId: string, publishTime: number): VaaConfig | null;
+  getVaa(priceFeedId: string, publishTime: number): VaaConfig | undefined;
 }
 
 type ListenerReadinessConfig = {
@@ -67,7 +67,7 @@ export class VaaCache {
     this.ttl = ttl;
   }
 
-  set(key: VaaKey, publishTime: number, vaa: string) {
+  set(key: VaaKey, publishTime: number, vaa: string): void {
     if (this.cache[key]) {
       this.cache[key].push({ publishTime, vaa });
     } else {
@@ -75,16 +75,16 @@ export class VaaCache {
     }
   }
 
-  get(key: VaaKey, publishTime: number) {
+  get(key: VaaKey, publishTime: number): VaaConfig | undefined {
     if (!this.cache[key]) {
-      return null;
+      return undefined;
     } else {
       const vaaConf = this.find(this.cache[key], publishTime);
       return vaaConf;
     }
   }
 
-  find(arr: VaaConfig[], publishTime: number) {
+  find(arr: VaaConfig[], publishTime: number): VaaConfig | undefined {
     let left = 0;
     let right = arr.length - 1;
     let nextLargest = -1;
@@ -101,7 +101,7 @@ export class VaaCache {
       }
     }
 
-    return nextLargest !== -1 ? arr[nextLargest] : null;
+    return nextLargest !== -1 ? arr[nextLargest] : undefined;
   }
 
   async removeExpiredValues() {
@@ -325,7 +325,7 @@ export class Listener implements PriceStore {
     );
   }
 
-  getVaa(priceFeedId: string, publishTime: number): VaaConfig | null {
+  getVaa(priceFeedId: string, publishTime: number): VaaConfig | undefined {
     return this.vaasCache.get(priceFeedId, publishTime);
   }
 
