@@ -145,7 +145,7 @@ export class RestAPI {
           // cache miss
           if (process.env["WEB_API_ENDPOINT"]) {
             fetch(
-              `https://web-api.pyth.network/vaa?id=${priceFeedId}&publishTime=${publishTime}&cluster=pythnet`
+              `${process.env["WEB_API_ENDPOINT"]}/vaa?id=${priceFeedId}&publishTime=${publishTime}&cluster=pythnet`
             )
               .then((r: any) => r.json())
               .then((arr: any) => {
