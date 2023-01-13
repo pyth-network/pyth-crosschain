@@ -44,7 +44,7 @@ impl<'a> Seeded<&P2WMessageDrvData> for P2WMessage<'a> {
             // See the note at 2022-09-05 above.
             // Change the version in the literal whenever you change the
             // price attestation data.
-            "p2w-message-v1".as_bytes().to_vec(),
+            "p2w-message-v2".as_bytes().to_vec(),
             data.message_owner.to_bytes().to_vec(),
             data.batch_size.to_be_bytes().to_vec(),
             data.id.to_be_bytes().to_vec(),

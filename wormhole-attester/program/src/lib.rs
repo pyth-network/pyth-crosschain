@@ -1,6 +1,7 @@
 #![allow(incomplete_features)]
 #![feature(adt_const_params)]
 pub mod attest;
+pub mod attestation_state;
 pub mod config;
 pub mod initialize;
 pub mod message;

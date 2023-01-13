@@ -1,5 +1,9 @@
 use {
     crate::{
+        attestation_state::{
+            AttestationState,
+            AttestationStateMapPDA,
+        },
         config::P2WConfigAccount,
         message::{
             P2WMessage,
@@ -34,6 +38,7 @@ use {
     solitaire::{
         trace,
         AccountState,
+        CreationLamports,
         ExecutionContext,
         FromAccounts,
         Info,
@@ -60,9 +65,10 @@ pub const P2W_MAX_BATCH_SIZE: u16 = 5;
 #[derive(FromAccounts)]
 pub struct Attest<'b> {
     // Payer also used for wormhole
-    pub payer:          Mut<Signer<Info<'b>>>,
-    pub system_program: Info<'b>,
-    pub config:         P2WConfigAccount<'b, { AccountState::Initialized }>,
+    pub payer:             Mut<Signer<Info<'b>>>,
+    pub system_program:    Info<'b>,
+    pub config:            P2WConfigAccount<'b, { AccountState::Initialized }>,
+    pub attestation_state: Mut<AttestationStateMapPDA<'b>>,
 
     // Hardcoded product/price pairs, bypassing Solitaire's variable-length limitations
     // Any change to the number of accounts must include an appropriate change to P2W_MAX_BATCH_SIZE
@@ -152,6 +158,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         return Err(ProgramError::InvalidAccountData.into());
     }
 
+
     // Make the specified prices iterable
     let price_pair_opts = [
         Some(&accs.pyth_product),
@@ -204,16 +211,36 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         ));
             return Err(SolitaireError::InvalidOwner(*accs.pyth_price.owner));
         }
+        let attestation_time = accs.clock.unix_timestamp;
+
+        // Take a mut reference to this price's metadata
+        let state_entry: &mut AttestationState = accs
+            .attestation_state
+            .entries
+            .entry(*price.key)
+            .or_insert(AttestationState {
+                // Use attestation_time as initial value, i.e. if no
+                // state exists for the symbol, no time passed since
+                // latest attestation
+                latest_attestation_time: attestation_time,
+            });
 
         let attestation = PriceAttestation::from_pyth_price_bytes(
             Identifier::new(price.key.to_bytes()),
-            accs.clock.unix_timestamp,
+            attestation_time,
+            state_entry.latest_attestation_time, // Used as prev_attestation_time
             &price.try_borrow_data()?,
         )
         .map_err(|e| {
             trace!(&e.to_string());
             ProgramError::InvalidAccountData
         })?;
+
+
+        // update latest_attestation_time with this price's
+        // attestation_time. Yes, it may be redundant for the entry()
+        // used above in the first attestation edge case.
+        state_entry.latest_attestation_time = attestation_time;
 
         // The following check is crucial against poorly ordered
         // account inputs, e.g. [Some(prod1), Some(price1),
@@ -240,6 +267,51 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
 
     trace!("Attestations successfully created");
 
+    // Serialize the state to calculate rent/account size adjustments
+    let serialized = accs.attestation_state.1.try_to_vec()?;
+
+    if accs.attestation_state.is_initialized() {
+        accs.attestation_state
+            .info()
+            .realloc(serialized.len(), false)?;
+        trace!("Attestation state resize OK");
+
+        let target_rent = CreationLamports::Exempt.amount(serialized.len());
+        let current_rent = accs.attestation_state.info().lamports();
+
+        // Adjust rent, but only if there isn't enough
+        if target_rent > current_rent {
+            let transfer_amount = target_rent - current_rent;
+
+            let transfer_ix = system_instruction::transfer(
+                accs.payer.info().key,
+                accs.attestation_state.info().key,
+                transfer_amount,
+            );
+
+            invoke(&transfer_ix, ctx.accounts)?;
+        }
+
+        trace!("Attestation state rent transfer OK");
+    } else {
+        let seeds = accs
+            .attestation_state
+            .self_bumped_seeds(None, ctx.program_id);
+        solitaire::create_account(
+            ctx,
+            accs.attestation_state.info(),
+            accs.payer.key,
+            solitaire::CreationLamports::Exempt,
+            serialized.len(),
+            ctx.program_id,
+            solitaire::IsSigned::SignedWithSeeds(&[seeds
+                .iter()
+                .map(|s| s.as_slice())
+                .collect::<Vec<_>>()
+                .as_slice()]),
+        )?;
+        trace!("Attestation state init OK");
+    }
     let bridge_config = BridgeData::try_from_slice(&accs.wh_bridge.try_borrow_mut_data()?)?.config;
 
     // Pay wormhole fee
