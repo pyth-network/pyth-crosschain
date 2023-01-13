@@ -30,7 +30,7 @@ export const TargetAction = {
 /** Helper to get the ActionName from a (moduleId, actionId) tuple*/
 export function toActionName(
   deserialized: Readonly<{ moduleId: number; actionId: number }>
-): ActionName {
+): ActionName | undefined {
   if (deserialized.moduleId == MODULE_EXECUTOR && deserialized.actionId == 0) {
     return "ExecutePostedVaa";
   } else if (deserialized.moduleId == MODULE_TARGET) {
@@ -49,7 +49,7 @@ export function toActionName(
         return "RequestGovernanceDataSourceTransfer";
     }
   }
-  throw new Error("Invalid header, action doesn't match module");
+  return undefined;
 }
 
 export declare type ActionName =
@@ -84,23 +84,28 @@ export class PythGovernanceHeader {
     this.action = action;
   }
   /** Decode Pyth Governance Header */
-  static decode(data: Buffer): PythGovernanceHeader {
-    let deserialized = this.layout.decode(data);
-    if (deserialized.magicNumber !== MAGIC_NUMBER) {
-      throw new Error("Wrong magic number");
-    }
+  static decode(data: Buffer): PythGovernanceHeader | undefined {
+    const deserialized = safeLayoutDecode(this.layout, data);
 
-    if (!toChainName(deserialized.chain)) {
-      throw new Error("Chain Id not found");
-    }
+    if (!deserialized) return undefined;
 
-    return new PythGovernanceHeader(
-      toChainName(deserialized.chain),
-      toActionName({
-        actionId: deserialized.action,
-        moduleId: deserialized.module,
-      })
-    );
+    if (deserialized.magicNumber !== MAGIC_NUMBER) return undefined;
+
+    if (!toChainName(deserialized.chain)) return undefined;
+
+    const actionName = toActionName({
+      actionId: deserialized.action,
+      moduleId: deserialized.module,
+    });
+
+    if (actionName) {
+      return new PythGovernanceHeader(
+        toChainName(deserialized.chain),
+        actionName
+      );
+    } else {
+      return undefined;
+    }
   }
 
   /** Encode Pyth Governance Header */
@@ -134,13 +139,28 @@ export const MODULE_EXECUTOR = 0;
 export const MODULE_TARGET = 1;
 
 /** Decode a governance payload */
-export function decodeGovernancePayload(data: Buffer): PythGovernanceAction {
+export function decodeGovernancePayload(
+  data: Buffer
+): PythGovernanceAction | undefined {
   const header = PythGovernanceHeader.decode(data);
+  if (!header) return undefined;
+
   switch (header.action) {
     case "ExecutePostedVaa":
       return ExecutePostedVaa.decode(data);
     default:
-      throw "Not supported";
+      return undefined;
+  }
+}
+
+export function safeLayoutDecode<T>(
+  layout: BufferLayout.Layout<T>,
+  data: Buffer
+): T | undefined {
+  try {
+    return layout.decode(data);
+  } catch {
+    return undefined;
   }
 }
 

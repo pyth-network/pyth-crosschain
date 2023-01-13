@@ -14,8 +14,8 @@ test("GovernancePayload ser/de", (done) => {
     buffer.equals(Buffer.from([80, 84, 71, 77, 0, 0, 0, 26]))
   ).toBeTruthy();
   let governanceHeader = PythGovernanceHeader.decode(buffer);
-  expect(governanceHeader.targetChainId).toBe("pythnet");
-  expect(governanceHeader.action).toBe("ExecutePostedVaa");
+  expect(governanceHeader?.targetChainId).toBe("pythnet");
+  expect(governanceHeader?.action).toBe("ExecutePostedVaa");
 
   // Valid header 2
   expectedGovernanceHeader = new PythGovernanceHeader(
@@ -37,25 +37,25 @@ test("GovernancePayload ser/de", (done) => {
   expect(governanceHeader?.action).toBe("SetFee");
 
   // Wrong magic number
-  expect(() =>
+  expect(
     PythGovernanceHeader.decode(
       Buffer.from([0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0])
     )
-  ).toThrow("Wrong magic number");
+  ).toBeUndefined();
 
   // Wrong chain
-  expect(() =>
+  expect(
     PythGovernanceHeader.decode(
       Buffer.from([80, 84, 71, 77, 0, 0, 255, 255, 0, 0, 0, 0])
     )
-  ).toThrow("Chain Id not found");
+  ).toBeUndefined();
 
   // Wrong module/action combination
-  expect(() =>
+  expect(
     PythGovernanceHeader.decode(
       Buffer.from([80, 84, 71, 77, 0, 1, 0, 26, 0, 0, 0, 0])
     )
-  ).toThrow("Invalid header, action doesn't match module");
+  ).toBeUndefined();
 
   // Decode executePostVaa with empty instructions
   let expectedExecutePostedVaa = new ExecutePostedVaa("pythnet", []);

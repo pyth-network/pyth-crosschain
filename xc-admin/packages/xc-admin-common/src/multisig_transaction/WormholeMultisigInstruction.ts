@@ -2,7 +2,11 @@ import { createReadOnlyWormholeProgramInterface } from "@certusone/wormhole-sdk/
 import { WormholeInstructionCoder } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole/coder/instruction";
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
 import { Connection, TransactionInstruction } from "@solana/web3.js";
-import { MultisigInstruction, MultisigInstructionProgram } from ".";
+import {
+  MultisigInstruction,
+  MultisigInstructionProgram,
+  UNRECOGNIZED_INSTRUCTION,
+} from ".";
 import {
   decodeGovernancePayload,
   PythGovernanceAction,
@@ -14,15 +18,18 @@ export class WormholeMultisigInstruction implements MultisigInstruction {
   readonly name: string;
   readonly args: { [key: string]: any };
   readonly accounts: AnchorAccounts;
+  readonly governanceAction: PythGovernanceAction | undefined;
 
   constructor(
     name: string,
     args: { [key: string]: any },
-    accounts: AnchorAccounts
+    accounts: AnchorAccounts,
+    governanceAction: PythGovernanceAction | undefined
   ) {
     this.name = name;
     this.args = args;
     this.accounts = accounts;
+    this.governanceAction = governanceAction;
   }
 
   static fromTransactionInstruction(
@@ -38,32 +45,38 @@ export class WormholeMultisigInstruction implements MultisigInstruction {
     ).decode(instruction.data);
 
     if (deserializedData) {
-      let result = new WormholeMultisigInstruction(
-        deserializedData.name,
-        deserializedData.data,
-        resolveAccountNames(
-          wormholeProgram.idl,
-          deserializedData.name,
-          instruction
-        )
-      );
+      if (deserializedData.name === "postMessage") {
+        const decodedGovernanceAction: PythGovernanceAction | undefined =
+          decodeGovernancePayload((deserializedData.data as any).payload);
 
-      if (result.name === "postMessage") {
-        try {
-          const decoded: PythGovernanceAction = decodeGovernancePayload(
-            result.args.payload
-          );
-          result.args.governanceAction = decoded;
-        } catch {
-          result.args.governanceAction = {};
-        }
+        return new WormholeMultisigInstruction(
+          deserializedData.name,
+          deserializedData.data,
+          resolveAccountNames(
+            wormholeProgram.idl,
+            deserializedData.name,
+            instruction
+          ),
+          decodedGovernanceAction
+        );
+      } else {
+        return new WormholeMultisigInstruction(
+          deserializedData.name,
+          deserializedData.data,
+          resolveAccountNames(
+            wormholeProgram.idl,
+            deserializedData.name,
+            instruction
+          ),
+          undefined
+        );
       }
-      return result;
     } else {
       return new WormholeMultisigInstruction(
-        "Unrecognized instruction",
-        {},
-        { named: {}, remaining: instruction.keys }
+        UNRECOGNIZED_INSTRUCTION,
+        { data: instruction.data },
+        { named: {}, remaining: instruction.keys },
+        undefined
       );
     }
   }
