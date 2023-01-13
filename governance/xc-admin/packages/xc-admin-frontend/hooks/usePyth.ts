@@ -7,6 +7,7 @@ import {
   parseProductData,
   PermissionData,
   parsePermissionData,
+  Product,
 } from '@pythnetwork/client'
 import { Connection, PublicKey } from '@solana/web3.js'
 import assert from 'assert'
@@ -43,7 +44,7 @@ export type MappingRawConfig = {
 export type ProductRawConfig = {
   address: PublicKey
   priceAccounts: PriceRawConfig[]
-  metadata: { [key: string]: string }
+  metadata: Product
 }
 export type PriceRawConfig = {
   next: PublicKey | null
@@ -181,7 +182,6 @@ const usePyth = (): PythHookData => {
         }
 
         console.log('REMAINING ACCOUNTS: ', allPythAccounts.length)
-        console.log(allPythAccounts.map((x) => parseBaseData(x.account.data)))
         assert(
           allPythAccounts.every(
             (x) =>
