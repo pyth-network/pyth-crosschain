@@ -19,7 +19,7 @@ import {
 } from "@pythnetwork/p2w-sdk-js";
 import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";
 import LRUCache from "lru-cache";
-import { envOrErr, sleep, TimestampInSec } from "./helpers";
+import { sleep, TimestampInSec } from "./helpers";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
 
@@ -62,9 +62,9 @@ export class VaaCache {
   private cache: { [key: string]: VaaConfig[] };
   private ttl: number;
 
-  constructor() {
+  constructor(ttl: number = 300) {
     this.cache = {};
-    this.ttl = Number(envOrErr("CACHE_TTL_SECONDS"));
+    this.ttl = ttl;
   }
 
   set(key: VaaKey, publishTime: number, vaa: string) {
@@ -169,14 +169,11 @@ export class Listener implements PriceStore {
     logger.info("loaded " + this.filters.length + " filters");
   }
 
-  async runCacheCleanupLoop() {
-    const REMOVE_EXPIRED_VALUES_INTERVAL_SECONDS = Number(
-      envOrErr("REMOVE_EXPIRED_VALUES_INTERVAL_SECONDS")
-    );
-    // run this every REMOVE_EXPIRED_VALUES_INTERVAL_SECONDS seconds
+  async runCacheCleanupLoop(interval: number = 60) {
+    // run this every interval seconds
     while (true) {
       await this.vaasCache.removeExpiredValues();
-      await sleep(REMOVE_EXPIRED_VALUES_INTERVAL_SECONDS * 1000);
+      await sleep(interval * 1000);
     }
   }
 
