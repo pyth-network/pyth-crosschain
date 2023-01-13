@@ -61,27 +61,27 @@ type VaaConfig = {
 };
 
 export class VaaCache {
-  private cache: { [key: string]: VaaConfig[] };
+  private cache: Map<string, VaaConfig[]>;
   private ttl: number;
 
   constructor(ttl: number = 300) {
-    this.cache = {};
+    this.cache = new Map();
     this.ttl = ttl;
   }
 
   set(key: VaaKey, publishTime: number, vaa: string): void {
-    if (this.cache[key]) {
-      this.cache[key].push({ publishTime, vaa });
+    if (this.cache.has(key)) {
+      this.cache.get(key)!.push({ publishTime, vaa });
     } else {
-      this.cache[key] = [{ publishTime, vaa }];
+      this.cache.set(key, [{ publishTime, vaa }]);
     }
   }
 
   get(key: VaaKey, publishTime: number): VaaConfig | undefined {
-    if (!this.cache[key]) {
+    if (!this.cache.has(key)) {
       return undefined;
     } else {
-      const vaaConf = this.find(this.cache[key], publishTime);
+      const vaaConf = this.find(this.cache.get(key)!, publishTime);
       return vaaConf;
     }
   }
@@ -112,9 +112,9 @@ export class VaaCache {
   async removeExpiredValues() {
     const now = Math.floor(Date.now() / 1000);
     for (const key in this.cache) {
-      this.cache[key] = this.cache[key].filter(
+      this.cache.set(key, this.cache.get(key)!.filter(
         (vaaConf) => now - vaaConf.publishTime < this.ttl
-      );
+      ));
     }
   }
 }
