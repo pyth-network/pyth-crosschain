@@ -43,10 +43,10 @@ export class RestAPI {
   private dbApiCluster?: string;
 
   constructor(
-    config: { port: number, dbApiEndpoint?: string, dbApiCluster?: string },
+    config: { port: number; dbApiEndpoint?: string; dbApiCluster?: string },
     priceFeedVaaInfo: PriceStore,
     isReady?: () => boolean,
-    promClient?: PromClient,
+    promClient?: PromClient
   ) {
     this.port = config.port;
     this.dbApiEndpoint = config.dbApiEndpoint;
