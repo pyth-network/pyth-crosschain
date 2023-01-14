@@ -46,7 +46,7 @@ function MinPublishers() {
                               {product.metadata.symbol}
                             </td>
                             <td className="py-3 pl-1 lg:pl-14">
-                              <span className="mr-2 hidden lg:block">
+                              <span className="mr-2">
                                 {priceAccount.minPub}
                               </span>
                             </td>

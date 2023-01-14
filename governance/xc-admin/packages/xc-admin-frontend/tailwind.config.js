@@ -69,6 +69,7 @@ module.exports = {
         darkGray2: '#312F47',
         darkGray3: '#2F2C4F',
         darkGray4: '#413E53',
+        hoverGray: 'rgba(255, 255, 255, 0.08)',
         beige: '#F1EAEA',
         'beige-300': 'rgba(229, 231, 235, .3)',
         beige2: '#E4DADB',
