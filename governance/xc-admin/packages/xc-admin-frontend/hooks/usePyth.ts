@@ -3,10 +3,10 @@ import {
   getPythProgramKeyForCluster,
   parseBaseData,
   parseMappingData,
+  parsePermissionData,
   parsePriceData,
   parseProductData,
   PermissionData,
-  parsePermissionData,
   Product,
 } from '@pythnetwork/client'
 import { Connection, PublicKey } from '@solana/web3.js'
@@ -83,7 +83,6 @@ const usePyth = (): PythHookData => {
         )
         const priceRawConfigs: { [key: string]: PriceRawConfig } = {}
 
-        console.log('LENGHT BEFORE FIRST PASS : ', allPythAccounts.length)
         /// First pass, price accounts
         let i = 0
         while (i < allPythAccounts.length) {
@@ -108,7 +107,6 @@ const usePyth = (): PythHookData => {
           }
         }
 
-        console.log('LENGHT BEFORE SECOND PASS : ', allPythAccounts.length)
         /// Second pass, product accounts
         i = 0
         const productRawConfigs: { [key: string]: ProductRawConfig } = {}
@@ -148,7 +146,6 @@ const usePyth = (): PythHookData => {
           }
         }
 
-        console.log('LENGHT BEFORE THIRD PASS : ', allPythAccounts.length)
         const rawConfig: RawConfig = { mappingAccounts: [] }
         /// Third pass, mapping accounts
         i = 0
@@ -181,7 +178,6 @@ const usePyth = (): PythHookData => {
           }
         }
 
-        console.log('REMAINING ACCOUNTS: ', allPythAccounts.length)
         assert(
           allPythAccounts.every(
             (x) =>
@@ -189,8 +185,6 @@ const usePyth = (): PythHookData => {
               parseBaseData(x.account.data)?.type == AccountType.Test
           )
         )
-
-        console.log(rawConfig)
 
         setRawConfig(rawConfig)
         setIsLoading(false)
