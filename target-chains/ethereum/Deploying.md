@@ -121,6 +121,24 @@ process described above. Please bump the version properly as described in [the s
 Anything other than the operations above will probably cause a collision. Please refer to Open Zeppelin Upgradeable
 (documentations)[https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable] for more information.
 
+### Upgrading the Wormhole guardian set in the Wormhole receiver contracts
+
+If the Wormhole guardian set is going to change, you need to update the guardian set in the Wormhole receiver
+contracts. You should do it before the guardians start publishing VAAs with the new guardian set and not earlier than 24 hours before that
+to avoid any possible downtime. After updating the guardian set there is a 24 hour windows that the contracts
+will accept VAAs from both the old and the new index. So, you will need to do it when you are certain that Guardians
+will start publishing with the new set soon.
+
+To update the guardian set update the
+[`receiverSubmitGuardianSetUpgrades.js`](./scripts/receiverSubmitGuardianSetUpgrades.js) script and add the new VAA and comment out the previous upgrades.
+Then, run it like below on the networks with Wormhole receiver contract:
+
+```
+npm run receiver-submit-guardian-sets -- --network <network>
+```
+
+You should create a PR to add this VAA to the repo for future deployments on new networks with Wormhole receiver contract.
+
 ### Versioning
 
 We use [Semantic Versioning](https://semver.org/) for our releases. When upgrading the contract, update the npm package version using

@@ -38,12 +38,12 @@ module.exports = async function (callback) {
       });
     // Upgrade set 2 to set 3
     await initialized.methods
-    .submitNewGuardianSet("0x" + GUARDIAN_SET_UPGRADE_3_VAA)
-    .send({
-      value: 0,
-      from: accounts[0],
-      gasLimit: 2000000,
-    });
+      .submitNewGuardianSet("0x" + GUARDIAN_SET_UPGRADE_3_VAA)
+      .send({
+        value: 0,
+        from: accounts[0],
+        gasLimit: 2000000,
+      });
     console.log("Updated the guardian set successfully.");
     callback();
   } catch (e) {
