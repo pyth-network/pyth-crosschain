@@ -1,4 +1,3 @@
-import { useMultisigContext } from '../contexts/MultisigContext'
 import { usePythContext } from '../contexts/PythContext'
 import ClusterSwitch from './ClusterSwitch'
 import Loadbar from './loaders/Loadbar'

@@ -2,7 +2,6 @@ import SquadsMesh from '@sqds/mesh'
 import { TransactionAccount } from '@sqds/mesh/lib/types'
 import React, { createContext, useContext, useMemo } from 'react'
 import { useMultisig } from '../hooks/useMultisig'
-import usePyth from '../hooks/usePyth'
 
 // TODO: fix any
 interface MultisigContextProps {
