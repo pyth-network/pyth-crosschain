@@ -1,6 +1,7 @@
 import { useContext } from 'react'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { usePythContext } from '../contexts/PythContext'
+import ClusterSwitch from './ClusterSwitch'
 import Loadbar from './loaders/Loadbar'
 
 function MinPublishers() {
@@ -15,7 +16,10 @@ function MinPublishers() {
         </div>
       </div>
       <div className="container">
-        <div className="table-responsive relative z-[2] mt-6">
+        <div className="mb-4 md:mb-0">
+          <ClusterSwitch />
+        </div>
+        <div className="table-responsive relative mt-6">
           {dataIsLoading ? (
             <div className="mt-3">
               <Loadbar theme="light" />

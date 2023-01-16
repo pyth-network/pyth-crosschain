@@ -8,7 +8,7 @@ export const ClusterContext = createContext<{
   setCluster: any
 }>({
   cluster: DEFAULT_CLUSTER,
-  setCluster: (cluster: PythCluster) => {},
+  setCluster: {},
 })
 
 export const ClusterProvider = (props: any) => {
