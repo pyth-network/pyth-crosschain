@@ -213,34 +213,40 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         }
         let attestation_time = accs.clock.unix_timestamp;
 
+        let price_data_ref = price.try_borrow_data()?;
+
+        // Parse the upstream Pyth struct to extract current publish
+        // time for payload construction
+        let price_struct =
+            pyth_sdk_solana::state::load_price_account(&price_data_ref).map_err(|e| {
+                trace!(&e.to_string());
+                ProgramError::InvalidAccountData
+            })?;
+
         // Take a mut reference to this price's metadata
         let state_entry: &mut AttestationState = accs
             .attestation_state
             .entries
             .entry(*price.key)
             .or_insert(AttestationState {
-                // Use attestation_time as initial value, i.e. if no
-                // state exists for the symbol, no time passed since
-                // latest attestation
-                latest_attestation_time: attestation_time,
+                // Use publish_time as initial value, i.e. if no state
+                // exists for the symbol, the new value _becomes_ the
+                // last attested publish time
+                last_attested_publish_time: price_struct.timestamp,
             });
 
-        let attestation = PriceAttestation::from_pyth_price_bytes(
+        let attestation = PriceAttestation::from_pyth_price_struct(
             Identifier::new(price.key.to_bytes()),
             attestation_time,
-            state_entry.latest_attestation_time, // Used as prev_attestation_time
-            &price.try_borrow_data()?,
-        )
-        .map_err(|e| {
-            trace!(&e.to_string());
-            ProgramError::InvalidAccountData
-        })?;
+            state_entry.last_attested_publish_time, // Used as last_attested_publish_time
+            price_struct,
+        );
 
 
-        // update latest_attestation_time with this price's
-        // attestation_time. Yes, it may be redundant for the entry()
-        // used above in the first attestation edge case.
-        state_entry.latest_attestation_time = attestation_time;
+        // update last_attested_publish_time with this price's
+        // publish_time. Yes, it may be redundant for the entry() used
+        // above in the rare first attestation edge case.
+        state_entry.last_attested_publish_time = attestation.publish_time;
 
         // The following check is crucial against poorly ordered
         // account inputs, e.g. [Some(prod1), Some(price1),

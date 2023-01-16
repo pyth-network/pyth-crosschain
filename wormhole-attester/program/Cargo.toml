@@ -25,3 +25,4 @@ p2w-sdk = { path = "../../third_party/pyth/p2w-sdk/rust", features = ["solana"] 
 serde = { version = "1", optional = true}
 serde_derive = { version = "1", optional = true}
 serde_json = { version = "1", optional = true}
+pyth-sdk-solana = { version = "0.5.0" }
