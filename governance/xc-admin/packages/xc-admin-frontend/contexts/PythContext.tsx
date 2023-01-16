@@ -1,18 +1,17 @@
-import React, { createContext, useContext, useEffect, useMemo } from 'react'
-import { useDebounce } from 'use-debounce'
+import React, { createContext, useContext, useMemo } from 'react'
 import usePyth from '../hooks/usePyth'
-import { PythData } from '../types'
+import { RawConfig } from '../hooks/usePyth'
 
 // TODO: fix any
 interface PythContextProps {
-  data: PythData
+  rawConfig: RawConfig
   dataIsLoading: boolean
   error: any
   connection: any
 }
 
 const PythContext = createContext<PythContextProps>({
-  data: {},
+  rawConfig: { mappingAccounts: [] },
   dataIsLoading: true,
   error: null,
   connection: null,
@@ -28,35 +27,17 @@ interface PythContextProviderProps {
 
 export const PythContextProvider: React.FC<PythContextProviderProps> = ({
   children,
-  symbols,
-  raw,
 }) => {
-  const { symbolMap, isLoading, error, connection } = usePyth(symbols)
-  const [debouncedSymbolMap, { flush: flushSymbolMap }] = useDebounce(
-    symbolMap,
-    500,
-    { maxWait: 500 }
-  )
-  const data = raw ? symbolMap : debouncedSymbolMap
-
-  useEffect(() => {
-    if (Object.keys(symbolMap).length == 0) flushSymbolMap()
-  }, [symbolMap, flushSymbolMap])
-
-  // const {
-  //   data: historicalData,
-  //   loading: historicalLoading,
-  //   error: historicalError,
-  // } = useHistoricalData()
+  const { isLoading, error, connection, rawConfig } = usePyth()
 
   const value = useMemo(
     () => ({
-      data,
+      rawConfig,
       dataIsLoading: isLoading,
       error,
       connection,
     }),
-    [data, isLoading, error, connection]
+    [rawConfig, isLoading, error, connection]
   )
 
   return <PythContext.Provider value={value}>{children}</PythContext.Provider>

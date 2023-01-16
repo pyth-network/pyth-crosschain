@@ -1,15 +1,14 @@
 import { PythCluster } from '@pythnetwork/client/lib/cluster'
 import { createContext, useMemo, useState } from 'react'
-import { isValidCluster } from '../utils/isValidCluster'
 
-export const DEFAULT_CLUSTER: PythCluster = 'pythnet'
+export const DEFAULT_CLUSTER: PythCluster = 'mainnet-beta'
 
 export const ClusterContext = createContext<{
   cluster: PythCluster
   setCluster: any
 }>({
   cluster: DEFAULT_CLUSTER,
-  setCluster: (cluster: PythCluster) => {},
+  setCluster: {},
 })
 
 export const ClusterProvider = (props: any) => {

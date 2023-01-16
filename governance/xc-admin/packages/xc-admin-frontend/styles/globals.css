@@ -223,3 +223,48 @@
   background: rgba(241, 234, 234, 0.6);
   border-radius: 5px;
 }
+
+.nav-link {
+  @apply text-sm text-light hover:text-white;
+}
+
+.primary-btn {
+  @apply h-[45px] whitespace-nowrap rounded-full border border-solid border-pythPurple bg-pythPurple px-8 font-mono text-xs uppercase;
+}
+
+.input-no-spin::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0px;
+}
+
+.wallet-adapter-dropdown-list {
+  @apply gap-1 border border-darkGray3 bg-darkGray2 text-xs;
+}
+
+.wallet-adapter-modal-wrapper {
+  @apply max-w-[660px]  rounded-3xl bg-darkGray2;
+}
+
+.wallet-adapter-modal-title {
+  @apply max-w-[480px] font-body text-[32px] leading-[1.1] text-light md:text-[44px];
+}
+
+.wallet-adapter-modal-list {
+  @apply mx-auto max-w-[380px]  text-light;
+}
+
+.wallet-adapter-modal-list-more {
+  @apply mx-auto font-mono text-xs font-semibold uppercase;
+}
+.wallet-adapter-dropdown-list .wallet-adapter-dropdown-list-item:hover,
+.wallet-adapter-modal-list .wallet-adapter-button:hover {
+  background-color: #413e53;
+}
+
+.wallet-adapter-modal-button-close {
+  @apply bg-transparent;
+}
+
+.wallet-adapter-button.secondary-btn:hover {
+  @apply hover:bg-pythPurple;
+}
