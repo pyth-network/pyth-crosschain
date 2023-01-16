@@ -17,14 +17,6 @@ import { pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 
 const ONES = '11111111111111111111111111111111'
 
-export const MAPPING_ACCOUNT_KEYS: { [key: string]: string } = {
-  devnet: 'BmA9Z6FjioHJPpjT39QazZyhDRUdZy2ezwx4GiDdE2u2',
-  testnet: 'AFmdnt9ng1uVxqCmqwQJDAYC5cKTkw8gJKSM5PnzuF6z',
-  'mainnet-beta': 'AHtgzX45WTKfkPG53L6WYhGEXwQkN1BVknET3sVsLL8J',
-  pythtest: 'AFmdnt9ng1uVxqCmqwQJDAYC5cKTkw8gJKSM5PnzuF6z',
-  pythnet: 'AHtgzX45WTKfkPG53L6WYhGEXwQkN1BVknET3sVsLL8J',
-}
-
 interface PythHookData {
   isLoading: boolean
   error: any // TODO: fix any
