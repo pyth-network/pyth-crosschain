@@ -32,6 +32,7 @@ export default function Document() {
           sizes="16x16"
           href="/favicon-16x16.png"
         />
+        <link rel="manifest" href="/site.webmanifest" />
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#242235" />
         <meta name="msapplication-TileColor" content="#242235" />
         <meta name="theme-color" content="#242235"></meta>
