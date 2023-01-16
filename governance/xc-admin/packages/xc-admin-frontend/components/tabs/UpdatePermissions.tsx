@@ -1,3 +1,4 @@
+import { PublicKey } from '@solana/web3.js'
 import { usePythContext } from '../../contexts/PythContext'
 import ClusterSwitch from '../ClusterSwitch'
 import Loadbar from '../loaders/Loadbar'
@@ -25,15 +26,21 @@ function UpdatePermissions() {
             <div className="mt-3">
               <p className="h5 mb-8">
                 Master Authority:{' '}
-                {rawConfig.permissionAccount?.masterAuthority.toBase58()}
+                {rawConfig.permissionAccount
+                  ? rawConfig.permissionAccount.masterAuthority.toBase58()
+                  : new PublicKey(0).toBase58()}
               </p>
               <p className="h5 mb-8">
                 Data Curation Authority:{' '}
-                {rawConfig.permissionAccount?.dataCurationAuthority.toBase58()}
+                {rawConfig.permissionAccount
+                  ? rawConfig.permissionAccount.dataCurationAuthority.toBase58()
+                  : new PublicKey(0).toBase58()}
               </p>
               <p className="h5 mb-8">
                 Security Authority:{' '}
-                {rawConfig.permissionAccount?.securityAuthority.toBase58()}
+                {rawConfig.permissionAccount
+                  ? rawConfig.permissionAccount.securityAuthority.toBase58()
+                  : new PublicKey(0).toBase58()}
               </p>
             </div>
           )}
