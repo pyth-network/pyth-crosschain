@@ -58,7 +58,7 @@ export const useMultisig = (): MultisigHookData => {
     connectionRef.current = connection
     ;(async () => {
       try {
-        let squads = new SquadsMesh({
+        const squads = new SquadsMesh({
           connection,
           wallet: new Keypair() as unknown as Wallet,
         })

@@ -5,8 +5,6 @@ import Loadbar from './loaders/Loadbar'
 
 function MinPublishers() {
   const { rawConfig, dataIsLoading } = usePythContext()
-  const context = useMultisigContext()
-  console.log(context)
 
   return (
     <div className="pt-15 relative lg:pt-20">
