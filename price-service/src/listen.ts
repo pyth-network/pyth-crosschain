@@ -1,11 +1,9 @@
-import { ChainId, uint8ArrayToHex } from "@certusone/wormhole-sdk";
-
 import {
   createSpyRPCServiceClient,
   subscribeSignedVAA,
 } from "@certusone/wormhole-spydk";
 
-import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
+import { ChainId, uint8ArrayToHex, parseVaa } from "@certusone/wormhole-sdk";
 
 import {
   FilterEntry,
@@ -25,7 +23,7 @@ import { PromClient } from "./promClient";
 
 export type PriceInfo = {
   vaa: Buffer;
-  seqNum: number;
+  seqNum: bigint;
   publishTime: TimestampInSec;
   attestationTime: TimestampInSec;
   priceFeed: PriceFeed;
@@ -249,14 +247,12 @@ export class Listener implements PriceStore {
   }
 
   async processVaa(vaa: Buffer) {
-    const { parse_vaa } = await importCoreWasm();
+    const parsedVaa = parseVaa(vaa);
 
-    const parsedVaa = parse_vaa(vaa);
-
-    const vaaEmitterAddressHex = Buffer.from(
-      parsedVaa.emitter_address
-    ).toString("hex");
-    const observedVaasKey: VaaKey = `${parsedVaa.emitter_chain}#${vaaEmitterAddressHex}#${parsedVaa.sequence}`;
+    const vaaEmitterAddressHex = Buffer.from(parsedVaa.emitterAddress).toString(
+      "hex"
+    );
+    const observedVaasKey: VaaKey = `${parsedVaa.emitterChain}#${vaaEmitterAddressHex}#${parsedVaa.sequence}`;
 
     if (this.observedVaas.has(observedVaasKey)) {
       return;
@@ -287,7 +283,7 @@ export class Listener implements PriceStore {
         publishTime: priceAttestation.publishTime,
         attestationTime: priceAttestation.attestationTime,
         priceFeed,
-        emitterChainId: parsedVaa.emitter_chain,
+        emitterChainId: parsedVaa.emitterChain,
         priceServiceReceiveTime: Math.floor(new Date().getTime() / 1000),
       };
 
@@ -318,9 +314,9 @@ export class Listener implements PriceStore {
 
     logger.info(
       "Parsed a new Batch Price Attestation: [" +
-        parsedVaa.emitter_chain +
+        parsedVaa.emitterChain +
         ":" +
-        uint8ArrayToHex(parsedVaa.emitter_address) +
+        uint8ArrayToHex(parsedVaa.emitterAddress) +
         "], seqNum: " +
         parsedVaa.sequence +
         ", Batch Summary: " +
