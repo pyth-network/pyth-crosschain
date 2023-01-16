@@ -224,6 +224,10 @@
   border-radius: 5px;
 }
 
+.nav-link {
+  @apply text-sm text-light hover:text-white;
+}
+
 .primary-btn {
   @apply h-[45px] whitespace-nowrap rounded-full border border-solid border-pythPurple bg-pythPurple px-8 font-mono text-xs uppercase;
 }

@@ -68,7 +68,7 @@ function Header() {
     <>
       <header
         className={`left-0 top-0 z-40 w-full px-1 transition-all lg:px-10
-        ${isSticky || headerState.opened ? 'fixed ' : 'absolute'}
+        ${isSticky || headerState.opened ? 'fixed' : 'absolute'}
         ${isSticky && !headerState.opened ? 'bg-darkGray shadow-black' : ''}
         `}
       >
@@ -84,18 +84,13 @@ function Header() {
 					`}
         >
           <Link href="/">
-            <a
-              className={`basis-7 ${
-                headerState.opened &&
-                'fixed left-5 top-3 sm:relative sm:left-0 sm:top-0'
-              }`}
-            >
-              <Pyth className="w-[170px]" />
+            <a className="flex basis-[160px] cursor-pointer items-center">
+              <Pyth className="h-30 mr-3" />
             </a>
           </Link>
           <nav>
             <ul
-              className={`hidden list-none lg:flex ${
+              className={`hidden list-none space-x-10 lg:flex ${
                 headerState.opened && 'hidden'
               }`}
             >
@@ -103,15 +98,11 @@ function Header() {
                 <li key={item.name}>
                   <Link href={item.href}>
                     <a
-                      className={`px-6 text-sm leading-none tracking-wide transition-colors hover:text-white lg:px-6 xl:px-8 ${
-                        router.pathname === item.href
-                          ? 'text-white'
-                          : 'text-light'
-                      }`}
-                      aria-current={
-                        router.pathname === item.href ? 'page' : undefined
+                      className={
+                        router.pathname == item.href
+                          ? 'nav-link font-bold'
+                          : 'nav-link '
                       }
-                      target={item.target}
                     >
                       {item.name}
                     </a>
@@ -121,7 +112,9 @@ function Header() {
             </ul>
           </nav>
           <div className="flex items-center justify-end space-x-2">
-            <WalletMultiButton className="primary-btn pt-0.5" />
+            {headerState.opened ? null : (
+              <WalletMultiButton className="primary-btn pt-0.5" />
+            )}
             <div
               className={`basis-7 ${
                 headerState.opened &&
