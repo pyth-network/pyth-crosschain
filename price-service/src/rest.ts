@@ -7,7 +7,7 @@ import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
 import fetch from "node-fetch";
 import { TimestampInSec } from "./helpers";
-import { PriceStore } from "./listen";
+import { PriceStore, VaaConfig } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
 
@@ -30,6 +30,14 @@ export class RestException extends Error {
       `Price Feeds with ids ${notFoundIds.join(", ")} not found`
     );
   }
+}
+
+function asyncWrapper(
+  callback: (req: Request, res: Response, next: NextFunction) => Promise<any>
+) {
+  return function (req: Request, res: Response, next: NextFunction) {
+    callback(req, res, next).catch(next);
+  };
 }
 
 export class RestAPI {
@@ -129,36 +137,41 @@ export class RestAPI {
     app.get(
       "/api/get_vaa",
       validate(getVaaInputSchema),
-      (req: Request, res: Response) => {
+      asyncWrapper(async (req: Request, res: Response) => {
         const priceFeedId = req.query.id as string;
         const publishTime = Number(req.query.publish_time as string);
-        const vaa = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
+
+        let vaa = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
+
         // if publishTime is older than cache ttl or vaa is not found, fetch from db
-        if (!vaa) {
-          // cache miss
-          if (this.dbApiEndpoint && this.dbApiCluster) {
-            fetch(
-              `${this.dbApiEndpoint}/vaa?id=${priceFeedId}&publishTime=${publishTime}&cluster=${this.dbApiCluster}`
-            )
-              .then((r: any) => r.json())
-              .then((arr: any) => {
-                if (arr.length > 0 && arr[0]) {
-                  res.json(arr[0]);
-                } else {
-                  res.status(StatusCodes.NOT_FOUND).send("VAA not found");
-                }
-              });
+        if (vaa === undefined && this.dbApiEndpoint && this.dbApiCluster) {
+          const priceFeedWithoutLeading0x = priceFeedId.startsWith("0x")
+            ? priceFeedId.substring(2)
+            : priceFeedId;
+          const res = await fetch(
+            `${this.dbApiEndpoint}/vaa?id=${priceFeedWithoutLeading0x}&publishTime=${publishTime}&cluster=${this.dbApiCluster}`
+          );
+
+          const data = (await res.json()) as any[];
+
+          if (data.length > 0) {
+            vaa = {
+              vaa: data[0].vaa,
+              publishTime: Math.floor(
+                new Date(data[0].publishTime).getTime() / 1000
+              ),
+            };
           }
-        } else {
-          // cache hit
-          const processedVaa = {
-            publishTime: new Date(vaa.publishTime),
-            vaa: vaa.vaa,
-          };
-          res.json(processedVaa);
         }
-      }
+
+        if (vaa === undefined) {
+          res.status(StatusCodes.NOT_FOUND).send("VAA not found.");
+        } else {
+          res.json(vaa);
+        }
+      })
     );
+
     endpoints.push(
       "api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>"
     );

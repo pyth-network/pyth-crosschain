@@ -15,3 +15,13 @@ export function envOrErr(env: string): string {
   }
   return String(process.env[env]);
 }
+
+export function parseToOptionalNumber(
+  s: string | undefined
+): number | undefined {
+  if (s === undefined) {
+    return undefined;
+  }
+
+  return parseInt(s, 10);
+}
