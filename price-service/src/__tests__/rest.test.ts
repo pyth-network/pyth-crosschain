@@ -42,7 +42,7 @@ function dummyPriceInfoPair(
       priceFeed: dummyPriceFeed(id),
       publishTime: 0,
       attestationTime: 0,
-      seqNum,
+      seqNum: BigInt(seqNum),
       vaa: Buffer.from(vaa, "hex"),
       emitterChainId: 0,
       priceServiceReceiveTime: 0,

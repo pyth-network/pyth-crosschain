@@ -1,5 +1,3 @@
-import { setDefaultWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
-
 import { envOrErr } from "./helpers";
 import { Listener } from "./listen";
 import { initLogger } from "./logging";
@@ -16,8 +14,6 @@ if (process.env.PYTH_PRICE_SERVICE_CONFIG) {
 console.log("Loading config file [%s]", configFile);
 // tslint:disable:no-var-requires
 require("dotenv").config({ path: configFile });
-
-setDefaultWasm("node");
 
 // Set up the logger.
 initLogger({ logLevel: process.env.LOG_LEVEL });
