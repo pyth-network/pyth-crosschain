@@ -3,10 +3,7 @@ import {
   subscribeSignedVAA,
 } from "@certusone/wormhole-spydk";
 
-import {
-  ChainId, uint8ArrayToHex,
-  parseVaa
-} from "@certusone/wormhole-sdk"
+import { ChainId, uint8ArrayToHex, parseVaa } from "@certusone/wormhole-sdk";
 
 import {
   FilterEntry,
@@ -252,9 +249,9 @@ export class Listener implements PriceStore {
   async processVaa(vaa: Buffer) {
     const parsedVaa = parseVaa(vaa);
 
-    const vaaEmitterAddressHex = Buffer.from(
-      parsedVaa.emitterAddress
-    ).toString("hex");
+    const vaaEmitterAddressHex = Buffer.from(parsedVaa.emitterAddress).toString(
+      "hex"
+    );
     const observedVaasKey: VaaKey = `${parsedVaa.emitterChain}#${vaaEmitterAddressHex}#${parsedVaa.sequence}`;
 
     if (this.observedVaas.has(observedVaasKey)) {
