@@ -22,7 +22,7 @@ const tabInfo = {
   },
 }
 
-const DEFAULT_TAB = 'MinPublishers'
+const DEFAULT_TAB = 'min-publishers'
 
 const Home: NextPage = () => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
@@ -45,7 +45,6 @@ const Home: NextPage = () => {
 
   // set current tab value when page is loaded
   useEffect(() => {
-    console.log(router.query.tab)
     router.query && router.query.tab
       ? setCurrentTabIndex(
           Object.values(tabInfo).findIndex(
