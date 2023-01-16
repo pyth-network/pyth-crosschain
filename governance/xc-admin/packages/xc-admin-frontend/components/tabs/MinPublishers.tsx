@@ -2,7 +2,7 @@ import { usePythContext } from '../../contexts/PythContext'
 import ClusterSwitch from '../ClusterSwitch'
 import Loadbar from '../loaders/Loadbar'
 
-function MinPublishers() {
+const MinPublishers = () => {
   const { rawConfig, dataIsLoading } = usePythContext()
 
   return (

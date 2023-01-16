@@ -1,9 +1,44 @@
 import { PublicKey } from '@solana/web3.js'
+import copy from 'copy-to-clipboard'
+import React from 'react'
 import { usePythContext } from '../../contexts/PythContext'
+import CopyIcon from '../../images/icons/copy.inline.svg'
 import ClusterSwitch from '../ClusterSwitch'
 import Loadbar from '../loaders/Loadbar'
 
-function UpdatePermissions() {
+interface UpdatePermissionsProps {
+  account: string
+  pubkey?: PublicKey
+}
+
+const UpdatePermissionsRow: React.FunctionComponent<UpdatePermissionsProps> = ({
+  account,
+  pubkey = new PublicKey(0),
+}) => {
+  return (
+    <tr key={account} className="border-t border-beige-300">
+      <td className="py-3 pl-4 pr-2 lg:pl-14">{account}</td>
+      <td className="py-3 pl-1 lg:pl-14">
+        <div
+          className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
+          onClick={() => {
+            copy(pubkey.toBase58())
+          }}
+        >
+          <span className="mr-2 hidden lg:block">{pubkey.toBase58()}</span>
+          <span className="mr-2 lg:hidden">
+            {pubkey.toBase58().slice(0, 6) +
+              '...' +
+              pubkey.toBase58().slice(-6)}
+          </span>{' '}
+          <CopyIcon className="shrink-0" />
+        </div>
+      </td>
+    </tr>
+  )
+}
+
+const UpdatePermissions = () => {
   const { rawConfig, dataIsLoading } = usePythContext()
 
   return (
@@ -23,25 +58,33 @@ function UpdatePermissions() {
               <Loadbar theme="light" />
             </div>
           ) : (
-            <div className="mt-3">
-              <p className="h5 mb-8">
-                Master Authority:{' '}
-                {rawConfig.permissionAccount
-                  ? rawConfig.permissionAccount.masterAuthority.toBase58()
-                  : new PublicKey(0).toBase58()}
-              </p>
-              <p className="h5 mb-8">
-                Data Curation Authority:{' '}
-                {rawConfig.permissionAccount
-                  ? rawConfig.permissionAccount.dataCurationAuthority.toBase58()
-                  : new PublicKey(0).toBase58()}
-              </p>
-              <p className="h5 mb-8">
-                Security Authority:{' '}
-                {rawConfig.permissionAccount
-                  ? rawConfig.permissionAccount.securityAuthority.toBase58()
-                  : new PublicKey(0).toBase58()}
-              </p>
+            <div className="table-responsive mb-10">
+              <table className="w-full bg-darkGray text-left">
+                <thead>
+                  <tr>
+                    <th className="base16 pt-8 pb-6 pl-4 pr-2 font-semibold opacity-60 lg:pl-14">
+                      Account
+                    </th>
+                    <th className="base16 pt-8 pb-6 pl-1 pr-2 font-semibold opacity-60 lg:pl-14">
+                      Public Key
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <UpdatePermissionsRow
+                    account="Master Authority"
+                    pubkey={rawConfig.permissionAccount?.masterAuthority}
+                  />
+                  <UpdatePermissionsRow
+                    account="Data Curation Authority"
+                    pubkey={rawConfig.permissionAccount?.dataCurationAuthority}
+                  />
+                  <UpdatePermissionsRow
+                    account="Security Authority"
+                    pubkey={rawConfig.permissionAccount?.securityAuthority}
+                  />
+                </tbody>
+              </table>
             </div>
           )}
         </div>
