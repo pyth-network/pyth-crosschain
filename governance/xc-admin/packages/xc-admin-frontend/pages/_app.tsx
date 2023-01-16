@@ -1,14 +1,11 @@
-import { DefaultSeo } from 'next-seo'
-import type { AppProps } from 'next/app'
-import Head from 'next/head'
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import {
   ConnectionProvider,
   WalletProvider,
 } from '@solana/wallet-adapter-react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
+import '@solana/wallet-adapter-react-ui/styles.css'
 import {
-  BackpackWalletAdapter,
   GlowWalletAdapter,
   LedgerWalletAdapter,
   PhantomWalletAdapter,
@@ -17,16 +14,15 @@ import {
   SolletWalletAdapter,
   TorusWalletAdapter,
 } from '@solana/wallet-adapter-wallets'
-import { Toaster } from 'react-hot-toast'
 import { clusterApiUrl } from '@solana/web3.js'
+import { DefaultSeo } from 'next-seo'
+import type { AppProps } from 'next/app'
+import Head from 'next/head'
+import { useMemo } from 'react'
+import { Toaster } from 'react-hot-toast'
 import { ClusterProvider } from '../contexts/ClusterContext'
 import SEO from '../next-seo.config'
 import '../styles/globals.css'
-import { useMemo } from 'react'
-
-// Use require instead of import since order matters
-require('@solana/wallet-adapter-react-ui/styles.css')
-require('../styles/globals.css')
 
 function MyApp({ Component, pageProps }: AppProps) {
   // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
@@ -43,7 +39,6 @@ function MyApp({ Component, pageProps }: AppProps) {
     () => [
       new PhantomWalletAdapter(),
       new GlowWalletAdapter(),
-      new BackpackWalletAdapter(),
       new SolflareWalletAdapter(),
       new TorusWalletAdapter(),
       new LedgerWalletAdapter(),

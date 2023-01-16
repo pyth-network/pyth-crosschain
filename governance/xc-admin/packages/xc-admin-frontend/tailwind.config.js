@@ -45,8 +45,13 @@ module.exports = {
       hoverable: { raw: '(hover: hover)' },
     },
     fontFamily: {
-      body: ["'Urbanist'", 'sans-serif'],
-      mono: ["'IBM Plex Mono'", 'monospace'],
+      arboria: 'arboria, sans-serif',
+      roboto: 'roboto, sans-serif',
+      robotoMono: 'roboto-mono, monospace',
+      inter: 'inter, sans-serif',
+      poppins: 'poppins, sans-serif',
+      body: 'Urbanist, sans-serif',
+      mono: 'IBM Plex Mono, monospace',
     },
     extend: {
       fontSize: {
@@ -77,6 +82,7 @@ module.exports = {
         green: '#15AE6E',
         lightPurple: '#7731EA',
         offPurple: '#745E9D',
+        pythPurple: '#7142CF',
       },
       letterSpacing: {
         wide: '.02em',
