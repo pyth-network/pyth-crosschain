@@ -15,7 +15,6 @@ function Header() {
   const { cluster } = useContext(ClusterContext)
   const router = useRouter()
   const [isSticky, setIsSticky] = useState(false)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const navigation = [
     {
@@ -75,23 +74,19 @@ function Header() {
         <div
           className={`relative flex items-center justify-between ${
             isSticky ? 'lg:py-4' : 'before:gradient-border md:py-6'
-          }
-					 ${
-             !headerState.opened
-               ? 'px-4 py-3 lg:px-10 lg:py-6'
-               : 'sm:px-4  sm:py-3  sm:lg:px-10  sm:lg:py-6'
-           }
-					`}
+          } px-4 py-3 lg:px-10 lg:py-6`}
         >
           <Link href="/">
-            <a className="flex basis-[160px] cursor-pointer items-center">
-              <Pyth className="h-30 mr-3" />
+            <a
+              className={`flex min-h-[45px] basis-[160px] cursor-pointer items-center`}
+            >
+              <Pyth />
             </a>
           </Link>
           <nav>
             <ul
-              className={`hidden list-none space-x-10 lg:flex ${
-                headerState.opened && 'hidden'
+              className={`list-none space-x-10 ${
+                headerState.opened ? 'hidden' : 'hidden lg:flex'
               }`}
             >
               {navigation.map((item) => (
@@ -101,7 +96,7 @@ function Header() {
                       className={
                         router.pathname == item.href
                           ? 'nav-link font-bold'
-                          : 'nav-link '
+                          : 'nav-link'
                       }
                     >
                       {item.name}
@@ -116,15 +111,17 @@ function Header() {
               <WalletMultiButton className="primary-btn pt-0.5" />
             )}
             <div
-              className={`basis-7 ${
-                headerState.opened &&
-                'fixed right-5 top-[20px] sm:relative sm:left-0 sm:top-0'
-              }`}
+              className={`relative top-0 right-5 left-0 basis-7
+              `}
               onClick={handleToggleMenu}
             >
-              <button className="group ml-auto block lg:hidden">
+              <button
+                className={`group ml-auto align-middle ${
+                  headerState.opened ? 'block' : 'lg:hidden'
+                }`}
+              >
                 <span
-                  className={`ml-auto block h-0.5 w-3.5  rounded-sm bg-light transition-all lg:group-hover:w-5 ${
+                  className={`ml-auto block h-0.5 w-3.5 rounded-sm bg-light transition-all lg:group-hover:w-5 ${
                     headerState.opened
                       ? 'mb-0 w-5 translate-y-1 rotate-45'
                       : 'mb-1'

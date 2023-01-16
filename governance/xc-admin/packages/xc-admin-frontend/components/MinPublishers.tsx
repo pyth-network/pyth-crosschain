@@ -1,17 +1,14 @@
-import { useContext } from 'react'
-import { ClusterContext } from '../contexts/ClusterContext'
 import { usePythContext } from '../contexts/PythContext'
 import ClusterSwitch from './ClusterSwitch'
 import Loadbar from './loaders/Loadbar'
 
 function MinPublishers() {
-  const cluster = useContext(ClusterContext)
   const { rawConfig, dataIsLoading } = usePythContext()
 
   return (
     <div className="pt-15 relative lg:pt-20">
       <div className="container flex flex-col items-center justify-between pt-32 lg:flex-row ">
-        <div className="mb-10 w-full text-center lg:mb-0 lg:text-left">
+        <div className="mb-10 w-full text-left lg:mb-0">
           <h1 className="h1 mb-3">Min Publishers</h1>
         </div>
       </div>
@@ -71,22 +68,6 @@ function MinPublishers() {
           )}
         </div>
       </div>
-    </div>
-  )
-}
-
-const MinPubsRow = ({ symbol, minPub }: { symbol: string; minPub: number }) => {
-  return (
-    <div>
-      <tr key={symbol} className="border-t border-beige hover:bg-beige3">
-        <td className="py-3 px-6 text-left md:px-8">
-          <span className="inline-flex  items-center  ">
-            <span className="hidden cursor-pointer md:block">{symbol}</span>
-          </span>
-        </td>
-      </tr>
-      <p className="leading-0 relative block md:text-base18 ">{symbol}</p>
-      <small className="leading-0 relative text-sm opacity-60">{minPub}</small>
     </div>
   )
 }
