@@ -65,3 +65,6 @@ export class MultisigParser {
     }
   }
 }
+
+export { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
+export { PythMultisigInstruction } from "./PythMultisigInstruction";

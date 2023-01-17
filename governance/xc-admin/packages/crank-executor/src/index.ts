@@ -11,14 +11,17 @@ import {
 import SquadsMesh, { DEFAULT_MULTISIG_PROGRAM_ID, getIxPDA } from "@sqds/mesh";
 import * as fs from "fs";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
-import { getProposals, MultisigParser } from "xc-admin-common";
+import {
+  getProposals,
+  MultisigParser,
+  WormholeMultisigInstruction,
+} from "xc-admin-common";
 import BN from "bn.js";
 import { AnchorProvider } from "@project-serum/anchor";
 import {
   getPythClusterApiUrl,
   PythCluster,
 } from "@pythnetwork/client/lib/cluster";
-import { WormholeMultisigInstruction } from "xc-admin-common/src/multisig_transaction/WormholeMultisigInstruction";
 import {
   deriveFeeCollectorKey,
   getWormholeBridgeData,
