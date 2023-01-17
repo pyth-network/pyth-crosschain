@@ -1,15 +1,15 @@
-import { usePythContext } from '../contexts/PythContext'
-import ClusterSwitch from './ClusterSwitch'
-import Loadbar from './loaders/Loadbar'
+import { usePythContext } from '../../contexts/PythContext'
+import ClusterSwitch from '../ClusterSwitch'
+import Loadbar from '../loaders/Loadbar'
 
-function MinPublishers() {
+const MinPublishers = () => {
   const { rawConfig, dataIsLoading } = usePythContext()
 
   return (
-    <div className="pt-15 relative lg:pt-20">
-      <div className="container flex flex-col items-center justify-between pt-32 lg:flex-row ">
-        <div className="mb-10 w-full text-left lg:mb-0">
-          <h1 className="h1 mb-3">Min Publishers</h1>
+    <div className="relative">
+      <div className="container flex flex-col items-center justify-between lg:flex-row">
+        <div className="mb-4 w-full text-left lg:mb-0">
+          <h1 className="h1 mb-4">Min Publishers</h1>
         </div>
       </div>
       <div className="container">
