@@ -10,6 +10,7 @@ import { removeLeading0x, TimestampInSec } from "./helpers";
 import { PriceStore, VaaConfig } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
+import { retry } from "ts-retry-promise";
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
@@ -29,6 +30,17 @@ export class RestException extends Error {
       StatusCodes.BAD_REQUEST,
       `Price Feed(s) with id(s) ${notFoundIds.join(", ")} not found.`
     );
+  }
+
+  static PublishTimeInTheFuture(): RestException {
+    return new RestException(
+      StatusCodes.BAD_REQUEST,
+      "Publish time is in the future."
+    );
+  }
+
+  static VaaNotFound(): RestException {
+    return new RestException(StatusCodes.NOT_FOUND, "VAA not found.");
   }
 }
 
@@ -70,11 +82,13 @@ export class RestAPI {
     if (vaa === undefined && this.dbApiEndpoint && this.dbApiCluster) {
       const priceFeedWithoutLeading0x = removeLeading0x(priceFeedId);
 
-      const res = await fetch(
-        `${this.dbApiEndpoint}/vaa?id=${priceFeedWithoutLeading0x}&publishTime=${publishTime}&cluster=${this.dbApiCluster}`
-      );
-
-      const data = (await res.json()) as any[];
+      const data = (await retry(
+        () =>
+          fetch(
+            `${this.dbApiEndpoint}/vaa?id=${priceFeedWithoutLeading0x}&publishTime=${publishTime}&cluster=${this.dbApiCluster}`
+          ).then((res) => res.json()),
+        { retries: 3 }
+      )) as any[];
 
       if (data.length > 0) {
         vaa = {
@@ -177,15 +191,13 @@ export class RestAPI {
 
         const currentTime = Math.floor(new Date().getTime() / 1000);
         if (publishTime > currentTime) {
-          res
-            .status(StatusCodes.NOT_FOUND)
-            .json({ message: "publishTime is in the future." });
+          throw RestException.PublishTimeInTheFuture();
         }
 
         const vaa = await this.getVaaWithDbLookup(priceFeedId, publishTime);
 
         if (vaa === undefined) {
-          res.status(StatusCodes.NOT_FOUND).json({ message: "VAA not found." });
+          throw RestException.VaaNotFound();
         } else {
           res.json(vaa);
         }
@@ -224,18 +236,20 @@ export class RestAPI {
 
         const currentTime = Math.floor(new Date().getTime() / 1000);
         if (publishTime > currentTime) {
-          res
-            .status(StatusCodes.NOT_FOUND)
-            .json({ message: "publishTime is in the future." });
+          throw RestException.PublishTimeInTheFuture();
         }
 
         const vaa = await this.getVaaWithDbLookup(priceFeedId, publishTime);
 
         if (vaa === undefined) {
-          // Returning internal server error because we should find one using the VAA db. CCIP expects a 5xx
-          // error if it needs to retry or try other endpoints.
+          // Returning Bad Gateway error because CCIP expects a 5xx error if it needs to
+          // retry or try other endpoints. Bad Gateway seems the best choice here as this
+          // is not an internal error and could happen on two scenarios:
+          // 1. DB Api is not responding well (Bad Gateway is appropriate here)
+          // 2. Publish time is a few seconds before current time and a VAA
+          //    Will be available in a few seconds. So we want the client to retry.
           res
-            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .status(StatusCodes.BAD_GATEWAY)
             .json({ "message:": "VAA not found." });
         } else {
           const pubTimeBuffer = Buffer.alloc(8);

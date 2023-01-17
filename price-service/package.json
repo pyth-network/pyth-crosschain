@@ -50,6 +50,7 @@
     "node-fetch": "^2.6.1",
     "prom-client": "^14.0.1",
     "response-time": "^2.3.2",
+    "ts-retry-promise": "^0.7.0",
     "winston": "^3.3.3",
     "ws": "^8.6.0"
   },
