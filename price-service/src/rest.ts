@@ -134,7 +134,7 @@ export class RestAPI {
 
         // Multiple price ids might share same vaa, we use sequence number as
         // key of a vaa and deduplicate using a map of seqnum to vaa bytes.
-        const vaaMap = new Map<bigint, Buffer>();
+        const vaaMap = new Map<number, Buffer>();
 
         const notFoundIds: string[] = [];
 
