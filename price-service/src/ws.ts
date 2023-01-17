@@ -233,6 +233,10 @@ export class WebSocketAPI {
         this.aliveClients.add(ws);
       });
 
+      ws.on("error", (err: Error) => {
+        logger.warn(`Err with client ${this.wsId.get(ws)}: ${err}`);
+      });
+
       ws.on("close", (_code: number, _reason: Buffer) => {
         logger.info(`client ${this.wsId.get(ws)} closed the connection.`);
         this.promClient?.addWebSocketInteraction("close", "ok");
