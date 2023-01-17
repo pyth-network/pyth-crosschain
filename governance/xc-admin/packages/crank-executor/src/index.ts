@@ -1,21 +1,28 @@
 import {
+  AccountMeta,
   Commitment,
   Connection,
   Keypair,
   PublicKey,
   SendTransactionError,
+  SystemProgram,
   Transaction,
 } from "@solana/web3.js";
 import SquadsMesh, { DEFAULT_MULTISIG_PROGRAM_ID, getIxPDA } from "@sqds/mesh";
 import * as fs from "fs";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
-import { getProposals } from "xc-admin-common";
+import { getProposals, MultisigParser } from "xc-admin-common";
 import BN from "bn.js";
 import { AnchorProvider } from "@project-serum/anchor";
 import {
   getPythClusterApiUrl,
   PythCluster,
 } from "@pythnetwork/client/lib/cluster";
+import { WormholeMultisigInstruction } from "xc-admin-common/src/multisig_transaction/WormholeMultisigInstruction";
+import {
+  deriveFeeCollectorKey,
+  getWormholeBridgeData,
+} from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 
 export function envOrErr(env: string): string {
   const val = process.env[env];
@@ -42,6 +49,15 @@ async function run() {
     wallet: new NodeWallet(KEYPAIR),
     multisigProgramId: DEFAULT_MULTISIG_PROGRAM_ID,
   });
+  const multisigParser = MultisigParser.fromCluster(CLUSTER as PythCluster);
+  const wormholeFee = (
+    await getWormholeBridgeData(
+      squad.connection,
+      multisigParser.wormholeBridgeAddress!,
+      COMMITMENT
+    )
+  ).config.fee;
+
   const proposals = await getProposals(squad, VAULT, undefined, "executeReady");
   for (const proposal of proposals) {
     // If we have previously cancelled because the proposal was failing, don't attempt
@@ -51,7 +67,35 @@ async function run() {
         i <= proposal.instructionIndex;
         i++
       ) {
-        const transaction = new Transaction().add(
+        const instructionPda = getIxPDA(
+          proposal.publicKey,
+          new BN(i),
+          squad.multisigProgramId
+        )[0];
+        const instruction = await squad.getInstruction(instructionPda);
+        const parsedInstruction = multisigParser.parseInstruction({
+          programId: instruction.programId,
+          data: instruction.data as Buffer,
+          keys: instruction.keys as AccountMeta[],
+        });
+        const transaction = new Transaction();
+
+        if (
+          parsedInstruction instanceof WormholeMultisigInstruction &&
+          parsedInstruction.name == "postMessage"
+        ) {
+          transaction.add(
+            SystemProgram.transfer({
+              lamports: wormholeFee,
+              toPubkey: deriveFeeCollectorKey(
+                multisigParser.wormholeBridgeAddress!
+              ),
+              fromPubkey: squad.wallet.publicKey,
+            })
+          );
+        }
+
+        transaction.add(
           await squad.buildExecuteInstruction(
             proposal.publicKey,
             getIxPDA(proposal.publicKey, new BN(i), squad.multisigProgramId)[0]
@@ -59,12 +103,14 @@ async function run() {
         );
 
         try {
+          console.log("Sending: ", transaction.instructions.length);
           await new AnchorProvider(squad.connection, squad.wallet, {
             commitment: COMMITMENT,
             preflightCommitment: COMMITMENT,
-          }).sendAndConfirm(transaction, []);
+          }).sendAndConfirm(transaction, [], { skipPreflight: true });
         } catch (error) {
           // Mark the transaction as cancelled if we failed to run it
+          console.log(error);
           if (error instanceof SendTransactionError) {
             await squad.cancelTransaction(proposal.publicKey);
           }
