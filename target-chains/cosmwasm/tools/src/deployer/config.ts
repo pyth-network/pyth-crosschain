@@ -41,6 +41,12 @@ export const CONFIG: Config = {
       network: Network.Testnet,
     },
   },
+  [NETWORKS.OSMOSIS_TESTNET]: {
+    type: CONFIG_TYPE.OSMOSIS,
+    host: {
+      endpoint: "https://rpc-test.osmosis.zone:443",
+    },
+  },
   [NETWORKS.OSMOSIS_LOCAL]: {
     type: CONFIG_TYPE.OSMOSIS,
     host: {
