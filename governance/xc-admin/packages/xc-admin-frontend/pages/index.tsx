@@ -8,7 +8,7 @@ import UpdatePermissions from '../components/tabs/UpdatePermissions'
 import { PythContextProvider } from '../contexts/PythContext'
 import { classNames } from '../utils/classNames'
 
-const tabInfo = {
+const TabInfo = {
   MinPublishers: {
     title: 'Min Publishers',
     description:
@@ -31,7 +31,7 @@ const Home: NextPage = () => {
 
   // set current tab value when tab is clicked
   const handleChangeTab = (index: number) => {
-    router.query.tab = Object.values(tabInfo)[index].queryString
+    router.query.tab = Object.values(TabInfo)[index].queryString
     setCurrentTabIndex(index)
     router.push(
       {
@@ -47,12 +47,12 @@ const Home: NextPage = () => {
   useEffect(() => {
     router.query && router.query.tab
       ? setCurrentTabIndex(
-          Object.values(tabInfo).findIndex(
+          Object.values(TabInfo).findIndex(
             (v) => v.queryString === router.query.tab
           )
         )
       : setCurrentTabIndex(
-          Object.values(tabInfo).findIndex((v) => v.queryString === DEFAULT_TAB)
+          Object.values(TabInfo).findIndex((v) => v.queryString === DEFAULT_TAB)
         )
   }, [router])
 
@@ -66,7 +66,7 @@ const Home: NextPage = () => {
               onChange={handleChangeTab}
             >
               <Tab.List className="mx-auto max-w-[526px] gap-1 space-x-4 text-center sm:gap-2.5 md:space-x-8">
-                {Object.entries(tabInfo).map((tab, idx) => (
+                {Object.entries(TabInfo).map((tab, idx) => (
                   <Tab
                     key={idx}
                     className={({ selected }) =>
@@ -87,11 +87,11 @@ const Home: NextPage = () => {
           </div>
         </div>
         {currentTabIndex !== -1 &&
-          (Object.values(tabInfo)[currentTabIndex].queryString ===
-          tabInfo.MinPublishers.queryString ? (
+          (Object.values(TabInfo)[currentTabIndex].queryString ===
+          TabInfo.MinPublishers.queryString ? (
             <MinPublishers />
-          ) : Object.values(tabInfo)[currentTabIndex].queryString ===
-            tabInfo.UpdatePermissions.queryString ? (
+          ) : Object.values(TabInfo)[currentTabIndex].queryString ===
+            TabInfo.UpdatePermissions.queryString ? (
             <UpdatePermissions />
           ) : null)}
       </PythContextProvider>
