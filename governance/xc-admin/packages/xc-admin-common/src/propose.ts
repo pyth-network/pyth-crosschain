@@ -3,12 +3,17 @@ import {
   PublicKey,
   Transaction,
   TransactionInstruction,
+  SYSVAR_RENT_PUBKEY,
+  SYSVAR_CLOCK_PUBKEY,
+  SystemProgram,
 } from "@solana/web3.js";
 import { BN } from "bn.js";
 import { AnchorProvider } from "@project-serum/anchor";
 import {
   createWormholeProgramInterface,
-  getPostMessageAccounts,
+  deriveWormholeBridgeDataKey,
+  deriveEmitterSequenceKey,
+  deriveFeeCollectorKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
 
@@ -36,7 +41,6 @@ export async function proposeInstructions(
 ): Promise<PublicKey> {
   const msAccount = await squad.getMultisig(vault);
   let txToSend: Transaction[] = [];
-
   const createProposal = new Transaction().add(
     await squad.buildCreateTransaction(
       msAccount.publicKey,
@@ -61,7 +65,7 @@ export async function proposeInstructions(
         vault,
         newProposalAddress,
         instructions[i],
-        i,
+        i + 1,
         wormholeAddress
       );
       txToSend.push(
@@ -134,7 +138,7 @@ export async function wrapAsRemoteInstruction(
   instructionIndex: number,
   wormholeAddress: PublicKey
 ): Promise<SquadInstruction> {
-  const emitter = squad.getAuthorityPDA(vault, 0);
+  const emitter = squad.getAuthorityPDA(vault, 1);
 
   const [messagePDA, messagePdaBump] = getIxAuthorityPDA(
     proposalAddress,
@@ -156,12 +160,7 @@ export async function wrapAsRemoteInstruction(
     instruction,
   ]).encode();
 
-  const accounts = getPostMessageAccounts(
-    wormholeAddress,
-    emitter,
-    emitter,
-    messagePDA
-  );
+  const accounts = getPostMessageAccounts(wormholeAddress, emitter, messagePDA);
 
   return {
     instruction: await wormholeProgram.methods
@@ -171,5 +170,22 @@ export async function wrapAsRemoteInstruction(
     authorityIndex: instructionIndex,
     authorityBump: messagePdaBump,
     authorityType: "custom",
+  };
+}
+function getPostMessageAccounts(
+  wormholeAddress: PublicKey,
+  emitter: PublicKey,
+  message: PublicKey
+) {
+  return {
+    bridge: deriveWormholeBridgeDataKey(wormholeAddress),
+    message,
+    emitter,
+    sequence: deriveEmitterSequenceKey(emitter, wormholeAddress),
+    payer: emitter,
+    feeCollector: deriveFeeCollectorKey(wormholeAddress),
+    clock: SYSVAR_CLOCK_PUBKEY,
+    rent: SYSVAR_RENT_PUBKEY,
+    systemProgram: SystemProgram.programId,
   };
 }
