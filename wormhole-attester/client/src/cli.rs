@@ -60,27 +60,6 @@ pub enum Action {
         #[clap(short = 'f', long = "--config", help = "Attestation YAML config")]
         attestation_cfg:           PathBuf,
         #[clap(
-            short = 'n',
-            long = "--n-retries",
-            help = "How many times to retry send_transaction() on each batch before flagging a failure. Only active outside daemon mode",
-            default_value = "5"
-        )]
-        n_retries:                 usize,
-        #[clap(
-            short = 'i',
-            long = "--retry-interval",
-            help = "How long to wait between send_transaction
-            retries. Only active outside daemon mode",
-            default_value = "5"
-        )]
-        retry_interval_secs:       u64,
-        #[clap(
-            short = 'd',
-            long = "--daemon",
-            help = "Do not stop attesting. In this mode, this program will behave more like a daemon and continuously attest the specified symbols."
-        )]
-        daemon:                    bool,
-        #[clap(
             short = 't',
             long = "--timeout",
             help = "How many seconds to wait before giving up on  tx confirmation.",

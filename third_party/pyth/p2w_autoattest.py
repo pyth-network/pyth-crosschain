@@ -168,34 +168,6 @@ symbol_groups:
 # modules like async HTTP requests and tokio runtime logs
 os.environ["RUST_LOG"] = os.environ.get("RUST_LOG", "info")
 
-# Send the first attestation in one-shot mode for testing
-first_attest_result = run_or_die(
-    [
-        "pwhac",
-        "--commitment",
-        "confirmed",
-        "--p2w-addr",
-        P2W_SOL_ADDRESS,
-        "--rpc-url",
-        SOL_RPC_URL,
-        "--payer",
-        SOL_PAYER_KEYPAIR,
-        "attest",
-        "-f",
-        P2W_ATTESTATION_CFG,
-        "--timeout",
-        P2W_RPC_TIMEOUT_SECS,
-    ],
-    capture_output=True,
-    debug = True,
-)
-
-logging.info("p2w_autoattest ready to roll!")
-
-# Let k8s know the service is up
-readiness_thread = threading.Thread(target=readiness, daemon=True)
-readiness_thread.start()
-
 # Do not exit this script if a continuous attestation stops for
 # whatever reason (this avoids k8s restart penalty)
 while True:
@@ -214,7 +186,6 @@ while True:
             "attest",
             "-f",
             P2W_ATTESTATION_CFG,
-            "-d",
             "--timeout",
             P2W_RPC_TIMEOUT_SECS,
         ]
