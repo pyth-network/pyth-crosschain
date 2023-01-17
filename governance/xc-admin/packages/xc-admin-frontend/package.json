@@ -13,6 +13,7 @@
     "@headlessui/react": "^1.7.7",
     "@pythnetwork/client": "^2.9.0",
     "@solana/wallet-adapter-base": "^0.9.20",
+    "@solana/wallet-adapter-react": "^0.15.28",
     "@solana/wallet-adapter-react-ui": "^0.9.27",
     "@solana/wallet-adapter-wallets": "^0.19.10",
     "@solana/web3.js": "^1.73.0",

@@ -1,4 +1,4 @@
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useContext, useEffect, useState } from 'react'
@@ -6,12 +6,18 @@ import { ClusterContext, DEFAULT_CLUSTER } from '../../contexts/ClusterContext'
 import Pyth from '../../images/logomark.inline.svg'
 import MobileMenu from './MobileMenu'
 
+const WalletMultiButtonDynamic = dynamic(
+  async () =>
+    (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
+  { ssr: false }
+)
+
 export interface BurgerState {
   initial: boolean | null
   opened: boolean | null
 }
 
-function Header() {
+const Header = () => {
   const { cluster } = useContext(ClusterContext)
   const router = useRouter()
   const [isSticky, setIsSticky] = useState(false)
@@ -78,7 +84,7 @@ function Header() {
         >
           <Link href="/">
             <a
-              className={`flex min-h-[45px] basis-[160px] cursor-pointer items-center`}
+              className={`flex min-h-[45px] basis-[180px] cursor-pointer items-center`}
             >
               <Pyth />
             </a>
@@ -107,11 +113,17 @@ function Header() {
             </ul>
           </nav>
           <div className="flex items-center justify-end space-x-2">
-            {headerState.opened ? null : (
-              <WalletMultiButton className="primary-btn pt-0.5" />
-            )}
+            <div className="h-[45px] w-[180px]">
+              {headerState.opened ? null : (
+                <WalletMultiButtonDynamic className="primary-btn float-right pt-0.5" />
+              )}
+            </div>
             <div
-              className={`relative top-0 right-5 left-0 basis-7
+              className={`${
+                headerState.opened
+                  ? 'relative top-0 right-5 left-0 basis-7'
+                  : 'lg:hidden'
+              }
               `}
               onClick={handleToggleMenu}
             >

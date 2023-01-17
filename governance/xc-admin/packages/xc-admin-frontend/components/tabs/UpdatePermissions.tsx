@@ -1,6 +1,13 @@
+import { AnchorProvider, Wallet } from '@coral-xyz/anchor'
+import {
+  getPythProgramKeyForCluster,
+  pythOracleProgram,
+} from '@pythnetwork/client'
+import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
 import copy from 'copy-to-clipboard'
-import React from 'react'
+import React, { useContext, useEffect } from 'react'
+import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
 import CopyIcon from '../../images/icons/copy.inline.svg'
 import ClusterSwitch from '../ClusterSwitch'
@@ -39,7 +46,26 @@ const UpdatePermissionsRow: React.FunctionComponent<UpdatePermissionsProps> = ({
 }
 
 const UpdatePermissions = () => {
-  const { rawConfig, dataIsLoading } = usePythContext()
+  const { cluster, setCluster } = useContext(ClusterContext)
+  const { rawConfig, dataIsLoading, connection } = usePythContext()
+  const anchorWallet = useAnchorWallet()
+  const { publicKey, connected } = useWallet()
+
+  // // create anchor wallet when connected
+  // useEffect(() => {
+  //   if (connected) {
+  //     const provider = new AnchorProvider(
+  //       connection,
+  //       anchorWallet as Wallet,
+  //       AnchorProvider.defaultOptions()
+  //     )
+  //     const pythOracle = pythOracleProgram(
+  //       getPythProgramKeyForCluster(cluster),
+  //       provider
+  //     )
+  //     console.log(pythOracle)
+  //   }
+  // }, [anchorWallet, connection, connected, cluster])
 
   return (
     <div className="relative">
