@@ -106,14 +106,12 @@ async function run() {
         );
 
         try {
-          console.log("Sending: ", transaction.instructions.length);
           await new AnchorProvider(squad.connection, squad.wallet, {
             commitment: COMMITMENT,
             preflightCommitment: COMMITMENT,
-          }).sendAndConfirm(transaction, [], { skipPreflight: true });
+          }).sendAndConfirm(transaction, []);
         } catch (error) {
           // Mark the transaction as cancelled if we failed to run it
-          console.log(error);
           if (error instanceof SendTransactionError) {
             await squad.cancelTransaction(proposal.publicKey);
           }
