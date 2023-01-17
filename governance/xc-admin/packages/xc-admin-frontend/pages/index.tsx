@@ -26,12 +26,13 @@ const DEFAULT_TAB = 'min-publishers'
 
 const Home: NextPage = () => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
+  const tabInfoArray = Object.values(TabInfo)
 
   const router = useRouter()
 
   // set current tab value when tab is clicked
   const handleChangeTab = (index: number) => {
-    router.query.tab = Object.values(TabInfo)[index].queryString
+    router.query.tab = tabInfoArray[index].queryString
     setCurrentTabIndex(index)
     router.push(
       {
@@ -47,14 +48,12 @@ const Home: NextPage = () => {
   useEffect(() => {
     router.query && router.query.tab
       ? setCurrentTabIndex(
-          Object.values(TabInfo).findIndex(
-            (v) => v.queryString === router.query.tab
-          )
+          tabInfoArray.findIndex((v) => v.queryString === router.query.tab)
         )
       : setCurrentTabIndex(
-          Object.values(TabInfo).findIndex((v) => v.queryString === DEFAULT_TAB)
+          tabInfoArray.findIndex((v) => v.queryString === DEFAULT_TAB)
         )
-  }, [router])
+  }, [router, tabInfoArray])
 
   return (
     <Layout>
@@ -86,10 +85,10 @@ const Home: NextPage = () => {
             </Tab.Group>
           </div>
         </div>
-        {Object.values(TabInfo)[currentTabIndex].queryString ===
+        {tabInfoArray[currentTabIndex].queryString ===
         TabInfo.MinPublishers.queryString ? (
           <MinPublishers />
-        ) : Object.values(TabInfo)[currentTabIndex].queryString ===
+        ) : tabInfoArray[currentTabIndex].queryString ===
           TabInfo.UpdatePermissions.queryString ? (
           <UpdatePermissions />
         ) : null}
