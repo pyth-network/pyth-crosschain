@@ -72,7 +72,6 @@ export const useMultisig = (): MultisigHookData => {
         setIsLoading(false)
       } catch (e) {
         if (cancelled) return
-        console.log(urlsIndex)
         if (urlsIndex === urls.length - 1) {
           // @ts-ignore
           setError(e)
@@ -80,7 +79,9 @@ export const useMultisig = (): MultisigHookData => {
           console.warn(`Failed to fetch accounts`)
         } else if (urlsIndex < urls.length - 1) {
           setUrlsIndex((urlsIndex) => urlsIndex + 1)
-          console.warn(`Increasing by 1`)
+          console.warn(
+            `Failed with ${urls[urlsIndex]}, trying with ${urls[urlsIndex + 1]}`
+          )
         }
       }
     })()
