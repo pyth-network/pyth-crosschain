@@ -8,7 +8,7 @@ import UpdatePermissions from '../components/tabs/UpdatePermissions'
 import { PythContextProvider } from '../contexts/PythContext'
 import { classNames } from '../utils/classNames'
 
-const TabInfo = {
+const TAB_INFO = {
   MinPublishers: {
     title: 'Min Publishers',
     description:
@@ -26,7 +26,7 @@ const DEFAULT_TAB = 'min-publishers'
 
 const Home: NextPage = () => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
-  const tabInfoArray = Object.values(TabInfo)
+  const tabInfoArray = Object.values(TAB_INFO)
 
   const router = useRouter()
 
@@ -65,7 +65,7 @@ const Home: NextPage = () => {
               onChange={handleChangeTab}
             >
               <Tab.List className="mx-auto max-w-[526px] gap-1 space-x-4 text-center sm:gap-2.5 md:space-x-8">
-                {Object.entries(TabInfo).map((tab, idx) => (
+                {Object.entries(TAB_INFO).map((tab, idx) => (
                   <Tab
                     key={idx}
                     className={({ selected }) =>
@@ -86,10 +86,10 @@ const Home: NextPage = () => {
           </div>
         </div>
         {tabInfoArray[currentTabIndex].queryString ===
-        TabInfo.MinPublishers.queryString ? (
+        TAB_INFO.MinPublishers.queryString ? (
           <MinPublishers />
         ) : tabInfoArray[currentTabIndex].queryString ===
-          TabInfo.UpdatePermissions.queryString ? (
+          TAB_INFO.UpdatePermissions.queryString ? (
           <UpdatePermissions />
         ) : null}
       </PythContextProvider>
