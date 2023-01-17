@@ -44,7 +44,7 @@ export class RestException extends Error {
 function asyncWrapper(
   callback: (req: Request, res: Response, next: NextFunction) => Promise<any>
 ) {
-  return function (req: Request, res: Response, next: NextFunction) {
+  return (req: Request, res: Response, next: NextFunction) => {
     callback(req, res, next).catch(next);
   };
 }
