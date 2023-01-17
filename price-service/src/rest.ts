@@ -6,7 +6,7 @@ import { Server } from "http";
 import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
 import fetch from "node-fetch";
-import { TimestampInSec } from "./helpers";
+import { removeLeading0x, TimestampInSec } from "./helpers";
 import { PriceStore, VaaConfig } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
@@ -27,7 +27,7 @@ export class RestException extends Error {
   static PriceFeedIdNotFound(notFoundIds: string[]): RestException {
     return new RestException(
       StatusCodes.BAD_REQUEST,
-      `Price Feeds with ids ${notFoundIds.join(", ")} not found`
+      `Price Feed(s) with id(s) ${notFoundIds.join(", ")} not found.`
     );
   }
 }
@@ -60,6 +60,33 @@ export class RestAPI {
     this.priceFeedVaaInfo = priceFeedVaaInfo;
     this.isReady = isReady;
     this.promClient = promClient;
+  }
+
+  async getVaaWithDbLookup(priceFeedId: string, publishTime: TimestampInSec) {
+    // Try to fetch the vaa from the local cache
+    let vaa = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
+
+    // if publishTime is older than cache ttl or vaa is not found, fetch from db
+    if (vaa === undefined && this.dbApiEndpoint && this.dbApiCluster) {
+      const priceFeedWithoutLeading0x = removeLeading0x(priceFeedId);
+
+      const res = await fetch(
+        `${this.dbApiEndpoint}/vaa?id=${priceFeedWithoutLeading0x}&publishTime=${publishTime}&cluster=${this.dbApiCluster}`
+      );
+
+      const data = (await res.json()) as any[];
+
+      if (data.length > 0) {
+        vaa = {
+          vaa: data[0].vaa,
+          publishTime: Math.floor(
+            new Date(data[0].publishTime).getTime() / 1000
+          ),
+        };
+      }
+    }
+
+    return vaa;
   }
 
   // Run this function without blocking (`await`) if you want to run it async.
@@ -134,6 +161,7 @@ export class RestAPI {
         publish_time: Joi.number().required(),
       }).required(),
     };
+
     app.get(
       "/api/get_vaa",
       validate(getVaaInputSchema),
@@ -141,31 +169,23 @@ export class RestAPI {
         const priceFeedId = req.query.id as string;
         const publishTime = Number(req.query.publish_time as string);
 
-        let vaa = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
-
-        // if publishTime is older than cache ttl or vaa is not found, fetch from db
-        if (vaa === undefined && this.dbApiEndpoint && this.dbApiCluster) {
-          const priceFeedWithoutLeading0x = priceFeedId.startsWith("0x")
-            ? priceFeedId.substring(2)
-            : priceFeedId;
-          const res = await fetch(
-            `${this.dbApiEndpoint}/vaa?id=${priceFeedWithoutLeading0x}&publishTime=${publishTime}&cluster=${this.dbApiCluster}`
-          );
-
-          const data = (await res.json()) as any[];
-
-          if (data.length > 0) {
-            vaa = {
-              vaa: data[0].vaa,
-              publishTime: Math.floor(
-                new Date(data[0].publishTime).getTime() / 1000
-              ),
-            };
-          }
+        if (
+          this.priceFeedVaaInfo.getLatestPriceInfo(priceFeedId) === undefined
+        ) {
+          throw RestException.PriceFeedIdNotFound([priceFeedId]);
         }
 
+        const currentTime = Math.floor(new Date().getTime() / 1000);
+        if (publishTime > currentTime) {
+          res
+            .status(StatusCodes.NOT_FOUND)
+            .json({ message: "publishTime is in the future." });
+        }
+
+        const vaa = await this.getVaaWithDbLookup(priceFeedId, publishTime);
+
         if (vaa === undefined) {
-          res.status(StatusCodes.NOT_FOUND).send("VAA not found.");
+          res.status(StatusCodes.NOT_FOUND).json({ message: "VAA not found." });
         } else {
           res.json(vaa);
         }
@@ -174,6 +194,67 @@ export class RestAPI {
 
     endpoints.push(
       "api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>"
+    );
+
+    const getVaaCcipInputSchema: schema = {
+      query: Joi.object({
+        data: Joi.string()
+          .regex(/^0x[a-f0-9]{80}$/)
+          .required(),
+      }).required(),
+    };
+
+    // CCIP compatible endpoint. Read more information about it from
+    // https://eips.ethereum.org/EIPS/eip-3668
+    app.get(
+      "/api/get_vaa_ccip",
+      validate(getVaaCcipInputSchema),
+      asyncWrapper(async (req: Request, res: Response) => {
+        const dataHex = req.query.data as string;
+        const data = Buffer.from(removeLeading0x(dataHex), "hex");
+
+        const priceFeedId = data.slice(0, 32).toString("hex");
+        const publishTime = Number(data.readBigInt64BE(32));
+
+        if (
+          this.priceFeedVaaInfo.getLatestPriceInfo(priceFeedId) === undefined
+        ) {
+          throw RestException.PriceFeedIdNotFound([priceFeedId]);
+        }
+
+        const currentTime = Math.floor(new Date().getTime() / 1000);
+        if (publishTime > currentTime) {
+          res
+            .status(StatusCodes.NOT_FOUND)
+            .json({ message: "publishTime is in the future." });
+        }
+
+        const vaa = await this.getVaaWithDbLookup(priceFeedId, publishTime);
+
+        if (vaa === undefined) {
+          // Returning internal server error because we should find one using the VAA db. CCIP expects a 5xx
+          // error if it needs to retry or try other endpoints.
+          res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .json({ "message:": "VAA not found." });
+        } else {
+          const pubTimeBuffer = Buffer.alloc(8);
+          pubTimeBuffer.writeBigInt64BE(BigInt(vaa.publishTime));
+
+          const resData =
+            "0x" +
+            pubTimeBuffer.toString("hex") +
+            Buffer.from(vaa.vaa, "base64").toString("hex");
+
+          res.json({
+            data: resData,
+          });
+        }
+      })
+    );
+
+    endpoints.push(
+      "api/get_vaa_ccip?data=<0x<price_feed_id_32_bytes>+<publish_time_unix_timestamp_be_8_bytes>>"
     );
 
     const latestPriceFeedsInputSchema: schema = {
