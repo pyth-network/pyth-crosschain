@@ -86,14 +86,13 @@ const Home: NextPage = () => {
             </Tab.Group>
           </div>
         </div>
-        {currentTabIndex !== -1 &&
-          (Object.values(TabInfo)[currentTabIndex].queryString ===
-          TabInfo.MinPublishers.queryString ? (
-            <MinPublishers />
-          ) : Object.values(TabInfo)[currentTabIndex].queryString ===
-            TabInfo.UpdatePermissions.queryString ? (
-            <UpdatePermissions />
-          ) : null)}
+        {Object.values(TabInfo)[currentTabIndex].queryString ===
+        TabInfo.MinPublishers.queryString ? (
+          <MinPublishers />
+        ) : Object.values(TabInfo)[currentTabIndex].queryString ===
+          TabInfo.UpdatePermissions.queryString ? (
+          <UpdatePermissions />
+        ) : null}
       </PythContextProvider>
     </Layout>
   )
