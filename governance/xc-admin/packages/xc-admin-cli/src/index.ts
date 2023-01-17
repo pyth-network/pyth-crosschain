@@ -1,4 +1,4 @@
-import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { program } from "commander";
 import { PythCluster } from "@pythnetwork/client/lib/cluster";
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
@@ -95,33 +95,4 @@ mutlisigCommand(
     await proposeInstructions(squad, vault, [proposalInstruction], false);
   });
 
-mutlisigCommand("propose-test", "Propose test").action(async (options: any) => {
-  const wallet = new NodeWallet(
-    Keypair.fromSecretKey(
-      Uint8Array.from(JSON.parse(fs.readFileSync(options.wallet, "ascii")))
-    )
-  );
-  const cluster: PythCluster = options.cluster;
-  const vault: PublicKey = new PublicKey(options.vault);
-
-  const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
-  await proposeInstructions(
-    squad,
-    vault,
-    [
-      SystemProgram.transfer({
-        lamports: 1,
-        toPubkey: PublicKey.unique(),
-        fromPubkey: PublicKey.unique(),
-      }),
-      SystemProgram.transfer({
-        lamports: 1,
-        toPubkey: PublicKey.unique(),
-        fromPubkey: PublicKey.unique(),
-      }),
-    ],
-    true,
-    new PublicKey("Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o")
-  );
-});
 program.parse();
