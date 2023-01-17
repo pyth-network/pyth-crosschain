@@ -65,7 +65,7 @@ export async function proposeInstructions(
         vault,
         newProposalAddress,
         instructions[i],
-        i,
+        i + 1,
         wormholeAddress
       );
       txToSend.push(
@@ -142,7 +142,7 @@ export async function wrapAsRemoteInstruction(
 
   const [messagePDA, messagePdaBump] = getIxAuthorityPDA(
     proposalAddress,
-    new BN(instructionIndex + 1),
+    new BN(instructionIndex),
     squad.multisigProgramId
   );
 
@@ -167,7 +167,7 @@ export async function wrapAsRemoteInstruction(
       .postMessage(0, buffer, 0)
       .accounts(accounts)
       .instruction(),
-    authorityIndex: instructionIndex + 1,
+    authorityIndex: instructionIndex,
     authorityBump: messagePdaBump,
     authorityType: "custom",
   };
