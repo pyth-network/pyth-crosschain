@@ -32,11 +32,8 @@ export class RestException extends Error {
     );
   }
 
-  static PublishTimeInTheFuture(): RestException {
-    return new RestException(
-      StatusCodes.BAD_REQUEST,
-      "Publish time is in the future."
-    );
+  static DbApiError(): RestException {
+    return new RestException(StatusCodes.INTERNAL_SERVER_ERROR, `DB API Error`);
   }
 
   static VaaNotFound(): RestException {
@@ -82,21 +79,25 @@ export class RestAPI {
     if (vaa === undefined && this.dbApiEndpoint && this.dbApiCluster) {
       const priceFeedWithoutLeading0x = removeLeading0x(priceFeedId);
 
-      const data = (await retry(
-        () =>
-          fetch(
-            `${this.dbApiEndpoint}/vaa?id=${priceFeedWithoutLeading0x}&publishTime=${publishTime}&cluster=${this.dbApiCluster}`
-          ).then((res) => res.json()),
-        { retries: 3 }
-      )) as any[];
-
-      if (data.length > 0) {
-        vaa = {
-          vaa: data[0].vaa,
-          publishTime: Math.floor(
-            new Date(data[0].publishTime).getTime() / 1000
-          ),
-        };
+      try {
+        const data = (await retry(
+          () =>
+            fetch(
+              `${this.dbApiEndpoint}/vaa?id=${priceFeedWithoutLeading0x}&publishTime=${publishTime}&cluster=${this.dbApiCluster}`
+            ).then((res) => res.json()),
+          { retries: 3 }
+        )) as any[];
+        if (data.length > 0) {
+          vaa = {
+            vaa: data[0].vaa,
+            publishTime: Math.floor(
+              new Date(data[0].publishTime).getTime() / 1000
+            ),
+          };
+        }
+      } catch (e: any) {
+        logger.error(`DB API Error: ${e}`);
+        throw RestException.DbApiError();
       }
     }
 
@@ -189,11 +190,6 @@ export class RestAPI {
           throw RestException.PriceFeedIdNotFound([priceFeedId]);
         }
 
-        const currentTime = Math.floor(new Date().getTime() / 1000);
-        if (publishTime > currentTime) {
-          throw RestException.PublishTimeInTheFuture();
-        }
-
         const vaa = await this.getVaaWithDbLookup(priceFeedId, publishTime);
 
         if (vaa === undefined) {
@@ -232,11 +228,6 @@ export class RestAPI {
           this.priceFeedVaaInfo.getLatestPriceInfo(priceFeedId) === undefined
         ) {
           throw RestException.PriceFeedIdNotFound([priceFeedId]);
-        }
-
-        const currentTime = Math.floor(new Date().getTime() / 1000);
-        if (publishTime > currentTime) {
-          throw RestException.PublishTimeInTheFuture();
         }
 
         const vaa = await this.getVaaWithDbLookup(priceFeedId, publishTime);
