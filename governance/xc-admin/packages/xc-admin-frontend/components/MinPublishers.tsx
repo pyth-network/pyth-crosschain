@@ -36,25 +36,30 @@ function MinPublishers() {
                 </thead>
                 <tbody>
                   {rawConfig.mappingAccounts.length ? (
-                    rawConfig.mappingAccounts[0].products.map((product) =>
-                      product.priceAccounts.map((priceAccount) => {
-                        return (
-                          <tr
-                            key={product.metadata.symbol}
-                            className="border-t border-beige-300"
-                          >
-                            <td className="py-3 pl-4 pr-2 lg:pl-14">
-                              {product.metadata.symbol}
-                            </td>
-                            <td className="py-3 pl-1 lg:pl-14">
-                              <span className="mr-2">
-                                {priceAccount.minPub}
-                              </span>
-                            </td>
-                          </tr>
-                        )
-                      })
-                    )
+                    rawConfig.mappingAccounts
+                      .sort(
+                        (mapping1, mapping2) =>
+                          mapping2.products.length - mapping1.products.length
+                      )[0]
+                      .products.map((product) =>
+                        product.priceAccounts.map((priceAccount) => {
+                          return (
+                            <tr
+                              key={product.metadata.symbol}
+                              className="border-t border-beige-300"
+                            >
+                              <td className="py-3 pl-4 pr-2 lg:pl-14">
+                                {product.metadata.symbol}
+                              </td>
+                              <td className="py-3 pl-1 lg:pl-14">
+                                <span className="mr-2">
+                                  {priceAccount.minPub}
+                                </span>
+                              </td>
+                            </tr>
+                          )
+                        })
+                      )
                   ) : (
                     <tr className="border-t border-beige-300">
                       <td className="py-3 pl-1 lg:pl-14" colSpan={2}>
