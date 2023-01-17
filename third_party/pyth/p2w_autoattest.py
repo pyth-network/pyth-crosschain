@@ -186,7 +186,6 @@ while True:
             "attest",
             "-f",
             P2W_ATTESTATION_CFG,
-            "-d",
             "--timeout",
             P2W_RPC_TIMEOUT_SECS,
         ]
