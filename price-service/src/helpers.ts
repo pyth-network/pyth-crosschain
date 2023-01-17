@@ -15,3 +15,21 @@ export function envOrErr(env: string): string {
   }
   return String(process.env[env]);
 }
+
+export function parseToOptionalNumber(
+  s: string | undefined
+): number | undefined {
+  if (s === undefined) {
+    return undefined;
+  }
+
+  return parseInt(s, 10);
+}
+
+export function removeLeading0x(s: string): string {
+  if (s.startsWith("0x")) {
+    return s.substring(2);
+  }
+
+  return s;
+}

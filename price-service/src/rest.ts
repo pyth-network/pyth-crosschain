@@ -6,10 +6,11 @@ import { Server } from "http";
 import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
 import fetch from "node-fetch";
-import { TimestampInSec } from "./helpers";
-import { PriceStore } from "./listen";
+import { removeLeading0x, TimestampInSec } from "./helpers";
+import { PriceStore, VaaConfig } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
+import { retry } from "ts-retry-promise";
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
@@ -27,9 +28,25 @@ export class RestException extends Error {
   static PriceFeedIdNotFound(notFoundIds: string[]): RestException {
     return new RestException(
       StatusCodes.BAD_REQUEST,
-      `Price Feeds with ids ${notFoundIds.join(", ")} not found`
+      `Price Feed(s) with id(s) ${notFoundIds.join(", ")} not found.`
     );
   }
+
+  static DbApiError(): RestException {
+    return new RestException(StatusCodes.INTERNAL_SERVER_ERROR, `DB API Error`);
+  }
+
+  static VaaNotFound(): RestException {
+    return new RestException(StatusCodes.NOT_FOUND, "VAA not found.");
+  }
+}
+
+function asyncWrapper(
+  callback: (req: Request, res: Response, next: NextFunction) => Promise<any>
+) {
+  return function (req: Request, res: Response, next: NextFunction) {
+    callback(req, res, next).catch(next);
+  };
 }
 
 export class RestAPI {
@@ -52,6 +69,39 @@ export class RestAPI {
     this.priceFeedVaaInfo = priceFeedVaaInfo;
     this.isReady = isReady;
     this.promClient = promClient;
+  }
+
+  async getVaaWithDbLookup(priceFeedId: string, publishTime: TimestampInSec) {
+    // Try to fetch the vaa from the local cache
+    let vaa = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
+
+    // if publishTime is older than cache ttl or vaa is not found, fetch from db
+    if (vaa === undefined && this.dbApiEndpoint && this.dbApiCluster) {
+      const priceFeedWithoutLeading0x = removeLeading0x(priceFeedId);
+
+      try {
+        const data = (await retry(
+          () =>
+            fetch(
+              `${this.dbApiEndpoint}/vaa?id=${priceFeedWithoutLeading0x}&publishTime=${publishTime}&cluster=${this.dbApiCluster}`
+            ).then((res) => res.json()),
+          { retries: 3 }
+        )) as any[];
+        if (data.length > 0) {
+          vaa = {
+            vaa: data[0].vaa,
+            publishTime: Math.floor(
+              new Date(data[0].publishTime).getTime() / 1000
+            ),
+          };
+        }
+      } catch (e: any) {
+        logger.error(`DB API Error: ${e}`);
+        throw RestException.DbApiError();
+      }
+    }
+
+    return vaa;
   }
 
   // Run this function without blocking (`await`) if you want to run it async.
@@ -126,41 +176,90 @@ export class RestAPI {
         publish_time: Joi.number().required(),
       }).required(),
     };
+
     app.get(
       "/api/get_vaa",
       validate(getVaaInputSchema),
-      (req: Request, res: Response) => {
+      asyncWrapper(async (req: Request, res: Response) => {
         const priceFeedId = req.query.id as string;
         const publishTime = Number(req.query.publish_time as string);
-        const vaa = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
-        // if publishTime is older than cache ttl or vaa is not found, fetch from db
-        if (!vaa) {
-          // cache miss
-          if (this.dbApiEndpoint && this.dbApiCluster) {
-            fetch(
-              `${this.dbApiEndpoint}/vaa?id=${priceFeedId}&publishTime=${publishTime}&cluster=${this.dbApiCluster}`
-            )
-              .then((r: any) => r.json())
-              .then((arr: any) => {
-                if (arr.length > 0 && arr[0]) {
-                  res.json(arr[0]);
-                } else {
-                  res.status(StatusCodes.NOT_FOUND).send("VAA not found");
-                }
-              });
-          }
-        } else {
-          // cache hit
-          const processedVaa = {
-            publishTime: new Date(vaa.publishTime),
-            vaa: vaa.vaa,
-          };
-          res.json(processedVaa);
+
+        if (
+          this.priceFeedVaaInfo.getLatestPriceInfo(priceFeedId) === undefined
+        ) {
+          throw RestException.PriceFeedIdNotFound([priceFeedId]);
         }
-      }
+
+        const vaa = await this.getVaaWithDbLookup(priceFeedId, publishTime);
+
+        if (vaa === undefined) {
+          throw RestException.VaaNotFound();
+        } else {
+          res.json(vaa);
+        }
+      })
     );
+
     endpoints.push(
       "api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>"
+    );
+
+    const getVaaCcipInputSchema: schema = {
+      query: Joi.object({
+        data: Joi.string()
+          .regex(/^0x[a-f0-9]{80}$/)
+          .required(),
+      }).required(),
+    };
+
+    // CCIP compatible endpoint. Read more information about it from
+    // https://eips.ethereum.org/EIPS/eip-3668
+    app.get(
+      "/api/get_vaa_ccip",
+      validate(getVaaCcipInputSchema),
+      asyncWrapper(async (req: Request, res: Response) => {
+        const dataHex = req.query.data as string;
+        const data = Buffer.from(removeLeading0x(dataHex), "hex");
+
+        const priceFeedId = data.slice(0, 32).toString("hex");
+        const publishTime = Number(data.readBigInt64BE(32));
+
+        if (
+          this.priceFeedVaaInfo.getLatestPriceInfo(priceFeedId) === undefined
+        ) {
+          throw RestException.PriceFeedIdNotFound([priceFeedId]);
+        }
+
+        const vaa = await this.getVaaWithDbLookup(priceFeedId, publishTime);
+
+        if (vaa === undefined) {
+          // Returning Bad Gateway error because CCIP expects a 5xx error if it needs to
+          // retry or try other endpoints. Bad Gateway seems the best choice here as this
+          // is not an internal error and could happen on two scenarios:
+          // 1. DB Api is not responding well (Bad Gateway is appropriate here)
+          // 2. Publish time is a few seconds before current time and a VAA
+          //    Will be available in a few seconds. So we want the client to retry.
+          res
+            .status(StatusCodes.BAD_GATEWAY)
+            .json({ "message:": "VAA not found." });
+        } else {
+          const pubTimeBuffer = Buffer.alloc(8);
+          pubTimeBuffer.writeBigInt64BE(BigInt(vaa.publishTime));
+
+          const resData =
+            "0x" +
+            pubTimeBuffer.toString("hex") +
+            Buffer.from(vaa.vaa, "base64").toString("hex");
+
+          res.json({
+            data: resData,
+          });
+        }
+      })
+    );
+
+    endpoints.push(
+      "api/get_vaa_ccip?data=<0x<price_feed_id_32_bytes>+<publish_time_unix_timestamp_be_8_bytes>>"
     );
 
     const latestPriceFeedsInputSchema: schema = {

@@ -1,4 +1,4 @@
-import { envOrErr } from "./helpers";
+import { envOrErr, parseToOptionalNumber } from "./helpers";
 import { Listener } from "./listen";
 import { initLogger } from "./logging";
 import { PromClient } from "./promClient";
@@ -38,6 +38,10 @@ async function run() {
           10
         ),
       },
+      cacheCleanupLoopInterval: parseToOptionalNumber(
+        process.env.REMOVE_EXPIRED_VALUES_INTERVAL_SECONDS
+      ),
+      cacheTtl: parseToOptionalNumber(process.env.CACHE_TTL_SECONDS),
     },
     promClient
   );
@@ -59,7 +63,7 @@ async function run() {
   const wsAPI = new WebSocketAPI(listener, promClient);
 
   listener.run();
-  listener.runCacheCleanupLoop();
+
   const server = await restAPI.run();
   wsAPI.run(server);
 }

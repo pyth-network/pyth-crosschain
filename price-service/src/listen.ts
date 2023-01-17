@@ -17,7 +17,7 @@ import {
 } from "@pythnetwork/p2w-sdk-js";
 import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";
 import LRUCache from "lru-cache";
-import { sleep, TimestampInSec } from "./helpers";
+import { DurationInSec, sleep, TimestampInSec } from "./helpers";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
 
@@ -49,11 +49,13 @@ type ListenerConfig = {
   readiness: ListenerReadinessConfig;
   webApiEndpoint?: string;
   webApiCluster?: string;
+  cacheCleanupLoopInterval?: DurationInSec;
+  cacheTtl?: DurationInSec;
 };
 
 type VaaKey = string;
 
-type VaaConfig = {
+export type VaaConfig = {
   publishTime: number;
   vaa: string;
 };
@@ -62,7 +64,7 @@ export class VaaCache {
   private cache: Map<string, VaaConfig[]>;
   private ttl: number;
 
-  constructor(ttl: number = 300) {
+  constructor(ttl: DurationInSec = 300) {
     this.cache = new Map();
     this.ttl = ttl;
   }
@@ -85,6 +87,9 @@ export class VaaCache {
   }
 
   find(arr: VaaConfig[], publishTime: number): VaaConfig | undefined {
+    // If the publishTime is less than the first element we are
+    // not sure that this VAA is actually the first VAA after that
+    // time.
     if (arr.length === 0 || publishTime < arr[0].publishTime) {
       return undefined;
     }
@@ -126,6 +131,7 @@ export class Listener implements PriceStore {
   private updateCallbacks: ((priceInfo: PriceInfo) => any)[];
   private observedVaas: LRUCache<VaaKey, boolean>;
   private vaasCache: VaaCache;
+  private cacheCleanupLoopInterval: DurationInSec;
 
   constructor(config: ListenerConfig, promClient?: PromClient) {
     this.promClient = promClient;
@@ -137,7 +143,8 @@ export class Listener implements PriceStore {
       max: 10000, // At most 10000 items
       ttl: 60 * 1000, // 60 seconds
     });
-    this.vaasCache = new VaaCache();
+    this.vaasCache = new VaaCache(config.cacheTtl);
+    this.cacheCleanupLoopInterval = config.cacheCleanupLoopInterval ?? 60;
   }
 
   private loadFilters(filtersRaw?: string) {
@@ -170,22 +177,21 @@ export class Listener implements PriceStore {
     logger.info("loaded " + this.filters.length + " filters");
   }
 
-  async runCacheCleanupLoop(interval: number = 60) {
-    setInterval(this.vaasCache.removeExpiredValues, interval * 1000);
-  }
-
   async run() {
     logger.info(
       "pyth_relay starting up, will listen for signed VAAs from " +
         this.spyServiceHost
     );
 
+    setInterval(
+      this.vaasCache.removeExpiredValues.bind(this.vaasCache),
+      this.cacheCleanupLoopInterval * 1000
+    );
+
     while (true) {
       let stream: ClientReadableStream<SubscribeSignedVAAResponse> | undefined;
       try {
-        const client = createSpyRPCServiceClient(
-          process.env.SPY_SERVICE_HOST || ""
-        );
+        const client = createSpyRPCServiceClient(this.spyServiceHost);
         stream = await subscribeSignedVAA(client, { filters: this.filters });
 
         stream!.on("data", ({ vaaBytes }: { vaaBytes: Buffer }) => {
