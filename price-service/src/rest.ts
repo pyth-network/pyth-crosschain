@@ -130,7 +130,7 @@ export class RestAPI {
       "/api/latest_vaas",
       validate(latestVaasInputSchema),
       (req: Request, res: Response) => {
-        const priceIds = req.query.ids as string[];
+        const priceIds = (req.query.ids as string[]).map(removeLeading0x);
 
         // Multiple price ids might share same vaa, we use sequence number as
         // key of a vaa and deduplicate using a map of seqnum to vaa bytes.
@@ -138,11 +138,7 @@ export class RestAPI {
 
         const notFoundIds: string[] = [];
 
-        for (let id of priceIds) {
-          if (id.startsWith("0x")) {
-            id = id.substring(2);
-          }
-
+        for (const id of priceIds) {
           const latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
 
           if (latestPriceInfo === undefined) {
@@ -181,7 +177,7 @@ export class RestAPI {
       "/api/get_vaa",
       validate(getVaaInputSchema),
       asyncWrapper(async (req: Request, res: Response) => {
-        const priceFeedId = req.query.id as string;
+        const priceFeedId = removeLeading0x(req.query.id as string);
         const publishTime = Number(req.query.publish_time as string);
 
         if (
@@ -275,7 +271,7 @@ export class RestAPI {
       "/api/latest_price_feeds",
       validate(latestPriceFeedsInputSchema),
       (req: Request, res: Response) => {
-        const priceIds = req.query.ids as string[];
+        const priceIds = (req.query.ids as string[]).map(removeLeading0x);
         // verbose is optional, default to false
         const verbose = req.query.verbose === "true";
         // binary is optional, default to false
@@ -285,11 +281,7 @@ export class RestAPI {
 
         const notFoundIds: string[] = [];
 
-        for (let id of priceIds) {
-          if (id.startsWith("0x")) {
-            id = id.substring(2);
-          }
-
+        for (const id of priceIds) {
           const latestPriceInfo = this.priceFeedVaaInfo.getLatestPriceInfo(id);
 
           if (latestPriceInfo === undefined) {
