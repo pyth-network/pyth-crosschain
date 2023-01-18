@@ -23,8 +23,8 @@ use {
 /// On-chain state for a single price attestation
 #[derive(BorshSerialize, BorshDeserialize)]
 pub struct AttestationState {
-    /// The last publish time we attested successfully
-    pub last_attested_publish_time: UnixTimestamp,
+    /// The last trading publish_time this attester saw
+    pub last_attested_trading_publish_time: UnixTimestamp,
 }
 
 /// Top-level state gathering all known AttestationState values, keyed by price address.

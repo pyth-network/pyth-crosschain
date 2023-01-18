@@ -24,6 +24,7 @@ use {
         P2WEmitter,
         PriceAttestation,
     },
+    pyth_sdk_solana::state::PriceStatus,
     solana_program::{
         clock::Clock,
         program::{
@@ -223,22 +224,28 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
                 ProgramError::InvalidAccountData
             })?;
 
+        // prev_publish_time is picked if the price is not trading
+        let last_trading_publish_time = match price_struct.agg.status {
+            PriceStatus::Trading => price_struct.timestamp,
+            _ => price_struct.prev_timestamp,
+        };
+
         // Take a mut reference to this price's metadata
         let state_entry: &mut AttestationState = accs
             .attestation_state
             .entries
             .entry(*price.key)
             .or_insert(AttestationState {
-                // Use publish_time as initial value, i.e. if no state
+                // Use the same value if no state
                 // exists for the symbol, the new value _becomes_ the
-                // last attested publish time
-                last_attested_publish_time: price_struct.timestamp,
+                // last attested trading publish time
+                last_attested_trading_publish_time: last_trading_publish_time,
             });
 
         let attestation = PriceAttestation::from_pyth_price_struct(
             Identifier::new(price.key.to_bytes()),
             attestation_time,
-            state_entry.last_attested_publish_time, // Used as last_attested_publish_time
+            state_entry.last_attested_trading_publish_time, // Used as last_attested_publish_time
             price_struct,
         );
 
@@ -246,7 +253,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         // update last_attested_publish_time with this price's
         // publish_time. Yes, it may be redundant for the entry() used
         // above in the rare first attestation edge case.
-        state_entry.last_attested_publish_time = attestation.publish_time;
+        state_entry.last_attested_trading_publish_time = last_trading_publish_time;
 
         // The following check is crucial against poorly ordered
         // account inputs, e.g. [Some(prod1), Some(price1),
