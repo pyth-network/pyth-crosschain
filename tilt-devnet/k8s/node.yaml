@@ -121,6 +121,10 @@ spec:
             - ws://solana-devnet:8900
             - --solanaRPC
             - http://solana-devnet:8899
+            - --pythnetContract
+            - Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o
+            - --pythnetRPC
+            - http://pythnet-devnet:8899
             - --unsafeDevMode
             - --guardianKey
             - /tmp/bridge.key

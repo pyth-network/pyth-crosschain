@@ -141,11 +141,24 @@ k8s_resource(
     port_forwards = [
         port_forward(8899, name = "Solana RPC [:8899]", host = webHost),
         port_forward(8900, name = "Solana WS [:8900]", host = webHost),
-        port_forward(9000, name = "Solana PubSub [:9000]", host = webHost),
     ],
     labels = ["solana"],
     trigger_mode = trigger_mode,
 )
+
+k8s_yaml_with_ns("tilt-devnet/k8s/pythnet-devnet.yaml")
+
+k8s_resource(
+    "pythnet-devnet",
+    port_forwards = [
+        port_forward(8901, container_port = 8899, name = "Solana RPC [:8901]", host = webHost),
+        port_forward(8902, container_port = 8900, name = "Solana WS [:8902]", host = webHost),
+    ],
+    labels = ["solana"],
+    trigger_mode = trigger_mode,
+)
+
+
 
 # eth devnet
 
