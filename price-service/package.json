@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-price-service",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "Pyth Price Service",
   "main": "index.js",
   "scripts": {
