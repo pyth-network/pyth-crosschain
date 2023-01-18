@@ -56,6 +56,7 @@ use {
     },
     p2w_sdk::{
         BatchPriceAttestation,
+        PriceAttestation,
         PriceStatus,
     },
     std::{
@@ -348,38 +349,7 @@ fn process_batch_attestation(
 
     // Update prices
     for price_attestation in batch_attestation.price_attestations.iter() {
-        let price_feed = match price_attestation.status {
-            PriceStatus::Trading => PriceFeed::new(
-                PriceIdentifier::new(price_attestation.price_id.to_bytes()),
-                Price {
-                    price:        price_attestation.price,
-                    conf:         price_attestation.conf,
-                    expo:         price_attestation.expo,
-                    publish_time: price_attestation.publish_time,
-                },
-                Price {
-                    price:        price_attestation.ema_price,
-                    conf:         price_attestation.ema_conf,
-                    expo:         price_attestation.expo,
-                    publish_time: price_attestation.publish_time,
-                },
-            ),
-            _ => PriceFeed::new(
-                PriceIdentifier::new(price_attestation.price_id.to_bytes()),
-                Price {
-                    price:        price_attestation.prev_price,
-                    conf:         price_attestation.prev_conf,
-                    expo:         price_attestation.expo,
-                    publish_time: price_attestation.prev_publish_time,
-                },
-                Price {
-                    price:        price_attestation.ema_price,
-                    conf:         price_attestation.ema_conf,
-                    expo:         price_attestation.expo,
-                    publish_time: price_attestation.prev_publish_time,
-                },
-            ),
-        };
+        let price_feed = create_price_feed_from_price_attestation(price_attestation);
 
         let attestation_time = Timestamp::from_seconds(price_attestation.attestation_time as u64);
 
@@ -392,6 +362,41 @@ fn process_batch_attestation(
         batch_attestation.price_attestations.len(),
         new_attestations_cnt,
     ))
+}
+
+fn create_price_feed_from_price_attestation(price_attestation: &PriceAttestation) -> PriceFeed {
+    match price_attestation.status {
+        PriceStatus::Trading => PriceFeed::new(
+            PriceIdentifier::new(price_attestation.price_id.to_bytes()),
+            Price {
+                price:        price_attestation.price,
+                conf:         price_attestation.conf,
+                expo:         price_attestation.expo,
+                publish_time: price_attestation.publish_time,
+            },
+            Price {
+                price:        price_attestation.ema_price,
+                conf:         price_attestation.ema_conf,
+                expo:         price_attestation.expo,
+                publish_time: price_attestation.publish_time,
+            },
+        ),
+        _ => PriceFeed::new(
+            PriceIdentifier::new(price_attestation.price_id.to_bytes()),
+            Price {
+                price:        price_attestation.prev_price,
+                conf:         price_attestation.prev_conf,
+                expo:         price_attestation.expo,
+                publish_time: price_attestation.prev_publish_time,
+            },
+            Price {
+                price:        price_attestation.ema_price,
+                conf:         price_attestation.ema_conf,
+                expo:         price_attestation.expo,
+                publish_time: price_attestation.prev_publish_time,
+            },
+        ),
+    }
 }
 
 /// Returns true if the price_feed is newer than the stored one.
@@ -508,6 +513,7 @@ mod test {
             SystemResult,
             Uint128,
         },
+        p2w_sdk::PriceAttestation,
         std::time::Duration,
     };
 
@@ -683,6 +689,210 @@ mod test {
         let info = mock_info("123", funds);
         let msg = create_price_update_msg(emitter_address, emitter_chain);
         update_price_feeds(deps.as_mut(), env, info, &[msg])
+    }
+
+    #[test]
+    fn test_process_batch_attestation_empty_array() {
+        let (mut deps, env) = setup_test();
+        let attestations = BatchPriceAttestation {
+            price_attestations: vec![],
+        };
+        let (total_attestations, new_attestations) =
+            process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
+
+        assert_eq!(total_attestations, 0);
+        assert_eq!(new_attestations, 0);
+    }
+
+    #[test]
+    fn test_create_price_feed_from_price_attestation_status_trading() {
+        let price_attestation = PriceAttestation {
+            price_id: p2w_sdk::Identifier::new([0u8; 32]),
+            price: 100,
+            conf: 100,
+            expo: 100,
+            ema_price: 100,
+            ema_conf: 100,
+            status: PriceStatus::Trading,
+            attestation_time: 100,
+            publish_time: 100,
+            prev_publish_time: 99,
+            prev_price: 99,
+            prev_conf: 99,
+            ..Default::default()
+        };
+
+        let price_feed = create_price_feed_from_price_attestation(&price_attestation);
+        let price = price_feed.get_price_unchecked();
+        let ema_price = price_feed.get_ema_price_unchecked();
+
+        // for price
+        assert_eq!(price.price, 100);
+        assert_eq!(price.conf, 100);
+        assert_eq!(price.expo, 100);
+        assert_eq!(price.publish_time, 100);
+
+        // for ema
+        assert_eq!(ema_price.price, 100);
+        assert_eq!(ema_price.conf, 100);
+        assert_eq!(ema_price.expo, 100);
+        assert_eq!(ema_price.publish_time, 100);
+    }
+
+    #[test]
+    fn test_create_price_feed_from_price_attestation_status_unknown() {
+        test_create_price_feed_from_price_attestation_not_trading(PriceStatus::Unknown)
+    }
+
+    #[test]
+    fn test_create_price_feed_from_price_attestation_status_halted() {
+        test_create_price_feed_from_price_attestation_not_trading(PriceStatus::Halted)
+    }
+
+    #[test]
+    fn test_create_price_feed_from_price_attestation_status_auction() {
+        test_create_price_feed_from_price_attestation_not_trading(PriceStatus::Auction)
+    }
+
+    fn test_create_price_feed_from_price_attestation_not_trading(status: PriceStatus) {
+        let price_attestation = PriceAttestation {
+            price_id: p2w_sdk::Identifier::new([0u8; 32]),
+            price: 100,
+            conf: 100,
+            expo: 100,
+            ema_price: 100,
+            ema_conf: 100,
+            status,
+            attestation_time: 100,
+            publish_time: 100,
+            prev_publish_time: 99,
+            prev_price: 99,
+            prev_conf: 99,
+            ..Default::default()
+        };
+
+        let price_feed = create_price_feed_from_price_attestation(&price_attestation);
+
+        let price = price_feed.get_price_unchecked();
+        let ema_price = price_feed.get_ema_price_unchecked();
+
+        // for price
+        assert_eq!(price.price, 99);
+        assert_eq!(price.conf, 99);
+        assert_eq!(price.expo, 100);
+        assert_eq!(price.publish_time, 99);
+
+        // for ema
+        assert_eq!(ema_price.price, 100);
+        assert_eq!(ema_price.conf, 100);
+        assert_eq!(ema_price.expo, 100);
+        assert_eq!(ema_price.publish_time, 99);
+    }
+
+    // this is testing the function process_batch_attestation
+    // process_batch_attestation is calling update_price_feed_if_new
+    // changes to update_price_feed_if_new might cause this test
+    #[test]
+    fn test_process_batch_attestation_status_not_trading() {
+        let (mut deps, env) = setup_test();
+
+        let price_attestation = PriceAttestation {
+            price_id: p2w_sdk::Identifier::new([0u8; 32]),
+            price: 100,
+            conf: 100,
+            expo: 100,
+            ema_price: 100,
+            ema_conf: 100,
+            status: PriceStatus::Auction,
+            attestation_time: 100,
+            publish_time: 100,
+            prev_publish_time: 99,
+            prev_price: 99,
+            prev_conf: 99,
+            ..Default::default()
+        };
+
+        let attestations = BatchPriceAttestation {
+            price_attestations: vec![price_attestation],
+        };
+        let (total_attestations, new_attestations) =
+            process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
+
+
+        let stored_price_feed = price_info_read(&deps.storage)
+            .load(&[0u8; 32])
+            .unwrap()
+            .price_feed;
+        let price = stored_price_feed.get_price_unchecked();
+        let ema_price = stored_price_feed.get_ema_price_unchecked();
+
+        assert_eq!(total_attestations, 1);
+        assert_eq!(new_attestations, 1);
+
+        // for price
+        assert_eq!(price.price, 99);
+        assert_eq!(price.conf, 99);
+        assert_eq!(price.expo, 100);
+        assert_eq!(price.publish_time, 99);
+
+        // for ema
+        assert_eq!(ema_price.price, 100);
+        assert_eq!(ema_price.conf, 100);
+        assert_eq!(ema_price.expo, 100);
+        assert_eq!(ema_price.publish_time, 99);
+    }
+
+    // this is testing the function process_batch_attestation
+    // process_batch_attestation is calling update_price_feed_if_new
+    // changes to update_price_feed_if_new might affect this test
+    #[test]
+    fn test_process_batch_attestation_status_trading() {
+        let (mut deps, env) = setup_test();
+
+        let price_attestation = PriceAttestation {
+            price_id: p2w_sdk::Identifier::new([0u8; 32]),
+            price: 100,
+            conf: 100,
+            expo: 100,
+            ema_price: 100,
+            ema_conf: 100,
+            status: PriceStatus::Trading,
+            attestation_time: 100,
+            publish_time: 100,
+            prev_publish_time: 99,
+            prev_price: 99,
+            prev_conf: 99,
+            ..Default::default()
+        };
+
+        let attestations = BatchPriceAttestation {
+            price_attestations: vec![price_attestation],
+        };
+        let (total_attestations, new_attestations) =
+            process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
+
+
+        let stored_price_feed = price_info_read(&deps.storage)
+            .load(&[0u8; 32])
+            .unwrap()
+            .price_feed;
+        let price = stored_price_feed.get_price_unchecked();
+        let ema_price = stored_price_feed.get_ema_price_unchecked();
+
+        assert_eq!(total_attestations, 1);
+        assert_eq!(new_attestations, 1);
+
+        // for price
+        assert_eq!(price.price, 100);
+        assert_eq!(price.conf, 100);
+        assert_eq!(price.expo, 100);
+        assert_eq!(price.publish_time, 100);
+
+        // for ema
+        assert_eq!(ema_price.price, 100);
+        assert_eq!(ema_price.conf, 100);
+        assert_eq!(ema_price.expo, 100);
+        assert_eq!(ema_price.publish_time, 100);
     }
 
     #[test]
