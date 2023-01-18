@@ -1,5 +1,5 @@
 #syntax=docker/dockerfile:1.2@sha256:e2a8561e419ab1ba6b2fe6cbdf49fd92b95912df1cf7d313c3e2230a333fdbcc
-FROM pythfoundation/pyth-client:devnet-v2.12.0 as pyth-oracle-copy
+FROM pythfoundation/pyth-client:devnet-v2.20.0 as pyth-oracle-copy
 
 FROM docker.io/library/rust:1.49@sha256:a50165ea96983c21832578afb1c8c028674c965bc1ed43b607871b1f362e06a5 as build
 
@@ -69,7 +69,7 @@ RUN --mount=type=cache,target=/usr/src/bridge/wormhole/solana/target \
     cp wormhole-attester/target/deploy/pyth_wormhole_attester.so /opt/solana/deps/pyth_wormhole_attester.so && \
     cp squads/squads-mpl/target/deploy/mesh.so /opt/solana/deps/mesh.so
 
-COPY --from=pyth-oracle-copy /home/pyth/pyth-client/target/oracle.so /opt/solana/deps/pyth_oracle.so
+COPY --from=pyth-oracle-copy /home/pyth/pyth-client/target/deploy/pyth_oracle.so /opt/solana/deps/pyth_oracle.so
 
 ENV RUST_LOG="solana_runtime::system_instruction_processor=trace,solana_runtime::message_processor=trace,solana_bpf_loader=debug,solana_rbpf=debug"
 ENV RUST_BACKTRACE=1
