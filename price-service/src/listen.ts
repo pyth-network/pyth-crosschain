@@ -114,8 +114,13 @@ export class VaaCache {
 
   async removeExpiredValues() {
     const now = Math.floor(Date.now() / 1000);
-    for (const arr of this.cache.values()) {
-      arr.filter((vaaConf) => now - vaaConf.publishTime < this.ttl);
+    for (const key of this.cache.keys()) {
+      this.cache.set(
+        key,
+        this.cache
+          .get(key)!
+          .filter((vaaConf) => now - vaaConf.publishTime < this.ttl)
+      );
     }
   }
 }
