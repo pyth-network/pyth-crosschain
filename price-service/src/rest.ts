@@ -44,7 +44,7 @@ export class RestException extends Error {
 function asyncWrapper(
   callback: (req: Request, res: Response, next: NextFunction) => Promise<any>
 ) {
-  return function (req: Request, res: Response, next: NextFunction) {
+  return (req: Request, res: Response, next: NextFunction) => {
     callback(req, res, next).catch(next);
   };
 }
@@ -134,7 +134,7 @@ export class RestAPI {
 
         // Multiple price ids might share same vaa, we use sequence number as
         // key of a vaa and deduplicate using a map of seqnum to vaa bytes.
-        const vaaMap = new Map<bigint, Buffer>();
+        const vaaMap = new Map<number, Buffer>();
 
         const notFoundIds: string[] = [];
 

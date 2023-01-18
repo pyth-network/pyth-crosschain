@@ -23,7 +23,7 @@ import { PromClient } from "./promClient";
 
 export type PriceInfo = {
   vaa: Buffer;
-  seqNum: bigint;
+  seqNum: number;
   publishTime: TimestampInSec;
   attestationTime: TimestampInSec;
   priceFeed: PriceFeed;
@@ -284,7 +284,7 @@ export class Listener implements PriceStore {
 
       const priceFeed = priceAttestationToPriceFeed(priceAttestation);
       const priceInfo = {
-        seqNum: parsedVaa.sequence,
+        seqNum: Number(parsedVaa.sequence),
         vaa,
         publishTime: priceAttestation.publishTime,
         attestationTime: priceAttestation.attestationTime,
