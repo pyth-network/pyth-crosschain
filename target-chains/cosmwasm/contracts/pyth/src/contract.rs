@@ -28,6 +28,9 @@ use {
             PriceInfo,
             PythDataSource,
         },
+        Price,
+        PriceFeed,
+        PriceIdentifier,
     },
     cosmwasm_std::{
         coin,
@@ -51,12 +54,9 @@ use {
         WasmMsg,
         WasmQuery,
     },
-    p2w_sdk::BatchPriceAttestation,
-    pyth_sdk_cw::{
-        PriceFeed,
-        PriceIdentifier,
+    p2w_sdk::{
+        BatchPriceAttestation,
         PriceStatus,
-        ProductIdentifier,
     },
     std::{
         collections::HashSet,
@@ -348,22 +348,38 @@ fn process_batch_attestation(
 
     // Update prices
     for price_attestation in batch_attestation.price_attestations.iter() {
-        let price_feed = PriceFeed::new(
-            PriceIdentifier::new(price_attestation.price_id.to_bytes()),
-            price_attestation.status,
-            price_attestation.publish_time,
-            price_attestation.expo,
-            price_attestation.max_num_publishers,
-            price_attestation.num_publishers,
-            ProductIdentifier::new(price_attestation.product_id.to_bytes()),
-            price_attestation.price,
-            price_attestation.conf,
-            price_attestation.ema_price,
-            price_attestation.ema_conf,
-            price_attestation.prev_price,
-            price_attestation.prev_conf,
-            price_attestation.prev_publish_time,
-        );
+        let price_feed = match price_attestation.status {
+            PriceStatus::Trading => PriceFeed::new(
+                PriceIdentifier::new(price_attestation.price_id.to_bytes()),
+                Price {
+                    price:        price_attestation.price,
+                    conf:         price_attestation.conf,
+                    expo:         price_attestation.expo,
+                    publish_time: price_attestation.publish_time,
+                },
+                Price {
+                    price:        price_attestation.ema_price,
+                    conf:         price_attestation.ema_conf,
+                    expo:         price_attestation.expo,
+                    publish_time: price_attestation.publish_time,
+                },
+            ),
+            _ => PriceFeed::new(
+                PriceIdentifier::new(price_attestation.price_id.to_bytes()),
+                Price {
+                    price:        price_attestation.prev_price,
+                    conf:         price_attestation.prev_conf,
+                    expo:         price_attestation.expo,
+                    publish_time: price_attestation.prev_publish_time,
+                },
+                Price {
+                    price:        price_attestation.ema_price,
+                    conf:         price_attestation.ema_conf,
+                    expo:         price_attestation.expo,
+                    publish_time: price_attestation.prev_publish_time,
+                },
+            ),
+        };
 
         let attestation_time = Timestamp::from_seconds(price_attestation.attestation_time as u64);
 
@@ -423,42 +439,19 @@ fn update_price_feed_if_new(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::PriceFeed { id } => to_binary(&query_price_feed(&deps, env, id.as_ref())?),
+        QueryMsg::PriceFeed { id } => to_binary(&query_price_feed(&deps, id.as_ref())?),
         QueryMsg::GetUpdateFee { vaas } => to_binary(&get_update_fee(&deps, &vaas)?),
         QueryMsg::GetValidTimePeriod => to_binary(&get_valid_time_period(&deps)?),
     }
 }
 
-pub fn query_price_feed(deps: &Deps, env: Env, address: &[u8]) -> StdResult<PriceFeedResponse> {
-    let config = config_read(deps.storage).load()?;
+pub fn query_price_feed(deps: &Deps, address: &[u8]) -> StdResult<PriceFeedResponse> {
     match price_info_read(deps.storage).load(address) {
-        Ok(mut price_info) => {
-            let env_time_sec = env.block.time.seconds();
-            let price_pub_time_sec = price_info.price_feed.publish_time as u64;
-
-            // Cases that it will cover:
-            // - This will ensure to set status unknown if the price has become very old and hasn't
-            //   updated yet.
-            // - If a price has arrived very late to this chain it will set the status to unknown.
-            // - If a price is coming from future it's tolerated up to VALID_TIME_PERIOD seconds
-            //   (using abs diff) but more than that is set to unknown, the reason could be the
-            //   clock time drift between the source and target chains.
-            let time_abs_diff = if env_time_sec > price_pub_time_sec {
-                env_time_sec - price_pub_time_sec
-            } else {
-                price_pub_time_sec - env_time_sec
-            };
-
-            if time_abs_diff > config.valid_time_period.as_secs() {
-                price_info.price_feed.status = PriceStatus::Unknown;
-            }
-
-            Ok(PriceFeedResponse {
-                price_feed: price_info.price_feed,
-            })
-        }
+        Ok(price_info) => Ok(PriceFeedResponse {
+            price_feed: price_info.price_feed,
+        }),
         Err(_) => Err(PythContractError::PriceFeedNotFound)?,
     }
 }
@@ -489,9 +482,12 @@ pub fn get_valid_time_period(deps: &Deps) -> StdResult<Duration> {
 mod test {
     use {
         super::*,
-        crate::governance::GovernanceModule::{
-            Executor,
-            Target,
+        crate::{
+            governance::GovernanceModule::{
+                Executor,
+                Target,
+            },
+            PriceIdentifier,
         },
         cosmwasm_std::{
             coins,
@@ -635,9 +631,17 @@ mod test {
     }
 
     fn create_price_feed(expo: i32) -> PriceFeed {
-        let mut price_feed = PriceFeed::default();
-        price_feed.expo = expo;
-        price_feed
+        PriceFeed::new(
+            PriceIdentifier::new([0u8; 32]),
+            Price {
+                expo,
+                ..Default::default()
+            },
+            Price {
+                expo,
+                ..Default::default()
+            },
+        )
     }
 
     fn create_data_sources(
@@ -828,102 +832,47 @@ mod test {
     }
 
     #[test]
-    fn test_query_price_info_ok_trading() {
-        let (mut deps, mut env) = setup_test();
+    fn test_query_price_info_ok() {
+        let (mut deps, _env) = setup_test();
 
         let address = b"123".as_ref();
 
-        let mut dummy_price_info = PriceInfo::default();
-        dummy_price_info.price_feed.publish_time = 80;
-        dummy_price_info.price_feed.status = PriceStatus::Trading;
+        let dummy_price_info = PriceInfo {
+            price_feed: PriceFeed::new(
+                PriceIdentifier::new([0u8; 32]),
+                Price {
+                    price:        300,
+                    conf:         301,
+                    expo:         302,
+                    publish_time: 303,
+                },
+                Price {
+                    ..Default::default()
+                },
+            ),
+            ..Default::default()
+        };
 
         price_info(&mut deps.storage)
             .save(address, &dummy_price_info)
             .unwrap();
 
-        env.block.time = Timestamp::from_seconds(80 + VALID_TIME_PERIOD.as_secs());
-
-        let price_feed = query_price_feed(&deps.as_ref(), env, address)
+        let price_feed = query_price_feed(&deps.as_ref(), address)
             .unwrap()
             .price_feed;
 
-        assert_eq!(price_feed.status, PriceStatus::Trading);
-    }
-
-    #[test]
-    fn test_query_price_info_ok_stale_past() {
-        let (mut deps, mut env) = setup_test();
-        let address = b"123".as_ref();
-
-        let mut dummy_price_info = PriceInfo::default();
-        dummy_price_info.price_feed.publish_time = 500;
-        dummy_price_info.price_feed.status = PriceStatus::Trading;
-
-        price_info(&mut deps.storage)
-            .save(address, &dummy_price_info)
-            .unwrap();
-
-        env.block.time = Timestamp::from_seconds(500 + VALID_TIME_PERIOD.as_secs() + 1);
-
-        let price_feed = query_price_feed(&deps.as_ref(), env, address)
-            .unwrap()
-            .price_feed;
-
-        assert_eq!(price_feed.status, PriceStatus::Unknown);
-    }
-
-    #[test]
-    fn test_query_price_info_ok_trading_future() {
-        let (mut deps, mut env) = setup_test();
-
-        let address = b"123".as_ref();
-
-        let mut dummy_price_info = PriceInfo::default();
-        dummy_price_info.price_feed.publish_time = 500;
-        dummy_price_info.price_feed.status = PriceStatus::Trading;
-
-        price_info(&mut deps.storage)
-            .save(address, &dummy_price_info)
-            .unwrap();
-
-        env.block.time = Timestamp::from_seconds(500 - VALID_TIME_PERIOD.as_secs());
-
-        let price_feed = query_price_feed(&deps.as_ref(), env, address)
-            .unwrap()
-            .price_feed;
-
-        assert_eq!(price_feed.status, PriceStatus::Trading);
-    }
-
-    #[test]
-    fn test_query_price_info_ok_stale_future() {
-        let (mut deps, mut env) = setup_test();
-
-        let address = b"123".as_ref();
-
-        let mut dummy_price_info = PriceInfo::default();
-        dummy_price_info.price_feed.publish_time = 500;
-        dummy_price_info.price_feed.status = PriceStatus::Trading;
-
-        price_info(&mut deps.storage)
-            .save(address, &dummy_price_info)
-            .unwrap();
-
-        env.block.time = Timestamp::from_seconds(500 - VALID_TIME_PERIOD.as_secs() - 1);
-
-        let price_feed = query_price_feed(&deps.as_ref(), env, address)
-            .unwrap()
-            .price_feed;
-
-        assert_eq!(price_feed.status, PriceStatus::Unknown);
+        assert_eq!(price_feed.get_price_unchecked().price, 300);
+        assert_eq!(price_feed.get_price_unchecked().conf, 301);
+        assert_eq!(price_feed.get_price_unchecked().expo, 302);
+        assert_eq!(price_feed.get_price_unchecked().publish_time, 303);
     }
 
     #[test]
     fn test_query_price_info_err_not_found() {
-        let (deps, env) = setup_test();
+        let deps = setup_test().0;
 
         assert_eq!(
-            query_price_feed(&deps.as_ref(), env, b"123".as_ref()),
+            query_price_feed(&deps.as_ref(), b"123".as_ref()),
             Err(PythContractError::PriceFeedNotFound.into())
         );
     }
