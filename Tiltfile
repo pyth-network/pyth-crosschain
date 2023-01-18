@@ -91,7 +91,7 @@ k8s_yaml_with_ns(build_node_yaml())
 
 k8s_resource(
     "guardian",
-    resource_deps = ["eth-devnet", "eth-devnet2", "terra-terrad", "solana-devnet"],
+    resource_deps = ["eth-devnet", "eth-devnet2", "terra-terrad", "solana-devnet", "pythnet-devnet"],
     port_forwards = [
         port_forward(6060, name = "Debug/Status Server [:6060]", host = webHost),
         port_forward(7070, name = "Public gRPC [:7070]", host = webHost),

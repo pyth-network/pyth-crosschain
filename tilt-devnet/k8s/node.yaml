@@ -123,6 +123,8 @@ spec:
             - http://solana-devnet:8899
             - --pythnetContract
             - Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o
+            - --pythnetWS
+            - http://pythnet-devnet:8899
             - --pythnetRPC
             - http://pythnet-devnet:8899
             - --unsafeDevMode
