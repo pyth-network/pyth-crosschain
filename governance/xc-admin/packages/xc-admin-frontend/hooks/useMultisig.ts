@@ -1,6 +1,6 @@
 import { Wallet } from '@coral-xyz/anchor'
 import { PythCluster } from '@pythnetwork/client/lib/cluster'
-import { Cluster, Connection, Keypair, PublicKey } from '@solana/web3.js'
+import { Cluster, Connection, PublicKey } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
 import { TransactionAccount } from '@sqds/mesh/lib/types'
 import { useContext, useEffect, useRef, useState } from 'react'
@@ -33,7 +33,7 @@ interface MultisigHookData {
   proposals: TransactionAccount[]
 }
 
-export const useMultisig = (): MultisigHookData => {
+export const useMultisig = (wallet: Wallet): MultisigHookData => {
   const connectionRef = useRef<Connection>()
   const { cluster } = useContext(ClusterContext)
   const [isLoading, setIsLoading] = useState(true)
@@ -57,37 +57,41 @@ export const useMultisig = (): MultisigHookData => {
 
     connectionRef.current = connection
     ;(async () => {
-      try {
-        const squads = new SquadsMesh({
-          connection,
-          wallet: new Keypair() as unknown as Wallet,
-        })
-        setProposals(
-          await getProposals(
-            squads,
-            UPGRADE_MUTLTISIG[getMultisigCluster(cluster)]
+      if (wallet) {
+        try {
+          const squads = new SquadsMesh({
+            connection,
+            wallet,
+          })
+          setProposals(
+            await getProposals(
+              squads,
+              UPGRADE_MUTLTISIG[getMultisigCluster(cluster)]
+            )
           )
-        )
-        setSquads(squads)
-        setIsLoading(false)
-      } catch (e) {
-        if (cancelled) return
-        if (urlsIndex === urls.length - 1) {
-          // @ts-ignore
-          setError(e)
+          setSquads(squads)
           setIsLoading(false)
-          console.warn(`Failed to fetch accounts`)
-        } else if (urlsIndex < urls.length - 1) {
-          setUrlsIndex((urlsIndex) => urlsIndex + 1)
-          console.warn(
-            `Failed with ${urls[urlsIndex]}, trying with ${urls[urlsIndex + 1]}`
-          )
+        } catch (e) {
+          if (cancelled) return
+          if (urlsIndex === urls.length - 1) {
+            // @ts-ignore
+            setError(e)
+            setIsLoading(false)
+            console.warn(`Failed to fetch accounts`)
+          } else if (urlsIndex < urls.length - 1) {
+            setUrlsIndex((urlsIndex) => urlsIndex + 1)
+            console.warn(
+              `Failed with ${urls[urlsIndex]}, trying with ${
+                urls[urlsIndex + 1]
+              }`
+            )
+          }
         }
       }
     })()
 
     return () => {}
-  }, [urlsIndex, cluster])
+  }, [urlsIndex, cluster, wallet])
 
   return {
     isLoading,

@@ -92,14 +92,14 @@ const UpdatePermissions = () => {
   const [pubkeyChanges, setPubkeyChanges] = useState<PubkeyChanges>({})
   const [editable, setEditable] = useState(false)
   const { cluster, setCluster } = useContext(ClusterContext)
+  const anchorWallet = useAnchorWallet()
   const {
     isLoading: isMultisigLoading,
     error,
     squads,
     proposals,
-  } = useMultisig()
+  } = useMultisig(anchorWallet as Wallet)
   const { rawConfig, dataIsLoading, connection } = usePythContext()
-  const anchorWallet = useAnchorWallet()
   const { publicKey, connected } = useWallet()
   const [pythProgramClient, setPythProgramClient] =
     useState<Program<PythOracle>>()
@@ -128,10 +128,6 @@ const UpdatePermissions = () => {
       ])
     }
   }, [dataIsLoading, rawConfig])
-
-  // useEffect(() => {
-  //   console.log(pubkeyChanges)
-  // }, [pubkeyChanges])
 
   const table = useReactTable({
     data,
@@ -189,7 +185,7 @@ const UpdatePermissions = () => {
             }
           })
         }
-        console.log(newPubkeyChanges['Master Authority'])
+        console.log(newPubkeyChanges)
         pythProgramClient?.methods
           .updPermissions(
             new PublicKey(newPubkeyChanges['Master Authority'].newPubkey),
