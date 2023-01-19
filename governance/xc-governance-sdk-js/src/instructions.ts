@@ -126,9 +126,7 @@ export class CosmwasmUpgradeContractInstruction extends TargetInstruction {
   }
 
   protected serializePayload(): Buffer {
-    return new BufferBuilder()
-      .addBigUint64(this.codeId)
-      .build();
+    return new BufferBuilder().addBigUint64(this.codeId).build();
   }
 }
 
