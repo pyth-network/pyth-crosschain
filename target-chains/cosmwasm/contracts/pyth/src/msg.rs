@@ -4,21 +4,24 @@ use {
         PriceFeed,
         PriceIdentifier,
     },
+    cosmwasm_schema::{
+        cw_serde,
+        QueryResponses,
+    },
     cosmwasm_std::{
         Binary,
         Coin,
     },
-    schemars::JsonSchema,
-    serde::{
-        Deserialize,
-        Serialize,
-    },
+    std::time::Duration,
 };
+
+// cw_serde attribute is equivalent to
+// #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, JsonSchema)]
+// #[serde(rename_all = "snake_case")]
 
 type HumanAddr = String;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct InstantiateMsg {
     pub wormhole_contract: HumanAddr,
     pub data_sources:      Vec<PythDataSource>,
@@ -33,29 +36,31 @@ pub struct InstantiateMsg {
     pub fee: Coin,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[derive(Eq)]
+#[cw_serde]
 pub enum ExecuteMsg {
     // TODO: add UpdatePriceFeeds if necessary
     UpdatePriceFeeds { data: Vec<Binary> },
     ExecuteGovernanceInstruction { data: Binary },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[derive(Eq)]
+#[cw_serde]
 pub struct MigrateMsg {}
 
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(PriceFeedResponse)]
     PriceFeed { id: PriceIdentifier },
+    #[returns(Coin)]
     GetUpdateFee { vaas: Vec<Binary> },
+    #[returns(Duration)]
     GetValidTimePeriod,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct PriceFeedResponse {
     pub price_feed: PriceFeed,
 }

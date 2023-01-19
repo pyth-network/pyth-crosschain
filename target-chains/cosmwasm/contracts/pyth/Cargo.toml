@@ -31,6 +31,7 @@ bigint = "4"
 p2w-sdk = { path = "../../../../third_party/pyth/p2w-sdk/rust" }
 pyth-sdk = "0.7.0"
 byteorder = "1.4.3"
+cosmwasm-schema = "1.1.9"
 
 [dev-dependencies]
 cosmwasm-vm = { version = "1.0.0", default-features = false }
