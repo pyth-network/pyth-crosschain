@@ -15,14 +15,12 @@ MESH_VAULT_EXT_AUTHORITY_KEY_PATH = MESH_KEY_DIR + "external_authority.json"
 
 ALICE_KEY_PATH = MESH_KEY_DIR + "member_alice.json"
 BOB_KEY_PATH = MESH_KEY_DIR + "member_bob.json"
-CAROL_KEY_PATH = MESH_KEY_DIR + "member_carol.json"
 
 create_key_addr = "73UuSY2yXat7h7T49MMGg8TiHPqJJKKVc33DmC4b41Hf" # The person that instantiated the multisig on mainnet used this create key, it never needs to sign but we're using it to match mainnet
 ext_authority_addr = sol_run_or_die("address", ["--keypair", MESH_VAULT_EXT_AUTHORITY_KEY_PATH], capture_output=True).stdout.strip()
 
 alice_addr = sol_run_or_die("address", ["--keypair", ALICE_KEY_PATH], capture_output=True).stdout.strip()
 bob_addr = sol_run_or_die("address", ["--keypair", BOB_KEY_PATH], capture_output=True).stdout.strip()
-carol_addr = sol_run_or_die("address", ["--keypair", CAROL_KEY_PATH], capture_output=True).stdout.strip()
 
 # wrap run_or_die in msg builder common cli args
 def msg_builder_run_or_die(args = [], debug=False, **kwargs):
@@ -40,8 +38,8 @@ res = msg_builder_run_or_die([
                         "-p", SOL_PAYER_KEYPAIR,
                         "-c", "localdevnet",
                         "-r", SOL_RPC_URL,
-                        "-i", f"{alice_addr},{bob_addr},{carol_addr}",
-                        "-t", "2", # 2/3 threshold
+                        "-i", f"{alice_addr},{bob_addr}",
+                        "-t", "1", # 1/3 threshold
                         ],
                              capture_output=True, debug=True, die=False)
 
