@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "../src/PythExample.sol";
+import "../src/OracleSwap.sol";
 import "pyth-sdk-solidity/MockPyth.sol";
 import "openzeppelin-contracts/contracts/mocks/ERC20Mock.sol";
 
