@@ -2699,6 +2699,7 @@ dependencies = [
  "borsh",
  "p2w-sdk",
  "pyth-client",
+ "pyth-sdk-solana 0.5.0",
  "rocksalt",
  "serde",
  "serde_derive",

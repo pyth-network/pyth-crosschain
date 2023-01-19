@@ -49,6 +49,7 @@ use {
         load_product_account,
     },
     pyth_wormhole_attester::{
+        attestation_state::AttestationStateMapPDA,
         config::{
             OldP2WConfigAccount,
             P2WConfigAccount,
@@ -324,6 +325,8 @@ pub fn gen_attest_tx(
         AccountMeta::new_readonly(system_program::id(), false),
         // config
         AccountMeta::new_readonly(p2w_config_addr, false),
+        // attestation_state
+        AccountMeta::new(AttestationStateMapPDA::key(None, &p2w_addr), false),
     ];
 
     // Batch contents and padding if applicable

@@ -12,9 +12,12 @@ pub use pyth_sdk::{
     UnixTimestamp,
 };
 #[cfg(feature = "solana")]
-use solitaire::{
-    Derive,
-    Info,
+use {
+    pyth_sdk_solana::state::PriceAccount,
+    solitaire::{
+        Derive,
+        Info,
+    },
 };
 use {
     serde::{
@@ -47,12 +50,18 @@ pub const P2W_MAGIC: &[u8] = b"P2WH";
 /// Format version used and understood by this codebase
 pub const P2W_FORMAT_VER_MAJOR: u16 = 3;
 
-/// Starting with v3, format introduces a minor version to mark forward-compatible iterations
-pub const P2W_FORMAT_VER_MINOR: u16 = 0;
+/// Starting with v3, format introduces a minor version to mark
+/// forward-compatible iterations.
+/// IMPORTANT: Remember to reset this to 0 whenever major version is
+/// bumped.
+/// Changelog:
+/// * v3.1 - last_attested_publish_time field added
+pub const P2W_FORMAT_VER_MINOR: u16 = 1;
 
 /// Starting with v3, format introduces append-only
 /// forward-compatibility to the header. This is the current number of
-/// bytes after the hdr_size field.
+/// bytes after the hdr_size field. After the specified bytes, inner
+/// payload-specific fields begin.
 pub const P2W_FORMAT_HDR_SIZE: u16 = 1;
 
 pub const PUBKEY_LEN: usize = 32;
@@ -80,28 +89,29 @@ pub enum PayloadId {
 #[serde(rename_all = "camelCase")]
 pub struct PriceAttestation {
     #[serde(serialize_with = "pubkey_to_hex")]
-    pub product_id:         Identifier,
+    pub product_id:                 Identifier,
     #[serde(serialize_with = "pubkey_to_hex")]
-    pub price_id:           Identifier,
+    pub price_id:                   Identifier,
     #[serde(serialize_with = "use_to_string")]
-    pub price:              i64,
+    pub price:                      i64,
     #[serde(serialize_with = "use_to_string")]
-    pub conf:               u64,
-    pub expo:               i32,
+    pub conf:                       u64,
+    pub expo:                       i32,
     #[serde(serialize_with = "use_to_string")]
-    pub ema_price:          i64,
+    pub ema_price:                  i64,
     #[serde(serialize_with = "use_to_string")]
-    pub ema_conf:           u64,
-    pub status:             PriceStatus,
-    pub num_publishers:     u32,
-    pub max_num_publishers: u32,
-    pub attestation_time:   UnixTimestamp,
-    pub publish_time:       UnixTimestamp,
-    pub prev_publish_time:  UnixTimestamp,
+    pub ema_conf:                   u64,
+    pub status:                     PriceStatus,
+    pub num_publishers:             u32,
+    pub max_num_publishers:         u32,
+    pub attestation_time:           UnixTimestamp,
+    pub publish_time:               UnixTimestamp,
+    pub prev_publish_time:          UnixTimestamp,
     #[serde(serialize_with = "use_to_string")]
-    pub prev_price:         i64,
+    pub prev_price:                 i64,
     #[serde(serialize_with = "use_to_string")]
-    pub prev_conf:          u64,
+    pub prev_conf:                  u64,
+    pub last_attested_publish_time: UnixTimestamp,
 }
 
 /// Helper allowing ToString implementers to be serialized as strings accordingly
@@ -145,6 +155,10 @@ impl BatchPriceAttestation {
 
         // payload_id
         buf.push(PayloadId::PriceBatchAttestation as u8);
+
+        // Header is over. NOTE: If you need to append to the header,
+        // make sure that the number of bytes after hdr_size is
+        // reflected in the P2W_FORMAT_HDR_SIZE constant.
 
         // n_attestations
         buf.extend_from_slice(&(self.price_attestations.len() as u16).to_be_bytes()[..]);
@@ -279,11 +293,25 @@ impl PriceAttestation {
     pub fn from_pyth_price_bytes(
         price_id: Identifier,
         attestation_time: UnixTimestamp,
+        last_attested_publish_time: UnixTimestamp,
         value: &[u8],
     ) -> Result<Self, ErrBox> {
-        let price = pyth_sdk_solana::state::load_price_account(value)?;
-
-        Ok(PriceAttestation {
+        let price_struct = pyth_sdk_solana::state::load_price_account(value)?;
+        Ok(Self::from_pyth_price_struct(
+            price_id,
+            attestation_time,
+            last_attested_publish_time,
+            price_struct,
+        ))
+    }
+    #[cfg(feature = "solana")]
+    pub fn from_pyth_price_struct(
+        price_id: Identifier,
+        attestation_time: UnixTimestamp,
+        last_attested_publish_time: UnixTimestamp,
+        price: &PriceAccount,
+    ) -> Self {
+        PriceAttestation {
             product_id: Identifier::new(price.prod.val),
             price_id,
             price: price.agg.price,
@@ -299,7 +327,8 @@ impl PriceAttestation {
             prev_publish_time: price.prev_timestamp,
             prev_price: price.prev_price,
             prev_conf: price.prev_conf,
-        })
+            last_attested_publish_time,
+        }
     }
 
     /// Serialize this attestation according to the Pyth-over-wormhole serialization format
@@ -322,6 +351,7 @@ impl PriceAttestation {
             prev_publish_time,
             prev_price,
             prev_conf,
+            last_attested_publish_time,
         } = self;
 
         let mut buf = Vec::new();
@@ -370,6 +400,9 @@ impl PriceAttestation {
 
         // prev_conf
         buf.extend_from_slice(&prev_conf.to_be_bytes()[..]);
+
+        // last_attested_publish_time
+        buf.extend_from_slice(&last_attested_publish_time.to_be_bytes()[..]);
 
         buf
     }
@@ -444,6 +477,11 @@ impl PriceAttestation {
         bytes.read_exact(prev_conf_vec.as_mut_slice())?;
         let prev_conf = u64::from_be_bytes(prev_conf_vec.as_slice().try_into()?);
 
+        let mut last_attested_publish_time_vec = vec![0u8; mem::size_of::<UnixTimestamp>()];
+        bytes.read_exact(last_attested_publish_time_vec.as_mut_slice())?;
+        let last_attested_publish_time =
+            UnixTimestamp::from_be_bytes(last_attested_publish_time_vec.as_slice().try_into()?);
+
         Ok(Self {
             product_id,
             price_id,
@@ -460,6 +498,7 @@ impl PriceAttestation {
             prev_publish_time,
             prev_price,
             prev_conf,
+            last_attested_publish_time,
         })
     }
 }
@@ -478,21 +517,22 @@ mod tests {
         let product_id_bytes = prod.unwrap_or([21u8; 32]);
         let price_id_bytes = price.unwrap_or([222u8; 32]);
         PriceAttestation {
-            product_id:         Identifier::new(product_id_bytes),
-            price_id:           Identifier::new(price_id_bytes),
-            price:              0x2bad2feed7,
-            conf:               101,
-            ema_price:          -42,
-            ema_conf:           42,
-            expo:               -3,
-            status:             PriceStatus::Trading,
-            num_publishers:     123212u32,
-            max_num_publishers: 321232u32,
-            attestation_time:   (0xdeadbeeffadedeedu64) as i64,
-            publish_time:       0xdadebeefi64,
-            prev_publish_time:  0xdeadbabei64,
-            prev_price:         0xdeadfacebeefi64,
-            prev_conf:          0xbadbadbeefu64, // I could do this all day -SD
+            product_id:                 Identifier::new(product_id_bytes),
+            price_id:                   Identifier::new(price_id_bytes),
+            price:                      0x2bad2feed7,
+            conf:                       101,
+            ema_price:                  -42,
+            ema_conf:                   42,
+            expo:                       -3,
+            status:                     PriceStatus::Trading,
+            num_publishers:             123212u32,
+            max_num_publishers:         321232u32,
+            attestation_time:           (0xdeadbeeffadedeedu64) as i64,
+            publish_time:               0xdadebeefi64,
+            prev_publish_time:          0xdeadbabei64,
+            prev_price:                 0xdeadfacebeefi64,
+            prev_conf:                  0xbadbadbeefu64, // I could do this all day -SD
+            last_attested_publish_time: (0xdeadbeeffadedeafu64) as i64,
         }
     }
 
