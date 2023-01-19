@@ -29,7 +29,7 @@ use {
 };
 
 pub static CONFIG_KEY: &[u8] = b"config";
-pub static PRICE_INFO_KEY: &[u8] = b"price_info_v3";
+pub static PRICE_INFO_KEY: &[u8] = b"price_info_v4";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, JsonSchema)]
 pub struct PythDataSource {
