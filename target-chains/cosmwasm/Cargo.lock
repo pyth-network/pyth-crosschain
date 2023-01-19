@@ -1136,7 +1136,7 @@ name = "p2w-sdk"
 version = "0.1.1"
 dependencies = [
  "hex",
- "pyth-sdk",
+ "pyth-sdk 0.5.0",
  "serde",
 ]
 
@@ -1248,7 +1248,7 @@ dependencies = [
  "k256 0.9.6",
  "lazy_static",
  "p2w-sdk",
- "pyth-sdk-cw",
+ "pyth-sdk 0.7.0",
  "schemars",
  "serde",
  "serde_derive",
@@ -1273,14 +1273,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "pyth-sdk-cw"
-version = "0.2.0"
+name = "pyth-sdk"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f1575db8f501031a810aa5fe5da8ac3868bfcee7ce3deb27d6354c81a5833cb"
+checksum = "00bf2540203ca3c7a5712fdb8b5897534b7f6a0b6e7b0923ff00466c5f9efcb3"
 dependencies = [
- "cosmwasm-std",
- "cosmwasm-storage",
- "pyth-sdk",
+ "borsh",
+ "borsh-derive",
+ "hex",
  "schemars",
  "serde",
 ]

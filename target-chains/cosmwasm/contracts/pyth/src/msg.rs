@@ -1,12 +1,12 @@
 use {
-    crate::state::PythDataSource,
+    crate::{
+        state::PythDataSource,
+        PriceFeed,
+        PriceIdentifier,
+    },
     cosmwasm_std::{
         Binary,
         Coin,
-    },
-    pyth_sdk_cw::{
-        PriceFeed,
-        PriceIdentifier,
     },
     schemars::JsonSchema,
     serde::{
