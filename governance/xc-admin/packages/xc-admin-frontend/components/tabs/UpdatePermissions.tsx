@@ -48,6 +48,10 @@ const defaultData: UpdatePermissionsProps[] = [
   },
 ]
 
+const BPF_UPGRADABLE_LOADER = new PublicKey(
+  'BPFLoaderUpgradeab1e11111111111111111111111'
+)
+
 const columnHelper = createColumnHelper<UpdatePermissionsProps>()
 
 const defaultColumns = [
@@ -186,29 +190,48 @@ const UpdatePermissions = () => {
           })
         }
         console.log(newPubkeyChanges)
-        pythProgramClient?.methods
-          .updPermissions(
-            new PublicKey(newPubkeyChanges['Master Authority'].newPubkey),
-            new PublicKey(
-              newPubkeyChanges['Data Curation Authority'].newPubkey
-            ),
-            new PublicKey(newPubkeyChanges['Security Authority'].newPubkey)
-          )
-          .accounts({
-            upgradeAuthority: PublicKey.unique(),
-            programDataAccount: PublicKey.unique(),
-          })
-          .instruction()
-          .then((instruction) => {
-            if (!isMultisigLoading && squads) {
-              proposeInstructions(
-                squads,
+        console.log(
+          squads
+            ?.getAuthorityPDA(UPGRADE_MUTLTISIG[getMultisigCluster(cluster)], 1)
+            .toBase58()
+        )
+
+        if (pythProgramClient) {
+          const programDataAccount = PublicKey.findProgramAddressSync(
+            [pythProgramClient?.programId.toBuffer()],
+            BPF_UPGRADABLE_LOADER
+          )[0]
+          console.log(programDataAccount.toBase58())
+          pythProgramClient?.methods
+            .updPermissions(
+              new PublicKey(newPubkeyChanges['Master Authority'].newPubkey),
+              new PublicKey(
+                newPubkeyChanges['Data Curation Authority'].newPubkey
+              ),
+              new PublicKey(newPubkeyChanges['Security Authority'].newPubkey)
+            )
+            .accounts({
+              upgradeAuthority: squads?.getAuthorityPDA(
                 UPGRADE_MUTLTISIG[getMultisigCluster(cluster)],
-                [instruction],
-                false
-              )
-            }
-          })
+                1
+              ),
+              programDataAccount,
+            })
+            .instruction()
+            .then((instruction) => {
+              console.log(instruction)
+              console.log(instruction.programId.toBase58())
+              instruction.keys.forEach((k) => console.log(k.pubkey.toBase58()))
+              if (!isMultisigLoading && squads) {
+                proposeInstructions(
+                  squads,
+                  UPGRADE_MUTLTISIG[getMultisigCluster(cluster)],
+                  [instruction],
+                  false
+                )
+              }
+            })
+        }
       }
     }
   }, [
