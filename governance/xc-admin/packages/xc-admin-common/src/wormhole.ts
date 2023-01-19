@@ -9,3 +9,12 @@ export const WORMHOLE_ADDRESS: Record<PythCluster, PublicKey | undefined> = {
   localnet: new PublicKey("Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"),
   testnet: undefined,
 };
+
+export const WORMHOLE_API_ENDPOINT: Record<PythCluster, string | undefined> = {
+  "mainnet-beta": "https://wormhole-v2-mainnet-api.certus.one",
+  pythtest: "https://wormhole-v2-testnet-api.certus.one",
+  devnet: "https://wormhole-v2-testnet-api.certus.one",
+  pythnet: "https://wormhole-v2-mainnet-api.certus.one",
+  localnet: undefined,
+  testnet: undefined,
+};
