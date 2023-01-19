@@ -39,7 +39,7 @@ res = msg_builder_run_or_die([
                         "-c", "localdevnet",
                         "-r", SOL_RPC_URL,
                         "-i", f"{alice_addr},{bob_addr}",
-                        "-t", "1", # 2/3 threshold
+                        "-t", "1", # 1/3 threshold
                         ],
                              capture_output=True, debug=True, die=False)
 
