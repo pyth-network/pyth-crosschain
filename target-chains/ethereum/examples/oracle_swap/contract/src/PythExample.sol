@@ -3,46 +3,62 @@ pragma solidity ^0.8.0;
 
 import "pyth-sdk-solidity/IPyth.sol";
 import "pyth-sdk-solidity/PythStructs.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
-contract PythExample {
+contract OracleSwap {
     event Transfer(address from, address to, uint amountUsd, uint amountWei);
 
     IPyth pyth;
-    bytes32 ethPriceId;
 
-    int32 constant ETH_IN_WEI_EXPO = 18;
+    bytes32 baseTokenPriceId;
+    bytes32 quoteTokenPriceId;
 
-    constructor(address _pyth, bytes32 _ethPriceId) {
+    ERC20 public baseToken;
+    ERC20 public quoteToken;
+
+    constructor(address _pyth, bytes32 _baseTokenPriceId, bytes32 _quoteTokenPriceId, address _baseToken, address _quoteToken) {
         pyth = IPyth(_pyth);
-        ethPriceId = _ethPriceId;
+        baseTokenPriceId = _baseTokenPriceId;
+        quoteTokenPriceId = _quoteTokenPriceId;
+        baseToken = ERC20(_baseToken);
+        quoteToken = ERC20(_quoteToken);
     }
 
-    function sendToFriend(address payable to, uint amountUsd, bytes[] calldata updateData) external payable {
+    function swap(bool isBuy, uint size, bytes[] calldata updateData) external payable {
         uint updateFee = pyth.getUpdateFee(updateData.length);
         pyth.updatePriceFeeds{value: updateFee}(updateData);
 
-        PythStructs.Price memory currentEthPrice = pyth.getPrice(ethPriceId);
+        PythStructs.Price memory currentBasePrice = pyth.getPrice(baseTokenPriceId);
+        PythStructs.Price memory currentQuotePrice = pyth.getPrice(quoteTokenPriceId);
 
-        uint amountWei;
+        uint256 basePrice = convertToUint(currentBasePrice, baseToken.decimals());
+        // Note: do all arithmetic in the base token's decimal quantity (which should be sufficient for the quote also)
+        uint256 quotePrice = convertToUint(currentQuotePrice, baseToken.decimals());
 
-        require(currentEthPrice.price >= 0, "price should be positive");
+        uint256 quoteSize = (size * basePrice) / quotePrice;
 
-        // amountUsd*10**(18-expo) / price
-
-        if (ETH_IN_WEI_EXPO - currentEthPrice.expo >= 0) {
-            amountWei = amountUsd * 10**uint32(ETH_IN_WEI_EXPO-currentEthPrice.expo) / uint(uint64(currentEthPrice.price));
+        if (isBuy) {
+            quoteToken.transferFrom(msg.sender, address(this), quoteSize);
+            baseToken.transfer(msg.sender, size);
         } else {
-            amountWei = amountUsd / (uint(uint64(currentEthPrice.price)) * 10**uint32(currentEthPrice.expo - ETH_IN_WEI_EXPO));
+            baseToken.transferFrom(msg.sender, address(this), size);
+            quoteToken.transfer(msg.sender, quoteSize);
         }
-
-        require(msg.value - updateFee >= amountWei, "insufficient fee");
-
-        to.transfer(amountWei);
-        payable(msg.sender).transfer(msg.value - amountWei - updateFee);
-
-        emit Transfer(msg.sender, to, amountUsd, amountWei);
     }
 
-    receive() external payable {
+    function convertToUint(PythStructs.Price memory price, uint8 targetDecimals) pure private returns (uint256) {
+        if (price.price < 0 || price.expo > 0 || price.expo < -255) {
+            revert();
+        }
+        // TODO: this code could be more generic
+        uint8 priceDecimals = uint8(uint32(-1 * price.expo));
+
+        if (targetDecimals - priceDecimals >= 0) {
+            return uint(uint64(price.price)) * 10**uint32(targetDecimals - priceDecimals);
+        } else {
+            return uint(uint64(price.price)) / 10**uint32(priceDecimals - targetDecimals);
+        }
     }
+
+    receive() external payable {}
 }

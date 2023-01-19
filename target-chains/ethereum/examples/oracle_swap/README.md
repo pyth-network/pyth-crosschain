@@ -12,6 +12,7 @@ To build
 cd ./contract
 forge install foundry-rs/forge-std@2c7cbfc6fbede6d7c9e6b17afe997e3fdfe22fef --no-git --no-commit
 forge install pyth-network/pyth-sdk-solidity@v1.0.1 --no-git --no-commit
+forge install OpenZeppelin/openzeppelin-contracts@v4.8.1 --no-git --no-commit
 cd ../app/
 npm ci
 ```
