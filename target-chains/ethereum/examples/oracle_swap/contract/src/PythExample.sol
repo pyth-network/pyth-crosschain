@@ -50,7 +50,7 @@ contract OracleSwap {
         if (price.price < 0 || price.expo > 0 || price.expo < -255) {
             revert();
         }
-        // TODO: this code could be more generic
+
         uint8 priceDecimals = uint8(uint32(-1 * price.expo));
 
         if (targetDecimals - priceDecimals >= 0) {
