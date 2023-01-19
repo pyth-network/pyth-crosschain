@@ -6,7 +6,6 @@ import {
 import { PythOracle } from '@pythnetwork/client/lib/anchor'
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
-import Squads from '@sqds/mesh'
 import {
   createColumnHelper,
   flexRender,
@@ -15,8 +14,14 @@ import {
 } from '@tanstack/react-table'
 import copy from 'copy-to-clipboard'
 import { useContext, useEffect, useState } from 'react'
+import { proposeInstructions } from 'xc-admin-common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
+import {
+  getMultisigCluster,
+  UPGRADE_MUTLTISIG,
+  useMultisig,
+} from '../../hooks/useMultisig'
 import CopyIcon from '../../images/icons/copy.inline.svg'
 import ClusterSwitch from '../ClusterSwitch'
 import EditButton from '../EditButton'
@@ -87,7 +92,12 @@ const UpdatePermissions = () => {
   const [pubkeyChanges, setPubkeyChanges] = useState<PubkeyChanges>({})
   const [editable, setEditable] = useState(false)
   const { cluster, setCluster } = useContext(ClusterContext)
-  const [sqdsClient, setSqdsClient] = useState<Squads>()
+  const {
+    isLoading: isMultisigLoading,
+    error,
+    squads,
+    proposals,
+  } = useMultisig()
   const { rawConfig, dataIsLoading, connection } = usePythContext()
   const anchorWallet = useAnchorWallet()
   const { publicKey, connected } = useWallet()
@@ -194,11 +204,26 @@ const UpdatePermissions = () => {
           })
           .instruction()
           .then((instruction) => {
-            // TODO: propose ix
+            if (!isMultisigLoading && squads) {
+              proposeInstructions(
+                squads,
+                UPGRADE_MUTLTISIG[getMultisigCluster(cluster)],
+                [instruction],
+                false
+              )
+            }
           })
       }
     }
-  }, [editable, pubkeyChanges, pythProgramClient, data])
+  }, [
+    editable,
+    pubkeyChanges,
+    pythProgramClient,
+    data,
+    cluster,
+    isMultisigLoading,
+    squads,
+  ])
 
   // create anchor wallet when connected
   useEffect(() => {
