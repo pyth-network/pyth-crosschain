@@ -38,7 +38,7 @@ interface UpdatePermissionsProps {
   newPubkey?: string
 }
 
-const defaultData: UpdatePermissionsProps[] = [
+const DEFAULT_DATA: UpdatePermissionsProps[] = [
   {
     account: 'Master Authority',
     pubkey: new PublicKey(0).toBase58(),
@@ -96,7 +96,7 @@ type PubkeyChanges = {
 }
 
 const UpdatePermissions = () => {
-  const [data, setData] = useState(() => [...defaultData])
+  const [data, setData] = useState(() => [...DEFAULT_DATA])
   const [columns, setColumns] = useState(() => [...defaultColumns])
   const [pubkeyChanges, setPubkeyChanges] = useState<PubkeyChanges>({})
   const [finalPubkeyChanges, setFinalPubkeyChanges] = useState<PubkeyChanges>(
