@@ -120,6 +120,16 @@ export class EthereumUpgradeContractInstruction extends TargetInstruction {
   }
 }
 
+export class CosmwasmUpgradeContractInstruction extends TargetInstruction {
+  constructor(targetChainId: ChainId, private codeId: bigint) {
+    super(TargetAction.UpgradeContract, targetChainId);
+  }
+
+  protected serializePayload(): Buffer {
+    return new BufferBuilder().addBigUint64(this.codeId).build();
+  }
+}
+
 export class AuthorizeGovernanceDataSourceTransferInstruction extends TargetInstruction {
   constructor(targetChainId: ChainId, private claimVaa: Buffer) {
     super(TargetAction.AuthorizeGovernanceDataSourceTransfer, targetChainId);
