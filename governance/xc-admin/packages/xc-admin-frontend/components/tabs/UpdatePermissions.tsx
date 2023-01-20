@@ -1,4 +1,5 @@
 import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor'
+import { Dialog, Transition } from '@headlessui/react'
 import {
   getPythProgramKeyForCluster,
   pythOracleProgram,
@@ -13,7 +14,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import copy from 'copy-to-clipboard'
-import { useContext, useEffect, useState } from 'react'
+import { Fragment, useContext, useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { proposeInstructions } from 'xc-admin-common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
@@ -23,8 +25,11 @@ import {
   useMultisig,
 } from '../../hooks/useMultisig'
 import CopyIcon from '../../images/icons/copy.inline.svg'
+import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
+import Spinner from '../common/Spinner'
 import EditButton from '../EditButton'
+import CloseIcon from '../icons/CloseIcon'
 import Loadbar from '../loaders/Loadbar'
 
 interface UpdatePermissionsProps {
@@ -70,8 +75,8 @@ const defaultColumns = [
               copy(pubkey)
             }}
           >
-            <span className="mr-2 hidden xl:block">{pubkey}</span>
-            <span className="mr-2 xl:hidden">
+            <span className="mr-2 hidden lg:block">{pubkey}</span>
+            <span className="mr-2 lg:hidden">
               {pubkey.slice(0, 6) + '...' + pubkey.slice(-6)}
             </span>{' '}
             <CopyIcon className="shrink-0" />
@@ -94,17 +99,20 @@ const UpdatePermissions = () => {
   const [data, setData] = useState(() => [...defaultData])
   const [columns, setColumns] = useState(() => [...defaultColumns])
   const [pubkeyChanges, setPubkeyChanges] = useState<PubkeyChanges>({})
+  const [finalPubkeyChanges, setFinalPubkeyChanges] = useState<PubkeyChanges>(
+    {}
+  )
   const [editable, setEditable] = useState(false)
-  const { cluster, setCluster } = useContext(ClusterContext)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
+    useState(false)
+  const { cluster } = useContext(ClusterContext)
   const anchorWallet = useAnchorWallet()
-  const {
-    isLoading: isMultisigLoading,
-    error,
-    squads,
-    proposals,
-  } = useMultisig(anchorWallet as Wallet)
+  const { isLoading: isMultisigLoading, squads } = useMultisig(
+    anchorWallet as Wallet
+  )
   const { rawConfig, dataIsLoading, connection } = usePythContext()
-  const { publicKey, connected } = useWallet()
+  const { connected } = useWallet()
   const [pythProgramClient, setPythProgramClient] =
     useState<Program<PythOracle>>()
 
@@ -139,8 +147,48 @@ const UpdatePermissions = () => {
     getCoreRowModel: getCoreRowModel(),
   })
 
+  const backfillPubkeyChanges = () => {
+    const newPubkeyChanges = { ...pubkeyChanges }
+    if (Object.keys(pubkeyChanges).length !== 3) {
+      data.forEach((d) => {
+        if (!newPubkeyChanges[d.account]) {
+          newPubkeyChanges[d.account] = {
+            prevPubkey: d.pubkey,
+            newPubkey: d.pubkey,
+          }
+        }
+      })
+    }
+    return newPubkeyChanges
+  }
+
   const handleEditButtonClick = () => {
-    setEditable(!editable)
+    const nextState = !editable
+    if (nextState) {
+      setColumns([
+        ...defaultColumns,
+        columnHelper.accessor('newPubkey', {
+          cell: (info) => info.getValue(),
+          header: () => <span>New Public Key</span>,
+        }),
+      ])
+    } else {
+      if (Object.keys(pubkeyChanges).length > 0) {
+        openModal()
+        setFinalPubkeyChanges(backfillPubkeyChanges())
+      } else {
+        setColumns(defaultColumns)
+      }
+    }
+    setEditable(nextState)
+  }
+
+  const openModal = () => {
+    setIsModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
   }
 
   // check if pubkey is valid
@@ -166,83 +214,52 @@ const UpdatePermissions = () => {
     }
   }
 
-  useEffect(() => {
-    if (editable) {
-      setColumns([
-        ...defaultColumns,
-        columnHelper.accessor('newPubkey', {
-          cell: (info) => info.getValue(),
-          header: () => <span>New Public Key</span>,
-        }),
-      ])
-    } else {
-      if (Object.keys(pubkeyChanges).length > 0) {
-        // if pubkeyChanges.length is not 3, then we need to fill pubkeyChanges with the previous pubkey from data
-        const newPubkeyChanges = { ...pubkeyChanges }
-        if (Object.keys(pubkeyChanges).length !== 3) {
-          data.forEach((d) => {
-            if (!newPubkeyChanges[d.account]) {
-              newPubkeyChanges[d.account] = {
-                prevPubkey: d.pubkey,
-                newPubkey: d.pubkey,
-              }
-            }
-          })
-        }
-        console.log(newPubkeyChanges)
-        console.log(
-          squads
-            ?.getAuthorityPDA(UPGRADE_MUTLTISIG[getMultisigCluster(cluster)], 1)
-            .toBase58()
+  const handleSendProposalButtonClick = () => {
+    if (pythProgramClient) {
+      const programDataAccount = PublicKey.findProgramAddressSync(
+        [pythProgramClient?.programId.toBuffer()],
+        BPF_UPGRADABLE_LOADER
+      )[0]
+      pythProgramClient?.methods
+        .updPermissions(
+          new PublicKey(finalPubkeyChanges['Master Authority'].newPubkey),
+          new PublicKey(
+            finalPubkeyChanges['Data Curation Authority'].newPubkey
+          ),
+          new PublicKey(finalPubkeyChanges['Security Authority'].newPubkey)
         )
-
-        if (pythProgramClient) {
-          const programDataAccount = PublicKey.findProgramAddressSync(
-            [pythProgramClient?.programId.toBuffer()],
-            BPF_UPGRADABLE_LOADER
-          )[0]
-          console.log(programDataAccount.toBase58())
-          pythProgramClient?.methods
-            .updPermissions(
-              new PublicKey(newPubkeyChanges['Master Authority'].newPubkey),
-              new PublicKey(
-                newPubkeyChanges['Data Curation Authority'].newPubkey
-              ),
-              new PublicKey(newPubkeyChanges['Security Authority'].newPubkey)
-            )
-            .accounts({
-              upgradeAuthority: squads?.getAuthorityPDA(
+        .accounts({
+          upgradeAuthority: squads?.getAuthorityPDA(
+            UPGRADE_MUTLTISIG[getMultisigCluster(cluster)],
+            1
+          ),
+          programDataAccount,
+        })
+        .instruction()
+        .then(async (instruction) => {
+          instruction.keys.forEach((k) => console.log(k.pubkey.toBase58()))
+          if (!isMultisigLoading && squads) {
+            console.log('setting isSendProposalButtonLoading to true')
+            setIsSendProposalButtonLoading(true)
+            try {
+              const proposalPubkey = await proposeInstructions(
+                squads,
                 UPGRADE_MUTLTISIG[getMultisigCluster(cluster)],
-                1
-              ),
-              programDataAccount,
-            })
-            .instruction()
-            .then((instruction) => {
-              console.log(instruction)
-              console.log(instruction.programId.toBase58())
-              instruction.keys.forEach((k) => console.log(k.pubkey.toBase58()))
-              if (!isMultisigLoading && squads) {
-                proposeInstructions(
-                  squads,
-                  UPGRADE_MUTLTISIG[getMultisigCluster(cluster)],
-                  [instruction],
-                  false
-                )
-              }
-            })
-        }
-      }
+                [instruction],
+                false
+              )
+              toast.success(
+                `Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`
+              )
+              setIsSendProposalButtonLoading(false)
+            } catch (e: any) {
+              toast.error(capitalizeFirstLetter(e.message))
+              setIsSendProposalButtonLoading(false)
+            }
+          }
+        })
     }
-  }, [
-    editable,
-    pubkeyChanges,
-    pythProgramClient,
-    data,
-    cluster,
-    isMultisigLoading,
-    squads,
-  ])
+  }
 
   // create anchor wallet when connected
   useEffect(() => {
@@ -255,12 +272,104 @@ const UpdatePermissions = () => {
       setPythProgramClient(
         pythOracleProgram(getPythProgramKeyForCluster(cluster), provider)
       )
-      // initializeSquadsClient()
     }
   }, [anchorWallet, connection, connected, cluster])
 
   return (
     <div className="relative">
+      <Transition appear show={isModalOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-10"
+          onClose={() => setIsModalOpen(false)}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-50" />
+          </Transition.Child>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="diaglogPanel">
+                  <button className="diaglogClose" onClick={closeModal}>
+                    <span className="mr-3">close</span> <CloseIcon />
+                  </button>
+                  <div className="max-w-full">
+                    <Dialog.Title as="h3" className="diaglogTitle">
+                      Proposed Changes
+                    </Dialog.Title>
+
+                    {Object.keys(finalPubkeyChanges).length === 0 ? (
+                      <p className="mb-8 leading-6 ">No proposed changes.</p>
+                    ) : (
+                      Object.keys(finalPubkeyChanges).map((key) => {
+                        if (
+                          finalPubkeyChanges[key].prevPubkey !==
+                          finalPubkeyChanges[key].newPubkey
+                        ) {
+                          return (
+                            <div
+                              key={key}
+                              className="flex justify-between pb-4"
+                            >
+                              <span className="pr-4 font-bold">{key}</span>
+                              <span className="mr-2 hidden lg:block">
+                                {finalPubkeyChanges[key].prevPubkey} &rarr;{' '}
+                                {finalPubkeyChanges[key].newPubkey}
+                              </span>
+                              <span className="mr-2 lg:hidden">
+                                {finalPubkeyChanges[key].prevPubkey.slice(
+                                  0,
+                                  6
+                                ) +
+                                  '...' +
+                                  finalPubkeyChanges[key].prevPubkey.slice(
+                                    -6
+                                  )}{' '}
+                                &rarr;{' '}
+                                {finalPubkeyChanges[key].newPubkey.slice(0, 6) +
+                                  '...' +
+                                  finalPubkeyChanges[key].newPubkey.slice(-6)}
+                              </span>{' '}
+                            </div>
+                          )
+                        }
+                      })
+                    )}
+
+                    <button
+                      className="action-btn text-base "
+                      onClick={handleSendProposalButtonClick}
+                      disabled={Object.keys(finalPubkeyChanges).length === 0}
+                    >
+                      {isSendProposalButtonLoading ? (
+                        <Spinner />
+                      ) : (
+                        'Send Proposal'
+                      )}
+                    </button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
       <div className="container flex flex-col items-center justify-between lg:flex-row">
         <div className="mb-4 w-full text-left lg:mb-0">
           <h1 className="h1 mb-4">Update Permissions</h1>
@@ -282,7 +391,7 @@ const UpdatePermissions = () => {
             </div>
           ) : (
             <div className="table-responsive mb-10">
-              <table className="w-full table-fixed bg-darkGray text-left">
+              <table className="w-full table-auto bg-darkGray text-left">
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr key={headerGroup.id}>
@@ -291,10 +400,8 @@ const UpdatePermissions = () => {
                           key={header.id}
                           className={
                             header.column.id === 'account'
-                              ? 'base16 pt-8 pb-6 pl-4 pr-2 font-semibold opacity-60 lg:pl-14'
-                              : header.column.id === 'pubkey'
-                              ? 'base16 w-half pt-8 pb-6 pl-1 pr-2 font-semibold opacity-60 lg:pl-14'
-                              : 'base16 w-half pt-8 pb-6 pl-1 pr-2 font-semibold opacity-60'
+                              ? 'base16 pt-8 pb-6 pl-4 pr-2 font-semibold opacity-60 xl:pl-14'
+                              : 'base16 pt-8 pb-6 pl-1 pr-2 font-semibold opacity-60'
                           }
                         >
                           {header.isPlaceholder
@@ -329,12 +436,8 @@ const UpdatePermissions = () => {
                           suppressContentEditableWarning={true}
                           className={
                             cell.column.id === 'account'
-                              ? 'py-3 pl-4 pr-2 lg:pl-14'
-                              : cell.column.id === 'pubkey'
-                              ? 'flex items-center py-3 pl-1 lg:pl-14'
-                              : cell.column.id === 'newPubkey'
-                              ? 'items-center py-3 pl-1'
-                              : ''
+                              ? 'py-3 pl-4 pr-2 xl:pl-14'
+                              : 'items-center py-3 pl-1 pr-4'
                           }
                         >
                           {flexRender(

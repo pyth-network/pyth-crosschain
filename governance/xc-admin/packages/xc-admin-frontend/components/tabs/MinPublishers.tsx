@@ -62,7 +62,7 @@ const MinPublishers = () => {
                       )
                   ) : (
                     <tr className="border-t border-beige-300">
-                      <td className="py-3 pl-1 lg:pl-14" colSpan={2}>
+                      <td className="py-3 pl-4 lg:pl-14" colSpan={2}>
                         No mapping accounts found.
                       </td>
                     </tr>

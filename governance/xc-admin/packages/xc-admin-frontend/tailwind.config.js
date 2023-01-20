@@ -83,6 +83,7 @@ module.exports = {
         lightPurple: '#7731EA',
         offPurple: '#745E9D',
         pythPurple: '#7142CF',
+        mediumSlateBlue: '#8246FA',
       },
       letterSpacing: {
         wide: '.02em',
