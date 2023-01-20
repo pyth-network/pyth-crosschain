@@ -1,7 +1,7 @@
 # This is a multi-stage docker file, first and second stage builds contracts
 # And the third one creates node.js environment to deploy them
 
-FROM cosmwasm/workspace-optimizer:0.12.6@sha256:e6565a5e87c830ef3e8775a9035006b38ad0aaf0a96319158c802457b1dd1d08 AS wormhole_builder
+FROM cosmwasm/workspace-optimizer:0.12.11@sha256:b6b0b1d5ed76dafd0ec0d3812a1e7a275316cf862fd6d0a918f14d71c4cb187f AS wormhole_builder
 
 WORKDIR /tmp/wormhole-repo
 
@@ -15,7 +15,7 @@ RUN mv wormhole-${WORMHOLE_REV}/cosmwasm/contracts /code/contracts
 WORKDIR /code
 RUN --mount=type=cache,target=/code/target,id=cosmwasm_wormhole_target --mount=type=cache,target=/usr/local/cargo/registry optimize_workspace.sh
 
-FROM cosmwasm/workspace-optimizer:0.12.6@sha256:e6565a5e87c830ef3e8775a9035006b38ad0aaf0a96319158c802457b1dd1d08 AS pyth_builder
+FROM cosmwasm/workspace-optimizer:0.12.11@sha256:b6b0b1d5ed76dafd0ec0d3812a1e7a275316cf862fd6d0a918f14d71c4cb187f AS pyth_builder
 
 COPY target-chains/cosmwasm/Cargo.lock /code/
 COPY target-chains/cosmwasm/Cargo.toml /code/
