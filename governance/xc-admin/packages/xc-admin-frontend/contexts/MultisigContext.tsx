@@ -1,3 +1,5 @@
+import { Wallet } from '@coral-xyz/anchor'
+import { useAnchorWallet } from '@solana/wallet-adapter-react'
 import SquadsMesh from '@sqds/mesh'
 import { TransactionAccount } from '@sqds/mesh/lib/types'
 import React, { createContext, useContext, useMemo } from 'react'
@@ -27,7 +29,10 @@ interface MultisigContextProviderProps {
 export const MultisigContextProvider: React.FC<
   MultisigContextProviderProps
 > = ({ children }) => {
-  const { isLoading, error, squads, proposals } = useMultisig()
+  const anchorWallet = useAnchorWallet()
+  const { isLoading, error, squads, proposals } = useMultisig(
+    anchorWallet as Wallet
+  )
 
   const value = useMemo(
     () => ({
