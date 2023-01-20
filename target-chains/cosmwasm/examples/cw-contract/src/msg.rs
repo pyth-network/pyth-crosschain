@@ -1,37 +1,40 @@
-use cosmwasm_std::Binary;
+use std::time::Duration;
+
+use cosmwasm_std::{Binary, Coin};
 use pyth_cosmwasm::{
     Price,
     PriceIdentifier,
 };
-use schemars::JsonSchema;
-use serde::{
-    Deserialize,
-    Serialize,
+
+use cosmwasm_schema::{
+    cw_serde,
+    QueryResponses,
 };
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub struct MigrateMsg {}
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct InstantiateMsg {
     pub price_feed_id:      PriceIdentifier,
     pub pyth_contract_addr: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum ExecuteMsg {}
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(FetchPriceResponse)]
     FetchPrice {},
+    #[returns(Coin)]
     FetchUpdateFee { vaas: Vec<Binary> },
+    #[returns(Duration)]
     FetchValidTimePeriod,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cw_serde]
 pub struct FetchPriceResponse {
     pub current_price: Price,
     pub ema_price:     Price,

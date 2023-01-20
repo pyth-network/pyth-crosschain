@@ -19,13 +19,6 @@ rustup target list --installed
 rustup target add wasm32-unknown-unknown
 ```
 
-This example uses relative paths in `Cargo.toml`; you must remove any `path` components within `Cargo.toml` dependencies if you intend to compile this code outside of the `pyth-sdk-cw` repository, otherwise this will fail to compile. For example:
-
-```diff
-- pyth-sdk-cw = { version = "0.1.0", path = "../../pyth-sdk-cw" }
-+ pyth-sdk-cw = { version = "0.1.0" }
-```
-
 ## Compiling
 
 After changing the contract, make sure you can compile and run it before
@@ -40,9 +33,8 @@ cargo build --release --target wasm32-unknown-unknown
 
 While the Wasm calls (`instantiate`, `execute`, `query`) accept JSON, this is not enough
 information to use it. You need to expose the schema for the expected messages to the
-clients. You can generate this schema by calling `cargo run --example schema`, which will output
-4 files in `./schema`, corresponding to the 3 message types the contract accepts,
-as well as the internal `State`.
+clients. You can generate this schema by calling `cargo run schema`, which will output
+4 files in `./schema`, corresponding to the message types defined in `msg.rs`.
 
 These files are in standard json-schema format, which should be usable by various
 client side tools, either to auto-generate codecs, or just to validate incoming
@@ -64,7 +56,7 @@ cd path/to/cargo/root
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/rust-optimizer:0.12.6
+  cosmwasm/rust-optimizer:0.12.11
 ```
 
 Or, If you're on an arm64 machine, you should use a docker image built with arm64.
@@ -74,7 +66,7 @@ cd path/to/cargo/root
 docker run --rm -v "$(pwd)":/code \
   --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
   --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/rust-optimizer-arm64:0.12.6
+  cosmwasm/rust-optimizer-arm64:0.12.11
 ```
 
 You must mount the contract code to `/code`. You can use a absolute path instead

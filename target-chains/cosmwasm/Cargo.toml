@@ -1,5 +1,6 @@
 [workspace]
 members = ["contracts/pyth"]
+exclude = ["examples/cw-contract"]
 
 [profile.release]
 opt-level = 3
