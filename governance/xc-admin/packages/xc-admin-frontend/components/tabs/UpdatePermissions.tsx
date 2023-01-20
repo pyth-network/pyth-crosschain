@@ -1,5 +1,4 @@
 import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor'
-import { Dialog, Transition } from '@headlessui/react'
 import {
   getPythProgramKeyForCluster,
   pythOracleProgram,
@@ -14,7 +13,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import copy from 'copy-to-clipboard'
-import { Fragment, useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { proposeInstructions } from 'xc-admin-common'
 import { ClusterContext } from '../../contexts/ClusterContext'
@@ -27,9 +26,8 @@ import {
 import CopyIcon from '../../images/icons/copy.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
-import Spinner from '../common/Spinner'
+import Modal from '../common/Modal'
 import EditButton from '../EditButton'
-import CloseIcon from '../icons/CloseIcon'
 import Loadbar from '../loaders/Loadbar'
 
 interface UpdatePermissionsProps {
@@ -90,8 +88,8 @@ const defaultColumns = [
 
 type PubkeyChanges = {
   [key: string]: {
-    prevPubkey: string
-    newPubkey: string
+    prev: string
+    new: string
   }
 }
 
@@ -153,8 +151,8 @@ const UpdatePermissions = () => {
       data.forEach((d) => {
         if (!newPubkeyChanges[d.account]) {
           newPubkeyChanges[d.account] = {
-            prevPubkey: d.pubkey,
-            newPubkey: d.pubkey,
+            prev: d.pubkey,
+            new: d.pubkey,
           }
         }
       })
@@ -207,8 +205,8 @@ const UpdatePermissions = () => {
       setPubkeyChanges({
         ...pubkeyChanges,
         [account]: {
-          prevPubkey,
-          newPubkey,
+          prev: prevPubkey,
+          new: newPubkey,
         },
       })
     }
@@ -222,11 +220,9 @@ const UpdatePermissions = () => {
       )[0]
       pythProgramClient?.methods
         .updPermissions(
-          new PublicKey(finalPubkeyChanges['Master Authority'].newPubkey),
-          new PublicKey(
-            finalPubkeyChanges['Data Curation Authority'].newPubkey
-          ),
-          new PublicKey(finalPubkeyChanges['Security Authority'].newPubkey)
+          new PublicKey(finalPubkeyChanges['Master Authority'].new),
+          new PublicKey(finalPubkeyChanges['Data Curation Authority'].new),
+          new PublicKey(finalPubkeyChanges['Security Authority'].new)
         )
         .accounts({
           upgradeAuthority: squads?.getAuthorityPDA(
@@ -277,99 +273,14 @@ const UpdatePermissions = () => {
 
   return (
     <div className="relative">
-      <Transition appear show={isModalOpen} as={Fragment}>
-        <Dialog
-          as="div"
-          className="relative z-10"
-          onClose={() => setIsModalOpen(false)}
-        >
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black bg-opacity-50" />
-          </Transition.Child>
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <Dialog.Panel className="diaglogPanel">
-                  <button className="diaglogClose" onClick={closeModal}>
-                    <span className="mr-3">close</span> <CloseIcon />
-                  </button>
-                  <div className="max-w-full">
-                    <Dialog.Title as="h3" className="diaglogTitle">
-                      Proposed Changes
-                    </Dialog.Title>
-
-                    {Object.keys(finalPubkeyChanges).length === 0 ? (
-                      <p className="mb-8 leading-6 ">No proposed changes.</p>
-                    ) : (
-                      Object.keys(finalPubkeyChanges).map((key) => {
-                        if (
-                          finalPubkeyChanges[key].prevPubkey !==
-                          finalPubkeyChanges[key].newPubkey
-                        ) {
-                          return (
-                            <div
-                              key={key}
-                              className="flex justify-between pb-4"
-                            >
-                              <span className="pr-4 font-bold">{key}</span>
-                              <span className="mr-2 hidden lg:block">
-                                {finalPubkeyChanges[key].prevPubkey} &rarr;{' '}
-                                {finalPubkeyChanges[key].newPubkey}
-                              </span>
-                              <span className="mr-2 lg:hidden">
-                                {finalPubkeyChanges[key].prevPubkey.slice(
-                                  0,
-                                  6
-                                ) +
-                                  '...' +
-                                  finalPubkeyChanges[key].prevPubkey.slice(
-                                    -6
-                                  )}{' '}
-                                &rarr;{' '}
-                                {finalPubkeyChanges[key].newPubkey.slice(0, 6) +
-                                  '...' +
-                                  finalPubkeyChanges[key].newPubkey.slice(-6)}
-                              </span>{' '}
-                            </div>
-                          )
-                        }
-                      })
-                    )}
-
-                    <button
-                      className="action-btn text-base "
-                      onClick={handleSendProposalButtonClick}
-                      disabled={Object.keys(finalPubkeyChanges).length === 0}
-                    >
-                      {isSendProposalButtonLoading ? (
-                        <Spinner />
-                      ) : (
-                        'Send Proposal'
-                      )}
-                    </button>
-                  </div>
-                </Dialog.Panel>
-              </Transition.Child>
-            </div>
-          </div>
-        </Dialog>
-      </Transition>
+      <Modal
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+        closeModal={closeModal}
+        changes={pubkeyChanges}
+        handleSendProposalButtonClick={handleSendProposalButtonClick}
+        isSendProposalButtonLoading={isSendProposalButtonLoading}
+      />
       <div className="container flex flex-col items-center justify-between lg:flex-row">
         <div className="mb-4 w-full text-left lg:mb-0">
           <h1 className="h1 mb-4">Update Permissions</h1>
