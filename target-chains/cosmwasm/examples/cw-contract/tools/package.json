@@ -1,0 +1,20 @@
+{
+  "name": "tools",
+  "version": "1.0.0",
+  "description": "",
+  "main": "deploy.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "node deploy.js",
+    "query": "node query.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@terra-money/terra.js": "^2.0.11",
+    "@cosmjs/encoding": "^0.26.2",
+    "ethers": "^5.4.4",
+    "yargs": "^17.0.1"
+  }
+}
