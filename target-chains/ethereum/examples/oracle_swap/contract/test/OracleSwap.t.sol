@@ -77,7 +77,7 @@ contract OracleSwapTest is Test {
         swap.swap{value: value}(isBuy, size, updateData);
     }
 
-    function testSwap(uint128 _amountInUsd) public {
+    function testSwap() public {
         setupTokens(10e18, 10e18, 10e18, 10e18);
 
         doSwap(10, 1, true, 1e18);
@@ -89,6 +89,17 @@ contract OracleSwapTest is Test {
 
         assertEq(quoteToken.balanceOf(address(this)), 10e18);
         assertEq(baseToken.balanceOf(address(this)), 10e18);
+    }
+
+    function testWithdraw() public {
+        setupTokens(10e18, 10e18, 10e18, 10e18);
+
+        swap.withdrawAll();
+
+        assertEq(quoteToken.balanceOf(address(this)), 20e18);
+        assertEq(baseToken.balanceOf(address(this)), 20e18);
+        assertEq(quoteToken.balanceOf(address(swap)), 0);
+        assertEq(baseToken.balanceOf(address(swap)), 0);
     }
 
     receive() external payable {}

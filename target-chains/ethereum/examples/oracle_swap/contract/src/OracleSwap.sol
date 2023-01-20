@@ -60,5 +60,27 @@ contract OracleSwap {
         }
     }
 
+    function baseBalance() view public returns (uint256) {
+        return baseToken.balanceOf(address(this));
+    }
+
+    function quoteBalance() view public returns (uint256) {
+        return quoteToken.balanceOf(address(this));
+    }
+
+    // Helper functions for demo purposes only
+
+    function withdrawAll() external {
+        baseToken.transfer(msg.sender, baseToken.balanceOf(address(this)));
+        quoteToken.transfer(msg.sender, quoteToken.balanceOf(address(this)));
+    }
+
+    function reinitialize(bytes32 _baseTokenPriceId, bytes32 _quoteTokenPriceId, address _baseToken, address _quoteToken) external {
+        baseTokenPriceId = _baseTokenPriceId;
+        quoteTokenPriceId = _quoteTokenPriceId;
+        baseToken = ERC20(_baseToken);
+        quoteToken = ERC20(_quoteToken);
+    }
+
     receive() external payable {}
 }

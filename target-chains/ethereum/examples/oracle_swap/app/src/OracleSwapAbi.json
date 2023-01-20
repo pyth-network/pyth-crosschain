@@ -8,8 +8,23 @@
       },
       {
         "internalType": "bytes32",
-        "name": "_ethPriceId",
+        "name": "_baseTokenPriceId",
         "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_quoteTokenPriceId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "_baseToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_quoteToken",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -47,15 +62,41 @@
     "type": "event"
   },
   {
+    "inputs": [],
+    "name": "baseToken",
+    "outputs": [
+      {
+        "internalType": "contract ERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "quoteToken",
+    "outputs": [
+      {
+        "internalType": "contract ERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
-        "internalType": "address payable",
-        "name": "to",
-        "type": "address"
+        "internalType": "bool",
+        "name": "isBuy",
+        "type": "bool"
       },
       {
         "internalType": "uint256",
-        "name": "amountUsd",
+        "name": "size",
         "type": "uint256"
       },
       {
@@ -64,9 +105,13 @@
         "type": "bytes[]"
       }
     ],
-    "name": "sendToFriend",
+    "name": "swap",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]
