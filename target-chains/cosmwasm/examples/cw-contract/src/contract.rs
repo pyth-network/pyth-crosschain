@@ -13,12 +13,14 @@ use cosmwasm_std::{
     Response,
     StdError,
     StdResult,
-    WasmQuery, Coin,
+    WasmQuery, Coin, CosmosMsg, WasmMsg, has_coins,
 };
 
+use pyth_cosmwasm::error::PythContractError;
 use pyth_cosmwasm::msg::{
     PriceFeedResponse,
     QueryMsg as PythQueryMsg,
+    ExecuteMsg as PythExecuteMsg,
 };
 
 use crate::msg::{
@@ -63,12 +65,28 @@ pub fn instantiate(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    _deps: DepsMut,
+    deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
-    _msg: ExecuteMsg,
+    info: MessageInfo,
+    msg: ExecuteMsg,
 ) -> StdResult<Response> {
-    Ok(Response::new().add_attribute("method", "execute"))
+    match msg {
+        ExecuteMsg::UpdatePriceFeed { vaas } => {
+            let fee = query_fetch_update_fee(deps.as_ref(), &vaas)?;
+            if !has_coins(info.funds.as_ref(), &fee) {
+                return Err(PythContractError::InsufficientFee)?;
+            }
+            let state = STATE.load(deps.storage)?;
+            Ok(
+                Response::new().add_attribute("method", "execute")
+                .add_message(CosmosMsg::Wasm(WasmMsg::Execute {
+                    contract_addr: state.pyth_contract_addr.into_string(),
+                    msg: to_binary(&PythExecuteMsg::UpdatePriceFeeds { data: vaas })?,
+                    funds: info.funds
+                }))
+            )
+        }
+    }
 }
 
 /// Query the Pyth contract the current price of the configured price feed.
@@ -76,7 +94,7 @@ pub fn execute(
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::FetchPrice {} => to_binary(&query_fetch_price(deps, env)?),
-        QueryMsg::FetchUpdateFee { vaas } => to_binary(&query_fetch_update_fee(deps, vaas)?),
+        QueryMsg::FetchUpdateFee { vaas } => to_binary(&query_fetch_update_fee(deps, &vaas)?),
         QueryMsg::FetchValidTimePeriod => to_binary(&query_fetch_valid_time_period(deps)?),
     }
 }
@@ -123,11 +141,11 @@ fn query_fetch_price(deps: Deps, env: Env) -> StdResult<FetchPriceResponse> {
     })
 }
 
-fn query_fetch_update_fee(deps: Deps, vaas: Vec<Binary>) -> StdResult<Coin> {
+fn query_fetch_update_fee(deps: Deps, vaas: &Vec<Binary>) -> StdResult<Coin> {
     let state = STATE.load(deps.storage)?;
     let contract_addr = state.pyth_contract_addr.into_string();
 
-    let msg = to_binary(&PythQueryMsg::GetUpdateFee { vaas })?;
+    let msg = to_binary(&PythQueryMsg::GetUpdateFee { vaas: vaas.to_vec() })?;
 
     let coin: Coin = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }))?;
     Ok(coin)

@@ -21,7 +21,9 @@ pub struct InstantiateMsg {
 }
 
 #[cw_serde]
-pub enum ExecuteMsg {}
+pub enum ExecuteMsg {
+    UpdatePriceFeed { vaas: Vec<Binary> }
+}
 
 #[cw_serde]
 #[derive(QueryResponses)]
