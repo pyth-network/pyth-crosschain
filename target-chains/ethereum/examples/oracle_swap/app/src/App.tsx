@@ -8,8 +8,6 @@ import { useMetaMask } from "metamask-react";
 import Web3 from "web3";
 import {BigNumber} from "ethers";
 
-// Please read https://docs.pyth.network/consume-data before building on Pyth
-
 const CONFIG = {
    // Each token is configured with its ERC20 contract address and Pyth Price Feed ID.
    // You can find the list of price feed ids at https://pyth.network/developers/price-feed-ids

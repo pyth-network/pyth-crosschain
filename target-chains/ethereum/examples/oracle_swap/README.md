@@ -6,6 +6,8 @@ The oracle AMM manages a pool of two tokens and allows a user to trade with the 
 This application has two components. The first component is a smart contract (in the `contract` directory) that manages the pool and implements the trading functionality.
 The second is a frontend application (in the `app` directory) that communicates with the smart contract.
 
+Please see the [Pyth documentation](https://docs.pyth.network/pythnet-price-feeds) for more information about Pyth and how to integrate it into your application. 
+
 ## AMM Contract
 
 All of the commands in this section expect to be run from the `contract` directory.
@@ -19,8 +21,6 @@ Once you have installed these tools, run the following commands from this direct
 forge install foundry-rs/forge-std@2c7cbfc6fbede6d7c9e6b17afe997e3fdfe22fef --no-git --no-commit
 forge install pyth-network/pyth-sdk-solidity@v1.0.1 --no-git --no-commit
 forge install OpenZeppelin/openzeppelin-contracts@v4.8.1 --no-git --no-commit
-cd ../app/
-npm ci
 ```
 
 ### Testing 
