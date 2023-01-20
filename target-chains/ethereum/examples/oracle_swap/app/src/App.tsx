@@ -4,8 +4,10 @@ import "./App.css";
 import {Price, PriceFeed, EvmPriceServiceConnection, HexString} from "@pythnetwork/pyth-evm-js";
 import IPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json"
 import OracleSwapAbi from "./OracleSwapAbi.json";
+import ERC20Abi from "./ERC20Abi.json";
 import { useMetaMask } from "metamask-react";
 import Web3 from "web3";
+import {BigNumber} from "ethers";
 
 // Please read https://docs.pyth.network/consume-data before building on Pyth
 
@@ -22,19 +24,19 @@ const testnetConnection = new EvmPriceServiceConnection(
 const ETH_USD_TESTNET_PRICE_ID =
   "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6";
 
-const PYTH_EXAMPLE_ADDRESS = "0x7B4b667F9B792054565e10656d1A08ECF50aa31C";
+const SWAP_CONTRACT_ADDRESS = "0xf3161b2B32761B46C084a7e1d8993C19703C09e7";
 const PYTH_CONTRACT = "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C";
 
 
 const CONFIG = {
   baseToken: {
     name: "BRL",
-    erc20Address: "",
+    erc20Address: "0x8e2a09b54fF35Cc4fe3e7dba68bF4173cC559C69",
     pythPriceFeedId: "08f781a893bc9340140c5f89c8a96f438bcfae4d1474cc0f688e3a52892c7318"
   },
   quoteToken: {
     name: "USDC",
-    erc20Address: "",
+    erc20Address: "0x98cDc14fe999435F3d4C2E65eC8863e0d70493Df",
     pythPriceFeedId: "41f3625971ca2ed2263e78573fe5ce23e13d2558ed3f2e47ab0f84fb9e7ae722"
   }
 }
@@ -91,6 +93,40 @@ function PriceText(props: {price: Record<HexString, Price>, currentTime: Date}) 
           <PriceTicker price={quotePrice} currentTime={props.currentTime}/>
           <br/>
         </p>
+      </div>
+  );
+}
+
+function PoolStatistics(props: {web3: Web3 | undefined}) {
+  const [baseQty, setBaseQty] = useState<string>("0");
+  const [quoteQty, setQuoteQty] = useState<string>("0");
+
+  useEffect(() => {
+    async function queryQtys() {
+      if (props.web3 !== undefined) {
+        const swapContract = new props.web3.eth.Contract(
+            OracleSwapAbi as any,
+            SWAP_CONTRACT_ADDRESS
+        );
+
+        const baseQty = await swapContract.methods.baseBalance().call();
+        const quoteQty = await swapContract.methods.quoteBalance().call();
+        console.log(`Updated pool stats: ${baseQty} base ${quoteQty} quote`);
+        setBaseQty(baseQty);
+        setQuoteQty(quoteQty);
+      }
+    }
+
+    const interval = setInterval(queryQtys, 5000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [props.web3]);
+
+  return (
+      <div>
+        <p>base qty {baseQty}</p>
+        <p>quote qty {quoteQty}</p>
       </div>
   );
 }
@@ -169,6 +205,16 @@ function App() {
 
         <div>
           <button
+              onClick={async () => {
+                await authorizeTokens(web3!, CONFIG.quoteToken.erc20Address, account!);
+              }}
+              disabled={status !== "connected" || !pythOffChainPrice}
+          >
+            {" "}
+            Authorize ERC20 Tranfers{" "}
+          </button>{" "}
+
+          <button
             onClick={async () => {
               await sendSwapTx(web3!, account!, qty, isBuy);
             }}
@@ -178,9 +224,22 @@ function App() {
             Swap!{" "}
           </button>{" "}
         </div>
+
+        <PoolStatistics web3={web3} />
+        <br />
+        Contract Address: {SWAP_CONTRACT_ADDRESS}
       </header>
     </div>
   );
+}
+
+async function authorizeTokens(web3: Web3, erc20Address: string, sender: string) {
+  const erc20 = new web3.eth.Contract(
+      ERC20Abi as any,
+      erc20Address
+  );
+
+  await erc20.methods.approve(SWAP_CONTRACT_ADDRESS, BigNumber.from("2").pow(256).sub(1)).send({from: sender});
 }
 
 async function sendSwapTx(web3: Web3, sender: string, qty: string, isBuy: boolean) {
@@ -200,17 +259,15 @@ async function sendSwapTx(web3: Web3, sender: string, qty: string, isBuy: boolea
 
   const swapContract = new web3.eth.Contract(
     OracleSwapAbi as any,
-    PYTH_EXAMPLE_ADDRESS
+    SWAP_CONTRACT_ADDRESS
   );
 
-  big
-
-  10
+  const qtyWei = BigNumber.from(qty).mul(BigNumber.from(10).pow(18));
 
   // Note: this shouldn't assume the token has 18 decimals
   await swapContract.methods
-  .swap(isBuy, Number(qty) * 10**18, priceFeedUpdateData)
-  .send({ value: updateFee , from: sender });
+  .swap(isBuy, qtyWei, priceFeedUpdateData)
+  .send({ value: updateFee, from: sender });
 }
 
 export default App;

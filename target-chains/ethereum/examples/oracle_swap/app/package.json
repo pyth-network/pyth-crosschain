@@ -13,6 +13,7 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "buffer": "^6.0.3",
+    "ethers": "^5.7.2",
     "metamask-react": "^2.4.0",
     "prettier": "^2.7.1",
     "react": "^18.2.0",

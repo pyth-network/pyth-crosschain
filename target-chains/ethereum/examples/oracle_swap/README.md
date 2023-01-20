@@ -55,7 +55,7 @@ forge create ERC20Mock --rpc-url https://goerli.optimism.io -l --constructor-arg
 optimism goerli addresses
 brl 0x8e2a09b54fF35Cc4fe3e7dba68bF4173cC559C69
 usd 0x98cDc14fe999435F3d4C2E65eC8863e0d70493Df
-
+swap contract 0xf3161b2B32761B46C084a7e1d8993C19703C09e7
 
 mint some usd for yourself
 ```
@@ -63,6 +63,6 @@ cast send --rpc-url https://goerli.optimism.io -l 0x98cDc14fe999435F3d4C2E65eC88
 ```
 
 
-working on this command
-forge create OracleSwap --rpc-url https://goerli.optimism.io -l --constructor-args "US Dollar" "USD" "0x4F22ff9e78D9287402cd16be157FF2c28638323e" "0"
+Instantiate oracle swap
 
+forge create src/OracleSwap.sol:OracleSwap --rpc-url https://goerli.optimism.io -l --constructor-args "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C" "0x08f781a893bc9340140c5f89c8a96f438bcfae4d1474cc0f688e3a52892c7318" "0x41f3625971ca2ed2263e78573fe5ce23e13d2558ed3f2e47ab0f84fb9e7ae722" "0x8e2a09b54fF35Cc4fe3e7dba68bF4173cC559C69" "0x98cDc14fe999435F3d4C2E65eC8863e0d70493Df"
