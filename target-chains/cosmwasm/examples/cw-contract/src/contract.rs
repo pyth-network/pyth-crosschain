@@ -139,6 +139,6 @@ fn query_fetch_valid_time_period(deps: Deps) -> StdResult<Duration> {
 
     let msg = to_binary(&PythQueryMsg::GetValidTimePeriod)?;
 
-    let coin: Duration = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }))?;
-    Ok(coin)
+    let duration: Duration = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }))?;
+    Ok(duration)
 }
