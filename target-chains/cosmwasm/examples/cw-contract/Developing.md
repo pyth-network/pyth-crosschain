@@ -34,7 +34,7 @@ cargo build --release --target wasm32-unknown-unknown
 While the Wasm calls (`instantiate`, `execute`, `query`) accept JSON, this is not enough
 information to use it. You need to expose the schema for the expected messages to the
 clients. You can generate this schema by calling `cargo run schema`, which will output
-4 files in `./schema`, corresponding to the message types defined in `msg.rs`.
+the schema at `./schema/example-cw-contract.json`, corresponding to the message types defined in `msg.rs`.
 
 These files are in standard json-schema format, which should be usable by various
 client side tools, either to auto-generate codecs, or just to validate incoming
