@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 # URL of the ethereum RPC node to use. Choose this based on your target network
-# (e.g., this deploys to goerli optimism testnet) 
+# (e.g., this deploys to goerli optimism testnet)
 RPC_URL=https://goerli.optimism.io
 
 # The address of the Pyth contract on your network. See the list of contract addresses here https://docs.pyth.network/pythnet-price-feeds/evm

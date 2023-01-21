@@ -27,7 +27,13 @@ contract OracleSwap {
     ERC20 public baseToken;
     ERC20 public quoteToken;
 
-    constructor(address _pyth, bytes32 _baseTokenPriceId, bytes32 _quoteTokenPriceId, address _baseToken, address _quoteToken) {
+    constructor(
+        address _pyth,
+        bytes32 _baseTokenPriceId,
+        bytes32 _quoteTokenPriceId,
+        address _baseToken,
+        address _quoteToken
+    ) {
         pyth = IPyth(_pyth);
         baseTokenPriceId = _baseTokenPriceId;
         quoteTokenPriceId = _quoteTokenPriceId;
@@ -42,12 +48,20 @@ contract OracleSwap {
     // the current pyth price. `pythUpdateData` is the binary pyth price update data (retrieved from Pyth's price
     // service); this data should contain a price update for both the base and quote price feeds.
     // See the frontend code for an example of how to retrieve this data and pass it to this function.
-    function swap(bool isBuy, uint size, bytes[] calldata pythUpdateData) external payable {
+    function swap(
+        bool isBuy,
+        uint size,
+        bytes[] calldata pythUpdateData
+    ) external payable {
         uint updateFee = pyth.getUpdateFee(pythUpdateData.length);
         pyth.updatePriceFeeds{value: updateFee}(pythUpdateData);
 
-        PythStructs.Price memory currentBasePrice = pyth.getPrice(baseTokenPriceId);
-        PythStructs.Price memory currentQuotePrice = pyth.getPrice(quoteTokenPriceId);
+        PythStructs.Price memory currentBasePrice = pyth.getPrice(
+            baseTokenPriceId
+        );
+        PythStructs.Price memory currentQuotePrice = pyth.getPrice(
+            quoteTokenPriceId
+        );
 
         // Note: this code does all arithmetic with 18 decimal points. This approach should be fine for most
         // price feeds, which typically have ~8 decimals. You can check the exponent on the price feed to ensure
@@ -72,7 +86,10 @@ contract OracleSwap {
     }
 
     // TODO: we should probably move something like this into the solidity sdk
-    function convertToUint(PythStructs.Price memory price, uint8 targetDecimals) pure private returns (uint256) {
+    function convertToUint(
+        PythStructs.Price memory price,
+        uint8 targetDecimals
+    ) private pure returns (uint256) {
         if (price.price < 0 || price.expo > 0 || price.expo < -255) {
             revert();
         }
@@ -80,19 +97,23 @@ contract OracleSwap {
         uint8 priceDecimals = uint8(uint32(-1 * price.expo));
 
         if (targetDecimals - priceDecimals >= 0) {
-            return uint(uint64(price.price)) * 10**uint32(targetDecimals - priceDecimals);
+            return
+                uint(uint64(price.price)) *
+                10 ** uint32(targetDecimals - priceDecimals);
         } else {
-            return uint(uint64(price.price)) / 10**uint32(priceDecimals - targetDecimals);
+            return
+                uint(uint64(price.price)) /
+                10 ** uint32(priceDecimals - targetDecimals);
         }
     }
 
     // Get the number of base tokens in the pool
-    function baseBalance() view public returns (uint256) {
+    function baseBalance() public view returns (uint256) {
         return baseToken.balanceOf(address(this));
     }
 
     // Get the number of quote tokens in the pool
-    function quoteBalance() view public returns (uint256) {
+    function quoteBalance() public view returns (uint256) {
         return quoteToken.balanceOf(address(this));
     }
 
@@ -105,7 +126,12 @@ contract OracleSwap {
 
     // Reinitialize the parameters of this contract.
     // (This function is for demo purposes only. You wouldn't include this on a real contract.)
-    function reinitialize(bytes32 _baseTokenPriceId, bytes32 _quoteTokenPriceId, address _baseToken, address _quoteToken) external {
+    function reinitialize(
+        bytes32 _baseTokenPriceId,
+        bytes32 _quoteTokenPriceId,
+        address _baseToken,
+        address _quoteToken
+    ) external {
         baseTokenPriceId = _baseTokenPriceId;
         quoteTokenPriceId = _quoteTokenPriceId;
         baseToken = ERC20(_baseToken);

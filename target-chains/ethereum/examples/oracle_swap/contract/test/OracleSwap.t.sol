@@ -15,29 +15,52 @@ contract OracleSwapTest is Test {
         0x0000000000000000000000000000000000000000000000000000000000001234;
 
     ERC20Mock baseToken;
-    address payable constant BASE_TOKEN_MINT = payable(0x0000000000000000000000000000000000000011);
+    address payable constant BASE_TOKEN_MINT =
+        payable(0x0000000000000000000000000000000000000011);
     ERC20Mock quoteToken;
-    address payable constant QUOTE_TOKEN_MINT = payable(0x0000000000000000000000000000000000000022);
+    address payable constant QUOTE_TOKEN_MINT =
+        payable(0x0000000000000000000000000000000000000022);
 
     OracleSwap public swap;
 
     address payable constant DUMMY_TO =
         payable(0x0000000000000000000000000000000000000055);
 
-    uint256 MAX_INT = 2**256 - 1;
+    uint256 MAX_INT = 2 ** 256 - 1;
 
     function setUp() public {
         // Creating a mock of Pyth contract with 60 seconds validTimePeriod (for staleness)
         // and 1 wei fee for updating the price.
         mockPyth = new MockPyth(60, 1);
 
-        baseToken = new ERC20Mock("Foo token", "FOO", BASE_TOKEN_MINT, 1000 * 10**18);
-        quoteToken = new ERC20Mock("Bar token", "BAR", QUOTE_TOKEN_MINT, 1000 * 10**18);
+        baseToken = new ERC20Mock(
+            "Foo token",
+            "FOO",
+            BASE_TOKEN_MINT,
+            1000 * 10 ** 18
+        );
+        quoteToken = new ERC20Mock(
+            "Bar token",
+            "BAR",
+            QUOTE_TOKEN_MINT,
+            1000 * 10 ** 18
+        );
 
-        swap = new OracleSwap(address(mockPyth), BASE_PRICE_ID, QUOTE_PRICE_ID, address(baseToken), address(quoteToken));
+        swap = new OracleSwap(
+            address(mockPyth),
+            BASE_PRICE_ID,
+            QUOTE_PRICE_ID,
+            address(baseToken),
+            address(quoteToken)
+        );
     }
 
-    function setupTokens(uint senderBaseQty, uint senderQuoteQty, uint poolBaseQty, uint poolQuoteQty) private {
+    function setupTokens(
+        uint senderBaseQty,
+        uint senderQuoteQty,
+        uint poolBaseQty,
+        uint poolQuoteQty
+    ) private {
         baseToken.mint(address(this), senderBaseQty);
         quoteToken.mint(address(this), senderQuoteQty);
 
@@ -45,7 +68,12 @@ contract OracleSwapTest is Test {
         quoteToken.mint(address(swap), poolQuoteQty);
     }
 
-    function doSwap(int32 basePrice, int32 quotePrice, bool isBuy, uint size) private {
+    function doSwap(
+        int32 basePrice,
+        int32 quotePrice,
+        bool isBuy,
+        uint size
+    ) private {
         bytes[] memory updateData = new bytes[](2);
 
         // This is a dummy update data for Eth. It shows the price as $1000 +- $10 (with -5 exponent).
