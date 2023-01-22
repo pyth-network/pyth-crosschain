@@ -56,14 +56,19 @@ const Modal: React.FC<{
                     Proposed Changes
                   </Dialog.Title>
 
-                  {Object.keys(changes).length === 0 ? (
+                  {!changes ? (
                     <p className="mb-8 leading-6 ">No proposed changes.</p>
                   ) : (
                     Object.keys(changes).map((key) => {
                       if (changes[key].prev !== changes[key].new) {
                         return (
-                          <div key={key} className="flex justify-between pb-4">
-                            <span className="pr-4 font-bold">{key}</span>
+                          <div
+                            key={key}
+                            className="flex items-center justify-between pb-4"
+                          >
+                            <span className="pr-4 text-left font-bold">
+                              {key}
+                            </span>
                             <span className="mr-2">
                               {changes[key].prev} &rarr; {changes[key].new}
                             </span>
@@ -76,7 +81,7 @@ const Modal: React.FC<{
                   <button
                     className="action-btn text-base "
                     onClick={handleSendProposalButtonClick}
-                    disabled={Object.keys(changes).length === 0}
+                    disabled={!changes}
                   >
                     {isSendProposalButtonLoading ? (
                       <Spinner />

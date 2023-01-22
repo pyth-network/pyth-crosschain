@@ -31,7 +31,7 @@ import EditButton from '../EditButton'
 import Loadbar from '../loaders/Loadbar'
 
 interface UpdatePermissionsProps {
-  account: string
+  account: PermissionAccount
   pubkey: string
   newPubkey?: string
 }
@@ -86,20 +86,24 @@ const defaultColumns = [
   }),
 ]
 
-type PubkeyChanges = {
-  [key: string]: {
-    prev: string
-    new: string
-  }
+// make a type with 3 possible values
+type PermissionAccount =
+  | 'Master Authority'
+  | 'Data Curation Authority'
+  | 'Security Authority'
+
+interface PermissionAccountInfo {
+  prev: string
+  new: string
 }
 
 const UpdatePermissions = () => {
   const [data, setData] = useState(() => [...DEFAULT_DATA])
   const [columns, setColumns] = useState(() => [...defaultColumns])
-  const [pubkeyChanges, setPubkeyChanges] = useState<PubkeyChanges>({})
-  const [finalPubkeyChanges, setFinalPubkeyChanges] = useState<PubkeyChanges>(
-    {}
-  )
+  const [pubkeyChanges, setPubkeyChanges] =
+    useState<Partial<Record<PermissionAccount, PermissionAccountInfo>>>()
+  const [finalPubkeyChanges, setFinalPubkeyChanges] =
+    useState<Record<PermissionAccount, PermissionAccountInfo>>()
   const [editable, setEditable] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
@@ -146,19 +150,42 @@ const UpdatePermissions = () => {
   })
 
   const backfillPubkeyChanges = () => {
-    const newPubkeyChanges = { ...pubkeyChanges }
-    if (Object.keys(pubkeyChanges).length !== 3) {
-      data.forEach((d) => {
-        if (!newPubkeyChanges[d.account]) {
-          newPubkeyChanges[d.account] = {
-            prev: d.pubkey,
-            new: d.pubkey,
-          }
-        }
+    const newPubkeyChanges: Record<PermissionAccount, PermissionAccountInfo> = {
+      'Master Authority': {
+        prev: data[0].pubkey,
+        new: data[0].pubkey,
+      },
+      'Data Curation Authority': {
+        prev: data[1].pubkey,
+        new: data[1].pubkey,
+      },
+      'Security Authority': {
+        prev: data[2].pubkey,
+        new: data[2].pubkey,
+      },
+    }
+    if (pubkeyChanges) {
+      Object.keys(pubkeyChanges).forEach((key) => {
+        newPubkeyChanges[key as PermissionAccount] = pubkeyChanges[
+          key as PermissionAccount
+        ] as PermissionAccountInfo
       })
     }
+
     return newPubkeyChanges
   }
+
+  //   let newPubkeyChanges: Record<PermissionAccount, PermissionAccountInfo>
+  //   data.forEach((d) => {
+  //     if (!newPubkeyChanges[d.account]) {
+  //       newPubkeyChanges[d.account] = {
+  //         prev: d.pubkey,
+  //         new: d.pubkey,
+  //       }
+  //     }
+  //   })
+
+  // return newPubkeyChanges
 
   const handleEditButtonClick = () => {
     const nextState = !editable
@@ -171,7 +198,7 @@ const UpdatePermissions = () => {
         }),
       ])
     } else {
-      if (Object.keys(pubkeyChanges).length > 0) {
+      if (pubkeyChanges && Object.keys(pubkeyChanges).length > 0) {
         openModal()
         setFinalPubkeyChanges(backfillPubkeyChanges())
       } else {
@@ -199,7 +226,11 @@ const UpdatePermissions = () => {
     }
   }
 
-  const handleEditPubkey = (e: any, account: string, prevPubkey: string) => {
+  const handleEditPubkey = (
+    e: any,
+    account: PermissionAccount,
+    prevPubkey: string
+  ) => {
     const newPubkey = e.target.textContent
     if (isValidPubkey(newPubkey) && newPubkey !== prevPubkey) {
       setPubkeyChanges({
@@ -213,7 +244,7 @@ const UpdatePermissions = () => {
   }
 
   const handleSendProposalButtonClick = () => {
-    if (pythProgramClient) {
+    if (pythProgramClient && finalPubkeyChanges) {
       const programDataAccount = PublicKey.findProgramAddressSync(
         [pythProgramClient?.programId.toBuffer()],
         BPF_UPGRADABLE_LOADER
@@ -233,9 +264,7 @@ const UpdatePermissions = () => {
         })
         .instruction()
         .then(async (instruction) => {
-          instruction.keys.forEach((k) => console.log(k.pubkey.toBase58()))
           if (!isMultisigLoading && squads) {
-            console.log('setting isSendProposalButtonLoading to true')
             setIsSendProposalButtonLoading(true)
             try {
               const proposalPubkey = await proposeInstructions(

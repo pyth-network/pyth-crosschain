@@ -2,7 +2,7 @@ const EditButton = ({
   editable,
   onClick,
 }: {
-  editable?: boolean | null
+  editable?: boolean
   onClick: React.MouseEventHandler<HTMLButtonElement>
 }) => {
   return (
