@@ -86,7 +86,6 @@ const defaultColumns = [
   }),
 ]
 
-// make a type with 3 possible values
 type PermissionAccount =
   | 'Master Authority'
   | 'Data Curation Authority'
@@ -174,18 +173,6 @@ const UpdatePermissions = () => {
 
     return newPubkeyChanges
   }
-
-  //   let newPubkeyChanges: Record<PermissionAccount, PermissionAccountInfo>
-  //   data.forEach((d) => {
-  //     if (!newPubkeyChanges[d.account]) {
-  //       newPubkeyChanges[d.account] = {
-  //         prev: d.pubkey,
-  //         new: d.pubkey,
-  //       }
-  //     }
-  //   })
-
-  // return newPubkeyChanges
 
   const handleEditButtonClick = () => {
     const nextState = !editable

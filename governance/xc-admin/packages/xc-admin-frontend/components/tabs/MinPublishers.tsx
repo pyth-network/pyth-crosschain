@@ -1,9 +1,18 @@
+import { useState } from 'react'
 import { usePythContext } from '../../contexts/PythContext'
 import ClusterSwitch from '../ClusterSwitch'
+import EditButton from '../EditButton'
 import Loadbar from '../loaders/Loadbar'
 
 const MinPublishers = () => {
   const { rawConfig, dataIsLoading } = usePythContext()
+  const [editable, setEditable] = useState(false)
+
+  const handleEditButtonClick = () => {
+    const nextState = !editable
+    console.log(nextState)
+    setEditable(nextState)
+  }
 
   return (
     <div className="relative">
@@ -13,8 +22,13 @@ const MinPublishers = () => {
         </div>
       </div>
       <div className="container">
-        <div className="mb-4 md:mb-0">
-          <ClusterSwitch />
+        <div className="flex justify-between">
+          <div className="mb-4 md:mb-0">
+            <ClusterSwitch />
+          </div>
+          <div className="mb-4 md:mb-0">
+            <EditButton editable={editable} onClick={handleEditButtonClick} />
+          </div>
         </div>
         <div className="table-responsive relative mt-6">
           {dataIsLoading ? (
