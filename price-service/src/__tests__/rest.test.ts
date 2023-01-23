@@ -241,14 +241,14 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
     });
 
     const pubTime16AsHex64Bit = "0000000000000010";
-    const ccip_resp = await request(app)
+    const ccipResp = await request(app)
       .get("/api/get_vaa_ccip")
       .query({
         data: "0x" + id + pubTime16AsHex64Bit,
       });
     const pubTime20AsHex64Bit = "0000000000000014";
-    expect(ccip_resp.status).toBe(StatusCodes.OK);
-    expect(ccip_resp.body).toEqual({
+    expect(ccipResp.status).toBe(StatusCodes.OK);
+    expect(ccipResp.body).toEqual({
       data:
         "0x" +
         pubTime20AsHex64Bit +
@@ -287,13 +287,13 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
     expect(resp.body.message).toContain(id);
 
     const pubTime16AsHex64Bit = "0000000000000010";
-    const ccip_resp = await request(app)
+    const ccipResp = await request(app)
       .get("/api/get_vaa_ccip")
       .query({
         data: "0x" + id + pubTime16AsHex64Bit,
       });
-    expect(ccip_resp.status).toBe(StatusCodes.BAD_REQUEST);
-    expect(ccip_resp.body.message).toContain(id);
+    expect(ccipResp.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(ccipResp.body.message).toContain(id);
   });
 
   test("When called with valid id and timestamp not in the cache without db returns vaa not found", async () => {
@@ -311,25 +311,25 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
     expect(resp.status).toBe(StatusCodes.NOT_FOUND);
 
     const pubTime5AsHex64Bit = "0000000000000005";
-    const ccip_resp = await request(app)
+    const ccipResp = await request(app)
       .get("/api/get_vaa_ccip")
       .query({
         data: "0x" + id + pubTime5AsHex64Bit,
       });
     // On CCIP we expect bad gateway so the client want to retry other ccip endpoints.
-    expect(ccip_resp.status).toBe(StatusCodes.BAD_GATEWAY);
+    expect(ccipResp.status).toBe(StatusCodes.BAD_GATEWAY);
   });
 
   test("When called with valid id and timestamp not in the cache with db returns ok", async () => {
     const dbBackend = express();
     dbBackend.get("/vaa", (req, res) => {
-      const id = req.query.id;
+      const priceId = req.query.id;
       const pubTime = Number(req.query.publishTime);
       const cluster = req.query.cluster;
 
       res.json([
         {
-          vaa: `${cluster}${id}${pubTime}`,
+          vaa: `${cluster}${priceId}${pubTime}`,
           publishTime: new Date(pubTime * 1000).toISOString(),
         },
       ]);
@@ -365,13 +365,13 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
     });
 
     const pubTime5AsHex64Bit = "0000000000000005";
-    const ccip_resp = await request(appWithDb)
+    const ccipResp = await request(appWithDb)
       .get("/api/get_vaa_ccip")
       .query({
         data: "0x" + id + pubTime5AsHex64Bit,
       });
-    expect(ccip_resp.status).toBe(StatusCodes.OK);
-    expect(ccip_resp.body).toEqual({
+    expect(ccipResp.status).toBe(StatusCodes.OK);
+    expect(ccipResp.body).toEqual({
       data:
         "0x" +
         pubTime5AsHex64Bit +
@@ -419,14 +419,14 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
       expect(resp.status).toBe(StatusCodes.NOT_FOUND);
 
       const pubTime5AsHex64Bit = "0000000000000005";
-      const ccip_resp = await request(appWithDb)
+      const ccipResp = await request(appWithDb)
         .get("/api/get_vaa_ccip")
         .query({
           data: "0x" + id + pubTime5AsHex64Bit,
         });
 
       // On CCIP we expect bad gateway so the client want to retry other ccip endpoints.
-      expect(ccip_resp.status).toBe(StatusCodes.BAD_GATEWAY);
+      expect(ccipResp.status).toBe(StatusCodes.BAD_GATEWAY);
 
       dbApp.close();
     }
@@ -461,12 +461,12 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
       expect(resp.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
 
       const pubTime5AsHex64Bit = "0000000000000005";
-      const ccip_resp = await request(appWithDb)
+      const ccipResp = await request(appWithDb)
         .get("/api/get_vaa_ccip")
         .query({
           data: "0x" + id + pubTime5AsHex64Bit,
         });
-      expect(ccip_resp.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
+      expect(ccipResp.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
     }
   );
 });

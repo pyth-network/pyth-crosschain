@@ -26,7 +26,7 @@ spec:
     matchLabels:
       app: pyth-price-service
   serviceName: pyth-price-service
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       labels:
