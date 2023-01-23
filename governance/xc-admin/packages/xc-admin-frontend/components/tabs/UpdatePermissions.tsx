@@ -140,7 +140,7 @@ const UpdatePermissions = () => {
         },
       ])
     }
-  }, [dataIsLoading, rawConfig])
+  }, [rawConfig])
 
   const table = useReactTable({
     data,
@@ -177,13 +177,14 @@ const UpdatePermissions = () => {
   const handleEditButtonClick = () => {
     const nextState = !editable
     if (nextState) {
-      setColumns([
+      const newColumns = [
         ...defaultColumns,
         columnHelper.accessor('newPubkey', {
           cell: (info) => info.getValue(),
           header: () => <span>New Public Key</span>,
         }),
-      ])
+      ]
+      setColumns(newColumns)
     } else {
       if (pubkeyChanges && Object.keys(pubkeyChanges).length > 0) {
         openModal()
