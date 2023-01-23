@@ -79,6 +79,8 @@ spec:
         - name: tests
           image: pyth-price-service
           command:
+            - /bin/sh
+            - -c
             - "npm run test && nc -lkp 2000 0.0.0.0"
           readinessProbe:
             periodSeconds: 1
