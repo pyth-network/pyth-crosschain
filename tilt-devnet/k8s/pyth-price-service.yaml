@@ -76,3 +76,12 @@ spec:
               value: "60"
             - name: CACHE_TTL_SECONDS
               value: "300"
+        - name: tests
+          image: pyth-price-service
+          command:
+            - "npm run test && nc -lkp 2000 0.0.0.0"
+          readinessProbe:
+            periodSeconds: 1
+            failureThreshold: 300
+            tcpSocket:
+              port: 2000
