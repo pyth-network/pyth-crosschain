@@ -131,7 +131,7 @@ mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
       BPF_UPGRADABLE_LOADER
     )[0];
 
-    // This is intruction is not in @solana/web3.js
+    // This is intruction is not in @solana/web3.js, source : https://docs.rs/solana-program/latest/src/solana_program/bpf_loader_upgradeable.rs.html#200
     const proposalInstruction: TransactionInstruction = {
       programId: BPF_UPGRADABLE_LOADER,
       data: Buffer.from([3, 0, 0, 0]),
