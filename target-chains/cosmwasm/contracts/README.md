@@ -1,6 +1,6 @@
 # Pyth Cosmwasm
 
-This crate provides utilities to interact with the Pyth contract on the CosmWasm ecosystem.
+This crate includes the actual contract and exposes utilities to interact with the contract on the CosmWasm ecosystem.
 It also includes an [example contract](../examples/cw-contract/) demonstrating how to read price feeds from on-chain CosmWasm applications.
 
 ## Installation
