@@ -1,4 +1,9 @@
-import { HexString, Price, PriceFeed } from "@pythnetwork/pyth-sdk-js";
+import {
+  HexString,
+  Price,
+  PriceFeed,
+  PriceFeedMetadata,
+} from "@pythnetwork/pyth-sdk-js";
 import { Express } from "express";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
@@ -40,8 +45,8 @@ function dummyPriceInfoPair(
     id,
     {
       priceFeed: dummyPriceFeed(id),
-      publishTime: 0,
-      attestationTime: 0,
+      publishTime: 1,
+      attestationTime: 2,
       seqNum,
       vaa: Buffer.from(vaa, "hex"),
       emitterChainId: 0,
@@ -92,6 +97,48 @@ describe("Latest Price Feed Endpoint", () => {
     expect(resp.body).toContainEqual(dummyPriceFeed(ids[1]).toJson());
   });
 
+  test("When called with valid ids with leading 0x, returns correct price feed", async () => {
+    const ids = [expandTo64Len("abcd"), expandTo64Len("3456")];
+    const resp = await request(app)
+      .get("/api/latest_price_feeds")
+      .query({
+        ids: ids.map((id) => "0x" + id), // Add 0x to the queries
+      });
+    expect(resp.status).toBe(StatusCodes.OK);
+    expect(resp.body.length).toBe(2);
+
+    // Please note that the response id is without 0x
+    expect(resp.body).toContainEqual(dummyPriceFeed(ids[0]).toJson());
+    expect(resp.body).toContainEqual(dummyPriceFeed(ids[1]).toJson());
+  });
+
+  test("When called with valid ids and verbose flag set to true, returns correct price feed with verbose information", async () => {
+    const ids = [expandTo64Len("abcd"), expandTo64Len("3456")];
+    const resp = await request(app)
+      .get("/api/latest_price_feeds")
+      .query({ ids, verbose: true });
+    expect(resp.status).toBe(StatusCodes.OK);
+    expect(resp.body.length).toBe(2);
+    expect(resp.body).toContainEqual({
+      ...priceInfoMap.get(ids[0])!.priceFeed.toJson(),
+      metadata: new PriceFeedMetadata({
+        attestationTime: priceInfoMap.get(ids[0])!.attestationTime,
+        emitterChain: priceInfoMap.get(ids[0])!.emitterChainId,
+        receiveTime: priceInfoMap.get(ids[0])!.priceServiceReceiveTime,
+        sequenceNumber: priceInfoMap.get(ids[0])!.seqNum,
+      }).toJson(),
+    });
+    expect(resp.body).toContainEqual({
+      ...priceInfoMap.get(ids[1])!.priceFeed.toJson(),
+      metadata: new PriceFeedMetadata({
+        attestationTime: priceInfoMap.get(ids[1])!.attestationTime,
+        emitterChain: priceInfoMap.get(ids[1])!.emitterChainId,
+        receiveTime: priceInfoMap.get(ids[1])!.priceServiceReceiveTime,
+        sequenceNumber: priceInfoMap.get(ids[1])!.seqNum,
+      }).toJson(),
+    });
+  });
+
   test("When called with valid ids and binary flag set to true, returns correct price feed with binary vaa", async () => {
     const ids = [expandTo64Len("abcd"), expandTo64Len("3456")];
     const resp = await request(app)
@@ -133,6 +180,29 @@ describe("Latest Vaa Bytes Endpoint", () => {
       expandTo64Len("3456"),
     ];
     const resp = await request(app).get("/api/latest_vaas").query({ ids });
+    expect(resp.status).toBe(StatusCodes.OK);
+    expect(resp.body.length).toBe(2);
+    expect(resp.body).toContain(
+      Buffer.from("a1b2c3d4", "hex").toString("base64")
+    );
+    expect(resp.body).toContain(
+      Buffer.from("bad01bad", "hex").toString("base64")
+    );
+  });
+
+  test("When called with valid ids with leading 0x, returns vaa bytes as array, merged if necessary", async () => {
+    const ids = [
+      expandTo64Len("abcd"),
+      expandTo64Len("ef01"),
+      expandTo64Len("3456"),
+    ];
+
+    const resp = await request(app)
+      .get("/api/latest_vaas")
+      .query({
+        ids: ids.map((id) => "0x" + id), // Add 0x to the queries
+      });
+
     expect(resp.status).toBe(StatusCodes.OK);
     expect(resp.body.length).toBe(2);
     expect(resp.body).toContain(

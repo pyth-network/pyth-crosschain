@@ -1,4 +1,9 @@
-import { HexString, Price, PriceFeed } from "@pythnetwork/pyth-sdk-js";
+import {
+  HexString,
+  Price,
+  PriceFeed,
+  PriceFeedMetadata,
+} from "@pythnetwork/pyth-sdk-js";
 import { Server } from "http";
 import { WebSocket, WebSocketServer } from "ws";
 import { sleep } from "../helpers";
@@ -12,39 +17,20 @@ let server: Server;
 let wss: WebSocketServer;
 
 let priceInfos: PriceInfo[];
-let priceMetadata: any;
 
 function expandTo64Len(id: string): string {
   return id.repeat(64).substring(0, 64);
 }
 
-function dummyPriceMetadata(
-  attestationTime: number,
-  emitterChainId: number,
-  seqNum: number,
-  priceServiceReceiveTime: number
-): any {
+function dummyPriceInfo(id: HexString, vaa: HexString): PriceInfo {
   return {
-    attestation_time: attestationTime,
-    emitter_chain: emitterChainId,
-    sequence_number: seqNum,
-    price_service_receive_time: priceServiceReceiveTime,
-  };
-}
-
-function dummyPriceInfo(
-  id: HexString,
-  vaa: HexString,
-  dummyPriceMetadataValue: any
-): PriceInfo {
-  return {
-    seqNum: dummyPriceMetadataValue.sequence_number,
+    seqNum: 1,
     publishTime: 0,
-    attestationTime: dummyPriceMetadataValue.attestation_time,
-    emitterChainId: dummyPriceMetadataValue.emitter_chain,
+    attestationTime: 2,
+    emitterChainId: 3,
     priceFeed: dummyPriceFeed(id),
     vaa: Buffer.from(vaa, "hex"),
-    priceServiceReceiveTime: dummyPriceMetadataValue.price_service_receive_time,
+    priceServiceReceiveTime: 4,
   };
 }
 
@@ -96,12 +82,11 @@ async function createSocketClient(): Promise<[WebSocket, any[]]> {
 }
 
 beforeAll(async () => {
-  priceMetadata = dummyPriceMetadata(0, 0, 0, 0);
   priceInfos = [
-    dummyPriceInfo(expandTo64Len("abcd"), "a1b2c3d4", priceMetadata),
-    dummyPriceInfo(expandTo64Len("ef01"), "a1b2c3d4", priceMetadata),
-    dummyPriceInfo(expandTo64Len("2345"), "bad01bad", priceMetadata),
-    dummyPriceInfo(expandTo64Len("6789"), "bidbidbid", priceMetadata),
+    dummyPriceInfo(expandTo64Len("abcd"), "a1b2c3d4"),
+    dummyPriceInfo(expandTo64Len("ef01"), "a1b2c3d4"),
+    dummyPriceInfo(expandTo64Len("2345"), "bad01bad"),
+    dummyPriceInfo(expandTo64Len("6789"), "bidbidbid"),
   ];
 
   const priceInfo: PriceStore = {
@@ -190,7 +175,12 @@ describe("Client receives data", () => {
       type: "price_update",
       price_feed: {
         ...priceInfos[0].priceFeed.toJson(),
-        metadata: priceMetadata,
+        metadata: new PriceFeedMetadata({
+          attestationTime: 2,
+          emitterChain: 3,
+          receiveTime: 4,
+          sequenceNumber: 1,
+        }).toJson(),
       },
     });
 
@@ -202,7 +192,12 @@ describe("Client receives data", () => {
       type: "price_update",
       price_feed: {
         ...priceInfos[1].priceFeed.toJson(),
-        metadata: priceMetadata,
+        metadata: new PriceFeedMetadata({
+          attestationTime: 2,
+          emitterChain: 3,
+          receiveTime: 4,
+          sequenceNumber: 1,
+        }).toJson(),
       },
     });
 
