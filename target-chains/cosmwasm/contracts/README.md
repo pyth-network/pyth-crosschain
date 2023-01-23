@@ -1,6 +1,6 @@
 # Pyth Cosmwasm
 
-This crate provides utilities for reading price feeds from the [pyth.network](https://pyth.network/) oracle on the CosmWasm ecosystem.
+This crate provides utilities to interact with the Pyth contract on the CosmWasm ecosystem.
 It also includes an [example contract](../examples/cw-contract/) demonstrating how to read price feeds from on-chain CosmWasm applications.
 
 ## Installation
