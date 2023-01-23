@@ -1,4 +1,10 @@
-import { Keypair, PublicKey } from "@solana/web3.js";
+import {
+  Keypair,
+  PublicKey,
+  TransactionInstruction,
+  SYSVAR_RENT_PUBKEY,
+  SYSVAR_CLOCK_PUBKEY,
+} from "@solana/web3.js";
 import { program } from "commander";
 import { PythCluster } from "@pythnetwork/client/lib/cluster";
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
@@ -91,6 +97,54 @@ mutlisigCommand(
         bpfUpgradableLoader: BPF_UPGRADABLE_LOADER,
       })
       .instruction();
+
+    await proposeInstructions(squad, vault, [proposalInstruction], false);
+  });
+
+mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
+  .requiredOption(
+    "-p, --program-id <pubkey>",
+    "program that you want to upgrade"
+  )
+  .requiredOption("-b, --buffer <pubkey>", "buffer account")
+
+  .action(async (options: any) => {
+    const wallet = new NodeWallet(
+      Keypair.fromSecretKey(
+        Uint8Array.from(JSON.parse(fs.readFileSync(options.wallet, "ascii")))
+      )
+    );
+    const cluster: PythCluster = options.cluster;
+    const programId: PublicKey = new PublicKey(options.programId);
+    const buffer: PublicKey = new PublicKey(options.buffer);
+    const vault: PublicKey = new PublicKey(options.vault);
+
+    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
+    const msAccount = await squad.getMultisig(vault);
+    const vaultAuthority = squad.getAuthorityPDA(
+      msAccount.publicKey,
+      msAccount.authorityIndex
+    );
+
+    const programDataAccount = PublicKey.findProgramAddressSync(
+      [programId.toBuffer()],
+      BPF_UPGRADABLE_LOADER
+    )[0];
+
+    // This is intruction is not in @solana/web3.js
+    const proposalInstruction: TransactionInstruction = {
+      programId: BPF_UPGRADABLE_LOADER,
+      data: Buffer.from([3, 0, 0, 0]),
+      keys: [
+        { pubkey: programDataAccount, isSigner: false, isWritable: true },
+        { pubkey: programId, isSigner: false, isWritable: true },
+        { pubkey: buffer, isSigner: false, isWritable: true },
+        { pubkey: wallet.publicKey, isSigner: false, isWritable: true },
+        { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+        { pubkey: SYSVAR_CLOCK_PUBKEY, isSigner: false, isWritable: false },
+        { pubkey: vaultAuthority, isSigner: true, isWritable: false },
+      ],
+    };
 
     await proposeInstructions(squad, vault, [proposalInstruction], false);
   });
