@@ -134,6 +134,7 @@ mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
     // This is intruction is not in @solana/web3.js, source : https://docs.rs/solana-program/latest/src/solana_program/bpf_loader_upgradeable.rs.html#200
     const proposalInstruction: TransactionInstruction = {
       programId: BPF_UPGRADABLE_LOADER,
+      // 4-bytes instruction discriminator, got it from https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html#104
       data: Buffer.from([3, 0, 0, 0]),
       keys: [
         { pubkey: programDataAccount, isSigner: false, isWritable: true },
