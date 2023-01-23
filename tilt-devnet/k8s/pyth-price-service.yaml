@@ -81,9 +81,9 @@ spec:
           command:
             - /bin/sh
             - -c
-            - "npm run test && nc -lkp 2000 0.0.0.0"
+            - "npm run test && nc -lkp 2358 0.0.0.0"
           readinessProbe:
-            periodSeconds: 1
+            periodSeconds: 5
             failureThreshold: 300
             tcpSocket:
-              port: 2000
+              port: 2358
