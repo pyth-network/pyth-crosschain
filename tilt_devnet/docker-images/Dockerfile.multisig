@@ -11,11 +11,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install
 WORKDIR /root
 
 # Also used by the multisig provisioning script
-ENV MULTISIG_SCRIPT_DIR=/root/pyth/multisig-wh-message-builder
+ENV MULTISIG_SCRIPT_DIR=/root/pyth/multisig_wh_message_builder
 
 WORKDIR $MULTISIG_SCRIPT_DIR
 
-ENV LOCAL_MULTISIG_SCRIPT_DIR=governance/multisig-wh-message-builder
+ENV LOCAL_MULTISIG_SCRIPT_DIR=governance/multisig_wh_message_builder
 
 # Add a barebones representation of our deps for Docker layer caching
 ADD $LOCAL_MULTISIG_SCRIPT_DIR/package.json \

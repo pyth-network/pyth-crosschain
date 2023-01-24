@@ -64,7 +64,7 @@ This is the deployment process:
    - Export the secret recovery phrase for the deployment account. Please store it in a file and read
      the file into `MNEMONIC` environment variable like so: `export MNEMONIC=$(cat path/to/mnemonic)`.
    - If you are modifying an existing contract, make sure that the multisig-cli has the operational
-     key stored in `governance/multisig-wh-message-builder/keys/key.json`.
+     key stored in `governance/multisig_wh_message_builder/keys/key.json`.
    - export the Infura RPC API key to `INFURA_KEY` if you are deploying to a network that uses an Infura RPC.
 5. Make sure the deployment account has proper balance on this network and top it up if needed. Search
    for testnet faucets if it is a testnet network. Sometimes you need to bridge the network token (e.g., L2s).
