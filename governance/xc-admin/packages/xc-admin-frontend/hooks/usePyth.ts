@@ -60,10 +60,6 @@ const usePyth = (): PythHookData => {
   }, [urlsIndex, cluster])
 
   useEffect(() => {
-    console.log(cluster)
-  }, [cluster])
-
-  useEffect(() => {
     let cancelled = false
     const urls = pythClusterApiUrls(cluster)
     const connection = new Connection(urls[urlsIndex].rpcUrl, {
