@@ -97,7 +97,7 @@ contract OracleSwapTest is Test {
         );
 
         // Make sure the contract has enough funds to update the pyth feeds
-        uint value = mockPyth.getUpdateFee(updateData.length);
+        uint value = mockPyth.getUpdateFee(updateData);
         vm.deal(address(this), value);
 
         baseToken.approve(address(swap), MAX_INT);

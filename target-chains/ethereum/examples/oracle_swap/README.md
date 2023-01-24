@@ -19,7 +19,7 @@ Once you have installed these tools, run the following commands from this direct
 
 ```
 forge install foundry-rs/forge-std@2c7cbfc6fbede6d7c9e6b17afe997e3fdfe22fef --no-git --no-commit
-forge install pyth-network/pyth-sdk-solidity@v1.0.1 --no-git --no-commit
+forge install pyth-network/pyth-sdk-solidity@v2.2.0 --no-git --no-commit
 forge install OpenZeppelin/openzeppelin-contracts@v4.8.1 --no-git --no-commit
 ```
 
@@ -58,7 +58,7 @@ The frontend uses this ABI to create transactions.
 You can overwrite the existing ABI by running the following command:
 
 ```
-forge inspect OracleSwap abi > ../app/src/OracleSwapAbi.json
+forge inspect OracleSwap abi > ../app/src/abi/OracleSwapAbi.json
 ```
 
 ## Frontend Application

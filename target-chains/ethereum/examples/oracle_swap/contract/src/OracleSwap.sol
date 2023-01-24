@@ -45,7 +45,10 @@ contract OracleSwap {
     // of decimals as expected by its ERC-20 implementation. If `isBuy` is true, the contract will send the caller
     // `size` base tokens; if false, `size` base tokens will be transferred from the caller to the contract. Some
     // number of quote tokens will be transferred in the opposite direction; the exact number will be determined by
-    // the current pyth price. `pythUpdateData` is the binary pyth price update data (retrieved from Pyth's price
+    // the current pyth price. The transaction will fail if either the pool or the sender does not have enough of the
+    // requisite tokens for these transfers.
+    //
+    // `pythUpdateData` is the binary pyth price update data (retrieved from Pyth's price
     // service); this data should contain a price update for both the base and quote price feeds.
     // See the frontend code for an example of how to retrieve this data and pass it to this function.
     function swap(
@@ -53,7 +56,7 @@ contract OracleSwap {
         uint size,
         bytes[] calldata pythUpdateData
     ) external payable {
-        uint updateFee = pyth.getUpdateFee(pythUpdateData.length);
+        uint updateFee = pyth.getUpdateFee(pythUpdateData);
         pyth.updatePriceFeeds{value: updateFee}(pythUpdateData);
 
         PythStructs.Price memory currentBasePrice = pyth.getPrice(
