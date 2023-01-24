@@ -62,14 +62,19 @@ export type VaaConfig = {
 
 export class VaaCache {
   private cache: Map<string, VaaConfig[]>;
-  private ttl: number;
+  private ttl: DurationInSec;
+  private cacheCleanupLoopInterval: DurationInSec;
 
-  constructor(ttl: DurationInSec = 300) {
+  constructor(
+    ttl: DurationInSec = 300,
+    cacheCleanupLoopInterval: DurationInSec = 60
+  ) {
     this.cache = new Map();
     this.ttl = ttl;
+    this.cacheCleanupLoopInterval = cacheCleanupLoopInterval;
   }
 
-  set(key: VaaKey, publishTime: number, vaa: string): void {
+  set(key: VaaKey, publishTime: TimestampInSec, vaa: string): void {
     if (this.cache.has(key)) {
       this.cache.get(key)!.push({ publishTime, vaa });
     } else {
@@ -77,7 +82,7 @@ export class VaaCache {
     }
   }
 
-  get(key: VaaKey, publishTime: number): VaaConfig | undefined {
+  get(key: VaaKey, publishTime: TimestampInSec): VaaConfig | undefined {
     if (!this.cache.has(key)) {
       return undefined;
     } else {
@@ -86,7 +91,10 @@ export class VaaCache {
     }
   }
 
-  find(arr: VaaConfig[], publishTime: number): VaaConfig | undefined {
+  private find(
+    arr: VaaConfig[],
+    publishTime: TimestampInSec
+  ): VaaConfig | undefined {
     // If the publishTime is less than the first element we are
     // not sure that this VAA is actually the first VAA after that
     // time.
@@ -123,6 +131,13 @@ export class VaaCache {
       );
     }
   }
+
+  runRemoveExpiredValuesLoop() {
+    setInterval(
+      this.removeExpiredValues.bind(this),
+      this.cacheCleanupLoopInterval * 1000
+    );
+  }
 }
 
 export class Listener implements PriceStore {
@@ -136,7 +151,6 @@ export class Listener implements PriceStore {
   private updateCallbacks: ((priceInfo: PriceInfo) => any)[];
   private observedVaas: LRUCache<VaaKey, boolean>;
   private vaasCache: VaaCache;
-  private cacheCleanupLoopInterval: DurationInSec;
 
   constructor(config: ListenerConfig, promClient?: PromClient) {
     this.promClient = promClient;
@@ -148,8 +162,10 @@ export class Listener implements PriceStore {
       max: 10000, // At most 10000 items
       ttl: 60 * 1000, // 60 seconds
     });
-    this.vaasCache = new VaaCache(config.cacheTtl);
-    this.cacheCleanupLoopInterval = config.cacheCleanupLoopInterval ?? 60;
+    this.vaasCache = new VaaCache(
+      config.cacheTtl,
+      config.cacheCleanupLoopInterval
+    );
   }
 
   private loadFilters(filtersRaw?: string) {
@@ -188,10 +204,7 @@ export class Listener implements PriceStore {
         this.spyServiceHost
     );
 
-    setInterval(
-      this.vaasCache.removeExpiredValues.bind(this.vaasCache),
-      this.cacheCleanupLoopInterval * 1000
-    );
+    this.vaasCache.runRemoveExpiredValuesLoop();
 
     while (true) {
       let stream: ClientReadableStream<SubscribeSignedVAAResponse> | undefined;

@@ -26,7 +26,7 @@ spec:
     matchLabels:
       app: pyth-price-service
   serviceName: pyth-price-service
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       labels:
@@ -76,3 +76,14 @@ spec:
               value: "60"
             - name: CACHE_TTL_SECONDS
               value: "300"
+        - name: tests
+          image: pyth-price-service
+          command:
+            - /bin/sh
+            - -c
+            - "npm run test && nc -lkp 2358 0.0.0.0"
+          readinessProbe:
+            periodSeconds: 5
+            failureThreshold: 300
+            tcpSocket:
+              port: 2358
