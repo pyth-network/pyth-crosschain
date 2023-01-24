@@ -10,5 +10,5 @@ clap = {version = "3.1.18", features = ["derive"]}
 solana-sdk = "=1.10.31"
 pyth-wormhole-attester-client = {path = "../client/"}
 hex = "0.4.3"
-remote-executor = {path = "../../governance/remote-executor/programs/remote-executor/"}
+remote-executor = {path = "../../governance/remote_executor/programs/remote-executor/"}
 borsh = "0.9.3"

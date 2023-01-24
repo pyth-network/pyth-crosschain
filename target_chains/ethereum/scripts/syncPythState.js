@@ -4,7 +4,7 @@
  * this script using `deploy.sh` as described in `Deploying.md` file.
  *
  * This script is a statefull and fully automated. It will invoke the multisig
- * cli in the `../../governance/multisig-wh-message-builder`
+ * cli in the `../../governance/multisig_wh_message_builder`
  * to create governed instructions to change on-chain contracts.
  * As multisig instructions require multiple people approval, this script
  * will create some cache files to store the last step and continues from
@@ -39,7 +39,7 @@ async function execMultisigCommand(cmd) {
   console.log(`Executing "${fullCmd}"`);
 
   const { stdout, stderr } = await exec(fullCmd, {
-    cwd: "../../governance/multisig-wh-message-builder",
+    cwd: "../../governance/multisig_wh_message_builder",
   });
 
   console.log("stdout:");

@@ -37,8 +37,8 @@ jobs:
         env:
           AWS_REGION: us-east-1
       - run: |
-          DOCKER_BUILDKIT=1 docker build -f tilt-devnet/docker-images/Dockerfile.wasm -o type=local,dest=. .
-          DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f price-service/Dockerfile.price_service .
+          DOCKER_BUILDKIT=1 docker build -f tilt_devnet/docker_images/Dockerfile.wasm -o type=local,dest=. .
+          DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f price_service/Dockerfile.price_service .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         env:
           ECR_REGISTRY: public.ecr.aws

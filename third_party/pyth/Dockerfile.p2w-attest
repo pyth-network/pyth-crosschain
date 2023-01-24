@@ -4,11 +4,11 @@ FROM ghcr.io/certusone/solana:1.10.31@sha256:d31e8db926a1d3fbaa9d9211d9979023692
 RUN apt-get update && apt-get install -yq python3 libudev-dev ncat
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs
 
-ADD governance/remote-executor /usr/src/governance/remote-executor
+ADD governance/remote_executor /usr/src/governance/remote_executor
 ADD third_party/pyth/p2w-sdk/rust /usr/src/third_party/pyth/p2w-sdk/rust
-ADD wormhole-attester /usr/src/wormhole-attester
+ADD wormhole_attester /usr/src/wormhole_attester
 
-WORKDIR /usr/src/wormhole-attester
+WORKDIR /usr/src/wormhole_attester
 
 ENV EMITTER_ADDRESS="11111111111111111111111111111115"
 ENV BRIDGE_ADDRESS="Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/root/.cache \
 
 ADD third_party/pyth/pyth_utils.py /usr/src/pyth/pyth_utils.py
 ADD third_party/pyth/p2w_autoattest.py /usr/src/pyth/p2w_autoattest.py
-ADD tilt-devnet/secrets/solana /solana-secrets
+ADD tilt_devnet/secrets/solana /solana-secrets
 
 RUN chmod a+rx /usr/src/pyth/*.py
 

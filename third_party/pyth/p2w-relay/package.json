@@ -7,8 +7,8 @@
     "build": "npm run build-evm && npm run build-lib",
     "build-evm": "npm run build-evm-contract && npm run copy-evm-abis && npm run build-evm-bindings",
     "build-lib": "tsc",
-    "build-evm-contract": "cd ../../../target-chains/ethereum/ && (npm run build || npm ci && npm run build)",
-    "copy-evm-abis": "mkdir -p ./src/evm/abis && cp -r ../../../target-chains/ethereum/build/contracts/* ./src/evm/abis/",
+    "build-evm-contract": "cd ../../../target_chains/ethereum/ && (npm run build || npm ci && npm run build)",
+    "copy-evm-abis": "mkdir -p ./src/evm/abis && cp -r ../../../target_chains/ethereum/build/contracts/* ./src/evm/abis/",
     "build-evm-bindings": "mkdir -p ./src/evm/bindings/ && typechain --target=ethers-v5 --out-dir=src/evm/bindings/ src/evm/abis/Pyth*.json",
     "start": "node lib/index.js",
     "listen_only": "node lib/index.js --listen_only"
