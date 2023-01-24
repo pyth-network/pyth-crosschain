@@ -174,6 +174,7 @@ mutlisigCommand(
   "Init price (useful for changing the exponent), only to be used on unused price feeds"
 )
   .requiredOption("-p, --price <pubkey>", "Price account to modify")
+  .requiredOption("-e, --exponent <number>", "New exponent")
   .action(async (options: any) => {
     const wallet = new NodeWallet(
       Keypair.fromSecretKey(
@@ -183,7 +184,7 @@ mutlisigCommand(
     const cluster: PythCluster = options.cluster;
     const vault: PublicKey = new PublicKey(options.vault);
     const priceAccount: PublicKey = new PublicKey(options.price);
-
+    const exponent = options.exponent;
     const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
 
     const msAccount = await squad.getMultisig(vault);
@@ -201,7 +202,7 @@ mutlisigCommand(
       getPythProgramKeyForCluster(cluster),
       provider
     )
-      .methods.initPrice(-10, 1)
+      .methods.initPrice(exponent, 1)
       .accounts({ fundingAccount: vaultAuthority, priceAccount })
       .instruction();
     await proposeInstructions(squad, vault, [proposalInstruction], false);
