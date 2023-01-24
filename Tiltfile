@@ -68,7 +68,7 @@ local_resource(
     name = "wasm-gen",
     cmd = "tilt docker build -- -f tilt_devnet/docker-images/Dockerfile.wasm -o type=local,dest=. .",
     env = {"DOCKER_BUILDKIT": "1"},
-    deps = "./wormhole-attester",
+    deps = "./wormhole_attester",
     labels = ["wasm"],
     allow_parallel=True,
     trigger_mode = trigger_mode,

@@ -19,7 +19,7 @@ RUN sh -c "$(curl -sSfL https://release.solana.com/v1.10.31/install)"
 ENV PATH="/root/.local/share/solana/install/active_release/bin:$PATH"
 
 
-ADD wormhole-attester/rust-toolchain /rust-toolchain
+ADD wormhole_attester/rust-toolchain /rust-toolchain
 
 USER root
 # Solana does a questionable download at the beginning of a *first* build-bpf call. Trigger and layer-cache it explicitly.
@@ -46,7 +46,7 @@ RUN mv squads-mpl-${SQUADS_REV} squads-mpl
 
 WORKDIR /usr/src/
 
-ADD wormhole-attester wormhole-attester
+ADD wormhole_attester wormhole_attester
 ADD governance/remote-executor governance/remote-executor
 ADD third_party/pyth/p2w-sdk/rust third_party/pyth/p2w-sdk/rust
 RUN mkdir -p /opt/solana/deps
@@ -58,15 +58,15 @@ WORKDIR /usr/src
 
 # Build Wormhole Solana programs
 RUN --mount=type=cache,target=/usr/src/bridge/wormhole/solana/target \
-    --mount=type=cache,target=/usr/src/wormhole-attester/target \
+    --mount=type=cache,target=/usr/src/wormhole_attester/target \
     --mount=type=cache,target=/usr/src/squads/squads-mpl/target \
     --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/root/.cache \
     cargo build-bpf --manifest-path "bridge/wormhole/solana/bridge/program/Cargo.toml" -- --locked && \
-    cargo build-bpf --manifest-path "wormhole-attester/program/Cargo.toml" -- --locked && \
+    cargo build-bpf --manifest-path "wormhole_attester/program/Cargo.toml" -- --locked && \
     cargo build-bpf --manifest-path "squads/squads-mpl/programs/mesh/Cargo.toml" -- --locked && \
     cp bridge/wormhole/solana/target/deploy/bridge.so /opt/solana/deps/bridge.so && \
-    cp wormhole-attester/target/deploy/pyth_wormhole_attester.so /opt/solana/deps/pyth_wormhole_attester.so && \
+    cp wormhole_attester/target/deploy/pyth_wormhole_attester.so /opt/solana/deps/pyth_wormhole_attester.so && \
     cp squads/squads-mpl/target/deploy/mesh.so /opt/solana/deps/mesh.so
 
 COPY --from=pyth-oracle-copy /home/pyth/pyth-client/target/deploy/pyth_oracle.so /opt/solana/deps/pyth_oracle.so

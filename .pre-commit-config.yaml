@@ -34,17 +34,17 @@ repos:
       - id: cargo-fmt-attester
         name: Cargo format for attester
         language: "rust"
-        entry: cargo +nightly fmt --manifest-path ./wormhole-attester/Cargo.toml --all -- --config-path rustfmt.toml
+        entry: cargo +nightly fmt --manifest-path ./wormhole_attester/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
-        files: wormhole-attester
+        files: wormhole_attester
       - id: cargo-clippy-attester
         name: Cargo clippy for attester
         language: "rust"
         entry: |
           bash -c 'EMITTER_ADDRESS=0 BRIDGE_ADDRESS=0 cargo +nightly clippy --manifest-path \
-            ./wormhole-attester/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings'
+            ./wormhole_attester/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings'
         pass_filenames: false
-        files: wormhole-attester
+        files: wormhole_attester
       # Hooks for cosmwasm contract
       - id: cargo-fmt-cosmwasm
         name: Cargo format for cosmwasm contract

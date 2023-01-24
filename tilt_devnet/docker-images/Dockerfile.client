@@ -8,7 +8,7 @@ ARG WORMHOLE_TAG=v2.8.9
 RUN apt-get update && apt-get install -yq libudev-dev ncat
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs
 
-ADD wormhole-attester/rust-toolchain /rust-toolchain
+ADD wormhole_attester/rust-toolchain /rust-toolchain
 WORKDIR /usr/src/bridge-client
 
 RUN --mount=type=cache,target=/root/.cache \

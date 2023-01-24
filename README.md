@@ -12,7 +12,7 @@ Within this monorepo you will find the following subprojects:
 
 ## Wormhole Attester
 
-> wormhole-attester
+> wormhole_attester
 
 The main Pyth implementation currently exists as an [on-chain contract][] on
 Solana. In order to expose these prices cross-chain, the Wormhole Attester
