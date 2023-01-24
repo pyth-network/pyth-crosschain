@@ -102,11 +102,6 @@ export async function proposeInstructions(
       await squad.buildActivateTransaction(vault, newProposalAddress)
     )
   );
-  txToSend.push(
-    new Transaction().add(
-      await squad.buildApproveTransaction(vault, newProposalAddress)
-    )
-  );
 
   await new AnchorProvider(
     squad.connection,
