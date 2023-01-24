@@ -4,19 +4,23 @@ import {
   TransactionInstruction,
   SYSVAR_RENT_PUBKEY,
   SYSVAR_CLOCK_PUBKEY,
+  AccountMeta,
 } from "@solana/web3.js";
 import { program } from "commander";
 import { PythCluster } from "@pythnetwork/client/lib/cluster";
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
-import { AnchorError, AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import fs from "fs";
 import SquadsMesh from "@sqds/mesh";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
   getMultisigCluster,
+  getProposalInstructions,
   isRemoteCluster,
   mapKey,
+  MultisigParser,
   proposeInstructions,
+  WORMHOLE_ADDRESS,
 } from "xc-admin-common";
 
 const PROGRAM_AUTHORITY_ESCROW = new PublicKey(
@@ -108,7 +112,13 @@ mutlisigCommand(
       })
       .instruction();
 
-    await proposeInstructions(squad, vault, [proposalInstruction], isRemote);
+    await proposeInstructions(
+      squad,
+      vault,
+      [proposalInstruction],
+      isRemote,
+      WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
+    );
   });
 
 mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
@@ -158,6 +168,33 @@ mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
     };
 
     await proposeInstructions(squad, vault, [proposalInstruction], false);
+  });
+
+program
+  .command("parse-transaction")
+  .description("Parse a transaction sitting in the multisig")
+  .requiredOption("-c, --cluster <network>", "solana cluster to use")
+  .requiredOption("-t, --transaction <pubkey>", "path to the operations key")
+  .action(async (options: any) => {
+    const cluster = options.cluster;
+    const transaction: PublicKey = new PublicKey(options.transaction);
+    const squad = SquadsMesh.endpoint(
+      getPythClusterApiUrl(cluster),
+      new NodeWallet(new Keypair())
+    );
+    const onChainInstructions = await getProposalInstructions(
+      squad,
+      await squad.getTransaction(new PublicKey(transaction))
+    );
+    const parser = MultisigParser.fromCluster(cluster);
+    const parsed = onChainInstructions.map((ix) =>
+      parser.parseInstruction({
+        programId: ix.programId,
+        data: ix.data as Buffer,
+        keys: ix.keys as AccountMeta[],
+      })
+    );
+    console.log(parsed);
   });
 
 program.parse();
