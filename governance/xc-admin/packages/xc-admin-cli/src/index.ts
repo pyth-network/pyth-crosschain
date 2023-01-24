@@ -12,7 +12,12 @@ import { AnchorError, AnchorProvider, Program } from "@coral-xyz/anchor";
 import fs from "fs";
 import SquadsMesh from "@sqds/mesh";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { proposeInstructions } from "xc-admin-common";
+import {
+  getMultisigCluster,
+  isRemoteCluster,
+  mapKey,
+  proposeInstructions,
+} from "xc-admin-common";
 
 const PROGRAM_AUTHORITY_ESCROW = new PublicKey(
   "escMHe7kSqPcDHx4HU44rAHhgdTLBZkUrU39aN8kMcL"
@@ -58,7 +63,11 @@ mutlisigCommand(
     const current: PublicKey = new PublicKey(options.current);
     const vault: PublicKey = new PublicKey(options.vault);
 
-    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
+    const isRemote = isRemoteCluster(cluster);
+    const squad = SquadsMesh.endpoint(
+      getPythClusterApiUrl(getMultisigCluster(cluster)),
+      wallet
+    );
     const msAccount = await squad.getMultisig(vault);
     const vaultAuthority = squad.getAuthorityPDA(
       msAccount.publicKey,
@@ -73,6 +82,7 @@ mutlisigCommand(
         AnchorProvider.defaultOptions()
       )
     );
+
     const programAuthorityEscrow = new Program(
       programAuthorityEscrowIdl!,
       PROGRAM_AUTHORITY_ESCROW,
@@ -91,14 +101,14 @@ mutlisigCommand(
       .accept()
       .accounts({
         currentAuthority: current,
-        newAuthority: vaultAuthority,
+        newAuthority: mapKey(vaultAuthority),
         programAccount: programId,
         programDataAccount,
         bpfUpgradableLoader: BPF_UPGRADABLE_LOADER,
       })
       .instruction();
 
-    await proposeInstructions(squad, vault, [proposalInstruction], false);
+    await proposeInstructions(squad, vault, [proposalInstruction], isRemote);
   });
 
 mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
