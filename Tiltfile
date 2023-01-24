@@ -66,7 +66,7 @@ def k8s_yaml_with_ns(objects):
 
 local_resource(
     name = "wasm-gen",
-    cmd = "tilt docker build -- -f tilt_devnet/docker-images/Dockerfile.wasm -o type=local,dest=. .",
+    cmd = "tilt docker build -- -f tilt_devnet/docker_images/Dockerfile.wasm -o type=local,dest=. .",
     env = {"DOCKER_BUILDKIT": "1"},
     deps = "./wormhole_attester",
     labels = ["wasm"],
@@ -121,7 +121,7 @@ k8s_resource(
 docker_build(
     ref = "bridge-client",
     context = ".",
-    dockerfile = "tilt_devnet/docker-images/Dockerfile.client",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.client",
 )
 
 # solana smart contract
@@ -129,7 +129,7 @@ docker_build(
 docker_build(
     ref = "solana-contract",
     context = ".",
-    dockerfile = "tilt_devnet/docker-images/Dockerfile.solana",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.solana",
 )
 
 # solana local devnet
@@ -152,7 +152,7 @@ k8s_resource(
 docker_build(
     ref = "eth-node",
     context = "./",
-    dockerfile = "tilt_devnet/docker-images/Dockerfile.ethereum",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.ethereum",
 
     # sync external scripts for incremental development
     # (everything else needs to be restarted from scratch for determinism)
@@ -285,7 +285,7 @@ docker_build(
 docker_build(
     ref = "cosmwasm-contracts",
     context = ".",
-    dockerfile = "tilt_devnet/docker-images/Dockerfile.cosmwasm",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.cosmwasm",
 )
 
 k8s_yaml_with_ns("tilt_devnet/k8s/terra-devnet.yaml")
@@ -317,7 +317,7 @@ k8s_resource(
 docker_build(
     ref = "prometheus",
     context = ".",
-    dockerfile = "tilt_devnet/docker-images/Dockerfile.prometheus",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.prometheus",
 )
 
 k8s_yaml_with_ns("tilt_devnet/k8s/prometheus.yaml")
@@ -332,7 +332,7 @@ k8s_resource(
 docker_build(
     ref = "multisig",
     context = ".",
-    dockerfile = "tilt_devnet/docker-images/Dockerfile.multisig",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.multisig",
 )
 
 k8s_yaml_with_ns("tilt_devnet/k8s/multisig.yaml")
