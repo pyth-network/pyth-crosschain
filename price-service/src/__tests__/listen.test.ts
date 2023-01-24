@@ -1,16 +1,4 @@
-import { DurationInSec } from "../helpers";
 import { VaaConfig, VaaCache } from "../listen";
-
-function addDummyValuesToCache(
-  cache: VaaCache,
-  key: string,
-  publistTimeOffset: DurationInSec
-) {
-  cache.set(key, publistTimeOffset + 1, `${key}-1`);
-  cache.set(key, publistTimeOffset + 4, `${key}-2`);
-  cache.set(key, publistTimeOffset + 10, `${key}-3`);
-  cache.set(key, publistTimeOffset + 13, `${key}-4`);
-}
 
 describe("VAA Cache works", () => {
   test("Setting and getting works as expected", async () => {
