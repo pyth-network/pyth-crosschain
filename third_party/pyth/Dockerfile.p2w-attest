@@ -4,7 +4,7 @@ FROM ghcr.io/certusone/solana:1.10.31@sha256:d31e8db926a1d3fbaa9d9211d9979023692
 RUN apt-get update && apt-get install -yq python3 libudev-dev ncat
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs
 
-ADD governance/remote-executor /usr/src/governance/remote-executor
+ADD governance/remote_executor /usr/src/governance/remote_executor
 ADD third_party/pyth/p2w-sdk/rust /usr/src/third_party/pyth/p2w-sdk/rust
 ADD wormhole_attester /usr/src/wormhole_attester
 

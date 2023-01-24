@@ -21,15 +21,15 @@ repos:
       - id: cargo-fmt-remote-executor
         name: Cargo format for remote executor
         language: "rust"
-        entry: cargo +nightly fmt --manifest-path ./governance/remote-executor/Cargo.toml --all -- --config-path rustfmt.toml
+        entry: cargo +nightly fmt --manifest-path ./governance/remote_executor/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
-        files: governance/remote-executor
+        files: governance/remote_executor
       - id: cargo-clippy-remote-executor
         name: Cargo clippy for remote executor
         language: "rust"
-        entry: cargo +nightly clippy --manifest-path ./governance/remote-executor/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +nightly clippy --manifest-path ./governance/remote_executor/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
-        files: governance/remote-executor
+        files: governance/remote_executor
       # Hooks for the attester
       - id: cargo-fmt-attester
         name: Cargo format for attester

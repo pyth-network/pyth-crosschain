@@ -2,10 +2,10 @@ name: Check Remote Executor
 
 on:
   pull_request:
-    paths: [governance/remote-executor/**]
+    paths: [governance/remote_executor/**]
   push:
     branches: [main]
-    paths: [governance/remote-executor/**]
+    paths: [governance/remote_executor/**]
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -22,4 +22,4 @@ jobs:
           sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Run executor tests
-        run: cargo test-bpf --manifest-path ./governance/remote-executor/Cargo.toml
+        run: cargo test-bpf --manifest-path ./governance/remote_executor/Cargo.toml
