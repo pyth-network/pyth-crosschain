@@ -1,0 +1,39 @@
+{
+  "name": "@pythnetwork/pyth-sdk-js",
+  "version": "1.2.0",
+  "description": "Pyth Network SDK in JS",
+  "homepage": "https://pyth.network",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "repository": "https://github.com/pyth-network/pyth-sdk-js",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "gen-ts-schema": "quicktype --src-lang schema src/schemas/price_feed.json -o src/schemas/PriceFeed.ts --raw-type any --converters all-objects && prettier --write \"src/schemas/*.ts\"",
+    "lint": "eslint src/",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src"
+  },
+  "keywords": [
+    "pyth",
+    "oracle"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
+    "@typescript-eslint/parser": "^5.20.0",
+    "eslint": "^8.13.0",
+    "jest": "^27.5.1",
+    "prettier": "^2.6.2",
+    "quicktype": "^15.0.261",
+    "ts-jest": "^27.1.4",
+    "typescript": "^4.6.3"
+  }
+}
