@@ -2,13 +2,13 @@ on:
   pull_request:
     paths:
       - target_chains/ethereum/**
-      - governance/xc-governance-sdk-js/**
+      - governance/xc_governance_sdk_js/**
   push:
     branches:
       - main
     paths:
       - target_chains/ethereum/**
-      - governance/xc-governance-sdk-js/**
+      - governance/xc_governance_sdk_js/**
 
 name: Ethereum Contract
 
@@ -24,7 +24,7 @@ jobs:
 
       - name: Install XC-governance sdk dependencies
         run: npm ci
-        working-directory: governance/xc-governance-sdk-js
+        working-directory: governance/xc_governance_sdk_js
 
       - name: Install contract npm dependencies
         run: npm ci

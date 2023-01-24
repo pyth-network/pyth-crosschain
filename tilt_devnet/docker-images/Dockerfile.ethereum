@@ -9,8 +9,8 @@ USER 1000
 RUN mkdir -p /home/node/ethereum
 RUN mkdir -p /home/node/.npm
 
-WORKDIR /home/node/governance/xc-governance-sdk-js/
-ADD --chown=node:node governance/xc-governance-sdk-js/ .
+WORKDIR /home/node/governance/xc_governance_sdk_js/
+ADD --chown=node:node governance/xc_governance_sdk_js/ .
 
 RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
   --mount=type=cache,uid=1000,gid=1000,target=xc_gc_node_modules \

@@ -35,7 +35,7 @@
     "@openzeppelin/contracts": "^4.5.0",
     "@openzeppelin/contracts-upgradeable": "^4.5.2",
     "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
-    "@pythnetwork/xc-governance-sdk": "file:../../governance/xc-governance-sdk-js",
+    "@pythnetwork/xc-governance-sdk": "file:../../governance/xc_governance_sdk_js",
     "dotenv": "^10.0.0",
     "elliptic": "^6.5.2",
     "ethers": "^5.7.2",

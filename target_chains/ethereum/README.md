@@ -7,10 +7,10 @@ This directory contains The Pyth contract on Ethereum and utilities to deploy it
 Run the following command to install required dependencies for the contract:
 
 ```
-# xc-governance-sdk-js is a local dependency that should be built
+# xc_governance_sdk_js is a local dependency that should be built
 # it is used in deployment (truffle migrations) to generate/sanity check
 # the governance VAAs
-pushd ../../governance/xc-governance-sdk-js && npm ci && popd
+pushd ../../governance/xc_governance_sdk_js && npm ci && popd
 npm ci
 ```
 
