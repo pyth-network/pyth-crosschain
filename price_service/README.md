@@ -57,7 +57,7 @@ Then, build the image from [the repo root](../../../) like below. It will create
 local image named `pyth_price_service`.
 
 ```
-$ docker buildx build -f price-service/Dockerfile.price_service -t pyth_price_service .
+$ docker buildx build -f price_service/Dockerfile.price_service -t pyth_price_service .
 ```
 
 If you wish to build price service without docker, please follow the instruction of the price service

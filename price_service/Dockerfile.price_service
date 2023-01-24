@@ -10,7 +10,7 @@ WORKDIR ${BASE_PATH}/${P2W_SDK_REL_PATH}
 COPY --chown=pyth:pyth ${P2W_SDK_REL_PATH} .
 RUN npm ci && npm run build && npm cache clean --force
 
-ARG PRICE_SERVICE_REL_PATH=price-service
+ARG PRICE_SERVICE_REL_PATH=price_service
 WORKDIR ${BASE_PATH}/${PRICE_SERVICE_REL_PATH}
 COPY --chown=pyth:pyth ${PRICE_SERVICE_REL_PATH} .
 RUN npm ci && npm run build && npm cache clean --force

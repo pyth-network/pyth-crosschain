@@ -241,7 +241,7 @@ k8s_resource(
 docker_build(
     ref = "pyth-price-service",
     context = ".",
-    dockerfile = "price-service/Dockerfile.price_service",
+    dockerfile = "price_service/Dockerfile.price_service",
 )
 k8s_yaml_with_ns("tilt-devnet/k8s/pyth-price-service.yaml")
 k8s_resource(
