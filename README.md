@@ -39,7 +39,7 @@ examples.
 
 ## Price Service
 
-> price_service
+> price_service/server
 
 The Price Service is an off-chain service which constantly observes the
 Wormhole network watching for price attestations emitted from the Pyth Solana

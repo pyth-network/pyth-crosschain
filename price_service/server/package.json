@@ -1,7 +1,7 @@
 {
-  "name": "@pythnetwork/pyth-price-service",
+  "name": "@pythnetwork/pyth-price-server",
   "version": "2.3.3",
-  "description": "Pyth Price Service",
+  "description": "Pyth Price Server",
   "main": "index.js",
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\"",
@@ -31,7 +31,7 @@
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.9",
     "@certusone/wormhole-spydk": "^0.0.1",
-    "@pythnetwork/p2w-sdk-js": "file:../third_party/pyth/p2w-sdk/js",
+    "@pythnetwork/p2w-sdk-js": "file:../../third_party/pyth/p2w-sdk/js",
     "@pythnetwork/pyth-sdk-js": "^1.1.0",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",

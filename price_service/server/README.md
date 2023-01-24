@@ -42,7 +42,7 @@ The compose files use a public release of Pyth price service and spy. If you wis
 price service you should:
 
 1. Build an image for using it first according to the section below.
-2. Change the price service image to your local docker image (e.g., `pyth_price_service`)
+2. Change the price service image to your local docker image (e.g., `pyth_price_server`)
 
 ## Build an image
 
@@ -54,11 +54,11 @@ docker buildx build -f Dockerfile.wasm -o type=local,dest=. .
 ```
 
 Then, build the image from [the repo root](../../../) like below. It will create a
-local image named `pyth_price_service`.
+local image named `pyth_price_server`.
 
 ```
-$ docker buildx build -f price_service/Dockerfile.price_service -t pyth_price_service .
+$ docker buildx build -f price_service/server/Dockerfile -t pyth_price_server .
 ```
 
 If you wish to build price service without docker, please follow the instruction of the price service
-[`Dockerfile`](./Dockerfile.price_service)
+[`Dockerfile`](./Dockerfile)

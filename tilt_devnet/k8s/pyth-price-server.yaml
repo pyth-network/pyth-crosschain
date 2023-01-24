@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: pyth-price-service
+  name: pyth-price-server
   labels:
-    app: pyth-price-service
+    app: pyth-price-server
 spec:
   ports:
     - port: 8081
@@ -15,27 +15,27 @@ spec:
       protocol: TCP
   clusterIP: None
   selector:
-    app: pyth-price-service
+    app: pyth-price-server
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pyth-price-service
+  name: pyth-price-server
 spec:
   selector:
     matchLabels:
-      app: pyth-price-service
-  serviceName: pyth-price-service
+      app: pyth-price-server
+  serviceName: pyth-price-server
   replicas: 1
   template:
     metadata:
       labels:
-        app: pyth-price-service
+        app: pyth-price-server
     spec:
       terminationGracePeriodSeconds: 0
       containers:
-        - name: pyth-price-service
-          image: pyth-price-service
+        - name: pyth-price-server
+          image: pyth-price-server
           ports:
             - containerPort: 8081
               name: prometheus
@@ -77,7 +77,7 @@ spec:
             - name: CACHE_TTL_SECONDS
               value: "300"
         - name: tests
-          image: pyth-price-service
+          image: pyth-price-server
           command:
             - /bin/sh
             - -c
