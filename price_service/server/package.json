@@ -1,7 +1,7 @@
 {
-  "name": "@pythnetwork/pyth-price-server",
+  "name": "@pythnetwork/price-service-server",
   "version": "2.3.3",
-  "description": "Pyth Price Server",
+  "description": "Pyth price pervice server",
   "main": "index.js",
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\"",

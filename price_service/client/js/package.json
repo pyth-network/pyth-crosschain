@@ -1,7 +1,7 @@
 {
-  "name": "@pythnetwork/pyth-common-js",
+  "name": "@pythnetwork/price-service-client",
   "version": "1.4.0",
-  "description": "Pyth Network Common Utils in JS",
+  "description": "Pyth price service client",
   "author": {
     "name": "Pyth Data Association"
   },
@@ -11,7 +11,7 @@
   "files": [
     "lib/**/*"
   ],
-  "repository": "https://github.com/pyth-network/pyth-js/pyth-common-js",
+  "repository": "https://github.com/pyth-network/pyth-crosschain",
   "scripts": {
     "test": "jest --passWithNoTests",
     "build": "tsc",
