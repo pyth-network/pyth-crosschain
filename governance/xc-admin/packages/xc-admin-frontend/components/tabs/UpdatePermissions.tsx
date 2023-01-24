@@ -20,7 +20,7 @@ import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
 import {
   getMultisigCluster,
-  UPGRADE_MUTLTISIG,
+  UPGRADE_MULTISIG,
   useMultisig,
 } from '../../hooks/useMultisig'
 import CopyIcon from '../../images/icons/copy.inline.svg'
@@ -245,7 +245,7 @@ const UpdatePermissions = () => {
         )
         .accounts({
           upgradeAuthority: squads?.getAuthorityPDA(
-            UPGRADE_MUTLTISIG[getMultisigCluster(cluster)],
+            UPGRADE_MULTISIG[getMultisigCluster(cluster)],
             1
           ),
           programDataAccount,
@@ -257,7 +257,7 @@ const UpdatePermissions = () => {
             try {
               const proposalPubkey = await proposeInstructions(
                 squads,
-                UPGRADE_MUTLTISIG[getMultisigCluster(cluster)],
+                UPGRADE_MULTISIG[getMultisigCluster(cluster)],
                 [instruction],
                 false
               )

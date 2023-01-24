@@ -19,7 +19,7 @@ import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
 import {
   getMultisigCluster,
-  UPGRADE_MUTLTISIG,
+  SECURITY_MULTISIG,
   useMultisig,
 } from '../../hooks/useMultisig'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
@@ -179,7 +179,7 @@ const MinPublishers = () => {
         try {
           const proposalPubkey = await proposeInstructions(
             squads,
-            UPGRADE_MUTLTISIG[getMultisigCluster(cluster)],
+            SECURITY_MULTISIG[getMultisigCluster(cluster)],
             instructions,
             false
           )
