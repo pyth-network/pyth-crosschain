@@ -18,7 +18,10 @@ import toast from 'react-hot-toast'
 import { getMultisigCluster, proposeInstructions } from 'xc-admin-common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
-import { SECURITY_MULTISIG, useMultisig } from '../../hooks/useMultisig'
+import {
+  SECURITY_MULTISIG,
+  useMultisig,
+} from '../../hooks/useMultisig'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import Modal from '../common/Modal'
