@@ -49,15 +49,15 @@ repos:
       - id: cargo-fmt-cosmwasm
         name: Cargo format for cosmwasm contract
         language: "rust"
-        entry: cargo +nightly fmt --manifest-path ./target-chains/cosmwasm/Cargo.toml --all -- --config-path rustfmt.toml
+        entry: cargo +nightly fmt --manifest-path ./target_chains/cosmwasm/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
-        files: target-chains/cosmwasm
+        files: target_chains/cosmwasm
       - id: cargo-clippy-cosmwasm
         name: Cargo clippy for cosmwasm contract
         language: "rust"
-        entry: cargo +nightly clippy --manifest-path ./target-chains/cosmwasm/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +nightly clippy --manifest-path ./target_chains/cosmwasm/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
-        files: target-chains/cosmwasm
+        files: target_chains/cosmwasm
       # Hooks for p2w-sdk/rust
       - id: cargo-fmt-p2w-sdk
         name: Cargo format for p2w-sdk

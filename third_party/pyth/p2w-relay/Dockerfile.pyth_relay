@@ -9,8 +9,8 @@ RUN addgroup -S pyth -g 10001 && adduser -S pyth -G pyth -u 10001
 RUN chown -R pyth:pyth .
 USER pyth
 
-WORKDIR ${BASE_PATH}/target-chains/ethereum
-ADD --chown=pyth:pyth target-chains/ethereum/ .
+WORKDIR ${BASE_PATH}/target_chains/ethereum
+ADD --chown=pyth:pyth target_chains/ethereum/ .
 RUN npm install && npm run build
 
 USER root

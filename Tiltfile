@@ -278,8 +278,8 @@ k8s_resource(
 
 docker_build(
     ref = "terra-image",
-    context = "./target-chains/cosmwasm/devnet",
-    dockerfile = "./target-chains/cosmwasm/devnet/Dockerfile",
+    context = "./target_chains/cosmwasm/devnet",
+    dockerfile = "./target_chains/cosmwasm/devnet/Dockerfile",
 )
 
 docker_build(

@@ -27,7 +27,7 @@ various receiver contracts.
 
 ### Ethereum
 
-> target-chains/ethereum/contracts/pyth
+> target_chains/ethereum/contracts/pyth
 
 The Ethereum contract acts as a receiver for Pyth prices relayed from the
 Wormhole Attester. It also provides a public API for other Ethereum contracts

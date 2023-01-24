@@ -1,13 +1,13 @@
 on:
   pull_request:
     paths:
-      - target-chains/ethereum/**
+      - target_chains/ethereum/**
       - governance/xc-governance-sdk-js/**
   push:
     branches:
       - main
     paths:
-      - target-chains/ethereum/**
+      - target_chains/ethereum/**
       - governance/xc-governance-sdk-js/**
 
 name: Ethereum Contract
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: target-chains/ethereum/
+        working-directory: target_chains/ethereum/
     steps:
       - uses: actions/checkout@v3
 

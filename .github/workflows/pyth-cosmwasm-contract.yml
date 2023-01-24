@@ -3,13 +3,13 @@ name: Pyth CosmWasm Contract
 on:
   pull_request:
     paths:
-      - target-chains/cosmwasm/**
+      - target_chains/cosmwasm/**
       - third_party/pyth/p2w-sdk/rust/**
   push:
     branches:
       - main
     paths:
-      - target-chains/cosmwasm/**
+      - target_chains/cosmwasm/**
       - third_party/pyth/p2w-sdk/rust/**
 
 env:
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: target-chains/cosmwasm/contracts/pyth
+        working-directory: target_chains/cosmwasm/contracts/pyth
     steps:
       - uses: actions/checkout@v2
       - name: Build
