@@ -9,7 +9,7 @@ USER root
 RUN apt-get install -y netcat-openbsd python3 && \
     rm -rf /var/lib/apt/lists/*
 
-ADD tilt-devnet/secrets/solana/ /solana-secrets
+ADD tilt_devnet/secrets/solana/ /solana-secrets
 
 ENV PYTH_KEY_STORE=/home/pyth/.pythd
 

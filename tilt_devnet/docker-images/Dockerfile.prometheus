@@ -1,3 +1,3 @@
 FROM prom/prometheus
 
-ADD --chown=nobody:nobody tilt-devnet/configs/prometheus_config.yaml .
+ADD --chown=nobody:nobody tilt_devnet/configs/prometheus_config.yaml .

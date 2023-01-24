@@ -32,6 +32,6 @@ RUN rm -rf node_modules && mv node_modules_cached node_modules
 
 # Add the rest of the code. This ensures that real code changes do not affect the layer caching of `npm ci`
 ADD third_party/pyth /root/pyth
-ADD tilt-devnet/secrets/solana/ /solana-secrets
+ADD tilt_devnet/secrets/solana/ /solana-secrets
 
 RUN npm install

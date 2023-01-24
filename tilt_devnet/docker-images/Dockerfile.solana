@@ -74,4 +74,4 @@ COPY --from=pyth-oracle-copy /home/pyth/pyth-client/target/deploy/pyth_oracle.so
 ENV RUST_LOG="solana_runtime::system_instruction_processor=trace,solana_runtime::message_processor=trace,solana_bpf_loader=debug,solana_rbpf=debug"
 ENV RUST_BACKTRACE=1
 
-ADD tilt-devnet/secrets/solana /solana-secrets
+ADD tilt_devnet/secrets/solana /solana-secrets
