@@ -21,7 +21,7 @@ ENV LOCAL_MULTISIG_SCRIPT_DIR=governance/multisig_wh_message_builder
 ADD $LOCAL_MULTISIG_SCRIPT_DIR/package.json \
     $LOCAL_MULTISIG_SCRIPT_DIR/package-lock.json \
     $LOCAL_MULTISIG_SCRIPT_DIR/tsconfig.json \
-    .
+    ./
 
 RUN mkdir src # tsc is run as part of the install, add minimal placeholders to satisfy it
 RUN touch src/index.ts
