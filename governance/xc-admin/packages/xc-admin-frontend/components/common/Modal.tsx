@@ -1,28 +1,18 @@
 import { Dialog, Transition } from '@headlessui/react'
 import { Dispatch, Fragment, SetStateAction } from 'react'
 import CloseIcon from '../icons/CloseIcon'
-import Spinner from './Spinner'
 
 const Modal: React.FC<{
   isModalOpen: boolean
   setIsModalOpen: Dispatch<SetStateAction<boolean>>
   closeModal: () => void
-  changes: any
-  handleSendProposalButtonClick: () => void
-  isSendProposalButtonLoading: boolean
-}> = ({
-  isModalOpen,
-  setIsModalOpen,
-  closeModal,
-  changes,
-  handleSendProposalButtonClick,
-  isSendProposalButtonLoading,
-}) => {
+  content: any
+}> = ({ isModalOpen, setIsModalOpen, closeModal, content }) => {
   return (
     <Transition appear show={isModalOpen} as={Fragment}>
       <Dialog
         as="div"
-        className="relative z-10"
+        className="relative z-40"
         onClose={() => setIsModalOpen(false)}
       >
         <Transition.Child
@@ -55,40 +45,7 @@ const Modal: React.FC<{
                   <Dialog.Title as="h3" className="diaglogTitle">
                     Proposed Changes
                   </Dialog.Title>
-
-                  {!changes ? (
-                    <p className="mb-8 leading-6 ">No proposed changes.</p>
-                  ) : (
-                    Object.keys(changes).map((key) => {
-                      if (changes[key].prev !== changes[key].new) {
-                        return (
-                          <div
-                            key={key}
-                            className="flex items-center justify-between pb-4"
-                          >
-                            <span className="pr-4 text-left font-bold">
-                              {key}
-                            </span>
-                            <span className="mr-2">
-                              {changes[key].prev} &rarr; {changes[key].new}
-                            </span>
-                          </div>
-                        )
-                      }
-                    })
-                  )}
-
-                  <button
-                    className="action-btn text-base "
-                    onClick={handleSendProposalButtonClick}
-                    disabled={!changes}
-                  >
-                    {isSendProposalButtonLoading ? (
-                      <Spinner />
-                    ) : (
-                      'Send Proposal'
-                    )}
-                  </button>
+                  {content}
                 </div>
               </Dialog.Panel>
             </Transition.Child>

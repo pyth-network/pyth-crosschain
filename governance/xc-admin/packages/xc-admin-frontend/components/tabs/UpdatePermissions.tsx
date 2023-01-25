@@ -27,6 +27,7 @@ import CopyIcon from '../../images/icons/copy.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import Modal from '../common/Modal'
+import Spinner from '../common/Spinner'
 import EditButton from '../EditButton'
 import Loadbar from '../loaders/Loadbar'
 
@@ -282,6 +283,43 @@ const UpdatePermissions = () => {
     }
   }
 
+  const ModalContent = ({ changes }: { changes: any }) => {
+    return (
+      <>
+        {changes ? (
+          Object.keys(changes).map((key) => {
+            return (
+              changes[key].prev !== changes[key].new && (
+                <>
+                  <div
+                    key={key}
+                    className="flex items-center justify-between mb-4"
+                  >
+                    <span className="pr-4 text-left font-bold">{key}</span>
+                    <span className="mr-2">
+                      {changes[key].prev} &rarr; {changes[key].new}
+                    </span>
+                  </div>
+                </>
+              )
+            )
+          })
+        ) : (
+          <p className="mb-8 leading-6">No proposed changes.</p>
+        )}
+        {changes ? (
+          <button
+            className="action-btn text-base"
+            onClick={handleSendProposalButtonClick}
+            disabled={!changes}
+          >
+            {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
+          </button>
+        ) : null}
+      </>
+    )
+  }
+
   // create anchor wallet when connected
   useEffect(() => {
     if (connected) {
@@ -302,16 +340,14 @@ const UpdatePermissions = () => {
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
         closeModal={closeModal}
-        changes={pubkeyChanges}
-        handleSendProposalButtonClick={handleSendProposalButtonClick}
-        isSendProposalButtonLoading={isSendProposalButtonLoading}
+        content={<ModalContent changes={pubkeyChanges} />}
       />
       <div className="container flex flex-col items-center justify-between lg:flex-row">
         <div className="mb-4 w-full text-left lg:mb-0">
           <h1 className="h1 mb-4">Update Permissions</h1>
         </div>
       </div>
-      <div className="container">
+      <div className="container min-h-[50vh]">
         <div className="flex justify-between">
           <div className="mb-4 md:mb-0">
             <ClusterSwitch />
