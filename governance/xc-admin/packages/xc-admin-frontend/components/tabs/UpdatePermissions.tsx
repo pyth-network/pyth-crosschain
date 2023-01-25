@@ -118,6 +118,7 @@ const UpdatePermissions = () => {
     useState<Program<PythOracle>>()
 
   useEffect(() => {
+    console.log(rawConfig)
     if (rawConfig.permissionAccount) {
       const masterAuthority =
         rawConfig.permissionAccount.masterAuthority.toBase58()
@@ -139,6 +140,8 @@ const UpdatePermissions = () => {
           pubkey: securityAuthority,
         },
       ])
+    } else {
+      setData([...DEFAULT_DATA])
     }
   }, [rawConfig])
 
