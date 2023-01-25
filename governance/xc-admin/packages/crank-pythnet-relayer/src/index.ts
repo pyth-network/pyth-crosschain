@@ -36,11 +36,13 @@ export function envOrErr(env: string): string {
 const REMOTE_EXECUTOR_ADDRESS = new PublicKey(
   "exe6S3AxPVNmy46L4Nj6HrnnAVQUhwyYzMSNcnRn3qq"
 );
+
 const CLAIM_RECORD_SEED = "CLAIM_RECORD";
 const EXECUTOR_KEY_SEED = "EXECUTOR_KEY";
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
 const COMMITMENT: Commitment =
   (process.env.COMMITMENT as Commitment) ?? "confirmed";
+const OFFSET: number = Number(process.env.OFFSET) ?? -1;
 const EMITTER: PublicKey = new PublicKey(envOrErr("EMITTER"));
 const KEYPAIR: Keypair = Keypair.fromSecretKey(
   Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii")))
@@ -71,12 +73,13 @@ async function run() {
   );
   let lastSequenceNumber: number = claimRecord
     ? (claimRecord.sequence as BN).toNumber()
-    : 0;
-
+    : -1;
+  lastSequenceNumber = Math.max(lastSequenceNumber, OFFSET);
   const wormholeApi = WORMHOLE_API_ENDPOINT[CLUSTER];
 
   while (true) {
     lastSequenceNumber += 1;
+    console.log(`Trying sequence number : ${lastSequenceNumber}`);
 
     const response = await (
       await fetch(
@@ -94,6 +97,7 @@ async function run() {
         governancePayload instanceof ExecutePostedVaa &&
         governancePayload.targetChainId == "pythnet"
       ) {
+        console.log(`Found VAA ${lastSequenceNumber}, relaying ...`);
         await postVaaSolana(
           provider.connection,
           signTransactionFactory(KEYPAIR),
@@ -127,6 +131,12 @@ async function run() {
           .rpc();
       }
     } else if (response.code == 5) {
+      console.log(`Wormhole API failure`);
+      console.log(
+        `${wormholeApi}/v1/signed_vaa/1/${EMITTER.toBuffer().toString(
+          "hex"
+        )}/${lastSequenceNumber}`
+      );
       break;
     } else {
       throw new Error("Could not connect to wormhole api");
