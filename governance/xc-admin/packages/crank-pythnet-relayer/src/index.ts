@@ -50,7 +50,7 @@ const KEYPAIR: Keypair = Keypair.fromSecretKey(
 
 async function run() {
   const provider = new AnchorProvider(
-    new Connection(getPythClusterApiUrl(CLUSTER), COMMITMENT),
+    new Connection("http://v1.pythtest.xyz.pyth.network:8899", COMMITMENT),
     new NodeWallet(KEYPAIR),
     {
       commitment: COMMITMENT,
@@ -107,7 +107,9 @@ async function run() {
           { commitment: COMMITMENT }
         );
 
-        let extraAccountMetas: AccountMeta[] = [];
+        let extraAccountMetas: AccountMeta[] = [
+          { pubkey: executorKey, isSigner: false, isWritable: true },
+        ];
         for (const ix of governancePayload.instructions) {
           extraAccountMetas.push({
             pubkey: ix.programId,
