@@ -9,7 +9,7 @@ Add this crate to the dependencies section of your CosmWasm contract's `Cargo.to
 
 ```
 [dependencies]
-pyth-cosmwasm = { git="https://github.com/pyth-network/pyth-crosschain", rev="5d0acc1", features=["library"] }
+pyth-cosmwasm = { git="https://github.com/pyth-network/pyth-crosschain", tag="pyth-cosmwasm-v0.1.0", features=["library"] }
 ```
 
 ## Usage
