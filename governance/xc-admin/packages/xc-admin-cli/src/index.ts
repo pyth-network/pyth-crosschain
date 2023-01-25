@@ -194,7 +194,7 @@ program
         keys: ix.keys as AccountMeta[],
       })
     );
-    console.log(parsed);
+    console.log(JSON.stringify(parsed, null, 2));
   });
 
 program.parse();
