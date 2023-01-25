@@ -139,7 +139,10 @@ const MinPublishers = () => {
           (mapping1, mapping2) =>
             mapping2.products.length - mapping1.products.length
         )[0]
-        .products.map((product) =>
+        .products.sort((product1, product2) =>
+          product1.metadata.symbol.localeCompare(product2.metadata.symbol)
+        )
+        .map((product) =>
           product.priceAccounts.map((priceAccount) => {
             minPublishersData.push({
               symbol: product.metadata.symbol,
