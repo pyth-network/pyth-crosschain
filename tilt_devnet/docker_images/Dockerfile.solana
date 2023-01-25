@@ -48,7 +48,6 @@ WORKDIR /usr/src/
 
 ADD wormhole_attester wormhole_attester
 ADD governance/remote_executor governance/remote_executor
-ADD third_party/pyth/p2w-sdk/rust third_party/pyth/p2w-sdk/rust
 RUN mkdir -p /opt/solana/deps
 
 ENV EMITTER_ADDRESS="11111111111111111111111111111115"

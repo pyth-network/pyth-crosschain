@@ -1,5 +1,5 @@
 [package]
-name = "p2w-sdk"
+name = "pyth-wormhole-attester-sdk"
 version = "0.1.1"
 authors = ["Wormhole Contributors <contact@certus.one>"]
 edition = "2018"

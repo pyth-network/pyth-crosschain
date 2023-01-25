@@ -8,9 +8,9 @@ let _P2W_WASM: any;
 async function importWasm() {
   if (!_P2W_WASM) {
     if (typeof window === "undefined") {
-      _P2W_WASM = await import("./solana/p2w-core/nodejs/p2w_sdk");
+      _P2W_WASM = await import("./wasm/nodejs/pyth_wormhole_attester_sdk");
     } else {
-      _P2W_WASM = await import("./solana/p2w-core/bundler/p2w_sdk");
+      _P2W_WASM = await import("./wasm/bundler/pyth_wormhole_attester_sdk");
     }
   }
   return _P2W_WASM;

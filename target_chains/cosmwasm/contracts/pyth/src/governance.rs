@@ -6,7 +6,7 @@ use {
         WriteBytesExt,
     },
     cosmwasm_std::Binary,
-    p2w_sdk::ErrBox,
+    pyth_wormhole_attester_sdk::ErrBox,
     schemars::JsonSchema,
     serde::{
         Deserialize,

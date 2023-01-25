@@ -14,7 +14,7 @@ import {
   getBatchSummary,
   parseBatchPriceAttestation,
   priceAttestationToPriceFeed,
-} from "@pythnetwork/p2w-sdk-js";
+} from "@pythnetwork/wormhole-attester-sdk";
 import { HexString, PriceFeed } from "@pythnetwork/pyth-sdk-js";
 import LRUCache from "lru-cache";
 import { DurationInSec, sleep, TimestampInSec } from "./helpers";

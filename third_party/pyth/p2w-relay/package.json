@@ -30,9 +30,9 @@
     "typescript": "^4.3.5"
   },
   "dependencies": {
-    "@pythnetwork/p2w-sdk-js": "file:../p2w-sdk/js",
     "@certusone/wormhole-sdk": "^0.1.4",
     "@certusone/wormhole-spydk": "^0.0.1",
+    "@pythnetwork/wormhole-attester-sdk": "file:../../../wormhole_attester/sdk/js",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.24.0",
     "@terra-money/terra.js": "^3.1.3",

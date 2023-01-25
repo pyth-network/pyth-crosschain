@@ -28,7 +28,7 @@ generic-array = { version = "0.14.4" }
 hex = "0.4.2"
 lazy_static = "1.4.0"
 bigint = "4"
-p2w-sdk = { path = "../../../../third_party/pyth/p2w-sdk/rust" }
+pyth-wormhole-attester-sdk = { path = "../../../../wormhole_attester/sdk/rust" }
 pyth-sdk = "0.7.0"
 byteorder = "1.4.3"
 cosmwasm-schema = "1.1.9"

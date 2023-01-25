@@ -1,2 +1,2 @@
 [workspace]
-members = ["client", "program", "governance"]
+members = ["client", "program", "governance", "sdk/rust"]

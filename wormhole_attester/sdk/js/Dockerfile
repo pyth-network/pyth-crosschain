@@ -14,10 +14,10 @@ RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
     npm ci
 COPY sdk/js .
 
-# Build p2w-sdk in dir preserving directory structure
-WORKDIR /usr/src/third_party/pyth/p2w-sdk/js/
-COPY third_party/pyth/p2w-sdk/js/package.json third_party/pyth/p2w-sdk/js/package-lock.json ./
+# Build wormhole sdk attester in dir preserving directory structure
+WORKDIR /usr/src/wormhole_attester/sdk/js/
+COPY wormhole_attester/sdk/js/package.json wormhole_attester/sdk/js/package-lock.json ./
 RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
     npm ci
-COPY third_party/pyth/p2w-sdk .
+COPY wormhole_attester/sdk .
 RUN npm run build-test

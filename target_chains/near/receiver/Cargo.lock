@@ -1840,15 +1840,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "p2w-sdk"
-version = "0.1.1"
-dependencies = [
- "hex 0.4.3",
- "pyth-sdk 0.5.0",
- "serde",
-]
-
-[[package]]
 name = "parity-scale-codec"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2039,8 +2030,8 @@ dependencies = [
  "nom",
  "num-derive",
  "num-traits",
- "p2w-sdk",
  "pyth-sdk 0.7.0",
+ "pyth-wormhole-attester-sdk",
  "serde",
  "serde_json",
  "serde_wormhole",
@@ -2074,6 +2065,15 @@ dependencies = [
  "borsh-derive",
  "hex 0.4.3",
  "schemars",
+ "serde",
+]
+
+[[package]]
+name = "pyth-wormhole-attester-sdk"
+version = "0.1.1"
+dependencies = [
+ "hex 0.4.3",
+ "pyth-sdk 0.5.0",
  "serde",
 ]
 

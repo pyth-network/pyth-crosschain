@@ -10,7 +10,7 @@ use {
             Serialize,
         },
     },
-    p2w_sdk::PriceAttestation,
+    pyth_wormhole_attester_sdk::PriceAttestation,
     wormhole::Chain as WormholeChain,
 };
 

@@ -27,7 +27,7 @@ use {
         Promise,
         StorageUsage,
     },
-    p2w_sdk::BatchPriceAttestation,
+    pyth_wormhole_attester_sdk::BatchPriceAttestation,
     state::{
         Price,
         PriceFeed,

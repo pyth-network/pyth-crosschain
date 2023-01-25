@@ -1,5 +1,5 @@
 {
-  "name": "@pythnetwork/p2w-sdk-js",
+  "name": "@pythnetwork/wormhole-attester-sdk",
   "version": "1.0.0",
   "description": "TypeScript library for interacting with Pyth2Wormhole",
   "types": "lib/index.d.ts",

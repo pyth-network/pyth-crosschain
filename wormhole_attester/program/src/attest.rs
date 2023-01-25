@@ -18,13 +18,13 @@ use {
         accounts::BridgeData,
         types::ConsistencyLevel,
     },
-    p2w_sdk::{
+    pyth_sdk_solana::state::PriceStatus,
+    pyth_wormhole_attester_sdk::{
         BatchPriceAttestation,
         Identifier,
         P2WEmitter,
         PriceAttestation,
     },
-    pyth_sdk_solana::state::PriceStatus,
     solana_program::{
         clock::Clock,
         program::{
