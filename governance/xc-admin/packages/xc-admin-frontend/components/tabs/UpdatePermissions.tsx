@@ -118,7 +118,6 @@ const UpdatePermissions = () => {
     useState<Program<PythOracle>>()
 
   useEffect(() => {
-    console.log(rawConfig)
     if (rawConfig.permissionAccount) {
       const masterAuthority =
         rawConfig.permissionAccount.masterAuthority.toBase58()
