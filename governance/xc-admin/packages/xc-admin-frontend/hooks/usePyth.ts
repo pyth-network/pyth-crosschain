@@ -73,6 +73,7 @@ const usePyth = (): PythHookData => {
         const allPythAccounts = await connection.getProgramAccounts(
           getPythProgramKeyForCluster(cluster)
         )
+        if (cancelled) return
         const priceRawConfigs: { [key: string]: PriceRawConfig } = {}
 
         /// First pass, price accounts
@@ -99,6 +100,7 @@ const usePyth = (): PythHookData => {
           }
         }
 
+        if (cancelled) return
         /// Second pass, product accounts
         i = 0
         const productRawConfigs: { [key: string]: ProductRawConfig } = {}
@@ -139,6 +141,7 @@ const usePyth = (): PythHookData => {
         }
 
         const rawConfig: RawConfig = { mappingAccounts: [] }
+        if (cancelled) return
         /// Third pass, mapping accounts
         i = 0
         while (i < allPythAccounts.length) {
@@ -193,7 +196,9 @@ const usePyth = (): PythHookData => {
       }
     })()
 
-    return () => {}
+    return () => {
+      cancelled = true
+    }
   }, [urlsIndex, cluster])
 
   return {

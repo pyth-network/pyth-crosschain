@@ -19,11 +19,18 @@ export function getMultisigCluster(cluster: PythCluster): Cluster | 'localnet' {
   }
 }
 
-export const UPGRADE_MUTLTISIG: Record<Cluster | 'localnet', PublicKey> = {
+export const UPGRADE_MULTISIG: Record<Cluster | 'localnet', PublicKey> = {
   'mainnet-beta': new PublicKey('FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj'),
   testnet: new PublicKey('FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj'),
   devnet: new PublicKey('6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3'),
   localnet: new PublicKey('FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj'),
+}
+
+export const SECURITY_MULTISIG: Record<Cluster | 'localnet', PublicKey> = {
+  'mainnet-beta': new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'), // TODO: placeholder value for now, fix when vault is created
+  testnet: new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'), // TODO: placeholder value for now, fix when vault is created
+  devnet: new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'),
+  localnet: new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'), // TODO: placeholder value for now, fix when vault is created
 }
 
 interface MultisigHookData {
@@ -66,7 +73,7 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
           setProposals(
             await getProposals(
               squads,
-              UPGRADE_MUTLTISIG[getMultisigCluster(cluster)]
+              UPGRADE_MULTISIG[getMultisigCluster(cluster)]
             )
           )
           setSquads(squads)
