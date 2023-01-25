@@ -8,6 +8,8 @@ The second is a frontend application (in the `app` directory) that communicates 
 
 Please see the [Pyth documentation](https://docs.pyth.network/pythnet-price-feeds) for more information about Pyth and how to integrate it into your application.
 
+**Warning** this AMM is intended only as a demonstration of Pyth price feeds and is **not for production use**.
+
 ## AMM Contract
 
 All of the commands in this section expect to be run from the `contract` directory.
