@@ -13,7 +13,10 @@ export function initLogger(config?: { logLevel?: string }) {
 
   let transport: any;
   // tslint:disable:no-console
-  console.log("p2w_api is logging to the console at level [%s]", logLevel);
+  console.log(
+    "price_service is logging to the console at level [%s]",
+    logLevel
+  );
 
   transport = new winston.transports.Console({
     level: logLevel,

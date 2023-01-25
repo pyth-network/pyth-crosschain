@@ -17,7 +17,7 @@ ENV EMITTER_ADDRESS="11111111111111111111111111111115"
 ENV BRIDGE_ADDRESS="Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 
 COPY wormhole_attester wormhole_attester
-COPY third_party third_party
+COPY governance/remote_executor governance/remote_executor
 
 # wasm-bindgen 0.2.74 generates JavaScript bindings for SystemInstruction exported from solana-program 1.9.4.
 # The generated JavaScript references a non-existent function (wasm.__wbg_systeminstruction_free) that leads
@@ -28,12 +28,12 @@ ARG SED_REMOVE_INVALID_REFERENCE="/^\s*wasm.__wbg_systeminstruction_free(ptr);$/
 # TODO: it appears that wasm-pack ignores our lockfiles even with --locked
 
 # Run unit tests
-WORKDIR /usr/src/third_party/pyth/p2w-sdk/rust
+WORKDIR /usr/src/wormhole_attester/sdk/rust
 RUN cargo test --locked && \
   /usr/local/cargo/bin/wasm-pack build --target bundler -d bundler -- --features wasm --locked && \
   /usr/local/cargo/bin/wasm-pack build --target nodejs -d nodejs -- --features wasm --locked
 
 FROM scratch AS export
 
-COPY --from=build /usr/src/third_party/pyth/p2w-sdk/rust/bundler third_party/pyth/p2w-sdk/js/src/solana/p2w-core/bundler
-COPY --from=build /usr/src/third_party/pyth/p2w-sdk/rust/nodejs third_party/pyth/p2w-sdk/js/src/solana/p2w-core/nodejs
+COPY --from=build /usr/src/wormhole_attester/sdk/rust/bundler wormhole_attester/sdk/js/src/wasm/bundler
+COPY --from=build /usr/src/wormhole_attester/sdk/rust/nodejs wormhole_attester/sdk/js/src/wasm/nodejs

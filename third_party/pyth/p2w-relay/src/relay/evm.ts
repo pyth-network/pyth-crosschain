@@ -5,7 +5,7 @@ import { hexToUint8Array } from "@certusone/wormhole-sdk";
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 
 import { PythUpgradable__factory, PythUpgradable } from "../evm/bindings/";
-import { parseBatchPriceAttestation } from "@pythnetwork/p2w-sdk-js";
+import { parseBatchPriceAttestation } from "@pythnetwork/wormhole-attester-sdk";
 
 let WH_WASM: any = null;
 

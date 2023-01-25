@@ -58,16 +58,3 @@ repos:
         entry: cargo +nightly clippy --manifest-path ./target_chains/cosmwasm/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: target_chains/cosmwasm
-      # Hooks for p2w-sdk/rust
-      - id: cargo-fmt-p2w-sdk
-        name: Cargo format for p2w-sdk
-        language: "rust"
-        entry: cargo +nightly fmt --manifest-path ./third_party/pyth/p2w-sdk/rust/Cargo.toml --all -- --config-path rustfmt.toml
-        pass_filenames: false
-        files: third_party/pyth/p2w-sdk/rust
-      - id: cargo-clippy-p2w-sdk
-        name: Cargo clippy for p2w-sdk
-        language: "rust"
-        entry: cargo +nightly clippy --manifest-path ./third_party/pyth/p2w-sdk/rust/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
-        pass_filenames: false
-        files: third_party/pyth/p2w-sdk/rust

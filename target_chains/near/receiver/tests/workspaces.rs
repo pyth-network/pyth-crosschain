@@ -1,6 +1,6 @@
 use {
     near_sdk::json_types::U128,
-    p2w_sdk::{
+    pyth_wormhole_attester_sdk::{
         BatchPriceAttestation,
         Identifier,
         PriceAttestation,

@@ -19,7 +19,6 @@ use {
         warn,
         LevelFilter,
     },
-    p2w_sdk::P2WEmitter,
     prometheus::{
         register_histogram,
         register_int_counter,
@@ -51,6 +50,7 @@ use {
         RLMutex,
         HEALTHCHECK_STATE,
     },
+    pyth_wormhole_attester_sdk::P2WEmitter,
     sha3::{
         Digest,
         Sha3_256,
