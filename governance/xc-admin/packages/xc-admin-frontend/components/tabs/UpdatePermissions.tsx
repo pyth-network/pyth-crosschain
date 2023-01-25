@@ -139,6 +139,8 @@ const UpdatePermissions = () => {
           pubkey: securityAuthority,
         },
       ])
+    } else {
+      setData([...DEFAULT_DATA])
     }
   }, [rawConfig])
 
@@ -228,6 +230,12 @@ const UpdatePermissions = () => {
           new: newPubkey,
         },
       })
+    } else {
+      // delete account from pubkeyChanges if it exists
+      if (pubkeyChanges && pubkeyChanges[account]) {
+        delete pubkeyChanges[account]
+      }
+      setPubkeyChanges(pubkeyChanges)
     }
   }
 
