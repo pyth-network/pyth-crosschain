@@ -106,17 +106,17 @@ contract OracleSwapTest is Test {
     }
 
     function testSwap() public {
-        setupTokens(10e18, 10e18, 10e18, 10e18);
+        setupTokens(20e18, 20e18, 20e18, 20e18);
 
         doSwap(10, 1, true, 1e18);
 
-        assertEq(quoteToken.balanceOf(address(this)), 0);
-        assertEq(baseToken.balanceOf(address(this)), 11e18);
+        assertEq(quoteToken.balanceOf(address(this)), 10e18 - 1);
+        assertEq(baseToken.balanceOf(address(this)), 21e18);
 
         doSwap(10, 1, false, 1e18);
 
-        assertEq(quoteToken.balanceOf(address(this)), 10e18);
-        assertEq(baseToken.balanceOf(address(this)), 10e18);
+        assertEq(quoteToken.balanceOf(address(this)), 20e18 - 1);
+        assertEq(baseToken.balanceOf(address(this)), 20e18);
     }
 
     function testWithdraw() public {
