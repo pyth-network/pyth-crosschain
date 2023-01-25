@@ -5,6 +5,7 @@ import {
 } from '@pythnetwork/client'
 import { PythOracle } from '@pythnetwork/client/lib/anchor'
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react'
+import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
 import { TransactionInstruction } from '@solana/web3.js'
 import {
   createColumnHelper,
@@ -217,7 +218,7 @@ const MinPublishers = () => {
                 <>
                   <div
                     key={key}
-                    className="flex items-center justify-between mb-4"
+                    className="mb-4 flex items-center justify-between"
                   >
                     <span className="pr-4 text-left font-bold">{key}</span>
                     <span className="mr-2">
@@ -232,13 +233,19 @@ const MinPublishers = () => {
           <p className="mb-8 leading-6">No proposed changes.</p>
         )}
         {changes ? (
-          <button
-            className="action-btn text-base"
-            onClick={handleSendProposalButtonClick}
-            disabled={!changes}
-          >
-            {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
-          </button>
+          !connected ? (
+            <div className="flex justify-center">
+              <WalletModalButton className="action-btn text-base" />
+            </div>
+          ) : (
+            <button
+              className="action-btn text-base"
+              onClick={handleSendProposalButtonClick}
+              disabled={!changes}
+            >
+              {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
+            </button>
+          )
         ) : null}
       </>
     )

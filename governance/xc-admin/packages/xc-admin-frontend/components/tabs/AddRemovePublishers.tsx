@@ -5,6 +5,7 @@ import {
 } from '@pythnetwork/client'
 import { PythOracle } from '@pythnetwork/client/lib/anchor'
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react'
+import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
 import { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import { Fragment, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -286,13 +287,19 @@ const AddRemovePublishers = () => {
           <p className="mb-8 leading-6">No proposed changes.</p>
         )}
         {changes ? (
-          <button
-            className="action-btn text-base"
-            onClick={handleSendProposalButtonClick}
-            disabled={!changes}
-          >
-            {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
-          </button>
+          !connected ? (
+            <div className="flex justify-center">
+              <WalletModalButton className="action-btn text-base" />
+            </div>
+          ) : (
+            <button
+              className="action-btn text-base"
+              onClick={handleSendProposalButtonClick}
+              disabled={!changes}
+            >
+              {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
+            </button>
+          )
         ) : null}
       </>
     )
