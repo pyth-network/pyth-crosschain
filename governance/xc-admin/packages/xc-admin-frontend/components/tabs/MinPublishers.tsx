@@ -122,6 +122,12 @@ const MinPublishers = () => {
           new: newMinPublishers,
         },
       })
+    } else {
+      // delete symbol from minPublishersChanges if it exists
+      if (minPublishersChanges && minPublishersChanges[symbol]) {
+        delete minPublishersChanges[symbol]
+      }
+      setMinPublishersChanges(minPublishersChanges)
     }
   }
 
@@ -170,6 +176,10 @@ const MinPublishers = () => {
           .setMinPub(newMinPublishers, [0, 0, 0])
           .accounts({
             priceAccount: priceAccountPubkey,
+            fundingAccount: squads?.getAuthorityPDA(
+              SECURITY_MULTISIG[getMultisigCluster(cluster)],
+              1
+            ),
           })
           .instruction()
           .then((instruction) => instructions.push(instruction))
