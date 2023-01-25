@@ -206,7 +206,7 @@ docker_build(
 k8s_yaml_with_ns("tilt_devnet/k8s/check-attestations.yaml")
 k8s_resource(
     "check-attestations",
-    resource_deps = ["pyth-price-service", "pyth", "p2w-attest"],
+    resource_deps = ["pyth-price-server", "pyth", "p2w-attest"],
     labels = ["pyth"],
     trigger_mode = trigger_mode,
 )
@@ -237,15 +237,15 @@ k8s_resource(
     labels = ["pyth"]
 )
 
-# Pyth Price service
+# Pyth Price server
 docker_build(
-    ref = "pyth-price-service",
+    ref = "pyth-price-server",
     context = ".",
-    dockerfile = "price_service/Dockerfile.price_service",
+    dockerfile = "price_service/server/Dockerfile",
 )
-k8s_yaml_with_ns("tilt_devnet/k8s/pyth-price-service.yaml")
+k8s_yaml_with_ns("tilt_devnet/k8s/pyth-price-server.yaml")
 k8s_resource(
-    "pyth-price-service",
+    "pyth-price-server",
     resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet", "wasm-gen"],
     port_forwards = [
         port_forward(4202, container_port = 4200, name = "Rest API (Status + Query) [:4202]", host = webHost),

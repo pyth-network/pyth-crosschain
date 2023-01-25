@@ -2,7 +2,7 @@ name: Build and Push Price Service Image
 on:
   push:
     tags:
-      - pyth-price-service-v*
+      - pyth-price-server-v*
   workflow_dispatch:
     inputs:
       dispatch_description:
@@ -13,18 +13,18 @@ permissions:
   contents: read
   id-token: write
 jobs:
-  price-service-image:
+  price-server-image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set image tag to version of the git tag
-        if: ${{ startsWith(github.ref, 'refs/tags/pyth-price-service-v') }}
+        if: ${{ startsWith(github.ref, 'refs/tags/pyth-price-server-v') }}
         run: |
-          PREFIX="refs/tags/pyth-price-service-"
+          PREFIX="refs/tags/pyth-price-server-"
           VERSION="${GITHUB_REF:${#PREFIX}}"
           echo "IMAGE_TAG=${VERSION}" >> "${GITHUB_ENV}"
       - name: Set image tag to the git commit hash
-        if: ${{ !startsWith(github.ref, 'refs/tags/pyth-price-service-v') }}
+        if: ${{ !startsWith(github.ref, 'refs/tags/pyth-price-server-v') }}
         run: |
           echo "IMAGE_TAG=${{ github.sha }}" >> "${GITHUB_ENV}"
       - uses: aws-actions/configure-aws-credentials@8a84b07f2009032ade05a88a28750d733cc30db1
@@ -38,7 +38,7 @@ jobs:
           AWS_REGION: us-east-1
       - run: |
           DOCKER_BUILDKIT=1 docker build -f tilt_devnet/docker_images/Dockerfile.wasm -o type=local,dest=. .
-          DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f price_service/Dockerfile.price_service .
+          DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f price_service/server/Dockerfile .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         env:
           ECR_REGISTRY: public.ecr.aws
