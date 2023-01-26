@@ -8,11 +8,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: governance/xc-admin/
     steps:
       - uses: actions/checkout@v2
       - name: Run xc-admin tests
         run: |
-          npm ci && npm run test
+          npm ci && npx lerna run test --scope "xc-admin-*"

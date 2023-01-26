@@ -5,7 +5,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   SYSVAR_CLOCK_PUBKEY,
 } from "@solana/web3.js";
-import { program } from "commander";
+import program from "commander";
 import { PythCluster } from "@pythnetwork/client/lib/cluster";
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
 import { AnchorError, AnchorProvider, Program } from "@coral-xyz/anchor";
@@ -150,4 +150,4 @@ mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
     await proposeInstructions(squad, vault, [proposalInstruction], false);
   });
 
-program.parse();
+program.parse(process.argv);

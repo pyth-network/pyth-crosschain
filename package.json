@@ -1,0 +1,9 @@
+{
+  "name": "root",
+  "workspaces": [
+    "governance/xc-admin/packages/*"
+  ],
+  "devDependencies": {
+    "lerna": "^6.4.1"
+  }
+}
