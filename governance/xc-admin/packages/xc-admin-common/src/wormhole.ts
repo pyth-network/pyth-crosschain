@@ -10,6 +10,7 @@ export const WORMHOLE_ADDRESS: Record<PythCluster, PublicKey | undefined> = {
   testnet: undefined,
 };
 
+// Source : https://book.wormhole.com/reference/rpcnodes.html
 export const WORMHOLE_API_ENDPOINT: Record<PythCluster, string | undefined> = {
   "mainnet-beta": "https://wormhole-v2-mainnet-api.certus.one",
   pythtest: "https://wormhole-v2-testnet-api.certus.one",
