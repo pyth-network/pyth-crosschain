@@ -79,7 +79,8 @@ const AddRemovePublishers = () => {
   // function to download json file
   const handleDownloadJsonButtonClick = () => {
     const dataStr =
-      'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data))
+      'data:text/json;charset=utf-8,' +
+      encodeURIComponent(JSON.stringify(data, null, 2))
     const downloadAnchor = document.createElement('a')
     downloadAnchor.setAttribute('href', dataStr)
     downloadAnchor.setAttribute('download', 'data.json')
@@ -174,7 +175,7 @@ const AddRemovePublishers = () => {
                 SECURITY_MULTISIG[getMultisigCluster(cluster)],
                 1
               ),
-              priceAccount: PublicKey.unique(),
+              priceAccount: new PublicKey(priceAccountKey),
             })
             .instruction()
             .then((instruction) => instructions.push(instruction))
@@ -188,7 +189,7 @@ const AddRemovePublishers = () => {
                 SECURITY_MULTISIG[getMultisigCluster(cluster)],
                 1
               ),
-              priceAccount: PublicKey.unique(),
+              priceAccount: new PublicKey(priceAccountKey),
             })
             .instruction()
             .then((instruction) => instructions.push(instruction))
