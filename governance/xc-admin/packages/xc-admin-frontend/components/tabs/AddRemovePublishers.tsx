@@ -80,8 +80,7 @@ const AddRemovePublishers = () => {
       symbolToPublisherKeysMapping = JSON.parse(
         JSON.stringify(
           symbolToPublisherKeysMapping,
-          Object.keys(symbolToPublisherKeysMapping).sort(),
-          2
+          Object.keys(symbolToPublisherKeysMapping).sort()
         )
       )
       // sort symbolToPublisherKeysMapping by publisher keys
