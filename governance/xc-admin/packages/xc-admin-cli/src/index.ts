@@ -134,7 +134,11 @@ mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
     const buffer: PublicKey = new PublicKey(options.buffer);
     const vault: PublicKey = new PublicKey(options.vault);
 
-    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
+    const isRemote = isRemoteCluster(cluster);
+    const squad = SquadsMesh.endpoint(
+      getPythClusterApiUrl(getMultisigCluster(cluster)),
+      wallet
+    );
     const msAccount = await squad.getMultisig(vault);
     const vaultAuthority = squad.getAuthorityPDA(
       msAccount.publicKey,
@@ -158,11 +162,17 @@ mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
         { pubkey: wallet.publicKey, isSigner: false, isWritable: true },
         { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
         { pubkey: SYSVAR_CLOCK_PUBKEY, isSigner: false, isWritable: false },
-        { pubkey: vaultAuthority, isSigner: true, isWritable: false },
+        { pubkey: mapKey(vaultAuthority), isSigner: true, isWritable: false },
       ],
     };
 
-    await proposeInstructions(squad, vault, [proposalInstruction], false);
+    await proposeInstructions(
+      squad,
+      vault,
+      [proposalInstruction],
+      isRemote,
+      WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
+    );
   });
 
 program
