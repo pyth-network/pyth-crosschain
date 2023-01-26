@@ -50,7 +50,7 @@ const KEYPAIR: Keypair = Keypair.fromSecretKey(
 
 async function run() {
   const provider = new AnchorProvider(
-    new Connection("http://v1.pythtest.xyz.pyth.network:8899", COMMITMENT),
+    new Connection(getPythClusterApiUrl(CLUSTER), COMMITMENT),
     new NodeWallet(KEYPAIR),
     {
       commitment: COMMITMENT,
