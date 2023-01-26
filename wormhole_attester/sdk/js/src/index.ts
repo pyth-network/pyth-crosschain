@@ -1,20 +1,4 @@
-import { getSignedVAA, CHAIN_ID_SOLANA } from "@certusone/wormhole-sdk";
-import { zeroPad } from "ethers/lib/utils";
-import { PublicKey } from "@solana/web3.js";
 import { PriceFeed, Price, UnixTimestamp } from "@pythnetwork/pyth-sdk-js";
-
-let _P2W_WASM: any;
-
-async function importWasm() {
-  if (!_P2W_WASM) {
-    if (typeof window === "undefined") {
-      _P2W_WASM = await import("./wasm/nodejs/pyth_wormhole_attester_sdk");
-    } else {
-      _P2W_WASM = await import("./wasm/bundler/pyth_wormhole_attester_sdk");
-    }
-  }
-  return _P2W_WASM;
-}
 
 export type PriceAttestation = {
   productId: string;
@@ -38,13 +22,149 @@ export type BatchPriceAttestation = {
   priceAttestations: PriceAttestation[];
 };
 
-export async function parseBatchPriceAttestation(
-  arr: Buffer
-): Promise<BatchPriceAttestation> {
-  const wasm = await importWasm();
-  const rawVal = await wasm.parse_batch_attestation(arr);
+/// Precedes every message implementing the wormhole attester serialization format
+const P2W_FORMAT_MAGIC: string = "P2WH";
+const P2W_FORMAT_VER_MAJOR = 3;
+const P2W_FORMAT_VER_MINOR = 0;
+const P2W_FORMAT_PAYLOAD_ID = 2;
 
-  return rawVal;
+export function parsePriceAttestation(bytes: Buffer): PriceAttestation {
+  let offset = 0;
+
+  const productId = bytes.slice(offset, offset + 32).toString("hex");
+  offset += 32;
+
+  const priceId = bytes.slice(offset, offset + 32).toString("hex");
+  offset += 32;
+
+  const price = bytes.readBigInt64BE(offset).toString();
+  offset += 8;
+
+  const conf = bytes.readBigUint64BE(offset).toString();
+  offset += 8;
+
+  const expo = bytes.readInt32BE(offset);
+  offset += 4;
+
+  const emaPrice = bytes.readBigInt64BE(offset).toString();
+  offset += 8;
+
+  const emaConf = bytes.readBigUint64BE(offset).toString();
+  offset += 8;
+
+  const status = bytes.readUint8(offset);
+  offset += 1;
+
+  const numPublishers = bytes.readUint32BE(offset);
+  offset += 4;
+
+  const maxNumPublishers = bytes.readUint32BE(offset);
+  offset += 4;
+
+  const attestationTime = Number(bytes.readBigInt64BE(offset));
+  offset += 8;
+
+  const publishTime = Number(bytes.readBigInt64BE(offset));
+  offset += 8;
+
+  const prevPublishTime = Number(bytes.readBigInt64BE(offset));
+  offset += 8;
+
+  const prevPrice = bytes.readBigInt64BE(offset).toString();
+  offset += 8;
+
+  const prevConf = bytes.readBigUint64BE(offset).toString();
+  offset += 8;
+
+  return {
+    productId,
+    priceId,
+    price,
+    conf,
+    expo,
+    emaPrice,
+    emaConf,
+    status,
+    numPublishers,
+    maxNumPublishers,
+    attestationTime,
+    publishTime,
+    prevPublishTime,
+    prevPrice,
+    prevConf,
+  };
+}
+
+// Read the sdk/rust as the reference implementation and documentation.
+export function parseBatchPriceAttestation(
+  bytes: Buffer
+): BatchPriceAttestation {
+  let offset = 0;
+
+  const magic = bytes.slice(offset, offset + 4).toString("utf8");
+  offset += 4;
+  if (magic !== P2W_FORMAT_MAGIC) {
+    throw new Error(`Invalid magic: ${magic}, expected: ${P2W_FORMAT_MAGIC}`);
+  }
+
+  const versionMajor = bytes.readUInt16BE(offset);
+  offset += 2;
+  if (versionMajor !== P2W_FORMAT_VER_MAJOR) {
+    throw new Error(
+      `Unsupported major version: ${versionMajor}, expected: ${P2W_FORMAT_VER_MAJOR}`
+    );
+  }
+
+  const versionMinor = bytes.readUInt16BE(offset);
+  offset += 2;
+  if (versionMinor < P2W_FORMAT_VER_MINOR) {
+    throw new Error(
+      `Unsupported minor version: ${versionMinor}, expected: ${P2W_FORMAT_VER_MINOR}`
+    );
+  }
+
+  // Header size is added for future-compatibility
+  const headerSize = bytes.readUint16BE(offset);
+  offset += 2;
+
+  let headerOffset = 0;
+
+  const payloadId = bytes.readUint8(offset + headerOffset);
+  headerOffset += 1;
+
+  if (payloadId !== P2W_FORMAT_PAYLOAD_ID) {
+    throw new Error(
+      `Invalid payloadId: ${payloadId}, expected: ${P2W_FORMAT_PAYLOAD_ID}`
+    );
+  }
+
+  offset += headerSize;
+
+  const batchLen = bytes.readUInt16BE(offset);
+  offset += 2;
+
+  const attestationSize = bytes.readUint16BE(offset);
+  offset += 2;
+
+  let priceAttestations: PriceAttestation[] = [];
+
+  for (let i = 0; i < batchLen; i += 1) {
+    console.log(
+      parsePriceAttestation(bytes.subarray(offset, offset + attestationSize))
+    );
+    priceAttestations.push(
+      parsePriceAttestation(bytes.subarray(offset, offset + attestationSize))
+    );
+    offset += attestationSize;
+  }
+
+  if (offset !== bytes.length) {
+    throw new Error(`Invalid length: ${bytes.length}, expected: ${offset}`);
+  }
+
+  return {
+    priceAttestations,
+  };
 }
 
 // Returns a hash of all priceIds within the batch, it can be used to identify whether there is a
@@ -73,27 +193,6 @@ export function getBatchSummary(batch: BatchPriceAttestation): string {
     }),
   };
   return JSON.stringify(abstractRepresentation);
-}
-
-export async function getSignedAttestation(
-  host: string,
-  p2wAddr: string,
-  sequence: number,
-  extraGrpcOpts = {}
-): Promise<any> {
-  const [emitter, _] = await PublicKey.findProgramAddress(
-    [Buffer.from("p2w-emitter")],
-    new PublicKey(p2wAddr)
-  );
-
-  const emitterHex = sol_addr2buf(emitter).toString("hex");
-  return await getSignedVAA(
-    host,
-    CHAIN_ID_SOLANA,
-    emitterHex,
-    "" + sequence,
-    extraGrpcOpts
-  );
 }
 
 export function priceAttestationToPriceFeed(
@@ -134,8 +233,4 @@ export function priceAttestationToPriceFeed(
     id: priceAttestation.priceId,
     price,
   });
-}
-
-function sol_addr2buf(addr: PublicKey): Buffer {
-  return Buffer.from(zeroPad(addr.toBytes(), 32));
 }

@@ -1,18 +1,15 @@
 {
   "name": "@pythnetwork/wormhole-attester-sdk",
   "version": "1.0.0",
-  "description": "TypeScript library for interacting with Pyth2Wormhole",
+  "description": "Pyth Wormhole Attester SDk",
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "files": [
     "lib/**/*"
   ],
   "scripts": {
-    "build": "npm run build-lib",
-    "build-lib": "npm run copy-artifacts && tsc",
-    "build-watch": "npm run copy-artifacts && tsc --watch",
+    "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
-    "copy-artifacts": "node scripts/copyWasm.cjs",
     "lint": "tslint -p tsconfig.json",
     "postversion": "git push && git push --tags",
     "preversion": "npm run lint",
@@ -22,7 +19,7 @@
     "type": "git",
     "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
   },
-  "author": "https://certus.one",
+  "author": "Pyth Data Association",
   "license": "MIT",
   "devDependencies": {
     "@openzeppelin/contracts": "^4.2.0",

@@ -62,18 +62,6 @@ if not ci:
 def k8s_yaml_with_ns(objects):
     return k8s_yaml(namespace_inject(objects, namespace))
 
-# wasm
-
-local_resource(
-    name = "wasm-gen",
-    cmd = "tilt docker build -- -f tilt_devnet/docker_images/Dockerfile.wasm -o type=local,dest=. .",
-    env = {"DOCKER_BUILDKIT": "1"},
-    deps = "./wormhole_attester",
-    labels = ["wasm"],
-    allow_parallel=True,
-    trigger_mode = trigger_mode,
-)
-
 def build_node_yaml():
     node_yaml = read_yaml_stream("tilt_devnet/k8s/node.yaml")
 
@@ -220,7 +208,7 @@ docker_build(
 k8s_yaml_with_ns("tilt_devnet/k8s/p2w-terra-relay.yaml")
 k8s_resource(
     "p2w-terra-relay",
-    resource_deps = ["pyth", "p2w-attest", "spy", "terra-terrad", "wasm-gen"],
+    resource_deps = ["pyth", "p2w-attest", "spy", "terra-terrad"],
     port_forwards = [
         port_forward(4200, name = "Rest API (Status + Query) [:4200]", host = webHost),
         port_forward(8081, name = "Prometheus [:8081]", host = webHost)],
@@ -230,7 +218,7 @@ k8s_resource(
 k8s_yaml_with_ns("tilt_devnet/k8s/p2w-evm-relay.yaml")
 k8s_resource(
     "p2w-evm-relay",
-    resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet", "wasm-gen"],
+    resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet"],
     port_forwards = [
         port_forward(4201, container_port = 4200, name = "Rest API (Status + Query) [:4201]", host = webHost),
         port_forward(8082, container_port = 8081, name = "Prometheus [:8082]", host = webHost)],
@@ -246,7 +234,7 @@ docker_build(
 k8s_yaml_with_ns("tilt_devnet/k8s/pyth-price-server.yaml")
 k8s_resource(
     "pyth-price-server",
-    resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet", "wasm-gen"],
+    resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet"],
     port_forwards = [
         port_forward(4202, container_port = 4200, name = "Rest API (Status + Query) [:4202]", host = webHost),
         port_forward(8083, container_port = 8081, name = "Prometheus [:8083]", host = webHost)],
