@@ -5,3 +5,4 @@ export * from "./wormhole";
 export * from "./multisig_transaction";
 export * from "./cluster";
 export * from "./remote_executor";
+export * from "./bpf_upgradable_loader";

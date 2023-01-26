@@ -14,21 +14,16 @@ import fs from "fs";
 import SquadsMesh from "@sqds/mesh";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
+  BPF_UPGRADABLE_LOADER,
   getMultisigCluster,
   getProposalInstructions,
   isRemoteCluster,
   mapKey,
   MultisigParser,
+  PROGRAM_AUTHORITY_ESCROW,
   proposeInstructions,
   WORMHOLE_ADDRESS,
 } from "xc-admin-common";
-
-const PROGRAM_AUTHORITY_ESCROW = new PublicKey(
-  "escMHe7kSqPcDHx4HU44rAHhgdTLBZkUrU39aN8kMcL"
-);
-const BPF_UPGRADABLE_LOADER = new PublicKey(
-  "BPFLoaderUpgradeab1e11111111111111111111111"
-);
 
 const mutlisigCommand = (name: string, description: string) =>
   program
