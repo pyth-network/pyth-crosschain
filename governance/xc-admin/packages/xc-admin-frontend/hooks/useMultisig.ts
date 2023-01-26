@@ -8,7 +8,7 @@ import { getMultisigCluster, getProposals } from 'xc-admin-common'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 
-export const UPGRADE_MUTLTISIG: Record<Cluster | 'localnet', PublicKey> = {
+export const UPGRADE_MULTISIG: Record<Cluster | 'localnet', PublicKey> = {
   'mainnet-beta': new PublicKey('FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj'),
   testnet: new PublicKey('FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj'),
   devnet: new PublicKey('6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3'),
