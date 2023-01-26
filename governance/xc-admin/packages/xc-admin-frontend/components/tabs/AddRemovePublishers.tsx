@@ -23,7 +23,7 @@ import Modal from '../common/Modal'
 import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
 
-interface PriceAccountToPublisherKeys {
+interface SymbolToPublisherKeys {
   [key: string]: PublicKey[]
 }
 
@@ -32,8 +32,10 @@ interface PublishersInfo {
   new: string[]
 }
 
+let symbolToPriceAccountKeyMapping: Record<string, string> = {}
+
 const AddRemovePublishers = () => {
-  const [data, setData] = useState<PriceAccountToPublisherKeys>({})
+  const [data, setData] = useState<SymbolToPublisherKeys>({})
   const [publisherChanges, setPublisherChanges] =
     useState<Record<string, PublishersInfo>>()
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -59,7 +61,7 @@ const AddRemovePublishers = () => {
 
   useEffect(() => {
     if (!dataIsLoading && rawConfig) {
-      const priceAccountToPublishers: PriceAccountToPublisherKeys = {}
+      const symbolToPublisherKeysMapping: SymbolToPublisherKeys = {}
       rawConfig.mappingAccounts.map((mappingAccount) => {
         mappingAccount.products.map((product) => {
           const priceAccount = product.priceAccounts.find(
@@ -67,12 +69,14 @@ const AddRemovePublishers = () => {
               priceAccount.address.toBase58() === product.metadata.price_account
           )
           if (priceAccount) {
-            priceAccountToPublishers[priceAccount.address.toBase58()] =
+            symbolToPublisherKeysMapping[product.metadata.symbol] =
               priceAccount.publishers
+            symbolToPriceAccountKeyMapping[product.metadata.symbol] =
+              priceAccount.address.toBase58()
           }
         })
       })
-      setData(priceAccountToPublishers)
+      setData(symbolToPublisherKeysMapping)
     }
   }, [rawConfig, dataIsLoading])
 
@@ -83,7 +87,7 @@ const AddRemovePublishers = () => {
       encodeURIComponent(JSON.stringify(data, null, 2))
     const downloadAnchor = document.createElement('a')
     downloadAnchor.setAttribute('href', dataStr)
-    downloadAnchor.setAttribute('download', 'data.json')
+    downloadAnchor.setAttribute('download', 'publishers.json')
     document.body.appendChild(downloadAnchor) // required for firefox
     downloadAnchor.click()
     downloadAnchor.remove()
@@ -103,16 +107,16 @@ const AddRemovePublishers = () => {
           if (!isValidJson(fileData as string)) return
           const fileDataParsed = JSON.parse(fileData as string)
           const changes: Record<string, PublishersInfo> = {}
-          Object.keys(fileDataParsed).forEach((priceAccount) => {
+          Object.keys(fileDataParsed).forEach((symbol) => {
             if (
-              JSON.stringify(data[priceAccount]) !==
-              JSON.stringify(fileDataParsed[priceAccount])
+              JSON.stringify(data[symbol]) !==
+              JSON.stringify(fileDataParsed[symbol])
             ) {
-              changes[priceAccount] = { prev: [], new: [] }
-              changes[priceAccount].prev = data[priceAccount].map(
-                (p: PublicKey) => p.toBase58()
+              changes[symbol] = { prev: [], new: [] }
+              changes[symbol].prev = data[symbol].map((p: PublicKey) =>
+                p.toBase58()
               )
-              changes[priceAccount].new = fileDataParsed[priceAccount]
+              changes[symbol].new = fileDataParsed[symbol]
             }
           })
           setPublisherChanges(changes)
@@ -134,18 +138,16 @@ const AddRemovePublishers = () => {
       toast.error(capitalizeFirstLetter(e.message))
       return false
     }
-    // check if json keys are valid existing price accounts
+    // check if json keys are existing products
     const jsonParsed = JSON.parse(json)
-    const jsonPriceAccounts = Object.keys(jsonParsed)
-    const existingPriceAccounts = Object.keys(data)
-    // check that jsonPriceAccounts is equal to existingPriceAccounts no matter the order
+    const jsonSymbols = Object.keys(jsonParsed)
+    const existingSymbols = Object.keys(data)
+    // check that jsonSymbols is equal to existingSymbols no matter the order
     if (
-      JSON.stringify(jsonPriceAccounts.sort()) !==
-      JSON.stringify(existingPriceAccounts.sort())
+      JSON.stringify(jsonSymbols.sort()) !==
+      JSON.stringify(existingSymbols.sort())
     ) {
-      toast.error(
-        'Price accounts in json file do not match existing price accounts!'
-      )
+      toast.error('Symbols in json file do not match existing symbols!')
       return false
     }
     return true
@@ -154,9 +156,8 @@ const AddRemovePublishers = () => {
   const handleSendProposalButtonClick = async () => {
     if (pythProgramClient && publisherChanges) {
       const instructions: TransactionInstruction[] = []
-      Object.keys(publisherChanges).forEach((priceAccountKey) => {
-        const { prev, new: newPublisherKeys } =
-          publisherChanges[priceAccountKey]
+      Object.keys(publisherChanges).forEach((symbol) => {
+        const { prev, new: newPublisherKeys } = publisherChanges[symbol]
         // prev and new are arrays of publisher pubkeys
         // check if there are any new publishers by comparing prev and new
         const publisherKeysToAdd = newPublisherKeys.filter(
@@ -175,7 +176,9 @@ const AddRemovePublishers = () => {
                 SECURITY_MULTISIG[getMultisigCluster(cluster)],
                 1
               ),
-              priceAccount: new PublicKey(priceAccountKey),
+              priceAccount: new PublicKey(
+                symbolToPriceAccountKeyMapping[symbol]
+              ),
             })
             .instruction()
             .then((instruction) => instructions.push(instruction))
@@ -189,7 +192,9 @@ const AddRemovePublishers = () => {
                 SECURITY_MULTISIG[getMultisigCluster(cluster)],
                 1
               ),
-              priceAccount: new PublicKey(priceAccountKey),
+              priceAccount: new PublicKey(
+                symbolToPriceAccountKeyMapping[symbol]
+              ),
             })
             .instruction()
             .then((instruction) => instructions.push(instruction))
@@ -243,9 +248,7 @@ const AddRemovePublishers = () => {
                   <tbody>
                     <Fragment key={key}>
                       <tr>
-                        <td className="py-3 pl-6 pr-1 lg:pl-14">
-                          Price Account
-                        </td>
+                        <td className="py-3 pl-6 pr-1 lg:pl-14">Product</td>
                         <td className="py-3 pl-1 pr-8 lg:pl-14">{key}</td>
                       </tr>
                       {publisherKeysToAdd.length > 0 && (
