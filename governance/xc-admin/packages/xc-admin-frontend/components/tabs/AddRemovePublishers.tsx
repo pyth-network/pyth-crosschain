@@ -85,8 +85,10 @@ const AddRemovePublishers = () => {
       )
       // sort symbolToPublisherKeysMapping by publisher keys
       Object.keys(symbolToPublisherKeysMapping).forEach((key) => {
-        symbolToPublisherKeysMapping[key] =
-          symbolToPublisherKeysMapping[key].sort()
+        // sort publisher keys and make them each of type PublicKey because JSON.stringify makes them of type string
+        symbolToPublisherKeysMapping[key] = symbolToPublisherKeysMapping[key]
+          .sort()
+          .map((publisherKey) => new PublicKey(publisherKey))
       })
       setData(symbolToPublisherKeysMapping)
     }
