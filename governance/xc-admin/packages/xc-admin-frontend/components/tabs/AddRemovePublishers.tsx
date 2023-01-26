@@ -76,6 +76,13 @@ const AddRemovePublishers = () => {
           }
         })
       })
+      // sort symbolToPublisherKeysMapping by symbol
+      Object.keys(symbolToPublisherKeysMapping)
+        .sort()
+        .forEach((key) => {
+          symbolToPublisherKeysMapping[key] =
+            symbolToPublisherKeysMapping[key].sort()
+        })
       setData(symbolToPublisherKeysMapping)
     }
   }, [rawConfig, dataIsLoading])
