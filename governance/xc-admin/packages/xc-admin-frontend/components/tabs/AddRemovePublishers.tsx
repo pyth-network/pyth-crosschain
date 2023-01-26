@@ -76,23 +76,27 @@ const AddRemovePublishers = () => {
           }
         })
       })
-      // sort symbolToPublisherKeysMapping by symbol
-      symbolToPublisherKeysMapping = JSON.parse(
-        JSON.stringify(
-          symbolToPublisherKeysMapping,
-          Object.keys(symbolToPublisherKeysMapping).sort()
-        )
-      )
-      // sort symbolToPublisherKeysMapping by publisher keys
-      Object.keys(symbolToPublisherKeysMapping).forEach((key) => {
-        // sort publisher keys and make them each of type PublicKey because JSON.stringify makes them of type string
-        symbolToPublisherKeysMapping[key] = symbolToPublisherKeysMapping[key]
-          .sort()
-          .map((publisherKey) => new PublicKey(publisherKey))
-      })
+      symbolToPublisherKeysMapping = sortData(symbolToPublisherKeysMapping)
       setData(symbolToPublisherKeysMapping)
     }
   }, [rawConfig, dataIsLoading])
+
+  const sortData = (data: SymbolToPublisherKeys) => {
+    let sortedSymbolToPublisherKeysMapping: SymbolToPublisherKeys = {}
+    // sort symbolToPublisherKeysMapping by symbol
+    sortedSymbolToPublisherKeysMapping = JSON.parse(
+      JSON.stringify(data, Object.keys(data).sort())
+    )
+    // sort symbolToPublisherKeysMapping by publisher keys
+    Object.keys(sortedSymbolToPublisherKeysMapping).forEach((key) => {
+      // sort publisher keys and make them each of type PublicKey because JSON.stringify makes them of type string
+      sortedSymbolToPublisherKeysMapping[key] =
+        sortedSymbolToPublisherKeysMapping[key]
+          .sort()
+          .map((publisherKey) => new PublicKey(publisherKey))
+    })
+    return sortedSymbolToPublisherKeysMapping
+  }
 
   // function to download json file
   const handleDownloadJsonButtonClick = () => {
@@ -119,7 +123,7 @@ const AddRemovePublishers = () => {
         if (e.target) {
           const fileData = e.target.result
           if (!isValidJson(fileData as string)) return
-          const fileDataParsed = JSON.parse(fileData as string)
+          const fileDataParsed = sortData(JSON.parse(fileData as string))
           const changes: Record<string, PublishersInfo> = {}
           Object.keys(fileDataParsed).forEach((symbol) => {
             if (
@@ -130,7 +134,9 @@ const AddRemovePublishers = () => {
               changes[symbol].prev = data[symbol].map((p: PublicKey) =>
                 p.toBase58()
               )
-              changes[symbol].new = fileDataParsed[symbol]
+              changes[symbol].new = fileDataParsed[symbol].map((p: PublicKey) =>
+                p.toBase58()
+              )
             }
           })
           setPublisherChanges(changes)
@@ -236,41 +242,41 @@ const AddRemovePublishers = () => {
   const ModalContent = ({ changes }: { changes: any }) => {
     return (
       <>
-        {changes ? (
-          Object.keys(changes).map((key) => {
-            const publisherKeysToAdd = changes[key].new.filter(
-              (newPublisher: string) =>
-                !changes[key].prev.includes(newPublisher)
-            )
-            const publisherKeysToRemove = changes[key].prev.filter(
-              (prevPublisher: string) =>
-                !changes[key].new.includes(prevPublisher)
-            )
-            return (
-              changes[key].prev !== changes[key].new && (
-                <table className="mb-4 w-full table-auto bg-darkGray text-left">
-                  <thead>
-                    <tr>
-                      <th className="base16 py-8 pl-6 pr-2 font-semibold lg:pl-14">
-                        Description
-                      </th>
-                      <th className="base16 py-8 pl-1 pr-2 font-semibold lg:pl-14">
-                        ID
-                      </th>
-                    </tr>
-                  </thead>
+        {Object.keys(changes).length > 0 ? (
+          <table className="mb-10 w-full table-auto bg-darkGray text-left">
+            <thead>
+              <tr>
+                <th className="base16 py-8 pl-6 pr-2 font-semibold lg:pl-6">
+                  Description
+                </th>
+                <th className="base16 py-8 pl-1 pr-2 font-semibold lg:pl-6">
+                  ID
+                </th>
+              </tr>
+            </thead>
+            {Object.keys(changes).map((key) => {
+              const publisherKeysToAdd = changes[key].new.filter(
+                (newPublisher: string) =>
+                  !changes[key].prev.includes(newPublisher)
+              )
+              const publisherKeysToRemove = changes[key].prev.filter(
+                (prevPublisher: string) =>
+                  !changes[key].new.includes(prevPublisher)
+              )
+              return (
+                changes[key].prev !== changes[key].new && (
                   <tbody>
                     <Fragment key={key}>
                       <tr>
-                        <td className="py-3 pl-6 pr-1 lg:pl-14">Product</td>
-                        <td className="py-3 pl-1 pr-8 lg:pl-14">{key}</td>
+                        <td className="py-3 pl-6 pr-1 lg:pl-6">Product</td>
+                        <td className="py-3 pl-1 pr-8 lg:pl-6">{key}</td>
                       </tr>
                       {publisherKeysToAdd.length > 0 && (
                         <tr>
-                          <td className="py-3 pl-6 pr-1 lg:pl-14">
+                          <td className="py-3 pl-6 pr-1 lg:pl-6">
                             Add Publisher(s)
                           </td>
-                          <td className="py-3 pl-1 pr-8 lg:pl-14">
+                          <td className="py-3 pl-1 pr-8 lg:pl-6">
                             {publisherKeysToAdd.map((publisherKey: string) => (
                               <span key={publisherKey} className="block">
                                 {publisherKey}
@@ -281,10 +287,10 @@ const AddRemovePublishers = () => {
                       )}
                       {publisherKeysToRemove.length > 0 && (
                         <tr>
-                          <td className="py-3 pl-6 pr-1 lg:pl-14">
+                          <td className="py-3 pl-6 pr-1 lg:pl-6">
                             Remove Publisher(s)
                           </td>
-                          <td className="py-3 pl-1 pr-8 lg:pl-14">
+                          <td className="py-3 pl-1 pr-8 lg:pl-6">
                             {publisherKeysToRemove.map(
                               (publisherKey: string) => (
                                 <span key={publisherKey} className="block">
@@ -297,14 +303,14 @@ const AddRemovePublishers = () => {
                       )}
                     </Fragment>
                   </tbody>
-                </table>
+                )
               )
-            )
-          })
+            })}
+          </table>
         ) : (
           <p className="mb-8 leading-6">No proposed changes.</p>
         )}
-        {changes ? (
+        {Object.keys(changes).length > 0 ? (
           !connected ? (
             <div className="flex justify-center">
               <WalletModalButton className="action-btn text-base" />
@@ -313,7 +319,6 @@ const AddRemovePublishers = () => {
             <button
               className="action-btn text-base"
               onClick={handleSendProposalButtonClick}
-              disabled={!changes}
             >
               {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
             </button>

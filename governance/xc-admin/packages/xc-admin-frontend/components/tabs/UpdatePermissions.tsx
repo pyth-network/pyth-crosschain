@@ -287,28 +287,30 @@ const UpdatePermissions = () => {
   const ModalContent = ({ changes }: { changes: any }) => {
     return (
       <>
-        {changes ? (
-          Object.keys(changes).map((key) => {
-            return (
-              changes[key].prev !== changes[key].new && (
-                <>
-                  <div
-                    key={key}
-                    className="mb-4 flex items-center justify-between"
-                  >
-                    <span className="pr-4 text-left font-bold">{key}</span>
-                    <span className="mr-2">
-                      {changes[key].prev} &rarr; {changes[key].new}
-                    </span>
-                  </div>
-                </>
+        {Object.keys(changes).length > 0 ? (
+          <div className="mb-10">
+            {Object.keys(changes).map((key) => {
+              return (
+                changes[key].prev !== changes[key].new && (
+                  <>
+                    <div
+                      key={key}
+                      className="mb-4 flex items-center justify-between"
+                    >
+                      <span className="pr-4 text-left font-bold">{key}</span>
+                      <span className="mr-2">
+                        {changes[key].prev} &rarr; {changes[key].new}
+                      </span>
+                    </div>
+                  </>
+                )
               )
-            )
-          })
+            })}
+          </div>
         ) : (
           <p className="mb-8 leading-6">No proposed changes.</p>
         )}
-        {changes ? (
+        {Object.keys(changes).length > 0 ? (
           !connected ? (
             <div className="flex justify-center">
               <WalletModalButton className="action-btn text-base" />
@@ -317,7 +319,6 @@ const UpdatePermissions = () => {
             <button
               className="action-btn text-base"
               onClick={handleSendProposalButtonClick}
-              disabled={!changes}
             >
               {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
             </button>
