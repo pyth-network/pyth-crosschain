@@ -3,6 +3,7 @@ import type { NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Layout from '../components/layout/Layout'
+import AddRemovePublishers from '../components/tabs/AddRemovePublishers'
 import MinPublishers from '../components/tabs/MinPublishers'
 import UpdatePermissions from '../components/tabs/UpdatePermissions'
 import { PythContextProvider } from '../contexts/PythContext'
@@ -19,6 +20,11 @@ const TAB_INFO = {
     title: 'Update Permissions',
     description: 'Update the permissions of the program.',
     queryString: 'update-permissions',
+  },
+  AddRemovePublishers: {
+    title: 'Add/Remove Publishers',
+    description: 'Add or remove publishers from price feeds.',
+    queryString: 'add-remove-publishers',
   },
 }
 
@@ -58,13 +64,13 @@ const Home: NextPage = () => {
   return (
     <Layout>
       <PythContextProvider>
-        <div className="relative pt-16 md:pt-20">
+        <div className="container relative pt-16 md:pt-20">
           <div className="py-8 md:py-16">
             <Tab.Group
               selectedIndex={currentTabIndex}
               onChange={handleChangeTab}
             >
-              <Tab.List className="mx-auto max-w-[526px] gap-1 space-x-4 text-center sm:gap-2.5 md:space-x-8">
+              <Tab.List className="mx-auto gap-1 space-x-4 text-center sm:gap-2.5 md:space-x-8">
                 {Object.entries(TAB_INFO).map((tab, idx) => (
                   <Tab
                     key={idx}
@@ -91,6 +97,9 @@ const Home: NextPage = () => {
         ) : tabInfoArray[currentTabIndex].queryString ===
           TAB_INFO.UpdatePermissions.queryString ? (
           <UpdatePermissions />
+        ) : tabInfoArray[currentTabIndex].queryString ===
+          TAB_INFO.AddRemovePublishers.queryString ? (
+          <AddRemovePublishers />
         ) : null}
       </PythContextProvider>
     </Layout>
