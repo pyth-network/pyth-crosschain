@@ -61,7 +61,7 @@ const AddRemovePublishers = () => {
 
   useEffect(() => {
     if (!dataIsLoading && rawConfig) {
-      const symbolToPublisherKeysMapping: SymbolToPublisherKeys = {}
+      let symbolToPublisherKeysMapping: SymbolToPublisherKeys = {}
       rawConfig.mappingAccounts.map((mappingAccount) => {
         mappingAccount.products.map((product) => {
           const priceAccount = product.priceAccounts.find(
@@ -77,12 +77,18 @@ const AddRemovePublishers = () => {
         })
       })
       // sort symbolToPublisherKeysMapping by symbol
-      Object.keys(symbolToPublisherKeysMapping)
-        .sort()
-        .forEach((key) => {
-          symbolToPublisherKeysMapping[key] =
-            symbolToPublisherKeysMapping[key].sort()
-        })
+      symbolToPublisherKeysMapping = JSON.parse(
+        JSON.stringify(
+          symbolToPublisherKeysMapping,
+          Object.keys(symbolToPublisherKeysMapping).sort(),
+          2
+        )
+      )
+      // sort symbolToPublisherKeysMapping by publisher keys
+      Object.keys(symbolToPublisherKeysMapping).forEach((key) => {
+        symbolToPublisherKeysMapping[key] =
+          symbolToPublisherKeysMapping[key].sort()
+      })
       setData(symbolToPublisherKeysMapping)
     }
   }, [rawConfig, dataIsLoading])
