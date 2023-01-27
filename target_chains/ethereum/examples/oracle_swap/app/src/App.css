@@ -1,39 +1,67 @@
 .App {
   text-align: left;
+  display: flex;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
+.control-panel {
+  flex: 1;
   background-color: #282c34;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: left;
-  float: left;
   justify-content: flex-start;
   color: white;
   padding: 5px;
+}
+
+.App-main {
+  flex: 1;
 }
 
 .App-link {
   color: #61dafb;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.tab-header {
+  display: flex;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.tab-item.active {
+  background-color: #ddd;
+}
+
+.tab-content {
+  padding: 10px;
+}
+
+.icon-container {
+  display: inline-block;
+  position: relative;
+}
+
+.tooltip {
+  position: absolute;
+  top: 5px; /* adjust as needed */
+  left: 30px; /* adjust as needed */
+  background-color: #333;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 3px;
+  font-size: 12px;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.3s ease-in-out;
+  width: 200px;
+}
+
+.icon-container:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
 }
