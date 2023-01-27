@@ -76,6 +76,8 @@ contract OracleSwap {
         // We need to round this result in favor of the contract.
         uint256 quoteSize = (size * basePrice) / quotePrice;
 
+        // TODO: use confidence interval
+
         if (isBuy) {
             // (Round up)
             quoteSize += 1;

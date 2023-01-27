@@ -7,7 +7,7 @@ import {
   HexString,
 } from "@pythnetwork/pyth-evm-js";
 import IPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
-import OracleSwapAbi from "./OracleSwapAbi.json";
+import OracleSwapAbi from "./abi/OracleSwapAbi.json";
 import ERC20Abi from "./ERC20Abi.json";
 import { useMetaMask } from "metamask-react";
 import Web3 from "web3";
@@ -196,81 +196,96 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <div style={{ float: "right", border: "1px solid white" }}>
-          <label>
-            Your address: <br /> {account}
-          </label>
-          <button
-            onClick={async () => {
-              connect();
-            }}
-            disabled={status === "connected"}
-          >
-            {" "}
-            Connect Wallet{" "}
-          </button>
-        </div>
+        <h3>Control Panel</h3>
 
-        <p>
-          Swap between {CONFIG.baseToken.name} and {CONFIG.quoteToken.name}
-        </p>
-        <PriceText price={pythOffChainPrice} currentTime={time} />
         <div>
-          <label>
-            Order size:
-            <input
-              type="text"
-              name="base"
-              value={qty}
-              onChange={(event) => {
-                setQty(event.target.value);
+          {status === "connected" ? (
+            <label>
+              Connected Wallet: <br /> {account}
+            </label>
+          ) : (
+            <button
+              onClick={async () => {
+                connect();
               }}
-            />
-            {CONFIG.baseToken.name}
-          </label>
+            >
+              {" "}
+              Connect Wallet{" "}
+            </button>
+          )}
         </div>
 
         <div>
-          <button
-            onClick={async () => {
-              await authorizeTokens(
-                web3!,
-                CONFIG.quoteToken.erc20Address,
-                account!
-              );
-              await authorizeTokens(
-                web3!,
-                CONFIG.baseToken.erc20Address,
-                account!
-              );
-            }}
-            disabled={status !== "connected" || !pythOffChainPrice}
-          >
-            {" "}
-            Authorize ERC20 Transfers{" "}
-          </button>{" "}
-          <button
-            onClick={async () => {
-              await sendSwapTx(web3!, account!, qty, true);
-            }}
-            disabled={status !== "connected" || !pythOffChainPrice}
-          >
-            {" "}
-            Buy{" "}
-          </button>{" "}
-          <button
-            onClick={async () => {
-              await sendSwapTx(web3!, account!, qty, false);
-            }}
-            disabled={status !== "connected" || !pythOffChainPrice}
-          >
-            {" "}
-            Sell{" "}
-          </button>{" "}
+          <h3>Wallet Balances</h3>
+          <p>
+            0 BRL <button>Mint 100</button>
+          </p>
+          <p>
+            0 USDC <button>Mint 100</button>
+          </p>
         </div>
 
+        <h3>AMM Balances</h3>
         <PoolStatistics web3={web3} />
       </header>
+
+      <p>
+        Swap between {CONFIG.baseToken.name} and {CONFIG.quoteToken.name}
+      </p>
+      <PriceText price={pythOffChainPrice} currentTime={time} />
+      <div>
+        <label>
+          Order size:
+          <input
+            type="text"
+            name="base"
+            value={qty}
+            onChange={(event) => {
+              setQty(event.target.value);
+            }}
+          />
+          {CONFIG.baseToken.name}
+        </label>
+      </div>
+
+      <div>
+        <button
+          onClick={async () => {
+            await authorizeTokens(
+              web3!,
+              CONFIG.quoteToken.erc20Address,
+              account!
+            );
+            await authorizeTokens(
+              web3!,
+              CONFIG.baseToken.erc20Address,
+              account!
+            );
+          }}
+          disabled={status !== "connected" || !pythOffChainPrice}
+        >
+          {" "}
+          Authorize ERC20 Transfers{" "}
+        </button>{" "}
+        <button
+          onClick={async () => {
+            await sendSwapTx(web3!, account!, qty, true);
+          }}
+          disabled={status !== "connected" || !pythOffChainPrice}
+        >
+          {" "}
+          Buy{" "}
+        </button>{" "}
+        <button
+          onClick={async () => {
+            await sendSwapTx(web3!, account!, qty, false);
+          }}
+          disabled={status !== "connected" || !pythOffChainPrice}
+        >
+          {" "}
+          Sell{" "}
+        </button>{" "}
+      </div>
     </div>
   );
 }
