@@ -4,22 +4,26 @@ import {
   TransactionInstruction,
   SYSVAR_RENT_PUBKEY,
   SYSVAR_CLOCK_PUBKEY,
+  AccountMeta,
 } from "@solana/web3.js";
 import { program } from "commander";
 import { PythCluster } from "@pythnetwork/client/lib/cluster";
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
-import { AnchorError, AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import fs from "fs";
 import SquadsMesh from "@sqds/mesh";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { proposeInstructions } from "xc-admin-common";
-
-const PROGRAM_AUTHORITY_ESCROW = new PublicKey(
-  "escMHe7kSqPcDHx4HU44rAHhgdTLBZkUrU39aN8kMcL"
-);
-const BPF_UPGRADABLE_LOADER = new PublicKey(
-  "BPFLoaderUpgradeab1e11111111111111111111111"
-);
+import {
+  BPF_UPGRADABLE_LOADER,
+  getMultisigCluster,
+  getProposalInstructions,
+  isRemoteCluster,
+  mapKey,
+  MultisigParser,
+  PROGRAM_AUTHORITY_ESCROW,
+  proposeInstructions,
+  WORMHOLE_ADDRESS,
+} from "xc-admin-common";
 
 const mutlisigCommand = (name: string, description: string) =>
   program
@@ -58,7 +62,11 @@ mutlisigCommand(
     const current: PublicKey = new PublicKey(options.current);
     const vault: PublicKey = new PublicKey(options.vault);
 
-    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
+    const isRemote = isRemoteCluster(cluster);
+    const squad = SquadsMesh.endpoint(
+      getPythClusterApiUrl(getMultisigCluster(cluster)),
+      wallet
+    );
     const msAccount = await squad.getMultisig(vault);
     const vaultAuthority = squad.getAuthorityPDA(
       msAccount.publicKey,
@@ -73,6 +81,7 @@ mutlisigCommand(
         AnchorProvider.defaultOptions()
       )
     );
+
     const programAuthorityEscrow = new Program(
       programAuthorityEscrowIdl!,
       PROGRAM_AUTHORITY_ESCROW,
@@ -91,14 +100,20 @@ mutlisigCommand(
       .accept()
       .accounts({
         currentAuthority: current,
-        newAuthority: vaultAuthority,
+        newAuthority: mapKey(vaultAuthority),
         programAccount: programId,
         programDataAccount,
         bpfUpgradableLoader: BPF_UPGRADABLE_LOADER,
       })
       .instruction();
 
-    await proposeInstructions(squad, vault, [proposalInstruction], false);
+    await proposeInstructions(
+      squad,
+      vault,
+      [proposalInstruction],
+      isRemote,
+      WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
+    );
   });
 
 mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
@@ -148,6 +163,33 @@ mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
     };
 
     await proposeInstructions(squad, vault, [proposalInstruction], false);
+  });
+
+program
+  .command("parse-transaction")
+  .description("Parse a transaction sitting in the multisig")
+  .requiredOption("-c, --cluster <network>", "solana cluster to use")
+  .requiredOption("-t, --transaction <pubkey>", "path to the operations key")
+  .action(async (options: any) => {
+    const cluster = options.cluster;
+    const transaction: PublicKey = new PublicKey(options.transaction);
+    const squad = SquadsMesh.endpoint(
+      getPythClusterApiUrl(cluster),
+      new NodeWallet(new Keypair())
+    );
+    const onChainInstructions = await getProposalInstructions(
+      squad,
+      await squad.getTransaction(new PublicKey(transaction))
+    );
+    const parser = MultisigParser.fromCluster(cluster);
+    const parsed = onChainInstructions.map((ix) =>
+      parser.parseInstruction({
+        programId: ix.programId,
+        data: ix.data as Buffer,
+        keys: ix.keys as AccountMeta[],
+      })
+    );
+    console.log(JSON.stringify(parsed, null, 2));
   });
 
 program.parse();

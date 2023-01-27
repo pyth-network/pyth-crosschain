@@ -16,14 +16,14 @@ import {
 import copy from 'copy-to-clipboard'
 import { useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { proposeInstructions } from 'xc-admin-common'
+import {
+  proposeInstructions,
+  getMultisigCluster,
+  BPF_UPGRADABLE_LOADER,
+} from 'xc-admin-common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
-import {
-  getMultisigCluster,
-  UPGRADE_MULTISIG,
-  useMultisig,
-} from '../../hooks/useMultisig'
+import { UPGRADE_MULTISIG, useMultisig } from '../../hooks/useMultisig'
 import CopyIcon from '../../images/icons/copy.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
@@ -52,10 +52,6 @@ const DEFAULT_DATA: UpdatePermissionsProps[] = [
     pubkey: new PublicKey(0).toBase58(),
   },
 ]
-
-const BPF_UPGRADABLE_LOADER = new PublicKey(
-  'BPFLoaderUpgradeab1e11111111111111111111111'
-)
 
 const columnHelper = createColumnHelper<UpdatePermissionsProps>()
 
