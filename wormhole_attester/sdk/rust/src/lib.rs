@@ -34,14 +34,6 @@ use {
     },
 };
 
-#[cfg(feature = "wasm")]
-#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-pub mod wasm;
-
-#[cfg(feature = "wasm")]
-#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-use wasm_bindgen::prelude::*;
-
 pub type ErrBox = Box<dyn std::error::Error>;
 
 /// Precedes every message implementing the p2w serialization format

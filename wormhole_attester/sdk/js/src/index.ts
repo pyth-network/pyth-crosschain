@@ -149,9 +149,6 @@ export function parseBatchPriceAttestation(
   let priceAttestations: PriceAttestation[] = [];
 
   for (let i = 0; i < batchLen; i += 1) {
-    console.log(
-      parsePriceAttestation(bytes.subarray(offset, offset + attestationSize))
-    );
     priceAttestations.push(
       parsePriceAttestation(bytes.subarray(offset, offset + attestationSize))
     );
