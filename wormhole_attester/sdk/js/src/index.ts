@@ -1,4 +1,12 @@
 import { PriceFeed, Price, UnixTimestamp } from "@pythnetwork/pyth-sdk-js";
+export { PriceFeed, Price, UnixTimestamp } from "@pythnetwork/pyth-sdk-js";
+
+export enum PriceAttestationStatus {
+  Unknown = 0,
+  Trading = 1,
+  Halted = 2,
+  Auction = 3,
+}
 
 export type PriceAttestation = {
   productId: string;
@@ -8,7 +16,7 @@ export type PriceAttestation = {
   expo: number;
   emaPrice: string;
   emaConf: string;
-  status: number;
+  status: PriceAttestationStatus;
   numPublishers: number;
   maxNumPublishers: number;
   attestationTime: UnixTimestamp;
@@ -52,7 +60,7 @@ export function parsePriceAttestation(bytes: Buffer): PriceAttestation {
   const emaConf = bytes.readBigUint64BE(offset).toString();
   offset += 8;
 
-  const status = bytes.readUint8(offset);
+  const status = bytes.readUint8(offset) as PriceAttestationStatus;
   offset += 1;
 
   const numPublishers = bytes.readUint32BE(offset);
@@ -204,7 +212,7 @@ export function priceAttestationToPriceFeed(
 
   let price: Price;
 
-  if (priceAttestation.status === 1) {
+  if (priceAttestation.status === PriceAttestationStatus.Trading) {
     // 1 means trading
     price = new Price({
       conf: priceAttestation.conf,
