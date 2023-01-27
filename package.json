@@ -4,7 +4,8 @@
     "governance/xc-admin/packages/*",
     "price_service/server",
     "price_service/sdk/js",
-    "price_service/client/js"
+    "price_service/client/js",
+    "wormhole_attester/sdk/js"
   ],
   "devDependencies": {
     "lerna": "^6.4.1"

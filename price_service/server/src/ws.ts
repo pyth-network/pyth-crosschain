@@ -1,4 +1,4 @@
-import { HexString } from "@pythnetwork/pyth-sdk-js";
+import { HexString } from "@pythnetwork/price-service-sdk";
 import * as http from "http";
 import Joi from "joi";
 import WebSocket, { RawData, WebSocketServer } from "ws";

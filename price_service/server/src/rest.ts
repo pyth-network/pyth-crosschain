@@ -1,4 +1,4 @@
-import { HexString } from "@pythnetwork/pyth-sdk-js";
+import { HexString } from "@pythnetwork/price-service-sdk";
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import { Joi, schema, validate, ValidationError } from "express-validation";
