@@ -42,7 +42,7 @@ const EXECUTOR_KEY_SEED = "EXECUTOR_KEY";
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
 const COMMITMENT: Commitment =
   (process.env.COMMITMENT as Commitment) ?? "confirmed";
-const OFFSET: number = Number(process.env.OFFSET) ?? -1;
+const OFFSET: number = Number(process.env.OFFSET ?? "-1");
 const EMITTER: PublicKey = new PublicKey(envOrErr("EMITTER"));
 const KEYPAIR: Keypair = Keypair.fromSecretKey(
   Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii")))
