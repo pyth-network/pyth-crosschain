@@ -443,6 +443,3 @@ const UpdatePermissions = () => {
 }
 
 export default UpdatePermissions
-function isRemote(cluster: string): boolean {
-  throw new Error('Function not implemented.')
-}
