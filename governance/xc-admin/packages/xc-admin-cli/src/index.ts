@@ -208,7 +208,7 @@ mutlisigCommand(
     await proposeInstructions(squad, vault, [proposalInstruction], false);
   });
 
-  program
+program
   .command("parse-transaction")
   .description("Parse a transaction sitting in the multisig")
   .requiredOption("-c, --cluster <network>", "solana cluster to use")
@@ -234,5 +234,5 @@ mutlisigCommand(
     );
     console.log(JSON.stringify(parsed, null, 2));
   });
-  
+
 program.parse();
