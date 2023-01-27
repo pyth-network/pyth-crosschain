@@ -7,7 +7,10 @@ import {
   AccountMeta,
 } from "@solana/web3.js";
 import { program } from "commander";
-import { PythCluster } from "@pythnetwork/client/lib/cluster";
+import {
+  getPythProgramKeyForCluster,
+  PythCluster,
+} from "@pythnetwork/client/lib/cluster";
 import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import fs from "fs";
@@ -24,6 +27,7 @@ import {
   proposeInstructions,
   WORMHOLE_ADDRESS,
 } from "xc-admin-common";
+import { pythOracleProgram } from "@pythnetwork/client";
 
 const mutlisigCommand = (name: string, description: string) =>
   program
@@ -162,6 +166,45 @@ mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
       ],
     };
 
+    await proposeInstructions(squad, vault, [proposalInstruction], false);
+  });
+
+mutlisigCommand(
+  "init-price",
+  "Init price (useful for changing the exponent), only to be used on unused price feeds"
+)
+  .requiredOption("-p, --price <pubkey>", "Price account to modify")
+  .requiredOption("-e, --exponent <number>", "New exponent")
+  .action(async (options: any) => {
+    const wallet = new NodeWallet(
+      Keypair.fromSecretKey(
+        Uint8Array.from(JSON.parse(fs.readFileSync(options.wallet, "ascii")))
+      )
+    );
+    const cluster: PythCluster = options.cluster;
+    const vault: PublicKey = new PublicKey(options.vault);
+    const priceAccount: PublicKey = new PublicKey(options.price);
+    const exponent = options.exponent;
+    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
+
+    const msAccount = await squad.getMultisig(vault);
+    const vaultAuthority = squad.getAuthorityPDA(
+      msAccount.publicKey,
+      msAccount.authorityIndex
+    );
+
+    const provider = new AnchorProvider(
+      squad.connection,
+      wallet,
+      AnchorProvider.defaultOptions()
+    );
+    const proposalInstruction: TransactionInstruction = await pythOracleProgram(
+      getPythProgramKeyForCluster(cluster),
+      provider
+    )
+      .methods.initPrice(exponent, 1)
+      .accounts({ fundingAccount: vaultAuthority, priceAccount })
+      .instruction();
     await proposeInstructions(squad, vault, [proposalInstruction], false);
   });
 
