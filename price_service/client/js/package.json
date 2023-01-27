@@ -41,10 +41,10 @@
     "yargs": "^17.4.1"
   },
   "dependencies": {
-    "@pythnetwork/pyth-sdk-js": "^1.2.0",
+    "@pythnetwork/price-service-sdk": "*",
     "@types/ws": "^8.5.3",
-    "axios": "^0.26.1",
-    "axios-retry": "^3.2.4",
+    "axios": "^1.2.5",
+    "axios-retry": "^3.4.0",
     "isomorphic-ws": "^4.0.1",
     "ts-log": "^2.2.4",
     "ws": "^8.6.0"

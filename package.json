@@ -1,7 +1,10 @@
 {
   "name": "root",
   "workspaces": [
-    "governance/xc-admin/packages/*"
+    "governance/xc-admin/packages/*",
+    "price_service/server",
+    "price_service/sdk/js",
+    "price_service/client/js"
   ],
   "devDependencies": {
     "lerna": "^6.4.1"
