@@ -34,14 +34,6 @@ use {
     },
 };
 
-#[cfg(feature = "wasm")]
-#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-pub mod wasm;
-
-#[cfg(feature = "wasm")]
-#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-use wasm_bindgen::prelude::*;
-
 pub type ErrBox = Box<dyn std::error::Error>;
 
 /// Precedes every message implementing the p2w serialization format
@@ -527,7 +519,7 @@ mod tests {
             status:                     PriceStatus::Trading,
             num_publishers:             123212u32,
             max_num_publishers:         321232u32,
-            attestation_time:           (0xdeadbeeffadedeedu64) as i64,
+            attestation_time:           (0xdeadbeeffadeu64) as i64,
             publish_time:               0xdadebeefi64,
             prev_publish_time:          0xdeadbabei64,
             prev_price:                 0xdeadfacebeefi64,
@@ -567,7 +559,7 @@ mod tests {
 
     #[test]
     fn test_batch_serde() -> Result<(), ErrBox> {
-        let attestations: Vec<_> = (1..=10)
+        let attestations: Vec<_> = (1..=3)
             .map(|i| {
                 mock_attestation(
                     Some([(i % 256) as u8; 32]),

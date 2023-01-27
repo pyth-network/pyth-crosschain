@@ -4,10 +4,10 @@ ARG BASE_PATH=/usr/src/pyth2wormhole
 RUN addgroup -S pyth -g 10001 && adduser -S pyth -G pyth -u 10001
 USER pyth
 
-# Adds p2w-sdk/js dependency
-ARG P2W_SDK_REL_PATH=third_party/pyth/p2w-sdk/js
-WORKDIR ${BASE_PATH}/${P2W_SDK_REL_PATH}
-COPY --chown=pyth:pyth ${P2W_SDK_REL_PATH} .
+# Adds wormhole_attester/sdk/js dependency
+ARG ATTESTER_SDK_REL_PATH=wormhole_attester/sdk/js
+WORKDIR ${BASE_PATH}/${ATTESTER_SDK_REL_PATH}
+COPY --chown=pyth:pyth ${ATTESTER_SDK_REL_PATH} .
 RUN npm ci && npm run build && npm cache clean --force
 
 ARG PRICE_SERVICE_REL_PATH=price_service/server

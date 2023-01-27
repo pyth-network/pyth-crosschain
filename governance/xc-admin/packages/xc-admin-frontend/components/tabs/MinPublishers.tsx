@@ -5,6 +5,7 @@ import {
 } from '@pythnetwork/client'
 import { PythOracle } from '@pythnetwork/client/lib/anchor'
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react'
+import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
 import { TransactionInstruction } from '@solana/web3.js'
 import {
   createColumnHelper,
@@ -25,6 +26,7 @@ import {
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import Modal from '../common/Modal'
+import Spinner from '../common/Spinner'
 import EditButton from '../EditButton'
 import Loadbar from '../loaders/Loadbar'
 
@@ -206,6 +208,50 @@ const MinPublishers = () => {
     }
   }
 
+  const ModalContent = ({ changes }: { changes: any }) => {
+    return (
+      <>
+        {Object.keys(changes).length > 0 ? (
+          <div className="mb-10">
+            {Object.keys(changes).map((key) => {
+              return (
+                changes[key].prev !== changes[key].new && (
+                  <>
+                    <div
+                      key={key}
+                      className="mb-4 flex items-center justify-between"
+                    >
+                      <span className="pr-4 text-left font-bold">{key}</span>
+                      <span className="mr-2">
+                        {changes[key].prev} &rarr; {changes[key].new}
+                      </span>
+                    </div>
+                  </>
+                )
+              )
+            })}
+          </div>
+        ) : (
+          <p className="mb-8 leading-6">No proposed changes.</p>
+        )}
+        {Object.keys(changes).length > 0 ? (
+          !connected ? (
+            <div className="flex justify-center">
+              <WalletModalButton className="action-btn text-base" />
+            </div>
+          ) : (
+            <button
+              className="action-btn text-base"
+              onClick={handleSendProposalButtonClick}
+            >
+              {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
+            </button>
+          )
+        ) : null}
+      </>
+    )
+  }
+
   // create anchor wallet when connected
   useEffect(() => {
     if (connected) {
@@ -226,16 +272,14 @@ const MinPublishers = () => {
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
         closeModal={closeModal}
-        changes={minPublishersChanges}
-        handleSendProposalButtonClick={handleSendProposalButtonClick}
-        isSendProposalButtonLoading={isSendProposalButtonLoading}
+        content={<ModalContent changes={minPublishersChanges} />}
       />
       <div className="container flex flex-col items-center justify-between lg:flex-row">
         <div className="mb-4 w-full text-left lg:mb-0">
           <h1 className="h1 mb-4">Min Publishers</h1>
         </div>
       </div>
-      <div className="container">
+      <div className="container min-h-[50vh]">
         <div className="flex justify-between">
           <div className="mb-4 md:mb-0">
             <ClusterSwitch />

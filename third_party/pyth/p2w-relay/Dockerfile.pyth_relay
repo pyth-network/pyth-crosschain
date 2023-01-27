@@ -18,8 +18,8 @@ RUN apk del build-base # No longer needed after EVM build
 
 USER pyth
 
-# Adds p2w-sdk/js dependency
-ARG P2W_SDK_REL_PATH=third_party/pyth/p2w-sdk/js
+# Adds wormhole_attester/sdk/js dependency
+ARG P2W_SDK_REL_PATH=wormhole_attester/sdk/js
 
 WORKDIR ${BASE_PATH}/${P2W_SDK_REL_PATH}
 ADD --chown=pyth:pyth ${P2W_SDK_REL_PATH} .

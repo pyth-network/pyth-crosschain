@@ -5,7 +5,6 @@ RUN apt-get update && apt-get install -yq python3 libudev-dev ncat
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs
 
 ADD governance/remote_executor /usr/src/governance/remote_executor
-ADD third_party/pyth/p2w-sdk/rust /usr/src/third_party/pyth/p2w-sdk/rust
 ADD wormhole_attester /usr/src/wormhole_attester
 
 WORKDIR /usr/src/wormhole_attester

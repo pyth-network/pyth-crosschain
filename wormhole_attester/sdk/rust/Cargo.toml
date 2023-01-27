@@ -1,5 +1,5 @@
 [package]
-name = "p2w-sdk"
+name = "pyth-wormhole-attester-sdk"
 version = "0.1.1"
 authors = ["Wormhole Contributors <contact@certus.one>"]
 edition = "2018"
@@ -11,14 +11,12 @@ crate-type = ["cdylib", "rlib"]
 [features]
 default = []
 solana  = ["solitaire", "solana-program", "pyth-sdk-solana"]
-wasm    = ["wasm-bindgen", "solana"]
 
 [dependencies]
 hex = "0.4.3"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 pyth-sdk = {version = "0.5.0"}
 pyth-sdk-solana = { version = "0.5.0", optional = true }
-wasm-bindgen = { version = "0.2.74", features = ["serde-serialize"], optional = true}
 solitaire = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9", optional = true}
 solana-program = { version = "=1.10.31", optional = true }
 

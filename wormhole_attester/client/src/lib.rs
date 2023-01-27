@@ -42,7 +42,6 @@ use {
         trace,
         warn,
     },
-    p2w_sdk::P2WEmitter,
     pyth_sdk_solana::state::{
         load_mapping_account,
         load_price_account,
@@ -60,6 +59,7 @@ use {
         },
         AttestData,
     },
+    pyth_wormhole_attester_sdk::P2WEmitter,
     solana_client::nonblocking::rpc_client::RpcClient,
     solana_program::{
         hash::Hash,

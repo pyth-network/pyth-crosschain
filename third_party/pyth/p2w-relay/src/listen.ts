@@ -17,7 +17,7 @@ import {
 import {
   parseBatchPriceAttestation,
   getBatchSummary,
-} from "@pythnetwork/p2w-sdk-js";
+} from "@pythnetwork/wormhole-attester-sdk";
 
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 

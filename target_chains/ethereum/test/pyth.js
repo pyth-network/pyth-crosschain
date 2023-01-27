@@ -73,10 +73,10 @@ contract("Pyth", function () {
     );
   });
 
-  // NOTE(2022-05-02): Raw hex payload obtained from format serialization unit tests in `p2w-sdk/rust`
+  // NOTE(2022-05-02): Raw hex payload obtained from format serialization unit tests in `wormhole_attester/sdk/rust`
   // Latest known addition: wire format v3
   //
-  // Tests rely on a p2w-sdk mock price/prod ID generation rule:
+  // Tests rely on a wormhole_attester/sdk/rust mock price/prod ID generation rule:
   // nthProdByte(n) = n % 256, starting with n=1
   // nthPriceByte(n) = 255 - (n % 256), starting with n=1
   //

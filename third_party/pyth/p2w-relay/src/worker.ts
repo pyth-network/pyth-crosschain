@@ -12,7 +12,7 @@ import {
   BatchPriceAttestation,
   getBatchAttestationHashKey,
   getBatchSummary,
-} from "@pythnetwork/p2w-sdk-js";
+} from "@pythnetwork/wormhole-attester-sdk";
 
 const mutex = new Mutex();
 let condition = new CondVar();

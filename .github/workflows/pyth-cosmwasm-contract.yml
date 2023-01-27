@@ -4,13 +4,13 @@ on:
   pull_request:
     paths:
       - target_chains/cosmwasm/**
-      - third_party/pyth/p2w-sdk/rust/**
+      - wormhole_attester/sdk/rust/**
   push:
     branches:
       - main
     paths:
       - target_chains/cosmwasm/**
-      - third_party/pyth/p2w-sdk/rust/**
+      - wormhole_attester/sdk/rust/**
 
 env:
   CARGO_TERM_COLOR: always

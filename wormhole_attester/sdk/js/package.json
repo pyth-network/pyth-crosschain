@@ -1,19 +1,17 @@
 {
-  "name": "@pythnetwork/p2w-sdk-js",
+  "name": "@pythnetwork/wormhole-attester-sdk",
   "version": "1.0.0",
-  "description": "TypeScript library for interacting with Pyth2Wormhole",
+  "description": "Pyth Wormhole Attester SDk",
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "files": [
     "lib/**/*"
   ],
   "scripts": {
-    "build": "npm run build-lib",
-    "build-lib": "npm run copy-artifacts && tsc",
-    "build-watch": "npm run copy-artifacts && tsc --watch",
+    "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
-    "copy-artifacts": "node scripts/copyWasm.cjs",
     "lint": "tslint -p tsconfig.json",
+    "test": "jest src/",
     "postversion": "git push && git push --tags",
     "preversion": "npm run lint",
     "version": "npm run format && git add -A src"
@@ -22,26 +20,22 @@
     "type": "git",
     "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
   },
-  "author": "https://certus.one",
+  "author": "Pyth Data Association",
   "license": "MIT",
   "devDependencies": {
-    "@openzeppelin/contracts": "^4.2.0",
-    "@typechain/ethers-v5": "^7.1.2",
+    "@types/jest": "^29.4.0",
     "@types/long": "^4.0.1",
     "@types/node": "^16.6.1",
     "copy-dir": "^1.3.0",
     "find": "^0.3.0",
+    "jest": "^29.4.1",
     "prettier": "^2.3.2",
+    "ts-jest": "^29.0.5",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.3.5"
   },
-  "peerDependencies": {
-    "@solana/web3.js": "^1.24.0"
-  },
   "dependencies": {
-    "@certusone/wormhole-sdk": "0.2.1",
-    "@improbable-eng/grpc-web-node-http-transport": "^0.14.1",
     "@pythnetwork/pyth-sdk-js": "^1.1.0"
   },
   "bugs": {
