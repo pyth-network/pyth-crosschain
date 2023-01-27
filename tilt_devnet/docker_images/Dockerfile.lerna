@@ -1,0 +1,26 @@
+FROM node:18.13.0@sha256:d9061fd0205c20cd47f70bdc879a7a84fb472b822d3ad3158aeef40698d2ce36 as base
+
+WORKDIR /home/node
+COPY ./ ./
+
+# Remove files that are not json packages
+RUN find . -type f ! -name 'package*.json' -delete
+# Remove directories that are empty now
+RUN find . -type d -empty -delete
+
+COPY ./lerna.json ./
+
+FROM node:18.13.0@sha256:d9061fd0205c20cd47f70bdc879a7a84fb472b822d3ad3158aeef40698d2ce36 as lerna
+
+# Node is the default user of node. It has uid and gid of 1000
+USER node
+RUN mkdir -p /home/node/.npm
+
+WORKDIR /home/node
+COPY --from=base --chown=node:node /home/node ./
+
+RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
+  --mount=type=cache,uid=1000,gid=1000,target=node_modules \
+  npm ci
+
+COPY --chown=node:node ./ ./
