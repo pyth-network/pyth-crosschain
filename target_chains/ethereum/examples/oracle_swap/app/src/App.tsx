@@ -139,7 +139,8 @@ function PriceText(props: {
     <div>
       {props.rate !== undefined ? (
         <div>
-          Current Exchange Rate: {props.rate.rate.toFixed(4)}{" "}
+          Current Exchange Rate:{" "}
+          <span className={"exchange-rate"}>{props.rate.rate.toFixed(4)}</span>{" "}
           <span
             className="icon-container"
             onMouseEnter={() => setShowTooltip(true)}
@@ -161,7 +162,7 @@ function PriceText(props: {
               </div>
             )}
           </span>
-          <p>
+          <p className={"last-updated"}>
             Last updated{" "}
             {timeAgo(
               (props.currentTime.getTime() -
@@ -289,7 +290,7 @@ function OrderEntry(props: {
         )}
       </div>
 
-      <div>
+      <div className={"swap-steps"}>
         {props.account === null || props.web3 === undefined ? (
           <div>Connect your wallet to swap</div>
         ) : (
@@ -444,7 +445,7 @@ function App() {
 
   return (
     <div className="App">
-      <header className="control-panel">
+      <div className="control-panel">
         <h3>Control Panel</h3>
 
         <div>
@@ -544,9 +545,9 @@ function App() {
             <p>loading...</p>
           )}
         </div>
-      </header>
+      </div>
 
-      <div className={"App-main"}>
+      <div className={"main"}>
         <h3>
           Swap between {CONFIG.baseToken.name} and {CONFIG.quoteToken.name}
         </h3>
