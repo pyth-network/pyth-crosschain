@@ -66,6 +66,31 @@ function timeAgo(diff: number) {
   }
 }
 
+function MintButton(props: {
+  web3: Web3;
+  sender: string;
+  erc20Address: string;
+  destination: string;
+  qty: number;
+  decimals: number;
+}) {
+  return (
+    <button
+      onClick={async () => {
+        await mint(
+          props.web3,
+          props.sender,
+          props.erc20Address,
+          props.destination,
+          numberToTokenQty(props.qty, props.decimals)
+        );
+      }}
+    >
+      Mint {CONFIG.mintQty}
+    </button>
+  );
+}
+
 function PriceTicker(props: {
   price: Price | undefined;
   currentTime: Date;
@@ -393,13 +418,6 @@ function App() {
     let basePrice = pythOffChainPrice[CONFIG.baseToken.pythPriceFeedId];
     let quotePrice = pythOffChainPrice[CONFIG.quoteToken.pythPriceFeedId];
 
-    console.log(`offchainPrice: ${JSON.stringify(pythOffChainPrice)}`);
-    console.log(
-      `basePrice: ${JSON.stringify(basePrice)} quotePrice: ${JSON.stringify(
-        quotePrice
-      )}`
-    );
-
     if (basePrice !== undefined && quotePrice !== undefined) {
       const exchangeRate =
         basePrice.getPriceAsNumberUnchecked() /
@@ -456,22 +474,14 @@ function App() {
                   CONFIG.baseToken.decimals
                 )}{" "}
                 {CONFIG.baseToken.name}
-                <button
-                  onClick={async () => {
-                    await mint(
-                      web3!,
-                      account!,
-                      CONFIG.baseToken.erc20Address,
-                      account!,
-                      numberToTokenQty(
-                        CONFIG.mintQty,
-                        CONFIG.baseToken.decimals
-                      )
-                    );
-                  }}
-                >
-                  Mint {CONFIG.mintQty}
-                </button>
+                <MintButton
+                  web3={web3!}
+                  sender={account!}
+                  erc20Address={CONFIG.baseToken.erc20Address}
+                  destination={account!}
+                  qty={CONFIG.mintQty}
+                  decimals={CONFIG.baseToken.decimals}
+                />
               </p>
               <p>
                 {tokenQtyToNumber(
@@ -479,22 +489,14 @@ function App() {
                   CONFIG.quoteToken.decimals
                 )}{" "}
                 {CONFIG.quoteToken.name}
-                <button
-                  onClick={async () => {
-                    await mint(
-                      web3!,
-                      account!,
-                      CONFIG.quoteToken.erc20Address,
-                      account!,
-                      numberToTokenQty(
-                        CONFIG.mintQty,
-                        CONFIG.quoteToken.decimals
-                      )
-                    );
-                  }}
-                >
-                  Mint {CONFIG.mintQty}
-                </button>
+                <MintButton
+                  web3={web3!}
+                  sender={account!}
+                  erc20Address={CONFIG.quoteToken.erc20Address}
+                  destination={account!}
+                  qty={CONFIG.mintQty}
+                  decimals={CONFIG.quoteToken.decimals}
+                />
               </p>
             </div>
           ) : (
@@ -506,19 +508,38 @@ function App() {
         <div>
           <p>Contract address: {CONFIG.swapContractAddress}</p>
           {chainState !== undefined ? (
-            <p>
-              Pool contains{" "}
-              {tokenQtyToNumber(
-                chainState?.poolBaseBalance,
-                CONFIG.baseToken.decimals
-              )}{" "}
-              {CONFIG.baseToken.name} and{" "}
-              {tokenQtyToNumber(
-                chainState?.poolQuoteBalance,
-                CONFIG.quoteToken.decimals
-              )}{" "}
-              {CONFIG.quoteToken.name}
-            </p>
+            <div>
+              <p>
+                {tokenQtyToNumber(
+                  chainState.poolBaseBalance,
+                  CONFIG.baseToken.decimals
+                )}{" "}
+                {CONFIG.baseToken.name}
+                <MintButton
+                  web3={web3!}
+                  sender={account!}
+                  erc20Address={CONFIG.baseToken.erc20Address}
+                  destination={CONFIG.swapContractAddress}
+                  qty={CONFIG.mintQty}
+                  decimals={CONFIG.baseToken.decimals}
+                />
+              </p>
+              <p>
+                {tokenQtyToNumber(
+                  chainState.poolQuoteBalance,
+                  CONFIG.quoteToken.decimals
+                )}{" "}
+                {CONFIG.quoteToken.name}
+                <MintButton
+                  web3={web3!}
+                  sender={account!}
+                  erc20Address={CONFIG.quoteToken.erc20Address}
+                  destination={CONFIG.swapContractAddress}
+                  qty={CONFIG.mintQty}
+                  decimals={CONFIG.quoteToken.decimals}
+                />
+              </p>
+            </div>
           ) : (
             <p>loading...</p>
           )}
@@ -608,8 +629,6 @@ async function mint(
   quantity: BigNumber
 ) {
   const erc20 = new web3.eth.Contract(ERC20Abi as any, erc20Address);
-  console.log(`Minting: ${quantity.toString()} to ${destinationAddress}`);
-
   await erc20.methods.mint(destinationAddress, quantity).send({ from: sender });
 }
 
