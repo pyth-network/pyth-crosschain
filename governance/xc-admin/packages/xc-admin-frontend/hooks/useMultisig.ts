@@ -4,20 +4,9 @@ import { Cluster, Connection, PublicKey } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
 import { TransactionAccount } from '@sqds/mesh/lib/types'
 import { useContext, useEffect, useRef, useState } from 'react'
-import { getProposals } from 'xc-admin-common'
+import { getMultisigCluster, getProposals } from 'xc-admin-common'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { pythClusterApiUrls } from '../utils/pythClusterApiUrl'
-
-export function getMultisigCluster(cluster: PythCluster): Cluster | 'localnet' {
-  switch (cluster) {
-    case 'pythnet':
-      return 'mainnet-beta'
-    case 'pythtest':
-      return 'devnet'
-    default:
-      return cluster
-  }
-}
 
 export const UPGRADE_MULTISIG: Record<Cluster | 'localnet', PublicKey> = {
   'mainnet-beta': new PublicKey('FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj'),

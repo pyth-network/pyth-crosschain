@@ -63,6 +63,7 @@ async function run() {
 
   const proposals = await getProposals(squad, VAULT, undefined, "executeReady");
   for (const proposal of proposals) {
+    console.log("Trying to execute: ", proposal.publicKey.toBase58());
     // If we have previously cancelled because the proposal was failing, don't attempt
     if (proposal.cancelled.length == 0) {
       for (
