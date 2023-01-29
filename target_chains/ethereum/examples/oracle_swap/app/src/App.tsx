@@ -8,7 +8,7 @@ import {
 } from "@pythnetwork/pyth-evm-js";
 import IPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import OracleSwapAbi from "./abi/OracleSwapAbi.json";
-import ERC20Abi from "./ERC20Abi.json";
+import ERC20Abi from "./abi/ERC20MockAbi.json";
 import { useMetaMask } from "metamask-react";
 import Web3 from "web3";
 import { BigNumber } from "ethers";
@@ -22,22 +22,26 @@ const CONFIG = {
     erc20Address: "0x8e2a09b54fF35Cc4fe3e7dba68bF4173cC559C69",
     pythPriceFeedId:
       "08f781a893bc9340140c5f89c8a96f438bcfae4d1474cc0f688e3a52892c7318",
+    decimals: 18,
   },
   quoteToken: {
     name: "USDC",
     erc20Address: "0x98cDc14fe999435F3d4C2E65eC8863e0d70493Df",
     pythPriceFeedId:
       "41f3625971ca2ed2263e78573fe5ce23e13d2558ed3f2e47ab0f84fb9e7ae722",
+    decimals: 18,
   },
   swapContractAddress: "0xf3161b2B32761B46C084a7e1d8993C19703C09e7",
   pythContractAddress: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
   priceServiceUrl: "https://xc-testnet.pyth.network",
+  mintQty: 100,
 };
 
 export interface TokenConfig {
   name: string;
   erc20Address: string;
   pythPriceFeedId: string;
+  decimals: number;
 }
 
 export interface ExchangeRateMeta {
@@ -45,9 +49,12 @@ export interface ExchangeRateMeta {
   lastUpdatedTime: Date;
 }
 
-// The Pyth price service client is used to retrieve the current Pyth prices and the price update data that
-// needs to be posted on-chain with each transaction.
-const pythPriceService = new EvmPriceServiceConnection(CONFIG.priceServiceUrl);
+export interface ChainState {
+  accountBaseBalance: BigNumber;
+  accountQuoteBalance: BigNumber;
+  poolBaseBalance: BigNumber;
+  poolQuoteBalance: BigNumber;
+}
 
 function timeAgo(diff: number) {
   if (diff > 60) {
@@ -129,51 +136,21 @@ function PriceText(props: {
               </div>
             )}
           </span>
-          <p>Last updated at: {props.rate.lastUpdatedTime.toISOString()}</p>
+          <p>
+            Last updated{" "}
+            {timeAgo(
+              (props.currentTime.getTime() -
+                props.rate.lastUpdatedTime.getTime()) /
+                1000
+            )}{" "}
+            ago
+          </p>
         </div>
       ) : (
         <div>
           <p>Exchange rate is loading...</p>
         </div>
       )}
-    </div>
-  );
-}
-
-function PoolStatistics(props: { web3: Web3 | undefined }) {
-  const [baseQty, setBaseQty] = useState<number>(0);
-  const [quoteQty, setQuoteQty] = useState<number>(0);
-
-  useEffect(() => {
-    async function queryQtys() {
-      if (props.web3 !== undefined) {
-        const swapContract = new props.web3.eth.Contract(
-          OracleSwapAbi as any,
-          CONFIG.swapContractAddress
-        );
-
-        const baseQty =
-          Number(await swapContract.methods.baseBalance().call()) / 1e18;
-        const quoteQty =
-          Number(await swapContract.methods.quoteBalance().call()) / 1e18;
-        setBaseQty(baseQty);
-        setQuoteQty(quoteQty);
-      }
-    }
-
-    const interval = setInterval(queryQtys, 5000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [props.web3]);
-
-  return (
-    <div>
-      <p>Contract address: {CONFIG.swapContractAddress}</p>
-      <p>
-        Pool contains {baseQty} {CONFIG.baseToken.name} and {quoteQty}{" "}
-        {CONFIG.quoteToken.name}
-      </p>
     </div>
   );
 }
@@ -226,7 +203,7 @@ function OrderEntry(props: {
 
   useEffect(() => {
     try {
-      const qtyBn = BigNumber.from(qty);
+      const qtyBn = numberToTokenQty(qty, CONFIG.baseToken.decimals);
       setQtyBn(qtyBn);
     } catch (error) {
       setQtyBn(undefined);
@@ -243,7 +220,9 @@ function OrderEntry(props: {
 
   useEffect(() => {
     if (qtyBn !== undefined && props.approxPrice !== undefined) {
-      setApproxQuoteSize(qtyBn.toNumber() * props.approxPrice);
+      setApproxQuoteSize(
+        tokenQtyToNumber(qtyBn, CONFIG.baseToken.decimals) * props.approxPrice
+      );
     } else {
       setApproxQuoteSize(undefined);
     }
@@ -268,12 +247,16 @@ function OrderEntry(props: {
           props.isBuy ? (
             <p>
               Pay {approxQuoteSize.toFixed(3)} {CONFIG.quoteToken.name} to
-              receive {qtyBn.toNumber().toFixed(3)} {CONFIG.baseToken.name}
+              receive{" "}
+              {tokenQtyToNumber(qtyBn, CONFIG.baseToken.decimals).toFixed(3)}{" "}
+              {CONFIG.baseToken.name}
             </p>
           ) : (
             <p>
-              Pay {qtyBn.toNumber().toFixed(3)} {CONFIG.baseToken.name} to
-              receive {approxQuoteSize.toFixed(3)} {CONFIG.quoteToken.name}
+              Pay{" "}
+              {tokenQtyToNumber(qtyBn, CONFIG.baseToken.decimals).toFixed(3)}{" "}
+              {CONFIG.baseToken.name} to receive {approxQuoteSize.toFixed(3)}{" "}
+              {CONFIG.quoteToken.name}
             </p>
           )
         ) : (
@@ -303,7 +286,12 @@ function OrderEntry(props: {
             2.
             <button
               onClick={async () => {
-                await sendSwapTx(props.web3!, props.account!, qty, props.isBuy);
+                await sendSwapTx(
+                  props.web3!,
+                  props.account!,
+                  qtyBn!,
+                  props.isBuy
+                );
               }}
               disabled={!isAuthorized}
             >
@@ -328,21 +316,74 @@ function App() {
     }
   }, [status]);
 
+  const [chainState, setChainState] = useState<ChainState | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    async function refreshChainState() {
+      if (web3 !== undefined && account !== null) {
+        setChainState({
+          accountBaseBalance: await getBalance(
+            web3,
+            CONFIG.baseToken.erc20Address,
+            account
+          ),
+          accountQuoteBalance: await getBalance(
+            web3,
+            CONFIG.quoteToken.erc20Address,
+            account
+          ),
+          poolBaseBalance: await getBalance(
+            web3,
+            CONFIG.baseToken.erc20Address,
+            CONFIG.swapContractAddress
+          ),
+          poolQuoteBalance: await getBalance(
+            web3,
+            CONFIG.quoteToken.erc20Address,
+            CONFIG.swapContractAddress
+          ),
+        });
+      } else {
+        setChainState(undefined);
+      }
+    }
+
+    const interval = setInterval(refreshChainState, 5000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [web3, account]);
+
   const [pythOffChainPrice, setPythOffChainPrice] = useState<
     Record<HexString, Price>
   >({});
 
   // Subscribe to offchain prices. These are the prices that a typical frontend will want to show.
-  pythPriceService.subscribePriceFeedUpdates(
-    [CONFIG.baseToken.pythPriceFeedId, CONFIG.quoteToken.pythPriceFeedId],
-    (priceFeed: PriceFeed) => {
-      const price = priceFeed.getPriceUnchecked(); // Fine to use unchecked (not checking for staleness) because this must be a recent price given that it comes from a websocket subscription.
-      setPythOffChainPrice({
-        ...pythOffChainPrice,
-        [priceFeed.id]: price,
-      });
-    }
-  );
+  useEffect(() => {
+    // The Pyth price service client is used to retrieve the current Pyth prices and the price update data that
+    // needs to be posted on-chain with each transaction.
+    const pythPriceService = new EvmPriceServiceConnection(
+      CONFIG.priceServiceUrl
+    );
+
+    pythPriceService.subscribePriceFeedUpdates(
+      [CONFIG.baseToken.pythPriceFeedId, CONFIG.quoteToken.pythPriceFeedId],
+      (priceFeed: PriceFeed) => {
+        const price = priceFeed.getPriceUnchecked(); // Fine to use unchecked (not checking for staleness) because this must be a recent price given that it comes from a websocket subscription.
+        setPythOffChainPrice({
+          ...pythOffChainPrice,
+          [priceFeed.id]: price,
+        });
+      }
+    );
+
+    return () => {
+      pythPriceService.closeWebSocket();
+    };
+  }, [pythOffChainPrice]);
 
   const [exchangeRateMeta, setExchangeRateMeta] = useState<
     ExchangeRateMeta | undefined
@@ -351,6 +392,13 @@ function App() {
   useEffect(() => {
     let basePrice = pythOffChainPrice[CONFIG.baseToken.pythPriceFeedId];
     let quotePrice = pythOffChainPrice[CONFIG.quoteToken.pythPriceFeedId];
+
+    console.log(`offchainPrice: ${JSON.stringify(pythOffChainPrice)}`);
+    console.log(
+      `basePrice: ${JSON.stringify(basePrice)} quotePrice: ${JSON.stringify(
+        quotePrice
+      )}`
+    );
 
     if (basePrice !== undefined && quotePrice !== undefined) {
       const exchangeRate =
@@ -400,16 +448,81 @@ function App() {
 
         <div>
           <h3>Wallet Balances</h3>
-          <p>
-            0 BRL <button>Mint 100</button>
-          </p>
-          <p>
-            0 USDC <button>Mint 100</button>
-          </p>
+          {chainState !== undefined ? (
+            <div>
+              <p>
+                {tokenQtyToNumber(
+                  chainState.accountBaseBalance,
+                  CONFIG.baseToken.decimals
+                )}{" "}
+                {CONFIG.baseToken.name}
+                <button
+                  onClick={async () => {
+                    await mint(
+                      web3!,
+                      account!,
+                      CONFIG.baseToken.erc20Address,
+                      account!,
+                      numberToTokenQty(
+                        CONFIG.mintQty,
+                        CONFIG.baseToken.decimals
+                      )
+                    );
+                  }}
+                >
+                  Mint {CONFIG.mintQty}
+                </button>
+              </p>
+              <p>
+                {tokenQtyToNumber(
+                  chainState.accountQuoteBalance,
+                  CONFIG.quoteToken.decimals
+                )}{" "}
+                {CONFIG.quoteToken.name}
+                <button
+                  onClick={async () => {
+                    await mint(
+                      web3!,
+                      account!,
+                      CONFIG.quoteToken.erc20Address,
+                      account!,
+                      numberToTokenQty(
+                        CONFIG.mintQty,
+                        CONFIG.quoteToken.decimals
+                      )
+                    );
+                  }}
+                >
+                  Mint {CONFIG.mintQty}
+                </button>
+              </p>
+            </div>
+          ) : (
+            <p>loading...</p>
+          )}
         </div>
 
         <h3>AMM Balances</h3>
-        <PoolStatistics web3={web3} />
+        <div>
+          <p>Contract address: {CONFIG.swapContractAddress}</p>
+          {chainState !== undefined ? (
+            <p>
+              Pool contains{" "}
+              {tokenQtyToNumber(
+                chainState?.poolBaseBalance,
+                CONFIG.baseToken.decimals
+              )}{" "}
+              {CONFIG.baseToken.name} and{" "}
+              {tokenQtyToNumber(
+                chainState?.poolQuoteBalance,
+                CONFIG.quoteToken.decimals
+              )}{" "}
+              {CONFIG.quoteToken.name}
+            </p>
+          ) : (
+            <p>loading...</p>
+          )}
+        </div>
       </header>
 
       <div className={"App-main"}>
@@ -478,12 +591,37 @@ async function getApprovedQuantity(
   return allowance as BigNumber;
 }
 
+async function getBalance(
+  web3: Web3,
+  erc20Address: string,
+  address: string
+): Promise<BigNumber> {
+  const erc20 = new web3.eth.Contract(ERC20Abi as any, erc20Address);
+  return BigNumber.from(await erc20.methods.balanceOf(address).call());
+}
+
+async function mint(
+  web3: Web3,
+  sender: string,
+  erc20Address: string,
+  destinationAddress: string,
+  quantity: BigNumber
+) {
+  const erc20 = new web3.eth.Contract(ERC20Abi as any, erc20Address);
+  console.log(`Minting: ${quantity.toString()} to ${destinationAddress}`);
+
+  await erc20.methods.mint(destinationAddress, quantity).send({ from: sender });
+}
+
 async function sendSwapTx(
   web3: Web3,
   sender: string,
-  qty: string,
+  qtyWei: BigNumber,
   isBuy: boolean
 ) {
+  const pythPriceService = new EvmPriceServiceConnection(
+    CONFIG.priceServiceUrl
+  );
   const priceFeedUpdateData = await pythPriceService.getPriceFeedsUpdateData([
     CONFIG.baseToken.pythPriceFeedId,
     CONFIG.quoteToken.pythPriceFeedId,
@@ -503,11 +641,28 @@ async function sendSwapTx(
     CONFIG.swapContractAddress
   );
 
-  // Note: this code assumes that the ERC20 token has 18 decimals. This may not be the case for arbitrary tokens.
-  const qtyWei = BigNumber.from(qty).mul(BigNumber.from(10).pow(18));
   await swapContract.methods
     .swap(isBuy, qtyWei, priceFeedUpdateData)
     .send({ value: updateFee, from: sender });
+}
+
+// Hacky function for converting a floating point number into a token quantity that's useful for ETH or ERC-20 tokens.
+// Note: this function assumes that decimals >= 6 (which is pretty much always the case for tokens)
+function numberToTokenQty(x: number | string, decimals: number): BigNumber {
+  if (typeof x == "string") {
+    x = Number.parseFloat(x);
+  }
+  return BigNumber.from(Math.floor(x * 1000000)).mul(
+    BigNumber.from(10).pow(decimals - 6)
+  );
+}
+
+// Hacky function for converting a token quantity back into a floating point number.
+// Note: this function assumes that decimals >= 6 (which is pretty much always the case for tokens)
+function tokenQtyToNumber(x: BigNumber, decimals: number): number {
+  const divided = x.div(BigNumber.from(10).pow(decimals - 6));
+
+  return divided.toNumber() / 1000000;
 }
 
 export default App;
