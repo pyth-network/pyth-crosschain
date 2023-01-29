@@ -376,7 +376,7 @@ function App() {
       }
     }
 
-    const interval = setInterval(refreshChainState, 5000);
+    const interval = setInterval(refreshChainState, 3000);
 
     return () => {
       clearInterval(interval);
