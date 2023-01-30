@@ -9,14 +9,10 @@ import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
 import { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import { Fragment, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { proposeInstructions } from 'xc-admin-common'
+import { proposeInstructions, getMultisigCluster } from 'xc-admin-common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
-import {
-  getMultisigCluster,
-  SECURITY_MULTISIG,
-  useMultisig,
-} from '../../hooks/useMultisig'
+import { SECURITY_MULTISIG, useMultisig } from '../../hooks/useMultisig'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import Modal from '../common/Modal'

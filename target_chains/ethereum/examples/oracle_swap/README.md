@@ -33,10 +33,10 @@ tests located in the [`contract/test`](./contract/test) directory.
 ### Deploying
 
 To deploy the contract, you first need to configure the target network and the tokens in the AMM pool.
-Edit the configuration parameters in the [deploy script](./scripts/deploy.sh) and then run it using `./scripts/deploy.sh`.
+Edit the configuration parameters in the [deploy script](./contract/scripts/deploy.sh) and then run it using `./scripts/deploy.sh`.
 The code comments in that file should help you populate the parameters correctly.
 
-If you don't have ERC-20 tokens to test with, you can use the [token deploy script](./script/deploy_token.sh) to create some for testing.
+If you don't have ERC-20 tokens to test with, you can use the [token deploy script](./contract/scripts/deploy_token.sh) to create some for testing.
 Edit the configuration parameters in there before running to set the network and token name.
 This will deploy a new mock token and print out a contract address.
 Once you have this address, you can mint the token anytime using the following command:
