@@ -26,7 +26,7 @@ import {
   PROGRAM_AUTHORITY_ESCROW,
   proposeInstructions,
   WORMHOLE_ADDRESS,
-} from "xc-admin-common";
+} from "xc_admin_common";
 import { pythOracleProgram } from "@pythnetwork/client";
 
 const mutlisigCommand = (name: string, description: string) =>
@@ -38,8 +38,8 @@ const mutlisigCommand = (name: string, description: string) =>
     .requiredOption("-v, --vault <pubkey>", "multisig address");
 
 program
-  .name("xc-admin-cli")
-  .description("CLI for interacting with Pyth's xc-admin")
+  .name("")
+  .description("CLI for interacting with Pyth's xc_admin")
   .version("0.1.0");
 
 mutlisigCommand(

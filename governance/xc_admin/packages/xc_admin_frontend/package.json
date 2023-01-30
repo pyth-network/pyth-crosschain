@@ -1,5 +1,5 @@
 {
-  "name": "xc-admin-frontend",
+  "name": "xc_admin_frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -31,7 +31,7 @@
     "react-hot-toast": "^2.4.0",
     "typescript": "4.9.4",
     "use-debounce": "^9.0.2",
-    "xc-admin-common": "*"
+    "xc_admin_common": "*"
   },
   "devDependencies": {
     "@svgr/webpack": "^6.3.1",

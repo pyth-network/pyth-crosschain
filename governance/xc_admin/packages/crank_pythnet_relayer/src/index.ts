@@ -23,7 +23,7 @@ import {
   ExecutePostedVaa,
   WORMHOLE_ADDRESS,
   WORMHOLE_API_ENDPOINT,
-} from "xc-admin-common";
+} from "xc_admin_common";
 
 export function envOrErr(env: string): string {
   const val = process.env[env];
