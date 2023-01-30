@@ -20,6 +20,9 @@ import {
   proposeInstructions,
   getMultisigCluster,
   BPF_UPGRADABLE_LOADER,
+  isRemoteCluster,
+  WORMHOLE_ADDRESS,
+  mapKey,
 } from 'xc-admin-common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
@@ -238,11 +241,16 @@ const UpdatePermissions = () => {
   }
 
   const handleSendProposalButtonClick = () => {
-    if (pythProgramClient && finalPubkeyChanges) {
+    if (pythProgramClient && finalPubkeyChanges && squads) {
       const programDataAccount = PublicKey.findProgramAddressSync(
         [pythProgramClient?.programId.toBuffer()],
         BPF_UPGRADABLE_LOADER
       )[0]
+      const multisigAuthority = squads.getAuthorityPDA(
+        UPGRADE_MULTISIG[getMultisigCluster(cluster)],
+        1
+      )
+
       pythProgramClient?.methods
         .updPermissions(
           new PublicKey(finalPubkeyChanges['Master Authority'].new),
@@ -250,22 +258,22 @@ const UpdatePermissions = () => {
           new PublicKey(finalPubkeyChanges['Security Authority'].new)
         )
         .accounts({
-          upgradeAuthority: squads?.getAuthorityPDA(
-            UPGRADE_MULTISIG[getMultisigCluster(cluster)],
-            1
-          ),
+          upgradeAuthority: isRemoteCluster(cluster)
+            ? mapKey(multisigAuthority)
+            : multisigAuthority,
           programDataAccount,
         })
         .instruction()
         .then(async (instruction) => {
-          if (!isMultisigLoading && squads) {
+          if (!isMultisigLoading) {
             setIsSendProposalButtonLoading(true)
             try {
               const proposalPubkey = await proposeInstructions(
                 squads,
                 UPGRADE_MULTISIG[getMultisigCluster(cluster)],
                 [instruction],
-                false
+                isRemoteCluster(cluster),
+                WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
               )
               toast.success(
                 `Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`
