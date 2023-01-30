@@ -218,7 +218,6 @@ mutlisigCommand(
     await proposeInstructions(squad, vault, [proposalInstruction], false);
   });
 
-
 program
   .command("parse-transaction")
   .description("Parse a transaction sitting in the multisig")
