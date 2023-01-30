@@ -1,9 +1,6 @@
-const jsonfile = require("jsonfile");
 const elliptic = require("elliptic");
-const BigNumber = require("bignumber.js");
 const governance = require("@pythnetwork/xc-governance-sdk");
 
-const PythStructs = artifacts.require("PythStructs");
 
 const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 const {
@@ -12,9 +9,6 @@ const {
   time,
 } = require("@openzeppelin/test-helpers");
 const { assert, expect } = require("chai");
-const {
-  deployProxyImpl,
-} = require("@openzeppelin/truffle-upgrades/dist/utils");
 
 // Use "WormholeReceiver" if you are testing with Wormhole Receiver
 const Wormhole = artifacts.require("Wormhole");
@@ -954,14 +948,8 @@ contract("Pyth", function () {
       2
     );
 
-    // This test fails without the hard coded gas limit.
-    // Without gas limit, it fails on a random place (in wormhole sig verification) which
-    // is probably because truffle cannot estimate the gas usage correctly. So the gas is
-    // hard-coded to a high value of 6.7m gas (close to ganache limit).
     await expectRevertCustomError(
-      this.pythProxy.executeGovernanceInstruction(transferBackVaaWrong, {
-        gas: 6700000,
-      }),
+      this.pythProxy.executeGovernanceInstruction(transferBackVaaWrong),
       "OldGovernanceMessage"
     );
   });

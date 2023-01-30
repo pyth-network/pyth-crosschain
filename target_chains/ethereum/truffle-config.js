@@ -303,7 +303,6 @@ module.exports = {
   },
 
   plugins: [
-    "@chainsafe/truffle-plugin-abigen",
     "truffle-plugin-verify",
     "truffle-contract-size",
   ],
