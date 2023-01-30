@@ -12,7 +12,8 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "downlevelIteration": true,
-    "allowJs": true
+    "allowJs": true,
+    "rootDir": "src/"
   },
   "types": [],
   "include": ["src", "types"],

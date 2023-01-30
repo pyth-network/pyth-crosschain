@@ -18,7 +18,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "downlevelIteration": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "rootDir": "src/"
   },
   "include": ["src"],
   "exclude": ["node_modules"]

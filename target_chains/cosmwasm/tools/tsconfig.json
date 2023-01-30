@@ -14,7 +14,8 @@
     "skipLibCheck": true,
     "noErrorTruncation": true,
     "sourceMap": true,
-    "lib": ["es2021"]
+    "lib": ["es2021"],
+    "rootDir": "src/"
   },
   "include": ["src/**/*.ts"]
 }

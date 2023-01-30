@@ -12,7 +12,8 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "noErrorTruncation": true
+    "noErrorTruncation": true,
+    "rootDir": "src/"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["src/__tests__/"]

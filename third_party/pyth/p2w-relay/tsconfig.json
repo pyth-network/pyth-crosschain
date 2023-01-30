@@ -17,7 +17,8 @@
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "rootDir": "src/"
   },
   "include": ["src"],
   "exclude": ["node_modules", "**/__tests__/*"]
