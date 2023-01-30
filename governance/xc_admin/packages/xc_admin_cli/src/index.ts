@@ -38,7 +38,7 @@ const mutlisigCommand = (name: string, description: string) =>
     .requiredOption("-v, --vault <pubkey>", "multisig address");
 
 program
-  .name("")
+  .name("xc_admin_cli")
   .description("CLI for interacting with Pyth's xc_admin")
   .version("0.1.0");
 
