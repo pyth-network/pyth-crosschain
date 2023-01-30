@@ -5,11 +5,10 @@
   "main": "index.js",
   "scripts": {
     "build": "npm run build-evm && npm run build-lib",
-    "build-evm": "npm run build-evm-contract && npm run copy-evm-abis && npm run build-evm-bindings",
+    "build-evm": "npm run copy-evm-abis && npm run build-evm-bindings",
     "build-lib": "tsc",
-    "build-evm-contract": "cd ../../../target_chains/ethereum/ && (npm run build || npm ci && npm run build)",
-    "copy-evm-abis": "mkdir -p ./src/evm/abis && cp -r ../../../target_chains/ethereum/build/contracts/* ./src/evm/abis/",
-    "build-evm-bindings": "mkdir -p ./src/evm/bindings/ && typechain --target=ethers-v5 --out-dir=src/evm/bindings/ src/evm/abis/Pyth*.json",
+    "copy-evm-abis": "mkdir -p ./src/evm/abis && cp -r ../../../node_modules/@pythnetwork/pyth-sdk-solidity/abis ./src/evm/",
+    "build-evm-bindings": "mkdir -p ./src/evm/bindings/ && typechain --target=ethers-v5 --out-dir=src/evm/bindings/ src/evm/abis/*Pyth*.json",
     "start": "node lib/index.js",
     "listen_only": "node lib/index.js --listen_only"
   },
@@ -32,7 +31,8 @@
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.1.4",
     "@certusone/wormhole-spydk": "^0.0.1",
-    "@pythnetwork/wormhole-attester-sdk": "file:../../../wormhole_attester/sdk/js",
+    "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
+    "@pythnetwork/wormhole-attester-sdk": "*",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.24.0",
     "@terra-money/terra.js": "^3.1.3",
