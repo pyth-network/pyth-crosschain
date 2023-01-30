@@ -1,23 +1,18 @@
-FROM node:16-alpine@sha256:72a490e7ed8aed68e16b8dc8f37b5bcc35c5b5c56ee3256effcdee63e2546f93
+# Defined in tilt_devnet/docker_images/Dockerfile.lerna
+FROM lerna
 
-ARG BASE_PATH=/usr/src/pyth2wormhole
-RUN addgroup -S pyth -g 10001 && adduser -S pyth -G pyth -u 10001
-USER pyth
+USER root
+RUN apt-get update && apt-get install -y ncat
 
-# Adds wormhole_attester/sdk/js dependency
-ARG ATTESTER_SDK_REL_PATH=wormhole_attester/sdk/js
-WORKDIR ${BASE_PATH}/${ATTESTER_SDK_REL_PATH}
-COPY --chown=pyth:pyth ${ATTESTER_SDK_REL_PATH} .
-RUN npm ci && npm run build && npm cache clean --force
+WORKDIR /home/node/
+USER 1000
 
-ARG PRICE_SERVICE_REL_PATH=price_service/server
-WORKDIR ${BASE_PATH}/${PRICE_SERVICE_REL_PATH}
-COPY --chown=pyth:pyth ${PRICE_SERVICE_REL_PATH} .
-RUN npm ci && npm run build && npm cache clean --force
+COPY --chown=1000:1000 price_service/server price_service/server
+COPY --chown=1000:1000 price_service/sdk/js price_service/sdk/js
+COPY --chown=1000:1000 wormhole_attester/sdk/js wormhole_attester/sdk/js
 
-# If you are building for production
-# RUN npm ci --only=production
+RUN npx lerna run build --scope="@pythnetwork/price-service-server" --include-dependencies
 
-RUN mkdir -p ${BASE_PATH}/${PRICE_SERVICE_REL_PATH}/logs
+WORKDIR /home/node/price_service/server
 
 CMD [ "npm", "run", "start" ]

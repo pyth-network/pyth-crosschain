@@ -1,37 +1,15 @@
-#syntax=docker/dockerfile:1.2@sha256:e2a8561e419ab1ba6b2fe6cbdf49fd92b95912df1cf7d313c3e2230a333fdbcc
-FROM ghcr.io/certusone/solana:1.10.31
+# Defined in tilt_devnet/docker_images/Dockerfile.lerna
+FROM lerna
 
-# This image builds an environment to initialize and use a local
-# devnet multisig. It uses Pyth's Mesh client.
+WORKDIR /home/node/
+USER 1000
 
-RUN apt-get update && apt-get install -yq python3 libudev-dev ncat
+RUN sh -c "$(curl -sSfL https://release.solana.com/v1.10.31/install)"
+ENV PATH="/home/node/.local/share/solana/install/active_release/bin:$PATH"
 
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs
+COPY --chown=1000:1000 governance/multisig_wh_message_builder governance/multisig_wh_message_builder
+COPY --chown=1000:1000 third_party/pyth/prepare_multisig.py third_party/pyth/pyth_utils.py third_party/pyth/
+COPY --chown=1000:1000 tilt_devnet/secrets/solana tilt_devnet/secrets/solana
+ENV SOL_PAYER_KEYPAIR /home/node/tilt_devnet/secrets/solana/solana-devnet.json
 
-WORKDIR /root
-
-# Also used by the multisig provisioning script
-ENV MULTISIG_SCRIPT_DIR=/root/pyth/multisig_wh_message_builder
-
-WORKDIR $MULTISIG_SCRIPT_DIR
-
-ENV LOCAL_MULTISIG_SCRIPT_DIR=governance/multisig_wh_message_builder
-
-# Add a barebones representation of our deps for Docker layer caching
-ADD $LOCAL_MULTISIG_SCRIPT_DIR/package.json \
-    $LOCAL_MULTISIG_SCRIPT_DIR/package-lock.json \
-    $LOCAL_MULTISIG_SCRIPT_DIR/tsconfig.json \
-    ./
-
-RUN mkdir src # tsc is run as part of the install, add minimal placeholders to satisfy it
-RUN touch src/index.ts
-
-RUN --mount=type=cache,target=/home/node/.cache \
-    npm ci && cp -r node_modules node_modules_cached
-RUN rm -rf node_modules && mv node_modules_cached node_modules
-
-# Add the rest of the code. This ensures that real code changes do not affect the layer caching of `npm ci`
-ADD third_party/pyth /root/pyth
-ADD tilt_devnet/secrets/solana/ /solana-secrets
-
-RUN npm install
+RUN npx lerna run build --scope="@pythnetwork/pyth-multisig-wh-message-builder" --include-dependencies
