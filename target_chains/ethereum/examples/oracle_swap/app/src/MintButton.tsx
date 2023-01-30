@@ -1,6 +1,4 @@
 import Web3 from "web3";
-import { BigNumber } from "ethers";
-import ERC20Abi from "./abi/ERC20MockAbi.json";
 import { numberToTokenQty } from "./utils";
 import { mint } from "./erc20";
 

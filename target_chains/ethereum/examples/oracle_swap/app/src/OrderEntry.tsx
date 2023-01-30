@@ -8,6 +8,10 @@ import OracleSwapAbi from "./abi/OracleSwapAbi.json";
 import { approveToken, getApprovedQuantity } from "./erc20";
 import { EvmPriceServiceConnection } from "@pythnetwork/pyth-evm-js";
 
+/**
+ * The order entry component lets users enter a quantity of the base token to buy/sell and submit
+ * the transaction to the blockchain.
+ */
 export function OrderEntry(props: {
   web3: Web3 | undefined;
   account: string | null;
