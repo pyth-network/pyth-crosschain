@@ -1,5 +1,5 @@
 {
-  "name": "crank_executor",
+  "name": "crank_pythnet_relayer",
   "version": "0.0.0",
   "description": "A crank to relay pyth governance actions to pythnet",
   "author": "",
