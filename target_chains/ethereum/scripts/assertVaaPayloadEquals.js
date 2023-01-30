@@ -10,7 +10,6 @@ module.exports = async function assertVaaPayloadEquals(
   vaaHex,
   expectedPayload
 ) {
-
   if (vaaHex.startsWith("0x")) {
     vaaHex = vaaHex.substring(2);
   }

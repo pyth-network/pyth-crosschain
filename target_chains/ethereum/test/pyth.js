@@ -1,7 +1,6 @@
 const elliptic = require("elliptic");
 const governance = require("@pythnetwork/xc-governance-sdk");
 
-
 const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 const {
   expectRevert,

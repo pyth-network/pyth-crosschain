@@ -46,9 +46,7 @@ export class EvmRelay implements Relay {
         : null;
 
       const updateData = ["0x" + signedVAAs[i]];
-      const updateFee = await this.p2wContract.getUpdateFee(
-        updateData
-      );
+      const updateFee = await this.p2wContract.getUpdateFee(updateData);
 
       let tx = this.p2wContract
         .updatePriceFeeds(updateData, { gasLimit: 2000000, value: updateFee })
@@ -175,7 +173,10 @@ export class EvmRelay implements Relay {
     );
 
     this.payerWallet = new ethers.Wallet(wallet.privateKey, provider);
-    this.p2wContract = AbstractPyth__factory.connect(cfg.p2wContractAddress, this.payerWallet);
+    this.p2wContract = AbstractPyth__factory.connect(
+      cfg.p2wContractAddress,
+      this.payerWallet
+    );
     this.verifyPriceFeeds = cfg.verifyPriceFeeds;
 
     // This promise and throw exist because of constructor() limitations.
