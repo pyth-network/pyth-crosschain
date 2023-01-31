@@ -19,20 +19,20 @@ const CONFIG = {
   // You can find the list of price feed ids at https://pyth.network/developers/price-feed-ids
   // Note that feeds have different ids on testnet / mainnet.
   baseToken: {
-    name: "MATICTEST",
+    name: "BRL",
     erc20Address: "0xB3a2EDFEFC35afE110F983E32Eb67E671501de1f",
     pythPriceFeedId:
-      "d2c2c1f2bba8e0964f9589e060c2ee97f5e19057267ac3284caef3bd50bd2cb5",
+      "08f781a893bc9340140c5f89c8a96f438bcfae4d1474cc0f688e3a52892c7318",
     decimals: 18,
   },
   quoteToken: {
-    name: "USDTTEST",
+    name: "USD",
     erc20Address: "0x8C65F3b18fB29D756d26c1965d84DBC273487624",
     pythPriceFeedId:
       "1fc18861232290221461220bd4e2acd1dcdfbc89c84092c93c18bdc7756c1588",
     decimals: 18,
   },
-  swapContractAddress: "0xb45923844A92093510E9a65DE9f54b01352a2A64",
+  swapContractAddress: "0x405b97aDd1Ae707D8690539e86c2EEd3d044bCcb",
   pythContractAddress: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
   priceServiceUrl: "https://xc-testnet.pyth.network",
   mintQty: 100,

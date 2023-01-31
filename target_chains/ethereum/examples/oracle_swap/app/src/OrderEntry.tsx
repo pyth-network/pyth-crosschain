@@ -62,6 +62,11 @@ export function OrderEntry(props: {
     }
 
     helper();
+    const interval = setInterval(helper, 3000);
+
+    return () => {
+      clearInterval(interval);
+    };
   }, [props.web3, props.account, spentToken]);
 
   useEffect(() => {
