@@ -15,7 +15,7 @@ import {
   getProposals,
   MultisigParser,
   WormholeMultisigInstruction,
-} from "xc-admin-common";
+} from "xc_admin_common";
 import BN from "bn.js";
 import { AnchorProvider } from "@project-serum/anchor";
 import {

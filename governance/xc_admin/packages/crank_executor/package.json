@@ -1,7 +1,7 @@
 {
-  "name": "xc-admin-cli",
+  "name": "crank_executor",
   "version": "0.0.0",
-  "description": "",
+  "description": "A crank to executed all executeReady multisig transaction",
   "author": "",
   "homepage": "https://github.com/pyth-network/pyth-crosschain",
   "license": "ISC",
@@ -18,12 +18,12 @@
     "format": "prettier --write \"src/**/*.ts\""
   },
   "dependencies": {
+    "@certusone/wormhole-sdk": "^0.9.9",
     "@coral-xyz/anchor": "^0.26.0",
     "@pythnetwork/client": "^2.9.0",
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
-    "commander": "^9.5.0",
-    "typescript": "^4.9.4",
-    "xc-admin-common": "*"
+    "ts-node": "^10.9.1",
+    "xc_admin_common": "*"
   }
 }

@@ -6,28 +6,19 @@ import {
 import { PythOracle } from '@pythnetwork/client/lib/anchor'
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
-import { PublicKey } from '@solana/web3.js'
+import { TransactionInstruction } from '@solana/web3.js'
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import copy from 'copy-to-clipboard'
 import { useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import {
-  proposeInstructions,
-  getMultisigCluster,
-  BPF_UPGRADABLE_LOADER,
-  isRemoteCluster,
-  WORMHOLE_ADDRESS,
-  mapKey,
-} from 'xc-admin-common'
+import { getMultisigCluster, proposeInstructions } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
-import { UPGRADE_MULTISIG, useMultisig } from '../../hooks/useMultisig'
-import CopyIcon from '../../images/icons/copy.inline.svg'
+import { SECURITY_MULTISIG, useMultisig } from '../../hooks/useMultisig'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import Modal from '../common/Modal'
@@ -35,75 +26,38 @@ import Spinner from '../common/Spinner'
 import EditButton from '../EditButton'
 import Loadbar from '../loaders/Loadbar'
 
-interface UpdatePermissionsProps {
-  account: PermissionAccount
-  pubkey: string
-  newPubkey?: string
+interface MinPublishersProps {
+  symbol: string
+  minPublishers: number
+  newMinPublishers?: number
 }
 
-const DEFAULT_DATA: UpdatePermissionsProps[] = [
-  {
-    account: 'Master Authority',
-    pubkey: new PublicKey(0).toBase58(),
-  },
-  {
-    account: 'Data Curation Authority',
-    pubkey: new PublicKey(0).toBase58(),
-  },
-  {
-    account: 'Security Authority',
-    pubkey: new PublicKey(0).toBase58(),
-  },
-]
+interface MinPublishersInfo {
+  prev: number
+  new: number
+}
 
-const columnHelper = createColumnHelper<UpdatePermissionsProps>()
+const columnHelper = createColumnHelper<MinPublishersProps>()
 
 const defaultColumns = [
-  columnHelper.accessor('account', {
+  columnHelper.accessor('symbol', {
     cell: (info) => info.getValue(),
-    header: () => <span>Account</span>,
+    header: () => <span>Symbol</span>,
   }),
-  columnHelper.accessor('pubkey', {
+  columnHelper.accessor('minPublishers', {
     cell: (props) => {
-      const pubkey = props.getValue()
-      return (
-        <>
-          <div
-            className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
-            onClick={() => {
-              copy(pubkey)
-            }}
-          >
-            <span className="mr-2 hidden lg:block">{pubkey}</span>
-            <span className="mr-2 lg:hidden">
-              {pubkey.slice(0, 6) + '...' + pubkey.slice(-6)}
-            </span>{' '}
-            <CopyIcon className="shrink-0" />
-          </div>
-        </>
-      )
+      const minPublishers = props.getValue()
+      return <span className="mr-2">{minPublishers}</span>
     },
-    header: () => <span>Public Key</span>,
+    header: () => <span>Min Publishers</span>,
   }),
 ]
 
-type PermissionAccount =
-  | 'Master Authority'
-  | 'Data Curation Authority'
-  | 'Security Authority'
-
-interface PermissionAccountInfo {
-  prev: string
-  new: string
-}
-
-const UpdatePermissions = () => {
-  const [data, setData] = useState(() => [...DEFAULT_DATA])
+const MinPublishers = () => {
+  const [data, setData] = useState<MinPublishersProps[]>([])
   const [columns, setColumns] = useState(() => [...defaultColumns])
-  const [pubkeyChanges, setPubkeyChanges] =
-    useState<Partial<Record<PermissionAccount, PermissionAccountInfo>>>()
-  const [finalPubkeyChanges, setFinalPubkeyChanges] =
-    useState<Record<PermissionAccount, PermissionAccountInfo>>()
+  const [minPublishersChanges, setMinPublishersChanges] =
+    useState<Record<string, MinPublishersInfo>>()
   const [editable, setEditable] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
@@ -118,87 +72,6 @@ const UpdatePermissions = () => {
   const [pythProgramClient, setPythProgramClient] =
     useState<Program<PythOracle>>()
 
-  useEffect(() => {
-    if (rawConfig.permissionAccount) {
-      const masterAuthority =
-        rawConfig.permissionAccount.masterAuthority.toBase58()
-      const dataCurationAuthority =
-        rawConfig.permissionAccount.dataCurationAuthority.toBase58()
-      const securityAuthority =
-        rawConfig.permissionAccount.securityAuthority.toBase58()
-      setData([
-        {
-          account: 'Master Authority',
-          pubkey: masterAuthority,
-        },
-        {
-          account: 'Data Curation Authority',
-          pubkey: dataCurationAuthority,
-        },
-        {
-          account: 'Security Authority',
-          pubkey: securityAuthority,
-        },
-      ])
-    } else {
-      setData([...DEFAULT_DATA])
-    }
-  }, [rawConfig])
-
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  })
-
-  const backfillPubkeyChanges = () => {
-    const newPubkeyChanges: Record<PermissionAccount, PermissionAccountInfo> = {
-      'Master Authority': {
-        prev: data[0].pubkey,
-        new: data[0].pubkey,
-      },
-      'Data Curation Authority': {
-        prev: data[1].pubkey,
-        new: data[1].pubkey,
-      },
-      'Security Authority': {
-        prev: data[2].pubkey,
-        new: data[2].pubkey,
-      },
-    }
-    if (pubkeyChanges) {
-      Object.keys(pubkeyChanges).forEach((key) => {
-        newPubkeyChanges[key as PermissionAccount] = pubkeyChanges[
-          key as PermissionAccount
-        ] as PermissionAccountInfo
-      })
-    }
-
-    return newPubkeyChanges
-  }
-
-  const handleEditButtonClick = () => {
-    const nextState = !editable
-    if (nextState) {
-      const newColumns = [
-        ...defaultColumns,
-        columnHelper.accessor('newPubkey', {
-          cell: (info) => info.getValue(),
-          header: () => <span>New Public Key</span>,
-        }),
-      ]
-      setColumns(newColumns)
-    } else {
-      if (pubkeyChanges && Object.keys(pubkeyChanges).length > 0) {
-        openModal()
-        setFinalPubkeyChanges(backfillPubkeyChanges())
-      } else {
-        setColumns(defaultColumns)
-      }
-    }
-    setEditable(nextState)
-  }
-
   const openModal = () => {
     setIsModalOpen(true)
   }
@@ -207,84 +80,127 @@ const UpdatePermissions = () => {
     setIsModalOpen(false)
   }
 
-  // check if pubkey is valid
-  const isValidPubkey = (pubkey: string) => {
-    try {
-      new PublicKey(pubkey)
-      return true
-    } catch (e) {
-      return false
+  const handleEditButtonClick = () => {
+    const nextState = !editable
+    if (nextState) {
+      const newColumns = [
+        ...defaultColumns,
+        columnHelper.accessor('newMinPublishers', {
+          cell: (info) => info.getValue(),
+          header: () => <span>New Min Publishers</span>,
+        }),
+      ]
+      setColumns(newColumns)
+    } else {
+      if (
+        minPublishersChanges &&
+        Object.keys(minPublishersChanges).length > 0
+      ) {
+        openModal()
+        setMinPublishersChanges(minPublishersChanges)
+      } else {
+        setColumns(defaultColumns)
+      }
     }
+
+    setEditable(nextState)
   }
 
-  const handleEditPubkey = (
+  const handleEditMinPublishers = (
     e: any,
-    account: PermissionAccount,
-    prevPubkey: string
+    symbol: string,
+    prevMinPublishers: number
   ) => {
-    const newPubkey = e.target.textContent
-    if (isValidPubkey(newPubkey) && newPubkey !== prevPubkey) {
-      setPubkeyChanges({
-        ...pubkeyChanges,
-        [account]: {
-          prev: prevPubkey,
-          new: newPubkey,
+    const newMinPublishers = Number(e.target.textContent)
+    if (prevMinPublishers !== newMinPublishers) {
+      setMinPublishersChanges({
+        ...minPublishersChanges,
+        [symbol]: {
+          prev: prevMinPublishers,
+          new: newMinPublishers,
         },
       })
     } else {
-      // delete account from pubkeyChanges if it exists
-      if (pubkeyChanges && pubkeyChanges[account]) {
-        delete pubkeyChanges[account]
+      // delete symbol from minPublishersChanges if it exists
+      if (minPublishersChanges && minPublishersChanges[symbol]) {
+        delete minPublishersChanges[symbol]
       }
-      setPubkeyChanges(pubkeyChanges)
+      setMinPublishersChanges(minPublishersChanges)
     }
   }
 
-  const handleSendProposalButtonClick = () => {
-    if (pythProgramClient && finalPubkeyChanges && squads) {
-      const programDataAccount = PublicKey.findProgramAddressSync(
-        [pythProgramClient?.programId.toBuffer()],
-        BPF_UPGRADABLE_LOADER
-      )[0]
-      const multisigAuthority = squads.getAuthorityPDA(
-        UPGRADE_MULTISIG[getMultisigCluster(cluster)],
-        1
-      )
-
-      pythProgramClient?.methods
-        .updPermissions(
-          new PublicKey(finalPubkeyChanges['Master Authority'].new),
-          new PublicKey(finalPubkeyChanges['Data Curation Authority'].new),
-          new PublicKey(finalPubkeyChanges['Security Authority'].new)
+  useEffect(() => {
+    if (!dataIsLoading && rawConfig) {
+      const minPublishersData: MinPublishersProps[] = []
+      rawConfig.mappingAccounts
+        .sort(
+          (mapping1, mapping2) =>
+            mapping2.products.length - mapping1.products.length
+        )[0]
+        .products.sort((product1, product2) =>
+          product1.metadata.symbol.localeCompare(product2.metadata.symbol)
         )
-        .accounts({
-          upgradeAuthority: isRemoteCluster(cluster)
-            ? mapKey(multisigAuthority)
-            : multisigAuthority,
-          programDataAccount,
-        })
-        .instruction()
-        .then(async (instruction) => {
-          if (!isMultisigLoading) {
-            setIsSendProposalButtonLoading(true)
-            try {
-              const proposalPubkey = await proposeInstructions(
-                squads,
-                UPGRADE_MULTISIG[getMultisigCluster(cluster)],
-                [instruction],
-                isRemoteCluster(cluster),
-                WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
-              )
-              toast.success(
-                `Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`
-              )
-              setIsSendProposalButtonLoading(false)
-            } catch (e: any) {
-              toast.error(capitalizeFirstLetter(e.message))
-              setIsSendProposalButtonLoading(false)
-            }
-          }
-        })
+        .map((product) =>
+          product.priceAccounts.map((priceAccount) => {
+            minPublishersData.push({
+              symbol: product.metadata.symbol,
+              minPublishers: priceAccount.minPub,
+            })
+          })
+        )
+      setData(minPublishersData)
+    }
+  }, [setData, rawConfig, dataIsLoading])
+
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  })
+
+  const handleSendProposalButtonClick = async () => {
+    if (pythProgramClient && minPublishersChanges) {
+      const instructions: TransactionInstruction[] = []
+      Object.keys(minPublishersChanges).forEach((symbol) => {
+        const { prev, new: newMinPublishers } = minPublishersChanges[symbol]
+        const priceAccountPubkey = rawConfig.mappingAccounts
+          .sort(
+            (mapping1, mapping2) =>
+              mapping2.products.length - mapping1.products.length
+          )[0]
+          .products.find((product) => product.metadata.symbol === symbol)!
+          .priceAccounts.find(
+            (priceAccount) => priceAccount.minPub === prev
+          )!.address
+
+        pythProgramClient.methods
+          .setMinPub(newMinPublishers, [0, 0, 0])
+          .accounts({
+            priceAccount: priceAccountPubkey,
+            fundingAccount: squads?.getAuthorityPDA(
+              SECURITY_MULTISIG[getMultisigCluster(cluster)],
+              1
+            ),
+          })
+          .instruction()
+          .then((instruction) => instructions.push(instruction))
+      })
+      if (!isMultisigLoading && squads) {
+        setIsSendProposalButtonLoading(true)
+        try {
+          const proposalPubkey = await proposeInstructions(
+            squads,
+            SECURITY_MULTISIG[getMultisigCluster(cluster)],
+            instructions,
+            false
+          )
+          toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
+          setIsSendProposalButtonLoading(false)
+        } catch (e: any) {
+          toast.error(capitalizeFirstLetter(e.message))
+          setIsSendProposalButtonLoading(false)
+        }
+      }
     }
   }
 
@@ -352,11 +268,11 @@ const UpdatePermissions = () => {
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
         closeModal={closeModal}
-        content={<ModalContent changes={pubkeyChanges} />}
+        content={<ModalContent changes={minPublishersChanges} />}
       />
       <div className="container flex flex-col items-center justify-between lg:flex-row">
         <div className="mb-4 w-full text-left lg:mb-0">
-          <h1 className="h1 mb-4">Update Permissions</h1>
+          <h1 className="h1 mb-4">Min Publishers</h1>
         </div>
       </div>
       <div className="container min-h-[50vh]">
@@ -368,7 +284,7 @@ const UpdatePermissions = () => {
             <EditButton editable={editable} onClick={handleEditButtonClick} />
           </div>
         </div>
-        <div className="relative mt-6">
+        <div className="table-responsive relative mt-6">
           {dataIsLoading ? (
             <div className="mt-3">
               <Loadbar theme="light" />
@@ -383,7 +299,7 @@ const UpdatePermissions = () => {
                         <th
                           key={header.id}
                           className={
-                            header.column.id === 'account'
+                            header.column.id === 'symbol'
                               ? 'base16 pt-8 pb-6 pl-4 pr-2 font-semibold opacity-60 xl:pl-14'
                               : 'base16 pt-8 pb-6 pl-1 pr-2 font-semibold opacity-60'
                           }
@@ -406,20 +322,20 @@ const UpdatePermissions = () => {
                         <td
                           key={cell.id}
                           onBlur={(e) =>
-                            handleEditPubkey(
+                            handleEditMinPublishers(
                               e,
-                              cell.row.original.account,
-                              cell.row.original.pubkey
+                              cell.row.original.symbol,
+                              cell.row.original.minPublishers
                             )
                           }
                           contentEditable={
-                            cell.column.id === 'newPubkey' && editable
+                            cell.column.id === 'newMinPublishers' && editable
                               ? true
                               : false
                           }
                           suppressContentEditableWarning={true}
                           className={
-                            cell.column.id === 'account'
+                            cell.column.id === 'symbol'
                               ? 'py-3 pl-4 pr-2 xl:pl-14'
                               : 'items-center py-3 pl-1 pr-4'
                           }
@@ -442,4 +358,4 @@ const UpdatePermissions = () => {
   )
 }
 
-export default UpdatePermissions
+export default MinPublishers

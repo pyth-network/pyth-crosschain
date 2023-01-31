@@ -1,7 +1,7 @@
 {
-  "name": "crank-executor",
+  "name": "crank_pythnet_relayer",
   "version": "0.0.0",
-  "description": "A crank to executed all executeReady multisig transaction",
+  "description": "A crank to relay pyth governance actions to pythnet",
   "author": "",
   "homepage": "https://github.com/pyth-network/pyth-crosschain",
   "license": "ISC",
@@ -24,6 +24,6 @@
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
     "ts-node": "^10.9.1",
-    "xc-admin-common": "*"
+    "xc_admin_common": "*"
   }
 }

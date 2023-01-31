@@ -4,7 +4,7 @@ import { Cluster, Connection, PublicKey } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
 import { TransactionAccount } from '@sqds/mesh/lib/types'
 import { useContext, useEffect, useRef, useState } from 'react'
-import { getMultisigCluster, getProposals } from 'xc-admin-common'
+import { getMultisigCluster, getProposals } from 'xc_admin_common'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 
