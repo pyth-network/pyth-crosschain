@@ -24,7 +24,17 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>React App</title>
+    <title>Pyth Example Oracle AMM</title>
+    <script>
+      const faviconTag = document.querySelector("link[rel~='icon']");
+      const isDark = window.matchMedia("(prefers-color-scheme: dark)");
+      const changeFavicon = () => {
+        if (isDark.matches) faviconTag.href = "/favicon-light.ico";
+        else faviconTag.href = "/favicon.ico";
+      };
+      changeFavicon();
+      setInterval(changeFavicon, 1000);
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
