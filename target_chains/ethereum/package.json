@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "rm -rf build && npx truffle compile --all",
-    "test": "truffle test",
+    "test-contract": "truffle test",
     "migrate": "truffle migrate",
     "receiver-submit-guardian-sets": "truffle exec scripts/receiverSubmitGuardianSetUpgrades.js",
     "verify": "truffle run verify $npm_config_module@$npm_config_contract_address --network $npm_config_network",

@@ -4,6 +4,12 @@ import {
   UnixTimestamp,
 } from "@pythnetwork/price-service-sdk";
 
+export {
+  PriceFeed,
+  Price,
+  UnixTimestamp,
+} from "@pythnetwork/price-service-sdk";
+
 export enum PriceAttestationStatus {
   Unknown = 0,
   Trading = 1,
