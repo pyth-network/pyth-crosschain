@@ -9,5 +9,5 @@ test = 'forge-test'
 
 libs = [
     'lib',
-    'node_modules',
+    '../../node_modules',
 ]

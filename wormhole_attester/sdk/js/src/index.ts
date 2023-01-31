@@ -1,5 +1,14 @@
-import { PriceFeed, Price, UnixTimestamp } from "@pythnetwork/pyth-sdk-js";
-export { PriceFeed, Price, UnixTimestamp } from "@pythnetwork/pyth-sdk-js";
+import {
+  PriceFeed,
+  Price,
+  UnixTimestamp,
+} from "@pythnetwork/price-service-sdk";
+
+export {
+  PriceFeed,
+  Price,
+  UnixTimestamp,
+} from "@pythnetwork/price-service-sdk";
 
 export enum PriceAttestationStatus {
   Unknown = 0,

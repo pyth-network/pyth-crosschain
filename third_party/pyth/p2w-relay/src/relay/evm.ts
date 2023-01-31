@@ -4,7 +4,7 @@ import { logger } from "../helpers";
 import { hexToUint8Array } from "@certusone/wormhole-sdk";
 import { importCoreWasm } from "@certusone/wormhole-sdk/lib/cjs/solana/wasm";
 
-import { PythUpgradable__factory, PythUpgradable } from "../evm/bindings/";
+import { AbstractPyth__factory, AbstractPyth } from "../evm/bindings/";
 import { parseBatchPriceAttestation } from "@pythnetwork/wormhole-attester-sdk";
 
 let WH_WASM: any = null;
@@ -19,7 +19,7 @@ async function whWasm(): Promise<any> {
 
 export class EvmRelay implements Relay {
   payerWallet: ethers.Wallet;
-  p2wContract: PythUpgradable;
+  p2wContract: AbstractPyth;
   // p2w contract sanity check; If set to true, we log query() results
   // on all prices in a batch before and after relaying.
   verifyPriceFeeds: boolean;
@@ -46,9 +46,7 @@ export class EvmRelay implements Relay {
         : null;
 
       const updateData = ["0x" + signedVAAs[i]];
-      const updateFee = await this.p2wContract["getUpdateFee(bytes[])"](
-        updateData
-      );
+      const updateFee = await this.p2wContract.getUpdateFee(updateData);
 
       let tx = this.p2wContract
         .updatePriceFeeds(updateData, { gasLimit: 2000000, value: updateFee })
@@ -175,8 +173,10 @@ export class EvmRelay implements Relay {
     );
 
     this.payerWallet = new ethers.Wallet(wallet.privateKey, provider);
-    let factory = new PythUpgradable__factory(this.payerWallet);
-    this.p2wContract = factory.attach(cfg.p2wContractAddress);
+    this.p2wContract = AbstractPyth__factory.connect(
+      cfg.p2wContractAddress,
+      this.payerWallet
+    );
     this.verifyPriceFeeds = cfg.verifyPriceFeeds;
 
     // This promise and throw exist because of constructor() limitations.

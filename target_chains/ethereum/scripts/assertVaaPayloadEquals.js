@@ -1,8 +1,4 @@
-const {
-  importCoreWasm,
-  setDefaultWasm,
-} = require("@certusone/wormhole-sdk-wasm");
-setDefaultWasm("node");
+const { parseVaa } = require("@certusone/wormhole-sdk");
 const { assert } = require("chai");
 
 /**
@@ -14,13 +10,11 @@ module.exports = async function assertVaaPayloadEquals(
   vaaHex,
   expectedPayload
 ) {
-  const { parse_vaa } = await importCoreWasm();
-
   if (vaaHex.startsWith("0x")) {
     vaaHex = vaaHex.substring(2);
   }
 
-  const vaaPayload = Buffer.from(parse_vaa(Buffer.from(vaaHex, "hex")).payload);
+  const vaaPayload = Buffer.from(parseVaa(Buffer.from(vaaHex, "hex")).payload);
 
   assert(
     expectedPayload.equals(vaaPayload),

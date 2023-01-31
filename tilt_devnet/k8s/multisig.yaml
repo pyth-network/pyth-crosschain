@@ -36,4 +36,4 @@ spec:
             failureThreshold: 300
           command:
             - python3
-            - /root/pyth/prepare_multisig.py
+            - /home/node/third_party/pyth/prepare_multisig.py

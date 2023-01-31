@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "declaration": true,
+    "composite": true,
+    "declarationMap": true,
+    "incremental": true,
     "target": "es2016",
     "module": "commonjs",
     "outDir": "lib",
@@ -9,7 +12,8 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "noErrorTruncation": true
+    "noErrorTruncation": true,
+    "rootDir": "src/"
   },
   "include": ["src/**/*.ts"]
 }

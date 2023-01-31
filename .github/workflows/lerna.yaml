@@ -1,0 +1,20 @@
+name: Lerna build & test
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "npm"
+      - name: Install deps
+        run: npm ci
+      - name: Run lerna build
+        run: npx lerna run build
+      - name: Run lerna tests
+        run: npx lerna run test

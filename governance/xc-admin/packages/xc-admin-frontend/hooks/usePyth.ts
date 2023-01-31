@@ -110,21 +110,23 @@ const usePyth = (): PythHookData => {
             case AccountType.Product:
               const parsed = parseProductData(allPythAccounts[i].account.data)
 
-              if (parsed.priceAccountKey.toBase58() == ONES) {
+              if (parsed.priceAccountKey?.toBase58() == ONES) {
                 productRawConfigs[allPythAccounts[i].pubkey.toBase58()] = {
                   priceAccounts: [],
                   metadata: parsed.product,
                   address: allPythAccounts[i].pubkey,
                 }
               } else {
-                let priceAccountKey: string | null =
-                  parsed.priceAccountKey.toBase58()
+                let priceAccountKey: string | undefined =
+                  parsed.priceAccountKey?.toBase58()
                 let priceAccounts = []
                 while (priceAccountKey) {
                   const toAdd: PriceRawConfig = priceRawConfigs[priceAccountKey]
                   priceAccounts.push(toAdd)
                   delete priceRawConfigs[priceAccountKey]
-                  priceAccountKey = toAdd.next ? toAdd.next.toBase58() : null
+                  priceAccountKey = toAdd.next
+                    ? toAdd.next.toBase58()
+                    : undefined
                 }
                 productRawConfigs[allPythAccounts[i].pubkey.toBase58()] = {
                   priceAccounts,

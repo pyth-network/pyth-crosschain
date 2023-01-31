@@ -3,7 +3,7 @@ import {
   Price,
   PriceFeed,
   PriceFeedMetadata,
-} from "@pythnetwork/pyth-sdk-js";
+} from "@pythnetwork/price-service-sdk";
 import { Server } from "http";
 import { WebSocket, WebSocketServer } from "ws";
 import { sleep } from "../helpers";

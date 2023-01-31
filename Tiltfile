@@ -62,6 +62,13 @@ if not ci:
 def k8s_yaml_with_ns(objects):
     return k8s_yaml(namespace_inject(objects, namespace))
 
+# Build lerna docker base for npm project
+docker_build(
+    ref = "lerna",
+    context = ".",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.lerna",
+)
+
 def build_node_yaml():
     node_yaml = read_yaml_stream("tilt_devnet/k8s/node.yaml")
 

@@ -9,4 +9,4 @@ export {
   PriceFeed,
   Price,
   UnixTimestamp,
-} from "@pythnetwork/pyth-sdk-js";
+} from "@pythnetwork/price-service-sdk";

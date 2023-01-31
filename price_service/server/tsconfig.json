@@ -9,12 +9,17 @@
     "allowJs": true,
     "alwaysStrict": true,
     "strict": true,
+    "declaration": true,
+    "composite": true,
+    "declarationMap": true,
+    "incremental": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "downlevelIteration": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "rootDir": "src/"
   },
   "include": ["src"],
   "exclude": ["node_modules"]

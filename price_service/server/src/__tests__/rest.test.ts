@@ -3,7 +3,7 @@ import {
   Price,
   PriceFeed,
   PriceFeedMetadata,
-} from "@pythnetwork/pyth-sdk-js";
+} from "@pythnetwork/price-service-sdk";
 import express, { Express } from "express";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";

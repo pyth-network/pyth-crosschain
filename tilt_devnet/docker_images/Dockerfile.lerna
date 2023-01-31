@@ -1,0 +1,35 @@
+# The aim for the base image here is to only keep package*.json files while having the
+# same directory structure to be able to have lerna dependencies installed once and cached
+# as long as the package*.json files have not changed. In the future, we can further optimize
+# it by creating slim package files that only contain *dependencies and name keys.
+
+FROM node:18.13.0@sha256:d9061fd0205c20cd47f70bdc879a7a84fb472b822d3ad3158aeef40698d2ce36 as base
+
+WORKDIR /home/node
+COPY --chown=1000:1000 ./ ./
+
+# Remove files that are not json packages
+RUN find . -type f ! -name 'package*.json' -delete
+# Remove directories that are empty now
+RUN find . -type d -empty -delete
+
+COPY ./lerna.json ./
+
+FROM node:18.13.0@sha256:d9061fd0205c20cd47f70bdc879a7a84fb472b822d3ad3158aeef40698d2ce36 as lerna
+
+# 1000 is the uid and gid of the node user
+USER 1000
+RUN mkdir -p /home/node/.npm
+RUN mkdir -p /home/node/node_modules
+
+WORKDIR /home/node
+COPY --from=base --chown=1000:1000 /home/node ./
+
+RUN --mount=type=cache,uid=1000,gid=1000,id=lerna,target=/home/node/.npm \
+  --mount=type=cache,uid=1000,gid=1000,id=lerna,target=/home/node/node_modules \
+  npm ci && cp -r node_modules node_modules_cache
+
+# Folders in the cache are not visible in the container that's why we copy
+# them and then move them back.
+
+RUN rm -rf node_modules && mv node_modules_cache node_modules

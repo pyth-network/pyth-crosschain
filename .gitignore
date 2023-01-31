@@ -13,3 +13,4 @@ bigtable-writer.json
 .vscode
 .dccache
 .aptos
+tsconfig.tsbuildinfo

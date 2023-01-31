@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "declaration": true,
+    "composite": true,
+    "declarationMap": true,
+    "incremental": true,
     "target": "es2020",
     "module": "CommonJS",
     "moduleResolution": "node",
@@ -11,7 +14,8 @@
     "skipLibCheck": true,
     "noErrorTruncation": true,
     "sourceMap": true,
-    "lib": ["es2021"]
+    "lib": ["es2021"],
+    "rootDir": "src/"
   },
   "include": ["src/**/*.ts"]
 }

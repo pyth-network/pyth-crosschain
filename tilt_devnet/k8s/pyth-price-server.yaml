@@ -81,7 +81,7 @@ spec:
           command:
             - /bin/sh
             - -c
-            - "npm run test && nc -lkp 2358 0.0.0.0"
+            - "npm run test && nc -lk 0.0.0.0 2358"
           readinessProbe:
             periodSeconds: 5
             failureThreshold: 300

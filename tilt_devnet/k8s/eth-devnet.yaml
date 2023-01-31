@@ -75,7 +75,7 @@ spec:
             - -c
             - "npm run migrate -- --network development &&
               npx truffle test test/pyth.js 2>&1 &&
-              nc -lkp 2000 0.0.0.0"
+              nc -lk 0.0.0.0 2000"
           readinessProbe:
             periodSeconds: 1
             failureThreshold: 300
@@ -114,7 +114,7 @@ spec:
             - --deterministic
             - --time="1970-01-01T00:00:00+00:00"
             - --host=0.0.0.0
-            - --chainId=1397
+            - --chain.chainId=1397
           ports:
             - containerPort: 8545
               name: rpc
@@ -129,7 +129,7 @@ spec:
             - /bin/sh
             - -c
             - "npm run migrate -- --network development &&
-              nc -lkp 2000 0.0.0.0"
+              nc -lk 0.0.0.0 2000"
           readinessProbe:
             periodSeconds: 1
             failureThreshold: 300

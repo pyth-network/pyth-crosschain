@@ -3,8 +3,12 @@
     "target": "esnext",
     "module": "commonjs",
     "declaration": true,
+    "composite": true,
+    "declarationMap": true,
+    "incremental": true,
     "outDir": "./lib",
-    "strict": true
+    "strict": true,
+    "rootDir": "src/"
   },
   "include": ["src"],
   "exclude": ["node_modules", "**/__tests__/*"]

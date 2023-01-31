@@ -4,12 +4,16 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "declaration": true,
+    "composite": true,
+    "declarationMap": true,
+    "incremental": true,
     "outDir": "./lib",
     "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "downlevelIteration": true,
-    "allowJs": true
+    "allowJs": true,
+    "rootDir": "src/"
   },
   "types": [],
   "include": ["src", "types"],
