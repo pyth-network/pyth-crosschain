@@ -88,7 +88,6 @@ async function send(
         p2 | P2_MORE,
         buffer
       );
-      // @ts-ignore -- TransportStatusError is a constructor Function, not a Class
       if (response.length !== 2)
         throw TransportStatusError(StatusCodes.INCORRECT_DATA);
 

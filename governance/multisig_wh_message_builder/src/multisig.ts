@@ -11,13 +11,13 @@ import lodash from "lodash";
 export async function getActiveProposals(
   squad: Squads,
   vault: PublicKey,
-  offset: number = 1
+  offset = 1
 ): Promise<TransactionAccount[]> {
   const msAccount = await squad.getMultisig(vault);
-  let txKeys = lodash
+  const txKeys = lodash
     .range(offset, msAccount.transactionIndex + 1)
     .map((i) => getTxPDA(vault, new BN(i), DEFAULT_MULTISIG_PROGRAM_ID)[0]);
-  let msTransactions = await squad.getTransactions(txKeys);
+  const msTransactions = await squad.getTransactions(txKeys);
   return msTransactions
     .filter(
       (x: TransactionAccount | null): x is TransactionAccount => x != null
@@ -29,10 +29,10 @@ export async function getManyProposalsInstructions(
   squad: Squads,
   txAccounts: TransactionAccount[]
 ): Promise<InstructionAccount[][]> {
-  let allIxsKeys = [];
-  let ownerTransaction = [];
-  for (let [index, txAccount] of txAccounts.entries()) {
-    let ixKeys = lodash
+  const allIxsKeys = [];
+  const ownerTransaction = [];
+  for (const [index, txAccount] of txAccounts.entries()) {
+    const ixKeys = lodash
       .range(1, txAccount.instructionIndex + 1)
       .map(
         (i) =>
@@ -42,14 +42,14 @@ export async function getManyProposalsInstructions(
             DEFAULT_MULTISIG_PROGRAM_ID
           )[0]
       );
-    for (let ixKey of ixKeys) {
+    for (const ixKey of ixKeys) {
       allIxsKeys.push(ixKey);
       ownerTransaction.push(index);
     }
   }
 
-  let allTxIxsAcccounts = await squad.getInstructions(allIxsKeys);
-  let ixAccountsByTx: InstructionAccount[][] = Array.from(
+  const allTxIxsAcccounts = await squad.getInstructions(allIxsKeys);
+  const ixAccountsByTx: InstructionAccount[][] = Array.from(
     Array(txAccounts.length),
     () => []
   );
@@ -67,13 +67,13 @@ export async function getProposalInstructions(
   squad: Squads,
   txAccount: TransactionAccount
 ): Promise<InstructionAccount[]> {
-  let ixKeys = lodash
+  const ixKeys = lodash
     .range(1, txAccount.instructionIndex + 1)
     .map(
       (i) =>
         getIxPDA(txAccount.publicKey, new BN(i), DEFAULT_MULTISIG_PROGRAM_ID)[0]
     );
-  let txIxs = await squad.getInstructions(ixKeys);
+  const txIxs = await squad.getInstructions(ixKeys);
   return txIxs.filter(
     (x: InstructionAccount | null): x is InstructionAccount => x != null
   );
