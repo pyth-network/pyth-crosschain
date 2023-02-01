@@ -7,16 +7,20 @@ import { PythOracle } from '@pythnetwork/client/lib/anchor'
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
 import { useContext, useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
 import { useMultisig } from '../../hooks/useMultisig'
+import { PriceRawConfig } from '../../hooks/usePyth'
+import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import Modal from '../common/Modal'
 import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
 
 const General = () => {
-  const [data, setData] = useState({})
+  const [data, setData] = useState<{ [key: string]: any }>({})
+  const [dataChanges, setDataChanges] = useState<Record<string, any>>()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
     useState(false)
@@ -40,7 +44,7 @@ const General = () => {
 
   useEffect(() => {
     if (!dataIsLoading && rawConfig && rawConfig.mappingAccounts.length > 0) {
-      const symbolToData: any = {}
+      let symbolToData: any = {}
       rawConfig.mappingAccounts
         .sort(
           (mapping1, mapping2) =>
@@ -64,9 +68,72 @@ const General = () => {
               }),
             })
         )
+      symbolToData = sortData(symbolToData)
       setData(symbolToData)
     }
   }, [rawConfig, dataIsLoading])
+
+  const sortData = (data: any) => {
+    const sortedData: any = {}
+    Object.keys(data)
+      .sort()
+      .forEach((key) => {
+        const sortedInnerData: any = {}
+        Object.keys(data[key])
+          .sort()
+          .forEach((innerKey) => {
+            if (innerKey === 'metadata') {
+              sortedInnerData[innerKey] = sortObjectByKeys(data[key][innerKey])
+            } else if (innerKey === 'priceAccounts') {
+              // sort price accounts by address
+              sortedInnerData[innerKey] = data[key][innerKey].sort(
+                (
+                  priceAccount1: PriceRawConfig,
+                  priceAccount2: PriceRawConfig
+                ) =>
+                  priceAccount1.address
+                    .toBase58()
+                    .localeCompare(priceAccount2.address.toBase58())
+              )
+              // sort price accounts keys
+              sortedInnerData[innerKey] = sortedInnerData[innerKey].map(
+                (priceAccount: any) => {
+                  const sortedPriceAccount: any = {}
+                  Object.keys(priceAccount)
+                    .sort()
+                    .forEach((priceAccountKey) => {
+                      if (priceAccountKey === 'publishers') {
+                        sortedPriceAccount[priceAccountKey] = priceAccount[
+                          priceAccountKey
+                        ].sort((pub1: string, pub2: string) =>
+                          pub1.localeCompare(pub2)
+                        )
+                      } else {
+                        sortedPriceAccount[priceAccountKey] =
+                          priceAccount[priceAccountKey]
+                      }
+                    })
+                  return sortedPriceAccount
+                }
+              )
+            } else {
+              sortedInnerData[innerKey] = data[key][innerKey]
+            }
+          })
+        sortedData[key] = sortedInnerData
+      })
+    return sortedData
+  }
+
+  const sortObjectByKeys = (obj: any) => {
+    const sortedObj: any = {}
+    Object.keys(obj)
+      .sort()
+      .forEach((key) => {
+        sortedObj[key] = obj[key]
+      })
+    return sortedObj
+  }
 
   // function to download json file
   const handleDownloadJsonButtonClick = () => {
@@ -79,6 +146,64 @@ const General = () => {
     document.body.appendChild(downloadAnchor) // required for firefox
     downloadAnchor.click()
     downloadAnchor.remove()
+  }
+
+  // function to upload json file and update changes state
+  const handleUploadJsonButtonClick = () => {
+    const uploadAnchor = document.createElement('input')
+    uploadAnchor.setAttribute('type', 'file')
+    uploadAnchor.setAttribute('accept', '.json')
+    uploadAnchor.addEventListener('change', (e) => {
+      const file = (e.target as HTMLInputElement).files![0]
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        if (e.target) {
+          const fileData = e.target.result
+          if (!isValidJson(fileData as string)) return
+          const fileDataParsed = sortData(JSON.parse(fileData as string))
+          const changes: Record<string, any> = {}
+          Object.keys(fileDataParsed).forEach((symbol) => {
+            if (
+              JSON.stringify(data[symbol]) !==
+              JSON.stringify(fileDataParsed[symbol])
+            ) {
+              changes[symbol] = { prev: {}, new: {} }
+              changes[symbol].prev = data[symbol]
+              changes[symbol].new = fileDataParsed[symbol]
+            }
+          })
+          setDataChanges(changes)
+          openModal()
+        }
+      }
+      reader.readAsText(file)
+    })
+    document.body.appendChild(uploadAnchor) // required for firefox
+    uploadAnchor.click()
+    uploadAnchor.remove()
+  }
+
+  // check if uploaded json is valid json
+  const isValidJson = (json: string) => {
+    try {
+      JSON.parse(json)
+    } catch (e: any) {
+      toast.error(capitalizeFirstLetter(e.message))
+      return false
+    }
+    // check if json keys are existing products
+    const jsonParsed = JSON.parse(json)
+    const jsonSymbols = Object.keys(jsonParsed)
+    const existingSymbols = Object.keys(data)
+    // check that jsonSymbols is equal to existingSymbols no matter the order
+    if (
+      JSON.stringify(jsonSymbols.sort()) !==
+      JSON.stringify(existingSymbols.sort())
+    ) {
+      toast.error('Symbols in json file do not match existing symbols!')
+      return false
+    }
+    return true
   }
 
   const ModalContent = ({ changes }: { changes: any }) => {
@@ -138,7 +263,7 @@ const General = () => {
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
         closeModal={closeModal}
-        content={<ModalContent changes={{}} />}
+        content={<ModalContent changes={dataChanges} />}
       />
       <div className="container flex flex-col items-center justify-between lg:flex-row">
         <div className="mb-4 w-full text-left lg:mb-0">
@@ -169,7 +294,7 @@ const General = () => {
               <div className="mb-10">
                 <button
                   className="action-btn text-base"
-                  //   onClick={handleUploadJsonButtonClick}
+                  onClick={handleUploadJsonButtonClick}
                 >
                   Upload JSON
                 </button>
