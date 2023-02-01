@@ -1,26 +1,10 @@
 {
-  "compilerOptions": {
-    "outDir": "lib",
-    "target": "esnext",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "lib": ["es2019"],
-    "skipLibCheck": true,
-    "allowJs": true,
-    "alwaysStrict": true,
-    "strict": true,
-    "declaration": true,
-    "composite": true,
-    "declarationMap": true,
-    "incremental": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "downlevelIteration": true,
-    "esModuleInterop": true,
-    "rootDir": "src/"
-  },
+  "extends": "../../tsconfig.base.json",
   "include": ["src"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "**/__tests__/*"],
+  "compilerOptions": {
+    "rootDir": "src/",
+    "outDir": "./lib",
+    "skipLibCheck": true
+  }
 }
