@@ -6,6 +6,7 @@ import Layout from '../components/layout/Layout'
 import AddRemovePublishers from '../components/tabs/AddRemovePublishers'
 import MinPublishers from '../components/tabs/MinPublishers'
 import UpdatePermissions from '../components/tabs/UpdatePermissions'
+import UpdateProductMetadata from '../components/tabs/UpdateProductMetadata'
 import { PythContextProvider } from '../contexts/PythContext'
 import { classNames } from '../utils/classNames'
 
@@ -25,6 +26,11 @@ const TAB_INFO = {
     title: 'Add/Remove Publishers',
     description: 'Add or remove publishers from price feeds.',
     queryString: 'add-remove-publishers',
+  },
+  UpdateProductMetadata: {
+    title: 'Update Product Metadata',
+    description: 'Update the metadata of a product.',
+    queryString: 'update-product-metadata',
   },
 }
 
@@ -100,6 +106,9 @@ const Home: NextPage = () => {
         ) : tabInfoArray[currentTabIndex].queryString ===
           TAB_INFO.AddRemovePublishers.queryString ? (
           <AddRemovePublishers />
+        ) : tabInfoArray[currentTabIndex].queryString ===
+          TAB_INFO.UpdateProductMetadata.queryString ? (
+          <UpdateProductMetadata />
         ) : null}
       </PythContextProvider>
     </Layout>
