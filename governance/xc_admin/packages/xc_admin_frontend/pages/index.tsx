@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Layout from '../components/layout/Layout'
 import AddRemovePublishers from '../components/tabs/AddRemovePublishers'
+import General from '../components/tabs/General'
 import MinPublishers from '../components/tabs/MinPublishers'
 import UpdatePermissions from '../components/tabs/UpdatePermissions'
 import UpdateProductMetadata from '../components/tabs/UpdateProductMetadata'
@@ -11,6 +12,11 @@ import { PythContextProvider } from '../contexts/PythContext'
 import { classNames } from '../utils/classNames'
 
 const TAB_INFO = {
+  General: {
+    title: 'General',
+    description: 'General panel for the program.',
+    queryString: 'general',
+  },
   MinPublishers: {
     title: 'Min Publishers',
     description:
@@ -76,7 +82,7 @@ const Home: NextPage = () => {
               selectedIndex={currentTabIndex}
               onChange={handleChangeTab}
             >
-              <Tab.List className="mx-auto gap-1 space-x-4 text-center sm:gap-2.5 md:space-x-8">
+              <Tab.List className="mx-auto gap-1 space-x-4 text-center sm:gap-2.5 md:space-x-8 space-y-4">
                 {Object.entries(TAB_INFO).map((tab, idx) => (
                   <Tab
                     key={idx}
@@ -98,7 +104,10 @@ const Home: NextPage = () => {
           </div>
         </div>
         {tabInfoArray[currentTabIndex].queryString ===
-        TAB_INFO.MinPublishers.queryString ? (
+        TAB_INFO.General.queryString ? (
+          <General />
+        ) : tabInfoArray[currentTabIndex].queryString ===
+          TAB_INFO.MinPublishers.queryString ? (
           <MinPublishers />
         ) : tabInfoArray[currentTabIndex].queryString ===
           TAB_INFO.UpdatePermissions.queryString ? (
