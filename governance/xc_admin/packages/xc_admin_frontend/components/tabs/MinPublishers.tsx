@@ -130,7 +130,7 @@ const MinPublishers = () => {
   }
 
   useEffect(() => {
-    if (!dataIsLoading && rawConfig) {
+    if (!dataIsLoading && rawConfig && rawConfig.mappingAccounts.length > 0) {
       const minPublishersData: MinPublishersProps[] = []
       rawConfig.mappingAccounts
         .sort(
