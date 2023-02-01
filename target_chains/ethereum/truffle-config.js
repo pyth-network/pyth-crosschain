@@ -2,15 +2,16 @@ require("dotenv").config({ path: ".env" });
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 
 /**
- * 
- * @param {string} url 
+ *
+ * @param {string} url
  * @returns {HDWalletProvider} An instance of HDWalletProvider
  */
 function payerProvider(url) {
-  return () => new HDWalletProvider({
-    mnemonic: process.env.MNEMONIC,
-    providerOrUrl: url
-  });
+  return () =>
+    new HDWalletProvider({
+      mnemonic: process.env.MNEMONIC,
+      providerOrUrl: url,
+    });
 }
 
 module.exports = {
@@ -22,7 +23,9 @@ module.exports = {
       network_id: "*",
     },
     ethereum: {
-      provider: payerProvider(`https://mainnet.infura.io/v3/` + process.env.INFURA_KEY),
+      provider: payerProvider(
+        `https://mainnet.infura.io/v3/` + process.env.INFURA_KEY
+      ),
       network_id: 1,
       gas: 10000000,
       gasPrice: 17000000000,
@@ -31,7 +34,9 @@ module.exports = {
       skipDryRun: false,
     },
     ropsten: {
-      provider: payerProvider(`https://ropsten.infura.io/v3/` + process.env.INFURA_KEY),
+      provider: payerProvider(
+        `https://ropsten.infura.io/v3/` + process.env.INFURA_KEY
+      ),
       network_id: 3,
       gas: 5500000,
       confirmations: 2,
@@ -39,7 +44,9 @@ module.exports = {
       skipDryRun: true,
     },
     rinkeby: {
-      provider: payerProvider(`https://rinkeby.infura.io/v3/` + process.env.INFURA_KEY),
+      provider: payerProvider(
+        `https://rinkeby.infura.io/v3/` + process.env.INFURA_KEY
+      ),
       network_id: 4,
       gas: 5500000,
       confirmations: 2,
@@ -47,7 +54,9 @@ module.exports = {
       skipDryRun: true,
     },
     goerli: {
-      provider: payerProvider(`https://goerli.infura.io/v3/` + process.env.INFURA_KEY),
+      provider: payerProvider(
+        `https://goerli.infura.io/v3/` + process.env.INFURA_KEY
+      ),
       network_id: "5",
       gas: 8465030,
       gasPrice: 15000000000,
@@ -74,7 +83,9 @@ module.exports = {
       gasPrice: 300000000000,
     },
     mumbai: {
-      provider: payerProvider(`https://polygon-testnet-rpc.allthatnode.com:8545`),
+      provider: payerProvider(
+        `https://polygon-testnet-rpc.allthatnode.com:8545`
+      ),
       network_id: "80001",
     },
     avalanche: {
