@@ -164,7 +164,7 @@ export function parseBatchPriceAttestation(
   const attestationSize = bytes.readUint16BE(offset);
   offset += 2;
 
-  let priceAttestations: PriceAttestation[] = [];
+  const priceAttestations: PriceAttestation[] = [];
 
   for (let i = 0; i < batchLen; i += 1) {
     priceAttestations.push(

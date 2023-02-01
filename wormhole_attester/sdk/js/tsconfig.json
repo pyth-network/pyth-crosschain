@@ -1,21 +1,9 @@
 {
+  "extends": "../../../tsconfig.base.json",
+  "include": ["src"],
+  "exclude": ["node_modules", "**/__tests__/*"],
   "compilerOptions": {
-    "target": "esnext",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "declaration": true,
-    "composite": true,
-    "declarationMap": true,
-    "incremental": true,
-    "outDir": "./lib",
-    "strict": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "downlevelIteration": true,
-    "allowJs": true,
-    "rootDir": "src/"
-  },
-  "types": [],
-  "include": ["src", "types"],
-  "exclude": ["node_modules", "**/__tests__/*"]
+    "rootDir": "src/",
+    "outDir": "./lib"
+  }
 }
