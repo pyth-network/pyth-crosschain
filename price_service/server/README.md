@@ -50,6 +50,7 @@ Build the image from [the repo root](../../) like below. It will create a
 local image named `pyth_price_server`.
 
 ```
+$ docker buildx build -f tilt_devnet/docker_images/Dockerfile.lerna -t lerna .
 $ docker buildx build -f price_service/server/Dockerfile -t pyth_price_server .
 ```
 
