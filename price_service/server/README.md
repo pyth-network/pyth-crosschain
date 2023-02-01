@@ -46,17 +46,11 @@ price service you should:
 
 ## Build an image
 
-First, build the wasm files from [the repo root](../../) like below. This command generates the wasm files necessary
-for parsing Pyth messages coming from Wormhole and stores them on [this](../../wormhole_attester/sdk/js) directory.
-
-```
-docker buildx build -f tilt_devnet/docker_images/Dockerfile.wasm -o type=local,dest=. .
-```
-
-Then, build the image from [the repo root](../../) like below. It will create a
+Build the image from [the repo root](../../) like below. It will create a
 local image named `pyth_price_server`.
 
 ```
+$ docker buildx build -f tilt_devnet/docker_images/Dockerfile.lerna -t lerna .
 $ docker buildx build -f price_service/server/Dockerfile -t pyth_price_server .
 ```
 
