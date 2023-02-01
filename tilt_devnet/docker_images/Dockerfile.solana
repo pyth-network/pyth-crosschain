@@ -31,7 +31,7 @@ RUN cargo init --lib /tmp/decoy-crate && \
 
 WORKDIR /usr/src/bridge
 
-ARG WORMHOLE_REV=2.8.9
+ARG WORMHOLE_REV=2.14.7
 ADD https://github.com/wormhole-foundation/wormhole/archive/refs/tags/v${WORMHOLE_REV}.tar.gz .
 RUN tar -xvf v${WORMHOLE_REV}.tar.gz
 RUN mv wormhole-${WORMHOLE_REV} wormhole
