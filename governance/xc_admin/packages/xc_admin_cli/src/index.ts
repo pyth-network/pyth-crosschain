@@ -28,14 +28,43 @@ import {
   WORMHOLE_ADDRESS,
 } from "xc_admin_common";
 import { pythOracleProgram } from "@pythnetwork/client";
+import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
+import { LedgerNodeWallet } from "./ledger";
+
+export async function loadHotWalletOrLedger(
+  wallet: string,
+  lda: number,
+  ldc: number
+): Promise<Wallet> {
+  if ((wallet = "ledger")) {
+    return await LedgerNodeWallet.createWallet(lda, ldc);
+  } else {
+    return new NodeWallet(
+      Keypair.fromSecretKey(
+        Uint8Array.from(JSON.parse(fs.readFileSync(wallet, "ascii")))
+      )
+    );
+  }
+}
 
 const mutlisigCommand = (name: string, description: string) =>
   program
     .command(name)
     .description(description)
     .requiredOption("-c, --cluster <network>", "solana cluster to use")
-    .requiredOption("-w, --wallet <filepath>", "path to the operations key")
-    .requiredOption("-v, --vault <pubkey>", "multisig address");
+    .requiredOption(
+      "-w, --wallet <filepath>",
+      'path to the operations key or "ledger"'
+    )
+    .requiredOption("-v, --vault <pubkey>", "multisig address")
+    .option(
+      "-lda, --ledger-derivation-account <number>",
+      "ledger derivation account to use"
+    )
+    .option(
+      "-ldc, --ledger-derivation-change <number>",
+      "ledger derivation change to use"
+    );
 
 program
   .name("xc_admin_cli")
@@ -56,10 +85,10 @@ mutlisigCommand(
   )
 
   .action(async (options: any) => {
-    const wallet = new NodeWallet(
-      Keypair.fromSecretKey(
-        Uint8Array.from(JSON.parse(fs.readFileSync(options.wallet, "ascii")))
-      )
+    const wallet = await loadHotWalletOrLedger(
+      options.wallet,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange
     );
     const cluster: PythCluster = options.cluster;
     const programId: PublicKey = new PublicKey(options.programId);
@@ -128,10 +157,10 @@ mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
   .requiredOption("-b, --buffer <pubkey>", "buffer account")
 
   .action(async (options: any) => {
-    const wallet = new NodeWallet(
-      Keypair.fromSecretKey(
-        Uint8Array.from(JSON.parse(fs.readFileSync(options.wallet, "ascii")))
-      )
+    const wallet = await loadHotWalletOrLedger(
+      options.wallet,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange
     );
     const cluster: PythCluster = options.cluster;
     const programId: PublicKey = new PublicKey(options.programId);
@@ -186,10 +215,10 @@ mutlisigCommand(
   .requiredOption("-p, --price <pubkey>", "Price account to modify")
   .requiredOption("-e, --exponent <number>", "New exponent")
   .action(async (options: any) => {
-    const wallet = new NodeWallet(
-      Keypair.fromSecretKey(
-        Uint8Array.from(JSON.parse(fs.readFileSync(options.wallet, "ascii")))
-      )
+    const wallet = await loadHotWalletOrLedger(
+      options.wallet,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange
     );
     const cluster: PythCluster = options.cluster;
     const vault: PublicKey = new PublicKey(options.vault);
