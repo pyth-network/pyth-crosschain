@@ -167,13 +167,6 @@ const UpdateProductMetadata = () => {
       return false
     }
 
-    // check for duplicate keys in jsonParsed
-    const jsonSymbolsSet = new Set(jsonSymbols)
-    if (jsonSymbols.length !== jsonSymbolsSet.size) {
-      toast.error('Duplicate symbols in json file!')
-      return false
-    }
-
     let isValid = true
     // check that the keys of the values of json are equal to the keys of the values of data
     jsonSymbols.forEach((symbol) => {
