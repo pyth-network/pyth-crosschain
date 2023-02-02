@@ -13,7 +13,7 @@ repos:
     hooks:
       - id: prettier
         additional_dependencies:
-          - "prettier@2.7.1"
+          - "prettier@2.8.3"
           - "prettier-plugin-solidity@1.0.0-rc.1"
   - repo: local
     hooks:
