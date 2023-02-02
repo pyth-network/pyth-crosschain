@@ -67,8 +67,14 @@ const UpdateProductMetadata = () => {
         .products.map((product) => {
           symbolToProductAccountKeyMapping[product.metadata.symbol] =
             product.address
-          symbolToProductMetadataMapping[product.metadata.symbol] =
-            product.metadata
+          // create copy of product.metadata to avoid mutating the original product.metadata
+          symbolToProductMetadataMapping[product.metadata.symbol] = {
+            ...product.metadata,
+          }
+          // these fields are immutable and should not be updated
+          delete symbolToProductMetadataMapping[product.metadata.symbol].symbol
+          delete symbolToProductMetadataMapping[product.metadata.symbol]
+            .price_account
         })
       setData(sortData(symbolToProductMetadataMapping))
     }
