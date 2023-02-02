@@ -6,6 +6,7 @@ export {
 
 export {
   HexString,
+  PriceFeedMetadata,
   PriceFeed,
   Price,
   UnixTimestamp,

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pyth-price-client-js
+spec:
+  selector:
+    matchLabels:
+      app: pyth-price-client-js
+  serviceName: pyth-price-client-js
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pyth-price-client-js
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: tests
+          image: pyth-price-client-js
+          command:
+            - /bin/sh
+            - -c
+            - "npm run test:e2e && nc -lk 0.0.0.0 2000"
+          readinessProbe:
+            periodSeconds: 5
+            failureThreshold: 300
+            tcpSocket:
+              port: 2000
+          resources:
+            limits:
+              cpu: "2"
+              memory: 1Gi
