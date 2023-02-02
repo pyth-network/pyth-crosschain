@@ -35,7 +35,7 @@ both the price service and spy. To run the mainnet docker compose file run
 the following command:
 
 ```
-docker-compose -f docker-compose.mainnet.yaml up
+docker compose -f docker-compose.mainnet.yaml up
 ```
 
 Now your own instance of the price service is up and running! Running the following command should give you the Pyth price of ETH/USD :
