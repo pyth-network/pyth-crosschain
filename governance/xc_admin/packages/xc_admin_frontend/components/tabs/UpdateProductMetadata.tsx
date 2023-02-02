@@ -231,16 +231,6 @@ const UpdateProductMetadata = () => {
       <>
         {Object.keys(changes).length > 0 ? (
           <table className="mb-10 w-full table-auto bg-darkGray text-left">
-            <thead>
-              <tr>
-                <th className="base16 py-8 pl-6 pr-2 font-semibold lg:pl-6">
-                  Description
-                </th>
-                <th className="base16 py-8 pl-1 pr-2 font-semibold lg:pl-6">
-                  Value
-                </th>
-              </tr>
-            </thead>
             {Object.keys(changes).map((key) => {
               const { prev, new: newProductMetadata } = changes[key]
               const diff = Object.keys(prev).filter(
@@ -248,6 +238,14 @@ const UpdateProductMetadata = () => {
               )
               return (
                 <tbody key={key}>
+                  <tr>
+                    <td
+                      className="base16 py-4 pl-6 pr-2 font-bold lg:pl-6"
+                      colSpan={2}
+                    >
+                      {key}
+                    </td>
+                  </tr>
                   {diff.map((k) => (
                     <tr key={k}>
                       <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
@@ -261,6 +259,15 @@ const UpdateProductMetadata = () => {
                       </td>
                     </tr>
                   ))}
+                  {/* add a divider only if its not the last item */}
+                  {Object.keys(changes).indexOf(key) !==
+                  Object.keys(changes).length - 1 ? (
+                    <tr>
+                      <td className="base16 py-4 pl-6 pr-6" colSpan={2}>
+                        <hr className="border-gray-700" />
+                      </td>
+                    </tr>
+                  ) : null}
                 </tbody>
               )
             })}
