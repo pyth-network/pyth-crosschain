@@ -36,7 +36,7 @@ export async function loadHotWalletOrLedger(
   lda: number,
   ldc: number
 ): Promise<Wallet> {
-  if ((wallet = "ledger")) {
+  if (wallet === "ledger") {
     return await LedgerNodeWallet.createWallet(lda, ldc);
   } else {
     return new NodeWallet(
@@ -251,7 +251,10 @@ program
   .command("parse-transaction")
   .description("Parse a transaction sitting in the multisig")
   .requiredOption("-c, --cluster <network>", "solana cluster to use")
-  .requiredOption("-t, --transaction <pubkey>", "path to the operations key")
+  .requiredOption(
+    "-t, --transaction <pubkey>",
+    "address of the outstanding transaction"
+  )
   .action(async (options: any) => {
     const cluster = options.cluster;
     const transaction: PublicKey = new PublicKey(options.transaction);
@@ -272,6 +275,24 @@ program
       })
     );
     console.log(JSON.stringify(parsed, null, 2));
+  });
+
+mutlisigCommand("approve", "Approve a transaction sitting in the multisig")
+  .requiredOption(
+    "-t, --transaction <pubkey>",
+    "address of the outstanding transaction"
+  )
+  .action(async (options: any) => {
+    const wallet = await loadHotWalletOrLedger(
+      options.wallet,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange
+    );
+    const transaction: PublicKey = new PublicKey(options.transaction);
+    const cluster: PythCluster = options.cluster;
+
+    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
+    await squad.approveTransaction(transaction);
   });
 
 program.parse();
