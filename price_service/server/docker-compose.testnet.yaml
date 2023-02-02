@@ -41,6 +41,8 @@ services:
       REMOVE_EXPIRED_VALUES_INTERVAL_SECONDS: "60"
       CACHE_TTL_SECONDS: "300"
       DB_API_ENDPOINT: "https://web-api.pyth.network"
+    ports:
+      - "4200:4200"
     healthcheck:
       test:
         [

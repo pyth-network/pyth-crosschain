@@ -94,7 +94,7 @@ export async function run(pm: PromHelper) {
         );
         stream = await subscribeSignedVAA(client, filter);
 
-        stream.on("data", ({ vaaBytes }: { vaaBytes: string }) => {
+        stream.on("data", ({ vaaBytes }: { vaaBytes: Buffer }) => {
           processVaa(vaaBytes);
         });
 
@@ -140,10 +140,10 @@ async function encodeEmitterAddress(
   return getEmitterAddressEth(emitterAddressStr);
 }
 
-async function processVaa(vaaBytes: string) {
+async function processVaa(vaaBytes: Buffer) {
   let receiveTime = new Date();
   const { parse_vaa } = await importCoreWasm();
-  const parsedVAA = parse_vaa(hexToUint8Array(vaaBytes));
+  const parsedVAA = parse_vaa(vaaBytes);
   // logger.debug(
   //   "processVaa, vaa len: " +
   //     vaaBytes.length +
