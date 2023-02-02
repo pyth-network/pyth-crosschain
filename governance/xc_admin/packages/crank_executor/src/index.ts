@@ -53,13 +53,16 @@ async function run() {
     multisigProgramId: DEFAULT_MULTISIG_PROGRAM_ID,
   });
   const multisigParser = MultisigParser.fromCluster(CLUSTER as PythCluster);
-  const wormholeFee = (
-    await getWormholeBridgeData(
-      squad.connection,
-      multisigParser.wormholeBridgeAddress!,
-      COMMITMENT
-    )
-  ).config.fee;
+
+  const wormholeFee = multisigParser.wormholeBridgeAddress
+    ? (
+        await getWormholeBridgeData(
+          squad.connection,
+          multisigParser.wormholeBridgeAddress!,
+          COMMITMENT
+        )
+      ).config.fee
+    : 0;
 
   const proposals = await getProposals(squad, VAULT, undefined, "executeReady");
   for (const proposal of proposals) {
@@ -114,11 +117,15 @@ async function run() {
         } catch (error) {
           // Mark the transaction as cancelled if we failed to run it
           if (error instanceof SendTransactionError) {
+            console.log(error);
             await squad.cancelTransaction(proposal.publicKey);
+            console.log("Cancelled: ", proposal.publicKey.toBase58());
           }
           break;
         }
       }
+    } else {
+      console.log("Skipping: ", proposal.publicKey.toBase58());
     }
   }
 }

@@ -133,7 +133,7 @@ mutlisigCommand(
       .accept()
       .accounts({
         currentAuthority: current,
-        newAuthority: mapKey(vaultAuthority),
+        newAuthority: isRemote ? mapKey(vaultAuthority) : vaultAuthority,
         programAccount: programId,
         programDataAccount,
         bpfUpgradableLoader: BPF_UPGRADABLE_LOADER,
@@ -195,7 +195,11 @@ mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
         { pubkey: wallet.publicKey, isSigner: false, isWritable: true },
         { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
         { pubkey: SYSVAR_CLOCK_PUBKEY, isSigner: false, isWritable: false },
-        { pubkey: mapKey(vaultAuthority), isSigner: true, isWritable: false },
+        {
+          pubkey: isRemote ? mapKey(vaultAuthority) : vaultAuthority,
+          isSigner: true,
+          isWritable: false,
+        },
       ],
     };
 
