@@ -21,15 +21,12 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::192824654885:role/github-actions-ecr
           aws-region: eu-west-2
-      - uses: docker/login-action@v2
-        with:
-          registry: public.ecr.aws
-        env:
-          AWS_REGION: us-east-1
+      - uses: aws-actions/amazon-ecr-login@v1
+        id: ecr_login
       - run: |
           DOCKER_BUILDKIT=1 docker build -t lerna -f tilt_devnet/docker_images/Dockerfile.lerna .
           DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f governance/xc_admin/Dockerfile .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         env:
-          ECR_REGISTRY: public.ecr.aws
-          ECR_REPOSITORY: pyth-network/xc-admin
+          ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}
+          ECR_REPOSITORY: xc-admin
