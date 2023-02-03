@@ -11,6 +11,9 @@
     "third_party/pyth/p2w-relay",
     "wormhole_attester/sdk/js"
   ],
+  "dependencies": {
+    "prettier": "2.7.1"
+  },
   "devDependencies": {
     "lerna": "^6.4.1"
   }
