@@ -1,4 +1,4 @@
-name: Lerna build & test
+name: JS/TS checks
 on:
   pull_request:
   push:
@@ -14,7 +14,9 @@ jobs:
           cache: "npm"
       - name: Install deps
         run: npm ci
-      - name: Run lerna build
+      - name: Build
         run: npx lerna run build
-      - name: Run lerna tests
+      - name: Test
         run: npx lerna run test
+      - name: Lint
+        run: npx lerna run lint

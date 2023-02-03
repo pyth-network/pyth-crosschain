@@ -106,17 +106,19 @@ program
     "http://localhost:8899"
   )
   .action(async (options: any) => {
-    let cluster: Cluster = options.cluster;
-    let createKeyAddr: PublicKey = new PublicKey(options.createKey);
-    let extAuthorityAddr: PublicKey = new PublicKey(options.externalAuthority);
+    const cluster: Cluster = options.cluster;
+    const createKeyAddr: PublicKey = new PublicKey(options.createKey);
+    const extAuthorityAddr: PublicKey = new PublicKey(
+      options.externalAuthority
+    );
 
-    let threshold: number = parseInt(options.threshold, 10);
+    const threshold: number = parseInt(options.threshold, 10);
 
-    let initialMembers = options.initialMembers
+    const initialMembers = options.initialMembers
       .split(",")
       .map((m: string) => new PublicKey(m));
 
-    let mesh = await getSquadsClient(
+    const mesh = await getSquadsClient(
       cluster,
       options.ledger,
       options.ledgerDerivationAccount,
@@ -125,11 +127,11 @@ program
       cluster == "localdevnet" ? options.solanaRpc : undefined
     );
 
-    let vaultAddr = getMsPDA(createKeyAddr, DEFAULT_MULTISIG_PROGRAM_ID)[0];
+    const vaultAddr = getMsPDA(createKeyAddr, DEFAULT_MULTISIG_PROGRAM_ID)[0];
     console.log("Creating new vault at", vaultAddr.toString());
 
     try {
-      let _multisig = await mesh.getMultisig(vaultAddr);
+      await mesh.getMultisig(vaultAddr);
 
       // NOTE(2022-12-08): If this check prevents you from iterating dev
       // work in tilt, restart solana-devnet.
@@ -137,7 +139,9 @@ program
         "Reached an existing vault under the address, refusing to create."
       );
       process.exit(17); // EEXIST
-    } catch (e: any) {}
+    } catch (e: any) {
+      undefined;
+    }
     console.log("No existing vault found, creating...");
     await mesh.createMultisig(
       extAuthorityAddr,
@@ -309,7 +313,7 @@ program
 
     const wormholeTools = await loadWormholeTools(cluster, squad.connection);
 
-    let onChainInstructions = await getProposalInstructions(
+    const onChainInstructions = await getProposalInstructions(
       squad,
       await squad.getTransaction(new PublicKey(options.txPda))
     );
@@ -692,7 +696,7 @@ async function setIsActiveIx(
   attesterProgramId: PublicKey,
   isActive: boolean
 ): Promise<TransactionInstruction> {
-  const [configKey, _bump] = PublicKey.findProgramAddressSync(
+  const [configKey] = PublicKey.findProgramAddressSync(
     [Buffer.from("pyth2wormhole-config-v3")],
     attesterProgramId
   );

@@ -146,6 +146,7 @@ export class Listener implements PriceStore {
   private promClient: PromClient | undefined;
   private spyServiceHost: string;
   private filters: FilterEntry[] = [];
+  private ignorePricesOlderThanSecs: number;
   private spyConnectionTime: TimestampInSec | undefined;
   private readinessConfig: ListenerReadinessConfig;
   private updateCallbacks: ((priceInfo: PriceInfo) => any)[];
@@ -156,6 +157,8 @@ export class Listener implements PriceStore {
     this.promClient = promClient;
     this.spyServiceHost = config.spyServiceHost;
     this.loadFilters(config.filtersRaw);
+    // Don't store any prices received from wormhole that are over 1 hour old.
+    this.ignorePricesOlderThanSecs = 60 * 60;
     this.readinessConfig = config.readiness;
     this.updateCallbacks = [];
     this.observedVaas = new LRUCache({
@@ -216,7 +219,7 @@ export class Listener implements PriceStore {
           this.processVaa(vaaBytes);
         });
 
-        this.spyConnectionTime = new Date().getTime() / 1000;
+        this.spyConnectionTime = this.currentTimeInSeconds();
 
         let connected = true;
         stream!.on("error", (err: any) => {
@@ -252,6 +255,16 @@ export class Listener implements PriceStore {
     cachedInfo: PriceInfo | undefined,
     observedInfo: PriceInfo
   ): boolean {
+    // Sometimes we get old VAAs from wormhole (for unknown reasons). These VAAs can include price feeds that
+    // were deleted and haven't been updated in a long time. This check filters out such feeds so they don't trigger
+    // the stale feeds check.
+    if (
+      observedInfo.attestationTime <
+      this.currentTimeInSeconds() - this.ignorePricesOlderThanSecs
+    ) {
+      return false;
+    }
+
     if (cachedInfo === undefined) {
       return true;
     }
@@ -378,5 +391,9 @@ export class Listener implements PriceStore {
     }
 
     return true;
+  }
+
+  private currentTimeInSeconds(): number {
+    return new Date().getTime() / 1000;
   }
 }

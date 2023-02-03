@@ -14,6 +14,7 @@ RUN find . -type f ! -name 'package*.json' -delete
 RUN find . -type d -empty -delete
 
 COPY ./lerna.json ./
+COPY ./tsconfig.base.json ./
 
 FROM node:18.13.0@sha256:d9061fd0205c20cd47f70bdc879a7a84fb472b822d3ad3158aeef40698d2ce36 as lerna
 
