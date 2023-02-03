@@ -40,7 +40,7 @@ const TAB_INFO = {
   },
 }
 
-const DEFAULT_TAB = 'min-publishers'
+const DEFAULT_TAB = 'general'
 
 const Home: NextPage = () => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
@@ -82,17 +82,14 @@ const Home: NextPage = () => {
               selectedIndex={currentTabIndex}
               onChange={handleChangeTab}
             >
-              <Tab.List className="mx-auto gap-1 space-x-4 text-center sm:gap-2.5 md:space-x-8 space-y-4">
+              <Tab.List className="mx-auto gap-1 space-x-4 space-y-4 text-center sm:gap-2.5 md:space-x-8">
                 {Object.entries(TAB_INFO).map((tab, idx) => (
                   <Tab
                     key={idx}
                     className={({ selected }) =>
                       classNames(
-                        'p-3 text-xs font-semibold uppercase outline-none transition-colors md:text-base',
-                        currentTabIndex === idx
-                          ? 'bg-darkGray3'
-                          : 'bg-darkGray2',
-                        selected ? 'bg-darkGray3' : 'hover:bg-darkGray3'
+                        'p-3 text-xs font-semibold uppercase outline-none transition-colors hover:bg-darkGray3 md:text-base',
+                        selected ? 'bg-darkGray3' : 'bg-darkGray2'
                       )
                     }
                   >

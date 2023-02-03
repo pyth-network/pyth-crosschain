@@ -1,12 +1,9 @@
 import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor'
-import {
-  getPythProgramKeyForCluster,
-  pythOracleProgram,
-} from '@pythnetwork/client'
-import { PythOracle } from '@pythnetwork/client/lib/anchor'
+import { getPythProgramKeyForCluster } from '@pythnetwork/client'
+import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
-import { useContext, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
@@ -19,7 +16,7 @@ import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
 
 const General = () => {
-  const [data, setData] = useState<{ [key: string]: any }>({})
+  const [data, setData] = useState<any>({})
   const [dataChanges, setDataChanges] = useState<Record<string, any>>()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
@@ -41,37 +38,6 @@ const General = () => {
   const closeModal = () => {
     setIsModalOpen(false)
   }
-
-  useEffect(() => {
-    if (!dataIsLoading && rawConfig && rawConfig.mappingAccounts.length > 0) {
-      let symbolToData: any = {}
-      rawConfig.mappingAccounts
-        .sort(
-          (mapping1, mapping2) =>
-            mapping2.products.length - mapping1.products.length
-        )[0]
-        .products.sort((product1, product2) =>
-          product1.metadata.symbol.localeCompare(product2.metadata.symbol)
-        )
-        .map(
-          (product) =>
-            (symbolToData[product.metadata.symbol] = {
-              address: product.address.toBase58(),
-              metadata: product.metadata,
-              priceAccounts: product.priceAccounts.map((p) => {
-                return {
-                  address: p.address.toBase58(),
-                  publishers: p.publishers.map((p) => p.toBase58()),
-                  expo: p.expo,
-                  minPub: p.minPub,
-                }
-              }),
-            })
-        )
-      symbolToData = sortData(symbolToData)
-      setData(symbolToData)
-    }
-  }, [rawConfig, dataIsLoading])
 
   const sortData = (data: any) => {
     const sortedData: any = {}
@@ -124,6 +90,39 @@ const General = () => {
       })
     return sortedData
   }
+  const sortDataMemo = useCallback(sortData, [])
+
+  useEffect(() => {
+    if (!dataIsLoading && rawConfig && rawConfig.mappingAccounts.length > 0) {
+      const symbolToData: any = {}
+      rawConfig.mappingAccounts
+        .sort(
+          (mapping1, mapping2) =>
+            mapping2.products.length - mapping1.products.length
+        )[0]
+        .products.sort((product1, product2) =>
+          product1.metadata.symbol.localeCompare(product2.metadata.symbol)
+        )
+        .map((product) => {
+          symbolToData[product.metadata.symbol] = {
+            address: product.address.toBase58(),
+            metadata: {
+              ...product.metadata,
+            },
+            priceAccounts: product.priceAccounts.map((p) => ({
+              address: p.address.toBase58(),
+              publishers: p.publishers.map((p) => p.toBase58()),
+              expo: p.expo,
+              minPub: p.minPub,
+            })),
+          }
+          // these fields are immutable and should not be updated
+          delete symbolToData[product.metadata.symbol].metadata.symbol
+          delete symbolToData[product.metadata.symbol].metadata.price_account
+        })
+      setData(sortDataMemo(symbolToData))
+    }
+  }, [rawConfig, dataIsLoading, sortDataMemo])
 
   const sortObjectByKeys = (obj: any) => {
     const sortedObj: any = {}
@@ -206,21 +205,188 @@ const General = () => {
     return true
   }
 
+  const AddressChangesRow = ({ changes }: { changes: any }) => {
+    const key = 'address'
+    return (
+      <>
+        {changes.prev !== changes.new && (
+          <tr key={key}>
+            <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+              {key
+                .split('_')
+                .map((word) => capitalizeFirstLetter(word))
+                .join(' ')}
+            </td>
+            <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+              <s>{changes.prev}</s>
+              <br />
+              {changes.new}
+            </td>
+          </tr>
+        )}
+      </>
+    )
+  }
+
+  const MetadataChangesRows = ({ changes }: { changes: any }) => {
+    return (
+      <>
+        {Object.keys(changes.new).map(
+          (metadataKey) =>
+            changes.prev[metadataKey] !== changes.new[metadataKey] && (
+              <tr key={metadataKey}>
+                <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+                  {metadataKey
+                    .split('_')
+                    .map((word) => capitalizeFirstLetter(word))
+                    .join(' ')}
+                </td>
+
+                <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+                  <s>{changes.prev[metadataKey]}</s>
+                  <br />
+                  {changes.new[metadataKey]}
+                </td>
+              </tr>
+            )
+        )}
+      </>
+    )
+  }
+
+  const PriceAccountsChangesRows = ({ changes }: { changes: any }) => {
+    return (
+      <>
+        {changes.new.map((priceAccount: any, index: number) =>
+          Object.keys(priceAccount).map((priceAccountKey) =>
+            priceAccountKey === 'publishers' &&
+            JSON.stringify(changes.prev[index][priceAccountKey]) !==
+              JSON.stringify(priceAccount[priceAccountKey]) ? (
+              <PublisherKeysChangesRows
+                key={priceAccountKey}
+                changes={{
+                  prev: changes.prev[index][priceAccountKey],
+                  new: priceAccount[priceAccountKey],
+                }}
+              />
+            ) : (
+              priceAccountKey !== 'publishers' &&
+              changes.prev[index][priceAccountKey] !==
+                priceAccount[priceAccountKey] && (
+                <tr key={priceAccountKey}>
+                  <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
+                    {priceAccountKey
+
+                      .split('_')
+                      .map((word) => capitalizeFirstLetter(word))
+                      .join(' ')}
+                  </td>
+                  <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+                    <s>{changes.prev[index][priceAccountKey]}</s>
+                    <br />
+                    {priceAccount[priceAccountKey]}
+                  </td>
+                </tr>
+              )
+            )
+          )
+        )}
+      </>
+    )
+  }
+
+  const PublisherKeysChangesRows = ({ changes }: { changes: any }) => {
+    const publisherKeysToAdd = changes.new.filter(
+      (newPublisher: string) => !changes.prev.includes(newPublisher)
+    )
+    const publisherKeysToRemove = changes.prev.filter(
+      (prevPublisher: string) => !changes.new.includes(prevPublisher)
+    )
+    return (
+      <>
+        {publisherKeysToAdd.length > 0 && (
+          <tr>
+            <td className="py-3 pl-6 pr-1 lg:pl-6">Add Publisher(s)</td>
+            <td className="py-3 pl-1 pr-8 lg:pl-6">
+              {publisherKeysToAdd.map((publisherKey: string) => (
+                <span key={publisherKey} className="block">
+                  {publisherKey}
+                </span>
+              ))}
+            </td>
+          </tr>
+        )}
+        {publisherKeysToRemove.length > 0 && (
+          <tr>
+            <td className="py-3 pl-6 pr-1 lg:pl-6">Remove Publisher(s)</td>
+            <td className="py-3 pl-1 pr-8 lg:pl-6">
+              {publisherKeysToRemove.map((publisherKey: string) => (
+                <span key={publisherKey} className="block">
+                  {publisherKey}
+                </span>
+              ))}
+            </td>
+          </tr>
+        )}
+      </>
+    )
+  }
+
   const ModalContent = ({ changes }: { changes: any }) => {
     return (
       <>
         {Object.keys(changes).length > 0 ? (
           <table className="mb-10 w-full table-auto bg-darkGray text-left">
-            <thead>
-              <tr>
-                <th className="base16 py-8 pl-6 pr-2 font-semibold lg:pl-6">
-                  Description
-                </th>
-                <th className="base16 py-8 pl-1 pr-2 font-semibold lg:pl-6">
-                  ID
-                </th>
-              </tr>
-            </thead>
+            {/* compare changes.prev and changes.new and display the fields that are different */}
+            {Object.keys(changes).map((key) => {
+              const { prev, new: newChanges } = changes[key]
+              const diff = Object.keys(prev).filter(
+                (k) => JSON.stringify(prev[k]) !== JSON.stringify(newChanges[k])
+              )
+              return (
+                <tbody key={key}>
+                  <tr>
+                    <td
+                      className="base16 py-4 pl-6 pr-2 font-bold lg:pl-6"
+                      colSpan={2}
+                    >
+                      {key}
+                    </td>
+                  </tr>
+                  {diff.map((k) =>
+                    k === 'address' ? (
+                      <AddressChangesRow
+                        key={k}
+                        changes={{ prev: prev[k], new: newChanges[k] }}
+                      />
+                    ) : k === 'metadata' ? (
+                      <MetadataChangesRows
+                        key={k}
+                        changes={{ prev: prev[k], new: newChanges[k] }}
+                      />
+                    ) : k === 'priceAccounts' ? (
+                      <PriceAccountsChangesRows
+                        key={k}
+                        changes={{
+                          prev: prev[k],
+                          new: newChanges[k],
+                        }}
+                      />
+                    ) : null
+                  )}
+
+                  {/* add a divider only if its not the last item */}
+                  {Object.keys(changes).indexOf(key) !==
+                  Object.keys(changes).length - 1 ? (
+                    <tr>
+                      <td className="base16 py-4 pl-6 pr-6" colSpan={2}>
+                        <hr className="border-gray-700" />
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              )
+            })}
           </table>
         ) : (
           <p className="mb-8 leading-6">No proposed changes.</p>

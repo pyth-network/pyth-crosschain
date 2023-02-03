@@ -254,6 +254,8 @@ const UpdateProductMetadata = () => {
                           .join(' ')}
                       </td>
                       <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+                        <s>{prev[k]}</s>
+                        <br />
                         {newProductMetadata[k]}
                       </td>
                     </tr>

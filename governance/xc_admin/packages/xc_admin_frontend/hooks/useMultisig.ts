@@ -1,5 +1,4 @@
 import { Wallet } from '@coral-xyz/anchor'
-import { PythCluster } from '@pythnetwork/client/lib/cluster'
 import { Cluster, Connection, PublicKey } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
 import { TransactionAccount } from '@sqds/mesh/lib/types'
