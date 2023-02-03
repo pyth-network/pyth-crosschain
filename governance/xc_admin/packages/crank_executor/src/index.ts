@@ -117,7 +117,7 @@ async function run() {
         } catch (error) {
           // Mark the transaction as cancelled if we failed to run it
           if (error instanceof SendTransactionError) {
-            console.log(error);
+            console.error(error);
             await squad.cancelTransaction(proposal.publicKey);
             console.log("Cancelled: ", proposal.publicKey.toBase58());
           }
