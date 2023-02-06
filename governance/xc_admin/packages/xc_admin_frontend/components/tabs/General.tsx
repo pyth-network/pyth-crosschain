@@ -167,15 +167,18 @@ const General = () => {
             if (!existingSymbols.has(symbol)) {
               // if symbol is not in existing symbols, create new entry
               changes[symbol] = { new: {} }
-              changes[symbol].new = fileDataParsed[symbol]
+              changes[symbol].new = { ...fileDataParsed[symbol] }
+              // these fields are generated deterministically and should not be updated
+              delete changes[symbol].new.address
+              delete changes[symbol].new.priceAccounts[0].address
             } else if (
               // if symbol is in existing symbols, check if data is different
               JSON.stringify(data[symbol]) !==
               JSON.stringify(fileDataParsed[symbol])
             ) {
               changes[symbol] = { prev: {}, new: {} }
-              changes[symbol].prev = data[symbol]
-              changes[symbol].new = fileDataParsed[symbol]
+              changes[symbol].prev = { ...data[symbol] }
+              changes[symbol].new = { ...fileDataParsed[symbol] }
             }
           })
           setDataChanges(changes)
@@ -482,7 +485,7 @@ const General = () => {
                   />
                 )
               )
-            ) : priceAccountKey === 'address' && addNewPriceFeed ? null : (
+            ) : (
               (addNewPriceFeed ||
                 changes.prev[index][priceAccountKey] !==
                   priceAccount[priceAccountKey]) && (
