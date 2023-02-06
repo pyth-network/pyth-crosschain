@@ -19,7 +19,6 @@ PYTH_KEY_STORE = os.environ.get("PYTH_KEY_STORE", "/home/pyth/.pythd")
 PYTH_PROGRAM_KEYPAIR = os.environ.get(
     "PYTH_PROGRAM_KEYPAIR", f"{PYTH_KEY_STORE}/publish_key_pair.json"
 )
-PYTH_PROGRAM_SO_PATH = os.environ.get("PYTH_PROGRAM_SO", "../target/oracle.so")
 PYTH_PUBLISHER_KEYPAIR = os.environ.get(
     "PYTH_PUBLISHER_KEYPAIR", f"{PYTH_KEY_STORE}/publish_key_pair.json"
 )

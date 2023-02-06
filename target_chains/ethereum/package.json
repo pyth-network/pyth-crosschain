@@ -1,0 +1,50 @@
+{
+  "name": "@pythnetwork/pyth-evm-contract",
+  "version": "1.2.0",
+  "description": "",
+  "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.15",
+    "@openzeppelin/truffle-upgrades": "^1.14.0",
+    "@truffle/hdwallet-provider": "^2.1.5",
+    "chai": "^4.2.0",
+    "mocha": "^8.2.1",
+    "truffle": "^5.7.4",
+    "truffle-deploy-registry": "^0.5.1",
+    "truffle-plugin-verify": "^0.6.1"
+  },
+  "scripts": {
+    "build": "rm -rf build && npx truffle compile --all",
+    "test-contract": "truffle test",
+    "migrate": "truffle migrate",
+    "receiver-submit-guardian-sets": "truffle exec scripts/receiverSubmitGuardianSetUpgrades.js",
+    "verify": "truffle run verify $npm_config_module@$npm_config_contract_address --network $npm_config_network",
+    "install-forge-deps": "forge install foundry-rs/forge-std@2c7cbfc6fbede6d7c9e6b17afe997e3fdfe22fef --no-git --no-commit"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@certusone/wormhole-sdk": "^0.9.9",
+    "@matterlabs/hardhat-zksync-deploy": "^0.6.1",
+    "@matterlabs/hardhat-zksync-solc": "^0.3.13",
+    "@openzeppelin/contracts": "^4.5.0",
+    "@openzeppelin/contracts-upgradeable": "^4.5.2",
+    "@pythnetwork/pyth-multisig-wh-message-builder": "*",
+    "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
+    "@pythnetwork/xc-governance-sdk": "*",
+    "dotenv": "^10.0.0",
+    "elliptic": "^6.5.2",
+    "ethers": "^5.7.2",
+    "ganache": "^7.7.3",
+    "hardhat": "^2.12.5",
+    "jsonfile": "^4.0.0",
+    "lodash": "^4.17.21",
+    "solc": "0.8.4",
+    "truffle-contract-size": "^2.0.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.4",
+    "web3": "^1.2.2",
+    "web3-eth-abi": "^1.2.2",
+    "web3-utils": "^1.2.2",
+    "zksync-web3": "^0.12.3"
+  }
+}

@@ -12,7 +12,7 @@ Within this monorepo you will find the following subprojects:
 
 ## Wormhole Attester
 
-> wormhole-attester
+> wormhole_attester
 
 The main Pyth implementation currently exists as an [on-chain contract][] on
 Solana. In order to expose these prices cross-chain, the Wormhole Attester
@@ -27,7 +27,7 @@ various receiver contracts.
 
 ### Ethereum
 
-> target-chains/ethereum/contracts/pyth
+> target_chains/ethereum/contracts/pyth
 
 The Ethereum contract acts as a receiver for Pyth prices relayed from the
 Wormhole Attester. It also provides a public API for other Ethereum contracts
@@ -39,7 +39,7 @@ examples.
 
 ## Price Service
 
-> price-service
+> price_service
 
 The Price Service is an off-chain service which constantly observes the
 Wormhole network watching for price attestations emitted from the Pyth Solana

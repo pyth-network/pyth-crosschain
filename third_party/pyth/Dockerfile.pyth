@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.2
 # Wormhole-specific setup for pyth
-FROM pythfoundation/pyth-client:devnet-v2.12.0
+FROM pythfoundation/pyth-client:devnet-v2.20.0
 
 USER root
 
@@ -9,7 +9,7 @@ USER root
 RUN apt-get install -y netcat-openbsd python3 && \
     rm -rf /var/lib/apt/lists/*
 
-ADD tilt-devnet/secrets/solana/ /solana-secrets
+ADD tilt_devnet/secrets/solana/ /solana-secrets
 
 ENV PYTH_KEY_STORE=/home/pyth/.pythd
 

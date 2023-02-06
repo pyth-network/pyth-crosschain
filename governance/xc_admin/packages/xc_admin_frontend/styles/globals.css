@@ -1,0 +1,286 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-dark font-mono text-base text-light antialiased;
+  }
+
+  p {
+    @apply mb-4;
+  }
+
+  sup {
+    @apply text-[65%];
+  }
+}
+
+@layer components {
+  .h1 {
+    @apply font-body text-5xl font-normal -tracking-[0.02em];
+  }
+
+  @screen lg {
+    .h1 {
+      @apply text-xl;
+    }
+  }
+
+  .h2 {
+    @apply font-body text-4xl font-normal;
+  }
+
+  @screen lg {
+    .h2 {
+      @apply text-5xl;
+    }
+  }
+
+  .h3 {
+    @apply font-body text-3xl font-normal;
+  }
+
+  @screen lg {
+    .h3 {
+      @apply text-4xl;
+    }
+  }
+
+  .h4 {
+    @apply font-body text-lg font-normal;
+  }
+
+  .h5 {
+    @apply font-body text-[18px] font-normal;
+  }
+
+  .subtitle {
+    @apply font-mono text-xs tracking-subtitle;
+  }
+
+  .btn {
+    @apply relative inline-block rounded-lg py-3 px-6 text-xs transition-all;
+  }
+
+  .btn--dark {
+    @apply bg-radial;
+  }
+
+  .btn--light {
+    @apply z-10 bg-radial2 text-dark;
+  }
+
+  .flipcard-front {
+    @apply absolute inset-0 flex items-center justify-center bg-darkGray p-14;
+  }
+
+  .flipcard-back {
+    @apply absolute inset-0 flex flex-col justify-between bg-darkGray p-8;
+  }
+}
+
+@layer utilities {
+  .gradient-border {
+    @apply absolute left-0 bottom-0 h-px w-full bg-radial opacity-60;
+  }
+
+  .btn-bg {
+    @apply absolute top-px left-px h-[calc(100%-2px)] w-[calc(100%-2px)] rounded-lg transition-all;
+  }
+
+  .lineTop {
+    @apply absolute left-8 top-8 right-8 h-px;
+  }
+
+  .lineBottom {
+    @apply absolute left-8 right-8 bottom-8 h-px;
+  }
+
+  .lineLeft {
+    @apply absolute left-8 top-0 bottom-0 w-px;
+  }
+
+  .lineRight {
+    @apply absolute right-8 top-0 bottom-0 w-px;
+  }
+
+  .table-responsive {
+    @apply w-full  overflow-auto pb-4;
+  }
+}
+
+.news .swiper-slide,
+.providers .swiper-slide {
+  height: auto;
+}
+
+.providers .swiper {
+  padding-bottom: 80px;
+}
+
+.swiper-scrollbar {
+  position: absolute;
+  left: 40px;
+  bottom: 8px;
+  width: calc(100% - 80px);
+  height: 1px;
+  background-color: #242235;
+}
+
+.swiper-scrollbar-drag {
+  background: #242235;
+  height: 6px;
+  position: absolute;
+  top: -3px;
+  z-index: 3;
+  cursor: grab;
+}
+
+.news .swiper-slide {
+  padding-bottom: 80px;
+}
+
+.news .swiper-scrollbar {
+  background: #53525f;
+}
+
+.news .swiper-scrollbar-drag {
+  background: #464456;
+}
+.perspective {
+  perspective: 1000px;
+}
+
+.flipcard-front {
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  transition: all 0.6s ease 0s;
+  z-index: 2;
+}
+
+.flipcard-back {
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  transition: all 0.6s ease 0s;
+}
+
+.swiper-button-prev,
+.swiper-button-next {
+  top: initial;
+  margin: 0;
+  bottom: 0;
+  width: 25px;
+  height: 18px;
+  cursor: pointer;
+  position: absolute;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAkCAYAAADLsGk3AAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAIhSURBVHgB3ZlNUhpBFMf/b0glQ6qiLeYAVCBV2cUbZLyBy+yiNzAnEE+QyglCTqDudAXu3IlrxRovAF1uHK1y2teAH8h8ATrd4281xTygf9X9+uM18AIIURVLi7W2EF9XYAgHc6IlSDltfvxBKjwWn2q/YIAS5oAlqiyxD9D3+8+IsOa+r/jBTf8EOTKzyEiixU3/9vydCZl3mIEnEtXoCHWCUriHHCFMSRYJRaEnpS+RI1OJ2CqhyTxrpUlwXvw3JTH4/yxBen0gdbuTJNGT3XUYJFVkKBG29GPkD1ggoUkcWhkk/togoYkV4ZzwkiVomyU2YQmRInqbQaqUInHWgEVM5MhAwkEz9gsWSmjGRIoqoXkQEQtftrihjYRYvT50YCkDkQwS1kNvQULjwHGm3jjaSCkIem23vMxrGzwUmMdkF/UGKbWVECsVYReWMj79ivomy/yJDVaq0bs834aFjB11eZgdueXKBdutRUYTeR8/LOHqun8Iy5g4swdBv1NEmcjiw1Bm+XAk404EWCgTW0XhYea75c8HBPUTBZCZ/2Cl0OxddjdgmNQzu5SnHUXOKhcW/Kj3PCWvVxZq/2CYzKt6avGBeyZ0bn9bXXy4J0M5iHsvXDUh8xoFOiMyU1fjuYG+bmhczrDgihbVwsiRma4VssjwzJ7rXcnM9yNJMjyTbUjZzXWDOfdZZHTR0xr2woNEE0VEy4jFGudF3YMh7gBHWPj805reJwAAAABJRU5ErkJggg==');
+  background-repeat: no-repeat;
+  background-size: contain;
+  z-index: 2;
+}
+
+.dark .swiper-button-prev,
+.dark .swiper-button-next {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAkCAYAAADLsGk3AAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAH6SURBVHgB3ZlLTgJBEIb/YhS3bAksIFGIK7mBcBLhBngC4ATGEwgnUE8ANxBXRjCBRHC2rCF02QWBhDAvBjPT+C3nlflSXd3V1cAfMBpxajJQvcmAS4iJBI5EJM7n3NMfuk2A3+wvvkMMHCVijzi3kiDcbK6x4nYcMoSQiAQv0NW/nnP8cIKq6UvqICLOEAI/CcV4X1h4RYQcHJFAEkkq5/M0Q4QcJGKqhBA42f0kmLkTl4QQKCKyPmjjZy+JTNGqIkZ8RdYSrCOBlNN9EyQEz6HlJ6HAjyZICK4i30Mu+0SilS1YdRiCo4iszBZ7S+hINGEQezkiElJmuL1gooSwI3KqEsJWxB5yQ/9o0+NZvT5QH4ayEgkgYTz0HySEhFIqdClvEiuJ6eeySUQNnDDbaASQmRHoBYayM6x+hss6mB5cHyZqpq+oBQPZyw9dX1V1afLk+oKhMo6JfooyrjOWFI263tJ7EOd6yzQZz6nXr4w3Seb4jRWonSlQDTHju2fPFqivQBXtPHa6T+DqdOCeT1EReFW3P3TzwfJoPujIzM9xb3TzYUMAmb6WqcQhc3iDzlCZg5vY6Wsa0xJeOVNK6v6X9MEQIaG68UFk1ByRnpWEPlbwklFQtUwx2gLz6L2IHPRcrFupqwiIRLZw1sYpIjL2gLtS1iAmfgHf8jKCCOCAIQAAAABJRU5ErkJggg==');
+}
+
+.swiper-button-next {
+  transform-origin: center;
+  transform: rotate(180deg);
+}
+
+.swiper-button-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.swiper-button-next {
+  right: 0;
+}
+
+.swiper-button-prev {
+  left: 0;
+}
+
+/* width */
+.sscroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+/* Track */
+.sscroll::-webkit-scrollbar-track {
+  background: rgba(241, 234, 234, 0.2);
+  border-radius: 5px;
+}
+
+/* Handle */
+.sscroll::-webkit-scrollbar-thumb {
+  background: rgba(241, 234, 234, 0.6);
+  border-radius: 5px;
+}
+
+.nav-link {
+  @apply text-sm text-light hover:text-white;
+}
+
+.primary-btn {
+  @apply h-[45px] whitespace-nowrap rounded-full border border-solid border-pythPurple bg-pythPurple px-8 font-mono text-xs uppercase;
+}
+
+.input-no-spin::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0px;
+}
+
+.wallet-adapter-dropdown-list {
+  @apply gap-1 border border-darkGray3 bg-darkGray2 text-xs;
+}
+
+.wallet-adapter-modal-wrapper {
+  @apply max-w-[660px]  rounded-3xl bg-darkGray2;
+}
+
+.wallet-adapter-modal-title {
+  @apply max-w-[480px] font-body text-[32px] leading-[1.1] text-light md:text-[44px];
+}
+
+.wallet-adapter-modal-list {
+  @apply mx-auto max-w-[380px]  text-light;
+}
+
+.wallet-adapter-modal-list-more {
+  @apply mx-auto font-mono text-xs font-semibold uppercase;
+}
+.wallet-adapter-dropdown-list .wallet-adapter-dropdown-list-item:hover,
+.wallet-adapter-modal-list .wallet-adapter-button:hover {
+  background-color: #413e53;
+}
+
+.wallet-adapter-modal-button-close {
+  @apply bg-transparent;
+}
+
+.wallet-adapter-button.secondary-btn:hover {
+  @apply hover:bg-pythPurple;
+}
+
+.diaglogPanel {
+  @apply flex h-full min-h-[420px]  w-[calc(100%-24px)]  max-w-6xl transform items-center justify-center rounded-[40px] bg-[rgba(49,47,71,1)] p-5 px-6 pt-20 pb-8 text-center  align-middle shadow-xl transition-all md:mt-[92px] lg:p-10;
+}
+
+.diaglogClose {
+  @apply absolute right-10 top-8  flex items-center leading-none;
+}
+
+.diaglogTitle {
+  @apply mb-8 text-center font-body text-[32px] leading-[1.1] lg:mb-11 lg:text-[44px];
+}
+
+.action-btn {
+  @apply h-[45px] rounded-full bg-pythPurple  px-8 font-mono  font-semibold uppercase  leading-none transition-colors  hover:bg-mediumSlateBlue disabled:opacity-70 disabled:hover:bg-pythPurple;
+}

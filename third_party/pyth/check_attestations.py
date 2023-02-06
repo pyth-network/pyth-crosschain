@@ -15,7 +15,7 @@ logging.basicConfig(
 PYTH_TEST_ACCOUNTS_HOST = "pyth"
 PYTH_TEST_ACCOUNTS_PORT = 4242
 
-PRICE_SERVICE_HOST = "pyth-price-service"
+PRICE_SERVICE_HOST = "pyth-price-server"
 PRICE_SERVICE_PORT = 4200
 
 def base58_to_hex(base58_string):

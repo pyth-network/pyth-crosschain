@@ -1,0 +1,112 @@
+.App {
+  text-align: left;
+  display: flex;
+}
+
+.control-panel {
+  flex: 1;
+  background-color: #282c34;
+  min-height: 100vh;
+  max-width: fit-content;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  color: white;
+  padding: 5px;
+}
+
+.main {
+  flex: 1;
+  padding: 0 20px;
+}
+
+.tab-header {
+  display: flex;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  cursor: pointer;
+  background-color: #ddd;
+  border: 1px solid black;
+}
+
+.tab-item.active {
+  background-color: #fff;
+  border-bottom: 0px;
+}
+
+.tab-content {
+  padding: 10px;
+  border: 1px solid black;
+  border-top: 0px;
+}
+
+.icon-container {
+  display: inline-block;
+  position: relative;
+  text-decoration: underline;
+}
+
+.tooltip {
+  position: absolute;
+  top: 5px; /* adjust as needed */
+  left: 30px; /* adjust as needed */
+  background-color: #333;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 3px;
+  font-size: 12px;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.3s ease-in-out;
+  width: 200px;
+}
+
+.icon-container:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.exchange-rate {
+  color: green;
+}
+
+.last-updated {
+  color: #777;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+p,
+input {
+  padding: 0;
+  margin: 0;
+}
+
+h3 {
+  margin: 30px 0px 3px;
+}
+
+p {
+  margin: 5px 0px 6px 0px;
+}
+
+input[type="text"] {
+  padding: 3px;
+  margin: 10px 5px;
+  text-align: right;
+}
+
+.swap-steps {
+  margin: 10px 0px;
+}
+
+button {
+  margin: 0px 5px 0px 5px;
+}

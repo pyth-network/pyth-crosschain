@@ -1,0 +1,15 @@
+# Defined in tilt_devnet/docker_images/Dockerfile.lerna
+FROM lerna
+
+WORKDIR /home/node/
+USER 1000
+
+RUN sh -c "$(curl -sSfL https://release.solana.com/v1.10.31/install)"
+ENV PATH="/home/node/.local/share/solana/install/active_release/bin:$PATH"
+
+COPY --chown=1000:1000 governance/multisig_wh_message_builder governance/multisig_wh_message_builder
+COPY --chown=1000:1000 third_party/pyth/prepare_multisig.py third_party/pyth/pyth_utils.py third_party/pyth/
+COPY --chown=1000:1000 tilt_devnet/secrets/solana tilt_devnet/secrets/solana
+ENV SOL_PAYER_KEYPAIR /home/node/tilt_devnet/secrets/solana/solana-devnet.json
+
+RUN npx lerna run build --scope="@pythnetwork/pyth-multisig-wh-message-builder" --include-dependencies

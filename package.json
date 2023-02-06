@@ -1,0 +1,20 @@
+{
+  "name": "root",
+  "workspaces": [
+    "governance/xc_admin/packages/*",
+    "governance/xc_governance_sdk_js",
+    "governance/multisig_wh_message_builder",
+    "price_service/server",
+    "price_service/sdk/js",
+    "price_service/client/js",
+    "target_chains/ethereum",
+    "third_party/pyth/p2w-relay",
+    "wormhole_attester/sdk/js"
+  ],
+  "dependencies": {
+    "prettier": "2.7.1"
+  },
+  "devDependencies": {
+    "lerna": "^6.4.1"
+  }
+}

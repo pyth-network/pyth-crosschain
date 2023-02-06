@@ -1,40 +1,15 @@
-FROM node:16-alpine@sha256:72a490e7ed8aed68e16b8dc8f37b5bcc35c5b5c56ee3256effcdee63e2546f93
+# Defined in tilt_devnet/docker_images/Dockerfile.lerna
+FROM lerna
 
-ARG BASE_PATH=/usr/src
+WORKDIR /home/node/
+USER 1000
 
-RUN apk --no-cache --update add python3 build-base  # Needed by the Ethereum build
+COPY --chown=1000:1000 price_service/sdk/js price_service/sdk/js
+COPY --chown=1000:1000 third_party/pyth/p2w-relay third_party/pyth/p2w-relay
+COPY --chown=1000:1000 wormhole_attester/sdk/js wormhole_attester/sdk/js
 
-WORKDIR ${BASE_PATH}
-RUN addgroup -S pyth -g 10001 && adduser -S pyth -G pyth -u 10001
-RUN chown -R pyth:pyth .
-USER pyth
+RUN npx lerna run build --scope="pyth_relay" --include-dependencies
 
-WORKDIR ${BASE_PATH}/target-chains/ethereum
-ADD --chown=pyth:pyth target-chains/ethereum/ .
-RUN npm install && npm run build
+WORKDIR /home/node/third_party/pyth/p2w-relay
 
-USER root
-RUN apk del build-base # No longer needed after EVM build
-
-USER pyth
-
-# Adds p2w-sdk/js dependency
-ARG P2W_SDK_REL_PATH=third_party/pyth/p2w-sdk/js
-
-WORKDIR ${BASE_PATH}/${P2W_SDK_REL_PATH}
-ADD --chown=pyth:pyth ${P2W_SDK_REL_PATH} .
-
-RUN npm ci && npm run build && npm cache clean --force
-
-# Add the code and compile
-ARG P2W_RELAY_REL_PATH=third_party/pyth/p2w-relay
-
-WORKDIR ${BASE_PATH}/${P2W_RELAY_REL_PATH}
-ADD --chown=pyth:pyth ${P2W_RELAY_REL_PATH} .
-
-RUN npm ci && npm run build && npm cache clean --force
-
-# If you are building for production
-# RUN npm ci --only=production
-
-RUN mkdir -p ${BASE_PATH}/${P2W_RELAY_REL_PATH}/logs
+CMD [ "npm", "run", "start" ]

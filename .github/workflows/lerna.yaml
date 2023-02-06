@@ -1,0 +1,22 @@
+name: JS/TS checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "npm"
+      - name: Install deps
+        run: npm ci
+      - name: Build
+        run: npx lerna run build
+      - name: Test
+        run: npx lerna run test
+      - name: Lint
+        run: npx lerna run lint

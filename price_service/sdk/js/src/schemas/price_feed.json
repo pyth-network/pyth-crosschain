@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PriceFeed",
+  "description": "Represents an aggregate price from Pyth publisher feeds.",
+  "type": "object",
+  "required": ["id", "price", "ema_price"],
+  "properties": {
+    "id": {
+      "description": "Unique identifier for this price.",
+      "$ref": "#/definitions/Identifier"
+    },
+    "price": {
+      "description": "Price",
+      "$ref": "#/definitions/Price"
+    },
+    "ema_price": {
+      "description": "Exponentially-weighted moving average Price",
+      "$ref": "#/definitions/Price"
+    },
+    "metadata": {
+      "description": "Metadata of the price",
+      "$ref": "#/definitions/PriceFeedMetadata"
+    },
+    "vaa": {
+      "description": "VAA of the price",
+      "$ref": "#/definitions/Identifier"
+    }
+  },
+  "definitions": {
+    "Identifier": {
+      "type": "string"
+    },
+    "Price": {
+      "description": "Represents a Pyth price",
+      "type": "object",
+      "required": ["conf", "expo", "price", "publish_time"],
+      "properties": {
+        "conf": {
+          "description": "Confidence interval around the price.",
+          "type": "string"
+        },
+        "expo": {
+          "description": "Price exponent.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "price": {
+          "description": "Price.",
+          "type": "string"
+        },
+        "publish_time": {
+          "description": "Publish Time of the price",
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "PriceFeedMetadata": {
+      "description": "Represents metadata of a price feed.",
+      "type": "object",
+      "required": [
+        "attestation_time",
+        "emitter_chain",
+        "price_service_receive_time",
+        "sequence_number"
+      ],
+      "properties": {
+        "attestation_time": {
+          "description": "Attestation time of the price",
+          "type": "integer",
+          "format": "int64"
+        },
+        "emitter_chain": {
+          "description": "Chain of the emitter",
+          "type": "integer",
+          "format": "int16"
+        },
+        "price_service_receive_time": {
+          "description": "The time that the price service received the price",
+          "type": "integer",
+          "format": "int64"
+        },
+        "sequence_number": {
+          "description": "Sequence number of the price",
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    }
+  }
+}

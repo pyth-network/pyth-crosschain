@@ -62,20 +62,15 @@ if not ci:
 def k8s_yaml_with_ns(objects):
     return k8s_yaml(namespace_inject(objects, namespace))
 
-# wasm
-
-local_resource(
-    name = "wasm-gen",
-    cmd = "tilt docker build -- -f tilt-devnet/docker-images/Dockerfile.wasm -o type=local,dest=. .",
-    env = {"DOCKER_BUILDKIT": "1"},
-    deps = "./wormhole-attester",
-    labels = ["wasm"],
-    allow_parallel=True,
-    trigger_mode = trigger_mode,
+# Build lerna docker base for npm project
+docker_build(
+    ref = "lerna",
+    context = ".",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.lerna",
 )
 
 def build_node_yaml():
-    node_yaml = read_yaml_stream("tilt-devnet/k8s/node.yaml")
+    node_yaml = read_yaml_stream("tilt_devnet/k8s/node.yaml")
 
     for obj in node_yaml:
         if obj["kind"] == "StatefulSet" and obj["metadata"]["name"] == "guardian":
@@ -103,7 +98,7 @@ k8s_resource(
 )
 
 # spy
-k8s_yaml_with_ns("tilt-devnet/k8s/spy.yaml")
+k8s_yaml_with_ns("tilt_devnet/k8s/spy.yaml")
 
 k8s_resource(
     "spy",
@@ -121,7 +116,7 @@ k8s_resource(
 docker_build(
     ref = "bridge-client",
     context = ".",
-    dockerfile = "tilt-devnet/docker-images/Dockerfile.client",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.client",
 )
 
 # solana smart contract
@@ -129,12 +124,12 @@ docker_build(
 docker_build(
     ref = "solana-contract",
     context = ".",
-    dockerfile = "tilt-devnet/docker-images/Dockerfile.solana",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.solana",
 )
 
 # solana local devnet
 
-k8s_yaml_with_ns("tilt-devnet/k8s/solana-devnet.yaml")
+k8s_yaml_with_ns("tilt_devnet/k8s/solana-devnet.yaml")
 
 k8s_resource(
     "solana-devnet",
@@ -152,7 +147,7 @@ k8s_resource(
 docker_build(
     ref = "eth-node",
     context = "./",
-    dockerfile = "tilt-devnet/docker-images/Dockerfile.ethereum",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.ethereum",
 
     # sync external scripts for incremental development
     # (everything else needs to be restarted from scratch for determinism)
@@ -170,7 +165,7 @@ docker_build(
     context = ".",
     dockerfile = "third_party/pyth/Dockerfile.pyth",
 )
-k8s_yaml_with_ns("./tilt-devnet/k8s/pyth.yaml")
+k8s_yaml_with_ns("./tilt_devnet/k8s/pyth.yaml")
 
 k8s_resource(
     "pyth",
@@ -186,7 +181,7 @@ docker_build(
     dockerfile = "./third_party/pyth/Dockerfile.p2w-attest",
 )
 
-k8s_yaml_with_ns("tilt-devnet/k8s/p2w-attest.yaml")
+k8s_yaml_with_ns("tilt_devnet/k8s/p2w-attest.yaml")
 k8s_resource(
     "p2w-attest",
     resource_deps = ["solana-devnet", "pyth", "guardian"],
@@ -203,10 +198,10 @@ docker_build(
     dockerfile = "./third_party/pyth/Dockerfile.check-attestations",
 )
 
-k8s_yaml_with_ns("tilt-devnet/k8s/check-attestations.yaml")
+k8s_yaml_with_ns("tilt_devnet/k8s/check-attestations.yaml")
 k8s_resource(
     "check-attestations",
-    resource_deps = ["pyth-price-service", "pyth", "p2w-attest"],
+    resource_deps = ["pyth-price-server", "pyth", "p2w-attest"],
     labels = ["pyth"],
     trigger_mode = trigger_mode,
 )
@@ -217,43 +212,43 @@ docker_build(
     context = ".",
     dockerfile = "third_party/pyth/p2w-relay/Dockerfile.pyth_relay",
 )
-k8s_yaml_with_ns("tilt-devnet/k8s/p2w-terra-relay.yaml")
+k8s_yaml_with_ns("tilt_devnet/k8s/p2w-terra-relay.yaml")
 k8s_resource(
     "p2w-terra-relay",
-    resource_deps = ["pyth", "p2w-attest", "spy", "terra-terrad", "wasm-gen"],
+    resource_deps = ["pyth", "p2w-attest", "spy", "terra-terrad"],
     port_forwards = [
         port_forward(4200, name = "Rest API (Status + Query) [:4200]", host = webHost),
         port_forward(8081, name = "Prometheus [:8081]", host = webHost)],
     labels = ["pyth"]
 )
 
-k8s_yaml_with_ns("tilt-devnet/k8s/p2w-evm-relay.yaml")
+k8s_yaml_with_ns("tilt_devnet/k8s/p2w-evm-relay.yaml")
 k8s_resource(
     "p2w-evm-relay",
-    resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet", "wasm-gen"],
+    resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet"],
     port_forwards = [
         port_forward(4201, container_port = 4200, name = "Rest API (Status + Query) [:4201]", host = webHost),
         port_forward(8082, container_port = 8081, name = "Prometheus [:8082]", host = webHost)],
     labels = ["pyth"]
 )
 
-# Pyth Price service
+# Pyth Price server
 docker_build(
-    ref = "pyth-price-service",
+    ref = "pyth-price-server",
     context = ".",
-    dockerfile = "price-service/Dockerfile.price_service",
+    dockerfile = "price_service/server/Dockerfile",
 )
-k8s_yaml_with_ns("tilt-devnet/k8s/pyth-price-service.yaml")
+k8s_yaml_with_ns("tilt_devnet/k8s/pyth-price-server.yaml")
 k8s_resource(
-    "pyth-price-service",
-    resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet", "wasm-gen"],
+    "pyth-price-server",
+    resource_deps = ["pyth", "p2w-attest", "spy", "eth-devnet"],
     port_forwards = [
         port_forward(4202, container_port = 4200, name = "Rest API (Status + Query) [:4202]", host = webHost),
         port_forward(8083, container_port = 8081, name = "Prometheus [:8083]", host = webHost)],
     labels = ["pyth"]
 )
 
-k8s_yaml_with_ns("tilt-devnet/k8s/eth-devnet.yaml")
+k8s_yaml_with_ns("tilt_devnet/k8s/eth-devnet.yaml")
 
 k8s_resource(
     "eth-devnet",
@@ -278,17 +273,17 @@ k8s_resource(
 
 docker_build(
     ref = "terra-image",
-    context = "./target-chains/cosmwasm/devnet",
-    dockerfile = "./target-chains/cosmwasm/devnet/Dockerfile",
+    context = "./target_chains/cosmwasm/devnet",
+    dockerfile = "./target_chains/cosmwasm/devnet/Dockerfile",
 )
 
 docker_build(
     ref = "cosmwasm-contracts",
     context = ".",
-    dockerfile = "tilt-devnet/docker-images/Dockerfile.cosmwasm",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.cosmwasm",
 )
 
-k8s_yaml_with_ns("tilt-devnet/k8s/terra-devnet.yaml")
+k8s_yaml_with_ns("tilt_devnet/k8s/terra-devnet.yaml")
 
 k8s_resource(
     "terra-terrad",
@@ -317,10 +312,10 @@ k8s_resource(
 docker_build(
     ref = "prometheus",
     context = ".",
-    dockerfile = "tilt-devnet/docker-images/Dockerfile.prometheus",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.prometheus",
 )
 
-k8s_yaml_with_ns("tilt-devnet/k8s/prometheus.yaml")
+k8s_yaml_with_ns("tilt_devnet/k8s/prometheus.yaml")
 
 k8s_resource(
     "prometheus",
@@ -332,14 +327,27 @@ k8s_resource(
 docker_build(
     ref = "multisig",
     context = ".",
-    dockerfile = "tilt-devnet/docker-images/Dockerfile.multisig",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.multisig",
 )
 
-k8s_yaml_with_ns("tilt-devnet/k8s/multisig.yaml")
+k8s_yaml_with_ns("tilt_devnet/k8s/multisig.yaml")
 
 k8s_resource(
     "multisig",
     resource_deps = ["solana-devnet"],
     labels = ["solana"],
     trigger_mode = trigger_mode,
+)
+
+# Pyth Price Client JS e2e test
+docker_build(
+    ref = "pyth-price-client-js",
+    context = ".",
+    dockerfile = "price_service/client/js/Dockerfile",
+)
+k8s_yaml_with_ns("tilt_devnet/k8s/pyth-price-client-js.yaml")
+k8s_resource(
+    "pyth-price-client-js",
+    resource_deps = ["pyth-price-server"],
+    labels = ["pyth"]
 )

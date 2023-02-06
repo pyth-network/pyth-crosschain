@@ -1,6 +1,0 @@
-@ensdomains/=node_modules/@ensdomains/
-@openzeppelin/=node_modules/@openzeppelin/
-@pythnetwork/=node_modules/@pythnetwork/
-ds-test/=lib/forge-std/lib/ds-test/src/
-forge-std/=lib/forge-std/src/
-truffle/=node_modules/truffle/

@@ -1,0 +1,31 @@
+{
+  "name": "xc_admin_cli",
+  "version": "0.0.0",
+  "description": "",
+  "author": "",
+  "homepage": "https://github.com/pyth-network/pyth-crosschain",
+  "license": "ISC",
+  "main": "src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  },
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.26.0",
+    "@ledgerhq/hw-transport": "^6.27.10",
+    "@ledgerhq/hw-transport-node-hid": "^6.27.10",
+    "@pythnetwork/client": "^2.9.0",
+    "@solana/web3.js": "^1.73.0",
+    "@sqds/mesh": "^1.0.6",
+    "commander": "^9.5.0",
+    "typescript": "^4.9.4",
+    "xc_admin_common": "*"
+  }
+}

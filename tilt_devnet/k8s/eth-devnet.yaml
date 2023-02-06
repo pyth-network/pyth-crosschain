@@ -1,0 +1,143 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eth-devnet
+  labels:
+    app: eth-devnet
+spec:
+  ports:
+    - port: 8545
+      name: rpc
+      protocol: TCP
+  clusterIP: None
+  selector:
+    app: eth-devnet
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eth-devnet2
+  labels:
+    app: eth-devnet2
+spec:
+  ports:
+    - port: 8546
+      targetPort: 8545
+      name: rpc
+      protocol: TCP
+  clusterIP: None
+  selector:
+    app: eth-devnet2
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: eth-devnet
+spec:
+  selector:
+    matchLabels:
+      app: eth-devnet
+  serviceName: eth-devnet
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: eth-devnet
+    spec:
+      terminationGracePeriodSeconds: 1
+      containers:
+        - name: ganache
+          image: eth-node
+          command:
+            - npx
+            - ganache-cli
+            - -e 10000
+            - --deterministic
+            # NOTE(2022-04-13): Some unit tests need block timestamp
+            # to be sufficiently far above UNIX epoch (Pyth EVM tests
+            # check feed staleness logic against 0 as lowest possible
+            # timestamp)
+            - --time="1970-01-02T00:00:00+00:00"
+            - --host=0.0.0.0
+          ports:
+            - containerPort: 8545
+              name: rpc
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: rpc
+        - name: tests
+          image: eth-node
+          stdin: true
+          command:
+            - /bin/sh
+            - -c
+            - "npm run migrate -- --network development &&
+              npx truffle test test/pyth.js 2>&1 &&
+              nc -lk 0.0.0.0 2000"
+          readinessProbe:
+            periodSeconds: 1
+            failureThreshold: 300
+            tcpSocket:
+              port: 2000
+        - name: mine
+          image: eth-node
+          command:
+            - /bin/sh
+            - -c
+            - "npx truffle exec mine.js"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: eth-devnet2
+spec:
+  selector:
+    matchLabels:
+      app: eth-devnet2
+  serviceName: eth-devnet2
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: eth-devnet2
+    spec:
+      terminationGracePeriodSeconds: 1
+      containers:
+        - name: ganache
+          image: eth-node
+          command:
+            - npx
+            - ganache-cli
+            - -e 10000
+            - --deterministic
+            - --time="1970-01-01T00:00:00+00:00"
+            - --host=0.0.0.0
+            - --chain.chainId=1397
+          ports:
+            - containerPort: 8545
+              name: rpc
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: rpc
+        - name: tests
+          image: eth-node
+          stdin: true
+          command:
+            - /bin/sh
+            - -c
+            - "npm run migrate -- --network development &&
+              nc -lk 0.0.0.0 2000"
+          readinessProbe:
+            periodSeconds: 1
+            failureThreshold: 300
+            tcpSocket:
+              port: 2000
+        - name: mine
+          image: eth-node
+          command:
+            - /bin/sh
+            - -c
+            - "npx truffle exec mine.js"

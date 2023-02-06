@@ -1,0 +1,29 @@
+{
+  "name": "crank_executor",
+  "version": "0.0.0",
+  "description": "A crank to executed all executeReady multisig transaction",
+  "author": "",
+  "homepage": "https://github.com/pyth-network/pyth-crosschain",
+  "license": "ISC",
+  "main": "src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  },
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@certusone/wormhole-sdk": "^0.9.9",
+    "@coral-xyz/anchor": "^0.26.0",
+    "@pythnetwork/client": "^2.9.0",
+    "@solana/web3.js": "^1.73.0",
+    "@sqds/mesh": "^1.0.6",
+    "ts-node": "^10.9.1",
+    "xc_admin_common": "*"
+  }
+}

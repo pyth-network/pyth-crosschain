@@ -1,0 +1,39 @@
+# This is a multi-stage docker file, first and second stage builds contracts
+# And the third one creates node.js environment to deploy them
+
+FROM cosmwasm/workspace-optimizer:0.12.11@sha256:b6b0b1d5ed76dafd0ec0d3812a1e7a275316cf862fd6d0a918f14d71c4cb187f AS wormhole_builder
+
+WORKDIR /tmp/wormhole-repo
+
+ARG WORMHOLE_REV=2.8.9
+ADD https://github.com/certusone/wormhole/archive/refs/tags/v${WORMHOLE_REV}.tar.gz .
+RUN tar -xvf v${WORMHOLE_REV}.tar.gz
+RUN mv wormhole-${WORMHOLE_REV}/cosmwasm/Cargo.lock /code/
+RUN mv wormhole-${WORMHOLE_REV}/cosmwasm/Cargo.toml /code/
+RUN mv wormhole-${WORMHOLE_REV}/cosmwasm/contracts /code/contracts
+
+WORKDIR /code
+RUN --mount=type=cache,target=/code/target,id=cosmwasm_wormhole_target --mount=type=cache,target=/usr/local/cargo/registry optimize_workspace.sh
+
+FROM cosmwasm/workspace-optimizer:0.12.11@sha256:b6b0b1d5ed76dafd0ec0d3812a1e7a275316cf862fd6d0a918f14d71c4cb187f AS pyth_builder
+
+COPY target_chains/cosmwasm/Cargo.lock /code/
+COPY target_chains/cosmwasm/Cargo.toml /code/
+COPY target_chains/cosmwasm/contracts /code/contracts
+COPY wormhole_attester/sdk/rust /wormhole_attester/sdk/rust
+RUN --mount=type=cache,target=/code/target,id=cosmwasm_pyth_target --mount=type=cache,target=/usr/local/cargo/registry optimize_workspace.sh
+
+# Contract deployment stage
+FROM node:16-buster-slim@sha256:93c9fc3550f5f7d159f282027228e90e3a7f8bf38544758024f005e82607f546
+
+RUN apt update && apt install netcat curl jq -y
+
+WORKDIR /app/tools
+
+COPY --from=wormhole_builder /code/artifacts/wormhole.wasm /app/artifacts/wormhole.wasm
+COPY --from=pyth_builder /code/artifacts/pyth_cosmwasm.wasm /app/artifacts/pyth_cosmwasm.wasm
+
+COPY target_chains/cosmwasm/tools/package.json target_chains/cosmwasm/tools/package-lock.json /app/tools/
+RUN --mount=type=cache,uid=1000,gid=1000,target=/home/node/.npm \
+    npm ci
+COPY target_chains/cosmwasm/tools /app/tools
