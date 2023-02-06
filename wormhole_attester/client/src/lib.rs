@@ -334,7 +334,7 @@ pub fn gen_attest_tx(
             .flat_map(|s| {
                 let state_address = AttestationStatePDA::key(&s.price_addr, &p2w_addr);
                 vec![
-                    AccountMeta::new_readonly(state_address, false),
+                    AccountMeta::new(state_address, false),
                     AccountMeta::new_readonly(s.price_addr, false),
                 ]
             })
