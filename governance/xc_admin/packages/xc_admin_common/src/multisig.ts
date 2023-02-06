@@ -9,6 +9,13 @@ import BN from "bn.js";
 import lodash from "lodash";
 
 /**
+ * Address of the ops key (same on all networks)
+ */
+export const OPS_KEY = new PublicKey(
+  "ACzP6RC98vcBk9oTeAwcH1o5HJvtBzU59b5nqdwc7Cxy"
+);
+
+/**
  * Find all proposals for vault `vault` using Squads client `squad`
  * @param squad Squads client
  * @param vault vault public key. It needs to exist in the instance of squads that `squad` is targeting

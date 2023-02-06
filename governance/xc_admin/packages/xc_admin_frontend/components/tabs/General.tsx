@@ -3,12 +3,17 @@ import { getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
+import { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import {
+  getMultisigCluster,
+  OPS_KEY,
+  proposeInstructions,
+} from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
-import { useMultisig } from '../../hooks/useMultisig'
-import { PriceRawConfig } from '../../hooks/usePyth'
+import { SECURITY_MULTISIG, useMultisig } from '../../hooks/useMultisig'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import Modal from '../common/Modal'
@@ -18,6 +23,7 @@ import Loadbar from '../loaders/Loadbar'
 const General = () => {
   const [data, setData] = useState<any>({})
   const [dataChanges, setDataChanges] = useState<Record<string, any>>()
+  const [existingSymbols, setExistingSymbols] = useState<Set<string>>(new Set())
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
     useState(false)
@@ -53,13 +59,8 @@ const General = () => {
             } else if (innerKey === 'priceAccounts') {
               // sort price accounts by address
               sortedInnerData[innerKey] = data[key][innerKey].sort(
-                (
-                  priceAccount1: PriceRawConfig,
-                  priceAccount2: PriceRawConfig
-                ) =>
-                  priceAccount1.address
-                    .toBase58()
-                    .localeCompare(priceAccount2.address.toBase58())
+                (priceAccount1: any, priceAccount2: any) =>
+                  priceAccount1.address.localeCompare(priceAccount2.address)
               )
               // sort price accounts keys
               sortedInnerData[innerKey] = sortedInnerData[innerKey].map(
@@ -120,6 +121,7 @@ const General = () => {
           delete symbolToData[product.metadata.symbol].metadata.symbol
           delete symbolToData[product.metadata.symbol].metadata.price_account
         })
+      setExistingSymbols(new Set(Object.keys(symbolToData)))
       setData(sortDataMemo(symbolToData))
     }
   }, [rawConfig, dataIsLoading, sortDataMemo])
@@ -162,7 +164,12 @@ const General = () => {
           const fileDataParsed = sortData(JSON.parse(fileData as string))
           const changes: Record<string, any> = {}
           Object.keys(fileDataParsed).forEach((symbol) => {
-            if (
+            if (!existingSymbols.has(symbol)) {
+              // if symbol is not in existing symbols, create new entry
+              changes[symbol] = { new: {} }
+              changes[symbol].new = fileDataParsed[symbol]
+            } else if (
+              // if symbol is in existing symbols, check if data is different
               JSON.stringify(data[symbol]) !==
               JSON.stringify(fileDataParsed[symbol])
             ) {
@@ -190,19 +197,205 @@ const General = () => {
       toast.error(capitalizeFirstLetter(e.message))
       return false
     }
-    // check if json keys are existing products
-    const jsonParsed = JSON.parse(json)
-    const jsonSymbols = Object.keys(jsonParsed)
-    const existingSymbols = Object.keys(data)
-    // check that jsonSymbols is equal to existingSymbols no matter the order
-    if (
-      JSON.stringify(jsonSymbols.sort()) !==
-      JSON.stringify(existingSymbols.sort())
-    ) {
-      toast.error('Symbols in json file do not match existing symbols!')
-      return false
-    }
     return true
+  }
+
+  const handleSendProposalButtonClick = async () => {
+    if (pythProgramClient && dataChanges) {
+      const instructions: TransactionInstruction[] = []
+      Object.keys(dataChanges).forEach(async (symbol) => {
+        const { prev, new: newChanges } = dataChanges[symbol]
+        // if prev is undefined, it means that the symbol is new
+        if (!prev) {
+          // deterministically generate product account key
+          const productAccountKey = await PublicKey.createWithSeed(
+            OPS_KEY,
+            'product:' + symbol,
+            pythProgramClient.programId
+          )
+          // create add product account instruction
+          instructions.push(
+            await pythProgramClient.methods
+              .addProduct()
+              .accounts({
+                fundingAccount: squads?.getAuthorityPDA(
+                  SECURITY_MULTISIG[getMultisigCluster(cluster)],
+                  1
+                ),
+                tailMappingAccount: rawConfig.mappingAccounts[0].address,
+                productAccount: productAccountKey,
+              })
+              .instruction()
+          )
+          // create update product account instruction
+          instructions.push(
+            await pythProgramClient.methods
+              .updProduct(newChanges.metadata)
+              .accounts({
+                fundingAccount: squads?.getAuthorityPDA(
+                  SECURITY_MULTISIG[getMultisigCluster(cluster)],
+                  1
+                ),
+                productAccount: productAccountKey,
+              })
+              .instruction()
+          )
+          // deterministically generate price account key
+          const priceAccountKey = await PublicKey.createWithSeed(
+            OPS_KEY,
+            'price:' + symbol,
+            pythProgramClient.programId
+          )
+          // create add price account instruction
+          instructions.push(
+            await pythProgramClient.methods
+              .addPrice(newChanges.priceAccounts[0].expo, 1)
+              .accounts({
+                fundingAccount: squads?.getAuthorityPDA(
+                  SECURITY_MULTISIG[getMultisigCluster(cluster)],
+                  1
+                ),
+                productAccount: productAccountKey,
+                priceAccount: priceAccountKey,
+              })
+              .instruction()
+          )
+
+          // create add publisher instruction if there are any publishers
+          if (newChanges.priceAccounts[0].publishers.length > 0) {
+            newChanges.priceAccounts[0].publishers.forEach(
+              (publisherKey: string) => {
+                pythProgramClient.methods
+                  .addPublisher(new PublicKey(publisherKey))
+                  .accounts({
+                    fundingAccount: squads?.getAuthorityPDA(
+                      SECURITY_MULTISIG[getMultisigCluster(cluster)],
+                      1
+                    ),
+                    priceAccount: priceAccountKey,
+                  })
+                  .instruction()
+                  .then((instruction) => instructions.push(instruction))
+              }
+            )
+          }
+
+          // create set min publisher instruction if there are any publishers
+          if (newChanges.priceAccounts[0].minPub) {
+            instructions.push(
+              await pythProgramClient.methods
+                .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
+                .accounts({
+                  priceAccount: priceAccountKey,
+                  fundingAccount: squads?.getAuthorityPDA(
+                    SECURITY_MULTISIG[getMultisigCluster(cluster)],
+                    1
+                  ),
+                })
+                .instruction()
+            )
+          }
+        } else {
+          // check if metadata has changed, or minPub has changed, or publishers have changed
+          // check if metadata has changed
+          // check if there are any new metadata by comparing prev and new values
+          if (
+            JSON.stringify(prev.metadata) !==
+            JSON.stringify(newChanges.metadata)
+          ) {
+            // create update product account instruction
+            instructions.push(
+              await pythProgramClient.methods
+                .updProduct(newChanges.metadata)
+                .accounts({
+                  fundingAccount: squads?.getAuthorityPDA(
+                    SECURITY_MULTISIG[getMultisigCluster(cluster)],
+                    1
+                  ),
+                  productAccount: new PublicKey(prev.address),
+                })
+                .instruction()
+            )
+          }
+          // check if minPub has changed
+          if (
+            prev.priceAccounts[0].minPub !== newChanges.priceAccounts[0].minPub
+          ) {
+            // create update product account instruction
+            instructions.push(
+              await pythProgramClient.methods
+                .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
+                .accounts({
+                  priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                  fundingAccount: squads?.getAuthorityPDA(
+                    SECURITY_MULTISIG[getMultisigCluster(cluster)],
+                    1
+                  ),
+                })
+                .instruction()
+            )
+          }
+
+          // check if publishers have changed
+          // check if there are any new publishers to add by comparing prev and new
+          const publisherKeysToAdd =
+            newChanges.priceAccounts[0].publishers.filter(
+              (newPublisher: string) =>
+                !prev.priceAccounts[0].publishers.includes(newPublisher)
+            )
+          // check if there are any publishers to remove by comparing prev and new
+          const publisherKeysToRemove = prev.priceAccounts[0].publishers.filter(
+            (prevPublisher: string) =>
+              !newChanges.priceAccounts[0].publishers.includes(prevPublisher)
+          )
+
+          // add instructions to add new publishers
+          publisherKeysToAdd.forEach((publisherKey: string) => {
+            pythProgramClient.methods
+              .addPublisher(new PublicKey(publisherKey))
+              .accounts({
+                fundingAccount: squads?.getAuthorityPDA(
+                  SECURITY_MULTISIG[getMultisigCluster(cluster)],
+                  1
+                ),
+                priceAccount: new PublicKey(prev.priceAccounts[0].address),
+              })
+              .instruction()
+              .then((instruction) => instructions.push(instruction))
+          })
+          // add instructions to remove publishers
+          publisherKeysToRemove.forEach((publisherKey: string) => {
+            pythProgramClient.methods
+              .delPublisher(new PublicKey(publisherKey))
+              .accounts({
+                fundingAccount: squads?.getAuthorityPDA(
+                  SECURITY_MULTISIG[getMultisigCluster(cluster)],
+                  1
+                ),
+                priceAccount: new PublicKey(prev.priceAccounts[0].address),
+              })
+              .instruction()
+              .then((instruction) => instructions.push(instruction))
+          })
+        }
+      })
+      if (!isMultisigLoading && squads) {
+        setIsSendProposalButtonLoading(true)
+        try {
+          const proposalPubkey = await proposeInstructions(
+            squads,
+            SECURITY_MULTISIG[getMultisigCluster(cluster)],
+            instructions,
+            false
+          )
+          toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
+          setIsSendProposalButtonLoading(false)
+        } catch (e: any) {
+          toast.error(capitalizeFirstLetter(e.message))
+          setIsSendProposalButtonLoading(false)
+        }
+      }
+    }
   }
 
   const AddressChangesRow = ({ changes }: { changes: any }) => {
@@ -229,11 +422,15 @@ const General = () => {
   }
 
   const MetadataChangesRows = ({ changes }: { changes: any }) => {
+    const addNewPriceFeed =
+      changes.prev === undefined && Object.keys(changes.new).length > 0
+
     return (
       <>
         {Object.keys(changes.new).map(
           (metadataKey) =>
-            changes.prev[metadataKey] !== changes.new[metadataKey] && (
+            (addNewPriceFeed ||
+              changes.prev[metadataKey] !== changes.new[metadataKey]) && (
               <tr key={metadataKey}>
                 <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
                   {metadataKey
@@ -243,8 +440,12 @@ const General = () => {
                 </td>
 
                 <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
-                  <s>{changes.prev[metadataKey]}</s>
-                  <br />
+                  {!addNewPriceFeed ? (
+                    <>
+                      <s>{changes.prev[metadataKey]}</s>
+                      <br />{' '}
+                    </>
+                  ) : null}
                   {changes.new[metadataKey]}
                 </td>
               </tr>
@@ -255,35 +456,50 @@ const General = () => {
   }
 
   const PriceAccountsChangesRows = ({ changes }: { changes: any }) => {
+    const addNewPriceFeed =
+      changes.prev === undefined && Object.keys(changes.new).length > 0
     return (
       <>
         {changes.new.map((priceAccount: any, index: number) =>
           Object.keys(priceAccount).map((priceAccountKey) =>
-            priceAccountKey === 'publishers' &&
-            JSON.stringify(changes.prev[index][priceAccountKey]) !==
-              JSON.stringify(priceAccount[priceAccountKey]) ? (
-              <PublisherKeysChangesRows
-                key={priceAccountKey}
-                changes={{
-                  prev: changes.prev[index][priceAccountKey],
-                  new: priceAccount[priceAccountKey],
-                }}
-              />
+            priceAccountKey === 'publishers' ? (
+              addNewPriceFeed ? (
+                <PublisherKeysChangesRows
+                  key={priceAccountKey}
+                  changes={{
+                    new: priceAccount[priceAccountKey],
+                  }}
+                />
+              ) : (
+                JSON.stringify(changes.prev[index][priceAccountKey]) !==
+                  JSON.stringify(priceAccount[priceAccountKey]) && (
+                  <PublisherKeysChangesRows
+                    key={priceAccountKey}
+                    changes={{
+                      prev: changes.prev[index][priceAccountKey],
+                      new: priceAccount[priceAccountKey],
+                    }}
+                  />
+                )
+              )
             ) : (
-              priceAccountKey !== 'publishers' &&
-              changes.prev[index][priceAccountKey] !==
-                priceAccount[priceAccountKey] && (
+              (addNewPriceFeed ||
+                changes.prev[index][priceAccountKey] !==
+                  priceAccount[priceAccountKey]) && (
                 <tr key={priceAccountKey}>
                   <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
                     {priceAccountKey
-
                       .split('_')
                       .map((word) => capitalizeFirstLetter(word))
                       .join(' ')}
                   </td>
                   <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
-                    <s>{changes.prev[index][priceAccountKey]}</s>
-                    <br />
+                    {!addNewPriceFeed ? (
+                      <>
+                        <s>{changes.prev[index][priceAccountKey]}</s>
+                        <br />
+                      </>
+                    ) : null}
                     {priceAccount[priceAccountKey]}
                   </td>
                 </tr>
@@ -296,12 +512,17 @@ const General = () => {
   }
 
   const PublisherKeysChangesRows = ({ changes }: { changes: any }) => {
-    const publisherKeysToAdd = changes.new.filter(
-      (newPublisher: string) => !changes.prev.includes(newPublisher)
-    )
-    const publisherKeysToRemove = changes.prev.filter(
-      (prevPublisher: string) => !changes.new.includes(prevPublisher)
-    )
+    const addNewPriceFeed = changes.prev === undefined && changes.new.length > 0
+    const publisherKeysToAdd = addNewPriceFeed
+      ? changes.new
+      : changes.new.filter(
+          (newPublisher: string) => !changes.prev.includes(newPublisher)
+        )
+    const publisherKeysToRemove = addNewPriceFeed
+      ? []
+      : changes.prev.filter(
+          (prevPublisher: string) => !changes.new.includes(prevPublisher)
+        )
     return (
       <>
         {publisherKeysToAdd.length > 0 && (
@@ -332,6 +553,27 @@ const General = () => {
     )
   }
 
+  const NewPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => {
+    const key =
+      priceFeedData.metadata.asset_type +
+      '.' +
+      priceFeedData.metadata.base +
+      '/' +
+      priceFeedData.metadata.quote_currency
+    return (
+      <>
+        <MetadataChangesRows
+          key={key + 'metadata'}
+          changes={{ new: priceFeedData.metadata }}
+        />
+        <PriceAccountsChangesRows
+          key={key + 'priceAccounts'}
+          changes={{ new: priceFeedData.priceAccounts }}
+        />
+      </>
+    )
+  }
+
   const ModalContent = ({ changes }: { changes: any }) => {
     return (
       <>
@@ -340,9 +582,14 @@ const General = () => {
             {/* compare changes.prev and changes.new and display the fields that are different */}
             {Object.keys(changes).map((key) => {
               const { prev, new: newChanges } = changes[key]
-              const diff = Object.keys(prev).filter(
-                (k) => JSON.stringify(prev[k]) !== JSON.stringify(newChanges[k])
-              )
+              const addNewPriceFeed =
+                prev === undefined && Object.keys(newChanges).length > 0
+              const diff = addNewPriceFeed
+                ? []
+                : Object.keys(prev).filter(
+                    (k) =>
+                      JSON.stringify(prev[k]) !== JSON.stringify(newChanges[k])
+                  )
               return (
                 <tbody key={key}>
                   <tr>
@@ -350,29 +597,33 @@ const General = () => {
                       className="base16 py-4 pl-6 pr-2 font-bold lg:pl-6"
                       colSpan={2}
                     >
-                      {key}
+                      {addNewPriceFeed ? 'Add New Price Feed' : key}
                     </td>
                   </tr>
-                  {diff.map((k) =>
-                    k === 'address' ? (
-                      <AddressChangesRow
-                        key={k}
-                        changes={{ prev: prev[k], new: newChanges[k] }}
-                      />
-                    ) : k === 'metadata' ? (
-                      <MetadataChangesRows
-                        key={k}
-                        changes={{ prev: prev[k], new: newChanges[k] }}
-                      />
-                    ) : k === 'priceAccounts' ? (
-                      <PriceAccountsChangesRows
-                        key={k}
-                        changes={{
-                          prev: prev[k],
-                          new: newChanges[k],
-                        }}
-                      />
-                    ) : null
+                  {addNewPriceFeed ? (
+                    <NewPriceFeedsRows key={key} priceFeedData={newChanges} />
+                  ) : (
+                    diff.map((k) =>
+                      k === 'address' ? (
+                        <AddressChangesRow
+                          key={k}
+                          changes={{ prev: prev[k], new: newChanges[k] }}
+                        />
+                      ) : k === 'metadata' ? (
+                        <MetadataChangesRows
+                          key={k}
+                          changes={{ prev: prev[k], new: newChanges[k] }}
+                        />
+                      ) : k === 'priceAccounts' ? (
+                        <PriceAccountsChangesRows
+                          key={k}
+                          changes={{
+                            prev: prev[k],
+                            new: newChanges[k],
+                          }}
+                        />
+                      ) : null
+                    )
                   )}
 
                   {/* add a divider only if its not the last item */}
@@ -399,7 +650,7 @@ const General = () => {
           ) : (
             <button
               className="action-btn text-base"
-              //   onClick={handleSendProposalButtonClick}
+              onClick={handleSendProposalButtonClick}
             >
               {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
             </button>
