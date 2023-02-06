@@ -338,3 +338,16 @@ k8s_resource(
     labels = ["solana"],
     trigger_mode = trigger_mode,
 )
+
+# Pyth Price Client JS e2e test
+docker_build(
+    ref = "pyth-price-client-js",
+    context = ".",
+    dockerfile = "price_service/client/js/Dockerfile",
+)
+k8s_yaml_with_ns("tilt_devnet/k8s/pyth-price-client-js.yaml")
+k8s_resource(
+    "pyth-price-client-js",
+    resource_deps = ["pyth-price-server"],
+    labels = ["pyth"]
+)
