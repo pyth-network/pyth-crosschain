@@ -218,20 +218,26 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
                 ProgramError::InvalidAccountData
             })?;
 
+        let new_last_attested_trading_publish_time = match price_struct.agg.status {
+            PriceStatus::Trading => price_struct.timestamp,
+            _ => price_struct.prev_timestamp,
+        };
+
         let attestation = PriceAttestation::from_pyth_price_struct(
             Identifier::new(price.key.to_bytes()),
             attestation_time,
-            state.0 .1.last_attested_trading_publish_time, // Used as last_attested_publish_time
+            // Used as last_attested_publish_time, defaults to the new_* value if no pre-existing state is available
+            state
+                .0
+                 .1
+                .last_attested_trading_publish_time
+                .unwrap_or(new_last_attested_trading_publish_time),
             price_struct,
         );
 
         // Update the on-chain value using publish_time or
         // prev_publish_time if the price is not currently trading
-        state.0.last_attested_trading_publish_time = match price_struct.agg.status {
-            PriceStatus::Trading => price_struct.timestamp,
-            _ => price_struct.prev_timestamp,
-        };
-
+        state.0.last_attested_trading_publish_time = Some(new_last_attested_trading_publish_time);
 
         // Serialize the state to calculate rent/account size adjustments
         let state_serialized = state.0 .1.try_to_vec()?;
