@@ -482,7 +482,7 @@ const General = () => {
                   />
                 )
               )
-            ) : (
+            ) : priceAccountKey === 'address' && addNewPriceFeed ? null : (
               (addNewPriceFeed ||
                 changes.prev[index][priceAccountKey] !==
                   priceAccount[priceAccountKey]) && (
