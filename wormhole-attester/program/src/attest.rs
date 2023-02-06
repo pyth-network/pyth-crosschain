@@ -1,9 +1,6 @@
 use {
     crate::{
-        attestation_state::{
-            AttestationState,
-            AttestationStateMapPDA,
-        },
+        attestation_state::AttestationStatePDA,
         config::P2WConfigAccount,
         message::{
             P2WMessage,
@@ -57,7 +54,7 @@ use {
 /// Important: must be manually maintained until native Solitaire
 /// variable len vector support.
 ///
-/// The number must reflect how many pyth product/price pairs are
+/// The number must reflect how many pyth state/price pairs are
 /// expected in the Attest struct below. The constant itself is only
 /// used in the on-chain config in order for attesters to learn the
 /// correct value dynamically.
@@ -66,42 +63,41 @@ pub const P2W_MAX_BATCH_SIZE: u16 = 5;
 #[derive(FromAccounts)]
 pub struct Attest<'b> {
     // Payer also used for wormhole
-    pub payer:             Mut<Signer<Info<'b>>>,
-    pub system_program:    Info<'b>,
-    pub config:            P2WConfigAccount<'b, { AccountState::Initialized }>,
-    pub attestation_state: Mut<AttestationStateMapPDA<'b>>,
+    pub payer:          Mut<Signer<Info<'b>>>,
+    pub system_program: Info<'b>,
+    pub config:         P2WConfigAccount<'b, { AccountState::Initialized }>,
 
-    // Hardcoded product/price pairs, bypassing Solitaire's variable-length limitations
+    // Hardcoded state/price pairs, bypassing Solitaire's variable-length limitations
     // Any change to the number of accounts must include an appropriate change to P2W_MAX_BATCH_SIZE
-    pub pyth_product: Info<'b>,
-    pub pyth_price:   Info<'b>,
+    pub pyth_state: AttestationStatePDA<'b>,
+    pub pyth_price: Info<'b>,
 
-    pub pyth_product2: Option<Info<'b>>,
-    pub pyth_price2:   Option<Info<'b>>,
+    pub pyth_state2: Option<AttestationStatePDA<'b>>,
+    pub pyth_price2: Option<Info<'b>>,
 
-    pub pyth_product3: Option<Info<'b>>,
-    pub pyth_price3:   Option<Info<'b>>,
+    pub pyth_state3: Option<AttestationStatePDA<'b>>,
+    pub pyth_price3: Option<Info<'b>>,
 
-    pub pyth_product4: Option<Info<'b>>,
-    pub pyth_price4:   Option<Info<'b>>,
+    pub pyth_state4: Option<AttestationStatePDA<'b>>,
+    pub pyth_price4: Option<Info<'b>>,
 
-    pub pyth_product5: Option<Info<'b>>,
-    pub pyth_price5:   Option<Info<'b>>,
+    pub pyth_state5: Option<AttestationStatePDA<'b>>,
+    pub pyth_price5: Option<Info<'b>>,
 
-    // Did you read the comment near `pyth_product`?
-    // pub pyth_product6: Option<Info<'b>>,
+    // Did you read the comment near `pyth_state`?
+    // pub pyth_state6: Option<Info<'b>>,
     // pub pyth_price6: Option<Info<'b>>,
 
-    // pub pyth_product7: Option<Info<'b>>,
+    // pub pyth_state7: Option<Info<'b>>,
     // pub pyth_price7: Option<Info<'b>>,
 
-    // pub pyth_product8: Option<Info<'b>>,
+    // pub pyth_state8: Option<Info<'b>>,
     // pub pyth_price8: Option<Info<'b>>,
 
-    // pub pyth_product9: Option<Info<'b>>,
+    // pub pyth_state9: Option<Info<'b>>,
     // pub pyth_price9: Option<Info<'b>>,
 
-    // pub pyth_product10: Option<Info<'b>>,
+    // pub pyth_state10: Option<Info<'b>>,
     // pub pyth_price10: Option<Info<'b>>,
     pub clock: Sysvar<'b, Clock>,
 
@@ -161,57 +157,55 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
 
 
     // Make the specified prices iterable
-    let price_pair_opts = [
-        Some(&accs.pyth_product),
-        Some(&accs.pyth_price),
-        accs.pyth_product2.as_ref(),
-        accs.pyth_price2.as_ref(),
-        accs.pyth_product3.as_ref(),
-        accs.pyth_price3.as_ref(),
-        accs.pyth_product4.as_ref(),
-        accs.pyth_price4.as_ref(),
-        accs.pyth_product5.as_ref(),
-        accs.pyth_price5.as_ref(),
-        // Did you read the comment near `pyth_product`?
-        // accs.pyth_product6.as_ref(),
-        // accs.pyth_price6.as_ref(),
-        // accs.pyth_product7.as_ref(),
-        // accs.pyth_price7.as_ref(),
-        // accs.pyth_product8.as_ref(),
-        // accs.pyth_price8.as_ref(),
-        // accs.pyth_product9.as_ref(),
-        // accs.pyth_price9.as_ref(),
-        // accs.pyth_product10.as_ref(),
-        // accs.pyth_price10.as_ref(),
+    let mut price_pair_opts = [
+        (Some(&mut accs.pyth_state), Some(&accs.pyth_price)),
+        (accs.pyth_state2.as_mut(), accs.pyth_price2.as_ref()),
+        (accs.pyth_state3.as_mut(), accs.pyth_price3.as_ref()),
+        (accs.pyth_state4.as_mut(), accs.pyth_price4.as_ref()),
+        (accs.pyth_state5.as_mut(), accs.pyth_price5.as_ref()),
+        // Did you read the comment near `pyth_state`?
+        // (accs.pyth_state6.as_mut(), accs.pyth_price6.as_ref()),
+        // (accs.pyth_state7.as_mut(), accs.pyth_price7.as_ref()),
+        // (accs.pyth_state8.as_mut(), accs.pyth_price8.as_ref()),
+        // (accs.pyth_state9.as_mut(), accs.pyth_price9.as_ref()),
+        // (accs.pyth_state10.as_mut(), accs.pyth_price10.as_ref()),
     ];
 
-    let price_pairs: Vec<_> = price_pair_opts.iter().filter_map(|acc| *acc).collect();
+    let price_pairs: Vec<(_, _)> = price_pair_opts
+        .iter_mut()
+        .filter_map(|pair| match pair {
+            // Only use this pair if both accounts are Some
+            (Some(state), Some(price)) => Some((state, price)),
+            _other => None,
+        })
+        .collect();
 
-    if price_pairs.len() % 2 != 0 {
-        trace!(&format!(
-            "Uneven product/price count detected: {}",
-            price_pairs.len()
-        ));
-        return Err(ProgramError::InvalidAccountData.into());
-    }
 
-    trace!("{} Pyth symbols received", price_pairs.len() / 2);
+    trace!("{} Pyth symbols received", price_pairs.len());
 
-    // Collect the validated symbols for batch serialization
-    let mut attestations = Vec::with_capacity(price_pairs.len() / 2);
+    // Collect the validated symbols here for batch serialization
+    let mut attestations = Vec::with_capacity(price_pairs.len());
 
-    for pair in price_pairs.as_slice().chunks_exact(2) {
-        let product = pair[0];
-        let price = pair[1];
-
-        if accs.config.pyth_owner != *price.owner || accs.config.pyth_owner != *product.owner {
+    for (state, price) in price_pairs.into_iter() {
+        // Pyth must own the price
+        if accs.config.pyth_owner != *price.owner {
             trace!(&format!(
-            "Pair {:?} - {:?}: pyth_owner pubkey mismatch (expected {:?}, got product owner {:?} and price owner {:?}",
-		product, price,
-            accs.config.pyth_owner, product.owner, price.owner
-        ));
-            return Err(SolitaireError::InvalidOwner(*accs.pyth_price.owner));
+                "Price {:?}: owner pubkey mismatch (expected pyth_owner {:?}, got unknown price owner {:?})",
+                price, accs.config.pyth_owner, price.owner
+            ));
+            return Err(SolitaireError::InvalidOwner(*price.owner));
         }
+
+        // State pubkey must reproduce from the price id
+        let state_addr_from_price = AttestationStatePDA::key(price.key, ctx.program_id);
+        if state_addr_from_price != *state.0.info().key {
+            trace!(&format!(
+                "Price {:?}: pubkey does not produce the passed state account (expected {:?} from seeds, {:?} was passed)",
+		price.key, state_addr_from_price, state.0.info().key
+            ));
+            return Err(ProgramError::InvalidAccountData.into());
+        }
+
         let attestation_time = accs.clock.unix_timestamp;
 
         let price_data_ref = price.try_borrow_data()?;
@@ -224,52 +218,63 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
                 ProgramError::InvalidAccountData
             })?;
 
-        // prev_publish_time is picked if the price is not trading
-        let last_trading_publish_time = match price_struct.agg.status {
+        let attestation = PriceAttestation::from_pyth_price_struct(
+            Identifier::new(price.key.to_bytes()),
+            attestation_time,
+            state.0 .1.last_attested_trading_publish_time, // Used as last_attested_publish_time
+            price_struct,
+        );
+
+        // Update the on-chain value using publish_time or
+        // prev_publish_time if the price is not currently trading
+        state.0.last_attested_trading_publish_time = match price_struct.agg.status {
             PriceStatus::Trading => price_struct.timestamp,
             _ => price_struct.prev_timestamp,
         };
 
-        // Take a mut reference to this price's metadata
-        let state_entry: &mut AttestationState = accs
-            .attestation_state
-            .entries
-            .entry(*price.key)
-            .or_insert(AttestationState {
-                // Use the same value if no state
-                // exists for the symbol, the new value _becomes_ the
-                // last attested trading publish time
-                last_attested_trading_publish_time: last_trading_publish_time,
-            });
 
-        let attestation = PriceAttestation::from_pyth_price_struct(
-            Identifier::new(price.key.to_bytes()),
-            attestation_time,
-            state_entry.last_attested_trading_publish_time, // Used as last_attested_publish_time
-            price_struct,
-        );
+        // Serialize the state to calculate rent/account size adjustments
+        let state_serialized = state.0 .1.try_to_vec()?;
 
+        if state.0.is_initialized() {
+            state.0.info().realloc(state_serialized.len(), false)?;
+            trace!("Attestation state resize OK");
 
-        // update last_attested_publish_time with this price's
-        // publish_time. Yes, it may be redundant for the entry() used
-        // above in the rare first attestation edge case.
-        state_entry.last_attested_trading_publish_time = last_trading_publish_time;
+            let target_rent = CreationLamports::Exempt.amount(state_serialized.len());
+            let current_rent = state.0.info().lamports();
 
-        // The following check is crucial against poorly ordered
-        // account inputs, e.g. [Some(prod1), Some(price1),
-        // Some(prod2), None, None, Some(price)], interpreted by
-        // earlier logic as [(prod1, price1), (prod2, price3)].
-        //
-        // Failing to verify the product/price relationship could lead
-        // to mismatched product/price metadata, which would result in
-        // a false attestation.
-        if attestation.product_id.to_bytes() != product.key.to_bytes() {
-            trace!(&format!(
-                "Price's product_id does not match the pased account (points at {:?} instead)",
-                attestation.product_id
-            ));
-            return Err(ProgramError::InvalidAccountData.into());
+            // Adjust rent, but only if there isn't enough
+            if target_rent > current_rent {
+                let transfer_amount = target_rent - current_rent;
+
+                let transfer_ix = system_instruction::transfer(
+                    accs.payer.info().key,
+                    state.0.info().key,
+                    transfer_amount,
+                );
+
+                invoke(&transfer_ix, ctx.accounts)?;
+            }
+
+            trace!("Attestation state rent transfer OK");
+        } else {
+            let seeds = state.self_bumped_seeds(price.key, ctx.program_id);
+            solitaire::create_account(
+                ctx,
+                state.0.info(),
+                accs.payer.key,
+                solitaire::CreationLamports::Exempt,
+                state_serialized.len(),
+                ctx.program_id,
+                solitaire::IsSigned::SignedWithSeeds(&[seeds
+                    .iter()
+                    .map(|s| s.as_slice())
+                    .collect::<Vec<_>>()
+                    .as_slice()]),
+            )?;
+            trace!("Attestation state init OK");
         }
+
 
         attestations.push(attestation);
     }
@@ -280,51 +285,6 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
 
     trace!("Attestations successfully created");
 
-    // Serialize the state to calculate rent/account size adjustments
-    let serialized = accs.attestation_state.1.try_to_vec()?;
-
-    if accs.attestation_state.is_initialized() {
-        accs.attestation_state
-            .info()
-            .realloc(serialized.len(), false)?;
-        trace!("Attestation state resize OK");
-
-        let target_rent = CreationLamports::Exempt.amount(serialized.len());
-        let current_rent = accs.attestation_state.info().lamports();
-
-        // Adjust rent, but only if there isn't enough
-        if target_rent > current_rent {
-            let transfer_amount = target_rent - current_rent;
-
-            let transfer_ix = system_instruction::transfer(
-                accs.payer.info().key,
-                accs.attestation_state.info().key,
-                transfer_amount,
-            );
-
-            invoke(&transfer_ix, ctx.accounts)?;
-        }
-
-        trace!("Attestation state rent transfer OK");
-    } else {
-        let seeds = accs
-            .attestation_state
-            .self_bumped_seeds(None, ctx.program_id);
-        solitaire::create_account(
-            ctx,
-            accs.attestation_state.info(),
-            accs.payer.key,
-            solitaire::CreationLamports::Exempt,
-            serialized.len(),
-            ctx.program_id,
-            solitaire::IsSigned::SignedWithSeeds(&[seeds
-                .iter()
-                .map(|s| s.as_slice())
-                .collect::<Vec<_>>()
-                .as_slice()]),
-        )?;
-        trace!("Attestation state init OK");
-    }
     let bridge_config = BridgeData::try_from_slice(&accs.wh_bridge.try_borrow_mut_data()?)?.config;
 
     // Pay wormhole fee

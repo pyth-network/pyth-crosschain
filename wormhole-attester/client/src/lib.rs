@@ -49,7 +49,7 @@ use {
         load_product_account,
     },
     pyth_wormhole_attester::{
-        attestation_state::AttestationStateMapPDA,
+        attestation_state::AttestationStatePDA,
         config::{
             OldP2WConfigAccount,
             P2WConfigAccount,
@@ -325,8 +325,6 @@ pub fn gen_attest_tx(
         AccountMeta::new_readonly(system_program::id(), false),
         // config
         AccountMeta::new_readonly(p2w_config_addr, false),
-        // attestation_state
-        AccountMeta::new(AttestationStateMapPDA::key(None, &p2w_addr), false),
     ];
 
     // Batch contents and padding if applicable
@@ -334,8 +332,9 @@ pub fn gen_attest_tx(
         let mut not_padded: Vec<_> = symbols
             .iter()
             .flat_map(|s| {
+                let state_address = AttestationStatePDA::key(&s.price_addr, &p2w_addr);
                 vec![
-                    AccountMeta::new_readonly(s.product_addr, false),
+                    AccountMeta::new_readonly(state_address, false),
                     AccountMeta::new_readonly(s.price_addr, false),
                 ]
             })
