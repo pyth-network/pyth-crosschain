@@ -72,6 +72,7 @@ const UpdateProductMetadata = () => {
             ...product.metadata,
           }
           // these fields are immutable and should not be updated
+          delete symbolToProductMetadataMapping[product.metadata.symbol].address
           delete symbolToProductMetadataMapping[product.metadata.symbol].symbol
           delete symbolToProductMetadataMapping[product.metadata.symbol]
             .price_account
@@ -254,6 +255,8 @@ const UpdateProductMetadata = () => {
                           .join(' ')}
                       </td>
                       <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+                        <s>{prev[k]}</s>
+                        <br />
                         {newProductMetadata[k]}
                       </td>
                     </tr>

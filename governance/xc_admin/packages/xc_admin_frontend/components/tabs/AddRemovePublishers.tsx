@@ -175,7 +175,7 @@ const AddRemovePublishers = () => {
       Object.keys(publisherChanges).forEach((symbol) => {
         const { prev, new: newPublisherKeys } = publisherChanges[symbol]
         // prev and new are arrays of publisher pubkeys
-        // check if there are any new publishers by comparing prev and new
+        // check if there are any new publishers to add by comparing prev and new
         const publisherKeysToAdd = newPublisherKeys.filter(
           (newPublisher) => !prev.includes(newPublisher)
         )
