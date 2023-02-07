@@ -110,20 +110,14 @@ const General = () => {
             metadata: {
               ...product.metadata,
             },
-            priceAccounts: [
-              {
-                address: product.priceAccounts[0].address.toBase58(),
-                publishers: product.priceAccounts[0].publishers.map((p) =>
-                  p.toBase58()
-                ),
-                expo: product.priceAccounts[0].expo,
-                minPub: product.priceAccounts[0].minPub,
-              },
-            ],
+            priceAccounts: product.priceAccounts.map((p) => ({
+              address: p.address.toBase58(),
+              publishers: p.publishers.map((p) => p.toBase58()),
+              expo: p.expo,
+              minPub: p.minPub,
+            })),
           }
           // these fields are immutable and should not be updated
-          delete symbolToData[product.metadata.symbol].address
-          delete symbolToData[product.metadata.symbol].priceAccounts[0].address
           delete symbolToData[product.metadata.symbol].metadata.symbol
           delete symbolToData[product.metadata.symbol].metadata.price_account
         })
@@ -206,7 +200,36 @@ const General = () => {
       toast.error(capitalizeFirstLetter(e.message))
       return false
     }
-    return true
+    let isValid = true
+    // check if json keys "address" key is changed
+    const jsonParsed = JSON.parse(json)
+    Object.keys(jsonParsed).forEach((symbol) => {
+      if (
+        jsonParsed[symbol].address &&
+        jsonParsed[symbol].address !== data[symbol].address
+      ) {
+        toast.error(
+          `Address field for product cannot be changed for symbol ${symbol}. Please revert any changes to the address field and try again.`
+        )
+        isValid = false
+      }
+    })
+
+    // check if json keys "priceAccounts" key "address" key is changed
+    Object.keys(jsonParsed).forEach((symbol) => {
+      if (
+        jsonParsed[symbol].priceAccounts[0].address &&
+        jsonParsed[symbol].priceAccounts[0].address !==
+          data[symbol].priceAccounts[0].address
+      ) {
+        toast.error(
+          `Address field for priceAccounts cannot be changed for symbol ${symbol}. Please revert any changes to the address field and try again.`
+        )
+        isValid = false
+      }
+    })
+
+    return isValid
   }
 
   const handleSendProposalButtonClick = async () => {
