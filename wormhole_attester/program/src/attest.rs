@@ -69,35 +69,35 @@ pub struct Attest<'b> {
 
     // Hardcoded state/price pairs, bypassing Solitaire's variable-length limitations
     // Any change to the number of accounts must include an appropriate change to P2W_MAX_BATCH_SIZE
-    pub pyth_state: AttestationStatePDA<'b>,
+    pub pyth_state: Mut<AttestationStatePDA<'b>>,
     pub pyth_price: Info<'b>,
 
-    pub pyth_state2: Option<AttestationStatePDA<'b>>,
+    pub pyth_state2: Option<Mut<AttestationStatePDA<'b>>>,
     pub pyth_price2: Option<Info<'b>>,
 
-    pub pyth_state3: Option<AttestationStatePDA<'b>>,
+    pub pyth_state3: Option<Mut<AttestationStatePDA<'b>>>,
     pub pyth_price3: Option<Info<'b>>,
 
-    pub pyth_state4: Option<AttestationStatePDA<'b>>,
+    pub pyth_state4: Option<Mut<AttestationStatePDA<'b>>>,
     pub pyth_price4: Option<Info<'b>>,
 
-    pub pyth_state5: Option<AttestationStatePDA<'b>>,
+    pub pyth_state5: Option<Mut<AttestationStatePDA<'b>>>,
     pub pyth_price5: Option<Info<'b>>,
 
     // Did you read the comment near `pyth_state`?
-    // pub pyth_state6: Option<Info<'b>>,
+    // pub pyth_state6: Option<Mut<AttestationStatePDA<'b>>>,
     // pub pyth_price6: Option<Info<'b>>,
 
-    // pub pyth_state7: Option<Info<'b>>,
+    // pub pyth_state7: Option<Mut<AttestationStatePDA<'b>>>,
     // pub pyth_price7: Option<Info<'b>>,
 
-    // pub pyth_state8: Option<Info<'b>>,
+    // pub pyth_state8: Option<Mut<AttestationStatePDA<'b>>>,
     // pub pyth_price8: Option<Info<'b>>,
 
-    // pub pyth_state9: Option<Info<'b>>,
+    // pub pyth_state9: Option<Mut<AttestationStatePDA<'b>>>,
     // pub pyth_price9: Option<Info<'b>>,
 
-    // pub pyth_state10: Option<Info<'b>>,
+    // pub pyth_state10: Option<Mut<AttestationStatePDA<'b>>>,
     // pub pyth_price10: Option<Info<'b>>,
     pub clock: Sysvar<'b, Clock>,
 
@@ -198,10 +198,10 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
 
         // State pubkey must reproduce from the price id
         let state_addr_from_price = AttestationStatePDA::key(price.key, ctx.program_id);
-        if state_addr_from_price != *state.0.info().key {
+        if state_addr_from_price != *state.0 .0.info().key {
             trace!(&format!(
                 "Price {:?}: pubkey does not produce the passed state account (expected {:?} from seeds, {:?} was passed)",
-		price.key, state_addr_from_price, state.0.info().key
+		price.key, state_addr_from_price, state.0.0.info().key
             ));
             return Err(ProgramError::InvalidAccountData.into());
         }
@@ -229,6 +229,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
             // Used as last_attested_publish_time, defaults to the new_* value if no pre-existing state is available
             state
                 .0
+                 .0
                  .1
                 .last_attested_trading_publish_time
                 .unwrap_or(new_last_attested_trading_publish_time),
@@ -237,17 +238,18 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
 
         // Update the on-chain value using publish_time or
         // prev_publish_time if the price is not currently trading
-        state.0.last_attested_trading_publish_time = Some(new_last_attested_trading_publish_time);
+        state.0 .0.last_attested_trading_publish_time =
+            Some(new_last_attested_trading_publish_time);
 
         // Serialize the state to calculate rent/account size adjustments
-        let state_serialized = state.0 .1.try_to_vec()?;
+        let state_serialized = state.0 .0 .1.try_to_vec()?;
 
-        if state.0.is_initialized() {
-            state.0.info().realloc(state_serialized.len(), false)?;
+        if state.0 .0.is_initialized() {
+            state.0 .0.info().realloc(state_serialized.len(), false)?;
             trace!("Attestation state resize OK");
 
             let target_rent = CreationLamports::Exempt.amount(state_serialized.len());
-            let current_rent = state.0.info().lamports();
+            let current_rent = state.0 .0.info().lamports();
 
             // Adjust rent, but only if there isn't enough
             if target_rent > current_rent {
@@ -255,7 +257,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
 
                 let transfer_ix = system_instruction::transfer(
                     accs.payer.info().key,
-                    state.0.info().key,
+                    state.0 .0.info().key,
                     transfer_amount,
                 );
 
@@ -267,7 +269,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
             let seeds = state.self_bumped_seeds(price.key, ctx.program_id);
             solitaire::create_account(
                 ctx,
-                state.0.info(),
+                state.0 .0.info(),
                 accs.payer.key,
                 solitaire::CreationLamports::Exempt,
                 state_serialized.len(),
