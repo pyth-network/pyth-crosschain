@@ -24,7 +24,7 @@ use {
 #[derive(BorshSerialize, BorshDeserialize, Default)]
 pub struct AttestationState {
     /// The last trading publish_time this attester saw
-    pub last_attested_trading_publish_time: Option<UnixTimestamp>,
+    pub last_attested_trading_publish_time: UnixTimestamp,
 }
 
 impl Owned for AttestationState {

@@ -218,28 +218,40 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
                 ProgramError::InvalidAccountData
             })?;
 
+        // Retrieve and rotate last_attested_tradind_publish_time
+
+        // Pick the value to store for the next attestation of this
+        // symbol. We use the prev_ value if the symbol is not
+        // currently being traded. The oracle marks the last known
+        // trading timestamp with it.
         let new_last_attested_trading_publish_time = match price_struct.agg.status {
             PriceStatus::Trading => price_struct.timestamp,
             _ => price_struct.prev_timestamp,
         };
 
+        // Retrieve the timestamp saved during the previous
+        // attestation. Use the new_* value if no existind state is
+        // present on-chain
+        let current_last_attested_trading_publish_time = if state.0 .0.is_initialized() {
+            // Use the existing on-chain value
+            state.0 .0 .1.last_attested_trading_publish_time
+        } else {
+            // Fall back to the new value if the state is not initialized
+            new_last_attested_trading_publish_time
+        };
+
+        // Build an attestatioin struct for this symbol using the just decided current value
         let attestation = PriceAttestation::from_pyth_price_struct(
             Identifier::new(price.key.to_bytes()),
             attestation_time,
-            // Used as last_attested_publish_time, defaults to the new_* value if no pre-existing state is available
-            state
-                .0
-                 .0
-                 .1
-                .last_attested_trading_publish_time
-                .unwrap_or(new_last_attested_trading_publish_time),
+            current_last_attested_trading_publish_time,
             price_struct,
         );
 
-        // Update the on-chain value using publish_time or
-        // prev_publish_time if the price is not currently trading
-        state.0 .0.last_attested_trading_publish_time =
-            Some(new_last_attested_trading_publish_time);
+        // Save the new value for the next attestation of this symbol
+        state.0 .0.last_attested_trading_publish_time = new_last_attested_trading_publish_time;
+
+        // handling of last_attested_trading_publish_time ends here
 
         // Serialize the state to calculate rent/account size adjustments
         let state_serialized = state.0 .0 .1.try_to_vec()?;
