@@ -110,14 +110,16 @@ const General = () => {
             metadata: {
               ...product.metadata,
             },
-            priceAccounts: {
-              address: product.priceAccounts[0].address.toBase58(),
-              publishers: product.priceAccounts[0].publishers.map((p) =>
-                p.toBase58()
-              ),
-              expo: product.priceAccounts[0].expo,
-              minPub: product.priceAccounts[0].minPub,
-            },
+            priceAccounts: [
+              {
+                address: product.priceAccounts[0].address.toBase58(),
+                publishers: product.priceAccounts[0].publishers.map((p) =>
+                  p.toBase58()
+                ),
+                expo: product.priceAccounts[0].expo,
+                minPub: product.priceAccounts[0].minPub,
+              },
+            ],
           }
           // these fields are immutable and should not be updated
           delete symbolToData[product.metadata.symbol].address
