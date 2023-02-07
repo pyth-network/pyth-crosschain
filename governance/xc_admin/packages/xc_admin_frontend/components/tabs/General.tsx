@@ -218,6 +218,7 @@ const General = () => {
     // check if json keys "priceAccounts" key "address" key is changed
     Object.keys(jsonParsed).forEach((symbol) => {
       if (
+        jsonParsed[symbol].priceAccounts[0] &&
         jsonParsed[symbol].priceAccounts[0].address &&
         jsonParsed[symbol].priceAccounts[0].address !==
           data[symbol].priceAccounts[0].address
