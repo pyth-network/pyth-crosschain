@@ -110,14 +110,18 @@ const General = () => {
             metadata: {
               ...product.metadata,
             },
-            priceAccounts: product.priceAccounts.map((p) => ({
-              address: p.address.toBase58(),
-              publishers: p.publishers.map((p) => p.toBase58()),
-              expo: p.expo,
-              minPub: p.minPub,
-            })),
+            priceAccounts: {
+              address: product.priceAccounts[0].address.toBase58(),
+              publishers: product.priceAccounts[0].publishers.map((p) =>
+                p.toBase58()
+              ),
+              expo: product.priceAccounts[0].expo,
+              minPub: product.priceAccounts[0].minPub,
+            },
           }
           // these fields are immutable and should not be updated
+          delete symbolToData[product.metadata.symbol].address
+          delete symbolToData[product.metadata.symbol].priceAccounts[0].address
           delete symbolToData[product.metadata.symbol].metadata.symbol
           delete symbolToData[product.metadata.symbol].metadata.price_account
         })
@@ -233,7 +237,7 @@ const General = () => {
           // create update product account instruction
           instructions.push(
             await pythProgramClient.methods
-              .updProduct(newChanges.metadata)
+              .updProduct({ ...newChanges.metadata, symbol: symbol })
               .accounts({
                 fundingAccount: squads?.getAuthorityPDA(
                   SECURITY_MULTISIG[getMultisigCluster(cluster)],
@@ -284,7 +288,7 @@ const General = () => {
           }
 
           // create set min publisher instruction if there are any publishers
-          if (newChanges.priceAccounts[0].minPub) {
+          if (newChanges.priceAccounts[0].minPub !== undefined) {
             instructions.push(
               await pythProgramClient.methods
                 .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
@@ -299,9 +303,7 @@ const General = () => {
             )
           }
         } else {
-          // check if metadata has changed, or minPub has changed, or publishers have changed
           // check if metadata has changed
-          // check if there are any new metadata by comparing prev and new values
           if (
             JSON.stringify(prev.metadata) !==
             JSON.stringify(newChanges.metadata)
@@ -309,7 +311,7 @@ const General = () => {
             // create update product account instruction
             instructions.push(
               await pythProgramClient.methods
-                .updProduct(newChanges.metadata)
+                .updProduct({ ...newChanges.metadata, symbol: symbol })
                 .accounts({
                   fundingAccount: squads?.getAuthorityPDA(
                     SECURITY_MULTISIG[getMultisigCluster(cluster)],
@@ -340,7 +342,6 @@ const General = () => {
           }
 
           // check if publishers have changed
-          // check if there are any new publishers to add by comparing prev and new
           const publisherKeysToAdd =
             newChanges.priceAccounts[0].publishers.filter(
               (newPublisher: string) =>
@@ -426,7 +427,7 @@ const General = () => {
 
   const MetadataChangesRows = ({ changes }: { changes: any }) => {
     const addNewPriceFeed =
-      changes.prev === undefined && Object.keys(changes.new).length > 0
+      changes.prev === undefined && changes.new !== undefined
 
     return (
       <>
@@ -460,7 +461,7 @@ const General = () => {
 
   const PriceAccountsChangesRows = ({ changes }: { changes: any }) => {
     const addNewPriceFeed =
-      changes.prev === undefined && Object.keys(changes.new).length > 0
+      changes.prev === undefined && changes.new !== undefined
     return (
       <>
         {changes.new.map((priceAccount: any, index: number) =>
@@ -515,7 +516,8 @@ const General = () => {
   }
 
   const PublisherKeysChangesRows = ({ changes }: { changes: any }) => {
-    const addNewPriceFeed = changes.prev === undefined && changes.new.length > 0
+    const addNewPriceFeed =
+      changes.prev === undefined && changes.new !== undefined
     const publisherKeysToAdd = addNewPriceFeed
       ? changes.new
       : changes.new.filter(
@@ -586,7 +588,7 @@ const General = () => {
             {Object.keys(changes).map((key) => {
               const { prev, new: newChanges } = changes[key]
               const addNewPriceFeed =
-                prev === undefined && Object.keys(newChanges).length > 0
+                prev === undefined && newChanges !== undefined
               const diff = addNewPriceFeed
                 ? []
                 : Object.keys(prev).filter(

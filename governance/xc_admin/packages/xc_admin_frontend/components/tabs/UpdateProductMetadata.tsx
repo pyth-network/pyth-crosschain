@@ -72,6 +72,7 @@ const UpdateProductMetadata = () => {
             ...product.metadata,
           }
           // these fields are immutable and should not be updated
+          delete symbolToProductMetadataMapping[product.metadata.symbol].address
           delete symbolToProductMetadataMapping[product.metadata.symbol].symbol
           delete symbolToProductMetadataMapping[product.metadata.symbol]
             .price_account
