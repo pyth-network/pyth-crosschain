@@ -132,11 +132,7 @@ async function run() {
                 getIxPDA(proposal.publicKey, new BN(i - 1), squad.multisigProgramId)[0]
               )
             )
-          } else {
-
-            break;
-          }
-
+          } 
 
         } else if (parsedInstruction instanceof PythMultisigInstruction && parsedInstruction.name == "addPrice"){
 
@@ -146,8 +142,7 @@ async function run() {
             const priceAddress = await PublicKey.createWithSeed(squad.wallet.publicKey, priceSeed, getPythProgramKeyForCluster(CLUSTER as PythCluster))
             transaction.add(SystemProgram.createAccountWithSeed({fromPubkey: squad.wallet.publicKey, basePubkey: squad.wallet.publicKey, newAccountPubkey: priceAddress, seed : priceSeed, space : PRICE_ACCOUNT_SIZE, lamports: await squad.connection.getMinimumBalanceForRentExemption(PRICE_ACCOUNT_SIZE), programId : getPythProgramKeyForCluster(CLUSTER as PythCluster)}))
           }
-    
-          
+
         }
 
         transaction.add(
@@ -157,18 +152,11 @@ async function run() {
           )
         );
 
-        try {
-          await new AnchorProvider(squad.connection, squad.wallet, {
-            commitment: COMMITMENT,
-            preflightCommitment: COMMITMENT,
-          }).sendAndConfirm(transaction, [], {skipPreflight:true});
-        } catch (error) {
-          // Mark the transaction as cancelled if we failed to run it
-          if (error instanceof SendTransactionError) {
-            console.error("Error sending:", error);
-          }
-          break;
-        }
+        await new AnchorProvider(squad.connection, squad.wallet, {
+          commitment: COMMITMENT,
+          preflightCommitment: COMMITMENT,
+        }).sendAndConfirm(transaction, [], {skipPreflight:true});
+
       }
     } else {
       console.log("Skipping: ", proposal.publicKey.toBase58());
