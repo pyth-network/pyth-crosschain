@@ -4,7 +4,6 @@ import {
   Connection,
   Keypair,
   PublicKey,
-  SendTransactionError,
   SystemProgram,
   Transaction,
 } from "@solana/web3.js";
