@@ -71,9 +71,7 @@ async function run() {
     : 0;
 
   const proposals = await getProposals(squad, VAULT, undefined, "executeReady");
-  if (proposals.length === 0){
-    console.log("NONE FOUND");
-  }
+
   for (const proposal of proposals) {
     console.log("Trying to execute: ", proposal.publicKey.toBase58());
     // If we have previously cancelled because the proposal was failing, don't attempt
@@ -125,11 +123,8 @@ async function run() {
           });
 
           if (nextParsedInstruction instanceof PythMultisigInstruction && nextParsedInstruction.name == "updProduct"){
-            console.log( nextParsedInstruction.args);
             const productSeed = "product:" + nextParsedInstruction.args.symbol;
-            console.log(productSeed);
             const productAddress = await PublicKey.createWithSeed(squad.wallet.publicKey, productSeed, getPythProgramKeyForCluster(CLUSTER as PythCluster))
-            console.log(productAddress.toBase58())
             transaction.add(SystemProgram.createAccountWithSeed({fromPubkey: squad.wallet.publicKey, basePubkey: squad.wallet.publicKey, newAccountPubkey: productAddress, seed : productSeed, space : PRODUCT_ACCOUNT_SIZE, lamports: await squad.connection.getMinimumBalanceForRentExemption(PRODUCT_ACCOUNT_SIZE), programId : getPythProgramKeyForCluster(CLUSTER as PythCluster)}))
             transaction.add(
               await squad.buildExecuteInstruction(
@@ -138,9 +133,7 @@ async function run() {
               )
             )
           } else {
-            // Non compliant order
-            console.log("NON COMPLIANT ORDER");
-            await squad.cancelTransaction(proposal.publicKey);
+
             break;
           }
 
@@ -150,9 +143,7 @@ async function run() {
           const productAccount = await squad.connection.getAccountInfo(parsedInstruction.accounts.named.productAccount.pubkey);
           if (productAccount?.data){
             const priceSeed = "price:" + parseProductData(productAccount.data).product.symbol;
-            console.log(priceSeed);
             const priceAddress = await PublicKey.createWithSeed(squad.wallet.publicKey, priceSeed, getPythProgramKeyForCluster(CLUSTER as PythCluster))
-            console.log(priceAddress.toBase58())
             transaction.add(SystemProgram.createAccountWithSeed({fromPubkey: squad.wallet.publicKey, basePubkey: squad.wallet.publicKey, newAccountPubkey: priceAddress, seed : priceSeed, space : PRICE_ACCOUNT_SIZE, lamports: await squad.connection.getMinimumBalanceForRentExemption(PRICE_ACCOUNT_SIZE), programId : getPythProgramKeyForCluster(CLUSTER as PythCluster)}))
           }
     
@@ -167,19 +158,14 @@ async function run() {
         );
 
         try {
-          console.log(transaction.instructions.length)
           await new AnchorProvider(squad.connection, squad.wallet, {
             commitment: COMMITMENT,
             preflightCommitment: COMMITMENT,
           }).sendAndConfirm(transaction, [], {skipPreflight:true});
         } catch (error) {
-          console.log("SIMULATION FAILED");
-          console.log(error);
           // Mark the transaction as cancelled if we failed to run it
           if (error instanceof SendTransactionError) {
-            console.error(error);
-            await squad.cancelTransaction(proposal.publicKey);
-            console.log("Cancelled: ", proposal.publicKey.toBase58());
+            console.error("Error sending:", error);
           }
           break;
         }
