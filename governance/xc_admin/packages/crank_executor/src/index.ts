@@ -29,7 +29,6 @@ import {
   getWormholeBridgeData,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { parseProductData } from "@pythnetwork/client";
-import { parse } from "@certusone/wormhole-sdk";
 
 export function envOrErr(env: string): string {
   const val = process.env[env];
