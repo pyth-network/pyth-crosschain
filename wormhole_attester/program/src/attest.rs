@@ -36,7 +36,6 @@ use {
     solitaire::{
         trace,
         AccountState,
-        CreationLamports,
         ExecutionContext,
         FromAccounts,
         Info,
@@ -253,31 +252,10 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
 
         // handling of last_attested_trading_publish_time ends here
 
-        // Serialize the state to calculate rent/account size adjustments
-        let state_serialized = state.0 .0 .1.try_to_vec()?;
+        if !state.0 .0.is_initialized() {
+            // Serialize the state to learn account size for creation
+            let state_serialized = state.0 .0 .1.try_to_vec()?;
 
-        if state.0 .0.is_initialized() {
-            state.0 .0.info().realloc(state_serialized.len(), false)?;
-            trace!("Attestation state resize OK");
-
-            let target_rent = CreationLamports::Exempt.amount(state_serialized.len());
-            let current_rent = state.0 .0.info().lamports();
-
-            // Adjust rent, but only if there isn't enough
-            if target_rent > current_rent {
-                let transfer_amount = target_rent - current_rent;
-
-                let transfer_ix = system_instruction::transfer(
-                    accs.payer.info().key,
-                    state.0 .0.info().key,
-                    transfer_amount,
-                );
-
-                invoke(&transfer_ix, ctx.accounts)?;
-            }
-
-            trace!("Attestation state rent transfer OK");
-        } else {
             let seeds = state.self_bumped_seeds(price.key, ctx.program_id);
             solitaire::create_account(
                 ctx,
