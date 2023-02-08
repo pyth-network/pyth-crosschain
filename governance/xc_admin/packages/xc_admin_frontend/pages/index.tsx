@@ -6,6 +6,7 @@ import Layout from '../components/layout/Layout'
 import AddRemovePublishers from '../components/tabs/AddRemovePublishers'
 import General from '../components/tabs/General'
 import MinPublishers from '../components/tabs/MinPublishers'
+import Proposals from '../components/tabs/Proposals'
 import UpdatePermissions from '../components/tabs/UpdatePermissions'
 import UpdateProductMetadata from '../components/tabs/UpdateProductMetadata'
 import { PythContextProvider } from '../contexts/PythContext'
@@ -38,6 +39,11 @@ const TAB_INFO = {
     description: 'Update the metadata of a product.',
     queryString: 'update-product-metadata',
   },
+  Proposals: {
+    title: 'Proposals',
+    description: 'View and vote on proposals.',
+    queryString: 'proposals',
+  },
 }
 
 const DEFAULT_TAB = 'general'
@@ -50,6 +56,9 @@ const Home: NextPage = () => {
 
   // set current tab value when tab is clicked
   const handleChangeTab = (index: number) => {
+    if (tabInfoArray[index].queryString !== 'proposals') {
+      delete router.query.proposal
+    }
     router.query.tab = tabInfoArray[index].queryString
     setCurrentTabIndex(index)
     router.push(
@@ -115,6 +124,9 @@ const Home: NextPage = () => {
         ) : tabInfoArray[currentTabIndex].queryString ===
           TAB_INFO.UpdateProductMetadata.queryString ? (
           <UpdateProductMetadata />
+        ) : tabInfoArray[currentTabIndex].queryString ===
+          TAB_INFO.Proposals.queryString ? (
+          <Proposals />
         ) : null}
       </PythContextProvider>
     </Layout>
