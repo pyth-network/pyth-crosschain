@@ -18,14 +18,12 @@ use {
         signer::Signer,
         instruction::Instruction,
         transaction::Transaction,
-        system_instruction::transfer,
     },
 
     wormhole::VAA,
     wormhole_solana::{
         Account,
         GuardianSet,
-        VAA as PostedVAA,
         Config as WormholeConfig,
         instructions::{
             post_vaa,
@@ -53,30 +51,6 @@ fn main() -> Result<()> {
             let vaa_bytes: Vec<u8> = base64::decode(vaa)?;
             let vaa = VAA::from_bytes(vaa_bytes.clone())?;
 
-            println!("Transfer money to two accounts: signature_set and posted_vaa");
-            let signature_set_keypair = Keypair::new();
-            let signature_set_size = 4 + 19 + 32 + 4;
-            let posted_vaa_size = 3 + 1 + 1 + 4 + 32 + 4 + 4 + 8 + 2 + 32 + 4 + vaa.payload.len();
-            let posted_vaa_key = PostedVAA::key(&wormhole, vaa.digest().unwrap().hash);
-            let payer =
-                read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
-            process_transaction(
-                &rpc_client,
-                vec![
-                    transfer(
-                        &payer.pubkey(),
-                        &signature_set_keypair.pubkey(),
-                        rpc_client.get_minimum_balance_for_rent_exemption(signature_set_size)?,
-                    ),
-                    transfer(
-                        &payer.pubkey(),
-                        &posted_vaa_key,
-                        rpc_client.get_minimum_balance_for_rent_exemption(posted_vaa_size)?,
-                    ),
-                ],
-                &vec![&payer],
-            )?;
-
             println!("Get wormhole guardian set configuration");
             let wormhole_config = WormholeConfig::key(&wormhole, ());
             let wormhole_config_data =
@@ -87,6 +61,9 @@ fn main() -> Result<()> {
                 GuardianSet::try_from_slice(&rpc_client.get_account_data(&guardian_set)?)?;
 
             println!("Invoke wormhole on solana to verify the VAA");
+            let payer =
+                read_keypair_file(&*shellexpand::tilde(&keypair)).expect("Keypair not found");
+            let signature_set_keypair = Keypair::new();
             let verify_txs = verify_signatures_txs(
                 vaa_bytes.as_slice(),
                 guardian_set_data,
