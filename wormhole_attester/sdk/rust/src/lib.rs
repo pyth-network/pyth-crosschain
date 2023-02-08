@@ -519,7 +519,7 @@ mod tests {
             status:                     PriceStatus::Trading,
             num_publishers:             123212u32,
             max_num_publishers:         321232u32,
-            attestation_time:           (0xdeadbeeffadeu64) as i64,
+            attestation_time:           (0xdeadbeeffadedeedu64) as i64,
             publish_time:               0xdadebeefi64,
             prev_publish_time:          0xdeadbabei64,
             prev_price:                 0xdeadfacebeefi64,
