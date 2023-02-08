@@ -2338,6 +2338,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyth-solana-receiver"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+]
+
+[[package]]
+name = "pyth-solana-receiver-cli"
+version = "0.1.0"
+dependencies = [
+ "anchor-client",
+ "anyhow",
+ "base64 0.13.1",
+ "clap 3.2.23",
+ "shellexpand",
+ "solana-client",
+ "solana-sdk",
+ "wormhole-core",
+ "wormhole-solana",
+]
+
+[[package]]
 name = "qstring"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3361,28 +3383,6 @@ checksum = "b6eca67181e0381532db4bc69a625b1f96a047be461ff9050c451add0165424f"
 dependencies = [
  "lazy_static",
  "num_cpus",
-]
-
-[[package]]
-name = "solana-receiver"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
-]
-
-[[package]]
-name = "solana-receiver-cli"
-version = "0.1.0"
-dependencies = [
- "anchor-client",
- "anyhow",
- "base64 0.13.1",
- "clap 3.2.23",
- "shellexpand",
- "solana-client",
- "solana-sdk",
- "wormhole-core",
- "wormhole-solana",
 ]
 
 [[package]]
