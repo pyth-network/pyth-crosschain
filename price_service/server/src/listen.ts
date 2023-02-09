@@ -157,7 +157,7 @@ export class Listener implements PriceStore {
     this.promClient = promClient;
     this.spyServiceHost = config.spyServiceHost;
     this.loadFilters(config.filtersRaw);
-    // Don't store any prices received from wormhole that are over 10 minutes old.
+    // Don't store any prices received from wormhole that are over 5 minutes old.
     this.ignorePricesOlderThanSecs = 5 * 60;
     this.readinessConfig = config.readiness;
     this.updateCallbacks = [];
