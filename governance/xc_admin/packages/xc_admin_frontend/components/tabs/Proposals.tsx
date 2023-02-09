@@ -297,6 +297,13 @@ const Proposal = ({
               </div>
             ) : instruction instanceof UnrecognizedProgram ? (
               <>
+                <div
+                  key={`${index}_programId`}
+                  className="flex justify-between"
+                >
+                  <div>Program ID</div>
+                  <div>{instruction.instruction.programId.toBase58()}</div>
+                </div>
                 <div key={`${index}_data`} className="flex justify-between">
                   <div>Data</div>
                   <div>
