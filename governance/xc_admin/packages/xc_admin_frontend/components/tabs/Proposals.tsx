@@ -1,7 +1,7 @@
 import { BN, Wallet } from '@coral-xyz/anchor'
-import { PythCluster } from '@pythnetwork/client/lib/cluster'
+import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes'
 import { useAnchorWallet } from '@solana/wallet-adapter-react'
-import { AccountMeta } from '@solana/web3.js'
+import { AccountMeta, PublicKey } from '@solana/web3.js'
 import { getIxPDA } from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import copy from 'copy-to-clipboard'
@@ -15,9 +15,12 @@ import {
   useState,
 } from 'react'
 import {
+  getMultisigCluster,
   getProposals,
+  MultisigInstruction,
   MultisigParser,
   PythMultisigInstruction,
+  UnrecognizedProgram,
   WormholeMultisigInstruction,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
@@ -105,7 +108,7 @@ const Proposal = ({
   multisig: any
 }) => {
   const [proposalInstructions, setProposalInstructions] = useState<
-    (PythMultisigInstruction | WormholeMultisigInstruction)[]
+    MultisigInstruction[]
   >([])
   const { cluster } = useContext(ClusterContext)
   const anchorWallet = useAnchorWallet()
@@ -113,7 +116,9 @@ const Proposal = ({
 
   useEffect(() => {
     const fetchProposalInstructions = async () => {
-      const multisigParser = MultisigParser.fromCluster(cluster as PythCluster)
+      const multisigParser = MultisigParser.fromCluster(
+        getMultisigCluster(cluster)
+      )
       if (squads) {
         const proposalIxs = []
         for (let i = 1; i <= proposal.instructionIndex; i++) {
@@ -128,12 +133,8 @@ const Proposal = ({
             data: instruction.data as Buffer,
             keys: instruction.keys as AccountMeta[],
           })
-          if (
-            parsedInstruction instanceof PythMultisigInstruction ||
-            parsedInstruction instanceof WormholeMultisigInstruction
-          ) {
-            proposalIxs.push(parsedInstruction)
-          }
+
+          proposalIxs.push(parsedInstruction)
         }
         setProposalInstructions(proposalIxs)
       }
@@ -185,89 +186,169 @@ const Proposal = ({
         <hr className="border-gray-700" />
         {proposalInstructions?.map((instruction, index) => (
           <>
-            <div key={index} className="flex justify-between">
+            <div key={`${index}_instruction`} className="flex justify-between">
               <div>Instruction</div>
-              <div>{instruction.name}</div>
+              <div>
+                {instruction instanceof PythMultisigInstruction ||
+                instruction instanceof WormholeMultisigInstruction
+                  ? instruction.name
+                  : 'Unknown'}
+              </div>
             </div>
-            <div key={index} className="grid grid-cols-4 justify-between">
+            <div
+              key={`${index}_arguments`}
+              className="grid grid-cols-4 justify-between"
+            >
               <div>Arguments</div>
-              {Object.keys(instruction.args).length > 0 ? (
-                <div className="col-span-4 mt-2 bg-darkGray2 p-4 lg:col-span-3 lg:mt-0">
-                  <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
-                    <div>Key</div>
-                    <div>Value</div>
-                  </div>
-                  {Object.keys(instruction.args).map((key, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between border-t border-beige-300 py-3"
-                    >
-                      <div>{key}</div>
-                      <div>{instruction.args[key]}</div>
+              {instruction instanceof PythMultisigInstruction ||
+              instruction instanceof WormholeMultisigInstruction ? (
+                Object.keys(instruction.args).length > 0 ? (
+                  <div className="col-span-4 mt-2 bg-darkGray2 p-4 lg:col-span-3 lg:mt-0">
+                    <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
+                      <div>Key</div>
+                      <div>Value</div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="col-span-3 text-right">No arguments</div>
-              )}
-            </div>
-            <div key={index} className="grid grid-cols-4 justify-between">
-              <div>Accounts</div>
-              {Object.keys(instruction.accounts.named).length > 0 ? (
-                <div className="col-span-4 mt-2 bg-darkGray2 p-4 lg:col-span-3 lg:mt-0">
-                  <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
-                    <div>Account</div>
-                    <div>Pubkey</div>
-                  </div>
-                  {Object.keys(instruction.accounts.named).map((key, index) => (
-                    <>
+                    {Object.keys(instruction.args).map((key, index) => (
                       <div
                         key={index}
                         className="flex justify-between border-t border-beige-300 py-3"
                       >
                         <div>{key}</div>
-                        <div className="flex space-x-2">
-                          {instruction.accounts.named[key].isSigner ? (
-                            <SignerTag />
-                          ) : null}
-                          {instruction.accounts.named[key].isWritable ? (
-                            <WritableTag />
-                          ) : null}
-                          <div
-                            className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
-                            onClick={() => {
-                              copy(
-                                instruction.accounts.named[
-                                  key
-                                ].pubkey.toBase58()
-                              )
-                            }}
-                          >
-                            <span className="mr-2 hidden xl:block">
-                              {instruction.accounts.named[
-                                key
-                              ].pubkey.toBase58()}
-                            </span>
-                            <span className="mr-2 xl:hidden">
-                              {instruction.accounts.named[key].pubkey
-                                .toBase58()
-                                .slice(0, 6) +
-                                '...' +
-                                instruction.accounts.named[key].pubkey
-                                  .toBase58()
-                                  .slice(-6)}
-                            </span>{' '}
-                            <CopyIcon className="shrink-0" />
-                          </div>
+                        <div>
+                          {instruction.args[key] instanceof PublicKey
+                            ? instruction.args[key].toBase58()
+                            : typeof instruction.args[key] === 'string'
+                            ? instruction.args[key]
+                            : JSON.stringify(instruction.args[key])}
                         </div>
                       </div>
-                    </>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="col-span-3 text-right">No arguments</div>
+                )
               ) : (
-                <div>No arguments</div>
+                <div className="col-span-3 text-right">Unknown</div>
               )}
             </div>
+            {instruction instanceof PythMultisigInstruction ||
+            instruction instanceof WormholeMultisigInstruction ? (
+              <div
+                key={`${index}_accounts`}
+                className="grid grid-cols-4 justify-between"
+              >
+                <div>Accounts</div>
+                {Object.keys(instruction.accounts.named).length > 0 ? (
+                  <div className="col-span-4 mt-2 bg-darkGray2 p-4 lg:col-span-3 lg:mt-0">
+                    <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
+                      <div>Account</div>
+                      <div>Pubkey</div>
+                    </div>
+                    {Object.keys(instruction.accounts.named).map(
+                      (key, index) => (
+                        <>
+                          <div
+                            key={index}
+                            className="flex justify-between border-t border-beige-300 py-3"
+                          >
+                            <div>{key}</div>
+                            <div className="flex space-x-2">
+                              {instruction.accounts.named[key].isSigner ? (
+                                <SignerTag />
+                              ) : null}
+                              {instruction.accounts.named[key].isWritable ? (
+                                <WritableTag />
+                              ) : null}
+                              <div
+                                className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
+                                onClick={() => {
+                                  copy(
+                                    instruction.accounts.named[
+                                      key
+                                    ].pubkey.toBase58()
+                                  )
+                                }}
+                              >
+                                <span className="mr-2 hidden xl:block">
+                                  {instruction.accounts.named[
+                                    key
+                                  ].pubkey.toBase58()}
+                                </span>
+                                <span className="mr-2 xl:hidden">
+                                  {instruction.accounts.named[key].pubkey
+                                    .toBase58()
+                                    .slice(0, 6) +
+                                    '...' +
+                                    instruction.accounts.named[key].pubkey
+                                      .toBase58()
+                                      .slice(-6)}
+                                </span>{' '}
+                                <CopyIcon className="shrink-0" />
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <div>No arguments</div>
+                )}
+              </div>
+            ) : instruction instanceof UnrecognizedProgram ? (
+              <>
+                <div key={`${index}_data`} className="flex justify-between">
+                  <div>Data</div>
+                  <div>
+                    {instruction.instruction.data.length > 0
+                      ? bs58.encode(instruction.instruction.data)
+                      : 'No data'}
+                  </div>
+                </div>
+                <div
+                  key={`${index}_keys`}
+                  className="grid grid-cols-4 justify-between"
+                >
+                  <div>Keys</div>
+                  <div className="col-span-4 mt-2 bg-darkGray2 p-4 lg:col-span-3 lg:mt-0">
+                    <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
+                      <div>Key #</div>
+                      <div>Pubkey</div>
+                    </div>
+                    {instruction.instruction.keys.map((key, index) => (
+                      <>
+                        <div
+                          key={index}
+                          className="flex justify-between border-t border-beige-300 py-3"
+                        >
+                          <div>Key {index + 1}</div>
+                          <div className="flex space-x-2">
+                            {key.isSigner ? <SignerTag /> : null}
+                            {key.isWritable ? <WritableTag /> : null}
+                            <div
+                              className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
+                              onClick={() => {
+                                copy(key.pubkey.toBase58())
+                              }}
+                            >
+                              <span className="mr-2 hidden xl:block">
+                                {key.pubkey.toBase58()}
+                              </span>
+                              <span className="mr-2 xl:hidden">
+                                {key.pubkey.toBase58().slice(0, 6) +
+                                  '...' +
+                                  key.pubkey.toBase58().slice(-6)}
+                              </span>{' '}
+                              <CopyIcon className="shrink-0" />
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : null}
             {index !== proposalInstructions.length - 1 ? (
               <hr className="border-gray-700" />
             ) : null}
@@ -325,6 +406,8 @@ const Proposals = () => {
               (a, b) => b.transactionIndex - a.transactionIndex
             )
           )
+        } else {
+          setProposals([])
         }
       }
       setDataIsLoading(false)
@@ -390,14 +473,14 @@ const Proposals = () => {
               className="max-w-fit cursor-pointer bg-darkGray2 p-3 text-xs font-semibold outline-none transition-colors hover:bg-darkGray3 md:text-base"
               onClick={handleClickBackToPriceFeeds}
             >
-              &#8592; back to price feeds
+              &#8592; back to proposals
             </div>
             {currentProposal ? (
               <div className="relative mt-6">
                 <Proposal proposal={currentProposal} multisig={multisig} />
               </div>
             ) : (
-              <div className="mt-3">
+              <div className="mt-6">
                 <Loadbar theme="light" />
               </div>
             )}
