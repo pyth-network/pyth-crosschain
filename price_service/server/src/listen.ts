@@ -312,7 +312,7 @@ export class Listener implements PriceStore {
       return;
     }
 
-    // There is no await to release the thread since the previous check
+    // There is no `await` clause to release the current thread since the previous check
     // but this is here to ensure this is correct as the code evolves.
     if (this.observedVaas.has(observedVaasKey)) {
       return;
