@@ -205,6 +205,7 @@ const General = () => {
     const jsonParsed = JSON.parse(json)
     Object.keys(jsonParsed).forEach((symbol) => {
       if (
+        existingSymbols.has(symbol) &&
         jsonParsed[symbol].address &&
         jsonParsed[symbol].address !== data[symbol].address
       ) {
@@ -218,6 +219,7 @@ const General = () => {
     // check if json keys "priceAccounts" key "address" key is changed
     Object.keys(jsonParsed).forEach((symbol) => {
       if (
+        existingSymbols.has(symbol) &&
         jsonParsed[symbol].priceAccounts[0] &&
         data[symbol].priceAccounts[0] &&
         jsonParsed[symbol].priceAccounts[0].address &&
