@@ -3,13 +3,16 @@ import { getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
-import { PublicKey, TransactionInstruction } from '@solana/web3.js'
+import { Cluster, PublicKey, TransactionInstruction } from '@solana/web3.js'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
   getMultisigCluster,
+  isRemoteCluster,
+  mapKey,
   OPS_KEY,
   proposeInstructions,
+  WORMHOLE_ADDRESS,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
@@ -28,6 +31,10 @@ const General = () => {
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
     useState(false)
   const { cluster } = useContext(ClusterContext)
+  const isRemote: boolean = isRemoteCluster(cluster) // Move to multisig context
+  const multisigCluster: Cluster | 'localnet' = getMultisigCluster(cluster) // Move to multisig context
+  const wormholeAddress = WORMHOLE_ADDRESS[multisigCluster] // Move to multisig context
+
   const anchorWallet = useAnchorWallet()
   const { isLoading: isMultisigLoading, squads } = useMultisig(
     anchorWallet as Wallet
@@ -237,9 +244,16 @@ const General = () => {
   }
 
   const handleSendProposalButtonClick = async () => {
-    if (pythProgramClient && dataChanges) {
+    if (pythProgramClient && dataChanges && !isMultisigLoading && squads) {
       const instructions: TransactionInstruction[] = []
       Object.keys(dataChanges).forEach(async (symbol) => {
+        const multisigAuthority = squads.getAuthorityPDA(
+          SECURITY_MULTISIG[getMultisigCluster(cluster)],
+          1
+        )
+        const fundingAccount = isRemote
+          ? mapKey(multisigAuthority)
+          : multisigAuthority
         const { prev, new: newChanges } = dataChanges[symbol]
         // if prev is undefined, it means that the symbol is new
         if (!prev) {
@@ -254,10 +268,7 @@ const General = () => {
             await pythProgramClient.methods
               .addProduct()
               .accounts({
-                fundingAccount: squads?.getAuthorityPDA(
-                  SECURITY_MULTISIG[getMultisigCluster(cluster)],
-                  1
-                ),
+                fundingAccount,
                 tailMappingAccount: rawConfig.mappingAccounts[0].address,
                 productAccount: productAccountKey,
               })
@@ -268,10 +279,7 @@ const General = () => {
             await pythProgramClient.methods
               .updProduct({ ...newChanges.metadata, symbol: symbol })
               .accounts({
-                fundingAccount: squads?.getAuthorityPDA(
-                  SECURITY_MULTISIG[getMultisigCluster(cluster)],
-                  1
-                ),
+                fundingAccount,
                 productAccount: productAccountKey,
               })
               .instruction()
@@ -287,10 +295,7 @@ const General = () => {
             await pythProgramClient.methods
               .addPrice(newChanges.priceAccounts[0].expo, 1)
               .accounts({
-                fundingAccount: squads?.getAuthorityPDA(
-                  SECURITY_MULTISIG[getMultisigCluster(cluster)],
-                  1
-                ),
+                fundingAccount,
                 productAccount: productAccountKey,
                 priceAccount: priceAccountKey,
               })
@@ -304,10 +309,7 @@ const General = () => {
                 pythProgramClient.methods
                   .addPublisher(new PublicKey(publisherKey))
                   .accounts({
-                    fundingAccount: squads?.getAuthorityPDA(
-                      SECURITY_MULTISIG[getMultisigCluster(cluster)],
-                      1
-                    ),
+                    fundingAccount,
                     priceAccount: priceAccountKey,
                   })
                   .instruction()
@@ -323,10 +325,7 @@ const General = () => {
                 .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
                 .accounts({
                   priceAccount: priceAccountKey,
-                  fundingAccount: squads?.getAuthorityPDA(
-                    SECURITY_MULTISIG[getMultisigCluster(cluster)],
-                    1
-                  ),
+                  fundingAccount,
                 })
                 .instruction()
             )
@@ -342,10 +341,7 @@ const General = () => {
               await pythProgramClient.methods
                 .updProduct({ ...newChanges.metadata, symbol: symbol })
                 .accounts({
-                  fundingAccount: squads?.getAuthorityPDA(
-                    SECURITY_MULTISIG[getMultisigCluster(cluster)],
-                    1
-                  ),
+                  fundingAccount,
                   productAccount: new PublicKey(prev.address),
                 })
                 .instruction()
@@ -361,10 +357,7 @@ const General = () => {
                 .setMinPub(newChanges.priceAccounts[0].minPub, [0, 0, 0])
                 .accounts({
                   priceAccount: new PublicKey(prev.priceAccounts[0].address),
-                  fundingAccount: squads?.getAuthorityPDA(
-                    SECURITY_MULTISIG[getMultisigCluster(cluster)],
-                    1
-                  ),
+                  fundingAccount,
                 })
                 .instruction()
             )
@@ -387,10 +380,7 @@ const General = () => {
             pythProgramClient.methods
               .addPublisher(new PublicKey(publisherKey))
               .accounts({
-                fundingAccount: squads?.getAuthorityPDA(
-                  SECURITY_MULTISIG[getMultisigCluster(cluster)],
-                  1
-                ),
+                fundingAccount,
                 priceAccount: new PublicKey(prev.priceAccounts[0].address),
               })
               .instruction()
@@ -401,10 +391,7 @@ const General = () => {
             pythProgramClient.methods
               .delPublisher(new PublicKey(publisherKey))
               .accounts({
-                fundingAccount: squads?.getAuthorityPDA(
-                  SECURITY_MULTISIG[getMultisigCluster(cluster)],
-                  1
-                ),
+                fundingAccount,
                 priceAccount: new PublicKey(prev.priceAccounts[0].address),
               })
               .instruction()
@@ -412,21 +399,21 @@ const General = () => {
           })
         }
       })
-      if (!isMultisigLoading && squads) {
-        setIsSendProposalButtonLoading(true)
-        try {
-          const proposalPubkey = await proposeInstructions(
-            squads,
-            SECURITY_MULTISIG[getMultisigCluster(cluster)],
-            instructions,
-            false
-          )
-          toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
-          setIsSendProposalButtonLoading(false)
-        } catch (e: any) {
-          toast.error(capitalizeFirstLetter(e.message))
-          setIsSendProposalButtonLoading(false)
-        }
+
+      setIsSendProposalButtonLoading(true)
+      try {
+        const proposalPubkey = await proposeInstructions(
+          squads,
+          SECURITY_MULTISIG[getMultisigCluster(cluster)],
+          instructions,
+          isRemote,
+          wormholeAddress
+        )
+        toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
+        setIsSendProposalButtonLoading(false)
+      } catch (e: any) {
+        toast.error(capitalizeFirstLetter(e.message))
+        setIsSendProposalButtonLoading(false)
       }
     }
   }
