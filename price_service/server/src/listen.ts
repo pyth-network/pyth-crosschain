@@ -157,13 +157,13 @@ export class Listener implements PriceStore {
     this.promClient = promClient;
     this.spyServiceHost = config.spyServiceHost;
     this.loadFilters(config.filtersRaw);
-    // Don't store any prices received from wormhole that are over 1 hour old.
-    this.ignorePricesOlderThanSecs = 60 * 60;
+    // Don't store any prices received from wormhole that are over 10 minutes old.
+    this.ignorePricesOlderThanSecs = 5 * 60;
     this.readinessConfig = config.readiness;
     this.updateCallbacks = [];
     this.observedVaas = new LRUCache({
-      max: 10000, // At most 10000 items
-      ttl: 60 * 1000, // 60 seconds
+      max: 100000, // At most 100000 items
+      ttl: 6 * 60 * 1000, // 6 minutes which is longer than ignorePricesOlderThanSecs
     });
     this.vaasCache = new VaaCache(
       config.cacheTtl,
@@ -255,16 +255,6 @@ export class Listener implements PriceStore {
     cachedInfo: PriceInfo | undefined,
     observedInfo: PriceInfo
   ): boolean {
-    // Sometimes we get old VAAs from wormhole (for unknown reasons). These VAAs can include price feeds that
-    // were deleted and haven't been updated in a long time. This check filters out such feeds so they don't trigger
-    // the stale feeds check.
-    if (
-      observedInfo.attestationTime <
-      this.currentTimeInSeconds() - this.ignorePricesOlderThanSecs
-    ) {
-      return false;
-    }
-
     if (cachedInfo === undefined) {
       return true;
     }
@@ -289,25 +279,46 @@ export class Listener implements PriceStore {
     const vaaEmitterAddressHex = Buffer.from(parsedVaa.emitterAddress).toString(
       "hex"
     );
+
     const observedVaasKey: VaaKey = `${parsedVaa.emitterChain}#${vaaEmitterAddressHex}#${parsedVaa.sequence}`;
 
     if (this.observedVaas.has(observedVaasKey)) {
       return;
     }
 
-    this.observedVaas.set(observedVaasKey, true);
-    this.promClient?.incReceivedVaa();
-
     let batchAttestation;
 
     try {
-      batchAttestation = await parseBatchPriceAttestation(
+      batchAttestation = parseBatchPriceAttestation(
         Buffer.from(parsedVaa.payload)
       );
     } catch (e: any) {
       logger.error(e, e.stack);
       logger.error("Parsing failed. Dropping vaa: %o", parsedVaa);
       return;
+    }
+
+    if (batchAttestation.priceAttestations.length === 0) {
+      return;
+    }
+
+    // Attestation time is the same in all feeds in the batch.
+    // Return early if an attestation is old to exclude it from
+    // the counter metric.
+    if (
+      batchAttestation.priceAttestations[0].attestationTime <
+      this.currentTimeInSeconds() - this.ignorePricesOlderThanSecs
+    ) {
+      return;
+    }
+
+    // There is no await to release the thread since the previous check
+    // but this is here to ensure this is correct as the code evolves.
+    if (this.observedVaas.has(observedVaasKey)) {
+      return;
+    } else {
+      this.observedVaas.set(observedVaasKey, true);
+      this.promClient?.incReceivedVaa();
     }
 
     for (const priceAttestation of batchAttestation.priceAttestations) {
