@@ -83,23 +83,31 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
               UPGRADE_MULTISIG[getMultisigCluster(cluster)]
             )
           )
-          setSecurityMultisigAccount(
-            await squads.getMultisig(
-              SECURITY_MULTISIG[getMultisigCluster(cluster)]
+          if (cluster === 'devnet') {
+            setSecurityMultisigAccount(
+              await squads.getMultisig(
+                SECURITY_MULTISIG[getMultisigCluster(cluster)]
+              )
             )
-          )
+          } else {
+            setSecurityMultisigAccount(undefined)
+          }
           setUpgradeMultisigProposals(
             await getSortedProposals(
               squads,
               UPGRADE_MULTISIG[getMultisigCluster(cluster)]
             )
           )
-          setSecurityMultisigProposals(
-            await getSortedProposals(
-              squads,
-              SECURITY_MULTISIG[getMultisigCluster(cluster)]
+          if (cluster === 'devnet') {
+            setSecurityMultisigProposals(
+              await getSortedProposals(
+                squads,
+                SECURITY_MULTISIG[getMultisigCluster(cluster)]
+              )
             )
-          )
+          } else {
+            setSecurityMultisigProposals([])
+          }
           setSquads(squads)
           setIsLoading(false)
         } catch (e) {
