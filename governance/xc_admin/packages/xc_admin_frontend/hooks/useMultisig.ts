@@ -95,6 +95,7 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
                 publicKey: new PublicKey(0),
               },
             })
+        if (cancelled) return
         setUpgradeMultisigAccount(
           await squads.getMultisig(
             UPGRADE_MULTISIG[getMultisigCluster(cluster)]
@@ -109,6 +110,7 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
         } else {
           setSecurityMultisigAccount(undefined)
         }
+        if (cancelled) return
         setUpgradeMultisigProposals(
           await getSortedProposals(
             squads,
@@ -144,7 +146,9 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
       }
     })()
 
-    return () => {}
+    return () => {
+      cancelled = true
+    }
   }, [urlsIndex, cluster, wallet])
 
   return {
