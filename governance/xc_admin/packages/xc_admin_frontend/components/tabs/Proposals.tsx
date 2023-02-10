@@ -216,46 +216,61 @@ const Proposal = ({
                   : 'Unknown'}
               </div>
             </div>
-            <div
-              key={`${index}_arguments`}
-              className="grid grid-cols-4 justify-between"
-            >
-              <div>Arguments</div>
-              {instruction instanceof PythMultisigInstruction ||
-              instruction instanceof WormholeMultisigInstruction ? (
-                Object.keys(instruction.args).length > 0 ? (
-                  <div className="col-span-4 mt-2 bg-darkGray2 p-4 lg:col-span-3 lg:mt-0">
-                    <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
-                      <div>Key</div>
-                      <div>Value</div>
-                    </div>
-                    {Object.keys(instruction.args).map((key, index) => (
-                      <div
-                        key={index}
-                        className="flex justify-between border-t border-beige-300 py-3"
-                      >
-                        <div>{key}</div>
-                        <div className="max-w-sm break-all">
-                          {instruction.args[key] instanceof PublicKey
-                            ? instruction.args[key].toBase58()
-                            : typeof instruction.args[key] === 'string'
-                            ? instruction.args[key]
-                            : instruction.args[key] instanceof Uint8Array
-                            ? instruction.args[key].toString('hex')
-                            : JSON.stringify(instruction.args[key])}
-                        </div>
+            {instruction instanceof WormholeMultisigInstruction &&
+            instruction.governanceAction ? (
+              <div
+                key={`${index}_targetChain`}
+                className="flex justify-between"
+              >
+                <div>Target Chain</div>
+                <div>
+                  {instruction.governanceAction.targetChainId === 'pythnet' &&
+                  cluster === 'devnet'
+                    ? 'pythtest'
+                    : 'pythnet'}
+                </div>
+              </div>
+            ) : null}
+            {instruction instanceof WormholeMultisigInstruction ? null : (
+              <div
+                key={`${index}_arguments`}
+                className="grid grid-cols-4 justify-between"
+              >
+                <div>Arguments</div>
+                {instruction instanceof PythMultisigInstruction ? (
+                  Object.keys(instruction.args).length > 0 ? (
+                    <div className="col-span-4 mt-2 bg-darkGray2 p-4 lg:col-span-3 lg:mt-0">
+                      <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
+                        <div>Key</div>
+                        <div>Value</div>
                       </div>
-                    ))}
-                  </div>
+                      {Object.keys(instruction.args).map((key, index) => (
+                        <div
+                          key={index}
+                          className="flex justify-between border-t border-beige-300 py-3"
+                        >
+                          <div>{key}</div>
+                          <div className="max-w-sm break-all">
+                            {instruction.args[key] instanceof PublicKey
+                              ? instruction.args[key].toBase58()
+                              : typeof instruction.args[key] === 'string'
+                              ? instruction.args[key]
+                              : instruction.args[key] instanceof Uint8Array
+                              ? instruction.args[key].toString('hex')
+                              : JSON.stringify(instruction.args[key])}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="col-span-3 text-right">No arguments</div>
+                  )
                 ) : (
-                  <div className="col-span-3 text-right">No arguments</div>
-                )
-              ) : (
-                <div className="col-span-3 text-right">Unknown</div>
-              )}
-            </div>
-            {instruction instanceof PythMultisigInstruction ||
-            instruction instanceof WormholeMultisigInstruction ? (
+                  <div className="col-span-3 text-right">Unknown</div>
+                )}
+              </div>
+            )}
+            {instruction instanceof PythMultisigInstruction ? (
               <div
                 key={`${index}_accounts`}
                 className="grid grid-cols-4 justify-between"
@@ -400,18 +415,33 @@ const Proposal = ({
                 )}
                 {instruction.governanceAction instanceof ExecutePostedVaa
                   ? instruction.governanceAction.instructions.map(
-                      (instruction, index) => {
+                      (innerInstruction, index) => {
                         const multisigParser = MultisigParser.fromCluster(
                           getRemoteCluster(cluster)
                         )
                         const parsedInstruction =
                           multisigParser.parseInstruction({
-                            programId: instruction.programId,
-                            data: instruction.data as Buffer,
-                            keys: instruction.keys as AccountMeta[],
+                            programId: innerInstruction.programId,
+                            data: innerInstruction.data as Buffer,
+                            keys: innerInstruction.keys as AccountMeta[],
                           })
                         return (
                           <>
+                            <div
+                              key={`${index}_program`}
+                              className="flex justify-between"
+                            >
+                              <div>Program</div>
+                              <div>
+                                {parsedInstruction instanceof
+                                PythMultisigInstruction
+                                  ? 'Pyth Oracle'
+                                  : innerInstruction instanceof
+                                    WormholeMultisigInstruction
+                                  ? 'Wormhole'
+                                  : 'Unknown'}
+                              </div>
+                            </div>
                             <div
                               key={`${index}_instructionName`}
                               className="flex justify-between"
