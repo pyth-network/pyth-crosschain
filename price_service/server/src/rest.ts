@@ -239,13 +239,7 @@ export class RestAPI {
             .status(StatusCodes.BAD_GATEWAY)
             .json({ "message:": "VAA not found." });
         } else {
-          const pubTimeBuffer = Buffer.alloc(8);
-          pubTimeBuffer.writeBigInt64BE(BigInt(vaa.publishTime));
-
-          const resData =
-            "0x" +
-            pubTimeBuffer.toString("hex") +
-            Buffer.from(vaa.vaa, "base64").toString("hex");
+          const resData = "0x" + Buffer.from(vaa.vaa, "base64").toString("hex");
 
           res.json({
             data: resData,

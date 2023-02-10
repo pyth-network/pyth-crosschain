@@ -246,13 +246,9 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
       .query({
         data: "0x" + id + pubTime16AsHex64Bit,
       });
-    const pubTime20AsHex64Bit = "0000000000000014";
     expect(ccipResp.status).toBe(StatusCodes.OK);
     expect(ccipResp.body).toEqual({
-      data:
-        "0x" +
-        pubTime20AsHex64Bit +
-        Buffer.from("abcd20", "base64").toString("hex"),
+      data: "0x" + Buffer.from("abcd20", "base64").toString("hex"),
     });
   });
 
@@ -372,10 +368,7 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
       });
     expect(ccipResp.status).toBe(StatusCodes.OK);
     expect(ccipResp.body).toEqual({
-      data:
-        "0x" +
-        pubTime5AsHex64Bit +
-        Buffer.from(`pythnet${id}5`, "base64").toString("hex"),
+      data: "0x" + Buffer.from(`pythnet${id}5`, "base64").toString("hex"),
     });
 
     dbApp.close();
