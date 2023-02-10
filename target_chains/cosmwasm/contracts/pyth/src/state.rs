@@ -1,5 +1,5 @@
 use {
-    crate::PriceFeed,
+    pyth_sdk_cw::PriceFeed,
     cosmwasm_std::{
         Addr,
         Binary,

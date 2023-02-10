@@ -16,7 +16,6 @@ use {
             ExecuteMsg,
             InstantiateMsg,
             MigrateMsg,
-            PriceFeedResponse,
             QueryMsg,
         },
         state::{
@@ -29,8 +28,6 @@ use {
             PythDataSource,
         },
         Price,
-        PriceFeed,
-        PriceIdentifier,
     },
     cosmwasm_std::{
         coin,
@@ -69,6 +66,11 @@ use {
         msg::QueryMsg as WormholeQueryMsg,
         state::ParsedVAA,
     },
+    pyth_sdk_cw::{
+        PriceFeedResponse,
+        PriceFeed,
+        PriceIdentifier,
+    }
 };
 
 /// Migration code that runs once when the contract is upgraded. On upgrade, the migrate
@@ -492,7 +494,6 @@ mod test {
                 Executor,
                 Target,
             },
-            PriceIdentifier,
         },
         cosmwasm_std::{
             coins,
@@ -515,6 +516,8 @@ mod test {
         },
         pyth_wormhole_attester_sdk::PriceAttestation,
         std::time::Duration,
+        pyth_sdk_cw::PriceIdentifier,
+
     };
 
     /// Default valid time period for testing purposes.

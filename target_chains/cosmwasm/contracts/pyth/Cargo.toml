@@ -32,6 +32,7 @@ pyth-wormhole-attester-sdk = { path = "../../../../wormhole_attester/sdk/rust" }
 pyth-sdk = "0.7.0"
 byteorder = "1.4.3"
 cosmwasm-schema = "1.1.9"
+pyth-sdk-cw = { path = "../../pyth-sdk-cw" }
 
 [dev-dependencies]
 cosmwasm-vm = { version = "1.0.0", default-features = false }

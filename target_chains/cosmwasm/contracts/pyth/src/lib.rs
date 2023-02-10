@@ -9,7 +9,4 @@ pub mod state;
 
 pub use pyth_sdk::{
     Price,
-    PriceFeed,
-    PriceIdentifier,
-    ProductIdentifier,
 };
