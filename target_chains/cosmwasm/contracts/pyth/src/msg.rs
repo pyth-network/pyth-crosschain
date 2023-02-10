@@ -1,18 +1,11 @@
+pub use pyth_sdk_cw::QueryMsg;
 use {
-    crate::{
-        state::PythDataSource,
-        PriceFeed,
-        PriceIdentifier,
-    },
-    cosmwasm_schema::{
-        cw_serde,
-        QueryResponses,
-    },
+    crate::state::PythDataSource,
+    cosmwasm_schema::cw_serde,
     cosmwasm_std::{
         Binary,
         Coin,
     },
-    std::time::Duration,
 };
 
 // cw_serde attribute is equivalent to
@@ -47,20 +40,3 @@ pub enum ExecuteMsg {
 #[derive(Eq)]
 #[cw_serde]
 pub struct MigrateMsg {}
-
-
-#[cw_serde]
-#[derive(QueryResponses)]
-pub enum QueryMsg {
-    #[returns(PriceFeedResponse)]
-    PriceFeed { id: PriceIdentifier },
-    #[returns(Coin)]
-    GetUpdateFee { vaas: Vec<Binary> },
-    #[returns(Duration)]
-    GetValidTimePeriod,
-}
-
-#[cw_serde]
-pub struct PriceFeedResponse {
-    pub price_feed: PriceFeed,
-}

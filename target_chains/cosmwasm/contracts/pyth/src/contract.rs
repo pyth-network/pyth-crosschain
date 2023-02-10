@@ -16,7 +16,6 @@ use {
             ExecuteMsg,
             InstantiateMsg,
             MigrateMsg,
-            PriceFeedResponse,
             QueryMsg,
         },
         state::{
@@ -29,8 +28,6 @@ use {
             PythDataSource,
         },
         Price,
-        PriceFeed,
-        PriceIdentifier,
     },
     cosmwasm_std::{
         coin,
@@ -53,6 +50,11 @@ use {
         Timestamp,
         WasmMsg,
         WasmQuery,
+    },
+    pyth_sdk_cw::{
+        PriceFeed,
+        PriceFeedResponse,
+        PriceIdentifier,
     },
     pyth_wormhole_attester_sdk::{
         BatchPriceAttestation,
@@ -487,12 +489,9 @@ pub fn get_valid_time_period(deps: &Deps) -> StdResult<Duration> {
 mod test {
     use {
         super::*,
-        crate::{
-            governance::GovernanceModule::{
-                Executor,
-                Target,
-            },
-            PriceIdentifier,
+        crate::governance::GovernanceModule::{
+            Executor,
+            Target,
         },
         cosmwasm_std::{
             coins,
@@ -513,6 +512,7 @@ mod test {
             SystemResult,
             Uint128,
         },
+        pyth_sdk_cw::PriceIdentifier,
         pyth_wormhole_attester_sdk::PriceAttestation,
         std::time::Duration,
     };

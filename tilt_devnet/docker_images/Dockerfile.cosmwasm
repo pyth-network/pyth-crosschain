@@ -20,6 +20,7 @@ FROM cosmwasm/workspace-optimizer:0.12.11@sha256:b6b0b1d5ed76dafd0ec0d3812a1e7a2
 COPY target_chains/cosmwasm/Cargo.lock /code/
 COPY target_chains/cosmwasm/Cargo.toml /code/
 COPY target_chains/cosmwasm/contracts /code/contracts
+COPY target_chains/cosmwasm/pyth-sdk-cw /code/pyth-sdk-cw
 COPY wormhole_attester/sdk/rust /wormhole_attester/sdk/rust
 RUN --mount=type=cache,target=/code/target,id=cosmwasm_pyth_target --mount=type=cache,target=/usr/local/cargo/registry optimize_workspace.sh
 
