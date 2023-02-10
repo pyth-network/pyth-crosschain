@@ -1,4 +1,6 @@
+pub mod error;
 pub use pyth_sdk::{
+    Price,
     PriceFeed,
     PriceIdentifier,
 };
@@ -14,6 +16,12 @@ use {
     std::time::Duration,
 };
 
+#[derive(Eq)]
+#[cw_serde]
+pub enum ExecuteMsg {
+    UpdatePriceFeeds { data: Vec<Binary> },
+    ExecuteGovernanceInstruction { data: Binary },
+}
 
 #[cw_serde]
 #[derive(QueryResponses)]
