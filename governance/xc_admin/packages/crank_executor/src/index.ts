@@ -213,5 +213,9 @@ async function run() {
 }
 
 (async () => {
-  await run();
+  try {
+    await run();
+  } catch (err) {
+    console.error(err);
+  }
 })();
