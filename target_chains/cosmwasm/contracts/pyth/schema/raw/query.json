@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QueryMsg",
+  "oneOf": [
+    {
+      "type": "string",
+      "enum": [
+        "get_valid_time_period"
+      ]
+    },
+    {
+      "type": "object",
+      "required": [
+        "price_feed"
+      ],
+      "properties": {
+        "price_feed": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Identifier"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "get_update_fee"
+      ],
+      "properties": {
+        "get_update_fee": {
+          "type": "object",
+          "required": [
+            "vaas"
+          ],
+          "properties": {
+            "vaas": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Binary"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "definitions": {
+    "Binary": {
+      "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>",
+      "type": "string"
+    },
+    "Identifier": {
+      "type": "string"
+    }
+  }
+}

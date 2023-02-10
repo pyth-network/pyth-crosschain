@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Duration",
+  "type": "object",
+  "required": [
+    "nanos",
+    "secs"
+  ],
+  "properties": {
+    "nanos": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0.0
+    },
+    "secs": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0.0
+    }
+  }
+}
