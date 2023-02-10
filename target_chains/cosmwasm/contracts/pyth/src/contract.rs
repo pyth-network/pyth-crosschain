@@ -48,12 +48,12 @@ use {
         WasmQuery,
     },
     pyth_sdk_cw::{
+        error::PythContractError,
+        ExecuteMsg,
         Price,
         PriceFeed,
         PriceFeedResponse,
         PriceIdentifier,
-        error::PythContractError,
-        ExecuteMsg,
         QueryMsg,
     },
     pyth_wormhole_attester_sdk::{

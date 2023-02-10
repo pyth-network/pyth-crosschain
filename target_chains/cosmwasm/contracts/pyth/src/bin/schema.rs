@@ -5,9 +5,9 @@ use {
         MigrateMsg,
     },
     pyth_sdk_cw::{
-        ExecuteMsg, 
+        ExecuteMsg,
         QueryMsg,
-    }
+    },
 };
 
 fn main() {
