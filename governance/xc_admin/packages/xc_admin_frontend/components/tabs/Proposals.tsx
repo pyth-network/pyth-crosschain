@@ -774,7 +774,6 @@ const Proposals = () => {
     priceFeedMultisigProposals,
     isLoading: isMultisigLoading,
   } = useMultisigContext()
-
   const { connected } = useWallet()
 
   const handleClickBackToPriceFeeds = () => {
