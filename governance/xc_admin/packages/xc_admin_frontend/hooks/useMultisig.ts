@@ -101,15 +101,17 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
             UPGRADE_MULTISIG[getMultisigCluster(cluster)]
           )
         )
-        if (cluster === 'devnet') {
+        try {
+          // DELETE THIS TRY CATCH ONCE THIS MULTISIG EXISTS EVERYWHERE
           setpriceFeedMultisigAccount(
             await squads.getMultisig(
               PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
             )
           )
-        } else {
+        } catch {
           setpriceFeedMultisigAccount(undefined)
         }
+
         if (cancelled) return
         setUpgradeMultisigProposals(
           await getSortedProposals(
@@ -117,16 +119,18 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
             UPGRADE_MULTISIG[getMultisigCluster(cluster)]
           )
         )
-        if (cluster === 'devnet') {
+        try {
+          // DELETE THIS TRY CATCH ONCE THIS MULTISIG EXISTS EVERYWHERE
           setpriceFeedMultisigProposals(
             await getSortedProposals(
               squads,
               PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
             )
           )
-        } else {
+        } catch {
           setpriceFeedMultisigProposals([])
         }
+
         setSquads(squads)
         setIsLoading(false)
       } catch (e) {
