@@ -1264,6 +1264,7 @@ dependencies = [
  "k256 0.9.6",
  "lazy_static",
  "pyth-sdk 0.7.0",
+ "pyth-sdk-cw",
  "pyth-wormhole-attester-sdk",
  "schemars",
  "serde",
@@ -1299,6 +1300,15 @@ dependencies = [
  "hex",
  "schemars",
  "serde",
+]
+
+[[package]]
+name = "pyth-sdk-cw"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "pyth-sdk 0.7.0",
 ]
 
 [[package]]

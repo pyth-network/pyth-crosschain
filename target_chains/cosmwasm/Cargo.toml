@@ -1,5 +1,5 @@
 [workspace]
-members = ["contracts/pyth"]
+members = ["contracts/pyth", "pyth-sdk-cw"]
 exclude = ["examples/cw-contract"]
 
 [profile.release]
