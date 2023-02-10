@@ -1,7 +1,7 @@
 import { Wallet } from '@coral-xyz/anchor'
-import { Cluster, Connection, PublicKey } from '@solana/web3.js'
+import { Cluster, Connection, PublicKey, Transaction } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
-import { TransactionAccount } from '@sqds/mesh/lib/types'
+import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useContext, useEffect, useRef, useState } from 'react'
 import { getMultisigCluster, getProposals } from 'xc_admin_common'
 import { ClusterContext } from '../contexts/ClusterContext'
@@ -25,7 +25,18 @@ interface MultisigHookData {
   isLoading: boolean
   error: any // TODO: fix any
   squads: SquadsMesh | undefined
-  proposals: TransactionAccount[]
+  upgradeMultisigAccount: MultisigAccount | undefined
+  securityMultisigAccount: MultisigAccount | undefined
+  upgradeMultisigProposals: TransactionAccount[]
+  securityMultisigProposals: TransactionAccount[]
+}
+
+const getSortedProposals = async (
+  squads: SquadsMesh,
+  vault: PublicKey
+): Promise<TransactionAccount[]> => {
+  const proposals = await getProposals(squads, vault)
+  return proposals.sort((a, b) => b.transactionIndex - a.transactionIndex)
 }
 
 export const useMultisig = (wallet: Wallet): MultisigHookData => {
@@ -33,7 +44,16 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
   const { cluster } = useContext(ClusterContext)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [proposals, setProposals] = useState<TransactionAccount[]>([])
+  const [upgradeMultisigAccount, setUpgradeMultisigAccount] =
+    useState<MultisigAccount>()
+  const [securityMultisigAccount, setSecurityMultisigAccount] =
+    useState<MultisigAccount>()
+  const [upgradeMultisigProposals, setUpgradeMultisigProposals] = useState<
+    TransactionAccount[]
+  >([])
+  const [securityMultisigProposals, setSecurityMultisigProposals] = useState<
+    TransactionAccount[]
+  >([])
   const [squads, setSquads] = useState<SquadsMesh>()
   const [urlsIndex, setUrlsIndex] = useState(0)
 
@@ -52,35 +72,74 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
 
     connectionRef.current = connection
     ;(async () => {
-      if (wallet) {
-        try {
-          const squads = new SquadsMesh({
-            connection,
-            wallet,
+      try {
+        // mock wallet to allow users to view proposals without connecting their wallet
+        const signTransaction = () =>
+          new Promise<Transaction>((resolve) => {
+            resolve(new Transaction())
           })
-          setProposals(
-            await getProposals(
-              squads,
-              UPGRADE_MULTISIG[getMultisigCluster(cluster)]
+        const signAllTransactions = () =>
+          new Promise<Transaction[]>((resolve) => {
+            resolve([new Transaction()])
+          })
+        const squads = wallet
+          ? new SquadsMesh({
+              connection,
+              wallet,
+            })
+          : new SquadsMesh({
+              connection,
+              wallet: {
+                signTransaction: () => signTransaction(),
+                signAllTransactions: () => signAllTransactions(),
+                publicKey: new PublicKey(0),
+              },
+            })
+        setUpgradeMultisigAccount(
+          await squads.getMultisig(
+            UPGRADE_MULTISIG[getMultisigCluster(cluster)]
+          )
+        )
+        if (cluster === 'devnet') {
+          setSecurityMultisigAccount(
+            await squads.getMultisig(
+              SECURITY_MULTISIG[getMultisigCluster(cluster)]
             )
           )
-          setSquads(squads)
-          setIsLoading(false)
-        } catch (e) {
-          if (cancelled) return
-          if (urlsIndex === urls.length - 1) {
-            // @ts-ignore
-            setError(e)
-            setIsLoading(false)
-            console.warn(`Failed to fetch accounts`)
-          } else if (urlsIndex < urls.length - 1) {
-            setUrlsIndex((urlsIndex) => urlsIndex + 1)
-            console.warn(
-              `Failed with ${urls[urlsIndex]}, trying with ${
-                urls[urlsIndex + 1]
-              }`
+        } else {
+          setSecurityMultisigAccount(undefined)
+        }
+        setUpgradeMultisigProposals(
+          await getSortedProposals(
+            squads,
+            UPGRADE_MULTISIG[getMultisigCluster(cluster)]
+          )
+        )
+        if (cluster === 'devnet') {
+          setSecurityMultisigProposals(
+            await getSortedProposals(
+              squads,
+              SECURITY_MULTISIG[getMultisigCluster(cluster)]
             )
-          }
+          )
+        } else {
+          setSecurityMultisigProposals([])
+        }
+        setSquads(squads)
+        setIsLoading(false)
+      } catch (e) {
+        console.log(e)
+        if (cancelled) return
+        if (urlsIndex === urls.length - 1) {
+          // @ts-ignore
+          setError(e)
+          setIsLoading(false)
+          console.warn(`Failed to fetch accounts`)
+        } else if (urlsIndex < urls.length - 1) {
+          setUrlsIndex((urlsIndex) => urlsIndex + 1)
+          console.warn(
+            `Failed with ${urls[urlsIndex]}, trying with ${urls[urlsIndex + 1]}`
+          )
         }
       }
     })()
@@ -92,6 +151,9 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
     isLoading,
     error,
     squads,
-    proposals,
+    upgradeMultisigAccount,
+    securityMultisigAccount,
+    upgradeMultisigProposals,
+    securityMultisigProposals,
   }
 }
