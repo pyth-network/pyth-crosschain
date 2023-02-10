@@ -284,3 +284,7 @@
 .action-btn {
   @apply h-[45px] rounded-full bg-pythPurple  px-8 font-mono  font-semibold uppercase  leading-none transition-colors  hover:bg-mediumSlateBlue disabled:opacity-70 disabled:hover:bg-pythPurple;
 }
+
+.sub-action-btn {
+  @apply h-[45px] rounded-full bg-darkGray2  px-8 font-mono  font-semibold uppercase  leading-none transition-colors  hover:bg-darkGray4 disabled:opacity-70 disabled:hover:bg-darkGray2;
+}

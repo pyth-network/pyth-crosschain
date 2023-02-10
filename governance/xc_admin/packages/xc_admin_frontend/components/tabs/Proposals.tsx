@@ -13,6 +13,7 @@ import {
   useEffect,
   useState,
 } from 'react'
+import toast from 'react-hot-toast'
 import {
   ExecutePostedVaa,
   getMultisigCluster,
@@ -26,6 +27,7 @@ import {
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
 import CopyIcon from '../../images/icons/copy.inline.svg'
+import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import Loadbar from '../loaders/Loadbar'
 
@@ -115,6 +117,8 @@ const Proposal = ({
   const { cluster } = useContext(ClusterContext)
   const { squads, isLoading: isMultisigLoading } = useMultisigContext()
 
+  const proposalStatus = proposal ? Object.keys(proposal.status)[0] : 'unknown'
+
   useEffect(() => {
     const fetchProposalInstructions = async () => {
       const multisigParser = MultisigParser.fromCluster(
@@ -145,6 +149,50 @@ const Proposal = ({
     fetchProposalInstructions()
   }, [proposal, squads, cluster])
 
+  const handleClickApprove = async () => {
+    if (proposal && squads) {
+      try {
+        await squads.approveTransaction(proposal.publicKey)
+        toast.success(`Approved proposal ${proposal.publicKey.toBase58()}`)
+      } catch (e: any) {
+        toast.error(capitalizeFirstLetter(e.message))
+      }
+    }
+  }
+
+  const handleClickReject = async () => {
+    if (proposal && squads) {
+      try {
+        await squads.rejectTransaction(proposal.publicKey)
+        toast.success(`Rejected proposal ${proposal.publicKey.toBase58()}`)
+      } catch (e: any) {
+        toast.error(capitalizeFirstLetter(e.message))
+      }
+    }
+  }
+
+  const handleClickExecute = async () => {
+    if (proposal && squads) {
+      try {
+        await squads.executeTransaction(proposal.publicKey)
+        toast.success(`Executed proposal ${proposal.publicKey.toBase58()}`)
+      } catch (e: any) {
+        toast.error(capitalizeFirstLetter(e.message))
+      }
+    }
+  }
+
+  const handleClickCancel = async () => {
+    if (proposal && squads) {
+      try {
+        await squads.cancelTransaction(proposal.publicKey)
+        toast.success(`Cancelled proposal ${proposal.publicKey.toBase58()}`)
+      } catch (e: any) {
+        toast.error(capitalizeFirstLetter(e.message))
+      }
+    }
+  }
+
   return proposal !== undefined &&
     multisig !== undefined &&
     !isMultisigLoading &&
@@ -153,6 +201,10 @@ const Proposal = ({
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-2">
         <h4 className="h4 font-semibold">Info</h4>
         <hr className="border-gray-700" />
+        <div className="flex justify-between">
+          <div>Status</div>
+          <div>{Object.keys(proposal.status)[0]}</div>
+        </div>
         <div className="flex justify-between">
           <div>Proposal</div>
           <div>{proposal.publicKey.toBase58()}</div>
@@ -169,7 +221,7 @@ const Proposal = ({
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-1">
         <h4 className="h4 mb-4 font-semibold">Results</h4>
         <hr className="border-gray-700" />
-        <div className="grid grid-cols-3 justify-center gap-4 pt-5 text-center align-middle">
+        <div className="grid grid-cols-3 justify-center gap-4 text-center align-middle">
           <div>
             <div className="font-bold">Confirmed</div>
             <div className="text-lg">{proposal.approved.length}</div>
@@ -185,6 +237,37 @@ const Proposal = ({
             </div>
           </div>
         </div>
+        {proposalStatus === 'active' ? (
+          <div className="flex items-center justify-between px-8 pt-3">
+            <button
+              className="action-btn text-base"
+              onClick={handleClickApprove}
+            >
+              Approve
+            </button>
+            <button
+              className="sub-action-btn text-base"
+              onClick={handleClickReject}
+            >
+              Reject
+            </button>
+          </div>
+        ) : proposalStatus === 'executeReady' ? (
+          <div className="flex items-center justify-between px-8 pt-3">
+            <button
+              className="action-btn text-base"
+              onClick={handleClickExecute}
+            >
+              Execute
+            </button>
+            <button
+              className="sub-action-btn text-base"
+              onClick={handleClickCancel}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : null}
       </div>
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
         <h4 className="h4 font-semibold">Instructions</h4>
