@@ -9,6 +9,7 @@ import MinPublishers from '../components/tabs/MinPublishers'
 import Proposals from '../components/tabs/Proposals'
 import UpdatePermissions from '../components/tabs/UpdatePermissions'
 import UpdateProductMetadata from '../components/tabs/UpdateProductMetadata'
+import { MultisigContextProvider } from '../contexts/MultisigContext'
 import { PythContextProvider } from '../contexts/PythContext'
 import { classNames } from '../utils/classNames'
 
@@ -85,49 +86,51 @@ const Home: NextPage = () => {
   return (
     <Layout>
       <PythContextProvider>
-        <div className="container relative pt-16 md:pt-20">
-          <div className="py-8 md:py-16">
-            <Tab.Group
-              selectedIndex={currentTabIndex}
-              onChange={handleChangeTab}
-            >
-              <Tab.List className="mx-auto gap-1 space-x-4 space-y-4 text-center sm:gap-2.5 md:space-x-8">
-                {Object.entries(TAB_INFO).map((tab, idx) => (
-                  <Tab
-                    key={idx}
-                    className={({ selected }) =>
-                      classNames(
-                        'p-3 text-xs font-semibold uppercase outline-none transition-colors hover:bg-darkGray3 md:text-base',
-                        selected ? 'bg-darkGray3' : 'bg-darkGray2'
-                      )
-                    }
-                  >
-                    {tab[1].title}
-                  </Tab>
-                ))}
-              </Tab.List>
-            </Tab.Group>
+        <MultisigContextProvider>
+          <div className="container relative pt-16 md:pt-20">
+            <div className="py-8 md:py-16">
+              <Tab.Group
+                selectedIndex={currentTabIndex}
+                onChange={handleChangeTab}
+              >
+                <Tab.List className="mx-auto gap-1 space-x-4 space-y-4 text-center sm:gap-2.5 md:space-x-8">
+                  {Object.entries(TAB_INFO).map((tab, idx) => (
+                    <Tab
+                      key={idx}
+                      className={({ selected }) =>
+                        classNames(
+                          'p-3 text-xs font-semibold uppercase outline-none transition-colors hover:bg-darkGray3 md:text-base',
+                          selected ? 'bg-darkGray3' : 'bg-darkGray2'
+                        )
+                      }
+                    >
+                      {tab[1].title}
+                    </Tab>
+                  ))}
+                </Tab.List>
+              </Tab.Group>
+            </div>
           </div>
-        </div>
-        {tabInfoArray[currentTabIndex].queryString ===
-        TAB_INFO.General.queryString ? (
-          <General />
-        ) : tabInfoArray[currentTabIndex].queryString ===
-          TAB_INFO.MinPublishers.queryString ? (
-          <MinPublishers />
-        ) : tabInfoArray[currentTabIndex].queryString ===
-          TAB_INFO.UpdatePermissions.queryString ? (
-          <UpdatePermissions />
-        ) : tabInfoArray[currentTabIndex].queryString ===
-          TAB_INFO.AddRemovePublishers.queryString ? (
-          <AddRemovePublishers />
-        ) : tabInfoArray[currentTabIndex].queryString ===
-          TAB_INFO.UpdateProductMetadata.queryString ? (
-          <UpdateProductMetadata />
-        ) : tabInfoArray[currentTabIndex].queryString ===
-          TAB_INFO.Proposals.queryString ? (
-          <Proposals />
-        ) : null}
+          {tabInfoArray[currentTabIndex].queryString ===
+          TAB_INFO.General.queryString ? (
+            <General />
+          ) : tabInfoArray[currentTabIndex].queryString ===
+            TAB_INFO.MinPublishers.queryString ? (
+            <MinPublishers />
+          ) : tabInfoArray[currentTabIndex].queryString ===
+            TAB_INFO.UpdatePermissions.queryString ? (
+            <UpdatePermissions />
+          ) : tabInfoArray[currentTabIndex].queryString ===
+            TAB_INFO.AddRemovePublishers.queryString ? (
+            <AddRemovePublishers />
+          ) : tabInfoArray[currentTabIndex].queryString ===
+            TAB_INFO.UpdateProductMetadata.queryString ? (
+            <UpdateProductMetadata />
+          ) : tabInfoArray[currentTabIndex].queryString ===
+            TAB_INFO.Proposals.queryString ? (
+            <Proposals />
+          ) : null}
+        </MultisigContextProvider>
       </PythContextProvider>
     </Layout>
   )

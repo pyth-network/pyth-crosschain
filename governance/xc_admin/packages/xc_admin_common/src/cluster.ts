@@ -21,3 +21,19 @@ export function getMultisigCluster(cluster: PythCluster): Cluster | "localnet" {
       return cluster;
   }
 }
+
+/**
+ * For cluster that are governed remotely (ex : Pythnet from Mainnet) return the network of the remote cluster
+ */
+export function getRemoteCluster(
+  cluster: PythCluster
+): PythCluster | "localnet" {
+  switch (cluster) {
+    case "devnet":
+      return "pythtest";
+    case "mainnet-beta":
+      return "pythnet";
+    default:
+      return cluster;
+  }
+}

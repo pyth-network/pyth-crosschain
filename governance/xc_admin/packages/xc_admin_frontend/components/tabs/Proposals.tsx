@@ -1,6 +1,5 @@
-import { BN, Wallet } from '@coral-xyz/anchor'
-import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes'
-import { useAnchorWallet } from '@solana/wallet-adapter-react'
+import { BN } from '@coral-xyz/anchor'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { AccountMeta, PublicKey } from '@solana/web3.js'
 import { getIxPDA } from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
@@ -15,8 +14,9 @@ import {
   useState,
 } from 'react'
 import {
+  ExecutePostedVaa,
   getMultisigCluster,
-  getProposals,
+  getRemoteCluster,
   MultisigInstruction,
   MultisigParser,
   PythMultisigInstruction,
@@ -24,7 +24,7 @@ import {
   WormholeMultisigInstruction,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
-import { SECURITY_MULTISIG, useMultisig } from '../../hooks/useMultisig'
+import { useMultisigContext } from '../../contexts/MultisigContext'
 import CopyIcon from '../../images/icons/copy.inline.svg'
 import ClusterSwitch from '../ClusterSwitch'
 import Loadbar from '../loaders/Loadbar'
@@ -67,17 +67,17 @@ const ProposalRow = ({
         <div
           className={
             status === 'active'
-              ? 'text-[#E5D8FE]'
+              ? 'text-[#E6DAFE]'
               : status === 'executed'
-              ? 'text-[#15AE6E]'
+              ? 'text-[#1FC3D7]'
               : status === 'cancelled'
-              ? 'text-[#FF5E00]'
+              ? 'text-[#FFA7A0]'
               : status === 'rejected'
-              ? 'text-[#F54562]'
+              ? 'text-[#F86B86]'
               : ''
           }
         >
-          {status}
+          <strong>{status}</strong>
         </div>
       </div>
     </div>
@@ -104,22 +104,24 @@ const Proposal = ({
   proposal,
   multisig,
 }: {
-  proposal: TransactionAccount
-  multisig: any
+  proposal: TransactionAccount | undefined
+  multisig: MultisigAccount | undefined
 }) => {
   const [proposalInstructions, setProposalInstructions] = useState<
     MultisigInstruction[]
   >([])
+  const [isProposalInstructionsLoading, setIsProposalInstructionsLoading] =
+    useState(false)
   const { cluster } = useContext(ClusterContext)
-  const anchorWallet = useAnchorWallet()
-  const { squads } = useMultisig(anchorWallet as Wallet)
+  const { squads, isLoading: isMultisigLoading } = useMultisigContext()
 
   useEffect(() => {
     const fetchProposalInstructions = async () => {
       const multisigParser = MultisigParser.fromCluster(
         getMultisigCluster(cluster)
       )
-      if (squads) {
+      if (squads && proposal) {
+        setIsProposalInstructionsLoading(true)
         const proposalIxs = []
         for (let i = 1; i <= proposal.instructionIndex; i++) {
           const instructionPda = getIxPDA(
@@ -133,17 +135,20 @@ const Proposal = ({
             data: instruction.data as Buffer,
             keys: instruction.keys as AccountMeta[],
           })
-
           proposalIxs.push(parsedInstruction)
         }
         setProposalInstructions(proposalIxs)
+        setIsProposalInstructionsLoading(false)
       }
     }
 
     fetchProposalInstructions()
   }, [proposal, squads, cluster])
 
-  return proposalInstructions ? (
+  return proposal !== undefined &&
+    multisig !== undefined &&
+    !isMultisigLoading &&
+    !isProposalInstructionsLoading ? (
     <div className="grid grid-cols-3 gap-4">
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-2">
         <h4 className="h4">Info</h4>
@@ -186,8 +191,24 @@ const Proposal = ({
         <hr className="border-gray-700" />
         {proposalInstructions?.map((instruction, index) => (
           <>
-            <div key={`${index}_instruction`} className="flex justify-between">
-              <div>Instruction</div>
+            <div
+              key={`${index}_instructionType`}
+              className="flex justify-between"
+            >
+              <div>Program</div>
+              <div>
+                {instruction instanceof PythMultisigInstruction
+                  ? 'Pyth Oracle'
+                  : instruction instanceof WormholeMultisigInstruction
+                  ? 'Wormhole'
+                  : 'Unknown'}
+              </div>
+            </div>
+            <div
+              key={`${index}_instructionName`}
+              className="flex justify-between"
+            >
+              <div>Instruction Name</div>
               <div>
                 {instruction instanceof PythMultisigInstruction ||
                 instruction instanceof WormholeMultisigInstruction
@@ -214,11 +235,13 @@ const Proposal = ({
                         className="flex justify-between border-t border-beige-300 py-3"
                       >
                         <div>{key}</div>
-                        <div>
+                        <div className="max-w-sm break-all">
                           {instruction.args[key] instanceof PublicKey
                             ? instruction.args[key].toBase58()
                             : typeof instruction.args[key] === 'string'
                             ? instruction.args[key]
+                            : instruction.args[key] instanceof Uint8Array
+                            ? instruction.args[key].toString('hex')
                             : JSON.stringify(instruction.args[key])}
                         </div>
                       </div>
@@ -308,7 +331,7 @@ const Proposal = ({
                   <div>Data</div>
                   <div>
                     {instruction.instruction.data.length > 0
-                      ? bs58.encode(instruction.instruction.data)
+                      ? instruction.instruction.data.toString('hex')
                       : 'No data'}
                   </div>
                 </div>
@@ -356,6 +379,275 @@ const Proposal = ({
                 </div>
               </>
             ) : null}
+            {instruction instanceof WormholeMultisigInstruction ? (
+              <div className="col-span-4 my-2 space-y-4 bg-darkGray2 p-4 lg:col-span-3">
+                <h4 className="h4">Wormhole Instructions</h4>
+                <hr className="border-[#E6DAFE] opacity-30" />
+                {instruction.governanceAction ? (
+                  <div className="base16 flex justify-between">
+                    <div>Governance Action</div>
+                    <div>
+                      {instruction.governanceAction instanceof ExecutePostedVaa
+                        ? 'Execute posted VAA'
+                        : 'Unknown governance action'}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="base16 flex justify-between">
+                    <div>Governance Action</div>
+                    <div>Unknown wormhole message</div>
+                  </div>
+                )}
+                {instruction.governanceAction instanceof ExecutePostedVaa
+                  ? instruction.governanceAction.instructions.map(
+                      (instruction, index) => {
+                        const multisigParser = MultisigParser.fromCluster(
+                          getRemoteCluster(cluster)
+                        )
+                        const parsedInstruction =
+                          multisigParser.parseInstruction({
+                            programId: instruction.programId,
+                            data: instruction.data as Buffer,
+                            keys: instruction.keys as AccountMeta[],
+                          })
+                        return (
+                          <>
+                            <div
+                              key={`${index}_instructionName`}
+                              className="flex justify-between"
+                            >
+                              <div>Instruction Name</div>
+                              <div>
+                                {parsedInstruction instanceof
+                                  PythMultisigInstruction ||
+                                parsedInstruction instanceof
+                                  WormholeMultisigInstruction
+                                  ? parsedInstruction.name
+                                  : 'Unknown'}
+                              </div>
+                            </div>
+                            <div
+                              key={`${index}_arguments`}
+                              className="grid grid-cols-4 justify-between"
+                            >
+                              <div>Arguments</div>
+                              {parsedInstruction instanceof
+                                PythMultisigInstruction ||
+                              parsedInstruction instanceof
+                                WormholeMultisigInstruction ? (
+                                Object.keys(parsedInstruction.args).length >
+                                0 ? (
+                                  <div className="col-span-4 mt-2 bg-darkGray4 p-4 lg:col-span-3 lg:mt-0">
+                                    <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
+                                      <div>Key</div>
+                                      <div>Value</div>
+                                    </div>
+                                    {Object.keys(parsedInstruction.args).map(
+                                      (key, index) => (
+                                        <div
+                                          key={index}
+                                          className="flex justify-between border-t border-beige-300 py-3"
+                                        >
+                                          <div>{key}</div>
+                                          <div className="max-w-sm break-all">
+                                            {parsedInstruction.args[
+                                              key
+                                            ] instanceof PublicKey
+                                              ? parsedInstruction.args[
+                                                  key
+                                                ].toBase58()
+                                              : typeof parsedInstruction.args[
+                                                  key
+                                                ] === 'string'
+                                              ? parsedInstruction.args[key]
+                                              : parsedInstruction.args[
+                                                  key
+                                                ] instanceof Uint8Array
+                                              ? parsedInstruction.args[
+                                                  key
+                                                ].toString('hex')
+                                              : JSON.stringify(
+                                                  parsedInstruction.args[key]
+                                                )}
+                                          </div>
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="col-span-3 text-right">
+                                    No arguments
+                                  </div>
+                                )
+                              ) : (
+                                <div className="col-span-3 text-right">
+                                  Unknown
+                                </div>
+                              )}
+                            </div>
+                            {parsedInstruction instanceof
+                              PythMultisigInstruction ||
+                            parsedInstruction instanceof
+                              WormholeMultisigInstruction ? (
+                              <div
+                                key={`${index}_accounts`}
+                                className="grid grid-cols-4 justify-between"
+                              >
+                                <div>Accounts</div>
+                                {Object.keys(parsedInstruction.accounts.named)
+                                  .length > 0 ? (
+                                  <div className="col-span-4 mt-2 bg-darkGray4 p-4 lg:col-span-3 lg:mt-0">
+                                    <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
+                                      <div>Account</div>
+                                      <div>Pubkey</div>
+                                    </div>
+                                    {Object.keys(
+                                      parsedInstruction.accounts.named
+                                    ).map((key, index) => (
+                                      <>
+                                        <div
+                                          key={index}
+                                          className="flex justify-between border-t border-beige-300 py-3"
+                                        >
+                                          <div>{key}</div>
+                                          <div className="flex space-x-2">
+                                            {parsedInstruction.accounts.named[
+                                              key
+                                            ].isSigner ? (
+                                              <SignerTag />
+                                            ) : null}
+                                            {parsedInstruction.accounts.named[
+                                              key
+                                            ].isWritable ? (
+                                              <WritableTag />
+                                            ) : null}
+                                            <div
+                                              className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
+                                              onClick={() => {
+                                                copy(
+                                                  parsedInstruction.accounts.named[
+                                                    key
+                                                  ].pubkey.toBase58()
+                                                )
+                                              }}
+                                            >
+                                              <span className="mr-2 hidden xl:block">
+                                                {parsedInstruction.accounts.named[
+                                                  key
+                                                ].pubkey.toBase58()}
+                                              </span>
+                                              <span className="mr-2 xl:hidden">
+                                                {parsedInstruction.accounts.named[
+                                                  key
+                                                ].pubkey
+                                                  .toBase58()
+                                                  .slice(0, 6) +
+                                                  '...' +
+                                                  parsedInstruction.accounts.named[
+                                                    key
+                                                  ].pubkey
+                                                    .toBase58()
+                                                    .slice(-6)}
+                                              </span>{' '}
+                                              <CopyIcon className="shrink-0" />
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div>No arguments</div>
+                                )}
+                              </div>
+                            ) : parsedInstruction instanceof
+                              UnrecognizedProgram ? (
+                              <>
+                                <div
+                                  key={`${index}_programId`}
+                                  className="flex justify-between"
+                                >
+                                  <div>Program ID</div>
+                                  <div>
+                                    {parsedInstruction.instruction.programId.toBase58()}
+                                  </div>
+                                </div>
+                                <div
+                                  key={`${index}_data`}
+                                  className="flex justify-between"
+                                >
+                                  <div>Data</div>
+                                  <div>
+                                    {parsedInstruction.instruction.data.length >
+                                    0
+                                      ? parsedInstruction.instruction.data.toString(
+                                          'hex'
+                                        )
+                                      : 'No data'}
+                                  </div>
+                                </div>
+                                <div
+                                  key={`${index}_keys`}
+                                  className="grid grid-cols-4 justify-between"
+                                >
+                                  <div>Keys</div>
+                                  <div className="col-span-4 mt-2 bg-darkGray4 p-4 lg:col-span-3 lg:mt-0">
+                                    <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
+                                      <div>Key #</div>
+                                      <div>Pubkey</div>
+                                    </div>
+                                    {parsedInstruction.instruction.keys.map(
+                                      (key, index) => (
+                                        <>
+                                          <div
+                                            key={index}
+                                            className="flex justify-between border-t border-beige-300 py-3"
+                                          >
+                                            <div>Key {index + 1}</div>
+                                            <div className="flex space-x-2">
+                                              {key.isSigner ? (
+                                                <SignerTag />
+                                              ) : null}
+                                              {key.isWritable ? (
+                                                <WritableTag />
+                                              ) : null}
+                                              <div
+                                                className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
+                                                onClick={() => {
+                                                  copy(key.pubkey.toBase58())
+                                                }}
+                                              >
+                                                <span className="mr-2 hidden xl:block">
+                                                  {key.pubkey.toBase58()}
+                                                </span>
+                                                <span className="mr-2 xl:hidden">
+                                                  {key.pubkey
+                                                    .toBase58()
+                                                    .slice(0, 6) +
+                                                    '...' +
+                                                    key.pubkey
+                                                      .toBase58()
+                                                      .slice(-6)}
+                                                </span>{' '}
+                                                <CopyIcon className="shrink-0" />
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </>
+                                      )
+                                    )}
+                                  </div>
+                                </div>
+                              </>
+                            ) : null}
+                          </>
+                        )
+                      }
+                    )
+                  : ''}
+              </div>
+            ) : null}
+
             {index !== proposalInstructions.length - 1 ? (
               <hr className="border-gray-700" />
             ) : null}
@@ -364,7 +656,7 @@ const Proposal = ({
       </div>
     </div>
   ) : (
-    <div className="mt-3">
+    <div className="mt-6">
       <Loadbar theme="light" />
     </div>
   )
@@ -372,16 +664,14 @@ const Proposal = ({
 
 const Proposals = () => {
   const router = useRouter()
-  const [multisig, setMultisig] = useState<MultisigAccount>()
-  const [proposals, setProposals] = useState<TransactionAccount[]>([])
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
-  const [dataIsLoading, setDataIsLoading] = useState<boolean>(false)
-  const { cluster } = useContext(ClusterContext)
-  const anchorWallet = useAnchorWallet()
-  const { isLoading: isMultisigLoading, squads } = useMultisig(
-    anchorWallet as Wallet
-  )
+  const {
+    securityMultisigAccount,
+    securityMultisigProposals,
+    isLoading: isMultisigLoading,
+  } = useMultisigContext()
+  const { connected } = useWallet()
 
   const handleClickBackToPriceFeeds = () => {
     delete router.query.proposal
@@ -396,33 +686,6 @@ const Proposals = () => {
   }
 
   useEffect(() => {
-    const fetchProposals = async () => {
-      setDataIsLoading(true)
-      if (squads) {
-        // TODO: support get proposals from other cluster when the security multisig is deployed
-        if (cluster === 'devnet') {
-          const sqdsProposals = await getProposals(
-            squads,
-            SECURITY_MULTISIG[cluster],
-            undefined,
-            'all'
-          )
-          setMultisig(await squads.getMultisig(SECURITY_MULTISIG[cluster]))
-          setProposals(
-            sqdsProposals.sort(
-              (a, b) => b.transactionIndex - a.transactionIndex
-            )
-          )
-        } else {
-          setProposals([])
-        }
-      }
-      setDataIsLoading(false)
-    }
-    fetchProposals()
-  }, [squads, cluster])
-
-  useEffect(() => {
     if (router.query.proposal) {
       setCurrentProposalPubkey(router.query.proposal as string)
     }
@@ -430,12 +693,12 @@ const Proposals = () => {
 
   useEffect(() => {
     if (currentProposalPubkey) {
-      const currentProposal = proposals.find(
+      const currentProposal = securityMultisigProposals.find(
         (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
       )
       setCurrentProposal(currentProposal)
     }
-  }, [currentProposalPubkey, proposals])
+  }, [currentProposalPubkey, securityMultisigProposals])
 
   return (
     <div className="relative">
@@ -455,13 +718,15 @@ const Proposals = () => {
               </div>
             </div>
             <div className="relative mt-6">
-              {isMultisigLoading || dataIsLoading ? (
+              {!connected ? (
+                'Please connect your wallet to view proposals.'
+              ) : isMultisigLoading ? (
                 <div className="mt-3">
                   <Loadbar theme="light" />
                 </div>
-              ) : proposals.length > 0 ? (
+              ) : securityMultisigProposals.length > 0 ? (
                 <div className="flex flex-col">
-                  {proposals.map((proposal, idx) => (
+                  {securityMultisigProposals.map((proposal, idx) => (
                     <ProposalRow
                       key={idx}
                       proposal={proposal}
@@ -482,15 +747,12 @@ const Proposals = () => {
             >
               &#8592; back to proposals
             </div>
-            {currentProposal ? (
-              <div className="relative mt-6">
-                <Proposal proposal={currentProposal} multisig={multisig} />
-              </div>
-            ) : (
-              <div className="mt-6">
-                <Loadbar theme="light" />
-              </div>
-            )}
+            <div className="relative mt-6">
+              <Proposal
+                proposal={currentProposal}
+                multisig={securityMultisigAccount}
+              />
+            </div>
           </>
         )}
       </div>
