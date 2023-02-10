@@ -1,11 +1,7 @@
-pub use pyth_sdk_cw::QueryMsg;
 use {
     crate::state::PythDataSource,
     cosmwasm_schema::cw_serde,
-    cosmwasm_std::{
-        Binary,
-        Coin,
-    },
+    cosmwasm_std::Coin,
 };
 
 // cw_serde attribute is equivalent to
@@ -27,14 +23,6 @@ pub struct InstantiateMsg {
     pub valid_time_period_secs: u16,
 
     pub fee: Coin,
-}
-
-#[derive(Eq)]
-#[cw_serde]
-pub enum ExecuteMsg {
-    // TODO: add UpdatePriceFeeds if necessary
-    UpdatePriceFeeds { data: Vec<Binary> },
-    ExecuteGovernanceInstruction { data: Binary },
 }
 
 #[derive(Eq)]
