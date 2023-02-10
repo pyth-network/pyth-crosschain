@@ -1,17 +1,12 @@
+pub use pyth_sdk_cw::QueryMsg;
 use {
-    crate::{
-        state::PythDataSource,
-    },
-    cosmwasm_schema::{
-        cw_serde,
-    },
+    crate::state::PythDataSource,
+    cosmwasm_schema::cw_serde,
     cosmwasm_std::{
         Binary,
         Coin,
     },
 };
-
-pub use pyth_sdk_cw::QueryMsg;
 
 // cw_serde attribute is equivalent to
 // #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, JsonSchema)]

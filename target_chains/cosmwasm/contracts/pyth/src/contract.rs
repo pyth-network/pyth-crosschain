@@ -51,6 +51,11 @@ use {
         WasmMsg,
         WasmQuery,
     },
+    pyth_sdk_cw::{
+        PriceFeed,
+        PriceFeedResponse,
+        PriceIdentifier,
+    },
     pyth_wormhole_attester_sdk::{
         BatchPriceAttestation,
         PriceAttestation,
@@ -66,11 +71,6 @@ use {
         msg::QueryMsg as WormholeQueryMsg,
         state::ParsedVAA,
     },
-    pyth_sdk_cw::{
-        PriceFeedResponse,
-        PriceFeed,
-        PriceIdentifier,
-    }
 };
 
 /// Migration code that runs once when the contract is upgraded. On upgrade, the migrate
@@ -489,11 +489,9 @@ pub fn get_valid_time_period(deps: &Deps) -> StdResult<Duration> {
 mod test {
     use {
         super::*,
-        crate::{
-            governance::GovernanceModule::{
-                Executor,
-                Target,
-            },
+        crate::governance::GovernanceModule::{
+            Executor,
+            Target,
         },
         cosmwasm_std::{
             coins,
@@ -514,10 +512,9 @@ mod test {
             SystemResult,
             Uint128,
         },
+        pyth_sdk_cw::PriceIdentifier,
         pyth_wormhole_attester_sdk::PriceAttestation,
         std::time::Duration,
-        pyth_sdk_cw::PriceIdentifier,
-
     };
 
     /// Default valid time period for testing purposes.

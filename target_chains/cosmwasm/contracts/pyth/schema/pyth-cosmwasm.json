@@ -61,10 +61,7 @@
       },
       "Coin": {
         "type": "object",
-        "required": [
-          "amount",
-          "denom"
-        ],
+        "required": ["amount", "denom"],
         "properties": {
           "amount": {
             "$ref": "#/definitions/Uint128"
@@ -76,10 +73,7 @@
       },
       "PythDataSource": {
         "type": "object",
-        "required": [
-          "chain_id",
-          "emitter"
-        ],
+        "required": ["chain_id", "emitter"],
         "properties": {
           "chain_id": {
             "type": "integer",
@@ -103,15 +97,11 @@
     "oneOf": [
       {
         "type": "object",
-        "required": [
-          "update_price_feeds"
-        ],
+        "required": ["update_price_feeds"],
         "properties": {
           "update_price_feeds": {
             "type": "object",
-            "required": [
-              "data"
-            ],
+            "required": ["data"],
             "properties": {
               "data": {
                 "type": "array",
@@ -127,15 +117,11 @@
       },
       {
         "type": "object",
-        "required": [
-          "execute_governance_instruction"
-        ],
+        "required": ["execute_governance_instruction"],
         "properties": {
           "execute_governance_instruction": {
             "type": "object",
-            "required": [
-              "data"
-            ],
+            "required": ["data"],
             "properties": {
               "data": {
                 "$ref": "#/definitions/Binary"
@@ -160,21 +146,15 @@
     "oneOf": [
       {
         "type": "string",
-        "enum": [
-          "get_valid_time_period"
-        ]
+        "enum": ["get_valid_time_period"]
       },
       {
         "type": "object",
-        "required": [
-          "price_feed"
-        ],
+        "required": ["price_feed"],
         "properties": {
           "price_feed": {
             "type": "object",
-            "required": [
-              "id"
-            ],
+            "required": ["id"],
             "properties": {
               "id": {
                 "$ref": "#/definitions/Identifier"
@@ -187,15 +167,11 @@
       },
       {
         "type": "object",
-        "required": [
-          "get_update_fee"
-        ],
+        "required": ["get_update_fee"],
         "properties": {
           "get_update_fee": {
             "type": "object",
-            "required": [
-              "vaas"
-            ],
+            "required": ["vaas"],
             "properties": {
               "vaas": {
                 "type": "array",
@@ -232,10 +208,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Coin",
       "type": "object",
-      "required": [
-        "amount",
-        "denom"
-      ],
+      "required": ["amount", "denom"],
       "properties": {
         "amount": {
           "$ref": "#/definitions/Uint128"
@@ -255,10 +228,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Duration",
       "type": "object",
-      "required": [
-        "nanos",
-        "secs"
-      ],
+      "required": ["nanos", "secs"],
       "properties": {
         "nanos": {
           "type": "integer",
@@ -276,9 +246,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "PriceFeedResponse",
       "type": "object",
-      "required": [
-        "price_feed"
-      ],
+      "required": ["price_feed"],
       "properties": {
         "price_feed": {
           "$ref": "#/definitions/PriceFeed"
@@ -292,12 +260,7 @@
         "Price": {
           "description": "A price with a degree of uncertainty at a certain time, represented as a price +- a confidence interval.\n\nPlease refer to the documentation at https://docs.pyth.network/consumers/best-practices for using this price safely.\n\nThe confidence interval roughly corresponds to the standard error of a normal distribution. Both the price and confidence are stored in a fixed-point numeric representation, `x * 10^expo`, where `expo` is the exponent. For example:\n\n``` use pyth_sdk::Price; Price { price: 12345, conf: 267, expo: -2, publish_time: 100 }; // represents 123.45 +- 2.67 published at UnixTimestamp 100 Price { price: 123, conf: 1, expo: 2,  publish_time: 100 }; // represents 12300 +- 100 published at UnixTimestamp 100 ```\n\n`Price` supports a limited set of mathematical operations. All of these operations will propagate any uncertainty in the arguments into the result. However, the uncertainty in the result may overestimate the true uncertainty (by at most a factor of `sqrt(2)`) due to computational limitations. Furthermore, all of these operations may return `None` if their result cannot be represented within the numeric representation (e.g., the exponent is so small that the price does not fit into an i64). Users of these methods should (1) select their exponents to avoid this problem, and (2) handle the `None` case gracefully.",
           "type": "object",
-          "required": [
-            "conf",
-            "expo",
-            "price",
-            "publish_time"
-          ],
+          "required": ["conf", "expo", "price", "publish_time"],
           "properties": {
             "conf": {
               "description": "Confidence interval.",
@@ -322,11 +285,7 @@
         "PriceFeed": {
           "description": "Represents a current aggregation price from pyth publisher feeds.",
           "type": "object",
-          "required": [
-            "ema_price",
-            "id",
-            "price"
-          ],
+          "required": ["ema_price", "id", "price"],
           "properties": {
             "ema_price": {
               "description": "Exponentially-weighted moving average (EMA) price.",

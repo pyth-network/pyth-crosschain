@@ -1,5 +1,4 @@
 use {
-    pyth_sdk_cw::PriceFeed,
     cosmwasm_std::{
         Addr,
         Binary,
@@ -17,6 +16,7 @@ use {
         ReadonlySingleton,
         Singleton,
     },
+    pyth_sdk_cw::PriceFeed,
     schemars::JsonSchema,
     serde::{
         Deserialize,

@@ -7,6 +7,4 @@ pub mod governance;
 pub mod msg;
 pub mod state;
 
-pub use pyth_sdk::{
-    Price,
-};
+pub use pyth_sdk::Price;

@@ -1,12 +1,17 @@
-use {
-    std::time::Duration,
-    cosmwasm_schema::{cw_serde, QueryResponses},
-    cosmwasm_std::{Binary, Coin},
-};
-
 pub use pyth_sdk::{
-    PriceIdentifier,
     PriceFeed,
+    PriceIdentifier,
+};
+use {
+    cosmwasm_schema::{
+        cw_serde,
+        QueryResponses,
+    },
+    cosmwasm_std::{
+        Binary,
+        Coin,
+    },
+    std::time::Duration,
 };
 
 
