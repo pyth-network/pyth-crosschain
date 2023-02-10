@@ -1,9 +1,11 @@
 use {
     cosmwasm_schema::write_api,
     pyth_cosmwasm::msg::{
-        ExecuteMsg,
         InstantiateMsg,
         MigrateMsg,
+    },
+    pyth_sdk_cw::{
+        ExecuteMsg,
         QueryMsg,
     },
 };

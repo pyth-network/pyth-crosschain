@@ -15,3 +15,4 @@ keywords = [ "pyth", "oracle", "cosmwasm" ]
 pyth-sdk = "0.7.0"
 cosmwasm-std = { version = "1.0.0" }
 cosmwasm-schema = "1.1.9"
+thiserror = "1.0.20"

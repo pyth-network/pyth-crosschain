@@ -1,6 +1,5 @@
 use {
     crate::{
-        error::PythContractError,
         governance::{
             GovernanceAction::{
                 AuthorizeGovernanceDataSourceTransfer,
@@ -13,10 +12,8 @@ use {
             GovernanceInstruction,
         },
         msg::{
-            ExecuteMsg,
             InstantiateMsg,
             MigrateMsg,
-            QueryMsg,
         },
         state::{
             config,
@@ -27,7 +24,6 @@ use {
             PriceInfo,
             PythDataSource,
         },
-        Price,
     },
     cosmwasm_std::{
         coin,
@@ -52,9 +48,13 @@ use {
         WasmQuery,
     },
     pyth_sdk_cw::{
+        error::PythContractError,
+        ExecuteMsg,
+        Price,
         PriceFeed,
         PriceFeedResponse,
         PriceIdentifier,
+        QueryMsg,
     },
     pyth_wormhole_attester_sdk::{
         BatchPriceAttestation,

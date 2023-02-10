@@ -1309,6 +1309,7 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "pyth-sdk 0.7.0",
+ "thiserror",
 ]
 
 [[package]]
