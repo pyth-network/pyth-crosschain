@@ -152,6 +152,7 @@ const Proposal = ({
   const handleClickApprove = async () => {
     if (proposal && squads) {
       try {
+        console.log(squads.wallet.publicKey.toBase58())
         await squads.approveTransaction(proposal.publicKey)
         toast.success(`Approved proposal ${proposal.publicKey.toBase58()}`)
       } catch (e: any) {
@@ -769,8 +770,8 @@ const Proposals = () => {
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
   const {
-    securityMultisigAccount,
-    securityMultisigProposals,
+    priceFeedMultisigAccount,
+    priceFeedMultisigProposals,
     isLoading: isMultisigLoading,
   } = useMultisigContext()
   const { connected } = useWallet()
@@ -795,12 +796,12 @@ const Proposals = () => {
 
   useEffect(() => {
     if (currentProposalPubkey) {
-      const currentProposal = securityMultisigProposals.find(
+      const currentProposal = priceFeedMultisigProposals.find(
         (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
       )
       setCurrentProposal(currentProposal)
     }
-  }, [currentProposalPubkey, securityMultisigProposals])
+  }, [currentProposalPubkey, priceFeedMultisigProposals])
 
   return (
     <div className="relative">
@@ -824,9 +825,9 @@ const Proposals = () => {
                 <div className="mt-3">
                   <Loadbar theme="light" />
                 </div>
-              ) : securityMultisigProposals.length > 0 ? (
+              ) : priceFeedMultisigProposals.length > 0 ? (
                 <div className="flex flex-col">
-                  {securityMultisigProposals.map((proposal, idx) => (
+                  {priceFeedMultisigProposals.map((proposal, idx) => (
                     <ProposalRow
                       key={idx}
                       proposal={proposal}
@@ -835,7 +836,7 @@ const Proposals = () => {
                   ))}
                 </div>
               ) : (
-                "No proposals found. If you're a member of the security multisig, you can create a proposal."
+                "No proposals found. If you're a member of the price feed multisig, you can create a proposal."
               )}
             </div>
           </>
@@ -850,7 +851,7 @@ const Proposals = () => {
             <div className="relative mt-6">
               <Proposal
                 proposal={currentProposal}
-                multisig={securityMultisigAccount}
+                multisig={priceFeedMultisigAccount}
               />
             </div>
           </>

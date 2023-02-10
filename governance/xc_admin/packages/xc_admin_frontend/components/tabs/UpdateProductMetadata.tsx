@@ -13,7 +13,7 @@ import toast from 'react-hot-toast'
 import { getMultisigCluster, proposeInstructions } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { usePythContext } from '../../contexts/PythContext'
-import { SECURITY_MULTISIG, useMultisig } from '../../hooks/useMultisig'
+import { PRICE_FEED_MULTISIG, useMultisig } from '../../hooks/useMultisig'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import Modal from '../common/Modal'
@@ -197,7 +197,7 @@ const UpdateProductMetadata = () => {
             .updProduct(newProductMetadata)
             .accounts({
               fundingAccount: squads?.getAuthorityPDA(
-                SECURITY_MULTISIG[getMultisigCluster(cluster)],
+                PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
                 1
               ),
               productAccount: symbolToProductAccountKeyMapping[symbol],
@@ -212,7 +212,7 @@ const UpdateProductMetadata = () => {
         try {
           const proposalPubkey = await proposeInstructions(
             squads,
-            SECURITY_MULTISIG[getMultisigCluster(cluster)],
+            PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
             instructions,
             false
           )

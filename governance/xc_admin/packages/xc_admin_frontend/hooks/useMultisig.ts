@@ -14,7 +14,7 @@ export const UPGRADE_MULTISIG: Record<Cluster | 'localnet', PublicKey> = {
   localnet: new PublicKey('FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj'),
 }
 
-export const SECURITY_MULTISIG: Record<Cluster | 'localnet', PublicKey> = {
+export const PRICE_FEED_MULTISIG: Record<Cluster | 'localnet', PublicKey> = {
   'mainnet-beta': new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'), // TODO: placeholder value for now, fix when vault is created
   testnet: new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'), // TODO: placeholder value for now, fix when vault is created
   devnet: new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'),
@@ -26,9 +26,9 @@ interface MultisigHookData {
   error: any // TODO: fix any
   squads: SquadsMesh | undefined
   upgradeMultisigAccount: MultisigAccount | undefined
-  securityMultisigAccount: MultisigAccount | undefined
+  priceFeedMultisigAccount: MultisigAccount | undefined
   upgradeMultisigProposals: TransactionAccount[]
-  securityMultisigProposals: TransactionAccount[]
+  priceFeedMultisigProposals: TransactionAccount[]
 }
 
 const getSortedProposals = async (
@@ -46,12 +46,12 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
   const [error, setError] = useState(null)
   const [upgradeMultisigAccount, setUpgradeMultisigAccount] =
     useState<MultisigAccount>()
-  const [securityMultisigAccount, setSecurityMultisigAccount] =
+  const [priceFeedMultisigAccount, setpriceFeedMultisigAccount] =
     useState<MultisigAccount>()
   const [upgradeMultisigProposals, setUpgradeMultisigProposals] = useState<
     TransactionAccount[]
   >([])
-  const [securityMultisigProposals, setSecurityMultisigProposals] = useState<
+  const [priceFeedMultisigProposals, setpriceFeedMultisigProposals] = useState<
     TransactionAccount[]
   >([])
   const [squads, setSquads] = useState<SquadsMesh>()
@@ -102,13 +102,13 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
           )
         )
         if (cluster === 'devnet') {
-          setSecurityMultisigAccount(
+          setpriceFeedMultisigAccount(
             await squads.getMultisig(
-              SECURITY_MULTISIG[getMultisigCluster(cluster)]
+              PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
             )
           )
         } else {
-          setSecurityMultisigAccount(undefined)
+          setpriceFeedMultisigAccount(undefined)
         }
         if (cancelled) return
         setUpgradeMultisigProposals(
@@ -118,14 +118,14 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
           )
         )
         if (cluster === 'devnet') {
-          setSecurityMultisigProposals(
+          setpriceFeedMultisigProposals(
             await getSortedProposals(
               squads,
-              SECURITY_MULTISIG[getMultisigCluster(cluster)]
+              PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
             )
           )
         } else {
-          setSecurityMultisigProposals([])
+          setpriceFeedMultisigProposals([])
         }
         setSquads(squads)
         setIsLoading(false)
@@ -156,8 +156,8 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
     error,
     squads,
     upgradeMultisigAccount,
-    securityMultisigAccount,
+    priceFeedMultisigAccount,
     upgradeMultisigProposals,
-    securityMultisigProposals,
+    priceFeedMultisigProposals,
   }
 }
