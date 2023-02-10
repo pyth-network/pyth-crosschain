@@ -151,10 +151,10 @@ const Proposal = ({
     !isProposalInstructionsLoading ? (
     <div className="grid grid-cols-3 gap-4">
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-2">
-        <h4 className="h4">Info</h4>
+        <h4 className="h4 font-semibold">Info</h4>
         <hr className="border-gray-700" />
         <div className="flex justify-between">
-          <div>Proposal Pubkey</div>
+          <div>Proposal</div>
           <div>{proposal.publicKey.toBase58()}</div>
         </div>
         <div className="flex justify-between">
@@ -167,7 +167,7 @@ const Proposal = ({
         </div>
       </div>
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-1">
-        <h4 className="h4 mb-4">Results</h4>
+        <h4 className="h4 mb-4 font-semibold">Results</h4>
         <hr className="border-gray-700" />
         <div className="grid grid-cols-3 justify-center gap-4 pt-5 text-center align-middle">
           <div>
@@ -187,10 +187,13 @@ const Proposal = ({
         </div>
       </div>
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
-        <h4 className="h4">Instructions</h4>
+        <h4 className="h4 font-semibold">Instructions</h4>
         <hr className="border-gray-700" />
         {proposalInstructions?.map((instruction, index) => (
           <>
+            <h4 className="h4 text-[20px] font-semibold">
+              Instruction {index + 1}
+            </h4>
             <div
               key={`${index}_instructionType`}
               className="flex justify-between"
@@ -204,34 +207,35 @@ const Proposal = ({
                   : 'Unknown'}
               </div>
             </div>
-            <div
-              key={`${index}_instructionName`}
-              className="flex justify-between"
-            >
-              <div>Instruction Name</div>
-              <div>
-                {instruction instanceof PythMultisigInstruction ||
-                instruction instanceof WormholeMultisigInstruction
-                  ? instruction.name
-                  : 'Unknown'}
-              </div>
-            </div>
-            {instruction instanceof WormholeMultisigInstruction &&
-            instruction.governanceAction ? (
+            {instruction instanceof PythMultisigInstruction ||
+            instruction instanceof WormholeMultisigInstruction ? (
               <div
-                key={`${index}_targetChain`}
+                key={`${index}_instructionName`}
                 className="flex justify-between"
               >
-                <div>Target Chain</div>
-                <div>
-                  {instruction.governanceAction.targetChainId === 'pythnet' &&
-                  cluster === 'devnet'
-                    ? 'pythtest'
-                    : 'pythnet'}
-                </div>
+                <div>Instruction Name</div>
+                <div>{instruction.name}</div>
               </div>
             ) : null}
-            {instruction instanceof WormholeMultisigInstruction ? null : (
+            {instruction instanceof WormholeMultisigInstruction &&
+            instruction.governanceAction ? (
+              <>
+                <div
+                  key={`${index}_targetChain`}
+                  className="flex justify-between"
+                >
+                  <div>Target Chain</div>
+                  <div>
+                    {instruction.governanceAction.targetChainId === 'pythnet' &&
+                    cluster === 'devnet'
+                      ? 'pythtest'
+                      : 'pythnet'}
+                  </div>
+                </div>
+              </>
+            ) : null}
+            {instruction instanceof WormholeMultisigInstruction ||
+            instruction instanceof UnrecognizedProgram ? null : (
               <div
                 key={`${index}_arguments`}
                 className="grid grid-cols-4 justify-between"
@@ -398,21 +402,6 @@ const Proposal = ({
               <div className="col-span-4 my-2 space-y-4 bg-darkGray2 p-4 lg:col-span-3">
                 <h4 className="h4">Wormhole Instructions</h4>
                 <hr className="border-[#E6DAFE] opacity-30" />
-                {instruction.governanceAction ? (
-                  <div className="base16 flex justify-between">
-                    <div>Governance Action</div>
-                    <div>
-                      {instruction.governanceAction instanceof ExecutePostedVaa
-                        ? 'Execute posted VAA'
-                        : 'Unknown governance action'}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="base16 flex justify-between">
-                    <div>Governance Action</div>
-                    <div>Unknown wormhole message</div>
-                  </div>
-                )}
                 {instruction.governanceAction instanceof ExecutePostedVaa
                   ? instruction.governanceAction.instructions.map(
                       (innerInstruction, index) => {
@@ -467,7 +456,7 @@ const Proposal = ({
                                 WormholeMultisigInstruction ? (
                                 Object.keys(parsedInstruction.args).length >
                                 0 ? (
-                                  <div className="col-span-4 mt-2 bg-darkGray4 p-4 lg:col-span-3 lg:mt-0">
+                                  <div className="col-span-4 mt-2 bg-[#444157] p-4 lg:col-span-3 lg:mt-0">
                                     <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
                                       <div>Key</div>
                                       <div>Value</div>
@@ -526,7 +515,7 @@ const Proposal = ({
                                 <div>Accounts</div>
                                 {Object.keys(parsedInstruction.accounts.named)
                                   .length > 0 ? (
-                                  <div className="col-span-4 mt-2 bg-darkGray4 p-4 lg:col-span-3 lg:mt-0">
+                                  <div className="col-span-4 mt-2 bg-[#444157] p-4 lg:col-span-3 lg:mt-0">
                                     <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
                                       <div>Account</div>
                                       <div>Pubkey</div>
@@ -748,9 +737,7 @@ const Proposals = () => {
               </div>
             </div>
             <div className="relative mt-6">
-              {!connected ? (
-                'Please connect your wallet to view proposals.'
-              ) : isMultisigLoading ? (
+              {isMultisigLoading ? (
                 <div className="mt-3">
                   <Loadbar theme="light" />
                 </div>

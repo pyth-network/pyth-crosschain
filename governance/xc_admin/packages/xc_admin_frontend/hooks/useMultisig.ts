@@ -1,5 +1,5 @@
 import { Wallet } from '@coral-xyz/anchor'
-import { Cluster, Connection, PublicKey } from '@solana/web3.js'
+import { Cluster, Connection, PublicKey, Transaction } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useContext, useEffect, useRef, useState } from 'react'
@@ -72,60 +72,74 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
 
     connectionRef.current = connection
     ;(async () => {
-      if (wallet) {
-        try {
-          const squads = new SquadsMesh({
-            connection,
-            wallet,
+      try {
+        // mock wallet to allow users to view proposals without connecting their wallet
+        const signTransaction = () =>
+          new Promise<Transaction>((resolve) => {
+            resolve(new Transaction())
           })
-          setUpgradeMultisigAccount(
+        const signAllTransactions = () =>
+          new Promise<Transaction[]>((resolve) => {
+            resolve([new Transaction()])
+          })
+        const squads = wallet
+          ? new SquadsMesh({
+              connection,
+              wallet,
+            })
+          : new SquadsMesh({
+              connection,
+              wallet: {
+                signTransaction: () => signTransaction(),
+                signAllTransactions: () => signAllTransactions(),
+                publicKey: new PublicKey(0),
+              },
+            })
+        setUpgradeMultisigAccount(
+          await squads.getMultisig(
+            UPGRADE_MULTISIG[getMultisigCluster(cluster)]
+          )
+        )
+        if (cluster === 'devnet') {
+          setSecurityMultisigAccount(
             await squads.getMultisig(
-              UPGRADE_MULTISIG[getMultisigCluster(cluster)]
+              SECURITY_MULTISIG[getMultisigCluster(cluster)]
             )
           )
-          if (cluster === 'devnet') {
-            setSecurityMultisigAccount(
-              await squads.getMultisig(
-                SECURITY_MULTISIG[getMultisigCluster(cluster)]
-              )
-            )
-          } else {
-            setSecurityMultisigAccount(undefined)
-          }
-          setUpgradeMultisigProposals(
+        } else {
+          setSecurityMultisigAccount(undefined)
+        }
+        setUpgradeMultisigProposals(
+          await getSortedProposals(
+            squads,
+            UPGRADE_MULTISIG[getMultisigCluster(cluster)]
+          )
+        )
+        if (cluster === 'devnet') {
+          setSecurityMultisigProposals(
             await getSortedProposals(
               squads,
-              UPGRADE_MULTISIG[getMultisigCluster(cluster)]
+              SECURITY_MULTISIG[getMultisigCluster(cluster)]
             )
           )
-          if (cluster === 'devnet') {
-            setSecurityMultisigProposals(
-              await getSortedProposals(
-                squads,
-                SECURITY_MULTISIG[getMultisigCluster(cluster)]
-              )
-            )
-          } else {
-            setSecurityMultisigProposals([])
-          }
-          setSquads(squads)
+        } else {
+          setSecurityMultisigProposals([])
+        }
+        setSquads(squads)
+        setIsLoading(false)
+      } catch (e) {
+        console.log(e)
+        if (cancelled) return
+        if (urlsIndex === urls.length - 1) {
+          // @ts-ignore
+          setError(e)
           setIsLoading(false)
-        } catch (e) {
-          console.log(e)
-          if (cancelled) return
-          if (urlsIndex === urls.length - 1) {
-            // @ts-ignore
-            setError(e)
-            setIsLoading(false)
-            console.warn(`Failed to fetch accounts`)
-          } else if (urlsIndex < urls.length - 1) {
-            setUrlsIndex((urlsIndex) => urlsIndex + 1)
-            console.warn(
-              `Failed with ${urls[urlsIndex]}, trying with ${
-                urls[urlsIndex + 1]
-              }`
-            )
-          }
+          console.warn(`Failed to fetch accounts`)
+        } else if (urlsIndex < urls.length - 1) {
+          setUrlsIndex((urlsIndex) => urlsIndex + 1)
+          console.warn(
+            `Failed with ${urls[urlsIndex]}, trying with ${urls[urlsIndex + 1]}`
+          )
         }
       }
     })()
