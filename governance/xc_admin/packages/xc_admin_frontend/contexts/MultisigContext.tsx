@@ -11,16 +11,16 @@ interface MultisigContextProps {
   error: any // TODO: fix any
   squads: SquadsMesh | undefined
   upgradeMultisigAccount: MultisigAccount | undefined
-  securityMultisigAccount: MultisigAccount | undefined
+  priceFeedMultisigAccount: MultisigAccount | undefined
   upgradeMultisigProposals: TransactionAccount[]
-  securityMultisigProposals: TransactionAccount[]
+  priceFeedMultisigProposals: TransactionAccount[]
 }
 
 const MultisigContext = createContext<MultisigContextProps>({
   upgradeMultisigAccount: undefined,
-  securityMultisigAccount: undefined,
+  priceFeedMultisigAccount: undefined,
   upgradeMultisigProposals: [],
-  securityMultisigProposals: [],
+  priceFeedMultisigProposals: [],
   isLoading: true,
   error: null,
   squads: undefined,
@@ -41,17 +41,17 @@ export const MultisigContextProvider: React.FC<
     error,
     squads,
     upgradeMultisigAccount,
-    securityMultisigAccount,
+    priceFeedMultisigAccount,
     upgradeMultisigProposals,
-    securityMultisigProposals,
+    priceFeedMultisigProposals,
   } = useMultisig(anchorWallet as Wallet)
 
   const value = useMemo(
     () => ({
       upgradeMultisigAccount,
-      securityMultisigAccount,
+      priceFeedMultisigAccount,
       upgradeMultisigProposals,
-      securityMultisigProposals,
+      priceFeedMultisigProposals,
       isLoading,
       error,
       squads,
@@ -61,9 +61,9 @@ export const MultisigContextProvider: React.FC<
       isLoading,
       error,
       upgradeMultisigAccount,
-      securityMultisigAccount,
+      priceFeedMultisigAccount,
       upgradeMultisigProposals,
-      securityMultisigProposals,
+      priceFeedMultisigProposals,
     ]
   )
 
