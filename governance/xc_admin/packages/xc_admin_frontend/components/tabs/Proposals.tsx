@@ -239,7 +239,7 @@ const Proposal = ({
           </div>
         </div>
         {proposalStatus === 'active' ? (
-          <div className="flex items-center justify-between px-8 pt-3">
+          <div className="flex items-center justify-center space-x-8 pt-3">
             <button
               className="action-btn text-base"
               onClick={handleClickApprove}
@@ -432,7 +432,7 @@ const Proposal = ({
                 </div>
                 <div key={`${index}_data`} className="flex justify-between">
                   <div>Data</div>
-                  <div>
+                  <div className='max-w-sm break-all'>
                     {instruction.instruction.data.length > 0
                       ? instruction.instruction.data.toString('hex')
                       : 'No data'}
