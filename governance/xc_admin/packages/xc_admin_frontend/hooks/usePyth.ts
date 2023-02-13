@@ -59,7 +59,6 @@ const usePyth = (): PythHookData => {
     setError(null)
   }, [urlsIndex, cluster])
 
-
   useEffect(() => {
     setUrlsIndex(0)
   }, [cluster])
