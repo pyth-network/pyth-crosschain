@@ -1,9 +1,6 @@
-import { ParsedVaa, parseVaa, postVaaSolana } from "@certusone/wormhole-sdk";
+import { parseVaa, postVaaSolana } from "@certusone/wormhole-sdk";
 import { signTransactionFactory } from "@certusone/wormhole-sdk/lib/cjs/solana";
-import {
-  derivePostedVaaKey,
-  getPostedVaa,
-} from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
+import { derivePostedVaaKey } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { parseProductData } from "@pythnetwork/client";
