@@ -74,7 +74,7 @@ async function run() {
   for (const proposal of proposals) {
     console.log("Trying to execute: ", proposal.publicKey.toBase58());
     // If we have previously cancelled because the proposal was failing, don't attempt
-    if (proposal.cancelled.length == 0) {
+    if (true) {
       for (
         let i = proposal.executedIndex + 1;
         i <= proposal.instructionIndex;
