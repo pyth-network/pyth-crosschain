@@ -28,6 +28,7 @@ import { useMultisigContext } from '../../contexts/MultisigContext'
 import CopyIcon from '../../images/icons/copy.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
+import CopyPubkey from '../common/CopyPubkey'
 import Loadbar from '../loaders/Loadbar'
 
 const ProposalRow = ({
@@ -68,17 +69,17 @@ const ProposalRow = ({
         <div
           className={
             status === 'active'
-              ? 'text-[#E6DAFE]'
+              ? 'text-[#15AE6E]'
               : status === 'executed'
-              ? 'text-[#1FC3D7]'
+              ? 'text-[#5EA1EC]'
               : status === 'cancelled'
-              ? 'text-[#FFA7A0]'
+              ? 'text-[#B59938]'
               : status === 'rejected'
-              ? 'text-[#F86B86]'
+              ? 'text-[#C3668E]'
               : ''
           }
         >
-          <strong>{status}</strong>
+          {status}
         </div>
       </div>
     </div>
@@ -205,26 +206,44 @@ const Proposal = ({
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-2">
         <div className="flex justify-between">
           <h4 className="h4 font-semibold">Info</h4>
-          <div className="flex items-center justify-center rounded-full bg-offPurple py-1 px-2 text-xs">
+          <div
+            className={`flex items-center justify-center rounded-full py-1 px-2 text-xs ${
+              isVerified ? 'bg-[#187B51]' : 'bg-[#8D2D41]'
+            }`}
+          >
             {isVerified ? 'Verified' : 'Unverified'}
           </div>
         </div>
         <hr className="border-gray-700" />
         <div className="flex justify-between">
           <div>Status</div>
-          <div>{Object.keys(proposal.status)[0]}</div>
+          <div
+            className={
+              proposalStatus === 'active'
+                ? 'text-[#15AE6E]'
+                : proposalStatus === 'executed'
+                ? 'text-[#5EA1EC]'
+                : proposalStatus === 'cancelled'
+                ? 'text-[#B59938]'
+                : proposalStatus === 'rejected'
+                ? 'text-[#C3668E]'
+                : ''
+            }
+          >
+            {proposalStatus}
+          </div>
         </div>
         <div className="flex justify-between">
           <div>Proposal</div>
-          <div>{proposal.publicKey.toBase58()}</div>
+          <CopyPubkey pubkey={proposal.publicKey.toBase58()} />
         </div>
         <div className="flex justify-between">
           <div>Creator</div>
-          <div>{proposal.creator.toBase58()}</div>
+          <CopyPubkey pubkey={proposal.creator.toBase58()} />
         </div>
         <div className="flex justify-between">
           <div>Multisig</div>
-          <div>{proposal.ms.toBase58()}</div>
+          <CopyPubkey pubkey={proposal.ms.toBase58()} />
         </div>
       </div>
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-1">
@@ -346,15 +365,19 @@ const Proposal = ({
                           className="flex justify-between border-t border-beige-300 py-3"
                         >
                           <div>{key}</div>
-                          <div className="max-w-sm break-all">
-                            {instruction.args[key] instanceof PublicKey
-                              ? instruction.args[key].toBase58()
-                              : typeof instruction.args[key] === 'string'
-                              ? instruction.args[key]
-                              : instruction.args[key] instanceof Uint8Array
-                              ? instruction.args[key].toString('hex')
-                              : JSON.stringify(instruction.args[key])}
-                          </div>
+                          {instruction.args[key] instanceof PublicKey ? (
+                            <CopyPubkey
+                              pubkey={instruction.args[key].toBase58()}
+                            />
+                          ) : (
+                            <div className="max-w-sm break-all">
+                              {typeof instruction.args[key] === 'string'
+                                ? instruction.args[key]
+                                : instruction.args[key] instanceof Uint8Array
+                                ? instruction.args[key].toString('hex')
+                                : JSON.stringify(instruction.args[key])}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -393,32 +416,11 @@ const Proposal = ({
                               {instruction.accounts.named[key].isWritable ? (
                                 <WritableTag />
                               ) : null}
-                              <div
-                                className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
-                                onClick={() => {
-                                  copy(
-                                    instruction.accounts.named[
-                                      key
-                                    ].pubkey.toBase58()
-                                  )
-                                }}
-                              >
-                                <span className="mr-2 hidden xl:block">
-                                  {instruction.accounts.named[
-                                    key
-                                  ].pubkey.toBase58()}
-                                </span>
-                                <span className="mr-2 xl:hidden">
-                                  {instruction.accounts.named[key].pubkey
-                                    .toBase58()
-                                    .slice(0, 6) +
-                                    '...' +
-                                    instruction.accounts.named[key].pubkey
-                                      .toBase58()
-                                      .slice(-6)}
-                                </span>{' '}
-                                <CopyIcon className="shrink-0" />
-                              </div>
+                              <CopyPubkey
+                                pubkey={instruction.accounts.named[
+                                  key
+                                ].pubkey.toBase58()}
+                              />
                             </div>
                           </div>
                         </>
@@ -436,7 +438,9 @@ const Proposal = ({
                   className="flex justify-between"
                 >
                   <div>Program ID</div>
-                  <div>{instruction.instruction.programId.toBase58()}</div>
+                  <CopyPubkey
+                    pubkey={instruction.instruction.programId.toBase58()}
+                  />
                 </div>
                 <div key={`${index}_data`} className="flex justify-between">
                   <div>Data</div>
@@ -560,27 +564,31 @@ const Proposal = ({
                                           className="flex justify-between border-t border-beige-300 py-3"
                                         >
                                           <div>{key}</div>
-                                          <div className="max-w-sm break-all">
-                                            {parsedInstruction.args[
-                                              key
-                                            ] instanceof PublicKey
-                                              ? parsedInstruction.args[
-                                                  key
-                                                ].toBase58()
-                                              : typeof parsedInstruction.args[
-                                                  key
-                                                ] === 'string'
-                                              ? parsedInstruction.args[key]
-                                              : parsedInstruction.args[
-                                                  key
-                                                ] instanceof Uint8Array
-                                              ? parsedInstruction.args[
-                                                  key
-                                                ].toString('hex')
-                                              : JSON.stringify(
-                                                  parsedInstruction.args[key]
-                                                )}
-                                          </div>
+                                          {parsedInstruction.args[
+                                            key
+                                          ] instanceof PublicKey ? (
+                                            <CopyPubkey
+                                              pubkey={parsedInstruction.args[
+                                                key
+                                              ].toBase58()}
+                                            />
+                                          ) : (
+                                            <div className="max-w-sm break-all">
+                                              {typeof parsedInstruction.args[
+                                                key
+                                              ] === 'string'
+                                                ? parsedInstruction.args[key]
+                                                : parsedInstruction.args[
+                                                    key
+                                                  ] instanceof Uint8Array
+                                                ? parsedInstruction.args[
+                                                    key
+                                                  ].toString('hex')
+                                                : JSON.stringify(
+                                                    parsedInstruction.args[key]
+                                                  )}
+                                            </div>
+                                          )}
                                         </div>
                                       )
                                     )}
