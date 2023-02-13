@@ -12,8 +12,14 @@ use {
         QueryResponses,
     },
     cosmwasm_std::{
+        to_binary,
+        Addr,
         Binary,
         Coin,
+        QuerierWrapper,
+        QueryRequest,
+        StdResult,
+        WasmQuery,
     },
     std::time::Duration,
 };
@@ -39,4 +45,40 @@ pub enum QueryMsg {
 #[cw_serde]
 pub struct PriceFeedResponse {
     pub price_feed: PriceFeed,
+}
+
+/// Queries the price on-chain
+pub fn query_price_feed(
+    querier: &QuerierWrapper,
+    contract_addr: Addr,
+    id: PriceIdentifier,
+) -> StdResult<PriceFeedResponse> {
+    let price_feed_response = querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
+        contract_addr: contract_addr.into_string(),
+        msg:           to_binary(&QueryMsg::PriceFeed { id })?,
+    }))?;
+    Ok(price_feed_response)
+}
+
+/// Get the fee required in order to update the on-chain state with the provided
+/// `price_update_vaas`.
+pub fn get_update_fee(
+    querier: &QuerierWrapper,
+    contract_addr: Addr,
+    price_update_vaas: &[Binary],
+) -> StdResult<Coin> {
+    querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
+        contract_addr: contract_addr.into_string(),
+        msg:           to_binary(&QueryMsg::GetUpdateFee {
+            vaas: price_update_vaas.to_vec(),
+        })?,
+    }))
+}
+
+/// Get the default length of time for which a price update remains valid.
+pub fn get_valid_time_period(querier: &QuerierWrapper, contract_addr: Addr) -> StdResult<Duration> {
+    querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
+        contract_addr: contract_addr.into_string(),
+        msg:           to_binary(&QueryMsg::GetValidTimePeriod)?,
+    }))
 }
