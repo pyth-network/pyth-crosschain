@@ -512,7 +512,7 @@ program
     );
   });
 
-  program
+program
   .command("change-external-authority")
   .description("Change external authority of multisig")
   .option("-c, --cluster <network>", "solana cluster to use", "devnet")
@@ -530,7 +530,10 @@ program
     "multisig wallet secret key filepath",
     "keys/key.json"
   )
-  .option("-ea, --external-authority <address>", "new external authority address")
+  .option(
+    "-ea, --external-authority <address>",
+    "new external authority address"
+  )
   .action(async (options) => {
     const cluster: Cluster = options.cluster;
     const squad = await getSquadsClient(
