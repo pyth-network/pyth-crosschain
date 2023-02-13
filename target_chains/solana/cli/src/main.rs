@@ -42,9 +42,7 @@ fn main() -> Result<()> {
     match cli.action {
         Action::PostPriceVAA { vaa, keypair } => {
             println!("PostPriceVAA is invoked with vaa\"{}\"", vaa);
-            // Hard-coded strings
             let rpc_client = RpcClient::new("https://api.devnet.solana.com");
-            // Is RpcClient::new_with_commitment necessary?
             let wormhole = Pubkey::from_str("3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5").unwrap();
 
             println!("Decode the VAA");
