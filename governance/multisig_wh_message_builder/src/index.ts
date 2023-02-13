@@ -512,6 +512,43 @@ program
     );
   });
 
+  program
+  .command("change-external-authority")
+  .description("Change external authority of multisig")
+  .option("-c, --cluster <network>", "solana cluster to use", "devnet")
+  .option("-l, --ledger", "use ledger")
+  .option(
+    "-lda, --ledger-derivation-account <number>",
+    "ledger derivation account to use"
+  )
+  .option(
+    "-ldc, --ledger-derivation-change <number>",
+    "ledger derivation change to use"
+  )
+  .option(
+    "-w, --wallet <filepath>",
+    "multisig wallet secret key filepath",
+    "keys/key.json"
+  )
+  .option("-ea, --external-authority <address>", "new external authority address")
+  .action(async (options) => {
+    const cluster: Cluster = options.cluster;
+    const squad = await getSquadsClient(
+      cluster,
+      options.ledger,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange,
+      options.wallet
+    );
+
+    await changeExternalAuthority(
+      options.cluster,
+      squad,
+      CONFIG[cluster].vault,
+      new PublicKey(options.externalAuthority)
+    );
+  });
+
 program
   .command("add-member")
   .description("Add member to multisig")
@@ -1004,6 +1041,30 @@ async function changeThreshold(
     msAccount.publicKey,
     msAccount.externalAuthority,
     threshold
+  );
+
+  const squadIxs: SquadInstruction[] = [{ instruction: ix }];
+  await addInstructionsToTx(
+    cluster,
+    squad,
+    msAccount.publicKey,
+    txKey,
+    squadIxs
+  );
+}
+
+async function changeExternalAuthority(
+  cluster: Cluster,
+  squad: Squads,
+  vault: PublicKey,
+  newExternalAuthority: PublicKey
+) {
+  const msAccount = await squad.getMultisig(vault);
+  const txKey = await createTx(squad, vault);
+  const ix = await squad.buildChangeExternalAuthority(
+    msAccount.publicKey,
+    msAccount.externalAuthority,
+    newExternalAuthority
   );
 
   const squadIxs: SquadInstruction[] = [{ instruction: ix }];
