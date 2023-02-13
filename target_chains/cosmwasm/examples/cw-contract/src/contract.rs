@@ -9,16 +9,17 @@ use cosmwasm_std::{
     DepsMut,
     Env,
     MessageInfo,
-    QueryRequest,
     Response,
     StdError,
     StdResult,
-    WasmQuery, Coin,
+    Coin,
 };
 
 use pyth_sdk_cw::{
     PriceFeedResponse,
-    QueryMsg as PythQueryMsg,
+    get_update_fee,
+    get_valid_time_period,
+    query_price_feed,
 };
 
 use crate::msg::{
@@ -89,14 +90,7 @@ fn query_fetch_price(deps: Deps, env: Env) -> StdResult<FetchPriceResponse> {
     // price feed. The result is a PriceFeed object with fields for the current price and other
     // useful information. The function will fail if the contract address or price feed id are
     // invalid.
-    let price_feed_response: PriceFeedResponse =
-        deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-            contract_addr: state.pyth_contract_addr.into_string(),
-            msg:           to_binary(&PythQueryMsg::PriceFeed {
-                id: state.price_feed_id,
-            })?,
-        }))?;
-
+    let price_feed_response: PriceFeedResponse = query_price_feed(&deps.querier, state.pyth_contract_addr, state.price_feed_id)?;
     let price_feed = price_feed_response.price_feed;
 
     // Get the current price and confidence interval from the price feed.
@@ -125,20 +119,12 @@ fn query_fetch_price(deps: Deps, env: Env) -> StdResult<FetchPriceResponse> {
 
 fn query_fetch_update_fee(deps: Deps, vaas: Vec<Binary>) -> StdResult<Coin> {
     let state = STATE.load(deps.storage)?;
-    let contract_addr = state.pyth_contract_addr.into_string();
-
-    let msg = to_binary(&PythQueryMsg::GetUpdateFee { vaas })?;
-
-    let coin: Coin = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }))?;
+    let coin = get_update_fee(&deps.querier, state.pyth_contract_addr, vaas.as_slice())?;
     Ok(coin)
 }
 
 fn query_fetch_valid_time_period(deps: Deps) -> StdResult<Duration> {
     let state = STATE.load(deps.storage)?;
-    let contract_addr = state.pyth_contract_addr.into_string();
-
-    let msg = to_binary(&PythQueryMsg::GetValidTimePeriod)?;
-
-    let duration: Duration = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }))?;
+    let duration = get_valid_time_period(&deps.querier, state.pyth_contract_addr)?;
     Ok(duration)
 }
