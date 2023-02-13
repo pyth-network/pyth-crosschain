@@ -6,7 +6,7 @@ use serde::{
 };
 
 use cw_storage_plus::Item;
-use pyth_cosmwasm::PriceIdentifier;
+use pyth_sdk_cw::PriceIdentifier;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct State {

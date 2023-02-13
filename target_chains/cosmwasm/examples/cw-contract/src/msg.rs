@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cosmwasm_std::{Binary, Coin};
-use pyth_cosmwasm::{
+use pyth_sdk_cw::{
     Price,
     PriceIdentifier,
 };

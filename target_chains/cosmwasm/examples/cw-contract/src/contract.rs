@@ -16,7 +16,7 @@ use cosmwasm_std::{
     WasmQuery, Coin,
 };
 
-use pyth_cosmwasm::msg::{
+use pyth_sdk_cw::{
     PriceFeedResponse,
     QueryMsg as PythQueryMsg,
 };
