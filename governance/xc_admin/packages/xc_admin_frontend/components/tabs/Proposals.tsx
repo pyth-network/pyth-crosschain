@@ -1,5 +1,4 @@
 import { BN } from '@coral-xyz/anchor'
-import { useWallet } from '@solana/wallet-adapter-react'
 import { AccountMeta, PublicKey } from '@solana/web3.js'
 import { getIxPDA } from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
@@ -114,6 +113,7 @@ const Proposal = ({
   >([])
   const [isProposalInstructionsLoading, setIsProposalInstructionsLoading] =
     useState(false)
+  const [isVerified, setIsVerified] = useState(false)
   const { cluster } = useContext(ClusterContext)
   const { squads, isLoading: isMultisigLoading } = useMultisigContext()
 
@@ -141,6 +141,9 @@ const Proposal = ({
           })
           proposalIxs.push(parsedInstruction)
         }
+        setIsVerified(
+          !proposalIxs.some((ix) => ix instanceof UnrecognizedProgram)
+        )
         setProposalInstructions(proposalIxs)
         setIsProposalInstructionsLoading(false)
       }
@@ -200,7 +203,12 @@ const Proposal = ({
     !isProposalInstructionsLoading ? (
     <div className="grid grid-cols-3 gap-4">
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-2">
-        <h4 className="h4 font-semibold">Info</h4>
+        <div className="flex justify-between">
+          <h4 className="h4 font-semibold">Info</h4>
+          <div className="flex items-center justify-center rounded-full bg-offPurple py-1 px-2 text-xs">
+            {isVerified ? 'Verified' : 'Unverified'}
+          </div>
+        </div>
         <hr className="border-gray-700" />
         <div className="flex justify-between">
           <div>Status</div>
@@ -432,7 +440,7 @@ const Proposal = ({
                 </div>
                 <div key={`${index}_data`} className="flex justify-between">
                   <div>Data</div>
-                  <div className='max-w-sm break-all'>
+                  <div className="max-w-sm break-all">
                     {instruction.instruction.data.length > 0
                       ? instruction.instruction.data.toString('hex')
                       : 'No data'}
@@ -774,7 +782,6 @@ const Proposals = () => {
     priceFeedMultisigProposals,
     isLoading: isMultisigLoading,
   } = useMultisigContext()
-  const { connected } = useWallet()
 
   const handleClickBackToPriceFeeds = () => {
     delete router.query.proposal
