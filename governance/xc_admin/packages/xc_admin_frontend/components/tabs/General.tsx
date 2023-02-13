@@ -266,7 +266,7 @@ const General = () => {
           // create add product account instruction
           instructions.push(
             await pythProgramClient.methods
-              .addProduct()
+              .addProduct({ ...newChanges.metadata, symbol: symbol })
               .accounts({
                 fundingAccount,
                 tailMappingAccount: rawConfig.mappingAccounts[0].address,
@@ -274,16 +274,7 @@ const General = () => {
               })
               .instruction()
           )
-          // create update product account instruction
-          instructions.push(
-            await pythProgramClient.methods
-              .updProduct({ ...newChanges.metadata, symbol: symbol })
-              .accounts({
-                fundingAccount,
-                productAccount: productAccountKey,
-              })
-              .instruction()
-          )
+
           // deterministically generate price account key
           const priceAccountKey = await PublicKey.createWithSeed(
             OPS_KEY,
