@@ -110,57 +110,27 @@ async function run() {
           parsedInstruction instanceof PythMultisigInstruction &&
           parsedInstruction.name == "addProduct"
         ) {
-          /// Add product, fetch the symbol from updProduct to get the address
-          i += 1;
-          const nextInstructionPda = getIxPDA(
-            proposal.publicKey,
-            new BN(i),
-            squad.multisigProgramId
-          )[0];
-          const nextInstruction = await squad.getInstruction(
-            nextInstructionPda
+          /// Add product, fetch the symbol from the instruction
+          const productSeed = "product:" + parsedInstruction.args.symbol;
+          const productAddress = await PublicKey.createWithSeed(
+            squad.wallet.publicKey,
+            productSeed,
+            getPythProgramKeyForCluster(CLUSTER as PythCluster)
           );
-          const nextParsedInstruction = multisigParser.parseInstruction({
-            programId: nextInstruction.programId,
-            data: nextInstruction.data as Buffer,
-            keys: nextInstruction.keys as AccountMeta[],
-          });
-
-          if (
-            nextParsedInstruction instanceof PythMultisigInstruction &&
-            nextParsedInstruction.name == "updProduct"
-          ) {
-            const productSeed = "product:" + nextParsedInstruction.args.symbol;
-            const productAddress = await PublicKey.createWithSeed(
-              squad.wallet.publicKey,
-              productSeed,
-              getPythProgramKeyForCluster(CLUSTER as PythCluster)
-            );
-            transaction.add(
-              SystemProgram.createAccountWithSeed({
-                fromPubkey: squad.wallet.publicKey,
-                basePubkey: squad.wallet.publicKey,
-                newAccountPubkey: productAddress,
-                seed: productSeed,
-                space: PRODUCT_ACCOUNT_SIZE,
-                lamports:
-                  await squad.connection.getMinimumBalanceForRentExemption(
-                    PRODUCT_ACCOUNT_SIZE
-                  ),
-                programId: getPythProgramKeyForCluster(CLUSTER as PythCluster),
-              })
-            );
-            transaction.add(
-              await squad.buildExecuteInstruction(
-                proposal.publicKey,
-                getIxPDA(
-                  proposal.publicKey,
-                  new BN(i - 1),
-                  squad.multisigProgramId
-                )[0]
-              )
-            );
-          }
+          transaction.add(
+            SystemProgram.createAccountWithSeed({
+              fromPubkey: squad.wallet.publicKey,
+              basePubkey: squad.wallet.publicKey,
+              newAccountPubkey: productAddress,
+              seed: productSeed,
+              space: PRODUCT_ACCOUNT_SIZE,
+              lamports:
+                await squad.connection.getMinimumBalanceForRentExemption(
+                  PRODUCT_ACCOUNT_SIZE
+                ),
+              programId: getPythProgramKeyForCluster(CLUSTER as PythCluster),
+            })
+          );
         } else if (
           parsedInstruction instanceof PythMultisigInstruction &&
           parsedInstruction.name == "addPrice"
@@ -169,7 +139,7 @@ async function run() {
           const productAccount = await squad.connection.getAccountInfo(
             parsedInstruction.accounts.named.productAccount.pubkey
           );
-          if (productAccount?.data) {
+          if (productAccount) {
             const priceSeed =
               "price:" + parseProductData(productAccount.data).product.symbol;
             const priceAddress = await PublicKey.createWithSeed(
@@ -191,6 +161,8 @@ async function run() {
                 programId: getPythProgramKeyForCluster(CLUSTER as PythCluster),
               })
             );
+          } else {
+            throw Error("Product account not found");
           }
         }
 
