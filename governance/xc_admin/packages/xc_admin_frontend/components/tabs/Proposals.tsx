@@ -273,15 +273,23 @@ const Proposal = ({
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-1">
         <h4 className="h4 mb-4 font-semibold">Results</h4>
         <hr className="border-gray-700" />
+
         <div className="grid grid-cols-3 justify-center gap-4 text-center align-middle">
           <div>
             <div className="font-bold">Confirmed</div>
             <div className="text-lg">{proposal.approved.length}</div>
           </div>
-          <div>
-            <div className="font-bold">Cancelled</div>
-            <div className="text-lg">{proposal.cancelled.length}</div>
-          </div>
+          {proposalStatus === 'active' || proposalStatus === 'rejected' ? (
+            <div>
+              <div className="font-bold">Rejected</div>
+              <div className="text-lg">{proposal.rejected.length}</div>
+            </div>
+          ) : (
+            <div>
+              <div className="font-bold">Cancelled</div>
+              <div className="text-lg">{proposal.cancelled.length}</div>
+            </div>
+          )}
           <div>
             <div className="font-bold">Threshold</div>
             <div className="text-lg">
