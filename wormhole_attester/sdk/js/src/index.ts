@@ -15,7 +15,7 @@ export enum PriceAttestationStatus {
   Trading = 1,
   Halted = 2,
   Auction = 3,
-  IGNORED = 4,
+  Ignored = 4,
 }
 
 export type PriceAttestation = {
