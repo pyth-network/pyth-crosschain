@@ -3,12 +3,9 @@ import type { NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Layout from '../components/layout/Layout'
-import AddRemovePublishers from '../components/tabs/AddRemovePublishers'
 import General from '../components/tabs/General'
-import MinPublishers from '../components/tabs/MinPublishers'
 import Proposals from '../components/tabs/Proposals'
 import UpdatePermissions from '../components/tabs/UpdatePermissions'
-import UpdateProductMetadata from '../components/tabs/UpdateProductMetadata'
 import { MultisigContextProvider } from '../contexts/MultisigContext'
 import { PythContextProvider } from '../contexts/PythContext'
 import { classNames } from '../utils/classNames'
@@ -19,26 +16,10 @@ const TAB_INFO = {
     description: 'General panel for the program.',
     queryString: 'general',
   },
-  MinPublishers: {
-    title: 'Min Publishers',
-    description:
-      'Set the minimum number of publishers required to publish a price.',
-    queryString: 'min-publishers',
-  },
   UpdatePermissions: {
     title: 'Update Permissions',
     description: 'Update the permissions of the program.',
     queryString: 'update-permissions',
-  },
-  AddRemovePublishers: {
-    title: 'Add/Remove Publishers',
-    description: 'Add or remove publishers from price feeds.',
-    queryString: 'add-remove-publishers',
-  },
-  UpdateProductMetadata: {
-    title: 'Update Product Metadata',
-    description: 'Update the metadata of a product.',
-    queryString: 'update-product-metadata',
   },
   Proposals: {
     title: 'Proposals',
@@ -115,17 +96,8 @@ const Home: NextPage = () => {
           TAB_INFO.General.queryString ? (
             <General />
           ) : tabInfoArray[currentTabIndex].queryString ===
-            TAB_INFO.MinPublishers.queryString ? (
-            <MinPublishers />
-          ) : tabInfoArray[currentTabIndex].queryString ===
             TAB_INFO.UpdatePermissions.queryString ? (
             <UpdatePermissions />
-          ) : tabInfoArray[currentTabIndex].queryString ===
-            TAB_INFO.AddRemovePublishers.queryString ? (
-            <AddRemovePublishers />
-          ) : tabInfoArray[currentTabIndex].queryString ===
-            TAB_INFO.UpdateProductMetadata.queryString ? (
-            <UpdateProductMetadata />
           ) : tabInfoArray[currentTabIndex].queryString ===
             TAB_INFO.Proposals.queryString ? (
             <Proposals />
