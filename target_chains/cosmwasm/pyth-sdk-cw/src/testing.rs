@@ -53,8 +53,10 @@ impl MockPyth {
         self.feeds.insert(feed.id, feed);
     }
 
-    /// TODO: Update this with example contracts -> Handler for processing query messages. See the tests in `contract.rs` for how to use this
-    /// handler within your tests.
+    /// Handler for processing query messages.
+    /// See the tests in `contract.rs`
+    /// `https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/cosmwasm/examples/cw-contract/src/contract.rs#L13`
+    /// for how to use this handler within your tests.
     pub fn handle_wasm_query(&self, msg: &Binary) -> QuerierResult {
         let query_msg = from_binary::<QueryMsg>(msg);
         match query_msg {
