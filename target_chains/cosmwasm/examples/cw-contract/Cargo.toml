@@ -34,5 +34,5 @@ cosmwasm-storage = { version = "1.0.0" }
 cw-storage-plus = "0.13.4"
 schemars = "0.8"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
-pyth-sdk-cw = "0.1.0"
+pyth-sdk-cw = "1.0.0"
 cosmwasm-schema = "1.1.9"
