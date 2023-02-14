@@ -65,22 +65,19 @@ const ProposalRow = ({
       }
     >
       <div className="flex justify-between p-4">
-        <div>{proposal.publicKey.toBase58()}</div>
-        <div
-          className={
-            status === 'active'
-              ? 'text-[#15AE6E]'
-              : status === 'executed'
-              ? 'text-[#5EA1EC]'
-              : status === 'cancelled'
-              ? 'text-[#B59938]'
-              : status === 'rejected'
-              ? 'text-[#C3668E]'
-              : ''
-          }
-        >
-          {status}
+        <div>
+          {' '}
+          <span className="mr-2 hidden sm:block">
+            {proposal.publicKey.toBase58()}
+          </span>
+          <span className="mr-2 sm:hidden">
+            {proposal.publicKey.toBase58().slice(0, 6) +
+              '...' +
+              proposal.publicKey.toBase58().slice(-6)}
+          </span>{' '}
         </div>
+
+        <StatusTag proposalStatus={status} />
       </div>
     </div>
   )
@@ -88,7 +85,7 @@ const ProposalRow = ({
 
 const SignerTag = () => {
   return (
-    <div className="flex items-center justify-center rounded-full bg-darkGray4 py-1 px-2 text-xs">
+    <div className="flex items-center justify-center rounded-full bg-[#605D72] py-1 px-2 text-xs">
       Signer
     </div>
   )
@@ -98,6 +95,26 @@ const WritableTag = () => {
   return (
     <div className="flex items-center justify-center rounded-full bg-offPurple py-1 px-2 text-xs">
       Writable
+    </div>
+  )
+}
+
+const StatusTag = ({ proposalStatus }: { proposalStatus: string }) => {
+  return (
+    <div
+      className={`flex items-center justify-center rounded-full ${
+        proposalStatus === 'active'
+          ? 'bg-[#3C3299]'
+          : proposalStatus === 'executed'
+          ? 'bg-[#1C1E5D]'
+          : proposalStatus === 'cancelled'
+          ? 'bg-[#C4428F]'
+          : proposalStatus === 'rejected'
+          ? 'bg-[#CF6E42]'
+          : 'bg-pythPurple'
+      } py-1 px-2 text-xs`}
+    >
+      {proposalStatus}
     </div>
   )
 }
@@ -143,7 +160,28 @@ const Proposal = ({
           proposalIxs.push(parsedInstruction)
         }
         setIsVerified(
-          !proposalIxs.some((ix) => ix instanceof UnrecognizedProgram)
+          proposalIxs.every(
+            (ix) =>
+              ix instanceof PythMultisigInstruction ||
+              (ix instanceof WormholeMultisigInstruction &&
+                ix.name === 'postMessage' &&
+                ix.governanceAction instanceof ExecutePostedVaa &&
+                ix.governanceAction.instructions.every((remoteIx) => {
+                  const innerMultisigParser = MultisigParser.fromCluster(
+                    getRemoteCluster(cluster)
+                  )
+                  const parsedRemoteInstruction =
+                    innerMultisigParser.parseInstruction({
+                      programId: remoteIx.programId,
+                      data: remoteIx.data as Buffer,
+                      keys: remoteIx.keys as AccountMeta[],
+                    })
+                  return (
+                    parsedRemoteInstruction instanceof PythMultisigInstruction
+                  )
+                }) &&
+                ix.governanceAction.targetChainId === 'pythnet')
+          )
         )
         setProposalInstructions(proposalIxs)
         setIsProposalInstructionsLoading(false)
@@ -217,21 +255,7 @@ const Proposal = ({
         <hr className="border-gray-700" />
         <div className="flex justify-between">
           <div>Status</div>
-          <div
-            className={
-              proposalStatus === 'active'
-                ? 'text-[#15AE6E]'
-                : proposalStatus === 'executed'
-                ? 'text-[#5EA1EC]'
-                : proposalStatus === 'cancelled'
-                ? 'text-[#B59938]'
-                : proposalStatus === 'rejected'
-                ? 'text-[#C3668E]'
-                : ''
-            }
-          >
-            {proposalStatus}
-          </div>
+          <StatusTag proposalStatus={proposalStatus} />
         </div>
         <div className="flex justify-between">
           <div>Proposal</div>
