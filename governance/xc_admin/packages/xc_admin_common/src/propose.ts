@@ -16,6 +16,7 @@ import {
   deriveFeeCollectorKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
+import { OPS_KEY } from "./multisig";
 
 type SquadInstruction = {
   instruction: TransactionInstruction;
@@ -103,6 +104,12 @@ export async function proposeInstructions(
     )
   );
 
+  txToSend.push(
+    new Transaction().add(
+      await squad.buildApproveTransaction(vault, newProposalAddress)
+    )
+  );
+
   await new AnchorProvider(
     squad.connection,
     squad.wallet,
@@ -177,7 +184,7 @@ function getPostMessageAccounts(
     message,
     emitter,
     sequence: deriveEmitterSequenceKey(emitter, wormholeAddress),
-    payer: emitter,
+    payer: OPS_KEY,
     feeCollector: deriveFeeCollectorKey(wormholeAddress),
     clock: SYSVAR_CLOCK_PUBKEY,
     rent: SYSVAR_RENT_PUBKEY,
