@@ -362,7 +362,7 @@ const Proposal = ({
                   <div>Target Chain</div>
                   <div>
                     {instruction.governanceAction.targetChainId === 'pythnet' &&
-                    cluster === 'devnet'
+                    getRemoteCluster(cluster) === 'pythtest'
                       ? 'pythtest'
                       : 'pythnet'}
                   </div>
