@@ -6,8 +6,10 @@ import {
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import { parseProductData } from "@pythnetwork/client";
 import {
   getPythClusterApiUrl,
+  getPythProgramKeyForCluster,
   PythCluster,
 } from "@pythnetwork/client/lib/cluster";
 import {
@@ -16,11 +18,15 @@ import {
   Connection,
   Keypair,
   PublicKey,
+  SystemProgram,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import * as fs from "fs";
 import {
   decodeGovernancePayload,
   ExecutePostedVaa,
+  MultisigParser,
+  PythMultisigInstruction,
   WORMHOLE_ADDRESS,
   WORMHOLE_API_ENDPOINT,
 } from "xc_admin_common";
@@ -37,6 +43,8 @@ const REMOTE_EXECUTOR_ADDRESS = new PublicKey(
   "exe6S3AxPVNmy46L4Nj6HrnnAVQUhwyYzMSNcnRn3qq"
 );
 
+const PRODUCT_ACCOUNT_SIZE = 512;
+const PRICE_ACCOUNT_SIZE = 3312;
 const CLAIM_RECORD_SEED = "CLAIM_RECORD";
 const EXECUTOR_KEY_SEED = "EXECUTOR_KEY";
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
@@ -97,6 +105,9 @@ async function run() {
         governancePayload instanceof ExecutePostedVaa &&
         governancePayload.targetChainId == "pythnet"
       ) {
+        const multisigParser = MultisigParser.fromCluster(CLUSTER);
+        const preInstructions: TransactionInstruction[] = [];
+
         console.log(`Found VAA ${lastSequenceNumber}, relaying ...`);
         await postVaaSolana(
           provider.connection,
@@ -110,6 +121,7 @@ async function run() {
         let extraAccountMetas: AccountMeta[] = [
           { pubkey: executorKey, isSigner: false, isWritable: true },
         ];
+
         for (const ix of governancePayload.instructions) {
           extraAccountMetas.push({
             pubkey: ix.programId,
@@ -121,6 +133,67 @@ async function run() {
               return !acc.pubkey.equals(executorKey);
             })
           );
+
+          const parsedInstruction = multisigParser.parseInstruction(ix);
+          if (
+            parsedInstruction instanceof PythMultisigInstruction &&
+            parsedInstruction.name == "addProduct"
+          ) {
+            const productSeed = "product:" + parsedInstruction.args.symbol;
+            const productAddress = await PublicKey.createWithSeed(
+              provider.wallet.publicKey,
+              productSeed,
+              getPythProgramKeyForCluster(CLUSTER as PythCluster)
+            );
+            preInstructions.push(
+              SystemProgram.createAccountWithSeed({
+                fromPubkey: provider.wallet.publicKey,
+                basePubkey: provider.wallet.publicKey,
+                newAccountPubkey: productAddress,
+                seed: productSeed,
+                space: PRODUCT_ACCOUNT_SIZE,
+                lamports:
+                  await provider.connection.getMinimumBalanceForRentExemption(
+                    PRODUCT_ACCOUNT_SIZE
+                  ),
+                programId: getPythProgramKeyForCluster(CLUSTER as PythCluster),
+              })
+            );
+          } else if (
+            parsedInstruction instanceof PythMultisigInstruction &&
+            parsedInstruction.name == "addPrice"
+          ) {
+            const productAccount = await provider.connection.getAccountInfo(
+              parsedInstruction.accounts.named.productAccount.pubkey
+            );
+            if (productAccount) {
+              const priceSeed =
+                "price:" + parseProductData(productAccount.data).product.symbol;
+              const priceAddress = await PublicKey.createWithSeed(
+                provider.wallet.publicKey,
+                priceSeed,
+                getPythProgramKeyForCluster(CLUSTER as PythCluster)
+              );
+              preInstructions.push(
+                SystemProgram.createAccountWithSeed({
+                  fromPubkey: provider.wallet.publicKey,
+                  basePubkey: provider.wallet.publicKey,
+                  newAccountPubkey: priceAddress,
+                  seed: priceSeed,
+                  space: PRICE_ACCOUNT_SIZE,
+                  lamports:
+                    await provider.connection.getMinimumBalanceForRentExemption(
+                      PRICE_ACCOUNT_SIZE
+                    ),
+                  programId: getPythProgramKeyForCluster(
+                    CLUSTER as PythCluster
+                  ),
+                })
+              );
+            } else {
+              throw Error("Product account not found");
+            }
+          }
         }
 
         await remoteExecutor.methods
@@ -130,6 +203,7 @@ async function run() {
             postedVaa: derivePostedVaaKey(WORMHOLE_ADDRESS[CLUSTER]!, vaa.hash),
           })
           .remainingAccounts(extraAccountMetas)
+          .preInstructions(preInstructions)
           .rpc();
       }
     } else if (response.code == 5) {
