@@ -1,40 +1,11 @@
 # Pyth Cosmwasm
 
-This crate includes the actual contract and exposes utilities to interact with the contract on the CosmWasm ecosystem.
-It also includes an [example contract](../examples/cw-contract/) demonstrating how to read price feeds from on-chain CosmWasm applications.
+This crate includes the actual contract for the CosmWasm ecosystem.
 
-## Installation
+## Integration
 
-Add this crate to the dependencies section of your CosmWasm contract's `Cargo.toml` file:
-
-```
-[dependencies]
-pyth-cosmwasm = { git="https://github.com/pyth-network/pyth-crosschain", tag="pyth-cosmwasm-v0.1.0", features=["library"] }
-```
-
-## Usage
-
-Simply import the structs exposed by the crate and use them while interacting with the pyth contract. For example:
-
-```rust
-// to query Pyth contract
-use pyth_cosmwasm::msg::{
-    PriceFeedResponse,
-};
-
-... {
-    let price_feed_response: PriceFeedResponse =
-    deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
-        contract_addr: state.pyth_contract_addr.into_string(),
-        msg:           to_binary(&PythQueryMsg::PriceFeed {
-            id: state.price_feed_id,
-        })?,
-    }))?;
-
-    let price_feed = price_feed_response.price_feed;
-}
-....
-```
+You can use `pyth-sdk-cw` which has been published to crates.io to integrate with the Pyth contract.
+The sdk exposes data structures and testing utilities for ease of use. Please look into this [pyth-sdk-cw](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/cosmwasm/pyth-sdk-cw)
 
 ## Off-Chain Queries
 
