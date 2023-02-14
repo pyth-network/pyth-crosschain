@@ -9,7 +9,7 @@ Add this crate to the dependencies section of your CosmWasm contract's `Cargo.to
 
 ```
 [dependencies]
-pyth-sdk-cw = "0.1.0"
+pyth-sdk-cw = "1.0.0"
 ```
 
 ## Usage
