@@ -1,5 +1,5 @@
 import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor'
-import { getPythProgramKeyForCluster } from '@pythnetwork/client'
+import { AccountType, getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
 import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
@@ -7,6 +7,7 @@ import { Cluster, PublicKey, TransactionInstruction } from '@solana/web3.js'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
+  findDetermisticAccountAddress,
   getMultisigCluster,
   isRemoteCluster,
   mapKey,
@@ -258,11 +259,13 @@ const General = () => {
         // if prev is undefined, it means that the symbol is new
         if (!prev) {
           // deterministically generate product account key
-          const productAccountKey = await PublicKey.createWithSeed(
-            OPS_KEY,
-            'product:' + symbol,
-            pythProgramClient.programId
-          )
+          const productAccountKey: PublicKey = (
+            await findDetermisticAccountAddress(
+              AccountType.Product,
+              symbol,
+              cluster
+            )
+          )[0]
           // create add product account instruction
           instructions.push(
             await pythProgramClient.methods
@@ -276,11 +279,13 @@ const General = () => {
           )
 
           // deterministically generate price account key
-          const priceAccountKey = await PublicKey.createWithSeed(
-            OPS_KEY,
-            'price:' + symbol,
-            pythProgramClient.programId
-          )
+          const priceAccountKey: PublicKey = (
+            await findDetermisticAccountAddress(
+              AccountType.Price,
+              symbol,
+              cluster
+            )
+          )[0]
           // create add price account instruction
           instructions.push(
             await pythProgramClient.methods
