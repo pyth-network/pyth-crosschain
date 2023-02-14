@@ -278,10 +278,17 @@ const Proposal = ({
             <div className="font-bold">Confirmed</div>
             <div className="text-lg">{proposal.approved.length}</div>
           </div>
-          <div>
-            <div className="font-bold">Cancelled</div>
-            <div className="text-lg">{proposal.cancelled.length}</div>
-          </div>
+          {proposalStatus === 'active' || proposalStatus === 'rejected' ? (
+            <div>
+              <div className="font-bold">Rejected</div>
+              <div className="text-lg">{proposal.rejected.length}</div>
+            </div>
+          ) : (
+            <div>
+              <div className="font-bold">Cancelled</div>
+              <div className="text-lg">{proposal.cancelled.length}</div>
+            </div>
+          )}
           <div>
             <div className="font-bold">Threshold</div>
             <div className="text-lg">
