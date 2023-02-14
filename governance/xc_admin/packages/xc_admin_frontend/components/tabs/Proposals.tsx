@@ -445,7 +445,9 @@ const Proposal = ({
                             key={index}
                             className="flex justify-between border-t border-beige-300 py-3"
                           >
-                            <div>{key}</div>
+                            <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
+                              {key}
+                            </div>
                             <div className="space-y-2 sm:flex sm:space-x-2">
                               <div className="flex items-center space-x-2 sm:mt-2 sm:ml-2">
                                 {instruction.accounts.named[key].isSigner ? (
@@ -675,7 +677,7 @@ const Proposal = ({
                                           key={index}
                                           className="flex justify-between border-t border-beige-300 py-3"
                                         >
-                                          <div className="max-w-[80px] break-words sm:break-normal">
+                                          <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
                                             {key}
                                           </div>
                                           <div className="space-y-2 sm:flex sm:space-x-2">
