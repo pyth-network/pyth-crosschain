@@ -1,23 +1,33 @@
-# Pyth Cosmwasm
+# Pyth SDK CW
 
-This crate includes the actual contract for the CosmWasm ecosystem.
+This crate exposes utilities to interact with the contract on the CosmWasm ecosystem.
+You can also look at the [example contract](../examples/cw-contract/) which demonstrates how to read price feeds from on-chain CosmWasm applications.
 
-## Integration
+## Installation
 
-You can use `pyth-sdk-cw` which has been published to crates.io to integrate with the Pyth contract.
-The sdk exposes data structures and testing utilities for ease of use. Please look into this [pyth-sdk-cw](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/cosmwasm/pyth-sdk-cw)
-
-## Off-Chain Queries
-
-You can use the provided schemas in the `./pyth/schema` directory to directly query the CosmWasm contract from off-chain applications.
-A typical query requires to pass the price feed id as a hex string. it will look like:
+Add this crate to the dependencies section of your CosmWasm contract's `Cargo.toml` file:
 
 ```
-{
-    "price_feed": {
-        "id": "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b"
-    }
+[dependencies]
+pyth-sdk-cw = "0.1.0"
+```
+
+## Usage
+
+Simply import the structs exposed by the crate and use them while interacting with the pyth contract. For example:
+
+```rust
+// to query Pyth contract
+use pyth_sdk_cw::{
+    PriceFeedResponse,
+    query_price_feed,
+};
+
+... {
+    let price_feed_response: PriceFeedResponse = query_price_feed(&deps.querier, state.pyth_contract_addr, state.price_feed_id)?;
+    let price_feed = price_feed_response.price_feed;
 }
+....
 ```
 
 ## Contracts and Price Feeds
