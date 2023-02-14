@@ -34,5 +34,5 @@ cosmwasm-storage = { version = "1.0.0" }
 cw-storage-plus = "0.13.4"
 schemars = "0.8"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
-pyth-cosmwasm = { git="https://github.com/pyth-network/pyth-crosschain", tag="pyth-cosmwasm-v0.1.0", features=["library"] }
+pyth-sdk-cw = { path="../../pyth-sdk-cw"}
 cosmwasm-schema = "1.1.9"

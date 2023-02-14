@@ -5,6 +5,7 @@ pub use pyth_sdk::{
     Price,
     PriceFeed,
     PriceIdentifier,
+    UnixTimestamp,
 };
 use {
     cosmwasm_schema::{
