@@ -15,9 +15,9 @@ trace = ["solitaire/trace", "wormhole-bridge-solana/trace"]
 no-entrypoint = []
 
 [dependencies]
-wormhole-bridge-solana = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9" }
-solitaire = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9"}
-rocksalt = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9"}
+wormhole-bridge-solana = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.14.8" }
+solitaire = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.14.8"}
+rocksalt = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.14.8"}
 solana-program = "=1.10.31"
 borsh = "=0.9.3"
 pyth-client = "0.2.2"

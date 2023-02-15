@@ -8,16 +8,11 @@ use {
         Pyth2WormholeConfig,
     },
     solana_program::{
-        program::invoke,
         program_error::ProgramError,
-        rent::Rent,
-        system_instruction,
         system_program,
-        sysvar::Sysvar,
     },
     solitaire::{
         trace,
-        AccountSize,
         AccountState,
         CreationLamports,
         ExecutionContext,
@@ -76,25 +71,6 @@ pub fn migrate(ctx: &ExecutionContext, accs: &mut Migrate, _data: ()) -> SoliRes
     accs.new_config
         .create(ctx, accs.payer.info().key, CreationLamports::Exempt)?;
     accs.new_config.1 = Pyth2WormholeConfig::from(old_config.clone());
-
-    // Adjust new config lamports
-    // NOTE(2022-09-29): Necessary due to PythNet rent calculation
-    // differences, remove when solitaire supports Rent::get()?
-    let acc_lamports = accs.new_config.info().lamports();
-
-    let new_lamports = Rent::get()?.minimum_balance(accs.new_config.size());
-
-    let diff_lamports: u64 = (acc_lamports as i64 - new_lamports as i64).unsigned_abs();
-
-    if acc_lamports < new_lamports {
-        // Less than enough lamports, debit the payer
-        let transfer_ix = system_instruction::transfer(
-            accs.payer.info().key,
-            accs.new_config.info().key,
-            diff_lamports,
-        );
-        invoke(&transfer_ix, ctx.accounts)?;
-    }
 
     // Reclaim old config lamports
 
