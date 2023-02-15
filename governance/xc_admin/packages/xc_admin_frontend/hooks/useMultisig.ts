@@ -102,13 +102,15 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
           )
         )
         try {
+          if (cancelled) return
           // DELETE THIS TRY CATCH ONCE THIS MULTISIG EXISTS EVERYWHERE
           setpriceFeedMultisigAccount(
             await squads.getMultisig(
               PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
             )
           )
-        } catch {
+        } catch (e) {
+          console.error(e)
           setpriceFeedMultisigAccount(undefined)
         }
 
@@ -120,6 +122,7 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
           )
         )
         try {
+          if (cancelled) return
           // DELETE THIS TRY CATCH ONCE THIS MULTISIG EXISTS EVERYWHERE
           setpriceFeedMultisigProposals(
             await getSortedProposals(
@@ -127,7 +130,8 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
               PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
             )
           )
-        } catch {
+        } catch (e) {
+          console.error(e)
           setpriceFeedMultisigProposals([])
         }
 
