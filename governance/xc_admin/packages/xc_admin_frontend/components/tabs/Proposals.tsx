@@ -31,6 +31,16 @@ import ClusterSwitch from '../ClusterSwitch'
 import CopyPubkey from '../common/CopyPubkey'
 import Loadbar from '../loaders/Loadbar'
 
+// check if a string is a pubkey
+const isPubkey = (str: string) => {
+  try {
+    new PublicKey(str)
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
 const ProposalRow = ({
   proposal,
   setCurrentProposalPubkey,
@@ -85,7 +95,7 @@ const ProposalRow = ({
 
 const SignerTag = () => {
   return (
-    <div className="flex items-center justify-center rounded-full bg-[#605D72] py-1 px-2 text-xs">
+    <div className="flex max-h-[22px] max-w-[74px] items-center justify-center rounded-full bg-[#605D72] py-1 px-2 text-xs">
       Signer
     </div>
   )
@@ -93,7 +103,7 @@ const SignerTag = () => {
 
 const WritableTag = () => {
   return (
-    <div className="flex items-center justify-center rounded-full bg-offPurple py-1 px-2 text-xs">
+    <div className="flex max-h-[22px] max-w-[74px] items-center justify-center rounded-full bg-offPurple py-1 px-2 text-xs">
       Writable
     </div>
   )
@@ -400,6 +410,9 @@ const Proposal = ({
                             <CopyPubkey
                               pubkey={instruction.args[key].toBase58()}
                             />
+                          ) : typeof instruction.args[key] === 'string' &&
+                            isPubkey(instruction.args[key]) ? (
+                            <CopyPubkey pubkey={instruction.args[key]} />
                           ) : (
                             <div className="max-w-sm break-all">
                               {typeof instruction.args[key] === 'string'
@@ -439,14 +452,18 @@ const Proposal = ({
                             key={index}
                             className="flex justify-between border-t border-beige-300 py-3"
                           >
-                            <div>{key}</div>
-                            <div className="flex space-x-2">
-                              {instruction.accounts.named[key].isSigner ? (
-                                <SignerTag />
-                              ) : null}
-                              {instruction.accounts.named[key].isWritable ? (
-                                <WritableTag />
-                              ) : null}
+                            <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
+                              {key}
+                            </div>
+                            <div className="space-y-2 sm:flex sm:space-x-2">
+                              <div className="flex items-center space-x-2 sm:mt-2 sm:ml-2">
+                                {instruction.accounts.named[key].isSigner ? (
+                                  <SignerTag />
+                                ) : null}
+                                {instruction.accounts.named[key].isWritable ? (
+                                  <WritableTag />
+                                ) : null}
+                              </div>
                               <CopyPubkey
                                 pubkey={instruction.accounts.named[
                                   key
@@ -603,6 +620,14 @@ const Proposal = ({
                                                 key
                                               ].toBase58()}
                                             />
+                                          ) : typeof instruction.args[key] ===
+                                              'string' &&
+                                            isPubkey(instruction.args[key]) ? (
+                                            <CopyPubkey
+                                              pubkey={
+                                                parsedInstruction.args[key]
+                                              }
+                                            />
                                           ) : (
                                             <div className="max-w-sm break-all">
                                               {typeof parsedInstruction.args[
@@ -659,18 +684,22 @@ const Proposal = ({
                                           key={index}
                                           className="flex justify-between border-t border-beige-300 py-3"
                                         >
-                                          <div>{key}</div>
-                                          <div className="flex space-x-2">
-                                            {parsedInstruction.accounts.named[
-                                              key
-                                            ].isSigner ? (
-                                              <SignerTag />
-                                            ) : null}
-                                            {parsedInstruction.accounts.named[
-                                              key
-                                            ].isWritable ? (
-                                              <WritableTag />
-                                            ) : null}
+                                          <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
+                                            {key}
+                                          </div>
+                                          <div className="space-y-2 sm:flex sm:space-x-2">
+                                            <div className="flex items-center space-x-2 sm:mt-2 sm:ml-2">
+                                              {parsedInstruction.accounts.named[
+                                                key
+                                              ].isSigner ? (
+                                                <SignerTag />
+                                              ) : null}
+                                              {parsedInstruction.accounts.named[
+                                                key
+                                              ].isWritable ? (
+                                                <WritableTag />
+                                              ) : null}
+                                            </div>
                                             <div
                                               className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
                                               onClick={() => {
