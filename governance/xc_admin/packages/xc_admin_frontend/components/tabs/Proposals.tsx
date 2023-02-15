@@ -116,7 +116,7 @@ const StatusTag = ({ proposalStatus }: { proposalStatus: string }) => {
         proposalStatus === 'active'
           ? 'bg-[#3C3299]'
           : proposalStatus === 'executed'
-          ? 'bg-[#1C1E5D]'
+          ? 'bg-[#1B730E]'
           : proposalStatus === 'cancelled'
           ? 'bg-[#C4428F]'
           : proposalStatus === 'rejected'
