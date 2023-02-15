@@ -19,4 +19,4 @@ default = []
 anchor-lang = "0.26.0"
 wormhole-core = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
 wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
-pyth-wormhole-attester-sdk = { path = "../../../../wormhole_attester/sdk/rust", features = ["solana"] }
+pyth-wormhole-attester-sdk = { path = "../../../../wormhole_attester/sdk/rust" }
