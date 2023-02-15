@@ -1,15 +1,11 @@
-import { ParsedVaa, parseVaa, postVaaSolana } from "@certusone/wormhole-sdk";
+import { parseVaa, postVaaSolana } from "@certusone/wormhole-sdk";
 import { signTransactionFactory } from "@certusone/wormhole-sdk/lib/cjs/solana";
-import {
-  derivePostedVaaKey,
-  getPostedVaa,
-} from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
+import { derivePostedVaaKey } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { parseProductData } from "@pythnetwork/client";
+import { AccountType, parseProductData } from "@pythnetwork/client";
 import {
   getPythClusterApiUrl,
-  getPythProgramKeyForCluster,
   PythCluster,
 } from "@pythnetwork/client/lib/cluster";
 import {
@@ -18,43 +14,31 @@ import {
   Connection,
   Keypair,
   PublicKey,
-  SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
 import * as fs from "fs";
 import {
   decodeGovernancePayload,
   ExecutePostedVaa,
+  getCreateAccountWithSeedInstruction,
   MultisigParser,
   PythMultisigInstruction,
   WORMHOLE_ADDRESS,
   WORMHOLE_API_ENDPOINT,
+  CLAIM_RECORD_SEED,
+  mapKey,
+  REMOTE_EXECUTOR_ADDRESS,
+  envOrErr,
 } from "xc_admin_common";
 
-export function envOrErr(env: string): string {
-  const val = process.env[env];
-  if (!val) {
-    throw new Error(`environment variable "${env}" must be set`);
-  }
-  return String(process.env[env]);
-}
-
-const REMOTE_EXECUTOR_ADDRESS = new PublicKey(
-  "exe6S3AxPVNmy46L4Nj6HrnnAVQUhwyYzMSNcnRn3qq"
-);
-
-const PRODUCT_ACCOUNT_SIZE = 512;
-const PRICE_ACCOUNT_SIZE = 3312;
-const CLAIM_RECORD_SEED = "CLAIM_RECORD";
-const EXECUTOR_KEY_SEED = "EXECUTOR_KEY";
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
-const COMMITMENT: Commitment =
-  (process.env.COMMITMENT as Commitment) ?? "confirmed";
-const OFFSET: number = Number(process.env.OFFSET ?? "-1");
 const EMITTER: PublicKey = new PublicKey(envOrErr("EMITTER"));
 const KEYPAIR: Keypair = Keypair.fromSecretKey(
   Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii")))
 );
+const OFFSET: number = Number(process.env.OFFSET ?? "-1");
+const COMMITMENT: Commitment =
+  (process.env.COMMITMENT as Commitment) ?? "confirmed";
 
 async function run() {
   const provider = new AnchorProvider(
@@ -65,6 +49,7 @@ async function run() {
       preflightCommitment: COMMITMENT,
     }
   );
+  const multisigParser = MultisigParser.fromCluster(CLUSTER);
 
   const remoteExecutor = await Program.at(REMOTE_EXECUTOR_ADDRESS, provider);
 
@@ -72,10 +57,7 @@ async function run() {
     [Buffer.from(CLAIM_RECORD_SEED), EMITTER.toBuffer()],
     remoteExecutor.programId
   )[0];
-  const executorKey: PublicKey = PublicKey.findProgramAddressSync(
-    [Buffer.from(EXECUTOR_KEY_SEED), EMITTER.toBuffer()],
-    remoteExecutor.programId
-  )[0];
+  const executorKey: PublicKey = mapKey(EMITTER);
   const claimRecord = await remoteExecutor.account.claimRecord.fetchNullable(
     claimRecordAddress
   );
@@ -105,7 +87,6 @@ async function run() {
         governancePayload instanceof ExecutePostedVaa &&
         governancePayload.targetChainId == "pythnet"
       ) {
-        const multisigParser = MultisigParser.fromCluster(CLUSTER);
         const preInstructions: TransactionInstruction[] = [];
 
         console.log(`Found VAA ${lastSequenceNumber}, relaying ...`);
@@ -139,25 +120,14 @@ async function run() {
             parsedInstruction instanceof PythMultisigInstruction &&
             parsedInstruction.name == "addProduct"
           ) {
-            const productSeed = "product:" + parsedInstruction.args.symbol;
-            const productAddress = await PublicKey.createWithSeed(
-              provider.wallet.publicKey,
-              productSeed,
-              getPythProgramKeyForCluster(CLUSTER as PythCluster)
-            );
             preInstructions.push(
-              SystemProgram.createAccountWithSeed({
-                fromPubkey: provider.wallet.publicKey,
-                basePubkey: provider.wallet.publicKey,
-                newAccountPubkey: productAddress,
-                seed: productSeed,
-                space: PRODUCT_ACCOUNT_SIZE,
-                lamports:
-                  await provider.connection.getMinimumBalanceForRentExemption(
-                    PRODUCT_ACCOUNT_SIZE
-                  ),
-                programId: getPythProgramKeyForCluster(CLUSTER as PythCluster),
-              })
+              await getCreateAccountWithSeedInstruction(
+                provider.connection,
+                CLUSTER,
+                provider.wallet.publicKey,
+                parsedInstruction.args.symbol,
+                AccountType.Product
+              )
             );
           } else if (
             parsedInstruction instanceof PythMultisigInstruction &&
@@ -167,28 +137,14 @@ async function run() {
               parsedInstruction.accounts.named.productAccount.pubkey
             );
             if (productAccount) {
-              const priceSeed =
-                "price:" + parseProductData(productAccount.data).product.symbol;
-              const priceAddress = await PublicKey.createWithSeed(
-                provider.wallet.publicKey,
-                priceSeed,
-                getPythProgramKeyForCluster(CLUSTER as PythCluster)
-              );
               preInstructions.push(
-                SystemProgram.createAccountWithSeed({
-                  fromPubkey: provider.wallet.publicKey,
-                  basePubkey: provider.wallet.publicKey,
-                  newAccountPubkey: priceAddress,
-                  seed: priceSeed,
-                  space: PRICE_ACCOUNT_SIZE,
-                  lamports:
-                    await provider.connection.getMinimumBalanceForRentExemption(
-                      PRICE_ACCOUNT_SIZE
-                    ),
-                  programId: getPythProgramKeyForCluster(
-                    CLUSTER as PythCluster
-                  ),
-                })
+                await getCreateAccountWithSeedInstruction(
+                  provider.connection,
+                  CLUSTER,
+                  provider.wallet.publicKey,
+                  parseProductData(productAccount.data).product.symbol,
+                  AccountType.Price
+                )
               );
             } else {
               throw Error("Product account not found");
@@ -204,16 +160,14 @@ async function run() {
           })
           .remainingAccounts(extraAccountMetas)
           .preInstructions(preInstructions)
-          .rpc();
+          .rpc({ skipPreflight: true });
       }
     } else if (response.code == 5) {
-      console.log(`Wormhole API failure`);
-      console.log(
-        `${wormholeApi}/v1/signed_vaa/1/${EMITTER.toBuffer().toString(
+      throw new Error(
+        `Wormhole API failure :${wormholeApi}/v1/signed_vaa/1/${EMITTER.toBuffer().toString(
           "hex"
         )}/${lastSequenceNumber}`
       );
-      break;
     } else {
       throw new Error("Could not connect to wormhole api");
     }
@@ -221,5 +175,10 @@ async function run() {
 }
 
 (async () => {
-  await run();
+  try {
+    await run();
+  } catch (err) {
+    console.error(err);
+    throw new Error();
+  }
 })();

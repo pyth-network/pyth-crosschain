@@ -11,6 +11,8 @@ import SquadsMesh, { DEFAULT_MULTISIG_PROGRAM_ID, getIxPDA } from "@sqds/mesh";
 import * as fs from "fs";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import {
+  envOrErr,
+  getCreateAccountWithSeedInstruction,
   getProposals,
   MultisigParser,
   PythMultisigInstruction,
@@ -20,44 +22,29 @@ import BN from "bn.js";
 import { AnchorProvider } from "@project-serum/anchor";
 import {
   getPythClusterApiUrl,
-  getPythProgramKeyForCluster,
   PythCluster,
 } from "@pythnetwork/client/lib/cluster";
 import {
   deriveFeeCollectorKey,
   getWormholeBridgeData,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { parseProductData } from "@pythnetwork/client";
+import { AccountType, parseProductData } from "@pythnetwork/client";
 
-export function envOrErr(env: string): string {
-  const val = process.env[env];
-  if (!val) {
-    throw new Error(`environment variable "${env}" must be set`);
-  }
-  return String(process.env[env]);
-}
-
-const PRODUCT_ACCOUNT_SIZE = 512;
-const PRICE_ACCOUNT_SIZE = 3312;
-
-const CLUSTER: string = envOrErr("CLUSTER");
-const COMMITMENT: Commitment =
-  (process.env.COMMITMENT as Commitment) ?? "confirmed";
+const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
 const VAULT: PublicKey = new PublicKey(envOrErr("VAULT"));
 const KEYPAIR: Keypair = Keypair.fromSecretKey(
   Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii")))
 );
+const COMMITMENT: Commitment =
+  (process.env.COMMITMENT as Commitment) ?? "confirmed";
 
 async function run() {
   const squad = new SquadsMesh({
-    connection: new Connection(
-      getPythClusterApiUrl(CLUSTER as PythCluster),
-      COMMITMENT
-    ),
+    connection: new Connection(getPythClusterApiUrl(CLUSTER), COMMITMENT),
     wallet: new NodeWallet(KEYPAIR),
     multisigProgramId: DEFAULT_MULTISIG_PROGRAM_ID,
   });
-  const multisigParser = MultisigParser.fromCluster(CLUSTER as PythCluster);
+  const multisigParser = MultisigParser.fromCluster(CLUSTER);
 
   const wormholeFee = multisigParser.wormholeBridgeAddress
     ? (
@@ -111,25 +98,14 @@ async function run() {
           parsedInstruction.name == "addProduct"
         ) {
           /// Add product, fetch the symbol from the instruction
-          const productSeed = "product:" + parsedInstruction.args.symbol;
-          const productAddress = await PublicKey.createWithSeed(
-            squad.wallet.publicKey,
-            productSeed,
-            getPythProgramKeyForCluster(CLUSTER as PythCluster)
-          );
           transaction.add(
-            SystemProgram.createAccountWithSeed({
-              fromPubkey: squad.wallet.publicKey,
-              basePubkey: squad.wallet.publicKey,
-              newAccountPubkey: productAddress,
-              seed: productSeed,
-              space: PRODUCT_ACCOUNT_SIZE,
-              lamports:
-                await squad.connection.getMinimumBalanceForRentExemption(
-                  PRODUCT_ACCOUNT_SIZE
-                ),
-              programId: getPythProgramKeyForCluster(CLUSTER as PythCluster),
-            })
+            await getCreateAccountWithSeedInstruction(
+              squad.connection,
+              CLUSTER,
+              squad.wallet.publicKey,
+              parsedInstruction.args.symbol,
+              AccountType.Product
+            )
           );
         } else if (
           parsedInstruction instanceof PythMultisigInstruction &&
@@ -140,26 +116,14 @@ async function run() {
             parsedInstruction.accounts.named.productAccount.pubkey
           );
           if (productAccount) {
-            const priceSeed =
-              "price:" + parseProductData(productAccount.data).product.symbol;
-            const priceAddress = await PublicKey.createWithSeed(
-              squad.wallet.publicKey,
-              priceSeed,
-              getPythProgramKeyForCluster(CLUSTER as PythCluster)
-            );
             transaction.add(
-              SystemProgram.createAccountWithSeed({
-                fromPubkey: squad.wallet.publicKey,
-                basePubkey: squad.wallet.publicKey,
-                newAccountPubkey: priceAddress,
-                seed: priceSeed,
-                space: PRICE_ACCOUNT_SIZE,
-                lamports:
-                  await squad.connection.getMinimumBalanceForRentExemption(
-                    PRICE_ACCOUNT_SIZE
-                  ),
-                programId: getPythProgramKeyForCluster(CLUSTER as PythCluster),
-              })
+              await getCreateAccountWithSeedInstruction(
+                squad.connection,
+                CLUSTER,
+                squad.wallet.publicKey,
+                parseProductData(productAccount.data).product.symbol,
+                AccountType.Price
+              )
             );
           } else {
             throw Error("Product account not found");
