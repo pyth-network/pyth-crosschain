@@ -16,6 +16,7 @@ import {
   getManyProposalsInstructions,
   getMultisigCluster,
   getRemoteCluster,
+  isRemoteCluster,
   MultisigInstruction,
   MultisigParser,
   PythMultisigInstruction,
@@ -745,6 +746,7 @@ const Proposal = ({
 
 const Proposals = () => {
   const router = useRouter()
+  const [allProposals, setAllProposals] = useState<TransactionAccount[]>([])
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
   const [currentProposalIndex, setCurrentProposalIndex] = useState<number>()
   const [allProposalsVerifiedArr, setAllProposalsVerifiedArr] = useState<
@@ -783,8 +785,34 @@ const Proposals = () => {
             })
           )
         )
+        console.log(parsedAllProposalsIxs)
+        const proposalsRes: TransactionAccount[] = []
+        const instructionsRes: MultisigInstruction[][] = []
+        // filter proposals for respective devnet/pythtest and mainnet-beta/pythnet clusters
+        parsedAllProposalsIxs.map((ixs, idx) => {
+          // pythtest/pythnet proposals
+          if (
+            isRemoteCluster(cluster) &&
+            ixs.length > 0 &&
+            ixs.every((ix) => ix instanceof WormholeMultisigInstruction)
+          ) {
+            proposalsRes.push(priceFeedMultisigProposals[idx])
+            instructionsRes.push(ixs)
+          }
+          // devnet/testnet/mainnet-beta proposals
+          if (
+            !isRemoteCluster(cluster) &&
+            (ixs.length === 0 ||
+              ixs.every((ix) => ix instanceof PythMultisigInstruction) ||
+              ixs.every((ix) => ix instanceof UnrecognizedProgram))
+          ) {
+            proposalsRes.push(priceFeedMultisigProposals[idx])
+            instructionsRes.push(ixs)
+          }
+        })
+        setAllProposals(proposalsRes)
+        setAllProposalsIxs(instructionsRes)
         setIsAllProposalsIxsLoading(false)
-        setAllProposalsIxs(parsedAllProposalsIxs)
       }
     }
     fetchAllProposalsInstructions()
@@ -794,28 +822,30 @@ const Proposals = () => {
     if (!isAllProposalsIxsLoading) {
       const res: boolean[] = []
       allProposalsIxs.map((ixs) => {
-        const isAllIxsVerified = ixs.every(
-          (ix) =>
-            ix instanceof PythMultisigInstruction ||
-            (ix instanceof WormholeMultisigInstruction &&
-              ix.name === 'postMessage' &&
-              ix.governanceAction instanceof ExecutePostedVaa &&
-              ix.governanceAction.instructions.every((remoteIx) => {
-                const innerMultisigParser = MultisigParser.fromCluster(
-                  getRemoteCluster(cluster)
-                )
-                const parsedRemoteInstruction =
-                  innerMultisigParser.parseInstruction({
-                    programId: remoteIx.programId,
-                    data: remoteIx.data as Buffer,
-                    keys: remoteIx.keys as AccountMeta[],
-                  })
-                return (
-                  parsedRemoteInstruction instanceof PythMultisigInstruction
-                )
-              }) &&
-              ix.governanceAction.targetChainId === 'pythnet')
-        )
+        const isAllIxsVerified =
+          ixs.length > 0 &&
+          ixs.every(
+            (ix) =>
+              ix instanceof PythMultisigInstruction ||
+              (ix instanceof WormholeMultisigInstruction &&
+                ix.name === 'postMessage' &&
+                ix.governanceAction instanceof ExecutePostedVaa &&
+                ix.governanceAction.instructions.every((remoteIx) => {
+                  const innerMultisigParser = MultisigParser.fromCluster(
+                    getRemoteCluster(cluster)
+                  )
+                  const parsedRemoteInstruction =
+                    innerMultisigParser.parseInstruction({
+                      programId: remoteIx.programId,
+                      data: remoteIx.data as Buffer,
+                      keys: remoteIx.keys as AccountMeta[],
+                    })
+                  return (
+                    parsedRemoteInstruction instanceof PythMultisigInstruction
+                  )
+                }) &&
+                ix.governanceAction.targetChainId === 'pythnet')
+          )
         res.push(isAllIxsVerified)
       })
       setAllProposalsVerifiedArr(res)
@@ -842,10 +872,10 @@ const Proposals = () => {
 
   useEffect(() => {
     if (currentProposalPubkey) {
-      const currProposal = priceFeedMultisigProposals.find(
+      const currProposal = allProposals.find(
         (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
       )
-      const currProposalIndex = priceFeedMultisigProposals.findIndex(
+      const currProposalIndex = allProposals.findIndex(
         (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
       )
       setCurrentProposal(currProposal)
@@ -853,12 +883,7 @@ const Proposals = () => {
         currProposalIndex === -1 ? undefined : currProposalIndex
       )
     }
-  }, [
-    currentProposalPubkey,
-    priceFeedMultisigProposals,
-    allProposalsIxs,
-    cluster,
-  ])
+  }, [currentProposalPubkey, allProposals, allProposalsIxs, cluster])
 
   return (
     <div className="relative">
@@ -882,15 +907,15 @@ const Proposals = () => {
                 <div className="mt-3">
                   <Loadbar theme="light" />
                 </div>
-              ) : priceFeedMultisigProposals.length > 0 ? (
+              ) : allProposals.length > 0 ? (
                 <>
                   <div className="pb-4">
                     <h4 className="h4">
-                      Total Proposals: {priceFeedMultisigProposals.length}
+                      Total Proposals: {allProposals.length}
                     </h4>
                   </div>
                   <div className="flex flex-col">
-                    {priceFeedMultisigProposals.map((proposal, idx) => (
+                    {allProposals.map((proposal, idx) => (
                       <ProposalRow
                         key={idx}
                         proposal={proposal}
