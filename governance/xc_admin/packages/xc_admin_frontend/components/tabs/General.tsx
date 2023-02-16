@@ -547,7 +547,6 @@ const General = () => {
   }
 
   const NewPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => {
-    priceFeedData.metadata.quote_currency
     return (
       <>
         <MetadataChangesRows
