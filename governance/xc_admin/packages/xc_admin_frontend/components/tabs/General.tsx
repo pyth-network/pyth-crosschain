@@ -11,7 +11,6 @@ import {
   getMultisigCluster,
   isRemoteCluster,
   mapKey,
-  OPS_KEY,
   proposeInstructions,
   WORMHOLE_ADDRESS,
 } from 'xc_admin_common'
@@ -458,6 +457,7 @@ const General = () => {
             priceAccountKey === 'publishers' ? (
               addNewPriceFeed ? (
                 <PublisherKeysChangesRows
+                  key={priceAccountKey}
                   changes={{
                     new: priceAccount[priceAccountKey],
                   }}
@@ -466,6 +466,7 @@ const General = () => {
                 JSON.stringify(changes.prev[index][priceAccountKey]) !==
                   JSON.stringify(priceAccount[priceAccountKey]) && (
                   <PublisherKeysChangesRows
+                    key={priceAccountKey}
                     changes={{
                       prev: changes.prev[index][priceAccountKey],
                       new: priceAccount[priceAccountKey],
@@ -546,10 +547,15 @@ const General = () => {
   }
 
   const NewPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => {
+    priceFeedData.metadata.quote_currency
     return (
       <>
-        <MetadataChangesRows changes={{ new: priceFeedData.metadata }} />
+        <MetadataChangesRows
+          key={priceFeedData.key + 'metadata'}
+          changes={{ new: priceFeedData.metadata }}
+        />
         <PriceAccountsChangesRows
+          key={priceFeedData.key + 'priceAccounts'}
           changes={{ new: priceFeedData.priceAccounts }}
         />
       </>
@@ -583,15 +589,17 @@ const General = () => {
                     </td>
                   </tr>
                   {addNewPriceFeed ? (
-                    <NewPriceFeedsRows priceFeedData={newChanges} />
+                    <NewPriceFeedsRows key={key} priceFeedData={newChanges} />
                   ) : (
                     diff.map((k) =>
                       k === 'metadata' ? (
                         <MetadataChangesRows
+                          key={k}
                           changes={{ prev: prev[k], new: newChanges[k] }}
                         />
                       ) : k === 'priceAccounts' ? (
                         <PriceAccountsChangesRows
+                          key={k}
                           changes={{
                             prev: prev[k],
                             new: newChanges[k],
