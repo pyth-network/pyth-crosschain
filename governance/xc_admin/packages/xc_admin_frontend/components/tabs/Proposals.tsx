@@ -1,6 +1,4 @@
-import { BN } from '@coral-xyz/anchor'
 import { AccountMeta, PublicKey } from '@solana/web3.js'
-import { getIxPDA } from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import copy from 'copy-to-clipboard'
 import { useRouter } from 'next/router'
@@ -15,6 +13,7 @@ import {
 import toast from 'react-hot-toast'
 import {
   ExecutePostedVaa,
+  getManyProposalsInstructions,
   getMultisigCluster,
   getRemoteCluster,
   MultisigInstruction,
@@ -43,9 +42,11 @@ const isPubkey = (str: string) => {
 
 const ProposalRow = ({
   proposal,
+  verified,
   setCurrentProposalPubkey,
 }: {
   proposal: TransactionAccount
+  verified: boolean
   setCurrentProposalPubkey: Dispatch<SetStateAction<string | undefined>>
 }) => {
   const status = Object.keys(proposal.status)[0]
@@ -86,8 +87,10 @@ const ProposalRow = ({
               proposal.publicKey.toBase58().slice(-6)}
           </span>{' '}
         </div>
-
-        <StatusTag proposalStatus={status} />
+        <div className="flex space-x-2">
+          <VerifiedTag isVerified={verified} />
+          <StatusTag proposalStatus={status} />
+        </div>
       </div>
     </div>
   )
@@ -129,82 +132,37 @@ const StatusTag = ({ proposalStatus }: { proposalStatus: string }) => {
   )
 }
 
+const VerifiedTag = ({ isVerified }: { isVerified: boolean }) => {
+  return (
+    <div
+      className={`flex items-center justify-center rounded-full py-1 px-2 text-xs ${
+        isVerified ? 'bg-[#187B51]' : 'bg-[#8D2D41]'
+      }`}
+    >
+      {isVerified ? 'verified' : 'unverified'}
+    </div>
+  )
+}
+
 const Proposal = ({
   proposal,
+  instructions,
+  verified,
   multisig,
 }: {
   proposal: TransactionAccount | undefined
+  instructions: MultisigInstruction[]
+  verified: boolean
   multisig: MultisigAccount | undefined
 }) => {
-  const [proposalInstructions, setProposalInstructions] = useState<
-    MultisigInstruction[]
-  >([])
-  const [isProposalInstructionsLoading, setIsProposalInstructionsLoading] =
-    useState(false)
-  const [isVerified, setIsVerified] = useState(false)
   const { cluster } = useContext(ClusterContext)
   const { squads, isLoading: isMultisigLoading } = useMultisigContext()
 
   const proposalStatus = proposal ? Object.keys(proposal.status)[0] : 'unknown'
 
-  useEffect(() => {
-    const fetchProposalInstructions = async () => {
-      const multisigParser = MultisigParser.fromCluster(
-        getMultisigCluster(cluster)
-      )
-      if (squads && proposal) {
-        setIsProposalInstructionsLoading(true)
-        const proposalIxs = []
-        for (let i = 1; i <= proposal.instructionIndex; i++) {
-          const instructionPda = getIxPDA(
-            proposal.publicKey,
-            new BN(i),
-            squads.multisigProgramId
-          )[0]
-          const instruction = await squads.getInstruction(instructionPda)
-          const parsedInstruction = multisigParser.parseInstruction({
-            programId: instruction.programId,
-            data: instruction.data as Buffer,
-            keys: instruction.keys as AccountMeta[],
-          })
-          proposalIxs.push(parsedInstruction)
-        }
-        setIsVerified(
-          proposalIxs.every(
-            (ix) =>
-              ix instanceof PythMultisigInstruction ||
-              (ix instanceof WormholeMultisigInstruction &&
-                ix.name === 'postMessage' &&
-                ix.governanceAction instanceof ExecutePostedVaa &&
-                ix.governanceAction.instructions.every((remoteIx) => {
-                  const innerMultisigParser = MultisigParser.fromCluster(
-                    getRemoteCluster(cluster)
-                  )
-                  const parsedRemoteInstruction =
-                    innerMultisigParser.parseInstruction({
-                      programId: remoteIx.programId,
-                      data: remoteIx.data as Buffer,
-                      keys: remoteIx.keys as AccountMeta[],
-                    })
-                  return (
-                    parsedRemoteInstruction instanceof PythMultisigInstruction
-                  )
-                }) &&
-                ix.governanceAction.targetChainId === 'pythnet')
-          )
-        )
-        setProposalInstructions(proposalIxs)
-        setIsProposalInstructionsLoading(false)
-      }
-    }
-
-    fetchProposalInstructions()
-  }, [proposal, squads, cluster])
-
   const handleClickApprove = async () => {
     if (proposal && squads) {
       try {
-        console.log(squads.wallet.publicKey.toBase58())
         await squads.approveTransaction(proposal.publicKey)
         toast.success(`Approved proposal ${proposal.publicKey.toBase58()}`)
       } catch (e: any) {
@@ -248,19 +206,12 @@ const Proposal = ({
 
   return proposal !== undefined &&
     multisig !== undefined &&
-    !isMultisigLoading &&
-    !isProposalInstructionsLoading ? (
+    !isMultisigLoading ? (
     <div className="grid grid-cols-3 gap-4">
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-2">
         <div className="flex justify-between">
           <h4 className="h4 font-semibold">Info</h4>
-          <div
-            className={`flex items-center justify-center rounded-full py-1 px-2 text-xs ${
-              isVerified ? 'bg-[#187B51]' : 'bg-[#8D2D41]'
-            }`}
-          >
-            {isVerified ? 'Verified' : 'Unverified'}
-          </div>
+          <VerifiedTag isVerified={verified} />
         </div>
         <hr className="border-gray-700" />
         <div className="flex justify-between">
@@ -339,9 +290,11 @@ const Proposal = ({
         ) : null}
       </div>
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
-        <h4 className="h4 font-semibold">Instructions</h4>
+        <h4 className="h4 font-semibold">
+          Total Instructions: {instructions.length}
+        </h4>
         <hr className="border-gray-700" />
-        {proposalInstructions?.map((instruction, index) => (
+        {instructions?.map((instruction, index) => (
           <>
             <h4 className="h4 text-[20px] font-semibold">
               Instruction {index + 1}
@@ -827,7 +780,7 @@ const Proposal = ({
               </div>
             ) : null}
 
-            {index !== proposalInstructions.length - 1 ? (
+            {index !== instructions.length - 1 ? (
               <hr className="border-gray-700" />
             ) : null}
           </>
@@ -844,12 +797,81 @@ const Proposal = ({
 const Proposals = () => {
   const router = useRouter()
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
+  const [currentProposalIndex, setCurrentProposalIndex] = useState<number>()
+  const [allProposalsVerifiedArr, setAllProposalsVerifiedArr] = useState<
+    boolean[]
+  >([])
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
+  const [allProposalsIxs, setAllProposalsIxs] = useState<
+    MultisigInstruction[][]
+  >([])
+  const [isAllProposalsIxsLoading, setIsAllProposalsIxsLoading] =
+    useState<boolean>(true)
+  const { cluster } = useContext(ClusterContext)
   const {
+    squads,
     priceFeedMultisigAccount,
     priceFeedMultisigProposals,
     isLoading: isMultisigLoading,
   } = useMultisigContext()
+
+  useEffect(() => {
+    const fetchAllProposalsInstructions = async () => {
+      if (squads) {
+        const allProposalsIxs = await getManyProposalsInstructions(
+          squads,
+          priceFeedMultisigProposals
+        )
+        const multisigParser = MultisigParser.fromCluster(
+          getMultisigCluster(cluster)
+        )
+        const parsedAllProposalsIxs = allProposalsIxs.map((ixs) =>
+          ixs.map((ix) =>
+            multisigParser.parseInstruction({
+              programId: ix.programId,
+              data: ix.data as Buffer,
+              keys: ix.keys as AccountMeta[],
+            })
+          )
+        )
+        setIsAllProposalsIxsLoading(false)
+        setAllProposalsIxs(parsedAllProposalsIxs)
+      }
+    }
+    fetchAllProposalsInstructions()
+  }, [squads, priceFeedMultisigProposals, cluster])
+
+  useEffect(() => {
+    if (!isAllProposalsIxsLoading) {
+      const res: boolean[] = []
+      allProposalsIxs.map((ixs) => {
+        const isAllIxsVerified = ixs.every(
+          (ix) =>
+            ix instanceof PythMultisigInstruction ||
+            (ix instanceof WormholeMultisigInstruction &&
+              ix.name === 'postMessage' &&
+              ix.governanceAction instanceof ExecutePostedVaa &&
+              ix.governanceAction.instructions.every((remoteIx) => {
+                const innerMultisigParser = MultisigParser.fromCluster(
+                  getRemoteCluster(cluster)
+                )
+                const parsedRemoteInstruction =
+                  innerMultisigParser.parseInstruction({
+                    programId: remoteIx.programId,
+                    data: remoteIx.data as Buffer,
+                    keys: remoteIx.keys as AccountMeta[],
+                  })
+                return (
+                  parsedRemoteInstruction instanceof PythMultisigInstruction
+                )
+              }) &&
+              ix.governanceAction.targetChainId === 'pythnet')
+        )
+        res.push(isAllIxsVerified)
+      })
+      setAllProposalsVerifiedArr(res)
+    }
+  }, [allProposalsIxs, isAllProposalsIxsLoading, cluster])
 
   const handleClickBackToPriceFeeds = () => {
     delete router.query.proposal
@@ -871,12 +893,23 @@ const Proposals = () => {
 
   useEffect(() => {
     if (currentProposalPubkey) {
-      const currentProposal = priceFeedMultisigProposals.find(
+      const currProposal = priceFeedMultisigProposals.find(
         (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
       )
-      setCurrentProposal(currentProposal)
+      const currProposalIndex = priceFeedMultisigProposals.findIndex(
+        (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
+      )
+      setCurrentProposal(currProposal)
+      setCurrentProposalIndex(
+        currProposalIndex === -1 ? undefined : currProposalIndex
+      )
     }
-  }, [currentProposalPubkey, priceFeedMultisigProposals])
+  }, [
+    currentProposalPubkey,
+    priceFeedMultisigProposals,
+    allProposalsIxs,
+    cluster,
+  ])
 
   return (
     <div className="relative">
@@ -896,26 +929,34 @@ const Proposals = () => {
               </div>
             </div>
             <div className="relative mt-6">
-              {isMultisigLoading ? (
+              {isMultisigLoading || isAllProposalsIxsLoading ? (
                 <div className="mt-3">
                   <Loadbar theme="light" />
                 </div>
               ) : priceFeedMultisigProposals.length > 0 ? (
-                <div className="flex flex-col">
-                  {priceFeedMultisigProposals.map((proposal, idx) => (
-                    <ProposalRow
-                      key={idx}
-                      proposal={proposal}
-                      setCurrentProposalPubkey={setCurrentProposalPubkey}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="pb-4">
+                    <h4 className="h4">
+                      Total Proposals: {priceFeedMultisigProposals.length}
+                    </h4>
+                  </div>
+                  <div className="flex flex-col">
+                    {priceFeedMultisigProposals.map((proposal, idx) => (
+                      <ProposalRow
+                        key={idx}
+                        proposal={proposal}
+                        verified={allProposalsVerifiedArr[idx]}
+                        setCurrentProposalPubkey={setCurrentProposalPubkey}
+                      />
+                    ))}
+                  </div>
+                </>
               ) : (
                 "No proposals found. If you're a member of the price feed multisig, you can create a proposal."
               )}
             </div>
           </>
-        ) : (
+        ) : !isAllProposalsIxsLoading && currentProposalIndex !== undefined ? (
           <>
             <div
               className="max-w-fit cursor-pointer bg-darkGray2 p-3 text-xs font-semibold outline-none transition-colors hover:bg-darkGray3 md:text-base"
@@ -926,10 +967,16 @@ const Proposals = () => {
             <div className="relative mt-6">
               <Proposal
                 proposal={currentProposal}
+                instructions={allProposalsIxs[currentProposalIndex]}
+                verified={allProposalsVerifiedArr[currentProposalIndex]}
                 multisig={priceFeedMultisigAccount}
               />
             </div>
           </>
+        ) : (
+          <div className="mt-3">
+            <Loadbar theme="light" />
+          </div>
         )}
       </div>
     </div>
