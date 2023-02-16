@@ -63,7 +63,7 @@ const ProposalRow = ({
           query: router.query,
         },
         undefined,
-        { scroll: false }
+        { scroll: true }
       )
     },
     [setCurrentProposalPubkey, router]
