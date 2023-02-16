@@ -25,6 +25,7 @@ import {
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
+import { usePythContext } from '../../contexts/PythContext'
 import VerifiedIcon from '../../images/icons/verified.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
@@ -151,6 +152,25 @@ const VerifiedIconWithTooltip = () => {
   )
 }
 
+const ParsedAccountPubkeyRow = ({
+  mapping,
+  title,
+  pubkey,
+}: {
+  mapping: { [key: string]: string }
+  title: string
+  pubkey: string
+}) => {
+  return (
+    <div className="flex justify-between pb-3">
+      <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
+        &#10551; {title}
+      </div>
+      <div className="space-y-2 sm:flex sm:space-x-2">{mapping[pubkey]}</div>
+    </div>
+  )
+}
+
 const Proposal = ({
   proposal,
   instructions,
@@ -162,8 +182,31 @@ const Proposal = ({
   verified: boolean
   multisig: MultisigAccount | undefined
 }) => {
+  const [
+    productAccountKeyToSymbolMapping,
+    setProductAccountKeyToSymbolMapping,
+  ] = useState<{ [key: string]: string }>({})
+  const [priceAccountKeyToSymbolMapping, setPriceAccountKeyToSymbolMapping] =
+    useState<{ [key: string]: string }>({})
   const { cluster } = useContext(ClusterContext)
   const { squads, isLoading: isMultisigLoading } = useMultisigContext()
+  const { rawConfig, dataIsLoading, connection } = usePythContext()
+
+  useEffect(() => {
+    if (!dataIsLoading) {
+      const productAccountMapping: { [key: string]: string } = {}
+      const priceAccountMapping: { [key: string]: string } = {}
+      rawConfig.mappingAccounts.map((acc) =>
+        acc.products.map((prod) => {
+          productAccountMapping[prod.address.toBase58()] = prod.metadata.symbol
+          priceAccountMapping[prod.priceAccounts[0].address.toBase58()] =
+            prod.metadata.symbol
+        })
+      )
+      setProductAccountKeyToSymbolMapping(productAccountMapping)
+      setPriceAccountKeyToSymbolMapping(priceAccountMapping)
+    }
+  }, [rawConfig, dataIsLoading])
 
   const proposalStatus = proposal ? Object.keys(proposal.status)[0] : 'unknown'
 
@@ -415,8 +458,8 @@ const Proposal = ({
                             <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
                               {key}
                             </div>
-                            <div className="space-y-2 sm:flex sm:space-x-2">
-                              <div className="flex items-center space-x-2 sm:mt-2 sm:ml-2">
+                            <div className="space-y-2 sm:flex sm:space-y-0 sm:space-x-2">
+                              <div className="flex items-center space-x-2 sm:ml-2">
                                 {instruction.accounts.named[key].isSigner ? (
                                   <SignerTag />
                                 ) : null}
@@ -431,6 +474,29 @@ const Proposal = ({
                               />
                             </div>
                           </div>
+                          {key === 'priceAccount' &&
+                          instruction.accounts.named[key].pubkey.toBase58() in
+                            priceAccountKeyToSymbolMapping ? (
+                            <ParsedAccountPubkeyRow
+                              key="priceAccountPubkey"
+                              mapping={priceAccountKeyToSymbolMapping}
+                              title="symbol"
+                              pubkey={instruction.accounts.named[
+                                key
+                              ].pubkey.toBase58()}
+                            />
+                          ) : key === 'productAccount' &&
+                            instruction.accounts.named[key].pubkey.toBase58() in
+                              productAccountKeyToSymbolMapping ? (
+                            <ParsedAccountPubkeyRow
+                              key="productAccountPubkey"
+                              mapping={productAccountKeyToSymbolMapping}
+                              title="symbol"
+                              pubkey={instruction.accounts.named[
+                                key
+                              ].pubkey.toBase58()}
+                            />
+                          ) : null}
                         </>
                       )
                     )}
@@ -632,8 +698,8 @@ const Proposal = ({
                                           <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
                                             {key}
                                           </div>
-                                          <div className="space-y-2 sm:flex sm:space-x-2">
-                                            <div className="flex items-center space-x-2 sm:mt-2 sm:ml-2">
+                                          <div className="space-y-2 sm:flex sm:space-y-0 sm:space-x-2">
+                                            <div className="flex items-center space-x-2 sm:ml-2">
                                               {parsedInstruction.accounts.named[
                                                 key
                                               ].isSigner ? (
@@ -652,6 +718,37 @@ const Proposal = ({
                                             />
                                           </div>
                                         </div>
+                                        {key === 'priceAccount' &&
+                                        parsedInstruction.accounts.named[
+                                          key
+                                        ].pubkey.toBase58() in
+                                          priceAccountKeyToSymbolMapping ? (
+                                          <ParsedAccountPubkeyRow
+                                            key="priceAccountPubkey"
+                                            mapping={
+                                              priceAccountKeyToSymbolMapping
+                                            }
+                                            title="symbol"
+                                            pubkey={parsedInstruction.accounts.named[
+                                              key
+                                            ].pubkey.toBase58()}
+                                          />
+                                        ) : key === 'productAccount' &&
+                                          parsedInstruction.accounts.named[
+                                            key
+                                          ].pubkey.toBase58() in
+                                            productAccountKeyToSymbolMapping ? (
+                                          <ParsedAccountPubkeyRow
+                                            key="productAccountPubkey"
+                                            mapping={
+                                              productAccountKeyToSymbolMapping
+                                            }
+                                            title="symbol"
+                                            pubkey={parsedInstruction.accounts.named[
+                                              key
+                                            ].pubkey.toBase58()}
+                                          />
+                                        ) : null}
                                       </>
                                     ))}
                                   </div>
@@ -785,7 +882,6 @@ const Proposals = () => {
             })
           )
         )
-        console.log(parsedAllProposalsIxs)
         const proposalsRes: TransactionAccount[] = []
         const instructionsRes: MultisigInstruction[][] = []
         // filter proposals for respective devnet/pythtest and mainnet-beta/pythnet clusters
