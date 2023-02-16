@@ -414,29 +414,6 @@ const General = () => {
     }
   }
 
-  const AddressChangesRow = ({ changes }: { changes: any }) => {
-    const key = 'address'
-    return (
-      <>
-        {changes.prev !== changes.new && (
-          <tr key={key}>
-            <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
-              {key
-                .split('_')
-                .map((word) => capitalizeFirstLetter(word))
-                .join(' ')}
-            </td>
-            <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
-              <s>{changes.prev}</s>
-              <br />
-              {changes.new}
-            </td>
-          </tr>
-        )}
-      </>
-    )
-  }
-
   const MetadataChangesRows = ({ changes }: { changes: any }) => {
     const addNewPriceFeed =
       changes.prev === undefined && changes.new !== undefined
@@ -481,7 +458,6 @@ const General = () => {
             priceAccountKey === 'publishers' ? (
               addNewPriceFeed ? (
                 <PublisherKeysChangesRows
-                  key={priceAccountKey}
                   changes={{
                     new: priceAccount[priceAccountKey],
                   }}
@@ -490,7 +466,6 @@ const General = () => {
                 JSON.stringify(changes.prev[index][priceAccountKey]) !==
                   JSON.stringify(priceAccount[priceAccountKey]) && (
                   <PublisherKeysChangesRows
-                    key={priceAccountKey}
                     changes={{
                       prev: changes.prev[index][priceAccountKey],
                       new: priceAccount[priceAccountKey],
@@ -571,20 +546,10 @@ const General = () => {
   }
 
   const NewPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => {
-    const key =
-      priceFeedData.metadata.asset_type +
-      '.' +
-      priceFeedData.metadata.base +
-      '/' +
-      priceFeedData.metadata.quote_currency
     return (
       <>
-        <MetadataChangesRows
-          key={key + 'metadata'}
-          changes={{ new: priceFeedData.metadata }}
-        />
+        <MetadataChangesRows changes={{ new: priceFeedData.metadata }} />
         <PriceAccountsChangesRows
-          key={key + 'priceAccounts'}
           changes={{ new: priceFeedData.priceAccounts }}
         />
       </>
@@ -618,22 +583,15 @@ const General = () => {
                     </td>
                   </tr>
                   {addNewPriceFeed ? (
-                    <NewPriceFeedsRows key={key} priceFeedData={newChanges} />
+                    <NewPriceFeedsRows priceFeedData={newChanges} />
                   ) : (
                     diff.map((k) =>
-                      k === 'address' ? (
-                        <AddressChangesRow
-                          key={k}
-                          changes={{ prev: prev[k], new: newChanges[k] }}
-                        />
-                      ) : k === 'metadata' ? (
+                      k === 'metadata' ? (
                         <MetadataChangesRows
-                          key={k}
                           changes={{ prev: prev[k], new: newChanges[k] }}
                         />
                       ) : k === 'priceAccounts' ? (
                         <PriceAccountsChangesRows
-                          key={k}
                           changes={{
                             prev: prev[k],
                             new: newChanges[k],
