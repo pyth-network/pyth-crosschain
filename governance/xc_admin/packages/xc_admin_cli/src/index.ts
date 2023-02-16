@@ -311,7 +311,7 @@ mutlisigCommand("propose-token-transfer", "Propose token transfer")
   .option(
     "-m --mint <pubkey>",
     "mint to transfer",
-    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" // default value is USDC SPL
+    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" // default value is solana mainnet USDC SPL
   )
   .action(async (options: any) => {
     const wallet = await loadHotWalletOrLedger(
