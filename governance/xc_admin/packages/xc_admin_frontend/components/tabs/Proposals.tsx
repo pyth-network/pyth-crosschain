@@ -143,7 +143,7 @@ const VerifiedIconWithTooltip = () => {
           </Tooltip.Trigger>
           <Tooltip.Content side="top" sideOffset={8}>
             <span className="inline-block bg-darkGray3 p-2 text-xs text-light hoverable:bg-darkGray">
-              The instructions in this proposals are verified.
+              The instructions in this proposal are verified.
             </span>
           </Tooltip.Content>
         </Tooltip.Root>
