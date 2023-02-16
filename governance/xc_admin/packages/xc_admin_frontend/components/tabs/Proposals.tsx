@@ -1,6 +1,6 @@
+import * as Tooltip from '@radix-ui/react-tooltip'
 import { AccountMeta, PublicKey } from '@solana/web3.js'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
-import copy from 'copy-to-clipboard'
 import { useRouter } from 'next/router'
 import {
   Dispatch,
@@ -24,7 +24,7 @@ import {
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
-import CopyIcon from '../../images/icons/copy.inline.svg'
+import VerifiedIcon from '../../images/icons/verified.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import CopyPubkey from '../common/CopyPubkey'
@@ -76,8 +76,7 @@ const ProposalRow = ({
       }
     >
       <div className="flex justify-between p-4">
-        <div>
-          {' '}
+        <div className="flex">
           <span className="mr-2 hidden sm:block">
             {proposal.publicKey.toBase58()}
           </span>
@@ -86,9 +85,9 @@ const ProposalRow = ({
               '...' +
               proposal.publicKey.toBase58().slice(-6)}
           </span>{' '}
+          {verified ? <VerifiedIconWithTooltip /> : null}
         </div>
-        <div className="flex space-x-2">
-          <VerifiedTag isVerified={verified} />
+        <div>
           <StatusTag proposalStatus={status} />
         </div>
       </div>
@@ -132,14 +131,21 @@ const StatusTag = ({ proposalStatus }: { proposalStatus: string }) => {
   )
 }
 
-const VerifiedTag = ({ isVerified }: { isVerified: boolean }) => {
+const VerifiedIconWithTooltip = () => {
   return (
-    <div
-      className={`flex items-center justify-center rounded-full py-1 px-2 text-xs ${
-        isVerified ? 'bg-[#187B51]' : 'bg-[#8D2D41]'
-      }`}
-    >
-      {isVerified ? 'verified' : 'unverified'}
+    <div className="flex items-center">
+      <Tooltip.Provider delayDuration={100} skipDelayDuration={500}>
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            <VerifiedIcon />
+          </Tooltip.Trigger>
+          <Tooltip.Content side="top" sideOffset={8}>
+            <span className="inline-block bg-darkGray3 p-2 text-xs text-light hoverable:bg-darkGray">
+              The instructions in this proposals are verified.
+            </span>
+          </Tooltip.Content>
+        </Tooltip.Root>
+      </Tooltip.Provider>
     </div>
   )
 }
@@ -211,7 +217,7 @@ const Proposal = ({
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-2">
         <div className="flex justify-between">
           <h4 className="h4 font-semibold">Info</h4>
-          <VerifiedTag isVerified={verified} />
+          {verified ? <VerifiedIconWithTooltip /> : null}
         </div>
         <hr className="border-gray-700" />
         <div className="flex justify-between">
@@ -471,22 +477,7 @@ const Proposal = ({
                           <div className="flex space-x-2">
                             {key.isSigner ? <SignerTag /> : null}
                             {key.isWritable ? <WritableTag /> : null}
-                            <div
-                              className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
-                              onClick={() => {
-                                copy(key.pubkey.toBase58())
-                              }}
-                            >
-                              <span className="mr-2 hidden xl:block">
-                                {key.pubkey.toBase58()}
-                              </span>
-                              <span className="mr-2 xl:hidden">
-                                {key.pubkey.toBase58().slice(0, 6) +
-                                  '...' +
-                                  key.pubkey.toBase58().slice(-6)}
-                              </span>{' '}
-                              <CopyIcon className="shrink-0" />
-                            </div>
+                            <CopyPubkey pubkey={key.pubkey.toBase58()} />
                           </div>
                         </div>
                       </>
@@ -653,36 +644,11 @@ const Proposal = ({
                                                 <WritableTag />
                                               ) : null}
                                             </div>
-                                            <div
-                                              className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
-                                              onClick={() => {
-                                                copy(
-                                                  parsedInstruction.accounts.named[
-                                                    key
-                                                  ].pubkey.toBase58()
-                                                )
-                                              }}
-                                            >
-                                              <span className="mr-2 hidden xl:block">
-                                                {parsedInstruction.accounts.named[
-                                                  key
-                                                ].pubkey.toBase58()}
-                                              </span>
-                                              <span className="mr-2 xl:hidden">
-                                                {parsedInstruction.accounts.named[
-                                                  key
-                                                ].pubkey
-                                                  .toBase58()
-                                                  .slice(0, 6) +
-                                                  '...' +
-                                                  parsedInstruction.accounts.named[
-                                                    key
-                                                  ].pubkey
-                                                    .toBase58()
-                                                    .slice(-6)}
-                                              </span>{' '}
-                                              <CopyIcon className="shrink-0" />
-                                            </div>
+                                            <CopyPubkey
+                                              pubkey={parsedInstruction.accounts.named[
+                                                key
+                                              ].pubkey.toBase58()}
+                                            />
                                           </div>
                                         </div>
                                       </>
@@ -743,26 +709,9 @@ const Proposal = ({
                                               {key.isWritable ? (
                                                 <WritableTag />
                                               ) : null}
-                                              <div
-                                                className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
-                                                onClick={() => {
-                                                  copy(key.pubkey.toBase58())
-                                                }}
-                                              >
-                                                <span className="mr-2 hidden xl:block">
-                                                  {key.pubkey.toBase58()}
-                                                </span>
-                                                <span className="mr-2 xl:hidden">
-                                                  {key.pubkey
-                                                    .toBase58()
-                                                    .slice(0, 6) +
-                                                    '...' +
-                                                    key.pubkey
-                                                      .toBase58()
-                                                      .slice(-6)}
-                                                </span>{' '}
-                                                <CopyIcon className="shrink-0" />
-                                              </div>
+                                              <CopyPubkey
+                                                pubkey={key.pubkey.toBase58()}
+                                              />
                                             </div>
                                           </div>
                                         </>
