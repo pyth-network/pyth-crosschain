@@ -267,8 +267,6 @@ const Proposal = ({
     }
   }
 
-  console.log(currentProposal)
-
   const handleClickExecute = async () => {
     if (proposal && squads) {
       try {
