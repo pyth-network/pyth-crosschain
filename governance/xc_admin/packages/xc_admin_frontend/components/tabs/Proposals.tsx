@@ -192,7 +192,11 @@ const Proposal = ({
   const [priceAccountKeyToSymbolMapping, setPriceAccountKeyToSymbolMapping] =
     useState<{ [key: string]: string }>({})
   const { cluster } = useContext(ClusterContext)
-  const { squads, isLoading: isMultisigLoading } = useMultisigContext()
+  const {
+    squads,
+    isLoading: isMultisigLoading,
+    setpriceFeedMultisigProposals,
+  } = useMultisigContext()
   const { rawConfig, dataIsLoading, connection } = usePythContext()
 
   useEffect(() => {
@@ -216,6 +220,20 @@ const Proposal = ({
   }, [rawConfig, dataIsLoading])
 
   const proposalStatus = proposal ? Object.keys(proposal.status)[0] : 'unknown'
+
+  useEffect(() => {
+    // update the priceFeedMultisigProposals with previous value but replace the current proposal with the updated one
+    if (currentProposal) {
+      setpriceFeedMultisigProposals((prevProposals: TransactionAccount[]) => {
+        const proposals = prevProposals.filter(
+          (proposal) =>
+            proposal.publicKey.toBase58() !==
+            currentProposal.publicKey.toBase58()
+        )
+        return [...proposals, currentProposal]
+      })
+    }
+  }, [currentProposal, setpriceFeedMultisigProposals])
 
   const handleClickApprove = async () => {
     if (proposal && squads) {
