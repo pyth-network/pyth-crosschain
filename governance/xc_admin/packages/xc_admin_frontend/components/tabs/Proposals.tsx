@@ -13,10 +13,7 @@ import {
 import toast from 'react-hot-toast'
 import {
   ExecutePostedVaa,
-  getManyProposalsInstructions,
-  getMultisigCluster,
   getRemoteCluster,
-  isRemoteCluster,
   MultisigInstruction,
   MultisigParser,
   PythMultisigInstruction,
@@ -843,81 +840,24 @@ const Proposal = ({
 
 const Proposals = () => {
   const router = useRouter()
-  const [allProposals, setAllProposals] = useState<TransactionAccount[]>([])
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
   const [currentProposalIndex, setCurrentProposalIndex] = useState<number>()
   const [allProposalsVerifiedArr, setAllProposalsVerifiedArr] = useState<
     boolean[]
   >([])
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
-  const [allProposalsIxs, setAllProposalsIxs] = useState<
-    MultisigInstruction[][]
-  >([])
-  const [isAllProposalsIxsLoading, setIsAllProposalsIxsLoading] =
-    useState<boolean>(true)
   const { cluster } = useContext(ClusterContext)
   const {
-    squads,
     priceFeedMultisigAccount,
     priceFeedMultisigProposals,
+    allProposalsIxsParsed,
     isLoading: isMultisigLoading,
   } = useMultisigContext()
 
   useEffect(() => {
-    const fetchAllProposalsInstructions = async () => {
-      if (squads) {
-        const allProposalsIxs = await getManyProposalsInstructions(
-          squads,
-          priceFeedMultisigProposals
-        )
-        const multisigParser = MultisigParser.fromCluster(
-          getMultisigCluster(cluster)
-        )
-        const parsedAllProposalsIxs = allProposalsIxs.map((ixs) =>
-          ixs.map((ix) =>
-            multisigParser.parseInstruction({
-              programId: ix.programId,
-              data: ix.data as Buffer,
-              keys: ix.keys as AccountMeta[],
-            })
-          )
-        )
-        const proposalsRes: TransactionAccount[] = []
-        const instructionsRes: MultisigInstruction[][] = []
-        // filter proposals for respective devnet/pythtest and mainnet-beta/pythnet clusters
-        parsedAllProposalsIxs.map((ixs, idx) => {
-          // pythtest/pythnet proposals
-          if (
-            isRemoteCluster(cluster) &&
-            ixs.length > 0 &&
-            ixs.every((ix) => ix instanceof WormholeMultisigInstruction)
-          ) {
-            proposalsRes.push(priceFeedMultisigProposals[idx])
-            instructionsRes.push(ixs)
-          }
-          // devnet/testnet/mainnet-beta proposals
-          if (
-            !isRemoteCluster(cluster) &&
-            (ixs.length === 0 ||
-              ixs.every((ix) => ix instanceof PythMultisigInstruction) ||
-              ixs.every((ix) => ix instanceof UnrecognizedProgram))
-          ) {
-            proposalsRes.push(priceFeedMultisigProposals[idx])
-            instructionsRes.push(ixs)
-          }
-        })
-        setAllProposals(proposalsRes)
-        setAllProposalsIxs(instructionsRes)
-        setIsAllProposalsIxsLoading(false)
-      }
-    }
-    fetchAllProposalsInstructions()
-  }, [squads, priceFeedMultisigProposals, cluster])
-
-  useEffect(() => {
-    if (!isAllProposalsIxsLoading) {
+    if (!isMultisigLoading) {
       const res: boolean[] = []
-      allProposalsIxs.map((ixs) => {
+      allProposalsIxsParsed.map((ixs, idx) => {
         const isAllIxsVerified =
           ixs.length > 0 &&
           ixs.every(
@@ -941,12 +881,19 @@ const Proposals = () => {
                   )
                 }) &&
                 ix.governanceAction.targetChainId === 'pythnet')
-          )
+          ) &&
+          Object.keys(priceFeedMultisigProposals[idx].status)[0] !== 'draft'
+
         res.push(isAllIxsVerified)
       })
       setAllProposalsVerifiedArr(res)
     }
-  }, [allProposalsIxs, isAllProposalsIxsLoading, cluster])
+  }, [
+    allProposalsIxsParsed,
+    isMultisigLoading,
+    cluster,
+    priceFeedMultisigProposals,
+  ])
 
   const handleClickBackToPriceFeeds = () => {
     delete router.query.proposal
@@ -968,10 +915,10 @@ const Proposals = () => {
 
   useEffect(() => {
     if (currentProposalPubkey) {
-      const currProposal = allProposals.find(
+      const currProposal = priceFeedMultisigProposals.find(
         (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
       )
-      const currProposalIndex = allProposals.findIndex(
+      const currProposalIndex = priceFeedMultisigProposals.findIndex(
         (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
       )
       setCurrentProposal(currProposal)
@@ -979,7 +926,12 @@ const Proposals = () => {
         currProposalIndex === -1 ? undefined : currProposalIndex
       )
     }
-  }, [currentProposalPubkey, allProposals, allProposalsIxs, cluster])
+  }, [
+    currentProposalPubkey,
+    priceFeedMultisigProposals,
+    allProposalsIxsParsed,
+    cluster,
+  ])
 
   return (
     <div className="relative">
@@ -999,19 +951,19 @@ const Proposals = () => {
               </div>
             </div>
             <div className="relative mt-6">
-              {isMultisigLoading || isAllProposalsIxsLoading ? (
+              {isMultisigLoading ? (
                 <div className="mt-3">
                   <Loadbar theme="light" />
                 </div>
-              ) : allProposals.length > 0 ? (
+              ) : priceFeedMultisigProposals.length > 0 ? (
                 <>
                   <div className="pb-4">
                     <h4 className="h4">
-                      Total Proposals: {allProposals.length}
+                      Total Proposals: {priceFeedMultisigProposals.length}
                     </h4>
                   </div>
                   <div className="flex flex-col">
-                    {allProposals.map((proposal, idx) => (
+                    {priceFeedMultisigProposals.map((proposal, idx) => (
                       <ProposalRow
                         key={idx}
                         proposal={proposal}
@@ -1026,7 +978,7 @@ const Proposals = () => {
               )}
             </div>
           </>
-        ) : !isAllProposalsIxsLoading && currentProposalIndex !== undefined ? (
+        ) : !isMultisigLoading && currentProposalIndex !== undefined ? (
           <>
             <div
               className="max-w-fit cursor-pointer bg-darkGray2 p-3 text-xs font-semibold outline-none transition-colors hover:bg-darkGray3 md:text-base"
@@ -1037,7 +989,7 @@ const Proposals = () => {
             <div className="relative mt-6">
               <Proposal
                 proposal={currentProposal}
-                instructions={allProposalsIxs[currentProposalIndex]}
+                instructions={allProposalsIxsParsed[currentProposalIndex]}
                 verified={allProposalsVerifiedArr[currentProposalIndex]}
                 multisig={priceFeedMultisigAccount}
               />
