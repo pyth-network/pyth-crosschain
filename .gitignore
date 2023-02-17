@@ -14,3 +14,4 @@ bigtable-writer.json
 .dccache
 .aptos
 tsconfig.tsbuildinfo
+*~
