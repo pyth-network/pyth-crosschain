@@ -61,19 +61,9 @@ async function run() {
   const priceFeeds = await connection.getLatestPriceFeeds(priceIds);
   console.log(priceFeeds);
 
-  const [priceFeedUpdate, timestamp] = await connection.getVaa(
-    priceIds[0],
-    1676478812
-  );
-  const priceFeedUpdateData = [
-    "0x" + Buffer.from(priceFeedUpdate, "base64").toString("hex"),
-  ];
-
-  /*
   const priceFeedUpdateData = await connection.getPriceFeedsUpdateData(
     priceIds
-    );
-    */
+  );
   console.log(priceFeedUpdateData);
 
   const pythContract = new web3.eth.Contract(
@@ -89,21 +79,9 @@ async function run() {
     .call();
   console.log(`Update fee: ${updateFee}`);
 
-  /*
   pythContract.methods
-    .parsePriceFeedUpdates(priceFeedUpdateData, priceIds, 0, 1776318382)
-    .estimateGas({
-       value: updateFee,
-       gas: 1000000
-     }, function (error: any, g: any) {
-     console.log(`error: ${JSON.stringify(error)}`);
-     console.log(`gas: ${g}`);
-    });
-  */
-
-  pythContract.methods
-    .parsePriceFeedUpdates(priceFeedUpdateData, priceIds, 0, 1776318382)
-    .send({ value: updateFee, gas: 1000000 })
+    .updatePriceFeeds(priceFeedUpdateData)
+    .send({ value: updateFee })
     .on("transactionHash", (hash: string) => {
       console.log(`Tx hash: ${hash}`);
     })
@@ -111,6 +89,7 @@ async function run() {
       console.error(receipt);
       throw err;
     });
+
   provider.engine.stop();
 }
 
