@@ -360,4 +360,26 @@ mutlisigCommand("propose-token-transfer", "Propose token transfer")
     await proposeInstructions(squad, vault, [proposalInstruction], false);
   });
 
+/**
+ * Activate proposal, mostly useful for cleaning up draft proposals that happen when the browser wallet fails to send all transactions succesfully
+ */
+mutlisigCommand("activate", "Activate a transaction sitting in the multisig")
+  .requiredOption(
+    "-t, --transaction <pubkey>",
+    "address of the draft transaction"
+  )
+  .action(async (options: any) => {
+    const wallet = await loadHotWalletOrLedger(
+      options.wallet,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange
+    );
+
+    const transaction: PublicKey = new PublicKey(options.transaction);
+    const cluster: PythCluster = options.cluster;
+
+    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
+    await squad.activateTransaction(transaction);
+  });
+
 program.parse();
