@@ -11,7 +11,6 @@ import {
   getMultisigCluster,
   isRemoteCluster,
   mapKey,
-  OPS_KEY,
   proposeInstructions,
   WORMHOLE_ADDRESS,
 } from 'xc_admin_common'
@@ -414,29 +413,6 @@ const General = () => {
     }
   }
 
-  const AddressChangesRow = ({ changes }: { changes: any }) => {
-    const key = 'address'
-    return (
-      <>
-        {changes.prev !== changes.new && (
-          <tr key={key}>
-            <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
-              {key
-                .split('_')
-                .map((word) => capitalizeFirstLetter(word))
-                .join(' ')}
-            </td>
-            <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
-              <s>{changes.prev}</s>
-              <br />
-              {changes.new}
-            </td>
-          </tr>
-        )}
-      </>
-    )
-  }
-
   const MetadataChangesRows = ({ changes }: { changes: any }) => {
     const addNewPriceFeed =
       changes.prev === undefined && changes.new !== undefined
@@ -571,20 +547,14 @@ const General = () => {
   }
 
   const NewPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => {
-    const key =
-      priceFeedData.metadata.asset_type +
-      '.' +
-      priceFeedData.metadata.base +
-      '/' +
-      priceFeedData.metadata.quote_currency
     return (
       <>
         <MetadataChangesRows
-          key={key + 'metadata'}
+          key={priceFeedData.key + 'metadata'}
           changes={{ new: priceFeedData.metadata }}
         />
         <PriceAccountsChangesRows
-          key={key + 'priceAccounts'}
+          key={priceFeedData.key + 'priceAccounts'}
           changes={{ new: priceFeedData.priceAccounts }}
         />
       </>
@@ -621,12 +591,7 @@ const General = () => {
                     <NewPriceFeedsRows key={key} priceFeedData={newChanges} />
                   ) : (
                     diff.map((k) =>
-                      k === 'address' ? (
-                        <AddressChangesRow
-                          key={k}
-                          changes={{ prev: prev[k], new: newChanges[k] }}
-                        />
-                      ) : k === 'metadata' ? (
+                      k === 'metadata' ? (
                         <MetadataChangesRows
                           key={k}
                           changes={{ prev: prev[k], new: newChanges[k] }}
