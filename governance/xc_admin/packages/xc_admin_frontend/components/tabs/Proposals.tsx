@@ -222,15 +222,18 @@ const Proposal = ({
   const proposalStatus = proposal ? Object.keys(proposal.status)[0] : 'unknown'
 
   useEffect(() => {
-    // update the priceFeedMultisigProposals with previous value but replace the current proposal with the updated one
+    // update the priceFeedMultisigProposals with previous value but replace the current proposal with the updated one at the specific index
     if (currentProposal) {
       setpriceFeedMultisigProposals((prevProposals: TransactionAccount[]) => {
-        const proposals = prevProposals.filter(
-          (proposal) =>
-            proposal.publicKey.toBase58() !==
+        const index = prevProposals.findIndex(
+          (prevProposal) =>
+            prevProposal.publicKey.toBase58() ===
             currentProposal.publicKey.toBase58()
         )
-        return [...proposals, currentProposal]
+        if (index !== -1) {
+          prevProposals.splice(index, 1, currentProposal)
+        }
+        return [...prevProposals]
       })
     }
   }, [currentProposal, setpriceFeedMultisigProposals])
