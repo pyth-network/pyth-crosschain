@@ -11,7 +11,7 @@
   "files": [
     "lib/**/*"
   ],
-  "repository": "https://github.com/pyth-network/pyth-js/pyth-evm-js",
+  "repository": "https://github.com/pyth-network/pyth-crosschain/target_chains/ethereum/js_sdk",
   "scripts": {
     "test": "jest --passWithNoTests",
     "build": "tsc",
