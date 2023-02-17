@@ -3,6 +3,7 @@ import { useAnchorWallet } from '@solana/wallet-adapter-react'
 import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import React, { createContext, useContext, useMemo } from 'react'
+import { MultisigInstruction } from 'xc_admin_common'
 import { useMultisig } from '../hooks/useMultisig'
 
 // TODO: fix any
@@ -14,6 +15,7 @@ interface MultisigContextProps {
   priceFeedMultisigAccount: MultisigAccount | undefined
   upgradeMultisigProposals: TransactionAccount[]
   priceFeedMultisigProposals: TransactionAccount[]
+  allProposalsIxsParsed: MultisigInstruction[][]
 }
 
 const MultisigContext = createContext<MultisigContextProps>({
@@ -21,6 +23,7 @@ const MultisigContext = createContext<MultisigContextProps>({
   priceFeedMultisigAccount: undefined,
   upgradeMultisigProposals: [],
   priceFeedMultisigProposals: [],
+  allProposalsIxsParsed: [],
   isLoading: true,
   error: null,
   squads: undefined,
@@ -44,6 +47,7 @@ export const MultisigContextProvider: React.FC<
     priceFeedMultisigAccount,
     upgradeMultisigProposals,
     priceFeedMultisigProposals,
+    allProposalsIxsParsed,
   } = useMultisig(anchorWallet as Wallet)
 
   const value = useMemo(
@@ -52,6 +56,7 @@ export const MultisigContextProvider: React.FC<
       priceFeedMultisigAccount,
       upgradeMultisigProposals,
       priceFeedMultisigProposals,
+      allProposalsIxsParsed,
       isLoading,
       error,
       squads,
@@ -64,6 +69,7 @@ export const MultisigContextProvider: React.FC<
       priceFeedMultisigAccount,
       upgradeMultisigProposals,
       priceFeedMultisigProposals,
+      allProposalsIxsParsed,
     ]
   )
 

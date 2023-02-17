@@ -1,9 +1,25 @@
 import { Wallet } from '@coral-xyz/anchor'
-import { Cluster, Connection, PublicKey, Transaction } from '@solana/web3.js'
+import {
+  AccountMeta,
+  Cluster,
+  Connection,
+  PublicKey,
+  Transaction,
+} from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useContext, useEffect, useRef, useState } from 'react'
-import { getMultisigCluster, getProposals } from 'xc_admin_common'
+import {
+  getManyProposalsInstructions,
+  getMultisigCluster,
+  getProposals,
+  isRemoteCluster,
+  MultisigInstruction,
+  MultisigParser,
+  PythMultisigInstruction,
+  UnrecognizedProgram,
+  WormholeMultisigInstruction,
+} from 'xc_admin_common'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 
@@ -29,6 +45,7 @@ interface MultisigHookData {
   priceFeedMultisigAccount: MultisigAccount | undefined
   upgradeMultisigProposals: TransactionAccount[]
   priceFeedMultisigProposals: TransactionAccount[]
+  allProposalsIxsParsed: MultisigInstruction[][]
 }
 
 const getSortedProposals = async (
@@ -53,6 +70,9 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
   >([])
   const [priceFeedMultisigProposals, setpriceFeedMultisigProposals] = useState<
     TransactionAccount[]
+  >([])
+  const [allProposalsIxsParsed, setAllProposalsIxsParsed] = useState<
+    MultisigInstruction[][]
   >([])
   const [squads, setSquads] = useState<SquadsMesh>()
   const [urlsIndex, setUrlsIndex] = useState(0)
@@ -124,14 +144,55 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
         try {
           if (cancelled) return
           // DELETE THIS TRY CATCH ONCE THIS MULTISIG EXISTS EVERYWHERE
-          setpriceFeedMultisigProposals(
-            await getSortedProposals(
-              squads,
-              PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
+          const sortedPriceFeedMultisigProposals = await getSortedProposals(
+            squads,
+            PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
+          )
+          const allProposalsIxs = await getManyProposalsInstructions(
+            squads,
+            sortedPriceFeedMultisigProposals
+          )
+          const multisigParser = MultisigParser.fromCluster(
+            getMultisigCluster(cluster)
+          )
+          const parsedAllProposalsIxs = allProposalsIxs.map((ixs) =>
+            ixs.map((ix) =>
+              multisigParser.parseInstruction({
+                programId: ix.programId,
+                data: ix.data as Buffer,
+                keys: ix.keys as AccountMeta[],
+              })
             )
           )
+          const proposalsRes: TransactionAccount[] = []
+          const instructionsRes: MultisigInstruction[][] = []
+          // filter proposals for respective devnet/pythtest and mainnet-beta/pythnet clusters
+          parsedAllProposalsIxs.map((ixs, idx) => {
+            // pythtest/pythnet proposals
+            if (
+              isRemoteCluster(cluster) &&
+              ixs.length > 0 &&
+              ixs.some((ix) => ix instanceof WormholeMultisigInstruction)
+            ) {
+              proposalsRes.push(sortedPriceFeedMultisigProposals[idx])
+              instructionsRes.push(ixs)
+            }
+            // devnet/testnet/mainnet-beta proposals
+            if (
+              !isRemoteCluster(cluster) &&
+              (ixs.length === 0 ||
+                ixs.some((ix) => ix instanceof PythMultisigInstruction) ||
+                ixs.some((ix) => ix instanceof UnrecognizedProgram))
+            ) {
+              proposalsRes.push(sortedPriceFeedMultisigProposals[idx])
+              instructionsRes.push(ixs)
+            }
+          })
+          setAllProposalsIxsParsed(instructionsRes)
+          setpriceFeedMultisigProposals(proposalsRes)
         } catch (e) {
           console.error(e)
+          setAllProposalsIxsParsed([])
           setpriceFeedMultisigProposals([])
         }
 
@@ -167,5 +228,6 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
     priceFeedMultisigAccount,
     upgradeMultisigProposals,
     priceFeedMultisigProposals,
+    allProposalsIxsParsed,
   }
 }

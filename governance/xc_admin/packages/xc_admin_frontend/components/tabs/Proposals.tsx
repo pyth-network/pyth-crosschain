@@ -1,8 +1,6 @@
-import { BN } from '@coral-xyz/anchor'
+import * as Tooltip from '@radix-ui/react-tooltip'
 import { AccountMeta, PublicKey } from '@solana/web3.js'
-import { getIxPDA } from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
-import copy from 'copy-to-clipboard'
 import { useRouter } from 'next/router'
 import {
   Dispatch,
@@ -15,7 +13,6 @@ import {
 import toast from 'react-hot-toast'
 import {
   ExecutePostedVaa,
-  getMultisigCluster,
   getRemoteCluster,
   MultisigInstruction,
   MultisigParser,
@@ -25,7 +22,8 @@ import {
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
-import CopyIcon from '../../images/icons/copy.inline.svg'
+import { usePythContext } from '../../contexts/PythContext'
+import VerifiedIcon from '../../images/icons/verified.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import CopyPubkey from '../common/CopyPubkey'
@@ -43,9 +41,11 @@ const isPubkey = (str: string) => {
 
 const ProposalRow = ({
   proposal,
+  verified,
   setCurrentProposalPubkey,
 }: {
   proposal: TransactionAccount
+  verified: boolean
   setCurrentProposalPubkey: Dispatch<SetStateAction<string | undefined>>
 }) => {
   const status = Object.keys(proposal.status)[0]
@@ -62,7 +62,7 @@ const ProposalRow = ({
           query: router.query,
         },
         undefined,
-        { scroll: false }
+        { scroll: true }
       )
     },
     [setCurrentProposalPubkey, router]
@@ -75,8 +75,7 @@ const ProposalRow = ({
       }
     >
       <div className="flex justify-between p-4">
-        <div>
-          {' '}
+        <div className="flex">
           <span className="mr-2 hidden sm:block">
             {proposal.publicKey.toBase58()}
           </span>
@@ -85,9 +84,11 @@ const ProposalRow = ({
               '...' +
               proposal.publicKey.toBase58().slice(-6)}
           </span>{' '}
+          {verified ? <VerifiedIconWithTooltip /> : null}
         </div>
-
-        <StatusTag proposalStatus={status} />
+        <div>
+          <StatusTag proposalStatus={status} />
+        </div>
       </div>
     </div>
   )
@@ -129,82 +130,86 @@ const StatusTag = ({ proposalStatus }: { proposalStatus: string }) => {
   )
 }
 
+const VerifiedIconWithTooltip = () => {
+  return (
+    <div className="flex items-center">
+      <Tooltip.Provider delayDuration={100} skipDelayDuration={500}>
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            <VerifiedIcon />
+          </Tooltip.Trigger>
+          <Tooltip.Content side="top" sideOffset={8}>
+            <span className="inline-block bg-darkGray3 p-2 text-xs text-light hoverable:bg-darkGray">
+              The instructions in this proposal are verified.
+            </span>
+          </Tooltip.Content>
+        </Tooltip.Root>
+      </Tooltip.Provider>
+    </div>
+  )
+}
+
+const ParsedAccountPubkeyRow = ({
+  mapping,
+  title,
+  pubkey,
+}: {
+  mapping: { [key: string]: string }
+  title: string
+  pubkey: string
+}) => {
+  return (
+    <div className="flex justify-between pb-3">
+      <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
+        &#10551; {title}
+      </div>
+      <div className="space-y-2 sm:flex sm:space-x-2">{mapping[pubkey]}</div>
+    </div>
+  )
+}
+
 const Proposal = ({
   proposal,
+  instructions,
+  verified,
   multisig,
 }: {
   proposal: TransactionAccount | undefined
+  instructions: MultisigInstruction[]
+  verified: boolean
   multisig: MultisigAccount | undefined
 }) => {
-  const [proposalInstructions, setProposalInstructions] = useState<
-    MultisigInstruction[]
-  >([])
-  const [isProposalInstructionsLoading, setIsProposalInstructionsLoading] =
-    useState(false)
-  const [isVerified, setIsVerified] = useState(false)
+  const [
+    productAccountKeyToSymbolMapping,
+    setProductAccountKeyToSymbolMapping,
+  ] = useState<{ [key: string]: string }>({})
+  const [priceAccountKeyToSymbolMapping, setPriceAccountKeyToSymbolMapping] =
+    useState<{ [key: string]: string }>({})
   const { cluster } = useContext(ClusterContext)
   const { squads, isLoading: isMultisigLoading } = useMultisigContext()
-
-  const proposalStatus = proposal ? Object.keys(proposal.status)[0] : 'unknown'
+  const { rawConfig, dataIsLoading, connection } = usePythContext()
 
   useEffect(() => {
-    const fetchProposalInstructions = async () => {
-      const multisigParser = MultisigParser.fromCluster(
-        getMultisigCluster(cluster)
+    if (!dataIsLoading) {
+      const productAccountMapping: { [key: string]: string } = {}
+      const priceAccountMapping: { [key: string]: string } = {}
+      rawConfig.mappingAccounts.map((acc) =>
+        acc.products.map((prod) => {
+          productAccountMapping[prod.address.toBase58()] = prod.metadata.symbol
+          priceAccountMapping[prod.priceAccounts[0].address.toBase58()] =
+            prod.metadata.symbol
+        })
       )
-      if (squads && proposal) {
-        setIsProposalInstructionsLoading(true)
-        const proposalIxs = []
-        for (let i = 1; i <= proposal.instructionIndex; i++) {
-          const instructionPda = getIxPDA(
-            proposal.publicKey,
-            new BN(i),
-            squads.multisigProgramId
-          )[0]
-          const instruction = await squads.getInstruction(instructionPda)
-          const parsedInstruction = multisigParser.parseInstruction({
-            programId: instruction.programId,
-            data: instruction.data as Buffer,
-            keys: instruction.keys as AccountMeta[],
-          })
-          proposalIxs.push(parsedInstruction)
-        }
-        setIsVerified(
-          proposalIxs.every(
-            (ix) =>
-              ix instanceof PythMultisigInstruction ||
-              (ix instanceof WormholeMultisigInstruction &&
-                ix.name === 'postMessage' &&
-                ix.governanceAction instanceof ExecutePostedVaa &&
-                ix.governanceAction.instructions.every((remoteIx) => {
-                  const innerMultisigParser = MultisigParser.fromCluster(
-                    getRemoteCluster(cluster)
-                  )
-                  const parsedRemoteInstruction =
-                    innerMultisigParser.parseInstruction({
-                      programId: remoteIx.programId,
-                      data: remoteIx.data as Buffer,
-                      keys: remoteIx.keys as AccountMeta[],
-                    })
-                  return (
-                    parsedRemoteInstruction instanceof PythMultisigInstruction
-                  )
-                }) &&
-                ix.governanceAction.targetChainId === 'pythnet')
-          )
-        )
-        setProposalInstructions(proposalIxs)
-        setIsProposalInstructionsLoading(false)
-      }
+      setProductAccountKeyToSymbolMapping(productAccountMapping)
+      setPriceAccountKeyToSymbolMapping(priceAccountMapping)
     }
+  }, [rawConfig, dataIsLoading])
 
-    fetchProposalInstructions()
-  }, [proposal, squads, cluster])
+  const proposalStatus = proposal ? Object.keys(proposal.status)[0] : 'unknown'
 
   const handleClickApprove = async () => {
     if (proposal && squads) {
       try {
-        console.log(squads.wallet.publicKey.toBase58())
         await squads.approveTransaction(proposal.publicKey)
         toast.success(`Approved proposal ${proposal.publicKey.toBase58()}`)
       } catch (e: any) {
@@ -248,19 +253,12 @@ const Proposal = ({
 
   return proposal !== undefined &&
     multisig !== undefined &&
-    !isMultisigLoading &&
-    !isProposalInstructionsLoading ? (
+    !isMultisigLoading ? (
     <div className="grid grid-cols-3 gap-4">
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-2">
         <div className="flex justify-between">
           <h4 className="h4 font-semibold">Info</h4>
-          <div
-            className={`flex items-center justify-center rounded-full py-1 px-2 text-xs ${
-              isVerified ? 'bg-[#187B51]' : 'bg-[#8D2D41]'
-            }`}
-          >
-            {isVerified ? 'Verified' : 'Unverified'}
-          </div>
+          {verified ? <VerifiedIconWithTooltip /> : null}
         </div>
         <hr className="border-gray-700" />
         <div className="flex justify-between">
@@ -339,9 +337,11 @@ const Proposal = ({
         ) : null}
       </div>
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
-        <h4 className="h4 font-semibold">Instructions</h4>
+        <h4 className="h4 font-semibold">
+          Total Instructions: {instructions.length}
+        </h4>
         <hr className="border-gray-700" />
-        {proposalInstructions?.map((instruction, index) => (
+        {instructions?.map((instruction, index) => (
           <>
             <h4 className="h4 text-[20px] font-semibold">
               Instruction {index + 1}
@@ -455,8 +455,8 @@ const Proposal = ({
                             <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
                               {key}
                             </div>
-                            <div className="space-y-2 sm:flex sm:space-x-2">
-                              <div className="flex items-center space-x-2 sm:mt-2 sm:ml-2">
+                            <div className="space-y-2 sm:flex sm:space-y-0 sm:space-x-2">
+                              <div className="flex items-center space-x-2 sm:ml-2">
                                 {instruction.accounts.named[key].isSigner ? (
                                   <SignerTag />
                                 ) : null}
@@ -471,6 +471,29 @@ const Proposal = ({
                               />
                             </div>
                           </div>
+                          {key === 'priceAccount' &&
+                          instruction.accounts.named[key].pubkey.toBase58() in
+                            priceAccountKeyToSymbolMapping ? (
+                            <ParsedAccountPubkeyRow
+                              key="priceAccountPubkey"
+                              mapping={priceAccountKeyToSymbolMapping}
+                              title="symbol"
+                              pubkey={instruction.accounts.named[
+                                key
+                              ].pubkey.toBase58()}
+                            />
+                          ) : key === 'productAccount' &&
+                            instruction.accounts.named[key].pubkey.toBase58() in
+                              productAccountKeyToSymbolMapping ? (
+                            <ParsedAccountPubkeyRow
+                              key="productAccountPubkey"
+                              mapping={productAccountKeyToSymbolMapping}
+                              title="symbol"
+                              pubkey={instruction.accounts.named[
+                                key
+                              ].pubkey.toBase58()}
+                            />
+                          ) : null}
                         </>
                       )
                     )}
@@ -518,22 +541,7 @@ const Proposal = ({
                           <div className="flex space-x-2">
                             {key.isSigner ? <SignerTag /> : null}
                             {key.isWritable ? <WritableTag /> : null}
-                            <div
-                              className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
-                              onClick={() => {
-                                copy(key.pubkey.toBase58())
-                              }}
-                            >
-                              <span className="mr-2 hidden xl:block">
-                                {key.pubkey.toBase58()}
-                              </span>
-                              <span className="mr-2 xl:hidden">
-                                {key.pubkey.toBase58().slice(0, 6) +
-                                  '...' +
-                                  key.pubkey.toBase58().slice(-6)}
-                              </span>{' '}
-                              <CopyIcon className="shrink-0" />
-                            </div>
+                            <CopyPubkey pubkey={key.pubkey.toBase58()} />
                           </div>
                         </div>
                       </>
@@ -687,8 +695,8 @@ const Proposal = ({
                                           <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
                                             {key}
                                           </div>
-                                          <div className="space-y-2 sm:flex sm:space-x-2">
-                                            <div className="flex items-center space-x-2 sm:mt-2 sm:ml-2">
+                                          <div className="space-y-2 sm:flex sm:space-y-0 sm:space-x-2">
+                                            <div className="flex items-center space-x-2 sm:ml-2">
                                               {parsedInstruction.accounts.named[
                                                 key
                                               ].isSigner ? (
@@ -700,38 +708,44 @@ const Proposal = ({
                                                 <WritableTag />
                                               ) : null}
                                             </div>
-                                            <div
-                                              className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
-                                              onClick={() => {
-                                                copy(
-                                                  parsedInstruction.accounts.named[
-                                                    key
-                                                  ].pubkey.toBase58()
-                                                )
-                                              }}
-                                            >
-                                              <span className="mr-2 hidden xl:block">
-                                                {parsedInstruction.accounts.named[
-                                                  key
-                                                ].pubkey.toBase58()}
-                                              </span>
-                                              <span className="mr-2 xl:hidden">
-                                                {parsedInstruction.accounts.named[
-                                                  key
-                                                ].pubkey
-                                                  .toBase58()
-                                                  .slice(0, 6) +
-                                                  '...' +
-                                                  parsedInstruction.accounts.named[
-                                                    key
-                                                  ].pubkey
-                                                    .toBase58()
-                                                    .slice(-6)}
-                                              </span>{' '}
-                                              <CopyIcon className="shrink-0" />
-                                            </div>
+                                            <CopyPubkey
+                                              pubkey={parsedInstruction.accounts.named[
+                                                key
+                                              ].pubkey.toBase58()}
+                                            />
                                           </div>
                                         </div>
+                                        {key === 'priceAccount' &&
+                                        parsedInstruction.accounts.named[
+                                          key
+                                        ].pubkey.toBase58() in
+                                          priceAccountKeyToSymbolMapping ? (
+                                          <ParsedAccountPubkeyRow
+                                            key="priceAccountPubkey"
+                                            mapping={
+                                              priceAccountKeyToSymbolMapping
+                                            }
+                                            title="symbol"
+                                            pubkey={parsedInstruction.accounts.named[
+                                              key
+                                            ].pubkey.toBase58()}
+                                          />
+                                        ) : key === 'productAccount' &&
+                                          parsedInstruction.accounts.named[
+                                            key
+                                          ].pubkey.toBase58() in
+                                            productAccountKeyToSymbolMapping ? (
+                                          <ParsedAccountPubkeyRow
+                                            key="productAccountPubkey"
+                                            mapping={
+                                              productAccountKeyToSymbolMapping
+                                            }
+                                            title="symbol"
+                                            pubkey={parsedInstruction.accounts.named[
+                                              key
+                                            ].pubkey.toBase58()}
+                                          />
+                                        ) : null}
                                       </>
                                     ))}
                                   </div>
@@ -790,26 +804,9 @@ const Proposal = ({
                                               {key.isWritable ? (
                                                 <WritableTag />
                                               ) : null}
-                                              <div
-                                                className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
-                                                onClick={() => {
-                                                  copy(key.pubkey.toBase58())
-                                                }}
-                                              >
-                                                <span className="mr-2 hidden xl:block">
-                                                  {key.pubkey.toBase58()}
-                                                </span>
-                                                <span className="mr-2 xl:hidden">
-                                                  {key.pubkey
-                                                    .toBase58()
-                                                    .slice(0, 6) +
-                                                    '...' +
-                                                    key.pubkey
-                                                      .toBase58()
-                                                      .slice(-6)}
-                                                </span>{' '}
-                                                <CopyIcon className="shrink-0" />
-                                              </div>
+                                              <CopyPubkey
+                                                pubkey={key.pubkey.toBase58()}
+                                              />
                                             </div>
                                           </div>
                                         </>
@@ -827,7 +824,7 @@ const Proposal = ({
               </div>
             ) : null}
 
-            {index !== proposalInstructions.length - 1 ? (
+            {index !== instructions.length - 1 ? (
               <hr className="border-gray-700" />
             ) : null}
           </>
@@ -844,12 +841,59 @@ const Proposal = ({
 const Proposals = () => {
   const router = useRouter()
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
+  const [currentProposalIndex, setCurrentProposalIndex] = useState<number>()
+  const [allProposalsVerifiedArr, setAllProposalsVerifiedArr] = useState<
+    boolean[]
+  >([])
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
+  const { cluster } = useContext(ClusterContext)
   const {
     priceFeedMultisigAccount,
     priceFeedMultisigProposals,
+    allProposalsIxsParsed,
     isLoading: isMultisigLoading,
   } = useMultisigContext()
+
+  useEffect(() => {
+    if (!isMultisigLoading) {
+      const res: boolean[] = []
+      allProposalsIxsParsed.map((ixs, idx) => {
+        const isAllIxsVerified =
+          ixs.length > 0 &&
+          ixs.every(
+            (ix) =>
+              ix instanceof PythMultisigInstruction ||
+              (ix instanceof WormholeMultisigInstruction &&
+                ix.name === 'postMessage' &&
+                ix.governanceAction instanceof ExecutePostedVaa &&
+                ix.governanceAction.instructions.every((remoteIx) => {
+                  const innerMultisigParser = MultisigParser.fromCluster(
+                    getRemoteCluster(cluster)
+                  )
+                  const parsedRemoteInstruction =
+                    innerMultisigParser.parseInstruction({
+                      programId: remoteIx.programId,
+                      data: remoteIx.data as Buffer,
+                      keys: remoteIx.keys as AccountMeta[],
+                    })
+                  return (
+                    parsedRemoteInstruction instanceof PythMultisigInstruction
+                  )
+                }) &&
+                ix.governanceAction.targetChainId === 'pythnet')
+          ) &&
+          Object.keys(priceFeedMultisigProposals[idx].status)[0] !== 'draft'
+
+        res.push(isAllIxsVerified)
+      })
+      setAllProposalsVerifiedArr(res)
+    }
+  }, [
+    allProposalsIxsParsed,
+    isMultisigLoading,
+    cluster,
+    priceFeedMultisigProposals,
+  ])
 
   const handleClickBackToPriceFeeds = () => {
     delete router.query.proposal
@@ -871,12 +915,23 @@ const Proposals = () => {
 
   useEffect(() => {
     if (currentProposalPubkey) {
-      const currentProposal = priceFeedMultisigProposals.find(
+      const currProposal = priceFeedMultisigProposals.find(
         (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
       )
-      setCurrentProposal(currentProposal)
+      const currProposalIndex = priceFeedMultisigProposals.findIndex(
+        (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
+      )
+      setCurrentProposal(currProposal)
+      setCurrentProposalIndex(
+        currProposalIndex === -1 ? undefined : currProposalIndex
+      )
     }
-  }, [currentProposalPubkey, priceFeedMultisigProposals])
+  }, [
+    currentProposalPubkey,
+    priceFeedMultisigProposals,
+    allProposalsIxsParsed,
+    cluster,
+  ])
 
   return (
     <div className="relative">
@@ -901,21 +956,29 @@ const Proposals = () => {
                   <Loadbar theme="light" />
                 </div>
               ) : priceFeedMultisigProposals.length > 0 ? (
-                <div className="flex flex-col">
-                  {priceFeedMultisigProposals.map((proposal, idx) => (
-                    <ProposalRow
-                      key={idx}
-                      proposal={proposal}
-                      setCurrentProposalPubkey={setCurrentProposalPubkey}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="pb-4">
+                    <h4 className="h4">
+                      Total Proposals: {priceFeedMultisigProposals.length}
+                    </h4>
+                  </div>
+                  <div className="flex flex-col">
+                    {priceFeedMultisigProposals.map((proposal, idx) => (
+                      <ProposalRow
+                        key={idx}
+                        proposal={proposal}
+                        verified={allProposalsVerifiedArr[idx]}
+                        setCurrentProposalPubkey={setCurrentProposalPubkey}
+                      />
+                    ))}
+                  </div>
+                </>
               ) : (
                 "No proposals found. If you're a member of the price feed multisig, you can create a proposal."
               )}
             </div>
           </>
-        ) : (
+        ) : !isMultisigLoading && currentProposalIndex !== undefined ? (
           <>
             <div
               className="max-w-fit cursor-pointer bg-darkGray2 p-3 text-xs font-semibold outline-none transition-colors hover:bg-darkGray3 md:text-base"
@@ -926,10 +989,16 @@ const Proposals = () => {
             <div className="relative mt-6">
               <Proposal
                 proposal={currentProposal}
+                instructions={allProposalsIxsParsed[currentProposalIndex]}
+                verified={allProposalsVerifiedArr[currentProposalIndex]}
                 multisig={priceFeedMultisigAccount}
               />
             </div>
           </>
+        ) : (
+          <div className="mt-3">
+            <Loadbar theme="light" />
+          </div>
         )}
       </div>
     </div>
