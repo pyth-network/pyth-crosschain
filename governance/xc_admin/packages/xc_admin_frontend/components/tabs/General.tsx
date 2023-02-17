@@ -378,10 +378,10 @@ const General = () => {
               !newChanges.priceAccounts[0].publishers.includes(prevPublisher)
           )
 
-          // add instructions to add new publishers
-          publisherKeysToAdd.forEach((publisherKey: string) => {
+          // add instructions to remove publishers
+          publisherKeysToRemove.forEach((publisherKey: string) => {
             pythProgramClient.methods
-              .addPublisher(new PublicKey(publisherKey))
+              .delPublisher(new PublicKey(publisherKey))
               .accounts({
                 fundingAccount,
                 priceAccount: new PublicKey(prev.priceAccounts[0].address),
@@ -389,10 +389,11 @@ const General = () => {
               .instruction()
               .then((instruction) => instructions.push(instruction))
           })
-          // add instructions to remove publishers
-          publisherKeysToRemove.forEach((publisherKey: string) => {
+
+          // add instructions to add new publishers
+          publisherKeysToAdd.forEach((publisherKey: string) => {
             pythProgramClient.methods
-              .delPublisher(new PublicKey(publisherKey))
+              .addPublisher(new PublicKey(publisherKey))
               .accounts({
                 fundingAccount,
                 priceAccount: new PublicKey(prev.priceAccounts[0].address),
@@ -526,11 +527,11 @@ const General = () => {
         )
     return (
       <>
-        {publisherKeysToAdd.length > 0 && (
+        {publisherKeysToRemove.length > 0 && (
           <tr>
-            <td className="py-3 pl-6 pr-1 lg:pl-6">Add Publisher(s)</td>
+            <td className="py-3 pl-6 pr-1 lg:pl-6">Remove Publisher(s)</td>
             <td className="py-3 pl-1 pr-8 lg:pl-6">
-              {publisherKeysToAdd.map((publisherKey: string) => (
+              {publisherKeysToRemove.map((publisherKey: string) => (
                 <span key={publisherKey} className="block">
                   {publisherKey}
                 </span>
@@ -538,11 +539,11 @@ const General = () => {
             </td>
           </tr>
         )}
-        {publisherKeysToRemove.length > 0 && (
+        {publisherKeysToAdd.length > 0 && (
           <tr>
-            <td className="py-3 pl-6 pr-1 lg:pl-6">Remove Publisher(s)</td>
+            <td className="py-3 pl-6 pr-1 lg:pl-6">Add Publisher(s)</td>
             <td className="py-3 pl-1 pr-8 lg:pl-6">
-              {publisherKeysToRemove.map((publisherKey: string) => (
+              {publisherKeysToAdd.map((publisherKey: string) => (
                 <span key={publisherKey} className="block">
                   {publisherKey}
                 </span>
