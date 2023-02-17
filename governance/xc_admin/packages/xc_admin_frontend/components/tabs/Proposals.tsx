@@ -174,11 +174,13 @@ const ParsedAccountPubkeyRow = ({
 
 const Proposal = ({
   proposal,
+  proposalIndex,
   instructions,
   verified,
   multisig,
 }: {
   proposal: TransactionAccount | undefined
+  proposalIndex: number
   instructions: MultisigInstruction[]
   verified: boolean
   multisig: MultisigAccount | undefined
@@ -225,18 +227,11 @@ const Proposal = ({
     // update the priceFeedMultisigProposals with previous value but replace the current proposal with the updated one at the specific index
     if (currentProposal) {
       setpriceFeedMultisigProposals((prevProposals: TransactionAccount[]) => {
-        const index = prevProposals.findIndex(
-          (prevProposal) =>
-            prevProposal.publicKey.toBase58() ===
-            currentProposal.publicKey.toBase58()
-        )
-        if (index !== -1) {
-          prevProposals.splice(index, 1, currentProposal)
-        }
+        prevProposals.splice(proposalIndex, 1, currentProposal)
         return [...prevProposals]
       })
     }
-  }, [currentProposal, setpriceFeedMultisigProposals])
+  }, [currentProposal, setpriceFeedMultisigProposals, proposalIndex])
 
   const handleClickApprove = async () => {
     if (proposal && squads) {
@@ -1118,6 +1113,7 @@ const Proposals = () => {
             <div className="relative mt-6">
               <Proposal
                 proposal={currentProposal}
+                proposalIndex={currentProposalIndex}
                 instructions={allProposalsIxsParsed[currentProposalIndex]}
                 verified={allProposalsVerifiedArr[currentProposalIndex]}
                 multisig={priceFeedMultisigAccount}
