@@ -1,0 +1,8 @@
+npm run example-relay -- \
+  --network "https://data-seed-prebsc-1-s1.binance.org:8545" \
+  --pyth-contract "0xd7308b14BF4008e7C7196eC35610B1427C5702EA"\
+  --mnemonic "my good mnemonic" \
+  --endpoint https://xc-testnet.pyth.network \
+  --price-ids \
+    "0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b" \
+    "0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6"

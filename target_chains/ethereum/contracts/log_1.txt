@@ -1,0 +1,138 @@
+Starting migrations...
+======================
+> Network name:    'polygon_zkevm_testnet'
+> Network id:      1422
+> Block gas limit: 30000000 (0x1c9c380)
+
+
+2_deploy_wormhole_receiver.js
+=============================
+
+   Deploying 'ReceiverSetup'
+   -------------------------
+   > transaction hash:    0x3803aace9250e45c3ee46e5428b453d1932299661000221cf369bfa7cd3a67e5
+   > Blocks: 1            Seconds: 4
+   > contract address:    0xef73b5ED2F2aB386023Ca7A58eFAE171Ea8f5cFB
+   > block number:        301038
+   > block timestamp:     1676313290
+   > account:             0x572E433ccA6F053B5dd4431ac5Db104411c75DcD
+   > balance:             0.089353859
+   > gas used:            344344 (0x54118)
+   > gas price:           1 gwei
+   > value sent:          0 ETH
+   > total cost:          0.000344344 ETH
+
+
+   Deploying 'ReceiverImplementation'
+   ----------------------------------
+   > transaction hash:    0x109f846162eba716b692b9661dd9fcb7d04da5be021f534ffc448af08c441938
+   > Blocks: 0            Seconds: 4
+   > contract address:    0xa4eE202da2f1b512aD7c98C5C6924FF185Add725
+   > block number:        301039
+   > block timestamp:     1676313290
+   > account:             0x572E433ccA6F053B5dd4431ac5Db104411c75DcD
+   > balance:             0.087277888
+   > gas used:            2075971 (0x1fad43)
+   > gas price:           1 gwei
+   > value sent:          0 ETH
+   > total cost:          0.002075971 ETH
+
+
+   Deploying 'WormholeReceiver'
+   ----------------------------
+   > transaction hash:    0x01cfbfb48ee44ba9a3589626aef2fca971c57be10ba6511ee2f9839d21c28dcb
+   > Blocks: 0            Seconds: 4
+   > contract address:    0x7e8fe3Cad4Bc3762D245f91E4e058Abc79F27B66
+   > block number:        301040
+   > block timestamp:     1676313290
+   > account:             0x572E433ccA6F053B5dd4431ac5Db104411c75DcD
+   > balance:             0.086898559
+   > gas used:            379329 (0x5c9c1)
+   > gas price:           1 gwei
+   > value sent:          0 ETH
+   > total cost:          0.000379329 ETH
+
+   > Saving migration to chain.
+   > Saving artifacts
+   -------------------------------------
+   > Total cost:         0.002799644 ETH
+
+
+3_deploy_pyth.js
+================
+emitterChainIds: 0x1,0x1a
+emitterAddresses: 0xf346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0,0xa27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6
+governanceEmitter: 0x63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385
+governanceChainId: 0x1
+governanceInitialSequence: 0
+validTimePeriodSeconds: 60
+singleUpdateFeeInWei: 1
+
+** ^ the run above failed , ran again
+
+3_deploy_pyth.js
+================
+emitterChainIds: 0x1,0x1a
+emitterAddresses: 0xf346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0,0xa27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6
+governanceEmitter: 0x63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385
+governanceChainId: 0x1
+governanceInitialSequence: 0
+validTimePeriodSeconds: 60
+singleUpdateFeeInWei: 1
+
+   Deploying 'PythUpgradable'
+   --------------------------
+   > transaction hash:    0x4c86c2ef30ef07dd481bac76eeda3d339c1c29f7f7217541893f2d477b65bf39
+   > Blocks: 0            Seconds: 8
+   > contract address:    0x7eDA7C04E4aA89c925E6dD45b287ab8e693cF7D3
+   > block number:        301043
+   > block timestamp:     1676313595
+   > account:             0x572E433ccA6F053B5dd4431ac5Db104411c75DcD
+   > balance:             0.08210616
+   > gas used:            4763775 (0x48b07f)
+   > gas price:           1 gwei
+   > value sent:          0 ETH
+   > total cost:          0.004763775 ETH
+
+
+   Deploying 'ERC1967Proxy'
+   ------------------------
+   > transaction hash:    0x08fd3f5164c7ae87b2c5a48a6c28173cef06c3d6fffb59ad23865b015e0be2f5
+   > Blocks: 0            Seconds: 8
+   > contract address:    0xC5E56d6b40F3e3B5fbfa266bCd35C37426537c65
+   > block number:        301044
+   > block timestamp:     1676313595
+   > account:             0x572E433ccA6F053B5dd4431ac5Db104411c75DcD
+   > balance:             0.081551272
+   > gas used:            554888 (0x87788)
+   > gas price:           1 gwei
+   > value sent:          0 ETH
+   > total cost:          0.000554888 ETH
+
+   > Saving migration to chain.
+   > Saving artifacts
+   -------------------------------------
+   > Total cost:         0.005318663 ETH
+
+Summary
+=======
+> Total deployments:   2
+> Final cost:          0.005318663 ETH
+
+
+Deployment to polygon_zkevm_testnet finished successfully
+=========== Syncing contract state ===========
+Using network 'polygon_zkevm_testnet'.
+
+secp256k1 unavailable, reverting to browser version
+Syncing Pyth contract deployed on 0xC5E56d6b40F3e3B5fbfa266bCd35C37426537c65...
+✅ There is no owner
+✅ Wormhole address and chain id is correct: 0x7e8fe3Cad4Bc3762D245f91E4e058Abc79F27B66 chainId: 60004
+✅ Contract version is up to date: 1.2.0
+✅ Contract update fee is in sync: 1
+✅ Contract valid time period is in sync: 60s
+✅ Contract data sources are in sync:
+[["1","0xf346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0"],["26","0xa27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6"]]
+✅ Contract data sources are in sync:
+1,0x63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385
+=========== Finished ===========
