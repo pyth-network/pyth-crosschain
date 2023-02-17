@@ -13,6 +13,8 @@ import {
 import toast from 'react-hot-toast'
 import {
   ExecutePostedVaa,
+  getMultisigCluster,
+  getProposals,
   getRemoteCluster,
   MultisigInstruction,
   MultisigParser,
@@ -23,10 +25,12 @@ import {
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'
+import { PRICE_FEED_MULTISIG } from '../../hooks/useMultisig'
 import VerifiedIcon from '../../images/icons/verified.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import CopyPubkey from '../common/CopyPubkey'
+import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
 
 // check if a string is a pubkey
@@ -179,6 +183,8 @@ const Proposal = ({
   verified: boolean
   multisig: MultisigAccount | undefined
 }) => {
+  const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
+  const [isTransactionLoading, setIsTransactionLoading] = useState(false)
   const [
     productAccountKeyToSymbolMapping,
     setProductAccountKeyToSymbolMapping,
@@ -188,6 +194,10 @@ const Proposal = ({
   const { cluster } = useContext(ClusterContext)
   const { squads, isLoading: isMultisigLoading } = useMultisigContext()
   const { rawConfig, dataIsLoading, connection } = usePythContext()
+
+  useEffect(() => {
+    setCurrentProposal(proposal)
+  }, [proposal])
 
   useEffect(() => {
     if (!dataIsLoading) {
@@ -210,9 +220,23 @@ const Proposal = ({
   const handleClickApprove = async () => {
     if (proposal && squads) {
       try {
+        setIsTransactionLoading(true)
         await squads.approveTransaction(proposal.publicKey)
+        const proposals = await getProposals(
+          squads,
+          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
+        )
+        setCurrentProposal(
+          proposals.find(
+            (proposal) =>
+              proposal.publicKey.toBase58() ===
+              currentProposal?.publicKey.toBase58()
+          )
+        )
         toast.success(`Approved proposal ${proposal.publicKey.toBase58()}`)
+        setIsTransactionLoading(false)
       } catch (e: any) {
+        setIsTransactionLoading(false)
         toast.error(capitalizeFirstLetter(e.message))
       }
     }
@@ -221,20 +245,50 @@ const Proposal = ({
   const handleClickReject = async () => {
     if (proposal && squads) {
       try {
+        setIsTransactionLoading(true)
         await squads.rejectTransaction(proposal.publicKey)
+        const proposals = await getProposals(
+          squads,
+          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
+        )
+        setCurrentProposal(
+          proposals.find(
+            (proposal) =>
+              proposal.publicKey.toBase58() ===
+              currentProposal?.publicKey.toBase58()
+          )
+        )
         toast.success(`Rejected proposal ${proposal.publicKey.toBase58()}`)
+        setIsTransactionLoading(false)
       } catch (e: any) {
+        setIsTransactionLoading(false)
         toast.error(capitalizeFirstLetter(e.message))
       }
     }
   }
 
+  console.log(currentProposal)
+
   const handleClickExecute = async () => {
     if (proposal && squads) {
       try {
+        setIsTransactionLoading(true)
         await squads.executeTransaction(proposal.publicKey)
+        const proposals = await getProposals(
+          squads,
+          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
+        )
+        setCurrentProposal(
+          proposals.find(
+            (proposal) =>
+              proposal.publicKey.toBase58() ===
+              currentProposal?.publicKey.toBase58()
+          )
+        )
         toast.success(`Executed proposal ${proposal.publicKey.toBase58()}`)
+        setIsTransactionLoading(false)
       } catch (e: any) {
+        setIsTransactionLoading(false)
         toast.error(capitalizeFirstLetter(e.message))
       }
     }
@@ -243,15 +297,29 @@ const Proposal = ({
   const handleClickCancel = async () => {
     if (proposal && squads) {
       try {
+        setIsTransactionLoading(true)
         await squads.cancelTransaction(proposal.publicKey)
+        const proposals = await getProposals(
+          squads,
+          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
+        )
+        setCurrentProposal(
+          proposals.find(
+            (proposal) =>
+              proposal.publicKey.toBase58() ===
+              currentProposal?.publicKey.toBase58()
+          )
+        )
         toast.success(`Cancelled proposal ${proposal.publicKey.toBase58()}`)
+        setIsTransactionLoading(false)
       } catch (e: any) {
+        setIsTransactionLoading(false)
         toast.error(capitalizeFirstLetter(e.message))
       }
     }
   }
 
-  return proposal !== undefined &&
+  return currentProposal !== undefined &&
     multisig !== undefined &&
     !isMultisigLoading ? (
     <div className="grid grid-cols-3 gap-4">
@@ -267,15 +335,15 @@ const Proposal = ({
         </div>
         <div className="flex justify-between">
           <div>Proposal</div>
-          <CopyPubkey pubkey={proposal.publicKey.toBase58()} />
+          <CopyPubkey pubkey={currentProposal.publicKey.toBase58()} />
         </div>
         <div className="flex justify-between">
           <div>Creator</div>
-          <CopyPubkey pubkey={proposal.creator.toBase58()} />
+          <CopyPubkey pubkey={currentProposal.creator.toBase58()} />
         </div>
         <div className="flex justify-between">
           <div>Multisig</div>
-          <CopyPubkey pubkey={proposal.ms.toBase58()} />
+          <CopyPubkey pubkey={currentProposal.ms.toBase58()} />
         </div>
       </div>
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-1">
@@ -284,17 +352,17 @@ const Proposal = ({
         <div className="grid grid-cols-3 justify-center gap-4 text-center align-middle">
           <div>
             <div className="font-bold">Confirmed</div>
-            <div className="text-lg">{proposal.approved.length}</div>
+            <div className="text-lg">{currentProposal.approved.length}</div>
           </div>
           {proposalStatus === 'active' || proposalStatus === 'rejected' ? (
             <div>
               <div className="font-bold">Rejected</div>
-              <div className="text-lg">{proposal.rejected.length}</div>
+              <div className="text-lg">{currentProposal.rejected.length}</div>
             </div>
           ) : (
             <div>
               <div className="font-bold">Cancelled</div>
-              <div className="text-lg">{proposal.cancelled.length}</div>
+              <div className="text-lg">{currentProposal.cancelled.length}</div>
             </div>
           )}
           <div>
@@ -310,13 +378,13 @@ const Proposal = ({
               className="action-btn text-base"
               onClick={handleClickApprove}
             >
-              Approve
+              {isTransactionLoading ? <Spinner /> : 'Approve'}
             </button>
             <button
               className="sub-action-btn text-base"
               onClick={handleClickReject}
             >
-              Reject
+              {isTransactionLoading ? <Spinner /> : 'Reject'}
             </button>
           </div>
         ) : proposalStatus === 'executeReady' ? (
@@ -325,17 +393,44 @@ const Proposal = ({
               className="action-btn text-base"
               onClick={handleClickExecute}
             >
-              Execute
+              {isTransactionLoading ? <Spinner /> : 'Execute'}
             </button>
             <button
               className="sub-action-btn text-base"
               onClick={handleClickCancel}
             >
-              Cancel
+              {isTransactionLoading ? <Spinner /> : 'Cancel'}
             </button>
           </div>
         ) : null}
       </div>
+      {currentProposal.approved.length > 0 ? (
+        <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
+          <h4 className="h4 font-semibold">
+            Confirmed: {currentProposal.approved.length}
+          </h4>
+          <hr className="border-gray-700" />
+          {currentProposal.approved.map((pubkey, idx) => (
+            <div className="flex justify-between" key={pubkey.toBase58()}>
+              <div>Key {idx + 1}</div>
+              <CopyPubkey pubkey={pubkey.toBase58()} />
+            </div>
+          ))}
+        </div>
+      ) : currentProposal.rejected.length > 0 ? (
+        <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
+          <h4 className="h4 font-semibold">
+            Rejected: {currentProposal.rejected.length}
+          </h4>
+          <hr className="border-gray-700" />
+          {currentProposal.rejected.map((pubkey, idx) => (
+            <div className="flex justify-between" key={pubkey.toBase58()}>
+              <div>Key {idx + 1}</div>
+              <CopyPubkey pubkey={pubkey.toBase58()} />
+            </div>
+          ))}
+        </div>
+      ) : null}
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
         <h4 className="h4 font-semibold">
           Total Instructions: {instructions.length}
