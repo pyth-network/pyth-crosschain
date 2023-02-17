@@ -1,0 +1,55 @@
+{
+  "name": "@pythnetwork/pyth-evm-price-pusher",
+  "version": "2.0.0",
+  "description": "Pyth EVM Price Pusher",
+  "homepage": "https://pyth.network",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "bin": {
+    "pyth-evm-price-pusher": "./lib/index.js"
+  },
+  "repository": "https://github.com/pyth-network/pyth-js",
+  "scripts": {
+    "test": "jest src/ --passWithNoTests",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint src/",
+    "start": "node lib/index.js",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src"
+  },
+  "keywords": [
+    "pyth",
+    "oracle",
+    "evm",
+    "ethereum"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/ethereum-protocol": "^1.0.2",
+    "@types/jest": "^27.4.1",
+    "@types/yargs": "^17.0.10",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
+    "@typescript-eslint/parser": "^5.20.0",
+    "eslint": "^8.13.0",
+    "jest": "^27.5.1",
+    "prettier": "^2.6.2",
+    "ts-jest": "^27.1.4",
+    "typescript": "^4.6.3"
+  },
+  "dependencies": {
+    "@pythnetwork/pyth-evm-js": "^1.1.0",
+    "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
+    "@truffle/hdwallet-provider": "^2.1.3",
+    "joi": "^17.6.0",
+    "web3": "^1.8.1",
+    "web3-eth-contract": "^1.8.1",
+    "yaml": "^2.1.1",
+    "yargs": "^17.5.1"
+  }
+}
