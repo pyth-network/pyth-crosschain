@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: target_chains/ethereum/contracts
+        working-directory: target_chains/ethereum/contracts/
     steps:
       - uses: actions/checkout@v3
 
