@@ -417,13 +417,28 @@ const Proposal = ({
             </div>
           ))}
         </div>
-      ) : currentProposal.rejected.length > 0 ? (
+      ) : null}
+      {currentProposal.rejected.length > 0 ? (
         <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
           <h4 className="h4 font-semibold">
             Rejected: {currentProposal.rejected.length}
           </h4>
           <hr className="border-gray-700" />
           {currentProposal.rejected.map((pubkey, idx) => (
+            <div className="flex justify-between" key={pubkey.toBase58()}>
+              <div>Key {idx + 1}</div>
+              <CopyPubkey pubkey={pubkey.toBase58()} />
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {currentProposal.cancelled.length > 0 ? (
+        <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
+          <h4 className="h4 font-semibold">
+            Cancelled: {currentProposal.cancelled.length}
+          </h4>
+          <hr className="border-gray-700" />
+          {currentProposal.cancelled.map((pubkey, idx) => (
             <div className="flex justify-between" key={pubkey.toBase58()}>
               <div>Key {idx + 1}</div>
               <CopyPubkey pubkey={pubkey.toBase58()} />
