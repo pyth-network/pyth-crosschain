@@ -311,9 +311,15 @@ mutlisigCommand("propose-token-transfer", "Propose token transfer")
   .option(
     "-m --mint <pubkey>",
     "mint to transfer",
-    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-  ) // default value is solana mainnet USDC SPL
+    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" // default value is solana mainnet USDC SPL
+  )
   .action(async (options: any) => {
+    const wallet = await loadHotWalletOrLedger(
+      options.wallet,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange
+    );
+
     const cluster: PythCluster = options.cluster;
     const destination: PublicKey = new PublicKey(options.destination);
     const mint: PublicKey = new PublicKey(options.mint);
