@@ -311,7 +311,56 @@ mutlisigCommand("propose-token-transfer", "Propose token transfer")
   .option(
     "-m --mint <pubkey>",
     "mint to transfer",
-    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" // default value is solana mainnet USDC SPL
+    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v") // default value is solana mainnet USDC SPL
+    .action(async (options: any) => {
+      const cluster: PythCluster = options.cluster;
+      const destination: PublicKey = new PublicKey(options.destination);
+      const mint: PublicKey = new PublicKey(options.mint);
+      const vault: PublicKey = new PublicKey(options.vault);
+      const amount: number = options.amount;
+  
+      const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
+      const msAccount = await squad.getMultisig(vault);
+      const vaultAuthority = squad.getAuthorityPDA(
+        msAccount.publicKey,
+        msAccount.authorityIndex
+      );
+  
+      const mintAccount = await getMint(
+        squad.connection,
+        mint,
+        undefined,
+        TOKEN_PROGRAM_ID
+      );
+      const sourceTokenAccount = await getAssociatedTokenAddress(
+        mint,
+        vaultAuthority,
+        true
+      );
+      const destinationTokenAccount = await getAssociatedTokenAddress(
+        mint,
+        destination
+      );
+  
+      const proposalInstruction: TransactionInstruction =
+        createTransferInstruction(
+          sourceTokenAccount,
+          destinationTokenAccount,
+          vaultAuthority,
+          BigInt(amount) * BigInt(10) ** BigInt(mintAccount.decimals)
+        );
+  
+      await proposeInstructions(squad, vault, [proposalInstruction], false);
+    } 
+    )
+    
+/**
+ * Activate proposal, mostly useful for cleaning up draft proposals that happen when the browser wallet fails to send all transactions succesfully
+ */
+mutlisigCommand("activate", "Activate a transaction sitting in the multisig")
+  .requiredOption(
+    "-t, --transaction <pubkey>",
+    "address of the draft transaction"
   )
   .action(async (options: any) => {
     const wallet = await loadHotWalletOrLedger(
@@ -320,44 +369,11 @@ mutlisigCommand("propose-token-transfer", "Propose token transfer")
       options.ledgerDerivationChange
     );
 
+    const transaction: PublicKey = new PublicKey(options.transaction);
     const cluster: PythCluster = options.cluster;
-    const destination: PublicKey = new PublicKey(options.destination);
-    const mint: PublicKey = new PublicKey(options.mint);
-    const vault: PublicKey = new PublicKey(options.vault);
-    const amount: number = options.amount;
 
     const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
-    const msAccount = await squad.getMultisig(vault);
-    const vaultAuthority = squad.getAuthorityPDA(
-      msAccount.publicKey,
-      msAccount.authorityIndex
-    );
-
-    const mintAccount = await getMint(
-      squad.connection,
-      mint,
-      undefined,
-      TOKEN_PROGRAM_ID
-    );
-    const sourceTokenAccount = await getAssociatedTokenAddress(
-      mint,
-      vaultAuthority,
-      true
-    );
-    const destinationTokenAccount = await getAssociatedTokenAddress(
-      mint,
-      destination
-    );
-
-    const proposalInstruction: TransactionInstruction =
-      createTransferInstruction(
-        sourceTokenAccount,
-        destinationTokenAccount,
-        vaultAuthority,
-        BigInt(amount) * BigInt(10) ** BigInt(mintAccount.decimals)
-      );
-
-    await proposeInstructions(squad, vault, [proposalInstruction], false);
+    await squad.activateTransaction(transaction);
   });
 
 program.parse();
