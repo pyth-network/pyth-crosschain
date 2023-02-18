@@ -16,6 +16,7 @@ interface MultisigContextProps {
   upgradeMultisigProposals: TransactionAccount[]
   priceFeedMultisigProposals: TransactionAccount[]
   allProposalsIxsParsed: MultisigInstruction[][]
+  setpriceFeedMultisigProposals: any
 }
 
 const MultisigContext = createContext<MultisigContextProps>({
@@ -27,6 +28,7 @@ const MultisigContext = createContext<MultisigContextProps>({
   isLoading: true,
   error: null,
   squads: undefined,
+  setpriceFeedMultisigProposals: () => {},
 })
 
 export const useMultisigContext = () => useContext(MultisigContext)
@@ -48,6 +50,7 @@ export const MultisigContextProvider: React.FC<
     upgradeMultisigProposals,
     priceFeedMultisigProposals,
     allProposalsIxsParsed,
+    setpriceFeedMultisigProposals,
   } = useMultisig(anchorWallet as Wallet)
 
   const value = useMemo(
@@ -57,6 +60,7 @@ export const MultisigContextProvider: React.FC<
       upgradeMultisigProposals,
       priceFeedMultisigProposals,
       allProposalsIxsParsed,
+      setpriceFeedMultisigProposals,
       isLoading,
       error,
       squads,
@@ -70,6 +74,7 @@ export const MultisigContextProvider: React.FC<
       upgradeMultisigProposals,
       priceFeedMultisigProposals,
       allProposalsIxsParsed,
+      setpriceFeedMultisigProposals,
     ]
   )
 

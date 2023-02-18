@@ -46,6 +46,9 @@ interface MultisigHookData {
   upgradeMultisigProposals: TransactionAccount[]
   priceFeedMultisigProposals: TransactionAccount[]
   allProposalsIxsParsed: MultisigInstruction[][]
+  setpriceFeedMultisigProposals: React.Dispatch<
+    React.SetStateAction<TransactionAccount[]>
+  >
 }
 
 const getSortedProposals = async (
@@ -229,5 +232,6 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
     upgradeMultisigProposals,
     priceFeedMultisigProposals,
     allProposalsIxsParsed,
+    setpriceFeedMultisigProposals,
   }
 }

@@ -415,6 +415,7 @@ const General = () => {
         )
         toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
         setIsSendProposalButtonLoading(false)
+        closeModal()
       } catch (e: any) {
         toast.error(capitalizeFirstLetter(e.message))
         setIsSendProposalButtonLoading(false)
