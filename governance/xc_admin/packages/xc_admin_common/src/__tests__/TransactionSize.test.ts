@@ -14,9 +14,12 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import {
+  batchIntoExecutorPayload,
   batchIntoTransactions,
   getSizeOfCompressedU16,
+  getSizeOfExecutorInstructions,
   getSizeOfTransaction,
+  MAX_EXECUTOR_PAYLOAD_SIZE,
 } from "..";
 
 it("Unit test compressed u16 size", async () => {
@@ -129,4 +132,16 @@ it("Unit test for getSizeOfTransaction", async () => {
       getSizeOfTransaction(tx.instructions)
     );
   }
+
+  const batches: TransactionInstruction[][] =
+    batchIntoExecutorPayload(ixsToSend);
+  expect(batches.map((batch) => batch.length).reduce((a, b) => a + b)).toBe(
+    ixsToSend.length
+  );
+  expect(
+    batches.every(
+      (batch) =>
+        getSizeOfExecutorInstructions(batch) <= MAX_EXECUTOR_PAYLOAD_SIZE
+    )
+  ).toBeTruthy();
 });

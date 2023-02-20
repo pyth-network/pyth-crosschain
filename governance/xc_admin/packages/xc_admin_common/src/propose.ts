@@ -19,7 +19,7 @@ import {
 import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
 import { OPS_KEY } from "./multisig";
 
-const MAX_REMOTE_PAYLOAD_SIZE = PACKET_DATA_SIZE - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
+export const MAX_EXECUTOR_PAYLOAD_SIZE = PACKET_DATA_SIZE - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
 
 type SquadInstruction = {
   instruction: TransactionInstruction;
@@ -130,7 +130,7 @@ export function batchIntoExecutorPayload(
     while (
       j < instructions.length &&
       getSizeOfExecutorInstructions(instructions.slice(i, j)) <=
-        MAX_REMOTE_PAYLOAD_SIZE
+        MAX_EXECUTOR_PAYLOAD_SIZE
     ) {
       j += 1;
     }
