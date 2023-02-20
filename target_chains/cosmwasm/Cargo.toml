@@ -12,3 +12,6 @@ codegen-units = 1
 panic = 'abort'
 incremental = false
 overflow-checks = true
+
+[patch.crates-io]
+cw20-wrapped-2 = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.14.8"}

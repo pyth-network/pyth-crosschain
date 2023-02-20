@@ -21,7 +21,7 @@ borsh = "=0.9.3"
 clap = {version = "3.1.18", features = ["derive"]}
 env_logger = "0.8.4"
 log = "0.4.14"
-wormhole-bridge-solana = {git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9"}
+wormhole-bridge-solana = {git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.14.8"}
 pyth-wormhole-attester = {path = "../program"}
 pyth-wormhole-attester-sdk = { path = "../sdk/rust", features=["solana"] }
 pyth-sdk-solana = "0.6.1"
@@ -32,7 +32,7 @@ solana-client = "=1.10.31"
 solana-program = "=1.10.31"
 solana-sdk = "=1.10.31"
 solana-transaction-status = "=1.10.31"
-solitaire = {git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.8.9"}
+solitaire = {git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.14.8"}
 tokio = {version = "1", features = ["sync", "rt-multi-thread", "time"]}
 futures = "0.3.21"
 sha3 = "0.10.6"
