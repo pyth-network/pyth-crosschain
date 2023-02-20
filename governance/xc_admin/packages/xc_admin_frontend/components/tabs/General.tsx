@@ -254,7 +254,7 @@ const General = () => {
   const handleSendProposalButtonClick = async () => {
     if (pythProgramClient && dataChanges && !isMultisigLoading && squads) {
       const instructions: TransactionInstruction[] = []
-      Object.keys(dataChanges).forEach(async (symbol) => {
+      for (const symbol of Object.keys(dataChanges)) {
         const multisigAuthority = squads.getAuthorityPDA(
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
           1
@@ -402,7 +402,7 @@ const General = () => {
               .then((instruction) => instructions.push(instruction))
           })
         }
-      })
+      }
 
       setIsSendProposalButtonLoading(true)
       try {
