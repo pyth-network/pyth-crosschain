@@ -83,10 +83,9 @@ it("Unit test for getSizeOfTransaction", async () => {
 
   transaction.recentBlockhash = "GqdFtdM7zzWw33YyHtBNwPhyBsdYKcfm9gT47bWnbHvs"; // Mock blockhash from devnet
   transaction.feePayer = payer.publicKey;
-  // transaction.partialSign(payer);
-  expect(
-    transaction.message.serialize({ requireAllSignatures: false }).length
-  ).toBe(getSizeOfTransaction(ixsToSend));
+  expect(transaction.serialize({ requireAllSignatures: false }).length).toBe(
+    getSizeOfTransaction(ixsToSend)
+  );
 });
 
 it("Unit test for getSizeOfTransaction", async () => {
@@ -132,7 +131,8 @@ it("Unit test for getSizeOfTransaction", async () => {
   for (let tx of txToSend) {
     tx.recentBlockhash = "GqdFtdM7zzWw33YyHtBNwPhyBsdYKcfm9gT47bWnbHvs"; // Mock blockhash from devnet
     tx.feePayer = payer.publicKey;
-    tx.partialSign(payer);
-    expect(tx.serialize().length).toBe(getSizeOfTransaction(tx.instructions));
+    expect(tx.serialize({ requireAllSignatures: false }).length).toBe(
+      getSizeOfTransaction(tx.instructions)
+    );
   }
 });
