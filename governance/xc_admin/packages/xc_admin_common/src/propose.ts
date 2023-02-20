@@ -105,7 +105,11 @@ export async function proposeInstructions(
     squad.connection,
     squad.wallet,
     AnchorProvider.defaultOptions()
-  ).sendAndConfirm(txToSend[0]);
+  ).sendAll(
+    txToSend.map((tx) => {
+      return { tx, signers: [] };
+    })
+  );
   return newProposalAddress;
 }
 
