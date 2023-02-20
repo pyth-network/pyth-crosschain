@@ -160,4 +160,18 @@ export const CONFIG: Config = {
     // used only for development and testing purposes
     ...PYTH_SOURCES_TESTNET,
   },
+  [NETWORKS.SEI_TESTNET]: {
+    // TODO: update it when there is a wormhole deployment on SEI
+    wormhole_contract: "sei1cfpxp6zggqzgsngt5tn8kj53pemkg6e4s7j8qj",
+    governance_source_index: 0,
+    governance_sequence_number: 0,
+    // TODO: update this too
+    chain_id: 19,
+    valid_time_period_secs: 60,
+    fee: {
+      amount: "1",
+      denom: "usei",
+    },
+    ...PYTH_SOURCES_TESTNET,
+  },
 };

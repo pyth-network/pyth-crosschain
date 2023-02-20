@@ -3,11 +3,13 @@ import { TerraHost } from "./terra";
 import { InjectiveHost } from "./injective";
 import { NETWORKS } from "../network";
 import { OsmosisHost } from "./osmosis";
+import { SeiHost } from "./sei";
 
 export enum CONFIG_TYPE {
   TERRA = "terra",
   INJECTIVE = "injective",
   OSMOSIS = "osmosis",
+  SEI = "sei",
 }
 
 export const CONFIG: Config = {
@@ -53,6 +55,12 @@ export const CONFIG: Config = {
       endpoint: "http://localhost:26657",
     },
   },
+  [NETWORKS.SEI_TESTNET]: {
+    type: CONFIG_TYPE.SEI,
+    host: {
+      endpoint: "https://node-6.sei-chain-incentivized.com/sei-chain-tm/",
+    },
+  },
 };
 
 export type Config = Record<NETWORKS, NetworkConfig>;
@@ -69,4 +77,8 @@ export type NetworkConfig =
   | {
       type: CONFIG_TYPE.OSMOSIS;
       host: OsmosisHost;
+    }
+  | {
+      type: CONFIG_TYPE.SEI;
+      host: SeiHost;
     };

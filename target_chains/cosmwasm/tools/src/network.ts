@@ -5,6 +5,7 @@ export enum NETWORKS {
   INJECTIVE_TESTNET = "injective_testnet",
   OSMOSIS_TESTNET = "osmosis_testnet",
   OSMOSIS_LOCAL = "osmosis_local",
+  SEI_TESTNET = "sei_testnet",
 }
 
 export const NETWORKS_OPTIONS = Object.values(NETWORKS);

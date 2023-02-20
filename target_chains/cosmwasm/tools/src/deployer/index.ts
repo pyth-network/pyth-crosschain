@@ -2,6 +2,7 @@ import { CONFIG_TYPE, NetworkConfig } from "./config";
 import { TerraDeployer } from "./terra";
 import { InjectiveDeployer } from "./injective";
 import { OsmosisDeployer } from "./osmosis";
+import { SeiDeployer } from "./sei";
 
 export type ContractInfo = {
   codeId: number;
@@ -34,6 +35,9 @@ export class DeployerFactory {
 
       case CONFIG_TYPE.OSMOSIS:
         return OsmosisDeployer.fromHostAndMnemonic(config.host, mnemonic);
+
+      case CONFIG_TYPE.SEI:
+        return SeiDeployer.fromHostAndMnemonic(config.host, mnemonic);
 
       default:
         throw new Error("Invalid config type");
