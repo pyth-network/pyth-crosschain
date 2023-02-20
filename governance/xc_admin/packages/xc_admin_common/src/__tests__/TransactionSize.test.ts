@@ -17,10 +17,7 @@ import {
   batchIntoTransactions,
   getSizeOfCompressedU16,
   getSizeOfTransaction,
-  MultisigInstructionProgram,
-  MultisigParser,
 } from "..";
-import { PythMultisigInstruction } from "../multisig_transaction/PythMultisigInstruction";
 
 it("Unit test compressed u16 size", async () => {
   expect(getSizeOfCompressedU16(127)).toBe(1);
@@ -115,10 +112,7 @@ it("Unit test for getSizeOfTransaction", async () => {
     );
   }
 
-  const txToSend: Transaction[] = batchIntoTransactions(
-    ixsToSend,
-    payer.publicKey
-  );
+  const txToSend: Transaction[] = batchIntoTransactions(ixsToSend);
   expect(
     txToSend.map((tx) => tx.instructions.length).reduce((a, b) => a + b)
   ).toBe(ixsToSend.length);

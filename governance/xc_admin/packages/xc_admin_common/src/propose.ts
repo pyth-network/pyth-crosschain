@@ -19,6 +19,8 @@ import {
 import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
 import { OPS_KEY } from "./multisig";
 
+const MAX_REMOTE_PAYLOAD_SIZE = PACKET_DATA_SIZE - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
+
 type SquadInstruction = {
   instruction: TransactionInstruction;
   authorityIndex?: number;
@@ -43,7 +45,7 @@ export async function proposeInstructions(
 ): Promise<PublicKey> {
   const msAccount = await squad.getMultisig(vault);
   let ixToSend: TransactionInstruction[] = [];
-  const createProposal = ixToSend.push(
+  ixToSend.push(
     await squad.buildCreateTransaction(
       msAccount.publicKey,
       msAccount.authorityIndex,
@@ -60,12 +62,14 @@ export async function proposeInstructions(
     if (!wormholeAddress) {
       throw new Error("Need wormhole address");
     }
-    for (let i = 0; i < instructions.length; i++) {
+
+    const batches = batchIntoExecutorPayload(instructions);
+    for (const [i, batch] of batches.entries()) {
       const squadIx = await wrapAsRemoteInstruction(
         squad,
         vault,
         newProposalAddress,
-        instructions[i],
+        batch,
         i + 1,
         wormholeAddress
       );
@@ -100,7 +104,9 @@ export async function proposeInstructions(
 
   ixToSend.push(await squad.buildApproveTransaction(vault, newProposalAddress));
 
-  const txToSend = batchIntoTransactions(ixToSend, squad.wallet.publicKey);
+  const txToSend = batchIntoTransactions(ixToSend);
+  console.log(txToSend.map((tx) => tx.instructions.length));
+  console.log(txToSend.map((tx) => getSizeOfTransaction(tx.instructions)));
   await new AnchorProvider(
     squad.connection,
     squad.wallet,
@@ -114,11 +120,37 @@ export async function proposeInstructions(
 }
 
 /**
+ * Batch instructions into batches for inclusion in a remote executor payload
+ */
+export function batchIntoExecutorPayload(
+  instructions: TransactionInstruction[]
+): TransactionInstruction[][] {
+  let i = 0;
+  const batches: TransactionInstruction[][] = [];
+  while (i < instructions.length) {
+    let j = i + 2;
+    while (
+      j < instructions.length &&
+      getSizeOfExecutorInstructions(instructions.slice(i, j)) <=
+        MAX_REMOTE_PAYLOAD_SIZE
+    ) {
+      j += 1;
+    }
+    const batch: TransactionInstruction[] = [];
+    for (let k = i; k < j - 1; k += 1) {
+      batch.push(instructions[k]);
+    }
+    i = j - 1;
+    batches.push(batch);
+  }
+  return batches;
+}
+
+/**
  * Batch instructions into transactions
  */
 export function batchIntoTransactions(
-  instructions: TransactionInstruction[],
-  feePayer: PublicKey
+  instructions: TransactionInstruction[]
 ): Transaction[] {
   let i = 0;
   const txToSend: Transaction[] = [];
@@ -131,7 +163,6 @@ export function batchIntoTransactions(
       j += 1;
     }
     const tx = new Transaction();
-    tx.feePayer = feePayer;
     for (let k = i; k < j - 1; k += 1) {
       tx.add(instructions[k]);
     }
@@ -141,6 +172,16 @@ export function batchIntoTransactions(
   return txToSend;
 }
 
+/** Get the size of instructions when serialized as in a remote executor payload */
+export function getSizeOfExecutorInstructions(
+  instructions: TransactionInstruction[]
+) {
+  return instructions
+    .map((ix) => {
+      return 32 + 4 + ix.keys.length * 34 + 4 + ix.data.length;
+    })
+    .reduce((a, b) => a + b);
+}
 /**
  * Get the size of a transaction that would contain the provided array of instructions
  */
@@ -170,6 +211,7 @@ export function getSizeOfTransaction(
         ix.data.length
     )
     .reduce((a, b) => a + b, 0);
+
   return (
     1 +
     signers.size * 64 +
@@ -194,7 +236,7 @@ export function getSizeOfCompressedU16(n: number) {
  * @param squad Squads client
  * @param vault vault public key (the id of the multisig where these instructions should be proposed)
  * @param proposalAddress address of the proposal
- * @param instruction instruction to be wrapped in a Wormhole message
+ * @param instructions instructions to be wrapped in a Wormhole message
  * @param instructionIndex index of the instruction within the proposal
  * @param wormholeAddress address of the Wormhole bridge
  * @returns an instruction to be proposed
@@ -203,7 +245,7 @@ export async function wrapAsRemoteInstruction(
   squad: Squads,
   vault: PublicKey,
   proposalAddress: PublicKey,
-  instruction: TransactionInstruction,
+  instructions: TransactionInstruction[],
   instructionIndex: number,
   wormholeAddress: PublicKey
 ): Promise<SquadInstruction> {
@@ -225,9 +267,7 @@ export async function wrapAsRemoteInstruction(
     provider
   );
 
-  const buffer: Buffer = new ExecutePostedVaa("pythnet", [
-    instruction,
-  ]).encode();
+  const buffer: Buffer = new ExecutePostedVaa("pythnet", instructions).encode();
 
   const accounts = getPostMessageAccounts(wormholeAddress, emitter, messagePDA);
 
