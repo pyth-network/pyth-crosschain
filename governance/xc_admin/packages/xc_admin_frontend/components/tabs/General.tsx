@@ -175,6 +175,10 @@ const General = () => {
               // if symbol is not in existing symbols, create new entry
               changes[symbol] = { new: {} }
               changes[symbol].new = { ...fileDataParsed[symbol] }
+              changes[symbol].new.metadata = {
+                ...changes[symbol].new.metadata,
+                symbol,
+              }
               // these fields are generated deterministically and should not be updated
               delete changes[symbol].new.address
               delete changes[symbol].new.priceAccounts[0].address
@@ -276,7 +280,7 @@ const General = () => {
           // create add product account instruction
           instructions.push(
             await pythProgramClient.methods
-              .addProduct({ ...newChanges.metadata, symbol: symbol })
+              .addProduct({ ...newChanges.metadata })
               .accounts({
                 fundingAccount,
                 tailMappingAccount: rawConfig.mappingAccounts[0].address,
