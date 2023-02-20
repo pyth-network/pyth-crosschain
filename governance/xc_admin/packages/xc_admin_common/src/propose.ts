@@ -6,6 +6,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   SYSVAR_CLOCK_PUBKEY,
   SystemProgram,
+  PACKET_DATA_SIZE,
 } from "@solana/web3.js";
 import { BN } from "bn.js";
 import { AnchorProvider } from "@project-serum/anchor";
@@ -41,8 +42,8 @@ export async function proposeInstructions(
   wormholeAddress?: PublicKey
 ): Promise<PublicKey> {
   const msAccount = await squad.getMultisig(vault);
-  let txToSend: Transaction[] = [];
-  const createProposal = new Transaction().add(
+  let ixToSend: TransactionInstruction[] = [];
+  const createProposal = ixToSend.push(
     await squad.buildCreateTransaction(
       msAccount.publicKey,
       msAccount.authorityIndex,
@@ -54,7 +55,6 @@ export async function proposeInstructions(
     new BN(msAccount.transactionIndex + 1),
     squad.multisigProgramId
   )[0];
-  txToSend.push(createProposal);
 
   if (remote) {
     if (!wormholeAddress) {
@@ -69,57 +69,122 @@ export async function proposeInstructions(
         i + 1,
         wormholeAddress
       );
-      txToSend.push(
-        new Transaction().add(
-          await squad.buildAddInstruction(
-            vault,
-            newProposalAddress,
-            squadIx.instruction,
-            i + 1,
-            squadIx.authorityIndex,
-            squadIx.authorityBump,
-            squadIx.authorityType
-          )
+      ixToSend.push(
+        await squad.buildAddInstruction(
+          vault,
+          newProposalAddress,
+          squadIx.instruction,
+          i + 1,
+          squadIx.authorityIndex,
+          squadIx.authorityBump,
+          squadIx.authorityType
         )
       );
     }
   } else {
     for (let i = 0; i < instructions.length; i++) {
-      txToSend.push(
-        new Transaction().add(
-          await squad.buildAddInstruction(
-            vault,
-            newProposalAddress,
-            instructions[i],
-            i + 1
-          )
+      ixToSend.push(
+        await squad.buildAddInstruction(
+          vault,
+          newProposalAddress,
+          instructions[i],
+          i + 1
         )
       );
     }
   }
 
-  txToSend.push(
-    new Transaction().add(
-      await squad.buildActivateTransaction(vault, newProposalAddress)
-    )
+  ixToSend.push(
+    await squad.buildActivateTransaction(vault, newProposalAddress)
   );
 
-  txToSend.push(
-    new Transaction().add(
-      await squad.buildApproveTransaction(vault, newProposalAddress)
-    )
-  );
+  ixToSend.push(await squad.buildApproveTransaction(vault, newProposalAddress));
 
+  const txToSend = batchIntoTransactions(instructions, squad.wallet.publicKey);
+  console.log(txToSend.length);
+  console.log(txToSend.map((tx) => getSizeOfTransaction(tx.instructions)));
   await new AnchorProvider(
     squad.connection,
     squad.wallet,
     AnchorProvider.defaultOptions()
-  ).sendAll(
-    txToSend.map((tx) => {
-      return { tx, signers: [] };
-    })
-  );
+  ).sendAndConfirm(txToSend[0]);
   return newProposalAddress;
+}
+
+/**
+ * Batch instructions into transactions
+ */
+export function batchIntoTransactions(
+  instructions: TransactionInstruction[],
+  feePayer: PublicKey
+): Transaction[] {
+  let i = 0;
+  const txToSend: Transaction[] = [];
+  while (i < instructions.length) {
+    let j = i + 2;
+    while (
+      j < instructions.length &&
+      getSizeOfTransaction(instructions.slice(i, j)) <= PACKET_DATA_SIZE
+    ) {
+      j += 1;
+    }
+    const tx = new Transaction();
+    tx.feePayer = feePayer;
+    for (let k = i; k < j - 1; k += 1) {
+      tx.add(instructions[k]);
+    }
+    i = j - 1;
+    txToSend.push(tx);
+  }
+  return txToSend;
+}
+
+/**
+ * Get the size of a transaction that would contain the provided array of instructions
+ */
+export function getSizeOfTransaction(
+  instructions: TransactionInstruction[]
+): number {
+  const signers = new Set<string>();
+  const accounts = new Set<string>();
+
+  instructions.map((ix) => {
+    accounts.add(ix.programId.toBase58()),
+      ix.keys.map((key) => {
+        if (key.isSigner) {
+          signers.add(key.pubkey.toBase58());
+        }
+        accounts.add(key.pubkey.toBase58());
+      });
+  });
+
+  const instruction_sizes: number = instructions
+    .map(
+      (ix) =>
+        1 +
+        getSizeOfCompressedU16(ix.keys.length) +
+        ix.keys.length +
+        getSizeOfCompressedU16(ix.data.length) +
+        ix.data.length
+    )
+    .reduce((a, b) => a + b, 0);
+  return (
+    1 +
+    signers.size * 64 +
+    3 +
+    getSizeOfCompressedU16(accounts.size) +
+    32 * accounts.size +
+    32 +
+    getSizeOfCompressedU16(instructions.length) +
+    instruction_sizes
+  );
+}
+
+/**
+ * Get the size of n in bytes when serialized as a CompressedU16
+ */
+export function getSizeOfCompressedU16(n: number) {
+  return 1 + Number(n >= 128) + Number(n >= 16384);
 }
 
 /**
