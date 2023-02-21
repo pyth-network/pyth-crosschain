@@ -29,7 +29,6 @@ import {
   mapKey,
   REMOTE_EXECUTOR_ADDRESS,
   envOrErr,
-  getSizeOfTransaction,
 } from "xc_admin_common";
 
 const CLUSTER: PythCluster = envOrErr("CLUSTER") as PythCluster;
@@ -62,7 +61,9 @@ async function run() {
   const claimRecord = await remoteExecutor.account.claimRecord.fetchNullable(
     claimRecordAddress
   );
-  let lastSequenceNumber: number = 15;
+  let lastSequenceNumber: number = claimRecord
+    ? (claimRecord.sequence as BN).toNumber()
+    : -1;
   lastSequenceNumber = Math.max(lastSequenceNumber, OFFSET);
   const wormholeApi = WORMHOLE_API_ENDPOINT[CLUSTER];
 
@@ -119,7 +120,6 @@ async function run() {
             parsedInstruction instanceof PythMultisigInstruction &&
             parsedInstruction.name == "addProduct"
           ) {
-            console.log("ADDPRODUCT");
             preInstructions.push(
               await getCreateAccountWithSeedInstruction(
                 provider.connection,
@@ -133,7 +133,6 @@ async function run() {
             parsedInstruction instanceof PythMultisigInstruction &&
             parsedInstruction.name == "addPrice"
           ) {
-            console.log("ADDPRICE");
             const productAccount = await provider.connection.getAccountInfo(
               parsedInstruction.accounts.named.productAccount.pubkey
             );
@@ -153,7 +152,7 @@ async function run() {
           }
         }
 
-        const tx = await remoteExecutor.methods
+        await remoteExecutor.methods
           .executePostedVaa()
           .accounts({
             claimRecord: claimRecordAddress,
@@ -161,18 +160,7 @@ async function run() {
           })
           .remainingAccounts(extraAccountMetas)
           .preInstructions(preInstructions)
-          .transaction();
-        tx.recentBlockhash = "GqdFtdM7zzWw33YyHtBNwPhyBsdYKcfm9gT47bWnbHvs";
-        tx.feePayer = remoteExecutor.provider.publicKey;
-        console.log(
-          "ACCOUNTS: ",
-          tx.instructions.map((ix) => ix.keys.length)
-        );
-        console.log(
-          "SIZE : ",
-          tx.serialize({ requireAllSignatures: false }).length
-        );
-        console.log("SIZE EXP: ", getSizeOfTransaction(tx.instructions));
+          .rpc({ skipPreflight: true });
       }
     } else if (response.code == 5) {
       throw new Error(
