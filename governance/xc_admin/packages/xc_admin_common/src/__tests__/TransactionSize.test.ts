@@ -14,13 +14,13 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import {
+  batchIntoExecutorPayload,
   batchIntoTransactions,
   getSizeOfCompressedU16,
+  getSizeOfExecutorInstructions,
   getSizeOfTransaction,
-  MultisigInstructionProgram,
-  MultisigParser,
+  MAX_EXECUTOR_PAYLOAD_SIZE,
 } from "..";
-import { PythMultisigInstruction } from "../multisig_transaction/PythMultisigInstruction";
 
 it("Unit test compressed u16 size", async () => {
   expect(getSizeOfCompressedU16(127)).toBe(1);
@@ -115,10 +115,7 @@ it("Unit test for getSizeOfTransaction", async () => {
     );
   }
 
-  const txToSend: Transaction[] = batchIntoTransactions(
-    ixsToSend,
-    payer.publicKey
-  );
+  const txToSend: Transaction[] = batchIntoTransactions(ixsToSend);
   expect(
     txToSend.map((tx) => tx.instructions.length).reduce((a, b) => a + b)
   ).toBe(ixsToSend.length);
@@ -135,4 +132,16 @@ it("Unit test for getSizeOfTransaction", async () => {
       getSizeOfTransaction(tx.instructions)
     );
   }
+
+  const batches: TransactionInstruction[][] =
+    batchIntoExecutorPayload(ixsToSend);
+  expect(batches.map((batch) => batch.length).reduce((a, b) => a + b)).toBe(
+    ixsToSend.length
+  );
+  expect(
+    batches.every(
+      (batch) =>
+        getSizeOfExecutorInstructions(batch) <= MAX_EXECUTOR_PAYLOAD_SIZE
+    )
+  ).toBeTruthy();
 });
