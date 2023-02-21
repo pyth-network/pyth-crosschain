@@ -111,7 +111,6 @@ export async function proposeInstructions(
   ixToSend.push(await squad.buildApproveTransaction(vault, newProposalAddress));
 
   const txToSend = batchIntoTransactions(ixToSend);
-  console.log(txToSend.length);
   await new AnchorProvider(
     squad.connection,
     squad.wallet,
