@@ -20,6 +20,7 @@ import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
 import { OPS_KEY } from "./multisig";
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE = PACKET_DATA_SIZE - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
+export const SIZE_OF_SIGNED_BATCH = 30;
 
 type SquadInstruction = {
   instruction: TransactionInstruction;
@@ -105,15 +106,18 @@ export async function proposeInstructions(
   ixToSend.push(await squad.buildApproveTransaction(vault, newProposalAddress));
 
   const txToSend = batchIntoTransactions(ixToSend);
-  await new AnchorProvider(
-    squad.connection,
-    squad.wallet,
-    AnchorProvider.defaultOptions()
-  ).sendAll(
-    txToSend.map((tx) => {
-      return { tx, signers: [] };
-    })
-  );
+
+  for (let i = 0; i < txToSend.length; i += SIZE_OF_SIGNED_BATCH) {
+    await new AnchorProvider(
+      squad.connection,
+      squad.wallet,
+      AnchorProvider.defaultOptions()
+    ).sendAll(
+      txToSend.slice(i, i + SIZE_OF_SIGNED_BATCH).map((tx) => {
+        return { tx, signers: [] };
+      })
+    );
+  }
   return newProposalAddress;
 }
 
