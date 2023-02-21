@@ -20,10 +20,9 @@ Note:
 ### Example
 
 To activate a transaction:
+
 ```
 
 npx ts-node src/index.ts activate -t <TRANSACTION_HASH> -c <CLUSTER: [mainnet|devnet]> -v <VAULT_ADDRESS> -w <WALLET_SECRET_KEY_FILEPATH: [filepath|"ledger"]> -lda <LEDGER_DERIVATION_ACCOUNT> -ldc <LEDGER_DERIVATION_CHANGE>
 
 ```
-
-
