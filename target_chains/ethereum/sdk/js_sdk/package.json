@@ -11,7 +11,7 @@
   "files": [
     "lib/**/*"
   ],
-  "repository": "https://github.com/pyth-network/pyth-crosschain/target_chains/ethereum/js_sdk",
+  "repository": "https://github.com/pyth-network/pyth-crosschain/target_chains/ethereum/sdk/js",
   "scripts": {
     "test": "jest --passWithNoTests",
     "build": "tsc",
