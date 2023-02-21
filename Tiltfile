@@ -5,16 +5,18 @@
 #  that, for example, changing the contract source code won't cause Solana itself to be rebuilt.
 #
 
+allow_k8s_contexts(k8s_context())
+
+image_registry = os.environ.get("TILT_IMAGE_REGISTRY")
+cluster_namespace = os.environ.get("TILT_NAMESPACE")
+
 load("ext://namespace", "namespace_create", "namespace_inject")
 load("ext://secret", "secret_yaml_generic")
 
-allow_k8s_contexts("ci")
+default_registry(image_registry, single_name="development")
 
 # Disable telemetry by default
 analytics_settings(False)
-
-# Moar updates (default is 3)
-update_settings(max_parallel_updates=10)
 
 # Runtime configuration
 config.define_bool("ci", False, "We are running in CI")
@@ -42,7 +44,7 @@ config.define_bool("pyth", False, "Enable Pyth-to-Wormhole component")
 
 cfg = config.parse()
 num_guardians = int(cfg.get("num", "1"))
-namespace = cfg.get("namespace", "wormhole")
+namespace = cluster_namespace # cfg.get("namespace", "development")
 gcpProject = cfg.get("gcpProject", "local-dev")
 bigTableKeyPath = cfg.get("bigTableKeyPath", "./event_database/devnet_key.json")
 webHost = cfg.get("webHost", "localhost")
@@ -56,8 +58,8 @@ else:
 
 # namespace
 
-if not ci:
-    namespace_create(namespace)
+# if not ci:
+#     namespace_create(namespace)
 
 def k8s_yaml_with_ns(objects):
     return k8s_yaml(namespace_inject(objects, namespace))
