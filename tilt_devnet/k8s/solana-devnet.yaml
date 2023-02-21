@@ -96,6 +96,13 @@ spec:
               port: rpc
               path: /health
             periodSeconds: 1
+          resources:
+            requests:
+              cpu: 500m
+              memory: 2Gi
+            limits:
+              cpu: 1000m
+              memory: 4Gi
         - name: setup
           image: bridge-client
           command:
@@ -105,6 +112,13 @@ spec:
               port: 2000
             periodSeconds: 1
             failureThreshold: 300
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 250m
+              memory: 250Mi
       volumes:
         - name: ledger
           emptyDir:
