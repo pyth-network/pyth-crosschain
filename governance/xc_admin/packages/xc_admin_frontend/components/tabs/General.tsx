@@ -421,7 +421,8 @@ const General = () => {
         setIsSendProposalButtonLoading(false)
         closeModal()
       } catch (e: any) {
-        toast.error(capitalizeFirstLetter(e.message))
+        throw e
+        // toast.error(capitalizeFirstLetter(e.message))
         setIsSendProposalButtonLoading(false)
       }
     }

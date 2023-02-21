@@ -64,6 +64,9 @@ export async function proposeInstructions(
     }
 
     const batches = batchIntoExecutorPayload(instructions);
+    if (255 <= batches.length) {
+      throw Error("A proposal can only supports 255 instructions");
+    }
     for (const [i, batch] of batches.entries()) {
       const squadIx = await wrapAsRemoteInstruction(
         squad,
@@ -86,6 +89,9 @@ export async function proposeInstructions(
       );
     }
   } else {
+    if (255 <= instructions.length) {
+      throw Error("A proposal can only supports 255 instructions");
+    }
     for (let i = 0; i < instructions.length; i++) {
       ixToSend.push(
         await squad.buildAddInstruction(
@@ -105,6 +111,7 @@ export async function proposeInstructions(
   ixToSend.push(await squad.buildApproveTransaction(vault, newProposalAddress));
 
   const txToSend = batchIntoTransactions(ixToSend);
+  console.log(txToSend.length);
   await new AnchorProvider(
     squad.connection,
     squad.wallet,
