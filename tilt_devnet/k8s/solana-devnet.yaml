@@ -122,7 +122,7 @@ spec:
       volumes:
         - name: ledger
           emptyDir:
-            sizeLimit: 1Gi
+            sizeLimit: 5Gi
         - name: tmp
           emptyDir:
             sizeLimit: 10Mi
