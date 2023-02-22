@@ -40,7 +40,7 @@ spec:
             - /guardiand
             - spy
             - --nodeKey
-            - /node.key
+            - /var/keys/node.key
             - --spyRPC
             - "[::]:7072"
             # Hardcoded devnet bootstrap (generated from deterministic key in guardiand)
@@ -54,7 +54,14 @@ spec:
             - containerPort: 6060
               name: status
               protocol: TCP
+          volumeMounts:
+            - name: keys
+              mountPath: /var/keys
           readinessProbe:
             httpGet:
               port: 6060
               path: /metrics
+      volumes:
+        - name: keys
+          emptyDir:
+            sizeLimit: 10Mi
