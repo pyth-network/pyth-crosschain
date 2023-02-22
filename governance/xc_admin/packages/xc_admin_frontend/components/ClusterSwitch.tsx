@@ -57,7 +57,7 @@ const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
   ]
 
   return (
-    <Menu as="div" className="relative z-[2] block w-[180px] text-left">
+    <Menu as="div" className="relative z-[3] block w-[180px] text-left">
       {({ open }) => (
         <>
           <Menu.Button
