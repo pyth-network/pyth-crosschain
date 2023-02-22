@@ -110,6 +110,7 @@ def pyth_admin_run_or_die(subcommand, args=[], debug=False, **kwargs):
         + ["-k", PYTH_KEY_STORE]
         + ["-r", SOL_RPC_HOST]
         + ["-c", "finalized"],
+        debug=debug,
         **kwargs,
     )
 
