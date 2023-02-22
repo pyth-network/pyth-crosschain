@@ -116,7 +116,7 @@ sol_run_or_die("airdrop", [
 ])
 
 # Create a mapping
-pyth_admin_run_or_die("init_mapping", capture_output=True)
+pyth_admin_run_or_die("init_mapping", debug=True, capture_output=True)
 
 mapping_addr = sol_run_or_die("address", args=[
     "--keypair", PYTH_MAPPING_KEYPAIR
