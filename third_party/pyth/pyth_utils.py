@@ -119,7 +119,7 @@ def sol_run_or_die(subcommand, args=[], **kwargs):
     """
     Solana boilerplate in front of run_or_die
     """
-    return run_or_die(["solana", subcommand] + args + ["--url", SOL_RPC_URL], **kwargs)
+    return run_or_die(["solana", subcommand] + args + ["--url", SOL_RPC_URL], debug=debug, **kwargs)
 
 
 def get_json(host, port, path):
