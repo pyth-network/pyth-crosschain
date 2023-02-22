@@ -60,6 +60,9 @@ spec:
             # timestamp)
             - --time="1970-01-02T00:00:00+00:00"
             - --host=0.0.0.0
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           ports:
             - containerPort: 8545
               name: rpc
@@ -76,6 +79,15 @@ spec:
             - "npm run migrate -- --network development &&
               npx truffle test test/pyth.js 2>&1 &&
               nc -lk 0.0.0.0 2000"
+          volumeMounts:
+            - name: ethereum
+              subPath: build
+              mountPath: /home/node/target_chains/ethereum/build
+            - name: ethereum
+              subPath: .openzeppelin
+              mountPath: /home/node/target_chains/ethereum/.openzeppelin
+            - name: tmp
+              mountPath: /tmp
           readinessProbe:
             periodSeconds: 1
             failureThreshold: 300
@@ -87,6 +99,13 @@ spec:
             - /bin/sh
             - -c
             - "npx truffle exec mine.js"
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 10Mi
+        - name: ethereum
+          emptyDir:
+            sizeLimit: 1Gi
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -119,6 +138,9 @@ spec:
             - containerPort: 8545
               name: rpc
               protocol: TCP
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           readinessProbe:
             tcpSocket:
               port: rpc
@@ -130,6 +152,15 @@ spec:
             - -c
             - "npm run migrate -- --network development &&
               nc -lk 0.0.0.0 2000"
+          volumeMounts:
+            - name: ethereum
+              subPath: build
+              mountPath: /home/node/target_chains/ethereum/build
+            - name: ethereum
+              subPath: .openzeppelin
+              mountPath: /home/node/target_chains/ethereum/.openzeppelin
+            - name: tmp
+              mountPath: /tmp
           readinessProbe:
             periodSeconds: 1
             failureThreshold: 300
@@ -141,3 +172,10 @@ spec:
             - /bin/sh
             - -c
             - "npx truffle exec mine.js"
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 10Mi
+        - name: ethereum
+          emptyDir:
+            sizeLimit: 1Gi
