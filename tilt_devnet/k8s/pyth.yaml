@@ -30,12 +30,31 @@ spec:
     spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 0
+      initContainers:
+        - name: copy-keys
+          image: pyth
+          command:
+            - /bin/sh
+            - -c
+            - |-
+              cp /home/pyth/.pythd/* /var/pythd/ &&
+              chown -R pyth:pyth /var/pythd &&
+              chmod 700 /var/pythd &&
+              true
+          volumeMounts:
+            - name: pythd
+              mountPath: /var/pythd
+          securityContext:
+            runAsUser: 0
       containers:
         - name: pyth-publisher
           image: pyth
           command:
             - python3
             - /opt/pyth/pyth_publisher.py
+          volumeMounts:
+            - name: pythd
+              mountPath: /home/pyth/.pythd
           readinessProbe:
             tcpSocket:
               port: 2000
@@ -45,3 +64,7 @@ spec:
             - containerPort: 4242
               name: pyth-accounts
               protocol: TCP
+      volumes:
+        - name: pythd
+          emptyDir:
+            sizeLimit: 100Mi
