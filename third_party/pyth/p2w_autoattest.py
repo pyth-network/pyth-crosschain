@@ -116,9 +116,10 @@ max_batch_jobs: 1000 # Where we're going there's no oomkiller
 default_attestation_conditions:
   min_interval_secs: 10
 symbol_groups:
-  - group_name: fast_interval_only
+  - group_name: fast_interval_rate_limited
     conditions:
       min_interval_secs: 1
+      rate_limit_interval_secs: 2
     symbols:
 """
 

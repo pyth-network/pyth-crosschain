@@ -1,3 +1,5 @@
+use pyth_wormhole_attester::attest::RATE_LIMIT_EXCEEDED_MSG;
+
 pub mod cli;
 
 use {
@@ -585,6 +587,7 @@ async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrB
             symbols: batch.symbols.to_vec(),
             max_jobs_sema: sema.clone(),
             message_q_mtx: message_q_mtx.clone(),
+            rate_limit_interval_secs: batch.conditions.rate_limit_interval_secs,
         });
 
         // This short-lived permit prevents scheduling excess
@@ -603,16 +606,17 @@ async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrB
 /// Arguments for attestation_job(). This struct rules out same-type
 /// ordering errors due to the large argument count
 pub struct AttestationJobArgs {
-    pub rlmtx:         Arc<RLMutex<RpcCfg>>,
-    pub batch_no:      usize,
-    pub batch_count:   usize,
-    pub group_name:    String,
-    pub p2w_addr:      Pubkey,
-    pub config:        Pyth2WormholeConfig,
-    pub payer:         Keypair,
-    pub symbols:       Vec<P2WSymbol>,
-    pub max_jobs_sema: Arc<Semaphore>,
-    pub message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
+    pub rlmtx:                    Arc<RLMutex<RpcCfg>>,
+    pub batch_no:                 usize,
+    pub batch_count:              usize,
+    pub group_name:               String,
+    pub p2w_addr:                 Pubkey,
+    pub config:                   Pyth2WormholeConfig,
+    pub payer:                    Keypair,
+    pub symbols:                  Vec<P2WSymbol>,
+    pub max_jobs_sema:            Arc<Semaphore>,
+    pub rate_limit_interval_secs: Option<u32>,
+    pub message_q_mtx:            Arc<Mutex<P2WMessageQueue>>,
 }
 
 /// A future for a single attempt to attest a batch on Solana.
@@ -627,6 +631,7 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
         payer,
         symbols,
         max_jobs_sema,
+        rate_limit_interval_secs,
         message_q_mtx,
     } = args;
     let batch_no4err_msg = batch_no;
@@ -662,19 +667,42 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
 
         let wh_msg_id = message_q_mtx.lock().await.get_account()?.id;
 
-        let tx_res: Result<_, ErrBoxSend> = gen_attest_tx(
+        let tx = gen_attest_tx(
             p2w_addr,
             &config,
             &payer,
             wh_msg_id,
             symbols.as_slice(),
             latest_blockhash,
-        );
+            rate_limit_interval_secs,
+        )?;
+
+        // Detect rate limiting error early
+        let simulation_res = rpc.simulate_transaction(&tx).await?;
+
+        match simulation_res.value.logs {
+            Some(logs) => {
+                for log in logs {
+                    if log.contains(RATE_LIMIT_EXCEEDED_MSG) {
+                        info!(
+                            "Batch {}/{}, group {:?} OK: rate limit reached, backing off",
+                            batch_no, batch_count, group_name
+                        );
+                        // Note: We return early if tx simulation
+                        // suggests rate limit was reached. This
+                        // ensures that we don't count this attempt in
+                        // ok/err monitoring and healthcheck counters.
+                        return Ok(());
+                    }
+                }
+            }
+            None => {}
+        }
 
         let tx_processing_start_time = Instant::now();
 
         let sig = rpc
-            .send_and_confirm_transaction(&tx_res?)
+            .send_and_confirm_transaction(&tx)
             .map_err(|e| -> ErrBoxSend { e.into() })
             .await?;
         let tx_data = rpc

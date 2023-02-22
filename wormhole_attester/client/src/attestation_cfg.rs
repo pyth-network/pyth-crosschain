@@ -321,15 +321,26 @@ pub const fn default_max_batch_jobs() -> usize {
     20
 }
 
-/// Spontaneous attestation triggers. Attestation is triggered if any
-/// of the active conditions is met. Option<> fields can be
+/// Per-group attestation resend rules. Attestation is triggered if
+/// any of the active conditions is met. Option<> fields can be
 /// de-activated with None. All conditions are inactive by default,
 /// except for the non-Option ones.
 #[derive(Clone, Debug, Hash, Deserialize, Serialize, PartialEq, Eq)]
 pub struct AttestationConditions {
-    /// Baseline, unconditional attestation interval. Attestation is triggered if the specified interval elapsed since last attestation.
+    /// Lower bound on attestation rate. Attestation is triggered
+    /// unconditionally whenever the specified interval elapses since
+    /// last attestation.
     #[serde(default = "default_min_interval_secs")]
     pub min_interval_secs: u64,
+
+    /// Upper bound on attestation rate. Attesting the same batch
+    /// before this many seconds pass fails the tx. This limit is
+    /// enforced on-chain, letting concurret attesters prevent
+    /// redundant batch resends and tx expenses. NOTE: The client
+    /// logic does not include rate limit failures in monitoring error
+    /// counts.
+    #[serde(default)]
+    pub rate_limit_interval_secs: Option<u32>,
 
     /// Limit concurrent attestation attempts per batch. This setting
     /// should act only as a failsafe cap on resource consumption and is
@@ -358,6 +369,7 @@ impl AttestationConditions {
             max_batch_jobs: _max_batch_jobs,
             price_changed_bps,
             publish_time_min_delta_secs,
+            rate_limit_interval_secs: _,
         } = self;
 
         price_changed_bps.is_some() || publish_time_min_delta_secs.is_some()
@@ -371,6 +383,7 @@ impl Default for AttestationConditions {
             max_batch_jobs:              default_max_batch_jobs(),
             price_changed_bps:           None,
             publish_time_min_delta_secs: None,
+            rate_limit_interval_secs:    None,
         }
     }
 }
