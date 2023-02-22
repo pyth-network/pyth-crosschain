@@ -10,10 +10,12 @@ spec:
     - port: 8899
       name: rpc
       protocol: TCP
+    - port: 8900
+      name: pubsub
+      protocol: TCP
     - port: 9900
       name: faucet
       protocol: TCP
-  clusterIP: None
   selector:
     app: solana-devnet
 ---
