@@ -1,0 +1,50 @@
+{
+  "name": "@pythnetwork/pyth-terra-js",
+  "version": "1.1.0",
+  "description": "Pyth Network Terra Utils in JS",
+  "homepage": "https://pyth.network",
+  "author": {
+    "name": "Pyth Data Association"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "repository": "https://github.com/pyth-network/pyth-js/pyth-terra-js",
+  "scripts": {
+    "test": "jest --passWithNoTests",
+    "build": "tsc",
+    "example-client": "npm run build && node lib/examples/TerraPriceServiceClient.js",
+    "example-relay": "npm run build && node lib/examples/TerraRelay.js",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint src/",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src"
+  },
+  "keywords": [
+    "pyth",
+    "oracle"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "@types/node": "^17.0.27",
+    "@types/yargs": "^17.0.10",
+    "@typescript-eslint/eslint-plugin": "^5.21.0",
+    "@typescript-eslint/parser": "^5.21.0",
+    "eslint": "^8.14.0",
+    "jest": "^27.5.1",
+    "prettier": "^2.6.2",
+    "ts-jest": "^27.1.4",
+    "typescript": "^4.6.3",
+    "yargs": "^17.4.1"
+  },
+  "dependencies": {
+    "@pythnetwork/pyth-common-js": "^1.2.0",
+    "@terra-money/terra.js": "^3.0.11",
+    "axios": "^0.26.1"
+  }
+}
