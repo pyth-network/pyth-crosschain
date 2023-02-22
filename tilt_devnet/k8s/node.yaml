@@ -43,7 +43,11 @@ spec:
       volumes:
         # mount shared between containers for runtime state
         - name: node-rundir
-          emptyDir: {}
+          emptyDir:
+            sizeLimit: 100Mi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 100Mi
         - name: node-keysdir
           secret:
             secretName: node-bigtable-key
@@ -59,6 +63,8 @@ spec:
               name: node-rundir
             - mountPath: /tmp/mounted-keys
               name: node-keysdir
+            - mountPath: /tmp
+              name: tmp
           env:
             - name: BIGTABLE_EMULATOR_HOST
               value: bigtable-emulator:8086
