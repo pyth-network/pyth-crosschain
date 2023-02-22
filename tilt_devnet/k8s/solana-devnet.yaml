@@ -34,6 +34,13 @@ spec:
     spec:
       terminationGracePeriodSeconds: 1
       containers:
+        - name: logs
+          image: solana-contract
+          command:
+            - solana
+            - logs
+            - -u
+            - http://localhost:8899
         - name: devnet
           image: solana-contract
           command:
