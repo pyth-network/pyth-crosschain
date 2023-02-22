@@ -119,7 +119,10 @@ const PermissionDepermissionKey = ({
     if (!dataIsLoading) {
       const res: PublicKey[] = []
       rawConfig.mappingAccounts[0].products.map((product: ProductRawConfig) => {
-        if (product.metadata.asset_type === selectedAssetType) {
+        if (
+          selectedAssetType === 'All' ||
+          product.metadata.asset_type === selectedAssetType
+        ) {
           res.push(product.priceAccounts[0].address)
         }
       })
