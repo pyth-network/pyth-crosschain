@@ -59,10 +59,31 @@ spec:
       labels:
         app: terra-terrad
     spec:
+      initContainers:
+        # Before starting terrad, copy the config and validator state files from
+        # the image to the volume with write access. Otherwise terrad will
+        # either try to write to a read-only directory, or not find the files
+        # because they are shadowed by the volume mount.
+        - name: copy-config
+          image: terra-image
+          command:
+            - /bin/sh
+            - -c
+            - |-
+              mkdir -p /var/terra/config &&
+              mkdir -p /var/terra/data &&
+              cp /root/.terra/config/* /var/terra/config/ &&
+              cp /root/.terra/data/priv_validator_state.json /var/terra/data/ &&
+              true
+          volumeMounts:
+            - name: terra-data
+              mountPath: /var/terra
       containers:
         - args:
             - terrad
             - start
+            - --home
+            - /var/terra
           image: terra-image
           name: terra-terrad
           ports:
@@ -72,20 +93,33 @@ spec:
             httpGet:
               port: 26657
           resources: {}
+          volumeMounts:
+            - name: terra-data
+              mountPath: /var/terra
         - name: cosmwasm-contracts
           image: cosmwasm-contracts
           command:
             - /bin/sh
             - -c
-            - "sh /app/tools/deploy.sh && touch /app/tools/success && sleep infinity"
+            - "sh /app/tools/deploy.sh && touch /tmp/success && sleep infinity"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           readinessProbe:
             exec:
               command:
                 - test
                 - -e
-                - "/app/tools/success"
+                - /tmp/success
             initialDelaySeconds: 5
             periodSeconds: 5
+      volumes:
+        - name: terra-data
+          emptyDir:
+            sizeLimit: 3Gi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 1Gi
       restartPolicy: Always
   serviceName: terra-terrad
 ---
@@ -118,6 +152,18 @@ spec:
               value: dev
             - name: POSTGRES_DB
               value: fcd
+          volumeMounts:
+            - name: postgres-lib
+              mountPath: /var/lib/postgresql
+            - name: postgres-run
+              mountPath: /var/run/postgresql
+      volumes:
+        - name: postgres-lib
+          emptyDir:
+            sizeLimit: 1Gi
+        - name: postgres-run
+          emptyDir:
+            sizeLimit: 1Mi
       restartPolicy: Always
   serviceName: terra-fcd
 ---
@@ -137,11 +183,26 @@ spec:
       labels:
         app: terra-fcd
     spec:
+      initContainers:
+        # Copy the app to a separate directory that can be mounted with write
+        # permissions because the entrypoint of fcd-collector writes to /app/static
+        - name: copy-app
+          image: terramoney/fcd:2.0.5
+          command:
+            - /bin/sh
+            - -c
+            - cp -R /app/* /var/app/ && true
+          volumeMounts:
+            - name: app
+              mountPath: /var/app
       containers:
         - image: terramoney/fcd:2.0.5
           name: fcd-collector
           args:
             - collector
+          volumeMounts:
+            - name: app
+              mountPath: /app
           resources: {}
           env:
             - name: CHAIN_ID
@@ -172,6 +233,9 @@ spec:
           name: fcd-api
           args:
             - start
+          volumeMounts:
+            - name: app
+              mountPath: /app
           resources: {}
           ports:
             - containerPort: 3060
@@ -200,5 +264,9 @@ spec:
               value: "false"
             - name: TYPEORM_ENTITIES
               value: "src/orm/*Entity.ts"
+      volumes:
+        - name: app
+          emptyDir:
+            sizeLimet: 3Gi
       restartPolicy: Always
   serviceName: terra-fcd
