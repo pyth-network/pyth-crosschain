@@ -45,6 +45,8 @@ res = msg_builder_run_or_die([
 
 if res.returncode == errno.EEXIST:
     print("WARNING: Skipping vault creation and testing, received EEXIST from script", file=sys.stderr)
+elif "Reached an existing vault under the address, refusing to create" in str(res.stdout):
+    print("WARNING: Skipping vault creation, received 'existing vault under the address'", file=sys.stderr)
 elif res.returncode != 0:
     print(f"ERROR: unexpected failure with code {res.returncode}", file=sys.stderr)
     sys.exit(res.returncode)
