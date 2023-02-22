@@ -110,7 +110,6 @@ export async function proposeInstructions(
     ) {
       const proposalIndex =
         msAccount.transactionIndex + 1 + j / MAX_INSTRUCTIONS_PER_PROPOSAL;
-      console.log(proposalIndex);
       ixToSend.push(
         await squad.buildCreateTransaction(
           msAccount.publicKey,
