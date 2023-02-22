@@ -120,15 +120,20 @@ const PermissionDepermissionKey = ({
       const res: PublicKey[] = []
       rawConfig.mappingAccounts[0].products.map((product: ProductRawConfig) => {
         if (
-          selectedAssetType === 'All' ||
-          product.metadata.asset_type === selectedAssetType
+          (isPermission && product.priceAccounts[0].publishers.length < 32) ||
+          !isPermission
         ) {
-          res.push(product.priceAccounts[0].address)
+          if (
+            selectedAssetType === 'All' ||
+            product.metadata.asset_type === selectedAssetType
+          ) {
+            res.push(product.priceAccounts[0].address)
+          }
         }
       })
       setPriceAccounts(res)
     }
-  }, [rawConfig, dataIsLoading, selectedAssetType])
+  }, [rawConfig, dataIsLoading, selectedAssetType, isPermission])
 
   return (
     <>
