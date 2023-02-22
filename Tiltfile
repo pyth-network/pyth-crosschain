@@ -8,7 +8,8 @@
 allow_k8s_contexts(k8s_context())
 
 image_registry = os.environ.get("TILT_IMAGE_REGISTRY")
-cluster_namespace = os.environ.get("TILT_NAMESPACE")
+cluster_namespace = os.environ.get("TILT_NAMESPACE", "ci")
+parallel_updates = os.environ.get("TILT_PARALLEL_UPDATES", "5")
 
 load("ext://namespace", "namespace_create", "namespace_inject")
 load("ext://secret", "secret_yaml_generic")
@@ -17,6 +18,8 @@ default_registry(image_registry, single_name="development")
 
 # Disable telemetry by default
 analytics_settings(False)
+
+update_settings(max_parallel_updates=int(parallel_updates))
 
 # Runtime configuration
 config.define_bool("ci", False, "We are running in CI")
