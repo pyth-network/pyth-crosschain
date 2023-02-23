@@ -325,7 +325,6 @@ const General = () => {
           if (newChanges.priceAccounts[0].publishers.length > 0) {
             newChanges.priceAccounts[0].publishers.forEach(
               (publisherKey: string) => {
-                console.log('adding')
                 pythProgramClient.methods
                   .addPublisher(new PublicKey(publisherKey))
                   .accounts({
