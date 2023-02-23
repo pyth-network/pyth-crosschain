@@ -122,4 +122,4 @@ docker-compose -f docker-compose.testnet.sample.yaml up
 
 It will take a few minutes until all the services are up and running.
 
-[pyth price service]: https://github.com/pyth-network/pyth-crosschain/tree/main/third_party/pyth/price-service
+[pyth price service]: https://github.com/pyth-network/pyth-crosschain/tree/main/price_service/server

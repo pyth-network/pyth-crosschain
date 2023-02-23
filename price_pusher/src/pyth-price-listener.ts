@@ -1,21 +1,15 @@
-import {
-  EvmPriceServiceConnection,
-  HexString,
-  PriceFeed,
-} from "@pythnetwork/pyth-evm-js";
+import { HexString, PriceFeed } from "@pythnetwork/pyth-evm-js";
+import { PriceServiceConnection } from "@pythnetwork/pyth-common-js";
 import { PriceConfig } from "./price-config";
-import { PriceInfo, PriceListener } from "./price-listener";
+import { PriceInfo, PriceListener } from "./interface";
 
 export class PythPriceListener implements PriceListener {
-  private connection: EvmPriceServiceConnection;
+  private connection: PriceServiceConnection;
   private priceIds: HexString[];
   private priceIdToAlias: Map<HexString, string>;
   private latestPriceInfo: Map<HexString, PriceInfo>;
 
-  constructor(
-    connection: EvmPriceServiceConnection,
-    priceConfigs: PriceConfig[]
-  ) {
+  constructor(connection: PriceServiceConnection, priceConfigs: PriceConfig[]) {
     this.connection = connection;
     this.priceIds = priceConfigs.map((priceConfig) => priceConfig.id);
     this.priceIdToAlias = new Map(
