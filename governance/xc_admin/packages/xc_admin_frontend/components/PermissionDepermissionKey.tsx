@@ -122,15 +122,22 @@ const PermissionDepermissionKey = ({
         if (
           (selectedAssetType === 'All' ||
             product.metadata.asset_type === selectedAssetType) &&
-          ((isPermission && product.priceAccounts[0].publishers.length < 32) ||
-            !isPermission)
+          ((isPermission &&
+            product.priceAccounts[0].publishers.length < 32 &&
+            product.priceAccounts[0].publishers.some(
+              (publisher) => publisher.toBase58() === publisherKey
+            )) ||
+            (!isPermission &&
+              !product.priceAccounts[0].publishers.some(
+                (publisher) => publisher.toBase58() === publisherKey
+              )))
         ) {
           res.push(product.priceAccounts[0].address)
         }
       })
       setPriceAccounts(res)
     }
-  }, [rawConfig, dataIsLoading, selectedAssetType, isPermission])
+  }, [rawConfig, dataIsLoading, selectedAssetType, isPermission, publisherKey])
 
   return (
     <>
