@@ -37,12 +37,12 @@ const Modal: React.FC<{
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="diaglogPanel">
-                <button className="diaglogClose" onClick={closeModal}>
+              <Dialog.Panel className="dialogPanel">
+                <button className="dialogClose" onClick={closeModal}>
                   <span className="mr-3">close</span> <CloseIcon />
                 </button>
                 <div className="max-w-full">
-                  <Dialog.Title as="h3" className="diaglogTitle">
+                  <Dialog.Title as="h3" className="dialogTitle">
                     Proposed Changes
                   </Dialog.Title>
                   {content}

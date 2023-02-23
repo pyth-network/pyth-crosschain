@@ -22,6 +22,7 @@ import ClusterSwitch from '../ClusterSwitch'
 import Modal from '../common/Modal'
 import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
+import PermissionDepermissionKey from '../PermissionDepermissionKey'
 
 const General = () => {
   const [data, setData] = useState<any>({})
@@ -688,6 +689,18 @@ const General = () => {
           <div className="mb-4 md:mb-0">
             <ClusterSwitch />
           </div>
+        </div>
+        <div className="relative mt-6 flex space-x-4">
+          <PermissionDepermissionKey
+            isPermission={true}
+            pythProgramClient={pythProgramClient}
+            squads={squads}
+          />
+          <PermissionDepermissionKey
+            isPermission={false}
+            pythProgramClient={pythProgramClient}
+            squads={squads}
+          />
         </div>
         <div className="relative mt-6">
           {dataIsLoading ? (

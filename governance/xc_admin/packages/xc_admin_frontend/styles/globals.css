@@ -269,16 +269,16 @@
   @apply hover:bg-pythPurple;
 }
 
-.diaglogPanel {
-  @apply flex h-full min-h-[420px]  w-[calc(100%-24px)]  max-w-6xl transform items-center justify-center rounded-[40px] bg-[rgba(49,47,71,1)] p-5 px-6 pt-20 pb-8 text-center  align-middle shadow-xl transition-all md:mt-[92px] lg:p-10;
+.dialogPanel {
+  @apply flex h-full min-h-[420px]  w-[calc(100%-24px)] max-w-6xl transform items-center justify-center rounded-[40px] bg-[rgba(49,47,71,1)] p-5 px-6 pt-20 pb-8 text-center align-middle shadow-xl transition-all md:mt-[92px] lg:p-10;
 }
 
-.diaglogClose {
-  @apply absolute right-10 top-8  flex items-center leading-none;
+.dialogClose {
+  @apply absolute right-10 top-8 flex items-center leading-none;
 }
 
-.diaglogTitle {
-  @apply mb-8 text-center font-body text-[32px] leading-[1.1] lg:mb-11 lg:text-[44px];
+.dialogTitle {
+  @apply mb-8 text-center font-body text-[32px] leading-[1.1] lg:mb-11 lg:text-[44px] px-10;
 }
 
 .action-btn {
