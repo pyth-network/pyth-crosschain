@@ -245,6 +245,17 @@ const General = () => {
       }
     })
 
+    // check that there are no duplicate publishers
+    Object.keys(jsonParsed).forEach((symbol) => {
+      if (
+        new Set(jsonParsed[symbol].priceAccounts[0].publishers).size !=
+        jsonParsed[symbol].priceAccounts[0].publishers.length
+      ) {
+        toast.error(`${symbol} has a duplicate publisher.`)
+        isValid = false
+      }
+    })
+
     // check that no price account has more than 32 publishers
     Object.keys(jsonParsed).forEach((symbol) => {
       if (jsonParsed[symbol].priceAccounts[0].publishers.length > 32) {
@@ -314,6 +325,7 @@ const General = () => {
           if (newChanges.priceAccounts[0].publishers.length > 0) {
             newChanges.priceAccounts[0].publishers.forEach(
               (publisherKey: string) => {
+                console.log('adding')
                 pythProgramClient.methods
                   .addPublisher(new PublicKey(publisherKey))
                   .accounts({
