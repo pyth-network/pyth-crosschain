@@ -21,6 +21,7 @@ import { OPS_KEY } from "./multisig";
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE = PACKET_DATA_SIZE - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
 export const SIZE_OF_SIGNED_BATCH = 30;
+export const MAX_INSTRUCTIONS_PER_PROPOSAL = 256 - 1;
 
 type SquadInstruction = {
   instruction: TransactionInstruction;
@@ -45,71 +46,104 @@ export async function proposeInstructions(
   wormholeAddress?: PublicKey
 ): Promise<PublicKey> {
   const msAccount = await squad.getMultisig(vault);
-  let ixToSend: TransactionInstruction[] = [];
-  ixToSend.push(
-    await squad.buildCreateTransaction(
-      msAccount.publicKey,
-      msAccount.authorityIndex,
-      msAccount.transactionIndex + 1
-    )
-  );
-  const newProposalAddress = getTxPDA(
-    vault,
-    new BN(msAccount.transactionIndex + 1),
-    squad.multisigProgramId
-  )[0];
+  const newProposals = [];
 
+  let ixToSend: TransactionInstruction[] = [];
   if (remote) {
     if (!wormholeAddress) {
       throw new Error("Need wormhole address");
     }
-
     const batches = batchIntoExecutorPayload(instructions);
-    if (255 <= batches.length) {
-      throw new Error("A proposal can only support 255 instructions");
-    }
-    for (const [i, batch] of batches.entries()) {
-      const squadIx = await wrapAsRemoteInstruction(
-        squad,
-        vault,
-        newProposalAddress,
-        batch,
-        i + 1,
-        wormholeAddress
-      );
+
+    for (let j = 0; j < batches.length; j += MAX_INSTRUCTIONS_PER_PROPOSAL) {
+      const proposalIndex =
+        msAccount.transactionIndex + 1 + j / MAX_INSTRUCTIONS_PER_PROPOSAL;
       ixToSend.push(
-        await squad.buildAddInstruction(
+        await squad.buildCreateTransaction(
+          msAccount.publicKey,
+          msAccount.authorityIndex,
+          proposalIndex
+        )
+      );
+      const newProposalAddress = getTxPDA(
+        vault,
+        new BN(proposalIndex),
+        squad.multisigProgramId
+      )[0];
+      newProposals.push(newProposalAddress);
+
+      for (const [i, batch] of batches
+        .slice(j, j + MAX_INSTRUCTIONS_PER_PROPOSAL)
+        .entries()) {
+        const squadIx = await wrapAsRemoteInstruction(
+          squad,
           vault,
           newProposalAddress,
-          squadIx.instruction,
+          batch,
           i + 1,
-          squadIx.authorityIndex,
-          squadIx.authorityBump,
-          squadIx.authorityType
-        )
+          wormholeAddress
+        );
+        ixToSend.push(
+          await squad.buildAddInstruction(
+            vault,
+            newProposalAddress,
+            squadIx.instruction,
+            i + 1,
+            squadIx.authorityIndex,
+            squadIx.authorityBump,
+            squadIx.authorityType
+          )
+        );
+      }
+      ixToSend.push(
+        await squad.buildActivateTransaction(vault, newProposalAddress)
+      );
+      ixToSend.push(
+        await squad.buildApproveTransaction(vault, newProposalAddress)
       );
     }
   } else {
-    if (255 <= instructions.length) {
-      throw new Error("A proposal can only support 255 instructions");
-    }
-    for (let i = 0; i < instructions.length; i++) {
+    for (
+      let j = 0;
+      j < instructions.length;
+      j += MAX_INSTRUCTIONS_PER_PROPOSAL
+    ) {
+      const proposalIndex =
+        msAccount.transactionIndex + 1 + j / MAX_INSTRUCTIONS_PER_PROPOSAL;
       ixToSend.push(
-        await squad.buildAddInstruction(
-          vault,
-          newProposalAddress,
-          instructions[i],
-          i + 1
+        await squad.buildCreateTransaction(
+          msAccount.publicKey,
+          msAccount.authorityIndex,
+          proposalIndex
         )
+      );
+      const newProposalAddress = getTxPDA(
+        vault,
+        new BN(proposalIndex),
+        squad.multisigProgramId
+      )[0];
+      newProposals.push(newProposalAddress);
+
+      for (let [i, instruction] of instructions
+        .slice(j, j + MAX_INSTRUCTIONS_PER_PROPOSAL)
+        .entries()) {
+        ixToSend.push(
+          await squad.buildAddInstruction(
+            vault,
+            newProposalAddress,
+            instruction,
+            i + 1
+          )
+        );
+      }
+      ixToSend.push(
+        await squad.buildActivateTransaction(vault, newProposalAddress)
+      );
+      ixToSend.push(
+        await squad.buildApproveTransaction(vault, newProposalAddress)
       );
     }
   }
-
-  ixToSend.push(
-    await squad.buildActivateTransaction(vault, newProposalAddress)
-  );
-
-  ixToSend.push(await squad.buildApproveTransaction(vault, newProposalAddress));
 
   const txToSend = batchIntoTransactions(ixToSend);
 
@@ -124,7 +158,7 @@ export async function proposeInstructions(
       })
     );
   }
-  return newProposalAddress;
+  return newProposals[0];
 }
 
 /**
