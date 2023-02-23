@@ -119,18 +119,17 @@ const PermissionDepermissionKey = ({
     if (!dataIsLoading) {
       const res: PublicKey[] = []
       rawConfig.mappingAccounts[0].products.map((product: ProductRawConfig) => {
+        const publisherExists =
+          product.priceAccounts[0].publishers.find(
+            (p) => p.toBase58() === publisherKey
+          ) !== undefined
         if (
           (selectedAssetType === 'All' ||
             product.metadata.asset_type === selectedAssetType) &&
           ((isPermission &&
             product.priceAccounts[0].publishers.length < 32 &&
-            product.priceAccounts[0].publishers.some(
-              (publisher) => publisher.toBase58() === publisherKey
-            )) ||
-            (!isPermission &&
-              !product.priceAccounts[0].publishers.some(
-                (publisher) => publisher.toBase58() === publisherKey
-              )))
+            !publisherExists) ||
+            (!isPermission && publisherExists))
         ) {
           res.push(product.priceAccounts[0].address)
         }
