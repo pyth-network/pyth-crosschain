@@ -11,14 +11,22 @@ import { EvmPriceListener, EvmPricePusher, PythContractFactory } from "./evm";
 import { PythPriceListener } from "./pyth-price-listener";
 import fs from "fs";
 import { readPriceConfigFile } from "./price-config";
+import { PriceServiceConnection } from "@pythnetwork/pyth-common-js";
+import { InjectivePriceListener, InjectivePricePusher } from "./injective";
 
 const argv = yargs(hideBin(process.argv))
-  .option("evm-endpoint", {
+  .option("network", {
+    description: "the blockchain network to push to",
+    type: "string",
+    choices: ["evm", "injective"],
+    required: true,
+  })
+  .option("endpoint", {
     description:
-      "RPC endpoint URL for the EVM network. If you provide a normal HTTP endpoint, the pusher " +
+      "RPC endpoint URL for the network. If you provide a normal HTTP endpoint, the pusher " +
       "will periodically poll for updates. The polling interval is configurable via the " +
-      "`evm-polling-frequency` command-line argument. If you provide a websocket RPC " +
-      "endpoint (`ws[s]://...`), the price pusher will use event subscriptions to read " +
+      "`polling-frequency` command-line argument. If you provide a websocket RPC " +
+      "endpoint (`ws[s]://...`) for the evm chain, the price pusher will use event subscriptions to read " +
       "the current EVM price in addition to polling. ",
     type: "string",
     required: true,
@@ -55,7 +63,7 @@ const argv = yargs(hideBin(process.argv))
     required: false,
     default: 10,
   })
-  .option("evm-polling-frequency", {
+  .option("polling-frequency", {
     description:
       "The frequency to poll price info data from the EVM network if the RPC is not a websocket.",
     type: "number",
@@ -79,13 +87,45 @@ if (CONTRACT_ADDR[argv.pythContract] !== undefined) {
 
 const priceConfigs = readPriceConfigFile(argv.priceConfigFile);
 
-async function run() {
+async function injectiveRun() {
+  const connection = new PriceServiceConnection(argv.priceEndpoint, {
+    logger: console,
+  });
+
+  const pythPriceListener = new PythPriceListener(connection, priceConfigs);
+
+  const injectivePriceListener = new InjectivePriceListener(
+    pythContractAddr,
+    argv.endpoint,
+    priceConfigs,
+    { pollingFrequency: argv.pollingFrequency }
+  );
+
+  const handler = new Controller(
+    priceConfigs,
+    pythPriceListener,
+    injectivePriceListener,
+    new InjectivePricePusher(),
+    {
+      cooldownDuration: argv.cooldownDuration,
+    }
+  );
+
+  await injectivePriceListener.start();
+  await pythPriceListener.start();
+
+  // Handler starts after the above listeners are started
+  // which means that they have fetched their initial price information.
+  await handler.start();
+}
+
+async function evmRun() {
   const connection = new EvmPriceServiceConnection(argv.priceEndpoint, {
     logger: console,
   });
 
   const pythContractFactory = new PythContractFactory(
-    argv.evmEndpoint,
+    argv.endpoint,
     fs.readFileSync(argv.mnemonicFile, "utf-8").trim(),
     pythContractAddr
   );
@@ -94,7 +134,7 @@ async function run() {
     pythContractFactory,
     priceConfigs,
     {
-      pollingFrequency: argv.evmPollingFrequency,
+      pollingFrequency: argv.pollingFrequency,
     }
   );
 
@@ -121,6 +161,11 @@ async function run() {
   // Handler starts after the above listeners are started
   // which means that they have fetched their initial price information.
   await handler.start();
+}
+
+function run() {
+  if (argv.network === "injective") injectiveRun();
+  else if (argv.network === "evm") evmRun();
 }
 
 run();
