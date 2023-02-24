@@ -111,6 +111,7 @@ async fn test_happy_path() -> Result<(), p2wc::ErrBoxSend> {
         0,
         symbols.as_slice(),
         ctx.last_blockhash,
+        0,
     )?;
 
     // NOTE: 2022-09-05

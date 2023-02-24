@@ -298,6 +298,9 @@ pub fn gen_attest_tx(
     wh_msg_id: u64,
     symbols: &[P2WSymbol],
     latest_blockhash: Hash,
+    // Desired rate limit interval. If all of the symbols are over
+    // the limit, the tx will fail. 0 means off.
+    rate_limit_interval_secs: u32,
 ) -> Result<Transaction, ErrBoxSend> {
     let emitter_addr = P2WEmitter::key(None, &p2w_addr);
 
@@ -390,8 +393,9 @@ pub fn gen_attest_tx(
     let ix_data = (
         pyth_wormhole_attester::instruction::Instruction::Attest,
         AttestData {
-            consistency_level:  ConsistencyLevel::Confirmed,
+            consistency_level: ConsistencyLevel::Confirmed,
             message_account_id: wh_msg_id,
+            rate_limit_interval_secs,
         },
     );
 

@@ -1,3 +1,9 @@
+use {
+    pyth_wormhole_attester::error::AttesterCustomError,
+    solana_program::instruction::InstructionError,
+    solana_sdk::transaction::TransactionError,
+};
+
 pub mod cli;
 
 use {
@@ -585,6 +591,7 @@ async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrB
             symbols: batch.symbols.to_vec(),
             max_jobs_sema: sema.clone(),
             message_q_mtx: message_q_mtx.clone(),
+            rate_limit_interval_secs: batch.conditions.rate_limit_interval_secs,
         });
 
         // This short-lived permit prevents scheduling excess
@@ -603,16 +610,17 @@ async fn attestation_sched_job(args: AttestationSchedJobArgs) -> Result<(), ErrB
 /// Arguments for attestation_job(). This struct rules out same-type
 /// ordering errors due to the large argument count
 pub struct AttestationJobArgs {
-    pub rlmtx:         Arc<RLMutex<RpcCfg>>,
-    pub batch_no:      usize,
-    pub batch_count:   usize,
-    pub group_name:    String,
-    pub p2w_addr:      Pubkey,
-    pub config:        Pyth2WormholeConfig,
-    pub payer:         Keypair,
-    pub symbols:       Vec<P2WSymbol>,
-    pub max_jobs_sema: Arc<Semaphore>,
-    pub message_q_mtx: Arc<Mutex<P2WMessageQueue>>,
+    pub rlmtx:                    Arc<RLMutex<RpcCfg>>,
+    pub batch_no:                 usize,
+    pub batch_count:              usize,
+    pub group_name:               String,
+    pub p2w_addr:                 Pubkey,
+    pub config:                   Pyth2WormholeConfig,
+    pub payer:                    Keypair,
+    pub symbols:                  Vec<P2WSymbol>,
+    pub max_jobs_sema:            Arc<Semaphore>,
+    pub rate_limit_interval_secs: u32,
+    pub message_q_mtx:            Arc<Mutex<P2WMessageQueue>>,
 }
 
 /// A future for a single attempt to attest a batch on Solana.
@@ -627,6 +635,7 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
         payer,
         symbols,
         max_jobs_sema,
+        rate_limit_interval_secs,
         message_q_mtx,
     } = args;
     let batch_no4err_msg = batch_no;
@@ -662,21 +671,37 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
 
         let wh_msg_id = message_q_mtx.lock().await.get_account()?.id;
 
-        let tx_res: Result<_, ErrBoxSend> = gen_attest_tx(
+        let tx = gen_attest_tx(
             p2w_addr,
             &config,
             &payer,
             wh_msg_id,
             symbols.as_slice(),
             latest_blockhash,
-        );
+            rate_limit_interval_secs,
+        )?;
 
         let tx_processing_start_time = Instant::now();
 
-        let sig = rpc
-            .send_and_confirm_transaction(&tx_res?)
-            .map_err(|e| -> ErrBoxSend { e.into() })
-            .await?;
+        let sig = match rpc.send_and_confirm_transaction(&tx).await {
+            Ok(s) => Ok(s),
+            Err(e) => match e.get_transaction_error() {
+                Some(TransactionError::InstructionError(_idx, InstructionError::Custom(code)))
+                    if code == AttesterCustomError::AttestRateLimitReached as u32 =>
+                {
+                    info!(
+                        "Batch {}/{}, group {:?} OK: configured {} second rate limit interval reached, backing off",
+                        batch_no, batch_count, group_name, rate_limit_interval_secs,
+                    );
+                    // Note: We return early if rate limit tx
+                    // error is detected. This ensures that we
+                    // don't count this attempt in ok/err
+                    // monitoring and healthcheck counters.
+                    return Ok(());
+                }
+                _other => Err(e),
+            },
+        }?;
         let tx_data = rpc
             .get_transaction_with_config(
                 &sig,

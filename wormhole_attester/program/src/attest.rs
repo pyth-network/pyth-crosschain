@@ -2,6 +2,7 @@ use {
     crate::{
         attestation_state::AttestationStatePDA,
         config::P2WConfigAccount,
+        error::AttesterCustomError,
         message::{
             P2WMessage,
             P2WMessageDrvData,
@@ -127,8 +128,17 @@ pub struct Attest<'b> {
 
 #[derive(BorshDeserialize, BorshSerialize)]
 pub struct AttestData {
-    pub consistency_level:  ConsistencyLevel,
-    pub message_account_id: u64,
+    pub consistency_level:        ConsistencyLevel,
+    pub message_account_id:       u64,
+    /// Fail the transaction if the global attestation rate of all
+    /// symbols in this batch is more frequent than the passed
+    /// interval. This is checked using the attestation time stored in
+    /// attestation state. This enables all of the clients to only
+    /// contribute attestations if their desired interval is not
+    /// already reached. If at least one symbol has been waiting
+    /// longer than this interval, we attest the whole batch. 0
+    /// effectively disables this feature.
+    pub rate_limit_interval_secs: u32,
 }
 
 pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> SoliResult<()> {
@@ -180,6 +190,10 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
     // Collect the validated symbols here for batch serialization
     let mut attestations = Vec::with_capacity(price_pairs.len());
 
+    let this_attestation_time = accs.clock.unix_timestamp;
+
+
+    let mut over_rate_limit = true;
     for (state, price) in price_pairs.into_iter() {
         // Pyth must own the price
         if accs.config.pyth_owner != *price.owner {
@@ -200,8 +214,6 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
             return Err(ProgramError::InvalidAccountData.into());
         }
 
-        let attestation_time = accs.clock.unix_timestamp;
-
         let price_data_ref = price.try_borrow_data()?;
 
         // Parse the upstream Pyth struct to extract current publish
@@ -213,6 +225,7 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
             })?;
 
         // Retrieve and rotate last_attested_tradind_publish_time
+
 
         // Pick the value to store for the next attestation of this
         // symbol. We use the prev_ value if the symbol is not
@@ -237,13 +250,28 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         // Build an attestatioin struct for this symbol using the just decided current value
         let attestation = PriceAttestation::from_pyth_price_struct(
             Identifier::new(price.key.to_bytes()),
-            attestation_time,
+            this_attestation_time,
             current_last_attested_trading_publish_time,
             price_struct,
         );
 
         // Save the new value for the next attestation of this symbol
         state.0 .0.last_attested_trading_publish_time = new_last_attested_trading_publish_time;
+
+        // don't re-evaluate if at least one symbol was found to be under limit
+        if over_rate_limit {
+            // Evaluate rate limit - should be smaller than duration from last attestation
+            if this_attestation_time - state.0 .0.last_attestation_time
+                >= data.rate_limit_interval_secs as i64
+            {
+                over_rate_limit = false;
+            } else {
+                trace!("Price {:?}: over rate limit", price.key);
+            }
+        }
+
+        // Update last attestation time
+        state.0 .0.last_attestation_time = this_attestation_time;
 
         // handling of last_attested_trading_publish_time ends here
 
@@ -270,6 +298,14 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
 
 
         attestations.push(attestation);
+    }
+
+    // Do not proceed if none of the symbols is under rate limit
+    if over_rate_limit {
+        trace!("All symbols over limit, bailing out");
+        return Err(
+            ProgramError::Custom(AttesterCustomError::AttestRateLimitReached as u32).into(),
+        );
     }
 
     let batch_attestation = BatchPriceAttestation {
