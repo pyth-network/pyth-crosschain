@@ -26,9 +26,15 @@ As these 3rd party audits are completed and issues are sufficiently addressed, w
 - **[April 27, 2022 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2022_04_27/pyth2wormhole_zellic.pdf)**
   - **Scope**: _pyth-crosschain (formerly known as pyth2wormhole))_
 - **[October 10, 2022 - OtterSec](https://github.com/pyth-network/audit-reports/blob/main/2022_10_10/pyth_aptos.pdf)**
-  - **Scope**: _pyth-aptos contracts_
+  - **Scope**: _pyth-crosschain-aptos contracts_
 - **[November 01, 2022 - Zellic](https://github.com/pyth-network/audit-reports/blob/main/2022_11_01/pyth.pdf)**
-  - **Scope**: _pyth-evm contracts_
+  - **Scope**: _pyth-crosschain-evm contracts_
+- **[December 13, 2022 - CertiK](https://github.com/pyth-network/audit-reports/blob/pyth-certik/2022_12_13/pyth-crosschain-governance.pdf)**
+  - **Scope**: _pyth-crosschain-governance contracts_
+- **[December 13, 2022 - CertiK](https://github.com/pyth-network/audit-reports/blob/pyth-certik/2022_12_13/pyth-crosschain-solana.pdf)**
+  - **Scope**: _pyth-crosschain-solana contracts_
+- **[February 23, 2023 - CertiK](https://github.com/pyth-network/audit-reports/blob/pyth-certik/2023_02_23/pyth-crosschain-eth.pdf)**
+  - **Scope**: _pyth-crosschain-evm contracts_
 
 ## Social Media Monitoring
 
