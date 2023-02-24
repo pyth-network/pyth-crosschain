@@ -8,7 +8,6 @@ use {
     serde::{
         Deserialize,
         Serialize,
-        Serializer,
     },
 };
 
@@ -37,7 +36,6 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub struct MigrateMsg {}
 
-
 // Injective specific
 
 // #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -58,14 +56,19 @@ pub struct InjectiveMsgWrapper {
     pub msg_data: InjectiveMsg,
 }
 
-
-pub fn create_relay_pyth_prices_msg(sender: Addr, price_attestations: Vec<PriceAttestation>) -> CosmosMsg<InjectiveMsgWrapper> {
+pub fn create_relay_pyth_prices_msg(
+    sender: Addr,
+    price_attestations: Vec<PriceAttestation>,
+) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route: "oracle".to_string(),
-        msg_data: InjectiveMsg::RelayPythPrices { sender, price_attestations },
-    }.into()
+        msg_data: InjectiveMsg::RelayPythPrices {
+            sender,
+            price_attestations,
+        },
+    }
+    .into()
 }
-
 
 impl From<InjectiveMsgWrapper> for CosmosMsg<InjectiveMsgWrapper> {
     fn from(s: InjectiveMsgWrapper) -> CosmosMsg<InjectiveMsgWrapper> {

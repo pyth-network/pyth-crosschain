@@ -2,12 +2,8 @@ use {
     crate::{
         governance::{
             GovernanceAction::{
-                AuthorizeGovernanceDataSourceTransfer,
-                RequestGovernanceDataSourceTransfer,
-                SetDataSources,
-                SetFee,
-                SetValidPeriod,
-                UpgradeContract,
+                AuthorizeGovernanceDataSourceTransfer, RequestGovernanceDataSourceTransfer,
+                SetDataSources, SetFee, SetValidPeriod, UpgradeContract,
             },
             GovernanceInstruction,
         },
@@ -18,44 +14,16 @@ use {
             InjectiveMsgWrapper,
         },
         state::{
-            config,
-            config_read,
-            price_info,
-            price_info_read,
-            ConfigInfo,
-            PriceInfo,
-            PythDataSource,
+            config, config_read, price_info, price_info_read, ConfigInfo, PriceInfo, PythDataSource,
         },
     },
     cosmwasm_std::{
-        coin,
-        entry_point,
-        has_coins,
-        to_binary,
-        Addr,
-        Binary,
-        Coin,
-        CosmosMsg,
-        Deps,
-        DepsMut,
-        Env,
-        MessageInfo,
-        OverflowError,
-        OverflowOperation,
-        QueryRequest,
-        Response,
-        StdResult,
-        Timestamp,
-        WasmMsg,
-        WasmQuery,
+        coin, entry_point, has_coins, to_binary, Addr, Binary, Coin, CosmosMsg, Deps, DepsMut, Env,
+        MessageInfo, OverflowError, OverflowOperation, QueryRequest, Response, StdResult,
+        Timestamp, WasmMsg, WasmQuery,
     },
     pyth_sdk_cw::{
-        error::PythContractError,
-        ExecuteMsg,
-        Price,
-        PriceFeed,
-        PriceFeedResponse,
-        PriceIdentifier,
+        error::PythContractError, ExecuteMsg, Price, PriceFeed, PriceFeedResponse, PriceIdentifier,
         QueryMsg,
     },
     pyth_wormhole_attester_sdk::{
@@ -369,10 +337,7 @@ fn process_batch_attestation<'a>(
         }
     }
 
-    Ok((
-        batch_attestation.price_attestations.len(),
-        new_attestations,
-    ))
+    Ok((batch_attestation.price_attestations.len(), new_attestations))
 }
 
 fn create_price_feed_from_price_attestation(price_attestation: &PriceAttestation) -> PriceFeed {
@@ -497,15 +462,14 @@ pub fn get_valid_time_period(deps: &Deps) -> StdResult<Duration> {
 #[cfg(test)]
 mod test {
     use {
+        super::*,
+        crate::governance::GovernanceModule::{
+            Executor,
+            Target,
+        },
         cosmwasm_std::{
-            Addr,
             coins,
-            ContractResult,
             from_binary,
-            OwnedDeps,
-            QuerierResult,
-            SystemError,
-            SystemResult,
             testing::{
                 mock_dependencies,
                 mock_env,
@@ -514,16 +478,17 @@ mod test {
                 MockQuerier,
                 MockStorage,
             },
+            Addr,
+            ContractResult,
+            OwnedDeps,
+            QuerierResult,
+            SystemError,
+            SystemResult,
             Uint128,
-        },
-        crate::governance::GovernanceModule::{
-            Executor,
-            Target,
         },
         pyth_sdk_cw::PriceIdentifier,
         pyth_wormhole_attester_sdk::PriceAttestation,
         std::time::Duration,
-        super::*,
     };
 
     /// Default valid time period for testing purposes.
@@ -683,7 +648,7 @@ mod test {
             price_feed,
             Timestamp::from_seconds(attestation_time_seconds),
         )
-            .unwrap()
+        .unwrap()
     }
 
     fn apply_price_update(
@@ -827,7 +792,6 @@ mod test {
         let (total_attestations, new_attestations) =
             process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
 
-
         let stored_price_feed = price_info_read(&deps.storage)
             .load(&[0u8; 32])
             .unwrap()
@@ -879,7 +843,6 @@ mod test {
         };
         let (total_attestations, new_attestations) =
             process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
-
 
         let stored_price_feed = price_info_read(&deps.storage)
             .load(&[0u8; 32])
@@ -1276,11 +1239,11 @@ mod test {
                             governance_data_source_index: 11,
                         },
                     }
-                        .serialize()
-                        .unwrap(),
+                    .serialize()
+                    .unwrap(),
                     ..create_zero_vaa()
                 })
-                    .unwrap(),
+                .unwrap(),
             },
         };
 
@@ -1315,11 +1278,11 @@ mod test {
                             governance_data_source_index: 10,
                         },
                     }
-                        .serialize()
-                        .unwrap(),
+                    .serialize()
+                    .unwrap(),
                     ..create_zero_vaa()
                 })
-                    .unwrap(),
+                .unwrap(),
             },
         };
 
@@ -1353,11 +1316,11 @@ mod test {
                             governance_data_source_index: 11,
                         },
                     }
-                        .serialize()
-                        .unwrap(),
+                    .serialize()
+                    .unwrap(),
                     ..create_zero_vaa()
                 })
-                    .unwrap(),
+                .unwrap(),
             },
         };
 
