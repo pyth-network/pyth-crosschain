@@ -65,7 +65,7 @@ const argv = yargs(hideBin(process.argv))
   })
   .option("polling-frequency", {
     description:
-      "The frequency to poll price info data from the EVM network if the RPC is not a websocket.",
+      "The frequency to poll price info data from the network if the RPC is not a websocket.",
     type: "number",
     required: false,
     default: 5,
