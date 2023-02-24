@@ -47,12 +47,19 @@ const ProposalRow = ({
   proposal,
   verified,
   setCurrentProposalPubkey,
+  msChangeIndex,
 }: {
   proposal: TransactionAccount
   verified: boolean
   setCurrentProposalPubkey: Dispatch<SetStateAction<string | undefined>>
+  msChangeIndex: number
 }) => {
-  const status = Object.keys(proposal.status)[0]
+  const onChainStatus = Object.keys(proposal.status)[0]
+  const status =
+    proposal.transactionIndex <= msChangeIndex &&
+    (onChainStatus == 'active' || onChainStatus == 'draft')
+      ? 'expired'
+      : onChainStatus
 
   const router = useRouter()
 
@@ -124,7 +131,7 @@ const StatusTag = ({ proposalStatus }: { proposalStatus: string }) => {
           ? 'bg-[#1B730E]'
           : proposalStatus === 'cancelled'
           ? 'bg-[#C4428F]'
-          : proposalStatus === 'rejected'
+          : proposalStatus === 'rejected' || proposalStatus === 'expired'
           ? 'bg-[#CF6E42]'
           : 'bg-pythPurple'
       } py-1 px-2 text-xs`}
@@ -221,7 +228,16 @@ const Proposal = ({
     }
   }, [rawConfig, dataIsLoading])
 
-  const proposalStatus = proposal ? Object.keys(proposal.status)[0] : 'unknown'
+  const onChainStatus = currentProposal
+    ? Object.keys(currentProposal.status)[0]
+    : 'unknown'
+  const proposalStatus =
+    currentProposal && multisig
+      ? currentProposal.transactionIndex <= multisig.msChangeIndex &&
+        (onChainStatus == 'active' || onChainStatus == 'draft')
+        ? 'expired'
+        : onChainStatus
+      : 'unknown'
 
   useEffect(() => {
     // update the priceFeedMultisigProposals with previous value but replace the current proposal with the updated one at the specific index
@@ -1079,7 +1095,8 @@ const Proposals = () => {
                 <div className="mt-3">
                   <Loadbar theme="light" />
                 </div>
-              ) : priceFeedMultisigProposals.length > 0 ? (
+              ) : priceFeedMultisigProposals.length > 0 &&
+                priceFeedMultisigAccount ? (
                 <>
                   <div className="pb-4">
                     <h4 className="h4">
@@ -1093,6 +1110,7 @@ const Proposals = () => {
                         proposal={proposal}
                         verified={allProposalsVerifiedArr[idx]}
                         setCurrentProposalPubkey={setCurrentProposalPubkey}
+                        msChangeIndex={priceFeedMultisigAccount.msChangeIndex}
                       />
                     ))}
                   </div>
