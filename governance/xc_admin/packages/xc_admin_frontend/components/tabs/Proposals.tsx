@@ -1095,8 +1095,7 @@ const Proposals = () => {
                 <div className="mt-3">
                   <Loadbar theme="light" />
                 </div>
-              ) : priceFeedMultisigProposals.length > 0 &&
-                priceFeedMultisigAccount ? (
+              ) : priceFeedMultisigProposals.length > 0 ? (
                 <>
                   <div className="pb-4">
                     <h4 className="h4">
@@ -1110,7 +1109,7 @@ const Proposals = () => {
                         proposal={proposal}
                         verified={allProposalsVerifiedArr[idx]}
                         setCurrentProposalPubkey={setCurrentProposalPubkey}
-                        msChangeIndex={priceFeedMultisigAccount.msChangeIndex}
+                        multisig={priceFeedMultisigAccount}
                       />
                     ))}
                   </div>
