@@ -34,7 +34,7 @@ import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
 
 // check if a string is a pubkey
-const isPubkey = (str: string) => {
+const isPubkey = (str: string): boolean => {
   try {
     new PublicKey(str)
     return true
@@ -44,9 +44,9 @@ const isPubkey = (str: string) => {
 }
 
 const getProposalStatus = (
-  proposal: TransactionAccount,
+  proposal: TransactionAccount | undefined,
   multisig: MultisigAccount | undefined
-) => {
+): string => {
   if (multisig && proposal) {
     const onChainStatus = Object.keys(proposal.status)[0]
     return proposal.transactionIndex <= multisig.msChangeIndex &&
