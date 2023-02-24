@@ -10,3 +10,10 @@ export interface PriceListener {
   // Should return undefined only when the price does not exist.
   getLatestPriceInfo(priceId: HexString): undefined | PriceInfo;
 }
+
+export interface ChainPricePusher {
+  updatePriceFeed(
+    priceIds: string[],
+    pubTimesToPush: UnixTimestamp[]
+  ): Promise<void>;
+}
