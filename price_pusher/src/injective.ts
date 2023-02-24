@@ -17,6 +17,7 @@ type PriceQueryResponse = {
 };
 
 // this use price without leading 0x
+// FIXME: implement common methods in the parent class
 export class InjectivePriceListener implements PriceListener {
   private latestPriceInfo: Map<HexString, PriceInfo>;
   private priceIds: HexString[];

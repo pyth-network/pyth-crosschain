@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-
+// FIXME: refactor this file and command structure
+// FIXME: update readme and compose files
+// FIXME: release a new version
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
