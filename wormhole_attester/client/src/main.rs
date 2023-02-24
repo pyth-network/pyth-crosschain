@@ -1,4 +1,8 @@
-use pyth_wormhole_attester::attest::RATE_LIMIT_EXCEEDED_MSG;
+use {
+    pyth_wormhole_attester::error::AttesterCustomError,
+    solana_program::instruction::InstructionError,
+    solana_sdk::transaction::TransactionError,
+};
 
 pub mod cli;
 
@@ -677,34 +681,27 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
             rate_limit_interval_secs,
         )?;
 
-        // Detect rate limiting error early
-        let simulation_res = rpc.simulate_transaction(&tx).await?;
-
-        match simulation_res.value.logs {
-            Some(logs) => {
-                for log in logs {
-                    if log.contains(RATE_LIMIT_EXCEEDED_MSG) {
-                        info!(
-                            "Batch {}/{}, group {:?} OK: rate limit reached, backing off",
-                            batch_no, batch_count, group_name
-                        );
-                        // Note: We return early if tx simulation
-                        // suggests rate limit was reached. This
-                        // ensures that we don't count this attempt in
-                        // ok/err monitoring and healthcheck counters.
-                        return Ok(());
-                    }
-                }
-            }
-            None => {}
-        }
-
         let tx_processing_start_time = Instant::now();
 
-        let sig = rpc
-            .send_and_confirm_transaction(&tx)
-            .map_err(|e| -> ErrBoxSend { e.into() })
-            .await?;
+        let sig = match rpc.send_and_confirm_transaction(&tx).await {
+            Ok(s) => Ok(s),
+            Err(e) => match e.get_transaction_error() {
+                Some(TransactionError::InstructionError(_idx, InstructionError::Custom(code)))
+                    if code == AttesterCustomError::AttestRateLimitReached as u32 =>
+                {
+                    info!(
+                        "Batch {}/{}, group {:?} OK: configured {} second rate limit interval reached, backing off",
+                        batch_no, batch_count, group_name, rate_limit_interval_secs.unwrap(),
+                    );
+                    // Note: We return early if rate limit tx
+                    // error is detected. This ensures that we
+                    // don't count this attempt in ok/err
+                    // monitoring and healthcheck counters.
+                    return Ok(());
+                }
+                _other => Err(e),
+            },
+        }?;
         let tx_data = rpc
             .get_transaction_with_config(
                 &sig,

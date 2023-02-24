@@ -3,6 +3,7 @@
 pub mod attest;
 pub mod attestation_state;
 pub mod config;
+pub mod error;
 pub mod initialize;
 pub mod message;
 pub mod migrate;

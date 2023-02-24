@@ -2,6 +2,7 @@ use {
     crate::{
         attestation_state::AttestationStatePDA,
         config::P2WConfigAccount,
+        error::AttesterCustomError,
         message::{
             P2WMessage,
             P2WMessageDrvData,
@@ -53,9 +54,6 @@ use {
 /// used in the on-chain config in order for attesters to learn the
 /// correct value dynamically.
 pub const P2W_MAX_BATCH_SIZE: u16 = 5;
-
-/// Log message contents for easier detection in attester clients
-pub const RATE_LIMIT_EXCEEDED_MSG: &str = "ATTESTER ALL SYMBOLS EXCEED RATE LIMIT";
 
 #[derive(FromAccounts)]
 pub struct Attest<'b> {
@@ -312,8 +310,9 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
     // Do not proceed if none of the symbols is under rate limit
     if over_rate_limit {
         trace!("All symbols over limit, bailing out");
-        solana_program::msg!(RATE_LIMIT_EXCEEDED_MSG);
-        return Err(ProgramError::InvalidInstructionData.into());
+        return Err(
+            ProgramError::Custom(AttesterCustomError::AttestRateLimitReached as u32).into(),
+        );
     }
 
     let batch_attestation = BatchPriceAttestation {
