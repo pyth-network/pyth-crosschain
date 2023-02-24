@@ -66,6 +66,7 @@ pub struct AttestationConfig {
     /// Attestation conditions that will be used for any symbols included in the mapping
     /// that aren't explicitly in one of the groups below, and any groups without explicitly
     /// configured attestation conditions.
+    #[serde(default)]
     pub default_attestation_conditions: AttestationConditions,
 
     /// Groups of symbols to publish.
@@ -383,7 +384,7 @@ impl Default for AttestationConditions {
             max_batch_jobs:              default_max_batch_jobs(),
             price_changed_bps:           None,
             publish_time_min_delta_secs: None,
-            rate_limit_interval_secs:    None,
+            rate_limit_interval_secs:    Some(1),
         }
     }
 }
