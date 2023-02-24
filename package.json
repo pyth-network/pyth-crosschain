@@ -7,7 +7,7 @@
     "price_service/server",
     "price_service/sdk/js",
     "price_service/client/js",
-    "target_chains/ethereum",
+    "target_chains/ethereum/contracts",
     "third_party/pyth/p2w-relay",
     "wormhole_attester/sdk/js"
   ],

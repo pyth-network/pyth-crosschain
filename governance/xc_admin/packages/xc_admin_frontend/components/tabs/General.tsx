@@ -11,7 +11,6 @@ import {
   getMultisigCluster,
   isRemoteCluster,
   mapKey,
-  OPS_KEY,
   proposeInstructions,
   WORMHOLE_ADDRESS,
 } from 'xc_admin_common'
@@ -23,6 +22,7 @@ import ClusterSwitch from '../ClusterSwitch'
 import Modal from '../common/Modal'
 import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
+import PermissionDepermissionKey from '../PermissionDepermissionKey'
 
 const General = () => {
   const [data, setData] = useState<any>({})
@@ -176,6 +176,10 @@ const General = () => {
               // if symbol is not in existing symbols, create new entry
               changes[symbol] = { new: {} }
               changes[symbol].new = { ...fileDataParsed[symbol] }
+              changes[symbol].new.metadata = {
+                ...changes[symbol].new.metadata,
+                symbol,
+              }
               // these fields are generated deterministically and should not be updated
               delete changes[symbol].new.address
               delete changes[symbol].new.priceAccounts[0].address
@@ -241,13 +245,32 @@ const General = () => {
       }
     })
 
+    // check that there are no duplicate publishers
+    Object.keys(jsonParsed).forEach((symbol) => {
+      if (
+        new Set(jsonParsed[symbol].priceAccounts[0].publishers).size !=
+        jsonParsed[symbol].priceAccounts[0].publishers.length
+      ) {
+        toast.error(`${symbol} has a duplicate publisher.`)
+        isValid = false
+      }
+    })
+
+    // check that no price account has more than 32 publishers
+    Object.keys(jsonParsed).forEach((symbol) => {
+      if (jsonParsed[symbol].priceAccounts[0].publishers.length > 32) {
+        toast.error(`${symbol} has more than 32 publishers.`)
+        isValid = false
+      }
+    })
+
     return isValid
   }
 
   const handleSendProposalButtonClick = async () => {
     if (pythProgramClient && dataChanges && !isMultisigLoading && squads) {
       const instructions: TransactionInstruction[] = []
-      Object.keys(dataChanges).forEach(async (symbol) => {
+      for (const symbol of Object.keys(dataChanges)) {
         const multisigAuthority = squads.getAuthorityPDA(
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
           1
@@ -269,7 +292,7 @@ const General = () => {
           // create add product account instruction
           instructions.push(
             await pythProgramClient.methods
-              .addProduct({ ...newChanges.metadata, symbol: symbol })
+              .addProduct({ ...newChanges.metadata })
               .accounts({
                 fundingAccount,
                 tailMappingAccount: rawConfig.mappingAccounts[0].address,
@@ -371,17 +394,6 @@ const General = () => {
               !newChanges.priceAccounts[0].publishers.includes(prevPublisher)
           )
 
-          // add instructions to add new publishers
-          publisherKeysToAdd.forEach((publisherKey: string) => {
-            pythProgramClient.methods
-              .addPublisher(new PublicKey(publisherKey))
-              .accounts({
-                fundingAccount,
-                priceAccount: new PublicKey(prev.priceAccounts[0].address),
-              })
-              .instruction()
-              .then((instruction) => instructions.push(instruction))
-          })
           // add instructions to remove publishers
           publisherKeysToRemove.forEach((publisherKey: string) => {
             pythProgramClient.methods
@@ -393,8 +405,20 @@ const General = () => {
               .instruction()
               .then((instruction) => instructions.push(instruction))
           })
+
+          // add instructions to add new publishers
+          publisherKeysToAdd.forEach((publisherKey: string) => {
+            pythProgramClient.methods
+              .addPublisher(new PublicKey(publisherKey))
+              .accounts({
+                fundingAccount,
+                priceAccount: new PublicKey(prev.priceAccounts[0].address),
+              })
+              .instruction()
+              .then((instruction) => instructions.push(instruction))
+          })
         }
-      })
+      }
 
       setIsSendProposalButtonLoading(true)
       try {
@@ -407,34 +431,12 @@ const General = () => {
         )
         toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
         setIsSendProposalButtonLoading(false)
+        closeModal()
       } catch (e: any) {
         toast.error(capitalizeFirstLetter(e.message))
         setIsSendProposalButtonLoading(false)
       }
     }
-  }
-
-  const AddressChangesRow = ({ changes }: { changes: any }) => {
-    const key = 'address'
-    return (
-      <>
-        {changes.prev !== changes.new && (
-          <tr key={key}>
-            <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
-              {key
-                .split('_')
-                .map((word) => capitalizeFirstLetter(word))
-                .join(' ')}
-            </td>
-            <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
-              <s>{changes.prev}</s>
-              <br />
-              {changes.new}
-            </td>
-          </tr>
-        )}
-      </>
-    )
   }
 
   const MetadataChangesRows = ({ changes }: { changes: any }) => {
@@ -542,18 +544,6 @@ const General = () => {
         )
     return (
       <>
-        {publisherKeysToAdd.length > 0 && (
-          <tr>
-            <td className="py-3 pl-6 pr-1 lg:pl-6">Add Publisher(s)</td>
-            <td className="py-3 pl-1 pr-8 lg:pl-6">
-              {publisherKeysToAdd.map((publisherKey: string) => (
-                <span key={publisherKey} className="block">
-                  {publisherKey}
-                </span>
-              ))}
-            </td>
-          </tr>
-        )}
         {publisherKeysToRemove.length > 0 && (
           <tr>
             <td className="py-3 pl-6 pr-1 lg:pl-6">Remove Publisher(s)</td>
@@ -566,25 +556,31 @@ const General = () => {
             </td>
           </tr>
         )}
+        {publisherKeysToAdd.length > 0 && (
+          <tr>
+            <td className="py-3 pl-6 pr-1 lg:pl-6">Add Publisher(s)</td>
+            <td className="py-3 pl-1 pr-8 lg:pl-6">
+              {publisherKeysToAdd.map((publisherKey: string) => (
+                <span key={publisherKey} className="block">
+                  {publisherKey}
+                </span>
+              ))}
+            </td>
+          </tr>
+        )}
       </>
     )
   }
 
   const NewPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => {
-    const key =
-      priceFeedData.metadata.asset_type +
-      '.' +
-      priceFeedData.metadata.base +
-      '/' +
-      priceFeedData.metadata.quote_currency
     return (
       <>
         <MetadataChangesRows
-          key={key + 'metadata'}
+          key={priceFeedData.key + 'metadata'}
           changes={{ new: priceFeedData.metadata }}
         />
         <PriceAccountsChangesRows
-          key={key + 'priceAccounts'}
+          key={priceFeedData.key + 'priceAccounts'}
           changes={{ new: priceFeedData.priceAccounts }}
         />
       </>
@@ -621,12 +617,7 @@ const General = () => {
                     <NewPriceFeedsRows key={key} priceFeedData={newChanges} />
                   ) : (
                     diff.map((k) =>
-                      k === 'address' ? (
-                        <AddressChangesRow
-                          key={k}
-                          changes={{ prev: prev[k], new: newChanges[k] }}
-                        />
-                      ) : k === 'metadata' ? (
+                      k === 'metadata' ? (
                         <MetadataChangesRows
                           key={k}
                           changes={{ prev: prev[k], new: newChanges[k] }}
@@ -709,6 +700,18 @@ const General = () => {
           <div className="mb-4 md:mb-0">
             <ClusterSwitch />
           </div>
+        </div>
+        <div className="relative mt-6 flex space-x-4">
+          <PermissionDepermissionKey
+            isPermission={true}
+            pythProgramClient={pythProgramClient}
+            squads={squads}
+          />
+          <PermissionDepermissionKey
+            isPermission={false}
+            pythProgramClient={pythProgramClient}
+            squads={squads}
+          />
         </div>
         <div className="relative mt-6">
           {dataIsLoading ? (

@@ -24,14 +24,9 @@ use {
     },
     solana_program::{
         clock::Clock,
-        program::{
-            invoke,
-            invoke_signed,
-        },
+        program::invoke_signed,
         program_error::ProgramError,
         rent::Rent,
-        system_instruction,
-        sysvar::Sysvar as SolanaSysvar,
     },
     solitaire::{
         trace,
@@ -367,43 +362,6 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
         ]
         .as_slice(),
     )?;
-
-    // NOTE: 2022-09-05
-    //
-    // This part is added to avoid rent exemption error that is introduced using
-    // a wrong implementation in solitaire
-    //
-    // This is done after the cross-contract call to get the proper account sizes
-    // and avoid breaking wormhole call.
-    //
-    // It can be removed once wormhole mitigates this problem and upgrades its contract
-
-    // Checking the message account balance
-    let wh_message_balance = accs.wh_message.info().lamports();
-    let wh_message_rent_exempt = Rent::get()?.minimum_balance(accs.wh_message.info().data_len());
-
-    if wh_message_balance < wh_message_rent_exempt {
-        let required_deposit = wh_message_rent_exempt - wh_message_balance;
-
-        let transfer_ix = system_instruction::transfer(
-            accs.payer.key,
-            accs.wh_message.info().key,
-            required_deposit,
-        );
-        invoke(&transfer_ix, ctx.accounts)?
-    }
-
-    // Checking the sequence account balance
-    let wh_sequence_balance = accs.wh_sequence.info().lamports();
-    let wh_sequence_rent_exempt = Rent::get()?.minimum_balance(accs.wh_sequence.data_len());
-
-    if wh_sequence_balance < wh_sequence_rent_exempt {
-        let required_deposit = wh_sequence_rent_exempt - wh_sequence_balance;
-
-        let transfer_ix =
-            system_instruction::transfer(accs.payer.key, accs.wh_sequence.key, required_deposit);
-        invoke(&transfer_ix, ctx.accounts)?
-    }
 
     Ok(())
 }

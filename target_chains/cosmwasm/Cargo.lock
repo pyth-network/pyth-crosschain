@@ -549,7 +549,7 @@ dependencies = [
 [[package]]
 name = "cw20-wrapped-2"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.14.8#7e982cb03264cf1cccfbb5d947c00d6ad3e2f8f1"
 dependencies = [
  "cosmwasm-std",
  "cosmwasm-storage",
@@ -1314,7 +1314,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-wormhole-attester-sdk"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "hex",
  "pyth-sdk 0.5.0",
@@ -2129,7 +2129,7 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 [[package]]
 name = "wormhole-bridge-terra-2"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.8.9#e47f9e481ef84d4dea7a94c9eafbf3b180892466"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.14.8#7e982cb03264cf1cccfbb5d947c00d6ad3e2f8f1"
 dependencies = [
  "cosmwasm-std",
  "cosmwasm-storage",
