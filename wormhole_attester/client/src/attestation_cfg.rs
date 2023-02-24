@@ -318,8 +318,8 @@ pub const fn default_min_interval_secs() -> u64 {
     60
 }
 
-pub const fn default_rate_limit_interval_secs() -> Option<u32> {
-    Some(1)
+pub const fn default_rate_limit_interval_secs() -> u32 {
+    1
 }
 
 pub const fn default_max_batch_jobs() -> usize {
@@ -343,9 +343,9 @@ pub struct AttestationConditions {
     /// enforced on-chain, letting concurret attesters prevent
     /// redundant batch resends and tx expenses. NOTE: The client
     /// logic does not include rate limit failures in monitoring error
-    /// counts.
+    /// counts. 0 effectively disables this feature.
     #[serde(default = "default_rate_limit_interval_secs")]
-    pub rate_limit_interval_secs: Option<u32>,
+    pub rate_limit_interval_secs: u32,
 
     /// Limit concurrent attestation attempts per batch. This setting
     /// should act only as a failsafe cap on resource consumption and is

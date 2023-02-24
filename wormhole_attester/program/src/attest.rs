@@ -136,8 +136,9 @@ pub struct AttestData {
     /// attestation state. This enables all of the clients to only
     /// contribute attestations if their desired interval is not
     /// already reached. If at least one symbol has been waiting
-    /// longer than this interval, we attest the whole batch.
-    pub rate_limit_interval_secs: Option<u32>,
+    /// longer than this interval, we attest the whole batch. 0
+    /// effectively disables this feature.
+    pub rate_limit_interval_secs: u32,
 }
 
 pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> SoliResult<()> {
@@ -259,21 +260,13 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
 
         // don't re-evaluate if at least one symbol was found to be under limit
         if over_rate_limit {
-            // Evaluate rate limit
-            match data.rate_limit_interval_secs {
-                Some(interval)
-                    if (this_attestation_time - state.0 .0.last_attestation_time)
-                        >= interval as i64 =>
-                {
-                    over_rate_limit = false;
-                }
-                // Unset attestation
-                None => {
-                    over_rate_limit = false;
-                }
-                Some(_other) => {
-                    trace!("Price {:?}: over rate limit", price.key);
-                }
+            // Evaluate rate limit - should be smaller than duration from last attestation
+            if this_attestation_time - state.0 .0.last_attestation_time
+                >= data.rate_limit_interval_secs as i64
+            {
+                over_rate_limit = false;
+            } else {
+                trace!("Price {:?}: over rate limit", price.key);
             }
         }
 

@@ -619,7 +619,7 @@ pub struct AttestationJobArgs {
     pub payer:                    Keypair,
     pub symbols:                  Vec<P2WSymbol>,
     pub max_jobs_sema:            Arc<Semaphore>,
-    pub rate_limit_interval_secs: Option<u32>,
+    pub rate_limit_interval_secs: u32,
     pub message_q_mtx:            Arc<Mutex<P2WMessageQueue>>,
 }
 
@@ -691,7 +691,7 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
                 {
                     info!(
                         "Batch {}/{}, group {:?} OK: configured {} second rate limit interval reached, backing off",
-                        batch_no, batch_count, group_name, rate_limit_interval_secs.unwrap(),
+                        batch_no, batch_count, group_name, rate_limit_interval_secs,
                     );
                     // Note: We return early if rate limit tx
                     // error is detected. This ensures that we
