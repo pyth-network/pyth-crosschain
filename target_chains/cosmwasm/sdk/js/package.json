@@ -11,7 +11,11 @@
   "files": [
     "lib/**/*"
   ],
-  "repository": "https://github.com/pyth-network/pyth-js/pyth-terra-js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "target_chains/cosmwasm/sdk/js"
+  },
   "scripts": {
     "test": "jest --passWithNoTests",
     "build": "tsc",

@@ -11,7 +11,11 @@
   "bin": {
     "pyth-evm-price-pusher": "./lib/index.js"
   },
-  "repository": "https://github.com/pyth-network/pyth-js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "price_pusher"
+  },
   "scripts": {
     "test": "jest src/ --passWithNoTests",
     "build": "tsc",
