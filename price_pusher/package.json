@@ -43,6 +43,7 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
+    "@injectivelabs/sdk-ts": "^1.0.457",
     "@pythnetwork/pyth-common-js": "^1.2.0",
     "@pythnetwork/pyth-evm-js": "^1.1.0",
     "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
