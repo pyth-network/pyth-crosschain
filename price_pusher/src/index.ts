@@ -25,8 +25,8 @@ const argv = yargs(hideBin(process.argv))
     description:
       "RPC endpoint URL for the network. If you provide a normal HTTP endpoint, the pusher " +
       "will periodically poll for updates. The polling interval is configurable via the " +
-      "`polling-frequency` command-line argument. If you provide a websocket RPC " +
-      "endpoint (`ws[s]://...`) for the evm chain, the price pusher will use event subscriptions to read " +
+      "`polling-frequency` command-line argument. for the evm chains, if you provide a websocket RPC " +
+      "endpoint (`ws[s]://...`), the price pusher will use event subscriptions to read " +
       "the current EVM price in addition to polling. ",
     type: "string",
     required: true,
