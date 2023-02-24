@@ -43,24 +43,33 @@ const isPubkey = (str: string) => {
   }
 }
 
+const getProposalStatus = (
+  proposal: TransactionAccount,
+  multisig: MultisigAccount | undefined
+) => {
+  if (multisig && proposal) {
+    const onChainStatus = Object.keys(proposal.status)[0]
+    return proposal.transactionIndex <= multisig.msChangeIndex &&
+      (onChainStatus == 'active' || onChainStatus == 'draft')
+      ? 'expired'
+      : onChainStatus
+  } else {
+    return 'unkwown'
+  }
+}
+
 const ProposalRow = ({
   proposal,
   verified,
   setCurrentProposalPubkey,
-  msChangeIndex,
+  multisig,
 }: {
   proposal: TransactionAccount
   verified: boolean
   setCurrentProposalPubkey: Dispatch<SetStateAction<string | undefined>>
-  msChangeIndex: number
+  multisig: MultisigAccount | undefined
 }) => {
-  const onChainStatus = Object.keys(proposal.status)[0]
-  const status =
-    proposal.transactionIndex <= msChangeIndex &&
-    (onChainStatus == 'active' || onChainStatus == 'draft')
-      ? 'expired'
-      : onChainStatus
-
+  const status = getProposalStatus(proposal, multisig)
   const router = useRouter()
 
   const handleClickIndividualProposal = useCallback(
@@ -228,16 +237,7 @@ const Proposal = ({
     }
   }, [rawConfig, dataIsLoading])
 
-  const onChainStatus = currentProposal
-    ? Object.keys(currentProposal.status)[0]
-    : 'unknown'
-  const proposalStatus =
-    currentProposal && multisig
-      ? currentProposal.transactionIndex <= multisig.msChangeIndex &&
-        (onChainStatus == 'active' || onChainStatus == 'draft')
-        ? 'expired'
-        : onChainStatus
-      : 'unknown'
+  const proposalStatus = getProposalStatus(proposal, multisig)
 
   useEffect(() => {
     // update the priceFeedMultisigProposals with previous value but replace the current proposal with the updated one at the specific index
