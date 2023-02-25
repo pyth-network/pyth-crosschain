@@ -1,4 +1,4 @@
-import { HexString } from "@pythnetwork/pyth-common-js";
+import { HexString } from "@pythnetwork/price-service-client";
 import { ChainPricePusher, PriceInfo, PriceListener } from "./interface";
 import { DurationInSeconds } from "./utils";
 import { PriceConfig } from "./price-config";
