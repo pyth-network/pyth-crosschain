@@ -17,3 +17,10 @@ default = []
 
 [dependencies]
 anchor-lang = "0.26.0"
+wormhole-core = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
+wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
+pyth-wormhole-attester-sdk = { path = "../../../../wormhole_attester/sdk/rust" }
+
+[dev-dependencies]
+pyth-sdk = "0.5.0"
+pyth-sdk-solana = "0.1.0"

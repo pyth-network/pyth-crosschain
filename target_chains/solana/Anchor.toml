@@ -1,15 +1,13 @@
 [features]
 seeds = false
 skip-lint = false
-[programs.localnet]
-solana_receiver = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+
+[programs.devnet]
+example_sol_anchor_contract = "H5gewNsx3yQbGeLZaRbzxn3CUNZz4EVSUNgs9Q1vaeWY"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "https://api.devnet.solana.com"
 wallet = "/home/yunhao/.config/solana/id.json"
-
-[scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
