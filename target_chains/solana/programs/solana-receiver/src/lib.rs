@@ -13,7 +13,7 @@ use {
 
 use crate::error::ReceiverError::*;
 
-declare_id!("H5gewNsx3yQbGeLZaRbzxn3CUNZz4EVSUNgs9Q1vaeWY");
+declare_id!("5dXnHcDXdXaiEp9QgknCDPsEhJStSqZqJ4ATirWfEqeY");
 
 #[program]
 pub mod pyth_solana_receiver {

@@ -11,21 +11,21 @@ The receiver program verifies that the VAA comes from wormhole (through the `own
 > solana-keygen new -o program_address.json
 
 # Build and deploy the receiver program
-> make build
-> make deploy
+> anchor build
+> anchor run deploy
 
 # Build and test the cli program
-> make cli_build
-> make cli_test
+> anchor run cli_build
+> anchor run cli_test
 # Example output
 ...
 [1/5] Decode the VAA
 [2/5] Get wormhole guardian set configuration
 [3/5] Invoke wormhole on solana to verify the VAA
-Transaction successful : 2YQn72fQpcSBLDAkP9zt4arqx6ZKVgsbu8z7d8exT3MHJ5cLNf6JUXKFi48LhoEv6PKTUMmWBCwNe8PmYgm3pnxC
+Transaction successful : 3VbrqQBCf1RsNLxrcvxN3aTb5fZRht4n8XDUVPM8NKniRmo84NZQUu5iFw5groAQgQYox3YCqaMjKc2WTpPU1yqV
 [4/5] Post the VAA data onto a solana account
-Transaction successful : 32f8Cx28j7jpLFBEsj3MXbfWhrq2x1jpf382cvTD7tMKfzcAUMsw64JSvZS31fryGXKVQ7f8qMmdqTCNC8sxeY9Y
+Transaction successful : 3L1vxzSHQv6B6TwtoMv2Y6m7vFGz3hzqApGHEhHSLA9Jn5dNKeWRWKv29UDPDc3vsgt1mYueamUPPt6bHGGEkbxh
 [5/5] Receive and deserialize the VAA on solana
-Receiver program ID is H5gewNsx3yQbGeLZaRbzxn3CUNZz4EVSUNgs9Q1vaeWY
-Transaction successful : 3YSWNemyyCXu9rza4caBRCyawUQJZviSQPfEb8Wug7HcjtQdfySuj6U3F6kWv5CJAJEqASyv9j6Z1iVpA36pyWAa
+Receiver program ID is 5dXnHcDXdXaiEp9QgknCDPsEhJStSqZqJ4ATirWfEqeY
+Transaction successful : u5y9Hqc18so3BnjSUvZkLZR4mvA8zkiBgzGKHSEYyWkHQhH3uQatM7xWf4kdrhjZFVGbfBLdR8RJJUmuf28ePtG
 ```
