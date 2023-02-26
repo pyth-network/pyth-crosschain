@@ -29,9 +29,9 @@ pub mod pyth_solana_receiver {
 
     pub fn decode_posted_vaa(ctx: Context<DecodePostedVaa>) -> Result<()> {
         let posted_vaa = &ctx.accounts.posted_vaa.payload;
-        //let payload = ExecutorPayload::try_from_slice(&posted_vaa.payload)?;
         let attestation = PriceAttestation::deserialize(posted_vaa.as_slice())
             .map_err(|_| ReceiverError::DeserializeVAAFailed)?;
+
         msg!("product_id: {}", attestation.product_id);
         msg!("price_id: {}", attestation.price_id);
         msg!("price: {}", attestation.price);
