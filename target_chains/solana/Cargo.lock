@@ -2348,6 +2348,18 @@ dependencies = [
 
 [[package]]
 name = "pyth-sdk"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "446ff07d7ef3bd98214f9b4fe6a611a69e36b5aad74b18cdbad5150193c1f204"
+dependencies = [
+ "borsh",
+ "borsh-derive",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "pyth-sdk"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5c805ba3dfb5b7ed6a8ffa62ec38391f485a79c7cf6b3b11d3bd44fb0325824"
@@ -2360,10 +2372,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyth-sdk-solana"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27a648739aa69cab94edd900a0d7ca37d8a789e9c88741b23deec11fab418d16"
+dependencies = [
+ "borsh",
+ "borsh-derive",
+ "bytemuck",
+ "num-derive",
+ "num-traits",
+ "pyth-sdk 0.1.0",
+ "serde",
+ "solana-program",
+ "thiserror",
+]
+
+[[package]]
 name = "pyth-solana-receiver"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "pyth-sdk 0.5.0",
+ "pyth-sdk-solana",
  "pyth-wormhole-attester-sdk",
  "wormhole-core",
  "wormhole-solana",
@@ -2390,7 +2421,7 @@ name = "pyth-wormhole-attester-sdk"
 version = "0.1.1"
 dependencies = [
  "hex",
- "pyth-sdk",
+ "pyth-sdk 0.5.0",
  "serde",
 ]
 

@@ -10,6 +10,7 @@ use {
     },
     pyth_wormhole_attester_sdk::PriceAttestation,
 };
+
 use crate::error::ReceiverError::*;
 
 declare_id!("H5gewNsx3yQbGeLZaRbzxn3CUNZz4EVSUNgs9Q1vaeWY");
@@ -56,3 +57,36 @@ impl crate::accounts::DecodePostedVaa {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use pyth_sdk::Identifier;
+    use pyth_wormhole_attester_sdk::PriceStatus;
+    use pyth_wormhole_attester_sdk::PriceAttestation;
+
+    #[test]
+    fn mock_attestation() {
+        let _attestation = PriceAttestation {
+            product_id:                 Identifier::new([18u8; 32]),
+            price_id:                   Identifier::new([150u8; 32]),
+            price:                      0x2bad2feed7,
+            conf:                       101,
+            ema_price:                  -42,
+            ema_conf:                   42,
+            expo:                       -3,
+            status:                     PriceStatus::Trading,
+            num_publishers:             123212u32,
+            max_num_publishers:         321232u32,
+            attestation_time:           (0xdeadbeeffadeu64) as i64,
+            publish_time:               0xdadebeefi64,
+            prev_publish_time:          0xdeadbabei64,
+            prev_price:                 0xdeadfacebeefi64,
+            prev_conf:                  0xbadbadbeefu64,
+            last_attested_publish_time: (0xdeadbeeffadedeafu64) as i64,
+        };
+
+        // TODO: create a VAA with this attestation as payload
+        // and then invoke DecodePostedVaa
+    }
+}
+
