@@ -10,13 +10,13 @@ use {
     std::str::FromStr,
 
     solana_sdk::{
+        instruction::Instruction,
         pubkey::Pubkey,
         signature::{
             read_keypair_file,
             Keypair,
         },
         signer::Signer,
-        instruction::Instruction,
         transaction::Transaction,
     },
 
@@ -30,17 +30,28 @@ use {
             verify_signatures_txs,
             PostVAAData,
         },
+        VAA as WormholeSolanaVAA,
+    },
+
+    pyth_solana_receiver::{
+        ID,
+        accounts::DecodePostedVaa,
+    },
+
+    anchor_client::anchor_lang::{
+        ToAccountMetas,
+        InstructionData,
+        AnchorDeserialize,
     },
 
     solana_client::rpc_client::RpcClient,
-    anchor_client::anchor_lang::AnchorDeserialize,
 };
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.action {
-        Action::PostPriceVAA { vaa, keypair } => {
+        Action::PostAndReceiveVAA { vaa, keypair } => {
             println!("PostPriceVAA is invoked with vaa\"{}\"", vaa);
             let rpc_client = RpcClient::new("https://api.devnet.solana.com");
             let wormhole = Pubkey::from_str("3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5").unwrap();
@@ -48,6 +59,7 @@ fn main() -> Result<()> {
             println!("Decode the VAA");
             let vaa_bytes: Vec<u8> = base64::decode(vaa)?;
             let vaa = VAA::from_bytes(vaa_bytes.clone())?;
+            let posted_vaa_key = WormholeSolanaVAA::key(&wormhole, vaa.digest().unwrap().hash);
 
             println!("Get wormhole guardian set configuration");
             let wormhole_config = WormholeConfig::key(&wormhole, ());
@@ -98,10 +110,22 @@ fn main() -> Result<()> {
                 )?],
                 &vec![&payer],
             )?;
-        }
 
-        Action::InvokePriceReceiver { keypair } => {
-            println!("TBD, keypair={}", keypair);
+            println!("Receive and deserialize the VAA on solana");
+            let account_metas = DecodePostedVaa::populate(&payer.pubkey(), &posted_vaa_key)
+                .to_account_metas(None);
+
+            let invoke_receiver_instruction = Instruction {
+                program_id: ID,
+                accounts:   account_metas,
+                data:       pyth_solana_receiver::instruction::DecodePostedVaa.data(),
+            };
+
+            process_transaction(
+                &rpc_client,
+                vec![invoke_receiver_instruction],
+                &vec![&payer],
+            )?;
         }
     }
 

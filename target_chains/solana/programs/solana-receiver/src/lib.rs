@@ -14,14 +14,6 @@ use crate::error::ReceiverError::*;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
-#[derive(Accounts)]
-pub struct DecodePostedVaa<'info> {
-    #[account(mut)]
-    pub payer:          Signer<'info>,
-    #[account(constraint = Chain::from(posted_vaa.emitter_chain) == Solana @ EmitterChainNotSolana)]
-    pub posted_vaa:     Account<'info, AnchorVaa>,
-}
-
 #[program]
 pub mod pyth_solana_receiver {
     use super::*;
@@ -42,5 +34,25 @@ pub mod pyth_solana_receiver {
         msg!("attestation_time: {}", attestation.attestation_time);
 
         Ok(())
+    }
+}
+
+#[derive(Accounts)]
+pub struct DecodePostedVaa<'info> {
+    #[account(mut)]
+    pub payer:          Signer<'info>,
+    #[account(constraint = Chain::from(posted_vaa.emitter_chain) == Solana @ EmitterChainNotSolana)]
+    pub posted_vaa:     Account<'info, AnchorVaa>,
+}
+
+impl crate::accounts::DecodePostedVaa {
+    pub fn populate(
+        payer: &Pubkey,
+        posted_vaa: &Pubkey,
+    ) -> Self {
+        crate::accounts::DecodePostedVaa {
+            payer: *payer,
+            posted_vaa: *posted_vaa,
+        }
     }
 }
