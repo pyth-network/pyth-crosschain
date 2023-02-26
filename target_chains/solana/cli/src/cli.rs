@@ -17,7 +17,7 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Action {
-    #[clap(about = "Verify and post the price VAA on solana")]
+    #[clap(about = "Verify, post and receive the price VAA on solana")]
     PostAndReceiveVAA {
         #[clap(short = 'v', long,
                help = "Price VAA from Pythnet")]
@@ -25,7 +25,7 @@ pub enum Action {
         #[clap(
             short = 'k', long,
             default_value = "~/.config/solana/id.json",
-            help = "Keypair of the transaction's funder"
+            help = "Keypair of the payer of transactions"
         )]
         keypair: String,
     },

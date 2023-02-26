@@ -1,21 +1,15 @@
 use {
-    anchor_lang::prelude::*,
     std::{
         io::Write,
         ops::Deref,
         str::FromStr,
     },
     wormhole_solana::VAA,
+    anchor_lang::prelude::*,
 };
 
 // The current chain's wormhole bridge owns the VAA accounts
 impl Owner for AnchorVaa {
-    // #[cfg(not(feature = "pythtest"))]
-    // fn owner() -> Pubkey {
-    //     Pubkey::from_str("H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU").unwrap()
-    // }
-
-    // #[cfg(feature = "pythtest")]
     fn owner() -> Pubkey {
         // wormhole address on solana devnet
         Pubkey::from_str("3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5").unwrap()

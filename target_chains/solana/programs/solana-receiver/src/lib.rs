@@ -2,12 +2,12 @@ pub mod error;
 pub mod state;
 
 use {
-    anchor_lang::prelude::*,
-    state::AnchorVaa,
     wormhole::Chain::{
         self,
         Solana,
     },
+    state::AnchorVaa,
+    anchor_lang::prelude::*,
     pyth_wormhole_attester_sdk::PriceAttestation,
 };
 
@@ -89,4 +89,3 @@ mod tests {
         // and then invoke DecodePostedVaa
     }
 }
-
