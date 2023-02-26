@@ -35,6 +35,8 @@ pub mod pyth_solana_receiver {
         msg!("price_id: {}", attestation.price_id);
         msg!("price: {}", attestation.price);
         msg!("conf: {}", attestation.conf);
+        msg!("ema_price: {}", attestation.ema_price);
+        msg!("ema_conf: {}", attestation.ema_conf);
         msg!("num_publishers: {}", attestation.num_publishers);
         msg!("publish_time: {}", attestation.publish_time);
         msg!("attestation_time: {}", attestation.attestation_time);
