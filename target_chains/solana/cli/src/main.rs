@@ -115,6 +115,7 @@ fn main() -> Result<()> {
             let account_metas = DecodePostedVaa::populate(&payer.pubkey(), &posted_vaa_key)
                 .to_account_metas(None);
 
+            println!("Receiver contract ID is {}", ID);
             let invoke_receiver_instruction = Instruction {
                 program_id: ID,
                 accounts:   account_metas,
