@@ -1,4 +1,3 @@
-//! CLI options
 use {
     clap::{
         Parser,
