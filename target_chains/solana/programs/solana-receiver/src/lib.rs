@@ -1,3 +1,6 @@
+pub mod error;
+pub mod state;
+
 use {
     anchor_lang::prelude::*,
     state::AnchorVaa,
@@ -7,7 +10,7 @@ use {
     },
     pyth_wormhole_attester_sdk::PriceAttestation,
 };
-pub mod state;
+use crate::error::ReceiverError;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -25,9 +28,14 @@ pub mod pyth_solana_receiver {
     use super::*;
 
     pub fn decode_posted_vaa(ctx: Context<DecodePostedVaa>) -> Result<()> {
-        let posted_vaa = &ctx.accounts.posted_vaa;
+        let posted_vaa = &ctx.accounts.posted_vaa.payload;
         //let payload = ExecutorPayload::try_from_slice(&posted_vaa.payload)?;
-        let _payload = PriceAttestation::deserialize(posted_vaa.payload.as_slice());
+        let attestation = PriceAttestation::deserialize(posted_vaa.as_slice())
+            .map_err(|_| ReceiverError::DeserializeVAAFailed)?;
+        msg!("product_id: {}", attestation.product_id);
+        msg!("price_id: {}", attestation.price_id);
+        msg!("price: {}", attestation.price);
+        msg!("conf: {}", attestation.conf);
 
         Ok(())
     }
