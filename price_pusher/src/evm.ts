@@ -5,7 +5,7 @@ import {
 } from "@pythnetwork/pyth-evm-js";
 import { Contract, EventData } from "web3-eth-contract";
 import { PriceConfig } from "./price-config";
-import { ChainPricePusher, PriceInfo, PriceListener } from "./interface";
+import { ChainPricePusher, PriceInfo, ChainPriceListener } from "./interface";
 import { TransactionReceipt } from "ethereum-protocol";
 import { addLeading0x, DurationInSeconds, removeLeading0x } from "./utils";
 import AbstractPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/AbstractPyth.json";
@@ -14,14 +14,10 @@ import { Provider } from "web3/providers";
 import Web3 from "web3";
 import { isWsEndpoint } from "./utils";
 
-export class EvmPriceListener implements PriceListener {
+export class EvmPriceListener extends ChainPriceListener {
   private pythContractFactory: PythContractFactory;
   private pythContract: Contract;
-  private latestPriceInfo: Map<HexString, PriceInfo>;
-  private priceIds: HexString[];
   private priceIdToAlias: Map<HexString, string>;
-
-  private pollingFrequency: DurationInSeconds;
 
   constructor(
     pythContractFactory: PythContractFactory,
@@ -30,13 +26,14 @@ export class EvmPriceListener implements PriceListener {
       pollingFrequency: DurationInSeconds;
     }
   ) {
-    this.latestPriceInfo = new Map();
-    this.priceIds = priceConfigs.map((priceConfig) => priceConfig.id);
+    super(
+      "Evm",
+      config.pollingFrequency,
+      priceConfigs.map((priceConfig) => priceConfig.id)
+    );
     this.priceIdToAlias = new Map(
       priceConfigs.map((priceConfig) => [priceConfig.id, priceConfig.alias])
     );
-
-    this.pollingFrequency = config.pollingFrequency;
 
     this.pythContractFactory = pythContractFactory;
     this.pythContract = this.pythContractFactory.createPythContract();
@@ -55,10 +52,8 @@ export class EvmPriceListener implements PriceListener {
       );
     }
 
-    console.log(`Polling the prices every ${this.pollingFrequency} seconds...`);
-    setInterval(this.pollPrices.bind(this), this.pollingFrequency * 1000);
-
-    await this.pollPrices();
+    // base class for polling
+    await super.start();
   }
 
   private async startSubscription() {
@@ -97,20 +92,6 @@ export class EvmPriceListener implements PriceListener {
     this.updateLatestPriceInfo(priceId, priceInfo);
   }
 
-  private async pollPrices() {
-    console.log("Polling evm prices...");
-    for (const priceId of this.priceIds) {
-      const currentPriceInfo = await this.getOnChainPriceInfo(priceId);
-      if (currentPriceInfo !== undefined) {
-        this.updateLatestPriceInfo(priceId, currentPriceInfo);
-      }
-    }
-  }
-
-  getLatestPriceInfo(priceId: string): PriceInfo | undefined {
-    return this.latestPriceInfo.get(priceId);
-  }
-
   async getOnChainPriceInfo(
     priceId: HexString
   ): Promise<PriceInfo | undefined> {
@@ -130,22 +111,6 @@ export class EvmPriceListener implements PriceListener {
       price: priceRaw.price,
       publishTime: Number(priceRaw.publishTime),
     };
-  }
-
-  private updateLatestPriceInfo(priceId: HexString, observedPrice: PriceInfo) {
-    const cachedLatestPriceInfo = this.getLatestPriceInfo(priceId);
-
-    // Ignore the observed price if the cache already has newer
-    // price. This could happen because we are using polling and
-    // subscription at the same time.
-    if (
-      cachedLatestPriceInfo !== undefined &&
-      cachedLatestPriceInfo.publishTime > observedPrice.publishTime
-    ) {
-      return;
-    }
-
-    this.latestPriceInfo.set(priceId, observedPrice);
   }
 }
 

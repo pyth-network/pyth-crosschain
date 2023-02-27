@@ -76,3 +76,7 @@ We use [Semantic Versioning](https://semver.org/) for our releases.
 pre-commit is a tool that checks and fixes simple issues (formatting, ...) before each commit. You can install it by following [their website](https://pre-commit.com/). In order to enable checks for this repo run `pre-commit install` from command-line in the root of this repo.
 
 The checks are also performed in the CI to ensure the code follows consistent formatting.
+
+### Tilt CI
+
+Integration tests run in Tilt (via the `tilt ci` command). The Tilt CI workflow requires approval from a member of the Pyth team. If you are a member, click on "Details" next to the "Workflow / ci-pyth-crosschain" check in a pull request, and then on the "Resume" button on the workflow page.
