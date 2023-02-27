@@ -1,0 +1,14 @@
+# A Docker file to build a Rust wasm32-unknown-unknown binary.
+FROM    rust:1.67 AS builder
+RUN     rustup target add wasm32-unknown-unknown
+ADD     receiver/Cargo.lock   /code/receiver/
+ADD     receiver/Cargo.toml   /code/receiver/
+ADD     receiver/src          /code/receiver/src
+ADD     attest-sdk/Cargo.toml /code/attest-sdk/Cargo.toml
+ADD     attest-sdk/src        /code/attest-sdk/src
+WORKDIR /code/receiver
+RUN     cargo build --release --target wasm32-unknown-unknown
+
+# Produce a minimal Docker image with only the WASM.
+FROM    scratch AS export-stage
+COPY    --from=builder /code/receiver/target/wasm32-unknown-unknown/release/pyth.wasm /

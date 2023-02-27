@@ -1,0 +1,20 @@
+# A Docker file to build a Rust wasm32-unknown-unknown binary.
+FROM    rust:1.67 AS builder
+RUN     rustup target add wasm32-unknown-unknown
+ADD     target_chains/near/receiver/Cargo.lock   /code/target_chains/near/receiver/
+ADD     target_chains/near/receiver/Cargo.toml   /code/target_chains/near/receiver/
+ADD     target_chains/near/receiver/src          /code/target_chains/near/receiver/src
+ADD     wormhole_attester/sdk/rust               /code/wormhole_attester/sdk/rust
+WORKDIR /code/target_chains/near/receiver
+RUN     ls -l
+RUN     cargo build --release --target wasm32-unknown-unknown
+
+# Produce a minimal Docker image with only the WASM.
+FROM    scratch AS export-stage
+COPY    --from=builder /code/target_chains/near/receiver/target/wasm32-unknown-unknown/release/pyth.wasm /
+
+# Deploy.
+FROM    node:16-buster-slim@sha256:93c9fc3550f5f7d159f282027228e90e3a7f8bf38544758024f005e82607f546
+COPY    --from=export-stage /pyth.wasm /pyth.wasm
+COPY    target_chains/near/devnet/devnet_deploy.sh /devnet_deploy.sh
+COPY    target_chains/near/devnet/devnet_deploy.ts /devnet_deploy.ts

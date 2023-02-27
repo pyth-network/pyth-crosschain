@@ -268,6 +268,20 @@ k8s_resource(
     trigger_mode = trigger_mode,
 )
 
+# NEAR devnet
+docker_build(
+    ref = "near-node",
+    context = "./target_chains/near/devnet",
+    dockerfile = "./target_chains/near/devnet/Dockerfile",
+)
+
+docker_build(
+    ref = "near-deploy",
+    context = ".",
+    dockerfile = "tilt_devnet/docker_images/Dockerfile.near",
+)
+
+k8s_yaml_with_ns("tilt_devnet/k8s/near-devnet.yaml")
 
 # terra devnet
 
