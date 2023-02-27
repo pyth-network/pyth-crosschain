@@ -1,4 +1,4 @@
-import { HexString, UnixTimestamp } from "@pythnetwork/pyth-evm-js";
+import { HexString, UnixTimestamp } from "@pythnetwork/pyth-common-js";
 
 export type PriceInfo = {
   price: string;
