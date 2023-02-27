@@ -76,8 +76,6 @@ const argv = yargs(hideBin(process.argv))
   })
   .parseSync();
 
-let pythContractAddr: string;
-
 const priceConfigs = readPriceConfigFile(argv.priceConfigFile);
 
 // TODO: name ChainPricePusher -> IPricePusher in a clean up PR
@@ -124,7 +122,7 @@ function getNetworkPriceListener(network: string): IPriceListener {
       const pythContractFactory = new PythContractFactory(
         argv.endpoint,
         fs.readFileSync(argv.mnemonicFile, "utf-8").trim(),
-        pythContractAddr
+        argv.pythContract
       );
 
       return new EvmPriceListener(pythContractFactory, priceConfigs, {
@@ -134,7 +132,7 @@ function getNetworkPriceListener(network: string): IPriceListener {
 
     case "injective":
       return new InjectivePriceListener(
-        pythContractAddr,
+        argv.pythContract,
         argv.endpoint,
         priceConfigs,
         { pollingFrequency: argv.pollingFrequency }
@@ -150,7 +148,7 @@ function getNetworkPricePusher(network: string): ChainPricePusher {
       const pythContractFactory = new PythContractFactory(
         argv.endpoint,
         fs.readFileSync(argv.mnemonicFile, "utf-8").trim(),
-        pythContractAddr
+        argv.pythContract
       );
       return new EvmPricePusher(
         priceServiceConnection,

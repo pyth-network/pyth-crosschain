@@ -1,4 +1,4 @@
-import { UnixTimestamp } from "@pythnetwork/pyth-evm-js";
+import { UnixTimestamp } from "@pythnetwork/pyth-common-js";
 import { DurationInSeconds, sleep } from "./utils";
 import { ChainPricePusher, IPriceListener } from "./interface";
 import { PriceConfig, shouldUpdate } from "./price-config";
