@@ -1,6 +1,9 @@
-# Developing the bridge
+# Tilt Devnet
 
-## Local Devnet
+We use Tilt to run integration tests. These tests instantiate docker containers with all of the
+various blockchains and services in order to verify that they interoperate correctly.
+
+## Installation
 
 The following dependencies are required for local development:
 
@@ -8,14 +11,14 @@ The following dependencies are required for local development:
 - [Tilt](http://tilt.dev/) >= 0.20.8
 - Any of the local Kubernetes clusters supported by Tilt.
   We strongly recommend [minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/) >=
-  v1.21.0 with the kvm2 driver.
+  v1.21.0 .
   - Tilt will use Minikube's embedded Docker server. If Minikube is not used, a local instance of
     [Docker](https://docs.docker.com/engine/install/) / moby-engine >= 19.03 is required.
 
 See the [Tilt docs](https://docs.tilt.dev/install.html) docs on how to set up your local cluster -
 it won't take more than a few minutes to set up! Example minikube invocation, adjust limits as needed:
 
-    minikube start --cpus=8 --memory=8G --disk-size=50G --driver=kvm2
+    minikube start --cpus=8 --memory=8G --disk-size=50G --driver=docker
 
 npm wants to set up an insane number of inotify watches in the web container which may exceed kernel limits.
 The minikube default is too low, adjust it like this:
