@@ -8,7 +8,7 @@
   "files": [
     "lib/**/*"
   ],
-  "repository": "https://github.com/pyth-crosschain",
+  "repository": "https://github.com/pyth-network/pyth-crosschain/",
   "scripts": {
     "test": "jest src/ --passWithNoTests",
     "build": "tsc",

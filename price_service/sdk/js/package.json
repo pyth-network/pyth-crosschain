@@ -8,7 +8,11 @@
   "files": [
     "lib/**/*"
   ],
-  "repository": "https://github.com/pyth-network/pyth-sdk-js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain.git",
+    "directory": "price_service/sdk/js"
+  },
   "scripts": {
     "test": "jest",
     "build": "tsc",

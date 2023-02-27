@@ -1,4 +1,7 @@
-import { PriceServiceConnection, HexString } from "@pythnetwork/pyth-common-js";
+import {
+  PriceServiceConnection,
+  HexString,
+} from "@pythnetwork/price-service-client";
 import { BCS } from "aptos";
 import { Buffer } from "buffer";
 

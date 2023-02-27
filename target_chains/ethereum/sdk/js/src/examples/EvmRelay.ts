@@ -55,6 +55,7 @@ async function run() {
     providerOrUrl: network,
   });
 
+  // @ts-ignore
   const web3 = new Web3(provider);
   const priceIds = argv.priceIds as string[];
 

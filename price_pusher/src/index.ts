@@ -9,7 +9,7 @@ import { EvmPriceListener, EvmPricePusher, PythContractFactory } from "./evm";
 import { PythPriceListener } from "./pyth-price-listener";
 import fs from "fs";
 import { readPriceConfigFile } from "./price-config";
-import { PriceServiceConnection } from "@pythnetwork/pyth-common-js";
+import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { InjectivePriceListener, InjectivePricePusher } from "./injective";
 import { ChainPricePusher, IPriceListener } from "./interface";
 

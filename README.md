@@ -1,12 +1,7 @@
 # Pyth Crosschain
 
 This repository acts as a monorepo for the various components that make up
-Pyth Crosschain. The base repository is a fork from Certus One's reference
-[Wormhole][] implementation in order to take advantage of the existing tooling
-for building projects based on Wormhole's various SDKs. Much of the existing
-documentation from there will also apply to this repository.
-
-[wormhole]: https://github.com/wormhole-foundation/wormhole
+Pyth Crosschain.
 
 Within this monorepo you will find the following subprojects:
 
@@ -15,8 +10,8 @@ Within this monorepo you will find the following subprojects:
 > wormhole_attester
 
 The main Pyth implementation currently exists as an [on-chain contract][] on
-Solana. In order to expose these prices cross-chain, the Wormhole Attester
-contract acts as a sender for Pyth prices. At regular intervals the Pyth
+Pythnet, a separate instance of the Solana blockchain. In order to expose
+these prices cross-chain, the Wormhole Attester contract acts as a sender for Pyth prices. At regular intervals the Pyth
 contract will observe the current Pyth price for selected products, and produce
 an attestation which is then relayed over Wormhole to be consumed by the
 various receiver contracts.
@@ -25,45 +20,28 @@ various receiver contracts.
 
 ## Target Chains
 
-### Ethereum
+> target_chains
 
-> target_chains/ethereum/contracts/pyth
-
-The Ethereum contract acts as a receiver for Pyth prices relayed from the
-Wormhole Attester. It also provides a public API for other Ethereum contracts
-that can be used to consume Pyth prices. For a guide on using this API to
-consume Pyth price feeds see [pyth-sdk-solidity][] which contains documented
-examples.
-
-[pyth-sdk-solidity]: https://github.com/pyth-network/pyth-sdk-solidity
+This directory contains on-chain contracts and SDKs for all of the various
+blockchain runtimes that Pyth supports. Each subdirectory corresponds to a
+blockchain runtime. Inside each subdirectory, there are subfolders for
+contracts, SDKs, and examples.
 
 ## Price Service
 
 > price_service
 
 The Price Service is an off-chain service which constantly observes the
-Wormhole network watching for price attestations emitted from the Pyth Solana
+Wormhole network watching for price attestations emitted from the Pyth
 contract. It exposes all observed attestations via a public API over HTTPS/WSS
 which can be consumed by client-side applications that wish to use Pyth pricing
 data.
 
-For a guide on utilising this service in your project, see the documentation in
-the [pyth-js][] repository.
+The `client` subdirectory provides an SDK for interacting with the price service.
+However, most users will interact with the price service via a chain-specific SDK
 
-[pyth-js]: https://github.com/pyth-network/pyth-js
-
----
-
-See [DEVELOP.md](DEVELOP.md) for instructions on how to set up a local devnet, and
-[CONTRIBUTING.md](CONTRIBUTING.md) for instructions on how to contribute to this project.
-
-### Audit / Feature Status
-
-⚠ **This software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-implied. See the License for the specific language governing permissions and limitations under the License.** Or plainly
-spoken - this is a very complex piece of software which targets a bleeding-edge, experimental smart contract runtime.
-Mistakes happen, and no matter how hard you try and whether you pay someone to audit it, it may eat your tokens, set
-your printer on fire or startle your cat. Cryptocurrencies are a high-risk investment, no matter how fancy.
+For a guide on utilising this service in your project, see the chain-specific SDK
+and examples for your blockchain runtime in the `target_chains` directory.
 
 ## Development
 
@@ -80,3 +58,11 @@ The checks are also performed in the CI to ensure the code follows consistent fo
 ### Tilt CI
 
 Integration tests run in Tilt (via the `tilt ci` command). The Tilt CI workflow requires approval from a member of the Pyth team. If you are a member, click on "Details" next to the "Workflow / ci-pyth-crosschain" check in a pull request, and then on the "Resume" button on the workflow page.
+
+## Audit / Feature Status
+
+⚠ **This software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+implied. See the License for the specific language governing permissions and limitations under the License.** Or plainly
+spoken - this is a very complex piece of software which targets a bleeding-edge, experimental smart contract runtime.
+Mistakes happen, and no matter how hard you try and whether you pay someone to audit it, it may eat your tokens, set
+your printer on fire or startle your cat. Cryptocurrencies are a high-risk investment, no matter how fancy.

@@ -1,8 +1,8 @@
 import {
-  PriceServiceConnection,
   HexString,
   PriceFeed,
-} from "@pythnetwork/pyth-common-js";
+  PriceServiceConnection,
+} from "@pythnetwork/price-service-client";
 import { PriceConfig } from "./price-config";
 import { PriceInfo, IPriceListener } from "./interface";
 

@@ -1,4 +1,7 @@
-import { PriceServiceConnection, HexString } from "@pythnetwork/pyth-common-js";
+import {
+  PriceServiceConnection,
+  HexString,
+} from "@pythnetwork/price-service-client";
 import { Buffer } from "buffer";
 
 export class EvmPriceServiceConnection extends PriceServiceConnection {
