@@ -1,5 +1,5 @@
 import { HexString, PriceServiceConnection } from "@pythnetwork/pyth-common-js";
-import { ChainPricePusher, PriceInfo, PriceListener } from "./interface";
+import { ChainPricePusher, PriceInfo, ChainPriceListener } from "./interface";
 import { DurationInSeconds } from "./utils";
 import { PriceConfig } from "./price-config";
 import {
@@ -32,13 +32,7 @@ type UpdateFeeResponse = {
 };
 
 // this use price without leading 0x
-// FIXME: implement common methods in the parent class
-export class InjectivePriceListener implements PriceListener {
-  private latestPriceInfo: Map<HexString, PriceInfo>;
-  private priceIds: HexString[];
-
-  private pollingFrequency: DurationInSeconds;
-
+export class InjectivePriceListener extends ChainPriceListener {
   constructor(
     private contractAddress: string,
     private grpcEndpoint: string,
@@ -47,27 +41,11 @@ export class InjectivePriceListener implements PriceListener {
       pollingFrequency: DurationInSeconds;
     }
   ) {
-    this.latestPriceInfo = new Map();
-    this.priceIds = priceConfigs.map((priceConfig) => priceConfig.id);
-
-    this.pollingFrequency = config.pollingFrequency;
-  }
-
-  async start() {
-    console.log(`Polling the prices every ${this.pollingFrequency} seconds...`);
-    setInterval(this.pollPrices.bind(this), this.pollingFrequency * 1000);
-
-    await this.pollPrices();
-  }
-
-  private async pollPrices() {
-    console.log("Polling injective prices...");
-    for (const priceId of this.priceIds) {
-      const currentPriceInfo = await this.getOnChainPriceInfo(priceId);
-      if (currentPriceInfo !== undefined) {
-        this.updateLatestPriceInfo(priceId, currentPriceInfo);
-      }
-    }
+    super(
+      "Injective",
+      config.pollingFrequency,
+      priceConfigs.map((priceConfig) => priceConfig.id)
+    );
   }
 
   async getOnChainPriceInfo(
@@ -94,26 +72,6 @@ export class InjectivePriceListener implements PriceListener {
       price: priceQueryResponse.price_feed.price.price,
       publishTime: priceQueryResponse.price_feed.price.publish_time,
     };
-  }
-
-  private updateLatestPriceInfo(priceId: HexString, observedPrice: PriceInfo) {
-    const cachedLatestPriceInfo = this.getLatestPriceInfo(priceId);
-
-    // Ignore the observed price if the cache already has newer
-    // price. This could happen because we are using polling and
-    // subscription at the same time.
-    if (
-      cachedLatestPriceInfo !== undefined &&
-      cachedLatestPriceInfo.publishTime > observedPrice.publishTime
-    ) {
-      return;
-    }
-
-    this.latestPriceInfo.set(priceId, observedPrice);
-  }
-
-  getLatestPriceInfo(priceId: string): PriceInfo | undefined {
-    return this.latestPriceInfo.get(priceId);
   }
 }
 
