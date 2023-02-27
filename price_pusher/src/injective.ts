@@ -1,8 +1,4 @@
-import {
-  HexString,
-  PriceServiceConnection,
-  PriceServiceConnectionConfig,
-} from "@pythnetwork/pyth-common-js";
+import { HexString, PriceServiceConnection } from "@pythnetwork/pyth-common-js";
 import { ChainPricePusher, PriceInfo, PriceListener } from "./interface";
 import { DurationInSeconds } from "./utils";
 import { PriceConfig } from "./price-config";
@@ -124,7 +120,7 @@ export class InjectivePriceListener implements PriceListener {
 export class InjectivePricePusher implements ChainPricePusher {
   private wallet: PrivateKey;
   constructor(
-    private cwPriceServiceConnection: CwPriceServiceConnection,
+    private priceServiceConnection: PriceServiceConnection,
     private pythContract: string,
     private grpcEndpoint: string,
     mnemonic: string
@@ -164,6 +160,16 @@ export class InjectivePricePusher implements ChainPricePusher {
     return txResponse;
   }
 
+  async getPriceFeedUpdateObject(priceIds: string[]): Promise<any> {
+    const vaas = await this.priceServiceConnection.getLatestVaas(priceIds);
+
+    return {
+      update_price_feeds: {
+        data: vaas,
+      },
+    };
+  }
+
   async updatePriceFeed(
     priceIds: string[],
     pubTimesToPush: number[]
@@ -178,8 +184,7 @@ export class InjectivePricePusher implements ChainPricePusher {
     let priceFeedUpdateObject;
     try {
       // get the latest VAAs for updatePriceFeed and then push them
-      priceFeedUpdateObject =
-        await this.cwPriceServiceConnection.getPriceFeedUpdateObject(priceIds);
+      priceFeedUpdateObject = await this.getPriceFeedUpdateObject(priceIds);
     } catch (e) {
       console.error("Error fetching the latest vaas to push");
       console.error(e);
@@ -226,22 +231,5 @@ export class InjectivePricePusher implements ChainPricePusher {
       console.error("Error executing messages");
       console.log(e);
     }
-  }
-}
-
-// FIXME: a better place for it while refactoring
-export class CwPriceServiceConnection extends PriceServiceConnection {
-  constructor(endpoint: string, config?: PriceServiceConnectionConfig) {
-    super(endpoint, config);
-  }
-
-  async getPriceFeedUpdateObject(priceIds: string[]): Promise<any> {
-    const vaas = await this.getLatestVaas(priceIds);
-
-    return {
-      update_price_feeds: {
-        data: vaas,
-      },
-    };
   }
 }

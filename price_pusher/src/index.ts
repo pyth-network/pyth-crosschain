@@ -14,11 +14,7 @@ import { PythPriceListener } from "./pyth-price-listener";
 import fs from "fs";
 import { readPriceConfigFile } from "./price-config";
 import { PriceServiceConnection } from "@pythnetwork/pyth-common-js";
-import {
-  CwPriceServiceConnection,
-  InjectivePriceListener,
-  InjectivePricePusher,
-} from "./injective";
+import { InjectivePriceListener, InjectivePricePusher } from "./injective";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {
@@ -108,9 +104,7 @@ async function injectiveRun() {
   );
 
   const injectivePricePusher = new InjectivePricePusher(
-    new CwPriceServiceConnection(argv.priceEndpoint, {
-      logger: console,
-    }),
+    connection,
     argv.pythContract,
     argv.endpoint,
     fs.readFileSync(argv.mnemonicFile, "utf-8").trim()
