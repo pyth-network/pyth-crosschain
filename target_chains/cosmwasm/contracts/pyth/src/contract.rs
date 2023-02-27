@@ -12,6 +12,8 @@ use {
             GovernanceInstruction,
         },
         msg::{
+            create_relay_pyth_prices_msg,
+            InjectiveMsgWrapper,
             InstantiateMsg,
             MigrateMsg,
         },
@@ -125,7 +127,12 @@ pub fn parse_vaa(deps: DepsMut, block_time: u64, data: &Binary) -> StdResult<Par
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> StdResult<Response> {
+pub fn execute(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> StdResult<Response<InjectiveMsgWrapper>> {
     match msg {
         ExecuteMsg::UpdatePriceFeeds { data } => update_price_feeds(deps, env, info, &data),
         ExecuteMsg::ExecuteGovernanceInstruction { data } => {
@@ -139,7 +146,7 @@ fn update_price_feeds(
     env: Env,
     info: MessageInfo,
     data: &[Binary],
-) -> StdResult<Response> {
+) -> StdResult<Response<InjectiveMsgWrapper>> {
     let state = config_read(deps.storage).load()?;
 
     if state.fee.amount.u128() > 0
@@ -149,7 +156,8 @@ fn update_price_feeds(
     }
 
     let mut total_attestations: usize = 0;
-    let mut new_attestations: usize = 0;
+    let mut new_attestations: Vec<PriceAttestation> = vec![];
+
     for datum in data {
         let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), datum)?;
         verify_vaa_from_data_source(&state, &vaa)?;
@@ -158,16 +166,21 @@ fn update_price_feeds(
         let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
             .map_err(|_| PythContractError::InvalidUpdatePayload)?;
 
-        let (num_updates, num_new) =
+        let (num_updates, added_attestations) =
             process_batch_attestation(&mut deps, &env, &batch_attestation)?;
         total_attestations += num_updates;
-        new_attestations += num_new;
+        for new_attestation in added_attestations {
+            new_attestations.push(new_attestation.to_owned());
+        }
     }
 
+    let new_attestations_cnt = new_attestations.len();
+    let inj_message = create_relay_pyth_prices_msg(env.contract.address, new_attestations);
     Ok(Response::new()
+        .add_message(inj_message)
         .add_attribute("action", "update_price_feeds")
         .add_attribute("num_attestations", format!("{total_attestations}"))
-        .add_attribute("num_updated", format!("{new_attestations}")))
+        .add_attribute("num_updated", format!("{new_attestations_cnt}")))
 }
 
 fn execute_governance_instruction(
@@ -175,7 +188,7 @@ fn execute_governance_instruction(
     env: Env,
     _info: MessageInfo,
     data: &Binary,
-) -> StdResult<Response> {
+) -> StdResult<Response<InjectiveMsgWrapper>> {
     let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
     let state = config_read(deps.storage).load()?;
 
@@ -197,7 +210,7 @@ fn execute_governance_instruction(
         return Err(PythContractError::InvalidGovernancePayload)?;
     }
 
-    let response = match instruction.action {
+    let response: Response<InjectiveMsgWrapper> = match instruction.action {
         UpgradeContract { code_id } => {
             if instruction.target_chain_id == 0 {
                 Err(PythContractError::InvalidGovernancePayload)?
@@ -258,7 +271,7 @@ fn transfer_governance(
     next_config: &mut ConfigInfo,
     current_config: &ConfigInfo,
     parsed_claim_vaa: &ParsedVAA,
-) -> StdResult<Response> {
+) -> StdResult<Response<InjectiveMsgWrapper>> {
     let claim_vaa_instruction =
         GovernanceInstruction::deserialize(parsed_claim_vaa.payload.as_slice())
             .map_err(|_| PythContractError::InvalidGovernancePayload)?;
@@ -307,7 +320,7 @@ fn transfer_governance(
 /// Upgrades the contract at `address` to `new_code_id` (by sending a `Migrate` message). The
 /// migration will fail unless this contract is the admin of the contract being upgraded.
 /// (Typically, `address` is this contract's address, and the contract is its own admin.)
-fn upgrade_contract(address: &Addr, new_code_id: u64) -> StdResult<Response> {
+fn upgrade_contract(address: &Addr, new_code_id: u64) -> StdResult<Response<InjectiveMsgWrapper>> {
     Ok(Response::new()
         .add_message(CosmosMsg::Wasm(WasmMsg::Migrate {
             contract_addr: address.to_string(),
@@ -342,13 +355,12 @@ fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> Std
     Ok(())
 }
 
-fn process_batch_attestation(
+fn process_batch_attestation<'a>(
     deps: &mut DepsMut,
     env: &Env,
-    batch_attestation: &BatchPriceAttestation,
-) -> StdResult<(usize, usize)> {
-    let mut new_attestations_cnt: usize = 0;
-
+    batch_attestation: &'a BatchPriceAttestation,
+) -> StdResult<(usize, Vec<&'a PriceAttestation>)> {
+    let mut new_attestations = vec![];
     // Update prices
     for price_attestation in batch_attestation.price_attestations.iter() {
         let price_feed = create_price_feed_from_price_attestation(price_attestation);
@@ -356,14 +368,11 @@ fn process_batch_attestation(
         let attestation_time = Timestamp::from_seconds(price_attestation.attestation_time as u64);
 
         if update_price_feed_if_new(deps, env, price_feed, attestation_time)? {
-            new_attestations_cnt += 1;
+            new_attestations.push(price_attestation);
         }
     }
 
-    Ok((
-        batch_attestation.price_attestations.len(),
-        new_attestations_cnt,
-    ))
+    Ok((batch_attestation.price_attestations.len(), new_attestations))
 }
 
 fn create_price_feed_from_price_attestation(price_attestation: &PriceAttestation) -> PriceFeed {
@@ -682,7 +691,7 @@ mod test {
         emitter_address: &[u8],
         emitter_chain: u16,
         funds: &[Coin],
-    ) -> StdResult<Response> {
+    ) -> StdResult<Response<InjectiveMsgWrapper>> {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(config_info).unwrap();
 
@@ -701,7 +710,7 @@ mod test {
             process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
 
         assert_eq!(total_attestations, 0);
-        assert_eq!(new_attestations, 0);
+        assert_eq!(new_attestations.len(), 0);
     }
 
     #[test]
@@ -827,7 +836,7 @@ mod test {
         let ema_price = stored_price_feed.get_ema_price_unchecked();
 
         assert_eq!(total_attestations, 1);
-        assert_eq!(new_attestations, 1);
+        assert_eq!(new_attestations.len(), 1);
 
         // for price
         assert_eq!(price.price, 99);
@@ -880,7 +889,7 @@ mod test {
         let ema_price = stored_price_feed.get_ema_price_unchecked();
 
         assert_eq!(total_attestations, 1);
-        assert_eq!(new_attestations, 1);
+        assert_eq!(new_attestations.len(), 1);
 
         // for price
         assert_eq!(price.price, 100);
@@ -1149,7 +1158,7 @@ mod test {
     fn apply_governance_vaa(
         initial_config: &ConfigInfo,
         vaa: &ParsedVAA,
-    ) -> StdResult<(Response, ConfigInfo)> {
+    ) -> StdResult<(Response<InjectiveMsgWrapper>, ConfigInfo)> {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(initial_config).unwrap();
 

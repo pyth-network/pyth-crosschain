@@ -1,7 +1,16 @@
 use {
     crate::state::PythDataSource,
     cosmwasm_schema::cw_serde,
-    cosmwasm_std::Coin,
+    cosmwasm_std::{
+        Addr,
+        Coin,
+        CosmosMsg,
+    },
+    pyth_wormhole_attester_sdk::PriceAttestation,
+    serde::{
+        Deserialize,
+        Serialize,
+    },
 };
 
 // cw_serde attribute is equivalent to
@@ -28,3 +37,42 @@ pub struct InstantiateMsg {
 #[derive(Eq)]
 #[cw_serde]
 pub struct MigrateMsg {}
+
+// Injective specific
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum InjectiveMsg {
+    RelayPythPrices {
+        sender:             Addr,
+        price_attestations: Vec<PriceAttestation>,
+    },
+}
+
+// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct InjectiveMsgWrapper {
+    pub route:    String,
+    pub msg_data: InjectiveMsg,
+}
+
+pub fn create_relay_pyth_prices_msg(
+    sender: Addr,
+    price_attestations: Vec<PriceAttestation>,
+) -> CosmosMsg<InjectiveMsgWrapper> {
+    InjectiveMsgWrapper {
+        route:    "oracle".to_string(),
+        msg_data: InjectiveMsg::RelayPythPrices {
+            sender,
+            price_attestations,
+        },
+    }
+    .into()
+}
+
+impl From<InjectiveMsgWrapper> for CosmosMsg<InjectiveMsgWrapper> {
+    fn from(s: InjectiveMsgWrapper) -> CosmosMsg<InjectiveMsgWrapper> {
+        CosmosMsg::Custom(s)
+    }
+}
