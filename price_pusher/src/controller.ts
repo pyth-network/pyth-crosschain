@@ -1,14 +1,14 @@
 import { UnixTimestamp } from "@pythnetwork/pyth-evm-js";
 import { DurationInSeconds, sleep } from "./utils";
-import { ChainPricePusher, PriceListener } from "./interface";
+import { ChainPricePusher, IPriceListener } from "./interface";
 import { PriceConfig, shouldUpdate } from "./price-config";
 
 export class Controller {
   private cooldownDuration: DurationInSeconds;
   constructor(
     private priceConfigs: PriceConfig[],
-    private sourcePriceListener: PriceListener,
-    private targetPriceListener: PriceListener,
+    private sourcePriceListener: IPriceListener,
+    private targetPriceListener: IPriceListener,
     private targetChainPricePusher: ChainPricePusher,
     config: {
       cooldownDuration: DurationInSeconds;

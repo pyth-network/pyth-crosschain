@@ -4,9 +4,9 @@ import {
   PriceFeed,
 } from "@pythnetwork/pyth-common-js";
 import { PriceConfig } from "./price-config";
-import { PriceInfo, PriceListener } from "./interface";
+import { PriceInfo, IPriceListener } from "./interface";
 
-export class PythPriceListener implements PriceListener {
+export class PythPriceListener implements IPriceListener {
   private connection: PriceServiceConnection;
   private priceIds: HexString[];
   private priceIdToAlias: Map<HexString, string>;
