@@ -103,11 +103,18 @@ async function injectiveRun() {
     { pollingFrequency: argv.pollingFrequency }
   );
 
+  const injectivePricePusher = new InjectivePricePusher(
+    connection,
+    argv.pythContract,
+    argv.endpoint,
+    fs.readFileSync(argv.mnemonicFile, "utf-8").trim()
+  );
+
   const handler = new Controller(
     priceConfigs,
     pythPriceListener,
     injectivePriceListener,
-    new InjectivePricePusher(),
+    injectivePricePusher,
     {
       cooldownDuration: argv.cooldownDuration,
     }
