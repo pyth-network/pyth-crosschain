@@ -99,11 +99,6 @@ async function start({
     }
   );
 
-  await sourcePriceListener.start();
-  await targetPriceListener.start();
-
-  // Handler starts after the above listeners are started
-  // which means that they have fetched their initial price information.
   await handler.start();
 }
 

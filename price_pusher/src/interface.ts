@@ -8,6 +8,7 @@ export type PriceInfo = {
 };
 
 export interface IPriceListener {
+  // start fetches the latest price initially and then keep updating it
   start(): Promise<void>;
   getLatestPriceInfo(priceId: string): PriceInfo | undefined;
 }

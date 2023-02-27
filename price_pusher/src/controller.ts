@@ -18,6 +18,10 @@ export class Controller {
   }
 
   async start() {
+    // start the listeners
+    await this.sourcePriceListener.start();
+    await this.targetPriceListener.start();
+
     for (;;) {
       const pricesToPush: PriceConfig[] = [];
       const pubTimesToPush: UnixTimestamp[] = [];
