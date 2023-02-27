@@ -8,6 +8,7 @@ export type PriceInfo = {
 };
 
 export interface IPriceListener {
+  start(): Promise<void>;
   getLatestPriceInfo(priceId: string): PriceInfo | undefined;
 }
 
