@@ -22,8 +22,7 @@
     "example-relay": "npm run build && node lib/examples/AptosRelay.js",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src/",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run lint",
+    "prepublishOnly": "npm run build && npm test && npm run lint",
     "preversion": "npm run lint",
     "version": "npm run format && git add -A src"
   },
