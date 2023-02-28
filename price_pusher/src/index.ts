@@ -9,7 +9,7 @@ import fs from "fs";
 import { readPriceConfigFile } from "./price-config";
 import { PriceServiceConnection } from "@pythnetwork/pyth-common-js";
 import { ChainPricePusher, IPriceListener } from "./interface";
-import { NetworkFactory, NetworkValues, Networks } from "./network";
+import { NetworkHelper, NetworkValues, Networks } from "./network";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {
@@ -97,7 +97,7 @@ async function start({
 
   await handler.start();
 }
-const network = NetworkFactory[argv.network as Networks];
+const network = NetworkHelper[argv.network as Networks];
 if (network === undefined) throw new Error("invalid network");
 
 const priceConfigs = readPriceConfigFile(argv.priceConfigFile);

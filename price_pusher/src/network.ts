@@ -25,12 +25,12 @@ type createNetworkPusher = (
   priceServiceConnection: PriceServiceConnection
 ) => ChainPricePusher;
 
-export type NetworkFactory = Record<
+export type NetworkHelper = Record<
   Networks,
   { createListener: createNetworkListener; createPusher: createNetworkPusher }
 >;
 
-export const NetworkFactory: NetworkFactory = {
+export const NetworkHelper: NetworkHelper = {
   [Networks.EVM]: {
     createListener: EvmPriceListener.create,
     createPusher: EvmPricePusher.create,
