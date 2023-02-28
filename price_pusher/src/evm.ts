@@ -1,8 +1,3 @@
-import {
-  EvmPriceServiceConnection,
-  HexString,
-  UnixTimestamp,
-} from "@pythnetwork/pyth-evm-js";
 import { Contract, EventData } from "web3-eth-contract";
 import { PriceConfig } from "./price-config";
 import { ChainPricePusher, PriceInfo, ChainPriceListener } from "./interface";
@@ -13,6 +8,11 @@ import HDWalletProvider from "@truffle/hdwallet-provider";
 import { Provider } from "web3/providers";
 import Web3 from "web3";
 import { isWsEndpoint } from "./utils";
+import {
+  PriceServiceConnection,
+  HexString,
+  UnixTimestamp,
+} from "@pythnetwork/pyth-common-js";
 
 export class EvmPriceListener extends ChainPriceListener {
   private pythContractFactory: PythContractFactory;
@@ -116,7 +116,7 @@ export class EvmPriceListener extends ChainPriceListener {
 
 export class EvmPricePusher implements ChainPricePusher {
   constructor(
-    private connection: EvmPriceServiceConnection,
+    private connection: PriceServiceConnection,
     private pythContract: Contract
   ) {}
   // The pubTimes are passed here to use the values that triggered the push.
@@ -135,7 +135,7 @@ export class EvmPricePusher implements ChainPricePusher {
 
     const priceIdsWith0x = priceIds.map((priceId) => addLeading0x(priceId));
 
-    const priceFeedUpdateData = await this.connection.getPriceFeedsUpdateData(
+    const priceFeedUpdateData = await this.getPriceFeedsUpdateData(
       priceIdsWith0x
     );
 
@@ -197,6 +197,15 @@ export class EvmPricePusher implements ChainPricePusher {
         console.error(receipt);
         throw err;
       });
+  }
+
+  private async getPriceFeedsUpdateData(
+    priceIds: HexString[]
+  ): Promise<string[]> {
+    const latestVaas = await this.connection.getLatestVaas(priceIds);
+    return latestVaas.map(
+      (vaa) => "0x" + Buffer.from(vaa, "base64").toString("hex")
+    );
   }
 }
 

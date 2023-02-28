@@ -4,17 +4,14 @@
 // FIXME: release a new version
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import {
-  EvmPriceServiceConnection,
-  CONTRACT_ADDR,
-} from "@pythnetwork/pyth-evm-js";
 import { Controller } from "./controller";
 import { EvmPriceListener, EvmPricePusher, PythContractFactory } from "./evm";
 import { PythPriceListener } from "./pyth-price-listener";
 import fs from "fs";
 import { readPriceConfigFile } from "./price-config";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+import { PriceServiceConnection } from "@pythnetwork/pyth-common-js";
 import { InjectivePriceListener, InjectivePricePusher } from "./injective";
+import { ChainPricePusher, IPriceListener } from "./interface";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {
@@ -27,7 +24,7 @@ const argv = yargs(hideBin(process.argv))
     description:
       "RPC endpoint URL for the network. If you provide a normal HTTP endpoint, the pusher " +
       "will periodically poll for updates. The polling interval is configurable via the " +
-      "`polling-frequency` command-line argument. for the evm chains, if you provide a websocket RPC " +
+      "`polling-frequency` command-line argument. For the evm chains, if you provide a websocket RPC " +
       "endpoint (`ws[s]://...`), the price pusher will use event subscriptions to read " +
       "the current EVM price in addition to polling. ",
     type: "string",
@@ -79,102 +76,94 @@ const argv = yargs(hideBin(process.argv))
   })
   .parseSync();
 
-let pythContractAddr: string;
-
-if (CONTRACT_ADDR[argv.pythContract] !== undefined) {
-  pythContractAddr = CONTRACT_ADDR[argv.pythContract];
-} else {
-  pythContractAddr = argv.pythContract;
-}
-
 const priceConfigs = readPriceConfigFile(argv.priceConfigFile);
 
-async function injectiveRun() {
-  const connection = new PriceServiceConnection(argv.priceEndpoint, {
-    logger: console,
-  });
-
-  const pythPriceListener = new PythPriceListener(connection, priceConfigs);
-
-  const injectivePriceListener = new InjectivePriceListener(
-    pythContractAddr,
-    argv.endpoint,
-    priceConfigs,
-    { pollingFrequency: argv.pollingFrequency }
-  );
-
-  const injectivePricePusher = new InjectivePricePusher(
-    connection,
-    argv.pythContract,
-    argv.endpoint,
-    fs.readFileSync(argv.mnemonicFile, "utf-8").trim()
-  );
-
+// TODO: name ChainPricePusher -> IPricePusher in a clean up PR
+// TODO: update listeners to not depend on the whole priceConfig
+async function start({
+  sourcePriceListener,
+  targetPriceListener,
+  targetPricePusher,
+}: {
+  sourcePriceListener: IPriceListener;
+  targetPriceListener: IPriceListener;
+  targetPricePusher: ChainPricePusher;
+}) {
   const handler = new Controller(
     priceConfigs,
-    pythPriceListener,
-    injectivePriceListener,
-    injectivePricePusher,
+    sourcePriceListener,
+    targetPriceListener,
+    targetPricePusher,
     {
       cooldownDuration: argv.cooldownDuration,
     }
   );
 
-  await injectivePriceListener.start();
-  await pythPriceListener.start();
-
-  // Handler starts after the above listeners are started
-  // which means that they have fetched their initial price information.
   await handler.start();
 }
 
-async function evmRun() {
-  const connection = new EvmPriceServiceConnection(argv.priceEndpoint, {
-    logger: console,
-  });
+const priceServiceConnection = new PriceServiceConnection(argv.priceEndpoint, {
+  logger: console,
+});
 
-  const pythContractFactory = new PythContractFactory(
-    argv.endpoint,
-    fs.readFileSync(argv.mnemonicFile, "utf-8").trim(),
-    pythContractAddr
-  );
+const pythPriceListener = new PythPriceListener(
+  priceServiceConnection,
+  priceConfigs
+);
 
-  const evmPriceListener = new EvmPriceListener(
-    pythContractFactory,
-    priceConfigs,
-    {
-      pollingFrequency: argv.pollingFrequency,
+function getNetworkPriceListener(network: string): IPriceListener {
+  switch (network) {
+    case "evm": {
+      const pythContractFactory = new PythContractFactory(
+        argv.endpoint,
+        fs.readFileSync(argv.mnemonicFile, "utf-8").trim(),
+        argv.pythContract
+      );
+
+      return new EvmPriceListener(pythContractFactory, priceConfigs, {
+        pollingFrequency: argv.pollingFrequency,
+      });
     }
-  );
 
-  const pythPriceListener = new PythPriceListener(connection, priceConfigs);
-
-  const evmPricePusher = new EvmPricePusher(
-    connection,
-    pythContractFactory.createPythContractWithPayer()
-  );
-
-  const handler = new Controller(
-    priceConfigs,
-    pythPriceListener,
-    evmPriceListener,
-    evmPricePusher,
-    {
-      cooldownDuration: argv.cooldownDuration,
-    }
-  );
-
-  await evmPriceListener.start();
-  await pythPriceListener.start();
-
-  // Handler starts after the above listeners are started
-  // which means that they have fetched their initial price information.
-  await handler.start();
+    case "injective":
+      return new InjectivePriceListener(
+        argv.pythContract,
+        argv.endpoint,
+        priceConfigs,
+        { pollingFrequency: argv.pollingFrequency }
+      );
+    default:
+      throw new Error("invalid network");
+  }
 }
 
-function run() {
-  if (argv.network === "injective") injectiveRun();
-  else if (argv.network === "evm") evmRun();
+function getNetworkPricePusher(network: string): ChainPricePusher {
+  switch (network) {
+    case "evm": {
+      const pythContractFactory = new PythContractFactory(
+        argv.endpoint,
+        fs.readFileSync(argv.mnemonicFile, "utf-8").trim(),
+        argv.pythContract
+      );
+      return new EvmPricePusher(
+        priceServiceConnection,
+        pythContractFactory.createPythContractWithPayer()
+      );
+    }
+    case "injective":
+      return new InjectivePricePusher(
+        priceServiceConnection,
+        argv.pythContract,
+        argv.endpoint,
+        fs.readFileSync(argv.mnemonicFile, "utf-8").trim()
+      );
+    default:
+      throw new Error("invalid network");
+  }
 }
 
-run();
+start({
+  sourcePriceListener: pythPriceListener,
+  targetPriceListener: getNetworkPriceListener(argv.network),
+  targetPricePusher: getNetworkPricePusher(argv.network),
+});

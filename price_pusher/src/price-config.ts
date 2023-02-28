@@ -1,4 +1,4 @@
-import { HexString } from "@pythnetwork/price-service-client";
+import { HexString } from "@pythnetwork/pyth-common-js";
 import Joi from "joi";
 import YAML from "yaml";
 import fs from "fs";

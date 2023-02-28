@@ -1,4 +1,4 @@
-import { UnixTimestamp } from "@pythnetwork/pyth-evm-js";
+import { UnixTimestamp } from "@pythnetwork/pyth-common-js";
 import { DurationInSeconds, sleep } from "./utils";
 import { ChainPricePusher, IPriceListener } from "./interface";
 import { PriceConfig, shouldUpdate } from "./price-config";
@@ -18,6 +18,10 @@ export class Controller {
   }
 
   async start() {
+    // start the listeners
+    await this.sourcePriceListener.start();
+    await this.targetPriceListener.start();
+
     for (;;) {
       const pricesToPush: PriceConfig[] = [];
       const pubTimesToPush: UnixTimestamp[] = [];

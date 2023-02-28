@@ -1,4 +1,4 @@
-import { HexString } from "@pythnetwork/pyth-evm-js";
+import { HexString } from "@pythnetwork/pyth-common-js";
 
 export type PctNumber = number;
 export type DurationInSeconds = number;

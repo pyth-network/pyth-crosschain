@@ -2,7 +2,7 @@ import {
   HexString,
   PriceFeed,
   PriceServiceConnection,
-} from "@pythnetwork/price-service-client";
+} from "@pythnetwork/pyth-common-js";
 import { PriceConfig } from "./price-config";
 import { PriceInfo, IPriceListener } from "./interface";
 
