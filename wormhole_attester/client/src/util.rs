@@ -142,15 +142,15 @@ async fn healthcheck_handler() -> Result<impl Reply, Rejection> {
             );
             Ok(reply::with_status(msg, StatusCode::OK))
         }
-        // Unhealthy - 503 Service Unavailable
+        // Unhealthy - 500 Internal Server Error
         Some(false) => {
             let msg = format!(
                 "unhealthy, all of {} latest attestations returned error",
                 hc_state.max_window_size
             );
-            Ok(reply::with_status(msg, StatusCode::SERVICE_UNAVAILABLE))
+            Ok(reply::with_status(msg, StatusCode::INTERNAL_SERVER_ERROR))
         }
-        // No data - 307 Temporary Redirect
+        // No data - 503 Service Unavailable
         None => {
             let msg = if hc_state.enable {
                 format!(
@@ -161,7 +161,7 @@ async fn healthcheck_handler() -> Result<impl Reply, Rejection> {
             } else {
                 "Healthcheck disabled (enable_healthcheck is false)".to_string()
             };
-            Ok(reply::with_status(msg, StatusCode::TEMPORARY_REDIRECT))
+            Ok(reply::with_status(msg, StatusCode::SERVICE_UNAVAILABLE))
         }
     }
 }
