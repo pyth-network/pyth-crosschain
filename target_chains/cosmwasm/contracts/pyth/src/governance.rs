@@ -24,7 +24,7 @@ const PYTH_GOVERNANCE_MAGIC: &[u8] = b"PTGM";
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u8)]
 pub enum GovernanceModule {
-    /// The PythNet executor contract
+    /// The PythNet executor contract. Messages sent to the
     Executor = 0,
     /// A target chain contract (like this one!)
     Target   = 1,
@@ -48,16 +48,33 @@ impl GovernanceModule {
 }
 
 /// The action to perform to change the state of the target chain contract.
+///
+/// Note that the order of the enum cannot be changed, as the integer representation of
+/// each field must be preserved for backward compatibility.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u8)]
 pub enum GovernanceAction {
-    UpgradeContract { code_id: u64 },                            // 0
+    /// Upgrade the code for the contract to the code uploaded at code_id
+    UpgradeContract { code_id: u64 }, // 0
+    /// This action is the second step of a governance handoff process.
+    /// The handoff is as follows:
+    /// 1. The new governance emitter creates a VAA containing a RequestGovernanceDataSourceTransfer action
+    /// 2. The existing governance emitter creates a AuthorizeGovernanceDataSourceTransfer message where
+    ///    claim_vaa is the VAA from step 1.
+    /// 3. The VAA from step 2 is submitted to the contract.
+    ///
+    /// This 2-step process ensures that the new emitter is able to send VAAs before the transfer
+    /// is completed.
     AuthorizeGovernanceDataSourceTransfer { claim_vaa: Binary }, // 1
-    SetDataSources { data_sources: Vec<PythDataSource> },        // 2
-    // Set the fee to val * (10 ** expo)
+    /// Set the set of authorized emitters for price update messages.
+    SetDataSources { data_sources: Vec<PythDataSource> }, // 2
+    /// Set the fee to val * (10 ** expo)
     SetFee { val: u64, expo: u64 }, // 3
-    // Set the default valid period to the provided number of seconds
+    /// Set the default valid period to the provided number of seconds
     SetValidPeriod { valid_seconds: u64 }, // 4
+    /// The first step of the governance handoff process (see documentation
+    /// on AuthorizeGovernanceDataSourceTransfer). `governance_data_source_index` is an incrementing
+    /// sequence number that ensures old transfer messages cannot be replayed.
     RequestGovernanceDataSourceTransfer { governance_data_source_index: u32 }, // 5
 }
 
@@ -82,10 +99,6 @@ impl GovernanceInstruction {
 
         let module_num = bytes.read_u8()?;
         let module = GovernanceModule::from_u8(module_num)?;
-
-        if module != GovernanceModule::Target {
-            return Err(format!("Invalid governance module {module_num}",).into());
-        }
 
         let action_type: u8 = bytes.read_u8()?;
         let target_chain_id: u16 = bytes.read_u16::<BigEndian>()?;
