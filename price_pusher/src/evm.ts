@@ -19,11 +19,12 @@ import {
 } from "@pythnetwork/pyth-common-js";
 
 export class EvmPriceListener extends ChainPriceListener {
-  private pythContractFactory: PythContractFactory;
   private pythContract: Contract;
+  private hasWSProvider: boolean;
 
   constructor(
-    pythContractFactory: PythContractFactory,
+    endpoint: string,
+    pythContractAddr: string,
     priceItems: PriceItem[],
     config: {
       pollingFrequency: DurationInSeconds;
@@ -31,14 +32,18 @@ export class EvmPriceListener extends ChainPriceListener {
   ) {
     super("Evm", config.pollingFrequency, priceItems);
 
-    this.pythContractFactory = pythContractFactory;
-    this.pythContract = this.pythContractFactory.createPythContract();
+    this.pythContract = PythContractFactory.createPythContract(
+      endpoint,
+      pythContractAddr
+    );
+
+    this.hasWSProvider = PythContractFactory.hasWebsocketProvider(endpoint);
   }
 
   // This method should be awaited on and once it finishes it has the latest value
   // for the given price feeds (if they exist).
   async start() {
-    if (this.pythContractFactory.hasWebsocketProvider()) {
+    if (this.hasWSProvider) {
       console.log("Subscribing to the target network pyth contract events...");
       this.startSubscription();
     } else {
@@ -117,10 +122,20 @@ export class EvmPriceListener extends ChainPriceListener {
 }
 
 export class EvmPricePusher implements ChainPricePusher {
+  private pythContract: Contract;
+
   constructor(
     private connection: PriceServiceConnection,
-    private pythContract: Contract
-  ) {}
+    pythContractAddr: string,
+    endpoint: string,
+    mnemonic: string
+  ) {
+    this.pythContract = PythContractFactory.createPythContractWithPayer(
+      endpoint,
+      pythContractAddr,
+      mnemonic
+    );
+  }
   // The pubTimes are passed here to use the values that triggered the push.
   // This is an optimization to avoid getting a newer value (as an update comes)
   // and will help multiple price pushers to have consistent behaviour.
@@ -212,12 +227,6 @@ export class EvmPricePusher implements ChainPricePusher {
 }
 
 export class PythContractFactory {
-  constructor(
-    private endpoint: string,
-    private mnemonic: string,
-    private pythContractAddr: string
-  ) {}
-
   /**
    * This method creates a web3 Pyth contract with payer (based on HDWalletProvider). As this
    * provider is an HDWalletProvider it does not support subscriptions even if the
@@ -225,23 +234,25 @@ export class PythContractFactory {
    *
    * @returns Pyth contract
    */
-  createPythContractWithPayer(): Contract {
+  static createPythContractWithPayer(
+    endpoint: string,
+    pythContractAddr: string,
+    mnemonic: string
+  ): Contract {
     const provider = new HDWalletProvider({
       mnemonic: {
-        phrase: this.mnemonic,
+        phrase: mnemonic,
       },
-      providerOrUrl: this.createWeb3Provider() as Provider,
+      providerOrUrl: PythContractFactory.createWeb3Provider(
+        endpoint
+      ) as Provider,
     });
 
     const web3 = new Web3(provider as any);
 
-    return new web3.eth.Contract(
-      AbstractPythAbi as any,
-      this.pythContractAddr,
-      {
-        from: provider.getAddress(0),
-      }
-    );
+    return new web3.eth.Contract(AbstractPythAbi as any, pythContractAddr, {
+      from: provider.getAddress(0),
+    });
   }
 
   /**
@@ -250,21 +261,24 @@ export class PythContractFactory {
    *
    * @returns Pyth contract
    */
-  createPythContract(): Contract {
-    const provider = this.createWeb3Provider();
+  static createPythContract(
+    endpoint: string,
+    pythContractAddr: string
+  ): Contract {
+    const provider = PythContractFactory.createWeb3Provider(endpoint);
     const web3 = new Web3(provider);
-    return new web3.eth.Contract(AbstractPythAbi as any, this.pythContractAddr);
+    return new web3.eth.Contract(AbstractPythAbi as any, pythContractAddr);
   }
 
-  hasWebsocketProvider(): boolean {
-    return isWsEndpoint(this.endpoint);
+  static hasWebsocketProvider(endpoint: string): boolean {
+    return isWsEndpoint(endpoint);
   }
 
-  private createWeb3Provider() {
-    if (isWsEndpoint(this.endpoint)) {
+  static createWeb3Provider(endpoint: string) {
+    if (isWsEndpoint(endpoint)) {
       Web3.providers.WebsocketProvider.prototype.sendAsync =
         Web3.providers.WebsocketProvider.prototype.send;
-      return new Web3.providers.WebsocketProvider(this.endpoint, {
+      return new Web3.providers.WebsocketProvider(endpoint, {
         clientConfig: {
           keepalive: true,
           keepaliveInterval: 30000,
@@ -279,7 +293,7 @@ export class PythContractFactory {
     } else {
       Web3.providers.HttpProvider.prototype.sendAsync =
         Web3.providers.HttpProvider.prototype.send;
-      return new Web3.providers.HttpProvider(this.endpoint, {
+      return new Web3.providers.HttpProvider(endpoint, {
         keepAlive: true,
         timeout: 30000,
       });

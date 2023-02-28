@@ -115,15 +115,14 @@ const pythPriceListener = new PythPriceListener(
 function getNetworkPriceListener(network: string): IPriceListener {
   switch (network) {
     case "evm": {
-      const pythContractFactory = new PythContractFactory(
+      return new EvmPriceListener(
         argv.endpoint,
-        fs.readFileSync(argv.mnemonicFile, "utf-8").trim(),
-        argv.pythContract
+        argv.pythContract,
+        priceItems,
+        {
+          pollingFrequency: argv.pollingFrequency,
+        }
       );
-
-      return new EvmPriceListener(pythContractFactory, priceItems, {
-        pollingFrequency: argv.pollingFrequency,
-      });
     }
 
     case "injective":
@@ -141,14 +140,11 @@ function getNetworkPriceListener(network: string): IPriceListener {
 function getNetworkPricePusher(network: string): ChainPricePusher {
   switch (network) {
     case "evm": {
-      const pythContractFactory = new PythContractFactory(
-        argv.endpoint,
-        fs.readFileSync(argv.mnemonicFile, "utf-8").trim(),
-        argv.pythContract
-      );
       return new EvmPricePusher(
         priceServiceConnection,
-        pythContractFactory.createPythContractWithPayer()
+        argv.pythContract,
+        argv.endpoint,
+        fs.readFileSync(argv.mnemonicFile, "utf-8").trim()
       );
     }
     case "injective":
