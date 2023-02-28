@@ -12,6 +12,7 @@ import { readPriceConfigFile } from "./price-config";
 import { PriceServiceConnection } from "@pythnetwork/pyth-common-js";
 import { InjectivePriceListener, InjectivePricePusher } from "./injective";
 import { ChainPricePusher, IPriceListener } from "./interface";
+import { CustomGasStation } from "./custom-gas-station";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {
@@ -68,6 +69,18 @@ const argv = yargs(hideBin(process.argv))
     type: "number",
     required: false,
     default: 5,
+  })
+  .option("custom-gas-station", {
+    description:
+      "If using a custom gas station, chainId of custom gas station to use",
+    type: "number",
+    required: false,
+  })
+  .option("tx-speed", {
+    description:
+      "txSpeed for custom gas station. choose between 'slow'|'standard'|'fast'",
+    type: "string",
+    required: false,
   })
   .help()
   .alias("help", "h")
@@ -139,6 +152,7 @@ function getNetworkPriceListener(network: string): IPriceListener {
 }
 
 function getNetworkPricePusher(network: string): ChainPricePusher {
+  const gasStation = getCustomGasStation(argv.customGasStation, argv.txSpeed);
   switch (network) {
     case "evm": {
       const pythContractFactory = new PythContractFactory(
@@ -148,7 +162,8 @@ function getNetworkPricePusher(network: string): ChainPricePusher {
       );
       return new EvmPricePusher(
         priceServiceConnection,
-        pythContractFactory.createPythContractWithPayer()
+        pythContractFactory.createPythContractWithPayer(),
+        gasStation
       );
     }
     case "injective":
@@ -160,6 +175,12 @@ function getNetworkPricePusher(network: string): ChainPricePusher {
       );
     default:
       throw new Error("invalid network");
+  }
+}
+
+function getCustomGasStation(customGasStation?: number, txSpeed?: string) {
+  if (customGasStation && txSpeed) {
+    return new CustomGasStation(customGasStation, txSpeed);
   }
 }
 
