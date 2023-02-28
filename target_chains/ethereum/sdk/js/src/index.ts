@@ -7,7 +7,7 @@ export {
   PriceFeed,
   PriceServiceConnectionConfig,
   UnixTimestamp,
-} from "@pythnetwork/pyth-common-js";
+} from "@pythnetwork/price-service-client";
 
 export const CONTRACT_ADDR: Record<string, string> = {
   bnb_testnet: "0xd7308b14BF4008e7C7196eC35610B1427C5702EA",

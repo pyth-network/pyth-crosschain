@@ -1,4 +1,4 @@
-import { HexString, UnixTimestamp } from "@pythnetwork/pyth-common-js";
+import { HexString, UnixTimestamp } from "@pythnetwork/price-service-client";
 import { DurationInSeconds } from "./utils";
 
 export type PriceInfo = {

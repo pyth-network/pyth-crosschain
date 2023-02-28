@@ -7,4 +7,4 @@ export {
   PriceFeed,
   PriceServiceConnectionConfig,
   UnixTimestamp,
-} from "@pythnetwork/pyth-common-js";
+} from "@pythnetwork/price-service-client";

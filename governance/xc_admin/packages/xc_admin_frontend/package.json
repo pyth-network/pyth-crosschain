@@ -22,7 +22,7 @@
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
     "@tanstack/react-table": "^8.7.6",
-    "@types/node": "18.11.18",
+    "@types/node": "^18.11.18",
     "@types/react": "18.0.26",
     "@types/react-dom": "18.0.10",
     "copy-to-clipboard": "^3.3.3",

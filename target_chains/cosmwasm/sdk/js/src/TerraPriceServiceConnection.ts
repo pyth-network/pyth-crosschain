@@ -1,4 +1,7 @@
-import { PriceServiceConnection, HexString } from "@pythnetwork/pyth-common-js";
+import {
+  PriceServiceConnection,
+  HexString,
+} from "@pythnetwork/price-service-client";
 import { MsgExecuteContract } from "@terra-money/terra.js";
 
 export class TerraPriceServiceConnection extends PriceServiceConnection {

@@ -11,15 +11,18 @@
   "bin": {
     "pyth-evm-price-pusher": "./lib/index.js"
   },
-  "repository": "https://github.com/pyth-network/pyth-js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "price_pusher"
+  },
   "scripts": {
     "test": "jest src/ --passWithNoTests",
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src/",
     "start": "node lib/index.js",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run lint",
+    "prepublishOnly": "npm run build && npm test && npm run lint",
     "preversion": "npm run lint",
     "version": "npm run format && git add -A src"
   },
@@ -44,7 +47,7 @@
   },
   "dependencies": {
     "@injectivelabs/sdk-ts": "^1.0.457",
-    "@pythnetwork/pyth-common-js": "^1.4.0",
+    "@pythnetwork/price-service-client": "*",
     "@pythnetwork/pyth-evm-js": "^1.1.0",
     "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
     "@truffle/hdwallet-provider": "^2.1.3",
