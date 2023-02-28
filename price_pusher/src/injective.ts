@@ -120,7 +120,7 @@ export class InjectivePricePusher implements ChainPricePusher {
       sequence: account.baseAccount.sequence,
       accountNumber: account.baseAccount.accountNumber,
       message: msg,
-      chainId: "injective-888",
+      chainId: "",
       fee,
       pubKey: this.wallet.toPublicKey().toBase64(),
     });
@@ -200,7 +200,7 @@ export class InjectivePricePusher implements ChainPricePusher {
 
       const rs = await this.signAndBroadcastMsg(executeMsg);
 
-      if (rs.code !== 0) throw new Error("Error: transaction failed");
+      if (rs.code !== 0) throw new Error(rs.rawLog);
 
       console.log("Succesfully broadcasted txHash:", rs.txHash);
     } catch (e) {
