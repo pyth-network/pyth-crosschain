@@ -41,11 +41,9 @@ export class InjectivePriceListener extends ChainPriceListener {
     private contractAddress: string,
     private grpcEndpoint: string,
     priceItems: PriceItem[],
-    config: {
-      pollingFrequency: DurationInSeconds;
-    }
+    pollingFrequency: DurationInSeconds
   ) {
-    super("Injective", config.pollingFrequency, priceItems);
+    super("Injective", pollingFrequency, priceItems);
   }
 
   async getOnChainPriceInfo(
@@ -78,6 +76,20 @@ export class InjectivePriceListener extends ChainPriceListener {
       price: priceQueryResponse.price_feed.price.price,
       publishTime: priceQueryResponse.price_feed.price.publish_time,
     };
+  }
+
+  static create(
+    endpoint: string,
+    pythContractAddr: string,
+    priceItems: PriceItem[],
+    pollingFrequency: DurationInSeconds
+  ) {
+    return new InjectivePriceListener(
+      pythContractAddr,
+      endpoint,
+      priceItems,
+      pollingFrequency
+    );
   }
 }
 
@@ -195,5 +207,19 @@ export class InjectivePricePusher implements ChainPricePusher {
       console.error("Error executing messages");
       console.log(e);
     }
+  }
+
+  static create(
+    endpoint: string,
+    mnemonic: string,
+    pythContractAddr: string,
+    priceServiceConnection: PriceServiceConnection
+  ) {
+    return new InjectivePricePusher(
+      priceServiceConnection,
+      pythContractAddr,
+      endpoint,
+      mnemonic
+    );
   }
 }

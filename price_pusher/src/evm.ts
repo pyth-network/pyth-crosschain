@@ -26,11 +26,9 @@ export class EvmPriceListener extends ChainPriceListener {
     endpoint: string,
     pythContractAddr: string,
     priceItems: PriceItem[],
-    config: {
-      pollingFrequency: DurationInSeconds;
-    }
+    pollingFrequency: DurationInSeconds
   ) {
-    super("Evm", config.pollingFrequency, priceItems);
+    super("Evm", pollingFrequency, priceItems);
 
     this.pythContract = PythContractFactory.createPythContract(
       endpoint,
@@ -118,6 +116,20 @@ export class EvmPriceListener extends ChainPriceListener {
       price: priceRaw.price,
       publishTime: Number(priceRaw.publishTime),
     };
+  }
+
+  static create(
+    endpoint: string,
+    pythContractAddr: string,
+    priceItems: PriceItem[],
+    pollingFrequency: DurationInSeconds
+  ) {
+    return new EvmPriceListener(
+      pythContractAddr,
+      endpoint,
+      priceItems,
+      pollingFrequency
+    );
   }
 }
 
@@ -224,9 +236,23 @@ export class EvmPricePusher implements ChainPricePusher {
       (vaa) => "0x" + Buffer.from(vaa, "base64").toString("hex")
     );
   }
+
+  static create(
+    endpoint: string,
+    mnemonic: string,
+    pythContractAddr: string,
+    priceServiceConnection: PriceServiceConnection
+  ) {
+    return new EvmPricePusher(
+      priceServiceConnection,
+      pythContractAddr,
+      endpoint,
+      mnemonic
+    );
+  }
 }
 
-export class PythContractFactory {
+class PythContractFactory {
   /**
    * This method creates a web3 Pyth contract with payer (based on HDWalletProvider). As this
    * provider is an HDWalletProvider it does not support subscriptions even if the

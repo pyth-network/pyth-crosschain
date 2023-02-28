@@ -1,23 +1,21 @@
 #!/usr/bin/env node
-// FIXME: refactor this file and command structure
 // FIXME: update readme and compose files
 // FIXME: release a new version
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Controller } from "./controller";
-import { EvmPriceListener, EvmPricePusher, PythContractFactory } from "./evm";
 import { PythPriceListener } from "./pyth-price-listener";
 import fs from "fs";
 import { readPriceConfigFile } from "./price-config";
 import { PriceServiceConnection } from "@pythnetwork/pyth-common-js";
-import { InjectivePriceListener, InjectivePricePusher } from "./injective";
 import { ChainPricePusher, IPriceListener } from "./interface";
+import { NetworkFactory, NetworkValues, Networks } from "./network";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {
     description: "the blockchain network to push to",
     type: "string",
-    choices: ["evm", "injective"],
+    choices: NetworkValues,
     required: true,
   })
   .option("endpoint", {
@@ -76,9 +74,6 @@ const argv = yargs(hideBin(process.argv))
   })
   .parseSync();
 
-const priceConfigs = readPriceConfigFile(argv.priceConfigFile);
-const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
-
 // TODO: name ChainPricePusher -> IPricePusher in a clean up PR
 // TODO: update listeners to not depend on the whole priceConfig
 async function start({
@@ -102,6 +97,11 @@ async function start({
 
   await handler.start();
 }
+const network = NetworkFactory[argv.network as Networks];
+if (network === undefined) throw new Error("invalid network");
+
+const priceConfigs = readPriceConfigFile(argv.priceConfigFile);
+const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
 const priceServiceConnection = new PriceServiceConnection(argv.priceEndpoint, {
   logger: console,
@@ -112,55 +112,18 @@ const pythPriceListener = new PythPriceListener(
   priceConfigs
 );
 
-function getNetworkPriceListener(network: string): IPriceListener {
-  switch (network) {
-    case "evm": {
-      return new EvmPriceListener(
-        argv.endpoint,
-        argv.pythContract,
-        priceItems,
-        {
-          pollingFrequency: argv.pollingFrequency,
-        }
-      );
-    }
-
-    case "injective":
-      return new InjectivePriceListener(
-        argv.pythContract,
-        argv.endpoint,
-        priceItems,
-        { pollingFrequency: argv.pollingFrequency }
-      );
-    default:
-      throw new Error("invalid network");
-  }
-}
-
-function getNetworkPricePusher(network: string): ChainPricePusher {
-  switch (network) {
-    case "evm": {
-      return new EvmPricePusher(
-        priceServiceConnection,
-        argv.pythContract,
-        argv.endpoint,
-        fs.readFileSync(argv.mnemonicFile, "utf-8").trim()
-      );
-    }
-    case "injective":
-      return new InjectivePricePusher(
-        priceServiceConnection,
-        argv.pythContract,
-        argv.endpoint,
-        fs.readFileSync(argv.mnemonicFile, "utf-8").trim()
-      );
-    default:
-      throw new Error("invalid network");
-  }
-}
-
 start({
   sourcePriceListener: pythPriceListener,
-  targetPriceListener: getNetworkPriceListener(argv.network),
-  targetPricePusher: getNetworkPricePusher(argv.network),
+  targetPriceListener: network.createListener(
+    argv.endpoint,
+    argv.pythContract,
+    priceItems,
+    argv.pollingFrequency
+  ),
+  targetPricePusher: network.createPusher(
+    argv.endpoint,
+    argv.pythContract,
+    fs.readFileSync(argv.mnemonicFile, "utf-8").trim(),
+    priceServiceConnection
+  ),
 });
