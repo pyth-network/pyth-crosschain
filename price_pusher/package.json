@@ -47,7 +47,6 @@
   },
   "dependencies": {
     "@injectivelabs/sdk-ts": "^1.0.457",
-    "@pythnetwork/price-service-client": "*",
     "@pythnetwork/pyth-common-js": "^1.4.0",
     "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
     "@truffle/hdwallet-provider": "^2.1.3",
