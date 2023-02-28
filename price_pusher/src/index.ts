@@ -77,6 +77,7 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 const priceConfigs = readPriceConfigFile(argv.priceConfigFile);
+const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
 // TODO: name ChainPricePusher -> IPricePusher in a clean up PR
 // TODO: update listeners to not depend on the whole priceConfig
@@ -120,7 +121,7 @@ function getNetworkPriceListener(network: string): IPriceListener {
         argv.pythContract
       );
 
-      return new EvmPriceListener(pythContractFactory, priceConfigs, {
+      return new EvmPriceListener(pythContractFactory, priceItems, {
         pollingFrequency: argv.pollingFrequency,
       });
     }
@@ -129,7 +130,7 @@ function getNetworkPriceListener(network: string): IPriceListener {
       return new InjectivePriceListener(
         argv.pythContract,
         argv.endpoint,
-        priceConfigs,
+        priceItems,
         { pollingFrequency: argv.pollingFrequency }
       );
     default:

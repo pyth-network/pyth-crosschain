@@ -1,6 +1,10 @@
 import { Contract, EventData } from "web3-eth-contract";
-import { PriceConfig } from "./price-config";
-import { ChainPricePusher, PriceInfo, ChainPriceListener } from "./interface";
+import {
+  ChainPricePusher,
+  PriceInfo,
+  ChainPriceListener,
+  PriceItem,
+} from "./interface";
 import { TransactionReceipt } from "ethereum-protocol";
 import { addLeading0x, DurationInSeconds, removeLeading0x } from "./utils";
 import AbstractPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/AbstractPyth.json";
@@ -17,23 +21,15 @@ import {
 export class EvmPriceListener extends ChainPriceListener {
   private pythContractFactory: PythContractFactory;
   private pythContract: Contract;
-  private priceIdToAlias: Map<HexString, string>;
 
   constructor(
     pythContractFactory: PythContractFactory,
-    priceConfigs: PriceConfig[],
+    priceItems: PriceItem[],
     config: {
       pollingFrequency: DurationInSeconds;
     }
   ) {
-    super(
-      "Evm",
-      config.pollingFrequency,
-      priceConfigs.map((priceConfig) => priceConfig.id)
-    );
-    this.priceIdToAlias = new Map(
-      priceConfigs.map((priceConfig) => [priceConfig.id, priceConfig.alias])
-    );
+    super("Evm", config.pollingFrequency, priceItems);
 
     this.pythContractFactory = pythContractFactory;
     this.pythContract = this.pythContractFactory.createPythContract();
@@ -57,7 +53,7 @@ export class EvmPriceListener extends ChainPriceListener {
   }
 
   private async startSubscription() {
-    for (const priceId of this.priceIds) {
+    for (const { id: priceId } of this.priceItems) {
       this.pythContract.events.PriceFeedUpdate(
         {
           filter: {
@@ -105,6 +101,12 @@ export class EvmPriceListener extends ChainPriceListener {
       console.error(e);
       return undefined;
     }
+
+    console.log(
+      `Polled an EVM on chain price for feed ${this.priceIdToAlias.get(
+        priceId
+      )} (${priceId}).`
+    );
 
     return {
       conf: priceRaw.conf,
