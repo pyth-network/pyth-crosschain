@@ -1,6 +1,11 @@
 import { HexString, UnixTimestamp } from "@pythnetwork/pyth-common-js";
 import { DurationInSeconds } from "./utils";
 
+export type PriceItem = {
+  id: HexString;
+  alias: string;
+};
+
 export type PriceInfo = {
   price: string;
   conf: string;
@@ -15,13 +20,17 @@ export interface IPriceListener {
 
 export abstract class ChainPriceListener implements IPriceListener {
   private latestPriceInfo: Map<HexString, PriceInfo>;
+  protected priceIdToAlias: Map<HexString, string>;
 
   constructor(
     private chain: string,
     private pollingFrequency: DurationInSeconds,
-    protected priceIds: HexString[]
+    protected priceItems: PriceItem[]
   ) {
     this.latestPriceInfo = new Map();
+    this.priceIdToAlias = new Map(
+      priceItems.map(({ id, alias }) => [id, alias])
+    );
   }
 
   async start() {
@@ -33,7 +42,7 @@ export abstract class ChainPriceListener implements IPriceListener {
 
   private async pollPrices() {
     console.log(`Polling ${this.chain} prices...`);
-    for (const priceId of this.priceIds) {
+    for (const { id: priceId } of this.priceItems) {
       const currentPriceInfo = await this.getOnChainPriceInfo(priceId);
       if (currentPriceInfo !== undefined) {
         this.updateLatestPriceInfo(priceId, currentPriceInfo);

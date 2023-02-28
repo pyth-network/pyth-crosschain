@@ -1,7 +1,11 @@
 import { HexString, PriceServiceConnection } from "@pythnetwork/pyth-common-js";
-import { ChainPricePusher, PriceInfo, ChainPriceListener } from "./interface";
+import {
+  ChainPricePusher,
+  PriceInfo,
+  ChainPriceListener,
+  PriceItem,
+} from "./interface";
 import { DurationInSeconds } from "./utils";
-import { PriceConfig } from "./price-config";
 import {
   ChainGrpcAuthApi,
   ChainGrpcWasmApi,
@@ -36,16 +40,12 @@ export class InjectivePriceListener extends ChainPriceListener {
   constructor(
     private contractAddress: string,
     private grpcEndpoint: string,
-    priceConfigs: PriceConfig[],
+    priceItems: PriceItem[],
     config: {
       pollingFrequency: DurationInSeconds;
     }
   ) {
-    super(
-      "Injective",
-      config.pollingFrequency,
-      priceConfigs.map((priceConfig) => priceConfig.id)
-    );
+    super("Injective", config.pollingFrequency, priceItems);
   }
 
   async getOnChainPriceInfo(
@@ -66,6 +66,12 @@ export class InjectivePriceListener extends ChainPriceListener {
       console.error(e);
       return undefined;
     }
+
+    console.log(
+      `Polled an Injective on chain price for feed ${this.priceIdToAlias.get(
+        priceId
+      )} (${priceId}).`
+    );
 
     return {
       conf: priceQueryResponse.price_feed.price.conf,
