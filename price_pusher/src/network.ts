@@ -9,7 +9,7 @@ export enum Networks {
   INJECTIVE = "injective",
 }
 
-export const NetworkValues = Object.keys(Networks);
+export const NetworkValues = Object.values(Networks);
 
 type createNetworkListener = (
   endpoint: string,

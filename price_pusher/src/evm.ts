@@ -125,8 +125,8 @@ export class EvmPriceListener extends ChainPriceListener {
     pollingFrequency: DurationInSeconds
   ) {
     return new EvmPriceListener(
-      pythContractAddr,
       endpoint,
+      pythContractAddr,
       priceItems,
       pollingFrequency
     );
