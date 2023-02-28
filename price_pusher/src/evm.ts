@@ -239,8 +239,8 @@ export class EvmPricePusher implements ChainPricePusher {
 
   static create(
     endpoint: string,
-    mnemonic: string,
     pythContractAddr: string,
+    mnemonic: string,
     priceServiceConnection: PriceServiceConnection
   ) {
     return new EvmPricePusher(

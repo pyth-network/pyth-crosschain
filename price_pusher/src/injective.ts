@@ -211,8 +211,8 @@ export class InjectivePricePusher implements ChainPricePusher {
 
   static create(
     endpoint: string,
-    mnemonic: string,
     pythContractAddr: string,
+    mnemonic: string,
     priceServiceConnection: PriceServiceConnection
   ) {
     return new InjectivePricePusher(
