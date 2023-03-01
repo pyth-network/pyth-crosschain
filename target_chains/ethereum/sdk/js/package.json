@@ -21,6 +21,7 @@
     "build": "tsc",
     "example-client": "npm run build && node lib/examples/EvmPriceServiceClient.js",
     "example-relay": "npm run build && node lib/examples/EvmRelay.js",
+    "example-benchmark": "npm run build && node lib/examples/EvmBenchmark.js",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src/",
     "prepublishOnly": "npm run build && npm test && npm run lint",
