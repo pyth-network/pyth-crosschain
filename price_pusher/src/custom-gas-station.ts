@@ -32,3 +32,12 @@ export class CustomGasStation {
     return gweiGasPrice.toString();
   }
 }
+
+export function getCustomGasStation(
+  customGasStation?: number,
+  txSpeed?: string
+) {
+  if (customGasStation && txSpeed) {
+    return new CustomGasStation(customGasStation, txSpeed);
+  }
+}

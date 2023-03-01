@@ -35,6 +35,7 @@ type UpdateFeeResponse = {
   amount: string;
 };
 
+// FIXME: CLEANUP contractAddr variable name consistency
 // this use price without leading 0x
 export class InjectivePriceListener extends ChainPriceListener {
   constructor(
