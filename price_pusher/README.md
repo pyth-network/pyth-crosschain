@@ -48,11 +48,22 @@ To run the price pusher, please run the following commands, replacing the comman
 ```sh
 npm install # Only run it the first time
 
-npm run start -- --evm-endpoint wss://example-rpc.com --mnemonic-file "path/to/mnemonic.txt" \
-    --pyth-contract example_network --price-endpoint https://example-pyth-price.com \
-    --price-config-file "path/to/price-config-file.yaml" \
+# For EVM
+npm run start -- evm --endpoint wss://example-rpc.com \
+    --pyth-contract-address 0xff1a0f4744e8582DF...... \
+    --price-service-endpoint https://example-pyth-price.com \
+    --price-config-file "path/to/price-config-file.yaml.testnet.sample.yaml" \
+    --mnemonic-file "path/to/mnemonic.txt" \
     [--cooldown-duration 10] \
-    [--evm-polling-frequency 5]
+    [--polling-frequency 5]
+
+# For Injective
+npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
+    --pyth-contract-address inj1z60tg0... --price-service-endpoint "https://example-pyth-price.com" \
+    --price-config-file "path/to/price-config-file.yaml.testnet.sample.yaml" \
+    --mnemonic-file "path/to/mnemonic.txt" \
+    [--cooldown-duration 10] \
+    [--polling-frequency 5]
 
 # Or, run the price pusher docker image instead of building from the source
 docker run public.ecr.aws/pyth-network/xc-evm-price-pusher:v<version> -- <above-arguments>
@@ -60,59 +71,50 @@ docker run public.ecr.aws/pyth-network/xc-evm-price-pusher:v<version> -- <above-
 
 ### Command Line Arguments
 
-The program accepts the following command line arguments:
+To know more about the arguments the price-pusher accepts. You can run:
 
-- `evm-endpoint`: RPC endpoint URL for the EVM network. If you provide a normal HTTP endpoint,
-  the pusher will periodically poll for updates. The polling interval is configurable via the
-  `evm-polling-frequency` command-line argument (described below). If you provide a websocket RPC endpoint
-  (`ws[s]://...`), the price pusher will use event subscriptions to read the current EVM
-  price in addition to polling.
-- `mnemonic-file`: Path to payer mnemonic (private key) file.
-- `pyth-contract`: The Pyth contract address. Provide the network name on which Pyth is deployed
-  or the Pyth contract address if you use a local network.
-  You can find the networks on which pyth is live and their corresponding names
-  [here](../pyth-evm-js/src/index.ts#L13). An example is `bnb_testnet`.
-- `price-endpoint`: Endpoint URL for the price service. You can use
-  `https://xc-testnet.pyth.network` for testnet and
-  `https://xc-mainnet.pyth.network` for mainnet. It is recommended
-  to run a standalone price service for more resiliency.
-- `price-config-file`: Path to price configuration YAML file.
-- `cooldown-duration` (Optional): The amount of time (in seconds) to wait between pushing
-  price updates. It should be greater than the block time of the network, so this
-  program confirms the price is updated and does not push it twice. Default: 10 seconds.
-- `evm-polling-frequency` (Optional): The frequency to poll price info data from the EVM network
-  if the RPC is not a Websocket. It has no effect if the RPC is a Websocket.
-  Default: 5 seconds.
+```sh
+npm run start -- --help
+
+# for specific network run
+npm run start -- {network} --help
+```
 
 ### Example
 
 For example, to push `BTC/USD` and `BNB/USD` prices on BNB testnet, run the following command:
 
 ```sh
-npm run start -- --evm-endpoint "https://data-seed-prebsc-1-s1.binance.org:8545" --mnemonic-file "path/to/mnemonic.txt" \
-  --pyth-contract bnb_testnet --price-endpoint https://xc-testnet.pyth.network \
-  --price-config-file "price-config.testnet.sample.yaml"
+npm run dev -- evm --endpoint https://endpoints.omniatech.io/v1/fantom/testnet/public \
+    --pyth-contract-address 0xd7308b14BF4008e7C7196eC35610B1427C5702EA --price-service-endpoint https://xc-testnet.pyth.network \
+    --mnemonic-file "./mnemonic" --price-config-file "./price-config.testnet.sample.yaml"
 ```
 
 [`price-config.testnet.sample.yaml`](./price-config.testnet.sample.yaml) contains configuration for `BTC/USD`
 and `BNB/USD` price feeds on Pyth testnet. [`price-config.mainnet.sample.yaml`](./price-config.mainnet.sample.yaml)
 contains the same configuration for `BTC/USD` and `BNB/USD` on Pyth mainnet.
 
+You can also provide a config file instead of providing command line options, run the following command:
+
+```sh
+npm run start -- injective --config "./config.injective.sample.json"
+```
+
+[`config.injective.sample.json`](./config.injective.sample.json) contains configuration to publish on Injective testnet.
+
 ## Running using a standalone price service (via docker-compose)
 
-EVM price pusher communicates with [Pyth price service][] to get the most recent price updates. Pyth price service listens to the
+Price pusher communicates with [Pyth price service][] to get the most recent price updates. Pyth price service listens to the
 Wormhole network to get latest price updates, and serves REST and websocket APIs for consumers to fetch the updates.
 Pyth hosts public endpoints for the price service; however, it is recommended to run it standalone to achieve more resiliency and
 scalability.
 
 This directory contains sample docker compose files ([testnet](./docker-compose.testnet.sample.yaml),
-[mainnet](./docker-compose.mainnet.sample.yaml)) an EVM price pusher and its dependencies, including a
+[mainnet](./docker-compose.mainnet.sample.yaml)) a price pusher and its dependencies, including a
 price service and a Wormhole spy. A price service depends on a Wormhole spy. A spy listens to the Wormhole
 network and reports all Pyth-related Wormhole messages to the price service.
 
-To run the services via docker-compose, please modify the your target network (testnet, mainnet) sample docker-compose file to adjust
-the path to your mnemonic file, the path to your price configuration file, the EVM endpoint, and the Pyth contract address
-as necessary.
+To run the services via docker-compose, please modify the your target network (testnet, mainnet) sample docker-compose file to adjust the configurations.
 
 Then, start the docker-compose like this:
 

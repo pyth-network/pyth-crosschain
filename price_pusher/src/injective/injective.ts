@@ -4,8 +4,8 @@ import {
   PriceInfo,
   ChainPriceListener,
   PriceItem,
-} from "./interface";
-import { DurationInSeconds } from "./utils";
+} from "../interface";
+import { DurationInSeconds } from "../utils";
 import {
   ChainGrpcAuthApi,
   ChainGrpcWasmApi,
@@ -35,6 +35,7 @@ type UpdateFeeResponse = {
   amount: string;
 };
 
+// FIXME: CLEANUP contractAddr variable name consistency
 // this use price without leading 0x
 export class InjectivePriceListener extends ChainPriceListener {
   constructor(

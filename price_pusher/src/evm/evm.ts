@@ -4,14 +4,14 @@ import {
   PriceInfo,
   ChainPriceListener,
   PriceItem,
-} from "./interface";
+} from "../interface";
 import { TransactionReceipt } from "ethereum-protocol";
-import { addLeading0x, DurationInSeconds, removeLeading0x } from "./utils";
+import { addLeading0x, DurationInSeconds, removeLeading0x } from "../utils";
 import AbstractPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/AbstractPyth.json";
 import HDWalletProvider from "@truffle/hdwallet-provider";
 import { Provider } from "web3/providers";
 import Web3 from "web3";
-import { isWsEndpoint } from "./utils";
+import { isWsEndpoint } from "../utils";
 import {
   PriceServiceConnection,
   HexString,

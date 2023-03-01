@@ -5,7 +5,7 @@ import {
   verifyValidOption,
   txSpeeds,
   customGasChainIds,
-} from "./utils";
+} from "../utils";
 
 type chainMethods = Record<CustomGasChainId, () => Promise<string>>;
 
@@ -30,5 +30,14 @@ export class CustomGasStation {
     const gasPrice = jsonRes[this.speed].maxFee;
     const gweiGasPrice = Web3.utils.toWei(gasPrice.toFixed(2), "Gwei");
     return gweiGasPrice.toString();
+  }
+}
+
+export function getCustomGasStation(
+  customGasStation?: number,
+  txSpeed?: string
+) {
+  if (customGasStation && txSpeed) {
+    return new CustomGasStation(customGasStation, txSpeed);
   }
 }

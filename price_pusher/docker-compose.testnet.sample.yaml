@@ -58,27 +58,16 @@ services:
     restart: always
     command:
       - "--"
-      - "--evm-endpoint"
-      # Replace this with RPC endpoint URL for the EVM network.
-      - "https://data-seed-prebsc-1-s1.binance.org:8545"
-      - "--mnemonic-file"
-      - "/mnemonic"
-      - "--pyth-contract"
-      # Replace this with the Pyth contract address. Provide the network name on which Pyth is deployed
-      # or the Pyth contract address if you use a local network
-      - "bnb_testnet"
-      - "--price-endpoint"
-      - "http://price-service:4200"
-      - "--price-config-file"
-      - "/price_config"
+      - "injective"
+      # you can choose to provide all the options here or a path to the config file
+      # we are providing a path to the config file
+      - "--config"
+      - "/command_config"
     configs:
-      - mnemonic
-      - price_config
+      - command_config
     depends_on:
       price-service:
         condition: service_healthy
 configs:
-  mnemonic:
-    file: ./path/to/mnemonic.txt # Replace this with the path to the mnemonic file
-  price_config:
-    file: ./price-config.testnet.sample.yaml # Replace this with the path to the price configuration file
+  command_config:
+    file: ./config.injective.sample.json # Replace this with the path to the configuration file
