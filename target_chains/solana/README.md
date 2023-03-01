@@ -1,4 +1,4 @@
-# Solana receiver program for price VAA from Pythnet
+# Solana program for receiving price VAA from Pythnet
 
 The program under `cli` receives a VAA string from the shell, verifies the VAA with wormhole, posts the VAA on solana and then invokes the receiver program under `programs`.
 The receiver program verifies that the VAA comes from wormhole (through the `owner` function in `state.rs`) and deserializes the price information (in `decode_posted_vaa` function of `lib.rs`).
