@@ -22,6 +22,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint src/",
     "start": "node lib/index.js",
+    "dev": "ts-node src/index.ts",
     "prepublishOnly": "npm run build && npm test && npm run lint",
     "preversion": "npm run lint",
     "version": "npm run format && git add -A src"
