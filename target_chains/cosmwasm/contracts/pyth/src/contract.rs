@@ -10,6 +10,7 @@ use {
                 UpgradeContract,
             },
             GovernanceInstruction,
+            GovernanceModule,
         },
         msg::{
             InstantiateMsg,
@@ -112,7 +113,12 @@ pub fn instantiate(
     Ok(Response::default())
 }
 
-pub fn parse_vaa(deps: DepsMut, block_time: u64, data: &Binary) -> StdResult<ParsedVAA> {
+/// Verify that `data` represents an authentic Wormhole VAA.
+///
+/// *Warning* this function does not verify the emitter of the wormhole message; it only checks
+/// that the wormhole signatures are valid. The caller is responsible for checking that the message
+/// originates from the expected emitter.
+pub fn parse_and_verify_vaa(deps: DepsMut, block_time: u64, data: &Binary) -> StdResult<ParsedVAA> {
     let cfg = config_read(deps.storage).load()?;
     let vaa: ParsedVAA = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: cfg.wormhole_contract.to_string(),
@@ -134,6 +140,11 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
     }
 }
 
+/// Update the on-chain price feeds given the array of price update VAAs `data`.
+/// Each price update VAA must be a valid Wormhole message and sent from an authorized emitter.
+///
+/// This method additionally requires the caller to pay a fee to the contract; the
+/// magnitude of the fee depends on both the data and the current contract configuration.
 fn update_price_feeds(
     mut deps: DepsMut,
     env: Env,
@@ -142,6 +153,7 @@ fn update_price_feeds(
 ) -> StdResult<Response> {
     let state = config_read(deps.storage).load()?;
 
+    // Check that a sufficient fee was sent with the message
     if state.fee.amount.u128() > 0
         && !has_coins(info.funds.as_ref(), &get_update_fee(&deps.as_ref(), data)?)
     {
@@ -151,7 +163,7 @@ fn update_price_feeds(
     let mut total_attestations: usize = 0;
     let mut new_attestations: usize = 0;
     for datum in data {
-        let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), datum)?;
+        let vaa = parse_and_verify_vaa(deps.branch(), env.block.time.seconds(), datum)?;
         verify_vaa_from_data_source(&state, &vaa)?;
 
         let data = &vaa.payload;
@@ -170,19 +182,24 @@ fn update_price_feeds(
         .add_attribute("num_updated", format!("{new_attestations}")))
 }
 
+/// Execute a governance instruction provided as the VAA `data`.
+/// The VAA must come from an authorized governance emitter.
+/// See [GovernanceInstruction] for descriptions of the supported operations.
 fn execute_governance_instruction(
     mut deps: DepsMut,
     env: Env,
     _info: MessageInfo,
     data: &Binary,
 ) -> StdResult<Response> {
-    let vaa = parse_vaa(deps.branch(), env.block.time.seconds(), data)?;
+    let vaa = parse_and_verify_vaa(deps.branch(), env.block.time.seconds(), data)?;
     let state = config_read(deps.storage).load()?;
+    verify_vaa_from_governance_source(&state, &vaa)?;
 
     // store updates to the config as a result of this action in here.
     let mut updated_config: ConfigInfo = state.clone();
-    verify_vaa_from_governance_source(&state, &vaa)?;
 
+    // Governance messages must be applied in order. This check prevents replay attacks where
+    // previous messages are re-applied.
     if vaa.sequence <= state.governance_sequence_number {
         return Err(PythContractError::OldGovernanceMessage)?;
     } else {
@@ -193,7 +210,15 @@ fn execute_governance_instruction(
     let instruction = GovernanceInstruction::deserialize(&data[..])
         .map_err(|_| PythContractError::InvalidGovernancePayload)?;
 
+    // Check that the instruction is intended for this chain.
+    // chain_id = 0 means the instruction applies to all chains
     if instruction.target_chain_id != state.chain_id && instruction.target_chain_id != 0 {
+        return Err(PythContractError::InvalidGovernancePayload)?;
+    }
+
+    // Check that the instruction is intended for this target chain contract (as opposed to
+    // other Pyth contracts that may live on the same chain).
+    if instruction.module != GovernanceModule::Target {
         return Err(PythContractError::InvalidGovernancePayload)?;
     }
 
@@ -205,7 +230,8 @@ fn execute_governance_instruction(
             upgrade_contract(&env.contract.address, code_id)?
         }
         AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
-            let parsed_claim_vaa = parse_vaa(deps.branch(), env.block.time.seconds(), &claim_vaa)?;
+            let parsed_claim_vaa =
+                parse_and_verify_vaa(deps.branch(), env.block.time.seconds(), &claim_vaa)?;
             transfer_governance(&mut updated_config, &state, &parsed_claim_vaa)?
         }
         SetDataSources { data_sources } => {
@@ -252,8 +278,9 @@ fn execute_governance_instruction(
     Ok(response)
 }
 
-/// Transfers governance to the data source provided in `parsed_claim_vaa`. Stores the new
-/// governance parameters in `next_config`.
+/// Transfers governance to the data source provided in `parsed_claim_vaa`.
+/// This function updates the contract config in `next_config`; it is the caller's responsibility
+/// to save this configuration in the on-chain storage.
 fn transfer_governance(
     next_config: &mut ConfigInfo,
     current_config: &ConfigInfo,
@@ -263,6 +290,10 @@ fn transfer_governance(
         GovernanceInstruction::deserialize(parsed_claim_vaa.payload.as_slice())
             .map_err(|_| PythContractError::InvalidGovernancePayload)?;
 
+    // Check that the requester is asking to govern this target chain contract.
+    // chain_id == 0 means they're asking for governance of all target chain contracts.
+    // (this check doesn't matter for security because we have already checked the information
+    // in the authorization message.)
     if claim_vaa_instruction.target_chain_id != current_config.chain_id
         && claim_vaa_instruction.target_chain_id != 0
     {
@@ -342,6 +373,7 @@ fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> Std
     Ok(())
 }
 
+/// Update the on-chain storage for any new price updates provided in `batch_attestation`.
 fn process_batch_attestation(
     deps: &mut DepsMut,
     env: &Env,
@@ -454,8 +486,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-pub fn query_price_feed(deps: &Deps, address: &[u8]) -> StdResult<PriceFeedResponse> {
-    match price_info_read(deps.storage).load(address) {
+/// Get the most recent value of the price feed indicated by `feed_id`.
+pub fn query_price_feed(deps: &Deps, feed_id: &[u8]) -> StdResult<PriceFeedResponse> {
+    match price_info_read(deps.storage).load(feed_id) {
         Ok(price_info) => Ok(PriceFeedResponse {
             price_feed: price_info.price_feed,
         }),
@@ -463,6 +496,8 @@ pub fn query_price_feed(deps: &Deps, address: &[u8]) -> StdResult<PriceFeedRespo
     }
 }
 
+/// Get the fee that a caller must pay in order to submit a price update.
+/// The fee depends on both the current contract configuration and the update data `vaas`.
 pub fn get_update_fee(deps: &Deps, vaas: &[Binary]) -> StdResult<Coin> {
     let config = config_read(deps.storage).load()?;
 

@@ -37,3 +37,8 @@ Available price feeds on these networks can be find below:
 | Network           | Available Price Feeds                                                                                                                |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | Injective Testnet | [https://pyth.network/developers/price-feed-ids#injective-testnet](https://pyth.network/developers/price-feed-ids#injective-testnet) |
+
+## Developing
+
+The cosmwasm contract lives in the `pyth` subdirectory.
+From that directory, you can build the contract with `cargo build` and run unit tests with `cargo test`.
