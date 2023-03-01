@@ -172,6 +172,10 @@ const General = () => {
           const fileDataParsed = sortData(JSON.parse(fileData as string))
           const changes: Record<string, any> = {}
           Object.keys(fileDataParsed).forEach((symbol) => {
+            // remove duplicate publishers
+            fileDataParsed[symbol].priceAccounts[0].publishers = [
+              ...new Set(fileDataParsed[symbol].priceAccounts[0].publishers),
+            ]
             if (!existingSymbols.has(symbol)) {
               // if symbol is not in existing symbols, create new entry
               changes[symbol] = { new: {} }
@@ -241,17 +245,6 @@ const General = () => {
         toast.error(
           `Address field for priceAccounts cannot be changed for symbol ${symbol}. Please revert any changes to the address field and try again.`
         )
-        isValid = false
-      }
-    })
-
-    // check that there are no duplicate publishers
-    Object.keys(jsonParsed).forEach((symbol) => {
-      if (
-        new Set(jsonParsed[symbol].priceAccounts[0].publishers).size !=
-        jsonParsed[symbol].priceAccounts[0].publishers.length
-      ) {
-        toast.error(`${symbol} has a duplicate publisher.`)
         isValid = false
       }
     })
