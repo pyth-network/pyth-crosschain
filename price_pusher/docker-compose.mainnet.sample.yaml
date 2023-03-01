@@ -58,16 +58,14 @@ services:
     restart: always
     command:
       - "--"
-      - "--evm-endpoint"
+      - "--endpoint"
       # Replace this with RPC endpoint URL for the EVM network.
       - "https://bsc-dataseed2.binance.org"
       - "--mnemonic-file"
       - "/mnemonic"
-      - "--pyth-contract"
-      # Replace this with the Pyth contract address. Provide the network name on which Pyth is deployed
-      # or the Pyth contract address if you use a local network
-      - "bnb"
-      - "--price-endpoint"
+      - "--pyth-contract-address"
+      - "0xd7308b14BF4008e7C7196eC35610B1427C5702EA"
+      - "--price-service-endpoint"
       - "http://price-service:4200"
       - "--price-config-file"
       - "/price_config"
