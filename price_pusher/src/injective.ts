@@ -120,7 +120,7 @@ export class InjectivePricePusher implements ChainPricePusher {
       sequence: account.baseAccount.sequence,
       accountNumber: account.baseAccount.accountNumber,
       message: msg,
-      chainId: "",
+      chainId: "injective-xxx",
       fee,
       pubKey: this.wallet.toPublicKey().toBase64(),
     });
