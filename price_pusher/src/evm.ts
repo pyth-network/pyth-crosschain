@@ -247,13 +247,15 @@ export class EvmPricePusher implements ChainPricePusher {
     endpoint: string,
     pythContractAddr: string,
     mnemonic: string,
-    priceServiceConnection: PriceServiceConnection
+    priceServiceConnection: PriceServiceConnection,
+    customGasStation?: CustomGasStation
   ) {
     return new EvmPricePusher(
       priceServiceConnection,
       pythContractAddr,
       endpoint,
-      mnemonic
+      mnemonic,
+      customGasStation
     );
   }
 }
