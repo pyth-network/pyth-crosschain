@@ -4,8 +4,8 @@ import {
   PriceInfo,
   ChainPriceListener,
   PriceItem,
-} from "./interface";
-import { DurationInSeconds } from "./utils";
+} from "../interface";
+import { DurationInSeconds } from "../utils";
 import {
   ChainGrpcAuthApi,
   ChainGrpcWasmApi,

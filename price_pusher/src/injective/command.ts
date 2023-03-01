@@ -2,7 +2,7 @@ import { PriceServiceConnection } from "@pythnetwork/pyth-common-js";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import fs from "fs";
-import { InjectivePriceListener, InjectivePricePusher } from "../injective";
+import { InjectivePriceListener, InjectivePricePusher } from "./injective";
 import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
 import { Options } from "yargs";

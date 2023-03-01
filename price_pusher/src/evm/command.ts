@@ -5,8 +5,8 @@ import fs from "fs";
 import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
 import { Options } from "yargs";
-import { EvmPriceListener, EvmPricePusher, PythContractFactory } from "../evm";
-import { getCustomGasStation } from "../custom-gas-station";
+import { EvmPriceListener, EvmPricePusher, PythContractFactory } from "./evm";
+import { getCustomGasStation } from "./custom-gas-station";
 
 export default {
   command: "evm",

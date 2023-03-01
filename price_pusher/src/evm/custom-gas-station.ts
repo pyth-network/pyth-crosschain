@@ -5,7 +5,7 @@ import {
   verifyValidOption,
   txSpeeds,
   customGasChainIds,
-} from "./utils";
+} from "../utils";
 
 type chainMethods = Record<CustomGasChainId, () => Promise<string>>;
 
