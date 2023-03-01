@@ -17,6 +17,7 @@ import {
   HexString,
   UnixTimestamp,
 } from "@pythnetwork/pyth-common-js";
+import { CustomGasStation } from "./custom-gas-station";
 
 export class EvmPriceListener extends ChainPriceListener {
   private pythContract: Contract;
@@ -135,18 +136,22 @@ export class EvmPriceListener extends ChainPriceListener {
 
 export class EvmPricePusher implements ChainPricePusher {
   private pythContract: Contract;
+  private customGasStation?: CustomGasStation;
 
   constructor(
     private connection: PriceServiceConnection,
     pythContractAddr: string,
     endpoint: string,
-    mnemonic: string
+    mnemonic: string,
+    customGasStation?: CustomGasStation
   ) {
     this.pythContract = PythContractFactory.createPythContractWithPayer(
       endpoint,
       pythContractAddr,
       mnemonic
     );
+
+    this.customGasStation = customGasStation;
   }
   // The pubTimes are passed here to use the values that triggered the push.
   // This is an optimization to avoid getting a newer value (as an update comes)
@@ -172,11 +177,12 @@ export class EvmPricePusher implements ChainPricePusher {
       "Pushing ",
       priceIdsWith0x.map((priceIdWith0x) => `${priceIdWith0x}`)
     );
-
     const updateFee = await this.pythContract.methods
       .getUpdateFee(priceFeedUpdateData)
       .call();
     console.log(`Update fee: ${updateFee}`);
+
+    const gasPrice = await this.customGasStation?.getCustomGasPrice();
 
     this.pythContract.methods
       .updatePriceFeedsIfNecessary(
@@ -184,7 +190,7 @@ export class EvmPricePusher implements ChainPricePusher {
         priceIdsWith0x,
         pubTimesToPush
       )
-      .send({ value: updateFee })
+      .send({ value: updateFee, gasPrice })
       .on("transactionHash", (hash: string) => {
         console.log(`Successful. Tx hash: ${hash}`);
       })

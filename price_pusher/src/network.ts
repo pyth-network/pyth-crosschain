@@ -3,6 +3,7 @@ import { ChainPricePusher, IPriceListener, PriceItem } from "./interface";
 import { DurationInSeconds } from "./utils";
 import { InjectivePriceListener, InjectivePricePusher } from "./injective";
 import { EvmPriceListener, EvmPricePusher } from "./evm";
+import { CustomGasStation } from "./custom-gas-station";
 
 export enum Networks {
   EVM = "evm",
@@ -22,7 +23,8 @@ type createNetworkPusher = (
   endpoint: string,
   pythContractAddr: string,
   mnemonic: string,
-  priceServiceConnection: PriceServiceConnection
+  priceServiceConnection: PriceServiceConnection,
+  gasStation?: CustomGasStation
 ) => ChainPricePusher;
 
 export type NetworkHelper = Record<

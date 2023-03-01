@@ -10,6 +10,7 @@ import { readPriceConfigFile } from "./price-config";
 import { PriceServiceConnection } from "@pythnetwork/pyth-common-js";
 import { ChainPricePusher, IPriceListener } from "./interface";
 import { NetworkHelper, NetworkValues, Networks } from "./network";
+import { CustomGasStation } from "./custom-gas-station";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {
@@ -67,6 +68,18 @@ const argv = yargs(hideBin(process.argv))
     required: false,
     default: 5,
   })
+  .option("custom-gas-station", {
+    description:
+      "If using a custom gas station, chainId of custom gas station to use",
+    type: "number",
+    required: false,
+  })
+  .option("tx-speed", {
+    description:
+      "txSpeed for custom gas station. choose between 'slow'|'standard'|'fast'",
+    type: "string",
+    required: false,
+  })
   .help()
   .alias("help", "h")
   .parserConfiguration({
@@ -112,6 +125,12 @@ const pythPriceListener = new PythPriceListener(
   priceConfigs
 );
 
+function getCustomGasStation(customGasStation?: number, txSpeed?: string) {
+  if (customGasStation && txSpeed) {
+    return new CustomGasStation(customGasStation, txSpeed);
+  }
+}
+
 start({
   sourcePriceListener: pythPriceListener,
   targetPriceListener: network.createListener(
@@ -124,6 +143,7 @@ start({
     argv.endpoint,
     argv.pythContract,
     fs.readFileSync(argv.mnemonicFile, "utf-8").trim(),
-    priceServiceConnection
+    priceServiceConnection,
+    getCustomGasStation(argv.customGasStation, argv.txSpeed)
   ),
 });

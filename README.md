@@ -59,6 +59,23 @@ The checks are also performed in the CI to ensure the code follows consistent fo
 
 Integration tests run in Tilt (via the `tilt ci` command). The Tilt CI workflow requires approval from a member of the Pyth team. If you are a member, click on "Details" next to the "Workflow / ci-pyth-crosschain" check in a pull request, and then on the "Resume" button on the workflow page.
 
+### Typescript Monorepo
+
+All of the typescript / javascript packages in this repository are part of a lerna monorepo.
+This setup allows each package to reference the current version of the others.
+You can install dependencies using `npm ci` from the repository root.
+You can build all of the packages using `npx lerna run build` and test with `npx lerna run test`.
+
+Lerna has some common failure modes that you may encounter:
+
+1. `npm ci` fails with a typescript compilation error about a missing package.
+   This error likely means that the failing package has a `prepare` entry compiling the typescript in its `package.json`.
+   Fix this error by moving that logic to the `prepublishOnly` entry.
+1. The software builds locally but fails in CI, or vice-versa.
+   This error likely means that some local build caches need to be cleaned.
+   The build error may not indicate that this is a caching issue, e.g., it may appear that the packages are being built in the wrong order.
+   Delete `node_modules/`, `lib/` and `tsconfig.tsbuildinfo` from each package's subdirectory. then try again.
+
 ## Audit / Feature Status
 
 ⚠ **This software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
