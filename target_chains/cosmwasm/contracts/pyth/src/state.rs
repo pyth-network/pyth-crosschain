@@ -4,7 +4,6 @@ use {
         Binary,
         Coin,
         Storage,
-        Timestamp,
     },
     cosmwasm_storage::{
         bucket,
@@ -29,7 +28,7 @@ use {
 };
 
 pub static CONFIG_KEY: &[u8] = b"config";
-pub static PRICE_INFO_KEY: &[u8] = b"price_info_v5";
+pub static PRICE_FEED_KEY: &[u8] = b"price_feed";
 
 /// A `PythDataSource` identifies a specific contract (given by its Wormhole `emitter`) on
 /// a specific blockchain (given by `chain_id`).
@@ -65,15 +64,6 @@ pub struct ConfigInfo {
     pub fee: Coin,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub struct PriceInfo {
-    pub arrival_time:  Timestamp,
-    pub arrival_block: u64,
-    pub publish_time:  Timestamp,
-    pub price_feed:    PriceFeed,
-}
-
 pub fn config(storage: &mut dyn Storage) -> Singleton<ConfigInfo> {
     singleton(storage, CONFIG_KEY)
 }
@@ -82,10 +72,10 @@ pub fn config_read(storage: &dyn Storage) -> ReadonlySingleton<ConfigInfo> {
     singleton_read(storage, CONFIG_KEY)
 }
 
-pub fn price_info(storage: &mut dyn Storage) -> Bucket<PriceInfo> {
-    bucket(storage, PRICE_INFO_KEY)
+pub fn price_feed_bucket(storage: &mut dyn Storage) -> Bucket<PriceFeed> {
+    bucket(storage, PRICE_FEED_KEY)
 }
 
-pub fn price_info_read(storage: &dyn Storage) -> ReadonlyBucket<PriceInfo> {
-    bucket_read(storage, PRICE_INFO_KEY)
+pub fn price_feed_read_bucket(storage: &dyn Storage) -> ReadonlyBucket<PriceFeed> {
+    bucket_read(storage, PRICE_FEED_KEY)
 }
