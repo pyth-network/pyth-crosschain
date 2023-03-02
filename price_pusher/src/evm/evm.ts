@@ -150,10 +150,20 @@ export class EvmPricePusher implements ChainPricePusher {
       "Pushing ",
       priceIdsWith0x.map((priceIdWith0x) => `${priceIdWith0x}`)
     );
-    const updateFee = await this.pythContract.methods
-      .getUpdateFee(priceFeedUpdateData)
-      .call();
-    console.log(`Update fee: ${updateFee}`);
+
+    let updateFee;
+
+    try {
+      updateFee = await this.pythContract.methods
+        .getUpdateFee(priceFeedUpdateData)
+        .call();
+      console.log(`Update fee: ${updateFee}`);
+    } catch (e: any) {
+      console.error(
+        "An unidentified error has occured when getting the update fee:"
+      );
+      throw e;
+    }
 
     const gasPrice = await this.customGasStation?.getCustomGasPrice();
 
@@ -168,11 +178,7 @@ export class EvmPricePusher implements ChainPricePusher {
         console.log(`Successful. Tx hash: ${hash}`);
       })
       .on("error", (err: Error, receipt?: TransactionReceipt) => {
-        if (
-          err.message.includes(
-            "VM Exception while processing transaction: revert"
-          )
-        ) {
+        if (err.message.includes("revert")) {
           // Since we are using custom error structs on solidity the rejection
           // doesn't return any information why the call has reverted. Assuming that
           // the update data is valid there is no possible rejection cause other than
