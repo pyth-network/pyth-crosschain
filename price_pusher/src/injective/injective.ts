@@ -3,7 +3,7 @@ import {
   PriceServiceConnection,
 } from "@pythnetwork/price-service-client";
 import {
-  ChainPricePusher,
+  IPricePusher,
   PriceInfo,
   ChainPriceListener,
   PriceItem,
@@ -84,7 +84,7 @@ export class InjectivePriceListener extends ChainPriceListener {
   }
 }
 
-export class InjectivePricePusher implements ChainPricePusher {
+export class InjectivePricePusher implements IPricePusher {
   private wallet: PrivateKey;
   constructor(
     private priceServiceConnection: PriceServiceConnection,

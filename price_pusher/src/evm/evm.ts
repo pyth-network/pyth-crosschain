@@ -1,6 +1,6 @@
 import { Contract, EventData } from "web3-eth-contract";
 import {
-  ChainPricePusher,
+  IPricePusher,
   PriceInfo,
   ChainPriceListener,
   PriceItem,
@@ -117,7 +117,7 @@ export class EvmPriceListener extends ChainPriceListener {
   }
 }
 
-export class EvmPricePusher implements ChainPricePusher {
+export class EvmPricePusher implements IPricePusher {
   private customGasStation?: CustomGasStation;
   constructor(
     private connection: PriceServiceConnection,

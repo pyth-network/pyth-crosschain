@@ -80,7 +80,7 @@ export abstract class ChainPriceListener implements IPriceListener {
   ): Promise<PriceInfo | undefined>;
 }
 
-export interface ChainPricePusher {
+export interface IPricePusher {
   updatePriceFeed(
     priceIds: string[],
     pubTimesToPush: UnixTimestamp[]

@@ -1,6 +1,6 @@
 import { UnixTimestamp } from "@pythnetwork/price-service-client";
 import { DurationInSeconds, sleep } from "./utils";
-import { ChainPricePusher, IPriceListener } from "./interface";
+import { IPricePusher, IPriceListener } from "./interface";
 import { PriceConfig, shouldUpdate } from "./price-config";
 
 export class Controller {
@@ -9,7 +9,7 @@ export class Controller {
     private priceConfigs: PriceConfig[],
     private sourcePriceListener: IPriceListener,
     private targetPriceListener: IPriceListener,
-    private targetChainPricePusher: ChainPricePusher,
+    private targetChainPricePusher: IPricePusher,
     config: {
       cooldownDuration: DurationInSeconds;
     }
