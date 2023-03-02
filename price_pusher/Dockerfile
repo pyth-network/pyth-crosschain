@@ -13,7 +13,7 @@ COPY --chown=1000:1000 price_service/sdk/js price_service/sdk/js
 
 COPY --chown=1000:1000 price_pusher price_pusher
 
-RUN npx lerna run build --scope="@pythnetwork/pyth-evm-price-pusher" --include-dependencies
+RUN npx lerna run build --scope="@pythnetwork/pyth-price-pusher" --include-dependencies
 
 WORKDIR /home/node/price_pusher
 

@@ -1,7 +1,7 @@
 {
-  "name": "@pythnetwork/pyth-evm-price-pusher",
-  "version": "2.0.1",
-  "description": "Pyth EVM Price Pusher",
+  "name": "@pythnetwork/pyth-price-pusher",
+  "version": "3.0.0",
+  "description": "Pyth Price Pusher",
   "homepage": "https://pyth.network",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -9,7 +9,7 @@
     "lib/**/*"
   ],
   "bin": {
-    "pyth-evm-price-pusher": "./lib/index.js"
+    "pyth-price-pusher": "./lib/index.js"
   },
   "repository": {
     "type": "git",
@@ -31,7 +31,8 @@
     "pyth",
     "oracle",
     "evm",
-    "ethereum"
+    "ethereum",
+    "injective"
   ],
   "license": "Apache-2.0",
   "devDependencies": {
