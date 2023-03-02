@@ -384,9 +384,9 @@ fn process_batch_attestation(
     for price_attestation in batch_attestation.price_attestations.iter() {
         let price_feed = create_price_feed_from_price_attestation(price_attestation);
 
-        let attestation_time = Timestamp::from_seconds(price_attestation.attestation_time as u64);
+        let publish_time = Timestamp::from_seconds(price_attestation.publish_time as u64);
 
-        if update_price_feed_if_new(deps, env, price_feed, attestation_time)? {
+        if update_price_feed_if_new(deps, env, price_feed, publish_time)? {
             new_attestations_cnt += 1;
         }
     }
@@ -441,7 +441,7 @@ fn update_price_feed_if_new(
     deps: &mut DepsMut,
     env: &Env,
     price_feed: PriceFeed,
-    attestation_time: Timestamp,
+    publish_time: Timestamp,
 ) -> StdResult<bool> {
     let mut is_new_price = true;
     price_info(deps.storage).update(
@@ -450,14 +450,14 @@ fn update_price_feed_if_new(
             match maybe_price_info {
                 Some(price_info) => {
                     // This check ensures that a price won't be updated with the same or older
-                    // message. Attestation_time is guaranteed increasing in
+                    // message. Publish_TIme is guaranteed increasing in
                     // solana
-                    if price_info.attestation_time < attestation_time {
+                    if price_info.publish_time < publish_time {
                         Ok(PriceInfo {
                             arrival_time: env.block.time,
                             arrival_block: env.block.height,
                             price_feed,
-                            attestation_time,
+                            publish_time,
                         })
                     } else {
                         is_new_price = false;
@@ -468,7 +468,7 @@ fn update_price_feed_if_new(
                     arrival_time: env.block.time,
                     arrival_block: env.block.height,
                     price_feed,
-                    attestation_time,
+                    publish_time,
                 }),
             }
         },
@@ -693,19 +693,19 @@ mod test {
         }])
     }
 
-    /// Updates the price feed with the given attestation time stamp and
+    /// Updates the price feed with the given publish time stamp and
     /// returns the update status (true means updated, false means ignored)
     fn do_update_price_feed(
         deps: &mut DepsMut,
         env: &Env,
         price_feed: PriceFeed,
-        attestation_time_seconds: u64,
+        publish_time_seconds: u64,
     ) -> bool {
         update_price_feed_if_new(
             deps,
             env,
             price_feed,
-            Timestamp::from_seconds(attestation_time_seconds),
+            Timestamp::from_seconds(publish_time_seconds),
         )
         .unwrap()
     }

@@ -29,7 +29,7 @@ use {
 };
 
 pub static CONFIG_KEY: &[u8] = b"config";
-pub static PRICE_INFO_KEY: &[u8] = b"price_info_v4";
+pub static PRICE_INFO_KEY: &[u8] = b"price_info_v5";
 
 /// A `PythDataSource` identifies a specific contract (given by its Wormhole `emitter`) on
 /// a specific blockchain (given by `chain_id`).
@@ -68,10 +68,10 @@ pub struct ConfigInfo {
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct PriceInfo {
-    pub arrival_time:     Timestamp,
-    pub arrival_block:    u64,
-    pub attestation_time: Timestamp,
-    pub price_feed:       PriceFeed,
+    pub arrival_time:  Timestamp,
+    pub arrival_block: u64,
+    pub publish_time:  Timestamp,
+    pub price_feed:    PriceFeed,
 }
 
 pub fn config(storage: &mut dyn Storage) -> Singleton<ConfigInfo> {
