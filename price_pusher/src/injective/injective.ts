@@ -1,6 +1,9 @@
-import { HexString, PriceServiceConnection } from "@pythnetwork/pyth-common-js";
 import {
-  ChainPricePusher,
+  HexString,
+  PriceServiceConnection,
+} from "@pythnetwork/price-service-client";
+import {
+  IPricePusher,
   PriceInfo,
   ChainPriceListener,
   PriceItem,
@@ -35,11 +38,10 @@ type UpdateFeeResponse = {
   amount: string;
 };
 
-// FIXME: CLEANUP contractAddr variable name consistency
 // this use price without leading 0x
 export class InjectivePriceListener extends ChainPriceListener {
   constructor(
-    private contractAddress: string,
+    private pythContractAddress: string,
     private grpcEndpoint: string,
     priceItems: PriceItem[],
     config: {
@@ -56,14 +58,14 @@ export class InjectivePriceListener extends ChainPriceListener {
     try {
       const api = new ChainGrpcWasmApi(this.grpcEndpoint);
       const { data } = await api.fetchSmartContractState(
-        this.contractAddress,
+        this.pythContractAddress,
         Buffer.from(`{"price_feed":{"id":"${priceId}"}}`).toString("base64")
       );
 
       const json = Buffer.from(data as string, "base64").toString();
       priceQueryResponse = JSON.parse(json);
     } catch (e) {
-      console.error(`Getting on-chain price for ${priceId} failed. Error:`);
+      console.error(`Polling on-chain price for ${priceId} failed. Error:`);
       console.error(e);
       return undefined;
     }
@@ -82,11 +84,11 @@ export class InjectivePriceListener extends ChainPriceListener {
   }
 }
 
-export class InjectivePricePusher implements ChainPricePusher {
+export class InjectivePricePusher implements IPricePusher {
   private wallet: PrivateKey;
   constructor(
     private priceServiceConnection: PriceServiceConnection,
-    private pythContract: string,
+    private pythContractAddress: string,
     private grpcEndpoint: string,
     mnemonic: string
   ) {
@@ -160,7 +162,7 @@ export class InjectivePricePusher implements ChainPricePusher {
     try {
       const api = new ChainGrpcWasmApi(this.grpcEndpoint);
       const { data } = await api.fetchSmartContractState(
-        this.pythContract,
+        this.pythContractAddress,
         Buffer.from(
           JSON.stringify({
             get_update_fee: {
@@ -178,11 +180,10 @@ export class InjectivePricePusher implements ChainPricePusher {
       return;
     }
 
-    // TODO: add specific error messages
     try {
       const executeMsg = MsgExecuteContract.fromJSON({
         sender: this.injectiveAddress(),
-        contractAddress: this.pythContract,
+        contractAddress: this.pythContractAddress,
         msg: priceFeedUpdateObject,
         funds: [updateFeeQueryResponse],
       });

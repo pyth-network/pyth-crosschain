@@ -1,6 +1,6 @@
-import { UnixTimestamp } from "@pythnetwork/pyth-common-js";
+import { UnixTimestamp } from "@pythnetwork/price-service-client";
 import { DurationInSeconds, sleep } from "./utils";
-import { ChainPricePusher, IPriceListener } from "./interface";
+import { IPricePusher, IPriceListener } from "./interface";
 import { PriceConfig, shouldUpdate } from "./price-config";
 
 export class Controller {
@@ -9,7 +9,7 @@ export class Controller {
     private priceConfigs: PriceConfig[],
     private sourcePriceListener: IPriceListener,
     private targetPriceListener: IPriceListener,
-    private targetChainPricePusher: ChainPricePusher,
+    private targetChainPricePusher: IPricePusher,
     config: {
       cooldownDuration: DurationInSeconds;
     }
@@ -39,9 +39,20 @@ export class Controller {
           pubTimesToPush.push((targetLatestPrice?.publishTime || 0) + 1);
         }
       }
-      // note that the priceIds are without leading "0x"
-      const priceIds = pricesToPush.map((priceConfig) => priceConfig.id);
-      this.targetChainPricePusher.updatePriceFeed(priceIds, pubTimesToPush);
+      if (pricesToPush.length !== 0) {
+        console.log(
+          "Some of the above values passed the threshold. Will push the price."
+        );
+
+        // note that the priceIds are without leading "0x"
+        const priceIds = pricesToPush.map((priceConfig) => priceConfig.id);
+        this.targetChainPricePusher.updatePriceFeed(priceIds, pubTimesToPush);
+      } else {
+        console.log(
+          "None of the above values passed the threshold. No push needed."
+        );
+      }
+
       await sleep(this.cooldownDuration * 1000);
     }
   }

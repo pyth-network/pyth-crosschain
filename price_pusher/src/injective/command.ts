@@ -1,4 +1,4 @@
-import { PriceServiceConnection } from "@pythnetwork/pyth-common-js";
+import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import * as options from "../options";
 import { readPriceConfigFile } from "../price-config";
 import fs from "fs";
@@ -51,7 +51,7 @@ export default {
 
     const pythListener = new PythPriceListener(
       priceServiceConnection,
-      priceConfigs
+      priceItems
     );
 
     const injectiveListener = new InjectivePriceListener(

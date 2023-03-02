@@ -1,6 +1,6 @@
 import { Contract, EventData } from "web3-eth-contract";
 import {
-  ChainPricePusher,
+  IPricePusher,
   PriceInfo,
   ChainPriceListener,
   PriceItem,
@@ -16,7 +16,7 @@ import {
   PriceServiceConnection,
   HexString,
   UnixTimestamp,
-} from "@pythnetwork/pyth-common-js";
+} from "@pythnetwork/price-service-client";
 import { CustomGasStation } from "./custom-gas-station";
 
 export class EvmPriceListener extends ChainPriceListener {
@@ -98,7 +98,7 @@ export class EvmPriceListener extends ChainPriceListener {
         .getPriceUnsafe(addLeading0x(priceId))
         .call();
     } catch (e) {
-      console.error(`Getting on-chain price for ${priceId} failed. Error:`);
+      console.error(`Polling on-chain price for ${priceId} failed. Error:`);
       console.error(e);
       return undefined;
     }
@@ -117,7 +117,7 @@ export class EvmPriceListener extends ChainPriceListener {
   }
 }
 
-export class EvmPricePusher implements ChainPricePusher {
+export class EvmPricePusher implements IPricePusher {
   private customGasStation?: CustomGasStation;
   constructor(
     private connection: PriceServiceConnection,
@@ -221,7 +221,7 @@ export class PythContractFactory {
   constructor(
     private endpoint: string,
     private mnemonic: string,
-    private pythContractAddr: string
+    private pythContractAddress: string
   ) {}
 
   /**
@@ -243,7 +243,7 @@ export class PythContractFactory {
 
     return new web3.eth.Contract(
       AbstractPythAbi as any,
-      this.pythContractAddr,
+      this.pythContractAddress,
       {
         from: provider.getAddress(0),
       }
@@ -259,7 +259,10 @@ export class PythContractFactory {
   createPythContract(): Contract {
     const provider = this.createWeb3Provider();
     const web3 = new Web3(provider);
-    return new web3.eth.Contract(AbstractPythAbi as any, this.pythContractAddr);
+    return new web3.eth.Contract(
+      AbstractPythAbi as any,
+      this.pythContractAddress
+    );
   }
 
   hasWebsocketProvider(): boolean {

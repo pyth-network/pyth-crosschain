@@ -2,9 +2,8 @@ import {
   HexString,
   PriceFeed,
   PriceServiceConnection,
-} from "@pythnetwork/pyth-common-js";
-import { PriceConfig } from "./price-config";
-import { PriceInfo, IPriceListener } from "./interface";
+} from "@pythnetwork/price-service-client";
+import { PriceInfo, IPriceListener, PriceItem } from "./interface";
 
 export class PythPriceListener implements IPriceListener {
   private connection: PriceServiceConnection;
@@ -12,11 +11,11 @@ export class PythPriceListener implements IPriceListener {
   private priceIdToAlias: Map<HexString, string>;
   private latestPriceInfo: Map<HexString, PriceInfo>;
 
-  constructor(connection: PriceServiceConnection, priceConfigs: PriceConfig[]) {
+  constructor(connection: PriceServiceConnection, priceItems: PriceItem[]) {
     this.connection = connection;
-    this.priceIds = priceConfigs.map((priceConfig) => priceConfig.id);
+    this.priceIds = priceItems.map((priceItem) => priceItem.id);
     this.priceIdToAlias = new Map(
-      priceConfigs.map((priceConfig) => [priceConfig.id, priceConfig.alias])
+      priceItems.map((priceItem) => [priceItem.id, priceItem.alias])
     );
     this.latestPriceInfo = new Map();
   }

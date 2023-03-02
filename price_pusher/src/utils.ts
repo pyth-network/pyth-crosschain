@@ -1,4 +1,4 @@
-import { HexString } from "@pythnetwork/pyth-common-js";
+import { HexString } from "@pythnetwork/price-service-client";
 
 export type PctNumber = number;
 export type DurationInSeconds = number;

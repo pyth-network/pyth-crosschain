@@ -1,4 +1,4 @@
-import { HexString, UnixTimestamp } from "@pythnetwork/pyth-common-js";
+import { HexString, UnixTimestamp } from "@pythnetwork/price-service-client";
 import { DurationInSeconds } from "./utils";
 
 export type PriceItem = {
@@ -34,14 +34,15 @@ export abstract class ChainPriceListener implements IPriceListener {
   }
 
   async start() {
-    console.log(`Polling the prices every ${this.pollingFrequency} seconds...`);
+    console.log(
+      `Polling the prices on ${this.chain} every ${this.pollingFrequency} seconds...`
+    );
     setInterval(this.pollPrices.bind(this), this.pollingFrequency * 1000);
 
     await this.pollPrices();
   }
 
   private async pollPrices() {
-    console.log(`Polling ${this.chain} prices...`);
     for (const { id: priceId } of this.priceItems) {
       const currentPriceInfo = await this.getOnChainPriceInfo(priceId);
       if (currentPriceInfo !== undefined) {
@@ -79,7 +80,7 @@ export abstract class ChainPriceListener implements IPriceListener {
   ): Promise<PriceInfo | undefined>;
 }
 
-export interface ChainPricePusher {
+export interface IPricePusher {
   updatePriceFeed(
     priceIds: string[],
     pubTimesToPush: UnixTimestamp[]
