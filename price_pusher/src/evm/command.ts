@@ -68,7 +68,7 @@ export default {
 
     const pythListener = new PythPriceListener(
       priceServiceConnection,
-      priceConfigs
+      priceItems
     );
 
     const pythContractFactory = new PythContractFactory(

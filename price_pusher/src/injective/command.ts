@@ -51,7 +51,7 @@ export default {
 
     const pythListener = new PythPriceListener(
       priceServiceConnection,
-      priceConfigs
+      priceItems
     );
 
     const injectiveListener = new InjectivePriceListener(
