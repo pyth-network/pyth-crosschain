@@ -355,6 +355,17 @@ const General = () => {
           }
         } else if (!newChanges) {
           // if new is undefined, it means that the symbol is deleted
+          // create delete price account instruction
+          instructions.push(
+            await pythProgramClient.methods
+              .delPrice()
+              .accounts({
+                fundingAccount,
+                productAccount: new PublicKey(prev.address),
+                priceAccount: new PublicKey(prev.priceAccounts[0].address),
+              })
+              .instruction()
+          )
           // create delete product account instruction
           instructions.push(
             await pythProgramClient.methods
