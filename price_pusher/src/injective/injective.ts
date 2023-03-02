@@ -180,7 +180,6 @@ export class InjectivePricePusher implements ChainPricePusher {
       return;
     }
 
-    // TODO: add specific error messages
     try {
       const executeMsg = MsgExecuteContract.fromJSON({
         sender: this.injectiveAddress(),
