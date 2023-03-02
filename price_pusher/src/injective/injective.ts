@@ -1,4 +1,7 @@
-import { HexString, PriceServiceConnection } from "@pythnetwork/pyth-common-js";
+import {
+  HexString,
+  PriceServiceConnection,
+} from "@pythnetwork/price-service-client";
 import {
   ChainPricePusher,
   PriceInfo,

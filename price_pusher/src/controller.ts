@@ -1,4 +1,4 @@
-import { UnixTimestamp } from "@pythnetwork/pyth-common-js";
+import { UnixTimestamp } from "@pythnetwork/price-service-client";
 import { DurationInSeconds, sleep } from "./utils";
 import { ChainPricePusher, IPriceListener } from "./interface";
 import { PriceConfig, shouldUpdate } from "./price-config";

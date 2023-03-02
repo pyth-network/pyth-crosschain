@@ -16,7 +16,7 @@ import {
   PriceServiceConnection,
   HexString,
   UnixTimestamp,
-} from "@pythnetwork/pyth-common-js";
+} from "@pythnetwork/price-service-client";
 import { CustomGasStation } from "./custom-gas-station";
 
 export class EvmPriceListener extends ChainPriceListener {
