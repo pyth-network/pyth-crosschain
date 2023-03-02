@@ -38,11 +38,10 @@ type UpdateFeeResponse = {
   amount: string;
 };
 
-// FIXME: CLEANUP contractAddr variable name consistency
 // this use price without leading 0x
 export class InjectivePriceListener extends ChainPriceListener {
   constructor(
-    private contractAddress: string,
+    private pythContractAddress: string,
     private grpcEndpoint: string,
     priceItems: PriceItem[],
     config: {
@@ -59,7 +58,7 @@ export class InjectivePriceListener extends ChainPriceListener {
     try {
       const api = new ChainGrpcWasmApi(this.grpcEndpoint);
       const { data } = await api.fetchSmartContractState(
-        this.contractAddress,
+        this.pythContractAddress,
         Buffer.from(`{"price_feed":{"id":"${priceId}"}}`).toString("base64")
       );
 
@@ -89,7 +88,7 @@ export class InjectivePricePusher implements ChainPricePusher {
   private wallet: PrivateKey;
   constructor(
     private priceServiceConnection: PriceServiceConnection,
-    private pythContract: string,
+    private pythContractAddress: string,
     private grpcEndpoint: string,
     mnemonic: string
   ) {
@@ -163,7 +162,7 @@ export class InjectivePricePusher implements ChainPricePusher {
     try {
       const api = new ChainGrpcWasmApi(this.grpcEndpoint);
       const { data } = await api.fetchSmartContractState(
-        this.pythContract,
+        this.pythContractAddress,
         Buffer.from(
           JSON.stringify({
             get_update_fee: {
@@ -185,7 +184,7 @@ export class InjectivePricePusher implements ChainPricePusher {
     try {
       const executeMsg = MsgExecuteContract.fromJSON({
         sender: this.injectiveAddress(),
-        contractAddress: this.pythContract,
+        contractAddress: this.pythContractAddress,
         msg: priceFeedUpdateObject,
         funds: [updateFeeQueryResponse],
       });

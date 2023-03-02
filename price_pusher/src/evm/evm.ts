@@ -221,7 +221,7 @@ export class PythContractFactory {
   constructor(
     private endpoint: string,
     private mnemonic: string,
-    private pythContractAddr: string
+    private pythContractAddress: string
   ) {}
 
   /**
@@ -243,7 +243,7 @@ export class PythContractFactory {
 
     return new web3.eth.Contract(
       AbstractPythAbi as any,
-      this.pythContractAddr,
+      this.pythContractAddress,
       {
         from: provider.getAddress(0),
       }
@@ -259,7 +259,10 @@ export class PythContractFactory {
   createPythContract(): Contract {
     const provider = this.createWeb3Provider();
     const web3 = new Web3(provider);
-    return new web3.eth.Contract(AbstractPythAbi as any, this.pythContractAddr);
+    return new web3.eth.Contract(
+      AbstractPythAbi as any,
+      this.pythContractAddress
+    );
   }
 
   hasWebsocketProvider(): boolean {
