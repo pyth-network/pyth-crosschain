@@ -197,6 +197,17 @@ const General = () => {
               changes[symbol].new = { ...fileDataParsed[symbol] }
             }
           })
+          // check if any existing symbols are not in uploaded json
+          Object.keys(data).forEach((symbol) => {
+            if (!fileDataParsed[symbol]) {
+              changes[symbol] = { prev: {} }
+              changes[symbol].prev = { ...data[symbol] }
+              changes[symbol].prev.metadata = {
+                ...changes[symbol].prev.metadata,
+                symbol,
+              }
+            }
+          })
           setDataChanges(changes)
           openModal()
         }
@@ -342,6 +353,19 @@ const General = () => {
                 .instruction()
             )
           }
+        } else if (!newChanges) {
+          // if new is undefined, it means that the symbol is deleted
+          // create delete product account instruction
+          instructions.push(
+            await pythProgramClient.methods
+              .delProduct()
+              .accounts({
+                fundingAccount,
+                mappingAccount: rawConfig.mappingAccounts[0].address,
+                productAccount: new PublicKey(prev.address),
+              })
+              .instruction()
+          )
         } else {
           // check if metadata has changed
           if (
@@ -580,6 +604,19 @@ const General = () => {
     )
   }
 
+  const OldPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => {
+    return (
+      <>
+        <tr key={priceFeedData.metadata.symbol}>
+          <td className="base16 py-4 pl-6 pr-2 lg:pl-6">Symbol</td>
+          <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
+            {priceFeedData.metadata.symbol}
+          </td>
+        </tr>
+      </>
+    )
+  }
+
   const ModalContent = ({ changes }: { changes: any }) => {
     return (
       <>
@@ -590,12 +627,16 @@ const General = () => {
               const { prev, new: newChanges } = changes[key]
               const addNewPriceFeed =
                 prev === undefined && newChanges !== undefined
-              const diff = addNewPriceFeed
-                ? []
-                : Object.keys(prev).filter(
-                    (k) =>
-                      JSON.stringify(prev[k]) !== JSON.stringify(newChanges[k])
-                  )
+              const deleteOldPriceFeed =
+                prev !== undefined && newChanges === undefined
+              const diff =
+                addNewPriceFeed || deleteOldPriceFeed
+                  ? []
+                  : Object.keys(prev).filter(
+                      (k) =>
+                        JSON.stringify(prev[k]) !==
+                        JSON.stringify(newChanges[k])
+                    )
               return (
                 <tbody key={key}>
                   <tr>
@@ -603,11 +644,17 @@ const General = () => {
                       className="base16 py-4 pl-6 pr-2 font-bold lg:pl-6"
                       colSpan={2}
                     >
-                      {addNewPriceFeed ? 'Add New Price Feed' : key}
+                      {addNewPriceFeed
+                        ? 'Add New Price Feed'
+                        : deleteOldPriceFeed
+                        ? 'Delete Old Price Feed'
+                        : key}
                     </td>
                   </tr>
                   {addNewPriceFeed ? (
                     <NewPriceFeedsRows key={key} priceFeedData={newChanges} />
+                  ) : deleteOldPriceFeed ? (
+                    <OldPriceFeedsRows key={key} priceFeedData={prev} />
                   ) : (
                     diff.map((k) =>
                       k === 'metadata' ? (
