@@ -114,11 +114,11 @@ mapping_reload_interval_mins: 1 # Very fast for testing purposes
 min_rpc_interval_ms: 0 # RIP RPC
 max_batch_jobs: 1000 # Where we're going there's no oomkiller
 default_attestation_conditions:
-  min_interval_secs: 10
+  min_interval_ms: 10000
 symbol_groups:
   - group_name: fast_interval_rate_limited
     conditions:
-      min_interval_secs: 1
+      min_interval_ms: 1000
       rate_limit_interval_secs: 2
     symbols:
 """
@@ -144,7 +144,7 @@ symbol_groups:
     cfg_yaml += f"""
   - group_name: longer_interval_sensitive_changes
     conditions:
-      min_interval_secs: 3
+      min_interval_ms: 3000
       price_changed_bps: 300
     symbols:
 """

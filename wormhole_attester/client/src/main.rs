@@ -1,5 +1,7 @@
 use {
     pyth_wormhole_attester::error::AttesterCustomError,
+    pyth_wormhole_attester_client::util::send_and_confirm_transaction_with_config,
+    solana_client::rpc_config::RpcSendTransactionConfig,
     solana_program::instruction::InstructionError,
     solana_sdk::transaction::TransactionError,
 };
@@ -683,7 +685,11 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
 
         let tx_processing_start_time = Instant::now();
 
-        let sig = match rpc.send_and_confirm_transaction(&tx).await {
+        let sig = match send_and_confirm_transaction_with_config(&rpc, &tx, RpcSendTransactionConfig {
+	    // Decreases probability of rate limit race conditions
+	    skip_preflight: true,
+	    ..Default::default()
+	}).await {
             Ok(s) => Ok(s),
             Err(e) => match e.get_transaction_error() {
                 Some(TransactionError::InstructionError(_idx, InstructionError::Custom(code)))
@@ -750,7 +756,7 @@ async fn attestation_job(args: AttestationJobArgs) -> Result<(), ErrBoxSend> {
     .or_else(move |e| async move {
         // log any errors coming from the job
         warn!(
-            "Batch {}/{}, group {:?} ERR: {:#?}",
+            "Batch {}/{}, group {:?} ERR: {:?}",
             batch_no4err_msg, batch_count4err_msg, group_name4err_msg, e
         );
 

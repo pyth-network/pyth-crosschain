@@ -6,6 +6,20 @@ use {
         trace,
     },
     prometheus::TextEncoder,
+    solana_client::{
+        client_error::Result as SolClientResult,
+        nonblocking::rpc_client::RpcClient,
+        rpc_config::RpcSendTransactionConfig,
+        rpc_request::RpcError,
+    },
+    solana_sdk::{
+        commitment_config::CommitmentConfig,
+        signature::Signature,
+        transaction::{
+            uses_durable_nonce,
+            Transaction,
+        },
+    },
     std::{
         net::SocketAddr,
         ops::{
@@ -17,9 +31,12 @@ use {
             Instant,
         },
     },
-    tokio::sync::{
-        Mutex,
-        MutexGuard,
+    tokio::{
+        sync::{
+            Mutex,
+            MutexGuard,
+        },
+        time::sleep,
     },
     warp::{
         reply,
@@ -178,4 +195,72 @@ pub async fn start_metrics_server(addr: impl Into<SocketAddr> + 'static) {
     warp::serve(metrics_route.or(healthcheck_route))
         .bind(addr)
         .await;
+}
+
+/// WARNING: Copied verbatim from v1.10.31, be careful when bumping
+/// solana crate versions!
+///
+/// TODO(2023-03-02): Use an upstream method when
+/// it's available.
+///
+/// This method is almost identical to
+/// RpcClient::send_and_confirm_transaction(). The only difference is
+/// that we let the user specify the config and replace
+/// send_transaction() inside with
+/// send_transaction_with_config(). This variant is currently missing
+/// from solana_client.
+pub async fn send_and_confirm_transaction_with_config(
+    client: &RpcClient,
+    transaction: &Transaction,
+    config: RpcSendTransactionConfig,
+) -> SolClientResult<Signature> {
+    const SEND_RETRIES: usize = 1;
+    const GET_STATUS_RETRIES: usize = usize::MAX;
+
+    'sending: for _ in 0..SEND_RETRIES {
+        let signature = client
+            .send_transaction_with_config(transaction, config)
+            .await?;
+
+        let recent_blockhash = if uses_durable_nonce(transaction).is_some() {
+            let (recent_blockhash, ..) = client
+                .get_latest_blockhash_with_commitment(CommitmentConfig::processed())
+                .await?;
+            recent_blockhash
+        } else {
+            transaction.message.recent_blockhash
+        };
+
+        for status_retry in 0..GET_STATUS_RETRIES {
+            match client.get_signature_status(&signature).await? {
+                Some(Ok(_)) => return Ok(signature),
+                Some(Err(e)) => return Err(e.into()),
+                None => {
+                    if !client
+                        .is_blockhash_valid(&recent_blockhash, CommitmentConfig::processed())
+                        .await?
+                    {
+                        // Block hash is not found by some reason
+                        break 'sending;
+                    } else if cfg!(not(test))
+                            // Ignore sleep at last step.
+                            && status_retry < GET_STATUS_RETRIES
+                    {
+                        // Retry twice a second
+                        sleep(Duration::from_millis(500)).await;
+
+                        continue;
+                    }
+                }
+            }
+        }
+    }
+
+    Err(RpcError::ForUser(
+        "unable to confirm transaction. \
+             This can happen in situations such as transaction expiration \
+             and insufficient fee-payer funds"
+            .to_string(),
+    )
+    .into())
 }
