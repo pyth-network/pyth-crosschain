@@ -1,11 +1,20 @@
-FROM node:16-alpine@sha256:72a490e7ed8aed68e16b8dc8f37b5bcc35c5b5c56ee3256effcdee63e2546f93
+# Defined in tilt_devnet/docker_images/Dockerfile.lerna
+FROM lerna:latest
 
-RUN addgroup -S pyth -g 10001 && adduser -S pyth -G pyth -u 10001
-USER pyth
+USER root
+RUN apt-get update && apt-get install -y ncat
 
-ARG PRICE_PUSHER_PATH=/usr/src/pyth-evm-price-pusher
-WORKDIR ${PRICE_PUSHER_PATH}
-COPY --chown=pyth:pyth . .
-RUN npm ci && npm run build && npm cache clean --force
+WORKDIR /home/node/
+USER 1000
+
+# local dependencies
+COPY --chown=1000:1000 price_service/client/js price_service/client/js
+COPY --chown=1000:1000 price_service/sdk/js price_service/sdk/js
+
+COPY --chown=1000:1000 price_pusher price_pusher
+
+RUN npx lerna run build --scope="@pythnetwork/pyth-evm-price-pusher" --include-dependencies
+
+WORKDIR /home/node/price_pusher
 
 ENTRYPOINT [ "npm", "run", "start" ]
