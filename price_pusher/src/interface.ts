@@ -34,14 +34,15 @@ export abstract class ChainPriceListener implements IPriceListener {
   }
 
   async start() {
-    console.log(`Polling the prices every ${this.pollingFrequency} seconds...`);
+    console.log(
+      `Polling the prices on ${this.chain} every ${this.pollingFrequency} seconds...`
+    );
     setInterval(this.pollPrices.bind(this), this.pollingFrequency * 1000);
 
     await this.pollPrices();
   }
 
   private async pollPrices() {
-    console.log(`Polling ${this.chain} prices...`);
     for (const { id: priceId } of this.priceItems) {
       const currentPriceInfo = await this.getOnChainPriceInfo(priceId);
       if (currentPriceInfo !== undefined) {

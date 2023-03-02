@@ -39,9 +39,20 @@ export class Controller {
           pubTimesToPush.push((targetLatestPrice?.publishTime || 0) + 1);
         }
       }
-      // note that the priceIds are without leading "0x"
-      const priceIds = pricesToPush.map((priceConfig) => priceConfig.id);
-      this.targetChainPricePusher.updatePriceFeed(priceIds, pubTimesToPush);
+      if (pricesToPush.length !== 0) {
+        console.log(
+          "Some of the above values passed the threshold. Will push the price."
+        );
+
+        // note that the priceIds are without leading "0x"
+        const priceIds = pricesToPush.map((priceConfig) => priceConfig.id);
+        this.targetChainPricePusher.updatePriceFeed(priceIds, pubTimesToPush);
+      } else {
+        console.log(
+          "None of the above values passed the threshold. No push needed."
+        );
+      }
+
       await sleep(this.cooldownDuration * 1000);
     }
   }

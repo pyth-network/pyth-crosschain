@@ -98,7 +98,7 @@ export class EvmPriceListener extends ChainPriceListener {
         .getPriceUnsafe(addLeading0x(priceId))
         .call();
     } catch (e) {
-      console.error(`Getting on-chain price for ${priceId} failed. Error:`);
+      console.error(`Polling on-chain price for ${priceId} failed. Error:`);
       console.error(e);
       return undefined;
     }

@@ -99,33 +99,19 @@ export function shouldUpdate(
   console.log("Target latest price: ", targetLatestPrice);
 
   console.log(
-    `Time difference: ${timeDifference} (< ${priceConfig.timeDifference}?)`
-  );
-  console.log(
-    `Price deviation: ${priceDeviationPct.toFixed(5)}% (< ${
-      priceConfig.priceDeviation
-    }%?)`
-  );
-  console.log(
-    `Confidence ratio: ${confidenceRatioPct.toFixed(5)}% (< ${
-      priceConfig.confidenceRatio
-    }%?)`
+    `Time difference: ${timeDifference} (< ${priceConfig.timeDifference}?) OR ` +
+      `Price deviation: ${priceDeviationPct.toFixed(5)}% (< ${
+        priceConfig.priceDeviation
+      }%?) OR ` +
+      `Confidence ratio: ${confidenceRatioPct.toFixed(5)}% (< ${
+        priceConfig.confidenceRatio
+      }%?)`
   );
 
   const result =
     timeDifference >= priceConfig.timeDifference ||
     priceDeviationPct >= priceConfig.priceDeviation ||
     confidenceRatioPct >= priceConfig.confidenceRatio;
-
-  if (result == true) {
-    console.log(
-      "Some of the above values passed the threshold. Will push the price."
-    );
-  } else {
-    console.log(
-      "None of the above values passed the threshold. No push needed."
-    );
-  }
 
   return result;
 }

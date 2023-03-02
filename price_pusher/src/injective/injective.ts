@@ -65,7 +65,7 @@ export class InjectivePriceListener extends ChainPriceListener {
       const json = Buffer.from(data as string, "base64").toString();
       priceQueryResponse = JSON.parse(json);
     } catch (e) {
-      console.error(`Getting on-chain price for ${priceId} failed. Error:`);
+      console.error(`Polling on-chain price for ${priceId} failed. Error:`);
       console.error(e);
       return undefined;
     }
