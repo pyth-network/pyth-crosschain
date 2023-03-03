@@ -24,4 +24,4 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}
           ECR_REPOSITORY: xc-admin-frontend
-          IMAGE_TAG: ${{ github.event.head_commit.timestamp }}-${{github.sha | truncate(7)}}
+          IMAGE_TAG: ${{ github.event.head_commit.timestamp }}-${{github.sha}}
