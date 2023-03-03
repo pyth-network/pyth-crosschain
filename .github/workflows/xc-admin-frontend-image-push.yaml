@@ -1,6 +1,5 @@
 name: Build and Push Cross Chain Admin Frontend
 on:
-  pull_request:
   push:
     branches: [main]
     paths: [governance/xc_admin/**]
