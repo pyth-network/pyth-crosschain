@@ -2,7 +2,6 @@
 FROM lerna
 
 USER root
-RUN apt-get update && apt-get install -y libc6
 
 WORKDIR /home/node/
 USER 1000
