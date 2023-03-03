@@ -91,12 +91,11 @@ pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Respons
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
     // Save general wormhole and pyth info
     let state = ConfigInfo {
-        owner:                      info.sender,
         wormhole_contract:          deps.api.addr_validate(msg.wormhole_contract.as_ref())?,
         data_sources:               msg.data_sources.iter().cloned().collect(),
         chain_id:                   msg.chain_id,
@@ -642,7 +641,6 @@ mod test {
 
     fn create_zero_config_info() -> ConfigInfo {
         ConfigInfo {
-            owner:                      Addr::unchecked(String::default()),
             wormhole_contract:          Addr::unchecked(String::default()),
             data_sources:               HashSet::default(),
             governance_source:          PythDataSource {

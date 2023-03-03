@@ -40,8 +40,6 @@ pub struct PythDataSource {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigInfo {
-    #[deprecated(note = "this field serves no purpose")]
-    pub owner:                      Addr,
     pub wormhole_contract:          Addr,
     pub data_sources:               HashSet<PythDataSource>,
     pub governance_source:          PythDataSource,
