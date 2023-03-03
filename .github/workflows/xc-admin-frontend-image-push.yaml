@@ -12,6 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Set image tag to timestamp and shortened commit hash
+        run: |
+          SHORT_HASH=$(echo ${{ github.sha }} | cut -c1-7)
+          TIMESTAMP=$(date +%s)
+          echo "IMAGE_TAG=${TIMESTAMP}-${SHORT_HASH}" >> "${GITHUB_ENV}"
       - uses: aws-actions/configure-aws-credentials@8a84b07f2009032ade05a88a28750d733cc30db1
         with:
           role-to-assume: arn:aws:iam::192824654885:role/github-actions-ecr
@@ -25,4 +30,3 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}
           ECR_REPOSITORY: xc-admin-frontend
-          IMAGE_TAG: ${{ github.event.head_commit.timestamp }}-${{ github.sha:0:8 }}
