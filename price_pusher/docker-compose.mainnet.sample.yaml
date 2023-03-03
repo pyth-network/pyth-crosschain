@@ -58,6 +58,7 @@ services:
     restart: always
     command:
       - "--"
+      - "evm"
       - "--endpoint"
       # Replace this with RPC endpoint URL for the EVM network.
       - "https://bsc-dataseed2.binance.org"

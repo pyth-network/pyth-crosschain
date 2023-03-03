@@ -70,4 +70,4 @@ services:
         condition: service_healthy
 configs:
   command_config:
-    file: ./config.injective.sample.json # Replace this with the path to the configuration file
+    file: ./config.injective.testnet.sample.json # Replace this with the path to the configuration file
