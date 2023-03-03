@@ -19,10 +19,9 @@ use {
         state::{
             config,
             config_read,
-            price_info,
-            price_info_read,
+            price_feed_bucket,
+            price_feed_read_bucket,
             ConfigInfo,
-            PriceInfo,
             PythDataSource,
         },
     },
@@ -44,7 +43,6 @@ use {
         QueryRequest,
         Response,
         StdResult,
-        Timestamp,
         WasmMsg,
         WasmQuery,
     },
@@ -93,12 +91,11 @@ pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Respons
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
     // Save general wormhole and pyth info
     let state = ConfigInfo {
-        owner:                      info.sender,
         wormhole_contract:          deps.api.addr_validate(msg.wormhole_contract.as_ref())?,
         data_sources:               msg.data_sources.iter().cloned().collect(),
         chain_id:                   msg.chain_id,
@@ -385,9 +382,7 @@ fn process_batch_attestation(
     for price_attestation in batch_attestation.price_attestations.iter() {
         let price_feed = create_price_feed_from_price_attestation(price_attestation);
 
-        let attestation_time = Timestamp::from_seconds(price_attestation.attestation_time as u64);
-
-        if update_price_feed_if_new(deps, env, price_feed, attestation_time)? {
+        if update_price_feed_if_new(deps, env, price_feed)? {
             new_attestations_cnt += 1;
         }
     }
@@ -440,37 +435,28 @@ fn create_price_feed_from_price_attestation(price_attestation: &PriceAttestation
 /// in the bucket won't be parsed.
 fn update_price_feed_if_new(
     deps: &mut DepsMut,
-    env: &Env,
-    price_feed: PriceFeed,
-    attestation_time: Timestamp,
+    _env: &Env,
+    new_price_feed: PriceFeed,
 ) -> StdResult<bool> {
     let mut is_new_price = true;
-    price_info(deps.storage).update(
-        price_feed.id.as_ref(),
-        |maybe_price_info| -> StdResult<PriceInfo> {
-            match maybe_price_info {
-                Some(price_info) => {
+    price_feed_bucket(deps.storage).update(
+        new_price_feed.id.as_ref(),
+        |maybe_price_feed| -> StdResult<PriceFeed> {
+            match maybe_price_feed {
+                Some(price_feed) => {
                     // This check ensures that a price won't be updated with the same or older
-                    // message. Attestation_time is guaranteed increasing in
+                    // message. Publish_TIme is guaranteed increasing in
                     // solana
-                    if price_info.attestation_time < attestation_time {
-                        Ok(PriceInfo {
-                            arrival_time: env.block.time,
-                            arrival_block: env.block.height,
-                            price_feed,
-                            attestation_time,
-                        })
+                    if price_feed.get_price_unchecked().publish_time
+                        < new_price_feed.get_price_unchecked().publish_time
+                    {
+                        Ok(new_price_feed)
                     } else {
                         is_new_price = false;
-                        Ok(price_info)
+                        Ok(price_feed)
                     }
                 }
-                None => Ok(PriceInfo {
-                    arrival_time: env.block.time,
-                    arrival_block: env.block.height,
-                    price_feed,
-                    attestation_time,
-                }),
+                None => Ok(new_price_feed),
             }
         },
     )?;
@@ -488,10 +474,8 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 /// Get the most recent value of the price feed indicated by `feed_id`.
 pub fn query_price_feed(deps: &Deps, feed_id: &[u8]) -> StdResult<PriceFeedResponse> {
-    match price_info_read(deps.storage).load(feed_id) {
-        Ok(price_info) => Ok(PriceFeedResponse {
-            price_feed: price_info.price_feed,
-        }),
+    match price_feed_read_bucket(deps.storage).load(feed_id) {
+        Ok(price_feed) => Ok(PriceFeedResponse { price_feed }),
         Err(_) => Err(PythContractError::PriceFeedNotFound)?,
     }
 }
@@ -547,6 +531,7 @@ mod test {
             SystemResult,
             Uint128,
         },
+        pyth_sdk::UnixTimestamp,
         pyth_sdk_cw::PriceIdentifier,
         pyth_wormhole_attester_sdk::PriceAttestation,
         std::time::Duration,
@@ -656,7 +641,6 @@ mod test {
 
     fn create_zero_config_info() -> ConfigInfo {
         ConfigInfo {
-            owner:                      Addr::unchecked(String::default()),
             wormhole_contract:          Addr::unchecked(String::default()),
             data_sources:               HashSet::default(),
             governance_source:          PythDataSource {
@@ -671,11 +655,12 @@ mod test {
         }
     }
 
-    fn create_price_feed(expo: i32) -> PriceFeed {
+    fn create_price_feed(expo: i32, publish_time: UnixTimestamp) -> PriceFeed {
         PriceFeed::new(
             PriceIdentifier::new([0u8; 32]),
             Price {
                 expo,
+                publish_time,
                 ..Default::default()
             },
             Price {
@@ -695,21 +680,10 @@ mod test {
         }])
     }
 
-    /// Updates the price feed with the given attestation time stamp and
+    /// Updates the price feed with the given publish time stamp and
     /// returns the update status (true means updated, false means ignored)
-    fn do_update_price_feed(
-        deps: &mut DepsMut,
-        env: &Env,
-        price_feed: PriceFeed,
-        attestation_time_seconds: u64,
-    ) -> bool {
-        update_price_feed_if_new(
-            deps,
-            env,
-            price_feed,
-            Timestamp::from_seconds(attestation_time_seconds),
-        )
-        .unwrap()
+    fn do_update_price_feed(deps: &mut DepsMut, env: &Env, price_feed: PriceFeed) -> bool {
+        update_price_feed_if_new(deps, env, price_feed).unwrap()
     }
 
     fn apply_price_update(
@@ -854,10 +828,9 @@ mod test {
             process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
 
 
-        let stored_price_feed = price_info_read(&deps.storage)
+        let stored_price_feed = price_feed_read_bucket(&deps.storage)
             .load(&[0u8; 32])
-            .unwrap()
-            .price_feed;
+            .unwrap();
         let price = stored_price_feed.get_price_unchecked();
         let ema_price = stored_price_feed.get_ema_price_unchecked();
 
@@ -907,10 +880,9 @@ mod test {
             process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
 
 
-        let stored_price_feed = price_info_read(&deps.storage)
+        let stored_price_feed = price_feed_read_bucket(&deps.storage)
             .load(&[0u8; 32])
-            .unwrap()
-            .price_feed;
+            .unwrap();
         let price = stored_price_feed.get_price_unchecked();
         let ema_price = stored_price_feed.get_ema_price_unchecked();
 
@@ -1005,15 +977,14 @@ mod test {
     #[test]
     fn test_update_price_feed_if_new_first_price_ok() {
         let (mut deps, env) = setup_test();
-        let price_feed = create_price_feed(3);
+        let price_feed = create_price_feed(3, 100);
 
-        let changed = do_update_price_feed(&mut deps.as_mut(), &env, price_feed, 100);
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, price_feed);
         assert!(changed);
 
-        let stored_price_feed = price_info(&mut deps.storage)
+        let stored_price_feed = price_feed_bucket(&mut deps.storage)
             .load(price_feed.id.as_ref())
-            .unwrap()
-            .price_feed;
+            .unwrap();
 
         assert_eq!(stored_price_feed, price_feed);
     }
@@ -1021,20 +992,18 @@ mod test {
     #[test]
     fn test_update_price_feed_if_new_ignore_duplicate_time() {
         let (mut deps, env) = setup_test();
-        let time = 100;
 
-        let first_price_feed = create_price_feed(3);
-        let changed = do_update_price_feed(&mut deps.as_mut(), &env, first_price_feed, time);
+        let first_price_feed = create_price_feed(3, 100);
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, first_price_feed);
         assert!(changed);
 
-        let second_price_feed = create_price_feed(4);
-        let changed = do_update_price_feed(&mut deps.as_mut(), &env, second_price_feed, time);
+        let second_price_feed = create_price_feed(4, 100);
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, second_price_feed);
         assert!(!changed);
 
-        let stored_price_feed = price_info(&mut deps.storage)
+        let stored_price_feed = price_feed_bucket(&mut deps.storage)
             .load(first_price_feed.id.as_ref())
-            .unwrap()
-            .price_feed;
+            .unwrap();
         assert_eq!(stored_price_feed, first_price_feed);
     }
 
@@ -1042,18 +1011,17 @@ mod test {
     fn test_update_price_feed_if_new_ignore_older() {
         let (mut deps, env) = setup_test();
 
-        let first_price_feed = create_price_feed(3);
-        let changed = do_update_price_feed(&mut deps.as_mut(), &env, first_price_feed, 100);
+        let first_price_feed = create_price_feed(3, 100);
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, first_price_feed);
         assert!(changed);
 
-        let second_price_feed = create_price_feed(4);
-        let changed = do_update_price_feed(&mut deps.as_mut(), &env, second_price_feed, 90);
+        let second_price_feed = create_price_feed(4, 90);
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, second_price_feed);
         assert!(!changed);
 
-        let stored_price_feed = price_info(&mut deps.storage)
+        let stored_price_feed = price_feed_bucket(&mut deps.storage)
             .load(first_price_feed.id.as_ref())
-            .unwrap()
-            .price_feed;
+            .unwrap();
         assert_eq!(stored_price_feed, first_price_feed);
     }
 
@@ -1061,18 +1029,17 @@ mod test {
     fn test_update_price_feed_if_new_accept_newer() {
         let (mut deps, env) = setup_test();
 
-        let first_price_feed = create_price_feed(3);
-        let changed = do_update_price_feed(&mut deps.as_mut(), &env, first_price_feed, 100);
+        let first_price_feed = create_price_feed(3, 100);
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, first_price_feed);
         assert!(changed);
 
-        let second_price_feed = create_price_feed(4);
-        let changed = do_update_price_feed(&mut deps.as_mut(), &env, second_price_feed, 110);
+        let second_price_feed = create_price_feed(4, 110);
+        let changed = do_update_price_feed(&mut deps.as_mut(), &env, second_price_feed);
         assert!(changed);
 
-        let stored_price_feed = price_info(&mut deps.storage)
+        let stored_price_feed = price_feed_bucket(&mut deps.storage)
             .load(first_price_feed.id.as_ref())
-            .unwrap()
-            .price_feed;
+            .unwrap();
         assert_eq!(stored_price_feed, second_price_feed);
     }
 
@@ -1082,24 +1049,20 @@ mod test {
 
         let address = b"123".as_ref();
 
-        let dummy_price_info = PriceInfo {
-            price_feed: PriceFeed::new(
-                PriceIdentifier::new([0u8; 32]),
-                Price {
-                    price:        300,
-                    conf:         301,
-                    expo:         302,
-                    publish_time: 303,
-                },
-                Price {
-                    ..Default::default()
-                },
-            ),
-            ..Default::default()
-        };
-
-        price_info(&mut deps.storage)
-            .save(address, &dummy_price_info)
+        let dummy_price_feed = PriceFeed::new(
+            PriceIdentifier::new([0u8; 32]),
+            Price {
+                price:        300,
+                conf:         301,
+                expo:         302,
+                publish_time: 303,
+            },
+            Price {
+                ..Default::default()
+            },
+        );
+        price_feed_bucket(&mut deps.storage)
+            .save(address, &dummy_price_feed)
             .unwrap();
 
         let price_feed = query_price_feed(&deps.as_ref(), address)
