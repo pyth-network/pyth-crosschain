@@ -50,11 +50,11 @@ impl<'a> BatchState {
 
         // min interval
         if self.last_job_finished_at.elapsed()
-            > Duration::from_secs(self.conditions.min_interval_secs)
+            > Duration::from_millis(self.conditions.min_interval_ms)
         {
             ret = Some(format!(
                 "minimum interval of {}s elapsed since last state change",
-                self.conditions.min_interval_secs
+                self.conditions.min_interval_ms
             ));
         }
 

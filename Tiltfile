@@ -11,7 +11,10 @@ namespace = os.environ.get("TILT_NAMESPACE", "development")
 load("ext://namespace", "namespace_create", "namespace_inject")
 load("ext://secret", "secret_yaml_generic")
 
-default_registry(image_registry, single_name="development")
+namespace_create(namespace)
+
+if image_registry:
+    default_registry(image_registry, single_name="development")
 
 allow_k8s_contexts(k8s_context())
 

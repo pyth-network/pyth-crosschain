@@ -314,8 +314,8 @@ pub const fn default_min_rpc_interval_ms() -> u64 {
     150
 }
 
-pub const fn default_min_interval_secs() -> u64 {
-    60
+pub const fn default_min_interval_ms() -> u64 {
+    60_000
 }
 
 pub const fn default_rate_limit_interval_secs() -> u32 {
@@ -335,8 +335,8 @@ pub struct AttestationConditions {
     /// Lower bound on attestation rate. Attestation is triggered
     /// unconditionally whenever the specified interval elapses since
     /// last attestation.
-    #[serde(default = "default_min_interval_secs")]
-    pub min_interval_secs: u64,
+    #[serde(default = "default_min_interval_ms")]
+    pub min_interval_ms: u64,
 
     /// Upper bound on attestation rate. Attesting the same batch
     /// before this many seconds pass fails the tx. This limit is
@@ -370,7 +370,7 @@ impl AttestationConditions {
         // Bug trap for new fields that also need to be included in
         // the returned expression
         let AttestationConditions {
-            min_interval_secs: _min_interval_secs,
+            min_interval_ms: _min_interval_ms,
             max_batch_jobs: _max_batch_jobs,
             price_changed_bps,
             publish_time_min_delta_secs,
@@ -384,7 +384,7 @@ impl AttestationConditions {
 impl Default for AttestationConditions {
     fn default() -> Self {
         Self {
-            min_interval_secs:           default_min_interval_secs(),
+            min_interval_ms:             default_min_interval_ms(),
             max_batch_jobs:              default_max_batch_jobs(),
             price_changed_bps:           None,
             publish_time_min_delta_secs: None,
@@ -471,7 +471,7 @@ mod tests {
         let fastbois = SymbolGroupConfig {
             group_name: "fast bois".to_owned(),
             conditions: Some(AttestationConditions {
-                min_interval_secs: 5,
+                min_interval_ms: 5,
                 ..Default::default()
             }),
             symbols:    vec![
@@ -489,7 +489,7 @@ mod tests {
         let slowbois = SymbolGroupConfig {
             group_name: "slow bois".to_owned(),
             conditions: Some(AttestationConditions {
-                min_interval_secs: 200,
+                min_interval_ms: 200,
                 ..Default::default()
             }),
             symbols:    vec![
@@ -541,7 +541,7 @@ mod tests {
         let eth_dup_price_key = Pubkey::new_unique();
 
         let attestation_conditions_1 = AttestationConditions {
-            min_interval_secs: 5,
+            min_interval_ms: 5,
             ..Default::default()
         };
 
@@ -584,7 +584,7 @@ mod tests {
         };
 
         let default_attestation_conditions = AttestationConditions {
-            min_interval_secs: 1,
+            min_interval_ms: 1,
             ..Default::default()
         };
 
