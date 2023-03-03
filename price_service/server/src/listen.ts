@@ -352,6 +352,14 @@ export class Listener implements PriceStore {
           this.promClient?.addPriceUpdatesPublishTimeGap(
             priceAttestation.publishTime - cachedPriceInfo.publishTime
           );
+          this.promClient?.addPriceUpdateAttestationTimeGapWith(
+            priceInfo.priceFeed.id,
+            priceAttestation.attestationTime - cachedPriceInfo.attestationTime
+          );
+          this.promClient?.addPriceUpdatePublishTimeGapWith(
+            priceInfo.priceFeed.id,
+            priceAttestation.publishTime - cachedPriceInfo.publishTime
+          );
         }
 
         for (const callback of this.updateCallbacks) {

@@ -51,6 +51,49 @@ export class PromClient {
     }
   });
 
+  private priceIdToPriceUpdatePublishTimeGapHistogram = new Map<
+    string,
+    client.Histogram<string>
+  >();
+
+  private getOrCreatePriceUpdatePublishTimeGapHistogram(priceId: string) {
+    let histogram =
+      this.priceIdToPriceUpdatePublishTimeGapHistogram.get(priceId);
+    if (!histogram) {
+      histogram = new client.Histogram({
+        name: `${SERVICE_PREFIX}price_updates_publish_time_gap_seconds__${priceId}`,
+        help: `Summary of publish time gaps between price updates for price ${priceId}`,
+        buckets: [1, 3, 5, 10, 15, 30, 60, 120],
+      });
+      this.register.registerMetric(histogram);
+      this.priceIdToPriceUpdatePublishTimeGapHistogram.set(priceId, histogram);
+    }
+    return histogram;
+  }
+
+  private priceIdToPriceUpdateAttestationTimeGapHistogram = new Map<
+    string,
+    client.Histogram<string>
+  >();
+
+  private getOrCreatePriceUpdateAttestationTimeGapHistogram(priceId: string) {
+    let histogram =
+      this.priceIdToPriceUpdateAttestationTimeGapHistogram.get(priceId);
+    if (!histogram) {
+      histogram = new client.Histogram({
+        name: `${SERVICE_PREFIX}price_updates_attestation_time_gap_seconds__${priceId}`,
+        help: `Summary of attestation time gaps between price updates for price ${priceId}`,
+        buckets: [1, 3, 5, 10, 15, 30, 60, 120],
+      });
+      this.register.registerMetric(histogram);
+      this.priceIdToPriceUpdateAttestationTimeGapHistogram.set(
+        priceId,
+        histogram
+      );
+    }
+    return histogram;
+  }
+
   constructor(config: { name: string; port: number }) {
     this.register.setDefaultLabels({
       app: config.name,
@@ -73,9 +116,17 @@ export class PromClient {
   addPriceUpdatesPublishTimeGap(gap: DurationInSec) {
     this.priceUpdatesPublishTimeGapHistogram.observe(gap);
   }
-
   addPriceUpdatesAttestationTimeGap(gap: DurationInSec) {
     this.priceUpdatesAttestationTimeGapHistogram.observe(gap);
+  }
+
+  addPriceUpdatePublishTimeGapWith(priceId: string, gap: DurationInSec) {
+    this.getOrCreatePriceUpdatePublishTimeGapHistogram(priceId).observe(gap);
+  }
+  addPriceUpdateAttestationTimeGapWith(priceId: string, gap: DurationInSec) {
+    this.getOrCreatePriceUpdateAttestationTimeGapHistogram(priceId).observe(
+      gap
+    );
   }
 
   addWebSocketInteraction(
