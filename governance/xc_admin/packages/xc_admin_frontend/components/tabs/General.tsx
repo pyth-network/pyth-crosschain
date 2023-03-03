@@ -202,10 +202,6 @@ const General = () => {
             if (!fileDataParsed[symbol]) {
               changes[symbol] = { prev: {} }
               changes[symbol].prev = { ...data[symbol] }
-              changes[symbol].prev.metadata = {
-                ...changes[symbol].prev.metadata,
-                symbol,
-              }
             }
           })
           setDataChanges(changes)
@@ -468,14 +464,14 @@ const General = () => {
   }
 
   const MetadataChangesRows = ({ changes }: { changes: any }) => {
-    const addNewPriceFeed =
+    const addPriceFeed =
       changes.prev === undefined && changes.new !== undefined
 
     return (
       <>
         {Object.keys(changes.new).map(
           (metadataKey) =>
-            (addNewPriceFeed ||
+            (addPriceFeed ||
               changes.prev[metadataKey] !== changes.new[metadataKey]) && (
               <tr key={metadataKey}>
                 <td className="base16 py-4 pl-6 pr-2 lg:pl-6">
@@ -486,7 +482,7 @@ const General = () => {
                 </td>
 
                 <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
-                  {!addNewPriceFeed ? (
+                  {!addPriceFeed ? (
                     <>
                       <s>{changes.prev[metadataKey]}</s>
                       <br />{' '}
@@ -502,14 +498,14 @@ const General = () => {
   }
 
   const PriceAccountsChangesRows = ({ changes }: { changes: any }) => {
-    const addNewPriceFeed =
+    const addPriceFeed =
       changes.prev === undefined && changes.new !== undefined
     return (
       <>
         {changes.new.map((priceAccount: any, index: number) =>
           Object.keys(priceAccount).map((priceAccountKey) =>
             priceAccountKey === 'publishers' ? (
-              addNewPriceFeed ? (
+              addPriceFeed ? (
                 <PublisherKeysChangesRows
                   key={priceAccountKey}
                   changes={{
@@ -529,7 +525,7 @@ const General = () => {
                 )
               )
             ) : (
-              (addNewPriceFeed ||
+              (addPriceFeed ||
                 changes.prev[index][priceAccountKey] !==
                   priceAccount[priceAccountKey]) && (
                 <tr key={priceAccountKey}>
@@ -540,7 +536,7 @@ const General = () => {
                       .join(' ')}
                   </td>
                   <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
-                    {!addNewPriceFeed ? (
+                    {!addPriceFeed ? (
                       <>
                         <s>{changes.prev[index][priceAccountKey]}</s>
                         <br />
@@ -558,14 +554,14 @@ const General = () => {
   }
 
   const PublisherKeysChangesRows = ({ changes }: { changes: any }) => {
-    const addNewPriceFeed =
+    const addPriceFeed =
       changes.prev === undefined && changes.new !== undefined
-    const publisherKeysToAdd = addNewPriceFeed
+    const publisherKeysToAdd = addPriceFeed
       ? changes.new
       : changes.new.filter(
           (newPublisher: string) => !changes.prev.includes(newPublisher)
         )
-    const publisherKeysToRemove = addNewPriceFeed
+    const publisherKeysToRemove = addPriceFeed
       ? []
       : changes.prev.filter(
           (prevPublisher: string) => !changes.new.includes(prevPublisher)
@@ -636,12 +632,12 @@ const General = () => {
             {/* compare changes.prev and changes.new and display the fields that are different */}
             {Object.keys(changes).map((key) => {
               const { prev, new: newChanges } = changes[key]
-              const addNewPriceFeed =
+              const addPriceFeed =
                 prev === undefined && newChanges !== undefined
-              const deleteOldPriceFeed =
+              const deletePriceFeed =
                 prev !== undefined && newChanges === undefined
               const diff =
-                addNewPriceFeed || deleteOldPriceFeed
+                addPriceFeed || deletePriceFeed
                   ? []
                   : Object.keys(prev).filter(
                       (k) =>
@@ -655,16 +651,16 @@ const General = () => {
                       className="base16 py-4 pl-6 pr-2 font-bold lg:pl-6"
                       colSpan={2}
                     >
-                      {addNewPriceFeed
+                      {addPriceFeed
                         ? 'Add New Price Feed'
-                        : deleteOldPriceFeed
+                        : deletePriceFeed
                         ? 'Delete Old Price Feed'
                         : key}
                     </td>
                   </tr>
-                  {addNewPriceFeed ? (
+                  {addPriceFeed ? (
                     <NewPriceFeedsRows key={key} priceFeedData={newChanges} />
-                  ) : deleteOldPriceFeed ? (
+                  ) : deletePriceFeed ? (
                     <OldPriceFeedsRows key={key} priceFeedData={prev} />
                   ) : (
                     diff.map((k) =>
