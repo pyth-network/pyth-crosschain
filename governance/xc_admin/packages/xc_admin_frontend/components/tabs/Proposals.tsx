@@ -402,7 +402,7 @@ const Proposal = ({
             </button>
           </div>
         ) : proposalStatus === 'executeReady' ? (
-          <div className="flex items-center justify-between px-8 pt-3">
+          <div className="flex items-center justify-center space-x-8 pt-3">
             <button
               className="action-btn text-base"
               onClick={handleClickExecute}

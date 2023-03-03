@@ -22,6 +22,11 @@ export class Controller {
     await this.sourcePriceListener.start();
     await this.targetPriceListener.start();
 
+    // wait for the listeners to get updated. There could be a restart
+    // before this run and we need to respect the cooldown duration as
+    // their might be a message sent before.
+    await sleep(this.cooldownDuration * 1000);
+
     for (;;) {
       const pricesToPush: PriceConfig[] = [];
       const pubTimesToPush: UnixTimestamp[] = [];
