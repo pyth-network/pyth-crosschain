@@ -3,6 +3,10 @@ import { PythCluster } from '@pythnetwork/client/lib/cluster'
 const CLUSTER_URLS: Record<PythCluster, any> = {
   'mainnet-beta': [
     {
+      rpcUrl: 'http://mainnet.xyz.pyth.network',
+      wsUrl: 'ws://mainnet.xyz.pyth.network',
+    },
+    {
       rpcUrl:
         'https://pyth-network.rpcpool.com/' +
         (process.env.NEXT_PUBLIC_RPC_POOL_TOKEN || ''),
@@ -25,11 +29,19 @@ const CLUSTER_URLS: Record<PythCluster, any> = {
   ],
   devnet: [
     {
+      rpcUrl: 'http://devnet.xyz.pyth.network',
+      wsUrl: 'ws://devnet.xyz.pyth.network',
+    },
+    {
       rpcUrl: 'https://api.devnet.solana.com/',
       wsUrl: 'wss://api.devnet.solana.com/',
     },
   ],
   testnet: [
+    {
+      rpcUrl: 'http://testnet.xyz.pyth.network',
+      wsUrl: 'ws://testnet.xyz.pyth.network',
+    },
     {
       rpcUrl: 'https://api.testnet.solana.com/',
       wsUrl: 'wss://api.testnet.solana.com/',
@@ -37,11 +49,19 @@ const CLUSTER_URLS: Record<PythCluster, any> = {
   ],
   pythtest: [
     {
+      rpcUrl: 'http://pythtest.xyz.pyth.network',
+      wsUrl: 'ws://pythtest.xyz.pyth.network',
+    },
+    {
       rpcUrl: 'https://api.pythtest.pyth.network/',
       wsUrl: 'wss://api.pythtest.pyth.network/',
     },
   ],
   pythnet: [
+    {
+      rpcUrl: 'http://pythnet.xyz.pyth.network',
+      wsUrl: 'ws://pythnet.xyz.pyth.network',
+    },
     {
       rpcUrl: 'https://pythnet.rpcpool.com/',
       wsUrl: 'wss://pythnet.rpcpool.com/',
