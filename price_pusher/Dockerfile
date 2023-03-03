@@ -2,7 +2,6 @@
 FROM lerna:latest
 
 USER root
-RUN apt-get update && apt-get install -y ncat
 
 WORKDIR /home/node/
 USER 1000
