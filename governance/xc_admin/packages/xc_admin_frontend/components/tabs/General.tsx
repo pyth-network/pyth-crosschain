@@ -464,8 +464,7 @@ const General = () => {
   }
 
   const MetadataChangesRows = ({ changes }: { changes: any }) => {
-    const addPriceFeed =
-      changes.prev === undefined && changes.new !== undefined
+    const addPriceFeed = changes.prev === undefined && changes.new !== undefined
 
     return (
       <>
@@ -498,8 +497,7 @@ const General = () => {
   }
 
   const PriceAccountsChangesRows = ({ changes }: { changes: any }) => {
-    const addPriceFeed =
-      changes.prev === undefined && changes.new !== undefined
+    const addPriceFeed = changes.prev === undefined && changes.new !== undefined
     return (
       <>
         {changes.new.map((priceAccount: any, index: number) =>
@@ -554,8 +552,7 @@ const General = () => {
   }
 
   const PublisherKeysChangesRows = ({ changes }: { changes: any }) => {
-    const addPriceFeed =
-      changes.prev === undefined && changes.new !== undefined
+    const addPriceFeed = changes.prev === undefined && changes.new !== undefined
     const publisherKeysToAdd = addPriceFeed
       ? changes.new
       : changes.new.filter(
