@@ -66,7 +66,7 @@ async function run() {
     : -1;
   lastSequenceNumber = Math.max(lastSequenceNumber, OFFSET);
   const wormholeApi = WORMHOLE_API_ENDPOINT[CLUSTER];
-
+  const productAccountToSymbol: { [key: string]: string } = {};
   while (true) {
     lastSequenceNumber += 1;
     console.log(`Trying sequence number : ${lastSequenceNumber}`);
@@ -129,6 +129,9 @@ async function run() {
                 AccountType.Product
               )
             );
+            productAccountToSymbol[
+              parsedInstruction.accounts.named.productAccount.pubkey.toBase58()
+            ] = parsedInstruction.args.symbol;
           } else if (
             parsedInstruction instanceof PythMultisigInstruction &&
             parsedInstruction.name == "addPrice"
@@ -136,13 +139,18 @@ async function run() {
             const productAccount = await provider.connection.getAccountInfo(
               parsedInstruction.accounts.named.productAccount.pubkey
             );
-            if (productAccount) {
+            const productSymbol = productAccount
+              ? parseProductData(productAccount.data).product.symbol
+              : productAccountToSymbol[
+                  parsedInstruction.accounts.named.productAccount.pubkey.toBase58()
+                ];
+            if (productSymbol) {
               preInstructions.push(
                 await getCreateAccountWithSeedInstruction(
                   provider.connection,
                   CLUSTER,
                   provider.wallet.publicKey,
-                  parseProductData(productAccount.data).product.symbol,
+                  productSymbol,
                   AccountType.Price
                 )
               );
