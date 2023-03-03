@@ -1,0 +1,32 @@
+name: Build and Push Cross Chain Admin Frontend
+on:
+  push:
+    tags:
+      - xc-admin-frontend-v*
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  xc-admin-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set image tag to version of the git tag
+        if: ${{ startsWith(github.ref, 'refs/tags/xc-admin-frontend-v') }}
+        run: |
+          PREFIX="refs/tags/xc-admin-frontend-"
+          VERSION="${GITHUB_REF:${#PREFIX}}"
+          echo "IMAGE_TAG=${VERSION}" >> "${GITHUB_ENV}"
+      - uses: aws-actions/configure-aws-credentials@8a84b07f2009032ade05a88a28750d733cc30db1
+        with:
+          role-to-assume: arn:aws:iam::192824654885:role/github-actions-ecr
+          aws-region: eu-west-2
+      - uses: aws-actions/amazon-ecr-login@v1
+        id: ecr_login
+      - run: |
+          DOCKER_BUILDKIT=1 docker build -t lerna -f tilt_devnet/docker_images/Dockerfile.lerna .
+          DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f governance/xc_admin/packages/xc_admin_frontend/Dockerfile .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        env:
+          ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}
+          ECR_REPOSITORY: xc-admin-frontend
