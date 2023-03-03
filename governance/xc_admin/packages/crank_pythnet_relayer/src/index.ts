@@ -171,11 +171,13 @@ async function run() {
           .rpc({ skipPreflight: true });
       }
     } else if (response.code == 5) {
-      throw new Error(
-        `Wormhole API failure :${wormholeApi}/v1/signed_vaa/1/${EMITTER.toBuffer().toString(
+      console.log(`All VAAs have been relayed`);
+      console.log(
+        `${wormholeApi}/v1/signed_vaa/1/${EMITTER.toBuffer().toString(
           "hex"
         )}/${lastSequenceNumber}`
       );
+      break;
     } else {
       throw new Error("Could not connect to wormhole api");
     }
