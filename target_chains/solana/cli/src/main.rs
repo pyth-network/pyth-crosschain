@@ -7,7 +7,6 @@ use {
     },
     clap::Parser,
     anyhow::Result,
-    std::str::FromStr,
 
     solana_sdk::{
         signature::{
@@ -15,7 +14,6 @@ use {
             Keypair,
         },
         signer::Signer,
-        pubkey::Pubkey,
         instruction::Instruction,
         transaction::Transaction,
     },
@@ -35,10 +33,12 @@ use {
 
     pyth_solana_receiver::{
         ID,
+        state::AnchorVaa,
         accounts::DecodePostedVaa,
     },
 
     anchor_client::anchor_lang::{
+        Owner,
         ToAccountMetas,
         InstructionData,
         AnchorDeserialize,
@@ -52,8 +52,8 @@ fn main() -> Result<()> {
 
     match cli.action {
         Action::PostAndReceiveVAA { vaa, keypair } => {
+            let wormhole = AnchorVaa::owner();
             let rpc_client = RpcClient::new("https://api.devnet.solana.com");
-            let wormhole = Pubkey::from_str("3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5").unwrap();
 
             println!("[1/5] Decode the VAA");
             let vaa_bytes: Vec<u8> = base64::decode(vaa)?;
