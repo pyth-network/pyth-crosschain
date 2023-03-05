@@ -3,14 +3,14 @@ seeds = false
 skip-lint = false
 
 [programs.devnet]
-pyth_solana_receiver = "5dXnHcDXdXaiEp9QgknCDPsEhJStSqZqJ4ATirWfEqeY"
+pyth_solana_receiver = "pythKkWXoywbvTQVcWrNDz5ENvWteF7tem7xzW52NBK"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
 cluster = "https://api.devnet.solana.com"
-wallet = "/home/yunhao/.config/solana/id.json"
+wallet = "~/.config/solana/id.json"
 
 [scripts]
 deploy = "anchor deploy --program-keypair program_address.json --program-name solana-receiver"
