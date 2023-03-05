@@ -5,6 +5,7 @@ use {
     wormhole::Chain::{
         self,
         Solana,
+        Pythnet,
     },
     state::AnchorVaa,
     anchor_lang::prelude::*,
@@ -42,7 +43,7 @@ pub mod pyth_solana_receiver {
 pub struct DecodePostedVaa<'info> {
     #[account(mut)]
     pub payer:          Signer<'info>,
-    #[account(constraint = Chain::from(posted_vaa.emitter_chain) == Solana @ EmitterChainNotSolana)]
+    #[account(constraint = (Chain::from(posted_vaa.emitter_chain) == Solana || Chain::from(posted_vaa.emitter_chain) == Pythnet) @ EmitterChainNotSolanaOrPythnet, constraint = (&posted_vaa.magic == b"vaa" || &posted_vaa.magic == b"msg" || &posted_vaa.magic == b"msu") @PostedVaaHeaderWrongMagicNumber)]
     pub posted_vaa:     Account<'info, AnchorVaa>,
 }
 
