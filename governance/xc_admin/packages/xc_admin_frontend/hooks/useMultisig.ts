@@ -31,10 +31,10 @@ export const UPGRADE_MULTISIG: Record<Cluster | 'localnet', PublicKey> = {
 }
 
 export const PRICE_FEED_MULTISIG: Record<Cluster | 'localnet', PublicKey> = {
-  'mainnet-beta': new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'), // TODO: placeholder value for now, fix when vault is created
-  testnet: new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'), // TODO: placeholder value for now, fix when vault is created
+  'mainnet-beta': new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'),
+  testnet: new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'),
   devnet: new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'),
-  localnet: new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'), // TODO: placeholder value for now, fix when vault is created
+  localnet: new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'),
 }
 
 interface MultisigHookData {
