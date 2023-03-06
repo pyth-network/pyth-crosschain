@@ -1,5 +1,6 @@
 import { Tab } from '@headlessui/react'
-import type { NextPage } from 'next'
+import * as fs from 'fs'
+import type { GetStaticProps, NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Layout from '../components/layout/Layout'
@@ -9,6 +10,22 @@ import UpdatePermissions from '../components/tabs/UpdatePermissions'
 import { MultisigContextProvider } from '../contexts/MultisigContext'
 import { PythContextProvider } from '../contexts/PythContext'
 import { classNames } from '../utils/classNames'
+
+export const getStaticProps: GetStaticProps = async () => {
+  const publisherKeyToNameMapping = fs.existsSync('publishers.json')
+    ? JSON.parse((await fs.promises.readFile('publishers.json')).toString())
+    : {}
+  const multisigSinerKeyToNameMapping = fs.existsSync('signers.json')
+    ? JSON.parse((await fs.promises.readFile('signers.json')).toString())
+    : {}
+
+  return {
+    props: {
+      publisherKeyToNameMapping,
+      multisigSinerKeyToNameMapping,
+    },
+  }
+}
 
 const TAB_INFO = {
   General: {
@@ -30,7 +47,10 @@ const TAB_INFO = {
 
 const DEFAULT_TAB = 'general'
 
-const Home: NextPage = () => {
+const Home: NextPage<{
+  publisherKeyToNameMapping: Record<string, string>
+  multisigSinerKeyToNameMapping: Record<string, string>
+}> = ({ publisherKeyToNameMapping, multisigSinerKeyToNameMapping }) => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
   const tabInfoArray = Object.values(TAB_INFO)
 
@@ -100,7 +120,10 @@ const Home: NextPage = () => {
             <UpdatePermissions />
           ) : tabInfoArray[currentTabIndex].queryString ===
             TAB_INFO.Proposals.queryString ? (
-            <Proposals />
+            <Proposals
+              publisherKeyToNameMapping={publisherKeyToNameMapping}
+              multisigSinerKeyToNameMapping={multisigSinerKeyToNameMapping}
+            />
           ) : null}
         </MultisigContextProvider>
       </PythContextProvider>
