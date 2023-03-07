@@ -54,7 +54,7 @@ This is the deployment process:
    values in [`.env.prod.development`](.env.prod.development).
 3. If you have changed the contract make sure that:
    - The change is not breaking the storage.
-   - If it is making a backward incomptabile change, the legacy methods/storages are still used. For example,
+   - If it is making a backward incompatible change, the legacy methods/storages are still used. For example,
      if the PriceInfos are now stored in a separate storage slot, the old PriceInfo should be accessible when
      the new one is not populated.
    - the contract version is updated both in [`Pyth.sol`](./contracts/pyth/Pyth.sol) and [`package.json`](./package.json).

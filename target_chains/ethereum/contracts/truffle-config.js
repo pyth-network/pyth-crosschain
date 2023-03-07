@@ -181,6 +181,10 @@ module.exports = {
       provider: payerProvider(`https://evm-t3.cronos.org`),
       network_id: 338,
     },
+    polygon_zkevm_testnet: {
+      provider: payerProvider(`https://rpc.public.zkevm-test.net/`),
+      network_id: 1442,
+    },
   },
 
   compilers: {
