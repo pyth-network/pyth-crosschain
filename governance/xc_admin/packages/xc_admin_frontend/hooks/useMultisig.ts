@@ -1,8 +1,10 @@
 import { Wallet } from '@coral-xyz/anchor'
+import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import {
   AccountMeta,
   Cluster,
   Connection,
+  Keypair,
   PublicKey,
   Transaction,
 } from '@solana/web3.js'
@@ -97,14 +99,6 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
     ;(async () => {
       try {
         // mock wallet to allow users to view proposals without connecting their wallet
-        const signTransaction = () =>
-          new Promise<Transaction>((resolve) => {
-            resolve(new Transaction())
-          })
-        const signAllTransactions = () =>
-          new Promise<Transaction[]>((resolve) => {
-            resolve([new Transaction()])
-          })
         const squads = wallet
           ? new SquadsMesh({
               connection,
@@ -112,11 +106,7 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
             })
           : new SquadsMesh({
               connection,
-              wallet: {
-                signTransaction: () => signTransaction(),
-                signAllTransactions: () => signAllTransactions(),
-                publicKey: new PublicKey(0),
-              },
+              wallet: new NodeWallet(new Keypair()),
             })
         if (cancelled) return
         setUpgradeMultisigAccount(
