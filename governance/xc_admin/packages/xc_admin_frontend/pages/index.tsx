@@ -1,5 +1,6 @@
 import { Tab } from '@headlessui/react'
-import type { NextPage } from 'next'
+import * as fs from 'fs'
+import type { GetStaticProps, NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Layout from '../components/layout/Layout'
@@ -9,6 +10,34 @@ import UpdatePermissions from '../components/tabs/UpdatePermissions'
 import { MultisigContextProvider } from '../contexts/MultisigContext'
 import { PythContextProvider } from '../contexts/PythContext'
 import { classNames } from '../utils/classNames'
+
+export const getStaticProps: GetStaticProps = async () => {
+  const publisherMappingFilePath = `${
+    process.env.MAPPING_BASE_PATH || ''
+  }publishers.json`
+  const publisherKeyToNameMapping = fs.existsSync(publisherMappingFilePath)
+    ? JSON.parse(
+        (await fs.promises.readFile(publisherMappingFilePath)).toString()
+      )
+    : {}
+  const multisigSignerMappingFilePath = `${
+    process.env.MAPPING_BASE_PATH || ''
+  }signers.json`
+  const multisigSignerKeyToNameMapping = fs.existsSync(
+    multisigSignerMappingFilePath
+  )
+    ? JSON.parse(
+        (await fs.promises.readFile(multisigSignerMappingFilePath)).toString()
+      )
+    : {}
+
+  return {
+    props: {
+      publisherKeyToNameMapping,
+      multisigSignerKeyToNameMapping,
+    },
+  }
+}
 
 const TAB_INFO = {
   General: {
@@ -30,7 +59,10 @@ const TAB_INFO = {
 
 const DEFAULT_TAB = 'general'
 
-const Home: NextPage = () => {
+const Home: NextPage<{
+  publisherKeyToNameMapping: Record<string, string>
+  multisigSignerKeyToNameMapping: Record<string, string>
+}> = ({ publisherKeyToNameMapping, multisigSignerKeyToNameMapping }) => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
   const tabInfoArray = Object.values(TAB_INFO)
 
@@ -100,7 +132,10 @@ const Home: NextPage = () => {
             <UpdatePermissions />
           ) : tabInfoArray[currentTabIndex].queryString ===
             TAB_INFO.Proposals.queryString ? (
-            <Proposals />
+            <Proposals
+              publisherKeyToNameMapping={publisherKeyToNameMapping}
+              multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
+            />
           ) : null}
         </MultisigContextProvider>
       </PythContextProvider>
