@@ -80,16 +80,40 @@ async function run() {
     .call();
   console.log(`Update fee: ${updateFee}`);
 
-  pythContract.methods
+  let txHash = undefined;
+  await pythContract.methods
     .updatePriceFeeds(priceFeedUpdateData)
     .send({ value: updateFee })
     .on("transactionHash", (hash: string) => {
-      console.log(`Tx hash: ${hash}`);
+      txHash = hash;
     })
     .on("error", (err: any, receipt: any) => {
       console.error(receipt);
       throw err;
     });
+
+  console.log(`Tx hash: ${txHash}`);
+  if (txHash === undefined) {
+    console.error("Something went wrong. Could not send price update tx.");
+  } else {
+    console.log("Awaiting tx confirmation...");
+    let receipt = undefined;
+    while (!receipt) {
+      receipt = await web3.eth.getTransactionReceipt(txHash);
+    }
+
+    // For on-chain use, you will typically perform the getPrice call within the same transaction as updatePriceFeeds.
+    // The call to getPrice below simply demonstrates that the on-chain price was in fact updated.
+    // Note that the code above for waiting for tx confirmation is a little flaky -- if so, you may see an old price printed here.
+    for (const priceId of priceIds) {
+      const [price, conf, expo, publishTime] = await pythContract.methods
+        .getPrice(priceId)
+        .call();
+      console.log(
+        `Updated ${priceId} to (${price} +- ${conf}) * 10^${expo} at unix timestamp ${publishTime}`
+      );
+    }
+  }
 
   provider.engine.stop();
 }
