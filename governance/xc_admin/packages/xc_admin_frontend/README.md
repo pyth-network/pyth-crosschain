@@ -5,8 +5,10 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 First, run the development server:
 
 ```bash
-npm install
-npm run dev
+pyth-crosschain % npm install
+pyth-crosschain % npx run lerna build --scope xc_admin_frontend --include-dependencies
+pyth-crosschain % cd governance/xc_admin/packages/xc_admin_frontend
+xc_admin_frontend % npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
