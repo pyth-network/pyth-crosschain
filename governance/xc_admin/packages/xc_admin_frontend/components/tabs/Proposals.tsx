@@ -174,7 +174,7 @@ const ParsedAccountPubkeyRow = ({
 
 const Proposal = ({
   publisherKeyToNameMapping,
-  multisigSinerKeyToNameMapping,
+  multisigSignerKeyToNameMapping,
   proposal,
   proposalIndex,
   instructions,
@@ -182,7 +182,7 @@ const Proposal = ({
   multisig,
 }: {
   publisherKeyToNameMapping: Record<string, string>
-  multisigSinerKeyToNameMapping: Record<string, string>
+  multisigSignerKeyToNameMapping: Record<string, string>
   proposal: TransactionAccount | undefined
   proposalIndex: number
   instructions: MultisigInstruction[]
@@ -434,10 +434,10 @@ const Proposal = ({
                 <div>Key {idx + 1}</div>
                 <CopyPubkey pubkey={pubkey.toBase58()} />
               </div>
-              {pubkey.toBase58() in multisigSinerKeyToNameMapping ? (
+              {pubkey.toBase58() in multisigSignerKeyToNameMapping ? (
                 <ParsedAccountPubkeyRow
                   key={`${idx}_${pubkey.toBase58()}_confirmed`}
-                  mapping={multisigSinerKeyToNameMapping}
+                  mapping={multisigSignerKeyToNameMapping}
                   title="owner"
                   pubkey={pubkey.toBase58()}
                 />
@@ -458,10 +458,10 @@ const Proposal = ({
                 <div>Key {idx + 1}</div>
                 <CopyPubkey pubkey={pubkey.toBase58()} />
               </div>
-              {pubkey.toBase58() in multisigSinerKeyToNameMapping ? (
+              {pubkey.toBase58() in multisigSignerKeyToNameMapping ? (
                 <ParsedAccountPubkeyRow
                   key={`${idx}_${pubkey.toBase58()}_rejected`}
-                  mapping={multisigSinerKeyToNameMapping}
+                  mapping={multisigSignerKeyToNameMapping}
                   title="owner"
                   pubkey={pubkey.toBase58()}
                 />
@@ -1026,10 +1026,10 @@ const Proposal = ({
 
 const Proposals = ({
   publisherKeyToNameMapping,
-  multisigSinerKeyToNameMapping,
+  multisigSignerKeyToNameMapping,
 }: {
   publisherKeyToNameMapping: Record<string, string>
-  multisigSinerKeyToNameMapping: Record<string, string>
+  multisigSignerKeyToNameMapping: Record<string, string>
 }) => {
   const router = useRouter()
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
@@ -1181,7 +1181,7 @@ const Proposals = ({
             <div className="relative mt-6">
               <Proposal
                 publisherKeyToNameMapping={publisherKeyToNameMapping}
-                multisigSinerKeyToNameMapping={multisigSinerKeyToNameMapping}
+                multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
                 proposal={currentProposal}
                 proposalIndex={currentProposalIndex}
                 instructions={allProposalsIxsParsed[currentProposalIndex]}

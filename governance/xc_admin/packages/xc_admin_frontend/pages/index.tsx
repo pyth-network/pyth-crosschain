@@ -12,17 +12,29 @@ import { PythContextProvider } from '../contexts/PythContext'
 import { classNames } from '../utils/classNames'
 
 export const getStaticProps: GetStaticProps = async () => {
-  const publisherKeyToNameMapping = fs.existsSync('publishers.json')
-    ? JSON.parse((await fs.promises.readFile('publishers.json')).toString())
+  const publisherMappingFilePath = `${
+    process.env.MAPPING_BASE_PATH || ''
+  }publishers.json`
+  const publisherKeyToNameMapping = fs.existsSync(publisherMappingFilePath)
+    ? JSON.parse(
+        (await fs.promises.readFile(publisherMappingFilePath)).toString()
+      )
     : {}
-  const multisigSinerKeyToNameMapping = fs.existsSync('signers.json')
-    ? JSON.parse((await fs.promises.readFile('signers.json')).toString())
+  const multisigSignerMappingFilePath = `${
+    process.env.MAPPING_BASE_PATH || ''
+  }signers.json`
+  const multisigSignerKeyToNameMapping = fs.existsSync(
+    multisigSignerMappingFilePath
+  )
+    ? JSON.parse(
+        (await fs.promises.readFile(multisigSignerMappingFilePath)).toString()
+      )
     : {}
 
   return {
     props: {
       publisherKeyToNameMapping,
-      multisigSinerKeyToNameMapping,
+      multisigSignerKeyToNameMapping,
     },
   }
 }
@@ -49,8 +61,8 @@ const DEFAULT_TAB = 'general'
 
 const Home: NextPage<{
   publisherKeyToNameMapping: Record<string, string>
-  multisigSinerKeyToNameMapping: Record<string, string>
-}> = ({ publisherKeyToNameMapping, multisigSinerKeyToNameMapping }) => {
+  multisigSignerKeyToNameMapping: Record<string, string>
+}> = ({ publisherKeyToNameMapping, multisigSignerKeyToNameMapping }) => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
   const tabInfoArray = Object.values(TAB_INFO)
 
@@ -122,7 +134,7 @@ const Home: NextPage<{
             TAB_INFO.Proposals.queryString ? (
             <Proposals
               publisherKeyToNameMapping={publisherKeyToNameMapping}
-              multisigSinerKeyToNameMapping={multisigSinerKeyToNameMapping}
+              multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
             />
           ) : null}
         </MultisigContextProvider>
