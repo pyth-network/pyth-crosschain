@@ -5,6 +5,8 @@ export const RECEIVER_CHAINS = {
   cronos: 60001,
   kcc: 60002,
   zksync: 60003,
+  shimmer: 60004,
+  gnosis: 60005,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

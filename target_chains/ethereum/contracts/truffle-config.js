@@ -181,6 +181,19 @@ module.exports = {
       provider: payerProvider(`https://evm-t3.cronos.org`),
       network_id: 338,
     },
+    shimmer_testnet: {
+      provider: payerProvider(`https://json-rpc.evm.testnet.shimmer.network`),
+      network_id: 1070,
+    },
+    gnosis: {
+      provider: payerProvider(`https://rpc.gnosischain.com`),
+      network_id: 100,
+    },
+    chiado: {
+      // gnosis testnet
+      provider: payerProvider(`https://rpc.chiadochain.net`),
+      network_id: 10200,
+    },
   },
 
   compilers: {
