@@ -144,7 +144,7 @@ const PermissionDepermissionKey = ({
         {({ open }) => (
           <>
             <Menu.Button
-              className={`inline-flex w-full items-center justify-between rounded-lg bg-darkGray2 py-3 px-6 text-sm outline-0`}
+              className={`inline-flex w-full items-center justify-between bg-darkGray2 py-3 px-6 text-sm outline-0`}
             >
               <span className="mr-3">
                 {isPermission ? 'Permission Key' : 'Depermission Key'}

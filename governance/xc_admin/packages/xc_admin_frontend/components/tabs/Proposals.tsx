@@ -173,12 +173,16 @@ const ParsedAccountPubkeyRow = ({
 }
 
 const Proposal = ({
+  publisherKeyToNameMapping,
+  multisigSignerKeyToNameMapping,
   proposal,
   proposalIndex,
   instructions,
   verified,
   multisig,
 }: {
+  publisherKeyToNameMapping: Record<string, string>
+  multisigSignerKeyToNameMapping: Record<string, string>
   proposal: TransactionAccount | undefined
   proposalIndex: number
   instructions: MultisigInstruction[]
@@ -425,10 +429,20 @@ const Proposal = ({
           </h4>
           <hr className="border-gray-700" />
           {currentProposal.approved.map((pubkey, idx) => (
-            <div className="flex justify-between" key={pubkey.toBase58()}>
-              <div>Key {idx + 1}</div>
-              <CopyPubkey pubkey={pubkey.toBase58()} />
-            </div>
+            <>
+              <div className="flex justify-between" key={pubkey.toBase58()}>
+                <div>Key {idx + 1}</div>
+                <CopyPubkey pubkey={pubkey.toBase58()} />
+              </div>
+              {pubkey.toBase58() in multisigSignerKeyToNameMapping ? (
+                <ParsedAccountPubkeyRow
+                  key={`${idx}_${pubkey.toBase58()}_confirmed`}
+                  mapping={multisigSignerKeyToNameMapping}
+                  title="owner"
+                  pubkey={pubkey.toBase58()}
+                />
+              ) : null}
+            </>
           ))}
         </div>
       ) : null}
@@ -439,10 +453,20 @@ const Proposal = ({
           </h4>
           <hr className="border-gray-700" />
           {currentProposal.rejected.map((pubkey, idx) => (
-            <div className="flex justify-between" key={pubkey.toBase58()}>
-              <div>Key {idx + 1}</div>
-              <CopyPubkey pubkey={pubkey.toBase58()} />
-            </div>
+            <>
+              <div className="flex justify-between" key={pubkey.toBase58()}>
+                <div>Key {idx + 1}</div>
+                <CopyPubkey pubkey={pubkey.toBase58()} />
+              </div>
+              {pubkey.toBase58() in multisigSignerKeyToNameMapping ? (
+                <ParsedAccountPubkeyRow
+                  key={`${idx}_${pubkey.toBase58()}_rejected`}
+                  mapping={multisigSignerKeyToNameMapping}
+                  title="owner"
+                  pubkey={pubkey.toBase58()}
+                />
+              ) : null}
+            </>
           ))}
         </div>
       ) : null}
@@ -525,28 +549,42 @@ const Proposal = ({
                         <div>Value</div>
                       </div>
                       {Object.keys(instruction.args).map((key, index) => (
-                        <div
-                          key={index}
-                          className="flex justify-between border-t border-beige-300 py-3"
-                        >
-                          <div>{key}</div>
-                          {instruction.args[key] instanceof PublicKey ? (
-                            <CopyPubkey
+                        <>
+                          <div
+                            key={index}
+                            className="flex justify-between border-t border-beige-300 py-3"
+                          >
+                            <div>{key}</div>
+                            {instruction.args[key] instanceof PublicKey ? (
+                              <CopyPubkey
+                                pubkey={instruction.args[key].toBase58()}
+                              />
+                            ) : typeof instruction.args[key] === 'string' &&
+                              isPubkey(instruction.args[key]) ? (
+                              <CopyPubkey pubkey={instruction.args[key]} />
+                            ) : (
+                              <div className="max-w-sm break-all">
+                                {typeof instruction.args[key] === 'string'
+                                  ? instruction.args[key]
+                                  : instruction.args[key] instanceof Uint8Array
+                                  ? instruction.args[key].toString('hex')
+                                  : JSON.stringify(instruction.args[key])}
+                              </div>
+                            )}
+                          </div>
+                          {key === 'pub' &&
+                          instruction.args[key].toBase58() in
+                            publisherKeyToNameMapping ? (
+                            <ParsedAccountPubkeyRow
+                              key={`${index}_${instruction.args[
+                                key
+                              ].toBase58()}`}
+                              mapping={publisherKeyToNameMapping}
+                              title="publisher"
                               pubkey={instruction.args[key].toBase58()}
                             />
-                          ) : typeof instruction.args[key] === 'string' &&
-                            isPubkey(instruction.args[key]) ? (
-                            <CopyPubkey pubkey={instruction.args[key]} />
-                          ) : (
-                            <div className="max-w-sm break-all">
-                              {typeof instruction.args[key] === 'string'
-                                ? instruction.args[key]
-                                : instruction.args[key] instanceof Uint8Array
-                                ? instruction.args[key].toString('hex')
-                                : JSON.stringify(instruction.args[key])}
-                            </div>
-                          )}
-                        </div>
+                          ) : null}
+                        </>
                       ))}
                     </div>
                   ) : (
@@ -739,45 +777,69 @@ const Proposal = ({
                                     </div>
                                     {Object.keys(parsedInstruction.args).map(
                                       (key, index) => (
-                                        <div
-                                          key={index}
-                                          className="flex justify-between border-t border-beige-300 py-3"
-                                        >
-                                          <div>{key}</div>
-                                          {parsedInstruction.args[
+                                        <>
+                                          <div
+                                            key={index}
+                                            className="flex justify-between border-t border-beige-300 py-3"
+                                          >
+                                            <div>{key}</div>
+                                            {parsedInstruction.args[
+                                              key
+                                            ] instanceof PublicKey ? (
+                                              <CopyPubkey
+                                                pubkey={parsedInstruction.args[
+                                                  key
+                                                ].toBase58()}
+                                              />
+                                            ) : typeof instruction.args[key] ===
+                                                'string' &&
+                                              isPubkey(
+                                                instruction.args[key]
+                                              ) ? (
+                                              <CopyPubkey
+                                                pubkey={
+                                                  parsedInstruction.args[key]
+                                                }
+                                              />
+                                            ) : (
+                                              <div className="max-w-sm break-all">
+                                                {typeof parsedInstruction.args[
+                                                  key
+                                                ] === 'string'
+                                                  ? parsedInstruction.args[key]
+                                                  : parsedInstruction.args[
+                                                      key
+                                                    ] instanceof Uint8Array
+                                                  ? parsedInstruction.args[
+                                                      key
+                                                    ].toString('hex')
+                                                  : JSON.stringify(
+                                                      parsedInstruction.args[
+                                                        key
+                                                      ]
+                                                    )}
+                                              </div>
+                                            )}
+                                          </div>
+                                          {key === 'pub' &&
+                                          parsedInstruction.args[
                                             key
-                                          ] instanceof PublicKey ? (
-                                            <CopyPubkey
+                                          ].toBase58() in
+                                            publisherKeyToNameMapping ? (
+                                            <ParsedAccountPubkeyRow
+                                              key={`${index}_${parsedInstruction.args[
+                                                key
+                                              ].toBase58()}`}
+                                              mapping={
+                                                publisherKeyToNameMapping
+                                              }
+                                              title="publisher"
                                               pubkey={parsedInstruction.args[
                                                 key
                                               ].toBase58()}
                                             />
-                                          ) : typeof instruction.args[key] ===
-                                              'string' &&
-                                            isPubkey(instruction.args[key]) ? (
-                                            <CopyPubkey
-                                              pubkey={
-                                                parsedInstruction.args[key]
-                                              }
-                                            />
-                                          ) : (
-                                            <div className="max-w-sm break-all">
-                                              {typeof parsedInstruction.args[
-                                                key
-                                              ] === 'string'
-                                                ? parsedInstruction.args[key]
-                                                : parsedInstruction.args[
-                                                    key
-                                                  ] instanceof Uint8Array
-                                                ? parsedInstruction.args[
-                                                    key
-                                                  ].toString('hex')
-                                                : JSON.stringify(
-                                                    parsedInstruction.args[key]
-                                                  )}
-                                            </div>
-                                          )}
-                                        </div>
+                                          ) : null}
+                                        </>
                                       )
                                     )}
                                   </div>
@@ -962,7 +1024,13 @@ const Proposal = ({
   )
 }
 
-const Proposals = () => {
+const Proposals = ({
+  publisherKeyToNameMapping,
+  multisigSignerKeyToNameMapping,
+}: {
+  publisherKeyToNameMapping: Record<string, string>
+  multisigSignerKeyToNameMapping: Record<string, string>
+}) => {
   const router = useRouter()
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
   const [currentProposalIndex, setCurrentProposalIndex] = useState<number>()
@@ -1112,6 +1180,8 @@ const Proposals = () => {
             </div>
             <div className="relative mt-6">
               <Proposal
+                publisherKeyToNameMapping={publisherKeyToNameMapping}
+                multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
                 proposal={currentProposal}
                 proposalIndex={currentProposalIndex}
                 instructions={allProposalsIxsParsed[currentProposalIndex]}
