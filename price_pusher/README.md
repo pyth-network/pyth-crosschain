@@ -1,6 +1,6 @@
-# Pyth EVM price pusher
+# Pyth price pusher
 
-Pyth EVM price pusher is a service that regularly pushes updates to the on-chain Pyth price based on configurable conditions.
+Pyth price pusher is a service that regularly pushes updates to the on-chain Pyth price based on configurable conditions.
 
 ## Background
 
@@ -8,7 +8,7 @@ Pyth is a cross-chain oracle that streams price updates over the peer-to-peer [W
 These price updates can be consumed on any chain that has a deployment of the Pyth contract.
 By default, Pyth does not automatically update the on-chain price every time the off-chain price changes;
 instead, anyone can permissionlessly update the on-chain price prior to using it.
-For more information please refer to [this document](../pyth-evm-js/README.md#how-pyth-works-on-evm-chains).
+For more information please refer to [this document](https://docs.pyth.network/design-overview).
 
 Protocols integrating with can update the on-chain Pyth prices in two different ways.
 The first approach is on-demand updates: package a Pyth price update together with each transaction that depends on it.
@@ -66,7 +66,7 @@ npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
     [--polling-frequency 5]
 
 # Or, run the price pusher docker image instead of building from the source
-docker run public.ecr.aws/pyth-network/xc-evm-price-pusher:v<version> -- <above-arguments>
+docker run public.ecr.aws/pyth-network/xc-price-pusher:v<version> -- <above-arguments>
 ```
 
 ### Command Line Arguments
