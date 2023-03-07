@@ -287,23 +287,59 @@ program
     console.log(JSON.stringify(parsed, null, 2));
   });
 
-mutlisigCommand("approve", "Approve a transaction sitting in the multisig")
-  .requiredOption(
-    "-t, --transaction <pubkey>",
-    "address of the outstanding transaction"
-  )
-  .action(async (options: any) => {
-    const wallet = await loadHotWalletOrLedger(
-      options.wallet,
-      options.ledgerDerivationAccount,
-      options.ledgerDerivationChange
-    );
-    const transaction: PublicKey = new PublicKey(options.transaction);
-    const cluster: PythCluster = options.cluster;
+mutlisigCommand(
+  "approve",
+  "Approve a transaction sitting in the multisig"
+).action(async (options: any) => {
+  const wallet = await loadHotWalletOrLedger(
+    options.wallet,
+    options.ledgerDerivationAccount,
+    options.ledgerDerivationChange
+  );
+  const vault: PublicKey = new PublicKey(options.vault);
+  const cluster: PythCluster = options.cluster;
 
-    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
-    await squad.approveTransaction(transaction);
-  });
+  const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
+  const msAccount = await squad.getMultisig(vault);
+  const vaultAuthority = squad.getAuthorityPDA(
+    msAccount.publicKey,
+    msAccount.authorityIndex
+  );
+  const priceFeedMultisig = new PublicKey(
+    "92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8"
+  );
+  const ixs: TransactionInstruction[] = [];
+  ixs.push(
+    await squad.buildAddMember(
+      vault,
+      vaultAuthority,
+      new PublicKey("opsLibxVY7Vz5eYMmSfX8cLFCFVYTtH6fr6MiifMpA7")
+    )
+  );
+  ixs.push(
+    await squad.buildAddMember(
+      vault,
+      vaultAuthority,
+      new PublicKey("E5KR7yfb9UyVB6ZhmhQki1rM1eBcxHvyGKFZakAC5uc")
+    )
+  );
+  ixs.push(
+    await squad.buildRemoveMember(
+      vault,
+      vaultAuthority,
+      new PublicKey("ACzP6RC98vcBk9oTeAwcH1o5HJvtBzU59b5nqdwc7Cxy")
+    )
+  );
+  ixs.push(
+    await squad.buildRemoveMember(
+      vault,
+      vaultAuthority,
+      new PublicKey("75jE5XFF3vbvvpdWGYSHfEzXZRLo2eKxtwt4dTKa4JYR")
+    )
+  );
+
+  await proposeInstructions(squad, vault, ixs, false);
+});
 
 mutlisigCommand("propose-token-transfer", "Propose token transfer")
   .requiredOption("-a, --amount <number>", "amount in dollars")
