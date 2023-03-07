@@ -1,14 +1,18 @@
 # Pyth Cross-chain Governance Admin CLI Program
 
-This program allows you to do a couple of features such as:
+The goal of this CLI is interacting with the Pyth Squads multisig.
+It allows to :
 
-- accept-authority
-- upgrade-program
-- init-price
-- parse-transaction
-- approve
-- propose-token-transfer
-- activate
+- Make proposals :
+  - `accept-authority`
+  - `upgrade-program`
+  - `init-price`
+  - `propose-token-transfer`
+- Interact with proposals :
+  - `approve`
+  - `activate`
+- Inspect proposals :
+  - `parse-transaction`
 
 ## Usage
 
@@ -22,7 +26,8 @@ Note:
 To activate a transaction:
 
 ```
-
-npx ts-node src/index.ts activate -t <TRANSACTION_HASH> -c <CLUSTER: [mainnet|devnet]> -v <VAULT_ADDRESS> -w <WALLET_SECRET_KEY_FILEPATH: [filepath|"ledger"]> -lda <LEDGER_DERIVATION_ACCOUNT> -ldc <LEDGER_DERIVATION_CHANGE>
+npm install
+npx lerna run build --scope "xc_admin_common"
+npx ts-node src/index.ts activate -t <TRANSACTION_HASH> -c <CLUSTER: [mainnet|devnet|testnet|pythnet|pythtest]> -v <VAULT_ADDRESS> -w <WALLET_SECRET_KEY_FILEPATH: [filepath|"ledger"]> -lda <LEDGER_DERIVATION_ACCOUNT> -ldc <LEDGER_DERIVATION_CHANGE>
 
 ```
