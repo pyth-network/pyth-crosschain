@@ -9,6 +9,7 @@ import Proposals from '../components/tabs/Proposals'
 import UpdatePermissions from '../components/tabs/UpdatePermissions'
 import { MultisigContextProvider } from '../contexts/MultisigContext'
 import { PythContextProvider } from '../contexts/PythContext'
+import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
 
 export const getStaticProps: GetStaticProps = async () => {
@@ -100,43 +101,45 @@ const Home: NextPage<{
     <Layout>
       <PythContextProvider>
         <MultisigContextProvider>
-          <div className="container relative pt-16 md:pt-20">
-            <div className="py-8 md:py-16">
-              <Tab.Group
-                selectedIndex={currentTabIndex}
-                onChange={handleChangeTab}
-              >
-                <Tab.List className="mx-auto gap-1 space-x-4 space-y-4 text-center sm:gap-2.5 md:space-x-8">
-                  {Object.entries(TAB_INFO).map((tab, idx) => (
-                    <Tab
-                      key={idx}
-                      className={({ selected }) =>
-                        classNames(
-                          'p-3 text-xs font-semibold uppercase outline-none transition-colors hover:bg-darkGray3 md:text-base',
-                          selected ? 'bg-darkGray3' : 'bg-darkGray2'
-                        )
-                      }
-                    >
-                      {tab[1].title}
-                    </Tab>
-                  ))}
-                </Tab.List>
-              </Tab.Group>
+          <StatusFilterProvider>
+            <div className="container relative pt-16 md:pt-20">
+              <div className="py-8 md:py-16">
+                <Tab.Group
+                  selectedIndex={currentTabIndex}
+                  onChange={handleChangeTab}
+                >
+                  <Tab.List className="mx-auto gap-1 space-x-4 space-y-4 text-center sm:gap-2.5 md:space-x-8">
+                    {Object.entries(TAB_INFO).map((tab, idx) => (
+                      <Tab
+                        key={idx}
+                        className={({ selected }) =>
+                          classNames(
+                            'p-3 text-xs font-semibold uppercase outline-none transition-colors hover:bg-darkGray3 md:text-base',
+                            selected ? 'bg-darkGray3' : 'bg-darkGray2'
+                          )
+                        }
+                      >
+                        {tab[1].title}
+                      </Tab>
+                    ))}
+                  </Tab.List>
+                </Tab.Group>
+              </div>
             </div>
-          </div>
-          {tabInfoArray[currentTabIndex].queryString ===
-          TAB_INFO.General.queryString ? (
-            <General />
-          ) : tabInfoArray[currentTabIndex].queryString ===
-            TAB_INFO.UpdatePermissions.queryString ? (
-            <UpdatePermissions />
-          ) : tabInfoArray[currentTabIndex].queryString ===
-            TAB_INFO.Proposals.queryString ? (
-            <Proposals
-              publisherKeyToNameMapping={publisherKeyToNameMapping}
-              multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
-            />
-          ) : null}
+            {tabInfoArray[currentTabIndex].queryString ===
+            TAB_INFO.General.queryString ? (
+              <General />
+            ) : tabInfoArray[currentTabIndex].queryString ===
+              TAB_INFO.UpdatePermissions.queryString ? (
+              <UpdatePermissions />
+            ) : tabInfoArray[currentTabIndex].queryString ===
+              TAB_INFO.Proposals.queryString ? (
+              <Proposals
+                publisherKeyToNameMapping={publisherKeyToNameMapping}
+                multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
+              />
+            ) : null}
+          </StatusFilterProvider>
         </MultisigContextProvider>
       </PythContextProvider>
     </Layout>

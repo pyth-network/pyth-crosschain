@@ -25,6 +25,7 @@ import {
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'
+import { StatusFilterContext } from '../../contexts/StatusFilterContext'
 import { PRICE_FEED_MULTISIG } from '../../hooks/useMultisig'
 import VerifiedIcon from '../../images/icons/verified.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
@@ -32,6 +33,7 @@ import ClusterSwitch from '../ClusterSwitch'
 import CopyPubkey from '../common/CopyPubkey'
 import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
+import ProposalStatusFilter from '../ProposalStatusFilter'
 
 // check if a string is a pubkey
 const isPubkey = (str: string) => {
@@ -1058,12 +1060,16 @@ const Proposals = ({
   >([])
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
   const { cluster } = useContext(ClusterContext)
+  const { statusFilter } = useContext(StatusFilterContext)
   const {
     priceFeedMultisigAccount,
     priceFeedMultisigProposals,
     allProposalsIxsParsed,
     isLoading: isMultisigLoading,
   } = useMultisigContext()
+  const [filteredProposals, setFilteredProposals] = useState<
+    TransactionAccount[]
+  >(priceFeedMultisigProposals)
 
   useEffect(() => {
     if (!isMultisigLoading) {
@@ -1144,6 +1150,21 @@ const Proposals = ({
     cluster,
   ])
 
+  useEffect(() => {
+    // filter price feed multisig proposals by status
+    if (statusFilter === 'all') {
+      setFilteredProposals(priceFeedMultisigProposals)
+    } else {
+      setFilteredProposals(
+        priceFeedMultisigProposals.filter(
+          (proposal) =>
+            getProposalStatus(proposal, priceFeedMultisigAccount) ===
+            statusFilter
+        )
+      )
+    }
+  }, [statusFilter, priceFeedMultisigAccount, priceFeedMultisigProposals])
+
   return (
     <div className="relative">
       <div className="container flex flex-col items-center justify-between lg:flex-row">
@@ -1166,27 +1187,33 @@ const Proposals = ({
                 <div className="mt-3">
                   <Loadbar theme="light" />
                 </div>
-              ) : priceFeedMultisigProposals.length > 0 ? (
-                <>
-                  <div className="pb-4">
-                    <h4 className="h4">
-                      Total Proposals: {priceFeedMultisigProposals.length}
-                    </h4>
-                  </div>
-                  <div className="flex flex-col">
-                    {priceFeedMultisigProposals.map((proposal, idx) => (
-                      <ProposalRow
-                        key={idx}
-                        proposal={proposal}
-                        verified={allProposalsVerifiedArr[idx]}
-                        setCurrentProposalPubkey={setCurrentProposalPubkey}
-                        multisig={priceFeedMultisigAccount}
-                      />
-                    ))}
-                  </div>
-                </>
               ) : (
-                "No proposals found. If you're a member of the price feed multisig, you can create a proposal."
+                <>
+                  <div className="flex items-center justify-between pb-4">
+                    <h4 className="h4">
+                      Total Proposals: {filteredProposals.length}
+                    </h4>
+                    <ProposalStatusFilter />
+                  </div>
+                  {filteredProposals.length > 0 ? (
+                    <div className="flex flex-col">
+                      {filteredProposals.map((proposal, idx) => (
+                        <ProposalRow
+                          key={idx}
+                          proposal={proposal}
+                          verified={allProposalsVerifiedArr[idx]}
+                          setCurrentProposalPubkey={setCurrentProposalPubkey}
+                          multisig={priceFeedMultisigAccount}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-4">
+                      No proposals found. If you&apos;re a member of the price
+                      feed multisig, you can create a proposal.
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </>
