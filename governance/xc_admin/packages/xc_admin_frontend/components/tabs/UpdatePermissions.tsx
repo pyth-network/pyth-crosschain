@@ -110,7 +110,6 @@ const UpdatePermissions = () => {
   const [isSendProposalButtonLoading, setIsSendProposalButtonLoading] =
     useState(false)
   const { cluster } = useContext(ClusterContext)
-  const anchorWallet = useAnchorWallet()
   const { isLoading: isMultisigLoading, proposeSquads } = useMultisigContext()
   const { rawConfig, dataIsLoading, connection } = usePythContext()
   const { connected } = useWallet()

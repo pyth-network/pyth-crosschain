@@ -11,7 +11,9 @@ export const StatusFilterContext = createContext<{
 })
 
 export const StatusFilterProvider = (props: any) => {
-  const [statusFilter, setStatusFilter] = useState<string>(DEFAULT_STATUS_FILTER)
+  const [statusFilter, setStatusFilter] = useState<string>(
+    DEFAULT_STATUS_FILTER
+  )
   const contextValue = useMemo(
     () => ({
       statusFilter,
