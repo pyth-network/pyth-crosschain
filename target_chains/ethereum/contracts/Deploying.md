@@ -84,7 +84,7 @@ This is the deployment process:
    If the deployment script runs successfully you should see many ✅s and no ❌s with a successful message.
    Please note that if you need to deploy/upgrade a zkSync network contract, you should deploy/upgrade it manually first
    as described below.
-7. On first time deployments for a network with Wormhole Receiver contract, run this command:
+7. On first time deployments for a **mainnet** network with Wormhole Receiver contract, run this command:
    ```bash
    npm run receiver-submit-guardian-sets -- --network <network>
    ```
