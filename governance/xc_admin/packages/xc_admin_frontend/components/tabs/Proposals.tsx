@@ -45,6 +45,14 @@ const isPubkey = (str: string) => {
   }
 }
 
+const getMappingCluster = (cluster: string) => {
+  if (cluster === 'mainnet-beta' || cluster === 'pythnet') {
+    return 'pythnet'
+  } else {
+    return 'pythtest'
+  }
+}
+
 const ProposalRow = ({
   proposal,
   verified,
@@ -202,7 +210,7 @@ const Proposal = ({
   verified,
   multisig,
 }: {
-  publisherKeyToNameMapping: Record<string, string>
+  publisherKeyToNameMapping: Record<string, Record<string, string>>
   multisigSignerKeyToNameMapping: Record<string, string>
   proposal: TransactionAccount | undefined
   proposalIndex: number
@@ -219,12 +227,14 @@ const Proposal = ({
   const [priceAccountKeyToSymbolMapping, setPriceAccountKeyToSymbolMapping] =
     useState<{ [key: string]: string }>({})
   const { cluster } = useContext(ClusterContext)
+  const publisherKeyToNameMappingCluster =
+    publisherKeyToNameMapping[getMappingCluster(cluster)]
   const {
     voteSquads,
     isLoading: isMultisigLoading,
     setpriceFeedMultisigProposals,
   } = useMultisigContext()
-  const { rawConfig, dataIsLoading, connection } = usePythContext()
+  const { rawConfig, dataIsLoading } = usePythContext()
 
   useEffect(() => {
     setCurrentProposal(proposal)
@@ -595,12 +605,12 @@ const Proposal = ({
                           </div>
                           {key === 'pub' &&
                           instruction.args[key].toBase58() in
-                            publisherKeyToNameMapping ? (
+                            publisherKeyToNameMappingCluster ? (
                             <ParsedAccountPubkeyRow
                               key={`${index}_${instruction.args[
                                 key
                               ].toBase58()}`}
-                              mapping={publisherKeyToNameMapping}
+                              mapping={publisherKeyToNameMappingCluster}
                               title="publisher"
                               pubkey={instruction.args[key].toBase58()}
                             />
@@ -846,13 +856,13 @@ const Proposal = ({
                                           parsedInstruction.args[
                                             key
                                           ].toBase58() in
-                                            publisherKeyToNameMapping ? (
+                                            publisherKeyToNameMappingCluster ? (
                                             <ParsedAccountPubkeyRow
                                               key={`${index}_${parsedInstruction.args[
                                                 key
                                               ].toBase58()}`}
                                               mapping={
-                                                publisherKeyToNameMapping
+                                                publisherKeyToNameMappingCluster
                                               }
                                               title="publisher"
                                               pubkey={parsedInstruction.args[
@@ -1049,7 +1059,7 @@ const Proposals = ({
   publisherKeyToNameMapping,
   multisigSignerKeyToNameMapping,
 }: {
-  publisherKeyToNameMapping: Record<string, string>
+  publisherKeyToNameMapping: Record<string, Record<string, string>>
   multisigSignerKeyToNameMapping: Record<string, string>
 }) => {
   const router = useRouter()

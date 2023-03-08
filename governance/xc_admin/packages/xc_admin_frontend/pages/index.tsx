@@ -28,14 +28,30 @@ export const getServerSideProps: GetServerSideProps = async () => {
         )
       : null
 
-  const publisherMappingFilePath = `${
-    process.env.MAPPING_BASE_PATH || ''
-  }publishers.json`
-  const publisherKeyToNameMapping = fs.existsSync(publisherMappingFilePath)
-    ? JSON.parse(
-        (await fs.promises.readFile(publisherMappingFilePath)).toString()
-      )
-    : {}
+  const publisherKeyToNameMapping = {
+    pythnet: fs.existsSync(
+      `${process.env.MAPPING_BASE_PATH || ''}publishers-pythnet.json`
+    )
+      ? JSON.parse(
+          (
+            await fs.promises.readFile(
+              `${process.env.MAPPING_BASE_PATH || ''}publishers-pythnet.json`
+            )
+          ).toString()
+        )
+      : {},
+    pythtest: fs.existsSync(
+      `${process.env.MAPPING_BASE_PATH || ''}publishers-pythtest.json`
+    )
+      ? JSON.parse(
+          (
+            await fs.promises.readFile(
+              `${process.env.MAPPING_BASE_PATH || ''}publishers-pythtest.json`
+            )
+          ).toString()
+        )
+      : {},
+  }
   const multisigSignerMappingFilePath = `${
     process.env.MAPPING_BASE_PATH || ''
   }signers.json`
@@ -78,7 +94,7 @@ const DEFAULT_TAB = 'general'
 
 const Home: NextPage<{
   OPS_WALLET: any
-  publisherKeyToNameMapping: Record<string, string>
+  publisherKeyToNameMapping: Record<string, Record<string, string>>
   multisigSignerKeyToNameMapping: Record<string, string>
 }> = ({
   OPS_WALLET,
