@@ -17,11 +17,16 @@ import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const OPS_WALLET = process.env['NEXT_PUBLIC_OPS_WALLET']
-    ? JSON.parse(
-        fs.readFileSync(String(process.env['NEXT_PUBLIC_OPS_WALLET']), 'ascii')
-      )
-    : null
+  const OPS_WALLET =
+    process.env['NEXT_PUBLIC_OPS_WALLET'] &&
+    fs.existsSync(String(process.env['NEXT_PUBLIC_OPS_WALLET']))
+      ? JSON.parse(
+          fs.readFileSync(
+            String(process.env['NEXT_PUBLIC_OPS_WALLET']),
+            'ascii'
+          )
+        )
+      : null
 
   const publisherMappingFilePath = `${
     process.env.MAPPING_BASE_PATH || ''
