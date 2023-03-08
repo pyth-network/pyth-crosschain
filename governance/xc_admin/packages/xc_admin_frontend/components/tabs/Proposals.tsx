@@ -47,12 +47,14 @@ const ProposalRow = ({
   proposal,
   verified,
   setCurrentProposalPubkey,
+  multisig,
 }: {
   proposal: TransactionAccount
   verified: boolean
   setCurrentProposalPubkey: Dispatch<SetStateAction<string | undefined>>
+  multisig: MultisigAccount | undefined
 }) => {
-  const status = Object.keys(proposal.status)[0]
+  const status = getProposalStatus(proposal, multisig)
 
   const router = useRouter()
 
@@ -126,6 +128,8 @@ const StatusTag = ({ proposalStatus }: { proposalStatus: string }) => {
           ? 'bg-[#C4428F]'
           : proposalStatus === 'rejected'
           ? 'bg-[#CF6E42]'
+          : proposalStatus === 'expired'
+          ? 'bg-[#A52A2A]'
           : 'bg-pythPurple'
       } py-1 px-2 text-xs`}
     >
@@ -170,6 +174,21 @@ const ParsedAccountPubkeyRow = ({
       <div className="space-y-2 sm:flex sm:space-x-2">{mapping[pubkey]}</div>
     </div>
   )
+}
+
+const getProposalStatus = (
+  proposal: TransactionAccount | undefined,
+  multisig: MultisigAccount | undefined
+): string => {
+  if (multisig && proposal) {
+    const onChainStatus = Object.keys(proposal.status)[0]
+    return proposal.transactionIndex <= multisig.msChangeIndex &&
+      (onChainStatus == 'active' || onChainStatus == 'draft')
+      ? 'expired'
+      : onChainStatus
+  } else {
+    return 'unkwown'
+  }
 }
 
 const Proposal = ({
@@ -225,7 +244,7 @@ const Proposal = ({
     }
   }, [rawConfig, dataIsLoading])
 
-  const proposalStatus = proposal ? Object.keys(proposal.status)[0] : 'unknown'
+  const proposalStatus = getProposalStatus(proposal, multisig)
 
   useEffect(() => {
     // update the priceFeedMultisigProposals with previous value but replace the current proposal with the updated one at the specific index
@@ -1161,6 +1180,7 @@ const Proposals = ({
                         proposal={proposal}
                         verified={allProposalsVerifiedArr[idx]}
                         setCurrentProposalPubkey={setCurrentProposalPubkey}
+                        multisig={priceFeedMultisigAccount}
                       />
                     ))}
                   </div>
