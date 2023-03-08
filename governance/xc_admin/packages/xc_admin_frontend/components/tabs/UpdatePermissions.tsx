@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor'
+import { AnchorProvider, Program } from '@coral-xyz/anchor'
 import {
   getPythProgramKeyForCluster,
   pythOracleProgram,
@@ -25,8 +25,9 @@ import {
   WORMHOLE_ADDRESS,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
+import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'
-import { UPGRADE_MULTISIG, useMultisig } from '../../hooks/useMultisig'
+import { UPGRADE_MULTISIG } from '../../hooks/useMultisig'
 import CopyIcon from '../../images/icons/copy.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
@@ -110,9 +111,7 @@ const UpdatePermissions = () => {
     useState(false)
   const { cluster } = useContext(ClusterContext)
   const anchorWallet = useAnchorWallet()
-  const { isLoading: isMultisigLoading, squads } = useMultisig(
-    anchorWallet as Wallet
-  )
+  const { isLoading: isMultisigLoading, proposeSquads } = useMultisigContext()
   const { rawConfig, dataIsLoading, connection } = usePythContext()
   const { connected } = useWallet()
   const [pythProgramClient, setPythProgramClient] =
@@ -241,12 +240,12 @@ const UpdatePermissions = () => {
   }
 
   const handleSendProposalButtonClick = () => {
-    if (pythProgramClient && finalPubkeyChanges && squads) {
+    if (pythProgramClient && finalPubkeyChanges && proposeSquads) {
       const programDataAccount = PublicKey.findProgramAddressSync(
         [pythProgramClient?.programId.toBuffer()],
         BPF_UPGRADABLE_LOADER
       )[0]
-      const multisigAuthority = squads.getAuthorityPDA(
+      const multisigAuthority = proposeSquads.getAuthorityPDA(
         UPGRADE_MULTISIG[getMultisigCluster(cluster)],
         1
       )
@@ -269,7 +268,7 @@ const UpdatePermissions = () => {
             setIsSendProposalButtonLoading(true)
             try {
               const proposalPubkey = await proposeInstructions(
-                squads,
+                proposeSquads,
                 UPGRADE_MULTISIG[getMultisigCluster(cluster)],
                 [instruction],
                 isRemoteCluster(cluster),
@@ -334,17 +333,17 @@ const UpdatePermissions = () => {
 
   // create anchor wallet when connected
   useEffect(() => {
-    if (connected) {
+    if (connected && proposeSquads) {
       const provider = new AnchorProvider(
         connection,
-        anchorWallet as Wallet,
+        proposeSquads?.wallet,
         AnchorProvider.defaultOptions()
       )
       setPythProgramClient(
         pythOracleProgram(getPythProgramKeyForCluster(cluster), provider)
       )
     }
-  }, [anchorWallet, connection, connected, cluster])
+  }, [connection, connected, cluster, proposeSquads])
 
   return (
     <div className="relative">
