@@ -1,8 +1,10 @@
 import { Wallet } from '@coral-xyz/anchor'
+import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import {
   AccountMeta,
   Cluster,
   Connection,
+  Keypair,
   PublicKey,
   Transaction,
 } from '@solana/web3.js'
@@ -60,7 +62,6 @@ const getSortedProposals = async (
 }
 
 export const useMultisig = (wallet: Wallet): MultisigHookData => {
-  const connectionRef = useRef<Connection>()
   const { cluster } = useContext(ClusterContext)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -86,6 +87,22 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
   }, [urlsIndex, cluster])
 
   useEffect(() => {
+    const urls = pythClusterApiUrls(getMultisigCluster(cluster))
+    const connection = new Connection(urls[urlsIndex].rpcUrl, {
+      commitment: 'confirmed',
+      wsEndpoint: urls[urlsIndex].wsUrl,
+    })
+    if (wallet) {
+      setSquads(
+        new SquadsMesh({
+          connection,
+          wallet,
+        })
+      )
+    }
+  }, [wallet, urlsIndex, cluster])
+
+  useEffect(() => {
     let cancelled = false
     const urls = pythClusterApiUrls(getMultisigCluster(cluster))
     const connection = new Connection(urls[urlsIndex].rpcUrl, {
@@ -93,34 +110,16 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
       wsEndpoint: urls[urlsIndex].wsUrl,
     })
 
-    connectionRef.current = connection
     ;(async () => {
       try {
         // mock wallet to allow users to view proposals without connecting their wallet
-        const signTransaction = () =>
-          new Promise<Transaction>((resolve) => {
-            resolve(new Transaction())
-          })
-        const signAllTransactions = () =>
-          new Promise<Transaction[]>((resolve) => {
-            resolve([new Transaction()])
-          })
-        const squads = wallet
-          ? new SquadsMesh({
-              connection,
-              wallet,
-            })
-          : new SquadsMesh({
-              connection,
-              wallet: {
-                signTransaction: () => signTransaction(),
-                signAllTransactions: () => signAllTransactions(),
-                publicKey: new PublicKey(0),
-              },
-            })
+        const readOnlySquads = new SquadsMesh({
+          connection,
+          wallet: new NodeWallet(new Keypair()),
+        })
         if (cancelled) return
         setUpgradeMultisigAccount(
-          await squads.getMultisig(
+          await readOnlySquads.getMultisig(
             UPGRADE_MULTISIG[getMultisigCluster(cluster)]
           )
         )
@@ -128,7 +127,7 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
           if (cancelled) return
           // DELETE THIS TRY CATCH ONCE THIS MULTISIG EXISTS EVERYWHERE
           setpriceFeedMultisigAccount(
-            await squads.getMultisig(
+            await readOnlySquads.getMultisig(
               PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
             )
           )
@@ -140,7 +139,7 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
         if (cancelled) return
         setUpgradeMultisigProposals(
           await getSortedProposals(
-            squads,
+            readOnlySquads,
             UPGRADE_MULTISIG[getMultisigCluster(cluster)]
           )
         )
@@ -148,11 +147,11 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
           if (cancelled) return
           // DELETE THIS TRY CATCH ONCE THIS MULTISIG EXISTS EVERYWHERE
           const sortedPriceFeedMultisigProposals = await getSortedProposals(
-            squads,
+            readOnlySquads,
             PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
           )
           const allProposalsIxs = await getManyProposalsInstructions(
-            squads,
+            readOnlySquads,
             sortedPriceFeedMultisigProposals
           )
           const multisigParser = MultisigParser.fromCluster(
@@ -199,7 +198,6 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
           setpriceFeedMultisigProposals([])
         }
 
-        setSquads(squads)
         setIsLoading(false)
       } catch (e) {
         console.log(e)
@@ -221,7 +219,7 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
     return () => {
       cancelled = true
     }
-  }, [urlsIndex, cluster, wallet])
+  }, [urlsIndex, cluster])
 
   return {
     isLoading,

@@ -194,6 +194,15 @@ module.exports = {
       provider: payerProvider(`https://rpc.chiadochain.net`),
       network_id: 10200,
     },
+    base_goerli: {
+      provider: payerProvider(`https://goerli.base.org`),
+      network_id: 84531,
+      verify: {
+        apiUrl: "https://api-goerli.basescan.org/api",
+        explorerUrl: "https://goerli.basescan.org/",
+        apiKey: "",
+      },
+    },
   },
 
   compilers: {
