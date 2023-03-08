@@ -220,7 +220,7 @@ const Proposal = ({
     useState<{ [key: string]: string }>({})
   const { cluster } = useContext(ClusterContext)
   const {
-    squads,
+    voteSquads,
     isLoading: isMultisigLoading,
     setpriceFeedMultisigProposals,
   } = useMultisigContext()
@@ -259,12 +259,12 @@ const Proposal = ({
   }, [currentProposal, setpriceFeedMultisigProposals, proposalIndex])
 
   const handleClickApprove = async () => {
-    if (proposal && squads) {
+    if (proposal && voteSquads) {
       try {
         setIsTransactionLoading(true)
-        await squads.approveTransaction(proposal.publicKey)
+        await voteSquads.approveTransaction(proposal.publicKey)
         const proposals = await getProposals(
-          squads,
+          voteSquads,
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
         )
         setCurrentProposal(
@@ -284,12 +284,12 @@ const Proposal = ({
   }
 
   const handleClickReject = async () => {
-    if (proposal && squads) {
+    if (proposal && voteSquads) {
       try {
         setIsTransactionLoading(true)
-        await squads.rejectTransaction(proposal.publicKey)
+        await voteSquads.rejectTransaction(proposal.publicKey)
         const proposals = await getProposals(
-          squads,
+          voteSquads,
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
         )
         setCurrentProposal(
@@ -309,12 +309,12 @@ const Proposal = ({
   }
 
   const handleClickExecute = async () => {
-    if (proposal && squads) {
+    if (proposal && voteSquads) {
       try {
         setIsTransactionLoading(true)
-        await squads.executeTransaction(proposal.publicKey)
+        await voteSquads.executeTransaction(proposal.publicKey)
         const proposals = await getProposals(
-          squads,
+          voteSquads,
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
         )
         setCurrentProposal(
@@ -334,12 +334,12 @@ const Proposal = ({
   }
 
   const handleClickCancel = async () => {
-    if (proposal && squads) {
+    if (proposal && voteSquads) {
       try {
         setIsTransactionLoading(true)
-        await squads.cancelTransaction(proposal.publicKey)
+        await voteSquads.cancelTransaction(proposal.publicKey)
         const proposals = await getProposals(
-          squads,
+          voteSquads,
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
         )
         setCurrentProposal(

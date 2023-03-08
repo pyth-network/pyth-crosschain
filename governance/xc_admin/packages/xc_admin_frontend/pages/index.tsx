@@ -1,6 +1,10 @@
+import { Wallet } from '@coral-xyz/anchor'
+import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { Tab } from '@headlessui/react'
+import { useAnchorWallet } from '@solana/wallet-adapter-react'
+import { Keypair } from '@solana/web3.js'
 import * as fs from 'fs'
-import type { GetStaticProps, NextPage } from 'next'
+import type { GetServerSideProps, NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Layout from '../components/layout/Layout'
@@ -12,7 +16,13 @@ import { PythContextProvider } from '../contexts/PythContext'
 import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
 
-export const getStaticProps: GetStaticProps = async () => {
+export const getServerSideProps: GetServerSideProps = async () => {
+  const OPS_WALLET = process.env['NEXT_PUBLIC_OPS_WALLET']
+    ? JSON.parse(
+        fs.readFileSync(String(process.env['NEXT_PUBLIC_OPS_WALLET']), 'ascii')
+      )
+    : null
+
   const publisherMappingFilePath = `${
     process.env.MAPPING_BASE_PATH || ''
   }publishers.json`
@@ -34,6 +44,7 @@ export const getStaticProps: GetStaticProps = async () => {
 
   return {
     props: {
+      OPS_WALLET,
       publisherKeyToNameMapping,
       multisigSignerKeyToNameMapping,
     },
@@ -61,11 +72,23 @@ const TAB_INFO = {
 const DEFAULT_TAB = 'general'
 
 const Home: NextPage<{
+  OPS_WALLET: any
   publisherKeyToNameMapping: Record<string, string>
   multisigSignerKeyToNameMapping: Record<string, string>
-}> = ({ publisherKeyToNameMapping, multisigSignerKeyToNameMapping }) => {
+}> = ({
+  OPS_WALLET,
+  publisherKeyToNameMapping,
+  multisigSignerKeyToNameMapping,
+}) => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
   const tabInfoArray = Object.values(TAB_INFO)
+  const anchorWallet = useAnchorWallet()
+  const wallet =
+    OPS_WALLET !== null
+      ? (new NodeWallet(
+          Keypair.fromSecretKey(Uint8Array.from(OPS_WALLET))
+        ) as Wallet)
+      : (anchorWallet as Wallet)
 
   const router = useRouter()
 
@@ -100,7 +123,7 @@ const Home: NextPage<{
   return (
     <Layout>
       <PythContextProvider>
-        <MultisigContextProvider>
+        <MultisigContextProvider wallet={wallet}>
           <StatusFilterProvider>
             <div className="container relative pt-16 md:pt-20">
               <div className="py-8 md:py-16">
