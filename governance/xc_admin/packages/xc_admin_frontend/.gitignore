@@ -37,5 +37,5 @@ next-env.d.ts
 
 
 # mappings
-publishers.json
+publishers-*.json
 signers.json

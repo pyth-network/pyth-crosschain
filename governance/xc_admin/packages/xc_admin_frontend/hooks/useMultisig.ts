@@ -1,16 +1,16 @@
 import { Wallet } from '@coral-xyz/anchor'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
+import { useAnchorWallet } from '@solana/wallet-adapter-react'
 import {
   AccountMeta,
   Cluster,
   Connection,
   Keypair,
   PublicKey,
-  Transaction,
 } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import {
   getManyProposalsInstructions,
   getMultisigCluster,
@@ -42,7 +42,8 @@ export const PRICE_FEED_MULTISIG: Record<Cluster | 'localnet', PublicKey> = {
 interface MultisigHookData {
   isLoading: boolean
   error: any // TODO: fix any
-  squads: SquadsMesh | undefined
+  proposeSquads: SquadsMesh | undefined
+  voteSquads: SquadsMesh | undefined
   upgradeMultisigAccount: MultisigAccount | undefined
   priceFeedMultisigAccount: MultisigAccount | undefined
   upgradeMultisigProposals: TransactionAccount[]
@@ -78,7 +79,10 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
   const [allProposalsIxsParsed, setAllProposalsIxsParsed] = useState<
     MultisigInstruction[][]
   >([])
-  const [squads, setSquads] = useState<SquadsMesh>()
+  const [proposeSquads, setProposeSquads] = useState<SquadsMesh>()
+  const [voteSquads, setVoteSquads] = useState<SquadsMesh>()
+  const anchorWallet = useAnchorWallet()
+
   const [urlsIndex, setUrlsIndex] = useState(0)
 
   useEffect(() => {
@@ -93,14 +97,22 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
       wsEndpoint: urls[urlsIndex].wsUrl,
     })
     if (wallet) {
-      setSquads(
+      setProposeSquads(
         new SquadsMesh({
           connection,
           wallet,
         })
       )
     }
-  }, [wallet, urlsIndex, cluster])
+    if (anchorWallet) {
+      setVoteSquads(
+        new SquadsMesh({
+          connection,
+          wallet: anchorWallet as Wallet,
+        })
+      )
+    }
+  }, [wallet, urlsIndex, cluster, anchorWallet])
 
   useEffect(() => {
     let cancelled = false
@@ -224,7 +236,8 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
   return {
     isLoading,
     error,
-    squads,
+    proposeSquads,
+    voteSquads,
     upgradeMultisigAccount,
     priceFeedMultisigAccount,
     upgradeMultisigProposals,

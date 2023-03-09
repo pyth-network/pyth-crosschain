@@ -25,6 +25,7 @@ import {
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'
+import { StatusFilterContext } from '../../contexts/StatusFilterContext'
 import { PRICE_FEED_MULTISIG } from '../../hooks/useMultisig'
 import VerifiedIcon from '../../images/icons/verified.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
@@ -32,6 +33,7 @@ import ClusterSwitch from '../ClusterSwitch'
 import CopyPubkey from '../common/CopyPubkey'
 import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
+import ProposalStatusFilter from '../ProposalStatusFilter'
 
 // check if a string is a pubkey
 const isPubkey = (str: string) => {
@@ -43,16 +45,26 @@ const isPubkey = (str: string) => {
   }
 }
 
+const getMappingCluster = (cluster: string) => {
+  if (cluster === 'mainnet-beta' || cluster === 'pythnet') {
+    return 'pythnet'
+  } else {
+    return 'pythtest'
+  }
+}
+
 const ProposalRow = ({
   proposal,
   verified,
   setCurrentProposalPubkey,
+  multisig,
 }: {
   proposal: TransactionAccount
   verified: boolean
   setCurrentProposalPubkey: Dispatch<SetStateAction<string | undefined>>
+  multisig: MultisigAccount | undefined
 }) => {
-  const status = Object.keys(proposal.status)[0]
+  const status = getProposalStatus(proposal, multisig)
 
   const router = useRouter()
 
@@ -126,6 +138,8 @@ const StatusTag = ({ proposalStatus }: { proposalStatus: string }) => {
           ? 'bg-[#C4428F]'
           : proposalStatus === 'rejected'
           ? 'bg-[#CF6E42]'
+          : proposalStatus === 'expired'
+          ? 'bg-[#A52A2A]'
           : 'bg-pythPurple'
       } py-1 px-2 text-xs`}
     >
@@ -172,6 +186,21 @@ const ParsedAccountPubkeyRow = ({
   )
 }
 
+const getProposalStatus = (
+  proposal: TransactionAccount | undefined,
+  multisig: MultisigAccount | undefined
+): string => {
+  if (multisig && proposal) {
+    const onChainStatus = Object.keys(proposal.status)[0]
+    return proposal.transactionIndex <= multisig.msChangeIndex &&
+      (onChainStatus == 'active' || onChainStatus == 'draft')
+      ? 'expired'
+      : onChainStatus
+  } else {
+    return 'unkwown'
+  }
+}
+
 const Proposal = ({
   publisherKeyToNameMapping,
   multisigSignerKeyToNameMapping,
@@ -181,7 +210,7 @@ const Proposal = ({
   verified,
   multisig,
 }: {
-  publisherKeyToNameMapping: Record<string, string>
+  publisherKeyToNameMapping: Record<string, Record<string, string>>
   multisigSignerKeyToNameMapping: Record<string, string>
   proposal: TransactionAccount | undefined
   proposalIndex: number
@@ -198,12 +227,14 @@ const Proposal = ({
   const [priceAccountKeyToSymbolMapping, setPriceAccountKeyToSymbolMapping] =
     useState<{ [key: string]: string }>({})
   const { cluster } = useContext(ClusterContext)
+  const publisherKeyToNameMappingCluster =
+    publisherKeyToNameMapping[getMappingCluster(cluster)]
   const {
-    squads,
+    voteSquads,
     isLoading: isMultisigLoading,
     setpriceFeedMultisigProposals,
   } = useMultisigContext()
-  const { rawConfig, dataIsLoading, connection } = usePythContext()
+  const { rawConfig, dataIsLoading } = usePythContext()
 
   useEffect(() => {
     setCurrentProposal(proposal)
@@ -225,7 +256,7 @@ const Proposal = ({
     }
   }, [rawConfig, dataIsLoading])
 
-  const proposalStatus = proposal ? Object.keys(proposal.status)[0] : 'unknown'
+  const proposalStatus = getProposalStatus(proposal, multisig)
 
   useEffect(() => {
     // update the priceFeedMultisigProposals with previous value but replace the current proposal with the updated one at the specific index
@@ -238,12 +269,12 @@ const Proposal = ({
   }, [currentProposal, setpriceFeedMultisigProposals, proposalIndex])
 
   const handleClickApprove = async () => {
-    if (proposal && squads) {
+    if (proposal && voteSquads) {
       try {
         setIsTransactionLoading(true)
-        await squads.approveTransaction(proposal.publicKey)
+        await voteSquads.approveTransaction(proposal.publicKey)
         const proposals = await getProposals(
-          squads,
+          voteSquads,
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
         )
         setCurrentProposal(
@@ -263,12 +294,12 @@ const Proposal = ({
   }
 
   const handleClickReject = async () => {
-    if (proposal && squads) {
+    if (proposal && voteSquads) {
       try {
         setIsTransactionLoading(true)
-        await squads.rejectTransaction(proposal.publicKey)
+        await voteSquads.rejectTransaction(proposal.publicKey)
         const proposals = await getProposals(
-          squads,
+          voteSquads,
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
         )
         setCurrentProposal(
@@ -288,12 +319,12 @@ const Proposal = ({
   }
 
   const handleClickExecute = async () => {
-    if (proposal && squads) {
+    if (proposal && voteSquads) {
       try {
         setIsTransactionLoading(true)
-        await squads.executeTransaction(proposal.publicKey)
+        await voteSquads.executeTransaction(proposal.publicKey)
         const proposals = await getProposals(
-          squads,
+          voteSquads,
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
         )
         setCurrentProposal(
@@ -313,12 +344,12 @@ const Proposal = ({
   }
 
   const handleClickCancel = async () => {
-    if (proposal && squads) {
+    if (proposal && voteSquads) {
       try {
         setIsTransactionLoading(true)
-        await squads.cancelTransaction(proposal.publicKey)
+        await voteSquads.cancelTransaction(proposal.publicKey)
         const proposals = await getProposals(
-          squads,
+          voteSquads,
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
         )
         setCurrentProposal(
@@ -574,12 +605,12 @@ const Proposal = ({
                           </div>
                           {key === 'pub' &&
                           instruction.args[key].toBase58() in
-                            publisherKeyToNameMapping ? (
+                            publisherKeyToNameMappingCluster ? (
                             <ParsedAccountPubkeyRow
                               key={`${index}_${instruction.args[
                                 key
                               ].toBase58()}`}
-                              mapping={publisherKeyToNameMapping}
+                              mapping={publisherKeyToNameMappingCluster}
                               title="publisher"
                               pubkey={instruction.args[key].toBase58()}
                             />
@@ -825,13 +856,13 @@ const Proposal = ({
                                           parsedInstruction.args[
                                             key
                                           ].toBase58() in
-                                            publisherKeyToNameMapping ? (
+                                            publisherKeyToNameMappingCluster ? (
                                             <ParsedAccountPubkeyRow
                                               key={`${index}_${parsedInstruction.args[
                                                 key
                                               ].toBase58()}`}
                                               mapping={
-                                                publisherKeyToNameMapping
+                                                publisherKeyToNameMappingCluster
                                               }
                                               title="publisher"
                                               pubkey={parsedInstruction.args[
@@ -1028,7 +1059,7 @@ const Proposals = ({
   publisherKeyToNameMapping,
   multisigSignerKeyToNameMapping,
 }: {
-  publisherKeyToNameMapping: Record<string, string>
+  publisherKeyToNameMapping: Record<string, Record<string, string>>
   multisigSignerKeyToNameMapping: Record<string, string>
 }) => {
   const router = useRouter()
@@ -1039,12 +1070,16 @@ const Proposals = ({
   >([])
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
   const { cluster } = useContext(ClusterContext)
+  const { statusFilter } = useContext(StatusFilterContext)
   const {
     priceFeedMultisigAccount,
     priceFeedMultisigProposals,
     allProposalsIxsParsed,
     isLoading: isMultisigLoading,
   } = useMultisigContext()
+  const [filteredProposals, setFilteredProposals] = useState<
+    TransactionAccount[]
+  >(priceFeedMultisigProposals)
 
   useEffect(() => {
     if (!isMultisigLoading) {
@@ -1125,6 +1160,21 @@ const Proposals = ({
     cluster,
   ])
 
+  useEffect(() => {
+    // filter price feed multisig proposals by status
+    if (statusFilter === 'all') {
+      setFilteredProposals(priceFeedMultisigProposals)
+    } else {
+      setFilteredProposals(
+        priceFeedMultisigProposals.filter(
+          (proposal) =>
+            getProposalStatus(proposal, priceFeedMultisigAccount) ===
+            statusFilter
+        )
+      )
+    }
+  }, [statusFilter, priceFeedMultisigAccount, priceFeedMultisigProposals])
+
   return (
     <div className="relative">
       <div className="container flex flex-col items-center justify-between lg:flex-row">
@@ -1147,26 +1197,33 @@ const Proposals = ({
                 <div className="mt-3">
                   <Loadbar theme="light" />
                 </div>
-              ) : priceFeedMultisigProposals.length > 0 ? (
-                <>
-                  <div className="pb-4">
-                    <h4 className="h4">
-                      Total Proposals: {priceFeedMultisigProposals.length}
-                    </h4>
-                  </div>
-                  <div className="flex flex-col">
-                    {priceFeedMultisigProposals.map((proposal, idx) => (
-                      <ProposalRow
-                        key={idx}
-                        proposal={proposal}
-                        verified={allProposalsVerifiedArr[idx]}
-                        setCurrentProposalPubkey={setCurrentProposalPubkey}
-                      />
-                    ))}
-                  </div>
-                </>
               ) : (
-                "No proposals found. If you're a member of the price feed multisig, you can create a proposal."
+                <>
+                  <div className="flex items-center justify-between pb-4">
+                    <h4 className="h4">
+                      Total Proposals: {filteredProposals.length}
+                    </h4>
+                    <ProposalStatusFilter />
+                  </div>
+                  {filteredProposals.length > 0 ? (
+                    <div className="flex flex-col">
+                      {filteredProposals.map((proposal, idx) => (
+                        <ProposalRow
+                          key={idx}
+                          proposal={proposal}
+                          verified={allProposalsVerifiedArr[idx]}
+                          setCurrentProposalPubkey={setCurrentProposalPubkey}
+                          multisig={priceFeedMultisigAccount}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-4">
+                      No proposals found. If you&apos;re a member of the price
+                      feed multisig, you can create a proposal.
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </>

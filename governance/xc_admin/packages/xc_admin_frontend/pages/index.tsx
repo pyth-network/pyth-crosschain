@@ -1,6 +1,10 @@
+import { Wallet } from '@coral-xyz/anchor'
+import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { Tab } from '@headlessui/react'
+import { useAnchorWallet } from '@solana/wallet-adapter-react'
+import { Keypair } from '@solana/web3.js'
 import * as fs from 'fs'
-import type { GetStaticProps, NextPage } from 'next'
+import type { GetServerSideProps, NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Layout from '../components/layout/Layout'
@@ -9,30 +13,47 @@ import Proposals from '../components/tabs/Proposals'
 import UpdatePermissions from '../components/tabs/UpdatePermissions'
 import { MultisigContextProvider } from '../contexts/MultisigContext'
 import { PythContextProvider } from '../contexts/PythContext'
+import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
 
-export const getStaticProps: GetStaticProps = async () => {
-  const publisherMappingFilePath = `${
-    process.env.MAPPING_BASE_PATH || ''
-  }publishers.json`
-  const publisherKeyToNameMapping = fs.existsSync(publisherMappingFilePath)
-    ? JSON.parse(
-        (await fs.promises.readFile(publisherMappingFilePath)).toString()
-      )
-    : {}
-  const multisigSignerMappingFilePath = `${
-    process.env.MAPPING_BASE_PATH || ''
-  }signers.json`
+export const getServerSideProps: GetServerSideProps = async () => {
+  const KEYPAIR_BASE_PATH = process.env.KEYPAIR_BASE_PATH || ''
+  const OPS_WALLET = fs.existsSync(KEYPAIR_BASE_PATH)
+    ? JSON.parse(fs.readFileSync(KEYPAIR_BASE_PATH, 'ascii'))
+    : null
+
+  const MAPPINGS_BASE_PATH = process.env.MAPPINGS_BASE_PATH || ''
+  const PUBLISHER_PYTHNET_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/publishers-pythnet.json`
+  const PUBLISHER_PYTHTEST_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/publishers-pythtest.json`
+
+  const publisherKeyToNameMapping = {
+    pythnet: fs.existsSync(PUBLISHER_PYTHNET_MAPPING_PATH)
+      ? JSON.parse(
+          (
+            await fs.promises.readFile(PUBLISHER_PYTHNET_MAPPING_PATH)
+          ).toString()
+        )
+      : {},
+    pythtest: fs.existsSync(PUBLISHER_PYTHTEST_MAPPING_PATH)
+      ? JSON.parse(
+          (
+            await fs.promises.readFile(PUBLISHER_PYTHTEST_MAPPING_PATH)
+          ).toString()
+        )
+      : {},
+  }
+  const MULTISIG_SIGNER_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/signers.json`
   const multisigSignerKeyToNameMapping = fs.existsSync(
-    multisigSignerMappingFilePath
+    MULTISIG_SIGNER_MAPPING_PATH
   )
     ? JSON.parse(
-        (await fs.promises.readFile(multisigSignerMappingFilePath)).toString()
+        (await fs.promises.readFile(MULTISIG_SIGNER_MAPPING_PATH)).toString()
       )
     : {}
 
   return {
     props: {
+      OPS_WALLET,
       publisherKeyToNameMapping,
       multisigSignerKeyToNameMapping,
     },
@@ -60,11 +81,22 @@ const TAB_INFO = {
 const DEFAULT_TAB = 'general'
 
 const Home: NextPage<{
-  publisherKeyToNameMapping: Record<string, string>
+  OPS_WALLET: number[] | null
+  publisherKeyToNameMapping: Record<string, Record<string, string>>
   multisigSignerKeyToNameMapping: Record<string, string>
-}> = ({ publisherKeyToNameMapping, multisigSignerKeyToNameMapping }) => {
+}> = ({
+  OPS_WALLET,
+  publisherKeyToNameMapping,
+  multisigSignerKeyToNameMapping,
+}) => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
   const tabInfoArray = Object.values(TAB_INFO)
+  const anchorWallet = useAnchorWallet()
+  const wallet = OPS_WALLET
+    ? (new NodeWallet(
+        Keypair.fromSecretKey(Uint8Array.from(OPS_WALLET))
+      ) as Wallet)
+    : (anchorWallet as Wallet)
 
   const router = useRouter()
 
@@ -99,7 +131,7 @@ const Home: NextPage<{
   return (
     <Layout>
       <PythContextProvider>
-        <MultisigContextProvider>
+        <MultisigContextProvider wallet={wallet}>
           <div className="container relative pt-16 md:pt-20">
             <div className="py-8 md:py-16">
               <Tab.Group
@@ -132,10 +164,12 @@ const Home: NextPage<{
             <UpdatePermissions />
           ) : tabInfoArray[currentTabIndex].queryString ===
             TAB_INFO.Proposals.queryString ? (
-            <Proposals
-              publisherKeyToNameMapping={publisherKeyToNameMapping}
-              multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
-            />
+            <StatusFilterProvider>
+              <Proposals
+                publisherKeyToNameMapping={publisherKeyToNameMapping}
+                multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
+              />
+            </StatusFilterProvider>
           ) : null}
         </MultisigContextProvider>
       </PythContextProvider>
