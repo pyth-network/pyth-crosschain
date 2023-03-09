@@ -4,17 +4,17 @@ import { IPricePusher, IPriceListener } from "./interface";
 import { PriceConfig, shouldUpdate } from "./price-config";
 
 export class Controller {
-  private cooldownDuration: DurationInSeconds;
+  private pushingFrequency: DurationInSeconds;
   constructor(
     private priceConfigs: PriceConfig[],
     private sourcePriceListener: IPriceListener,
     private targetPriceListener: IPriceListener,
     private targetChainPricePusher: IPricePusher,
     config: {
-      cooldownDuration: DurationInSeconds;
+      pushingFrequency: DurationInSeconds;
     }
   ) {
-    this.cooldownDuration = config.cooldownDuration;
+    this.pushingFrequency = config.pushingFrequency;
   }
 
   async start() {
@@ -25,7 +25,7 @@ export class Controller {
     // wait for the listeners to get updated. There could be a restart
     // before this run and we need to respect the cooldown duration as
     // their might be a message sent before.
-    await sleep(this.cooldownDuration * 1000);
+    await sleep(this.pushingFrequency * 1000);
 
     for (;;) {
       const pricesToPush: PriceConfig[] = [];
@@ -58,7 +58,7 @@ export class Controller {
         );
       }
 
-      await sleep(this.cooldownDuration * 1000);
+      await sleep(this.pushingFrequency * 1000);
     }
   }
 }

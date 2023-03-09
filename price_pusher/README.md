@@ -54,16 +54,18 @@ npm run start -- evm --endpoint wss://example-rpc.com \
     --price-service-endpoint https://example-pyth-price.com \
     --price-config-file "path/to/price-config-file.yaml.testnet.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
-    [--cooldown-duration 10] \
-    [--polling-frequency 5]
+    [--pushing-frequency 10] \
+    [--polling-frequency 5] \
+    [--override-gas-price-multiplier 1.1]
 
 # For Injective
 npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
     --pyth-contract-address inj1z60tg0... --price-service-endpoint "https://example-pyth-price.com" \
     --price-config-file "path/to/price-config-file.yaml.testnet.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
-    [--cooldown-duration 10] \
-    [--polling-frequency 5]
+    [--pushing-frequency 10] \
+    [--polling-frequency 5] \
+
 
 # Or, run the price pusher docker image instead of building from the source
 docker run public.ecr.aws/pyth-network/xc-price-pusher:v<version> -- <above-arguments>
@@ -82,11 +84,11 @@ npm run start -- {network} --help
 
 ### Example
 
-For example, to push `BTC/USD` and `BNB/USD` prices on BNB testnet, run the following command:
+For example, to push `BTC/USD` and `BNB/USD` prices on Fantom testnet, run the following command:
 
 ```sh
 npm run dev -- evm --endpoint https://endpoints.omniatech.io/v1/fantom/testnet/public \
-    --pyth-contract-address 0xd7308b14BF4008e7C7196eC35610B1427C5702EA --price-service-endpoint https://xc-testnet.pyth.network \
+    --pyth-contract-address 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C --price-service-endpoint https://xc-testnet.pyth.network \
     --mnemonic-file "./mnemonic" --price-config-file "./price-config.testnet.sample.yaml"
 ```
 
@@ -125,3 +127,13 @@ docker-compose -f docker-compose.testnet.sample.yaml up
 It will take a few minutes until all the services are up and running.
 
 [pyth price service]: https://github.com/pyth-network/pyth-crosschain/tree/main/price_service/server
+
+## Reliability
+
+You can run multiple instances of the price pusher to increase the reliability. It is better to use
+difference RPCs to get better reliability in case an RPC goes down. **If you use the same payer account
+in different pushers, then due to blockchains nonce or sequence for accounts, a transaction won't be
+pushed twiced and you won't pay additional costs most of the time.** However, there might be some race
+condiitons in the RPCs because they are often behind a load balancer than can sometimes cause rejected
+transactions land on-chain. You can reduce the chances of additional cost overhead by reducing the
+pushing frequency.
