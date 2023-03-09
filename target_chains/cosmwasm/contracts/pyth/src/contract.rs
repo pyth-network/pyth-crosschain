@@ -1,3 +1,8 @@
+// #[cfg(target_chain = "injective")]
+use crate::injective::{
+    create_relay_pyth_prices_msg,
+    InjectiveMsgWrapper as MsgWrapper,
+};
 use {
     crate::{
         governance::{
@@ -36,7 +41,7 @@ use {
         CosmosMsg,
         Deps,
         DepsMut,
-        Empty as MsgWrapper,
+        // Empty as MsgWrapper,
         Env,
         MessageInfo,
         OverflowError,
@@ -72,8 +77,6 @@ use {
         state::ParsedVAA,
     },
 };
-// #[cfg(target_chain = "injective")]
-// use crate::injective::InjectiveMsgWrapper as MsgWrapper;
 
 /// Migration code that runs once when the contract is upgraded. On upgrade, the migrate
 /// function in the *new* code version is run, which allows the new code to update the on-chain
@@ -186,7 +189,9 @@ fn update_price_feeds(
 
     let num_total_new_attestations = total_new_attestations.len();
 
+    let inj_message = create_relay_pyth_prices_msg(env.contract.address, total_new_attestations);
     Ok(Response::new()
+        .add_message(inj_message)
         .add_attribute("action", "update_price_feeds")
         .add_attribute("num_attestations", format!("{num_total_attestations}"))
         .add_attribute("num_updated", format!("{num_total_new_attestations}")))
@@ -701,7 +706,7 @@ mod test {
         emitter_address: &[u8],
         emitter_chain: u16,
         funds: &[Coin],
-    ) -> StdResult<Response> {
+    ) -> StdResult<Response<MsgWrapper>> {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(config_info).unwrap();
 
@@ -1157,7 +1162,7 @@ mod test {
     fn apply_governance_vaa(
         initial_config: &ConfigInfo,
         vaa: &ParsedVAA,
-    ) -> StdResult<(Response, ConfigInfo)> {
+    ) -> StdResult<(Response<MsgWrapper>, ConfigInfo)> {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(initial_config).unwrap();
 

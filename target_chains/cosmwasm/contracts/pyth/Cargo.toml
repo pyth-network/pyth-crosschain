@@ -19,6 +19,7 @@ cosmwasm-storage = { version = "1.0.0" }
 schemars = "0.8.1"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 serde_derive = { version = "1.0.103"}
+serde_repr = "0.1"
 terraswap = "2.4.0"
 wormhole-bridge-terra-2 = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.14.8", features = ["library"] }
 thiserror = { version = "1.0.20" }
