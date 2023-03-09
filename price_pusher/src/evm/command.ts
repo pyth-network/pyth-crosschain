@@ -46,7 +46,7 @@ export default {
     ...options.mnemonicFile,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
-    ...options.cooldownDuration,
+    ...options.pushingFrequency,
   },
   handler: function (argv: any) {
     // FIXME: type checks for this
@@ -56,7 +56,7 @@ export default {
       priceServiceEndpoint,
       mnemonicFile,
       pythContractAddress,
-      cooldownDuration,
+      pushingFrequency,
       pollingFrequency,
       customGasStation,
       txSpeed,
@@ -109,7 +109,7 @@ export default {
       pythListener,
       evmListener,
       evmPusher,
-      { cooldownDuration }
+      { pushingFrequency }
     );
 
     controller.start();

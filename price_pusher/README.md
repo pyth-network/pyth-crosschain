@@ -54,7 +54,7 @@ npm run start -- evm --endpoint wss://example-rpc.com \
     --price-service-endpoint https://example-pyth-price.com \
     --price-config-file "path/to/price-config-file.yaml.testnet.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
-    [--cooldown-duration 10] \
+    [--pushing-frequency 10] \
     [--polling-frequency 5]
 
 # For Injective
@@ -62,7 +62,7 @@ npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
     --pyth-contract-address inj1z60tg0... --price-service-endpoint "https://example-pyth-price.com" \
     --price-config-file "path/to/price-config-file.yaml.testnet.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
-    [--cooldown-duration 10] \
+    [--pushing-frequency 10] \
     [--polling-frequency 5]
 
 # Or, run the price pusher docker image instead of building from the source
