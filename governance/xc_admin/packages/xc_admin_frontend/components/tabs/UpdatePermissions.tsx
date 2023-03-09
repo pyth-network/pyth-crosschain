@@ -335,7 +335,7 @@ const UpdatePermissions = () => {
     if (connected && proposeSquads) {
       const provider = new AnchorProvider(
         connection,
-        proposeSquads?.wallet,
+        proposeSquads.wallet,
         AnchorProvider.defaultOptions()
       )
       setPythProgramClient(

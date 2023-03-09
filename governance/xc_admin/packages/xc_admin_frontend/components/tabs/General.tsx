@@ -143,7 +143,6 @@ const General = () => {
 
   // function to download json file
   const handleDownloadJsonButtonClick = () => {
-    console.log(proposeSquads?.wallet.publicKey.toBase58())
     const dataStr =
       'data:text/json;charset=utf-8,' +
       encodeURIComponent(JSON.stringify(data, null, 2))
@@ -720,7 +719,7 @@ const General = () => {
     if (connected && proposeSquads) {
       const provider = new AnchorProvider(
         connection,
-        proposeSquads?.wallet,
+        proposeSquads.wallet,
         AnchorProvider.defaultOptions()
       )
       setPythProgramClient(
