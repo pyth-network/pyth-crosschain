@@ -6,7 +6,7 @@ First, run the development server:
 
 ```bash
 pyth-crosschain % npm install
-pyth-crosschain % npx run lerna build --scope xc_admin_frontend --include-dependencies
+pyth-crosschain % npx lerna run build --scope xc_admin_frontend --include-dependencies
 pyth-crosschain % cd governance/xc_admin/packages/xc_admin_frontend
 xc_admin_frontend % npm run dev
 ```
