@@ -6,4 +6,5 @@ pub mod governance;
 pub mod msg;
 pub mod state;
 
-pub mod injective;
+#[cfg(feature = "injective")]
+mod injective;

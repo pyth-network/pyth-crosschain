@@ -1,8 +1,10 @@
-// #[cfg(target_chain = "injective")]
+#[cfg(feature = "injective")]
 use crate::injective::{
     create_relay_pyth_prices_msg,
     InjectiveMsgWrapper as MsgWrapper,
 };
+#[cfg(not(feature = "injective"))]
+use cosmwasm_std::Empty as MsgWrapper;
 use {
     crate::{
         governance::{
@@ -41,7 +43,6 @@ use {
         CosmosMsg,
         Deps,
         DepsMut,
-        // Empty as MsgWrapper,
         Env,
         MessageInfo,
         OverflowError,
@@ -189,9 +190,17 @@ fn update_price_feeds(
 
     let num_total_new_attestations = total_new_attestations.len();
 
-    let inj_message = create_relay_pyth_prices_msg(env.contract.address, total_new_attestations);
-    Ok(Response::new()
-        .add_message(inj_message)
+    let response = Response::new();
+
+    #[cfg(feature = "injective")]
+    {
+        let inj_message =
+            create_relay_pyth_prices_msg(env.contract.address, total_new_attestations);
+        response.add_message(inj_message);
+    }
+
+
+    Ok(response
         .add_attribute("action", "update_price_feeds")
         .add_attribute("num_attestations", format!("{num_total_attestations}"))
         .add_attribute("num_updated", format!("{num_total_new_attestations}")))
