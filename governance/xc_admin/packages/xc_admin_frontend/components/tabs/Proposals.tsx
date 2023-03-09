@@ -462,17 +462,14 @@ const Proposal = ({
           {currentProposal.approved.map((pubkey, idx) => (
             <>
               <div className="flex justify-between" key={pubkey.toBase58()}>
-                <div>Key {idx + 1}</div>
+                <div>
+                  Key {idx + 1}{' '}
+                  {pubkey.toBase58() in multisigSignerKeyToNameMapping
+                    ? `(${multisigSignerKeyToNameMapping[pubkey.toBase58()]})`
+                    : null}
+                </div>
                 <CopyPubkey pubkey={pubkey.toBase58()} />
               </div>
-              {pubkey.toBase58() in multisigSignerKeyToNameMapping ? (
-                <ParsedAccountPubkeyRow
-                  key={`${idx}_${pubkey.toBase58()}_confirmed`}
-                  mapping={multisigSignerKeyToNameMapping}
-                  title="owner"
-                  pubkey={pubkey.toBase58()}
-                />
-              ) : null}
             </>
           ))}
         </div>
