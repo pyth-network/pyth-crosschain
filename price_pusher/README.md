@@ -82,11 +82,11 @@ npm run start -- {network} --help
 
 ### Example
 
-For example, to push `BTC/USD` and `BNB/USD` prices on BNB testnet, run the following command:
+For example, to push `BTC/USD` and `BNB/USD` prices on Fantom testnet, run the following command:
 
 ```sh
 npm run dev -- evm --endpoint https://endpoints.omniatech.io/v1/fantom/testnet/public \
-    --pyth-contract-address 0xd7308b14BF4008e7C7196eC35610B1427C5702EA --price-service-endpoint https://xc-testnet.pyth.network \
+    --pyth-contract-address 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C --price-service-endpoint https://xc-testnet.pyth.network \
     --mnemonic-file "./mnemonic" --price-config-file "./price-config.testnet.sample.yaml"
 ```
 

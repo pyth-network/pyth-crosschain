@@ -42,7 +42,14 @@ export default {
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: console,
+        logger: {
+          // Log only warnings and errors from the price service client
+          info: () => undefined,
+          warn: console.warn,
+          error: console.error,
+          debug: () => undefined,
+          trace: () => undefined,
+        },
       }
     );
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();

@@ -9,7 +9,6 @@ import { TransactionReceipt } from "ethereum-protocol";
 import { addLeading0x, DurationInSeconds, removeLeading0x } from "../utils";
 import AbstractPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/AbstractPyth.json";
 import HDWalletProvider from "@truffle/hdwallet-provider";
-import { Provider } from "web3/providers";
 import Web3 from "web3";
 import { isWsEndpoint } from "../utils";
 import {
@@ -18,6 +17,7 @@ import {
   UnixTimestamp,
 } from "@pythnetwork/price-service-client";
 import { CustomGasStation } from "./custom-gas-station";
+import { Provider } from "web3/providers";
 
 export class EvmPriceListener extends ChainPriceListener {
   private pythContractFactory: PythContractFactory;
@@ -117,18 +117,35 @@ export class EvmPriceListener extends ChainPriceListener {
   }
 }
 
+type PushAttempt = {
+  nonce: number;
+  gasPrice: number;
+};
+
 export class EvmPricePusher implements IPricePusher {
   private customGasStation?: CustomGasStation;
+  private pythContract: Contract;
+  private web3: Web3;
+  private pusherAddress: string | undefined;
+  private lastPushAttempt: PushAttempt | undefined;
+
   constructor(
     private connection: PriceServiceConnection,
-    private pythContract: Contract,
+    pythContractFactory: PythContractFactory,
+    private overrideGasPriceMultiplier: number,
     customGasStation?: CustomGasStation
   ) {
     this.customGasStation = customGasStation;
+    this.pythContract = pythContractFactory.createPythContractWithPayer();
+    this.web3 = new Web3(pythContractFactory.createWeb3PayerProvider() as any);
   }
+
   // The pubTimes are passed here to use the values that triggered the push.
   // This is an optimization to avoid getting a newer value (as an update comes)
   // and will help multiple price pushers to have consistent behaviour.
+  // To ensure that we transactions are landing and we are not pushing the prices twice
+  // we will re-use the same nonce (with a higher gas price) if the previous transaction
+  // is not landed yet.
   async updatePriceFeed(
     priceIds: string[],
     pubTimesToPush: UnixTimestamp[]
@@ -146,10 +163,7 @@ export class EvmPricePusher implements IPricePusher {
       priceIdsWith0x
     );
 
-    console.log(
-      "Pushing ",
-      priceIdsWith0x.map((priceIdWith0x) => `${priceIdWith0x}`)
-    );
+    console.log("Pushing ", priceIdsWith0x);
 
     let updateFee;
 
@@ -165,7 +179,37 @@ export class EvmPricePusher implements IPricePusher {
       throw e;
     }
 
-    const gasPrice = await this.customGasStation?.getCustomGasPrice();
+    let gasPrice = Number(
+      (await this.customGasStation?.getCustomGasPrice()) ||
+        (await this.web3.eth.getGasPrice())
+    );
+
+    // Try to re-use the same nonce and increase the gas if the last tx is not landed yet.
+    if (this.pusherAddress === undefined) {
+      this.pusherAddress = (await this.web3.eth.getAccounts())[0];
+    }
+    const lastExecutedNonce =
+      (await this.web3.eth.getTransactionCount(this.pusherAddress)) - 1;
+
+    let gasPriceToOverride = undefined;
+
+    if (this.lastPushAttempt !== undefined) {
+      if (this.lastPushAttempt.nonce <= lastExecutedNonce) {
+        this.lastPushAttempt = undefined;
+      } else {
+        gasPriceToOverride = Math.ceil(
+          this.lastPushAttempt.gasPrice * this.overrideGasPriceMultiplier
+        );
+      }
+    }
+
+    if (gasPriceToOverride !== undefined && gasPriceToOverride > gasPrice) {
+      gasPrice = gasPriceToOverride;
+    }
+
+    const txNonce = lastExecutedNonce + 1;
+
+    console.log(`Using gas price: ${gasPrice} and nonce: ${txNonce}`);
 
     this.pythContract.methods
       .updatePriceFeedsIfNecessary(
@@ -173,7 +217,7 @@ export class EvmPricePusher implements IPricePusher {
         priceIdsWith0x,
         pubTimesToPush
       )
-      .send({ value: updateFee, gasPrice })
+      .send({ value: updateFee, gasPrice, nonce: txNonce })
       .on("transactionHash", (hash: string) => {
         console.log(`Successful. Tx hash: ${hash}`);
       })
@@ -207,10 +251,32 @@ export class EvmPricePusher implements IPricePusher {
           throw err;
         }
 
+        if (err.message.includes("transaction underpriced")) {
+          console.error(
+            "The gas price of the transaction is too low. Skipping this push. " +
+              "You might want to use a custom gas station or increase the override gas price " +
+              "multiplier to increase the likelihood of the transaction landing on-chain."
+          );
+          return;
+        }
+
+        if (err.message.includes("could not replace existing tx")) {
+          console.log(
+            "A transaction with the same nonce has been mined and this one is no longer needed."
+          );
+          return;
+        }
+
         console.error("An unidentified error has occured:");
         console.error(receipt);
         throw err;
       });
+
+    // Update lastAttempt
+    this.lastPushAttempt = {
+      nonce: txNonce,
+      gasPrice: gasPrice,
+    };
   }
 
   private async getPriceFeedsUpdateData(
@@ -238,12 +304,7 @@ export class PythContractFactory {
    * @returns Pyth contract
    */
   createPythContractWithPayer(): Contract {
-    const provider = new HDWalletProvider({
-      mnemonic: {
-        phrase: this.mnemonic,
-      },
-      providerOrUrl: this.createWeb3Provider() as Provider,
-    });
+    const provider = this.createWeb3PayerProvider();
 
     const web3 = new Web3(provider as any);
 
@@ -275,7 +336,7 @@ export class PythContractFactory {
     return isWsEndpoint(this.endpoint);
   }
 
-  private createWeb3Provider() {
+  createWeb3Provider() {
     if (isWsEndpoint(this.endpoint)) {
       Web3.providers.WebsocketProvider.prototype.sendAsync =
         Web3.providers.WebsocketProvider.prototype.send;
@@ -299,5 +360,14 @@ export class PythContractFactory {
         timeout: 30000,
       });
     }
+  }
+
+  createWeb3PayerProvider() {
+    return new HDWalletProvider({
+      mnemonic: {
+        phrase: this.mnemonic,
+      },
+      providerOrUrl: this.createWeb3Provider() as Provider,
+    });
   }
 }
