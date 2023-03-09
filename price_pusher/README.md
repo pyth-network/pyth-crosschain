@@ -55,7 +55,8 @@ npm run start -- evm --endpoint wss://example-rpc.com \
     --price-config-file "path/to/price-config-file.yaml.testnet.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
     [--pushing-frequency 10] \
-    [--polling-frequency 5]
+    [--polling-frequency 5] \
+    [--override-gas-price-multiplier 1.1]
 
 # For Injective
 npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
@@ -63,7 +64,8 @@ npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
     --price-config-file "path/to/price-config-file.yaml.testnet.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
     [--pushing-frequency 10] \
-    [--polling-frequency 5]
+    [--polling-frequency 5] \
+
 
 # Or, run the price pusher docker image instead of building from the source
 docker run public.ecr.aws/pyth-network/xc-price-pusher:v<version> -- <above-arguments>
@@ -125,3 +127,13 @@ docker-compose -f docker-compose.testnet.sample.yaml up
 It will take a few minutes until all the services are up and running.
 
 [pyth price service]: https://github.com/pyth-network/pyth-crosschain/tree/main/price_service/server
+
+## Reliability
+
+You can run multiple instances of the price pusher to increase the reliability. It is better to use
+difference RPCs to get better reliability in case an RPC goes down. **If you use the same payer account
+in different pushers, then due to blockchains nonce or sequence for accounts, a transaction won't be
+pushed twiced and you won't pay additional costs most of the time.** However, there might be some race
+condiitons in the RPCs because they are often behind a load balancer than can sometimes cause rejected
+transactions land on-chain. You can reduce the chances of additional cost overhead by reducing the
+pushing frequency.
