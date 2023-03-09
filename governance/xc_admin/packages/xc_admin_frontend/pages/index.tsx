@@ -18,8 +18,8 @@ import { classNames } from '../utils/classNames'
 
 export const getServerSideProps: GetServerSideProps = async () => {
   const KEYPAIR_BASE_PATH = process.env.KEYPAIR_BASE_PATH || ''
-  const OPS_WALLET = fs.existsSync(KEYPAIR_BASE_PATH)
-    ? JSON.parse(fs.readFileSync(KEYPAIR_BASE_PATH, 'ascii'))
+  const OPS_WALLET = fs.existsSync(`${KEYPAIR_BASE_PATH}/ops-key`)
+    ? JSON.parse(fs.readFileSync(`${KEYPAIR_BASE_PATH}/ops-key`, 'ascii'))
     : null
 
   const MAPPINGS_BASE_PATH = process.env.MAPPINGS_BASE_PATH || ''
