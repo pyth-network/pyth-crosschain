@@ -17,14 +17,14 @@ import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const SECRETS_BASE_PATH = process.env.SECRETS_BASE_PATH || ''
-  const OPS_KEY_PATH = `${SECRETS_BASE_PATH}/ops-key.json`
-  const OPS_WALLET = fs.existsSync(String(process.env[OPS_KEY_PATH]))
-    ? JSON.parse(fs.readFileSync(String(process.env[OPS_KEY_PATH]), 'ascii'))
+  const KEYPAIR_BASE_PATH = process.env.KEYPAIR_BASE_PATH || ''
+  const OPS_WALLET = fs.existsSync(KEYPAIR_BASE_PATH)
+    ? JSON.parse(fs.readFileSync(KEYPAIR_BASE_PATH, 'ascii'))
     : null
 
-  const PUBLISHER_PYTHNET_MAPPING_PATH = `${SECRETS_BASE_PATH}/publishers-pythnet.json`
-  const PUBLISHER_PYTHTEST_MAPPING_PATH = `${SECRETS_BASE_PATH}/publishers-pythtest.json`
+  const MAPPINGS_BASE_PATH = process.env.MAPPINGS_BASE_PATH || ''
+  const PUBLISHER_PYTHNET_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/publishers-pythnet.json`
+  const PUBLISHER_PYTHTEST_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/publishers-pythtest.json`
 
   const publisherKeyToNameMapping = {
     pythnet: fs.existsSync(PUBLISHER_PYTHNET_MAPPING_PATH)
