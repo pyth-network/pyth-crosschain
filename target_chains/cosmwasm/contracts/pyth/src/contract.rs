@@ -36,6 +36,7 @@ use {
         CosmosMsg,
         Deps,
         DepsMut,
+        Empty as MsgWrapper,
         Env,
         MessageInfo,
         OverflowError,
@@ -71,6 +72,8 @@ use {
         state::ParsedVAA,
     },
 };
+// #[cfg(target_chain = "injective")]
+// use crate::injective::InjectiveMsgWrapper as MsgWrapper;
 
 /// Migration code that runs once when the contract is upgraded. On upgrade, the migrate
 /// function in the *new* code version is run, which allows the new code to update the on-chain
@@ -128,7 +131,12 @@ pub fn parse_and_verify_vaa(deps: DepsMut, block_time: u64, data: &Binary) -> St
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> StdResult<Response> {
+pub fn execute(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> StdResult<Response<MsgWrapper>> {
     match msg {
         ExecuteMsg::UpdatePriceFeeds { data } => update_price_feeds(deps, env, info, &data),
         ExecuteMsg::ExecuteGovernanceInstruction { data } => {
@@ -147,7 +155,7 @@ fn update_price_feeds(
     env: Env,
     info: MessageInfo,
     data: &[Binary],
-) -> StdResult<Response> {
+) -> StdResult<Response<MsgWrapper>> {
     let state = config_read(deps.storage).load()?;
 
     // Check that a sufficient fee was sent with the message
@@ -157,8 +165,9 @@ fn update_price_feeds(
         return Err(PythContractError::InsufficientFee.into());
     }
 
-    let mut total_attestations: usize = 0;
-    let mut new_attestations: usize = 0;
+    let mut num_total_attestations: usize = 0;
+    let mut total_new_attestations: Vec<PriceAttestation> = vec![];
+
     for datum in data {
         let vaa = parse_and_verify_vaa(deps.branch(), env.block.time.seconds(), datum)?;
         verify_vaa_from_data_source(&state, &vaa)?;
@@ -167,16 +176,20 @@ fn update_price_feeds(
         let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
             .map_err(|_| PythContractError::InvalidUpdatePayload)?;
 
-        let (num_updates, num_new) =
+        let (num_attestations, new_attestations) =
             process_batch_attestation(&mut deps, &env, &batch_attestation)?;
-        total_attestations += num_updates;
-        new_attestations += num_new;
+        num_total_attestations += num_attestations;
+        for new_attestation in new_attestations {
+            total_new_attestations.push(new_attestation.to_owned());
+        }
     }
+
+    let num_total_new_attestations = total_new_attestations.len();
 
     Ok(Response::new()
         .add_attribute("action", "update_price_feeds")
-        .add_attribute("num_attestations", format!("{total_attestations}"))
-        .add_attribute("num_updated", format!("{new_attestations}")))
+        .add_attribute("num_attestations", format!("{num_total_attestations}"))
+        .add_attribute("num_updated", format!("{num_total_new_attestations}")))
 }
 
 /// Execute a governance instruction provided as the VAA `data`.
@@ -187,7 +200,7 @@ fn execute_governance_instruction(
     env: Env,
     _info: MessageInfo,
     data: &Binary,
-) -> StdResult<Response> {
+) -> StdResult<Response<MsgWrapper>> {
     let vaa = parse_and_verify_vaa(deps.branch(), env.block.time.seconds(), data)?;
     let state = config_read(deps.storage).load()?;
     verify_vaa_from_governance_source(&state, &vaa)?;
@@ -371,26 +384,23 @@ fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> Std
 }
 
 /// Update the on-chain storage for any new price updates provided in `batch_attestation`.
-fn process_batch_attestation(
+fn process_batch_attestation<'a>(
     deps: &mut DepsMut,
     env: &Env,
-    batch_attestation: &BatchPriceAttestation,
-) -> StdResult<(usize, usize)> {
-    let mut new_attestations_cnt: usize = 0;
+    batch_attestation: &'a BatchPriceAttestation,
+) -> StdResult<(usize, Vec<&'a PriceAttestation>)> {
+    let mut new_attestations = vec![];
 
     // Update prices
     for price_attestation in batch_attestation.price_attestations.iter() {
         let price_feed = create_price_feed_from_price_attestation(price_attestation);
 
         if update_price_feed_if_new(deps, env, price_feed)? {
-            new_attestations_cnt += 1;
+            new_attestations.push(price_attestation);
         }
     }
 
-    Ok((
-        batch_attestation.price_attestations.len(),
-        new_attestations_cnt,
-    ))
+    Ok((batch_attestation.price_attestations.len(), new_attestations))
 }
 
 fn create_price_feed_from_price_attestation(price_attestation: &PriceAttestation) -> PriceFeed {
@@ -706,11 +716,11 @@ mod test {
         let attestations = BatchPriceAttestation {
             price_attestations: vec![],
         };
-        let (total_attestations, new_attestations) =
+        let (num_attestations, new_attestations) =
             process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
 
-        assert_eq!(total_attestations, 0);
-        assert_eq!(new_attestations, 0);
+        assert_eq!(num_attestations, 0);
+        assert_eq!(new_attestations.len(), 0);
     }
 
     #[test]
@@ -824,7 +834,7 @@ mod test {
         let attestations = BatchPriceAttestation {
             price_attestations: vec![price_attestation],
         };
-        let (total_attestations, new_attestations) =
+        let (num_attestations, new_attestations) =
             process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
 
 
@@ -834,8 +844,8 @@ mod test {
         let price = stored_price_feed.get_price_unchecked();
         let ema_price = stored_price_feed.get_ema_price_unchecked();
 
-        assert_eq!(total_attestations, 1);
-        assert_eq!(new_attestations, 1);
+        assert_eq!(num_attestations, 1);
+        assert_eq!(new_attestations.len(), 1);
 
         // for price
         assert_eq!(price.price, 99);
@@ -876,7 +886,7 @@ mod test {
         let attestations = BatchPriceAttestation {
             price_attestations: vec![price_attestation],
         };
-        let (total_attestations, new_attestations) =
+        let (num_attestations, new_attestations) =
             process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
 
 
@@ -886,8 +896,8 @@ mod test {
         let price = stored_price_feed.get_price_unchecked();
         let ema_price = stored_price_feed.get_ema_price_unchecked();
 
-        assert_eq!(total_attestations, 1);
-        assert_eq!(new_attestations, 1);
+        assert_eq!(num_attestations, 1);
+        assert_eq!(new_attestations.len(), 1);
 
         // for price
         assert_eq!(price.price, 100);
