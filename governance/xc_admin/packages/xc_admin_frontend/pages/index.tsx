@@ -17,37 +17,27 @@ import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const OPS_WALLET =
-    process.env['NEXT_PUBLIC_OPS_WALLET'] &&
-    fs.existsSync(String(process.env['NEXT_PUBLIC_OPS_WALLET']))
-      ? JSON.parse(
-          fs.readFileSync(
-            String(process.env['NEXT_PUBLIC_OPS_WALLET']),
-            'ascii'
-          )
-        )
-      : null
+  const SECRETS_BASE_PATH = process.env.SECRETS_BASE_PATH || ''
+  const OPS_KEY_PATH = `${SECRETS_BASE_PATH}/ops-key.json`
+  const OPS_WALLET = fs.existsSync(String(process.env[OPS_KEY_PATH]))
+    ? JSON.parse(fs.readFileSync(String(process.env[OPS_KEY_PATH]), 'ascii'))
+    : null
+
+  const PUBLISHER_PYTHNET_MAPPING_PATH = `${SECRETS_BASE_PATH}/publishers-pythnet.json`
+  const PUBLISHER_PYTHTEST_MAPPING_PATH = `${SECRETS_BASE_PATH}/publishers-pythtest.json`
 
   const publisherKeyToNameMapping = {
-    pythnet: fs.existsSync(
-      `${process.env.MAPPING_BASE_PATH || ''}publishers-pythnet.json`
-    )
+    pythnet: fs.existsSync(PUBLISHER_PYTHNET_MAPPING_PATH)
       ? JSON.parse(
           (
-            await fs.promises.readFile(
-              `${process.env.MAPPING_BASE_PATH || ''}publishers-pythnet.json`
-            )
+            await fs.promises.readFile(PUBLISHER_PYTHNET_MAPPING_PATH)
           ).toString()
         )
       : {},
-    pythtest: fs.existsSync(
-      `${process.env.MAPPING_BASE_PATH || ''}publishers-pythtest.json`
-    )
+    pythtest: fs.existsSync(PUBLISHER_PYTHTEST_MAPPING_PATH)
       ? JSON.parse(
           (
-            await fs.promises.readFile(
-              `${process.env.MAPPING_BASE_PATH || ''}publishers-pythtest.json`
-            )
+            await fs.promises.readFile(PUBLISHER_PYTHTEST_MAPPING_PATH)
           ).toString()
         )
       : {},
