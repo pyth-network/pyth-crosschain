@@ -295,7 +295,7 @@ fn transfer_governance(
     next_config: &mut ConfigInfo,
     current_config: &ConfigInfo,
     parsed_claim_vaa: &ParsedVAA,
-) -> StdResult<Response> {
+) -> StdResult<Response<MsgWrapper>> {
     let claim_vaa_instruction =
         GovernanceInstruction::deserialize(parsed_claim_vaa.payload.as_slice())
             .map_err(|_| PythContractError::InvalidGovernancePayload)?;
@@ -348,7 +348,7 @@ fn transfer_governance(
 /// Upgrades the contract at `address` to `new_code_id` (by sending a `Migrate` message). The
 /// migration will fail unless this contract is the admin of the contract being upgraded.
 /// (Typically, `address` is this contract's address, and the contract is its own admin.)
-fn upgrade_contract(address: &Addr, new_code_id: u64) -> StdResult<Response> {
+fn upgrade_contract(address: &Addr, new_code_id: u64) -> StdResult<Response<MsgWrapper>> {
     Ok(Response::new()
         .add_message(CosmosMsg::Wasm(WasmMsg::Migrate {
             contract_addr: address.to_string(),
