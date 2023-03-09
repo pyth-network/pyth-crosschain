@@ -42,14 +42,12 @@ export const getServerSideProps: GetServerSideProps = async () => {
         )
       : {},
   }
-  const multisigSignerMappingFilePath = `${
-    process.env.MAPPING_BASE_PATH || ''
-  }signers.json`
+  const MULTISIG_SIGNER_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/signers.json`
   const multisigSignerKeyToNameMapping = fs.existsSync(
-    multisigSignerMappingFilePath
+    MULTISIG_SIGNER_MAPPING_PATH
   )
     ? JSON.parse(
-        (await fs.promises.readFile(multisigSignerMappingFilePath)).toString()
+        (await fs.promises.readFile(MULTISIG_SIGNER_MAPPING_PATH)).toString()
       )
     : {}
 
