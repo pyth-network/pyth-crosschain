@@ -2,7 +2,6 @@ import { AnchorProvider, Program } from '@coral-xyz/anchor'
 import { AccountType, getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
 import { Cluster, PublicKey, TransactionInstruction } from '@solana/web3.js'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -697,18 +696,12 @@ const General = () => {
           <p className="mb-8 leading-6">No proposed changes.</p>
         )}
         {Object.keys(changes).length > 0 ? (
-          !connected ? (
-            <div className="flex justify-center">
-              <WalletModalButton className="action-btn text-base" />
-            </div>
-          ) : (
-            <button
-              className="action-btn text-base"
-              onClick={handleSendProposalButtonClick}
-            >
-              {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
-            </button>
-          )
+          <button
+            className="action-btn text-base"
+            onClick={handleSendProposalButtonClick}
+          >
+            {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
+          </button>
         ) : null}
       </>
     )
