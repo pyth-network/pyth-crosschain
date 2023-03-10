@@ -21,6 +21,7 @@ module.exports = async function (callback) {
       WormholeReceiver.address
     );
     // Upgrade set 0 to set 1
+    console.log("Upgrading to guardian set 1.");
     await initialized.methods
       .submitNewGuardianSet("0x" + GUARDIAN_SET_UPGRADE_1_VAA)
       .send({
@@ -29,6 +30,7 @@ module.exports = async function (callback) {
         gasLimit: 2000000,
       });
     // Upgrade set 1 to set 2
+    console.log("Upgrading to guardian set 2.");
     await initialized.methods
       .submitNewGuardianSet("0x" + GUARDIAN_SET_UPGRADE_2_VAA)
       .send({
@@ -37,6 +39,7 @@ module.exports = async function (callback) {
         gasLimit: 2000000,
       });
     // Upgrade set 2 to set 3
+    console.log("Upgrading to guardian set 3.");
     await initialized.methods
       .submitNewGuardianSet("0x" + GUARDIAN_SET_UPGRADE_3_VAA)
       .send({
