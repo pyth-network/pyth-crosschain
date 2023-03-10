@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import "forge-std/Test.sol";
 import "./AbstractPyth.sol";
 import "./PythStructs.sol";
 import "./PythErrors.sol";
@@ -11,6 +12,8 @@ contract MockPyth is AbstractPyth {
 
     uint singleUpdateFeeInWei;
     uint validTimePeriod;
+
+    mapping(bytes32 => address payable) pendingRequests;
 
     constructor(uint _validTimePeriod, uint _singleUpdateFeeInWei) {
         singleUpdateFeeInWei = _singleUpdateFeeInWei;
@@ -109,6 +112,47 @@ contract MockPyth is AbstractPyth {
             if (feeds[i].id != priceIds[i])
                 revert PythErrors.PriceFeedNotFoundWithinRange();
         }
+    }
+
+    function requirePriceFeeds(
+        bytes32[] memory priceIds
+    ) public payable override returns (bytes32) {
+        console.log("requirePriceFeeds");
+        console.log(tx.origin);
+        console.log(msg.value);
+
+        bytes32 requestId = keccak256(abi.encode(tx.origin, priceIds));
+        address payable payer = pendingRequests[requestId];
+
+        if (payer != address(0x0)) {
+            // TODO: transfer?
+            bool success = payer.send(msg.value);
+            delete pendingRequests[requestId];
+        } else {
+            revert PythErrors.RequirePriceFeeds(priceIds);
+        }
+
+        return requestId;
+    }
+
+    function updatePriceFeedsOnBehalfOf(
+        address requester,
+        bytes32[] calldata priceIds,
+        bytes[] calldata updateData
+    ) public payable override returns (bytes32) {
+        console.log("updateOnBehalfOf");
+        console.log(requester);
+
+        // TODO: does this need to be more differentiated??
+        bytes32 requestId = keccak256(abi.encode(requester, priceIds));
+
+        updatePriceFeeds(updateData);
+
+        // TODO: check that update includes all of priceIds
+
+        pendingRequests[requestId] = payable(msg.sender);
+
+        return requestId;
     }
 
     function createPriceFeedUpdateData(

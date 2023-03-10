@@ -91,4 +91,10 @@ contract PythGetters is PythState {
     function governanceDataSourceIndex() public view returns (uint32) {
         return _state.governanceDataSourceIndex;
     }
+
+    function getPendingRequest(
+        bytes32 requestId
+    ) public view returns (address payable) {
+        return _state.pendingRequests[requestId];
+    }
 }

@@ -29,4 +29,6 @@ library PythErrors {
     error InvalidGovernanceDataSource();
     // Governance message is old.
     error OldGovernanceMessage();
+    // Call requires someone to update the given price ids first.
+    error RequirePriceFeeds(bytes32[] priceIds);
 }

@@ -525,4 +525,41 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
             MAX_UINT64
         );
     }
+
+    function testRequirePriceFeeds() public {
+        uint numAttestations = 1;
+        (
+            bytes32[] memory priceIds,
+            PriceAttestation[] memory attestations
+        ) = generateRandomPriceAttestations(numAttestations);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                PythErrors.RequirePriceFeeds.selector,
+                priceIds
+            )
+        );
+        pyth.requirePriceFeeds(priceIds);
+
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createBatchedUpdateDataFromAttestations(attestations);
+
+        // console.log(address(this));
+        // console.log(address(this).balance);
+        // console.log(address(pyth).balance);
+        // payable(address(this)).transfer(100);
+
+        bytes32 requestId1 = pyth.updatePriceFeedsOnBehalfOf{value: updateFee}(
+            tx.origin,
+            priceIds,
+            updateData
+        );
+        console.logBytes32(requestId1);
+        bytes32 requestId2 = pyth.requirePriceFeeds{value: 7}(priceIds);
+        console.logBytes32(requestId2);
+    }
+
+    fallback() external payable {}
 }

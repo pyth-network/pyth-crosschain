@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "pyth-sdk-solidity/IPyth.sol";
-import "pyth-sdk-solidity/PythStructs.sol";
+import "forge-std/Test.sol";
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 // Example oracle AMM powered by Pyth price feeds.
@@ -59,6 +60,20 @@ contract OracleSwap {
         uint updateFee = pyth.getUpdateFee(pythUpdateData);
         pyth.updatePriceFeeds{value: updateFee}(pythUpdateData);
 
+        swapImpl(isBuy, size);
+    }
+
+    function swapNoUpdate(bool isBuy, uint size) external payable {
+        bytes32[] memory feedIds = new bytes32[](2);
+        feedIds[0] = baseTokenPriceId;
+        feedIds[1] = quoteTokenPriceId;
+
+        pyth.requirePriceFeeds(feedIds);
+
+        swapImpl(isBuy, size);
+    }
+
+    function swapImpl(bool isBuy, uint size) private {
         PythStructs.Price memory currentBasePrice = pyth.getPrice(
             baseTokenPriceId
         );

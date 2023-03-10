@@ -38,4 +38,17 @@ contract PythSetters is PythState {
     function setGovernanceDataSourceIndex(uint32 newIndex) internal {
         _state.governanceDataSourceIndex = newIndex;
     }
+
+    function setPendingRequest(
+        bytes32 requestId,
+        address payable payer
+    ) internal {
+        // TODO: probably needs a timestamp / freshness check
+        _state.pendingRequests[requestId] = payer;
+    }
+
+    function clearPendingRequest(bytes32 requestId) internal {
+        // TODO: probably needs a timestamp / freshness check
+        delete _state.pendingRequests[requestId];
+    }
 }

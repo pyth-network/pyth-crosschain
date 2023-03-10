@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
 import Web3 from "web3";
+import ethers from "ethers";
 import { BigNumber } from "ethers";
 import { TokenConfig, numberToTokenQty, tokenQtyToNumber } from "./utils";
 import IPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import OracleSwapAbi from "./abi/OracleSwapAbi.json";
 import { approveToken, getApprovedQuantity } from "./erc20";
 import { EvmPriceServiceConnection } from "@pythnetwork/pyth-evm-js";
+import {PriceId} from "pyth_relay/lib/relay/iface";
 
 /**
  * The order entry component lets users enter a quantity of the base token to buy/sell and submit
@@ -200,6 +202,8 @@ async function sendSwapTx(
     pythContractAddress
   );
 
+  // todo: need to craft update transaction here
+
   const updateFee = await pythContract.methods
     .getUpdateFee(priceFeedUpdateData.length)
     .call();
@@ -210,6 +214,56 @@ async function sendSwapTx(
   );
 
   await swapContract.methods
-    .swap(isBuy, qtyWei, priceFeedUpdateData)
+    .swapNoUpdate(isBuy, qtyWei, priceFeedUpdateData)
     .send({ value: updateFee, from: sender });
+}
+
+
+async function sendSwapTxEthers(
+    web3: Web3,
+    priceServiceUrl: string,
+    baseTokenPriceFeedId: string,
+    quoteTokenPriceFeedId: string,
+    pythContractAddress: string,
+    swapContractAddress: string,
+    sender: string,
+    qtyWei: BigNumber,
+    isBuy: boolean
+) {
+  // @ts-ignore
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer: any = undefined;
+
+  const swapContract = new ethers.Contract(
+      swapContractAddress,
+      OracleSwapAbi as any,
+      provider
+  ).connect(signer);
+
+  let swapTx = await swapContract.populateTransaction.swapNoUpdate(isBuy, qtyWei);
+
+}
+
+async function sendTxWithPyth(tx: PopulatedTransaction, priceServiceUrl: string) {
+  const pythPriceService = new EvmPriceServiceConnection(priceServiceUrl);
+
+  let requiredFeeds: [PriceId] = [];
+  let loop = true;
+  let bundle = undefined;
+  while (loop) {
+    const priceFeedUpdateData = await pythPriceService.getPriceFeedsUpdateData(requiredFeeds);
+    let updateTx = await pythContract.populateTransaction.updatePriceFeeds(priceFeedUpdateData);
+    bundle = [updateTx, tx];
+    let maybeError = await ethers.simulateBundle([updateTx, tx]);
+
+    if (maybeError == "NoPriceFeed") {
+      // this error needs an ID that can get attached to requiredFeeds
+      // there's another similar error
+    } else {
+      loop = false;
+    }
+  }
+
+  ethers.
+
 }

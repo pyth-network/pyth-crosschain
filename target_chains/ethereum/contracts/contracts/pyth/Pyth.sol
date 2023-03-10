@@ -6,6 +6,7 @@ pragma solidity ^0.8.0;
 import "../libraries/external/UnsafeBytesLib.sol";
 import "@pythnetwork/pyth-sdk-solidity/AbstractPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+import "forge-std/Test.sol";
 
 import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
 import "./PythGetters.sol";
@@ -89,6 +90,44 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         bytes[] calldata updateData
     ) public view override returns (uint feeAmount) {
         return singleUpdateFeeInWei() * updateData.length;
+    }
+
+    function requirePriceFeeds(
+        bytes32[] memory priceIds
+    ) public payable override returns (bytes32) {
+        bytes32 requestId = keccak256(abi.encode(tx.origin, priceIds));
+        address payable payer = getPendingRequest(requestId);
+
+        if (payer != address(0x0)) {
+            console.log(payer);
+            console.log(address(this));
+            console.log(address(this).balance);
+            // TODO: transfer?
+            bool success = payer.send(msg.value);
+            console.log(success);
+            clearPendingRequest(requestId);
+        } else {
+            revert PythErrors.RequirePriceFeeds(priceIds);
+        }
+
+        return requestId;
+    }
+
+    function updatePriceFeedsOnBehalfOf(
+        address requester,
+        bytes32[] calldata priceIds,
+        bytes[] calldata updateData
+    ) public payable override returns (bytes32) {
+        // TODO: does this need to be more differentiated??
+        bytes32 requestId = keccak256(abi.encode(requester, priceIds));
+
+        updatePriceFeeds(updateData);
+
+        // TODO: check that update includes all of priceIds
+
+        setPendingRequest(requestId, payable(msg.sender));
+
+        return requestId;
     }
 
     function verifyPythVM(
