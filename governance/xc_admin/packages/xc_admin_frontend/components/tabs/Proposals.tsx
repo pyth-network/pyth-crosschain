@@ -1,4 +1,5 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { AccountMeta, PublicKey } from '@solana/web3.js'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
@@ -28,6 +29,7 @@ import { usePythContext } from '../../contexts/PythContext'
 import { StatusFilterContext } from '../../contexts/StatusFilterContext'
 import { PRICE_FEED_MULTISIG } from '../../hooks/useMultisig'
 import VerifiedIcon from '../../images/icons/verified.inline.svg'
+import VotedIcon from '../../images/icons/voted.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import CopyPubkey from '../common/CopyPubkey'
@@ -56,11 +58,13 @@ const getMappingCluster = (cluster: string) => {
 const ProposalRow = ({
   proposal,
   verified,
+  voted,
   setCurrentProposalPubkey,
   multisig,
 }: {
   proposal: TransactionAccount
   verified: boolean
+  voted: boolean
   setCurrentProposalPubkey: Dispatch<SetStateAction<string | undefined>>
   multisig: MultisigAccount | undefined
 }) => {
@@ -100,7 +104,10 @@ const ProposalRow = ({
               '...' +
               proposal.publicKey.toBase58().slice(-6)}
           </span>{' '}
-          {verified ? <VerifiedIconWithTooltip /> : null}
+          <div className="mr-2 items-center flex">
+            {verified ? <VerifiedIconWithTooltip /> : null}
+          </div>
+          {voted ? <VotedIconWithTooltip /> : null}
         </div>
         <div>
           <StatusTag proposalStatus={status} />
@@ -167,6 +174,25 @@ const VerifiedIconWithTooltip = () => {
   )
 }
 
+const VotedIconWithTooltip = () => {
+  return (
+    <div className="flex items-center">
+      <Tooltip.Provider delayDuration={100} skipDelayDuration={500}>
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            <VotedIcon />
+          </Tooltip.Trigger>
+          <Tooltip.Content side="top" sideOffset={8}>
+            <span className="inline-block bg-darkGray3 p-2 text-xs text-light hoverable:bg-darkGray">
+              You have voted on this proposal.
+            </span>
+          </Tooltip.Content>
+        </Tooltip.Root>
+      </Tooltip.Provider>
+    </div>
+  )
+}
+
 const ParsedAccountPubkeyRow = ({
   mapping,
   title,
@@ -187,7 +213,7 @@ const ParsedAccountPubkeyRow = ({
 }
 
 const getProposalStatus = (
-  proposal: TransactionAccount | undefined,
+  proposal: TransactionAccount | ClientProposal | undefined,
   multisig: MultisigAccount | undefined
 ): string => {
   if (multisig && proposal) {
@@ -1054,6 +1080,8 @@ const Proposal = ({
   )
 }
 
+type ClientProposal = TransactionAccount & { verified: boolean; voted: boolean }
+
 const Proposals = ({
   publisherKeyToNameMapping,
   multisigSignerKeyToNameMapping,
@@ -1062,11 +1090,13 @@ const Proposals = ({
   multisigSignerKeyToNameMapping: Record<string, string>
 }) => {
   const router = useRouter()
+  const { connected, publicKey: signerPublicKey } = useWallet()
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
   const [currentProposalIndex, setCurrentProposalIndex] = useState<number>()
   const [allProposalsVerifiedArr, setAllProposalsVerifiedArr] = useState<
     boolean[]
   >([])
+  const [proposalsVotedArr, setProposalsVotedArr] = useState<boolean[]>([])
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
   const { cluster } = useContext(ClusterContext)
   const { statusFilter } = useContext(StatusFilterContext)
@@ -1076,9 +1106,9 @@ const Proposals = ({
     allProposalsIxsParsed,
     isLoading: isMultisigLoading,
   } = useMultisigContext()
-  const [filteredProposals, setFilteredProposals] = useState<
-    TransactionAccount[]
-  >(priceFeedMultisigProposals)
+  const [filteredProposals, setFilteredProposals] = useState<ClientProposal[]>(
+    []
+  )
 
   useEffect(() => {
     if (!isMultisigLoading) {
@@ -1160,19 +1190,59 @@ const Proposals = ({
   ])
 
   useEffect(() => {
+    const allClientProposals = priceFeedMultisigProposals.map(
+      (proposal, idx) => ({
+        ...proposal,
+        verified: allProposalsVerifiedArr[idx],
+        voted: proposalsVotedArr[idx],
+      })
+    )
     // filter price feed multisig proposals by status
     if (statusFilter === 'all') {
-      setFilteredProposals(priceFeedMultisigProposals)
+      // pass priceFeedMultisigProposals and add verified and voted props
+      setFilteredProposals(allClientProposals)
     } else {
       setFilteredProposals(
-        priceFeedMultisigProposals.filter(
+        allClientProposals.filter(
           (proposal) =>
             getProposalStatus(proposal, priceFeedMultisigAccount) ===
             statusFilter
         )
       )
     }
-  }, [statusFilter, priceFeedMultisigAccount, priceFeedMultisigProposals])
+  }, [
+    statusFilter,
+    priceFeedMultisigAccount,
+    priceFeedMultisigProposals,
+    allProposalsVerifiedArr,
+    proposalsVotedArr,
+  ])
+
+  useEffect(() => {
+    if (priceFeedMultisigAccount && connected && signerPublicKey) {
+      const res: boolean[] = []
+      priceFeedMultisigProposals.map((proposal) => {
+        // check if proposal.approved, proposal.cancelled, proposal.rejected has wallet pubkey and return true if anyone of them has wallet pubkey
+        const isProposalVoted =
+          proposal.approved.some(
+            (p) => p.toBase58() === signerPublicKey.toBase58()
+          ) ||
+          proposal.cancelled.some(
+            (p) => p.toBase58() === signerPublicKey.toBase58()
+          ) ||
+          proposal.rejected.some(
+            (p) => p.toBase58() === signerPublicKey.toBase58()
+          )
+        res.push(isProposalVoted)
+      })
+      setProposalsVotedArr(res)
+    }
+  }, [
+    priceFeedMultisigAccount,
+    priceFeedMultisigProposals,
+    connected,
+    signerPublicKey,
+  ])
 
   return (
     <div className="relative">
@@ -1210,7 +1280,8 @@ const Proposals = ({
                         <ProposalRow
                           key={idx}
                           proposal={proposal}
-                          verified={allProposalsVerifiedArr[idx]}
+                          verified={proposal.verified}
+                          voted={proposal.voted}
                           setCurrentProposalPubkey={setCurrentProposalPubkey}
                           multisig={priceFeedMultisigAccount}
                         />
