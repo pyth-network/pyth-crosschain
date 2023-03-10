@@ -196,7 +196,7 @@ fn update_price_feeds(
     {
         let inj_message =
             create_relay_pyth_prices_msg(env.contract.address, total_new_attestations);
-        response.add_message(inj_message);
+        response = response.add_message(inj_message);
     }
 
 

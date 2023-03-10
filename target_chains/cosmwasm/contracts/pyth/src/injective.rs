@@ -2,11 +2,13 @@ use {
     cosmwasm_std::{
         Addr,
         CosmosMsg,
+        CustomMsg,
     },
     pyth_wormhole_attester_sdk::{
         PriceAttestation,
         PriceStatus,
     },
+    schemars::JsonSchema,
     serde::{
         Deserialize,
         Serialize,
@@ -14,7 +16,7 @@ use {
     serde_repr::*,
 };
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct InjectivePriceAttestation {
     pub product_id:         String,
     pub price_id:           String,
@@ -71,7 +73,7 @@ impl From<PriceStatus> for PythStatus {
 }
 
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum InjectiveMsg {
     RelayPythPrices {
@@ -81,8 +83,7 @@ pub enum InjectiveMsg {
 }
 
 
-// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct InjectiveMsgWrapper {
     pub route:    String,
@@ -110,4 +111,7 @@ impl From<InjectiveMsgWrapper> for CosmosMsg<InjectiveMsgWrapper> {
     fn from(s: InjectiveMsgWrapper) -> CosmosMsg<InjectiveMsgWrapper> {
         CosmosMsg::Custom(s)
     }
+}
+
+impl CustomMsg for InjectiveMsgWrapper {
 }
