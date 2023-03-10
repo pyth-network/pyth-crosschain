@@ -187,7 +187,7 @@ module.exports = {
       verify: {
         apiUrl: "https://explorer.evm.testnet.shimmer.network/api",
         explorerUrl: "https://explorer.evm.testnet.shimmer.network",
-        apiKey: "dd",
+        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
       },
     },
     gnosis: {
