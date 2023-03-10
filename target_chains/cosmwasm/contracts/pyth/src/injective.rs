@@ -25,7 +25,7 @@ pub struct InjectivePriceAttestation {
     pub expo:               i32,
     pub ema_price:          i64,
     pub ema_conf:           u64,
-    pub status:             PriceStatus,
+    pub status:             PythStatus,
     pub num_publishers:     u32,
     pub max_num_publishers: u32,
     pub attestation_time:   i64,
