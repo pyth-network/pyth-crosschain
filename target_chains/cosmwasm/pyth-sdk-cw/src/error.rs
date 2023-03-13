@@ -41,6 +41,10 @@ pub enum PythContractError {
     #[error("OldGovernanceMessage")]
     OldGovernanceMessage,
 
+    /// The governance source index it not valid.
+    #[error("OldGovernanceMessage")]
+    InvalidGovernanceSourceIndex,
+
     /// The message did not include a sufficient fee.
     #[error("InsufficientFee")]
     InsufficientFee,

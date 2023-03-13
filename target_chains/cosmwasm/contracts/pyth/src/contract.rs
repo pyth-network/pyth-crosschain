@@ -334,8 +334,8 @@ fn transfer_governance(
         RequestGovernanceDataSourceTransfer {
             governance_data_source_index,
         } => {
-            if current_config.governance_source_index >= governance_data_source_index {
-                Err(PythContractError::OldGovernanceMessage)?
+            if current_config.governance_source_index != governance_data_source_index - 1 {
+                Err(PythContractError::InvalidGovernanceSourceIndex)?
             }
 
             next_config.governance_source_index = governance_data_source_index;
@@ -657,8 +657,7 @@ mod test {
 
     fn create_price_update_msg(emitter_address: &[u8], emitter_chain: u16) -> Binary {
         let batch_attestation = BatchPriceAttestation {
-            // TODO: pass these in
-            price_attestations: vec![],
+            price_attestations: vec![PriceAttestation::default()],
         };
 
         let mut vaa = create_zero_vaa();
@@ -1292,7 +1291,7 @@ mod test {
                         module:          Target,
                         target_chain_id: test_config.chain_id,
                         action:          RequestGovernanceDataSourceTransfer {
-                            governance_data_source_index: 11,
+                            governance_data_source_index: 1,
                         },
                     }
                     .serialize()
@@ -1306,7 +1305,7 @@ mod test {
         let test_vaa = governance_vaa(&test_instruction);
         let (_response, result_config) = apply_governance_vaa(&test_config, &test_vaa).unwrap();
         assert_eq!(result_config.governance_source, source_2);
-        assert_eq!(result_config.governance_source_index, 11);
+        assert_eq!(result_config.governance_source_index, 1);
         assert_eq!(result_config.governance_sequence_number, 12);
     }
 
@@ -1345,7 +1344,7 @@ mod test {
         let test_vaa = governance_vaa(&test_instruction);
         assert_eq!(
             apply_governance_vaa(&test_config, &test_vaa),
-            Err(PythContractError::OldGovernanceMessage.into())
+            Err(PythContractError::InvalidGovernanceSourceIndex.into())
         );
     }
 
