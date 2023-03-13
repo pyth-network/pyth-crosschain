@@ -68,9 +68,9 @@ This is the deployment process:
    - export the Infura RPC API key to `INFURA_KEY` if you are deploying to a network that uses an Infura RPC.
 5. Make sure the deployment account has proper balance on this network and top it up if needed. Search
    for testnet faucets if it is a testnet network. Sometimes you need to bridge the network token (e.g., L2s).
-6. Deploy the new contract or changes using the [`deploy.sh`](./deploy.sh) script. If you have made changes 
-   to [`chains.ts`](../../../governance/xc_governance_sdk_js/src/chains.ts), please make sure to 
-   run `npx lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies` in the 
+6. Deploy the new contract or changes using the [`deploy.sh`](./deploy.sh) script. If you have made changes
+   to [`chains.ts`](../../../governance/xc_governance_sdk_js/src/chains.ts), please make sure to
+   run `npx lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies` in the
    root directory before running the deployment script.
    You might need to repeat this script because of busy RPCs. Repeating would not cause any problem even
    if the changes are already made. Also, sometimes the gases are not adjusted and it will cause the tx to

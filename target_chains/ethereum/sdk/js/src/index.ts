@@ -37,4 +37,5 @@ export const CONTRACT_ADDR: Record<string, string> = {
   shimmer_testnet: "0x354bF866A4B006C9AF9d9e06d9364217A8616E12",
   chiado: "0xdDAf6D29b8bc81c1F0798a5e4c264ae89c16a72B", // Gnosis testnet
   zksync: "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834",
+  evmos_testnet: "0x354bF866A4B006C9AF9d9e06d9364217A8616E12",
 };
