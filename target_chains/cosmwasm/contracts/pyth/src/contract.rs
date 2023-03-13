@@ -196,14 +196,20 @@ fn update_price_feeds(
     {
         let inj_message =
             create_relay_pyth_prices_msg(env.contract.address, total_new_attestations);
-        response = response.add_message(inj_message);
+        Ok(response
+            .add_message(inj_message)
+            .add_attribute("action", "update_price_feeds")
+            .add_attribute("num_attestations", format!("{num_total_attestations}"))
+            .add_attribute("num_updated", format!("{num_total_new_attestations}")))
     }
 
-
-    Ok(response
-        .add_attribute("action", "update_price_feeds")
-        .add_attribute("num_attestations", format!("{num_total_attestations}"))
-        .add_attribute("num_updated", format!("{num_total_new_attestations}")))
+    #[cfg(not(feature = "injective"))]
+    {
+        Ok(response
+            .add_attribute("action", "update_price_feeds")
+            .add_attribute("num_attestations", format!("{num_total_attestations}"))
+            .add_attribute("num_updated", format!("{num_total_new_attestations}")))
+    }
 }
 
 /// Execute a governance instruction provided as the VAA `data`.
