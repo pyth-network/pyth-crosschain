@@ -184,6 +184,11 @@ module.exports = {
     shimmer_testnet: {
       provider: payerProvider(`https://json-rpc.evm.testnet.shimmer.network`),
       network_id: 1070,
+      verify: {
+        apiUrl: "https://explorer.evm.testnet.shimmer.network/api",
+        explorerUrl: "https://explorer.evm.testnet.shimmer.network",
+        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
+      },
     },
     gnosis: {
       provider: payerProvider(`https://rpc.gnosischain.com`),
