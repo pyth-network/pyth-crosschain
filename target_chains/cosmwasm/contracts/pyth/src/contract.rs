@@ -657,8 +657,7 @@ mod test {
 
     fn create_price_update_msg(emitter_address: &[u8], emitter_chain: u16) -> Binary {
         let batch_attestation = BatchPriceAttestation {
-            // TODO: pass these in
-            price_attestations: vec![],
+            price_attestations: vec![PriceAttestation::default()],
         };
 
         let mut vaa = create_zero_vaa();
