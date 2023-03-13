@@ -9,7 +9,7 @@ use {
     },
     state::AnchorVaa,
     anchor_lang::prelude::*,
-    pyth_wormhole_attester_sdk::PriceAttestation,
+    pyth_wormhole_attester_sdk::BatchPriceAttestation,
 };
 
 use crate::error::ReceiverError::*;
@@ -22,18 +22,23 @@ pub mod pyth_solana_receiver {
 
     pub fn decode_posted_vaa(ctx: Context<DecodePostedVaa>) -> Result<()> {
         let posted_vaa = &ctx.accounts.posted_vaa.payload;
-        let attestation = PriceAttestation::deserialize(posted_vaa.as_slice())
+        let batch: BatchPriceAttestation =
+            BatchPriceAttestation::deserialize(posted_vaa.as_slice())
             .map_err(|_| DeserializeVAAFailed)?;
 
-        msg!("product_id: {}", attestation.product_id);
-        msg!("price_id: {}", attestation.price_id);
-        msg!("price: {}", attestation.price);
-        msg!("conf: {}", attestation.conf);
-        msg!("ema_price: {}", attestation.ema_price);
-        msg!("ema_conf: {}", attestation.ema_conf);
-        msg!("num_publishers: {}", attestation.num_publishers);
-        msg!("publish_time: {}", attestation.publish_time);
-        msg!("attestation_time: {}", attestation.attestation_time);
+        msg!("There are {} attestations in this batch.", batch.price_attestations.len());
+
+        for attestation in batch.price_attestations {
+            msg!("product_id: {}", attestation.product_id);
+            msg!("price_id: {}", attestation.price_id);
+            msg!("price: {}", attestation.price);
+            msg!("conf: {}", attestation.conf);
+            msg!("ema_price: {}", attestation.ema_price);
+            msg!("ema_conf: {}", attestation.ema_conf);
+            msg!("num_publishers: {}", attestation.num_publishers);
+            msg!("publish_time: {}", attestation.publish_time);
+            msg!("attestation_time: {}", attestation.attestation_time);
+        }
 
         Ok(())
     }
@@ -67,6 +72,9 @@ mod tests {
 
     #[test]
     fn mock_attestation() {
+        // TODO: create a VAA with this attestation as payload
+        // and then invoke DecodePostedVaa
+
         let _attestation = PriceAttestation {
             product_id:                 Identifier::new([18u8; 32]),
             price_id:                   Identifier::new([150u8; 32]),
@@ -85,8 +93,5 @@ mod tests {
             prev_conf:                  0xbadbadbeefu64,
             last_attested_publish_time: (0xdeadbeeffadedeafu64) as i64,
         };
-
-        // TODO: create a VAA with this attestation as payload
-        // and then invoke DecodePostedVaa
     }
 }
