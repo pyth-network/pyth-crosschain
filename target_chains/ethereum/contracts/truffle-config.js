@@ -208,6 +208,10 @@ module.exports = {
         apiKey: "",
       },
     },
+    evmos_testnet: {
+      provider: payerProvider(`https://eth.bd.evmos.dev:8545/`),
+      network_id: 9000,
+    },
   },
 
   compilers: {
