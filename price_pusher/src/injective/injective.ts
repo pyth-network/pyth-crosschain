@@ -12,7 +12,6 @@ import { DurationInSeconds } from "../utils";
 import {
   ChainGrpcAuthApi,
   ChainGrpcWasmApi,
-  DEFAULT_STD_FEE,
   MsgExecuteContract,
   Msgs,
   PrivateKey,
@@ -20,6 +19,8 @@ import {
   TxResponse,
   createTransactionFromMsg,
 } from "@injectivelabs/sdk-ts";
+
+import { DEFAULT_GAS_PRICE } from "@injectivelabs/utils";
 
 type PriceQueryResponse = {
   price_feed: {
@@ -99,14 +100,44 @@ export class InjectivePricePusher implements IPricePusher {
     return this.wallet.toBech32();
   }
 
-  private async signAndBroadcastMsg(
-    msg: Msgs,
-    fee = DEFAULT_STD_FEE
-  ): Promise<TxResponse> {
+  private async signAndBroadcastMsg(msg: Msgs): Promise<TxResponse> {
     const chainGrpcAuthApi = new ChainGrpcAuthApi(this.grpcEndpoint);
     const account = await chainGrpcAuthApi.fetchAccount(
       this.injectiveAddress()
     );
+    const { txRaw: simulateTxRaw } = createTransactionFromMsg({
+      sequence: account.baseAccount.sequence,
+      accountNumber: account.baseAccount.accountNumber,
+      message: msg,
+      chainId: "injective-888",
+      pubKey: this.wallet.toPublicKey().toBase64(),
+    });
+
+    const txService = new TxGrpcClient(this.grpcEndpoint);
+    // simulation
+    const {
+      gasInfo: { gasUsed },
+    } = await txService.simulate(simulateTxRaw);
+
+    // simulation returns us the approximate gas used
+    // gas passed with the transaction should be more than that
+    // in order for it to be successfully executed
+    // this multiplier takes care of that
+    const EXTRA_GAS_MULTIPLIER = 1.2;
+    const fee = {
+      amount: [
+        {
+          denom: "inj",
+          amount: (
+            gasUsed *
+            DEFAULT_GAS_PRICE *
+            EXTRA_GAS_MULTIPLIER
+          ).toFixed(),
+        },
+      ],
+      gas: (gasUsed * EXTRA_GAS_MULTIPLIER).toFixed(),
+    };
+
     const { signBytes, txRaw } = createTransactionFromMsg({
       sequence: account.baseAccount.sequence,
       accountNumber: account.baseAccount.accountNumber,
@@ -121,7 +152,6 @@ export class InjectivePricePusher implements IPricePusher {
     /** Append Signatures */
     txRaw.setSignaturesList([sig]);
 
-    const txService = new TxGrpcClient(this.grpcEndpoint);
     const txResponse = await txService.broadcast(txRaw);
 
     return txResponse;
