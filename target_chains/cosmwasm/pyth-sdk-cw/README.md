@@ -30,6 +30,13 @@ use pyth_sdk_cw::{
 ....
 ```
 
+This snippet returns a `PriceFeed` struct which exposes methods for reading the current price along with other useful functionality.
+See the [Pyth common SDK documentation](https://github.com/pyth-network/pyth-sdk-rs/tree/main/pyth-sdk#pyth-network-common-rust-sdk) for more information
+about this struct.
+The common SDK also provides methods for combining price feeds in several useful ways.
+These methods allow you to derive prices for alternative quote currencies -- for example, to derive the BTC/ETH price from
+the BTC/USD and ETH/USD price feeds -- and to price baskets of currencies.
+
 ## Contracts and Price Feeds
 
 Pyth is currently available on the following cosmwasm chains:
