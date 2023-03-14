@@ -26,6 +26,8 @@ use {
         state::{
             config,
             config_read,
+            deprecated_config,
+            deprecated_config_read,
             price_feed_bucket,
             price_feed_read_bucket,
             ConfigInfo,
@@ -49,6 +51,7 @@ use {
         OverflowOperation,
         QueryRequest,
         Response,
+        StdError,
         StdResult,
         WasmMsg,
         WasmQuery,
@@ -90,8 +93,30 @@ use {
 /// this function can safely be implemented as:
 /// `Ok(Response::default())`
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
-    Ok(Response::default())
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
+    let depreceated_cfg_result = deprecated_config_read(deps.storage).load();
+    match depreceated_cfg_result {
+        Ok(depreceated_cfg) => {
+            let cfg = ConfigInfo {
+                wormhole_contract:          depreceated_cfg.wormhole_contract,
+                data_sources:               depreceated_cfg.data_sources,
+                governance_source:          depreceated_cfg.governance_source,
+                governance_source_index:    depreceated_cfg.governance_source_index,
+                governance_sequence_number: depreceated_cfg.governance_sequence_number,
+                chain_id:                   depreceated_cfg.chain_id,
+                valid_time_period:          depreceated_cfg.valid_time_period,
+                fee:                        depreceated_cfg.fee,
+            };
+
+            config(deps.storage).save(&cfg)?;
+            deprecated_config(deps.storage).remove();
+
+            Ok(Response::default())
+        }
+        Err(_) => Err(StdError::GenericErr {
+            msg: String::from("Error reading config"),
+        }),
+    }
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
