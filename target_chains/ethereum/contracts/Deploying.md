@@ -26,7 +26,7 @@ Each network that Pyth is deployed on has some configuration stored on this repo
    - `MIGRATIONS_NETWORK`: Network name in the [`truffle-config.js`](./truffle-config.js) file.
    - `WORMHOLE_CHAIN_NAME`: Chain name in Wormhole. It is either defined in the
      [Wormhole SDK constants](https://github.com/wormhole-foundation/wormhole/blob/dev.v2/sdk/js/src/utils/consts.ts)
-     or is defined in [Wormhole Receiver names](../third_party/pyth/xc_governance_sdk_js/src/chains.ts). If the new
+     or is defined in [Wormhole Receiver names](../../../governance/xc_governance_sdk_js/src/chains.ts). If the new
      network requires a Receiver contract you need to update the latter file and add the network there.
    - `CLUSTER`: Cluster of this network. It is either `testnet` or `mainnet`. There are some cluster specific
      configuration that are loaded from [`.env.cluster.testnet`](./.env.cluster.testnet) or
@@ -68,7 +68,10 @@ This is the deployment process:
    - export the Infura RPC API key to `INFURA_KEY` if you are deploying to a network that uses an Infura RPC.
 5. Make sure the deployment account has proper balance on this network and top it up if needed. Search
    for testnet faucets if it is a testnet network. Sometimes you need to bridge the network token (e.g., L2s).
-6. Deploy the new contract or changes using the [`deploy.sh`](./deploy.sh) script.
+6. Deploy the new contract or changes using the [`deploy.sh`](./deploy.sh) script. If you have made changes
+   to [`chains.ts`](../../../governance/xc_governance_sdk_js/src/chains.ts), please make sure to
+   run `npx lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies` in the
+   root directory before running the deployment script.
    You might need to repeat this script because of busy RPCs. Repeating would not cause any problem even
    if the changes are already made. Also, sometimes the gases are not adjusted and it will cause the tx to
    remain on the mempool for a long time (so there is no progress until timeout). Please update them with
@@ -191,7 +194,13 @@ contract or a new contract do the following steps in addition to the steps descr
 1. Update the [`hardhad.config.ts`](./hardhat.config.ts) file.
 2. Add the configuration files to `truffle-config.js` and `.env.prod.<network>` file as described above. Truffle
    config is required as the above deployment script still works in changing the contract (except upgrades).
-3. Run `npx hardhat compile` to compile the contracts.
-4. If you wish to deploy the contract run `npx hardhat deploy-zksync --script deploy/zkSyncDeploy` to deploy it to the new network. Otherwise
-   run `npx hardhat deploy-zksync --script deploy/zkSyncDeployNewPythImpl.ts` to get a new implementation address. Then put it in
+3. Run `npx hardhat clean && npx hardhat compile` to have a clean compile the contracts.
+4. Prepare the enviornment:
+
+- Export the secret recovery phrase for the deployment account. Please store it in a file and read
+  the file into `MNEMONIC` environment variable like so: `export MNEMONIC=$(cat path/to/mnemonic)`.
+- Copy the correct env file (e.g: `.env.production.zksync`) to `.env`.
+
+5. If you wish to deploy the contract run `npx hardhat deploy-zksync --network <network> --script deploy/zkSyncDeploy` to deploy it to the new network. Otherwise
+   run `npx hardhat deploy-zksync --network <network> --script deploy/zkSyncDeployNewPythImpl.ts` to get a new implementation address. Then put it in
    `.<network>.new_impl` file and run the deployment script to handle the rest of the changes.

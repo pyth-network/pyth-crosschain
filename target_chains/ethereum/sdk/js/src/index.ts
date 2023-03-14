@@ -36,4 +36,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   base_goerli: "0x5955C1478F0dAD753C7E2B4dD1b4bC530C64749f",
   shimmer_testnet: "0x354bF866A4B006C9AF9d9e06d9364217A8616E12",
   chiado: "0xdDAf6D29b8bc81c1F0798a5e4c264ae89c16a72B", // Gnosis testnet
+  zksync: "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834",
+  evmos: "0x354bF866A4B006C9AF9d9e06d9364217A8616E12",
+  evmos_testnet: "0x354bF866A4B006C9AF9d9e06d9364217A8616E12",
 };

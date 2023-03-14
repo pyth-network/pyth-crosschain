@@ -24,7 +24,7 @@ export default {
     ...options.mnemonicFile,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
-    ...options.cooldownDuration,
+    ...options.pushingFrequency,
   },
   handler: function (argv: any) {
     // FIXME: type checks for this
@@ -34,7 +34,7 @@ export default {
       priceServiceEndpoint,
       mnemonicFile,
       pythContractAddress,
-      cooldownDuration,
+      pushingFrequency,
       pollingFrequency,
     } = argv;
 
@@ -42,7 +42,14 @@ export default {
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: console,
+        logger: {
+          // Log only warnings and errors from the price service client
+          info: () => undefined,
+          warn: console.warn,
+          error: console.error,
+          debug: () => undefined,
+          trace: () => undefined,
+        },
       }
     );
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
@@ -74,7 +81,7 @@ export default {
       pythListener,
       injectiveListener,
       injectivePusher,
-      { cooldownDuration }
+      { pushingFrequency }
     );
 
     controller.start();

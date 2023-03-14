@@ -65,9 +65,17 @@ services:
       - "/command_config"
     configs:
       - command_config
+      - mnemonic
+      - price_config
     depends_on:
       price-service:
         condition: service_healthy
 configs:
   command_config:
-    file: ./config.injective.testnet.sample.json # Replace this with the path to the configuration file
+    # Replace this with the path to the configuration file. You need to update the paths defined in
+    # the config file
+    file: ./config.injective.testnet.sample.json
+  mnemonic:
+    file: ./mnemonic # Replace this with the path to the mnemonic file
+  price_config:
+    file: ./price-config.testnet.sample.yaml # Replace this with the path to the price configuration file

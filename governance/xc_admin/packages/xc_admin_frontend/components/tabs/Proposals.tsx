@@ -1,4 +1,5 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { AccountMeta, PublicKey } from '@solana/web3.js'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
@@ -25,13 +26,16 @@ import {
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'
+import { StatusFilterContext } from '../../contexts/StatusFilterContext'
 import { PRICE_FEED_MULTISIG } from '../../hooks/useMultisig'
 import VerifiedIcon from '../../images/icons/verified.inline.svg'
+import VotedIcon from '../../images/icons/voted.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import CopyPubkey from '../common/CopyPubkey'
 import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
+import ProposalStatusFilter from '../ProposalStatusFilter'
 
 // check if a string is a pubkey
 const isPubkey = (str: string) => {
@@ -43,16 +47,28 @@ const isPubkey = (str: string) => {
   }
 }
 
+const getMappingCluster = (cluster: string) => {
+  if (cluster === 'mainnet-beta' || cluster === 'pythnet') {
+    return 'pythnet'
+  } else {
+    return 'pythtest'
+  }
+}
+
 const ProposalRow = ({
   proposal,
   verified,
+  voted,
   setCurrentProposalPubkey,
+  multisig,
 }: {
   proposal: TransactionAccount
   verified: boolean
+  voted: boolean
   setCurrentProposalPubkey: Dispatch<SetStateAction<string | undefined>>
+  multisig: MultisigAccount | undefined
 }) => {
-  const status = Object.keys(proposal.status)[0]
+  const status = getProposalStatus(proposal, multisig)
 
   const router = useRouter()
 
@@ -88,7 +104,10 @@ const ProposalRow = ({
               '...' +
               proposal.publicKey.toBase58().slice(-6)}
           </span>{' '}
-          {verified ? <VerifiedIconWithTooltip /> : null}
+          <div className="mr-2 items-center flex">
+            {verified ? <VerifiedIconWithTooltip /> : null}
+          </div>
+          {voted ? <VotedIconWithTooltip /> : null}
         </div>
         <div>
           <StatusTag proposalStatus={status} />
@@ -126,6 +145,8 @@ const StatusTag = ({ proposalStatus }: { proposalStatus: string }) => {
           ? 'bg-[#C4428F]'
           : proposalStatus === 'rejected'
           ? 'bg-[#CF6E42]'
+          : proposalStatus === 'expired'
+          ? 'bg-[#A52A2A]'
           : 'bg-pythPurple'
       } py-1 px-2 text-xs`}
     >
@@ -153,6 +174,25 @@ const VerifiedIconWithTooltip = () => {
   )
 }
 
+const VotedIconWithTooltip = () => {
+  return (
+    <div className="flex items-center">
+      <Tooltip.Provider delayDuration={100} skipDelayDuration={500}>
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            <VotedIcon />
+          </Tooltip.Trigger>
+          <Tooltip.Content side="top" sideOffset={8}>
+            <span className="inline-block bg-darkGray3 p-2 text-xs text-light hoverable:bg-darkGray">
+              You have voted on this proposal.
+            </span>
+          </Tooltip.Content>
+        </Tooltip.Root>
+      </Tooltip.Provider>
+    </div>
+  )
+}
+
 const ParsedAccountPubkeyRow = ({
   mapping,
   title,
@@ -172,6 +212,21 @@ const ParsedAccountPubkeyRow = ({
   )
 }
 
+const getProposalStatus = (
+  proposal: TransactionAccount | ClientProposal | undefined,
+  multisig: MultisigAccount | undefined
+): string => {
+  if (multisig && proposal) {
+    const onChainStatus = Object.keys(proposal.status)[0]
+    return proposal.transactionIndex <= multisig.msChangeIndex &&
+      (onChainStatus == 'active' || onChainStatus == 'draft')
+      ? 'expired'
+      : onChainStatus
+  } else {
+    return 'unkwown'
+  }
+}
+
 const Proposal = ({
   publisherKeyToNameMapping,
   multisigSignerKeyToNameMapping,
@@ -181,7 +236,7 @@ const Proposal = ({
   verified,
   multisig,
 }: {
-  publisherKeyToNameMapping: Record<string, string>
+  publisherKeyToNameMapping: Record<string, Record<string, string>>
   multisigSignerKeyToNameMapping: Record<string, string>
   proposal: TransactionAccount | undefined
   proposalIndex: number
@@ -198,12 +253,14 @@ const Proposal = ({
   const [priceAccountKeyToSymbolMapping, setPriceAccountKeyToSymbolMapping] =
     useState<{ [key: string]: string }>({})
   const { cluster } = useContext(ClusterContext)
+  const publisherKeyToNameMappingCluster =
+    publisherKeyToNameMapping[getMappingCluster(cluster)]
   const {
-    squads,
+    voteSquads,
     isLoading: isMultisigLoading,
     setpriceFeedMultisigProposals,
   } = useMultisigContext()
-  const { rawConfig, dataIsLoading, connection } = usePythContext()
+  const { rawConfig, dataIsLoading } = usePythContext()
 
   useEffect(() => {
     setCurrentProposal(proposal)
@@ -225,7 +282,7 @@ const Proposal = ({
     }
   }, [rawConfig, dataIsLoading])
 
-  const proposalStatus = proposal ? Object.keys(proposal.status)[0] : 'unknown'
+  const proposalStatus = getProposalStatus(proposal, multisig)
 
   useEffect(() => {
     // update the priceFeedMultisigProposals with previous value but replace the current proposal with the updated one at the specific index
@@ -238,12 +295,12 @@ const Proposal = ({
   }, [currentProposal, setpriceFeedMultisigProposals, proposalIndex])
 
   const handleClickApprove = async () => {
-    if (proposal && squads) {
+    if (proposal && voteSquads) {
       try {
         setIsTransactionLoading(true)
-        await squads.approveTransaction(proposal.publicKey)
+        await voteSquads.approveTransaction(proposal.publicKey)
         const proposals = await getProposals(
-          squads,
+          voteSquads,
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
         )
         setCurrentProposal(
@@ -263,12 +320,12 @@ const Proposal = ({
   }
 
   const handleClickReject = async () => {
-    if (proposal && squads) {
+    if (proposal && voteSquads) {
       try {
         setIsTransactionLoading(true)
-        await squads.rejectTransaction(proposal.publicKey)
+        await voteSquads.rejectTransaction(proposal.publicKey)
         const proposals = await getProposals(
-          squads,
+          voteSquads,
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
         )
         setCurrentProposal(
@@ -288,12 +345,12 @@ const Proposal = ({
   }
 
   const handleClickExecute = async () => {
-    if (proposal && squads) {
+    if (proposal && voteSquads) {
       try {
         setIsTransactionLoading(true)
-        await squads.executeTransaction(proposal.publicKey)
+        await voteSquads.executeTransaction(proposal.publicKey)
         const proposals = await getProposals(
-          squads,
+          voteSquads,
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
         )
         setCurrentProposal(
@@ -313,12 +370,12 @@ const Proposal = ({
   }
 
   const handleClickCancel = async () => {
-    if (proposal && squads) {
+    if (proposal && voteSquads) {
       try {
         setIsTransactionLoading(true)
-        await squads.cancelTransaction(proposal.publicKey)
+        await voteSquads.cancelTransaction(proposal.publicKey)
         const proposals = await getProposals(
-          squads,
+          voteSquads,
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
         )
         setCurrentProposal(
@@ -431,17 +488,14 @@ const Proposal = ({
           {currentProposal.approved.map((pubkey, idx) => (
             <>
               <div className="flex justify-between" key={pubkey.toBase58()}>
-                <div>Key {idx + 1}</div>
+                <div>
+                  Key {idx + 1}{' '}
+                  {pubkey.toBase58() in multisigSignerKeyToNameMapping
+                    ? `(${multisigSignerKeyToNameMapping[pubkey.toBase58()]})`
+                    : null}
+                </div>
                 <CopyPubkey pubkey={pubkey.toBase58()} />
               </div>
-              {pubkey.toBase58() in multisigSignerKeyToNameMapping ? (
-                <ParsedAccountPubkeyRow
-                  key={`${idx}_${pubkey.toBase58()}_confirmed`}
-                  mapping={multisigSignerKeyToNameMapping}
-                  title="owner"
-                  pubkey={pubkey.toBase58()}
-                />
-              ) : null}
             </>
           ))}
         </div>
@@ -455,17 +509,14 @@ const Proposal = ({
           {currentProposal.rejected.map((pubkey, idx) => (
             <>
               <div className="flex justify-between" key={pubkey.toBase58()}>
-                <div>Key {idx + 1}</div>
+                <div>
+                  Key {idx + 1}{' '}
+                  {pubkey.toBase58() in multisigSignerKeyToNameMapping
+                    ? `(${multisigSignerKeyToNameMapping[pubkey.toBase58()]})`
+                    : null}
+                </div>
                 <CopyPubkey pubkey={pubkey.toBase58()} />
               </div>
-              {pubkey.toBase58() in multisigSignerKeyToNameMapping ? (
-                <ParsedAccountPubkeyRow
-                  key={`${idx}_${pubkey.toBase58()}_rejected`}
-                  mapping={multisigSignerKeyToNameMapping}
-                  title="owner"
-                  pubkey={pubkey.toBase58()}
-                />
-              ) : null}
             </>
           ))}
         </div>
@@ -478,7 +529,12 @@ const Proposal = ({
           <hr className="border-gray-700" />
           {currentProposal.cancelled.map((pubkey, idx) => (
             <div className="flex justify-between" key={pubkey.toBase58()}>
-              <div>Key {idx + 1}</div>
+              <div>
+                Key {idx + 1}{' '}
+                {pubkey.toBase58() in multisigSignerKeyToNameMapping
+                  ? `(${multisigSignerKeyToNameMapping[pubkey.toBase58()]})`
+                  : null}
+              </div>
               <CopyPubkey pubkey={pubkey.toBase58()} />
             </div>
           ))}
@@ -574,12 +630,12 @@ const Proposal = ({
                           </div>
                           {key === 'pub' &&
                           instruction.args[key].toBase58() in
-                            publisherKeyToNameMapping ? (
+                            publisherKeyToNameMappingCluster ? (
                             <ParsedAccountPubkeyRow
                               key={`${index}_${instruction.args[
                                 key
                               ].toBase58()}`}
-                              mapping={publisherKeyToNameMapping}
+                              mapping={publisherKeyToNameMappingCluster}
                               title="publisher"
                               pubkey={instruction.args[key].toBase58()}
                             />
@@ -825,13 +881,13 @@ const Proposal = ({
                                           parsedInstruction.args[
                                             key
                                           ].toBase58() in
-                                            publisherKeyToNameMapping ? (
+                                            publisherKeyToNameMappingCluster ? (
                                             <ParsedAccountPubkeyRow
                                               key={`${index}_${parsedInstruction.args[
                                                 key
                                               ].toBase58()}`}
                                               mapping={
-                                                publisherKeyToNameMapping
+                                                publisherKeyToNameMappingCluster
                                               }
                                               title="publisher"
                                               pubkey={parsedInstruction.args[
@@ -1024,27 +1080,35 @@ const Proposal = ({
   )
 }
 
+type ClientProposal = TransactionAccount & { verified: boolean; voted: boolean }
+
 const Proposals = ({
   publisherKeyToNameMapping,
   multisigSignerKeyToNameMapping,
 }: {
-  publisherKeyToNameMapping: Record<string, string>
+  publisherKeyToNameMapping: Record<string, Record<string, string>>
   multisigSignerKeyToNameMapping: Record<string, string>
 }) => {
   const router = useRouter()
+  const { connected, publicKey: signerPublicKey } = useWallet()
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
   const [currentProposalIndex, setCurrentProposalIndex] = useState<number>()
   const [allProposalsVerifiedArr, setAllProposalsVerifiedArr] = useState<
     boolean[]
   >([])
+  const [proposalsVotedArr, setProposalsVotedArr] = useState<boolean[]>([])
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
   const { cluster } = useContext(ClusterContext)
+  const { statusFilter } = useContext(StatusFilterContext)
   const {
     priceFeedMultisigAccount,
     priceFeedMultisigProposals,
     allProposalsIxsParsed,
     isLoading: isMultisigLoading,
   } = useMultisigContext()
+  const [filteredProposals, setFilteredProposals] = useState<ClientProposal[]>(
+    []
+  )
 
   useEffect(() => {
     if (!isMultisigLoading) {
@@ -1125,6 +1189,61 @@ const Proposals = ({
     cluster,
   ])
 
+  useEffect(() => {
+    const allClientProposals = priceFeedMultisigProposals.map(
+      (proposal, idx) => ({
+        ...proposal,
+        verified: allProposalsVerifiedArr[idx],
+        voted: proposalsVotedArr[idx],
+      })
+    )
+    // filter price feed multisig proposals by status
+    if (statusFilter === 'all') {
+      // pass priceFeedMultisigProposals and add verified and voted props
+      setFilteredProposals(allClientProposals)
+    } else {
+      setFilteredProposals(
+        allClientProposals.filter(
+          (proposal) =>
+            getProposalStatus(proposal, priceFeedMultisigAccount) ===
+            statusFilter
+        )
+      )
+    }
+  }, [
+    statusFilter,
+    priceFeedMultisigAccount,
+    priceFeedMultisigProposals,
+    allProposalsVerifiedArr,
+    proposalsVotedArr,
+  ])
+
+  useEffect(() => {
+    if (priceFeedMultisigAccount && connected && signerPublicKey) {
+      const res: boolean[] = []
+      priceFeedMultisigProposals.map((proposal) => {
+        // check if proposal.approved, proposal.cancelled, proposal.rejected has wallet pubkey and return true if anyone of them has wallet pubkey
+        const isProposalVoted =
+          proposal.approved.some(
+            (p) => p.toBase58() === signerPublicKey.toBase58()
+          ) ||
+          proposal.cancelled.some(
+            (p) => p.toBase58() === signerPublicKey.toBase58()
+          ) ||
+          proposal.rejected.some(
+            (p) => p.toBase58() === signerPublicKey.toBase58()
+          )
+        res.push(isProposalVoted)
+      })
+      setProposalsVotedArr(res)
+    }
+  }, [
+    priceFeedMultisigAccount,
+    priceFeedMultisigProposals,
+    connected,
+    signerPublicKey,
+  ])
+
   return (
     <div className="relative">
       <div className="container flex flex-col items-center justify-between lg:flex-row">
@@ -1147,26 +1266,34 @@ const Proposals = ({
                 <div className="mt-3">
                   <Loadbar theme="light" />
                 </div>
-              ) : priceFeedMultisigProposals.length > 0 ? (
-                <>
-                  <div className="pb-4">
-                    <h4 className="h4">
-                      Total Proposals: {priceFeedMultisigProposals.length}
-                    </h4>
-                  </div>
-                  <div className="flex flex-col">
-                    {priceFeedMultisigProposals.map((proposal, idx) => (
-                      <ProposalRow
-                        key={idx}
-                        proposal={proposal}
-                        verified={allProposalsVerifiedArr[idx]}
-                        setCurrentProposalPubkey={setCurrentProposalPubkey}
-                      />
-                    ))}
-                  </div>
-                </>
               ) : (
-                "No proposals found. If you're a member of the price feed multisig, you can create a proposal."
+                <>
+                  <div className="flex items-center justify-between pb-4">
+                    <h4 className="h4">
+                      Total Proposals: {filteredProposals.length}
+                    </h4>
+                    <ProposalStatusFilter />
+                  </div>
+                  {filteredProposals.length > 0 ? (
+                    <div className="flex flex-col">
+                      {filteredProposals.map((proposal, idx) => (
+                        <ProposalRow
+                          key={idx}
+                          proposal={proposal}
+                          verified={proposal.verified}
+                          voted={proposal.voted}
+                          setCurrentProposalPubkey={setCurrentProposalPubkey}
+                          multisig={priceFeedMultisigAccount}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-4">
+                      No proposals found. If you&apos;re a member of the price
+                      feed multisig, you can create a proposal.
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </>

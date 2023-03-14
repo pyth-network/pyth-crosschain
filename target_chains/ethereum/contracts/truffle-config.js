@@ -184,6 +184,11 @@ module.exports = {
     shimmer_testnet: {
       provider: payerProvider(`https://json-rpc.evm.testnet.shimmer.network`),
       network_id: 1070,
+      verify: {
+        apiUrl: "https://explorer.evm.testnet.shimmer.network/api",
+        explorerUrl: "https://explorer.evm.testnet.shimmer.network",
+        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
+      },
     },
     gnosis: {
       provider: payerProvider(`https://rpc.gnosischain.com`),
@@ -202,6 +207,14 @@ module.exports = {
         explorerUrl: "https://goerli.basescan.org/",
         apiKey: "",
       },
+    },
+    evmos: {
+      provider: payerProvider(`https://eth.bd.evmos.org:8545/`),
+      network_id: 9001,
+    },
+    evmos_testnet: {
+      provider: payerProvider(`https://eth.bd.evmos.dev:8545/`),
+      network_id: 9000,
     },
   },
 

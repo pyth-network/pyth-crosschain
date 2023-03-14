@@ -1,8 +1,7 @@
-import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor'
+import { AnchorProvider, Program } from '@coral-xyz/anchor'
 import { AccountType, getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
-import { useAnchorWallet, useWallet } from '@solana/wallet-adapter-react'
-import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { Cluster, PublicKey, TransactionInstruction } from '@solana/web3.js'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -15,8 +14,9 @@ import {
   WORMHOLE_ADDRESS,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
+import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'
-import { PRICE_FEED_MULTISIG, useMultisig } from '../../hooks/useMultisig'
+import { PRICE_FEED_MULTISIG } from '../../hooks/useMultisig'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'
 import Modal from '../common/Modal'
@@ -35,11 +35,7 @@ const General = () => {
   const isRemote: boolean = isRemoteCluster(cluster) // Move to multisig context
   const multisigCluster: Cluster | 'localnet' = getMultisigCluster(cluster) // Move to multisig context
   const wormholeAddress = WORMHOLE_ADDRESS[multisigCluster] // Move to multisig context
-
-  const anchorWallet = useAnchorWallet()
-  const { isLoading: isMultisigLoading, squads } = useMultisig(
-    anchorWallet as Wallet
-  )
+  const { isLoading: isMultisigLoading, proposeSquads } = useMultisigContext()
   const { rawConfig, dataIsLoading, connection } = usePythContext()
   const { connected } = useWallet()
   const [pythProgramClient, setPythProgramClient] =
@@ -268,10 +264,15 @@ const General = () => {
   }
 
   const handleSendProposalButtonClick = async () => {
-    if (pythProgramClient && dataChanges && !isMultisigLoading && squads) {
+    if (
+      pythProgramClient &&
+      dataChanges &&
+      !isMultisigLoading &&
+      proposeSquads
+    ) {
       const instructions: TransactionInstruction[] = []
       for (const symbol of Object.keys(dataChanges)) {
-        const multisigAuthority = squads.getAuthorityPDA(
+        const multisigAuthority = proposeSquads.getAuthorityPDA(
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
           1
         )
@@ -447,7 +448,7 @@ const General = () => {
       setIsSendProposalButtonLoading(true)
       try {
         const proposalPubkey = await proposeInstructions(
-          squads,
+          proposeSquads,
           PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
           instructions,
           isRemote,
@@ -695,18 +696,12 @@ const General = () => {
           <p className="mb-8 leading-6">No proposed changes.</p>
         )}
         {Object.keys(changes).length > 0 ? (
-          !connected ? (
-            <div className="flex justify-center">
-              <WalletModalButton className="action-btn text-base" />
-            </div>
-          ) : (
-            <button
-              className="action-btn text-base"
-              onClick={handleSendProposalButtonClick}
-            >
-              {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
-            </button>
-          )
+          <button
+            className="action-btn text-base"
+            onClick={handleSendProposalButtonClick}
+          >
+            {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
+          </button>
         ) : null}
       </>
     )
@@ -714,17 +709,17 @@ const General = () => {
 
   // create anchor wallet when connected
   useEffect(() => {
-    if (connected) {
+    if (connected && proposeSquads) {
       const provider = new AnchorProvider(
         connection,
-        anchorWallet as Wallet,
+        proposeSquads.wallet,
         AnchorProvider.defaultOptions()
       )
       setPythProgramClient(
         pythOracleProgram(getPythProgramKeyForCluster(cluster), provider)
       )
     }
-  }, [anchorWallet, connection, connected, cluster])
+  }, [connection, connected, cluster, proposeSquads])
 
   return (
     <div className="relative">
@@ -749,12 +744,12 @@ const General = () => {
           <PermissionDepermissionKey
             isPermission={true}
             pythProgramClient={pythProgramClient}
-            squads={squads}
+            squads={proposeSquads}
           />
           <PermissionDepermissionKey
             isPermission={false}
             pythProgramClient={pythProgramClient}
-            squads={squads}
+            squads={proposeSquads}
           />
         </div>
         <div className="relative mt-6">

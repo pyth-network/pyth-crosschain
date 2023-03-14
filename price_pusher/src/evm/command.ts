@@ -34,12 +34,19 @@ export default {
       choices: ["slow", "standard", "fast"],
       required: false,
     } as Options,
+    "override-gas-price-multiplier": {
+      description:
+        "Multiply the gas price by this number if the transaction is not landing to override it. Default to 1.1",
+      type: "number",
+      required: false,
+      default: 1.1,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.mnemonicFile,
     ...options.pythContractAddress,
     ...options.pollingFrequency,
-    ...options.cooldownDuration,
+    ...options.pushingFrequency,
   },
   handler: function (argv: any) {
     // FIXME: type checks for this
@@ -49,17 +56,25 @@ export default {
       priceServiceEndpoint,
       mnemonicFile,
       pythContractAddress,
-      cooldownDuration,
+      pushingFrequency,
       pollingFrequency,
       customGasStation,
       txSpeed,
+      overrideGasPriceMultiplier,
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const priceServiceConnection = new PriceServiceConnection(
       priceServiceEndpoint,
       {
-        logger: console,
+        logger: {
+          // Log only warnings and errors from the price service client
+          info: () => undefined,
+          warn: console.warn,
+          error: console.error,
+          debug: () => undefined,
+          trace: () => undefined,
+        },
       }
     );
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
@@ -84,7 +99,8 @@ export default {
     const gasStation = getCustomGasStation(customGasStation, txSpeed);
     const evmPusher = new EvmPricePusher(
       priceServiceConnection,
-      pythContractFactory.createPythContractWithPayer(),
+      pythContractFactory,
+      overrideGasPriceMultiplier,
       gasStation
     );
 
@@ -93,7 +109,7 @@ export default {
       pythListener,
       evmListener,
       evmPusher,
-      { cooldownDuration }
+      { pushingFrequency }
     );
 
     controller.start();
