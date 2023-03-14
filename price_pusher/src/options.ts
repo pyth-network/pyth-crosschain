@@ -38,7 +38,7 @@ export const pollingFrequency = {
 };
 
 export const pushingFrequency = {
-  "pushing-duration": {
+  "pushing-frequency": {
     description:
       "The frequency to push prices to the RPC. " +
       "It is better that the value be greater than the block time of the network, so this program confirms " +
