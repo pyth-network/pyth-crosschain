@@ -8,7 +8,7 @@ import IPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import OracleSwapAbi from "./abi/OracleSwapAbi.json";
 import { approveToken, getApprovedQuantity } from "./erc20";
 import { EvmPriceServiceConnection } from "@pythnetwork/pyth-evm-js";
-import {PriceId} from "pyth_relay/lib/relay/iface";
+import { PriceId } from "pyth_relay/lib/relay/iface";
 
 /**
  * The order entry component lets users enter a quantity of the base token to buy/sell and submit
@@ -218,7 +218,7 @@ async function sendSwapTx(
     .send({ value: updateFee, from: sender });
 }
 
-
+/*
 async function sendSwapTxEthers(
     web3: Web3,
     priceServiceUrl: string,
@@ -265,5 +265,5 @@ async function sendTxWithPyth(tx: PopulatedTransaction, priceServiceUrl: string)
   }
 
   ethers.
-
 }
+*/

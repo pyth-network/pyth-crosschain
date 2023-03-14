@@ -557,8 +557,10 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
             updateData
         );
         console.logBytes32(requestId1);
+        console.log(address(this).balance);
         bytes32 requestId2 = pyth.requirePriceFeeds{value: 7}(priceIds);
         console.logBytes32(requestId2);
+        console.log(address(this).balance);
     }
 
     fallback() external payable {}

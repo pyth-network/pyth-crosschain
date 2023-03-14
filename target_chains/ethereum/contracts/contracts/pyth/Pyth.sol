@@ -107,7 +107,7 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
             console.log(success);
             clearPendingRequest(requestId);
         } else {
-            revert PythErrors.RequirePriceFeeds(priceIds);
+            revert PythErrors.RequirePriceFeeds(priceIds, msg.value);
         }
 
         return requestId;

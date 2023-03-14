@@ -23,7 +23,7 @@ contract OracleSwapTest is Test {
 
     OracleSwap public swap;
 
-    address payable constant DUMMY_TO =
+    address payable constant DUMMY_ADDRESS =
         payable(0x0000000000000000000000000000000000000055);
 
     uint256 MAX_INT = 2 ** 256 - 1;
@@ -166,17 +166,24 @@ contract OracleSwapTest is Test {
         );
         swap.swapNoUpdate{value: tip}(isBuy, size);
 
+        console.log("balance");
+        console.log(DUMMY_ADDRESS.balance);
         uint updateFee = mockPyth.getUpdateFee(updateData);
-        vm.deal(address(this), updateFee);
+        vm.deal(DUMMY_ADDRESS, updateFee);
+        console.log(DUMMY_ADDRESS.balance);
 
+        vm.prank(DUMMY_ADDRESS);
         mockPyth.updatePriceFeedsOnBehalfOf{value: updateFee}(
             tx.origin,
             priceIds,
             updateData
         );
+        console.log(DUMMY_ADDRESS.balance);
 
         vm.deal(address(this), tip);
+        // console.log(address(this).balance);
         swap.swapNoUpdate{value: tip}(isBuy, size);
+        console.log(DUMMY_ADDRESS.balance);
     }
 
     function testSwapNoUpdate() public {

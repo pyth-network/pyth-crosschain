@@ -129,7 +129,7 @@ contract MockPyth is AbstractPyth {
             bool success = payer.send(msg.value);
             delete pendingRequests[requestId];
         } else {
-            revert PythErrors.RequirePriceFeeds(priceIds);
+            revert PythErrors.RequirePriceFeeds(priceIds, msg.value);
         }
 
         return requestId;
