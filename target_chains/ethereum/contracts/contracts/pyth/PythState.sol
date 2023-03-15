@@ -38,6 +38,7 @@ contract PythStorage {
         // Mapping of cached price information
         // priceId => PriceInfo
         mapping(bytes32 => PythInternalStructs.PriceInfo) latestPriceInfo;
+        mapping(bytes32 => address payable) pendingRequests;
     }
 }
 

@@ -136,4 +136,14 @@ interface IPyth is IPythEvents {
         uint64 minPublishTime,
         uint64 maxPublishTime
     ) external payable returns (PythStructs.PriceFeed[] memory priceFeeds);
+
+    function requirePriceFeeds(
+        bytes32[] memory priceIds
+    ) external payable returns (bytes32);
+
+    function updatePriceFeedsOnBehalfOf(
+        address requester,
+        bytes32[] calldata priceIds,
+        bytes[] calldata updateData
+    ) external payable returns (bytes32);
 }

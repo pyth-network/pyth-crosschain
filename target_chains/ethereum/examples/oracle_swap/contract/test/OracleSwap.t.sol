@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "../src/OracleSwap.sol";
-import "pyth-sdk-solidity/MockPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/MockPyth.sol";
 import "openzeppelin-contracts/contracts/mocks/ERC20Mock.sol";
 
 contract OracleSwapTest is Test {
@@ -23,7 +23,7 @@ contract OracleSwapTest is Test {
 
     OracleSwap public swap;
 
-    address payable constant DUMMY_TO =
+    address payable constant DUMMY_ADDRESS =
         payable(0x0000000000000000000000000000000000000055);
 
     uint256 MAX_INT = 2 ** 256 - 1;
@@ -117,6 +117,87 @@ contract OracleSwapTest is Test {
 
         assertEq(quoteToken.balanceOf(address(this)), 20e18 - 1);
         assertEq(baseToken.balanceOf(address(this)), 20e18);
+    }
+
+    function doSwapNoUpdate(
+        int32 basePrice,
+        int32 quotePrice,
+        bool isBuy,
+        uint size
+    ) private {
+        bytes[] memory updateData = new bytes[](2);
+
+        // This is a dummy update data for Eth. It shows the price as $1000 +- $10 (with -5 exponent).
+        updateData[0] = mockPyth.createPriceFeedUpdateData(
+            BASE_PRICE_ID,
+            basePrice * 100000,
+            10 * 100000,
+            -5,
+            basePrice * 100000,
+            10 * 100000,
+            uint64(block.timestamp)
+        );
+        updateData[1] = mockPyth.createPriceFeedUpdateData(
+            QUOTE_PRICE_ID,
+            quotePrice * 100000,
+            10 * 100000,
+            -5,
+            quotePrice * 100000,
+            10 * 100000,
+            uint64(block.timestamp)
+        );
+
+        // Make sure the contract has enough funds to update the pyth feeds
+
+        baseToken.approve(address(swap), MAX_INT);
+        quoteToken.approve(address(swap), MAX_INT);
+
+        bytes32[] memory priceIds = new bytes32[](2);
+        priceIds[0] = BASE_PRICE_ID;
+        priceIds[1] = QUOTE_PRICE_ID;
+
+        uint tip = 7;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                PythErrors.RequirePriceFeeds.selector,
+                priceIds
+            )
+        );
+        swap.swapNoUpdate{value: tip}(isBuy, size);
+
+        console.log("balance");
+        console.log(DUMMY_ADDRESS.balance);
+        uint updateFee = mockPyth.getUpdateFee(updateData);
+        vm.deal(DUMMY_ADDRESS, updateFee);
+        console.log(DUMMY_ADDRESS.balance);
+
+        vm.prank(DUMMY_ADDRESS);
+        mockPyth.updatePriceFeedsOnBehalfOf{value: updateFee}(
+            tx.origin,
+            priceIds,
+            updateData
+        );
+        console.log(DUMMY_ADDRESS.balance);
+
+        vm.deal(address(this), tip);
+        // console.log(address(this).balance);
+        swap.swapNoUpdate{value: tip}(isBuy, size);
+        console.log(DUMMY_ADDRESS.balance);
+    }
+
+    function testSwapNoUpdate() public {
+        setupTokens(20e18, 20e18, 20e18, 20e18);
+
+        doSwapNoUpdate(10, 1, true, 1e18);
+
+        // assertEq(quoteToken.balanceOf(address(this)), 10e18 - 1);
+        // assertEq(baseToken.balanceOf(address(this)), 21e18);
+
+        // doSwapNoUpdate(10, 1, false, 1e18);
+
+        // assertEq(quoteToken.balanceOf(address(this)), 20e18 - 1);
+        // assertEq(baseToken.balanceOf(address(this)), 20e18);
     }
 
     function testWithdraw() public {
