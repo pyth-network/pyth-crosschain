@@ -68,7 +68,7 @@ contract OracleSwap {
         feedIds[0] = baseTokenPriceId;
         feedIds[1] = quoteTokenPriceId;
 
-        pyth.requirePriceFeeds(feedIds);
+        pyth.requirePriceFeeds{value: msg.value}(feedIds);
 
         swapImpl(isBuy, size);
     }

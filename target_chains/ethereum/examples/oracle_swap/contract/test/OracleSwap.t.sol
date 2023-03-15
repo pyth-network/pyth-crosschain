@@ -23,10 +23,10 @@ contract OracleSwapTest is Test {
 
     OracleSwap public swap;
 
-    address payable constant DUMMY_ADDRESS =
-        payable(0x0000000000000000000000000000000000000055);
-
     uint256 MAX_INT = 2 ** 256 - 1;
+
+    address swapper = address(1);
+    address updater = address(2);
 
     function setUp() public {
         // Creating a mock of Pyth contract with 60 seconds validTimePeriod (for staleness)
@@ -61,8 +61,13 @@ contract OracleSwapTest is Test {
         uint poolBaseQty,
         uint poolQuoteQty
     ) private {
-        baseToken.mint(address(this), senderBaseQty);
-        quoteToken.mint(address(this), senderQuoteQty);
+        baseToken.mint(address(swapper), senderBaseQty);
+        quoteToken.mint(address(swapper), senderQuoteQty);
+
+        vm.prank(swapper);
+        baseToken.approve(address(swap), MAX_INT);
+        vm.prank(swapper);
+        quoteToken.approve(address(swap), MAX_INT);
 
         baseToken.mint(address(swap), poolBaseQty);
         quoteToken.mint(address(swap), poolQuoteQty);
@@ -98,10 +103,9 @@ contract OracleSwapTest is Test {
 
         // Make sure the contract has enough funds to update the pyth feeds
         uint value = mockPyth.getUpdateFee(updateData);
-        vm.deal(address(this), value);
+        vm.deal(address(swapper), value);
 
-        baseToken.approve(address(swap), MAX_INT);
-        quoteToken.approve(address(swap), MAX_INT);
+        vm.prank(swapper);
         swap.swap{value: value}(isBuy, size, updateData);
     }
 
@@ -110,13 +114,13 @@ contract OracleSwapTest is Test {
 
         doSwap(10, 1, true, 1e18);
 
-        assertEq(quoteToken.balanceOf(address(this)), 10e18 - 1);
-        assertEq(baseToken.balanceOf(address(this)), 21e18);
+        assertEq(quoteToken.balanceOf(address(swapper)), 10e18 - 1);
+        assertEq(baseToken.balanceOf(address(swapper)), 21e18);
 
         doSwap(10, 1, false, 1e18);
 
-        assertEq(quoteToken.balanceOf(address(this)), 20e18 - 1);
-        assertEq(baseToken.balanceOf(address(this)), 20e18);
+        assertEq(quoteToken.balanceOf(address(swapper)), 20e18 - 1);
+        assertEq(baseToken.balanceOf(address(swapper)), 20e18);
     }
 
     function doSwapNoUpdate(
@@ -147,43 +151,42 @@ contract OracleSwapTest is Test {
             uint64(block.timestamp)
         );
 
-        // Make sure the contract has enough funds to update the pyth feeds
-
-        baseToken.approve(address(swap), MAX_INT);
-        quoteToken.approve(address(swap), MAX_INT);
-
         bytes32[] memory priceIds = new bytes32[](2);
         priceIds[0] = BASE_PRICE_ID;
         priceIds[1] = QUOTE_PRICE_ID;
 
-        uint tip = 7;
+        vm.deal(swapper, 1 ether);
+        vm.deal(updater, 1 ether);
+
+        uint tip = 9;
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 PythErrors.RequirePriceFeeds.selector,
-                priceIds
+                priceIds,
+                tip
             )
         );
+        vm.prank(swapper);
         swap.swapNoUpdate{value: tip}(isBuy, size);
 
-        console.log("balance");
-        console.log(DUMMY_ADDRESS.balance);
         uint updateFee = mockPyth.getUpdateFee(updateData);
-        vm.deal(DUMMY_ADDRESS, updateFee);
-        console.log(DUMMY_ADDRESS.balance);
 
-        vm.prank(DUMMY_ADDRESS);
+        vm.prank(updater);
         mockPyth.updatePriceFeedsOnBehalfOf{value: updateFee}(
             tx.origin,
             priceIds,
             updateData
         );
-        console.log(DUMMY_ADDRESS.balance);
 
-        vm.deal(address(this), tip);
-        // console.log(address(this).balance);
+        uint updaterInitialBalance = updater.balance;
+        uint swapperInitialBalance = swapper.balance;
+
+        vm.prank(swapper);
         swap.swapNoUpdate{value: tip}(isBuy, size);
-        console.log(DUMMY_ADDRESS.balance);
+
+        assertEq(swapperInitialBalance - tip, swapper.balance);
+        assertEq(updaterInitialBalance + tip, updater.balance);
     }
 
     function testSwapNoUpdate() public {
@@ -191,22 +194,18 @@ contract OracleSwapTest is Test {
 
         doSwapNoUpdate(10, 1, true, 1e18);
 
-        // assertEq(quoteToken.balanceOf(address(this)), 10e18 - 1);
-        // assertEq(baseToken.balanceOf(address(this)), 21e18);
-
-        // doSwapNoUpdate(10, 1, false, 1e18);
-
-        // assertEq(quoteToken.balanceOf(address(this)), 20e18 - 1);
-        // assertEq(baseToken.balanceOf(address(this)), 20e18);
+        assertEq(quoteToken.balanceOf(address(swapper)), 10e18 - 1);
+        assertEq(baseToken.balanceOf(address(swapper)), 21e18);
     }
 
     function testWithdraw() public {
         setupTokens(10e18, 10e18, 10e18, 10e18);
 
+        vm.prank(swapper);
         swap.withdrawAll();
 
-        assertEq(quoteToken.balanceOf(address(this)), 20e18);
-        assertEq(baseToken.balanceOf(address(this)), 20e18);
+        assertEq(quoteToken.balanceOf(address(swapper)), 20e18);
+        assertEq(baseToken.balanceOf(address(swapper)), 20e18);
         assertEq(quoteToken.balanceOf(address(swap)), 0);
         assertEq(baseToken.balanceOf(address(swap)), 0);
     }
