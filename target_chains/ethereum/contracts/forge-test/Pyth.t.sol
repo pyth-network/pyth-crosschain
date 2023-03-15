@@ -533,35 +533,45 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
             PriceAttestation[] memory attestations
         ) = generateRandomPriceAttestations(numAttestations);
 
+        uint tip = 7;
+        address updater = address(1111);
+        address requirer = address(1234);
+
+        vm.deal(updater, 1 ether);
+        vm.deal(requirer, 1 ether);
         vm.expectRevert(
             abi.encodeWithSelector(
                 PythErrors.RequirePriceFeeds.selector,
-                priceIds
+                priceIds,
+                tip
             )
         );
-        pyth.requirePriceFeeds(priceIds);
+        vm.prank(requirer);
+        pyth.requirePriceFeeds{value: tip}(priceIds);
 
         (
             bytes[] memory updateData,
             uint updateFee
         ) = createBatchedUpdateDataFromAttestations(attestations);
 
-        // console.log(address(this));
-        // console.log(address(this).balance);
-        // console.log(address(pyth).balance);
-        // payable(address(this)).transfer(100);
-
+        vm.prank(updater);
         bytes32 requestId1 = pyth.updatePriceFeedsOnBehalfOf{value: updateFee}(
             tx.origin,
             priceIds,
             updateData
         );
-        console.logBytes32(requestId1);
-        console.log(address(this).balance);
-        bytes32 requestId2 = pyth.requirePriceFeeds{value: 7}(priceIds);
+
+        uint initialRequirerBalance = requirer.balance;
+        uint initialUpdaterBalance = updater.balance;
+
+        vm.prank(requirer);
+        bytes32 requestId2 = pyth.requirePriceFeeds{value: tip}(priceIds);
         console.logBytes32(requestId2);
-        console.log(address(this).balance);
+
+        assertEq(initialRequirerBalance - tip, requirer.balance);
+        assertEq(initialUpdaterBalance + tip, updater.balance);
     }
 
+    // required for the contract to get paid ETH in testRequirePriceFeeds
     fallback() external payable {}
 }

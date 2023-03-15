@@ -43,7 +43,7 @@ contract PythSetters is PythState {
         bytes32 requestId,
         address payable payer
     ) internal {
-        // TODO: probably needs a timestamp / freshness check
+        // TODO: probably need to store a timestamp also to implement a freshness check
         _state.pendingRequests[requestId] = payer;
     }
 

@@ -98,11 +98,13 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         bytes32 requestId = keccak256(abi.encode(tx.origin, priceIds));
         address payable payer = getPendingRequest(requestId);
 
+        // TODO: add a freshness check to ensure the payer's update was sufficiently recent
+
         if (payer != address(0x0)) {
             console.log(payer);
             console.log(address(this));
             console.log(address(this).balance);
-            // TODO: transfer?
+            // TODO: should this be transfer instead of send?
             bool success = payer.send(msg.value);
             console.log(success);
             clearPendingRequest(requestId);
