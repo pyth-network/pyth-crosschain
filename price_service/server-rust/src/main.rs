@@ -1,15 +1,5 @@
 #![feature(never_type)]
 
-//! This application implements an RPC and P2P gossip layer for PythNet that operates under
-//! Solana's existing P2P and RPC.
-//!
-//! The purpose for this is to allow PythNet to have a fast and reliable gossip layer for
-//! generating state proofs and a reliable RPC layer for offering a distributed price service to
-//! clients, as well as proof subscriptions.
-//!
-//! This is currently experimental and is meant to act as a possible alternative to Pyth's existing
-//! price service.
-
 use {
     anyhow::Result,
     futures::{
@@ -44,7 +34,7 @@ pub struct AccountUpdate {
 }
 
 /// Handler for LibP2P messages. Currently these consist only of Wormhole Observations.
-fn handle_message(_observation: network::Observation) -> Result<()> {
+fn handle_message(_observation: network::p2p::Observation) -> Result<()> {
     println!("Rust: Received Observation");
     Ok(())
 }
@@ -69,11 +59,11 @@ async fn init(_update_channel: Receiver<AccountUpdate>) -> Result<()> {
 
             // Spawn the P2P layer.
             log::info!("Starting P2P server on {}", p2p_addr);
-            network::spawn_p2p(handle_message).await?;
+            network::p2p::spawn(handle_message).await?;
 
             // Spawn the RPC server.
             log::info!("Starting RPC server on {}", rpc_addr);
-            network::spawn_rpc(rpc_addr.to_string()).await?;
+            network::rpc::spawn(rpc_addr.to_string()).await?;
 
             // Wait on Ctrl+C similar to main.
             tokio::signal::ctrl_c().await?;

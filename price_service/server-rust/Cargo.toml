@@ -6,7 +6,6 @@ edition                        = "2021"
 [dependencies]
 axum                           = { version = "0.6.9", features = ["json", "ws"] }
 axum-macros                    = { version = "0.3.4" }
-# yerpc                          = { version = "0.4.0", features = ["anyhow", "support-axum"] }
 anyhow                         = { version = "1.0.69" }
 bs58                           = { version = "0.4.0" }
 dashmap                        = { version = "5.4.0" }

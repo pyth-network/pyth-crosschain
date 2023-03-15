@@ -58,3 +58,9 @@ repos:
         entry: cargo +nightly clippy --manifest-path ./target_chains/cosmwasm/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: target_chains/cosmwasm
+      - id: cargo-fmt-price-service
+        name: Cargo format for Rust Price Service
+        language: "rust"
+        entry: cargo +nightly fmt --manifest-path ./price_service/server-rust/Cargo.toml --all -- --config-path rustfmt.toml
+        pass_filenames: false
+        files: price_service/server-rust

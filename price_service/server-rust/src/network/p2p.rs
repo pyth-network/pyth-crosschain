@@ -74,7 +74,8 @@ where
     Ok(())
 }
 
-pub async fn spawn_p2p<H>(handle_message: H) -> Result<()>
+// Spawn's the P2P layer as a separate thread via Go.
+pub async fn spawn<H>(handle_message: H) -> Result<()>
 where
     H: Fn(Observation) -> Result<()> + Send + 'static,
 {

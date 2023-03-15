@@ -1,6 +1,8 @@
 use {
-    super::OBSERVATIONS,
-    crate::Vaa,
+    crate::{
+        network::p2p::OBSERVATIONS,
+        Vaa,
+    },
     anyhow::Result,
     axum::{
         routing::get,
@@ -79,7 +81,7 @@ impl State {
 ///
 /// Currently this is based on Axum due to the simplicity and strong ecosystem support for the
 /// packages they are based on (tokio & hyper).
-pub async fn spawn_rpc(rpc_addr: String) -> Result<()> {
+pub async fn spawn(rpc_addr: String) -> Result<()> {
     let mut cfg = State::new();
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
