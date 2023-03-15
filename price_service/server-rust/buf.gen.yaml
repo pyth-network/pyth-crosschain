@@ -1,0 +1,11 @@
+# This file specifies how `buf` should generate `p2p.pb.go`. The `- M` flag
+# rewrites the module from `gossipsubv1` as specified in the Wormhole repo to
+# `main` so it can compile in our repo (as we don't have a full Go project).
+version: v1beta1
+plugins:
+  - name: go
+    out: .
+    path: tools/bin/protoc-gen-go
+    opt:
+      - Msrc/network/p2p.proto=github.com/pyth-network/main;main
+      - paths=source_relative
