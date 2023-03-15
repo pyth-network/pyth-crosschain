@@ -12,7 +12,6 @@ import { DurationInSeconds } from "../utils";
 import {
   ChainGrpcAuthApi,
   ChainGrpcWasmApi,
-  DEFAULT_STD_FEE,
   MsgExecuteContract,
   Msgs,
   PrivateKey,
@@ -20,6 +19,8 @@ import {
   TxResponse,
   createTransactionFromMsg,
 } from "@injectivelabs/sdk-ts";
+
+import { DEFAULT_GAS_PRICE } from "@injectivelabs/utils";
 
 type PriceQueryResponse = {
   price_feed: {
@@ -84,34 +85,77 @@ export class InjectivePriceListener extends ChainPriceListener {
   }
 }
 
+type InjectiveConfig = {
+  chainId: string;
+  gasMultiplier: number;
+  gasPrice: number;
+};
 export class InjectivePricePusher implements IPricePusher {
   private wallet: PrivateKey;
+  private chainConfig: InjectiveConfig;
+
   constructor(
     private priceServiceConnection: PriceServiceConnection,
     private pythContractAddress: string,
     private grpcEndpoint: string,
-    mnemonic: string
+    mnemonic: string,
+    chainConfig?: Partial<InjectiveConfig>
   ) {
     this.wallet = PrivateKey.fromMnemonic(mnemonic);
+
+    this.chainConfig = {
+      chainId: chainConfig?.chainId ?? "injective-888",
+      gasMultiplier: chainConfig?.gasMultiplier ?? 1.2,
+      gasPrice: chainConfig?.gasPrice ?? DEFAULT_GAS_PRICE,
+    };
   }
 
   private injectiveAddress(): string {
     return this.wallet.toBech32();
   }
 
-  private async signAndBroadcastMsg(
-    msg: Msgs,
-    fee = DEFAULT_STD_FEE
-  ): Promise<TxResponse> {
+  private async signAndBroadcastMsg(msg: Msgs): Promise<TxResponse> {
     const chainGrpcAuthApi = new ChainGrpcAuthApi(this.grpcEndpoint);
     const account = await chainGrpcAuthApi.fetchAccount(
       this.injectiveAddress()
     );
+    const { txRaw: simulateTxRaw } = createTransactionFromMsg({
+      sequence: account.baseAccount.sequence,
+      accountNumber: account.baseAccount.accountNumber,
+      message: msg,
+      chainId: this.chainConfig.chainId,
+      pubKey: this.wallet.toPublicKey().toBase64(),
+    });
+
+    const txService = new TxGrpcClient(this.grpcEndpoint);
+    // simulation
+    const {
+      gasInfo: { gasUsed },
+    } = await txService.simulate(simulateTxRaw);
+
+    // simulation returns us the approximate gas used
+    // gas passed with the transaction should be more than that
+    // in order for it to be successfully executed
+    // this multiplier takes care of that
+    const fee = {
+      amount: [
+        {
+          denom: "inj",
+          amount: (
+            gasUsed *
+            this.chainConfig.gasPrice *
+            this.chainConfig.gasMultiplier
+          ).toFixed(),
+        },
+      ],
+      gas: (gasUsed * this.chainConfig.gasMultiplier).toFixed(),
+    };
+
     const { signBytes, txRaw } = createTransactionFromMsg({
       sequence: account.baseAccount.sequence,
       accountNumber: account.baseAccount.accountNumber,
       message: msg,
-      chainId: "injective-888",
+      chainId: this.chainConfig.chainId,
       fee,
       pubKey: this.wallet.toPublicKey().toBase64(),
     });
@@ -121,7 +165,6 @@ export class InjectivePricePusher implements IPricePusher {
     /** Append Signatures */
     txRaw.setSignaturesList([sig]);
 
-    const txService = new TxGrpcClient(this.grpcEndpoint);
     const txResponse = await txService.broadcast(txRaw);
 
     return txResponse;
