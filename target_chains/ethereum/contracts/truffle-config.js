@@ -216,6 +216,10 @@ module.exports = {
       provider: payerProvider(`https://eth.bd.evmos.dev:8545/`),
       network_id: 9000,
     },
+    neon_devnet: {
+      provider: payerProvider(`https://devnet.neonevm.org`),
+      network_id: 245022926,
+    },
   },
 
   compilers: {

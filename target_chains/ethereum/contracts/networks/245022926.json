@@ -1,0 +1,16 @@
+[
+  {
+    "contractName": "Migrations",
+    "address": "0x5e92a04Cb8591cb7d9FD40B77B474cde0fE44D36"
+  },
+  {
+    "contractName": "WormholeReceiver",
+    "address": "0x5955C1478F0dAD753C7E2B4dD1b4bC530C64749f",
+    "transactionHash": "0x1c14a83c42fd99c7e78bfadf9a0200ac3cfd9682cdfbbf875b7ebf90ce75e520"
+  },
+  {
+    "contractName": "PythUpgradable",
+    "address": "0x2FF312f50689ad279ABb164dB255Eb568733BD6c",
+    "transactionHash": "0x9fb37b19c9c4d1e765c495f74692de0645ce9efbd3ac7ad9d2a64f0bafccc675"
+  }
+]

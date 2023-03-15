@@ -8,6 +8,7 @@ export const RECEIVER_CHAINS = {
   shimmer: 60004,
   gnosis: 60005,
   evmos: 60006,
+  neon: 60007,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

@@ -53,7 +53,7 @@ export async function loadHotWalletOrLedger(
   }
 }
 
-const mutlisigCommand = (name: string, description: string) =>
+const multisigCommand = (name: string, description: string) =>
   program
     .command(name)
     .description(description)
@@ -77,7 +77,7 @@ program
   .description("CLI for interacting with Pyth's xc_admin")
   .version("0.1.0");
 
-mutlisigCommand(
+multisigCommand(
   "accept-authority",
   "Accept authority from the program authority escrow"
 )
@@ -155,7 +155,7 @@ mutlisigCommand(
     );
   });
 
-mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
+multisigCommand("upgrade-program", "Upgrade a program from a buffer")
   .requiredOption(
     "-p, --program-id <pubkey>",
     "program that you want to upgrade"
@@ -218,7 +218,7 @@ mutlisigCommand("upgrade-program", "Upgrade a program from a buffer")
     );
   });
 
-mutlisigCommand(
+multisigCommand(
   "init-price",
   "Init price (useful for changing the exponent), only to be used on unused price feeds"
 )
@@ -287,7 +287,7 @@ program
     console.log(JSON.stringify(parsed, null, 2));
   });
 
-mutlisigCommand("approve", "Approve a transaction sitting in the multisig")
+multisigCommand("approve", "Approve a transaction sitting in the multisig")
   .requiredOption(
     "-t, --transaction <pubkey>",
     "address of the outstanding transaction"
@@ -305,7 +305,7 @@ mutlisigCommand("approve", "Approve a transaction sitting in the multisig")
     await squad.approveTransaction(transaction);
   });
 
-mutlisigCommand("propose-token-transfer", "Propose token transfer")
+multisigCommand("propose-token-transfer", "Propose token transfer")
   .requiredOption("-a, --amount <number>", "amount in dollars")
   .requiredOption("-d, --destination <pubkey>", "destination address")
   .option(
@@ -363,7 +363,7 @@ mutlisigCommand("propose-token-transfer", "Propose token transfer")
 /**
  * Activate proposal, mostly useful for cleaning up draft proposals that happen when the browser wallet fails to send all transactions succesfully
  */
-mutlisigCommand("activate", "Activate a transaction sitting in the multisig")
+multisigCommand("activate", "Activate a transaction sitting in the multisig")
   .requiredOption(
     "-t, --transaction <pubkey>",
     "address of the draft transaction"
