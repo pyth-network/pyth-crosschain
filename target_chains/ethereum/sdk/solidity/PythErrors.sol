@@ -30,5 +30,6 @@ library PythErrors {
     // Governance message is old.
     error OldGovernanceMessage();
     // Call requires someone to update the given price ids first.
+    // Whoever performs the update will receive tip wei when this transaction succeeds.
     error RequirePriceFeeds(bytes32[] priceIds, uint tip);
 }
