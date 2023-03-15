@@ -236,7 +236,19 @@ export class InjectivePricePusher implements IPricePusher {
       if (rs.code !== 0) throw new Error("Error: transaction failed");
 
       console.log("Succesfully broadcasted txHash:", rs.txHash);
-    } catch (e) {
+    } catch (e: any) {
+      if (e.message.match(/account inj[a-zA-Z0-9]+ not found/) !== null) {
+        console.error(e);
+        throw new Error("Please check the mnemonic");
+      }
+
+      if (
+        e.message.match(/insufficient/) !== null &&
+        e.message.match(/funds/) !== null
+      ) {
+        console.error(e);
+        throw new Error("Insufficient funds");
+      }
       console.error("Error executing messages");
       console.log(e);
     }
