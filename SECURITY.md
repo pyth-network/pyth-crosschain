@@ -35,6 +35,8 @@ As these 3rd party audits are completed and issues are sufficiently addressed, w
   - **Scope**: _pyth-crosschain-solana contracts_
 - **[February 23, 2023 - CertiK](https://github.com/pyth-network/audit-reports/blob/pyth-certik/2023_02_23/pyth-crosschain-eth.pdf)**
   - **Scope**: _pyth-crosschain-evm contracts_
+- **[March 14, 2023 - Zellic](https://github.com/pyth-network/audit-reports/blob/njk/zellic/2023_03_14/Pyth%20Network%20-%20Zellic%20Audit%20Report.pdf)**
+  - **Scope**: _pyth-crosschain-cosmwasm contracts_
 
 ## Social Media Monitoring
 
