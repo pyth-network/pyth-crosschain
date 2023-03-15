@@ -10,6 +10,10 @@ fn main() {
 
     // Clone the Wormhole repository, which we need to access the protobuf definitions for Wormhole
     // P2P message types.
+    //
+    // TODO: This is ugly and costly, and requires git. Instead of this we should have our own tool
+    // build process that can generate protobuf definitions for this and other user cases. For now
+    // this is easy and works and matches upstream Wormhole's `Makefile`.
     let _ = Command::new("git")
         .args([
             "clone",
