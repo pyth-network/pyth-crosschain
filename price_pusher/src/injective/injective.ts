@@ -85,15 +85,29 @@ export class InjectivePriceListener extends ChainPriceListener {
   }
 }
 
+type InjectiveConfig = {
+  chainId: string;
+  gasMultiplier: number;
+  gasPrice: number;
+};
 export class InjectivePricePusher implements IPricePusher {
   private wallet: PrivateKey;
+  private chainConfig: InjectiveConfig;
+
   constructor(
     private priceServiceConnection: PriceServiceConnection,
     private pythContractAddress: string,
     private grpcEndpoint: string,
-    mnemonic: string
+    mnemonic: string,
+    chainConfig?: Partial<InjectiveConfig>
   ) {
     this.wallet = PrivateKey.fromMnemonic(mnemonic);
+
+    this.chainConfig = {
+      chainId: chainConfig?.chainId ?? "injective-888",
+      gasMultiplier: chainConfig?.gasMultiplier ?? 1.2,
+      gasPrice: chainConfig?.gasPrice ?? DEFAULT_GAS_PRICE,
+    };
   }
 
   private injectiveAddress(): string {
@@ -109,7 +123,7 @@ export class InjectivePricePusher implements IPricePusher {
       sequence: account.baseAccount.sequence,
       accountNumber: account.baseAccount.accountNumber,
       message: msg,
-      chainId: "injective-888",
+      chainId: this.chainConfig.chainId,
       pubKey: this.wallet.toPublicKey().toBase64(),
     });
 
@@ -123,26 +137,25 @@ export class InjectivePricePusher implements IPricePusher {
     // gas passed with the transaction should be more than that
     // in order for it to be successfully executed
     // this multiplier takes care of that
-    const EXTRA_GAS_MULTIPLIER = 1.2;
     const fee = {
       amount: [
         {
           denom: "inj",
           amount: (
             gasUsed *
-            DEFAULT_GAS_PRICE *
-            EXTRA_GAS_MULTIPLIER
+            this.chainConfig.gasPrice *
+            this.chainConfig.gasMultiplier
           ).toFixed(),
         },
       ],
-      gas: (gasUsed * EXTRA_GAS_MULTIPLIER).toFixed(),
+      gas: (gasUsed * this.chainConfig.gasMultiplier).toFixed(),
     };
 
     const { signBytes, txRaw } = createTransactionFromMsg({
       sequence: account.baseAccount.sequence,
       accountNumber: account.baseAccount.accountNumber,
       message: msg,
-      chainId: "injective-888",
+      chainId: this.chainConfig.chainId,
       fee,
       pubKey: this.wallet.toPublicKey().toBase64(),
     });
