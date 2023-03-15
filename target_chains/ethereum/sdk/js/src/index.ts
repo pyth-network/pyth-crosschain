@@ -39,4 +39,5 @@ export const CONTRACT_ADDR: Record<string, string> = {
   zksync: "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834",
   evmos: "0x354bF866A4B006C9AF9d9e06d9364217A8616E12",
   evmos_testnet: "0x354bF866A4B006C9AF9d9e06d9364217A8616E12",
+  neon_devnet: "0x2FF312f50689ad279ABb164dB255Eb568733BD6c",
 };
