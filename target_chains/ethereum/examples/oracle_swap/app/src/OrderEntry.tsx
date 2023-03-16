@@ -239,7 +239,7 @@ async function sendSwapTxNew(
   try {
     const res = await swapContract.methods
       .swapNoUpdate(isBuy, qtyWei)
-      .call({ value: tip, from: sender });
+      .send({ value: tip, from: sender });
   } catch (error) {
     console.log(error);
   }
@@ -258,7 +258,4 @@ async function sendSwapTxNew(
   const updateFee = await pythContract.methods
     .getUpdateFee(priceFeedUpdateData.length)
     .call();
-
-  pythContract;
-  alert(res);
 }

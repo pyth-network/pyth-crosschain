@@ -83,3 +83,11 @@ usd 0x98cDc14fe999435F3d4C2E65eC8863e0d70493Df
 swap contract 0xf3161b2B32761B46C084a7e1d8993C19703C09e7
 
 Once you've configured everything, simply run `npm run start`.
+
+## Local Eth network
+
+from `ethereum/contracts/contract` run
+
+`npx ganache-cli -e 10000 --deterministic --time="1970-01-02T00:00:00+00:00" --host=0.0.0.0`
+
+then run `./local-devnet.sh` in this directory to set up the contracts on the ganache node

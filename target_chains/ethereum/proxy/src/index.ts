@@ -2,12 +2,13 @@ import express from "express";
 import axios, { AxiosError } from "axios";
 import bodyParser from "body-parser";
 
-const UNDERLYING_URL = "https://goerli.optimism.io";
+const UNDERLYING_URL = "http://localhost:8545";
 
 const IGNORE_METHODS = [
   "eth_blockNumber",
   "eth_getBalance",
   "eth_getBlockByNumber",
+  "eth_getBlockByHash",
   "eth_feeHistory",
   "eth_call",
 ];
