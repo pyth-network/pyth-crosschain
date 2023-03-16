@@ -1,16 +1,60 @@
 import express from "express";
-import {
-  createProxyMiddleware,
-  Filter,
-  Options,
-  RequestHandler,
-  responseInterceptor,
-} from "http-proxy-middleware";
-import * as http from "http";
-import { ClientRequest } from "http";
+import axios, { AxiosError } from "axios";
+import bodyParser from "body-parser";
 
 const UNDERLYING_URL = "https://goerli.optimism.io";
 
+const app = express();
+const port = 8080;
+
+// Use body-parser to parse JSON request bodies
+app.use(bodyParser.json());
+
+// Handle POST requests to /
+app.post("/", async (req, res) => {
+  try {
+    // Get the URL to proxy to from the request body
+    console.log(
+      `[-->] ${req.method} url: ${req.url} path: ${
+        req.path
+      } params: ${JSON.stringify(req.params)}`
+    );
+    console.log(`      ${JSON.stringify(req.body)}`);
+
+    if (req.method == "POST") {
+      const destUrl = `${UNDERLYING_URL}${req.path}`;
+      const response = await axios.post(destUrl, req.body);
+      console.log(`[<--] ${response.status} ${JSON.stringify(response.data)}`);
+
+      res.status(response.status).send(response.data);
+    } else {
+      res.status(405).send(`Unsupported method: ${req.method} is not allowed`);
+    }
+
+    /*
+    const { url } = req.body;
+    // Make a POST request to the proxied endpoint using Axios
+
+    // Return the response from the proxied endpoint
+    res.status(response.status).send(response.data);
+     */
+  } catch (error) {
+    // Handle errors and return an error response
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      res.status(axiosError.response?.status || 500).send(axiosError.message);
+    } else {
+      res.status(500).send(error);
+    }
+  }
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Proxy server listening at http://localhost:${port}`);
+});
+
+/*
 const proxy = createProxyMiddleware({
   target: UNDERLYING_URL,
   changeOrigin: true, // for vhosted sites
@@ -59,6 +103,7 @@ app.use("/", proxy);
 // app.use(bodyParser.urlencoded());
 
 app.listen(8080);
+*/
 
 /*
 import * as http from "http";
