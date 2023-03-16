@@ -21,20 +21,20 @@ repos:
       - id: cargo-fmt-remote-executor
         name: Cargo format for remote executor
         language: "rust"
-        entry: cargo +nightly fmt --manifest-path ./governance/remote_executor/Cargo.toml --all -- --config-path rustfmt.toml
+        entry: cargo fmt --manifest-path ./governance/remote_executor/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: governance/remote_executor
       - id: cargo-clippy-remote-executor
         name: Cargo clippy for remote executor
         language: "rust"
-        entry: cargo +nightly clippy --manifest-path ./governance/remote_executor/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo clippy --manifest-path ./governance/remote_executor/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: governance/remote_executor
       # Hooks for the attester
       - id: cargo-fmt-attester
         name: Cargo format for attester
         language: "rust"
-        entry: cargo +nightly fmt --manifest-path ./wormhole_attester/Cargo.toml --all -- --config-path rustfmt.toml
+        entry: cargo fmt --manifest-path ./wormhole_attester/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: wormhole_attester
       - id: cargo-clippy-attester
@@ -49,18 +49,18 @@ repos:
       - id: cargo-fmt-cosmwasm
         name: Cargo format for cosmwasm contract
         language: "rust"
-        entry: cargo +nightly fmt --manifest-path ./target_chains/cosmwasm/Cargo.toml --all -- --config-path rustfmt.toml
+        entry: cargo fmt --manifest-path ./target_chains/cosmwasm/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: target_chains/cosmwasm
       - id: cargo-clippy-cosmwasm
         name: Cargo clippy for cosmwasm contract
         language: "rust"
-        entry: cargo +nightly clippy --manifest-path ./target_chains/cosmwasm/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo clippy --manifest-path ./target_chains/cosmwasm/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: target_chains/cosmwasm
       - id: cargo-fmt-price-service
         name: Cargo format for Rust Price Service
         language: "rust"
-        entry: cargo +nightly fmt --manifest-path ./price_service/server-rust/Cargo.toml --all -- --config-path rustfmt.toml
+        entry: cargo fmt --manifest-path ./price_service/server-rust/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: price_service/server-rust
