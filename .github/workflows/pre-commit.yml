@@ -14,7 +14,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.69
+          toolchain: nightly-2023-03-01
           components: rustfmt, clippy
           default: true
       - uses: pre-commit/action@v2.0.3
