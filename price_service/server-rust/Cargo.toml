@@ -1,0 +1,51 @@
+[package]
+name                           = "price-service"
+version                        = "0.1.0"
+edition                        = "2021"
+
+[dependencies]
+axum                           = { version = "0.6.9", features = ["json", "ws"] }
+axum-macros                    = { version = "0.3.4" }
+anyhow                         = { version = "1.0.69" }
+bs58                           = { version = "0.4.0" }
+dashmap                        = { version = "5.4.0" }
+der                            = { version = "0.7.0" }
+env_logger                     = { version = "0.10.0" }
+futures                        = { version = "0.3.26" }
+hex                            = { version = "0.4.3" }
+rand                           = { version = "0.8.5" }
+reqwest                        = { version = "0.11.14", features = ["blocking", "json"] }
+ring                           = { version = "0.16.20" }
+rusqlite                       = { version = "0.28.0", features = ["bundled"] }
+lazy_static                    = { version = "1.4.0" }
+libc                           = { version = "0.2.140" }
+secp256k1                      = { version = "0.26.0", features = ["rand", "recovery", "serde"] }
+serde                          = { version = "1.0.152", features = ["derive"] }
+serde_arrays                   = { version = "0.1.0" }
+serde_cbor                     = { version = "0.11.2" }
+serde_json                     = { version = "1.0.93" }
+sha256                         = { version = "1.1.2" }
+structopt                      = { version = "0.3.26" }
+tokio                          = { version = "1.26.0", features = ["full"] }
+typescript-type-def            = { version = "0.5.5" }
+log                            = { version = "0.4.17" }
+
+# Setup LibP2P. Unfortunately the dependencies required by libp2p are shared
+# with the dependencies required by solana's geyser plugin. This means that we
+# would have to use the same version of libp2p as solana. Luckily we don't need
+# to do this yet but it's something to keep in mind.
+libp2p                         = { version = "0.51.1", features = [
+    "dns",
+    "gossipsub",
+    "identify",
+    "macros",
+    "mplex",
+    "noise",
+    "quic",
+    "secp256k1",
+    "tcp",
+    "tls",
+    "tokio",
+    "websocket",
+    "yamux",
+]}

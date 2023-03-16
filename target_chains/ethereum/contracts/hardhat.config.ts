@@ -16,6 +16,10 @@ module.exports = {
   },
   defaultNetwork: "zkSyncTestnet",
   networks: {
+    goerli: {
+      url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
+      zksync: false,
+    },
     zkSyncTestnet: {
       url: "https://zksync2-testnet.zksync.dev", // URL of the zkSync network RPC
       ethNetwork: "goerli", // Can also be the RPC URL of the Ethereum network (e.g. `https://goerli.infura.io/v3/<API_KEY>`)
