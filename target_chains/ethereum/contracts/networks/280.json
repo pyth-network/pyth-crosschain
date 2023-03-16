@@ -1,10 +1,10 @@
 [
   {
     "contractName": "WormholeReceiver",
-    "address": "0x02C404128Ba4b83f4Ea8c134Ca30A7Aa07aac535"
+    "address": "0xA32e2Fe21b6441689f1308867931F4F145186B9F"
   },
   {
     "contractName": "PythUpgradable",
-    "address": "0xF532F2C1bB7b67E08f7D8B76f9fF804D0831725e"
+    "address": "0xC38B1dd611889Abc95d4E0a472A667c3671c08DE"
   }
 ]

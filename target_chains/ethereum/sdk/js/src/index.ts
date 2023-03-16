@@ -32,7 +32,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   cronos: "0xE0d0e68297772Dd5a1f1D99897c581E2082dbA5B",
   cronos_testnet: "0xBAEA4A1A2Eaa4E9bb78f2303C213Da152933170E",
   arbitrum_goerli: "0x939C0e902FF5B3F7BA666Cc8F6aC75EE76d3f900",
-  zksync_goerli: "0xF532F2C1bB7b67E08f7D8B76f9fF804D0831725e",
+  zksync_goerli: "0xC38B1dd611889Abc95d4E0a472A667c3671c08DE",
   base_goerli: "0x5955C1478F0dAD753C7E2B4dD1b4bC530C64749f",
   shimmer_testnet: "0x354bF866A4B006C9AF9d9e06d9364217A8616E12",
   chiado: "0xdDAf6D29b8bc81c1F0798a5e4c264ae89c16a72B", // Gnosis testnet
