@@ -212,6 +212,28 @@ async function sendSwapTx(
   );
 
   await swapContract.methods
-    .swapNoUpdate(isBuy, qtyWei, priceFeedUpdateData)
+    .swap(isBuy, qtyWei, priceFeedUpdateData)
     .send({ value: updateFee, from: sender });
+}
+
+async function sendSwapTxNew(
+  web3: Web3,
+  priceServiceUrl: string,
+  baseTokenPriceFeedId: string,
+  quoteTokenPriceFeedId: string,
+  pythContractAddress: string,
+  swapContractAddress: string,
+  sender: string,
+  qtyWei: BigNumber,
+  isBuy: boolean
+) {
+  const swapContract = new web3.eth.Contract(
+    OracleSwapAbi as any,
+    swapContractAddress
+  );
+
+  const tip = 7;
+  await swapContract.methods
+    .swapNoUpdate(isBuy, qtyWei)
+    .send({ value: tip, from: sender });
 }
