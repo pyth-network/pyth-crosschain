@@ -6,7 +6,6 @@ pragma solidity ^0.8.0;
 import "../libraries/external/UnsafeBytesLib.sol";
 import "@pythnetwork/pyth-sdk-solidity/AbstractPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
-import "forge-std/Test.sol";
 
 import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
 import "./PythGetters.sol";
@@ -101,12 +100,8 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
         // TODO: add a freshness check to ensure the payer's update was sufficiently recent
 
         if (payer != address(0x0)) {
-            console.log(payer);
-            console.log(address(this));
-            console.log(address(this).balance);
             // TODO: should this be transfer instead of send?
             bool success = payer.send(msg.value);
-            console.log(success);
             clearPendingRequest(requestId);
         } else {
             revert PythErrors.RequirePriceFeeds(priceIds, msg.value);
