@@ -233,7 +233,32 @@ async function sendSwapTxNew(
   );
 
   const tip = 7;
-  await swapContract.methods
-    .swapNoUpdate(isBuy, qtyWei)
-    .send({ value: tip, from: sender });
+
+  console.log("trying to swap");
+
+  try {
+    const res = await swapContract.methods
+      .swapNoUpdate(isBuy, qtyWei)
+      .call({ value: tip, from: sender });
+  } catch (error) {
+    console.log(error);
+  }
+
+  const pythPriceService = new EvmPriceServiceConnection(priceServiceUrl);
+  const priceFeedUpdateData = await pythPriceService.getPriceFeedsUpdateData([
+    baseTokenPriceFeedId,
+    quoteTokenPriceFeedId,
+  ]);
+
+  const pythContract = new web3.eth.Contract(
+    IPythAbi as any,
+    pythContractAddress
+  );
+
+  const updateFee = await pythContract.methods
+    .getUpdateFee(priceFeedUpdateData.length)
+    .call();
+
+  pythContract;
+  alert(res);
 }

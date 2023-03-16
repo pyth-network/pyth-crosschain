@@ -20,19 +20,19 @@ const CONFIG = {
   // Note that feeds have different ids on testnet / mainnet.
   baseToken: {
     name: "BRL",
-    erc20Address: "0xB3a2EDFEFC35afE110F983E32Eb67E671501de1f",
+    erc20Address: "0x8e2a09b54fF35Cc4fe3e7dba68bF4173cC559C69",
     pythPriceFeedId:
       "08f781a893bc9340140c5f89c8a96f438bcfae4d1474cc0f688e3a52892c7318",
     decimals: 18,
   },
   quoteToken: {
     name: "USD",
-    erc20Address: "0x8C65F3b18fB29D756d26c1965d84DBC273487624",
+    erc20Address: "0x98cDc14fe999435F3d4C2E65eC8863e0d70493Df",
     pythPriceFeedId:
       "1fc18861232290221461220bd4e2acd1dcdfbc89c84092c93c18bdc7756c1588",
     decimals: 18,
   },
-  swapContractAddress: "0x15F9ccA28688F5E6Cbc8B00A8f33e8cE73eD7B02",
+  swapContractAddress: "0xec86479a72469Fe5E4efc2B5b1c960Ed460e9081",
   pythContractAddress: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C",
   priceServiceUrl: "https://xc-testnet.pyth.network",
   mintQty: 100,
