@@ -80,9 +80,3 @@ We use [Semantic Versioning](https://semver.org/) for our releases. In order to 
 
 1. Run `npm version <new version number> --no-git-tag-version`. This command will update the version of the package. Then push your changes to github.
 2. Once your change is merged into `main`, create a release with tag `v<new version number>` like `v1.5.2`, and a github action will automatically publish the new version of this package to npm.
-
-### pre-commit hooks
-
-pre-commit is a tool that checks and fixes simple issues (formatting, ...) before each commit. You can install it by following [their website](https://pre-commit.com/). In order to enable checks for this repo run `pre-commit install` from command-line in the root of this repo.
-
-The checks are also performed in the CI to ensure the code follows consistent formatting.
