@@ -156,7 +156,7 @@ export function OrderEntry(props: {
             2.
             <button
               onClick={async () => {
-                await sendSwapTx(
+                await sendSwapTxNew(
                   props.web3!,
                   props.priceServiceUrl,
                   props.baseToken.pythPriceFeedId,
