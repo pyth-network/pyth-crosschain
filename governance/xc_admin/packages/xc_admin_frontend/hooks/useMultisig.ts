@@ -91,6 +91,10 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
   }, [urlsIndex, cluster])
 
   useEffect(() => {
+    setUrlsIndex(0)
+  }, [cluster])
+
+  useEffect(() => {
     const urls = pythClusterApiUrls(getMultisigCluster(cluster))
     const connection = new Connection(urls[urlsIndex].rpcUrl, {
       commitment: 'confirmed',
