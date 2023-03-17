@@ -1,20 +1,20 @@
-import "@matterlabs/hardhat-zksync-deploy";
-import "@matterlabs/hardhat-zksync-solc";
+// import "@matterlabs/hardhat-zksync-deploy";
+// import "@matterlabs/hardhat-zksync-solc";
 import "@nomiclabs/hardhat-etherscan";
 import "@openzeppelin/hardhat-upgrades";
-import "@matterlabs/hardhat-zksync-verify";
+// import "@matterlabs/hardhat-zksync-verify";
 
 module.exports = {
-  zksolc: {
-    version: "1.3.1",
-    compilerSource: "binary",
-    settings: {
-      optimizer: {
-        enabled: true,
-      },
-    },
-  },
-  defaultNetwork: "zkSyncTestnet",
+  // zksolc: {
+  //   version: "1.3.1",
+  //   compilerSource: "binary",
+  //   settings: {
+  //     optimizer: {
+  //       enabled: true,
+  //     },
+  //   },
+  // },
+  // defaultNetwork: "zkSyncTestnet",
   networks: {
     zkSyncTestnet: {
       url: "https://zksync2-testnet.zksync.dev", // URL of the zkSync network RPC
@@ -32,6 +32,44 @@ module.exports = {
       verifyURL:
         "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
     },
+    neon_devnet: {
+      url: "https://devnet.neonevm.org",
+      chainId: 245022926,
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+      },
+    },
+    shimmer_testnet: {
+      url: "https://json-rpc.evm.testnet.shimmer.network",
+      chainId: 1070,
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+      },
+    },
+  },
+  etherscan: {
+    apiKey: {
+      neon_devnet: "there_should_be_a_dummy_value_here_to_avoid_error",
+      shimmer_testnet: "there_should_be_a_dummy_value_here_to_avoid_error",
+    },
+    customChains: [
+      {
+        network: "neon_devnet",
+        chainId: 245022926,
+        urls: {
+          apiURL: "https://devnet-api.neonscan.org/hardhat/verify",
+          browserURL: "https://devnet.neonscan.org",
+        },
+      },
+      {
+        network: "shimmer_testnet",
+        chainId: 1070,
+        urls: {
+          apiURL: "https://explorer.evm.testnet.shimmer.network/api",
+          browserURL: "https://explorer.evm.testnet.shimmer.network",
+        },
+      },
+    ],
   },
   solidity: {
     version: "0.8.4",
