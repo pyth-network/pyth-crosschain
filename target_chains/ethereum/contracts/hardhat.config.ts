@@ -1,20 +1,20 @@
-// import "@matterlabs/hardhat-zksync-deploy";
-// import "@matterlabs/hardhat-zksync-solc";
 import "@nomiclabs/hardhat-etherscan";
 import "@openzeppelin/hardhat-upgrades";
-// import "@matterlabs/hardhat-zksync-verify";
+import "@matterlabs/hardhat-zksync-deploy";
+import "@matterlabs/hardhat-zksync-solc";
+// import "@matterlabs/hardhat-zksync-verify"; UNCOMMENT THIS AND INSTALL THIS PACKAGE TO VERIFY ZKSYNC
 
 module.exports = {
-  // zksolc: {
-  //   version: "1.3.1",
-  //   compilerSource: "binary",
-  //   settings: {
-  //     optimizer: {
-  //       enabled: true,
-  //     },
-  //   },
-  // },
-  // defaultNetwork: "zkSyncTestnet",
+  zksolc: {
+    version: "1.3.1",
+    compilerSource: "binary",
+    settings: {
+      optimizer: {
+        enabled: true,
+      },
+    },
+  },
+  defaultNetwork: "zkSyncTestnet",
   networks: {
     zkSyncTestnet: {
       url: "https://zksync2-testnet.zksync.dev", // URL of the zkSync network RPC
