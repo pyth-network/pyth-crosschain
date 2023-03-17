@@ -33,12 +33,6 @@ pub struct AccountUpdate {
     data: Vec<u8>,
 }
 
-/// Handler for LibP2P messages. Currently these consist only of Wormhole Observations.
-fn handle_message(_observation: network::p2p::Observation) -> Result<()> {
-    println!("Rust: Received Observation");
-    Ok(())
-}
-
 /// Initialize the Application. This can be invoked either by real main, or by the Geyser plugin.
 async fn init(_update_channel: Receiver<AccountUpdate>) -> Result<()> {
     log::info!("Initializing PythNet...");
@@ -59,7 +53,7 @@ async fn init(_update_channel: Receiver<AccountUpdate>) -> Result<()> {
 
             // Spawn the P2P layer.
             log::info!("Starting P2P server on {}", p2p_addr);
-            network::p2p::spawn(handle_message).await?;
+            network::p2p::spawn().await;
 
             // Spawn the RPC server.
             log::info!("Starting RPC server on {}", rpc_addr);
