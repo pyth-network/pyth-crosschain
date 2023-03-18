@@ -1,0 +1,17 @@
+[package]
+name = "Pyth"
+version = "0.0.1"
+
+[dependencies.Sui]
+git = "https://github.com/MystenLabs/sui.git"
+subdir = "crates/sui-framework"
+rev = "157ac72030d014f17d76cefe81f3915b4afab2c9"
+
+[dependencies.Wormhole]
+git = "https://github.com/wormhole-foundation/wormhole.git"
+subdir = "sui/wormhole"
+rev = "sui/wormhole-cleanup"
+
+[addresses]
+pyth = "0x250"
+wormhole = "0x200"
