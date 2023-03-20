@@ -9,6 +9,7 @@ USER 1000
 WORKDIR /home/node
 COPY --chown=1000:1000 governance/multisig_wh_message_builder governance/multisig_wh_message_builder
 COPY --chown=1000:1000 governance/xc_governance_sdk_js governance/xc_governance_sdk_js
+COPY --chown=1000:1000 target_chains/ethereum/sdk/solidity target_chains/ethereum/sdk/solidity
 COPY --chown=1000:1000 target_chains/ethereum/contracts target_chains/ethereum/contracts
 
 RUN npx lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies
