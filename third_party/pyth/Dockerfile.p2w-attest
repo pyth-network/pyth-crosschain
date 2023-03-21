@@ -12,6 +12,9 @@ WORKDIR /usr/src/wormhole_attester
 ENV EMITTER_ADDRESS="11111111111111111111111111111115"
 ENV BRIDGE_ADDRESS="Bridge1p5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o"
 
+# This option reduces RAM usage when fetching the crates.io index
+ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
+
 RUN --mount=type=cache,target=/root/.cache \
     --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=target \
