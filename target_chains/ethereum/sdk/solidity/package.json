@@ -7,14 +7,10 @@
     "url": "https://github.com/pyth-network/pyth-crosschain",
     "directory": "target_chains/ethereum/sdk/solidity"
   },
-  "files": [
-    "*"
-  ],
   "scripts": {
     "format": "npx prettier --write .",
     "generate-abi": "node scripts/generateAbi.js",
-    "build": "solcjs --bin MockPyth.sol --base-path . -o build/",
-    "prepublishOnly": "npm run build"
+    "build": "solcjs --bin MockPyth.sol --base-path . -o build/"
   },
   "keywords": [
     "pyth",
