@@ -2,6 +2,7 @@
   "name": "xc_admin_common",
   "version": "0.0.0",
   "description": "",
+  "private": "true",
   "author": "",
   "homepage": "https://github.com/pyth-network/pyth-crosschain",
   "license": "ISC",

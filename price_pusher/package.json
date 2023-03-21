@@ -1,5 +1,5 @@
 {
-  "name": "@pythnetwork/pyth-price-pusher",
+  "name": "@pythnetwork/price-pusher",
   "version": "4.1.1",
   "description": "Pyth Price Pusher",
   "homepage": "https://pyth.network",
