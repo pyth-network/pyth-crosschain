@@ -13,7 +13,8 @@
   "scripts": {
     "format": "npx prettier --write .",
     "generate-abi": "node scripts/generateAbi.js",
-    "build": "solcjs --bin MockPyth.sol --base-path . -o build/"
+    "build": "solcjs --bin MockPyth.sol --base-path . -o build/",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "pyth",
