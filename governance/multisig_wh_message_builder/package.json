@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Pyth Multisig Wormhole Message Builder",
   "homepage": "https://pyth.network",
+  "private": "true",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
