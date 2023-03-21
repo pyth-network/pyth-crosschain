@@ -6,6 +6,7 @@
     "@openzeppelin/test-helpers": "^0.5.15",
     "@openzeppelin/truffle-upgrades": "^1.14.0",
     "@truffle/hdwallet-provider": "^2.1.5",
+    "@types/chai": "^4.3.4",
     "chai": "^4.2.0",
     "mocha": "^8.2.1",
     "truffle": "^5.7.4",
@@ -24,10 +25,12 @@
   "license": "ISC",
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.9",
-    "@matterlabs/hardhat-zksync-deploy": "^0.6.1",
-    "@matterlabs/hardhat-zksync-solc": "^0.3.13",
+    "@matterlabs/hardhat-zksync-deploy": "^0.6.2",
+    "@matterlabs/hardhat-zksync-solc": "^0.3.14",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
     "@openzeppelin/contracts": "^4.5.0",
     "@openzeppelin/contracts-upgradeable": "^4.5.2",
+    "@openzeppelin/hardhat-upgrades": "^1.22.1",
     "@pythnetwork/pyth-multisig-wh-message-builder": "*",
     "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
     "@pythnetwork/xc-governance-sdk": "*",
@@ -45,6 +48,6 @@
     "web3": "^1.2.2",
     "web3-eth-abi": "^1.2.2",
     "web3-utils": "^1.2.2",
-    "zksync-web3": "^0.12.3"
+    "zksync-web3": "^0.13.4"
   }
 }

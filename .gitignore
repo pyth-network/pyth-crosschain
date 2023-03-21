@@ -15,3 +15,4 @@ bigtable-writer.json
 .aptos
 tsconfig.tsbuildinfo
 *~
+*mnemonic*

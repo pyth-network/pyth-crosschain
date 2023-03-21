@@ -20,11 +20,11 @@ Please refer to [Deploying.md](./Deploying.md) for more information.
 Foundry can be installed by the official installer, or by running our helper script which will automatically pull the correct installation script individually for Foundry and the Solidity compiler for your current OS. This may work better if you are running into networking/firewall issues using Foundry's Solidity installer. To use helper script, run the command below from this directory:
 
 ```sh
-pyth-crosschain/ethereum $ bash ../scripts/install-foundry.sh
+pyth-crosschain/target_chains/ethereum/contracts $ bash ../../../scripts/install-foundry.sh
 ```
 
 You need to install npm dependencies as described in [Installation](#installation). Also, you need to run the following
-command to install forge dependencies:
+command in the `contracts` directory to install forge dependencies:
 
 ```
 npm run install-forge-deps

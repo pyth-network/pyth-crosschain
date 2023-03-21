@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-evm-js",
-  "version": "1.1.0",
+  "version": "1.7.0",
   "description": "Pyth Network EVM Utils in JS",
   "homepage": "https://pyth.network",
   "author": {
@@ -34,7 +34,7 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
-    "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
+    "@pythnetwork/pyth-sdk-solidity": "*",
     "@truffle/hdwallet-provider": "^2.1.5",
     "@types/ethereum-protocol": "^1.0.2",
     "@types/jest": "^29.4.0",

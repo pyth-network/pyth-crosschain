@@ -7,7 +7,7 @@ import {
   customGasChainIds,
 } from "../utils";
 
-type chainMethods = Record<CustomGasChainId, () => Promise<string>>;
+type chainMethods = Record<CustomGasChainId, () => Promise<string | undefined>>;
 
 export class CustomGasStation {
   private chain: CustomGasChainId;
@@ -25,11 +25,19 @@ export class CustomGasStation {
   }
 
   private async fetchMaticMainnetGasPrice() {
-    const res = await fetch("https://gasstation-mainnet.matic.network/v2");
-    const jsonRes = await res.json();
-    const gasPrice = jsonRes[this.speed].maxFee;
-    const gweiGasPrice = Web3.utils.toWei(gasPrice.toFixed(2), "Gwei");
-    return gweiGasPrice.toString();
+    try {
+      const res = await fetch("https://gasstation-mainnet.matic.network/v2");
+      const jsonRes = await res.json();
+      const gasPrice = jsonRes[this.speed].maxFee;
+      const gweiGasPrice = Web3.utils.toWei(gasPrice.toFixed(2), "Gwei");
+      return gweiGasPrice.toString();
+    } catch (e) {
+      console.error(
+        "Failed to fetch gas price from Matic mainnet. Returning undefined"
+      );
+      console.error(e);
+      return undefined;
+    }
   }
 }
 

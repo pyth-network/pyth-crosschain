@@ -39,3 +39,17 @@ dependencies, so it fails to parse the `HDWallet` arguments in our
 `truffle-config.json`. As a quick workaround, we backport the patch to `0.5.11`
 by applying the `truffle-verify-constants.patch` file, which the `npm run verify` script does transparently. Once the toolchain has been upgraded and the
 errors fixed, this patch can be removed.
+
+## Verifying with hardhat
+
+Some chains might require users to verify with hardhat. Here are the additional steps :
+
+- Add the chain to `networks` in `hardhat.config.ts` (equivalent of `truffle-config.js`)
+- Add the explorer parameters to `etherscan` in `hardhat.config.ts`
+- Run :
+
+```
+MNEMONIC=... npx hardhat verify 0x354bF866A4B006C9AF9d9e06d9364217A8616E12 --network shimmer_testnet
+```
+
+This process is somehow flaky. After running it, check the explorer as sometimes it will work even when it says it failed.

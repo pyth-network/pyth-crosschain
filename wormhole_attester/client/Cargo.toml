@@ -45,3 +45,4 @@ http = "0.2.8"
 [dev-dependencies]
 solana-program-test = "=1.10.31"
 solana-sdk = "=1.10.31"
+serial_test = "1.0.0"

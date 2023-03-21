@@ -1,0 +1,7 @@
+# Ignore Rust build artifacts
+/target
+
+# Ignore Protobuf build artifacts
+src/network/p2p.pb.go
+src/network/p2p.proto
+tools/

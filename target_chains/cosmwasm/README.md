@@ -18,6 +18,14 @@ This directory contains the code to perform all the steps. Read below for the de
 
 First, build the contracts within [the current directory](./). You must have Docker installed.
 
+NOTE: In order to build for Injective. We need to enable a feature in [Cargo.toml](./contracts/pyth/Cargo.toml) like this.
+
+```toml
+[features]
+default=["injective"]
+...
+```
+
 ```sh
 bash build.sh
 ```

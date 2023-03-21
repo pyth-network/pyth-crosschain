@@ -12,6 +12,7 @@ use {
         Pyth2WormholeConfig,
     },
     pyth_wormhole_attester_client as p2wc,
+    serial_test::serial,
     solana_program::system_program,
     solana_program_test::*,
     solana_sdk::{
@@ -29,6 +30,7 @@ use {
 };
 
 #[tokio::test]
+#[serial]
 async fn test_migrate_works() -> Result<(), solitaire::ErrBox> {
     info!("Starting");
     // Programs
@@ -91,6 +93,7 @@ async fn test_migrate_works() -> Result<(), solitaire::ErrBox> {
 }
 
 #[tokio::test]
+#[serial]
 async fn test_migrate_already_migrated() -> Result<(), solitaire::ErrBox> {
     info!("Starting");
     // Programs

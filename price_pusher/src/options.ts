@@ -37,11 +37,11 @@ export const pollingFrequency = {
   } as Options,
 };
 
-export const cooldownDuration = {
-  "cooldown-duration": {
+export const pushingFrequency = {
+  "pushing-frequency": {
     description:
-      "The amount of time (in seconds) to wait between pushing price updates. " +
-      "This value should be greater than the block time of the network, so this program confirms " +
+      "The frequency to push prices to the RPC. " +
+      "It is better that the value be greater than the block time of the network, so this program confirms " +
       "it is updated and does not push it twice.",
     type: "number",
     required: false,

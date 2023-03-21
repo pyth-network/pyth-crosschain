@@ -12,6 +12,7 @@
     "target_chains/cosmwasm/sdk/js",
     "target_chains/ethereum/contracts",
     "target_chains/ethereum/sdk/js",
+    "target_chains/ethereum/sdk/solidity",
     "third_party/pyth/p2w-relay",
     "wormhole_attester/sdk/js"
   ],

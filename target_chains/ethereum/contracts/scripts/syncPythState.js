@@ -39,7 +39,7 @@ async function execMultisigCommand(cmd) {
   console.log(`Executing "${fullCmd}"`);
 
   const { stdout, stderr } = await exec(fullCmd, {
-    cwd: "../../governance/multisig_wh_message_builder",
+    cwd: "../../../governance/multisig_wh_message_builder",
   });
 
   console.log("stdout:");

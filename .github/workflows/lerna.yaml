@@ -20,3 +20,7 @@ jobs:
         run: npx lerna run test
       - name: Lint
         run: npx lerna run lint
+      - name: Generate ABIs
+        run: npx lerna run generate-abi
+      - name: Check Solidity ABI
+        run: git diff --exit-code target_chains/ethereum/sdk/solidity/abis/

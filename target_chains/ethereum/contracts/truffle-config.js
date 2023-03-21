@@ -185,6 +185,45 @@ module.exports = {
       provider: payerProvider(`https://rpc.public.zkevm-test.net/`),
       network_id: 1442,
     },
+    shimmer_testnet: {
+      provider: payerProvider(`https://json-rpc.evm.testnet.shimmer.network`),
+      network_id: 1070,
+      verify: {
+        apiUrl: "https://explorer.evm.testnet.shimmer.network/api",
+        explorerUrl: "https://explorer.evm.testnet.shimmer.network",
+        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
+      },
+    },
+    gnosis: {
+      provider: payerProvider(`https://rpc.gnosischain.com`),
+      network_id: 100,
+    },
+    chiado: {
+      // gnosis testnet
+      provider: payerProvider(`https://rpc.chiadochain.net`),
+      network_id: 10200,
+    },
+    base_goerli: {
+      provider: payerProvider(`https://goerli.base.org`),
+      network_id: 84531,
+      verify: {
+        apiUrl: "https://api-goerli.basescan.org/api",
+        explorerUrl: "https://goerli.basescan.org/",
+        apiKey: "",
+      },
+    },
+    evmos: {
+      provider: payerProvider(`https://eth.bd.evmos.org:8545/`),
+      network_id: 9001,
+    },
+    evmos_testnet: {
+      provider: payerProvider(`https://eth.bd.evmos.dev:8545/`),
+      network_id: 9000,
+    },
+    neon_devnet: {
+      provider: payerProvider(`https://devnet.neonevm.org`),
+      network_id: 245022926,
+    },
   },
 
   compilers: {

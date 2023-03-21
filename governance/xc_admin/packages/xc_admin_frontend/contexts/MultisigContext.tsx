@@ -1,5 +1,4 @@
 import { Wallet } from '@coral-xyz/anchor'
-import { useAnchorWallet } from '@solana/wallet-adapter-react'
 import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import React, { createContext, useContext, useMemo } from 'react'
@@ -10,7 +9,8 @@ import { useMultisig } from '../hooks/useMultisig'
 interface MultisigContextProps {
   isLoading: boolean
   error: any // TODO: fix any
-  squads: SquadsMesh | undefined
+  proposeSquads: SquadsMesh | undefined
+  voteSquads: SquadsMesh | undefined
   upgradeMultisigAccount: MultisigAccount | undefined
   priceFeedMultisigAccount: MultisigAccount | undefined
   upgradeMultisigProposals: TransactionAccount[]
@@ -27,7 +27,8 @@ const MultisigContext = createContext<MultisigContextProps>({
   allProposalsIxsParsed: [],
   isLoading: true,
   error: null,
-  squads: undefined,
+  proposeSquads: undefined,
+  voteSquads: undefined,
   setpriceFeedMultisigProposals: () => {},
 })
 
@@ -35,23 +36,24 @@ export const useMultisigContext = () => useContext(MultisigContext)
 
 interface MultisigContextProviderProps {
   children?: React.ReactNode
+  wallet: Wallet
 }
 
 export const MultisigContextProvider: React.FC<
   MultisigContextProviderProps
-> = ({ children }) => {
-  const anchorWallet = useAnchorWallet()
+> = ({ children, wallet }) => {
   const {
     isLoading,
     error,
-    squads,
+    proposeSquads,
+    voteSquads,
     upgradeMultisigAccount,
     priceFeedMultisigAccount,
     upgradeMultisigProposals,
     priceFeedMultisigProposals,
     allProposalsIxsParsed,
     setpriceFeedMultisigProposals,
-  } = useMultisig(anchorWallet as Wallet)
+  } = useMultisig(wallet)
 
   const value = useMemo(
     () => ({
@@ -63,10 +65,12 @@ export const MultisigContextProvider: React.FC<
       setpriceFeedMultisigProposals,
       isLoading,
       error,
-      squads,
+      proposeSquads,
+      voteSquads,
     }),
     [
-      squads,
+      proposeSquads,
+      voteSquads,
       isLoading,
       error,
       upgradeMultisigAccount,
