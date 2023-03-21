@@ -2,6 +2,7 @@
   "name": "@pythnetwork/price-service-server",
   "version": "3.0.0",
   "description": "Webservice for retrieving prices from the Pyth oracle.",
+  "private": "true",
   "main": "index.js",
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\"",
