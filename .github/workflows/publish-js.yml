@@ -5,7 +5,7 @@ on:
     types:
       - created
 jobs:
-  publish-solidity-sdk:
+  publish-js:
     name: Publish Javascript Packages to NPM
     if: ${{ startsWith(github.ref, 'refs/tags/pyth-js-v') }}
     runs-on: ubuntu-latest
@@ -16,6 +16,6 @@ jobs:
           node-version: "16"
           registry-url: "https://registry.npmjs.org"
       - run: npm ci
-      - run: npx lerna publish from-package --no-git-tag-version
+      - run: npx lerna publish from-package --no-git-tag-version --yes
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
