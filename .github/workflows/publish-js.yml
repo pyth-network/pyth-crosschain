@@ -6,7 +6,7 @@ on:
       - created
 jobs:
   publish-solidity-sdk:
-    name: Publish Solidity SDK
+    name: Publish Javascript Packages to NPM
     if: ${{ startsWith(github.ref, 'refs/tags/pyth-js-v') }}
     runs-on: ubuntu-latest
     steps:
