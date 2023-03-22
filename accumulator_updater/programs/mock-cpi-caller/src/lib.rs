@@ -5,10 +5,7 @@ use {
     },
     anchor_lang::{
         prelude::*,
-        solana_program::{
-            instruction::Instruction,
-            sysvar,
-        },
+        solana_program::sysvar,
     },
 };
 
@@ -111,67 +108,6 @@ impl PythSchemas {
     fn to_u8(&self) -> u8 {
         *self as u8
     }
-}
-
-pub fn invoke_add_account_cpi_solana(ctx: Context<AddPrice>) -> Result<()> {
-    /*
-    let wh_complete_native_with_payload_acct_infos = vec![
-        self.payer.to_account_info().clone(),
-        self.token_bridge_config.to_account_info().clone(),
-        self.message.to_account_info().clone(),
-        self.claim.to_account_info().clone(),
-        self.endpoint.to_account_info().clone(),
-        self.to.to_account_info().clone(),
-        self.redeemer.to_account_info().clone(),
-        self.fee_recipient.to_account_info().clone(),
-        self.custody.to_account_info().clone(),
-        self.swim_usd_mint.to_account_info().clone(),
-        self.custody_signer.to_account_info().clone(),
-        self.rent.to_account_info().clone(),
-        self.system_program.to_account_info().clone(),
-        self.wormhole.to_account_info().clone(),
-        self.token_program.to_account_info().clone(),
-    ];
-    let complete_transfer_with_payload_ix = Instruction {
-        program_id: self.token_bridge.key(),
-        // accounts: ctx.accounts.to_account_metas(None),
-        accounts: vec![
-            AccountMeta::new(self.payer.key(), true),
-            AccountMeta::new_readonly(self.token_bridge_config.key(), false),
-            AccountMeta::new_readonly(self.message.key(), false),
-            AccountMeta::new(self.claim.key(), false),
-            AccountMeta::new_readonly(self.endpoint.key(), false),
-            AccountMeta::new(self.to.key(), false),
-            AccountMeta::new_readonly(self.redeemer.key(), true),
-            AccountMeta::new(self.fee_recipient.key(), false),
-            AccountMeta::new(self.custody.key(), false),
-            AccountMeta::new_readonly(self.swim_usd_mint.key(), false),
-            AccountMeta::new_readonly(self.custody_signer.key(), false),
-            // Dependencies
-            AccountMeta::new_readonly(Rent::id(), false),
-            AccountMeta::new_readonly(system_program::id(), false),
-            // Program
-            AccountMeta::new_readonly(self.wormhole.key(), false),
-            AccountMeta::new_readonly(spl_token::id(), false),
-        ],
-        data: (COMPLETE_NATIVE_WITH_PAYLOAD_INSTRUCTION, CompleteNativeWithPayloadData {}).try_to_vec()?,
-    };
-    invoke_signed(
-        &complete_transfer_with_payload_ix,
-        &wh_complete_native_with_payload_acct_infos,
-        // &self.to_account_infos(),
-        &[&[&b"redeemer".as_ref(), &[self.propeller.redeemer_bump]]],
-    )?;
-     */
-    let _add_accumulator_accounts_ix = Instruction {
-        program_id: ctx.accounts.accumulator_program.key(),
-        accounts:   vec![],
-        data:       vec![],
-    };
-    // invoke_signed(
-    //
-    // )
-    Ok(())
 }
 
 #[derive(Accounts)]
