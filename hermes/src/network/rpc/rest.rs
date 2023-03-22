@@ -1,3 +1,4 @@
+use crate::db::Db;
 // This file implements a REST service for the Price Service. This is a mostly direct copy of the
 // TypeScript implementation in the `pyth-crosschain` repo. It uses `axum` as the web framework and
 // `tokio` as the async runtime.
@@ -21,10 +22,10 @@ pub struct LatestVaaQueryParams {
 /// REST endpoint /latest_price_feeds?ids[]=...&ids[]=...&ids[]=...
 /// TODO: Replace Infallible with an actual error return type instead of unwrap() crashing the RPC.
 pub async fn latest_vaas(
-    State(state): State<super::State>,
+    State(state): State<super::State<impl Db>>,
     Query(params): Query<LatestVaaQueryParams>,
 ) -> Result<impl IntoResponse, std::convert::Infallible> {
-    Ok(Json(state.vaa_cache.latest_for_ids(params.ids)))
+    Ok(Json(0))
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]

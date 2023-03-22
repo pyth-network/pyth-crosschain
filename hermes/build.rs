@@ -72,7 +72,7 @@ fn main() {
     println!("cargo:rustc-link-search=native={out_var}");
     println!("cargo:rustc-link-lib=static=pythnet");
 
-    #[cfg(target_os = "aarch64")]
+    #[cfg(target_arch = "aarch64")]
     println!("cargo:rustc-link-lib=resolv");
 
     let status = cmd.status().unwrap();

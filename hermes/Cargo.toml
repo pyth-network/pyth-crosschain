@@ -7,6 +7,7 @@ edition                        = "2021"
 axum                           = { version = "0.6.9", features = ["json", "ws"] }
 axum-macros                    = { version = "0.3.4" }
 anyhow                         = { version = "1.0.69" }
+borsh                          = { version = "0.9.0" }
 bs58                           = { version = "0.4.0" }
 dashmap                        = { version = "5.4.0" }
 der                            = { version = "0.7.0" }
@@ -19,16 +20,23 @@ ring                           = { version = "0.16.20" }
 rusqlite                       = { version = "0.28.0", features = ["bundled"] }
 lazy_static                    = { version = "1.4.0" }
 libc                           = { version = "0.2.140" }
+pyth-sdk                       = { version = "0.7.0" }
 secp256k1                      = { version = "0.26.0", features = ["rand", "recovery", "serde"] }
 serde                          = { version = "1.0.152", features = ["derive"] }
 serde_arrays                   = { version = "0.1.0" }
 serde_cbor                     = { version = "0.11.2" }
-serde_json                     = { version = "1.0.93" }
+serde_json                      = { version = "1.0.93" }
 sha256                         = { version = "1.1.2" }
 structopt                      = { version = "0.3.26" }
 tokio                          = { version = "1.26.0", features = ["full"] }
 typescript-type-def            = { version = "0.5.5" }
 log                            = { version = "0.4.17" }
+
+# Parse Wormhole VAAs from our own patch. TODO: Replace with released version when wormhole releases it
+wormhole-core                  = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
+
+# Parse Wormhole attester price attestations.
+pyth-wormhole-attester-sdk     = { path = "../wormhole_attester/sdk/rust/", version = "0.1.2" }
 
 # Setup LibP2P. Unfortunately the dependencies required by libp2p are shared
 # with the dependencies required by solana's geyser plugin. This means that we
