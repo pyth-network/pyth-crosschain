@@ -2,12 +2,18 @@ module pyth::state {
     use std::vector;
     use sui::object::{Self, UID};
     use sui::transfer::{Self};
-    use sui::tx_context::{TxContext};
+    use sui::tx_context::{Self, TxContext};
 
     use pyth::data_source::{DataSource};
     use pyth::set::{Self, Set};
 
     friend pyth::pyth;
+
+    /// Capability for creating a bridge state object, granted to sender when this
+    /// module is deployed
+    struct DeployerCap has key, store {
+        id: UID
+    }
 
     struct State has key {
         id: UID,
@@ -22,14 +28,27 @@ module pyth::state {
         base_update_fee: u64
     }
 
+    fun init(ctx: &mut TxContext) {
+        transfer::transfer(
+            DeployerCap {
+                id: object::new(ctx)
+            },
+            tx_context::sender(ctx)
+        );
+    }
+
     // Initialization
     public(friend) fun init_and_share_state(
+        deployer: DeployerCap,
         stale_price_threshold: u64,
         base_update_fee: u64,
         governance_data_source: DataSource,
         sources: vector<DataSource>,
         ctx: &mut TxContext
     ) {
+        let DeployerCap { id } = deployer;
+        object::delete(id);
+
         // Convert the vector of DataSource objects into a set
         // of DataSource objects
         let data_sources = set::new<DataSource>(ctx);
