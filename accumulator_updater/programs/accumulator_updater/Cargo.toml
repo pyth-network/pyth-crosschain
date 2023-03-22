@@ -1,0 +1,21 @@
+[package]
+name = "accumulator_updater"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "accumulator_updater"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.27.0"
+# needed for the new #[account(zero_copy)] in anchor 0.27.0
+bytemuck = { version = "1.4.0", features = ["derive", "min_const_generics"]}
