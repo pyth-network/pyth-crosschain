@@ -11,6 +11,9 @@ function payerProvider(url) {
     new HDWalletProvider({
       mnemonic: process.env.MNEMONIC,
       providerOrUrl: url,
+      // This option makes deployments more reliable (by avoiding rate limiting errors) at the cost of
+      // taking a little longer.
+      pollingInterval: 12000,
     });
 }
 
