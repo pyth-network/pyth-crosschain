@@ -2,6 +2,7 @@
   "name": "@pythnetwork/wormhole-attester-sdk",
   "version": "1.0.0",
   "description": "Pyth Wormhole Attester SDk",
+  "private": "true",
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "files": [

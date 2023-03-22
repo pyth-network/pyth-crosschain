@@ -2,6 +2,7 @@
   "name": "crank_executor",
   "version": "0.0.0",
   "description": "A crank to executed all executeReady multisig transaction",
+  "private": "true",
   "author": "",
   "homepage": "https://github.com/pyth-network/pyth-crosschain",
   "license": "ISC",
