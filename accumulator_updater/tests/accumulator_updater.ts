@@ -56,7 +56,7 @@ describe("accumulator_updater", () => {
     );
   });
 
-  it("Mock CPI program creates an price account and initializes accumulator accounts", async () => {
+  it("Mock CPI program - AddPrice", async () => {
     const addPriceParams = {
       id: new anchor.BN(1),
       price: new anchor.BN(2),
@@ -145,9 +145,6 @@ describe("accumulator_updater", () => {
     const accumulatorPriceAccounts = accumulatorInputs.map((ai) => {
       const { header, data } = ai;
 
-      // AccumlatorInput.data for AccumulatorInput<PriceAccount> will
-      // have mockCpiCaller::PriceAccount.discriminator()
-      // AccumulatorInput<PriceOnly> will not since its not an account
       return parseAccumulatorInput(ai);
     });
     console.log(
@@ -157,14 +154,25 @@ describe("accumulator_updater", () => {
         2
       )}`
     );
+    accumulatorPriceAccounts.forEach((pa) => {
+      assert.isTrue(pa.id.eq(addPriceParams.id));
+      assert.isTrue(pa.price.eq(addPriceParams.price));
+      assert.isTrue(pa.priceExpo.eq(addPriceParams.priceExpo));
+    });
   });
 });
 
 type AccumulatorInputHeader = IdlTypes<AccumulatorUpdater>["AccumulatorHeader"];
 type AccumulatorInputPriceAccountTypes =
-  | IdlAccounts<MockCpiCaller>["priceAccount"]
+  | IdlAccounts<MockCpiCaller>["priceAccount"] // case-sensitive
   | IdlTypes<MockCpiCaller>["PriceOnly"];
 
+// Parses AccumulatorInput.data into a PriceAccount or PriceOnly object based on the
+// accountType and accountSchema.
+//
+// AccumulatorInput.data for AccumulatorInput<PriceAccount> will
+// have mockCpiCaller::PriceAccount.discriminator()
+// AccumulatorInput<PriceOnly> will not since its not an account
 function parseAccumulatorInput({
   header,
   data,
@@ -176,6 +184,8 @@ function parseAccumulatorInput({
   assert.strictEqual(header.accountType, 3);
   if (header.accountSchema === 0) {
     console.log(`[full]data: ${data.toString("hex")}`);
+    // case-sensitive. Note that "P" is capitalized here and not in
+    // the AccumulatorInputPriceAccountTypes type alias.
     return mockCpiProg.coder.accounts.decode("PriceAccount", data);
   } else {
     console.log(`[compact]data: ${data.toString("hex")}`);
