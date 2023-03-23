@@ -72,8 +72,8 @@ module pyth::pyth {
 
     /// Create and share new price feed objects if they don't already exist.
     public fun create_price_feeds(
-        worm_state: &mut WormState,
-        pyth_state: &PythState,
+        worm_state: &WormState,
+        pyth_state: &mut PythState,
         vaas: vector<vector<u8>>,
         ctx: &mut TxContext
     ){
@@ -107,8 +107,14 @@ module pyth::pyth {
                             )
                         )
                 ){
-                    // Create and share newly created Sui PriceInfoObject containing a price feed.
+                    // Create and share newly created Sui PriceInfoObject containing a price feed,
+                    // and then register a copy of its ID with State.
                     let new_price_info_object = price_info::new_price_info_object(cur_price_info, ctx);
+                    let price_identifier = price_info::get_price_identifier(&cur_price_info);
+                    let id = price_info::uid_to_inner(&new_price_info_object);
+
+                    state::register_price_info_object(pyth_state, price_identifier, id);
+
                     transfer::share_object(new_price_info_object);
                 }
             }
@@ -200,8 +206,8 @@ module pyth::pyth {
                 // Check if the current price info object corresponds to the price feed that
                 // the update is meant for.
                 let price_info = price_info::get_price_info_from_price_info_object(vector::borrow(price_info_objects, i));
-                if (price_info::get_price_info_price_identifier(&price_info) ==
-                    price_info::get_price_info_price_identifier(&update)){
+                if (price_info::get_price_identifier(&price_info) ==
+                    price_info::get_price_identifier(&update)){
                     found = true;
                     // TODO: use clock timestamp instead of epoch in the future
                     pyth_event::emit_price_feed_update(price_feed::from(price_info::get_price_feed(&update)), tx_context::epoch(ctx));

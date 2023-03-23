@@ -95,7 +95,7 @@ module pyth::price_info {
         price_info.price_info
     }
 
-    public fun get_price_info_price_identifier(price_info: &PriceInfo): PriceIdentifier {
+    public fun get_price_identifier(price_info: &PriceInfo): PriceIdentifier {
         price_feed::get_price_identifier(&price_info.price_feed)
     }
 

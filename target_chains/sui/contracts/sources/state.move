@@ -110,6 +110,10 @@ module pyth::state {
         };
     }
 
+    public(friend) fun register_price_info_object(s: &mut State, price_identifier: PriceIdentifier, id: ID) {
+        price_info::add(&mut s.id, price_identifier, id);
+    }
+
     public(friend) fun set_last_executed_governance_sequence(s: &mut State, sequence: u64) {
         s.last_executed_governance_sequence = sequence;
     }
