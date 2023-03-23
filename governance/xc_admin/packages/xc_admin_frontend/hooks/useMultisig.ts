@@ -238,4 +238,3 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
     setpriceFeedMultisigProposals,
   }
 }
-export { PRICE_FEED_MULTISIG }
