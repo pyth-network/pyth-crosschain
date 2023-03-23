@@ -2,13 +2,13 @@ mod macros;
 
 use anchor_lang::{
     prelude::*,
-    solana_program::{
-        program::invoke_signed,
-        system_instruction,
-        sysvar::{
-            self,
-            instructions::get_instruction_relative,
-        },
+    solana_program::sysvar::{
+        self,
+        instructions::get_instruction_relative,
+    },
+    system_program::{
+        self,
+        CreateAccount,
     },
 };
 
@@ -24,6 +24,7 @@ pub mod accumulator_updater {
         Ok(())
     }
 
+    //TODO: add authorization mechanism for this
     pub fn add_allowed_program(
         ctx: Context<AddAllowedProgram>,
         allowed_program: Pubkey,
@@ -39,18 +40,26 @@ pub mod accumulator_updater {
     }
 
     /// Add new account(s) to be included in the accumulator
-    pub fn add_account<'info>(
-        ctx: Context<'_, '_, '_, 'info, AddAccount<'info>>,
+    ///
+    /// * `base_account` - Pubkey of the original account the AccumulatorInput(s) are derived from
+    /// * `data` - Vec of AccumulatorInput account data
+    /// * `account_type` - Marker to indicate base_account account_type
+    /// * `account_schemas` - Vec of markers to indicate schemas for AccumulatorInputs. In same respective
+    ///    order as data
+    pub fn create_inputs<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateInputs<'info>>,
         base_account: Pubkey,
         data: Vec<Vec<u8>>,
         account_type: u32,
         account_schemas: Vec<u8>,
     ) -> Result<()> {
         let cpi_caller = ctx.accounts.whitelist_verifier.is_allowed()?;
-        require_eq!(data.len(), account_schemas.len());
         let accts = ctx.remaining_accounts;
         require_eq!(accts.len(), data.len());
+        require_eq!(data.len(), account_schemas.len());
         let mut zip = data.into_iter().zip(account_schemas.into_iter());
+
+        let rent = Rent::get()?;
 
         for ai in accts {
             let (account_data, account_schema) = zip.next().unwrap();
@@ -58,18 +67,19 @@ pub mod accumulator_updater {
             let (pda, bump) = Pubkey::find_program_address(seeds, &crate::ID);
             require_keys_eq!(ai.key(), pda);
 
+            //TODO: Update this with serialization logic
             let accumulator_size = 8 + AccumulatorInput::get_initial_size(&account_data);
-            let accumulator_account = AccumulatorInput {
-                header: AccumulatorHeader {
-                    version: 1, // from cpi caller?
+            let accumulator_input = AccumulatorInput::new(
+                AccumulatorHeader::new(
+                    1, //from CPI caller?
                     account_type,
                     account_schema,
-                },
-                data:   account_data,
-            };
-            create_and_initialize_accumulator_account_pda(
+                ),
+                account_data,
+            );
+            CreateInputs::create_and_initialize_accumulator_input_pda(
                 ai,
-                accumulator_account,
+                accumulator_input,
                 accumulator_size,
                 &ctx.accounts.payer,
                 &[accumulator_acc_seeds_with_bump!(
@@ -78,54 +88,13 @@ pub mod accumulator_updater {
                     account_schema,
                     bump
                 )],
+                &rent,
                 &ctx.accounts.system_program,
             )?;
         }
 
         Ok(())
     }
-}
-
-fn create_and_initialize_accumulator_account_pda<'a>(
-    accumulator_input_ai: &AccountInfo<'a>,
-    accumulator_input: AccumulatorInput,
-    accumulator_input_size: usize,
-    payer: &AccountInfo<'a>,
-    seeds: &[&[&[u8]]],
-    system_program: &AccountInfo<'a>,
-) -> Result<()> {
-    let rent = Rent::get()?;
-    let lamports = rent.minimum_balance(accumulator_input_size);
-    let create_pda_ix = &system_instruction::create_account(
-        payer.key,
-        accumulator_input_ai.key,
-        lamports,
-        accumulator_input_size.try_into().unwrap(),
-        &crate::ID,
-    );
-
-    invoke_signed(
-        create_pda_ix,
-        &[
-            payer.clone(),
-            accumulator_input_ai.clone(),
-            system_program.clone(),
-        ],
-        seeds,
-    )?;
-
-
-    AccountSerialize::try_serialize(
-        &accumulator_input,
-        &mut &mut accumulator_input_ai.data.borrow_mut()[..],
-    )
-    .map_err(|e| {
-        msg!("original error: {:?}", e);
-        AccumulatorUpdaterError::SerializeError
-    })?;
-    msg!("accumulator_input_ai: {:#?}", accumulator_input_ai);
-
-    Ok(())
 }
 
 
@@ -200,13 +169,14 @@ pub struct AddAllowedProgram<'info> {
 
 #[derive(Accounts)]
 #[instruction(base_account: Pubkey, data: Vec<Vec<u8>>, account_type: u32)] // only needed if using optional accounts
-pub struct AddAccount<'info> {
+pub struct CreateInputs<'info> {
     #[account(mut)]
     pub payer:              Signer<'info>,
     pub whitelist_verifier: WhitelistVerifier<'info>,
     pub system_program:     Program<'info, System>,
     //TODO: decide on using optional accounts vs ctx.remaining_accounts
     //      - optional accounts can leverage anchor macros for PDA init/verification
+    //      - ctx.remaining_accounts can be used to pass in any number of accounts
     //
     // https://github.com/coral-xyz/anchor/pull/2101 - anchor optional accounts PR
     // #[account(
@@ -224,13 +194,55 @@ pub struct AddAccount<'info> {
     // pub acc_input_0:          Option<Account<'info, AccumulatorInput>>,
 }
 
+impl<'info> CreateInputs<'info> {
+    fn create_and_initialize_accumulator_input_pda<'a>(
+        accumulator_input_ai: &AccountInfo<'a>,
+        accumulator_input: AccumulatorInput,
+        accumulator_input_size: usize,
+        payer: &AccountInfo<'a>,
+        seeds: &[&[&[u8]]],
+        rent: &Rent,
+        system_program: &AccountInfo<'a>,
+    ) -> Result<()> {
+        let lamports = rent.minimum_balance(accumulator_input_size);
+
+        system_program::create_account(
+            CpiContext::new_with_signer(
+                system_program.to_account_info(),
+                CreateAccount {
+                    from: payer.to_account_info(),
+                    to:   accumulator_input_ai.to_account_info(),
+                },
+                seeds,
+            ),
+            lamports,
+            accumulator_input_size.try_into().unwrap(),
+            &crate::ID,
+        )?;
+
+        AccountSerialize::try_serialize(
+            &accumulator_input,
+            &mut &mut accumulator_input_ai.data.borrow_mut()[..],
+        )
+        .map_err(|e| {
+            msg!("original error: {:?}", e);
+            AccumulatorUpdaterError::SerializeError
+        })?;
+        // msg!("accumulator_input_ai: {:#?}", accumulator_input_ai);
+
+        Ok(())
+    }
+}
+
+// TODO: should UpdateInput be allowed to resize an AccumulatorInput account?
 #[derive(Accounts)]
-pub struct UpdateAccount<'info> {
+pub struct UpdateInputs<'info> {
     #[account(mut)]
     pub payer:              Signer<'info>,
     pub whitelist_verifier: WhitelistVerifier<'info>,
 }
 
+//TODO: implement custom serialization & set alignment
 #[account]
 pub struct AccumulatorInput {
     pub header: AccumulatorHeader,
@@ -242,8 +254,15 @@ impl AccumulatorInput {
     pub fn get_initial_size(data: &Vec<u8>) -> usize {
         AccumulatorHeader::SIZE + 4 + data.len()
     }
+
+    pub fn new(header: AccumulatorHeader, data: Vec<u8>) -> Self {
+        Self { header, data }
+    }
 }
 
+//TODO:
+// - implement custom serialization & set alignment
+// - what other fields are needed?
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Default)]
 pub struct AccumulatorHeader {
     pub version:        u8,
@@ -252,8 +271,17 @@ pub struct AccumulatorHeader {
     pub account_schema: u8,
 }
 
+
 impl AccumulatorHeader {
     pub const SIZE: usize = 1 + 4 + 1;
+
+    pub fn new(version: u8, account_type: u32, account_schema: u8) -> Self {
+        Self {
+            version,
+            account_type,
+            account_schema,
+        }
+    }
 }
 
 #[error_code]

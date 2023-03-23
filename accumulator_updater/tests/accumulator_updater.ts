@@ -4,9 +4,10 @@ import { AccumulatorUpdater } from "../target/types/accumulator_updater";
 import { MockCpiCaller } from "../target/types/mock_cpi_caller";
 import lumina from "@lumina-dev/test";
 import { assert } from "chai";
-import { IdlTypeDef } from "@coral-xyz/anchor/dist/cjs/idl";
 import { ComputeBudgetProgram } from "@solana/web3.js";
 
+// Enables tool that runs in localbrowser for easier debugging of txns
+// in this test -  https://lumina.fyi/debug
 lumina();
 
 const accumulatorUpdaterProgram = anchor.workspace

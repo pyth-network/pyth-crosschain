@@ -22,7 +22,7 @@
    ever change.
    1. maybe safer to always lock the fields once they've been published and just add new schemas (e.g. a CompactV2)
 
-## Implemenation Notes/Questions:
+## Implementation Notes/Questions:
 
 1. use anchor? solitaire? vanilla solana?
    1. for anchor, if add/delete/updateAccount should support multiple accounts at once, use Option or old `&ctx.accounts.remaining_accounts` call?
@@ -111,3 +111,32 @@ ex: `PriceAccount` (full) `PriceOnly` `PriceAndEma`
 2. how to provide these transformations/schemas for clients who get the `AccumulatorInput`?
    1. Manually update them in the SDKs and as long as backwards compatibility is handled it should be okay if clients
       aren't on the latest version?
+
+## Additional feedback/notes
+
+Accumulator root VAA
+
+wormhole signatures
+header to distinguish this message type from the old message format -- must be in the exact same byte position as the existing batch price attestation header
+merkle tree root hash
+chain timestamp when it was sent -- this is "attestationTimestamp" now
+slot
+Merkle Tree -- just some hashes + an account key (accumulator updater PDA) for each leaf
+-- accumulator PDA is derived from the (program, program controlled account pubkey -- "price feed id", serialization format -- just differentiates between different ways to save the "same" data).
+
+Payload
+-- header has (account id, schema)
+-- binary data entirely controlled by the program writing the data into the accumulator
+
+how do we look up a price update for a specific feed?
+You pass the price feed id + serialization format to the price service. The price service derives the accumulator PDA for the feed (it knows the oracle program address so it can do this). The price service looks at the current wormhole-attested merkle tree root and gets the slot. It then looks at the circular buffer of merkle trees in the validator to get the proof for the PDA.
+
+how do we update the target chain contracts in a backward-compatible way?
+you look at the header for the wormhole VAA
+
+how does the target chain code know that it has the price data for a specific price feed?
+
+look at the account id in the header of the data payload
+how do we ensure that a price update is timely?
+
+this is the caller of the accumulator update program's responsibility to put a timestamp in the payload.
