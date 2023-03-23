@@ -6,24 +6,12 @@ use {
             ProofStore,
             ProofUpdate,
         },
-        Vaa,
     },
-    anyhow::{
-        anyhow,
-        Result,
-    },
+    anyhow::Result,
     axum::{
         routing::get,
         Router,
     },
-    dashmap::DashMap,
-    pyth_sdk::PriceFeed,
-    std::{
-        sync::Arc,
-        time::Duration,
-    },
-    tokio::sync::RwLock,
-    wormhole::VAA,
 };
 
 mod rest;
@@ -52,6 +40,7 @@ pub async fn spawn(rpc_addr: String, db: impl Db + 'static) -> Result<()> {
     let app = app
         .route("/", get(rest::index))
         .route("/live", get(rest::live))
+        .route("/latest_price_feeds", get(rest::latest_price_feeds))
         .route("/latest_vaas", get(rest::latest_vaas))
         .with_state(state.clone());
 
@@ -59,15 +48,11 @@ pub async fn spawn(rpc_addr: String, db: impl Db + 'static) -> Result<()> {
     tokio::spawn(async move {
         loop {
             if let Ok(observation) = OBSERVATIONS.1.lock().unwrap().recv() {
-                if let Ok(vaa) = VAA::from_bytes(observation.clone()) {
-                    // Add the VAA to the cache.
-                    //
-                    // TODO: We haven't deserialized the VAA yet, so we don't know the Price ID. We
-                    // should this but for this PR we just use a placeholder.
-                    // cfg.vaa_cache.add("UnknownID".to_string(), 0, vaa).unwrap();
-                    state.proof_store.process_update(ProofUpdate::Vaa(vaa));
-                } else {
-                    log::error!("Failed to deserialize VAA from bytes: {:?}", observation);
+                if let Err(e) = state
+                    .proof_store
+                    .process_update(ProofUpdate::Vaa(observation))
+                {
+                    log::error!("Failed to process VAA: {:?}", e);
                 }
             }
         }

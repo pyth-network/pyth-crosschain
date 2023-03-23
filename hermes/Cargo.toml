@@ -5,6 +5,7 @@ edition                        = "2021"
 
 [dependencies]
 axum                           = { version = "0.6.9", features = ["json", "ws"] }
+axum-extra                     = { version = "0.7.2", features = ["query"] }
 axum-macros                    = { version = "0.3.4" }
 anyhow                         = { version = "1.0.69" }
 borsh                          = { version = "0.9.0" }

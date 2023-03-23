@@ -66,6 +66,7 @@ async fn init(_update_channel: Receiver<AccountUpdate>) -> Result<()> {
 
             // Spawn the RPC server.
             log::info!("Starting RPC server on {}", rpc_addr);
+            // TODO: Add max size to the config
             network::rpc::spawn(rpc_addr.to_string(), LocalCache::new(1000)).await?;
 
             // Wait on Ctrl+C similar to main.
