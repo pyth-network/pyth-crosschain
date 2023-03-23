@@ -12,12 +12,12 @@ import {
   getMultisigCluster,
   isRemoteCluster,
   mapKey,
+  PRICE_FEED_MULTISIG,
   proposeInstructions,
   WORMHOLE_ADDRESS,
 } from 'xc_admin_common'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { usePythContext } from '../contexts/PythContext'
-import { PRICE_FEED_MULTISIG } from '../hooks/useMultisig'
 import { ProductRawConfig } from '../hooks/usePyth'
 import Arrow from '../images/icons/down.inline.svg'
 import { capitalizeFirstLetter } from '../utils/capitalizeFirstLetter'

@@ -17,7 +17,7 @@ import {
   deriveFeeCollectorKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
-import { OPS_KEY } from "./multisig";
+import { getOpsKey, PRICE_FEED_OPS_KEY } from "./multisig";
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE = PACKET_DATA_SIZE - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
 export const SIZE_OF_SIGNED_BATCH = 30;
@@ -311,7 +311,12 @@ export async function wrapAsRemoteInstruction(
 
   const buffer: Buffer = new ExecutePostedVaa("pythnet", instructions).encode();
 
-  const accounts = getPostMessageAccounts(wormholeAddress, emitter, messagePDA);
+  const accounts = getPostMessageAccounts(
+    wormholeAddress,
+    emitter,
+    getOpsKey(vault),
+    messagePDA
+  );
 
   return {
     instruction: await wormholeProgram.methods
@@ -326,6 +331,7 @@ export async function wrapAsRemoteInstruction(
 function getPostMessageAccounts(
   wormholeAddress: PublicKey,
   emitter: PublicKey,
+  payer: PublicKey,
   message: PublicKey
 ) {
   return {
@@ -333,7 +339,7 @@ function getPostMessageAccounts(
     message,
     emitter,
     sequence: deriveEmitterSequenceKey(emitter, wormholeAddress),
-    payer: OPS_KEY,
+    payer,
     feeCollector: deriveFeeCollectorKey(wormholeAddress),
     clock: SYSVAR_CLOCK_PUBKEY,
     rent: SYSVAR_RENT_PUBKEY,
