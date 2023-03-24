@@ -1,4 +1,14 @@
-target
-bin
 **/target
 **/node_modules
+**/bin
+**/build
+**/target
+**/*artifact*
+**/*cache*
+**/.next
+
+**/lib
+
+.git
+
+hermes/wormhole
