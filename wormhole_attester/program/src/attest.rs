@@ -255,25 +255,20 @@ pub fn attest(ctx: &ExecutionContext, accs: &mut Attest, data: AttestData) -> So
             price_struct,
         );
 
-        // don't re-evaluate if at least one symbol was found to be under limit
-        if over_rate_limit {
-            // Evaluate rate limit - should be smaller than duration from last attestation
-            let trading_publish_time_diff = new_last_attested_trading_publish_time
-                - state.0 .0.last_attested_trading_publish_time;
-            let attestation_publish_time_diff =
-                this_attestation_time - state.0 .0.last_attestation_time;
+        // Evaluate rate limit - should be smaller than duration from last attestation
+        let trading_publish_time_diff =
+            new_last_attested_trading_publish_time - state.0 .0.last_attested_trading_publish_time;
+        let attestation_time_diff = this_attestation_time - state.0 .0.last_attestation_time;
 
-            // We like to have the rate_limit for trading publish_time because that is the field that
-            // the users consume. However, when the price is not trading we still want to send
-            // the prices. We do not use the same frequency because that might cause two
-            // attestations within the rate_limit which is not a desired behavior.
-            if trading_publish_time_diff >= data.rate_limit_interval_secs as i64
-                || attestation_publish_time_diff >= 2 * data.rate_limit_interval_secs as i64
-            {
-                over_rate_limit = false;
-            } else {
-                trace!("Price {:?}: over rate limit", price.key);
-            }
+        // We like to have the rate_limit for trading publish_time because that is the field that
+        // the users consume. Also, when the price is not trading and trading_publish_time is the
+        // same, we still want to send the prices (on a lower frequency).
+        if trading_publish_time_diff >= data.rate_limit_interval_secs as i64
+            || attestation_time_diff >= 2 * data.rate_limit_interval_secs as i64
+        {
+            over_rate_limit = false;
+        } else {
+            trace!("Price {:?}: over rate limit", price.key);
         }
 
         // Save the new value for the next attestation of this symbol
