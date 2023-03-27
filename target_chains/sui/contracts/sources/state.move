@@ -9,6 +9,12 @@ module pyth::state {
     use pyth::price_identifier::{PriceIdentifier};
 
     friend pyth::pyth;
+    friend pyth::governance_action;
+    friend pyth::set_update_fee;
+    friend pyth::set_stale_price_threshold;
+    friend pyth::set_data_sources;
+    friend pyth::governance;
+    friend pyth::set_governance_data_source;
 
     /// Capability for creating a bridge state object, granted to sender when this
     /// module is deployed
