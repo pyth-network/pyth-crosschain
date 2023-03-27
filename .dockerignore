@@ -7,6 +7,12 @@
 **/*cache*
 **/.next
 
+# All our TS projects are in `src` and the JS build output is in `lib`
+# We should make sure that we exclude the ones that we really need in docker
+**/lib
+
+**/tsconfig.tsbuildinfo
+
 .git
 
 hermes/wormhole
