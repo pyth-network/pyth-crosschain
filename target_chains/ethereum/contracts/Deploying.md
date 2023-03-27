@@ -96,7 +96,7 @@ This is the deployment process:
 9. If you are deploying to a new network, please add the new contract address to consumer facing libraries
    and documentations. Please update the following resources:
    - [Pyth Gitbook EVM Page](https://github.com/pyth-network/pyth-gitbook/blob/main/pythnet-price-feeds/evm.md#networks)
-   - [pyth-evm-js package](https://github.com/pyth-network/pyth-js/blob/main/pyth-evm-js/src/index.ts#L13)
+   - [pyth-evm-js package](../sdk/js/)
 10. (Optional) You can test the deployed contract by sending and fetching a price update as described in the
     [Testing](#testing) section below.
 11. (Optional) Verify the contract as described in the [Verifying the contract](#verifying-the-contract) section.
