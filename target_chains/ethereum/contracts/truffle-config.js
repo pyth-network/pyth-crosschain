@@ -188,6 +188,10 @@ module.exports = {
       provider: payerProvider(`https://rpc.public.zkevm-test.net/`),
       network_id: 1442,
     },
+    polygon_zkevm: {
+      provider: payerProvider(`https://zkevm-rpc.com`),
+      network_id: 1101,
+    },
     shimmer_testnet: {
       provider: payerProvider(`https://json-rpc.evm.testnet.shimmer.network`),
       network_id: 1070,
