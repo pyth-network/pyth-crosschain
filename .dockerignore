@@ -7,8 +7,6 @@
 **/*cache*
 **/.next
 
-**/lib
-
 .git
 
 hermes/wormhole
