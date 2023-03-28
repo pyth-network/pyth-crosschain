@@ -194,7 +194,7 @@ module.exports = {
     },
     shimmer_testnet: {
       provider: payerProvider(`https://json-rpc.evm.testnet.shimmer.network`),
-      network_id: 1070,
+      network_id: 1071,
       verify: {
         apiUrl: "https://explorer.evm.testnet.shimmer.network/api",
         explorerUrl: "https://explorer.evm.testnet.shimmer.network",
