@@ -1,6 +1,6 @@
 [package]
 name = "pyth-wormhole-attester"
-version = "2.0.0"
+version = "2.0.1"
 description = "Pyth-over-Wormhole Solana contract"
 edition = "2018"
 
