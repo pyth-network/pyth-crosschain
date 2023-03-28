@@ -16,11 +16,13 @@ pub enum RequestTime {
     FirstAfter(UnixTimestamp),
 }
 
-/// This trait defines the interface for a database. The design can support both current
-/// batch-based attestation and future attestation based on accumulators. A accumulated
-/// data contains all the state at a single timestamp; but as we will probably have different
-/// accumulators, we store each data on a separate key. The data is defined as a binary
-/// to abstract away the details of the proof data.
+/// This trait defines the interface for a Proof Storage
+///
+/// Price proofs for Pyth can come in multiple formats, for example VAA's and
+/// Merkle proofs. The abstraction therefore allows storing these as binary
+/// data to abstract the details of the proof data, and so each proof is stored
+/// under a separate key. The caller is responsible for specifying the right
+/// key for the proof data they wish to access.
 pub trait Db: Clone + Sync + Send {
     fn insert(&mut self, key: &[u8], record: DbRecord) -> Result<()>;
     fn get(&self, key: &[u8], request_time: RequestTime) -> Result<Option<Vec<u8>>>;
