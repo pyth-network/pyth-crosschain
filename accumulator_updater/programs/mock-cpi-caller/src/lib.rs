@@ -28,7 +28,7 @@ pub mod mock_cpi_caller {
         params: AddPriceParams,
     ) -> Result<()> {
         let mut account_data: Vec<Vec<u8>> = vec![];
-        let schemas = get_schemas(PythAccountType::PRICE);
+        let schemas = get_schemas(PythAccountType::Price);
 
         {
             let pyth_price_acct = &mut ctx.accounts.pyth_price_account.load_init()?;
@@ -51,7 +51,7 @@ pub mod mock_cpi_caller {
         // 44444 compute units
         // AddPrice::invoke_cpi_anchor(ctx, account_data, PythAccountType::Price, account_schemas)
         // 44045 compute units
-        AddPrice::invoke_cpi_solana(ctx, account_data, PythAccountType::PRICE, account_schemas)
+        AddPrice::invoke_cpi_solana(ctx, account_data, PythAccountType::Price, account_schemas)
     }
 }
 
@@ -167,11 +167,11 @@ trait PythAccount {
 #[derive(Copy, Clone)]
 #[repr(u32)]
 pub enum PythAccountType {
-    MAPPING     = 1,
-    PRODUCT     = 2,
-    PRICE       = 3,
-    TEST        = 4,
-    PERMISSIONS = 5,
+    Mapping     = 1,
+    Product     = 2,
+    Price       = 3,
+    Test        = 4,
+    Permissions = 5,
 }
 impl PythAccountType {
     fn to_u32(&self) -> u32 {
@@ -235,7 +235,7 @@ impl PriceAccount {
 }
 
 impl PythAccount for PriceAccount {
-    const ACCOUNT_TYPE: PythAccountType = PythAccountType::PRICE;
+    const ACCOUNT_TYPE: PythAccountType = PythAccountType::Price;
 }
 
 

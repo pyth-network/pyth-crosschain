@@ -20,7 +20,7 @@ impl PythSchema {
 //  should these account_type -> schema mappings be stored in an account somewhere?
 pub fn get_schemas(account_type: PythAccountType) -> Vec<PythSchema> {
     match account_type {
-        PythAccountType::PRICE => vec![PythSchema::Full, PythSchema::Compact],
+        PythAccountType::Price => vec![PythSchema::Full, PythSchema::Compact],
         _ => vec![],
     }
 }
