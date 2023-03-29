@@ -18,7 +18,6 @@ jobs:
         run: |
           bash ./build.sh
           zip -r artifacts.zip artifacts
-          ls
       - name: Set env
         run: |
           PREFIX="refs/tags/pyth-cosmwasm-"
