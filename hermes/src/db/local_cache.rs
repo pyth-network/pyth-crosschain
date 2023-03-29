@@ -28,9 +28,12 @@ impl LocalCache {
 }
 
 impl Db for LocalCache {
-    /// Add a new db record to the deque for the key while keeping it sorted.
-    /// This function also removes the oldest record in the cache if the max_size is reached.
-    /// Records are usually added in increasing order and the function is optimized for that case.
+    /// Add a new db entry to the cache.
+    /// 
+    /// This method keeps the backed store sorted for efficiency, and removes
+    /// the oldest record in the cache if the max_size is reached. Entries are
+    /// usually added in increasing order and likely to be inserted near the
+    /// end of the deque. The function is optimized for this specific case.
     fn insert(&mut self, key: &[u8], record: DbRecord) -> Result<()> {
         let mut key_cache = self.cache.entry(key.to_vec()).or_insert_with(VecDeque::new);
 
