@@ -58,9 +58,23 @@ repos:
         entry: cargo +nightly clippy --manifest-path ./target_chains/cosmwasm/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: target_chains/cosmwasm
+      # Hooks for price-service/server-rust
       - id: cargo-fmt-price-service
         name: Cargo format for Rust Price Service
         language: "rust"
         entry: cargo +nightly fmt --manifest-path ./price_service/server-rust/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: price_service/server-rust
+      # Hooks for accumulator updater contract
+      - id: cargo-fmt-accumulator-updater
+        name: Cargo format for accumulator updater contract
+        language: "rust"
+        entry: cargo +nightly fmt --manifest-path ./accumulator_updater/Cargo.toml --all -- --config-path rustfmt.toml
+        pass_filenames: false
+        files: accumulator_updater
+      - id: cargo-clippy-accumulator-updater
+        name: Cargo clippy for accumulator-updater contract
+        language: "rust"
+        entry: cargo +nightly clippy --manifest-path ./accumulator_updater/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        pass_filenames: false
+        files: accumulator_updater
