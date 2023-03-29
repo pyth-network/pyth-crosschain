@@ -1,10 +1,9 @@
 name: Release Pyth Cosmwasm Contract
 
 on:
-  pull_request:
-  # push:
-  #   tags:
-  #     - pyth-cosmwasm-v*
+  push:
+    tags:
+      - pyth-cosmwasm-v*
 
 jobs:
   release-contract:
@@ -22,7 +21,7 @@ jobs:
           ls
       - name: Set env
         run: |
-          PREFIX="refs"
+          PREFIX="refs/tags/pyth-cosmwasm-"
           echo "VERSION=${GITHUB_REF:${#PREFIX}}" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
@@ -30,9 +29,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release Pyth Cosmwasm ${{ env.VERSION }}
-          draft: true
+          tag_name: ${{ github.ref_name }}
+          # Setting VERSION in set env step and hence it will be available
+          release_name: Pyth Cosmwasm ${{ env.VERSION }}
+          draft: false
           prerelease: false
       - name: Upload Release Asset
         id: upload-release-asset
