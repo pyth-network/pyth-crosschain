@@ -4,8 +4,8 @@ on:
   pull_request:
 
 jobs:
-  build-contract:
-    name: Build cosmwasm contract
+  release-contract:
+    name: Build and Release cosmwasm contract
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -13,11 +13,26 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: bash ./build.sh
-      - name: Build
-        run: ls ./artifacts
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        run: |
+          bash ./build.sh
+          zip -r artifacts.zip artifacts
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: artifacts
-          path: target_chains/cosmwasm/artifacts
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./artifacts.zip
+          asset_name: artifacts.zip
+          asset_content_type: application/zip
