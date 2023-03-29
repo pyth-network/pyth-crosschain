@@ -1,10 +1,9 @@
 use {
     crate::{
-        db::Db,
         network::p2p::OBSERVATIONS,
-        proof_store::{
-            ProofStore,
+        store::{
             ProofUpdate,
+            Store,
         },
     },
     anyhow::Result,
@@ -17,12 +16,12 @@ use {
 mod rest;
 
 #[derive(Clone)]
-pub struct State<D: Db> {
-    pub proof_store: ProofStore<D>,
+pub struct State {
+    pub proof_store: Store,
 }
 
-impl<D: Db> State<D> {
-    pub fn new(proof_store: ProofStore<D>) -> Self {
+impl State {
+    pub fn new(proof_store: Store) -> Self {
         Self { proof_store }
     }
 }
@@ -31,8 +30,8 @@ impl<D: Db> State<D> {
 ///
 /// Currently this is based on Axum due to the simplicity and strong ecosystem support for the
 /// packages they are based on (tokio & hyper).
-pub async fn spawn(rpc_addr: String, db: impl Db + 'static) -> Result<()> {
-    let mut state = State::new(ProofStore::new(db));
+pub async fn spawn(rpc_addr: String, store: Store) -> Result<()> {
+    let mut state = State::new(store);
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.

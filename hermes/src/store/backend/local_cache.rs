@@ -1,9 +1,11 @@
 use {
     super::{
-        Db,
-        DbRecord,
-        RequestTime,
+        super::RequestTime,
+        Key,
+        StoreBackend,
+        UnixTimestamp,
     },
+    crate::store::BackendData,
     anyhow::Result,
     dashmap::DashMap,
     std::{
@@ -12,9 +14,15 @@ use {
     },
 };
 
+#[derive(Clone, PartialEq, Debug)]
+pub struct Record {
+    pub time:  UnixTimestamp,
+    pub value: BackendData,
+}
+
 #[derive(Clone)]
 pub struct LocalCache {
-    cache:            Arc<DashMap<Vec<u8>, VecDeque<DbRecord>>>,
+    cache:            Arc<DashMap<Key, VecDeque<Record>>>,
     max_size_per_key: usize,
 }
 
@@ -27,15 +35,17 @@ impl LocalCache {
     }
 }
 
-impl Db for LocalCache {
+impl StoreBackend for LocalCache {
     /// Add a new db entry to the cache.
-    /// 
+    ///
     /// This method keeps the backed store sorted for efficiency, and removes
     /// the oldest record in the cache if the max_size is reached. Entries are
     /// usually added in increasing order and likely to be inserted near the
     /// end of the deque. The function is optimized for this specific case.
-    fn insert(&mut self, key: &[u8], record: DbRecord) -> Result<()> {
-        let mut key_cache = self.cache.entry(key.to_vec()).or_insert_with(VecDeque::new);
+    fn insert(&self, key: Key, time: UnixTimestamp, value: BackendData) -> Result<()> {
+        let mut key_cache = self.cache.entry(key).or_insert_with(VecDeque::new);
+
+        let record = Record { time, value };
 
         key_cache.push_back(record);
 
@@ -54,8 +64,8 @@ impl Db for LocalCache {
         Ok(())
     }
 
-    fn get(&self, key: &[u8], request_time: RequestTime) -> Result<Option<Vec<u8>>> {
-        match self.cache.get(key) {
+    fn get(&self, key: Key, request_time: RequestTime) -> Result<Option<BackendData>> {
+        match self.cache.get(&key) {
             Some(key_cache) => {
                 let record = match request_time {
                     RequestTime::Latest => key_cache.back().cloned(),

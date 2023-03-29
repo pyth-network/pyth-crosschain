@@ -1,13 +1,8 @@
 use {
-    crate::{
-        db::{
-            Db,
-            RequestTime,
-        },
-        proof_store::{
-            Proof,
-            ProofType,
-        },
+    crate::store::{
+        Proof,
+        ProofType,
+        RequestTime,
     },
     pyth_sdk::{
         PriceFeed,
@@ -56,7 +51,7 @@ pub struct LatestVaaQueryParams {
 ///
 /// TODO: This endpoint returns proof as a byte array. We should probably return a base64 or hex string.
 pub async fn latest_vaas(
-    State(state): State<super::State<impl Db>>,
+    State(state): State<super::State>,
     Query(params): Query<LatestVaaQueryParams>,
 ) -> Result<Json<Proof>, RestError> {
     // TODO: Find better ways to validate query parameters.
@@ -81,7 +76,7 @@ pub struct LatestPriceFeedParams {
 
 /// REST endpoint /latest_vaas?ids[]=...&ids[]=...&ids[]=...
 pub async fn latest_price_feeds(
-    State(state): State<super::State<impl Db>>,
+    State(state): State<super::State>,
     Query(params): Query<LatestPriceFeedParams>,
 ) -> Result<Json<Vec<PriceFeed>>, RestError> {
     let price_ids: Vec<PriceIdentifier> = params

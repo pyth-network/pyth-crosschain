@@ -1,9 +1,7 @@
 use {
-    crate::db::{
-        Db,
-        DbRecord,
-        RequestTime,
-        UnixTimestamp,
+    self::backend::{
+        Key,
+        StoreBackend,
     },
     anyhow::{
         anyhow,
@@ -36,9 +34,20 @@ use {
             Deref,
             DerefMut,
         },
+        sync::Arc,
     },
     wormhole::VAA,
 };
+
+mod backend;
+
+pub type UnixTimestamp = u64;
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum RequestTime {
+    Latest,
+    FirstAfter(UnixTimestamp),
+}
 
 
 pub enum ProofUpdate {
@@ -92,15 +101,24 @@ pub struct PriceFeedsWithProof {
     pub proof:       Proof,
 }
 
-
-#[derive(Clone, Default)]
-pub struct ProofStore<D: Db> {
-    pub db: D,
+#[derive(Clone, PartialEq, Debug, BorshSerialize, BorshDeserialize)]
+pub enum BackendData {
+    BatchVaa(PriceInfo),
 }
 
-impl<D: Db> ProofStore<D> {
-    pub fn new(db: D) -> Self {
-        Self { db }
+
+#[derive(Clone)]
+pub struct Store {
+    pub db: Arc<Box<dyn StoreBackend>>,
+}
+
+impl Store {
+    pub fn new_with_local_cache(max_size_per_key: usize) -> Self {
+        Self {
+            db: Arc::new(Box::new(backend::local_cache::LocalCache::new(
+                max_size_per_key,
+            ))),
+        }
     }
 
     // TODO: This should return the updated feeds so the subscribers can be notified.
@@ -125,12 +143,9 @@ impl<D: Db> ProofStore<D> {
                         publish_time,
                     };
 
-                    let key = price_feed.id.to_bytes().to_vec();
-                    let record = DbRecord {
-                        time:  publish_time,
-                        value: price_info.try_to_vec()?,
-                    };
-                    self.db.insert(&key, record)?;
+                    let key = Key::new(price_feed.id.to_bytes().to_vec());
+                    self.db
+                        .insert(key, publish_time, BackendData::BatchVaa(price_info))?;
                 }
             }
         };
@@ -148,15 +163,21 @@ impl<D: Db> ProofStore<D> {
                 let mut price_feeds = HashMap::new();
                 let mut vaas: HashSet<Vec<u8>> = HashSet::new();
                 for price_id in price_ids {
-                    let key = price_id.to_bytes().to_vec();
-                    let record = self.db.get(&key, request_time.clone())?;
-                    if let Some(record) = record {
-                        let price_info = PriceInfo::try_from_slice(&record)?;
-                        price_feeds.insert(price_info.price_feed.id, price_info.price_feed);
-                        vaas.insert(price_info.vaa_bytes);
-                    } else {
-                        log::info!("No price feed found for price id: {:?}", price_id);
-                        return Err(anyhow!("No price feed found for price id: {:?}", price_id));
+                    let key = Key::new(price_id.to_bytes().to_vec());
+                    let maybe_data = self.db.get(key, request_time.clone())?;
+
+                    match maybe_data {
+                        Some(BackendData::BatchVaa(price_info)) => {
+                            price_feeds.insert(price_info.price_feed.id, price_info.price_feed);
+                            vaas.insert(price_info.vaa_bytes);
+                        }
+                        None => {
+                            log::info!("No price feed found for price id: {:?}", price_id);
+                            return Err(anyhow!(
+                                "No price feed found for price id: {:?}",
+                                price_id
+                            ));
+                        }
                     }
                 }
                 let proof = Proof(vaas.into_iter().collect());

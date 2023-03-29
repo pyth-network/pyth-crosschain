@@ -1,7 +1,7 @@
 #![feature(never_type)]
 
 use {
-    crate::db::local_cache::LocalCache,
+    crate::store::Store,
     anyhow::Result,
     futures::{
         channel::mpsc::Receiver,
@@ -16,9 +16,8 @@ use {
 };
 
 mod config;
-mod db;
 mod network;
-mod proof_store;
+mod store;
 
 /// A Wormhole VAA is an array of bytes. TODO: Decoding.
 #[derive(Debug, Clone, Eq, Hash, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -66,8 +65,9 @@ async fn init(_update_channel: Receiver<AccountUpdate>) -> Result<()> {
 
             // Spawn the RPC server.
             log::info!("Starting RPC server on {}", rpc_addr);
+
             // TODO: Add max size to the config
-            network::rpc::spawn(rpc_addr.to_string(), LocalCache::new(1000)).await?;
+            network::rpc::spawn(rpc_addr.to_string(), Store::new_with_local_cache(1000)).await?;
 
             // Wait on Ctrl+C similar to main.
             tokio::signal::ctrl_c().await?;
