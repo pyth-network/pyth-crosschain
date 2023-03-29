@@ -16,6 +16,9 @@
     "url": "https://github.com/pyth-network/pyth-crosschain",
     "directory": "target_chains/ethereum/sdk/js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "jest --passWithNoTests",
     "build": "tsc",
