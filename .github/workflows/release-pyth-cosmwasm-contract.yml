@@ -3,7 +3,7 @@ name: Release Pyth Cosmwasm Contract
 on:
   push:
     tags:
-      - pyth-cosmwasm-v*
+      - pyth-cosmwasm-contract-v*
 
 jobs:
   release-contract:
@@ -20,7 +20,7 @@ jobs:
           zip -r artifacts.zip artifacts
       - name: Set env
         run: |
-          PREFIX="refs/tags/pyth-cosmwasm-"
+          PREFIX="refs/tags/pyth-cosmwasm-contract-"
           echo "VERSION=${GITHUB_REF:${#PREFIX}}" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
