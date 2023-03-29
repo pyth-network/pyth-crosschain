@@ -1,0 +1,16 @@
+name: Release Pyth Cosmwasm Contract
+
+on:
+  pull_request:
+
+jobs:
+  build-contract:
+    name: Build cosmwasm contract
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: target_chains/cosmwasm
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: bash ./build.sh
