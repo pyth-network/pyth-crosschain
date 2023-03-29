@@ -16,6 +16,9 @@
     "url": "https://github.com/pyth-network/pyth-crosschain",
     "directory": "price_service/client/js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "jest --testPathIgnorePatterns=.*.e2e.test.ts --passWithNoTests",
     "test:e2e": "jest --testPathPattern=.*.e2e.test.ts",
