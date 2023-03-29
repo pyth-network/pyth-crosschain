@@ -30,7 +30,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           # Setting VERSION in set env step and hence it will be available
-          release_name: Pyth Cosmwasm ${{ env.VERSION }}
+          release_name: Pyth Cosmwasm Contract ${{ env.VERSION }}
           draft: false
           prerelease: false
       - name: Upload Release Asset
