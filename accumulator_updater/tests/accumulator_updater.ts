@@ -1,10 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import {
-  IdlTypes,
-  Program,
-  IdlAccounts,
-  BorshAccountsCoder,
-} from "@coral-xyz/anchor";
+import { IdlTypes, Program, BorshAccountsCoder } from "@coral-xyz/anchor";
 import { AccumulatorUpdater } from "../target/types/accumulator_updater";
 import { MockCpiCaller } from "../target/types/mock_cpi_caller";
 import lumina from "@lumina-dev/test";
@@ -12,8 +7,8 @@ import { assert } from "chai";
 import { ComputeBudgetProgram } from "@solana/web3.js";
 import bs58 from "bs58";
 
-// Enables tool that runs in localbrowser for easier debugging of txns
-// in this test -  https://lumina.fyi/debug
+// Enables tool that runs in local browser for easier debugging of
+// transactions in this test -  https://lumina.fyi/debug
 lumina();
 
 const accumulatorUpdaterProgram = anchor.workspace
@@ -49,7 +44,7 @@ describe("accumulator_updater", () => {
   });
 
   it("Adds a program to the whitelist", async () => {
-    const addToWhitelistTx = await accumulatorUpdaterProgram.methods
+    await accumulatorUpdaterProgram.methods
       .addAllowedProgram(mockCpiProg.programId)
       .accounts({
         authority: whitelistAuthority.publicKey,
@@ -70,7 +65,7 @@ describe("accumulator_updater", () => {
 
   it("Updates the whitelist authority", async () => {
     const newWhitelistAuthority = anchor.web3.Keypair.generate();
-    const updateWhitelistAuthorityTx = await accumulatorUpdaterProgram.methods
+    await accumulatorUpdaterProgram.methods
       .updateWhitelistAuthority(newWhitelistAuthority.publicKey)
       .accounts({
         authority: whitelistAuthority.publicKey,
@@ -169,16 +164,14 @@ describe("accumulator_updater", () => {
       mockCpiCallerAddPriceTxPubkeys.pythPriceAccount
     );
     console.log(`pythPriceAccount: ${pythPriceAccount.data.toString("hex")}`);
-    const accumulatorInputkeys = accumulatorPdas.map((a) => a.pubkey);
+    const accumulatorInputKeys = accumulatorPdas.map((a) => a.pubkey);
 
     const accumulatorInputs =
       await accumulatorUpdaterProgram.account.accumulatorInput.fetchMultiple(
-        accumulatorInputkeys
+        accumulatorInputKeys
       );
 
     const accumulatorPriceAccounts = accumulatorInputs.map((ai) => {
-      const { header, data } = ai;
-
       return parseAccumulatorInput(ai);
     });
     console.log(
@@ -212,7 +205,7 @@ describe("accumulator_updater", () => {
         ],
       }
     );
-    const accumulatorInputKeyStrings = accumulatorInputkeys.map((k) =>
+    const accumulatorInputKeyStrings = accumulatorInputKeys.map((k) =>
       k.toString()
     );
     accumulatorAccounts.forEach((a) => {
@@ -222,9 +215,6 @@ describe("accumulator_updater", () => {
 });
 
 type AccumulatorInputHeader = IdlTypes<AccumulatorUpdater>["AccumulatorHeader"];
-type AccumulatorInputPriceAccountTypes =
-  | PriceFull
-  | IdlTypes<MockCpiCaller>["PriceCompact"];
 
 // Parses AccumulatorInput.data into a PriceAccount or PriceOnly object based on the
 // accountType and accountSchema.
@@ -238,7 +228,7 @@ function parseAccumulatorInput({
 }: {
   header: AccumulatorInputHeader;
   data: Buffer;
-}) {
+}): AccumulatorPriceAccount {
   console.log(`header: ${JSON.stringify(header)}`);
   assert.strictEqual(header.accountType, 3);
   if (header.accountSchema === 0) {
