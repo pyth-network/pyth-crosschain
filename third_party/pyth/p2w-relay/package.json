@@ -2,6 +2,7 @@
   "name": "pyth_relay",
   "version": "1.0.0",
   "description": "Pyth relayer",
+  "private": "true",
   "main": "index.js",
   "scripts": {
     "build": "npm run build-evm && npm run build-lib",

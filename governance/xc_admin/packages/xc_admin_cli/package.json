@@ -1,6 +1,7 @@
 {
   "name": "xc_admin_cli",
   "version": "0.0.0",
+  "private": "true",
   "description": "",
   "author": "",
   "homepage": "https://github.com/pyth-network/pyth-crosschain",

@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-aptos-js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Pyth Network Aptos Utilities",
   "homepage": "https://pyth.network",
   "author": {
@@ -15,6 +15,9 @@
     "type": "git",
     "url": "https://github.com/pyth-network/pyth-crosschain",
     "directory": "target_chains/aptos/sdk/js"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "test": "jest --passWithNoTests",

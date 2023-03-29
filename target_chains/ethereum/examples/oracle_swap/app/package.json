@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@pythnetwork/pyth-evm-js": "^1.0.1",
-    "@pythnetwork/pyth-sdk-solidity": "^1.0.1",
+    "@pythnetwork/pyth-evm-js": "*",
+    "@pythnetwork/pyth-sdk-solidity": "*",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",

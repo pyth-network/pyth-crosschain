@@ -11,6 +11,9 @@ function payerProvider(url) {
     new HDWalletProvider({
       mnemonic: process.env.MNEMONIC,
       providerOrUrl: url,
+      // This option makes deployments more reliable (by avoiding rate limiting errors) at the cost of
+      // taking a little longer.
+      pollingInterval: 12000,
     });
 }
 
@@ -149,6 +152,14 @@ module.exports = {
       gas: 8000000,
       gasPrice: 300000000000,
     },
+    canto_testnet: {
+      provider: payerProvider(`https://canto-testnet.plexnode.wtf`),
+      deploymentPollingInterval: 20000,
+      network_id: 7701,
+      networkCheckTimeout: 1000000,
+      timeoutBlocks: 200,
+      disableConfirmationListener: true,
+    },
     celo: {
       provider: payerProvider(`https://forno.celo.org`),
       network_id: 42220,
@@ -181,9 +192,17 @@ module.exports = {
       provider: payerProvider(`https://evm-t3.cronos.org`),
       network_id: 338,
     },
+    polygon_zkevm_testnet: {
+      provider: payerProvider(`https://rpc.public.zkevm-test.net/`),
+      network_id: 1442,
+    },
+    polygon_zkevm: {
+      provider: payerProvider(`https://zkevm-rpc.com`),
+      network_id: 1101,
+    },
     shimmer_testnet: {
       provider: payerProvider(`https://json-rpc.evm.testnet.shimmer.network`),
-      network_id: 1070,
+      network_id: 1071,
       verify: {
         apiUrl: "https://explorer.evm.testnet.shimmer.network/api",
         explorerUrl: "https://explorer.evm.testnet.shimmer.network",

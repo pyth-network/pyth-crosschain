@@ -1111,9 +1111,7 @@ mod test {
                 expo:         302,
                 publish_time: 303,
             },
-            Price {
-                ..Default::default()
-            },
+            Default::default(),
         );
         price_feed_bucket(&mut deps.storage)
             .save(address, &dummy_price_feed)

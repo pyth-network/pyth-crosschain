@@ -1,7 +1,8 @@
 {
   "name": "@pythnetwork/xc-governance-sdk",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "description": "Pyth Cross-chain Governance SDK",
+  "private": "true",
   "homepage": "https://pyth.network",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

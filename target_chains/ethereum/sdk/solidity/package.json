@@ -1,0 +1,31 @@
+{
+  "name": "@pythnetwork/pyth-sdk-solidity",
+  "version": "2.2.1",
+  "description": "Read prices from the Pyth oracle",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyth-network/pyth-crosschain",
+    "directory": "target_chains/ethereum/sdk/solidity"
+  },
+  "scripts": {
+    "format": "npx prettier --write .",
+    "generate-abi": "node scripts/generateAbi.js",
+    "build": "solcjs --bin MockPyth.sol --base-path . -o build/"
+  },
+  "keywords": [
+    "pyth",
+    "solidity",
+    "oracle"
+  ],
+  "author": "Pyth Data Foundation",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  },
+  "homepage": "https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/sdk/solidity",
+  "devDependencies": {
+    "prettier": "^2.7.1",
+    "prettier-plugin-solidity": "^1.0.0-rc.1",
+    "solc": "^0.8.15"
+  }
+}

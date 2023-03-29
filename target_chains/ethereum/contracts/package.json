@@ -2,6 +2,7 @@
   "name": "@pythnetwork/pyth-evm-contract",
   "version": "1.2.0",
   "description": "",
+  "private": "true",
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.15",
     "@openzeppelin/truffle-upgrades": "^1.14.0",

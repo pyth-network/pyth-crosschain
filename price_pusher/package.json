@@ -1,5 +1,5 @@
 {
-  "name": "@pythnetwork/pyth-price-pusher",
+  "name": "@pythnetwork/price-pusher",
   "version": "4.1.1",
   "description": "Pyth Price Pusher",
   "homepage": "https://pyth.network",
@@ -15,6 +15,9 @@
     "type": "git",
     "url": "https://github.com/pyth-network/pyth-crosschain",
     "directory": "price_pusher"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "test": "jest src/ --passWithNoTests",
@@ -50,7 +53,7 @@
   "dependencies": {
     "@injectivelabs/sdk-ts": "^1.0.484",
     "@pythnetwork/price-service-client": "*",
-    "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
+    "@pythnetwork/pyth-sdk-solidity": "*",
     "@truffle/hdwallet-provider": "^2.1.3",
     "joi": "^17.6.0",
     "web3": "^1.8.1",

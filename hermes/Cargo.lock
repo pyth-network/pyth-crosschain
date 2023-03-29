@@ -1454,6 +1454,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
 
 [[package]]
+name = "hermes"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "axum-macros",
+ "bs58",
+ "dashmap",
+ "der 0.7.0",
+ "env_logger",
+ "futures",
+ "hex",
+ "lazy_static",
+ "libc",
+ "libp2p",
+ "log",
+ "rand 0.8.5",
+ "reqwest",
+ "ring",
+ "rusqlite",
+ "secp256k1",
+ "serde",
+ "serde_arrays",
+ "serde_cbor",
+ "serde_json",
+ "sha256",
+ "structopt",
+ "tokio",
+ "typescript-type-def",
+]
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2938,38 +2970,6 @@ checksum = "e97e3215779627f01ee256d2fad52f3d95e8e1c11e9fc6fd08f7cd455d5d5c78"
 dependencies = [
  "proc-macro2",
  "syn",
-]
-
-[[package]]
-name = "price-service"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "axum-macros",
- "bs58",
- "dashmap",
- "der 0.7.0",
- "env_logger",
- "futures",
- "hex",
- "lazy_static",
- "libc",
- "libp2p",
- "log",
- "rand 0.8.5",
- "reqwest",
- "ring",
- "rusqlite",
- "secp256k1",
- "serde",
- "serde_arrays",
- "serde_cbor",
- "serde_json",
- "sha256",
- "structopt",
- "tokio",
- "typescript-type-def",
 ]
 
 [[package]]
