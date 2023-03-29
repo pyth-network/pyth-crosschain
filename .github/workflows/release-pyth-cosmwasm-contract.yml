@@ -15,9 +15,9 @@ jobs:
       - name: Build
         run: bash ./build.sh
       - name: Build
-        run: ls
+        run: ls ./artifacts
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: artifacts
-          path: artifacts
+          path: ./artifacts
