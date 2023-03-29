@@ -10,6 +10,7 @@ export const RECEIVER_CHAINS = {
   evmos: 60006,
   neon: 60007,
   polygon_zkevm: 60008,
+  canto: 60009,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
