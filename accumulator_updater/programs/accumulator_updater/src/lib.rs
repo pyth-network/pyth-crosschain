@@ -18,11 +18,11 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod accumulator_updater {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, admin: Pubkey) -> Result<()> {
-        require_keys_neq!(admin, Pubkey::default());
+    pub fn initialize(ctx: Context<Initialize>, authority: Pubkey) -> Result<()> {
+        require_keys_neq!(authority, Pubkey::default());
         let whitelist = &mut ctx.accounts.whitelist;
         whitelist.bump = *ctx.bumps.get("whitelist").unwrap();
-        whitelist.authority = admin;
+        whitelist.authority = authority;
         Ok(())
     }
 
