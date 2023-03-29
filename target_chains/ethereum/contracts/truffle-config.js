@@ -152,6 +152,14 @@ module.exports = {
       gas: 8000000,
       gasPrice: 300000000000,
     },
+    canto_testnet: {
+      provider: payerProvider(`https://canto-testnet.plexnode.wtf`),
+      deploymentPollingInterval: 20000,
+      network_id: 7701,
+      networkCheckTimeout: 1000000,
+      timeoutBlocks: 200,
+      disableConfirmationListener: true,
+    },
     celo: {
       provider: payerProvider(`https://forno.celo.org`),
       network_id: 42220,
