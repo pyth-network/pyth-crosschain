@@ -80,6 +80,7 @@ pub mod accumulator_updater {
             let accumulator_size = 8 + AccumulatorInput::get_initial_size(&account_data);
             let accumulator_input = AccumulatorInput::new(
                 AccumulatorHeader::new(
+                    bump,
                     1, //from CPI caller?
                     account_type,
                     account_schema,
@@ -100,6 +101,50 @@ pub mod accumulator_updater {
                 &rent,
                 &ctx.accounts.system_program,
             )?;
+        }
+
+        Ok(())
+    }
+
+    pub fn update_inputs<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdateInputs<'info>>,
+        base_account: Pubkey,
+        data: Vec<Vec<u8>>,
+        account_type: u32,
+        account_schemas: Vec<u8>,
+    ) -> Result<()> {
+        let cpi_caller = ctx.accounts.whitelist_verifier.is_allowed()?;
+        let accts = ctx.remaining_accounts;
+        require_eq!(accts.len(), data.len());
+        require_eq!(data.len(), account_schemas.len());
+        let mut zip = data.into_iter().zip(account_schemas.into_iter());
+
+
+        for ai in accts {
+            let (account_data, account_schema) = zip.next().unwrap();
+
+            let accumulator_input = &mut <AccumulatorInput as AccountDeserialize>::try_deserialize(
+                &mut &**ai.try_borrow_mut_data()?,
+            )?;
+            {
+                let pubkey = ai.key();
+                let expected_key = Pubkey::create_program_address(
+                    accumulator_acc_seeds_with_bump!(
+                        cpi_caller,
+                        base_account,
+                        account_schema,
+                        accumulator_input.header.bump
+                    ),
+                    &crate::ID,
+                )
+                .map_err(|_| AccumulatorUpdaterError::InvalidPDA)?;
+                require_keys_eq!(expected_key, pubkey);
+                require_eq!(accumulator_input.header.account_type, account_type);
+                require_eq!(accumulator_input.header.account_schema, account_schema);
+                // TODO: allow re-sizing?
+                require_gte!(accumulator_input.data.len(), account_data.len());
+            }
+            accumulator_input.data = account_data;
         }
 
         Ok(())
@@ -280,7 +325,6 @@ pub struct UpdateInputs<'info> {
 #[account]
 pub struct AccumulatorInput {
     pub header: AccumulatorHeader,
-    //TODO: Vec<u8> for resizing?
     pub data:   Vec<u8>,
 }
 
@@ -299,6 +343,7 @@ impl AccumulatorInput {
 // - what other fields are needed?
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Default)]
 pub struct AccumulatorHeader {
+    pub bump:           u8,
     pub version:        u8,
     // u32 for parity with pyth oracle contract
     pub account_type:   u32,
@@ -309,8 +354,9 @@ pub struct AccumulatorHeader {
 impl AccumulatorHeader {
     pub const SIZE: usize = 1 + 4 + 1;
 
-    pub fn new(version: u8, account_type: u32, account_schema: u8) -> Self {
+    pub fn new(bump: u8, version: u8, account_type: u32, account_schema: u8) -> Self {
         Self {
+            bump,
             version,
             account_type,
             account_schema,
@@ -334,4 +380,6 @@ pub enum AccumulatorUpdaterError {
     InvalidAllowedProgram,
     #[msg("Maximum number of allowed programs exceeded")]
     MaximumAllowedProgramsExceeded,
+    #[msg("Invalid PDA")]
+    InvalidPDA,
 }
