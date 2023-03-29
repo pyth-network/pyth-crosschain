@@ -18,3 +18,5 @@ default = []
 [dependencies]
 anchor-lang = "0.27.0"
 accumulator_updater = { path = "../accumulator_updater", features = ["cpi"] }
+# needed for the new #[account(zero_copy)] in anchor 0.27.0
+bytemuck = { version = "1.4.0", features = ["derive", "min_const_generics"]}

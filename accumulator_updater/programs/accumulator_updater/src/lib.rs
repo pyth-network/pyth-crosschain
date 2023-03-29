@@ -18,24 +18,31 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod accumulator_updater {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, admin: Pubkey) -> Result<()> {
+        require_keys_neq!(admin, Pubkey::default());
         let whitelist = &mut ctx.accounts.whitelist;
         whitelist.bump = *ctx.bumps.get("whitelist").unwrap();
+        whitelist.authority = admin;
         Ok(())
     }
 
-    //TODO: add authorization mechanism for this
     pub fn add_allowed_program(
         ctx: Context<AddAllowedProgram>,
         allowed_program: Pubkey,
     ) -> Result<()> {
         let whitelist = &mut ctx.accounts.whitelist;
-        require_keys_neq!(allowed_program, Pubkey::default());
-        require!(
-            !whitelist.allowed_programs.contains(&allowed_program),
-            AccumulatorUpdaterError::DuplicateAllowedProgram
-        );
+        whitelist.validate_program(allowed_program)?;
         whitelist.allowed_programs.push(allowed_program);
+        Ok(())
+    }
+
+    pub fn update_whitelist_authority(
+        ctx: Context<UpdateWhitelistAuthority>,
+        new_authority: Pubkey,
+    ) -> Result<()> {
+        let whitelist = &mut ctx.accounts.whitelist;
+        whitelist.validate_new_authority(new_authority)?;
+        whitelist.authority = new_authority;
         Ok(())
     }
 
@@ -105,8 +112,26 @@ pub mod accumulator_updater {
 #[derive(InitSpace)]
 pub struct Whitelist {
     pub bump:             u8,
+    pub authority:        Pubkey,
     #[max_len(32)]
     pub allowed_programs: Vec<Pubkey>,
+}
+
+impl Whitelist {
+    pub fn validate_program(&self, allowed_program: Pubkey) -> Result<()> {
+        require_keys_neq!(allowed_program, Pubkey::default());
+        require!(
+            !self.allowed_programs.contains(&allowed_program),
+            AccumulatorUpdaterError::DuplicateAllowedProgram
+        );
+        Ok(())
+    }
+
+    pub fn validate_new_authority(&self, new_authority: Pubkey) -> Result<()> {
+        require_keys_neq!(new_authority, Pubkey::default());
+        require_keys_neq!(self.authority, new_authority);
+        Ok(())
+    }
 }
 
 
@@ -153,17 +178,36 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
 }
 
+// Note: keeping two separate contexts for
+// this context & `UpdateWhitelistAuthority`
+// even though they are identical
+// because the ix input parameter types are also identical
 #[derive(Accounts)]
 pub struct AddAllowedProgram<'info> {
     #[account(mut)]
-    pub payer:          Signer<'info>,
+    pub payer:     Signer<'info>,
+    pub authority: Signer<'info>,
     #[account(
     mut,
     seeds = [b"accumulator".as_ref(), b"whitelist".as_ref()],
     bump = whitelist.bump,
+    has_one = authority,
     )]
-    pub whitelist:      Account<'info, Whitelist>,
-    pub system_program: Program<'info, System>,
+    pub whitelist: Account<'info, Whitelist>,
+}
+
+#[derive(Accounts)]
+pub struct UpdateWhitelistAuthority<'info> {
+    #[account(mut)]
+    pub payer:     Signer<'info>,
+    pub authority: Signer<'info>,
+    #[account(
+    mut,
+    seeds = [b"accumulator".as_ref(), b"whitelist".as_ref()],
+    bump = whitelist.bump,
+    has_one = authority,
+    )]
+    pub whitelist: Account<'info, Whitelist>,
 }
 
 
@@ -294,4 +338,6 @@ pub enum AccumulatorUpdaterError {
     ConversionError,
     #[msg("Serialization Error")]
     SerializeError,
+    #[msg("Whitelist admin required on initialization")]
+    WhitelistAdminRequired,
 }
