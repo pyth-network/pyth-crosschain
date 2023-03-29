@@ -17,8 +17,6 @@ function payerProvider(url) {
     });
 }
 
-console.log(process.env.MIGRATIONS_DIR);
-
 module.exports = {
   migrations_directory: process.env.MIGRATIONS_DIR,
   networks: {
