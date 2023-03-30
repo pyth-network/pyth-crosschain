@@ -115,7 +115,7 @@ module pyth::pyth {
 
                     state::register_price_info_object(pyth_state, price_identifier, id);
 
-                    transfer::share_object(new_price_info_object);
+                    transfer::public_share_object(new_price_info_object);
                 }
             }
         };
@@ -145,7 +145,7 @@ module pyth::pyth {
         // Charge the message update fee
         // TODO - error::insufficient_fee()
         //assert!(get_update_fee(&vaas) <= coin::value(&fee), 0);
-        transfer::transfer(fee, @pyth);
+        transfer::public_transfer(fee, @pyth);
 
         // Update the price feed from each VAA
         while (!vector::is_empty(&vaas)) {
