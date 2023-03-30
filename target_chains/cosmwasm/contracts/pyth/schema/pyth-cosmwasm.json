@@ -1,6 +1,6 @@
 {
   "contract_name": "pyth-cosmwasm",
-  "contract_version": "0.1.0",
+  "contract_version": "1.1.0",
   "idl_version": "1.0.0",
   "instantiate": {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -72,6 +72,7 @@
         }
       },
       "PythDataSource": {
+        "description": "A `PythDataSource` identifies a specific contract (given by its Wormhole `emitter`) on a specific blockchain (given by `chain_id`).",
         "type": "object",
         "required": ["chain_id", "emitter"],
         "properties": {
