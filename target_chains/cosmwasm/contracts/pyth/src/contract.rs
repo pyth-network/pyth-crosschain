@@ -745,6 +745,75 @@ mod test {
     }
 
     #[test]
+    fn test_instantiate() {
+        let mut deps = mock_dependencies();
+
+        let instantiate_msg = InstantiateMsg {
+            // this is an example wormhole contract address in order to create a valid instantiate message
+            wormhole_contract:          String::from("inj1xx3aupmgv3ce537c0yce8zzd3sz567syuyedpg"),
+            data_sources:               Vec::new(),
+            governance_source:          PythDataSource {
+                emitter:  Binary(vec![]),
+                chain_id: 0,
+            },
+            governance_source_index:    0,
+            governance_sequence_number: 0,
+            chain_id:                   0,
+            valid_time_period_secs:     0,
+            fee:                        Coin::new(0, ""),
+        };
+
+        let res = instantiate(
+            deps.as_mut(),
+            mock_env(),
+            MessageInfo {
+                sender: Addr::unchecked(""),
+                funds:  Vec::new(),
+            },
+            instantiate_msg,
+        );
+        assert!(res.is_ok());
+
+        // check config
+        let config_result = config(&mut deps.storage).load();
+        assert!(config_result.is_ok());
+
+        // check contract version
+        let contract_version = get_contract_version(&mut deps.storage);
+        assert_eq!(contract_version, Ok(String::from(CONTRACT_VERSION)));
+    }
+
+    #[test]
+    fn test_instantiate_invalid_wormhole_address() {
+        let mut deps = mock_dependencies();
+
+        let instantiate_msg = InstantiateMsg {
+            wormhole_contract:          String::from(""),
+            data_sources:               Vec::new(),
+            governance_source:          PythDataSource {
+                emitter:  Binary(vec![]),
+                chain_id: 0,
+            },
+            governance_source_index:    0,
+            governance_sequence_number: 0,
+            chain_id:                   0,
+            valid_time_period_secs:     0,
+            fee:                        Coin::new(0, ""),
+        };
+
+        let res = instantiate(
+            deps.as_mut(),
+            mock_env(),
+            MessageInfo {
+                sender: Addr::unchecked(""),
+                funds:  Vec::new(),
+            },
+            instantiate_msg,
+        );
+        assert!(res.is_err());
+    }
+
+    #[test]
     fn test_process_batch_attestation_empty_array() {
         let (mut deps, env) = setup_test();
         let attestations = BatchPriceAttestation {
