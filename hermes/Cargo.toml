@@ -58,3 +58,4 @@ libp2p                         = { version = "0.51.1", features = [
     "websocket",
     "yamux",
 ]}
+base64 = "0.21.0"

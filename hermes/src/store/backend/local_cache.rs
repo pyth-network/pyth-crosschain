@@ -1,11 +1,14 @@
 use {
     super::{
-        super::RequestTime,
+        super::{
+            BackendData,
+            RequestTime,
+        },
+        Backend,
         Key,
-        StoreBackend,
+        Storage,
         UnixTimestamp,
     },
-    crate::store::BackendData,
     anyhow::Result,
     dashmap::DashMap,
     std::{
@@ -27,15 +30,15 @@ pub struct LocalCache {
 }
 
 impl LocalCache {
-    pub fn new(max_size_per_key: usize) -> Self {
-        Self {
+    pub fn new_shared(max_size_per_key: usize) -> Backend {
+        Arc::new(Box::new(Self {
             cache: Arc::new(DashMap::new()),
             max_size_per_key,
-        }
+        }))
     }
 }
 
-impl StoreBackend for LocalCache {
+impl Storage for LocalCache {
     /// Add a new db entry to the cache.
     ///
     /// This method keeps the backed store sorted for efficiency, and removes

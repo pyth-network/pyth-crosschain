@@ -1,8 +1,8 @@
 use {
-    crate::store::{
-        Proof,
-        ProofType,
-        RequestTime,
+    crate::store::RequestTime,
+    base64::{
+        engine::general_purpose::STANDARD as base64_standard_engine,
+        Engine as _,
     },
     pyth_sdk::{
         PriceFeed,
@@ -53,7 +53,7 @@ pub struct LatestVaaQueryParams {
 pub async fn latest_vaas(
     State(state): State<super::State>,
     Query(params): Query<LatestVaaQueryParams>,
-) -> Result<Json<Proof>, RestError> {
+) -> Result<Json<Vec<String>>, RestError> {
     // TODO: Find better ways to validate query parameters.
     // FIXME: Handle ids with leading 0x
     let price_ids: Vec<PriceIdentifier> = params
@@ -64,9 +64,16 @@ pub async fn latest_vaas(
         .map_err(|_| RestError::InvalidPriceId)?;
     let price_feeds_with_proof = state
         .proof_store
-        .get_price_feeds_with_proof(ProofType::BatchVaa, price_ids, RequestTime::Latest)
+        .get_price_feeds_with_proof(price_ids, RequestTime::Latest)
         .map_err(|_| RestError::ProofNotFound)?;
-    Ok(Json(price_feeds_with_proof.proof))
+    Ok(Json(
+        price_feeds_with_proof
+            .proof
+            .batch_vaa
+            .iter()
+            .map(|vaa_bytes| base64_standard_engine.encode(vaa_bytes))
+            .collect(),
+    ))
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -87,7 +94,7 @@ pub async fn latest_price_feeds(
         .map_err(|_| RestError::InvalidPriceId)?;
     let price_feeds_with_proof = state
         .proof_store
-        .get_price_feeds_with_proof(ProofType::BatchVaa, price_ids, RequestTime::Latest)
+        .get_price_feeds_with_proof(price_ids, RequestTime::Latest)
         .map_err(|_| RestError::ProofNotFound)?;
     Ok(Json(
         price_feeds_with_proof.price_feeds.into_values().collect(),

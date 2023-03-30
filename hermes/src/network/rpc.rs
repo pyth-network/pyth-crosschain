@@ -2,8 +2,8 @@ use {
     crate::{
         network::p2p::OBSERVATIONS,
         store::{
-            ProofUpdate,
             Store,
+            Update,
         },
     },
     anyhow::Result,
@@ -31,7 +31,7 @@ impl State {
 /// Currently this is based on Axum due to the simplicity and strong ecosystem support for the
 /// packages they are based on (tokio & hyper).
 pub async fn spawn(rpc_addr: String, store: Store) -> Result<()> {
-    let mut state = State::new(store);
+    let state = State::new(store);
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
@@ -47,10 +47,7 @@ pub async fn spawn(rpc_addr: String, store: Store) -> Result<()> {
     tokio::spawn(async move {
         loop {
             if let Ok(observation) = OBSERVATIONS.1.lock().unwrap().recv() {
-                if let Err(e) = state
-                    .proof_store
-                    .process_update(ProofUpdate::Vaa(observation))
-                {
+                if let Err(e) = state.proof_store.store_update(Update::Vaa(observation)) {
                     log::error!("Failed to process VAA: {:?}", e);
                 }
             }
