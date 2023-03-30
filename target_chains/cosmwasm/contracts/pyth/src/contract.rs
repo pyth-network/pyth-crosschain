@@ -26,8 +26,10 @@ use {
         state::{
             config,
             config_read,
+            get_contract_version,
             price_feed_bucket,
             price_feed_read_bucket,
+            set_contract_version,
             ConfigInfo,
             PythDataSource,
         },
@@ -79,6 +81,8 @@ use {
     },
 };
 
+const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 /// Migration code that runs once when the contract is upgraded. On upgrade, the migrate
 /// function in the *new* code version is run, which allows the new code to update the on-chain
 /// state before any of its other functions are invoked.
@@ -90,8 +94,17 @@ use {
 /// this function can safely be implemented as:
 /// `Ok(Response::default())`
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
-    Ok(Response::default())
+pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
+    match get_contract_version(deps.storage) {
+        // We have contracts deployed on injective and osmosis where there is no contract version
+        // hence this arm will never be reached.
+        // this should be updated though in future migrations
+        Ok(_) => {}
+        Err(_) => {
+            set_contract_version(deps.storage, &String::from(CONTRACT_VERSION))?;
+        }
+    }
+    Ok(Response::default().add_attribute("Contract Version", CONTRACT_VERSION))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -113,6 +126,8 @@ pub fn instantiate(
         fee:                        msg.fee,
     };
     config(deps.storage).save(&state)?;
+
+    set_contract_version(deps.storage, &String::from(CONTRACT_VERSION))?;
 
     Ok(Response::default())
 }

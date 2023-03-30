@@ -3,6 +3,7 @@ use {
         Addr,
         Binary,
         Coin,
+        StdResult,
         Storage,
     },
     cosmwasm_storage::{
@@ -29,6 +30,7 @@ use {
 
 pub static CONFIG_KEY: &[u8] = b"config_v1";
 pub static PRICE_FEED_KEY: &[u8] = b"price_feed";
+pub static CONTRACT_VERSION_KEY: &[u8] = b"contract_version";
 
 /// A `PythDataSource` identifies a specific contract (given by its Wormhole `emitter`) on
 /// a specific blockchain (given by `chain_id`).
@@ -77,4 +79,12 @@ pub fn price_feed_bucket(storage: &mut dyn Storage) -> Bucket<PriceFeed> {
 
 pub fn price_feed_read_bucket(storage: &dyn Storage) -> ReadonlyBucket<PriceFeed> {
     bucket_read(storage, PRICE_FEED_KEY)
+}
+
+pub fn set_contract_version(storage: &mut dyn Storage, contract_version: &String) -> StdResult<()> {
+    singleton(storage, CONTRACT_VERSION_KEY).save(contract_version)
+}
+
+pub fn get_contract_version(storage: &mut dyn Storage) -> StdResult<String> {
+    singleton_read(storage, CONTRACT_VERSION_KEY).load()
 }
