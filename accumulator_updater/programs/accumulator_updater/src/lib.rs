@@ -48,11 +48,13 @@ pub mod accumulator_updater {
 
     /// Add new account(s) to be included in the accumulator
     ///
-    /// * `base_account` - Pubkey of the original account the AccumulatorInput(s) are derived from
-    /// * `data` - Vec of AccumulatorInput account data
-    /// * `account_type` - Marker to indicate base_account account_type
-    /// * `account_schemas` - Vec of markers to indicate schemas for AccumulatorInputs. In same respective
-    ///    order as data
+    /// * `base_account`    - Pubkey of the original account the
+    ///                       AccumulatorInput(s) are derived from
+    /// * `data`            - Vec of AccumulatorInput account data
+    /// * `account_type`    - Marker to indicate base_account account_type
+    /// * `account_schemas` - Vec of markers to indicate schemas for
+    ///                       AccumulatorInputs. In same respective
+    ///                       order as data
     pub fn create_inputs<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateInputs<'info>>,
         base_account: Pubkey,
@@ -169,7 +171,8 @@ impl<'info> WhitelistVerifier<'info> {
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
-    pub payer:          Signer<'info>,
+    pub payer: Signer<'info>,
+
     #[account(
         init,
         payer = payer,
@@ -185,13 +188,14 @@ pub struct Initialize<'info> {
 #[derive(Accounts)]
 pub struct UpdateWhitelist<'info> {
     #[account(mut)]
-    pub payer:     Signer<'info>,
+    pub payer: Signer<'info>,
+
     pub authority: Signer<'info>,
     #[account(
-    mut,
-    seeds = [b"accumulator".as_ref(), b"whitelist".as_ref()],
-    bump = whitelist.bump,
-    has_one = authority,
+        mut,
+        seeds = [b"accumulator".as_ref(), b"whitelist".as_ref()],
+        bump = whitelist.bump,
+        has_one = authority
     )]
     pub whitelist: Account<'info, Whitelist>,
 }
