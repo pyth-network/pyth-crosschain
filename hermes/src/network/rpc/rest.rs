@@ -64,11 +64,11 @@ pub async fn latest_vaas(
         .map_err(|_| RestError::InvalidPriceId)?;
     let price_feeds_with_proof = state
         .proof_store
-        .get_price_feeds_with_proof(price_ids, RequestTime::Latest)
+        .get_price_feeds_with_update_data(price_ids, RequestTime::Latest)
         .map_err(|_| RestError::ProofNotFound)?;
     Ok(Json(
         price_feeds_with_proof
-            .proof
+            .update_data
             .batch_vaa
             .iter()
             .map(|vaa_bytes| base64_standard_engine.encode(vaa_bytes))
@@ -94,7 +94,7 @@ pub async fn latest_price_feeds(
         .map_err(|_| RestError::InvalidPriceId)?;
     let price_feeds_with_proof = state
         .proof_store
-        .get_price_feeds_with_proof(price_ids, RequestTime::Latest)
+        .get_price_feeds_with_update_data(price_ids, RequestTime::Latest)
         .map_err(|_| RestError::ProofNotFound)?;
     Ok(Json(
         price_feeds_with_proof.price_feeds.into_values().collect(),

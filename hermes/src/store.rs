@@ -1,8 +1,5 @@
 use {
-    self::{
-        proof::batch_vaa::PriceInfo,
-        storage::Storage,
-    },
+    self::storage::Storage,
     anyhow::Result,
     pyth_sdk::{
         PriceFeed,
@@ -33,20 +30,19 @@ pub enum Update {
     Vaa(Vec<u8>),
 }
 
-#[derive(Clone, PartialEq, Debug)]
-pub enum StorageData {
-    BatchVaa(PriceInfo),
-}
-
 #[derive(Clone, Default, Serialize, Deserialize)]
 pub struct UpdateData {
     pub batch_vaa: Vec<Vec<u8>>,
 }
 
+// TODO: A price feed might not have update data in all different
+// formats. For example, Batch VAA and Merkle updates will result
+// in different price feeds. We need to figure out how to handle
+// it properly.
 #[derive(Clone, Default)]
-pub struct PriceFeedsWithProof {
+pub struct PriceFeedsWithUpdateData {
     pub price_feeds: HashMap<PriceIdentifier, PriceFeed>,
-    pub proof:       UpdateData,
+    pub update_data: UpdateData,
 }
 
 pub type State = Arc<Box<dyn Storage>>;
@@ -74,11 +70,11 @@ impl Store {
         }
     }
 
-    pub fn get_price_feeds_with_proof(
+    pub fn get_price_feeds_with_update_data(
         &self,
         price_ids: Vec<PriceIdentifier>,
         request_time: RequestTime,
-    ) -> Result<PriceFeedsWithProof> {
+    ) -> Result<PriceFeedsWithUpdateData> {
         proof::batch_vaa::get_price_feeds_with_proofs(self.state.clone(), price_ids, request_time)
     }
 }

@@ -1,7 +1,7 @@
 use {
     super::{
+        proof::batch_vaa::PriceInfo,
         RequestTime,
-        StorageData,
         UnixTimestamp,
     },
     anyhow::Result,
@@ -12,6 +12,11 @@ use {
 };
 
 pub mod local_cache;
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum StorageData {
+    BatchVaa(PriceInfo),
+}
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash, Deref, DerefMut)]
 pub struct Key(Vec<u8>);

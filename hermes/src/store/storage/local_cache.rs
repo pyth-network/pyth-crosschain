@@ -1,11 +1,9 @@
 use {
     super::{
-        super::{
-            RequestTime,
-            StorageData,
-        },
+        super::RequestTime,
         Key,
         Storage,
+        StorageData,
         UnixTimestamp,
     },
     anyhow::Result,

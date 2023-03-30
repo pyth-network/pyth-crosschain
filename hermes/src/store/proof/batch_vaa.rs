@@ -1,10 +1,12 @@
 use {
     crate::store::{
-        storage::Key,
-        PriceFeedsWithProof,
+        storage::{
+            Key,
+            StorageData,
+        },
+        PriceFeedsWithUpdateData,
         RequestTime,
         State,
-        StorageData,
         UnixTimestamp,
         UpdateData,
     },
@@ -68,7 +70,7 @@ pub fn get_price_feeds_with_proofs(
     state: State,
     price_ids: Vec<PriceIdentifier>,
     request_time: RequestTime,
-) -> Result<PriceFeedsWithProof> {
+) -> Result<PriceFeedsWithUpdateData> {
     let mut price_feeds = HashMap::new();
     let mut vaas: HashSet<Vec<u8>> = HashSet::new();
     for price_id in price_ids {
@@ -89,7 +91,10 @@ pub fn get_price_feeds_with_proofs(
     let proof = UpdateData {
         batch_vaa: vaas.into_iter().collect(),
     };
-    Ok(PriceFeedsWithProof { price_feeds, proof })
+    Ok(PriceFeedsWithUpdateData {
+        price_feeds,
+        update_data: proof,
+    })
 }
 
 
