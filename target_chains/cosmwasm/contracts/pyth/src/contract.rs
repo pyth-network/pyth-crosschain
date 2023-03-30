@@ -26,7 +26,6 @@ use {
         state::{
             config,
             config_read,
-            get_contract_version,
             price_feed_bucket,
             price_feed_read_bucket,
             set_contract_version,
@@ -95,15 +94,8 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// `Ok(Response::default())`
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
-    match get_contract_version(deps.storage) {
-        // We have contracts deployed on injective and osmosis where there is no contract version
-        // hence this arm will never be reached.
-        // this should be updated though in future migrations
-        Ok(_) => {}
-        Err(_) => {
-            set_contract_version(deps.storage, &String::from(CONTRACT_VERSION))?;
-        }
-    }
+    // a new contract version should be set everytime a contract is migrated
+    set_contract_version(deps.storage, &String::from(CONTRACT_VERSION))?;
     Ok(Response::default().add_attribute("Contract Version", CONTRACT_VERSION))
 }
 
@@ -553,9 +545,12 @@ pub fn get_valid_time_period(deps: &Deps) -> StdResult<Duration> {
 mod test {
     use {
         super::*,
-        crate::governance::GovernanceModule::{
-            Executor,
-            Target,
+        crate::{
+            governance::GovernanceModule::{
+                Executor,
+                Target,
+            },
+            state::get_contract_version,
         },
         cosmwasm_std::{
             coins,
