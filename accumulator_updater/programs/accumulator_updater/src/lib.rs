@@ -27,7 +27,7 @@ pub mod accumulator_updater {
     }
 
     pub fn set_allowed_programs(
-        ctx: Context<SetAllowedPrograms>,
+        ctx: Context<UpdateWhitelist>,
         allowed_programs: Vec<Pubkey>,
     ) -> Result<()> {
         let whitelist = &mut ctx.accounts.whitelist;
@@ -37,7 +37,7 @@ pub mod accumulator_updater {
     }
 
     pub fn update_whitelist_authority(
-        ctx: Context<UpdateWhitelistAuthority>,
+        ctx: Context<UpdateWhitelist>,
         new_authority: Pubkey,
     ) -> Result<()> {
         let whitelist = &mut ctx.accounts.whitelist;
@@ -181,26 +181,9 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
 }
 
-// Note: keeping two separate contexts for
-// this context & `UpdateWhitelistAuthority`
-// even though they are identical
-// because the ix input parameter types are also identical
-#[derive(Accounts)]
-pub struct SetAllowedPrograms<'info> {
-    #[account(mut)]
-    pub payer:     Signer<'info>,
-    pub authority: Signer<'info>,
-    #[account(
-    mut,
-    seeds = [b"accumulator".as_ref(), b"whitelist".as_ref()],
-    bump = whitelist.bump,
-    has_one = authority,
-    )]
-    pub whitelist: Account<'info, Whitelist>,
-}
 
 #[derive(Accounts)]
-pub struct UpdateWhitelistAuthority<'info> {
+pub struct UpdateWhitelist<'info> {
     #[account(mut)]
     pub payer:     Signer<'info>,
     pub authority: Signer<'info>,
