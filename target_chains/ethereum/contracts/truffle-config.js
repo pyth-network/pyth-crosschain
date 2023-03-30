@@ -239,6 +239,14 @@ module.exports = {
       provider: payerProvider(`https://devnet.neonevm.org`),
       network_id: 245022926,
     },
+    meter_testnet: {
+      provider: payerProvider("https://rpctest.meter.io"),
+      network_id: 83,
+    },
+    meter: {
+      provider: payerProvider("https://pokt.network"),
+      network_id: 82,
+    },
   },
 
   compilers: {
