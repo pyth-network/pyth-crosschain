@@ -18,16 +18,15 @@ This directory contains the code to perform all the steps. Read below for the de
 
 First, build the contracts within [the current directory](./). You must have Docker installed.
 
-NOTE: In order to build for Injective. We need to enable a feature in [Cargo.toml](./contracts/pyth/Cargo.toml) like this.
-
-```toml
-[features]
-default=["injective"]
-...
 ```
+cd ./tools
+npm ci
 
-```sh
-bash build.sh
+# if you want to build specifically for injective
+npm run build-contract -- --injective
+
+# else a generic cosmwasm contract can be build using
+npm run build-contract -- --cosmwasm
 ```
 
 This command will build and save the Pyth contract in the `artifacts` directory.
