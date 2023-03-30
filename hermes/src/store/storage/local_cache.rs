@@ -80,9 +80,10 @@ impl Storage for LocalCache {
                             }
                         }
 
-                        // Binary search returns Ok(idx) if the element is found at index idx or Err(idx) if it's not found which idx
-                        // is the index where the element should be inserted to keep the vector sorted. Getting idx within any of
-                        // the match arms will give us the index of the element that is closest after or equal to the requested time.
+                        // Binary search returns Ok(idx) if the element is found at index idx or Err(idx) if it's not
+                        // found which idx is the index where the element should be inserted to keep the vector sorted.
+                        // Getting idx within any of the match arms will give us the index of the element that is
+                        // closest after or equal to the requested time.
                         let idx = match key_cache.binary_search_by_key(&time, |record| record.time)
                         {
                             Ok(idx) => idx,

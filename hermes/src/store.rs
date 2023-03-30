@@ -39,14 +39,14 @@ pub enum StorageData {
 }
 
 #[derive(Clone, Default, Serialize, Deserialize)]
-pub struct Proof {
+pub struct UpdateData {
     pub batch_vaa: Vec<Vec<u8>>,
 }
 
 #[derive(Clone, Default)]
 pub struct PriceFeedsWithProof {
     pub price_feeds: HashMap<PriceIdentifier, PriceFeed>,
-    pub proof:       Proof,
+    pub proof:       UpdateData,
 }
 
 pub type State = Arc<Box<dyn Storage>>;
@@ -67,7 +67,11 @@ impl Store {
 
     // TODO: This should return the updated feeds so the subscribers can be notified.
     pub fn store_update(&self, update: Update) -> Result<()> {
-        proof::batch_vaa::store_update(self.state.clone(), update)
+        match update {
+            Update::Vaa(vaa_bytes) => {
+                proof::batch_vaa::store_vaa_update(self.state.clone(), vaa_bytes)
+            }
+        }
     }
 
     pub fn get_price_feeds_with_proof(

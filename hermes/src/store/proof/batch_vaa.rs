@@ -2,12 +2,11 @@ use {
     crate::store::{
         storage::Key,
         PriceFeedsWithProof,
-        Proof,
         RequestTime,
         State,
         StorageData,
         UnixTimestamp,
-        Update,
+        UpdateData,
     },
     anyhow::{
         anyhow,
@@ -39,32 +38,28 @@ pub struct PriceInfo {
 }
 
 
-pub fn store_update(state: State, update: Update) -> Result<()> {
-    match update {
-        Update::Vaa(vaa_bytes) => {
-            // FIXME: Vaa bytes might not be a valid Pyth BatchUpdate message nor originate from Our emitter. We should check that.
-            let vaa = VAA::from_bytes(&vaa_bytes)?;
-            // Ideally this part would be in a separate function/module when we add more proof types.
-            let batch_price_attestation =
-                BatchPriceAttestation::deserialize(vaa.payload.as_slice())
-                    .map_err(|_| anyhow!("Failed to deserialize VAA"))?;
+pub fn store_vaa_update(state: State, vaa_bytes: Vec<u8>) -> Result<()> {
+    // FIXME: Vaa bytes might not be a valid Pyth BatchUpdate message nor originate from Our emitter.
+    // We should check that.
+    let vaa = VAA::from_bytes(&vaa_bytes)?;
+    // Ideally this part would be in a separate function/module when we add more proof types.
+    let batch_price_attestation = BatchPriceAttestation::deserialize(vaa.payload.as_slice())
+        .map_err(|_| anyhow!("Failed to deserialize VAA"))?;
 
-            for price_attestation in batch_price_attestation.price_attestations {
-                let price_feed = price_attestation_to_price_feed(price_attestation);
+    for price_attestation in batch_price_attestation.price_attestations {
+        let price_feed = price_attestation_to_price_feed(price_attestation);
 
-                let publish_time = price_feed.get_price_unchecked().publish_time.try_into()?;
+        let publish_time = price_feed.get_price_unchecked().publish_time.try_into()?;
 
-                let price_info = PriceInfo {
-                    price_feed,
-                    vaa_bytes: vaa_bytes.clone(),
-                    publish_time,
-                };
+        let price_info = PriceInfo {
+            price_feed,
+            vaa_bytes: vaa_bytes.clone(),
+            publish_time,
+        };
 
-                let key = Key::new(price_feed.id.to_bytes().to_vec());
-                state.insert(key, publish_time, StorageData::BatchVaa(price_info))?;
-            }
-        }
-    };
+        let key = Key::new(price_feed.id.to_bytes().to_vec());
+        state.insert(key, publish_time, StorageData::BatchVaa(price_info))?;
+    }
     Ok(())
 }
 
@@ -91,16 +86,17 @@ pub fn get_price_feeds_with_proofs(
             }
         }
     }
-    let proof = Proof {
+    let proof = UpdateData {
         batch_vaa: vaas.into_iter().collect(),
     };
     Ok(PriceFeedsWithProof { price_feeds, proof })
 }
 
 
-///  This function converts a PriceAttestation to a PriceFeed.
-///  We cannot implmenet this function as From/Into trait because none of these types are defined in this crate. Ideally we need to move
-/// this method to the wormhole_attester sdk crate or have our own implementation of PriceFeed.
+/// Convert a PriceAttestation to a PriceFeed.
+///
+/// We cannot implmenet this function as From/Into trait because none of these types are defined in this crate.
+/// Ideally we need to move this method to the wormhole_attester sdk crate or have our own implementation of PriceFeed.
 pub fn price_attestation_to_price_feed(price_attestation: PriceAttestation) -> PriceFeed {
     if price_attestation.status == PriceStatus::Trading {
         PriceFeed::new(
