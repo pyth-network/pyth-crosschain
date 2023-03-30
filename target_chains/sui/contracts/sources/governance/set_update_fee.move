@@ -1,8 +1,11 @@
 module pyth::set_update_fee {
-    use wormhole::cursor;
+    use sui::math::{Self};
+
     use pyth::deserialize;
-    //use std::math64;
     use pyth::state::{Self, State};
+
+    use wormhole::cursor;
+
 
     friend pyth::governance;
 
@@ -15,7 +18,8 @@ module pyth::set_update_fee {
 
     public(friend) fun execute(pyth_state: &mut State, payload: vector<u8>) {
         let SetUpdateFee { mantissa, exponent } = from_byte_vec(payload);
-        let fee = apply_exponent(mantissa, exponent);
+        assert!(exponent <= 255, 0); // TODO - throw error that exponent does not fit in a u8
+        let fee = apply_exponent(mantissa, (exponent as u8));
         state::set_base_update_fee(pyth_state, fee);
     }
 
@@ -30,8 +34,7 @@ module pyth::set_update_fee {
         }
     }
 
-    fun apply_exponent(mantissa: u64, exponent: u64): u64 {
-        // TODO - how to do exponentiation in Sui?
-        mantissa * math64::pow(10, exponent)
+    fun apply_exponent(mantissa: u64, exponent: u8): u64 {
+        mantissa * math::pow(10, exponent)
     }
 }

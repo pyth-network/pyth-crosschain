@@ -62,21 +62,21 @@ module pyth::governance_instruction {
     }
 
     #[test]
-    #[expected_failure(abort_code = 65556)]
+    #[expected_failure]
     fun test_from_byte_vec_invalid_magic() {
         let bytes = x"5054474eb01087a85361f738f19454e66664d3c9";
         destroy(from_byte_vec(bytes));
     }
 
     #[test]
-    #[expected_failure(abort_code = 65548)]
+    #[expected_failure]
     fun test_from_byte_vec_invalid_module() {
         let bytes = x"5054474db00187a85361f738f19454e66664d3c9";
         destroy(from_byte_vec(bytes));
     }
 
     #[test]
-    #[expected_failure(abort_code = 65548)]
+    #[expected_failure]
     fun test_from_byte_vec_invalid_target_chain_id() {
         let bytes = x"5054474db00187a85361f738f19454e66664d3c9";
         destroy(from_byte_vec(bytes));

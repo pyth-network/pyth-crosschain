@@ -4,7 +4,7 @@ module pyth::governance {
     use pyth::data_source::{Self};
     use pyth::governance_instruction;
     use pyth::governance_action;
-    //use pyth::contract_upgrade;
+    use pyth::contract_upgrade;
     use pyth::set_governance_data_source;
     use pyth::set_data_sources;
     use pyth::set_stale_price_threshold;
@@ -16,30 +16,31 @@ module pyth::governance {
     use wormhole::state::{State as WormState};
 
     public entry fun execute_governance_instruction(
+        pyth_state : &mut State,
+        worm_state: &WormState,
         vaa_bytes: vector<u8>,
-        worm_state: &mut WormState,
         ctx: &mut TxContext
     ) {
-        let parsed_vaa = parse_and_verify_governance_vaa(vaa_bytes, ctx);
-        let instruction = governance_instruction::from_byte_vec(vaa::destroy(parsed_vaa));
+        let parsed_vaa = parse_and_verify_governance_vaa(pyth_state, worm_state, vaa_bytes, ctx);
+        let instruction = governance_instruction::from_byte_vec(vaa::take_payload(parsed_vaa));
 
         // Dispatch the instruction to the appropiate handler
         let action = governance_instruction::get_action(&instruction);
         if (action == governance_action::new_contract_upgrade()) {
             assert!(governance_instruction::get_target_chain_id(&instruction) != 0,
-                error::governance_contract_upgrade_chain_id_zero());
-            contract_upgrade::execute(governance_instruction::destroy(instruction));
+                0); // TODO - error::governance_contract_upgrade_chain_id_zero()
+            contract_upgrade::execute(worm_state, pyth_state, governance_instruction::destroy(instruction));
         } else if (action == governance_action::new_set_governance_data_source()) {
-            set_governance_data_source::execute(governance_instruction::destroy(instruction));
+            set_governance_data_source::execute(pyth_state, governance_instruction::destroy(instruction));
         } else if (action == governance_action::new_set_data_sources()) {
-            set_data_sources::execute(governance_instruction::destroy(instruction));
+            set_data_sources::execute(pyth_state, governance_instruction::destroy(instruction));
         } else if (action == governance_action::new_set_update_fee()) {
-            set_update_fee::execute(governance_instruction::destroy(instruction));
+            set_update_fee::execute(pyth_state, governance_instruction::destroy(instruction));
         } else if (action == governance_action::new_set_stale_price_threshold()) {
-            set_stale_price_threshold::execute(governance_instruction::destroy(instruction));
+            set_stale_price_threshold::execute(pyth_state, governance_instruction::destroy(instruction));
         } else {
             governance_instruction::destroy(instruction);
-            assert!(false, error::invalid_governance_action());
+            assert!(false, 0); // TODO - error::invalid_governance_action()
         }
     }
 
