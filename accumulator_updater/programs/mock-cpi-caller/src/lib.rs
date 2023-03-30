@@ -10,13 +10,14 @@ use {
             sysvar,
         },
     },
-    schema::{
+    message::{
         get_schemas,
         price::*,
+        AccumulatorSerializer,
     },
 };
 
-pub mod schema;
+pub mod message;
 declare_id!("Dg5PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
@@ -35,13 +36,14 @@ pub mod mock_cpi_caller {
 
             pyth_price_acct.init(params)?;
 
-            let price_full_data = PriceFull::from(&**pyth_price_acct).accumulator_serialize()?;
+            let price_full_data =
+                FullPriceMessage::from(&**pyth_price_acct).accumulator_serialize()?;
 
             account_data.push(price_full_data);
 
 
             let price_compact_data =
-                PriceCompact::from(&**pyth_price_acct).accumulator_serialize()?;
+                CompactPriceMessage::from(&**pyth_price_acct).accumulator_serialize()?;
             account_data.push(price_compact_data);
         }
 
@@ -205,13 +207,6 @@ pub struct AddPrice<'info> {
 }
 
 
-//Note: this will use anchor's default borsh serialization schema with the header
-//  #[account(zero_copy)] is alias for
-//
-// #[derive(Copy, Clone)]
-// #[derive(bytemuck::Zeroable)]
-// #[derive(bytemuck::Pod)]
-// #[repr(C)]
 #[account(zero_copy)]
 #[derive(InitSpace)]
 pub struct PriceAccount {

@@ -43,9 +43,10 @@ describe("accumulator_updater", () => {
     console.info(`whitelist: ${JSON.stringify(whitelist)}`);
   });
 
-  it("Adds a program to the whitelist", async () => {
+  it("Sets allowed programs to the whitelist", async () => {
+    const allowedPrograms = [mockCpiProg.programId];
     await accumulatorUpdaterProgram.methods
-      .addAllowedProgram(mockCpiProg.programId)
+      .setAllowedPrograms(allowedPrograms)
       .accounts({
         authority: whitelistAuthority.publicKey,
       })
@@ -55,11 +56,12 @@ describe("accumulator_updater", () => {
       whitelistPubkey
     );
     console.info(`whitelist after add: ${JSON.stringify(whitelist)}`);
-
-    assert.isTrue(
-      whitelist.allowedPrograms
-        .map((pk) => pk.toString())
-        .includes(mockCpiProg.programId.toString())
+    const whitelistAllowedPrograms = whitelist.allowedPrograms.map((pk) =>
+      pk.toString()
+    );
+    assert.deepEqual(
+      whitelistAllowedPrograms,
+      allowedPrograms.map((p) => p.toString())
     );
   });
 
@@ -218,40 +220,37 @@ type AccumulatorInputHeader = IdlTypes<AccumulatorUpdater>["AccumulatorHeader"];
 
 // Parses AccumulatorInput.data into a PriceAccount or PriceOnly object based on the
 // accountType and accountSchema.
-//
-// AccumulatorInput.data for AccumulatorInput<PriceAccount> will
-// have mockCpiCaller::PriceAccount.discriminator()
-// AccumulatorInput<PriceOnly> will not since its not an account
 function parseAccumulatorInput({
   header,
   data,
 }: {
   header: AccumulatorInputHeader;
   data: Buffer;
-}): AccumulatorPriceAccount {
+}): AccumulatorPriceMessage {
   console.log(`header: ${JSON.stringify(header)}`);
   assert.strictEqual(header.accountType, 3);
   if (header.accountSchema === 0) {
     console.log(`[full]data: ${data.toString("hex")}`);
-    return parsePriceFull(data);
+    return parseFullPriceMessage(data);
   } else {
     console.log(`[compact]data: ${data.toString("hex")}`);
-    return parsePriceCompact(data);
+    return parseCompactPriceMessage(data);
   }
 }
 
 //TODO: follow wormhole sdk parsing structure?
 // - https://github.com/wormhole-foundation/wormhole/blob/main/sdk/js/src/vaa/generic.ts
-type AccumulatorPriceAccount = PriceFull | PriceCompact;
+type AccumulatorPriceMessage = FullPriceMessage | CompactPriceMessage;
 
-type PriceFull = {
+type FullPriceMessage = {
   id: anchor.BN;
   price: anchor.BN;
   priceExpo: anchor.BN;
   ema: anchor.BN;
   emaExpo: anchor.BN;
 };
-function parsePriceFull(data: Buffer): PriceFull {
+
+function parseFullPriceMessage(data: Buffer): FullPriceMessage {
   return {
     id: new anchor.BN(data.subarray(0, 8), "be"),
     price: new anchor.BN(data.subarray(8, 16), "be"),
@@ -261,13 +260,13 @@ function parsePriceFull(data: Buffer): PriceFull {
   };
 }
 
-type PriceCompact = {
+type CompactPriceMessage = {
   id: anchor.BN;
   price: anchor.BN;
   priceExpo: anchor.BN;
 };
 
-function parsePriceCompact(data: Buffer): PriceCompact {
+function parseCompactPriceMessage(data: Buffer): CompactPriceMessage {
   return {
     id: new anchor.BN(data.subarray(0, 8), "be"),
     price: new anchor.BN(data.subarray(8, 16), "be"),

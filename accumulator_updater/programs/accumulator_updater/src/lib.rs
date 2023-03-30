@@ -26,13 +26,13 @@ pub mod accumulator_updater {
         Ok(())
     }
 
-    pub fn add_allowed_program(
-        ctx: Context<AddAllowedProgram>,
-        allowed_program: Pubkey,
+    pub fn set_allowed_programs(
+        ctx: Context<SetAllowedPrograms>,
+        allowed_programs: Vec<Pubkey>,
     ) -> Result<()> {
         let whitelist = &mut ctx.accounts.whitelist;
-        whitelist.validate_program(allowed_program)?;
-        whitelist.allowed_programs.push(allowed_program);
+        whitelist.validate_programs(&allowed_programs)?;
+        whitelist.allowed_programs = allowed_programs;
         Ok(())
     }
 
@@ -118,18 +118,21 @@ pub struct Whitelist {
 }
 
 impl Whitelist {
-    pub fn validate_program(&self, allowed_program: Pubkey) -> Result<()> {
-        require_keys_neq!(allowed_program, Pubkey::default());
+    pub fn validate_programs(&self, allowed_programs: &[Pubkey]) -> Result<()> {
         require!(
-            !self.allowed_programs.contains(&allowed_program),
-            AccumulatorUpdaterError::DuplicateAllowedProgram
+            !self.allowed_programs.contains(&Pubkey::default()),
+            AccumulatorUpdaterError::InvalidAllowedProgram
+        );
+        require_gte!(
+            32,
+            allowed_programs.len(),
+            AccumulatorUpdaterError::MaximumAllowedProgramsExceeded
         );
         Ok(())
     }
 
     pub fn validate_new_authority(&self, new_authority: Pubkey) -> Result<()> {
         require_keys_neq!(new_authority, Pubkey::default());
-        require_keys_neq!(self.authority, new_authority);
         Ok(())
     }
 }
@@ -183,7 +186,7 @@ pub struct Initialize<'info> {
 // even though they are identical
 // because the ix input parameter types are also identical
 #[derive(Accounts)]
-pub struct AddAllowedProgram<'info> {
+pub struct SetAllowedPrograms<'info> {
     #[account(mut)]
     pub payer:     Signer<'info>,
     pub authority: Signer<'info>,
@@ -340,4 +343,8 @@ pub enum AccumulatorUpdaterError {
     SerializeError,
     #[msg("Whitelist admin required on initialization")]
     WhitelistAdminRequired,
+    #[msg("Invalid allowed program")]
+    InvalidAllowedProgram,
+    #[msg("Maximum number of allowed programs exceeded")]
+    MaximumAllowedProgramsExceeded,
 }

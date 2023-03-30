@@ -1,5 +1,8 @@
 use {
-    crate::PriceAccount,
+    crate::{
+        message::AccumulatorSerializer,
+        PriceAccount,
+    },
     anchor_lang::prelude::*,
     bytemuck::{
         Pod,
@@ -12,14 +15,14 @@ use {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Pod, Zeroable)]
-pub struct PriceCompact {
+pub struct CompactPriceMessage {
     pub price_expo: u64,
     pub price:      u64,
     pub id:         u64,
 }
 
 
-impl AccumulatorSerializer for PriceCompact {
+impl AccumulatorSerializer for CompactPriceMessage {
     fn accumulator_serialize(&self) -> Result<Vec<u8>> {
         let mut bytes = vec![];
         bytes.write_all(&self.id.to_be_bytes())?;
@@ -29,7 +32,7 @@ impl AccumulatorSerializer for PriceCompact {
     }
 }
 
-impl From<&PriceAccount> for PriceCompact {
+impl From<&PriceAccount> for CompactPriceMessage {
     fn from(other: &PriceAccount) -> Self {
         Self {
             id:         other.id,
@@ -42,7 +45,7 @@ impl From<&PriceAccount> for PriceCompact {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Pod, Zeroable)]
-pub struct PriceFull {
+pub struct FullPriceMessage {
     pub id:         u64,
     pub price:      u64,
     pub price_expo: u64,
@@ -50,7 +53,7 @@ pub struct PriceFull {
     pub ema_expo:   u64,
 }
 
-impl From<&PriceAccount> for PriceFull {
+impl From<&PriceAccount> for FullPriceMessage {
     fn from(other: &PriceAccount) -> Self {
         Self {
             id:         other.id,
@@ -62,11 +65,7 @@ impl From<&PriceAccount> for PriceFull {
     }
 }
 
-pub trait AccumulatorSerializer {
-    fn accumulator_serialize(&self) -> Result<Vec<u8>>;
-}
-
-impl AccumulatorSerializer for PriceFull {
+impl AccumulatorSerializer for FullPriceMessage {
     fn accumulator_serialize(&self) -> Result<Vec<u8>> {
         let mut bytes = vec![];
         bytes.write_all(&self.id.to_be_bytes())?;
