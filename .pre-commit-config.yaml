@@ -65,12 +65,6 @@ repos:
         entry: cargo +nightly fmt --manifest-path ./hermes/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: hermes
-      - id: cargo-clippy-hermes
-        name: Cargo clippy for Pyth Hermes
-        language: "rust"
-        entry: cargo +nightly clippy --manifest-path ./hermes/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
-        pass_filenames: false
-        files: hermes
       # Hooks for accumulator updater contract
       - id: cargo-fmt-accumulator-updater
         name: Cargo format for accumulator updater contract
