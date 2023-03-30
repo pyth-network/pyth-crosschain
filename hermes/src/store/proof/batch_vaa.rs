@@ -1,13 +1,11 @@
 use {
     crate::store::{
-        backend::{
-            Backend,
-            Key,
-        },
-        BackendData,
+        storage::Key,
         PriceFeedsWithProof,
         Proof,
         RequestTime,
+        State,
+        StorageData,
         UnixTimestamp,
         Update,
     },
@@ -41,7 +39,7 @@ pub struct PriceInfo {
 }
 
 
-pub fn store_update(backend: Backend, update: Update) -> Result<()> {
+pub fn store_update(state: State, update: Update) -> Result<()> {
     match update {
         Update::Vaa(vaa_bytes) => {
             // FIXME: Vaa bytes might not be a valid Pyth BatchUpdate message nor originate from Our emitter. We should check that.
@@ -63,7 +61,7 @@ pub fn store_update(backend: Backend, update: Update) -> Result<()> {
                 };
 
                 let key = Key::new(price_feed.id.to_bytes().to_vec());
-                backend.insert(key, publish_time, BackendData::BatchVaa(price_info))?;
+                state.insert(key, publish_time, StorageData::BatchVaa(price_info))?;
             }
         }
     };
@@ -72,7 +70,7 @@ pub fn store_update(backend: Backend, update: Update) -> Result<()> {
 
 
 pub fn get_price_feeds_with_proofs(
-    backend: Backend,
+    state: State,
     price_ids: Vec<PriceIdentifier>,
     request_time: RequestTime,
 ) -> Result<PriceFeedsWithProof> {
@@ -80,10 +78,10 @@ pub fn get_price_feeds_with_proofs(
     let mut vaas: HashSet<Vec<u8>> = HashSet::new();
     for price_id in price_ids {
         let key = Key::new(price_id.to_bytes().to_vec());
-        let maybe_data = backend.get(key, request_time.clone())?;
+        let maybe_data = state.get(key, request_time.clone())?;
 
         match maybe_data {
-            Some(BackendData::BatchVaa(price_info)) => {
+            Some(StorageData::BatchVaa(price_info)) => {
                 price_feeds.insert(price_info.price_feed.id, price_info.price_feed);
                 vaas.insert(price_info.vaa_bytes);
             }

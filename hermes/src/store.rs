@@ -1,7 +1,7 @@
 use {
     self::{
-        backend::Backend,
         proof::batch_vaa::PriceInfo,
+        storage::Storage,
     },
     anyhow::Result,
     pyth_sdk::{
@@ -12,11 +12,14 @@ use {
         Deserialize,
         Serialize,
     },
-    std::collections::HashMap,
+    std::{
+        collections::HashMap,
+        sync::Arc,
+    },
 };
 
-mod backend;
 mod proof;
+mod storage;
 
 pub type UnixTimestamp = u64;
 
@@ -31,7 +34,7 @@ pub enum Update {
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub enum BackendData {
+pub enum StorageData {
     BatchVaa(PriceInfo),
 }
 
@@ -46,21 +49,25 @@ pub struct PriceFeedsWithProof {
     pub proof:       Proof,
 }
 
+pub type State = Arc<Box<dyn Storage>>;
+
 #[derive(Clone)]
 pub struct Store {
-    pub backend: Backend,
+    pub state: State,
 }
 
 impl Store {
     pub fn new_with_local_cache(max_size_per_key: usize) -> Self {
         Self {
-            backend: backend::local_cache::LocalCache::new_shared(max_size_per_key),
+            state: Arc::new(Box::new(storage::local_cache::LocalCache::new(
+                max_size_per_key,
+            ))),
         }
     }
 
     // TODO: This should return the updated feeds so the subscribers can be notified.
     pub fn store_update(&self, update: Update) -> Result<()> {
-        proof::batch_vaa::store_update(self.backend.clone(), update)
+        proof::batch_vaa::store_update(self.state.clone(), update)
     }
 
     pub fn get_price_feeds_with_proof(
@@ -68,6 +75,6 @@ impl Store {
         price_ids: Vec<PriceIdentifier>,
         request_time: RequestTime,
     ) -> Result<PriceFeedsWithProof> {
-        proof::batch_vaa::get_price_feeds_with_proofs(self.backend.clone(), price_ids, request_time)
+        proof::batch_vaa::get_price_feeds_with_proofs(self.state.clone(), price_ids, request_time)
     }
 }

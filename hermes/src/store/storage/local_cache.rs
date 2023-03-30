@@ -1,10 +1,9 @@
 use {
     super::{
         super::{
-            BackendData,
             RequestTime,
+            StorageData,
         },
-        Backend,
         Key,
         Storage,
         UnixTimestamp,
@@ -20,7 +19,7 @@ use {
 #[derive(Clone, PartialEq, Debug)]
 pub struct Record {
     pub time:  UnixTimestamp,
-    pub value: BackendData,
+    pub value: StorageData,
 }
 
 #[derive(Clone)]
@@ -30,11 +29,11 @@ pub struct LocalCache {
 }
 
 impl LocalCache {
-    pub fn new_shared(max_size_per_key: usize) -> Backend {
-        Arc::new(Box::new(Self {
+    pub fn new(max_size_per_key: usize) -> Self {
+        Self {
             cache: Arc::new(DashMap::new()),
             max_size_per_key,
-        }))
+        }
     }
 }
 
@@ -45,7 +44,7 @@ impl Storage for LocalCache {
     /// the oldest record in the cache if the max_size is reached. Entries are
     /// usually added in increasing order and likely to be inserted near the
     /// end of the deque. The function is optimized for this specific case.
-    fn insert(&self, key: Key, time: UnixTimestamp, value: BackendData) -> Result<()> {
+    fn insert(&self, key: Key, time: UnixTimestamp, value: StorageData) -> Result<()> {
         let mut key_cache = self.cache.entry(key).or_insert_with(VecDeque::new);
 
         let record = Record { time, value };
@@ -67,7 +66,7 @@ impl Storage for LocalCache {
         Ok(())
     }
 
-    fn get(&self, key: Key, request_time: RequestTime) -> Result<Option<BackendData>> {
+    fn get(&self, key: Key, request_time: RequestTime) -> Result<Option<StorageData>> {
         match self.cache.get(&key) {
             Some(key_cache) => {
                 let record = match request_time {

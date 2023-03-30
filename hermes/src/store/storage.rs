@@ -1,16 +1,13 @@
 use {
     super::{
-        BackendData,
         RequestTime,
+        StorageData,
         UnixTimestamp,
     },
     anyhow::Result,
-    std::{
-        ops::{
-            Deref,
-            DerefMut,
-        },
-        sync::Arc,
+    std::ops::{
+        Deref,
+        DerefMut,
     },
 };
 
@@ -47,8 +44,6 @@ impl DerefMut for Key {
 /// under a separate key. The caller is responsible for specifying the right
 /// key for the proof data they wish to access.
 pub trait Storage: Sync + Send {
-    fn insert(&self, key: Key, time: UnixTimestamp, value: BackendData) -> Result<()>;
-    fn get(&self, key: Key, request_time: RequestTime) -> Result<Option<BackendData>>;
+    fn insert(&self, key: Key, time: UnixTimestamp, value: StorageData) -> Result<()>;
+    fn get(&self, key: Key, request_time: RequestTime) -> Result<Option<StorageData>>;
 }
-
-pub type Backend = Arc<Box<dyn Storage>>;
