@@ -75,6 +75,10 @@ impl Store {
         price_ids: Vec<PriceIdentifier>,
         request_time: RequestTime,
     ) -> Result<PriceFeedsWithUpdateData> {
-        proof::batch_vaa::get_price_feeds_with_proofs(self.state.clone(), price_ids, request_time)
+        proof::batch_vaa::get_price_feeds_with_update_data(
+            self.state.clone(),
+            price_ids,
+            request_time,
+        )
     }
 }

@@ -28,7 +28,7 @@ use {
 
 pub enum RestError {
     InvalidPriceId,
-    ProofNotFound,
+    UpdateDataNotFound,
 }
 
 impl IntoResponse for RestError {
@@ -37,7 +37,9 @@ impl IntoResponse for RestError {
             RestError::InvalidPriceId => {
                 (StatusCode::BAD_REQUEST, "Invalid Price Id").into_response()
             }
-            RestError::ProofNotFound => (StatusCode::NOT_FOUND, "Proof not found").into_response(),
+            RestError::UpdateDataNotFound => {
+                (StatusCode::NOT_FOUND, "Update data not found").into_response()
+            }
         }
     }
 }
@@ -49,7 +51,8 @@ pub struct LatestVaaQueryParams {
 
 /// REST endpoint /latest_vaas?ids[]=...&ids[]=...&ids[]=...
 ///
-/// TODO: This endpoint returns proof as a byte array. We should probably return a base64 or hex string.
+/// TODO: This endpoint returns update data as an array of base64 encoded strings. We want
+/// to support other formats such as hex in the future.
 pub async fn latest_vaas(
     State(state): State<super::State>,
     Query(params): Query<LatestVaaQueryParams>,
@@ -62,12 +65,12 @@ pub async fn latest_vaas(
         .map(PriceIdentifier::from_hex)
         .collect::<Result<Vec<PriceIdentifier>, _>>()
         .map_err(|_| RestError::InvalidPriceId)?;
-    let price_feeds_with_proof = state
-        .proof_store
+    let price_feeds_with_update_data = state
+        .store
         .get_price_feeds_with_update_data(price_ids, RequestTime::Latest)
-        .map_err(|_| RestError::ProofNotFound)?;
+        .map_err(|_| RestError::UpdateDataNotFound)?;
     Ok(Json(
-        price_feeds_with_proof
+        price_feeds_with_update_data
             .update_data
             .batch_vaa
             .iter()
@@ -92,12 +95,15 @@ pub async fn latest_price_feeds(
         .map(PriceIdentifier::from_hex)
         .collect::<Result<Vec<PriceIdentifier>, _>>()
         .map_err(|_| RestError::InvalidPriceId)?;
-    let price_feeds_with_proof = state
-        .proof_store
+    let price_feeds_with_update_data = state
+        .store
         .get_price_feeds_with_update_data(price_ids, RequestTime::Latest)
-        .map_err(|_| RestError::ProofNotFound)?;
+        .map_err(|_| RestError::UpdateDataNotFound)?;
     Ok(Json(
-        price_feeds_with_proof.price_feeds.into_values().collect(),
+        price_feeds_with_update_data
+            .price_feeds
+            .into_values()
+            .collect(),
     ))
 }
 

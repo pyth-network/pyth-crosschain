@@ -17,12 +17,12 @@ mod rest;
 
 #[derive(Clone)]
 pub struct State {
-    pub proof_store: Store,
+    pub store: Store,
 }
 
 impl State {
-    pub fn new(proof_store: Store) -> Self {
-        Self { proof_store }
+    pub fn new(store: Store) -> Self {
+        Self { store }
     }
 }
 
@@ -47,7 +47,7 @@ pub async fn spawn(rpc_addr: String, store: Store) -> Result<()> {
     tokio::spawn(async move {
         loop {
             if let Ok(observation) = OBSERVATIONS.1.lock().unwrap().recv() {
-                if let Err(e) = state.proof_store.store_update(Update::Vaa(observation)) {
+                if let Err(e) = state.store.store_update(Update::Vaa(observation)) {
                     log::error!("Failed to process VAA: {:?}", e);
                 }
             }

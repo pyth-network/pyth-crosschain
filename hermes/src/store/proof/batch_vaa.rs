@@ -44,7 +44,6 @@ pub fn store_vaa_update(state: State, vaa_bytes: Vec<u8>) -> Result<()> {
     // FIXME: Vaa bytes might not be a valid Pyth BatchUpdate message nor originate from Our emitter.
     // We should check that.
     let vaa = VAA::from_bytes(&vaa_bytes)?;
-    // Ideally this part would be in a separate function/module when we add more proof types.
     let batch_price_attestation = BatchPriceAttestation::deserialize(vaa.payload.as_slice())
         .map_err(|_| anyhow!("Failed to deserialize VAA"))?;
 
@@ -66,7 +65,7 @@ pub fn store_vaa_update(state: State, vaa_bytes: Vec<u8>) -> Result<()> {
 }
 
 
-pub fn get_price_feeds_with_proofs(
+pub fn get_price_feeds_with_update_data(
     state: State,
     price_ids: Vec<PriceIdentifier>,
     request_time: RequestTime,
@@ -88,12 +87,12 @@ pub fn get_price_feeds_with_proofs(
             }
         }
     }
-    let proof = UpdateData {
+    let update_data = UpdateData {
         batch_vaa: vaas.into_iter().collect(),
     };
     Ok(PriceFeedsWithUpdateData {
         price_feeds,
-        update_data: proof,
+        update_data,
     })
 }
 
