@@ -4,7 +4,8 @@ use {
         pubkey::Pubkey,
         instruction::Instruction,
     },
-    crate::instruction
+    crate::instruction as receiver_instruction,
+    crate::accounts as receiver_accounts,
 };
 use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
@@ -23,7 +24,9 @@ async fn test_add_price() {
 
     let mut sim = PythSimulator::new().await;
 
-    let inst = Instruction::new_with_bytes(sim.program_id, &(instruction::Update { data: vec![] }.data()), vec![]);
+    let accounts = receiver_accounts::Update::populate(&sim.genesis_keypair.pubkey()).to_account_metas(None);
+
+    let inst = Instruction::new_with_bytes(sim.program_id, &(receiver_instruction::Update { data: vec![] }.data()), accounts);
 
     let result = sim.process_ix(inst, &vec![], &sim.genesis_keypair.insecure_clone()).await.unwrap();
 
