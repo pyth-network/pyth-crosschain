@@ -29,3 +29,8 @@ Transaction successful : 3L1vxzSHQv6B6TwtoMv2Y6m7vFGz3hzqApGHEhHSLA9Jn5dNKeWRWKv
 Receiver program ID is 5dXnHcDXdXaiEp9QgknCDPsEhJStSqZqJ4ATirWfEqeY
 Transaction successful : u5y9Hqc18so3BnjSUvZkLZR4mvA8zkiBgzGKHSEYyWkHQhH3uQatM7xWf4kdrhjZFVGbfBLdR8RJJUmuf28ePtG
 ```
+
+## Unit tests
+
+Run `anchor run test` to run the unit tests in the `src/tests/` directory.
+**Warning**: do not confuse this command with `anchor test`, which doesn't do anything useful.

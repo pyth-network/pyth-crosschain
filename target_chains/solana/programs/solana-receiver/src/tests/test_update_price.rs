@@ -21,12 +21,11 @@ AnchorDeserialize,
 };
 use rand::rngs::OsRng;
 
-use crate::tests::simulator::PythSimulator;
-use crate::tests::simulator::sighash;
+use crate::tests::simulator::ProgramSimulator;
 
 #[tokio::test]
-async fn test_add_price() {
-    let mut sim = PythSimulator::new().await;
+async fn test_update_price() {
+    let mut sim = ProgramSimulator::new().await;
 
     let message = b"hello world";
     let message_hash = {
@@ -45,5 +44,4 @@ async fn test_add_price() {
     let inst = Instruction::new_with_bytes(sim.program_id, &instruction_data, accounts);
 
     let result = sim.process_ix(inst, &vec![], &sim.genesis_keypair.insecure_clone()).await.unwrap();
-
 }
