@@ -20,8 +20,8 @@ const argv = yargs(hideBin(process.argv))
 // we need to update the toml file to have a feature on - default=['injective']
 // editing and writing the toml file before building the contract for injective
 function injectivePreSetup(contractTomlFilePath: string) {
-  const tomlContentStr = readFileSync(contractTomlFilePath, "utf-8");
-  const parsedToml = toml.parse(tomlContentStr);
+  const originalTomlContentStr = readFileSync(contractTomlFilePath, "utf-8");
+  const parsedToml = toml.parse(originalTomlContentStr);
 
   // add injective feature to the cargo.toml
   // @ts-ignore
@@ -38,19 +38,11 @@ function injectivePreSetup(contractTomlFilePath: string) {
   });
 
   writeFileSync(contractTomlFilePath, updatedToml);
-}
 
-// we are using `git restore` to restore the toml file to it's original content.
-// we can also remove a feature from parsedToml and stringify it as above.
-// But stringifying it gives us an output with different indentation
-// and other such edits.
-function injectivePostCleanup(contractTomlFilePath: string) {
-  exec(`git restore ${contractTomlFilePath}`, (error, _stdout, _stderr) => {
-    if (error !== null)
-      console.log(
-        "Error restoring cargo.toml file. Please restore it manually."
-      );
-  });
+  // after contract compilation we need to reset the original content of the toml file
+  return function injectivePostCleanup() {
+    writeFileSync(contractTomlFilePath, originalTomlContentStr);
+  };
 }
 
 function build() {
@@ -61,14 +53,16 @@ function build() {
 
   const contractTomlFilePath = "../contracts/pyth/Cargo.toml";
 
-  if (argv.injective === true) injectivePreSetup(contractTomlFilePath);
+  let cleanup = () => {};
+  if (argv.injective === true)
+    cleanup = injectivePreSetup(contractTomlFilePath);
 
   const buildCommand = `
           docker run --rm -v "$(cd ..; pwd)":/code \
           -v $(cd ../../../wormhole_attester; pwd):/wormhole_attester \
           --mount type=volume,source="$(basename "$(cd ..; pwd)")_cache",target=/code/target \
           --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-          cosmwasm/workspace-optimizer-arm64:0.12.11
+          cosmwasm/workspace-optimizer:0.12.11
           `;
 
   // build contract by running the command
@@ -76,7 +70,7 @@ function build() {
     console.log(stdout);
     console.log(stderr);
 
-    if (argv.injective === true) injectivePostCleanup(contractTomlFilePath);
+    cleanup();
   });
 }
 
