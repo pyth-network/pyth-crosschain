@@ -15,8 +15,7 @@ use {
     pyth_wormhole_attester_sdk::BatchPriceAttestation,
     solana_program::{ keccak, secp256k1_recover::secp256k1_recover },
 };
-use wormhole_solana::instructions::PostVAAData;
-
+use hex::ToHex;
 use crate::error::ReceiverError::*;
 
 declare_id!("pythKkWXoywbvTQVcWrNDz5ENvWteF7tem7xzW52NBK");
@@ -24,8 +23,6 @@ declare_id!("pythKkWXoywbvTQVcWrNDz5ENvWteF7tem7xzW52NBK");
 #[program]
 pub mod pyth_solana_receiver {
     use super::*;
-
-    pub const PROGRAM_ID: &str = "pythKkWXoywbvTQVcWrNDz5ENvWteF7tem7xzW52NBK";
 
     pub fn decode_posted_vaa(ctx: Context<DecodePostedVaa>) -> Result<()> {
         let posted_vaa = &ctx.accounts.posted_vaa.payload;
@@ -50,34 +47,30 @@ pub mod pyth_solana_receiver {
         Ok(())
     }
 
-    pub fn update(ctx: Context<Update>, data: Vec<u8>) -> Result<()> {
-        // FIXME: more security checks
-        // ctx.accounts.guardian_set.index == vaa_data.index;
-
-        /*
+    pub fn update(ctx: Context<Update>, data: Vec<u8>, recovery_id: u8, signature: [u8; 64]) -> Result<()> {
+        // This costs about 10k compute units
         let message_hash = {
             let mut hasher = keccak::Hasher::default();
-            hasher.hash(&instruction.message);
+            hasher.hash(&data);
             hasher.result()
         };
 
+        // This costs about 25k compute units
         let recovered_pubkey = secp256k1_recover(
             &message_hash.0,
-            instruction.recovery_id,
-            &instruction.signature,
+            recovery_id,
+            &signature,
         ).map_err(|_| ProgramError::InvalidArgument)?;
-*/
 
-            //
-            //     // If we're using this function for signature verification then we
-            //     // need to check the pubkey is an expected value.
-            //     // Here we are checking the secp256k1 pubkey against a known authorized pubkey.
-            //     if recovered_pubkey.0 != AUTHORIZED_PUBLIC_KEY {
-            //         return Err(ProgramError::InvalidArgument);
-            //     }
+        msg!("Recovered key: {}", recovered_pubkey.0.encode_hex::<String>());
 
+        // TODO: Check the pubkey is an expected value.
+        // Here we are checking the secp256k1 pubkey against a known authorized pubkey.
+        //
+        // if recovered_pubkey.0 != AUTHORIZED_PUBLIC_KEY {
+        //  return Err(ProgramError::InvalidArgument);
+        // }
 
-        // ctx.accounts.guardian_set.keys[0].
         Ok(())
     }
 }

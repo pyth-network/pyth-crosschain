@@ -1,4 +1,5 @@
 use {
+    crate::ID,
     solana_program::{
         bpf_loader_upgradeable::{
             self,
@@ -36,7 +37,6 @@ use {
         mem::size_of,
         path::Path,
     },
-    super::super::pyth_solana_receiver::PROGRAM_ID,
 };
 
 /// Simulator for the state of the pyth program on Solana. You can run solana transactions against
@@ -64,7 +64,7 @@ impl PythSimulator {
 
 
         let mut program_test = ProgramTest::default();
-        let program_key = Pubkey::try_from(PROGRAM_ID).unwrap();
+        let program_key = Pubkey::try_from(ID).unwrap();
         // This PDA is the actual address in the real world
         // https://docs.rs/solana-program/1.6.4/solana_program/bpf_loader_upgradeable/index.html
         let (programdata_key, _) =
