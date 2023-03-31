@@ -4,10 +4,16 @@ use {
         pubkey::Pubkey,
         instruction::Instruction,
     },
-    crate::pyth_solana_receiver
+    crate::instruction
 };
 use anchor_lang::prelude::*;
 use anchor_lang::Discriminator;
+use anchor_lang::{
+Owner,
+ToAccountMetas,
+InstructionData,
+AnchorDeserialize,
+};
 
 use crate::tests::simulator::PythSimulator;
 use crate::tests::simulator::sighash;
@@ -17,9 +23,9 @@ async fn test_add_price() {
 
     let mut sim = PythSimulator::new().await;
 
-    let instruction = Instruction::new_with_bytes(sim.program_id, &(pyth_solana_receiver::instruction::Update.data()), vec![]);
+    let inst = Instruction::new_with_bytes(sim.program_id, &(instruction::Update { data: vec![] }.data()), vec![]);
 
-    let result = sim.process_ix(instruction, &vec![], &sim.genesis_keypair.insecure_clone()).await.unwrap();
+    let result = sim.process_ix(inst, &vec![], &sim.genesis_keypair.insecure_clone()).await.unwrap();
 
 }
 
