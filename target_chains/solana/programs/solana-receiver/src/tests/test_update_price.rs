@@ -1,4 +1,3 @@
-include!(concat!(env!("IDL_FILE")));
 use pyth_solana_receiver::PythSolanaReceiver;
 use solana_program_test::processor;
 
@@ -20,19 +19,13 @@ async fn test_add_price() {
 
     let mut sim = PythSimulator::new().await;
 
-    let instruction_data = pyth_solana_receiver::update_price(vec![]).try_to_vec().unwrap();
+    let instruction_data = vec![crate::sighash("global", "update_price")];
+
     let instruction = solana_sdk::instruction::Instruction {
         program_id,
         accounts: vec![],
         data: instruction_data,
     };
-
-
-    anchor_client::program(sim.program_id);
-
-    // let discriminator = InstructionData::data("pyth_solana_receiver:update_price");
-
-    pyth_solana_receiver::update_price
 
     let instruction = Instruction::new_with_bytes(sim.program_id, &discriminator, vec![]);
 
