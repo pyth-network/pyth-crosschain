@@ -157,11 +157,7 @@ impl ProgramSimulator {
         let instruction =
             system_instruction::transfer(&self.genesis_keypair.pubkey(), to, lamports);
 
-        self.process_ix(instruction, &vec![], &copy_keypair(&self.genesis_keypair))
+        self.process_ix(instruction, &vec![], &self.genesis_keypair.insecure_clone())
             .await
     }
-}
-
-pub fn copy_keypair(keypair: &Keypair) -> Keypair {
-    Keypair::from_bytes(&keypair.to_bytes()).unwrap()
 }
