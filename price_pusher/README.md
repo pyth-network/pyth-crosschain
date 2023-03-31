@@ -46,7 +46,9 @@ You can get the list of available price feeds from
 To run the price pusher, please run the following commands, replacing the command line arguments as necessary:
 
 ```sh
-npm install # Only run it the first time
+# Only run it the first time to build the code
+npm install
+npx lerna run build
 
 # For EVM
 npm run start -- evm --endpoint wss://example-rpc.com \

@@ -16,3 +16,4 @@ bigtable-writer.json
 tsconfig.tsbuildinfo
 *~
 *mnemonic*
+.envrc

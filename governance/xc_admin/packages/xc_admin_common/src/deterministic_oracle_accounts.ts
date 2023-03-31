@@ -9,7 +9,7 @@ import {
   SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
-import { OPS_KEY } from "./multisig";
+import { PRICE_FEED_OPS_KEY } from "./multisig";
 
 /**
  * Get seed for deterministic creation of a price/product account
@@ -58,7 +58,7 @@ export async function findDetermisticAccountAddress(
 ): Promise<[PublicKey, string]> {
   const seed: string = getSeed(type, symbol);
   const address: PublicKey = await PublicKey.createWithSeed(
-    OPS_KEY,
+    PRICE_FEED_OPS_KEY,
     seed,
     getPythProgramKeyForCluster(cluster)
   );

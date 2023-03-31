@@ -37,6 +37,7 @@ pub type Observation = Vec<u8>;
 // A Static Channel to pipe the `Observation` from the callback into the local Rust handler for
 // observation messages. It has to be static for now because there's no way to capture state in
 // the callback passed into Go-land.
+// TODO: Move this channel to the module level that spawns the services
 lazy_static::lazy_static! {
     pub static ref OBSERVATIONS: (
         Mutex<Sender<Observation>>,

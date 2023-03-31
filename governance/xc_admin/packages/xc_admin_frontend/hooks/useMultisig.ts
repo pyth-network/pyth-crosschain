@@ -18,26 +18,14 @@ import {
   isRemoteCluster,
   MultisigInstruction,
   MultisigParser,
+  PRICE_FEED_MULTISIG,
   PythMultisigInstruction,
   UnrecognizedProgram,
+  UPGRADE_MULTISIG,
   WormholeMultisigInstruction,
 } from 'xc_admin_common'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { pythClusterApiUrls } from '../utils/pythClusterApiUrl'
-
-export const UPGRADE_MULTISIG: Record<Cluster | 'localnet', PublicKey> = {
-  'mainnet-beta': new PublicKey('FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj'),
-  testnet: new PublicKey('FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj'),
-  devnet: new PublicKey('6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3'),
-  localnet: new PublicKey('FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj'),
-}
-
-export const PRICE_FEED_MULTISIG: Record<Cluster | 'localnet', PublicKey> = {
-  'mainnet-beta': new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'),
-  testnet: new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'),
-  devnet: new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'),
-  localnet: new PublicKey('92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8'),
-}
 
 interface MultisigHookData {
   isLoading: boolean

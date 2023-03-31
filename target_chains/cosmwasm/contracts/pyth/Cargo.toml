@@ -1,6 +1,6 @@
 [package]
 name = "pyth-cosmwasm"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["Wormhole Contributors <contact@certus.one>"]
 edition = "2018"
 description = "Pyth price receiver"

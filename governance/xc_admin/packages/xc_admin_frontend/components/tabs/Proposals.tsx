@@ -19,6 +19,7 @@ import {
   getRemoteCluster,
   MultisigInstruction,
   MultisigParser,
+  PRICE_FEED_MULTISIG,
   PythMultisigInstruction,
   UnrecognizedProgram,
   WormholeMultisigInstruction,
@@ -27,7 +28,6 @@ import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'
 import { StatusFilterContext } from '../../contexts/StatusFilterContext'
-import { PRICE_FEED_MULTISIG } from '../../hooks/useMultisig'
 import VerifiedIcon from '../../images/icons/verified.inline.svg'
 import VotedIcon from '../../images/icons/voted.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'

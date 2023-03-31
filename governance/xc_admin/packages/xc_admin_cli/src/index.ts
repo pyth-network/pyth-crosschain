@@ -5,6 +5,8 @@ import {
   SYSVAR_RENT_PUBKEY,
   SYSVAR_CLOCK_PUBKEY,
   AccountMeta,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 import { program } from "commander";
 import {
@@ -358,6 +360,47 @@ multisigCommand("propose-token-transfer", "Propose token transfer")
       );
 
     await proposeInstructions(squad, vault, [proposalInstruction], false);
+  });
+
+multisigCommand("propose-sol-transfer", "Propose sol transfer")
+  .requiredOption("-a, --amount <number>", "amount in sol")
+  .requiredOption("-d, --destination <pubkey>", "destination address")
+  .action(async (options: any) => {
+    const wallet = await loadHotWalletOrLedger(
+      options.wallet,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange
+    );
+
+    const cluster: PythCluster = options.cluster;
+    const isRemote = isRemoteCluster(cluster);
+    const destination: PublicKey = new PublicKey(options.destination);
+    const vault: PublicKey = new PublicKey(options.vault);
+    const amount: number = options.amount;
+
+    const squad = SquadsMesh.endpoint(
+      getPythClusterApiUrl(getMultisigCluster(cluster)),
+      wallet
+    );
+    const msAccount = await squad.getMultisig(vault);
+    const vaultAuthority = squad.getAuthorityPDA(
+      msAccount.publicKey,
+      msAccount.authorityIndex
+    );
+
+    const proposalInstruction: TransactionInstruction = SystemProgram.transfer({
+      fromPubkey: isRemote ? mapKey(vaultAuthority) : vaultAuthority,
+      toPubkey: destination,
+      lamports: amount * LAMPORTS_PER_SOL,
+    });
+
+    await proposeInstructions(
+      squad,
+      vault,
+      [proposalInstruction],
+      isRemote,
+      WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
+    );
   });
 
 /**

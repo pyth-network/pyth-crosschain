@@ -16,6 +16,6 @@ jobs:
           node-version: "16"
           registry-url: "https://registry.npmjs.org"
       - run: npm ci
-      - run: npx lerna publish from-package --no-git-tag-version --yes
+      - run: npx lerna publish from-package --no-private --no-git-tag-version --yes
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

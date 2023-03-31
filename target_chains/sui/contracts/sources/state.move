@@ -25,7 +25,7 @@ module pyth::state {
     }
 
     fun init(ctx: &mut TxContext) {
-        transfer::transfer(
+        transfer::public_transfer(
             DeployerCap {
                 id: object::new(ctx)
             },

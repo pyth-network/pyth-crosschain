@@ -1,0 +1,48 @@
+name: Release Pyth Cosmwasm Contract
+
+on:
+  push:
+    tags:
+      - pyth-cosmwasm-contract-v*
+
+jobs:
+  release-contract:
+    name: Build and Release cosmwasm contract
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: target_chains/cosmwasm/tools
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup tool
+        run: npm ci
+      - name: Build generic cosmwasm contract
+        run: |
+          npm run build-contract -- --cosmwasm
+          mv ../artifacts ../cosmwasm
+          zip -r cosmwasm.zip ../cosmwasm
+      - name: Build injective cosmwasm contract
+        run: |
+          npm run build-contract -- --injective
+          mv ../artifacts ../injective
+          zip -r injective.zip ../injective
+
+      - name: Set env
+        run: |
+          PREFIX="refs/tags/pyth-cosmwasm-contract-"
+          echo "VERSION=${GITHUB_REF:${#PREFIX}}" >> $GITHUB_ENV
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            target_chains/cosmwasm/tools/cosmwasm.zip
+            target_chains/cosmwasm/tools/injective.zip
+          body: |
+            Contracts
+            - cosmwasm.zip contains the generic cosmwasm contract for most Cosmos SDK chains.
+            - injective.zip contains injectives specific contract.
+          draft: false
+          # Setting VERSION in set env step and hence it will be available
+          name: Pyth Cosmwasm Contract ${{ env.VERSION }}
+          tag_name: ${{ github.ref_name }}

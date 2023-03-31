@@ -23,11 +23,11 @@ import {
   mapKey,
   proposeInstructions,
   WORMHOLE_ADDRESS,
+  UPGRADE_MULTISIG,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
 import { usePythContext } from '../../contexts/PythContext'
-import { UPGRADE_MULTISIG } from '../../hooks/useMultisig'
 import CopyIcon from '../../images/icons/copy.inline.svg'
 import { capitalizeFirstLetter } from '../../utils/capitalizeFirstLetter'
 import ClusterSwitch from '../ClusterSwitch'

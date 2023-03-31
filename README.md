@@ -56,7 +56,14 @@ To perform a release, follow these steps:
 4. When this release is published, it will automatically trigger a CI workflow to publish the updated packages to NPM.
 
 If you have a javascript package that shouldn't be published, simply add `"private": "true"` to the `package.json` file
-and it will be excluded from the publishing workflow.
+and it will be excluded from the publishing workflow. If you are creating a new public javascript package, you should add
+the following config option to `package.json`:
+
+```
+  "publishConfig": {
+    "access": "public"
+  },
+```
 
 ### pre-commit hooks
 
