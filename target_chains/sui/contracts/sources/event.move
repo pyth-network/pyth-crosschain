@@ -8,7 +8,7 @@ module pyth::event {
     struct PythInitializationEvent has copy, drop {}
 
     /// Signifies that a price feed has been updated
-    struct PriceFeedUpdate has copy, store, drop {
+    struct PriceFeedUpdateEvent has copy, store, drop {
         /// Value of the price feed
         price_feed: PriceFeed,
         /// Timestamp of the update
@@ -17,7 +17,7 @@ module pyth::event {
 
     public(friend) fun emit_price_feed_update(price_feed: PriceFeed, timestamp: u64) {
         event::emit(
-            PriceFeedUpdate {
+            PriceFeedUpdateEvent {
                 price_feed,
                 timestamp,
             }
