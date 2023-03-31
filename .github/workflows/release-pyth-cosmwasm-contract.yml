@@ -43,5 +43,6 @@ jobs:
             - cosmwasm.zip contains the generic cosmwasm contract for most Cosmos SDK chains.
             - injective.zip contains injectives specific contract.
           draft: false
+          # Setting VERSION in set env step and hence it will be available
           name: Pyth Cosmwasm Contract ${{ env.VERSION }}
           tag_name: ${{ github.ref_name }}
