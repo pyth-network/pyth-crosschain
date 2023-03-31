@@ -55,16 +55,16 @@ module pyth::state {
         while (!vector::is_empty(&sources)) {
             set::add(&mut data_sources, vector::pop_back(&mut sources));
         };
-            transfer::share_object(
-                State {
-                    id: object::new(ctx),
-                    data_sources,
-                    governance_data_source,
-                    last_executed_governance_sequence: 0,
-                    stale_price_threshold,
-                    base_update_fee
-                }
-            );
+        transfer::share_object(
+            State {
+                id: object::new(ctx),
+                data_sources,
+                governance_data_source,
+                last_executed_governance_sequence: 0,
+                stale_price_threshold,
+                base_update_fee
+            }
+        );
     }
 
     // Accessors
