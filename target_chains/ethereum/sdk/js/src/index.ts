@@ -43,4 +43,6 @@ export const CONTRACT_ADDR: Record<string, string> = {
   polygon_zkevm_testnet: "0xd54bf1758b1C932F86B178F8b1D5d1A7e2F62C2E",
   polygon_zkevm: "0xC5E56d6b40F3e3B5fbfa266bCd35C37426537c65",
   canto_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  meter_testnet: "0x5fF5B9039FbD8256864A4460B7EA77093A65B1b5",
+  meter: "0xbFe3f445653f2136b2FD1e6DdDb5676392E3AF16",
 };

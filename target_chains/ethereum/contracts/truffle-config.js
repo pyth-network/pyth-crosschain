@@ -244,7 +244,7 @@ module.exports = {
       network_id: 83,
     },
     meter: {
-      provider: payerProvider("https://pokt.network"),
+      provider: payerProvider("https://rpc-meter.jellypool.xyz"),
       network_id: 82,
     },
   },
