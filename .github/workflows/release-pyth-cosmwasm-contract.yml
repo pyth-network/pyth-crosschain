@@ -1,9 +1,11 @@
 name: Release Pyth Cosmwasm Contract
 
 on:
-  push:
-    tags:
-      - pyth-cosmwasm-contract-v*
+  # TODO: change this back
+  # push:
+  #   tags:
+  #     - pyth-cosmwasm-contract-v*
+  pull_request:
 
 jobs:
   release-contract:
@@ -11,35 +13,66 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: target_chains/cosmwasm
+        working-directory: target_chains/cosmwasm/tools
     steps:
       - uses: actions/checkout@v2
-      - name: Build
+      - name: Setup tool
+        run: npm ci
+      - name: Build generic cosmwasm contract
         run: |
-          bash ./build.sh
-          zip -r artifacts.zip artifacts
+          npm run build-contract -- --cosmwasm
+          zip -r cosmwasm.zip ../artifacts
+          rm -rf ../artifacts
+      - name: Build injective cosmwasm contract
+        run: |
+          npm run build-contract -- --injective
+          zip -r injective.zip ../artifacts
+          rm -rf ../artifacts
+
       - name: Set env
         run: |
           PREFIX="refs/tags/pyth-cosmwasm-contract-"
           echo "VERSION=${GITHUB_REF:${#PREFIX}}" >> $GITHUB_ENV
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
+          files: |
+            target_chains/cosmwasm/tools/cosmwasm.zip
+            target_chains/cosmwasm/tools/injective.zip
+          body: |
+            Contracts
+            - cosmwasm.zip contains the generic cosmwasm contract for most Cosmos SDK chains.
+            - injective.zip contains injectives specific contract.
+          # TODO: set it to false once all is working
+          draft: true
+          name: Cosmwasm Contract ${{ env.VERSION }}
           tag_name: ${{ github.ref_name }}
-          # Setting VERSION in set env step and hence it will be available
-          release_name: Pyth Cosmwasm Contract ${{ env.VERSION }}
-          draft: false
-          prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: target_chains/cosmwasm/artifacts.zip
-          asset_name: artifacts.zip
-          asset_content_type: application/zip
+
+      # - name: Create Release
+      #   id: create_release
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: ${{ github.ref_name }}
+      #     # Setting VERSION in set env step and hence it will be available
+      #     release_name: Pyth Cosmwasm Contract ${{ env.VERSION }}
+      #     body: |
+      #       Contracts
+      #       - cosmwasm.zip contains the generic cosmwasm contract for most Cosmos SDK chains.
+      #       - injective.zip contains injectives specific contract.
+
+      #     # TODO: set it to false once all is working
+      #     draft: true
+      #     prerelease: false
+      # - name: Upload Release Asset
+      #   id: upload-release-asset
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+      #     asset_path: target_chains/cosmwasm/artifacts.zip
+      #     asset_name: artifacts.zip
+      #     asset_content_type: application/zip
