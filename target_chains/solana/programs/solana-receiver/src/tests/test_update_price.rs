@@ -4,6 +4,7 @@ use {
         pubkey::Pubkey,
         instruction::Instruction,
     },
+    solana_sdk::signature::Signer,
     crate::instruction as receiver_instruction,
     crate::accounts as receiver_accounts,
 };
@@ -24,7 +25,7 @@ async fn test_add_price() {
 
     let mut sim = PythSimulator::new().await;
 
-    let accounts = receiver_accounts::Update::populate(&sim.genesis_keypair.pubkey()).to_account_metas(None);
+    let accounts = receiver_accounts::Update { payer: sim.genesis_keypair.pubkey() }.to_account_metas(None);
 
     let inst = Instruction::new_with_bytes(sim.program_id, &(receiver_instruction::Update { data: vec![] }.data()), accounts);
 

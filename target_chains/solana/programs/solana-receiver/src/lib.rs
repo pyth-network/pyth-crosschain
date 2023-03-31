@@ -50,7 +50,7 @@ pub mod pyth_solana_receiver {
         Ok(())
     }
 
-    pub fn update(ctx: Context<UpdatePrice>, data: Vec<u8>) -> Result<()> {
+    pub fn update(ctx: Context<Update>, data: Vec<u8>) -> Result<()> {
         // FIXME: more security checks
         // ctx.accounts.guardian_set.index == vaa_data.index;
 
@@ -103,7 +103,7 @@ impl crate::accounts::DecodePostedVaa {
 }
 
 #[derive(Accounts)]
-pub struct UpdatePrice<'info> {
+pub struct Update<'info> {
     #[account(mut)]
     pub payer:          Signer<'info>,
 }
