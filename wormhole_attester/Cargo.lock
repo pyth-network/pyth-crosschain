@@ -2693,7 +2693,7 @@ dependencies = [
 
 [[package]]
 name = "pyth-wormhole-attester"
-version = "2.0.0"
+version = "2.0.1"
 dependencies = [
  "borsh",
  "pyth-client",

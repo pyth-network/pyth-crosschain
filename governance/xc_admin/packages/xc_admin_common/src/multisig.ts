@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Cluster, PublicKey } from "@solana/web3.js";
 import Squads, {
   DEFAULT_MULTISIG_PROGRAM_ID,
   getIxPDA,
@@ -9,11 +9,51 @@ import BN from "bn.js";
 import lodash from "lodash";
 
 /**
+ * Address of the upgrade multisig
+ */
+export const UPGRADE_MULTISIG: Record<Cluster | "localnet", PublicKey> = {
+  "mainnet-beta": new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
+  testnet: new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
+  devnet: new PublicKey("6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3"),
+  localnet: new PublicKey("FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"),
+};
+
+/**
+ * Address of the price feed multisig
+ */
+export const PRICE_FEED_MULTISIG: Record<Cluster | "localnet", PublicKey> = {
+  "mainnet-beta": new PublicKey("92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8"),
+  testnet: new PublicKey("92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8"),
+  devnet: new PublicKey("92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8"),
+  localnet: new PublicKey("92hQkq8kBgCUcF9yWN8URZB9RTmA4mZpDGtbiAWA74Z8"),
+};
+
+/**
  * Address of the ops key (same on all networks)
  */
-export const OPS_KEY = new PublicKey(
+export const PRICE_FEED_OPS_KEY = new PublicKey(
   "ACzP6RC98vcBk9oTeAwcH1o5HJvtBzU59b5nqdwc7Cxy"
 );
+
+export const UPGRADE_OPS_KEY = new PublicKey(
+  "opsLibxVY7Vz5eYMmSfX8cLFCFVYTtH6fr6MiifMpA7"
+);
+
+export function getOpsKey(vault: PublicKey): PublicKey {
+  if (
+    Object.values(PRICE_FEED_MULTISIG).some((pubkey) => {
+      return pubkey.equals(vault);
+    })
+  )
+    return PRICE_FEED_OPS_KEY;
+  else if (
+    Object.values(UPGRADE_MULTISIG).some((pubkey) => {
+      return pubkey.equals(vault);
+    })
+  )
+    return UPGRADE_OPS_KEY;
+  else throw new Error("Unrecognized multisig vault");
+}
 
 /**
  * Find all proposals for vault `vault` using Squads client `squad`

@@ -16,6 +16,9 @@
     "url": "https://github.com/pyth-network/pyth-crosschain",
     "directory": "price_pusher"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "jest src/ --passWithNoTests",
     "build": "tsc",

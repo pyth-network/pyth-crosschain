@@ -45,7 +45,7 @@ module.exports = {
     },
     shimmer_testnet: {
       url: "https://json-rpc.evm.testnet.shimmer.network",
-      chainId: 1070,
+      chainId: 1071,
       accounts: {
         mnemonic: process.env.MNEMONIC,
       },
@@ -67,7 +67,7 @@ module.exports = {
       },
       {
         network: "shimmer_testnet",
-        chainId: 1070,
+        chainId: 1071,
         urls: {
           apiURL: "https://explorer.evm.testnet.shimmer.network/api",
           browserURL: "https://explorer.evm.testnet.shimmer.network",
