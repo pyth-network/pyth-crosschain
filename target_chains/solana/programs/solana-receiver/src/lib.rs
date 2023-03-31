@@ -19,12 +19,13 @@ use wormhole_solana::instructions::PostVAAData;
 
 use crate::error::ReceiverError::*;
 
+declare_id!("pythKkWXoywbvTQVcWrNDz5ENvWteF7tem7xzW52NBK");
+
 #[program]
 pub mod pyth_solana_receiver {
     use super::*;
 
     pub const PROGRAM_ID: &str = "pythKkWXoywbvTQVcWrNDz5ENvWteF7tem7xzW52NBK";
-    declare_id!("pythKkWXoywbvTQVcWrNDz5ENvWteF7tem7xzW52NBK");
 
     pub fn decode_posted_vaa(ctx: Context<DecodePostedVaa>) -> Result<()> {
         let posted_vaa = &ctx.accounts.posted_vaa.payload;
@@ -49,7 +50,7 @@ pub mod pyth_solana_receiver {
         Ok(())
     }
 
-    pub fn update_price(ctx: Context<UpdatePrice>, data: Vec<u8>) -> Result<()> {
+    pub fn update(ctx: Context<UpdatePrice>, data: Vec<u8>) -> Result<()> {
         // FIXME: more security checks
         // ctx.accounts.guardian_set.index == vaa_data.index;
 

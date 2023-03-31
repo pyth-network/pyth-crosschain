@@ -1,33 +1,23 @@
-use pyth_solana_receiver::PythSolanaReceiver;
-use solana_program_test::processor;
-
 use {
     solana_program::{
         program_error::ProgramError,
         pubkey::Pubkey,
         instruction::Instruction,
     },
-    anchor_client,
+    crate::pyth_solana_receiver
 };
-use crate::pyth_solana_receiver;
 use anchor_lang::prelude::*;
+use anchor_lang::Discriminator;
 
 use crate::tests::simulator::PythSimulator;
+use crate::tests::simulator::sighash;
 
 #[tokio::test]
 async fn test_add_price() {
 
     let mut sim = PythSimulator::new().await;
 
-    let instruction_data = vec![crate::sighash("global", "update_price")];
-
-    let instruction = solana_sdk::instruction::Instruction {
-        program_id,
-        accounts: vec![],
-        data: instruction_data,
-    };
-
-    let instruction = Instruction::new_with_bytes(sim.program_id, &discriminator, vec![]);
+    let instruction = Instruction::new_with_bytes(sim.program_id, &(pyth_solana_receiver::instruction::Update.data()), vec![]);
 
     let result = sim.process_ix(instruction, &vec![], &sim.genesis_keypair.insecure_clone()).await.unwrap();
 
