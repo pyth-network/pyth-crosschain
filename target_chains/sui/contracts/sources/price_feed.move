@@ -23,8 +23,18 @@ module pyth::price_feed {
         }
     }
 
-    public fun get_price_identifier(price_feed: &PriceFeed): &PriceIdentifier {
-        &price_feed.price_identifier
+     public fun from(
+        price_feed: &PriceFeed
+    ): PriceFeed {
+        PriceFeed {
+            price_identifier: price_feed.price_identifier,
+            price: price_feed.price,
+            ema_price: price_feed.ema_price,
+        }
+    }
+
+    public fun get_price_identifier(price_feed: &PriceFeed): PriceIdentifier {
+        price_feed.price_identifier
     }
 
     public fun get_price(price_feed: &PriceFeed): Price {

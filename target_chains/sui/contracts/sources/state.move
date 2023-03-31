@@ -1,11 +1,12 @@
 module pyth::state {
     use std::vector;
-    use sui::object::{Self, UID};
+    use sui::object::{Self, UID, ID};
     use sui::transfer::{Self};
     use sui::tx_context::{Self, TxContext};
 
-    use pyth::data_source::{DataSource};
-    use pyth::set::{Self, Set};
+    use pyth::data_source::{Self, DataSource};
+    use pyth::price_info::{Self};
+    use pyth::price_identifier::{PriceIdentifier};
 
     friend pyth::pyth;
 
@@ -17,19 +18,14 @@ module pyth::state {
 
     struct State has key {
         id: UID,
-        // TODO - Make data_sources a dynamic field of State,
-        // inside of something embedded in State, because there will be
-        // 10k+ data sources in the future, and we want to minimize the
-        // size of State.
-        data_sources: Set<DataSource>,
         governance_data_source: DataSource,
         last_executed_governance_sequence: u64,
         stale_price_threshold: u64,
-        base_update_fee: u64
+        base_update_fee: u64,
     }
 
     fun init(ctx: &mut TxContext) {
-        transfer::transfer(
+        transfer::public_transfer(
             DeployerCap {
                 id: object::new(ctx)
             },
@@ -49,20 +45,32 @@ module pyth::state {
         let DeployerCap { id } = deployer;
         object::delete(id);
 
-        // Convert the vector of DataSource objects into a set
-        // of DataSource objects
-        let data_sources = set::new<DataSource>(ctx);
+        let uid = object::new(ctx);
+
+        // Create a set that contains all registered data sources and
+        // attach it to uid as a dynamic field to minimize the
+        // size of State.
+        data_source::new_data_source_registry(&mut uid, ctx);
+
+        // Create a table that tracks the object IDs of price feeds and
+        // attach it to the uid as a dynamic object field to minimize the
+        // size of State.
+        price_info::new_price_info_registry(&mut uid, ctx);
+
+        // Iterate through data sources and add them to the data source
+        // registry in state.
         while (!vector::is_empty(&sources)) {
-            set::add(&mut data_sources, vector::pop_back(&mut sources));
+            data_source::add(&mut uid, vector::pop_back(&mut sources));
         };
+
+        // Share state so that is a shared Sui object.
         transfer::share_object(
             State {
-                id: object::new(ctx),
-                data_sources,
+                id: uid,
                 governance_data_source,
                 last_executed_governance_sequence: 0,
                 stale_price_threshold,
-                base_update_fee
+                base_update_fee,
             }
         );
     }
@@ -77,7 +85,7 @@ module pyth::state {
     }
 
     public fun is_valid_data_source(s: &State, data_source: DataSource): bool {
-        set::contains<DataSource>(&s.data_sources, data_source)
+        data_source::contains(&s.id, data_source)
     }
 
     public fun is_valid_governance_data_source(s: &State, source: DataSource): bool {
@@ -88,15 +96,22 @@ module pyth::state {
         s.last_executed_governance_sequence
     }
 
+    public fun price_feed_object_exists(s: &State, p: PriceIdentifier): bool {
+        price_info::contains(&s.id, p)
+    }
+
     // Setters
     public(friend) fun set_data_sources(s: &mut State, new_sources: vector<DataSource>) {
-        // Empty the existing set of data sources instead of dropping it,
-        // because it does not have drop ability.
-        set::empty<DataSource>(&mut s.data_sources);
-        // Add new sources to state.data_sources.
+        // Empty the existing table of data sources registered in state.
+        data_source::empty(&mut s.id);
+        // Add the new data sources to the dynamic field registry.
         while (!vector::is_empty(&new_sources)) {
-            set::add(&mut s.data_sources, vector::pop_back(&mut new_sources));
+            data_source::add(&mut s.id, vector::pop_back(&mut new_sources));
         };
+    }
+
+    public(friend) fun register_price_info_object(s: &mut State, price_identifier: PriceIdentifier, id: ID) {
+        price_info::add(&mut s.id, price_identifier, id);
     }
 
     public(friend) fun set_last_executed_governance_sequence(s: &mut State, sequence: u64) {
@@ -113,5 +128,9 @@ module pyth::state {
 
     public(friend) fun set_stale_price_threshold_secs(s: &mut State, threshold_secs: u64) {
         s.stale_price_threshold = threshold_secs;
+    }
+
+    public(friend) fun register_price_feed(s: &mut State, p: PriceIdentifier, id: ID){
+        price_info::add(&mut s.id, p, id);
     }
 }
