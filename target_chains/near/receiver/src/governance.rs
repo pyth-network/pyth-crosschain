@@ -345,9 +345,6 @@ impl Pyth {
             SetFee { base, expo } => self.set_update_fee(base, expo)?,
             SetValidPeriod { valid_seconds } => self.set_valid_period(valid_seconds),
             RequestGovernanceDataSourceTransfer { .. } => Err(InvalidPayload)?,
-            AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
-                self.authorize_gov_source_transfer(claim_vaa)?
-            }
             UpgradeContract { codehash } => {
                 // Additionally restrict to only Near for upgrades. This is a safety measure to
                 // prevent accidental upgrades to the wrong contract.
@@ -356,6 +353,33 @@ impl Pyth {
                     InvalidPayload
                 );
                 self.set_upgrade_hash(codehash)
+            }
+
+            // In the case of AuthorizeGovernanceDataSourceTransfer we need to verify the VAA
+            // contained within the action. This implies another async call so we return here and
+            // allow the refund / gov processing to happen in the callback.
+            AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
+                ext_wormhole::ext(self.wormhole.clone())
+                    .with_static_gas(Gas(30_000_000_000_000))
+                    .verify_vaa(hex::encode(claim_vaa.clone()))
+                    .then(
+                        Self::ext(env::current_account_id())
+                            .with_static_gas(Gas(30_000_000_000_000))
+                            .with_attached_deposit(env::attached_deposit())
+                            .authorize_gov_source_transfer(
+                                env::predecessor_account_id(),
+                                claim_vaa,
+                                storage,
+                            ),
+                    )
+                    .then(
+                        Self::ext(env::current_account_id())
+                            .with_static_gas(Gas(30_000_000_000_000))
+                            .refund_vaa(env::predecessor_account_id(), env::attached_deposit()),
+                    );
+
+                // Return early, the callback has to perform the rest of the processing.
+                return Ok(());
             }
         }
 
@@ -382,7 +406,13 @@ impl Pyth {
 
     #[private]
     #[handle_result]
-    pub fn authorize_gov_source_transfer(&mut self, claim_vaa: Vec<u8>) -> Result<(), Error> {
+    pub fn authorize_gov_source_transfer(
+        &mut self,
+        account_id: AccountId,
+        claim_vaa: Vec<u8>,
+        storage: u64,
+        #[callback_result] _result: Result<u32, near_sdk::PromiseError>,
+    ) -> Result<(), Error> {
         let (vaa, rest): (wormhole::Vaa<()>, _) =
             serde_wormhole::from_slice_with_payload(&claim_vaa).expect("Failed to deserialize VAA");
 
@@ -410,7 +440,9 @@ impl Pyth {
                     InvalidPayload
                 );
 
+                // Update executed VAA indices, prevents replay on both the VAA.
                 self.executed_governance_change_vaa = governance_data_source_index as u64;
+                self.executed_governance_vaa = vaa.sequence;
 
                 // Update Governance Source
                 self.gov_source = Source {
@@ -422,35 +454,13 @@ impl Pyth {
             _ => Err(Unknown)?,
         }
 
-        Ok(())
-    }
-
-    #[private]
-    pub fn set_valid_period(&mut self, threshold: u64) {
-        self.stale_threshold = threshold;
-    }
-
-    #[private]
-    #[handle_result]
-    pub fn set_update_fee(&mut self, fee: u64, expo: u64) -> Result<(), Error> {
-        self.update_fee = (fee as u128)
-            .checked_mul(
-                10_u128
-                    .checked_pow(u32::try_from(expo).map_err(|_| ArithmeticOverflow)?)
-                    .ok_or(ArithmeticOverflow)?,
-            )
-            .ok_or(ArithmeticOverflow)?;
-
-        Ok(())
-    }
-
-    #[private]
-    #[handle_result]
-    pub fn set_sources(&mut self, sources: Vec<Source>) {
-        self.sources.clear();
-        sources.iter().for_each(|s| {
-            self.sources.insert(s);
-        });
+        // Refund storage difference to `account_id` after storage execution.
+        self.refund_storage_usage(
+            account_id,
+            storage,
+            env::storage_usage(),
+            env::attached_deposit(),
+        )
     }
 
     /// This method allows self-upgrading the contract to a new implementation.
@@ -497,6 +507,29 @@ impl Pyth {
         (self.gov_source == *source)
             .then_some(())
             .ok_or(UnknownSource)
+    }
+
+    pub fn set_valid_period(&mut self, threshold: u64) {
+        self.stale_threshold = threshold;
+    }
+
+    pub fn set_update_fee(&mut self, fee: u64, expo: u64) -> Result<(), Error> {
+        self.update_fee = (fee as u128)
+            .checked_mul(
+                10_u128
+                    .checked_pow(u32::try_from(expo).map_err(|_| ArithmeticOverflow)?)
+                    .ok_or(ArithmeticOverflow)?,
+            )
+            .ok_or(ArithmeticOverflow)?;
+
+        Ok(())
+    }
+
+    pub fn set_sources(&mut self, sources: Vec<Source>) {
+        self.sources.clear();
+        sources.iter().for_each(|s| {
+            self.sources.insert(s);
+        });
     }
 
     pub fn set_upgrade_hash(&mut self, codehash: [u8; 32]) {
