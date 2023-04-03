@@ -1,3 +1,6 @@
+import { CosmwasmExecutor } from "./cosmwasm";
+import { InjectiveExecutor } from "./injective";
+
 export type Fund = {
   denom: string;
   amount: string;
@@ -65,4 +68,48 @@ export interface ChainExecutor {
   updateContractAdmin(
     req: UpdateContractAdminRequest
   ): Promise<UpdateContractAdminResponse>;
+}
+
+export enum ChainExecutorType {
+  INJECTIVE = "injective",
+  COSMWASM = "cosmwasm",
+}
+
+export type ChainExecutorFactoryArgs =
+  | {
+      type: ChainExecutorType.INJECTIVE;
+      value: InjectiveConfig;
+    }
+  | {
+      type: ChainExecutorType.COSMWASM;
+      value: CosmwasmConfig;
+    };
+
+export type InjectiveConfig = {
+  grpcEndpoint: string;
+  mnemonic: string;
+};
+
+export type CosmwasmConfig = {
+  endpoint: string;
+  mnemonic: string;
+  prefix: string;
+  gasPrice: string;
+  // FIXME: probably have to pass the hd path too. not sure
+};
+
+export function ChainExecutorFactory({
+  type,
+  value,
+}: ChainExecutorFactoryArgs): ChainExecutor {
+  if (type === ChainExecutorType.INJECTIVE) {
+    return new InjectiveExecutor(value.grpcEndpoint, value.mnemonic);
+  }
+
+  return new CosmwasmExecutor(
+    value.endpoint,
+    value.mnemonic,
+    value.prefix,
+    value.gasPrice
+  );
 }
