@@ -1,4 +1,5 @@
 use {
+    crate::Seconds,
     near_sdk::{
         borsh::{
             self,
@@ -42,7 +43,7 @@ pub struct Price {
     /// The exponent
     pub expo:      i32,
     /// Unix timestamp of when this price was computed
-    pub timestamp: u64,
+    pub timestamp: Seconds,
 }
 
 /// The PriceFeed structure is stored in the contract under a Price Feed Identifier.

@@ -50,6 +50,9 @@ enum StorageKeys {
     Prices,
 }
 
+/// Alias to document time unit Pyth expects data to be in.
+type Seconds = u64;
+
 /// The `State` contains all persisted state for the contract. This includes runtime configuration.
 ///
 /// There is no valid Default state for this contract, so we derive PanicOnDefault to force
@@ -296,7 +299,11 @@ impl Pyth {
 
     /// Get the latest available price cached for the given price identifier, if that price is
     /// no older than the given age.
-    pub fn get_price_no_older_than(&self, price_id: PriceIdentifier, age: u64) -> Option<Price> {
+    pub fn get_price_no_older_than(
+        &self,
+        price_id: PriceIdentifier,
+        age: Seconds,
+    ) -> Option<Price> {
         self.prices.get(&price_id).and_then(|feed| {
             let block_timestamp = env::block_timestamp() / 1_000_000_000;
             let price_timestamp = feed.price.timestamp;
@@ -326,10 +333,10 @@ impl Pyth {
     pub fn get_ema_price_no_older_than(
         &self,
         price_id: PriceIdentifier,
-        age: u64,
+        age: Seconds,
     ) -> Option<Price> {
         self.prices.get(&price_id).and_then(|feed| {
-            let block_timestamp = env::block_timestamp();
+            let block_timestamp = env::block_timestamp() / 1_000_000_000;
             let price_timestamp = feed.ema_price.timestamp;
 
             // - If Price older than STALENESS_THRESHOLD, set status to Unknown.
