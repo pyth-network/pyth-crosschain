@@ -8,6 +8,8 @@ module pyth::data_source {
     use wormhole::external_address::ExternalAddress;
 
     const KEY: vector<u8> = b"data_sources";
+    const E_DATA_SOURCE_REGISTRY_ALREADY_EXISTS: u64 = 0;
+    const E_DATA_SOURCE_ALREADY_REGISTERED: u64 = 1;
 
     struct DataSource has copy, drop, store {
         emitter_chain: u64,
@@ -17,7 +19,7 @@ module pyth::data_source {
     public fun new_data_source_registry(parent_id: &mut UID, ctx: &mut TxContext) {
         assert!(
             !dynamic_field::exists_(parent_id, KEY),
-            0 // TODO - add custom error type
+            E_DATA_SOURCE_REGISTRY_ALREADY_EXISTS // TODO - add custom error type
         );
         dynamic_field::add(
             parent_id,
@@ -29,7 +31,7 @@ module pyth::data_source {
     public fun add(parent_id: &mut UID, data_source: DataSource) {
         assert!(
             !contains(parent_id, data_source),
-            0 // TODO - add custom error message
+            E_DATA_SOURCE_ALREADY_REGISTERED
         );
         set::add(
             dynamic_field::borrow_mut(parent_id, KEY),

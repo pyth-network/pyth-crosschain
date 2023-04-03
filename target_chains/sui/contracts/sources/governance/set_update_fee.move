@@ -10,6 +10,7 @@ module pyth::set_update_fee {
     friend pyth::governance;
 
     const MAX_U64: u128 = (1 << 64) - 1;
+    const E_EXPONENT_DOES_NOT_FIT_IN_U8: u64 = 0;
 
     struct SetUpdateFee {
         mantissa: u64,
@@ -18,7 +19,7 @@ module pyth::set_update_fee {
 
     public(friend) fun execute(pyth_state: &mut State, payload: vector<u8>) {
         let SetUpdateFee { mantissa, exponent } = from_byte_vec(payload);
-        assert!(exponent <= 255, 0); // TODO - throw error that exponent does not fit in a u8
+        assert!(exponent <= 255, E_EXPONENT_DOES_NOT_FIT_IN_U8);
         let fee = apply_exponent(mantissa, (exponent as u8));
         state::set_base_update_fee(pyth_state, fee);
     }
