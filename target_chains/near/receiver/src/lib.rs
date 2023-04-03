@@ -83,7 +83,7 @@ pub struct Pyth {
     /// If this `hash` does not match the current contract code, then it indicates that a pending
     /// upgrade has been allowed, calling `upgrade` with code that matches this hash will cause the
     /// contract to upgrade itself.
-    codehash: [u8; 32],
+    codehash: Option<[u8; 32]>,
 
     /// Staleness threshold for rejecting price updates.
     stale_threshold: Duration,
@@ -98,7 +98,6 @@ impl Pyth {
     #[allow(clippy::new_without_default)]
     pub fn new(
         wormhole: AccountId,
-        codehash: [u8; 32],
         initial_source: Source,
         gov_source: Source,
         update_fee: U128,
@@ -115,14 +114,44 @@ impl Pyth {
             gov_source,
             sources,
             wormhole,
-            codehash,
+            codehash: None,
             update_fee: update_fee.into(),
         }
     }
 
+    #[private]
     #[init(ignore_state)]
     pub fn migrate() -> Self {
-        let state: Self = env::state_read().expect("Failed to read state");
+        // This currently deserializes and produces the same state, I.E migration is a no-op to the
+        // current state. We only update the codehash to prevent re-upgrading.
+        //
+        // In the case where we want to actually migrate to a new state, we can do this by defining
+        // the old State struct here and then deserializing into that, then migrating into the new
+        // state, example code for the future reader:
+        //
+        // ```rust
+        // pub fn migrate() -> Self {
+        //     pub struct OldPyth {
+        //         sources:                        UnorderedSet<Source>,
+        //         gov_source:                     Source,
+        //         executed_governance_vaa:        u64,
+        //         executed_governance_change_vaa: u64,
+        //         prices:                         UnorderedMap<PriceIdentifier, PriceFeed>,
+        //         wormhole:                       AccountId,
+        //         codehash:                       [u8; 32],
+        //         stale_threshold:                Duration,
+        //         update_fee:                     u128,
+        //     }
+        //
+        //     // Construct new Pyth State from old, perform any migrations needed.
+        //     let old: OldPyth = env::state_read().expect("Failed to read state");
+        //     Self {
+        //        ...
+        //     }
+        // }
+        // ```
+        let mut state: Self = env::state_read().expect("Failed to read state");
+        state.codehash = None;
         state
     }
 
