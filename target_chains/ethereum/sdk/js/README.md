@@ -73,7 +73,7 @@ contract SomeContract {
   function doSomething(
     uint someArg,
     string memory otherArg,
-    bytes[] memory priceUpdateData
+    bytes[] calldata priceUpdateData
   ) public payable {
     // Update the prices to be set to the latest values
     uint fee = pyth.getUpdateFee(priceUpdateData);
