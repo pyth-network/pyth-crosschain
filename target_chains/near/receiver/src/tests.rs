@@ -16,7 +16,6 @@ mod tests {
     fn create_contract() -> Pyth {
         Pyth::new(
             "wormhole.near".parse().unwrap(),
-            [0; 32],
             Source::default(),
             Source::default(),
             1.into(),
