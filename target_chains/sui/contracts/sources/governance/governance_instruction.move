@@ -8,6 +8,7 @@ module pyth::governance_instruction {
 
     const E_INVALID_GOVERNANCE_MODULE: u64 = 0;
     const E_INVALID_GOVERNANCE_MAGIC_VALUE: u64 = 1;
+    const E_TARGET_CHAIN_MISMATCH: u64 = 2;
 
     struct GovernanceInstruction {
         module_: u8,
@@ -19,13 +20,14 @@ module pyth::governance_instruction {
     fun validate(instruction: &GovernanceInstruction) {
         assert!(instruction.module_ == MODULE, E_INVALID_GOVERNANCE_MODULE);
         let target_chain_id = instruction.target_chain_id;
-        assert!(target_chain_id == (wormhole::state::chain_id() as u64) || target_chain_id == 0, E_INVALID_GOVERNANCE_MODULE);
+        assert!(target_chain_id == (wormhole::state::chain_id() as u64) || target_chain_id == 0, E_TARGET_CHAIN_MISMATCH);
     }
 
     public fun from_byte_vec(bytes: vector<u8>): GovernanceInstruction {
         let cursor = cursor::new(bytes);
         let magic = deserialize::deserialize_vector(&mut cursor, 4);
         assert!(magic == MAGIC, E_INVALID_GOVERNANCE_MAGIC_VALUE);
+        // "module" is a reserved keyword, so we use "module_" instead.
         let module_ = deserialize::deserialize_u8(&mut cursor);
         let action = governance_action::from_u8(deserialize::deserialize_u8(&mut cursor));
         let target_chain_id = deserialize::deserialize_u16(&mut cursor);
