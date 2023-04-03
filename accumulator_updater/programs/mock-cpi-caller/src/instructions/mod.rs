@@ -1,0 +1,18 @@
+use anchor_lang::solana_program::hash::hashv;
+pub use {
+    add_price::*,
+    update_price::*,
+};
+mod add_price;
+mod update_price;
+
+/// Generate discriminator to be able to call anchor program's ix
+/// * `namespace` - "global" for instructions
+/// * `name` - name of ix to call CASE-SENSITIVE
+pub fn sighash(namespace: &str, name: &str) -> [u8; 8] {
+    let preimage = format!("{namespace}:{name}");
+
+    let mut sighash = [0u8; 8];
+    sighash.copy_from_slice(&hashv(&[preimage.as_bytes()]).to_bytes()[..8]);
+    sighash
+}

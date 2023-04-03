@@ -1,7 +1,7 @@
 use {
     crate::{
         message::AccumulatorSerializer,
-        PriceAccount,
+        state::PriceAccount,
     },
     anchor_lang::prelude::*,
     bytemuck::{

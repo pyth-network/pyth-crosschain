@@ -1,4 +1,4 @@
-use crate::PythAccountType;
+use crate::state::PythAccountType;
 
 pub mod price;
 

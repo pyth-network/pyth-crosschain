@@ -106,6 +106,7 @@ pub mod accumulator_updater {
         Ok(())
     }
 
+    /// Update accumulator input account(s)
     pub fn update_inputs<'info>(
         ctx: Context<'_, '_, '_, 'info, UpdateInputs<'info>>,
         base_account: Pubkey,
@@ -121,30 +122,39 @@ pub mod accumulator_updater {
 
 
         for ai in accts {
+            require!(
+                ai.is_writable,
+                AccumulatorUpdaterError::AccumulatorInputNotWritable
+            );
             let (account_data, account_schema) = zip.next().unwrap();
 
-            let accumulator_input = &mut <AccumulatorInput as AccountDeserialize>::try_deserialize(
+            let mut accumulator_input = <AccumulatorInput as AccountDeserialize>::try_deserialize(
+                // &mut &ai.data.borrow_mut()[..],
                 &mut &**ai.try_borrow_mut_data()?,
             )?;
             {
-                let pubkey = ai.key();
-                let expected_key = Pubkey::create_program_address(
-                    accumulator_acc_seeds_with_bump!(
-                        cpi_caller,
-                        base_account,
-                        account_schema,
-                        accumulator_input.header.bump
-                    ),
-                    &crate::ID,
-                )
-                .map_err(|_| AccumulatorUpdaterError::InvalidPDA)?;
-                require_keys_eq!(expected_key, pubkey);
-                require_eq!(accumulator_input.header.account_type, account_type);
-                require_eq!(accumulator_input.header.account_schema, account_schema);
                 // TODO: allow re-sizing?
-                require_gte!(accumulator_input.data.len(), account_data.len());
+                require_gte!(
+                    accumulator_input.data.len(),
+                    account_data.len(),
+                    AccumulatorUpdaterError::CurrentDataLengthExceeded
+                );
+
+                AccumulatorInput::validate_account_info(
+                    ai.key(),
+                    &accumulator_input,
+                    cpi_caller,
+                    base_account,
+                    account_type,
+                    account_schema,
+                )?;
             }
             accumulator_input.data = account_data;
+            AccountSerialize::try_serialize(&accumulator_input, &mut &mut ai.data.borrow_mut()[..])
+                .map_err(|e| {
+                    msg!("original error: {:?}", e);
+                    AccumulatorUpdaterError::SerializeError
+                })?;
         }
 
         Ok(())
@@ -336,6 +346,32 @@ impl AccumulatorInput {
     pub fn new(header: AccumulatorHeader, data: Vec<u8>) -> Self {
         Self { header, data }
     }
+
+    pub fn validate_account_info(
+        accumulator_input_key: Pubkey,
+        accumulator_input: &AccumulatorInput,
+        cpi_caller: Pubkey,
+        base_account: Pubkey,
+        account_type: u32,
+        account_schema: u8,
+    ) -> Result<()> {
+        // let pubkey = ai.key();
+        let expected_key = Pubkey::create_program_address(
+            accumulator_acc_seeds_with_bump!(
+                cpi_caller,
+                base_account,
+                account_schema,
+                accumulator_input.header.bump
+            ),
+            &crate::ID,
+        )
+        .map_err(|_| AccumulatorUpdaterError::InvalidPDA)?;
+        require_keys_eq!(expected_key, accumulator_input_key);
+        require_eq!(accumulator_input.header.account_type, account_type);
+        require_eq!(accumulator_input.header.account_schema, account_schema);
+
+        Ok(())
+    }
 }
 
 //TODO:
@@ -352,7 +388,7 @@ pub struct AccumulatorHeader {
 
 
 impl AccumulatorHeader {
-    pub const SIZE: usize = 1 + 4 + 1;
+    pub const SIZE: usize = 1 + 1 + 4 + 1;
 
     pub fn new(bump: u8, version: u8, account_type: u32, account_schema: u8) -> Self {
         Self {
@@ -382,4 +418,8 @@ pub enum AccumulatorUpdaterError {
     MaximumAllowedProgramsExceeded,
     #[msg("Invalid PDA")]
     InvalidPDA,
+    #[msg("Update data exceeds current length")]
+    CurrentDataLengthExceeded,
+    #[msg("Accumulator Input not writable")]
+    AccumulatorInputNotWritable,
 }
