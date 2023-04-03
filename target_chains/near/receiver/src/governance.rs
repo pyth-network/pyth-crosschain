@@ -381,11 +381,6 @@ impl Pyth {
     }
 
     #[private]
-    pub fn set_upgrade_hash(&mut self, codehash: [u8; 32]) {
-        self.codehash = codehash;
-    }
-
-    #[private]
     #[handle_result]
     pub fn authorize_gov_source_transfer(&mut self, claim_vaa: Vec<u8>) -> Result<(), Error> {
         let (vaa, rest): (wormhole::Vaa<()>, _) =
@@ -469,11 +464,14 @@ impl Pyth {
     /// this method as a normal public method.
     #[handle_result]
     pub(crate) fn upgrade(&mut self, new_code: Vec<u8>) -> Result<Promise, Error> {
-        let signature = env::sha256(&new_code);
+        let signature = TryInto::<[u8; 32]>::try_into(env::sha256(&new_code)).unwrap();
+        let default = <[u8; 32] as Default>::default();
+        ensure!(signature != default, UnauthorizedUpgrade);
         ensure!(signature == self.codehash, UnauthorizedUpgrade);
 
         Ok(Promise::new(env::current_account_id())
             .deploy_contract(new_code)
+            .then(Self::ext(env::current_account_id()).migrate())
             .then(Self::ext(env::current_account_id()).refund_upgrade(
                 env::predecessor_account_id(),
                 env::attached_deposit(),
@@ -501,6 +499,10 @@ impl Pyth {
         (self.gov_source == *source)
             .then_some(())
             .ok_or(UnknownSource(source.emitter))
+    }
+
+    pub fn set_upgrade_hash(&mut self, codehash: [u8; 32]) {
+        self.codehash = codehash;
     }
 }
 
@@ -541,7 +543,6 @@ mod tests {
 
         let mut contract = Pyth::new(
             near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
-            [0; 32],
             Source::default(),
             Source::default(),
             0.into(),
@@ -561,7 +562,6 @@ mod tests {
 
         let mut contract = Pyth::new(
             near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
-            [0; 32],
             Source::default(),
             Source::default(),
             0.into(),
@@ -580,7 +580,6 @@ mod tests {
 
         let mut contract = Pyth::new(
             near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
-            [0; 32],
             Source::default(),
             Source::default(),
             0.into(),
@@ -599,7 +598,6 @@ mod tests {
 
         let mut contract = Pyth::new(
             near_sdk::AccountId::new_unchecked("pyth.near".to_owned()),
-            [0; 32],
             Source::default(),
             Source::default(),
             0.into(),
