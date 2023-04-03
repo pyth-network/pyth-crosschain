@@ -589,7 +589,7 @@ impl Pyth {
     /// Checks storage usage invariants and additionally refunds the caller if they overpay.
     fn refund_storage_usage(
         &self,
-        refunder: AccountId,
+        recipient: AccountId,
         before: StorageUsage,
         after: StorageUsage,
         deposit: Balance,
@@ -606,13 +606,15 @@ impl Pyth {
 
             // Otherwise we refund whatever is left over.
             if deposit - cost > 0 {
-                Promise::new(refunder).transfer(cost);
+                Promise::new(recipient).transfer(deposit - cost);
             }
         } else {
-            // Handle storage decrease if checked_sub fails. We know storage used now is <=
+            // If checked_sub fails we have a storage decrease, we want to refund them the cost of
+            // the amount reduced, as well the original deposit they sent.
             let refund = Balance::from(before - after);
             let refund = refund * env::storage_byte_cost();
-            Promise::new(refunder).transfer(refund);
+            let refund = refund + deposit;
+            Promise::new(recipient).transfer(refund);
         }
 
         Ok(())
