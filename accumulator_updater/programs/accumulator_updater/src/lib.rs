@@ -15,6 +15,7 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod accumulator_updater {
     use super::*;
 
+    /// Initializes the whitelist and sets it's authority to the provided pubkey
     pub fn initialize(ctx: Context<Initialize>, authority: Pubkey) -> Result<()> {
         require_keys_neq!(authority, Pubkey::default());
         let whitelist = &mut ctx.accounts.whitelist;
@@ -23,6 +24,10 @@ pub mod accumulator_updater {
         Ok(())
     }
 
+    /// Sets the programs that are allowed to invoke this program through CPI
+    ///
+    /// * `allowed_programs` - Entire list of programs that are allowed to
+    ///                       invoke this program through CPI
     pub fn set_allowed_programs(
         ctx: Context<UpdateWhitelist>,
         allowed_programs: Vec<Pubkey>,
@@ -33,6 +38,7 @@ pub mod accumulator_updater {
         Ok(())
     }
 
+    /// Sets the new authority for the whitelist
     pub fn update_whitelist_authority(
         ctx: Context<UpdateWhitelist>,
         new_authority: Pubkey,
@@ -63,6 +69,7 @@ pub mod accumulator_updater {
     }
 
     /// Update accumulator input account(s)
+    /// Data in each PDA will be replaced with the provided data
     pub fn update_inputs<'info>(
         ctx: Context<'_, '_, '_, 'info, UpdateInputs<'info>>,
         base_account: Pubkey,

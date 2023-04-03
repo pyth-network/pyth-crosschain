@@ -94,6 +94,7 @@ pub struct CreateInputs<'info> {
 }
 
 impl<'info> CreateInputs<'info> {
+    /// Creates and initializes an accumulator input PDA
     fn create_and_initialize_accumulator_input_pda<'a>(
         accumulator_input_ai: &AccountInfo<'a>,
         accumulator_input: AccumulatorInput,

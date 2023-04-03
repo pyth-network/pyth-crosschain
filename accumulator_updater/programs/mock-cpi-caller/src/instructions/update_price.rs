@@ -52,7 +52,8 @@ pub struct UpdatePrice<'info> {
     pub accumulator_program:   Program<'info, AccumulatorUpdaterProgram>,
 }
 
-
+/// Updates the mock pyth price account and calls accumulator-updater
+/// update_inputs ix
 pub fn update_price<'info>(
     ctx: Context<'_, '_, '_, 'info, UpdatePrice<'info>>,
     params: UpdatePriceParams,
@@ -81,6 +82,7 @@ pub fn update_price<'info>(
 }
 
 impl<'info> UpdatePrice<'info> {
+    /// Invoke accumulator-updater::update_inputs ix CPI using native solana style
     pub fn invoke_cpi_solana(
         ctx: Context<'_, '_, '_, 'info, UpdatePrice<'info>>,
         account_data: Vec<Vec<u8>>,

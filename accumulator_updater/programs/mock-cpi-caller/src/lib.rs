@@ -13,6 +13,7 @@ declare_id!("Dg5PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod mock_cpi_caller {
     use super::*;
 
+    /// Creates a `PriceAccount` with the given parameters
     pub fn add_price<'info>(
         ctx: Context<'_, '_, '_, 'info, AddPrice<'info>>,
         params: AddPriceParams,
@@ -20,6 +21,7 @@ pub mod mock_cpi_caller {
         instructions::add_price(ctx, params)
     }
 
+    /// Updates a `PriceAccount` with the given parameters
     pub fn update_price<'info>(
         ctx: Context<'_, '_, '_, 'info, UpdatePrice<'info>>,
         params: UpdatePriceParams,
