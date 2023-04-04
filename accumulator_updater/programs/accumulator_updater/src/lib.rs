@@ -15,6 +15,7 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod accumulator_updater {
     use super::*;
 
+
     /// Initializes the whitelist and sets it's authority to the provided pubkey
     pub fn initialize(ctx: Context<Initialize>, authority: Pubkey) -> Result<()> {
         require_keys_neq!(authority, Pubkey::default());
@@ -69,7 +70,6 @@ pub mod accumulator_updater {
         instructions::emit_inputs(ctx, base_account, data, account_type, account_schemas)
     }
 }
-
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {

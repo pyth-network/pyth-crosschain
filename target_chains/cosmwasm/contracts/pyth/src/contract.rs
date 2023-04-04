@@ -26,10 +26,9 @@ use {
         state::{
             config,
             config_read,
-            deprecated_config,
-            deprecated_config_read,
             price_feed_bucket,
             price_feed_read_bucket,
+            set_contract_version,
             ConfigInfo,
             PythDataSource,
         },
@@ -51,7 +50,6 @@ use {
         OverflowOperation,
         QueryRequest,
         Response,
-        StdError,
         StdResult,
         WasmMsg,
         WasmQuery,
@@ -82,6 +80,8 @@ use {
     },
 };
 
+const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 /// Migration code that runs once when the contract is upgraded. On upgrade, the migrate
 /// function in the *new* code version is run, which allows the new code to update the on-chain
 /// state before any of its other functions are invoked.
@@ -94,29 +94,9 @@ use {
 /// `Ok(Response::default())`
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
-    let depreceated_cfg_result = deprecated_config_read(deps.storage).load();
-    match depreceated_cfg_result {
-        Ok(depreceated_cfg) => {
-            let cfg = ConfigInfo {
-                wormhole_contract:          depreceated_cfg.wormhole_contract,
-                data_sources:               depreceated_cfg.data_sources,
-                governance_source:          depreceated_cfg.governance_source,
-                governance_source_index:    depreceated_cfg.governance_source_index,
-                governance_sequence_number: depreceated_cfg.governance_sequence_number,
-                chain_id:                   depreceated_cfg.chain_id,
-                valid_time_period:          depreceated_cfg.valid_time_period,
-                fee:                        depreceated_cfg.fee,
-            };
-
-            config(deps.storage).save(&cfg)?;
-            deprecated_config(deps.storage).remove();
-
-            Ok(Response::default())
-        }
-        Err(_) => Err(StdError::GenericErr {
-            msg: String::from("Error reading config"),
-        }),
-    }
+    // a new contract version should be set everytime a contract is migrated
+    set_contract_version(deps.storage, &String::from(CONTRACT_VERSION))?;
+    Ok(Response::default().add_attribute("Contract Version", CONTRACT_VERSION))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -138,6 +118,8 @@ pub fn instantiate(
         fee:                        msg.fee,
     };
     config(deps.storage).save(&state)?;
+
+    set_contract_version(deps.storage, &String::from(CONTRACT_VERSION))?;
 
     Ok(Response::default())
 }
@@ -563,9 +545,12 @@ pub fn get_valid_time_period(deps: &Deps) -> StdResult<Duration> {
 mod test {
     use {
         super::*,
-        crate::governance::GovernanceModule::{
-            Executor,
-            Target,
+        crate::{
+            governance::GovernanceModule::{
+                Executor,
+                Target,
+            },
+            state::get_contract_version,
         },
         cosmwasm_std::{
             coins,
@@ -752,6 +737,75 @@ mod test {
         let info = mock_info("123", funds);
         let msg = create_price_update_msg(emitter_address, emitter_chain);
         update_price_feeds(deps.as_mut(), env, info, &[msg])
+    }
+
+    #[test]
+    fn test_instantiate() {
+        let mut deps = mock_dependencies();
+
+        let instantiate_msg = InstantiateMsg {
+            // this is an example wormhole contract address in order to create a valid instantiate message
+            wormhole_contract:          String::from("inj1xx3aupmgv3ce537c0yce8zzd3sz567syuyedpg"),
+            data_sources:               Vec::new(),
+            governance_source:          PythDataSource {
+                emitter:  Binary(vec![]),
+                chain_id: 0,
+            },
+            governance_source_index:    0,
+            governance_sequence_number: 0,
+            chain_id:                   0,
+            valid_time_period_secs:     0,
+            fee:                        Coin::new(0, ""),
+        };
+
+        let res = instantiate(
+            deps.as_mut(),
+            mock_env(),
+            MessageInfo {
+                sender: Addr::unchecked(""),
+                funds:  Vec::new(),
+            },
+            instantiate_msg,
+        );
+        assert!(res.is_ok());
+
+        // check config
+        let config_result = config(&mut deps.storage).load();
+        assert!(config_result.is_ok());
+
+        // check contract version
+        let contract_version = get_contract_version(&mut deps.storage);
+        assert_eq!(contract_version, Ok(String::from(CONTRACT_VERSION)));
+    }
+
+    #[test]
+    fn test_instantiate_invalid_wormhole_address() {
+        let mut deps = mock_dependencies();
+
+        let instantiate_msg = InstantiateMsg {
+            wormhole_contract:          String::from(""),
+            data_sources:               Vec::new(),
+            governance_source:          PythDataSource {
+                emitter:  Binary(vec![]),
+                chain_id: 0,
+            },
+            governance_source_index:    0,
+            governance_sequence_number: 0,
+            chain_id:                   0,
+            valid_time_period_secs:     0,
+            fee:                        Coin::new(0, ""),
+        };
+
+        let res = instantiate(
+            deps.as_mut(),
+            mock_env(),
+            MessageInfo {
+                sender: Addr::unchecked(""),
+                funds:  Vec::new(),
+            },
+            instantiate_msg,
+        );
+        assert!(res.is_err());
     }
 
     #[test]
