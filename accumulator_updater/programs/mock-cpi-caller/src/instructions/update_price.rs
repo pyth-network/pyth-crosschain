@@ -44,6 +44,8 @@ pub struct UpdatePrice<'info> {
     pub pyth_price_account:    AccountLoader<'info, PriceAccount>,
     #[account(mut)]
     pub payer:                 Signer<'info>,
+    /// Needed for accumulator_updater
+    pub system_program:        Program<'info, System>,
     /// CHECK: whitelist
     pub accumulator_whitelist: UncheckedAccount<'info>,
     /// CHECK: instructions introspection sysvar
@@ -93,6 +95,7 @@ impl<'info> UpdatePrice<'info> {
             AccountMeta::new(ctx.accounts.payer.key(), true),
             AccountMeta::new_readonly(ctx.accounts.accumulator_whitelist.key(), false),
             AccountMeta::new_readonly(ctx.accounts.ixs_sysvar.key(), false),
+            AccountMeta::new_readonly(ctx.accounts.system_program.key(), false),
         ];
         accounts.extend_from_slice(
             &ctx.remaining_accounts
@@ -105,7 +108,8 @@ impl<'info> UpdatePrice<'info> {
             accounts,
             data: (
                 //anchor ix discriminator/identifier
-                sighash("global", "update_inputs"),
+                // sighash("global", "update_inputs"),
+                sighash("global", "emit_inputs"),
                 ctx.accounts.pyth_price_account.key(),
                 account_data,
                 account_type.to_u32(),

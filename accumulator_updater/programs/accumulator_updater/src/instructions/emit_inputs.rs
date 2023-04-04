@@ -15,8 +15,8 @@ use {
 };
 
 
-pub fn create_inputs<'info>(
-    ctx: Context<'_, '_, '_, 'info, CreateInputs<'info>>,
+pub fn emit_inputs<'info>(
+    ctx: Context<'_, '_, '_, 'info, EmitInputs<'info>>,
     base_account: Pubkey,
     data: Vec<Vec<u8>>,
     account_type: u32,
@@ -29,46 +29,85 @@ pub fn create_inputs<'info>(
     let mut zip = data.into_iter().zip(account_schemas.into_iter());
 
     let rent = Rent::get()?;
-
+    let (mut initialized, mut updated) = (vec![], vec![]);
     for ai in accts {
         let (account_data, account_schema) = zip.next().unwrap();
-        let seeds = accumulator_acc_seeds!(cpi_caller, base_account, account_schema);
-        let (pda, bump) = Pubkey::find_program_address(seeds, &crate::ID);
-        require_keys_eq!(ai.key(), pda);
 
-        //TODO: Update this with serialization logic
-        let accumulator_size = 8 + AccumulatorInput::get_initial_size(&account_data);
-        let accumulator_input = AccumulatorInput::new(
-            AccumulatorHeader::new(
-                bump,
-                1, //from CPI caller?
-                account_type,
-                account_schema,
-            ),
-            account_data,
-        );
-        CreateInputs::create_and_initialize_accumulator_input_pda(
-            ai,
-            accumulator_input,
-            accumulator_size,
-            &ctx.accounts.payer,
-            &[accumulator_acc_seeds_with_bump!(
-                cpi_caller,
-                base_account,
-                account_schema,
-                bump
-            )],
-            &rent,
-            &ctx.accounts.system_program,
-        )?;
+        if is_uninitialized_account(ai) {
+            let seeds = accumulator_acc_seeds!(cpi_caller, base_account, account_schema);
+            let (pda, bump) = Pubkey::find_program_address(seeds, &crate::ID);
+            require_keys_eq!(ai.key(), pda);
+
+            //TODO: Update this with serialization logic
+            let accumulator_size = 8 + AccumulatorInput::get_initial_size(&account_data);
+            let accumulator_input = AccumulatorInput::new(
+                AccumulatorHeader::new(
+                    bump,
+                    1, //from CPI caller?
+                    account_type,
+                    account_schema,
+                ),
+                account_data,
+            );
+            EmitInputs::init_accumulator_input(
+                ai,
+                accumulator_input,
+                accumulator_size,
+                &ctx.accounts.payer,
+                &[accumulator_acc_seeds_with_bump!(
+                    cpi_caller,
+                    base_account,
+                    account_schema,
+                    bump
+                )],
+                &rent,
+                &ctx.accounts.system_program,
+            )?;
+            initialized.push(ai.key());
+        } else {
+            let mut accumulator_input = <AccumulatorInput as AccountDeserialize>::try_deserialize(
+                &mut &**ai.try_borrow_mut_data()?,
+            )?;
+            {
+                // TODO: allow re-sizing?
+                require_gte!(
+                    accumulator_input.data.len(),
+                    account_data.len(),
+                    AccumulatorUpdaterError::CurrentDataLengthExceeded
+                );
+
+                AccumulatorInput::validate_account_info(
+                    ai.key(),
+                    &accumulator_input,
+                    cpi_caller,
+                    base_account,
+                    account_type,
+                    account_schema,
+                )?;
+            }
+
+            //TODO: update header?
+            accumulator_input.data = account_data;
+            accumulator_input.persist(ai)?;
+            updated.push(ai.key());
+        }
     }
+    msg!(
+        "[emit-updates]: initialized: {:?}, updated: {:?}",
+        initialized,
+        updated
+    );
 
     Ok(())
 }
 
+pub fn is_uninitialized_account(ai: &AccountInfo) -> bool {
+    ai.data_is_empty() && ai.owner == &system_program::ID
+}
+
 #[derive(Accounts)]
 #[instruction(base_account: Pubkey, data: Vec<Vec<u8>>, account_type: u32)] // only needed if using optional accounts
-pub struct CreateInputs<'info> {
+pub struct EmitInputs<'info> {
     #[account(mut)]
     pub payer:              Signer<'info>,
     pub whitelist_verifier: WhitelistVerifier<'info>,
@@ -93,9 +132,9 @@ pub struct CreateInputs<'info> {
     // pub acc_input_0:          Option<Account<'info, AccumulatorInput>>,
 }
 
-impl<'info> CreateInputs<'info> {
+impl<'info> EmitInputs<'info> {
     /// Creates and initializes an accumulator input PDA
-    fn create_and_initialize_accumulator_input_pda<'a>(
+    fn init_accumulator_input<'a>(
         accumulator_input_ai: &AccountInfo<'a>,
         accumulator_input: AccumulatorInput,
         accumulator_input_size: usize,
@@ -120,16 +159,7 @@ impl<'info> CreateInputs<'info> {
             &crate::ID,
         )?;
 
-        AccountSerialize::try_serialize(
-            &accumulator_input,
-            &mut &mut accumulator_input_ai.data.borrow_mut()[..],
-        )
-        .map_err(|e| {
-            msg!("original error: {:?}", e);
-            AccumulatorUpdaterError::SerializeError
-        })?;
-        // msg!("accumulator_input_ai: {:#?}", accumulator_input_ai);
-
+        accumulator_input.persist(accumulator_input_ai)?;
         Ok(())
     }
 }
