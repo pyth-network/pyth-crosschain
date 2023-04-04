@@ -209,14 +209,14 @@ export class CosmwasmExecutor implements ChainExecutor {
   async updateContractAdmin(
     req: UpdateContractAdminRequest
   ): Promise<UpdateContractAdminResponse> {
-    const { newAdmin, contractAddr } = req;
-    const currAdmin = await this.getAddress();
+    const { newAdminAddr, contractAddr } = req;
+    const currAdminAddr = await this.getAddress();
 
     const msgUpdateAdminEncodeObject: MsgUpdateAdminEncodeObject = {
       typeUrl: "/cosmwasm.wasm.v1.MsgUpdateAdmin",
       value: {
-        sender: currAdmin,
-        newAdmin,
+        sender: currAdminAddr,
+        newAdmin: newAdminAddr,
         contract: contractAddr,
       },
     };

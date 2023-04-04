@@ -199,12 +199,12 @@ export class InjectiveExecutor implements ChainExecutor {
   async updateContractAdmin(
     req: UpdateContractAdminRequest
   ): Promise<UpdateContractAdminResponse> {
-    const { newAdmin, contractAddr } = req;
-    const currAdmin = this.getAddress();
+    const { newAdminAddr, contractAddr } = req;
+    const currAdminAddr = this.getAddress();
 
     const updateAdminMsg = new MsgUpdateAdmin({
-      sender: currAdmin,
-      newAdmin,
+      sender: currAdminAddr,
+      newAdmin: newAdminAddr,
       contract: contractAddr,
     });
 
