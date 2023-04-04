@@ -1,13 +1,9 @@
+import { Coin } from "@cosmjs/stargate";
 import {
   ChainExecutor,
   ExecuteContractResponse,
 } from "./chains-manager/chain-executor";
 import { ChainQuerier } from "./chains-manager/chain-querier";
-
-export type UpdateFeeResponse = {
-  denom: string;
-  amount: string;
-};
 
 export type Price = {
   price: number;
@@ -26,10 +22,7 @@ export class PythWrapperQuerier {
   constructor(private chainQuerier: ChainQuerier) {}
 
   // get update fee
-  async getUpdateFee(
-    contractAddr: string,
-    vaas: string[]
-  ): Promise<UpdateFeeResponse> {
+  async getUpdateFee(contractAddr: string, vaas: string[]): Promise<Coin> {
     try {
       const updateFeeResponse = await this.chainQuerier.getSmartContractState({
         contractAddr,
@@ -40,7 +33,7 @@ export class PythWrapperQuerier {
         },
       });
 
-      return updateFeeResponse as UpdateFeeResponse;
+      return updateFeeResponse as Coin;
     } catch (e) {
       throw new Error("Error fetching update fee");
     }

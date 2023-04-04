@@ -2,11 +2,16 @@ import { Tendermint34Client } from "@cosmjs/tendermint-rpc";
 import { QueryClient } from "@cosmjs/stargate";
 import { WasmExtension, setupWasmExtension } from "@cosmjs/cosmwasm-stargate";
 
+// TODO: expose the querier and consume them in price pusher
+
 /**
  * Interface for classes implementing a querier for a cosmwasm chain.
  *
  * The querier interacts with contracts only and can get it's info, stored state.
  * It can also query the `Query methods` defined in the contract.
+ *
+ * For contract dependent response, you need to look into contract specific schema in order
+ * to know what to expect
  *
  * @interface ChainQuerier
  */
