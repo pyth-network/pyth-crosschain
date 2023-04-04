@@ -239,10 +239,9 @@ async fn test_set_governance_source() {
         .args_json(&json!({
             "vaa": vaa,
         }))
-        .transact_async()
+        .transact()
         .await
         .expect("Failed to submit VAA")
-        .await
         .unwrap()
         .failures()
         .is_empty());
