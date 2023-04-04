@@ -49,7 +49,8 @@ pub mod accumulator_updater {
         Ok(())
     }
 
-    /// Add new account(s) to be included in the accumulator
+
+    /// Create or update account(s) to be included in the accumulator
     ///
     /// * `base_account`    - Pubkey of the original account the
     ///                       AccumulatorInput(s) are derived from
@@ -58,26 +59,14 @@ pub mod accumulator_updater {
     /// * `account_schemas` - Vec of markers to indicate schemas for
     ///                       AccumulatorInputs. In same respective
     ///                       order as data
-    pub fn create_inputs<'info>(
-        ctx: Context<'_, '_, '_, 'info, CreateInputs<'info>>,
+    pub fn emit_inputs<'info>(
+        ctx: Context<'_, '_, '_, 'info, EmitInputs<'info>>,
         base_account: Pubkey,
         data: Vec<Vec<u8>>,
         account_type: u32,
         account_schemas: Vec<u8>,
     ) -> Result<()> {
-        instructions::create_inputs(ctx, base_account, data, account_type, account_schemas)
-    }
-
-    /// Update accumulator input account(s)
-    /// Data in each PDA will be replaced with the provided data
-    pub fn update_inputs<'info>(
-        ctx: Context<'_, '_, '_, 'info, UpdateInputs<'info>>,
-        base_account: Pubkey,
-        data: Vec<Vec<u8>>,
-        account_type: u32,
-        account_schemas: Vec<u8>,
-    ) -> Result<()> {
-        instructions::update_inputs(ctx, base_account, data, account_type, account_schemas)
+        instructions::emit_inputs(ctx, base_account, data, account_type, account_schemas)
     }
 }
 

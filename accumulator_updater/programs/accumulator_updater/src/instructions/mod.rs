@@ -1,7 +1,3 @@
-pub use {
-    create_inputs::*,
-    update_inputs::*,
-};
+pub use emit_inputs::*;
 
-mod create_inputs;
-mod update_inputs;
+mod emit_inputs;

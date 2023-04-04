@@ -57,13 +57,13 @@ pub fn add_price<'info>(
 
 
 impl<'info> AddPrice<'info> {
-    fn create_inputs_ctx(
+    fn emit_inputs_ctx(
         &self,
         remaining_accounts: &[AccountInfo<'info>],
-    ) -> CpiContext<'_, '_, '_, 'info, AccumulatorUpdaterCpiAccts::CreateInputs<'info>> {
+    ) -> CpiContext<'_, '_, '_, 'info, AccumulatorUpdaterCpiAccts::EmitInputs<'info>> {
         let mut cpi_ctx = CpiContext::new(
             self.accumulator_program.to_account_info(),
-            AccumulatorUpdaterCpiAccts::CreateInputs {
+            AccumulatorUpdaterCpiAccts::EmitInputs {
                 payer:              self.payer.to_account_info(),
                 whitelist_verifier: AccumulatorUpdaterCpiAccts::WhitelistVerifier {
                     whitelist:  self.accumulator_whitelist.to_account_info(),
@@ -85,8 +85,8 @@ impl<'info> AddPrice<'info> {
         account_type: PythAccountType,
         account_schemas: Vec<u8>,
     ) -> anchor_lang::Result<()> {
-        accumulator_updater::cpi::create_inputs(
-            ctx.accounts.create_inputs_ctx(ctx.remaining_accounts),
+        accumulator_updater::cpi::emit_inputs(
+            ctx.accounts.emit_inputs_ctx(ctx.remaining_accounts),
             ctx.accounts.pyth_price_account.key(),
             account_data,
             account_type.to_u32(),
@@ -120,7 +120,7 @@ impl<'info> AddPrice<'info> {
             accounts,
             data: (
                 //anchor ix discriminator/identifier
-                sighash("global", "create_inputs"),
+                sighash("global", "emit_inputs"),
                 ctx.accounts.pyth_price_account.key(),
                 account_data,
                 account_type.to_u32(),

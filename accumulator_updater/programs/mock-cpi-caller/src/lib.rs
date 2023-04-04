@@ -40,7 +40,7 @@ mod test {
 
     #[test]
     fn ix_discriminator() {
-        let a = &(accumulator_updater::instruction::CreateInputs {
+        let a = &(accumulator_updater::instruction::EmitInputs {
             base_account:    anchor_lang::prelude::Pubkey::default(),
             data:            vec![],
             account_type:    0,
@@ -48,7 +48,7 @@ mod test {
         }
         .data()[..8]);
 
-        let sighash = sighash("global", "create_inputs");
+        let sighash = sighash("global", "emit_inputs");
         println!(
             r"
             a: {a:?}

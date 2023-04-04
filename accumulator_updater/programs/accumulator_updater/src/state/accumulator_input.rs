@@ -47,6 +47,14 @@ impl AccumulatorInput {
 
         Ok(())
     }
+
+    pub fn persist(&self, ai: &AccountInfo) -> Result<()> {
+        AccountSerialize::try_serialize(self, &mut &mut ai.data.borrow_mut()[..]).map_err(|e| {
+            msg!("original error: {:?}", e);
+            AccumulatorUpdaterError::SerializeError
+        })?;
+        Ok(())
+    }
 }
 
 //TODO:
