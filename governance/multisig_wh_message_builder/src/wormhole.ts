@@ -3,7 +3,7 @@ import {
   utils as wormholeUtils,
 } from "@certusone/wormhole-sdk";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { Cluster, CONFIG } from ".";
+import { Cluster, CONFIG } from "./helper";
 
 export type WormholeNetwork = "TESTNET" | "MAINNET" | "DEVNET";
 
