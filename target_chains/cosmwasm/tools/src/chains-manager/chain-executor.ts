@@ -173,7 +173,7 @@ export type CosmwasmConfig = {
   // FIXME: probably have to pass the hd path too. not sure
 };
 
-export function ChainExecutorFactory({
+export function executorFromConfig({
   type,
   value,
 }: ChainExecutorFactoryArgs): ChainExecutor {
