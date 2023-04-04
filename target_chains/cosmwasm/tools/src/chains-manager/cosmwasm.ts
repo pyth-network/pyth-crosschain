@@ -21,7 +21,7 @@ import {
   MsgMigrateContractEncodeObject,
   MsgUpdateAdminEncodeObject,
 } from "@cosmjs/cosmwasm-stargate";
-import { GasPrice } from "@cosmjs/stargate";
+import { GasPrice, calculateFee } from "@cosmjs/stargate";
 import Long from "long";
 import assert from "assert";
 
@@ -63,10 +63,16 @@ export class CosmwasmExecutor implements ChainExecutor {
       }
     );
 
-    const txResponse = await cosmwasmClient.signAndBroadcast(
+    const gasUsed = await cosmwasmClient.simulate(
       address,
       [encodedMsgObject],
       "auto"
+    );
+
+    const txResponse = await cosmwasmClient.signAndBroadcast(
+      address,
+      [encodedMsgObject],
+      calculateFee(gasUsed * 1.5, this.gasPrice)
     );
 
     if (txResponse.code !== 0) {
@@ -228,7 +234,7 @@ export class CosmwasmExecutor implements ChainExecutor {
 // enter key of what to extract
 function extractFromRawLog(rawLog: string, key: string): string {
   try {
-    const rx = new RegExp(`"${key}","value":"\\\\"([^\\\\"]+)`, "gm");
+    const rx = new RegExp(`"${key}","value":"([^"]+)`, "gm");
     return rx.exec(rawLog)![1];
   } catch (e) {
     console.error(
