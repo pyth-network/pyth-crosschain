@@ -66,7 +66,8 @@ pub enum GovernanceModule {
 }
 
 /// A `GovernanceAction` represents the different actions that can be voted on and executed by the
-/// governance system.
+/// governance system. Note that this implementation is NEAR specific, for example within the
+/// UpgradeContract variant we use a codehash unlike a code_id in Cosmwasm, or a Pubkey in Solana.
 ///
 /// [ref:chain_structure] This type uses a [u8; 32] for contract upgrades which differs from other
 /// chains, see the reference for more details.
@@ -269,11 +270,6 @@ impl Pyth {
             // Convert to local VAA type to catch API changes.
             let vaa = Vaa::from(vaa);
 
-            ensure!(
-                self.executed_governance_vaa < vaa.sequence,
-                VaaVerificationFailed
-            );
-
             // Confirm the VAA is coming from a trusted source chain.
             ensure!(
                 self.gov_source
@@ -339,6 +335,16 @@ impl Pyth {
             InvalidPayload
         );
 
+        // Ensure the VAA is ahead in sequence, this check is here instead of during
+        // `execute_governance_instruction` as otherwise someone would be able to slip
+        // competing actions into the execution stream before the sequence is updated.
+        ensure!(
+            self.executed_governance_vaa < vaa.sequence,
+            VaaVerificationFailed
+        );
+
+        self.executed_governance_vaa = vaa.sequence;
+
         match GovernanceInstruction::deserialize(rest)?.action {
             SetDataSources { data_sources } => self.set_sources(data_sources),
             SetFee { base, expo } => self.set_update_fee(base, expo)?,
@@ -360,10 +366,13 @@ impl Pyth {
             AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
                 let claim_vaa = hex::encode(claim_vaa);
 
-                // Return early, the callback has to perform the rest of the processing.
+                // Return early, the callback has to perform the rest of the processing. Normally
+                // VAA processing will complete and the code below this match statement will
+                // execute. But because the VAA verification is async, we must return here instead
+                // and the logic below is duplicated within the authorize_gov_source_transfer function.
                 return Ok(PromiseOrValue::Promise(
                     ext_wormhole::ext(self.wormhole.clone())
-                        .with_static_gas(Gas(30_000_000_000_000))
+                        .with_static_gas(Gas(10_000_000_000_000))
                         .verify_vaa(claim_vaa.clone())
                         .then(
                             Self::ext(env::current_account_id())
@@ -384,14 +393,13 @@ impl Pyth {
             }
         }
 
-        self.executed_governance_vaa = vaa.sequence;
-
         // Refund storage difference to `account_id` after storage execution.
-        self.refund_storage_usage(
+        Self::refund_storage_usage(
             account_id,
             storage,
             env::storage_usage(),
             env::attached_deposit(),
+            None,
         )
         .map(|v| PromiseOrValue::Value(v))
     }
@@ -416,6 +424,9 @@ impl Pyth {
         storage: u64,
         #[callback_result] _result: Result<u32, near_sdk::PromiseError>,
     ) -> Result<(), Error> {
+        // If VAA verification failed we should bail.
+        ensure!(is_promise_success(), VaaVerificationFailed);
+
         let vaa = hex::decode(claim_vaa).map_err(|_| InvalidPayload)?;
         let (vaa, rest): (wormhole::Vaa<()>, _) =
             serde_wormhole::from_slice_with_payload(&vaa).expect("Failed to deserialize VAA");
@@ -459,11 +470,12 @@ impl Pyth {
         }
 
         // Refund storage difference to `account_id` after storage execution.
-        self.refund_storage_usage(
+        Self::refund_storage_usage(
             account_id,
             storage,
             env::storage_usage(),
             env::attached_deposit(),
+            None,
         )
     }
 
@@ -503,7 +515,7 @@ impl Pyth {
         amount: u128,
         storage: u64,
     ) -> Result<(), Error> {
-        self.refund_storage_usage(account_id, storage, env::storage_usage(), amount)
+        Self::refund_storage_usage(account_id, storage, env::storage_usage(), amount, None)
     }
 }
 
