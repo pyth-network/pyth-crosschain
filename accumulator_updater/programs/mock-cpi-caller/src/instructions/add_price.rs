@@ -14,10 +14,7 @@ use {
             PythAccountType,
         },
     },
-    accumulator_updater::{
-        cpi::accounts as AccumulatorUpdaterCpiAccts,
-        program::AccumulatorUpdater as AccumulatorUpdaterProgram,
-    },
+    accumulator_updater::program::AccumulatorUpdater as AccumulatorUpdaterProgram,
     anchor_lang::{
         prelude::*,
         solana_program::sysvar,
@@ -52,52 +49,13 @@ pub fn add_price<'info>(
     // 44444 compute units
     // AddPrice::invoke_cpi_anchor(ctx, account_data, PythAccountType::Price, account_schemas)
     // 44045 compute units
-    AddPrice::invoke_cpi_solana(ctx, account_data, PythAccountType::Price, account_schemas)
+    AddPrice::emit_accumulator_inputs(ctx, account_data, PythAccountType::Price, account_schemas)
 }
 
 
 impl<'info> AddPrice<'info> {
-    fn emit_inputs_ctx(
-        &self,
-        remaining_accounts: &[AccountInfo<'info>],
-    ) -> CpiContext<'_, '_, '_, 'info, AccumulatorUpdaterCpiAccts::EmitInputs<'info>> {
-        let mut cpi_ctx = CpiContext::new(
-            self.accumulator_program.to_account_info(),
-            AccumulatorUpdaterCpiAccts::EmitInputs {
-                payer:              self.payer.to_account_info(),
-                whitelist_verifier: AccumulatorUpdaterCpiAccts::WhitelistVerifier {
-                    whitelist:  self.accumulator_whitelist.to_account_info(),
-                    ixs_sysvar: self.ixs_sysvar.to_account_info(),
-                },
-                system_program:     self.system_program.to_account_info(),
-            },
-        );
-
-
-        cpi_ctx = cpi_ctx.with_remaining_accounts(remaining_accounts.to_vec());
-        cpi_ctx
-    }
-
-    /// invoke cpi call using anchor
-    fn invoke_cpi_anchor(
-        ctx: Context<'_, '_, '_, 'info, AddPrice<'info>>,
-        account_data: Vec<Vec<u8>>,
-        account_type: PythAccountType,
-        account_schemas: Vec<u8>,
-    ) -> anchor_lang::Result<()> {
-        accumulator_updater::cpi::emit_inputs(
-            ctx.accounts.emit_inputs_ctx(ctx.remaining_accounts),
-            ctx.accounts.pyth_price_account.key(),
-            account_data,
-            account_type.to_u32(),
-            account_schemas,
-        )?;
-        Ok(())
-    }
-
-
-    /// invoke cpi call using solana
-    pub fn invoke_cpi_solana(
+    /// Invoke accumulator-updater emit-inputs ix cpi call using solana
+    pub fn emit_accumulator_inputs(
         ctx: Context<'_, '_, '_, 'info, AddPrice<'info>>,
         account_data: Vec<Vec<u8>>,
         account_type: PythAccountType,

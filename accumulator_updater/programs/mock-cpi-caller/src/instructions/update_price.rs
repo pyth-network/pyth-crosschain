@@ -80,12 +80,12 @@ pub fn update_price<'info>(
 
     let account_schemas = schemas.into_iter().map(|s| s.to_u8()).collect::<Vec<u8>>();
 
-    UpdatePrice::invoke_cpi_solana(ctx, account_data, PythAccountType::Price, account_schemas)
+    UpdatePrice::emit_accumulator_inputs(ctx, account_data, PythAccountType::Price, account_schemas)
 }
 
 impl<'info> UpdatePrice<'info> {
-    /// Invoke accumulator-updater::update_inputs ix CPI using native solana style
-    pub fn invoke_cpi_solana(
+    /// Invoke accumulator-updater emit-inputs ix cpi call
+    pub fn emit_accumulator_inputs(
         ctx: Context<'_, '_, '_, 'info, UpdatePrice<'info>>,
         account_data: Vec<Vec<u8>>,
         account_type: PythAccountType,
@@ -108,7 +108,6 @@ impl<'info> UpdatePrice<'info> {
             accounts,
             data: (
                 //anchor ix discriminator/identifier
-                // sighash("global", "update_inputs"),
                 sighash("global", "emit_inputs"),
                 ctx.accounts.pyth_price_account.key(),
                 account_data,
