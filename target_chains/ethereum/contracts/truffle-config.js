@@ -247,6 +247,10 @@ module.exports = {
       provider: payerProvider("https://rpc-meter.jellypool.xyz"),
       network_id: 82,
     },
+    mantle_testnet: {
+      provider: payerProvider("https://rpc.testnet.mantle.xyz/"),
+      network_id: 5001,
+    },
   },
 
   compilers: {
