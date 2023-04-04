@@ -1,25 +1,27 @@
 import * as anchor from "@coral-xyz/anchor";
-import { IdlTypes, Program, IdlAccounts } from "@coral-xyz/anchor";
+import { IdlTypes, Program, BorshAccountsCoder } from "@coral-xyz/anchor";
 import { AccumulatorUpdater } from "../target/types/accumulator_updater";
 import { MockCpiCaller } from "../target/types/mock_cpi_caller";
 import lumina from "@lumina-dev/test";
 import { assert } from "chai";
 import { ComputeBudgetProgram } from "@solana/web3.js";
+import bs58 from "bs58";
 
-// Enables tool that runs in localbrowser for easier debugging of txns
-// in this test -  https://lumina.fyi/debug
+// Enables tool that runs in local browser for easier debugging of
+// transactions in this test -  https://lumina.fyi/debug
 lumina();
 
 const accumulatorUpdaterProgram = anchor.workspace
   .AccumulatorUpdater as Program<AccumulatorUpdater>;
 const mockCpiProg = anchor.workspace.MockCpiCaller as Program<MockCpiCaller>;
+let whitelistAuthority = anchor.web3.Keypair.generate();
 
 describe("accumulator_updater", () => {
   // Configure the client to use the local cluster.
   let provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
-  const [whitelistPda, whitelistBump] =
+  const [whitelistPubkey, whitelistBump] =
     anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("accumulator"), Buffer.from("whitelist")],
       accumulatorUpdaterProgram.programId
@@ -28,33 +30,57 @@ describe("accumulator_updater", () => {
   it("Is initialized!", async () => {
     // Add your test here.
     const tx = await accumulatorUpdaterProgram.methods
-      .initialize()
+      .initialize(whitelistAuthority.publicKey)
       .accounts({})
       .rpc();
     console.log("Your transaction signature", tx);
 
     const whitelist = await accumulatorUpdaterProgram.account.whitelist.fetch(
-      whitelistPda
+      whitelistPubkey
     );
     assert.strictEqual(whitelist.bump, whitelistBump);
+    assert.isTrue(whitelist.authority.equals(whitelistAuthority.publicKey));
     console.info(`whitelist: ${JSON.stringify(whitelist)}`);
   });
 
-  it("Adds a program to the whitelist", async () => {
-    const addToWhitelistTx = await accumulatorUpdaterProgram.methods
-      .addAllowedProgram(mockCpiProg.programId)
-      .accounts({})
+  it("Sets allowed programs to the whitelist", async () => {
+    const allowedPrograms = [mockCpiProg.programId];
+    await accumulatorUpdaterProgram.methods
+      .setAllowedPrograms(allowedPrograms)
+      .accounts({
+        authority: whitelistAuthority.publicKey,
+      })
+      .signers([whitelistAuthority])
       .rpc();
     const whitelist = await accumulatorUpdaterProgram.account.whitelist.fetch(
-      whitelistPda
+      whitelistPubkey
     );
     console.info(`whitelist after add: ${JSON.stringify(whitelist)}`);
-
-    assert.isTrue(
-      whitelist.allowedPrograms
-        .map((pk) => pk.toString())
-        .includes(mockCpiProg.programId.toString())
+    const whitelistAllowedPrograms = whitelist.allowedPrograms.map((pk) =>
+      pk.toString()
     );
+    assert.deepEqual(
+      whitelistAllowedPrograms,
+      allowedPrograms.map((p) => p.toString())
+    );
+  });
+
+  it("Updates the whitelist authority", async () => {
+    const newWhitelistAuthority = anchor.web3.Keypair.generate();
+    await accumulatorUpdaterProgram.methods
+      .updateWhitelistAuthority(newWhitelistAuthority.publicKey)
+      .accounts({
+        authority: whitelistAuthority.publicKey,
+      })
+      .signers([whitelistAuthority])
+      .rpc();
+
+    const whitelist = await accumulatorUpdaterProgram.account.whitelist.fetch(
+      whitelistPubkey
+    );
+    assert.isTrue(whitelist.authority.equals(newWhitelistAuthority.publicKey));
+
+    whitelistAuthority = newWhitelistAuthority;
   });
 
   it("Mock CPI program - AddPrice", async () => {
@@ -71,7 +97,7 @@ describe("accumulator_updater", () => {
       .accounts({
         systemProgram: anchor.web3.SystemProgram.programId,
         ixsSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
-        accumulatorWhitelist: whitelistPda,
+        accumulatorWhitelist: whitelistPubkey,
         accumulatorProgram: accumulatorUpdaterProgram.programId,
       })
       .pubkeys();
@@ -136,16 +162,18 @@ describe("accumulator_updater", () => {
       });
 
     console.log(`addPriceTx: ${addPriceTx}`);
-    const accumulatorInputkeys = accumulatorPdas.map((a) => a.pubkey);
+    const pythPriceAccount = await provider.connection.getAccountInfo(
+      mockCpiCallerAddPriceTxPubkeys.pythPriceAccount
+    );
+    console.log(`pythPriceAccount: ${pythPriceAccount.data.toString("hex")}`);
+    const accumulatorInputKeys = accumulatorPdas.map((a) => a.pubkey);
 
     const accumulatorInputs =
       await accumulatorUpdaterProgram.account.accumulatorInput.fetchMultiple(
-        accumulatorInputkeys
+        accumulatorInputKeys
       );
 
     const accumulatorPriceAccounts = accumulatorInputs.map((ai) => {
-      const { header, data } = ai;
-
       return parseAccumulatorInput(ai);
     });
     console.log(
@@ -160,36 +188,93 @@ describe("accumulator_updater", () => {
       assert.isTrue(pa.price.eq(addPriceParams.price));
       assert.isTrue(pa.priceExpo.eq(addPriceParams.priceExpo));
     });
+
+    let discriminator =
+      BorshAccountsCoder.accountDiscriminator("AccumulatorInput");
+    let accumulatorInputDiscriminator = bs58.encode(discriminator);
+
+    // fetch using `getProgramAccounts` and memcmp filter
+    const accumulatorAccounts = await provider.connection.getProgramAccounts(
+      accumulatorUpdaterProgram.programId,
+      {
+        filters: [
+          {
+            memcmp: {
+              offset: 0,
+              bytes: accumulatorInputDiscriminator,
+            },
+          },
+        ],
+      }
+    );
+    const accumulatorInputKeyStrings = accumulatorInputKeys.map((k) =>
+      k.toString()
+    );
+    accumulatorAccounts.forEach((a) => {
+      assert.isTrue(accumulatorInputKeyStrings.includes(a.pubkey.toString()));
+    });
   });
 });
 
 type AccumulatorInputHeader = IdlTypes<AccumulatorUpdater>["AccumulatorHeader"];
-type AccumulatorInputPriceAccountTypes =
-  | IdlAccounts<MockCpiCaller>["priceAccount"] // case-sensitive
-  | IdlTypes<MockCpiCaller>["PriceOnly"];
 
 // Parses AccumulatorInput.data into a PriceAccount or PriceOnly object based on the
 // accountType and accountSchema.
-//
-// AccumulatorInput.data for AccumulatorInput<PriceAccount> will
-// have mockCpiCaller::PriceAccount.discriminator()
-// AccumulatorInput<PriceOnly> will not since its not an account
 function parseAccumulatorInput({
   header,
   data,
 }: {
   header: AccumulatorInputHeader;
   data: Buffer;
-}): AccumulatorInputPriceAccountTypes {
+}): AccumulatorPriceMessage {
   console.log(`header: ${JSON.stringify(header)}`);
   assert.strictEqual(header.accountType, 3);
   if (header.accountSchema === 0) {
     console.log(`[full]data: ${data.toString("hex")}`);
-    // case-sensitive. Note that "P" is capitalized here and not in
-    // the AccumulatorInputPriceAccountTypes type alias.
-    return mockCpiProg.coder.accounts.decode("PriceAccount", data);
+    return parseFullPriceMessage(data);
   } else {
     console.log(`[compact]data: ${data.toString("hex")}`);
-    return mockCpiProg.coder.types.decode("PriceOnly", data);
+    return parseCompactPriceMessage(data);
   }
+}
+
+//TODO: follow wormhole sdk parsing structure?
+// - https://github.com/wormhole-foundation/wormhole/blob/main/sdk/js/src/vaa/generic.ts
+type AccumulatorPriceMessage = FullPriceMessage | CompactPriceMessage;
+
+type FullPriceMessage = {
+  id: anchor.BN;
+  price: anchor.BN;
+  priceExpo: anchor.BN;
+  ema: anchor.BN;
+  emaExpo: anchor.BN;
+};
+
+function parseFullPriceMessage(data: Buffer): FullPriceMessage {
+  return {
+    id: new anchor.BN(data.subarray(0, 8), "be"),
+    price: new anchor.BN(data.subarray(8, 16), "be"),
+    priceExpo: new anchor.BN(data.subarray(16, 24), "be"),
+    ema: new anchor.BN(data.subarray(24, 32), "be"),
+    emaExpo: new anchor.BN(data.subarray(32, 40), "be"),
+  };
+}
+
+type CompactPriceMessage = {
+  id: anchor.BN;
+  price: anchor.BN;
+  priceExpo: anchor.BN;
+};
+
+function parseCompactPriceMessage(data: Buffer): CompactPriceMessage {
+  return {
+    id: new anchor.BN(data.subarray(0, 8), "be"),
+    price: new anchor.BN(data.subarray(8, 16), "be"),
+    priceExpo: new anchor.BN(data.subarray(16, 24), "be"),
+  };
+}
+
+interface AccumulatorInput<T> {
+  header: AccumulatorInputHeader;
+  account: T;
 }

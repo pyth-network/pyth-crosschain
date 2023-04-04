@@ -10,8 +10,14 @@ use {
             sysvar,
         },
     },
+    message::{
+        get_schemas,
+        price::*,
+        AccumulatorSerializer,
+    },
 };
 
+pub mod message;
 declare_id!("Dg5PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
@@ -22,26 +28,27 @@ pub mod mock_cpi_caller {
         ctx: Context<'_, '_, '_, 'info, AddPrice<'info>>,
         params: AddPriceParams,
     ) -> Result<()> {
-        let pyth_price_acct = &mut ctx.accounts.pyth_price_account;
-        pyth_price_acct.init(params)?;
+        let mut account_data: Vec<Vec<u8>> = vec![];
+        let schemas = get_schemas(PythAccountType::Price);
 
-        let mut price_account_data_vec = vec![];
-        AccountSerialize::try_serialize(
-            &pyth_price_acct.clone().into_inner(),
-            &mut price_account_data_vec,
-        )?;
+        {
+            let pyth_price_acct = &mut ctx.accounts.pyth_price_account.load_init()?;
+
+            pyth_price_acct.init(params)?;
+
+            let price_full_data =
+                FullPriceMessage::from(&**pyth_price_acct).accumulator_serialize()?;
+
+            account_data.push(price_full_data);
 
 
-        let price_only_data = PriceOnly::from(&pyth_price_acct.clone().into_inner())
-            .try_to_vec()
-            .unwrap();
+            let price_compact_data =
+                CompactPriceMessage::from(&**pyth_price_acct).accumulator_serialize()?;
+            account_data.push(price_compact_data);
+        }
 
 
-        let account_data: Vec<Vec<u8>> = vec![price_account_data_vec, price_only_data];
-        let account_schemas = [PythSchemas::Full, PythSchemas::Compact]
-            .into_iter()
-            .map(|s| s.to_u8())
-            .collect::<Vec<u8>>();
+        let account_schemas = schemas.into_iter().map(|s| s.to_u8()).collect::<Vec<u8>>();
 
         // 44444 compute units
         // AddPrice::invoke_cpi_anchor(ctx, account_data, PythAccountType::Price, account_schemas)
@@ -81,7 +88,6 @@ impl<'info> AddPrice<'info> {
         account_schemas: Vec<u8>,
     ) -> Result<()> {
         accumulator_updater::cpi::create_inputs(
-            // cpi_ctx,
             ctx.accounts.create_inputs_ctx(ctx.remaining_accounts),
             ctx.accounts.pyth_price_account.key(),
             account_data,
@@ -111,7 +117,7 @@ impl<'info> AddPrice<'info> {
                 .map(|a| AccountMeta::new(a.key(), false))
                 .collect::<Vec<_>>(),
         );
-        let add_accumulator_input_ix = anchor_lang::solana_program::instruction::Instruction {
+        let create_inputs_ix = anchor_lang::solana_program::instruction::Instruction {
             program_id: ctx.accounts.accumulator_program.key(),
             accounts,
             data: (
@@ -127,7 +133,7 @@ impl<'info> AddPrice<'info> {
         };
         let account_infos = &mut ctx.accounts.to_account_infos();
         account_infos.extend_from_slice(ctx.remaining_accounts);
-        anchor_lang::solana_program::program::invoke(&add_accumulator_input_ix, account_infos)?;
+        anchor_lang::solana_program::program::invoke(&create_inputs_ix, account_infos)?;
         Ok(())
     }
 }
@@ -153,6 +159,13 @@ pub struct AddPriceParams {
     pub ema_expo:   u64,
 }
 
+trait PythAccount {
+    const ACCOUNT_TYPE: PythAccountType;
+    fn account_type() -> PythAccountType {
+        Self::ACCOUNT_TYPE
+    }
+}
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 pub enum PythAccountType {
@@ -168,20 +181,6 @@ impl PythAccountType {
     }
 }
 
-#[derive(Copy, Clone)]
-#[repr(u8)]
-pub enum PythSchemas {
-    Full    = 0,
-    Compact = 1,
-    Minimal = 2,
-}
-
-impl PythSchemas {
-    fn to_u8(&self) -> u8 {
-        *self as u8
-    }
-}
-
 #[derive(Accounts)]
 #[instruction(params: AddPriceParams)]
 pub struct AddPrice<'info> {
@@ -192,7 +191,7 @@ pub struct AddPrice<'info> {
         bump,
         space = 8 + PriceAccount::INIT_SPACE
     )]
-    pub pyth_price_account:    Account<'info, PriceAccount>,
+    pub pyth_price_account:    AccountLoader<'info, PriceAccount>,
     #[account(mut)]
     pub payer:                 Signer<'info>,
     /// also needed for accumulator_updater
@@ -208,8 +207,7 @@ pub struct AddPrice<'info> {
 }
 
 
-//Note: this will use anchor's default borsh serialization schema with the header
-#[account]
+#[account(zero_copy)]
 #[derive(InitSpace)]
 pub struct PriceAccount {
     pub id:         u64,
@@ -217,6 +215,7 @@ pub struct PriceAccount {
     pub price_expo: u64,
     pub ema:        u64,
     pub ema_expo:   u64,
+    pub comp_:      [Pubkey; 32],
 }
 
 impl PriceAccount {
@@ -230,45 +229,10 @@ impl PriceAccount {
     }
 }
 
-// #[derive(Default, Debug, borsh::BorshSerialize)]
-#[derive(AnchorSerialize, AnchorDeserialize, Default, Debug, Clone)]
-pub struct PriceOnly {
-    pub price_expo: u64,
-    pub price:      u64,
-    pub id:         u64,
+impl PythAccount for PriceAccount {
+    const ACCOUNT_TYPE: PythAccountType = PythAccountType::Price;
 }
 
-impl PriceOnly {
-    fn serialize(&self) -> Vec<u8> {
-        self.try_to_vec().unwrap()
-    }
-
-    fn serialize_from_price_account(other: PriceAccount) -> Vec<u8> {
-        PriceOnly::from(&other).try_to_vec().unwrap()
-    }
-}
-
-
-impl From<&PriceAccount> for PriceOnly {
-    fn from(other: &PriceAccount) -> Self {
-        Self {
-            id:         other.id,
-            price:      other.price,
-            price_expo: other.price_expo,
-        }
-    }
-}
-
-
-impl From<PriceAccount> for PriceOnly {
-    fn from(other: PriceAccount) -> Self {
-        Self {
-            id:         other.id,
-            price:      other.price,
-            price_expo: other.price_expo,
-        }
-    }
-}
 
 #[cfg(test)]
 mod test {

@@ -899,6 +899,7 @@ version = "0.1.0"
 dependencies = [
  "accumulator_updater",
  "anchor-lang",
+ "bytemuck",
 ]
 
 [[package]]

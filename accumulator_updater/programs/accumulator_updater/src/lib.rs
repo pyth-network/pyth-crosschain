@@ -18,34 +18,43 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod accumulator_updater {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, authority: Pubkey) -> Result<()> {
+        require_keys_neq!(authority, Pubkey::default());
         let whitelist = &mut ctx.accounts.whitelist;
         whitelist.bump = *ctx.bumps.get("whitelist").unwrap();
+        whitelist.authority = authority;
         Ok(())
     }
 
-    //TODO: add authorization mechanism for this
-    pub fn add_allowed_program(
-        ctx: Context<AddAllowedProgram>,
-        allowed_program: Pubkey,
+    pub fn set_allowed_programs(
+        ctx: Context<UpdateWhitelist>,
+        allowed_programs: Vec<Pubkey>,
     ) -> Result<()> {
         let whitelist = &mut ctx.accounts.whitelist;
-        require_keys_neq!(allowed_program, Pubkey::default());
-        require!(
-            !whitelist.allowed_programs.contains(&allowed_program),
-            AccumulatorUpdaterError::DuplicateAllowedProgram
-        );
-        whitelist.allowed_programs.push(allowed_program);
+        whitelist.validate_programs(&allowed_programs)?;
+        whitelist.allowed_programs = allowed_programs;
+        Ok(())
+    }
+
+    pub fn update_whitelist_authority(
+        ctx: Context<UpdateWhitelist>,
+        new_authority: Pubkey,
+    ) -> Result<()> {
+        let whitelist = &mut ctx.accounts.whitelist;
+        whitelist.validate_new_authority(new_authority)?;
+        whitelist.authority = new_authority;
         Ok(())
     }
 
     /// Add new account(s) to be included in the accumulator
     ///
-    /// * `base_account` - Pubkey of the original account the AccumulatorInput(s) are derived from
-    /// * `data` - Vec of AccumulatorInput account data
-    /// * `account_type` - Marker to indicate base_account account_type
-    /// * `account_schemas` - Vec of markers to indicate schemas for AccumulatorInputs. In same respective
-    ///    order as data
+    /// * `base_account`    - Pubkey of the original account the
+    ///                       AccumulatorInput(s) are derived from
+    /// * `data`            - Vec of AccumulatorInput account data
+    /// * `account_type`    - Marker to indicate base_account account_type
+    /// * `account_schemas` - Vec of markers to indicate schemas for
+    ///                       AccumulatorInputs. In same respective
+    ///                       order as data
     pub fn create_inputs<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateInputs<'info>>,
         base_account: Pubkey,
@@ -105,8 +114,29 @@ pub mod accumulator_updater {
 #[derive(InitSpace)]
 pub struct Whitelist {
     pub bump:             u8,
+    pub authority:        Pubkey,
     #[max_len(32)]
     pub allowed_programs: Vec<Pubkey>,
+}
+
+impl Whitelist {
+    pub fn validate_programs(&self, allowed_programs: &[Pubkey]) -> Result<()> {
+        require!(
+            !self.allowed_programs.contains(&Pubkey::default()),
+            AccumulatorUpdaterError::InvalidAllowedProgram
+        );
+        require_gte!(
+            32,
+            allowed_programs.len(),
+            AccumulatorUpdaterError::MaximumAllowedProgramsExceeded
+        );
+        Ok(())
+    }
+
+    pub fn validate_new_authority(&self, new_authority: Pubkey) -> Result<()> {
+        require_keys_neq!(new_authority, Pubkey::default());
+        Ok(())
+    }
 }
 
 
@@ -141,7 +171,8 @@ impl<'info> WhitelistVerifier<'info> {
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
-    pub payer:          Signer<'info>,
+    pub payer: Signer<'info>,
+
     #[account(
         init,
         payer = payer,
@@ -153,17 +184,20 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
 }
 
+
 #[derive(Accounts)]
-pub struct AddAllowedProgram<'info> {
+pub struct UpdateWhitelist<'info> {
     #[account(mut)]
-    pub payer:          Signer<'info>,
+    pub payer: Signer<'info>,
+
+    pub authority: Signer<'info>,
     #[account(
-    mut,
-    seeds = [b"accumulator".as_ref(), b"whitelist".as_ref()],
-    bump = whitelist.bump,
+        mut,
+        seeds = [b"accumulator".as_ref(), b"whitelist".as_ref()],
+        bump = whitelist.bump,
+        has_one = authority
     )]
-    pub whitelist:      Account<'info, Whitelist>,
-    pub system_program: Program<'info, System>,
+    pub whitelist: Account<'info, Whitelist>,
 }
 
 
@@ -294,4 +328,10 @@ pub enum AccumulatorUpdaterError {
     ConversionError,
     #[msg("Serialization Error")]
     SerializeError,
+    #[msg("Whitelist admin required on initialization")]
+    WhitelistAdminRequired,
+    #[msg("Invalid allowed program")]
+    InvalidAllowedProgram,
+    #[msg("Maximum number of allowed programs exceeded")]
+    MaximumAllowedProgramsExceeded,
 }
