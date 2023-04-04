@@ -5,6 +5,7 @@ module pyth::pyth {
     use sui::sui::{SUI};
     use sui::transfer::{Self};
     use sui::clock::{Self, Clock};
+    use sui::package::{UpgradeCap};
 
     use pyth::event::{Self as pyth_event};
     use pyth::data_source::{Self, DataSource};
@@ -26,6 +27,7 @@ module pyth::pyth {
     /// state and emit event corresponding to Pyth initialization.
     public entry fun init_pyth(
         deployer: DeployerCap,
+        upgrade_cap: UpgradeCap,
         stale_price_threshold: u64,
         governance_emitter_chain_id: u64,
         governance_emitter_address: vector<u8>,
@@ -36,6 +38,7 @@ module pyth::pyth {
     ) {
         state::init_and_share_state(
             deployer,
+            upgrade_cap,
             stale_price_threshold,
             update_fee,
             data_source::new(
@@ -261,3 +264,155 @@ module pyth::pyth {
 
 // TODO - pyth tests
 // https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/aptos/contracts/sources/pyth.move#L384
+
+module pyth::pyth_tests{
+    use sui::sui::SUI;
+    use sui::coin::{Self, Coin};
+    use sui::clock::{Self};
+    use sui::test_scenario::{Self, Scenario, ctx};
+    use sui::package::Self;
+    use sui::object::Self;
+
+    use pyth::state::{Self};
+    use pyth::price_identifier::{Self};
+    use pyth::price_info::{Self, PriceInfo};
+    use pyth::price_feed::{Self};
+    use pyth::data_source::{Self, DataSource};
+    use pyth::i64::{Self};
+    use pyth::price::{Self};
+
+    use wormhole::setup::{Self as wormhole_setup, DeployerCap};
+    use wormhole::external_address::{Self};
+
+    #[test_only]
+    /// Init Wormhole core bridge state.
+    /// Init Pyth state.
+    /// Set initial Sui clock time,
+    /// Mint some SUI fee coins.
+    fun setup_test(
+        stale_price_threshold: u64,
+        governance_emitter_chain_id: u64,
+        governance_emitter_address: vector<u8>,
+        data_sources: vector<DataSource>,
+        base_update_fee: u64,
+        to_mint: u64
+    ): (Scenario, Coin<SUI>) {
+
+        let deployer = @0x1234;
+        let scenario = test_scenario::begin(deployer);
+
+        // Initialize Wormhole core bridge.
+        wormhole_setup::init_test_only(ctx(&mut scenario));
+
+        // Take the `DeployerCap` from the sender of the transaction.
+        let deployer_cap =
+            test_scenario::take_from_address<DeployerCap>(
+                &scenario,
+                deployer
+            );
+
+        // This will be created and sent to the transaction sender automatically
+        // when the contract is published. This exists in place of grabbing
+        // it from the sender.
+        let upgrade_cap =
+            package::test_publish(
+                object::id_from_address(@0x0),
+                test_scenario::ctx(&mut scenario)
+            );
+
+        let governance_chain = 1234;
+        let governance_contract =
+            x"deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
+        let initial_guardians =
+            vector[
+                x"1337133713371337133713371337133713371337",
+                x"c0dec0dec0dec0dec0dec0dec0dec0dec0dec0de",
+                x"ba5edba5edba5edba5edba5edba5edba5edba5ed"
+            ];
+        let guardian_set_seconds_to_live = 5678;
+        let message_fee = 350;
+
+        wormhole_setup::init_and_share_state(
+            deployer_cap,
+            upgrade_cap,
+            governance_chain,
+            governance_contract,
+            initial_guardians,
+            guardian_set_seconds_to_live,
+            message_fee,
+            test_scenario::ctx(&mut scenario)
+        );
+
+        // Create and share a global clock object for timekeeping.
+        clock::create_for_testing(ctx(&mut scenario));
+
+        // Initialize Pyth state.
+        let pyth_upgrade_cap=
+            package::test_publish(
+                object::id_from_address(@0x123456),
+                test_scenario::ctx(&mut scenario)
+            );
+
+        state::init_test_only(ctx(&mut scenario));
+
+        let pyth_deployer_cap = test_scenario::take_from_address<state::DeployerCap>(
+            &scenario,
+            @pyth
+        );
+
+        state::init_and_share_state(
+            pyth_deployer_cap,
+            pyth_upgrade_cap,
+            stale_price_threshold,
+            base_update_fee,
+            data_source::new(governance_emitter_chain_id, external_address::from_bytes(governance_emitter_address)),
+            data_sources,
+            ctx(&mut scenario)
+        );
+
+        let coins = coin::mint_for_testing<SUI>(to_mint, ctx(&mut scenario));
+        (scenario, coins)
+    }
+
+    #[test_only]
+    fun get_mock_price_infos(): vector<PriceInfo> {
+        vector<PriceInfo>[
+                price_info::new_price_info(
+                    1663680747,
+                    1663074349,
+                    price_feed::new(
+                        price_identifier::from_byte_vec(x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1"),
+                        price::new(i64::new(1557, false), 7, i64::new(5, true), 1663680740),
+                        price::new(i64::new(1500, false), 3, i64::new(5, true), 1663680740),
+                    ),
+                ),
+                price_info::new_price_info(
+                    1663680747,
+                    1663074349,
+                    price_feed::new(
+                        price_identifier::from_byte_vec(x"3b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe"),
+                        price::new(i64::new(1050, false), 3, i64::new(5, true), 1663680745),
+                        price::new(i64::new(1483, false), 3, i64::new(5, true), 1663680745),
+                    ),
+                ),
+                price_info::new_price_info(
+                    1663680747,
+                    1663074349,
+                    price_feed::new(
+                        price_identifier::from_byte_vec(x"33832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d"),
+                        price::new(i64::new(1010, false), 2, i64::new(5, true), 1663680745),
+                        price::new(i64::new(1511, false), 3, i64::new(5, true), 1663680745),
+                    ),
+                ),
+                price_info::new_price_info(
+                    1663680747,
+                    1663074349,
+                    price_feed::new(
+                        price_identifier::from_byte_vec(x"21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db8"),
+                        price::new(i64::new(1739, false), 1, i64::new(5, true), 1663680745),
+                        price::new(i64::new(1508, false), 3, i64::new(5, true), 1663680745),
+                    ),
+                ),
+            ]
+    }
+}
