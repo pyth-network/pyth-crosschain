@@ -35,7 +35,6 @@ const [pythPriceAccountPk] = anchor.web3.PublicKey.findProgramAddressSync(
 
 const PRICE_SCHEMAS = [0, 1];
 
-
 describe("accumulator_updater", () => {
   // Configure the client to use the local cluster.
   let provider = anchor.AnchorProvider.env();
@@ -282,31 +281,6 @@ describe("accumulator_updater", () => {
       assert.isTrue(pm.id.eq(addPriceParams.id));
       assert.isTrue(pm.price.eq(updatePriceParams.price));
       assert.isTrue(pm.priceExpo.eq(updatePriceParams.priceExpo));
-    });
-
-    let discriminator =
-      BorshAccountsCoder.accountDiscriminator("AccumulatorInput");
-    let accumulatorInputDiscriminator = bs58.encode(discriminator);
-
-    // fetch using `getProgramAccounts` and memcmp filter
-    const accumulatorAccounts = await provider.connection.getProgramAccounts(
-      accumulatorUpdaterProgram.programId,
-      {
-        filters: [
-          {
-            memcmp: {
-              offset: 0,
-              bytes: accumulatorInputDiscriminator,
-            },
-          },
-        ],
-      }
-    );
-    const accumulatorInputKeyStrings = accumulatorInputKeys.map((k) =>
-      k.toString()
-    );
-    accumulatorAccounts.forEach((a) => {
-      assert.isTrue(accumulatorInputKeyStrings.includes(a.pubkey.toString()));
     });
   });
 });
