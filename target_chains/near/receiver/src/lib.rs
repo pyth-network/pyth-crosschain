@@ -123,7 +123,7 @@ impl Pyth {
     #[init(ignore_state)]
     pub fn migrate() -> Self {
         // This currently deserializes and produces the same state, I.E migration is a no-op to the
-        // current state. We only update the codehash to prevent re-upgrading.
+        // current state.
         //
         // In the case where we want to actually migrate to a new state, we can do this by defining
         // the old State struct here and then deserializing into that, then migrating into the new
@@ -145,13 +145,15 @@ impl Pyth {
         //
         //     // Construct new Pyth State from old, perform any migrations needed.
         //     let old: OldPyth = env::state_read().expect("Failed to read state");
+        //
         //     Self {
+        //        sources:    old.sources,
+        //        gov_source: old.gov_source,
         //        ...
         //     }
         // }
         // ```
-        let mut state: Self = env::state_read().expect("Failed to read state");
-        state.codehash = None;
+        let state: Self = env::state_read().expect("Failed to read state");
         state
     }
 
@@ -230,14 +232,7 @@ impl Pyth {
         // forces the caller to add the required fee to the deposit. The protocol defines the fee
         // as a u128, but storage is a u64, so we need to check that the fee does not overflow the
         // storage cost as well.
-        let storage = (env::storage_usage() as u128)
-            .checked_sub(
-                self.update_fee
-                    .checked_div(env::storage_byte_cost())
-                    .ok_or(Error::ArithmeticOverflow)?,
-            )
-            .ok_or(Error::InsufficientDeposit)
-            .and_then(|s| u64::try_from(s).map_err(|_| Error::ArithmeticOverflow))?;
+        let storage = env::storage_usage();
 
         // Deserialize VAA, note that we already deserialized and verified the VAA in `process_vaa`
         // at this point so we only care about the `rest` component which contains bytes we can
@@ -277,11 +272,12 @@ impl Pyth {
         );
 
         // Refund storage difference to `account_id` after storage execution.
-        self.refund_storage_usage(
+        Self::refund_storage_usage(
             account_id,
             storage,
             env::storage_usage(),
             env::attached_deposit(),
+            Some(self.update_fee),
         )
     }
 
@@ -402,18 +398,22 @@ impl Pyth {
         }
     }
 
-    /// Checks storage usage invariants and additionally refunds the caller if they overpay.
+    /// Checks storage usage invariants and additionally refunds the caller if they overpay. This
+    /// method can optionally charge a fee to the caller which is removed from their deposit during
+    /// refund.
     fn refund_storage_usage(
-        &self,
         recipient: AccountId,
         before: StorageUsage,
         after: StorageUsage,
         deposit: Balance,
+        additional_fee: Option<Balance>,
     ) -> Result<(), Error> {
+        let fee = additional_fee.unwrap_or(0);
+
         if let Some(diff) = after.checked_sub(before) {
             // Handle storage increases if checked_sub succeeds.
             let cost = Balance::from(diff);
-            let cost = cost * env::storage_byte_cost();
+            let cost = (cost * env::storage_byte_cost()) + fee;
 
             // If the cost is higher than the deposit we bail.
             if cost > deposit {
@@ -429,7 +429,7 @@ impl Pyth {
             // the amount reduced, as well the original deposit they sent.
             let refund = Balance::from(before - after);
             let refund = refund * env::storage_byte_cost();
-            let refund = refund + deposit;
+            let refund = refund + deposit - fee;
             Promise::new(recipient).transfer(refund);
         }
 
