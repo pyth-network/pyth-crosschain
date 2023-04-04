@@ -1,6 +1,3 @@
-import { CosmwasmExecutor } from "./cosmwasm";
-import { InjectiveExecutor } from "./injective";
-
 import { Coin } from "@cosmjs/stargate";
 // TODO: expose these executors and consume them in price pusher
 /**
@@ -144,47 +141,3 @@ export type UpdateContractAdminRequest = {
 export type UpdateContractAdminResponse = {
   txHash: string;
 };
-
-export enum ChainExecutorType {
-  INJECTIVE = "injective",
-  COSMWASM = "cosmwasm",
-}
-
-export type ChainExecutorFactoryArgs =
-  | {
-      type: ChainExecutorType.INJECTIVE;
-      value: InjectiveConfig;
-    }
-  | {
-      type: ChainExecutorType.COSMWASM;
-      value: CosmwasmConfig;
-    };
-
-export type InjectiveConfig = {
-  grpcEndpoint: string;
-  mnemonic: string;
-};
-
-export type CosmwasmConfig = {
-  endpoint: string;
-  mnemonic: string;
-  prefix: string;
-  gasPrice: string;
-  // FIXME: probably have to pass the hd path too. not sure
-};
-
-export function executorFromConfig({
-  type,
-  value,
-}: ChainExecutorFactoryArgs): ChainExecutor {
-  if (type === ChainExecutorType.INJECTIVE) {
-    return new InjectiveExecutor(value.grpcEndpoint, value.mnemonic);
-  }
-
-  return new CosmwasmExecutor(
-    value.endpoint,
-    value.mnemonic,
-    value.prefix,
-    value.gasPrice
-  );
-}
