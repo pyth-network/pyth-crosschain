@@ -30,7 +30,7 @@ import assert from "assert";
 export class InjectiveExecutor implements ChainExecutor {
   private readonly wallet: PrivateKey;
   private readonly chainId = "injective-888";
-  private readonly gasMultiplier = 1.3;
+  private readonly gasMultiplier = 1.8;
   private readonly gasPrice = DEFAULT_GAS_PRICE;
 
   constructor(
@@ -92,6 +92,7 @@ export class InjectiveExecutor implements ChainExecutor {
     const txResponse = await txService.broadcast(txRaw);
 
     if (txResponse.code !== 0) {
+      console.log(`Transaction failed: ${txResponse.rawLog}`);
       throw new Error(`Transaction failed: ${txResponse.rawLog}`);
     } else {
       console.log(
