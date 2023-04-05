@@ -178,7 +178,11 @@ describe("accumulator_updater", () => {
     const pythPriceAccount = await provider.connection.getAccountInfo(
       mockCpiCallerAddPriceTxPubkeys.pythPriceAccount
     );
-    console.log(`pythPriceAccount: ${pythPriceAccount.data.toString("hex")}`);
+    const pythPriceAcct = {
+      ...pythPriceAccount,
+      data: pythPriceAccount.data.toString("hex"),
+    };
+    console.log(`pythPriceAccount: ${JSON.stringify(pythPriceAcct)}`);
 
     const accumulatorInputs =
       await accumulatorUpdaterProgram.account.accumulatorInput.fetchMultiple(
@@ -321,7 +325,6 @@ function parseAccumulatorInput({
   data: Buffer;
 }): AccumulatorPriceMessage {
   console.log(`header: ${JSON.stringify(header)}`);
-  assert.strictEqual(header.accountType, 3);
   if (header.accountSchema === 0) {
     console.log(`[full]data: ${data.toString("hex")}`);
     return parseFullPriceMessage(data);

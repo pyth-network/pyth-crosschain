@@ -1,6 +1,6 @@
 use {
     crate::{
-        accumulator_acc_seeds_with_bump,
+        accumulator_input_seeds,
         AccumulatorUpdaterError,
     },
     anchor_lang::prelude::*,
@@ -14,7 +14,7 @@ pub struct AccumulatorInput {
 }
 
 impl AccumulatorInput {
-    pub fn get_initial_size(data: &Vec<u8>) -> usize {
+    pub fn size(data: &Vec<u8>) -> usize {
         AccumulatorHeader::SIZE + 4 + data.len()
     }
 
@@ -22,29 +22,30 @@ impl AccumulatorInput {
         Self { header, data }
     }
 
-    pub fn validate_account_info(
-        accumulator_input_key: Pubkey,
-        accumulator_input: &AccumulatorInput,
-        cpi_caller: Pubkey,
-        base_account: Pubkey,
-        account_type: u32,
-        account_schema: u8,
-    ) -> Result<()> {
-        // let pubkey = ai.key();
-        let expected_key = Pubkey::create_program_address(
-            accumulator_acc_seeds_with_bump!(
-                cpi_caller,
-                base_account,
-                account_schema,
-                accumulator_input.header.bump
-            ),
+    pub fn update(&mut self, new_data: Vec<u8>) {
+        self.header = AccumulatorHeader::new(self.header.bump, self.header.account_schema);
+        self.data = new_data;
+    }
+
+    fn derive_pda(&self, cpi_caller: Pubkey, base_account: Pubkey) -> Result<Pubkey> {
+        let res = Pubkey::create_program_address(
+            accumulator_input_seeds!(self, cpi_caller, base_account),
             &crate::ID,
         )
         .map_err(|_| AccumulatorUpdaterError::InvalidPDA)?;
-        require_keys_eq!(expected_key, accumulator_input_key);
-        require_eq!(accumulator_input.header.account_type, account_type);
-        require_eq!(accumulator_input.header.account_schema, account_schema);
+        Ok(res)
+    }
 
+    pub fn validate(
+        &self,
+        key: Pubkey,
+        cpi_caller: Pubkey,
+        base_account: Pubkey,
+        account_schema: u8,
+    ) -> Result<()> {
+        let expected_key = self.derive_pda(cpi_caller, base_account)?;
+        require_keys_eq!(expected_key, key);
+        require_eq!(self.header.account_schema, account_schema);
         Ok(())
     }
 
@@ -64,20 +65,18 @@ impl AccumulatorInput {
 pub struct AccumulatorHeader {
     pub bump:           u8,
     pub version:        u8,
-    // u32 for parity with pyth oracle contract
-    pub account_type:   u32,
     pub account_schema: u8,
 }
 
 
 impl AccumulatorHeader {
-    pub const SIZE: usize = 1 + 1 + 4 + 1;
+    pub const SIZE: usize = 1 + 1 + 1;
+    pub const CURRENT_VERSION: u8 = 1;
 
-    pub fn new(bump: u8, version: u8, account_type: u32, account_schema: u8) -> Self {
+    pub fn new(bump: u8, account_schema: u8) -> Self {
         Self {
             bump,
-            version,
-            account_type,
+            version: Self::CURRENT_VERSION,
             account_schema,
         }
     }

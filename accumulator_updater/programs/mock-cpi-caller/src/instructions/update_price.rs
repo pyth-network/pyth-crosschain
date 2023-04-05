@@ -1,6 +1,9 @@
 use {
     crate::{
-        instructions::sighash,
+        instructions::{
+            sighash,
+            ACCUMULATOR_UPDATER_IX_NAME,
+        },
         message::{
             get_schemas,
             price::{
@@ -78,18 +81,24 @@ pub fn update_price<'info>(
     }
 
 
-    let account_schemas = schemas.into_iter().map(|s| s.to_u8()).collect::<Vec<u8>>();
+    // let account_schemas = schemas.into_iter().map(|s| s.to_u8()).collect::<Vec<u8>>();
 
-    UpdatePrice::emit_accumulator_inputs(ctx, account_data, PythAccountType::Price, account_schemas)
+    let values = schemas
+        .into_iter()
+        .map(|s| s.to_u8())
+        .zip(account_data)
+        .collect::<Vec<(u8, Vec<u8>)>>();
+
+    UpdatePrice::emit_accumulator_inputs(ctx, values)
 }
 
 impl<'info> UpdatePrice<'info> {
     /// Invoke accumulator-updater emit-inputs ix cpi call
     pub fn emit_accumulator_inputs(
         ctx: Context<'_, '_, '_, 'info, UpdatePrice<'info>>,
-        account_data: Vec<Vec<u8>>,
-        account_type: PythAccountType,
-        account_schemas: Vec<u8>,
+        values: Vec<(u8, Vec<u8>)>,
+        // account_data: Vec<Vec<u8>>,
+        // account_schemas: Vec<u8>,
     ) -> anchor_lang::Result<()> {
         let mut accounts = vec![
             AccountMeta::new(ctx.accounts.payer.key(), true),
@@ -108,11 +117,11 @@ impl<'info> UpdatePrice<'info> {
             accounts,
             data: (
                 //anchor ix discriminator/identifier
-                sighash("global", "emit_inputs"),
+                sighash("global", ACCUMULATOR_UPDATER_IX_NAME),
                 ctx.accounts.pyth_price_account.key(),
-                account_data,
-                account_type.to_u32(),
-                account_schemas,
+                values,
+                // account_data,
+                // account_schemas,
             )
                 .try_to_vec()
                 .unwrap(),

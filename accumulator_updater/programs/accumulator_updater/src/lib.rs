@@ -17,6 +17,7 @@ pub mod accumulator_updater {
 
 
     /// Initializes the whitelist and sets it's authority to the provided pubkey
+    /// Once initialized, the authority must sign all further changes to the whitelist.
     pub fn initialize(ctx: Context<Initialize>, authority: Pubkey) -> Result<()> {
         require_keys_neq!(authority, Pubkey::default());
         let whitelist = &mut ctx.accounts.whitelist;
@@ -51,23 +52,24 @@ pub mod accumulator_updater {
     }
 
 
-    /// Create or update account(s) to be included in the accumulator
+    /// Create or update inputs for the Accumulator. Each input is written
+    /// into a separate PDA account derived with
+    /// seeds = [cpi_caller, b"accumulator", base_account_key, schema]
     ///
-    /// * `base_account`    - Pubkey of the original account the
-    ///                       AccumulatorInput(s) are derived from
-    /// * `data`            - Vec of AccumulatorInput account data
-    /// * `account_type`    - Marker to indicate base_account account_type
-    /// * `account_schemas` - Vec of markers to indicate schemas for
-    ///                       AccumulatorInputs. In same respective
-    ///                       order as data
-    pub fn emit_inputs<'info>(
-        ctx: Context<'_, '_, '_, 'info, EmitInputs<'info>>,
-        base_account: Pubkey,
-        data: Vec<Vec<u8>>,
-        account_type: u32,
-        account_schemas: Vec<u8>,
+    /// The caller of this instruction must pass those PDAs
+    /// while calling this function in the same order as elements.
+    ///
+    ///
+    /// * `base_account_key`    - Pubkey of the original account the
+    ///                         AccumulatorInput(s) are derived from
+    /// * `values`              - Vec of (schema, account_data) in same respective
+    ///                           order `ctx.remaining_accounts`
+    pub fn put_all<'info>(
+        ctx: Context<'_, '_, '_, 'info, PutAll<'info>>,
+        base_account_key: Pubkey,
+        values: Vec<InputSchemaAndData>,
     ) -> Result<()> {
-        instructions::emit_inputs(ctx, base_account, data, account_type, account_schemas)
+        instructions::put_all(ctx, base_account_key, values)
     }
 }
 
