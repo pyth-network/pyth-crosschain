@@ -24,7 +24,7 @@ import {
   addMember,
   removeMember,
   SquadInstruction,
-} from "./helper";
+} from "./helpers";
 
 setDefaultWasm("node");
 
