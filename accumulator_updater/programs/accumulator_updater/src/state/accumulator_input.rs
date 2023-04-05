@@ -6,7 +6,14 @@ use {
     anchor_lang::prelude::*,
 };
 
-//TODO: implement custom serialization & set alignment
+/// `AccumulatorInput` is an arbitrary set of bytes
+/// that will be included in the AccumulatorSysvar
+///
+///
+/// The actual contents of data are set/handled by
+/// the CPI calling program (e.g. Pyth Oracle)
+///
+/// TODO: implement custom serialization & set alignment
 #[account]
 pub struct AccumulatorInput {
     pub header: AccumulatorHeader,
