@@ -28,6 +28,12 @@ import {
 
 setDefaultWasm("node");
 
+// NOTE(2023-04-05): Donot export from this file:
+// If any other file import anything from this file, commandline specific
+// code will also be triggered.
+// We don't want. Anything you would like to export should be added to an
+// another file and not this.
+
 // NOTE(2022-11-30): Naming disambiguation:
 // - "mainnet" - always means a public production environment
 //
