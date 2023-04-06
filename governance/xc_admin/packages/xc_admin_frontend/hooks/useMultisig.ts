@@ -1,5 +1,6 @@
 import { Wallet } from '@coral-xyz/anchor'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
+import { getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { useAnchorWallet } from '@solana/wallet-adapter-react'
 import {
   AccountMeta,
@@ -12,6 +13,7 @@ import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useContext, useEffect, useState } from 'react'
 import {
+  ExecutePostedVaa,
   getManyProposalsInstructions,
   getMultisigCluster,
   getProposals,
@@ -129,7 +131,6 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
         )
         try {
           if (cancelled) return
-          // DELETE THIS TRY CATCH ONCE THIS MULTISIG EXISTS EVERYWHERE
           setpriceFeedMultisigAccount(
             await readOnlySquads.getMultisig(
               PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
@@ -149,7 +150,6 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
         )
         try {
           if (cancelled) return
-          // DELETE THIS TRY CATCH ONCE THIS MULTISIG EXISTS EVERYWHERE
           const sortedPriceFeedMultisigProposals = await getSortedProposals(
             readOnlySquads,
             PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
@@ -178,7 +178,14 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
             if (
               isRemoteCluster(cluster) &&
               ixs.length > 0 &&
-              ixs.some((ix) => ix instanceof WormholeMultisigInstruction)
+              ixs.some(
+                (ix) =>
+                  ix instanceof WormholeMultisigInstruction &&
+                  ix.governanceAction instanceof ExecutePostedVaa &&
+                  ix.governanceAction.instructions.some((ix) =>
+                    ix.programId.equals(getPythProgramKeyForCluster(cluster))
+                  )
+              )
             ) {
               proposalsRes.push(sortedPriceFeedMultisigProposals[idx])
               instructionsRes.push(ixs)
