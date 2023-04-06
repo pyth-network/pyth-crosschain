@@ -47,7 +47,17 @@ const CLUSTER_URLS: Record<PythCluster, any> = {
       wsUrl: 'wss://api.testnet.solana.com/',
     },
   ],
-  pythtest: [
+  'pythtest-conformance': [
+    {
+      rpcUrl: 'http://pythtest.xyz.pyth.network',
+      wsUrl: 'ws://pythtest.xyz.pyth.network',
+    },
+    {
+      rpcUrl: 'https://api.pythtest.pyth.network/',
+      wsUrl: 'wss://api.pythtest.pyth.network/',
+    },
+  ],
+  'pythtest-crosschain': [
     {
       rpcUrl: 'http://pythtest.xyz.pyth.network',
       wsUrl: 'ws://pythtest.xyz.pyth.network',
