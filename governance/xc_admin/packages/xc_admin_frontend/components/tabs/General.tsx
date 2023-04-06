@@ -391,6 +391,23 @@ const General = () => {
                 .instruction()
             )
           }
+
+          if (
+            JSON.stringify(prev.priceAccounts[0].expo) !==
+            JSON.stringify(newChanges.priceAccounts[0].expo)
+          ) {
+            // create update exponent instruction
+            instructions.push(
+              await pythProgramClient.methods
+                .initPrice(newChanges.priceAccounts[0].expo, 1)
+                .accounts({
+                  fundingAccount,
+                  priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                })
+                .instruction()
+            )
+          }
+
           // check if minPub has changed
           if (
             prev.priceAccounts[0].minPub !== newChanges.priceAccounts[0].minPub
