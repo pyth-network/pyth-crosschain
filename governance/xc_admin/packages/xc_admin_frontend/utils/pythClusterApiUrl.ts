@@ -29,8 +29,8 @@ const CLUSTER_URLS: Record<PythCluster, any> = {
   ],
   devnet: [
     {
-      rpcUrl: 'https://rpc.ankr.com/solana_devnet',
-      wsUrl: 'wss://rpc.ankr.com/solana_devnet',
+      rpcUrl: 'http://devnet.xyz.pyth.network',
+      wsUrl: 'ws://devnet.xyz.pyth.network',
     },
     {
       rpcUrl: 'https://api.devnet.solana.com/',
@@ -58,20 +58,20 @@ const CLUSTER_URLS: Record<PythCluster, any> = {
     },
   ],
   'pythtest-crosschain': [
-    // {
-    //   rpcUrl: 'http://pythtest.xyz.pyth.network',
-    //   wsUrl: 'ws://pythtest.xyz.pyth.network',
-    // },
+    {
+      rpcUrl: 'http://pythtest.xyz.pyth.network',
+      wsUrl: 'ws://pythtest.xyz.pyth.network',
+    },
     {
       rpcUrl: 'https://api.pythtest.pyth.network/',
       wsUrl: 'wss://api.pythtest.pyth.network/',
     },
   ],
   pythnet: [
-    // {
-    //   rpcUrl: 'http://pythnet.xyz.pyth.network',
-    //   wsUrl: 'ws://pythnet.xyz.pyth.network',
-    // },
+    {
+      rpcUrl: 'http://pythnet.xyz.pyth.network',
+      wsUrl: 'ws://pythnet.xyz.pyth.network',
+    },
     {
       rpcUrl: 'https://pythnet.rpcpool.com/',
       wsUrl: 'wss://pythnet.rpcpool.com/',
