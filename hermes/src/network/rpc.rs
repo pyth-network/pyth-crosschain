@@ -43,6 +43,7 @@ pub async fn spawn(rpc_addr: String, store: Store) -> Result<()> {
         .route("/api/latest_vaas", get(rest::latest_vaas))
         .route("/api/get_vaa", get(rest::get_vaa))
         .route("/api/get_vaa_ccip", get(rest::get_vaa_ccip))
+        .route("/api/price_feed_ids", get(rest::price_feed_ids))
         .with_state(state.clone());
 
     // Listen in the background for new VAA's from the Wormhole RPC.

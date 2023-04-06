@@ -37,4 +37,5 @@ impl Key {
 pub trait Storage: Sync + Send {
     fn insert(&self, key: Key, time: UnixTimestamp, value: StorageData) -> Result<()>;
     fn get(&self, key: Key, request_time: RequestTime) -> Result<Option<StorageData>>;
+    fn keys(&self) -> Vec<Key>;
 }

@@ -82,7 +82,6 @@ pub fn get_price_feeds_with_update_data(
                 vaas.insert(price_info.vaa_bytes);
             }
             None => {
-                log::info!("No price feed found for price id: {:?}", price_id);
                 return Err(anyhow!("No price feed found for price id: {:?}", price_id));
             }
         }
@@ -96,6 +95,18 @@ pub fn get_price_feeds_with_update_data(
     })
 }
 
+
+pub fn get_price_feed_ids(state: State) -> Vec<PriceIdentifier> {
+    let mut price_ids = Vec::new();
+    for key in state.keys() {
+        let maybe_32_bytes: Result<[u8; 32], _> = ((*key).clone()).try_into();
+        if let Ok(bytes) = maybe_32_bytes {
+            let price_id = PriceIdentifier::new(bytes);
+            price_ids.push(price_id);
+        }
+    }
+    price_ids
+}
 
 /// Convert a PriceAttestation to a PriceFeed.
 ///
