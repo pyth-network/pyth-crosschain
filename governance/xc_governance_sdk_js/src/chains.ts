@@ -13,6 +13,7 @@ export const RECEIVER_CHAINS = {
   canto: 60009,
   meter: 60010,
   mantle: 60011,
+  conflux_espace: 60012,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

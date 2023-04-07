@@ -251,6 +251,14 @@ module.exports = {
       provider: payerProvider("https://rpc.testnet.mantle.xyz/"),
       network_id: 5001,
     },
+    conflux_espace: {
+      provider: payerProvider("https://evm.confluxrpc.org"),
+      network_id: 1030,
+    },
+    conflux_espace_testnet: {
+      provider: payerProvider("https://evmtestnet.confluxrpc.com"),
+      network_id: 71,
+    },
   },
 
   compilers: {
