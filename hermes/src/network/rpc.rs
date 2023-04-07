@@ -14,6 +14,7 @@ use {
 };
 
 mod rest;
+mod rpc_price_feed;
 
 #[derive(Clone)]
 pub struct State {
