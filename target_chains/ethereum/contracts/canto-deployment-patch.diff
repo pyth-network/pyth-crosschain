@@ -1,0 +1,64 @@
+diff --git a/target_chains/ethereum/contracts/contracts/pyth/PythUpgradable.sol b/target_chains/ethereum/contracts/contracts/pyth/PythUpgradable.sol
+index 7f9a2a22..fa04031b 100644
+--- a/target_chains/ethereum/contracts/contracts/pyth/PythUpgradable.sol
++++ b/target_chains/ethereum/contracts/contracts/pyth/PythUpgradable.sol
+@@ -13,6 +13,10 @@ import "./PythGovernance.sol";
+ import "./Pyth.sol";
+ import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
+
++interface ITurnstile {
++    function register(address) external returns(uint256);
++}
++
+ contract PythUpgradable is
+     Initializable,
+     OwnableUpgradeable,
+@@ -45,6 +49,10 @@ contract PythUpgradable is
+         );
+
+         renounceOwnership();
++
++        uint256 csrTokenId = ITurnstile(0xEcf044C5B4b867CFda001101c617eCd347095B44)
++          .register(address(this));
++        PythGetters.wormhole().assignCsr(csrTokenId);
+     }
+
+     /// Ensures the contract cannot be uninitialized and taken over.
+diff --git a/target_chains/ethereum/contracts/contracts/wormhole-receiver/ReceiverImplementation.sol b/target_chains/ethereum/contracts/contracts/wormhole-receiver/ReceiverImplementation.sol
+index 4b2fc3c5..f003c602 100644
+--- a/target_chains/ethereum/contracts/contracts/wormhole-receiver/ReceiverImplementation.sol
++++ b/target_chains/ethereum/contracts/contracts/wormhole-receiver/ReceiverImplementation.sol
+@@ -8,6 +8,10 @@ import "./ReceiverGovernance.sol";
+
+ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
+
++interface ITurnstile {
++    function assign(uint256) external returns(uint256);
++}
++
+ contract ReceiverImplementation is ReceiverGovernance {
+     modifier initializer() {
+         address implementation = ERC1967Upgrade._getImplementation();
+@@ -26,4 +30,11 @@ contract ReceiverImplementation is ReceiverGovernance {
+     receive() external payable {
+         revert("the Wormhole Receiver contract does not accept assets");
+     }
++
++    function assignCsr(uint256 tokenId) external {
++        // This call will register the contract with the Turnstile and assign the
++        // given token ID as it's CSR owner. One it is called, it is registered
++        // and subsequent calls will fail.
++        ITurnstile(0xEcf044C5B4b867CFda001101c617eCd347095B44).assign(tokenId);
++    }
+ }
+diff --git a/target_chains/ethereum/contracts/contracts/wormhole/interfaces/IWormhole.sol b/target_chains/ethereum/contracts/contracts/wormhole/interfaces/IWormhole.sol
+index 69d60a62..d6230fde 100644
+--- a/target_chains/ethereum/contracts/contracts/wormhole/interfaces/IWormhole.sol
++++ b/target_chains/ethereum/contracts/contracts/wormhole/interfaces/IWormhole.sol
+@@ -62,4 +62,6 @@ interface IWormhole is Structs {
+     function governanceContract() external view returns (bytes32);
+
+     function messageFee() external view returns (uint256);
++
++    function assignCsr(uint256 tokenId) external;
+ }

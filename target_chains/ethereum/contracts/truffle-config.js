@@ -160,6 +160,10 @@ module.exports = {
       timeoutBlocks: 200,
       disableConfirmationListener: true,
     },
+    canto: {
+      provider: payerProvider(`https://canto.gravitychain.io`),
+      network_id: 7700,
+    },
     celo: {
       provider: payerProvider(`https://forno.celo.org`),
       network_id: 42220,
