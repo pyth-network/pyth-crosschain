@@ -49,10 +49,13 @@ const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
       value: 'devnet',
       name: 'devnet',
     },
-    // hide pythtest as its broken
     {
-      value: 'pythtest',
-      name: 'pythtest',
+      value: 'pythtest-conformance',
+      name: 'pythtest-conformance',
+    },
+    {
+      value: 'pythtest-crosschain',
+      name: 'pythtest-crosschain',
     },
   ]
 

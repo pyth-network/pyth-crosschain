@@ -5,7 +5,11 @@ import { Cluster } from "@solana/web3.js";
  * Return whether the cluster is governed remotely or not. For example Pythnet is governed remotely by a mainnet multisig.
  */
 export function isRemoteCluster(cluster: PythCluster) {
-  return cluster == "pythnet" || cluster == "pythtest";
+  return (
+    cluster == "pythnet" ||
+    cluster == "pythtest-conformance" ||
+    cluster == "pythtest-crosschain"
+  );
 }
 
 /**
@@ -15,24 +19,10 @@ export function getMultisigCluster(cluster: PythCluster): Cluster | "localnet" {
   switch (cluster) {
     case "pythnet":
       return "mainnet-beta";
-    case "pythtest":
+    case "pythtest-conformance":
       return "devnet";
-    default:
-      return cluster;
-  }
-}
-
-/**
- * For cluster that are governed remotely (ex : Pythnet from Mainnet) return the network of the remote cluster
- */
-export function getRemoteCluster(
-  cluster: PythCluster
-): PythCluster | "localnet" {
-  switch (cluster) {
-    case "devnet":
-      return "pythtest";
-    case "mainnet-beta":
-      return "pythnet";
+    case "pythtest-crosschain":
+      return "devnet";
     default:
       return cluster;
   }
