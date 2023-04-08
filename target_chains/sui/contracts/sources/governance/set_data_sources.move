@@ -3,6 +3,7 @@ module pyth::set_data_sources {
 
     use wormhole::cursor;
     use wormhole::external_address::{Self};
+    use wormhole::bytes32::{Self};
 
     use pyth::deserialize;
     use pyth::data_source::{Self, DataSource};
@@ -28,7 +29,7 @@ module pyth::set_data_sources {
         let i = 0;
         while (i < data_sources_count) {
             let emitter_chain_id = deserialize::deserialize_u16(&mut cursor);
-            let emitter_address = external_address::from_bytes(deserialize::deserialize_vector(&mut cursor, 32));
+            let emitter_address = external_address::new(bytes32::from_bytes(deserialize::deserialize_vector(&mut cursor, 32)));
             vector::push_back(&mut sources, data_source::new((emitter_chain_id as u64), emitter_address));
 
             i = i + 1;

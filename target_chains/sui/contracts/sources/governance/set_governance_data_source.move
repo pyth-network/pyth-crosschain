@@ -5,6 +5,7 @@ module pyth::set_governance_data_source {
 
     use wormhole::cursor;
     use wormhole::external_address::{Self, ExternalAddress};
+    use wormhole::bytes32::{Self};
     //use wormhole::state::{Self}
 
     friend pyth::governance;
@@ -24,7 +25,7 @@ module pyth::set_governance_data_source {
     fun from_byte_vec(bytes: vector<u8>): SetGovernanceDataSource {
         let cursor = cursor::new(bytes);
         let emitter_chain_id = deserialize::deserialize_u16(&mut cursor);
-        let emitter_address = external_address::from_bytes(deserialize::deserialize_vector(&mut cursor, 32));
+        let emitter_address = external_address::new(bytes32::from_bytes(deserialize::deserialize_vector(&mut cursor, 32)));
         let initial_sequence = deserialize::deserialize_u64(&mut cursor);
         cursor::destroy_empty(cursor);
         SetGovernanceDataSource {

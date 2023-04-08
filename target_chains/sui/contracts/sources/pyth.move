@@ -13,15 +13,18 @@ module pyth::pyth {
     use pyth::price_info::{Self, PriceInfo, PriceInfoObject};
     use pyth::batch_price_attestation::{Self};
     use pyth::price_feed::{Self};
-    use pyth::price::{Self};
+    use pyth::price::{Self, Price};
+    use pyth::price_identifier::{PriceIdentifier};
 
     use wormhole::external_address::{Self};
     use wormhole::vaa::{Self};
     use wormhole::state::{State as WormState};
+    use wormhole::bytes32::{Self};
 
     const E_DATA_SOURCE_EMITTER_ADDRESS_AND_CHAIN_IDS_DIFFERENT_LENGTHS: u64 = 0;
     const E_INVALID_DATA_SOURCE: u64 = 1;
     const E_INSUFFICIENT_FEE: u64 = 2;
+    const E_STALE_PRICE_UPDATE: u64 = 3;
 
     /// Call init_and_share_state with deployer cap to initialize
     /// state and emit event corresponding to Pyth initialization.
@@ -43,7 +46,8 @@ module pyth::pyth {
             update_fee,
             data_source::new(
                 governance_emitter_chain_id,
-                external_address::from_bytes(governance_emitter_address)),
+                external_address::new((bytes32::from_bytes(governance_emitter_address)))
+            ),
             parse_data_sources(
                 data_sources_emitter_chain_ids,
                 data_sources_emitter_addresses,
@@ -68,7 +72,7 @@ module pyth::pyth {
         while (i < vector::length(&emitter_chain_ids)) {
             vector::push_back(&mut sources, data_source::new(
                 *vector::borrow(&emitter_chain_ids, i),
-                external_address::from_bytes(*vector::borrow(&emitter_addresses, i))
+                external_address::new(bytes32::from_bytes(*vector::borrow(&emitter_addresses, i)))
             ));
 
             i = i + 1;
@@ -88,7 +92,7 @@ module pyth::pyth {
             let vaa = vector::pop_back(&mut vaas);
 
             // Deserialize the VAA
-            let vaa = vaa::parse_and_verify(worm_state, vaa, ctx);
+            let vaa = vaa::parse_and_verify(worm_state, vaa, clock);
 
             // Check that the VAA is from a valid data source (emitter)
             assert!(
@@ -147,9 +151,8 @@ module pyth::pyth {
         vaas: vector<vector<u8>>,
         price_info_objects: &mut vector<PriceInfoObject>,
         fee: Coin<SUI>,
-        clock: &Clock,
-        ctx: &mut TxContext
-    ) {
+        clock: &Clock
+    ){
         // Charge the message update fee
         assert!(get_total_update_fee(pyth_state, &vaas) <= coin::value(&fee), E_INSUFFICIENT_FEE);
 
@@ -163,8 +166,7 @@ module pyth::pyth {
                 pyth_state,
                 vector::pop_back(&mut vaas),
                 price_info_objects,
-                clock,
-                ctx
+                clock
             );
         };
     }
@@ -177,11 +179,10 @@ module pyth::pyth {
         pyth_state: &PythState,
         worm_vaa: vector<u8>,
         price_info_objects: &mut vector<PriceInfoObject>,
-        clock: &Clock,
-        ctx: &mut TxContext
+        clock: &Clock
     ) {
         // Deserialize the VAA
-        let vaa = vaa::parse_and_verify(worm_state, worm_vaa, ctx);
+        let vaa = vaa::parse_and_verify(worm_state, worm_vaa, clock);
 
         // Check that the VAA is from a valid data source (emitter)
         assert!(
@@ -254,13 +255,89 @@ module pyth::pyth {
         update_timestamp > cached_timestamp
     }
 
+    // -----------------------------------------------------------------------------
+    // Query the cached prices
+    //
+    // It is strongly recommended to update the cached prices using the functions above,
+    // before using the functions below to query the cached data.
+
     /// Get the number of AptosCoin's required to perform the given price updates.
     ///
+
+    /// Determine if a price feed for the given price_identifier exists
+    public fun price_feed_exists(state: &PythState, price_identifier: PriceIdentifier): bool {
+        state::price_feed_object_exists(state, price_identifier)
+    }
+
+    /// Get the latest available price cached for the given price identifier, if that price is
+    /// no older than the stale price threshold.
+    ///
+    /// Please refer to the documentation at https://docs.pyth.network/consumers/best-practices for
+    /// how to how this price safely.
+    ///
+    /// Important: Pyth uses an on-demand update model, where consumers need to update the
+    /// cached prices before using them. Please read more about this at https://docs.pyth.network/consume-data/on-demand.
+    /// get_price() is likely to abort unless you call update_price_feeds() to update the cached price
+    /// beforehand, as the cached prices may be older than the stale price threshold.
+    ///
+    /// The price_info_object is a Sui object with the key ability that uniquely
+    /// contains a price feed for a given price_identifier.
+    ///
+    public fun get_price(state: &PythState, price_info_object: &PriceInfoObject, clock: &Clock): Price {
+        get_price_no_older_than(price_info_object, clock, state::get_stale_price_threshold_secs(state))
+    }
+
+    /// Get the latest available price cached for the given price identifier, if that price is
+    /// no older than the given age.
+    public fun get_price_no_older_than(price_info_object: &PriceInfoObject, clock: &Clock, max_age_secs: u64): Price {
+        let price = get_price_unsafe(price_info_object);
+        check_price_is_fresh(&price, clock, max_age_secs);
+        price
+    }
+
+    /// Get the latest available price cached for the given price identifier.
+    ///
+    /// WARNING: the returned price can be from arbitrarily far in the past.
+    /// This function makes no guarantees that the returned price is recent or
+    /// useful for any particular application. Users of this function should check
+    /// the returned timestamp to ensure that the returned price is sufficiently
+    /// recent for their application. The checked get_price_no_older_than()
+    /// function should be used in preference to this.
+    public fun get_price_unsafe(price_info_object: &PriceInfoObject): Price {
+        // TODO: extract Price from this guy...
+        let price_info = price_info::get_price_info_from_price_info_object(price_info_object);
+        price_feed::get_price(
+            price_info::get_price_feed(&price_info)
+        )
+    }
+
+    fun abs_diff(x: u64, y: u64): u64 {
+        if (x > y) {
+            return x - y
+        } else {
+            return y - x
+        }
+    }
+
+    /// Get the stale price threshold: the amount of time after which a cached price
+    /// is considered stale and no longer returned by get_price()/get_ema_price().
+    public fun get_stale_price_threshold_secs(state: &PythState): u64 {
+        state::get_stale_price_threshold_secs(state)
+    }
+
+    fun check_price_is_fresh(price: &Price, clock: &Clock, max_age_secs: u64) {
+        let age = abs_diff(clock::timestamp_ms(clock)/1000, price::get_timestamp(price));
+        assert!(age < max_age_secs, E_STALE_PRICE_UPDATE);
+    }
+
     /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public fun get_total_update_fee(pyth_state: &PythState, update_data: &vector<vector<u8>>): u64 {
         state::get_base_update_fee(pyth_state) * vector::length(update_data)
     }
 }
+
+
+
 
 // TODO - pyth tests
 // https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/aptos/contracts/sources/pyth.move#L384
@@ -283,6 +360,7 @@ module pyth::pyth_tests{
 
     use wormhole::setup::{Self as wormhole_setup, DeployerCap};
     use wormhole::external_address::{Self};
+    use wormhole::bytes32::{Self};
 
     #[test_only]
     /// Init Wormhole core bridge state.
@@ -332,7 +410,7 @@ module pyth::pyth_tests{
         let guardian_set_seconds_to_live = 5678;
         let message_fee = 350;
 
-        wormhole_setup::init_and_share_state(
+        wormhole_setup::complete(
             deployer_cap,
             upgrade_cap,
             governance_chain,
@@ -365,7 +443,7 @@ module pyth::pyth_tests{
             pyth_upgrade_cap,
             stale_price_threshold,
             base_update_fee,
-            data_source::new(governance_emitter_chain_id, external_address::from_bytes(governance_emitter_address)),
+            data_source::new(governance_emitter_chain_id, external_address::new(bytes32::from_bytes(governance_emitter_address))),
             data_sources,
             ctx(&mut scenario)
         );

@@ -1,5 +1,5 @@
 module pyth::governance {
-    use sui::tx_context::{TxContext};
+    use sui::clock::{Clock};
 
     use pyth::data_source::{Self};
     use pyth::governance_instruction;
@@ -24,9 +24,9 @@ module pyth::governance {
         pyth_state : &mut State,
         worm_state: &WormState,
         vaa_bytes: vector<u8>,
-        ctx: &mut TxContext
+        clock: &Clock
     ) {
-        let parsed_vaa = parse_and_verify_governance_vaa(pyth_state, worm_state, vaa_bytes, ctx);
+        let parsed_vaa = parse_and_verify_governance_vaa(pyth_state, worm_state, vaa_bytes, clock);
         let instruction = governance_instruction::from_byte_vec(vaa::take_payload(parsed_vaa));
 
         // Dispatch the instruction to the appropiate handler
@@ -53,9 +53,9 @@ module pyth::governance {
         pyth_state: &mut State,
         worm_state: &WormState,
         bytes: vector<u8>,
-        ctx: &mut TxContext
+        clock: &Clock,
     ): VAA {
-        let parsed_vaa = vaa::parse_and_verify(worm_state, bytes, ctx);
+        let parsed_vaa = vaa::parse_and_verify(worm_state, bytes, clock);
 
         // Check that the governance data source is valid
         assert!(
