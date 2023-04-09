@@ -5,25 +5,20 @@ use {
             self,
             UpgradeableLoaderState,
         },
-        hash::hash,
         hash::Hash,
-        instruction::{
-            AccountMeta,
-            Instruction,
-        },
+        instruction::Instruction,
         native_token::LAMPORTS_PER_SOL,
         pubkey::Pubkey,
         rent::Rent,
         stake_history::Epoch,
         system_instruction,
-        system_program,
     },
     solana_program_test::{
+        read_file,
         BanksClient,
         BanksClientError,
         ProgramTest,
         ProgramTestBanksClientExt,
-        read_file,
     },
     solana_sdk::{
         account::Account,
@@ -33,16 +28,13 @@ use {
         },
         transaction::Transaction,
     },
-    std::{
-        mem::size_of,
-        path::Path,
-    },
+    std::path::Path,
 };
 
 /// Simulator for the state of the target chain program on Solana. You can run solana transactions against
 /// this struct to test how pyth instructions execute in the Solana runtime.
 pub struct ProgramSimulator {
-    pub program_id:            Pubkey,
+    pub program_id:        Pubkey,
     banks_client:          BanksClient,
     /// Hash used to submit the last transaction. The hash must be advanced for each new
     /// transaction; otherwise, replayed transactions in different states can return stale
@@ -54,7 +46,6 @@ pub struct ProgramSimulator {
 }
 
 impl ProgramSimulator {
-
     /// Deploys the target chain contract as upgradable
     pub async fn new() -> ProgramSimulator {
         let mut bpf_data = read_file(
