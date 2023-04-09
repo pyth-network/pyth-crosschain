@@ -261,9 +261,6 @@ module pyth::pyth {
     // It is strongly recommended to update the cached prices using the functions above,
     // before using the functions below to query the cached data.
 
-    /// Get the number of AptosCoin's required to perform the given price updates.
-    ///
-
     /// Determine if a price feed for the given price_identifier exists
     public fun price_feed_exists(state: &PythState, price_identifier: PriceIdentifier): bool {
         state::price_feed_object_exists(state, price_identifier)
@@ -336,27 +333,22 @@ module pyth::pyth {
     }
 }
 
-
-
-
-// TODO - pyth tests
-// https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/aptos/contracts/sources/pyth.move#L384
-
 module pyth::pyth_tests{
     use sui::sui::SUI;
     use sui::coin::{Self, Coin};
     use sui::clock::{Self};
-    use sui::test_scenario::{Self, Scenario, ctx};
+    use sui::test_scenario::{Self, Scenario, ctx, take_shared, return_shared};
     use sui::package::Self;
     use sui::object::Self;
 
-    use pyth::state::{Self};
+    use pyth::state::{Self, State as PythState};
     use pyth::price_identifier::{Self};
     use pyth::price_info::{Self, PriceInfo};
     use pyth::price_feed::{Self};
     use pyth::data_source::{Self, DataSource};
     use pyth::i64::{Self};
     use pyth::price::{Self};
+    use pyth::pyth::{Self};
 
     use wormhole::setup::{Self as wormhole_setup, DeployerCap};
     use wormhole::external_address::{Self};
@@ -492,5 +484,30 @@ module pyth::pyth_tests{
                     ),
                 ),
             ]
+    }
+
+    #[test_only]
+    fun test_get_update_fee() {
+        let single_update_fee = 50;
+        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 100000, 0);
+
+        let pyth_state = take_shared<PythState>(&scenario);
+        // Pass in a single VAA
+        assert!(pyth::get_total_update_fee(&pyth_state, &vector[
+            x"fb1543888001083cf2e6ef3afdcf827e89b11efd87c563638df6e1995ada9f93",
+        ]) == single_update_fee, 1);
+
+        // Pass in multiple VAAs
+        assert!(pyth::get_total_update_fee(&pyth_state, &vector[
+            x"4ee17a1a4524118de513fddcf82b77454e51be5d6fc9e29fc72dd6c204c0e4fa",
+            x"c72fdf81cfc939d4286c93fbaaae2eec7bae28a5926fa68646b43a279846ccc1",
+            x"d9a8123a793529c31200339820a3210059ecace6c044f81ecad62936e47ca049",
+            x"84e4f21b3e65cef47fda25d15b4eddda1edf720a1d062ccbf441d6396465fbe6",
+            x"9e73f9041476a93701a0b9c7501422cc2aa55d16100bec628cf53e0281b6f72f"
+        ]) == 250, 1);
+
+        return_shared(pyth_state);
+        coin::burn_for_testing<SUI>(test_coins);
+        test_scenario::end(scenario);
     }
 }
