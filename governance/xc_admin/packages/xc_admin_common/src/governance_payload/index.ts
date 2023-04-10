@@ -150,6 +150,7 @@ export function decodeGovernancePayload(
     case "ExecutePostedVaa":
       return ExecutePostedVaa.decode(data);
     case "UpgradeContract":
+      //TO DO : Support non-cosmos upgrades
       return CosmosUpgradeContract.decode(data);
     default:
       return undefined;
