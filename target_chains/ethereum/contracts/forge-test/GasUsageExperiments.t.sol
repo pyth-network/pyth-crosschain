@@ -53,6 +53,10 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
     ThresholdMerkleUpdate thresholdMerkleUpdateDepth1;
     ThresholdMerkleUpdate thresholdMerkleUpdateDepth8;
 
+    ThresholdUpdate thresholdUpdate;
+
+    bytes nativeUpdate;
+
     uint64 sequence;
     uint randSeed;
 
@@ -163,6 +167,10 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
             freshPrices[0],
             8
         );
+
+        thresholdUpdate = generateThresholdUpdate(priceIds[0], freshPrices[0]);
+
+        nativeUpdate = generateAttestationPayload(priceIds[0], freshPrices[0]);
     }
 
     function getRand() internal returns (uint val) {
@@ -187,14 +195,10 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         updateFee = pyth.getUpdateFee(updateData);
     }
 
-    function generateMerkleUpdate(
+    function generateAttestationPayload(
         bytes32 priceId,
-        PythStructs.Price memory price,
-        uint depth
-    )
-        internal
-        returns (bytes32 root, bytes memory data, bytes32[] memory proof)
-    {
+        PythStructs.Price memory price
+    ) internal returns (bytes memory data) {
         bytes32[] memory attestationPriceIds = new bytes32[](1);
         attestationPriceIds[0] = priceId;
         PythStructs.Price[] memory prices = new PythStructs.Price[](1);
@@ -204,6 +208,19 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
             prices
         );
         data = generatePriceFeedUpdatePayload(attestation);
+
+        return data;
+    }
+
+    function generateMerkleUpdate(
+        bytes32 priceId,
+        PythStructs.Price memory price,
+        uint depth
+    )
+        internal
+        returns (bytes32 root, bytes memory data, bytes32[] memory proof)
+    {
+        data = generateAttestationPayload(priceId, price);
 
         bytes32 curNodeHash = keccak256(data);
         proof = new bytes32[](depth);
@@ -258,10 +275,26 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
             bytes32[] memory proof
         ) = generateMerkleUpdate(priceId, price, depth);
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(THRESHOLD_KEY, root);
-        bytes memory rootSignature = abi.encodePacked(r, s, v - 27);
+        data = generateAttestationPayload(priceId, price);
+        bytes32 hash = keccak256(data);
 
-        return ThresholdMerkleUpdate(rootSignature, root, data, proof);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(THRESHOLD_KEY, root);
+        bytes memory signature = abi.encodePacked(r, s, v - 27);
+
+        return ThresholdMerkleUpdate(signature, root, data, proof);
+    }
+
+    function generateThresholdUpdate(
+        bytes32 priceId,
+        PythStructs.Price memory price
+    ) internal returns (ThresholdUpdate memory update) {
+        bytes memory data = generateAttestationPayload(priceId, price);
+        bytes32 hash = keccak256(data);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(THRESHOLD_KEY, hash);
+        bytes memory signature = abi.encodePacked(r, s, v - 27);
+
+        return ThresholdUpdate(signature, data);
     }
 
     function testBenchmarkUpdatePriceFeedsFresh() public {
@@ -325,6 +358,17 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
             thresholdMerkleUpdateDepth8.data,
             thresholdMerkleUpdateDepth8.proof
         );
+    }
+
+    function testUpdateThreshold() public {
+        pyth.updatePriceFeedsThreshold(
+            thresholdUpdate.signature,
+            thresholdUpdate.data
+        );
+    }
+
+    function testUpdateNative() public {
+        pyth.updatePriceFeedsNative(nativeUpdate);
     }
 }
 
@@ -416,6 +460,49 @@ contract PythExperimental is Pyth {
         }
     }
 
+    function updatePriceFeedsThreshold(
+        bytes memory signature,
+        bytes memory data
+    ) public payable {
+        bytes32 hash = keccak256(data);
+        if (!verifySignature(hash, signature, thresholdPublicKey))
+            revert PythErrors.InvalidArgument();
+
+        (
+            PythInternalStructs.PriceInfo memory info,
+            bytes32 priceId
+        ) = parseSingleAttestationFromBatch(data, 0, data.length);
+        uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
+
+        if (info.publishTime > latestPublishTime) {
+            setLatestPriceInfo(priceId, info);
+            emit PriceFeedUpdate(
+                priceId,
+                info.publishTime,
+                info.price,
+                info.conf
+            );
+        }
+    }
+
+    function updatePriceFeedsNative(bytes memory data) public payable {
+        (
+            PythInternalStructs.PriceInfo memory info,
+            bytes32 priceId
+        ) = parseSingleAttestationFromBatch(data, 0, data.length);
+        uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
+
+        if (info.publishTime > latestPublishTime) {
+            setLatestPriceInfo(priceId, info);
+            emit PriceFeedUpdate(
+                priceId,
+                info.publishTime,
+                info.price,
+                info.conf
+            );
+        }
+    }
+
     function verifySignature(
         bytes32 messageHash,
         bytes memory signature,
@@ -480,4 +567,14 @@ struct ThresholdMerkleUpdate {
     bytes data;
     // The chain of proof nodes.
     bytes32[] proof;
+}
+
+// A merkle tree price update delivered via threshold signature.
+// The update is valid if the data above hashed with the proof nodes sequentially
+// equals the root hash, and the signature is valid for rootHash.
+struct ThresholdUpdate {
+    // Signature of the hash of the data.
+    bytes signature;
+    // The serialized bytes of a PriceAttestation
+    bytes data;
 }
