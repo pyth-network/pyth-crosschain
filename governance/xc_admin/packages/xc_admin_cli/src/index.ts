@@ -26,6 +26,7 @@ import {
   mapKey,
   MultisigParser,
   PROGRAM_AUTHORITY_ESCROW,
+  proposeArbitraryPayload,
   proposeInstructions,
   WORMHOLE_ADDRESS,
 } from "xc_admin_common";
@@ -400,6 +401,36 @@ multisigCommand("propose-sol-transfer", "Propose sol transfer")
       [proposalInstruction],
       isRemote,
       WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
+    );
+  });
+
+multisigCommand("propose-arbitrary-payload", "Propose arbitrary payload")
+  .option("-p, --payload <hex-string>", "Wormhole VAA payload")
+  .action(async (options: any) => {
+    const wallet = await loadHotWalletOrLedger(
+      options.wallet,
+      options.ledgerDerivationAccount,
+      options.ledgerDerivationChange
+    );
+
+    const cluster: PythCluster = options.cluster;
+    const vault: PublicKey = new PublicKey(options.vault);
+
+    const squad = SquadsMesh.endpoint(
+      getPythClusterApiUrl(getMultisigCluster(cluster)),
+      wallet
+    );
+
+    let payload = options.payload;
+    if (payload.startsWith("0x")) {
+      payload = payload.substring(2);
+    }
+
+    await proposeArbitraryPayload(
+      squad,
+      vault,
+      Buffer.from(payload, "hex"),
+      WORMHOLE_ADDRESS[cluster]!
     );
   });
 

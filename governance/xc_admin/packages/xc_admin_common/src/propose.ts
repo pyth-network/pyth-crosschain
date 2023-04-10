@@ -30,6 +30,70 @@ type SquadInstruction = {
   authorityType?: string;
 };
 
+export async function proposeArbitraryPayload(
+  squad: Squads,
+  vault: PublicKey,
+  payload: Buffer,
+  wormholeAddress: PublicKey
+): Promise<PublicKey> {
+  const msAccount = await squad.getMultisig(vault);
+
+  let ixToSend: TransactionInstruction[] = [];
+  const proposalIndex = msAccount.transactionIndex + 1;
+  ixToSend.push(
+    await squad.buildCreateTransaction(
+      msAccount.publicKey,
+      msAccount.authorityIndex,
+      proposalIndex
+    )
+  );
+
+  const newProposalAddress = getTxPDA(
+    vault,
+    new BN(proposalIndex),
+    squad.multisigProgramId
+  )[0];
+
+  const instructionToPropose = await getPostMessageInstruction(
+    squad,
+    vault,
+    newProposalAddress,
+    1,
+    wormholeAddress,
+    payload
+  );
+  ixToSend.push(
+    await squad.buildAddInstruction(
+      vault,
+      newProposalAddress,
+      instructionToPropose.instruction,
+      1,
+      instructionToPropose.authorityIndex,
+      instructionToPropose.authorityBump,
+      instructionToPropose.authorityType
+    )
+  );
+  ixToSend.push(
+    await squad.buildActivateTransaction(vault, newProposalAddress)
+  );
+  ixToSend.push(await squad.buildApproveTransaction(vault, newProposalAddress));
+
+  const txToSend = batchIntoTransactions(ixToSend);
+
+  for (let i = 0; i < txToSend.length; i += SIZE_OF_SIGNED_BATCH) {
+    await new AnchorProvider(
+      squad.connection,
+      squad.wallet,
+      AnchorProvider.defaultOptions()
+    ).sendAll(
+      txToSend.slice(i, i + SIZE_OF_SIGNED_BATCH).map((tx) => {
+        return { tx, signers: [] };
+      })
+    );
+  }
+  return newProposalAddress;
+}
+
 /**
  * Propose an array of `TransactionInstructions` as a proposal
  * @param squad Squads client
@@ -291,14 +355,41 @@ export async function wrapAsRemoteInstruction(
   instructionIndex: number,
   wormholeAddress: PublicKey
 ): Promise<SquadInstruction> {
-  const emitter = squad.getAuthorityPDA(vault, 1);
+  const buffer: Buffer = new ExecutePostedVaa("pythnet", instructions).encode();
+  return await getPostMessageInstruction(
+    squad,
+    vault,
+    proposalAddress,
+    instructionIndex,
+    wormholeAddress,
+    buffer
+  );
+}
 
+/**
+ * Returns a postMessage instruction that will post the provided payload to wormhole when the multisig approves the proposal
+ * @param squad Squads client
+ * @param vault vault public key (the id of the multisig where these instructions should be proposed)
+ * @param proposalAddress address of the proposal
+ * @param instructionIndex index of the instruction within the proposal
+ * @param wormholeAddress address of the Wormhole bridge
+ * @param payload the payload to be posted
+ */
+async function getPostMessageInstruction(
+  squad: Squads,
+  vault: PublicKey,
+  proposalAddress: PublicKey,
+  instructionIndex: number,
+  wormholeAddress: PublicKey,
+  payload: Buffer
+): Promise<SquadInstruction> {
   const [messagePDA, messagePdaBump] = getIxAuthorityPDA(
     proposalAddress,
     new BN(instructionIndex),
     squad.multisigProgramId
   );
 
+  const emitter = squad.getAuthorityPDA(vault, 1);
   const provider = new AnchorProvider(
     squad.connection,
     squad.wallet,
@@ -309,8 +400,6 @@ export async function wrapAsRemoteInstruction(
     provider
   );
 
-  const buffer: Buffer = new ExecutePostedVaa("pythnet", instructions).encode();
-
   const accounts = getPostMessageAccounts(
     wormholeAddress,
     emitter,
@@ -320,7 +409,7 @@ export async function wrapAsRemoteInstruction(
 
   return {
     instruction: await wormholeProgram.methods
-      .postMessage(0, buffer, 0)
+      .postMessage(0, payload, 0)
       .accounts(accounts)
       .instruction(),
     authorityIndex: instructionIndex,
@@ -328,6 +417,7 @@ export async function wrapAsRemoteInstruction(
     authorityType: "custom",
   };
 }
+
 function getPostMessageAccounts(
   wormholeAddress: PublicKey,
   emitter: PublicKey,
