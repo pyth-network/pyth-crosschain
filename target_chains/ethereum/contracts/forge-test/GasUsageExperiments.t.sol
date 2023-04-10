@@ -14,6 +14,7 @@ import "../contracts/pyth/PythInternalStructs.sol";
 import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
 
+// Experiments to measure the gas usage of different ways of verifying prices in the EVM contract.
 contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
     // 19, current mainnet number of guardians, is used to have gas estimates
     // close to our mainnet transactions.
@@ -126,7 +127,7 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         (
             cachedPricesUpdateData,
             cachedPricesUpdateFee
-        ) = generateUpdateDataAndFee(cachedPrices);
+        ) = generateWormholeUpdateDataAndFee(cachedPrices);
         pyth.updatePriceFeeds{value: cachedPricesUpdateFee}(
             cachedPricesUpdateData
         );
@@ -134,7 +135,9 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         (
             freshPricesUpdateData,
             freshPricesUpdateFee
-        ) = generateUpdateDataAndFee(freshPrices);
+        ) = generateWormholeUpdateDataAndFee(freshPrices);
+
+        // Generate the update payloads for the various verification systems
 
         whMerkleUpdateDepth0 = generateWhMerkleUpdate(
             priceIds[0],
@@ -178,7 +181,8 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         val = uint(keccak256(abi.encode(randSeed)));
     }
 
-    function generateUpdateDataAndFee(
+    // Get the payload for a wormhole batch price update
+    function generateWormholeUpdateDataAndFee(
         PythStructs.Price[] memory prices
     ) internal returns (bytes[] memory updateData, uint updateFee) {
         bytes memory vaa = generatePriceFeedUpdateVAA(
@@ -195,6 +199,8 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         updateFee = pyth.getUpdateFee(updateData);
     }
 
+    // Helper function to serialize a single price update to bytes.
+    // Returns a serialized PriceAttestation.
     function generateAttestationPayload(
         bytes32 priceId,
         PythStructs.Price memory price
@@ -212,7 +218,10 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         return data;
     }
 
-    function generateMerkleUpdate(
+    // Helper function to generate a merkle proof of the given depth for the given price.
+    // Note: this function assumes that the data is on the leftmost branch of the tree and
+    // mocks the rest of the nodes (as the hash of the depth).
+    function generateMerkleProof(
         bytes32 priceId,
         PythStructs.Price memory price,
         uint depth
@@ -239,6 +248,7 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         return (root, data, proof);
     }
 
+    // Generate a wormhole-attested merkle proof with the given depth.
     function generateWhMerkleUpdate(
         bytes32 priceId,
         PythStructs.Price memory price,
@@ -248,7 +258,7 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
             bytes32 root,
             bytes memory data,
             bytes32[] memory proof
-        ) = generateMerkleUpdate(priceId, price, depth);
+        ) = generateMerkleProof(priceId, price, depth);
 
         bytes memory rootVaa = generateVaa(
             uint32(block.timestamp),
@@ -264,6 +274,7 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         return WormholeMerkleUpdate(rootVaa, data, proof);
     }
 
+    // Generate a threshold-signed merkle proof with the given depth.
     function generateThresholdMerkleUpdate(
         bytes32 priceId,
         PythStructs.Price memory price,
@@ -273,7 +284,7 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
             bytes32 root,
             bytes memory data,
             bytes32[] memory proof
-        ) = generateMerkleUpdate(priceId, price, depth);
+        ) = generateMerkleProof(priceId, price, depth);
 
         data = generateAttestationPayload(priceId, price);
         bytes32 hash = keccak256(data);
@@ -284,6 +295,7 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         return ThresholdMerkleUpdate(signature, root, data, proof);
     }
 
+    // Generate a threshold-signed price attestation.
     function generateThresholdUpdate(
         bytes32 priceId,
         PythStructs.Price memory price
@@ -396,6 +408,7 @@ contract PythExperimental is Pyth {
     }
 
     // Update a single price feed via a wormhole-attested merkle proof.
+    // data is expected to be a serialized PriceAttestation
     function updatePriceFeedsWhMerkle(
         bytes calldata rootVaa,
         bytes memory data,
@@ -425,6 +438,8 @@ contract PythExperimental is Pyth {
         }
     }
 
+    // Update a single price feed via a threshold-signed merkle proof.
+    // data is expected to be a serialized PriceAttestation
     function updatePriceFeedsThresholdMerkle(
         bytes memory rootSignature,
         bytes32 rootHash,
@@ -454,6 +469,8 @@ contract PythExperimental is Pyth {
         }
     }
 
+    // Update a single price feed via a threshold-signed price update.
+    // data is expected to be a serialized PriceAttestation.
     function updatePriceFeedsThreshold(
         bytes memory signature,
         bytes memory data
@@ -479,7 +496,13 @@ contract PythExperimental is Pyth {
         }
     }
 
+    // Update a single price feed via a "native" price update (i.e., using the default ethereum tx signature for authentication).
+    // data is expected to be a serialized PriceAttestation.
+    // This function represents the lower bound on how much gas we can use.
     function updatePriceFeedsNative(bytes memory data) public payable {
+        // TODO: this function should have a check on the sender.
+        // I'm assuming that check is not very expensive here.
+
         (
             PythInternalStructs.PriceInfo memory info,
             bytes32 priceId
@@ -497,6 +520,7 @@ contract PythExperimental is Pyth {
         }
     }
 
+    // Verify that signature is a valid ECDSA signature of messageHash by signer.
     function verifySignature(
         bytes32 messageHash,
         bytes memory signature,
@@ -520,6 +544,8 @@ contract PythExperimental is Pyth {
         return (recoveredAddress == signer);
     }
 
+    // Check that proof is a valid merkle proof of data. This function assumes that
+    // data is the leftmost node of the tree.
     // TODO: need to encode left/right structure for proof nodes
     function isValidMerkleProof(
         bytes32 expectedRoot,
