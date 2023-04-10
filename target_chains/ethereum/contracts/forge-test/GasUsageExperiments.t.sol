@@ -25,6 +25,9 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
     // We use 5 prices to form a batch of 5 prices, close to our mainnet transactions.
     uint8 constant NUM_PRICES = 5;
 
+    // Private key for the threshold signature
+    uint256 THRESHOLD_KEY = 1234;
+
     PythExperimental public pyth;
 
     bytes32[] priceIds;
@@ -42,9 +45,13 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
     uint freshPricesUpdateFee;
     uint64[] freshPricesPublishTimes;
 
-    WormholeMerkleUpdate merkleUpdateDepth0;
-    WormholeMerkleUpdate merkleUpdateDepth1;
-    WormholeMerkleUpdate merkleUpdateDepth8;
+    WormholeMerkleUpdate whMerkleUpdateDepth0;
+    WormholeMerkleUpdate whMerkleUpdateDepth1;
+    WormholeMerkleUpdate whMerkleUpdateDepth8;
+
+    ThresholdMerkleUpdate thresholdMerkleUpdateDepth0;
+    ThresholdMerkleUpdate thresholdMerkleUpdateDepth1;
+    ThresholdMerkleUpdate thresholdMerkleUpdateDepth8;
 
     uint64 sequence;
     uint randSeed;
@@ -68,6 +75,7 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
 
         pyth.initialize(
             wormhole,
+            vm.addr(THRESHOLD_KEY),
             emitterChainIds,
             emitterAddresses,
             PythTestUtils.GOVERNANCE_EMITTER_CHAIN_ID,
@@ -124,17 +132,33 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
             freshPricesUpdateFee
         ) = generateUpdateDataAndFee(freshPrices);
 
-        merkleUpdateDepth0 = generateMerkleProof(
+        whMerkleUpdateDepth0 = generateWhMerkleUpdate(
             priceIds[0],
             freshPrices[0],
             0
         );
-        merkleUpdateDepth1 = generateMerkleProof(
+        whMerkleUpdateDepth1 = generateWhMerkleUpdate(
             priceIds[0],
             freshPrices[0],
             1
         );
-        merkleUpdateDepth8 = generateMerkleProof(
+        whMerkleUpdateDepth8 = generateWhMerkleUpdate(
+            priceIds[0],
+            freshPrices[0],
+            8
+        );
+
+        thresholdMerkleUpdateDepth0 = generateThresholdMerkleUpdate(
+            priceIds[0],
+            freshPrices[0],
+            0
+        );
+        thresholdMerkleUpdateDepth1 = generateThresholdMerkleUpdate(
+            priceIds[0],
+            freshPrices[0],
+            1
+        );
+        thresholdMerkleUpdateDepth8 = generateThresholdMerkleUpdate(
             priceIds[0],
             freshPrices[0],
             8
@@ -163,11 +187,14 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         updateFee = pyth.getUpdateFee(updateData);
     }
 
-    function generateMerkleProof(
+    function generateMerkleUpdate(
         bytes32 priceId,
         PythStructs.Price memory price,
         uint depth
-    ) internal returns (WormholeMerkleUpdate memory update) {
+    )
+        internal
+        returns (bytes32 root, bytes memory data, bytes32[] memory proof)
+    {
         bytes32[] memory attestationPriceIds = new bytes32[](1);
         attestationPriceIds[0] = priceId;
         PythStructs.Price[] memory prices = new PythStructs.Price[](1);
@@ -176,10 +203,10 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
             attestationPriceIds,
             prices
         );
-        bytes memory data = generatePriceFeedUpdatePayload(attestation);
+        data = generatePriceFeedUpdatePayload(attestation);
 
         bytes32 curNodeHash = keccak256(data);
-        bytes32[] memory proof = new bytes32[](depth);
+        proof = new bytes32[](depth);
         for (uint i = 0; i < depth; ) {
             // pretend the ith sibling is just i
             proof[i] = keccak256(abi.encode(i));
@@ -190,18 +217,51 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
             }
         }
 
+        root = curNodeHash;
+
+        return (root, data, proof);
+    }
+
+    function generateWhMerkleUpdate(
+        bytes32 priceId,
+        PythStructs.Price memory price,
+        uint depth
+    ) internal returns (WormholeMerkleUpdate memory update) {
+        (
+            bytes32 root,
+            bytes memory data,
+            bytes32[] memory proof
+        ) = generateMerkleUpdate(priceId, price, depth);
+
         bytes memory rootVaa = generateVaa(
             uint32(block.timestamp),
             PythTestUtils.SOURCE_EMITTER_CHAIN_ID,
             PythTestUtils.SOURCE_EMITTER_ADDRESS,
             sequence,
-            bytes.concat(curNodeHash), // the root hash
+            bytes.concat(root), // the root hash
             NUM_GUARDIAN_SIGNERS
         );
 
         ++sequence;
 
         return WormholeMerkleUpdate(rootVaa, data, proof);
+    }
+
+    function generateThresholdMerkleUpdate(
+        bytes32 priceId,
+        PythStructs.Price memory price,
+        uint depth
+    ) internal returns (ThresholdMerkleUpdate memory update) {
+        (
+            bytes32 root,
+            bytes memory data,
+            bytes32[] memory proof
+        ) = generateMerkleUpdate(priceId, price, depth);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(THRESHOLD_KEY, root);
+        bytes memory rootSignature = abi.encodePacked(r, s, v - 27);
+
+        return ThresholdMerkleUpdate(rootSignature, root, data, proof);
     }
 
     function testBenchmarkUpdatePriceFeedsFresh() public {
@@ -216,35 +276,65 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         );
     }
 
-    function testVerifyMerkleProofDepth0() public {
-        pyth.updatePriceFeedsMerkle(
-            merkleUpdateDepth0.rootVaa,
-            merkleUpdateDepth0.data,
-            merkleUpdateDepth0.proof
+    function testUpdateWhMerkleProofDepth0() public {
+        pyth.updatePriceFeedsWhMerkle(
+            whMerkleUpdateDepth0.rootVaa,
+            whMerkleUpdateDepth0.data,
+            whMerkleUpdateDepth0.proof
         );
     }
 
-    function testVerifyMerkleProofDepth1() public {
-        pyth.updatePriceFeedsMerkle(
-            merkleUpdateDepth1.rootVaa,
-            merkleUpdateDepth1.data,
-            merkleUpdateDepth1.proof
+    function testUpdateWhMerkleProofDepth1() public {
+        pyth.updatePriceFeedsWhMerkle(
+            whMerkleUpdateDepth1.rootVaa,
+            whMerkleUpdateDepth1.data,
+            whMerkleUpdateDepth1.proof
         );
     }
 
-    function testVerifyMerkleProofDepth8() public {
-        pyth.updatePriceFeedsMerkle(
-            merkleUpdateDepth8.rootVaa,
-            merkleUpdateDepth8.data,
-            merkleUpdateDepth8.proof
+    function testUpdateWhMerkleProofDepth8() public {
+        pyth.updatePriceFeedsWhMerkle(
+            whMerkleUpdateDepth8.rootVaa,
+            whMerkleUpdateDepth8.data,
+            whMerkleUpdateDepth8.proof
+        );
+    }
+
+    function testUpdateThresholdMerkleProofDepth0() public {
+        pyth.updatePriceFeedsThresholdMerkle(
+            thresholdMerkleUpdateDepth0.rootSignature,
+            thresholdMerkleUpdateDepth0.rootHash,
+            thresholdMerkleUpdateDepth0.data,
+            thresholdMerkleUpdateDepth0.proof
+        );
+    }
+
+    function testUpdateThresholdMerkleProofDepth1() public {
+        pyth.updatePriceFeedsThresholdMerkle(
+            thresholdMerkleUpdateDepth1.rootSignature,
+            thresholdMerkleUpdateDepth1.rootHash,
+            thresholdMerkleUpdateDepth1.data,
+            thresholdMerkleUpdateDepth1.proof
+        );
+    }
+
+    function testUpdateThresholdMerkleProofDepth8() public {
+        pyth.updatePriceFeedsThresholdMerkle(
+            thresholdMerkleUpdateDepth8.rootSignature,
+            thresholdMerkleUpdateDepth8.rootHash,
+            thresholdMerkleUpdateDepth8.data,
+            thresholdMerkleUpdateDepth8.proof
         );
     }
 }
 
 // Pyth contract extended with methods for other verification systems (merkle proofs / threshold signatures)
 contract PythExperimental is Pyth {
+    address thresholdPublicKey;
+
     function initialize(
         address wormhole,
+        address thresholdPublicKeyArg,
         uint16[] calldata dataSourceEmitterChainIds,
         bytes32[] calldata dataSourceEmitterAddresses,
         uint16 governanceEmitterChainId,
@@ -253,6 +343,8 @@ contract PythExperimental is Pyth {
         uint validTimePeriodSeconds,
         uint singleUpdateFeeInWei
     ) public {
+        thresholdPublicKey = thresholdPublicKeyArg;
+
         Pyth._initialize(
             wormhole,
             dataSourceEmitterChainIds,
@@ -265,8 +357,8 @@ contract PythExperimental is Pyth {
         );
     }
 
-    // Experiment 2: Minimal merkle tree verification.
-    function updatePriceFeedsMerkle(
+    // Update a single price feed via a wormhole-attested merkle proof.
+    function updatePriceFeedsWhMerkle(
         bytes calldata rootVaa,
         bytes memory data,
         bytes32[] memory proof
@@ -295,6 +387,58 @@ contract PythExperimental is Pyth {
         }
     }
 
+    function updatePriceFeedsThresholdMerkle(
+        bytes memory rootSignature,
+        bytes32 rootHash,
+        bytes memory data,
+        bytes32[] memory proof
+    ) public payable {
+        if (!verifySignature(rootHash, rootSignature, thresholdPublicKey))
+            revert PythErrors.InvalidArgument();
+
+        bool validProof = isValidMerkleProof(rootHash, data, proof);
+        if (!validProof) revert PythErrors.InvalidArgument();
+
+        (
+            PythInternalStructs.PriceInfo memory info,
+            bytes32 priceId
+        ) = parseSingleAttestationFromBatch(data, 0, data.length);
+        uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
+
+        if (info.publishTime > latestPublishTime) {
+            setLatestPriceInfo(priceId, info);
+            emit PriceFeedUpdate(
+                priceId,
+                info.publishTime,
+                info.price,
+                info.conf
+            );
+        }
+    }
+
+    function verifySignature(
+        bytes32 messageHash,
+        bytes memory signature,
+        address signer
+    ) public pure returns (bool) {
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := mload(add(signature, 32))
+            s := mload(add(signature, 64))
+            v := byte(0, mload(add(signature, 96)))
+        }
+        if (v < 27) {
+            v += 27;
+        }
+        if (v != 27 && v != 28) {
+            return false;
+        }
+        address recoveredAddress = ecrecover(messageHash, v, r, s);
+        return (recoveredAddress == signer);
+    }
+
     // TODO: need to encode left/right structure for proof nodes
     function isValidMerkleProof(
         bytes32 expectedRoot,
@@ -320,6 +464,18 @@ struct WormholeMerkleUpdate {
     // The serialized bytes of a wormhole VAA
     // The payload of this VAA is a single 32-byte root hash for the merkle tree.
     bytes rootVaa;
+    // The serialized bytes of a PriceAttestation
+    bytes data;
+    // The chain of proof nodes.
+    bytes32[] proof;
+}
+
+// A merkle tree price update delivered via threshold signature.
+// The update is valid if the data above hashed with the proof nodes sequentially
+// equals the root hash, and the signature is valid for rootHash.
+struct ThresholdMerkleUpdate {
+    bytes rootSignature;
+    bytes32 rootHash;
     // The serialized bytes of a PriceAttestation
     bytes data;
     // The chain of proof nodes.
