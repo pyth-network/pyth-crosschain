@@ -25,6 +25,7 @@ module pyth::pyth {
     const E_INVALID_DATA_SOURCE: u64 = 1;
     const E_INSUFFICIENT_FEE: u64 = 2;
     const E_STALE_PRICE_UPDATE: u64 = 3;
+    const E_PRICE_INFO_OBJECT_NOT_FOUND: u64 = 4;
 
     /// Call init_and_share_state with deployer cap to initialize
     /// state and emit event corresponding to Pyth initialization.
@@ -234,8 +235,7 @@ module pyth::pyth {
                 i = i + 1;
             };
             if (!found){
-                // TODO - throw error, since the price_feeds in price_info_objects do
-                //        not constitute a superset of the price_feeds to be updated
+                abort(E_PRICE_INFO_OBJECT_NOT_FOUND)
             }
         };
         vector::destroy_empty(updates);
@@ -342,7 +342,7 @@ module pyth::pyth_tests{
     use sui::clock::{Self, Clock};
     use sui::test_scenario::{Self, Scenario, ctx, take_shared, return_shared};
     use sui::package::Self;
-    use sui::object::Self;
+    use sui::object::{Self, ID};
 
     use pyth::state::{Self, State as PythState};
     use pyth::price_identifier::{Self};
@@ -499,6 +499,30 @@ module pyth::pyth_tests{
             ]
     }
 
+     #[test_only]
+    fun check_price_feeds_cached(expected: &vector<PriceInfo>, actual: &vector<PriceInfoObject>) {
+        // Check that we can retrieve the correct current price and ema price for each price feed
+        let i = 0;
+        while (i < vector::length(expected)) {
+            let price_feed = price_info::get_price_feed(vector::borrow(expected, i));
+            let price = price_feed::get_price(price_feed);
+            let ema_price = price_feed::get_ema_price(price_feed);
+            let price_identifier = price_info::get_price_identifier(vector::borrow(expected, i));
+
+            let actual_price_info = price_info::get_price_info_from_price_info_object(vector::borrow(actual, i));
+            let actual_price_feed = price_info::get_price_feed(&actual_price_info);
+            let actual_price = price_feed::get_price(actual_price_feed);
+            let actual_ema_price = price_feed::get_ema_price(actual_price_feed);
+            let actual_price_identifier = price_info::get_price_identifier(&actual_price_info);
+
+            assert!(price == actual_price, 0);
+            assert!(ema_price == actual_ema_price, 0);
+            assert!(price_identifier::get_bytes(&price_identifier) == price_identifier::get_bytes(&actual_price_identifier), 0);
+
+            i = i + 1;
+        };
+    }
+
     #[test]
     fun test_get_update_fee() {
         let single_update_fee = 50;
@@ -565,7 +589,7 @@ module pyth::pyth_tests{
             )
         ];
 
-        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, 50, 0);
+        let (scenario, test_coins) = setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, 50, 0);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);
@@ -601,7 +625,7 @@ module pyth::pyth_tests{
     }
 
     #[test]
-    fun test_create_and_update_price_feeds() {
+    fun test_create_and_update_price_feeds_success() {
         let data_sources = data_sources_for_test_vaa();
         let base_update_fee = 50;
         let coins_to_mint = 5000;
@@ -621,22 +645,152 @@ module pyth::pyth_tests{
             ctx(&mut scenario)
         );
 
-        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        // Affirm that 4 objects, which correspond to the 4 new price info objects
+        // containing the price feeds were created and shared.
+        let effects = test_scenario::next_tx(&mut scenario, DEPLOYER);
+        let shared_ids = test_scenario::shared(&effects);
+        let created_ids = test_scenario::created(&effects);
+        assert!(vector::length<ID>(&shared_ids)==4, 0);
+        assert!(vector::length<ID>(&created_ids)==4, 0);
 
-        let price_info_object = take_shared<PriceInfoObject>(&scenario);
-        let w = vector[price_info_object];
+        let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_2 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_3 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_4 = take_shared<PriceInfoObject>(&scenario);
+
+        // Create vector of price info objects (Sui objects with key ability and living in global store),
+        // which contain the price feeds we want to update. Note that these can be passed into
+        // update_price_feeds in any order!
+        let price_info_object_vec = vector[price_info_object_1, price_info_object_2, price_info_object_3, price_info_object_4];
 
         pyth::update_price_feeds(
             &mut worm_state,
             &mut pyth_state,
             TEST_VAAS,
-            &mut w,
+            &mut price_info_object_vec,
             test_coins,
             &clock
         );
 
-        price_info_object = vector::pop_back(&mut w);
-        vector::destroy_empty(w);
+        price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_2 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_3 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_4 = vector::pop_back(&mut price_info_object_vec);
+
+        vector::destroy_empty(price_info_object_vec);
+        return_shared(pyth_state);
+        return_shared(worm_state);
+        return_shared(price_info_object_1);
+        return_shared(price_info_object_2);
+        return_shared(price_info_object_3);
+        return_shared(price_info_object_4);
+
+        return_shared(clock);
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = pyth::pyth::E_PRICE_INFO_OBJECT_NOT_FOUND)]
+    fun test_create_and_update_price_feeds_price_info_object_not_found_failure() {
+        let data_sources = data_sources_for_test_vaa();
+        let base_update_fee = 50;
+        let coins_to_mint = 5000;
+
+        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        let pyth_state = take_shared<PythState>(&scenario);
+        let worm_state = take_shared<WormState>(&scenario);
+        let clock = take_shared<Clock>(&scenario);
+
+        pyth::create_price_feeds(
+            &mut worm_state,
+            &mut pyth_state,
+            TEST_VAAS,
+            &clock,
+            ctx(&mut scenario)
+        );
+
+        // Affirm that 4 objects, which correspond to the 4 new price info objects
+        // containing the price feeds were created and shared.
+        let effects = test_scenario::next_tx(&mut scenario, DEPLOYER);
+        let shared_ids = test_scenario::shared(&effects);
+        let created_ids = test_scenario::created(&effects);
+        assert!(vector::length<ID>(&shared_ids)==4, 0);
+        assert!(vector::length<ID>(&created_ids)==4, 0);
+
+        let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_2 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_3 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_4 = take_shared<PriceInfoObject>(&scenario);
+
+        // Note that here we only pass in 3 price info objects corresponding to 3 out
+        // of the 4 price feeds.
+        let price_info_object_vec = vector[price_info_object_1, price_info_object_2, price_info_object_3];
+
+        pyth::update_price_feeds(
+            &mut worm_state,
+            &mut pyth_state,
+            TEST_VAAS,
+            &mut price_info_object_vec,
+            test_coins,
+            &clock
+        );
+
+        price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_2 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_3 = vector::pop_back(&mut price_info_object_vec);
+
+        vector::destroy_empty(price_info_object_vec);
+        return_shared(pyth_state);
+        return_shared(worm_state);
+        return_shared(price_info_object_1);
+        return_shared(price_info_object_2);
+        return_shared(price_info_object_3);
+        return_shared(price_info_object_4);
+
+        return_shared(clock);
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = pyth::pyth::E_INSUFFICIENT_FEE)]
+    fun test_create_and_update_price_feeds_insufficient_fee() {
+        let data_sources = data_sources_for_test_vaa();
+        let base_update_fee = 50;
+        let coins_to_mint = 5;
+
+        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        let pyth_state = take_shared<PythState>(&scenario);
+        let worm_state = take_shared<WormState>(&scenario);
+        let clock = take_shared<Clock>(&scenario);
+
+        pyth::create_price_feeds(
+            &mut worm_state,
+            &mut pyth_state,
+            TEST_VAAS,
+            &clock,
+            ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        let price_info_object = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_vec = vector[price_info_object];
+
+        pyth::update_price_feeds(
+            &mut worm_state,
+            &mut pyth_state,
+            TEST_VAAS,
+            &mut price_info_object_vec,
+            test_coins,
+            &clock
+        );
+
+        price_info_object = vector::pop_back(&mut price_info_object_vec);
+        vector::destroy_empty(price_info_object_vec);
         return_shared(pyth_state);
         return_shared(worm_state);
         return_shared(price_info_object);
