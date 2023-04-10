@@ -15,7 +15,7 @@ import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
 
 // Experiments to measure the gas usage of different ways of verifying prices in the EVM contract.
-contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
+contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
     // 19, current mainnet number of guardians, is used to have gas estimates
     // close to our mainnet transactions.
     uint8 constant NUM_GUARDIANS = 19;
