@@ -42,9 +42,9 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
     uint freshPricesUpdateFee;
     uint64[] freshPricesPublishTimes;
 
-    MerklePriceUpdate merkleUpdateDepth0;
-    MerklePriceUpdate merkleUpdateDepth1;
-    MerklePriceUpdate merkleUpdateDepth8;
+    WormholeMerkleUpdate merkleUpdateDepth0;
+    WormholeMerkleUpdate merkleUpdateDepth1;
+    WormholeMerkleUpdate merkleUpdateDepth8;
 
     uint64 sequence;
     uint randSeed;
@@ -167,7 +167,7 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         bytes32 priceId,
         PythStructs.Price memory price,
         uint depth
-    ) internal returns (MerklePriceUpdate memory update) {
+    ) internal returns (WormholeMerkleUpdate memory update) {
         bytes32[] memory attestationPriceIds = new bytes32[](1);
         attestationPriceIds[0] = priceId;
         PythStructs.Price[] memory prices = new PythStructs.Price[](1);
@@ -201,10 +201,8 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
 
         ++sequence;
 
-        return MerklePriceUpdate(rootVaa, data, proof);
+        return WormholeMerkleUpdate(rootVaa, data, proof);
     }
-
-    function testNothing() public {}
 
     function testBenchmarkUpdatePriceFeedsFresh() public {
         pyth.updatePriceFeeds{value: freshPricesUpdateFee}(
@@ -241,142 +239,10 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
             merkleUpdateDepth8.proof
         );
     }
-
-    /*
-    function testBenchmarkParsePriceFeedUpdatesForOnePriceFeed() public {
-        bytes32[] memory ids = new bytes32[](1);
-        ids[0] = priceIds[0];
-
-        pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee}(
-            freshPricesUpdateData,
-            ids,
-            0,
-            50
-        );
-    }
-
-    function testBenchmarkParsePriceFeedUpdatesForTwoPriceFeed() public {
-        bytes32[] memory ids = new bytes32[](2);
-        ids[0] = priceIds[0];
-        ids[1] = priceIds[1];
-
-        pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee}(
-            freshPricesUpdateData,
-            ids,
-            0,
-            50
-        );
-    }
-
-    function testBenchmarkParsePriceFeedUpdatesForOnePriceFeedNotWithinRange()
-        public
-    {
-        bytes32[] memory ids = new bytes32[](1);
-        ids[0] = priceIds[0];
-
-        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
-        pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee}(
-            freshPricesUpdateData,
-            ids,
-            50,
-            100
-        );
-    }
-
-    function testBenchmarkGetPrice() public {
-        // Set the block timestamp to 0. As prices have < 10 timestamp and staleness
-        // is set to 60 seconds, the getPrice should work as expected.
-        vm.warp(0);
-
-        pyth.getPrice(priceIds[0]);
-    }
-
-    function testBenchmarkGetEmaPrice() public {
-        // Set the block timestamp to 0. As prices have < 10 timestamp and staleness
-        // is set to 60 seconds, the getPrice should work as expected.
-        vm.warp(0);
-
-        pyth.getEmaPrice(priceIds[0]);
-    }
-
-    function testBenchmarkGetUpdateFee() public view {
-        pyth.getUpdateFee(freshPricesUpdateData);
-    }
-    */
 }
 
-/*
-contract PythExperimental is
-Initializable,
-OwnableUpgradeable,
-UUPSUpgradeable,
-Pyth,
-PythGovernance
-{
-    function initialize(
-        address wormhole,
-        uint16[] calldata dataSourceEmitterChainIds,
-        bytes32[] calldata dataSourceEmitterAddresses,
-        uint16 governanceEmitterChainId,
-        bytes32 governanceEmitterAddress,
-        uint64 governanceInitialSequence,
-        uint validTimePeriodSeconds,
-        uint singleUpdateFeeInWei
-    ) public initializer {
-        __Ownable_init();
-        __UUPSUpgradeable_init();
-
-        Pyth._initialize(
-            wormhole,
-            dataSourceEmitterChainIds,
-            dataSourceEmitterAddresses,
-            governanceEmitterChainId,
-            governanceEmitterAddress,
-            governanceInitialSequence,
-            validTimePeriodSeconds,
-            singleUpdateFeeInWei
-        );
-
-        renounceOwnership();
-    }
-
-    /// Ensures the contract cannot be uninitialized and taken over.
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
-
-    // Only allow the owner to upgrade the proxy to a new implementation.
-    // The contract has no owner so this function will always revert
-    // but UUPSUpgradeable expects this method to be implemented.
-    function _authorizeUpgrade(address) internal override onlyOwner {}
-
-    function pythUpgradableMagic() public pure returns (uint32) {
-        return 0x97a6f304;
-    }
-
-    // Execute a UpgradeContract governance message
-    function upgradeUpgradableContract(
-        UpgradeContractPayload memory payload
-    ) internal override {
-        address oldImplementation = _getImplementation();
-        _upgradeToAndCallUUPS(payload.newImplementation, new bytes(0), false);
-
-        // Calling a method using `this.<method>` will cause a contract call that will use
-        // the new contract. This call will fail if the method does not exists or the magic
-        // is different.
-        if (this.pythUpgradableMagic() != 0x97a6f304)
-            revert PythErrors.InvalidGovernanceMessage();
-
-        emit ContractUpgraded(oldImplementation, _getImplementation());
-    }
-}
-*/
-
+// Pyth contract extended with methods for other verification systems (merkle proofs / threshold signatures)
 contract PythExperimental is Pyth {
-    // address payable wormholeAddr;
-    // For tracking all active emitter/chain ID pairs
-    // PythInternalStructs.DataSource[] validDataSources;
-    // mapping(bytes32 => bool) isValidDataSource;
-
     function initialize(
         address wormhole,
         uint16[] calldata dataSourceEmitterChainIds,
@@ -409,7 +275,7 @@ contract PythExperimental is Pyth {
         assert(vm.payload.length == 32);
 
         bytes32 expectedRoot = UnsafeBytesLib.toBytes32(vm.payload, 0);
-        bool validProof = verifyMerkleProof(expectedRoot, data, proof);
+        bool validProof = isValidMerkleProof(expectedRoot, data, proof);
         if (!validProof) revert PythErrors.InvalidArgument();
 
         (
@@ -430,7 +296,7 @@ contract PythExperimental is Pyth {
     }
 
     // TODO: need to encode left/right structure for proof nodes
-    function verifyMerkleProof(
+    function isValidMerkleProof(
         bytes32 expectedRoot,
         bytes memory data,
         bytes32[] memory proof
@@ -447,8 +313,15 @@ contract PythExperimental is Pyth {
     }
 }
 
-struct MerklePriceUpdate {
+// A merkle tree price update delivered via wormhole.
+// The update is valid if the data above hashed with the proof nodes sequentially
+// equals the root hash in the wormhole VAA.
+struct WormholeMerkleUpdate {
+    // The serialized bytes of a wormhole VAA
+    // The payload of this VAA is a single 32-byte root hash for the merkle tree.
     bytes rootVaa;
+    // The serialized bytes of a PriceAttestation
     bytes data;
+    // The chain of proof nodes.
     bytes32[] proof;
 }
