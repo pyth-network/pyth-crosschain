@@ -253,7 +253,7 @@ multisigCommand(
       getPythProgramKeyForCluster(cluster),
       provider
     )
-      .methods.initPrice(exponent, 1)
+      .methods.setExponent(exponent, 1)
       .accounts({ fundingAccount: vaultAuthority, priceAccount })
       .instruction();
     await proposeInstructions(squad, vault, [proposalInstruction], false);

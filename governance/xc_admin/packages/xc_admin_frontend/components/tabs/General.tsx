@@ -399,7 +399,7 @@ const General = () => {
             // create update exponent instruction
             instructions.push(
               await pythProgramClient.methods
-                .initPrice(newChanges.priceAccounts[0].expo, 1)
+                .setExponent(newChanges.priceAccounts[0].expo, 1)
                 .accounts({
                   fundingAccount,
                   priceAccount: new PublicKey(prev.priceAccounts[0].address),
