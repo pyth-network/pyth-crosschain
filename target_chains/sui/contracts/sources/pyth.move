@@ -26,6 +26,8 @@ module pyth::pyth {
     const E_INSUFFICIENT_FEE: u64 = 2;
     const E_STALE_PRICE_UPDATE: u64 = 3;
     const E_PRICE_INFO_OBJECT_NOT_FOUND: u64 = 4;
+    const E_INVALID_PUBLISH_TIMES_LENGTH: u64 = 5;
+    const E_NO_FRESH_DATA: u64 = 6;
 
     friend pyth::pyth_tests;
 
@@ -140,7 +142,7 @@ module pyth::pyth {
     ///
     /// The vaas argument is a vector of VAAs encoded as bytes.
     ///
-    /// The javascript https://github.com/pyth-network/pyth-js/tree/main/pyth-aptos-js package
+    /// The javascript https://github.com/pyth-network/pyth-js/tree/main/pyth-sui-js package
     /// should be used to fetch these VAAs from the Price Service. More information about this
     /// process can be found at https://docs.pyth.network/consume-data.
     ///
@@ -242,6 +244,48 @@ module pyth::pyth {
             }
         };
         vector::destroy_empty(updates);
+    }
+
+    /// Update the cached price feeds with the data in the given VAAs, using
+    /// update_price_feeds(). However, this function will only have an effect if any of the
+    /// prices in the update are fresh. The price_identifiers and publish_times parameters
+    /// are used to determine if the update is fresh without doing any serialisation or verification
+    /// of the VAAs, potentially saving time and gas. If the update contains no fresh data, this function
+    /// will revert with error::no_fresh_data().
+    ///
+    /// For a given price update i in the batch, that price is considered fresh if the current cached
+    /// price for price_identifiers[i] is older than publish_times[i].
+    public fun update_price_feeds_if_fresh(
+        vaas: vector<vector<u8>>,
+        worm_state: &WormState,
+        pyth_state: &PythState,
+        price_info_objects: &mut vector<PriceInfoObject>,
+        publish_times: vector<u64>,
+        fee: Coin<SUI>,
+        clock: &Clock
+    ) {
+        assert!(vector::length(price_info_objects) == vector::length(&publish_times),
+            E_INVALID_PUBLISH_TIMES_LENGTH
+        );
+
+        let fresh_data = false;
+        let i = 0;
+        while (i < vector::length(&publish_times)) {
+            let cur_price_info = price_info::get_price_info_from_price_info_object(vector::borrow(price_info_objects, i));
+            let cur_price_feed = price_info::get_price_feed(&cur_price_info);
+            let cur_price = price_feed::get_price(cur_price_feed);
+
+            let cached_timestamp = price::get_timestamp(&cur_price);
+            if (cached_timestamp < *vector::borrow(&publish_times, i)) {
+                fresh_data = true;
+                break
+            };
+
+            i = i + 1;
+        };
+
+        assert!(fresh_data, E_NO_FRESH_DATA);
+        update_price_feeds(worm_state, pyth_state, vaas, price_info_objects, fee, clock);
     }
 
     /// Determine if the given price update is "fresh": we have nothing newer already cached for that
@@ -411,9 +455,6 @@ module pyth::pyth_tests{
         let initial_guardians =
             vector[
                 x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"
-                //x"1337133713371337133713371337133713371337",
-                //x"c0dec0dec0dec0dec0dec0dec0dec0dec0dec0de",
-                //x"ba5edba5edba5edba5edba5edba5edba5edba5ed"
             ];
         let guardian_set_seconds_to_live = 5678;
         let message_fee = 350;
@@ -502,8 +543,8 @@ module pyth::pyth_tests{
             ]
     }
 
-     #[test_only]
-     /// Compare the expected price feed with the actual Pyth price feeds.
+    #[test_only]
+    /// Compare the expected price feed with the actual Pyth price feeds.
     fun check_price_feeds_cached(expected: &vector<PriceInfo>, actual: &vector<PriceInfoObject>) {
         // Check that we can retrieve the correct current price and ema price for each price feed
         let i = 0;
