@@ -205,7 +205,7 @@ module pyth::pyth {
     }
 
     /// Update PriceInfoObjects using up-to-date PriceInfos.
-    fun update_cache(
+    public(friend) fun update_cache(
         updates: vector<PriceInfo>,
         price_info_objects: &mut vector<PriceInfoObject>,
         clock: &Clock,
@@ -218,7 +218,7 @@ module pyth::pyth {
             // TODO - Construct an in-memory table to make look-ups faster?
             //        This loop might be expensive if there are a large number
             //        of updates and/or price_info_objects we are updating.
-            while (i < vector::length<PriceInfoObject>(price_info_objects)){
+            while (i < vector::length<PriceInfoObject>(price_info_objects) && found == false){
                 // Check if the current price info object corresponds to the price feed that
                 // the update is meant for.
                 let price_info = price_info::get_price_info_from_price_info_object(vector::borrow(price_info_objects, i));
@@ -503,6 +503,7 @@ module pyth::pyth_tests{
     }
 
      #[test_only]
+     /// Compare the expected price feed with the actual Pyth price feeds.
     fun check_price_feeds_cached(expected: &vector<PriceInfo>, actual: &vector<PriceInfoObject>) {
         // Check that we can retrieve the correct current price and ema price for each price feed
         let i = 0;
@@ -675,10 +676,10 @@ module pyth::pyth_tests{
             &clock
         );
 
-        price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
-        price_info_object_2 = vector::pop_back(&mut price_info_object_vec);
-        price_info_object_3 = vector::pop_back(&mut price_info_object_vec);
         price_info_object_4 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_3 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_2 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
         vector::destroy_empty(price_info_object_vec);
 
         return_shared(pyth_state);
@@ -740,9 +741,9 @@ module pyth::pyth_tests{
             &clock
         );
 
-        price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
-        price_info_object_2 = vector::pop_back(&mut price_info_object_vec);
         price_info_object_3 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_2 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
 
         vector::destroy_empty(price_info_object_vec);
         return_shared(pyth_state);
@@ -829,6 +830,7 @@ module pyth::pyth_tests{
         let price_info_object_3 = take_shared<PriceInfoObject>(&scenario);
         let price_info_object_4 = take_shared<PriceInfoObject>(&scenario);
 
+        // These updates are price infos that correspond to the ones in TEST_VAAS.
         let updates = get_mock_price_infos();
         let price_info_object_vec = vector[
             price_info_object_1,
@@ -837,12 +839,14 @@ module pyth::pyth_tests{
             price_info_object_4
         ];
 
+        // Check that TEST_VAAS was indeed used to instantiate the price feeds correctly,
+        // by confirming that the info in updates is contained in price_info_object_vec.
         check_price_feeds_cached(&updates, &price_info_object_vec);
 
-        price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
-        price_info_object_2 = vector::pop_back(&mut price_info_object_vec);
-        price_info_object_3 = vector::pop_back(&mut price_info_object_vec);
         price_info_object_4 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_3 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_2 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
         vector::destroy_empty(price_info_object_vec);
 
         return_shared(pyth_state);
@@ -857,4 +861,129 @@ module pyth::pyth_tests{
         test_scenario::end(scenario);
     }
 
+    #[test]
+    fun test_update_cache_old_update() {
+        let data_sources = data_sources_for_test_vaa();
+        let base_update_fee = 50;
+        let coins_to_mint = 5000;
+
+        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        let pyth_state = take_shared<PythState>(&scenario);
+        let worm_state = take_shared<WormState>(&scenario);
+        let clock = take_shared<Clock>(&scenario);
+
+        pyth::create_price_feeds(
+            &mut worm_state,
+            &mut pyth_state,
+            TEST_VAAS,
+            &clock,
+            ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_2 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_3 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_4 = take_shared<PriceInfoObject>(&scenario);
+
+        let price_info_object_vec = vector[
+            price_info_object_1,
+            price_info_object_2,
+            price_info_object_3,
+            price_info_object_4
+        ];
+
+        // Hardcode the price identifier, price, and ema_price for price_info_object_1, because
+        // it's easier than unwrapping price_info_object_1 and getting the quantities via getters.
+        let timestamp = 1663680740;
+        let price_identifier = price_identifier::from_byte_vec(x"c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1");
+        let price = price::new(i64::new(1557, false), 7, i64::new(5, true), timestamp);
+        let ema_price = price::new(i64::new(1500, false), 3, i64::new(5, true), timestamp);
+
+        // Attempt to update the price with an update older than the current cached one.
+        let old_price = price::new(i64::new(1243, true), 9802, i64::new(6, false), timestamp - 200);
+        let old_ema_price = price::new(i64::new(8976, true), 234, i64::new(897, false), timestamp - 200);
+        let old_update = price_info::new_price_info(
+            1257278600,
+            1690226180,
+            price_feed::new(
+                    price_identifier,
+                    old_price,
+                    old_ema_price,
+            )
+        );
+        pyth::update_cache(vector<PriceInfo>[old_update], &mut price_info_object_vec, &clock);
+
+        price_info_object_4 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_3 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_2 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
+
+        vector::destroy_empty(price_info_object_vec);
+
+        // Confirm that the current price and ema price didn't change
+        let current_price_info = price_info::get_price_info_from_price_info_object(&price_info_object_1);
+        let current_price_feed = price_info::get_price_feed(&current_price_info);
+        let current_price = price_feed::get_price(current_price_feed);
+        let current_ema_price = price_feed::get_ema_price(current_price_feed);
+
+        // Confirm that no price update occurred when we tried to update cache with an
+        // outdated update: old_update.
+        assert!(current_price == price, 1);
+        assert!(current_ema_price == ema_price, 1);
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        // Update the cache with a fresh update.
+        let fresh_price = price::new(i64::new(5243, true), 2, i64::new(3, false), timestamp + 200);
+        let fresh_ema_price = price::new(i64::new(8976, true), 21, i64::new(32, false), timestamp + 200);
+        let fresh_update = price_info::new_price_info(
+            1257278600,
+            1690226180,
+            price_feed::new(
+                    price_identifier,
+                    fresh_price,
+                    fresh_ema_price,
+            )
+        );
+
+        let price_info_object_vec = vector[
+            price_info_object_1,
+            price_info_object_2,
+            price_info_object_3,
+            price_info_object_4
+        ];
+
+        pyth::update_cache(vector<PriceInfo>[fresh_update], &mut price_info_object_vec, &clock);
+
+        price_info_object_4 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_3 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_2 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
+
+        vector::destroy_empty(price_info_object_vec);
+
+        // Confirm that the Pyth cached price got updated to fresh_price
+        let current_price_info = price_info::get_price_info_from_price_info_object(&price_info_object_1);
+        let current_price_feed = price_info::get_price_feed(&current_price_info);
+        let current_price = price_feed::get_price(current_price_feed);
+        let current_ema_price = price_feed::get_ema_price(current_price_feed);
+
+        assert!(current_price==fresh_price, 0);
+        assert!(current_ema_price==fresh_ema_price, 0);
+
+        return_shared(pyth_state);
+        return_shared(worm_state);
+        return_shared(price_info_object_1);
+        return_shared(price_info_object_2);
+        return_shared(price_info_object_3);
+        return_shared(price_info_object_4);
+        coin::burn_for_testing<SUI>(test_coins);
+
+        return_shared(clock);
+        test_scenario::end(scenario);
+    }
 }
