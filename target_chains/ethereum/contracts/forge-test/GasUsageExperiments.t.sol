@@ -137,6 +137,39 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         updateFee = 0;
     }
 
+    function generateMerkleProof(
+        bytes32 priceId,
+        PythStructs.Price memory price,
+        uint depth
+    )
+        internal
+        returns (bytes32 root, bytes memory data, bytes32[] memory proof)
+    {
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = priceId;
+        PythStructs.Price[] memory prices = new PythStructs.Price[](1);
+        prices[0] = price;
+        PriceAttestation[] memory attestation = pricesToPriceAttestations(
+            priceIds,
+            prices
+        );
+        data = generatePriceFeedUpdatePayload(attestation);
+
+        bytes32 curNodeHash = keccak256(data);
+        proof = new bytes32[](depth);
+        for (uint i = 0; i < depth; ) {
+            // pretend the ith sibling is just i
+            proof[i] = keccak256(abi.encode(i));
+            curNodeHash = keccak256(abi.encode(curNodeHash, proof[i]));
+
+            unchecked {
+                i++;
+            }
+        }
+
+        return (curNodeHash, data, proof);
+    }
+
     function testBenchmarkUpdatePriceFeedsFresh() public {
         pyth.updatePriceFeeds{value: freshPricesUpdateFee}(
             freshPricesUpdateData
@@ -147,6 +180,33 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         pyth.updatePriceFeeds{value: cachedPricesUpdateFee}(
             cachedPricesUpdateData
         );
+    }
+
+    function testVerifyMerkleProofDepth0() public {
+        (
+            bytes32 root,
+            bytes memory data,
+            bytes32[] memory proof
+        ) = generateMerkleProof(priceIds[0], freshPrices[0], 0);
+        assert(pyth.verifyMerkleProof(root, data, proof));
+    }
+
+    function testVerifyMerkleProofDepth1() public {
+        (
+            bytes32 root,
+            bytes memory data,
+            bytes32[] memory proof
+        ) = generateMerkleProof(priceIds[0], freshPrices[0], 1);
+        assert(pyth.verifyMerkleProof(root, data, proof));
+    }
+
+    function testVerifyMerkleProofDepth8() public {
+        (
+            bytes32 root,
+            bytes memory data,
+            bytes32[] memory proof
+        ) = generateMerkleProof(priceIds[0], freshPrices[0], 8);
+        assert(pyth.verifyMerkleProof(root, data, proof));
     }
 
     /*
@@ -277,6 +337,25 @@ contract PythExperimental {
                     abi.encodePacked(vm.emitterChainId, vm.emitterAddress)
                 )
             ];
+    }
+
+    // Experiment 2: Minimal merkle tree verification.@author
+
+    // TODO: need to encode left/right structure for proof nodes
+    function verifyMerkleProof(
+        bytes32 expectedRoot,
+        bytes memory data,
+        bytes32[] memory proof
+    ) public returns (bool) {
+        bytes32 curNodeHash = keccak256(data);
+        for (uint i = 0; i < proof.length; ) {
+            curNodeHash = keccak256(abi.encode(curNodeHash, proof[i]));
+            unchecked {
+                i++;
+            }
+        }
+
+        return (expectedRoot == curNodeHash);
     }
 
     // Misc utilities
