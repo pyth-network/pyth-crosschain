@@ -42,6 +42,10 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
     uint freshPricesUpdateFee;
     uint64[] freshPricesPublishTimes;
 
+    MerklePriceUpdate merkleUpdateDepth0;
+    MerklePriceUpdate merkleUpdateDepth1;
+    MerklePriceUpdate merkleUpdateDepth8;
+
     uint64 sequence;
     uint randSeed;
 
@@ -72,10 +76,6 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
             60, // Valid time period in seconds
             1 // single update fee in wei
         );
-
-        // pyth.initialize(wormhole, emitterChainIds, emitterAddresses);
-
-        // TBD not clear what's going on below here
 
         priceIds = new bytes32[](NUM_PRICES);
         priceIds[0] = bytes32(
@@ -123,6 +123,22 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
             freshPricesUpdateData,
             freshPricesUpdateFee
         ) = generateUpdateDataAndFee(freshPrices);
+
+        merkleUpdateDepth0 = generateMerkleProof(
+            priceIds[0],
+            freshPrices[0],
+            0
+        );
+        merkleUpdateDepth1 = generateMerkleProof(
+            priceIds[0],
+            freshPrices[0],
+            1
+        );
+        merkleUpdateDepth8 = generateMerkleProof(
+            priceIds[0],
+            freshPrices[0],
+            8
+        );
     }
 
     function getRand() internal returns (uint val) {
@@ -151,22 +167,19 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         bytes32 priceId,
         PythStructs.Price memory price,
         uint depth
-    )
-        internal
-        returns (bytes32 root, bytes memory data, bytes32[] memory proof)
-    {
-        bytes32[] memory priceIds = new bytes32[](1);
-        priceIds[0] = priceId;
+    ) internal returns (MerklePriceUpdate memory update) {
+        bytes32[] memory attestationPriceIds = new bytes32[](1);
+        attestationPriceIds[0] = priceId;
         PythStructs.Price[] memory prices = new PythStructs.Price[](1);
         prices[0] = price;
         PriceAttestation[] memory attestation = pricesToPriceAttestations(
-            priceIds,
+            attestationPriceIds,
             prices
         );
-        data = generatePriceFeedUpdatePayload(attestation);
+        bytes memory data = generatePriceFeedUpdatePayload(attestation);
 
         bytes32 curNodeHash = keccak256(data);
-        proof = new bytes32[](depth);
+        bytes32[] memory proof = new bytes32[](depth);
         for (uint i = 0; i < depth; ) {
             // pretend the ith sibling is just i
             proof[i] = keccak256(abi.encode(i));
@@ -177,7 +190,18 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
             }
         }
 
-        return (curNodeHash, data, proof);
+        bytes memory rootVaa = generateVaa(
+            uint32(block.timestamp),
+            PythTestUtils.SOURCE_EMITTER_CHAIN_ID,
+            PythTestUtils.SOURCE_EMITTER_ADDRESS,
+            sequence,
+            bytes.concat(curNodeHash), // the root hash
+            NUM_GUARDIAN_SIGNERS
+        );
+
+        ++sequence;
+
+        return MerklePriceUpdate(rootVaa, data, proof);
     }
 
     function testNothing() public {}
@@ -195,30 +219,27 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
     }
 
     function testVerifyMerkleProofDepth0() public {
-        (
-            bytes32 root,
-            bytes memory data,
-            bytes32[] memory proof
-        ) = generateMerkleProof(priceIds[0], freshPrices[0], 0);
-        assert(pyth.verifyMerkleProof(root, data, proof));
+        pyth.updatePriceFeedsMerkle(
+            merkleUpdateDepth0.rootVaa,
+            merkleUpdateDepth0.data,
+            merkleUpdateDepth0.proof
+        );
     }
 
     function testVerifyMerkleProofDepth1() public {
-        (
-            bytes32 root,
-            bytes memory data,
-            bytes32[] memory proof
-        ) = generateMerkleProof(priceIds[0], freshPrices[0], 1);
-        assert(pyth.verifyMerkleProof(root, data, proof));
+        pyth.updatePriceFeedsMerkle(
+            merkleUpdateDepth1.rootVaa,
+            merkleUpdateDepth1.data,
+            merkleUpdateDepth1.proof
+        );
     }
 
     function testVerifyMerkleProofDepth8() public {
-        (
-            bytes32 root,
-            bytes memory data,
-            bytes32[] memory proof
-        ) = generateMerkleProof(priceIds[0], freshPrices[0], 8);
-        assert(pyth.verifyMerkleProof(root, data, proof));
+        pyth.updatePriceFeedsMerkle(
+            merkleUpdateDepth8.rootVaa,
+            merkleUpdateDepth8.data,
+            merkleUpdateDepth8.proof
+        );
     }
 
     /*
@@ -378,47 +399,35 @@ contract PythExperimental is Pyth {
         );
     }
 
-    /*
+    // Experiment 2: Minimal merkle tree verification.
+    function updatePriceFeedsMerkle(
+        bytes calldata rootVaa,
+        bytes memory data,
+        bytes32[] memory proof
+    ) public payable {
+        IWormhole.VM memory vm = parseAndVerifyBatchAttestationVM(rootVaa);
+        assert(vm.payload.length == 32);
 
-    // Experiment 1: Minimal wormhole update. No hashing or anything is performed.
+        bytes32 expectedRoot = UnsafeBytesLib.toBytes32(vm.payload, 0);
+        bool validProof = verifyMerkleProof(expectedRoot, data, proof);
+        if (!validProof) revert PythErrors.InvalidArgument();
 
-    function updatePriceFeeds(bytes[] calldata updateData) public payable {
-        for (uint i = 0; i < updateData.length; ) {
-            IWormhole.VM memory vm = parseAndVerifyBatchAttestationVM(
-                updateData[i]
+        (
+            PythInternalStructs.PriceInfo memory info,
+            bytes32 priceId
+        ) = parseSingleAttestationFromBatch(data, 0, data.length);
+        uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
+
+        if (info.publishTime > latestPublishTime) {
+            setLatestPriceInfo(priceId, info);
+            emit PriceFeedUpdate(
+                priceId,
+                info.publishTime,
+                info.price,
+                info.conf
             );
-
-            unchecked {
-                i++;
-            }
         }
     }
-
-    function parseAndVerifyBatchAttestationVM(
-        bytes calldata encodedVm
-    ) internal view returns (IWormhole.VM memory vm) {
-        {
-            bool valid;
-            (vm, valid, ) = wormhole().parseAndVerifyVM(encodedVm);
-            if (!valid) revert PythErrors.InvalidWormholeVaa();
-        }
-
-        if (!verifyPythVM(vm)) revert PythErrors.InvalidUpdateDataSource();
-    }
-
-    function verifyPythVM(
-        IWormhole.VM memory vm
-    ) private view returns (bool valid) {
-        return
-            isValidDataSource[
-                keccak256(
-                    abi.encodePacked(vm.emitterChainId, vm.emitterAddress)
-                )
-            ];
-    }
-    */
-
-    // Experiment 2: Minimal merkle tree verification.@author
 
     // TODO: need to encode left/right structure for proof nodes
     function verifyMerkleProof(
@@ -436,17 +445,10 @@ contract PythExperimental is Pyth {
 
         return (expectedRoot == curNodeHash);
     }
+}
 
-    // Misc utilities
-    /*
-    function hashDataSource(
-        PythInternalStructs.DataSource memory ds
-    ) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(ds.chainId, ds.emitterAddress));
-    }
-
-    function wormhole() public view returns (IWormhole) {
-        return IWormhole(wormholeAddr);
-    }
-    */
+struct MerklePriceUpdate {
+    bytes rootVaa;
+    bytes data;
+    bytes32[] proof;
 }
