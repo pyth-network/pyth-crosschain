@@ -297,15 +297,9 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         return ThresholdUpdate(signature, data);
     }
 
-    function testBenchmarkUpdatePriceFeedsFresh() public {
+    function testWormholeBatchUpdate() public {
         pyth.updatePriceFeeds{value: freshPricesUpdateFee}(
             freshPricesUpdateData
-        );
-    }
-
-    function testBenchmarkUpdatePriceFeedsNotFresh() public {
-        pyth.updatePriceFeeds{value: cachedPricesUpdateFee}(
-            cachedPricesUpdateData
         );
     }
 
