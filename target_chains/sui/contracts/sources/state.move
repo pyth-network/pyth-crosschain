@@ -3,11 +3,13 @@ module pyth::state {
     use sui::object::{Self, UID, ID};
     use sui::transfer::{Self};
     use sui::tx_context::{Self, TxContext};
-    use sui::package::{UpgradeCap};
+    use sui::package::{Self, UpgradeCap};
 
     use pyth::data_source::{Self, DataSource};
     use pyth::price_info::{Self};
     use pyth::price_identifier::{PriceIdentifier};
+
+    use wormhole::setup::{assert_package_upgrade_cap};
 
     friend pyth::pyth;
     friend pyth::pyth_tests;
@@ -64,8 +66,18 @@ module pyth::state {
         sources: vector<DataSource>,
         ctx: &mut TxContext
     ) {
+        // TODO - version control
+        // let version = wormhole::version_control::version();
+        //assert!(version == 1, E_INVALID_BUILD_VERSION);
+
         let DeployerCap { id } = deployer;
         object::delete(id);
+
+        assert_package_upgrade_cap<DeployerCap>(
+            &upgrade_cap,
+            package::compatible_policy(),
+            1 // version
+        );
 
         let uid = object::new(ctx);
 

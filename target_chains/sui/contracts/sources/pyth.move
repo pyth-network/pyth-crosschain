@@ -336,7 +336,7 @@ module pyth::pyth {
 module pyth::pyth_tests{
     use sui::sui::SUI;
     use sui::coin::{Self, Coin};
-    use sui::clock::{Self};
+    use sui::clock::{Self, Clock};
     use sui::test_scenario::{Self, Scenario, ctx, take_shared, return_shared};
     use sui::package::Self;
     use sui::object::Self;
@@ -353,11 +353,14 @@ module pyth::pyth_tests{
     use wormhole::setup::{Self as wormhole_setup, DeployerCap};
     use wormhole::external_address::{Self};
     use wormhole::bytes32::{Self};
+    use wormhole::state::{State as WormState};
+
+    const DEPLOYER: address = @0x1234;
 
     #[test_only]
     /// Init Wormhole core bridge state.
     /// Init Pyth state.
-    /// Set initial Sui clock time,
+    /// Set initial Sui clock time.
     /// Mint some SUI fee coins.
     fun setup_test(
         stale_price_threshold: u64,
@@ -368,17 +371,17 @@ module pyth::pyth_tests{
         to_mint: u64
     ): (Scenario, Coin<SUI>) {
 
-        let deployer = @0x1234;
-        let scenario = test_scenario::begin(deployer);
+        let scenario = test_scenario::begin(DEPLOYER);
 
         // Initialize Wormhole core bridge.
         wormhole_setup::init_test_only(ctx(&mut scenario));
-
+        //debug::print(&0x1111);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
         // Take the `DeployerCap` from the sender of the transaction.
         let deployer_cap =
             test_scenario::take_from_address<DeployerCap>(
                 &scenario,
-                deployer
+                DEPLOYER
             );
 
         // This will be created and sent to the transaction sender automatically
@@ -386,7 +389,7 @@ module pyth::pyth_tests{
         // it from the sender.
         let upgrade_cap =
             package::test_publish(
-                object::id_from_address(@0x0),
+                object::id_from_address(@wormhole),
                 test_scenario::ctx(&mut scenario)
             );
 
@@ -419,15 +422,15 @@ module pyth::pyth_tests{
         // Initialize Pyth state.
         let pyth_upgrade_cap=
             package::test_publish(
-                object::id_from_address(@0x123456),
+                object::id_from_address(@pyth),
                 test_scenario::ctx(&mut scenario)
             );
 
         state::init_test_only(ctx(&mut scenario));
-
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
         let pyth_deployer_cap = test_scenario::take_from_address<state::DeployerCap>(
             &scenario,
-            @pyth
+            DEPLOYER
         );
 
         state::init_and_share_state(
@@ -486,11 +489,11 @@ module pyth::pyth_tests{
             ]
     }
 
-    #[test_only]
+    #[test]
     fun test_get_update_fee() {
         let single_update_fee = 50;
-        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 100000, 0);
-
+        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], single_update_fee, 0);
+        test_scenario::next_tx(&mut scenario, DEPLOYER, );
         let pyth_state = take_shared<PythState>(&scenario);
         // Pass in a single VAA
         assert!(pyth::get_total_update_fee(&pyth_state, &vector[
@@ -507,6 +510,34 @@ module pyth::pyth_tests{
         ]) == 250, 1);
 
         return_shared(pyth_state);
+        coin::burn_for_testing<SUI>(test_coins);
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = wormhole::vaa::E_WRONG_VERSION)]
+    fun test_update_price_feeds_corrupt_vaa() {
+        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 100000, 0);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        let pyth_state = take_shared<PythState>(&scenario);
+        let worm_state = take_shared<WormState>(&scenario);
+        let clock = take_shared<Clock>(&scenario);
+
+        // Pass in a corrupt VAA, which should fail deseriaizing
+        let corrupt_vaa = x"90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
+
+        // Create Pyth price feed
+        pyth::create_price_feeds(
+            &mut worm_state,
+            &mut pyth_state,
+            vector[corrupt_vaa],
+            &clock,
+            ctx(&mut scenario)
+        );
+
+        return_shared(pyth_state);
+        return_shared(worm_state);
+        return_shared(clock);
         coin::burn_for_testing<SUI>(test_coins);
         test_scenario::end(scenario);
     }
