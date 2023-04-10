@@ -62,7 +62,18 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         bytes32[] memory emitterAddresses = new bytes32[](1);
         emitterAddresses[0] = PythTestUtils.SOURCE_EMITTER_ADDRESS;
 
-        pyth.initialize(wormhole, emitterChainIds, emitterAddresses);
+        pyth.initialize(
+            wormhole,
+            emitterChainIds,
+            emitterAddresses,
+            PythTestUtils.GOVERNANCE_EMITTER_CHAIN_ID,
+            PythTestUtils.GOVERNANCE_EMITTER_ADDRESS,
+            0, // Initial governance sequence
+            60, // Valid time period in seconds
+            1 // single update fee in wei
+        );
+
+        // pyth.initialize(wormhole, emitterChainIds, emitterAddresses);
 
         // TBD not clear what's going on below here
 
@@ -133,8 +144,7 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
         updateData = new bytes[](1);
         updateData[0] = vaa;
 
-        // updateFee = pyth.getUpdateFee(updateData);
-        updateFee = 0;
+        updateFee = pyth.getUpdateFee(updateData);
     }
 
     function generateMerkleProof(
@@ -169,6 +179,8 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
 
         return (curNodeHash, data, proof);
     }
+
+    function testNothing() public {}
 
     function testBenchmarkUpdatePriceFeedsFresh() public {
         pyth.updatePriceFeeds{value: freshPricesUpdateFee}(
@@ -272,35 +284,101 @@ contract GasUsageExperiments is Test, WormholeTestUtils, PythTestUtils {
     */
 }
 
-contract PythExperimental {
-    address payable wormholeAddr;
+/*
+contract PythExperimental is
+Initializable,
+OwnableUpgradeable,
+UUPSUpgradeable,
+Pyth,
+PythGovernance
+{
+    function initialize(
+        address wormhole,
+        uint16[] calldata dataSourceEmitterChainIds,
+        bytes32[] calldata dataSourceEmitterAddresses,
+        uint16 governanceEmitterChainId,
+        bytes32 governanceEmitterAddress,
+        uint64 governanceInitialSequence,
+        uint validTimePeriodSeconds,
+        uint singleUpdateFeeInWei
+    ) public initializer {
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+
+        Pyth._initialize(
+            wormhole,
+            dataSourceEmitterChainIds,
+            dataSourceEmitterAddresses,
+            governanceEmitterChainId,
+            governanceEmitterAddress,
+            governanceInitialSequence,
+            validTimePeriodSeconds,
+            singleUpdateFeeInWei
+        );
+
+        renounceOwnership();
+    }
+
+    /// Ensures the contract cannot be uninitialized and taken over.
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    // Only allow the owner to upgrade the proxy to a new implementation.
+    // The contract has no owner so this function will always revert
+    // but UUPSUpgradeable expects this method to be implemented.
+    function _authorizeUpgrade(address) internal override onlyOwner {}
+
+    function pythUpgradableMagic() public pure returns (uint32) {
+        return 0x97a6f304;
+    }
+
+    // Execute a UpgradeContract governance message
+    function upgradeUpgradableContract(
+        UpgradeContractPayload memory payload
+    ) internal override {
+        address oldImplementation = _getImplementation();
+        _upgradeToAndCallUUPS(payload.newImplementation, new bytes(0), false);
+
+        // Calling a method using `this.<method>` will cause a contract call that will use
+        // the new contract. This call will fail if the method does not exists or the magic
+        // is different.
+        if (this.pythUpgradableMagic() != 0x97a6f304)
+            revert PythErrors.InvalidGovernanceMessage();
+
+        emit ContractUpgraded(oldImplementation, _getImplementation());
+    }
+}
+*/
+
+contract PythExperimental is Pyth {
+    // address payable wormholeAddr;
     // For tracking all active emitter/chain ID pairs
-    PythInternalStructs.DataSource[] validDataSources;
-    mapping(bytes32 => bool) isValidDataSource;
+    // PythInternalStructs.DataSource[] validDataSources;
+    // mapping(bytes32 => bool) isValidDataSource;
 
     function initialize(
-        address payable wormholeArg,
+        address wormhole,
         uint16[] calldata dataSourceEmitterChainIds,
-        bytes32[] calldata dataSourceEmitterAddresses
+        bytes32[] calldata dataSourceEmitterAddresses,
+        uint16 governanceEmitterChainId,
+        bytes32 governanceEmitterAddress,
+        uint64 governanceInitialSequence,
+        uint validTimePeriodSeconds,
+        uint singleUpdateFeeInWei
     ) public {
-        wormholeAddr = wormholeArg;
-
-        if (
-            dataSourceEmitterChainIds.length !=
-            dataSourceEmitterAddresses.length
-        ) revert PythErrors.InvalidArgument();
-
-        for (uint i = 0; i < dataSourceEmitterChainIds.length; i++) {
-            PythInternalStructs.DataSource memory ds = PythInternalStructs
-                .DataSource(
-                    dataSourceEmitterChainIds[i],
-                    dataSourceEmitterAddresses[i]
-                );
-
-            isValidDataSource[hashDataSource(ds)] = true;
-            validDataSources.push(ds);
-        }
+        Pyth._initialize(
+            wormhole,
+            dataSourceEmitterChainIds,
+            dataSourceEmitterAddresses,
+            governanceEmitterChainId,
+            governanceEmitterAddress,
+            governanceInitialSequence,
+            validTimePeriodSeconds,
+            singleUpdateFeeInWei
+        );
     }
+
+    /*
 
     // Experiment 1: Minimal wormhole update. No hashing or anything is performed.
 
@@ -338,6 +416,7 @@ contract PythExperimental {
                 )
             ];
     }
+    */
 
     // Experiment 2: Minimal merkle tree verification.@author
 
@@ -359,7 +438,7 @@ contract PythExperimental {
     }
 
     // Misc utilities
-
+    /*
     function hashDataSource(
         PythInternalStructs.DataSource memory ds
     ) public pure returns (bytes32) {
@@ -369,4 +448,5 @@ contract PythExperimental {
     function wormhole() public view returns (IWormhole) {
         return IWormhole(wormholeAddr);
     }
+    */
 }
