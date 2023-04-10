@@ -7,6 +7,7 @@ import {
 import * as BufferLayout from "@solana/buffer-layout";
 import { PACKET_DATA_SIZE } from "@solana/web3.js";
 import { ExecutePostedVaa } from "./ExecutePostedVaa";
+import { CosmosUpgradeContract } from "./UpgradeContract";
 
 export interface PythGovernanceAction {
   readonly targetChainId: ChainName;
@@ -148,6 +149,8 @@ export function decodeGovernancePayload(
   switch (header.action) {
     case "ExecutePostedVaa":
       return ExecutePostedVaa.decode(data);
+    case "UpgradeContract":
+      return CosmosUpgradeContract.decode(data);
     default:
       return undefined;
   }
