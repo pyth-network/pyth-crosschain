@@ -358,6 +358,14 @@ module pyth::pyth_tests{
     const DEPLOYER: address = @0x1234;
 
     #[test_only]
+    /// A vector containing a single VAA with:
+    /// - emitter chain ID 17
+    /// - emitter address 0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b
+    /// - payload corresponding to the batch price attestation of the prices returned by get_mock_price_infos()
+    const TEST_VAAS: vector<vector<u8>> = vector[x"0100000000010036eb563b80a24f4253bee6150eb8924e4bdf6e4fa1dfc759a6664d2e865b4b134651a7b021b7f1ce3bd078070b688b6f2e37ce2de0d9b48e6a78684561e49d5201527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000001005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001"];
+
+
+    #[test_only]
     /// Init Wormhole core bridge state.
     /// Init Pyth state.
     /// Set initial Sui clock time.
@@ -398,9 +406,10 @@ module pyth::pyth_tests{
             x"deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
         let initial_guardians =
             vector[
-                x"1337133713371337133713371337133713371337",
-                x"c0dec0dec0dec0dec0dec0dec0dec0dec0dec0de",
-                x"ba5edba5edba5edba5edba5edba5edba5edba5ed"
+                x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"
+                //x"1337133713371337133713371337133713371337",
+                //x"c0dec0dec0dec0dec0dec0dec0dec0dec0dec0de",
+                //x"ba5edba5edba5edba5edba5edba5edba5edba5ed"
             ];
         let guardian_set_seconds_to_live = 5678;
         let message_fee = 350;
@@ -517,7 +526,7 @@ module pyth::pyth_tests{
     #[test]
     #[expected_failure(abort_code = wormhole::vaa::E_WRONG_VERSION)]
     fun test_update_price_feeds_corrupt_vaa() {
-        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 100000, 0);
+        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 50, 0);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         let pyth_state = take_shared<PythState>(&scenario);
         let worm_state = take_shared<WormState>(&scenario);
@@ -531,6 +540,41 @@ module pyth::pyth_tests{
             &mut worm_state,
             &mut pyth_state,
             vector[corrupt_vaa],
+            &clock,
+            ctx(&mut scenario)
+        );
+
+        return_shared(pyth_state);
+        return_shared(worm_state);
+        return_shared(clock);
+        coin::burn_for_testing<SUI>(test_coins);
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    #[expected_failure(abort_code = pyth::pyth::E_INVALID_DATA_SOURCE)]
+    fun test_update_price_feeds_invalid_data_source() {
+        // Initialize the contract with some valid data sources, excluding our test VAA's source
+        let data_sources = vector<DataSource>[
+            data_source::new(
+                4, external_address::new(bytes32::new(x"0000000000000000000000000000000000000000000000000000000000007742"))
+            ),
+            data_source::new(
+                5, external_address::new(bytes32::new(x"0000000000000000000000000000000000000000000000000000000000007637"))
+            )
+        ];
+
+        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, 50, 0);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        let pyth_state = take_shared<PythState>(&scenario);
+        let worm_state = take_shared<WormState>(&scenario);
+        let clock = take_shared<Clock>(&scenario);
+
+        pyth::create_price_feeds(
+            &mut worm_state,
+            &mut pyth_state,
+            TEST_VAAS,
             &clock,
             ctx(&mut scenario)
         );
