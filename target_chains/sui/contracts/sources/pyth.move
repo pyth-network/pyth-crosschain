@@ -27,6 +27,8 @@ module pyth::pyth {
     const E_STALE_PRICE_UPDATE: u64 = 3;
     const E_PRICE_INFO_OBJECT_NOT_FOUND: u64 = 4;
 
+    friend pyth::pyth_tests;
+
     /// Call init_and_share_state with deployer cap to initialize
     /// state and emit event corresponding to Pyth initialization.
     public entry fun init_pyth(
@@ -213,8 +215,9 @@ module pyth::pyth {
             let i = 0;
             let found = false;
             // Find PriceInfoObjects corresponding to the current update (PriceInfo).
-            // TODO - This for loop might be expensive if there are a large
-            //        number of updates and/or price_info_objects we are updating.
+            // TODO - Construct an in-memory table to make look-ups faster?
+            //        This loop might be expensive if there are a large number
+            //        of updates and/or price_info_objects we are updating.
             while (i < vector::length<PriceInfoObject>(price_info_objects)){
                 // Check if the current price info object corresponds to the price feed that
                 // the update is meant for.
@@ -676,8 +679,8 @@ module pyth::pyth_tests{
         price_info_object_2 = vector::pop_back(&mut price_info_object_vec);
         price_info_object_3 = vector::pop_back(&mut price_info_object_vec);
         price_info_object_4 = vector::pop_back(&mut price_info_object_vec);
-
         vector::destroy_empty(price_info_object_vec);
+
         return_shared(pyth_state);
         return_shared(worm_state);
         return_shared(price_info_object_1);
@@ -794,6 +797,68 @@ module pyth::pyth_tests{
         return_shared(pyth_state);
         return_shared(worm_state);
         return_shared(price_info_object);
+        return_shared(clock);
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    fun test_update_cache(){
+        let data_sources = data_sources_for_test_vaa();
+        let base_update_fee = 50;
+        let coins_to_mint = 5000;
+
+        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        let pyth_state = take_shared<PythState>(&scenario);
+        let worm_state = take_shared<WormState>(&scenario);
+        let clock = take_shared<Clock>(&scenario);
+
+        pyth::create_price_feeds(
+            &mut worm_state,
+            &mut pyth_state,
+            TEST_VAAS,
+            &clock,
+            ctx(&mut scenario)
+        );
+
+        // Affirm that 4 objects, which correspond to the 4 new price info objects
+        // containing the price feeds were created and shared.
+        let effects = test_scenario::next_tx(&mut scenario, DEPLOYER);
+        let shared_ids = test_scenario::shared(&effects);
+        let created_ids = test_scenario::created(&effects);
+        assert!(vector::length<ID>(&shared_ids)==4, 0);
+        assert!(vector::length<ID>(&created_ids)==4, 0);
+
+        let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_2 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_3 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_4 = take_shared<PriceInfoObject>(&scenario);
+
+        let updates = get_mock_price_infos();
+        let price_info_object_vec = vector[
+            price_info_object_1,
+            price_info_object_2,
+            price_info_object_3,
+            price_info_object_4
+        ];
+
+        check_price_feeds_cached(&updates, &price_info_object_vec);
+
+        price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_2 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_3 = vector::pop_back(&mut price_info_object_vec);
+        price_info_object_4 = vector::pop_back(&mut price_info_object_vec);
+        vector::destroy_empty(price_info_object_vec);
+
+        return_shared(pyth_state);
+        return_shared(worm_state);
+        return_shared(price_info_object_1);
+        return_shared(price_info_object_2);
+        return_shared(price_info_object_3);
+        return_shared(price_info_object_4);
+        coin::burn_for_testing<SUI>(test_coins);
+
         return_shared(clock);
         test_scenario::end(scenario);
     }
