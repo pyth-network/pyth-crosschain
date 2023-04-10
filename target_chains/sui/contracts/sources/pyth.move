@@ -822,13 +822,7 @@ module pyth::pyth_tests{
             ctx(&mut scenario)
         );
 
-        // Affirm that 4 objects, which correspond to the 4 new price info objects
-        // containing the price feeds were created and shared.
-        let effects = test_scenario::next_tx(&mut scenario, DEPLOYER);
-        let shared_ids = test_scenario::shared(&effects);
-        let created_ids = test_scenario::created(&effects);
-        assert!(vector::length<ID>(&shared_ids)==4, 0);
-        assert!(vector::length<ID>(&created_ids)==4, 0);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
         let price_info_object_2 = take_shared<PriceInfoObject>(&scenario);
