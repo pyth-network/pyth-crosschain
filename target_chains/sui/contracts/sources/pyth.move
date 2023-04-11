@@ -393,10 +393,10 @@ module pyth::pyth_tests{
 
     use sui::sui::SUI;
     use sui::coin::{Self, Coin};
-    use sui::clock::{Self, Clock};
     use sui::test_scenario::{Self, Scenario, ctx, take_shared, return_shared};
     use sui::package::Self;
     use sui::object::{Self, ID};
+    use sui::clock::{Self, Clock};
 
     use pyth::state::{Self, State as PythState};
     use pyth::price_identifier::{Self};
@@ -433,7 +433,7 @@ module pyth::pyth_tests{
         data_sources: vector<DataSource>,
         base_update_fee: u64,
         to_mint: u64
-    ): (Scenario, Coin<SUI>) {
+    ): (Scenario, Coin<SUI>, Clock) {
 
         let scenario = test_scenario::begin(DEPLOYER);
 
@@ -477,9 +477,6 @@ module pyth::pyth_tests{
             test_scenario::ctx(&mut scenario)
         );
 
-        // Create and share a global clock object for timekeeping.
-        clock::create_for_testing(ctx(&mut scenario));
-
         // Initialize Pyth state.
         let pyth_upgrade_cap=
             package::test_publish(
@@ -505,7 +502,8 @@ module pyth::pyth_tests{
         );
 
         let coins = coin::mint_for_testing<SUI>(to_mint, ctx(&mut scenario));
-        (scenario, coins)
+        let clock = clock::create_for_testing(ctx(&mut scenario));
+        (scenario, coins, clock)
     }
 
     #[test_only]
@@ -578,7 +576,7 @@ module pyth::pyth_tests{
     #[test]
     fun test_get_update_fee() {
         let single_update_fee = 50;
-        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], single_update_fee, 0);
+        let (scenario, test_coins, _clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], single_update_fee, 0);
         test_scenario::next_tx(&mut scenario, DEPLOYER, );
         let pyth_state = take_shared<PythState>(&scenario);
         // Pass in a single VAA
@@ -597,17 +595,17 @@ module pyth::pyth_tests{
 
         return_shared(pyth_state);
         coin::burn_for_testing<SUI>(test_coins);
+        clock::destroy_for_testing(_clock);
         test_scenario::end(scenario);
     }
 
     #[test]
     #[expected_failure(abort_code = wormhole::vaa::E_WRONG_VERSION)]
     fun test_create_price_feeds_corrupt_vaa() {
-        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 50, 0);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 50, 0);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         let pyth_state = take_shared<PythState>(&scenario);
         let worm_state = take_shared<WormState>(&scenario);
-        let clock = take_shared<Clock>(&scenario);
 
         // Pass in a corrupt VAA, which should fail deseriaizing
         let corrupt_vaa = x"90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
@@ -623,7 +621,7 @@ module pyth::pyth_tests{
 
         return_shared(pyth_state);
         return_shared(worm_state);
-        return_shared(clock);
+        clock::destroy_for_testing(clock);
         coin::burn_for_testing<SUI>(test_coins);
         test_scenario::end(scenario);
     }
@@ -641,12 +639,11 @@ module pyth::pyth_tests{
             )
         ];
 
-        let (scenario, test_coins) = setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, 50, 0);
+        let (scenario, test_coins, clock) = setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, 50, 0);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);
         let worm_state = take_shared<WormState>(&scenario);
-        let clock = take_shared<Clock>(&scenario);
 
         pyth::create_price_feeds(
             &mut worm_state,
@@ -658,7 +655,7 @@ module pyth::pyth_tests{
 
         return_shared(pyth_state);
         return_shared(worm_state);
-        return_shared(clock);
+        clock::destroy_for_testing(clock);
         coin::burn_for_testing<SUI>(test_coins);
         test_scenario::end(scenario);
     }
@@ -682,12 +679,11 @@ module pyth::pyth_tests{
         let base_update_fee = 50;
         let coins_to_mint = 5000;
 
-        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);
         let worm_state = take_shared<WormState>(&scenario);
-        let clock = take_shared<Clock>(&scenario);
 
         pyth::create_price_feeds(
             &mut worm_state,
@@ -737,7 +733,7 @@ module pyth::pyth_tests{
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
 
-        return_shared(clock);
+        clock::destroy_for_testing(clock);
         test_scenario::end(scenario);
     }
 
@@ -748,12 +744,11 @@ module pyth::pyth_tests{
         let base_update_fee = 50;
         let coins_to_mint = 5000;
 
-        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);
         let worm_state = take_shared<WormState>(&scenario);
-        let clock = take_shared<Clock>(&scenario);
 
         pyth::create_price_feeds(
             &mut worm_state,
@@ -812,12 +807,11 @@ module pyth::pyth_tests{
         let base_update_fee = 50;
         let coins_to_mint = 5;
 
-        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);
         let worm_state = take_shared<WormState>(&scenario);
-        let clock = take_shared<Clock>(&scenario);
 
         pyth::create_price_feeds(
             &mut worm_state,
@@ -856,12 +850,11 @@ module pyth::pyth_tests{
         let base_update_fee = 50;
         let coins_to_mint = 5000;
 
-        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);
         let worm_state = take_shared<WormState>(&scenario);
-        let clock = take_shared<Clock>(&scenario);
 
         pyth::create_price_feeds(
             &mut worm_state,
@@ -905,7 +898,7 @@ module pyth::pyth_tests{
         return_shared(price_info_object_4);
         coin::burn_for_testing<SUI>(test_coins);
 
-        return_shared(clock);
+        clock::destroy_for_testing(clock);
         test_scenario::end(scenario);
     }
 
@@ -915,12 +908,11 @@ module pyth::pyth_tests{
         let base_update_fee = 50;
         let coins_to_mint = 5000;
 
-        let (scenario, test_coins) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);
         let worm_state = take_shared<WormState>(&scenario);
-        let clock = take_shared<Clock>(&scenario);
 
         pyth::create_price_feeds(
             &mut worm_state,
@@ -1031,7 +1023,7 @@ module pyth::pyth_tests{
         return_shared(price_info_object_4);
         coin::burn_for_testing<SUI>(test_coins);
 
-        return_shared(clock);
+        clock::destroy_for_testing(clock);
         test_scenario::end(scenario);
     }
 }
