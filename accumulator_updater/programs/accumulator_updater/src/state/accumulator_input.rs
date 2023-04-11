@@ -155,15 +155,15 @@ mod test {
             align_of::<AccumulatorInput>(),
         );
 
-        // input_idx
-        //     size: 4
-        //     align: 2
-        // header
-        //     size: 1022
-        //     align: 2
-        // input
-        //     size: 2046
-        //     align: 2
+        //            input_idx
+        //                 size: 8
+        //                 align: 4
+        //             header
+        //                 size: 2044
+        //                 align: 4
+        //             input
+        //                 size: 10220
+        //                 align: 4
         println!(
             r"
             input_idx
