@@ -128,4 +128,6 @@ pub enum AccumulatorUpdaterError {
     CurrentDataLengthExceeded,
     #[msg("Accumulator Input not writable")]
     AccumulatorInputNotWritable,
+    #[msg("Accumulator Input not provided")]
+    AccumulatorInputNotProvided,
 }
