@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.8",
-    "@pythnetwork/client": "^2.16.0",
+    "@pythnetwork/client": "^2.17.0",
     "@solana/buffer-layout": "^4.0.1",
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
