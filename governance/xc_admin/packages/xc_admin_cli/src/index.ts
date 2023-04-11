@@ -65,7 +65,10 @@ const multisigCommand = (name: string, description: string) =>
       "-w, --wallet <filepath>",
       'path to the operations key or "ledger"'
     )
-    .requiredOption("-v, --vault <pubkey>", "multisig address")
+    .requiredOption(
+      "-v, --vault <pubkey>",
+      "multisig address, all the addresses can be found in xc_admin_common/src/multisig.ts"
+    )
     .option(
       "-lda, --ledger-derivation-account <number>",
       "ledger derivation account to use"
