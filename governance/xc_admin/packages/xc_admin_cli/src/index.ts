@@ -416,10 +416,7 @@ multisigCommand("propose-arbitrary-payload", "Propose arbitrary payload")
     const cluster: PythCluster = options.cluster;
     const vault: PublicKey = new PublicKey(options.vault);
 
-    const squad = SquadsMesh.endpoint(
-      getPythClusterApiUrl(getMultisigCluster(cluster)),
-      wallet
-    );
+    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
 
     let payload = options.payload;
     if (payload.startsWith("0x")) {
