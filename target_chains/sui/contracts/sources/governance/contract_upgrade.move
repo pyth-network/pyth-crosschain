@@ -1,25 +1,26 @@
 // SPDX-License-Identifier: Apache 2
 
+/// Note: This module is based on the upgrade_contract module
+/// from the Sui Wormhole package:
+/// https://github.com/wormhole-foundation/wormhole/blob/sui/integration_v2/sui/wormhole/sources/governance/upgrade_contract.move
+
 /// This module implements handling a governance VAA to enact upgrading the
-/// Wormhole contract to a new build. The procedure to upgrade this contract
+/// Pyth contract to a new build. The procedure to upgrade this contract
 /// requires a Programmable Transaction, which includes the following procedure:
 /// 1.  Load new build.
 /// 2.  Authorize upgrade.
 /// 3.  Upgrade.
 /// 4.  Commit upgrade.
-module wormhole::upgrade_contract {
+module pyth::contract_upgrade {
     use sui::clock::{Clock};
     use sui::event::{Self};
     use sui::object::{Self, ID};
     use sui::package::{UpgradeReceipt, UpgradeTicket};
 
-    use pyth::state::{State};
+    use pyth::state::{Self, State};
 
-    use wormhole::state::{State as WormState};
     use wormhole::bytes32::{Self, Bytes32};
-    use wormhole::consumed_vaas::{Self};
     use wormhole::cursor::{Self};
-    use wormhole::state::{Self, State};
 
     friend pyth::governance;
 
@@ -47,25 +48,12 @@ module wormhole::upgrade_contract {
     /// NOTE: This method is guarded by a minimum build version check. This
     /// method could break backward compatibility on an upgrade.
     public fun execute(
-        wormhole_state: &mut State,
-        vaa_buf: vector<u8>,
-        the_clock: &Clock
+        pyth_state: &mut State,
+        payload: vector<u8>,
+        _the_clock: &Clock
     ): UpgradeTicket {
-        let msg =
-            governance_message::parse_and_verify_vaa(
-                wormhole_state,
-                vaa_buf,
-                the_clock
-            );
-
-        // Do not allow this VAA to be replayed.
-        consumed_vaas::consume(
-            state::borrow_mut_consumed_vaas(wormhole_state),
-            governance_message::vaa_hash(&msg)
-        );
-
         // Proceed with processing new implementation version.
-        handle_upgrade_contract(wormhole_state, msg)
+        handle_upgrade_contract(pyth_state, payload)
     }
 
     /// Finalize the upgrade that ran to produce the given `receipt`. This
@@ -80,28 +68,20 @@ module wormhole::upgrade_contract {
         // Emit an event reflecting package ID change.
         event::emit(
             ContractUpgraded {
-                old_contract: object::id_from_address(@wormhole),
+                old_contract: object::id_from_address(@pyth),
                 new_contract: latest_package_id
             }
         );
     }
 
     fun handle_upgrade_contract(
-        wormhole_state: &mut State,
-        msg: GovernanceMessage
+        pyth_state: &mut State,
+        payload: vector<u8>
     ): UpgradeTicket {
-        // Verify that this governance message is to update the Wormhole fee.
-        let governance_payload =
-            governance_message::take_local_action(
-                msg,
-                state::governance_module(),
-                ACTION_UPGRADE_CONTRACT
-            );
 
-        // Deserialize the payload as amount to change the Wormhole fee.
-        let UpgradeContract { digest } = deserialize(governance_payload);
+        let UpgradeContract { digest } = deserialize(payload);
 
-        state::authorize_upgrade(wormhole_state, digest)
+        state::authorize_upgrade(pyth_state, digest)
     }
 
     fun deserialize(payload: vector<u8>): UpgradeContract {
@@ -120,9 +100,4 @@ module wormhole::upgrade_contract {
     public fun action(): u8 {
         ACTION_UPGRADE_CONTRACT
     }
-}
-
-#[test_only]
-module wormhole::upgrade_contract_tests {
-    // TODO
 }

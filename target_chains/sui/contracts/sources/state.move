@@ -5,16 +5,19 @@ module pyth::state {
     use sui::tx_context::{Self, TxContext};
     use sui::dynamic_field::{Self as field};
     use sui::package::{Self, UpgradeCap, UpgradeReceipt, UpgradeTicket};
+    use sui::balance::{Balance};
+    use sui::sui::SUI;
 
     use pyth::data_source::{Self, DataSource};
     use pyth::price_info::{Self};
     use pyth::price_identifier::{PriceIdentifier};
     use pyth::required_version::{Self, RequiredVersion};
-    use wormhole::version_control::{Self as control};
+    use pyth::version_control::{Self as control};
 
     use wormhole::setup::{assert_package_upgrade_cap};
-    use wormhole::consumed_vaas::{Self};
+    use wormhole::consumed_vaas::{Self, ConsumedVAAs};
     use wormhole::bytes32::{Self, Bytes32};
+    use wormhole::fee_collector::{Self, FeeCollector};
 
     friend pyth::pyth;
     friend pyth::pyth_tests;
@@ -25,6 +28,8 @@ module pyth::state {
     friend pyth::governance;
     friend pyth::set_governance_data_source;
     friend pyth::migrate;
+    friend pyth::contract_upgrade;
+    friend pyth::transfer_fee;
 
     const E_BUILD_VERSION_MISMATCH: u64 = 0;
     const E_INVALID_BUILD_VERSION: u64 = 1;
@@ -42,18 +47,18 @@ module pyth::state {
     /// See `migrate` module for more info.
     struct MigrationControl has store, drop, copy {}
 
-    /// Used as key for dynamic field for consumed VAAs
-    struct ConsumedVAAsKey has store, drop, copy {}
-
     struct State has key {
         id: UID,
         governance_data_source: DataSource,
-        last_executed_governance_sequence: u64,
         stale_price_threshold: u64,
         base_update_fee: u64,
+        consumed_vaas: ConsumedVAAs,
 
         // Upgrade capability.
         upgrade_cap: UpgradeCap,
+
+        // Fee collector.
+        fee_collector: FeeCollector,
 
         /// Contract build version tracker.
         required_version: RequiredVersion
@@ -106,7 +111,6 @@ module pyth::state {
         let uid = object::new(ctx);
 
         field::add(&mut uid, MigrationControl {}, false);
-        field::add(&mut uid, ConsumedVAAsKey {}, consumed_vaas::new(ctx));
 
         // Create a set that contains all registered data sources and
         // attach it to uid as a dynamic field to minimize the
@@ -124,16 +128,28 @@ module pyth::state {
             data_source::add(&mut uid, vector::pop_back(&mut sources));
         };
 
+        let consumed_vaas = consumed_vaas::new(ctx);
+
+        let required_version = required_version::new(control::version(), ctx);
+        required_version::add<control::SetDataSources>(&mut required_version);
+        required_version::add<control::SetGovernanceDataSource>(&mut required_version);
+        required_version::add<control::SetStalePriceThreshold>(&mut required_version);
+        required_version::add<control::SetUpdateFee>(&mut required_version);
+        required_version::add<control::TransferFee>(&mut required_version);
+        required_version::add<control::UpdatePriceFeeds>(&mut required_version);
+        required_version::add<control::CreatePriceFeeds>(&mut required_version);
+
         // Share state so that is a shared Sui object.
         transfer::share_object(
             State {
                 id: uid,
                 upgrade_cap,
                 governance_data_source,
-                last_executed_governance_sequence: 0,
                 stale_price_threshold,
                 base_update_fee,
-                required_version: required_version::new(control::version(), ctx)
+                consumed_vaas,
+                fee_collector: fee_collector::new(base_update_fee),
+                required_version
             }
         );
     }
@@ -237,7 +253,6 @@ module pyth::state {
         *field::borrow_mut(&mut self.id, MigrationControl {}) = false;
     }
 
-
     // Accessors
     public fun get_stale_price_threshold_secs(s: &State): u64 {
         s.stale_price_threshold
@@ -255,15 +270,35 @@ module pyth::state {
         s.governance_data_source == source
     }
 
-    public fun get_last_executed_governance_sequence(s: &State): u64 {
-        s.last_executed_governance_sequence
-    }
-
     public fun price_feed_object_exists(s: &State, p: PriceIdentifier): bool {
         price_info::contains(&s.id, p)
     }
 
-    // Setters
+    // Mutators and Setters
+
+    /// Withdraw collected fees when governance action to transfer fees to a
+    /// particular recipient.
+    ///
+    /// See `pyth::transfer_fee` for more info.
+    public(friend) fun withdraw_fee(
+        self: &mut State,
+        amount: u64
+    ): Balance<SUI> {
+        fee_collector::withdraw_balance(&mut self.fee_collector, amount)
+    }
+
+    public(friend) fun deposit_fee(self: &mut State, fee: Balance<SUI>) {
+        fee_collector::deposit_balance(&mut self.fee_collector, fee);
+    }
+
+    public(friend) fun set_fee_collector_fee(self: &mut State, amount: u64) {
+        fee_collector::change_fee(&mut self.fee_collector, amount);
+    }
+
+    public(friend) fun consume_vaa(state: &mut State, vaa_digest: Bytes32){
+        consumed_vaas::consume(&mut state.consumed_vaas, vaa_digest);
+    }
+
     public(friend) fun set_data_sources(s: &mut State, new_sources: vector<DataSource>) {
         // Empty the existing table of data sources registered in state.
         data_source::empty(&mut s.id);
@@ -275,10 +310,6 @@ module pyth::state {
 
     public(friend) fun register_price_info_object(s: &mut State, price_identifier: PriceIdentifier, id: ID) {
         price_info::add(&mut s.id, price_identifier, id);
-    }
-
-    public(friend) fun set_last_executed_governance_sequence(s: &mut State, sequence: u64) {
-        s.last_executed_governance_sequence = sequence;
     }
 
     public(friend) fun set_governance_data_source(s: &mut State, source: DataSource) {

@@ -15,6 +15,7 @@ module pyth::pyth {
     use pyth::price_feed::{Self};
     use pyth::price::{Self, Price};
     use pyth::price_identifier::{PriceIdentifier};
+    use pyth::version_control::{UpdatePriceFeeds, CreatePriceFeeds};
 
     use wormhole::external_address::{Self};
     use wormhole::vaa::{Self};
@@ -93,6 +94,8 @@ module pyth::pyth {
         clock: &Clock,
         ctx: &mut TxContext
     ){
+        // Version control.
+        state::check_minimum_requirement<CreatePriceFeeds>(pyth_state);
         while (!vector::is_empty(&vaas)) {
             let vaa = vector::pop_back(&mut vaas);
 
@@ -137,8 +140,8 @@ module pyth::pyth {
         };
     }
 
-    /// Update PriceInfo objects and corresponding price feeds with the
-    /// data in the given VAAs.
+    /// Update Pyth Price Info objects (containing price feeds) with the
+    /// price data in the given VAAs.
     ///
     /// The vaas argument is a vector of VAAs encoded as bytes.
     ///
@@ -158,6 +161,9 @@ module pyth::pyth {
         fee: Coin<SUI>,
         clock: &Clock
     ){
+        // Version control.
+        state::check_minimum_requirement<UpdatePriceFeeds>(pyth_state);
+
         // Charge the message update fee
         assert!(get_total_update_fee(pyth_state, &vaas) <= coin::value(&fee), E_INSUFFICIENT_FEE);
 
@@ -176,9 +182,11 @@ module pyth::pyth {
         };
     }
 
-    /// Precondition: A Sui object of type PriceInfoObject must exist for each update
+    /// Make sure that a Sui object of type PriceInfoObject exists for each update
     /// encoded in the worm_vaa (batch_attestation_vaa). These should be passed in
-    /// via the price_info_objects argument.
+    /// via the price_info_objects argument. If for any price feed update, a
+    /// a PriceInfoObject with a matching price identifier is not found, the update_cache
+    /// function will revert, causing this function to revert.
     fun update_price_feed_from_single_vaa(
         worm_state: &WormState,
         pyth_state: &PythState,
@@ -216,10 +224,9 @@ module pyth::pyth {
             let update = vector::pop_back(&mut updates);
             let i = 0;
             let found = false;
-            // Find PriceInfoObjects corresponding to the current update (PriceInfo).
-            // TODO - Construct an in-memory table to make look-ups faster?
-            //        This loop might be expensive if there are a large number
-            //        of updates and/or price_info_objects we are updating.
+            // Note - Would it be worth it to construct an in-memory hash-map to make look-ups faster?
+            //        This loop might be expensive if there are a large number of price_info_objects
+            //        passed in.
             while (i < vector::length<PriceInfoObject>(price_info_objects) && found == false){
                 // Check if the current price info object corresponds to the price feed that
                 // the update is meant for.

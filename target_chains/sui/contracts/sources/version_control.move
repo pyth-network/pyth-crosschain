@@ -18,29 +18,28 @@ module pyth::version_control {
     /// a new implementation is built for a contract upgrade.
     const CURRENT_BUILD_VERSION: u64 = 1;
 
-    /// Key used to check minimum version requirement for `emitter` module.
-    struct Emitter {}
+    /// Key used to check minimum version requirement for `set_data_sources`
+    struct SetDataSources {}
 
-    /// Key used to check minimum version requirement for `governance_message`
-    /// module.
-    struct GovernanceMessage {}
+    /// Key used to check minimum version requirement for `set_governance_data_source`
+    struct SetGovernanceDataSource {}
 
-    /// Key used to check minimum version requirement for `publish_module`
-    /// module.
-    struct PublishMessage {}
+    /// Key used to check minimum version requirement for `set_stale_price_threshold`
+    struct SetStalePriceThreshold {}
 
-    /// Key used to check minimum version requirement for `set_fee` module.
-    struct SetFee {}
+    /// Key used to check minimum version requirement for `set_update_fee`
+    struct SetUpdateFee {}
 
-    /// Key used to check minimum version requirement for `transfer_fee` module.
+    /// Key used to check minimum version requirement for `transfer_fee`
     struct TransferFee {}
 
-    /// Key used to check minimum version requirement for `update_guardian_set`
-    /// module.
-    struct UpdateGuardianSet {}
+    /// Key used to check minimum version requirement for `update_price_feeds`
+    struct UpdatePriceFeeds {}
 
-    /// Key used to check minimum version requirement for `vaa` module.
-    struct Vaa {}
+    /// Key used to check minimum version requirement for `create_price_feeds`
+    struct CreatePriceFeeds {}
+
+    //=======================================================================
 
     /// Return const value `CURRENT_BUILD_VERSION` for this particular build.
     /// This value is used to determine whether this implementation meets

@@ -6,6 +6,7 @@ module pyth::governance_action {
     const SET_DATA_SOURCES: u8 = 2;
     const SET_UPDATE_FEE: u8 = 3;
     const SET_STALE_PRICE_THRESHOLD: u8 = 4;
+    const TRANSFER_FEE: u8 = 5;
 
     const E_INVALID_GOVERNANCE_ACTION: u64 = 5;
 
@@ -36,5 +37,9 @@ module pyth::governance_action {
 
     public fun new_set_stale_price_threshold(): GovernanceAction {
         GovernanceAction { value: SET_STALE_PRICE_THRESHOLD }
+    }
+
+    public fun new_transfer_fee(): GovernanceAction {
+        GovernanceAction { value: TRANSFER_FEE }
     }
 }

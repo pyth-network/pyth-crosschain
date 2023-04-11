@@ -37,12 +37,14 @@ module pyth::migrate {
         //
         ////////////////////////////////////////////////////////////////////////
 
-        // state::require_current_version<control::NewEmitter>(pyth_state);
-        // state::require_current_version<control::ParseAndVerify>(pyth_state);
-        // state::require_current_version<control::PublishMessage>(pyth_state);
-        // state::require_current_version<control::SetFee>(pyth_state);
+
+        // state::require_current_version<control::SetDataSources>(pyth_state);
+        // state::require_current_version<control::SetGovernanceDataSource>(pyth_state);
+        // state::require_current_version<control::SetStalePriceThreshold>(pyth_state);
+        // state::require_current_version<control::SetUpdateFee>(pyth_state);
         // state::require_current_version<control::TransferFee>(pyth_state);
-        // state::require_current_version<control::UpdateGuardianSet>(pyth_state);
+        // state::require_current_version<control::UpdatePriceFeeds>(pyth_state);
+        // state::require_current_version<control::CreatePriceFeeds>(pyth_state);
 
         ////////////////////////////////////////////////////////////////////////
         //

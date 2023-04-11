@@ -8,19 +8,22 @@ module pyth::set_data_sources {
     use pyth::deserialize;
     use pyth::data_source::{Self, DataSource};
     use pyth::state::{Self, State};
+    use pyth::version_control::{SetDataSources};
 
     friend pyth::governance;
 
-    struct SetDataSources {
+    struct DataSources {
         sources: vector<DataSource>,
     }
 
     public(friend) fun execute(state: &mut State, payload: vector<u8>) {
-        let SetDataSources { sources } = from_byte_vec(payload);
+        state::check_minimum_requirement<SetDataSources>(state);
+
+        let DataSources { sources } = from_byte_vec(payload);
         state::set_data_sources(state, sources);
     }
 
-    fun from_byte_vec(bytes: vector<u8>): SetDataSources {
+    fun from_byte_vec(bytes: vector<u8>): DataSources {
         let cursor = cursor::new(bytes);
         let data_sources_count = deserialize::deserialize_u8(&mut cursor);
 
@@ -37,7 +40,7 @@ module pyth::set_data_sources {
 
         cursor::destroy_empty(cursor);
 
-        SetDataSources {
+        DataSources {
             sources
         }
     }
