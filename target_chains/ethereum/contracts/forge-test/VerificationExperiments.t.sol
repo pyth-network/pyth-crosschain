@@ -13,9 +13,15 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "../contracts/pyth/PythInternalStructs.sol";
 import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
+import "./utils/RandTestUtils.t.sol";
 
 // Experiments to measure the gas usage of different ways of verifying prices in the EVM contract.
-contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
+contract VerificationExperiments is
+    Test,
+    WormholeTestUtils,
+    PythTestUtils,
+    RandTestUtils
+{
     // 19, current mainnet number of guardians, is used to have gas estimates
     // close to our mainnet transactions.
     uint8 constant NUM_GUARDIANS = 19;
@@ -59,7 +65,6 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
     bytes nativeUpdate;
 
     uint64 sequence;
-    uint randSeed;
 
     function setUp() public {
         address payable wormhole = payable(setUpWormhole(NUM_GUARDIANS));
@@ -98,24 +103,25 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
             priceIds[i] = bytes32(uint256(priceIds[i - 1]) + 1);
         }
 
+        setRandSeed(12345);
         for (uint i = 0; i < NUM_PRICES; ++i) {
-            uint64 publishTime = uint64(getRand() % 10);
+            uint64 publishTime = uint64(getRandUint() % 10);
 
             cachedPrices.push(
                 PythStructs.Price(
-                    int64(uint64(getRand() % 1000)), // Price
-                    uint64(getRand() % 100), // Confidence
+                    int64(uint64(getRandUint() % 1000)), // Price
+                    uint64(getRandUint() % 100), // Confidence
                     -5, // Expo
                     publishTime
                 )
             );
             cachedPricesPublishTimes.push(publishTime);
 
-            publishTime += uint64(getRand() % 10);
+            publishTime += uint64(getRandUint() % 10);
             freshPrices.push(
                 PythStructs.Price(
-                    int64(uint64(getRand() % 1000)), // Price
-                    uint64(getRand() % 100), // Confidence
+                    int64(uint64(getRandUint() % 1000)), // Price
+                    uint64(getRandUint() % 100), // Confidence
                     -5, // Expo
                     publishTime
                 )
@@ -174,11 +180,6 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
         thresholdUpdate = generateThresholdUpdate(priceIds[0], freshPrices[0]);
 
         nativeUpdate = generateAttestationPayload(priceIds[0], freshPrices[0]);
-    }
-
-    function getRand() internal returns (uint val) {
-        ++randSeed;
-        val = uint(keccak256(abi.encode(randSeed)));
     }
 
     // Get the payload for a wormhole batch price update
@@ -265,7 +266,7 @@ contract VerificationExperiments is Test, WormholeTestUtils, PythTestUtils {
             PythTestUtils.SOURCE_EMITTER_CHAIN_ID,
             PythTestUtils.SOURCE_EMITTER_ADDRESS,
             sequence,
-            bytes.concat(root), // the root hash
+            bytes.concat(root),
             NUM_GUARDIAN_SIGNERS
         );
 
