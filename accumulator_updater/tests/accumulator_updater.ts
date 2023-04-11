@@ -121,14 +121,7 @@ describe("accumulator_updater", () => {
       ],
       accumulatorUpdaterProgram.programId
     )[0];
-    // const accumulatorPdaMetas = accumulatorPdaKeys.map((pda) => {
-    //   return {
-    //     pubkey: pda,
-    //     isSigner: false,
-    //     isWritable: true,
-    //   };
-    //   // return pda;
-    // });
+
     const accumulatorPdaMetas = [
       {
         pubkey: accumulatorPdaKey,
@@ -192,9 +185,7 @@ describe("accumulator_updater", () => {
       );
 
     const accumulatorPriceMessages = parseAccumulatorInput(accumulatorInput);
-    // const accumulatorPriceMessages = accumulatorInputs.map((ai) => {
-    //   return parseAccumulatorInput(ai);
-    // });
+
     console.log(
       `accumulatorPriceMessages: ${JSON.stringify(
         accumulatorPriceMessages,
@@ -313,7 +304,6 @@ function parseAccumulatorInput({
   data,
 }: {
   header: AccumulatorInputHeader;
-  // data: number[]
   data: Uint8Array;
 }): AccumulatorPriceMessage[] {
   const messages = [];

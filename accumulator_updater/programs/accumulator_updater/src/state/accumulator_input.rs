@@ -23,6 +23,9 @@ pub struct AccumulatorInput {
     pub data:   [u8; 8_176],
 }
 
+//TODO:
+// - implement custom serialization & set alignment
+// - what other fields are needed?
 #[zero_copy]
 #[derive(InitSpace, Debug)]
 pub struct AccumulatorHeader {
@@ -30,6 +33,27 @@ pub struct AccumulatorHeader {
     pub version:  u8,                // 2
     pub unused_0: u16,               // 2
     pub indexes:  [InputIndex; 255], // 2048
+}
+
+impl AccumulatorHeader {
+    pub const CURRENT_VERSION: u8 = 1;
+
+    pub fn new(bump: u8) -> Self {
+        Self {
+            bump,
+            unused_0: 0,
+            version: Self::CURRENT_VERSION,
+            indexes: [InputIndex {
+                offset:   0,
+                unused_0: 0,
+                len:      0,
+            }; u8::MAX as usize],
+        }
+    }
+
+    pub fn set_version(&mut self) {
+        self.version = Self::CURRENT_VERSION;
+    }
 }
 
 #[zero_copy]
@@ -103,38 +127,6 @@ impl AccumulatorInput {
         let expected_key = self.derive_pda(cpi_caller, base_account)?;
         require_keys_eq!(expected_key, key);
         Ok(())
-    }
-}
-
-//TODO:
-// - implement custom serialization & set alignment
-// - what other fields are needed?
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Default, InitSpace)]
-pub struct AccumulatorHeaderOld {
-    pub bump:           u8,
-    pub version:        u8,
-    pub account_schema: u8,
-}
-
-
-impl AccumulatorHeader {
-    pub const CURRENT_VERSION: u8 = 1;
-
-    pub fn new(bump: u8) -> Self {
-        Self {
-            bump,
-            unused_0: 0,
-            version: Self::CURRENT_VERSION,
-            indexes: [InputIndex {
-                offset:   0,
-                unused_0: 0,
-                len:      0,
-            }; u8::MAX as usize],
-        }
-    }
-
-    pub fn set_version(&mut self) {
-        self.version = Self::CURRENT_VERSION;
     }
 }
 
