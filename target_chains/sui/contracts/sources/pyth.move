@@ -964,7 +964,6 @@ module pyth::pyth_tests{
 
         vector::destroy_empty(price_info_object_vec);
 
-        // Confirm that the current price and ema price didn't change
         let current_price_info = price_info::get_price_info_from_price_info_object(&price_info_object_1);
         let current_price_feed = price_info::get_price_feed(&current_price_info);
         let current_price = price_feed::get_price(current_price_feed);
@@ -1006,7 +1005,7 @@ module pyth::pyth_tests{
 
         vector::destroy_empty(price_info_object_vec);
 
-        // Confirm that the Pyth cached price got updated to fresh_price
+        // Confirm that the Pyth cached price got updated to fresh_price.
         let current_price_info = price_info::get_price_info_from_price_info_object(&price_info_object_1);
         let current_price_feed = price_info::get_price_feed(&current_price_info);
         let current_price = price_feed::get_price(current_price_feed);
