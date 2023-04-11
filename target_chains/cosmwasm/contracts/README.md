@@ -5,7 +5,7 @@ This crate includes the actual contract for the CosmWasm ecosystem.
 ## Integration
 
 You can use `pyth-sdk-cw` which has been published to crates.io to integrate with the Pyth contract.
-The sdk exposes data structures and testing utilities for ease of use. Please look into this [pyth-sdk-cw](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/cosmwasm/pyth-sdk-cw)
+The sdk exposes data structures and testing utilities for ease of use. Please look into this [pyth-sdk-cw](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/cosmwasm/sdk/rs)
 
 ## Off-Chain Queries
 
