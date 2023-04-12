@@ -12,7 +12,7 @@
 ///
 /// See `pyth::required_version` and `pyth::state` for more info.
 module pyth::version_control {
-    /// This value tracks the current version of the Wormhole version. We are
+    /// This value tracks the current Pyth contract version. We are
     /// placing this constant value at the top, which goes against Move style
     /// guides so that we bring special attention to changing this value when
     /// a new implementation is built for a contract upgrade.

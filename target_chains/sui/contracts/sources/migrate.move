@@ -14,7 +14,7 @@ module pyth::migrate {
     use pyth::state::{Self, State};
 
     // This import is only used when `state::require_current_version` is used.
-    // use pytg::version_control::{Self as control};
+    // use pyth::version_control::{Self as control};
 
     /// Upgrade procedure is not complete (most likely due to an upgrade not
     /// being initialized since upgrades can only be performed via programmable
