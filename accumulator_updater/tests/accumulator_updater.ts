@@ -33,8 +33,6 @@ const [pythPriceAccountPk] = anchor.web3.PublicKey.findProgramAddressSync(
   mockCpiProg.programId
 );
 
-const PRICE_SCHEMAS = [0, 1];
-
 describe("accumulator_updater", () => {
   // Configure the client to use the local cluster.
   let provider = anchor.AnchorProvider.env();
@@ -304,10 +302,9 @@ function parseAccumulatorInput({
   data,
 }: {
   header: AccumulatorInputHeader;
-  data: Uint8Array;
+  data: number[];
 }): AccumulatorPriceMessage[] {
   const messages = [];
-
   let dataBuffer = Buffer.from(data);
 
   let start = 0;
@@ -319,11 +316,14 @@ function parseAccumulatorInput({
       break;
     }
 
-    const inputData = dataBuffer.subarray(start, endOffset);
-    if (i == 0) {
-      messages.push(parseFullPriceMessage(inputData));
-    } else if (i == 1) {
-      messages.push(parseCompactPriceMessage(inputData));
+    const messageBytes = dataBuffer.subarray(start, endOffset);
+    const { header: msgHeader, data: msgData } =
+      parseMessageBytes(messageBytes);
+    console.info(`header: ${JSON.stringify(msgHeader, null, 2)}`);
+    if (msgHeader.schema == 0) {
+      messages.push(parseFullPriceMessage(msgData));
+    } else if (msgHeader.schema == 1) {
+      messages.push(parseCompactPriceMessage(msgData));
     } else {
       console.warn("Unknown input index: " + i);
       continue;
@@ -331,6 +331,41 @@ function parseAccumulatorInput({
     start = endOffset;
   }
   return messages;
+}
+
+type MessageHeader = {
+  schema: number;
+  version: number;
+  size: number;
+};
+
+type Message = {
+  header: MessageHeader;
+  data: Buffer;
+};
+
+function parseMessageBytes(data: Buffer): Message {
+  let offset = 0;
+
+  const schema = data.readInt8(offset);
+  offset += 1;
+
+  const version = data.readInt16BE(offset);
+  offset += 2;
+
+  const size = data.readUInt32BE(offset);
+  offset += 4;
+
+  const messageHeader = {
+    schema,
+    version,
+    size,
+  };
+  let messageData = data.subarray(offset, offset + size);
+  return {
+    header: messageHeader,
+    data: messageData,
+  };
 }
 
 //TODO: follow wormhole sdk parsing structure?
