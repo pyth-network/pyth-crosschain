@@ -220,7 +220,7 @@ fn update_price_feeds(
     let state = config_read(deps.storage).load()?;
 
     if !is_fee_sufficient(&deps.as_ref(), info, data)? {
-        return Err(PythContractError::OldGovernanceMessage)?;
+        return Err(PythContractError::InsufficientFee)?;
     }
 
     let mut num_total_attestations: usize = 0;
