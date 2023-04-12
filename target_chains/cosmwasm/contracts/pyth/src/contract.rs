@@ -32,6 +32,10 @@ use {
             ConfigInfo,
             PythDataSource,
         },
+        wormhole::{
+            ParsedVAA,
+            WormholeQueryMsg,
+        },
     },
     cosmwasm_std::{
         coin,
@@ -53,6 +57,7 @@ use {
         WasmMsg,
         WasmQuery,
     },
+    osmosis_std::types::osmosis::txfees::v1beta1::TxfeesQuerier,
     pyth_sdk_cw::{
         error::PythContractError,
         ExecuteMsg,
@@ -72,10 +77,6 @@ use {
         convert::TryFrom,
         iter::FromIterator,
         time::Duration,
-    },
-    wormhole::{
-        msg::QueryMsg as WormholeQueryMsg,
-        state::ParsedVAA,
     },
 };
 
@@ -164,12 +165,14 @@ fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResu
         && has_coins(info.funds.as_ref(), &get_update_fee(&deps, data)?));
 }
 
-// TODO: add tests for these
+// it only checks for fee denoms other than the base denom
 #[cfg(feature = "osmosis")]
-fn is_allowed_tx_fees_denom(denom: &String) -> StdResult<bool> {
-    // TODO: update the logic
-    // implement the logic here
-    Ok(denom == "uosmo")
+fn is_allowed_tx_fees_denom(deps: &Deps, denom: &String) -> StdResult<bool> {
+    let querier = TxfeesQuerier::new(&deps.querier);
+    match querier.denom_pool_id(denom.to_string()) {
+        Ok(_) => Ok(true),
+        Err(_) => Ok(false),
+    }
 }
 
 // TODO: add tests for these
@@ -188,7 +191,7 @@ fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResu
     // FIXME: should we accept fee for a single transaction in different tokens?
     let total_amount = Uint128::new(0);
     for coin in &info.funds {
-        if !is_allowed_tx_fees_denom(&coin.denom)? {
+        if coin.denom == state.fee.denom || !is_allowed_tx_fees_denom(deps, &coin.denom)? {
             return Err(PythContractError::InvalidFeeDenom {
                 denom: coin.denom.to_string(),
             })?;
@@ -593,7 +596,7 @@ pub fn get_update_fee(deps: &Deps, vaas: &[Binary]) -> StdResult<Coin> {
 pub fn get_update_fee_for_denom(deps: &Deps, vaas: &[Binary], denom: String) -> StdResult<Coin> {
     let config = config_read(deps.storage).load()?;
 
-    if !is_allowed_tx_fees_denom(&denom)? {
+    if !is_allowed_tx_fees_denom(deps, &denom)? {
         return Err(PythContractError::InvalidFeeDenom { denom })?;
     }
     // right now this will return the same amount as the base denom as set in config
