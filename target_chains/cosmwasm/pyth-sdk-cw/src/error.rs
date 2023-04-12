@@ -48,6 +48,10 @@ pub enum PythContractError {
     /// The message did not include a sufficient fee.
     #[error("InsufficientFee")]
     InsufficientFee,
+
+    /// The message did not include a sufficient fee.
+    #[error("InvalidFeeDenom")]
+    InvalidFeeDenom { denom: String },
 }
 
 impl From<PythContractError> for StdError {

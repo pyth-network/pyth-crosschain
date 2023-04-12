@@ -36,7 +36,6 @@ use {
     cosmwasm_std::{
         coin,
         entry_point,
-        has_coins,
         to_binary,
         Addr,
         Binary,
@@ -156,6 +155,51 @@ pub fn execute(
     }
 }
 
+// TODO: add tests for these
+#[cfg(not(feature = "osmosis"))]
+fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResult<bool> {
+    use cosmwasm_std::has_coins;
+    let state = config_read(deps.storage).load()?;
+    return Ok(state.fee.amount.u128() > 0
+        && has_coins(info.funds.as_ref(), &get_update_fee(&deps, data)?));
+}
+
+// TODO: add tests for these
+#[cfg(feature = "osmosis")]
+fn is_allowed_tx_fees_denom(denom: &String) -> StdResult<bool> {
+    // TODO: update the logic
+    // implement the logic here
+    Ok(denom == "uosmo")
+}
+
+// TODO: add tests for these
+#[cfg(feature = "osmosis")]
+fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResult<bool> {
+    use cosmwasm_std::Uint128;
+
+    let state = config_read(deps.storage).load()?;
+
+    // how to change this in future
+    // for given coins verify they are allowed in txfee module
+    // convert each of them to the base token that is 'uosmo'
+    // combine all the converted token
+    // check with `has_coins`
+
+    // FIXME: should we accept fee for a single transaction in different tokens?
+    let total_amount = Uint128::new(0);
+    for coin in &info.funds {
+        if !is_allowed_tx_fees_denom(&coin.denom)? {
+            return Err(PythContractError::InvalidFeeDenom {
+                denom: coin.denom.to_string(),
+            })?;
+        }
+        total_amount.checked_add(coin.amount)?;
+    }
+
+    let base_denom_fee = get_update_fee(deps, data)?;
+    Ok(state.fee.amount.u128() > 0 && base_denom_fee.amount <= total_amount)
+}
+
 /// Update the on-chain price feeds given the array of price update VAAs `data`.
 /// Each price update VAA must be a valid Wormhole message and sent from an authorized emitter.
 ///
@@ -169,11 +213,8 @@ fn update_price_feeds(
 ) -> StdResult<Response<MsgWrapper>> {
     let state = config_read(deps.storage).load()?;
 
-    // Check that a sufficient fee was sent with the message
-    if state.fee.amount.u128() > 0
-        && !has_coins(info.funds.as_ref(), &get_update_fee(&deps.as_ref(), data)?)
-    {
-        return Err(PythContractError::InsufficientFee.into());
+    if !is_fee_sufficient(&deps.as_ref(), info, data)? {
+        return Err(PythContractError::OldGovernanceMessage)?;
     }
 
     let mut num_total_attestations: usize = 0;
@@ -523,6 +564,7 @@ pub fn query_price_feed(deps: &Deps, feed_id: &[u8]) -> StdResult<PriceFeedRespo
 
 /// Get the fee that a caller must pay in order to submit a price update.
 /// The fee depends on both the current contract configuration and the update data `vaas`.
+/// The fee is in the denoms as stored in the current configuration
 pub fn get_update_fee(deps: &Deps, vaas: &[Binary]) -> StdResult<Coin> {
     let config = config_read(deps.storage).load()?;
 
@@ -542,9 +584,15 @@ pub fn get_update_fee(deps: &Deps, vaas: &[Binary]) -> StdResult<Coin> {
 }
 
 #[cfg(feature = "osmosis")]
+/// Osmosis can support multiple tokens for transaction fees
+/// This will return update fee for the given denom only if that denom is allowed in Osmosis's txFee module
+/// Else it will throw error
 pub fn get_update_fee_for_denom(deps: &Deps, vaas: &[Binary], denom: String) -> StdResult<Coin> {
     let config = config_read(deps.storage).load()?;
 
+    if !is_allowed_tx_fees_denom(&denom)? {
+        return Err(PythContractError::InvalidFeeDenom { denom })?;
+    }
     // right now this will return the same amount as the base denom as set in config
     // but we can change it later on to add custom logic
     Ok(coin(
@@ -1240,6 +1288,49 @@ mod test {
         assert_eq!(
             get_update_fee(&deps.as_ref(), &updates[0..2]),
             Ok(Coin::new(20, fee_denom.clone()))
+        );
+
+        let big_fee: u128 = (u128::MAX / 4) * 3;
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                fee: Coin::new(big_fee, fee_denom.clone()),
+                ..create_zero_config_info()
+            })
+            .unwrap();
+
+        assert_eq!(
+            get_update_fee(&deps.as_ref(), &updates[0..1]),
+            Ok(Coin::new(big_fee, fee_denom))
+        );
+        assert!(get_update_fee(&deps.as_ref(), &updates[0..2]).is_err());
+    }
+
+    #[cfg(feature = "osmosis")]
+    #[test]
+    fn test_get_update_fee_for_denom() {
+        let (mut deps, _env) = setup_test();
+        let fee_denom: String = "test".into();
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                fee: Coin::new(10, fee_denom.clone()),
+                ..create_zero_config_info()
+            })
+            .unwrap();
+
+        let updates = vec![Binary::from([1u8]), Binary::from([2u8])];
+
+        let denom = "uosmo";
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..0], denom.to_string()),
+            Ok(Coin::new(0, denom))
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], denom.to_string()),
+            Ok(Coin::new(10, denom))
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], denom.to_string()),
+            Ok(Coin::new(20, denom))
         );
 
         let big_fee: u128 = (u128::MAX / 4) * 3;
