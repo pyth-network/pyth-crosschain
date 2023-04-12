@@ -71,7 +71,7 @@ impl MockPyth {
             Ok(QueryMsg::GetValidTimePeriod) => {
                 SystemResult::Ok(to_binary(&self.valid_time_period).into())
             }
-            #[cfg(not(feature = "osmosis"))]
+
             Ok(QueryMsg::GetUpdateFee { vaas }) => {
                 let new_amount = self
                     .fee_per_vaa
@@ -82,7 +82,7 @@ impl MockPyth {
                 SystemResult::Ok(to_binary(&Coin::new(new_amount, &self.fee_per_vaa.denom)).into())
             }
             #[cfg(feature = "osmosis")]
-            Ok(QueryMsg::GetUpdateFee { vaas, denom }) => {
+            Ok(QueryMsg::GetUpdateFeeForDenom { vaas, denom }) => {
                 let new_amount = self
                     .fee_per_vaa
                     .amount
