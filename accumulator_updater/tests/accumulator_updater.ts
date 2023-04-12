@@ -310,16 +310,16 @@ function parseAccumulatorInput({
 
   let dataBuffer = Buffer.from(data);
 
-  for (let i = 0; i < header.indexes.length; i++) {
-    const inputIndex = header.indexes[i];
-    if (inputIndex.len == 0) {
-      continue;
+  let start = 0;
+  for (let i = 0; i < header.endOffsets.length; i++) {
+    const endOffset = header.endOffsets[i];
+
+    if (endOffset == 0) {
+      console.log(`endOffset = 0. breaking`);
+      break;
     }
 
-    const inputData = dataBuffer.subarray(
-      inputIndex.offset,
-      inputIndex.offset + inputIndex.len
-    );
+    const inputData = dataBuffer.subarray(start, endOffset);
     if (i == 0) {
       messages.push(parseFullPriceMessage(inputData));
     } else if (i == 1) {
@@ -328,6 +328,7 @@ function parseAccumulatorInput({
       console.warn("Unknown input index: " + i);
       continue;
     }
+    start = endOffset;
   }
   return messages;
 }

@@ -19,8 +19,8 @@ use {
 #[derive(Debug, InitSpace)]
 pub struct AccumulatorInput {
     pub header: AccumulatorHeader,
-    // 10KB - 8 (discriminator) - 2053 (header) - 11 (alignment)
-    pub data:   [u8; 8_176],
+    // 10KB - 8 (discriminator) - 514 (header) - 11 (alignment)
+    pub data:   [u8; 8_690],
 }
 
 //TODO:
@@ -29,25 +29,34 @@ pub struct AccumulatorInput {
 #[zero_copy]
 #[derive(InitSpace, Debug)]
 pub struct AccumulatorHeader {
-    pub bump:     u8,                // 1
-    pub version:  u8,                // 2
-    pub unused_0: u16,               // 2
-    pub indexes:  [InputIndex; 255], // 2048
+    pub bump:        u8, // 1
+    pub version:     u8, // 1
+    // byte offset of accounts where data starts
+    // e.g. account_info.data[offset + header_len]
+    pub header_len:  u16, // 2
+    /// endpoints of every message.
+    /// ex: [10, 14]
+    /// => msg1 = data[(header_len + 0)..(header_len + 10)]
+    /// => msg2 = data[(header_len + 10)..(header_len + 14)]
+    pub end_offsets: [u16; 255], // 510
 }
 
 impl AccumulatorHeader {
+    // header_size. Keeping same structure as `BatchPriceAttestation` header
+    // HEADER_LEN allows for append-only forward-compatibility for the header.
+    // this is the number of bytes from the beginning of the account_info.data
+    // to the start of the `AccumulatorInput` data.
+    // *NOTE* this is slightly different than the `BatchPriceAttestation` header_size
+    pub const HEADER_LEN: u16 = 8 + AccumulatorHeader::INIT_SPACE as u16;
+
     pub const CURRENT_VERSION: u8 = 1;
 
     pub fn new(bump: u8) -> Self {
         Self {
             bump,
-            unused_0: 0,
+            header_len: Self::HEADER_LEN,
             version: Self::CURRENT_VERSION,
-            indexes: [InputIndex {
-                offset:   0,
-                unused_0: 0,
-                len:      0,
-            }; u8::MAX as usize],
+            end_offsets: [0u16; u8::MAX as usize],
         }
     }
 
@@ -65,8 +74,6 @@ pub struct InputIndex {
 }
 
 impl AccumulatorInput {
-    pub const DATA_MAX_LEN: usize = (4 * 1024) - 8 - AccumulatorHeader::INIT_SPACE;
-
     pub fn init_size(values: &Vec<InputSchemaAndData>) -> usize {
         let mut size = AccumulatorHeader::INIT_SPACE + 4;
         for v in values {
@@ -79,35 +86,26 @@ impl AccumulatorInput {
         AccumulatorHeader::INIT_SPACE + 4 + self.data.len()
     }
 
-    pub fn offset(&self) -> u32 {
-        self.header
-            .indexes
-            .iter()
-            .map(|v| v.offset)
-            .max()
-            .unwrap_or_default()
-    }
-
-
     pub fn new(bump: u8) -> Self {
         let header = AccumulatorHeader::new(bump);
         Self {
             header,
-            data: [0u8; 8_176],
+            data: [0u8; 8_690],
         }
     }
 
-    pub fn put_all(&mut self, values: Vec<InputSchemaAndData>) -> Result<()> {
-        let mut offset = self.offset();
-        for v in values {
-            let end;
-            {
-                let input_idx = &mut self.header.indexes[v.schema as usize];
-                input_idx.len = v.data.len() as u16;
-                input_idx.offset = offset;
-                end = offset + input_idx.len as u32;
-            }
-            self.data[((offset as usize)..(end as usize))].copy_from_slice(&v.data);
+    // note: this does not handle if multiple CPI calls
+    // need to be made to write all the messages
+    // TODO: add a end_offsets index parameter for "continuation"
+    // TODO: test max size of parameters that can be passed into CPI call
+    pub fn put_all(&mut self, values: Vec<Vec<u8>>) -> Result<()> {
+        let mut offset = 0u16;
+
+        for (i, v) in values.into_iter().enumerate() {
+            let start = offset;
+            let end = offset + (v.len() as u16);
+            self.header.end_offsets[i] = end;
+            self.data[(start as usize)..(end as usize)].copy_from_slice(&v);
             offset = end;
         }
         Ok(())
@@ -135,16 +133,33 @@ impl AccumulatorInput {
 mod test {
     use {
         super::*,
+        bytemuck::bytes_of,
         std::mem::{
             align_of,
             size_of,
         },
     };
 
+    fn data_bytes(data: Vec<u16>) -> Vec<u8> {
+        let mut bytes = vec![];
+        for d in data {
+            bytes.extend_from_slice(&d.to_be_bytes());
+        }
+        bytes
+    }
+
+    fn create_accumulator_input(data: Vec<Vec<u16>>) -> AccumulatorInput {
+        let mut ai = AccumulatorInput::new(0);
+        let mut ai_data = vec![];
+        for d in data {
+            ai_data.push(data_bytes(d));
+        }
+        ai.put_all(ai_data).unwrap();
+        ai
+    }
+
     #[test]
     fn test_sizes_and_alignments() {
-        let (input_idx_size, input_idx_align) = (size_of::<InputIndex>(), align_of::<InputIndex>());
-
         let (header_idx_size, header_idx_align) = (
             size_of::<AccumulatorHeader>(),
             align_of::<AccumulatorHeader>(),
@@ -155,20 +170,10 @@ mod test {
             align_of::<AccumulatorInput>(),
         );
 
-        //            input_idx
-        //                 size: 8
-        //                 align: 4
-        //             header
-        //                 size: 2044
-        //                 align: 4
-        //             input
-        //                 size: 10220
-        //                 align: 4
+
         println!(
             r"
-            input_idx
-                size: {input_idx_size:?}
-                align: {input_idx_align:?}
+
             header
                 size: {header_idx_size:?}
                 align: {header_idx_align:?}
@@ -176,6 +181,43 @@ mod test {
                 size: {input_size:?}
                 align: {input_align:?}
         "
-        )
+        );
+        assert_eq!(header_idx_size, 514);
+        assert_eq!(header_idx_align, 2);
+        assert_eq!(input_size, 8690);
+        assert_eq!(input_align, 2);
+    }
+
+    #[test]
+    fn test_put_all() {
+        let data = vec![vec![12, 34], vec![56, 78, 90]];
+        let accumulator_input = &mut create_accumulator_input(data.clone());
+
+        assert_eq!(accumulator_input.header.end_offsets[0], 4);
+        assert_eq!(accumulator_input.header.end_offsets[1], 10);
+
+        let data_bytes: Vec<Vec<u8>> = data.iter().map(|x| data_bytes(x.clone())).collect();
+
+        let accumulator_input_bytes = bytes_of(accumulator_input);
+
+        // *note* minus 8 here since no account discriminator when using
+        // `bytes_of`directly on accumulator_input
+        let header_len = accumulator_input.header.header_len as usize - 8;
+
+
+        let iter = accumulator_input
+            .header
+            .end_offsets
+            .iter()
+            .take_while(|x| **x != 0);
+        let mut start = header_len;
+        let mut data_iter = data_bytes.iter();
+        for offset in iter {
+            let end_offset = header_len + *offset as usize;
+            let accumulator_input_data = &accumulator_input_bytes[start..end_offset];
+            let expected_data = data_iter.next().unwrap();
+            assert_eq!(accumulator_input_data, expected_data.as_slice());
+            start = end_offset;
+        }
     }
 }

@@ -28,8 +28,8 @@ pub fn add_price<'info>(
     ctx: Context<'_, '_, '_, 'info, AddPrice<'info>>,
     params: AddPriceParams,
 ) -> Result<()> {
-    let mut account_data: Vec<Vec<u8>> = vec![];
-    let schemas = get_schemas(PythAccountType::Price);
+    let mut inputs: Vec<Vec<u8>> = vec![];
+    let _schemas = get_schemas(PythAccountType::Price);
 
     {
         let pyth_price_acct = &mut ctx.accounts.pyth_price_account.load_init()?;
@@ -38,25 +38,19 @@ pub fn add_price<'info>(
 
         let price_full_data = FullPriceMessage::from(&**pyth_price_acct).accumulator_serialize()?;
 
-        account_data.push(price_full_data);
+        inputs.push(price_full_data);
 
 
         let price_compact_data =
             CompactPriceMessage::from(&**pyth_price_acct).accumulator_serialize()?;
-        account_data.push(price_compact_data);
+        inputs.push(price_compact_data);
     }
 
-
-    let values = schemas
-        .into_iter()
-        .map(|s| s.to_u8())
-        .zip(account_data)
-        .collect::<Vec<(u8, Vec<u8>)>>();
 
     // Note: normally pyth oracle add_price wouldn't call emit_accumulator_inputs
     // since add_price doesn't actually add/update any price data we would
     // want included in the accumulator anyways. This is just for testing
-    AddPrice::emit_accumulator_inputs(ctx, values)
+    AddPrice::emit_accumulator_inputs(ctx, inputs)
 }
 
 
@@ -64,7 +58,7 @@ impl<'info> AddPrice<'info> {
     /// Invoke accumulator-updater emit-inputs ix cpi call using solana
     pub fn emit_accumulator_inputs(
         ctx: Context<'_, '_, '_, 'info, AddPrice<'info>>,
-        values: Vec<(u8, Vec<u8>)>,
+        inputs: Vec<Vec<u8>>,
     ) -> anchor_lang::Result<()> {
         let mut accounts = vec![
             AccountMeta::new(ctx.accounts.payer.key(), true),
@@ -85,9 +79,7 @@ impl<'info> AddPrice<'info> {
                 //anchor ix discriminator/identifier
                 sighash("global", ACCUMULATOR_UPDATER_IX_NAME),
                 ctx.accounts.pyth_price_account.key(),
-                values,
-                // account_data,
-                // account_schemas,
+                inputs,
             )
                 .try_to_vec()
                 .unwrap(),

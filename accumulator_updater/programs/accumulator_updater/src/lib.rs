@@ -62,12 +62,11 @@ pub mod accumulator_updater {
     ///
     /// * `base_account_key`    - Pubkey of the original account the
     ///                         AccumulatorInput(s) are derived from
-    /// * `values`              - Vec of (schema, account_data) in same respective
-    ///                           order `ctx.remaining_accounts`
+    /// * `values`              - Vec of account_data in same respective
     pub fn put_all<'info>(
         ctx: Context<'_, '_, '_, 'info, PutAll<'info>>,
         base_account_key: Pubkey,
-        values: Vec<InputSchemaAndData>,
+        values: Vec<Vec<u8>>,
     ) -> Result<()> {
         instructions::put_all(ctx, base_account_key, values)
     }
