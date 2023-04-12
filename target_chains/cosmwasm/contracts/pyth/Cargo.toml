@@ -11,10 +11,12 @@ crate-type = ["cdylib", "rlib"]
 [features]
 # IMPORTANT: if you want to build for injective, enable the default feature below
 # default=["injective"]
+default=["osmosis"]
 backtraces = ["cosmwasm-std/backtraces"]
 # use library feature to disable all init/handle/query exports
 library = []
 injective = ["dep:serde_repr"]
+osmosis=["pyth-sdk-cw/osmosis"]
 
 [dependencies]
 cosmwasm-std = { version = "1.0.0" }

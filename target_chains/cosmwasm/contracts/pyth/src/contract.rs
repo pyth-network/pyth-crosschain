@@ -504,6 +504,10 @@ fn update_price_feed_if_new(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::PriceFeed { id } => to_binary(&query_price_feed(&deps, id.as_ref())?),
+        #[cfg(feature = "osmosis")]
+        QueryMsg::GetUpdateFeeForDenom { vaas, denom } => {
+            to_binary(&get_update_fee_for_denom(&deps, &vaas, denom)?)
+        }
         QueryMsg::GetUpdateFee { vaas } => to_binary(&get_update_fee(&deps, &vaas)?),
         QueryMsg::GetValidTimePeriod => to_binary(&get_valid_time_period(&deps)?),
     }
@@ -534,6 +538,27 @@ pub fn get_update_fee(deps: &Deps, vaas: &[Binary]) -> StdResult<Coin> {
                 vaas.len(),
             ))?,
         config.fee.denom,
+    ))
+}
+
+#[cfg(feature = "osmosis")]
+pub fn get_update_fee_for_denom(deps: &Deps, vaas: &[Binary], denom: String) -> StdResult<Coin> {
+    let config = config_read(deps.storage).load()?;
+
+    // right now this will return the same amount as the base denom as set in config
+    // but we can change it later on to add custom logic
+    Ok(coin(
+        config
+            .fee
+            .amount
+            .u128()
+            .checked_mul(vaas.len() as u128)
+            .ok_or(OverflowError::new(
+                OverflowOperation::Mul,
+                config.fee.amount,
+                vaas.len(),
+            ))?,
+        denom,
     ))
 }
 
