@@ -42,7 +42,7 @@ module pyth::governance {
             E_GOVERNANCE_ACTION_MUST_BE_CONTRACT_UPGRADE);
         assert!(governance_instruction::get_target_chain_id(&instruction) != 0,
             E_GOVERNANCE_CONTRACT_UPGRADE_CHAIN_ID_ZERO);
-        contract_upgrade::execute(pyth_state, governance_instruction::destroy(instruction), clock)
+        contract_upgrade::execute(pyth_state, governance_instruction::destroy(instruction))
     }
 
     /// Execute a governance instruction.

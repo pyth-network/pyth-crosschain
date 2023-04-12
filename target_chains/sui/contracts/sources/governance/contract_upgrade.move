@@ -12,7 +12,6 @@
 /// 3.  Upgrade.
 /// 4.  Commit upgrade.
 module pyth::contract_upgrade {
-    use sui::clock::{Clock};
     use sui::event::{Self};
     use sui::object::{Self, ID};
     use sui::package::{UpgradeReceipt, UpgradeTicket};
@@ -47,10 +46,9 @@ module pyth::contract_upgrade {
     ///
     /// NOTE: This method is guarded by a minimum build version check. This
     /// method could break backward compatibility on an upgrade.
-    public fun execute(
+    public(friend) fun execute(
         pyth_state: &mut State,
         payload: vector<u8>,
-        _the_clock: &Clock
     ): UpgradeTicket {
         // Proceed with processing new implementation version.
         handle_upgrade_contract(pyth_state, payload)
