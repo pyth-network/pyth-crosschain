@@ -19,8 +19,10 @@ use {
 #[derive(Debug, InitSpace)]
 pub struct AccumulatorInput {
     pub header: AccumulatorHeader,
-    // 10KB - 8 (discriminator) - 514 (header) - 11 (alignment)
-    pub data:   [u8; 8_690],
+    // 10KB - 8 (discriminator) - 514 (header)
+    // TODO: do we want to initialize this to the max size?
+    //   - will lead to more data being passed around for validators
+    pub data:   [u8; 9_718],
 }
 
 //TODO:
@@ -46,7 +48,9 @@ impl AccumulatorHeader {
     // HEADER_LEN allows for append-only forward-compatibility for the header.
     // this is the number of bytes from the beginning of the account_info.data
     // to the start of the `AccumulatorInput` data.
-    // *NOTE* this is slightly different than the `BatchPriceAttestation` header_size
+    //
+    // *NOTE* this implementation is slightly different
+    // than the `BatchPriceAttestation` header_size
     pub const HEADER_LEN: u16 = 8 + AccumulatorHeader::INIT_SPACE as u16;
 
     pub const CURRENT_VERSION: u8 = 1;
@@ -90,7 +94,7 @@ impl AccumulatorInput {
         let header = AccumulatorHeader::new(bump);
         Self {
             header,
-            data: [0u8; 8_690],
+            data: [0u8; 9_718],
         }
     }
 
@@ -184,7 +188,7 @@ mod test {
         );
         assert_eq!(header_idx_size, 514);
         assert_eq!(header_idx_align, 2);
-        assert_eq!(input_size, 8690);
+        assert_eq!(input_size, 10_232);
         assert_eq!(input_align, 2);
     }
 
