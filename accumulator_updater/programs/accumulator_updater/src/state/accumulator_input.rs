@@ -84,23 +84,9 @@ impl AccumulatorInput {
     // need to be made to write all the messages
     // TODO: add a end_offsets index parameter for "continuation"
     // TODO: test max size of parameters that can be passed into CPI call
-    pub fn put_all_old(&mut self, values: Vec<Vec<u8>>) -> Result<()> {
-        let mut offset = 0u16;
-
-        for (i, v) in values.into_iter().enumerate() {
-            let start = offset;
-            let end = offset + (v.len() as u16);
-            self.header.end_offsets[i] = end;
-            self.data[(start as usize)..(end as usize)].copy_from_slice(&v);
-            offset = end;
-        }
-        Ok(())
-    }
-
     pub fn put_all(&mut self, values: &Vec<Vec<u8>>) -> (usize, u16) {
         let mut offset = 0u16;
 
-        let values_len = values.len();
         for (i, v) in values.iter().enumerate() {
             let start = offset;
             let end = offset + (v.len() as u16);
@@ -112,7 +98,7 @@ impl AccumulatorInput {
             self.data[(start as usize)..(end as usize)].copy_from_slice(v);
             offset = end
         }
-        (values_len, offset)
+        (values.len(), offset)
     }
 
 

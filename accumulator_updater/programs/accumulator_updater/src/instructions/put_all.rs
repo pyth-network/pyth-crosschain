@@ -15,8 +15,6 @@ use {
 
 pub const ACCUMULATOR: &[u8; 11] = b"accumulator";
 
-/// Puts all
-///
 pub fn put_all<'info>(
     ctx: Context<'_, '_, '_, 'info, PutAll<'info>>,
     base_account_key: Pubkey,
@@ -70,9 +68,6 @@ pub fn put_all<'info>(
         // note: redundant for uninitialized code path but safer to check here.
         // compute budget cost should be minimal
         accumulator_input.validate(accumulator_input_ai.key(), cpi_caller, base_account_key)?;
-
-
-        // accumulator_input.put_all_old(messages)?;
 
 
         let (num_msgs, num_bytes) = accumulator_input.put_all(&messages);

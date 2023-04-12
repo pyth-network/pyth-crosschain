@@ -63,8 +63,18 @@ pub mod accumulator_updater {
     /// * `messages`            - Vec of vec of bytes, each representing a message
     ///                           to be hashed and accumulated
     ///
-    /// TODO: need to be tolerant/handle situation where PDA size is insufficient
-    ///      to hold all messages.
+    /// This ix will write as many of the messages up to the length
+    /// of the `accumulator_input.data`.
+    /// If `accumulator_input.data.len() < messages.map(|x| x.len()).sum()`
+    /// then the remaining messages will be ignored.
+    ///
+    /// The current implementation assumes that each invocation of this
+    /// ix is independent of any previous invocations.
+    ///
+    /// TODO:
+    ///     - try handling re-allocation of the accumulator_input space
+    ///     - handle updates ("paging/batches of messages")
+    ///
     pub fn put_all<'info>(
         ctx: Context<'_, '_, '_, 'info, PutAll<'info>>,
         base_account_key: Pubkey,
