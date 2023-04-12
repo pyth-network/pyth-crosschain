@@ -12,27 +12,21 @@ use {
     },
 };
 
-// NOte: get rid of this. not using schema.
-#[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct InputSchemaAndData {
-    pub schema: u8,
-    pub data:   Vec<u8>,
-}
 
 pub const ACCUMULATOR: &[u8; 11] = b"accumulator";
 
+/// Puts all
+///
 pub fn put_all<'info>(
     ctx: Context<'_, '_, '_, 'info, PutAll<'info>>,
     base_account_key: Pubkey,
-    values: Vec<Vec<u8>>,
+    messages: Vec<Vec<u8>>,
 ) -> Result<()> {
     let cpi_caller = ctx.accounts.whitelist_verifier.is_allowed()?;
-    let account_infos = ctx.remaining_accounts;
-    let accumulator_input_ai = account_infos
+    let accumulator_input_ai = ctx
+        .remaining_accounts
         .first()
         .ok_or(AccumulatorUpdaterError::AccumulatorInputNotProvided)?;
-
-    let _rent = Rent::get()?;
 
     let loader;
 
@@ -76,7 +70,15 @@ pub fn put_all<'info>(
         // note: redundant for uninitialized code path but safer to check here.
         // compute budget cost should be minimal
         accumulator_input.validate(accumulator_input_ai.key(), cpi_caller, base_account_key)?;
-        accumulator_input.put_all(values)?;
+
+
+        // accumulator_input.put_all_old(messages)?;
+
+
+        let (num_msgs, num_bytes) = accumulator_input.put_all(&messages);
+        if num_msgs != messages.len() {
+            msg!("unable to fit all messages in accumulator input account. Wrote {}/{} messages and {} bytes", num_msgs, messages.len(), num_bytes);
+        }
     }
 
 
@@ -96,7 +98,7 @@ pub struct PutAll<'info> {
     pub payer:              Signer<'info>,
     pub whitelist_verifier: WhitelistVerifier<'info>,
     pub system_program:     Program<'info, System>,
-    // remaining_accounts:  - [AccumulatorInput PDAs]
+    // remaining_accounts:  - [AccumulatorInput PDA]
 }
 
 impl<'info> PutAll<'info> {

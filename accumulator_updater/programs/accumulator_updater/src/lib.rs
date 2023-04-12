@@ -52,23 +52,25 @@ pub mod accumulator_updater {
     }
 
 
-    /// Create or update inputs for the Accumulator. Each input is written
-    /// into a separate PDA account derived with
-    /// seeds = [cpi_caller, b"accumulator", base_account_key, schema]
+    /// Insert messages/inputs for the Accumulator. All inputs derived from the
+    /// `base_account_key` will go into the same PDA. The PDA is derived with
+    /// seeds = [cpi_caller, b"accumulator", base_account_key]
     ///
-    /// The caller of this instruction must pass those PDAs
-    /// while calling this function in the same order as elements.
     ///
     ///
     /// * `base_account_key`    - Pubkey of the original account the
-    ///                         AccumulatorInput(s) are derived from
-    /// * `values`              - Vec of account_data in same respective
+    ///                           AccumulatorInput is derived from
+    /// * `messages`            - Vec of vec of bytes, each representing a message
+    ///                           to be hashed and accumulated
+    ///
+    /// TODO: need to be tolerant/handle situation where PDA size is insufficient
+    ///      to hold all messages.
     pub fn put_all<'info>(
         ctx: Context<'_, '_, '_, 'info, PutAll<'info>>,
         base_account_key: Pubkey,
-        values: Vec<Vec<u8>>,
+        messages: Vec<Vec<u8>>,
     ) -> Result<()> {
-        instructions::put_all(ctx, base_account_key, values)
+        instructions::put_all(ctx, base_account_key, messages)
     }
 }
 

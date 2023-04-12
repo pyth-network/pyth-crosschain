@@ -1,7 +1,6 @@
 use {
     crate::{
         accumulator_input_seeds,
-        instructions::InputSchemaAndData,
         AccumulatorUpdaterError,
     },
     anchor_lang::prelude::*,
@@ -68,24 +67,7 @@ impl AccumulatorHeader {
         self.version = Self::CURRENT_VERSION;
     }
 }
-
-#[zero_copy]
-#[derive(Debug, InitSpace)]
-pub struct InputIndex {
-    pub offset:   u32,
-    pub len:      u16,
-    pub unused_0: u16,
-}
-
 impl AccumulatorInput {
-    pub fn init_size(values: &Vec<InputSchemaAndData>) -> usize {
-        let mut size = AccumulatorHeader::INIT_SPACE + 4;
-        for v in values {
-            size += v.data.len();
-        }
-        size
-    }
-
     pub fn size(&self) -> usize {
         AccumulatorHeader::INIT_SPACE + 4 + self.data.len()
     }
@@ -102,7 +84,7 @@ impl AccumulatorInput {
     // need to be made to write all the messages
     // TODO: add a end_offsets index parameter for "continuation"
     // TODO: test max size of parameters that can be passed into CPI call
-    pub fn put_all(&mut self, values: Vec<Vec<u8>>) -> Result<()> {
+    pub fn put_all_old(&mut self, values: Vec<Vec<u8>>) -> Result<()> {
         let mut offset = 0u16;
 
         for (i, v) in values.into_iter().enumerate() {
@@ -113,6 +95,24 @@ impl AccumulatorInput {
             offset = end;
         }
         Ok(())
+    }
+
+    pub fn put_all(&mut self, values: &Vec<Vec<u8>>) -> (usize, u16) {
+        let mut offset = 0u16;
+
+        let values_len = values.len();
+        for (i, v) in values.iter().enumerate() {
+            let start = offset;
+            let end = offset + (v.len() as u16);
+            if end > self.data.len() as u16 {
+                // need to return number of messages written & length?
+                return (i, start);
+            }
+            self.header.end_offsets[i] = end;
+            self.data[(start as usize)..(end as usize)].copy_from_slice(v);
+            offset = end
+        }
+        (values_len, offset)
     }
 
 
@@ -144,7 +144,7 @@ mod test {
         },
     };
 
-    fn data_bytes(data: Vec<u16>) -> Vec<u8> {
+    fn data_bytes(data: Vec<u8>) -> Vec<u8> {
         let mut bytes = vec![];
         for d in data {
             bytes.extend_from_slice(&d.to_be_bytes());
@@ -152,15 +152,6 @@ mod test {
         bytes
     }
 
-    fn create_accumulator_input(data: Vec<Vec<u16>>) -> AccumulatorInput {
-        let mut ai = AccumulatorInput::new(0);
-        let mut ai_data = vec![];
-        for d in data {
-            ai_data.push(data_bytes(d));
-        }
-        ai.put_all(ai_data).unwrap();
-        ai
-    }
 
     #[test]
     fn test_sizes_and_alignments() {
@@ -195,12 +186,18 @@ mod test {
     #[test]
     fn test_put_all() {
         let data = vec![vec![12, 34], vec![56, 78, 90]];
-        let accumulator_input = &mut create_accumulator_input(data.clone());
+        let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
 
-        assert_eq!(accumulator_input.header.end_offsets[0], 4);
-        assert_eq!(accumulator_input.header.end_offsets[1], 10);
+        let accumulator_input = &mut AccumulatorInput::new(0);
 
-        let data_bytes: Vec<Vec<u8>> = data.iter().map(|x| data_bytes(x.clone())).collect();
+        let (num_msgs, num_bytes) = accumulator_input.put_all(&data_bytes);
+        assert_eq!(num_msgs, 2);
+        assert_eq!(num_bytes, 5);
+
+
+        assert_eq!(accumulator_input.header.end_offsets[0], 2);
+        assert_eq!(accumulator_input.header.end_offsets[1], 5);
+
 
         let accumulator_input_bytes = bytes_of(accumulator_input);
 
@@ -223,5 +220,43 @@ mod test {
             assert_eq!(accumulator_input_data, expected_data.as_slice());
             start = end_offset;
         }
+    }
+
+    #[test]
+    fn test_put_all_exceed_max() {
+        let data = vec![vec![0u8; 9_718 - 2], vec![0u8], vec![0u8; 2]];
+
+        let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
+        let accumulator_input = &mut AccumulatorInput::new(0);
+        let (num_msgs, num_bytes) = accumulator_input.put_all(&data_bytes);
+        assert_eq!(num_msgs, 2);
+        assert_eq!(
+            num_bytes,
+            data_bytes[0..2].iter().map(|x| x.len()).sum::<usize>() as u16
+        );
+
+        let accumulator_input_bytes = bytes_of(accumulator_input);
+
+        // *note* minus 8 here since no account discriminator when using
+        // `bytes_of`directly on accumulator_input
+        let header_len = accumulator_input.header.header_len as usize - 8;
+
+
+        let iter = accumulator_input
+            .header
+            .end_offsets
+            .iter()
+            .take_while(|x| **x != 0);
+        let mut start = header_len;
+        let mut data_iter = data_bytes.iter();
+        for offset in iter {
+            let end_offset = header_len + *offset as usize;
+            let accumulator_input_data = &accumulator_input_bytes[start..end_offset];
+            let expected_data = data_iter.next().unwrap();
+            assert_eq!(accumulator_input_data, expected_data.as_slice());
+            start = end_offset;
+        }
+
+        assert_eq!(accumulator_input.header.end_offsets[2], 0);
     }
 }
