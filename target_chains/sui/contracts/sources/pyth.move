@@ -856,6 +856,7 @@ module pyth::pyth_tests{
         let pyth_state = take_shared<PythState>(&scenario);
         let worm_state = take_shared<WormState>(&scenario);
 
+        // Update cache is called by create_price_feeds.
         pyth::create_price_feeds(
             &mut worm_state,
             &mut pyth_state,
