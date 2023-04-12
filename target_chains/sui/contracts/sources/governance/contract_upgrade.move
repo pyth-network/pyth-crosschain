@@ -54,6 +54,16 @@ module pyth::contract_upgrade {
         handle_upgrade_contract(pyth_state, payload)
     }
 
+    fun handle_upgrade_contract(
+        pyth_state: &mut State,
+        payload: vector<u8>
+    ): UpgradeTicket {
+
+        let UpgradeContract { digest } = deserialize(payload);
+
+        state::authorize_upgrade(pyth_state, digest)
+    }
+
     /// Finalize the upgrade that ran to produce the given `receipt`. This
     /// method invokes `state::commit_upgrade` which interacts with
     /// `sui::package`.
@@ -70,16 +80,6 @@ module pyth::contract_upgrade {
                 new_contract: latest_package_id
             }
         );
-    }
-
-    fun handle_upgrade_contract(
-        pyth_state: &mut State,
-        payload: vector<u8>
-    ): UpgradeTicket {
-
-        let UpgradeContract { digest } = deserialize(payload);
-
-        state::authorize_upgrade(pyth_state, digest)
     }
 
     fun deserialize(payload: vector<u8>): UpgradeContract {
