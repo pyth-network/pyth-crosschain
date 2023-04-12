@@ -37,8 +37,12 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     #[returns(PriceFeedResponse)]
     PriceFeed { id: PriceIdentifier },
+    #[cfg(not(feature = "osmosis"))]
     #[returns(Coin)]
     GetUpdateFee { vaas: Vec<Binary> },
+    #[cfg(feature = "osmosis")]
+    #[returns(Coin)]
+    GetUpdateFee { denom: String, vaas: Vec<Binary> },
     #[returns(Duration)]
     GetValidTimePeriod,
 }
@@ -61,6 +65,7 @@ pub fn query_price_feed(
     Ok(price_feed_response)
 }
 
+#[cfg(not(feature = "osmosis"))]
 /// Get the fee required in order to update the on-chain state with the provided
 /// `price_update_vaas`.
 pub fn get_update_fee(
@@ -72,6 +77,24 @@ pub fn get_update_fee(
         contract_addr: contract_addr.into_string(),
         msg:           to_binary(&QueryMsg::GetUpdateFee {
             vaas: price_update_vaas.to_vec(),
+        })?,
+    }))
+}
+
+#[cfg(feature = "osmosis")]
+/// Get the fee required in order to update the on-chain state with the provided
+/// `price_update_vaas`.
+pub fn get_update_fee(
+    querier: &QuerierWrapper,
+    contract_addr: Addr,
+    price_update_vaas: &[Binary],
+    denom: String,
+) -> StdResult<Coin> {
+    querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
+        contract_addr: contract_addr.into_string(),
+        msg:           to_binary(&QueryMsg::GetUpdateFee {
+            vaas: price_update_vaas.to_vec(),
+            denom,
         })?,
     }))
 }

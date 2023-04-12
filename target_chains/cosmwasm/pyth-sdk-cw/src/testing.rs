@@ -71,6 +71,7 @@ impl MockPyth {
             Ok(QueryMsg::GetValidTimePeriod) => {
                 SystemResult::Ok(to_binary(&self.valid_time_period).into())
             }
+            #[cfg(not(feature = "osmosis"))]
             Ok(QueryMsg::GetUpdateFee { vaas }) => {
                 let new_amount = self
                     .fee_per_vaa
@@ -79,6 +80,16 @@ impl MockPyth {
                     .checked_mul(vaas.len() as u128)
                     .unwrap();
                 SystemResult::Ok(to_binary(&Coin::new(new_amount, &self.fee_per_vaa.denom)).into())
+            }
+            #[cfg(feature = "osmosis")]
+            Ok(QueryMsg::GetUpdateFee { vaas, denom }) => {
+                let new_amount = self
+                    .fee_per_vaa
+                    .amount
+                    .u128()
+                    .checked_mul(vaas.len() as u128)
+                    .unwrap();
+                SystemResult::Ok(to_binary(&Coin::new(new_amount, denom)).into())
             }
             Err(_e) => SystemResult::Err(SystemError::InvalidRequest {
                 error:   "Invalid message".into(),
