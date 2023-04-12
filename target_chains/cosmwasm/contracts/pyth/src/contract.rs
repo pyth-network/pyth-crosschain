@@ -197,6 +197,9 @@ fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResu
     }
 
     let base_denom_fee = get_update_fee(deps, data)?;
+
+    // right now the fee amount is same for all the different denoms
+    // which is to be changed in future when we will query osmosis for price
     Ok(state.fee.amount.u128() > 0 && base_denom_fee.amount <= total_amount)
 }
 
