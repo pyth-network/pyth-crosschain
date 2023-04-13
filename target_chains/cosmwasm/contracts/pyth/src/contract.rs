@@ -5,6 +5,8 @@ use crate::injective::{
 };
 #[cfg(not(feature = "injective"))]
 use cosmwasm_std::Empty as MsgWrapper;
+#[cfg(feature = "osmosis")]
+use osmosis_std::types::osmosis::txfees::v1beta1::TxfeesQuerier;
 use {
     crate::{
         governance::{
@@ -172,6 +174,17 @@ fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResu
 // it only checks for fee denoms other than the base denom
 #[cfg(feature = "osmosis")]
 fn is_allowed_tx_fees_denom(deps: &Deps, denom: &String) -> bool {
+    // TxFeesQuerier uses stargate queries which we can't mock as of now.
+    // The capability has not been implemented in `cosmwasm-std` yet.
+    // Hence hacking it this way to be able to right tests.
+    // FIXME
+    #[cfg(test)]
+    if denom == "uion"
+        || denom == "ibc/FF3065989E34457F342D4EFB8692406D49D4E2B5C70F725F127862E22CE6BDCD"
+    {
+        return true;
+    }
+
     let querier = TxfeesQuerier::new(&deps.querier);
     match querier.denom_pool_id(denom.to_string()) {
         Ok(_) => true,
@@ -183,6 +196,14 @@ fn is_allowed_tx_fees_denom(deps: &Deps, denom: &String) -> bool {
 #[cfg(feature = "osmosis")]
 fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResult<bool> {
     let state = config_read(deps.storage).load()?;
+
+    // as with chains other than osmosis
+    // if the base fee amount is set to 0
+    // no funds are required
+    // here also the behavior is same
+    if state.fee.amount.u128() == 0 {
+        return Ok(true);
+    }
 
     // how to change this in future
     // for given coins verify they are allowed in txfee module
@@ -209,8 +230,10 @@ fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResu
 
     let base_denom_fee = get_update_fee(deps, data)?;
 
-    // right now the fee amount is same for all the different denoms
-    // which is to be changed in future when we will query osmosis for price
+    // NOTE: the base fee denom right now is = denom: 'uosmo', amount: 1, which is almost negligible
+    // It's not important to convert the price right now. For now
+    // we are keeping the base fee amount same for each valid denom -> 1
+    // but this logic will be updated to use spot price for different valid tokens in future
     Ok(base_denom_fee.amount.u128() <= total_amount)
 }
 
@@ -608,8 +631,13 @@ pub fn get_update_fee_for_denom(deps: &Deps, vaas: &[Binary], denom: String) -> 
     if denom != config.fee.denom && !is_allowed_tx_fees_denom(deps, &denom) {
         return Err(PythContractError::InvalidFeeDenom { denom })?;
     }
-    // right now this will return the same amount as the base denom as set in config
-    // but we can change it later on to add custom logic
+
+    // the base fee is set to -> denom = base denom of a chain, amount = 1
+    // which is very minimal
+    // for other valid denoms too we are using the base amount as 1
+    // base amount is multiplied to number of vaas to get the total amount
+
+    // this will be change later on to add custom logic using spot price for valid tokens
     Ok(coin(
         config
             .fee
@@ -914,8 +942,60 @@ mod test {
 
         // insufficient fee -> false
         info.funds = coins(50, "foo");
+        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), &[data.clone()]);
+        assert_eq!(result, Ok(false));
+
+        // insufficient fee -> false
+        info.funds = coins(150, "bar");
         let result = is_fee_sufficient(&deps.as_ref(), info, &[data]);
         assert_eq!(result, Ok(false));
+    }
+
+    #[cfg(feature = "osmosis")]
+    #[test]
+    fn test_is_fee_sufficient() {
+        // setup config with base fee
+        let base_denom = "foo";
+        let base_amount = 100;
+        let mut config_info = default_config_info();
+        config_info.fee = Coin::new(base_amount, base_denom);
+        let (mut deps, _env) = setup_test();
+        config(&mut deps.storage).save(&config_info).unwrap();
+
+        // a dummy price data
+        let data = create_price_update_msg(default_emitter_addr().as_slice(), EMITTER_CHAIN);
+
+        // sufficient fee in base denom -> true
+        let info = mock_info("123", coins(base_amount, base_denom).as_slice());
+        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), &[data.clone()]);
+        assert_eq!(result, Ok(true));
+
+        // insufficient fee in base denom -> false
+        let info = mock_info("123", coins(50, base_denom).as_slice());
+        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        assert_eq!(result, Ok(false));
+
+        // valid denoms are 'uion' or 'ibc/FF3065989E34457F342D4EFB8692406D49D4E2B5C70F725F127862E22CE6BDCD'
+        // a valid denom other than base denom with sufficient fee
+        let info = mock_info("123", coins(100, "uion").as_slice());
+        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        assert_eq!(result, Ok(true));
+
+        // insufficient fee in valid denom -> false
+        let info = mock_info("123", coins(50, "uion").as_slice());
+        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        assert_eq!(result, Ok(false));
+
+        // an invalid denom -> Err invalid fee denom
+        let info = mock_info("123", coins(100, "invalid_denom").as_slice());
+        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        assert_eq!(
+            result,
+            Err(PythContractError::InvalidFeeDenom {
+                denom: "invalid_denom".to_string(),
+            }
+            .into())
+        );
     }
 
     #[test]
@@ -1153,44 +1233,6 @@ mod test {
     }
 
     #[test]
-    fn test_update_price_feeds_insufficient_fee() {
-        let mut config_info = default_config_info();
-        config_info.fee = Coin::new(100, "foo");
-
-        let result = apply_price_update(
-            &config_info,
-            default_emitter_addr().as_slice(),
-            EMITTER_CHAIN,
-            &[],
-        );
-        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
-
-        let result = apply_price_update(
-            &config_info,
-            default_emitter_addr().as_slice(),
-            EMITTER_CHAIN,
-            coins(100, "foo").as_slice(),
-        );
-        assert!(result.is_ok());
-
-        let result = apply_price_update(
-            &config_info,
-            default_emitter_addr().as_slice(),
-            EMITTER_CHAIN,
-            coins(99, "foo").as_slice(),
-        );
-        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
-
-        let result = apply_price_update(
-            &config_info,
-            default_emitter_addr().as_slice(),
-            EMITTER_CHAIN,
-            coins(100, "bar").as_slice(),
-        );
-        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
-    }
-
-    #[test]
     fn test_update_price_feed_if_new_first_price_ok() {
         let (mut deps, env) = setup_test();
         let price_feed = create_price_feed(3, 100);
@@ -1344,43 +1386,112 @@ mod test {
     #[test]
     fn test_get_update_fee_for_denom() {
         let (mut deps, _env) = setup_test();
-        let fee_denom: String = "test".into();
+        let base_denom = "test";
         config(&mut deps.storage)
             .save(&ConfigInfo {
-                fee: Coin::new(10, fee_denom.clone()),
+                fee: Coin::new(10, base_denom),
                 ..create_zero_config_info()
             })
             .unwrap();
 
         let updates = vec![Binary::from([1u8]), Binary::from([2u8])];
 
-        let denom = "test";
+        // test for base denom
         assert_eq!(
-            get_update_fee_for_denom(&deps.as_ref(), &updates[0..0], denom.to_string()),
-            Ok(Coin::new(0, denom))
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..0], base_denom.to_string()),
+            Ok(Coin::new(0, base_denom))
         );
         assert_eq!(
-            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], denom.to_string()),
-            Ok(Coin::new(10, denom))
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], base_denom.to_string()),
+            Ok(Coin::new(10, base_denom))
         );
         assert_eq!(
-            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], denom.to_string()),
-            Ok(Coin::new(20, denom))
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], base_denom.to_string()),
+            Ok(Coin::new(20, base_denom))
         );
 
+        // test for valid but not base denom
+        // valid denoms are 'uion' or 'ibc/FF3065989E34457F342D4EFB8692406D49D4E2B5C70F725F127862E22CE6BDCD'
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..0], "uion".to_string()),
+            Ok(Coin::new(0, "uion"))
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], "uion".to_string()),
+            Ok(Coin::new(10, "uion"))
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], "uion".to_string()),
+            Ok(Coin::new(20, "uion"))
+        );
+
+
+        // test for invalid denom
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..0], "invalid_denom".to_string()),
+            Err(PythContractError::InvalidFeeDenom {
+                denom: "invalid_denom".to_string(),
+            }
+            .into())
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], "invalid_denom".to_string()),
+            Err(PythContractError::InvalidFeeDenom {
+                denom: "invalid_denom".to_string(),
+            }
+            .into())
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], "invalid_denom".to_string()),
+            Err(PythContractError::InvalidFeeDenom {
+                denom: "invalid_denom".to_string(),
+            }
+            .into())
+        );
+
+        // check for overflow
         let big_fee: u128 = (u128::MAX / 4) * 3;
         config(&mut deps.storage)
             .save(&ConfigInfo {
-                fee: Coin::new(big_fee, fee_denom.clone()),
+                fee: Coin::new(big_fee, base_denom),
                 ..create_zero_config_info()
             })
             .unwrap();
 
+        // base denom
         assert_eq!(
-            get_update_fee(&deps.as_ref(), &updates[0..1]),
-            Ok(Coin::new(big_fee, fee_denom))
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], base_denom.to_string()),
+            Ok(Coin::new(big_fee, base_denom))
         );
-        assert!(get_update_fee(&deps.as_ref(), &updates[0..2]).is_err());
+        assert!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], base_denom.to_string())
+                .is_err()
+        );
+
+        // valid but not base
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], "uion".to_string()),
+            Ok(Coin::new(big_fee, "uion"))
+        );
+        assert!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], "uion".to_string()).is_err()
+        );
+
+        // invalid
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], "invalid_denom".to_string()),
+            Err(PythContractError::InvalidFeeDenom {
+                denom: "invalid_denom".to_string(),
+            }
+            .into())
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], "invalid_denom".to_string()),
+            Err(PythContractError::InvalidFeeDenom {
+                denom: "invalid_denom".to_string(),
+            }
+            .into())
+        );
     }
 
     #[test]
