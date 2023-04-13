@@ -161,8 +161,10 @@ pub fn execute(
 fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResult<bool> {
     use cosmwasm_std::has_coins;
     let state = config_read(deps.storage).load()?;
-    return Ok(state.fee.amount.u128() > 0
-        && has_coins(info.funds.as_ref(), &get_update_fee(&deps, data)?));
+    return Ok(has_coins(
+        info.funds.as_ref(),
+        &get_update_fee(&deps, data)?,
+    ));
 }
 
 // it only checks for fee denoms other than the base denom
@@ -178,8 +180,6 @@ fn is_allowed_tx_fees_denom(deps: &Deps, denom: &String) -> StdResult<bool> {
 // TODO: add tests for these
 #[cfg(feature = "osmosis")]
 fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResult<bool> {
-    use cosmwasm_std::Uint128;
-
     let state = config_read(deps.storage).load()?;
 
     // how to change this in future
@@ -189,21 +189,27 @@ fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResu
     // check with `has_coins`
 
     // FIXME: should we accept fee for a single transaction in different tokens?
-    let total_amount = Uint128::new(0);
+    let mut total_amount = 0u128;
     for coin in &info.funds {
-        if coin.denom == state.fee.denom || !is_allowed_tx_fees_denom(deps, &coin.denom)? {
+        if coin.denom != state.fee.denom && !is_allowed_tx_fees_denom(deps, &coin.denom)? {
             return Err(PythContractError::InvalidFeeDenom {
                 denom: coin.denom.to_string(),
             })?;
         }
-        total_amount.checked_add(coin.amount)?;
+        total_amount = total_amount
+            .checked_add(coin.amount.u128())
+            .ok_or(OverflowError::new(
+                OverflowOperation::Add,
+                total_amount,
+                coin.amount,
+            ))?;
     }
 
     let base_denom_fee = get_update_fee(deps, data)?;
 
     // right now the fee amount is same for all the different denoms
     // which is to be changed in future when we will query osmosis for price
-    Ok(state.fee.amount.u128() > 0 && base_denom_fee.amount <= total_amount)
+    Ok(base_denom_fee.amount.u128() <= total_amount)
 }
 
 /// Update the on-chain price feeds given the array of price update VAAs `data`.
@@ -596,7 +602,8 @@ pub fn get_update_fee(deps: &Deps, vaas: &[Binary]) -> StdResult<Coin> {
 pub fn get_update_fee_for_denom(deps: &Deps, vaas: &[Binary], denom: String) -> StdResult<Coin> {
     let config = config_read(deps.storage).load()?;
 
-    if !is_allowed_tx_fees_denom(deps, &denom)? {
+    // if the denom is not a base denom it should be an allowed one
+    if denom != config.fee.denom && !is_allowed_tx_fees_denom(deps, &denom)? {
         return Err(PythContractError::InvalidFeeDenom { denom })?;
     }
     // right now this will return the same amount as the base denom as set in config
@@ -1014,7 +1021,6 @@ mod test {
         let (num_attestations, new_attestations) =
             process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
 
-
         let stored_price_feed = price_feed_read_bucket(&deps.storage)
             .load(&[0u8; 32])
             .unwrap();
@@ -1065,7 +1071,6 @@ mod test {
         };
         let (num_attestations, new_attestations) =
             process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
-
 
         let stored_price_feed = price_feed_read_bucket(&deps.storage)
             .load(&[0u8; 32])
@@ -1158,7 +1163,13 @@ mod test {
             EMITTER_CHAIN,
             coins(100, "bar").as_slice(),
         );
-        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
+        assert_eq!(
+            result,
+            Err(PythContractError::InvalidFeeDenom {
+                denom: "bar".to_string(),
+            }
+            .into())
+        );
     }
 
     #[test]
@@ -1325,7 +1336,7 @@ mod test {
 
         let updates = vec![Binary::from([1u8]), Binary::from([2u8])];
 
-        let denom = "uosmo";
+        let denom = "test";
         assert_eq!(
             get_update_fee_for_denom(&deps.as_ref(), &updates[0..0], denom.to_string()),
             Ok(Coin::new(0, denom))
