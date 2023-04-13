@@ -286,7 +286,13 @@ program
         keys: ix.keys as AccountMeta[],
       })
     );
-    console.log(JSON.stringify(parsed, null, 2));
+    console.log(
+      JSON.stringify(
+        parsed,
+        (key, value) => (typeof value === "bigint" ? value.toString() : value), // return everything else unchanged
+        2
+      )
+    );
   });
 
 multisigCommand("approve", "Approve a transaction sitting in the multisig")
