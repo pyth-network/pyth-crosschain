@@ -57,7 +57,6 @@ use {
         WasmMsg,
         WasmQuery,
     },
-    osmosis_std::types::osmosis::txfees::v1beta1::TxfeesQuerier,
     pyth_sdk_cw::{
         error::PythContractError,
         ExecuteMsg,
@@ -160,11 +159,7 @@ pub fn execute(
 #[cfg(not(feature = "osmosis"))]
 fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResult<bool> {
     use cosmwasm_std::has_coins;
-    let state = config_read(deps.storage).load()?;
-    return Ok(has_coins(
-        info.funds.as_ref(),
-        &get_update_fee(&deps, data)?,
-    ));
+    return Ok(has_coins(info.funds.as_ref(), &get_update_fee(deps, data)?));
 }
 
 // it only checks for fee denoms other than the base denom

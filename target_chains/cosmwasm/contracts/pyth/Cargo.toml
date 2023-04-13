@@ -9,9 +9,10 @@ description = "Pyth price receiver"
 crate-type = ["cdylib", "rlib"]
 
 [features]
-# IMPORTANT: if you want to build for injective, enable the default feature below
+# IMPORTANT: if you want to build for injective or osmosis, enable injective default feature for injective
+# and osmosis default feature for osmosis
 # default=["injective"]
-default=["osmosis"]
+# default=["osmosis"]
 backtraces = ["cosmwasm-std/backtraces"]
 # use library feature to disable all init/handle/query exports
 library = []
