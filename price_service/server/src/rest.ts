@@ -342,13 +342,14 @@ export class RestAPI {
         const priceIds = (req.query.ids as string[]).map(removeLeading0x);
         // verbose is optional, default to false
         const verbose = req.query.verbose === "true";
-        // binary is optional, default to false
-        // If encoding is present, binary must be true.
-        const binary =
-          req.query.binary === "true" || req.query.encoding !== undefined;
-        const encoding: VaaEncoding | undefined = req.query.encoding as
+        // The binary and encoding are somewhat redundant. Binary still exists for backward compatibility reasons.
+        // No VAA will be returned if both arguments are omitted. binary=true is the same as encoding=defaultVaaEncoding
+        let encoding: VaaEncoding | undefined = req.query.encoding as
           | VaaEncoding
           | undefined;
+        if (encoding === undefined && req.query.binary === "true") {
+          encoding = defaultVaaEncoding;
+        }
 
         const responseJson = [];
 
@@ -363,7 +364,7 @@ export class RestAPI {
           }
 
           responseJson.push(
-            this.priceInfoToJson(latestPriceInfo, verbose, binary)
+            this.priceInfoToJson(latestPriceInfo, verbose, encoding)
           );
         }
 
@@ -383,6 +384,9 @@ export class RestAPI {
     endpoints.push(
       "api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&verbose=true&binary=true"
     );
+    endpoints.push(
+      `api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&verbose=true&${encodingArgString}`
+    );
 
     const getPriceFeedInputSchema: schema = {
       query: Joi.object({
@@ -392,6 +396,7 @@ export class RestAPI {
         publish_time: Joi.number().required(),
         verbose: Joi.boolean(),
         binary: Joi.boolean(),
+        encoding: Joi.string().valid(validVaaEncodings).optional(),
       }).required(),
     };
 
@@ -403,8 +408,14 @@ export class RestAPI {
         const publishTime = Number(req.query.publish_time as string);
         // verbose is optional, default to false
         const verbose = req.query.verbose === "true";
-        // binary is optional, default to false
-        const binary = req.query.binary === "true";
+        // The binary and encoding are somewhat redundant. Binary still exists for backward compatibility reasons.
+        // No VAA will be returned if both arguments are omitted. binary=true is the same as encoding=defaultVaaEncoding
+        let encoding: VaaEncoding | undefined = req.query.encoding as
+          | VaaEncoding
+          | undefined;
+        if (encoding === undefined && req.query.binary === "true") {
+          encoding = defaultVaaEncoding;
+        }
 
         if (
           this.priceFeedVaaInfo.getLatestPriceInfo(priceFeedId) === undefined
@@ -425,7 +436,7 @@ export class RestAPI {
         if (priceInfo === undefined) {
           throw RestException.VaaNotFound();
         } else {
-          res.json(this.priceInfoToJson(priceInfo, verbose, binary));
+          res.json(this.priceInfoToJson(priceInfo, verbose, encoding));
         }
       })
     );
