@@ -35,7 +35,7 @@ export type PriceInfo = {
 export function createPriceInfo(
   priceAttestation: PriceAttestation,
   vaa: Buffer,
-  sequence: string,
+  sequence: bigint,
   emitterChain: number
 ): PriceInfo {
   const priceFeed = priceAttestationToPriceFeed(priceAttestation);

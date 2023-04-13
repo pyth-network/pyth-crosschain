@@ -15,6 +15,7 @@ import { createPriceInfo, PriceInfo, PriceStore, VaaConfig } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
 import { retry } from "ts-retry-promise";
+import { parseVaa } from "@certusone/wormhole-sdk";
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
@@ -78,7 +79,7 @@ export class RestAPI {
   async getVaaWithDbLookup(
     priceFeedId: string,
     publishTime: TimestampInSec
-  ): VaaConfig | undefined {
+  ): Promise<VaaConfig | undefined> {
     // Try to fetch the vaa from the local cache
     let vaa = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
 
@@ -390,9 +391,14 @@ export class RestAPI {
           throw RestException.PriceFeedIdNotFound([priceFeedId]);
         }
 
+        const vaa = await this.getVaaWithDbLookup(priceFeedId, publishTime);
+        if (vaa === undefined) {
+          throw RestException.VaaNotFound();
+        }
+
         const priceInfo = this.vaaToPriceInfo(
           priceFeedId,
-          await this.getVaaWithDbLookup(priceFeedId, publishTime)
+          Buffer.from(vaa.vaa, "base64")
         );
 
         if (priceInfo === undefined) {
@@ -404,7 +410,13 @@ export class RestAPI {
     );
 
     endpoints.push(
-      "api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>"
+      "api/get_price_feed?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>"
+    );
+    endpoints.push(
+      "api/get_price_feed?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>&verbose=true"
+    );
+    endpoints.push(
+      "api/get_price_feed?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>&binary=true"
     );
 
     app.get("/api/price_feed_ids", (req: Request, res: Response) => {
