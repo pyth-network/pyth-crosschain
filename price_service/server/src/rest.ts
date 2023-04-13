@@ -21,6 +21,13 @@ const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
   ' :status :res[content-length] :response-time ms ":referrer" ":user-agent"';
 
+export type VaaEncoding = "base64" | "hex";
+export const validVaaEncodings: VaaEncoding[] = ["base64", "hex"];
+export const defaultVaaEncoding: VaaEncoding = "base64";
+export const encodingArgString = `encoding=<${validVaaEncodings.join("|")}>`;
+
+function encodeVaa(vaa: string | Buffer, encoding: VaaEncoding): string {}
+
 export class RestException extends Error {
   statusCode: number;
   message: string;
@@ -144,7 +151,7 @@ export class RestAPI {
   priceInfoToJson(
     priceInfo: PriceInfo,
     verbose: boolean,
-    binary: boolean
+    encoding: VaaEncoding | undefined
   ): object {
     return {
       ...priceInfo.priceFeed.toJson(),
@@ -156,8 +163,8 @@ export class RestAPI {
           price_service_receive_time: priceInfo.priceServiceReceiveTime,
         },
       }),
-      ...(binary && {
-        vaa: priceInfo.vaa.toString("base64"),
+      ...(encoding !== undefined && {
+        vaa: encodeVaa(priceInfo.vaa, encoding),
       }),
     };
   }
@@ -182,6 +189,9 @@ export class RestAPI {
         ids: Joi.array()
           .items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/))
           .required(),
+        encoding: Joi.string()
+          .valid(validVaaEncodings)
+          .default(defaultVaaEncoding),
       }).required(),
     };
     app.get(
@@ -189,6 +199,7 @@ export class RestAPI {
       validate(latestVaasInputSchema),
       (req: Request, res: Response) => {
         const priceIds = (req.query.ids as string[]).map(removeLeading0x);
+        const encoding = req.query.encoding as VaaEncoding;
 
         // Multiple price ids might share same vaa, we use sequence number as
         // key of a vaa and deduplicate using a map of seqnum to vaa bytes.
@@ -212,14 +223,14 @@ export class RestAPI {
         }
 
         const jsonResponse = Array.from(vaaMap.values(), (vaa) =>
-          vaa.toString("base64")
+          encodeVaa(vaa, encoding)
         );
 
         res.json(jsonResponse);
       }
     );
     endpoints.push(
-      "api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
+      `api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&${encodingArgString}`
     );
 
     const getVaaInputSchema: schema = {
@@ -228,6 +239,9 @@ export class RestAPI {
           .regex(/^(0x)?[a-f0-9]{64}$/)
           .required(),
         publish_time: Joi.number().required(),
+        encoding: Joi.string()
+          .valid(validVaaEncodings)
+          .default(defaultVaaEncoding),
       }).required(),
     };
 
@@ -237,6 +251,7 @@ export class RestAPI {
       asyncWrapper(async (req: Request, res: Response) => {
         const priceFeedId = removeLeading0x(req.query.id as string);
         const publishTime = Number(req.query.publish_time as string);
+        const encoding = req.query.encoding as VaaEncoding;
 
         if (
           this.priceFeedVaaInfo.getLatestPriceInfo(priceFeedId) === undefined
@@ -244,18 +259,18 @@ export class RestAPI {
           throw RestException.PriceFeedIdNotFound([priceFeedId]);
         }
 
-        const vaa = await this.getVaaWithDbLookup(priceFeedId, publishTime);
-
-        if (vaa === undefined) {
+        let vaaConfig = await this.getVaaWithDbLookup(priceFeedId, publishTime);
+        if (vaaConfig === undefined) {
           throw RestException.VaaNotFound();
         } else {
-          res.json(vaa);
+          vaaConfig.vaa = encodeVaa(vaaConfig.vaa, encoding);
+          res.json(vaaConfig);
         }
       })
     );
 
     endpoints.push(
-      "api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>"
+      `api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>&${encodingArgString}`
     );
 
     const getVaaCcipInputSchema: schema = {
@@ -317,6 +332,7 @@ export class RestAPI {
           .required(),
         verbose: Joi.boolean(),
         binary: Joi.boolean(),
+        encoding: Joi.string().valid(validVaaEncodings).optional(),
       }).required(),
     };
     app.get(
@@ -327,7 +343,12 @@ export class RestAPI {
         // verbose is optional, default to false
         const verbose = req.query.verbose === "true";
         // binary is optional, default to false
-        const binary = req.query.binary === "true";
+        // If encoding is present, binary must be true.
+        const binary =
+          req.query.binary === "true" || req.query.encoding !== undefined;
+        const encoding: VaaEncoding | undefined = req.query.encoding as
+          | VaaEncoding
+          | undefined;
 
         const responseJson = [];
 
