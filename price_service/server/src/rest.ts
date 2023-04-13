@@ -208,7 +208,7 @@ export class RestAPI {
           .items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/))
           .required(),
         encoding: Joi.string()
-          .valid(validVaaEncodings)
+          .valid(...validVaaEncodings)
           .default(defaultVaaEncoding),
       }).required(),
     };
@@ -258,7 +258,7 @@ export class RestAPI {
           .required(),
         publish_time: Joi.number().required(),
         encoding: Joi.string()
-          .valid(validVaaEncodings)
+          .valid(...validVaaEncodings)
           .default(defaultVaaEncoding),
       }).required(),
     };
@@ -350,7 +350,9 @@ export class RestAPI {
           .required(),
         verbose: Joi.boolean(),
         binary: Joi.boolean(),
-        encoding: Joi.string().valid(validVaaEncodings).optional(),
+        encoding: Joi.string()
+          .valid(...validVaaEncodings)
+          .optional(),
       }).required(),
     };
     app.get(
@@ -414,7 +416,9 @@ export class RestAPI {
         publish_time: Joi.number().required(),
         verbose: Joi.boolean(),
         binary: Joi.boolean(),
-        encoding: Joi.string().valid(validVaaEncodings).optional(),
+        encoding: Joi.string()
+          .valid(...validVaaEncodings)
+          .optional(),
       }).required(),
     };
 
