@@ -14,6 +14,7 @@ import {
   getBatchSummary,
   parseBatchPriceAttestation,
   priceAttestationToPriceFeed,
+  PriceAttestation,
 } from "@pythnetwork/wormhole-attester-sdk";
 import { HexString, PriceFeed } from "@pythnetwork/price-service-sdk";
 import LRUCache from "lru-cache";
@@ -30,6 +31,24 @@ export type PriceInfo = {
   emitterChainId: number;
   priceServiceReceiveTime: number;
 };
+
+export function createPriceInfo(
+  priceAttestation: PriceAttestation,
+  vaa: Buffer,
+  sequence: string,
+  emitterChain: number
+): PriceInfo {
+  const priceFeed = priceAttestationToPriceFeed(priceAttestation);
+  return {
+    seqNum: Number(sequence),
+    vaa,
+    publishTime: priceAttestation.publishTime,
+    attestationTime: priceAttestation.attestationTime,
+    priceFeed,
+    emitterChainId: emitterChain,
+    priceServiceReceiveTime: Math.floor(new Date().getTime() / 1000),
+  };
+}
 
 export interface PriceStore {
   getPriceIds(): Set<HexString>;
@@ -324,17 +343,12 @@ export class Listener implements PriceStore {
     for (const priceAttestation of batchAttestation.priceAttestations) {
       const key = priceAttestation.priceId;
 
-      const priceFeed = priceAttestationToPriceFeed(priceAttestation);
-      const priceInfo = {
-        seqNum: Number(parsedVaa.sequence),
+      const priceInfo = createPriceInfo(
+        priceAttestation,
         vaa,
-        publishTime: priceAttestation.publishTime,
-        attestationTime: priceAttestation.attestationTime,
-        priceFeed,
-        emitterChainId: parsedVaa.emitterChain,
-        priceServiceReceiveTime: Math.floor(new Date().getTime() / 1000),
-      };
-
+        parsedVaa.sequence,
+        parsedVaa.emitterChain
+      );
       const cachedPriceInfo = this.priceFeedVaaMap.get(key);
 
       if (this.isNewPriceInfo(cachedPriceInfo, priceInfo)) {

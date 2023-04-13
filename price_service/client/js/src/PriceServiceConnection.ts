@@ -174,6 +174,11 @@ export class PriceServiceConnection {
     return [response.data.vaa, response.data.publishTime];
   }
 
+  async getPriceFeed(
+    priceId: HexString,
+    publishTIme: EpochTimeStamp
+  ): Promise<[PriceFeed, EpochTimeStamp]> {}
+
   /**
    * Fetch the list of available price feed ids.
    * This will throw an axios error if there is a network problem or the price service returns a non-ok response.

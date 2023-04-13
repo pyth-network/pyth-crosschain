@@ -6,8 +6,12 @@ import { Server } from "http";
 import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
 import fetch from "node-fetch";
+import {
+  parseBatchPriceAttestation,
+  priceAttestationToPriceFeed,
+} from "@pythnetwork/wormhole-attester-sdk";
 import { removeLeading0x, TimestampInSec } from "./helpers";
-import { PriceStore, VaaConfig } from "./listen";
+import { createPriceInfo, PriceInfo, PriceStore, VaaConfig } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
 import { retry } from "ts-retry-promise";
@@ -71,7 +75,10 @@ export class RestAPI {
     this.promClient = promClient;
   }
 
-  async getVaaWithDbLookup(priceFeedId: string, publishTime: TimestampInSec) {
+  async getVaaWithDbLookup(
+    priceFeedId: string,
+    publishTime: TimestampInSec
+  ): VaaConfig | undefined {
     // Try to fetch the vaa from the local cache
     let vaa = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
 
@@ -102,6 +109,56 @@ export class RestAPI {
     }
 
     return vaa;
+  }
+
+  vaaToPriceInfo(priceFeedId: string, vaa: Buffer): PriceInfo | undefined {
+    const parsedVaa = parseVaa(vaa);
+
+    let batchAttestation;
+
+    try {
+      batchAttestation = parseBatchPriceAttestation(
+        Buffer.from(parsedVaa.payload)
+      );
+    } catch (e: any) {
+      logger.error(e, e.stack);
+      logger.error("Parsing historical VAA failed: %o", parsedVaa);
+      return undefined;
+    }
+
+    for (const priceAttestation of batchAttestation.priceAttestations) {
+      if (priceAttestation.priceId == priceFeedId) {
+        return createPriceInfo(
+          priceAttestation,
+          vaa,
+          parsedVaa.sequence,
+          parsedVaa.emitterChain
+        );
+      }
+    }
+
+    return undefined;
+  }
+
+  priceInfoToJson(
+    priceInfo: PriceInfo,
+    verbose: boolean,
+    binary: boolean
+  ): Object {
+    return {
+      ...priceInfo.priceFeed.toJson(),
+      ...(verbose && {
+        metadata: {
+          emitter_chain: priceInfo.emitterChainId,
+          attestation_time: priceInfo.attestationTime,
+          sequence_number: priceInfo.seqNum,
+          price_service_receive_time: priceInfo.priceServiceReceiveTime,
+        },
+      }),
+      ...(binary && {
+        vaa: priceInfo.vaa.toString("base64"),
+      }),
+    };
   }
 
   // Run this function without blocking (`await`) if you want to run it async.
@@ -283,21 +340,9 @@ export class RestAPI {
             continue;
           }
 
-          responseJson.push({
-            ...latestPriceInfo.priceFeed.toJson(),
-            ...(verbose && {
-              metadata: {
-                emitter_chain: latestPriceInfo.emitterChainId,
-                attestation_time: latestPriceInfo.attestationTime,
-                sequence_number: latestPriceInfo.seqNum,
-                price_service_receive_time:
-                  latestPriceInfo.priceServiceReceiveTime,
-              },
-            }),
-            ...(binary && {
-              vaa: latestPriceInfo.vaa.toString("base64"),
-            }),
-          });
+          responseJson.push(
+            this.priceInfoToJson(latestPriceInfo, verbose, binary)
+          );
         }
 
         if (notFoundIds.length > 0) {
@@ -315,6 +360,51 @@ export class RestAPI {
     );
     endpoints.push(
       "api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&verbose=true&binary=true"
+    );
+
+    const getPriceFeedInputSchema: schema = {
+      query: Joi.object({
+        id: Joi.string()
+          .regex(/^(0x)?[a-f0-9]{64}$/)
+          .required(),
+        publish_time: Joi.number().required(),
+        verbose: Joi.boolean(),
+        binary: Joi.boolean(),
+      }).required(),
+    };
+
+    app.get(
+      "/api/get_price_feed",
+      validate(getPriceFeedInputSchema),
+      asyncWrapper(async (req: Request, res: Response) => {
+        const priceFeedId = removeLeading0x(req.query.id as string);
+        const publishTime = Number(req.query.publish_time as string);
+        // verbose is optional, default to false
+        const verbose = req.query.verbose === "true";
+        // binary is optional, default to false
+        const binary = req.query.binary === "true";
+
+        if (
+          this.priceFeedVaaInfo.getLatestPriceInfo(priceFeedId) === undefined
+        ) {
+          throw RestException.PriceFeedIdNotFound([priceFeedId]);
+        }
+
+        const priceInfo = this.vaaToPriceInfo(
+          priceFeedId,
+          await this.getVaaWithDbLookup(priceFeedId, publishTime)
+        );
+
+        if (priceInfo === undefined) {
+          throw RestException.VaaNotFound();
+        } else {
+          res.json(this.priceInfoToJson(priceInfo, verbose, binary));
+        }
+      })
+    );
+
+    endpoints.push(
+      "api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>"
     );
 
     app.get("/api/price_feed_ids", (req: Request, res: Response) => {
