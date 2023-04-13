@@ -155,11 +155,18 @@ pub fn execute(
     }
 }
 
-// TODO: add tests for these
 #[cfg(not(feature = "osmosis"))]
 fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResult<bool> {
     use cosmwasm_std::has_coins;
-    return Ok(has_coins(info.funds.as_ref(), &get_update_fee(deps, data)?));
+
+    let state = config_read(deps.storage).load()?;
+
+    // for any chain other than injective there is only one base denom
+    // if base denom is present in coins and has enough amount this will return true
+    // or if the base fee is set to 0
+    // else it will return false
+    return Ok(state.fee.amount.u128() == 0
+        || has_coins(info.funds.as_ref(), &get_update_fee(deps, data)?));
 }
 
 // it only checks for fee denoms other than the base denom
@@ -889,6 +896,28 @@ mod test {
         assert!(res.is_err());
     }
 
+    #[cfg(not(feature = "osmosis"))]
+    #[test]
+    fn test_is_fee_sufficient() {
+        let mut config_info = default_config_info();
+        config_info.fee = Coin::new(100, "foo");
+
+        let (mut deps, _env) = setup_test();
+        config(&mut deps.storage).save(&config_info).unwrap();
+
+        let mut info = mock_info("123", coins(100, "foo").as_slice());
+        let data = create_price_update_msg(default_emitter_addr().as_slice(), EMITTER_CHAIN);
+
+        // sufficient fee -> true
+        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), &[data.clone()]);
+        assert_eq!(result, Ok(true));
+
+        // insufficient fee -> false
+        info.funds = coins(50, "foo");
+        let result = is_fee_sufficient(&deps.as_ref(), info, &[data]);
+        assert_eq!(result, Ok(false));
+    }
+
     #[test]
     fn test_process_batch_attestation_empty_array() {
         let (mut deps, env) = setup_test();
@@ -1158,13 +1187,7 @@ mod test {
             EMITTER_CHAIN,
             coins(100, "bar").as_slice(),
         );
-        assert_eq!(
-            result,
-            Err(PythContractError::InvalidFeeDenom {
-                denom: "bar".to_string(),
-            }
-            .into())
-        );
+        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
     }
 
     #[test]
