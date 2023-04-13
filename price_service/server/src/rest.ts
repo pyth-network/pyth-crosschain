@@ -128,7 +128,7 @@ export class RestAPI {
     }
 
     for (const priceAttestation of batchAttestation.priceAttestations) {
-      if (priceAttestation.priceId == priceFeedId) {
+      if (priceAttestation.priceId === priceFeedId) {
         return createPriceInfo(
           priceAttestation,
           vaa,
@@ -145,7 +145,7 @@ export class RestAPI {
     priceInfo: PriceInfo,
     verbose: boolean,
     binary: boolean
-  ): Object {
+  ): object {
     return {
       ...priceInfo.priceFeed.toJson(),
       ...(verbose && {
