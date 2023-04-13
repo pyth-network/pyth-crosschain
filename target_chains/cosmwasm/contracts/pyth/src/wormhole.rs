@@ -1,3 +1,8 @@
+// These types are copied from the Wormhole contract. See the links with each type to see the original code
+// The reason to do so was dependency conflict. Wormhole contracts were using a very old version of a dependency
+// which is not compatible with the one used by osmosis-sdk. And since we weren't using anything else from
+// the Wormhole contract the types are moved here.
+
 use {
     cosmwasm_std::Binary,
     schemars::JsonSchema,
@@ -9,6 +14,8 @@ use {
 
 type HumanAddr = String;
 
+// This type is copied from
+// https://github.com/wormhole-foundation/wormhole/blob/main/cosmwasm/contracts/wormhole/src/state.rs#L75
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct ParsedVAA {
     pub version:            u8,
@@ -26,6 +33,9 @@ pub struct ParsedVAA {
     pub hash: Vec<u8>,
 }
 
+
+// The type is copied from
+// https://github.com/wormhole-foundation/wormhole/blob/main/cosmwasm/contracts/wormhole/src/msg.rs#L37
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum WormholeQueryMsg {
