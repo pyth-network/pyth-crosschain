@@ -21,12 +21,30 @@ const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
   ' :status :res[content-length] :response-time ms ":referrer" ":user-agent"';
 
-export type VaaEncoding = "base64" | "hex";
-export const validVaaEncodings: VaaEncoding[] = ["base64", "hex"];
+export type VaaEncoding = "base64" | "hex" | "0x";
+export const validVaaEncodings: VaaEncoding[] = ["base64", "hex", "0x"];
 export const defaultVaaEncoding: VaaEncoding = "base64";
 export const encodingArgString = `encoding=<${validVaaEncodings.join("|")}>`;
 
-function encodeVaa(vaa: string | Buffer, encoding: VaaEncoding): string {}
+function encodeVaa(vaa: string | Buffer, encoding: VaaEncoding): string {
+  let vaaBuffer: Buffer;
+  if (typeof vaa === "string") {
+    if (encoding === defaultVaaEncoding) {
+      return vaa;
+    } else {
+      vaaBuffer = Buffer.from(vaa, defaultVaaEncoding as BufferEncoding);
+    }
+  } else {
+    vaaBuffer = vaa;
+  }
+
+  switch (encoding) {
+    case "0x":
+      return "0x" + vaaBuffer.toString("hex");
+    default:
+      return vaaBuffer.toString(encoding);
+  }
+}
 
 export class RestException extends Error {
   statusCode: number;
