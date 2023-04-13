@@ -164,11 +164,11 @@ fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResu
 
 // it only checks for fee denoms other than the base denom
 #[cfg(feature = "osmosis")]
-fn is_allowed_tx_fees_denom(deps: &Deps, denom: &String) -> StdResult<bool> {
+fn is_allowed_tx_fees_denom(deps: &Deps, denom: &String) -> bool {
     let querier = TxfeesQuerier::new(&deps.querier);
     match querier.denom_pool_id(denom.to_string()) {
-        Ok(_) => Ok(true),
-        Err(_) => Ok(false),
+        Ok(_) => true,
+        Err(_) => false,
     }
 }
 
@@ -186,7 +186,7 @@ fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResu
     // FIXME: should we accept fee for a single transaction in different tokens?
     let mut total_amount = 0u128;
     for coin in &info.funds {
-        if coin.denom != state.fee.denom && !is_allowed_tx_fees_denom(deps, &coin.denom)? {
+        if coin.denom != state.fee.denom && !is_allowed_tx_fees_denom(deps, &coin.denom) {
             return Err(PythContractError::InvalidFeeDenom {
                 denom: coin.denom.to_string(),
             })?;
@@ -598,7 +598,7 @@ pub fn get_update_fee_for_denom(deps: &Deps, vaas: &[Binary], denom: String) -> 
     let config = config_read(deps.storage).load()?;
 
     // if the denom is not a base denom it should be an allowed one
-    if denom != config.fee.denom && !is_allowed_tx_fees_denom(deps, &denom)? {
+    if denom != config.fee.denom && !is_allowed_tx_fees_denom(deps, &denom) {
         return Err(PythContractError::InvalidFeeDenom { denom })?;
     }
     // right now this will return the same amount as the base denom as set in config
