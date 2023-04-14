@@ -277,7 +277,10 @@ export class RestAPI {
           throw RestException.PriceFeedIdNotFound([priceFeedId]);
         }
 
-        let vaaConfig = await this.getVaaWithDbLookup(priceFeedId, publishTime);
+        const vaaConfig = await this.getVaaWithDbLookup(
+          priceFeedId,
+          publishTime
+        );
         if (vaaConfig === undefined) {
           throw RestException.VaaNotFound();
         } else {
