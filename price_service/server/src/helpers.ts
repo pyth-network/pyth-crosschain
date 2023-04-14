@@ -33,3 +33,11 @@ export function removeLeading0x(s: string): string {
 
   return s;
 }
+
+export function getOrElse<T>(value: T | undefined, defaultValue: T): T {
+  if (value === undefined) {
+    return defaultValue;
+  } else {
+    return value;
+  }
+}

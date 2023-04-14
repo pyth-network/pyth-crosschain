@@ -16,17 +16,33 @@ import { logger } from "./logging";
 import { PromClient } from "./promClient";
 import { retry } from "ts-retry-promise";
 import { parseVaa } from "@certusone/wormhole-sdk";
+import { getOrElse } from "./helpers";
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
   ' :status :res[content-length] :response-time ms ":referrer" ":user-agent"';
 
-export type VaaEncoding = "base64" | "hex" | "0x";
-export const validVaaEncodings: VaaEncoding[] = ["base64", "hex", "0x"];
-export const defaultVaaEncoding: VaaEncoding = "base64";
-export const encodingArgString = `encoding=<${validVaaEncodings.join("|")}>`;
+export type TargetChain = "evm" | "cosmos" | "aptos" | "sui" | "default";
+export const validTargetChains = ["evm", "cosmos", "aptos", "sui", "default"];
+export const defaultTargetChain: TargetChain = "default";
+export const targetChainArgString = `encoding=<${validTargetChains.join("|")}>`;
 
-function encodeVaa(vaa: string | Buffer, encoding: VaaEncoding): string {
+export type VaaEncoding = "base64" | "hex" | "0x";
+export const defaultVaaEncoding: VaaEncoding = "base64";
+export const chainToEncoding: Record<TargetChain, VaaEncoding> = {
+  evm: "0x",
+  cosmos: "base64",
+  aptos: "base64",
+  sui: "base64",
+  default: "base64",
+};
+
+function encodeVaaForChain(
+  vaa: string | Buffer,
+  targetChain: TargetChain
+): string {
+  const encoding = chainToEncoding[targetChain];
+
   let vaaBuffer: Buffer;
   if (typeof vaa === "string") {
     if (encoding === defaultVaaEncoding) {
@@ -169,7 +185,7 @@ export class RestAPI {
   priceInfoToJson(
     priceInfo: PriceInfo,
     verbose: boolean,
-    encoding: VaaEncoding | undefined
+    targetChain: TargetChain | undefined
   ): object {
     return {
       ...priceInfo.priceFeed.toJson(),
@@ -181,8 +197,8 @@ export class RestAPI {
           price_service_receive_time: priceInfo.priceServiceReceiveTime,
         },
       }),
-      ...(encoding !== undefined && {
-        vaa: encodeVaa(priceInfo.vaa, encoding),
+      ...(targetChain !== undefined && {
+        vaa: encodeVaaForChain(priceInfo.vaa, targetChain),
       }),
     };
   }
@@ -207,9 +223,9 @@ export class RestAPI {
         ids: Joi.array()
           .items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/))
           .required(),
-        encoding: Joi.string()
-          .valid(...validVaaEncodings)
-          .default(defaultVaaEncoding),
+        target_chain: Joi.string()
+          .valid(...validTargetChains)
+          .optional(),
       }).required(),
     };
     app.get(
@@ -217,7 +233,10 @@ export class RestAPI {
       validate(latestVaasInputSchema),
       (req: Request, res: Response) => {
         const priceIds = (req.query.ids as string[]).map(removeLeading0x);
-        const encoding = req.query.encoding as VaaEncoding;
+        const targetChain = getOrElse(
+          req.query.target_chain as TargetChain | undefined,
+          defaultTargetChain
+        );
 
         // Multiple price ids might share same vaa, we use sequence number as
         // key of a vaa and deduplicate using a map of seqnum to vaa bytes.
@@ -241,14 +260,14 @@ export class RestAPI {
         }
 
         const jsonResponse = Array.from(vaaMap.values(), (vaa) =>
-          encodeVaa(vaa, encoding)
+          encodeVaaForChain(vaa, targetChain)
         );
 
         res.json(jsonResponse);
       }
     );
     endpoints.push(
-      `api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&${encodingArgString}`
+      `api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&${targetChainArgString}`
     );
 
     const getVaaInputSchema: schema = {
@@ -257,9 +276,9 @@ export class RestAPI {
           .regex(/^(0x)?[a-f0-9]{64}$/)
           .required(),
         publish_time: Joi.number().required(),
-        encoding: Joi.string()
-          .valid(...validVaaEncodings)
-          .default(defaultVaaEncoding),
+        target_chain: Joi.string()
+          .valid(...validTargetChains)
+          .optional(),
       }).required(),
     };
 
@@ -269,7 +288,10 @@ export class RestAPI {
       asyncWrapper(async (req: Request, res: Response) => {
         const priceFeedId = removeLeading0x(req.query.id as string);
         const publishTime = Number(req.query.publish_time as string);
-        const encoding = req.query.encoding as VaaEncoding;
+        const targetChain = getOrElse(
+          req.query.target_chain as TargetChain | undefined,
+          defaultTargetChain
+        );
 
         if (
           this.priceFeedVaaInfo.getLatestPriceInfo(priceFeedId) === undefined
@@ -284,14 +306,14 @@ export class RestAPI {
         if (vaaConfig === undefined) {
           throw RestException.VaaNotFound();
         } else {
-          vaaConfig.vaa = encodeVaa(vaaConfig.vaa, encoding);
+          vaaConfig.vaa = encodeVaaForChain(vaaConfig.vaa, targetChain);
           res.json(vaaConfig);
         }
       })
     );
 
     endpoints.push(
-      `api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>&${encodingArgString}`
+      `api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>&${targetChainArgString}`
     );
 
     const getVaaCcipInputSchema: schema = {
@@ -353,8 +375,8 @@ export class RestAPI {
           .required(),
         verbose: Joi.boolean(),
         binary: Joi.boolean(),
-        encoding: Joi.string()
-          .valid(...validVaaEncodings)
+        target_chain: Joi.string()
+          .valid(...validTargetChains)
           .optional(),
       }).required(),
     };
@@ -365,13 +387,11 @@ export class RestAPI {
         const priceIds = (req.query.ids as string[]).map(removeLeading0x);
         // verbose is optional, default to false
         const verbose = req.query.verbose === "true";
-        // The binary and encoding are somewhat redundant. Binary still exists for backward compatibility reasons.
-        // No VAA will be returned if both arguments are omitted. binary=true is the same as encoding=defaultVaaEncoding
-        let encoding: VaaEncoding | undefined = req.query.encoding as
-          | VaaEncoding
-          | undefined;
-        if (encoding === undefined && req.query.binary === "true") {
-          encoding = defaultVaaEncoding;
+        // The binary and target_chain are somewhat redundant. Binary still exists for backward compatibility reasons.
+        // No VAA will be returned if both arguments are omitted. binary=true is the same as target_chain=default
+        let targetChain = req.query.target_chain as TargetChain | undefined;
+        if (targetChain === undefined && req.query.binary === "true") {
+          targetChain = defaultTargetChain;
         }
 
         const responseJson = [];
@@ -387,7 +407,7 @@ export class RestAPI {
           }
 
           responseJson.push(
-            this.priceInfoToJson(latestPriceInfo, verbose, encoding)
+            this.priceInfoToJson(latestPriceInfo, verbose, targetChain)
           );
         }
 
@@ -408,7 +428,7 @@ export class RestAPI {
       "api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&verbose=true&binary=true"
     );
     endpoints.push(
-      `api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&verbose=true&${encodingArgString}`
+      `api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&verbose=true&${targetChainArgString}`
     );
 
     const getPriceFeedInputSchema: schema = {
@@ -419,8 +439,8 @@ export class RestAPI {
         publish_time: Joi.number().required(),
         verbose: Joi.boolean(),
         binary: Joi.boolean(),
-        encoding: Joi.string()
-          .valid(...validVaaEncodings)
+        target_chain: Joi.string()
+          .valid(...validTargetChains)
           .optional(),
       }).required(),
     };
@@ -433,13 +453,11 @@ export class RestAPI {
         const publishTime = Number(req.query.publish_time as string);
         // verbose is optional, default to false
         const verbose = req.query.verbose === "true";
-        // The binary and encoding are somewhat redundant. Binary still exists for backward compatibility reasons.
-        // No VAA will be returned if both arguments are omitted. binary=true is the same as encoding=defaultVaaEncoding
-        let encoding: VaaEncoding | undefined = req.query.encoding as
-          | VaaEncoding
-          | undefined;
-        if (encoding === undefined && req.query.binary === "true") {
-          encoding = defaultVaaEncoding;
+        // The binary and target_chain are somewhat redundant. Binary still exists for backward compatibility reasons.
+        // No VAA will be returned if both arguments are omitted. binary=true is the same as target_chain=default
+        let targetChain = req.query.target_chain as TargetChain | undefined;
+        if (targetChain === undefined && req.query.binary === "true") {
+          targetChain = defaultTargetChain;
         }
 
         if (
@@ -461,7 +479,7 @@ export class RestAPI {
         if (priceInfo === undefined) {
           throw RestException.VaaNotFound();
         } else {
-          res.json(this.priceInfoToJson(priceInfo, verbose, encoding));
+          res.json(this.priceInfoToJson(priceInfo, verbose, targetChain));
         }
       })
     );
