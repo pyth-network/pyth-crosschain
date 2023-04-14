@@ -163,8 +163,8 @@ fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResu
 
     let state = config_read(deps.storage).load()?;
 
-    // for any chain other than injective there is only one base denom
-    // if base denom is present in coins and has enough amount this will return true
+    // For any chain other than osmosis there is only one base denom
+    // If base denom is present in coins and has enough amount this will return true
     // or if the base fee is set to 0
     // else it will return false
     return Ok(state.fee.amount.u128() == 0
@@ -176,7 +176,7 @@ fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResu
 fn is_allowed_tx_fees_denom(deps: &Deps, denom: &String) -> bool {
     // TxFeesQuerier uses stargate queries which we can't mock as of now.
     // The capability has not been implemented in `cosmwasm-std` yet.
-    // Hence hacking it this way to be able to right tests.
+    // Hence, we are hacking it with a feature flag to be able to write tests.
     // FIXME
     #[cfg(test)]
     if denom == "uion"
@@ -196,14 +196,6 @@ fn is_allowed_tx_fees_denom(deps: &Deps, denom: &String) -> bool {
 #[cfg(feature = "osmosis")]
 fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResult<bool> {
     let state = config_read(deps.storage).load()?;
-
-    // as with chains other than osmosis
-    // if the base fee amount is set to 0
-    // no funds are required
-    // here also the behavior is same
-    if state.fee.amount.u128() == 0 {
-        return Ok(true);
-    }
 
     // how to change this in future
     // for given coins verify they are allowed in txfee module
