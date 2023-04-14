@@ -152,6 +152,23 @@ describe("Latest Price Feed Endpoint", () => {
     });
   });
 
+  test("When called with a target_chain, returns correct price feed with binary vaa encoded properly", async () => {
+    const ids = [expandTo64Len("abcd"), expandTo64Len("3456")];
+    const resp = await request(app)
+      .get("/api/latest_price_feeds")
+      .query({ ids, target_chain: "evm" });
+    expect(resp.status).toBe(StatusCodes.OK);
+    expect(resp.body.length).toBe(2);
+    expect(resp.body).toContainEqual({
+      ...priceInfoMap.get(ids[0])!.priceFeed.toJson(),
+      vaa: "0x" + priceInfoMap.get(ids[0])!.vaa.toString("hex"),
+    });
+    expect(resp.body).toContainEqual({
+      ...priceInfoMap.get(ids[1])!.priceFeed.toJson(),
+      vaa: "0x" + priceInfoMap.get(ids[1])!.vaa.toString("hex"),
+    });
+  });
+
   test("When called with some non-existent ids within ids, returns error mentioning non-existent ids", async () => {
     const ids = [
       expandTo64Len("ab01"),
@@ -184,6 +201,21 @@ describe("Latest Vaa Bytes Endpoint", () => {
     expect(resp.body).toContain(
       Buffer.from("bad01bad", "hex").toString("base64")
     );
+  });
+
+  test("When called with target_chain, returns vaa bytes encoded correctly", async () => {
+    const ids = [
+      expandTo64Len("abcd"),
+      expandTo64Len("ef01"),
+      expandTo64Len("3456"),
+    ];
+    const resp = await request(app)
+      .get("/api/latest_vaas")
+      .query({ ids, target_chain: "evm" });
+    expect(resp.status).toBe(StatusCodes.OK);
+    expect(resp.body.length).toBe(2);
+    expect(resp.body).toContain("0xa1b2c3d4");
+    expect(resp.body).toContain("0xbad01bad");
   });
 
   test("When called with valid ids with leading 0x, returns vaa bytes as array, merged if necessary", async () => {
@@ -267,6 +299,26 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
     expect(resp.status).toBe(StatusCodes.OK);
     expect(resp.body).toEqual<VaaConfig>({
       vaa: "abcd20",
+      publishTime: 20,
+    });
+  });
+
+  test("When called with target_chain, encodes resulting VAA in the right format", async () => {
+    const id = expandTo64Len("abcd");
+    vaasCache.set(id, 10, "abcd10");
+    vaasCache.set(id, 20, "abcd20");
+    vaasCache.set(id, 30, "abcd30");
+
+    const resp = await request(app)
+      .get("/api/get_vaa")
+      .query({
+        id: "0x" + id,
+        publish_time: 16,
+        target_chain: "evm",
+      });
+    expect(resp.status).toBe(StatusCodes.OK);
+    expect(resp.body).toEqual<VaaConfig>({
+      vaa: "0x" + Buffer.from("abcd20", "base64").toString("hex"),
       publishTime: 20,
     });
   });

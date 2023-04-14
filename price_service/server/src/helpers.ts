@@ -33,3 +33,13 @@ export function removeLeading0x(s: string): string {
 
   return s;
 }
+
+// Helper for treating T | undefined as an optional value. This lets you pick a
+// default if value is undefined.
+export function getOrElse<T>(value: T | undefined, defaultValue: T): T {
+  if (value === undefined) {
+    return defaultValue;
+  } else {
+    return value;
+  }
+}
