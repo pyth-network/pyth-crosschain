@@ -17,50 +17,22 @@ import { PromClient } from "./promClient";
 import { retry } from "ts-retry-promise";
 import { parseVaa } from "@certusone/wormhole-sdk";
 import { getOrElse } from "./helpers";
+import {
+  TargetChain,
+  validTargetChains,
+  defaultTargetChain,
+  VaaEncoding,
+  encodeVaaForChain,
+} from "./encoding";
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
   ' :status :res[content-length] :response-time ms ":referrer" ":user-agent"';
 
-export type TargetChain = "evm" | "cosmos" | "aptos" | "sui" | "default";
-export const validTargetChains = ["evm", "cosmos", "aptos", "sui", "default"];
-export const defaultTargetChain: TargetChain = "default";
-export const targetChainArgString = `encoding=<${validTargetChains.join("|")}>`;
-
-export type VaaEncoding = "base64" | "hex" | "0x";
-export const defaultVaaEncoding: VaaEncoding = "base64";
-export const chainToEncoding: Record<TargetChain, VaaEncoding> = {
-  evm: "0x",
-  cosmos: "base64",
-  aptos: "base64",
-  sui: "base64",
-  default: "base64",
-};
-
-function encodeVaaForChain(
-  vaa: string | Buffer,
-  targetChain: TargetChain
-): string {
-  const encoding = chainToEncoding[targetChain];
-
-  let vaaBuffer: Buffer;
-  if (typeof vaa === "string") {
-    if (encoding === defaultVaaEncoding) {
-      return vaa;
-    } else {
-      vaaBuffer = Buffer.from(vaa, defaultVaaEncoding as BufferEncoding);
-    }
-  } else {
-    vaaBuffer = vaa;
-  }
-
-  switch (encoding) {
-    case "0x":
-      return "0x" + vaaBuffer.toString("hex");
-    default:
-      return vaaBuffer.toString(encoding);
-  }
-}
+// GET argument string to represent the options for target_chain
+export const targetChainArgString = `target_chain=<${validTargetChains.join(
+  "|"
+)}>`;
 
 export class RestException extends Error {
   statusCode: number;
