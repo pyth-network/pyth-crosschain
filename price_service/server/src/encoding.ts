@@ -2,8 +2,8 @@
 
 // List of all possible target chains. Note that "default" is an option because we need at least one chain
 // with a base64 encoding (which is the old default behavior of all API methods).
-export type TargetChain = "evm" | "cosmos" | "aptos" | "sui" | "default";
-export const validTargetChains = ["evm", "cosmos", "aptos", "sui", "default"];
+export type TargetChain = "evm" | "cosmos" | "aptos" | "default";
+export const validTargetChains = ["evm", "cosmos", "aptos", "default"];
 export const defaultTargetChain: TargetChain = "default";
 
 // Possible encodings of the binary VAA data as a string.
@@ -13,8 +13,9 @@ export const defaultVaaEncoding: VaaEncoding = "base64";
 export const chainToEncoding: Record<TargetChain, VaaEncoding> = {
   evm: "0x",
   cosmos: "base64",
+  // TODO: I think aptos actually wants a number[] for this data... need to decide how to
+  // handle that case.
   aptos: "base64",
-  sui: "base64",
   default: "base64",
 };
 
