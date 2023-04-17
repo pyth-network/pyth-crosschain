@@ -12,20 +12,26 @@ const argv = yargs(hideBin(process.argv))
   .option("injective", {
     type: "boolean",
   })
+  .option("osmosis", {
+    type: "boolean",
+  })
+  .option("arm64", {
+    type: "boolean",
+  })
   .help()
   .alias("help", "h")
   .wrap(yargs.terminalWidth())
   .parseSync();
 
-// we need to update the toml file to have a feature on - default=['injective']
-// editing and writing the toml file before building the contract for injective
-function injectivePreSetup(contractTomlFilePath: string) {
+// we need to update the toml file to have a feature on - default=[feature (passed as parameter)]
+// editing and writing the toml file before building the contract for other than cosmwasm
+function cargoPreSetup(contractTomlFilePath: string, feature: string) {
   const originalTomlContentStr = readFileSync(contractTomlFilePath, "utf-8");
   const parsedToml = toml.parse(originalTomlContentStr);
 
-  // add injective feature to the cargo.toml
+  // add default feature to the cargo.toml
   // @ts-ignore
-  parsedToml.features.default = ["injective"];
+  parsedToml.features.default = [feature];
 
   // @ts-ignore
   const updatedToml = toml.stringify(parsedToml, {
@@ -40,29 +46,44 @@ function injectivePreSetup(contractTomlFilePath: string) {
   writeFileSync(contractTomlFilePath, updatedToml);
 
   // after contract compilation we need to reset the original content of the toml file
-  return function injectivePostCleanup() {
+  return function cargoPostCleanup() {
     writeFileSync(contractTomlFilePath, originalTomlContentStr);
   };
 }
 
 function build() {
-  if (argv.cosmwasm !== true && argv.injective !== true) {
-    console.log("Please provide one of the options: ['cosmwasm', 'injective']");
-    return;
-  }
-
   const contractTomlFilePath = "../contracts/pyth/Cargo.toml";
 
   let cleanup = () => {};
-  if (argv.injective === true)
-    cleanup = injectivePreSetup(contractTomlFilePath);
+  if (argv.cosmwasm !== true) {
+    const feature =
+      argv.osmosis === true
+        ? "osmosis"
+        : argv.injective === true
+        ? "injective"
+        : undefined;
+
+    if (feature === undefined) {
+      console.log(
+        "Please provide one of the options: ['cosmwasm', 'injective', 'osmosis']"
+      );
+      return;
+    }
+
+    cleanup = cargoPreSetup(contractTomlFilePath, feature);
+  }
+
+  const dockerImage =
+    argv.arm64 === true
+      ? "cosmwasm/workspace-optimizer-arm64:0.12.11"
+      : "cosmwasm/workspace-optimizer:0.12.11";
 
   const buildCommand = `
           docker run --rm -v "$(cd ..; pwd)":/code \
-          -v $(cd ../../../wormhole_attester; pwd):/wormhole_attester \
+          -v "$(cd ../../../wormhole_attester; pwd)":/wormhole_attester \
           --mount type=volume,source="$(basename "$(cd ..; pwd)")_cache",target=/code/target \
           --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-          cosmwasm/workspace-optimizer:0.12.11
+          ${dockerImage}
           `;
 
   // build contract by running the command
