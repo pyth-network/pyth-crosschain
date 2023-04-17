@@ -30,7 +30,7 @@ jobs:
         run: |
           npm run build-contract -- --osmosis
           mv ../artifacts ../osmosis
-          zip -r injective.zip ../osmosis
+          zip -r osmosis.zip ../osmosis
 
       - name: Set env
         run: |
@@ -43,10 +43,12 @@ jobs:
           files: |
             target_chains/cosmwasm/tools/cosmwasm.zip
             target_chains/cosmwasm/tools/injective.zip
+            target_chains/cosmwasm/tools/osmosis.zip
           body: |
             Contracts
             - cosmwasm.zip contains the generic cosmwasm contract for most Cosmos SDK chains.
-            - injective.zip contains injectives specific contract.
+            - injective.zip contains injective specific contract.
+            - osmosis.zip contains osmosis specific contract.
           draft: false
           # Setting VERSION in set env step and hence it will be available
           name: Pyth Cosmwasm Contract ${{ env.VERSION }}
