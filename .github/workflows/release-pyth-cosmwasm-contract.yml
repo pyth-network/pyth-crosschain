@@ -26,6 +26,11 @@ jobs:
           npm run build-contract -- --injective
           mv ../artifacts ../injective
           zip -r injective.zip ../injective
+      - name: Build osmosis cosmwasm contract
+        run: |
+          npm run build-contract -- --osmosis
+          mv ../artifacts ../osmosis
+          zip -r injective.zip ../osmosis
 
       - name: Set env
         run: |
