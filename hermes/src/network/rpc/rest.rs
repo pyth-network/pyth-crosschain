@@ -29,6 +29,10 @@ use {
     },
 };
 
+/// PriceIdInput is a wrapper around a 32-byte hex string.
+/// that supports a flexible deserialization from a hex string.
+/// It supports both 0x-prefixed and non-prefixed hex strings,
+/// and also supports both lower and upper case characters.
 #[derive(Debug, Clone, Deref, DerefMut)]
 pub struct PriceIdInput([u8; 32]);
 // TODO: Use const generics instead of macro.
@@ -42,6 +46,7 @@ impl From<PriceIdInput> for PriceIdentifier {
 
 pub enum RestError {
     UpdateDataNotFound,
+    CcipUpdateDataNotFound,
 }
 
 impl IntoResponse for RestError {
@@ -50,10 +55,26 @@ impl IntoResponse for RestError {
             RestError::UpdateDataNotFound => {
                 (StatusCode::NOT_FOUND, "Update data not found").into_response()
             }
+            RestError::CcipUpdateDataNotFound => {
+                // Returning Bad Gateway error because CCIP expects a 5xx error if it needs to
+                // retry or try other endpoints. Bad Gateway seems the best choice here as this
+                // is not an internal error and could happen on two scenarios:
+                // 1. DB Api is not responding well (Bad Gateway is appropriate here)
+                // 2. Publish time is a few seconds before current time and a VAA
+                //    Will be available in a few seconds. So we want the client to retry.
+
+                (StatusCode::BAD_GATEWAY, "CCIP update data not found").into_response()
+            }
         }
     }
 }
 
+pub async fn price_feed_ids(
+    State(state): State<super::State>,
+) -> Result<Json<Vec<PriceIdentifier>>, RestError> {
+    let price_feeds = state.store.get_price_feed_ids();
+    Ok(Json(price_feeds))
+}
 
 #[derive(Debug, serde::Deserialize)]
 pub struct LatestVaasQueryParams {
@@ -173,7 +194,7 @@ pub async fn get_vaa_ccip(
     let price_feeds_with_update_data = state
         .store
         .get_price_feeds_with_update_data(vec![price_id], RequestTime::FirstAfter(publish_time))
-        .map_err(|_| RestError::UpdateDataNotFound)?;
+        .map_err(|_| RestError::CcipUpdateDataNotFound)?;
 
     let vaa = price_feeds_with_update_data
         .update_data
@@ -199,6 +220,7 @@ pub async fn live() -> Result<impl IntoResponse, std::convert::Infallible> {
 pub async fn index() -> impl IntoResponse {
     Json([
         "/live",
+        "/api/price_feed_ids",
         "/api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..",
         "/api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&...",
         "/api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>",

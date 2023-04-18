@@ -81,4 +81,8 @@ impl Store {
             request_time,
         )
     }
+
+    pub fn get_price_feed_ids(&self) -> Vec<PriceIdentifier> {
+        proof::batch_vaa::get_price_feed_ids(self.state.clone())
+    }
 }
