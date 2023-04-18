@@ -626,14 +626,16 @@ const General = () => {
     )
   }
 
-  const OldPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => {
+  const OldPriceFeedsRows = ({
+    priceFeedSymbol,
+  }: {
+    priceFeedSymbol: string
+  }) => {
     return (
       <>
-        <tr key={priceFeedData.metadata.symbol}>
+        <tr key={priceFeedSymbol}>
           <td className="base16 py-4 pl-6 pr-2 lg:pl-6">Symbol</td>
-          <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
-            {priceFeedData.metadata.symbol}
-          </td>
+          <td className="base16 py-4 pl-1 pr-2 lg:pl-6">{priceFeedSymbol}</td>
         </tr>
       </>
     )
@@ -676,7 +678,7 @@ const General = () => {
                   {addPriceFeed ? (
                     <NewPriceFeedsRows key={key} priceFeedData={newChanges} />
                   ) : deletePriceFeed ? (
-                    <OldPriceFeedsRows key={key} priceFeedData={prev} />
+                    <OldPriceFeedsRows key={key} priceFeedSymbol={key} />
                   ) : (
                     diff.map((k) =>
                       k === 'metadata' ? (
