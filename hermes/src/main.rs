@@ -16,6 +16,7 @@ use {
 };
 
 mod config;
+mod macros;
 mod network;
 mod store;
 
