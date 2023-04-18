@@ -299,13 +299,13 @@ type AccumulatorInputHeader = IdlTypes<AccumulatorUpdater>["AccumulatorHeader"];
 // accountType and accountSchema.
 function parseAccumulatorInput({
   header,
-  data,
+  messages,
 }: {
   header: AccumulatorInputHeader;
-  data: number[];
+  messages: number[];
 }): AccumulatorPriceMessage[] {
-  const messages = [];
-  let dataBuffer = Buffer.from(data);
+  const accumulatorMessages = [];
+  let dataBuffer = Buffer.from(messages);
 
   let start = 0;
   for (let i = 0; i < header.endOffsets.length; i++) {
@@ -321,16 +321,16 @@ function parseAccumulatorInput({
       parseMessageBytes(messageBytes);
     console.info(`header: ${JSON.stringify(msgHeader, null, 2)}`);
     if (msgHeader.schema == 0) {
-      messages.push(parseFullPriceMessage(msgData));
+      accumulatorMessages.push(parseFullPriceMessage(msgData));
     } else if (msgHeader.schema == 1) {
-      messages.push(parseCompactPriceMessage(msgData));
+      accumulatorMessages.push(parseCompactPriceMessage(msgData));
     } else {
       console.warn("Unknown input index: " + i);
       continue;
     }
     start = endOffset;
   }
-  return messages;
+  return accumulatorMessages;
 }
 
 type MessageHeader = {
