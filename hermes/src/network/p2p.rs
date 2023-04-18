@@ -84,7 +84,6 @@ pub fn bootstrap<H>(
 where
     H: Fn(Observation) -> Result<()> + 'static,
 {
-    log::warn!("Network ID: {:?}", network_id);
     let c_network_id = CString::new(network_id)?;
     let c_wh_bootstrap_addrs = CString::new(wh_bootstrap_addrs)?;
     let c_wh_listen_addrs = CString::new(wh_listen_addrs)?;
@@ -97,12 +96,6 @@ where
             c_wh_bootstrap_addrs.as_ptr(),
             c_wh_listen_addrs.as_ptr(),
         );
-
-        // The memory will be freed when the Go function finishes using the
-        // pointers since C.GoString creates a copy of the strings.
-        std::mem::forget(c_network_id);
-        std::mem::forget(c_wh_bootstrap_addrs);
-        std::mem::forget(c_wh_listen_addrs);
     }
     Ok(())
 }

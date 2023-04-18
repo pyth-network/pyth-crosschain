@@ -48,12 +48,12 @@ import (
 
 //export RegisterObservationCallback
 func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, listen_addrs *C.char) {
+	networkID := C.GoString(network_id)
+	bootstrapAddrs := strings.Split(C.GoString(bootstrap_addrs), ",")
+	listenAddrs := strings.Split(C.GoString(listen_addrs), ",")
+
 	go func() {
 		ctx := context.Background()
-
-		networkID := C.GoString(network_id)
-		bootstrapAddrs := strings.Split(C.GoString(bootstrap_addrs), ",")
-		listenAddrs := strings.Split(C.GoString(listen_addrs), ",")
 
 		// Setup base network configuration.
 		priv, _, err := crypto.GenerateKeyPair(crypto.Ed25519, -1)
