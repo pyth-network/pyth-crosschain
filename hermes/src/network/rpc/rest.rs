@@ -109,7 +109,8 @@ pub async fn latest_vaas(
 #[derive(Debug, serde::Deserialize)]
 pub struct LatestPriceFeedsQueryParams {
     ids:     Vec<PriceIdInput>,
-    verbose: Option<bool>,
+    #[serde(default)]
+    verbose: bool,
     binary:  Option<bool>,
 }
 
