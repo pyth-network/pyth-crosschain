@@ -31,6 +31,7 @@ use {
 
 #[derive(Debug, Clone, Deref, DerefMut)]
 pub struct PriceIdInput([u8; 32]);
+// TODO: Use const generics instead of macro.
 impl_deserialize_for_hex_string_wrapper!(PriceIdInput, 32);
 
 impl From<PriceIdInput> for PriceIdentifier {
@@ -159,7 +160,7 @@ pub struct GetVaaCcipQueryParams {
 
 #[derive(Debug, serde::Serialize)]
 pub struct GetVaaCcipResponse {
-    data: String,
+    data: String, // TODO: Use a typed wrapper for the hex output with leading 0x.
 }
 
 pub async fn get_vaa_ccip(
@@ -177,7 +178,7 @@ pub async fn get_vaa_ccip(
     let vaa = price_feeds_with_update_data
         .update_data
         .batch_vaa
-        .get(0)
+        .get(0) // One price feed has only a single VAA as proof.
         .ok_or(RestError::UpdateDataNotFound)?;
 
     // FIXME: We should return 5xx when the vaa is not found and 4xx when the price id is not there

@@ -1,5 +1,7 @@
 #[macro_export]
-/// A macro that generates Deserialize for serde for a struct S that wraps [u8; N] where N is a compile-time constant.
+/// A macro that generates Deserialize from string for a struct S that wraps [u8; N] where N is a
+/// compile-time constant. This macro deserializes a string with or without leading 0x and supports
+/// both lower case and upper case hex characters.
 macro_rules! impl_deserialize_for_hex_string_wrapper {
     ($struct_name:ident, $array_size:expr) => {
         impl<'de> serde::Deserialize<'de> for $struct_name {
