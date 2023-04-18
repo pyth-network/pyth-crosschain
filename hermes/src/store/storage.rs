@@ -5,10 +5,6 @@ use {
         UnixTimestamp,
     },
     anyhow::Result,
-    derive_more::{
-        Deref,
-        DerefMut,
-    },
     pyth_sdk::PriceIdentifier,
 };
 

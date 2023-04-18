@@ -4,18 +4,8 @@ use {
         storage::Storage,
     },
     anyhow::Result,
-    pyth_sdk::{
-        PriceFeed,
-        PriceIdentifier,
-    },
-    serde::{
-        Deserialize,
-        Serialize,
-    },
-    std::{
-        collections::HashMap,
-        sync::Arc,
-    },
+    pyth_sdk::PriceIdentifier,
+    std::sync::Arc,
 };
 
 mod proof;

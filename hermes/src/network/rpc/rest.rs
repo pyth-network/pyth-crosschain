@@ -27,10 +27,7 @@ use {
         Deref,
         DerefMut,
     },
-    pyth_sdk::{
-        PriceFeed,
-        PriceIdentifier,
-    },
+    pyth_sdk::PriceIdentifier,
 };
 
 /// PriceIdInput is a wrapper around a 32-byte hex string.
@@ -111,7 +108,8 @@ pub struct LatestPriceFeedsQueryParams {
     ids:     Vec<PriceIdInput>,
     #[serde(default)]
     verbose: bool,
-    binary:  Option<bool>,
+    #[serde(default)]
+    binary:  bool,
 }
 
 pub async fn latest_price_feeds(
@@ -130,22 +128,17 @@ pub async fn latest_price_feeds(
             .into_values()
             .map(|price_info| {
                 let mut rpc_price_feed: RpcPriceFeed = price_info.price_feed.into();
-                rpc_price_feed.metadata = params.verbose.then(|| RpcPriceFeedMetadata {
+                rpc_price_feed.metadata = params.verbose.then_some(RpcPriceFeedMetadata {
                     emitter_chain:              price_info.emitter_chain,
                     sequence_number:            price_info.sequence_number,
                     attestation_time:           price_info.attestation_time,
-                    price_service_receive_time: price_info.price_service_receive_time,
+                    price_service_receive_time: price_info.receive_time,
                 });
-                    rpc_price_feed.metadata = Some(RpcPriceFeedMetadata {
-                        emitter_chain:              price_info.emitter_chain,
-                        sequence_number:            price_info.sequence_number,
-                        attestation_time:           price_info.attestation_time,
-                        price_service_receive_time: price_info.receive_time,
-                    });
-                }
-                if params.binary.unwrap_or(false) {
-                    rpc_price_feed.vaa = Some(base64_standard_engine.encode(&price_info.vaa_bytes));
-                }
+
+                rpc_price_feed.vaa = params
+                    .binary
+                    .then_some(base64_standard_engine.encode(&price_info.vaa_bytes));
+
                 rpc_price_feed
             })
             .collect(),
@@ -192,9 +185,6 @@ pub async fn get_vaa(
         .get(&price_id)
         .map(|price_info| price_info.publish_time)
         .ok_or(RestError::UpdateDataNotFound)?;
-    let publish_time: UnixTimestamp = publish_time
-        .try_into()
-        .map_err(|_| RestError::UpdateDataNotFound)?;
 
     Ok(Json(GetVaaResponse { vaa, publish_time }))
 }
@@ -227,10 +217,9 @@ pub async fn get_vaa_ccip(
 
     let vaa = price_feeds_with_update_data
         .batch_vaa
+        .update_data
         .get(0) // One price feed has only a single VAA as proof.
         .ok_or(RestError::UpdateDataNotFound)?;
-
-    // FIXME: We should return 5xx when the vaa is not found and 4xx when the price id is not there
 
     Ok(Json(GetVaaCcipResponse {
         data: format!("0x{}", hex::encode(vaa)),
