@@ -24,13 +24,21 @@ pub enum Options {
         #[structopt(long)]
         id_secp256k1: Option<PathBuf>,
 
-        /// Multiaddress for a Wormhole bootstrap peer.
-        #[structopt(long)]
-        wormhole_peer: Option<String>,
+        /// Network ID for Wormhole
+        #[structopt(long, env = "WORMHOLE_NETWORK_ID")]
+        wh_network_id: String,
 
-        /// Multiaddress to bind Wormhole P2P to.
-        #[structopt(long)]
-        wormhole_addr: Option<Multiaddr>,
+        /// Multiaddresses for Wormhole bootstrap peers (separated by comma).
+        #[structopt(long, env = "WORMHOLE_BOOTSTRAP_ADDRS")]
+        wh_bootstrap_addrs: String,
+
+        /// Multiaddresses to bind Wormhole P2P to (separated by comma)
+        #[structopt(
+            long,
+            default_value = "/ip4/0.0.0.0/udp/30910/quic,/ip6/::/udp/30910/quic",
+            env = "WORMHOLE_LISTEN_ADDRS"
+        )]
+        wh_listen_addrs: String,
 
         /// The address to bind the RPC server to.
         #[structopt(long, default_value = "127.0.0.1:33999")]

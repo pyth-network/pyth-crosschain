@@ -8,6 +8,7 @@
 package main
 
 // #include <stdlib.h>
+// #include <string.h>
 //
 // // A structure containing Wormhole VAA observations. This must match on both
 // // the Go and Rust side.
@@ -27,6 +28,7 @@ import "C"
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -45,17 +47,16 @@ import (
 )
 
 //export RegisterObservationCallback
-func RegisterObservationCallback(f C.callback_t) {
+func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, listen_addrs *C.char) {
 	go func() {
 		ctx := context.Background()
 
+		networkID := C.GoString(network_id)
+		bootstrapAddrs := strings.Split(C.GoString(bootstrap_addrs), ",")
+		listenAddrs := strings.Split(C.GoString(listen_addrs), ",")
+
 		// Setup base network configuration.
-		networkID := "/wormhole/testnet/2/1"
 		priv, _, err := crypto.GenerateKeyPair(crypto.Ed25519, -1)
-		bootstrapPeers := []string{
-			//"/dns4/wormhole-mainnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWQp644DK27fd3d4Km3jr7gHiuJJ5ZGmy8hH4py7fP4FP7",
-			"/dns4/wormhole-testnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWAkB9ynDur1Jtoa97LBUp8RXdhzS5uHgAfdTquJbrbN7i",
-		}
 
 		// Setup libp2p Connection Manager.
 		mgr, err := connmgr.NewConnManager(
@@ -73,16 +74,13 @@ func RegisterObservationCallback(f C.callback_t) {
 		// Setup libp2p Reactor.
 		h, err := libp2p.New(
 			libp2p.Identity(priv),
-			libp2p.ListenAddrStrings(
-				"/ip4/0.0.0.0/udp/30910/quic",
-				"/ip6/::/udp/30910/quic",
-			),
+			libp2p.ListenAddrStrings(listenAddrs...),
 			libp2p.Security(libp2ptls.ID, libp2ptls.New),
 			libp2p.Transport(libp2pquic.NewTransport),
 			libp2p.ConnectionManager(mgr),
 			libp2p.Routing(func(h host.Host) (routing.PeerRouting, error) {
 				bootstrappers := make([]peer.AddrInfo, 0)
-				for _, addr := range bootstrapPeers {
+				for _, addr := range bootstrapAddrs {
 					ma, err := multiaddr.NewMultiaddr(addr)
 					if err != nil {
 						continue

@@ -51,8 +51,9 @@ async fn init(_update_channel: Receiver<AccountUpdate>) -> Result<()> {
         config::Options::Run {
             id: _,
             id_secp256k1: _,
-            wormhole_addr: _,
-            wormhole_peer: _,
+            wh_network_id,
+            wh_bootstrap_addrs,
+            wh_listen_addrs,
             rpc_addr,
             p2p_addr,
             p2p_peer: _,
@@ -61,7 +62,13 @@ async fn init(_update_channel: Receiver<AccountUpdate>) -> Result<()> {
 
             // Spawn the P2P layer.
             log::info!("Starting P2P server on {}", p2p_addr);
-            network::p2p::spawn(handle_message).await?;
+            network::p2p::spawn(
+                handle_message,
+                wh_network_id.to_string(),
+                wh_bootstrap_addrs.to_string(),
+                wh_listen_addrs.to_string(),
+            )
+            .await?;
 
             // Spawn the RPC server.
             log::info!("Starting RPC server on {}", rpc_addr);
