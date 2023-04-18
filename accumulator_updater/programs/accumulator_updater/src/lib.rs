@@ -69,7 +69,8 @@ pub mod accumulator_updater {
     /// then the remaining messages will be ignored.
     ///
     /// The current implementation assumes that each invocation of this
-    /// ix is independent of any previous invocations.
+    /// ix is independent of any previous invocations. It will overwrite
+    /// any existing contents.
     ///
     /// TODO:
     ///     - try handling re-allocation of the accumulator_input space

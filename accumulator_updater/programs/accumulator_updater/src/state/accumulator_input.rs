@@ -17,11 +17,11 @@ use {
 #[account(zero_copy)]
 #[derive(Debug, InitSpace)]
 pub struct AccumulatorInput {
-    pub header: AccumulatorHeader,
+    pub header:   AccumulatorHeader,
     // 10KB - 8 (discriminator) - 514 (header)
     // TODO: do we want to initialize this to the max size?
     //   - will lead to more data being passed around for validators
-    pub data:   [u8; 9_718],
+    pub messages: [u8; 9_718],
 }
 
 //TODO:
@@ -37,19 +37,15 @@ pub struct AccumulatorHeader {
     pub header_len:  u16, // 2
     /// endpoints of every message.
     /// ex: [10, 14]
-    /// => msg1 = data[(header_len + 0)..(header_len + 10)]
-    /// => msg2 = data[(header_len + 10)..(header_len + 14)]
+    /// => msg1 = account_info.data[(header_len + 0)..(header_len + 10)]
+    /// => msg2 = account_info.data[(header_len + 10)..(header_len + 14)]
     pub end_offsets: [u16; 255], // 510
 }
 
 impl AccumulatorHeader {
-    // header_size. Keeping same structure as `BatchPriceAttestation` header
     // HEADER_LEN allows for append-only forward-compatibility for the header.
     // this is the number of bytes from the beginning of the account_info.data
     // to the start of the `AccumulatorInput` data.
-    //
-    // *NOTE* this implementation is slightly different
-    // than the `BatchPriceAttestation` header_size
     pub const HEADER_LEN: u16 = 8 + AccumulatorHeader::INIT_SPACE as u16;
 
     pub const CURRENT_VERSION: u8 = 1;
@@ -69,19 +65,23 @@ impl AccumulatorHeader {
 }
 impl AccumulatorInput {
     pub fn size(&self) -> usize {
-        AccumulatorHeader::INIT_SPACE + 4 + self.data.len()
+        AccumulatorHeader::INIT_SPACE + 4 + self.messages.len()
     }
 
     pub fn new(bump: u8) -> Self {
         let header = AccumulatorHeader::new(bump);
         Self {
             header,
-            data: [0u8; 9_718],
+            messages: [0u8; 9_718],
         }
     }
 
-    // note: this does not handle if multiple CPI calls
-    // need to be made to write all the messages
+    /// `put_all` writes all the messages to the `AccumulatorInput` account
+    /// and updates the `end_offsets` array.
+    ///
+    /// Returns tuple of the number of messages written and the end_offset
+    /// of the last message
+    ///
     // TODO: add a end_offsets index parameter for "continuation"
     // TODO: test max size of parameters that can be passed into CPI call
     pub fn put_all(&mut self, values: &Vec<Vec<u8>>) -> (usize, u16) {
@@ -89,13 +89,20 @@ impl AccumulatorInput {
 
         for (i, v) in values.iter().enumerate() {
             let start = offset;
-            let end = offset + (v.len() as u16);
-            if end > self.data.len() as u16 {
-                // need to return number of messages written & length?
+            let len = u16::try_from(v.len());
+            if len.is_err() {
+                return (i, start);
+            }
+            let end = offset.checked_add(len.unwrap());
+            if end.is_none() {
+                return (i, start);
+            }
+            let end = end.unwrap();
+            if end > self.messages.len() as u16 {
                 return (i, start);
             }
             self.header.end_offsets[i] = end;
-            self.data[(start as usize)..(end as usize)].copy_from_slice(v);
+            self.messages[(start as usize)..(end as usize)].copy_from_slice(v);
             offset = end
         }
         (values.len(), offset)
@@ -151,18 +158,6 @@ mod test {
             align_of::<AccumulatorInput>(),
         );
 
-
-        println!(
-            r"
-
-            header
-                size: {header_idx_size:?}
-                align: {header_idx_align:?}
-            input
-                size: {input_size:?}
-                align: {input_align:?}
-        "
-        );
         assert_eq!(header_idx_size, 514);
         assert_eq!(header_idx_align, 2);
         assert_eq!(input_size, 10_232);
@@ -187,8 +182,9 @@ mod test {
 
         let accumulator_input_bytes = bytes_of(accumulator_input);
 
-        // *note* minus 8 here since no account discriminator when using
-        // `bytes_of`directly on accumulator_input
+        // The header_len field represents the size of all data prior to the message bytes.
+        // This includes the account discriminator, which is not part of the header struct.
+        // Subtract the size of the discriminator (8 bytes) to compensate
         let header_len = accumulator_input.header.header_len as usize - 8;
 
 
@@ -223,6 +219,51 @@ mod test {
 
         let accumulator_input_bytes = bytes_of(accumulator_input);
 
+        // The header_len field represents the size of all data prior to the message bytes.
+        // This includes the account discriminator, which is not part of the header struct.
+        // Subtract the size of the discriminator (8 bytes) to compensate
+        let header_len = accumulator_input.header.header_len as usize - 8;
+
+
+        let iter = accumulator_input
+            .header
+            .end_offsets
+            .iter()
+            .take_while(|x| **x != 0);
+        let mut start = header_len;
+        let mut data_iter = data_bytes.iter();
+        for offset in iter {
+            let end_offset = header_len + *offset as usize;
+            let accumulator_input_data = &accumulator_input_bytes[start..end_offset];
+            let expected_data = data_iter.next().unwrap();
+            assert_eq!(accumulator_input_data, expected_data.as_slice());
+            start = end_offset;
+        }
+
+        assert_eq!(accumulator_input.header.end_offsets[2], 0);
+    }
+
+    #[test]
+    fn test_put_all_long_vec() {
+        let data = vec![
+            vec![0u8; 9_718 - 3],
+            vec![0u8],
+            vec![0u8],
+            vec![0u8; u16::MAX as usize + 2],
+            vec![0u8],
+        ];
+
+        let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
+        let accumulator_input = &mut AccumulatorInput::new(0);
+        let (num_msgs, num_bytes) = accumulator_input.put_all(&data_bytes);
+        assert_eq!(num_msgs, 3);
+        assert_eq!(
+            num_bytes,
+            data_bytes[0..3].iter().map(|x| x.len()).sum::<usize>() as u16
+        );
+
+        let accumulator_input_bytes = bytes_of(accumulator_input);
+
         // *note* minus 8 here since no account discriminator when using
         // `bytes_of`directly on accumulator_input
         let header_len = accumulator_input.header.header_len as usize - 8;
@@ -243,6 +284,10 @@ mod test {
             start = end_offset;
         }
 
-        assert_eq!(accumulator_input.header.end_offsets[2], 0);
+        assert_eq!(accumulator_input.header.end_offsets[0], 9_715);
+        assert_eq!(accumulator_input.header.end_offsets[1], 9_716);
+        assert_eq!(accumulator_input.header.end_offsets[2], 9_717);
+        assert_eq!(accumulator_input.header.end_offsets[3], 0);
+        assert_eq!(accumulator_input.header.end_offsets[4], 0);
     }
 }
