@@ -63,8 +63,8 @@ pub fn update_price<'info>(
     ctx: Context<'_, '_, '_, 'info, UpdatePrice<'info>>,
     params: UpdatePriceParams,
 ) -> Result<()> {
-    let mut account_data = vec![];
-    let schemas = get_schemas(PythAccountType::Price);
+    let mut inputs = vec![];
+    let _schemas = get_schemas(PythAccountType::Price);
 
     {
         let pyth_price_acct = &mut ctx.accounts.pyth_price_account.load_mut()?;
@@ -72,33 +72,23 @@ pub fn update_price<'info>(
 
         let price_full_data = FullPriceMessage::from(&**pyth_price_acct).accumulator_serialize()?;
 
-        account_data.push(price_full_data);
+        inputs.push(price_full_data);
 
 
         let price_compact_data =
             CompactPriceMessage::from(&**pyth_price_acct).accumulator_serialize()?;
-        account_data.push(price_compact_data);
+        inputs.push(price_compact_data);
     }
 
 
-    // let account_schemas = schemas.into_iter().map(|s| s.to_u8()).collect::<Vec<u8>>();
-
-    let values = schemas
-        .into_iter()
-        .map(|s| s.to_u8())
-        .zip(account_data)
-        .collect::<Vec<(u8, Vec<u8>)>>();
-
-    UpdatePrice::emit_accumulator_inputs(ctx, values)
+    UpdatePrice::emit_accumulator_inputs(ctx, inputs)
 }
 
 impl<'info> UpdatePrice<'info> {
     /// Invoke accumulator-updater emit-inputs ix cpi call
     pub fn emit_accumulator_inputs(
         ctx: Context<'_, '_, '_, 'info, UpdatePrice<'info>>,
-        values: Vec<(u8, Vec<u8>)>,
-        // account_data: Vec<Vec<u8>>,
-        // account_schemas: Vec<u8>,
+        values: Vec<Vec<u8>>,
     ) -> anchor_lang::Result<()> {
         let mut accounts = vec![
             AccountMeta::new(ctx.accounts.payer.key(), true),
@@ -120,8 +110,6 @@ impl<'info> UpdatePrice<'info> {
                 sighash("global", ACCUMULATOR_UPDATER_IX_NAME),
                 ctx.accounts.pyth_price_account.key(),
                 values,
-                // account_data,
-                // account_schemas,
             )
                 .try_to_vec()
                 .unwrap(),

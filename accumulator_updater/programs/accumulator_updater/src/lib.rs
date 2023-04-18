@@ -52,24 +52,36 @@ pub mod accumulator_updater {
     }
 
 
-    /// Create or update inputs for the Accumulator. Each input is written
-    /// into a separate PDA account derived with
-    /// seeds = [cpi_caller, b"accumulator", base_account_key, schema]
+    /// Insert messages/inputs for the Accumulator. All inputs derived from the
+    /// `base_account_key` will go into the same PDA. The PDA is derived with
+    /// seeds = [cpi_caller, b"accumulator", base_account_key]
     ///
-    /// The caller of this instruction must pass those PDAs
-    /// while calling this function in the same order as elements.
     ///
     ///
     /// * `base_account_key`    - Pubkey of the original account the
-    ///                         AccumulatorInput(s) are derived from
-    /// * `values`              - Vec of (schema, account_data) in same respective
-    ///                           order `ctx.remaining_accounts`
+    ///                           AccumulatorInput is derived from
+    /// * `messages`            - Vec of vec of bytes, each representing a message
+    ///                           to be hashed and accumulated
+    ///
+    /// This ix will write as many of the messages up to the length
+    /// of the `accumulator_input.data`.
+    /// If `accumulator_input.data.len() < messages.map(|x| x.len()).sum()`
+    /// then the remaining messages will be ignored.
+    ///
+    /// The current implementation assumes that each invocation of this
+    /// ix is independent of any previous invocations. It will overwrite
+    /// any existing contents.
+    ///
+    /// TODO:
+    ///     - try handling re-allocation of the accumulator_input space
+    ///     - handle updates ("paging/batches of messages")
+    ///
     pub fn put_all<'info>(
         ctx: Context<'_, '_, '_, 'info, PutAll<'info>>,
         base_account_key: Pubkey,
-        values: Vec<InputSchemaAndData>,
+        messages: Vec<Vec<u8>>,
     ) -> Result<()> {
-        instructions::put_all(ctx, base_account_key, values)
+        instructions::put_all(ctx, base_account_key, messages)
     }
 }
 
@@ -128,4 +140,6 @@ pub enum AccumulatorUpdaterError {
     CurrentDataLengthExceeded,
     #[msg("Accumulator Input not writable")]
     AccumulatorInputNotWritable,
+    #[msg("Accumulator Input not provided")]
+    AccumulatorInputNotProvided,
 }

@@ -12,99 +12,73 @@ use {
     },
 };
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct InputSchemaAndData {
-    pub schema: u8,
-    pub data:   Vec<u8>,
-}
 
+pub const ACCUMULATOR: &[u8; 11] = b"accumulator";
 
 pub fn put_all<'info>(
     ctx: Context<'_, '_, '_, 'info, PutAll<'info>>,
     base_account_key: Pubkey,
-    values: Vec<InputSchemaAndData>,
+    messages: Vec<Vec<u8>>,
 ) -> Result<()> {
     let cpi_caller = ctx.accounts.whitelist_verifier.is_allowed()?;
-    let account_infos = ctx.remaining_accounts;
-    require_eq!(account_infos.len(), values.len());
+    let accumulator_input_ai = ctx
+        .remaining_accounts
+        .first()
+        .ok_or(AccumulatorUpdaterError::AccumulatorInputNotProvided)?;
 
-    let rent = Rent::get()?;
-    let (mut initialized, mut updated) = (vec![], vec![]);
+    let loader;
 
-    for (
-        ai,
-        InputSchemaAndData {
-            schema: account_schema,
-            data: account_data,
-        },
-    ) in account_infos.iter().zip(values)
     {
-        let bump = if is_uninitialized_account(ai) {
-            let seeds = &[
-                cpi_caller.as_ref(),
-                b"accumulator".as_ref(),
-                base_account_key.as_ref(),
-                &account_schema.to_le_bytes(),
-            ];
-            let (pda, bump) = Pubkey::find_program_address(seeds, &crate::ID);
-            require_keys_eq!(ai.key(), pda);
-
-
-            //TODO: Update this with serialization logic
-            // 8 for anchor discriminator
-            let accumulator_size = 8 + AccumulatorInput::size(&account_data);
-            PutAll::create_account(
-                ai,
-                accumulator_size,
-                &ctx.accounts.payer,
+        let accumulator_input = &mut (if is_uninitialized_account(accumulator_input_ai) {
+            let (pda, bump) = Pubkey::find_program_address(
                 &[
                     cpi_caller.as_ref(),
-                    b"accumulator".as_ref(),
+                    ACCUMULATOR.as_ref(),
                     base_account_key.as_ref(),
-                    &account_schema.to_le_bytes(),
-                    &[bump],
                 ],
-                &rent,
+                &crate::ID,
+            );
+            require_keys_eq!(accumulator_input_ai.key(), pda);
+            let signer_seeds = &[
+                cpi_caller.as_ref(),
+                ACCUMULATOR.as_ref(),
+                base_account_key.as_ref(),
+                &[bump],
+            ];
+            PutAll::create_account(
+                accumulator_input_ai,
+                8 + AccumulatorInput::INIT_SPACE,
+                &ctx.accounts.payer,
+                signer_seeds,
                 &ctx.accounts.system_program,
             )?;
-            initialized.push(ai.key());
-
-            bump
-        } else {
-            let accumulator_input = <AccumulatorInput as AccountDeserialize>::try_deserialize(
-                &mut &**ai.try_borrow_mut_data()?,
+            loader = AccountLoader::<AccumulatorInput>::try_from_unchecked(
+                &crate::ID,
+                accumulator_input_ai,
             )?;
-            {
-                // TODO: allow re-sizing?
-                require_gte!(
-                    accumulator_input.data.len(),
-                    account_data.len(),
-                    AccumulatorUpdaterError::CurrentDataLengthExceeded
-                );
-
-                accumulator_input.validate(
-                    ai.key(),
-                    cpi_caller,
-                    base_account_key,
-                    account_schema,
-                )?;
-            }
+            let mut accumulator_input = loader.load_init()?;
+            accumulator_input.header = AccumulatorHeader::new(bump);
+            accumulator_input
+        } else {
+            loader = AccountLoader::<AccumulatorInput>::try_from(accumulator_input_ai)?;
+            let mut accumulator_input = loader.load_mut()?;
+            accumulator_input.header.set_version();
+            accumulator_input
+        });
+        // note: redundant for uninitialized code path but safer to check here.
+        // compute budget cost should be minimal
+        accumulator_input.validate(accumulator_input_ai.key(), cpi_caller, base_account_key)?;
 
 
-            updated.push(ai.key());
-            accumulator_input.header.bump
-        };
-
-        let accumulator_input =
-            AccumulatorInput::new(AccumulatorHeader::new(bump, account_schema), account_data);
-        accumulator_input.persist(ai)?;
+        let (num_msgs, num_bytes) = accumulator_input.put_all(&messages);
+        if num_msgs != messages.len() {
+            msg!("unable to fit all messages in accumulator input account. Wrote {}/{} messages and {} bytes", num_msgs, messages.len(), num_bytes);
+        }
     }
 
-    msg!(
-        "[emit-updates]: initialized: {:?}, updated: {:?}",
-        initialized,
-        updated
-    );
+
+    loader.exit(&crate::ID)?;
+
     Ok(())
 }
 
@@ -113,12 +87,13 @@ pub fn is_uninitialized_account(ai: &AccountInfo) -> bool {
 }
 
 #[derive(Accounts)]
+#[instruction( base_account_key: Pubkey)]
 pub struct PutAll<'info> {
     #[account(mut)]
     pub payer:              Signer<'info>,
     pub whitelist_verifier: WhitelistVerifier<'info>,
     pub system_program:     Program<'info, System>,
-    // remaining_accounts:  - [AccumulatorInput PDAs]
+    // remaining_accounts:  - [AccumulatorInput PDA]
 }
 
 impl<'info> PutAll<'info> {
@@ -127,10 +102,9 @@ impl<'info> PutAll<'info> {
         space: usize,
         payer: &AccountInfo<'a>,
         seeds: &[&[u8]],
-        rent: &Rent,
         system_program: &AccountInfo<'a>,
     ) -> Result<()> {
-        let lamports = rent.minimum_balance(space);
+        let lamports = Rent::get()?.minimum_balance(space);
 
         system_program::create_account(
             CpiContext::new_with_signer(

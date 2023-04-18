@@ -33,8 +33,6 @@ const [pythPriceAccountPk] = anchor.web3.PublicKey.findProgramAddressSync(
   mockCpiProg.programId
 );
 
-const PRICE_SCHEMAS = [0, 1];
-
 describe("accumulator_updater", () => {
   // Configure the client to use the local cluster.
   let provider = anchor.AnchorProvider.env();
@@ -113,26 +111,22 @@ describe("accumulator_updater", () => {
       })
       .pubkeys();
 
-    const accumulatorPdaKeys = PRICE_SCHEMAS.map((pythSchema) => {
-      return anchor.web3.PublicKey.findProgramAddressSync(
-        [
-          mockCpiProg.programId.toBuffer(),
-          Buffer.from("accumulator"),
-          // mockCpiCallerAddPriceTxPubkeys.pythPriceAccount.toBuffer(),
-          pythPriceAccountPk.toBuffer(),
-          new anchor.BN(pythSchema).toArrayLike(Buffer, "le", 1),
-        ],
-        accumulatorUpdaterProgram.programId
-      )[0];
-    });
-    const accumulatorPdaMetas = accumulatorPdaKeys.map((pda) => {
-      return {
-        pubkey: pda,
+    const accumulatorPdaKey = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        mockCpiProg.programId.toBuffer(),
+        Buffer.from("accumulator"),
+        pythPriceAccountPk.toBuffer(),
+      ],
+      accumulatorUpdaterProgram.programId
+    )[0];
+
+    const accumulatorPdaMetas = [
+      {
+        pubkey: accumulatorPdaKey,
         isSigner: false,
         isWritable: true,
-      };
-      // return pda;
-    });
+      },
+    ];
 
     const mockCpiCallerAddPriceTxPrep = await mockCpiProg.methods
       .addPrice(addPriceParams)
@@ -182,16 +176,14 @@ describe("accumulator_updater", () => {
       ...pythPriceAccount,
       data: pythPriceAccount.data.toString("hex"),
     };
-    console.log(`pythPriceAccount: ${JSON.stringify(pythPriceAcct)}`);
 
-    const accumulatorInputs =
-      await accumulatorUpdaterProgram.account.accumulatorInput.fetchMultiple(
-        accumulatorPdaKeys
+    const accumulatorInput =
+      await accumulatorUpdaterProgram.account.accumulatorInput.fetch(
+        accumulatorPdaKey
       );
 
-    const accumulatorPriceMessages = accumulatorInputs.map((ai) => {
-      return parseAccumulatorInput(ai);
-    });
+    const accumulatorPriceMessages = parseAccumulatorInput(accumulatorInput);
+
     console.log(
       `accumulatorPriceMessages: ${JSON.stringify(
         accumulatorPriceMessages,
@@ -223,12 +215,10 @@ describe("accumulator_updater", () => {
         ],
       }
     );
-    const accumulatorInputKeyStrings = accumulatorPdaKeys.map((k) =>
-      k.toString()
-    );
-    accumulatorAccounts.forEach((a) => {
-      assert.isTrue(accumulatorInputKeyStrings.includes(a.pubkey.toString()));
-    });
+
+    accumulatorAccounts
+      .map((a) => a.toString())
+      .includes(accumulatorPdaKey.toString());
   });
 
   it("Mock CPI Program - UpdatePrice", async () => {
@@ -239,10 +229,7 @@ describe("accumulator_updater", () => {
       emaExpo: new anchor.BN(8),
     };
 
-    let accumulatorPdaMetas = getAccumulatorPdaMetas(
-      pythPriceAccountPk,
-      PRICE_SCHEMAS
-    );
+    let accumulatorPdaMeta = getAccumulatorPdaMeta(pythPriceAccountPk);
     await mockCpiProg.methods
       .updatePrice(updatePriceParams)
       .accounts({
@@ -251,7 +238,7 @@ describe("accumulator_updater", () => {
         accumulatorWhitelist: whitelistPubkey,
         accumulatorProgram: accumulatorUpdaterProgram.programId,
       })
-      .remainingAccounts(accumulatorPdaMetas)
+      .remainingAccounts([accumulatorPdaMeta])
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
       ])
@@ -266,13 +253,12 @@ describe("accumulator_updater", () => {
     assert.isTrue(pythPriceAccount.priceExpo.eq(updatePriceParams.priceExpo));
     assert.isTrue(pythPriceAccount.ema.eq(updatePriceParams.ema));
     assert.isTrue(pythPriceAccount.emaExpo.eq(updatePriceParams.emaExpo));
-    const accumulatorInputs =
-      await accumulatorUpdaterProgram.account.accumulatorInput.fetchMultiple(
-        accumulatorPdaMetas.map((m) => m.pubkey)
+    const accumulatorInput =
+      await accumulatorUpdaterProgram.account.accumulatorInput.fetch(
+        accumulatorPdaMeta.pubkey
       );
-    const updatedAccumulatorPriceMessages = accumulatorInputs.map((ai) => {
-      return parseAccumulatorInput(ai);
-    });
+    const updatedAccumulatorPriceMessages =
+      parseAccumulatorInput(accumulatorInput);
 
     console.log(
       `updatedAccumulatorPriceMessages: ${JSON.stringify(
@@ -289,28 +275,22 @@ describe("accumulator_updater", () => {
   });
 });
 
-export const getAccumulatorPdaMetas = (
-  pythAccount: anchor.web3.PublicKey,
-  schemas: number[]
-): AccountMeta[] => {
-  const accumulatorPdaKeys = schemas.map((pythSchema) => {
-    return anchor.web3.PublicKey.findProgramAddressSync(
-      [
-        mockCpiProg.programId.toBuffer(),
-        Buffer.from("accumulator"),
-        pythAccount.toBuffer(),
-        new anchor.BN(pythSchema).toArrayLike(Buffer, "le", 1),
-      ],
-      accumulatorUpdaterProgram.programId
-    )[0];
-  });
-  return accumulatorPdaKeys.map((pda) => {
-    return {
-      pubkey: pda,
-      isSigner: false,
-      isWritable: true,
-    };
-  });
+export const getAccumulatorPdaMeta = (
+  pythAccount: anchor.web3.PublicKey
+): AccountMeta => {
+  const accumulatorPdaKey = anchor.web3.PublicKey.findProgramAddressSync(
+    [
+      mockCpiProg.programId.toBuffer(),
+      Buffer.from("accumulator"),
+      pythAccount.toBuffer(),
+    ],
+    accumulatorUpdaterProgram.programId
+  )[0];
+  return {
+    pubkey: accumulatorPdaKey,
+    isSigner: false,
+    isWritable: true,
+  };
 };
 
 type AccumulatorInputHeader = IdlTypes<AccumulatorUpdater>["AccumulatorHeader"];
@@ -319,19 +299,73 @@ type AccumulatorInputHeader = IdlTypes<AccumulatorUpdater>["AccumulatorHeader"];
 // accountType and accountSchema.
 function parseAccumulatorInput({
   header,
-  data,
+  messages,
 }: {
   header: AccumulatorInputHeader;
-  data: Buffer;
-}): AccumulatorPriceMessage {
-  console.log(`header: ${JSON.stringify(header)}`);
-  if (header.accountSchema === 0) {
-    console.log(`[full]data: ${data.toString("hex")}`);
-    return parseFullPriceMessage(data);
-  } else {
-    console.log(`[compact]data: ${data.toString("hex")}`);
-    return parseCompactPriceMessage(data);
+  messages: number[];
+}): AccumulatorPriceMessage[] {
+  const accumulatorMessages = [];
+  let dataBuffer = Buffer.from(messages);
+
+  let start = 0;
+  for (let i = 0; i < header.endOffsets.length; i++) {
+    const endOffset = header.endOffsets[i];
+
+    if (endOffset == 0) {
+      console.log(`endOffset = 0. breaking`);
+      break;
+    }
+
+    const messageBytes = dataBuffer.subarray(start, endOffset);
+    const { header: msgHeader, data: msgData } =
+      parseMessageBytes(messageBytes);
+    console.info(`header: ${JSON.stringify(msgHeader, null, 2)}`);
+    if (msgHeader.schema == 0) {
+      accumulatorMessages.push(parseFullPriceMessage(msgData));
+    } else if (msgHeader.schema == 1) {
+      accumulatorMessages.push(parseCompactPriceMessage(msgData));
+    } else {
+      console.warn("Unknown input index: " + i);
+      continue;
+    }
+    start = endOffset;
   }
+  return accumulatorMessages;
+}
+
+type MessageHeader = {
+  schema: number;
+  version: number;
+  size: number;
+};
+
+type Message = {
+  header: MessageHeader;
+  data: Buffer;
+};
+
+function parseMessageBytes(data: Buffer): Message {
+  let offset = 0;
+
+  const schema = data.readInt8(offset);
+  offset += 1;
+
+  const version = data.readInt16BE(offset);
+  offset += 2;
+
+  const size = data.readUInt32BE(offset);
+  offset += 4;
+
+  const messageHeader = {
+    schema,
+    version,
+    size,
+  };
+  let messageData = data.subarray(offset, offset + size);
+  return {
+    header: messageHeader,
+    data: messageData,
+  };
 }
 
 //TODO: follow wormhole sdk parsing structure?
@@ -345,8 +379,7 @@ type FullPriceMessage = {
   ema: anchor.BN;
   emaExpo: anchor.BN;
 };
-
-function parseFullPriceMessage(data: Buffer): FullPriceMessage {
+function parseFullPriceMessage(data: Uint8Array): FullPriceMessage {
   return {
     id: new anchor.BN(data.subarray(0, 8), "be"),
     price: new anchor.BN(data.subarray(8, 16), "be"),
@@ -362,7 +395,7 @@ type CompactPriceMessage = {
   priceExpo: anchor.BN;
 };
 
-function parseCompactPriceMessage(data: Buffer): CompactPriceMessage {
+function parseCompactPriceMessage(data: Uint8Array): CompactPriceMessage {
   return {
     id: new anchor.BN(data.subarray(0, 8), "be"),
     price: new anchor.BN(data.subarray(8, 16), "be"),
