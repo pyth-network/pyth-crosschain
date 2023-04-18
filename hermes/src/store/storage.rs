@@ -9,6 +9,7 @@ use {
         Deref,
         DerefMut,
     },
+    pyth_sdk::PriceIdentifier,
 };
 
 pub mod local_cache;
@@ -18,13 +19,9 @@ pub enum StorageData {
     BatchVaa(PriceInfo),
 }
 
-#[derive(Clone, PartialEq, Eq, Debug, Hash, Deref, DerefMut)]
-pub struct Key(Vec<u8>);
-
-impl Key {
-    pub fn new(key: Vec<u8>) -> Self {
-        Self(key)
-    }
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
+pub enum Key {
+    BatchVaa(PriceIdentifier),
 }
 
 /// This trait defines the interface for update data storage

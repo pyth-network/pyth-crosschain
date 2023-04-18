@@ -58,7 +58,7 @@ pub fn store_vaa_update(state: State, vaa_bytes: Vec<u8>) -> Result<()> {
             publish_time,
         };
 
-        let key = Key::new(price_feed.id.to_bytes().to_vec());
+        let key = Key::BatchVaa(price_feed.id);
         state.insert(key, publish_time, StorageData::BatchVaa(price_info))?;
     }
     Ok(())
@@ -73,7 +73,7 @@ pub fn get_price_feeds_with_update_data(
     let mut price_feeds = HashMap::new();
     let mut vaas: HashSet<Vec<u8>> = HashSet::new();
     for price_id in price_ids {
-        let key = Key::new(price_id.to_bytes().to_vec());
+        let key = Key::BatchVaa(price_id);
         let maybe_data = state.get(key, request_time.clone())?;
 
         match maybe_data {
@@ -97,15 +97,16 @@ pub fn get_price_feeds_with_update_data(
 
 
 pub fn get_price_feed_ids(state: State) -> Vec<PriceIdentifier> {
-    let mut price_ids = Vec::new();
-    for key in state.keys() {
-        let maybe_32_bytes: Result<[u8; 32], _> = ((*key).clone()).try_into();
-        if let Ok(bytes) = maybe_32_bytes {
-            let price_id = PriceIdentifier::new(bytes);
-            price_ids.push(price_id);
-        }
-    }
-    price_ids
+    // Currently we have only one type and filter map is not necessary.
+    // But we might have more types in the future.
+    #[allow(clippy::unnecessary_filter_map)]
+    state
+        .keys()
+        .into_iter()
+        .filter_map(|key| match key {
+            Key::BatchVaa(price_id) => Some(price_id),
+        })
+        .collect()
 }
 
 /// Convert a PriceAttestation to a PriceFeed.
