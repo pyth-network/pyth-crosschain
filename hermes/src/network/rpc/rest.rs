@@ -130,7 +130,12 @@ pub async fn latest_price_feeds(
             .into_values()
             .map(|price_info| {
                 let mut rpc_price_feed: RpcPriceFeed = price_info.price_feed.into();
-                if params.verbose.unwrap_or(false) {
+                rpc_price_feed.metadata = params.verbose.then(|| RpcPriceFeedMetadata {
+                    emitter_chain:              price_info.emitter_chain,
+                    sequence_number:            price_info.sequence_number,
+                    attestation_time:           price_info.attestation_time,
+                    price_service_receive_time: price_info.price_service_receive_time,
+                });
                     rpc_price_feed.metadata = Some(RpcPriceFeedMetadata {
                         emitter_chain:              price_info.emitter_chain,
                         sequence_number:            price_info.sequence_number,
