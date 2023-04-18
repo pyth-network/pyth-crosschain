@@ -1,4 +1,8 @@
 use {
+    super::rpc_price_feed::{
+        RpcPriceFeed,
+        RpcPriceFeedMetadata,
+    },
     crate::store::RequestTime,
     crate::{
         impl_deserialize_for_hex_string_wrapper,
@@ -23,10 +27,7 @@ use {
         Deref,
         DerefMut,
     },
-    pyth_sdk::{
-        PriceFeed,
-        PriceIdentifier,
-    },
+    pyth_sdk::PriceIdentifier,
 };
 
 /// PriceIdInput is a wrapper around a 32-byte hex string.
@@ -93,8 +94,8 @@ pub async fn latest_vaas(
         .map_err(|_| RestError::UpdateDataNotFound)?;
     Ok(Json(
         price_feeds_with_update_data
-            .update_data
             .batch_vaa
+            .update_data
             .iter()
             .map(|vaa_bytes| base64_standard_engine.encode(vaa_bytes)) // TODO: Support multiple
             // encoding formats
@@ -104,13 +105,17 @@ pub async fn latest_vaas(
 
 #[derive(Debug, serde::Deserialize)]
 pub struct LatestPriceFeedsQueryParams {
-    ids: Vec<PriceIdInput>,
+    ids:     Vec<PriceIdInput>,
+    #[serde(default)]
+    verbose: bool,
+    #[serde(default)]
+    binary:  bool,
 }
 
 pub async fn latest_price_feeds(
     State(state): State<super::State>,
     Query(params): Query<LatestPriceFeedsQueryParams>,
-) -> Result<Json<Vec<PriceFeed>>, RestError> {
+) -> Result<Json<Vec<RpcPriceFeed>>, RestError> {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
     let price_feeds_with_update_data = state
         .store
@@ -118,8 +123,24 @@ pub async fn latest_price_feeds(
         .map_err(|_| RestError::UpdateDataNotFound)?;
     Ok(Json(
         price_feeds_with_update_data
-            .price_feeds
+            .batch_vaa
+            .price_infos
             .into_values()
+            .map(|price_info| {
+                let mut rpc_price_feed: RpcPriceFeed = price_info.price_feed.into();
+                rpc_price_feed.metadata = params.verbose.then_some(RpcPriceFeedMetadata {
+                    emitter_chain:              price_info.emitter_chain,
+                    sequence_number:            price_info.sequence_number,
+                    attestation_time:           price_info.attestation_time,
+                    price_service_receive_time: price_info.receive_time,
+                });
+
+                rpc_price_feed.vaa = params
+                    .binary
+                    .then_some(base64_standard_engine.encode(&price_info.vaa_bytes));
+
+                rpc_price_feed
+            })
             .collect(),
     ))
 }
@@ -152,20 +173,18 @@ pub async fn get_vaa(
         .map_err(|_| RestError::UpdateDataNotFound)?;
 
     let vaa = price_feeds_with_update_data
-        .update_data
         .batch_vaa
+        .update_data
         .get(0)
         .map(|vaa_bytes| base64_standard_engine.encode(vaa_bytes))
         .ok_or(RestError::UpdateDataNotFound)?;
 
     let publish_time = price_feeds_with_update_data
-        .price_feeds
+        .batch_vaa
+        .price_infos
         .get(&price_id)
-        .map(|price_feed| price_feed.get_price_unchecked().publish_time)
+        .map(|price_info| price_info.publish_time)
         .ok_or(RestError::UpdateDataNotFound)?;
-    let publish_time: UnixTimestamp = publish_time
-        .try_into()
-        .map_err(|_| RestError::UpdateDataNotFound)?;
 
     Ok(Json(GetVaaResponse { vaa, publish_time }))
 }
@@ -197,12 +216,10 @@ pub async fn get_vaa_ccip(
         .map_err(|_| RestError::CcipUpdateDataNotFound)?;
 
     let vaa = price_feeds_with_update_data
-        .update_data
         .batch_vaa
+        .update_data
         .get(0) // One price feed has only a single VAA as proof.
         .ok_or(RestError::UpdateDataNotFound)?;
-
-    // FIXME: We should return 5xx when the vaa is not found and 4xx when the price id is not there
 
     Ok(Json(GetVaaCcipResponse {
         data: format!("0x{}", hex::encode(vaa)),
@@ -221,7 +238,7 @@ pub async fn index() -> impl IntoResponse {
     Json([
         "/live",
         "/api/price_feed_ids",
-        "/api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..",
+        "/api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..(&verbose=true)(&binary=true)",
         "/api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&...",
         "/api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>",
         "/api/get_vaa_ccip?data=<0x<price_feed_id_32_bytes>+<publish_time_unix_timestamp_be_8_bytes>>",
