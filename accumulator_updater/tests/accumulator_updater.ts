@@ -15,6 +15,10 @@ const accumulatorUpdaterProgram = anchor.workspace
   .AccumulatorUpdater as Program<AccumulatorUpdater>;
 const mockCpiProg = anchor.workspace.MockCpiCaller as Program<MockCpiCaller>;
 let whitelistAuthority = anchor.web3.Keypair.generate();
+const [fundPda] = anchor.web3.PublicKey.findProgramAddressSync(
+  [Buffer.from("accumulator"), Buffer.from("fund")],
+  accumulatorUpdaterProgram.programId
+);
 
 const pythPriceAccountId = new anchor.BN(1);
 const addPriceParams = {
@@ -33,6 +37,7 @@ const [pythPriceAccountPk] = anchor.web3.PublicKey.findProgramAddressSync(
   mockCpiProg.programId
 );
 
+let fundBalance = 100 * anchor.web3.LAMPORTS_PER_SOL;
 describe("accumulator_updater", () => {
   // Configure the client to use the local cluster.
   let provider = anchor.AnchorProvider.env();
@@ -43,6 +48,10 @@ describe("accumulator_updater", () => {
       [Buffer.from("accumulator"), Buffer.from("whitelist")],
       accumulatorUpdaterProgram.programId
     );
+
+  before("transfer lamports to the fund", async () => {
+    await provider.connection.requestAirdrop(fundPda, fundBalance);
+  });
 
   it("Is initialized!", async () => {
     // Add your test here.
@@ -104,6 +113,7 @@ describe("accumulator_updater", () => {
     const mockCpiCallerAddPriceTxPubkeys = await mockCpiProg.methods
       .addPrice(addPriceParams)
       .accounts({
+        fund: fundPda,
         systemProgram: anchor.web3.SystemProgram.programId,
         ixsSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
         accumulatorWhitelist: whitelistPubkey,
@@ -219,6 +229,9 @@ describe("accumulator_updater", () => {
     accumulatorAccounts
       .map((a) => a.toString())
       .includes(accumulatorPdaKey.toString());
+
+    const fundBalanceAfter = await provider.connection.getBalance(fundPda);
+    assert.isTrue(fundBalance > fundBalanceAfter);
   });
 
   it("Mock CPI Program - UpdatePrice", async () => {
@@ -233,6 +246,7 @@ describe("accumulator_updater", () => {
     await mockCpiProg.methods
       .updatePrice(updatePriceParams)
       .accounts({
+        fund: fundPda,
         pythPriceAccount: pythPriceAccountPk,
         ixsSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
         accumulatorWhitelist: whitelistPubkey,
