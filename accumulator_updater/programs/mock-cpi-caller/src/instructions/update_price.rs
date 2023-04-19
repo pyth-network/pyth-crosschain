@@ -45,8 +45,6 @@ pub struct UpdatePrice<'info> {
     bump,
     )]
     pub pyth_price_account:    AccountLoader<'info, PriceAccount>,
-    // #[account(mut)]
-    // pub payer:                 Signer<'info>,
     #[account(mut)]
     pub fund:                  SystemAccount<'info>,
     /// Needed for accumulator_updater
