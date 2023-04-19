@@ -47,7 +47,7 @@ pub struct WhitelistVerifier<'info> {
         seeds = [b"accumulator".as_ref(), b"whitelist".as_ref()],
         bump = whitelist.bump,
     )]
-    pub whitelist:  Account<'info, Whitelist>,
+    pub whitelist:  Box<Account<'info, Whitelist>>,
     /// CHECK: Instruction introspection sysvar
     #[account(address = sysvar::instructions::ID)]
     pub ixs_sysvar: UncheckedAccount<'info>,

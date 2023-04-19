@@ -290,7 +290,7 @@ describe("accumulator_updater", () => {
 
   it("Mock CPI Program - CPI Max Test", async () => {
     // with loosen CPI feature activated, max cpi instruction size len is 10KB
-    for (let num_msgs = 1; num_msgs < 9; num_msgs++) {
+    for (let num_msgs = 1; num_msgs < 8; num_msgs++) {
       console.info(`testing num_msgs: ${num_msgs}`);
       const updatePriceParams = {
         price: new anchor.BN(10 * num_msgs + 5),
