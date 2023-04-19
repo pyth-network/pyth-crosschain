@@ -287,6 +287,64 @@ describe("accumulator_updater", () => {
       assert.isTrue(pm.priceExpo.eq(updatePriceParams.priceExpo));
     });
   });
+
+  it("Mock CPI Program - CPI Max Test", async () => {
+    // with loosen CPI feature activated, max cpi instruction size len is 10KB
+    for (let num_msgs = 1; num_msgs < 9; num_msgs++) {
+      console.info(`testing num_msgs: ${num_msgs}`);
+      const updatePriceParams = {
+        price: new anchor.BN(10 * num_msgs + 5),
+        priceExpo: new anchor.BN(10 & (num_msgs + 6)),
+        ema: new anchor.BN(10 * num_msgs + 7),
+        emaExpo: new anchor.BN(10 * num_msgs + 8),
+      };
+
+      let accumulatorPdaMeta = getAccumulatorPdaMeta(pythPriceAccountPk);
+      await mockCpiProg.methods
+        .cpiMaxTest(updatePriceParams, num_msgs)
+        .accounts({
+          fund: fundPda,
+          pythPriceAccount: pythPriceAccountPk,
+          ixsSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+          accumulatorWhitelist: whitelistPubkey,
+          accumulatorProgram: accumulatorUpdaterProgram.programId,
+        })
+        .remainingAccounts([accumulatorPdaMeta])
+        .preInstructions([
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
+        ])
+        .rpc({
+          skipPreflight: true,
+        });
+
+      const pythPriceAccount = await mockCpiProg.account.priceAccount.fetch(
+        pythPriceAccountPk
+      );
+      assert.isTrue(pythPriceAccount.price.eq(updatePriceParams.price));
+      assert.isTrue(pythPriceAccount.priceExpo.eq(updatePriceParams.priceExpo));
+      assert.isTrue(pythPriceAccount.ema.eq(updatePriceParams.ema));
+      assert.isTrue(pythPriceAccount.emaExpo.eq(updatePriceParams.emaExpo));
+      const accumulatorInput =
+        await accumulatorUpdaterProgram.account.accumulatorInput.fetch(
+          accumulatorPdaMeta.pubkey
+        );
+      const updatedAccumulatorPriceMessages =
+        parseAccumulatorInput(accumulatorInput);
+
+      console.log(
+        `updatedAccumulatorPriceMessages: ${JSON.stringify(
+          updatedAccumulatorPriceMessages,
+          null,
+          2
+        )}`
+      );
+      updatedAccumulatorPriceMessages.forEach((pm) => {
+        assert.isTrue(pm.id.eq(addPriceParams.id));
+        assert.isTrue(pm.price.eq(updatePriceParams.price));
+        assert.isTrue(pm.priceExpo.eq(updatePriceParams.priceExpo));
+      });
+    }
+  });
 });
 
 export const getAccumulatorPdaMeta = (
@@ -339,7 +397,7 @@ function parseAccumulatorInput({
     } else if (msgHeader.schema == 1) {
       accumulatorMessages.push(parseCompactPriceMessage(msgData));
     } else {
-      console.warn("Unknown input index: " + i);
+      console.warn("unknown msgHeader.schema: " + i);
       continue;
     }
     start = endOffset;

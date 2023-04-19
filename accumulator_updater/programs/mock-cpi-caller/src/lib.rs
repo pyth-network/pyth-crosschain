@@ -8,6 +8,7 @@ pub mod message;
 mod state;
 
 declare_id!("Dg5PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+// declare_id!("EKwG38D6Sd67NqsAVc4R7Hqr6mZFPzFotzBchoQJRRDe");
 
 #[program]
 pub mod mock_cpi_caller {
@@ -27,6 +28,15 @@ pub mod mock_cpi_caller {
         params: UpdatePriceParams,
     ) -> Result<()> {
         instructions::update_price(ctx, params)
+    }
+
+    /// num_messages is the number of 1kb messages to send to the CPI
+    pub fn cpi_max_test<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdatePrice<'info>>,
+        params: UpdatePriceParams,
+        num_messages: u8,
+    ) -> Result<()> {
+        instructions::cpi_max_test(ctx, params, num_messages)
     }
 }
 
