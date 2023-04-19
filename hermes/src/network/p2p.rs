@@ -11,6 +11,7 @@
 
 use {
     anyhow::Result,
+    libp2p::Multiaddr,
     std::{
         ffi::{
             c_char,
@@ -78,23 +79,35 @@ extern "C" fn proxy(o: ObservationC) {
 pub fn bootstrap<H>(
     _handle_message: H,
     network_id: String,
-    wh_bootstrap_addrs: String,
-    wh_listen_addrs: String,
+    wh_bootstrap_addrs: Vec<Multiaddr>,
+    wh_listen_addrs: Vec<Multiaddr>,
 ) -> Result<()>
 where
     H: Fn(Observation) -> Result<()> + 'static,
 {
-    let c_network_id = CString::new(network_id)?;
-    let c_wh_bootstrap_addrs = CString::new(wh_bootstrap_addrs)?;
-    let c_wh_listen_addrs = CString::new(wh_listen_addrs)?;
+    let network_id_cstr = CString::new(network_id)?;
+    let wh_bootstrap_addrs_cstr = CString::new(
+        wh_bootstrap_addrs
+            .iter()
+            .map(|a| a.to_string())
+            .collect::<Vec<_>>()
+            .join(","),
+    )?;
+    let wh_listen_addrs_cstr = CString::new(
+        wh_listen_addrs
+            .iter()
+            .map(|a| a.to_string())
+            .collect::<Vec<_>>()
+            .join(","),
+    )?;
 
     // Launch the Go LibP2P Reactor.
     unsafe {
         RegisterObservationCallback(
             proxy as extern "C" fn(observation: ObservationC),
-            c_network_id.as_ptr(),
-            c_wh_bootstrap_addrs.as_ptr(),
-            c_wh_listen_addrs.as_ptr(),
+            network_id_cstr.as_ptr(),
+            wh_bootstrap_addrs_cstr.as_ptr(),
+            wh_listen_addrs_cstr.as_ptr(),
         );
     }
     Ok(())
@@ -104,8 +117,8 @@ where
 pub async fn spawn<H>(
     handle_message: H,
     network_id: String,
-    wh_bootstrap_addrs: String,
-    wh_listen_addrs: String,
+    wh_bootstrap_addrs: Vec<Multiaddr>,
+    wh_listen_addrs: Vec<Multiaddr>,
 ) -> Result<()>
 where
     H: Fn(Observation) -> Result<()> + Send + 'static,

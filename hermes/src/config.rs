@@ -29,16 +29,17 @@ pub enum Options {
         wh_network_id: String,
 
         /// Multiaddresses for Wormhole bootstrap peers (separated by comma).
-        #[structopt(long, env = "WORMHOLE_BOOTSTRAP_ADDRS")]
-        wh_bootstrap_addrs: String,
+        #[structopt(long, use_delimiter = true, env = "WORMHOLE_BOOTSTRAP_ADDRS")]
+        wh_bootstrap_addrs: Vec<Multiaddr>,
 
         /// Multiaddresses to bind Wormhole P2P to (separated by comma)
         #[structopt(
             long,
+            use_delimiter = true,
             default_value = "/ip4/0.0.0.0/udp/30910/quic,/ip6/::/udp/30910/quic",
             env = "WORMHOLE_LISTEN_ADDRS"
         )]
-        wh_listen_addrs: String,
+        wh_listen_addrs: Vec<Multiaddr>,
 
         /// The address to bind the RPC server to.
         #[structopt(long, default_value = "127.0.0.1:33999")]

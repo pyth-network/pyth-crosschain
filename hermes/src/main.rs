@@ -65,8 +65,8 @@ async fn init(_update_channel: Receiver<AccountUpdate>) -> Result<()> {
             network::p2p::spawn(
                 handle_message,
                 wh_network_id.to_string(),
-                wh_bootstrap_addrs.to_string(),
-                wh_listen_addrs.to_string(),
+                wh_bootstrap_addrs,
+                wh_listen_addrs,
             )
             .await?;
 
