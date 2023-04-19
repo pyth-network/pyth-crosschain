@@ -1,4 +1,5 @@
 use {
+    self::ws::dispatch_updates,
     crate::{
         network::p2p::OBSERVATIONS,
         store::{
@@ -11,19 +12,25 @@ use {
         routing::get,
         Router,
     },
+    std::sync::Arc,
 };
 
 mod rest;
-mod rpc_price_feed;
+mod types;
+mod ws;
 
 #[derive(Clone)]
 pub struct State {
     pub store: Store,
+    pub ws:    Arc<ws::WsState>,
 }
 
 impl State {
     pub fn new(store: Store) -> Self {
-        Self { store }
+        Self {
+            store,
+            ws: Arc::new(ws::WsState::new()),
+        }
     }
 }
 
@@ -40,6 +47,7 @@ pub async fn spawn(rpc_addr: String, store: Store) -> Result<()> {
     let app = app
         .route("/", get(rest::index))
         .route("/live", get(rest::live))
+        .route("/ws", get(ws::ws_route_handler))
         .route("/api/latest_price_feeds", get(rest::latest_price_feeds))
         .route("/api/latest_vaas", get(rest::latest_vaas))
         .route("/api/get_vaa", get(rest::get_vaa))
@@ -51,8 +59,11 @@ pub async fn spawn(rpc_addr: String, store: Store) -> Result<()> {
     tokio::spawn(async move {
         loop {
             if let Ok(observation) = OBSERVATIONS.1.lock().unwrap().recv() {
-                if let Err(e) = state.store.store_update(Update::Vaa(observation)) {
-                    log::error!("Failed to process VAA: {:?}", e);
+                match state.store.store_update(Update::Vaa(observation)) {
+                    Ok(updated_feed_ids) => {
+                        tokio::spawn(dispatch_updates(updated_feed_ids, state.clone()));
+                    }
+                    Err(e) => log::error!("Failed to process VAA: {:?}", e),
                 }
             }
         }

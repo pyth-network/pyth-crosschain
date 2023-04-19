@@ -8,8 +8,8 @@ use {
     std::sync::Arc,
 };
 
-mod proof;
-mod storage;
+pub mod proof;
+pub mod storage;
 
 pub type UnixTimestamp = u64;
 
@@ -43,8 +43,9 @@ impl Store {
         }
     }
 
-    // TODO: This should return the updated feeds so the subscribers can be notified.
-    pub fn store_update(&self, update: Update) -> Result<()> {
+    /// Stores the update data in the store and returns the price identifiers for which
+    /// price feeds were updated.
+    pub fn store_update(&self, update: Update) -> Result<Vec<PriceIdentifier>> {
         match update {
             Update::Vaa(vaa_bytes) => {
                 proof::batch_vaa::store_vaa_update(self.state.clone(), vaa_bytes)

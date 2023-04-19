@@ -53,7 +53,7 @@ pub struct PriceInfosWithUpdateData {
     pub update_data: Vec<Vec<u8>>,
 }
 
-pub fn store_vaa_update(state: State, vaa_bytes: Vec<u8>) -> Result<()> {
+pub fn store_vaa_update(state: State, vaa_bytes: Vec<u8>) -> Result<Vec<PriceIdentifier>> {
     // FIXME: Vaa bytes might not be a valid Pyth BatchUpdate message nor originate from Our emitter.
     // We should check that.
     // FIXME: We receive multiple vaas for the same update (due to different signedVAAs). We need
@@ -61,6 +61,8 @@ pub fn store_vaa_update(state: State, vaa_bytes: Vec<u8>) -> Result<()> {
     let vaa = VAA::from_bytes(&vaa_bytes)?;
     let batch_price_attestation = BatchPriceAttestation::deserialize(vaa.payload.as_slice())
         .map_err(|_| anyhow!("Failed to deserialize VAA"))?;
+
+    let mut updated_price_feed_ids = Vec::new();
 
     for price_attestation in batch_price_attestation.price_attestations {
         let price_feed = price_attestation_to_price_feed(price_attestation.clone());
@@ -79,8 +81,13 @@ pub fn store_vaa_update(state: State, vaa_bytes: Vec<u8>) -> Result<()> {
 
         let key = Key::BatchVaa(price_feed.id);
         state.insert(key, publish_time, StorageData::BatchVaa(price_info))?;
+
+        // FIXME: Only add price feed if it's newer
+        // or include whether it's newer or not in the vector
+        updated_price_feed_ids.push(price_feed.id);
     }
-    Ok(())
+
+    Ok(updated_price_feed_ids)
 }
 
 

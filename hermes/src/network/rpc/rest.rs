@@ -1,8 +1,6 @@
+use super::types::PriceIdInput;
 use {
-    super::rpc_price_feed::{
-        RpcPriceFeed,
-        RpcPriceFeedMetadata,
-    },
+    super::types::RpcPriceFeed,
     crate::store::RequestTime,
     crate::{
         impl_deserialize_for_hex_string_wrapper,
@@ -29,21 +27,6 @@ use {
     },
     pyth_sdk::PriceIdentifier,
 };
-
-/// PriceIdInput is a wrapper around a 32-byte hex string.
-/// that supports a flexible deserialization from a hex string.
-/// It supports both 0x-prefixed and non-prefixed hex strings,
-/// and also supports both lower and upper case characters.
-#[derive(Debug, Clone, Deref, DerefMut)]
-pub struct PriceIdInput([u8; 32]);
-// TODO: Use const generics instead of macro.
-impl_deserialize_for_hex_string_wrapper!(PriceIdInput, 32);
-
-impl From<PriceIdInput> for PriceIdentifier {
-    fn from(id: PriceIdInput) -> Self {
-        Self::new(*id)
-    }
-}
 
 pub enum RestError {
     UpdateDataNotFound,
@@ -127,19 +110,7 @@ pub async fn latest_price_feeds(
             .price_infos
             .into_values()
             .map(|price_info| {
-                let mut rpc_price_feed: RpcPriceFeed = price_info.price_feed.into();
-                rpc_price_feed.metadata = params.verbose.then_some(RpcPriceFeedMetadata {
-                    emitter_chain:              price_info.emitter_chain,
-                    sequence_number:            price_info.sequence_number,
-                    attestation_time:           price_info.attestation_time,
-                    price_service_receive_time: price_info.receive_time,
-                });
-
-                rpc_price_feed.vaa = params
-                    .binary
-                    .then_some(base64_standard_engine.encode(&price_info.vaa_bytes));
-
-                rpc_price_feed
+                RpcPriceFeed::from_price_info(price_info, params.verbose, params.binary)
             })
             .collect(),
     ))
