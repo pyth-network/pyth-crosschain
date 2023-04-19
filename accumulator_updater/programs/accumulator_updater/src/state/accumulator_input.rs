@@ -6,6 +6,7 @@ use {
     anchor_lang::prelude::*,
 };
 
+
 /// `AccumulatorInput` is an arbitrary set of bytes
 /// that will be included in the AccumulatorSysvar
 ///
@@ -41,6 +42,7 @@ pub struct AccumulatorHeader {
     /// => msg2 = account_info.data[(header_len + 10)..(header_len + 14)]
     pub end_offsets: [u16; 255], // 510
 }
+
 
 impl AccumulatorHeader {
     // HEADER_LEN allows for append-only forward-compatibility for the header.

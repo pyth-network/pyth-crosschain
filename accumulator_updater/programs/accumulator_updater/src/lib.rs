@@ -88,8 +88,7 @@ pub mod accumulator_updater {
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
-    pub payer: Signer<'info>,
-
+    pub payer:          Signer<'info>,
     #[account(
         init,
         payer = payer,
@@ -142,4 +141,6 @@ pub enum AccumulatorUpdaterError {
     AccumulatorInputNotWritable,
     #[msg("Accumulator Input not provided")]
     AccumulatorInputNotProvided,
+    #[msg("Fund Bump not found")]
+    FundBumpNotFound,
 }
