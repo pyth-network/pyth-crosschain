@@ -15,6 +15,14 @@ const accumulatorUpdaterProgram = anchor.workspace
   .AccumulatorUpdater as Program<AccumulatorUpdater>;
 const mockCpiProg = anchor.workspace.MockCpiCaller as Program<MockCpiCaller>;
 let whitelistAuthority = anchor.web3.Keypair.generate();
+const [mockCpiCallerAuth] = anchor.web3.PublicKey.findProgramAddressSync(
+  [
+    accumulatorUpdaterProgram.programId.toBuffer(),
+    Buffer.from("cpi"),
+    Buffer.from("auth"),
+  ],
+  mockCpiProg.programId
+);
 const [fundPda] = anchor.web3.PublicKey.findProgramAddressSync(
   [Buffer.from("fund")],
   accumulatorUpdaterProgram.programId
@@ -35,6 +43,15 @@ const [pythPriceAccountPk] = anchor.web3.PublicKey.findProgramAddressSync(
     pythPriceAccountId.toArrayLike(Buffer, "le", 8),
   ],
   mockCpiProg.programId
+);
+
+const [accumulatorPdaKey] = anchor.web3.PublicKey.findProgramAddressSync(
+  [
+    mockCpiCallerAuth.toBuffer(),
+    Buffer.from("accumulator"),
+    pythPriceAccountPk.toBuffer(),
+  ],
+  accumulatorUpdaterProgram.programId
 );
 
 let fundBalance = 100 * anchor.web3.LAMPORTS_PER_SOL;
@@ -70,9 +87,9 @@ describe("accumulator_updater", () => {
   });
 
   it("Sets allowed programs to the whitelist", async () => {
-    const allowedPrograms = [mockCpiProg.programId];
+    const allowedProgramAuthorities = [mockCpiCallerAuth];
     await accumulatorUpdaterProgram.methods
-      .setAllowedPrograms(allowedPrograms)
+      .setAllowedPrograms(allowedProgramAuthorities)
       .accounts({
         authority: whitelistAuthority.publicKey,
       })
@@ -87,7 +104,7 @@ describe("accumulator_updater", () => {
     );
     assert.deepEqual(
       whitelistAllowedPrograms,
-      allowedPrograms.map((p) => p.toString())
+      allowedProgramAuthorities.map((p) => p.toString())
     );
   });
 
@@ -115,20 +132,11 @@ describe("accumulator_updater", () => {
       .accounts({
         fund: fundPda,
         systemProgram: anchor.web3.SystemProgram.programId,
-        ixsSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+        auth: mockCpiCallerAuth,
         accumulatorWhitelist: whitelistPubkey,
         accumulatorProgram: accumulatorUpdaterProgram.programId,
       })
       .pubkeys();
-
-    const accumulatorPdaKey = anchor.web3.PublicKey.findProgramAddressSync(
-      [
-        mockCpiProg.programId.toBuffer(),
-        Buffer.from("accumulator"),
-        pythPriceAccountPk.toBuffer(),
-      ],
-      accumulatorUpdaterProgram.programId
-    )[0];
 
     const accumulatorPdaMetas = [
       {
@@ -182,10 +190,6 @@ describe("accumulator_updater", () => {
     const pythPriceAccount = await provider.connection.getAccountInfo(
       mockCpiCallerAddPriceTxPubkeys.pythPriceAccount
     );
-    const pythPriceAcct = {
-      ...pythPriceAccount,
-      data: pythPriceAccount.data.toString("hex"),
-    };
 
     const accumulatorInput =
       await accumulatorUpdaterProgram.account.accumulatorInput.fetch(
@@ -242,13 +246,16 @@ describe("accumulator_updater", () => {
       emaExpo: new anchor.BN(8),
     };
 
-    let accumulatorPdaMeta = getAccumulatorPdaMeta(pythPriceAccountPk);
+    let accumulatorPdaMeta = getAccumulatorPdaMeta(
+      mockCpiCallerAuth,
+      pythPriceAccountPk
+    );
     await mockCpiProg.methods
       .updatePrice(updatePriceParams)
       .accounts({
         fund: fundPda,
         pythPriceAccount: pythPriceAccountPk,
-        ixsSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+        auth: mockCpiCallerAuth,
         accumulatorWhitelist: whitelistPubkey,
         accumulatorProgram: accumulatorUpdaterProgram.programId,
       })
@@ -302,13 +309,16 @@ describe("accumulator_updater", () => {
         emaExpo: new anchor.BN(10 * i + 8),
       };
 
-      let accumulatorPdaMeta = getAccumulatorPdaMeta(pythPriceAccountPk);
+      let accumulatorPdaMeta = getAccumulatorPdaMeta(
+        mockCpiCallerAuth,
+        pythPriceAccountPk
+      );
       await mockCpiProg.methods
         .cpiMaxTest(updatePriceParams, testCase)
         .accounts({
           fund: fundPda,
           pythPriceAccount: pythPriceAccountPk,
-          ixsSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+          auth: mockCpiCallerAuth,
           accumulatorWhitelist: whitelistPubkey,
           accumulatorProgram: accumulatorUpdaterProgram.programId,
         })
@@ -363,7 +373,10 @@ describe("accumulator_updater", () => {
         emaExpo: new anchor.BN(10 * i + 8),
       };
 
-      let accumulatorPdaMeta = getAccumulatorPdaMeta(pythPriceAccountPk);
+      let accumulatorPdaMeta = getAccumulatorPdaMeta(
+        mockCpiCallerAuth,
+        pythPriceAccountPk
+      );
       let errorThrown = false;
       try {
         await mockCpiProg.methods
@@ -371,7 +384,7 @@ describe("accumulator_updater", () => {
           .accounts({
             fund: fundPda,
             pythPriceAccount: pythPriceAccountPk,
-            ixsSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+            auth: mockCpiCallerAuth,
             accumulatorWhitelist: whitelistPubkey,
             accumulatorProgram: accumulatorUpdaterProgram.programId,
           })
@@ -391,11 +404,12 @@ describe("accumulator_updater", () => {
 });
 
 export const getAccumulatorPdaMeta = (
+  cpiCallerAuth: anchor.web3.PublicKey,
   pythAccount: anchor.web3.PublicKey
 ): AccountMeta => {
   const accumulatorPdaKey = anchor.web3.PublicKey.findProgramAddressSync(
     [
-      mockCpiProg.programId.toBuffer(),
+      cpiCallerAuth.toBuffer(),
       Buffer.from("accumulator"),
       pythAccount.toBuffer(),
     ],
