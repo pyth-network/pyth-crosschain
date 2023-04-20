@@ -10,7 +10,6 @@ use {
 };
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
-// declare_id!("3xzsrbvWEM4SMM2W7wbVofpDi3zrdhb2Z2xLwMEGJQiZ");
 
 #[program]
 pub mod accumulator_updater {

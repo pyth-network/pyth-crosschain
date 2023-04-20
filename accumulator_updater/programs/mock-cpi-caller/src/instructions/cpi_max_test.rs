@@ -5,15 +5,9 @@ use {
             UpdatePriceParams,
         },
         message::{
-            get_schemas,
-            price::{
-                CompactPriceMessage,
-                DummyPriceMessage,
-                FullPriceMessage,
-            },
+            price::DummyPriceMessage,
             AccumulatorSerializer,
         },
-        state::PythAccountType,
     },
     anchor_lang::prelude::*,
 };
@@ -21,27 +15,16 @@ use {
 pub fn cpi_max_test<'info>(
     ctx: Context<'_, '_, '_, 'info, UpdatePrice<'info>>,
     params: UpdatePriceParams,
-    num_messages: u8,
+    msg_sizes: Vec<u16>,
 ) -> Result<()> {
     let mut inputs = vec![];
-    let _schemas = get_schemas(PythAccountType::Price);
 
     {
         let pyth_price_acct = &mut ctx.accounts.pyth_price_account.load_mut()?;
         pyth_price_acct.update(params)?;
 
-        let price_full_data = FullPriceMessage::from(&**pyth_price_acct).accumulator_serialize()?;
-
-        inputs.push(price_full_data);
-
-
-        let price_compact_data =
-            CompactPriceMessage::from(&**pyth_price_acct).accumulator_serialize()?;
-        inputs.push(price_compact_data);
-
-        for _ in 0..num_messages {
-            let price_dummy_data =
-                DummyPriceMessage::from(&**pyth_price_acct).accumulator_serialize()?;
+        for msg_size in msg_sizes {
+            let price_dummy_data = DummyPriceMessage::new(msg_size).accumulator_serialize()?;
             inputs.push(price_dummy_data);
         }
     }

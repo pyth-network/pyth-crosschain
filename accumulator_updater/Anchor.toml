@@ -4,8 +4,6 @@ skip-lint = false
 [programs.localnet]
 accumulator_updater = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 mock_cpi_caller = "Dg5PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
-#accumulator_updater = "3xzsrbvWEM4SMM2W7wbVofpDi3zrdhb2Z2xLwMEGJQiZ"
-#mock_cpi_caller = "EKwG38D6Sd67NqsAVc4R7Hqr6mZFPzFotzBchoQJRRDe"
 
 [registry]
 url = "https://api.apr.dev"

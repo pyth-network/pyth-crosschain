@@ -8,7 +8,6 @@ pub mod message;
 mod state;
 
 declare_id!("Dg5PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
-// declare_id!("EKwG38D6Sd67NqsAVc4R7Hqr6mZFPzFotzBchoQJRRDe");
 
 #[program]
 pub mod mock_cpi_caller {
@@ -34,9 +33,9 @@ pub mod mock_cpi_caller {
     pub fn cpi_max_test<'info>(
         ctx: Context<'_, '_, '_, 'info, UpdatePrice<'info>>,
         params: UpdatePriceParams,
-        num_messages: u8,
+        msg_sizes: Vec<u16>,
     ) -> Result<()> {
-        instructions::cpi_max_test(ctx, params, num_messages)
+        instructions::cpi_max_test(ctx, params, msg_sizes)
     }
 }
 

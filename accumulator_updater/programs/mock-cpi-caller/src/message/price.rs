@@ -119,21 +119,21 @@ impl AccumulatorSerializer for FullPriceMessage {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DummyPriceMessage {
     pub header: MessageHeader,
-    pub data:   [u8; 1017],
+    pub data:   Vec<u8>,
 }
+
 
 impl DummyPriceMessage {
     pub const SIZE: usize = 1017;
-}
 
-impl From<&PriceAccount> for DummyPriceMessage {
-    fn from(_other: &PriceAccount) -> Self {
+    pub fn new(msg_size: u16) -> Self {
         Self {
-            header: MessageHeader::new(MessageSchema::Dummy, Self::SIZE as u32),
-            data:   [0u8; 1017],
+            header: MessageHeader::new(MessageSchema::Dummy, msg_size as u32),
+            data:   vec![0u8; msg_size as usize],
         }
     }
 }
+
 
 impl AccumulatorSerializer for DummyPriceMessage {
     fn accumulator_serialize(&self) -> Result<Vec<u8>> {

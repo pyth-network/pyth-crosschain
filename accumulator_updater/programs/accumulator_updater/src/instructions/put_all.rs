@@ -13,10 +13,8 @@ use {
 };
 
 
-
 pub const ACCUMULATOR: &str = "accumulator";
 pub const FUND: &str = "fund";
-
 
 
 pub fn put_all<'info>(
@@ -125,7 +123,6 @@ impl<'info> PutAll<'info> {
         system_program: &AccountInfo<'a>,
     ) -> Result<()> {
         let lamports = Rent::get()?.minimum_balance(space);
-
         system_program::create_account(
             CpiContext::new_with_signer(
                 system_program.to_account_info(),

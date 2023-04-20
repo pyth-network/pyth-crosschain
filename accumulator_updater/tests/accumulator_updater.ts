@@ -290,18 +290,21 @@ describe("accumulator_updater", () => {
 
   it("Mock CPI Program - CPI Max Test", async () => {
     // with loosen CPI feature activated, max cpi instruction size len is 10KB
-    for (let num_msgs = 1; num_msgs < 8; num_msgs++) {
-      console.info(`testing num_msgs: ${num_msgs}`);
+    let testCases = [[1024], [1024, 2048], [1024, 2048, 4096]];
+    // for (let i = 1; i < 8; i++) {
+    for (let i = 0; i < testCases.length; i++) {
+      let testCase = testCases[i];
+      console.info(`testCase: ${testCase}`);
       const updatePriceParams = {
-        price: new anchor.BN(10 * num_msgs + 5),
-        priceExpo: new anchor.BN(10 & (num_msgs + 6)),
-        ema: new anchor.BN(10 * num_msgs + 7),
-        emaExpo: new anchor.BN(10 * num_msgs + 8),
+        price: new anchor.BN(10 * i + 5),
+        priceExpo: new anchor.BN(10 & (i + 6)),
+        ema: new anchor.BN(10 * i + 7),
+        emaExpo: new anchor.BN(10 * i + 8),
       };
 
       let accumulatorPdaMeta = getAccumulatorPdaMeta(pythPriceAccountPk);
       await mockCpiProg.methods
-        .cpiMaxTest(updatePriceParams, num_msgs)
+        .cpiMaxTest(updatePriceParams, testCase)
         .accounts({
           fund: fundPda,
           pythPriceAccount: pythPriceAccountPk,
@@ -343,6 +346,46 @@ describe("accumulator_updater", () => {
         assert.isTrue(pm.price.eq(updatePriceParams.price));
         assert.isTrue(pm.priceExpo.eq(updatePriceParams.priceExpo));
       });
+    }
+  });
+
+  it("Mock CPI Program - CPI Max Test Fail", async () => {
+    // with loosen CPI feature activated, max cpi instruction size len is 10KB
+    let testCases = [[1024, 2048, 4096, 8192]];
+    // for (let i = 1; i < 8; i++) {
+    for (let i = 0; i < testCases.length; i++) {
+      let testCase = testCases[i];
+      console.info(`testCase: ${testCase}`);
+      const updatePriceParams = {
+        price: new anchor.BN(10 * i + 5),
+        priceExpo: new anchor.BN(10 & (i + 6)),
+        ema: new anchor.BN(10 * i + 7),
+        emaExpo: new anchor.BN(10 * i + 8),
+      };
+
+      let accumulatorPdaMeta = getAccumulatorPdaMeta(pythPriceAccountPk);
+      let errorThrown = false;
+      try {
+        await mockCpiProg.methods
+          .cpiMaxTest(updatePriceParams, testCase)
+          .accounts({
+            fund: fundPda,
+            pythPriceAccount: pythPriceAccountPk,
+            ixsSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
+            accumulatorWhitelist: whitelistPubkey,
+            accumulatorProgram: accumulatorUpdaterProgram.programId,
+          })
+          .remainingAccounts([accumulatorPdaMeta])
+          .preInstructions([
+            ComputeBudgetProgram.setComputeUnitLimit({ units: 1_000_000 }),
+          ])
+          .rpc({
+            skipPreflight: true,
+          });
+      } catch (_err) {
+        errorThrown = true;
+      }
+      assert.ok(errorThrown);
     }
   });
 });
