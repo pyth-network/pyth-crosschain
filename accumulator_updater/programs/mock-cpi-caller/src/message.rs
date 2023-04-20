@@ -8,6 +8,7 @@ pub enum MessageSchema {
     Full    = 0,
     Compact = 1,
     Minimal = 2,
+    Dummy   = 3,
 }
 
 impl MessageSchema {

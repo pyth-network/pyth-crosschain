@@ -113,3 +113,35 @@ impl AccumulatorSerializer for FullPriceMessage {
         Ok(bytes)
     }
 }
+
+
+#[repr(C)]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct DummyPriceMessage {
+    pub header: MessageHeader,
+    pub data:   Vec<u8>,
+}
+
+
+impl DummyPriceMessage {
+    pub const SIZE: usize = 1017;
+
+    pub fn new(msg_size: u16) -> Self {
+        Self {
+            header: MessageHeader::new(MessageSchema::Dummy, msg_size as u32),
+            data:   vec![0u8; msg_size as usize],
+        }
+    }
+}
+
+
+impl AccumulatorSerializer for DummyPriceMessage {
+    fn accumulator_serialize(&self) -> Result<Vec<u8>> {
+        let mut bytes = vec![];
+        bytes.write_all(&self.header.schema.to_be_bytes())?;
+        bytes.write_all(&self.header.version.to_be_bytes())?;
+        bytes.write_all(&self.header.size.to_be_bytes())?;
+        bytes.extend_from_slice(&self.data);
+        Ok(bytes)
+    }
+}

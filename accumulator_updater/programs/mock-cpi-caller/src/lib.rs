@@ -28,6 +28,15 @@ pub mod mock_cpi_caller {
     ) -> Result<()> {
         instructions::update_price(ctx, params)
     }
+
+    /// num_messages is the number of 1kb messages to send to the CPI
+    pub fn cpi_max_test<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdatePrice<'info>>,
+        params: UpdatePriceParams,
+        msg_sizes: Vec<u16>,
+    ) -> Result<()> {
+        instructions::cpi_max_test(ctx, params, msg_sizes)
+    }
 }
 
 

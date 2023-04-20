@@ -13,8 +13,9 @@ use {
 };
 
 
-pub const ACCUMULATOR: &[u8; 11] = b"accumulator";
-pub const FUND: &[u8; 4] = b"fund";
+pub const ACCUMULATOR: &str = "accumulator";
+pub const FUND: &str = "fund";
+
 
 pub fn put_all<'info>(
     ctx: Context<'_, '_, '_, 'info, PutAll<'info>>,
@@ -34,7 +35,7 @@ pub fn put_all<'info>(
             let (pda, bump) = Pubkey::find_program_address(
                 &[
                     cpi_caller.as_ref(),
-                    ACCUMULATOR.as_ref(),
+                    ACCUMULATOR.as_bytes(),
                     base_account_key.as_ref(),
                 ],
                 &crate::ID,
@@ -42,15 +43,15 @@ pub fn put_all<'info>(
             require_keys_eq!(accumulator_input_ai.key(), pda);
             let signer_seeds = [
                 cpi_caller.as_ref(),
-                ACCUMULATOR.as_ref(),
+                ACCUMULATOR.as_bytes(),
                 base_account_key.as_ref(),
                 &[bump],
             ];
             let fund_pda_bump = *ctx
                 .bumps
-                .get("fund")
+                .get(FUND)
                 .ok_or(AccumulatorUpdaterError::FundBumpNotFound)?;
-            let fund_signer_seeds = [ACCUMULATOR.as_ref(), FUND.as_ref(), &[fund_pda_bump]];
+            let fund_signer_seeds = [FUND.as_bytes(), &[fund_pda_bump]];
             PutAll::create_account(
                 accumulator_input_ai,
                 8 + AccumulatorInput::INIT_SPACE,
@@ -102,10 +103,7 @@ pub struct PutAll<'info> {
     /// `AccumulatorInput` account initialization
     #[account(
         mut,
-        seeds = [
-            b"accumulator".as_ref(),
-            b"fund".as_ref(),
-        ],
+        seeds = [b"fund".as_ref()],
         owner = system_program::System::id(),
         bump,
     )]
@@ -125,7 +123,6 @@ impl<'info> PutAll<'info> {
         system_program: &AccountInfo<'a>,
     ) -> Result<()> {
         let lamports = Rent::get()?.minimum_balance(space);
-
         system_program::create_account(
             CpiContext::new_with_signer(
                 system_program.to_account_info(),

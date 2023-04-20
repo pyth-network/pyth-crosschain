@@ -1,12 +1,29 @@
+## Testing
+
+- run `anchor test` if no special customization for the test-validator is needed
+- `anchor test` will run `solana-test-validator` will all features activated.
+  One of the features activated on the test-validator which is not currently activated on pythnet is
+
+```
+"GDH5TVdbTPUpRnXaRyQqiKUa7uZAbZ28Q2N9bhbKoMLm  loosen cpi size restrictions #26641"
+```
+
+In order to run `solana-test-validator` with this feature deactivated, do the following:
+
+1. open a terminal and run `solana-test-validator --reset --deactivate-feature GDH5TVdbTPUpRnXaRyQqiKUa7uZAbZ28Q2N9bhbKoMLm`
+2. open a separate terminal and run `anchor build` in the `accumulator_updater` dir
+3. get the pubkeys of the program keypairs `solana address -k accumulator_updater/target/deploy/<program_keypair>.json`
+4. change the pubkeys in the `declare_id!` macro to these keypairs
+5. update `Anchor.toml` `[programs.localnet]` programIds as well
+6. run `anchor test --skip-local-validator`
+
 ## Questions
 
 1.  Do we need to support multiple Whitelists?
 2.  Support multiple accumulators
     1.  should each accumulator store a different type of data?
         => implications for length of merkle proof
-    2.
-3.  authority?
-4.  how to know what went into the `AccumulatorAccount` (for deserializing/proofs)
+3.  how to know what went into the `AccumulatorAccount` (for deserializing/proofs)
     1.  Header?
 
 ## To Do

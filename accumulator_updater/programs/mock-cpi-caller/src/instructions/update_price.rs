@@ -5,17 +5,13 @@ use {
             ACCUMULATOR_UPDATER_IX_NAME,
         },
         message::{
-            get_schemas,
             price::{
                 CompactPriceMessage,
                 FullPriceMessage,
             },
             AccumulatorSerializer,
         },
-        state::{
-            PriceAccount,
-            PythAccountType,
-        },
+        state::PriceAccount,
     },
     accumulator_updater::program::AccumulatorUpdater as AccumulatorUpdaterProgram,
     anchor_lang::{
@@ -45,8 +41,6 @@ pub struct UpdatePrice<'info> {
     bump,
     )]
     pub pyth_price_account:    AccountLoader<'info, PriceAccount>,
-    // #[account(mut)]
-    // pub payer:                 Signer<'info>,
     #[account(mut)]
     pub fund:                  SystemAccount<'info>,
     /// Needed for accumulator_updater
@@ -66,7 +60,6 @@ pub fn update_price<'info>(
     params: UpdatePriceParams,
 ) -> Result<()> {
     let mut inputs = vec![];
-    let _schemas = get_schemas(PythAccountType::Price);
 
     {
         let pyth_price_acct = &mut ctx.accounts.pyth_price_account.load_mut()?;

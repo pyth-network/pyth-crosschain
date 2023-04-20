@@ -1,9 +1,12 @@
 use anchor_lang::solana_program::hash::hashv;
 pub use {
     add_price::*,
+    cpi_max_test::*,
     update_price::*,
 };
+
 mod add_price;
+mod cpi_max_test;
 mod update_price;
 
 /// Generate discriminator to be able to call anchor program's ix
