@@ -1,8 +1,13 @@
 # Run with:
 # docker build -f Dockerfile.wormhole -o artifacts .
 
-FROM cosmwasm/workspace-optimizer-arm64:0.12.11@sha256:a00c01c2fdae8c74d6a9db95fa7b0cbb8e81101ce23a78487012e363d632fee9 AS builder
-# FROM cosmwasm/workspace-optimizer:0.12.11@sha256:b6b0b1d5ed76dafd0ec0d3812a1e7a275316cf862fd6d0a918f14d71c4cb187f AS builder
+# Source: https://github.com/CosmWasm/rust-optimizer#notice
+# Arm images are released to ease development and testing on Mac M1 machines.
+# For release / production use, only contracts built with the Intel optimizers must be used.
+# In order to test on mac m1 uncomment the below line
+# FROM cosmwasm/workspace-optimizer-arm64:0.12.11@sha256:a00c01c2fdae8c74d6a9db95fa7b0cbb8e81101ce23a78487012e363d632fee9 AS builder
+# and comment this one
+FROM cosmwasm/workspace-optimizer:0.12.11@sha256:b6b0b1d5ed76dafd0ec0d3812a1e7a275316cf862fd6d0a918f14d71c4cb187f AS builder
 
 WORKDIR /tmp/wormhole-repo
 
