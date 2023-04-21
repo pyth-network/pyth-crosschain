@@ -6,41 +6,6 @@ use {
     anchor_lang::prelude::*,
 };
 
-
-/// `MessageBuffer` is an arbitrary set of bytes
-/// that will be included in the AccumulatorSysvar
-///
-///
-/// The actual contents of data are set/handled by
-/// the CPI calling program (e.g. Pyth Oracle)
-/// TODO: this probably goes away
-#[account(zero_copy)]
-#[derive(Debug, InitSpace)]
-pub struct MessageBufferTemp {
-    pub header:   BufferHeaderTemp,
-    // 10KB - 8 (discriminator) - 514 (header)
-    // TODO: do we want to initialize this to the max size?
-    //   - will lead to more data being passed around for validators
-    pub messages: [u8; 9_718],
-}
-
-#[zero_copy]
-#[derive(InitSpace, Debug)]
-pub struct BufferHeaderTemp {
-    pub bump:        u8, // 1
-    pub version:     u8, // 1
-    // byte offset of accounts where data starts
-    // e.g. account_info.data[offset + header_len]
-    pub header_len:  u16, // 2
-    /// endpoints of every message.
-    /// ex: [10, 14]
-    /// => msg1 = account_info.data[(header_len + 0)..(header_len + 10)]
-    /// => msg2 = account_info.data[(header_len + 10)..(header_len + 14)]
-    pub end_offsets: [u16; 255], // 510
-}
-
-
-
 #[account(zero_copy)]
 #[derive(InitSpace, Debug)]
 pub struct BufferHeader {
@@ -77,25 +42,19 @@ impl BufferHeader {
     pub fn set_version(&mut self) {
         self.version = Self::CURRENT_VERSION;
     }
-}
-impl MessageBufferTemp {
-    pub fn new(bump: u8) -> Self {
-        let header = BufferHeaderTemp::new(bump);
-        Self {
-            header,
-            messages: [0u8; 9_718],
-        }
-    }
 
     /// `put_all` writes all the messages to the `AccumulatorInput` account
     /// and updates the `end_offsets` array.
     ///
+    /// TODO: the first byte of destination is the first non-header byte of the
+    /// message buffer account
+    ///
     /// Returns tuple of the number of messages written and the end_offset
     /// of the last message
     ///
-    // TODO: add a end_offsets index parameter for "continuation"
-    // TODO: test max size of parameters that can be passed into CPI call
-    pub fn put_all(&mut self, values: &Vec<Vec<u8>>) -> (usize, u16) {
+// TODO: add a end_offsets index parameter for "continuation"
+// TODO: test max size of parameters that can be passed into CPI call
+    fn put_all_in_buffer(&mut self, destination: &mut &[u8], values: &Vec<Vec<u8>>) -> (usize, u16) {
         let mut offset = 0u16;
 
         for (i, v) in values.iter().enumerate() {
@@ -113,19 +72,18 @@ impl MessageBufferTemp {
                 return (i, start);
             }
             self.header.end_offsets[i] = end;
-            self.messages[(start as usize)..(end as usize)].copy_from_slice(v);
+            destination[(start as usize)..(end as usize)].copy_from_slice(v);
             offset = end
         }
         (values.len(), offset)
     }
-
 
     fn derive_pda(&self, cpi_caller: Pubkey, base_account: Pubkey) -> Result<Pubkey> {
         let res = Pubkey::create_program_address(
             accumulator_input_seeds!(self, cpi_caller, base_account),
             &crate::ID,
         )
-        .map_err(|_| AccumulatorUpdaterError::InvalidPDA)?;
+            .map_err(|_| AccumulatorUpdaterError::InvalidPDA)?;
         Ok(res)
     }
 
@@ -134,8 +92,9 @@ impl MessageBufferTemp {
         require_keys_eq!(expected_key, key);
         Ok(())
     }
-}
 
+
+}
 
 #[cfg(test)]
 mod test {
