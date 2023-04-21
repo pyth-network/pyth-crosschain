@@ -22,7 +22,7 @@ pub fn put_all<'info>(
     base_account_key: Pubkey,
     messages: Vec<Vec<u8>>,
 ) -> Result<()> {
-    let cpi_caller = ctx.accounts.whitelist_verifier.is_allowed()?;
+    let cpi_caller_auth = ctx.accounts.whitelist_verifier.is_allowed()?;
     let accumulator_input_ai = ctx
         .remaining_accounts
         .first()
@@ -34,7 +34,7 @@ pub fn put_all<'info>(
         let accumulator_input = &mut (if is_uninitialized_account(accumulator_input_ai) {
             let (pda, bump) = Pubkey::find_program_address(
                 &[
-                    cpi_caller.as_ref(),
+                    cpi_caller_auth.as_ref(),
                     ACCUMULATOR.as_bytes(),
                     base_account_key.as_ref(),
                 ],
@@ -42,7 +42,7 @@ pub fn put_all<'info>(
             );
             require_keys_eq!(accumulator_input_ai.key(), pda);
             let signer_seeds = [
-                cpi_caller.as_ref(),
+                cpi_caller_auth.as_ref(),
                 ACCUMULATOR.as_bytes(),
                 base_account_key.as_ref(),
                 &[bump],
@@ -56,7 +56,6 @@ pub fn put_all<'info>(
                 accumulator_input_ai,
                 8 + AccumulatorInput::INIT_SPACE,
                 &ctx.accounts.fund,
-                // seeds,
                 &[signer_seeds.as_slice(), fund_signer_seeds.as_slice()],
                 &ctx.accounts.system_program,
             )?;
@@ -75,7 +74,11 @@ pub fn put_all<'info>(
         });
         // note: redundant for uninitialized code path but safer to check here.
         // compute budget cost should be minimal
-        accumulator_input.validate(accumulator_input_ai.key(), cpi_caller, base_account_key)?;
+        accumulator_input.validate(
+            accumulator_input_ai.key(),
+            cpi_caller_auth,
+            base_account_key,
+        )?;
 
 
         let (num_msgs, num_bytes) = accumulator_input.put_all(&messages);

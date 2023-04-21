@@ -66,10 +66,6 @@ impl AccumulatorHeader {
     }
 }
 impl AccumulatorInput {
-    pub fn size(&self) -> usize {
-        AccumulatorHeader::INIT_SPACE + 4 + self.messages.len()
-    }
-
     pub fn new(bump: u8) -> Self {
         let header = AccumulatorHeader::new(bump);
         Self {

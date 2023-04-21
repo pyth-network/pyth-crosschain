@@ -3,6 +3,7 @@ use {
         instructions::{
             sighash,
             ACCUMULATOR_UPDATER_IX_NAME,
+            CPI,
         },
         message::{
             get_schemas,
@@ -20,7 +21,7 @@ use {
     accumulator_updater::program::AccumulatorUpdater as AccumulatorUpdaterProgram,
     anchor_lang::{
         prelude::*,
-        solana_program::sysvar,
+        system_program,
     },
 };
 
@@ -63,7 +64,7 @@ impl<'info> AddPrice<'info> {
         let mut accounts = vec![
             AccountMeta::new(ctx.accounts.fund.key(), false),
             AccountMeta::new_readonly(ctx.accounts.accumulator_whitelist.key(), false),
-            AccountMeta::new_readonly(ctx.accounts.ixs_sysvar.key(), false),
+            AccountMeta::new_readonly(ctx.accounts.auth.key(), true),
             AccountMeta::new_readonly(ctx.accounts.system_program.key(), false),
         ];
         accounts.extend_from_slice(
@@ -86,7 +87,24 @@ impl<'info> AddPrice<'info> {
         };
         let account_infos = &mut ctx.accounts.to_account_infos();
         account_infos.extend_from_slice(ctx.remaining_accounts);
-        anchor_lang::solana_program::program::invoke(&create_inputs_ix, account_infos)?;
+        // using find_program_address here instead of ctx.bumps.get since
+        // that won't be available in the oracle program
+        let (_, bump) = Pubkey::find_program_address(
+            &[
+                ctx.accounts.accumulator_program.key().as_ref(),
+                CPI.as_bytes(),
+            ],
+            &crate::ID,
+        );
+        anchor_lang::solana_program::program::invoke_signed(
+            &create_inputs_ix,
+            account_infos,
+            &[&[
+                ctx.accounts.accumulator_program.key().as_ref(),
+                CPI.as_bytes(),
+                &[bump],
+            ]],
+        )?;
         Ok(())
     }
 }
@@ -119,9 +137,14 @@ pub struct AddPrice<'info> {
     pub system_program:        Program<'info, System>,
     /// CHECK: whitelist
     pub accumulator_whitelist: UncheckedAccount<'info>,
-    /// CHECK: instructions introspection sysvar
-    #[account(address = sysvar::instructions::ID)]
-    pub ixs_sysvar:            UncheckedAccount<'info>,
+    /// PDA representing this program's authority
+    /// to call the accumulator program
+    #[account(
+        seeds = [accumulator_program.key().as_ref(), b"cpi".as_ref()],
+        owner = system_program::System::id(),
+        bump,
+    )]
+    pub auth:                  SystemAccount<'info>,
     pub accumulator_program:   Program<'info, AccumulatorUpdaterProgram>,
     // Remaining Accounts
     // should all be new uninitialized accounts
