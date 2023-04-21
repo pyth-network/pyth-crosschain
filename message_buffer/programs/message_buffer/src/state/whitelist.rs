@@ -38,7 +38,7 @@ impl Whitelist {
 #[derive(Accounts)]
 pub struct WhitelistVerifier<'info> {
     #[account(
-        seeds = [b"accumulator".as_ref(), b"whitelist".as_ref()],
+        seeds = [b"message".as_ref(), b"whitelist".as_ref()],
         bump = whitelist.bump,
     )]
     // Using a Box to move account from stack to heap

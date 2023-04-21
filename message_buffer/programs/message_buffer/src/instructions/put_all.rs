@@ -13,7 +13,7 @@ use {
 };
 
 
-pub const ACCUMULATOR: &str = "accumulator";
+pub const MESSAGE: &str = "message";
 pub const FUND: &str = "fund";
 
 
@@ -35,7 +35,7 @@ pub fn put_all<'info>(
             let (pda, bump) = Pubkey::find_program_address(
                 &[
                     cpi_caller_auth.as_ref(),
-                    ACCUMULATOR.as_bytes(),
+                    MESSAGE.as_bytes(),
                     base_account_key.as_ref(),
                 ],
                 &crate::ID,
@@ -43,7 +43,7 @@ pub fn put_all<'info>(
             require_keys_eq!(accumulator_input_ai.key(), pda);
             let signer_seeds = [
                 cpi_caller_auth.as_ref(),
-                ACCUMULATOR.as_bytes(),
+                MESSAGE.as_bytes(),
                 base_account_key.as_ref(),
                 &[bump],
             ];

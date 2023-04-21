@@ -40,13 +40,9 @@ const [pythPriceAccountPk] = anchor.web3.PublicKey.findProgramAddressSync(
   ],
   mockCpiProg.programId
 );
-
+const MESSAGE = Buffer.from("message");
 const [accumulatorPdaKey] = anchor.web3.PublicKey.findProgramAddressSync(
-  [
-    mockCpiCallerAuth.toBuffer(),
-    Buffer.from("accumulator"),
-    pythPriceAccountPk.toBuffer(),
-  ],
+  [mockCpiCallerAuth.toBuffer(), MESSAGE, pythPriceAccountPk.toBuffer()],
   messageBufferProgram.programId
 );
 
@@ -58,7 +54,7 @@ describe("accumulator_updater", () => {
 
   const [whitelistPubkey, whitelistBump] =
     anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("accumulator"), Buffer.from("whitelist")],
+      [MESSAGE, Buffer.from("whitelist")],
       messageBufferProgram.programId
     );
 
@@ -407,11 +403,7 @@ export const getAccumulatorPdaMeta = (
   pythAccount: anchor.web3.PublicKey
 ): AccountMeta => {
   const accumulatorPdaKey = anchor.web3.PublicKey.findProgramAddressSync(
-    [
-      cpiCallerAuth.toBuffer(),
-      Buffer.from("accumulator"),
-      pythAccount.toBuffer(),
-    ],
+    [cpiCallerAuth.toBuffer(), MESSAGE, pythAccount.toBuffer()],
     messageBufferProgram.programId
   )[0];
   return {

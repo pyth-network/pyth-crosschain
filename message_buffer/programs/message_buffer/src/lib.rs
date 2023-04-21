@@ -93,7 +93,7 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = payer,
-        seeds = [b"accumulator".as_ref(), b"whitelist".as_ref()],
+        seeds = [b"message".as_ref(), b"whitelist".as_ref()],
         bump,
         space = 8 + Whitelist::INIT_SPACE
     )]
@@ -110,7 +110,7 @@ pub struct UpdateWhitelist<'info> {
     pub authority: Signer<'info>,
     #[account(
         mut,
-        seeds = [b"accumulator".as_ref(), b"whitelist".as_ref()],
+        seeds = [b"message".as_ref(), b"whitelist".as_ref()],
         bump = whitelist.bump,
         has_one = authority
     )]
