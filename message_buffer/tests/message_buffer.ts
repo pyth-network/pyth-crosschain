@@ -461,17 +461,17 @@ export const getAccumulatorPdaMeta = (
   };
 };
 
+async function getMessageBuffer(connection: anchor.web3.Connection, accountKey: anchor.web3.PublicKey): Buffer {
+  (await connection.getAccountInfo(accumulatorPdaKey)).data;
+}
+
 type BufferHeader = IdlAccounts<MessageBufferType>["BufferHeader"];
 
 // Parses MessageBuffer.data into a PriceAccount or PriceOnly object based on the
 // accountType and accountSchema.
-function parseMessageBuffer({
-  header,
-  messages,
-}: {
-  header: BufferHeader;
-  messages: number[];
-}): AccumulatorPriceMessage[] {
+function parseMessageBuffer(accountData: Buffer): AccumulatorPriceMessage[] {
+  header =
+
   const accumulatorMessages = [];
   let dataBuffer = Buffer.from(messages);
 

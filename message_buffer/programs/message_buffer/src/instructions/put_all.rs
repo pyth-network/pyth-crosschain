@@ -28,8 +28,6 @@ pub fn put_all<'info>(
         .ok_or(AccumulatorUpdaterError::MessageBufferNotProvided)?;
 
 
-
-    // TODO: use MessageHeader here
     let account_data = &mut message_buffer_account_info.try_borrow_mut_data()?;
     let header_end_index = mem::size_of::<BufferHeader>() + 8;
     let (header_bytes, body_bytes) = account_data.split_at_mut(header_end_index);
