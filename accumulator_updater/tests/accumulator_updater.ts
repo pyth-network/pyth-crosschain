@@ -16,11 +16,7 @@ const accumulatorUpdaterProgram = anchor.workspace
 const mockCpiProg = anchor.workspace.MockCpiCaller as Program<MockCpiCaller>;
 let whitelistAuthority = anchor.web3.Keypair.generate();
 const [mockCpiCallerAuth] = anchor.web3.PublicKey.findProgramAddressSync(
-  [
-    accumulatorUpdaterProgram.programId.toBuffer(),
-    Buffer.from("cpi"),
-    Buffer.from("auth"),
-  ],
+  [accumulatorUpdaterProgram.programId.toBuffer(), Buffer.from("cpi")],
   mockCpiProg.programId
 );
 const [fundPda] = anchor.web3.PublicKey.findProgramAddressSync(

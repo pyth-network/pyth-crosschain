@@ -3,7 +3,6 @@ use {
         instructions::{
             sighash,
             ACCUMULATOR_UPDATER_IX_NAME,
-            AUTH,
             CPI,
         },
         message::{
@@ -94,7 +93,6 @@ impl<'info> AddPrice<'info> {
             &[
                 ctx.accounts.accumulator_program.key().as_ref(),
                 CPI.as_bytes(),
-                AUTH.as_bytes(),
             ],
             &crate::ID,
         );
@@ -104,7 +102,6 @@ impl<'info> AddPrice<'info> {
             &[&[
                 ctx.accounts.accumulator_program.key().as_ref(),
                 CPI.as_bytes(),
-                AUTH.as_bytes(),
                 &[bump],
             ]],
         )?;
@@ -143,7 +140,7 @@ pub struct AddPrice<'info> {
     /// PDA representing this program's authority
     /// to call the accumulator program
     #[account(
-        seeds = [accumulator_program.key().as_ref(), b"cpi".as_ref(), b"auth".as_ref()],
+        seeds = [accumulator_program.key().as_ref(), b"cpi".as_ref()],
         owner = system_program::System::id(),
         bump,
     )]

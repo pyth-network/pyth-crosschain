@@ -3,7 +3,6 @@ use {
         instructions::{
             sighash,
             ACCUMULATOR_UPDATER_IX_NAME,
-            AUTH,
             CPI,
         },
         message::{
@@ -50,7 +49,7 @@ pub struct UpdatePrice<'info> {
     /// CHECK: whitelist
     pub accumulator_whitelist: UncheckedAccount<'info>,
     #[account(
-        seeds = [accumulator_program.key().as_ref(), b"cpi".as_ref(), b"auth".as_ref()],
+        seeds = [accumulator_program.key().as_ref(), b"cpi".as_ref()],
         owner = system_program::System::id(),
         bump,
     )]
@@ -122,7 +121,6 @@ impl<'info> UpdatePrice<'info> {
             &[
                 ctx.accounts.accumulator_program.key().as_ref(),
                 CPI.as_bytes(),
-                AUTH.as_bytes(),
             ],
             &crate::ID,
         );
@@ -132,7 +130,6 @@ impl<'info> UpdatePrice<'info> {
             &[&[
                 ctx.accounts.accumulator_program.key().as_ref(),
                 CPI.as_bytes(),
-                AUTH.as_bytes(),
                 &[bump],
             ]],
         )?;
