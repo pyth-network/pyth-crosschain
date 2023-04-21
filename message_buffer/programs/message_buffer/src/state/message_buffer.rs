@@ -13,22 +13,35 @@ use {
 ///
 /// The actual contents of data are set/handled by
 /// the CPI calling program (e.g. Pyth Oracle)
-///
-/// TODO: implement custom serialization & set alignment
+/// TODO: this probably goes away
 #[account(zero_copy)]
 #[derive(Debug, InitSpace)]
-pub struct MessageBuffer {
-    pub header:   BufferHeader,
+pub struct MessageBufferTemp {
+    pub header:   BufferHeaderTemp,
     // 10KB - 8 (discriminator) - 514 (header)
     // TODO: do we want to initialize this to the max size?
     //   - will lead to more data being passed around for validators
     pub messages: [u8; 9_718],
 }
 
-//TODO:
-// - implement custom serialization & set alignment
-// - what other fields are needed?
 #[zero_copy]
+#[derive(InitSpace, Debug)]
+pub struct BufferHeaderTemp {
+    pub bump:        u8, // 1
+    pub version:     u8, // 1
+    // byte offset of accounts where data starts
+    // e.g. account_info.data[offset + header_len]
+    pub header_len:  u16, // 2
+    /// endpoints of every message.
+    /// ex: [10, 14]
+    /// => msg1 = account_info.data[(header_len + 0)..(header_len + 10)]
+    /// => msg2 = account_info.data[(header_len + 10)..(header_len + 14)]
+    pub end_offsets: [u16; 255], // 510
+}
+
+
+
+#[account(zero_copy)]
 #[derive(InitSpace, Debug)]
 pub struct BufferHeader {
     pub bump:        u8, // 1
@@ -65,9 +78,9 @@ impl BufferHeader {
         self.version = Self::CURRENT_VERSION;
     }
 }
-impl MessageBuffer {
+impl MessageBufferTemp {
     pub fn new(bump: u8) -> Self {
-        let header = BufferHeader::new(bump);
+        let header = BufferHeaderTemp::new(bump);
         Self {
             header,
             messages: [0u8; 9_718],
@@ -149,7 +162,7 @@ mod test {
         let (header_idx_size, header_idx_align) =
             (size_of::<BufferHeader>(), align_of::<BufferHeader>());
 
-        let (input_size, input_align) = (size_of::<MessageBuffer>(), align_of::<MessageBuffer>());
+        let (input_size, input_align) = (size_of::<MessageBufferTemp>(), align_of::<MessageBufferTemp>());
 
         assert_eq!(header_idx_size, 514);
         assert_eq!(header_idx_align, 2);
@@ -162,7 +175,7 @@ mod test {
         let data = vec![vec![12, 34], vec![56, 78, 90]];
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
 
-        let accumulator_input = &mut MessageBuffer::new(0);
+        let accumulator_input = &mut MessageBufferTemp::new(0);
 
         let (num_msgs, num_bytes) = accumulator_input.put_all(&data_bytes);
         assert_eq!(num_msgs, 2);
@@ -202,7 +215,7 @@ mod test {
         let data = vec![vec![0u8; 9_718 - 2], vec![0u8], vec![0u8; 2]];
 
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
-        let message_buffer = &mut MessageBuffer::new(0);
+        let message_buffer = &mut MessageBufferTemp::new(0);
         let (num_msgs, num_bytes) = message_buffer.put_all(&data_bytes);
         assert_eq!(num_msgs, 2);
         assert_eq!(
@@ -247,7 +260,7 @@ mod test {
         ];
 
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
-        let message_buffer = &mut MessageBuffer::new(0);
+        let message_buffer = &mut MessageBufferTemp::new(0);
         let (num_msgs, num_bytes) = message_buffer.put_all(&data_bytes);
         assert_eq!(num_msgs, 3);
         assert_eq!(

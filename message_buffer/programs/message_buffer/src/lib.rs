@@ -52,11 +52,10 @@ pub mod message_buffer {
     }
 
 
-    /// Insert messages/inputs for the Accumulator. All inputs derived from the
-    /// `base_account_key` will go into the same PDA. The PDA is derived with
-    /// seeds = [cpi_caller_auth, b"accumulator", base_account_key]
-    ///
-    ///
+    /// Put messages into the Accumulator. All messages put for the same
+    /// `base_account_key` go into the same buffer PDA. The PDA's address is
+    /// `[allowed_program_auth, MESSAGE, base_account_key]`, where `allowed_program_auth`
+    /// is the whitelisted pubkey who authorized this call.
     ///
     /// * `base_account_key`    - Pubkey of the original account the
     ///                           `MessageBuffer` is derived from
@@ -118,6 +117,7 @@ pub struct UpdateWhitelist<'info> {
 }
 
 
+// TODO: rename this
 #[error_code]
 pub enum AccumulatorUpdaterError {
     #[msg("CPI Caller not allowed")]
@@ -140,6 +140,8 @@ pub enum AccumulatorUpdaterError {
     CurrentDataLengthExceeded,
     #[msg("Message Buffer not provided")]
     MessageBufferNotProvided,
+    #[msg("Message Buffer is not sufficiently large")]
+    MessageBufferTooSmall,
     #[msg("Fund Bump not found")]
     FundBumpNotFound,
 }

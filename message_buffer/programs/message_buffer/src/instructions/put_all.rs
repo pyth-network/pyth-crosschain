@@ -13,10 +13,6 @@ use {
 };
 
 
-pub const MESSAGE: &str = "message";
-pub const FUND: &str = "fund";
-
-
 pub fn put_all<'info>(
     ctx: Context<'_, '_, '_, 'info, PutAll<'info>>,
     base_account_key: Pubkey,
@@ -28,50 +24,22 @@ pub fn put_all<'info>(
         .first()
         .ok_or(AccumulatorUpdaterError::MessageBufferNotProvided)?;
 
-    let loader;
+    /*
+        let loader;
 
-    {
-        let accumulator_input = &mut (if is_uninitialized_account(accumulator_input_ai) {
-            let (pda, bump) = Pubkey::find_program_address(
-                &[
-                    cpi_caller_auth.as_ref(),
-                    MESSAGE.as_bytes(),
-                    base_account_key.as_ref(),
-                ],
-                &crate::ID,
-            );
-            require_keys_eq!(accumulator_input_ai.key(), pda);
-            let signer_seeds = [
-                cpi_caller_auth.as_ref(),
-                MESSAGE.as_bytes(),
-                base_account_key.as_ref(),
-                &[bump],
-            ];
-            let fund_pda_bump = *ctx
-                .bumps
-                .get(FUND)
-                .ok_or(AccumulatorUpdaterError::FundBumpNotFound)?;
-            let fund_signer_seeds = [FUND.as_bytes(), &[fund_pda_bump]];
-            PutAll::create_account(
-                accumulator_input_ai,
-                8 + MessageBuffer::INIT_SPACE,
-                &ctx.accounts.fund,
-                &[signer_seeds.as_slice(), fund_signer_seeds.as_slice()],
-                &ctx.accounts.system_program,
-            )?;
-            loader = AccountLoader::<MessageBuffer>::try_from_unchecked(
-                &crate::ID,
-                accumulator_input_ai,
-            )?;
-            let mut accumulator_input = loader.load_init()?;
-            accumulator_input.header = BufferHeader::new(bump);
-            accumulator_input
-        } else {
-            loader = AccountLoader::<MessageBuffer>::try_from(accumulator_input_ai)?;
-            let mut accumulator_input = loader.load_mut()?;
-            accumulator_input.header.set_version();
-            accumulator_input
-        });
+    // TODO: use MessageHeader here
+    let account_data = accumulator_input_ai.try_borrow_mut_data()?;
+    let header = bytemuck::from_bytes_mut(&mut account_data.deref_mut()[8..mem::size_of::<BufferHeader>() + 8]);
+    let message_region = [mem::size_of::<BufferHeader>() + 8..];
+
+    loader = AccountLoader::<BufferHeader>::try_from(accumulator_input_ai)?;
+    let mut accumulator_input = loader.load_mut()?;
+    accumulator_input.header.set_version();
+    accumulator_input
+
+    accumulator_input_ai.data.
+
+
         // note: redundant for uninitialized code path but safer to check here.
         // compute budget cost should be minimal
         accumulator_input.validate(
@@ -81,14 +49,13 @@ pub fn put_all<'info>(
         )?;
 
 
-        let (num_msgs, num_bytes) = accumulator_input.put_all(&messages);
-        if num_msgs != messages.len() {
-            msg!("unable to fit all messages in accumulator input account. Wrote {}/{} messages and {} bytes", num_msgs, messages.len(), num_bytes);
-        }
+    let (num_msgs, num_bytes) = accumulator_input.put_all(&messages);
+    if num_msgs != messages.len() {
+        msg!("unable to fit all messages in accumulator input account. Wrote {}/{} messages and {} bytes", num_msgs, messages.len(), num_bytes);
     }
 
-
     loader.exit(&crate::ID)?;
+     */
 
     Ok(())
 }

@@ -1,20 +1,28 @@
 import * as anchor from "@coral-xyz/anchor";
-import { IdlTypes, Program, BorshAccountsCoder } from "@coral-xyz/anchor";
+import { IdlAccounts, IdlTypes, Program, BorshAccountsCoder } from "@coral-xyz/anchor";
 import { MessageBuffer } from "../target/types/message_buffer";
+console.log("-1");
 import { MockCpiCaller } from "../target/types/mock_cpi_caller";
 import lumina from "@lumina-dev/test";
 import { assert } from "chai";
 import { AccountMeta, ComputeBudgetProgram } from "@solana/web3.js";
 import bs58 from "bs58";
 
+console.log("0");
+
 // Enables tool that runs in local browser for easier debugging of
 // transactions in this test -  https://lumina.fyi/debug
-lumina();
+// lumina();
+console.log("1");
+
 
 const messageBufferProgram = anchor.workspace
   .MessageBuffer as Program<MessageBuffer>;
 const mockCpiProg = anchor.workspace.MockCpiCaller as Program<MockCpiCaller>;
 let whitelistAuthority = anchor.web3.Keypair.generate();
+
+console.log("1.5");
+
 const [mockCpiCallerAuth] = anchor.web3.PublicKey.findProgramAddressSync(
   [messageBufferProgram.programId.toBuffer(), Buffer.from("cpi")],
   mockCpiProg.programId
@@ -23,6 +31,8 @@ const [fundPda] = anchor.web3.PublicKey.findProgramAddressSync(
   [Buffer.from("fund")],
   messageBufferProgram.programId
 );
+
+console.log("2");
 
 const pythPriceAccountId = new anchor.BN(1);
 const addPriceParams = {
@@ -45,6 +55,8 @@ const [accumulatorPdaKey] = anchor.web3.PublicKey.findProgramAddressSync(
   [mockCpiCallerAuth.toBuffer(), MESSAGE, pythPriceAccountPk.toBuffer()],
   messageBufferProgram.programId
 );
+
+console.log("3");
 
 let fundBalance = 100 * anchor.web3.LAMPORTS_PER_SOL;
 describe("accumulator_updater", () => {
@@ -116,6 +128,31 @@ describe("accumulator_updater", () => {
     assert.isTrue(whitelist.authority.equals(newWhitelistAuthority.publicKey));
 
     whitelistAuthority = newWhitelistAuthority;
+  });
+
+  it("Creates a buffer", async() => {
+    const accumulatorPdaMetas = [
+      {
+        pubkey: accumulatorPdaKey,
+        isSigner: false,
+        isWritable: true,
+      },
+    ];
+
+    await messageBufferProgram.methods.createBuffer(mockCpiCallerAuth, pythPriceAccountPk, new anchor.BN(1000)).accounts(
+      {
+        whitelist: whitelistPubkey,
+        authority: whitelistAuthority.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      }
+    ).remainingAccounts(accumulatorPdaMetas).rpc();
+
+    const messageBufferAccount = await provider.connection.getAccountInfo(
+      accumulatorPdaKey
+    );
+
+    // version
+    assert.equal(messageBufferAccount.data[8 + 1], 1);
   });
 
   it("Mock CPI program - AddPrice", async () => {
@@ -413,7 +450,7 @@ export const getAccumulatorPdaMeta = (
   };
 };
 
-type BufferHeader = IdlTypes<MessageBuffer>["BufferHeader"];
+type BufferHeader = IdlAccounts<MessageBufferType>["BufferHeader"];
 
 // Parses MessageBuffer.data into a PriceAccount or PriceOnly object based on the
 // accountType and accountSchema.
@@ -459,12 +496,12 @@ type MessageHeader = {
   size: number;
 };
 
-type MessageBuffer = {
+type MessageBufferType = {
   header: MessageHeader;
   data: Buffer;
 };
 
-function parseMessageBytes(data: Buffer): MessageBuffer {
+function parseMessageBytes(data: Buffer): MessageBufferType {
   let offset = 0;
 
   const schema = data.readInt8(offset);
