@@ -1,4 +1,3 @@
-// contracts/Bridge.sol
 // SPDX-License-Identifier: Apache 2
 
 pragma solidity ^0.8.0;
@@ -8,11 +7,17 @@ import "@pythnetwork/pyth-sdk-solidity/AbstractPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
+import "./PythAccumulator.sol";
 import "./PythGetters.sol";
 import "./PythSetters.sol";
 import "./PythInternalStructs.sol";
 
-abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
+abstract contract Pyth is
+    PythGetters,
+    PythSetters,
+    AbstractPyth,
+    PythAccumulator
+{
     function _initialize(
         address wormhole,
         uint16[] calldata dataSourceEmitterChainIds,
@@ -66,11 +71,19 @@ abstract contract Pyth is PythGetters, PythSetters, AbstractPyth {
     function updatePriceFeeds(
         bytes[] calldata updateData
     ) public payable override {
+        // TODO: Is this fee model still good for accumulator?
         uint requiredFee = getUpdateFee(updateData);
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
 
         for (uint i = 0; i < updateData.length; ) {
-            updatePriceBatchFromVm(updateData[i]);
+            if (
+                updateData[i].length > 4 &&
+                UnsafeBytesLib.toUint32(updateData[i], 0) == ACCUMULATOR_MAGIC
+            ) {
+                updatePricesUsingAccumulator(updateData[i]);
+            } else {
+                updatePriceBatchFromVm(updateData[i]);
+            }
 
             unchecked {
                 i++;
