@@ -65,17 +65,17 @@ repos:
         entry: cargo +nightly fmt --manifest-path ./hermes/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: hermes
-      # Hooks for accumulator updater contract
-      - id: cargo-fmt-accumulator-updater
-        name: Cargo format for accumulator updater contract
+      # Hooks for message buffer contract
+      - id: cargo-fmt-message-buffer
+        name: Cargo format for message buffer contract
         language: "rust"
-        entry: cargo +nightly fmt --manifest-path ./accumulator_updater/Cargo.toml --all -- --config-path rustfmt.toml
+        entry: cargo +nightly fmt --manifest-path ./message_buffer/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: accumulator_updater
-      - id: cargo-clippy-accumulator-updater
-        name: Cargo clippy for accumulator-updater contract
+      - id: cargo-clippy-message-buffer
+        name: Cargo clippy for message buffer contract
         language: "rust"
-        entry: cargo +nightly clippy --manifest-path ./accumulator_updater/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +nightly clippy --manifest-path ./message_buffer/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
         files: accumulator_updater
       # Hooks for solana receiver contract

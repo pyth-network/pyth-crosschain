@@ -14,11 +14,11 @@ use {
         },
         state::PriceAccount,
     },
-    accumulator_updater::program::AccumulatorUpdater as AccumulatorUpdaterProgram,
     anchor_lang::{
         prelude::*,
         system_program,
     },
+    message_buffer::program::MessageBuffer as MessageBufferProgram,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
@@ -41,20 +41,20 @@ pub struct UpdatePrice<'info> {
     ],
     bump,
     )]
-    pub pyth_price_account:    AccountLoader<'info, PriceAccount>,
+    pub pyth_price_account:     AccountLoader<'info, PriceAccount>,
     #[account(mut)]
-    pub fund:                  SystemAccount<'info>,
+    pub fund:                   SystemAccount<'info>,
     /// Needed for accumulator_updater
-    pub system_program:        Program<'info, System>,
+    pub system_program:         Program<'info, System>,
     /// CHECK: whitelist
-    pub accumulator_whitelist: UncheckedAccount<'info>,
+    pub accumulator_whitelist:  UncheckedAccount<'info>,
     #[account(
-        seeds = [accumulator_program.key().as_ref(), b"cpi".as_ref()],
+        seeds = [message_buffer_program.key().as_ref(), b"cpi".as_ref()],
         owner = system_program::System::id(),
         bump,
     )]
-    pub auth:                  SystemAccount<'info>,
-    pub accumulator_program:   Program<'info, AccumulatorUpdaterProgram>,
+    pub auth:                   SystemAccount<'info>,
+    pub message_buffer_program: Program<'info, MessageBufferProgram>,
 }
 
 /// Updates the mock pyth price account and calls accumulator-updater
@@ -102,7 +102,7 @@ impl<'info> UpdatePrice<'info> {
                 .collect::<Vec<_>>(),
         );
         let update_inputs_ix = anchor_lang::solana_program::instruction::Instruction {
-            program_id: ctx.accounts.accumulator_program.key(),
+            program_id: ctx.accounts.message_buffer_program.key(),
             accounts,
             data: (
                 //anchor ix discriminator/identifier
@@ -119,7 +119,7 @@ impl<'info> UpdatePrice<'info> {
         // that won't be available in the oracle program
         let (_, bump) = Pubkey::find_program_address(
             &[
-                ctx.accounts.accumulator_program.key().as_ref(),
+                ctx.accounts.message_buffer_program.key().as_ref(),
                 CPI.as_bytes(),
             ],
             &crate::ID,
@@ -128,7 +128,7 @@ impl<'info> UpdatePrice<'info> {
             &update_inputs_ix,
             account_infos,
             &[&[
-                ctx.accounts.accumulator_program.key().as_ref(),
+                ctx.accounts.message_buffer_program.key().as_ref(),
                 CPI.as_bytes(),
                 &[bump],
             ]],

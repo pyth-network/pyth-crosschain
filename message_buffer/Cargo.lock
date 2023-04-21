@@ -3,14 +3,6 @@
 version = 3
 
 [[package]]
-name = "accumulator_updater"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "bytemuck",
-]
-
-[[package]]
 name = "ahash"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -894,12 +886,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "message_buffer"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "bytemuck",
+]
+
+[[package]]
 name = "mock-cpi-caller"
 version = "0.1.0"
 dependencies = [
- "accumulator_updater",
  "anchor-lang",
  "bytemuck",
+ "message_buffer",
 ]
 
 [[package]]

@@ -12,7 +12,7 @@ use {
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
-pub mod accumulator_updater {
+pub mod message_buffer {
     use super::*;
 
 
@@ -54,12 +54,13 @@ pub mod accumulator_updater {
 
     /// Insert messages/inputs for the Accumulator. All inputs derived from the
     /// `base_account_key` will go into the same PDA. The PDA is derived with
-    /// seeds = [cpi_caller, b"accumulator", base_account_key]
+    /// seeds = [cpi_caller_auth, b"accumulator", base_account_key]
     ///
     ///
     ///
     /// * `base_account_key`    - Pubkey of the original account the
-    ///                           AccumulatorInput is derived from
+    ///                           `MessageBuffer` is derived from
+    ///                           (e.g. pyth price account)
     /// * `messages`            - Vec of vec of bytes, each representing a message
     ///                           to be hashed and accumulated
     ///
@@ -137,10 +138,8 @@ pub enum AccumulatorUpdaterError {
     InvalidPDA,
     #[msg("Update data exceeds current length")]
     CurrentDataLengthExceeded,
-    #[msg("Accumulator Input not writable")]
-    AccumulatorInputNotWritable,
-    #[msg("Accumulator Input not provided")]
-    AccumulatorInputNotProvided,
+    #[msg("Message Buffer not provided")]
+    MessageBufferNotProvided,
     #[msg("Fund Bump not found")]
     FundBumpNotFound,
 }

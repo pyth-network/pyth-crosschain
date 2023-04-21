@@ -18,11 +18,11 @@ use {
             PythAccountType,
         },
     },
-    accumulator_updater::program::AccumulatorUpdater as AccumulatorUpdaterProgram,
     anchor_lang::{
         prelude::*,
         system_program,
     },
+    message_buffer::program::MessageBuffer as MessageBufferProgram,
 };
 
 pub fn add_price<'info>(
@@ -74,7 +74,7 @@ impl<'info> AddPrice<'info> {
                 .collect::<Vec<_>>(),
         );
         let create_inputs_ix = anchor_lang::solana_program::instruction::Instruction {
-            program_id: ctx.accounts.accumulator_program.key(),
+            program_id: ctx.accounts.message_buffer_program.key(),
             accounts,
             data: (
                 //anchor ix discriminator/identifier
@@ -91,7 +91,7 @@ impl<'info> AddPrice<'info> {
         // that won't be available in the oracle program
         let (_, bump) = Pubkey::find_program_address(
             &[
-                ctx.accounts.accumulator_program.key().as_ref(),
+                ctx.accounts.message_buffer_program.key().as_ref(),
                 CPI.as_bytes(),
             ],
             &crate::ID,
@@ -100,7 +100,7 @@ impl<'info> AddPrice<'info> {
             &create_inputs_ix,
             account_infos,
             &[&[
-                ctx.accounts.accumulator_program.key().as_ref(),
+                ctx.accounts.message_buffer_program.key().as_ref(),
                 CPI.as_bytes(),
                 &[bump],
             ]],
@@ -128,24 +128,24 @@ pub struct AddPrice<'info> {
         bump,
         space = 8 + PriceAccount::INIT_SPACE
     )]
-    pub pyth_price_account:    AccountLoader<'info, PriceAccount>,
+    pub pyth_price_account:     AccountLoader<'info, PriceAccount>,
     #[account(mut)]
-    pub payer:                 Signer<'info>,
+    pub payer:                  Signer<'info>,
     #[account(mut)]
-    pub fund:                  SystemAccount<'info>,
+    pub fund:                   SystemAccount<'info>,
     /// also needed for accumulator_updater
-    pub system_program:        Program<'info, System>,
+    pub system_program:         Program<'info, System>,
     /// CHECK: whitelist
-    pub accumulator_whitelist: UncheckedAccount<'info>,
+    pub accumulator_whitelist:  UncheckedAccount<'info>,
     /// PDA representing this program's authority
     /// to call the accumulator program
     #[account(
-        seeds = [accumulator_program.key().as_ref(), b"cpi".as_ref()],
+        seeds = [message_buffer_program.key().as_ref(), b"cpi".as_ref()],
         owner = system_program::System::id(),
         bump,
     )]
-    pub auth:                  SystemAccount<'info>,
-    pub accumulator_program:   Program<'info, AccumulatorUpdaterProgram>,
+    pub auth:                   SystemAccount<'info>,
+    pub message_buffer_program: Program<'info, MessageBufferProgram>,
     // Remaining Accounts
     // should all be new uninitialized accounts
 }

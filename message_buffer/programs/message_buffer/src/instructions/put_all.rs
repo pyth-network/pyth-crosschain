@@ -26,7 +26,7 @@ pub fn put_all<'info>(
     let accumulator_input_ai = ctx
         .remaining_accounts
         .first()
-        .ok_or(AccumulatorUpdaterError::AccumulatorInputNotProvided)?;
+        .ok_or(AccumulatorUpdaterError::MessageBufferNotProvided)?;
 
     let loader;
 
@@ -54,20 +54,20 @@ pub fn put_all<'info>(
             let fund_signer_seeds = [FUND.as_bytes(), &[fund_pda_bump]];
             PutAll::create_account(
                 accumulator_input_ai,
-                8 + AccumulatorInput::INIT_SPACE,
+                8 + MessageBuffer::INIT_SPACE,
                 &ctx.accounts.fund,
                 &[signer_seeds.as_slice(), fund_signer_seeds.as_slice()],
                 &ctx.accounts.system_program,
             )?;
-            loader = AccountLoader::<AccumulatorInput>::try_from_unchecked(
+            loader = AccountLoader::<MessageBuffer>::try_from_unchecked(
                 &crate::ID,
                 accumulator_input_ai,
             )?;
             let mut accumulator_input = loader.load_init()?;
-            accumulator_input.header = AccumulatorHeader::new(bump);
+            accumulator_input.header = BufferHeader::new(bump);
             accumulator_input
         } else {
-            loader = AccountLoader::<AccumulatorInput>::try_from(accumulator_input_ai)?;
+            loader = AccountLoader::<MessageBuffer>::try_from(accumulator_input_ai)?;
             let mut accumulator_input = loader.load_mut()?;
             accumulator_input.header.set_version();
             accumulator_input

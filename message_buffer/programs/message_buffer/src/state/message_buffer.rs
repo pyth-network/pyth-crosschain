@@ -7,7 +7,7 @@ use {
 };
 
 
-/// `AccumulatorInput` is an arbitrary set of bytes
+/// `MessageBuffer` is an arbitrary set of bytes
 /// that will be included in the AccumulatorSysvar
 ///
 ///
@@ -17,8 +17,8 @@ use {
 /// TODO: implement custom serialization & set alignment
 #[account(zero_copy)]
 #[derive(Debug, InitSpace)]
-pub struct AccumulatorInput {
-    pub header:   AccumulatorHeader,
+pub struct MessageBuffer {
+    pub header:   BufferHeader,
     // 10KB - 8 (discriminator) - 514 (header)
     // TODO: do we want to initialize this to the max size?
     //   - will lead to more data being passed around for validators
@@ -30,7 +30,7 @@ pub struct AccumulatorInput {
 // - what other fields are needed?
 #[zero_copy]
 #[derive(InitSpace, Debug)]
-pub struct AccumulatorHeader {
+pub struct BufferHeader {
     pub bump:        u8, // 1
     pub version:     u8, // 1
     // byte offset of accounts where data starts
@@ -44,11 +44,11 @@ pub struct AccumulatorHeader {
 }
 
 
-impl AccumulatorHeader {
+impl BufferHeader {
     // HEADER_LEN allows for append-only forward-compatibility for the header.
     // this is the number of bytes from the beginning of the account_info.data
     // to the start of the `AccumulatorInput` data.
-    pub const HEADER_LEN: u16 = 8 + AccumulatorHeader::INIT_SPACE as u16;
+    pub const HEADER_LEN: u16 = 8 + BufferHeader::INIT_SPACE as u16;
 
     pub const CURRENT_VERSION: u8 = 1;
 
@@ -65,9 +65,9 @@ impl AccumulatorHeader {
         self.version = Self::CURRENT_VERSION;
     }
 }
-impl AccumulatorInput {
+impl MessageBuffer {
     pub fn new(bump: u8) -> Self {
-        let header = AccumulatorHeader::new(bump);
+        let header = BufferHeader::new(bump);
         Self {
             header,
             messages: [0u8; 9_718],
@@ -146,15 +146,10 @@ mod test {
 
     #[test]
     fn test_sizes_and_alignments() {
-        let (header_idx_size, header_idx_align) = (
-            size_of::<AccumulatorHeader>(),
-            align_of::<AccumulatorHeader>(),
-        );
+        let (header_idx_size, header_idx_align) =
+            (size_of::<BufferHeader>(), align_of::<BufferHeader>());
 
-        let (input_size, input_align) = (
-            size_of::<AccumulatorInput>(),
-            align_of::<AccumulatorInput>(),
-        );
+        let (input_size, input_align) = (size_of::<MessageBuffer>(), align_of::<MessageBuffer>());
 
         assert_eq!(header_idx_size, 514);
         assert_eq!(header_idx_align, 2);
@@ -167,7 +162,7 @@ mod test {
         let data = vec![vec![12, 34], vec![56, 78, 90]];
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
 
-        let accumulator_input = &mut AccumulatorInput::new(0);
+        let accumulator_input = &mut MessageBuffer::new(0);
 
         let (num_msgs, num_bytes) = accumulator_input.put_all(&data_bytes);
         assert_eq!(num_msgs, 2);
@@ -178,7 +173,7 @@ mod test {
         assert_eq!(accumulator_input.header.end_offsets[1], 5);
 
 
-        let accumulator_input_bytes = bytes_of(accumulator_input);
+        let message_buffer_bytes = bytes_of(accumulator_input);
 
         // The header_len field represents the size of all data prior to the message bytes.
         // This includes the account discriminator, which is not part of the header struct.
@@ -195,9 +190,9 @@ mod test {
         let mut data_iter = data_bytes.iter();
         for offset in iter {
             let end_offset = header_len + *offset as usize;
-            let accumulator_input_data = &accumulator_input_bytes[start..end_offset];
+            let message_buffer_data = &message_buffer_bytes[start..end_offset];
             let expected_data = data_iter.next().unwrap();
-            assert_eq!(accumulator_input_data, expected_data.as_slice());
+            assert_eq!(message_buffer_data, expected_data.as_slice());
             start = end_offset;
         }
     }
@@ -207,23 +202,23 @@ mod test {
         let data = vec![vec![0u8; 9_718 - 2], vec![0u8], vec![0u8; 2]];
 
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
-        let accumulator_input = &mut AccumulatorInput::new(0);
-        let (num_msgs, num_bytes) = accumulator_input.put_all(&data_bytes);
+        let message_buffer = &mut MessageBuffer::new(0);
+        let (num_msgs, num_bytes) = message_buffer.put_all(&data_bytes);
         assert_eq!(num_msgs, 2);
         assert_eq!(
             num_bytes,
             data_bytes[0..2].iter().map(|x| x.len()).sum::<usize>() as u16
         );
 
-        let accumulator_input_bytes = bytes_of(accumulator_input);
+        let message_buffer_bytes = bytes_of(message_buffer);
 
         // The header_len field represents the size of all data prior to the message bytes.
         // This includes the account discriminator, which is not part of the header struct.
         // Subtract the size of the discriminator (8 bytes) to compensate
-        let header_len = accumulator_input.header.header_len as usize - 8;
+        let header_len = message_buffer.header.header_len as usize - 8;
 
 
-        let iter = accumulator_input
+        let iter = message_buffer
             .header
             .end_offsets
             .iter()
@@ -232,13 +227,13 @@ mod test {
         let mut data_iter = data_bytes.iter();
         for offset in iter {
             let end_offset = header_len + *offset as usize;
-            let accumulator_input_data = &accumulator_input_bytes[start..end_offset];
+            let message_buffer_data = &message_buffer_bytes[start..end_offset];
             let expected_data = data_iter.next().unwrap();
-            assert_eq!(accumulator_input_data, expected_data.as_slice());
+            assert_eq!(message_buffer_data, expected_data.as_slice());
             start = end_offset;
         }
 
-        assert_eq!(accumulator_input.header.end_offsets[2], 0);
+        assert_eq!(message_buffer.header.end_offsets[2], 0);
     }
 
     #[test]
@@ -252,22 +247,22 @@ mod test {
         ];
 
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
-        let accumulator_input = &mut AccumulatorInput::new(0);
-        let (num_msgs, num_bytes) = accumulator_input.put_all(&data_bytes);
+        let message_buffer = &mut MessageBuffer::new(0);
+        let (num_msgs, num_bytes) = message_buffer.put_all(&data_bytes);
         assert_eq!(num_msgs, 3);
         assert_eq!(
             num_bytes,
             data_bytes[0..3].iter().map(|x| x.len()).sum::<usize>() as u16
         );
 
-        let accumulator_input_bytes = bytes_of(accumulator_input);
+        let message_buffer_bytes = bytes_of(message_buffer);
 
         // *note* minus 8 here since no account discriminator when using
         // `bytes_of`directly on accumulator_input
-        let header_len = accumulator_input.header.header_len as usize - 8;
+        let header_len = message_buffer.header.header_len as usize - 8;
 
 
-        let iter = accumulator_input
+        let iter = message_buffer
             .header
             .end_offsets
             .iter()
@@ -276,16 +271,16 @@ mod test {
         let mut data_iter = data_bytes.iter();
         for offset in iter {
             let end_offset = header_len + *offset as usize;
-            let accumulator_input_data = &accumulator_input_bytes[start..end_offset];
+            let message_buffer_data = &message_buffer_bytes[start..end_offset];
             let expected_data = data_iter.next().unwrap();
-            assert_eq!(accumulator_input_data, expected_data.as_slice());
+            assert_eq!(message_buffer_data, expected_data.as_slice());
             start = end_offset;
         }
 
-        assert_eq!(accumulator_input.header.end_offsets[0], 9_715);
-        assert_eq!(accumulator_input.header.end_offsets[1], 9_716);
-        assert_eq!(accumulator_input.header.end_offsets[2], 9_717);
-        assert_eq!(accumulator_input.header.end_offsets[3], 0);
-        assert_eq!(accumulator_input.header.end_offsets[4], 0);
+        assert_eq!(message_buffer.header.end_offsets[0], 9_715);
+        assert_eq!(message_buffer.header.end_offsets[1], 9_716);
+        assert_eq!(message_buffer.header.end_offsets[2], 9_717);
+        assert_eq!(message_buffer.header.end_offsets[3], 0);
+        assert_eq!(message_buffer.header.end_offsets[4], 0);
     }
 }
