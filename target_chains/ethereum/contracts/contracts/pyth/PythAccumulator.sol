@@ -62,6 +62,25 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 offset += 1;
 
                 if (majorVersion != 1) revert PythErrors.InvalidUpdateData();
+
+                // never reverts
+                // uint8 minorVersion = UnsafeBytesLib.toUint16(encoded, index);
+                offset += 1;
+
+                // This check is always false as minorVersion is 0, so it is commented.
+                // in the future that the minor version increases this will have effect.
+                // if(minorVersion < 0) revert InvalidUpdateData();
+
+                // This field ensure that we can add headers in the future
+                // without breaking the contract (future compatibility)
+                uint8 trailingHeaderSize = UnsafeBytesLib.toUint8(
+                    accumulatorUpdate,
+                    offset
+                );
+                offset += 1;
+
+                // Currently we don't have any trailing header
+                offset += trailingHeaderSize;
             }
 
             // This value is only used as the check below which currently
@@ -129,6 +148,10 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
 
                     if (updateType != UpdateType.WormholeMerkle)
                         revert PythErrors.InvalidUpdateData();
+
+                    // This field is not used
+                    // uint32 storageIndex = UnsafeBytesLib.toUint32(encodedPayload, payloadoffset);
+                    payloadoffset += 4;
 
                     digest = bytes20(
                         UnsafeBytesLib.toAddress(encodedPayload, payloadoffset)
