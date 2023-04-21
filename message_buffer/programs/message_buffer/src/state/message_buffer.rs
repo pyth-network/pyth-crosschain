@@ -54,7 +54,7 @@ impl BufferHeader {
     ///
 // TODO: add a end_offsets index parameter for "continuation"
 // TODO: test max size of parameters that can be passed into CPI call
-    fn put_all_in_buffer(&mut self, destination: &mut &[u8], values: &Vec<Vec<u8>>) -> (usize, u16) {
+    fn put_all_in_buffer(&mut self, destination: &mut [u8], values: &Vec<Vec<u8>>) -> (usize, u16) {
         let mut offset = 0u16;
 
         for (i, v) in values.iter().enumerate() {
@@ -68,10 +68,10 @@ impl BufferHeader {
                 return (i, start);
             }
             let end = end.unwrap();
-            if end > self.messages.len() as u16 {
+            if end > destination.len() as u16 {
                 return (i, start);
             }
-            self.header.end_offsets[i] = end;
+            self.end_offsets[i] = end;
             destination[(start as usize)..(end as usize)].copy_from_slice(v);
             offset = end
         }
