@@ -49,7 +49,7 @@ mod test {
 
     #[test]
     fn ix_discriminator() {
-        let a = &(accumulator_updater::instruction::PutAll {
+        let a = &(message_buffer::instruction::PutAll {
             base_account_key: anchor_lang::prelude::Pubkey::default(),
             messages:         vec![],
         }
