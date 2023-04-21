@@ -10,6 +10,9 @@ use {
             CreateAccount,
         },
     },
+    std::cell::RefMut,
+    std::mem,
+    std::ops::DerefMut,
 };
 
 
@@ -19,43 +22,32 @@ pub fn put_all<'info>(
     messages: Vec<Vec<u8>>,
 ) -> Result<()> {
     let cpi_caller_auth = ctx.accounts.whitelist_verifier.is_allowed()?;
-    let accumulator_input_ai = ctx
+    let message_buffer_account_info = ctx
         .remaining_accounts
         .first()
         .ok_or(AccumulatorUpdaterError::MessageBufferNotProvided)?;
 
-    /*
-        let loader;
+
 
     // TODO: use MessageHeader here
-    let account_data = accumulator_input_ai.try_borrow_mut_data()?;
-    let header = bytemuck::from_bytes_mut(&mut account_data.deref_mut()[8..mem::size_of::<BufferHeader>() + 8]);
-    let message_region = [mem::size_of::<BufferHeader>() + 8..];
+    let account_data = &mut message_buffer_account_info.try_borrow_mut_data()?;
+    let header_end_index = mem::size_of::<BufferHeader>() + 8;
+    let (header_bytes, body_bytes) = account_data.split_at_mut(header_end_index);
 
-    loader = AccountLoader::<BufferHeader>::try_from(accumulator_input_ai)?;
-    let mut accumulator_input = loader.load_mut()?;
-    accumulator_input.header.set_version();
-    accumulator_input
+    let header: &mut BufferHeader = bytemuck::from_bytes_mut(&mut header_bytes[8..]);
 
-    accumulator_input_ai.data.
+    header.validate(
+        message_buffer_account_info.key(),
+        cpi_caller_auth,
+        base_account_key,
+    )?;
 
+    header.set_version();
+    let (num_msgs, num_bytes) = header.put_all_in_buffer(body_bytes, &messages);
 
-        // note: redundant for uninitialized code path but safer to check here.
-        // compute budget cost should be minimal
-        accumulator_input.validate(
-            accumulator_input_ai.key(),
-            cpi_caller_auth,
-            base_account_key,
-        )?;
-
-
-    let (num_msgs, num_bytes) = accumulator_input.put_all(&messages);
     if num_msgs != messages.len() {
         msg!("unable to fit all messages in accumulator input account. Wrote {}/{} messages and {} bytes", num_msgs, messages.len(), num_bytes);
     }
-
-    loader.exit(&crate::ID)?;
-     */
 
     Ok(())
 }

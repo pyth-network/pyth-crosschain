@@ -1,4 +1,7 @@
 pub use put_all::*;
+pub use create_buffer::*;
+pub use resize_buffer::*;
+pub use delete_buffer::*;
 
 mod put_all;
 mod create_buffer;

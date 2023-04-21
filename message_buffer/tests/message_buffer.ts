@@ -1,5 +1,10 @@
 import * as anchor from "@coral-xyz/anchor";
-import { IdlAccounts, IdlTypes, Program, BorshAccountsCoder } from "@coral-xyz/anchor";
+import {
+  IdlAccounts,
+  IdlTypes,
+  Program,
+  BorshAccountsCoder,
+} from "@coral-xyz/anchor";
 import { MessageBuffer } from "../target/types/message_buffer";
 console.log("-1");
 import { MockCpiCaller } from "../target/types/mock_cpi_caller";
@@ -14,7 +19,6 @@ console.log("0");
 // transactions in this test -  https://lumina.fyi/debug
 // lumina();
 console.log("1");
-
 
 const messageBufferProgram = anchor.workspace
   .MessageBuffer as Program<MessageBuffer>;
@@ -70,8 +74,12 @@ describe("accumulator_updater", () => {
       messageBufferProgram.programId
     );
 
-  before("transfer lamports to the fund", async () => {
+  before("transfer lamports to needed accounts", async () => {
     await provider.connection.requestAirdrop(fundPda, fundBalance);
+    await provider.connection.requestAirdrop(
+      whitelistAuthority.publicKey,
+      fundBalance
+    );
   });
 
   it("Is initialized!", async () => {
@@ -112,6 +120,34 @@ describe("accumulator_updater", () => {
     );
   });
 
+  it("Creates a buffer", async () => {
+    const accumulatorPdaMetas = [
+      {
+        pubkey: accumulatorPdaKey,
+        isSigner: false,
+        isWritable: true,
+      },
+    ];
+
+    await messageBufferProgram.methods
+      .createBuffer(mockCpiCallerAuth, pythPriceAccountPk, new anchor.BN(1000))
+      .accounts({
+        whitelist: whitelistPubkey,
+        authority: whitelistAuthority.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([whitelistAuthority])
+      .remainingAccounts(accumulatorPdaMetas)
+      .rpc({ skipPreflight: true });
+
+    const messageBufferAccount = await provider.connection.getAccountInfo(
+      accumulatorPdaKey
+    );
+
+    // version
+    assert.equal(messageBufferAccount.data[8 + 1], 1);
+  });
+
   it("Updates the whitelist authority", async () => {
     const newWhitelistAuthority = anchor.web3.Keypair.generate();
     await messageBufferProgram.methods
@@ -128,31 +164,6 @@ describe("accumulator_updater", () => {
     assert.isTrue(whitelist.authority.equals(newWhitelistAuthority.publicKey));
 
     whitelistAuthority = newWhitelistAuthority;
-  });
-
-  it("Creates a buffer", async() => {
-    const accumulatorPdaMetas = [
-      {
-        pubkey: accumulatorPdaKey,
-        isSigner: false,
-        isWritable: true,
-      },
-    ];
-
-    await messageBufferProgram.methods.createBuffer(mockCpiCallerAuth, pythPriceAccountPk, new anchor.BN(1000)).accounts(
-      {
-        whitelist: whitelistPubkey,
-        authority: whitelistAuthority.publicKey,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      }
-    ).remainingAccounts(accumulatorPdaMetas).rpc();
-
-    const messageBufferAccount = await provider.connection.getAccountInfo(
-      accumulatorPdaKey
-    );
-
-    // version
-    assert.equal(messageBufferAccount.data[8 + 1], 1);
   });
 
   it("Mock CPI program - AddPrice", async () => {

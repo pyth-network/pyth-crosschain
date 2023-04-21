@@ -83,6 +83,14 @@ pub mod message_buffer {
     ) -> Result<()> {
         instructions::put_all(ctx, base_account_key, messages)
     }
+
+
+    pub fn create_buffer<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateBuffer<'info>>,
+        allowed_program_auth: Pubkey,
+        base_account_key: Pubkey,
+        target_size: u32,
+    ) -> Result<()> { instructions::create_buffer(ctx, allowed_program_auth, base_account_key, target_size) }
 }
 
 #[derive(Accounts)]
