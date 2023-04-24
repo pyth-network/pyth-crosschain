@@ -39,8 +39,10 @@ impl BufferHeader {
         }
     }
 
-    pub fn set_version(&mut self) {
+    pub fn refresh(&mut self) {
+        self.header_len = Self::HEADER_LEN;
         self.version = Self::CURRENT_VERSION;
+        self.end_offsets = [0u16; u8::MAX as usize];
     }
 
     /// `put_all` writes all the messages to the `AccumulatorInput` account
@@ -52,15 +54,20 @@ impl BufferHeader {
     /// Returns tuple of the number of messages written and the end_offset
     /// of the last message
     ///
-// TODO: add a end_offsets index parameter for "continuation"
-// TODO: test max size of parameters that can be passed into CPI call
-    pub fn put_all_in_buffer(&mut self, destination: &mut [u8], values: &Vec<Vec<u8>>) -> (usize, u16) {
+    // TODO: add a end_offsets index parameter for "continuation"
+    // TODO: test max size of parameters that can be passed into CPI call
+    pub fn put_all_in_buffer(
+        &mut self,
+        destination: &mut [u8],
+        values: &Vec<Vec<u8>>,
+    ) -> (usize, u16) {
         let mut offset = 0u16;
 
         for (i, v) in values.iter().enumerate() {
             let start = offset;
             let len = u16::try_from(v.len());
             if len.is_err() {
+                msg!("len err");
                 return (i, start);
             }
             let end = offset.checked_add(len.unwrap());
@@ -83,7 +90,7 @@ impl BufferHeader {
             accumulator_input_seeds!(self, cpi_caller, base_account),
             &crate::ID,
         )
-            .map_err(|_| AccumulatorUpdaterError::InvalidPDA)?;
+        .map_err(|_| AccumulatorUpdaterError::InvalidPDA)?;
         Ok(res)
     }
 
@@ -92,8 +99,6 @@ impl BufferHeader {
         require_keys_eq!(expected_key, key);
         Ok(())
     }
-
-
 }
 
 #[cfg(test)]
@@ -121,7 +126,10 @@ mod test {
         let (header_idx_size, header_idx_align) =
             (size_of::<BufferHeader>(), align_of::<BufferHeader>());
 
-        let (input_size, input_align) = (size_of::<MessageBufferTemp>(), align_of::<MessageBufferTemp>());
+        let (input_size, input_align) = (
+            size_of::<MessageBufferTemp>(),
+            align_of::<MessageBufferTemp>(),
+        );
 
         assert_eq!(header_idx_size, 514);
         assert_eq!(header_idx_align, 2);

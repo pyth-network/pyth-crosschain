@@ -10,9 +10,11 @@ use {
             CreateAccount,
         },
     },
-    std::cell::RefMut,
-    std::mem,
-    std::ops::DerefMut,
+    std::{
+        cell::RefMut,
+        mem,
+        ops::DerefMut,
+    },
 };
 
 
@@ -40,7 +42,8 @@ pub fn put_all<'info>(
         base_account_key,
     )?;
 
-    header.set_version();
+    header.refresh();
+
     let (num_msgs, num_bytes) = header.put_all_in_buffer(body_bytes, &messages);
 
     if num_msgs != messages.len() {
@@ -58,16 +61,6 @@ pub fn is_uninitialized_account(ai: &AccountInfo) -> bool {
 #[derive(Accounts)]
 #[instruction( base_account_key: Pubkey)]
 pub struct PutAll<'info> {
-    /// `Fund` is a system account that holds
-    /// the lamports that will be used to fund
-    /// `AccumulatorInput` account initialization
-    #[account(
-        mut,
-        seeds = [b"fund".as_ref()],
-        owner = system_program::System::id(),
-        bump,
-    )]
-    pub fund:               SystemAccount<'info>,
     pub whitelist_verifier: WhitelistVerifier<'info>,
     pub system_program:     Program<'info, System>,
     // remaining_accounts:  - [AccumulatorInput PDA]
