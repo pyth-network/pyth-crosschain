@@ -156,12 +156,12 @@ describe("accumulator_updater", () => {
       provider.connection,
       accumulatorPdaKey
     );
-    const header = messageBufferProgram.coder.accounts.decode(
-      "BufferHeader",
+    const messageBufferHeader = deserializeMessageBufferHeader(
+      messageBufferProgram,
       messageBufferAccountData
     );
-    assert.equal(header.version, 1);
-    assert.equal(header.bump, accumulatorPdaBump);
+    assert.equal(messageBufferHeader.version, 1);
+    assert.equal(messageBufferHeader.bump, accumulatorPdaBump);
   });
 
   it("Creates a buffer even if the account already has lamports", async () => {
@@ -191,15 +191,16 @@ describe("accumulator_updater", () => {
       accumulatorPdaKey2
     );
 
-    const header = messageBufferProgram.coder.accounts.decode(
-      "BufferHeader",
+    const messageBufferHeader = deserializeMessageBufferHeader(
+      messageBufferProgram,
       messageBufferAccountData
     );
-    console.log(`header: ${JSON.stringify(header)}`);
-    assert.equal(header.bump, accumulatorPdaBump2);
+
+    console.log(`header: ${JSON.stringify(messageBufferHeader)}`);
+    assert.equal(messageBufferHeader.bump, accumulatorPdaBump2);
     assert.equal(messageBufferAccountData[8], accumulatorPdaBump2);
 
-    assert.equal(header.version, 1);
+    assert.equal(messageBufferHeader.version, 1);
   });
 
   it("Updates the whitelist authority", async () => {
@@ -290,6 +291,7 @@ describe("accumulator_updater", () => {
     );
 
     const accumulatorPriceMessages = parseMessageBuffer(
+      messageBufferProgram,
       messageBufferAccount.data
     );
 
@@ -308,7 +310,8 @@ describe("accumulator_updater", () => {
   });
 
   it("Fetches MessageBuffer using getProgramAccounts with discriminator", async () => {
-    let discriminator = BorshAccountsCoder.accountDiscriminator("BufferHeader");
+    let discriminator =
+      BorshAccountsCoder.accountDiscriminator("MessageBuffer");
     let messageBufferDiscriminator = bs58.encode(discriminator);
 
     // fetch using `getProgramAccounts` and memcmp filter
@@ -378,14 +381,9 @@ describe("accumulator_updater", () => {
     );
 
     const updatedAccumulatorPriceMessages = parseMessageBuffer(
+      messageBufferProgram,
       messageBufferAccountData
     );
-
-    // const messageBuffer =
-    //   await messageBufferProgram.account.messageBuffer.fetch(
-    //     accumulatorPdaMeta.pubkey
-    //   );
-    // const updatedAccumulatorPriceMessages = parseMessageBuffer(messageBuffer);
 
     console.log(
       `updatedAccumulatorPriceMessages: ${JSON.stringify(
@@ -449,11 +447,12 @@ describe("accumulator_updater", () => {
         accumulatorPdaKey
       );
 
-      const header = messageBufferProgram.coder.accounts.decode(
-        "BufferHeader",
+      const messageBufferHeader = deserializeMessageBufferHeader(
+        messageBufferProgram,
         messageBufferAccountData
       );
-      console.log(`header: ${JSON.stringify(header)}`);
+
+      console.log(`header: ${JSON.stringify(messageBufferHeader)}`);
       let mockCpiMessageHeaderLen = 7;
 
       let currentExpectedOffset = 0;
@@ -461,10 +460,12 @@ describe("accumulator_updater", () => {
         currentExpectedOffset += testCase[j];
         currentExpectedOffset += mockCpiMessageHeaderLen;
         console.log(`
-          header.endOffsets[${j}]: ${header.endOffsets[j]}
+          header.endOffsets[${j}]: ${messageBufferHeader.endOffsets[j]}
           currentExpectedOffset: ${currentExpectedOffset}
         `);
-        assert.isTrue(header.endOffsets[j] === currentExpectedOffset);
+        assert.isTrue(
+          messageBufferHeader.endOffsets[j] === currentExpectedOffset
+        );
       }
     }
   });
@@ -538,19 +539,25 @@ async function getMessageBuffer(
 
 // Parses MessageBuffer.data into a PriceAccount or PriceOnly object based on the
 // accountType and accountSchema.
-function parseMessageBuffer(accountData: Buffer): AccumulatorPriceMessage[] {
-  const header = messageBufferProgram.coder.accounts.decode(
-    "BufferHeader",
+function parseMessageBuffer(
+  messageBufferProgram: Program<MessageBuffer>,
+  accountData: Buffer
+): AccumulatorPriceMessage[] {
+  const msgBufferHeader = deserializeMessageBufferHeader(
+    messageBufferProgram,
     accountData
   );
 
   const accumulatorMessages = [];
   // let dataBuffer = Buffer.from(messages);
 
-  let dataBuffer = accountData.subarray(header.headerLen, accountData.length);
+  let dataBuffer = accountData.subarray(
+    msgBufferHeader.headerLen,
+    accountData.length
+  );
   let start = 0;
-  for (let i = 0; i < header.endOffsets.length; i++) {
-    const endOffset = header.endOffsets[i];
+  for (let i = 0; i < msgBufferHeader.endOffsets.length; i++) {
+    const endOffset = msgBufferHeader.endOffsets[i];
 
     if (endOffset == 0) {
       console.log(`endOffset = 0. breaking`);
@@ -584,6 +591,16 @@ type MessageBufferType = {
   header: MessageHeader;
   data: Buffer;
 };
+
+function deserializeMessageBufferHeader(
+  messageBufferProgram: Program<MessageBuffer>,
+  accountData: Buffer
+) {
+  return messageBufferProgram.coder.accounts.decode(
+    "MessageBuffer",
+    accountData
+  );
+}
 
 function parseMessageBytes(data: Buffer): MessageBufferType {
   let offset = 0;

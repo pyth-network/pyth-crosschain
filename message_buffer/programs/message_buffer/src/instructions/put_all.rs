@@ -1,7 +1,7 @@
 use {
     crate::{
         state::*,
-        AccumulatorUpdaterError,
+        MessageBufferError,
     },
     anchor_lang::{
         prelude::*,
@@ -27,14 +27,14 @@ pub fn put_all<'info>(
     let message_buffer_account_info = ctx
         .remaining_accounts
         .first()
-        .ok_or(AccumulatorUpdaterError::MessageBufferNotProvided)?;
+        .ok_or(MessageBufferError::MessageBufferNotProvided)?;
 
 
     let account_data = &mut message_buffer_account_info.try_borrow_mut_data()?;
-    let header_end_index = mem::size_of::<BufferHeader>() + 8;
+    let header_end_index = mem::size_of::<MessageBuffer>() + 8;
     let (header_bytes, body_bytes) = account_data.split_at_mut(header_end_index);
 
-    let header: &mut BufferHeader = bytemuck::from_bytes_mut(&mut header_bytes[8..]);
+    let header: &mut MessageBuffer = bytemuck::from_bytes_mut(&mut header_bytes[8..]);
 
     header.validate(
         message_buffer_account_info.key(),

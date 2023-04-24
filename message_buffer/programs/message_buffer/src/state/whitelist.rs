@@ -1,5 +1,5 @@
 use {
-    crate::AccumulatorUpdaterError,
+    crate::MessageBufferError,
     anchor_lang::prelude::*,
 };
 
@@ -19,12 +19,12 @@ impl Whitelist {
     pub fn validate_programs(&self, allowed_programs: &[Pubkey]) -> Result<()> {
         require!(
             !self.allowed_programs.contains(&Pubkey::default()),
-            AccumulatorUpdaterError::InvalidAllowedProgram
+            MessageBufferError::InvalidAllowedProgram
         );
         require_gte!(
             32,
             allowed_programs.len(),
-            AccumulatorUpdaterError::MaximumAllowedProgramsExceeded
+            MessageBufferError::MaximumAllowedProgramsExceeded
         );
         Ok(())
     }
@@ -53,7 +53,7 @@ impl<'info> WhitelistVerifier<'info> {
         let whitelist = &self.whitelist;
         require!(
             whitelist.allowed_programs.contains(&auth),
-            AccumulatorUpdaterError::CallerNotAllowed
+            MessageBufferError::CallerNotAllowed
         );
         Ok(auth)
     }

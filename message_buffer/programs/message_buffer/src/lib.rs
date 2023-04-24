@@ -73,7 +73,6 @@ pub mod message_buffer {
     /// any existing contents.
     ///
     /// TODO:
-    ///     - try handling re-allocation of the accumulator_input space
     ///     - handle updates ("paging/batches of messages")
     ///
     pub fn put_all<'info>(
@@ -85,12 +84,24 @@ pub mod message_buffer {
     }
 
 
+    /// Initializes the buffer account with
     pub fn create_buffer<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateBuffer<'info>>,
         allowed_program_auth: Pubkey,
         base_account_key: Pubkey,
         target_size: u32,
-    ) -> Result<()> { instructions::create_buffer(ctx, allowed_program_auth, base_account_key, target_size) }
+    ) -> Result<()> {
+        instructions::create_buffer(ctx, allowed_program_auth, base_account_key, target_size)
+    }
+
+    pub fn delete_buffer<'info>(
+        ctx: Context<'_, '_, '_, 'info, DeleteBuffer<'info>>,
+        allowed_program_auth: Pubkey,
+        base_account_key: Pubkey,
+        bump: u8,
+    ) -> Result<()> {
+        instructions::delete_buffer(ctx, allowed_program_auth, base_account_key, bump)
+    }
 }
 
 #[derive(Accounts)]
@@ -127,7 +138,7 @@ pub struct UpdateWhitelist<'info> {
 
 // TODO: rename this
 #[error_code]
-pub enum AccumulatorUpdaterError {
+pub enum MessageBufferError {
     #[msg("CPI Caller not allowed")]
     CallerNotAllowed,
     #[msg("Whitelist already contains program")]

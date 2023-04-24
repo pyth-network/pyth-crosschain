@@ -3,7 +3,7 @@ use anchor_lang::solana_program::message::MessageHeader;
 use {
     crate::{
         state::*,
-        AccumulatorUpdaterError,
+        MessageBufferError,
         MESSAGE,
     },
     anchor_lang::{
@@ -24,9 +24,9 @@ pub fn create_buffer<'info>(
     let buffer_account = ctx
         .remaining_accounts
         .first()
-        .ok_or(AccumulatorUpdaterError::MessageBufferNotProvided)?;
+        .ok_or(MessageBufferError::MessageBufferNotProvided)?;
 
-    require_gte!(target_size, BufferHeader::HEADER_LEN as u32, AccumulatorUpdaterError::MessageBufferTooSmall);
+    require_gte!(target_size, MessageBuffer::HEADER_LEN as u32, MessageBufferError::MessageBufferTooSmall);
     if is_uninitialized_account(buffer_account) {
         let (pda, bump) = Pubkey::find_program_address(
             &[
@@ -52,13 +52,13 @@ pub fn create_buffer<'info>(
             &ctx.accounts.system_program,
         )?;
 
-        let loader = AccountLoader::<BufferHeader>::try_from_unchecked(
+        let loader = AccountLoader::<MessageBuffer>::try_from_unchecked(
             &crate::ID,
             buffer_account,
         )?;
         {
             let mut accumulator_input = loader.load_init()?;
-            *accumulator_input = BufferHeader::new(bump);
+            *accumulator_input = MessageBuffer::new(bump);
         }
         loader.exit(&crate::ID)?;
     }
