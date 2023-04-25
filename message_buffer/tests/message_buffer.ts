@@ -821,7 +821,7 @@ type MessageBufferType = {
 function deserializeMessageBufferHeader(
   messageBufferProgram: Program<MessageBuffer>,
   accountData: Buffer
-): IdlAccounts<MessageBuffer>["MessageBuffer"] {
+): IdlAccounts<MessageBuffer>["messageBuffer"] {
   return messageBufferProgram.coder.accounts.decode(
     "MessageBuffer",
     accountData

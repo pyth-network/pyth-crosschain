@@ -1,5 +1,6 @@
 use {
     crate::{
+        instructions::verify_message_buffer,
         state::*,
         MessageBufferError,
         MESSAGE,
@@ -13,10 +14,12 @@ pub fn delete_buffer<'info>(
     base_account_key: Pubkey,
     bump: u8,
 ) -> Result<()> {
-    let buffer_account = ctx
+    let message_buffer_account_info = ctx
         .remaining_accounts
         .first()
         .ok_or(MessageBufferError::MessageBufferNotProvided)?;
+
+    verify_message_buffer(message_buffer_account_info)?;
 
     let expected_key = Pubkey::create_program_address(
         &[
@@ -28,8 +31,11 @@ pub fn delete_buffer<'info>(
         &crate::ID,
     )
     .map_err(|_| MessageBufferError::InvalidPDA)?;
-    require_keys_eq!(buffer_account.key(), expected_key);
-    let loader = AccountLoader::<MessageBuffer>::try_from_unchecked(&crate::ID, buffer_account)?;
+    require_keys_eq!(message_buffer_account_info.key(), expected_key);
+    let loader = AccountLoader::<MessageBuffer>::try_from_unchecked(
+        &crate::ID,
+        message_buffer_account_info,
+    )?;
     loader.close(ctx.accounts.admin.to_account_info())?;
     Ok(())
 }
