@@ -10,7 +10,7 @@ use {
 #[derive(InitSpace)]
 pub struct Whitelist {
     pub bump:             u8,
-    pub authority:        Pubkey,
+    pub admin:            Pubkey,
     #[max_len(32)]
     pub allowed_programs: Vec<Pubkey>,
 }

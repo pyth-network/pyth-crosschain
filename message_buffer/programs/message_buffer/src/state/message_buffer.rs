@@ -7,7 +7,7 @@ use {
 };
 
 /// A MessageBuffer will have the following structure
-/// ```
+/// ```ignore
 /// struct MessageBuffer {
 ///     header: BufferHeader,
 ///     messages: [u8; accountInfo.data.len - header.header_len]
@@ -61,7 +61,7 @@ impl MessageBuffer {
         }
     }
 
-    pub fn refresh(&mut self) {
+    pub fn refresh_header(&mut self) {
         self.header_len = Self::HEADER_LEN;
         self.version = Self::CURRENT_VERSION;
         self.end_offsets = [0u16; u8::MAX as usize];
@@ -127,10 +127,17 @@ impl MessageBuffer {
 mod test {
     use {
         super::*,
-        bytemuck::bytes_of,
-        std::mem::{
-            align_of,
-            size_of,
+        anchor_lang::solana_program::keccak::hashv,
+        bytemuck::{
+            bytes_of,
+            bytes_of_mut,
+        },
+        std::{
+            io::Write,
+            mem::{
+                align_of,
+                size_of,
+            },
         },
     };
 
@@ -142,21 +149,22 @@ mod test {
         bytes
     }
 
+    fn sighash(namespace: &str, name: &str) -> [u8; 8] {
+        let preimage = format!("{namespace}:{name}");
+
+        let mut sighash = [0u8; 8];
+        sighash.copy_from_slice(&hashv(&[preimage.as_bytes()]).to_bytes()[..8]);
+        sighash
+    }
+
 
     #[test]
     fn test_sizes_and_alignments() {
-        let (header_idx_size, header_idx_align) =
+        let (message_buffer_size, message_buffer_align) =
             (size_of::<MessageBuffer>(), align_of::<MessageBuffer>());
 
-        let (input_size, input_align) = (
-            size_of::<MessageBufferTemp>(),
-            align_of::<MessageBufferTemp>(),
-        );
-
-        assert_eq!(header_idx_size, 514);
-        assert_eq!(header_idx_align, 2);
-        assert_eq!(input_size, 10_232);
-        assert_eq!(input_align, 2);
+        assert_eq!(message_buffer_size, 514);
+        assert_eq!(message_buffer_align, 2);
     }
 
     #[test]
@@ -165,126 +173,159 @@ mod test {
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
 
         let message_buffer = &mut MessageBuffer::new(0);
-        // this would normally be accountInfo.data[message_buffer.header_len..accountInfo.data.len]
-        let account_data = &mut vec![];
-        let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(account_data, &data_bytes);
+        let header_len = message_buffer.header_len as usize;
+        let message_buffer_bytes = bytes_of_mut(message_buffer);
+        // assuming account_info.data.len() == 10KB
+        let messages = &mut vec![0u8; 10_240 - header_len];
+
+        let account_info_data = &mut vec![];
+        let discriminator = &mut sighash("accounts", "MessageBuffer");
+        account_info_data.write_all(discriminator).unwrap();
+        account_info_data.write_all(message_buffer_bytes).unwrap();
+        account_info_data
+            .write_all(messages.as_mut_slice())
+            .unwrap();
+
+        let account_data_len = account_info_data.len();
+
+        let destination = &mut account_info_data[(message_buffer.header_len as usize)..];
+
+        let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(destination, &data_bytes);
 
         assert_eq!(num_msgs, 2);
         assert_eq!(num_bytes, 5);
 
 
-        assert_eq!(accumulator_input.header.end_offsets[0], 2);
-        assert_eq!(accumulator_input.header.end_offsets[1], 5);
+        assert_eq!(message_buffer.end_offsets[0], 2);
+        assert_eq!(message_buffer.end_offsets[1], 5);
 
 
-        let message_buffer_bytes = bytes_of(accumulator_input);
-
-        // The header_len field represents the size of all data prior to the message bytes.
-        // This includes the account discriminator, which is not part of the header struct.
-        // Subtract the size of the discriminator (8 bytes) to compensate
-        let header_len = accumulator_input.header.header_len as usize - 8;
+        // let account_data = bytes_of(accumulator_input);
 
 
-        let iter = accumulator_input
-            .header
-            .end_offsets
-            .iter()
-            .take_while(|x| **x != 0);
+        // // The header_len field represents the size of all data prior to the message bytes.
+        // // This includes the account discriminator, which is not part of the header struct.
+        // // Subtract the size of the discriminator (8 bytes) to compensate
+        // let header_len = message_buffer.header_len as usize - 8;
+        let header_len = message_buffer.header_len as usize;
+
+
+        let iter = message_buffer.end_offsets.iter().take_while(|x| **x != 0);
         let mut start = header_len;
         let mut data_iter = data_bytes.iter();
         for offset in iter {
             let end_offset = header_len + *offset as usize;
-            let message_buffer_data = &message_buffer_bytes[start..end_offset];
+            let message_buffer_data = &account_info_data[start..end_offset];
             let expected_data = data_iter.next().unwrap();
             assert_eq!(message_buffer_data, expected_data.as_slice());
             start = end_offset;
         }
     }
 
-    // #[test]
-    // fn test_put_all_exceed_max() {
-    //     let data = vec![vec![0u8; 9_718 - 2], vec![0u8], vec![0u8; 2]];
+    #[test]
+    fn test_put_all_exceed_max() {
+        let data = vec![vec![0u8; 9_718 - 2], vec![0u8], vec![0u8; 2]];
+
+        let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
+
+        let message_buffer = &mut MessageBuffer::new(0);
+        let header_len = message_buffer.header_len as usize;
+        let message_buffer_bytes = bytes_of_mut(message_buffer);
+        // assuming account_info.data.len() == 10KB
+        let messages = &mut vec![0u8; 10_240 - header_len];
+
+        let account_info_data = &mut vec![];
+        let discriminator = &mut sighash("accounts", "MessageBuffer");
+        account_info_data.write_all(discriminator).unwrap();
+        account_info_data.write_all(message_buffer_bytes).unwrap();
+        account_info_data
+            .write_all(messages.as_mut_slice())
+            .unwrap();
+
+        let account_data_len = account_info_data.len();
+
+        let destination = &mut account_info_data[(message_buffer.header_len as usize)..];
+
+        let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(destination, &data_bytes);
+
+        assert_eq!(num_msgs, 2);
+        assert_eq!(
+            num_bytes,
+            data_bytes[0..2].iter().map(|x| x.len()).sum::<usize>() as u16
+        );
+
+
+        let iter = message_buffer.end_offsets.iter().take_while(|x| **x != 0);
+        let mut start = header_len;
+        let mut data_iter = data_bytes.iter();
+        for offset in iter {
+            let end_offset = header_len + *offset as usize;
+            let message_buffer_data = &account_info_data[start..end_offset];
+            let expected_data = data_iter.next().unwrap();
+            assert_eq!(message_buffer_data, expected_data.as_slice());
+            start = end_offset;
+        }
+
+        assert_eq!(message_buffer.end_offsets[2], 0);
+    }
     //
-    //     let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
-    //     let message_buffer = &mut MessageBufferTemp::new(0);
-    //     let (num_msgs, num_bytes) = message_buffer.put_all(&data_bytes);
-    //     assert_eq!(num_msgs, 2);
-    //     assert_eq!(
-    //         num_bytes,
-    //         data_bytes[0..2].iter().map(|x| x.len()).sum::<usize>() as u16
-    //     );
-    //
-    //     let message_buffer_bytes = bytes_of(message_buffer);
-    //
-    //     // The header_len field represents the size of all data prior to the message bytes.
-    //     // This includes the account discriminator, which is not part of the header struct.
-    //     // Subtract the size of the discriminator (8 bytes) to compensate
-    //     let header_len = message_buffer.header.header_len as usize - 8;
-    //
-    //
-    //     let iter = message_buffer
-    //         .header
-    //         .end_offsets
-    //         .iter()
-    //         .take_while(|x| **x != 0);
-    //     let mut start = header_len;
-    //     let mut data_iter = data_bytes.iter();
-    //     for offset in iter {
-    //         let end_offset = header_len + *offset as usize;
-    //         let message_buffer_data = &message_buffer_bytes[start..end_offset];
-    //         let expected_data = data_iter.next().unwrap();
-    //         assert_eq!(message_buffer_data, expected_data.as_slice());
-    //         start = end_offset;
-    //     }
-    //
-    //     assert_eq!(message_buffer.header.end_offsets[2], 0);
-    // }
-    //
-    // #[test]
-    // fn test_put_all_long_vec() {
-    //     let data = vec![
-    //         vec![0u8; 9_718 - 3],
-    //         vec![0u8],
-    //         vec![0u8],
-    //         vec![0u8; u16::MAX as usize + 2],
-    //         vec![0u8],
-    //     ];
-    //
-    //     let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
-    //     let message_buffer = &mut MessageBufferTemp::new(0);
-    //     let (num_msgs, num_bytes) = message_buffer.put_all(&data_bytes);
-    //     assert_eq!(num_msgs, 3);
-    //     assert_eq!(
-    //         num_bytes,
-    //         data_bytes[0..3].iter().map(|x| x.len()).sum::<usize>() as u16
-    //     );
-    //
-    //     let message_buffer_bytes = bytes_of(message_buffer);
-    //
-    //     // *note* minus 8 here since no account discriminator when using
-    //     // `bytes_of`directly on accumulator_input
-    //     let header_len = message_buffer.header.header_len as usize - 8;
-    //
-    //
-    //     let iter = message_buffer
-    //         .header
-    //         .end_offsets
-    //         .iter()
-    //         .take_while(|x| **x != 0);
-    //     let mut start = header_len;
-    //     let mut data_iter = data_bytes.iter();
-    //     for offset in iter {
-    //         let end_offset = header_len + *offset as usize;
-    //         let message_buffer_data = &message_buffer_bytes[start..end_offset];
-    //         let expected_data = data_iter.next().unwrap();
-    //         assert_eq!(message_buffer_data, expected_data.as_slice());
-    //         start = end_offset;
-    //     }
-    //
-    //     assert_eq!(message_buffer.header.end_offsets[0], 9_715);
-    //     assert_eq!(message_buffer.header.end_offsets[1], 9_716);
-    //     assert_eq!(message_buffer.header.end_offsets[2], 9_717);
-    //     assert_eq!(message_buffer.header.end_offsets[3], 0);
-    //     assert_eq!(message_buffer.header.end_offsets[4], 0);
-    // }
+    #[test]
+    fn test_put_all_long_vec() {
+        let data = vec![
+            vec![0u8; 9_718 - 3],
+            vec![0u8],
+            vec![0u8],
+            vec![0u8; u16::MAX as usize + 2],
+            vec![0u8],
+        ];
+
+        let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
+        // let message_buffer = &mut MessageBufferTemp::new(0);
+        // let (num_msgs, num_bytes) = message_buffer.put_all(&data_bytes);
+
+        let message_buffer = &mut MessageBuffer::new(0);
+        let header_len = message_buffer.header_len as usize;
+
+        let message_buffer_bytes = bytes_of_mut(message_buffer);
+        // assuming account_info.data.len() == 10KB
+        let messages = &mut vec![0u8; 10_240 - header_len];
+
+        let account_info_data = &mut vec![];
+        let discriminator = &mut sighash("accounts", "MessageBuffer");
+        account_info_data.write_all(discriminator).unwrap();
+        account_info_data.write_all(message_buffer_bytes).unwrap();
+        account_info_data
+            .write_all(messages.as_mut_slice())
+            .unwrap();
+
+        let account_data_len = account_info_data.len();
+
+        let destination = &mut account_info_data[(message_buffer.header_len as usize)..];
+
+        let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(destination, &data_bytes);
+
+        assert_eq!(num_msgs, 3);
+        assert_eq!(
+            num_bytes,
+            data_bytes[0..3].iter().map(|x| x.len()).sum::<usize>() as u16
+        );
+
+
+        let iter = message_buffer.end_offsets.iter().take_while(|x| **x != 0);
+        let mut start = header_len;
+        let mut data_iter = data_bytes.iter();
+        for offset in iter {
+            let end_offset = header_len + *offset as usize;
+            let message_buffer_data = &account_info_data[start..end_offset];
+            let expected_data = data_iter.next().unwrap();
+            assert_eq!(message_buffer_data, expected_data.as_slice());
+            start = end_offset;
+        }
+
+        assert_eq!(message_buffer.end_offsets[0], 9_715);
+        assert_eq!(message_buffer.end_offsets[1], 9_716);
+        assert_eq!(message_buffer.end_offsets[2], 9_717);
+        assert_eq!(message_buffer.end_offsets[3], 0);
+        assert_eq!(message_buffer.end_offsets[4], 0);
+    }
 }

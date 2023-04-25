@@ -16,13 +16,13 @@ pub mod message_buffer {
     use super::*;
 
 
-    /// Initializes the whitelist and sets it's authority to the provided pubkey
+    /// Initializes the whitelist and sets it's admin to the provided pubkey
     /// Once initialized, the authority must sign all further changes to the whitelist.
-    pub fn initialize(ctx: Context<Initialize>, authority: Pubkey) -> Result<()> {
-        require_keys_neq!(authority, Pubkey::default());
+    pub fn initialize(ctx: Context<Initialize>, admin: Pubkey) -> Result<()> {
+        require_keys_neq!(admin, Pubkey::default());
         let whitelist = &mut ctx.accounts.whitelist;
         whitelist.bump = *ctx.bumps.get("whitelist").unwrap();
-        whitelist.authority = authority;
+        whitelist.admin = admin;
         Ok(())
     }
 
@@ -47,7 +47,7 @@ pub mod message_buffer {
     ) -> Result<()> {
         let whitelist = &mut ctx.accounts.whitelist;
         whitelist.validate_new_authority(new_authority)?;
-        whitelist.authority = new_authority;
+        whitelist.admin = new_authority;
         Ok(())
     }
 
@@ -84,7 +84,10 @@ pub mod message_buffer {
     }
 
 
-    /// Initializes the buffer account with
+    /// Initializes the buffer account with the target_size
+    ///
+    /// TODO: should target_size be a parameter or should
+    ///     it be a hardcoded initial size
     pub fn create_buffer<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateBuffer<'info>>,
         allowed_program_auth: Pubkey,
@@ -94,13 +97,31 @@ pub mod message_buffer {
         instructions::create_buffer(ctx, allowed_program_auth, base_account_key, target_size)
     }
 
+    pub fn resize_buffer<'info>(
+        ctx: Context<'_, '_, '_, 'info, ResizeBuffer<'info>>,
+        allowed_program_auth: Pubkey,
+        base_account_key: Pubkey,
+        buffer_bump: u8,
+        target_size: u32,
+    ) -> Result<()> {
+        instructions::resize_buffer(
+            ctx,
+            allowed_program_auth,
+            base_account_key,
+            buffer_bump,
+            target_size,
+        )
+    }
+
+    // TODO: should delete_buffer have same CPI restrictions
+    //  as put_all?
     pub fn delete_buffer<'info>(
         ctx: Context<'_, '_, '_, 'info, DeleteBuffer<'info>>,
         allowed_program_auth: Pubkey,
         base_account_key: Pubkey,
-        bump: u8,
+        buffer_bump: u8,
     ) -> Result<()> {
-        instructions::delete_buffer(ctx, allowed_program_auth, base_account_key, bump)
+        instructions::delete_buffer(ctx, allowed_program_auth, base_account_key, buffer_bump)
     }
 }
 
@@ -125,18 +146,17 @@ pub struct UpdateWhitelist<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    pub authority: Signer<'info>,
+    pub admin:     Signer<'info>,
     #[account(
         mut,
         seeds = [b"message".as_ref(), b"whitelist".as_ref()],
         bump = whitelist.bump,
-        has_one = authority
+        has_one = admin
     )]
     pub whitelist: Account<'info, Whitelist>,
 }
 
 
-// TODO: rename this
 #[error_code]
 pub enum MessageBufferError {
     #[msg("CPI Caller not allowed")]
@@ -163,4 +183,10 @@ pub enum MessageBufferError {
     MessageBufferTooSmall,
     #[msg("Fund Bump not found")]
     FundBumpNotFound,
+    #[msg("Reallocation failed")]
+    ReallocFailed,
+    #[msg("Target size too large for reallocation. Max increase is 10240")]
+    ReallocTooLarge,
+    #[msg("MessageBuffer Uninitialized")]
+    MessageBufferUninitialized,
 }
