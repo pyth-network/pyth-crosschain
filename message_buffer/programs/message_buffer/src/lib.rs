@@ -40,14 +40,11 @@ pub mod message_buffer {
         Ok(())
     }
 
-    /// Sets the new authority for the whitelist
-    pub fn update_whitelist_authority(
-        ctx: Context<UpdateWhitelist>,
-        new_authority: Pubkey,
-    ) -> Result<()> {
+    /// Sets the new admin for the whitelist
+    pub fn update_whitelist_admin(ctx: Context<UpdateWhitelist>, new_admin: Pubkey) -> Result<()> {
         let whitelist = &mut ctx.accounts.whitelist;
-        whitelist.validate_new_authority(new_authority)?;
-        whitelist.admin = new_authority;
+        whitelist.validate_new_admin(new_admin)?;
+        whitelist.admin = new_admin;
         Ok(())
     }
 

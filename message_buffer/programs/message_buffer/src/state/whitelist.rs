@@ -29,8 +29,8 @@ impl Whitelist {
         Ok(())
     }
 
-    pub fn validate_new_authority(&self, new_authority: Pubkey) -> Result<()> {
-        require_keys_neq!(new_authority, Pubkey::default());
+    pub fn validate_new_admin(&self, new_admin: Pubkey) -> Result<()> {
+        require_keys_neq!(new_admin, Pubkey::default());
         Ok(())
     }
 }

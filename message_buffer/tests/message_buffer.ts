@@ -243,9 +243,9 @@ describe("accumulator_updater", () => {
   });
 
   it("Updates the whitelist authority", async () => {
-    const newWhitelistAuthority = anchor.web3.Keypair.generate();
+    const newWhitelistAdmin = anchor.web3.Keypair.generate();
     await messageBufferProgram.methods
-      .updateWhitelistAuthority(newWhitelistAuthority.publicKey)
+      .updateWhitelistAdmin(newWhitelistAdmin.publicKey)
       .accounts({
         admin: whitelistAdmin.publicKey,
       })
@@ -255,15 +255,15 @@ describe("accumulator_updater", () => {
     let whitelist = await messageBufferProgram.account.whitelist.fetch(
       whitelistPubkey
     );
-    assert.isTrue(whitelist.admin.equals(newWhitelistAuthority.publicKey));
+    assert.isTrue(whitelist.admin.equals(newWhitelistAdmin.publicKey));
 
     // swap back to original authority
     await messageBufferProgram.methods
-      .updateWhitelistAuthority(whitelistAdmin.publicKey)
+      .updateWhitelistAdmin(whitelistAdmin.publicKey)
       .accounts({
-        admin: newWhitelistAuthority.publicKey,
+        admin: newWhitelistAdmin.publicKey,
       })
-      .signers([newWhitelistAuthority])
+      .signers([newWhitelistAdmin])
       .rpc();
 
     whitelist = await messageBufferProgram.account.whitelist.fetch(
