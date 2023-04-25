@@ -4,15 +4,7 @@ use {
         MessageBufferError,
         MESSAGE,
     },
-    anchor_lang::{
-        prelude::*,
-        solana_program::message::MessageHeader,
-        system_program::{
-            self,
-            CreateAccount,
-        },
-    },
-    std::mem,
+    anchor_lang::prelude::*,
 };
 
 pub fn delete_buffer<'info>(

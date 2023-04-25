@@ -1,25 +1,11 @@
 use {
     crate::{
-        instructions::{
-            is_uninitialized_account,
-            verify_message_buffer,
-        },
+        instructions::verify_message_buffer,
         state::*,
         MessageBufferError,
     },
-    anchor_lang::{
-        prelude::*,
-        system_program::{
-            self,
-            CreateAccount,
-        },
-        Discriminator,
-    },
-    std::{
-        cell::RefMut,
-        mem,
-        ops::DerefMut,
-    },
+    anchor_lang::prelude::*,
+    std::mem,
 };
 
 

@@ -6,19 +6,12 @@ use {
     },
     anchor_lang::{
         prelude::*,
-        solana_program::{
-            entrypoint::MAX_PERMITTED_DATA_INCREASE,
-            message::MessageHeader,
-        },
+        solana_program::entrypoint::MAX_PERMITTED_DATA_INCREASE,
         system_program::{
             self,
-            Allocate,
-            Assign,
-            CreateAccount,
             Transfer,
         },
     },
-    std::mem,
 };
 
 pub fn resize_buffer<'info>(
@@ -40,7 +33,11 @@ pub fn resize_buffer<'info>(
     );
     let target_size = target_size as usize;
     let target_size_delta = target_size.saturating_sub(buffer_account.data_len());
-    require_gte!(MAX_PERMITTED_DATA_INCREASE, target_size_delta, MessageBufferError::ReallocTooLarge);
+    require_gte!(
+        MAX_PERMITTED_DATA_INCREASE,
+        target_size_delta,
+        MessageBufferError::ReallocTooLarge
+    );
 
     let expected_key = Pubkey::create_program_address(
         &[
@@ -54,10 +51,9 @@ pub fn resize_buffer<'info>(
     .map_err(|_| MessageBufferError::InvalidPDA)?;
     require_keys_eq!(buffer_account.key(), expected_key);
 
-    let is_size_increase = target_size as usize > buffer_account.data_len();
+    let _is_size_increase = target_size > buffer_account.data_len();
     if target_size_delta > 0 {
-
-        let target_rent = Rent::get()?.minimum_balance(target_size as usize);
+        let target_rent = Rent::get()?.minimum_balance(target_size);
         if buffer_account.lamports() < target_rent {
             system_program::transfer(
                 CpiContext::new(
@@ -70,13 +66,14 @@ pub fn resize_buffer<'info>(
                 target_rent - buffer_account.lamports(),
             )?;
         }
-        buffer_account.realloc(target_size, false).map_err(|_| MessageBufferError::ReallocFailed)?;
-
+        buffer_account
+            .realloc(target_size, false)
+            .map_err(|_| MessageBufferError::ReallocFailed)?;
     } else {
         // TODO:
         //      do we want to allow shrinking?
         //      if so, do we want to transfer excess lamports?
-        buffer_account.realloc(target_size as usize, false)?;
+        buffer_account.realloc(target_size, false)?;
     }
     Ok(())
 }

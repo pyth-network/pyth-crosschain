@@ -7,16 +7,13 @@ use {
     },
     anchor_lang::{
         prelude::*,
-        solana_program::message::MessageHeader,
         system_program::{
             self,
             Allocate,
             Assign,
-            CreateAccount,
             Transfer,
         },
     },
-    std::mem,
 };
 
 pub fn create_buffer<'info>(

@@ -128,10 +128,7 @@ mod test {
     use {
         super::*,
         anchor_lang::solana_program::keccak::hashv,
-        bytemuck::{
-            bytes_of,
-            bytes_of_mut,
-        },
+        bytemuck::bytes_of_mut,
         std::{
             io::Write,
             mem::{
@@ -186,7 +183,7 @@ mod test {
             .write_all(messages.as_mut_slice())
             .unwrap();
 
-        let account_data_len = account_info_data.len();
+        let _account_data_len = account_info_data.len();
 
         let destination = &mut account_info_data[(message_buffer.header_len as usize)..];
 
@@ -242,7 +239,7 @@ mod test {
             .write_all(messages.as_mut_slice())
             .unwrap();
 
-        let account_data_len = account_info_data.len();
+        let _account_data_len = account_info_data.len();
 
         let destination = &mut account_info_data[(message_buffer.header_len as usize)..];
 
@@ -298,7 +295,7 @@ mod test {
             .write_all(messages.as_mut_slice())
             .unwrap();
 
-        let account_data_len = account_info_data.len();
+        let _account_data_len = account_info_data.len();
 
         let destination = &mut account_info_data[(message_buffer.header_len as usize)..];
 

@@ -71,13 +71,13 @@ repos:
         language: "rust"
         entry: cargo +nightly fmt --manifest-path ./message_buffer/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
-        files: accumulator_updater
+        files: message_buffer
       - id: cargo-clippy-message-buffer
         name: Cargo clippy for message buffer contract
         language: "rust"
         entry: cargo +nightly clippy --manifest-path ./message_buffer/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
         pass_filenames: false
-        files: accumulator_updater
+        files: message_buffer
       # Hooks for solana receiver contract
       - id: cargo-fmt-solana-receiver
         name: Cargo format for solana target chain contract
