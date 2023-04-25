@@ -16,13 +16,13 @@ pub mod message_buffer {
     use super::*;
 
 
-    /// Initializes the whitelist and sets it's authority to the provided pubkey
+    /// Initializes the whitelist and sets it's admin to the provided pubkey
     /// Once initialized, the authority must sign all further changes to the whitelist.
-    pub fn initialize(ctx: Context<Initialize>, authority: Pubkey) -> Result<()> {
-        require_keys_neq!(authority, Pubkey::default());
+    pub fn initialize(ctx: Context<Initialize>, admin: Pubkey) -> Result<()> {
+        require_keys_neq!(admin, Pubkey::default());
         let whitelist = &mut ctx.accounts.whitelist;
         whitelist.bump = *ctx.bumps.get("whitelist").unwrap();
-        whitelist.authority = authority;
+        whitelist.admin = admin;
         Ok(())
     }
 
@@ -40,23 +40,19 @@ pub mod message_buffer {
         Ok(())
     }
 
-    /// Sets the new authority for the whitelist
-    pub fn update_whitelist_authority(
-        ctx: Context<UpdateWhitelist>,
-        new_authority: Pubkey,
-    ) -> Result<()> {
+    /// Sets the new admin for the whitelist
+    pub fn update_whitelist_admin(ctx: Context<UpdateWhitelist>, new_admin: Pubkey) -> Result<()> {
         let whitelist = &mut ctx.accounts.whitelist;
-        whitelist.validate_new_authority(new_authority)?;
-        whitelist.authority = new_authority;
+        whitelist.validate_new_admin(new_admin)?;
+        whitelist.admin = new_admin;
         Ok(())
     }
 
 
-    /// Insert messages/inputs for the Accumulator. All inputs derived from the
-    /// `base_account_key` will go into the same PDA. The PDA is derived with
-    /// seeds = [cpi_caller_auth, b"accumulator", base_account_key]
-    ///
-    ///
+    /// Put messages into the Accumulator. All messages put for the same
+    /// `base_account_key` go into the same buffer PDA. The PDA's address is
+    /// `[allowed_program_auth, MESSAGE, base_account_key]`, where `allowed_program_auth`
+    /// is the whitelisted pubkey who authorized this call.
     ///
     /// * `base_account_key`    - Pubkey of the original account the
     ///                           `MessageBuffer` is derived from
@@ -74,7 +70,6 @@ pub mod message_buffer {
     /// any existing contents.
     ///
     /// TODO:
-    ///     - try handling re-allocation of the accumulator_input space
     ///     - handle updates ("paging/batches of messages")
     ///
     pub fn put_all<'info>(
@@ -83,6 +78,74 @@ pub mod message_buffer {
         messages: Vec<Vec<u8>>,
     ) -> Result<()> {
         instructions::put_all(ctx, base_account_key, messages)
+    }
+
+
+    /// Initializes the buffer account with the `target_size`
+    ///
+    /// *`allowed_program_auth` - The whitelisted pubkey representing an
+    ///                            allowed program. Used as one of the seeds
+    ///                            for deriving the `MessageBuffer` PDA.
+    /// * `base_account_key`    - Pubkey of the original account the
+    ///                           `MessageBuffer` is derived from
+    ///                           (e.g. pyth price account)
+    /// *`target_size`          - Initial size to allocate for the
+    ///                           `MessageBuffer` PDA. `target_size`
+    ///                           must be >= HEADER_LEN && <= 10240
+    pub fn create_buffer<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateBuffer<'info>>,
+        allowed_program_auth: Pubkey,
+        base_account_key: Pubkey,
+        target_size: u32,
+    ) -> Result<()> {
+        instructions::create_buffer(ctx, allowed_program_auth, base_account_key, target_size)
+    }
+
+    /// Resizes the buffer account to the `target_size`
+    ///
+    /// *`allowed_program_auth` - The whitelisted pubkey representing an
+    ///                            allowed program. Used as one of the seeds
+    ///                            for deriving the `MessageBuffer` PDA.
+    /// * `base_account_key`    - Pubkey of the original account the
+    ///                           `MessageBuffer` is derived from
+    ///                           (e.g. pyth price account)
+    /// *`target_size`          -  Size to re-allocate for the
+    ///                           `MessageBuffer` PDA. If increasing the size,
+    ///                           max delta of current_size & target_size is 10240
+    /// *`buffer_bump`          -  Bump seed for the `MessageBuffer` PDA
+    pub fn resize_buffer<'info>(
+        ctx: Context<'_, '_, '_, 'info, ResizeBuffer<'info>>,
+        allowed_program_auth: Pubkey,
+        base_account_key: Pubkey,
+        buffer_bump: u8,
+        target_size: u32,
+    ) -> Result<()> {
+        instructions::resize_buffer(
+            ctx,
+            allowed_program_auth,
+            base_account_key,
+            buffer_bump,
+            target_size,
+        )
+    }
+
+    /// Closes the buffer account and transfers the remaining lamports to the
+    /// `admin` account
+    ///
+    /// *`allowed_program_auth` - The whitelisted pubkey representing an
+    ///                            allowed program. Used as one of the seeds
+    ///                            for deriving the `MessageBuffer` PDA.
+    /// * `base_account_key`    - Pubkey of the original account the
+    ///                           `MessageBuffer` is derived from
+    ///                           (e.g. pyth price account)
+    /// *`buffer_bump`          -  Bump seed for the `MessageBuffer` PDA
+    pub fn delete_buffer<'info>(
+        ctx: Context<'_, '_, '_, 'info, DeleteBuffer<'info>>,
+        allowed_program_auth: Pubkey,
+        base_account_key: Pubkey,
+        buffer_bump: u8,
+    ) -> Result<()> {
+        instructions::delete_buffer(ctx, allowed_program_auth, base_account_key, buffer_bump)
     }
 }
 
@@ -107,19 +170,19 @@ pub struct UpdateWhitelist<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    pub authority: Signer<'info>,
+    pub admin:     Signer<'info>,
     #[account(
         mut,
         seeds = [b"message".as_ref(), b"whitelist".as_ref()],
         bump = whitelist.bump,
-        has_one = authority
+        has_one = admin
     )]
     pub whitelist: Account<'info, Whitelist>,
 }
 
 
 #[error_code]
-pub enum AccumulatorUpdaterError {
+pub enum MessageBufferError {
     #[msg("CPI Caller not allowed")]
     CallerNotAllowed,
     #[msg("Whitelist already contains program")]
@@ -140,6 +203,14 @@ pub enum AccumulatorUpdaterError {
     CurrentDataLengthExceeded,
     #[msg("Message Buffer not provided")]
     MessageBufferNotProvided,
+    #[msg("Message Buffer is not sufficiently large")]
+    MessageBufferTooSmall,
     #[msg("Fund Bump not found")]
     FundBumpNotFound,
+    #[msg("Reallocation failed")]
+    ReallocFailed,
+    #[msg("Target size too large for reallocation/initialization. Max delta is 10240")]
+    TargetSizeDeltaExceeded,
+    #[msg("MessageBuffer Uninitialized")]
+    MessageBufferUninitialized,
 }

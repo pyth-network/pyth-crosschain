@@ -42,10 +42,6 @@ pub struct UpdatePrice<'info> {
     bump,
     )]
     pub pyth_price_account:     AccountLoader<'info, PriceAccount>,
-    #[account(mut)]
-    pub fund:                   SystemAccount<'info>,
-    /// Needed for accumulator_updater
-    pub system_program:         Program<'info, System>,
     /// CHECK: whitelist
     pub accumulator_whitelist:  UncheckedAccount<'info>,
     #[account(
@@ -90,10 +86,8 @@ impl<'info> UpdatePrice<'info> {
         values: Vec<Vec<u8>>,
     ) -> anchor_lang::Result<()> {
         let mut accounts = vec![
-            AccountMeta::new(ctx.accounts.fund.key(), false),
             AccountMeta::new_readonly(ctx.accounts.accumulator_whitelist.key(), false),
             AccountMeta::new_readonly(ctx.accounts.auth.key(), true),
-            AccountMeta::new_readonly(ctx.accounts.system_program.key(), false),
         ];
         accounts.extend_from_slice(
             &ctx.remaining_accounts
