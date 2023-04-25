@@ -177,6 +177,11 @@ module pyth::state {
     }
 
     /// Finalize the upgrade that ran to produce the given `receipt`.
+    ///
+    /// NOTE: The Sui VM performs a check that this method is executed from the
+    /// latest published package. If someone were to try to execute this using
+    /// a stale build, the transaction will revert with `PackageUpgradeError`,
+    /// specifically `PackageIDDoesNotMatch`.
     public(friend) fun commit_upgrade(
         self: &mut State,
         receipt: UpgradeReceipt
@@ -184,32 +189,38 @@ module pyth::state {
         // Uptick the upgrade cap version number using this receipt.
         package::commit_upgrade(&mut self.upgrade_cap, receipt);
 
-        // Check that the upticked hard-coded version version agrees with the
-        // upticked version number.
-        assert!(
-            package::version(&self.upgrade_cap) == control::version() + 1,
-            E_BUILD_VERSION_MISMATCH
-        );
-
         // Update global version.
         required_version::update_latest(
             &mut self.required_version,
             &self.upgrade_cap
         );
 
-        // Enable `migrate` to be called after commiting the upgrade.
+        // Require that `migrate` be called only from the current build.
+        require_current_version<control::Migrate>(self);
+
+        // Require that `migrate` be called only from the current build.
+        require_current_version<control::Migrate>(self);
+
+        // We require that a `MigrateTicket` struct be destroyed as the final
+        // step to an upgrade by calling `migrate` from the `migrate` module.
         //
         // A separate method is required because `state` is a dependency of
         // `migrate`. This method warehouses state modifications required
         // for the new implementation plus enabling any methods required to be
         // gated by the current implementation version. In most cases `migrate`
-        // is a no-op. But it still must be called in order to reset the
-        // migration control to `false`.
+        // is a no-op.
+        //
+        // The only case where this would fail is if `migrate` were not called
+        // from a previous upgrade.
         //
         // See `migrate` module for more info.
-        enable_migration(self);
+        field::add(&mut self.id, b"migrate", MigrateTicket {});
 
-        package::upgrade_package(&self.upgrade_cap)
+        // Return the package IDs.
+        (
+            field::remove(&mut self.id, b"current_package_id"),
+            package::upgrade_package(&self.upgrade_cap)
+        )
     }
 
     /// Enforce a particular method to use the current build version as its
