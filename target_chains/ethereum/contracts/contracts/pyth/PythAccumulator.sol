@@ -11,6 +11,8 @@ import "./PythGetters.sol";
 import "./PythSetters.sol";
 import "./PythInternalStructs.sol";
 
+import "../libraries/MerkleTree.sol";
+
 abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     uint32 constant ACCUMULATOR_MAGIC = 0x504e4155; // Stands for PNAU (Pyth Network Accumulator Update)
     uint32 constant ACCUMULATOR_WORMHOLE_MAGIC = 0x41555756; // Stands for AUWV (Accumulator Update Wormhole Verficiation)
@@ -83,11 +85,6 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 offset += trailingHeaderSize;
             }
 
-            // This value is only used as the check below which currently
-            // never reverts
-            // uint8 minorVersion = UnsafeBytesLib.toUint18(accumulatorUpdate, offset);
-            offset += 1;
-
             UpdateType updateType = UpdateType(
                 UnsafeBytesLib.toUint8(accumulatorUpdate, offset)
             );
@@ -156,7 +153,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                     digest = bytes20(
                         UnsafeBytesLib.toAddress(encodedPayload, payloadoffset)
                     );
-                    payloadoffset += 32;
+                    payloadoffset += 20;
 
                     // TODO: Do we need to be strict about the size of the payload? How it can evolve?
                     if (payloadoffset != encodedPayload.length)
@@ -179,15 +176,8 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
-    uint8 constant MERKLE_LEAF_PREFIX = 0;
-    uint8 constant MERKLE_NODE_PREFIX = 1;
-
-    function merkleHash(bytes memory input) private pure returns (bytes20) {
-        return bytes20(keccak256(input));
-    }
-
     function verifyAndUpdatePriceFeedFromMerkleProof(
-        bytes32 digest,
+        bytes20 digest,
         bytes memory encoded,
         uint offset
     ) private returns (uint endOffset) {
@@ -202,48 +192,16 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             );
             offset += messageSize;
 
-            {
-                bytes20 currentDigest = merkleHash(
-                    abi.encodePacked(MERKLE_LEAF_PREFIX, encodedMessage)
-                );
+            bool valid;
+            (valid, offset) = MerkleTree.verify(
+                encoded,
+                offset,
+                digest,
+                encodedMessage
+            );
 
-                uint8 proofSize = UnsafeBytesLib.toUint8(encoded, offset);
-                offset += 1;
-
-                for (uint i = 0; i < proofSize; i++) {
-                    uint8 isSiblingRight = UnsafeBytesLib.toUint8(
-                        encoded,
-                        offset
-                    );
-                    offset += 1;
-
-                    bytes32 siblingDigest = UnsafeBytesLib.toBytes32(
-                        encoded,
-                        offset
-                    );
-                    offset += 32;
-
-                    if (isSiblingRight == 0) {
-                        currentDigest = merkleHash(
-                            abi.encodePacked(
-                                MERKLE_NODE_PREFIX,
-                                siblingDigest,
-                                currentDigest
-                            )
-                        );
-                    } else {
-                        currentDigest = merkleHash(
-                            abi.encodePacked(
-                                MERKLE_NODE_PREFIX,
-                                currentDigest,
-                                siblingDigest
-                            )
-                        );
-                    }
-                }
-
-                if (currentDigest != digest)
-                    revert PythErrors.InvalidUpdateData();
+            if (!valid) {
+                revert PythErrors.InvalidUpdateData();
             }
 
             parseAndProcessMessage(encodedMessage);
