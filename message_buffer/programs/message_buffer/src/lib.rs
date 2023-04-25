@@ -81,10 +81,17 @@ pub mod message_buffer {
     }
 
 
-    /// Initializes the buffer account with the target_size
+    /// Initializes the buffer account with the `target_size`
     ///
-    /// TODO: should target_size be a parameter or should
-    ///     it be a hardcoded initial size
+    /// *`allowed_program_auth` - The whitelisted pubkey representing an
+    ///                            allowed program. Used as one of the seeds
+    ///                            for deriving the `MessageBuffer` PDA.
+    /// * `base_account_key`    - Pubkey of the original account the
+    ///                           `MessageBuffer` is derived from
+    ///                           (e.g. pyth price account)
+    /// *`target_size`          - Initial size to allocate for the
+    ///                           `MessageBuffer` PDA. `target_size`
+    ///                           must be >= HEADER_LEN && <= 10240
     pub fn create_buffer<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateBuffer<'info>>,
         allowed_program_auth: Pubkey,
@@ -94,6 +101,18 @@ pub mod message_buffer {
         instructions::create_buffer(ctx, allowed_program_auth, base_account_key, target_size)
     }
 
+    /// Resizes the buffer account to the `target_size`
+    ///
+    /// *`allowed_program_auth` - The whitelisted pubkey representing an
+    ///                            allowed program. Used as one of the seeds
+    ///                            for deriving the `MessageBuffer` PDA.
+    /// * `base_account_key`    - Pubkey of the original account the
+    ///                           `MessageBuffer` is derived from
+    ///                           (e.g. pyth price account)
+    /// *`target_size`          -  Size to re-allocate for the
+    ///                           `MessageBuffer` PDA. If increasing the size,
+    ///                           max delta of current_size & target_size is 10240
+    /// *`buffer_bump`          -  Bump seed for the `MessageBuffer` PDA
     pub fn resize_buffer<'info>(
         ctx: Context<'_, '_, '_, 'info, ResizeBuffer<'info>>,
         allowed_program_auth: Pubkey,
@@ -110,8 +129,16 @@ pub mod message_buffer {
         )
     }
 
-    // TODO: should delete_buffer have same CPI restrictions
-    //  as put_all?
+    /// Closes the buffer account and transfers the remaining lamports to the
+    /// `admin` account
+    ///
+    /// *`allowed_program_auth` - The whitelisted pubkey representing an
+    ///                            allowed program. Used as one of the seeds
+    ///                            for deriving the `MessageBuffer` PDA.
+    /// * `base_account_key`    - Pubkey of the original account the
+    ///                           `MessageBuffer` is derived from
+    ///                           (e.g. pyth price account)
+    /// *`buffer_bump`          -  Bump seed for the `MessageBuffer` PDA
     pub fn delete_buffer<'info>(
         ctx: Context<'_, '_, '_, 'info, DeleteBuffer<'info>>,
         allowed_program_auth: Pubkey,
@@ -182,8 +209,8 @@ pub enum MessageBufferError {
     FundBumpNotFound,
     #[msg("Reallocation failed")]
     ReallocFailed,
-    #[msg("Target size too large for reallocation. Max increase is 10240")]
-    ReallocTooLarge,
+    #[msg("Target size too large for reallocation/initialization. Max delta is 10240")]
+    TargetSizeDeltaExceeded,
     #[msg("MessageBuffer Uninitialized")]
     MessageBufferUninitialized,
 }

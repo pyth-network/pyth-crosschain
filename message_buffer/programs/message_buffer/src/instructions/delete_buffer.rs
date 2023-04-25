@@ -19,6 +19,10 @@ pub fn delete_buffer<'info>(
         .first()
         .ok_or(MessageBufferError::MessageBufferNotProvided)?;
 
+    ctx.accounts
+        .whitelist
+        .is_allowed_program_auth(&allowed_program_auth)?;
+
     verify_message_buffer(message_buffer_account_info)?;
 
     let expected_key = Pubkey::create_program_address(
@@ -31,7 +35,12 @@ pub fn delete_buffer<'info>(
         &crate::ID,
     )
     .map_err(|_| MessageBufferError::InvalidPDA)?;
-    require_keys_eq!(message_buffer_account_info.key(), expected_key);
+
+    require_keys_eq!(
+        message_buffer_account_info.key(),
+        expected_key,
+        MessageBufferError::InvalidPDA
+    );
     let loader = AccountLoader::<MessageBuffer>::try_from_unchecked(
         &crate::ID,
         message_buffer_account_info,
@@ -52,7 +61,5 @@ pub struct DeleteBuffer<'info> {
     // Also the recipient of the lamports from closing the buffer account
     #[account(mut)]
     pub admin: Signer<'info>,
-
-    pub system_program: Program<'info, System>,
     // remaining_account:  - [AccumulatorInput PDA]
 }

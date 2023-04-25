@@ -6,33 +6,25 @@ import {
   BorshAccountsCoder,
 } from "@coral-xyz/anchor";
 import { MessageBuffer } from "../target/types/message_buffer";
-console.log("-1");
 import { MockCpiCaller } from "../target/types/mock_cpi_caller";
 import lumina from "@lumina-dev/test";
 import { assert } from "chai";
 import { AccountMeta, ComputeBudgetProgram } from "@solana/web3.js";
 import bs58 from "bs58";
 
-console.log("0");
-
 // Enables tool that runs in local browser for easier debugging of
 // transactions in this test -  https://lumina.fyi/debug
 // lumina();
-console.log("1");
 
 const messageBufferProgram = anchor.workspace
   .MessageBuffer as Program<MessageBuffer>;
 const mockCpiProg = anchor.workspace.MockCpiCaller as Program<MockCpiCaller>;
 let whitelistAdmin = anchor.web3.Keypair.generate();
 
-console.log("1.5");
-
 const [mockCpiCallerAuth] = anchor.web3.PublicKey.findProgramAddressSync(
   [messageBufferProgram.programId.toBuffer(), Buffer.from("cpi")],
   mockCpiProg.programId
 );
-
-console.log("2");
 
 const pythPriceAccountId = new anchor.BN(1);
 const addPriceParams = {
@@ -276,7 +268,6 @@ describe("accumulator_updater", () => {
     const mockCpiCallerAddPriceTxPubkeys = await mockCpiProg.methods
       .addPrice(addPriceParams)
       .accounts({
-        // fund: fundPda,
         systemProgram: anchor.web3.SystemProgram.programId,
         auth: mockCpiCallerAuth,
         accumulatorWhitelist: whitelistPubkey,
@@ -671,7 +662,6 @@ describe("accumulator_updater", () => {
       .accounts({
         whitelist: whitelistPubkey,
         admin: whitelistAdmin.publicKey,
-        systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([whitelistAdmin])
       .remainingAccounts([accumulatorPdaMeta2])
@@ -757,11 +747,7 @@ async function getMessageBuffer(
 ): Promise<Buffer | null> {
   let accountInfo = await connection.getAccountInfo(accountKey);
   return accountInfo ? accountInfo.data : null;
-  // return (accountInfo ?? accountInfo.data)
-  // return (await connection.getAccountInfo(accumulatorPdaKey)).data;
 }
-
-// type BufferHeader = IdlAccounts<MessageBuffer>["BufferHeader"];
 
 // Parses MessageBuffer.data into a PriceAccount or PriceOnly object based on the
 // accountType and accountSchema.

@@ -33,6 +33,14 @@ impl Whitelist {
         require_keys_neq!(new_admin, Pubkey::default());
         Ok(())
     }
+
+    pub fn is_allowed_program_auth(&self, auth: &Pubkey) -> Result<()> {
+        require!(
+            self.allowed_programs.contains(auth),
+            MessageBufferError::CallerNotAllowed
+        );
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -51,10 +59,7 @@ impl<'info> WhitelistVerifier<'info> {
     pub fn is_allowed(&self) -> Result<Pubkey> {
         let auth = self.cpi_caller_auth.key();
         let whitelist = &self.whitelist;
-        require!(
-            whitelist.allowed_programs.contains(&auth),
-            MessageBufferError::CallerNotAllowed
-        );
+        whitelist.is_allowed_program_auth(&auth)?;
         Ok(auth)
     }
 }

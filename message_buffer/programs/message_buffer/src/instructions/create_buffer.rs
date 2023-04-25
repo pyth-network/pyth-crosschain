@@ -7,6 +7,7 @@ use {
     },
     anchor_lang::{
         prelude::*,
+        solana_program::entrypoint::MAX_PERMITTED_DATA_INCREASE,
         system_program::{
             self,
             Allocate,
@@ -27,10 +28,20 @@ pub fn create_buffer<'info>(
         .first()
         .ok_or(MessageBufferError::MessageBufferNotProvided)?;
 
+    ctx.accounts
+        .whitelist
+        .is_allowed_program_auth(&allowed_program_auth)?;
+
     require_gte!(
         target_size,
         MessageBuffer::HEADER_LEN as u32,
         MessageBufferError::MessageBufferTooSmall
+    );
+
+    require_gte!(
+        MAX_PERMITTED_DATA_INCREASE,
+        target_size as usize,
+        MessageBufferError::TargetSizeDeltaExceeded
     );
     if is_uninitialized_account(buffer_account) {
         let (pda, bump) = Pubkey::find_program_address(
@@ -60,8 +71,8 @@ pub fn create_buffer<'info>(
         let loader =
             AccountLoader::<MessageBuffer>::try_from_unchecked(&crate::ID, buffer_account)?;
         {
-            let mut accumulator_input = loader.load_init()?;
-            *accumulator_input = MessageBuffer::new(bump);
+            let mut message_buffer = loader.load_init()?;
+            *message_buffer = MessageBuffer::new(bump);
         }
         loader.exit(&crate::ID)?;
     }

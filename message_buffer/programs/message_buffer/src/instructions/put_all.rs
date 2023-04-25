@@ -51,6 +51,5 @@ pub fn put_all<'info>(
 #[instruction( base_account_key: Pubkey)]
 pub struct PutAll<'info> {
     pub whitelist_verifier: WhitelistVerifier<'info>,
-    pub system_program:     Program<'info, System>,
     // remaining_accounts:  - [AccumulatorInput PDA]
 }

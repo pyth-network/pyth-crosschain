@@ -27,6 +27,9 @@ pub fn resize_buffer<'info>(
         .first()
         .ok_or(MessageBufferError::MessageBufferNotProvided)?;
 
+    ctx.accounts
+        .whitelist
+        .is_allowed_program_auth(&allowed_program_auth)?;
     verify_message_buffer(message_buffer_account_info)?;
 
     require_gte!(
@@ -39,7 +42,7 @@ pub fn resize_buffer<'info>(
     require_gte!(
         MAX_PERMITTED_DATA_INCREASE,
         target_size_delta,
-        MessageBufferError::ReallocTooLarge
+        MessageBufferError::TargetSizeDeltaExceeded
     );
 
     let expected_key = Pubkey::create_program_address(
@@ -52,9 +55,13 @@ pub fn resize_buffer<'info>(
         &crate::ID,
     )
     .map_err(|_| MessageBufferError::InvalidPDA)?;
-    require_keys_eq!(message_buffer_account_info.key(), expected_key);
 
-    let _is_size_increase = target_size > message_buffer_account_info.data_len();
+    require_keys_eq!(
+        message_buffer_account_info.key(),
+        expected_key,
+        MessageBufferError::InvalidPDA
+    );
+
     if target_size_delta > 0 {
         let target_rent = Rent::get()?.minimum_balance(target_size);
         if message_buffer_account_info.lamports() < target_rent {
@@ -73,9 +80,8 @@ pub fn resize_buffer<'info>(
             .realloc(target_size, false)
             .map_err(|_| MessageBufferError::ReallocFailed)?;
     } else {
-        // TODO:
-        //      do we want to allow shrinking?
-        //      if so, do we want to transfer excess lamports?
+        // Not transferring excess lamports back to admin.
+        // Account will retain more lamports than necessary.
         message_buffer_account_info.realloc(target_size, false)?;
     }
     Ok(())
