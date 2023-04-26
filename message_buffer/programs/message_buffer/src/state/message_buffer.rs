@@ -26,6 +26,13 @@ use {
 /// A `MessageBuffer` AccountInfo.data will look like:
 /// [  <discrimintator>, <buffer_header>, <messages> ]
 ///         (0..8)       (8..header_len) (header_len...accountInfo.data.len)
+///
+///<br>
+///
+/// NOTE: The defined fields are read as *Little Endian*. The actual messages
+/// are read as *Big Endian*. The MessageBuffer fields are only ever read
+/// by the Pythnet validator & Hermes so don't need to be in Big Endian
+/// for cross-platform compatibility.
 #[account(zero_copy)]
 #[derive(InitSpace, Debug)]
 pub struct MessageBuffer {
@@ -180,6 +187,23 @@ mod test {
         sighash
     }
 
+    fn generate_message_buffer_bytes(_data_bytes: &Vec<Vec<u8>>) -> Vec<u8> {
+        let message_buffer = &mut MessageBuffer::new(0);
+        let header_len = message_buffer.header_len as usize;
+
+        let account_info_data = &mut vec![];
+        let discriminator = &mut sighash("accounts", "MessageBuffer");
+        let destination = &mut vec![0u8; 10_240 - header_len];
+
+
+        account_info_data.write_all(discriminator).unwrap();
+        account_info_data
+            .write_all(bytes_of_mut(message_buffer))
+            .unwrap();
+        account_info_data.write_all(destination).unwrap();
+        account_info_data.to_vec()
+    }
+
 
     #[test]
     fn test_sizes_and_alignments() {
@@ -195,19 +219,9 @@ mod test {
         let data = vec![vec![12, 34], vec![56, 78, 90]];
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
 
-        let message_buffer = &mut MessageBuffer::new(0);
-        let header_len = message_buffer.header_len as usize;
+        let account_info_data = &mut generate_message_buffer_bytes(&data_bytes);
 
-        let account_info_data = &mut vec![];
-        let discriminator = &mut sighash("accounts", "MessageBuffer");
-        let destination = &mut vec![0u8; 10_240 - header_len];
-
-
-        account_info_data.write_all(discriminator).unwrap();
-        account_info_data
-            .write_all(bytes_of_mut(message_buffer))
-            .unwrap();
-        account_info_data.write_all(destination).unwrap();
+        let header_len = MessageBuffer::HEADER_LEN as usize;
 
 
         let (header_bytes, body_bytes) = account_info_data.split_at_mut(header_len);
@@ -251,20 +265,9 @@ mod test {
 
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
 
-        let message_buffer = &mut MessageBuffer::new(0);
-        let header_len = message_buffer.header_len as usize;
+        let account_info_data = &mut generate_message_buffer_bytes(&data_bytes);
 
-        let account_info_data = &mut vec![];
-        let discriminator = &mut sighash("accounts", "MessageBuffer");
-        let destination = &mut vec![0u8; 10_240 - header_len];
-
-
-        account_info_data.write_all(discriminator).unwrap();
-        account_info_data
-            .write_all(bytes_of_mut(message_buffer))
-            .unwrap();
-        account_info_data.write_all(destination).unwrap();
-
+        let header_len = MessageBuffer::HEADER_LEN as usize;
 
         let (header_bytes, body_bytes) = account_info_data.split_at_mut(header_len);
         let message_buffer: &mut MessageBuffer = bytemuck::from_bytes_mut(&mut header_bytes[8..]);
@@ -295,7 +298,8 @@ mod test {
 
         assert_eq!(message_buffer.end_offsets[2], 0);
     }
-    //
+
+
     #[test]
     fn test_put_all_long_vec() {
         let data = vec![
@@ -308,19 +312,9 @@ mod test {
 
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
 
-        let message_buffer = &mut MessageBuffer::new(0);
-        let header_len = message_buffer.header_len as usize;
+        let account_info_data = &mut generate_message_buffer_bytes(&data_bytes);
 
-        let account_info_data = &mut vec![];
-        let discriminator = &mut sighash("accounts", "MessageBuffer");
-        let destination = &mut vec![0u8; 10_240 - header_len];
-
-
-        account_info_data.write_all(discriminator).unwrap();
-        account_info_data
-            .write_all(bytes_of_mut(message_buffer))
-            .unwrap();
-        account_info_data.write_all(destination).unwrap();
+        let header_len = MessageBuffer::HEADER_LEN as usize;
 
 
         let (header_bytes, body_bytes) = account_info_data.split_at_mut(header_len);
@@ -367,21 +361,9 @@ mod test {
 
         let data = vec![vec![12, 34], vec![56, 78, 90]];
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
+        let account_info_data = &mut generate_message_buffer_bytes(&data_bytes);
 
-        let message_buffer = &mut MessageBuffer::new(0);
-        let header_len = message_buffer.header_len as usize;
-
-        let account_info_data = &mut vec![];
-        let discriminator = &mut sighash("accounts", "MessageBuffer");
-        let destination = &mut vec![0u8; 10_240 - header_len];
-
-
-        account_info_data.write_all(discriminator).unwrap();
-        account_info_data
-            .write_all(bytes_of_mut(message_buffer))
-            .unwrap();
-        account_info_data.write_all(destination).unwrap();
-
+        let header_len = MessageBuffer::HEADER_LEN as usize;
 
         let (header_bytes, body_bytes) = account_info_data.split_at_mut(header_len);
         let message_buffer: &mut MessageBuffer = bytemuck::from_bytes_mut(&mut header_bytes[8..]);
@@ -401,17 +383,17 @@ mod test {
         let mut cursor = std::io::Cursor::new(&account_info_data[10..]);
         let header_len = cursor.read_u16::<LittleEndian>().unwrap();
         println!("header_len: {}", header_len);
-        let mut header_begin = header_len;
-        let mut header_end = cursor.read_u16::<LittleEndian>().unwrap();
+        let mut current_msg_start = header_len;
+        let mut end_offset = cursor.read_u16::<LittleEndian>().unwrap();
         let mut data_iter = data_bytes.iter();
-        println!("init header_end: {}", header_end);
+        println!("init header_end: {}", end_offset);
         let read_data = &mut vec![];
-        while header_end != 0 {
-            let end_offset = header_len + header_end;
+        while end_offset != 0 {
+            let current_msg_end = header_len + end_offset;
             let accumulator_input_data =
-                &account_info_data[header_begin as usize..end_offset as usize];
-            header_end = cursor.read_u16::<LittleEndian>().unwrap();
-            header_begin = end_offset;
+                &account_info_data[current_msg_start as usize..current_msg_end as usize];
+            end_offset = cursor.read_u16::<LittleEndian>().unwrap();
+            current_msg_start = current_msg_end;
             read_data.push(accumulator_input_data);
         }
 
