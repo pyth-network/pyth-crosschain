@@ -19,3 +19,6 @@ default = []
 anchor-lang = { version = "0.27.0" }
 # needed for the new #[account(zero_copy)] in anchor 0.27.0
 bytemuck = { version = "1.4.0", features = ["derive", "min_const_generics"]}
+
+[dev-dependencies]
+byteorder = "1.4.3"

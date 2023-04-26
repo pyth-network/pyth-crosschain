@@ -1,6 +1,5 @@
 use {
     crate::{
-        instructions::verify_message_buffer,
         state::*,
         MessageBufferError,
         MESSAGE,
@@ -23,7 +22,7 @@ pub fn delete_buffer<'info>(
         .whitelist
         .is_allowed_program_auth(&allowed_program_auth)?;
 
-    verify_message_buffer(message_buffer_account_info)?;
+    MessageBuffer::check_discriminator(message_buffer_account_info)?;
 
     let expected_key = Pubkey::create_program_address(
         &[
