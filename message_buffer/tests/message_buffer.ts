@@ -1,5 +1,10 @@
 import * as anchor from "@coral-xyz/anchor";
-import { IdlTypes, Program, BorshAccountsCoder } from "@coral-xyz/anchor";
+import {
+  IdlAccounts,
+  IdlTypes,
+  Program,
+  BorshAccountsCoder,
+} from "@coral-xyz/anchor";
 import { MessageBuffer } from "../target/types/message_buffer";
 import { MockCpiCaller } from "../target/types/mock_cpi_caller";
 import lumina from "@lumina-dev/test";
@@ -9,19 +14,16 @@ import bs58 from "bs58";
 
 // Enables tool that runs in local browser for easier debugging of
 // transactions in this test -  https://lumina.fyi/debug
-lumina();
+// lumina();
 
 const messageBufferProgram = anchor.workspace
   .MessageBuffer as Program<MessageBuffer>;
 const mockCpiProg = anchor.workspace.MockCpiCaller as Program<MockCpiCaller>;
-let whitelistAuthority = anchor.web3.Keypair.generate();
+let whitelistAdmin = anchor.web3.Keypair.generate();
+
 const [mockCpiCallerAuth] = anchor.web3.PublicKey.findProgramAddressSync(
   [messageBufferProgram.programId.toBuffer(), Buffer.from("cpi")],
   mockCpiProg.programId
-);
-const [fundPda] = anchor.web3.PublicKey.findProgramAddressSync(
-  [Buffer.from("fund")],
-  messageBufferProgram.programId
 );
 
 const pythPriceAccountId = new anchor.BN(1);
@@ -41,12 +43,41 @@ const [pythPriceAccountPk] = anchor.web3.PublicKey.findProgramAddressSync(
   mockCpiProg.programId
 );
 const MESSAGE = Buffer.from("message");
-const [accumulatorPdaKey] = anchor.web3.PublicKey.findProgramAddressSync(
-  [mockCpiCallerAuth.toBuffer(), MESSAGE, pythPriceAccountPk.toBuffer()],
-  messageBufferProgram.programId
+const [accumulatorPdaKey, accumulatorPdaBump] =
+  anchor.web3.PublicKey.findProgramAddressSync(
+    [mockCpiCallerAuth.toBuffer(), MESSAGE, pythPriceAccountPk.toBuffer()],
+    messageBufferProgram.programId
+  );
+
+const pythPriceAccountId2 = new anchor.BN(2);
+const [pythPriceAccountPk2] = anchor.web3.PublicKey.findProgramAddressSync(
+  [
+    Buffer.from("pyth"),
+    Buffer.from("price"),
+    pythPriceAccountId2.toArrayLike(Buffer, "le", 8),
+  ],
+  mockCpiProg.programId
 );
 
+const [accumulatorPdaKey2, accumulatorPdaBump2] =
+  anchor.web3.PublicKey.findProgramAddressSync(
+    [mockCpiCallerAuth.toBuffer(), MESSAGE, pythPriceAccountPk2.toBuffer()],
+    messageBufferProgram.programId
+  );
+
+const accumulatorPdaMeta2 = {
+  pubkey: accumulatorPdaKey2,
+  isSigner: false,
+  isWritable: true,
+};
+
+console.log("3");
+
 let fundBalance = 100 * anchor.web3.LAMPORTS_PER_SOL;
+
+const discriminator = BorshAccountsCoder.accountDiscriminator("MessageBuffer");
+const messageBufferDiscriminator = bs58.encode(discriminator);
+
 describe("accumulator_updater", () => {
   // Configure the client to use the local cluster.
   let provider = anchor.AnchorProvider.env();
@@ -58,14 +89,26 @@ describe("accumulator_updater", () => {
       messageBufferProgram.programId
     );
 
-  before("transfer lamports to the fund", async () => {
-    await provider.connection.requestAirdrop(fundPda, fundBalance);
+  before("transfer lamports to needed accounts", async () => {
+    const airdropTxnSig = await provider.connection.requestAirdrop(
+      whitelistAdmin.publicKey,
+      fundBalance
+    );
+
+    await provider.connection.confirmTransaction({
+      signature: airdropTxnSig,
+      ...(await provider.connection.getLatestBlockhash()),
+    });
+    const whitelistAuthorityBalance = await provider.connection.getBalance(
+      whitelistAdmin.publicKey
+    );
+    assert.isTrue(whitelistAuthorityBalance === fundBalance);
   });
 
   it("Is initialized!", async () => {
     // Add your test here.
     const tx = await messageBufferProgram.methods
-      .initialize(whitelistAuthority.publicKey)
+      .initialize(whitelistAdmin.publicKey)
       .accounts({})
       .rpc();
     console.log("Your transaction signature", tx);
@@ -74,7 +117,7 @@ describe("accumulator_updater", () => {
       whitelistPubkey
     );
     assert.strictEqual(whitelist.bump, whitelistBump);
-    assert.isTrue(whitelist.authority.equals(whitelistAuthority.publicKey));
+    assert.isTrue(whitelist.admin.equals(whitelistAdmin.publicKey));
     console.info(`whitelist: ${JSON.stringify(whitelist)}`);
   });
 
@@ -83,9 +126,9 @@ describe("accumulator_updater", () => {
     await messageBufferProgram.methods
       .setAllowedPrograms(allowedProgramAuthorities)
       .accounts({
-        authority: whitelistAuthority.publicKey,
+        admin: whitelistAdmin.publicKey,
       })
-      .signers([whitelistAuthority])
+      .signers([whitelistAdmin])
       .rpc();
     const whitelist = await messageBufferProgram.account.whitelist.fetch(
       whitelistPubkey
@@ -100,29 +143,131 @@ describe("accumulator_updater", () => {
     );
   });
 
-  it("Updates the whitelist authority", async () => {
-    const newWhitelistAuthority = anchor.web3.Keypair.generate();
+  it("Creates a buffer", async () => {
+    const accumulatorPdaMetas = [
+      {
+        pubkey: accumulatorPdaKey,
+        isSigner: false,
+        isWritable: true,
+      },
+    ];
+
     await messageBufferProgram.methods
-      .updateWhitelistAuthority(newWhitelistAuthority.publicKey)
+      .createBuffer(mockCpiCallerAuth, pythPriceAccountPk, 1024 * 8)
       .accounts({
-        authority: whitelistAuthority.publicKey,
+        whitelist: whitelistPubkey,
+        admin: whitelistAdmin.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
       })
-      .signers([whitelistAuthority])
+      .signers([whitelistAdmin])
+      .remainingAccounts(accumulatorPdaMetas)
+      .rpc({ skipPreflight: true });
+
+    const messageBufferAccountData = await getMessageBuffer(
+      provider.connection,
+      accumulatorPdaKey
+    );
+    const messageBufferHeader = deserializeMessageBufferHeader(
+      messageBufferProgram,
+      messageBufferAccountData
+    );
+    assert.equal(messageBufferHeader.version, 1);
+    assert.equal(messageBufferHeader.bump, accumulatorPdaBump);
+  });
+
+  it("Creates a buffer even if the account already has lamports", async () => {
+    const minimumEmptyRent =
+      await provider.connection.getMinimumBalanceForRentExemption(0);
+    await provider.sendAndConfirm(
+      (() => {
+        const tx = new anchor.web3.Transaction();
+        tx.add(
+          anchor.web3.SystemProgram.transfer({
+            fromPubkey: provider.wallet.publicKey,
+            toPubkey: accumulatorPdaKey2,
+            lamports: minimumEmptyRent,
+          })
+        );
+        return tx;
+      })()
+    );
+
+    const accumulatorPdaBalance = await provider.connection.getBalance(
+      accumulatorPdaKey2
+    );
+    console.log(`accumulatorPdaBalance: ${accumulatorPdaBalance}`);
+    assert.isTrue(accumulatorPdaBalance === minimumEmptyRent);
+
+    await messageBufferProgram.methods
+      .createBuffer(mockCpiCallerAuth, pythPriceAccountPk2, 1000)
+      .accounts({
+        whitelist: whitelistPubkey,
+        admin: whitelistAdmin.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([whitelistAdmin])
+      .remainingAccounts([accumulatorPdaMeta2])
+      .rpc({ skipPreflight: true });
+
+    const messageBufferAccountData = await getMessageBuffer(
+      provider.connection,
+      accumulatorPdaKey2
+    );
+
+    const minimumMessageBufferRent =
+      await provider.connection.getMinimumBalanceForRentExemption(
+        messageBufferAccountData.length
+      );
+    const accumulatorPdaBalanceAfter = await provider.connection.getBalance(
+      accumulatorPdaKey2
+    );
+    assert.isTrue(accumulatorPdaBalanceAfter === minimumMessageBufferRent);
+    const messageBufferHeader = deserializeMessageBufferHeader(
+      messageBufferProgram,
+      messageBufferAccountData
+    );
+
+    console.log(`header: ${JSON.stringify(messageBufferHeader)}`);
+    assert.equal(messageBufferHeader.bump, accumulatorPdaBump2);
+    assert.equal(messageBufferAccountData[8], accumulatorPdaBump2);
+
+    assert.equal(messageBufferHeader.version, 1);
+  });
+
+  it("Updates the whitelist authority", async () => {
+    const newWhitelistAdmin = anchor.web3.Keypair.generate();
+    await messageBufferProgram.methods
+      .updateWhitelistAdmin(newWhitelistAdmin.publicKey)
+      .accounts({
+        admin: whitelistAdmin.publicKey,
+      })
+      .signers([whitelistAdmin])
       .rpc();
 
-    const whitelist = await messageBufferProgram.account.whitelist.fetch(
+    let whitelist = await messageBufferProgram.account.whitelist.fetch(
       whitelistPubkey
     );
-    assert.isTrue(whitelist.authority.equals(newWhitelistAuthority.publicKey));
+    assert.isTrue(whitelist.admin.equals(newWhitelistAdmin.publicKey));
 
-    whitelistAuthority = newWhitelistAuthority;
+    // swap back to original authority
+    await messageBufferProgram.methods
+      .updateWhitelistAdmin(whitelistAdmin.publicKey)
+      .accounts({
+        admin: newWhitelistAdmin.publicKey,
+      })
+      .signers([newWhitelistAdmin])
+      .rpc();
+
+    whitelist = await messageBufferProgram.account.whitelist.fetch(
+      whitelistPubkey
+    );
+    assert.isTrue(whitelist.admin.equals(whitelistAdmin.publicKey));
   });
 
   it("Mock CPI program - AddPrice", async () => {
     const mockCpiCallerAddPriceTxPubkeys = await mockCpiProg.methods
       .addPrice(addPriceParams)
       .accounts({
-        fund: fundPda,
         systemProgram: anchor.web3.SystemProgram.programId,
         auth: mockCpiCallerAuth,
         accumulatorWhitelist: whitelistPubkey,
@@ -183,10 +328,14 @@ describe("accumulator_updater", () => {
       mockCpiCallerAddPriceTxPubkeys.pythPriceAccount
     );
 
-    const messageBuffer =
-      await messageBufferProgram.account.messageBuffer.fetch(accumulatorPdaKey);
+    const messageBufferAccount = await provider.connection.getAccountInfo(
+      accumulatorPdaKey
+    );
 
-    const accumulatorPriceMessages = parseMessageBuffer(messageBuffer);
+    const accumulatorPriceMessages = parseMessageBuffer(
+      messageBufferProgram,
+      messageBufferAccount.data
+    );
 
     console.log(
       `accumulatorPriceMessages: ${JSON.stringify(
@@ -200,29 +349,11 @@ describe("accumulator_updater", () => {
       assert.isTrue(pm.price.eq(addPriceParams.price));
       assert.isTrue(pm.priceExpo.eq(addPriceParams.priceExpo));
     });
-
-    const fundBalanceAfter = await provider.connection.getBalance(fundPda);
-    assert.isTrue(fundBalance > fundBalanceAfter);
   });
 
   it("Fetches MessageBuffer using getProgramAccounts with discriminator", async () => {
-    let discriminator =
-      BorshAccountsCoder.accountDiscriminator("MessageBuffer");
-    let messageBufferDiscriminator = bs58.encode(discriminator);
-
-    // fetch using `getProgramAccounts` and memcmp filter
-    const messageBufferAccounts = await provider.connection.getProgramAccounts(
-      messageBufferProgram.programId,
-      {
-        filters: [
-          {
-            memcmp: {
-              offset: 0,
-              bytes: messageBufferDiscriminator,
-            },
-          },
-        ],
-      }
+    const messageBufferAccounts = await getProgramAccountsForMessageBuffers(
+      provider.connection
     );
     const msgBufferAcctKeys = messageBufferAccounts.map((ai) =>
       ai.pubkey.toString()
@@ -231,7 +362,7 @@ describe("accumulator_updater", () => {
       `messageBufferAccounts: ${JSON.stringify(msgBufferAcctKeys, null, 2)}`
     );
 
-    assert.isTrue(messageBufferAccounts.length === 1);
+    assert.isTrue(messageBufferAccounts.length === 2);
     msgBufferAcctKeys.includes(accumulatorPdaKey.toString());
   });
 
@@ -250,7 +381,6 @@ describe("accumulator_updater", () => {
     await mockCpiProg.methods
       .updatePrice(updatePriceParams)
       .accounts({
-        fund: fundPda,
         pythPriceAccount: pythPriceAccountPk,
         auth: mockCpiCallerAuth,
         accumulatorWhitelist: whitelistPubkey,
@@ -271,11 +401,16 @@ describe("accumulator_updater", () => {
     assert.isTrue(pythPriceAccount.priceExpo.eq(updatePriceParams.priceExpo));
     assert.isTrue(pythPriceAccount.ema.eq(updatePriceParams.ema));
     assert.isTrue(pythPriceAccount.emaExpo.eq(updatePriceParams.emaExpo));
-    const messageBuffer =
-      await messageBufferProgram.account.messageBuffer.fetch(
-        accumulatorPdaMeta.pubkey
-      );
-    const updatedAccumulatorPriceMessages = parseMessageBuffer(messageBuffer);
+
+    const messageBufferAccountData = await getMessageBuffer(
+      provider.connection,
+      accumulatorPdaKey
+    );
+
+    const updatedAccumulatorPriceMessages = parseMessageBuffer(
+      messageBufferProgram,
+      messageBufferAccountData
+    );
 
     console.log(
       `updatedAccumulatorPriceMessages: ${JSON.stringify(
@@ -299,11 +434,12 @@ describe("accumulator_updater", () => {
       let testCase = testCases[i];
       console.info(`testCase: ${testCase}`);
       const updatePriceParams = {
-        price: new anchor.BN(10 * i + 5),
-        priceExpo: new anchor.BN(10 & (i + 6)),
+        price: new anchor.BN(10 * (i + 5)),
+        priceExpo: new anchor.BN(10 * (i + 6)),
         ema: new anchor.BN(10 * i + 7),
         emaExpo: new anchor.BN(10 * i + 8),
       };
+      console.log(`updatePriceParams: ${JSON.stringify(updatePriceParams)}`);
 
       let accumulatorPdaMeta = getAccumulatorPdaMeta(
         mockCpiCallerAuth,
@@ -312,7 +448,6 @@ describe("accumulator_updater", () => {
       await mockCpiProg.methods
         .cpiMaxTest(updatePriceParams, testCase)
         .accounts({
-          fund: fundPda,
           pythPriceAccount: pythPriceAccountPk,
           auth: mockCpiCallerAuth,
           accumulatorWhitelist: whitelistPubkey,
@@ -333,28 +468,36 @@ describe("accumulator_updater", () => {
       assert.isTrue(pythPriceAccount.priceExpo.eq(updatePriceParams.priceExpo));
       assert.isTrue(pythPriceAccount.ema.eq(updatePriceParams.ema));
       assert.isTrue(pythPriceAccount.emaExpo.eq(updatePriceParams.emaExpo));
-      const messageBuffer =
-        await messageBufferProgram.account.messageBuffer.fetch(
-          accumulatorPdaMeta.pubkey
-        );
-      const updatedAccumulatorPriceMessages = parseMessageBuffer(messageBuffer);
 
-      console.log(
-        `updatedAccumulatorPriceMessages: ${JSON.stringify(
-          updatedAccumulatorPriceMessages,
-          null,
-          2
-        )}`
+      const messageBufferAccountData = await getMessageBuffer(
+        provider.connection,
+        accumulatorPdaKey
       );
-      updatedAccumulatorPriceMessages.forEach((pm) => {
-        assert.isTrue(pm.id.eq(addPriceParams.id));
-        assert.isTrue(pm.price.eq(updatePriceParams.price));
-        assert.isTrue(pm.priceExpo.eq(updatePriceParams.priceExpo));
-      });
+
+      const messageBufferHeader = deserializeMessageBufferHeader(
+        messageBufferProgram,
+        messageBufferAccountData
+      );
+
+      console.log(`header: ${JSON.stringify(messageBufferHeader)}`);
+      let mockCpiMessageHeaderLen = 7;
+
+      let currentExpectedOffset = 0;
+      for (let j = 0; j < testCase.length; j++) {
+        currentExpectedOffset += testCase[j];
+        currentExpectedOffset += mockCpiMessageHeaderLen;
+        console.log(`
+          header.endOffsets[${j}]: ${messageBufferHeader.endOffsets[j]}
+          currentExpectedOffset: ${currentExpectedOffset}
+        `);
+        assert.isTrue(
+          messageBufferHeader.endOffsets[j] === currentExpectedOffset
+        );
+      }
     }
   });
 
-  it("Mock CPI Program - CPI Max Test Fail", async () => {
+  it("Mock CPI Program - Exceed CPI Max Test ", async () => {
     // with loosen CPI feature activated, max cpi instruction size len is 10KB
     let testCases = [[1024, 2048, 4096, 8192]];
     // for (let i = 1; i < 8; i++) {
@@ -363,7 +506,7 @@ describe("accumulator_updater", () => {
       console.info(`testCase: ${testCase}`);
       const updatePriceParams = {
         price: new anchor.BN(10 * i + 5),
-        priceExpo: new anchor.BN(10 & (i + 6)),
+        priceExpo: new anchor.BN(10 * (i + 6)),
         ema: new anchor.BN(10 * i + 7),
         emaExpo: new anchor.BN(10 * i + 8),
       };
@@ -377,7 +520,6 @@ describe("accumulator_updater", () => {
         await mockCpiProg.methods
           .cpiMaxTest(updatePriceParams, testCase)
           .accounts({
-            fund: fundPda,
             pythPriceAccount: pythPriceAccountPk,
             auth: mockCpiCallerAuth,
             accumulatorWhitelist: whitelistPubkey,
@@ -396,6 +538,192 @@ describe("accumulator_updater", () => {
       assert.ok(errorThrown);
     }
   });
+
+  it("Resizes a buffer to a valid larger size", async () => {
+    const messageBufferAccountDataBefore = await getMessageBuffer(
+      provider.connection,
+      accumulatorPdaKey2
+    );
+    const messageBufferAccountDataLenBefore =
+      messageBufferAccountDataBefore.length;
+
+    // check that header is stil the same as before
+    const messageBufferHeaderBefore = deserializeMessageBufferHeader(
+      messageBufferProgram,
+      messageBufferAccountDataBefore
+    );
+
+    const whitelistAuthorityBalanceBefore =
+      await provider.connection.getBalance(whitelistAdmin.publicKey);
+    console.log(
+      `whitelistAuthorityBalance: ${whitelistAuthorityBalanceBefore}`
+    );
+    const targetSize = 10 * 1024;
+    await messageBufferProgram.methods
+      .resizeBuffer(
+        mockCpiCallerAuth,
+        pythPriceAccountPk2,
+        accumulatorPdaBump2,
+        targetSize
+      )
+      .accounts({
+        whitelist: whitelistPubkey,
+        admin: whitelistAdmin.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([whitelistAdmin])
+      .remainingAccounts([accumulatorPdaMeta2])
+      .rpc({ skipPreflight: true });
+
+    const whitelistAuthorityBalanceAfter = await provider.connection.getBalance(
+      whitelistAdmin.publicKey
+    );
+    assert.isTrue(
+      whitelistAuthorityBalanceAfter < whitelistAuthorityBalanceBefore
+    );
+
+    const messageBufferAccountData = await getMessageBuffer(
+      provider.connection,
+      accumulatorPdaKey2
+    );
+    assert.equal(messageBufferAccountData.length, targetSize);
+
+    // check that header is still the same as before
+    const messageBufferHeader = deserializeMessageBufferHeader(
+      messageBufferProgram,
+      messageBufferAccountData
+    );
+    assert.deepEqual(
+      messageBufferHeader.endOffsets,
+      messageBufferHeaderBefore.endOffsets
+    );
+    assert.deepEqual(
+      messageBufferAccountData.subarray(0, messageBufferAccountDataLenBefore),
+      messageBufferAccountDataBefore
+    );
+  });
+
+  it("Resizes a buffer to a smaller size", async () => {
+    const targetSize = 4 * 1024;
+    await messageBufferProgram.methods
+      .resizeBuffer(
+        mockCpiCallerAuth,
+        pythPriceAccountPk2,
+        accumulatorPdaBump2,
+        targetSize
+      )
+      .accounts({
+        whitelist: whitelistPubkey,
+        admin: whitelistAdmin.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([whitelistAdmin])
+      .remainingAccounts([accumulatorPdaMeta2])
+      .rpc({ skipPreflight: true });
+
+    const messageBufferAccountData = await getMessageBuffer(
+      provider.connection,
+      accumulatorPdaKey2
+    );
+    assert.equal(messageBufferAccountData.length, targetSize);
+  });
+
+  it("Fails to resize buffers to invalid sizes", async () => {
+    // resize more than 10KB in one txn and less than header.header_len should be fail
+    const testCases = [20 * 1024, 2];
+    for (const testCase of testCases) {
+      let errorThrown = false;
+      try {
+        await messageBufferProgram.methods
+          .resizeBuffer(
+            mockCpiCallerAuth,
+            pythPriceAccountPk2,
+            accumulatorPdaBump2,
+            testCase
+          )
+          .accounts({
+            whitelist: whitelistPubkey,
+            admin: whitelistAdmin.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          })
+          .signers([whitelistAdmin])
+          .remainingAccounts([accumulatorPdaMeta2])
+          .rpc({ skipPreflight: true });
+      } catch (_err) {
+        errorThrown = true;
+      }
+      assert.ok(errorThrown);
+    }
+  });
+
+  it("Deletes a buffer", async () => {
+    await messageBufferProgram.methods
+      .deleteBuffer(mockCpiCallerAuth, pythPriceAccountPk2, accumulatorPdaBump2)
+      .accounts({
+        whitelist: whitelistPubkey,
+        admin: whitelistAdmin.publicKey,
+      })
+      .signers([whitelistAdmin])
+      .remainingAccounts([accumulatorPdaMeta2])
+      .rpc({ skipPreflight: true });
+
+    const messageBufferAccountData = await getMessageBuffer(
+      provider.connection,
+      accumulatorPdaKey2
+    );
+
+    if (messageBufferAccountData != null) {
+      assert.fail("messageBufferAccountData should be null");
+    }
+
+    const messageBufferAccounts = await getProgramAccountsForMessageBuffers(
+      provider.connection
+    );
+    assert.equal(messageBufferAccounts.length, 1);
+
+    assert.isFalse(
+      messageBufferAccounts
+        .map((a) => a.pubkey.toString())
+        .includes(accumulatorPdaKey2.toString())
+    );
+  });
+
+  it("Can recreate a buffer after it's been deleted", async () => {
+    await messageBufferProgram.methods
+      .createBuffer(mockCpiCallerAuth, pythPriceAccountPk2, 1000)
+      .accounts({
+        whitelist: whitelistPubkey,
+        admin: whitelistAdmin.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([whitelistAdmin])
+      .remainingAccounts([accumulatorPdaMeta2])
+      .rpc({ skipPreflight: true });
+
+    const messageBufferAccountData = await getMessageBuffer(
+      provider.connection,
+      accumulatorPdaKey2
+    );
+
+    const minimumMessageBufferRent =
+      await provider.connection.getMinimumBalanceForRentExemption(
+        messageBufferAccountData.length
+      );
+    const accumulatorPdaBalanceAfter = await provider.connection.getBalance(
+      accumulatorPdaKey2
+    );
+    assert.isTrue(accumulatorPdaBalanceAfter === minimumMessageBufferRent);
+    const messageBufferHeader = deserializeMessageBufferHeader(
+      messageBufferProgram,
+      messageBufferAccountData
+    );
+
+    console.log(`header: ${JSON.stringify(messageBufferHeader)}`);
+    assert.equal(messageBufferHeader.bump, accumulatorPdaBump2);
+    assert.equal(messageBufferAccountData[8], accumulatorPdaBump2);
+
+    assert.equal(messageBufferHeader.version, 1);
+  });
 });
 
 export const getAccumulatorPdaMeta = (
@@ -413,23 +741,35 @@ export const getAccumulatorPdaMeta = (
   };
 };
 
-type BufferHeader = IdlTypes<MessageBuffer>["BufferHeader"];
+async function getMessageBuffer(
+  connection: anchor.web3.Connection,
+  accountKey: anchor.web3.PublicKey
+): Promise<Buffer | null> {
+  let accountInfo = await connection.getAccountInfo(accountKey);
+  return accountInfo ? accountInfo.data : null;
+}
 
 // Parses MessageBuffer.data into a PriceAccount or PriceOnly object based on the
 // accountType and accountSchema.
-function parseMessageBuffer({
-  header,
-  messages,
-}: {
-  header: BufferHeader;
-  messages: number[];
-}): AccumulatorPriceMessage[] {
-  const accumulatorMessages = [];
-  let dataBuffer = Buffer.from(messages);
+function parseMessageBuffer(
+  messageBufferProgram: Program<MessageBuffer>,
+  accountData: Buffer
+): AccumulatorPriceMessage[] {
+  const msgBufferHeader = deserializeMessageBufferHeader(
+    messageBufferProgram,
+    accountData
+  );
 
+  const accumulatorMessages = [];
+  // let dataBuffer = Buffer.from(messages);
+
+  let dataBuffer = accountData.subarray(
+    msgBufferHeader.headerLen,
+    accountData.length
+  );
   let start = 0;
-  for (let i = 0; i < header.endOffsets.length; i++) {
-    const endOffset = header.endOffsets[i];
+  for (let i = 0; i < msgBufferHeader.endOffsets.length; i++) {
+    const endOffset = msgBufferHeader.endOffsets[i];
 
     if (endOffset == 0) {
       console.log(`endOffset = 0. breaking`);
@@ -459,12 +799,22 @@ type MessageHeader = {
   size: number;
 };
 
-type MessageBuffer = {
+type MessageBufferType = {
   header: MessageHeader;
   data: Buffer;
 };
 
-function parseMessageBytes(data: Buffer): MessageBuffer {
+function deserializeMessageBufferHeader(
+  messageBufferProgram: Program<MessageBuffer>,
+  accountData: Buffer
+): IdlAccounts<MessageBuffer>["messageBuffer"] {
+  return messageBufferProgram.coder.accounts.decode(
+    "MessageBuffer",
+    accountData
+  );
+}
+
+function parseMessageBytes(data: Buffer): MessageBufferType {
   let offset = 0;
 
   const schema = data.readInt8(offset);
@@ -488,8 +838,6 @@ function parseMessageBytes(data: Buffer): MessageBuffer {
   };
 }
 
-//TODO: follow wormhole sdk parsing structure?
-// - https://github.com/wormhole-foundation/wormhole/blob/main/sdk/js/src/vaa/generic.ts
 type AccumulatorPriceMessage = FullPriceMessage | CompactPriceMessage;
 
 type FullPriceMessage = {
@@ -521,4 +869,20 @@ function parseCompactPriceMessage(data: Uint8Array): CompactPriceMessage {
     price: new anchor.BN(data.subarray(8, 16), "be"),
     priceExpo: new anchor.BN(data.subarray(16, 24), "be"),
   };
+}
+
+// fetch MessageBuffer accounts using `getProgramAccounts` and memcmp filter
+async function getProgramAccountsForMessageBuffers(
+  connection: anchor.web3.Connection
+) {
+  return await connection.getProgramAccounts(messageBufferProgram.programId, {
+    filters: [
+      {
+        memcmp: {
+          offset: 0,
+          bytes: messageBufferDiscriminator,
+        },
+      },
+    ],
+  });
 }

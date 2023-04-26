@@ -1,5 +1,5 @@
 use {
-    crate::AccumulatorUpdaterError,
+    crate::MessageBufferError,
     anchor_lang::prelude::*,
 };
 
@@ -10,7 +10,7 @@ use {
 #[derive(InitSpace)]
 pub struct Whitelist {
     pub bump:             u8,
-    pub authority:        Pubkey,
+    pub admin:            Pubkey,
     #[max_len(32)]
     pub allowed_programs: Vec<Pubkey>,
 }
@@ -19,18 +19,26 @@ impl Whitelist {
     pub fn validate_programs(&self, allowed_programs: &[Pubkey]) -> Result<()> {
         require!(
             !self.allowed_programs.contains(&Pubkey::default()),
-            AccumulatorUpdaterError::InvalidAllowedProgram
+            MessageBufferError::InvalidAllowedProgram
         );
         require_gte!(
             32,
             allowed_programs.len(),
-            AccumulatorUpdaterError::MaximumAllowedProgramsExceeded
+            MessageBufferError::MaximumAllowedProgramsExceeded
         );
         Ok(())
     }
 
-    pub fn validate_new_authority(&self, new_authority: Pubkey) -> Result<()> {
-        require_keys_neq!(new_authority, Pubkey::default());
+    pub fn validate_new_admin(&self, new_admin: Pubkey) -> Result<()> {
+        require_keys_neq!(new_admin, Pubkey::default());
+        Ok(())
+    }
+
+    pub fn is_allowed_program_auth(&self, auth: &Pubkey) -> Result<()> {
+        require!(
+            self.allowed_programs.contains(auth),
+            MessageBufferError::CallerNotAllowed
+        );
         Ok(())
     }
 }
@@ -51,10 +59,7 @@ impl<'info> WhitelistVerifier<'info> {
     pub fn is_allowed(&self) -> Result<Pubkey> {
         let auth = self.cpi_caller_auth.key();
         let whitelist = &self.whitelist;
-        require!(
-            whitelist.allowed_programs.contains(&auth),
-            AccumulatorUpdaterError::CallerNotAllowed
-        );
+        whitelist.is_allowed_program_auth(&auth)?;
         Ok(auth)
     }
 }
