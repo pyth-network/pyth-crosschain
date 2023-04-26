@@ -28,14 +28,14 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
 
     // Cached prices are populated in the setUp
     PythStructs.Price[] cachedPrices;
-    bytes[] cachedPricesUpdateData;
+    bytes[] cachedPricesWhBatchUpdateData;
     uint cachedPricesUpdateFee;
     uint64[] cachedPricesPublishTimes;
 
     // Fresh prices are different prices that can be used
     // as a fresh price to update the prices
     PythStructs.Price[] freshPrices;
-    bytes[] freshPricesUpdateData;
+    bytes[] freshPricesWhBatchUpdateData;
     uint freshPricesUpdateFee;
     uint64[] freshPricesPublishTimes;
 
@@ -80,17 +80,17 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
 
         // Populate the contract with the initial prices
         (
-            cachedPricesUpdateData,
+            cachedPricesWhBatchUpdateData,
             cachedPricesUpdateFee
-        ) = generateUpdateDataAndFee(cachedPrices);
+        ) = generateWhBatchUpdateDataAndFee(cachedPrices);
         pyth.updatePriceFeeds{value: cachedPricesUpdateFee}(
-            cachedPricesUpdateData
+            cachedPricesWhBatchUpdateData
         );
 
         (
-            freshPricesUpdateData,
+            freshPricesWhBatchUpdateData,
             freshPricesUpdateFee
-        ) = generateUpdateDataAndFee(freshPrices);
+        ) = generateWhBatchUpdateDataAndFee(freshPrices);
     }
 
     function getRand() internal returns (uint val) {
@@ -98,10 +98,10 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         val = uint(keccak256(abi.encode(randSeed)));
     }
 
-    function generateUpdateDataAndFee(
+    function generateWhBatchUpdateDataAndFee(
         PythStructs.Price[] memory prices
     ) internal returns (bytes[] memory updateData, uint updateFee) {
-        bytes memory vaa = generatePriceFeedUpdateVAA(
+        bytes memory vaa = generateWhBatchUpdate(
             pricesToPriceAttestations(priceIds, prices),
             sequence,
             NUM_GUARDIAN_SIGNERS
@@ -117,13 +117,13 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
 
     function testBenchmarkUpdatePriceFeedsFresh() public {
         pyth.updatePriceFeeds{value: freshPricesUpdateFee}(
-            freshPricesUpdateData
+            freshPricesWhBatchUpdateData
         );
     }
 
     function testBenchmarkUpdatePriceFeedsNotFresh() public {
         pyth.updatePriceFeeds{value: cachedPricesUpdateFee}(
-            cachedPricesUpdateData
+            cachedPricesWhBatchUpdateData
         );
     }
 
@@ -131,7 +131,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         // Since the prices have advanced, the publishTimes are newer than one in
         // the contract and hence, the call should succeed.
         pyth.updatePriceFeedsIfNecessary{value: freshPricesUpdateFee}(
-            freshPricesUpdateData,
+            freshPricesWhBatchUpdateData,
             priceIds,
             freshPricesPublishTimes
         );
@@ -143,7 +143,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         vm.expectRevert(PythErrors.NoFreshUpdate.selector);
 
         pyth.updatePriceFeedsIfNecessary{value: cachedPricesUpdateFee}(
-            cachedPricesUpdateData,
+            cachedPricesWhBatchUpdateData,
             priceIds,
             cachedPricesPublishTimes
         );
@@ -154,7 +154,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         ids[0] = priceIds[0];
 
         pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee}(
-            freshPricesUpdateData,
+            freshPricesWhBatchUpdateData,
             ids,
             0,
             50
@@ -167,7 +167,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         ids[1] = priceIds[1];
 
         pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee}(
-            freshPricesUpdateData,
+            freshPricesWhBatchUpdateData,
             ids,
             0,
             50
@@ -182,7 +182,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
 
         vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
         pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee}(
-            freshPricesUpdateData,
+            freshPricesWhBatchUpdateData,
             ids,
             50,
             100
@@ -206,6 +206,6 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     }
 
     function testBenchmarkGetUpdateFee() public view {
-        pyth.getUpdateFee(freshPricesUpdateData);
+        pyth.getUpdateFee(freshPricesWhBatchUpdateData);
     }
 }
