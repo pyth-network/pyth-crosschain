@@ -252,6 +252,24 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
             attestations[i].prevConf = prices[i].conf;
         }
     }
+
+    function pricesToPriceFeedMessages(
+        bytes32[] memory priceIds,
+        PythStructs.Price[] memory prices
+    ) public returns (PriceFeedMessage[] memory priceFeedMessages) {
+        assertGe(priceIds.length, prices.length);
+        priceFeedMessages = new PriceFeedMessage[](prices.length);
+
+        for (uint i = 0; i < prices.length; ++i) {
+            priceFeedMessages[i].priceId = priceIds[i];
+            priceFeedMessages[i].price = prices[i].price;
+            priceFeedMessages[i].conf = prices[i].conf;
+            priceFeedMessages[i].expo = prices[i].expo;
+            priceFeedMessages[i].publishTime = uint64(prices[i].publishTime);
+            priceFeedMessages[i].emaPrice = prices[i].price;
+            priceFeedMessages[i].emaConf = prices[i].conf;
+        }
+    }
 }
 
 contract PythTestUtilsTest is
