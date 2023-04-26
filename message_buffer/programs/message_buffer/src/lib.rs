@@ -9,7 +9,7 @@ use {
     state::*,
 };
 
-declare_id!("85CXHH71gNyww8NJ5FQQBBvB7UbMdSMMH4ihi2xXgen");
+declare_id!("Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM");
 
 #[program]
 pub mod message_buffer {
