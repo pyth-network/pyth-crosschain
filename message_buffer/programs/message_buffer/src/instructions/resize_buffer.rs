@@ -1,6 +1,5 @@
 use {
     crate::{
-        instructions::verify_message_buffer,
         state::*,
         MessageBufferError,
         MESSAGE,
@@ -30,7 +29,7 @@ pub fn resize_buffer<'info>(
     ctx.accounts
         .whitelist
         .is_allowed_program_auth(&allowed_program_auth)?;
-    verify_message_buffer(message_buffer_account_info)?;
+    MessageBuffer::check_discriminator(message_buffer_account_info)?;
 
     require_gte!(
         target_size,
@@ -62,7 +61,10 @@ pub fn resize_buffer<'info>(
         MessageBufferError::InvalidPDA
     );
 
-    if target_size_delta > 0 {
+    // allow for delta == 0 in case Rent requirements have changed
+    // and additional lamports need to be transferred.
+    // the realloc step will be a no-op in this case.
+    if target_size_delta >= 0 {
         let target_rent = Rent::get()?.minimum_balance(target_size);
         if message_buffer_account_info.lamports() < target_rent {
             system_program::transfer(

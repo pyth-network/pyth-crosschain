@@ -1,6 +1,5 @@
 use {
     crate::{
-        instructions::verify_message_buffer,
         state::*,
         MessageBufferError,
     },
@@ -20,7 +19,7 @@ pub fn put_all<'info>(
         .first()
         .ok_or(MessageBufferError::MessageBufferNotProvided)?;
 
-    verify_message_buffer(message_buffer_account_info)?;
+    MessageBuffer::check_discriminator(message_buffer_account_info)?;
 
     let account_data = &mut message_buffer_account_info.try_borrow_mut_data()?;
     let header_end_index = mem::size_of::<MessageBuffer>() + 8;
