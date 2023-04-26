@@ -33,4 +33,4 @@ RUN cargo fetch --locked
 ADD . .
 
 RUN --mount=type=cache,target=target anchor build -p message_buffer && cp -r target target_tmp
-RUN mv target_tmp/* target
+RUN rm -rf target && mv target_tmp target
