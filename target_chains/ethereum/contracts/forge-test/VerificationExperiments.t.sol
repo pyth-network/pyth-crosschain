@@ -186,7 +186,7 @@ contract VerificationExperiments is
     function generateWormholeUpdateDataAndFee(
         PythStructs.Price[] memory prices
     ) internal returns (bytes[] memory updateData, uint updateFee) {
-        bytes memory vaa = generatePriceFeedUpdateVAA(
+        bytes memory vaa = generateWhBatchUpdate(
             pricesToPriceAttestations(priceIds, prices),
             sequence,
             NUM_GUARDIAN_SIGNERS
@@ -310,7 +310,7 @@ contract VerificationExperiments is
         return ThresholdUpdate(signature, data);
     }
 
-    function testWormholeBatchUpdate() public {
+    function testWhBatchUpdate() public {
         pyth.updatePriceFeeds{value: freshPricesUpdateFee}(
             freshPricesUpdateData
         );

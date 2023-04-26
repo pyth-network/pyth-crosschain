@@ -155,8 +155,8 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                     );
                     payloadoffset += 20;
 
-                    // TODO: Do we need to be strict about the size of the payload? How it can evolve?
-                    if (payloadoffset != encodedPayload.length)
+                    // We don't check equality to enable future compatibility.
+                    if (payloadoffset > encodedPayload.length)
                         revert PythErrors.InvalidUpdateData();
                 }
             }
@@ -256,7 +256,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             );
             offset += 8;
 
-            // TODO: Do we need to be strict about the size of the payload? How it can evolve?
+            // We don't check equality to enable future compatibility.
             if (offset > encodedPriceFeed.length)
                 revert PythErrors.InvalidUpdateData();
         }

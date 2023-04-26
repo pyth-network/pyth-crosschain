@@ -88,14 +88,10 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
         uint64 emaConf;
     }
 
-    function generateWhMerkleUpdate(
-        PriceFeedMessage[] memory priceFeedMessages,
-        uint8 depth,
-        uint8 numSigners
-    ) internal returns (bytes memory whMerkleUpdateData) {
-        bytes[] memory encodedPriceFeedMessages = new bytes[](
-            priceFeedMessages.length
-        );
+    function encodePriceFeedMessages(
+        PriceFeedMessage[] memory priceFeedMessages
+    ) internal pure returns (bytes[] memory encodedPriceFeedMessages) {
+        encodedPriceFeedMessages = new bytes[](priceFeedMessages.length);
 
         for (uint i = 0; i < priceFeedMessages.length; i++) {
             encodedPriceFeedMessages[i] = abi.encodePacked(
@@ -109,6 +105,16 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
                 priceFeedMessages[i].emaConf
             );
         }
+    }
+
+    function generateWhMerkleUpdate(
+        PriceFeedMessage[] memory priceFeedMessages,
+        uint8 depth,
+        uint8 numSigners
+    ) internal returns (bytes memory whMerkleUpdateData) {
+        bytes[] memory encodedPriceFeedMessages = encodePriceFeedMessages(
+            priceFeedMessages
+        );
 
         (bytes20 rootDigest, bytes[] memory proofs) = MerkleTree
             .constructProofs(encodedPriceFeedMessages, depth);
@@ -152,7 +158,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
 
     // Generates byte-encoded payload for the given price attestations. You can use this to mock wormhole
     // call using `vm.mockCall` and return a VM struct with this payload.
-    // You can use generatePriceFeedUpdateVAA to generate a VAA for a price update.
+    // You can use generatePriceFeedUpdate to generate a VAA for a price update.
     function generatePriceFeedUpdatePayload(
         PriceAttestation[] memory attestations
     ) public pure returns (bytes memory payload) {
@@ -200,7 +206,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
     // Generates a VAA for the given attestations.
     // This method calls generatePriceFeedUpdatePayload and then creates a VAA with it.
     // The VAAs generated from this method use block timestamp as their timestamp.
-    function generatePriceFeedUpdateVAA(
+    function generateWhBatchUpdate(
         PriceAttestation[] memory attestations,
         uint64 sequence,
         uint8 numSigners
@@ -254,7 +260,7 @@ contract PythTestUtilsTest is
     PythTestUtils,
     IPythEvents
 {
-    function testGeneratePriceFeedUpdateVAAWorks() public {
+    function testGenerateWhBatchUpdateWorks() public {
         IPyth pyth = IPyth(
             setUpPyth(
                 setUpWormhole(
@@ -276,7 +282,7 @@ contract PythTestUtilsTest is
             1 // Publish time
         );
 
-        bytes memory vaa = generatePriceFeedUpdateVAA(
+        bytes memory vaa = generateWhBatchUpdate(
             pricesToPriceAttestations(priceIds, prices),
             1, // Sequence
             1 // No. Signers
