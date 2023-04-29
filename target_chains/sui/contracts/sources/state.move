@@ -16,6 +16,7 @@ module pyth::state {
     use wormhole::bytes32::{Self, Bytes32};
     use wormhole::fee_collector::{Self, FeeCollector};
     use wormhole::package_utils::{Self};
+    use wormhole::external_address::{ExternalAddress};
 
     friend pyth::pyth;
     friend pyth::pyth_tests;
@@ -127,6 +128,26 @@ module pyth::state {
         self.governance_data_source
     }
 
+    /// Retrieve governance module name.
+    public fun governance_module(): Bytes32 {
+        // TODO: make this the right governance module
+        bytes32::new(
+            x"000000000000000000000000000000000000000000546f6b656e427269646765"
+        )
+    }
+
+    /// Retrieve governance chain ID, which is governance's emitter chain ID.
+    public fun governance_chain(self: &State): u16 {
+        let governance_data_source = governance_data_source(self);
+        (data_source::emitter_chain(&governance_data_source) as u16)
+    }
+
+    /// Retrieve governance emitter address.
+    public fun governance_contract(self: &State): ExternalAddress {
+                let governance_data_source = governance_data_source(self);
+        data_source::emitter_address(&governance_data_source)
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     //
     //  Privileged `State` Access
@@ -208,17 +229,12 @@ module pyth::state {
         package_utils::current_package(&self.id)
     }
 
-    // Mutators and Setters
 
-    public(friend) fun set_fee_collector_fee(self: &mut State, amount: u64) {
+    public(friend) fun set_fee_collector_fee(_: &LatestOnly, self: &mut State, amount: u64) {
         fee_collector::change_fee(&mut self.fee_collector, amount);
     }
 
-    public(friend) fun consume_vaa(state: &mut State, vaa_digest: Bytes32){
-        consumed_vaas::consume(&mut state.consumed_vaas, vaa_digest);
-    }
-
-    public(friend) fun set_data_sources(s: &mut State, new_sources: vector<DataSource>) {
+    public(friend) fun set_data_sources(_: &LatestOnly, s: &mut State, new_sources: vector<DataSource>) {
         // Empty the existing table of data sources registered in state.
         data_source::empty(&mut s.id);
         // Add the new data sources to the dynamic field registry.
@@ -227,23 +243,23 @@ module pyth::state {
         };
     }
 
-    public(friend) fun register_price_info_object(s: &mut State, price_identifier: PriceIdentifier, id: ID) {
+    public(friend) fun register_price_info_object(_: &LatestOnly, s: &mut State, price_identifier: PriceIdentifier, id: ID) {
         price_info::add(&mut s.id, price_identifier, id);
     }
 
-    public(friend) fun set_governance_data_source(s: &mut State, source: DataSource) {
+    public(friend) fun set_governance_data_source(_: &LatestOnly, s: &mut State, source: DataSource) {
         s. governance_data_source = source;
     }
 
-    public(friend) fun set_base_update_fee(s: &mut State, fee: u64) {
+    public(friend) fun set_base_update_fee(_: &LatestOnly, s: &mut State, fee: u64) {
         s.base_update_fee = fee;
     }
 
-    public(friend) fun set_stale_price_threshold_secs(s: &mut State, threshold_secs: u64) {
+    public(friend) fun set_stale_price_threshold_secs(_: &LatestOnly, s: &mut State, threshold_secs: u64) {
         s.stale_price_threshold = threshold_secs;
     }
 
-    public(friend) fun register_price_feed(s: &mut State, p: PriceIdentifier, id: ID){
+    public(friend) fun register_price_feed(_: &LatestOnly, s: &mut State, p: PriceIdentifier, id: ID){
         price_info::add(&mut s.id, p, id);
     }
 

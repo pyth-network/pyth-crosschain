@@ -5,12 +5,9 @@ module pyth::set_data_sources {
     use wormhole::external_address::{Self};
     use wormhole::bytes32::{Self};
 
-    use wormhole::governance_message::{Self, DecreeTicket, DecreeReceipt};
-
     use pyth::deserialize;
     use pyth::data_source::{Self, DataSource};
-    use pyth::state::{Self, State};
-    use pyth::version_control::{SetDataSources};
+    use pyth::state::{Self, State, LatestOnly};
 
     friend pyth::governance;
 
@@ -21,22 +18,12 @@ module pyth::set_data_sources {
     }
 
     public(friend) fun execute(
+        latest_only: &LatestOnly,
         state: &mut State,
-        receipt: DecreeReceipt<GovernanceWitness>
+        payload: vector<u8>
     ) {
-        // This capability ensures that the current build version is used.
-        let latest_only = state::assert_latest_only(state);
-
-        let payload =
-            governance_message::take_payload(
-                state::borrow_mut_consumed_vaas(
-                    &latest_only,
-                    state
-                ),
-                receipt
-            );
         let DataSources { sources } = from_byte_vec(payload);
-        state::set_data_sources(state, sources);
+        state::set_data_sources(latest_only, state, sources);
     }
 
     fun from_byte_vec(bytes: vector<u8>): DataSources {

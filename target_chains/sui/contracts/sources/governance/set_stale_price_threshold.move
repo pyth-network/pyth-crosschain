@@ -1,8 +1,7 @@
 module pyth::set_stale_price_threshold {
     use wormhole::cursor;
     use pyth::deserialize;
-    use pyth::state::{Self, State};
-    use pyth::version_control::SetStalePriceThreshold;
+    use pyth::state::{Self, State, LatestOnly};
 
     friend pyth::governance;
 
@@ -10,11 +9,9 @@ module pyth::set_stale_price_threshold {
         threshold: u64,
     }
 
-    public(friend) fun execute(state: &mut State, payload: vector<u8>) {
-        state::check_minimum_requirement<SetStalePriceThreshold>(state);
-
+    public(friend) fun execute(latest_only: &LatestOnly, state: &mut State, payload: vector<u8>) {
         let StalePriceThreshold { threshold } = from_byte_vec(payload);
-        state::set_stale_price_threshold_secs(state, threshold);
+        state::set_stale_price_threshold_secs(latest_only, state, threshold);
     }
 
     fun from_byte_vec(bytes: vector<u8>): StalePriceThreshold {

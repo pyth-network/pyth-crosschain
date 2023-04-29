@@ -56,4 +56,12 @@ module pyth::data_source {
             emitter_address: emitter_address,
         }
     }
+
+    public fun emitter_chain(data_source: &DataSource): u64{
+        data_source.emitter_chain
+    }
+
+    public fun emitter_address(data_source: &DataSource): ExternalAddress{
+        data_source.emitter_address
+    }
 }

@@ -8,8 +8,7 @@ module pyth::transfer_fee {
     use wormhole::external_address::{Self};
     use wormhole::bytes32::{Self};
 
-    use pyth::state::{Self, State};
-    use pyth::version_control::{TransferFee};
+    use pyth::state::{Self, State, LatestOnly};
 
     friend pyth::governance;
 
@@ -18,14 +17,13 @@ module pyth::transfer_fee {
         recipient: address
     }
 
-    public(friend) fun execute(state: &mut State, payload: vector<u8>, ctx: &mut TxContext) {
-        state::check_minimum_requirement<TransferFee>(state);
+    public(friend) fun execute(latest_only: &LatestOnly, state: &mut State, payload: vector<u8>, ctx: &mut TxContext) {
 
         let PythFee { amount, recipient } = from_byte_vec(payload);
 
         transfer::public_transfer(
             coin::from_balance(
-                state::withdraw_fee(state, amount),
+                state::withdraw_fee(latest_only, state, amount),
                 ctx
             ),
             recipient

@@ -1,8 +1,7 @@
 module pyth::set_governance_data_source {
     use pyth::deserialize;
     use pyth::data_source;
-    use pyth::state::{Self, State};
-    use pyth::version_control::SetGovernanceDataSource;
+    use pyth::state::{Self, State, LatestOnly};
 
     use wormhole::cursor;
     use wormhole::external_address::{Self, ExternalAddress};
@@ -16,12 +15,9 @@ module pyth::set_governance_data_source {
         initial_sequence: u64,
     }
 
-    public(friend) fun execute(pyth_state: &mut State, payload: vector<u8>) {
-        state::check_minimum_requirement<SetGovernanceDataSource>(pyth_state);
-
-        // TODO - What is GovernanceDataSource initial_sequence used for?
+    public(friend) fun execute(latest_only: &LatestOnly, pyth_state: &mut State, payload: vector<u8>) {
         let GovernanceDataSource { emitter_chain_id, emitter_address, initial_sequence: _initial_sequence } = from_byte_vec(payload);
-        state::set_governance_data_source(pyth_state, data_source::new(emitter_chain_id, emitter_address));
+        state::set_governance_data_source(latest_only, pyth_state, data_source::new(emitter_chain_id, emitter_address));
     }
 
     fun from_byte_vec(bytes: vector<u8>): GovernanceDataSource {

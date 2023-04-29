@@ -39,12 +39,12 @@ module pyth::contract_upgrade {
     }
 
     public fun authorize_governance(
-        wormhole_state: &State
+        pyth_state: &State
     ): DecreeTicket<GovernanceWitness> {
         governance_message::authorize_verify_local(
             GovernanceWitness {},
-            state::governance_chain(wormhole_state),
-            state::governance_contract(wormhole_state),
+            state::governance_chain(pyth_state),
+            state::governance_contract(pyth_state),
             state::governance_module(),
             ACTION_UPGRADE_CONTRACT
         )
@@ -121,6 +121,6 @@ module pyth::contract_upgrade {
 }
 
 #[test_only]
-module token_bridge::upgrade_contract_tests {
+module pyth::upgrade_contract_tests {
     // TODO
 }

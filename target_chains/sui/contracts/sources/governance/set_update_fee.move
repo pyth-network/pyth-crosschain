@@ -2,8 +2,7 @@ module pyth::set_update_fee {
     use sui::math::{Self};
 
     use pyth::deserialize;
-    use pyth::state::{Self, State};
-    use pyth::version_control::SetUpdateFee;
+    use pyth::state::{Self, State, LatestOnly};
 
     use wormhole::cursor;
 
@@ -18,13 +17,11 @@ module pyth::set_update_fee {
         exponent: u64,
     }
 
-    public(friend) fun execute(pyth_state: &mut State, payload: vector<u8>) {
-        state::check_minimum_requirement<SetUpdateFee>(pyth_state);
-
+    public(friend) fun execute(latest_only: &LatestOnly, pyth_state: &mut State, payload: vector<u8>) {
         let UpdateFee { mantissa, exponent } = from_byte_vec(payload);
         assert!(exponent <= 255, E_EXPONENT_DOES_NOT_FIT_IN_U8);
         let fee = apply_exponent(mantissa, (exponent as u8));
-        state::set_base_update_fee(pyth_state, fee);
+        state::set_base_update_fee(latest_only, pyth_state, fee);
     }
 
     fun from_byte_vec(bytes: vector<u8>): UpdateFee {
