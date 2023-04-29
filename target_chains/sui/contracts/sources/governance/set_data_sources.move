@@ -5,6 +5,8 @@ module pyth::set_data_sources {
     use wormhole::external_address::{Self};
     use wormhole::bytes32::{Self};
 
+    use wormhole::governance_message::{Self, DecreeTicket, DecreeReceipt};
+
     use pyth::deserialize;
     use pyth::data_source::{Self, DataSource};
     use pyth::state::{Self, State};
@@ -12,13 +14,27 @@ module pyth::set_data_sources {
 
     friend pyth::governance;
 
+    struct GovernanceWitness has drop {}
+
     struct DataSources {
         sources: vector<DataSource>,
     }
 
-    public(friend) fun execute(state: &mut State, payload: vector<u8>) {
-        state::check_minimum_requirement<SetDataSources>(state);
+    public(friend) fun execute(
+        state: &mut State,
+        receipt: DecreeReceipt<GovernanceWitness>
+    ) {
+        // This capability ensures that the current build version is used.
+        let latest_only = state::assert_latest_only(state);
 
+        let payload =
+            governance_message::take_payload(
+                state::borrow_mut_consumed_vaas(
+                    &latest_only,
+                    state
+                ),
+                receipt
+            );
         let DataSources { sources } = from_byte_vec(payload);
         state::set_data_sources(state, sources);
     }

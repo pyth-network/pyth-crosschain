@@ -399,6 +399,7 @@ module pyth::pyth_tests{
     use sui::clock::{Self, Clock};
 
     use pyth::state::{Self, State as PythState};
+    use pyth::setup::{Self};
     use pyth::price_identifier::{Self};
     use pyth::price_info::{Self, PriceInfo, PriceInfoObject};
     use pyth::price_feed::{Self};
@@ -484,14 +485,14 @@ module pyth::pyth_tests{
                 test_scenario::ctx(&mut scenario)
             );
 
-        state::init_test_only(ctx(&mut scenario));
+        setup::init_test_only(ctx(&mut scenario));
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        let pyth_deployer_cap = test_scenario::take_from_address<state::DeployerCap>(
+        let pyth_deployer_cap = test_scenario::take_from_address<setup::DeployerCap>(
             &scenario,
             DEPLOYER
         );
 
-        state::init_and_share_state(
+        setup::init_and_share_state(
             pyth_deployer_cap,
             pyth_upgrade_cap,
             stale_price_threshold,
