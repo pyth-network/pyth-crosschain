@@ -33,5 +33,5 @@ pub fn cpi_max_test<'info>(
     msg!("input_len: {}", input_len);
 
 
-    UpdatePrice::emit_accumulator_inputs(ctx, inputs)
+    UpdatePrice::emit_messages(ctx, inputs)
 }

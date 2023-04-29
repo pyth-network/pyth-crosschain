@@ -14,6 +14,10 @@ use {
     },
 };
 
+//TODO: make sure this works regardless if the msg_buffer is initialized already or not
+// we could be in a sitaution where we have a new price account & new msg_buffer acount
+// and we know we need more than 10KB to fit all the messages. In this situation
+// we would call create_buffer(10240) then resize_buffer(target_size)
 pub fn resize_buffer<'info>(
     ctx: Context<'_, '_, '_, 'info, ResizeBuffer<'info>>,
     allowed_program_auth: Pubkey,
@@ -36,8 +40,11 @@ pub fn resize_buffer<'info>(
         MessageBuffer::HEADER_LEN as u32,
         MessageBufferError::MessageBufferTooSmall
     );
+
     let target_size = target_size as usize;
-    let target_size_delta = target_size.saturating_sub(message_buffer_account_info.data_len());
+
+    let current_account_size = message_buffer_account_info.data_len();
+    let target_size_delta = target_size.saturating_sub(current_account_size);
     require_gte!(
         MAX_PERMITTED_DATA_INCREASE,
         target_size_delta,
@@ -61,10 +68,10 @@ pub fn resize_buffer<'info>(
         MessageBufferError::InvalidPDA
     );
 
-    // allow for delta == 0 in case Rent requirements have changed
+    // allow for target_size == account_size in case Rent requirements have changed
     // and additional lamports need to be transferred.
     // the realloc step will be a no-op in this case.
-    if target_size_delta >= 0 {
+    if target_size >= current_account_size {
         let target_rent = Rent::get()?.minimum_balance(target_size);
         if message_buffer_account_info.lamports() < target_rent {
             system_program::transfer(

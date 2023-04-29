@@ -35,9 +35,9 @@ impl MessageHeader {
 #[derive(Clone, Default, Debug, Eq, PartialEq)]
 pub struct CompactPriceMessage {
     pub header:     MessageHeader,
-    pub price_expo: u64,
-    pub price:      u64,
     pub id:         u64,
+    pub price:      u64,
+    pub price_expo: u64,
 }
 
 

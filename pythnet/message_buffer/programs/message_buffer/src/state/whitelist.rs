@@ -11,6 +11,8 @@ use {
 pub struct Whitelist {
     pub bump:             u8,
     pub admin:            Pubkey,
+    // This is used by the `#[derive(InitSpace)]`
+    // to determine initial account size
     #[max_len(32)]
     pub allowed_programs: Vec<Pubkey>,
 }

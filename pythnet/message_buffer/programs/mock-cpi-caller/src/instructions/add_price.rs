@@ -3,7 +3,7 @@ use {
         instructions::{
             sighash,
             ACCUMULATOR_UPDATER_IX_NAME,
-            CPI,
+            UPD_PRICE_WRITE,
         },
         message::{
             get_schemas,
@@ -51,13 +51,13 @@ pub fn add_price<'info>(
     // Note: normally pyth oracle add_price wouldn't call emit_accumulator_inputs
     // since add_price doesn't actually add/update any price data we would
     // want included in the accumulator anyways. This is just for testing
-    AddPrice::emit_accumulator_inputs(ctx, inputs)
+    AddPrice::emit_messages(ctx, inputs)
 }
 
 
 impl<'info> AddPrice<'info> {
-    /// Invoke accumulator-updater emit-inputs ix cpi call using solana
-    pub fn emit_accumulator_inputs(
+    /// Invoke message_buffer::put_all ix cpi call using solana
+    pub fn emit_messages(
         ctx: Context<'_, '_, '_, 'info, AddPrice<'info>>,
         inputs: Vec<Vec<u8>>,
     ) -> anchor_lang::Result<()> {
@@ -89,8 +89,8 @@ impl<'info> AddPrice<'info> {
         // that won't be available in the oracle program
         let (_, bump) = Pubkey::find_program_address(
             &[
+                UPD_PRICE_WRITE.as_bytes(),
                 ctx.accounts.message_buffer_program.key().as_ref(),
-                CPI.as_bytes(),
             ],
             &crate::ID,
         );
@@ -98,8 +98,10 @@ impl<'info> AddPrice<'info> {
             &create_inputs_ix,
             account_infos,
             &[&[
+                UPD_PRICE_WRITE.as_bytes(),
                 ctx.accounts.message_buffer_program.key().as_ref(),
-                CPI.as_bytes(),
+                // ctx.accounts.message_buffer_program.key().as_ref(),
+                // UPD_PRICE_WRITE.as_bytes(),
                 &[bump],
             ]],
         )?;
@@ -136,7 +138,7 @@ pub struct AddPrice<'info> {
     /// PDA representing this program's authority
     /// to call the accumulator program
     #[account(
-        seeds = [message_buffer_program.key().as_ref(), b"cpi".as_ref()],
+        seeds = [b"upd_price_write".as_ref(), message_buffer_program.key().as_ref()],
         owner = system_program::System::id(),
         bump,
     )]
