@@ -17,7 +17,6 @@ As with other chains, one first obtains a batch price attestation VAA (of type `
 ### 1. `wormhole::parse_and_verify`
 
 Call `parse_and_verify` on the batch attestation VAA bytes to obtain a `VAA` hot potato object. 
-Note: you will also need to pass in a reference to the Wormhole state and the Sui clock.
   ```Rust
   public fun parse_and_verify(
         wormhole_state: &State,
@@ -26,6 +25,7 @@ Note: you will also need to pass in a reference to the Wormhole state and the Su
     ): VAA
   ```
 ### 2.`pyth:update_price_feeds` 
+Vectorize the `VAA` from the previous step and pass it to `update_price_feeds`.
 ```Rust
  public fun update_price_feeds(
         pyth_state: &PythState,
