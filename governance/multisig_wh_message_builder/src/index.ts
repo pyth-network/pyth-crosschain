@@ -17,11 +17,7 @@ import { program } from "commander";
 import * as fs from "fs";
 import { LedgerNodeWallet } from "./wallet";
 import lodash from "lodash";
-import {
-  getActiveProposals,
-  getManyProposalsInstructions,
-  getProposalInstructions,
-} from "./multisig";
+import { getProposalInstructions } from "./multisig";
 import {
   WormholeNetwork,
   loadWormholeTools,
@@ -149,130 +145,6 @@ program
       createKeyAddr,
       initialMembers
     );
-  });
-
-program
-  .command("create")
-  .description("Create a new multisig transaction")
-  .option("-c, --cluster <network>", "solana cluster to use", "devnet")
-  .option("-l, --ledger", "use ledger")
-  .option(
-    "-lda, --ledger-derivation-account <number>",
-    "ledger derivation account to use"
-  )
-  .option(
-    "-ldc, --ledger-derivation-change <number>",
-    "ledger derivation change to use"
-  )
-  .option(
-    "-w, --wallet <filepath>",
-    "multisig wallet secret key filepath",
-    "keys/key.json"
-  )
-  .option("-f, --file <filepath>", "Path to a json file with instructions")
-  .option("-p, --payload <hex-string>", "Wormhole VAA payload")
-  .option("-s, --skip-duplicate-check", "Skip checking duplicates")
-  .action(async (options) => {
-    const cluster: Cluster = options.cluster;
-    const squad = await getSquadsClient(
-      cluster,
-      options.ledger,
-      options.ledgerDerivationAccount,
-      options.ledgerDerivationChange,
-      options.wallet
-    );
-
-    if (options.payload && options.file) {
-      console.log("Only one of --payload or --file must be provided");
-      return;
-    }
-
-    if (options.payload) {
-      const wormholeTools = await loadWormholeTools(cluster, squad.connection);
-
-      if (!options.skipDuplicateCheck) {
-        const activeProposals = await getActiveProposals(
-          squad,
-          CONFIG[cluster].vault
-        );
-        const activeInstructions = await getManyProposalsInstructions(
-          squad,
-          activeProposals
-        );
-
-        const msAccount = await squad.getMultisig(CONFIG[cluster].vault);
-        const emitter = squad.getAuthorityPDA(
-          msAccount.publicKey,
-          msAccount.authorityIndex
-        );
-
-        for (let i = 0; i < activeProposals.length; i++) {
-          if (
-            hasWormholePayload(
-              squad,
-              emitter,
-              activeProposals[i].publicKey,
-              options.payload,
-              activeInstructions[i],
-              wormholeTools
-            )
-          ) {
-            console.log(
-              `❌ Skipping, payload ${options.payload} matches instructions at ${activeProposals[i].publicKey}`
-            );
-            return;
-          }
-        }
-      }
-
-      await createWormholeMsgMultisigTx(
-        options.cluster,
-        squad,
-        CONFIG[cluster].vault,
-        options.payload,
-        wormholeTools
-      );
-    }
-
-    if (options.file) {
-      const instructions: SquadInstruction[] = loadInstructionsFromJson(
-        options.file
-      );
-
-      if (!options.skipDuplicateCheck) {
-        const activeProposals = await getActiveProposals(
-          squad,
-          CONFIG[cluster].vault
-        );
-        const activeInstructions = await getManyProposalsInstructions(
-          squad,
-          activeProposals
-        );
-
-        for (let i = 0; i < activeProposals.length; i++) {
-          if (
-            areEqualOnChainInstructions(
-              instructions.map((ix) => ix.instruction),
-              activeInstructions[i]
-            )
-          ) {
-            console.log(
-              `❌ Skipping, instructions from ${options.file} match instructions at ${activeProposals[i].publicKey}`
-            );
-            return;
-          }
-        }
-      }
-
-      const txKey = await createTx(squad, CONFIG[cluster].vault);
-      await addInstructionsToTx(
-        cluster,
-        squad,
-        CONFIG[cluster].vault,
-        txKey,
-        instructions
-      );
-    }
   });
 
 program

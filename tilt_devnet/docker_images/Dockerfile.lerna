@@ -18,6 +18,8 @@ COPY ./tsconfig.base.json ./
 
 FROM node:18.13.0@sha256:d9061fd0205c20cd47f70bdc879a7a84fb472b822d3ad3158aeef40698d2ce36 as lerna
 
+RUN apt-get update && apt-get install -y libusb-dev
+
 # 1000 is the uid and gid of the node user
 USER 1000
 RUN mkdir -p /home/node/.npm

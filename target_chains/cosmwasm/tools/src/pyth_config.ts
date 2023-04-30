@@ -117,6 +117,18 @@ export const CONFIG: Config = {
     // invalid contract info for local testing
     ...PYTH_SOURCES_TESTNET,
   },
+  [NETWORKS.INJECTIVE_MAINNET]: {
+    wormhole_contract: "inj17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9l2q74d",
+    governance_source_index: 0,
+    governance_sequence_number: 0,
+    chain_id: 19,
+    valid_time_period_secs: 60,
+    fee: {
+      amount: "1",
+      denom: "inj",
+    },
+    ...PYTH_SOURCES_MAINNET,
+  },
   [NETWORKS.INJECTIVE_TESTNET]: {
     wormhole_contract: "inj1xx3aupmgv3ce537c0yce8zzd3sz567syuyedpg",
     governance_source_index: 0,

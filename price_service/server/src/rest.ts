@@ -6,15 +6,33 @@ import { Server } from "http";
 import { StatusCodes } from "http-status-codes";
 import morgan from "morgan";
 import fetch from "node-fetch";
+import {
+  parseBatchPriceAttestation,
+  priceAttestationToPriceFeed,
+} from "@pythnetwork/wormhole-attester-sdk";
 import { removeLeading0x, TimestampInSec } from "./helpers";
-import { PriceStore, VaaConfig } from "./listen";
+import { createPriceInfo, PriceInfo, PriceStore, VaaConfig } from "./listen";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
 import { retry } from "ts-retry-promise";
+import { parseVaa } from "@certusone/wormhole-sdk";
+import { getOrElse } from "./helpers";
+import {
+  TargetChain,
+  validTargetChains,
+  defaultTargetChain,
+  VaaEncoding,
+  encodeVaaForChain,
+} from "./encoding";
 
 const MORGAN_LOG_FORMAT =
   ':remote-addr - :remote-user ":method :url HTTP/:http-version"' +
   ' :status :res[content-length] :response-time ms ":referrer" ":user-agent"';
+
+// GET argument string to represent the options for target_chain
+export const targetChainArgString = `target_chain=<${validTargetChains.join(
+  "|"
+)}>`;
 
 export class RestException extends Error {
   statusCode: number;
@@ -71,7 +89,10 @@ export class RestAPI {
     this.promClient = promClient;
   }
 
-  async getVaaWithDbLookup(priceFeedId: string, publishTime: TimestampInSec) {
+  async getVaaWithDbLookup(
+    priceFeedId: string,
+    publishTime: TimestampInSec
+  ): Promise<VaaConfig | undefined> {
     // Try to fetch the vaa from the local cache
     let vaa = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
 
@@ -104,6 +125,56 @@ export class RestAPI {
     return vaa;
   }
 
+  vaaToPriceInfo(priceFeedId: string, vaa: Buffer): PriceInfo | undefined {
+    const parsedVaa = parseVaa(vaa);
+
+    let batchAttestation;
+
+    try {
+      batchAttestation = parseBatchPriceAttestation(
+        Buffer.from(parsedVaa.payload)
+      );
+    } catch (e: any) {
+      logger.error(e, e.stack);
+      logger.error("Parsing historical VAA failed: %o", parsedVaa);
+      return undefined;
+    }
+
+    for (const priceAttestation of batchAttestation.priceAttestations) {
+      if (priceAttestation.priceId === priceFeedId) {
+        return createPriceInfo(
+          priceAttestation,
+          vaa,
+          parsedVaa.sequence,
+          parsedVaa.emitterChain
+        );
+      }
+    }
+
+    return undefined;
+  }
+
+  priceInfoToJson(
+    priceInfo: PriceInfo,
+    verbose: boolean,
+    targetChain: TargetChain | undefined
+  ): object {
+    return {
+      ...priceInfo.priceFeed.toJson(),
+      ...(verbose && {
+        metadata: {
+          emitter_chain: priceInfo.emitterChainId,
+          attestation_time: priceInfo.attestationTime,
+          sequence_number: priceInfo.seqNum,
+          price_service_receive_time: priceInfo.priceServiceReceiveTime,
+        },
+      }),
+      ...(targetChain !== undefined && {
+        vaa: encodeVaaForChain(priceInfo.vaa, targetChain),
+      }),
+    };
+  }
+
   // Run this function without blocking (`await`) if you want to run it async.
   async createApp() {
     const app = express();
@@ -124,6 +195,9 @@ export class RestAPI {
         ids: Joi.array()
           .items(Joi.string().regex(/^(0x)?[a-f0-9]{64}$/))
           .required(),
+        target_chain: Joi.string()
+          .valid(...validTargetChains)
+          .optional(),
       }).required(),
     };
     app.get(
@@ -131,6 +205,10 @@ export class RestAPI {
       validate(latestVaasInputSchema),
       (req: Request, res: Response) => {
         const priceIds = (req.query.ids as string[]).map(removeLeading0x);
+        const targetChain = getOrElse(
+          req.query.target_chain as TargetChain | undefined,
+          defaultTargetChain
+        );
 
         // Multiple price ids might share same vaa, we use sequence number as
         // key of a vaa and deduplicate using a map of seqnum to vaa bytes.
@@ -154,14 +232,14 @@ export class RestAPI {
         }
 
         const jsonResponse = Array.from(vaaMap.values(), (vaa) =>
-          vaa.toString("base64")
+          encodeVaaForChain(vaa, targetChain)
         );
 
         res.json(jsonResponse);
       }
     );
     endpoints.push(
-      "api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&.."
+      `api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&${targetChainArgString}`
     );
 
     const getVaaInputSchema: schema = {
@@ -170,6 +248,9 @@ export class RestAPI {
           .regex(/^(0x)?[a-f0-9]{64}$/)
           .required(),
         publish_time: Joi.number().required(),
+        target_chain: Joi.string()
+          .valid(...validTargetChains)
+          .optional(),
       }).required(),
     };
 
@@ -179,6 +260,10 @@ export class RestAPI {
       asyncWrapper(async (req: Request, res: Response) => {
         const priceFeedId = removeLeading0x(req.query.id as string);
         const publishTime = Number(req.query.publish_time as string);
+        const targetChain = getOrElse(
+          req.query.target_chain as TargetChain | undefined,
+          defaultTargetChain
+        );
 
         if (
           this.priceFeedVaaInfo.getLatestPriceInfo(priceFeedId) === undefined
@@ -186,18 +271,21 @@ export class RestAPI {
           throw RestException.PriceFeedIdNotFound([priceFeedId]);
         }
 
-        const vaa = await this.getVaaWithDbLookup(priceFeedId, publishTime);
-
-        if (vaa === undefined) {
+        const vaaConfig = await this.getVaaWithDbLookup(
+          priceFeedId,
+          publishTime
+        );
+        if (vaaConfig === undefined) {
           throw RestException.VaaNotFound();
         } else {
-          res.json(vaa);
+          vaaConfig.vaa = encodeVaaForChain(vaaConfig.vaa, targetChain);
+          res.json(vaaConfig);
         }
       })
     );
 
     endpoints.push(
-      "api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>"
+      `api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>&${targetChainArgString}`
     );
 
     const getVaaCcipInputSchema: schema = {
@@ -259,6 +347,9 @@ export class RestAPI {
           .required(),
         verbose: Joi.boolean(),
         binary: Joi.boolean(),
+        target_chain: Joi.string()
+          .valid(...validTargetChains)
+          .optional(),
       }).required(),
     };
     app.get(
@@ -268,8 +359,12 @@ export class RestAPI {
         const priceIds = (req.query.ids as string[]).map(removeLeading0x);
         // verbose is optional, default to false
         const verbose = req.query.verbose === "true";
-        // binary is optional, default to false
-        const binary = req.query.binary === "true";
+        // The binary and target_chain are somewhat redundant. Binary still exists for backward compatibility reasons.
+        // No VAA will be returned if both arguments are omitted. binary=true is the same as target_chain=default
+        let targetChain = req.query.target_chain as TargetChain | undefined;
+        if (targetChain === undefined && req.query.binary === "true") {
+          targetChain = defaultTargetChain;
+        }
 
         const responseJson = [];
 
@@ -283,21 +378,9 @@ export class RestAPI {
             continue;
           }
 
-          responseJson.push({
-            ...latestPriceInfo.priceFeed.toJson(),
-            ...(verbose && {
-              metadata: {
-                emitter_chain: latestPriceInfo.emitterChainId,
-                attestation_time: latestPriceInfo.attestationTime,
-                sequence_number: latestPriceInfo.seqNum,
-                price_service_receive_time:
-                  latestPriceInfo.priceServiceReceiveTime,
-              },
-            }),
-            ...(binary && {
-              vaa: latestPriceInfo.vaa.toString("base64"),
-            }),
-          });
+          responseJson.push(
+            this.priceInfoToJson(latestPriceInfo, verbose, targetChain)
+          );
         }
 
         if (notFoundIds.length > 0) {
@@ -315,6 +398,72 @@ export class RestAPI {
     );
     endpoints.push(
       "api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&verbose=true&binary=true"
+    );
+    endpoints.push(
+      `api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..&verbose=true&${targetChainArgString}`
+    );
+
+    const getPriceFeedInputSchema: schema = {
+      query: Joi.object({
+        id: Joi.string()
+          .regex(/^(0x)?[a-f0-9]{64}$/)
+          .required(),
+        publish_time: Joi.number().required(),
+        verbose: Joi.boolean(),
+        binary: Joi.boolean(),
+        target_chain: Joi.string()
+          .valid(...validTargetChains)
+          .optional(),
+      }).required(),
+    };
+
+    app.get(
+      "/api/get_price_feed",
+      validate(getPriceFeedInputSchema),
+      asyncWrapper(async (req: Request, res: Response) => {
+        const priceFeedId = removeLeading0x(req.query.id as string);
+        const publishTime = Number(req.query.publish_time as string);
+        // verbose is optional, default to false
+        const verbose = req.query.verbose === "true";
+        // The binary and target_chain are somewhat redundant. Binary still exists for backward compatibility reasons.
+        // No VAA will be returned if both arguments are omitted. binary=true is the same as target_chain=default
+        let targetChain = req.query.target_chain as TargetChain | undefined;
+        if (targetChain === undefined && req.query.binary === "true") {
+          targetChain = defaultTargetChain;
+        }
+
+        if (
+          this.priceFeedVaaInfo.getLatestPriceInfo(priceFeedId) === undefined
+        ) {
+          throw RestException.PriceFeedIdNotFound([priceFeedId]);
+        }
+
+        const vaa = await this.getVaaWithDbLookup(priceFeedId, publishTime);
+        if (vaa === undefined) {
+          throw RestException.VaaNotFound();
+        }
+
+        const priceInfo = this.vaaToPriceInfo(
+          priceFeedId,
+          Buffer.from(vaa.vaa, "base64")
+        );
+
+        if (priceInfo === undefined) {
+          throw RestException.VaaNotFound();
+        } else {
+          res.json(this.priceInfoToJson(priceInfo, verbose, targetChain));
+        }
+      })
+    );
+
+    endpoints.push(
+      "api/get_price_feed?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>"
+    );
+    endpoints.push(
+      "api/get_price_feed?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>&verbose=true"
+    );
+    endpoints.push(
+      "api/get_price_feed?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>&binary=true"
     );
 
     app.get("/api/price_feed_ids", (req: Request, res: Response) => {

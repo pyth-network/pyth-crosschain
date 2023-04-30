@@ -6,7 +6,6 @@ module pyth::governance_action {
     const SET_DATA_SOURCES: u8 = 2;
     const SET_UPDATE_FEE: u8 = 3;
     const SET_STALE_PRICE_THRESHOLD: u8 = 4;
-
     const E_INVALID_GOVERNANCE_ACTION: u64 = 5;
 
     struct GovernanceAction has copy, drop {

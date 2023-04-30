@@ -99,4 +99,8 @@ impl Storage for LocalCache {
             None => Ok(None),
         }
     }
+
+    fn keys(&self) -> Vec<Key> {
+        self.cache.iter().map(|entry| entry.key().clone()).collect()
+    }
 }

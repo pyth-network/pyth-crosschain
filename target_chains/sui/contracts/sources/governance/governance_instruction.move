@@ -9,7 +9,7 @@ module pyth::governance_instruction {
     const E_INVALID_GOVERNANCE_MODULE: u64 = 0;
     const E_INVALID_GOVERNANCE_MAGIC_VALUE: u64 = 1;
     const E_TARGET_CHAIN_MISMATCH: u64 = 2;
-
+    
     struct GovernanceInstruction {
         module_: u8,
         action: GovernanceAction,

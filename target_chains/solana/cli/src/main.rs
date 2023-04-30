@@ -1,23 +1,33 @@
 pub mod cli;
 
 use {
+    anchor_client::anchor_lang::{
+        AnchorDeserialize,
+        InstructionData,
+        Owner,
+        ToAccountMetas,
+    },
+    anyhow::Result,
+    clap::Parser,
     cli::{
         Action,
         Cli,
     },
-    clap::Parser,
-    anyhow::Result,
-
+    pyth_solana_receiver::{
+        accounts::DecodePostedVaa,
+        state::AnchorVaa,
+        ID,
+    },
+    solana_client::rpc_client::RpcClient,
     solana_sdk::{
+        instruction::Instruction,
         signature::{
             read_keypair_file,
             Keypair,
         },
         signer::Signer,
-        instruction::Instruction,
         transaction::Transaction,
     },
-
     wormhole::VAA,
     wormhole_solana::{
         instructions::{
@@ -26,25 +36,10 @@ use {
             PostVAAData,
         },
         Account,
-        GuardianSet,
         Config as WormholeConfig,
+        GuardianSet,
         VAA as WormholeSolanaVAA,
     },
-
-    pyth_solana_receiver::{
-        ID,
-        state::AnchorVaa,
-        accounts::DecodePostedVaa,
-    },
-
-    anchor_client::anchor_lang::{
-        Owner,
-        ToAccountMetas,
-        InstructionData,
-        AnchorDeserialize,
-    },
-
-    solana_client::rpc_client::RpcClient,
 };
 
 fn main() -> Result<()> {
@@ -111,8 +106,8 @@ fn main() -> Result<()> {
             )?;
 
             println!("[5/5] Receive and deserialize the VAA on solana");
-            let account_metas = DecodePostedVaa::populate(&payer.pubkey(), &posted_vaa_key)
-                .to_account_metas(None);
+            let account_metas =
+                DecodePostedVaa::populate(&payer.pubkey(), &posted_vaa_key).to_account_metas(None);
 
             println!("Receiver program ID is {}", ID);
             let invoke_receiver_instruction = Instruction {
