@@ -170,7 +170,11 @@ module pyth::pyth {
         // Charge the message update fee
         assert!(get_total_update_fee(pyth_state, vector::length(&verified_vaas)) <= coin::value(&fee), E_INSUFFICIENT_FEE);
 
-        // TODO: use Wormhole fee collector instead of transferring funds to deployer address.
+        // TODO: We want to use Wormhole fee collector instead of transferring funds to deployer address,
+        //       however this requires a mutable reference to PythState. We don't want update_price_feeds
+        //       to take in mutable references to PythState, because taking a global write lock on it
+        //       makes it so price updates can't execute in parallel, even if they are on different price feeds
+        //       (or PriceInfoObjects).
         transfer::public_transfer(fee, @pyth);
 
         // Update the price feed from each VAA
