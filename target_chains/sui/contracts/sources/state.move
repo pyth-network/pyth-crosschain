@@ -3,12 +3,16 @@ module pyth::state {
     use sui::object::{Self, UID, ID};
     use sui::transfer::{Self};
     use sui::tx_context::{Self, TxContext};
+    use sui::package::{Self, UpgradeCap};
 
     use pyth::data_source::{Self, DataSource};
     use pyth::price_info::{Self};
     use pyth::price_identifier::{PriceIdentifier};
 
+    use wormhole::setup::{assert_package_upgrade_cap};
+
     friend pyth::pyth;
+    friend pyth::pyth_tests;
     friend pyth::governance_action;
     friend pyth::set_update_fee;
     friend pyth::set_stale_price_threshold;
@@ -28,6 +32,7 @@ module pyth::state {
         last_executed_governance_sequence: u64,
         stale_price_threshold: u64,
         base_update_fee: u64,
+        upgrade_cap: UpgradeCap
     }
 
     fun init(ctx: &mut TxContext) {
@@ -39,17 +44,40 @@ module pyth::state {
         );
     }
 
+    #[test_only]
+    public fun init_test_only(ctx: &mut TxContext) {
+        init(ctx);
+
+        // This will be created and sent to the transaction sender
+        // automatically when the contract is published.
+        transfer::public_transfer(
+            sui::package::test_publish(object::id_from_address(@pyth), ctx),
+            tx_context::sender(ctx)
+        );
+    }
+
     // Initialization
     public(friend) fun init_and_share_state(
         deployer: DeployerCap,
+        upgrade_cap: UpgradeCap,
         stale_price_threshold: u64,
         base_update_fee: u64,
         governance_data_source: DataSource,
         sources: vector<DataSource>,
         ctx: &mut TxContext
     ) {
+        // TODO - version control
+        // let version = wormhole::version_control::version();
+        //assert!(version == 1, E_INVALID_BUILD_VERSION);
+
         let DeployerCap { id } = deployer;
         object::delete(id);
+
+        assert_package_upgrade_cap<DeployerCap>(
+            &upgrade_cap,
+            package::compatible_policy(),
+            1 // version
+        );
 
         let uid = object::new(ctx);
 
@@ -73,6 +101,7 @@ module pyth::state {
         transfer::share_object(
             State {
                 id: uid,
+                upgrade_cap,
                 governance_data_source,
                 last_executed_governance_sequence: 0,
                 stale_price_threshold,

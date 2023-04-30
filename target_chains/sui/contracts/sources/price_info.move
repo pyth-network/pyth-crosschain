@@ -13,8 +13,8 @@ module pyth::price_info {
 
     friend pyth::pyth;
 
-    /// Sui Object version of PriceInfo.
-    /// Has a key and lives in global store.
+    /// Sui object version of PriceInfo.
+    /// Has a key ability, is unique for each price identifier, and lives in global store.
     struct PriceInfoObject has key, store {
         id: UID,
         price_info: PriceInfo
