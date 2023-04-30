@@ -391,6 +391,23 @@ const General = () => {
                 .instruction()
             )
           }
+
+          if (
+            JSON.stringify(prev.priceAccounts[0].expo) !==
+            JSON.stringify(newChanges.priceAccounts[0].expo)
+          ) {
+            // create update exponent instruction
+            instructions.push(
+              await pythProgramClient.methods
+                .setExponent(newChanges.priceAccounts[0].expo, 1)
+                .accounts({
+                  fundingAccount,
+                  priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                })
+                .instruction()
+            )
+          }
+
           // check if minPub has changed
           if (
             prev.priceAccounts[0].minPub !== newChanges.priceAccounts[0].minPub
@@ -609,14 +626,16 @@ const General = () => {
     )
   }
 
-  const OldPriceFeedsRows = ({ priceFeedData }: { priceFeedData: any }) => {
+  const OldPriceFeedsRows = ({
+    priceFeedSymbol,
+  }: {
+    priceFeedSymbol: string
+  }) => {
     return (
       <>
-        <tr key={priceFeedData.metadata.symbol}>
+        <tr key={priceFeedSymbol}>
           <td className="base16 py-4 pl-6 pr-2 lg:pl-6">Symbol</td>
-          <td className="base16 py-4 pl-1 pr-2 lg:pl-6">
-            {priceFeedData.metadata.symbol}
-          </td>
+          <td className="base16 py-4 pl-1 pr-2 lg:pl-6">{priceFeedSymbol}</td>
         </tr>
       </>
     )
@@ -659,7 +678,7 @@ const General = () => {
                   {addPriceFeed ? (
                     <NewPriceFeedsRows key={key} priceFeedData={newChanges} />
                   ) : deletePriceFeed ? (
-                    <OldPriceFeedsRows key={key} priceFeedData={prev} />
+                    <OldPriceFeedsRows key={key} priceFeedSymbol={key} />
                   ) : (
                     diff.map((k) =>
                       k === 'metadata' ? (

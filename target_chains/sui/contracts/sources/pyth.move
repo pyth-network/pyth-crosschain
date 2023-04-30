@@ -1028,3 +1028,6 @@ module pyth::pyth_tests{
         test_scenario::end(scenario);
     }
 }
+
+// TODO - pyth tests
+// https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/aptos/contracts/sources/pyth.move#L384

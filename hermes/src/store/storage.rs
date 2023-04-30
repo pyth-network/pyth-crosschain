@@ -5,10 +5,7 @@ use {
         UnixTimestamp,
     },
     anyhow::Result,
-    derive_more::{
-        Deref,
-        DerefMut,
-    },
+    pyth_sdk::PriceIdentifier,
 };
 
 pub mod local_cache;
@@ -18,13 +15,9 @@ pub enum StorageData {
     BatchVaa(PriceInfo),
 }
 
-#[derive(Clone, PartialEq, Eq, Debug, Hash, Deref, DerefMut)]
-pub struct Key(Vec<u8>);
-
-impl Key {
-    pub fn new(key: Vec<u8>) -> Self {
-        Self(key)
-    }
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
+pub enum Key {
+    BatchVaa(PriceIdentifier),
 }
 
 /// This trait defines the interface for update data storage
@@ -37,4 +30,5 @@ impl Key {
 pub trait Storage: Sync + Send {
     fn insert(&self, key: Key, time: UnixTimestamp, value: StorageData) -> Result<()>;
     fn get(&self, key: Key, request_time: RequestTime) -> Result<Option<StorageData>>;
+    fn keys(&self) -> Vec<Key>;
 }

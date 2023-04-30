@@ -11,17 +11,29 @@
 
 use {
     anyhow::Result,
-    std::sync::{
-        mpsc::{
-            Receiver,
-            Sender,
+    libp2p::Multiaddr,
+    std::{
+        ffi::{
+            c_char,
+            CString,
         },
-        Mutex,
+        sync::{
+            mpsc::{
+                Receiver,
+                Sender,
+            },
+            Mutex,
+        },
     },
 };
 
 extern "C" {
-    fn RegisterObservationCallback(cb: extern "C" fn(o: ObservationC));
+    fn RegisterObservationCallback(
+        cb: extern "C" fn(o: ObservationC),
+        network_id: *const c_char,
+        bootstrap_addrs: *const c_char,
+        listen_addrs: *const c_char,
+    );
 }
 
 // An `Observation` C type passed back to us from Go.
@@ -64,22 +76,58 @@ extern "C" fn proxy(o: ObservationC) {
 /// TODO: handle_message should be capable of handling more than just Observations. But we don't
 /// have our own P2P network, we pass it in to keep the code structure and read directly from the
 /// OBSERVATIONS channel in the RPC for now.
-pub fn bootstrap<H>(_handle_message: H) -> Result<()>
+pub fn bootstrap<H>(
+    _handle_message: H,
+    network_id: String,
+    wh_bootstrap_addrs: Vec<Multiaddr>,
+    wh_listen_addrs: Vec<Multiaddr>,
+) -> Result<()>
 where
     H: Fn(Observation) -> Result<()> + 'static,
 {
+    let network_id_cstr = CString::new(network_id)?;
+    let wh_bootstrap_addrs_cstr = CString::new(
+        wh_bootstrap_addrs
+            .iter()
+            .map(|a| a.to_string())
+            .collect::<Vec<_>>()
+            .join(","),
+    )?;
+    let wh_listen_addrs_cstr = CString::new(
+        wh_listen_addrs
+            .iter()
+            .map(|a| a.to_string())
+            .collect::<Vec<_>>()
+            .join(","),
+    )?;
+
     // Launch the Go LibP2P Reactor.
     unsafe {
-        RegisterObservationCallback(proxy as extern "C" fn(o: ObservationC));
+        RegisterObservationCallback(
+            proxy as extern "C" fn(observation: ObservationC),
+            network_id_cstr.as_ptr(),
+            wh_bootstrap_addrs_cstr.as_ptr(),
+            wh_listen_addrs_cstr.as_ptr(),
+        );
     }
     Ok(())
 }
 
 // Spawn's the P2P layer as a separate thread via Go.
-pub async fn spawn<H>(handle_message: H) -> Result<()>
+pub async fn spawn<H>(
+    handle_message: H,
+    network_id: String,
+    wh_bootstrap_addrs: Vec<Multiaddr>,
+    wh_listen_addrs: Vec<Multiaddr>,
+) -> Result<()>
 where
     H: Fn(Observation) -> Result<()> + Send + 'static,
 {
-    bootstrap(handle_message)?;
+    bootstrap(
+        handle_message,
+        network_id,
+        wh_bootstrap_addrs,
+        wh_listen_addrs,
+    )?;
     Ok(())
 }

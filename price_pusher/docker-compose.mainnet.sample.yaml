@@ -52,9 +52,9 @@ services:
     build:
       context: .
     # Uncomment this line (and comment out the above lines) to use a prebuilt image. Replace <version>
-    # with the latest released image of the EVM price pusher from this repo release page:
-    # https://github.com/pyth-network/pyth-js/releases
-    # image: public.ecr.aws/pyth-network/xc-evm-price-pusher:v<version>
+    # with the latest released image of the price pusher from this repo release page:
+    # https://github.com/pyth-network/pyth-crosschain/releases
+    # image: public.ecr.aws/pyth-network/xc-price-pusher:v<version>
     restart: always
     command:
       - "--"

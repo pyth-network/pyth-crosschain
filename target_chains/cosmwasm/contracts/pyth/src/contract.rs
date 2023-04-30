@@ -5,6 +5,8 @@ use crate::injective::{
 };
 #[cfg(not(feature = "injective"))]
 use cosmwasm_std::Empty as MsgWrapper;
+#[cfg(feature = "osmosis")]
+use osmosis_std::types::osmosis::txfees::v1beta1::TxfeesQuerier;
 use {
     crate::{
         governance::{
@@ -32,11 +34,14 @@ use {
             ConfigInfo,
             PythDataSource,
         },
+        wormhole::{
+            ParsedVAA,
+            WormholeQueryMsg,
+        },
     },
     cosmwasm_std::{
         coin,
         entry_point,
-        has_coins,
         to_binary,
         Addr,
         Binary,
@@ -73,10 +78,6 @@ use {
         convert::TryFrom,
         iter::FromIterator,
         time::Duration,
-    },
-    wormhole::{
-        msg::QueryMsg as WormholeQueryMsg,
-        state::ParsedVAA,
     },
 };
 
@@ -156,6 +157,78 @@ pub fn execute(
     }
 }
 
+#[cfg(not(feature = "osmosis"))]
+fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResult<bool> {
+    use cosmwasm_std::has_coins;
+
+    let state = config_read(deps.storage).load()?;
+
+    // For any chain other than osmosis there is only one base denom
+    // If base denom is present in coins and has enough amount this will return true
+    // or if the base fee is set to 0
+    // else it will return false
+    return Ok(state.fee.amount.u128() == 0
+        || has_coins(info.funds.as_ref(), &get_update_fee(deps, data)?));
+}
+
+// it only checks for fee denoms other than the base denom
+#[cfg(feature = "osmosis")]
+fn is_allowed_tx_fees_denom(deps: &Deps, denom: &String) -> bool {
+    // TxFeesQuerier uses stargate queries which we can't mock as of now.
+    // The capability has not been implemented in `cosmwasm-std` yet.
+    // Hence, we are hacking it with a feature flag to be able to write tests.
+    // FIXME
+    #[cfg(test)]
+    if denom == "uion"
+        || denom == "ibc/FF3065989E34457F342D4EFB8692406D49D4E2B5C70F725F127862E22CE6BDCD"
+    {
+        return true;
+    }
+
+    let querier = TxfeesQuerier::new(&deps.querier);
+    match querier.denom_pool_id(denom.to_string()) {
+        Ok(_) => true,
+        Err(_) => false,
+    }
+}
+
+// TODO: add tests for these
+#[cfg(feature = "osmosis")]
+fn is_fee_sufficient(deps: &Deps, info: MessageInfo, data: &[Binary]) -> StdResult<bool> {
+    let state = config_read(deps.storage).load()?;
+
+    // how to change this in future
+    // for given coins verify they are allowed in txfee module
+    // convert each of them to the base token that is 'uosmo'
+    // combine all the converted token
+    // check with `has_coins`
+
+    // FIXME: should we accept fee for a single transaction in different tokens?
+    let mut total_amount = 0u128;
+    for coin in &info.funds {
+        if coin.denom != state.fee.denom && !is_allowed_tx_fees_denom(deps, &coin.denom) {
+            return Err(PythContractError::InvalidFeeDenom {
+                denom: coin.denom.to_string(),
+            })?;
+        }
+        total_amount = total_amount
+            .checked_add(coin.amount.u128())
+            .ok_or(OverflowError::new(
+                OverflowOperation::Add,
+                total_amount,
+                coin.amount,
+            ))?;
+    }
+
+    let base_denom_fee = get_update_fee(deps, data)?;
+
+    // NOTE: the base fee denom right now is = denom: 'uosmo', amount: 1, which is almost negligible
+    // It's not important to convert the price right now. For now
+    // we are keeping the base fee amount same for each valid denom -> 1
+    // but this logic will be updated to use spot price for different valid tokens in future
+    Ok(base_denom_fee.amount.u128() <= total_amount)
+}
+
 /// Update the on-chain price feeds given the array of price update VAAs `data`.
 /// Each price update VAA must be a valid Wormhole message and sent from an authorized emitter.
 ///
@@ -169,11 +242,8 @@ fn update_price_feeds(
 ) -> StdResult<Response<MsgWrapper>> {
     let state = config_read(deps.storage).load()?;
 
-    // Check that a sufficient fee was sent with the message
-    if state.fee.amount.u128() > 0
-        && !has_coins(info.funds.as_ref(), &get_update_fee(&deps.as_ref(), data)?)
-    {
-        return Err(PythContractError::InsufficientFee.into());
+    if !is_fee_sufficient(&deps.as_ref(), info, data)? {
+        return Err(PythContractError::InsufficientFee)?;
     }
 
     let mut num_total_attestations: usize = 0;
@@ -504,6 +574,10 @@ fn update_price_feed_if_new(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::PriceFeed { id } => to_binary(&query_price_feed(&deps, id.as_ref())?),
+        #[cfg(feature = "osmosis")]
+        QueryMsg::GetUpdateFeeForDenom { vaas, denom } => {
+            to_binary(&get_update_fee_for_denom(&deps, &vaas, denom)?)
+        }
         QueryMsg::GetUpdateFee { vaas } => to_binary(&get_update_fee(&deps, &vaas)?),
         QueryMsg::GetValidTimePeriod => to_binary(&get_valid_time_period(&deps)?),
     }
@@ -519,6 +593,7 @@ pub fn query_price_feed(deps: &Deps, feed_id: &[u8]) -> StdResult<PriceFeedRespo
 
 /// Get the fee that a caller must pay in order to submit a price update.
 /// The fee depends on both the current contract configuration and the update data `vaas`.
+/// The fee is in the denoms as stored in the current configuration
 pub fn get_update_fee(deps: &Deps, vaas: &[Binary]) -> StdResult<Coin> {
     let config = config_read(deps.storage).load()?;
 
@@ -534,6 +609,39 @@ pub fn get_update_fee(deps: &Deps, vaas: &[Binary]) -> StdResult<Coin> {
                 vaas.len(),
             ))?,
         config.fee.denom,
+    ))
+}
+
+#[cfg(feature = "osmosis")]
+/// Osmosis can support multiple tokens for transaction fees
+/// This will return update fee for the given denom only if that denom is allowed in Osmosis's txFee module
+/// Else it will throw error
+pub fn get_update_fee_for_denom(deps: &Deps, vaas: &[Binary], denom: String) -> StdResult<Coin> {
+    let config = config_read(deps.storage).load()?;
+
+    // if the denom is not a base denom it should be an allowed one
+    if denom != config.fee.denom && !is_allowed_tx_fees_denom(deps, &denom) {
+        return Err(PythContractError::InvalidFeeDenom { denom })?;
+    }
+
+    // the base fee is set to -> denom = base denom of a chain, amount = 1
+    // which is very minimal
+    // for other valid denoms too we are using the base amount as 1
+    // base amount is multiplied to number of vaas to get the total amount
+
+    // this will be change later on to add custom logic using spot price for valid tokens
+    Ok(coin(
+        config
+            .fee
+            .amount
+            .u128()
+            .checked_mul(vaas.len() as u128)
+            .ok_or(OverflowError::new(
+                OverflowOperation::Mul,
+                config.fee.amount,
+                vaas.len(),
+            ))?,
+        denom,
     ))
 }
 
@@ -808,6 +916,80 @@ mod test {
         assert!(res.is_err());
     }
 
+    #[cfg(not(feature = "osmosis"))]
+    #[test]
+    fn test_is_fee_sufficient() {
+        let mut config_info = default_config_info();
+        config_info.fee = Coin::new(100, "foo");
+
+        let (mut deps, _env) = setup_test();
+        config(&mut deps.storage).save(&config_info).unwrap();
+
+        let mut info = mock_info("123", coins(100, "foo").as_slice());
+        let data = create_price_update_msg(default_emitter_addr().as_slice(), EMITTER_CHAIN);
+
+        // sufficient fee -> true
+        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), &[data.clone()]);
+        assert_eq!(result, Ok(true));
+
+        // insufficient fee -> false
+        info.funds = coins(50, "foo");
+        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), &[data.clone()]);
+        assert_eq!(result, Ok(false));
+
+        // insufficient fee -> false
+        info.funds = coins(150, "bar");
+        let result = is_fee_sufficient(&deps.as_ref(), info, &[data]);
+        assert_eq!(result, Ok(false));
+    }
+
+    #[cfg(feature = "osmosis")]
+    #[test]
+    fn test_is_fee_sufficient() {
+        // setup config with base fee
+        let base_denom = "foo";
+        let base_amount = 100;
+        let mut config_info = default_config_info();
+        config_info.fee = Coin::new(base_amount, base_denom);
+        let (mut deps, _env) = setup_test();
+        config(&mut deps.storage).save(&config_info).unwrap();
+
+        // a dummy price data
+        let data = create_price_update_msg(default_emitter_addr().as_slice(), EMITTER_CHAIN);
+
+        // sufficient fee in base denom -> true
+        let info = mock_info("123", coins(base_amount, base_denom).as_slice());
+        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), &[data.clone()]);
+        assert_eq!(result, Ok(true));
+
+        // insufficient fee in base denom -> false
+        let info = mock_info("123", coins(50, base_denom).as_slice());
+        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        assert_eq!(result, Ok(false));
+
+        // valid denoms are 'uion' or 'ibc/FF3065989E34457F342D4EFB8692406D49D4E2B5C70F725F127862E22CE6BDCD'
+        // a valid denom other than base denom with sufficient fee
+        let info = mock_info("123", coins(100, "uion").as_slice());
+        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        assert_eq!(result, Ok(true));
+
+        // insufficient fee in valid denom -> false
+        let info = mock_info("123", coins(50, "uion").as_slice());
+        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        assert_eq!(result, Ok(false));
+
+        // an invalid denom -> Err invalid fee denom
+        let info = mock_info("123", coins(100, "invalid_denom").as_slice());
+        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        assert_eq!(
+            result,
+            Err(PythContractError::InvalidFeeDenom {
+                denom: "invalid_denom".to_string(),
+            }
+            .into())
+        );
+    }
+
     #[test]
     fn test_process_batch_attestation_empty_array() {
         let (mut deps, env) = setup_test();
@@ -935,7 +1117,6 @@ mod test {
         let (num_attestations, new_attestations) =
             process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
 
-
         let stored_price_feed = price_feed_read_bucket(&deps.storage)
             .load(&[0u8; 32])
             .unwrap();
@@ -986,7 +1167,6 @@ mod test {
         };
         let (num_attestations, new_attestations) =
             process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
-
 
         let stored_price_feed = price_feed_read_bucket(&deps.storage)
             .load(&[0u8; 32])
@@ -1042,44 +1222,6 @@ mod test {
             &[],
         );
         assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
-    }
-
-    #[test]
-    fn test_update_price_feeds_insufficient_fee() {
-        let mut config_info = default_config_info();
-        config_info.fee = Coin::new(100, "foo");
-
-        let result = apply_price_update(
-            &config_info,
-            default_emitter_addr().as_slice(),
-            EMITTER_CHAIN,
-            &[],
-        );
-        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
-
-        let result = apply_price_update(
-            &config_info,
-            default_emitter_addr().as_slice(),
-            EMITTER_CHAIN,
-            coins(100, "foo").as_slice(),
-        );
-        assert!(result.is_ok());
-
-        let result = apply_price_update(
-            &config_info,
-            default_emitter_addr().as_slice(),
-            EMITTER_CHAIN,
-            coins(99, "foo").as_slice(),
-        );
-        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
-
-        let result = apply_price_update(
-            &config_info,
-            default_emitter_addr().as_slice(),
-            EMITTER_CHAIN,
-            coins(100, "bar").as_slice(),
-        );
-        assert_eq!(result, Err(PythContractError::InsufficientFee.into()));
     }
 
     #[test]
@@ -1230,6 +1372,118 @@ mod test {
             Ok(Coin::new(big_fee, fee_denom))
         );
         assert!(get_update_fee(&deps.as_ref(), &updates[0..2]).is_err());
+    }
+
+    #[cfg(feature = "osmosis")]
+    #[test]
+    fn test_get_update_fee_for_denom() {
+        let (mut deps, _env) = setup_test();
+        let base_denom = "test";
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                fee: Coin::new(10, base_denom),
+                ..create_zero_config_info()
+            })
+            .unwrap();
+
+        let updates = vec![Binary::from([1u8]), Binary::from([2u8])];
+
+        // test for base denom
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..0], base_denom.to_string()),
+            Ok(Coin::new(0, base_denom))
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], base_denom.to_string()),
+            Ok(Coin::new(10, base_denom))
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], base_denom.to_string()),
+            Ok(Coin::new(20, base_denom))
+        );
+
+        // test for valid but not base denom
+        // valid denoms are 'uion' or 'ibc/FF3065989E34457F342D4EFB8692406D49D4E2B5C70F725F127862E22CE6BDCD'
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..0], "uion".to_string()),
+            Ok(Coin::new(0, "uion"))
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], "uion".to_string()),
+            Ok(Coin::new(10, "uion"))
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], "uion".to_string()),
+            Ok(Coin::new(20, "uion"))
+        );
+
+
+        // test for invalid denom
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..0], "invalid_denom".to_string()),
+            Err(PythContractError::InvalidFeeDenom {
+                denom: "invalid_denom".to_string(),
+            }
+            .into())
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], "invalid_denom".to_string()),
+            Err(PythContractError::InvalidFeeDenom {
+                denom: "invalid_denom".to_string(),
+            }
+            .into())
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], "invalid_denom".to_string()),
+            Err(PythContractError::InvalidFeeDenom {
+                denom: "invalid_denom".to_string(),
+            }
+            .into())
+        );
+
+        // check for overflow
+        let big_fee: u128 = (u128::MAX / 4) * 3;
+        config(&mut deps.storage)
+            .save(&ConfigInfo {
+                fee: Coin::new(big_fee, base_denom),
+                ..create_zero_config_info()
+            })
+            .unwrap();
+
+        // base denom
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], base_denom.to_string()),
+            Ok(Coin::new(big_fee, base_denom))
+        );
+        assert!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], base_denom.to_string())
+                .is_err()
+        );
+
+        // valid but not base
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], "uion".to_string()),
+            Ok(Coin::new(big_fee, "uion"))
+        );
+        assert!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], "uion".to_string()).is_err()
+        );
+
+        // invalid
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..1], "invalid_denom".to_string()),
+            Err(PythContractError::InvalidFeeDenom {
+                denom: "invalid_denom".to_string(),
+            }
+            .into())
+        );
+        assert_eq!(
+            get_update_fee_for_denom(&deps.as_ref(), &updates[0..2], "invalid_denom".to_string()),
+            Err(PythContractError::InvalidFeeDenom {
+                denom: "invalid_denom".to_string(),
+            }
+            .into())
+        );
     }
 
     #[test]

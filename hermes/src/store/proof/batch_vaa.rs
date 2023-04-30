@@ -4,11 +4,9 @@ use {
             Key,
             StorageData,
         },
-        PriceFeedsWithUpdateData,
         RequestTime,
         State,
         UnixTimestamp,
-        UpdateData,
     },
     anyhow::{
         anyhow,
@@ -24,9 +22,15 @@ use {
         PriceAttestation,
         PriceStatus,
     },
-    std::collections::{
-        HashMap,
-        HashSet,
+    std::{
+        collections::{
+            HashMap,
+            HashSet,
+        },
+        time::{
+            SystemTime,
+            UNIX_EPOCH,
+        },
     },
     wormhole::VAA,
 };
@@ -34,21 +38,32 @@ use {
 // TODO: We need to add more metadata to this struct.
 #[derive(Clone, Default, PartialEq, Debug)]
 pub struct PriceInfo {
-    pub price_feed:   PriceFeed,
-    pub vaa_bytes:    Vec<u8>,
-    pub publish_time: UnixTimestamp,
+    pub price_feed:       PriceFeed,
+    pub vaa_bytes:        Vec<u8>,
+    pub publish_time:     UnixTimestamp,
+    pub emitter_chain:    u16,
+    pub attestation_time: UnixTimestamp,
+    pub receive_time:     UnixTimestamp,
+    pub sequence_number:  u64,
 }
 
+#[derive(Clone, Default)]
+pub struct PriceInfosWithUpdateData {
+    pub price_infos: HashMap<PriceIdentifier, PriceInfo>,
+    pub update_data: Vec<Vec<u8>>,
+}
 
 pub fn store_vaa_update(state: State, vaa_bytes: Vec<u8>) -> Result<()> {
     // FIXME: Vaa bytes might not be a valid Pyth BatchUpdate message nor originate from Our emitter.
     // We should check that.
+    // FIXME: We receive multiple vaas for the same update (due to different signedVAAs). We need
+    // to drop them.
     let vaa = VAA::from_bytes(&vaa_bytes)?;
     let batch_price_attestation = BatchPriceAttestation::deserialize(vaa.payload.as_slice())
         .map_err(|_| anyhow!("Failed to deserialize VAA"))?;
 
     for price_attestation in batch_price_attestation.price_attestations {
-        let price_feed = price_attestation_to_price_feed(price_attestation);
+        let price_feed = price_attestation_to_price_feed(price_attestation.clone());
 
         let publish_time = price_feed.get_price_unchecked().publish_time.try_into()?;
 
@@ -56,46 +71,60 @@ pub fn store_vaa_update(state: State, vaa_bytes: Vec<u8>) -> Result<()> {
             price_feed,
             vaa_bytes: vaa_bytes.clone(),
             publish_time,
+            emitter_chain: vaa.emitter_chain.into(),
+            attestation_time: price_attestation.attestation_time.try_into()?,
+            receive_time: SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
+            sequence_number: vaa.sequence,
         };
 
-        let key = Key::new(price_feed.id.to_bytes().to_vec());
+        let key = Key::BatchVaa(price_feed.id);
         state.insert(key, publish_time, StorageData::BatchVaa(price_info))?;
     }
     Ok(())
 }
 
 
-pub fn get_price_feeds_with_update_data(
+pub fn get_price_infos_with_update_data(
     state: State,
     price_ids: Vec<PriceIdentifier>,
     request_time: RequestTime,
-) -> Result<PriceFeedsWithUpdateData> {
-    let mut price_feeds = HashMap::new();
+) -> Result<PriceInfosWithUpdateData> {
+    let mut price_infos = HashMap::new();
     let mut vaas: HashSet<Vec<u8>> = HashSet::new();
     for price_id in price_ids {
-        let key = Key::new(price_id.to_bytes().to_vec());
+        let key = Key::BatchVaa(price_id);
         let maybe_data = state.get(key, request_time.clone())?;
 
         match maybe_data {
             Some(StorageData::BatchVaa(price_info)) => {
-                price_feeds.insert(price_info.price_feed.id, price_info.price_feed);
-                vaas.insert(price_info.vaa_bytes);
+                vaas.insert(price_info.vaa_bytes.clone());
+                price_infos.insert(price_id, price_info);
             }
             None => {
-                log::info!("No price feed found for price id: {:?}", price_id);
                 return Err(anyhow!("No price feed found for price id: {:?}", price_id));
             }
         }
     }
-    let update_data = UpdateData {
-        batch_vaa: vaas.into_iter().collect(),
-    };
-    Ok(PriceFeedsWithUpdateData {
-        price_feeds,
+    let update_data: Vec<Vec<u8>> = vaas.into_iter().collect();
+    Ok(PriceInfosWithUpdateData {
+        price_infos,
         update_data,
     })
 }
 
+
+pub fn get_price_feed_ids(state: State) -> Vec<PriceIdentifier> {
+    // Currently we have only one type and filter map is not necessary.
+    // But we might have more types in the future.
+    #[allow(clippy::unnecessary_filter_map)]
+    state
+        .keys()
+        .into_iter()
+        .filter_map(|key| match key {
+            Key::BatchVaa(price_id) => Some(price_id),
+        })
+        .collect()
+}
 
 /// Convert a PriceAttestation to a PriceFeed.
 ///

@@ -1,11 +1,11 @@
 use {
+    anchor_lang::prelude::*,
     std::{
         io::Write,
         ops::Deref,
         str::FromStr,
     },
     wormhole_solana::VAA,
-    anchor_lang::prelude::*,
 };
 
 // The current chain's wormhole bridge owns the VAA accounts

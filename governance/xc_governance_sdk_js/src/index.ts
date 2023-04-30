@@ -9,6 +9,7 @@ export {
   SetValidPeriodInstruction,
   RequestGovernanceDataSourceTransferInstruction,
   AuthorizeGovernanceDataSourceTransferInstruction,
+  CosmwasmUpgradeContractInstruction,
   Instruction,
 } from "./instructions";
 
