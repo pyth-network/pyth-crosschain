@@ -15,7 +15,7 @@ module pyth::governance {
 
     const E_INVALID_GOVERNANCE_ACTION: u64 = 0;
     const E_MUST_USE_CONTRACT_UPGRADE_MODULE_TO_DO_UPGRADES: u64 = 1;
-    const E_CANNOT_EXECUTE_GOVERNANCE_ACTION_WITH_OLD_SEQUENCE_NUMBER: u64 = 2;
+    const E_CANNOT_EXECUTE_GOVERNANCE_ACTION_WITH_OBSOLETE_SEQUENCE_NUMBER: u64 = 2;
 
     /// Execute a governance instruction other than contract upgrade, which is
     /// handled separately in the contract_upgrade.move module.
@@ -33,7 +33,7 @@ module pyth::governance {
 
         // Require that new sequence number is greater than last executed sequence number.
         assert!(sequence > state::get_last_executed_governance_sequence(pyth_state),
-            E_CANNOT_EXECUTE_GOVERNANCE_ACTION_WITH_OLD_SEQUENCE_NUMBER);
+            E_CANNOT_EXECUTE_GOVERNANCE_ACTION_WITH_OBSOLETE_SEQUENCE_NUMBER);
 
         // Update latest executed sequence number to current one.
         state::set_last_executed_governance_sequence(&latest_only, pyth_state, sequence);
