@@ -34,7 +34,6 @@ module pyth::state {
     const E_INVALID_BUILD_DIGEST: u64 = 0;
     /// Specified version does not match this build's version.
     const E_VERSION_MISMATCH: u64 = 1;
-    const E_SET_GOVERNANCE_DATA_SOURCE_SEQUENCE_NUMBERS_NON_INCREASING: u64 = 2;
 
     /// Sui's chain ID is hard-coded to one value.
     const CHAIN_ID: u16 = 21;
@@ -273,8 +272,6 @@ module pyth::state {
     }
 
     public(friend) fun set_last_executed_governance_sequence(_: &LatestOnly, s: &mut State, sequence: u64) {
-        let prev_sequence = get_last_executed_governance_sequence(s);
-        assert!(sequence>=prev_sequence, E_SET_GOVERNANCE_DATA_SOURCE_SEQUENCE_NUMBERS_NON_INCREASING);
         s.last_executed_governance_sequence = sequence;
     }
 
