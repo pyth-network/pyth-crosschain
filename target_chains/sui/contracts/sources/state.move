@@ -152,9 +152,8 @@ module pyth::state {
 
     /// Retrieve governance module name.
     public fun governance_module(): Bytes32 {
-        // TODO: make this the right governance module
         bytes32::new(
-            x"000000000000000000000000000000000000000000546f6b656e427269646765"
+            x"0000000000000000000000000000000000000000000000000000000000000001"
         )
     }
 
