@@ -7,9 +7,8 @@ module pyth::governance {
     use pyth::set_data_sources;
     use pyth::set_stale_price_threshold;
     use pyth::transfer_fee;
-    use pyth::state::{State};
+    use pyth::state::{Self, State};
     use pyth::set_update_fee;
-    use pyth::state;
     use pyth::governance_witness::{GovernanceWitness};
 
     use wormhole::governance_message::{Self, DecreeReceipt};
@@ -32,9 +31,12 @@ module pyth::governance {
         // generate the receipt.
         let sequence = governance_message::sequence(&receipt);
 
-        // Governance actions on Pyth must be executed in order!
+        // Require that new sequence number is greater than last executed sequence number.
         assert!(sequence > state::get_last_executed_governance_sequence(pyth_state),
             E_CANNOT_EXECUTE_GOVERNANCE_ACTION_WITH_OLD_SEQUENCE_NUMBER);
+
+        // Update latest executed sequence number to current one.
+        state::set_last_executed_governance_sequence(&latest_only, pyth_state, sequence);
 
         // governance_message::take_payload takes care of replay protection.
         let payload =
