@@ -37,6 +37,7 @@ Vectorize the `VAA` from the previous step and pass it to `update_price_feeds`.
 ```
 
 ### 3. `pyth::get_price` 
+Finally, get the price of the updated price feed in `PriceInfoObject`.
 ```Rust
 public fun get_price(
       state: &PythState, 
