@@ -15,13 +15,10 @@ module pyth::pyth {
     use pyth::price_feed::{Self};
     use pyth::price::{Self, Price};
     use pyth::price_identifier::{PriceIdentifier};
-    //use pyth::version_control::{Self};
     use pyth::setup::{Self, DeployerCap};
-    //use pyth::vaa::{PythMessage};
 
     use wormhole::external_address::{Self};
     use wormhole::vaa::{Self, VAA};
-    //use wormhole::state::{State as WormState};
     use wormhole::bytes32::{Self};
 
     const E_DATA_SOURCE_EMITTER_ADDRESS_AND_CHAIN_IDS_DIFFERENT_LENGTHS: u64 = 0;
@@ -94,7 +91,6 @@ module pyth::pyth {
         // These vaas have been verified and consumed, so we don't have to worry about
         // doing replay protection for them.
         verified_vaas: vector<VAA>,
-        //vaas: vector<vector<u8>>,
         clock: &Clock,
         ctx: &mut TxContext
     ){
@@ -158,7 +154,6 @@ module pyth::pyth {
     ///
     /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public fun update_price_feeds(
-        //worm_state: &WormState,
         pyth_state: &PythState,
         verified_vaas: vector<VAA>,
         price_info_objects: &mut vector<PriceInfoObject>,
