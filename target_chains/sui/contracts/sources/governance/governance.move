@@ -15,7 +15,7 @@ module pyth::governance {
     use wormhole::governance_message::{Self, DecreeReceipt};
 
     const E_INVALID_GOVERNANCE_ACTION: u64 = 0;
-    const E_MUST_USE_EXECUTE_CONTRACT_UPGRADE_GOVERNANCE_INSTRUCTION_CALLSITE: u64 = 1;
+    const E_MUST_USE_CONTRACT_UPGRADE_MODULE_TO_DO_UPGRADES: u64 = 1;
 
     /// Execute a governance instruction other than contract upgrade, which is
     /// handled separately in the contract_upgrade.move module.
@@ -44,7 +44,7 @@ module pyth::governance {
 
         // Dispatch the instruction to the appropriate handler.
         if (action == governance_action::new_contract_upgrade()) {
-            abort(E_MUST_USE_EXECUTE_CONTRACT_UPGRADE_GOVERNANCE_INSTRUCTION_CALLSITE)
+            abort(E_MUST_USE_CONTRACT_UPGRADE_MODULE_TO_DO_UPGRADES)
         } else if (action == governance_action::new_set_governance_data_source()) {
             set_governance_data_source::execute(&latest_only, pyth_state, governance_instruction::destroy(instruction));
         } else if (action == governance_action::new_set_data_sources()) {
