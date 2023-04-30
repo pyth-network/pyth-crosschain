@@ -15,7 +15,7 @@ module pyth::event {
         timestamp: u64,
     }
 
-    public(friend) fun emit_price_feed_update(price_feed: PriceFeed, timestamp: u64) {
+    public(friend) fun emit_price_feed_update(price_feed: PriceFeed, timestamp: u64 /* in seconds */) {
         event::emit(
             PriceFeedUpdateEvent {
                 price_feed,

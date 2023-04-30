@@ -1,10 +1,10 @@
 module pyth::pyth {
     use std::vector;
     use sui::tx_context::{TxContext};
-    use sui::coin::{Coin};
+    use sui::coin::{Self, Coin};
     use sui::sui::{SUI};
     use sui::transfer::{Self};
-    use sui::tx_context::{Self};
+    use sui::clock::{Self, Clock};
 
     use pyth::event::{Self as pyth_event};
     use pyth::data_source::{Self, DataSource};
@@ -18,6 +18,9 @@ module pyth::pyth {
     use wormhole::vaa::{Self};
     use wormhole::state::{State as WormState};
 
+    const E_DATA_SOURCE_EMITTER_ADDRESS_AND_CHAIN_IDS_DIFFERENT_LENGTHS: u64 = 0;
+    const E_INVALID_DATA_SOURCE: u64 = 1;
+    const E_INSUFFICIENT_FEE: u64 = 2;
 
     /// Call init_and_share_state with deployer cap to initialize
     /// state and emit event corresponding to Pyth initialization.
@@ -54,8 +57,8 @@ module pyth::pyth {
         emitter_addresses: vector<vector<u8>>
     ): vector<DataSource> {
 
-        // TODO - add custom error type error::data_source_emitter_address_and_chain_ids_different_lengths()
-        assert!(vector::length(&emitter_chain_ids) == vector::length(&emitter_addresses), 0);
+        assert!(vector::length(&emitter_chain_ids) == vector::length(&emitter_addresses),
+            E_DATA_SOURCE_EMITTER_ADDRESS_AND_CHAIN_IDS_DIFFERENT_LENGTHS);
 
         let sources = vector::empty();
         let i = 0;
@@ -75,6 +78,7 @@ module pyth::pyth {
         worm_state: &WormState,
         pyth_state: &mut PythState,
         vaas: vector<vector<u8>>,
+        clock: &Clock,
         ctx: &mut TxContext
     ){
         while (!vector::is_empty(&vaas)) {
@@ -91,10 +95,10 @@ module pyth::pyth {
                         (vaa::emitter_chain(&vaa) as u64),
                         vaa::emitter_address(&vaa))
                     ),
-            0); // TODO - use custom error message - error::invalid_data_source()
+            E_INVALID_DATA_SOURCE);
 
             // Deserialize the batch price attestation
-            let price_infos = batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::take_payload(vaa), ctx));
+            let price_infos = batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::take_payload(vaa), clock));
             while (!vector::is_empty(&price_infos)){
                 let cur_price_info = vector::pop_back(&mut price_infos);
 
@@ -140,11 +144,13 @@ module pyth::pyth {
         vaas: vector<vector<u8>>,
         price_info_objects: &mut vector<PriceInfoObject>,
         fee: Coin<SUI>,
+        clock: &Clock,
         ctx: &mut TxContext
     ) {
         // Charge the message update fee
-        // TODO - error::insufficient_fee()
-        //assert!(get_update_fee(&vaas) <= coin::value(&fee), 0);
+        assert!(get_total_update_fee(pyth_state, &vaas) <= coin::value(&fee), E_INSUFFICIENT_FEE);
+
+        // TODO: use Wormhole fee collector instead of transferring funds to deployer address.
         transfer::public_transfer(fee, @pyth);
 
         // Update the price feed from each VAA
@@ -154,6 +160,7 @@ module pyth::pyth {
                 pyth_state,
                 vector::pop_back(&mut vaas),
                 price_info_objects,
+                clock,
                 ctx
             );
         };
@@ -167,6 +174,7 @@ module pyth::pyth {
         pyth_state: &PythState,
         worm_vaa: vector<u8>,
         price_info_objects: &mut vector<PriceInfoObject>,
+        clock: &Clock,
         ctx: &mut TxContext
     ) {
         // Deserialize the VAA
@@ -180,20 +188,20 @@ module pyth::pyth {
                     (vaa::emitter_chain(&vaa) as u64),
                     vaa::emitter_address(&vaa))
                 ),
-        0); // TODO - use custom error message - error::invalid_data_source()
+        E_INVALID_DATA_SOURCE);
 
         // Deserialize the batch price attestation
-        let price_infos = batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::take_payload(vaa), ctx));
+        let price_infos = batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::take_payload(vaa), clock));
 
         // Update price info objects.
-        update_cache(price_infos, price_info_objects, ctx);
+        update_cache(price_infos, price_info_objects, clock);
     }
 
     /// Update PriceInfoObjects using up-to-date PriceInfos.
     fun update_cache(
         updates: vector<PriceInfo>,
         price_info_objects: &mut vector<PriceInfoObject>,
-        ctx: &mut TxContext
+        clock: &Clock,
     ){
         while (!vector::is_empty(&updates)) {
             let update = vector::pop_back(&mut updates);
@@ -209,8 +217,7 @@ module pyth::pyth {
                 if (price_info::get_price_identifier(&price_info) ==
                     price_info::get_price_identifier(&update)){
                     found = true;
-                    // TODO: use clock timestamp instead of epoch in the future
-                    pyth_event::emit_price_feed_update(price_feed::from(price_info::get_price_feed(&update)), tx_context::epoch(ctx));
+                    pyth_event::emit_price_feed_update(price_feed::from(price_info::get_price_feed(&update)), clock::timestamp_ms(clock)/1000);
 
                     // Update the price info object with the new updated price info.
                     if (is_fresh_update(&update, vector::borrow(price_info_objects, i))){
@@ -243,4 +250,14 @@ module pyth::pyth {
 
         update_timestamp > cached_timestamp
     }
+
+    /// Get the number of AptosCoin's required to perform the given price updates.
+    ///
+    /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
+    public fun get_total_update_fee(pyth_state: &PythState, update_data: &vector<vector<u8>>): u64 {
+        state::get_base_update_fee(pyth_state) * vector::length(update_data)
+    }
 }
+
+// TODO - pyth tests
+// https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/aptos/contracts/sources/pyth.move#L384

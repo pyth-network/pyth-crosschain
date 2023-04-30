@@ -15,6 +15,11 @@ module pyth::governance {
     use wormhole::vaa::{Self, VAA};
     use wormhole::state::{State as WormState};
 
+    const E_GOVERNANCE_CONTRACT_UPGRADE_CHAIN_ID_ZERO: u64 = 0;
+    const E_INVALID_GOVERNANCE_ACTION: u64 = 1;
+    const E_INVALID_GOVERNANCE_DATA_SOURCE: u64 = 2;
+    const E_INVALID_GOVERNANCE_SEQUENCE_NUMBER: u64 = 3;
+    
     public entry fun execute_governance_instruction(
         pyth_state : &mut State,
         worm_state: &WormState,
@@ -28,7 +33,7 @@ module pyth::governance {
         let action = governance_instruction::get_action(&instruction);
         if (action == governance_action::new_contract_upgrade()) {
             assert!(governance_instruction::get_target_chain_id(&instruction) != 0,
-                0); // TODO - error::governance_contract_upgrade_chain_id_zero()
+                E_GOVERNANCE_CONTRACT_UPGRADE_CHAIN_ID_ZERO);
             contract_upgrade::execute(worm_state, pyth_state, governance_instruction::destroy(instruction));
         } else if (action == governance_action::new_set_governance_data_source()) {
             set_governance_data_source::execute(pyth_state, governance_instruction::destroy(instruction));
@@ -40,7 +45,7 @@ module pyth::governance {
             set_stale_price_threshold::execute(pyth_state, governance_instruction::destroy(instruction));
         } else {
             governance_instruction::destroy(instruction);
-            assert!(false, 0); // TODO - error::invalid_governance_action()
+            assert!(false, E_INVALID_GOVERNANCE_ACTION);
         }
     }
 
@@ -59,11 +64,11 @@ module pyth::governance {
                 data_source::new(
                     (vaa::emitter_chain(&parsed_vaa) as u64),
                     vaa::emitter_address(&parsed_vaa))),
-            0); // TODO - error::invalid_governance_data_source()
+            E_INVALID_GOVERNANCE_DATA_SOURCE);
 
         // Check that the sequence number is greater than the last executed governance VAA
         let sequence = vaa::sequence(&parsed_vaa);
-        assert!(sequence > state::get_last_executed_governance_sequence(pyth_state), 0); // TODO - error::invalid_governance_sequence_number()
+        assert!(sequence > state::get_last_executed_governance_sequence(pyth_state), E_INVALID_GOVERNANCE_SEQUENCE_NUMBER);
         state::set_last_executed_governance_sequence(pyth_state, sequence);
 
         parsed_vaa

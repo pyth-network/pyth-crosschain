@@ -6,13 +6,14 @@ module pyth::governance_action {
     const SET_DATA_SOURCES: u8 = 2;
     const SET_UPDATE_FEE: u8 = 3;
     const SET_STALE_PRICE_THRESHOLD: u8 = 4;
+    const E_INVALID_GOVERNANCE_ACTION: u64 = 5;
 
     struct GovernanceAction has copy, drop {
         value: u8,
     }
 
     public fun from_u8(value: u8): GovernanceAction {
-        assert!(CONTRACT_UPGRADE <= value && value <= SET_STALE_PRICE_THRESHOLD, 0); //TODO - add specific error: error::invalid_governance_action()
+        assert!(CONTRACT_UPGRADE <= value && value <= SET_STALE_PRICE_THRESHOLD, E_INVALID_GOVERNANCE_ACTION);
         GovernanceAction { value }
     }
 

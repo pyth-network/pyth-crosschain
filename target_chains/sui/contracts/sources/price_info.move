@@ -8,6 +8,8 @@ module pyth::price_info {
     use pyth::price_identifier::{PriceIdentifier};
 
     const KEY: vector<u8> = b"price_info";
+    const E_PRICE_INFO_REGISTRY_ALREADY_EXISTS: u64 = 0;
+    const E_PRICE_IDENTIFIER_ALREADY_REGISTERED: u64 = 1;
 
     friend pyth::pyth;
 
@@ -30,7 +32,7 @@ module pyth::price_info {
     public fun new_price_info_registry(parent_id: &mut UID, ctx: &mut TxContext) {
         assert!(
             !dynamic_object_field::exists_(parent_id, KEY),
-            0 // TODO - add custom error message
+            E_PRICE_INFO_REGISTRY_ALREADY_EXISTS
         );
         dynamic_object_field::add(
             parent_id,
@@ -42,7 +44,7 @@ module pyth::price_info {
     public fun add(parent_id: &mut UID, price_identifier: PriceIdentifier, id: ID) {
         assert!(
             !contains(parent_id, price_identifier),
-            0 // TODO - add custom error message
+            E_PRICE_IDENTIFIER_ALREADY_REGISTERED
         );
         table::add(
             dynamic_object_field::borrow_mut(parent_id, KEY),
