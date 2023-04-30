@@ -12,6 +12,7 @@ module pyth::price_info {
     const E_PRICE_IDENTIFIER_ALREADY_REGISTERED: u64 = 1;
 
     friend pyth::pyth;
+    friend pyth::state;
 
     /// Sui object version of PriceInfo.
     /// Has a key ability, is unique for each price identifier, and lives in global store.
@@ -29,7 +30,7 @@ module pyth::price_info {
 
     /// Creates a table which maps a PriceIdentifier to the
     /// UID (in bytes) of the corresponding Sui PriceInfoObject.
-    public fun new_price_info_registry(parent_id: &mut UID, ctx: &mut TxContext) {
+    public(friend) fun new_price_info_registry(parent_id: &mut UID, ctx: &mut TxContext) {
         assert!(
             !dynamic_object_field::exists_(parent_id, KEY),
             E_PRICE_INFO_REGISTRY_ALREADY_EXISTS
@@ -41,7 +42,7 @@ module pyth::price_info {
         )
     }
 
-    public fun add(parent_id: &mut UID, price_identifier: PriceIdentifier, id: ID) {
+    public(friend) fun add(parent_id: &mut UID, price_identifier: PriceIdentifier, id: ID) {
         assert!(
             !contains(parent_id, price_identifier),
             E_PRICE_IDENTIFIER_ALREADY_REGISTERED
@@ -58,7 +59,7 @@ module pyth::price_info {
         table::contains<PriceIdentifier, ID>(ref, price_identifier)
     }
 
-    public fun new_price_info_object(
+    public(friend) fun new_price_info_object(
         price_info: PriceInfo,
         ctx: &mut TxContext
     ): PriceInfoObject {
