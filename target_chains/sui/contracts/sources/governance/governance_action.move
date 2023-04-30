@@ -15,7 +15,7 @@ module pyth::governance_action {
     }
 
     public fun from_u8(value: u8): GovernanceAction {
-        assert!(CONTRACT_UPGRADE <= value && value <= SET_STALE_PRICE_THRESHOLD, E_INVALID_GOVERNANCE_ACTION);
+        assert!(CONTRACT_UPGRADE <= value && value <= TRANSFER_FEE, E_INVALID_GOVERNANCE_ACTION);
         GovernanceAction { value }
     }
 
