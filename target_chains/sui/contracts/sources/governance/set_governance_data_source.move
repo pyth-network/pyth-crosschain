@@ -42,8 +42,9 @@ module pyth::set_governance_data_source {
     }
 
     public(friend) fun execute(latest_only: &LatestOnly, pyth_state: &mut State, payload: vector<u8>) {
-        let GovernanceDataSource { emitter_chain_id, emitter_address, initial_sequence: _initial_sequence } = from_byte_vec(payload);
+        let GovernanceDataSource { emitter_chain_id, emitter_address, initial_sequence: initial_sequence } = from_byte_vec(payload);
         state::set_governance_data_source(latest_only, pyth_state, data_source::new(emitter_chain_id, emitter_address));
+        state::set_last_executed_governance_sequence(latest_only, pyth_state, initial_sequence);
     }
 
     fun from_byte_vec(bytes: vector<u8>): GovernanceDataSource {

@@ -34,6 +34,7 @@ module pyth::state {
     const E_INVALID_BUILD_DIGEST: u64 = 0;
     /// Specified version does not match this build's version.
     const E_VERSION_MISMATCH: u64 = 1;
+    const E_SET_GOVERNANCE_DATA_SOURCE_SEQUENCE_NUMBERS_NON_INCREASING: u64 = 2;
 
     /// Sui's chain ID is hard-coded to one value.
     const CHAIN_ID: u16 = 21;
@@ -47,6 +48,7 @@ module pyth::state {
         governance_data_source: DataSource,
         stale_price_threshold: u64,
         base_update_fee: u64,
+        last_executed_governance_sequence: u64,
         consumed_vaas: ConsumedVAAs,
 
         // Upgrade capability.
@@ -105,6 +107,7 @@ module pyth::state {
             stale_price_threshold,
             base_update_fee,
             consumed_vaas,
+            last_executed_governance_sequence: 0,
             fee_collector: fee_collector::new(base_update_fee)
         }
     }
@@ -141,6 +144,10 @@ module pyth::state {
     /// Retrieve governance chain ID, which is governance's emitter chain ID.
     public fun governance_data_source(self: &State): DataSource {
         self.governance_data_source
+    }
+
+    public fun get_last_executed_governance_sequence(self: &State): u64{
+        return self.last_executed_governance_sequence
     }
 
     /// Retrieve governance module name.
@@ -263,7 +270,13 @@ module pyth::state {
     }
 
     public(friend) fun set_governance_data_source(_: &LatestOnly, s: &mut State, source: DataSource) {
-        s. governance_data_source = source;
+        s.governance_data_source = source;
+    }
+
+    public(friend) fun set_last_executed_governance_sequence(_: &LatestOnly, s: &mut State, sequence: u64) {
+        let prev_sequence = get_last_executed_governance_sequence(s);
+        assert!(sequence>=prev_sequence, E_SET_GOVERNANCE_DATA_SOURCE_SEQUENCE_NUMBERS_NON_INCREASING);
+        s.last_executed_governance_sequence = sequence;
     }
 
     public(friend) fun set_base_update_fee(_: &LatestOnly, s: &mut State, fee: u64) {
