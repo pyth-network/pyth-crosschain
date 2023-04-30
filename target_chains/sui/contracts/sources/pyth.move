@@ -141,6 +141,7 @@ module pyth::pyth {
                 }
             }
         };
+        vector::destroy_empty(verified_vaas);
     }
 
     /// Update Pyth Price Info objects (containing price feeds) with the
@@ -159,7 +160,7 @@ module pyth::pyth {
     public fun update_price_feeds(
         //worm_state: &WormState,
         pyth_state: &PythState,
-        vaas: vector<VAA>,
+        verified_vaas: vector<VAA>,
         price_info_objects: &mut vector<PriceInfoObject>,
         fee: Coin<SUI>,
         clock: &Clock
@@ -167,20 +168,21 @@ module pyth::pyth {
         let _ = state::assert_latest_only(pyth_state);
 
         // Charge the message update fee
-        assert!(get_total_update_fee(pyth_state, &vaas) <= coin::value(&fee), E_INSUFFICIENT_FEE);
+        assert!(get_total_update_fee(pyth_state, vector::length(&verified_vaas)) <= coin::value(&fee), E_INSUFFICIENT_FEE);
 
         // TODO: use Wormhole fee collector instead of transferring funds to deployer address.
         transfer::public_transfer(fee, @pyth);
 
         // Update the price feed from each VAA
-        while (!vector::is_empty(&vaas)) {
+        while (!vector::is_empty(&verified_vaas)) {
             update_price_feed_from_single_vaa(
                 pyth_state,
-                vector::pop_back(&mut vaas),
+                vector::pop_back(&mut verified_vaas),
                 price_info_objects,
                 clock
             );
         };
+        vector::destroy_empty(verified_vaas);
     }
 
     /// Make sure that a Sui object of type PriceInfoObject exists for each update
@@ -380,8 +382,8 @@ module pyth::pyth {
     }
 
     /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
-    public fun get_total_update_fee(pyth_state: &PythState, update_data: &vector<VAA>): u64 {
-        state::get_base_update_fee(pyth_state) * vector::length(update_data)
+    public fun get_total_update_fee(pyth_state: &PythState, n: u64): u64 {
+        state::get_base_update_fee(pyth_state) * n
     }
 }
 
@@ -395,7 +397,7 @@ module pyth::pyth_tests{
     use sui::object::{Self, ID};
     use sui::clock::{Self, Clock};
 
-    use pyth::state::{Self, State as PythState};
+    use pyth::state::{State as PythState};
     use pyth::setup::{Self};
     use pyth::price_identifier::{Self};
     use pyth::price_info::{Self, PriceInfo, PriceInfoObject};
@@ -421,16 +423,22 @@ module pyth::pyth_tests{
     const TEST_VAAS: vector<vector<u8>> = vector[x"0100000000010036eb563b80a24f4253bee6150eb8924e4bdf6e4fa1dfc759a6664d2e865b4b134651a7b021b7f1ce3bd078070b688b6f2e37ce2de0d9b48e6a78684561e49d5201527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000001005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001"];
 
     fun get_verified_test_vaas(worm_state: &WormState, clock: &Clock): vector<VAA> {
-        let verified_vaas = vector::empty<VAA>();
+        let verified_vaas_reversed = vector::empty<VAA>();
         let test_vaas = TEST_VAAS;
         let i = 0;
         while (i < vector::length(&TEST_VAAS)) {
             let cur_test_vaa = vector::pop_back(&mut test_vaas);
             let verified_vaa = vaa::parse_and_verify(worm_state, cur_test_vaa, clock);
-            vector::push_back(&mut verified_vaas, verified_vaa);
+            vector::push_back(&mut verified_vaas_reversed, verified_vaa);
             i=i+1;
         };
-        return verified_vaas
+        let verified_vaas = vector::empty<VAA>();
+        while (vector::length<VAA>(&verified_vaas_reversed)!=0){
+            let cur = vector::pop_back(&mut verified_vaas_reversed);
+            vector::push_back(&mut verified_vaas, cur);
+        };
+        vector::destroy_empty(verified_vaas_reversed);
+        verified_vaas
     }
 
     #[test_only]
@@ -592,18 +600,23 @@ module pyth::pyth_tests{
         test_scenario::next_tx(&mut scenario, DEPLOYER, );
         let pyth_state = take_shared<PythState>(&scenario);
         // Pass in a single VAA
-        assert!(pyth::get_total_update_fee(&pyth_state, &vector[
-            x"fb1543888001083cf2e6ef3afdcf827e89b11efd87c563638df6e1995ada9f93",
-        ]) == single_update_fee, 1);
 
-        // Pass in multiple VAAs
-        assert!(pyth::get_total_update_fee(&pyth_state, &vector[
+        let single_vaa = vector[
+            x"fb1543888001083cf2e6ef3afdcf827e89b11efd87c563638df6e1995ada9f93",
+        ];
+
+        assert!(pyth::get_total_update_fee(&pyth_state, vector::length<vector<u8>>(&single_vaa)) == single_update_fee, 1);
+
+        let multiple_vaas = vector[
             x"4ee17a1a4524118de513fddcf82b77454e51be5d6fc9e29fc72dd6c204c0e4fa",
             x"c72fdf81cfc939d4286c93fbaaae2eec7bae28a5926fa68646b43a279846ccc1",
             x"d9a8123a793529c31200339820a3210059ecace6c044f81ecad62936e47ca049",
             x"84e4f21b3e65cef47fda25d15b4eddda1edf720a1d062ccbf441d6396465fbe6",
             x"9e73f9041476a93701a0b9c7501422cc2aa55d16100bec628cf53e0281b6f72f"
-        ]) == 250, 1);
+        ];
+
+        // Pass in multiple VAAs
+        assert!(pyth::get_total_update_fee(&pyth_state, vector::length<vector<u8>>(&multiple_vaas)) == 250, 1);
 
         return_shared(pyth_state);
         coin::burn_for_testing<SUI>(test_coins);
@@ -723,6 +736,7 @@ module pyth::pyth_tests{
         // which contain the price feeds we want to update. Note that these can be passed into
         // update_price_feeds in any order!
         let price_info_object_vec = vector[price_info_object_1, price_info_object_2, price_info_object_3, price_info_object_4];
+        verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
         pyth::update_price_feeds(
             &mut pyth_state,

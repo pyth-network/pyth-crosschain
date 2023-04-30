@@ -8,7 +8,7 @@ module pyth::governance_action {
     const SET_STALE_PRICE_THRESHOLD: u8 = 4;
     const TRANSFER_FEE: u8 = 5;
 
-    const E_INVALID_GOVERNANCE_ACTION: u64 = 5;
+    const E_INVALID_GOVERNANCE_ACTION: u64 = 6;
 
     struct GovernanceAction has copy, drop {
         value: u8,
@@ -17,6 +17,10 @@ module pyth::governance_action {
     public fun from_u8(value: u8): GovernanceAction {
         assert!(CONTRACT_UPGRADE <= value && value <= SET_STALE_PRICE_THRESHOLD, E_INVALID_GOVERNANCE_ACTION);
         GovernanceAction { value }
+    }
+
+    public fun get_value(a: GovernanceAction): u8{
+        a.value
     }
 
     public fun new_contract_upgrade(): GovernanceAction {
@@ -39,7 +43,7 @@ module pyth::governance_action {
         GovernanceAction { value: SET_STALE_PRICE_THRESHOLD }
     }
 
-    public fun new_transfer_fee(): GovernanceAction {
+    public fun new_set_transfer_fee(): GovernanceAction {
         GovernanceAction { value: TRANSFER_FEE }
     }
 }

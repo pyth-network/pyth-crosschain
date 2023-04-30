@@ -16,17 +16,21 @@ module pyth::contract_upgrade {
     use wormhole::governance_message::{Self, DecreeTicket, DecreeReceipt};
 
     use pyth::state::{Self, State};
+    use pyth::governance_witness::{GovernanceWitness, new_governance_witness};
+    use pyth::governance_instruction::{Self};
+    use pyth::governance_action::{Self};
 
     friend pyth::migrate;
 
     /// Digest is all zeros.
     const E_DIGEST_ZERO_BYTES: u64 = 0;
+    const E_GOVERNANCE_ACTION_MUST_BE_CONTRACT_UPGRADE: u64 = 1;
+    const E_GOVERNANCE_CONTRACT_UPGRADE_CHAIN_ID_ZERO: u64 = 2;
 
     /// Specific governance payload ID (action) to complete upgrading the
     /// contract.
-    const ACTION_UPGRADE_CONTRACT: u8 = 1;
-
-    struct GovernanceWitness has drop {}
+    /// TODO: is it okay for the contract upgrade action for Pyth to be 0? Or should it be 1?
+    const CONTRACT_UPGRADE: u8 = 0;
 
     // Event reflecting package upgrade.
     struct ContractUpgraded has drop, copy {
@@ -42,11 +46,11 @@ module pyth::contract_upgrade {
         pyth_state: &State
     ): DecreeTicket<GovernanceWitness> {
         governance_message::authorize_verify_local(
-            GovernanceWitness {},
+            new_governance_witness(),
             state::governance_chain(pyth_state),
             state::governance_contract(pyth_state),
             state::governance_module(),
-            ACTION_UPGRADE_CONTRACT
+            CONTRACT_UPGRADE
         )
     }
 
@@ -55,20 +59,35 @@ module pyth::contract_upgrade {
     /// because a contract upgrade is only relevant to one particular network
     /// (in this case Sui), whose build digest is encoded in this message.
     public fun authorize_upgrade(
-        token_bridge_state: &mut State,
+        pyth_state: &mut State,
         receipt: DecreeReceipt<GovernanceWitness>
     ): UpgradeTicket {
-        // current package checking when consuming VAA hashes. This is because
+
+        // Current package checking when consuming VAA hashes. This is because
         // upgrades are protected by the Sui VM, enforcing the latest package
         // is the one performing the upgrade.
         let consumed =
-            state::borrow_mut_consumed_vaas_unchecked(token_bridge_state);
+            state::borrow_mut_consumed_vaas_unchecked(pyth_state);
 
         // And consume.
         let payload = governance_message::take_payload(consumed, receipt);
 
+        let instruction = governance_instruction::from_byte_vec(payload);
+
+        // Get the governance action.
+        let action = governance_instruction::get_action(&instruction);
+
+        assert!(action == governance_action::new_contract_upgrade(),
+             E_GOVERNANCE_ACTION_MUST_BE_CONTRACT_UPGRADE);
+
+        assert!(governance_instruction::get_target_chain_id(&instruction) != 0,
+             E_GOVERNANCE_CONTRACT_UPGRADE_CHAIN_ID_ZERO);
+
+        // upgrade_payload contains a 32-byte digest
+        let upgrade_payload = governance_instruction::destroy(instruction);
+
         // Proceed with processing new implementation version.
-        handle_upgrade_contract(token_bridge_state, payload)
+        handle_upgrade_contract(pyth_state, upgrade_payload)
     }
 
     /// Finalize the upgrade that ran to produce the given `receipt`. This
@@ -96,10 +115,10 @@ module pyth::contract_upgrade {
     }
 
     fun handle_upgrade_contract(
-        wormhole_state: &mut State,
+        pyth_state: &mut State,
         payload: vector<u8>
     ): UpgradeTicket {
-        state::authorize_upgrade(wormhole_state, take_digest(payload))
+        state::authorize_upgrade(pyth_state, take_digest(payload))
     }
 
     fun deserialize(payload: vector<u8>): UpgradeContract {
@@ -116,7 +135,7 @@ module pyth::contract_upgrade {
 
     #[test_only]
     public fun action(): u8 {
-        ACTION_UPGRADE_CONTRACT
+        CONTRACT_UPGRADE
     }
 }
 

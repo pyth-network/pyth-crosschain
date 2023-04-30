@@ -2,7 +2,6 @@ module pyth::state {
     use std::vector;
     use sui::object::{Self, UID, ID};
     use sui::tx_context::{TxContext};
-    //use sui::dynamic_field::{Self as field};
     use sui::package::{UpgradeCap, UpgradeTicket, UpgradeReceipt};
     use sui::balance::{Balance};
     use sui::sui::SUI;
@@ -82,6 +81,22 @@ module pyth::state {
         };
 
         let consumed_vaas = consumed_vaas::new(ctx);
+
+
+        // Set first version for this package.
+        package_utils::init_version(
+            &mut uid,
+            version_control::current_version()
+        );
+
+        // Initialize package info. This will be used for emitting information
+        // of successful migrations.
+        package_utils::init_package_info(
+            &mut uid,
+            &upgrade_cap,
+            bytes32::default(),
+            bytes32::default()
+        );
 
         State {
             id: uid,

@@ -2,10 +2,13 @@ module pyth::set_governance_data_source {
     use pyth::deserialize;
     use pyth::data_source;
     use pyth::state::{Self, State, LatestOnly};
+    use pyth::governance_action::{Self};
+    use pyth::governance_witness::{Self, GovernanceWitness};
 
     use wormhole::cursor;
     use wormhole::external_address::{Self, ExternalAddress};
     use wormhole::bytes32::{Self};
+    use wormhole::governance_message::{Self, DecreeTicket};
 
     friend pyth::governance;
 
@@ -13,6 +16,29 @@ module pyth::set_governance_data_source {
         emitter_chain_id: u64,
         emitter_address: ExternalAddress,
         initial_sequence: u64,
+    }
+
+    public fun authorize_governance(
+        pyth_state: &State,
+        global: bool
+    ): DecreeTicket<GovernanceWitness> {
+        if (global){
+            governance_message::authorize_verify_global(
+                governance_witness::new_governance_witness(),
+                state::governance_chain(pyth_state),
+                state::governance_contract(pyth_state),
+                state::governance_module(),
+                governance_action::get_value(governance_action::new_set_governance_data_source())
+            )
+        } else {
+            governance_message::authorize_verify_local(
+                governance_witness::new_governance_witness(),
+                state::governance_chain(pyth_state),
+                state::governance_contract(pyth_state),
+                state::governance_module(),
+                governance_action::get_value(governance_action::new_set_governance_data_source())
+            )
+        }
     }
 
     public(friend) fun execute(latest_only: &LatestOnly, pyth_state: &mut State, payload: vector<u8>) {
