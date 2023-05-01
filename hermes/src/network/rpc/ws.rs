@@ -18,6 +18,7 @@ use {
     },
     dashmap::DashMap,
     futures::{
+        future::join_all,
         stream::{
             SplitSink,
             SplitStream,
@@ -220,18 +221,30 @@ impl Subscriber {
 
 pub async fn dispatch_updates(update_feed_ids: Vec<PriceIdentifier>, state: super::State) {
     let ws_state = state.ws.clone();
-    let mut closed_subscribers: Vec<SubscriberId> = Vec::new();
+    let update_feed_ids_ref = &update_feed_ids;
 
-    for subscriber in ws_state.subscribers.iter_mut() {
-        if let Err(e) = subscriber.send(update_feed_ids.clone()).await {
-            log::debug!("Error sending update to subscriber: {}", e);
-            closed_subscribers.push(*subscriber.key());
+    let closed_subscribers: Vec<Option<SubscriberId>> = join_all(
+        ws_state
+            .subscribers
+            .iter_mut()
+            .map(|subscriber| async move {
+                match subscriber.send(update_feed_ids_ref.clone()).await {
+                    Ok(_) => None,
+                    Err(e) => {
+                        log::debug!("Error sending update to subscriber: {}", e);
+                        Some(subscriber.key().clone())
+                    }
+                }
+            }),
+    )
+    .await;
+
+    // Remove closed_subscribers from ws_state
+    closed_subscribers.into_iter().for_each(|id| {
+        if let Some(id) = id {
+            ws_state.subscribers.remove(&id);
         }
-    }
-
-    for closed_subscriber in closed_subscribers {
-        ws_state.subscribers.remove(&closed_subscriber);
-    }
+    });
 }
 
 #[derive(Clone)]
