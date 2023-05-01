@@ -18,6 +18,7 @@ module pyth::state {
     use wormhole::external_address::{ExternalAddress};
 
     friend pyth::pyth;
+    #[test_only]
     friend pyth::pyth_tests;
     friend pyth::governance_action;
     friend pyth::set_update_fee;

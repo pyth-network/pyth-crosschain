@@ -11,6 +11,7 @@ module pyth::data_source {
     friend pyth::set_data_sources;
     friend pyth::pyth;
     friend pyth::set_governance_data_source;
+    #[test_only]
     friend pyth::pyth_tests;
 
     const KEY: vector<u8> = b"data_sources";
