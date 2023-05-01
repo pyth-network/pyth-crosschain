@@ -57,6 +57,8 @@ pub struct RpcPriceFeed {
 }
 
 impl RpcPriceFeed {
+    // TODO: Use a Encoding type to have None, Base64, and Hex variants instead of binary flag.
+    // TODO: Use a Verbosity type to define None, or Full instead of verbose flag.
     pub fn from_price_info(price_info: PriceInfo, verbose: bool, binary: bool) -> Self {
         Self {
             id:        price_info.price_feed.id,

@@ -103,9 +103,6 @@ impl Subscriber {
 
     pub async fn run(&mut self) {
         while !self.closed {
-            if self.closed {
-                break;
-            }
             if let Err(e) = self.handle_next().await {
                 log::error!("Subscriber {}: Error handling next message: {}", self.id, e);
                 break;
@@ -115,12 +112,21 @@ impl Subscriber {
 
     async fn handle_next(&mut self) -> Result<()> {
         tokio::select! {
-            Some(update_feed_ids) = self.update_rx.recv() => {
+            maybe_update_feed_ids = self.update_rx.recv() => {
+                let update_feed_ids = maybe_update_feed_ids.ok_or_else(|| {
+                    anyhow::anyhow!("Update channel closed.")
+                })?;
                 self.handle_price_feeds_update(update_feed_ids).await?;
             },
-            Some(message_or_err) = self.receiver.next() => {
-                let message = message_or_err?;
-                self.handle_client_message(message).await?;
+            maybe_message_or_err = self.receiver.next() => {
+                match maybe_message_or_err {
+                    None => {
+                        log::debug!("Subscriber {} closed connection unexpectedly.", self.id);
+                        self.closed = true;
+                        return Ok(());
+                    },
+                    Some(message_or_err) => self.handle_client_message(message_or_err?).await?
+                }
             },
         }
 
@@ -141,16 +147,18 @@ impl Subscriber {
                     .batch_vaa
                     .price_infos
                     .get(&price_feed_id)
-                    .unwrap()
+                    .ok_or_else(|| {
+                        anyhow::anyhow!("Price feed {} not found.", price_feed_id.to_string())
+                    })?
                     .clone();
                 let price_feed =
                     RpcPriceFeed::from_price_info(price_info, config.verbose, config.binary);
                 // Feed does not flush the message and will allow us
                 // to send multiple messages in a single flush.
                 self.sender
-                    .feed(Message::Text(
-                        serde_json::to_string(&ServerMessage::PriceUpdate { price_feed }).unwrap(),
-                    ))
+                    .feed(Message::Text(serde_json::to_string(
+                        &ServerMessage::PriceUpdate { price_feed },
+                    )?))
                     .await?;
             }
         }
@@ -181,8 +189,7 @@ impl Subscriber {
                             ServerResponseMessage::Err {
                                 error: e.to_string(),
                             },
-                        ))
-                        .unwrap()
+                        ))?
                         .into(),
                     )
                     .await?;
@@ -209,9 +216,7 @@ impl Subscriber {
 
         self.sender
             .send(
-                serde_json::to_string(&ServerMessage::Response(ServerResponseMessage::Ok))
-                    .unwrap()
-                    .into(),
+                serde_json::to_string(&ServerMessage::Response(ServerResponseMessage::Ok))?.into(),
             )
             .await?;
 
