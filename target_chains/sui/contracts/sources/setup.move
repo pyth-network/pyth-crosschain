@@ -12,6 +12,10 @@ module pyth::setup {
     /// Build version for setup must only be `1`.
     const E_INVALID_BUILD_VERSION: u64 = 1;
 
+    friend pyth::pyth;
+    #[test_only]
+    friend pyth::pyth_tests;
+
     /// Capability created at `init`, which will be destroyed once
     /// `init_and_share_state` is called. This ensures only the deployer can
     /// create the shared `State`.
@@ -42,7 +46,7 @@ module pyth::setup {
 
     /// Only the owner of the `DeployerCap` can call this method. This
     /// method destroys the capability and shares the `State` object.
-    public fun init_and_share_state(
+    public(friend) fun init_and_share_state(
         deployer: DeployerCap,
         upgrade_cap: UpgradeCap,
         stale_price_threshold: u64,
