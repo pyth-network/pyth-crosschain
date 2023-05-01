@@ -7,6 +7,9 @@
     "dependencies": {
         "@certusone/wormhole-sdk": "^0.9.12",
         "@mysten/sui.js": "^0.32.2",
+        "@pythnetwork/client": "^2.17.0",
+        "@pythnetwork/price-service-client": "^1.4.0",
+        "@pythnetwork/price-service-sdk": "^1.2.0",
         "chai": "^4.3.7",
         "dotenv": "^16.0.3",
         "mocha": "^10.2.0",
@@ -18,6 +21,6 @@
     "devDependencies": {
         "@types/chai": "^4.3.4",
         "@types/mocha": "^10.0.1",
-        "@types/node": "^18.15.11"
+        "@types/node": "^18.16.3"
     }
 }

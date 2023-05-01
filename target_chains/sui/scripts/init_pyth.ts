@@ -45,7 +45,7 @@ async function init_pyth(
     pythPackage: string,
     deployerCap: string,
     upgradeCap: string
-  ) {
+) {
 
     const tx = new TransactionBlock();
 
@@ -77,4 +77,4 @@ async function init_pyth(
     });
     console.log(result)
     return result
-  }
+}
