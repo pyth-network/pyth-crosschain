@@ -102,7 +102,7 @@ impl Subscriber {
     }
 
     pub async fn run(&mut self) {
-        loop {
+        while !self.closed {
             if self.closed {
                 break;
             }
