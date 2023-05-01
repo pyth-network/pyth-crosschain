@@ -20,7 +20,7 @@ import {
   createTransactionFromMsg,
 } from "@injectivelabs/sdk-ts";
 
-import { DEFAULT_GAS_PRICE } from "@injectivelabs/utils";
+const DEFAULT_GAS_PRICE = 500000000;
 
 type PriceQueryResponse = {
   price_feed: {
