@@ -171,7 +171,7 @@ module pyth::pyth {
         //       to take in mutable references to PythState, because taking a global write lock on it
         //       makes it so price updates can't execute in parallel, even if they act on different price feeds
         //       (or PriceInfoObjects).
-        transfer::public_transfer(fee, @pyth);
+        transfer::public_transfer(fee, state::get_fee_recipient(pyth_state));
 
         // Update the price feed from each VAA
         while (!vector::is_empty(&verified_vaas)) {
@@ -234,10 +234,9 @@ module pyth::pyth {
                 if (price_info::get_price_identifier(&price_info) ==
                     price_info::get_price_identifier(&update)){
                     found = true;
-                    pyth_event::emit_price_feed_update(price_feed::from(price_info::get_price_feed(&update)), clock::timestamp_ms(clock)/1000);
-
                     // Update the price info object with the new updated price info.
                     if (is_fresh_update(&update, vector::borrow(price_info_objects, i))){
+                        pyth_event::emit_price_feed_update(price_feed::from(price_info::get_price_feed(&update)), clock::timestamp_ms(clock)/1000);
                         price_info::update_price_info_object(
                             vector::borrow_mut(price_info_objects, i),
                             update

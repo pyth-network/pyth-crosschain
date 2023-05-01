@@ -1,10 +1,8 @@
 module pyth::state {
     use std::vector;
     use sui::object::{Self, UID, ID};
-    use sui::tx_context::{TxContext};
+    use sui::tx_context::{Self, TxContext};
     use sui::package::{UpgradeCap, UpgradeTicket, UpgradeReceipt};
-    use sui::balance::{Balance};
-    use sui::sui::SUI;
 
     use pyth::data_source::{Self, DataSource};
     use pyth::price_info::{Self};
@@ -13,7 +11,6 @@ module pyth::state {
 
     use wormhole::consumed_vaas::{Self, ConsumedVAAs};
     use wormhole::bytes32::{Self, Bytes32};
-    use wormhole::fee_collector::{Self, FeeCollector};
     use wormhole::package_utils::{Self};
     use wormhole::external_address::{ExternalAddress};
 
@@ -28,7 +25,7 @@ module pyth::state {
     friend pyth::set_governance_data_source;
     friend pyth::migrate;
     friend pyth::contract_upgrade;
-    friend pyth::transfer_fee;
+    friend pyth::set_fee_recipient;
     friend pyth::setup;
 
     /// Build digest does not agree with current implementation.
@@ -48,14 +45,12 @@ module pyth::state {
         governance_data_source: DataSource,
         stale_price_threshold: u64,
         base_update_fee: u64,
+        fee_recipient_address: address,
         last_executed_governance_sequence: u64,
         consumed_vaas: ConsumedVAAs,
 
         // Upgrade capability.
-        upgrade_cap: UpgradeCap,
-
-        // Fee collector.
-        fee_collector: FeeCollector,
+        upgrade_cap: UpgradeCap
     }
 
     public(friend) fun new(
@@ -105,10 +100,10 @@ module pyth::state {
             upgrade_cap,
             governance_data_source,
             stale_price_threshold,
+            fee_recipient_address: tx_context::sender(ctx),
             base_update_fee,
             consumed_vaas,
-            last_executed_governance_sequence: 0,
-            fee_collector: fee_collector::new(base_update_fee)
+            last_executed_governance_sequence: 0
         }
     }
 
@@ -127,6 +122,10 @@ module pyth::state {
 
     public fun get_base_update_fee(s: &State): u64 {
         s.base_update_fee
+    }
+
+    public fun get_fee_recipient(s: &State): address {
+        s.fee_recipient_address
     }
 
     public fun is_valid_data_source(s: &State, data_source: DataSource): bool {
@@ -197,30 +196,12 @@ module pyth::state {
         LatestOnly {}
     }
 
-    /// Deposit fee when sending Wormhole message. This method does not
-    /// necessarily have to be a `friend` to `wormhole::publish_message`. But
-    /// we also do not want an integrator to mistakenly deposit fees outside
-    /// of calling `publish_message`.
-    ///
-    /// See `wormhole::publish_message` for more info.
-    public(friend) fun deposit_fee(
+    public(friend) fun set_fee_recipient(
         _: &LatestOnly,
         self: &mut State,
-        fee: Balance<SUI>
+        addr: address
     ) {
-        fee_collector::deposit_balance(&mut self.fee_collector, fee);
-    }
-
-    /// Withdraw collected fees when governance action to transfer fees to a
-    /// particular recipient.
-    ///
-    /// See `wormhole::transfer_fee` for more info.
-    public(friend) fun withdraw_fee(
-        _: &LatestOnly,
-        self: &mut State,
-        amount: u64
-    ): Balance<SUI> {
-        fee_collector::withdraw_balance(&mut self.fee_collector, amount)
+        self.fee_recipient_address = addr;
     }
 
     /// Store `VAA` hash as a way to claim a VAA. This method prevents a VAA
@@ -250,11 +231,6 @@ module pyth::state {
         package_utils::current_package(&self.id)
     }
 
-
-    public(friend) fun set_fee_collector_fee(_: &LatestOnly, self: &mut State, amount: u64) {
-        fee_collector::change_fee(&mut self.fee_collector, amount);
-    }
-
     public(friend) fun set_data_sources(_: &LatestOnly, s: &mut State, new_sources: vector<DataSource>) {
         // Empty the existing table of data sources registered in state.
         data_source::empty(&mut s.id);
@@ -282,10 +258,6 @@ module pyth::state {
 
     public(friend) fun set_stale_price_threshold_secs(_: &LatestOnly, s: &mut State, threshold_secs: u64) {
         s.stale_price_threshold = threshold_secs;
-    }
-
-    public(friend) fun register_price_feed(_: &LatestOnly, s: &mut State, p: PriceIdentifier, id: ID){
-        price_info::add(&mut s.id, p, id);
     }
 
     ////////////////////////////////////////////////////////////////////////////

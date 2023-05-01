@@ -4,7 +4,7 @@ module pyth::governance_witness {
     friend pyth::set_stale_price_threshold;
     friend pyth::set_update_fee;
     friend pyth::set_governance_data_source;
-    friend pyth::transfer_fee;
+    friend pyth::set_fee_recipient;
     friend pyth::contract_upgrade;
 
     /// A hot potato that ensures that only DecreeTickets

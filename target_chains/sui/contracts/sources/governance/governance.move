@@ -1,12 +1,10 @@
 module pyth::governance {
-    use sui::tx_context::{TxContext};
-
     use pyth::governance_instruction;
     use pyth::governance_action;
     use pyth::set_governance_data_source;
     use pyth::set_data_sources;
     use pyth::set_stale_price_threshold;
-    use pyth::transfer_fee;
+    use pyth::set_fee_recipient;
     use pyth::state::{Self, State};
     use pyth::set_update_fee;
     use pyth::governance_witness::{GovernanceWitness};
@@ -22,7 +20,6 @@ module pyth::governance {
     public fun execute_governance_instruction(
         pyth_state : &mut State,
         receipt: DecreeReceipt<GovernanceWitness>,
-        ctx: &mut TxContext
     ) {
         // This capability ensures that the current build version is used.
         let latest_only = state::assert_latest_only(pyth_state);
@@ -64,8 +61,8 @@ module pyth::governance {
             set_update_fee::execute(&latest_only, pyth_state, governance_instruction::destroy(instruction));
         } else if (action == governance_action::new_set_stale_price_threshold()) {
             set_stale_price_threshold::execute(&latest_only, pyth_state, governance_instruction::destroy(instruction));
-        } else if (action == governance_action::new_set_transfer_fee()) {
-            transfer_fee::execute(&latest_only, pyth_state, governance_instruction::destroy(instruction), ctx);
+        } else if (action == governance_action::new_set_fee_recipient()) {
+            set_fee_recipient::execute(&latest_only, pyth_state, governance_instruction::destroy(instruction));
         } else {
             governance_instruction::destroy(instruction);
             assert!(false, E_INVALID_GOVERNANCE_ACTION);
