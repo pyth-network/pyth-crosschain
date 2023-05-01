@@ -1,75 +1,27 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { createInterface } from "readline";
 
-const readline = createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+// This function lets you write a question to the terminal
+// And returns you the response of the user
+function readLineAsync(msg: string) {
+  const readline = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
 
-const readLineAsync = (msg: string) => {
   return new Promise((resolve) => {
     readline.question(msg, (userRes) => {
       resolve(userRes);
     });
   });
-};
-
-// constraints
-// a pipeline can have any number of stages
-// every stage has the same number of steps
-
-export type Step =
-  | ((
-      stepId: string,
-      // get the result of a past stage using it's id
-      // it will return the result for the same step id
-      // it can return undefined if the previous stage data has not been stored locally
-      // or if a future stage data is being asked
-      getResultOfPastStage: <Y>(stageId: string) => Y
-    ) => Promise<any>)
-  | ((stepId: string) => Promise<any>);
-
-// a stage is nothing but - stage id, step
-type Stage = {
-  stageId: string;
-  step: Step;
-};
-
-// class pipeline
-// have stages
-// a stage can be any function given by the caller
-// or a stage can be created using processStage method for which the caller has to provide what one step should do.
-// it should be given stepIds
-
-type StepResult<T = any> =
-  | {
-      status: "rejected";
-      stepId: string;
-      reason: any;
-    }
-  | {
-      status: "fulfilled";
-      stepId: string;
-      result: T;
-    };
-
-// each stage processes multiple steps
-// it stores the result in a file named after the step
-// if a file exists previously for this particular version
-// it will read previous results. if the previous result is fulfilled
-// it will do nothing. else it will reprocess it.
-// a common set of stepIds should be used for the whole pipeline
-
-// check if previous stage was fulfilled
-// and if result is complete
-// it will throw an error if a step was rejected
-// or if chains are not in order
-// or if some chains are missing from the results
-// a common set of stepIds should be used for the whole pipeline
+}
 
 type StateStore<T = any> = {
   [stepId: string]: T;
 };
+// StateManager helps in getting and setting the state locally
+// It manipulates data in-memory and once the consumer has finished manipulating it
+// They need to commit the data to permanent storage using the commit method
 class StateManager<T> {
   private readonly fileExt = ".json";
   private readonly dirPath = "./tmp";
@@ -94,29 +46,66 @@ class StateManager<T> {
     this.store = JSON.parse(readFileSync(this.filePath).toString());
   }
 
-  // it gets the latest state for the given step
+  // It gets the latest state for the given step
   // the state after the last operation
   getStepState(stepId: string): T | undefined {
     return this.store[stepId];
   }
 
+  // It sets the latest state for the given step
   setSetState(stepId: string, state: T) {
     this.store[stepId] = state;
   }
 
-  // after all the in memory operations
-  // one can commit to the local file
+  // After all the in memory operations one can commit to the local file
   // for permanent storage
   commit() {
     writeFileSync(this.filePath, JSON.stringify(this.store, null, 4));
   }
 }
 
-// can have many stages
-// each stage will have some steps
-// each stage will have same number of steps
-// a step is a function to which the step id will be passed
-// and it will proceed accordingly
+// A step is defined as a method
+// it takes in a step id as a parameter to execute that particular step
+// Optionally it can take in a method `getResultOfPastStage` as a parameter
+// if it wants to access the result of the previous stages
+export type Step =
+  | ((
+      stepId: string,
+      // get the result of a past stage using it's id
+      // It will return the result for the same step id
+      // It will return undefined if the previous stage data has not been stored locally
+      // or if a future stage data is being asked
+      getResultOfPastStage: <Y>(stageId: string) => Y
+    ) => Promise<any>)
+  | ((stepId: string) => Promise<any>);
+
+// A step can fail. If the error is not handled it will crash the pipeline
+// We would like to store the result or reason locally too
+// For that purpose the response from a step is being wrapped in this
+type StepResult<T = any> =
+  | {
+      status: "rejected";
+      stepId: string;
+      reason: any;
+    }
+  | {
+      status: "fulfilled";
+      stepId: string;
+      result: T;
+    };
+
+// A stage will contain an identifier and a step method
+type Stage = {
+  stageId: string;
+  step: Step;
+};
+
+// A pipeline is conists of multiple stages
+// A stage contains of multiple steps
+// Stages will be run synchronously i.e, in order
+// Steps will be run asychronously
+// CONSTRAINT: Each stage will have the same number of steps
+// See the type definition of `Stage` and `Step` above to know more about them
 export class Pipeline {
   private readonly stages: Stage[] = [];
   constructor(
@@ -128,8 +117,12 @@ export class Pipeline {
     this.stages.push({ stageId, step });
   }
 
+  // We want to wrap the step provided by the pipeline consumer
+  // In order to wrap the response of the step in the StepResult
+  // also in this method we inject the `getResultOfPastStage` to the step
   private stepWrapper<T, Y>(step: Step) {
     return async (stepId: string): Promise<StepResult<T>> => {
+      // method to inject
       const getResultOfPastStage = <Y>(stageId: string): Y => {
         let stateManager = new StateManager<StepResult<Y>>(
           stageId,
@@ -148,6 +141,7 @@ export class Pipeline {
         return result.result;
       };
       try {
+        // wrapping result
         const result = await step(stepId, getResultOfPastStage);
         return {
           status: "fulfilled",
@@ -167,7 +161,6 @@ export class Pipeline {
   async processStage(stage: Stage) {
     console.log("processing stage: ", stage.stageId);
 
-    // create a stage manager
     let stateManager = new StateManager<StepResult>(
       stage.stageId,
       this.version
@@ -179,6 +172,7 @@ export class Pipeline {
         console.log(`processing step: ${stepId} of stage: ${stage.stageId}`);
 
         const prevResult = stateManager.getStepState(stepId);
+        // We are only processing the step if the past result of it was not fulfilled
         if (prevResult === undefined || prevResult.status === "rejected") {
           let stepResult = await this.stepWrapper(stage.step)(stepId);
 
@@ -190,18 +184,19 @@ export class Pipeline {
             console.log(stepResult.reason);
           }
 
-          // since javascript is a single threaded language
-          // only one thread will be executing this function at a time
+          // Since javascript is a single threaded language
+          // Only one thread will be executing this function at a time
           stateManager.setSetState(stepId, stepResult);
         }
       })
     );
 
-    // commit
+    // We need to commit after all the manipulations
+    // so that the result is persisted locally
     stateManager.commit();
 
-    // check if each step is fulfilled
-    // re process
+    // We are checking if some steps are rejected
+    // If they are, we will try them process it again
     if (areSomeRejected) {
       const rerun =
         (await readLineAsync(

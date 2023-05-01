@@ -2,12 +2,11 @@ import { ChainExecutor } from "./chain-executor";
 import { CosmwasmExecutor } from "./cosmwasm";
 import { InjectiveExecutor } from "./injective";
 
-// guideline to add new chains
-// chains ENUM should be of the form
+// GUIDELINES: to add new chains
+// ENUM Key should be of the form:
 // CHAINNAME_[TESTNET/MAINNET/DEVNET]{_OPTIONAL-IDENTIFIER}
-// value should be
-// snake case
-// all small but the same as enum name
+// ENUM Value should be of the form:
+// chainname_[testnet/mainnet/devnet]{_optional-identifier}
 export enum ChainId {
   INJECTIVE_TESTNET = "injective_testnet",
   OSMOSIS_TESTNET_4 = "osmosis_testnet_4",

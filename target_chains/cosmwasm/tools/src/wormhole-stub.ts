@@ -27,18 +27,19 @@ async function run() {
     return;
   }
 
+  // IMPORTANT: IN ORDER TO RUN THIS SCRIPT FOR OTHER CHAINS
+  // WE NEED SOME METADATA
+  // HERE IS WHERE WE WILL ADDING THAT
+  // REPLACE THIS PART OF THE CODE FOR NEW CHAINS
   const chainIds = [ChainId.NEUTRON_TESTNET_PION_1];
-  // wormhole info should be there for each chain id
+  // Wormhole info should be there for each chain id in `chainIds`.
   const wormholeInfo = {
     [ChainId.NEUTRON_TESTNET_PION_1]: {
       feeDenom: "untrn",
       chainId: "neutron",
     },
   };
-  // check that these chain ids have a chain id in wormhole library
-  // if not raise error
-  // once checked
-  // move ahead
+  // We are checking that the chainIds are present in `xc_governance_sdk_js`s
   for (let chainId of chainIds) {
     // @ts-ignore
     let chain = wormholeInfo[chainId].chainId;
@@ -80,6 +81,9 @@ async function run() {
   await pipeline.run();
 }
 
+// All the steps getter below returns a closure which helps them with information
+// required to process a step
+
 function getDeployWormholeCodeStep(
   mnemonic: string,
   contractBytes: Buffer
@@ -112,8 +116,6 @@ function getInstantiateWormholeStep(
       getResultOfPastStage(deployCodeStageId);
 
     const chainExecutor = createExecutorForChain(chainId as ChainId, mnemonic);
-
-    console.log(getWormholeConfig(wormholeChainId, feeDenom, mainnet));
 
     return chainExecutor.instantiateContract({
       codeId: storeCodeRes.codeId,
