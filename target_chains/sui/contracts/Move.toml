@@ -10,7 +10,7 @@ rev = "09b2081498366df936abae26eea4b2d5cafb2788"
 [dependencies.Wormhole]
 git = "https://github.com/wormhole-foundation/wormhole.git"
 subdir = "sui/wormhole"
-rev = "2c4b52dd04e6cbe07f3ad648e7a0b8cfb63bad5a"
+rev = "760db3c81072a4290ca8fbca6dddd47f335f2028"
 
 [addresses]
 pyth = "_"

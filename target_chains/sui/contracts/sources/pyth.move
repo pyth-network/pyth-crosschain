@@ -486,12 +486,13 @@ module pyth::pyth_tests{
             ];
         let guardian_set_seconds_to_live = 5678;
         let message_fee = 350;
-
+        let guardian_set_index = 0;
         wormhole_setup::complete(
             deployer_cap,
             upgrade_cap,
             governance_chain,
             governance_contract,
+            guardian_set_index,
             initial_guardians,
             guardian_set_seconds_to_live,
             message_fee,

@@ -22,8 +22,8 @@ module pyth::version_control {
        V__0_1_1 {}
     }
 
-    public(friend) fun previous_version(): V__0_1_0 {
-        V__0_1_0 {}
+    public(friend) fun previous_version(): V__DUMMY {
+        V__DUMMY {}
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -77,7 +77,7 @@ module pyth::version_control {
     }
 
     #[test_only]
-    public fun previous_version_test_only(): V__0_1_0 {
+    public fun previous_version_test_only(): V__DUMMY {
         previous_version()
     }
 }
