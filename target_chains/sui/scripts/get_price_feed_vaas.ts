@@ -1,3 +1,5 @@
+/// Fetch price feed VAAs of interest from the Pyth
+/// price feed service.
 import { PriceServiceConnection } from '@pythnetwork/price-service-client';
 import { Buffer } from 'buffer';
 async function main(){
@@ -23,4 +25,3 @@ async function main(){
 }
 
 main();
-

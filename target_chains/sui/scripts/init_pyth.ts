@@ -12,28 +12,34 @@ import {
   Connection,
 } from "@mysten/sui.js";
 
-const provider = new JsonRpcProvider(new Connection({ fullnode: "http://0.0.0.0:9000" }))
+import {REGISTRY, NETWORK, INITIAL_DATA_SOURCES} from "./registry"
 dotenv.config({"path":"~/.env"})
 
+let network = NETWORK.DEVNET
+const registry = REGISTRY[network]
+const initial_data_sources = INITIAL_DATA_SOURCES[network]
+const provider = new JsonRpcProvider(new Connection({ fullnode: registry["RPC_URL"]}))
+let walletPrivateKey = process.env.SUI_DEVNET; // <= Update this with the right private key
+
 async function main() {
-    const walletPrivateKey = process.env.SUI_DEVNET;
     if (walletPrivateKey === undefined) {
       throw new Error("SUI_DEVNET unset in environment");
     }
 
     const wallet = new RawSigner(
         Ed25519Keypair.fromSecretKey(
-         Buffer.from(walletPrivateKey, "base64").subarray(1)
+          Buffer.from(walletPrivateKey, "base64").subarray(1)
         ),
      provider
     );
 
-    // Note: set these before calling init_pyth
-    const pythPackage = "0xb94d0d4a7ce7934e6bae2e430d5d7d5ba58c25d229aa1338ad543f0445bdfc7f"
-    const deployerCap = "0x80bbb9430366fcd6d8b22769988612e202055f12787cc2abdafed5e51f78f756"
-    const upgradeCap = "0xffdc98c07d8cd0d5327209153bd01fedb0b15862da99eb3a837931a44202d48b"
+    const PYTH_PACKAGE = registry["PYTH_PACKAGE_ID"]
 
-    init_pyth(wallet, pythPackage, deployerCap, upgradeCap)
+    // Note: Set these before calling init_pyth
+    const upgradeCap = "0x83d655518f83d791b9617d6ec5bd62c4ef369d08e0cfd737902b4ca8f2a4695d"
+    const deployerCap = "0x272d403533abb081e0fd1fd53c5a9c1526bb10e75f7f2b6154953bee7ebe5f55"
+
+    init_pyth(wallet, PYTH_PACKAGE, deployerCap, upgradeCap)
 }
 
 main();
@@ -48,18 +54,17 @@ async function init_pyth(
 ) {
 
     const tx = new TransactionBlock();
-
     tx.moveCall({
       target: `${pythPackage}::pyth::init_pyth`,
       arguments: [
         tx.object(deployerCap),
         tx.object(upgradeCap),
-        tx.pure(1000), // stale price threshold
-        tx.pure(121), // governance emitter chain id
-        tx.pure("3"), // governance emitter chain address
-        tx.pure([121]), // data source emitter chain ids
-        tx.pure(["3"]), // data source addresses
-        tx.pure(0), // base update fee
+        tx.pure(60), // stale price threshold
+        tx.pure(initial_data_sources["GOVERNANCE_CHAIN"]), // governance emitter chain id
+        tx.pure([...Buffer.from(initial_data_sources["GOVERNANCE_ADDRESS"], "hex")]), // governance emitter chain address
+        tx.pure(initial_data_sources["DATA_SOURCE_CHAINS"]), // data source emitter chain ids
+        tx.pure(initial_data_sources["DATA_SOURCE_ADDRESSES"].map( x => [...Buffer.from(x, "hex")])), // data source addresses
+        tx.pure(1), // base update fee
       ],
     });
 

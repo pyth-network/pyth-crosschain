@@ -17,3 +17,4 @@ tsconfig.tsbuildinfo
 *~
 *mnemonic*
 .envrc
+*/*.sui.log*
