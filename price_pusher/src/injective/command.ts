@@ -6,6 +6,7 @@ import { InjectivePriceListener, InjectivePricePusher } from "./injective";
 import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
 import { Options } from "yargs";
+import { getNetworkInfo } from "@injectivelabs/networks";
 
 export default {
   command: "injective",
@@ -16,6 +17,11 @@ export default {
         "gRPC endpoint URL for injective. The pusher will periodically" +
         "poll for updates. The polling interval is configurable via the " +
         "`polling-frequency` command-line argument.",
+      type: "string",
+      required: true,
+    } as Options,
+    network: {
+      description: "testnet or mainnet",
       type: "string",
       required: true,
     } as Options,
@@ -36,7 +42,12 @@ export default {
       pythContractAddress,
       pushingFrequency,
       pollingFrequency,
+      network,
     } = argv;
+
+    if (network !== "testnet" && network !== "mainnet") {
+      throw new Error("Please specify network. One of [testnet, mainnet]");
+    }
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
     const priceServiceConnection = new PriceServiceConnection(
@@ -73,7 +84,10 @@ export default {
       priceServiceConnection,
       pythContractAddress,
       grpcEndpoint,
-      mnemonic
+      mnemonic,
+      {
+        chainId: getNetworkInfo(network).chainId,
+      }
     );
 
     const controller = new Controller(
