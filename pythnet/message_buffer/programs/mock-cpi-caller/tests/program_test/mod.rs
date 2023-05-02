@@ -535,18 +535,11 @@ pub fn deserialize_price_msg_header(msg: &[u8]) -> (PriceMsgSchema, PriceMsgVers
     (schema, version, size)
 }
 
-// hacky way to deserialize all price messsage types
-// pub fn deserialize_price_msg(msg: &[u8]) -> Vec<u64> {
-//     let (schema, _, _) = deserialize_price_msg_header(msg);
-//     match schema {
-//         0 => deserialize_full_price_msg(msg),
-//         1 => deserialize_compact_price_msg(msg),
-//         3 => deserialize_dummy_msg(msg),
-//         _ => panic!(),
-//     }
-// }
-//
-// pub fn deserialize_full_price_msg(msg: &[u8]) -> Vec<u64> {
-//     let mut cus;
-//     vec![]
-// }
+
+pub fn get_mock_pyth_price_account(id: u64) -> Pubkey {
+    let (mock_pyth_price_acct, _) = Pubkey::find_program_address(
+        &[b"pyth".as_ref(), b"price".as_ref(), &id.to_le_bytes()],
+        &::mock_cpi_caller::id(),
+    );
+    mock_pyth_price_acct
+}

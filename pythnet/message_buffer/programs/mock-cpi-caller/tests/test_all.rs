@@ -74,14 +74,7 @@ async fn test_create_msg_buffer() {
         .await
         .unwrap();
     let pyth_price_acct_id = 0u64;
-    let (mock_pyth_price_acct, _) = Pubkey::find_program_address(
-        &[
-            b"pyth".as_ref(),
-            b"price".as_ref(),
-            &pyth_price_acct_id.to_le_bytes(),
-        ],
-        &::mock_cpi_caller::id(),
-    );
+    let mock_pyth_price_acct = get_mock_pyth_price_account(pyth_price_acct_id);
     let space = 1024;
     let (msg_buffer_pda, msg_buffer_bump) = send_create_msg_buffer(
         banks_client,
@@ -127,14 +120,7 @@ async fn fail_create_msg_buffer_with_invalid_admin() {
         .await
         .unwrap();
     let pyth_price_acct_id = 0u64;
-    let (mock_pyth_price_acct, _) = Pubkey::find_program_address(
-        &[
-            b"pyth".as_ref(),
-            b"price".as_ref(),
-            &pyth_price_acct_id.to_le_bytes(),
-        ],
-        &::mock_cpi_caller::id(),
-    );
+    let mock_pyth_price_acct = get_mock_pyth_price_account(pyth_price_acct_id);
     let space = 1024;
     let invalid_admin = Keypair::new();
     send_create_msg_buffer(
@@ -171,14 +157,7 @@ async fn fail_create_msg_buffer_with_invalid_size() {
         .await
         .unwrap();
     let pyth_price_acct_id = 0u64;
-    let (mock_pyth_price_acct, _) = Pubkey::find_program_address(
-        &[
-            b"pyth".as_ref(),
-            b"price".as_ref(),
-            &pyth_price_acct_id.to_le_bytes(),
-        ],
-        &::mock_cpi_caller::id(),
-    );
+    let mock_pyth_price_acct = get_mock_pyth_price_account(pyth_price_acct_id);
     let space = 1;
     send_create_msg_buffer(
         banks_client,
@@ -213,14 +192,7 @@ async fn test_resize_buffer() {
         .await
         .unwrap();
     let pyth_price_acct_id = 0u64;
-    let (mock_pyth_price_acct, _) = Pubkey::find_program_address(
-        &[
-            b"pyth".as_ref(),
-            b"price".as_ref(),
-            &pyth_price_acct_id.to_le_bytes(),
-        ],
-        &::mock_cpi_caller::id(),
-    );
+    let mock_pyth_price_acct = get_mock_pyth_price_account(pyth_price_acct_id);
     let target_size = 1024;
     let (msg_buffer_pda, msg_buffer_bump) = send_create_msg_buffer(
         banks_client,
@@ -291,14 +263,7 @@ async fn test_multiple_resize_buffer_ixs() {
         .await
         .unwrap();
     let pyth_price_acct_id = 0u64;
-    let (mock_pyth_price_acct, _) = Pubkey::find_program_address(
-        &[
-            b"pyth".as_ref(),
-            b"price".as_ref(),
-            &pyth_price_acct_id.to_le_bytes(),
-        ],
-        &::mock_cpi_caller::id(),
-    );
+    let mock_pyth_price_acct = get_mock_pyth_price_account(pyth_price_acct_id);
     let target_size = 1024;
     let (msg_buffer_pda, msg_buffer_bump) = send_create_msg_buffer(
         banks_client,
@@ -374,14 +339,7 @@ async fn fail_resize_buffer_invalid_increase() {
         .await
         .unwrap();
     let pyth_price_acct_id = 0u64;
-    let (mock_pyth_price_acct, _) = Pubkey::find_program_address(
-        &[
-            b"pyth".as_ref(),
-            b"price".as_ref(),
-            &pyth_price_acct_id.to_le_bytes(),
-        ],
-        &::mock_cpi_caller::id(),
-    );
+    let mock_pyth_price_acct = get_mock_pyth_price_account(pyth_price_acct_id);
     let target_size = 1024;
     let (msg_buffer_pda, msg_buffer_bump) = send_create_msg_buffer(
         banks_client,
@@ -434,14 +392,7 @@ async fn fail_resize_buffer_invalid_decrease() {
         .await
         .unwrap();
     let pyth_price_acct_id = 0u64;
-    let (mock_pyth_price_acct, _) = Pubkey::find_program_address(
-        &[
-            b"pyth".as_ref(),
-            b"price".as_ref(),
-            &pyth_price_acct_id.to_le_bytes(),
-        ],
-        &::mock_cpi_caller::id(),
-    );
+    let mock_pyth_price_acct = get_mock_pyth_price_account(pyth_price_acct_id);
     let target_size = 1024;
     let (_, msg_buffer_bump) = send_create_msg_buffer(
         banks_client,
@@ -490,14 +441,7 @@ async fn test_put_all() {
         .await
         .unwrap();
     let pyth_price_acct_id = 0u64;
-    let (mock_pyth_price_acct, _) = Pubkey::find_program_address(
-        &[
-            b"pyth".as_ref(),
-            b"price".as_ref(),
-            &pyth_price_acct_id.to_le_bytes(),
-        ],
-        &::mock_cpi_caller::id(),
-    );
+    let mock_pyth_price_acct = get_mock_pyth_price_account(pyth_price_acct_id);
     let space = 1024;
     let (msg_buffer_pda, msg_buffer_bump) = send_create_msg_buffer(
         banks_client,
@@ -563,6 +507,10 @@ async fn test_put_all() {
 #[should_panic]
 async fn fail_put_all_invalid_auth() {
     panic!()
+}
+
+#[tokio::test]
+async fn test_resize_initialized_buffer() {
 }
 
 #[tokio::test]
