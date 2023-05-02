@@ -3,5 +3,6 @@
   "pyth-contract-address": "inj1z60tg0tekdzcasenhuuwq3htjcd5slmgf7gpez",
   "price-service-endpoint": "https://xc-testnet.pyth.network",
   "mnemonic-file": "./mnemonic",
-  "price-config-file": "./price-config.testnet.sample.yaml"
+  "price-config-file": "./price-config.testnet.sample.yaml",
+  "network": "testnet"
 }
