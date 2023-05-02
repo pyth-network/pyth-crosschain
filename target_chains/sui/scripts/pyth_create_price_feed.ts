@@ -11,6 +11,7 @@ import {
   Ed25519Keypair,
   testnetConnection,
   Connection,
+  TypeTagSerializer
 } from "@mysten/sui.js";
 
 dotenv.config({"path":"~/.env"})
@@ -68,11 +69,31 @@ async function create_price_feeds(
         ],
     });
 
+  //   console.log("parsed thing: ", TypeTagSerializer.tagToString(
+  //     { vector:
+  //       {
+  //         address: '0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7',
+  //         module: 'vaa',
+  //         name: 'VAA'
+  //     }
+  //   }
+  //   )
+  // )
+
     tx.moveCall({
       target: `${PYTH_PACKAGE}::pyth::create_price_feeds`,
       arguments: [
         tx.object(PYTH_STATE),
-        tx.makeMoveVec({ objects: [verified_vaa] }), // has type vector<VAA>
+        //tx.makeMoveVec({ type: TypeTagSerializer.tagToString(TypeTagSerializer.parseFromStr('0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7::vaa::VAA')), objects: [verified_vaa] }), // has type vector<VAA>
+        //@ts-ignore
+        tx.makeMoveVec({ type: TypeTagSerializer.tagToString(
+          { vector: { struct : {
+          address: '0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7',
+          module: 'vaa',
+          name: 'VAA',
+          typeParams: []
+        }}}
+        ), objects: [verified_vaa] }), // has type vector<VAA>,
         tx.object(SUI_CLOCK_OBJECT_ID)
       ],
     });
