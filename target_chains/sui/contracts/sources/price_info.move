@@ -10,6 +10,7 @@ module pyth::price_info {
     const KEY: vector<u8> = b"price_info";
     const E_PRICE_INFO_REGISTRY_ALREADY_EXISTS: u64 = 0;
     const E_PRICE_IDENTIFIER_ALREADY_REGISTERED: u64 = 1;
+    const E_PRICE_IDENTIFIER_NOT_REGISTERED: u64 = 2;
 
     friend pyth::pyth;
     friend pyth::state;
@@ -54,6 +55,19 @@ module pyth::price_info {
         )
     }
 
+    public fun get(parent_id: &UID, price_identifier: PriceIdentifier): vector<u8> {
+        assert!(
+            contains(parent_id, price_identifier),
+            E_PRICE_IDENTIFIER_NOT_REGISTERED
+        );
+        object::id_to_bytes(
+            table::borrow<PriceIdentifier, ID>(
+                dynamic_object_field::borrow(parent_id, KEY),
+                price_identifier
+            )
+        )
+    }
+
     public fun contains(parent_id: &UID, price_identifier: PriceIdentifier): bool {
         let ref = dynamic_object_field::borrow(parent_id, KEY);
         table::contains<PriceIdentifier, ID>(ref, price_identifier)
@@ -79,6 +93,35 @@ module pyth::price_info {
             arrival_time: arrival_time,
             price_feed: price_feed,
         }
+    }
+
+    #[test]
+    public fun test_get_price_info_object_id_from_price_identifier(){
+        use sui::object::{Self};
+        use sui::test_scenario::{Self, ctx};
+        use pyth::price_identifier::{Self};
+        let scenario = test_scenario::begin(@pyth);
+        let uid = object::new(ctx(&mut scenario));
+
+        // Create a new price info object registry.
+        new_price_info_registry(&mut uid, ctx(&mut scenario));
+
+        // Register a price info object in the registry.
+        let price_identifier = price_identifier::from_byte_vec(x"ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace");
+
+        // Create a new ID.
+        let id = object::id_from_bytes(x"19f253b07e88634bfd5a3a749f60bfdb83c9748910646803f06b60b76319e7ba");
+
+        add(&mut uid, price_identifier, id);
+
+        let result = get(&uid, price_identifier);
+
+        // Assert that ID matches original.
+        assert!(result==x"19f253b07e88634bfd5a3a749f60bfdb83c9748910646803f06b60b76319e7ba", 0);
+
+        // Clean up.
+        object::delete(uid);
+        test_scenario::end(scenario);
     }
 
     #[test_only]
