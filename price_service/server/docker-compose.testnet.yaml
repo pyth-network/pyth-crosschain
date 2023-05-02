@@ -53,7 +53,7 @@ services:
           "--no-verbose",
           "--tries=1",
           "--spider",
-          "http://localhost:4200/ready"
+          "http://localhost:4200/ready",
         ]
       start_period: 20s
     depends_on:
