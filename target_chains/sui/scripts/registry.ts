@@ -14,8 +14,8 @@ export const REGISTRY =
         "RPC_URL": "http://0.0.0.0:9000"
     },
     TESTNET: {
-        "PYTH_PACKAGE_ID": "0xc17dcfa2b406995f5ea5237565418ebe6106467430a5a8ba198e451ca86f35e2",
-        "PYTH_STATE_ID": "0x0",
+        "PYTH_PACKAGE_ID": "0x6ab42a4799973ce95dfc3579b10343122da4e19108fbf1036d83fe0422192f73",
+        "PYTH_STATE_ID": "0x35a0d5a868ca3612822045985cbb869354fa10b389e1816d065ebd2909cab6e8",
         "WORMHOLE_PACKAGE_ID": "0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7",
         "WORMHOLE_STATE_ID": "0x79ab4d569f7eb1efdcc1f25b532f8593cda84776206772e33b490694cb8fc07a",
         "RPC_URL": "https://fullnode.testnet.sui.io:443"

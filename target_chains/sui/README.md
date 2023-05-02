@@ -50,12 +50,12 @@ Fetch the price of the updated Price Info Object.
 ## 3. Contracts Registry
 
 ### Pyth on Testnet
-- WORMHOLE_ID: TBA
-- PYTH_STATE_ID: TBA
+- PYTH_PACKAGE_ID: [0x6ab42a4799973ce95dfc3579b10343122da4e19108fbf1036d83fe0422192f73](https://explorer.sui.io/object/0x6ab42a4799973ce95dfc3579b10343122da4e19108fbf1036d83fe0422192f73),
+- PYTH_STATE_ID: [0x35a0d5a868ca3612822045985cbb869354fa10b389e1816d065ebd2909cab6e8](https://explorer.sui.io/object/0x35a0d5a868ca3612822045985cbb869354fa10b389e1816d065ebd2909cab6e8),
 
 ### Wormhole on Testnet
-- WORMHOLE_ID: `0x3542d705ec6a7e05045288ec99a6c4b4e3ded999b6feab720fab535b08fa51f8`
-- WORMHOLE_STATE_ID: `0x69ae41bdef4770895eb4e7aaefee5e4673acc08f6917b4856cf55549c4573ca8`
+- WORMHOLE_PACKAGE_ID: [0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7](https://explorer.sui.io/object/0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7),
+- WORMHOLE_STATE_ID: [0x79ab4d569f7eb1efdcc1f25b532f8593cda84776206772e33b490694cb8fc07a](https://explorer.sui.io/object/0x79ab4d569f7eb1efdcc1f25b532f8593cda84776206772e33b490694cb8fc07a),
 
 ### Pyth on Mainnet
 - PYTH_ID: TBA
@@ -64,4 +64,6 @@ Fetch the price of the updated Price Info Object.
 ### Wormhole on Mainnet
 - WORMHOLE_ID: TBA
 - WORMHOLE_STATE_ID: TBA
+
+
 

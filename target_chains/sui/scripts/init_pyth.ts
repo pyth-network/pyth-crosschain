@@ -36,8 +36,8 @@ async function main() {
     const PYTH_PACKAGE = registry["PYTH_PACKAGE_ID"]
 
     // Note: Set these before calling init_pyth
-    const upgradeCap = "0xca0db6d95d5c8498cd5de0b6767e24b6fed45af463abca66982e476e3bb4bba4"
-    const deployerCap = "0xc28b1f1efc64db5647c931cb643f5cd4e3bdac38e0b64cd6f0fb13dfae94e98c"
+    const upgradeCap = "0xf253b931426f2aba0b0150b86323a41061b6e6e34e7f88f07a80c01d8903d442"
+    const deployerCap = "0x26a3696ca84a81f0545c66093b63245cc32f2907c823d89d7eb1146ae12f27ca"
 
     init_pyth(wallet, PYTH_PACKAGE, deployerCap, upgradeCap)
 }
