@@ -57,12 +57,13 @@ async function create_price_feeds(
     console.log("PYTH_STATE: ", PYTH_STATE)
     console.log("WORM_PACKAGE: ", WORM_PACKAGE)
     console.log("WORM_STATE: ", WORM_STATE)
+    console.log("SUI_CLOCK_OBJECT_ID: ", SUI_CLOCK_OBJECT_ID)
 
     let [verified_vaa] = tx.moveCall({
         target: `${WORM_PACKAGE}::vaa::parse_and_verify`,
         arguments: [
           tx.object(WORM_STATE),
-          tx.pure([...Buffer.from(vaa_bytes, "hex")]),
+          tx.pure([...Buffer.from(vaa_bytes, "base64")]),
           tx.object(SUI_CLOCK_OBJECT_ID),
         ],
     });
@@ -71,10 +72,19 @@ async function create_price_feeds(
       target: `${PYTH_PACKAGE}::pyth::create_price_feeds`,
       arguments: [
         tx.object(PYTH_STATE),
-        verified_vaa,
+        tx.makeMoveVec({ objects: [verified_vaa] }), // has type vector<VAA>
         tx.object(SUI_CLOCK_OBJECT_ID)
       ],
     });
+
+    // tx.moveCall({
+    //   target: `${PYTH_PACKAGE}::state::get_fee_recipient`,
+    //   arguments: [
+    //     tx.pure(PYTH_STATE),
+    //     //tx.makeMoveVec({ objects: [verified_vaa] }), // has type vector<VAA>
+    //     //tx.object(SUI_CLOCK_OBJECT_ID)
+    //   ],
+    // });
 
     tx.setGasBudget(1_000_000_000n);
 

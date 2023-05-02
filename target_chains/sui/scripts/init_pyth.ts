@@ -36,8 +36,8 @@ async function main() {
     const PYTH_PACKAGE = registry["PYTH_PACKAGE_ID"]
 
     // Note: Set these before calling init_pyth
-    const upgradeCap = "0x83d655518f83d791b9617d6ec5bd62c4ef369d08e0cfd737902b4ca8f2a4695d"
-    const deployerCap = "0x272d403533abb081e0fd1fd53c5a9c1526bb10e75f7f2b6154953bee7ebe5f55"
+    const upgradeCap = "0x4d14b6d73323af805fa531bad542c44696d671858303ffc1bfbf70212e20b042"
+    const deployerCap = "0xa49273072591dce457a77fc71f47c7ec9244cbdbe870938e10bc0d7209bb54d1"
 
     init_pyth(wallet, PYTH_PACKAGE, deployerCap, upgradeCap)
 }
@@ -52,8 +52,12 @@ async function init_pyth(
     deployerCap: string,
     upgradeCap: string
 ) {
-
+    console.log("GOVERNANCE_CHAIN: ", initial_data_sources["GOVERNANCE_CHAIN"])
+    console.log("GOVERNANCE_ADDRESS: ", [...Buffer.from(initial_data_sources["GOVERNANCE_ADDRESS"], "hex")])
+    console.log("DATA_SOURCE_CHAINS: ", initial_data_sources["DATA_SOURCE_CHAINS"])
+    console.log("DATA_SOURCE_ADDRESSES: ", initial_data_sources["DATA_SOURCE_ADDRESSES"].map( x => [...Buffer.from(x, "hex")]))
     const tx = new TransactionBlock();
+
     tx.moveCall({
       target: `${pythPackage}::pyth::init_pyth`,
       arguments: [
