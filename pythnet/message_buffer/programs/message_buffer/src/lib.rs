@@ -15,62 +15,13 @@ declare_id!("Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM");
 pub mod message_buffer {
     use super::*;
 
-    pub fn test(ctx: Context<Test>, admin: Pubkey) -> Result<()> {
-        use anchor_lang::{
-            prelude::*,
-            system_program::{
-                self,
-                Transfer,
-            },
-        };
-        msg!("in test");
-        let (whitelist_pda, whitelist_bump) =
-            Pubkey::find_program_address(&[b"message", b"whitelist"], &crate::ID);
-        msg!("crate_id: {:?}", crate::ID);
-        let payer_pk = ctx.accounts.payer.key();
-        msg!("payer_pk: {:?}", payer_pk);
-        msg!("admin: {:?}", admin);
-        msg!(
-            "whitelist_pda: {:?}, whitelist_bump: {:?}",
-            whitelist_pda,
-            whitelist_bump
-        );
-        let whitelist_acct_pk = ctx.accounts.whitelist.key();
-        msg!("whitelist_acct_pk: {:?}", whitelist_acct_pk);
-
-        // let whitelist = &mut ctx.accounts.whitelist;
-        // whitelist.bump = w_bump;
-
-        // let whitelist_bump = *ctx.bumps.get("whitelist").unwrap();
-        // msg!("whitelist_bump: {:?}", whitelist_bump);
-        // whitelist.admin = Pubkey::default();
-        // let init = &mut ctx.accounts.init;
-        // init.bump = *ctx.bumps.get("init").unwrap();
-        // msg!("[test]: initialized init");
-        let system_prog = ctx.accounts.system_program.key();
-        msg!("system_prog: {:?}", system_prog);
-        system_program::transfer(
-            CpiContext::new(
-                ctx.accounts.system_program.to_account_info(),
-                Transfer {
-                    from: ctx.accounts.payer.to_account_info(),
-                    to:   ctx.accounts.whitelist.to_account_info(),
-                },
-            ),
-            Rent::get()?.minimum_balance(0),
-        )?;
-        msg!("transferred to payer");
-        Ok(())
-    }
 
     /// Initializes the whitelist and sets it's admin to the provided pubkey
     /// Once initialized, the authority must sign all further changes to the whitelist.
     pub fn initialize(ctx: Context<Initialize>, admin: Pubkey) -> Result<()> {
         require_keys_neq!(admin, Pubkey::default());
-        msg!("in initialize");
         let whitelist = &mut ctx.accounts.whitelist;
         whitelist.bump = *ctx.bumps.get("whitelist").unwrap();
-        // whitelist.bump = bump;
         whitelist.admin = admin;
         Ok(())
     }
@@ -196,36 +147,6 @@ pub mod message_buffer {
     ) -> Result<()> {
         instructions::delete_buffer(ctx, allowed_program_auth, base_account_key, buffer_bump)
     }
-}
-
-#[derive(Accounts)]
-pub struct Test<'info> {
-    #[account(mut)]
-    pub payer: Signer<'info>,
-
-    // #[account(
-    // init,
-    // payer = payer,
-    // seeds = [b"message".as_ref(), b"whitelist".as_ref()],
-    // bump,
-    // space = 8 + Whitelist::INIT_SPACE,
-    // )]
-    // pub whitelist:      Account<'info, Whitelist>,
-    #[account(
-    seeds = [b"message".as_ref(), b"whitelist".as_ref()],
-    bump,
-    )]
-    /// CHECK: test
-    pub whitelist:      UncheckedAccount<'info>,
-    pub system_program: Program<'info, System>,
-    // #[account(
-    // init,
-    // payer = payer,
-    // seeds = [b"message".as_ref(), b"init".as_ref()],
-    // bump,
-    // space = 8,
-    // )]
-    // pub init:           Account<'info, Init>,
 }
 
 #[account]
