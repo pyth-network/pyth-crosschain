@@ -51,6 +51,12 @@ Fetch the price of the updated Price Info Object.
 ## 3. Examples
 See the `./scripts` folder for examples of programmable transactions for creating price feeds, updating price feeds, and deploying contracts.
 
+To build and test the contracts, run the following
+```
+$ make test
+$ make build
+```
+
 ## 4. Contracts Registry
 
 ## Pyth on Testnet

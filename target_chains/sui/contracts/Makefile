@@ -6,4 +6,4 @@ test:
 
 .PHONY: build
 build:
-	sui move build
+	sui move build -d
