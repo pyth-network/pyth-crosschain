@@ -17,14 +17,14 @@ dotenv.config({"path":"~/.env"})
 
 import {REGISTRY, NETWORK} from "./registry"
 
-let network = NETWORK.DEVNET
+let network = NETWORK.TESTNET
 const registry = REGISTRY[network]
 const provider = new JsonRpcProvider(new Connection({ fullnode: registry["RPC_URL"] }))
-const walletPrivateKey = process.env.SUI_DEVNET;
+const walletPrivateKey = process.env.SUI_TESTNET_BASE_64;
 
 async function main() {
     if (walletPrivateKey === undefined) {
-      throw new Error("SUI_DEVNET unset in environment");
+      throw new Error("SUI_TESTNET unset in environment");
     }
     const wallet = new RawSigner(
         Ed25519Keypair.fromSecretKey(
