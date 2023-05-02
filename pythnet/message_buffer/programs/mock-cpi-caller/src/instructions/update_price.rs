@@ -124,27 +124,9 @@ impl<'info> UpdatePrice<'info> {
             &[&[
                 UPD_PRICE_WRITE.as_bytes(),
                 ctx.accounts.message_buffer_program.key().as_ref(),
-                // ctx.accounts.message_buffer_program.key().as_ref(),
-                // UPD_PRICE_WRITE.as_bytes(),
                 &[bump],
             ]],
         )?;
-        // let (_, bump) = Pubkey::find_program_address(
-        //     &[
-        //         ctx.accounts.message_buffer_program.key().as_ref(),
-        //         UPD_PRICE_WRITE.as_bytes(),
-        //     ],
-        //     &crate::ID,
-        // );
-        // anchor_lang::solana_program::program::invoke_signed(
-        //     &update_inputs_ix,
-        //     account_infos,
-        //     &[&[
-        //         ctx.accounts.message_buffer_program.key().as_ref(),
-        //         UPD_PRICE_WRITE.as_bytes(),
-        //         &[bump],
-        //     ]],
-        // )?;
         Ok(())
     }
 }

@@ -22,7 +22,6 @@ const mockCpiProg = anchor.workspace.MockCpiCaller as Program<MockCpiCaller>;
 let whitelistAdmin = anchor.web3.Keypair.generate();
 
 const [mockCpiCallerAuth] = anchor.web3.PublicKey.findProgramAddressSync(
-  // [messageBufferProgram.programId.toBuffer(), Buffer.from("cpi")],
   [Buffer.from("upd_price_write"), messageBufferProgram.programId.toBuffer()],
   mockCpiProg.programId
 );
@@ -108,14 +107,6 @@ describe("accumulator_updater", () => {
 
   it("Is initialized!", async () => {
     // Add your test here.
-    // const initTxn = await messageBufferProgram.methods
-    //                                           .initialize(whitelistAdmin.publicKey)
-    //                                           .accounts({}).transaction();
-    // console.log(`initTxn: ${JSON.stringify(initTxn)}`);
-    // const tx = await provider.sendAndConfirm(initTxn);
-    //
-    // const compiled = initTxn.compileMessage()
-    // console.log(`compiled: ${JSON.stringify(compiled)}`);
     const tx = await messageBufferProgram.methods
       .initialize(whitelistAdmin.publicKey)
       .accounts({})

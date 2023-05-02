@@ -149,11 +149,6 @@ pub mod message_buffer {
     }
 }
 
-#[account]
-pub struct Init {
-    pub bump: u8,
-}
-
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
