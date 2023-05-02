@@ -79,20 +79,12 @@ module pyth::state {
 
         let consumed_vaas = consumed_vaas::new(ctx);
 
-
-        // Set first version for this package.
-        package_utils::init_version(
-            &mut uid,
-            version_control::current_version()
-        );
-
         // Initialize package info. This will be used for emitting information
         // of successful migrations.
         package_utils::init_package_info(
             &mut uid,
-            &upgrade_cap,
-            bytes32::default(),
-            bytes32::default()
+            version_control::current_version(),
+            &upgrade_cap
         );
 
         State {
@@ -340,20 +332,13 @@ module pyth::state {
         // fields do not exist in the previous build (0.1.0).
         // See `state::new` above.
 
-        // Need to remove old dynamic field. This was set when performing the
-        // upgrade on previous version. We need to take this digest and then
-        // initialize package info with this as the pending digest.
-        let pending_digest =
-            sui::dynamic_field::remove(&mut self.id, CurrentDigest {});
-
         // Initialize package info. This will be used for emitting information
         // of successful migrations.
         let upgrade_cap = &self.upgrade_cap;
         package_utils::init_package_info(
             &mut self.id,
+            version_control::current_version(),
             upgrade_cap,
-            bytes32::default(),
-            pending_digest
         );
     }
 

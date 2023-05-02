@@ -15,15 +15,15 @@ import {
 import {REGISTRY, NETWORK, INITIAL_DATA_SOURCES} from "./registry"
 dotenv.config({"path":"~/.env"})
 
-let network = NETWORK.DEVNET
+let network = NETWORK.TESTNET // <= Update this when changing network
 const registry = REGISTRY[network]
 const initial_data_sources = INITIAL_DATA_SOURCES[network]
 const provider = new JsonRpcProvider(new Connection({ fullnode: registry["RPC_URL"]}))
-let walletPrivateKey = process.env.SUI_DEVNET; // <= Update this with the right private key
+let walletPrivateKey = process.env.SUI_TESTNET_BASE_64; // <= Update this when changing network
 
 async function main() {
     if (walletPrivateKey === undefined) {
-      throw new Error("SUI_DEVNET unset in environment");
+      throw new Error("SUI_TESTNET unset in environment");
     }
 
     const wallet = new RawSigner(
@@ -36,8 +36,8 @@ async function main() {
     const PYTH_PACKAGE = registry["PYTH_PACKAGE_ID"]
 
     // Note: Set these before calling init_pyth
-    const upgradeCap = "0x4d14b6d73323af805fa531bad542c44696d671858303ffc1bfbf70212e20b042"
-    const deployerCap = "0xa49273072591dce457a77fc71f47c7ec9244cbdbe870938e10bc0d7209bb54d1"
+    const upgradeCap = "0xca0db6d95d5c8498cd5de0b6767e24b6fed45af463abca66982e476e3bb4bba4"
+    const deployerCap = "0xc28b1f1efc64db5647c931cb643f5cd4e3bdac38e0b64cd6f0fb13dfae94e98c"
 
     init_pyth(wallet, PYTH_PACKAGE, deployerCap, upgradeCap)
 }

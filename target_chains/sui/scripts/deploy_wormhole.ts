@@ -36,7 +36,7 @@ async function main(){
         ),
         provider
     );
-    await publishPackage(wallet, "../contracts");
+    await publishPackage(wallet, "~/developer/wormhole/sui/wormhole");
 }
 
 main()
