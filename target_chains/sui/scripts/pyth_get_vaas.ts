@@ -14,13 +14,10 @@ async function main(){
     //     "0xdcef50dd0a4cd2dcc17e45df1676dcb336a11a61c69df7a0299b0150c672d25c"
     // ];
     const priceIds = [
-        "0x61226d39beea19d334f17c2febce27e12646d84675924ebb02b9cdaea68727e3"
+        "0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b"
     ]
     const priceFeedVAAs = await connection.getLatestVaas(priceIds);
     console.log(priceFeedVAAs)
-
-    let x = Buffer.from([19,148,123,212,139,24,229,63,218,238,231,127,52,115,57,26,199,39,198,56]).toString("hex")
-    console.log(x)
 
 }
 

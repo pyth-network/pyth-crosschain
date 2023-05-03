@@ -12,7 +12,7 @@ import {
   testnetConnection,
   Connection,
   TypeTagSerializer
-} from "@mysten/sui.js";
+} from "@optke3/sui.js";
 
 dotenv.config({"path":"~/.env"})
 
@@ -37,7 +37,7 @@ async function main() {
         provider
     );
     console.log(wallet.getAddress())
-    const vaa_bytes = "AQAAAAABAMN885gNTVEako6fczJq22AOFSRWdUsUOxPQVHSnxhj3ecU2gJVDBlAcY6G9FWmGCcGcdZ/5iVXQCm+0loHvfqwAZE/kXQAAAAAAGqJ4OdZBsHdDwMtfaMUfjNMdLAdivsANxvzSVDPvGrW2AAAAAADugxEBUDJXSAADAAEAAQIABQCdWnl7akEQMaEEfYaw/fhuJFW+jn/vFq7yPbIJcj2vlB9hIm05vuoZ0zTxfC/rzifhJkbYRnWSTrsCuc2upocn4wAAAABBxD4gAAAAAAAJ2WD////4AAAAAEIrzm4AAAAAAAn/ewEAAAABAAAAAgAAAABkT+RdAAAAAGRP5F0AAAAAZE/kXAAAAABBxC0/AAAAAAAJi/EAAAAAZE/kXLWIXWbTUV6YNI7DMlk7XRbg/bhT77Ye1dzAvPgOkWCB11ZqO6f3KG7VT0rn6YP0QgrgseDziS4R+cSrEHu617kAAAAAZCplIAAAAAAAEu4I////+AAAAABkvzOKAAAAAAAQZDgBAAAAAQAAAAIAAAAAZE/kXQAAAABkT+RdAAAAAGRP5FwAAAAAZCplIAAAAAAAFIotAAAAAGRP5Fw3+21L/xkSgKfP+Av17aeofBUakdmoW6So+OLPlX5BjbMn2c8OzXk6F1+nCsjS3BCdRGJ1jlVpYsSoewLsTz8VAAAAAC1gXb0AAAAAAAdkLv////gAAAAALZa00gAAAAAABpwgAQAAAAEAAAACAAAAAGRP5F0AAAAAZE/kXQAAAABkT+RcAAAAAC1gXb0AAAAAAAdkLgAAAABkT+RcHNsaXh40VtKXfuDT1wdlI58IpChVuVCP1HnhXG3E0f7s9VN3DZsQll+Ptkdx6T9WkKGC7cMr5KMjbgyqpuBYGgAAAAewLri2AAAAAAEnq0n////4AAAAB7uEHmgAAAAAAV8hnAEAAAABAAAAAgAAAABkT+RdAAAAAGRP5F0AAAAAZE/kXAAAAAewBz2PAAAAAAE4kisAAAAAZE/kXGogZxwOP4yyGc4/RuWuCWpPL9+TbSvU2okl9wCH1R3YMAKUeVmHlykONjihcSwpveI2fQ7KeU93iyW1pHLxkt4AAAACtJQuKQAAAAAAn4lX////+AAAAAK3aIHUAAAAAACmrg4BAAAAAQAAAAIAAAAAZE/kXQAAAABkT+RdAAAAAGRP5FwAAAACtJOhZQAAAAAAnAlPAAAAAGRP5Fw=";
+    const vaa_bytes = "AQAAAAABAD8FwBwewFlgIZEo0t7Dpu8mz9i+bPEJ5PfOWLUbxFX7AMvugmXM9tX9k+r/QxC8kIXNgMhL73KSydo2GSUstSAAZFHbwAAAAAAAGqJ4OdZBsHdDwMtfaMUfjNMdLAdivsANxvzSVDPvGrW2AAAAAAETHVsBUDJXSAADAAEAAQIABQCdKP4F0nCMZXEYKnydH/RXoiG0Ze316prxNz+VYtFrjRX5wBcroQ36TRkIjZT1v2HTtU1b10g6MiqYLhNz7o6jGwAAAphd6NU9AAAAAB6Wb4P////4AAACmAbWa0AAAAAAJefHvAEAAAABAAAAAgAAAABkUdvAAAAAAGRR28AAAAAAZFHbvwAAAphbwUynAAAAAB3wzlkAAAAAZFHbv4s423AOizRkDmgeyac+iWCL2ilBVUeiJPllhRkrS53HlLzkruiP36W1jYEJC9azeEcX+m34VBnZ8EQzuz1hXVwAAAAABWEWZgAAAAAAAKsd////+AAAAAAFXhNiAAAAAAAAw3EBAAAAAQAAAAIAAAAAZFHbwAAAAABkUdvAAAAAAGRR278AAAAABWEWZgAAAAAAAKsdAAAAAGRR2787aaPPB1ZGxf2BSLcFuBB+YaGiU9XYqENV3LYos/HRIDF3Xh1olxKeioTuupdXePtQAVuIA56bwUC72DlpSsCuAAAAAAB3mT0AAAAAAAAPk/////gAAAAAAHeFVwAAAAAAABJyAQAAAAEAAAACAAAAAGRR28AAAAAAZFHbwAAAAABkUdu/AAAAAAB3mTAAAAAAAAANrgAAAABkUdu/SGZ95ESKIEFTqpC4mv1o8FTA5ZWWxNrHr0W+iuWp6c0FqTTLO7re+TtSWXirW9PVzjuPxnF7nqGCpojF2O6OAgAAAAAO3VLRAAAAAAACEbH////4AAAAAA61qRQAAAAAAAGV1wEAAAABAAAAAgAAAABkUdvAAAAAAGRR278AAAAAZFHbvwAAAAAO3VLRAAAAAAACEbEAAAAAZFHbv1bQch5gfcAz/wK+4huZGOE7zOuX4nmi0fooiPAFat09tWItMvNtyCCvKIqrd5Ez7xIF0xI7viVmA4Sbgg3ki4cAAAAAH0BMAQAAAAAAAvAf////+AAAAAAfVHCKAAAAAAAC2YABAAAAAQAAAAIAAAAAZFHbwAAAAABkUdu/AAAAAGRR278AAAAAH0BMAQAAAAAAAvAfAAAAAGRR278="
     create_price_feeds(wallet, registry, vaa_bytes)
 }
 
@@ -69,31 +69,13 @@ async function create_price_feeds(
         ],
     });
 
-  //   console.log("parsed thing: ", TypeTagSerializer.tagToString(
-  //     { vector:
-  //       {
-  //         address: '0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7',
-  //         module: 'vaa',
-  //         name: 'VAA'
-  //     }
-  //   }
-  //   )
-  // )
-
     tx.moveCall({
       target: `${PYTH_PACKAGE}::pyth::create_price_feeds`,
       arguments: [
         tx.object(PYTH_STATE),
         //tx.makeMoveVec({ type: TypeTagSerializer.tagToString(TypeTagSerializer.parseFromStr('0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7::vaa::VAA')), objects: [verified_vaa] }), // has type vector<VAA>
         //@ts-ignore
-        tx.makeMoveVec({ type: TypeTagSerializer.tagToString(
-          { vector: { struct : {
-          address: '0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7',
-          module: 'vaa',
-          name: 'VAA',
-          typeParams: []
-        }}}
-        ), objects: [verified_vaa] }), // has type vector<VAA>,
+        tx.makeMoveVec({ type: `${WORM_PACKAGE}::vaa::VAA`, objects: [verified_vaa] }), // has type vector<VAA>,
         tx.object(SUI_CLOCK_OBJECT_ID)
       ],
     });
