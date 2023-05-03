@@ -20,6 +20,10 @@ function readLineAsync(msg: string) {
 // The stage executor is where the stage functionality is defined
 // Optionally it can take in a method `getResultOfPastStage` as a parameter
 // if it wants to access the result of the previous stages
+
+// Each stage should have exactly one atomic operation (like sending a transaction),
+// The pipeline doesn't enforce atomicity. So if you have 2 atomic operations in
+// one stage, then you could end up fulfilling one and failing the other.
 export type StageExecutor =
   | ((
       // get the result of a past stage using it's id
@@ -51,14 +55,10 @@ export class Pipeline {
 
   constructor(
     // osmosis_testnet_4
-    readonly id: string,
-    readonly version: string,
-    // should not end with /
-    // "./on-chain/wormhole-stub"
-    readonly storageDir: string
+    private readonly id: string,
+    readonly storageFilePath: string
   ) {
-    const filePath = `${storageDir}/${id}-${version}.json`;
-    this.pipelineStore = new PipelineStore(filePath);
+    this.pipelineStore = new PipelineStore(storageFilePath);
   }
 
   addStage(stage: Stage) {
@@ -116,15 +116,9 @@ export class Pipeline {
 
     if (newResult.status === "fulfilled") return true;
 
-    // Some steps can fail due to some one time errors like API issues
-    // This allows the user to re run this particular stage
-    const rerun =
-      (await readLineAsync(
-        `${this.id}: Some steps of stage: ${stage.id} failed. \n Do you want to rerun? (y) `
-      )) === "y";
-
-    if (rerun) return this.processStage(stage);
-    else return false;
+    console.log(`${this.id}: Stage with id: ${stage.id} failed.`);
+    console.log(`Please fix the error and re run the pipeline`);
+    return false;
   }
 
   async run() {
@@ -134,22 +128,21 @@ export class Pipeline {
 
       // This method is only going to process stage if all the past ones have been fulfilled
       let fulfilled = await this.processStage(stage);
+
+      // store the whole processing locally after every stage
+      this.pipelineStore.commit();
       if (fulfilled === false) break;
     }
-
-    // store the whole processing locally
-    this.pipelineStore.commit();
   }
 }
 
-type StoreStructure = {
-  [stageId: string]: any;
-};
 // PipelineStore helps in getting and setting the state locally
 // It manipulates data in-memory and once the consumer has finished manipulating it
 // They need to commit the data to permanent storage using the commit method
 class PipelineStore {
-  private readonly store: StoreStructure;
+  private readonly store: {
+    [stageId: string]: any;
+  };
 
   constructor(private readonly filePath: string) {
     if (!existsSync(this.filePath)) {
@@ -162,7 +155,8 @@ class PipelineStore {
 
   // It gets the latest state for the given stage
   // the state after the last operation
-  // if there is no stage stage, in case it was no process it will return undefined.
+  // if there is no stage state, in case it was no process it will return undefined.
+  // the caller can provide the T and this method will cast the result into it.
   getStageState<T = any>(stageId: string): T | undefined {
     return this.store[stageId];
   }

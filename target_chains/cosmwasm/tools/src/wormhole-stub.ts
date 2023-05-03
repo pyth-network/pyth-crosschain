@@ -77,7 +77,8 @@ async function run() {
 
   let chainIds = argv.chainId === undefined ? ChainIdsTestnet : [argv.chainId];
   for (let chainId of chainIds) {
-    const pipeline = new Pipeline(chainId, argv.contractVersion, STORAGE_DIR);
+    let pipelineStoreFilePath = `${STORAGE_DIR}/${chainId}-${argv.contractVersion}.json`;
+    const pipeline = new Pipeline(chainId, pipelineStoreFilePath);
 
     const chainExecutor = createExecutorForChain(chainId, argv.mnemonic);
 
