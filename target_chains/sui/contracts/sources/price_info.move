@@ -55,6 +55,8 @@ module pyth::price_info {
         )
     }
 
+
+    /// Returns ID of price info object corresponding to price_identifier as a byte vector.
     public fun get(parent_id: &UID, price_identifier: PriceIdentifier): vector<u8> {
         assert!(
             contains(parent_id, price_identifier),
@@ -64,6 +66,22 @@ module pyth::price_info {
             table::borrow<PriceIdentifier, ID>(
                 dynamic_object_field::borrow(parent_id, KEY),
                 price_identifier
+            )
+        )
+    }
+
+    /// Returns ID of price info object corresponding to price_identifier as an ID.
+    public fun get_id(parent_id: &UID, price_identifier: PriceIdentifier): ID {
+        assert!(
+            contains(parent_id, price_identifier),
+            E_PRICE_IDENTIFIER_NOT_REGISTERED
+        );
+        object::id_from_bytes(
+            object::id_to_bytes(
+                table::borrow<PriceIdentifier, ID>(
+                    dynamic_object_field::borrow(parent_id, KEY),
+                    price_identifier
+                )
             )
         )
     }

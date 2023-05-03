@@ -160,6 +160,10 @@ module pyth::state {
         data_source::emitter_address(&governance_data_source)
     }
 
+    public fun get_price_info_object_id(self: &State): ID {
+        price_info::get_price_info_object_id(&self.UID)
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     //
     //  Privileged `State` Access
