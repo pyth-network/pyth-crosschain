@@ -60,8 +60,8 @@ $ make build
 ## 4. Contracts Registry
 
 ## Pyth on Testnet
-- PYTH_PACKAGE_ID: [0x6ab42a4799973ce95dfc3579b10343122da4e19108fbf1036d83fe0422192f73](https://explorer.sui.io/object/0x6ab42a4799973ce95dfc3579b10343122da4e19108fbf1036d83fe0422192f73)
-- PYTH_STATE_ID: [0x35a0d5a868ca3612822045985cbb869354fa10b389e1816d065ebd2909cab6e8](https://explorer.sui.io/object/0x35a0d5a868ca3612822045985cbb869354fa10b389e1816d065ebd2909cab6e8)
+- PYTH_PACKAGE_ID: [0x7c017b047a3c9db5a8f4586d347c54869b761b6d6b0882a179823e8642faf7b9](https://explorer.sui.io/object/0x7c017b047a3c9db5a8f4586d347c54869b761b6d6b0882a179823e8642faf7b9)
+- PYTH_STATE_ID: [0x3fc17e66d5ced3bf62f3fe8289cb2cb78c311a1e1c9700727ecd278d242e9e88](https://explorer.sui.io/object/0x3fc17e66d5ced3bf62f3fe8289cb2cb78c311a1e1c9700727ecd278d242e9e88)
 
 ## Wormhole on Testnet
 - WORMHOLE_PACKAGE_ID: [0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7](https://explorer.sui.io/object/0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7)

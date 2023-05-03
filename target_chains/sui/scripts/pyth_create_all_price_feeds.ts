@@ -50,11 +50,10 @@ async function main() {
     let {data} = await axios.get("https://xc-testnet.pyth.network/api/price_feed_ids")
     console.log("all price feed ids: ", data)
 
-    console.log(data.slice(0, 3))
-    const priceFeedVAAs = await connection.getLatestVaas(data.slice(0, 30));
+    const priceFeedVAAs = await connection.getLatestVaas(data);
     console.log("price feed VAAs: ", priceFeedVAAs)
 
-    //create_price_feeds(wallet, registry, data.slice(0, 10))
+    create_price_feeds(wallet, registry, priceFeedVAAs)
 }
 
 main();
@@ -64,8 +63,6 @@ async function create_price_feeds(
     registry: any,
     priceFeedVAAs: Array<string>
 ) {
-    const tx = new TransactionBlock();
-
     let PYTH_PACKAGE = registry["PYTH_PACKAGE_ID"]
     let PYTH_STATE = registry["PYTH_STATE_ID"]
     let WORM_PACKAGE = registry["WORMHOLE_PACKAGE_ID"]
@@ -76,39 +73,40 @@ async function create_price_feeds(
     console.log("WORM_STATE: ", WORM_STATE)
     console.log("SUI_CLOCK_OBJECT_ID: ", SUI_CLOCK_OBJECT_ID)
 
-    // let [verified_vaa] = tx.moveCall({
-    //     target: `${WORM_PACKAGE}::vaa::parse_and_verify`,
-    //     arguments: [
-    //       tx.object(WORM_STATE),
-    //       tx.pure([...Buffer.from(vaa_bytes, "base64")]),
-    //       tx.object(SUI_CLOCK_OBJECT_ID),
-    //     ],
-    // });
+    for (let vaa of priceFeedVAAs){
+      // create new txn block for creating a price feed
+      const tx = new TransactionBlock();
 
-    // tx.moveCall({
-    //   target: `${PYTH_PACKAGE}::pyth::create_price_feeds`,
-    //   arguments: [
-    //     tx.object(PYTH_STATE),
-    //     //tx.makeMoveVec({ type: TypeTagSerializer.tagToString(TypeTagSerializer.parseFromStr('0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7::vaa::VAA')), objects: [verified_vaa] }), // has type vector<VAA>
-    //     //@ts-ignore
-    //     tx.makeMoveVec({ type: `${WORM_PACKAGE}::vaa::VAA`, objects: [verified_vaa] }), // has type vector<VAA>,
-    //     tx.object(SUI_CLOCK_OBJECT_ID)
-    //   ],
-    // });
+      let [verified_vaa] = tx.moveCall({
+          target: `${WORM_PACKAGE}::vaa::parse_and_verify`,
+          arguments: [
+            tx.object(WORM_STATE),
+            tx.pure([...Buffer.from(vaa, "base64")]),
+            tx.object(SUI_CLOCK_OBJECT_ID),
+          ],
+      });
 
+      tx.moveCall({
+        target: `${PYTH_PACKAGE}::pyth::create_price_feeds`,
+        arguments: [
+          tx.object(PYTH_STATE),
+          tx.makeMoveVec({ type: `${WORM_PACKAGE}::vaa::VAA`, objects: [verified_vaa] }), // has type vector<VAA>,
+          tx.object(SUI_CLOCK_OBJECT_ID)
+        ],
+      });
 
-    tx.setGasBudget(1_000_000_000n);
+      tx.setGasBudget(1000000000);
 
-    let result = await signer.signAndExecuteTransactionBlock({
-      transactionBlock: tx,
-      options: {
-        showInput: true,
-        showEffects: true,
-        showEvents: true,
-        showObjectChanges: true,
-        showBalanceChanges: true,
-      },
-    });
-    console.log(result)
-    return result
+      let result = await signer.signAndExecuteTransactionBlock({
+        transactionBlock: tx,
+        options: {
+          showInput: true,
+          showEffects: true,
+          showEvents: true,
+          showObjectChanges: true,
+          showBalanceChanges: true,
+        },
+      });
+      console.log(result)
+    }
 }

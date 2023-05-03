@@ -21,10 +21,10 @@ export const REGISTRY =
         "RPC_URL": "https://fullnode.testnet.sui.io:443"
     },
     MAINNET: {
-        "PYTH_PACKAGE_ID": "0x0",
-        "PYTH_STATE_ID": "0x0",
-        "WORMHOLE_PACKAGE_ID": "0x0",
-        "WORMHOLE_STATE_ID": "0x0",
+        "PYTH_PACKAGE_ID": "0xa446c4a37c0bb69d03357c1a52d60da0b434048226d5f3feffdb693586bea861",
+        "PYTH_STATE_ID": "0x428b5795904d5256d1eea5991df672934315fb8dcf8f6111134c1a52afd005ca",
+        "WORMHOLE_PACKAGE_ID": "0x5306f64e312b581766351c07af79c72fcb1cd25147157fdc2f8ad76de9a3fb6a",
+        "WORMHOLE_STATE_ID": "0xaeab97f96cf9877fee2883315d459552b2b921edc16d7ceac6eab944dd88919c",
         "RPC_URL": "https://fullnode.mainnet.sui.io:443"
     }
 }

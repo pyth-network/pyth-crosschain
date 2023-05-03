@@ -21,14 +21,15 @@ import {REGISTRY, NETWORK} from "./registry"
 
 dotenv.config({"path":"~/.env"})
 
-let network = NETWORK.TESTNET
+// ctrl+f network and replace with desired from [MAINNET, TESTNET, DEVNET]
+let network = NETWORK.MAINNET
 const registry = REGISTRY[network]
 const provider = new JsonRpcProvider(new Connection({ fullnode: registry["RPC_URL"] }))
-const walletPrivateKey = process.env.SUI_TESTNET;
+const walletPrivateKey = process.env.SUI_MAINNET;
 
 async function main(){
     if (walletPrivateKey === undefined) {
-        throw new Error("SUI_TESTNET unset in environment");
+        throw new Error("SUI_MAINNET unset in environment");
       }
     const wallet = new RawSigner(
         Ed25519Keypair.fromSecretKey(
@@ -66,7 +67,7 @@ main()
       const transactionBlock = new TransactionBlock();
 
       // important
-      transactionBlock.setGasBudget(2000000000);
+      transactionBlock.setGasBudget(4000000000);
 
       const [upgradeCap] = transactionBlock.publish({
         modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),
