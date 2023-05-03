@@ -86,7 +86,7 @@ export const ChainsConfigTestnet: Record<ChainIdTestnet, ChainConfig> = {
     executorEndpoint: "https://rpc.atlantic-2.seinetwork.io/",
     querierEndpoint: "https://rpc.atlantic-2.seinetwork.io/",
     prefix: "sei",
-    gasPrice: "0.1usei",
+    gasPrice: "0.01usei",
   },
   [ChainIdTestnet.NEUTRON_PION_1]: {
     chainId: ChainIdTestnet.NEUTRON_PION_1,
