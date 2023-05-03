@@ -1,8 +1,3 @@
-// use test_all::program_test::{
-//     fetch_whitelist,
-//     send_initialize_whitelist,
-//     setup_program_test,
-// };
 pub use {
     super::program_test::*,
     solana_program_test::*,

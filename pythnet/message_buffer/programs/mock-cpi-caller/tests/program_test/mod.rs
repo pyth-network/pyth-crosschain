@@ -397,7 +397,6 @@ pub async fn send_add_price_ix(
         .await
         .unwrap();
 
-    // Ok((msg_buffer_pda, msg_buffer_bump))
     Ok(())
 }
 
