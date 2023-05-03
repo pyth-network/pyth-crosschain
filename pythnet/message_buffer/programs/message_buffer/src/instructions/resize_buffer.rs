@@ -82,17 +82,20 @@ pub fn resize_buffer<'info>(
     } else {
         // Check that account doesn't get resized to smaller than the amount of
         // data it is currently holding (if any)
-        let account_data = &mut message_buffer_account_info.try_borrow_data()?;
-        let header_end_index = std::mem::size_of::<MessageBuffer>() + 8;
-        let (header_bytes, _) = account_data.split_at(header_end_index);
-        let message_buffer: &MessageBuffer = bytemuck::from_bytes(&header_bytes[8..]);
-        let max_end_offset = message_buffer.end_offsets.iter().max().unwrap();
-        let minimum_size = max_end_offset + message_buffer.header_len;
-        require_gte!(
-            target_size,
-            minimum_size as usize,
-            MessageBufferError::MessageBufferTooSmall
-        );
+        {
+            let account_data = &message_buffer_account_info.try_borrow_data()?;
+            let header_end_index = std::mem::size_of::<MessageBuffer>() + 8;
+            let (header_bytes, _) = account_data.split_at(header_end_index);
+            let message_buffer: &MessageBuffer = bytemuck::from_bytes(&header_bytes[8..]);
+            let max_end_offset = message_buffer.end_offsets.iter().max().unwrap();
+            let minimum_size = max_end_offset + message_buffer.header_len;
+            require_gte!(
+                target_size,
+                minimum_size as usize,
+                MessageBufferError::MessageBufferTooSmall
+            );
+        }
+
 
         // Not transferring excess lamports back to admin.
         // Account will retain more lamports than necessary.
