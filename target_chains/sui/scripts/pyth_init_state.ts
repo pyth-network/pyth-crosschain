@@ -10,7 +10,7 @@ import {
   Ed25519Keypair,
   testnetConnection,
   Connection,
-} from "@mysten/sui.js";
+} from "@optke3/sui.js";
 
 import {REGISTRY, NETWORK, INITIAL_DATA_SOURCES} from "./registry"
 dotenv.config({"path":"~/.env"})
@@ -36,8 +36,8 @@ async function main() {
     const PYTH_PACKAGE = registry["PYTH_PACKAGE_ID"]
 
     // Note: Set these before calling init_pyth
-    const upgradeCap = "0xf253b931426f2aba0b0150b86323a41061b6e6e34e7f88f07a80c01d8903d442"
-    const deployerCap = "0x26a3696ca84a81f0545c66093b63245cc32f2907c823d89d7eb1146ae12f27ca"
+    const upgradeCap = "0xf23ac8c9b43c96a1cfcd4b78929b1da0b2e184966e7ea81eaefb911eebae4196"
+    const deployerCap = "0xe9d0e33aea42915a82e8ac8a4dbf015b0410afe1fcfbbd700ed820670468c9fc"
 
     init_pyth(wallet, PYTH_PACKAGE, deployerCap, upgradeCap)
 }

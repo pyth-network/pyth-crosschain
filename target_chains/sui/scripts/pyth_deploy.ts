@@ -10,7 +10,7 @@ import {
     Ed25519Keypair,
     testnetConnection,
     Connection,
-  } from "@mysten/sui.js";
+  } from "@optke3/sui.js";
   import { execSync } from "child_process";
   import fs from "fs";
   import { resolve } from "path";
@@ -66,7 +66,7 @@ main()
       const transactionBlock = new TransactionBlock();
 
       // important
-      transactionBlock.setGasBudget(5000000000);
+      transactionBlock.setGasBudget(2000000000);
 
       const [upgradeCap] = transactionBlock.publish({
         modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),

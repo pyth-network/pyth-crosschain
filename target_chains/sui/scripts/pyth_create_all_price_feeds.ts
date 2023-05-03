@@ -1,9 +1,6 @@
-/// We build a programmable transaction to look up a PriceInfoObject ID
-/// from a price feed ID, update the price feed, and finally fetch
-/// the updated price.
-///
-/// https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
+/// We build a programmable txn to create a price feed.
 import dotenv from "dotenv"
+import axios from 'axios';
 import { PriceServiceConnection } from '@pythnetwork/price-service-client';
 
 import {
@@ -16,7 +13,7 @@ import {
   Ed25519Keypair,
   testnetConnection,
   Connection,
-  TypeTag
+  TypeTagSerializer
 } from "@optke3/sui.js";
 
 dotenv.config({"path":"~/.env"})
@@ -49,17 +46,23 @@ async function main() {
     );
     console.log(wallet.getAddress())
 
-    // update a single price feed
-    let price_feed_id = "0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b"; // BTC/USD
-    update_price_feeds(wallet, registry, price_feed_id)
+    // Fetch all price IDs
+    let {data} = await axios.get("https://xc-testnet.pyth.network/api/price_feed_ids")
+    console.log("all price feed ids: ", data)
+
+    console.log(data.slice(0, 3))
+    const priceFeedVAAs = await connection.getLatestVaas(data.slice(0, 30));
+    console.log("price feed VAAs: ", priceFeedVAAs)
+
+    //create_price_feeds(wallet, registry, data.slice(0, 10))
 }
 
 main();
 
-async function update_price_feeds(
+async function create_price_feeds(
     signer: RawSigner,
     registry: any,
-    price_feed_id: string
+    priceFeedVAAs: Array<string>
 ) {
     const tx = new TransactionBlock();
 
@@ -73,35 +76,28 @@ async function update_price_feeds(
     console.log("WORM_STATE: ", WORM_STATE)
     console.log("SUI_CLOCK_OBJECT_ID: ", SUI_CLOCK_OBJECT_ID)
 
-    let [ID] = tx.moveCall({
-      target: `${PYTH_PACKAGE}::state::get_price_info_object_id`,
-      arguments: [
-        tx.object(PYTH_STATE),
-        tx.pure([...Buffer.from(price_feed_id, "hex")]), // price identifier
-      ],
-    });
+    // let [verified_vaa] = tx.moveCall({
+    //     target: `${WORM_PACKAGE}::vaa::parse_and_verify`,
+    //     arguments: [
+    //       tx.object(WORM_STATE),
+    //       tx.pure([...Buffer.from(vaa_bytes, "base64")]),
+    //       tx.object(SUI_CLOCK_OBJECT_ID),
+    //     ],
+    // });
 
-    // get VAA for price attestation
-    const priceFeedVAAs = await connection.getLatestVaas([price_feed_id]);
+    // tx.moveCall({
+    //   target: `${PYTH_PACKAGE}::pyth::create_price_feeds`,
+    //   arguments: [
+    //     tx.object(PYTH_STATE),
+    //     //tx.makeMoveVec({ type: TypeTagSerializer.tagToString(TypeTagSerializer.parseFromStr('0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7::vaa::VAA')), objects: [verified_vaa] }), // has type vector<VAA>
+    //     //@ts-ignore
+    //     tx.makeMoveVec({ type: `${WORM_PACKAGE}::vaa::VAA`, objects: [verified_vaa] }), // has type vector<VAA>,
+    //     tx.object(SUI_CLOCK_OBJECT_ID)
+    //   ],
+    // });
 
-    let [verified_vaa] = tx.moveCall({
-      target: `${WORM_PACKAGE}::vaa::parse_and_verify`,
-      arguments: [
-        tx.object(WORM_STATE),
-        tx.pure([...Buffer.from(priceFeedVAAs[0], "base64")]),
-        tx.object(SUI_CLOCK_OBJECT_ID),
-      ],
-    });
 
-    let [ID] = tx.moveCall({
-      target: `${PYTH_PACKAGE}::pyth::update_price_feeds`,
-      arguments: [
-        tx.object(PYTH_STATE),
-        tx.pure([...Buffer.from(price_feed_id, "hex")]), // price identifier
-      ],
-    });
-
-    tx.setGasBudget(2000000000);
+    tx.setGasBudget(1_000_000_000n);
 
     let result = await signer.signAndExecuteTransactionBlock({
       transactionBlock: tx,
