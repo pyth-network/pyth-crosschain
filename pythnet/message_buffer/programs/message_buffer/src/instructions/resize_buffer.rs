@@ -14,10 +14,6 @@ use {
     },
 };
 
-//TODO: make sure this works regardless if the msg_buffer is initialized already or not
-// we could be in a sitaution where we have a new price account & new msg_buffer acount
-// and we know we need more than 10KB to fit all the messages. In this situation
-// we would call create_buffer(10240) then resize_buffer(target_size)
 pub fn resize_buffer<'info>(
     ctx: Context<'_, '_, '_, 'info, ResizeBuffer<'info>>,
     allowed_program_auth: Pubkey,
@@ -35,11 +31,6 @@ pub fn resize_buffer<'info>(
         .is_allowed_program_auth(&allowed_program_auth)?;
     MessageBuffer::check_discriminator(message_buffer_account_info)?;
 
-    require_gte!(
-        target_size,
-        MessageBuffer::HEADER_LEN as u32,
-        MessageBufferError::MessageBufferTooSmall
-    );
 
     let target_size = target_size as usize;
 
@@ -89,6 +80,20 @@ pub fn resize_buffer<'info>(
             .realloc(target_size, false)
             .map_err(|_| MessageBufferError::ReallocFailed)?;
     } else {
+        // Check that account doesn't get resized to smaller than the amount of
+        // data it is currently holding (if any)
+        let account_data = &mut message_buffer_account_info.try_borrow_data()?;
+        let header_end_index = std::mem::size_of::<MessageBuffer>() + 8;
+        let (header_bytes, _) = account_data.split_at(header_end_index);
+        let message_buffer: &MessageBuffer = bytemuck::from_bytes(&header_bytes[8..]);
+        let max_end_offset = message_buffer.end_offsets.iter().max().unwrap();
+        let minimum_size = max_end_offset + message_buffer.header_len;
+        require_gte!(
+            target_size,
+            minimum_size as usize,
+            MessageBufferError::MessageBufferTooSmall
+        );
+
         // Not transferring excess lamports back to admin.
         // Account will retain more lamports than necessary.
         message_buffer_account_info.realloc(target_size, false)?;

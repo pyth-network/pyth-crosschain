@@ -203,7 +203,7 @@ pub enum MessageBufferError {
     CurrentDataLengthExceeded,
     #[msg("Message Buffer not provided")]
     MessageBufferNotProvided,
-    #[msg("Message Buffer is not sufficiently large")]
+    #[msg("Message Buffer target size is not sufficiently large")]
     MessageBufferTooSmall,
     #[msg("Fund Bump not found")]
     FundBumpNotFound,
