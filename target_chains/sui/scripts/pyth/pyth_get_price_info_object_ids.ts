@@ -1,9 +1,4 @@
-/// We build a programmable txn to create a price feed.
-import dotenv from "dotenv"
-import axios from 'axios';
-
 import { Connection, JsonRpcProvider, JsonRpcClient} from '@mysten/sui.js';
-import { setMaxIdleHTTPParsers } from "http";
 
 const provider = new JsonRpcProvider(
   new Connection({ fullnode: 'https://fullnode.mainnet.sui.io:443' }),

@@ -5,29 +5,30 @@ import {
     normalizeSuiObjectId,
     RawSigner,
     TransactionBlock,
+    SUI_CLOCK_OBJECT_ID,
     JsonRpcProvider,
     Ed25519Keypair,
+    testnetConnection,
     Connection,
-  } from "@optke3/sui.js";
+  } from "@mysten/sui.js";
   import { execSync } from "child_process";
   import fs from "fs";
   import { resolve } from "path";
 
 import dotenv from "dotenv"
 
-import {REGISTRY, NETWORK} from "./registry"
+import {REGISTRY, NETWORK} from "../registry"
 
 dotenv.config({"path":"~/.env"})
 
-// ctrl+f network and replace with desired from [MAINNET, TESTNET, DEVNET]
-let network = NETWORK.MAINNET
+let network = NETWORK.TESTNET
 const registry = REGISTRY[network]
 const provider = new JsonRpcProvider(new Connection({ fullnode: registry["RPC_URL"] }))
-const walletPrivateKey = process.env.SUI_MAINNET;
+const walletPrivateKey = process.env.SUI_TESTNET;
 
 async function main(){
     if (walletPrivateKey === undefined) {
-        throw new Error("SUI_MAINNET unset in environment");
+        throw new Error("SUI_TESTNET unset in environment");
       }
     const wallet = new RawSigner(
         Ed25519Keypair.fromSecretKey(
@@ -35,7 +36,7 @@ async function main(){
         ),
         provider
     );
-    await publishPackage(wallet, "../contracts");
+    await publishPackage(wallet, "~/developer/wormhole/sui/wormhole");
 }
 
 main()
@@ -65,7 +66,7 @@ main()
       const transactionBlock = new TransactionBlock();
 
       // important
-      transactionBlock.setGasBudget(4000000000);
+      transactionBlock.setGasBudget(5000000000);
 
       const [upgradeCap] = transactionBlock.publish({
         modules: buildOutput.modules.map((m: string) => Array.from(fromB64(m))),

@@ -1,4 +1,4 @@
-/// We build a programmable txn to create a price feed.
+/// We build a programmable txn to create all price feeds.
 import dotenv from "dotenv"
 import axios from 'axios';
 import { PriceServiceConnection } from '@pythnetwork/price-service-client';
@@ -14,7 +14,7 @@ import {
 
 dotenv.config({"path":"~/.env"})
 
-import {REGISTRY, NETWORK} from "./registry"
+import {REGISTRY, NETWORK} from "../registry"
 
 let network = NETWORK.MAINNET
 const registry = REGISTRY[network]

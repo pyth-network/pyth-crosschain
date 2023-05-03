@@ -17,7 +17,7 @@ import {
 
 dotenv.config({"path":"~/.env"})
 
-import {REGISTRY, NETWORK} from "./registry"
+import {REGISTRY, NETWORK} from "../registry"
 
 let network = NETWORK.TESTNET
 const registry = REGISTRY[network]
@@ -30,6 +30,9 @@ const connection = new PriceServiceConnection("https://xc-testnet.pyth.network",
   },
 })
 
+//
+// NOTE: this function is a WIP
+//
 async function main() {
     if (walletPrivateKey === undefined) {
       throw new Error("SUI_TESTNET unset in environment");

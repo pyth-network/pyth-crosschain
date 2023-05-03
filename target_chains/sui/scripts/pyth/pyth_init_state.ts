@@ -8,7 +8,7 @@ import {
   Connection,
 } from "@optke3/sui.js";
 
-import {REGISTRY, NETWORK, INITIAL_DATA_SOURCES} from "./registry"
+import {REGISTRY, NETWORK, INITIAL_DATA_SOURCES} from "../registry"
 dotenv.config({"path":"~/.env"})
 
 let network = NETWORK.MAINNET // <= Update this when changing network

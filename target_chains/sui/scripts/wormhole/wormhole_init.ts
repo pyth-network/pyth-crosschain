@@ -17,7 +17,7 @@ import {
 
 import dotenv from "dotenv"
 
-import {REGISTRY, NETWORK} from "./registry"
+import {REGISTRY, NETWORK} from "../registry"
 
 dotenv.config({"path":"~/.env"})
 

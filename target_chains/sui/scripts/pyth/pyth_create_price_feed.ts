@@ -12,7 +12,7 @@ import {
 
 dotenv.config({"path":"~/.env"})
 
-import {REGISTRY, NETWORK} from "./registry"
+import {REGISTRY, NETWORK} from "../registry"
 
 let network = NETWORK.TESTNET
 const registry = REGISTRY[network]
