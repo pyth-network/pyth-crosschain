@@ -2,13 +2,9 @@ import dotenv from "dotenv"
 
 import {
   RawSigner,
-  SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
-  fromB64,
-  normalizeSuiObjectId,
   JsonRpcProvider,
   Ed25519Keypair,
-  testnetConnection,
   Connection,
 } from "@optke3/sui.js";
 

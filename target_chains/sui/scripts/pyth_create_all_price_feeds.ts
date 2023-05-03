@@ -7,25 +7,21 @@ import {
   RawSigner,
   SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
-  fromB64,
-  normalizeSuiObjectId,
   JsonRpcProvider,
   Ed25519Keypair,
-  testnetConnection,
-  Connection,
-  TypeTagSerializer
+  Connection
 } from "@optke3/sui.js";
 
 dotenv.config({"path":"~/.env"})
 
 import {REGISTRY, NETWORK} from "./registry"
 
-let network = NETWORK.TESTNET
+let network = NETWORK.MAINNET
 const registry = REGISTRY[network]
 const provider = new JsonRpcProvider(new Connection({ fullnode: registry["RPC_URL"] }))
-const walletPrivateKey = process.env.SUI_TESTNET_BASE_64;
+const walletPrivateKey = process.env.SUI_MAINNET;
 
-const connection = new PriceServiceConnection("https://xc-testnet.pyth.network", {
+const connection = new PriceServiceConnection("https://xc-mainnet.pyth.network", {
   priceFeedRequestConfig: {
     binary: true,
   },
@@ -33,27 +29,30 @@ const connection = new PriceServiceConnection("https://xc-testnet.pyth.network",
 
 async function main() {
     if (walletPrivateKey === undefined) {
-      throw new Error("SUI_TESTNET unset in environment");
+      throw new Error("SUI_MAINNET unset in environment");
     }
     const wallet = new RawSigner(
         Ed25519Keypair.fromSecretKey(
-            network == "MAINNET" ?
             Buffer.from(walletPrivateKey, "hex")
-                :
-            Buffer.from(walletPrivateKey, "base64").subarray(1)
         ),
         provider
     );
     console.log(wallet.getAddress())
 
     // Fetch all price IDs
-    let {data} = await axios.get("https://xc-testnet.pyth.network/api/price_feed_ids")
-    console.log("all price feed ids: ", data)
+    let {data} = await axios.get("https://xc-mainnet.pyth.network/api/price_feed_ids")
+    const price_feed_ids = data;
+    console.log("num price feed ids: ", price_feed_ids.length)
 
-    const priceFeedVAAs = await connection.getLatestVaas(data);
-    console.log("price feed VAAs: ", priceFeedVAAs)
+    //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(0, 50));
+    //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(50, 100));
+    //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(100, 150));
+    //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(150, 200));
+    const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(200, 250));
 
-    create_price_feeds(wallet, registry, priceFeedVAAs)
+    console.log("price feed VAAs len: ", priceFeedVAAs.length)
+
+    //create_price_feeds(wallet, registry, priceFeedVAAs)
 }
 
 main();

@@ -5,10 +5,8 @@ import {
     normalizeSuiObjectId,
     RawSigner,
     TransactionBlock,
-    SUI_CLOCK_OBJECT_ID,
     JsonRpcProvider,
     Ed25519Keypair,
-    testnetConnection,
     Connection,
   } from "@optke3/sui.js";
   import { execSync } from "child_process";

@@ -5,13 +5,9 @@ import {
   RawSigner,
   SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
-  fromB64,
-  normalizeSuiObjectId,
   JsonRpcProvider,
   Ed25519Keypair,
-  testnetConnection,
-  Connection,
-  TypeTagSerializer
+  Connection
 } from "@optke3/sui.js";
 
 dotenv.config({"path":"~/.env"})
@@ -69,38 +65,16 @@ async function create_price_feeds(
         ],
     });
 
-  //   console.log("parsed thing: ", TypeTagSerializer.tagToString(
-  //     { vector:
-  //       {
-  //         address: '0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7',
-  //         module: 'vaa',
-  //         name: 'VAA'
-  //     }
-  //   }
-  //   )
-  // )
-
     tx.moveCall({
       target: `${PYTH_PACKAGE}::pyth::create_price_feeds`,
       arguments: [
         tx.object(PYTH_STATE),
-        //tx.makeMoveVec({ type: TypeTagSerializer.tagToString(TypeTagSerializer.parseFromStr('0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7::vaa::VAA')), objects: [verified_vaa] }), // has type vector<VAA>
-        //@ts-ignore
         tx.makeMoveVec({ type: `${WORM_STATE}::vaa::VAA`, objects: [verified_vaa] }), // has type vector<VAA>,
         tx.object(SUI_CLOCK_OBJECT_ID)
       ],
     });
 
-    // tx.moveCall({
-    //   target: `${PYTH_PACKAGE}::state::get_fee_recipient`,
-    //   arguments: [
-    //     tx.pure(PYTH_STATE),
-    //     //tx.makeMoveVec({ objects: [verified_vaa] }), // has type vector<VAA>
-    //     //tx.object(SUI_CLOCK_OBJECT_ID)
-    //   ],
-    // });
-
-    tx.setGasBudget(1_000_000_000n);
+    tx.setGasBudget(2000000000);
 
     let result = await signer.signAndExecuteTransactionBlock({
       transactionBlock: tx,

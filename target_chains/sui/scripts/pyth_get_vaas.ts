@@ -1,7 +1,6 @@
 /// Fetch price feed VAAs of interest from the Pyth
 /// price feed service.
 import { PriceServiceConnection } from '@pythnetwork/price-service-client';
-import { Buffer } from 'buffer';
 import axios from 'axios';
 
 async function main(){
