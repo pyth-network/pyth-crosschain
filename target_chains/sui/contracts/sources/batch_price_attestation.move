@@ -163,7 +163,7 @@ module pyth::batch_price_attestation {
     #[test]
     #[expected_failure]
     fun test_deserialize_batch_price_attestation_invalid_magic() {
-        use sui::test_scenario::{Self, ctx};
+        use sui::test_scenario::{Self, take_shared, return_shared, ctx};
         let test = test_scenario::begin(@0x1234);
         let test_clock = clock::create_for_testing(ctx(&mut test));
         // A batch price attestation with a magic number of 0x50325749
@@ -175,7 +175,7 @@ module pyth::batch_price_attestation {
 
     #[test]
     fun test_deserialize_batch_price_attestation() {
-        use sui::test_scenario::{Self, ctx};
+        use sui::test_scenario::{Self, take_shared, return_shared, ctx};
         // Set the arrival time
         let test = test_scenario::begin(@0x1234);
         let test_clock = clock::create_for_testing(ctx(&mut test));

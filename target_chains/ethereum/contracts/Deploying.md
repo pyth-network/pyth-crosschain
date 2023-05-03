@@ -204,3 +204,12 @@ contract or a new contract do the following steps in addition to the steps descr
 5. If you wish to deploy the contract run `npx hardhat deploy-zksync --network <network> --script deploy/zkSyncDeploy` to deploy it to the new network. Otherwise
    run `npx hardhat deploy-zksync --network <network> --script deploy/zkSyncDeployNewPythImpl.ts` to get a new implementation address. Then put it in
    `.<network>.new_impl` file and run the deployment script to handle the rest of the changes.
+
+# Deploy/Upgrade on Canto
+
+Canto network rewards some percentage of the gas usage to the contracts. To enable the rewards we have modified the contract upon
+deployment to register its own address as the receiver of the rewards and also assigned Pyth to received Wormhole Receiver rewards
+too. The registration only happens once for contract. The contracts are registered with token id 654. We don't need to register
+the contracts upon upgrades because the proxy address doesn't change. The contract changes for registration are stored in
+[this diff](./canto-deployment-patch.diff) for future reference. Please note that if we switch to another Wormhole Receiver
+(a new address) we will need to register the new contract.

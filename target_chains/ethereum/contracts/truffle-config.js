@@ -160,6 +160,10 @@ module.exports = {
       timeoutBlocks: 200,
       disableConfirmationListener: true,
     },
+    canto: {
+      provider: payerProvider(`https://canto.gravitychain.io`),
+      network_id: 7700,
+    },
     celo: {
       provider: payerProvider(`https://forno.celo.org`),
       network_id: 42220,
@@ -246,6 +250,18 @@ module.exports = {
     meter: {
       provider: payerProvider("https://rpc-meter.jellypool.xyz"),
       network_id: 82,
+    },
+    mantle_testnet: {
+      provider: payerProvider("https://rpc.testnet.mantle.xyz/"),
+      network_id: 5001,
+    },
+    conflux_espace: {
+      provider: payerProvider("https://evm.confluxrpc.org"),
+      network_id: 1030,
+    },
+    conflux_espace_testnet: {
+      provider: payerProvider("https://evmtestnet.confluxrpc.com"),
+      network_id: 71,
     },
   },
 

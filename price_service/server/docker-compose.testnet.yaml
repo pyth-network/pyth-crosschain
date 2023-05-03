@@ -2,6 +2,7 @@ services:
   spy:
     # Find latest Guardian images in https://github.com/wormhole-foundation/wormhole/pkgs/container/guardiand
     image: ghcr.io/wormhole-foundation/guardiand:v2.14.8.1
+    restart: on-failure
     command:
       - "spy"
       - "--nodeKey"
@@ -17,6 +18,7 @@ services:
   price-service:
     # Find latest price service images https://gallery.ecr.aws/pyth-network/xc-server
     image: public.ecr.aws/pyth-network/xc-server:v3.0.0
+    restart: on-failure
     # Or alternatively use a locally built image
     # image: pyth_price_server
     environment:

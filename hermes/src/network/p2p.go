@@ -8,6 +8,7 @@
 package main
 
 // #include <stdlib.h>
+// #include <string.h>
 //
 // // A structure containing Wormhole VAA observations. This must match on both
 // // the Go and Rust side.
@@ -27,6 +28,7 @@ import "C"
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -45,123 +47,120 @@ import (
 )
 
 //export RegisterObservationCallback
-func RegisterObservationCallback(f C.callback_t) {
-    go func() {
-        ctx := context.Background()
+func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, listen_addrs *C.char) {
+	networkID := C.GoString(network_id)
+	bootstrapAddrs := strings.Split(C.GoString(bootstrap_addrs), ",")
+	listenAddrs := strings.Split(C.GoString(listen_addrs), ",")
 
-        // Setup base network configuration.
-        networkID      := "/wormhole/mainnet/2"
-        priv, _, err   := crypto.GenerateKeyPair(crypto.Ed25519, -1)
-        bootstrapPeers := []string{
-            "/dns4/wormhole-mainnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWQp644DK27fd3d4Km3jr7gHiuJJ5ZGmy8hH4py7fP4FP7",
-        }
+	go func() {
+		ctx := context.Background()
 
-        // Setup libp2p Connection Manager.
-        mgr, err := connmgr.NewConnManager(
-            100,
-            400,
-            connmgr.WithGracePeriod(0),
-        )
+		// Setup base network configuration.
+		priv, _, err := crypto.GenerateKeyPair(crypto.Ed25519, -1)
 
-        if err != nil {
-            err := fmt.Errorf("Failed to create connection manager: %w", err)
-            fmt.Println(err)
-            return
-        }
+		// Setup libp2p Connection Manager.
+		mgr, err := connmgr.NewConnManager(
+			100,
+			400,
+			connmgr.WithGracePeriod(0),
+		)
 
-        // Setup libp2p Reactor.
-        h, err := libp2p.New(
-            libp2p.Identity(priv),
-            libp2p.ListenAddrStrings(
-                "/ip4/0.0.0.0/udp/30910/quic",
-                "/ip6/::/udp/30910/quic",
-            ),
-            libp2p.Security(libp2ptls.ID, libp2ptls.New),
-            libp2p.Transport(libp2pquic.NewTransport),
-            libp2p.ConnectionManager(mgr),
-            libp2p.Routing(func(h host.Host) (routing.PeerRouting, error) {
-                bootstrappers := make([]peer.AddrInfo, 0)
-                for _, addr := range bootstrapPeers {
-                    ma, err := multiaddr.NewMultiaddr(addr)
-                    if err != nil {
-                        continue
-                    }
+		if err != nil {
+			err := fmt.Errorf("Failed to create connection manager: %w", err)
+			fmt.Println(err)
+			return
+		}
 
-                    pi, err := peer.AddrInfoFromP2pAddr(ma)
-                    if err != nil || pi.ID == h.ID() {
-                        continue
-                    }
+		// Setup libp2p Reactor.
+		h, err := libp2p.New(
+			libp2p.Identity(priv),
+			libp2p.ListenAddrStrings(listenAddrs...),
+			libp2p.Security(libp2ptls.ID, libp2ptls.New),
+			libp2p.Transport(libp2pquic.NewTransport),
+			libp2p.ConnectionManager(mgr),
+			libp2p.Routing(func(h host.Host) (routing.PeerRouting, error) {
+				bootstrappers := make([]peer.AddrInfo, 0)
+				for _, addr := range bootstrapAddrs {
+					ma, err := multiaddr.NewMultiaddr(addr)
+					if err != nil {
+						continue
+					}
 
-                    bootstrappers = append(bootstrappers, *pi)
-                }
-                idht, err := dht.New(ctx, h, dht.Mode(dht.ModeServer),
-                    dht.ProtocolPrefix(protocol.ID("/"+networkID)),
-                    dht.BootstrapPeers(bootstrappers...),
-                )
-                return idht, err
-            }),
-        )
+					pi, err := peer.AddrInfoFromP2pAddr(ma)
+					if err != nil || pi.ID == h.ID() {
+						continue
+					}
 
-        if err != nil {
-            err := fmt.Errorf("Failed to create libp2p host: %w", err)
-            fmt.Println(err)
-            return
-        }
+					bootstrappers = append(bootstrappers, *pi)
+				}
+				idht, err := dht.New(ctx, h, dht.Mode(dht.ModeServer),
+					dht.ProtocolPrefix(protocol.ID("/"+networkID)),
+					dht.BootstrapPeers(bootstrappers...),
+				)
+				return idht, err
+			}),
+		)
 
-        topic := fmt.Sprintf("%s/%s", networkID, "broadcast")
-        ps, err := pubsub.NewGossipSub(ctx, h)
-        if err != nil {
-            err := fmt.Errorf("Failed to create Pubsub: %w", err)
-            fmt.Println(err)
-            return
-        }
+		if err != nil {
+			err := fmt.Errorf("Failed to create libp2p host: %w", err)
+			fmt.Println(err)
+			return
+		}
 
-        th, err := ps.Join(topic)
-        if err != nil {
-             err := fmt.Errorf("Failed to join topic: %w", err)
-             fmt.Println(err)
-             return
-        }
+		topic := fmt.Sprintf("%s/%s", networkID, "broadcast")
+		ps, err := pubsub.NewGossipSub(ctx, h)
+		if err != nil {
+			err := fmt.Errorf("Failed to create Pubsub: %w", err)
+			fmt.Println(err)
+			return
+		}
 
-        sub, err := th.Subscribe()
-        if err != nil {
-            err := fmt.Errorf("Failed to subscribe topic: %w", err)
-            fmt.Println(err)
-            return
-        }
+		th, err := ps.Join(topic)
+		if err != nil {
+			err := fmt.Errorf("Failed to join topic: %w", err)
+			fmt.Println(err)
+			return
+		}
 
-        for {
-            for {
-                select {
-                case <-ctx.Done():
-                    return
-                default:
-                    envelope, err := sub.Next(ctx)
-                    if err != nil {
-                        err := fmt.Errorf("Failed to receive Pubsub message: %w", err)
-                        fmt.Println(err)
-                        return
-                    }
+		sub, err := th.Subscribe()
+		if err != nil {
+			err := fmt.Errorf("Failed to subscribe topic: %w", err)
+			fmt.Println(err)
+			return
+		}
 
-                    // Definition for GossipMessage is generated by Protobuf, see `p2p.proto`.
-                    var msg GossipMessage
-                    err = proto.Unmarshal(envelope.Data, &msg)
+		for {
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					envelope, err := sub.Next(ctx)
+					if err != nil {
+						err := fmt.Errorf("Failed to receive Pubsub message: %w", err)
+						fmt.Println(err)
+						return
+					}
 
-                    switch msg.Message.(type) {
-                    case *GossipMessage_SignedObservation:
-                    case *GossipMessage_SignedVaaWithQuorum:
-                        vaaBytes := msg.GetSignedVaaWithQuorum().GetVaa()
-                        cBytes := C.CBytes(vaaBytes)
-                        defer C.free(cBytes)
-                        C.invoke(f, C.observation_t{
-                            vaa: (*C.char)(cBytes),
-                            vaa_len: C.size_t(len(vaaBytes)),
-                        })
-                    }
-                }
-            }
-        }
-    }()
+					// Definition for GossipMessage is generated by Protobuf, see `p2p.proto`.
+					var msg GossipMessage
+					err = proto.Unmarshal(envelope.Data, &msg)
+
+					switch msg.Message.(type) {
+					case *GossipMessage_SignedObservation:
+					case *GossipMessage_SignedVaaWithQuorum:
+						vaaBytes := msg.GetSignedVaaWithQuorum().GetVaa()
+						cBytes := C.CBytes(vaaBytes)
+						defer C.free(cBytes)
+						C.invoke(f, C.observation_t{
+							vaa:     (*C.char)(cBytes),
+							vaa_len: C.size_t(len(vaaBytes)),
+						})
+					}
+				}
+			}
+		}
+	}()
 }
 
 func main() {

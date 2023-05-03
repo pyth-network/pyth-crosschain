@@ -19,6 +19,8 @@ module pyth::state {
     use wormhole::bytes32::{Self, Bytes32};
     use wormhole::fee_collector::{Self, FeeCollector};
 
+    use wormhole::setup::{assert_package_upgrade_cap};
+
     friend pyth::pyth;
     friend pyth::pyth_tests;
     friend pyth::governance_action;

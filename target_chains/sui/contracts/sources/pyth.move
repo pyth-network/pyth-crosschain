@@ -163,7 +163,6 @@ module pyth::pyth {
     ){
         // Version control.
         state::check_minimum_requirement<UpdatePriceFeeds>(pyth_state);
-
         // Charge the message update fee
         assert!(get_total_update_fee(pyth_state, &vaas) <= coin::value(&fee), E_INSUFFICIENT_FEE);
 
@@ -964,7 +963,7 @@ module pyth::pyth_tests{
         price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
 
         vector::destroy_empty(price_info_object_vec);
-
+        
         let current_price_info = price_info::get_price_info_from_price_info_object(&price_info_object_1);
         let current_price_feed = price_info::get_price_feed(&current_price_info);
         let current_price = price_feed::get_price(current_price_feed);
@@ -1027,3 +1026,6 @@ module pyth::pyth_tests{
         test_scenario::end(scenario);
     }
 }
+
+// TODO - pyth tests
+// https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/aptos/contracts/sources/pyth.move#L384

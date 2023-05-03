@@ -77,7 +77,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
                 batchAttestations[j - i] = attestations[j];
             }
 
-            updateData[i / batchSize] = generatePriceFeedUpdateVAA(
+            updateData[i / batchSize] = generateWhBatchUpdate(
                 batchAttestations,
                 0,
                 1

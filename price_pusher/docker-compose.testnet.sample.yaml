@@ -52,29 +52,31 @@ services:
     build:
       context: .
     # Uncomment this line (and comment out the above lines) to use a prebuilt image. Replace <version>
-    # with the latest released image of the EVM price pusher from this repo release page:
-    # https://github.com/pyth-network/pyth-js/releases
-    # image: public.ecr.aws/pyth-network/xc-evm-price-pusher:v<version>
+    # with the latest released image of the price pusher from this repo release page:
+    # https://github.com/pyth-network/pyth-crosschain/releases
+    # image: public.ecr.aws/pyth-network/xc-price-pusher:v<version>
     restart: always
     command:
       - "--"
-      - "injective"
-      # you can choose to provide all the options here or a path to the config file
-      # we are providing a path to the config file
-      - "--config"
-      - "/command_config"
+      - "evm"
+      - "--endpoint"
+      # Replace this with RPC endpoint URL for the EVM network.
+      - "https://endpoints.omniatech.io/v1/fantom/testnet/public"
+      - "--mnemonic-file"
+      - "/mnemonic"
+      - "--pyth-contract-address"
+      - "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
+      - "--price-service-endpoint"
+      - "http://price-service:4200"
+      - "--price-config-file"
+      - "/price_config"
     configs:
-      - command_config
       - mnemonic
       - price_config
     depends_on:
       price-service:
         condition: service_healthy
 configs:
-  command_config:
-    # Replace this with the path to the configuration file. You need to update the paths defined in
-    # the config file
-    file: ./config.injective.testnet.sample.json
   mnemonic:
     file: ./mnemonic # Replace this with the path to the mnemonic file
   price_config:
