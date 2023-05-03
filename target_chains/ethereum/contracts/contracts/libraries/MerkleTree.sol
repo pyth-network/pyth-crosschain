@@ -12,9 +12,14 @@ import "./external/UnsafeBytesLib.sol";
 library MerkleTree {
     uint8 constant MERKLE_LEAF_PREFIX = 0;
     uint8 constant MERKLE_NODE_PREFIX = 1;
+    uint8 constant MERKLE_EMPTY_LEAF_PREFIX = 2;
 
     function hash(bytes memory input) internal pure returns (bytes20) {
         return bytes20(keccak256(input));
+    }
+
+    function emptyLeafHash() internal pure returns (bytes20) {
+        return hash(abi.encodePacked(MERKLE_EMPTY_LEAF_PREFIX));
     }
 
     function leafHash(bytes memory data) internal pure returns (bytes20) {
@@ -32,11 +37,14 @@ library MerkleTree {
     }
 
     /// @notice Verify Merkle Tree proof for given leaf data.
-    /// @dev This method does not perform any check on the boundry of the
-    /// `encodedProof` and `proofOffset` parameters. It is the caller's
-    /// responsibility to ensure that the `encodedProof` is long enough to
-    /// contain the proof and the `proofOffset` is not out of bound.
-    function verify(
+    /// @dev To optimize gas usage, this method doesn't take the proof as a bytes array
+    /// but rather takes the encoded proof and the offset of the proof in the
+    /// encoded proof array possibly containing multiple proofs. Also, the method
+    /// does not perform any check on the boundry of the `encodedProof` and  the
+    /// `proofOffset` parameters. It is the caller's responsibility to ensure
+    /// that the `encodedProof` is long enough to contain the proof and the
+    /// `proofOffset` is not out of bound.
+    function isProofValid(
         bytes memory encodedProof,
         uint proofOffset,
         bytes20 root,
@@ -91,11 +99,13 @@ library MerkleTree {
         // is x^1. The root is at index 1 and index 0 is not used.
 
         // Filling the leaf hashes
+        bytes20 cachedEmptyLeafHash = emptyLeafHash();
+
         for (uint i = 0; i < (1 << depth); i++) {
             if (i < messages.length) {
                 tree[(1 << depth) + i] = leafHash(messages[i]);
             } else {
-                tree[(1 << depth) + i] = leafHash("");
+                tree[(1 << depth) + i] = cachedEmptyLeafHash;
             }
         }
 

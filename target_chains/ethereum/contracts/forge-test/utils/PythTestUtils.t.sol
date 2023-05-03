@@ -84,6 +84,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
         uint64 conf;
         int32 expo;
         uint64 publishTime;
+        uint64 prevPublishTime;
         int64 emaPrice;
         uint64 emaConf;
     }
@@ -101,6 +102,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
                 priceFeedMessages[i].conf,
                 priceFeedMessages[i].expo,
                 priceFeedMessages[i].publishTime,
+                priceFeedMessages[i].prevPublishTime,
                 priceFeedMessages[i].emaPrice,
                 priceFeedMessages[i].emaConf
             );

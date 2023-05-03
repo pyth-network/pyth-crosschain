@@ -16,6 +16,8 @@ import "../libraries/MerkleTree.sol";
 abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     uint32 constant ACCUMULATOR_MAGIC = 0x504e4155; // Stands for PNAU (Pyth Network Accumulator Update)
     uint32 constant ACCUMULATOR_WORMHOLE_MAGIC = 0x41555756; // Stands for AUWV (Accumulator Update Wormhole Verficiation)
+    uint8 constant MINIMUM_ALLOWED_MINOR_VERSION = 0;
+    uint8 constant MAJOR_VERSION = 1;
 
     enum UpdateType {
         WormholeMerkle
@@ -63,15 +65,19 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 );
                 offset += 1;
 
-                if (majorVersion != 1) revert PythErrors.InvalidUpdateData();
+                if (majorVersion != MAJOR_VERSION)
+                    revert PythErrors.InvalidUpdateData();
 
-                // never reverts
-                // uint8 minorVersion = UnsafeBytesLib.toUint16(encoded, index);
+                uint8 minorVersion = UnsafeBytesLib.toUint8(
+                    accumulatorUpdate,
+                    offset
+                );
                 offset += 1;
 
-                // This check is always false as minorVersion is 0, so it is commented.
-                // in the future that the minor version increases this will have effect.
-                // if(minorVersion < 0) revert InvalidUpdateData();
+                // Minor versions are forward compatible, so we only check
+                // that the minor version is not less than the minimum allowed
+                if (minorVersion < MINIMUM_ALLOWED_MINOR_VERSION)
+                    revert PythErrors.InvalidUpdateData();
 
                 // This field ensure that we can add headers in the future
                 // without breaking the contract (future compatibility)
@@ -81,7 +87,14 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 );
                 offset += 1;
 
-                // Currently we don't have any trailing header
+                // We use another offset for the trailing header and in the end add the
+                // offset by trailingHeaderSize to skip the future headers.
+                //
+                // An example would be like this:
+                // uint trailingHeaderOffset = offset
+                // uint x = UnsafeBytesLib.ToUint8(accumulatorUpdate, trailingHeaderOffset)
+                // trailingHeaderOffset += 1
+
                 offset += trailingHeaderSize;
             }
 
@@ -193,7 +206,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             offset += messageSize;
 
             bool valid;
-            (valid, offset) = MerkleTree.verify(
+            (valid, offset) = MerkleTree.isProofValid(
                 encoded,
                 offset,
                 digest,
@@ -239,10 +252,18 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             );
             offset += 4;
 
+            // Publish time is i64 in some environments due to the standard in that
+            // environment. This would not cause any problem because since the signed
+            // integer is represented in two's complement, the value would be the same
+            // in both cases (for a million year at least)
             priceInfo.publishTime = UnsafeBytesLib.toUint64(
                 encodedPriceFeed,
                 offset
             );
+            offset += 8;
+
+            // We do not store this field because it is not used on the latest feed queries.
+            // uint64 prevPublishTime = UnsafeBytesLib.toUint64(encodedPriceFeed, offset);
             offset += 8;
 
             priceInfo.emaPrice = int64(

@@ -57,6 +57,7 @@ contract PythWormholeMerkleAccumulatorTest is
                 conf: getRandUint64(),
                 expo: getRandInt32(),
                 publishTime: getRandUint64(),
+                prevPublishTime: getRandUint64(),
                 emaPrice: getRandInt64(),
                 emaConf: getRandUint64()
             });
@@ -244,6 +245,8 @@ contract PythWormholeMerkleAccumulatorTest is
     }
 
     /// @notice This method creates a forged invalid wormhole update data.
+    /// The caller should pass the forgeItem as string and if it matches the
+    /// expected value, that item will be forged to be invalid.
     function createAndForgeWormholeMerkleUpdateData(
         bytes memory forgeItem
     ) public returns (bytes[] memory updateData, uint updateFee) {
