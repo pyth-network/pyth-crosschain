@@ -77,6 +77,8 @@ async function update_price_feeds(
       ],
     });
 
+    // TODO
+
     // get VAA for price attestation
     const priceFeedVAAs = await connection.getLatestVaas([price_feed_id]);
 
