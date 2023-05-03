@@ -57,7 +57,7 @@ module pyth::price_info {
 
 
     /// Returns ID of price info object corresponding to price_identifier as a byte vector.
-    public fun get(parent_id: &UID, price_identifier: PriceIdentifier): vector<u8> {
+    public fun get_id_bytes(parent_id: &UID, price_identifier: PriceIdentifier): vector<u8> {
         assert!(
             contains(parent_id, price_identifier),
             E_PRICE_IDENTIFIER_NOT_REGISTERED
@@ -132,7 +132,7 @@ module pyth::price_info {
 
         add(&mut uid, price_identifier, id);
 
-        let result = get(&uid, price_identifier);
+        let result = get_id_bytes(&uid, price_identifier);
 
         // Assert that ID matches original.
         assert!(result==x"19f253b07e88634bfd5a3a749f60bfdb83c9748910646803f06b60b76319e7ba", 0);

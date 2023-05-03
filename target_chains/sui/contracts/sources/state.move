@@ -6,7 +6,7 @@ module pyth::state {
 
     use pyth::data_source::{Self, DataSource};
     use pyth::price_info::{Self};
-    use pyth::price_identifier::{PriceIdentifier};
+    use pyth::price_identifier::{Self, PriceIdentifier};
     use pyth::version_control::{Self};
 
     use wormhole::consumed_vaas::{Self, ConsumedVAAs};
@@ -160,8 +160,9 @@ module pyth::state {
         data_source::emitter_address(&governance_data_source)
     }
 
-    public fun get_price_info_object_id(self: &State): ID {
-        price_info::get_price_info_object_id(&self.UID)
+    public fun get_price_info_object_id(self: &State, price_identifier_bytes: vector<u8>): ID {
+        let price_identifier = price_identifier::from_byte_vec(price_identifier_bytes);
+        price_info::get_id(&self.id, price_identifier)
     }
 
     ////////////////////////////////////////////////////////////////////////////
