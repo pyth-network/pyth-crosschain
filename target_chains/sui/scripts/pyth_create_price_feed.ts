@@ -21,7 +21,7 @@ const walletPrivateKey = process.env.SUI_TESTNET_BASE_64;
 
 async function main() {
     if (walletPrivateKey === undefined) {
-      throw new Error("SUI_TESTNET unset in environment");
+      throw new Error("SUI KEY unset in environment");
     }
     const wallet = new RawSigner(
         Ed25519Keypair.fromSecretKey(
