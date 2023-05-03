@@ -1,8 +1,9 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { createInterface } from "readline";
+import path from "path";
 
 // This function lets you write a question to the terminal
-// And returns you the response of the user
+// And returns the response of the user
 function readLineAsync(msg: string) {
   const readline = createInterface({
     input: process.stdin,
@@ -16,201 +17,165 @@ function readLineAsync(msg: string) {
   });
 }
 
-type StateStore<T = any> = {
-  [stepId: string]: T;
-};
-// StateManager helps in getting and setting the state locally
-// It manipulates data in-memory and once the consumer has finished manipulating it
-// They need to commit the data to permanent storage using the commit method
-class StateManager<T> {
-  private readonly fileExt = ".json";
-  private readonly dirPath = "./tmp";
-
-  private readonly store: StateStore<T>;
-  private readonly filePath: string;
-
-  constructor(
-    private readonly stageId: string,
-    private readonly version: string
-  ) {
-    // dir check
-    if (!existsSync(this.dirPath)) {
-      mkdirSync(this.dirPath);
-    }
-
-    this.filePath = `${this.dirPath}/${this.stageId}-${this.version}${this.fileExt}`;
-    if (existsSync(this.filePath) === false) {
-      this.store = {};
-      return;
-    }
-    this.store = JSON.parse(readFileSync(this.filePath).toString());
-  }
-
-  // It gets the latest state for the given step
-  // the state after the last operation
-  getStepState(stepId: string): T | undefined {
-    return this.store[stepId];
-  }
-
-  // It sets the latest state for the given step
-  setSetState(stepId: string, state: T) {
-    this.store[stepId] = state;
-  }
-
-  // After all the in memory operations one can commit to the local file
-  // for permanent storage
-  commit() {
-    writeFileSync(this.filePath, JSON.stringify(this.store, null, 4));
-  }
-}
-
-// A step is defined as a method
-// it takes in a step id as a parameter to execute that particular step
+// The stage executor is where the stage functionality is defined
 // Optionally it can take in a method `getResultOfPastStage` as a parameter
 // if it wants to access the result of the previous stages
-export type Step =
+export type StageExecutor =
   | ((
-      stepId: string,
       // get the result of a past stage using it's id
       // It will return the result for the same step id
       // It will return undefined if the previous stage data has not been stored locally
       // or if a future stage data is being asked
       getResultOfPastStage: <Y>(stageId: string) => Y
     ) => Promise<any>)
-  | ((stepId: string) => Promise<any>);
+  | (() => Promise<any>);
 
-// A step can fail. If the error is not handled it will crash the pipeline
-// We would like to store the result or reason locally too
-// For that purpose the response from a step is being wrapped in this
-type StepResult<T = any> =
+export type Stage = {
+  id: string;
+  executor: StageExecutor;
+};
+
+type StageResult<T = any> =
   | {
       status: "rejected";
-      stepId: string;
       reason: any;
     }
   | {
       status: "fulfilled";
-      stepId: string;
       result: T;
     };
 
-// A stage will contain an identifier and a step method
-type Stage = {
-  stageId: string;
-  step: Step;
-};
-
-// A pipeline is conists of multiple stages
-// A stage contains of multiple steps
-// Stages will be run synchronously i.e, in order
-// Steps will be run asychronously
-// CONSTRAINT: Each stage will have the same number of steps
-// See the type definition of `Stage` and `Step` above to know more about them
 export class Pipeline {
-  private readonly stages: Stage[] = [];
-  constructor(
-    private readonly version: string,
-    private readonly stepIds: string[]
-  ) {}
+  private stages: Stage[] = [];
+  private readonly pipelineStore: PipelineStore;
 
-  addStage(stageId: string, step: Step) {
-    this.stages.push({ stageId, step });
+  constructor(
+    // osmosis_testnet_4
+    readonly id: string,
+    readonly version: string,
+    // should not end with /
+    // "./on-chain/wormhole-stub"
+    readonly storageDir: string
+  ) {
+    const filePath = `${storageDir}/${id}-${version}.json`;
+    this.pipelineStore = new PipelineStore(filePath);
   }
 
-  // We want to wrap the step provided by the pipeline consumer
-  // In order to wrap the response of the step in the StepResult
-  // also in this method we inject the `getResultOfPastStage` to the step
-  private stepWrapper<T, Y>(step: Step) {
-    return async (stepId: string): Promise<StepResult<T>> => {
+  addStage(stage: Stage) {
+    this.stages.push(stage);
+  }
+
+  private stageExecutorWrapper(executor: StageExecutor) {
+    // We want to wrap the executor provided by the pipeline consumer
+    // In order to wrap the response of the executor in the StageResult
+    // also in this method we inject the `getResultOfPastStage` to the stage executor
+    return async (): Promise<StageResult> => {
       // method to inject
       const getResultOfPastStage = <Y>(stageId: string): Y => {
-        let stateManager = new StateManager<StepResult<Y>>(
-          stageId,
-          this.version
-        );
-        let result = stateManager.getStepState(stepId);
-        // pipeline will only proceed to the next stage if the previous one is fulfilled
-        if (result !== undefined && result.status === "rejected") {
-          throw new Error("previous stage was not fulfilled");
-        }
-        if (result === undefined) {
+        let result = this.pipelineStore.getStageState<StageResult<Y>>(stageId);
+
+        // This if condition will execute only if the stage executor is
+        // trying to reading a stage's state with stage id that doesn't exist
+        // past results will all be fulfilled and the pipeline will make sure of that
+        if (
+          result === undefined ||
+          (result !== undefined && result.status === "rejected")
+        ) {
           throw new Error(
-            `either the previous stage is not fully processed or a future stage is being referred to: ${stageId}`
+            `${this.id}: Stage id seems to be invalid: ${stageId}`
           );
         }
         return result.result;
       };
       try {
         // wrapping result
-        const result = await step(stepId, getResultOfPastStage);
+        const result = await executor(getResultOfPastStage);
         return {
           status: "fulfilled",
-          stepId,
           result,
         };
       } catch (e) {
         return {
           status: "rejected",
-          stepId,
           reason: e,
         };
       }
     };
   }
 
-  async processStage(stage: Stage) {
-    console.log("processing stage: ", stage.stageId);
+  private async processStage(stage: Stage): Promise<boolean> {
+    // Here we will check if there is a past result that has been fulfilled
+    // If yes, we are not going to process any further
+    let currentResult = this.pipelineStore.getStageState<StageResult>(stage.id);
+    if (currentResult !== undefined && currentResult.status === "fulfilled")
+      return true;
 
-    let stateManager = new StateManager<StepResult>(
-      stage.stageId,
-      this.version
-    );
+    // Else we will process the new stage and store the result
+    const newResult = await this.stageExecutorWrapper(stage.executor)();
+    this.pipelineStore.setStageState(stage.id, newResult);
 
-    let areSomeRejected = false;
-    await Promise.all(
-      this.stepIds.map(async (stepId) => {
-        console.log(`processing step: ${stepId} of stage: ${stage.stageId}`);
+    if (newResult.status === "fulfilled") return true;
 
-        const prevResult = stateManager.getStepState(stepId);
-        // We are only processing the step if the past result of it was not fulfilled
-        if (prevResult === undefined || prevResult.status === "rejected") {
-          let stepResult = await this.stepWrapper(stage.step)(stepId);
+    // Some steps can fail due to some one time errors like API issues
+    // This allows the user to re run this particular stage
+    const rerun =
+      (await readLineAsync(
+        `${this.id}: Some steps of stage: ${stage.id} failed. \n Do you want to rerun? (y) `
+      )) === "y";
 
-          if (stepResult.status === "rejected") {
-            areSomeRejected = true;
-            console.log(
-              `step: ${stepId} of stage: ${stage.stageId} was rejected due to the following reason`
-            );
-            console.log(stepResult.reason);
-          }
-
-          // Since javascript is a single threaded language
-          // Only one thread will be executing this function at a time
-          stateManager.setSetState(stepId, stepResult);
-        }
-      })
-    );
-
-    // We need to commit after all the manipulations
-    // so that the result is persisted locally
-    stateManager.commit();
-
-    // We are checking if some steps are rejected
-    // If they are, we will try them process it again
-    if (areSomeRejected) {
-      const rerun =
-        (await readLineAsync(
-          `Some steps of stage: ${stage.stageId} failed. \n Do you want to rerun? (y)`
-        )) === "y";
-
-      if (rerun) await this.processStage(stage);
-      else process.exit();
-    }
+    if (rerun) return this.processStage(stage);
+    else return false;
   }
 
   async run() {
-    for (let { stageId, step } of this.stages) {
-      await this.processStage({ stageId, step });
+    console.log("Running pipeline with id: ", this.id);
+    for (let stage of this.stages) {
+      console.log(`${this.id}: Running stage with id: ${stage.id}`);
+
+      // This method is only going to process stage if all the past ones have been fulfilled
+      let fulfilled = await this.processStage(stage);
+      if (fulfilled === false) break;
     }
+
+    // store the whole processing locally
+    this.pipelineStore.commit();
+  }
+}
+
+type StoreStructure = {
+  [stageId: string]: any;
+};
+// PipelineStore helps in getting and setting the state locally
+// It manipulates data in-memory and once the consumer has finished manipulating it
+// They need to commit the data to permanent storage using the commit method
+class PipelineStore {
+  private readonly store: StoreStructure;
+
+  constructor(private readonly filePath: string) {
+    if (!existsSync(this.filePath)) {
+      this.store = {};
+      return;
+    }
+
+    this.store = JSON.parse(readFileSync(this.filePath).toString());
+  }
+
+  // It gets the latest state for the given stage
+  // the state after the last operation
+  // if there is no stage stage, in case it was no process it will return undefined.
+  getStageState<T = any>(stageId: string): T | undefined {
+    return this.store[stageId];
+  }
+
+  // It sets the latest state for the given step
+  setStageState(stageId: string, state: any) {
+    this.store[stageId] = state;
+  }
+
+  // After all the in memory operations one can commit to the local file
+  // for permanent storage
+  commit() {
+    mkdirSync(path.dirname(this.filePath), { recursive: true });
+    writeFileSync(this.filePath, JSON.stringify(this.store, null, 4));
   }
 }

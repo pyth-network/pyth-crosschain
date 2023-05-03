@@ -1,4 +1,8 @@
-import { ChainId, createExecutorForChain } from "./chains-manager/chains";
+import {
+  ChainIdTestnet,
+  ChainIdsTestnet,
+  createExecutorForChain,
+} from "./chains-manager/chains";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { readFileSync } from "fs";
@@ -6,157 +10,129 @@ import {
   InstantiateContractResponse,
   StoreCodeResponse,
 } from "./chains-manager/chain-executor";
-import { Pipeline, Step } from "./pipeline";
+import { Pipeline } from "./pipeline";
 import { CHAINS } from "@pythnetwork/xc-governance-sdk";
 const argv = yargs(hideBin(process.argv))
   .usage("USAGE: npm run wormhole-stub -- <command>")
   .option("mnemonic", {
     type: "string",
+    demandOption: "Please provide the mnemonic",
+  })
+  .option("contract-version", {
+    type: "string",
+    demandOption: `Please input the contract-version of the wormhole contract.
+    There should be a compiled code at the path - "../wormhole-stub/artifacts/wormhole-\${contract-version}.wasm"`,
+  })
+  .option("chain-id", {
+    type: "string",
+    choices: ChainIdsTestnet,
   })
   .option("mainnet", {
     type: "boolean",
+    desc: "Execute this script for mainnet networks. THIS WILL BE ADDED IN FUTURE",
   })
   .help()
   .alias("help", "h")
   .wrap(yargs.terminalWidth())
   .parseSync();
 
+// IMPORTANT: IN ORDER TO RUN THIS SCRIPT FOR CHAINS
+// WE NEED SOME METADATA
+// HERE IS WHERE WE WILL BE ADDING THAT
+
+// The type definition here make sure that the chain is added to xc_governance_sdk_js before this script was executed
+type WormholeConfig = Record<
+  ChainIdTestnet,
+  { feeDenom: string; chainId: number }
+>;
+const wormholeConfig: WormholeConfig = {
+  [ChainIdTestnet.INJECTIVE]: {
+    feeDenom: "inj",
+    chainId: CHAINS.injective,
+  },
+  [ChainIdTestnet.OSMOSIS_4]: {
+    feeDenom: "uosmo",
+    chainId: CHAINS.osmosis,
+  },
+  [ChainIdTestnet.OSMOSIS_5]: {
+    feeDenom: "uosmo",
+    chainId: CHAINS.osmosis,
+  },
+  [ChainIdTestnet.SEI_ATLANTIC_2]: {
+    feeDenom: "usei",
+    chainId: CHAINS.sei,
+  },
+  [ChainIdTestnet.NEUTRON_PION_1]: {
+    feeDenom: "untrn",
+    chainId: CHAINS.neutron,
+  },
+};
+
 async function run() {
-  if (argv.mnemonic === undefined) {
-    console.log("Please provide the mnemonic");
-    return;
-  }
-
-  // IMPORTANT: IN ORDER TO RUN THIS SCRIPT FOR OTHER CHAINS
-  // WE NEED SOME METADATA
-  // HERE IS WHERE WE WILL ADDING THAT
-  // REPLACE THIS PART OF THE CODE FOR NEW CHAINS
-  const chainIds = [ChainId.NEUTRON_TESTNET_PION_1];
-  // Wormhole info should be there for each chain id in `chainIds`.
-  const wormholeInfo = {
-    [ChainId.NEUTRON_TESTNET_PION_1]: {
-      feeDenom: "untrn",
-      chainId: "neutron",
-    },
-  };
-  // We are checking that the chainIds are present in `xc_governance_sdk_js`s
-  for (let chainId of chainIds) {
-    // @ts-ignore
-    let chain = wormholeInfo[chainId].chainId;
-
-    // @ts-ignore
-    if (CHAINS[chain] === undefined)
-      throw new Error(
-        `Chain Id: ${chainId} is not defined in wormhole Chains. Please add it there in the governance sdk js before moving forward`
-      );
-  }
+  const STORAGE_DIR = "../wormhole-stub/testnet";
+  let wasmFilePath = `../wormhole-stub/artifacts/wormhole-${argv.contractVersion}.wasm`;
 
   // get the wormhole code
-  const contractBytes = readFileSync(
-    "../wormhole-stub/artifacts/wormhole.wasm"
-  );
-  // pipeline
-  const pipeline = new Pipeline("wormhole-stub", chainIds);
-  // store it on all the chains
-  pipeline.addStage(
-    "deploy-wormhole-code",
-    getDeployWormholeCodeStep(argv.mnemonic, contractBytes)
-  );
-  // instantiate the contract on chain
-  pipeline.addStage(
-    "instantiate-wormhole",
-    getInstantiateWormholeStep(
-      argv.mnemonic,
-      "deploy-wormhole-code",
-      wormholeInfo,
-      argv.mainnet
-    )
-  );
-  // set it to its own admin
-  pipeline.addStage(
-    "set-own-admin",
-    getSetAdminStep(argv.mnemonic, "instantiate-wormhole")
-  );
+  const contractBytes = readFileSync(wasmFilePath);
 
-  await pipeline.run();
-}
+  let chainIds = argv.chainId === undefined ? ChainIdsTestnet : [argv.chainId];
+  for (let chainId of chainIds) {
+    const pipeline = new Pipeline(chainId, argv.contractVersion, STORAGE_DIR);
 
-// All the steps getter below returns a closure which helps them with information
-// required to process a step
+    const chainExecutor = createExecutorForChain(chainId, argv.mnemonic);
 
-function getDeployWormholeCodeStep(
-  mnemonic: string,
-  contractBytes: Buffer
-): Step {
-  return (chainId: string) => {
-    const chainExecutor = createExecutorForChain(chainId as ChainId, mnemonic);
-
-    return chainExecutor.storeCode({
-      contractBytes,
-    });
-  };
-}
-
-function getInstantiateWormholeStep(
-  mnemonic: string,
-  deployCodeStageId: string,
-  wormholeChainInfo: any,
-  mainnet?: boolean
-): Step {
-  return (chainId, getResultOfPastStage) => {
-    // @ts-ignore
-    const wormholeChainId = CHAINS[wormholeChainInfo[chainId].chainId];
-    if (wormholeChainId === undefined)
-      throw new Error(`wormhole chain id undefined for chain: ${chainId}`);
-    const feeDenom = wormholeChainInfo[chainId].feeDenom;
-    if (feeDenom === undefined)
-      throw new Error(`fee denom undefined for chain: ${chainId}`);
-
-    const storeCodeRes: StoreCodeResponse =
-      getResultOfPastStage(deployCodeStageId);
-
-    const chainExecutor = createExecutorForChain(chainId as ChainId, mnemonic);
-
-    return chainExecutor.instantiateContract({
-      codeId: storeCodeRes.codeId,
-      instMsg: getWormholeConfig(wormholeChainId, feeDenom, mainnet),
-      label: "wormhole",
-    });
-  };
-}
-
-function getSetAdminStep(mnemonic: string, instantiateStageId: string): Step {
-  return (chainId, getResultOfPastStage) => {
-    const instantiateContractRes: InstantiateContractResponse =
-      getResultOfPastStage(instantiateStageId);
-
-    const chainExecutor = createExecutorForChain(chainId as ChainId, mnemonic);
-
-    return chainExecutor.updateContractAdmin({
-      newAdminAddr: instantiateContractRes.contractAddr,
-      contractAddr: instantiateContractRes.contractAddr,
-    });
-  };
-}
-
-function getWormholeConfig(
-  chainId: number,
-  feeDenom: string,
-  mainnet?: boolean
-) {
-  if (mainnet === true) {
-    return {
-      chain_id: chainId,
-      fee_denom: feeDenom,
-      gov_chain: 1,
-      gov_address: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ=",
-      guardian_set_expirity: 86400,
-      initial_guardian_set: {
-        addresses: [{ bytes: "WMw65cCXshPOPIGXnhuflXB0aqU=" }],
-        expiration_time: 0,
+    // add stages
+    // 1 deploy artifact
+    pipeline.addStage({
+      id: "deploy-wormhole-code",
+      executor: async () => {
+        return chainExecutor.storeCode({
+          contractBytes,
+        });
       },
-    };
+    });
+
+    // 2 instantiate contract
+    pipeline.addStage({
+      id: "instantiate-contract",
+      executor: (getResultOfPastStage) => {
+        const storeCodeRes: StoreCodeResponse = getResultOfPastStage(
+          "deploy-wormhole-code"
+        );
+
+        return chainExecutor.instantiateContract({
+          codeId: storeCodeRes.codeId,
+          instMsg: getWormholeConfig(wormholeConfig[chainId]),
+          label: "wormhole",
+        });
+      },
+    });
+
+    // 3 set its own admin
+    pipeline.addStage({
+      id: "set-own-admin",
+      executor: (getResultOfPastStage) => {
+        const instantiateContractRes: InstantiateContractResponse =
+          getResultOfPastStage("instantiate-contract");
+
+        return chainExecutor.updateContractAdmin({
+          newAdminAddr: instantiateContractRes.contractAddr,
+          contractAddr: instantiateContractRes.contractAddr,
+        });
+      },
+    });
+
+    await pipeline.run();
   }
+}
+
+function getWormholeConfig({
+  feeDenom,
+  chainId,
+}: {
+  feeDenom: string;
+  chainId: number;
+}) {
   return {
     chain_id: chainId,
     fee_denom: feeDenom,
@@ -164,7 +140,7 @@ function getWormholeConfig(
     gov_address: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ=",
     guardian_set_expirity: 86400,
     initial_guardian_set: {
-      addresses: [{ bytes: "E5R71IsY5T/a7ud/NHM5Gscnxjg=" }],
+      addresses: [{ bytes: "WMw65cCXshPOPIGXnhuflXB0aqU=" }],
       expiration_time: 0,
     },
   };
