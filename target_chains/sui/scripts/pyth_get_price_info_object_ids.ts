@@ -10,7 +10,10 @@ const provider = new JsonRpcProvider(
 );
 
 async function main() {
+
+  // Table of Sui Pyth PriceIdentifier => Price Info Object IDs
   const objectId = '0xc4a7182984a662b159a18a8754dbc15e11048b42494b2c4ddcf1ec3bcc7004fe';
+
   let nextCursor;
   let hasNextPage = false;
   let map = new Map<string, string>();
