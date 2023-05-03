@@ -99,8 +99,7 @@ export const ChainsConfigTestnet: Record<ChainIdTestnet, ChainConfig> = {
 };
 
 /**
- * Based on the chainType associated with the given chain.
- * This method will return an executor for that corresponding chainType
+ * This method will return an executor for that corresponding chainType for given chainId.
  */
 export function createExecutorForChain(
   chainId: ChainIdTestnet,
