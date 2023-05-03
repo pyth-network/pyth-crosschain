@@ -275,6 +275,68 @@ pub async fn send_resize_msg_buffer(
     Ok(())
 }
 
+pub async fn delete_msg_buffer_ix(
+    admin: Pubkey,
+    whitelist: Pubkey,
+    cpi_caller_auth: Pubkey,
+    pyth_price_acct: Pubkey,
+    msg_buffer_bump: u8,
+) -> anchor_lang::Result<Instruction> {
+    let msg_buffer_pda = Pubkey::create_program_address(
+        &[
+            cpi_caller_auth.as_ref(),
+            b"message".as_ref(),
+            pyth_price_acct.as_ref(),
+            &[msg_buffer_bump],
+        ],
+        &::message_buffer::id(),
+    )
+    .unwrap();
+
+
+    let delete_ix_disc = sighash("global", "delete_buffer");
+
+    let delete_ix = Instruction::new_with_borsh(
+        ::message_buffer::id(),
+        &(
+            delete_ix_disc,
+            cpi_caller_auth,
+            pyth_price_acct,
+            msg_buffer_bump,
+        ),
+        vec![
+            AccountMeta::new_readonly(whitelist, false),
+            AccountMeta::new(admin, true),
+            AccountMeta::new(msg_buffer_pda, false),
+        ],
+    );
+    Ok(delete_ix)
+}
+
+pub async fn send_delete_msg_buffer(
+    banks_client: &mut BanksClient,
+    admin: &Keypair,
+    whitelist: Pubkey,
+    cpi_caller_auth: Pubkey,
+    pyth_price_acct: Pubkey,
+    msg_buffer_bump: u8,
+) -> anchor_lang::Result<()> {
+    let delete_ix = delete_msg_buffer_ix(
+        admin.pubkey(),
+        whitelist,
+        cpi_caller_auth,
+        pyth_price_acct,
+        msg_buffer_bump,
+    )
+    .await
+    .unwrap();
+
+    send_transaction(banks_client, &[delete_ix], admin.pubkey(), vec![admin])
+        .await
+        .unwrap();
+    Ok(())
+}
+
 fn add_price_ix(
     id: u64,
     price: u64,
@@ -398,7 +460,7 @@ type Version = u8;
 type HeaderLen = u16;
 type EndOffsets = [u16; 255];
 
-pub async fn fetch_msg_buffer_account(
+pub async fn fetch_msg_buffer_account_data(
     banks_client: &mut BanksClient,
     msg_buffer: &Pubkey,
 ) -> Vec<u8> {
@@ -542,4 +604,12 @@ pub fn get_mock_pyth_price_account(id: u64) -> Pubkey {
         &::mock_cpi_caller::id(),
     );
     mock_pyth_price_acct
+}
+
+pub fn get_mock_cpi_auth() -> Pubkey {
+    let (mock_cpi_caller_auth, _) = Pubkey::find_program_address(
+        &[b"upd_price_write".as_ref(), ::message_buffer::id().as_ref()],
+        &::mock_cpi_caller::id(),
+    );
+    mock_cpi_caller_auth
 }
