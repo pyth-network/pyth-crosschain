@@ -55,7 +55,6 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 );
                 offset += 4;
 
-                // TODO: It is checked on the caller, do we still need to check it?
                 if (magic != ACCUMULATOR_MAGIC)
                     revert PythErrors.InvalidUpdateData();
 
