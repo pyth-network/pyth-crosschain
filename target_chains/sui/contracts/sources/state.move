@@ -63,8 +63,6 @@ module pyth::state {
     ): State {
         let uid = object::new(ctx);
 
-        field::add(&mut uid, MigrationControl {}, false);
-
         // Create a set that contains all registered data sources and
         // attach it to uid as a dynamic field to minimize the
         // size of State.
