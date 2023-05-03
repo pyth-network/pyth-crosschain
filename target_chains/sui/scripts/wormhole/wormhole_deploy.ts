@@ -21,10 +21,13 @@ import {REGISTRY, NETWORK} from "../registry"
 
 dotenv.config({"path":"~/.env"})
 
-let network = NETWORK.TESTNET
+// Network dependent settings.
+let network = NETWORK.TESTNET // <= NOTE: Update this when changing network
+const walletPrivateKey = process.env.SUI_TESTNET; // <= NOTE: Update this when changing network
+
+// Load registry and provider.
 const registry = REGISTRY[network]
 const provider = new JsonRpcProvider(new Connection({ fullnode: registry["RPC_URL"] }))
-const walletPrivateKey = process.env.SUI_TESTNET;
 
 async function main(){
     if (walletPrivateKey === undefined) {

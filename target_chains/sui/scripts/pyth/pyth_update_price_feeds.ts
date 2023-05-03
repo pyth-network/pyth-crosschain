@@ -19,10 +19,12 @@ dotenv.config({"path":"~/.env"})
 
 import {REGISTRY, NETWORK} from "../registry"
 
-let network = NETWORK.TESTNET
+// Network dependent settings.
+let network = NETWORK.TESTNET // <= NOTE: Update this when changing network
+const walletPrivateKey = process.env.SUI_TESTNET_BASE_64; // <= NOTE: Update this when changing network
+
 const registry = REGISTRY[network]
 const provider = new JsonRpcProvider(new Connection({ fullnode: registry["RPC_URL"] }))
-const walletPrivateKey = process.env.SUI_TESTNET_BASE_64;
 
 const connection = new PriceServiceConnection("https://xc-testnet.pyth.network", {
   priceFeedRequestConfig: {

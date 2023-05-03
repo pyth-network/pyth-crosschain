@@ -21,10 +21,13 @@ import {REGISTRY, NETWORK} from "../registry"
 
 dotenv.config({"path":"~/.env"})
 
-let network = NETWORK.TESTNET
+// Network dependent settings
+let network = NETWORK.TESTNET // <= NOTE: Update this when changing network
+const walletPrivateKey = process.env.SUI_TESTNET; // <= NOTE: Update this when changing network
+
+// Load registry and provider.
 const registry = REGISTRY[network]
 const provider = new JsonRpcProvider(new Connection({ fullnode: registry["RPC_URL"] }))
-const walletPrivateKey = process.env.SUI_TESTNET;
 
 async function main(){
     if (walletPrivateKey === undefined) {
@@ -46,58 +49,48 @@ main()
     WORMHOLE_PACKAGE_ID: string
   ) {
     try {
-      // Publish contracts
+
       const tx = new TransactionBlock();
 
-      // important
       tx.setGasBudget(2500000000);
 
-    //   public fun complete(
-    //     deployer: DeployerCap,
-    //     upgrade_cap: UpgradeCap,
-    //     governance_chain: u16,
-    //     governance_contract: vector<u8>,
-    //     guardian_set_index: u32,
-    //     initial_guardians: vector<vector<u8>>,
-    //     guardian_set_seconds_to_live: u32,
-    //     message_fee: u64,
-    let DEPLOYER_CAP = "0x19f253b07e88634bfd5a3a749f60bfdb83c9748910646803f06b60b76319e7ba";
-    let UPGRADE_CAP = "0x746cbe8c14f9ef163fc4e18c1edc6fc61041e118f7d6e751bcc4162b722636d4"
-    let GOVERNANCE_CHAIN = 1;
-    let GOVERNANCE_CONTRACT = "04";
-    let GUARDIAN_SET_INDEX = 0;
-    let INITIAL_GUARDIANS = ["13947bd48b18e53fdaeee77f3473391ac727c638"]
-    let GUARDIAN_SECONDS_TO_LIVE = "100000000"
-    let MESSAGE_FEE = 0
+      let DEPLOYER_CAP = "0x19f253b07e88634bfd5a3a749f60bfdb83c9748910646803f06b60b76319e7ba";
+      let UPGRADE_CAP = "0x746cbe8c14f9ef163fc4e18c1edc6fc61041e118f7d6e751bcc4162b722636d4"
+      let GOVERNANCE_CHAIN = 1;
+      let GOVERNANCE_CONTRACT = "04";
+      let GUARDIAN_SET_INDEX = 0;
+      let INITIAL_GUARDIANS = ["13947bd48b18e53fdaeee77f3473391ac727c638"]
+      let GUARDIAN_SECONDS_TO_LIVE = "100000000"
+      let MESSAGE_FEE = 0
 
-    tx.moveCall({
-        target: `${WORMHOLE_PACKAGE_ID}::setup::complete`,
-        arguments: [
-            tx.object(DEPLOYER_CAP),
-            tx.object(UPGRADE_CAP),
-            tx.pure(GOVERNANCE_CHAIN),
-            tx.pure(GOVERNANCE_CONTRACT),
-            tx.pure(GUARDIAN_SET_INDEX),
-            tx.pure(INITIAL_GUARDIANS.map(x=>[...Buffer.from(x, "hex")])),
-            tx.pure(GUARDIAN_SECONDS_TO_LIVE),
-            tx.pure(MESSAGE_FEE)
-        ],
-      });
+      tx.moveCall({
+          target: `${WORMHOLE_PACKAGE_ID}::setup::complete`,
+          arguments: [
+              tx.object(DEPLOYER_CAP),
+              tx.object(UPGRADE_CAP),
+              tx.pure(GOVERNANCE_CHAIN),
+              tx.pure(GOVERNANCE_CONTRACT),
+              tx.pure(GUARDIAN_SET_INDEX),
+              tx.pure(INITIAL_GUARDIANS.map(x=>[...Buffer.from(x, "hex")])),
+              tx.pure(GUARDIAN_SECONDS_TO_LIVE),
+              tx.pure(MESSAGE_FEE)
+          ],
+        });
 
-      let res = await signer.signAndExecuteTransactionBlock({
-        transactionBlock: tx,
-        options: {
-          showInput: true,
-          showEffects: true,
-          showEvents: true,
-          showObjectChanges: true,
-          showBalanceChanges: true,
-        },
-      });
-      console.log(res)
+        let res = await signer.signAndExecuteTransactionBlock({
+          transactionBlock: tx,
+          options: {
+            showInput: true,
+            showEffects: true,
+            showEvents: true,
+            showObjectChanges: true,
+            showBalanceChanges: true,
+          },
+        });
+        console.log(res)
 
-      // Return publish transaction info
-      return res;
+        // Return publish transaction info
+        return res;
     } catch (e) {
       throw e;
     } finally {

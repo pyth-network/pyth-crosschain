@@ -17,11 +17,12 @@ import {REGISTRY, NETWORK} from "../registry"
 
 dotenv.config({"path":"~/.env"})
 
-// ctrl+f network and replace with desired from [MAINNET, TESTNET, DEVNET]
-let network = NETWORK.MAINNET
+// Network dependent settings.
+let network = NETWORK.MAINNET // <= NOTE: Update this when changing network
+const walletPrivateKey = process.env.SUI_MAINNET; // <= NOTE: Update this when changing network
+
 const registry = REGISTRY[network]
 const provider = new JsonRpcProvider(new Connection({ fullnode: registry["RPC_URL"] }))
-const walletPrivateKey = process.env.SUI_MAINNET;
 
 async function main(){
     if (walletPrivateKey === undefined) {
@@ -40,7 +41,6 @@ main()
 
  async function publishPackage(
     signer: RawSigner,
-    //network: Network,
     packagePath: string
   ) {
     try {
@@ -62,7 +62,6 @@ main()
       // Publish contracts
       const transactionBlock = new TransactionBlock();
 
-      // important
       transactionBlock.setGasBudget(4000000000);
 
       const [upgradeCap] = transactionBlock.publish({
@@ -87,7 +86,6 @@ main()
         },
       });
 
-      // Update network-specific Move.toml with package ID
       const publishEvents = getPublishedObjectChanges(res);
       if (publishEvents.length !== 1) {
         throw new Error(
@@ -96,7 +94,6 @@ main()
         );
       }
 
-      // Return publish transaction info
       return res;
     } catch (e) {
       throw e;

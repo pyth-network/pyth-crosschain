@@ -16,10 +16,12 @@ dotenv.config({"path":"~/.env"})
 
 import {REGISTRY, NETWORK} from "../registry"
 
-let network = NETWORK.MAINNET
+// Network dependent settings.
+let network = NETWORK.MAINNET // <= NOTE: Update this when changing network
+const walletPrivateKey = process.env.SUI_MAINNET; // <= NOTE: Update this when changing network
+
 const registry = REGISTRY[network]
 const provider = new JsonRpcProvider(new Connection({ fullnode: registry["RPC_URL"] }))
-const walletPrivateKey = process.env.SUI_MAINNET;
 
 const connection = new PriceServiceConnection("https://xc-mainnet.pyth.network", {
   priceFeedRequestConfig: {
@@ -37,7 +39,7 @@ async function main() {
         ),
         provider
     );
-    console.log(wallet.getAddress())
+    console.log("wallet address: ", wallet.getAddress())
 
     // Fetch all price IDs
     let {data} = await axios.get("https://xc-mainnet.pyth.network/api/price_feed_ids")
@@ -81,7 +83,7 @@ async function create_price_feeds(
     console.log("SUI_CLOCK_OBJECT_ID: ", SUI_CLOCK_OBJECT_ID)
 
     for (let vaa of priceFeedVAAs){
-      // create new txn block for creating a price feed
+
       const tx = new TransactionBlock();
 
       let [verified_vaa] = tx.moveCall({
@@ -97,7 +99,7 @@ async function create_price_feeds(
         target: `${PYTH_PACKAGE}::pyth::create_price_feeds`,
         arguments: [
           tx.object(PYTH_STATE),
-          tx.makeMoveVec({ type: `${WORM_PACKAGE}::vaa::VAA`, objects: [verified_vaa] }), // has type vector<VAA>,
+          tx.makeMoveVec({ type: `${WORM_PACKAGE}::vaa::VAA`, objects: [verified_vaa] }),
           tx.object(SUI_CLOCK_OBJECT_ID)
         ],
       });
