@@ -20,7 +20,7 @@ import {
   createTransactionFromMsg,
 } from "@injectivelabs/sdk-ts";
 
-import { DEFAULT_GAS_PRICE } from "@injectivelabs/utils";
+const DEFAULT_GAS_PRICE = 500000000;
 
 type PriceQueryResponse = {
   price_feed: {
@@ -63,7 +63,7 @@ export class InjectivePriceListener extends ChainPriceListener {
         Buffer.from(`{"price_feed":{"id":"${priceId}"}}`).toString("base64")
       );
 
-      const json = Buffer.from(data as string, "base64").toString();
+      const json = Buffer.from(data).toString();
       priceQueryResponse = JSON.parse(json);
     } catch (e) {
       console.error(`Polling on-chain price for ${priceId} failed. Error:`);
@@ -163,8 +163,7 @@ export class InjectivePricePusher implements IPricePusher {
     const sig = await this.wallet.sign(Buffer.from(signBytes));
 
     /** Append Signatures */
-    txRaw.setSignaturesList([sig]);
-
+    txRaw.signatures = [sig];
     const txResponse = await txService.broadcast(txRaw);
 
     return txResponse;
@@ -215,7 +214,7 @@ export class InjectivePricePusher implements IPricePusher {
         ).toString("base64")
       );
 
-      const json = Buffer.from(data as string, "base64").toString();
+      const json = Buffer.from(data).toString();
       updateFeeQueryResponse = JSON.parse(json);
     } catch (e) {
       console.error("Error fetching update fee");

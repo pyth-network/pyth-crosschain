@@ -1,22 +1,15 @@
 use {
-    self::storage::Storage,
+    self::{
+        proof::batch_vaa::PriceInfosWithUpdateData,
+        storage::Storage,
+    },
     anyhow::Result,
-    pyth_sdk::{
-        PriceFeed,
-        PriceIdentifier,
-    },
-    serde::{
-        Deserialize,
-        Serialize,
-    },
-    std::{
-        collections::HashMap,
-        sync::Arc,
-    },
+    pyth_sdk::PriceIdentifier,
+    std::sync::Arc,
 };
 
-mod proof;
-mod storage;
+pub mod proof;
+pub mod storage;
 
 pub type UnixTimestamp = u64;
 
@@ -30,19 +23,8 @@ pub enum Update {
     Vaa(Vec<u8>),
 }
 
-#[derive(Clone, Default, Serialize, Deserialize)]
-pub struct UpdateData {
-    pub batch_vaa: Vec<Vec<u8>>,
-}
-
-// TODO: A price feed might not have update data in all different
-// formats. For example, Batch VAA and Merkle updates will result
-// in different price feeds. We need to figure out how to handle
-// it properly.
-#[derive(Clone, Default)]
 pub struct PriceFeedsWithUpdateData {
-    pub price_feeds: HashMap<PriceIdentifier, PriceFeed>,
-    pub update_data: UpdateData,
+    pub batch_vaa: PriceInfosWithUpdateData,
 }
 
 pub type State = Arc<Box<dyn Storage>>;
@@ -61,8 +43,9 @@ impl Store {
         }
     }
 
-    // TODO: This should return the updated feeds so the subscribers can be notified.
-    pub fn store_update(&self, update: Update) -> Result<()> {
+    /// Stores the update data in the store and returns the price identifiers for which
+    /// price feeds were updated.
+    pub fn store_update(&self, update: Update) -> Result<Vec<PriceIdentifier>> {
         match update {
             Update::Vaa(vaa_bytes) => {
                 proof::batch_vaa::store_vaa_update(self.state.clone(), vaa_bytes)
@@ -75,10 +58,16 @@ impl Store {
         price_ids: Vec<PriceIdentifier>,
         request_time: RequestTime,
     ) -> Result<PriceFeedsWithUpdateData> {
-        proof::batch_vaa::get_price_feeds_with_update_data(
-            self.state.clone(),
-            price_ids,
-            request_time,
-        )
+        Ok(PriceFeedsWithUpdateData {
+            batch_vaa: proof::batch_vaa::get_price_infos_with_update_data(
+                self.state.clone(),
+                price_ids,
+                request_time,
+            )?,
+        })
+    }
+
+    pub fn get_price_feed_ids(&self) -> Vec<PriceIdentifier> {
+        proof::batch_vaa::get_price_feed_ids(self.state.clone())
     }
 }

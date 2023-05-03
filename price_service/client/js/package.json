@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/price-service-client",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Pyth price service client",
   "author": {
     "name": "Pyth Data Association"
@@ -50,8 +50,8 @@
   "dependencies": {
     "@pythnetwork/price-service-sdk": "*",
     "@types/ws": "^8.5.3",
-    "axios": "^1.2.5",
-    "axios-retry": "^3.4.0",
+    "axios": "=1.1.0",
+    "axios-retry": "~3.3.0",
     "isomorphic-ws": "^4.0.1",
     "ts-log": "^2.2.4",
     "ws": "^8.6.0"

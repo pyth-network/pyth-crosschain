@@ -441,7 +441,7 @@ module pyth::pyth_tests{
         vector::destroy_empty(verified_vaas_reversed);
         verified_vaas
     }
-
+    
     #[test_only]
     /// Init Wormhole core bridge state.
     /// Init Pyth state.
@@ -1058,3 +1058,6 @@ module pyth::pyth_tests{
         test_scenario::end(scenario);
     }
 }
+
+// TODO - pyth tests
+// https://github.com/pyth-network/pyth-crosschain/blob/main/target_chains/aptos/contracts/sources/pyth.move#L384

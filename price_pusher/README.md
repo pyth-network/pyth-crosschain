@@ -46,9 +46,12 @@ You can get the list of available price feeds from
 To run the price pusher, please run the following commands, replacing the command line arguments as necessary:
 
 ```sh
-# Only run it the first time to build the code
+# Please run the two following commands once from the root of the repo to build the code.
 npm install
-npx lerna run build
+npx lerna run build --scope @pythnetwork/price-pusher --include-dependencies
+
+# Navigate to the price_pusher folder
+cd price_pusher
 
 # For EVM
 npm run start -- evm --endpoint wss://example-rpc.com \

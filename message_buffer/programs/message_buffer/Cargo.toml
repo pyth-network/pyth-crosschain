@@ -1,0 +1,24 @@
+[package]
+name = "message_buffer"
+version = "0.1.0"
+description = "Message Buffer Pythnet Program"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "message_buffer"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = { version = "0.27.0" }
+# needed for the new #[account(zero_copy)] in anchor 0.27.0
+bytemuck = { version = "1.4.0", features = ["derive", "min_const_generics"]}
+
+[dev-dependencies]
+byteorder = "1.4.3"

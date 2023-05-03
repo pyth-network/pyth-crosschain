@@ -49,6 +49,14 @@ Deployed Code ID:  11
 
 ### Instantiating new contract
 
+Pyth contract needs the Wormhole core contract deployed on the same chain. Some chains won't have it deployed.
+In that case, you have to deploy wormhole contract yourself. You can build the contract using the scripts given in `wormhole-stub`.
+Run and you will get the compiled contract code in `wormhole-stub/artifacts`
+
+```sh
+./build.sh
+```
+
 This command will upload the code and instantiates a new Pyth contract with the given code id:
 
 ```sh

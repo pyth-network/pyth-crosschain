@@ -1,0 +1,27 @@
+# Run with:
+# docker build -f Dockerfile.wormhole -o artifacts .
+
+# Source: https://github.com/CosmWasm/rust-optimizer#notice
+# Arm images are released to ease development and testing on Mac M1 machines.
+# For release / production use, only contracts built with the Intel optimizers must be used.
+# In order to test on mac m1 uncomment the below line
+# FROM cosmwasm/workspace-optimizer-arm64:0.12.11@sha256:a00c01c2fdae8c74d6a9db95fa7b0cbb8e81101ce23a78487012e363d632fee9 AS builder
+# and comment this one
+FROM cosmwasm/workspace-optimizer:0.12.11@sha256:b6b0b1d5ed76dafd0ec0d3812a1e7a275316cf862fd6d0a918f14d71c4cb187f AS builder
+
+WORKDIR /tmp/wormhole-repo
+
+ARG WORMHOLE_REV=2.14.9
+ADD https://github.com/certusone/wormhole/archive/refs/tags/v${WORMHOLE_REV}.tar.gz .
+RUN tar -xvf v${WORMHOLE_REV}.tar.gz
+RUN mv wormhole-${WORMHOLE_REV}/cosmwasm/Cargo.lock /code/
+RUN mv wormhole-${WORMHOLE_REV}/cosmwasm/Cargo.toml /code/
+RUN mv wormhole-${WORMHOLE_REV}/cosmwasm/contracts /code/contracts
+RUN mv wormhole-${WORMHOLE_REV}/cosmwasm/packages /code/packages
+RUN mv wormhole-${WORMHOLE_REV}/sdk /sdk
+
+WORKDIR /code
+RUN --mount=type=cache,target=/code/target,id=cosmwasm_wormhole_target --mount=type=cache,target=/usr/local/cargo/registry optimize_workspace.sh
+
+FROM scratch AS export-stage
+COPY --from=builder /code/artifacts/ /

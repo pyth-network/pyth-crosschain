@@ -1,18 +1,25 @@
 pub mod error;
 pub mod state;
 
+#[cfg(test)]
+mod tests;
+
 use {
-    wormhole::Chain::{
-        self,
-        Solana,
-        Pythnet,
+    crate::error::ReceiverError::*,
+    anchor_lang::prelude::*,
+    hex::ToHex,
+    pyth_wormhole_attester_sdk::BatchPriceAttestation,
+    solana_program::{
+        keccak,
+        secp256k1_recover::secp256k1_recover,
     },
     state::AnchorVaa,
-    anchor_lang::prelude::*,
-    pyth_wormhole_attester_sdk::BatchPriceAttestation,
+    wormhole::Chain::{
+        self,
+        Pythnet,
+        Solana,
+    },
 };
-
-use crate::error::ReceiverError::*;
 
 declare_id!("pythKkWXoywbvTQVcWrNDz5ENvWteF7tem7xzW52NBK");
 
@@ -24,9 +31,12 @@ pub mod pyth_solana_receiver {
         let posted_vaa = &ctx.accounts.posted_vaa.payload;
         let batch: BatchPriceAttestation =
             BatchPriceAttestation::deserialize(posted_vaa.as_slice())
-            .map_err(|_| DeserializeVAAFailed)?;
+                .map_err(|_| DeserializeVAAFailed)?;
 
-        msg!("There are {} attestations in this batch.", batch.price_attestations.len());
+        msg!(
+            "There are {} attestations in this batch.",
+            batch.price_attestations.len()
+        );
 
         for attestation in batch.price_attestations {
             msg!("product_id: {}", attestation.product_id);
@@ -42,56 +52,59 @@ pub mod pyth_solana_receiver {
 
         Ok(())
     }
+
+    pub fn update(
+        _ctx: Context<Update>,
+        data: Vec<u8>,
+        recovery_id: u8,
+        signature: [u8; 64],
+    ) -> Result<()> {
+        // This costs about 10k compute units
+        let message_hash = {
+            let mut hasher = keccak::Hasher::default();
+            hasher.hash(&data);
+            hasher.result()
+        };
+
+        // This costs about 25k compute units
+        let recovered_pubkey = secp256k1_recover(&message_hash.0, recovery_id, &signature)
+            .map_err(|_| ProgramError::InvalidArgument)?;
+
+        msg!(
+            "Recovered key: {}",
+            recovered_pubkey.0.encode_hex::<String>()
+        );
+
+        // TODO: Check the pubkey is an expected value.
+        // Here we are checking the secp256k1 pubkey against a known authorized pubkey.
+        //
+        // if recovered_pubkey.0 != AUTHORIZED_PUBLIC_KEY {
+        //  return Err(ProgramError::InvalidArgument);
+        // }
+
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
 pub struct DecodePostedVaa<'info> {
     #[account(mut)]
-    pub payer:          Signer<'info>,
+    pub payer:      Signer<'info>,
     #[account(constraint = (Chain::from(posted_vaa.emitter_chain) == Solana || Chain::from(posted_vaa.emitter_chain) == Pythnet) @ EmitterChainNotSolanaOrPythnet, constraint = (&posted_vaa.magic == b"vaa" || &posted_vaa.magic == b"msg" || &posted_vaa.magic == b"msu") @PostedVaaHeaderWrongMagicNumber)]
-    pub posted_vaa:     Account<'info, AnchorVaa>,
+    pub posted_vaa: Account<'info, AnchorVaa>,
 }
 
 impl crate::accounts::DecodePostedVaa {
-    pub fn populate(
-        payer: &Pubkey,
-        posted_vaa: &Pubkey,
-    ) -> Self {
+    pub fn populate(payer: &Pubkey, posted_vaa: &Pubkey) -> Self {
         crate::accounts::DecodePostedVaa {
-            payer: *payer,
+            payer:      *payer,
             posted_vaa: *posted_vaa,
         }
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use pyth_sdk::Identifier;
-    use pyth_wormhole_attester_sdk::PriceStatus;
-    use pyth_wormhole_attester_sdk::PriceAttestation;
-
-    #[test]
-    fn mock_attestation() {
-        // TODO: create a VAA with this attestation as payload
-        // and then invoke DecodePostedVaa
-
-        let _attestation = PriceAttestation {
-            product_id:                 Identifier::new([18u8; 32]),
-            price_id:                   Identifier::new([150u8; 32]),
-            price:                      0x2bad2feed7,
-            conf:                       101,
-            ema_price:                  -42,
-            ema_conf:                   42,
-            expo:                       -3,
-            status:                     PriceStatus::Trading,
-            num_publishers:             123212u32,
-            max_num_publishers:         321232u32,
-            attestation_time:           (0xdeadbeeffadeu64) as i64,
-            publish_time:               0xdadebeefi64,
-            prev_publish_time:          0xdeadbabei64,
-            prev_price:                 0xdeadfacebeefi64,
-            prev_conf:                  0xbadbadbeefu64,
-            last_attested_publish_time: (0xdeadbeeffadedeafu64) as i64,
-        };
-    }
+#[derive(Accounts)]
+pub struct Update<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2
 
 /// This module implements handling a governance VAA to enact upgrading the
-/// Token Bridge contract to a new build. The procedure to upgrade this contract
+/// Pyth contract to a new build. The procedure to upgrade this contract
 /// requires a Programmable Transaction, which includes the following procedure:
 /// 1.  Load new build.
 /// 2.  Authorize upgrade.
