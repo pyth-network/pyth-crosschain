@@ -78,7 +78,7 @@ let fundBalance = 100 * anchor.web3.LAMPORTS_PER_SOL;
 const discriminator = BorshAccountsCoder.accountDiscriminator("MessageBuffer");
 const messageBufferDiscriminator = bs58.encode(discriminator);
 
-describe("accumulator_updater", () => {
+describe("message_buffer", () => {
   // Configure the client to use the local cluster.
   let provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
