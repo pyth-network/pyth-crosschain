@@ -91,7 +91,7 @@ const pythConfig: PythConfig = {
 };
 
 async function run() {
-  const STORAGE_DIR = "./testnet";
+  const STORAGE_DIR = "./testnet/instantiate-pyth";
 
   // download wasm code from github
   let contractBytesDict = await getContractBytesDict(
