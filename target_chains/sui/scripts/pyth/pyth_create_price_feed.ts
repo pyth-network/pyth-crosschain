@@ -71,7 +71,7 @@ async function create_price_feeds(
       target: `${PYTH_PACKAGE}::pyth::create_price_feeds`,
       arguments: [
         tx.object(PYTH_STATE),
-        tx.makeMoveVec({ type: `${WORM_STATE}::vaa::VAA`, objects: [verified_vaa] }), // has type vector<VAA>,
+        tx.makeMoveVec({ type: `${WORM_PACKAGE}::vaa::VAA`, objects: [verified_vaa] }), // has type vector<VAA>,
         tx.object(SUI_CLOCK_OBJECT_ID)
       ],
     });
