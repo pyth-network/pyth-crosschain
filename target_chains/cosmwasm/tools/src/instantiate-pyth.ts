@@ -11,7 +11,6 @@ import {
 } from "./chains-manager/chain-executor";
 import { Pipeline } from "./pipeline";
 import { rimrafSync } from "rimraf";
-import { CHAINS } from "@pythnetwork/xc-governance-sdk";
 import download from "download";
 import AdmZip from "adm-zip";
 import path from "path";
