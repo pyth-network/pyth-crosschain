@@ -170,6 +170,7 @@ class PipelineStore {
   // for permanent storage
   commit() {
     mkdirSync(path.dirname(this.filePath), { recursive: true });
-    writeFileSync(this.filePath, JSON.stringify(this.store, null, 4));
+    // The "\n" at the end of the line is to satisfy the formatting rules
+    writeFileSync(this.filePath, JSON.stringify(this.store, null, 2) + "\n");
   }
 }
