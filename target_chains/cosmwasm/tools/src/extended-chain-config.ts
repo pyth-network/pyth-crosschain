@@ -45,4 +45,10 @@ export const ExtendedChainsConfigTestnet: Record<
     wormholeChainId: CHAINS.neutron,
     ...ChainsConfigTestnet[ChainIdTestnet.NEUTRON_PION_1],
   },
+  [ChainIdTestnet.JUNO]: {
+    feeDenom: "ujunox",
+    pythArtifactZipName: "cosmwasm",
+    wormholeChainId: CHAINS.juno,
+    ...ChainsConfigTestnet[ChainIdTestnet.JUNO],
+  },
 };

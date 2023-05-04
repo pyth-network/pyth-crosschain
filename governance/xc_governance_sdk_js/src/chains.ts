@@ -17,7 +17,7 @@ export const RECEIVER_CHAINS = {
   sei: 60013,
   osmosis: 60014,
   neutron: 60015,
-  // juno: 60016
+  juno: 60016,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

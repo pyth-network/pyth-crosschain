@@ -18,7 +18,7 @@ export enum ChainIdTestnet {
   OSMOSIS_5 = "osmosis_5",
   SEI_ATLANTIC_2 = "sei_atlantic_2",
   NEUTRON_PION_1 = "neutron_pion_1",
-  // JUNO = "juno",
+  JUNO = "juno",
 }
 
 export const ChainIdsTestnet = Object.values(ChainIdTestnet);
@@ -97,14 +97,14 @@ export const ChainsConfigTestnet: Record<ChainIdTestnet, ChainConfig> = {
     prefix: "neutron",
     gasPrice: "0.025untrn",
   },
-  // [ChainIdTestnet.JUNO]: {
-  //   chainId: ChainIdTestnet.JUNO,
-  //   chainType: ChainType.COSMWASM,
-  //   executorEndpoint: "https://rpc.uni.junonetwork.io/",
-  //   querierEndpoint: "https://rpc.uni.junonetwork.io/",
-  //   prefix: "juno",
-  //   gasPrice: "0.025ujunox",
-  // },
+  [ChainIdTestnet.JUNO]: {
+    chainId: ChainIdTestnet.JUNO,
+    chainType: ChainType.COSMWASM,
+    executorEndpoint: "https://rpc.uni.junonetwork.io/",
+    querierEndpoint: "https://rpc.uni.junonetwork.io/",
+    prefix: "juno",
+    gasPrice: "0.025ujunox",
+  },
 };
 
 /**
