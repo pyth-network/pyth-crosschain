@@ -1,21 +1,5 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { createInterface } from "readline";
 import path from "path";
-
-// This function lets you write a question to the terminal
-// And returns the response of the user
-function readLineAsync(msg: string) {
-  const readline = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    readline.question(msg, (userRes) => {
-      resolve(userRes);
-    });
-  });
-}
 
 // The stage executor is where the stage functionality is defined
 // Optionally it can take in a method `getResultOfPastStage` as a parameter
