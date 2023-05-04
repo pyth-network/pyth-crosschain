@@ -18,5 +18,23 @@
     "result": {
       "txHash": "B9188160725B5282D11DB83F1AC28F88879A4C03AF7B6F178EA44BD07BB76805"
     }
+  },
+  "GUARDIAN_SET_UPGRADE_1_VAA": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "6ACF2A42CEE311F5D2C980AE8CD90D0DC92330EDA940E49BEDBB7C9A8FE2802F"
+    }
+  },
+  "GUARDIAN_SET_UPGRADE_2_VAA": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "621914F52BC5BED6BF5F4D6966B8FDF7BDA4E552D1A69AA4BE78FA0C7C5500AC"
+    }
+  },
+  "GUARDIAN_SET_UPGRADE_3_VAA": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "4ED3C3AF3223030E2BBB9068767C1E8C60B7D7E5895BDE586F0E07CAA649A05C"
+    }
   }
 }
