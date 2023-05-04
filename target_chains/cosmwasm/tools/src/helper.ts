@@ -32,3 +32,7 @@ export function getWormholeContractAddress(
 
   return wormholeContractAddress;
 }
+
+export function hexToBase64(hex: string): string {
+  return Buffer.from(hex, "hex").toString("base64");
+}

@@ -10,7 +10,7 @@ import {
   StoreCodeResponse,
 } from "./chains-manager/chain-executor";
 import { Pipeline } from "./pipeline";
-import { getWormholeFileName } from "./helper";
+import { getWormholeFileName, hexToBase64 } from "./helper";
 import { ExtendedChainsConfigTestnet } from "./extended-chain-config";
 const argv = yargs(hideBin(process.argv))
   .usage("USAGE: npm run wormhole-stub -- <command>")
@@ -115,6 +115,7 @@ async function run() {
         executor: (getResultOfPastStage) => {
           const instantiateContractRes: InstantiateContractResponse =
             getResultOfPastStage("instantiate-contract");
+
           return chainExecutor.executeContract({
             contractAddr: instantiateContractRes.contractAddr,
             msg: {
