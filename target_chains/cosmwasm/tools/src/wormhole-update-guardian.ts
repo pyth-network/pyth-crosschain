@@ -15,7 +15,8 @@ const argv = yargs(hideBin(process.argv))
   })
   .option("contract-version", {
     type: "string",
-    demandOption: `Please input the contract-version of the deployed wormhole contracts.`,
+    desc: `Please input the contract-version of the deployed wormhole contracts.`,
+    default: "2.14.9",
   })
   .option("chain-id", {
     type: "string",
