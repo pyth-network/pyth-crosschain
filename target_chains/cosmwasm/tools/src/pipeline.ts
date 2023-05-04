@@ -113,6 +113,8 @@ export class Pipeline {
       // This method is only going to process stage if all the past ones have been fulfilled
       let fulfilled = await this.processStage(stage);
 
+      console.log(`${this.id}: Processed stage with id: ${stage.id}`);
+
       // store the whole processing locally after every stage
       this.pipelineStore.commit();
       if (fulfilled === false) break;
