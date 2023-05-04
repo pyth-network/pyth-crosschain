@@ -1,32 +1,37 @@
-use std::fmt::Debug;
+use {
+    serde::{
+        Deserialize,
+        Serialize,
+    },
+    std::fmt::Debug,
+};
 
 pub mod keccak256;
+pub mod keccak256_160;
 pub mod prime;
 
-/// Hasher is a trait used to provide a hashing algorithm for the library.
-pub trait Hasher: Clone + Default + Debug + serde::Serialize {
-    /// This type is used as a hash type in the library.
-    /// It is recommended to use fixed size u8 array as a hash type. For example,
-    /// for sha256 the type would be `[u8; 32]`, representing 32 bytes,
-    /// which is the size of the sha256 digest. Also, fixed sized arrays of `u8`
-    /// by default satisfy all trait bounds required by this type.
-    ///
-    /// # Trait bounds
-    /// `Copy` is required as the hash needs to be copied to be concatenated/propagated
-    /// when constructing nodes.
-    /// `PartialEq` is required to compare equality when verifying proof
-    /// `Into<Vec<u8>>` is required to be able to serialize proof
-    /// `TryFrom<Vec<u8>>` is required to parse hashes from a serialized proof
-    /// `Default` is required to be able to create a default hash
-    // TODO: use Digest trait from digest crate?
+/// We provide `Hasher` as a small hashing abstraction.
+///
+/// This trait allows us to use a more abstract idea of hashing than the `Digest` trait from the
+/// `digest` create provides. In particular, if we want to use none cryptographic hashes or hashes
+/// that fit the mathematical definition of a hash, we can do this with this far more general
+/// abstraction.
+pub trait Hasher
+where
+    Self: Clone,
+    Self: Debug,
+    Self: Default,
+    Self: Serialize,
+{
     type Hash: Copy
-        + PartialEq
+        + AsRef<[u8]>
+        + Debug
         + Default
         + Eq
-        + Default
-        + Debug
-        + AsRef<[u8]>
+        + PartialOrd
+        + PartialEq
         + serde::Serialize
-        + for<'a> serde::de::Deserialize<'a>;
-    fn hashv<T: AsRef<[u8]>>(data: &[T]) -> Self::Hash;
+        + for<'a> Deserialize<'a>;
+
+    fn hashv(data: &[impl AsRef<[u8]>]) -> Self::Hash;
 }
