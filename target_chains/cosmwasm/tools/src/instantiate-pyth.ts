@@ -1,5 +1,4 @@
 import {
-  ChainIdTestnet,
   ChainIdsTestnet,
   createExecutorForChain,
 } from "./chains-manager/chains";
@@ -16,6 +15,11 @@ import { CHAINS } from "@pythnetwork/xc-governance-sdk";
 import download from "download";
 import AdmZip from "adm-zip";
 import path from "path";
+import {
+  WORMHOLE_CONTRACT_VERSION,
+  getWormholeContractAddress,
+} from "./helper";
+import { ExtendedChainsConfigTestnet } from "./extended-chain-config";
 
 const argv = yargs(hideBin(process.argv))
   .usage("USAGE: npm run wormhole-stub -- <command>")
@@ -40,63 +44,13 @@ const argv = yargs(hideBin(process.argv))
   .wrap(yargs.terminalWidth())
   .parseSync();
 
-// IMPORTANT: IN ORDER TO RUN THIS SCRIPT FOR CHAINS
-// WE NEED SOME METADATA
-// HERE IS WHERE WE WILL BE ADDING THAT
-
-// The type definition here make sure that the chain is added to xc_governance_sdk_js before this script was executed
-type PythConfig = Record<
-  ChainIdTestnet,
-  {
-    feeDenom: string;
-    chainId: number;
-    wormholeContract: string;
-    // default name used will be cosmwasm
-    artifactsZipFileName?: string;
-  }
->;
-const pythConfig: PythConfig = {
-  [ChainIdTestnet.INJECTIVE]: {
-    feeDenom: "inj",
-    chainId: CHAINS.injective,
-    wormholeContract: "inj1ks8v2tvx2vsqxx7sgckl9h7rxga60tuvgezpps",
-    artifactsZipFileName: "injective",
-  },
-  [ChainIdTestnet.OSMOSIS_4]: {
-    feeDenom: "uosmo",
-    chainId: CHAINS.osmosis,
-    wormholeContract:
-      "osmo18njur8dzzq6lm5dd6n2td94jgmnywt0j9es2ymxpa0zyy7jrwwuq4v8arc",
-    artifactsZipFileName: "osmosis",
-  },
-  [ChainIdTestnet.OSMOSIS_5]: {
-    feeDenom: "uosmo",
-    chainId: CHAINS.osmosis,
-    wormholeContract:
-      "osmo1224ksv5ckfcuz2geeqfpdu2u3uf706y5fx8frtgz6egmgy0hkxxqtgad95",
-    artifactsZipFileName: "osmosis",
-  },
-  [ChainIdTestnet.SEI_ATLANTIC_2]: {
-    feeDenom: "usei",
-    chainId: CHAINS.sei,
-    wormholeContract:
-      "sei1tu7w5lxsckpa4ahd4umra0k02zyd7eq79j7zxk8e3ds8evlejywqrtsl6a",
-  },
-  [ChainIdTestnet.NEUTRON_PION_1]: {
-    feeDenom: "untrn",
-    chainId: CHAINS.neutron,
-    wormholeContract:
-      "neutron17xlvf3f82tklvzpveam56n96520pdrxfgpralyhf3nq7f33uvgzqrgegc7",
-  },
-};
-
 async function run() {
   const STORAGE_DIR = "./testnet/instantiate-pyth";
 
   // download wasm code from github
   let contractBytesDict = await getContractBytesDict(
-    Object.values(pythConfig).map(({ artifactsZipFileName }) =>
-      artifactsZipFileName ? artifactsZipFileName : "cosmwasm"
+    Object.values(ExtendedChainsConfigTestnet).map(
+      ({ pythArtifactZipName }) => pythArtifactZipName
     ),
     argv.contractVersion
   );
@@ -106,7 +60,10 @@ async function run() {
     let pipelineStoreFilePath = `${STORAGE_DIR}/${chainId}-${argv.contractVersion}.json`;
     const pipeline = new Pipeline(chainId, pipelineStoreFilePath);
 
-    const chainExecutor = createExecutorForChain(chainId, argv.mnemonic);
+    const chainExecutor = createExecutorForChain(
+      ExtendedChainsConfigTestnet[chainId],
+      argv.mnemonic
+    );
 
     // add stages
     // 1 deploy artifact
@@ -116,7 +73,7 @@ async function run() {
         return chainExecutor.storeCode({
           contractBytes:
             contractBytesDict[
-              pythConfig[chainId].artifactsZipFileName ?? "cosmwasm"
+              ExtendedChainsConfigTestnet[chainId].pythArtifactZipName
             ],
         });
       },
@@ -131,7 +88,16 @@ async function run() {
 
         return chainExecutor.instantiateContract({
           codeId: storeCodeRes.codeId,
-          instMsg: getPythConfig(pythConfig[chainId]),
+          instMsg: getPythConfig({
+            feeDenom: ExtendedChainsConfigTestnet[chainId].feeDenom,
+            wormholeChainId:
+              ExtendedChainsConfigTestnet[chainId].wormholeChainId,
+            wormholeContract: getWormholeContractAddress(
+              chainId,
+              WORMHOLE_CONTRACT_VERSION,
+              false
+            ),
+          }),
           label: "wormhole",
         });
       },
@@ -158,17 +124,17 @@ async function run() {
 function getPythConfig({
   feeDenom,
   wormholeContract,
-  chainId,
+  wormholeChainId,
 }: {
   feeDenom: string;
   wormholeContract: string;
-  chainId: number;
+  wormholeChainId: number;
 }) {
   return {
     wormhole_contract: wormholeContract,
     governance_source_index: 0,
     governance_sequence_number: 0,
-    chain_id: chainId,
+    chain_id: wormholeChainId,
     valid_time_period_secs: 60,
     fee: {
       amount: "1",

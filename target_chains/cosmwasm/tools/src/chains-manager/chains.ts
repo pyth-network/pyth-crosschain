@@ -18,6 +18,7 @@ export enum ChainIdTestnet {
   OSMOSIS_5 = "osmosis_5",
   SEI_ATLANTIC_2 = "sei_atlantic_2",
   NEUTRON_PION_1 = "neutron_pion_1",
+  // JUNO = "juno",
 }
 
 export const ChainIdsTestnet = Object.values(ChainIdTestnet);
@@ -96,16 +97,23 @@ export const ChainsConfigTestnet: Record<ChainIdTestnet, ChainConfig> = {
     prefix: "neutron",
     gasPrice: "0.025untrn",
   },
+  // [ChainIdTestnet.JUNO]: {
+  //   chainId: ChainIdTestnet.JUNO,
+  //   chainType: ChainType.COSMWASM,
+  //   executorEndpoint: "https://rpc.uni.junonetwork.io/",
+  //   querierEndpoint: "https://rpc.uni.junonetwork.io/",
+  //   prefix: "juno",
+  //   gasPrice: "0.025ujunox",
+  // },
 };
 
 /**
- * This method will return an executor for that corresponding chainType for given chainId.
+ * This method will return an executor for give chainConfig.
  */
-export function createExecutorForChain(
-  chainId: ChainIdTestnet,
+export function createExecutorForChain<T extends ChainConfig>(
+  chainConfig: T,
   mnemonic: string
 ): ChainExecutor {
-  const chainConfig = ChainsConfigTestnet[chainId];
   const chainType = chainConfig.chainType;
 
   if (chainType === ChainType.INJECTIVE) {

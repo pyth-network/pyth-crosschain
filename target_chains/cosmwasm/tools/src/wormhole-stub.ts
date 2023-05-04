@@ -1,5 +1,4 @@
 import {
-  ChainIdTestnet,
   ChainIdsTestnet,
   createExecutorForChain,
 } from "./chains-manager/chains";
@@ -11,7 +10,8 @@ import {
   StoreCodeResponse,
 } from "./chains-manager/chain-executor";
 import { Pipeline } from "./pipeline";
-import { CHAINS } from "@pythnetwork/xc-governance-sdk";
+import { getWormholeFileName } from "./helper";
+import { ExtendedChainsConfigTestnet } from "./extended-chain-config";
 const argv = yargs(hideBin(process.argv))
   .usage("USAGE: npm run wormhole-stub -- <command>")
   .option("mnemonic", {
@@ -31,43 +31,12 @@ const argv = yargs(hideBin(process.argv))
   .option("mainnet", {
     type: "boolean",
     desc: "Execute this script for mainnet networks. THIS WILL BE ADDED IN FUTURE",
+    default: false,
   })
   .help()
   .alias("help", "h")
   .wrap(yargs.terminalWidth())
   .parseSync();
-
-// IMPORTANT: IN ORDER TO RUN THIS SCRIPT FOR CHAINS
-// WE NEED SOME METADATA
-// HERE IS WHERE WE WILL BE ADDING THAT
-
-// The type definition here make sure that the chain is added to xc_governance_sdk_js before this script was executed
-type WormholeConfig = Record<
-  ChainIdTestnet,
-  { feeDenom: string; chainId: number }
->;
-const wormholeConfig: WormholeConfig = {
-  [ChainIdTestnet.INJECTIVE]: {
-    feeDenom: "inj",
-    chainId: CHAINS.injective,
-  },
-  [ChainIdTestnet.OSMOSIS_4]: {
-    feeDenom: "uosmo",
-    chainId: CHAINS.osmosis,
-  },
-  [ChainIdTestnet.OSMOSIS_5]: {
-    feeDenom: "uosmo",
-    chainId: CHAINS.osmosis,
-  },
-  [ChainIdTestnet.SEI_ATLANTIC_2]: {
-    feeDenom: "usei",
-    chainId: CHAINS.sei,
-  },
-  [ChainIdTestnet.NEUTRON_PION_1]: {
-    feeDenom: "untrn",
-    chainId: CHAINS.neutron,
-  },
-};
 
 const VAA_UPGRADES = {
   GUARDIAN_SET_UPGRADE_1_VAA:
@@ -79,7 +48,6 @@ const VAA_UPGRADES = {
 };
 
 async function run() {
-  const STORAGE_DIR = "../wormhole-stub/testnet";
   let wasmFilePath = `../wormhole-stub/artifacts/wormhole-${argv.contractVersion}.wasm`;
 
   // get the wormhole code
@@ -87,10 +55,17 @@ async function run() {
 
   let chainIds = argv.chainId === undefined ? ChainIdsTestnet : [argv.chainId];
   for (let chainId of chainIds) {
-    let pipelineStoreFilePath = `${STORAGE_DIR}/${chainId}-${argv.contractVersion}.json`;
+    let pipelineStoreFilePath = getWormholeFileName(
+      chainId,
+      argv.contractVersion,
+      argv.mainnet
+    );
     const pipeline = new Pipeline(chainId, pipelineStoreFilePath);
 
-    const chainExecutor = createExecutorForChain(chainId, argv.mnemonic);
+    const chainExecutor = createExecutorForChain(
+      ExtendedChainsConfigTestnet[chainId],
+      argv.mnemonic
+    );
 
     // add stages
     // 1 deploy artifact
@@ -113,7 +88,7 @@ async function run() {
 
         return chainExecutor.instantiateContract({
           codeId: storeCodeRes.codeId,
-          instMsg: getWormholeConfig(wormholeConfig[chainId]),
+          instMsg: getWormholeConfig(ExtendedChainsConfigTestnet[chainId]),
           label: "wormhole",
         });
       },
@@ -155,15 +130,13 @@ async function run() {
   }
 }
 
-function getWormholeConfig({
-  feeDenom,
-  chainId,
-}: {
+interface ReqWormholeConfig {
   feeDenom: string;
-  chainId: number;
-}) {
+  wormholeChainId: number;
+}
+function getWormholeConfig({ feeDenom, wormholeChainId }: ReqWormholeConfig) {
   return {
-    chain_id: chainId,
+    chain_id: wormholeChainId,
     fee_denom: feeDenom,
     gov_chain: 1,
     gov_address: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ=",
