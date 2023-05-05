@@ -12,18 +12,18 @@ import { REGISTRY, NETWORK, INITIAL_DATA_SOURCES } from "../registry";
 dotenv.config({ path: "~/.env" });
 
 // Network dependent settings.
-let network = NETWORK.MAINNET; // <= NOTE: Update this when changing network
-let walletPrivateKey = process.env.SUI_MAINNET; // <= NOTE: Update this when changing network
+let network = NETWORK.TESTNET; // <= NOTE: Update this when changing network
+let walletPrivateKey = process.env.SUI_TESTNET; // <= NOTE: Update this when changing network
 
 const registry = REGISTRY[network];
-const initial_data_sources = INITIAL_DATA_SOURCES[network];
+const initial_data_sources = INITIAL_DATA_SOURCES[network]; //TODO - SET THIS CORRECTLY
 const provider = new JsonRpcProvider(
   new Connection({ fullnode: registry["RPC_URL"] })
 );
 
 async function main() {
   if (walletPrivateKey === undefined) {
-    throw new Error("SUI_MAINNET unset in environment");
+    throw new Error("Wallet key unset in environment");
   }
 
   const wallet = new RawSigner(
@@ -35,9 +35,9 @@ async function main() {
 
   // NOTE: Set these before calling init_pyth
   const upgradeCap =
-    "0x92d51150b762fd694877b23ecaba79a3fc1032bc24914d145a393b62e1e61894";
+    "0xa8ec5206fe1306433bfa7925d97f9eba8394442cd08888d965341185119656b8";
   const deployerCap =
-    "0x645ba70c9087d54a3e5e6abed0d506516dddb71d987b0ee503593de2677caefe";
+    "0x4d294a17405992e04e220991bdb6768b7f261f188e711a962cd2a8d45fee2a8d";
 
   init_pyth(wallet, PYTH_PACKAGE, deployerCap, upgradeCap);
 }
@@ -88,7 +88,7 @@ async function init_pyth(
     ],
   });
 
-  tx.setGasBudget(1_000_000_000n);
+  tx.setGasBudget(2_000_000_000n);
 
   let result = await signer.signAndExecuteTransactionBlock({
     transactionBlock: tx,

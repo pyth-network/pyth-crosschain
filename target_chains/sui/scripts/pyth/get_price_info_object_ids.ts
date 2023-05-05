@@ -1,13 +1,13 @@
-import { Connection, JsonRpcProvider, JsonRpcClient } from "@mysten/sui.js";
+import { Connection, JsonRpcProvider } from "@mysten/sui.js";
 
 const provider = new JsonRpcProvider(
-  new Connection({ fullnode: "https://fullnode.mainnet.sui.io:443" })
+  new Connection({ fullnode: "https://fullnode.testnet.sui.io:443" }) // <= NOTE: Update this when changing network
 );
+const objectId =
+"0xb2989cd62ec2c2d031f3fbb7cefc0784e0325e73edd5c252019e931ec98bf065"; // <= NOTE: Update this when changing network
 
 async function main() {
   // Table of Sui Pyth PriceIdentifier => Price Info Object IDs
-  const objectId =
-    "0xc4a7182984a662b159a18a8754dbc15e11048b42494b2c4ddcf1ec3bcc7004fe";
 
   let nextCursor;
   let hasNextPage = false;
@@ -26,10 +26,9 @@ async function main() {
     );
 
     //@ts-ignore
-    let key_value_pairs = promises.map((x) => [
-      Buffer.from(x.data.content.fields.name.fields.bytes).toString("hex"),
-      x.data.content.fields.value,
-    ]);
+    let get_key = x => Buffer.from(x.data.content.fields.name.fields.bytes).toString("hex")
+    let get_value = x => x.data.content.fields.value
+    let key_value_pairs = promises.map((x) => [get_key(x), get_value(x)]);
     console.log("key value pairs: ", key_value_pairs);
     for (let x of key_value_pairs) {
       console.log("entry in key value pairs: ", x);

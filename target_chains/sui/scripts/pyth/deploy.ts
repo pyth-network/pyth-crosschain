@@ -18,8 +18,8 @@ import { REGISTRY, NETWORK } from "../registry";
 dotenv.config({ path: "~/.env" });
 
 // Network dependent settings.
-let network = NETWORK.MAINNET; // <= NOTE: Update this when changing network
-const walletPrivateKey = process.env.SUI_MAINNET; // <= NOTE: Update this when changing network
+let network = NETWORK.TESTNET; // <= NOTE: Update this when changing network
+const walletPrivateKey = process.env.SUI_TESTNET; // <= NOTE: Update this when changing network
 
 const registry = REGISTRY[network];
 const provider = new JsonRpcProvider(
@@ -28,13 +28,13 @@ const provider = new JsonRpcProvider(
 
 async function main() {
   if (walletPrivateKey === undefined) {
-    throw new Error("SUI_MAINNET unset in environment");
+    throw new Error("Wallet unset in environment");
   }
   const wallet = new RawSigner(
     Ed25519Keypair.fromSecretKey(Buffer.from(walletPrivateKey, "hex")),
     provider
   );
-  await publishPackage(wallet, "../../contracts");
+  await publishPackage(wallet, "../contracts");
 }
 
 main();

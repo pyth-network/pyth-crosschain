@@ -332,145 +332,146 @@ module pyth::pyth {
 
 #[test_only]
 module pyth::pyth_tests{
-    // use std::vector::{Self};
+    use std::vector::{Self};
 
-    // use sui::sui::SUI;
-    // use sui::coin::{Self, Coin};
-    // use sui::test_scenario::{Self, Scenario, ctx, take_shared, return_shared};
-    // use sui::package::Self;
-    // use sui::object::{Self, ID};
-    // use sui::clock::{Self, Clock};
+    use sui::sui::SUI;
+    use sui::coin::{Self, Coin};
+    use sui::test_scenario::{Self, Scenario, ctx, take_shared, return_shared};
+    use sui::package::Self;
+    use sui::object::{Self, ID};
+    use sui::clock::{Self, Clock};
 
-    // use pyth::state::{State as PythState};
-    // use pyth::setup::{Self};
-    // use pyth::price_identifier::{Self};
-    // use pyth::price_info::{Self, PriceInfo, PriceInfoObject};
-    // use pyth::price_feed::{Self};
-    // use pyth::data_source::{Self, DataSource};
-    // use pyth::i64::{Self};
-    // use pyth::price::{Self};
-    // use pyth::pyth::{Self};
+    use pyth::state::{State as PythState};
+    use pyth::setup::{Self};
+    //use pyth::price_identifier::{Self};
+    use pyth::price_info::{PriceInfo, PriceInfoObject};//, PriceInfo, PriceInfoObject};
+    //use pyth::price_feed::{Self};
+    use pyth::data_source::{Self, DataSource};
+    //use pyth::i64::{Self};
+    //use pyth::price::{Self};
+    use pyth::pyth::{Self, create_price_infos_hot_potato, update_single_price_feed};
+    use pyth::hot_potato_vector::{Self};
 
-    // use wormhole::setup::{Self as wormhole_setup, DeployerCap};
-    // use wormhole::external_address::{Self};
-    // use wormhole::bytes32::{Self};
-    // use wormhole::state::{State as WormState};
-    // use wormhole::vaa::{Self, VAA};
+    use wormhole::setup::{Self as wormhole_setup, DeployerCap};
+    use wormhole::external_address::{Self};
+    use wormhole::bytes32::{Self};
+    use wormhole::state::{State as WormState};
+    use wormhole::vaa::{Self, VAA};
 
-    // const DEPLOYER: address = @0x1234;
+    const DEPLOYER: address = @0x1234;
 
-    // #[test_only]
+    #[test_only]
     // /// A vector containing a single VAA with:
     // /// - emitter chain ID 17
     // /// - emitter address 0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b
     // /// - payload corresponding to the batch price attestation of the prices returned by get_mock_price_infos()
-    // const TEST_VAAS: vector<vector<u8>> = vector[x"0100000000010036eb563b80a24f4253bee6150eb8924e4bdf6e4fa1dfc759a6664d2e865b4b134651a7b021b7f1ce3bd078070b688b6f2e37ce2de0d9b48e6a78684561e49d5201527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000001005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001"];
+    const TEST_VAAS: vector<vector<u8>> = vector[x"0100000000010036eb563b80a24f4253bee6150eb8924e4bdf6e4fa1dfc759a6664d2e865b4b134651a7b021b7f1ce3bd078070b688b6f2e37ce2de0d9b48e6a78684561e49d5201527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000001005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001"];
 
-    // fun get_verified_test_vaas(worm_state: &WormState, clock: &Clock): vector<VAA> {
-    //     let test_vaas_: vector<vector<u8>> = vector[x"0100000000010036eb563b80a24f4253bee6150eb8924e4bdf6e4fa1dfc759a6664d2e865b4b134651a7b021b7f1ce3bd078070b688b6f2e37ce2de0d9b48e6a78684561e49d5201527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000001005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001"];
-    //     let verified_vaas_reversed = vector::empty<VAA>();
-    //     let test_vaas = test_vaas_;
-    //     let i = 0;
-    //     while (i < vector::length(&test_vaas_)) {
-    //         let cur_test_vaa = vector::pop_back(&mut test_vaas);
-    //         let verified_vaa = vaa::parse_and_verify(worm_state, cur_test_vaa, clock);
-    //         vector::push_back(&mut verified_vaas_reversed, verified_vaa);
-    //         i=i+1;
-    //     };
-    //     let verified_vaas = vector::empty<VAA>();
-    //     while (vector::length<VAA>(&verified_vaas_reversed)!=0){
-    //         let cur = vector::pop_back(&mut verified_vaas_reversed);
-    //         vector::push_back(&mut verified_vaas, cur);
-    //     };
-    //     vector::destroy_empty(verified_vaas_reversed);
-    //     verified_vaas
-    // }
+    fun get_verified_test_vaas(worm_state: &WormState, clock: &Clock): vector<VAA> {
+        let test_vaas_: vector<vector<u8>> = vector[x"0100000000010036eb563b80a24f4253bee6150eb8924e4bdf6e4fa1dfc759a6664d2e865b4b134651a7b021b7f1ce3bd078070b688b6f2e37ce2de0d9b48e6a78684561e49d5201527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000001005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001"];
+        let verified_vaas_reversed = vector::empty<VAA>();
+        let test_vaas = test_vaas_;
+        let i = 0;
+        while (i < vector::length(&test_vaas_)) {
+            let cur_test_vaa = vector::pop_back(&mut test_vaas);
+            let verified_vaa = vaa::parse_and_verify(worm_state, cur_test_vaa, clock);
+            vector::push_back(&mut verified_vaas_reversed, verified_vaa);
+            i=i+1;
+        };
+        let verified_vaas = vector::empty<VAA>();
+        while (vector::length<VAA>(&verified_vaas_reversed)!=0){
+            let cur = vector::pop_back(&mut verified_vaas_reversed);
+            vector::push_back(&mut verified_vaas, cur);
+        };
+        vector::destroy_empty(verified_vaas_reversed);
+        verified_vaas
+    }
 
-    // #[test_only]
-    // /// Init Wormhole core bridge state.
-    // /// Init Pyth state.
-    // /// Set initial Sui clock time.
-    // /// Mint some SUI fee coins.
-    // fun setup_test(
-    //     stale_price_threshold: u64,
-    //     governance_emitter_chain_id: u64,
-    //     governance_emitter_address: vector<u8>,
-    //     data_sources: vector<DataSource>,
-    //     base_update_fee: u64,
-    //     to_mint: u64
-    // ): (Scenario, Coin<SUI>, Clock) {
+    #[test_only]
+    /// Init Wormhole core bridge state.
+    /// Init Pyth state.
+    /// Set initial Sui clock time.
+    /// Mint some SUI fee coins.
+    fun setup_test(
+        stale_price_threshold: u64,
+        governance_emitter_chain_id: u64,
+        governance_emitter_address: vector<u8>,
+        data_sources: vector<DataSource>,
+        base_update_fee: u64,
+        to_mint: u64
+    ): (Scenario, Coin<SUI>, Clock) {
 
-    //     let scenario = test_scenario::begin(DEPLOYER);
+        let scenario = test_scenario::begin(DEPLOYER);
 
-    //     // Initialize Wormhole core bridge.
-    //     wormhole_setup::init_test_only(ctx(&mut scenario));
-    //     test_scenario::next_tx(&mut scenario, DEPLOYER);
-    //     // Take the `DeployerCap` from the sender of the transaction.
-    //     let deployer_cap =
-    //         test_scenario::take_from_address<DeployerCap>(
-    //             &scenario,
-    //             DEPLOYER
-    //         );
+        // Initialize Wormhole core bridge.
+        wormhole_setup::init_test_only(ctx(&mut scenario));
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        // Take the `DeployerCap` from the sender of the transaction.
+        let deployer_cap =
+            test_scenario::take_from_address<DeployerCap>(
+                &scenario,
+                DEPLOYER
+            );
 
-    //     // This will be created and sent to the transaction sender automatically
-    //     // when the contract is published. This exists in place of grabbing
-    //     // it from the sender.
-    //     let upgrade_cap =
-    //         package::test_publish(
-    //             object::id_from_address(@wormhole),
-    //             test_scenario::ctx(&mut scenario)
-    //         );
+        // This will be created and sent to the transaction sender automatically
+        // when the contract is published. This exists in place of grabbing
+        // it from the sender.
+        let upgrade_cap =
+            package::test_publish(
+                object::id_from_address(@wormhole),
+                test_scenario::ctx(&mut scenario)
+            );
 
-    //     let governance_chain = 1234;
-    //     let governance_contract =
-    //         x"deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
-    //     let initial_guardians =
-    //         vector[
-    //             x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"
-    //         ];
-    //     let guardian_set_seconds_to_live = 5678;
-    //     let message_fee = 350;
-    //     let guardian_set_index = 0;
-    //     wormhole_setup::complete(
-    //         deployer_cap,
-    //         upgrade_cap,
-    //         governance_chain,
-    //         governance_contract,
-    //         guardian_set_index,
-    //         initial_guardians,
-    //         guardian_set_seconds_to_live,
-    //         message_fee,
-    //         test_scenario::ctx(&mut scenario)
-    //     );
+        let governance_chain = 1234;
+        let governance_contract =
+            x"deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
+        let initial_guardians =
+            vector[
+                x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"
+            ];
+        let guardian_set_seconds_to_live = 5678;
+        let message_fee = 350;
+        let guardian_set_index = 0;
+        wormhole_setup::complete(
+            deployer_cap,
+            upgrade_cap,
+            governance_chain,
+            governance_contract,
+            guardian_set_index,
+            initial_guardians,
+            guardian_set_seconds_to_live,
+            message_fee,
+            test_scenario::ctx(&mut scenario)
+        );
 
-    //     // Initialize Pyth state.
-    //     let pyth_upgrade_cap=
-    //         package::test_publish(
-    //             object::id_from_address(@pyth),
-    //             test_scenario::ctx(&mut scenario)
-    //         );
+        // Initialize Pyth state.
+        let pyth_upgrade_cap=
+            package::test_publish(
+                object::id_from_address(@pyth),
+                test_scenario::ctx(&mut scenario)
+            );
 
-    //     setup::init_test_only(ctx(&mut scenario));
-    //     test_scenario::next_tx(&mut scenario, DEPLOYER);
-    //     let pyth_deployer_cap = test_scenario::take_from_address<setup::DeployerCap>(
-    //         &scenario,
-    //         DEPLOYER
-    //     );
+        setup::init_test_only(ctx(&mut scenario));
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        let pyth_deployer_cap = test_scenario::take_from_address<setup::DeployerCap>(
+            &scenario,
+            DEPLOYER
+        );
 
-    //     setup::init_and_share_state(
-    //         pyth_deployer_cap,
-    //         pyth_upgrade_cap,
-    //         stale_price_threshold,
-    //         base_update_fee,
-    //         data_source::new(governance_emitter_chain_id, external_address::new(bytes32::from_bytes(governance_emitter_address))),
-    //         data_sources,
-    //         ctx(&mut scenario)
-    //     );
+        setup::init_and_share_state(
+            pyth_deployer_cap,
+            pyth_upgrade_cap,
+            stale_price_threshold,
+            base_update_fee,
+            data_source::new(governance_emitter_chain_id, external_address::new(bytes32::from_bytes(governance_emitter_address))),
+            data_sources,
+            ctx(&mut scenario)
+        );
 
-    //     let coins = coin::mint_for_testing<SUI>(to_mint, ctx(&mut scenario));
-    //     let clock = clock::create_for_testing(ctx(&mut scenario));
-    //     (scenario, coins, clock)
-    // }
+        let coins = coin::mint_for_testing<SUI>(to_mint, ctx(&mut scenario));
+        let clock = clock::create_for_testing(ctx(&mut scenario));
+        (scenario, coins, clock)
+    }
 
     // #[test_only]
     // fun get_mock_price_infos(): vector<PriceInfo> {
@@ -570,31 +571,31 @@ module pyth::pyth_tests{
     //     test_scenario::end(scenario);
     // }
 
-    // #[test]
-    // #[expected_failure(abort_code = wormhole::vaa::E_WRONG_VERSION)]
-    // fun test_create_price_feeds_corrupt_vaa() {
-    //     let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 50, 0);
-    //     test_scenario::next_tx(&mut scenario, DEPLOYER);
-    //     let pyth_state = take_shared<PythState>(&scenario);
-    //     let worm_state = take_shared<WormState>(&scenario);
+    #[test]
+    #[expected_failure(abort_code = wormhole::vaa::E_WRONG_VERSION)]
+    fun test_create_price_feeds_corrupt_vaa() {
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 50, 0);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        let pyth_state = take_shared<PythState>(&scenario);
+        let worm_state = take_shared<WormState>(&scenario);
 
-    //     // Pass in a corrupt VAA, which should fail deseriaizing
-    //     let corrupt_vaa = x"90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
-    //     let verified_vaas = vector[vaa::parse_and_verify(&worm_state, corrupt_vaa, &clock)];
-    //     // Create Pyth price feed
-    //     pyth::create_price_feeds(
-    //         &mut pyth_state,
-    //         verified_vaas,
-    //         &clock,
-    //         ctx(&mut scenario)
-    //     );
+        // Pass in a corrupt VAA, which should fail deseriaizing
+        let corrupt_vaa = x"90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
+        let verified_vaas = vector[vaa::parse_and_verify(&worm_state, corrupt_vaa, &clock)];
+        // Create Pyth price feed
+        pyth::create_price_feeds(
+            &mut pyth_state,
+            verified_vaas,
+            &clock,
+            ctx(&mut scenario)
+        );
 
-    //     return_shared(pyth_state);
-    //     return_shared(worm_state);
-    //     clock::destroy_for_testing(clock);
-    //     coin::burn_for_testing<SUI>(test_coins);
-    //     test_scenario::end(scenario);
-    // }
+        return_shared(pyth_state);
+        return_shared(worm_state);
+        clock::destroy_for_testing(clock);
+        coin::burn_for_testing<SUI>(test_coins);
+        test_scenario::end(scenario);
+    }
 
     // #[test]
     // #[expected_failure(abort_code = pyth::pyth::E_INVALID_DATA_SOURCE)]
@@ -631,83 +632,100 @@ module pyth::pyth_tests{
     //     test_scenario::end(scenario);
     // }
 
-    // #[test_only]
-    // fun data_sources_for_test_vaa(): vector<DataSource> {
-    //     // Set some valid data sources, including our test VAA's source
-    //     vector<DataSource>[
-    //         data_source::new(
-    //             1, external_address::new(bytes32::from_bytes(x"0000000000000000000000000000000000000000000000000000000000000004"))),
-    //             data_source::new(
-    //             5, external_address::new(bytes32::new(x"0000000000000000000000000000000000000000000000000000000000007637"))),
-    //             data_source::new(
-    //             17, external_address::new(bytes32::new(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b")))
-    //     ]
-    // }
+    #[test_only]
+    fun data_sources_for_test_vaa(): vector<DataSource> {
+        // Set some valid data sources, including our test VAA's source
+        vector<DataSource>[
+            data_source::new(
+                1, external_address::new(bytes32::from_bytes(x"0000000000000000000000000000000000000000000000000000000000000004"))),
+                data_source::new(
+                5, external_address::new(bytes32::new(x"0000000000000000000000000000000000000000000000000000000000007637"))),
+                data_source::new(
+                17, external_address::new(bytes32::new(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b")))
+        ]
+    }
 
-    // #[test]
-    // fun test_create_and_update_price_feeds_success() {
-    //     let data_sources = data_sources_for_test_vaa();
-    //     let base_update_fee = 50;
-    //     let coins_to_mint = 5000;
+    #[test]
+    fun test_create_and_update_price_feeds_success() {
+        let data_sources = data_sources_for_test_vaa();
+        let base_update_fee = 50;
+        let coins_to_mint = 5000;
 
-    //     let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
-    //     test_scenario::next_tx(&mut scenario, DEPLOYER);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-    //     let pyth_state = take_shared<PythState>(&scenario);
-    //     let worm_state = take_shared<WormState>(&scenario);
+        let pyth_state = take_shared<PythState>(&scenario);
+        let worm_state = take_shared<WormState>(&scenario);
 
-    //     let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
+        let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
-    //     pyth::create_price_feeds(
-    //         &mut pyth_state,
-    //         verified_vaas,
-    //         &clock,
-    //         ctx(&mut scenario)
-    //     );
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-    //     // Affirm that 4 objects, which correspond to the 4 new price info objects
-    //     // containing the price feeds were created and shared.
-    //     let effects = test_scenario::next_tx(&mut scenario, DEPLOYER);
-    //     let shared_ids = test_scenario::shared(&effects);
-    //     let created_ids = test_scenario::created(&effects);
-    //     assert!(vector::length<ID>(&shared_ids)==4, 0);
-    //     assert!(vector::length<ID>(&created_ids)==4, 0);
+        pyth::create_price_feeds(
+            &mut pyth_state,
+            verified_vaas,
+            &clock,
+            ctx(&mut scenario)
+        );
 
-    //     let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
-    //     let price_info_object_2 = take_shared<PriceInfoObject>(&scenario);
-    //     let price_info_object_3 = take_shared<PriceInfoObject>(&scenario);
-    //     let price_info_object_4 = take_shared<PriceInfoObject>(&scenario);
+        // Affirm that 4 objects, which correspond to the 4 new price info objects
+        // containing the price feeds were created and shared.
+        let effects = test_scenario::next_tx(&mut scenario, DEPLOYER);
+        let shared_ids = test_scenario::shared(&effects);
+        let created_ids = test_scenario::created(&effects);
+        assert!(vector::length<ID>(&shared_ids)==4, 0);
+        assert!(vector::length<ID>(&created_ids)==4, 0);
 
-    //     // Create vector of price info objects (Sui objects with key ability and living in global store),
-    //     // which contain the price feeds we want to update. Note that these can be passed into
-    //     // update_price_feeds in any order!
-    //     let price_info_object_vec = vector[price_info_object_1, price_info_object_2, price_info_object_3, price_info_object_4];
-    //     verified_vaas = get_verified_test_vaas(&worm_state, &clock);
+        let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_2 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_3 = take_shared<PriceInfoObject>(&scenario);
+        let price_info_object_4 = take_shared<PriceInfoObject>(&scenario);
 
-    //     pyth::update_price_feeds(
-    //         &mut pyth_state,
-    //         verified_vaas,
-    //         &mut price_info_object_vec,
-    //         test_coins,
-    //         &clock
-    //     );
+        // Create vector of price info objects (Sui objects with key ability and living in global store),
+        // which contain the price feeds we want to update. Note that these can be passed into
+        // update_price_feeds in any order!
+        //let price_info_object_vec = vector[price_info_object_1, price_info_object_2, price_info_object_3, price_info_object_4];
+        verified_vaas = get_verified_test_vaas(&worm_state, &clock);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-    //     price_info_object_4 = vector::pop_back(&mut price_info_object_vec);
-    //     price_info_object_3 = vector::pop_back(&mut price_info_object_vec);
-    //     price_info_object_2 = vector::pop_back(&mut price_info_object_vec);
-    //     price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
-    //     vector::destroy_empty(price_info_object_vec);
+        // Get VAA objects
+        std::debug::print(&vector::length<VAA>(&verified_vaas));
+        std::debug::print(&vector::length<VAA>(&verified_vaas));
 
-    //     return_shared(pyth_state);
-    //     return_shared(worm_state);
-    //     return_shared(price_info_object_1);
-    //     return_shared(price_info_object_2);
-    //     return_shared(price_info_object_3);
-    //     return_shared(price_info_object_4);
+        let vaa_1 = vector::pop_back<VAA>(&mut verified_vaas);
 
-    //     clock::destroy_for_testing(clock);
-    //     test_scenario::end(scenario);
-    // }
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        // Create hot potato.
+        let potato = create_price_infos_hot_potato(
+            &pyth_state,
+            vector[vaa_1],
+            &clock
+        );
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        potato = update_single_price_feed(
+            &mut pyth_state,
+            potato,
+            &mut price_info_object_1,
+            test_coins,
+            &clock
+        );
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        hot_potato_vector::destroy<PriceInfo>(potato);
+
+        vector::destroy_empty(verified_vaas);
+        return_shared(pyth_state);
+        return_shared(worm_state);
+        return_shared(price_info_object_1);
+        return_shared(price_info_object_2);
+        return_shared(price_info_object_3);
+        return_shared(price_info_object_4);
+
+        clock::destroy_for_testing(clock);
+        test_scenario::end(scenario);
+    }
 
     // #[test]
     // #[expected_failure(abort_code = pyth::pyth::E_PRICE_INFO_OBJECT_NOT_FOUND)]

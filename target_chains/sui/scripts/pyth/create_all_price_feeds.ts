@@ -2,7 +2,7 @@
 import dotenv from "dotenv";
 import axios from "axios";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
-
+import * as _ from "lodash";
 import {
   RawSigner,
   SUI_CLOCK_OBJECT_ID,
@@ -17,26 +17,25 @@ dotenv.config({ path: "~/.env" });
 import { REGISTRY, NETWORK } from "../registry";
 
 // Network dependent settings.
-let network = NETWORK.MAINNET; // <= NOTE: Update this when changing network
-const walletPrivateKey = process.env.SUI_MAINNET; // <= NOTE: Update this when changing network
-
-const registry = REGISTRY[network];
-const provider = new JsonRpcProvider(
-  new Connection({ fullnode: registry["RPC_URL"] })
-);
-
+let network = NETWORK.TESTNET; // <= NOTE: Update this when changing network
+const walletPrivateKey = process.env.SUI_TESTNET; // <= NOTE: Update this when changing network
+const price_feed_id_url = "https://xc-testnet.pyth.network/api/price_feed_ids"; // <= NOTE: Update this when changing network
 const connection = new PriceServiceConnection(
-  "https://xc-mainnet.pyth.network",
+  "https://xc-testnet.pyth.network", // <= NOTE: Update this when changing network
   {
     priceFeedRequestConfig: {
       binary: true,
     },
   }
 );
+const registry = REGISTRY[network];
+const provider = new JsonRpcProvider(
+  new Connection({ fullnode: registry["RPC_URL"] })
+);
 
 async function main() {
   if (walletPrivateKey === undefined) {
-    throw new Error("SUI_MAINNET unset in environment");
+    throw new Error("Wallet key unset in environment");
   }
   const wallet = new RawSigner(
     Ed25519Keypair.fromSecretKey(Buffer.from(walletPrivateKey, "hex")),
@@ -45,31 +44,17 @@ async function main() {
   console.log("wallet address: ", wallet.getAddress());
 
   // Fetch all price IDs
-  let { data } = await axios.get(
-    "https://xc-mainnet.pyth.network/api/price_feed_ids"
-  );
+  let { data } = await axios.get(price_feed_id_url);
   const price_feed_ids = data;
   console.log("num price feed ids: ", price_feed_ids.length);
 
-  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(0, 20));
-  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(20, 21));
-  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(20, 40));
-  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(40, 60));
-  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(60, 80));
-  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(80, 100));
-  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(100, 120));
-  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(120, 140));
-  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(140, 160));
-  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(160, 180));
-  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(180, 200));
-  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(200, 220));
-  const priceFeedVAAs = await connection.getLatestVaas(
-    price_feed_ids.slice(220, 240)
-  );
-
-  console.log("price feed VAAs len: ", priceFeedVAAs.length);
-
-  create_price_feeds(wallet, registry, priceFeedVAAs);
+  // Create price feeds 20 at a time
+  for (let chunk of _.chunk(price_feed_ids, 20)){
+    //@ts-ignore
+    const priceFeedVAAs = await connection.getLatestVaas(chunk);
+    console.log("price feed VAAs len: ", priceFeedVAAs.length);
+    await create_price_feeds(wallet, registry, priceFeedVAAs);
+  }
 }
 
 main();
@@ -113,7 +98,7 @@ async function create_price_feeds(
       ],
     });
 
-    tx.setGasBudget(1000000000);
+    tx.setGasBudget(2000000000);
 
     let result = await signer.signAndExecuteTransactionBlock({
       transactionBlock: tx,
