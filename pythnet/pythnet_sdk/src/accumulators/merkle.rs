@@ -1,13 +1,12 @@
-// TODO: Go back to a reference based implementation ala Solana's original.
+//! A MerkleTree based Accumulator.
 
 use {
     crate::{
         accumulators::Accumulator,
         hashers::{
-            keccak256::Keccak256Hasher,
+            keccak256::Keccak256,
             Hasher,
         },
-        PriceId,
     },
     borsh::{
         BorshDeserialize,
@@ -17,240 +16,165 @@ use {
         Deserialize,
         Serialize,
     },
-    std::collections::HashSet,
 };
 
-// We need to discern between leaf and intermediate nodes to prevent trivial second
-// pre-image attacks.
-// https://flawed.net.nz/2018/02/21/attacking-merkle-trees-with-a-second-preimage-attack
+// We need to discern between leaf and intermediate nodes to prevent trivial second pre-image
+// attacks. If we did not do this it would be possible for an attacker to intentionally create
+// non-leaf nodes that have the same hash as a leaf node, and then use that to prove the existence
+// of a leaf node that does not exist.
+//
+// See:
+//
+// - https://flawed.net.nz/2018/02/21/attacking-merkle-trees-with-a-second-preimage-attack
+// - https://en.wikipedia.org/wiki/Merkle_tree#Second_preimage_attack
+//
+// NOTE: We use a NULL prefix for leaf nodes to distinguish them from the empty message (""), while
+// there is no path that allows empty messages this is a safety measure to prevent future
+// vulnerabilities being introduced.
 const LEAF_PREFIX: &[u8] = &[0];
-const INTERMEDIATE_PREFIX: &[u8] = &[1];
+const NODE_PREFIX: &[u8] = &[1];
+const NULL_PREFIX: &[u8] = &[2];
 
-macro_rules! hash_leaf {
-    {$x:ty, $d:ident} => {
-        <$x as Hasher>::hashv(&[LEAF_PREFIX, $d])
+fn hash_leaf<H: Hasher>(leaf: &[u8]) -> H::Hash {
+    H::hashv(&[LEAF_PREFIX, leaf])
+}
+
+fn hash_node<H: Hasher>(l: &H::Hash, r: &H::Hash) -> H::Hash {
+    H::hashv(&[
+        NODE_PREFIX,
+        (if l <= r { l } else { r }).as_ref(),
+        (if l <= r { r } else { l }).as_ref(),
+    ])
+}
+
+fn hash_null<H: Hasher>() -> H::Hash {
+    H::hashv(&[NULL_PREFIX])
+}
+
+#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize)]
+pub struct MerklePath<H: Hasher>(Vec<H::Hash>);
+
+impl<H: Hasher> MerklePath<H> {
+    pub fn new(path: Vec<H::Hash>) -> Self {
+        Self(path)
     }
 }
 
-macro_rules! hash_intermediate {
-    {$x:ty, $l:ident, $r:ident} => {
-        <$x as Hasher>::hashv(&[INTERMEDIATE_PREFIX, $l.as_ref(), $r.as_ref()])
-    }
-}
-
-/// An implementation of a Sha3/Keccak256 based Merkle Tree based on the implementation provided by
-/// solana-merkle-tree. This modifies the structure slightly to be serialization friendly, and to
-/// make verification cheaper on EVM based networks.
+/// A MerkleAccumulator maintains a Merkle Tree.
+///
+/// The implementation is based on Solana's Merkle Tree implementation. This structure also stores
+/// the items that are in the tree due to the need to look-up the index of an item in the tree in
+/// order to create a proof.
 #[derive(
     Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize, Serialize, Deserialize, Default,
 )]
-pub struct MerkleTree<H: Hasher = Keccak256Hasher> {
-    pub leaf_count: usize,
-    pub nodes:      Vec<H::Hash>,
+pub struct MerkleAccumulator<H: Hasher = Keccak256> {
+    pub root:  H::Hash,
+    #[serde(skip)]
+    pub nodes: Vec<H::Hash>,
 }
 
-pub struct MerkleAccumulator<'a, H: Hasher = Keccak256Hasher> {
-    pub accumulator: MerkleTree<H>,
-    /// A list of the original items inserted into the tree.
-    ///
-    /// The full list is kept because proofs require the index of each item in the tree, by
-    /// keeping the nodes we can look up the position in the original list for proof
-    /// verification.
-    pub items:       Vec<&'a [u8]>,
+// Layout:
+//
+// ```
+// 4 bytes:  magic number
+// 1 byte:   update type
+// 4 byte:   storage id
+// 32 bytes: root hash
+// ```
+//
+// TODO: This code does not belong to MerkleAccumulator, we should be using the wire data types in
+// calling code to wrap this value.
+impl<'a, H: Hasher + 'a> MerkleAccumulator<H> {
+    pub fn serialize(&self, storage: u32) -> Vec<u8> {
+        let mut serialized = vec![];
+        serialized.extend_from_slice(0x41555756u32.to_be_bytes().as_ref());
+        serialized.extend_from_slice(0u8.to_be_bytes().as_ref());
+        serialized.extend_from_slice(storage.to_be_bytes().as_ref());
+        serialized.extend_from_slice(self.root.as_ref());
+        serialized
+    }
 }
 
-impl<'a, H: Hasher + 'a> Accumulator<'a> for MerkleAccumulator<'a, H> {
+impl<'a, H: Hasher + 'a> Accumulator<'a> for MerkleAccumulator<H> {
     type Proof = MerklePath<H>;
 
-    fn from_set(items: impl Iterator<Item = &'a &'a [u8]>) -> Option<Self> {
-        let items: Vec<&[u8]> = items.copied().collect();
-        let tree = MerkleTree::new(&items);
-        Some(Self {
-            accumulator: tree,
-            items,
-        })
+    fn from_set(items: impl Iterator<Item = &'a [u8]>) -> Option<Self> {
+        let items: Vec<&[u8]> = items.collect();
+        Self::new(&items)
     }
 
     fn prove(&'a self, item: &[u8]) -> Option<Self::Proof> {
-        let index = self.items.iter().position(|i| i == &item)?;
-        self.accumulator.find_path(index)
+        let item = hash_leaf::<H>(item);
+        let index = self.nodes.iter().position(|i| i == &item)?;
+        Some(self.find_path(index))
     }
 
-    fn verify(&'a self, proof: Self::Proof, item: &[u8]) -> bool {
-        let item = hash_leaf!(H, item);
-        proof.validate(item)
+    // NOTE: This `check` call is intended to be generic accross accumulator implementations, but
+    // for a merkle tree the proof does not use the `self` parameter as the proof is standalone
+    // and doesn't need the original nodes. Normally a merkle API would be something like:
+    //
+    // ```
+    // MerkleTree::check(proof)
+    // ```
+    //
+    // or even:
+    //
+    // ```
+    // proof.verify()
+    // ```
+    //
+    // But to stick to the Accumulator trait we do it via the trait method.
+    fn check(&'a self, proof: Self::Proof, item: &[u8]) -> bool {
+        let mut current = hash_leaf::<H>(item);
+        for hash in proof.0 {
+            current = hash_node::<H>(&current, &hash);
+        }
+        current == self.root
     }
 }
 
-impl<H: Hasher> MerkleTree<H> {
-    #[inline]
-    fn next_level_len(level_len: usize) -> usize {
-        if level_len == 1 {
-            0
-        } else {
-            (level_len + 1) / 2
-        }
-    }
-
-    fn calculate_vec_capacity(leaf_count: usize) -> usize {
-        // the most nodes consuming case is when n-1 is full balanced binary tree
-        // then n will cause the previous tree add a left only path to the root
-        // this cause the total nodes number increased by tree height, we use this
-        // condition as the max nodes consuming case.
-        // n is current leaf nodes number
-        // assuming n-1 is a full balanced binary tree, n-1 tree nodes number will be
-        // 2(n-1) - 1, n tree height is closed to log2(n) + 1
-        // so the max nodes number is 2(n-1) - 1 + log2(n) + 1, finally we can use
-        // 2n + log2(n+1) as a safe capacity value.
-        // test results:
-        // 8192 leaf nodes(full balanced):
-        // computed cap is 16398, actually using is 16383
-        // 8193 leaf nodes:(full balanced plus 1 leaf):
-        // computed cap is 16400, actually using is 16398
-        // about performance: current used fast_math log2 code is constant algo time
-        if leaf_count > 0 {
-            fast_math::log2_raw(leaf_count as f32) as usize + 2 * leaf_count + 1
-        } else {
-            0
-        }
-    }
-
-    pub fn new<T: AsRef<[u8]>>(items: &[T]) -> Self {
-        let cap = MerkleTree::<H>::calculate_vec_capacity(items.len());
-        let mut mt = MerkleTree {
-            leaf_count: items.len(),
-            nodes:      Vec::with_capacity(cap),
-        };
-
-        for item in items {
-            let item = item.as_ref();
-            let hash = hash_leaf!(H, item);
-            mt.nodes.push(hash);
-        }
-
-        let mut level_len = MerkleTree::<H>::next_level_len(items.len());
-        let mut level_start = items.len();
-        let mut prev_level_len = items.len();
-        let mut prev_level_start = 0;
-        while level_len > 0 {
-            for i in 0..level_len {
-                let prev_level_idx = 2 * i;
-
-                let lsib: &H::Hash = &mt.nodes[prev_level_start + prev_level_idx];
-                let rsib: &H::Hash = if prev_level_idx + 1 < prev_level_len {
-                    &mt.nodes[prev_level_start + prev_level_idx + 1]
-                } else {
-                    // Duplicate last entry if the level length is odd
-                    &mt.nodes[prev_level_start + prev_level_idx]
-                };
-
-                let hash = hash_intermediate!(H, lsib, rsib);
-                mt.nodes.push(hash);
-            }
-            prev_level_start = level_start;
-            prev_level_len = level_len;
-            level_start += level_len;
-            level_len = MerkleTree::<H>::next_level_len(level_len);
-        }
-
-        mt
-    }
-
-    pub fn get_root(&self) -> Option<&H::Hash> {
-        self.nodes.iter().last()
-    }
-
-    pub fn find_path(&self, index: usize) -> Option<MerklePath<H>> {
-        if index >= self.leaf_count {
+impl<H: Hasher> MerkleAccumulator<H> {
+    pub fn new(items: &[&[u8]]) -> Option<Self> {
+        if items.is_empty() {
             return None;
         }
 
-        let mut level_len = self.leaf_count;
-        let mut level_start = 0;
-        let mut path = MerklePath::<H>::default();
-        let mut node_index = index;
-        let mut lsib = None;
-        let mut rsib = None;
-        while level_len > 0 {
-            let level = &self.nodes[level_start..(level_start + level_len)];
+        let depth = items.len().next_power_of_two().trailing_zeros();
+        let mut tree: Vec<H::Hash> = vec![Default::default(); 1 << (depth + 1)];
 
-            let target = level[node_index];
-            if lsib.is_some() || rsib.is_some() {
-                path.push(MerkleNode::new(target, lsib, rsib));
-            }
-            if node_index % 2 == 0 {
-                lsib = None;
-                rsib = if node_index + 1 < level.len() {
-                    Some(level[node_index + 1])
-                } else {
-                    Some(level[node_index])
-                };
+        // Filling the leaf hashes
+        for i in 0..(1 << depth) {
+            if i < items.len() {
+                tree[(1 << depth) + i] = hash_leaf::<H>(items[i].as_ref());
             } else {
-                lsib = Some(level[node_index - 1]);
-                rsib = None;
+                tree[(1 << depth) + i] = hash_null::<H>();
             }
-            node_index /= 2;
-
-            level_start += level_len;
-            level_len = MerkleTree::<H>::next_level_len(level_len);
         }
-        Some(path)
-    }
-}
 
-#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize)]
-pub struct MerklePath<H: Hasher>(Vec<MerkleNode<H>>);
-
-impl<H: Hasher> MerklePath<H> {
-    pub fn push(&mut self, entry: MerkleNode<H>) {
-        self.0.push(entry)
-    }
-
-    pub fn validate(&self, candidate: H::Hash) -> bool {
-        let result = self.0.iter().try_fold(candidate, |candidate, pe| {
-            let lsib = &pe.1.unwrap_or(candidate);
-            let rsib = &pe.2.unwrap_or(candidate);
-            let hash = hash_intermediate!(H, lsib, rsib);
-
-            if hash == pe.0 {
-                Some(hash)
-            } else {
-                None
+        // Filling the node hashes from bottom to top
+        for k in (1..=depth).rev() {
+            let level = k - 1;
+            let level_num_nodes = 1 << level;
+            for i in 0..level_num_nodes {
+                let id = (1 << level) + i;
+                tree[id] = hash_node::<H>(&tree[id * 2], &tree[id * 2 + 1]);
             }
-        });
-        matches!(result, Some(_))
+        }
+
+        Some(Self {
+            root:  tree[1],
+            nodes: tree,
+        })
     }
-}
 
-#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize)]
-pub struct MerkleNode<H: Hasher>(H::Hash, Option<H::Hash>, Option<H::Hash>);
-
-impl<'a, H: Hasher> MerkleNode<H> {
-    pub fn new(
-        target: H::Hash,
-        left_sibling: Option<H::Hash>,
-        right_sibling: Option<H::Hash>,
-    ) -> Self {
-        assert!(left_sibling.is_none() ^ right_sibling.is_none());
-        Self(target, left_sibling, right_sibling)
-    }
-}
-
-//TODO: update this to correct value/type later
-//
-/** using `sdk/program/src/slot_hashes.rs` as a reference **/
-
-//TODO: newtype or type alias?
-//  also double check alignment in conjunction with `AccumulatorPrice`
-// #[repr(transparent)
-#[derive(Serialize, PartialEq, Eq, Default)]
-pub struct PriceProofs<H: Hasher>(Vec<(PriceId, MerklePath<H>)>);
-
-impl<H: Hasher> PriceProofs<H> {
-    pub fn new(price_proofs: &[(PriceId, MerklePath<H>)]) -> Self {
-        let mut price_proofs = price_proofs.to_vec();
-        price_proofs.sort_by(|(a, _), (b, _)| a.cmp(b));
-        Self(price_proofs)
+    fn find_path(&self, mut index: usize) -> MerklePath<H> {
+        let mut path = Vec::new();
+        while index > 1 {
+            path.push(self.nodes[index ^ 1].clone());
+            index /= 2;
+        }
+        MerklePath::new(path)
     }
 }
 
@@ -258,7 +182,11 @@ impl<H: Hasher> PriceProofs<H> {
 mod test {
     use {
         super::*,
-        std::mem::size_of,
+        proptest::prelude::*,
+        std::{
+            collections::BTreeSet,
+            mem::size_of,
+        },
     };
 
     #[derive(Default, Clone, Debug, borsh::BorshSerialize)]
@@ -288,9 +216,56 @@ mod test {
         }
     }
 
+    #[derive(Debug)]
+    struct MerkleAccumulatorDataWrapper {
+        pub accumulator: MerkleAccumulator,
+        pub data:        BTreeSet<Vec<u8>>,
+    }
+
+    impl Arbitrary for MerkleAccumulatorDataWrapper {
+        type Parameters = usize;
+
+        fn arbitrary_with(size: Self::Parameters) -> Self::Strategy {
+            let size = size.saturating_add(1);
+            prop::collection::vec(
+                prop::collection::vec(any::<u8>(), 1..=10),
+                size..=size.saturating_add(100),
+            )
+            .prop_map(|v| {
+                let data: BTreeSet<Vec<u8>> = v.into_iter().collect();
+                let accumulator =
+                    MerkleAccumulator::<Keccak256>::from_set(data.iter().map(|i| i.as_ref()))
+                        .unwrap();
+                MerkleAccumulatorDataWrapper { accumulator, data }
+            })
+            .boxed()
+        }
+
+        type Strategy = BoxedStrategy<Self>;
+    }
+
+    impl Arbitrary for MerklePath<Keccak256> {
+        type Parameters = usize;
+
+        fn arbitrary_with(size: Self::Parameters) -> Self::Strategy {
+            let size = size.saturating_add(1);
+            prop::collection::vec(
+                prop::collection::vec(any::<u8>(), 32),
+                size..=size.saturating_add(100),
+            )
+            .prop_map(|v| {
+                let v = v.into_iter().map(|i| i.try_into().unwrap()).collect();
+                MerklePath(v)
+            })
+            .boxed()
+        }
+
+        type Strategy = BoxedStrategy<Self>;
+    }
+
     #[test]
     fn test_merkle() {
-        let mut set: HashSet<&[u8]> = HashSet::new();
+        let mut set: BTreeSet<&[u8]> = BTreeSet::new();
 
         // Create some random elements (converted to bytes). All accumulators store arbitrary bytes so
         // that we can target any account (or subset of accounts).
@@ -314,35 +289,168 @@ mod test {
         set.insert(&item_b);
         set.insert(&item_c);
 
-        let accumulator = MerkleAccumulator::<'_, Keccak256Hasher>::from_set(set.iter()).unwrap();
+        let accumulator = MerkleAccumulator::<Keccak256>::from_set(set.into_iter()).unwrap();
         let proof = accumulator.prove(&item_a).unwrap();
-        // println!("Proof:  {:02X?}", proof);
-        assert!(accumulator.verify(proof, &item_a));
-        let proof = accumulator.prove(&item_a).unwrap();
-        println!(
-            "proof: {:#?}",
-            proof.0.iter().map(|x| format!("{x:?}")).collect::<Vec<_>>()
-        );
-        println!(
-            "accumulator root: {:?}",
-            accumulator.accumulator.get_root().unwrap()
-        );
-        println!(
-            r"
-                Sizes:
-                    MerkleAccumulator::Proof    {:?}
-                    Keccak256Hasher::Hash       {:?}
-                    MerkleNode                  {:?}
-                    MerklePath                  {:?}
 
-            ",
-            size_of::<<MerkleAccumulator<'_> as Accumulator>::Proof>(),
-            size_of::<<Keccak256Hasher as Hasher>::Hash>(),
-            size_of::<MerkleNode<Keccak256Hasher>>(),
-            size_of::<MerklePath<Keccak256Hasher>>()
-        );
-        assert!(!accumulator.verify(proof, &item_d));
+        assert!(accumulator.check(proof, &item_a));
+        let proof = accumulator.prove(&item_a).unwrap();
+        assert_eq!(size_of::<<Keccak256 as Hasher>::Hash>(), 32);
+
+        assert!(!accumulator.check(proof, &item_d));
     }
 
-    //TODO: more tests
+    #[test]
+    // Note that this is testing proofs for trees size 2 and greater, as a size 1 tree the root is
+    // its own proof and will always pass. This just checks the most obvious case that an empty or
+    // default proof should obviously not work, see the proptest for a more thorough check.
+    fn test_merkle_default_proof_fails() {
+        let mut set: BTreeSet<&[u8]> = BTreeSet::new();
+
+        // Insert the bytes into the Accumulate type.
+        let item_a = 88usize.to_be_bytes();
+        let item_b = 99usize.to_be_bytes();
+        set.insert(&item_a);
+        set.insert(&item_b);
+
+        // Attempt to prove empty proofs that are not in the accumulator.
+        let accumulator = MerkleAccumulator::<Keccak256>::from_set(set.into_iter()).unwrap();
+        let proof = MerklePath::<Keccak256>::default();
+        assert!(!accumulator.check(proof, &item_a));
+        let proof = MerklePath::<Keccak256>(vec![Default::default()]);
+        assert!(!accumulator.check(proof, &item_a));
+    }
+
+    #[test]
+    fn test_corrupted_tree_proofs() {
+        let mut set: BTreeSet<&[u8]> = BTreeSet::new();
+
+        // Insert the bytes into the Accumulate type.
+        let item_a = 88usize.to_be_bytes();
+        let item_b = 99usize.to_be_bytes();
+        let item_c = 100usize.to_be_bytes();
+        let item_d = 101usize.to_be_bytes();
+        set.insert(&item_a);
+        set.insert(&item_b);
+        set.insert(&item_c);
+        set.insert(&item_d);
+
+        // Accumulate
+        let accumulator = MerkleAccumulator::<Keccak256>::from_set(set.into_iter()).unwrap();
+
+        // For each hash in the resulting proofs, corrupt one hash and confirm that the proof
+        // cannot pass check.
+        for item in [item_a, item_b, item_c, item_d].iter() {
+            let proof = accumulator.prove(item).unwrap();
+            for (i, _) in proof.0.iter().enumerate() {
+                let mut corrupted_proof = proof.clone();
+                corrupted_proof.0[i] = Default::default();
+                assert!(!accumulator.check(corrupted_proof, item));
+            }
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    // Generates a tree with four leaves, then uses the first leaf of the right subtree as the
+    // sibling hash, this detects if second preimage attacks are possible.
+    fn test_merkle_second_preimage_attack() {
+        let mut set: BTreeSet<&[u8]> = BTreeSet::new();
+
+        // Insert the bytes into the Accumulate type.
+        let item_a = 81usize.to_be_bytes();
+        let item_b = 99usize.to_be_bytes();
+        let item_c = 100usize.to_be_bytes();
+        let item_d = 101usize.to_be_bytes();
+        set.insert(&item_a);
+        set.insert(&item_b);
+        set.insert(&item_c);
+        set.insert(&item_d);
+
+        // Accumulate into a 2 level tree.
+        let accumulator = MerkleAccumulator::<Keccak256>::from_set(set.into_iter()).unwrap();
+        let proof = accumulator.prove(&item_a).unwrap();
+        assert!(accumulator.check(proof.clone(), &item_a));
+
+        // We now have a 2 level tree with 4 nodes:
+        //
+        //         root
+        //         /  \
+        //        /    \
+        //       A      B
+        //      / \    / \
+        //     a   b  c   d
+        //
+        // Laid out as: [0, root, A, B, a, b, c, d]
+        //
+        // In order to test preimage resistance we will attack the tree by dropping its leaf nodes
+        // from the bottom level, this produces a new tree with 2 nodes:
+        //
+        //         root
+        //         /  \
+        //        /    \
+        //       A      B
+        //
+        // Laid out as: [0, root, A, B]
+        //
+        // Here rather than A/B being hashes of leaf nodes, they themselves ARE the leaves, if the
+        // implementation did not use a different hash for nodes and leaves then it is possible to
+        // falsely prove `A` was in the original tree by tricking the implementation into performing
+        // H(a || b) at the leaf.
+        let faulty_accumulator = MerkleAccumulator::<Keccak256> {
+            root:  accumulator.root,
+            nodes: vec![
+                accumulator.nodes[0].clone(),
+                accumulator.nodes[1].clone(), // Root Stays the Same
+                accumulator.nodes[2].clone(), // Left node hash becomes a leaf.
+                accumulator.nodes[3].clone(), // Right node hash becomes a leaf.
+            ],
+        };
+
+        // `a || b` is the concatenation of a and b, which when hashed without pre-image fixes in
+        // place generates A as a leaf rather than a pair node.
+        let fake_leaf_A = &[
+            hash_leaf::<Keccak256>(&item_b),
+            hash_leaf::<Keccak256>(&item_a),
+        ]
+        .concat();
+
+        // Confirm our combined hash existed as a node pair in the original tree.
+        assert_eq!(hash_leaf::<Keccak256>(&fake_leaf_A), accumulator.nodes[2]);
+
+        // Now we can try and prove leaf membership in the faulty accumulator. NOTE: this should
+        // fail but to confirm that the test is actually correct you can remove the PREFIXES from
+        // the hash functions and this test will erroneously pass.
+        let proof = faulty_accumulator.prove(&fake_leaf_A).unwrap();
+        assert!(faulty_accumulator.check(proof, &fake_leaf_A));
+    }
+
+    proptest! {
+        // Use proptest to generate arbitrary Merkle trees as part of our fuzzing strategy. This
+        // will help us identify any edge cases or unexpected behavior in the implementation.
+        #[test]
+        fn test_merkle_tree(v in any::<MerkleAccumulatorDataWrapper>()) {
+            for d in v.data {
+                let proof = v.accumulator.prove(&d).unwrap();
+                assert!(v.accumulator.check(proof, &d));
+            }
+        }
+
+        // Use proptest to generate arbitrary proofs for Merkle Trees trying to find a proof that
+        // passes which should not.
+        #[test]
+        fn test_fake_merkle_proofs(
+            v in any::<MerkleAccumulatorDataWrapper>(),
+            p in any::<MerklePath<Keccak256>>(),
+        ) {
+            // Reject 1-sized trees as they will always pass due to root being the only elements
+            // own proof (I.E proof is [])
+            if v.data.len() == 1 {
+                return Ok(());
+            }
+
+            for d in v.data {
+                assert!(!v.accumulator.check(p.clone(), &d));
+            }
+        }
+    }
 }

@@ -1,5 +1,5 @@
 use {
-    crate::RawPubkey,
+    crate::Pubkey,
     borsh::{
         BorshDeserialize,
         BorshSerialize,
@@ -29,35 +29,16 @@ pub struct PostedMessageUnreliableData {
 
 #[derive(Debug, Default, BorshSerialize, BorshDeserialize, Clone, Serialize, Deserialize)]
 pub struct MessageData {
-    /// Header of the posted VAA
-    pub vaa_version: u8,
-
-    /// Level of consistency requested by the emitter
-    pub consistency_level: u8,
-
-    /// Time the vaa was submitted
-    pub vaa_time: u32,
-
-    /// Account where signatures are stored
-    pub vaa_signature_account: RawPubkey,
-
-    /// Time the posted message was created
-    pub submission_time: u32,
-
-    /// Unique nonce for this message
-    pub nonce: u32,
-
-    /// Sequence number of this message
-    pub sequence: u64,
-
-    /// Emitter of the message
-    pub emitter_chain: u16,
-
-    /// Emitter of the message
-    pub emitter_address: [u8; 32],
-
-    /// Message payload
-    pub payload: Vec<u8>,
+    pub vaa_version:           u8,
+    pub consistency_level:     u8,
+    pub vaa_time:              u32,
+    pub vaa_signature_account: Pubkey,
+    pub submission_time:       u32,
+    pub nonce:                 u32,
+    pub sequence:              u64,
+    pub emitter_chain:         u16,
+    pub emitter_address:       [u8; 32],
+    pub payload:               Vec<u8>,
 }
 
 impl BorshSerialize for PostedMessageUnreliableData {
@@ -90,7 +71,6 @@ impl BorshDeserialize for PostedMessageUnreliableData {
 
 impl Deref for PostedMessageUnreliableData {
     type Target = MessageData;
-
     fn deref(&self) -> &Self::Target {
         &self.message
     }
