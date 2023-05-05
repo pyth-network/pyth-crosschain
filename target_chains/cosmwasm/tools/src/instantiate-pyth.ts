@@ -4,18 +4,14 @@ import {
 } from "./chains-manager/chains";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { readFileSync } from "fs";
 import {
   InstantiateContractResponse,
   StoreCodeResponse,
 } from "./chains-manager/chain-executor";
 import { Pipeline } from "./pipeline";
-import { rimrafSync } from "rimraf";
-import download from "download";
-import AdmZip from "adm-zip";
-import path from "path";
 import {
   WORMHOLE_CONTRACT_VERSION,
+  getContractBytesDict,
   getWormholeContractAddress,
 } from "./helper";
 import { ExtendedChainsConfigTestnet } from "./extended-chain-config";
@@ -46,7 +42,7 @@ const argv = yargs(hideBin(process.argv))
 async function run() {
   const STORAGE_DIR = "./testnet/instantiate-pyth";
 
-  // download wasm code from github
+  // get the wasm code from github
   let contractBytesDict = await getContractBytesDict(
     Object.values(ExtendedChainsConfigTestnet).map(
       ({ pythArtifactZipName }) => pythArtifactZipName
@@ -163,49 +159,6 @@ function getPythConfig({
       chain_id: 1,
     },
   };
-}
-
-async function getContractBytesDict(
-  artifactZipFileNames: string[],
-  version: string
-) {
-  const githubArtifactsLink = `https://github.com/pyth-network/pyth-crosschain/releases/download/pyth-cosmwasm-contract-v${version}/`;
-  const tmpCodeStorageDir = "./tmp";
-  // clear tmp directory before downloading contracts
-  rimrafSync(tmpCodeStorageDir);
-
-  const uniqueArtifactsZipName = Array.from(new Set(artifactZipFileNames));
-
-  // download zip files
-  await Promise.all(
-    uniqueArtifactsZipName.map(async (artifactZipName) => {
-      await download(
-        githubArtifactsLink + artifactZipName + ".zip",
-        tmpCodeStorageDir
-      );
-    })
-  );
-
-  // extract zip files
-  uniqueArtifactsZipName.map(async (artifactZipName) => {
-    const zip = new AdmZip(
-      path.resolve(tmpCodeStorageDir + "/" + artifactZipName + ".zip")
-    );
-    zip.extractAllTo(path.resolve(tmpCodeStorageDir));
-  });
-
-  let contractBytesDict: { [fileName: string]: Buffer } = {};
-  for (let uniqueArtifactZipName of uniqueArtifactsZipName) {
-    const contractBytes = readFileSync(
-      tmpCodeStorageDir + "/" + uniqueArtifactZipName + "/pyth_cosmwasm.wasm"
-    );
-    contractBytesDict[uniqueArtifactZipName] = contractBytes;
-  }
-
-  // clear tmp directory before downloading contracts
-  rimrafSync(tmpCodeStorageDir);
-
-  return contractBytesDict;
 }
 
 run();
