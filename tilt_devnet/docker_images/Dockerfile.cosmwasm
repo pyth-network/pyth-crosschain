@@ -27,6 +27,11 @@ RUN --mount=type=cache,target=/code/target,id=cosmwasm_pyth_target --mount=type=
 # Contract deployment stage
 FROM lerna
 
+USER root
+RUN apt update && apt install netcat curl jq -y
+
+USER 1000
+
 COPY --from=wormhole_builder /code/artifacts/wormhole.wasm /home/node/target_chains/cosmwasm/artifacts/wormhole.wasm
 COPY --from=pyth_builder /code/artifacts/pyth_cosmwasm.wasm /home/node/target_chains/cosmwasm/artifacts/pyth_cosmwasm.wasm
 
@@ -34,3 +39,7 @@ WORKDIR /home/node/
 
 COPY --chown=1000:1000 governance/xc_governance_sdk_js governance/xc_governance_sdk_js
 COPY --chown=1000:1000 target_chains/cosmwasm/tools target_chains/cosmwasm/tools
+
+RUN npx lerna run build --scope="@pythnetwork/cosmwasm-deploy-tools" --include-dependencies
+
+WORKDIR /home/node/target_chains/cosmwasm/tools
