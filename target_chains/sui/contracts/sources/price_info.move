@@ -177,8 +177,12 @@ module pyth::price_info {
 
     public(friend) fun update_price_info_object(
         price_info_object: &mut PriceInfoObject,
-        price_info: PriceInfo
+        price_info: &PriceInfo
     ) {
-        price_info_object.price_info = price_info;
+        price_info_object.price_info = new_price_info(
+            price_info.attestation_time,
+            price_info.arrival_time,
+            price_info.price_feed
+        );
     }
 }
