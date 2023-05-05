@@ -194,9 +194,8 @@ module pyth::pyth {
     ): HotPotatoVector<PriceInfo> {
         let latest_only = state::assert_latest_only(pyth_state);
 
-        // Charge the message update fee (multiply RHS by 5 because that's the max number of
-        // price updates that fit inside of a single batch price attestation VAA).
-        // We charge the base update fee for 5 price updates.
+        // Since we charge the base update fee per 5 price updates, here we check that
+        // Coin Value >= update_fee / 5 (we only update a single price feed in this function).
         assert!(state::get_base_update_fee(pyth_state) <= 5 * coin::value(&fee), E_INSUFFICIENT_FEE);
 
         // TODO: Ideally, we'd want to use Wormhole fee collector instead of transferring funds to deployer address,
