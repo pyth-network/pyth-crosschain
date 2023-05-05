@@ -29,6 +29,7 @@ module pyth::pyth {
     const E_PRICE_INFO_OBJECT_NOT_FOUND: u64 = 4;
     const E_INVALID_PUBLISH_TIMES_LENGTH: u64 = 5;
     const E_NO_FRESH_DATA: u64 = 6;
+    const E_UPDATE_AND_PRICE_INFO_OBJECT_MISMATCH: u64 = 7;
 
     #[test_only]
     friend pyth::pyth_tests;
@@ -142,57 +143,24 @@ module pyth::pyth {
         vector::destroy_empty(verified_vaas);
     }
 
-    /// Update Pyth Price Info objects (containing price feeds) with the
-    /// price data in the given VAAs.
-    ///
-    /// The vaas argument is a vector of VAAs encoded as bytes.
-    ///
-    /// The javascript https://github.com/pyth-network/pyth-js/tree/main/pyth-sui-js package
-    /// should be used to fetch these VAAs from the Price Service. More information about this
-    /// process can be found at https://docs.pyth.network/consume-data.
-    ///
-    /// The given fee must contain a sufficient number of coins to pay the update fee for the given vaas.
-    /// The update fee amount can be queried by calling get_update_fee(&vaas).
-    ///
-    /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
-    public fun update_price_feeds(
+    public fun create_price_infos_hot_potato(
         pyth_state: &PythState,
-        verified_vaas: vector<VAA>,
-        price_info_objects: &mut vector<PriceInfoObject>,
-        fee: Coin<SUI>,
-        clock: &Clock
-    ){
-        let _ = state::assert_latest_only(pyth_state);
-
-        // Charge the message update fee
-        assert!(get_total_update_fee(pyth_state, vector::length(&verified_vaas)) <= coin::value(&fee), E_INSUFFICIENT_FEE);
-
-        // TODO: Ideally, we'd want to use Wormhole fee collector instead of transferring funds to deployer address,
-        //       however this requires a mutable reference to PythState. We don't want update_price_feeds
-        //       to take in mutable references to PythState, because taking a global write lock on it
-        //       makes it so price updates can't execute in parallel, even if they act on different price feeds
-        //       (or PriceInfoObjects).
-        transfer::public_transfer(fee, state::get_fee_recipient(pyth_state));
-
-        // Update the price feed from each VAA
-        while (!vector::is_empty(&verified_vaas)) {
-            update_price_feed_from_single_vaa(
-                pyth_state,
-                vector::pop_back(&mut verified_vaas),
-                price_info_objects,
-                clock
-            );
-        };
-        vector::destroy_empty(verified_vaas);
-    }
-
-    fun create_price_infos_hot_potato(
         verified_vaas: vector<VAA>,
         clock: &Clock
     ): HotPotatoVector<PriceInfo> {
         let price_updates = vector::empty<PriceInfo>();
         while (vector::length(&verified_vaas) != 0){
             let cur_vaa = vector::pop_back(&mut verified_vaas);
+
+            assert!(
+                state::is_valid_data_source(
+                    pyth_state,
+                    data_source::new(
+                        (vaa::emitter_chain(&cur_vaa) as u64),
+                        vaa::emitter_address(&cur_vaa))
+                ),
+                E_INVALID_DATA_SOURCE
+            );
             let price_infos = batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::take_payload(cur_vaa), clock));
             while (vector::length(&price_infos) !=0 ){
                 let cur_price_info = vector::pop_back(&mut price_infos);
@@ -203,112 +171,68 @@ module pyth::pyth {
         return hot_potato_vector::new(price_updates)
     }
 
-    /// Make sure that a Sui object of type PriceInfoObject exists for each update
-    /// encoded in the worm_vaa (batch_attestation_vaa). These should be passed in
-    /// via the price_info_objects argument. If for any price feed update, a
-    /// a PriceInfoObject with a matching price identifier is not found, the update_cache
-    /// function will revert, causing this function to revert.
-    fun update_price_feed_from_single_vaa(
-        pyth_state: &PythState,
-        verified_vaa: VAA,
-        price_info_objects: &mut vector<PriceInfoObject>,
-        clock: &Clock
-    ) {
-
-        // Check that the VAA is from a valid data source (emitter)
-        assert!(
-            state::is_valid_data_source(
-                pyth_state,
-                data_source::new(
-                    (vaa::emitter_chain(&verified_vaa) as u64),
-                    vaa::emitter_address(&verified_vaa))
-                ),
-        E_INVALID_DATA_SOURCE);
-
-        // Deserialize the batch price attestation
-        let price_infos = batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::take_payload(verified_vaa), clock));
-
-        // Update price info objects.
-        update_cache(price_infos, price_info_objects, clock);
-    }
-
-    /// Update PriceInfoObjects using up-to-date PriceInfos.
-    public(friend) fun update_cache(
-        updates: vector<PriceInfo>,
-        price_info_objects: &mut vector<PriceInfoObject>,
-        clock: &Clock,
-    ){
-        while (!vector::is_empty(&updates)) {
-            let update = vector::pop_back(&mut updates);
-            let i = 0;
-            let found = false;
-            // Note - Would it be worth it to construct an in-memory hash-map to make look-ups faster?
-            //        This loop might be expensive if there are a large number of price_info_objects
-            //        passed in.
-            while (i < vector::length<PriceInfoObject>(price_info_objects) && found == false){
-                // Check if the current price info object corresponds to the price feed that
-                // the update is meant for.
-                let price_info = price_info::get_price_info_from_price_info_object(vector::borrow(price_info_objects, i));
-                if (price_info::get_price_identifier(&price_info) ==
-                    price_info::get_price_identifier(&update)){
-                    found = true;
-                    // Update the price info object with the new updated price info.
-                    if (is_fresh_update(&update, vector::borrow(price_info_objects, i))){
-                        pyth_event::emit_price_feed_update(price_feed::from(price_info::get_price_feed(&update)), clock::timestamp_ms(clock)/1000);
-                        price_info::update_price_info_object(
-                            vector::borrow_mut(price_info_objects, i),
-                            update
-                        );
-                    }
-                };
-                i = i + 1;
-            };
-            if (!found){
-                abort(E_PRICE_INFO_OBJECT_NOT_FOUND)
-            }
-        };
-        vector::destroy_empty(updates);
-    }
-
-    /// Update the cached price feeds with the data in the given VAAs, using
-    /// update_price_feeds(). However, this function will only have an effect if any of the
-    /// prices in the update are fresh. The price_identifiers and publish_times parameters
-    /// are used to determine if the update is fresh without doing any serialisation or verification
-    /// of the VAAs, potentially saving time and gas. If the update contains no fresh data, this function
-    /// will revert with error::no_fresh_data().
+    /// Update a singular Pyth PriceInfoObject (containing a price feed) with the
+    /// price data in the given hot potato vector (a vector of PriceInfo objects).
     ///
-    /// For a given price update i in the batch, that price is considered fresh if the current cached
-    /// price for price_identifiers[i] is older than publish_times[i].
-    public fun update_price_feeds_if_fresh(
-        vaas: vector<VAA>,
+    ///
+    /// The javascript https://github.com/pyth-network/pyth-js/tree/main/pyth-sui-js package
+    /// should be used to fetch these VAAs from the Price Service. More information about this
+    /// process can be found at https://docs.pyth.network/consume-data.
+    ///
+    /// The given fee must contain a sufficient number of coins to pay the update fee for the given vaas.
+    /// The update fee amount can be queried by calling get_update_fee(&vaas).
+    ///
+    /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
+    public fun update_single_price_feed(
         pyth_state: &PythState,
-        price_info_objects: &mut vector<PriceInfoObject>,
-        publish_times: vector<u64>,
+        price_updates: HotPotatoVector<PriceInfo>,
+        price_info_object: &mut PriceInfoObject,
         fee: Coin<SUI>,
         clock: &Clock
-    ) {
-        assert!(vector::length(price_info_objects) == vector::length(&publish_times),
-            E_INVALID_PUBLISH_TIMES_LENGTH
-        );
+    ): HotPotatoVector<PriceInfo> {
+        let _ = state::assert_latest_only(pyth_state);
 
-        let fresh_data = false;
-        let i = 0;
-        while (i < vector::length(&publish_times)) {
-            let cur_price_info = price_info::get_price_info_from_price_info_object(vector::borrow(price_info_objects, i));
-            let cur_price_feed = price_info::get_price_feed(&cur_price_info);
-            let cur_price = price_feed::get_price(cur_price_feed);
+        // Charge the message update fee (multiply RHS by 5 because that's the max number of
+        // price updates that fit inside of a single batch price attestation VAA).
+        // We charge the base update fee for 5 price updates.
+        assert!(state::get_base_update_fee(pyth_state) <= 5 * coin::value(&fee), E_INSUFFICIENT_FEE);
 
-            let cached_timestamp = price::get_timestamp(&cur_price);
-            if (cached_timestamp < *vector::borrow(&publish_times, i)) {
-                fresh_data = true;
-                break
-            };
+        // TODO: Ideally, we'd want to use Wormhole fee collector instead of transferring funds to deployer address,
+        //       however this requires a mutable reference to PythState. We don't want update_price_feeds
+        //       to take in mutable references to PythState, because taking a global write lock on it
+        //       makes it so price updates can't execute in parallel, even if they act on different price feeds
+        //       (or PriceInfoObjects).
+        transfer::public_transfer(fee, state::get_fee_recipient(pyth_state));
 
-            i = i + 1;
-        };
+        let (price_info, hot_potato_vector) = hot_potato_vector::pop_back<PriceInfo>(price_updates);
 
-        assert!(fresh_data, E_NO_FRESH_DATA);
-        update_price_feeds(pyth_state, vaas, price_info_objects, fee, clock);
+        // Update the price_info_object using the price_info.
+        // If the price_info is not intended to update price_info_object,
+        // then the call will revert.
+        update_cache(price_info, price_info_object, clock);
+
+        hot_potato_vector
+    }
+
+    /// Update PriceInfoObject with updated data from a PriceInfo
+    public(friend) fun update_cache(
+        update: PriceInfo,
+        price_info_object: &mut PriceInfoObject,
+        clock: &Clock,
+    ){
+        let price_info = price_info::get_price_info_from_price_info_object(price_info_object);
+        // Check if the current price info object corresponds to the price feed that
+        // the update is meant for.
+        assert!(price_info::get_price_identifier(&price_info) == price_info::get_price_identifier(&update), E_UPDATE_AND_PRICE_INFO_OBJECT_MISMATCH);
+
+        // Update the price info object with the new updated price info.
+        if (is_fresh_update(&update, price_info_object)){
+            pyth_event::emit_price_feed_update(price_feed::from(price_info::get_price_feed(&update)), clock::timestamp_ms(clock)/1000);
+            price_info::update_price_info_object(
+                price_info_object,
+                update
+            );
+        }
     }
 
     /// Determine if the given price update is "fresh": we have nothing newer already cached for that

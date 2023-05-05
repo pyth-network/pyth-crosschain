@@ -4,22 +4,35 @@ module pyth::hot_potato_vector {
     use std::vector;
     const E_EMPTY_HOT_POTATO: u64 = 0;
 
+    friend pyth::pyth;
+    friend pyth::batch_price_attestation;
+
     // A hot potato containing a vector of elements
     struct HotPotatoVector<T: drop> {
         contents: vector<T>
     }
 
+    // A public destroy function.
     public fun destroy<T: drop>(hot_potato_vector: HotPotatoVector<T>){
         let HotPotatoVector {contents: _} = hot_potato_vector;
     }
 
-    public fun new<T: drop>(vec: vector<T>): HotPotatoVector<T>{
+    // Only certain on-chain functions are allowed to create a new hot potato vector.
+    public(friend) fun new<T: drop>(vec: vector<T>): HotPotatoVector<T>{
         HotPotatoVector {
             contents: vec
         }
     }
 
-    public fun pop_back<T: drop>(hot_potato_vector: HotPotatoVector<T>): (T, HotPotatoVector<T>){
+    public fun length<T: drop>(potato: &HotPotatoVector<T>): u64 {
+        vector::length(&potato.contents)
+    }
+
+    public fun is_empty<T: drop>(potato: &HotPotatoVector<T>): bool {
+        vector::is_empty(&potato.contents)
+    }
+
+    public(friend) fun pop_back<T: drop>(hot_potato_vector: HotPotatoVector<T>): (T, HotPotatoVector<T>){
         let elem = vector::pop_back<T>(&mut hot_potato_vector.contents);
         return (elem, hot_potato_vector)
     }
