@@ -5,7 +5,6 @@ module pyth::hot_potato_vector {
     const E_EMPTY_HOT_POTATO: u64 = 0;
 
     friend pyth::pyth;
-    friend pyth::batch_price_attestation;
 
     // A hot potato containing a vector of elements
     struct HotPotatoVector<T: drop> {
