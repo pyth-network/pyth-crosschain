@@ -7,6 +7,7 @@ module pyth::batch_price_attestation {
     use pyth::price_identifier::{Self};
     use pyth::price_status;
     use pyth::deserialize::{Self};
+    use pyth::hot_potato_vector::{Self, HotPotatoVector};
 
     use wormhole::cursor::{Self, Cursor};
     use wormhole::bytes::{Self};
@@ -54,6 +55,11 @@ module pyth::batch_price_attestation {
             version_major: (version_major as u64),
             payload_id: payload_id,
         }
+    }
+
+    public fun destruct_into_hot_potato(batch: BatchPriceAttestation): HotPotatoVector<PriceInfo> {
+        let price_infos = destroy(batch);
+        hot_potato_vector::new<PriceInfo>(price_infos)
     }
 
     public fun destroy(batch: BatchPriceAttestation): vector<PriceInfo> {
