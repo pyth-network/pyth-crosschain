@@ -1,5 +1,5 @@
 {
-  "name": "tools",
+  "name": "@pythnetwork/cosmwasm-deploy-tools",
   "version": "1.0.0",
   "description": "",
   "main": "deploy-pyth-bridge.ts",

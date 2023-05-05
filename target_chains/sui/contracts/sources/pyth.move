@@ -963,7 +963,7 @@ module pyth::pyth_tests{
         price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
 
         vector::destroy_empty(price_info_object_vec);
-        
+
         let current_price_info = price_info::get_price_info_from_price_info_object(&price_info_object_1);
         let current_price_feed = price_info::get_price_feed(&current_price_info);
         let current_price = price_feed::get_price(current_price_feed);
