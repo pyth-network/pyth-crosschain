@@ -360,7 +360,6 @@ module pyth::pyth_tests{
     //use pyth::price::{Self};
     use pyth::pyth::{Self, create_price_infos_hot_potato, update_single_price_feed};
     use pyth::hot_potato_vector::{Self};
-    use pyth::batch_price_attestation::Self;
 
     use wormhole::setup::{Self as wormhole_setup, DeployerCap};
     use wormhole::external_address::{Self};
@@ -698,10 +697,6 @@ module pyth::pyth_tests{
         verified_vaas = get_verified_test_vaas(&worm_state, &clock);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        // Get VAA objects
-        std::debug::print(&vector::length<VAA>(&verified_vaas));
-        std::debug::print(&vector::length<VAA>(&verified_vaas));
-
         let vaa_1 = vector::pop_back<VAA>(&mut verified_vaas);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
@@ -724,13 +719,6 @@ module pyth::pyth_tests{
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         hot_potato_vector::destroy<PriceInfo>(potato);
-
-        // custom test
-        let my_payload = x"50325748000300010001020005009d6d019ae796c5dcf01a8ff745bf296633fee4b1ce65f999dfe8387670b412d38019786f31e85d3598cecdab810b2787de0fc22c2cf98b4f16fb1e5bf567a0a4310000000002c03544000000000000b540fffffff80000000002c0292e000000000000c5bb01000000010000000200000000645564b700000000645564b600000000645564b50000000002c03544000000000000b54000000000645564afa99e670be7a52f782741f3d29eebdd67fc3f3255e13a535a7fb9a62bb4e3fb778b62866fcd3a25ff9118506444e9fe5171e67c61a049f4b4fdacdbc31ae862bb000000000905a2a5000000000001be4dfffffff80000000009088b05000000000001788901000000010000000200000000645564b700000000645564b700000000645564b6000000000905a2a5000000000001be4d00000000645564af7e630e398613940e3623025da9969971d3f31a9436d97a3ee15aa7cb5846af4bf73112d4ad26fd37cf18ca9b3f7e6f1a562b5965cbc26e4488a540552f18072e00000000000514a300000000000003c3fffffff8000000000005137d00000000000002d001000000010000000200000000645564b700000000645564b700000000645564b600000000000514a300000000000003c300000000645564af0fee5ddc076a96f1a0ed3190757e4313a48449ed7b99e983a58759139391ce056cd5c99c6d86df928b0562f26617ddef400818f8907391f3087965e6b786b0b300000000002daa8b00000000000006b1fffffff800000000002daae3000000000000066f01000000010000000200000000645564b700000000645564b700000000645564b600000000002da9f5000000000000074700000000645564afa968e23dc27f032167b37c0e43f3dc2c109572ad90eb48f20caf90caa16a1e66eb00e1f858549e12034ff880b7592456a71b4237aaf4aeb16e63cd9b68ba4d7e0000000000ee0dcc0000000000018aecfffffff80000000000ee5bcf000000000000c1d501000000010000000200000000645564b700000000645564b700000000645564b60000000000ee1b14000000000000907300000000645564af";
-        let price_updates = batch_price_attestation::deserialize(my_payload, &clock);
-        std::debug::print(&price_updates);
-        let _payload = batch_price_attestation::destroy(price_updates);
-        //std::debug::print(&payload);
 
         vector::destroy_empty(verified_vaas);
         return_shared(pyth_state);
