@@ -9,7 +9,7 @@ module pyth::pyth {
 
     use pyth::event::{Self as pyth_event};
     use pyth::data_source::{Self, DataSource};
-    use pyth::state::{Self as state, State as PythState};
+    use pyth::state::{Self as state, State as PythState, LatestOnly};
     use pyth::price_info::{Self, PriceInfo, PriceInfoObject};
     use pyth::batch_price_attestation::{Self};
     use pyth::price_feed::{Self};
@@ -148,6 +148,8 @@ module pyth::pyth {
         verified_vaas: vector<VAA>,
         clock: &Clock
     ): HotPotatoVector<PriceInfo> {
+        let _ = state::assert_latest_only(pyth_state);
+
         let price_updates = vector::empty<PriceInfo>();
         while (vector::length(&verified_vaas) != 0){
             let cur_vaa = vector::pop_back(&mut verified_vaas);
@@ -190,7 +192,7 @@ module pyth::pyth {
         fee: Coin<SUI>,
         clock: &Clock
     ): HotPotatoVector<PriceInfo> {
-        let _ = state::assert_latest_only(pyth_state);
+        let latest_only = state::assert_latest_only(pyth_state);
 
         // Charge the message update fee (multiply RHS by 5 because that's the max number of
         // price updates that fit inside of a single batch price attestation VAA).
@@ -209,13 +211,14 @@ module pyth::pyth {
         // Update the price_info_object using the price_info.
         // If the price_info is not intended to update price_info_object,
         // then the call will revert.
-        update_cache(price_info, price_info_object, clock);
+        update_cache(latest_only, price_info, price_info_object, clock);
 
         hot_potato_vector
     }
 
     /// Update PriceInfoObject with updated data from a PriceInfo
     public(friend) fun update_cache(
+        _: LatestOnly,
         update: PriceInfo,
         price_info_object: &mut PriceInfoObject,
         clock: &Clock,
