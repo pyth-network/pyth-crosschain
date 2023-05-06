@@ -37,7 +37,7 @@ public fun create_price_infos_hot_potato(
 ```
 
 ### 3.`pyth::pyth::update_single_price_feed`
-Use the hot potato to update a price feed.
+Use the hot potato price updates vector to update a price feed.
 
 ```Rust
 public fun update_single_price_feed(
