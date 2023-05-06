@@ -76,6 +76,8 @@ async function main() {
 
 main();
 
+// Example on updating a price feed and then getting
+// the updated price.
 async function update_price_feeds(
   signer: RawSigner,
   registry: any,
@@ -93,6 +95,8 @@ async function update_price_feeds(
   console.log("WORM_PACKAGE: ", WORM_PACKAGE);
   console.log("WORM_STATE: ", WORM_STATE);
 
+  // Parse our batch price attestation VAA bytes using Wormhole.
+  // Check out the Wormhole cross-chain bridge here: https://github.com/wormhole-foundation/wormhole
   let verified_vaas = [];
   for (let vaa of vaas) {
     let [verified_vaa] = tx.moveCall({
@@ -106,6 +110,8 @@ async function update_price_feeds(
     verified_vaas = verified_vaas.concat(verified_vaa);
   }
 
+  // Create a hot potato vector of price feed updates that will
+  // be used to update price feeds.
   let [price_updates_hot_potato] = tx.moveCall({
     target: `${PYTH_PACKAGE}::pyth::create_price_infos_hot_potato`,
     arguments: [
@@ -118,6 +124,8 @@ async function update_price_feeds(
     ],
   });
 
+  // Update each price info object (containing our price feeds of interest)
+  // using the hot potato vector.
   for (let price_info_object of price_info_object_ids) {
     let coin = tx.splitCoins(tx.gas, [tx.pure(1)]);
     [price_updates_hot_potato] = tx.moveCall({
@@ -132,6 +140,8 @@ async function update_price_feeds(
     });
   }
 
+  // Explicitly destroy the hot potato vector, since it can't be dropped
+  // automatically.
   tx.moveCall({
     target: `${PYTH_PACKAGE}::hot_potato_vector::destroy`,
     arguments: [price_updates_hot_potato],
