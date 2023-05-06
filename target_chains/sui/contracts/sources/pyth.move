@@ -26,17 +26,13 @@ module pyth::pyth {
     const E_INVALID_DATA_SOURCE: u64 = 1;
     const E_INSUFFICIENT_FEE: u64 = 2;
     const E_STALE_PRICE_UPDATE: u64 = 3;
-    const E_PRICE_INFO_OBJECT_NOT_FOUND: u64 = 4;
-    const E_INVALID_PUBLISH_TIMES_LENGTH: u64 = 5;
-    const E_NO_FRESH_DATA: u64 = 6;
-    const E_UPDATE_AND_PRICE_INFO_OBJECT_MISMATCH: u64 = 7;
-    const E_PRICE_UPDATE_NOT_FOUND_FOR_PRICE_INFO_OBJECT: u64 = 8;
+    const E_UPDATE_AND_PRICE_INFO_OBJECT_MISMATCH: u64 = 4;
+    const E_PRICE_UPDATE_NOT_FOUND_FOR_PRICE_INFO_OBJECT: u64 = 5;
 
     #[test_only]
     friend pyth::pyth_tests;
 
-    /// Call init_and_share_state with deployer cap to initialize
-    /// state and emit event corresponding to Pyth initialization.
+    /// Init state and emit event corresponding to Pyth initialization.
     public entry fun init_pyth(
         deployer: DeployerCap,
         upgrade_cap: UpgradeCap,
