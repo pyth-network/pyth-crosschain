@@ -6,9 +6,8 @@ Pyth price feeds on Sui are uniquely represented in the global store as `PriceIn
 
 `PriceInfoObject`s are central to Pyth on Sui, since they are in unique correspondence with each Pyth price feed and must be passed in to functions that act on price feeds, e.g.
 
-- `update_price_feeds`
-- `update_price_feed_from_single_vaa`
-- `update_price_feeds_if_fresh`
+- `update_single_price_feed`
+- `update_single_pric_feeds_if_fresh`
 
 ## 2. How to Update and Consume Price Feeds
 
