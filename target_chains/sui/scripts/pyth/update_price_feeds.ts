@@ -92,7 +92,8 @@ async function update_price_feeds(
   console.log("WORM_STATE: ", WORM_STATE);
 
   // Parse our batch price attestation VAA bytes using Wormhole.
-  // Check out the Wormhole cross-chain bridge here: https://github.com/wormhole-foundation/wormhole
+  // Check out the Wormhole cross-chain bridge and generic messaging protocol here:
+  //     https://github.com/wormhole-foundation/wormhole
   let verified_vaas = [];
   for (let vaa of vaas) {
     let [verified_vaa] = tx.moveCall({
