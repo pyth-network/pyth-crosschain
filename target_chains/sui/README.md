@@ -72,7 +72,6 @@ This looks like a long sequence of calls to update a price feed, but programmabl
 
 See the `./scripts` folder for examples of programmable transactions for creating price feeds and updating price feeds.
 - [Demo for updating a price feed](./scripts/pyth/update_price_feeds.ts)
-- [Demo for creating new price feeds](./scripts/pyth/create_all_price_feeds.ts)
 
 To build and test the contracts, run the following
 ```
