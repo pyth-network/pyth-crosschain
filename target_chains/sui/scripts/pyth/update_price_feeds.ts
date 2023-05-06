@@ -50,14 +50,31 @@ async function main() {
   console.log(wallet.getAddress());
 
   // update a single price feed
-  const deployer = "0xf0bd738bf137f4cb0601713e95bb9307a5efe8d27f34c9e34f419e17b4e74099";// testnet
-  const price_feed_id =
-    "0x8b62866fcd3a25ff9118506444e9fe5171e67c61a049f4b4fdacdbc31ae862bb"; // testnet
-  const vaa =
-    "AQAAAAABAK46ShchGcySL+D7xbyKdz6C3FxGeMlAaAmDrb1l2LQTRsY7JOCMcKhvhYUvi6U+50JiFO8/AUudI+d5a4RZj/IBZFUq5QAAAAAAGqJ4OdZBsHdDwMtfaMUfjNMdLAdivsANxvzSVDPvGrW2AAAAAAFRKgMBUDJXSAADAAEAAQIABQCdbQGa55bF3PAaj/dFvylmM/7ksc5l+Znf6Dh2cLQS04AZeG8x6F01mM7Nq4ELJ4feD8IsLPmLTxb7Hlv1Z6CkMQAAAAACwJuKAAAAAAABP5D////4AAAAAAK5q0QAAAAAAADnMAEAAAABAAAAAgAAAABkVSrlAAAAAGRVKuUAAAAAZFUq4gAAAAACwJSlAAAAAAABOKsAAAAAZFUq36meZwvnpS94J0Hz0p7r3Wf8PzJV4TpTWn+5piu04/t3i2KGb806Jf+RGFBkROn+UXHmfGGgSfS0/azbwxroYrsAAAAACQzUggAAAAAAAU8K////+AAAAAAI90/oAAAAAAABzswBAAAAAQAAAAIAAAAAZFUq5QAAAABkVSrlAAAAAGRVKuEAAAAACQwGpAAAAAAAAgfMAAAAAGRVKt9+Yw45hhOUDjYjAl2plplx0/MalDbZej7hWqfLWEavS/cxEtStJv03zxjKmz9+bxpWK1lly8JuRIilQFUvGAcuAAAAAAAFHyQAAAAAAAAEgP////gAAAAAAAUXsgAAAAAAAALxAQAAAAEAAAACAAAAAGRVKuUAAAAAZFUq5QAAAABkVSrhAAAAAAAFHyIAAAAAAAAEfgAAAABkVSrfD+5d3AdqlvGg7TGQdX5DE6SESe17memDpYdZE5ORzgVs1cmcbYbfkosFYvJmF93vQAgY+JBzkfMIeWXmt4awswAAAAAALc8CAAAAAAAABm3////4AAAAAAAtgJUAAAAAAAAHJwEAAAABAAAAAgAAAABkVSrlAAAAAGRVKuUAAAAAZFUq4QAAAAAALc5GAAAAAAAAB4YAAAAAZFUq36lo4j3CfwMhZ7N8DkPz3CwQlXKtkOtI8gyvkMqhah5m6wDh+FhUnhIDT/iAt1kkVqcbQjeq9K6xbmPNm2i6TX4AAAAAAO7CdQAAAAAAAZX/////+AAAAAAA7e9ZAAAAAAAA95IBAAAAAQAAAAIAAAAAZFUq5QAAAABkVSrlAAAAAGRVKuQAAAAAAO7CdQAAAAAAAZX/AAAAAGRVKt8="
-  const price_info_object_id =
-    "0xc2c00924b47ce5a4c51b455dff49923c77b4d66eef4953b5b7abcabc1ed80a07";
-  update_price_feeds(wallet, registry, vaa, price_info_object_id, deployer);
+  const _deployer = "0xf0bd738bf137f4cb0601713e95bb9307a5efe8d27f34c9e34f419e17b4e74099";// testnet
+
+  // Price feeds IDs of feeds we are interested in updating.
+  const _price_feed_ids = [
+      "0x8b62866fcd3a25ff9118506444e9fe5171e67c61a049f4b4fdacdbc31ae862bb",
+      "0x0e60a64dcbd660e87a08eb2cc95e8d84d1126fd7354d377b3fc5730352f4b8b2",
+      "0x651071f8c7ab2321b6bdd3bc79b94a50841a92a6e065f9e3b8b9926a8fb5a5d1"
+    ];
+
+  // Batch attestation VAA for price feed IDs above.
+  const vaas = [
+    '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'
+  ]
+
+  // Price info objects corresponding to the price feeds we want to update.
+  const price_info_object_ids =
+    [
+      "0x0d2fbbf69315c2bf139ef2db39fa9290944b714aaf651924be1206fa66a076e7",
+      "0xacfd46e1f0fccfe3b5b2c7959ab628f9543b590555286e6ed7b351bc66a18688",
+      "0x8e0d74c3364b0be0b805fab72974edb9872451737848cf6a28a948e5ade1c8ee"
+    ];
+
+  update_price_feeds(wallet, registry, vaas, price_info_object_ids);
 }
 
 main();
@@ -65,9 +82,8 @@ main();
 async function update_price_feeds(
   signer: RawSigner,
   registry: any,
-  vaa: string,
-  object_id: string,
-  deployer: string
+  vaas: Array<string>,
+  price_info_object_ids: Array<string>,
 ) {
   const tx = new TransactionBlock();
 
@@ -79,55 +95,50 @@ async function update_price_feeds(
   console.log("PYTH_STATE: ", PYTH_STATE);
   console.log("WORM_PACKAGE: ", WORM_PACKAGE);
   console.log("WORM_STATE: ", WORM_STATE);
-  console.log("SUI_CLOCK_OBJECT_ID: ", SUI_CLOCK_OBJECT_ID);
 
-  let [verified_vaa] = tx.moveCall({
-    target: `${WORM_PACKAGE}::vaa::parse_and_verify`,
-    arguments: [
-      tx.object(WORM_STATE),
-      tx.pure([...Buffer.from(vaa, "base64")]),
-      tx.object(SUI_CLOCK_OBJECT_ID),
-    ],
-  });
+  let verified_vaas = []
+  for (let vaa of vaas){
+    let [verified_vaa] = tx.moveCall({
+      target: `${WORM_PACKAGE}::vaa::parse_and_verify`,
+      arguments: [
+        tx.object(WORM_STATE),
+        tx.pure([...Buffer.from(vaa, "base64")]),
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
+    verified_vaas = verified_vaas.concat(verified_vaa)
+  }
 
-  const [coin] = tx.splitCoins(tx.gas, [tx.pure(1)]);
-  tx.transferObjects([coin], tx.pure(deployer));
-
-  let [price_updates_hot_potato_1] = tx.moveCall({
+  let [price_updates_hot_potato] = tx.moveCall({
     target: `${PYTH_PACKAGE}::pyth::create_price_infos_hot_potato`,
     arguments: [
       tx.object(PYTH_STATE),
       tx.makeMoveVec({
         type: `${WORM_PACKAGE}::vaa::VAA`,
-        objects: [verified_vaa],
+        objects: verified_vaas,
       }),
       tx.object(SUI_CLOCK_OBJECT_ID),
     ],
   });
 
-  // Signature:
-  //      pyth_state: &PythState,
-  //      price_updates: HotPotatoVector<PriceInfo>,
-  //      price_info_object: &mut PriceInfoObject,
-  //      fee: Coin<SUI>,
-  //      clock: &Clock
-
-  // This appears to fail with 'CommandArgumentError { arg_idx: 2, kind: TypeMismatch } in command 5'
-  let [price_updates_hot_potato_2] = tx.moveCall({
-    target: `${PYTH_PACKAGE}::pyth::update_single_price_feed`,
-    arguments: [
-      tx.object(PYTH_STATE),
-      price_updates_hot_potato_1,
-      tx.object(object_id),
-      coin,
-      tx.object(SUI_CLOCK_OBJECT_ID),
-    ]
-  });
+  for (let price_info_object of price_info_object_ids){
+    let coin = tx.splitCoins(tx.gas, [tx.pure(1)]);
+    [price_updates_hot_potato] = tx.moveCall({
+      target: `${PYTH_PACKAGE}::pyth::update_single_price_feed`,
+      arguments: [
+        tx.object(PYTH_STATE),
+        price_updates_hot_potato,
+        tx.object(price_info_object),
+        coin,
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ]
+    });
+  }
 
   tx.moveCall({
     target: `${PYTH_PACKAGE}::hot_potato_vector::destroy`,
     arguments: [
-      price_updates_hot_potato_2
+      price_updates_hot_potato
     ],
     typeArguments: [
       `${PYTH_PACKAGE}::price_info::PriceInfo`

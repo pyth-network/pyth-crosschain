@@ -4,7 +4,7 @@ const provider = new JsonRpcProvider(
   new Connection({ fullnode: "https://fullnode.testnet.sui.io:443" }) // <= NOTE: Update this when changing network
 );
 const objectId =
-"0xb2989cd62ec2c2d031f3fbb7cefc0784e0325e73edd5c252019e931ec98bf065"; // <= NOTE: Update this when changing network
+"0xf1cadf5316e1da9af0126c4851a3769b7d77d1cbf053037d20d46484cfc84846"; // <= NOTE: Update this when changing network AND with new deployment
 
 async function main() {
   // Table of Sui Pyth PriceIdentifier => Price Info Object IDs

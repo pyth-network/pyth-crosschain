@@ -1,4 +1,5 @@
 import axios from "axios";
+import { Buffer } from "buffer";
 
 const price_ids_to_price_objects = {
     "4e53c6ef1f2f9952facdcf64551edb6d2a550985484ccce6a0477cae4c1bca3e" : "0x22d83073f60ede68f262043f367d457b161761884cd24bb17666e8c196b266eb",
@@ -203,22 +204,59 @@ const price_feed_id_url = "https://xc-mainnet.pyth.network/api/price_feed_ids"; 
 
 async function main(){
     // get keys from map (price feed ids)
-    console.log("price ids published len: ", Object.keys(price_ids_to_price_objects).length)
-    let all_keys = Object.keys(price_ids_to_price_objects).map(x=>x.toUpperCase())
-    console.log("all keys: ", all_keys)
+    // console.log("price ids published len: ", Object.keys(price_ids_to_price_objects).length)
+    // let all_keys = Object.keys(price_ids_to_price_objects).map(x=>x.toUpperCase())
+    // console.log("all keys: ", all_keys)
 
-    let { data } = await axios.get(price_feed_id_url);
-    console.log("data len: ", data.length)
-    let not_published = []
-    for (let item of data){
-        //console.log("item: ", item)
-        if (!(all_keys.indexOf(item.toUpperCase())>-1)){
-            console.log("not found in keys")
-            not_published = not_published.concat(item)
-        }
-    }
-    console.log("not published: ", not_published)
-    console.log("not_published length: ", not_published.length)
+    // let { data } = await axios.get(price_feed_id_url);
+    // console.log("data len: ", data.length)
+    // let not_published = []
+    // for (let item of data){
+    //     //console.log("item: ", item)
+    //     if (!(all_keys.indexOf(item.toUpperCase())>-1)){
+    //         console.log("not found in keys")
+    //         not_published = not_published.concat(item)
+    //     }
+    // }
+    // console.log("not published: ", not_published)
+    // console.log("not_published length: ", not_published.length)
+
+
+    let buf = Buffer.from([
+        139,
+        98,
+        134,
+        111,
+        205,
+        58,
+        37,
+        255,
+        145,
+        24,
+        80,
+        100,
+        68,
+        233,
+        254,
+        81,
+        113,
+        230,
+        124,
+        97,
+        160,
+        73,
+        244,
+        180,
+        253,
+        172,
+        219,
+        195,
+        26,
+        232,
+        98,
+        187
+      ]).toString("hex")
+      console.log("buf is: ", buf)
 }
 
 main()

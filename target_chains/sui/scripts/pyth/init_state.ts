@@ -35,9 +35,9 @@ async function main() {
 
   // NOTE: Set these before calling init_pyth
   const upgradeCap =
-    "0xa8ec5206fe1306433bfa7925d97f9eba8394442cd08888d965341185119656b8";
+    "0xc9d62cb6af2937ec1dafe99a7e1f85ecfaaa05800c1a4fdbec1a9fdadcee7cab";
   const deployerCap =
-    "0x4d294a17405992e04e220991bdb6768b7f261f188e711a962cd2a8d45fee2a8d";
+    "0xea1aeeb71a4607f1ec61cd3573be44eade6150af407da95d15ca283dc6bd8921";
 
   init_pyth(wallet, PYTH_PACKAGE, deployerCap, upgradeCap);
 }
