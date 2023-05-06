@@ -14,9 +14,9 @@ Pyth price feeds on Sui are uniquely represented in the global store as `PriceIn
 
 To update and then consume a price feed, one needs to build a Sui [programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk).
 
-As with other chains, one first obtains a batch price attestation VAA (of type `vector<u8>`) off-chain for a Price Info Object whose feed is to be used. Assume the ID is `PRICE_INFO_OBJECT_ID`. Then, chain together the following sequence of function calls:
+As with other chains, one first obtains a batch price attestation VAA (of type `vector<u8>`) off-chain for a Price Info Object whose feed is to be used. Assume the ID is `PRICE_INFO_OBJECT_ID`. Then, chain together the following sequence of function calls to update a price feed.
 
-### 1. `wormhole::parse_and_verify`
+### 1. `wormhole::wormhole::parse_and_verify`
 
 Call `parse_and_verify` on the batch attestation VAA bytes to obtain a `VAA` hot potato object.
 
@@ -27,25 +27,39 @@ public fun parse_and_verify(
       the_clock: &Clock
   ): VAA
 ```
-
-### 2.`pyth:update_price_feeds`
-
-Vectorize the `VAA` from the previous step and pass it to `update_price_feeds`.
-
+### 2. `pyth::pyth::update_single_price_feed`
+Use the verified VAA and create a hot potato containing price updates.
 ```Rust
- public fun update_price_feeds(
+public fun create_price_infos_hot_potato(
         pyth_state: &PythState,
         verified_vaas: vector<VAA>,
-        price_info_objects: &mut vector<PriceInfoObject>,
-        fee: Coin<SUI>,
         clock: &Clock
-    )
+): HotPotatoVector<PriceInfo> 
 ```
 
-### 3. `pyth::get_price`
+### 3.`pyth::pyth::update_single_price_feed`
+Use the hot potato to update a price feed.
 
-Finally, get the price of the updated price feed in `PriceInfoObject`.
+```Rust
+public fun update_single_price_feed(
+    pyth_state: &PythState,
+    price_updates: HotPotatoVector<PriceInfo>,
+    price_info_object: &mut PriceInfoObject,
+    fee: Coin<SUI>,
+    clock: &Clock
+): HotPotatoVector<PriceInfo>
+```
 
+### 4.`pyth::hot_potato_vector::destroy`
+Drop the hot potato. (You must call this function to drop the potato).
+```Rust
+public fun destroy<T: copy + drop>(
+    hot_potato_vector: HotPotatoVector<T>
+)
+```
+
+### 5. `pyth::get_price`
+Finally, get the price of the updated price feed in `PriceInfoObject` 🎉🎉🎉.
 ```Rust
 public fun get_price(
       state: &PythState,
@@ -58,10 +72,11 @@ Fetch the price of the updated Price Info Object.
 
 ## 3. Examples
 
-See the `./scripts` folder for examples of programmable transactions for creating price feeds, updating price feeds, and deploying contracts.
+See the `./scripts` folder for examples of programmable transactions for creating price feeds and updating price feeds.
+- [Demo for updating a price feed](./scripts/pyth/update_price_feeds.ts)
+- [Demo for creating new price feeds](./scripts/pyth/create_all_price_feeds.ts)
 
 To build and test the contracts, run the following
-
 ```
 $ make test
 $ make build
@@ -71,13 +86,13 @@ $ make build
 
 ## Pyth on Testnet
 
-- PYTH_PACKAGE_ID: [0x7c017b047a3c9db5a8f4586d347c54869b761b6d6b0882a179823e8642faf7b9](https://explorer.sui.io/object/0x7c017b047a3c9db5a8f4586d347c54869b761b6d6b0882a179823e8642faf7b9)
-- PYTH_STATE_ID: [0x3fc17e66d5ced3bf62f3fe8289cb2cb78c311a1e1c9700727ecd278d242e9e88](https://explorer.sui.io/object/0x3fc17e66d5ced3bf62f3fe8289cb2cb78c311a1e1c9700727ecd278d242e9e88)
+- PYTH_PACKAGE_ID: [0x4eb4b9b5f3ca3293d3b92898ebb54f4a8705cc6c1fb2a0d2b7ec69388c7f14e4](https://explorer.sui.io/object/0x4eb4b9b5f3ca3293d3b92898ebb54f4a8705cc6c1fb2a0d2b7ec69388c7f14e4?network=testnet)
+- PYTH_STATE_ID: [0xe96526143f8305830a103331151d46063339f7a9946b50aaa0d704c8c04173e5](https://explorer.sui.io/object/0xe96526143f8305830a103331151d46063339f7a9946b50aaa0d704c8c04173e5?network=testnet)
 
 ## Wormhole on Testnet
 
-- WORMHOLE_PACKAGE_ID: [0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7](https://explorer.sui.io/object/0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7)
-- WORMHOLE_STATE_ID: [0x79ab4d569f7eb1efdcc1f25b532f8593cda84776206772e33b490694cb8fc07a](https://explorer.sui.io/object/0x79ab4d569f7eb1efdcc1f25b532f8593cda84776206772e33b490694cb8fc07a)
+- WORMHOLE_PACKAGE_ID: [0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7](https://explorer.sui.io/object/0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7?network=testnet)
+- WORMHOLE_STATE_ID: [0x79ab4d569f7eb1efdcc1f25b532f8593cda84776206772e33b490694cb8fc07a](https://explorer.sui.io/object/0x79ab4d569f7eb1efdcc1f25b532f8593cda84776206772e33b490694cb8fc07a?network=testnet)
 
 ## Pyth on Mainnet
 
