@@ -57,7 +57,7 @@ public fun destroy<T: copy + drop>(
 )
 ```
 
-### 5. `pyth::get_price`
+### 5. `pyth::pyth::get_price`
 Finally, get the price of the updated price feed in `PriceInfoObject` 🎉🎉🎉.
 ```Rust
 public fun get_price(
