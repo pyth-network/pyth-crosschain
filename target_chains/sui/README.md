@@ -13,7 +13,7 @@ Pyth price feeds on Sui are uniquely represented in the global store as `PriceIn
 
 To update and then consume a price feed, one needs to build a Sui [programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk).
 
-As with other chains, one first obtains a batch price attestation VAA (of type `vector<u8>`) off-chain for a Price Info Object whose feed is to be used. Assume the ID is `PRICE_INFO_OBJECT_ID`. Then, chain together the following sequence of function calls to update a price feed.
+As with other chains, one first obtains a batch price attestation VAA (of type `vector<u8>`) off-chain for a Price Info Object whose feed is to be used. Then, chain together the following sequence of function calls to update a price feed.
 
 ### 1. `wormhole::wormhole::parse_and_verify`
 
