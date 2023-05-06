@@ -66,8 +66,7 @@ public fun get_price(
       clock: &Clock
 ): Price
 ```
-
-Fetch the price of the updated Price Info Object.
+This looks like a long sequence of calls to update a price, feed but programmable transactions make it easy. (See demos below).
 
 ## 3. Examples
 
