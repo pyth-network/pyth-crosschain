@@ -49,7 +49,7 @@ async function main() {
   console.log("num price feed ids: ", price_feed_ids.length);
 
   // Create price feeds 20 at a time
-  for (let chunk of _.chunk(price_feed_ids, 20)){
+  for (let chunk of _.chunk(price_feed_ids, 20)) {
     //@ts-ignore
     const priceFeedVAAs = await connection.getLatestVaas(chunk);
     console.log("price feed VAAs len: ", priceFeedVAAs.length);

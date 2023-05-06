@@ -4,7 +4,7 @@ const provider = new JsonRpcProvider(
   new Connection({ fullnode: "https://fullnode.testnet.sui.io:443" }) // <= NOTE: Update this when changing network
 );
 const objectId =
-"0xf1cadf5316e1da9af0126c4851a3769b7d77d1cbf053037d20d46484cfc84846"; // <= NOTE: Update this when changing network AND with new deployment
+  "0xf1cadf5316e1da9af0126c4851a3769b7d77d1cbf053037d20d46484cfc84846"; // <= NOTE: Update this when changing network AND with new deployment
 
 async function main() {
   // Table of Sui Pyth PriceIdentifier => Price Info Object IDs
@@ -26,8 +26,9 @@ async function main() {
     );
 
     //@ts-ignore
-    let get_key = x => Buffer.from(x.data.content.fields.name.fields.bytes).toString("hex")
-    let get_value = x => x.data.content.fields.value
+    let get_key = (x) =>
+      Buffer.from(x.data.content.fields.name.fields.bytes).toString("hex");
+    let get_value = (x) => x.data.content.fields.value;
     let key_value_pairs = promises.map((x) => [get_key(x), get_value(x)]);
     console.log("key value pairs: ", key_value_pairs);
     for (let x of key_value_pairs) {
