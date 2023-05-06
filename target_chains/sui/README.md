@@ -27,7 +27,7 @@ public fun parse_and_verify(
   ): VAA
 ```
 ### 2. `pyth::pyth::update_single_price_feed`
-Use the verified VAA and create a hot potato containing price updates.
+Use the verified VAA and create a hot potato vector containing the latest price updates.
 ```Rust
 public fun create_price_infos_hot_potato(
         pyth_state: &PythState,
