@@ -63,7 +63,6 @@ async function main() {
   const vaas = await connection.getLatestVaas(price_feed_ids);
 
   const price_feed_id_to_price_info_map = JSON.parse(fs.readFileSync(PATH_TO_PRICE_ID_TO_OBJECT_MAP, 'utf8'));
-  console.log(price_feed_id_to_price_info_map)
   // Price info objects corresponding to the price feeds we want to update.
   let price_info_object_ids = []
   for (let id of price_feed_ids){
@@ -138,6 +137,20 @@ async function update_price_feeds(
     arguments: [price_updates_hot_potato],
     typeArguments: [`${PYTH_PACKAGE}::price_info::PriceInfo`],
   });
+
+  // Get newly updated prices.
+  for (let price_info_object of price_info_object_ids) {
+    // The returned price is dropped in this example, but can be consumed by
+    // another downstream smart contract.
+    let [price] = tx.moveCall({
+      target: `${PYTH_PACKAGE}::pyth::get_price`,
+      arguments: [
+        tx.object(PYTH_STATE),
+        tx.object(price_info_object),
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
+  }
 
   tx.setGasBudget(2000000000);
 
