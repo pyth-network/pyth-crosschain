@@ -25,21 +25,21 @@ pub mod pythnet {
     use super::Pubkey;
     /// Official Wormhole Program Address on Pythnet
     /// pubkey!("H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU");
-    pub(crate) const WORMHOLE_PID: Pubkey = [
+    pub const WORMHOLE_PID: Pubkey = [
         238, 106, 51, 154, 165, 236, 145, 158, 20, 176, 156, 210, 101, 132, 136, 107, 95, 235, 248,
         189, 230, 34, 185, 117, 208, 26, 214, 142, 191, 11, 208, 35,
     ];
 
     /// Pubkey::find_program_address(&[b"Sequence", &emitter_pda_key.to_bytes()], &WORMHOLE_PID);
     /// pubkey!("HiqU8jiyUoFbRjf4YFAKRFWq5NZykEYC6mWhXXnoszJR");
-    pub(crate) const ACCUMULATOR_SEQUENCE_ADDR: Pubkey = [
+    pub const ACCUMULATOR_SEQUENCE_ADDR: Pubkey = [
         109, 92, 198, 114, 10, 119, 5, 31, 13, 197, 193, 195, 132, 17, 12, 3, 77, 111, 158, 247,
         194, 137, 236, 50, 8, 185, 1, 61, 85, 94, 54, 198,
     ];
 
     /// Official Pyth Oracle Program Id on Pythnet
     /// pubkey!("FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH");
-    pub(crate) const PYTH_PID: Pubkey = [
+    pub const PYTH_PID: Pubkey = [
         220, 229, 235, 225, 228, 156, 59, 159, 17, 76, 181, 84, 76, 80, 169, 158, 192, 214, 146,
         214, 63, 86, 121, 90, 224, 41, 172, 131, 217, 234, 139, 226,
     ];
