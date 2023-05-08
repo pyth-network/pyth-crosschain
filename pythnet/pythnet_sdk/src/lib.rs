@@ -8,14 +8,14 @@ pub(crate) type PriceId = Pubkey;
 
 /// Official Message Buffer Program Id
 /// pubkey!("Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM");
-const MESSAGE_BUFFER_PID: Pubkey = [
+pub const MESSAGE_BUFFER_PID: Pubkey = [
     7, 83, 149, 9, 30, 102, 77, 194, 50, 151, 133, 40, 118, 10, 93, 152, 174, 44, 244, 56, 27, 47,
     234, 218, 173, 153, 254, 48, 102, 178, 128, 18,
 ];
 
 /// Pubkey::find_program_address(&[b"emitter"], &sysvar::accumulator::id());
 /// pubkey!("G9LV2mp9ua1znRAfYwZz5cPiJMAbo1T6mbjdQsDZuMJg");
-const ACCUMULATOR_EMITTER_ADDRESS: Pubkey = [
+pub const ACCUMULATOR_EMITTER_ADDRESS: Pubkey = [
     225, 1, 250, 237, 172, 88, 81, 227, 43, 155, 35, 181, 249, 65, 26, 140, 43, 172, 74, 174, 62,
     212, 221, 123, 129, 29, 209, 167, 46, 164, 170, 113,
 ];
