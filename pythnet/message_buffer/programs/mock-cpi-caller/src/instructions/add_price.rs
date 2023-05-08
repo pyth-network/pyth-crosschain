@@ -100,8 +100,6 @@ impl<'info> AddPrice<'info> {
             &[&[
                 UPD_PRICE_WRITE.as_bytes(),
                 ctx.accounts.message_buffer_program.key().as_ref(),
-                // ctx.accounts.message_buffer_program.key().as_ref(),
-                // UPD_PRICE_WRITE.as_bytes(),
                 &[bump],
             ]],
         )?;
