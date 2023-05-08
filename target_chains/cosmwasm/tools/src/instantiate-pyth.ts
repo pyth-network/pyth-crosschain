@@ -135,6 +135,7 @@ function getPythConfig({
       amount: "1",
       denom: feeDenom,
     },
+    // All contracts on any network are using mainnet data sources.
     data_sources: [
       {
         emitter: Buffer.from(
