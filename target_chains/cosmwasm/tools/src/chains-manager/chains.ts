@@ -110,8 +110,8 @@ export const ChainsConfigTestnet: Record<ChainIdTestnet, ChainConfig> = {
 /**
  * This method will return an executor for given chainConfig.
  */
-export function createExecutorForChain<T extends ChainConfig>(
-  chainConfig: T,
+export function createExecutorForChain(
+  chainConfig: ChainConfig,
   mnemonic: string
 ): ChainExecutor {
   const chainType = chainConfig.chainType;
