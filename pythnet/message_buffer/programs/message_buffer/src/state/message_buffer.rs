@@ -92,7 +92,6 @@ impl MessageBuffer {
         end_offsets: &mut [u16; u8::MAX as usize],
     ) -> (usize, u16) {
         let mut offset = 0u16;
-        // let mut end_offsets = [0u16; u8::MAX as usize];
 
         for (i, v) in values.iter().enumerate() {
             let start = offset;
