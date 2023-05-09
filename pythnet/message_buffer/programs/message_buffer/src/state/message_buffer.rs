@@ -197,8 +197,6 @@ mod test {
 
         let header_len = MessageBuffer::HEADER_LEN as usize;
 
-        let _end_offsets = [0u16; u8::MAX as usize];
-
         let (header_bytes, body_bytes) = account_info_data.split_at_mut(header_len);
         let message_buffer: &mut MessageBuffer = bytemuck::from_bytes_mut(&mut header_bytes[8..]);
 
@@ -242,9 +240,6 @@ mod test {
         let account_info_data = &mut generate_message_buffer_bytes(&data_bytes);
 
         let header_len = MessageBuffer::HEADER_LEN as usize;
-
-
-        let _end_offsets = [0u16; u8::MAX as usize];
 
         let (header_bytes, body_bytes) = account_info_data.split_at_mut(header_len);
 
@@ -352,10 +347,6 @@ mod test {
         assert_eq!(num_bytes, 5);
         assert_eq!(message_buffer.end_offsets[0], 2);
         assert_eq!(message_buffer.end_offsets[1], 5);
-
-
-        let _message_buffer: &MessageBuffer =
-            bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);
 
 
         let mut cursor = std::io::Cursor::new(&account_info_data[10..]);
