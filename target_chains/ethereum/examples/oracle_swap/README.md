@@ -65,7 +65,11 @@ forge inspect OracleSwap abi > ../app/src/abi/OracleSwapAbi.json
 
 ## Frontend Application
 
-All of the commands in this section assume you are in the `app` directory
+All of the commands in this section assume you are in the `app` directory.
+
+By default, the frontend is configured to use the already deployed version of the oracle AMM
+at address [`0x15F9ccA28688F5E6Cbc8B00A8f33e8cE73eD7B02`](https://mumbai.polygonscan.com/address/0x15F9ccA28688F5E6Cbc8B00A8f33e8cE73eD7B02) on Polygon Mumbai.
+This means you can start playing with the application without going through the steps above (Remember to switch your wallet to Mumbai and to claim funds from a faucet to pay for the gas).
 
 ### Build
 
@@ -73,13 +77,11 @@ All of the commands in this section assume you are in the `app` directory
 
 ### Run
 
-TODO: describe configuration in this section once the configuration is less janky.
+`npm run start`
 
-Default configuration:
+### Other configurations:
 
 optimism goerli addresses
 brl 0x8e2a09b54fF35Cc4fe3e7dba68bF4173cC559C69
 usd 0x98cDc14fe999435F3d4C2E65eC8863e0d70493Df
 swap contract 0xf3161b2B32761B46C084a7e1d8993C19703C09e7
-
-Once you've configured everything, simply run `npm run start`.

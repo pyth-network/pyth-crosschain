@@ -24,8 +24,9 @@ import {
   UpdateContractAdminRequest,
   UpdateContractAdminResponse,
 } from "./chain-executor";
-import { DEFAULT_GAS_PRICE } from "@injectivelabs/utils";
 import assert from "assert";
+
+const DEFAULT_GAS_PRICE = 500000000;
 
 export class InjectiveExecutor implements ChainExecutor {
   private readonly wallet: PrivateKey;
@@ -131,6 +132,7 @@ export class InjectiveExecutor implements ChainExecutor {
       admin: this.getAddress(),
       codeId,
       label,
+      // @ts-ignore: bug in the injective's sdk
       msg: instMsg,
     });
 
