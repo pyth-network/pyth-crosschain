@@ -20,7 +20,7 @@ serde = { version = "1.0.144", features = ["derive"] }
 #serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole" }
 sha3 = "0.10.4"
 slow_primes = "0.1.14"
-wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole" }
+wormhole-sdk = "0.1.0"
 
 [dev-dependencies]
 base64 = "0.21.0"
@@ -38,4 +38,4 @@ rustc_version = "0.4"
 
 [patch.crates-io]
 #serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole" }
-wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole" }
+wormhole-sdk = { path = "../wormhole/sdk/rust/core" }
