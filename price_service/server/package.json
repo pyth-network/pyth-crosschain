@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/price-service-server",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "Webservice for retrieving prices from the Pyth oracle.",
   "private": "true",
   "main": "index.js",

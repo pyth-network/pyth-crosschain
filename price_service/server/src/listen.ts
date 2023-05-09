@@ -304,11 +304,6 @@ export class Listener implements PriceStore {
   async processVaa(vaa: Buffer) {
     const parsedVaa = parseVaa(vaa);
 
-    if (!isValidVaa(parsedVaa, this.wormholeCluster)) {
-      logger.info("Ignoring an invalid VAA");
-      return;
-    }
-
     const vaaEmitterAddressHex = Buffer.from(parsedVaa.emitterAddress).toString(
       "hex"
     );
@@ -316,6 +311,11 @@ export class Listener implements PriceStore {
     const observedVaasKey: VaaKey = `${parsedVaa.emitterChain}#${vaaEmitterAddressHex}#${parsedVaa.sequence}`;
 
     if (this.observedVaas.has(observedVaasKey)) {
+      return;
+    }
+
+    if (!isValidVaa(parsedVaa, this.wormholeCluster)) {
+      logger.info("Ignoring an invalid VAA");
       return;
     }
 
