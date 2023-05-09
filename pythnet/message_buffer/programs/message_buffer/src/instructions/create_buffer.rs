@@ -76,7 +76,6 @@ pub fn create_buffer<'info>(
         }
         loader.exit(&crate::ID)?;
     } else {
-        // FIXME: change this to be emit!(Event)
         msg!("Buffer account already initialized");
     }
 

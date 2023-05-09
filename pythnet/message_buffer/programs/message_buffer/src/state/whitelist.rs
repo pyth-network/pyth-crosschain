@@ -58,10 +58,10 @@ pub struct WhitelistVerifier<'info> {
 }
 
 impl<'info> WhitelistVerifier<'info> {
-    pub fn is_allowed(&self) -> Result<Pubkey> {
+    pub fn is_allowed(&self) -> Result<()> {
         let auth = self.cpi_caller_auth.key();
         let whitelist = &self.whitelist;
         whitelist.is_allowed_program_auth(&auth)?;
-        Ok(auth)
+        Ok(())
     }
 }
