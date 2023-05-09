@@ -1,4 +1,4 @@
-mod instructions;
+pub mod instructions;
 mod macros;
 mod state;
 
@@ -158,7 +158,7 @@ pub struct Initialize<'info> {
         payer = payer,
         seeds = [b"message".as_ref(), b"whitelist".as_ref()],
         bump,
-        space = 8 + Whitelist::INIT_SPACE
+        space = 8 + Whitelist::INIT_SPACE,
     )]
     pub whitelist:      Account<'info, Whitelist>,
     pub system_program: Program<'info, System>,
@@ -203,7 +203,7 @@ pub enum MessageBufferError {
     CurrentDataLengthExceeded,
     #[msg("Message Buffer not provided")]
     MessageBufferNotProvided,
-    #[msg("Message Buffer is not sufficiently large")]
+    #[msg("Message Buffer target size is not sufficiently large")]
     MessageBufferTooSmall,
     #[msg("Fund Bump not found")]
     FundBumpNotFound,

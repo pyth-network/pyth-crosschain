@@ -3,7 +3,7 @@ use {
         instructions::{
             sighash,
             ACCUMULATOR_UPDATER_IX_NAME,
-            CPI,
+            UPD_PRICE_WRITE,
         },
         message::{
             price::{
@@ -45,7 +45,7 @@ pub struct UpdatePrice<'info> {
     /// CHECK: whitelist
     pub accumulator_whitelist:  UncheckedAccount<'info>,
     #[account(
-        seeds = [message_buffer_program.key().as_ref(), b"cpi".as_ref()],
+        seeds = [b"upd_price_write".as_ref(), message_buffer_program.key().as_ref()],
         owner = system_program::System::id(),
         bump,
     )]
@@ -76,12 +76,12 @@ pub fn update_price<'info>(
     }
 
 
-    UpdatePrice::emit_accumulator_inputs(ctx, inputs)
+    UpdatePrice::emit_messages(ctx, inputs)
 }
 
 impl<'info> UpdatePrice<'info> {
-    /// Invoke accumulator-updater emit-inputs ix cpi call
-    pub fn emit_accumulator_inputs(
+    /// Invoke message_buffer::put_all ix cpi call
+    pub fn emit_messages(
         ctx: Context<'_, '_, '_, 'info, UpdatePrice<'info>>,
         values: Vec<Vec<u8>>,
     ) -> anchor_lang::Result<()> {
@@ -113,8 +113,8 @@ impl<'info> UpdatePrice<'info> {
         // that won't be available in the oracle program
         let (_, bump) = Pubkey::find_program_address(
             &[
+                UPD_PRICE_WRITE.as_bytes(),
                 ctx.accounts.message_buffer_program.key().as_ref(),
-                CPI.as_bytes(),
             ],
             &crate::ID,
         );
@@ -122,8 +122,8 @@ impl<'info> UpdatePrice<'info> {
             &update_inputs_ix,
             account_infos,
             &[&[
+                UPD_PRICE_WRITE.as_bytes(),
                 ctx.accounts.message_buffer_program.key().as_ref(),
-                CPI.as_bytes(),
                 &[bump],
             ]],
         )?;

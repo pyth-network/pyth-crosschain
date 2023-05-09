@@ -40,10 +40,7 @@ pub fn delete_buffer<'info>(
         expected_key,
         MessageBufferError::InvalidPDA
     );
-    let loader = AccountLoader::<MessageBuffer>::try_from_unchecked(
-        &crate::ID,
-        message_buffer_account_info,
-    )?;
+    let loader = AccountLoader::<MessageBuffer>::try_from(message_buffer_account_info)?;
     loader.close(ctx.accounts.admin.to_account_info())?;
     Ok(())
 }

@@ -31,13 +31,11 @@ pub fn resize_buffer<'info>(
         .is_allowed_program_auth(&allowed_program_auth)?;
     MessageBuffer::check_discriminator(message_buffer_account_info)?;
 
-    require_gte!(
-        target_size,
-        MessageBuffer::HEADER_LEN as u32,
-        MessageBufferError::MessageBufferTooSmall
-    );
+
     let target_size = target_size as usize;
-    let target_size_delta = target_size.saturating_sub(message_buffer_account_info.data_len());
+
+    let current_account_size = message_buffer_account_info.data_len();
+    let target_size_delta = target_size.saturating_sub(current_account_size);
     require_gte!(
         MAX_PERMITTED_DATA_INCREASE,
         target_size_delta,
@@ -61,10 +59,10 @@ pub fn resize_buffer<'info>(
         MessageBufferError::InvalidPDA
     );
 
-    // allow for delta == 0 in case Rent requirements have changed
+    // allow for target_size == account_size in case Rent requirements have changed
     // and additional lamports need to be transferred.
     // the realloc step will be a no-op in this case.
-    if target_size_delta >= 0 {
+    if target_size >= current_account_size {
         let target_rent = Rent::get()?.minimum_balance(target_size);
         if message_buffer_account_info.lamports() < target_rent {
             system_program::transfer(
@@ -82,6 +80,23 @@ pub fn resize_buffer<'info>(
             .realloc(target_size, false)
             .map_err(|_| MessageBufferError::ReallocFailed)?;
     } else {
+        // Check that account doesn't get resized to smaller than the amount of
+        // data it is currently holding (if any)
+        {
+            let account_data = &message_buffer_account_info.try_borrow_data()?;
+            let header_end_index = std::mem::size_of::<MessageBuffer>() + 8;
+            let (header_bytes, _) = account_data.split_at(header_end_index);
+            let message_buffer: &MessageBuffer = bytemuck::from_bytes(&header_bytes[8..]);
+            let max_end_offset = message_buffer.end_offsets.iter().max().unwrap();
+            let minimum_size = max_end_offset + message_buffer.header_len;
+            require_gte!(
+                target_size,
+                minimum_size as usize,
+                MessageBufferError::MessageBufferTooSmall
+            );
+        }
+
+
         // Not transferring excess lamports back to admin.
         // Account will retain more lamports than necessary.
         message_buffer_account_info.realloc(target_size, false)?;

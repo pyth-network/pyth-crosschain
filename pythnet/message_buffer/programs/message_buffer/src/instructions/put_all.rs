@@ -39,8 +39,7 @@ pub fn put_all<'info>(
     let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(body_bytes, &messages);
 
     if num_msgs != messages.len() {
-        // FIXME: make this into an emit! event
-        msg!("unable to fit all messages in accumulator input account. Wrote {}/{} messages and {} bytes", num_msgs, messages.len(), num_bytes);
+        msg!("unable to fit all messages in MessageBuffer account. Wrote {}/{} messages and {} bytes", num_msgs, messages.len(), num_bytes);
     }
 
     Ok(())

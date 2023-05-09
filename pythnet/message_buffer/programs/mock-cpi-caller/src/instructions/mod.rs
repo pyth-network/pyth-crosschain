@@ -24,4 +24,4 @@ pub fn sighash(namespace: &str, name: &str) -> [u8; 8] {
 }
 
 pub const ACCUMULATOR_UPDATER_IX_NAME: &str = "put_all";
-pub const CPI: &str = "cpi";
+pub const UPD_PRICE_WRITE: &str = "upd_price_write";

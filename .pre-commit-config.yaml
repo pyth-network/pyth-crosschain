@@ -75,7 +75,7 @@ repos:
       - id: cargo-clippy-message-buffer
         name: Cargo clippy for message buffer contract
         language: "rust"
-        entry: cargo +nightly clippy --manifest-path ./pythnet/message_buffer/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +nightly clippy --manifest-path ./pythnet/message_buffer/Cargo.toml --tests --fix --allow-dirty --allow-staged --features test-bpf -- -D warnings
         pass_filenames: false
         files: message_buffer
       # Hooks for solana receiver contract

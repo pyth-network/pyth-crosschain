@@ -100,7 +100,6 @@ impl MessageBuffer {
             let start = offset;
             let len = u16::try_from(v.len());
             if len.is_err() {
-                msg!("len err");
                 return (i, start);
             }
             let end = offset.checked_add(len.unwrap());
