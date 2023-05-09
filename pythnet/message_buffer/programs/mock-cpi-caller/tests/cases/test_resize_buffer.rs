@@ -125,7 +125,6 @@ async fn fail_resize_buffer_invalid_increase() {
     let err: ProgramError = res.unwrap_err().into();
     assert_eq!(
         err,
-        // ProgramError::Custom(MessageBufferError::TargetSizeDeltaExceeded.into())
         ProgramError::Custom(anchor_lang::error::ErrorCode::AccountReallocExceedsLimit.into())
     );
     println!("finished invalid buffer increase");
@@ -167,15 +166,6 @@ async fn fail_resize_buffer_invalid_increase() {
         .process_ixs(&[resize_ix], vec![&admin])
         .await
         .unwrap();
-
-    // let res = context.process_ixs(&[resize_ix], vec![&admin]).await;
-    //
-    // assert!(res.is_err());
-    // let err: ProgramError = res.unwrap_err().into();
-    // assert_eq!(
-    //     err,
-    //     ProgramError::Custom(MessageBufferError::MessageBufferTooSmall.into())
-    // );
 }
 
 #[tokio::test]
