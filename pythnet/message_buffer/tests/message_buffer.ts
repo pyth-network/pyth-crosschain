@@ -65,7 +65,7 @@ const [messageBufferPda2, messageBufferBump2] =
     messageBufferProgram.programId
   );
 
-const accumulatorPdaMeta2 = {
+const messageBufferPdaMeta2 = {
   pubkey: messageBufferPda2,
   isSigner: false,
   isWritable: true,
@@ -144,7 +144,7 @@ describe("message_buffer", () => {
   });
 
   it("Creates a buffer", async () => {
-    const accumulatorPdaMetas = [
+    const msgBufferPdaMetas = [
       {
         pubkey: messageBufferPda,
         isSigner: false,
@@ -160,7 +160,7 @@ describe("message_buffer", () => {
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([whitelistAdmin])
-      .remainingAccounts(accumulatorPdaMetas)
+      .remainingAccounts(msgBufferPdaMetas)
       .rpc({ skipPreflight: true });
 
     const messageBufferAccountData = await getMessageBuffer(
@@ -206,7 +206,7 @@ describe("message_buffer", () => {
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([whitelistAdmin])
-      .remainingAccounts([accumulatorPdaMeta2])
+      .remainingAccounts([messageBufferPdaMeta2])
       .rpc({ skipPreflight: true });
 
     const messageBufferAccountData = await getMessageBuffer(
@@ -560,19 +560,13 @@ describe("message_buffer", () => {
     );
     const targetSize = 10 * 1024;
     await messageBufferProgram.methods
-      .resizeBuffer(
-        mockCpiCallerAuth,
-        pythPriceAccountPk2,
-        messageBufferBump2,
-        targetSize
-      )
+      .resizeBuffer(mockCpiCallerAuth, pythPriceAccountPk2, targetSize)
       .accounts({
         whitelist: whitelistPubkey,
         admin: whitelistAdmin.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([whitelistAdmin])
-      .remainingAccounts([accumulatorPdaMeta2])
       .rpc({ skipPreflight: true });
 
     const whitelistAuthorityBalanceAfter = await provider.connection.getBalance(
@@ -606,19 +600,14 @@ describe("message_buffer", () => {
   it("Resizes a buffer to a smaller size", async () => {
     const targetSize = 4 * 1024;
     await messageBufferProgram.methods
-      .resizeBuffer(
-        mockCpiCallerAuth,
-        pythPriceAccountPk2,
-        messageBufferBump2,
-        targetSize
-      )
+      .resizeBuffer(mockCpiCallerAuth, pythPriceAccountPk2, targetSize)
       .accounts({
         whitelist: whitelistPubkey,
         admin: whitelistAdmin.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
+        messageBuffer: messageBufferPda2,
       })
       .signers([whitelistAdmin])
-      .remainingAccounts([accumulatorPdaMeta2])
       .rpc({ skipPreflight: true });
 
     const messageBufferAccountData = await getMessageBuffer(
@@ -635,19 +624,14 @@ describe("message_buffer", () => {
       let errorThrown = false;
       try {
         await messageBufferProgram.methods
-          .resizeBuffer(
-            mockCpiCallerAuth,
-            pythPriceAccountPk2,
-            messageBufferBump2,
-            testCase
-          )
+          .resizeBuffer(mockCpiCallerAuth, pythPriceAccountPk2, testCase)
           .accounts({
             whitelist: whitelistPubkey,
             admin: whitelistAdmin.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
+            messageBuffer: messageBufferPda2,
           })
           .signers([whitelistAdmin])
-          .remainingAccounts([accumulatorPdaMeta2])
           .rpc({ skipPreflight: true });
       } catch (_err) {
         errorThrown = true;
@@ -658,13 +642,14 @@ describe("message_buffer", () => {
 
   it("Deletes a buffer", async () => {
     await messageBufferProgram.methods
-      .deleteBuffer(mockCpiCallerAuth, pythPriceAccountPk2, messageBufferBump2)
+      .deleteBuffer(mockCpiCallerAuth, pythPriceAccountPk2)
       .accounts({
         whitelist: whitelistPubkey,
         admin: whitelistAdmin.publicKey,
+        messageBuffer: messageBufferPda2,
       })
       .signers([whitelistAdmin])
-      .remainingAccounts([accumulatorPdaMeta2])
+      .remainingAccounts([messageBufferPdaMeta2])
       .rpc({ skipPreflight: true });
 
     const messageBufferAccountData = await getMessageBuffer(
@@ -697,7 +682,7 @@ describe("message_buffer", () => {
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([whitelistAdmin])
-      .remainingAccounts([accumulatorPdaMeta2])
+      .remainingAccounts([messageBufferPdaMeta2])
       .rpc({ skipPreflight: true });
 
     const messageBufferAccountData = await getMessageBuffer(

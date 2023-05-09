@@ -192,7 +192,10 @@ impl MessageBufferTestContext {
                 let e = Custom(error_code);
                 Err(e.into())
             }
-            Err(_) => panic!("Unexpected error"),
+            Err(e) => {
+                println!("proces_ixs Error: {:?}", e);
+                panic!("Non Custom Ix Error in process_ixs{:?}", e);
+            }
             Ok(_) => Ok(()),
         }
     }
@@ -287,14 +290,13 @@ impl MessageBufferTestContext {
     pub async fn delete_buffer(&mut self, id: u64) -> anchor_lang::Result<()> {
         let pyth_price_account = Self::get_mock_pyth_price_account(id);
 
-        let (msg_buffer_pda, msg_buffer_bump) =
+        let (msg_buffer_pda, _) =
             find_msg_buffer_pda(Self::get_mock_cpi_auth(), pyth_price_account);
         let admin = self.admin.as_ref().unwrap().insecure_clone();
 
         let delete_ix = delete_msg_buffer_ix(
             Self::get_mock_cpi_auth(),
             pyth_price_account,
-            msg_buffer_bump,
             self.whitelist(),
             admin.pubkey(),
             msg_buffer_pda,
@@ -310,7 +312,7 @@ impl MessageBufferTestContext {
         target_sizes: Vec<u32>,
     ) -> anchor_lang::Result<()> {
         let pyth_price_account = Self::get_mock_pyth_price_account(id);
-        let (msg_buffer_pda, msg_buffer_bump) =
+        let (msg_buffer_pda, _) =
             find_msg_buffer_pda(Self::get_mock_cpi_auth(), pyth_price_account);
 
         let resize_ixs = &mut vec![];
@@ -322,7 +324,6 @@ impl MessageBufferTestContext {
             let resize_ix = resize_msg_buffer_ix(
                 Self::get_mock_cpi_auth(),
                 pyth_price_account,
-                msg_buffer_bump,
                 target_size,
                 self.whitelist(),
                 admin.pubkey(),
@@ -430,7 +431,6 @@ pub fn create_msg_buffer_ix(
 pub fn resize_msg_buffer_ix(
     cpi_caller_auth: Pubkey,
     pyth_price_acct: Pubkey,
-    msg_buffer_bump: u8,
     target_size: u32,
     whitelist: Pubkey,
     admin: Pubkey,
@@ -444,7 +444,6 @@ pub fn resize_msg_buffer_ix(
             resize_ix_disc,
             cpi_caller_auth,
             pyth_price_acct,
-            msg_buffer_bump,
             target_size,
         ),
         vec![
@@ -460,7 +459,6 @@ pub fn resize_msg_buffer_ix(
 pub fn delete_msg_buffer_ix(
     cpi_caller_auth: Pubkey,
     pyth_price_acct: Pubkey,
-    msg_buffer_bump: u8,
     whitelist: Pubkey,
     admin: Pubkey,
     msg_buffer_pda: Pubkey,
@@ -469,12 +467,7 @@ pub fn delete_msg_buffer_ix(
 
     Instruction::new_with_borsh(
         ::message_buffer::id(),
-        &(
-            delete_ix_disc,
-            cpi_caller_auth,
-            pyth_price_acct,
-            msg_buffer_bump,
-        ),
+        &(delete_ix_disc, cpi_caller_auth, pyth_price_acct),
         vec![
             AccountMeta::new_readonly(whitelist, false),
             AccountMeta::new(admin, true),
