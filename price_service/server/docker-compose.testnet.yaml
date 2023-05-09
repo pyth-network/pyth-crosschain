@@ -17,7 +17,7 @@ services:
       - "warn"
   price-service:
     # Find latest price service images https://gallery.ecr.aws/pyth-network/xc-server
-    image: public.ecr.aws/pyth-network/xc-server:v3.0.0
+    image: public.ecr.aws/pyth-network/xc-server:v3.0.2
     restart: on-failure
     # Or alternatively use a locally built image
     # image: pyth_price_server
@@ -39,6 +39,7 @@ services:
       READINESS_SPY_SYNC_TIME_SECONDS: "20"
       READINESS_NUM_LOADED_SYMBOLS: "50"
       LOG_LEVEL: warning
+      WORMHOLE_CLUSTER: testnet
       DB_API_CLUSTER: devnet
       REMOVE_EXPIRED_VALUES_INTERVAL_SECONDS: "60"
       CACHE_TTL_SECONDS: "300"
