@@ -1,7 +1,6 @@
 use {
     crate::state::*,
     anchor_lang::prelude::*,
-    std::mem,
 };
 
 
@@ -12,24 +11,19 @@ pub fn put_all<'info>(
 ) -> Result<()> {
     ctx.accounts.whitelist_verifier.is_allowed()?;
 
-    let mut end_offsets = [0u16; u8::MAX as usize];
-    {
-        let msg_buffer_ai = ctx.accounts.message_buffer.to_account_info();
-        let account_data = &mut msg_buffer_ai.try_borrow_mut_data()?;
-        let header_end_index = mem::size_of::<MessageBuffer>() + 8;
+    let msg_buffer_ai = ctx.accounts.message_buffer.to_account_info();
+    let account_data = &mut msg_buffer_ai.try_borrow_mut_data()?;
+    let header_end_index = MessageBuffer::HEADER_LEN as usize;
 
-        let (_, body_bytes) = account_data.split_at_mut(header_end_index);
+    let (header_bytes, body_bytes) = account_data.split_at_mut(header_end_index);
 
-        let (num_msgs, num_bytes) =
-            MessageBuffer::put_all_in_buffer(body_bytes, &messages, &mut end_offsets);
-        if num_msgs != messages.len() {
-            msg!("unable to fit all messages in MessageBuffer account. Wrote {}/{} messages and {} bytes", num_msgs, messages.len(), num_bytes);
-        }
+    let message_buffer: &mut MessageBuffer = bytemuck::from_bytes_mut(&mut header_bytes[8..]);
+
+    message_buffer.refresh_header();
+    let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(body_bytes, &messages);
+    if num_msgs != messages.len() {
+        msg!("unable to fit all messages in MessageBuffer account. Wrote {}/{} messages and {} bytes", num_msgs, messages.len(), num_bytes);
     }
-
-    let msg_buffer = &mut ctx.accounts.message_buffer.load_mut()?;
-    msg_buffer.update_header(end_offsets);
-
     Ok(())
 }
 
