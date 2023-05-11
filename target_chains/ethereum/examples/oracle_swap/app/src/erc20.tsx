@@ -1,18 +1,7 @@
-import React, { useState, useEffect } from "react";
 import "./App.css";
-import {
-  Price,
-  PriceFeed,
-  EvmPriceServiceConnection,
-  HexString,
-} from "@pythnetwork/pyth-evm-js";
-import IPythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
-import OracleSwapAbi from "./abi/OracleSwapAbi.json";
 import ERC20Abi from "./abi/ERC20MockAbi.json";
-import { useMetaMask } from "metamask-react";
 import Web3 from "web3";
 import { BigNumber } from "ethers";
-import { TokenConfig } from "./utils";
 
 /**
  * Allow `approvedSpender` to spend your

@@ -1,13 +1,9 @@
 use {
     crate::{
         accumulator_input_seeds,
-        instructions,
         MessageBufferError,
     },
-    anchor_lang::{
-        prelude::*,
-        Discriminator,
-    },
+    anchor_lang::prelude::*,
 };
 
 /// A MessageBuffer will have the following structure
@@ -78,6 +74,7 @@ impl MessageBuffer {
         self.end_offsets = [0u16; u8::MAX as usize];
     }
 
+
     /// `put_all` writes all the messages to the `AccumulatorInput` account
     /// and updates the `end_offsets` array.
     ///
@@ -100,7 +97,6 @@ impl MessageBuffer {
             let start = offset;
             let len = u16::try_from(v.len());
             if len.is_err() {
-                msg!("len err");
                 return (i, start);
             }
             let end = offset.checked_add(len.unwrap());
@@ -130,28 +126,6 @@ impl MessageBuffer {
     pub fn validate(&self, key: Pubkey, cpi_caller: Pubkey, base_account: Pubkey) -> Result<()> {
         let expected_key = self.derive_pda(cpi_caller, base_account)?;
         require_keys_eq!(expected_key, key);
-        Ok(())
-    }
-
-    /// Verify message buffer account is initialized and has the correct discriminator.
-    ///
-    /// Note: manually checking because using anchor's `AccountLoader.load()`
-    /// will panic since the `AccountInfo.data_len()` will not match the
-    /// size of the `MessageBuffer` since the `MessageBuffer` struct does not
-    /// include the messages.
-    pub fn check_discriminator(message_buffer_account_info: &AccountInfo) -> Result<()> {
-        if instructions::is_uninitialized_account(message_buffer_account_info) {
-            return err!(MessageBufferError::MessageBufferUninitialized);
-        }
-        let data = message_buffer_account_info.try_borrow_data()?;
-        if data.len() < MessageBuffer::discriminator().len() {
-            return Err(ErrorCode::AccountDiscriminatorNotFound.into());
-        }
-
-        let disc_bytes = &data[0..8];
-        if disc_bytes != &MessageBuffer::discriminator() {
-            return Err(ErrorCode::AccountDiscriminatorMismatch.into());
-        }
         Ok(())
     }
 }
@@ -223,15 +197,10 @@ mod test {
 
         let header_len = MessageBuffer::HEADER_LEN as usize;
 
-
         let (header_bytes, body_bytes) = account_info_data.split_at_mut(header_len);
         let message_buffer: &mut MessageBuffer = bytemuck::from_bytes_mut(&mut header_bytes[8..]);
 
         let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(body_bytes, &data_bytes);
-
-
-        let message_buffer: &MessageBuffer =
-            bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);
 
         assert_eq!(num_msgs, 2);
         assert_eq!(num_bytes, 5);
@@ -240,6 +209,8 @@ mod test {
         assert_eq!(message_buffer.end_offsets[0], 2);
         assert_eq!(message_buffer.end_offsets[1], 5);
 
+        let message_buffer: &MessageBuffer =
+            bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);
 
         let iter = message_buffer.end_offsets.iter().take_while(|x| **x != 0);
         let mut start = header_len;
@@ -259,6 +230,7 @@ mod test {
         }
     }
 
+
     #[test]
     fn test_put_all_exceed_max() {
         let data = vec![vec![0u8; 9_718 - 2], vec![0u8], vec![0u8; 2]];
@@ -270,19 +242,23 @@ mod test {
         let header_len = MessageBuffer::HEADER_LEN as usize;
 
         let (header_bytes, body_bytes) = account_info_data.split_at_mut(header_len);
+
         let message_buffer: &mut MessageBuffer = bytemuck::from_bytes_mut(&mut header_bytes[8..]);
 
         let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(body_bytes, &data_bytes);
-
-
-        let message_buffer: &MessageBuffer =
-            bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);
 
         assert_eq!(num_msgs, 2);
         assert_eq!(
             num_bytes,
             data_bytes[0..2].iter().map(|x| x.len()).sum::<usize>() as u16
         );
+
+        assert_eq!(message_buffer.end_offsets[0], 9_718 - 2);
+        assert_eq!(message_buffer.end_offsets[1], 9_718 - 1);
+
+
+        let message_buffer: &MessageBuffer =
+            bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);
 
 
         let iter = message_buffer.end_offsets.iter().take_while(|x| **x != 0);
@@ -298,7 +274,6 @@ mod test {
 
         assert_eq!(message_buffer.end_offsets[2], 0);
     }
-
 
     #[test]
     fn test_put_all_long_vec() {
@@ -316,15 +291,10 @@ mod test {
 
         let header_len = MessageBuffer::HEADER_LEN as usize;
 
-
         let (header_bytes, body_bytes) = account_info_data.split_at_mut(header_len);
         let message_buffer: &mut MessageBuffer = bytemuck::from_bytes_mut(&mut header_bytes[8..]);
 
         let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(body_bytes, &data_bytes);
-
-
-        let message_buffer: &MessageBuffer =
-            bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);
 
 
         assert_eq!(num_msgs, 3);
@@ -333,6 +303,9 @@ mod test {
             data_bytes[0..3].iter().map(|x| x.len()).sum::<usize>() as u16
         );
 
+
+        let message_buffer: &MessageBuffer =
+            bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);
 
         let iter = message_buffer.end_offsets.iter().take_while(|x| **x != 0);
         let mut start = header_len;
@@ -369,13 +342,9 @@ mod test {
         let message_buffer: &mut MessageBuffer = bytemuck::from_bytes_mut(&mut header_bytes[8..]);
 
         let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(body_bytes, &data_bytes);
+
         assert_eq!(num_msgs, 2);
         assert_eq!(num_bytes, 5);
-
-
-        let message_buffer: &MessageBuffer =
-            bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);
-
         assert_eq!(message_buffer.end_offsets[0], 2);
         assert_eq!(message_buffer.end_offsets[1], 5);
 

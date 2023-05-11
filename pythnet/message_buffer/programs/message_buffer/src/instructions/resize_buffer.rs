@@ -2,97 +2,35 @@ use {
     crate::{
         state::*,
         MessageBufferError,
-        MESSAGE,
     },
-    anchor_lang::{
-        prelude::*,
-        solana_program::entrypoint::MAX_PERMITTED_DATA_INCREASE,
-        system_program::{
-            self,
-            Transfer,
-        },
-    },
+    anchor_lang::prelude::*,
 };
+
 
 pub fn resize_buffer<'info>(
     ctx: Context<'_, '_, '_, 'info, ResizeBuffer<'info>>,
     allowed_program_auth: Pubkey,
-    base_account_key: Pubkey,
-    buffer_bump: u8,
+    _base_account_key: Pubkey,
     target_size: u32,
 ) -> Result<()> {
-    let message_buffer_account_info = ctx
-        .remaining_accounts
-        .first()
-        .ok_or(MessageBufferError::MessageBufferNotProvided)?;
-
     ctx.accounts
         .whitelist
         .is_allowed_program_auth(&allowed_program_auth)?;
-    MessageBuffer::check_discriminator(message_buffer_account_info)?;
 
+    let message_buffer = &ctx.accounts.message_buffer.load()?;
+    let max_end_offset = message_buffer.end_offsets.iter().max().unwrap();
+    let minimum_size = max_end_offset + message_buffer.header_len;
     require_gte!(
-        target_size,
-        MessageBuffer::HEADER_LEN as u32,
+        target_size as usize,
+        minimum_size as usize,
         MessageBufferError::MessageBufferTooSmall
     );
-    let target_size = target_size as usize;
-    let target_size_delta = target_size.saturating_sub(message_buffer_account_info.data_len());
-    require_gte!(
-        MAX_PERMITTED_DATA_INCREASE,
-        target_size_delta,
-        MessageBufferError::TargetSizeDeltaExceeded
-    );
-
-    let expected_key = Pubkey::create_program_address(
-        &[
-            allowed_program_auth.as_ref(),
-            MESSAGE.as_bytes(),
-            base_account_key.as_ref(),
-            &[buffer_bump],
-        ],
-        &crate::ID,
-    )
-    .map_err(|_| MessageBufferError::InvalidPDA)?;
-
-    require_keys_eq!(
-        message_buffer_account_info.key(),
-        expected_key,
-        MessageBufferError::InvalidPDA
-    );
-
-    // allow for delta == 0 in case Rent requirements have changed
-    // and additional lamports need to be transferred.
-    // the realloc step will be a no-op in this case.
-    if target_size_delta >= 0 {
-        let target_rent = Rent::get()?.minimum_balance(target_size);
-        if message_buffer_account_info.lamports() < target_rent {
-            system_program::transfer(
-                CpiContext::new(
-                    ctx.accounts.system_program.to_account_info(),
-                    Transfer {
-                        from: ctx.accounts.admin.to_account_info(),
-                        to:   message_buffer_account_info.to_account_info(),
-                    },
-                ),
-                target_rent - message_buffer_account_info.lamports(),
-            )?;
-        }
-        message_buffer_account_info
-            .realloc(target_size, false)
-            .map_err(|_| MessageBufferError::ReallocFailed)?;
-    } else {
-        // Not transferring excess lamports back to admin.
-        // Account will retain more lamports than necessary.
-        message_buffer_account_info.realloc(target_size, false)?;
-    }
     Ok(())
 }
 
 #[derive(Accounts)]
 #[instruction(
-    allowed_program_auth: Pubkey, base_account_key: Pubkey,
-    buffer_bump: u8, target_size: u32
+    allowed_program_auth: Pubkey, base_account_key: Pubkey, target_size: u32
 )]
 pub struct ResizeBuffer<'info> {
     #[account(
@@ -107,5 +45,18 @@ pub struct ResizeBuffer<'info> {
     pub admin: Signer<'info>,
 
     pub system_program: Program<'info, System>,
-    // remaining_accounts:  - [AccumulatorInput PDA]
+
+    /// If decreasing, Anchor will automatically check
+    /// if target_size is too small and if so,then load() will fail.
+    /// If increasing, Anchor also automatically checks if target_size delta
+    /// exceeds MAX_PERMITTED_DATA_INCREASE
+    #[account(
+        mut,
+        realloc = target_size as usize,
+        realloc::zero = false,
+        realloc::payer = admin,
+        seeds = [allowed_program_auth.as_ref(), b"message".as_ref(), base_account_key.as_ref()],
+        bump = message_buffer.load()?.bump,
+    )]
+    pub message_buffer: AccountLoader<'info, MessageBuffer>,
 }

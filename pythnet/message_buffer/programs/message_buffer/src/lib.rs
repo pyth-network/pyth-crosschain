@@ -1,4 +1,4 @@
-mod instructions;
+pub mod instructions;
 mod macros;
 mod state;
 
@@ -112,21 +112,13 @@ pub mod message_buffer {
     /// *`target_size`          -  Size to re-allocate for the
     ///                           `MessageBuffer` PDA. If increasing the size,
     ///                           max delta of current_size & target_size is 10240
-    /// *`buffer_bump`          -  Bump seed for the `MessageBuffer` PDA
     pub fn resize_buffer<'info>(
         ctx: Context<'_, '_, '_, 'info, ResizeBuffer<'info>>,
         allowed_program_auth: Pubkey,
         base_account_key: Pubkey,
-        buffer_bump: u8,
         target_size: u32,
     ) -> Result<()> {
-        instructions::resize_buffer(
-            ctx,
-            allowed_program_auth,
-            base_account_key,
-            buffer_bump,
-            target_size,
-        )
+        instructions::resize_buffer(ctx, allowed_program_auth, base_account_key, target_size)
     }
 
     /// Closes the buffer account and transfers the remaining lamports to the
@@ -138,14 +130,12 @@ pub mod message_buffer {
     /// * `base_account_key`    - Pubkey of the original account the
     ///                           `MessageBuffer` is derived from
     ///                           (e.g. pyth price account)
-    /// *`buffer_bump`          -  Bump seed for the `MessageBuffer` PDA
     pub fn delete_buffer<'info>(
         ctx: Context<'_, '_, '_, 'info, DeleteBuffer<'info>>,
         allowed_program_auth: Pubkey,
         base_account_key: Pubkey,
-        buffer_bump: u8,
     ) -> Result<()> {
-        instructions::delete_buffer(ctx, allowed_program_auth, base_account_key, buffer_bump)
+        instructions::delete_buffer(ctx, allowed_program_auth, base_account_key)
     }
 }
 
@@ -158,7 +148,7 @@ pub struct Initialize<'info> {
         payer = payer,
         seeds = [b"message".as_ref(), b"whitelist".as_ref()],
         bump,
-        space = 8 + Whitelist::INIT_SPACE
+        space = 8 + Whitelist::INIT_SPACE,
     )]
     pub whitelist:      Account<'info, Whitelist>,
     pub system_program: Program<'info, System>,
@@ -203,7 +193,7 @@ pub enum MessageBufferError {
     CurrentDataLengthExceeded,
     #[msg("Message Buffer not provided")]
     MessageBufferNotProvided,
-    #[msg("Message Buffer is not sufficiently large")]
+    #[msg("Message Buffer target size is not sufficiently large")]
     MessageBufferTooSmall,
     #[msg("Fund Bump not found")]
     FundBumpNotFound,
