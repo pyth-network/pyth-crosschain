@@ -17,7 +17,7 @@ All of the commands in this section expect to be run from the `contract` directo
 ### Building
 
 You need to have [Foundry](https://getfoundry.sh/) and `node` installed to run this example.
-Once you have installed these tools, run the following commands from this directory:
+Once you have installed these tools, run the following commands from the [`contract`](./contract) directory:
 
 ```
 forge install foundry-rs/forge-std@2c7cbfc6fbede6d7c9e6b17afe997e3fdfe22fef --no-git --no-commit
