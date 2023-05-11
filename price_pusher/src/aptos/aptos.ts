@@ -30,9 +30,9 @@ export class AptosPriceListener extends ChainPriceListener {
         `${this.pythModule}::state::LatestPriceInfo`
       );
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const handle = res.data.info.handle;
+      // This depends upon the pyth contract storage on Aptos and should not be undefined.
+      // If undefined, there has been some change and we would need to update accordingly.
+      const handle = (res.data as any).info.handle;
 
       const priceItemRes = await client.getTableItem(handle, {
         key_type: `${this.pythModule}::price_identifier::PriceIdentifier`,
