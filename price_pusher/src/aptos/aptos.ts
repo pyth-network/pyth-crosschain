@@ -139,6 +139,13 @@ export class AptosPricePusher implements IPricePusher {
         estimatePrioritizedGasUnitPrice: true,
       });
 
+      // Transactions on Aptos can be prioritized by paying a higher gas unit price.
+      // We are storing the gas unit price paid for the last transaction.
+      // If that transaction is not added to the block, we are increasing the gas unit price
+      // by multiplying the old gas unit price with `this.overrideGasPriceMultiplier`.
+      // After which we are sending a transaction with the same sequence number as the last
+      // transaction. Since they have the same sequence number only one of them will be added to
+      // the block and we won't be paying fees twice.
       let gasUnitPrice = Number(simulation[0].gas_unit_price);
       if (this.lastPushAttempt !== undefined) {
         if (

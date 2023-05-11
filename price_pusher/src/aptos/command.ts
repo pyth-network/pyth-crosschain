@@ -21,10 +21,10 @@ export default {
     } as Options,
     "override-gas-price-multiplier": {
       description:
-        "Multiply the gas price by this number if the transaction is not landing to override it. Default to 1.1",
+        "Multiply the gas price by this number if the transaction is not landing to override it. Default 2",
       type: "number",
       required: false,
-      default: 1.1,
+      default: 2,
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
