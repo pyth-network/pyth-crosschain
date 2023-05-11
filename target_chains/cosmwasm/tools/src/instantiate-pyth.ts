@@ -15,6 +15,8 @@ import {
   getWormholeContractAddress,
 } from "./helper";
 import { ExtendedChainsConfigTestnet } from "./extended-chain-config";
+import { sha256 } from "@cosmjs/crypto";
+import { CHECKSUM } from "./contract-checksum";
 
 const argv = yargs(hideBin(process.argv))
   .usage("USAGE: npm run wormhole-stub -- <command>")
@@ -49,6 +51,26 @@ async function run() {
     ),
     argv.contractVersion
   );
+
+  // check that the downloaded code has the same checksum as the one hardcoded in contract-checksum.ts
+  for (let key in contractBytesDict) {
+    const hardcodedChecksum = CHECKSUM[argv.contractVersion][key];
+    if (hardcodedChecksum === undefined)
+      throw new Error(
+        `Contract for ${key} doesn't have a checksum in "contract-checksum.ts"`
+      );
+
+    const downloadedCodeChecksum = Buffer.from(
+      sha256(contractBytesDict[key])
+    ).toString("hex");
+
+    if (downloadedCodeChecksum !== hardcodedChecksum)
+      throw new Error(
+        `Checksum doesn't match for ${key}. \n Downloaded file checksum ${downloadedCodeChecksum}. Hardcoded checksum ${hardcodedChecksum}`
+      );
+  }
+
+  console.log();
 
   let chainIds = argv.chainId === undefined ? ChainIdsTestnet : [argv.chainId];
   for (let chainId of chainIds) {
