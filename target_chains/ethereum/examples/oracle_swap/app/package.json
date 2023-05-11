@@ -1,5 +1,5 @@
 {
-  "name": "transfer-usd-in-eth",
+  "name": "@pythnetwork/eth-oracle-swap-example-frontend",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
