@@ -6,7 +6,9 @@ import { DownloaderHelper } from "node-downloader-helper";
 
 // We have released the compile contacts on github. If a chain needs some specific
 // feature in a contract, a version of the contract with that specific features is
-// also released. For example, "injective.zip" for injective.
+// released. For example, "injective.zip" for injective.
+// NOTE that the each zip file should contain the compiled code with the same file
+// name `pyth_cosmwasm.wasm`
 // Given a contract version (eg 1.2.0) and  zipFileNames (eg ["injective", "osmosis"])
 // this method will return an object with key = zipFileName and value = compiledCode
 export async function getContractBytesDict(
