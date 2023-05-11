@@ -18,6 +18,7 @@ import {
 } from "@pythnetwork/price-service-client";
 import { CustomGasStation } from "./custom-gas-station";
 import { Provider } from "web3/providers";
+import { PushAttempt } from "../common";
 
 export class EvmPriceListener extends ChainPriceListener {
   private pythContractFactory: PythContractFactory;
@@ -116,11 +117,6 @@ export class EvmPriceListener extends ChainPriceListener {
     };
   }
 }
-
-type PushAttempt = {
-  nonce: number;
-  gasPrice: number;
-};
 
 export class EvmPricePusher implements IPricePusher {
   private customGasStation?: CustomGasStation;

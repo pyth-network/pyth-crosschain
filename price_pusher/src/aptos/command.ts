@@ -13,11 +13,9 @@ export default {
   builder: {
     endpoint: {
       description:
-        "RPC endpoint URL for aptos network. If you provide a normal HTTP endpoint, the pusher " +
-        "will periodically poll for updates. The polling interval is configurable via the " +
-        "`polling-frequency` command-line argument. If you provide a websocket RPC " +
-        "endpoint (`ws[s]://...`), the price pusher will use event subscriptions to read " +
-        "the current EVM price in addition to polling. ",
+        "RPC endpoint endpoint URL for aptos. The pusher will periodically" +
+        "poll for updates. The polling interval is configurable via the " +
+        "`polling-frequency` command-line argument.",
       type: "string",
       required: true,
     } as Options,
@@ -78,7 +76,13 @@ export default {
       priceItems,
       { pollingFrequency }
     );
-    const aptosPusher = new AptosPricePusher();
+    const aptosPusher = new AptosPricePusher(
+      priceServiceConnection,
+      pythContractAddress,
+      endpoint,
+      mnemonic,
+      overrideGasPriceMultiplier
+    );
 
     const controller = new Controller(
       priceConfigs,
