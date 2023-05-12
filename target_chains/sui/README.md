@@ -15,7 +15,7 @@ To update and then consume a price feed, one needs to build a Sui [programmable 
 
 As with other chains, one first obtains a batch price attestation VAA (of type `vector<u8>`) off-chain for a Price Info Object whose feed is to be used. Then, chain together the following sequence of function calls to update a price feed.
 
-### 1. `wormhole::wormhole::parse_and_verify`
+### 1. `wormhole::vaa::parse_and_verify`
 
 Call `parse_and_verify` on the batch attestation VAA bytes to obtain a `VAA` hot potato object.
 
