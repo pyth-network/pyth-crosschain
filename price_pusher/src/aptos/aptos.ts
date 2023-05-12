@@ -147,17 +147,14 @@ export class AptosPricePusher implements IPricePusher {
       // transaction. Since they have the same sequence number only one of them will be added to
       // the block and we won't be paying fees twice.
       let gasUnitPrice = Number(simulation[0].gas_unit_price);
-      if (this.lastPushAttempt !== undefined) {
-        if (
-          Number(simulation[0].sequence_number) > this.lastPushAttempt.nonce
-        ) {
-          this.lastPushAttempt === undefined;
-        } else {
-          const newGasUnitPrice = Number(
-            this.lastPushAttempt.gasPrice * this.overrideGasPriceMultiplier
-          );
-          if (gasUnitPrice < newGasUnitPrice) gasUnitPrice = newGasUnitPrice;
-        }
+      if (
+        this.lastPushAttempt !== undefined &&
+        Number(simulation[0].sequence_number) === this.lastPushAttempt.nonce
+      ) {
+        const newGasUnitPrice = Number(
+          this.lastPushAttempt.gasPrice * this.overrideGasPriceMultiplier
+        );
+        if (gasUnitPrice < newGasUnitPrice) gasUnitPrice = newGasUnitPrice;
       }
 
       const gasUsed = Number(simulation[0].gas_used) * 1.5;

@@ -69,7 +69,6 @@ export default {
       priceItems
     );
 
-    // create aptos listerer and pusher
     const aptosListener = new AptosPriceListener(
       pythContractAddress,
       endpoint,
