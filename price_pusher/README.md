@@ -72,9 +72,9 @@ npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
     [--polling-frequency 5] \
 
 # For Aptos
-npm run start -- aptos --endpoint https://example-rpc-endpoint.com \
-    --pyth-contract-address 0x7e783b34... --price-service-endpoint "https://example-pyth-price.com" \
-    --price-config-file "path/to/price-config-file.yaml.testnet.sample.yaml" \
+npm run start -- aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
+    --pyth-contract-address 0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387 --price-service-endpoint "https://xc-testnet.pyth.network" \
+    --price-config-file "./price-config.testnet.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
     [--pushing-frequency 10] \
     [--polling-frequency 5] \
