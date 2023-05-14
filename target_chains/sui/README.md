@@ -103,7 +103,7 @@ $ make build
 ## 5. Common Questions on How to Integrate with Pyth
 1. What is up with the "sui rev"? (`09b2081498366df936abae26eea4b2d5cafb2788`). Why does it point to a specific commit hash instead of Sui github "main" or "devnet"?
 
-Our Pyth `Move.toml` file looks like the following. It depends on specific versions of the Sui Framework as well as Wormhole. To make your contracts compatible, you must also specify the following dependencies verbatim in your `Move.toml` file. We are locked in to this specific `rev` because our package depends on Wormhole, which uses this rev.
+Our Pyth `Move.toml` file contains the following dependencies. It depends on specific versions of the [Sui Framework](https://github.com/MystenLabs/sui) as well as [Wormhole](https://github.com/wormhole-foundation/wormhole). To make your Sui package compatible, you must also specify the following dependencies verbatim in your `Move.toml` file. We are locked in to this specific `rev` because our package depends on Wormhole, which uses this `rev`.
 ```
 [dependencies.Sui]
 git = "https://github.com/MystenLabs/sui.git"
@@ -115,5 +115,3 @@ git = "https://github.com/wormhole-foundation/wormhole.git"
 subdir = "sui/wormhole"
 rev = "d050ad1d67a5b7da9fb65030aad12ef5d774ccad"
 ```
-
-
