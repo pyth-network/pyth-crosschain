@@ -112,7 +112,7 @@ $ make build
 # 5. Common Questions on How to Integrate with Pyth on Sui
 ## 1. What is up with the "sui rev"? (`09b2081498366df936abae26eea4b2d5cafb2788`). Why does it point to a specific commit hash instead of "main" or "devnet"?
 
-Our Pyth `Move.toml` file contains the following dependencies. It depends on specific versions of the [Sui Framework](https://github.com/MystenLabs/sui) as well as [Wormhole](https://github.com/wormhole-foundation/wormhole). To make your Sui package compatible, you must also specify the following dependencies verbatim in your `Move.toml` file. We are locked in to this specific `rev` because our package depends on Wormhole, which uses this `rev`.
+Our Pyth `Move.toml` file contains the following dependencies. It depends on specific versions of the [Sui Framework](https://github.com/MystenLabs/sui) as well as [Wormhole](https://github.com/wormhole-foundation/wormhole). To make your Sui package compatible, you must also specify the following dependencies verbatim in your `Move.toml` file. We are locked in to this specific `rev` because our package depends on Wormhole, which [uses the `rev` `09b2081498366df936abae26eea4b2d5cafb2788`](https://github.com/wormhole-foundation/wormhole/blob/main/sui/wormhole/Move.mainnet.toml).
 ```
 [dependencies.Sui]
 git = "https://github.com/MystenLabs/sui.git"
@@ -126,9 +126,10 @@ rev = "d050ad1d67a5b7da9fb65030aad12ef5d774ccad"
 ```
 
 ## 2. How do I find the Sui Object ID of a PriceInfoObject for a Pyth Price Feed?
-The list of Pyth price feed IDs can be found [here](https://pyth.network/developers/price-feed-ids#pyth-evm-testnet).
-
-The mapping of Pyth price feed IDs to `PriceInfoObject` object IDs can be found [here](./scripts/generated/).
+The mapping of Pyth price feed IDs to `PriceInfoObject` object IDs can be found [here](./scripts/generated/). (Note: this may go out of date as more price feeds are introduced and created over time).
 
 This mapping is also stored on-chain, and can be queried on-chain using the getter function `pyth::state::get_price_info_object_id` defined in the Pyth package.
+
+Also recall that the list of Pyth price feed IDs can be found [here](https://pyth.network/developers/price-feed-ids#pyth-evm-testnet).
+
 
