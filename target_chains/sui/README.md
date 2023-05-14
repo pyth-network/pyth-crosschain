@@ -17,9 +17,9 @@ Pyth price feeds on Sui are uniquely represented in the global store as `PriceIn
 
 # 2. How to Update and Consume Price Feeds
 
-To update and then consume a price feed, one needs to build a Sui [programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk).
+We demo how to update and then consume a price feed by building a Sui [programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) off-chain, and then executing it to update and get price feeds.
 
-As with other chains, one first obtains a batch price attestation VAA (of type `vector<u8>`) off-chain for a Price Info Object whose feed is to be used. Then, chain together the following sequence of function calls to update a price feed.
+As with other chains, one first obtains a batch price attestation VAA (of type `vector<u8>`) from a Pyth price service endpoint, which encodes update price information for a feed.
 
 ### 1. `wormhole::vaa::parse_and_verify`
 
@@ -28,7 +28,7 @@ Call `parse_and_verify` on the batch attestation VAA bytes to obtain a `VAA` hot
 ```Rust
 public fun parse_and_verify(
       wormhole_state: &State,
-      buf: vector<u8>,
+      buf: vector<u8>, // price update VAA bytes
       the_clock: &Clock
   ): VAA
 ```
@@ -39,11 +39,11 @@ public fun create_price_infos_hot_potato(
         pyth_state: &PythState,
         verified_vaas: vector<VAA>,
         clock: &Clock
-): HotPotatoVector<PriceInfo> 
+): HotPotatoVector<PriceInfo>
 ```
 
 ### 3.`pyth::pyth::update_single_price_feed`
-Use the hot potato price updates vector to update a price feed.
+Use the hot potato price updates vector to update a price feed. Note that conventional Pyth price IDs are found [here](https://pyth.network/developers/price-feed-ids#pyth-evm-mainnet). However, one must pass in the Sui Object wrapper for that price feed for the `price_info_object` argument to `update_single_price_feed`. The `PriceInfoObject` IDs are stored in a map on-chain. We pulled them into local json files which can be found [here](./scripts/generated). The `PriceInfoObject` ID can also be queried on-chain by calling the `pyth::state::get_price_info_object_id` found in the Pyth package. See the common questions section below for more info.
 
 ```Rust
 public fun update_single_price_feed(
