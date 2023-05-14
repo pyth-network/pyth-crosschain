@@ -8,12 +8,13 @@
 
 # 1. Background
 
-Pyth price feeds on Sui are uniquely represented in the global store as `PriceInfoObjects`. These objects have the `key` ability and serve as wrappers around the `PriceInfo` object, which in turn wraps around the `PriceFeed`, the arrival time of the latest price update, and the attestation time of the latest update.
+Pyth price feeds on Sui are uniquely represented in the global store as `PriceInfoObjects`. These objects have the `key` ability and serve as wrappers around the `PriceInfo` object, which in turn contains the price info: namely the `PriceFeed`, the arrival time of the latest price update, and the attestation time of the latest update.
 
-`PriceInfoObject`s are central to Pyth on Sui, since they are in unique correspondence with each Pyth price feed and must be passed in to functions that act on price feeds, e.g.
+`PriceInfoObject`s are central to Pyth on Sui, since they are in unique correspondence with each Pyth price feed and must be passed in to functions that update price feeds or which query info about price feeds, e.g.
 
 - `update_single_price_feed`
-- `update_single_pric_feeds_if_fresh`
+- `update_single_price_feeds_if_fresh`
+- `get_price`
 
 # 2. How to Update and Consume Price Feeds
 
@@ -43,7 +44,12 @@ public fun create_price_infos_hot_potato(
 ```
 
 ### 3.`pyth::pyth::update_single_price_feed`
-Use the hot potato price updates vector to update a price feed. Note that conventional Pyth price IDs are found [here](https://pyth.network/developers/price-feed-ids#pyth-evm-mainnet). However, one must pass in the Sui Object wrapper for that price feed for the `price_info_object` argument to `update_single_price_feed`. The `PriceInfoObject` IDs are stored in a map on-chain. We pulled them into local json files which can be found [here](./scripts/generated). The `PriceInfoObject` ID can also be queried on-chain by calling the `pyth::state::get_price_info_object_id` found in the Pyth package. See the common questions section below for more info.
+Use the hot potato price updates vector to update a price feed.
+
+Note that conventional Pyth price IDs are found [here](https://pyth.network/developers/price-feed-ids#pyth-evm-mainnet).
+However, instead of passing in a Pyth price feed ID to update the price feed (which is what is conventionally done), one must pass in a `PriceInfoObject` ID instead.
+
+The `PriceInfoObject` IDs are stored in a map on-chain. We pulled them into local json files which can be found [here](./scripts/generated). The `PriceInfoObject` ID can also be queried on-chain by calling the `pyth::state::get_price_info_object_id` found in the Pyth package. See the common questions section below for more info.
 
 ```Rust
 public fun update_single_price_feed(
