@@ -91,7 +91,7 @@ $ make build
 
 - PYTH_PACKAGE_ID: [0x975e063f398f720af4f33ec06a927f14ea76ca24f7f8dd544aa62ab9d5d15f44](https://explorer.sui.io/object/0x975e063f398f720af4f33ec06a927f14ea76ca24f7f8dd544aa62ab9d5d15f44?network=testnet)
 - PYTH_STATE_ID: [0xd8afde3a48b4ff7212bd6829a150f43f59043221200d63504d981f62bff2e27a](https://explorer.sui.io/object/0xd8afde3a48b4ff7212bd6829a150f43f59043221200d63504d981f62bff2e27a?network=testnet)
-- PYTH_PRICE_FEED_ID_TO_PRICE_INFO_OBJECT_ID: PYTH_STATE_ID: [0xf8929174008c662266a1adde78e1e8e33016eb7ad37d379481e860b911e40ed5](https://explorer.sui.io/object/0xf8929174008c662266a1adde78e1e8e33016eb7ad37d379481e860b911e40ed5?network=https%3A%2F%2Ffullnode.mainnet.sui.io%3A443)
+- PYTH_PRICE_FEED_ID_TO_PRICE_INFO_OBJECT_ID: [0xf8929174008c662266a1adde78e1e8e33016eb7ad37d379481e860b911e40ed5](https://explorer.sui.io/object/0xf8929174008c662266a1adde78e1e8e33016eb7ad37d379481e860b911e40ed5?network=https%3A%2F%2Ffullnode.testnet.sui.io%3A443)
 
 
 ## Wormhole on Testnet
@@ -102,7 +102,7 @@ $ make build
 ## Pyth on Mainnet
 - PYTH_PACKAGE_ID: [0x00b53b0f4174108627fbee72e2498b58d6a2714cded53fac537034c220d26302](https://explorer.sui.io/object/0x00b53b0f4174108627fbee72e2498b58d6a2714cded53fac537034c220d26302?network=https%3A%2F%2Ffullnode.mainnet.sui.io%3A443)
 - PYTH_STATE_ID: [0xf9ff3ef935ef6cdfb659a203bf2754cebeb63346e29114a535ea6f41315e5a3f](https://explorer.sui.io/object/0xf9ff3ef935ef6cdfb659a203bf2754cebeb63346e29114a535ea6f41315e5a3f?network=https%3A%2F%2Ffullnode.mainnet.sui.io%3A443)
-- PYTH_PRICE_FEED_ID_TO_PRICE_INFO_OBJECT_ID: PYTH_STATE_ID: [0x14b4697477d24c30c8eecc31dd1bd49a3115a9fe0db6bd4fd570cf14640b79a0](https://explorer.sui.io/object/0x14b4697477d24c30c8eecc31dd1bd49a3115a9fe0db6bd4fd570cf14640b79a0?network=https%3A%2F%2Ffullnode.mainnet.sui.io%3A443)
+- PYTH_PRICE_FEED_ID_TO_PRICE_INFO_OBJECT_ID: [0x14b4697477d24c30c8eecc31dd1bd49a3115a9fe0db6bd4fd570cf14640b79a0](https://explorer.sui.io/object/0x14b4697477d24c30c8eecc31dd1bd49a3115a9fe0db6bd4fd570cf14640b79a0?network=https%3A%2F%2Ffullnode.mainnet.sui.io%3A443)
 
 ## Wormhole on Mainnet
 
