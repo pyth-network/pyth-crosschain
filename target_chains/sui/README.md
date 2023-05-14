@@ -18,7 +18,7 @@ Pyth price feeds on Sui are uniquely represented in the global store as `PriceIn
 
 # 2. How to Update and Consume Price Feeds
 
-We demo how to update and then consume a price feed by building a Sui [programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) off-chain, and then executing it to update and get price feeds.
+We demo how to update and then consume a price feed by building a Sui [programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) off-chain, and then executing it to update a price feed and get an updated price.
 
 As with other chains, one first obtains a batch price attestation VAA (of type `vector<u8>`) from a Pyth price service endpoint, which encodes update price information for a feed.
 
