@@ -16,7 +16,7 @@ let network = NETWORK.TESTNET; // <= NOTE: Update this when changing network
 let walletPrivateKey = process.env.SUI_TESTNET; // <= NOTE: Update this when changing network
 
 const registry = REGISTRY[network];
-const initial_data_sources = INITIAL_DATA_SOURCES[network]; //TODO - SET THIS CORRECTLY
+const initial_data_sources = INITIAL_DATA_SOURCES[network];
 const provider = new JsonRpcProvider(
   new Connection({ fullnode: registry["RPC_URL"] })
 );
@@ -35,9 +35,9 @@ async function main() {
 
   // NOTE: Set these before calling init_pyth
   const upgradeCap =
-    "0xc9d62cb6af2937ec1dafe99a7e1f85ecfaaa05800c1a4fdbec1a9fdadcee7cab";
+    "0x0ca3774120057575d31f771a9779d449f8a7f4350948d9ab3e8b899481a229cf";
   const deployerCap =
-    "0xea1aeeb71a4607f1ec61cd3573be44eade6150af407da95d15ca283dc6bd8921";
+    "0x2f79ab183ec0c602c95384638e5a13892ac93ea839b9d953a2a4be1a11d8a449";
 
   init_pyth(wallet, PYTH_PACKAGE, deployerCap, upgradeCap);
 }

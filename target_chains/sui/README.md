@@ -83,13 +83,13 @@ $ make build
 
 ## Pyth on Testnet
 
-- PYTH_PACKAGE_ID: [0x4eb4b9b5f3ca3293d3b92898ebb54f4a8705cc6c1fb2a0d2b7ec69388c7f14e4](https://explorer.sui.io/object/0x4eb4b9b5f3ca3293d3b92898ebb54f4a8705cc6c1fb2a0d2b7ec69388c7f14e4?network=testnet)
-- PYTH_STATE_ID: [0xe96526143f8305830a103331151d46063339f7a9946b50aaa0d704c8c04173e5](https://explorer.sui.io/object/0xe96526143f8305830a103331151d46063339f7a9946b50aaa0d704c8c04173e5?network=testnet)
+- PYTH_PACKAGE_ID: [0x975e063f398f720af4f33ec06a927f14ea76ca24f7f8dd544aa62ab9d5d15f44](https://explorer.sui.io/object/0x975e063f398f720af4f33ec06a927f14ea76ca24f7f8dd544aa62ab9d5d15f44?network=testnet)
+- PYTH_STATE_ID: [0xd8afde3a48b4ff7212bd6829a150f43f59043221200d63504d981f62bff2e27a](https://explorer.sui.io/object/0xd8afde3a48b4ff7212bd6829a150f43f59043221200d63504d981f62bff2e27a?network=testnet)
 
 ## Wormhole on Testnet
 
-- WORMHOLE_PACKAGE_ID: [0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7](https://explorer.sui.io/object/0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7?network=testnet)
-- WORMHOLE_STATE_ID: [0x79ab4d569f7eb1efdcc1f25b532f8593cda84776206772e33b490694cb8fc07a](https://explorer.sui.io/object/0x79ab4d569f7eb1efdcc1f25b532f8593cda84776206772e33b490694cb8fc07a?network=testnet)
+- WORMHOLE_PACKAGE_ID: [0xcc029e2810f17f9f43f52262f40026a71fbdca40ed3803ad2884994361910b7e](https://explorer.sui.io/object/0xcc029e2810f17f9f43f52262f40026a71fbdca40ed3803ad2884994361910b7e?network=testnet)
+- WORMHOLE_STATE_ID: [0xebba4cc4d614f7a7cdbe883acc76d1cc767922bc96778e7b68be0d15fce27c02](https://explorer.sui.io/object/0xebba4cc4d614f7a7cdbe883acc76d1cc767922bc96778e7b68be0d15fce27c02?network=testnet)
 
 ## Pyth on Mainnet
 

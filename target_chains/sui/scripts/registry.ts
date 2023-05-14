@@ -18,24 +18,24 @@ export const REGISTRY = {
   },
   TESTNET: {
     PYTH_PACKAGE_ID:
-      "0x4eb4b9b5f3ca3293d3b92898ebb54f4a8705cc6c1fb2a0d2b7ec69388c7f14e4",
+      "0x975e063f398f720af4f33ec06a927f14ea76ca24f7f8dd544aa62ab9d5d15f44",
     PYTH_STATE_ID:
-      "0xe96526143f8305830a103331151d46063339f7a9946b50aaa0d704c8c04173e5",
+      "0xd8afde3a48b4ff7212bd6829a150f43f59043221200d63504d981f62bff2e27a",
     WORMHOLE_PACKAGE_ID:
-      "0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7",
+      "0xcc029e2810f17f9f43f52262f40026a71fbdca40ed3803ad2884994361910b7e",
     WORMHOLE_STATE_ID:
-      "0x79ab4d569f7eb1efdcc1f25b532f8593cda84776206772e33b490694cb8fc07a",
+      "0xebba4cc4d614f7a7cdbe883acc76d1cc767922bc96778e7b68be0d15fce27c02",
     RPC_URL: "https://fullnode.testnet.sui.io:443",
   },
   MAINNET: {
     PYTH_PACKAGE_ID:
-      "0xa446c4a37c0bb69d03357c1a52d60da0b434048226d5f3feffdb693586bea861",
+      "",
     PYTH_STATE_ID:
-      "0x428b5795904d5256d1eea5991df672934315fb8dcf8f6111134c1a52afd005ca",
+      "",
     WORMHOLE_PACKAGE_ID:
-      "0x5306f64e312b581766351c07af79c72fcb1cd25147157fdc2f8ad76de9a3fb6a",
+      "",
     WORMHOLE_STATE_ID:
-      "0xaeab97f96cf9877fee2883315d459552b2b921edc16d7ceac6eab944dd88919c",
+      "",
     RPC_URL: "https://fullnode.mainnet.sui.io:443",
   },
 };

@@ -53,6 +53,7 @@ async function main() {
     //@ts-ignore
     const priceFeedVAAs = await connection.getLatestVaas(chunk);
     console.log("price feed VAAs len: ", priceFeedVAAs.length);
+    console.log("sample vaa: ", priceFeedVAAs[0])
     await create_price_feeds(wallet, registry, priceFeedVAAs);
   }
 }

@@ -19,10 +19,10 @@ import { REGISTRY, NETWORK } from "../registry";
 // ================== Network dependent settings ==================
 let network = NETWORK.TESTNET;
 const walletPrivateKey = process.env.SUI_TESTNET;
-const price_connection_url = "https://xc-testnet.pyth.network";
+const price_connection_url = "https://xc-mainnet.pyth.network";
 // ================================================================
 
-const PATH_TO_PRICE_ID_TO_OBJECT_MAP = "./generated/price_id_to_object_id.testnet.json"
+const PATH_TO_PRICE_ID_TO_OBJECT_MAP = "./generated/price_id_to_object_id.testnet.mainnet_simulation.json"
 
 const registry = REGISTRY[network];
 const provider = new JsonRpcProvider(
@@ -49,9 +49,7 @@ async function main() {
   // For a full list of testnet price feed ids, see:
   // https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
   const price_feed_ids = [
-    "0x8b62866fcd3a25ff9118506444e9fe5171e67c61a049f4b4fdacdbc31ae862bb",
-    "0x0e60a64dcbd660e87a08eb2cc95e8d84d1126fd7354d377b3fc5730352f4b8b2",
-    "0x651071f8c7ab2321b6bdd3bc79b94a50841a92a6e065f9e3b8b9926a8fb5a5d1",
+    "0xccca1d2b0d9a9ca72aa2c849329520a378aea0ec7ef14497e67da4050d6cf578"
     // INSERT YOUR PRICE FEED ID HERE!
   ];
 
