@@ -92,7 +92,6 @@ $ make build
 - WORMHOLE_STATE_ID: [0xebba4cc4d614f7a7cdbe883acc76d1cc767922bc96778e7b68be0d15fce27c02](https://explorer.sui.io/object/0xebba4cc4d614f7a7cdbe883acc76d1cc767922bc96778e7b68be0d15fce27c02?network=testnet)
 
 ## Pyth on Mainnet
-
 - PYTH_PACKAGE_ID: [0x00b53b0f4174108627fbee72e2498b58d6a2714cded53fac537034c220d26302](https://explorer.sui.io/object/0x00b53b0f4174108627fbee72e2498b58d6a2714cded53fac537034c220d26302?network=https%3A%2F%2Ffullnode.mainnet.sui.io%3A443)
 - PYTH_STATE_ID: [0xf9ff3ef935ef6cdfb659a203bf2754cebeb63346e29114a535ea6f41315e5a3f](https://explorer.sui.io/object/0xf9ff3ef935ef6cdfb659a203bf2754cebeb63346e29114a535ea6f41315e5a3f?network=https%3A%2F%2Ffullnode.mainnet.sui.io%3A443)
 
@@ -100,3 +99,20 @@ $ make build
 
 - WORMHOLE_PACKAGE_ID: [0x5306f64e312b581766351c07af79c72fcb1cd25147157fdc2f8ad76de9a3fb6a](https://explorer.sui.io/object/0x5306f64e312b581766351c07af79c72fcb1cd25147157fdc2f8ad76de9a3fb6a)
 - WORMHOLE_STATE_ID: [0xaeab97f96cf9877fee2883315d459552b2b921edc16d7ceac6eab944dd88919c](https://explorer.sui.io/object/0xaeab97f96cf9877fee2883315d459552b2b921edc16d7ceac6eab944dd88919c)
+
+## 5. Common Questions on How to Integrate with Pyth
+Q. What is up with the "sui rev"? (09b2081498366df936abae26eea4b2d5cafb2788). Why does it point to a specific commit hash instead of Sui github "main" or "devnet"?
+A. Our Pyth `Move.toml` file looks like the following. It depends on specific versions of the Sui Framework as well as Wormhole. To make your contracts compatible, you must also specify the following dependencies verbatim in your `Move.toml` file. We are locked in to this specific rev because our package depends on Wormhole, which uses this rev.
+```
+[dependencies.Sui]
+git = "https://github.com/MystenLabs/sui.git"
+subdir = "crates/sui-framework/packages/sui-framework"
+rev = "09b2081498366df936abae26eea4b2d5cafb2788"
+
+[dependencies.Wormhole]
+git = "https://github.com/wormhole-foundation/wormhole.git"
+subdir = "sui/wormhole"
+rev = "d050ad1d67a5b7da9fb65030aad12ef5d774ccad"
+```
+
+
