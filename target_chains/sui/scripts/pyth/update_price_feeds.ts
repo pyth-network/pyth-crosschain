@@ -17,12 +17,11 @@ dotenv.config({ path: "~/.env" });
 import { REGISTRY, NETWORK } from "../registry";
 
 // ================== Network dependent settings ==================
-let network = NETWORK.TESTNET;
-const walletPrivateKey = process.env.SUI_TESTNET;
+let network = NETWORK.MAINNET;
+const walletPrivateKey = process.env.SUI_MAINNET;
 const price_connection_url = "https://xc-mainnet.pyth.network";
+const PATH_TO_PRICE_ID_TO_OBJECT_MAP = "./generated/price_id_to_object_id.mainnet.json"
 // ================================================================
-
-const PATH_TO_PRICE_ID_TO_OBJECT_MAP = "./generated/price_id_to_object_id.testnet.mainnet_simulation.json"
 
 const registry = REGISTRY[network];
 const provider = new JsonRpcProvider(
@@ -49,7 +48,7 @@ async function main() {
   // For a full list of testnet price feed ids, see:
   // https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
   const price_feed_ids = [
-    "0xccca1d2b0d9a9ca72aa2c849329520a378aea0ec7ef14497e67da4050d6cf578"
+    "0x63f341689d98a12ef60a5cff1d7f85c70a9e17bf1575f0e7c0b2512d48b1c8b3"
     // INSERT YOUR PRICE FEED ID HERE!
   ];
 

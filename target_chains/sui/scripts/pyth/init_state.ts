@@ -11,9 +11,10 @@ import {
 import { REGISTRY, NETWORK, INITIAL_DATA_SOURCES } from "../registry";
 dotenv.config({ path: "~/.env" });
 
-// Network dependent settings.
-let network = NETWORK.TESTNET; // <= NOTE: Update this when changing network
-let walletPrivateKey = process.env.SUI_TESTNET; // <= NOTE: Update this when changing network
+// ================== Network dependent settings ==================
+let network = NETWORK.MAINNET; // <= NOTE: Update this when changing network
+let walletPrivateKey = process.env.SUI_MAINNET; // <= NOTE: Update this when changing network
+// ================================================================
 
 const registry = REGISTRY[network];
 const initial_data_sources = INITIAL_DATA_SOURCES[network];
@@ -35,9 +36,9 @@ async function main() {
 
   // NOTE: Set these before calling init_pyth
   const upgradeCap =
-    "0x0ca3774120057575d31f771a9779d449f8a7f4350948d9ab3e8b899481a229cf";
+    "0x82d5b1ab3bd40d121f1a9b073815f241ccd696edf324d2a386d38477f0834082";
   const deployerCap =
-    "0x2f79ab183ec0c602c95384638e5a13892ac93ea839b9d953a2a4be1a11d8a449";
+    "0x5bc07a9e7627534680313a2a0499cbbaa76c4b50db30eb86e85ae211c26fc911";
 
   init_pyth(wallet, PYTH_PACKAGE, deployerCap, upgradeCap);
 }

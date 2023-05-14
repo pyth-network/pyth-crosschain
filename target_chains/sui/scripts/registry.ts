@@ -29,13 +29,13 @@ export const REGISTRY = {
   },
   MAINNET: {
     PYTH_PACKAGE_ID:
-      "",
+      "0x00b53b0f4174108627fbee72e2498b58d6a2714cded53fac537034c220d26302",
     PYTH_STATE_ID:
-      "",
+      "0xf9ff3ef935ef6cdfb659a203bf2754cebeb63346e29114a535ea6f41315e5a3f",
     WORMHOLE_PACKAGE_ID:
-      "",
+      "0x5306f64e312b581766351c07af79c72fcb1cd25147157fdc2f8ad76de9a3fb6a",
     WORMHOLE_STATE_ID:
-      "",
+      "0xaeab97f96cf9877fee2883315d459552b2b921edc16d7ceac6eab944dd88919c",
     RPC_URL: "https://fullnode.mainnet.sui.io:443",
   },
 };

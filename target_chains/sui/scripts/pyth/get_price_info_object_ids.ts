@@ -1,10 +1,12 @@
 import { Connection, JsonRpcProvider } from "@mysten/sui.js";
 
+// ================== Network dependent settings ==================
 const provider = new JsonRpcProvider(
-  new Connection({ fullnode: "https://fullnode.testnet.sui.io:443" }) // <= NOTE: Update this when changing network
+  new Connection({ fullnode: "https://fullnode.mainnet.sui.io:443" }) // <= NOTE: Update this when changing network
 );
 const objectId =
-  "0xf8929174008c662266a1adde78e1e8e33016eb7ad37d379481e860b911e40ed5"; // <= NOTE: Update this when changing network AND with new deployment
+  "0x14b4697477d24c30c8eecc31dd1bd49a3115a9fe0db6bd4fd570cf14640b79a0"; // <= NOTE: Update this when changing network AND with new deployment
+// ================================================================
 
 async function main() {
   // Table of Sui Pyth PriceIdentifier => Price Info Object IDs

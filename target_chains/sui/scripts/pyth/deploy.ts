@@ -17,9 +17,10 @@ import { REGISTRY, NETWORK } from "../registry";
 
 dotenv.config({ path: "~/.env" });
 
-// Network dependent settings.
-let network = NETWORK.TESTNET; // <= NOTE: Update this when changing network
-const walletPrivateKey = process.env.SUI_TESTNET; // <= NOTE: Update this when changing network
+// ================== Network dependent settings ==================
+let network = NETWORK.MAINNET; // <= NOTE: Update this when changing network
+const walletPrivateKey = process.env.SUI_MAINNET; // <= NOTE: Update this when changing network
+// ================================================================
 
 const registry = REGISTRY[network];
 const provider = new JsonRpcProvider(

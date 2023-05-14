@@ -93,8 +93,8 @@ $ make build
 
 ## Pyth on Mainnet
 
-- PYTH_PACKAGE_ID: [0xa446c4a37c0bb69d03357c1a52d60da0b434048226d5f3feffdb693586bea861](https://explorer.sui.io/object/0xa446c4a37c0bb69d03357c1a52d60da0b434048226d5f3feffdb693586bea861?network=https%3A%2F%2Ffullnode.mainnet.sui.io%3A443)
-- PYTH_STATE_ID: [0x428b5795904d5256d1eea5991df672934315fb8dcf8f6111134c1a52afd005ca](https://explorer.sui.io/object/0x428b5795904d5256d1eea5991df672934315fb8dcf8f6111134c1a52afd005ca?network=https%3A%2F%2Ffullnode.mainnet.sui.io%3A443)
+- PYTH_PACKAGE_ID: [0x00b53b0f4174108627fbee72e2498b58d6a2714cded53fac537034c220d26302](https://explorer.sui.io/object/0x00b53b0f4174108627fbee72e2498b58d6a2714cded53fac537034c220d26302?network=https%3A%2F%2Ffullnode.mainnet.sui.io%3A443)
+- PYTH_STATE_ID: [0xf9ff3ef935ef6cdfb659a203bf2754cebeb63346e29114a535ea6f41315e5a3f](https://explorer.sui.io/object/0xf9ff3ef935ef6cdfb659a203bf2754cebeb63346e29114a535ea6f41315e5a3f?network=https%3A%2F%2Ffullnode.mainnet.sui.io%3A443)
 
 ## Wormhole on Mainnet
 

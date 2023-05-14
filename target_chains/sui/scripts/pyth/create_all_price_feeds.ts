@@ -16,18 +16,20 @@ dotenv.config({ path: "~/.env" });
 
 import { REGISTRY, NETWORK } from "../registry";
 
-// Network dependent settings.
-let network = NETWORK.TESTNET; // <= NOTE: Update this when changing network
-const walletPrivateKey = process.env.SUI_TESTNET; // <= NOTE: Update this when changing network
-const price_feed_id_url = "https://xc-testnet.pyth.network/api/price_feed_ids"; // <= NOTE: Update this when changing network
+// ================== Network dependent settings ==================
+let network = NETWORK.MAINNET; // <= NOTE: Update this when changing network
+const walletPrivateKey = process.env.SUI_MAINNET; // <= NOTE: Update this when changing network
+const price_feed_id_url = "https://xc-mainnet.pyth.network/api/price_feed_ids"; // <= NOTE: Update this when changing network
 const connection = new PriceServiceConnection(
-  "https://xc-testnet.pyth.network", // <= NOTE: Update this when changing network
+  "https://xc-mainnet.pyth.network", // <= NOTE: Update this when changing network
   {
     priceFeedRequestConfig: {
       binary: true,
     },
   }
 );
+// ================================================================
+
 const registry = REGISTRY[network];
 const provider = new JsonRpcProvider(
   new Connection({ fullnode: registry["RPC_URL"] })
