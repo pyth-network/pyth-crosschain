@@ -4,13 +4,10 @@ use {
 };
 
 pub fn delete_buffer<'info>(
-    ctx: Context<'_, '_, '_, 'info, DeleteBuffer<'info>>,
-    allowed_program_auth: Pubkey,
+    _ctx: Context<'_, '_, '_, 'info, DeleteBuffer<'info>>,
+    _allowed_program_auth: Pubkey,
     _base_account_key: Pubkey,
 ) -> Result<()> {
-    ctx.accounts
-        .whitelist
-        .is_allowed_program_auth(&allowed_program_auth)?;
     Ok(())
 }
 
