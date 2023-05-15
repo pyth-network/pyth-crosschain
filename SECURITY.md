@@ -6,8 +6,9 @@ Pyth operates a self hosted [bug bounty program](https://pyth.network/bounty) to
 
 - **Scopes**
   - [Pyth Oracle](https://github.com/pyth-network/pyth-client/tree/main/program)
-  - [Pyth Crosschain Ethereum](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/contracts/pyth)
+  - [Pyth Crosschain Ethereum](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/ethereum/contracts/contracts/pyth)
   - [Pyth Crosschain Aptos](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/aptos/contracts)
+  - [Pyth Crosschain Sui](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/sui/contracts)
   - [Pyth Governance](https://github.com/pyth-network/governance/tree/master/staking/programs/staking)
 - **Rewards**
   - Critical: Up to $500,000

@@ -69,13 +69,13 @@ repos:
       - id: cargo-fmt-message-buffer
         name: Cargo format for message buffer contract
         language: "rust"
-        entry: cargo +nightly fmt --manifest-path ./message_buffer/Cargo.toml --all -- --config-path rustfmt.toml
+        entry: cargo +nightly fmt --manifest-path ./pythnet/message_buffer/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: message_buffer
       - id: cargo-clippy-message-buffer
         name: Cargo clippy for message buffer contract
         language: "rust"
-        entry: cargo +nightly clippy --manifest-path ./message_buffer/Cargo.toml --tests --fix --allow-dirty --allow-staged -- -D warnings
+        entry: cargo +nightly clippy --manifest-path ./pythnet/message_buffer/Cargo.toml --tests --fix --allow-dirty --allow-staged --features test-bpf -- -D warnings
         pass_filenames: false
         files: message_buffer
       # Hooks for solana receiver contract

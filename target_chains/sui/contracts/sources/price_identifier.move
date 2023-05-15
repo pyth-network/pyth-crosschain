@@ -1,16 +1,15 @@
 module pyth::price_identifier {
     use std::vector;
-    //use pyth::error;
 
     const IDENTIFIER_BYTES_LENGTH: u64 = 32;
+    const E_INCORRECT_IDENTIFIER_LENGTH: u64 = 0;
 
     struct PriceIdentifier has copy, drop, store {
         bytes: vector<u8>,
     }
 
     public fun from_byte_vec(bytes: vector<u8>): PriceIdentifier {
-        assert!(vector::length(&bytes) == IDENTIFIER_BYTES_LENGTH, 0); //error::incorrect_identifier_length()
-
+        assert!(vector::length(&bytes) == IDENTIFIER_BYTES_LENGTH, E_INCORRECT_IDENTIFIER_LENGTH);
         PriceIdentifier {
             bytes: bytes
         }
