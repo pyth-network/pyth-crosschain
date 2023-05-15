@@ -108,8 +108,11 @@ describe("message_buffer", () => {
   it("Is initialized!", async () => {
     // Add your test here.
     const tx = await messageBufferProgram.methods
-      .initialize(whitelistAdmin.publicKey)
-      .accounts({})
+      .initialize()
+      .accounts({
+        admin: whitelistAdmin.publicKey,
+      })
+      .signers([whitelistAdmin])
       .rpc();
     console.log("Your transaction signature", tx);
 

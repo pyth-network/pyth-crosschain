@@ -18,7 +18,8 @@ pub mod message_buffer {
 
     /// Initializes the whitelist and sets it's admin to the provided pubkey
     /// Once initialized, the authority must sign all further changes to the whitelist.
-    pub fn initialize(ctx: Context<Initialize>, admin: Pubkey) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        let admin = ctx.accounts.admin.key();
         require_keys_neq!(admin, Pubkey::default());
         let whitelist = &mut ctx.accounts.whitelist;
         whitelist.bump = *ctx.bumps.get("whitelist").unwrap();
@@ -141,11 +142,12 @@ pub mod message_buffer {
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
+    /// Admin that can update the whitelist and create/resize/delete buffers
     #[account(mut)]
-    pub payer:          Signer<'info>,
+    pub admin:          Signer<'info>,
     #[account(
         init,
-        payer = payer,
+        payer = admin,
         seeds = [b"message".as_ref(), b"whitelist".as_ref()],
         bump,
         space = 8 + Whitelist::INIT_SPACE,

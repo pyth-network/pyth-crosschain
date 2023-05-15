@@ -209,8 +209,7 @@ impl MessageBufferTestContext {
         self.admin = Some(admin.insecure_clone());
         self.whitelist = Some(whitelist_pda);
 
-        let init_message_buffer_ix =
-            initialize_ix(admin.pubkey(), self.payer.pubkey(), whitelist_pda);
+        let init_message_buffer_ix = initialize_ix(admin.pubkey(), whitelist_pda);
 
         self.process_ixs(
             &[init_message_buffer_ix],
@@ -367,14 +366,14 @@ impl MessageBufferTestContext {
 
 pub type AddPriceParams = (u64, u64, u64, u64, u64);
 
-fn initialize_ix(admin: Pubkey, payer: Pubkey, whitelist_pda: Pubkey) -> Instruction {
+fn initialize_ix(admin: Pubkey, whitelist_pda: Pubkey) -> Instruction {
     let init_ix_discriminator = sighash("global", "initialize");
 
     Instruction::new_with_borsh(
         ::message_buffer::id(),
-        &(init_ix_discriminator, admin),
+        &(init_ix_discriminator),
         vec![
-            AccountMeta::new(payer, true),
+            AccountMeta::new(admin, true),
             AccountMeta::new(whitelist_pda, false),
             AccountMeta::new_readonly(System::id(), false),
         ],
