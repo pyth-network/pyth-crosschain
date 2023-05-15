@@ -1,5 +1,4 @@
 pub mod instructions;
-mod macros;
 mod state;
 
 
@@ -159,9 +158,6 @@ pub struct Initialize<'info> {
 
 #[derive(Accounts)]
 pub struct UpdateWhitelist<'info> {
-    #[account(mut)]
-    pub payer: Signer<'info>,
-
     pub admin:     Signer<'info>,
     #[account(
         mut,
@@ -205,4 +201,6 @@ pub enum MessageBufferError {
     TargetSizeDeltaExceeded,
     #[msg("MessageBuffer Uninitialized")]
     MessageBufferUninitialized,
+    #[msg("Target size exceeds MessageBuffer::MAX_LEN")]
+    TargetSizeExceedsMaxLen,
 }

@@ -1,5 +1,9 @@
 use {
-    crate::MessageBufferError,
+    crate::{
+        MessageBufferError,
+        MESSAGE,
+        WHITELIST,
+    },
     anchor_lang::prelude::*,
 };
 
@@ -48,7 +52,7 @@ impl Whitelist {
 #[derive(Accounts)]
 pub struct WhitelistVerifier<'info> {
     #[account(
-        seeds = [b"message".as_ref(), b"whitelist".as_ref()],
+        seeds = [MESSAGE.as_bytes(), WHITELIST.as_bytes()],
         bump = whitelist.bump,
     )]
     // Using a Box to move account from stack to heap

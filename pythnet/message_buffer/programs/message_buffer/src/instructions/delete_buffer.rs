@@ -1,5 +1,9 @@
 use {
-    crate::state::*,
+    crate::{
+        state::*,
+        MESSAGE,
+        WHITELIST,
+    },
     anchor_lang::prelude::*,
 };
 
@@ -15,7 +19,7 @@ pub fn delete_buffer<'info>(
 #[instruction(allowed_program_auth: Pubkey, base_account_key: Pubkey)]
 pub struct DeleteBuffer<'info> {
     #[account(
-        seeds = [b"message".as_ref(), b"whitelist".as_ref()],
+        seeds = [MESSAGE.as_bytes(), WHITELIST.as_bytes()],
         bump = whitelist.bump,
         has_one = admin,
     )]
@@ -26,10 +30,10 @@ pub struct DeleteBuffer<'info> {
     pub admin: Signer<'info>,
 
     #[account(
-    mut,
-    close = admin,
-    seeds = [allowed_program_auth.as_ref(), b"message".as_ref(), base_account_key.as_ref()],
-    bump = message_buffer.load()?.bump,
+        mut,
+        close = admin,
+        seeds = [allowed_program_auth.as_ref(), MESSAGE.as_bytes(), base_account_key.as_ref()],
+        bump = message_buffer.load()?.bump,
     )]
     pub message_buffer: AccountLoader<'info, MessageBuffer>,
 }

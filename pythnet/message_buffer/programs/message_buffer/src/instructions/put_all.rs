@@ -1,5 +1,8 @@
 use {
-    crate::state::*,
+    crate::{
+        state::*,
+        MESSAGE,
+    },
     anchor_lang::prelude::*,
 };
 
@@ -33,7 +36,7 @@ pub struct PutAll<'info> {
     pub whitelist_verifier: WhitelistVerifier<'info>,
     #[account(
         mut,
-        seeds = [whitelist_verifier.cpi_caller_auth.key().as_ref(), b"message".as_ref(), base_account_key.as_ref()],
+        seeds = [whitelist_verifier.cpi_caller_auth.key().as_ref(), MESSAGE.as_bytes(), base_account_key.as_ref()],
         bump = message_buffer.load()?.bump,
     )]
     pub message_buffer:     AccountLoader<'info, MessageBuffer>,

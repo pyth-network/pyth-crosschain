@@ -330,3 +330,55 @@ async fn fail_resize_initialized_buffer() {
 
     assert_eq!(msg_buffer_account_data.len(), target_size as usize);
 }
+
+#[tokio::test]
+async fn fail_resize_buffer_exceed_max_size() {
+    let mut context = MessageBufferTestContext::initialize_with_default_test_buffer(
+        false,
+        MessageBufferTestContext::DEFAULT_TARGET_SIZE,
+    )
+    .await
+    .unwrap();
+
+    let whitelist = context.whitelist();
+    let admin = context.default_admin();
+    let cpi_caller_auth = MessageBufferTestContext::get_mock_cpi_auth();
+    let pyth_price_acct = MessageBufferTestContext::default_pyth_price_account();
+    let (msg_buffer_pda, _msg_buffer_bump) = MessageBufferTestContext::default_msg_buffer();
+
+
+    // increase buffer size beyond maximum allowed
+    let mut target_size = MessageBufferTestContext::DEFAULT_TARGET_SIZE + 10240;
+    while target_size < u32::from(u16::MAX) {
+        let resize_ix = resize_msg_buffer_ix(
+            cpi_caller_auth,
+            pyth_price_acct,
+            target_size,
+            whitelist,
+            admin.pubkey(),
+            msg_buffer_pda,
+        );
+
+        let res = context.process_ixs(&[resize_ix], vec![&admin]).await;
+        assert!(res.is_ok());
+        target_size += 10240;
+    }
+
+    let resize_ix = resize_msg_buffer_ix(
+        cpi_caller_auth,
+        pyth_price_acct,
+        target_size,
+        whitelist,
+        admin.pubkey(),
+        msg_buffer_pda,
+    );
+
+    let res = context.process_ixs(&[resize_ix], vec![&admin]).await;
+    assert!(res.is_err());
+
+    let err: ProgramError = res.unwrap_err().into();
+    assert_eq!(
+        err,
+        ProgramError::Custom(MessageBufferError::TargetSizeExceedsMaxLen.into())
+    );
+}

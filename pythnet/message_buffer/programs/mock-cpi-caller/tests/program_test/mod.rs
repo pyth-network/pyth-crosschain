@@ -237,12 +237,8 @@ impl MessageBufferTestContext {
 
 
     pub async fn set_allowed_programs(&mut self, allowed_programs: &Vec<Pubkey>) -> Result<()> {
-        let set_allowed_programs_ix = set_allowed_programs_ix(
-            self.admin_pubkey(),
-            self.payer.pubkey(),
-            self.whitelist(),
-            allowed_programs,
-        );
+        let set_allowed_programs_ix =
+            set_allowed_programs_ix(self.admin_pubkey(), self.whitelist(), allowed_programs);
 
         self.process_ixs(
             &[set_allowed_programs_ix],
@@ -382,7 +378,6 @@ fn initialize_ix(admin: Pubkey, whitelist_pda: Pubkey) -> Instruction {
 
 fn set_allowed_programs_ix(
     admin: Pubkey,
-    payer: Pubkey,
     whitelist: Pubkey,
     allowed_programs: &Vec<Pubkey>,
 ) -> Instruction {
@@ -393,7 +388,6 @@ fn set_allowed_programs_ix(
         &(ix_discriminator, allowed_programs),
         vec![
             AccountMeta::new(admin, true),
-            AccountMeta::new(payer, true),
             AccountMeta::new(whitelist, false),
         ],
     )
