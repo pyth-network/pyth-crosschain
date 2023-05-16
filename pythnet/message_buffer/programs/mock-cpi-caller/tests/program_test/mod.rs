@@ -18,6 +18,10 @@ use {
         LittleEndian,
         ReadBytesExt,
     },
+    message_buffer::instructions::{
+        MESSAGE,
+        WHITELIST,
+    },
     solana_program_test::{
         BanksClientError,
         ProgramTest,
@@ -202,15 +206,14 @@ impl MessageBufferTestContext {
 
     pub async fn initialize(&mut self, admin: Keypair) -> Result<(Pubkey, u8)> {
         let (whitelist_pda, whitelist_bump) = Pubkey::find_program_address(
-            &[b"message".as_ref(), b"whitelist".as_ref()],
+            &[MESSAGE.as_bytes(), WHITELIST.as_bytes()],
             &::message_buffer::id(),
         );
 
         self.admin = Some(admin.insecure_clone());
         self.whitelist = Some(whitelist_pda);
 
-        let init_message_buffer_ix =
-            initialize_ix(admin.pubkey(), self.payer.pubkey(), whitelist_pda);
+        let init_message_buffer_ix = initialize_ix(admin.pubkey(), whitelist_pda);
 
         self.process_ixs(
             &[init_message_buffer_ix],
@@ -238,12 +241,8 @@ impl MessageBufferTestContext {
 
 
     pub async fn set_allowed_programs(&mut self, allowed_programs: &Vec<Pubkey>) -> Result<()> {
-        let set_allowed_programs_ix = set_allowed_programs_ix(
-            self.admin_pubkey(),
-            self.payer.pubkey(),
-            self.whitelist(),
-            allowed_programs,
-        );
+        let set_allowed_programs_ix =
+            set_allowed_programs_ix(self.admin_pubkey(), self.whitelist(), allowed_programs);
 
         self.process_ixs(
             &[set_allowed_programs_ix],
@@ -367,14 +366,14 @@ impl MessageBufferTestContext {
 
 pub type AddPriceParams = (u64, u64, u64, u64, u64);
 
-fn initialize_ix(admin: Pubkey, payer: Pubkey, whitelist_pda: Pubkey) -> Instruction {
+fn initialize_ix(admin: Pubkey, whitelist_pda: Pubkey) -> Instruction {
     let init_ix_discriminator = sighash("global", "initialize");
 
     Instruction::new_with_borsh(
         ::message_buffer::id(),
-        &(init_ix_discriminator, admin),
+        &(init_ix_discriminator),
         vec![
-            AccountMeta::new(payer, true),
+            AccountMeta::new(admin, true),
             AccountMeta::new(whitelist_pda, false),
             AccountMeta::new_readonly(System::id(), false),
         ],
@@ -383,7 +382,6 @@ fn initialize_ix(admin: Pubkey, payer: Pubkey, whitelist_pda: Pubkey) -> Instruc
 
 fn set_allowed_programs_ix(
     admin: Pubkey,
-    payer: Pubkey,
     whitelist: Pubkey,
     allowed_programs: &Vec<Pubkey>,
 ) -> Instruction {
@@ -394,7 +392,6 @@ fn set_allowed_programs_ix(
         &(ix_discriminator, allowed_programs),
         vec![
             AccountMeta::new(admin, true),
-            AccountMeta::new(payer, true),
             AccountMeta::new(whitelist, false),
         ],
     )
@@ -635,7 +632,7 @@ pub fn find_msg_buffer_pda(cpi_caller_auth: Pubkey, pyth_price_acct: Pubkey) -> 
     Pubkey::find_program_address(
         &[
             cpi_caller_auth.as_ref(),
-            b"message".as_ref(),
+            MESSAGE.as_bytes(),
             pyth_price_acct.as_ref(),
         ],
         &::message_buffer::id(),

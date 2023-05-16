@@ -4,6 +4,7 @@ use {
         state::*,
         MessageBufferError,
         MESSAGE,
+        WHITELIST,
     },
     anchor_lang::{
         prelude::*,
@@ -23,6 +24,8 @@ pub fn create_buffer<'info>(
     base_account_key: Pubkey,
     target_size: u32,
 ) -> Result<()> {
+    require_keys_neq!(base_account_key, Pubkey::default());
+
     let buffer_account = ctx
         .remaining_accounts
         .first()
@@ -86,9 +89,9 @@ pub fn create_buffer<'info>(
 #[derive(Accounts)]
 pub struct CreateBuffer<'info> {
     #[account(
-    seeds = [b"message".as_ref(), b"whitelist".as_ref()],
-    bump = whitelist.bump,
-    has_one = admin,
+        seeds = [MESSAGE.as_bytes(), WHITELIST.as_bytes()],
+        bump = whitelist.bump,
+        has_one = admin,
     )]
     pub whitelist: Account<'info, Whitelist>,
 

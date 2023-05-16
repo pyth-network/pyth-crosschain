@@ -2,6 +2,8 @@ use {
     crate::{
         state::*,
         MessageBufferError,
+        MESSAGE,
+        WHITELIST,
     },
     anchor_lang::prelude::*,
 };
@@ -25,6 +27,13 @@ pub fn resize_buffer<'info>(
         minimum_size as usize,
         MessageBufferError::MessageBufferTooSmall
     );
+
+    require_gte!(
+        MessageBuffer::MAX_LEN as usize,
+        target_size as usize,
+        MessageBufferError::TargetSizeExceedsMaxLen
+    );
+
     Ok(())
 }
 
@@ -34,7 +43,7 @@ pub fn resize_buffer<'info>(
 )]
 pub struct ResizeBuffer<'info> {
     #[account(
-        seeds = [b"message".as_ref(), b"whitelist".as_ref()],
+        seeds = [MESSAGE.as_bytes(), WHITELIST.as_bytes()],
         bump = whitelist.bump,
         has_one = admin,
     )]
@@ -47,7 +56,8 @@ pub struct ResizeBuffer<'info> {
     pub system_program: Program<'info, System>,
 
     /// If decreasing, Anchor will automatically check
-    /// if target_size is too small and if so,then load() will fail.
+    /// if target_size is < MessageBuffer::INIT_SPACE + 8
+    /// and if so,then load() will fail.
     /// If increasing, Anchor also automatically checks if target_size delta
     /// exceeds MAX_PERMITTED_DATA_INCREASE
     #[account(
@@ -55,7 +65,7 @@ pub struct ResizeBuffer<'info> {
         realloc = target_size as usize,
         realloc::zero = false,
         realloc::payer = admin,
-        seeds = [allowed_program_auth.as_ref(), b"message".as_ref(), base_account_key.as_ref()],
+        seeds = [allowed_program_auth.as_ref(), MESSAGE.as_bytes(), base_account_key.as_ref()],
         bump = message_buffer.load()?.bump,
     )]
     pub message_buffer: AccountLoader<'info, MessageBuffer>,

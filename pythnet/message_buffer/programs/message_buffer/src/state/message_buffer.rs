@@ -1,10 +1,4 @@
-use {
-    crate::{
-        accumulator_input_seeds,
-        MessageBufferError,
-    },
-    anchor_lang::prelude::*,
-};
+use anchor_lang::prelude::*;
 
 /// A MessageBuffer will have the following structure
 /// ```ignore
@@ -59,6 +53,10 @@ impl MessageBuffer {
 
     pub const CURRENT_VERSION: u8 = 1;
 
+    // end_offsets are u16 so max size that account can be resized to
+    // is u16::MAX + HEADER_LEN
+    pub const MAX_LEN: u32 = (u16::MAX as u32) + (Self::HEADER_LEN as u32);
+
     pub fn new(bump: u8) -> Self {
         Self {
             bump,
@@ -78,7 +76,7 @@ impl MessageBuffer {
     /// `put_all` writes all the messages to the `AccumulatorInput` account
     /// and updates the `end_offsets` array.
     ///
-    /// TODO: the first byte of destination is the first non-header byte of the
+    /// the first byte of destination is the first non-header byte of the
     /// message buffer account
     ///
     /// Returns tuple of the number of messages written and the end_offset
@@ -94,6 +92,9 @@ impl MessageBuffer {
         let mut offset = 0u16;
 
         for (i, v) in values.iter().enumerate() {
+            if i >= self.end_offsets.len() {
+                return (i, offset);
+            }
             let start = offset;
             let len = u16::try_from(v.len());
             if len.is_err() {
@@ -104,7 +105,7 @@ impl MessageBuffer {
                 return (i, start);
             }
             let end = end.unwrap();
-            if end > destination.len() as u16 {
+            if end as usize > destination.len() {
                 return (i, start);
             }
             self.end_offsets[i] = end;
@@ -112,21 +113,6 @@ impl MessageBuffer {
             offset = end
         }
         (values.len(), offset)
-    }
-
-    fn derive_pda(&self, cpi_caller: Pubkey, base_account: Pubkey) -> Result<Pubkey> {
-        let res = Pubkey::create_program_address(
-            accumulator_input_seeds!(self, cpi_caller, base_account),
-            &crate::ID,
-        )
-        .map_err(|_| MessageBufferError::InvalidPDA)?;
-        Ok(res)
-    }
-
-    pub fn validate(&self, key: Pubkey, cpi_caller: Pubkey, base_account: Pubkey) -> Result<()> {
-        let expected_key = self.derive_pda(cpi_caller, base_account)?;
-        require_keys_eq!(expected_key, key);
-        Ok(())
     }
 }
 
@@ -145,6 +131,8 @@ mod test {
         },
     };
 
+    const DESTINATION_TARGET_SIZE: usize = 10_240 - (MessageBuffer::HEADER_LEN as usize);
+
     fn data_bytes(data: Vec<u8>) -> Vec<u8> {
         let mut bytes = vec![];
         for d in data {
@@ -161,13 +149,13 @@ mod test {
         sighash
     }
 
-    fn generate_message_buffer_bytes(_data_bytes: &Vec<Vec<u8>>) -> Vec<u8> {
+    fn generate_message_buffer_bytes(destination_size: usize) -> Vec<u8> {
         let message_buffer = &mut MessageBuffer::new(0);
-        let header_len = message_buffer.header_len as usize;
+        let _header_len = message_buffer.header_len as usize;
 
         let account_info_data = &mut vec![];
         let discriminator = &mut sighash("accounts", "MessageBuffer");
-        let destination = &mut vec![0u8; 10_240 - header_len];
+        let destination = &mut vec![0u8; destination_size];
 
 
         account_info_data.write_all(discriminator).unwrap();
@@ -193,7 +181,7 @@ mod test {
         let data = vec![vec![12, 34], vec![56, 78, 90]];
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
 
-        let account_info_data = &mut generate_message_buffer_bytes(&data_bytes);
+        let account_info_data = &mut generate_message_buffer_bytes(DESTINATION_TARGET_SIZE);
 
         let header_len = MessageBuffer::HEADER_LEN as usize;
 
@@ -237,7 +225,7 @@ mod test {
 
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
 
-        let account_info_data = &mut generate_message_buffer_bytes(&data_bytes);
+        let account_info_data = &mut generate_message_buffer_bytes(DESTINATION_TARGET_SIZE);
 
         let header_len = MessageBuffer::HEADER_LEN as usize;
 
@@ -287,7 +275,7 @@ mod test {
 
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
 
-        let account_info_data = &mut generate_message_buffer_bytes(&data_bytes);
+        let account_info_data = &mut generate_message_buffer_bytes(DESTINATION_TARGET_SIZE);
 
         let header_len = MessageBuffer::HEADER_LEN as usize;
 
@@ -334,7 +322,7 @@ mod test {
 
         let data = vec![vec![12, 34], vec![56, 78, 90]];
         let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
-        let account_info_data = &mut generate_message_buffer_bytes(&data_bytes);
+        let account_info_data = &mut generate_message_buffer_bytes(DESTINATION_TARGET_SIZE);
 
         let header_len = MessageBuffer::HEADER_LEN as usize;
 
@@ -372,5 +360,111 @@ mod test {
             assert_eq!(d, &expected_data.as_slice());
         }
         assert_eq!(read_data.len(), 2);
+    }
+
+    // TOB-PYTH-8
+    #[test]
+    fn test_put_all_max_num_messages() {
+        let mut data = vec![vec![0u8; 2]; 253];
+
+        data.push(vec![1u8; 3]);
+        data.push(vec![2u8; 3]);
+        data.push(vec![3u8; 5]);
+
+        let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
+
+        // let target_size = (u16::MAX as usize) + 1;
+        let account_info_data = &mut generate_message_buffer_bytes(DESTINATION_TARGET_SIZE);
+
+        let header_len = MessageBuffer::HEADER_LEN as usize;
+
+        let (header_bytes, body_bytes) = account_info_data.split_at_mut(header_len);
+        let message_buffer: &mut MessageBuffer = bytemuck::from_bytes_mut(&mut header_bytes[8..]);
+
+        let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(body_bytes, &data_bytes);
+
+
+        assert_eq!(num_msgs, u8::MAX as usize);
+        assert_eq!(
+            num_bytes,
+            data_bytes[0..u8::MAX as usize]
+                .iter()
+                .map(|x| x.len())
+                .sum::<usize>() as u16
+        );
+
+
+        let message_buffer: &MessageBuffer =
+            bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);
+
+        let iter = message_buffer.end_offsets.iter().take_while(|x| **x != 0);
+        let mut start = header_len;
+        let mut data_iter = data_bytes.iter();
+        for offset in iter {
+            let end_offset = header_len + *offset as usize;
+            let message_buffer_data = &account_info_data[start..end_offset];
+            let expected_data = data_iter.next().unwrap();
+            assert_eq!(message_buffer_data, expected_data.as_slice());
+            start = end_offset;
+        }
+
+        assert_eq!(message_buffer.end_offsets[0], 2);
+        assert_eq!(message_buffer.end_offsets[1], 4);
+        assert_eq!(message_buffer.end_offsets[2], 6);
+        assert_eq!(message_buffer.end_offsets[252], 506);
+        assert_eq!(message_buffer.end_offsets[253], 509);
+        assert_eq!(message_buffer.end_offsets[254], 512);
+    }
+
+    // TOB-PYTH-10
+    #[test]
+    fn test_put_all_max_len_messages() {
+        let data = vec![
+            vec![0u8; 9_718 - 3],
+            vec![0u8],
+            vec![0u8],
+            vec![0u8; u16::MAX as usize + 2],
+            vec![0u8],
+        ];
+
+        let data_bytes: Vec<Vec<u8>> = data.into_iter().map(data_bytes).collect();
+
+        let target_size = (u16::MAX as usize) + 1;
+        let account_info_data = &mut generate_message_buffer_bytes(target_size);
+
+        let header_len = MessageBuffer::HEADER_LEN as usize;
+
+        let (header_bytes, body_bytes) = account_info_data.split_at_mut(header_len);
+        let message_buffer: &mut MessageBuffer = bytemuck::from_bytes_mut(&mut header_bytes[8..]);
+
+        let (num_msgs, num_bytes) = message_buffer.put_all_in_buffer(body_bytes, &data_bytes);
+
+
+        assert_eq!(num_msgs, 3);
+        assert_eq!(
+            num_bytes,
+            data_bytes[0..3].iter().map(|x| x.len()).sum::<usize>() as u16
+        );
+
+
+        let message_buffer: &MessageBuffer =
+            bytemuck::from_bytes(&account_info_data.as_slice()[8..header_len]);
+
+        let iter = message_buffer.end_offsets.iter().take_while(|x| **x != 0);
+        let mut start = header_len;
+        let mut data_iter = data_bytes.iter();
+        for offset in iter {
+            let end_offset = header_len + *offset as usize;
+            let message_buffer_data = &account_info_data[start..end_offset];
+            let expected_data = data_iter.next().unwrap();
+            assert_eq!(message_buffer_data, expected_data.as_slice());
+            start = end_offset;
+        }
+
+        assert_eq!(message_buffer.end_offsets[0], 9_715);
+        assert_eq!(message_buffer.end_offsets[1], 9_716);
+        assert_eq!(message_buffer.end_offsets[2], 9_717);
+        assert_eq!(message_buffer.end_offsets[3], 0);
+        assert_eq!(message_buffer.end_offsets[4], 0);
     }
 }
