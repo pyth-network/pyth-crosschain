@@ -8,7 +8,7 @@ USER 1000
 
 COPY --chown=1000:1000 governance/xc_admin governance/xc_admin
 
-RUN npx lerna run build --scope="{crank_executor,crank_pythnet_relayer}" --include-dependencies
+RUN npx lerna run build --scope="{crank_executor,crank_pythnet_relayer,proposer_server}" --include-dependencies
 
 WORKDIR /home/node/governance/xc_admin
 
