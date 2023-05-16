@@ -11,6 +11,7 @@ import lumina from "@lumina-dev/test";
 import { assert } from "chai";
 import { AccountMeta, ComputeBudgetProgram } from "@solana/web3.js";
 import bs58 from "bs58";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 // Enables tool that runs in local browser for easier debugging of
 // transactions in this test -  https://lumina.fyi/debug
@@ -19,7 +20,6 @@ import bs58 from "bs58";
 const messageBufferProgram = anchor.workspace
   .MessageBuffer as Program<MessageBuffer>;
 const mockCpiProg = anchor.workspace.MockCpiCaller as Program<MockCpiCaller>;
-let whitelistAdmin = anchor.web3.Keypair.generate();
 
 const [mockCpiCallerAuth] = anchor.web3.PublicKey.findProgramAddressSync(
   [Buffer.from("upd_price_write"), messageBufferProgram.programId.toBuffer()],
@@ -71,46 +71,29 @@ const messageBufferPdaMeta2 = {
   isWritable: true,
 };
 
-console.log("3");
-
-let fundBalance = 100 * anchor.web3.LAMPORTS_PER_SOL;
-
 const discriminator = BorshAccountsCoder.accountDiscriminator("MessageBuffer");
 const messageBufferDiscriminator = bs58.encode(discriminator);
 
+let provider = anchor.AnchorProvider.env();
+anchor.setProvider(provider);
+
+const payer = provider.wallet as NodeWallet;
+let whitelistAdmin = anchor.web3.Keypair.generate();
+
+const [whitelistPubkey, whitelistBump] =
+  anchor.web3.PublicKey.findProgramAddressSync(
+    [MESSAGE, Buffer.from("whitelist")],
+    messageBufferProgram.programId
+  );
+
 describe("message_buffer", () => {
-  // Configure the client to use the local cluster.
-  let provider = anchor.AnchorProvider.env();
-  anchor.setProvider(provider);
-
-  const [whitelistPubkey, whitelistBump] =
-    anchor.web3.PublicKey.findProgramAddressSync(
-      [MESSAGE, Buffer.from("whitelist")],
-      messageBufferProgram.programId
-    );
-
-  before("transfer lamports to needed accounts", async () => {
-    const airdropTxnSig = await provider.connection.requestAirdrop(
-      whitelistAdmin.publicKey,
-      fundBalance
-    );
-
-    await provider.connection.confirmTransaction({
-      signature: airdropTxnSig,
-      ...(await provider.connection.getLatestBlockhash()),
-    });
-    const whitelistAuthorityBalance = await provider.connection.getBalance(
-      whitelistAdmin.publicKey
-    );
-    assert.isTrue(whitelistAuthorityBalance === fundBalance);
-  });
-
   it("Is initialized!", async () => {
     // Add your test here.
     const tx = await messageBufferProgram.methods
       .initialize()
       .accounts({
         admin: whitelistAdmin.publicKey,
+        payer: payer.publicKey,
       })
       .signers([whitelistAdmin])
       .rpc();
@@ -160,6 +143,7 @@ describe("message_buffer", () => {
       .accounts({
         whitelist: whitelistPubkey,
         admin: whitelistAdmin.publicKey,
+        payer: payer.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([whitelistAdmin])
@@ -206,6 +190,7 @@ describe("message_buffer", () => {
       .accounts({
         whitelist: whitelistPubkey,
         admin: whitelistAdmin.publicKey,
+        payer: payer.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([whitelistAdmin])
@@ -556,28 +541,26 @@ describe("message_buffer", () => {
       messageBufferAccountDataBefore
     );
 
-    const whitelistAuthorityBalanceBefore =
-      await provider.connection.getBalance(whitelistAdmin.publicKey);
-    console.log(
-      `whitelistAuthorityBalance: ${whitelistAuthorityBalanceBefore}`
+    const payerBalanceBefore = await provider.connection.getBalance(
+      payer.publicKey
     );
+    console.log(`payerBalanceBefore: ${payerBalanceBefore}`);
     const targetSize = 10 * 1024;
     await messageBufferProgram.methods
       .resizeBuffer(mockCpiCallerAuth, pythPriceAccountPk2, targetSize)
       .accounts({
         whitelist: whitelistPubkey,
         admin: whitelistAdmin.publicKey,
+        payer: payer.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([whitelistAdmin])
       .rpc({ skipPreflight: true });
 
-    const whitelistAuthorityBalanceAfter = await provider.connection.getBalance(
-      whitelistAdmin.publicKey
+    const payerBalanceAftger = await provider.connection.getBalance(
+      payer.publicKey
     );
-    assert.isTrue(
-      whitelistAuthorityBalanceAfter < whitelistAuthorityBalanceBefore
-    );
+    assert.isTrue(payerBalanceAftger < payerBalanceBefore);
 
     const messageBufferAccountData = await getMessageBuffer(
       provider.connection,
@@ -607,6 +590,7 @@ describe("message_buffer", () => {
       .accounts({
         whitelist: whitelistPubkey,
         admin: whitelistAdmin.publicKey,
+        payer: payer.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
         messageBuffer: messageBufferPda2,
       })
@@ -631,6 +615,7 @@ describe("message_buffer", () => {
           .accounts({
             whitelist: whitelistPubkey,
             admin: whitelistAdmin.publicKey,
+            payer: payer.publicKey,
             systemProgram: anchor.web3.SystemProgram.programId,
             messageBuffer: messageBufferPda2,
           })
@@ -649,6 +634,7 @@ describe("message_buffer", () => {
       .accounts({
         whitelist: whitelistPubkey,
         admin: whitelistAdmin.publicKey,
+        payer: payer.publicKey,
         messageBuffer: messageBufferPda2,
       })
       .signers([whitelistAdmin])
@@ -682,6 +668,7 @@ describe("message_buffer", () => {
       .accounts({
         whitelist: whitelistPubkey,
         admin: whitelistAdmin.publicKey,
+        payer: payer.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([whitelistAdmin])

@@ -25,13 +25,15 @@ pub struct DeleteBuffer<'info> {
     )]
     pub whitelist: Account<'info, Whitelist>,
 
-    // Also the recipient of the lamports from closing the buffer account
-    #[account(mut)]
     pub admin: Signer<'info>,
+
+    /// Recipient of the lamports from closing the buffer account
+    #[account(mut)]
+    pub payer: Signer<'info>,
 
     #[account(
         mut,
-        close = admin,
+        close = payer,
         seeds = [allowed_program_auth.as_ref(), MESSAGE.as_bytes(), base_account_key.as_ref()],
         bump = message_buffer.load()?.bump,
     )]
