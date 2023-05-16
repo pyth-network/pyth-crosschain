@@ -66,7 +66,7 @@ pub fn create_buffer<'info>(
         CreateBuffer::create_account(
             buffer_account,
             target_size as usize,
-            &ctx.accounts.admin,
+            &ctx.accounts.payer,
             &[signer_seeds.as_slice()],
             &ctx.accounts.system_program,
         )?;
@@ -95,9 +95,11 @@ pub struct CreateBuffer<'info> {
     )]
     pub whitelist: Account<'info, Whitelist>,
 
-    // Also pays for account creation
-    #[account(mut)]
     pub admin: Signer<'info>,
+
+    /// pays for account initialization
+    #[account(mut)]
+    pub payer: Signer<'info>,
 
     pub system_program: Program<'info, System>,
     // remaining_accounts:  - [AccumulatorInput PDA]

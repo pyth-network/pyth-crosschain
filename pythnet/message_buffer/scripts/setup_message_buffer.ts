@@ -43,7 +43,7 @@ const messageBufferProgram = new Program(
   provider
 ) as unknown as Program<MessageBuffer>;
 
-const whitelistAdmin = payer;
+const whitelistAdmin = anchor.web3.Keypair.generate();
 
 const MESSAGE = Buffer.from("message");
 const [whitelistPubkey, whitelistBump] =
@@ -86,10 +86,8 @@ async function main() {
     ...(await provider.connection.getLatestBlockhash()),
   });
 
-  const whitelistAdminBalance = await provider.connection.getBalance(
-    whitelistAdmin.publicKey
-  );
-  console.log(`whitelistAdminBalance: ${whitelistAdminBalance}`);
+  const payerBalance = await provider.connection.getBalance(payer.publicKey);
+  console.log(`payerBalance: ${payerBalance}`);
   console.log("Airdrop complete");
   console.groupEnd();
 
@@ -103,7 +101,9 @@ async function main() {
       .initialize()
       .accounts({
         admin: whitelistAdmin.publicKey,
+        payer: payer.publicKey,
       })
+      .signers([whitelistAdmin, payer])
       .rpc();
 
     console.log(`initializeTxnSig: ${initializeTxnSig}`);

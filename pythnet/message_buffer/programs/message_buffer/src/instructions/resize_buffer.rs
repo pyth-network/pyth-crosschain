@@ -49,9 +49,11 @@ pub struct ResizeBuffer<'info> {
     )]
     pub whitelist: Account<'info, Whitelist>,
 
-    // Also pays for account creation
-    #[account(mut)]
     pub admin: Signer<'info>,
+
+    /// Pays for any additional rent needed to increase the buffer size
+    #[account(mut)]
+    pub payer: Signer<'info>,
 
     pub system_program: Program<'info, System>,
 
@@ -64,7 +66,7 @@ pub struct ResizeBuffer<'info> {
         mut,
         realloc = target_size as usize,
         realloc::zero = false,
-        realloc::payer = admin,
+        realloc::payer = payer,
         seeds = [allowed_program_auth.as_ref(), MESSAGE.as_bytes(), base_account_key.as_ref()],
         bump = message_buffer.load()?.bump,
     )]

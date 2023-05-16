@@ -50,6 +50,7 @@ async fn create_buffer_with_invalid_admin_should_fail() {
         space,
         context.whitelist(),
         invalid_admin.pubkey(),
+        context.payer.pubkey(),
         msg_buffer_pda,
     );
 
@@ -80,7 +81,7 @@ async fn create_buffer_with_invalid_size_should_fail() {
     );
     let cpi_caller_auth = MessageBufferTestContext::get_mock_cpi_auth();
     let _whitelist = context.whitelist();
-    let admin = context.default_admin();
+    let admin = context.admin();
 
     let (msg_buffer_pda, _) = find_msg_buffer_pda(cpi_caller_auth, pyth_price_acct);
     let invalid_create_buffer_ix = create_msg_buffer_ix(
@@ -89,6 +90,7 @@ async fn create_buffer_with_invalid_size_should_fail() {
         1,
         context.whitelist(),
         admin.pubkey(),
+        context.payer.pubkey(),
         msg_buffer_pda,
     );
 

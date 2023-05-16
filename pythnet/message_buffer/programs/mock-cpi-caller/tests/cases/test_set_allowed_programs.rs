@@ -3,8 +3,8 @@ use super::*;
 #[tokio::test]
 async fn test_set_allowed_programs() {
     let context = &mut MessageBufferTestContext::initialize_context(false).await;
-    let admin = context.default_admin();
-    context.initialize(admin).await.unwrap();
+    let admin = Keypair::new();
+    context.initialize(&admin).await.unwrap();
 
 
     let mock_cpi_caller_auth = MessageBufferTestContext::get_mock_cpi_auth();

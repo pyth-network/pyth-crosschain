@@ -145,11 +145,13 @@ pub mod message_buffer {
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     /// Admin that can update the whitelist and create/resize/delete buffers
+    pub admin: Signer<'info>,
+
     #[account(mut)]
-    pub admin:          Signer<'info>,
+    pub payer:          Signer<'info>,
     #[account(
         init,
-        payer = admin,
+        payer = payer,
         seeds = [MESSAGE.as_bytes(), WHITELIST.as_bytes()],
         bump,
         space = 8 + Whitelist::INIT_SPACE,

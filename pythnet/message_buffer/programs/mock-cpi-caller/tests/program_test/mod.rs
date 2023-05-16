@@ -98,7 +98,8 @@ impl MessageBufferTestContext {
         disable_loosen_cpi_limit: bool,
     ) -> Result<Self> {
         let mut context = Self::initialize_context(disable_loosen_cpi_limit).await;
-        context.initialize(context.default_admin()).await.unwrap();
+        let admin = Keypair::new();
+        context.initialize(&admin).await.unwrap();
         context
             .set_allowed_programs(&Self::default_allowed_programs())
             .await
@@ -127,8 +128,8 @@ impl MessageBufferTestContext {
         self.context.banks_client.get_balance(pubkey).await.unwrap()
     }
 
-    pub fn default_admin(&self) -> Keypair {
-        self.payer.insecure_clone()
+    pub fn admin(&self) -> Keypair {
+        self.admin.as_ref().unwrap().insecure_clone()
     }
 
     fn admin_pubkey(&self) -> Pubkey {
@@ -204,7 +205,7 @@ impl MessageBufferTestContext {
         }
     }
 
-    pub async fn initialize(&mut self, admin: Keypair) -> Result<(Pubkey, u8)> {
+    pub async fn initialize(&mut self, admin: &Keypair) -> Result<(Pubkey, u8)> {
         let (whitelist_pda, whitelist_bump) = Pubkey::find_program_address(
             &[MESSAGE.as_bytes(), WHITELIST.as_bytes()],
             &::message_buffer::id(),
@@ -213,7 +214,8 @@ impl MessageBufferTestContext {
         self.admin = Some(admin.insecure_clone());
         self.whitelist = Some(whitelist_pda);
 
-        let init_message_buffer_ix = initialize_ix(admin.pubkey(), whitelist_pda);
+        let init_message_buffer_ix =
+            initialize_ix(admin.pubkey(), self.payer.pubkey(), whitelist_pda);
 
         self.process_ixs(
             &[init_message_buffer_ix],
@@ -266,6 +268,7 @@ impl MessageBufferTestContext {
             target_size,
             self.whitelist(),
             admin.pubkey(),
+            self.payer.pubkey(),
             msg_buffer_pda,
         );
         self.process_ixs(&[create_msg_buffer_ix], vec![&admin])
@@ -291,13 +294,14 @@ impl MessageBufferTestContext {
 
         let (msg_buffer_pda, _) =
             find_msg_buffer_pda(Self::get_mock_cpi_auth(), pyth_price_account);
-        let admin = self.admin.as_ref().unwrap().insecure_clone();
+        let admin = self.admin();
 
         let delete_ix = delete_msg_buffer_ix(
             Self::get_mock_cpi_auth(),
             pyth_price_account,
             self.whitelist(),
             admin.pubkey(),
+            self.payer.pubkey(),
             msg_buffer_pda,
         );
 
@@ -326,6 +330,7 @@ impl MessageBufferTestContext {
                 target_size,
                 self.whitelist(),
                 admin.pubkey(),
+                self.payer.pubkey(),
                 msg_buffer_pda,
             );
             resize_ixs.push(resize_ix);
@@ -366,14 +371,15 @@ impl MessageBufferTestContext {
 
 pub type AddPriceParams = (u64, u64, u64, u64, u64);
 
-fn initialize_ix(admin: Pubkey, whitelist_pda: Pubkey) -> Instruction {
+fn initialize_ix(admin: Pubkey, payer: Pubkey, whitelist_pda: Pubkey) -> Instruction {
     let init_ix_discriminator = sighash("global", "initialize");
 
     Instruction::new_with_borsh(
         ::message_buffer::id(),
         &(init_ix_discriminator),
         vec![
-            AccountMeta::new(admin, true),
+            AccountMeta::new_readonly(admin, true),
+            AccountMeta::new(payer, true),
             AccountMeta::new(whitelist_pda, false),
             AccountMeta::new_readonly(System::id(), false),
         ],
@@ -403,6 +409,7 @@ pub fn create_msg_buffer_ix(
     target_size: u32,
     whitelist: Pubkey,
     admin: Pubkey,
+    payer: Pubkey,
     msg_buffer_pda: Pubkey,
 ) -> Instruction {
     let create_ix_discriminator = sighash("global", "create_buffer");
@@ -417,7 +424,8 @@ pub fn create_msg_buffer_ix(
         ),
         vec![
             AccountMeta::new_readonly(whitelist, false),
-            AccountMeta::new(admin, true),
+            AccountMeta::new_readonly(admin, true),
+            AccountMeta::new(payer, true),
             AccountMeta::new_readonly(System::id(), false),
             AccountMeta::new(msg_buffer_pda, false),
         ],
@@ -431,6 +439,7 @@ pub fn resize_msg_buffer_ix(
     target_size: u32,
     whitelist: Pubkey,
     admin: Pubkey,
+    payer: Pubkey,
     msg_buffer_pda: Pubkey,
 ) -> Instruction {
     let resize_ix_disc = sighash("global", "resize_buffer");
@@ -445,7 +454,8 @@ pub fn resize_msg_buffer_ix(
         ),
         vec![
             AccountMeta::new_readonly(whitelist, false),
-            AccountMeta::new(admin, true),
+            AccountMeta::new_readonly(admin, true),
+            AccountMeta::new(payer, true),
             AccountMeta::new_readonly(System::id(), false),
             AccountMeta::new(msg_buffer_pda, false),
         ],
@@ -458,6 +468,7 @@ pub fn delete_msg_buffer_ix(
     pyth_price_acct: Pubkey,
     whitelist: Pubkey,
     admin: Pubkey,
+    payer: Pubkey,
     msg_buffer_pda: Pubkey,
 ) -> Instruction {
     let delete_ix_disc = sighash("global", "delete_buffer");
@@ -467,7 +478,8 @@ pub fn delete_msg_buffer_ix(
         &(delete_ix_disc, cpi_caller_auth, pyth_price_acct),
         vec![
             AccountMeta::new_readonly(whitelist, false),
-            AccountMeta::new(admin, true),
+            AccountMeta::new_readonly(admin, true),
+            AccountMeta::new(payer, true),
             AccountMeta::new(msg_buffer_pda, false),
         ],
     )

@@ -100,7 +100,7 @@ async fn fail_resize_buffer_invalid_increase() {
     .unwrap();
 
     let whitelist = context.whitelist();
-    let admin = context.default_admin();
+    let admin = context.admin();
     let cpi_caller_auth = MessageBufferTestContext::get_mock_cpi_auth();
     let pyth_price_acct = MessageBufferTestContext::default_pyth_price_account();
     let (msg_buffer_pda, msg_buffer_bump) = MessageBufferTestContext::default_msg_buffer();
@@ -115,6 +115,7 @@ async fn fail_resize_buffer_invalid_increase() {
         target_size,
         whitelist,
         admin.pubkey(),
+        context.payer.pubkey(),
         msg_buffer_pda,
     );
 
@@ -154,6 +155,7 @@ async fn fail_resize_buffer_invalid_increase() {
         target_size,
         whitelist,
         admin.pubkey(),
+        context.payer.pubkey(),
         msg_buffer_pda,
     );
 
@@ -259,7 +261,7 @@ async fn fail_resize_initialized_buffer() {
     .unwrap();
 
     let payer = context.payer.pubkey();
-    let admin = context.default_admin();
+    let admin = context.admin();
     let pyth_price_acct = MessageBufferTestContext::default_pyth_price_account();
     let whitelist = context.whitelist();
     let cpi_caller_auth = MessageBufferTestContext::get_mock_cpi_auth();
@@ -295,6 +297,7 @@ async fn fail_resize_initialized_buffer() {
         target_size,
         whitelist,
         admin.pubkey(),
+        context.payer.pubkey(),
         msg_buffer_pda,
     );
 
@@ -317,6 +320,7 @@ async fn fail_resize_initialized_buffer() {
         target_size,
         whitelist,
         admin.pubkey(),
+        context.payer.pubkey(),
         msg_buffer_pda,
     );
 
@@ -341,7 +345,7 @@ async fn fail_resize_buffer_exceed_max_size() {
     .unwrap();
 
     let whitelist = context.whitelist();
-    let admin = context.default_admin();
+    let admin = context.admin();
     let cpi_caller_auth = MessageBufferTestContext::get_mock_cpi_auth();
     let pyth_price_acct = MessageBufferTestContext::default_pyth_price_account();
     let (msg_buffer_pda, _msg_buffer_bump) = MessageBufferTestContext::default_msg_buffer();
@@ -356,6 +360,7 @@ async fn fail_resize_buffer_exceed_max_size() {
             target_size,
             whitelist,
             admin.pubkey(),
+            context.payer.pubkey(),
             msg_buffer_pda,
         );
 
@@ -370,6 +375,7 @@ async fn fail_resize_buffer_exceed_max_size() {
         target_size,
         whitelist,
         admin.pubkey(),
+        context.payer.pubkey(),
         msg_buffer_pda,
     );
 
