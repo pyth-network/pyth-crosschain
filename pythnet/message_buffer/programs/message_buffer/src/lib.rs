@@ -3,6 +3,10 @@ mod state;
 
 
 use {
+    crate::{
+        MESSAGE,
+        WHITELIST,
+    },
     anchor_lang::prelude::*,
     instructions::*,
     state::*,
@@ -147,7 +151,7 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = admin,
-        seeds = [b"message".as_ref(), b"whitelist".as_ref()],
+        seeds = [MESSAGE.as_bytes(), WHITELIST.as_bytes()],
         bump,
         space = 8 + Whitelist::INIT_SPACE,
     )]
@@ -161,7 +165,7 @@ pub struct UpdateWhitelist<'info> {
     pub admin:     Signer<'info>,
     #[account(
         mut,
-        seeds = [b"message".as_ref(), b"whitelist".as_ref()],
+        seeds = [MESSAGE.as_bytes(), WHITELIST.as_bytes()],
         bump = whitelist.bump,
         has_one = admin
     )]
@@ -173,34 +177,16 @@ pub struct UpdateWhitelist<'info> {
 pub enum MessageBufferError {
     #[msg("CPI Caller not allowed")]
     CallerNotAllowed,
-    #[msg("Whitelist already contains program")]
-    DuplicateAllowedProgram,
-    #[msg("Conversion Error")]
-    ConversionError,
-    #[msg("Serialization Error")]
-    SerializeError,
-    #[msg("Whitelist admin required on initialization")]
-    WhitelistAdminRequired,
     #[msg("Invalid allowed program")]
     InvalidAllowedProgram,
     #[msg("Maximum number of allowed programs exceeded")]
     MaximumAllowedProgramsExceeded,
-    #[msg("Invalid PDA")]
-    InvalidPDA,
-    #[msg("Update data exceeds current length")]
-    CurrentDataLengthExceeded,
     #[msg("Message Buffer not provided")]
     MessageBufferNotProvided,
     #[msg("Message Buffer target size is not sufficiently large")]
     MessageBufferTooSmall,
-    #[msg("Fund Bump not found")]
-    FundBumpNotFound,
-    #[msg("Reallocation failed")]
-    ReallocFailed,
     #[msg("Target size too large for reallocation/initialization. Max delta is 10240")]
     TargetSizeDeltaExceeded,
-    #[msg("MessageBuffer Uninitialized")]
-    MessageBufferUninitialized,
     #[msg("Target size exceeds MessageBuffer::MAX_LEN")]
     TargetSizeExceedsMaxLen,
 }
