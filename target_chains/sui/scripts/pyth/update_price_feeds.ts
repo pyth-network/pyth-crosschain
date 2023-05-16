@@ -20,7 +20,8 @@ import { REGISTRY, NETWORK } from "../registry";
 let network = NETWORK.MAINNET;
 const walletPrivateKey = process.env.SUI_MAINNET;
 const price_connection_url = "https://xc-mainnet.pyth.network";
-const PATH_TO_PRICE_ID_TO_OBJECT_MAP = "./generated/price_id_to_object_id.mainnet.json"
+const PATH_TO_PRICE_ID_TO_OBJECT_MAP =
+  "./generated/price_id_to_object_id.mainnet.json";
 // ================================================================
 
 const registry = REGISTRY[network];
@@ -48,22 +49,26 @@ async function main() {
   // For a full list of testnet price feed ids, see:
   // https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
   const price_feed_ids = [
-    "0x63f341689d98a12ef60a5cff1d7f85c70a9e17bf1575f0e7c0b2512d48b1c8b3"
+    "0x63f341689d98a12ef60a5cff1d7f85c70a9e17bf1575f0e7c0b2512d48b1c8b3",
     // INSERT YOUR PRICE FEED ID HERE!
   ];
 
   // Batch attestation VAA for price feed IDs above.
   const vaas = await connection.getLatestVaas(price_feed_ids);
 
-  const price_feed_id_to_price_info_map = JSON.parse(fs.readFileSync(PATH_TO_PRICE_ID_TO_OBJECT_MAP, 'utf8'));
+  const price_feed_id_to_price_info_map = JSON.parse(
+    fs.readFileSync(PATH_TO_PRICE_ID_TO_OBJECT_MAP, "utf8")
+  );
   // Price info objects corresponding to the price feeds we want to update.
-  let price_info_object_ids = []
-  for (let id of price_feed_ids){
-    let sliced_id = id.slice(2) // removed 0x prefix
-    price_info_object_ids = price_info_object_ids.concat(price_feed_id_to_price_info_map[sliced_id])
+  let price_info_object_ids = [];
+  for (let id of price_feed_ids) {
+    let sliced_id = id.slice(2); // removed 0x prefix
+    price_info_object_ids = price_info_object_ids.concat(
+      price_feed_id_to_price_info_map[sliced_id]
+    );
   }
 
-  console.log("price info objects to be updated: ", price_info_object_ids)
+  console.log("price info objects to be updated: ", price_info_object_ids);
   update_price_feeds(wallet, registry, vaas, price_info_object_ids);
 }
 

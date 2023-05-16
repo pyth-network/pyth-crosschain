@@ -27,28 +27,24 @@ async function main() {
     throw new Error("SUI_TESTNET unset in environment");
   }
   const wallet = new RawSigner(
-    Ed25519Keypair.fromSecretKey(
-        Buffer.from(walletPrivateKey, "hex")
-    ),
+    Ed25519Keypair.fromSecretKey(Buffer.from(walletPrivateKey, "hex")),
     provider
   );
-  let sender = await wallet.getAddress()
-  let recipient = "0x4ed01b6abcc271a5c7a1e05ee9344d6eb72d0c1f2483a1c600b46d73a22ba764"
+  let sender = await wallet.getAddress();
+  let recipient =
+    "0x4ed01b6abcc271a5c7a1e05ee9344d6eb72d0c1f2483a1c600b46d73a22ba764";
   console.log("Sender: ", sender);
   transfer_tokens(wallet, recipient);
 }
 
 main();
 
-async function transfer_tokens(
-  signer: RawSigner,
-  recipient: string
-) {
+async function transfer_tokens(signer: RawSigner, recipient: string) {
   const tx = new TransactionBlock();
 
   let coin = tx.splitCoins(tx.gas, [tx.pure(100000000000)]);
 
-  tx.transferObjects([coin], tx.pure(recipient))
+  tx.transferObjects([coin], tx.pure(recipient));
 
   tx.setGasBudget(1000000000);
 
