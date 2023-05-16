@@ -1,7 +1,8 @@
 {
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "init-buffer": "yarn ts-node scripts/initialize-buffer.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.27.0",
