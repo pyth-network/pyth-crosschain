@@ -16,26 +16,34 @@ import {
   WORMHOLE_ADDRESS,
 } from "xc_admin_common";
 import * as fs from "fs";
-import { PythCluster } from "@pythnetwork/client";
+import { getPythClusterApiUrl, PythCluster } from "@pythnetwork/client";
 import SquadsMesh from "@sqds/mesh";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
+const PORT: number = Number(process.env.PORT ?? "3000");
+const KEYPAIR: Keypair = Keypair.fromSecretKey(
+  Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii")))
+);
+const MAINNET_RPC: string =
+  process.env.MAINNET_RPC ?? getPythClusterApiUrl("mainnet-beta");
+const DEVNET_RPC: string =
+  process.env.DEVNET_RPC ?? getPythClusterApiUrl("devnet");
+const TESTNET_RPC: string =
+  process.env.TESTNET_RPC ?? getPythClusterApiUrl("testnet");
+const LOCALNET_RPC: string =
+  process.env.LOCALNET_RPC ?? getPythClusterApiUrl("localnet");
+
 const RPC_URLS: Record<Cluster | "localnet", string> = {
-  "mainnet-beta": "http://rpc-mainnet.rpc-mainnet",
-  testnet: "http://rpc-testnet.rpc-testnet",
-  devnet: "http://rpc-devnet.rpc-devnet",
-  localnet: "http://localhost:8899",
+  "mainnet-beta": MAINNET_RPC,
+  devnet: DEVNET_RPC,
+  testnet: TESTNET_RPC,
+  localnet: LOCALNET_RPC,
 };
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-const PORT: number = Number(process.env.PORT ?? "3000");
-const KEYPAIR: Keypair = Keypair.fromSecretKey(
-  Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii")))
-);
 
 app.post("/api/propose", async (req: Request, res: Response) => {
   try {
