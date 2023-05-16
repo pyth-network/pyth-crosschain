@@ -5,7 +5,11 @@ import messageBuffer from "../target/idl/message_buffer.json";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { assert } from "chai";
 
-//TODO: read this from host
+/**
+ * Script to initialize the message buffer program and whitelist admin
+ * using the integration repo setup
+ */
+
 const payer = anchor.web3.Keypair.fromSecretKey(
   // Keypair at keys/funding.json
   Uint8Array.from([
@@ -15,10 +19,11 @@ const payer = anchor.web3.Keypair.fromSecretKey(
     117, 79, 154, 107, 133, 193, 249, 251, 40, 171, 42, 191, 192, 60, 188, 78,
   ])
 );
-
+const endpoint = "http://pythnet:8899";
+console.log(`connecting to ${endpoint}`);
 const commitment = "finalized";
 const provider = new anchor.AnchorProvider(
-  new anchor.web3.Connection("http://pythnet:8899"),
+  new anchor.web3.Connection(endpoint),
   new NodeWallet(payer),
   {
     commitment,
@@ -88,70 +93,97 @@ async function main() {
   console.log("Airdrop complete");
   console.groupEnd();
 
-  console.group("Initialize message buffer");
-  const initializeTxn = await messageBufferProgram.methods
-    .initialize(whitelistAdmin.publicKey)
-    .accounts({})
-    .rpc();
-
-  console.log("fetching & checking whitelist");
-  let whitelist = await messageBufferProgram.account.whitelist.fetch(
+  let whitelist = await messageBufferProgram.account.whitelist.fetchNullable(
     whitelistPubkey
   );
 
-  assert.strictEqual(whitelist.bump, whitelistBump);
-  assert.isTrue(whitelist.admin.equals(whitelistAdmin.publicKey));
-  console.groupEnd();
-  console.group("Set Allowed Programs");
-  const allowedProgramAuthorities = [pythOracleCpiAuth];
-  await messageBufferProgram.methods
-    .setAllowedPrograms(allowedProgramAuthorities)
-    .accounts({
-      admin: whitelistAdmin.publicKey,
-    })
-    .signers([whitelistAdmin])
-    .rpc();
-  console.log("fetching & checking whitelist after add");
-  whitelist = await messageBufferProgram.account.whitelist.fetch(
-    whitelistPubkey
-  );
-  console.info(`whitelist after add: ${JSON.stringify(whitelist)}`);
-  const whitelistAllowedPrograms = whitelist.allowedPrograms.map((pk) =>
-    pk.toString()
-  );
-  assert.deepEqual(
-    whitelistAllowedPrograms,
-    allowedProgramAuthorities.map((p) => p.toString())
-  );
-  console.groupEnd();
+  if (whitelist === null) {
+    console.group("No whitelist detected. Initializing message buffer");
+    const initializeTxnSig = await messageBufferProgram.methods
+      .initialize()
+      .accounts({
+        admin: whitelistAdmin.publicKey,
+      })
+      .rpc();
 
-  console.group("Create Message Buffer");
-  const msgBufferPdaMetas = [
-    {
-      pubkey: messageBufferPda,
-      isSigner: false,
-      isWritable: true,
-    },
-  ];
+    console.log(`initializeTxnSig: ${initializeTxnSig}`);
 
-  await messageBufferProgram.methods
-    .createBuffer(pythOracleCpiAuth, pythPriceAccountPk, 1024 * 8)
-    .accounts({
-      whitelist: whitelistPubkey,
-      admin: whitelistAdmin.publicKey,
-      systemProgram: anchor.web3.SystemProgram.programId,
-    })
-    .signers([whitelistAdmin])
-    .remainingAccounts(msgBufferPdaMetas)
-    .rpc({ skipPreflight: true });
+    console.log("fetching & checking whitelist");
+    whitelist = await messageBufferProgram.account.whitelist.fetch(
+      whitelistPubkey
+    );
 
-  console.log("fetching messageBuffer");
-  const messageBufferData = await getMessageBuffer(
+    assert.strictEqual(whitelist.bump, whitelistBump);
+    assert.isTrue(whitelist.admin.equals(whitelistAdmin.publicKey));
+    console.groupEnd();
+  } else {
+    console.log("Whitelist already initialized");
+  }
+
+  if (whitelist.allowedPrograms.length === 0) {
+    console.group("Setting Allowed Programs");
+    const allowedProgramAuthorities = [pythOracleCpiAuth];
+    let setAllowedProgramSig = await messageBufferProgram.methods
+      .setAllowedPrograms(allowedProgramAuthorities)
+      .accounts({
+        admin: whitelistAdmin.publicKey,
+      })
+      .signers([whitelistAdmin])
+      .rpc();
+    console.log(`setAllowedProgramSig: ${setAllowedProgramSig}`);
+    console.log("fetching & checking whitelist after add");
+    whitelist = await messageBufferProgram.account.whitelist.fetch(
+      whitelistPubkey
+    );
+    console.info(`whitelist after add: ${JSON.stringify(whitelist)}`);
+    const whitelistAllowedPrograms = whitelist.allowedPrograms.map((pk) =>
+      pk.toString()
+    );
+    assert.deepEqual(
+      whitelistAllowedPrograms,
+      allowedProgramAuthorities.map((p) => p.toString())
+    );
+    console.groupEnd();
+  } else {
+    console.log("Allowed Programs already set");
+  }
+
+  let messageBufferData = await getMessageBuffer(
     provider.connection,
     messageBufferPda
   );
-  console.log(`messageBufferData: ${messageBufferData.toString("utf-8")}`);
-  console.groupEnd();
+  if (messageBufferData === null) {
+    console.group("Creating Message Buffer");
+    const msgBufferPdaMetas = [
+      {
+        pubkey: messageBufferPda,
+        isSigner: false,
+        isWritable: true,
+      },
+    ];
+
+    await messageBufferProgram.methods
+      .createBuffer(pythOracleCpiAuth, pythPriceAccountPk, 1024 * 8)
+      .accounts({
+        whitelist: whitelistPubkey,
+        admin: whitelistAdmin.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([whitelistAdmin])
+      .remainingAccounts(msgBufferPdaMetas)
+      .rpc({ skipPreflight: true });
+
+    console.log("fetching messageBuffer");
+    const messageBufferData = await getMessageBuffer(
+      provider.connection,
+      messageBufferPda
+    );
+    console.log(`messageBufferData: ${messageBufferData.toString("utf-8")}`);
+    console.groupEnd();
+  } else {
+    console.log("Message Buffer already created");
+    console.log(`messageBufferData: ${messageBufferData.toString("utf-8")}`);
+  }
 }
 
 async function getMessageBuffer(

@@ -45,45 +45,17 @@ mod test {
     use {
         super::*,
         anchor_lang::InstructionData,
-        solana_sdk::instruction::Instruction,
     };
 
     #[test]
     fn ix_discriminator() {
-        let messages = vec![vec![0], vec![1]];
-        let account_metas: Vec<AccountMeta> = vec![];
-
-        let sighash = sighash("global", ACCUMULATOR_UPDATER_IX_NAME);
-        let raw_put_all_parameters = Instruction::new_with_borsh(
-            crate::ID,
-            &(sighash, Pubkey::default().to_bytes()),
-            account_metas,
-        )
-        .data;
-        println!("raw_put_all_parameters: {:?}", raw_put_all_parameters);
-        // let put_all_ix = &(
-        //     message_buffer::instruction::PutAll {
-        //         base_account_key: anchor_lang::prelude::Pubkey::default(),
-        //         messages:         messages.clone(),
-        //     }
-        //     .data(),
-        //     account_metas.clone(),
-        // )
-        //     .data();
-        // // let put_all_ix = &(message_buffer::instruction::PutAll {
-        // //     base_account_key: anchor_lang::prelude::Pubkey::default(),
-        // //     messages:         messages.clone(),
-        // // }
-        // // .data());
-        // println!("put_all_ix: {:?}", put_all_ix.clone());
-
         let a = &(message_buffer::instruction::PutAll {
             base_account_key: anchor_lang::prelude::Pubkey::default(),
-            messages,
+            messages:         vec![],
         }
         .data()[..8]);
 
-
+        let sighash = sighash("global", ACCUMULATOR_UPDATER_IX_NAME);
         println!(
             r"
             a: {a:?}
