@@ -63,23 +63,28 @@ export class CosmwasmExecutor implements ChainExecutor {
       }
     );
 
-    const txResponse = await cosmwasmClient.signAndBroadcast(
-      address,
-      [encodedMsgObject],
-      1.5
-    );
-
-    if (txResponse.code !== 0) {
-      throw new Error(`Transaction failed: ${txResponse.rawLog}`);
-    } else {
-      console.log(
-        `Broadcasted transaction hash: ${JSON.stringify(
-          txResponse.transactionHash
-        )}`
+    try {
+      const txResponse = await cosmwasmClient.signAndBroadcast(
+        address,
+        [encodedMsgObject],
+        1.5
       );
-    }
 
-    return txResponse;
+      if (txResponse.code !== 0) {
+        throw new Error(`Transaction failed: ${txResponse.rawLog}`);
+      } else {
+        console.log(
+          `Broadcasted transaction hash: ${JSON.stringify(
+            txResponse.transactionHash
+          )}`
+        );
+      }
+
+      return txResponse;
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
   }
 
   async storeCode(req: StoreCodeRequest): Promise<StoreCodeResponse> {

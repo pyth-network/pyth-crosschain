@@ -1,21 +1,5 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { createInterface } from "readline";
 import path from "path";
-
-// This function lets you write a question to the terminal
-// And returns the response of the user
-function readLineAsync(msg: string) {
-  const readline = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    readline.question(msg, (userRes) => {
-      resolve(userRes);
-    });
-  });
-}
 
 // The stage executor is where the stage functionality is defined
 // Optionally it can take in a method `getResultOfPastStage` as a parameter
@@ -129,6 +113,8 @@ export class Pipeline {
       // This method is only going to process stage if all the past ones have been fulfilled
       let fulfilled = await this.processStage(stage);
 
+      console.log(`${this.id}: Processed stage with id: ${stage.id}`);
+
       // store the whole processing locally after every stage
       this.pipelineStore.commit();
       if (fulfilled === false) break;
@@ -170,6 +156,7 @@ class PipelineStore {
   // for permanent storage
   commit() {
     mkdirSync(path.dirname(this.filePath), { recursive: true });
-    writeFileSync(this.filePath, JSON.stringify(this.store, null, 4));
+    // The "\n" at the end of the line is to satisfy the formatting rules
+    writeFileSync(this.filePath, JSON.stringify(this.store, null, 2) + "\n");
   }
 }
