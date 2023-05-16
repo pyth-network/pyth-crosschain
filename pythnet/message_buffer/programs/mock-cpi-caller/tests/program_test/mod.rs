@@ -18,6 +18,10 @@ use {
         LittleEndian,
         ReadBytesExt,
     },
+    message_buffer::instructions::{
+        MESSAGE,
+        WHITELIST,
+    },
     solana_program_test::{
         BanksClientError,
         ProgramTest,
@@ -202,7 +206,7 @@ impl MessageBufferTestContext {
 
     pub async fn initialize(&mut self, admin: Keypair) -> Result<(Pubkey, u8)> {
         let (whitelist_pda, whitelist_bump) = Pubkey::find_program_address(
-            &[b"message".as_ref(), b"whitelist".as_ref()],
+            &[MESSAGE.as_bytes(), WHITELIST.as_bytes()],
             &::message_buffer::id(),
         );
 
@@ -628,7 +632,7 @@ pub fn find_msg_buffer_pda(cpi_caller_auth: Pubkey, pyth_price_acct: Pubkey) -> 
     Pubkey::find_program_address(
         &[
             cpi_caller_auth.as_ref(),
-            b"message".as_ref(),
+            MESSAGE.as_bytes(),
             pyth_price_acct.as_ref(),
         ],
         &::message_buffer::id(),

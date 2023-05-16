@@ -3,6 +3,7 @@ use {
         state::*,
         MessageBufferError,
         MESSAGE,
+        WHITELIST,
     },
     anchor_lang::prelude::*,
 };
@@ -42,7 +43,7 @@ pub fn resize_buffer<'info>(
 )]
 pub struct ResizeBuffer<'info> {
     #[account(
-        seeds = [b"message".as_ref(), b"whitelist".as_ref()],
+        seeds = [MESSAGE.as_bytes(), WHITELIST.as_bytes()],
         bump = whitelist.bump,
         has_one = admin,
     )]

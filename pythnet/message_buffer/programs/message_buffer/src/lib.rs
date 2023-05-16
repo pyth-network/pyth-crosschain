@@ -19,14 +19,13 @@ pub mod message_buffer {
     use super::*;
 
 
-    /// Initializes the whitelist and sets it's admin to the provided pubkey
-    /// Once initialized, the authority must sign all further changes to the whitelist.
+    /// Initializes the whitelist and sets it's admin. Once initialized,
+    /// the admin must sign all further changes to the whitelist.
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        let admin = ctx.accounts.admin.key();
-        require_keys_neq!(admin, Pubkey::default());
+        require_keys_neq!(ctx.accounts.admin.key(), Pubkey::default());
         let whitelist = &mut ctx.accounts.whitelist;
         whitelist.bump = *ctx.bumps.get("whitelist").unwrap();
-        whitelist.admin = admin;
+        whitelist.admin = ctx.accounts.admin.key();
         Ok(())
     }
 
