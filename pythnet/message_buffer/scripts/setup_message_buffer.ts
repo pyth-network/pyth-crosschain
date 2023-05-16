@@ -43,7 +43,7 @@ const messageBufferProgram = new Program(
   provider
 ) as unknown as Program<MessageBuffer>;
 
-const whitelistAdmin = anchor.web3.Keypair.generate();
+const whitelistAdmin = payer;
 
 const MESSAGE = Buffer.from("message");
 const [whitelistPubkey, whitelistBump] =
