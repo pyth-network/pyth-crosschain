@@ -1,9 +1,6 @@
 use {
     libp2p::Multiaddr,
-    std::{
-        net::SocketAddr,
-        path::PathBuf,
-    },
+    std::net::SocketAddr,
     structopt::StructOpt,
 };
 
@@ -12,24 +9,27 @@ use {
 /// Some of these arguments are not currently used, but are included for future use to guide the
 /// structure of the application.
 #[derive(StructOpt, Debug)]
-#[structopt(name = "pythnet", about = "PythNet")]
+#[structopt(name = "hermes", about = "Hermes")]
 pub enum Options {
-    /// Run the PythNet P2P service.
     Run {
-        /// A Path to a protobuf encoded ed25519 private key.
-        #[structopt(short, long)]
-        id: Option<PathBuf>,
-
-        /// A Path to a protobuf encoded secp256k1 private key.
-        #[structopt(long)]
-        id_secp256k1: Option<PathBuf>,
+        #[structopt(long, env = "PYTHNET_WS_ENDPOINT")]
+        pythnet_ws_endpoint: String,
 
         /// Network ID for Wormhole
-        #[structopt(long, env = "WORMHOLE_NETWORK_ID")]
+        #[structopt(
+            long,
+            default_value = "/wormhole/mainnet/2",
+            env = "WORMHOLE_NETWORK_ID"
+        )]
         wh_network_id: String,
 
         /// Multiaddresses for Wormhole bootstrap peers (separated by comma).
-        #[structopt(long, use_delimiter = true, env = "WORMHOLE_BOOTSTRAP_ADDRS")]
+        #[structopt(
+            long,
+            use_delimiter = true,
+            default_value = "/dns4/wormhole-mainnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWQp644DK27fd3d4Km3jr7gHiuJJ5ZGmy8hH4py7fP4FP7",
+            env = "WORMHOLE_BOOTSTRAP_ADDRS"
+        )]
         wh_bootstrap_addrs: Vec<Multiaddr>,
 
         /// Multiaddresses to bind Wormhole P2P to (separated by comma)
@@ -41,24 +41,8 @@ pub enum Options {
         )]
         wh_listen_addrs: Vec<Multiaddr>,
 
-        /// The address to bind the RPC server to.
+        /// The address to bind the API server to.
         #[structopt(long, default_value = "127.0.0.1:33999")]
-        rpc_addr: SocketAddr,
-
-        /// Multiaddress to bind Pyth P2P server to.
-        #[structopt(long, default_value = "/ip4/127.0.0.1/tcp/34000")]
-        p2p_addr: Multiaddr,
-
-        /// A bootstrapping peer to join the cluster.
-        #[allow(dead_code)]
-        #[structopt(long)]
-        p2p_peer: Vec<SocketAddr>,
-    },
-
-    /// Generate a new keypair.
-    Keygen {
-        /// The path to write the generated key to.
-        #[structopt(short, long)]
-        output: PathBuf,
+        api_addr: SocketAddr,
     },
 }

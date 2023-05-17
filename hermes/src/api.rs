@@ -1,12 +1,6 @@
 use {
     self::ws::dispatch_updates,
-    crate::{
-        network::p2p::OBSERVATIONS,
-        store::{
-            Store,
-            Update,
-        },
-    },
+    crate::store::Store,
     anyhow::Result,
     axum::{
         routing::get,
@@ -36,7 +30,7 @@ impl State {
 
 /// This method provides a background service that responds to REST requests
 ///
-/// Currently this is based on Axum due to the simplicity and strong ecosyjtem support for the
+/// Currently this is based on Axum due to the simplicity and strong ecosystem support for the
 /// packages they are based on (tokio & hyper).
 pub async fn spawn(rpc_addr: String, store: Store) -> Result<()> {
     let state = State::new(store);
@@ -55,25 +49,25 @@ pub async fn spawn(rpc_addr: String, store: Store) -> Result<()> {
         .route("/api/price_feed_ids", get(rest::price_feed_ids))
         .with_state(state.clone());
 
-    // Listen in the background for new VAA's from the Wormhole RPC.
-    tokio::spawn(async move {
-        loop {
-            if let Ok(observation) = OBSERVATIONS.1.lock().unwrap().recv() {
-                match state.store.store_update(Update::Vaa(observation)) {
-                    Ok(updated_feed_ids) => {
-                        tokio::spawn(dispatch_updates(updated_feed_ids, state.clone()));
-                    }
-                    Err(e) => log::error!("Failed to process VAA: {:?}", e),
-                }
-            }
-        }
-    });
 
     // Binds the axum's server to the configured address and port. This is a blocking call and will
     // not return until the server is shutdown.
-    axum::Server::bind(&rpc_addr.parse()?)
-        .serve(app.into_make_service())
-        .await?;
+    tokio::spawn(async move {
+        // FIXME handle errors properly
+        axum::Server::bind(&rpc_addr.parse().unwrap())
+            .serve(app.into_make_service())
+            .await
+            .unwrap();
+    });
+
+    // Call dispatch updates to websocket every 1 seconds
+    // FIXME use a channel to get updates from the store
+    tokio::spawn(async move {
+        loop {
+            dispatch_updates(state.store.get_price_feed_ids(), state.clone()).await;
+            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        }
+    });
 
     Ok(())
 }

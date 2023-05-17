@@ -5,7 +5,6 @@ edition                        = "2021"
 
 [dependencies]
 axum                           = { version = "0.6.9", features = ["json", "ws", "macros"] }
-axum-extra                     = { version = "0.7.2", features = ["query"] }
 axum-macros                    = { version = "0.3.4" }
 anyhow                         = { version = "1.0.69" }
 base64                         = { version = "0.21.0" }
@@ -15,7 +14,7 @@ dashmap                        = { version = "5.4.0" }
 der                            = { version = "0.7.0" }
 derive_more                    = { version = "0.99.17" }
 env_logger                     = { version = "0.10.0" }
-futures                        = { version = "0.3.26" }
+futures                        = { version = "0.3.28" }
 hex                            = { version = "0.4.3" }
 rand                           = { version = "0.8.5" }
 reqwest                        = { version = "0.11.14", features = ["blocking", "json"] }
@@ -39,24 +38,30 @@ log                            = { version = "0.4.17" }
 wormhole-core                  = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
 
 # Parse Wormhole attester price attestations.
-pyth-wormhole-attester-sdk     = { path = "../wormhole_attester/sdk/rust/", version = "0.1.2" }
+pythnet-sdk                    = { path = "../pythnet/pythnet_sdk/", version = "=1.13.6" }
 
 # Setup LibP2P. Unfortunately the dependencies required by libp2p are shared
 # with the dependencies required by solana's geyser plugin. This means that we
 # would have to use the same version of libp2p as solana. Luckily we don't need
 # to do this yet but it's something to keep in mind.
-libp2p                         = { version = "0.51.1", features = [
-    "dns",
+libp2p                         = { version = "0.42.2", features = [
     "gossipsub",
     "identify",
-    "macros",
     "mplex",
     "noise",
-    "quic",
     "secp256k1",
-    "tcp",
-    "tls",
-    "tokio",
     "websocket",
     "yamux",
 ]}
+
+async-trait = "0.1.68"
+solana-client = "=1.15.2"
+solana-sdk = "=1.15.2"
+solana-account-decoder = "=1.15.2"
+moka = { version = "0.11.0", features = ["future"] }
+derive_builder = "0.12.0"
+byteorder = "1.4.3"
+serde_qs = { version = "0.12.0", features = ["axum"] }
+
+[patch.crates-io]
+serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole" }

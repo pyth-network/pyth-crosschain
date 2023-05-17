@@ -1,10 +1,14 @@
-use super::types::PriceIdInput;
 use {
-    super::types::RpcPriceFeed,
-    crate::store::RequestTime,
+    super::types::{
+        PriceIdInput,
+        RpcPriceFeed,
+    },
     crate::{
         impl_deserialize_for_hex_string_wrapper,
-        store::UnixTimestamp,
+        store::types::{
+            RequestTime,
+            UnixTimestamp,
+        },
     },
     anyhow::Result,
     axum::{
@@ -16,7 +20,6 @@ use {
         },
         Json,
     },
-    axum_extra::extract::Query, // Axum extra Query allows us to parse multi-value query parameters.
     base64::{
         engine::general_purpose::STANDARD as base64_standard_engine,
         Engine as _,
@@ -26,6 +29,7 @@ use {
         DerefMut,
     },
     pyth_sdk::PriceIdentifier,
+    serde_qs::axum::QsQuery,
 };
 
 pub enum RestError {
@@ -68,7 +72,7 @@ pub struct LatestVaasQueryParams {
 
 pub async fn latest_vaas(
     State(state): State<super::State>,
-    Query(params): Query<LatestVaasQueryParams>,
+    QsQuery(params): QsQuery<LatestVaasQueryParams>,
 ) -> Result<Json<Vec<String>>, RestError> {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
     let price_feeds_with_update_data = state
@@ -77,10 +81,9 @@ pub async fn latest_vaas(
         .map_err(|_| RestError::UpdateDataNotFound)?;
     Ok(Json(
         price_feeds_with_update_data
-            .batch_vaa
-            .update_data
+            .wormhole_merkle_update_data
             .iter()
-            .map(|vaa_bytes| base64_standard_engine.encode(vaa_bytes)) // TODO: Support multiple
+            .map(|bytes| base64_standard_engine.encode(bytes)) // TODO: Support multiple
             // encoding formats
             .collect(),
     ))
@@ -97,7 +100,7 @@ pub struct LatestPriceFeedsQueryParams {
 
 pub async fn latest_price_feeds(
     State(state): State<super::State>,
-    Query(params): Query<LatestPriceFeedsQueryParams>,
+    QsQuery(params): QsQuery<LatestPriceFeedsQueryParams>,
 ) -> Result<Json<Vec<RpcPriceFeed>>, RestError> {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
     let price_feeds_with_update_data = state
@@ -106,11 +109,10 @@ pub async fn latest_price_feeds(
         .map_err(|_| RestError::UpdateDataNotFound)?;
     Ok(Json(
         price_feeds_with_update_data
-            .batch_vaa
-            .price_infos
-            .into_values()
-            .map(|price_info| {
-                RpcPriceFeed::from_price_info(price_info, params.verbose, params.binary)
+            .price_feeds
+            .into_iter()
+            .map(|price_feed| {
+                RpcPriceFeed::from_price_feed_message(price_feed, params.verbose, params.binary)
             })
             .collect(),
     ))
@@ -131,7 +133,7 @@ pub struct GetVaaResponse {
 
 pub async fn get_vaa(
     State(state): State<super::State>,
-    Query(params): Query<GetVaaQueryParams>,
+    QsQuery(params): QsQuery<GetVaaQueryParams>,
 ) -> Result<Json<GetVaaResponse>, RestError> {
     let price_id: PriceIdentifier = params.id.into();
 
@@ -144,18 +146,16 @@ pub async fn get_vaa(
         .map_err(|_| RestError::UpdateDataNotFound)?;
 
     let vaa = price_feeds_with_update_data
-        .batch_vaa
-        .update_data
+        .wormhole_merkle_update_data
         .get(0)
-        .map(|vaa_bytes| base64_standard_engine.encode(vaa_bytes))
+        .map(|bytes| base64_standard_engine.encode(bytes))
         .ok_or(RestError::UpdateDataNotFound)?;
 
     let publish_time = price_feeds_with_update_data
-        .batch_vaa
-        .price_infos
-        .get(&price_id)
-        .map(|price_info| price_info.publish_time)
-        .ok_or(RestError::UpdateDataNotFound)?;
+        .price_feeds
+        .get(0)
+        .ok_or(RestError::UpdateDataNotFound)?
+        .publish_time; // TODO: This should never happen.
 
     Ok(Json(GetVaaResponse { vaa, publish_time }))
 }
@@ -176,7 +176,7 @@ pub struct GetVaaCcipResponse {
 
 pub async fn get_vaa_ccip(
     State(state): State<super::State>,
-    Query(params): Query<GetVaaCcipQueryParams>,
+    QsQuery(params): QsQuery<GetVaaCcipQueryParams>,
 ) -> Result<Json<GetVaaCcipResponse>, RestError> {
     let price_id: PriceIdentifier = PriceIdentifier::new(params.data[0..32].try_into().unwrap());
     let publish_time = UnixTimestamp::from_be_bytes(params.data[32..40].try_into().unwrap());
@@ -186,14 +186,13 @@ pub async fn get_vaa_ccip(
         .get_price_feeds_with_update_data(vec![price_id], RequestTime::FirstAfter(publish_time))
         .map_err(|_| RestError::CcipUpdateDataNotFound)?;
 
-    let vaa = price_feeds_with_update_data
-        .batch_vaa
-        .update_data
+    let bytes = price_feeds_with_update_data
+        .wormhole_merkle_update_data
         .get(0) // One price feed has only a single VAA as proof.
         .ok_or(RestError::UpdateDataNotFound)?;
 
     Ok(Json(GetVaaCcipResponse {
-        data: format!("0x{}", hex::encode(vaa)),
+        data: format!("0x{}", hex::encode(bytes)),
     }))
 }
 
