@@ -17,10 +17,12 @@ import {
   PriceAttestation,
 } from "@pythnetwork/wormhole-attester-sdk";
 import { HexString, PriceFeed } from "@pythnetwork/price-service-sdk";
+import { ethers } from "ethers";
 import LRUCache from "lru-cache";
 import { DurationInSec, sleep, TimestampInSec } from "./helpers";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
+import { isValidVaa, WormholeCluster, wormholeClusterFromString } from "./vaa";
 
 export type PriceInfo = {
   vaa: Buffer;
@@ -64,6 +66,7 @@ type ListenerReadinessConfig = {
 
 type ListenerConfig = {
   spyServiceHost: string;
+  wormholeCluster?: string;
   filtersRaw?: string;
   readiness: ListenerReadinessConfig;
   webApiEndpoint?: string;
@@ -171,6 +174,7 @@ export class Listener implements PriceStore {
   private updateCallbacks: ((priceInfo: PriceInfo) => any)[];
   private observedVaas: LRUCache<VaaKey, boolean>;
   private vaasCache: VaaCache;
+  private wormholeCluster: WormholeCluster;
 
   constructor(config: ListenerConfig, promClient?: PromClient) {
     this.promClient = promClient;
@@ -188,6 +192,11 @@ export class Listener implements PriceStore {
       config.cacheTtl,
       config.cacheCleanupLoopInterval
     );
+    if (config.wormholeCluster !== undefined) {
+      this.wormholeCluster = wormholeClusterFromString(config.wormholeCluster);
+    } else {
+      this.wormholeCluster = "mainnet";
+    }
   }
 
   private loadFilters(filtersRaw?: string) {
@@ -302,6 +311,11 @@ export class Listener implements PriceStore {
     const observedVaasKey: VaaKey = `${parsedVaa.emitterChain}#${vaaEmitterAddressHex}#${parsedVaa.sequence}`;
 
     if (this.observedVaas.has(observedVaasKey)) {
+      return;
+    }
+
+    if (!isValidVaa(parsedVaa, this.wormholeCluster)) {
+      logger.info("Ignoring an invalid VAA");
       return;
     }
 
