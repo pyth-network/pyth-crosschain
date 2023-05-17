@@ -1,14 +1,10 @@
 use {
     crate::{
         impl_deserialize_for_hex_string_wrapper,
-        store::{
-            proof::batch_vaa::PriceInfo,
+        store::types::{
+            PriceFeedMessage,
             UnixTimestamp,
         },
-    },
-    base64::{
-        engine::general_purpose::STANDARD as base64_standard_engine,
-        Engine as _,
     },
     derive_more::{
         Deref,
@@ -41,7 +37,6 @@ type Base64String = String;
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RpcPriceFeedMetadata {
     pub emitter_chain:              u16,
-    pub attestation_time:           UnixTimestamp,
     pub sequence_number:            u64,
     pub price_service_receive_time: UnixTimestamp,
 }
@@ -51,26 +46,45 @@ pub struct RpcPriceFeed {
     pub id:        PriceIdentifier,
     pub price:     Price,
     pub ema_price: Price,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata:  Option<RpcPriceFeedMetadata>,
     /// Vaa binary represented in base64.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub vaa:       Option<Base64String>,
 }
 
 impl RpcPriceFeed {
     // TODO: Use a Encoding type to have None, Base64, and Hex variants instead of binary flag.
     // TODO: Use a Verbosity type to define None, or Full instead of verbose flag.
-    pub fn from_price_info(price_info: PriceInfo, verbose: bool, binary: bool) -> Self {
+    pub fn from_price_feed_message(
+        price_feed_message: PriceFeedMessage,
+        _verbose: bool,
+        _binary: bool,
+    ) -> Self {
         Self {
-            id:        price_info.price_feed.id,
-            price:     price_info.price_feed.get_price_unchecked(),
-            ema_price: price_info.price_feed.get_ema_price_unchecked(),
-            metadata:  verbose.then_some(RpcPriceFeedMetadata {
-                emitter_chain:              price_info.emitter_chain,
-                attestation_time:           price_info.attestation_time,
-                sequence_number:            price_info.sequence_number,
-                price_service_receive_time: price_info.receive_time,
-            }),
-            vaa:       binary.then_some(base64_standard_engine.encode(price_info.vaa_bytes)),
+            id:        PriceIdentifier::new(price_feed_message.id),
+            price:     Price {
+                price:        price_feed_message.price,
+                conf:         price_feed_message.conf,
+                expo:         price_feed_message.exponent,
+                publish_time: price_feed_message.publish_time,
+            },
+            ema_price: Price {
+                price:        price_feed_message.ema_price,
+                conf:         price_feed_message.ema_conf,
+                expo:         price_feed_message.exponent,
+                publish_time: price_feed_message.publish_time,
+            },
+            // FIXME: Handle verbose flag properly.
+            // metadata:  verbose.then_some(RpcPriceFeedMetadata {
+            //     emitter_chain:              price_feed_message.emitter_chain,
+            //     sequence_number:            price_feed_message.sequence_number,
+            //     price_service_receive_time: price_feed_message.receive_time,
+            // }),
+            metadata:  None,
+            // FIXME: The vaa is wrong, fix it
+            // vaa:       binary.then_some(base64_standard_engine.encode(message_state.proof_set.wormhole_merkle_proof.vaa)),
+            vaa:       None,
         }
     }
 }

@@ -1,24 +1,16 @@
 use {
-    super::{
-        proof::batch_vaa::PriceInfo,
+    super::types::{
+        MessageIdentifier,
+        MessageKey,
+        MessageState,
         RequestTime,
-        UnixTimestamp,
+        RequestType,
     },
     anyhow::Result,
-    pyth_sdk::PriceIdentifier,
+    std::sync::Arc,
 };
 
-pub mod local_cache;
-
-#[derive(Clone, PartialEq, Debug)]
-pub enum StorageData {
-    BatchVaa(PriceInfo),
-}
-
-#[derive(Clone, PartialEq, Eq, Debug, Hash)]
-pub enum Key {
-    BatchVaa(PriceIdentifier),
-}
+pub mod local_storage;
 
 /// This trait defines the interface for update data storage
 ///
@@ -27,8 +19,15 @@ pub enum Key {
 /// data to abstract the details of the update data, and so each update data is stored
 /// under a separate key. The caller is responsible for specifying the right
 /// key for the update data they wish to access.
-pub trait Storage: Sync + Send {
-    fn insert(&self, key: Key, time: UnixTimestamp, value: StorageData) -> Result<()>;
-    fn get(&self, key: Key, request_time: RequestTime) -> Result<Option<StorageData>>;
-    fn keys(&self) -> Vec<Key>;
+pub trait Storage: Send + Sync {
+    fn store_message_states(&self, message_states: Vec<MessageState>) -> Result<()>;
+    fn retrieve_message_states(
+        &self,
+        ids: Vec<MessageIdentifier>,
+        request_type: RequestType,
+        request_time: RequestTime,
+    ) -> Result<Vec<MessageState>>;
+    fn keys(&self) -> Vec<MessageKey>;
 }
+
+pub type StorageInstance = Arc<Box<dyn Storage>>;

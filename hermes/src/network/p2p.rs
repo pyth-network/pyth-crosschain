@@ -10,6 +10,10 @@
 //! their infrastructure.
 
 use {
+    crate::store::{
+        types::Update,
+        Store,
+    },
     anyhow::Result,
     libp2p::Multiaddr,
     std::{
@@ -66,6 +70,7 @@ lazy_static::lazy_static! {
 extern "C" fn proxy(o: ObservationC) {
     // Create a fixed slice from the pointer and length.
     let vaa = unsafe { std::slice::from_raw_parts(o.vaa, o.vaa_len) }.to_owned();
+    // FIXME: Remove unwrap
     if let Err(e) = OBSERVATIONS.0.lock().unwrap().send(vaa) {
         log::error!("Failed to send observation: {}", e);
     }
@@ -76,15 +81,11 @@ extern "C" fn proxy(o: ObservationC) {
 /// TODO: handle_message should be capable of handling more than just Observations. But we don't
 /// have our own P2P network, we pass it in to keep the code structure and read directly from the
 /// OBSERVATIONS channel in the RPC for now.
-pub fn bootstrap<H>(
-    _handle_message: H,
+pub fn bootstrap(
     network_id: String,
     wh_bootstrap_addrs: Vec<Multiaddr>,
     wh_listen_addrs: Vec<Multiaddr>,
-) -> Result<()>
-where
-    H: Fn(Observation) -> Result<()> + 'static,
-{
+) -> Result<()> {
     let network_id_cstr = CString::new(network_id)?;
     let wh_bootstrap_addrs_cstr = CString::new(
         wh_bootstrap_addrs
@@ -114,20 +115,43 @@ where
 }
 
 // Spawn's the P2P layer as a separate thread via Go.
-pub async fn spawn<H>(
-    handle_message: H,
+pub async fn spawn(
     network_id: String,
     wh_bootstrap_addrs: Vec<Multiaddr>,
     wh_listen_addrs: Vec<Multiaddr>,
-) -> Result<()>
-where
-    H: Fn(Observation) -> Result<()> + Send + 'static,
-{
-    bootstrap(
-        handle_message,
-        network_id,
-        wh_bootstrap_addrs,
-        wh_listen_addrs,
-    )?;
+    store: Store,
+) -> Result<()> {
+    bootstrap(network_id, wh_bootstrap_addrs, wh_listen_addrs)?;
+
+    // Listen in the background for new VAA's from the p2p layer
+    // and update the state accordingly.
+    tokio::spawn(async move {
+        loop {
+            let vaa_bytes = {
+                let observation = OBSERVATIONS.1.lock();
+
+                let observation = match observation {
+                    Ok(observation) => observation,
+                    Err(e) => {
+                        log::error!("Failed to lock observation channel: {}", e);
+                        return;
+                    }
+                };
+
+                match observation.recv() {
+                    Ok(vaa_bytes) => vaa_bytes,
+                    Err(e) => {
+                        log::error!("Failed to receive observation: {}", e);
+                        return;
+                    }
+                }
+            };
+
+            if let Err(e) = store.store_update(Update::Vaa(vaa_bytes)).await {
+                log::error!("Failed to process VAA: {:?}", e);
+            }
+        }
+    });
+
     Ok(())
 }

@@ -3,7 +3,10 @@ use {
         PriceIdInput,
         RpcPriceFeed,
     },
-    crate::store::Store,
+    crate::store::{
+        types::RequestTime,
+        Store,
+    },
     anyhow::Result,
     axum::{
         extract::{
@@ -139,20 +142,21 @@ impl Subscriber {
     ) -> Result<()> {
         for price_feed_id in price_feed_ids {
             if let Some(config) = self.price_feeds_with_config.get(&price_feed_id) {
-                let price_feeds_with_update_data = self.store.get_price_feeds_with_update_data(
-                    vec![price_feed_id],
-                    crate::store::RequestTime::Latest,
-                )?;
-                let price_info = price_feeds_with_update_data
-                    .batch_vaa
-                    .price_infos
-                    .get(&price_feed_id)
+                let price_feeds_with_update_data = self
+                    .store
+                    .get_price_feeds_with_update_data(vec![price_feed_id], RequestTime::Latest)?;
+                let price_feed = *price_feeds_with_update_data
+                    .price_feeds
+                    .iter()
+                    .find(|price_feed| price_feed.id == price_feed_id.to_bytes())
                     .ok_or_else(|| {
                         anyhow::anyhow!("Price feed {} not found.", price_feed_id.to_string())
-                    })?
-                    .clone();
-                let price_feed =
-                    RpcPriceFeed::from_price_info(price_info, config.verbose, config.binary);
+                    })?;
+                let price_feed = RpcPriceFeed::from_price_feed_message(
+                    price_feed,
+                    config.verbose,
+                    config.binary,
+                );
                 // Feed does not flush the message and will allow us
                 // to send multiple messages in a single flush.
                 self.sender
@@ -237,7 +241,7 @@ pub async fn dispatch_updates(update_feed_ids: Vec<PriceIdentifier>, state: supe
                     Ok(_) => None,
                     Err(e) => {
                         log::debug!("Error sending update to subscriber: {}", e);
-                        Some(subscriber.key().clone())
+                        Some(*subscriber.key())
                     }
                 }
             }),
