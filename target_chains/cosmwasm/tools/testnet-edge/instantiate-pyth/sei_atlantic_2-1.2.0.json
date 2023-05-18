@@ -1,0 +1,10 @@
+{
+  "deploy-pyth-code": {
+    "status": "rejected",
+    "reason": {
+      "code": 5,
+      "codespace": "sdk",
+      "log": ""
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import {
   ChainIdsTestnet,
+  ChainIdsMainnet,
   createExecutorForChain,
 } from "./chains-manager/chains";
 import yargs from "yargs";
@@ -10,8 +11,12 @@ import {
   StoreCodeResponse,
 } from "./chains-manager/chain-executor";
 import { Pipeline } from "./pipeline";
-import { getWormholeFileName, hexToBase64 } from "./helper";
-import { ExtendedChainsConfigTestnet } from "./extended-chain-config";
+import { DeploymentType, getWormholeFileName, hexToBase64 } from "./helper";
+import {
+  getWormholeConfig,
+  getContractConfig,
+  getChainConfig,
+} from "./configs";
 const argv = yargs(hideBin(process.argv))
   .usage("USAGE: npm run wormhole-stub -- <command>")
   .option("mnemonic", {
@@ -24,14 +29,11 @@ const argv = yargs(hideBin(process.argv))
     There should be a compiled code at the path - "../wormhole-stub/artifacts/wormhole-\${contract-version}.wasm"`,
     default: "2.14.9",
   })
-  .option("chain-id", {
+  .option("deploy", {
     type: "string",
-    choices: ChainIdsTestnet,
-  })
-  .option("mainnet", {
-    type: "boolean",
-    desc: "Execute this script for mainnet networks. THIS WILL BE ADDED IN FUTURE",
-    default: false,
+    desc: "Execute this script for the given networks.",
+    choices: ["mainnet", "testnet-stable", "testnet-edge"],
+    demandOption: "Please provide the deployment type",
   })
   .help()
   .alias("help", "h")
@@ -53,19 +55,28 @@ async function run() {
   // get the wormhole code
   const contractBytes = readFileSync(wasmFilePath);
 
-  let chainIds = argv.chainId === undefined ? ChainIdsTestnet : [argv.chainId];
+  let chainIds;
+  if (argv.deploy === "mainnet") {
+    chainIds = ChainIdsMainnet;
+  } else if (argv.deploy === "testnet-stable") {
+    chainIds = ChainIdsTestnet;
+  } else if (argv.deploy === "testnet-edge") {
+    chainIds = ChainIdsTestnet;
+  } else {
+    throw new Error("unknown deploy type " + argv.deploy);
+  }
+
   for (let chainId of chainIds) {
+    let contractConfig = getContractConfig(chainId, argv.deploy);
+    let chainConfig = getChainConfig(chainId, argv.deploy);
     let pipelineStoreFilePath = getWormholeFileName(
       chainId,
       argv.contractVersion,
-      argv.mainnet
+      argv.deploy as DeploymentType
     );
     const pipeline = new Pipeline(chainId, pipelineStoreFilePath);
 
-    const chainExecutor = createExecutorForChain(
-      ExtendedChainsConfigTestnet[chainId],
-      argv.mnemonic
-    );
+    const chainExecutor = createExecutorForChain(chainConfig, argv.mnemonic);
 
     // add stages
     // 1 deploy artifact
@@ -88,7 +99,12 @@ async function run() {
 
         return chainExecutor.instantiateContract({
           codeId: storeCodeRes.codeId,
-          instMsg: getWormholeConfig(ExtendedChainsConfigTestnet[chainId]),
+          instMsg: getWormholeConfig({
+            feeDenom: contractConfig.feeDenom,
+            wormholeChainId: contractConfig.wormholeChainId,
+            mainnet:
+              argv.deploy === "mainnet" || argv.deploy === "testnet-stable",
+          }),
           label: "wormhole",
         });
       },
@@ -108,45 +124,28 @@ async function run() {
       },
     });
 
-    // 4 vaa upgrades for guardian set
-    Object.keys(VAA_MAINNET_UPGRADES).forEach((id) => {
-      pipeline.addStage({
-        id,
-        executor: (getResultOfPastStage) => {
-          const instantiateContractRes: InstantiateContractResponse =
-            getResultOfPastStage("instantiate-contract");
+    // 4 vaa upgrades for guardian set for mainnet sources only
+    if (argv.deploy === "mainnet" || argv.deploy === "testnet-stable")
+      Object.keys(VAA_MAINNET_UPGRADES).forEach((id) => {
+        pipeline.addStage({
+          id,
+          executor: (getResultOfPastStage) => {
+            const instantiateContractRes: InstantiateContractResponse =
+              getResultOfPastStage("instantiate-contract");
 
-          return chainExecutor.executeContract({
-            contractAddr: instantiateContractRes.contractAddr,
-            msg: {
-              // @ts-ignore
-              submit_v_a_a: { vaa: hexToBase64(VAA_MAINNET_UPGRADES[id]) },
-            },
-          });
-        },
+            return chainExecutor.executeContract({
+              contractAddr: instantiateContractRes.contractAddr,
+              msg: {
+                // @ts-ignore
+                submit_v_a_a: { vaa: hexToBase64(VAA_MAINNET_UPGRADES[id]) },
+              },
+            });
+          },
+        });
       });
-    });
 
     await pipeline.run();
   }
-}
-
-interface ReqWormholeConfig {
-  feeDenom: string;
-  wormholeChainId: number;
-}
-function getWormholeConfig({ feeDenom, wormholeChainId }: ReqWormholeConfig) {
-  return {
-    chain_id: wormholeChainId,
-    fee_denom: feeDenom,
-    gov_chain: 1,
-    gov_address: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ=",
-    guardian_set_expirity: 86400,
-    initial_guardian_set: {
-      addresses: [{ bytes: "WMw65cCXshPOPIGXnhuflXB0aqU=" }],
-      expiration_time: 0,
-    },
-  };
 }
 
 run();

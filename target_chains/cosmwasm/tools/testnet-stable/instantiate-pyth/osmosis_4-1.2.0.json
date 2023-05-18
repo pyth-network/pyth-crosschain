@@ -1,0 +1,22 @@
+{
+  "deploy-pyth-code": {
+    "status": "fulfilled",
+    "result": {
+      "codeId": 7132,
+      "txHash": "63B8EBA9DB096D34D0A20EACA201F11C11CCD8CAF8FDCA1C54C6EC3C9096676E"
+    }
+  },
+  "instantiate-contract": {
+    "status": "fulfilled",
+    "result": {
+      "contractAddr": "osmo1jzrpy80uzhypjpg9r88dshqy8slmcfenwgem2n2acgd55zdgk07sm2w0ar",
+      "txHash": "BA8844E42D412FB07AA752086674A991112500F6DA0799454C731BCAC9E5F6A7"
+    }
+  },
+  "set-own-admin": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "C9508A2252269E7863D10980FA4309ECFD0BEF7F9D138ABD80ABE7523ABCB833"
+    }
+  }
+}

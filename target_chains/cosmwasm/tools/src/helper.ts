@@ -4,6 +4,8 @@ import AdmZip from "adm-zip";
 import path from "path";
 import { DownloaderHelper } from "node-downloader-helper";
 
+export type DeploymentType = "mainnet" | "testnet-stable" | "testnet-edge";
+
 // We have released the compile contacts on github. If a chain needs some specific
 // feature in a contract, a version of the contract with that specific features is
 // released. For example, "injective.zip" for injective.
@@ -80,12 +82,9 @@ export const WORMHOLE_CONTRACT_VERSION = "2.14.9";
 export function getWormholeFileName(
   chainId: string,
   version: string,
-  mainnet: boolean
+  deploymentType: DeploymentType
 ): string {
-  const WORMHOLE_STORAGE_DIR = mainnet
-    ? "../wormhole-stub/mainnet"
-    : "../wormhole-stub/testnet";
-
+  const WORMHOLE_STORAGE_DIR = "../wormhole-stub/" + deploymentType;
   return `${WORMHOLE_STORAGE_DIR}/${chainId}-${version}.json`;
 }
 
@@ -94,9 +93,9 @@ export function getWormholeFileName(
 export function getWormholeContractAddress(
   chainId: string,
   version: string,
-  mainnet: boolean
+  deploymentType: DeploymentType
 ): string {
-  let deployedFilePath = getWormholeFileName(chainId, version, mainnet);
+  let deployedFilePath = getWormholeFileName(chainId, version, deploymentType);
   const wormholeContractAddress = JSON.parse(
     readFileSync(deployedFilePath).toString()
   )["instantiate-contract"].result.contractAddr;
@@ -108,6 +107,38 @@ export function getWormholeContractAddress(
     );
 
   return wormholeContractAddress;
+}
+
+// This method returns the file name which stores the deployment result for
+// wormhole stub
+export function getPythFileName(
+  chainId: string,
+  version: string,
+  deploymentType: DeploymentType
+): string {
+  const STORAGE_DIR = `./${deploymentType}/instantiate-pyth`;
+  return `${STORAGE_DIR}/${chainId}-${version}.json`;
+}
+
+// This method will read the pyth file with the deployment resutt and will
+// return the deployed pyth contract address
+export function getPythContractAddress(
+  chainId: string,
+  version: string,
+  deploymentType: DeploymentType
+): string {
+  let deployedFilePath = getPythFileName(chainId, version, deploymentType);
+  const pythContractAddress = JSON.parse(
+    readFileSync(deployedFilePath).toString()
+  )["instantiate-contract"].result.contractAddr;
+
+  if (pythContractAddress === undefined)
+    throw new Error(
+      "Wormhole contract address should be present in the file" +
+        deployedFilePath
+    );
+
+  return pythContractAddress;
 }
 
 export function hexToBase64(hex: string): string {

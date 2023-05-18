@@ -23,6 +23,13 @@ export enum ChainIdTestnet {
 
 export const ChainIdsTestnet = Object.values(ChainIdTestnet);
 
+export enum ChainIdMainnet {
+  INJECTIVE = "injective",
+  OSMOSIS = "osmosis",
+}
+
+export const ChainIdsMainnet = Object.values(ChainIdMainnet);
+
 // TODO: ADD MAINNET IDs IN FUTURE
 // export enum ChainIdMainnet {
 //   INJECTIVE = "injective",
@@ -32,7 +39,7 @@ export type ChainConfig =
   | {
       // usually the chain name
       // osmosis, injective
-      chainId: ChainIdTestnet;
+      chainId: ChainIdTestnet | ChainIdMainnet;
       chainType: ChainType.INJECTIVE;
 
       // endpoints to create executor and querier for a particular chain
@@ -42,7 +49,7 @@ export type ChainConfig =
   | {
       // usually the chain name
       // osmosis, injective
-      chainId: ChainIdTestnet;
+      chainId: ChainIdTestnet | ChainIdMainnet;
       chainType: ChainType.COSMWASM;
 
       // endpoints to create executor and querier for a particular chain
@@ -104,6 +111,23 @@ export const ChainsConfigTestnet: Record<ChainIdTestnet, ChainConfig> = {
     querierEndpoint: "https://rpc.uni.junonetwork.io/",
     prefix: "juno",
     gasPrice: "0.025ujunox",
+  },
+};
+
+export const ChainsConfigMainnet: Record<ChainIdMainnet, ChainConfig> = {
+  [ChainIdMainnet.INJECTIVE]: {
+    chainId: ChainIdTestnet.INJECTIVE,
+    chainType: ChainType.INJECTIVE,
+    querierEndpoint: "https://k8s.testnet.tm.injective.network:443",
+    executorEndpoint: "https://k8s.testnet.chain.grpc-web.injective.network",
+  },
+  [ChainIdMainnet.OSMOSIS]: {
+    chainId: ChainIdMainnet.OSMOSIS,
+    chainType: ChainType.COSMWASM,
+    executorEndpoint: "https://rpc.osmotest5.osmosis.zone/",
+    querierEndpoint: "https://rpc.osmotest5.osmosis.zone/",
+    prefix: "osmo",
+    gasPrice: "0.025uosmo",
   },
 };
 
