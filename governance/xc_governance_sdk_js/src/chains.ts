@@ -30,14 +30,15 @@ export const RECEIVER_CHAINS = {
   conflux_espace: 60012,
 
   // for cosmos
-  sei: 60013,
-  sei_stable: 60014,
-  osmosis: 60015,
-  osmosis_stable: 60016,
-  neutron: 60017,
-  neutron_stable: 60018,
-  juno: 60019,
-  juno_stable: 60020,
+  injective_stable: 60013,
+  sei: 60014,
+  sei_stable: 60015,
+  osmosis: 60016,
+  osmosis_stable: 60017,
+  neutron: 60018,
+  neutron_stable: 60019,
+  juno: 60020,
+  juno_stable: 60021,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
