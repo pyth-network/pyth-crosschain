@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "@injectivelabs/sdk-ts": "1.10.72",
+    "@mysten/sui.js": "^0.34.0",
     "@pythnetwork/price-service-client": "*",
     "@pythnetwork/pyth-sdk-solidity": "*",
     "@truffle/hdwallet-provider": "^2.1.3",
