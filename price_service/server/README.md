@@ -68,3 +68,9 @@ $ docker buildx build -f price_service/server/Dockerfile -t pyth_price_server .
 
 If you wish to build price service without docker, please follow the instruction of the price service
 [`Dockerfile`](./Dockerfile)
+
+## Known Issues
+
+The spy sometimes fails to connect to the peer-to-peer network on initialization. If this happens, the price
+service will not be able to retrieve any data. You can fix this problem by quitting, removing the containers from Docker,
+then restarting both containers. Simply stopping and starting the services tends not to work.
