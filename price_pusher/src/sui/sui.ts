@@ -212,6 +212,10 @@ export class SuiPricePusher implements IPricePusher {
   }
 }
 
+// We are calculating stored price info object id for given price id
+// The mapping between which is static. Hence, we are caching it here.
+const CACHE: { [priceId: string]: string } = {};
+
 // For given priceid, this method will fetch the price info object id
 // where the price information for the corresponding price feed is stored
 async function priceIdToPriceInfoObjectId(
@@ -220,6 +224,9 @@ async function priceIdToPriceInfoObjectId(
   priceFeedToPriceInfoObjectTableId: string,
   priceId: string
 ) {
+  // Check if this was fetched before.
+  if (CACHE[priceId] !== undefined) return CACHE[priceId];
+
   const storedObjectID = await provider.getDynamicFieldObject({
     parentId: priceFeedToPriceInfoObjectTableId,
     name: {
@@ -242,6 +249,9 @@ async function priceIdToPriceInfoObjectId(
     throw new Error("fetched object datatype should be moveObject");
   // This ID points to the price info object for the given price id stored on chain
   const priceInfoObjectId = storedObjectID.data.content.fields.value;
+
+  // cache the price info object id
+  CACHE[priceId] = priceInfoObjectId;
 
   return priceInfoObjectId;
 }
