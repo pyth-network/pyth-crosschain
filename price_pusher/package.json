@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/price-pusher",
-  "version": "5.1.0",
+  "version": "5.2.0",
   "description": "Pyth Price Pusher",
   "homepage": "https://pyth.network",
   "main": "lib/index.js",
@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "@injectivelabs/sdk-ts": "1.10.72",
+    "@mysten/sui.js": "^0.34.0",
     "@pythnetwork/price-service-client": "*",
     "@pythnetwork/pyth-sdk-solidity": "*",
     "@truffle/hdwallet-provider": "^2.1.3",
