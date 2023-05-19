@@ -57,7 +57,7 @@ export class SuiPriceListener extends ChainPriceListener {
         throw new Error("Price not found on chain for price id " + priceId);
 
       if (priceInfoObject.data.content.dataType !== "moveObject")
-        throw new Error("fetched object datatype should be mmoveObject");
+        throw new Error("fetched object datatype should be moveObject");
 
       const { magnitude, negative } =
         priceInfoObject.data.content.fields.price_info.fields.price_feed.fields
