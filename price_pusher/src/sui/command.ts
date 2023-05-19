@@ -9,7 +9,11 @@ import { SuiPriceListener, SuiPricePusher } from "./sui";
 
 export default {
   command: "sui",
-  describe: "run price pusher for sui",
+  describe:
+    "Run price pusher for sui. Most of the arguments below are" +
+    "network specific, so there's one set of values for mainnet and" +
+    "another for testnet. See config.sui..sample.json for the " +
+    "appropriate values for your network. ",
   builder: {
     endpoint: {
       description:
