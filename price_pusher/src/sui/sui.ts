@@ -28,9 +28,6 @@ export class SuiPriceListener extends ChainPriceListener {
     super("sui", config.pollingFrequency, priceItems);
   }
 
-  // This method is closely linked to how data structure are stored on Sui.
-  // Any change in contracts or in Sui can possible break it.
-  // We will have to update it accordingly then.
   async getOnChainPriceInfo(priceId: string): Promise<PriceInfo | undefined> {
     try {
       const provider = new JsonRpcProvider(
