@@ -1,6 +1,8 @@
+import { logger } from "./logging";
 import { ParsedVaa } from "@certusone/wormhole-sdk";
 import { GuardianSet } from "@certusone/wormhole-spydk/lib/cjs/proto/publicrpc/v1/publicrpc";
-import { ethers } from "ethers";
+import * as secp256k1 from "secp256k1";
+import * as keccak from "keccak";
 
 const WormholeClusters = ["localnet", "testnet", "mainnet"] as const;
 export type WormholeCluster = typeof WormholeClusters[number];
@@ -58,16 +60,59 @@ export function isValidVaa(vaa: ParsedVaa, cluster: WormholeCluster): boolean {
     return false;
   }
 
-  const digest = ethers.utils.keccak256(vaa.hash);
+  // It's not possible to call a signature verification function directly
+  // because we only have the addresses of the guardians and not their public
+  // keys. Instead, we compare the address extracted from the public key that
+  // signed the VAA with the corresponding address stored in the guardian set.
 
-  let validVaa = true;
-  vaa.guardianSignatures.forEach((sig) => {
-    if (
-      ethers.utils.recoverAddress(digest, sig.signature) !==
-      currentGuardianSet.addresses[sig.index]
-    )
-      validVaa = false;
-  });
+  const messageHash = keccak.default("keccak256").update(vaa.hash).digest();
+  let counter = 0;
 
-  return validVaa;
+  try {
+    vaa.guardianSignatures.forEach((sig) => {
+      // Each signature is a 65-byte secp256k1 signature with the recovery ID at
+      // the last byte. It is not the compact representation from EIP-2098.
+      const recoveryID = sig.signature[64] % 2;
+      const signature = sig.signature.slice(0, 64);
+      const publicKey = Buffer.from(
+        secp256k1.ecdsaRecover(signature, recoveryID, messageHash, false)
+      );
+      // The first byte of the public key is the prefix (0x03 or 0x04)
+      // indicating if the public key is compressed. Remove it before hashing.
+      const publicKeyHash = keccak
+        .default("keccak256")
+        .update(publicKey.slice(1))
+        .digest();
+      // The last 20 bytes of the hash are the address.
+      const address = publicKeyHash.slice(-20).toString("hex");
+
+      if (
+        checksumAddress(address) === currentGuardianSet.addresses[sig.index]
+      ) {
+        counter++;
+      }
+    });
+
+    return counter === vaa.guardianSignatures.length;
+  } catch (error) {
+    logger.warn("Error validating VAA signatures:", error);
+
+    return false;
+  }
+}
+
+function checksumAddress(address: string) {
+  address = address.toLowerCase().replace("0x", "");
+  const hash = keccak.default("keccak256").update(address).digest("hex");
+  let ret = "0x";
+
+  for (let i = 0; i < address.length; i++) {
+    if (parseInt(hash[i], 16) >= 8) {
+      ret += address[i].toUpperCase();
+    } else {
+      ret += address[i];
+    }
+  }
+
+  return ret;
 }

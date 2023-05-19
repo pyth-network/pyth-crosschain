@@ -3,7 +3,6 @@ import { Listener } from "./listen";
 import { initLogger } from "./logging";
 import { PromClient } from "./promClient";
 import { RestAPI } from "./rest";
-import { wormholeClusterFromString } from "./vaa";
 import { WebSocketAPI } from "./ws";
 
 let configFile: string = ".env";

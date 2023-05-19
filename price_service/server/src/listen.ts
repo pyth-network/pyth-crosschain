@@ -17,7 +17,6 @@ import {
   PriceAttestation,
 } from "@pythnetwork/wormhole-attester-sdk";
 import { HexString, PriceFeed } from "@pythnetwork/price-service-sdk";
-import { ethers } from "ethers";
 import LRUCache from "lru-cache";
 import { DurationInSec, sleep, TimestampInSec } from "./helpers";
 import { logger } from "./logging";
