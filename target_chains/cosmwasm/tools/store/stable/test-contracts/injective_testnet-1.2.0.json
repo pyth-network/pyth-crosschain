@@ -1,0 +1,34 @@
+{
+  "push-price-update": {
+    "status": "rejected",
+    "reason": {
+      "code": 2,
+      "metadata": {
+        "headersMap": {
+          "date": ["Mon, 22 May 2023 14:19:12 GMT"],
+          "content-type": ["application/grpc-web+proto"],
+          "transfer-encoding": ["chunked"],
+          "connection": ["close"],
+          "set-cookie": [
+            "chain-cookie=26cc53620be2cd8c5e20599b6cee03e1; Expires=Wed, 24-May-23 14:19:12 GMT; Max-Age=172800; Path=/; Secure; HttpOnly"
+          ],
+          "access-control-expose-headers": [
+            "Vary, Grpc-Status-Details-Bin, Date, Content-Type, X-Cosmos-Block-Height, Grpc-Status, Grpc-Message, grpc-status, grpc-message"
+          ],
+          "grpc-message": [
+            "failed to execute message; message index: 0: dispatch: submessages: unauthorized Pyth price relay [!injective!labs/wasmd@v0.30.0-inj-1/x/wasm/keeper/keeper.go:1238] With gas wanted: '30000000' and gas used: '456932'"
+          ],
+          "grpc-status": ["2"],
+          "grpc-status-details-bin": [
+            "CAIS2AFmYWlsZWQgdG8gZXhlY3V0ZSBtZXNzYWdlOyBtZXNzYWdlIGluZGV4OiAwOiBkaXNwYXRjaDogc3VibWVzc2FnZXM6IHVuYXV0aG9yaXplZCBQeXRoIHByaWNlIHJlbGF5IFshaW5qZWN0aXZlIWxhYnMvd2FzbWRAdjAuMzAuMC1pbmotMS94L3dhc20va2VlcGVyL2tlZXBlci5nbzoxMjM4XSBXaXRoIGdhcyB3YW50ZWQ6ICczMDAwMDAwMCcgYW5kIGdhcyB1c2VkOiAnNDU2OTMyJyAacAoodHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUucnBjLkVycm9ySW5mbxJECh11bmF1dGhvcml6ZWQgUHl0aCBwcmljZSByZWxheRoTCglDb2Rlc3BhY2USBm9yYWNsZRoOCghBQkNJQ29kZRICMzU"
+          ],
+          "vary": ["Origin, Origin"],
+          "x-cosmos-block-height": ["11702525"],
+          "strict-transport-security": ["max-age=15724800; includeSubDomains"],
+          "access-control-allow-origin": ["*"],
+          "access-control-allow-credentials": ["true"]
+        }
+      }
+    }
+  }
+}

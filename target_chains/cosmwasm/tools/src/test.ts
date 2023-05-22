@@ -11,6 +11,7 @@ import {
   getChainIdsForEdgeDeployment,
   getChainIdsForStableDeployment,
   getPythContractAddress,
+  getTestPythContractFileName,
 } from "./helper";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { CosmwasmQuerier } from "./chains-manager/chain-querier";
@@ -20,10 +21,15 @@ const argv = yargs(hideBin(process.argv))
     type: "string",
     demandOption: "Please provide the mnemonic",
   })
+  .option("contract-version", {
+    type: "string",
+    description: `Please input the contract-version of the pyth contract.`,
+    default: "1.2.0",
+  })
   .option("deploy", {
     type: "string",
     desc: "Execute this script for the given networks.",
-    choices: ["mainnet", "testnet-stable", "testnet-edge"],
+    choices: ["stable", "edge"],
     demandOption: "Please provide the deployment type",
   })
   .help()
@@ -32,8 +38,6 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 async function run() {
-  const STORAGE_DIR = `./${argv.deploy}/test-contracts`;
-
   let chainIds;
   if (argv.deploy === "stable") {
     chainIds = getChainIdsForStableDeployment();
@@ -45,7 +49,11 @@ async function run() {
     let chainConfig = CHAINS_NETWORK_CONFIG[chainId];
     const pipeline = new Pipeline(
       chainId,
-      `${STORAGE_DIR}/${chainId}-1.2.0.json`
+      getTestPythContractFileName(
+        chainId,
+        argv.contractVersion,
+        argv.deploy as DeploymentType
+      )
     );
 
     const chainExecutor = createExecutorForChain(chainConfig, argv.mnemonic);
@@ -56,19 +64,19 @@ async function run() {
     const pythQuerier = new PythWrapperQuerier(chainQuerier);
 
     const priceServiceConnection = new PriceServiceConnection(
-      argv.deploy === "mainnet" || argv.deploy === "testnet-stable"
+      argv.deploy === "stable"
         ? "https://xc-mainnet.pyth.network"
         : "https://xc-testnet.pyth.network"
     );
 
     const priceFeedId =
-      argv.deploy === "mainnet" || argv.deploy === "testnet-stable"
+      argv.deploy === "stable"
         ? "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
         : "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b";
 
     const pythContractAddr = getPythContractAddress(
       chainId,
-      "1.2.0",
+      argv.contractVersion,
       argv.deploy as DeploymentType
     );
 

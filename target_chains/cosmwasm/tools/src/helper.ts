@@ -132,13 +132,24 @@ export function getWormholeContractAddress(
 }
 
 // This method returns the file name which stores the deployment result for
-// wormhole stub
-export function getPythFileName(
+// pyth instantiation
+export function getPythInstantiateFileName(
   chainId: string,
   version: string,
   deploymentType: DeploymentType
 ): string {
   const STORAGE_DIR = `./store/${deploymentType}/instantiate-pyth`;
+  return `${STORAGE_DIR}/${chainId}-${version}.json`;
+}
+
+// This method returns the file name which stores the deployment result for
+// test pyth contract
+export function getTestPythContractFileName(
+  chainId: string,
+  version: string,
+  deploymentType: DeploymentType
+): string {
+  const STORAGE_DIR = `./store/${deploymentType}/test-contracts`;
   return `${STORAGE_DIR}/${chainId}-${version}.json`;
 }
 
@@ -149,7 +160,11 @@ export function getPythContractAddress(
   version: string,
   deploymentType: DeploymentType
 ): string {
-  let deployedFilePath = getPythFileName(chainId, version, deploymentType);
+  let deployedFilePath = getPythInstantiateFileName(
+    chainId,
+    version,
+    deploymentType
+  );
   const pythContractAddress = JSON.parse(
     readFileSync(deployedFilePath).toString()
   )["instantiate-contract"].result.contractAddr;

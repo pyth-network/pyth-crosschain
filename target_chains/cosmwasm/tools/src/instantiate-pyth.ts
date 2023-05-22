@@ -15,7 +15,7 @@ import {
   getChainIdsForEdgeDeployment,
   getChainIdsForStableDeployment,
   getContractBytesDict,
-  getPythFileName,
+  getPythInstantiateFileName,
   getWormholeContractAddress,
 } from "./helper";
 import { sha256 } from "@cosmjs/crypto";
@@ -83,7 +83,7 @@ async function run() {
 
     const pipeline = new Pipeline(
       chainId,
-      getPythFileName(
+      getPythInstantiateFileName(
         chainId,
         argv.contractVersion,
         argv.deploy as DeploymentType
