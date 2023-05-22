@@ -112,8 +112,12 @@ const PermissionDepermissionKey = ({
         toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
         setIsSubmitButtonLoading(false)
         closeModal()
-      } catch (e: any) {
-        toast.error(capitalizeFirstLetter(e.message))
+      } catch (error: any) {
+        if (error.response) {
+          toast.error(capitalizeFirstLetter(error.response.data))
+        } else {
+          toast.error(capitalizeFirstLetter(error.message))
+        }
         setIsSubmitButtonLoading(false)
       }
     }
