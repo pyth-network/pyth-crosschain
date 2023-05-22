@@ -78,29 +78,34 @@ const PermissionDepermissionKey = ({
       const fundingAccount = isRemote
         ? mapKey(multisigAuthority)
         : multisigAuthority
-      priceAccounts.map((priceAccount) => {
-        isPermission
-          ? pythProgramClient.methods
+
+      for (const priceAccount of priceAccounts) {
+        if (isPermission) {
+          instructions.push(
+            await pythProgramClient.methods
               .addPublisher(new PublicKey(publisherKey))
               .accounts({
                 fundingAccount,
                 priceAccount: priceAccount,
               })
               .instruction()
-              .then((instruction) => instructions.push(instruction))
-          : pythProgramClient.methods
+          )
+        } else {
+          instructions.push(
+            await pythProgramClient.methods
               .delPublisher(new PublicKey(publisherKey))
               .accounts({
                 fundingAccount,
                 priceAccount: priceAccount,
               })
               .instruction()
-              .then((instruction) => instructions.push(instruction))
-      })
+          )
+        }
+      }
       setIsSubmitButtonLoading(true)
       try {
         const response = await axios.post(
-          process.env.PROPOSER_SERVER_URL + '/api/propose',
+          process.env.NEXT_PUBLIC_PROPOSER_SERVER_URL + '/api/propose',
           { instructions, cluster }
         )
         const { proposalPubkey } = response.data

@@ -466,7 +466,7 @@ const General = () => {
       setIsSendProposalButtonLoading(true)
       try {
         const response = await axios.post(
-          process.env.PROPOSER_SERVER_URL + '/api/propose',
+          process.env.NEXT_PUBLIC_PROPOSER_SERVER_URL + '/api/propose',
           { instructions, cluster }
         )
         const { proposalPubkey } = response.data
