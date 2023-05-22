@@ -58,6 +58,18 @@ impl<H: Hasher> MerklePath<H> {
     pub fn new(path: Vec<H::Hash>) -> Self {
         Self(path)
     }
+
+    pub fn serialize(&self) -> Option<Vec<u8>> {
+        let mut serialized = vec![];
+        let proof_size: u8 = self.0.len().try_into().ok()?;
+        serialized.extend_from_slice(&proof_size.to_be_bytes());
+
+        for node in self.0.iter() {
+            serialized.extend_from_slice(node.as_ref());
+        }
+
+        Some(serialized)
+    }
 }
 
 /// A MerkleAccumulator maintains a Merkle Tree.
@@ -86,11 +98,12 @@ pub struct MerkleAccumulator<H: Hasher = Keccak256> {
 // TODO: This code does not belong to MerkleAccumulator, we should be using the wire data types in
 // calling code to wrap this value.
 impl<'a, H: Hasher + 'a> MerkleAccumulator<H> {
-    pub fn serialize(&self, storage: u32) -> Vec<u8> {
+    pub fn serialize(&self, slot: u64, ring_size: u32) -> Vec<u8> {
         let mut serialized = vec![];
         serialized.extend_from_slice(0x41555756u32.to_be_bytes().as_ref());
         serialized.extend_from_slice(0u8.to_be_bytes().as_ref());
-        serialized.extend_from_slice(storage.to_be_bytes().as_ref());
+        serialized.extend_from_slice(slot.to_be_bytes().as_ref());
+        serialized.extend_from_slice(ring_size.to_be_bytes().as_ref());
         serialized.extend_from_slice(self.root.as_ref());
         serialized
     }
@@ -146,7 +159,7 @@ impl<H: Hasher> MerkleAccumulator<H> {
         // Filling the leaf hashes
         for i in 0..(1 << depth) {
             if i < items.len() {
-                tree[(1 << depth) + i] = hash_leaf::<H>(items[i].as_ref());
+                tree[(1 << depth) + i] = hash_leaf::<H>(items[i]);
             } else {
                 tree[(1 << depth) + i] = hash_null::<H>();
             }
@@ -171,7 +184,7 @@ impl<H: Hasher> MerkleAccumulator<H> {
     fn find_path(&self, mut index: usize) -> MerklePath<H> {
         let mut path = Vec::new();
         while index > 1 {
-            path.push(self.nodes[index ^ 1].clone());
+            path.push(self.nodes[index ^ 1]);
             index /= 2;
         }
         MerklePath::new(path)
@@ -369,7 +382,7 @@ mod test {
         // Accumulate into a 2 level tree.
         let accumulator = MerkleAccumulator::<Keccak256>::from_set(set.into_iter()).unwrap();
         let proof = accumulator.prove(&item_a).unwrap();
-        assert!(accumulator.check(proof.clone(), &item_a));
+        assert!(accumulator.check(proof, &item_a));
 
         // We now have a 2 level tree with 4 nodes:
         //
@@ -399,10 +412,10 @@ mod test {
         let faulty_accumulator = MerkleAccumulator::<Keccak256> {
             root:  accumulator.root,
             nodes: vec![
-                accumulator.nodes[0].clone(),
-                accumulator.nodes[1].clone(), // Root Stays the Same
-                accumulator.nodes[2].clone(), // Left node hash becomes a leaf.
-                accumulator.nodes[3].clone(), // Right node hash becomes a leaf.
+                accumulator.nodes[0],
+                accumulator.nodes[1], // Root Stays the Same
+                accumulator.nodes[2], // Left node hash becomes a leaf.
+                accumulator.nodes[3], // Right node hash becomes a leaf.
             ],
         };
 
@@ -415,13 +428,13 @@ mod test {
         .concat();
 
         // Confirm our combined hash existed as a node pair in the original tree.
-        assert_eq!(hash_leaf::<Keccak256>(&fake_leaf_A), accumulator.nodes[2]);
+        assert_eq!(hash_leaf::<Keccak256>(fake_leaf_A), accumulator.nodes[2]);
 
         // Now we can try and prove leaf membership in the faulty accumulator. NOTE: this should
         // fail but to confirm that the test is actually correct you can remove the PREFIXES from
         // the hash functions and this test will erroneously pass.
-        let proof = faulty_accumulator.prove(&fake_leaf_A).unwrap();
-        assert!(faulty_accumulator.check(proof, &fake_leaf_A));
+        let proof = faulty_accumulator.prove(fake_leaf_A).unwrap();
+        assert!(faulty_accumulator.check(proof, fake_leaf_A));
     }
 
     proptest! {

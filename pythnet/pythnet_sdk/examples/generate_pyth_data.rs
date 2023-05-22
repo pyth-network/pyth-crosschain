@@ -8,8 +8,10 @@ use {
     solana_client::rpc_client::RpcClient,
     solana_pyth::PYTH_PID,
     solana_sdk::pubkey::Pubkey,
-    std::str::FromStr,
-    std::io::Write,
+    std::{
+        io::Write,
+        str::FromStr,
+    },
 };
 
 fn main() {
