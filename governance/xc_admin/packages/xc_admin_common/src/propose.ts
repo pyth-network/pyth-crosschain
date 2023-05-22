@@ -212,11 +212,10 @@ export async function proposeInstructions(
   const txToSend = batchIntoTransactions(ixToSend);
 
   for (let i = 0; i < txToSend.length; i += SIZE_OF_SIGNED_BATCH) {
-    await new AnchorProvider(
-      squad.connection,
-      squad.wallet,
-      AnchorProvider.defaultOptions()
-    ).sendAll(
+    await new AnchorProvider(squad.connection, squad.wallet, {
+      preflightCommitment: "processed",
+      commitment: "confirmed",
+    }).sendAll(
       txToSend.slice(i, i + SIZE_OF_SIGNED_BATCH).map((tx) => {
         return { tx, signers: [] };
       })
