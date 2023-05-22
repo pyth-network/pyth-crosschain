@@ -245,6 +245,9 @@ export class EvmPricePusher implements IPricePusher {
           // LastPushAttempt was stored with the class
           // Next time the update will be executing, it will check the last attempt
           // and increase the gas price accordingly.
+          console.log(
+            "The transaction failed with error: max fee per gas less than block base fee "
+          );
           return;
         }
 
