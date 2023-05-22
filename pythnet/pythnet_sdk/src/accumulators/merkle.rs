@@ -98,12 +98,12 @@ pub struct MerkleAccumulator<H: Hasher = Keccak256> {
 // TODO: This code does not belong to MerkleAccumulator, we should be using the wire data types in
 // calling code to wrap this value.
 impl<'a, H: Hasher + 'a> MerkleAccumulator<H> {
-    pub fn serialize(&self, slot: u64, ring_index: u32) -> Vec<u8> {
+    pub fn serialize(&self, slot: u64, ring_size: u32) -> Vec<u8> {
         let mut serialized = vec![];
         serialized.extend_from_slice(0x41555756u32.to_be_bytes().as_ref());
         serialized.extend_from_slice(0u8.to_be_bytes().as_ref());
         serialized.extend_from_slice(slot.to_be_bytes().as_ref());
-        serialized.extend_from_slice(ring_index.to_be_bytes().as_ref());
+        serialized.extend_from_slice(ring_size.to_be_bytes().as_ref());
         serialized.extend_from_slice(self.root.as_ref());
         serialized
     }
