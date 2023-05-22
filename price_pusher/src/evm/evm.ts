@@ -244,7 +244,7 @@ export class EvmPricePusher implements IPricePusher {
           // We just have to handle this error and return.
           // LastPushAttempt was stored with the class
           // Next time the update will be executing, it will check the last attempt
-          // and update the gas price accordingly.
+          // and increase the gas price accordingly.
           return;
         }
 
