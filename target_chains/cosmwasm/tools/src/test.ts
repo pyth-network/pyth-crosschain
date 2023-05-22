@@ -1,14 +1,17 @@
 import {
-  ChainIdsTestnet,
-  ChainIdsMainnet,
+  CHAINS_NETWORK_CONFIG,
   createExecutorForChain,
 } from "./chains-manager/chains";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Pipeline } from "./pipeline";
-import { getChainConfig } from "./configs";
 import { PythWrapperExecutor, PythWrapperQuerier } from "./pyth-wrapper";
-import { DeploymentType, getPythContractAddress } from "./helper";
+import {
+  DeploymentType,
+  getChainIdsForEdgeDeployment,
+  getChainIdsForStableDeployment,
+  getPythContractAddress,
+} from "./helper";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { CosmwasmQuerier } from "./chains-manager/chain-querier";
 const argv = yargs(hideBin(process.argv))
@@ -32,18 +35,14 @@ async function run() {
   const STORAGE_DIR = `./${argv.deploy}/test-contracts`;
 
   let chainIds;
-  if (argv.deploy === "mainnet") {
-    chainIds = ChainIdsMainnet;
-  } else if (argv.deploy === "testnet-stable") {
-    chainIds = ChainIdsTestnet;
-  } else if (argv.deploy === "testnet-edge") {
-    chainIds = ChainIdsTestnet;
+  if (argv.deploy === "stable") {
+    chainIds = getChainIdsForStableDeployment();
   } else {
-    throw new Error("unknown deploy type " + argv.deploy);
+    chainIds = getChainIdsForEdgeDeployment();
   }
 
   for (let chainId of chainIds) {
-    let chainConfig = getChainConfig(chainId, argv.deploy);
+    let chainConfig = CHAINS_NETWORK_CONFIG[chainId];
     const pipeline = new Pipeline(
       chainId,
       `${STORAGE_DIR}/${chainId}-1.2.0.json`

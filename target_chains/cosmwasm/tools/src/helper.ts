@@ -3,8 +3,31 @@ import { rimrafSync } from "rimraf";
 import AdmZip from "adm-zip";
 import path from "path";
 import { DownloaderHelper } from "node-downloader-helper";
+import { ChainId } from "./chains-manager/chains";
 
-export type DeploymentType = "mainnet" | "testnet-stable" | "testnet-edge";
+export function getChainIdsForStableDeployment(): ChainId[] {
+  return [
+    ChainId.INJECTIVE_TESTNET,
+    ChainId.OSMOSIS_TESTNET_4,
+    ChainId.OSMOSIS_TESTNET_5,
+    ChainId.SEI_TESTNET_ATLANTIC_2,
+    ChainId.NEUTRON_TESTNET_PION_1,
+    ChainId.JUNO_TESTNET,
+  ];
+}
+
+export function getChainIdsForEdgeDeployment(): ChainId[] {
+  return [
+    ChainId.INJECTIVE_TESTNET,
+    ChainId.OSMOSIS_TESTNET_4,
+    ChainId.OSMOSIS_TESTNET_5,
+    ChainId.SEI_TESTNET_ATLANTIC_2,
+    ChainId.NEUTRON_TESTNET_PION_1,
+    ChainId.JUNO_TESTNET,
+  ];
+}
+
+export type DeploymentType = "stable" | "edge";
 
 // We have released the compile contacts on github. If a chain needs some specific
 // feature in a contract, a version of the contract with that specific features is
@@ -76,7 +99,6 @@ export async function getContractBytesDict(
 }
 
 export const WORMHOLE_CONTRACT_VERSION = "2.14.9";
-
 // This method returns the file name which stores the deployment result for
 // wormhole stub
 export function getWormholeFileName(
@@ -116,7 +138,7 @@ export function getPythFileName(
   version: string,
   deploymentType: DeploymentType
 ): string {
-  const STORAGE_DIR = `./${deploymentType}/instantiate-pyth`;
+  const STORAGE_DIR = `./store/${deploymentType}/instantiate-pyth`;
   return `${STORAGE_DIR}/${chainId}-${version}.json`;
 }
 

@@ -1,121 +1,60 @@
-import { CHAINS, ChainId } from "@pythnetwork/xc-governance-sdk";
-import {
-  ChainIdMainnet,
-  ChainIdTestnet,
-  ChainsConfigMainnet,
-  ChainsConfigTestnet,
-} from "./chains-manager/chains";
+import { CHAINS } from "@pythnetwork/xc-governance-sdk";
+import { ChainId } from "./chains-manager/chains";
 import { DeploymentType } from "./helper";
 
-type ContractConfig = {
+type ChainContractConfig = {
   feeDenom: string;
   pythArtifactZipName: string;
   wormholeChainId: number;
 };
 
-const MainnetContractConfig: Record<ChainIdMainnet, ContractConfig> = {
-  [ChainIdMainnet.INJECTIVE]: {
+export const CHAINS_CONTRACT_CONFIG: Record<ChainId, ChainContractConfig> = {
+  [ChainId.INJECTIVE_TESTNET]: {
+    feeDenom: "inj",
+    pythArtifactZipName: "injective",
+    wormholeChainId: CHAINS.injective_testnet,
+  },
+  [ChainId.OSMOSIS_TESTNET_4]: {
+    feeDenom: "uosmo",
+    pythArtifactZipName: "osmosis",
+    wormholeChainId: CHAINS.osmosis_testnet_4,
+  },
+  [ChainId.OSMOSIS_TESTNET_5]: {
+    feeDenom: "uosmo",
+    pythArtifactZipName: "osmosis",
+    wormholeChainId: CHAINS.osmosis_testnet_5,
+  },
+  [ChainId.SEI_TESTNET_ATLANTIC_2]: {
+    feeDenom: "usei",
+    pythArtifactZipName: "cosmwasm",
+    wormholeChainId: CHAINS.sei_testnet_atlantic_2,
+  },
+  [ChainId.NEUTRON_TESTNET_PION_1]: {
+    feeDenom: "untrn",
+    pythArtifactZipName: "cosmwasm",
+    wormholeChainId: CHAINS.neutron_testnet_pion_1,
+  },
+  [ChainId.JUNO_TESTNET]: {
+    feeDenom: "ujunox",
+    pythArtifactZipName: "cosmwasm",
+    wormholeChainId: CHAINS.juno_testnet,
+  },
+
+  // mainnet
+  [ChainId.INJECTIVE]: {
     feeDenom: "inj",
     pythArtifactZipName: "injective",
     wormholeChainId: CHAINS.injective,
   },
-  [ChainIdMainnet.OSMOSIS]: {
+  [ChainId.OSMOSIS]: {
     feeDenom: "uosmo",
     pythArtifactZipName: "osmosis",
     wormholeChainId: CHAINS.osmosis,
   },
 };
 
-const TestnetEdgeContractConfig: Record<ChainIdTestnet, ContractConfig> = {
-  [ChainIdTestnet.INJECTIVE]: {
-    feeDenom: "inj",
-    pythArtifactZipName: "injective",
-    wormholeChainId: CHAINS.injective,
-  },
-  [ChainIdTestnet.OSMOSIS_4]: {
-    feeDenom: "uosmo",
-    pythArtifactZipName: "osmosis",
-    wormholeChainId: CHAINS.osmosis,
-  },
-  [ChainIdTestnet.OSMOSIS_5]: {
-    feeDenom: "uosmo",
-    pythArtifactZipName: "osmosis",
-    wormholeChainId: CHAINS.osmosis,
-  },
-  [ChainIdTestnet.SEI_ATLANTIC_2]: {
-    feeDenom: "usei",
-    pythArtifactZipName: "cosmwasm",
-    wormholeChainId: CHAINS.sei,
-  },
-  [ChainIdTestnet.NEUTRON_PION_1]: {
-    feeDenom: "untrn",
-    pythArtifactZipName: "cosmwasm",
-    wormholeChainId: CHAINS.neutron,
-  },
-  [ChainIdTestnet.JUNO]: {
-    feeDenom: "ujunox",
-    pythArtifactZipName: "cosmwasm",
-    wormholeChainId: CHAINS.juno,
-  },
-};
-
-const TestnetStableContractConfig: Record<ChainIdTestnet, ContractConfig> = {
-  [ChainIdTestnet.INJECTIVE]: {
-    feeDenom: "inj",
-    pythArtifactZipName: "injective",
-    wormholeChainId: CHAINS.injective_stable,
-  },
-  [ChainIdTestnet.OSMOSIS_4]: {
-    feeDenom: "uosmo",
-    pythArtifactZipName: "osmosis",
-    wormholeChainId: CHAINS.osmosis_stable,
-  },
-  [ChainIdTestnet.OSMOSIS_5]: {
-    feeDenom: "uosmo",
-    pythArtifactZipName: "osmosis",
-    wormholeChainId: CHAINS.osmosis_stable,
-  },
-  [ChainIdTestnet.SEI_ATLANTIC_2]: {
-    feeDenom: "usei",
-    pythArtifactZipName: "cosmwasm",
-    wormholeChainId: CHAINS.sei_stable,
-  },
-  [ChainIdTestnet.NEUTRON_PION_1]: {
-    feeDenom: "untrn",
-    pythArtifactZipName: "cosmwasm",
-    wormholeChainId: CHAINS.neutron_stable,
-  },
-  [ChainIdTestnet.JUNO]: {
-    feeDenom: "ujunox",
-    pythArtifactZipName: "cosmwasm",
-    wormholeChainId: CHAINS.juno_stable,
-  },
-};
-
-export function getContractConfig(
-  chainId: ChainIdMainnet | ChainIdTestnet,
-  deploymentType: DeploymentType
-): ContractConfig {
-  if (deploymentType === "mainnet")
-    return MainnetContractConfig[chainId as ChainIdMainnet];
-  else if (deploymentType === "testnet-stable")
-    return TestnetStableContractConfig[chainId as ChainIdTestnet];
-
-  // testnet-edge
-  return TestnetEdgeContractConfig[chainId as ChainIdTestnet];
-}
-
-export function getChainConfig(
-  chainId: ChainIdTestnet | ChainIdMainnet,
-  deploymentType: DeploymentType
-) {
-  if (deploymentType === "mainnet")
-    return ChainsConfigMainnet[chainId as ChainIdMainnet];
-  return ChainsConfigTestnet[chainId as ChainIdTestnet];
-}
-
-function getPythSources(mainnet: boolean) {
-  if (mainnet) {
+function getPythSources(deploymentType: DeploymentType) {
+  if (deploymentType === "stable") {
     return {
       data_sources: [
         {
@@ -174,12 +113,12 @@ export function getPythConfig({
   feeDenom,
   wormholeContract,
   wormholeChainId,
-  mainnet,
+  deploymentType,
 }: {
   feeDenom: string;
   wormholeContract: string;
   wormholeChainId: number;
-  mainnet: boolean;
+  deploymentType: DeploymentType;
 }) {
   return {
     wormhole_contract: wormholeContract,
@@ -191,22 +130,22 @@ export function getPythConfig({
       amount: "1",
       denom: feeDenom,
     },
-    ...getPythSources(mainnet),
+    ...getPythSources(deploymentType),
   };
 }
 
 interface ReqWormholeConfig {
   feeDenom: string;
   wormholeChainId: number;
-  mainnet: boolean;
+  deploymentType: DeploymentType;
 }
 
 export function getWormholeConfig({
   feeDenom,
   wormholeChainId,
-  mainnet,
+  deploymentType,
 }: ReqWormholeConfig) {
-  if (mainnet)
+  if (deploymentType === "stable")
     return {
       chain_id: wormholeChainId,
       fee_denom: feeDenom,

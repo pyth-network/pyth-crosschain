@@ -1,6 +1,5 @@
 import {
-  ChainIdsTestnet,
-  ChainIdsMainnet,
+  CHAINS_NETWORK_CONFIG,
   createExecutorForChain,
 } from "./chains-manager/chains";
 import yargs from "yargs";
@@ -11,12 +10,14 @@ import {
   StoreCodeResponse,
 } from "./chains-manager/chain-executor";
 import { Pipeline } from "./pipeline";
-import { DeploymentType, getWormholeFileName, hexToBase64 } from "./helper";
 import {
-  getWormholeConfig,
-  getContractConfig,
-  getChainConfig,
-} from "./configs";
+  DeploymentType,
+  getChainIdsForEdgeDeployment,
+  getChainIdsForStableDeployment,
+  getWormholeFileName,
+  hexToBase64,
+} from "./helper";
+import { getWormholeConfig, CHAINS_CONTRACT_CONFIG } from "./configs";
 const argv = yargs(hideBin(process.argv))
   .usage("USAGE: npm run wormhole-stub -- <command>")
   .option("mnemonic", {
@@ -31,8 +32,8 @@ const argv = yargs(hideBin(process.argv))
   })
   .option("deploy", {
     type: "string",
-    desc: "Execute this script for the given networks.",
-    choices: ["mainnet", "testnet-stable", "testnet-edge"],
+    desc: "Execute this script for the given deployment type.",
+    choices: ["stable", "edge"],
     demandOption: "Please provide the deployment type",
   })
   .help()
@@ -40,7 +41,7 @@ const argv = yargs(hideBin(process.argv))
   .wrap(yargs.terminalWidth())
   .parseSync();
 
-const VAA_MAINNET_UPGRADES = {
+const STABLE_VAA_UPGRADES = {
   GUARDIAN_SET_UPGRADE_1_VAA:
     "010000000001007ac31b282c2aeeeb37f3385ee0de5f8e421d30b9e5ae8ba3d4375c1c77a86e77159bb697d9c456d6f8c02d22a94b1279b65b0d6a9957e7d3857423845ac758e300610ac1d2000000030001000000000000000000000000000000000000000000000000000000000000000400000000000005390000000000000000000000000000000000000000000000000000000000436f7265020000000000011358cc3ae5c097b213ce3c81979e1b9f9570746aa5ff6cb952589bde862c25ef4392132fb9d4a42157114de8460193bdf3a2fcf81f86a09765f4762fd1107a0086b32d7a0977926a205131d8731d39cbeb8c82b2fd82faed2711d59af0f2499d16e726f6b211b39756c042441be6d8650b69b54ebe715e234354ce5b4d348fb74b958e8966e2ec3dbd4958a7cdeb5f7389fa26941519f0863349c223b73a6ddee774a3bf913953d695260d88bc1aa25a4eee363ef0000ac0076727b35fbea2dac28fee5ccb0fea768eaf45ced136b9d9e24903464ae889f5c8a723fc14f93124b7c738843cbb89e864c862c38cddcccf95d2cc37a4dc036a8d232b48f62cdd4731412f4890da798f6896a3331f64b48c12d1d57fd9cbe7081171aa1be1d36cafe3867910f99c09e347899c19c38192b6e7387ccd768277c17dab1b7a5027c0b3cf178e21ad2e77ae06711549cfbb1f9c7a9d8096e85e1487f35515d02a92753504a8d75471b9f49edb6fbebc898f403e4773e95feb15e80c9a99c8348d",
   GUARDIAN_SET_UPGRADE_2_VAA:
@@ -56,19 +57,16 @@ async function run() {
   const contractBytes = readFileSync(wasmFilePath);
 
   let chainIds;
-  if (argv.deploy === "mainnet") {
-    chainIds = ChainIdsMainnet;
-  } else if (argv.deploy === "testnet-stable") {
-    chainIds = ChainIdsTestnet;
-  } else if (argv.deploy === "testnet-edge") {
-    chainIds = ChainIdsTestnet;
+  if (argv.deploy === "stable") {
+    chainIds = getChainIdsForStableDeployment();
   } else {
-    throw new Error("unknown deploy type " + argv.deploy);
+    chainIds = getChainIdsForEdgeDeployment();
   }
 
   for (let chainId of chainIds) {
-    let contractConfig = getContractConfig(chainId, argv.deploy);
-    let chainConfig = getChainConfig(chainId, argv.deploy);
+    let contractConfig = CHAINS_CONTRACT_CONFIG[chainId];
+    let chainConfig = CHAINS_NETWORK_CONFIG[chainId];
+
     let pipelineStoreFilePath = getWormholeFileName(
       chainId,
       argv.contractVersion,
@@ -102,8 +100,7 @@ async function run() {
           instMsg: getWormholeConfig({
             feeDenom: contractConfig.feeDenom,
             wormholeChainId: contractConfig.wormholeChainId,
-            mainnet:
-              argv.deploy === "mainnet" || argv.deploy === "testnet-stable",
+            deploymentType: argv.deploy as DeploymentType,
           }),
           label: "wormhole",
         });
@@ -125,8 +122,8 @@ async function run() {
     });
 
     // 4 vaa upgrades for guardian set for mainnet sources only
-    if (argv.deploy === "mainnet" || argv.deploy === "testnet-stable")
-      Object.keys(VAA_MAINNET_UPGRADES).forEach((id) => {
+    if (argv.deploy === "stable")
+      Object.keys(STABLE_VAA_UPGRADES).forEach((id) => {
         pipeline.addStage({
           id,
           executor: (getResultOfPastStage) => {

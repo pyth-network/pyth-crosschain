@@ -1,7 +1,6 @@
 import {
-  ChainIdsMainnet,
-  ChainIdsTestnet,
   createExecutorForChain,
+  CHAINS_NETWORK_CONFIG,
 } from "./chains-manager/chains";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -13,16 +12,18 @@ import { Pipeline } from "./pipeline";
 import {
   DeploymentType,
   WORMHOLE_CONTRACT_VERSION,
+  getChainIdsForEdgeDeployment,
+  getChainIdsForStableDeployment,
   getContractBytesDict,
   getPythFileName,
   getWormholeContractAddress,
 } from "./helper";
 import { sha256 } from "@cosmjs/crypto";
 import { CHECKSUM } from "./contract-checksum";
-import { getChainConfig, getContractConfig, getPythConfig } from "./configs";
+import { CHAINS_CONTRACT_CONFIG, getPythConfig } from "./configs";
 
 const argv = yargs(hideBin(process.argv))
-  .usage("USAGE: npm run wormhole-stub -- <command>")
+  .usage("USAGE: npm run instantiate-pyth -- <command>")
   .option("mnemonic", {
     type: "string",
     demandOption: "Please provide the mnemonic",
@@ -34,7 +35,7 @@ const argv = yargs(hideBin(process.argv))
   .option("deploy", {
     type: "string",
     desc: "Execute this script for the given networks.",
-    choices: ["mainnet", "testnet-stable", "testnet-edge"],
+    choices: ["edge", "stable"],
     demandOption: "Please provide the deployment type",
   })
   .help()
@@ -44,22 +45,16 @@ const argv = yargs(hideBin(process.argv))
 
 async function run() {
   let chainIds;
-  if (argv.deploy === "mainnet") {
-    chainIds = ChainIdsMainnet;
-  } else if (argv.deploy === "testnet-stable") {
-    chainIds = ChainIdsTestnet;
-  } else if (argv.deploy === "testnet-edge") {
-    chainIds = ChainIdsTestnet;
+  if (argv.deploy === "stable") {
+    chainIds = getChainIdsForStableDeployment();
   } else {
-    throw new Error("unknown deploy type " + argv.deploy);
+    chainIds = getChainIdsForEdgeDeployment();
   }
 
   // get the wasm code from github
   let contractBytesDict = await getContractBytesDict(
     chainIds.map(
-      (chainId) =>
-        getContractConfig(chainId, argv.deploy as DeploymentType)
-          .pythArtifactZipName
+      (chainId) => CHAINS_CONTRACT_CONFIG[chainId].pythArtifactZipName
     ),
     argv.contractVersion
   );
@@ -83,12 +78,16 @@ async function run() {
   }
 
   for (let chainId of chainIds) {
-    let chainConfig = getChainConfig(chainId, argv.deploy);
-    let contractConfig = getContractConfig(chainId, argv.deploy);
+    let chainConfig = CHAINS_NETWORK_CONFIG[chainId];
+    let contractConfig = CHAINS_CONTRACT_CONFIG[chainId];
 
     const pipeline = new Pipeline(
       chainId,
-      getPythFileName(chainId, argv.contractVersion, argv.deploy)
+      getPythFileName(
+        chainId,
+        argv.contractVersion,
+        argv.deploy as DeploymentType
+      )
     );
 
     const chainExecutor = createExecutorForChain(chainConfig, argv.mnemonic);
@@ -121,8 +120,7 @@ async function run() {
               WORMHOLE_CONTRACT_VERSION,
               argv.deploy as DeploymentType
             ),
-            mainnet:
-              argv.deploy === "mainnet" || argv.deploy === "testnet-stable",
+            deploymentType: argv.deploy as DeploymentType,
           }),
           label: "wormhole",
         });
