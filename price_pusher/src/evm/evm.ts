@@ -240,6 +240,14 @@ export class EvmPricePusher implements IPricePusher {
           return;
         }
 
+        if (err.message.includes("max fee per gas less than block base fee")) {
+          // We just have to handle this error and return.
+          // LastPushAttempt was stored with the class
+          // Next time the update will be executing, it will check the last attempt
+          // and update the gas price accordingly.
+          return;
+        }
+
         if (
           err.message.includes("sender doesn't have enough funds to send tx.")
         ) {
