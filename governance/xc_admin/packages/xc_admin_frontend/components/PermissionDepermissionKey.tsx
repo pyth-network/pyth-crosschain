@@ -6,6 +6,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
 import { Cluster, PublicKey, TransactionInstruction } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
+import axios from 'axios'
 import { Fragment, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
@@ -98,13 +99,11 @@ const PermissionDepermissionKey = ({
       })
       setIsSubmitButtonLoading(true)
       try {
-        const proposalPubkey = await proposeInstructions(
-          squads,
-          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
-          instructions,
-          isRemote,
-          wormholeAddress
+        const response = await axios.post(
+          process.env.PROPOSER_SERVER_URL + '/api/propose',
+          { instructions, cluster }
         )
+        const { proposalPubkey } = response.data
         toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
         setIsSubmitButtonLoading(false)
         closeModal()
