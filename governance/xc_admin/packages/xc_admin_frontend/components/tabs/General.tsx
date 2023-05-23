@@ -3,6 +3,7 @@ import { AccountType, getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Cluster, PublicKey, TransactionInstruction } from '@solana/web3.js'
+import axios from 'axios'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
@@ -464,18 +465,20 @@ const General = () => {
 
       setIsSendProposalButtonLoading(true)
       try {
-        const proposalPubkey = await proposeInstructions(
-          proposeSquads,
-          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
-          instructions,
-          isRemote,
-          wormholeAddress
+        const response = await axios.post(
+          process.env.NEXT_PUBLIC_PROPOSER_SERVER_URL + '/api/propose',
+          { instructions, cluster }
         )
+        const { proposalPubkey } = response.data
         toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
         setIsSendProposalButtonLoading(false)
         closeModal()
-      } catch (e: any) {
-        toast.error(capitalizeFirstLetter(e.message))
+      } catch (error: any) {
+        if (error.response) {
+          toast.error(capitalizeFirstLetter(error.response.data))
+        } else {
+          toast.error(capitalizeFirstLetter(error.message))
+        }
         setIsSendProposalButtonLoading(false)
       }
     }
