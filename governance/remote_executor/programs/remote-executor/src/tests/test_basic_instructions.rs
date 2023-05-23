@@ -68,11 +68,9 @@ async fn test_basic_instructions() {
     );
 
     let vaa_account_create =
-        bench.add_vaa_account(&emitter, &vec![instruction1, instruction2], VaaAttack::None);
-    let vaa_account_transfer1 =
-        bench.add_vaa_account(&emitter, &vec![instruction3], VaaAttack::None);
-    let vaa_account_transfer2 =
-        bench.add_vaa_account(&emitter, &vec![instruction4], VaaAttack::None);
+        bench.add_vaa_account(&emitter, &[instruction1, instruction2], VaaAttack::None);
+    let vaa_account_transfer1 = bench.add_vaa_account(&emitter, &[instruction3], VaaAttack::None);
+    let vaa_account_transfer2 = bench.add_vaa_account(&emitter, &[instruction4], VaaAttack::None);
 
     let mut sim = bench.start().await;
 

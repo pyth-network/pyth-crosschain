@@ -43,10 +43,7 @@ use {
             Keypair,
         },
         signer::Signer,
-        system_instruction::{
-            self,
-            transfer,
-        },
+        system_instruction::{self,},
         transaction::Transaction,
     },
     std::str::FromStr,
@@ -91,31 +88,9 @@ fn main() -> Result<()> {
 
             let vaa = VAA::from_bytes(vaa_bytes.clone())?;
 
-            // RENT HACK STARTS HERE
-            let signature_set_size = 4 + 19 + 32 + 4;
-            let posted_vaa_size = 3 + 1 + 1 + 4 + 32 + 4 + 4 + 8 + 2 + 32 + 4 + vaa.payload.len();
+            // First verify VAA
             let posted_vaa_key = PostedVAA::key(&wormhole, vaa.digest().unwrap().hash);
 
-            process_transaction(
-                &rpc_client,
-                vec![
-                    transfer(
-                        &payer.pubkey(),
-                        &signature_set_keypair.pubkey(),
-                        rpc_client.get_minimum_balance_for_rent_exemption(signature_set_size)?,
-                    ),
-                    transfer(
-                        &payer.pubkey(),
-                        &posted_vaa_key,
-                        rpc_client.get_minimum_balance_for_rent_exemption(posted_vaa_size)?,
-                    ),
-                ],
-                &vec![&payer],
-            )?;
-
-            // RENT HACK ENDS HERE
-
-            // First verify VAA
             let verify_txs = verify_signatures_txs(
                 vaa_bytes.as_slice(),
                 guardian_set_data,
