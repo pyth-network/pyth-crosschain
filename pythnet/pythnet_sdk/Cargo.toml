@@ -17,10 +17,10 @@ bytemuck = { version = "1.11.0", features = ["derive"] }
 fast-math = "0.1"
 hex = { version = "0.4.3", features = ["serde"] }
 serde = { version = "1.0.144", features = ["derive"] }
-serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole" }
+serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"}
 sha3 = "0.10.4"
 slow_primes = "0.1.14"
-wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole" }
+wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
 
 [dev-dependencies]
 base64 = "0.21.0"
@@ -37,4 +37,4 @@ targets = ["x86_64-unknown-linux-gnu"]
 rustc_version = "0.4"
 
 [patch.crates-io]
-serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole" }
+serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
