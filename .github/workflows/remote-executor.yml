@@ -17,6 +17,7 @@ jobs:
           profile: minimal
           toolchain: 1.66.1
           components: rustfmt, clippy
+          override: true
       - name: Install Solana
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
