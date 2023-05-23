@@ -10,6 +10,7 @@ export function getChainIdsForStableDeployment(): ChainId[] {
     ChainId.INJECTIVE_TESTNET,
     ChainId.OSMOSIS_TESTNET_4,
     ChainId.OSMOSIS_TESTNET_5,
+    ChainId.OSMOSIS,
     ChainId.SEI_TESTNET_ATLANTIC_2,
     ChainId.NEUTRON_TESTNET_PION_1,
     ChainId.JUNO_TESTNET,

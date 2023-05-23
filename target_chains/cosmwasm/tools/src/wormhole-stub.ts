@@ -134,7 +134,7 @@ async function run() {
               contractAddr: instantiateContractRes.contractAddr,
               msg: {
                 // @ts-ignore
-                submit_v_a_a: { vaa: hexToBase64(VAA_MAINNET_UPGRADES[id]) },
+                submit_v_a_a: { vaa: hexToBase64(STABLE_VAA_UPGRADES[id]) },
               },
             });
           },
