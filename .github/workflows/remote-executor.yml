@@ -15,11 +15,11 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: "1.66.1"
+          toolchain: nightly
           components: rustfmt, clippy
       - name: Install Solana
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Run executor tests
-        run: cargo test-bpf --manifest-path ./governance/remote_executor/Cargo.toml
+        run: cargo +1.66.1 test-bpf --manifest-path ./governance/remote_executor/Cargo.toml
