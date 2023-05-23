@@ -145,7 +145,7 @@ export function getWormholeConfig({
   wormholeChainId,
   deploymentType,
 }: ReqWormholeConfig) {
-  if (deploymentType === "stable")
+  if (deploymentType === "stable") {
     return {
       chain_id: wormholeChainId,
       fee_denom: feeDenom,
@@ -157,6 +157,7 @@ export function getWormholeConfig({
         expiration_time: 0,
       },
     };
+  }
 
   return {
     chain_id: wormholeChainId,
