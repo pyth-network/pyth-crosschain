@@ -16,7 +16,7 @@ import {
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { CosmwasmQuerier } from "./chains-manager/chain-querier";
 const argv = yargs(hideBin(process.argv))
-  .usage("USAGE: npm run wormhole-stub -- <command>")
+  .usage("USAGE: npm run test -- <command>")
   .option("mnemonic", {
     type: "string",
     demandOption: "Please provide the mnemonic",
@@ -28,7 +28,7 @@ const argv = yargs(hideBin(process.argv))
   })
   .option("deploy", {
     type: "string",
-    desc: "Execute this script for the given networks.",
+    desc: "test the following deployment type.",
     choices: ["stable", "edge"],
     demandOption: "Please provide the deployment type",
   })
