@@ -2,7 +2,13 @@ const fs = require("fs");
 const solc = require("solc");
 
 // Assuming each contract is in the file with the same name.
-var contracts = ["IPyth", "IPythEvents", "AbstractPyth", "MockPyth"];
+var contracts = [
+  "IPyth",
+  "IPythEvents",
+  "AbstractPyth",
+  "MockPyth",
+  "PythErrors",
+];
 
 var sources = {};
 var outputSelection = {};
