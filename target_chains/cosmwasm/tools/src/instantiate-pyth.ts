@@ -122,7 +122,7 @@ async function run() {
             ),
             deploymentType: argv.deploy as DeploymentType,
           }),
-          label: "wormhole",
+          label: "pyth",
         });
       },
     });
