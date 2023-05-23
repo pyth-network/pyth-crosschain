@@ -16,9 +16,6 @@ cpi = ["no-entrypoint"]
 default = []
 pythtest = []
 
-[profile.release]
-overflow-checks = true
-
 [dependencies]
 anchor-lang = {version = "0.25.0", features = ["init-if-needed"]}
 wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
