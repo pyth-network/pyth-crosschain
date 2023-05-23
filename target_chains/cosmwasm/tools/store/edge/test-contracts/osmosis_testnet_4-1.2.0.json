@@ -1,0 +1,28 @@
+{
+  "push-price-update": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "ED580159C0393A11223C2CC1C51200D0BDC9EB28E22C5DB28AA5934761248F78"
+    }
+  },
+  "fetch-price-feed-update": {
+    "status": "fulfilled",
+    "result": {
+      "price_feed": {
+        "id": "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b",
+        "price": {
+          "price": "2690892219934",
+          "conf": "640219934",
+          "expo": -8,
+          "publish_time": 1684765098
+        },
+        "ema_price": {
+          "price": "2687619200000",
+          "conf": "644806510",
+          "expo": -8,
+          "publish_time": 1684765098
+        }
+      }
+    }
+  }
+}

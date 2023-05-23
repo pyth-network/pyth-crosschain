@@ -12,27 +12,26 @@ export enum ChainType {
 // CHAINNAME{_OPTIONAL-IDENTIFIER}
 // ENUM Value should be of the form:
 // chainname{_optional-identifier}
-export enum ChainIdTestnet {
+export enum ChainId {
+  INJECTIVE_TESTNET = "injective_testnet",
+  OSMOSIS_TESTNET_4 = "osmosis_testnet_4",
+  OSMOSIS_TESTNET_5 = "osmosis_testnet_5",
+  SEI_TESTNET_ATLANTIC_2 = "sei_testnet_atlantic_2",
+  NEUTRON_TESTNET_PION_1 = "neutron_testnet_pion_1",
+  JUNO_TESTNET = "juno_testnet",
+
+  // Below are mainnet chain ids
   INJECTIVE = "injective",
-  OSMOSIS_4 = "osmosis_4",
-  OSMOSIS_5 = "osmosis_5",
-  SEI_ATLANTIC_2 = "sei_atlantic_2",
-  NEUTRON_PION_1 = "neutron_pion_1",
-  JUNO = "juno",
+  OSMOSIS = "osmosis",
 }
 
-export const ChainIdsTestnet = Object.values(ChainIdTestnet);
+export const ChainIds = Object.values(ChainId);
 
-// TODO: ADD MAINNET IDs IN FUTURE
-// export enum ChainIdMainnet {
-//   INJECTIVE = "injective",
-// }
-
-export type ChainConfig =
+export type ChainNetworkConfig =
   | {
       // usually the chain name
       // osmosis, injective
-      chainId: ChainIdTestnet;
+      chainId: ChainId;
       chainType: ChainType.INJECTIVE;
 
       // endpoints to create executor and querier for a particular chain
@@ -42,7 +41,7 @@ export type ChainConfig =
   | {
       // usually the chain name
       // osmosis, injective
-      chainId: ChainIdTestnet;
+      chainId: ChainId;
       chainType: ChainType.COSMWASM;
 
       // endpoints to create executor and querier for a particular chain
@@ -58,52 +57,68 @@ export type ChainConfig =
       gasPrice: string;
     };
 
-export const ChainsConfigTestnet: Record<ChainIdTestnet, ChainConfig> = {
-  [ChainIdTestnet.INJECTIVE]: {
-    chainId: ChainIdTestnet.INJECTIVE,
+export const CHAINS_NETWORK_CONFIG: Record<ChainId, ChainNetworkConfig> = {
+  [ChainId.INJECTIVE_TESTNET]: {
+    chainId: ChainId.INJECTIVE_TESTNET,
     chainType: ChainType.INJECTIVE,
     querierEndpoint: "https://k8s.testnet.tm.injective.network:443",
     executorEndpoint: "https://k8s.testnet.chain.grpc-web.injective.network",
   },
-  [ChainIdTestnet.OSMOSIS_5]: {
-    chainId: ChainIdTestnet.OSMOSIS_5,
+  [ChainId.OSMOSIS_TESTNET_5]: {
+    chainId: ChainId.OSMOSIS_TESTNET_5,
     chainType: ChainType.COSMWASM,
     executorEndpoint: "https://rpc.osmotest5.osmosis.zone/",
     querierEndpoint: "https://rpc.osmotest5.osmosis.zone/",
     prefix: "osmo",
     gasPrice: "0.025uosmo",
   },
-  [ChainIdTestnet.OSMOSIS_4]: {
-    chainId: ChainIdTestnet.OSMOSIS_4,
+  [ChainId.OSMOSIS_TESTNET_4]: {
+    chainId: ChainId.OSMOSIS_TESTNET_4,
     chainType: ChainType.COSMWASM,
     executorEndpoint: "https://rpc-test.osmosis.zone:443",
     querierEndpoint: "https://rpc-test.osmosis.zone:443",
     prefix: "osmo",
     gasPrice: "0.025uosmo",
   },
-  [ChainIdTestnet.SEI_ATLANTIC_2]: {
-    chainId: ChainIdTestnet.SEI_ATLANTIC_2,
+  [ChainId.SEI_TESTNET_ATLANTIC_2]: {
+    chainId: ChainId.SEI_TESTNET_ATLANTIC_2,
     chainType: ChainType.COSMWASM,
     executorEndpoint: "https://rpc.atlantic-2.seinetwork.io/",
     querierEndpoint: "https://rpc.atlantic-2.seinetwork.io/",
     prefix: "sei",
     gasPrice: "0.01usei",
   },
-  [ChainIdTestnet.NEUTRON_PION_1]: {
-    chainId: ChainIdTestnet.NEUTRON_PION_1,
+  [ChainId.NEUTRON_TESTNET_PION_1]: {
+    chainId: ChainId.NEUTRON_TESTNET_PION_1,
     chainType: ChainType.COSMWASM,
     executorEndpoint: "https://rpc.pion.rs-testnet.polypore.xyz/",
     querierEndpoint: "https://rpc.pion.rs-testnet.polypore.xyz/",
     prefix: "neutron",
     gasPrice: "0.025untrn",
   },
-  [ChainIdTestnet.JUNO]: {
-    chainId: ChainIdTestnet.JUNO,
+  [ChainId.JUNO_TESTNET]: {
+    chainId: ChainId.JUNO_TESTNET,
     chainType: ChainType.COSMWASM,
     executorEndpoint: "https://rpc.uni.junonetwork.io/",
     querierEndpoint: "https://rpc.uni.junonetwork.io/",
     prefix: "juno",
     gasPrice: "0.025ujunox",
+  },
+
+  // Mainnet chains
+  [ChainId.INJECTIVE]: {
+    chainId: ChainId.INJECTIVE,
+    chainType: ChainType.INJECTIVE,
+    querierEndpoint: "https://k8s.testnet.tm.injective.network:443",
+    executorEndpoint: "https://k8s.testnet.chain.grpc-web.injective.network",
+  },
+  [ChainId.OSMOSIS]: {
+    chainId: ChainId.OSMOSIS,
+    chainType: ChainType.COSMWASM,
+    executorEndpoint: "https://rpc.osmotest5.osmosis.zone/",
+    querierEndpoint: "https://rpc.osmotest5.osmosis.zone/",
+    prefix: "osmo",
+    gasPrice: "0.025uosmo",
   },
 };
 
@@ -111,7 +126,7 @@ export const ChainsConfigTestnet: Record<ChainIdTestnet, ChainConfig> = {
  * This method will return an executor for given chainConfig.
  */
 export function createExecutorForChain(
-  chainConfig: ChainConfig,
+  chainConfig: ChainNetworkConfig,
   mnemonic: string
 ): ChainExecutor {
   const chainType = chainConfig.chainType;

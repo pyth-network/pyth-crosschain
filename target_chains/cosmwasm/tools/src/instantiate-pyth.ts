@@ -1,6 +1,6 @@
 import {
-  ChainIdsTestnet,
   createExecutorForChain,
+  CHAINS_NETWORK_CONFIG,
 } from "./chains-manager/chains";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -10,16 +10,20 @@ import {
 } from "./chains-manager/chain-executor";
 import { Pipeline } from "./pipeline";
 import {
+  DeploymentType,
   WORMHOLE_CONTRACT_VERSION,
+  getChainIdsForEdgeDeployment,
+  getChainIdsForStableDeployment,
   getContractBytesDict,
+  getPythInstantiateFileName,
   getWormholeContractAddress,
 } from "./helper";
-import { ExtendedChainsConfigTestnet } from "./extended-chain-config";
 import { sha256 } from "@cosmjs/crypto";
 import { CHECKSUM } from "./contract-checksum";
+import { CHAINS_CONTRACT_CONFIG, getPythConfig } from "./configs";
 
 const argv = yargs(hideBin(process.argv))
-  .usage("USAGE: npm run wormhole-stub -- <command>")
+  .usage("USAGE: npm run instantiate-pyth -- <command>")
   .option("mnemonic", {
     type: "string",
     demandOption: "Please provide the mnemonic",
@@ -28,13 +32,11 @@ const argv = yargs(hideBin(process.argv))
     type: "string",
     demandOption: `Please input the contract-version of the pyth contract.`,
   })
-  .option("chain-id", {
+  .option("deploy", {
     type: "string",
-    choices: ChainIdsTestnet,
-  })
-  .option("mainnet", {
-    type: "boolean",
-    desc: "Execute this script for mainnet networks. THIS WILL BE ADDED IN FUTURE",
+    desc: "Execute this script for the given networks.",
+    choices: ["edge", "stable"],
+    demandOption: "Please provide the deployment type",
   })
   .help()
   .alias("help", "h")
@@ -42,12 +44,17 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 async function run() {
-  const STORAGE_DIR = "./testnet/instantiate-pyth";
+  let chainIds;
+  if (argv.deploy === "stable") {
+    chainIds = getChainIdsForStableDeployment();
+  } else {
+    chainIds = getChainIdsForEdgeDeployment();
+  }
 
   // get the wasm code from github
   let contractBytesDict = await getContractBytesDict(
-    Object.values(ExtendedChainsConfigTestnet).map(
-      ({ pythArtifactZipName }) => pythArtifactZipName
+    chainIds.map(
+      (chainId) => CHAINS_CONTRACT_CONFIG[chainId].pythArtifactZipName
     ),
     argv.contractVersion
   );
@@ -70,17 +77,20 @@ async function run() {
       );
   }
 
-  console.log();
-
-  let chainIds = argv.chainId === undefined ? ChainIdsTestnet : [argv.chainId];
   for (let chainId of chainIds) {
-    let pipelineStoreFilePath = `${STORAGE_DIR}/${chainId}-${argv.contractVersion}.json`;
-    const pipeline = new Pipeline(chainId, pipelineStoreFilePath);
+    let chainConfig = CHAINS_NETWORK_CONFIG[chainId];
+    let contractConfig = CHAINS_CONTRACT_CONFIG[chainId];
 
-    const chainExecutor = createExecutorForChain(
-      ExtendedChainsConfigTestnet[chainId],
-      argv.mnemonic
+    const pipeline = new Pipeline(
+      chainId,
+      getPythInstantiateFileName(
+        chainId,
+        argv.contractVersion,
+        argv.deploy as DeploymentType
+      )
     );
+
+    const chainExecutor = createExecutorForChain(chainConfig, argv.mnemonic);
 
     // add stages
     // 1 deploy artifact
@@ -88,10 +98,7 @@ async function run() {
       id: "deploy-pyth-code",
       executor: async () => {
         return chainExecutor.storeCode({
-          contractBytes:
-            contractBytesDict[
-              ExtendedChainsConfigTestnet[chainId].pythArtifactZipName
-            ],
+          contractBytes: contractBytesDict[contractConfig.pythArtifactZipName],
         });
       },
     });
@@ -106,14 +113,14 @@ async function run() {
         return chainExecutor.instantiateContract({
           codeId: storeCodeRes.codeId,
           instMsg: getPythConfig({
-            feeDenom: ExtendedChainsConfigTestnet[chainId].feeDenom,
-            wormholeChainId:
-              ExtendedChainsConfigTestnet[chainId].wormholeChainId,
+            feeDenom: contractConfig.feeDenom,
+            wormholeChainId: contractConfig.wormholeChainId,
             wormholeContract: getWormholeContractAddress(
               chainId,
               WORMHOLE_CONTRACT_VERSION,
-              false
+              argv.deploy as DeploymentType
             ),
+            deploymentType: argv.deploy as DeploymentType,
           }),
           label: "wormhole",
         });
@@ -136,52 +143,6 @@ async function run() {
 
     await pipeline.run();
   }
-}
-
-function getPythConfig({
-  feeDenom,
-  wormholeContract,
-  wormholeChainId,
-}: {
-  feeDenom: string;
-  wormholeContract: string;
-  wormholeChainId: number;
-}) {
-  return {
-    wormhole_contract: wormholeContract,
-    governance_source_index: 0,
-    governance_sequence_number: 0,
-    chain_id: wormholeChainId,
-    valid_time_period_secs: 60,
-    fee: {
-      amount: "1",
-      denom: feeDenom,
-    },
-    // All contracts on any network are using mainnet data sources.
-    data_sources: [
-      {
-        emitter: Buffer.from(
-          "6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25",
-          "hex"
-        ).toString("base64"),
-        chain_id: 1,
-      },
-      {
-        emitter: Buffer.from(
-          "f8cd23c2ab91237730770bbea08d61005cdda0984348f3f6eecb559638c0bba0",
-          "hex"
-        ).toString("base64"),
-        chain_id: 26,
-      },
-    ],
-    governance_source: {
-      emitter: Buffer.from(
-        "5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e",
-        "hex"
-      ).toString("base64"),
-      chain_id: 1,
-    },
-  };
 }
 
 run();
