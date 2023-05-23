@@ -6,14 +6,13 @@ export { CHAINS as WORMHOLE_CHAINS } from "@certusone/wormhole-sdk";
 // 1. Mainnet Deployment - which will have pyth mainnet governance and data sources
 // 2. Testnet Stable Deployment - which will also have pyth mainnet governance and data sources
 // 3. Testnet Edge Deployment - which will have pyth testnet governance and data sources.
-// Mainnet Deployment and Testnet Edge deployment can have the same chain id.
-// Testnet Stable Deployment must have an id separate from Mainnet Deployment. Or else the VAAs
-// for Testnet Stable Deployment are executable on Mainnet Deploymnent.
-//
-// If there is already a chain id in wormhole sdk. Use that for Mainnet and Testnet Edge
-// Else add a chain id for these two eg. juno 60016
-// For Testnet Stable Deployment add an id that is different to the above mentioned chain id.
-// eg. juno_stable: 60019
+// Different chains will have different chain ids i.e., mainnet and testnet will have different chain ids.
+// Though stable and edge contracts on testnet will share the same chain id. They are governed by different
+// sources hence there is no chance of collision.
+
+// If there is already a chain id in wormhole sdk. Use that for Mainnet
+// Else add a chain id for mainnet too.
+// Add an id for the testnet
 // Currently we are deploying this for cosmos chains only. But this will be for all the chains in future.
 export const RECEIVER_CHAINS = {
   cronos: 60001,
