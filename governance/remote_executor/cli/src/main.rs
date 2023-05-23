@@ -43,7 +43,7 @@ use {
             Keypair,
         },
         signer::Signer,
-        system_instruction::{self,},
+        system_instruction,
         transaction::Transaction,
     },
     std::str::FromStr,
