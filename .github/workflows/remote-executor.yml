@@ -15,7 +15,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: "1.66.1"
           components: rustfmt, clippy
       - name: Install Solana
         run: |
