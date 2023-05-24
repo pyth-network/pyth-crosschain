@@ -115,8 +115,8 @@ export const CHAINS_NETWORK_CONFIG: Record<ChainId, ChainNetworkConfig> = {
   [ChainId.OSMOSIS]: {
     chainId: ChainId.OSMOSIS,
     chainType: ChainType.COSMWASM,
-    executorEndpoint: "https://rpc.osmotest5.osmosis.zone/",
-    querierEndpoint: "https://rpc.osmotest5.osmosis.zone/",
+    executorEndpoint: "https://rpc.osmosis.zone:443",
+    querierEndpoint: "https://rpc.osmosis.zone:443",
     prefix: "osmo",
     gasPrice: "0.025uosmo",
   },
