@@ -6,7 +6,6 @@ use {
     crate::store::{
         types::{
             AccumulatorMessages,
-            RawMessage,
             Update,
         },
         Store,
@@ -21,6 +20,10 @@ use {
             RpcAccountInfoConfig,
             RpcProgramAccountsConfig,
         },
+        rpc_filter::{
+            Memcmp,
+            RpcFilterType,
+        },
     },
     solana_sdk::{
         account::Account,
@@ -28,10 +31,7 @@ use {
         pubkey::Pubkey,
         system_program,
     },
-    std::ops::Rem,
 };
-
-const RING_SIZE: u32 = 10_000;
 
 pub async fn spawn(pythnet_ws_endpoint: String, store: Store) -> Result<()> {
     let client = PubsubClient::new(pythnet_ws_endpoint.as_ref()).await?;
@@ -42,6 +42,10 @@ pub async fn spawn(pythnet_ws_endpoint: String, store: Store) -> Result<()> {
             encoding: Some(UiAccountEncoding::Base64Zstd),
             ..Default::default()
         },
+        filters: Some(vec![RpcFilterType::Memcmp(Memcmp::new_raw_bytes(
+            0,
+            b"PAS1".to_vec(),
+        ))]),
         with_context: Some(true),
         ..Default::default()
     };
@@ -55,38 +59,36 @@ pub async fn spawn(pythnet_ws_endpoint: String, store: Store) -> Result<()> {
         log::debug!("Received Pythnet update: {:?}", update);
 
         if let Some(update) = update {
-            // Check whether this account matches the state for this slot
-            // FIXME this is hardcoded for localnet, we need to remove it from the code
-            let pyth = Pubkey::try_from("7th6GdMuo4u1zNLzFAyMY6psunHNsGjPjo8hXvcTgKei").unwrap();
-
-            let accumulator_slot = update.context.slot - 1;
-
-            // Apparently we get the update for the previous slot, so we need to subtract 1
-            let ring_index = accumulator_slot.rem(RING_SIZE as u64) as u32;
-
-            let (candidate, _) = Pubkey::find_program_address(
-                &[
-                    b"AccumulatorState",
-                    &pyth.to_bytes(),
-                    &ring_index.to_be_bytes(),
-                ],
-                &system_program::id(),
-            );
-
-            if candidate.to_string() != update.value.pubkey {
-                continue;
-            }
-
             let account: Account = update.value.account.decode().unwrap();
             log::debug!("Received Accumulator update: {:?}", account);
-            let accumulator_messages = AccumulatorMessages {
-                slot:     accumulator_slot,
-                messages: Vec::<RawMessage>::try_from_slice(account.data.as_ref())?,
-            };
 
-            store
-                .store_update(Update::AccumulatorMessages(accumulator_messages))
-                .await?;
+            let accumulator_messages = AccumulatorMessages::try_from_slice(&account.data);
+            match accumulator_messages {
+                Ok(accumulator_messages) => {
+                    let (candidate, _) = Pubkey::find_program_address(
+                        &[
+                            b"AccumulatorState",
+                            &accumulator_messages.ring_index().to_be_bytes(),
+                        ],
+                        &system_program::id(),
+                    );
+
+                    if candidate.to_string() == update.value.pubkey {
+                        store
+                            .store_update(Update::AccumulatorMessages(accumulator_messages))
+                            .await?;
+                    } else {
+                        log::error!(
+                            "Failed to verify the messages public key: {:?} != {:?}",
+                            candidate,
+                            update.value.pubkey
+                        );
+                    }
+                }
+                Err(err) => {
+                    log::error!("Failed to parse AccumulatorMessages: {:?}", err);
+                }
+            };
         }
     }
 }
