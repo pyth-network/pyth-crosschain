@@ -136,7 +136,6 @@ async fn test_adversarial() {
     );
 
     // Claim record does not correspond to the emitter's claim record
-    // Next error is privilege scalation because anchor tries to create the account at wrong address but signing with the right seeds
     assert_eq!(
         sim.execute_posted_vaa(
             &vaa_account_valid,
