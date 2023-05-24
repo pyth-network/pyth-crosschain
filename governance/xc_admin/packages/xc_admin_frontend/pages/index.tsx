@@ -46,11 +46,11 @@ export const getServerSideProps: GetServerSideProps = async () => {
       )
     : {}
 
-  const PROPOSER_SERVER_URL =
+  const proposerServerUrl =
     process.env.PROPOSER_SERVER_URL || 'http://localhost:4000'
   return {
     props: {
-      PROPOSER_SERVER_URL,
+      proposerServerUrl,
       publisherKeyToNameMapping,
       multisigSignerKeyToNameMapping,
     },
@@ -80,11 +80,11 @@ const DEFAULT_TAB = 'general'
 const Home: NextPage<{
   publisherKeyToNameMapping: Record<string, Record<string, string>>
   multisigSignerKeyToNameMapping: Record<string, string>
-  PROPOSER_SERVER_URL: string
+  proposerServerUrl: string
 }> = ({
   publisherKeyToNameMapping,
   multisigSignerKeyToNameMapping,
-  PROPOSER_SERVER_URL,
+  proposerServerUrl,
 }) => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
   const tabInfoArray = Object.values(TAB_INFO)
@@ -151,7 +151,7 @@ const Home: NextPage<{
           </div>
           {tabInfoArray[currentTabIndex].queryString ===
           TAB_INFO.General.queryString ? (
-            <General PROPOSER_SERVER_URL={PROPOSER_SERVER_URL} />
+            <General proposerServerUrl={proposerServerUrl} />
           ) : tabInfoArray[currentTabIndex].queryString ===
             TAB_INFO.UpdatePermissions.queryString ? (
             <UpdatePermissions />

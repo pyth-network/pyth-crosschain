@@ -25,7 +25,7 @@ import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
 import PermissionDepermissionKey from '../PermissionDepermissionKey'
 
-const General = ({ PROPOSER_SERVER_URL }: { PROPOSER_SERVER_URL: string }) => {
+const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const [data, setData] = useState<any>({})
   const [dataChanges, setDataChanges] = useState<Record<string, any>>()
   const [existingSymbols, setExistingSymbols] = useState<Set<string>>(new Set())
@@ -465,10 +465,10 @@ const General = ({ PROPOSER_SERVER_URL }: { PROPOSER_SERVER_URL: string }) => {
 
       setIsSendProposalButtonLoading(true)
       try {
-        const response = await axios.post(
-          PROPOSER_SERVER_URL + '/api/propose',
-          { instructions, cluster }
-        )
+        const response = await axios.post(proposerServerUrl + '/api/propose', {
+          instructions,
+          cluster,
+        })
         const { proposalPubkey } = response.data
         toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
         setIsSendProposalButtonLoading(false)
@@ -767,13 +767,13 @@ const General = ({ PROPOSER_SERVER_URL }: { PROPOSER_SERVER_URL: string }) => {
             isPermission={true}
             pythProgramClient={pythProgramClient}
             squads={proposeSquads}
-            PROPOSER_SERVER_URL={PROPOSER_SERVER_URL}
+            proposerServerUrl={proposerServerUrl}
           />
           <PermissionDepermissionKey
             isPermission={false}
             pythProgramClient={pythProgramClient}
             squads={proposeSquads}
-            PROPOSER_SERVER_URL={PROPOSER_SERVER_URL}
+            proposerServerUrl={proposerServerUrl}
           />
         </div>
         <div className="relative mt-6">
