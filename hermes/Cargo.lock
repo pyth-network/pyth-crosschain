@@ -745,17 +745,6 @@ checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
 
 [[package]]
 name = "bstr"
-version = "0.2.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba3569f383e8f1598449f1a423e72e99569137b47740b1da11ef19af3d5c3223"
-dependencies = [
- "lazy_static",
- "memchr",
- "regex-automata",
-]
-
-[[package]]
-name = "bstr"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d4260bcc2e8fc9df1eac4919a720effeb63a3f0952f5bf4944adfa18897f09"
@@ -1703,15 +1692,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "835a3dc7d1ec9e75e2b5fb4ba75396837112d2060b03f7d43bc1897c7f7211da"
 
 [[package]]
-name = "fixed-hash"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfcf0ed7fe52a17a03854ec54a9f76d6d84508d1c0e66bc1793301c73fc8493c"
-dependencies = [
- "static_assertions",
-]
-
-[[package]]
 name = "fixedbitset"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2078,6 +2058,7 @@ dependencies = [
  "serde_cbor",
  "serde_json",
  "serde_qs",
+ "serde_wormhole",
  "sha256",
  "solana-account-decoder",
  "solana-client",
@@ -2085,7 +2066,7 @@ dependencies = [
  "structopt",
  "tokio",
  "typescript-type-def",
- "wormhole-core",
+ "wormhole-sdk",
 ]
 
 [[package]]
@@ -2120,12 +2101,6 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 dependencies = [
  "serde",
 ]
-
-[[package]]
-name = "hex-literal"
-version = "0.3.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ebdb29d2ea9ed0083cd8cece49bbd968021bd99b0849edb4a9a7ee0fdf6a4e0"
 
 [[package]]
 name = "hex_fmt"
@@ -4045,16 +4020,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
-name = "primitive-types"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e28720988bff275df1f51b171e1b2a18c30d194c4d2b61defdacecd625a5d94a"
-dependencies = [
- "fixed-hash",
- "uint",
-]
-
-[[package]]
 name = "proc-macro-crate"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5006,7 +4971,7 @@ dependencies = [
 [[package]]
 name = "serde_wormhole"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole#f6f93bf35e8a9f13c1c9c2d5f47a0db4e45c6faf"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.17.1#3e423a75180f9da69263279e9ffce47b1858ae78"
 dependencies = [
  "base64 0.13.1",
  "itoa",
@@ -7232,28 +7197,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "wormhole-core"
-version = "0.1.0"
-source = "git+https://github.com/guibescos/wormhole?branch=reisen/sdk-solana#61bb2fb691a8df0aa0e42a21632e43b392ffa90f"
-dependencies = [
- "borsh",
- "bstr 0.2.17",
- "byteorder",
- "hex",
- "hex-literal",
- "nom",
- "primitive-types",
- "sha3 0.10.8",
- "thiserror",
-]
-
-[[package]]
 name = "wormhole-sdk"
 version = "0.1.0"
-source = "git+https://github.com/wormhole-foundation/wormhole#f6f93bf35e8a9f13c1c9c2d5f47a0db4e45c6faf"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.17.1#3e423a75180f9da69263279e9ffce47b1858ae78"
 dependencies = [
  "anyhow",
- "bstr 1.4.0",
+ "bstr",
  "schemars",
  "serde",
  "serde_wormhole",
