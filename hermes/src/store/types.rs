@@ -7,6 +7,7 @@ use {
         anyhow,
         Result,
     },
+    borsh::BorshDeserialize,
 };
 
 #[derive(Clone, Debug, PartialEq)]
@@ -149,10 +150,18 @@ pub enum RequestTime {
     FirstAfter(UnixTimestamp),
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, BorshDeserialize)]
 pub struct AccumulatorMessages {
-    pub slot:     Slot,
-    pub messages: Vec<RawMessage>,
+    pub magic:     [u8; 4],
+    pub slot:      Slot,
+    pub ring_size: u32,
+    pub messages:  Vec<RawMessage>,
+}
+
+impl AccumulatorMessages {
+    pub fn ring_index(&self) -> u32 {
+        (self.slot % self.ring_size as u64) as u32
+    }
 }
 
 pub enum Update {
