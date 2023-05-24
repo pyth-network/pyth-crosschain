@@ -71,7 +71,8 @@ impl Store {
     pub async fn store_update(&self, update: Update) -> Result<()> {
         let slot = match update {
             Update::Vaa(vaa_bytes) => {
-                let vaa = serde_wormhole::from_slice::<Vaa<Vec<u8>>>(&vaa_bytes)?;
+                let vaa =
+                    serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(&vaa_bytes)?;
                 let payload = WormholePayload::try_from_bytes(&vaa.payload, &vaa_bytes)?;
 
                 // FIXME: Validate the VAA
