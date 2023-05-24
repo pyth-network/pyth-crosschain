@@ -159,7 +159,11 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                         revert PythErrors.InvalidUpdateData();
 
                     // This field is not used
-                    // uint32 storageIndex = UnsafeBytesLib.toUint32(encodedPayload, payloadoffset);
+                    // uint64 slot = UnsafeBytesLib.toUint64(encodedPayload, payloadoffset);
+                    payloadoffset += 8;
+
+                    // This field is not used
+                    // uint32 ringSize = UnsafeBytesLib.toUint32(encodedPayload, payloadoffset);
                     payloadoffset += 4;
 
                     digest = bytes20(
