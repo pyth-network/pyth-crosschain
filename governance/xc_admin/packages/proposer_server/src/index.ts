@@ -20,7 +20,7 @@ import { getPythClusterApiUrl, PythCluster } from "@pythnetwork/client";
 import SquadsMesh from "@sqds/mesh";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
-const PORT: number = Number(process.env.PORT ?? "3000");
+const PORT: number = Number(process.env.PORT ?? "4000");
 const KEYPAIR: Keypair = Keypair.fromSecretKey(
   Uint8Array.from(JSON.parse(fs.readFileSync(envOrErr("WALLET"), "ascii")))
 );
