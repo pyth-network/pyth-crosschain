@@ -6,10 +6,10 @@ edition = "2018"
 [dependencies]
 clap = {version ="3.2.22", features = ["derive"]}
 remote-executor = {path = "../programs/remote-executor/"}
-solana-program = "1.10.31"
-solana-client = "1.10.31"
-solana-sdk = "1.10.31"
-anchor-client = "0.25.0"
+solana-program = "1.14.17"
+solana-client = "1.14.17"
+solana-sdk = "1.14.17"
+anchor-client = "0.27.0"
 shellexpand = "2.1.2"
 anyhow = "1.0.65"
 base64 = "0.13.0"

@@ -146,7 +146,7 @@ async fn test_adversarial() {
         .await
         .unwrap_err()
         .unwrap(),
-        InstructionError::PrivilegeEscalation.into_transation_error()
+        ErrorCode::ConstraintSeeds.into_transation_error()
     );
 
     // Claim record does not correspond to the emitter's claim record, but this time it is initialized

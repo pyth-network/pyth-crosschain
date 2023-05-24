@@ -294,7 +294,7 @@ impl ExecutorSimulator {
         let mut account_metas = crate::accounts::ExecutePostedVaa::populate(
             &self.program_id,
             &self.payer.pubkey(),
-            &Pubkey::new(&posted_vaa_data.emitter_address),
+            &Pubkey::from(posted_vaa_data.emitter_address),
             posted_vaa_address,
         )
         .to_account_metas(None);
