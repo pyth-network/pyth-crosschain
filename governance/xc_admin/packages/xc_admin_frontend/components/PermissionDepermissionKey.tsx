@@ -31,10 +31,12 @@ const PermissionDepermissionKey = ({
   isPermission,
   pythProgramClient,
   squads,
+  PROPOSER_SERVER_URL,
 }: {
   isPermission: boolean
   pythProgramClient?: Program<PythOracle>
   squads?: SquadsMesh
+  PROPOSER_SERVER_URL: string
 }) => {
   const [publisherKey, setPublisherKey] = useState(
     'JTmFx5zX9mM94itfk2nQcJnQQDPjcv4UPD7SYj6xDCV'
@@ -105,7 +107,7 @@ const PermissionDepermissionKey = ({
       setIsSubmitButtonLoading(true)
       try {
         const response = await axios.post(
-          process.env.NEXT_PUBLIC_PROPOSER_SERVER_URL + '/api/propose',
+          PROPOSER_SERVER_URL + '/api/propose',
           { instructions, cluster }
         )
         const { proposalPubkey } = response.data

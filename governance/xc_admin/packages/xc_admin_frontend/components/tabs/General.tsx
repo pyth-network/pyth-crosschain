@@ -25,7 +25,7 @@ import Spinner from '../common/Spinner'
 import Loadbar from '../loaders/Loadbar'
 import PermissionDepermissionKey from '../PermissionDepermissionKey'
 
-const General = () => {
+const General = ({ PROPOSER_SERVER_URL }: { PROPOSER_SERVER_URL: string }) => {
   const [data, setData] = useState<any>({})
   const [dataChanges, setDataChanges] = useState<Record<string, any>>()
   const [existingSymbols, setExistingSymbols] = useState<Set<string>>(new Set())
@@ -466,7 +466,7 @@ const General = () => {
       setIsSendProposalButtonLoading(true)
       try {
         const response = await axios.post(
-          process.env.NEXT_PUBLIC_PROPOSER_SERVER_URL + '/api/propose',
+          PROPOSER_SERVER_URL + '/api/propose',
           { instructions, cluster }
         )
         const { proposalPubkey } = response.data
@@ -767,11 +767,13 @@ const General = () => {
             isPermission={true}
             pythProgramClient={pythProgramClient}
             squads={proposeSquads}
+            PROPOSER_SERVER_URL={PROPOSER_SERVER_URL}
           />
           <PermissionDepermissionKey
             isPermission={false}
             pythProgramClient={pythProgramClient}
             squads={proposeSquads}
+            PROPOSER_SERVER_URL={PROPOSER_SERVER_URL}
           />
         </div>
         <div className="relative mt-6">

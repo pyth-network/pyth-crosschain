@@ -46,8 +46,11 @@ export const getServerSideProps: GetServerSideProps = async () => {
       )
     : {}
 
+  const PROPOSER_SERVER_URL =
+    process.env.PROPOSER_SERVER_URL || 'http://localhost:4000'
   return {
     props: {
+      PROPOSER_SERVER_URL,
       publisherKeyToNameMapping,
       multisigSignerKeyToNameMapping,
     },
@@ -77,7 +80,12 @@ const DEFAULT_TAB = 'general'
 const Home: NextPage<{
   publisherKeyToNameMapping: Record<string, Record<string, string>>
   multisigSignerKeyToNameMapping: Record<string, string>
-}> = ({ publisherKeyToNameMapping, multisigSignerKeyToNameMapping }) => {
+  PROPOSER_SERVER_URL: string
+}> = ({
+  publisherKeyToNameMapping,
+  multisigSignerKeyToNameMapping,
+  PROPOSER_SERVER_URL,
+}) => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
   const tabInfoArray = Object.values(TAB_INFO)
   const anchorWallet = useAnchorWallet()
@@ -143,7 +151,7 @@ const Home: NextPage<{
           </div>
           {tabInfoArray[currentTabIndex].queryString ===
           TAB_INFO.General.queryString ? (
-            <General />
+            <General PROPOSER_SERVER_URL={PROPOSER_SERVER_URL} />
           ) : tabInfoArray[currentTabIndex].queryString ===
             TAB_INFO.UpdatePermissions.queryString ? (
             <UpdatePermissions />
