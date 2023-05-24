@@ -32,9 +32,10 @@ type Hash = [u8; 20];
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct WormholeMerkleProof {
-    pub vaa:         Vec<u8>,
-    pub state_index: u32,
-    pub root:        Hash,
+    pub vaa:       Vec<u8>,
+    pub slot:      u64,
+    pub ring_size: u32,
+    pub root:      Hash,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -49,13 +50,13 @@ pub async fn store_wormhole_merkle_verified_message(
 ) -> Result<()> {
     let pending_acc = store
         .pending_accumulations
-        .entry(proof.state_index)
+        .entry(proof.slot)
         .or_default()
         .await
         .into_value();
     store
         .pending_accumulations
-        .insert(proof.state_index, pending_acc.wormhole_merkle_proof(proof))
+        .insert(proof.slot, pending_acc.wormhole_merkle_proof(proof))
         .await;
     Ok(())
 }
