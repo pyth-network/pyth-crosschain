@@ -4,14 +4,14 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-clap = {version ="3.2.22", features = ["derive"]}
+clap = {version ="4.3.0", features = ["derive"]}
 remote-executor = {path = "../programs/remote-executor/"}
-solana-program = "1.14.17"
-solana-client = "1.14.17"
-solana-sdk = "1.14.17"
+solana-program = "1.14.18"
+solana-client = "1.14.18"
+solana-sdk = "1.14.18"
 anchor-client = "0.27.0"
-shellexpand = "2.1.2"
-anyhow = "1.0.65"
+shellexpand = "3.1.0"
+anyhow = "1.0.71"
 base64 = "0.13.0"
 wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
 wormhole-core = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
