@@ -67,7 +67,7 @@ export class CosmwasmExecutor implements ChainExecutor {
       const txResponse = await cosmwasmClient.signAndBroadcast(
         address,
         [encodedMsgObject],
-        1.5
+        calculateFee(472458, this.gasPrice)
       );
 
       if (txResponse.code !== 0) {

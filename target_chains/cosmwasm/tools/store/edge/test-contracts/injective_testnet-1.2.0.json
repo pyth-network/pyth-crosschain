@@ -5,25 +5,25 @@
       "code": 2,
       "metadata": {
         "headersMap": {
-          "date": ["Mon, 22 May 2023 14:18:22 GMT"],
+          "date": ["Wed, 24 May 2023 14:52:27 GMT"],
           "content-type": ["application/grpc-web+proto"],
           "transfer-encoding": ["chunked"],
           "connection": ["close"],
           "set-cookie": [
-            "chain-cookie=897b26a087ddf13b95194a034c704cf7; Expires=Wed, 24-May-23 14:18:22 GMT; Max-Age=172800; Path=/; Secure; HttpOnly"
+            "chain-cookie=bbab683274350dcd5a89b660b92d6fb9; Expires=Fri, 26-May-23 14:52:26 GMT; Max-Age=172800; Path=/; Secure; HttpOnly"
           ],
           "access-control-expose-headers": [
-            "X-Cosmos-Block-Height, Grpc-Status, Grpc-Message, Grpc-Status-Details-Bin, Date, Vary, Content-Type, grpc-status, grpc-message"
+            "Content-Type, X-Cosmos-Block-Height, Grpc-Status, Grpc-Message, Vary, Grpc-Status-Details-Bin, Date, grpc-status, grpc-message"
           ],
           "grpc-message": [
-            "failed to execute message; message index: 0: dispatch: submessages: unauthorized Pyth price relay [!injective!labs/wasmd@v0.30.0-inj-1/x/wasm/keeper/keeper.go:1238] With gas wanted: '30000000' and gas used: '326963'"
+            "failed to execute message; message index: 0: dispatch: submessages: unauthorized Pyth price relay [!injective!labs/wasmd@v0.40.0-rc.1-inj/x/wasm/keeper/keeper.go:1209] With gas wanted: '50000000' and gas used: '317686'"
           ],
           "grpc-status": ["2"],
           "grpc-status-details-bin": [
-            "CAIS2AFmYWlsZWQgdG8gZXhlY3V0ZSBtZXNzYWdlOyBtZXNzYWdlIGluZGV4OiAwOiBkaXNwYXRjaDogc3VibWVzc2FnZXM6IHVuYXV0aG9yaXplZCBQeXRoIHByaWNlIHJlbGF5IFshaW5qZWN0aXZlIWxhYnMvd2FzbWRAdjAuMzAuMC1pbmotMS94L3dhc20va2VlcGVyL2tlZXBlci5nbzoxMjM4XSBXaXRoIGdhcyB3YW50ZWQ6ICczMDAwMDAwMCcgYW5kIGdhcyB1c2VkOiAnMzI2OTYzJyAacAoodHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUucnBjLkVycm9ySW5mbxJECh11bmF1dGhvcml6ZWQgUHl0aCBwcmljZSByZWxheRoTCglDb2Rlc3BhY2USBm9yYWNsZRoOCghBQkNJQ29kZRICMzU"
+            "CAIS2wFmYWlsZWQgdG8gZXhlY3V0ZSBtZXNzYWdlOyBtZXNzYWdlIGluZGV4OiAwOiBkaXNwYXRjaDogc3VibWVzc2FnZXM6IHVuYXV0aG9yaXplZCBQeXRoIHByaWNlIHJlbGF5IFshaW5qZWN0aXZlIWxhYnMvd2FzbWRAdjAuNDAuMC1yYy4xLWluai94L3dhc20va2VlcGVyL2tlZXBlci5nbzoxMjA5XSBXaXRoIGdhcyB3YW50ZWQ6ICc1MDAwMDAwMCcgYW5kIGdhcyB1c2VkOiAnMzE3Njg2JyAacAoodHlwZS5nb29nbGVhcGlzLmNvbS9nb29nbGUucnBjLkVycm9ySW5mbxJECh11bmF1dGhvcml6ZWQgUHl0aCBwcmljZSByZWxheRoTCglDb2Rlc3BhY2USBm9yYWNsZRoOCghBQkNJQ29kZRICMzU"
           ],
           "vary": ["Origin, Origin"],
-          "x-cosmos-block-height": ["11702504"],
+          "x-cosmos-block-height": ["11769418"],
           "strict-transport-security": ["max-age=15724800; includeSubDomains"],
           "access-control-allow-origin": ["*"],
           "access-control-allow-credentials": ["true"]

@@ -9,14 +9,14 @@
   "instantiate-contract": {
     "status": "fulfilled",
     "result": {
-      "txHash": "B9B18667E75A21D82A4684FEDE8DAB57BC4575E19EAB8A5D6FAC8F7D816D064D",
-      "contractAddr": "inj1228a0hxh6pnu6mnwmwvxus2lufwetnqrhz9hk9"
+      "txHash": "8B9B0533E6839BD9590C73D57CB7D39C92466FFF074C5129243202E980356B18",
+      "contractAddr": "inj18hckkzqf47mdhd734g6papk6wj20y24rm43sk9"
     }
   },
   "set-own-admin": {
     "status": "fulfilled",
     "result": {
-      "txHash": "13F148074A7D0D392C77A4A71F8E25BF6C2592A216392E2BA909915E74B67FAA"
+      "txHash": "CE314088E6B871635B4658EC0398B2C1AFA73D18AE00034A95E725CE93D956E0"
     }
   }
 }
