@@ -588,6 +588,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "bstr"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a246e68bb43f6cd9db24bea052a53e40405417c5fb372e3d1a8a7f770a564ef5"
+dependencies = [
+ "memchr",
+ "once_cell",
+ "regex-automata",
+ "serde",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1126,6 +1138,12 @@ dependencies = [
  "quote 0.6.13",
  "syn 0.15.44",
 ]
+
+[[package]]
+name = "dyn-clone"
+version = "1.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68b0cf012f1230e43cd00ebb729c6bb58707ecfa8ad08b52ef3a4ccd2697fc30"
 
 [[package]]
 name = "ed25519"
@@ -2796,10 +2814,11 @@ dependencies = [
  "bincode",
  "boolinator",
  "rand 0.8.5",
+ "serde_wormhole",
  "solana-program-test",
  "solana-sdk",
  "tokio",
- "wormhole-core",
+ "wormhole-sdk",
  "wormhole-solana",
 ]
 
@@ -2813,11 +2832,12 @@ dependencies = [
  "clap 3.2.22",
  "hex",
  "remote-executor",
+ "serde_wormhole",
  "shellexpand",
  "solana-client",
  "solana-program",
  "solana-sdk",
- "wormhole-core",
+ "wormhole-sdk",
  "wormhole-solana",
 ]
 
@@ -3002,6 +3022,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "schemars"
+version = "0.8.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02c613288622e5f0c3fdc5dbd4db1c5fbe752746b1d1a56a0630b78fd00de44f"
+dependencies = [
+ "dyn-clone",
+ "schemars_derive",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "schemars_derive"
+version = "0.8.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "109da1e6b197438deb6db99952990c7f959572794b80ff93707d55a232545e7c"
+dependencies = [
+ "proc-macro2 1.0.43",
+ "quote 1.0.21",
+ "serde_derive_internals",
+ "syn 1.0.100",
+]
+
+[[package]]
 name = "scopeguard"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3096,6 +3140,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_derive_internals"
+version = "0.26.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85bf8229e7920a9f636479437026331ce11aa132b4dde37d121944a44d6e5f3c"
+dependencies = [
+ "proc-macro2 1.0.43",
+ "quote 1.0.21",
+ "syn 1.0.100",
+]
+
+[[package]]
 name = "serde_json"
 version = "1.0.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3116,6 +3171,18 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "serde_wormhole"
+version = "0.1.0"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.17.1#3e423a75180f9da69263279e9ffce47b1858ae78"
+dependencies = [
+ "base64 0.13.0",
+ "itoa",
+ "serde",
+ "serde_bytes",
+ "thiserror",
 ]
 
 [[package]]
@@ -5030,7 +5097,7 @@ version = "0.1.0"
 source = "git+https://github.com/guibescos/wormhole-solana#850eb356b33f785cb8f118e2edbf3c60206cbdb0"
 dependencies = [
  "borsh",
- "bstr",
+ "bstr 0.2.17",
  "byteorder",
  "hex",
  "hex-literal",
@@ -5041,12 +5108,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "wormhole-sdk"
+version = "0.1.0"
+source = "git+https://github.com/wormhole-foundation/wormhole?tag=v2.17.1#3e423a75180f9da69263279e9ffce47b1858ae78"
+dependencies = [
+ "anyhow",
+ "bstr 1.5.0",
+ "schemars",
+ "serde",
+ "serde_wormhole",
+ "sha3 0.10.5",
+ "thiserror",
+]
+
+[[package]]
 name = "wormhole-solana"
 version = "0.1.0"
 source = "git+https://github.com/guibescos/wormhole-solana#850eb356b33f785cb8f118e2edbf3c60206cbdb0"
 dependencies = [
  "borsh",
- "bstr",
+ "bstr 0.2.17",
  "byteorder",
  "hex",
  "hex-literal",

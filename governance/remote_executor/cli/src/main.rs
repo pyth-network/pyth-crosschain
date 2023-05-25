@@ -1,4 +1,12 @@
 #![deny(warnings)]
+
+use {
+    serde_wormhole::RawMessage,
+    wormhole_sdk::{
+        vaa::digest,
+        Vaa,
+    },
+};
 pub mod cli;
 use {
     anchor_client::{
@@ -47,7 +55,6 @@ use {
         transaction::Transaction,
     },
     std::str::FromStr,
-    wormhole::VAA,
     wormhole_solana::{
         instructions::{
             post_message,
@@ -86,7 +93,7 @@ fn main() -> Result<()> {
 
             let signature_set_keypair = Keypair::new();
 
-            let vaa = VAA::from_bytes(vaa_bytes.clone())?;
+            let vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa_bytes)?;
 
             let posted_vaa_key = PostedVAA::key(&wormhole, vaa.digest().unwrap().hash);
 
@@ -111,10 +118,10 @@ fn main() -> Result<()> {
                 timestamp:          vaa.timestamp,
                 nonce:              vaa.nonce,
                 emitter_chain:      vaa.emitter_chain.into(),
-                emitter_address:    vaa.emitter_address,
+                emitter_address:    vaa.emitter_address.0,
                 sequence:           vaa.sequence,
                 consistency_level:  vaa.consistency_level,
-                payload:            vaa.payload,
+                payload:            vaa.payload.to_vec(),
             };
 
             process_transaction(

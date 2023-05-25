@@ -12,7 +12,7 @@ use {
         claim_record::ClaimRecord,
         posted_vaa::AnchorVaa,
     },
-    wormhole::Chain::{
+    wormhole_sdk::Chain::{
         self,
         Solana,
     },

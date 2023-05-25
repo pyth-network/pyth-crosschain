@@ -19,10 +19,12 @@ pythtest = []
 [dependencies]
 anchor-lang = {version = "0.25.0", features = ["init-if-needed"]}
 wormhole-solana = { git = "https://github.com/guibescos/wormhole-solana"}
-wormhole-core = { git = "https://github.com/guibescos/wormhole-solana"}
+wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
+serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"}
 boolinator = "2.4.0"
 
 [dev-dependencies]
+
 solana-program-test = "=1.10.31"
 tokio = "1.14.1"
 solana-sdk = "=1.10.31"

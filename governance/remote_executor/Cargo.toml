@@ -6,3 +6,6 @@ members = [
 
 [profile.release]
 overflow-checks = true
+
+[patch.crates-io]
+serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
