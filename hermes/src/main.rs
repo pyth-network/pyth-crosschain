@@ -26,12 +26,15 @@ async fn init() -> Result<()> {
             wh_bootstrap_addrs,
             wh_listen_addrs,
             api_addr,
+            eth_rpc_endpoint,
+            wormhole_eth_contract_address,
+            eth_polling_interval,
         } => {
-            log::info!("Running Hermes...");
-            let store = Store::new_with_local_cache(1000);
+            // A channel to emit state updates to api
+            let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
 
-            // FIXME: Instead of spawing threads separately, we should handle all their
-            // errors properly.
+            log::info!("Running Hermes...");
+            let store = Store::new_with_local_cache(update_tx, 1000);
 
             // Spawn the P2P layer.
             log::info!("Starting P2P server on {:?}", wh_listen_addrs);
@@ -44,26 +47,25 @@ async fn init() -> Result<()> {
             .await?;
 
             // Spawn the Ethereum guardian set watcher
+            log::info!(
+                "Starting Ethereum guardian set watcher using {}",
+                eth_rpc_endpoint
+            );
             network::ethereum::spawn(
                 store.clone(),
-                "https://rpc.ankr.com/eth".to_owned(),
-                "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B".to_owned(),
+                eth_rpc_endpoint,
+                wormhole_eth_contract_address,
+                eth_polling_interval.into(),
             )
-            .await;
-
-            // Spawn the RPC server.
-            log::info!("Starting RPC server on {}", api_addr);
-
-            // TODO: Add max size to the config
-            api::spawn(store.clone(), api_addr.to_string()).await?;
+            .await?;
 
             // Spawn the Pythnet listener
-            // TODO: Exit the thread when it gets spawned
             log::info!("Starting Pythnet listener using {}", pythnet_ws_endpoint);
             network::pythnet::spawn(store.clone(), pythnet_ws_endpoint).await?;
 
-            // Wait on Ctrl+C similar to main.
-            tokio::signal::ctrl_c().await?;
+            // Run the RPC server and wait for it to shutdown gracefully.
+            log::info!("Starting RPC server on {}", api_addr);
+            api::run(store.clone(), update_rx, api_addr.to_string()).await?;
         }
     }
 

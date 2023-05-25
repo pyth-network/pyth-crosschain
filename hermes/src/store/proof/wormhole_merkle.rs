@@ -8,10 +8,6 @@ use {
         anyhow,
         Result,
     },
-    byteorder::{
-        BigEndian,
-        WriteBytesExt,
-    },
     pythnet_sdk::{
         accumulators::{
             merkle::{
@@ -21,22 +17,15 @@ use {
             Accumulator,
         },
         hashers::keccak256_160::Keccak160,
-    },
-    std::io::{
-        Cursor,
-        Write,
+        payload::v1::{
+            AccumulatorUpdateData,
+            MerklePriceUpdate,
+            Proof,
+            WormholeMerkleRoot,
+        },
+        ser::to_vec,
     },
 };
-
-type Hash = [u8; 20];
-
-#[derive(Clone, PartialEq, Debug)]
-pub struct WormholeMerkleProof {
-    pub vaa:       Vec<u8>,
-    pub slot:      u64,
-    pub ring_size: u32,
-    pub root:      Hash,
-}
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct WormholeMerkleMessageProof {
@@ -46,7 +35,8 @@ pub struct WormholeMerkleMessageProof {
 
 pub async fn store_wormhole_merkle_verified_message(
     store: &Store,
-    proof: WormholeMerkleProof,
+    proof: WormholeMerkleRoot,
+    vaa_bytes: Vec<u8>,
 ) -> Result<()> {
     let pending_acc = store
         .pending_accumulations
@@ -56,7 +46,10 @@ pub async fn store_wormhole_merkle_verified_message(
         .into_value();
     store
         .pending_accumulations
-        .insert(proof.slot, pending_acc.wormhole_merkle_proof(proof))
+        .insert(
+            proof.slot,
+            pending_acc.wormhole_merkle_proof((proof, vaa_bytes)),
+        )
         .await;
     Ok(())
 }
@@ -76,14 +69,11 @@ pub fn construct_message_states_proofs(
         None => return Ok(vec![]), // It only happens when the message set is empty
     };
 
-    let proof = &state.wormhole_merkle_proof;
+    let (proof, vaa) = &state.wormhole_merkle_proof;
 
-    log::info!(
-        "Merkle root: {:?}, Verified root: {:?}",
-        merkle_acc.root,
-        proof.root
-    );
-    log::info!("Valid: {}", merkle_acc.root == proof.root);
+    if merkle_acc.root != proof.root {
+        return Err(anyhow!("Invalid merkle root"));
+    }
 
     state
         .accumulator_messages
@@ -91,7 +81,7 @@ pub fn construct_message_states_proofs(
         .iter()
         .map(|m| {
             Ok(WormholeMerkleMessageProof {
-                vaa:   state.wormhole_merkle_proof.vaa.clone(),
+                vaa:   vaa.clone(),
                 proof: merkle_acc
                     .prove(m.as_ref())
                     .ok_or(anyhow!("Failed to prove message"))?,
@@ -100,7 +90,7 @@ pub fn construct_message_states_proofs(
         .collect::<Result<Vec<WormholeMerkleMessageProof>>>()
 }
 
-pub fn construct_update_data(mut message_states: Vec<MessageState>) -> Result<Vec<Vec<u8>>> {
+pub fn construct_update_data(mut message_states: Vec<&MessageState>) -> Result<Vec<Vec<u8>>> {
     message_states.sort_by_key(
         |m| m.proof_set.wormhole_merkle_proof.vaa.clone(), // FIXME: This is not efficient
     );
@@ -118,39 +108,18 @@ pub fn construct_update_data(mut message_states: Vec<MessageState>) -> Result<Ve
                 .vaa
                 .clone();
 
-            let mut cursor = Cursor::new(Vec::new());
-
-            cursor.write_u32::<BigEndian>(0x504e4155)?; // "PNAU"
-            cursor.write_u8(0x01)?; // Major version
-            cursor.write_u8(0x00)?; // Minor version
-            cursor.write_u8(0)?; // Trailing header size
-
-            cursor.write_u8(0)?; // Update type of WormholeMerkle. FIXME: Make this out of enum
-
-            // Writing VAA
-            cursor.write_u16::<BigEndian>(vaa.len().try_into()?)?;
-            cursor.write_all(&vaa)?;
-
-            // Writing number of messages
-            cursor.write_u8(messages.len().try_into()?)?;
-
-            for message in messages {
-                // Writing message
-                cursor.write_u16::<BigEndian>(message.raw_message.len().try_into()?)?;
-                cursor.write_all(&message.raw_message)?;
-
-                // Writing proof
-                cursor.write_all(
-                    &message
-                        .proof_set
-                        .wormhole_merkle_proof
-                        .proof
-                        .serialize()
-                        .ok_or(anyhow!("Unable to serialize merkle proof path"))?,
-                )?;
-            }
-
-            Ok(cursor.into_inner())
+            Ok(to_vec::<_, byteorder::BE>(&AccumulatorUpdateData::new(
+                Proof::WormholeMerkle {
+                    vaa:     vaa.into(),
+                    updates: messages
+                        .iter()
+                        .map(|message| MerklePriceUpdate {
+                            message: message.raw_message.clone().into(),
+                            proof:   message.proof_set.wormhole_merkle_proof.proof.clone(),
+                        })
+                        .collect(),
+                },
+            ))?)
         })
         .collect::<Result<Vec<Vec<u8>>>>()
 }

@@ -36,6 +36,7 @@ use {
 pub enum RestError {
     UpdateDataNotFound,
     CcipUpdateDataNotFound,
+    InvalidCCIPInput,
 }
 
 impl IntoResponse for RestError {
@@ -53,6 +54,9 @@ impl IntoResponse for RestError {
                 //    Will be available in a few seconds. So we want the client to retry.
 
                 (StatusCode::BAD_GATEWAY, "CCIP update data not found").into_response()
+            }
+            RestError::InvalidCCIPInput => {
+                (StatusCode::BAD_REQUEST, "Invalid CCIP input").into_response()
             }
         }
     }
@@ -113,7 +117,7 @@ pub async fn latest_price_feeds(
             .price_feeds
             .into_iter()
             .map(|price_feed| {
-                RpcPriceFeed::from_price_feed_message(price_feed, params.verbose, params.binary)
+                RpcPriceFeed::from_price_feed_update(price_feed, params.verbose, params.binary)
             })
             .collect(),
     ))
@@ -156,7 +160,8 @@ pub async fn get_vaa(
         .price_feeds
         .get(0)
         .ok_or(RestError::UpdateDataNotFound)?
-        .publish_time; // TODO: This should never happen.
+        .price_feed
+        .publish_time;
 
     Ok(Json(GetVaaResponse { vaa, publish_time }))
 }
@@ -179,8 +184,16 @@ pub async fn get_vaa_ccip(
     State(state): State<super::State>,
     QsQuery(params): QsQuery<GetVaaCcipQueryParams>,
 ) -> Result<Json<GetVaaCcipResponse>, RestError> {
-    let price_id: PriceIdentifier = PriceIdentifier::new(params.data[0..32].try_into().unwrap());
-    let publish_time = UnixTimestamp::from_be_bytes(params.data[32..40].try_into().unwrap());
+    let price_id: PriceIdentifier = PriceIdentifier::new(
+        params.data[0..32]
+            .try_into()
+            .map_err(|_| RestError::InvalidCCIPInput)?,
+    );
+    let publish_time = UnixTimestamp::from_be_bytes(
+        params.data[32..40]
+            .try_into()
+            .map_err(|_| RestError::InvalidCCIPInput)?,
+    );
 
     let price_feeds_with_update_data = state
         .store

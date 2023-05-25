@@ -51,24 +51,12 @@ fn hash_null<H: Hasher>() -> H::Hash {
     H::hashv(&[NULL_PREFIX])
 }
 
-#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Default, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MerklePath<H: Hasher>(Vec<H::Hash>);
 
 impl<H: Hasher> MerklePath<H> {
     pub fn new(path: Vec<H::Hash>) -> Self {
         Self(path)
-    }
-
-    pub fn serialize(&self) -> Option<Vec<u8>> {
-        let mut serialized = vec![];
-        let proof_size: u8 = self.0.len().try_into().ok()?;
-        serialized.extend_from_slice(&proof_size.to_be_bytes());
-
-        for node in self.0.iter() {
-            serialized.extend_from_slice(node.as_ref());
-        }
-
-        Some(serialized)
     }
 }
 

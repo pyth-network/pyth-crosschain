@@ -1,3 +1,8 @@
+//! This module provides Wormhole primitives.
+//!
+//! Wormhole does not provide an SDK for working with Solana versions of Wormhole related types, so
+//! we clone the definitions from the Solana contracts here and adapt them to Pyth purposes. This
+//! allows us to emit and parse messages through Wormhole.
 use {
     crate::Pubkey,
     borsh::{

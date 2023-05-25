@@ -28,6 +28,7 @@ where
         + Debug
         + Default
         + Eq
+        + std::hash::Hash
         + PartialOrd
         + PartialEq
         + serde::Serialize

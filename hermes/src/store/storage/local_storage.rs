@@ -28,10 +28,10 @@ pub struct LocalStorage {
 
 impl LocalStorage {
     pub fn new_instance(max_size_per_key: usize) -> StorageInstance {
-        Arc::new(Box::new(Self {
+        Box::new(Self {
             cache: Arc::new(DashMap::new()),
             max_size_per_key,
-        }))
+        })
     }
 
     fn retrieve_message_state(

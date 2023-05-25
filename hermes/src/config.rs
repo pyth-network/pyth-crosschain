@@ -44,5 +44,21 @@ pub enum Options {
         /// The address to bind the API server to.
         #[structopt(long, default_value = "127.0.0.1:33999")]
         api_addr: SocketAddr,
+
+        /// Ethereum RPC endpoint
+        #[structopt(long, env = "ETH_RPC_ENDPOINT")]
+        eth_rpc_endpoint: String,
+
+        /// Wormhole contract address on Ethereum
+        #[structopt(
+            long,
+            env = "WORMHOLE_CONTRACT_ADDRESS",
+            default_value = "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
+        )]
+        wormhole_eth_contract_address: String,
+
+        /// Ethereum RPC polling duration
+        #[structopt(long, env = "ETH_POLLING_INTERVAL", default_value = "10s")]
+        eth_polling_interval: humantime::Duration,
     },
 }

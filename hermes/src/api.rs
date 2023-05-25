@@ -7,6 +7,10 @@ use {
         Router,
     },
     std::sync::Arc,
+    tokio::{
+        signal,
+        sync::mpsc::Receiver,
+    },
 };
 
 mod rest;
@@ -15,12 +19,12 @@ mod ws;
 
 #[derive(Clone)]
 pub struct State {
-    pub store: Store,
+    pub store: Arc<Store>,
     pub ws:    Arc<ws::WsState>,
 }
 
 impl State {
-    pub fn new(store: Store) -> Self {
+    pub fn new(store: Arc<Store>) -> Self {
         Self {
             store,
             ws: Arc::new(ws::WsState::new()),
@@ -32,7 +36,7 @@ impl State {
 ///
 /// Currently this is based on Axum due to the simplicity and strong ecosystem support for the
 /// packages they are based on (tokio & hyper).
-pub async fn spawn(store: Store, rpc_addr: String) -> Result<()> {
+pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: String) -> Result<()> {
     let state = State::new(store);
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
@@ -50,28 +54,31 @@ pub async fn spawn(store: Store, rpc_addr: String) -> Result<()> {
         .with_state(state.clone());
 
 
-    // Binds the axum's server to the configured address and port. This is a blocking call and will
-    // not return until the server is shutdown.
-    tokio::spawn(async move {
-        // FIXME handle errors properly
-        axum::Server::bind(&rpc_addr.parse().unwrap())
-            .serve(app.into_make_service())
-            .await
-            .unwrap();
-    });
-
     // Call dispatch updates to websocket every 1 seconds
     // FIXME use a channel to get updates from the store
     tokio::spawn(async move {
         loop {
-            dispatch_updates(
-                state.store.get_price_feed_ids().into_iter().collect(),
-                state.clone(),
-            )
-            .await;
-            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+            // Panics if the update channel is closed, which should never happen.
+            // If it happens we have no way to recover, so we just panic.
+            update_rx
+                .recv()
+                .await
+                .expect("state update channel is closed");
+
+            dispatch_updates(state.clone()).await;
         }
     });
+
+    // Binds the axum's server to the configured address and port. This is a blocking call and will
+    // not return until the server is shutdown.
+    axum::Server::try_bind(&rpc_addr.parse()?)?
+        .serve(app.into_make_service())
+        .with_graceful_shutdown(async {
+            signal::ctrl_c()
+                .await
+                .expect("Ctrl-c signal handler failed.");
+        })
+        .await?;
 
     Ok(())
 }

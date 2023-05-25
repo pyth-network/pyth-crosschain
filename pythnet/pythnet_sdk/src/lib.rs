@@ -1,4 +1,5 @@
 pub mod accumulators;
+pub mod error;
 pub mod hashers;
 pub mod wire;
 pub mod wormhole;
