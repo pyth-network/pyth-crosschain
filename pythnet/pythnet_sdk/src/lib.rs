@@ -1,10 +1,9 @@
 pub mod accumulators;
 pub mod hashers;
-pub mod payload;
+pub mod wire;
 pub mod wormhole;
 
 pub(crate) type Pubkey = [u8; 32];
-pub(crate) type PriceId = Pubkey;
 
 /// Official Message Buffer Program Id
 /// pubkey!("7Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM");
