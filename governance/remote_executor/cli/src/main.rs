@@ -137,7 +137,6 @@ fn main() -> Result<()> {
                 &vec![&payer],
             )?;
 
-            println!("{}", posted_vaa_key);
             // Now execute
             process_transaction(
                 &rpc_client,
