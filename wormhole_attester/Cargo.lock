@@ -5710,7 +5710,7 @@ dependencies = [
 [[package]]
 name = "wormhole-solana"
 version = "0.1.0"
-source = "git+https://github.com/guibescos/wormhole-solana#f14b3b54c1e37e1aaf8c2ac2a5e236832ffdb3c2"
+source = "git+https://github.com/guibescos/wormhole-solana?rev=f14b3b54c1e37e1aaf8c2ac2a5e236832ffdb3c2#f14b3b54c1e37e1aaf8c2ac2a5e236832ffdb3c2"
 dependencies = [
  "borsh",
  "bstr 0.2.17",
