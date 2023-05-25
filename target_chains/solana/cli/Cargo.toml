@@ -12,5 +12,5 @@ solana-client = "1.10.31"
 anchor-client = "0.26.0"
 clap = {version ="3.2.22", features = ["derive"]}
 pyth-solana-receiver = {path = "../programs/solana-receiver"}
-wormhole-core = { git = "https://github.com/guibescos/wormhole-solana"}
-wormhole-solana = { git = "https://github.com/guibescos/wormhole-solana"}
+wormhole-core = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
+wormhole-solana = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
