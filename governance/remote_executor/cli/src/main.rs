@@ -2,8 +2,9 @@
 
 use {
     serde_wormhole::RawMessage,
-    wormhole_sdk::{
-        vaa::digest,
+    wormhole_sdk::vaa::{
+        Body,
+        Header,
         Vaa,
     },
 };
@@ -94,8 +95,9 @@ fn main() -> Result<()> {
             let signature_set_keypair = Keypair::new();
 
             let vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa_bytes)?;
+            let (header, body): (Header, Body<&RawMessage>) = vaa.into();
 
-            let posted_vaa_key = PostedVAA::key(&wormhole, digest(&vaa_bytes).unwrap().hash);
+            let posted_vaa_key = PostedVAA::key(&wormhole, body.digest().unwrap().hash);
 
             // First verify VAA
             let verify_txs = verify_signatures_txs(
@@ -113,15 +115,15 @@ fn main() -> Result<()> {
 
             // Post VAA
             let post_vaa_data = PostVAAData {
-                version:            vaa.version,
-                guardian_set_index: vaa.guardian_set_index,
-                timestamp:          vaa.timestamp,
-                nonce:              vaa.nonce,
-                emitter_chain:      vaa.emitter_chain.into(),
-                emitter_address:    vaa.emitter_address.0,
-                sequence:           vaa.sequence,
-                consistency_level:  vaa.consistency_level,
-                payload:            vaa.payload.to_vec(),
+                version:            header.version,
+                guardian_set_index: header.guardian_set_index,
+                timestamp:          body.timestamp,
+                nonce:              body.nonce,
+                emitter_chain:      body.emitter_chain.into(),
+                emitter_address:    body.emitter_address.0,
+                sequence:           body.sequence,
+                consistency_level:  body.consistency_level,
+                payload:            body.payload.to_vec(),
             };
 
             process_transaction(
@@ -135,6 +137,7 @@ fn main() -> Result<()> {
                 &vec![&payer],
             )?;
 
+            println!("{}", posted_vaa_key);
             // Now execute
             process_transaction(
                 &rpc_client,
