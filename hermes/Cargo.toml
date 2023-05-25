@@ -69,6 +69,8 @@ pyth-oracle = { git = "https://github.com/pyth-network/pyth-client", rev = "7d59
 
 strum = { version = "0.24", features = ["derive"] }
 ethabi = { version = "18.0.0", features = ["serde"] }
+sha3 = "0.10.4"
+humantime = "2.1.0"
 
 [patch.crates-io]
 serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }

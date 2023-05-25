@@ -2010,6 +2010,7 @@ dependencies = [
  "ethabi",
  "futures",
  "hex",
+ "humantime",
  "lazy_static",
  "libc",
  "libp2p",
@@ -2030,6 +2031,7 @@ dependencies = [
  "serde_qs",
  "serde_wormhole",
  "sha256",
+ "sha3 0.10.8",
  "solana-account-decoder",
  "solana-client",
  "solana-sdk",
@@ -4216,6 +4218,7 @@ dependencies = [
  "bincode",
  "borsh",
  "bytemuck",
+ "byteorder",
  "fast-math",
  "hex",
  "rustc_version 0.4.0",
@@ -4223,6 +4226,7 @@ dependencies = [
  "serde_wormhole",
  "sha3 0.10.8",
  "slow_primes",
+ "thiserror",
  "wormhole-sdk",
 ]
 

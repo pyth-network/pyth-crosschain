@@ -1,13 +1,11 @@
 use {
     self::{
-        proof::wormhole_merkle::{
-            construct_update_data,
-            WormholeMerkleProof,
-        },
+        proof::wormhole_merkle::construct_update_data,
         storage::StorageInstance,
         types::{
             AccumulatorMessages,
             MessageType,
+            PriceFeedUpdate,
             PriceFeedsWithUpdateData,
             RequestTime,
             Slot,
@@ -22,11 +20,9 @@ use {
         types::{
             MessageState,
             ProofSet,
+            UnixTimestamp,
         },
-        wormhole::{
-            parse_and_verify_vaa,
-            WormholePayload,
-        },
+        wormhole::parse_and_verify_vaa,
     },
     anyhow::{
         anyhow,
@@ -36,12 +32,24 @@ use {
     moka::future::Cache,
     pyth_oracle::Message,
     pyth_sdk::PriceIdentifier,
+    pythnet_sdk::payload::v1::{
+        WormholeMerkleRoot,
+        WormholeMessage,
+        WormholePayload,
+    },
     std::{
         collections::HashSet,
         sync::Arc,
-        time::Duration,
+        time::{
+            Duration,
+            SystemTime,
+            UNIX_EPOCH,
+        },
     },
-    tokio::sync::RwLock,
+    tokio::sync::{
+        mpsc::Sender,
+        RwLock,
+    },
     wormhole_sdk::{
         Address,
         Chain,
@@ -58,30 +66,27 @@ pub mod wormhole;
 #[builder(derive(Debug), pattern = "immutable")]
 pub struct AccumulatorState {
     pub accumulator_messages:  AccumulatorMessages,
-    pub wormhole_merkle_proof: WormholeMerkleProof,
+    pub wormhole_merkle_proof: (WormholeMerkleRoot, Vec<u8>),
 }
 
-#[derive(Clone)]
 pub struct Store {
     pub storage:               StorageInstance,
     pub pending_accumulations: Cache<Slot, AccumulatorStateBuilder>,
-    pub guardian_set:          Arc<RwLock<Option<Vec<GuardianAddress>>>>,
+    pub guardian_set:          RwLock<Option<Vec<GuardianAddress>>>,
+    pub update_tx:             Sender<()>,
 }
 
 impl Store {
-    pub fn new_with_local_cache(max_size_per_key: usize) -> Self {
-        // TODO: Should we return an Arc<Self>? Although we are currently safe to be cloned without
-        // an Arc but it is easily to miss and cause a bug.
-        Self {
-            storage:               storage::local_storage::LocalStorage::new_instance(
-                max_size_per_key,
-            ),
+    pub fn new_with_local_cache(update_tx: Sender<()>, max_size_per_key: usize) -> Arc<Self> {
+        Arc::new(Self {
+            storage: storage::local_storage::LocalStorage::new_instance(max_size_per_key),
             pending_accumulations: Cache::builder()
                 .max_capacity(10_000)
                 .time_to_live(Duration::from_secs(60 * 5))
                 .build(), // FIXME: Make this configurable
-            guardian_set:          Arc::new(RwLock::new(None)),
-        }
+            guardian_set: RwLock::new(None),
+            update_tx,
+        })
     }
 
     /// Stores the update data in the store
@@ -103,30 +108,19 @@ impl Store {
                     return Ok(()); // Ignore VAA from other emitters
                 }
 
-                let payload = WormholePayload::try_from_bytes(body.payload, &vaa_bytes)?;
-
-                match payload {
+                match WormholeMessage::try_from_bytes(body.payload)?.payload {
                     WormholePayload::Merkle(proof) => {
-                        log::info!(
-                            "Storing merkle proof for slot {:?}: {:?}",
-                            proof.slot,
-                            proof
-                        );
-                        store_wormhole_merkle_verified_message(self, proof.clone()).await?;
+                        log::info!("Storing merkle proof for slot {:?}", proof.slot,);
+                        store_wormhole_merkle_verified_message(self, proof.clone(), vaa_bytes)
+                            .await?;
                         proof.slot
                     }
                 }
             }
             Update::AccumulatorMessages(accumulator_messages) => {
-                // FIXME: Move this constant to a better place
-
                 let slot = accumulator_messages.slot;
 
-                log::info!(
-                    "Storing accumulator messages for slot {:?}: {:?}",
-                    slot,
-                    accumulator_messages
-                );
+                log::info!("Storing accumulator messages for slot {:?}.", slot,);
 
                 let pending_acc = self
                     .pending_accumulations
@@ -154,9 +148,10 @@ impl Store {
             Err(_) => return Ok(()),
         };
 
-        log::info!("State: {:?}", state);
-
         let wormhole_merkle_message_states_proofs = construct_message_states_proofs(state.clone())?;
+
+        let current_time: UnixTimestamp =
+            SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as _;
 
         let message_states = state
             .accumulator_messages
@@ -176,15 +171,18 @@ impl Store {
                             .clone(),
                     },
                     state.accumulator_messages.slot,
+                    current_time,
                 ))
             })
             .collect::<Result<Vec<_>>>()?;
 
-        log::info!("Message states: {:?}", message_states);
+        log::info!("Message states len: {:?}", message_states.len());
 
         self.storage.store_message_states(message_states)?;
 
         self.pending_accumulations.invalidate(&slot).await;
+
+        self.update_tx.send(()).await?;
 
         Ok(())
     }
@@ -207,11 +205,20 @@ impl Store {
         let price_feeds = messages
             .iter()
             .map(|message_state| match message_state.message {
-                Message::PriceFeedMessage(price_feed) => Ok(price_feed),
+                Message::PriceFeedMessage(price_feed) => Ok(PriceFeedUpdate {
+                    price_feed,
+                    received_at: message_state.received_at,
+                    slot: message_state.slot,
+                    wormhole_merkle_update_data: construct_update_data(vec![message_state])?
+                        .into_iter()
+                        .next()
+                        .ok_or(anyhow!("Missing update data for message"))?,
+                }),
                 _ => Err(anyhow!("Invalid message state type")),
             })
             .collect::<Result<Vec<_>>>()?;
-        let update_data = construct_update_data(messages)?;
+
+        let update_data = construct_update_data(messages.iter().collect())?;
 
         Ok(PriceFeedsWithUpdateData {
             price_feeds,

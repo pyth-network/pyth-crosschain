@@ -17,6 +17,11 @@ use {
     },
     ethabi::Function,
     reqwest::Client,
+    std::{
+        sync::Arc,
+        time::Duration,
+    },
+    tokio::time::Instant,
     wormhole_sdk::GuardianAddress,
 };
 
@@ -49,17 +54,25 @@ async fn query(
 
     let res = res
         .get("result")
-        .ok_or(anyhow!("Invalid RPC Response, 'result' not found"))?
+        .ok_or(anyhow!(
+            "Invalid RPC Response, 'result' not found. {:?}",
+            res
+        ))?
         .as_str()
-        .ok_or(anyhow!("Invalid result"))?;
+        .ok_or(anyhow!("Invalid result. {:?}", res))?;
 
-    let res = hex::decode(&res[2..]).unwrap();
+    let res = hex::decode(&res[2..])?;
     let res = method.decode_output(&res)?;
 
     Ok(res)
 }
 
-async fn run(store: Store, rpc_endpoint: String, wormhole_contract: String) -> Result<()> {
+async fn run(
+    store: Arc<Store>,
+    rpc_endpoint: String,
+    wormhole_contract: String,
+    polling_interval: Duration,
+) -> Result<!> {
     loop {
         let get_current_index_method = serde_json::from_str::<Function>(
             r#"{"inputs":[],"name":"getCurrentGuardianSetIndex","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],
@@ -126,32 +139,49 @@ async fn run(store: Store, rpc_endpoint: String, wormhole_contract: String) -> R
 
         log::info!("Guardian set: {:?}", guardian_set);
 
-        store
-            .update_guardian_set(
-                guardian_set
-                    .into_iter()
-                    .map(|address| GuardianAddress(address.0))
-                    .collect(),
-            )
-            .await;
+        let store = store.clone();
+        tokio::spawn(async move {
+            store
+                .update_guardian_set(
+                    guardian_set
+                        .into_iter()
+                        .map(|address| GuardianAddress(address.0))
+                        .collect(),
+                )
+                .await;
+        });
 
-        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+        tokio::time::sleep(polling_interval).await;
     }
 }
 
-pub async fn spawn(store: Store, rpc_endpoint: String, wormhole_contract: String) {
+pub async fn spawn(
+    store: Arc<Store>,
+    rpc_endpoint: String,
+    wormhole_contract: String,
+    polling_interval: Duration,
+) -> Result<()> {
     tokio::spawn(async move {
         loop {
-            if let Err(e) = run(
+            let current_time = Instant::now();
+
+            if let Err(ref e) = run(
                 store.clone(),
                 rpc_endpoint.clone(),
                 wormhole_contract.clone(),
+                polling_interval,
             )
             .await
             {
-                log::error!("Error in ethereum network: {}", e);
-                // TODO: Add a backoff here.
+                log::error!("Error in Ethereum network listener: {:?}", e);
+            }
+
+            if current_time.elapsed() < Duration::from_secs(30) {
+                log::error!("Ethereum network listener is restarting too quickly. Sleeping for 1s");
+                tokio::time::sleep(Duration::from_secs(1)).await;
             }
         }
     });
+
+    Ok(())
 }

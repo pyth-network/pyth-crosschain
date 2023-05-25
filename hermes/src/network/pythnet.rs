@@ -10,7 +10,10 @@ use {
         },
         Store,
     },
-    anyhow::Result,
+    anyhow::{
+        anyhow,
+        Result,
+    },
     borsh::BorshDeserialize,
     futures::stream::StreamExt,
     solana_account_decoder::UiAccountEncoding,
@@ -32,9 +35,14 @@ use {
         pubkey::Pubkey,
         system_program,
     },
+    std::{
+        sync::Arc,
+        time::Duration,
+    },
+    tokio::time::Instant,
 };
 
-pub async fn spawn(store: Store, pythnet_ws_endpoint: String) -> Result<()> {
+pub async fn run(store: Arc<Store>, pythnet_ws_endpoint: String) -> Result<!> {
     let client = PubsubClient::new(pythnet_ws_endpoint.as_ref()).await?;
 
     let config = RpcProgramAccountsConfig {
@@ -56,40 +64,73 @@ pub async fn spawn(store: Store, pythnet_ws_endpoint: String) -> Result<()> {
         .await?;
 
     loop {
-        let update = notif.next().await;
-        log::debug!("Received Pythnet update: {:?}", update);
-
-        if let Some(update) = update {
-            let account: Account = update.value.account.decode().unwrap();
-            log::debug!("Received Accumulator update: {:?}", account);
-
-            let accumulator_messages = AccumulatorMessages::try_from_slice(&account.data);
-            match accumulator_messages {
-                Ok(accumulator_messages) => {
-                    let (candidate, _) = Pubkey::find_program_address(
-                        &[
-                            b"AccumulatorState",
-                            &accumulator_messages.ring_index().to_be_bytes(),
-                        ],
-                        &system_program::id(),
-                    );
-
-                    if candidate.to_string() == update.value.pubkey {
-                        store
-                            .store_update(Update::AccumulatorMessages(accumulator_messages))
-                            .await?;
-                    } else {
-                        log::error!(
-                            "Failed to verify the messages public key: {:?} != {:?}",
-                            candidate,
-                            update.value.pubkey
-                        );
+        match notif.next().await {
+            Some(update) => {
+                let account: Account = match update.value.account.decode() {
+                    Some(account) => account,
+                    None => {
+                        log::error!("Failed to decode account from update: {:?}", update);
+                        continue;
                     }
-                }
-                Err(err) => {
-                    log::error!("Failed to parse AccumulatorMessages: {:?}", err);
-                }
-            };
+                };
+
+                let accumulator_messages = AccumulatorMessages::try_from_slice(&account.data);
+                match accumulator_messages {
+                    Ok(accumulator_messages) => {
+                        let (candidate, _) = Pubkey::find_program_address(
+                            &[
+                                b"AccumulatorState",
+                                &accumulator_messages.ring_index().to_be_bytes(),
+                            ],
+                            &system_program::id(),
+                        );
+
+                        if candidate.to_string() == update.value.pubkey {
+                            let store = store.clone();
+                            tokio::spawn(async move {
+                                if let Err(err) = store
+                                    .store_update(Update::AccumulatorMessages(accumulator_messages))
+                                    .await
+                                {
+                                    log::error!("Failed to store accumulator messages: {:?}", err);
+                                }
+                            });
+                        } else {
+                            log::error!(
+                                "Failed to verify the messages public key: {:?} != {:?}",
+                                candidate,
+                                update.value.pubkey
+                            );
+                        }
+                    }
+                    Err(err) => {
+                        log::error!("Failed to parse AccumulatorMessages: {:?}", err);
+                    }
+                };
+            }
+            None => {
+                return Err(anyhow!("Pythnet network listener terminated"));
+            }
         }
     }
+}
+
+
+pub async fn spawn(store: Arc<Store>, pythnet_ws_endpoint: String) -> Result<()> {
+    tokio::spawn(async move {
+        loop {
+            let current_time = Instant::now();
+
+            if let Err(ref e) = run(store.clone(), pythnet_ws_endpoint.clone()).await {
+                log::error!("Error in Pythnet network listener: {:?}", e);
+            }
+
+            if current_time.elapsed() < Duration::from_secs(30) {
+                log::error!("Pythnet network listener is restarting too quickly. Sleeping for 1s");
+                tokio::time::sleep(Duration::from_secs(1)).await;
+            }
+        }
+    });
+
+    Ok(())
 }

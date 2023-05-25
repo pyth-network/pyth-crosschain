@@ -7,7 +7,10 @@ use {
         types::RequestTime,
         Store,
     },
-    anyhow::Result,
+    anyhow::{
+        anyhow,
+        Result,
+    },
     axum::{
         extract::{
             ws::{
@@ -23,6 +26,7 @@ use {
     futures::{
         future::join_all,
         stream::{
+            iter,
             SplitSink,
             SplitStream,
         },
@@ -37,9 +41,12 @@ use {
     std::{
         collections::HashMap,
         pin::Pin,
-        sync::atomic::{
-            AtomicUsize,
-            Ordering,
+        sync::{
+            atomic::{
+                AtomicUsize,
+                Ordering,
+            },
+            Arc,
         },
         time::Duration,
     },
@@ -63,7 +70,7 @@ async fn websocket_handler(stream: WebSocket, state: super::State) {
 
     // TODO: Use a configured value for the buffer size or make it const static
     // TODO: Use redis stream to source the updates instead of a channel
-    let (tx, rx) = mpsc::channel::<Vec<PriceIdentifier>>(1000);
+    let (tx, rx) = mpsc::channel::<()>(1000);
 
     ws_state.subscribers.insert(id, tx);
 
@@ -81,8 +88,8 @@ pub type SubscriberId = usize;
 pub struct Subscriber {
     id:                      SubscriberId,
     closed:                  bool,
-    store:                   Store,
-    update_rx:               mpsc::Receiver<Vec<PriceIdentifier>>,
+    store:                   Arc<Store>,
+    update_rx:               mpsc::Receiver<()>,
     receiver:                SplitStream<WebSocket>,
     sender:                  SplitSink<WebSocket, Message>,
     price_feeds_with_config: HashMap<PriceIdentifier, PriceFeedClientConfig>,
@@ -93,8 +100,8 @@ pub struct Subscriber {
 impl Subscriber {
     pub fn new(
         id: SubscriberId,
-        store: Store,
-        update_rx: mpsc::Receiver<Vec<PriceIdentifier>>,
+        store: Arc<Store>,
+        update_rx: mpsc::Receiver<()>,
         receiver: SplitStream<WebSocket>,
         sender: SplitSink<WebSocket, Message>,
     ) -> Self {
@@ -114,7 +121,7 @@ impl Subscriber {
     pub async fn run(&mut self) {
         while !self.closed {
             if let Err(e) = self.handle_next().await {
-                log::error!("Subscriber {}: Error handling next message: {}", self.id, e);
+                log::warn!("Subscriber {}: Error handling next message: {}", self.id, e);
                 break;
             }
         }
@@ -122,11 +129,11 @@ impl Subscriber {
 
     async fn handle_next(&mut self) -> Result<()> {
         tokio::select! {
-            maybe_update_feed_ids = self.update_rx.recv() => {
-                let update_feed_ids = maybe_update_feed_ids.ok_or_else(|| {
-                    anyhow::anyhow!("Update channel closed.")
-                })?;
-                self.handle_price_feeds_update(update_feed_ids).await?;
+            maybe_update_feeds = self.update_rx.recv() => {
+                if maybe_update_feeds.is_none() {
+                    return Err(anyhow!("Update channel closed. This should never happen. Closing connection."));
+                };
+                self.handle_price_feeds_update().await?;
             },
             maybe_message_or_err = self.receiver.next() => {
                 match maybe_message_or_err {
@@ -140,7 +147,7 @@ impl Subscriber {
             },
             _  = &mut self.ping_interval_future => {
                 if !self.responded_to_ping {
-                    log::debug!("Subscriber {} did not respond to ping, closing connection.", self.id);
+                    log::debug!("Subscriber {} did not respond to ping. Closing connection.", self.id);
                     self.closed = true;
                     return Ok(());
                 }
@@ -153,37 +160,32 @@ impl Subscriber {
         Ok(())
     }
 
-    async fn handle_price_feeds_update(
-        &mut self,
-        price_feed_ids: Vec<PriceIdentifier>,
-    ) -> Result<()> {
-        for price_feed_id in price_feed_ids {
-            if let Some(config) = self.price_feeds_with_config.get(&price_feed_id) {
+    async fn handle_price_feeds_update(&mut self) -> Result<()> {
+        let messages = self
+            .price_feeds_with_config
+            .iter()
+            .map(|(price_feed_id, config)| {
                 let price_feeds_with_update_data = self
                     .store
-                    .get_price_feeds_with_update_data(vec![price_feed_id], RequestTime::Latest)?;
-                let price_feed = *price_feeds_with_update_data
+                    .get_price_feeds_with_update_data(vec![*price_feed_id], RequestTime::Latest)?;
+                let price_feed = price_feeds_with_update_data
                     .price_feeds
-                    .iter()
-                    .find(|price_feed| price_feed.id == price_feed_id.to_bytes())
+                    .into_iter()
+                    .next()
                     .ok_or_else(|| {
                         anyhow::anyhow!("Price feed {} not found.", price_feed_id.to_string())
                     })?;
-                let price_feed = RpcPriceFeed::from_price_feed_message(
-                    price_feed,
-                    config.verbose,
-                    config.binary,
-                );
-                // Feed does not flush the message and will allow us
-                // to send multiple messages in a single flush.
-                self.sender
-                    .feed(Message::Text(serde_json::to_string(
-                        &ServerMessage::PriceUpdate { price_feed },
-                    )?))
-                    .await?;
-            }
-        }
-        self.sender.flush().await?;
+                let price_feed =
+                    RpcPriceFeed::from_price_feed_update(price_feed, config.verbose, config.binary);
+
+                Ok(Message::Text(serde_json::to_string(
+                    &ServerMessage::PriceUpdate { price_feed },
+                )?))
+            })
+            .collect::<Result<Vec<Message>>>()?;
+        self.sender
+            .send_all(&mut iter(messages.into_iter().map(Ok)))
+            .await?;
         Ok(())
     }
 
@@ -253,16 +255,15 @@ impl Subscriber {
     }
 }
 
-pub async fn dispatch_updates(update_feed_ids: Vec<PriceIdentifier>, state: super::State) {
+pub async fn dispatch_updates(state: super::State) {
     let ws_state = state.ws.clone();
-    let update_feed_ids_ref = &update_feed_ids;
 
     let closed_subscribers: Vec<Option<SubscriberId>> = join_all(
         ws_state
             .subscribers
             .iter_mut()
             .map(|subscriber| async move {
-                match subscriber.send(update_feed_ids_ref.clone()).await {
+                match subscriber.send(()).await {
                     Ok(_) => None,
                     Err(e) => {
                         log::debug!("Error sending update to subscriber: {}", e);
@@ -289,7 +290,7 @@ pub struct PriceFeedClientConfig {
 
 pub struct WsState {
     pub subscriber_counter: AtomicUsize,
-    pub subscribers:        DashMap<SubscriberId, mpsc::Sender<Vec<PriceIdentifier>>>,
+    pub subscribers:        DashMap<SubscriberId, mpsc::Sender<()>>,
 }
 
 impl WsState {

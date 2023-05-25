@@ -1,63 +1,79 @@
 use std::{
     env,
     path::PathBuf,
-    process::Command,
+    process::{
+        Command,
+        Stdio,
+    },
 };
 
 fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let out_var = env::var("OUT_DIR").unwrap();
 
-    // Clone the Wormhole repository, which we need to access the protobuf definitions for Wormhole
-    // P2P message types.
+    // Download the Wormhole repository at a certain tag, which we need to access the protobuf definitions
+    // for Wormhole P2P message types.
     //
-    // TODO: This is ugly and costly, and requires git. Instead of this we should have our own tool
+    // TODO: This is ugly. Instead of this we should have our own tool
     // build process that can generate protobuf definitions for this and other user cases. For now
     // this is easy and works and matches upstream Wormhole's `Makefile`.
-    let _ = Command::new("git")
+
+    const WORMHOLE_VERSION: &str = "2.18.1";
+
+    let wh_curl = Command::new("curl")
         .args([
-            "clone",
-            "https://github.com/wormhole-foundation/wormhole",
-            "wormhole",
+            "-s",
+            "-L",
+            format!("https://github.com/wormhole-foundation/wormhole/archive/refs/tags/v{WORMHOLE_VERSION}.tar.gz").as_str(),
         ])
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("failed to download wormhole archive");
+
+    let _ = Command::new("tar")
+        .args(["xvz"])
+        .stdin(Stdio::from(wh_curl.stdout.unwrap()))
         .output()
-        .expect("failed to execute process");
+        .expect("failed to extract wormhole archive");
 
     // Move the tools directory to the root of the repo because that's where the build script
     // expects it to be, paths get hardcoded into the binaries.
     let _ = Command::new("mv")
-        .args(["wormhole/tools", "tools"])
+        .args([
+            format!("wormhole-{WORMHOLE_VERSION}/tools").as_str(),
+            "tools",
+        ])
         .output()
-        .expect("failed to execute process");
+        .expect("failed to move wormhole tools directory");
 
     // Move the protobuf definitions to the src/network directory, we don't have to do this
     // but it is more intuitive when debugging.
     let _ = Command::new("mv")
         .args([
-            "wormhole/proto/gossip/v1/gossip.proto",
+            format!("wormhole-{WORMHOLE_VERSION}/proto/gossip/v1/gossip.proto").as_str(),
             "src/network/p2p.proto",
         ])
         .output()
-        .expect("failed to execute process");
+        .expect("failed to move wormhole protobuf definitions");
 
     // Build the protobuf compiler.
     let _ = Command::new("./build.sh")
         .current_dir("tools")
         .output()
-        .expect("failed to execute process");
+        .expect("failed to run protobuf compiler build script");
 
     // Make the protobuf compiler executable.
     let _ = Command::new("chmod")
         .args(["+x", "tools/bin/*"])
         .output()
-        .expect("failed to execute process");
+        .expect("failed to make protofuf compiler executable");
 
     // Generate the protobuf definitions. See buf.gen.yaml to see how we rename the module for our
     // particular use case.
     let _ = Command::new("./tools/bin/buf")
         .args(["generate", "--path", "src"])
         .output()
-        .expect("failed to execute process");
+        .expect("failed to generate protobuf definitions");
 
     // Build the Go library.
     let mut cmd = Command::new("go");

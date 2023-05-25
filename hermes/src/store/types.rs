@@ -60,7 +60,6 @@ pub struct WormholeMerkleState {
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct MessageIdentifier {
-    // -> this is the real message id
     pub price_id: PriceIdentifier,
     pub type_:    MessageType,
 }
@@ -84,6 +83,7 @@ pub struct MessageState {
     pub message:      Message,
     pub raw_message:  RawMessage,
     pub proof_set:    ProofSet,
+    pub received_at:  UnixTimestamp,
 }
 
 impl MessageState {
@@ -98,7 +98,13 @@ impl MessageState {
         self.id.clone()
     }
 
-    pub fn new(message: Message, raw_message: RawMessage, proof_set: ProofSet, slot: Slot) -> Self {
+    pub fn new(
+        message: Message,
+        raw_message: RawMessage,
+        proof_set: ProofSet,
+        slot: Slot,
+        received_at: UnixTimestamp,
+    ) -> Self {
         Self {
             publish_time: message.publish_time(),
             slot,
@@ -106,6 +112,7 @@ impl MessageState {
             message,
             raw_message,
             proof_set,
+            received_at,
         }
     }
 }
@@ -138,7 +145,17 @@ pub enum Update {
     AccumulatorMessages(AccumulatorMessages),
 }
 
+pub struct PriceFeedUpdate {
+    pub price_feed:                  PriceFeedMessage,
+    pub slot:                        Slot,
+    pub received_at:                 UnixTimestamp,
+    /// Wormhole merkle update data for this single price feed update.
+    /// This field is available for backward compatibility and will be
+    /// removed in the future.
+    pub wormhole_merkle_update_data: Vec<u8>,
+}
+
 pub struct PriceFeedsWithUpdateData {
-    pub price_feeds:                 Vec<PriceFeedMessage>,
+    pub price_feeds:                 Vec<PriceFeedUpdate>,
     pub wormhole_merkle_update_data: Vec<Vec<u8>>,
 }

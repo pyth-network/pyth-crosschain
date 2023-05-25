@@ -7,7 +7,6 @@ use {
     },
     anyhow::Result,
     pyth_sdk::PriceIdentifier,
-    std::sync::Arc,
 };
 
 pub mod local_storage;
@@ -30,4 +29,4 @@ pub trait Storage: Send + Sync {
     fn keys(&self) -> Vec<MessageIdentifier>;
 }
 
-pub type StorageInstance = Arc<Box<dyn Storage>>;
+pub type StorageInstance = Box<dyn Storage>;

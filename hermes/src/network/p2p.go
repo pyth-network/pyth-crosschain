@@ -28,7 +28,9 @@ import "C"
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -44,6 +46,7 @@ import (
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	libp2pquic "github.com/libp2p/go-libp2p/p2p/transport/quic"
+	libp2pquicreuse "github.com/libp2p/go-libp2p/p2p/transport/quicreuse"
 )
 
 //export RegisterObservationCallback
@@ -52,11 +55,24 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 	bootstrapAddrs := strings.Split(C.GoString(bootstrap_addrs), ",")
 	listenAddrs := strings.Split(C.GoString(listen_addrs), ",")
 
-	go func() {
+	var startTime int64
+	var recoverRerun func()
+
+	routine := func() {
+		defer recoverRerun()
+
+		// Record the current time
+		startTime = time.Now().UnixNano()
+
 		ctx := context.Background()
 
 		// Setup base network configuration.
 		priv, _, err := crypto.GenerateKeyPair(crypto.Ed25519, -1)
+		if err != nil {
+			err := fmt.Errorf("Failed to generate key pair: %w", err)
+			fmt.Println(err)
+			return
+		}
 
 		// Setup libp2p Connection Manager.
 		mgr, err := connmgr.NewConnManager(
@@ -76,6 +92,28 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 			libp2p.Identity(priv),
 			libp2p.ListenAddrStrings(listenAddrs...),
 			libp2p.Security(libp2ptls.ID, libp2ptls.New),
+			// Disable Reuse because upon panic, the Close() call on the p2p reactor does not properly clean up the
+			// open ports (they are kept around for re-use, this seems to be a libp2p bug in the reuse `gc()` call
+			// which can be found here:
+			//
+			// https://github.com/libp2p/go-libp2p/blob/master/p2p/transport/quicreuse/reuse.go#L97
+			//
+			// By disabling this we get correct Close() behaviour.
+            //
+            // IMPORTANT: Normally re-use allows libp2p to dial on the same port that is used to listen for traffic
+            // and by disabling this dialing uses a random high port (32768-60999) which causes the nodes that we
+            // connect to by dialing (instead of them connecting to us) will respond on the high range port instead
+            // of the specified Dial port. This requires firewalls to be configured to allow (UDP 32768-60999) which
+            // should be specified in our documentation.
+            //
+            // The best way to securely enable this range is via the conntrack module, which can statefully allow
+            // UDP packets only when a sent UDP packet is present in the conntrack table. This rule looks roughly
+            // like this:
+            //
+            // iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+            //
+            // Which is a standard rule in many firewall configurations (RELATED is the key flag).
+			libp2p.QUICReuse(libp2pquicreuse.NewConnManager, libp2pquicreuse.DisableReuseport()),
 			libp2p.Transport(libp2pquic.NewTransport),
 			libp2p.ConnectionManager(mgr),
 			libp2p.Routing(func(h host.Host) (routing.PeerRouting, error) {
@@ -107,6 +145,8 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 			return
 		}
 
+		defer h.Close()
+
 		topic := fmt.Sprintf("%s/%s", networkID, "broadcast")
 		ps, err := pubsub.NewGossipSub(ctx, h)
 		if err != nil {
@@ -122,12 +162,16 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 			return
 		}
 
+		defer th.Close()
+
 		sub, err := th.Subscribe()
 		if err != nil {
 			err := fmt.Errorf("Failed to subscribe topic: %w", err)
 			fmt.Println(err)
 			return
 		}
+
+		defer sub.Cancel()
 
 		for {
 			for {
@@ -160,7 +204,25 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 				}
 			}
 		}
-	}()
+	}
+
+	recoverRerun = func() {
+		// Print the error if any and recall routine
+		if err := recover(); err != nil {
+			fmt.Fprintf(os.Stderr, "p2p.go error: %v\n", err)
+		}
+
+		// Sleep for 1 second if the time elapsed is less than 30 seconds
+		// to avoid spamming the network with requests.
+		elapsed := time.Duration(time.Now().UnixNano() - startTime)
+		if elapsed < 30*time.Second {
+			time.Sleep(1 * time.Second)
+		}
+
+		go routine()
+	}
+
+	go routine()
 }
 
 func main() {
