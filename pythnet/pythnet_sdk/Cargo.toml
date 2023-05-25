@@ -14,12 +14,14 @@ name = "pythnet_sdk"
 bincode = "1.3.1"
 borsh = "0.9.1"
 bytemuck = { version = "1.11.0", features = ["derive"] }
+byteorder = "1.4.3"
 fast-math = "0.1"
 hex = { version = "0.4.3", features = ["serde"] }
 serde = { version = "1.0.144", features = ["derive"] }
 serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"}
 sha3 = "0.10.4"
 slow_primes = "0.1.14"
+thiserror = "1.0.40"
 wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
 
 [dev-dependencies]

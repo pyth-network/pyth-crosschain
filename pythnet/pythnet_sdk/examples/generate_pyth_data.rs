@@ -4,9 +4,9 @@
 // #![feature(proc_macro_hygiene)]
 
 use {
+    pythnet_sdk::pythnet::PYTH_PID,
     serde_json::json,
     solana_client::rpc_client::RpcClient,
-    solana_pyth::PYTH_PID,
     solana_sdk::pubkey::Pubkey,
     std::{
         io::Write,
