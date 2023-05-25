@@ -95,7 +95,7 @@ fn main() -> Result<()> {
 
             let vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa_bytes)?;
 
-            let posted_vaa_key = PostedVAA::key(&wormhole, vaa.digest().unwrap().hash);
+            let posted_vaa_key = PostedVAA::key(&wormhole, digest(&vaa_bytes).unwrap().hash);
 
             // First verify VAA
             let verify_txs = verify_signatures_txs(
