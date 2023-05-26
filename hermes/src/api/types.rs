@@ -1,15 +1,13 @@
 use {
     crate::{
         impl_deserialize_for_hex_string_wrapper,
-        store::types::{
-            PriceFeedMessage,
-            UnixTimestamp,
-        },
+        store::types::UnixTimestamp,
     },
     derive_more::{
         Deref,
         DerefMut,
     },
+    pyth_oracle::PriceFeedMessage,
     pyth_sdk::{
         Price,
         PriceIdentifier,

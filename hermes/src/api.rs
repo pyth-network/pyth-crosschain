@@ -64,7 +64,11 @@ pub async fn spawn(rpc_addr: String, store: Store) -> Result<()> {
     // FIXME use a channel to get updates from the store
     tokio::spawn(async move {
         loop {
-            dispatch_updates(state.store.get_price_feed_ids(), state.clone()).await;
+            dispatch_updates(
+                state.store.get_price_feed_ids().into_iter().collect(),
+                state.clone(),
+            )
+            .await;
             tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
         }
     });

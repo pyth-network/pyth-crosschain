@@ -20,7 +20,6 @@ use {
             store_wormhole_merkle_verified_message,
         },
         types::{
-            Message,
             MessageState,
             ProofSet,
             WormholePayload,
@@ -32,8 +31,12 @@ use {
     },
     derive_builder::Builder,
     moka::future::Cache,
+    pyth_oracle::Message,
     pyth_sdk::PriceIdentifier,
-    std::time::Duration,
+    std::{
+        collections::HashSet,
+        time::Duration,
+    },
     wormhole_sdk::Vaa,
 };
 
@@ -137,7 +140,7 @@ impl Store {
             .iter()
             .enumerate()
             .map(|(idx, raw_message)| {
-                let message = Message::from_bytes(raw_message)?;
+                let message = Message::try_from_bytes(raw_message)?;
 
                 Ok(MessageState::new(
                     message,
@@ -168,18 +171,15 @@ impl Store {
         request_time: RequestTime,
     ) -> Result<PriceFeedsWithUpdateData> {
         let messages = self.storage.retrieve_message_states(
-            price_ids
-                .iter()
-                .map(|price_id| price_id.to_bytes())
-                .collect(),
-            types::RequestType::Some(vec![MessageType::PriceFeed]),
+            price_ids,
             request_time,
+            Some(&|message_type| *message_type == MessageType::PriceFeedMessage),
         )?;
 
         let price_feeds = messages
             .iter()
             .map(|message_state| match message_state.message {
-                Message::PriceFeed(price_feed) => Ok(price_feed),
+                Message::PriceFeedMessage(price_feed) => Ok(price_feed),
                 _ => Err(anyhow!("Invalid message state type")),
             })
             .collect::<Result<Vec<_>>>()?;
@@ -191,11 +191,7 @@ impl Store {
         })
     }
 
-    pub fn get_price_feed_ids(&self) -> Vec<PriceIdentifier> {
-        self.storage
-            .keys()
-            .iter()
-            .map(|key| PriceIdentifier::new(key.id))
-            .collect()
+    pub fn get_price_feed_ids(&self) -> HashSet<PriceIdentifier> {
+        self.storage.keys().iter().map(|key| key.price_id).collect()
     }
 }

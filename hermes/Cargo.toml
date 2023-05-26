@@ -52,9 +52,12 @@ libp2p                         = { version = "0.42.2", features = [
 ]}
 
 async-trait = "0.1.68"
-solana-client = "=1.15.2"
-solana-sdk = "=1.15.2"
-solana-account-decoder = "=1.15.2"
+
+# We around bound to this version because of pyth-oracle
+solana-client = "=1.13.3"
+solana-sdk = "=1.13.3"
+solana-account-decoder = "=1.13.3"
+
 moka = { version = "0.11.0", features = ["future"] }
 derive_builder = "0.12.0"
 byteorder = "1.4.3"
@@ -62,6 +65,9 @@ serde_qs = { version = "0.12.0", features = ["axum"] }
 
 serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"}
 wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
+pyth-oracle = { git = "https://github.com/pyth-network/pyth-client", rev = "7d593d87e07a1e2486e7ca21597d664ee72be1ec", features = ["library"] }
+
+strum = { version = "0.24", features = ["derive"] }
 
 [patch.crates-io]
 serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }

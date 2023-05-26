@@ -1,10 +1,8 @@
 use {
     super::{
         MessageIdentifier,
-        MessageKey,
         MessageState,
         RequestTime,
-        RequestType,
         Storage,
         StorageInstance,
     },
@@ -14,15 +12,17 @@ use {
         Result,
     },
     dashmap::DashMap,
+    pyth_sdk::PriceIdentifier,
     std::{
         collections::VecDeque,
         sync::Arc,
     },
+    strum::IntoEnumIterator,
 };
 
 #[derive(Clone)]
 pub struct LocalStorage {
-    cache:            Arc<DashMap<MessageKey, VecDeque<MessageState>>>,
+    cache:            Arc<DashMap<MessageIdentifier, VecDeque<MessageState>>>,
     max_size_per_key: usize,
 }
 
@@ -36,7 +36,7 @@ impl LocalStorage {
 
     fn retrieve_message_state(
         &self,
-        key: MessageKey,
+        key: MessageIdentifier,
         request_time: RequestTime,
     ) -> Option<MessageState> {
         match self.cache.get(&key) {
@@ -109,19 +109,22 @@ impl Storage for LocalStorage {
 
     fn retrieve_message_states(
         &self,
-        ids: Vec<MessageIdentifier>,
-        request_type: RequestType,
+        ids: Vec<PriceIdentifier>,
         request_time: RequestTime,
+        filter: Option<&dyn Fn(&MessageType) -> bool>,
     ) -> Result<Vec<MessageState>> {
         // TODO: Should we return an error if any of the ids are not found?
-        let types: Vec<MessageType> = request_type.into();
         ids.into_iter()
             .flat_map(|id| {
                 let request_time = request_time.clone();
-                types.iter().map(move |message_type| {
-                    let key = MessageKey {
-                        id,
-                        type_: message_type.clone(),
+                let message_types: Vec<MessageType> = match filter {
+                    Some(filter) => MessageType::iter().filter(filter).collect(),
+                    None => MessageType::iter().collect(),
+                };
+                message_types.into_iter().map(move |message_type| {
+                    let key = MessageIdentifier {
+                        price_id: id,
+                        type_:    message_type,
                     };
                     self.retrieve_message_state(key, request_time.clone())
                         .ok_or(anyhow!("Message not found"))
@@ -130,7 +133,7 @@ impl Storage for LocalStorage {
             .collect()
     }
 
-    fn keys(&self) -> Vec<MessageKey> {
+    fn keys(&self) -> Vec<MessageIdentifier> {
         self.cache.iter().map(|entry| entry.key().clone()).collect()
     }
 }
