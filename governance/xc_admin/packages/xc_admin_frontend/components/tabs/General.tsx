@@ -324,18 +324,16 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           )
 
           // create add publisher instruction if there are any publishers
-          if (newChanges.priceAccounts[0].publishers.length > 0) {
-            newChanges.priceAccounts[0].publishers.forEach(
-              (publisherKey: string) => {
-                pythProgramClient.methods
-                  .addPublisher(new PublicKey(publisherKey))
-                  .accounts({
-                    fundingAccount,
-                    priceAccount: priceAccountKey,
-                  })
-                  .instruction()
-                  .then((instruction) => instructions.push(instruction))
-              }
+
+          for (let publisherKey of newChanges.priceAccounts[0].publishers) {
+            instructions.push(
+              await pythProgramClient.methods
+                .addPublisher(new PublicKey(publisherKey))
+                .accounts({
+                  fundingAccount,
+                  priceAccount: priceAccountKey,
+                })
+                .instruction()
             )
           }
 
@@ -438,28 +436,31 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
           )
 
           // add instructions to remove publishers
-          publisherKeysToRemove.forEach((publisherKey: string) => {
-            pythProgramClient.methods
-              .delPublisher(new PublicKey(publisherKey))
-              .accounts({
-                fundingAccount,
-                priceAccount: new PublicKey(prev.priceAccounts[0].address),
-              })
-              .instruction()
-              .then((instruction) => instructions.push(instruction))
-          })
+
+          for (let publisherKey of publisherKeysToRemove) {
+            instructions.push(
+              await pythProgramClient.methods
+                .delPublisher(new PublicKey(publisherKey))
+                .accounts({
+                  fundingAccount,
+                  priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                })
+                .instruction()
+            )
+          }
 
           // add instructions to add new publishers
-          publisherKeysToAdd.forEach((publisherKey: string) => {
-            pythProgramClient.methods
-              .addPublisher(new PublicKey(publisherKey))
-              .accounts({
-                fundingAccount,
-                priceAccount: new PublicKey(prev.priceAccounts[0].address),
-              })
-              .instruction()
-              .then((instruction) => instructions.push(instruction))
-          })
+          for (let publisherKey of publisherKeysToAdd) {
+            instructions.push(
+              await pythProgramClient.methods
+                .addPublisher(new PublicKey(publisherKey))
+                .accounts({
+                  fundingAccount,
+                  priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                })
+                .instruction()
+            )
+          }
         }
       }
 
