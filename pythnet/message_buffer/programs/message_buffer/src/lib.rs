@@ -12,7 +12,7 @@ use {
     state::*,
 };
 
-declare_id!("Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM");
+declare_id!("7Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM");
 
 #[program]
 pub mod message_buffer {
