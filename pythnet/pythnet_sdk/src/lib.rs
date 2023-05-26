@@ -7,10 +7,10 @@ pub(crate) type Pubkey = [u8; 32];
 pub(crate) type PriceId = Pubkey;
 
 /// Official Message Buffer Program Id
-/// pubkey!("Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM");
+/// pubkey!("7Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM");
 pub const MESSAGE_BUFFER_PID: Pubkey = [
-    7, 83, 149, 9, 30, 102, 77, 194, 50, 151, 133, 40, 118, 10, 93, 152, 174, 44, 244, 56, 27, 47,
-    234, 218, 173, 153, 254, 48, 102, 178, 128, 18,
+    96, 121, 180, 39, 141, 35, 152, 85, 128, 70, 147, 124, 128, 196, 115, 241, 86, 159, 207, 148,
+    39, 234, 137, 86, 178, 4, 238, 48, 102, 178, 128, 18,
 ];
 
 /// Pubkey::find_program_address(&[b"emitter"], &sysvar::accumulator::id());
@@ -99,7 +99,7 @@ pub(crate) mod tests {
             pythtest_accumulator_sequence_address.to_bytes()
         );
 
-        let message_buffer_program = pubkey!("Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM");
+        let message_buffer_program = pubkey!("7Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM");
         assert_eq!(MESSAGE_BUFFER_PID, message_buffer_program.to_bytes());
     }
 }
