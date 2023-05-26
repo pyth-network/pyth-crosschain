@@ -30,6 +30,7 @@ use {
     },
     pyth_sdk::PriceIdentifier,
     serde_qs::axum::QsQuery,
+    std::collections::HashSet,
 };
 
 pub enum RestError {
@@ -59,7 +60,7 @@ impl IntoResponse for RestError {
 
 pub async fn price_feed_ids(
     State(state): State<super::State>,
-) -> Result<Json<Vec<PriceIdentifier>>, RestError> {
+) -> Result<Json<HashSet<PriceIdentifier>>, RestError> {
     let price_feeds = state.store.get_price_feed_ids();
     Ok(Json(price_feeds))
 }

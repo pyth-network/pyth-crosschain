@@ -1,12 +1,12 @@
 use {
     super::types::{
         MessageIdentifier,
-        MessageKey,
         MessageState,
+        MessageType,
         RequestTime,
-        RequestType,
     },
     anyhow::Result,
+    pyth_sdk::PriceIdentifier,
     std::sync::Arc,
 };
 
@@ -23,11 +23,11 @@ pub trait Storage: Send + Sync {
     fn store_message_states(&self, message_states: Vec<MessageState>) -> Result<()>;
     fn retrieve_message_states(
         &self,
-        ids: Vec<MessageIdentifier>,
-        request_type: RequestType,
+        ids: Vec<PriceIdentifier>,
         request_time: RequestTime,
+        filter: Option<&dyn Fn(&MessageType) -> bool>,
     ) -> Result<Vec<MessageState>>;
-    fn keys(&self) -> Vec<MessageKey>;
+    fn keys(&self) -> Vec<MessageIdentifier>;
 }
 
 pub type StorageInstance = Arc<Box<dyn Storage>>;

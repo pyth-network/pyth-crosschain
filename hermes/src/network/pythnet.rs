@@ -22,6 +22,7 @@ use {
         },
         rpc_filter::{
             Memcmp,
+            MemcmpEncodedBytes,
             RpcFilterType,
         },
     },
@@ -42,10 +43,11 @@ pub async fn spawn(pythnet_ws_endpoint: String, store: Store) -> Result<()> {
             encoding: Some(UiAccountEncoding::Base64Zstd),
             ..Default::default()
         },
-        filters: Some(vec![RpcFilterType::Memcmp(Memcmp::new_raw_bytes(
-            0,
-            b"PAS1".to_vec(),
-        ))]),
+        filters: Some(vec![RpcFilterType::Memcmp(Memcmp {
+            offset:   0,
+            bytes:    MemcmpEncodedBytes::Bytes(b"PAS1".to_vec()),
+            encoding: None,
+        })]),
         with_context: Some(true),
         ..Default::default()
     };
