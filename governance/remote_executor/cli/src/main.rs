@@ -1,4 +1,13 @@
 #![deny(warnings)]
+
+use {
+    serde_wormhole::RawMessage,
+    wormhole_sdk::vaa::{
+        Body,
+        Header,
+        Vaa,
+    },
+};
 pub mod cli;
 use {
     anchor_client::{
@@ -47,7 +56,6 @@ use {
         transaction::Transaction,
     },
     std::str::FromStr,
-    wormhole::VAA,
     wormhole_solana::{
         instructions::{
             post_message,
@@ -86,9 +94,10 @@ fn main() -> Result<()> {
 
             let signature_set_keypair = Keypair::new();
 
-            let vaa = VAA::from_bytes(vaa_bytes.clone())?;
+            let vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa_bytes)?;
+            let (header, body): (Header, Body<&RawMessage>) = vaa.into();
 
-            let posted_vaa_key = PostedVAA::key(&wormhole, vaa.digest().unwrap().hash);
+            let posted_vaa_key = PostedVAA::key(&wormhole, body.digest().unwrap().hash);
 
             // First verify VAA
             let verify_txs = verify_signatures_txs(
@@ -106,15 +115,15 @@ fn main() -> Result<()> {
 
             // Post VAA
             let post_vaa_data = PostVAAData {
-                version:            vaa.version,
-                guardian_set_index: vaa.guardian_set_index,
-                timestamp:          vaa.timestamp,
-                nonce:              vaa.nonce,
-                emitter_chain:      vaa.emitter_chain.into(),
-                emitter_address:    vaa.emitter_address,
-                sequence:           vaa.sequence,
-                consistency_level:  vaa.consistency_level,
-                payload:            vaa.payload,
+                version:            header.version,
+                guardian_set_index: header.guardian_set_index,
+                timestamp:          body.timestamp,
+                nonce:              body.nonce,
+                emitter_chain:      body.emitter_chain.into(),
+                emitter_address:    body.emitter_address.0,
+                sequence:           body.sequence,
+                consistency_level:  body.consistency_level,
+                payload:            body.payload.to_vec(),
             };
 
             process_transaction(

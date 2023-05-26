@@ -31,7 +31,6 @@ use {
         ToAccountMetas,
     },
     solana_program_test::{
-        find_file,
         read_file,
         BanksClient,
         BanksClientError,
@@ -54,8 +53,11 @@ use {
             TransactionError,
         },
     },
-    std::collections::HashMap,
-    wormhole::Chain,
+    std::{
+        collections::HashMap,
+        path::Path,
+    },
+    wormhole_sdk::Chain,
     wormhole_solana::VAA,
 };
 
@@ -81,9 +83,12 @@ pub enum VaaAttack {
 impl ExecutorBench {
     /// Deploys the executor program as upgradable
     pub fn new() -> ExecutorBench {
-        let mut bpf_data = read_file(find_file("remote_executor.so").unwrap_or_else(|| {
-            panic!("Unable to locate {}", "remote_executor.so");
-        }));
+        let mut bpf_data = read_file(
+            std::env::current_dir()
+                .unwrap()
+                .join(Path::new("../../target/deploy/remote_executor.so")),
+        );
+
 
         let mut program_test = ProgramTest::default();
         let program_key = crate::id();

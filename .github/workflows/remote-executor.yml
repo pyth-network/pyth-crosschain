@@ -20,7 +20,7 @@ jobs:
           override: true
       - name: Install Solana
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+          sh -c "$(curl -sSfL https://release.solana.com/v1.14.18/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
       - name: Run executor tests
         run: cargo test-bpf --manifest-path ./governance/remote_executor/Cargo.toml

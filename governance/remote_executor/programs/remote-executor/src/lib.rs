@@ -1,5 +1,6 @@
 #![deny(warnings)]
 #![allow(clippy::result_unit_err)]
+#![allow(clippy::result_large_err)]
 
 use {
     anchor_lang::{
@@ -12,7 +13,7 @@ use {
         claim_record::ClaimRecord,
         posted_vaa::AnchorVaa,
     },
-    wormhole::Chain::{
+    wormhole_sdk::Chain::{
         self,
         Solana,
     },
