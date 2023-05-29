@@ -1,0 +1,40 @@
+{
+  "deploy-wormhole-code": {
+    "status": "fulfilled",
+    "result": {
+      "codeId": 27,
+      "txHash": "729FCDE0B848F61014B45F7AB457E980596A25F6A1CC12D3FC0AB48CE3270681"
+    }
+  },
+  "instantiate-contract": {
+    "status": "fulfilled",
+    "result": {
+      "contractAddr": "sei12qq3cufehhsaprjfjrwpx5ltyr43lcrxvf6eaqf0p4jsjpc7semq8p6ewa",
+      "txHash": "A3E5EA72B0D51D31FF1F8A394C8F133D241DA3298E84DA38F40C1D5295704534"
+    }
+  },
+  "set-own-admin": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "7DE665D160C98F9E28A27EF672E90979E3532C9A9294510793DAC9630A1DEA19"
+    }
+  },
+  "GUARDIAN_SET_UPGRADE_1_VAA": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "40769A24638F25D1FC6F7F82053565E9BD6DABE9142C7A1380A529DE3709B064"
+    }
+  },
+  "GUARDIAN_SET_UPGRADE_2_VAA": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "543822E19B22468A65E40478CF5792CE7D26CF30951A67286DC9F1A21BF25C22"
+    }
+  },
+  "GUARDIAN_SET_UPGRADE_3_VAA": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "37903878FD47F0D1D273BE359962A8180F6F720AF8A95BF3EF5C426061A013F1"
+    }
+  }
+}
