@@ -32,7 +32,7 @@ impl State {
 ///
 /// Currently this is based on Axum due to the simplicity and strong ecosystem support for the
 /// packages they are based on (tokio & hyper).
-pub async fn spawn(rpc_addr: String, store: Store) -> Result<()> {
+pub async fn spawn(store: Store, rpc_addr: String) -> Result<()> {
     let state = State::new(store);
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the

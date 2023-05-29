@@ -68,6 +68,13 @@ wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = 
 pyth-oracle = { git = "https://github.com/pyth-network/pyth-client", rev = "7d593d87e07a1e2486e7ca21597d664ee72be1ec", features = ["library"] }
 
 strum = { version = "0.24", features = ["derive"] }
+ethabi = { version = "18.0.0", features = ["serde"] }
 
 [patch.crates-io]
 serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
+
+[profile.release]
+panic = 'abort'
+
+[profile.dev]
+panic = 'abort'

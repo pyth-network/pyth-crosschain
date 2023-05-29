@@ -116,10 +116,10 @@ pub fn bootstrap(
 
 // Spawn's the P2P layer as a separate thread via Go.
 pub async fn spawn(
+    store: Store,
     network_id: String,
     wh_bootstrap_addrs: Vec<Multiaddr>,
     wh_listen_addrs: Vec<Multiaddr>,
-    store: Store,
 ) -> Result<()> {
     bootstrap(network_id, wh_bootstrap_addrs, wh_listen_addrs)?;
 

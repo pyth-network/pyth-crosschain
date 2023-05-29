@@ -1,12 +1,5 @@
 use {
-    super::proof::wormhole_merkle::{
-        WormholeMerkleMessageProof,
-        WormholeMerkleProof,
-    },
-    anyhow::{
-        anyhow,
-        Result,
-    },
+    super::proof::wormhole_merkle::WormholeMerkleMessageProof,
     borsh::BorshDeserialize,
     pyth_oracle::{
         Message,
@@ -15,43 +8,6 @@ use {
     pyth_sdk::PriceIdentifier,
     strum::EnumIter,
 };
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum WormholePayload {
-    Merkle(WormholeMerkleProof),
-}
-
-impl WormholePayload {
-    pub fn try_from_bytes(bytes: &[u8], vaa_bytes: &[u8]) -> Result<Self> {
-        if bytes.len() != 37 {
-            return Err(anyhow!("Invalid message length"));
-        }
-
-        // TODO: Use byte string literals for this check
-        let magic = u32::from_be_bytes(bytes[0..4].try_into()?);
-        if magic != 0x41555756u32 {
-            return Err(anyhow!("Invalid magic"));
-        }
-
-        let message_type = u8::from_be_bytes(bytes[4..5].try_into()?);
-
-        if message_type != 0 {
-            return Err(anyhow!("Invalid message type"));
-        }
-
-        let slot = u64::from_be_bytes(bytes[5..13].try_into()?);
-        let ring_size = u32::from_be_bytes(bytes[13..17].try_into()?);
-        let root_digest = bytes[17..37].try_into()?;
-
-
-        Ok(Self::Merkle(WormholeMerkleProof {
-            root: root_digest,
-            slot,
-            ring_size,
-            vaa: vaa_bytes.to_vec(),
-        }))
-    }
-}
 
 
 // TODO: We can use strum on Message enum to derive this.

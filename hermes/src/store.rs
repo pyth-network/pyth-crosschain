@@ -22,6 +22,9 @@ use {
         types::{
             MessageState,
             ProofSet,
+        },
+        wormhole::{
+            parse_and_verify_vaa,
             WormholePayload,
         },
     },
@@ -35,14 +38,21 @@ use {
     pyth_sdk::PriceIdentifier,
     std::{
         collections::HashSet,
+        sync::Arc,
         time::Duration,
     },
-    wormhole_sdk::Vaa,
+    tokio::sync::RwLock,
+    wormhole_sdk::{
+        Address,
+        Chain,
+        GuardianAddress,
+    },
 };
 
 pub mod proof;
 pub mod storage;
 pub mod types;
+pub mod wormhole;
 
 #[derive(Clone, PartialEq, Debug, Builder)]
 #[builder(derive(Debug), pattern = "immutable")]
@@ -55,10 +65,13 @@ pub struct AccumulatorState {
 pub struct Store {
     pub storage:               StorageInstance,
     pub pending_accumulations: Cache<Slot, AccumulatorStateBuilder>,
+    pub guardian_set:          Arc<RwLock<Option<Vec<GuardianAddress>>>>,
 }
 
 impl Store {
     pub fn new_with_local_cache(max_size_per_key: usize) -> Self {
+        // TODO: Should we return an Arc<Self>? Although we are currently safe to be cloned without
+        // an Arc but it is easily to miss and cause a bug.
         Self {
             storage:               storage::local_storage::LocalStorage::new_instance(
                 max_size_per_key,
@@ -67,6 +80,7 @@ impl Store {
                 .max_capacity(10_000)
                 .time_to_live(Duration::from_secs(60 * 5))
                 .build(), // FIXME: Make this configurable
+            guardian_set:          Arc::new(RwLock::new(None)),
         }
     }
 
@@ -74,12 +88,22 @@ impl Store {
     pub async fn store_update(&self, update: Update) -> Result<()> {
         let slot = match update {
             Update::Vaa(vaa_bytes) => {
-                let vaa =
-                    serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(&vaa_bytes)?;
-                let payload = WormholePayload::try_from_bytes(vaa.payload, &vaa_bytes)?;
+                let body = parse_and_verify_vaa(self, &vaa_bytes).await;
+                let body = match body {
+                    Ok(body) => body,
+                    Err(err) => {
+                        log::info!("Ignoring invalid VAA: {:?}", err);
+                        return Ok(());
+                    }
+                };
 
-                // FIXME: Validate the VAA
-                // FIXME: Skip similar VAAs
+                if body.emitter_chain != Chain::Pythnet
+                    || body.emitter_address != Address(pythnet_sdk::ACCUMULATOR_EMITTER_ADDRESS)
+                {
+                    return Ok(()); // Ignore VAA from other emitters
+                }
+
+                let payload = WormholePayload::try_from_bytes(body.payload, &vaa_bytes)?;
 
                 match payload {
                     WormholePayload::Merkle(proof) => {
@@ -163,6 +187,10 @@ impl Store {
         self.pending_accumulations.invalidate(&slot).await;
 
         Ok(())
+    }
+
+    pub async fn update_guardian_set(&self, guardian_set: Vec<GuardianAddress>) {
+        self.guardian_set.write().await.replace(guardian_set);
     }
 
     pub fn get_price_feeds_with_update_data(
