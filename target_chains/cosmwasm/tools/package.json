@@ -3,6 +3,7 @@
   "version": "1.1.0",
   "description": "",
   "main": "deploy-pyth-bridge.ts",
+  "private": "true",
   "scripts": {
     "build": "tsc",
     "build-contract": "ts-node ./src/build-contract.ts",
