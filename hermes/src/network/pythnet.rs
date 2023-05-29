@@ -34,7 +34,7 @@ use {
     },
 };
 
-pub async fn spawn(pythnet_ws_endpoint: String, store: Store) -> Result<()> {
+pub async fn spawn(store: Store, pythnet_ws_endpoint: String) -> Result<()> {
     let client = PubsubClient::new(pythnet_ws_endpoint.as_ref()).await?;
 
     let config = RpcProgramAccountsConfig {

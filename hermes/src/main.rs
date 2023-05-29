@@ -36,23 +36,31 @@ async fn init() -> Result<()> {
             // Spawn the P2P layer.
             log::info!("Starting P2P server on {:?}", wh_listen_addrs);
             network::p2p::spawn(
+                store.clone(),
                 wh_network_id.to_string(),
                 wh_bootstrap_addrs,
                 wh_listen_addrs,
-                store.clone(),
             )
             .await?;
+
+            // Spawn the Ethereum guardian set watcher
+            network::ethereum::spawn(
+                store.clone(),
+                "https://rpc.ankr.com/eth".to_owned(),
+                "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B".to_owned(),
+            )
+            .await;
 
             // Spawn the RPC server.
             log::info!("Starting RPC server on {}", api_addr);
 
             // TODO: Add max size to the config
-            api::spawn(api_addr.to_string(), store.clone()).await?;
+            api::spawn(store.clone(), api_addr.to_string()).await?;
 
             // Spawn the Pythnet listener
             // TODO: Exit the thread when it gets spawned
             log::info!("Starting Pythnet listener using {}", pythnet_ws_endpoint);
-            network::pythnet::spawn(pythnet_ws_endpoint, store.clone()).await?;
+            network::pythnet::spawn(store.clone(), pythnet_ws_endpoint).await?;
 
             // Wait on Ctrl+C similar to main.
             tokio::signal::ctrl_c().await?;
