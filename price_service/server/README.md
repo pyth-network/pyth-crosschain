@@ -56,6 +56,13 @@ price service you should:
 1. Build an image for using it first according to the section below.
 2. Change the price service image to your local docker image (e.g., `pyth_price_server`)
 
+### Self-Hosting
+
+If you would like to host your own instance of the price service, we recommend using a host like [Latitude](https://www.latitude.sh/) or [Hetzner](https://www.hetzner.com/) and avoiding cloud service providers like AWS in order to reduce the cost.
+The price service participates in a peer-to-peer network which can use a lot of bandwidth.
+Cloud hosts like AWS charge high fees for bandwidth, which makes running the service much more expensive than necessary.
+Using one of the recommended hosts above should cost $10-50 / month.
+
 ## Build an image
 
 Build the image from [the repo root](../../) like below. It will create a
