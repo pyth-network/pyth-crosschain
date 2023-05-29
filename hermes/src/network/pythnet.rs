@@ -43,13 +43,12 @@ pub async fn spawn(pythnet_ws_endpoint: String, store: Store) -> Result<()> {
             encoding: Some(UiAccountEncoding::Base64Zstd),
             ..Default::default()
         },
-        filters: Some(vec![RpcFilterType::Memcmp(Memcmp {
+        filters:        Some(vec![RpcFilterType::Memcmp(Memcmp {
             offset:   0,
             bytes:    MemcmpEncodedBytes::Bytes(b"PAS1".to_vec()),
             encoding: None,
         })]),
-        with_context: Some(true),
-        ..Default::default()
+        with_context:   Some(true),
     };
 
     let (mut notif, _unsub) = client
