@@ -58,12 +58,7 @@
     "PriceFeedMetadata": {
       "description": "Represents metadata of a price feed.",
       "type": "object",
-      "required": [
-        "attestation_time",
-        "emitter_chain",
-        "price_service_receive_time",
-        "sequence_number"
-      ],
+      "required": ["emitter_chain"],
       "properties": {
         "attestation_time": {
           "description": "Attestation time of the price",
@@ -82,6 +77,11 @@
         },
         "sequence_number": {
           "description": "Sequence number of the price",
+          "type": "integer",
+          "format": "int64"
+        },
+        "slot": {
+          "description": "Pythnet slot number of the price",
           "type": "integer",
           "format": "int64"
         }

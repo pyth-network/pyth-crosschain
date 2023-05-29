@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/price-service-client",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Pyth price service client",
   "author": {
     "name": "Pyth Data Association"

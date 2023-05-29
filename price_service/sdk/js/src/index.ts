@@ -83,7 +83,7 @@ export class PriceFeedMetadata {
   /**
    * Attestation time of the price
    */
-  attestationTime: number;
+  attestationTime?: number;
   /**
    * Chain of the emitter
    */
@@ -91,22 +91,28 @@ export class PriceFeedMetadata {
   /**
    * The time that the price service received the price
    */
-  priceServiceReceiveTime: number;
+  priceServiceReceiveTime?: number;
   /**
    * Sequence number of the price
    */
-  sequenceNumber: number;
+  sequenceNumber?: number;
+  /**
+   * Pythnet slot number of the price
+   */
+  slot?: number;
 
   constructor(metadata: {
-    attestationTime: number;
+    attestationTime?: number;
     emitterChain: number;
-    receiveTime: number;
-    sequenceNumber: number;
+    receiveTime?: number;
+    sequenceNumber?: number;
+    slot?: number;
   }) {
     this.attestationTime = metadata.attestationTime;
     this.emitterChain = metadata.emitterChain;
     this.priceServiceReceiveTime = metadata.receiveTime;
     this.sequenceNumber = metadata.sequenceNumber;
+    this.slot = metadata.slot;
   }
 
   static fromJson(json: any): PriceFeedMetadata | undefined {
@@ -119,6 +125,7 @@ export class PriceFeedMetadata {
       emitterChain: jsonFeed.emitter_chain,
       receiveTime: jsonFeed.price_service_receive_time,
       sequenceNumber: jsonFeed.sequence_number,
+      slot: jsonFeed.slot,
     });
   }
 
@@ -128,6 +135,7 @@ export class PriceFeedMetadata {
       emitter_chain: this.emitterChain,
       price_service_receive_time: this.priceServiceReceiveTime,
       sequence_number: this.sequenceNumber,
+      slot: this.slot,
     };
     // this is done to avoid sending undefined values to the server
     return Convert.priceFeedMetadataToJson(jsonFeed);
