@@ -76,7 +76,7 @@ impl Store {
             Update::Vaa(vaa_bytes) => {
                 let vaa =
                     serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(&vaa_bytes)?;
-                let payload = WormholePayload::try_from_bytes(&vaa.payload, &vaa_bytes)?;
+                let payload = WormholePayload::try_from_bytes(vaa.payload, &vaa_bytes)?;
 
                 // FIXME: Validate the VAA
                 // FIXME: Skip similar VAAs
