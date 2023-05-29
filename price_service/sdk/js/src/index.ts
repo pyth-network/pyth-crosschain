@@ -83,7 +83,7 @@ export class PriceFeedMetadata {
   /**
    * Attestation time of the price
    */
-  attestationTime: number;
+  attestationTime?: number;
   /**
    * Chain of the emitter
    */
@@ -91,17 +91,17 @@ export class PriceFeedMetadata {
   /**
    * The time that the price service received the price
    */
-  priceServiceReceiveTime: number;
+  priceServiceReceiveTime?: number;
   /**
    * Sequence number of the price
    */
-  sequenceNumber: number;
+  sequenceNumber?: number;
 
   constructor(metadata: {
-    attestationTime: number;
+    attestationTime?: number;
     emitterChain: number;
-    receiveTime: number;
-    sequenceNumber: number;
+    receiveTime?: number;
+    sequenceNumber?: number;
   }) {
     this.attestationTime = metadata.attestationTime;
     this.emitterChain = metadata.emitterChain;
