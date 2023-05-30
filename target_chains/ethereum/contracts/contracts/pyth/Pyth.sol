@@ -413,6 +413,149 @@ abstract contract Pyth is
         if (!verifyPythVM(vm)) revert PythErrors.InvalidUpdateDataSource();
     }
 
+    /*
+
+    function updatePriceFeeds(
+        bytes[] calldata updateData
+    ) public payable override {
+        // TODO: Is this fee model still good for accumulator?
+        uint requiredFee = getUpdateFee(updateData);
+        if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
+
+        for (uint i = 0; i < updateData.length; ) {
+            if (
+                updateData[i].length > 4 &&
+                UnsafeBytesLib.toUint32(updateData[i], 0) == ACCUMULATOR_MAGIC
+            ) {
+                updatePricesUsingAccumulator(updateData[i]);
+            } else {
+                updatePriceBatchFromVm(updateData[i]);
+            }
+
+            unchecked {
+                i++;
+            }
+        }
+    }
+    */
+
+    // function parsePriceFeedUpdates(
+    //     bytes[] calldata updateData,
+    //     bytes32[] calldata priceIds,
+    //     uint64 minPublishTime,
+    //     uint64 maxPublishTime
+    // )
+    //     external
+    //     payable
+    //     override
+    //     returns (PythStructs.PriceFeed[] memory priceFeeds)
+    // {
+    //     unchecked {
+    //         {
+    //             uint requiredFee = getUpdateFee(updateData);
+    //             if (msg.value < requiredFee)
+    //                 revert PythErrors.InsufficientFee();
+    //         }
+
+    //         priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
+
+    //         for (uint i = 0; i < updateData.length; i++) {
+    //             bytes memory encoded;
+
+    //             if (
+    //                 updateData[i].length > 4 &&
+    //                 UnsafeBytesLib.toUint32(updateData[i], 0) == ACCUMULATOR_MAGIC
+    //             ) {
+    //                 parseAccumlatorPriceUpdate(updateData[i]);
+    //             } else {
+    //                 parsePriceBatchUpdate(updateData[i]);
+    //             }
+
+    //             {
+    //                 IWormhole.VM memory vm = parseAndVerifyBatchAttestationVM(
+    //                     updateData[i]
+    //                 );
+    //                 encoded = vm.payload;
+    //             }
+
+    //             (
+    //                 uint index,
+    //                 uint nAttestations,
+    //                 uint attestationSize
+    //             ) = parseBatchAttestationHeader(encoded);
+
+    //             // Deserialize each attestation
+    //             for (uint j = 0; j < nAttestations; j++) {
+    //                 // NOTE: We don't advance the global index immediately.
+    //                 // attestationIndex is an attestation-local offset used
+    //                 // for readability and easier debugging.
+    //                 uint attestationIndex = 0;
+
+    //                 // Unused bytes32 product id
+    //                 attestationIndex += 32;
+
+    //                 bytes32 priceId = UnsafeBytesLib.toBytes32(
+    //                     encoded,
+    //                     index + attestationIndex
+    //                 );
+
+    //                 // Check whether the caller requested for this data.
+    //                 uint k = 0;
+    //                 for (; k < priceIds.length; k++) {
+    //                     if (priceIds[k] == priceId) {
+    //                         break;
+    //                     }
+    //                 }
+
+    //                 // If priceFeed[k].id != 0 then it means that there was a valid
+    //                 // update for priceIds[k] and we don't need to process this one.
+    //                 if (k == priceIds.length || priceFeeds[k].id != 0) {
+    //                     index += attestationSize;
+    //                     continue;
+    //                 }
+
+    //                 (
+    //                     PythInternalStructs.PriceInfo memory info,
+
+    //                 ) = parseSingleAttestationFromBatch(
+    //                         encoded,
+    //                         index,
+    //                         attestationSize
+    //                     );
+
+    //                 priceFeeds[k].id = priceId;
+    //                 priceFeeds[k].price.price = info.price;
+    //                 priceFeeds[k].price.conf = info.conf;
+    //                 priceFeeds[k].price.expo = info.expo;
+    //                 priceFeeds[k].price.publishTime = uint(info.publishTime);
+    //                 priceFeeds[k].emaPrice.price = info.emaPrice;
+    //                 priceFeeds[k].emaPrice.conf = info.emaConf;
+    //                 priceFeeds[k].emaPrice.expo = info.expo;
+    //                 priceFeeds[k].emaPrice.publishTime = uint(info.publishTime);
+
+    //                 // Check the publish time of the price is within the given range
+    //                 // if it is not, then set the id to 0 to indicate that this price id
+    //                 // still does not have a valid price feed. This will allow other updates
+    //                 // for this price id to be processed.
+    //                 if (
+    //                     priceFeeds[k].price.publishTime < minPublishTime ||
+    //                     priceFeeds[k].price.publishTime > maxPublishTime
+    //                 ) {
+    //                     priceFeeds[k].id = 0;
+    //                 }
+
+    //                 index += attestationSize;
+    //             }
+    //         }
+
+    //         for (uint k = 0; k < priceIds.length; k++) {
+    //             if (priceFeeds[k].id == 0) {
+    //                 revert PythErrors.PriceFeedNotFoundWithinRange();
+    //             }
+    //         }
+    //     }
+    // }
+
     function parsePriceFeedUpdates(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
@@ -435,81 +578,155 @@ abstract contract Pyth is
 
             for (uint i = 0; i < updateData.length; i++) {
                 bytes memory encoded;
+                bool isAccumulator = false;
 
                 {
-                    IWormhole.VM memory vm = parseAndVerifyBatchAttestationVM(
-                        updateData[i]
-                    );
+                    IWormhole.VM memory vm;
+
+                    if (
+                        updateData[i].length > 4 &&
+                        UnsafeBytesLib.toUint32(updateData[i], 0) ==
+                        ACCUMULATOR_MAGIC
+                    ) {
+                        // [Ricky] - does simple wormhole VM parsing/validation
+                        vm = parseAndVerifyPythVM(updateData[i]);
+                        isAccumulator = true;
+                    } else {
+                        vm = parseAndVerifyBatchAttestationVM(updateData[i]);
+                    }
                     encoded = vm.payload;
                 }
 
-                (
-                    uint index,
-                    uint nAttestations,
-                    uint attestationSize
-                ) = parseBatchAttestationHeader(encoded);
+                /** accumulator update logic */
+                /*
+                    offset = parseAccumulatorHeader;
+                */
 
-                // Deserialize each attestation
-                for (uint j = 0; j < nAttestations; j++) {
-                    // NOTE: We don't advance the global index immediately.
-                    // attestationIndex is an attestation-local offset used
-                    // for readability and easier debugging.
-                    uint attestationIndex = 0;
-
-                    // Unused bytes32 product id
-                    attestationIndex += 32;
-
-                    bytes32 priceId = UnsafeBytesLib.toBytes32(
-                        encoded,
-                        index + attestationIndex
-                    );
-
-                    // Check whether the caller requested for this data.
-                    uint k = 0;
-                    for (; k < priceIds.length; k++) {
-                        if (priceIds[k] == priceId) {
-                            break;
-                        }
-                    }
-
-                    // If priceFeed[k].id != 0 then it means that there was a valid
-                    // update for priceIds[k] and we don't need to process this one.
-                    if (k == priceIds.length || priceFeeds[k].id != 0) {
-                        index += attestationSize;
-                        continue;
-                    }
-
+                if (isAccumulator) {
                     (
-                        PythInternalStructs.PriceInfo memory info,
+                        PythInternalStructs.PriceInfo[]
+                            memory accumulatorPriceInfos,
+                        bytes32[] memory accumulatorPriceIds
+                    ) = parsePricesUsingAccumulator(encoded);
 
-                    ) = parseSingleAttestationFromBatch(
-                            encoded,
-                            index,
-                            attestationSize
+                    for (uint j = 0; j < accumulatorPriceIds.length; i++) {
+                        bytes32 accumulatorPriceId = accumulatorPriceIds[j];
+                        // check whether caller requested for this data
+                        uint k = 0;
+                        for (; k < priceIds.length; k++) {
+                            if (priceIds[k] == accumulatorPriceId) {
+                                break;
+                            }
+                        }
+
+                        // If priceFeed[k].id != 0 then it means that there was a valid
+                        // update for priceIds[k] and we don't need to process this one.
+                        if (k == priceIds.length || priceFeeds[k].id != 0) {
+                            continue;
+                        }
+
+                        PythInternalStructs.PriceInfo
+                            memory info = accumulatorPriceInfos[j];
+
+                        priceFeeds[k].id = accumulatorPriceId;
+                        priceFeeds[k].price.price = info.price;
+                        priceFeeds[k].price.conf = info.conf;
+                        priceFeeds[k].price.expo = info.expo;
+                        priceFeeds[k].price.publishTime = uint(
+                            info.publishTime
+                        );
+                        priceFeeds[k].emaPrice.price = info.emaPrice;
+                        priceFeeds[k].emaPrice.conf = info.emaConf;
+                        priceFeeds[k].emaPrice.expo = info.expo;
+                        priceFeeds[k].emaPrice.publishTime = uint(
+                            info.publishTime
                         );
 
-                    priceFeeds[k].id = priceId;
-                    priceFeeds[k].price.price = info.price;
-                    priceFeeds[k].price.conf = info.conf;
-                    priceFeeds[k].price.expo = info.expo;
-                    priceFeeds[k].price.publishTime = uint(info.publishTime);
-                    priceFeeds[k].emaPrice.price = info.emaPrice;
-                    priceFeeds[k].emaPrice.conf = info.emaConf;
-                    priceFeeds[k].emaPrice.expo = info.expo;
-                    priceFeeds[k].emaPrice.publishTime = uint(info.publishTime);
-
-                    // Check the publish time of the price is within the given range
-                    // if it is not, then set the id to 0 to indicate that this price id
-                    // still does not have a valid price feed. This will allow other updates
-                    // for this price id to be processed.
-                    if (
-                        priceFeeds[k].price.publishTime < minPublishTime ||
-                        priceFeeds[k].price.publishTime > maxPublishTime
-                    ) {
-                        priceFeeds[k].id = 0;
+                        // Check the publish time of the price is within the given range
+                        // if it is not, then set the id to 0 to indicate that this price id
+                        // still does not have a valid price feed. This will allow other updates
+                        // for this price id to be processed.
+                        if (
+                            priceFeeds[k].price.publishTime < minPublishTime ||
+                            priceFeeds[k].price.publishTime > maxPublishTime
+                        ) {
+                            priceFeeds[k].id = 0;
+                        }
                     }
+                } else {
+                    /** Batch price logic */
+                    (
+                        uint index,
+                        uint nAttestations,
+                        uint attestationSize
+                    ) = parseBatchAttestationHeader(encoded);
 
-                    index += attestationSize;
+                    // Deserialize each attestation
+                    for (uint j = 0; j < nAttestations; j++) {
+                        // NOTE: We don't advance the global index immediately.
+                        // attestationIndex is an attestation-local offset used
+                        // for readability and easier debugging.
+                        uint attestationIndex = 0;
+
+                        // Unused bytes32 product id
+                        attestationIndex += 32;
+
+                        bytes32 priceId = UnsafeBytesLib.toBytes32(
+                            encoded,
+                            index + attestationIndex
+                        );
+
+                        // Check whether the caller requested for this data.
+                        uint k = 0;
+                        for (; k < priceIds.length; k++) {
+                            if (priceIds[k] == priceId) {
+                                break;
+                            }
+                        }
+
+                        // If priceFeed[k].id != 0 then it means that there was a valid
+                        // update for priceIds[k] and we don't need to process this one.
+                        if (k == priceIds.length || priceFeeds[k].id != 0) {
+                            index += attestationSize;
+                            continue;
+                        }
+
+                        (
+                            PythInternalStructs.PriceInfo memory info,
+
+                        ) = parseSingleAttestationFromBatch(
+                                encoded,
+                                index,
+                                attestationSize
+                            );
+
+                        priceFeeds[k].id = priceId;
+                        priceFeeds[k].price.price = info.price;
+                        priceFeeds[k].price.conf = info.conf;
+                        priceFeeds[k].price.expo = info.expo;
+                        priceFeeds[k].price.publishTime = uint(
+                            info.publishTime
+                        );
+                        priceFeeds[k].emaPrice.price = info.emaPrice;
+                        priceFeeds[k].emaPrice.conf = info.emaConf;
+                        priceFeeds[k].emaPrice.expo = info.expo;
+                        priceFeeds[k].emaPrice.publishTime = uint(
+                            info.publishTime
+                        );
+
+                        // Check the publish time of the price is within the given range
+                        // if it is not, then set the id to 0 to indicate that this price id
+                        // still does not have a valid price feed. This will allow other updates
+                        // for this price id to be processed.
+                        if (
+                            priceFeeds[k].price.publishTime < minPublishTime ||
+                            priceFeeds[k].price.publishTime > maxPublishTime
+                        ) {
+                            priceFeeds[k].id = 0;
+                        }
+
+                        index += attestationSize;
+                    }
                 }
             }
 

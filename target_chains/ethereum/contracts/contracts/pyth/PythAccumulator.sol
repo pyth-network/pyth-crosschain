@@ -42,11 +42,11 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             revert PythErrors.InvalidUpdateDataSource();
     }
 
-    function updatePricesUsingAccumulator(
-        bytes calldata accumulatorUpdate
-    ) internal {
+    function parseAccumulatorUpdateHeader(
+        bytes memory accumulatorUpdate
+    ) internal pure returns (uint offset) {
         unchecked {
-            uint offset = 0;
+            offset = 0;
 
             {
                 uint32 magic = UnsafeBytesLib.toUint32(
@@ -105,17 +105,130 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             if (accumulatorUpdate.length < offset)
                 revert PythErrors.InvalidUpdateData();
 
-            if (updateType == UpdateType.WormholeMerkle) {
-                updatePricesUsingWormholeMerkle(
-                    UnsafeBytesLib.slice(
-                        accumulatorUpdate,
-                        offset,
-                        accumulatorUpdate.length - offset
-                    )
-                );
-            } else {
+            if (updateType != UpdateType.WormholeMerkle) {
                 revert PythErrors.InvalidUpdateData();
             }
+        }
+    }
+
+    function parsePricesUsingAccumulator(
+        bytes memory accumulatorUpdate
+    )
+        internal
+        view
+        returns (
+            PythInternalStructs.PriceInfo[] memory priceInfos,
+            bytes32[] memory priceIds
+        )
+    {
+        uint offset = parseAccumulatorUpdateHeader(accumulatorUpdate);
+        (priceInfos, priceIds) = parsePricesUsingWormholeMerkle(
+            UnsafeBytesLib.slice(
+                accumulatorUpdate,
+                offset,
+                accumulatorUpdate.length - offset
+            )
+        );
+    }
+
+    function updatePricesUsingAccumulator(
+        bytes calldata accumulatorUpdate
+    ) internal {
+        uint offset = parseAccumulatorUpdateHeader(accumulatorUpdate);
+        updatePricesUsingWormholeMerkle(
+            UnsafeBytesLib.slice(
+                accumulatorUpdate,
+                offset,
+                accumulatorUpdate.length - offset
+            )
+        );
+    }
+
+    function parsePricesUsingWormholeMerkle(
+        bytes memory encoded
+    )
+        internal
+        view
+        returns (
+            PythInternalStructs.PriceInfo[] memory priceInfos,
+            bytes32[] memory priceIds
+        )
+    {
+        unchecked {
+            uint offset = 0;
+
+            uint16 whProofSize = UnsafeBytesLib.toUint16(encoded, offset);
+            offset += 2;
+
+            bytes20 digest;
+
+            {
+                IWormhole.VM memory vm = parseAndVerifyPythVM(
+                    UnsafeBytesLib.slice(encoded, offset, whProofSize)
+                );
+                offset += whProofSize;
+
+                // TODO: Do we need to emit an update for accumulator update? If so what should we emit?
+                // emit AccumulatorUpdate(vm.chainId, vm.sequence);
+
+                bytes memory encodedPayload = vm.payload;
+                uint payloadoffset = 0;
+
+                {
+                    uint32 magic = UnsafeBytesLib.toUint32(
+                        encodedPayload,
+                        payloadoffset
+                    );
+                    payloadoffset += 4;
+
+                    if (magic != ACCUMULATOR_WORMHOLE_MAGIC)
+                        revert PythErrors.InvalidUpdateData();
+
+                    UpdateType updateType = UpdateType(
+                        UnsafeBytesLib.toUint8(encodedPayload, payloadoffset)
+                    );
+                    payloadoffset += 1;
+
+                    if (updateType != UpdateType.WormholeMerkle)
+                        revert PythErrors.InvalidUpdateData();
+
+                    // This field is not used
+                    // uint64 slot = UnsafeBytesLib.toUint64(encodedPayload, payloadoffset);
+                    payloadoffset += 8;
+
+                    // This field is not used
+                    // uint32 ringSize = UnsafeBytesLib.toUint32(encodedPayload, payloadoffset);
+                    payloadoffset += 4;
+
+                    digest = bytes20(
+                        UnsafeBytesLib.toAddress(encodedPayload, payloadoffset)
+                    );
+                    payloadoffset += 20;
+
+                    // We don't check equality to enable future compatibility.
+                    if (payloadoffset > encodedPayload.length)
+                        revert PythErrors.InvalidUpdateData();
+                }
+            }
+
+            uint8 numUpdates = UnsafeBytesLib.toUint8(encoded, offset);
+            offset += 1;
+
+            priceInfos = new PythInternalStructs.PriceInfo[](numUpdates);
+            priceIds = new bytes32[](numUpdates);
+            for (uint i = 0; i < numUpdates; i++) {
+                (
+                    offset,
+                    priceInfos[i],
+                    priceIds[i]
+                ) = verifyAndParsePriceFeedFromMerkleProof(
+                    digest,
+                    encoded,
+                    offset
+                );
+            }
+
+            if (offset != encoded.length) revert PythErrors.InvalidUpdateData();
         }
     }
 
@@ -189,6 +302,50 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             }
 
             if (offset != encoded.length) revert PythErrors.InvalidUpdateData();
+        }
+    }
+
+    function verifyAndParsePriceFeedFromMerkleProof(
+        bytes20 digest,
+        bytes memory encoded,
+        uint offset
+    )
+        private
+        pure
+        returns (
+            uint endOffset,
+            PythInternalStructs.PriceInfo memory priceInfo,
+            bytes32 priceId
+        )
+    {
+        unchecked {
+            uint16 messageSize = UnsafeBytesLib.toUint16(encoded, offset);
+            offset += 2;
+
+            bytes memory encodedMessage = UnsafeBytesLib.slice(
+                encoded,
+                offset,
+                messageSize
+            );
+            offset += messageSize;
+
+            bool valid;
+            (valid, offset) = MerkleTree.isProofValid(
+                encoded,
+                offset,
+                digest,
+                encodedMessage
+            );
+
+            if (!valid) {
+                revert PythErrors.InvalidUpdateData();
+            }
+
+            (priceInfo, priceId) = verifyAndParsePriceFeedMessage(
+                encodedMessage
+            );
+
+            return (offset, priceInfo, priceId);
         }
     }
 
@@ -286,37 +443,55 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
-    function parseAndProcessMessage(bytes memory encodedMessage) private {
+    function verifyAndParsePriceFeedMessage(
+        bytes memory encodedMessage
+    )
+        private
+        pure
+        returns (PythInternalStructs.PriceInfo memory info, bytes32 priceId)
+    {
         unchecked {
             MessageType messageType = MessageType(
                 UnsafeBytesLib.toUint8(encodedMessage, 0)
             );
 
             if (messageType == MessageType.PriceFeed) {
-                (
-                    PythInternalStructs.PriceInfo memory info,
-                    bytes32 priceId
-                ) = parsePriceFeedMessage(
-                        UnsafeBytesLib.slice(
-                            encodedMessage,
-                            1,
-                            encodedMessage.length - 1
-                        )
-                    );
-
-                uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
-
-                if (info.publishTime > latestPublishTime) {
-                    setLatestPriceInfo(priceId, info);
-                    emit PriceFeedUpdate(
-                        priceId,
-                        info.publishTime,
-                        info.price,
-                        info.conf
-                    );
-                }
+                (info, priceId) = parsePriceFeedMessage(
+                    UnsafeBytesLib.slice(
+                        encodedMessage,
+                        1,
+                        encodedMessage.length - 1
+                    )
+                );
             } else {
                 revert PythErrors.InvalidUpdateData();
+            }
+        }
+    }
+
+    function parseAndProcessMessage(bytes memory encodedMessage) private {
+        unchecked {
+            (
+                PythInternalStructs.PriceInfo memory info,
+                bytes32 priceId
+            ) = verifyAndParsePriceFeedMessage(
+                    UnsafeBytesLib.slice(
+                        encodedMessage,
+                        1,
+                        encodedMessage.length - 1
+                    )
+                );
+
+            uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
+
+            if (info.publishTime > latestPublishTime) {
+                setLatestPriceInfo(priceId, info);
+                emit PriceFeedUpdate(
+                    priceId,
+                    info.publishTime,
+                    info.price,
+                    info.conf
+                );
             }
         }
     }
