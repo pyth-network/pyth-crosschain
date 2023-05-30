@@ -58,7 +58,8 @@ price service you should:
 
 ### Self-Hosting
 
-If you would like to host your own instance of the price service, we recommend using a host like [Latitude](https://www.latitude.sh/) or [Hetzner](https://www.hetzner.com/) and avoiding cloud service providers like AWS in order to reduce the cost.
+If you would like to host your own instance of the price service, we recommend running the process on a 4 core machine with 4 GB of RAM.
+We also recommend using a host like [Latitude](https://www.latitude.sh/) or [Hetzner](https://www.hetzner.com/) and avoiding cloud service providers like AWS in order to reduce the cost.
 The price service participates in a peer-to-peer network which can use a lot of bandwidth.
 Cloud hosts like AWS charge high fees for bandwidth, which makes running the service much more expensive than necessary.
 Using one of the recommended hosts above should cost $10-50 / month.
