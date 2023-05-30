@@ -51,6 +51,11 @@ export const CHAINS_CONTRACT_CONFIG: Record<ChainId, ChainContractConfig> = {
     pythArtifactZipName: "osmosis",
     wormholeChainId: CHAINS.osmosis,
   },
+  [ChainId.SEI_PACIFIC_1]: {
+    feeDenom: "usei",
+    pythArtifactZipName: "cosmwasm",
+    wormholeChainId: CHAINS.sei_pacific_1,
+  },
 };
 
 function getPythSources(deploymentType: DeploymentType) {

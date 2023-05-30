@@ -14,6 +14,7 @@ export function getChainIdsForStableDeployment(): ChainId[] {
     ChainId.SEI_TESTNET_ATLANTIC_2,
     ChainId.NEUTRON_TESTNET_PION_1,
     ChainId.JUNO_TESTNET,
+    ChainId.SEI_PACIFIC_1,
   ];
 }
 

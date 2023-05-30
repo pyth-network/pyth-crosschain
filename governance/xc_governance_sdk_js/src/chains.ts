@@ -33,7 +33,7 @@ export const RECEIVER_CHAINS = {
   osmosis: 60014,
   osmosis_testnet_4: 60015,
   osmosis_testnet_5: 60016,
-  sei: 60017,
+  sei_pacific_1: 60017,
   sei_testnet_atlantic_2: 60018,
   neutron: 60019,
   neutron_testnet_pion_1: 60020,
