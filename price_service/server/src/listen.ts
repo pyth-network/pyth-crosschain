@@ -28,6 +28,7 @@ export type PriceInfo = {
   seqNum: number;
   publishTime: TimestampInSec;
   attestationTime: TimestampInSec;
+  lastAttestedPublishTime: TimestampInSec,
   priceFeed: PriceFeed;
   emitterChainId: number;
   priceServiceReceiveTime: number;
@@ -45,6 +46,7 @@ export function createPriceInfo(
     vaa,
     publishTime: priceAttestation.publishTime,
     attestationTime: priceAttestation.attestationTime,
+    lastAttestedPublishTime: priceAttestation.lastAttestedPublishTime,
     priceFeed,
     emitterChainId: emitterChain,
     priceServiceReceiveTime: Math.floor(new Date().getTime() / 1000),
@@ -78,6 +80,7 @@ type VaaKey = string;
 
 export type VaaConfig = {
   publishTime: number;
+  lastAttestedPublishTime: number;
   vaa: string;
 };
 
@@ -95,11 +98,11 @@ export class VaaCache {
     this.cacheCleanupLoopInterval = cacheCleanupLoopInterval;
   }
 
-  set(key: VaaKey, publishTime: TimestampInSec, vaa: string): void {
+  set(key: VaaKey, publishTime: TimestampInSec, lastAttestedPublishTime: TimestampInSec, vaa: string): void {
     if (this.cache.has(key)) {
-      this.cache.get(key)!.push({ publishTime, vaa });
+      this.cache.get(key)!.push({ publishTime, lastAttestedPublishTime, vaa });
     } else {
-      this.cache.set(key, [{ publishTime, vaa }]);
+      this.cache.set(key, [{ publishTime, lastAttestedPublishTime, vaa }]);
     }
   }
 
@@ -110,6 +113,12 @@ export class VaaCache {
       const vaaConf = this.find(this.cache.get(key)!, publishTime);
       return vaaConf;
     }
+  }
+
+  // insert elt into array. Assumes that array is sorted by publishTime first and lastAttestedPublishTime second
+  // and maintains that invariant.
+  private insert(array: VaaConfig[], elt: VaaConfig) {
+    if (array.length == 0)
   }
 
   private find(
@@ -128,7 +137,7 @@ export class VaaCache {
 
     while (left <= right) {
       const middle = Math.floor((left + right) / 2);
-      if (arr[middle].publishTime === publishTime) {
+      if (arr[middle].publishTime === publishTime && arr[middle]) {
         return arr[middle];
       } else if (arr[middle].publishTime < publishTime) {
         left = middle + 1;
@@ -368,6 +377,7 @@ export class Listener implements PriceStore {
         this.vaasCache.set(
           priceInfo.priceFeed.id,
           priceInfo.publishTime,
+          priceInfo.lastAttestedPublishTime,
           priceInfo.vaa.toString("base64")
         );
         this.priceFeedVaaMap.set(key, priceInfo);
