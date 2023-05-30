@@ -28,7 +28,7 @@ export type PriceInfo = {
   seqNum: number;
   publishTime: TimestampInSec;
   attestationTime: TimestampInSec;
-  lastAttestedPublishTime: TimestampInSec,
+  lastAttestedPublishTime: TimestampInSec;
   priceFeed: PriceFeed;
   emitterChainId: number;
   priceServiceReceiveTime: number;
@@ -98,7 +98,12 @@ export class VaaCache {
     this.cacheCleanupLoopInterval = cacheCleanupLoopInterval;
   }
 
-  set(key: VaaKey, publishTime: TimestampInSec, lastAttestedPublishTime: TimestampInSec, vaa: string): void {
+  set(
+    key: VaaKey,
+    publishTime: TimestampInSec,
+    lastAttestedPublishTime: TimestampInSec,
+    vaa: string
+  ): void {
     if (this.cache.has(key)) {
       this.cache.get(key)!.push({ publishTime, lastAttestedPublishTime, vaa });
     } else {
@@ -113,12 +118,6 @@ export class VaaCache {
       const vaaConf = this.find(this.cache.get(key)!, publishTime);
       return vaaConf;
     }
-  }
-
-  // insert elt into array. Assumes that array is sorted by publishTime first and lastAttestedPublishTime second
-  // and maintains that invariant.
-  private insert(array: VaaConfig[], elt: VaaConfig) {
-    if (array.length == 0)
   }
 
   private find(
@@ -137,7 +136,10 @@ export class VaaCache {
 
     while (left <= right) {
       const middle = Math.floor((left + right) / 2);
-      if (arr[middle].publishTime === publishTime && arr[middle]) {
+      if (
+        arr[middle].publishTime === publishTime &&
+        arr[middle].lastAttestedPublishTime < publishTime
+      ) {
         return arr[middle];
       } else if (arr[middle].publishTime < publishTime) {
         left = middle + 1;
