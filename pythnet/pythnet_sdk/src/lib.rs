@@ -79,6 +79,13 @@ pub(crate) mod tests {
             200, 74, 124, 198, 226, 194, 215, 62, 43, 98, 207, 184, 167, 181, 175, 174, 254, 192,
             204, 37, 26, 45, 137, 21, 180, 83, 228, 241, 198, 180, 129, 67,
         ];
+        assert_eq!(
+            pythtest_wormhole_pid_bytes,
+            pythtest_wormhole_pid.to_bytes()
+        );
+
+        let expected_pythtest_accumulator_sequence_addr =
+            pubkey!("Ao4tQp1ouW9w73CE34npzSDjgPG5FGz8KmoSauzCwuh7");
         let (pythtest_accumulator_sequence_address, _) = Pubkey::find_program_address(
             &[b"Sequence", accumulator_emitter_address.as_ref()],
             &pythtest_wormhole_pid,
@@ -90,8 +97,8 @@ pub(crate) mod tests {
         ];
 
         assert_eq!(
-            pythtest_wormhole_pid_bytes,
-            pythtest_wormhole_pid.to_bytes()
+            expected_pythtest_accumulator_sequence_addr,
+            pythtest_accumulator_sequence_address
         );
 
         assert_eq!(
