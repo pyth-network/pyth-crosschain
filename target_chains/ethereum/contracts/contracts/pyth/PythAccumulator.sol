@@ -13,6 +13,8 @@ import "./PythInternalStructs.sol";
 
 import "../libraries/MerkleTree.sol";
 
+import "forge-std/console.sol";
+
 abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     uint32 constant ACCUMULATOR_MAGIC = 0x504e4155; // Stands for PNAU (Pyth Network Accumulator Update)
     uint32 constant ACCUMULATOR_WORMHOLE_MAGIC = 0x41555756; // Stands for AUWV (Accumulator Update Wormhole Verficiation)
@@ -135,6 +137,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         bytes calldata accumulatorUpdate
     ) internal {
         uint offset = parseAccumulatorUpdateHeader(accumulatorUpdate);
+        console.log("header offset: %d", offset);
         updatePricesUsingWormholeMerkle(
             UnsafeBytesLib.slice(
                 accumulatorUpdate,
@@ -293,6 +296,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             uint8 numUpdates = UnsafeBytesLib.toUint8(encoded, offset);
             offset += 1;
 
+            console.log("numUpdates: %d", numUpdates);
             for (uint i = 0; i < numUpdates; i++) {
                 offset = verifyAndUpdatePriceFeedFromMerkleProof(
                     digest,
@@ -376,6 +380,9 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             if (!valid) {
                 revert PythErrors.InvalidUpdateData();
             }
+            console.log(
+                "[verifyAndUpdatePriceFeedFromMerkleProof]: parseAndProcessMessage"
+            );
 
             parseAndProcessMessage(encodedMessage);
 
@@ -454,7 +461,6 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             MessageType messageType = MessageType(
                 UnsafeBytesLib.toUint8(encodedMessage, 0)
             );
-
             if (messageType == MessageType.PriceFeed) {
                 (info, priceId) = parsePriceFeedMessage(
                     UnsafeBytesLib.slice(
@@ -474,14 +480,9 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             (
                 PythInternalStructs.PriceInfo memory info,
                 bytes32 priceId
-            ) = verifyAndParsePriceFeedMessage(
-                    UnsafeBytesLib.slice(
-                        encodedMessage,
-                        1,
-                        encodedMessage.length - 1
-                    )
-                );
+            ) = verifyAndParsePriceFeedMessage(encodedMessage);
 
+            console.log("[parseAndProcessMessage] parsed info & priceId");
             uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
 
             if (info.publishTime > latestPublishTime) {
