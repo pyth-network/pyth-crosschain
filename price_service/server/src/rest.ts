@@ -100,7 +100,7 @@ export class RestAPI {
   ): Promise<VaaResponse | undefined> {
     // Try to fetch the vaa from the local cache
     const vaaConfig = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
-    let vaa: VaaResponse | undefined = undefined;
+    let vaa: VaaResponse | undefined;
 
     // if publishTime is older than cache ttl or vaa is not found, fetch from db
     if (vaaConfig !== undefined) {
