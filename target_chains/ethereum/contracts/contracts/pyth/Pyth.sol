@@ -11,7 +11,6 @@ import "./PythAccumulator.sol";
 import "./PythGetters.sol";
 import "./PythSetters.sol";
 import "./PythInternalStructs.sol";
-import "forge-std/console.sol";
 
 abstract contract Pyth is
     PythGetters,

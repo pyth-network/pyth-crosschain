@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
-import "forge-std/console.sol";
 
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
@@ -90,7 +89,6 @@ contract PythWormholeMerkleAccumulatorTest is
         setRandSeed(seed);
 
         uint numPriceFeeds = (getRandUint() % 10) + 1;
-        console.log("generating price feed messages");
         PriceFeedMessage[]
             memory priceFeedMessages = generateRandomPriceFeedMessage(
                 numPriceFeeds
@@ -99,19 +97,15 @@ contract PythWormholeMerkleAccumulatorTest is
             bytes[] memory updateData,
             uint updateFee
         ) = createWormholeMerkleUpdateData(priceFeedMessages);
-        console.log("generated price feed messages");
-        console.log("updating price feeds");
+
         pyth.updatePriceFeeds{value: updateFee}(updateData);
 
-        console.log("first assert");
         for (uint i = 0; i < numPriceFeeds; i++) {
             assertPriceFeedMessageStored(priceFeedMessages[i]);
         }
 
-        console.log("updating price feeds again");
         // Update the prices again with the same data should work
         pyth.updatePriceFeeds{value: updateFee}(updateData);
-        console.log("finished updatePriceFeeds");
 
         for (uint i = 0; i < numPriceFeeds; i++) {
             assertPriceFeedMessageStored(priceFeedMessages[i]);
@@ -131,11 +125,9 @@ contract PythWormholeMerkleAccumulatorTest is
             priceFeedMessages[i].emaConf = getRandUint64();
         }
 
-        console.log("creating wh merkle update data");
         (updateData, updateFee) = createWormholeMerkleUpdateData(
             priceFeedMessages
         );
-        console.log("created wh merkle update data");
 
         pyth.updatePriceFeeds{value: updateFee}(updateData);
 
@@ -440,7 +432,6 @@ contract PythWormholeMerkleAccumulatorTest is
         setRandSeed(seed);
 
         uint numPriceFeeds = (getRandUint() % 10) + 1;
-        console.log("numPriceFeeds: %d", numPriceFeeds);
         PriceFeedMessage[]
             memory priceFeedMessages = generateRandomPriceFeedMessage(
                 numPriceFeeds
@@ -453,8 +444,6 @@ contract PythWormholeMerkleAccumulatorTest is
         for (uint i = 0; i < numPriceFeeds; i++) {
             priceIds[i] = priceFeedMessages[i].priceId;
         }
-        console.log("generated price feed messages");
-        console.log("parsing  price feeds");
         PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
             value: updateFee
         }(updateData, priceIds, 0, MAX_UINT64);
@@ -479,47 +468,6 @@ contract PythWormholeMerkleAccumulatorTest is
                 priceFeedMessages[i].publishTime
             );
         }
-        /*
-        console.log("first assert");
-        for (uint i = 0; i < numPriceFeeds; i++) {
-            assertPriceFeedMessageStored(priceFeedMessages[i]);
-        }
-
-        console.log("updating price feeds again");
-        // Update the prices again with the same data should work
-        pyth.updatePriceFeeds{value: updateFee}(updateData);
-        console.log("finished updatePriceFeeds");
-
-        for (uint i = 0; i < numPriceFeeds; i++) {
-            assertPriceFeedMessageStored(priceFeedMessages[i]);
-        }
-
-        // Update the prices again with updated data should update the prices
-        for (uint i = 0; i < numPriceFeeds; i++) {
-            priceFeedMessages[i].price = getRandInt64();
-            priceFeedMessages[i].conf = getRandUint64();
-            priceFeedMessages[i].expo = getRandInt32();
-
-            // Increase the publish time if it is not causing an overflow
-            if (priceFeedMessages[i].publishTime != type(uint64).max) {
-                priceFeedMessages[i].publishTime += 1;
-            }
-            priceFeedMessages[i].emaPrice = getRandInt64();
-            priceFeedMessages[i].emaConf = getRandUint64();
-        }
-
-        console.log("creating wh merkle update data");
-        (updateData, updateFee) = createWormholeMerkleUpdateData(
-            priceFeedMessages
-        );
-        console.log("created wh merkle update data");
-
-
-        pyth.updatePriceFeeds{value: updateFee}(updateData);
-
-        for (uint i = 0; i < numPriceFeeds; i++) {
-            assertPriceFeedMessageStored(priceFeedMessages[i]);
-        }
-        */
+        // TODO: add more tests
     }
 }

@@ -13,8 +13,6 @@ import "./PythInternalStructs.sol";
 
 import "../libraries/MerkleTree.sol";
 
-import "forge-std/console.sol";
-
 abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     uint32 constant ACCUMULATOR_MAGIC = 0x504e4155; // Stands for PNAU (Pyth Network Accumulator Update)
     uint32 constant ACCUMULATOR_WORMHOLE_MAGIC = 0x41555756; // Stands for AUWV (Accumulator Update Wormhole Verficiation)
