@@ -43,13 +43,6 @@ module.exports = {
         mnemonic: process.env.MNEMONIC,
       },
     },
-    neon: {
-      url: "REPLACE_THIS_BY_NEON_URL",
-      network_id: 245022934,
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-      },
-    },
     shimmer_testnet: {
       url: "https://json-rpc.evm.testnet.shimmer.network",
       chainId: 1071,
