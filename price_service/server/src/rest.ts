@@ -67,6 +67,11 @@ function asyncWrapper(
   };
 }
 
+export type VaaResponse = {
+  publishTime: number;
+  vaa: string;
+};
+
 export class RestAPI {
   private port: number;
   private priceFeedVaaInfo: PriceStore;
@@ -92,12 +97,18 @@ export class RestAPI {
   async getVaaWithDbLookup(
     priceFeedId: string,
     publishTime: TimestampInSec
-  ): Promise<VaaConfig | undefined> {
+  ): Promise<VaaResponse | undefined> {
     // Try to fetch the vaa from the local cache
-    let vaa = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
+    const vaaConfig = this.priceFeedVaaInfo.getVaa(priceFeedId, publishTime);
+    let vaa: VaaResponse | undefined;
 
     // if publishTime is older than cache ttl or vaa is not found, fetch from db
-    if (vaa === undefined && this.dbApiEndpoint && this.dbApiCluster) {
+    if (vaaConfig !== undefined) {
+      vaa = {
+        vaa: vaaConfig.vaa,
+        publishTime: vaaConfig.publishTime,
+      };
+    } else if (vaa === undefined && this.dbApiEndpoint && this.dbApiCluster) {
       const priceFeedWithoutLeading0x = removeLeading0x(priceFeedId);
 
       try {
