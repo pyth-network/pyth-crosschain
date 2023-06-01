@@ -1,7 +1,10 @@
 use {
     crate::store::{
-        types::MessageState,
-        AccumulatorState,
+        storage::AccumulatorState,
+        types::{
+            AccumulatorMessages,
+            MessageState,
+        },
         Store,
     },
     anyhow::{
@@ -40,45 +43,43 @@ pub async fn store_wormhole_merkle_verified_message(
     proof: WormholeMerkleRoot,
     vaa_bytes: Vec<u8>,
 ) -> Result<()> {
-    let pending_acc = store
-        .pending_accumulations
-        .entry(proof.slot)
-        .or_default()
-        .await
-        .into_value();
+    let mut accumulator_state = store
+        .storage
+        .fetch_accumulator_state(proof.slot)
+        .await?
+        .unwrap_or(AccumulatorState {
+            slot:                  proof.slot,
+            accumulator_messages:  None,
+            wormhole_merkle_proof: None,
+        });
+
+    accumulator_state.wormhole_merkle_proof = Some((proof, vaa_bytes));
     store
-        .pending_accumulations
-        .insert(
-            proof.slot,
-            pending_acc.wormhole_merkle_proof((proof, vaa_bytes)),
-        )
-        .await;
+        .storage
+        .store_accumulator_state(accumulator_state)
+        .await?;
     Ok(())
 }
 
 pub fn construct_message_states_proofs(
-    state: AccumulatorState,
+    accumulator_messages: &AccumulatorMessages,
+    wormhole_merkle_proof: &(WormholeMerkleRoot, Vec<u8>),
 ) -> Result<Vec<WormholeMerkleMessageProof>> {
     // Check whether the state is valid
     let merkle_acc = match MerkleAccumulator::<Keccak160>::from_set(
-        state
-            .accumulator_messages
-            .messages
-            .iter()
-            .map(|m| m.as_ref()),
+        accumulator_messages.messages.iter().map(|m| m.as_ref()),
     ) {
         Some(merkle_acc) => merkle_acc,
         None => return Ok(vec![]), // It only happens when the message set is empty
     };
 
-    let (proof, vaa) = &state.wormhole_merkle_proof;
+    let (proof, vaa) = &wormhole_merkle_proof;
 
     if merkle_acc.root != proof.root {
         return Err(anyhow!("Invalid merkle root"));
     }
 
-    state
-        .accumulator_messages
+    accumulator_messages
         .messages
         .iter()
         .map(|m| {

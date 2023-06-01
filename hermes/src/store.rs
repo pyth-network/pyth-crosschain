@@ -1,7 +1,10 @@
 use {
     self::{
         proof::wormhole_merkle::construct_update_data,
-        storage::StorageInstance,
+        storage::{
+            MessageStateFilter,
+            StorageInstance,
+        },
         types::{
             AccumulatorMessages,
             MessageType,
@@ -17,6 +20,7 @@ use {
             construct_message_states_proofs,
             store_wormhole_merkle_verified_message,
         },
+        storage::AccumulatorState,
         types::{
             MessageState,
             ProofSet,
@@ -41,7 +45,6 @@ use {
         collections::HashSet,
         sync::Arc,
         time::{
-            Duration,
             SystemTime,
             UNIX_EPOCH,
         },
@@ -62,28 +65,16 @@ pub mod storage;
 pub mod types;
 pub mod wormhole;
 
-#[derive(Clone, PartialEq, Debug, Builder)]
-#[builder(derive(Debug), pattern = "immutable")]
-pub struct AccumulatorState {
-    pub accumulator_messages:  AccumulatorMessages,
-    pub wormhole_merkle_proof: (WormholeMerkleRoot, Vec<u8>),
-}
-
 pub struct Store {
-    pub storage:               StorageInstance,
-    pub pending_accumulations: Cache<Slot, AccumulatorStateBuilder>,
-    pub guardian_set:          RwLock<Option<Vec<GuardianAddress>>>,
-    pub update_tx:             Sender<()>,
+    pub storage:      StorageInstance,
+    pub guardian_set: RwLock<Option<Vec<GuardianAddress>>>,
+    pub update_tx:    Sender<()>,
 }
 
 impl Store {
-    pub fn new_with_local_cache(update_tx: Sender<()>, max_size_per_key: usize) -> Arc<Self> {
+    pub fn new_with_local_cache(update_tx: Sender<()>, cache_size: u64) -> Arc<Self> {
         Arc::new(Self {
-            storage: storage::local_storage::LocalStorage::new_instance(max_size_per_key),
-            pending_accumulations: Cache::builder()
-                .max_capacity(10_000)
-                .time_to_live(Duration::from_secs(60 * 5))
-                .build(), // FIXME: Make this configurable
+            storage: storage::local_storage::LocalStorage::new_instance(cache_size),
             guardian_set: RwLock::new(None),
             update_tx,
         })
@@ -117,44 +108,47 @@ impl Store {
                     }
                 }
             }
+
             Update::AccumulatorMessages(accumulator_messages) => {
                 let slot = accumulator_messages.slot;
-
                 log::info!("Storing accumulator messages for slot {:?}.", slot,);
-
-                let pending_acc = self
-                    .pending_accumulations
-                    .entry(slot)
-                    .or_default()
-                    .await
-                    .into_value();
-                self.pending_accumulations
-                    .insert(slot, pending_acc.accumulator_messages(accumulator_messages))
-                    .await;
-
+                let mut accumulator_state = self
+                    .storage
+                    .fetch_accumulator_state(slot)
+                    .await?
+                    .unwrap_or(AccumulatorState {
+                        slot,
+                        accumulator_messages: None,
+                        wormhole_merkle_proof: None,
+                    });
+                accumulator_state.accumulator_messages = Some(accumulator_messages);
+                self.storage
+                    .store_accumulator_state(accumulator_state)
+                    .await?;
                 slot
             }
         };
 
-        let pending_state = self.pending_accumulations.get(&slot);
-        let pending_state = match pending_state {
-            Some(pending_state) => pending_state,
-            // Due to some race conditions this might happen when it's processed before
+        let state = match self.storage.fetch_accumulator_state(slot).await? {
+            Some(state) => state,
             None => return Ok(()),
         };
 
-        let state = match pending_state.build() {
-            Ok(state) => state,
-            Err(_) => return Ok(()),
-        };
+        let (accumulator_messages, wormhole_merkle_proof) =
+            match (state.accumulator_messages, state.wormhole_merkle_proof) {
+                (Some(accumulator_messages), Some(wormhole_merkle_proof)) => {
+                    (accumulator_messages, wormhole_merkle_proof)
+                }
+                _ => return Ok(()),
+            };
 
-        let wormhole_merkle_message_states_proofs = construct_message_states_proofs(state.clone())?;
+        let wormhole_merkle_message_states_proofs =
+            construct_message_states_proofs(&accumulator_messages, &wormhole_merkle_proof)?;
 
         let current_time: UnixTimestamp =
             SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as _;
 
-        let message_states = state
-            .accumulator_messages
+        let message_states = accumulator_messages
             .messages
             .iter()
             .enumerate()
@@ -170,7 +164,7 @@ impl Store {
                             .ok_or(anyhow!("Missing proof for message"))?
                             .clone(),
                     },
-                    state.accumulator_messages.slot,
+                    accumulator_messages.slot,
                     current_time,
                 ))
             })
@@ -178,9 +172,7 @@ impl Store {
 
         log::info!("Message states len: {:?}", message_states.len());
 
-        self.storage.store_message_states(message_states)?;
-
-        self.pending_accumulations.invalidate(&slot).await;
+        self.storage.store_message_states(message_states).await?;
 
         self.update_tx.send(()).await?;
 
@@ -191,16 +183,19 @@ impl Store {
         self.guardian_set.write().await.replace(guardian_set);
     }
 
-    pub fn get_price_feeds_with_update_data(
+    pub async fn get_price_feeds_with_update_data(
         &self,
         price_ids: Vec<PriceIdentifier>,
         request_time: RequestTime,
     ) -> Result<PriceFeedsWithUpdateData> {
-        let messages = self.storage.retrieve_message_states(
-            price_ids,
-            request_time,
-            Some(&|message_type| *message_type == MessageType::PriceFeedMessage),
-        )?;
+        let messages = self
+            .storage
+            .fetch_message_states(
+                price_ids,
+                request_time,
+                MessageStateFilter::Only(MessageType::PriceFeedMessage),
+            )
+            .await?;
 
         let price_feeds = messages
             .iter()
@@ -226,7 +221,12 @@ impl Store {
         })
     }
 
-    pub fn get_price_feed_ids(&self) -> HashSet<PriceIdentifier> {
-        self.storage.keys().iter().map(|key| key.price_id).collect()
+    pub async fn get_price_feed_ids(&self) -> HashSet<PriceIdentifier> {
+        self.storage
+            .message_state_keys()
+            .await
+            .iter()
+            .map(|key| key.price_id)
+            .collect()
     }
 }
