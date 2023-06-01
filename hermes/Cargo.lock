@@ -4223,11 +4223,9 @@ dependencies = [
  "hex",
  "rustc_version 0.4.0",
  "serde",
- "serde_wormhole",
  "sha3 0.10.8",
  "slow_primes",
  "thiserror",
- "wormhole-sdk",
 ]
 
 [[package]]

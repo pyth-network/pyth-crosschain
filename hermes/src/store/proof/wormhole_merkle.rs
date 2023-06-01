@@ -17,13 +17,15 @@ use {
             Accumulator,
         },
         hashers::keccak256_160::Keccak160,
-        payload::v1::{
-            AccumulatorUpdateData,
-            MerklePriceUpdate,
-            Proof,
-            WormholeMerkleRoot,
+        wire::{
+            to_vec,
+            v1::{
+                AccumulatorUpdateData,
+                MerklePriceUpdate,
+                Proof,
+                WormholeMerkleRoot,
+            },
         },
-        ser::to_vec,
     },
 };
 

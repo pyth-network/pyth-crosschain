@@ -32,7 +32,7 @@ use {
     moka::future::Cache,
     pyth_oracle::Message,
     pyth_sdk::PriceIdentifier,
-    pythnet_sdk::payload::v1::{
+    pythnet_sdk::wire::v1::{
         WormholeMerkleRoot,
         WormholeMessage,
         WormholePayload,
