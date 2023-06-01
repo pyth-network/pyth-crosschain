@@ -49,6 +49,22 @@ contract PythWormholeMerkleAccumulatorTest is
         assertEq(emaPrice.publishTime, priceFeedMessage.publishTime);
     }
 
+    function assertParsedPriceFeed(
+        PythStructs.PriceFeed memory priceFeed,
+        PriceFeedMessage memory priceFeedMessage,
+        bytes32 priceId
+    ) internal {
+        assertEq(priceFeed.id, priceId);
+        assertEq(priceFeed.price.price, priceFeedMessage.price);
+        assertEq(priceFeed.price.conf, priceFeedMessage.conf);
+        assertEq(priceFeed.price.expo, priceFeedMessage.expo);
+        assertEq(priceFeed.price.publishTime, priceFeedMessage.publishTime);
+        assertEq(priceFeed.emaPrice.price, priceFeedMessage.emaPrice);
+        assertEq(priceFeed.emaPrice.conf, priceFeedMessage.emaConf);
+        assertEq(priceFeed.emaPrice.expo, priceFeedMessage.expo);
+        assertEq(priceFeed.emaPrice.publishTime, priceFeedMessage.publishTime);
+    }
+
     function generateRandomPriceFeedMessage(
         uint numPriceFeeds
     ) internal returns (PriceFeedMessage[] memory priceFeedMessages) {
@@ -449,25 +465,45 @@ contract PythWormholeMerkleAccumulatorTest is
         }(updateData, priceIds, 0, MAX_UINT64);
 
         for (uint i = 0; i < priceFeeds.length; i++) {
-            assertEq(priceFeeds[i].id, priceIds[i]);
-            assertEq(priceFeeds[i].price.price, priceFeedMessages[i].price);
-            assertEq(priceFeeds[i].price.conf, priceFeedMessages[i].conf);
-            assertEq(priceFeeds[i].price.expo, priceFeedMessages[i].expo);
-            assertEq(
-                priceFeeds[i].price.publishTime,
-                priceFeedMessages[i].publishTime
-            );
-            assertEq(
-                priceFeeds[i].emaPrice.price,
-                priceFeedMessages[i].emaPrice
-            );
-            assertEq(priceFeeds[i].emaPrice.conf, priceFeedMessages[i].emaConf);
-            assertEq(priceFeeds[i].emaPrice.expo, priceFeedMessages[i].expo);
-            assertEq(
-                priceFeeds[i].emaPrice.publishTime,
-                priceFeedMessages[i].publishTime
+            assertParsedPriceFeed(
+                priceFeeds[i],
+                priceFeedMessages[i],
+                priceIds[i]
             );
         }
-        // TODO: add more tests
+
+        // update priceFeedMessages
+        for (uint i = 0; i < numPriceFeeds; i++) {
+            priceFeedMessages[i].price = getRandInt64();
+            priceFeedMessages[i].conf = getRandUint64();
+            priceFeedMessages[i].expo = getRandInt32();
+
+            // Increase the publish time if it is not causing an overflow
+            if (priceFeedMessages[i].publishTime != type(uint64).max) {
+                priceFeedMessages[i].publishTime += 1;
+            }
+            priceFeedMessages[i].emaPrice = getRandInt64();
+            priceFeedMessages[i].emaConf = getRandUint64();
+        }
+
+        (updateData, updateFee) = createWormholeMerkleUpdateData(
+            priceFeedMessages
+        );
+
+        // reparse
+        priceFeeds = pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64
+        );
+
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            assertParsedPriceFeed(
+                priceFeeds[i],
+                priceFeedMessages[i],
+                priceIds[i]
+            );
+        }
     }
 }

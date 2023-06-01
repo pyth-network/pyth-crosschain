@@ -42,6 +42,26 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             revert PythErrors.InvalidUpdateDataSource();
     }
 
+    function parsePricesUsingAccumulator(
+        bytes memory accumulatorUpdate
+    )
+        internal
+        view
+        returns (
+            PythInternalStructs.PriceInfo[] memory priceInfos,
+            bytes32[] memory priceIds
+        )
+    {
+        uint offset = parseAccumulatorUpdateHeader(accumulatorUpdate);
+        (priceInfos, priceIds) = parsePricesUsingWormholeMerkle(
+            UnsafeBytesLib.slice(
+                accumulatorUpdate,
+                offset,
+                accumulatorUpdate.length - offset
+            )
+        );
+    }
+
     function parseAccumulatorUpdateHeader(
         bytes memory accumulatorUpdate
     ) internal pure returns (uint offset) {
@@ -111,8 +131,8 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
-    function parsePricesUsingAccumulator(
-        bytes memory accumulatorUpdate
+    function parsePricesUsingWormholeMerkle(
+        bytes memory encoded
     )
         internal
         view
@@ -121,27 +141,29 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             bytes32[] memory priceIds
         )
     {
-        uint offset = parseAccumulatorUpdateHeader(accumulatorUpdate);
-        (priceInfos, priceIds) = parsePricesUsingWormholeMerkle(
-            UnsafeBytesLib.slice(
-                accumulatorUpdate,
-                offset,
-                accumulatorUpdate.length - offset
-            )
-        );
-    }
+        unchecked {
+            (
+                uint offset,
+                bytes20 digest,
+                uint8 numUpdates
+            ) = parseWormholeMerkleHeader(encoded);
 
-    function updatePricesUsingAccumulator(
-        bytes calldata accumulatorUpdate
-    ) internal {
-        uint offset = parseAccumulatorUpdateHeader(accumulatorUpdate);
-        updatePricesUsingWormholeMerkle(
-            UnsafeBytesLib.slice(
-                accumulatorUpdate,
-                offset,
-                accumulatorUpdate.length - offset
-            )
-        );
+            priceInfos = new PythInternalStructs.PriceInfo[](numUpdates);
+            priceIds = new bytes32[](numUpdates);
+            for (uint i = 0; i < numUpdates; i++) {
+                (
+                    offset,
+                    priceInfos[i],
+                    priceIds[i]
+                ) = verifyAndParsePriceFeedFromMerkleProof(
+                    digest,
+                    encoded,
+                    offset
+                );
+            }
+
+            if (offset != encoded.length) revert PythErrors.InvalidUpdateData();
+        }
     }
 
     function parseWormholeMerkleHeader(
@@ -207,58 +229,31 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
-    function parsePricesUsingWormholeMerkle(
-        bytes memory encoded
+    function verifyAndParsePriceFeedFromMerkleProof(
+        bytes20 digest,
+        bytes memory encoded,
+        uint offset
     )
-        internal
-        view
+        private
+        pure
         returns (
-            PythInternalStructs.PriceInfo[] memory priceInfos,
-            bytes32[] memory priceIds
+            uint endOffset,
+            PythInternalStructs.PriceInfo memory priceInfo,
+            bytes32 priceId
         )
     {
         unchecked {
-            (
-                uint offset,
-                bytes20 digest,
-                uint8 numUpdates
-            ) = parseWormholeMerkleHeader(encoded);
+            bytes memory encodedMessage;
+            (offset, encodedMessage) = validateMessageWithProof(
+                digest,
+                encoded,
+                offset
+            );
+            (priceInfo, priceId) = verifyAndParsePriceFeedMessage(
+                encodedMessage
+            );
 
-            priceInfos = new PythInternalStructs.PriceInfo[](numUpdates);
-            priceIds = new bytes32[](numUpdates);
-            for (uint i = 0; i < numUpdates; i++) {
-                (
-                    offset,
-                    priceInfos[i],
-                    priceIds[i]
-                ) = verifyAndParsePriceFeedFromMerkleProof(
-                    digest,
-                    encoded,
-                    offset
-                );
-            }
-
-            if (offset != encoded.length) revert PythErrors.InvalidUpdateData();
-        }
-    }
-
-    function updatePricesUsingWormholeMerkle(bytes memory encoded) private {
-        unchecked {
-            (
-                uint offset,
-                bytes20 digest,
-                uint8 numUpdates
-            ) = parseWormholeMerkleHeader(encoded);
-
-            for (uint i = 0; i < numUpdates; i++) {
-                offset = verifyAndUpdatePriceFeedFromMerkleProof(
-                    digest,
-                    encoded,
-                    offset
-                );
-            }
-
-            if (offset != encoded.length) revert PythErrors.InvalidUpdateData();
+            return (offset, priceInfo, priceId);
         }
     }
 
@@ -287,53 +282,6 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             }
 
             return (offset, encodedMessage);
-        }
-    }
-
-    function verifyAndUpdatePriceFeedFromMerkleProof(
-        bytes20 digest,
-        bytes memory encoded,
-        uint offset
-    ) private returns (uint endOffset) {
-        unchecked {
-            PythInternalStructs.PriceInfo memory priceInfo;
-            bytes32 priceId;
-            (
-                offset,
-                priceInfo,
-                priceId
-            ) = verifyAndParsePriceFeedFromMerkleProof(digest, encoded, offset);
-            processMessage(priceInfo, priceId);
-
-            return offset;
-        }
-    }
-
-    function verifyAndParsePriceFeedFromMerkleProof(
-        bytes20 digest,
-        bytes memory encoded,
-        uint offset
-    )
-        private
-        pure
-        returns (
-            uint endOffset,
-            PythInternalStructs.PriceInfo memory priceInfo,
-            bytes32 priceId
-        )
-    {
-        unchecked {
-            bytes memory encodedMessage;
-            (offset, encodedMessage) = validateMessageWithProof(
-                digest,
-                encoded,
-                offset
-            );
-            (priceInfo, priceId) = verifyAndParsePriceFeedMessage(
-                encodedMessage
-            );
-
-            return (offset, priceInfo, priceId);
         }
     }
 
@@ -419,6 +367,58 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             // We don't check equality to enable future compatibility.
             if (offset > encodedPriceFeed.length)
                 revert PythErrors.InvalidUpdateData();
+        }
+    }
+
+    function updatePricesUsingAccumulator(
+        bytes calldata accumulatorUpdate
+    ) internal {
+        uint offset = parseAccumulatorUpdateHeader(accumulatorUpdate);
+        updatePricesUsingWormholeMerkle(
+            UnsafeBytesLib.slice(
+                accumulatorUpdate,
+                offset,
+                accumulatorUpdate.length - offset
+            )
+        );
+    }
+
+    function updatePricesUsingWormholeMerkle(bytes memory encoded) private {
+        unchecked {
+            (
+                uint offset,
+                bytes20 digest,
+                uint8 numUpdates
+            ) = parseWormholeMerkleHeader(encoded);
+
+            for (uint i = 0; i < numUpdates; i++) {
+                offset = verifyAndUpdatePriceFeedFromMerkleProof(
+                    digest,
+                    encoded,
+                    offset
+                );
+            }
+
+            if (offset != encoded.length) revert PythErrors.InvalidUpdateData();
+        }
+    }
+
+    function verifyAndUpdatePriceFeedFromMerkleProof(
+        bytes20 digest,
+        bytes memory encoded,
+        uint offset
+    ) private returns (uint endOffset) {
+        unchecked {
+            PythInternalStructs.PriceInfo memory priceInfo;
+            bytes32 priceId;
+            (
+                offset,
+                priceInfo,
+                priceId
+            ) = verifyAndParsePriceFeedFromMerkleProof(digest, encoded, offset);
+            processMessage(priceInfo, priceId);
+
+            return offset;
         }
     }
 

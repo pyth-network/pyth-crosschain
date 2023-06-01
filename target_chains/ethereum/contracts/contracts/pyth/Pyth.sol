@@ -478,7 +478,7 @@ abstract contract Pyth is
                         ) {
                             priceFeeds[k].id = 0;
                         } else {
-                            setPriceFeedsInfo(
+                            fillPriceFeedsInfo(
                                 priceFeeds,
                                 k,
                                 accumulatorPriceId,
@@ -582,11 +582,12 @@ abstract contract Pyth is
     }
 
     function getPriceFeedsIndex(
-        bytes32[] memory priceIds,
+        bytes32[] calldata priceIds,
         bytes32 targetPriceId
     ) private pure returns (uint index) {
         uint k = 0;
-        for (; k < priceIds.length; k++) {
+        uint len = priceIds.length;
+        for (; k < len; k++) {
             if (priceIds[k] == targetPriceId) {
                 break;
             }
@@ -594,7 +595,7 @@ abstract contract Pyth is
         return k;
     }
 
-    function setPriceFeedsInfo(
+    function fillPriceFeedsInfo(
         PythStructs.PriceFeed[] memory priceFeeds,
         uint k,
         bytes32 priceId,
