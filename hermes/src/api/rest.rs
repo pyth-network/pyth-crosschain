@@ -65,7 +65,7 @@ impl IntoResponse for RestError {
 pub async fn price_feed_ids(
     State(state): State<super::State>,
 ) -> Result<Json<HashSet<PriceIdentifier>>, RestError> {
-    let price_feeds = state.store.get_price_feed_ids();
+    let price_feeds = state.store.get_price_feed_ids().await;
     Ok(Json(price_feeds))
 }
 
@@ -83,6 +83,7 @@ pub async fn latest_vaas(
     let price_feeds_with_update_data = state
         .store
         .get_price_feeds_with_update_data(price_ids, RequestTime::Latest)
+        .await
         .map_err(|_| RestError::UpdateDataNotFound)?;
     Ok(Json(
         price_feeds_with_update_data
@@ -111,6 +112,7 @@ pub async fn latest_price_feeds(
     let price_feeds_with_update_data = state
         .store
         .get_price_feeds_with_update_data(price_ids, RequestTime::Latest)
+        .await
         .map_err(|_| RestError::UpdateDataNotFound)?;
     Ok(Json(
         price_feeds_with_update_data
@@ -148,6 +150,7 @@ pub async fn get_vaa(
             vec![price_id],
             RequestTime::FirstAfter(params.publish_time),
         )
+        .await
         .map_err(|_| RestError::UpdateDataNotFound)?;
 
     let vaa = price_feeds_with_update_data
@@ -198,6 +201,7 @@ pub async fn get_vaa_ccip(
     let price_feeds_with_update_data = state
         .store
         .get_price_feeds_with_update_data(vec![price_id], RequestTime::FirstAfter(publish_time))
+        .await
         .map_err(|_| RestError::CcipUpdateDataNotFound)?;
 
     let bytes = price_feeds_with_update_data

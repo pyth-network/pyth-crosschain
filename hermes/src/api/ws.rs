@@ -161,31 +161,34 @@ impl Subscriber {
     }
 
     async fn handle_price_feeds_update(&mut self) -> Result<()> {
-        let messages = self
-            .price_feeds_with_config
-            .iter()
-            .map(|(price_feed_id, config)| {
-                let price_feeds_with_update_data = self
-                    .store
-                    .get_price_feeds_with_update_data(vec![*price_feed_id], RequestTime::Latest)?;
-                let price_feed = price_feeds_with_update_data
-                    .price_feeds
-                    .into_iter()
-                    .next()
-                    .ok_or_else(|| {
-                        anyhow::anyhow!("Price feed {} not found.", price_feed_id.to_string())
-                    })?;
-                let price_feed =
-                    RpcPriceFeed::from_price_feed_update(price_feed, config.verbose, config.binary);
+        let price_feed_ids = self.price_feeds_with_config.keys().cloned().collect();
+        for update in self
+            .store
+            .get_price_feeds_with_update_data(price_feed_ids, RequestTime::Latest)
+            .await?
+            .price_feeds
+        {
+            let config = self
+                .price_feeds_with_config
+                .get(&PriceIdentifier::new(update.price_feed.id))
+                .ok_or(anyhow::anyhow!(
+                    "Config missing, price feed list was poisoned during iteration."
+                ))?;
 
-                Ok(Message::Text(serde_json::to_string(
-                    &ServerMessage::PriceUpdate { price_feed },
+            self.sender
+                .feed(Message::Text(serde_json::to_string(
+                    &ServerMessage::PriceUpdate {
+                        price_feed: RpcPriceFeed::from_price_feed_update(
+                            update,
+                            config.verbose,
+                            config.binary,
+                        ),
+                    },
                 )?))
-            })
-            .collect::<Result<Vec<Message>>>()?;
-        self.sender
-            .send_all(&mut iter(messages.into_iter().map(Ok)))
-            .await?;
+                .await?;
+        }
+
+        self.sender.flush().await?;
         Ok(())
     }
 

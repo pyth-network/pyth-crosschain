@@ -11,7 +11,7 @@ use {
 
 
 // TODO: We can use strum on Message enum to derive this.
-#[derive(Clone, Debug, Eq, PartialEq, Hash, EnumIter)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, EnumIter)]
 pub enum MessageType {
     PriceFeedMessage,
     TwapMessage,

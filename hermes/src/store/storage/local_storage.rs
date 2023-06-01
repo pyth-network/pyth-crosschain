@@ -1,17 +1,24 @@
 use {
     super::{
+        AccumulatorState,
         MessageIdentifier,
         MessageState,
+        MessageStateFilter,
         RequestTime,
         Storage,
         StorageInstance,
     },
-    crate::store::types::MessageType,
+    crate::store::types::{
+        MessageType,
+        Slot,
+    },
     anyhow::{
         anyhow,
         Result,
     },
+    async_trait::async_trait,
     dashmap::DashMap,
+    moka::sync::Cache,
     pyth_sdk::PriceIdentifier,
     std::{
         collections::VecDeque,
@@ -22,15 +29,20 @@ use {
 
 #[derive(Clone)]
 pub struct LocalStorage {
-    cache:            Arc<DashMap<MessageIdentifier, VecDeque<MessageState>>>,
-    max_size_per_key: usize,
+    message_cache:     Arc<DashMap<MessageIdentifier, VecDeque<MessageState>>>,
+    accumulator_cache: Cache<Slot, AccumulatorState>,
+    cache_size:        u64,
 }
 
 impl LocalStorage {
-    pub fn new_instance(max_size_per_key: usize) -> StorageInstance {
+    pub fn new_instance(cache_size: u64) -> StorageInstance {
         Box::new(Self {
-            cache: Arc::new(DashMap::new()),
-            max_size_per_key,
+            message_cache: Arc::new(DashMap::new()),
+            accumulator_cache: Cache::builder()
+                .max_capacity(cache_size)
+                .time_to_live(std::time::Duration::from_secs(60 * 60 * 24))
+                .build(),
+            cache_size,
         })
     }
 
@@ -39,7 +51,7 @@ impl LocalStorage {
         key: MessageIdentifier,
         request_time: RequestTime,
     ) -> Option<MessageState> {
-        match self.cache.get(&key) {
+        match self.message_cache.get(&key) {
             Some(key_cache) => {
                 match request_time {
                     RequestTime::Latest => key_cache.back().cloned(),
@@ -74,6 +86,7 @@ impl LocalStorage {
     }
 }
 
+#[async_trait]
 impl Storage for LocalStorage {
     /// Add a new db entry to the cache.
     ///
@@ -81,11 +94,11 @@ impl Storage for LocalStorage {
     /// the oldest record in the cache if the max_size is reached. Entries are
     /// usually added in increasing order and likely to be inserted near the
     /// end of the deque. The function is optimized for this specific case.
-    fn store_message_states(&self, message_states: Vec<MessageState>) -> Result<()> {
+    async fn store_message_states(&self, message_states: Vec<MessageState>) -> Result<()> {
         for message_state in message_states {
             let key = message_state.key();
 
-            let mut key_cache = self.cache.entry(key).or_insert_with(VecDeque::new);
+            let mut key_cache = self.message_cache.entry(key).or_insert_with(VecDeque::new);
 
             key_cache.push_back(message_state);
 
@@ -99,7 +112,7 @@ impl Storage for LocalStorage {
             // FIXME remove equal elements by key and time
 
             // Remove the oldest record if the max size is reached.
-            if key_cache.len() > self.max_size_per_key {
+            if key_cache.len() > self.cache_size as usize {
                 key_cache.pop_front();
             }
         }
@@ -107,20 +120,20 @@ impl Storage for LocalStorage {
         Ok(())
     }
 
-    fn retrieve_message_states(
+    async fn fetch_message_states(
         &self,
         ids: Vec<PriceIdentifier>,
         request_time: RequestTime,
-        filter: Option<&dyn Fn(&MessageType) -> bool>,
+        filter: MessageStateFilter,
     ) -> Result<Vec<MessageState>> {
-        // TODO: Should we return an error if any of the ids are not found?
         ids.into_iter()
             .flat_map(|id| {
                 let request_time = request_time.clone();
                 let message_types: Vec<MessageType> = match filter {
-                    Some(filter) => MessageType::iter().filter(filter).collect(),
-                    None => MessageType::iter().collect(),
+                    MessageStateFilter::All => MessageType::iter().collect(),
+                    MessageStateFilter::Only(t) => vec![t],
                 };
+
                 message_types.into_iter().map(move |message_type| {
                     let key = MessageIdentifier {
                         price_id: id,
@@ -133,7 +146,20 @@ impl Storage for LocalStorage {
             .collect()
     }
 
-    fn keys(&self) -> Vec<MessageIdentifier> {
-        self.cache.iter().map(|entry| entry.key().clone()).collect()
+    async fn message_state_keys(&self) -> Vec<MessageIdentifier> {
+        self.message_cache
+            .iter()
+            .map(|entry| entry.key().clone())
+            .collect()
+    }
+
+    async fn store_accumulator_state(&self, state: super::AccumulatorState) -> Result<()> {
+        let key = state.slot;
+        self.accumulator_cache.insert(key, state);
+        Ok(())
+    }
+
+    async fn fetch_accumulator_state(&self, slot: Slot) -> Result<Option<super::AccumulatorState>> {
+        Ok(self.accumulator_cache.get(&slot))
     }
 }
