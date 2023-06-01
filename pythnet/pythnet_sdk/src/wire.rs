@@ -6,12 +6,6 @@
 //!
 //! See the `ser` submodule for a description of the Pyth Wire format.
 
-use {
-    borsh::BorshSerialize,
-    serde::Serialize,
-    wormhole_sdk::Vaa,
-};
-
 pub mod array;
 mod de;
 mod prefixed_vec;
@@ -32,56 +26,100 @@ pub use {
     },
 };
 
-// Transfer Format.
-// --------------------------------------------------------------------------------
-// This definition is what will be sent over the wire (I.E, pulled from PythNet and
-// submitted to target chains).
-#[derive(BorshSerialize, Serialize)]
-pub struct AccumulatorProof<'a> {
-    magic:         [u8; 4],
-    major_version: u8,
-    minor_version: u8,
-    trailing:      &'a [u8],
-    proof:         v1::Proof<'a>,
-}
-
 // Proof Format (V1)
 // --------------------------------------------------------------------------------
-// The definitions within each module can be updated with append-only data without
-// requiring a new module to be defined. So for example, new accounts can be added
-// to the end of `AccumulatorAccount` without moving to a `v1`.
+// The definitions within each module can be updated with append-only data without requiring a new
+// module to be defined. So for example, it is possible to add new fields can be added to the end
+// of the `AccumulatorAccount` without moving to a `v1`.
 pub mod v1 {
-    use super::*;
+    use {
+        super::*,
+        crate::{
+            accumulators::merkle::MerklePath,
+            error::Error,
+            hashers::keccak256_160::Keccak160,
+            require,
+        },
+        serde::{
+            Deserialize,
+            Serialize,
+        },
+    };
+
+    // Transfer Format.
+    // --------------------------------------------------------------------------------
+    // This definition is what will be sent over the wire (I.E, pulled from PythNet and submitted
+    // to target chains).
+    #[derive(Clone, Debug, Hash, PartialEq, Serialize, Deserialize)]
+    pub struct AccumulatorUpdateData {
+        magic:         [u8; 4],
+        major_version: u8,
+        minor_version: u8,
+        trailing:      Vec<u8>,
+        proof:         Proof,
+    }
+
+    impl AccumulatorUpdateData {
+        pub fn new(proof: Proof) -> Self {
+            Self {
+                magic: *b"PNAU",
+                major_version: 1,
+                minor_version: 0,
+                trailing: vec![],
+                proof,
+            }
+        }
+
+        pub fn try_from_slice(bytes: &[u8]) -> Result<Self, Error> {
+            let message = from_slice::<byteorder::BE, Self>(bytes).unwrap();
+            require!(&message.magic[..] != b"PNAU", Error::InvalidMagic);
+            require!(message.major_version == 1, Error::InvalidVersion);
+            require!(message.minor_version == 0, Error::InvalidVersion);
+            Ok(message)
+        }
+    }
 
     // A hash of some data.
-    pub type Hash = [u8; 32];
+    pub type Hash = [u8; 20];
 
-    #[derive(Serialize)]
-    pub enum Proof<'a> {
+    #[derive(Clone, Debug, Hash, PartialEq, Serialize, Deserialize)]
+    pub enum Proof {
         WormholeMerkle {
-            proof:   Vaa<VerifiedDigest>,
-            updates: &'a [MerkleProof<'a>],
+            vaa:     PrefixedVec<u16, u8>,
+            updates: Vec<MerklePriceUpdate>,
         },
     }
 
-    #[derive(Serialize)]
-    pub struct VerifiedDigest {
-        magic:      [u8; 4],
-        proof_type: u8,
-        len:        u8,
-        storage_id: u64,
-        digest:     Hash,
+    #[derive(Clone, Debug, Hash, PartialEq, Serialize, Deserialize)]
+    pub struct MerklePriceUpdate {
+        pub message: PrefixedVec<u16, u8>,
+        pub proof:   MerklePath<Keccak160>,
     }
 
-    #[derive(Serialize)]
-    pub struct MerkleProof<'a> {
-        proof: &'a [Hash],
-        data:  &'a [u8],
+    #[derive(Clone, Debug, Hash, PartialEq, Serialize, Deserialize)]
+    pub struct WormholeMessage {
+        pub magic:   [u8; 4],
+        pub payload: WormholePayload,
     }
 
-    #[derive(Serialize)]
-    pub enum AccumulatorAccount {
-        Empty,
+    impl WormholeMessage {
+        pub fn try_from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, Error> {
+            let message = from_slice::<byteorder::BE, Self>(bytes.as_ref()).unwrap();
+            require!(&message.magic[..] == b"AUWV", Error::InvalidMagic);
+            Ok(message)
+        }
+    }
+
+    #[derive(Clone, Debug, Hash, PartialEq, Serialize, Deserialize)]
+    pub enum WormholePayload {
+        Merkle(WormholeMerkleRoot),
+    }
+
+    #[derive(Clone, Debug, Hash, PartialEq, Serialize, Deserialize)]
+    pub struct WormholeMerkleRoot {
+        pub slot:      u64,
+        pub ring_size: u32,
+        pub root:      Hash,
     }
 }
 
