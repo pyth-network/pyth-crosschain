@@ -3,8 +3,8 @@ use {
         storage::{
             AccumulatorState,
             CompletedAccumulatorState,
+            MessageState,
         },
-        types::MessageState,
         Store,
     },
     anyhow::{
