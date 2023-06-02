@@ -11,7 +11,7 @@ use serde::{
 /// PrefixlessVec overrides the serialization to _not_ write a length prefix.
 #[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
 struct PrefixlessVec<T> {
-    data: Vec<T>,
+    inner: Vec<T>,
 }
 
 impl<T> Serialize for PrefixlessVec<T>
@@ -21,7 +21,7 @@ where
     #[inline]
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut seq = serializer.serialize_seq(None)?;
-        for item in &self.data {
+        for item in &self.inner {
             seq.serialize_element(item)?;
         }
         seq.end()
@@ -75,7 +75,7 @@ where
                     );
                 }
 
-                Ok(PrefixlessVec { data })
+                Ok(PrefixlessVec { inner: data })
             }
         }
 
@@ -105,12 +105,33 @@ pub struct PrefixedVec<L, T> {
     data:      PrefixlessVec<T>,
 }
 
-impl<T, L> From<Vec<T>> for PrefixedVec<L, T> {
+impl<L, T> From<Vec<T>> for PrefixedVec<L, T> {
     fn from(data: Vec<T>) -> Self {
         Self {
             __phantom: std::marker::PhantomData,
-            data:      PrefixlessVec { data },
+            data:      PrefixlessVec { inner: data },
         }
+    }
+}
+
+impl<L, T> From<PrefixedVec<L, T>> for Vec<T> {
+    fn from(data: PrefixedVec<L, T>) -> Self {
+        data.data.inner
+    }
+}
+
+impl<L, T> IntoIterator for PrefixedVec<L, T> {
+    type Item = T;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.data.inner.into_iter()
+    }
+}
+
+impl<L, T> PrefixedVec<L, T> {
+    pub fn iter(&self) -> std::slice::Iter<T> {
+        self.data.inner.iter()
     }
 }
 
@@ -123,7 +144,7 @@ where
 {
     #[inline]
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let len: L = L::try_from(self.data.data.len()).unwrap();
+        let len: L = L::try_from(self.data.inner.len()).unwrap();
         let mut st = serializer.serialize_struct("SizedVec", 1)?;
         st.serialize_field("len", &len)?;
         st.serialize_field("data", &self.data)?;
