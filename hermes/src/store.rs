@@ -6,12 +6,10 @@ use {
             StorageInstance,
         },
         types::{
-            AccumulatorMessages,
             MessageType,
             PriceFeedUpdate,
             PriceFeedsWithUpdateData,
             RequestTime,
-            Slot,
             Update,
         },
     },
@@ -32,12 +30,9 @@ use {
         anyhow,
         Result,
     },
-    derive_builder::Builder,
-    moka::future::Cache,
     pyth_oracle::Message,
     pyth_sdk::PriceIdentifier,
     pythnet_sdk::wire::v1::{
-        WormholeMerkleRoot,
         WormholeMessage,
         WormholePayload,
     },
@@ -108,7 +103,6 @@ impl Store {
                     }
                 }
             }
-
             Update::AccumulatorMessages(accumulator_messages) => {
                 let slot = accumulator_messages.slot;
                 log::info!("Storing accumulator messages for slot {:?}.", slot,);
