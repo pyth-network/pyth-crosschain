@@ -3,11 +3,14 @@ use {
         proof::wormhole_merkle::WormholeMerkleState,
         types::{
             AccumulatorMessages,
+            MessageExt,
             MessageIdentifier,
-            MessageState,
             MessageType,
+            ProofSet,
+            RawMessage,
             RequestTime,
             Slot,
+            UnixTimestamp,
         },
     },
     anyhow::{
@@ -15,8 +18,8 @@ use {
         Result,
     },
     async_trait::async_trait,
+    pyth_oracle::Message,
     pyth_sdk::PriceIdentifier,
-    pythnet_sdk::wire::v1::WormholeMerkleRoot,
 };
 
 pub mod local_storage;
@@ -50,6 +53,54 @@ impl TryFrom<AccumulatorState> for CompletedAccumulatorState {
             accumulator_messages,
             wormhole_merkle_state,
         })
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Debug, PartialOrd, Ord)]
+pub struct MessageStateTime {
+    pub publish_time: UnixTimestamp,
+    pub slot:         Slot,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct MessageState {
+    pub publish_time: UnixTimestamp,
+    pub slot:         Slot,
+    pub id:           MessageIdentifier,
+    pub message:      Message,
+    pub raw_message:  RawMessage,
+    pub proof_set:    ProofSet,
+    pub received_at:  UnixTimestamp,
+}
+
+impl MessageState {
+    pub fn time(&self) -> MessageStateTime {
+        MessageStateTime {
+            publish_time: self.publish_time,
+            slot:         self.slot,
+        }
+    }
+
+    pub fn key(&self) -> MessageIdentifier {
+        self.id.clone()
+    }
+
+    pub fn new(
+        message: Message,
+        raw_message: RawMessage,
+        proof_set: ProofSet,
+        slot: Slot,
+        received_at: UnixTimestamp,
+    ) -> Self {
+        Self {
+            publish_time: message.publish_time(),
+            slot,
+            id: message.id(),
+            message,
+            raw_message,
+            proof_set,
+            received_at,
+        }
     }
 }
 

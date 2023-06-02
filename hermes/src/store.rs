@@ -2,6 +2,7 @@ use {
     self::{
         proof::wormhole_merkle::construct_update_data,
         storage::{
+            MessageState,
             MessageStateFilter,
             StorageInstance,
         },
@@ -23,7 +24,6 @@ use {
             CompletedAccumulatorState,
         },
         types::{
-            MessageState,
             ProofSet,
             UnixTimestamp,
         },
