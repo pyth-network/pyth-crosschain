@@ -7,7 +7,6 @@ use {
             StorageInstance,
         },
         types::{
-            MessageType,
             PriceFeedUpdate,
             PriceFeedsWithUpdateData,
             RequestTime,
@@ -33,7 +32,10 @@ use {
         anyhow,
         Result,
     },
-    pyth_oracle::Message,
+    pyth_oracle::{
+        Message,
+        MessageType,
+    },
     pyth_sdk::PriceIdentifier,
     pythnet_sdk::wire::v1::{
         WormholeMessage,
@@ -160,12 +162,9 @@ impl Store {
             .messages
             .iter()
             .enumerate()
-            .map(|(idx, raw_message)| {
-                let message = Message::try_from_bytes(raw_message)?;
-
+            .map(|(idx, message)| {
                 Ok(MessageState::new(
-                    message,
-                    raw_message.clone(),
+                    message.clone(),
                     ProofSet {
                         wormhole_merkle_proof: wormhole_merkle_message_states_proofs
                             .get(idx)
@@ -232,7 +231,7 @@ impl Store {
             .message_state_keys()
             .await
             .iter()
-            .map(|key| key.price_id)
+            .map(|key| PriceIdentifier::new(key.id))
             .collect()
     }
 }

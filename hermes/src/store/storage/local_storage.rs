@@ -1,17 +1,14 @@
 use {
     super::{
         AccumulatorState,
-        MessageIdentifier,
         MessageState,
         MessageStateFilter,
+        MessageStateKey,
         RequestTime,
         Storage,
         StorageInstance,
     },
-    crate::store::types::{
-        MessageType,
-        Slot,
-    },
+    crate::store::types::Slot,
     anyhow::{
         anyhow,
         Result,
@@ -19,6 +16,7 @@ use {
     async_trait::async_trait,
     dashmap::DashMap,
     moka::sync::Cache,
+    pyth_oracle::MessageType,
     pyth_sdk::PriceIdentifier,
     std::{
         collections::VecDeque,
@@ -29,7 +27,7 @@ use {
 
 #[derive(Clone)]
 pub struct LocalStorage {
-    message_cache:     Arc<DashMap<MessageIdentifier, VecDeque<MessageState>>>,
+    message_cache:     Arc<DashMap<MessageStateKey, VecDeque<MessageState>>>,
     accumulator_cache: Cache<Slot, AccumulatorState>,
     cache_size:        u64,
 }
@@ -48,7 +46,7 @@ impl LocalStorage {
 
     fn retrieve_message_state(
         &self,
-        key: MessageIdentifier,
+        key: MessageStateKey,
         request_time: RequestTime,
     ) -> Option<MessageState> {
         match self.message_cache.get(&key) {
@@ -135,9 +133,9 @@ impl Storage for LocalStorage {
                 };
 
                 message_types.into_iter().map(move |message_type| {
-                    let key = MessageIdentifier {
-                        price_id: id,
-                        type_:    message_type,
+                    let key = MessageStateKey {
+                        id:    id.to_bytes(),
+                        type_: message_type,
                     };
                     self.retrieve_message_state(key, request_time.clone())
                         .ok_or(anyhow!("Message not found"))
@@ -146,7 +144,7 @@ impl Storage for LocalStorage {
             .collect()
     }
 
-    async fn message_state_keys(&self) -> Vec<MessageIdentifier> {
+    async fn message_state_keys(&self) -> Vec<MessageStateKey> {
         self.message_cache
             .iter()
             .map(|entry| entry.key().clone())

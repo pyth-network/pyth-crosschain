@@ -4120,14 +4120,16 @@ dependencies = [
 [[package]]
 name = "pyth-oracle"
 version = "2.21.0"
-source = "git+https://github.com/pyth-network/pyth-client?rev=7d593d87e07a1e2486e7ca21597d664ee72be1ec#7d593d87e07a1e2486e7ca21597d664ee72be1ec"
+source = "git+https://github.com/pyth-network/pyth-client?rev=319cdc1baade5c4780b830eaf927f9bfef89ee39#319cdc1baade5c4780b830eaf927f9bfef89ee39"
 dependencies = [
  "bindgen",
  "bytemuck",
  "byteorder",
  "num-derive",
  "num-traits",
+ "serde",
  "solana-program",
+ "strum",
  "thiserror",
 ]
 
