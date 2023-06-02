@@ -47,7 +47,7 @@ where
     type Value = [T; N];
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(formatter, "an array of length {}", N)
+        write!(formatter, "an array of length {N}")
     }
 
     fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
