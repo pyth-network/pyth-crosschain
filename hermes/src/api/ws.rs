@@ -26,7 +26,6 @@ use {
     futures::{
         future::join_all,
         stream::{
-            iter,
             SplitSink,
             SplitStream,
         },
