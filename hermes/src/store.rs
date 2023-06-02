@@ -164,7 +164,7 @@ impl Store {
             .enumerate()
             .map(|(idx, message)| {
                 Ok(MessageState::new(
-                    message.clone(),
+                    *message,
                     ProofSet {
                         wormhole_merkle_proof: wormhole_merkle_message_states_proofs
                             .get(idx)

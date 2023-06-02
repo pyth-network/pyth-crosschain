@@ -13,12 +13,10 @@ pub struct MessageIdentifier {
     pub type_:    MessageType,
 }
 
-
 #[derive(Clone, PartialEq, Debug)]
 pub struct ProofSet {
     pub wormhole_merkle_proof: WormholeMerkleMessageProof,
 }
-
 
 pub type Slot = u64;
 pub type UnixTimestamp = i64;
