@@ -28,11 +28,10 @@ use {
 };
 
 /// Parses and verifies a VAA to ensure it is signed by the Wormhole guardian set.
-pub async fn parse_and_verify_vaa<'a>(
+pub async fn verify_vaa<'a>(
     store: &Store,
-    vaa_bytes: &'a [u8],
-) -> Result<Body<&'a RawMessage>> {
-    let vaa = serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(vaa_bytes)?;
+    vaa: Vaa<&'a RawMessage>,
+) -> Result<Vaa<&'a RawMessage>> {
     let (header, body): (Header, Body<&RawMessage>) = vaa.into();
     let digest = body.digest()?;
 
@@ -83,5 +82,5 @@ pub async fn parse_and_verify_vaa<'a>(
         ));
     }
 
-    Ok(body)
+    Ok((header, body).into())
 }

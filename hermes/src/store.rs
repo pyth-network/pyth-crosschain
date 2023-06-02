@@ -26,12 +26,13 @@ use {
             ProofSet,
             UnixTimestamp,
         },
-        wormhole::parse_and_verify_vaa,
+        wormhole::verify_vaa,
     },
     anyhow::{
         anyhow,
         Result,
     },
+    moka::future::Cache,
     pyth_oracle::{
         Message,
         MessageType,
@@ -45,6 +46,7 @@ use {
         collections::HashSet,
         sync::Arc,
         time::{
+            Duration,
             SystemTime,
             UNIX_EPOCH,
         },
@@ -57,6 +59,7 @@ use {
         Address,
         Chain,
         GuardianAddress,
+        Vaa,
     },
 };
 
@@ -66,15 +69,20 @@ pub mod types;
 pub mod wormhole;
 
 pub struct Store {
-    pub storage:      StorageInstance,
-    pub guardian_set: RwLock<Option<Vec<GuardianAddress>>>,
-    pub update_tx:    Sender<()>,
+    pub storage:           StorageInstance,
+    pub observed_vaa_seqs: Cache<u64, bool>,
+    pub guardian_set:      RwLock<Option<Vec<GuardianAddress>>>,
+    pub update_tx:         Sender<()>,
 }
 
 impl Store {
     pub fn new_with_local_cache(update_tx: Sender<()>, cache_size: u64) -> Arc<Self> {
         Arc::new(Self {
             storage: storage::local_storage::LocalStorage::new_instance(cache_size),
+            observed_vaa_seqs: Cache::builder()
+                .max_capacity(cache_size)
+                .time_to_live(Duration::from_secs(60 * 5))
+                .build(),
             guardian_set: RwLock::new(None),
             update_tx,
         })
@@ -84,22 +92,32 @@ impl Store {
     pub async fn store_update(&self, update: Update) -> Result<()> {
         let slot = match update {
             Update::Vaa(vaa_bytes) => {
-                let body = parse_and_verify_vaa(self, &vaa_bytes).await;
-                let body = match body {
-                    Ok(body) => body,
+                let vaa =
+                    serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(&vaa_bytes)?;
+
+                if vaa.emitter_chain != Chain::Pythnet
+                    || vaa.emitter_address != Address(pythnet_sdk::ACCUMULATOR_EMITTER_ADDRESS)
+                {
+                    return Ok(()); // Ignore VAA from other emitters
+                }
+
+                if self.observed_vaa_seqs.get(&vaa.sequence).is_some() {
+                    return Ok(()); // Ignore VAA if we have already seen it
+                }
+
+                let vaa = verify_vaa(self, vaa).await;
+
+                let vaa = match vaa {
+                    Ok(vaa) => vaa,
                     Err(err) => {
                         log::info!("Ignoring invalid VAA: {:?}", err);
                         return Ok(());
                     }
                 };
 
-                if body.emitter_chain != Chain::Pythnet
-                    || body.emitter_address != Address(pythnet_sdk::ACCUMULATOR_EMITTER_ADDRESS)
-                {
-                    return Ok(()); // Ignore VAA from other emitters
-                }
+                self.observed_vaa_seqs.insert(vaa.sequence, true).await;
 
-                match WormholeMessage::try_from_bytes(body.payload)?.payload {
+                match WormholeMessage::try_from_bytes(vaa.payload)?.payload {
                     WormholePayload::Merkle(proof) => {
                         log::info!("Storing merkle proof for slot {:?}", proof.slot,);
                         store_wormhole_merkle_verified_message(self, proof.clone(), vaa_bytes)
