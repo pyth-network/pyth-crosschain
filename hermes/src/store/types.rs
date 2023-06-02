@@ -52,12 +52,6 @@ impl MessageExt for Message {
 
 pub type RawMessage = Vec<u8>;
 
-#[derive(Clone, PartialEq, Debug)]
-pub struct WormholeMerkleState {
-    pub digest_proof: Vec<u8>,
-    pub tree:         Option<Vec<Vec<u8>>>,
-}
-
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct MessageIdentifier {
     pub price_id: PriceIdentifier,
