@@ -99,20 +99,20 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 			// https://github.com/libp2p/go-libp2p/blob/master/p2p/transport/quicreuse/reuse.go#L97
 			//
 			// By disabling this we get correct Close() behaviour.
-            //
-            // IMPORTANT: Normally re-use allows libp2p to dial on the same port that is used to listen for traffic
-            // and by disabling this dialing uses a random high port (32768-60999) which causes the nodes that we
-            // connect to by dialing (instead of them connecting to us) will respond on the high range port instead
-            // of the specified Dial port. This requires firewalls to be configured to allow (UDP 32768-60999) which
-            // should be specified in our documentation.
-            //
-            // The best way to securely enable this range is via the conntrack module, which can statefully allow
-            // UDP packets only when a sent UDP packet is present in the conntrack table. This rule looks roughly
-            // like this:
-            //
-            // iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-            //
-            // Which is a standard rule in many firewall configurations (RELATED is the key flag).
+			//
+			// IMPORTANT: Normally re-use allows libp2p to dial on the same port that is used to listen for traffic
+			// and by disabling this dialing uses a random high port (32768-60999) which causes the nodes that we
+			// connect to by dialing (instead of them connecting to us) will respond on the high range port instead
+			// of the specified Dial port. This requires firewalls to be configured to allow (UDP 32768-60999) which
+			// should be specified in our documentation.
+			//
+			// The best way to securely enable this range is via the conntrack module, which can statefully allow
+			// UDP packets only when a sent UDP packet is present in the conntrack table. This rule looks roughly
+			// like this:
+			//
+			// iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+			//
+			// Which is a standard rule in many firewall configurations (RELATED is the key flag).
 			libp2p.QUICReuse(libp2pquicreuse.NewConnManager, libp2pquicreuse.DisableReuseport()),
 			libp2p.Transport(libp2pquic.NewTransport),
 			libp2p.ConnectionManager(mgr),
