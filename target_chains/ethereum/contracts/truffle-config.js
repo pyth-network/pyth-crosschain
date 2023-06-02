@@ -263,6 +263,10 @@ module.exports = {
       provider: payerProvider("https://evmtestnet.confluxrpc.com"),
       network_id: 71,
     },
+    neon: {
+      provider: payerProvider("NEON_RPC_PLACEHOLDER"), // Replace this by the neon RPC node endpoint
+      network_id: 245022934,
+    },
   },
 
   compilers: {
