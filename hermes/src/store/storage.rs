@@ -3,11 +3,7 @@ use {
         proof::wormhole_merkle::WormholeMerkleState,
         types::{
             AccumulatorMessages,
-            MessageExt,
-            MessageIdentifier,
-            MessageType,
             ProofSet,
-            RawMessage,
             RequestTime,
             Slot,
             UnixTimestamp,
@@ -18,7 +14,10 @@ use {
         Result,
     },
     async_trait::async_trait,
-    pyth_oracle::Message,
+    pyth_oracle::{
+        Message,
+        MessageType,
+    },
     pyth_sdk::PriceIdentifier,
 };
 
@@ -56,6 +55,12 @@ impl TryFrom<AccumulatorState> for CompletedAccumulatorState {
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Debug, Hash)]
+pub struct MessageStateKey {
+    pub id:    [u8; 32],
+    pub type_: MessageType,
+}
+
 #[derive(Clone, PartialEq, Eq, Debug, PartialOrd, Ord)]
 pub struct MessageStateTime {
     pub publish_time: UnixTimestamp,
@@ -64,40 +69,36 @@ pub struct MessageStateTime {
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct MessageState {
-    pub publish_time: UnixTimestamp,
-    pub slot:         Slot,
-    pub id:           MessageIdentifier,
-    pub message:      Message,
-    pub raw_message:  RawMessage,
-    pub proof_set:    ProofSet,
-    pub received_at:  UnixTimestamp,
+    pub slot:        Slot,
+    pub message:     Message,
+    pub proof_set:   ProofSet,
+    pub received_at: UnixTimestamp,
 }
 
 impl MessageState {
     pub fn time(&self) -> MessageStateTime {
         MessageStateTime {
-            publish_time: self.publish_time,
+            publish_time: self.message.publish_time(),
             slot:         self.slot,
         }
     }
 
-    pub fn key(&self) -> MessageIdentifier {
-        self.id.clone()
+    pub fn key(&self) -> MessageStateKey {
+        MessageStateKey {
+            id:    self.message.id(),
+            type_: self.message.into(),
+        }
     }
 
     pub fn new(
         message: Message,
-        raw_message: RawMessage,
         proof_set: ProofSet,
         slot: Slot,
         received_at: UnixTimestamp,
     ) -> Self {
         Self {
-            publish_time: message.publish_time(),
             slot,
-            id: message.id(),
             message,
-            raw_message,
             proof_set,
             received_at,
         }
@@ -119,7 +120,7 @@ pub enum MessageStateFilter {
 /// key for the update data they wish to access.
 #[async_trait]
 pub trait Storage: Send + Sync {
-    async fn message_state_keys(&self) -> Vec<MessageIdentifier>;
+    async fn message_state_keys(&self) -> Vec<MessageStateKey>;
     async fn store_message_states(&self, message_states: Vec<MessageState>) -> Result<()>;
     async fn fetch_message_states(
         &self,

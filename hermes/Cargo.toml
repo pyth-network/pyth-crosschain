@@ -64,7 +64,9 @@ serde_qs = { version = "0.12.0", features = ["axum"] }
 
 serde_wormhole = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1"}
 wormhole-sdk = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
-pyth-oracle = { git = "https://github.com/pyth-network/pyth-client", rev = "7d593d87e07a1e2486e7ca21597d664ee72be1ec", features = ["library"] }
+# pyth-oracle = { git = "https://github.com/pyth-network/pyth-client", rev = "7d593d87e07a1e2486e7ca21597d664ee72be1ec", features = ["library"] }
+pyth-oracle = { git = "https://github.com/pyth-network/pyth-client", rev = "319cdc1baade5c4780b830eaf927f9bfef89ee39" , features = ["library"] }
+
 
 strum = { version = "0.24", features = ["derive"] }
 ethabi = { version = "18.0.0", features = ["serde"] }
