@@ -18,7 +18,10 @@ use {
             construct_message_states_proofs,
             store_wormhole_merkle_verified_message,
         },
-        storage::AccumulatorState,
+        storage::{
+            AccumulatorState,
+            CompletedAccumulatorState,
+        },
         types::{
             MessageState,
             ProofSet,
@@ -113,7 +116,7 @@ impl Store {
                     .unwrap_or(AccumulatorState {
                         slot,
                         accumulator_messages: None,
-                        wormhole_merkle_proof: None,
+                        wormhole_merkle_state: None,
                     });
                 accumulator_state.accumulator_messages = Some(accumulator_messages);
                 self.storage
@@ -128,21 +131,32 @@ impl Store {
             None => return Ok(()),
         };
 
-        let (accumulator_messages, wormhole_merkle_proof) =
-            match (state.accumulator_messages, state.wormhole_merkle_proof) {
-                (Some(accumulator_messages), Some(wormhole_merkle_proof)) => {
-                    (accumulator_messages, wormhole_merkle_proof)
-                }
-                _ => return Ok(()),
-            };
+        let completed_state = state.try_into();
+        let completed_state: CompletedAccumulatorState = match completed_state {
+            Ok(completed_state) => completed_state,
+            Err(_) => {
+                return Ok(());
+            }
+        };
 
+        // Once the accumulator reaches a complete state for a specific slot
+        // we can build the message states
+        self.build_message_states(completed_state).await?;
+
+        self.update_tx.send(()).await?;
+
+        Ok(())
+    }
+
+    async fn build_message_states(&self, completed_state: CompletedAccumulatorState) -> Result<()> {
         let wormhole_merkle_message_states_proofs =
-            construct_message_states_proofs(&accumulator_messages, &wormhole_merkle_proof)?;
+            construct_message_states_proofs(&completed_state)?;
 
         let current_time: UnixTimestamp =
             SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as _;
 
-        let message_states = accumulator_messages
+        let message_states = completed_state
+            .accumulator_messages
             .messages
             .iter()
             .enumerate()
@@ -158,7 +172,7 @@ impl Store {
                             .ok_or(anyhow!("Missing proof for message"))?
                             .clone(),
                     },
-                    accumulator_messages.slot,
+                    completed_state.slot,
                     current_time,
                 ))
             })
@@ -167,8 +181,6 @@ impl Store {
         log::info!("Message states len: {:?}", message_states.len());
 
         self.storage.store_message_states(message_states).await?;
-
-        self.update_tx.send(()).await?;
 
         Ok(())
     }

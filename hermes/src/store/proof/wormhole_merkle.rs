@@ -1,10 +1,10 @@
 use {
     crate::store::{
-        storage::AccumulatorState,
-        types::{
-            AccumulatorMessages,
-            MessageState,
+        storage::{
+            AccumulatorState,
+            CompletedAccumulatorState,
         },
+        types::MessageState,
         Store,
     },
     anyhow::{
@@ -33,6 +33,12 @@ use {
 };
 
 #[derive(Clone, PartialEq, Debug)]
+pub struct WormholeMerkleState {
+    pub root: WormholeMerkleRoot,
+    pub vaa:  Vec<u8>,
+}
+
+#[derive(Clone, PartialEq, Debug)]
 pub struct WormholeMerkleMessageProof {
     pub vaa:   Vec<u8>,
     pub proof: MerklePath<Keccak160>,
@@ -40,20 +46,23 @@ pub struct WormholeMerkleMessageProof {
 
 pub async fn store_wormhole_merkle_verified_message(
     store: &Store,
-    proof: WormholeMerkleRoot,
+    root: WormholeMerkleRoot,
     vaa_bytes: Vec<u8>,
 ) -> Result<()> {
     let mut accumulator_state = store
         .storage
-        .fetch_accumulator_state(proof.slot)
+        .fetch_accumulator_state(root.slot)
         .await?
         .unwrap_or(AccumulatorState {
-            slot:                  proof.slot,
+            slot:                  root.slot,
             accumulator_messages:  None,
-            wormhole_merkle_proof: None,
+            wormhole_merkle_state: None,
         });
 
-    accumulator_state.wormhole_merkle_proof = Some((proof, vaa_bytes));
+    accumulator_state.wormhole_merkle_state = Some(WormholeMerkleState {
+        root,
+        vaa: vaa_bytes,
+    });
     store
         .storage
         .store_accumulator_state(accumulator_state)
@@ -62,9 +71,11 @@ pub async fn store_wormhole_merkle_verified_message(
 }
 
 pub fn construct_message_states_proofs(
-    accumulator_messages: &AccumulatorMessages,
-    wormhole_merkle_proof: &(WormholeMerkleRoot, Vec<u8>),
+    completed_accumulator_state: &CompletedAccumulatorState,
 ) -> Result<Vec<WormholeMerkleMessageProof>> {
+    let accumulator_messages = &completed_accumulator_state.accumulator_messages;
+    let wormhole_merkle_state = &completed_accumulator_state.wormhole_merkle_state;
+
     // Check whether the state is valid
     let merkle_acc = match MerkleAccumulator::<Keccak160>::from_set(
         accumulator_messages.messages.iter().map(|m| m.as_ref()),
@@ -73,9 +84,7 @@ pub fn construct_message_states_proofs(
         None => return Ok(vec![]), // It only happens when the message set is empty
     };
 
-    let (proof, vaa) = &wormhole_merkle_proof;
-
-    if merkle_acc.root != proof.root {
+    if merkle_acc.root != wormhole_merkle_state.root.root {
         return Err(anyhow!("Invalid merkle root"));
     }
 
@@ -84,7 +93,7 @@ pub fn construct_message_states_proofs(
         .iter()
         .map(|m| {
             Ok(WormholeMerkleMessageProof {
-                vaa:   vaa.clone(),
+                vaa:   wormhole_merkle_state.vaa.clone(),
                 proof: merkle_acc
                     .prove(m.as_ref())
                     .ok_or(anyhow!("Failed to prove message"))?,

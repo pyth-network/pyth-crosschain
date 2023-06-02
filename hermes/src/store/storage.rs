@@ -1,13 +1,19 @@
 use {
-    super::types::{
-        AccumulatorMessages,
-        MessageIdentifier,
-        MessageState,
-        MessageType,
-        RequestTime,
-        Slot,
+    super::{
+        proof::wormhole_merkle::WormholeMerkleState,
+        types::{
+            AccumulatorMessages,
+            MessageIdentifier,
+            MessageState,
+            MessageType,
+            RequestTime,
+            Slot,
+        },
     },
-    anyhow::Result,
+    anyhow::{
+        anyhow,
+        Result,
+    },
     async_trait::async_trait,
     pyth_sdk::PriceIdentifier,
     pythnet_sdk::wire::v1::WormholeMerkleRoot,
@@ -19,7 +25,32 @@ pub mod local_storage;
 pub struct AccumulatorState {
     pub slot:                  Slot,
     pub accumulator_messages:  Option<AccumulatorMessages>,
-    pub wormhole_merkle_proof: Option<(WormholeMerkleRoot, Vec<u8>)>,
+    pub wormhole_merkle_state: Option<WormholeMerkleState>,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct CompletedAccumulatorState {
+    pub slot:                  Slot,
+    pub accumulator_messages:  AccumulatorMessages,
+    pub wormhole_merkle_state: WormholeMerkleState,
+}
+
+impl TryFrom<AccumulatorState> for CompletedAccumulatorState {
+    type Error = anyhow::Error;
+
+    fn try_from(state: AccumulatorState) -> Result<Self> {
+        let accumulator_messages = state
+            .accumulator_messages
+            .ok_or_else(|| anyhow!("missing accumulator messages"))?;
+        let wormhole_merkle_state = state
+            .wormhole_merkle_state
+            .ok_or_else(|| anyhow!("missing wormhole merkle state"))?;
+        Ok(Self {
+            slot: state.slot,
+            accumulator_messages,
+            wormhole_merkle_state,
+        })
+    }
 }
 
 #[derive(Clone, Copy)]
