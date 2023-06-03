@@ -201,7 +201,7 @@ async function sendSwapTx(
   );
 
   const updateFee = await pythContract.methods
-    .getUpdateFee(priceFeedUpdateData.length)
+    .getUpdateFee(priceFeedUpdateData)
     .call();
 
   const swapContract = new web3.eth.Contract(
