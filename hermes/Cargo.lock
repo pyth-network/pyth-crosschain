@@ -4120,7 +4120,7 @@ dependencies = [
 [[package]]
 name = "pyth-oracle"
 version = "2.21.0"
-source = "git+https://github.com/pyth-network/pyth-client?rev=319cdc1baade5c4780b830eaf927f9bfef89ee39#319cdc1baade5c4780b830eaf927f9bfef89ee39"
+source = "git+https://github.com/pyth-network/pyth-client?rev=1bdac0d2ee39a5a9f27eb86e4fd01229bd68aa5a#1bdac0d2ee39a5a9f27eb86e4fd01229bd68aa5a"
 dependencies = [
  "bindgen",
  "bytemuck",

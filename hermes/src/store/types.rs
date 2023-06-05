@@ -2,16 +2,9 @@ use {
     super::proof::wormhole_merkle::WormholeMerkleMessageProof,
     pyth_oracle::{
         Message,
-        MessageType,
         PriceFeedMessage,
     },
 };
-
-#[derive(Clone, PartialEq, Eq, Debug, Hash)]
-pub struct MessageIdentifier {
-    pub price_id: [u8; 32],
-    pub type_:    MessageType,
-}
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct ProofSet {
