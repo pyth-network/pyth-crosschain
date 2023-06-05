@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
@@ -22,7 +23,7 @@ contract PythWormholeMerkleAccumulatorTest is
 {
     IPyth public pyth;
 
-    // -1 is equal to 0x111111 which is the biggest uint if converted back
+    // -1 is equal to 0xffffff which is the biggest uint if converted back
     uint64 constant MAX_UINT64 = uint64(int64(-1));
 
     function setUp() public {
@@ -63,6 +64,26 @@ contract PythWormholeMerkleAccumulatorTest is
         assertEq(priceFeed.emaPrice.conf, priceFeedMessage.emaConf);
         assertEq(priceFeed.emaPrice.expo, priceFeedMessage.expo);
         assertEq(priceFeed.emaPrice.publishTime, priceFeedMessage.publishTime);
+    }
+
+    function assertParsedPriceFeedStored(
+        PythStructs.PriceFeed memory priceFeed
+    ) internal {
+        PythStructs.Price memory aggregatePrice = pyth.getPriceUnsafe(
+            priceFeed.id
+        );
+        assertEq(aggregatePrice.price, priceFeed.price.price);
+        assertEq(aggregatePrice.conf, priceFeed.price.conf);
+        assertEq(aggregatePrice.expo, priceFeed.price.expo);
+        assertEq(aggregatePrice.publishTime, priceFeed.price.publishTime);
+
+        PythStructs.Price memory emaPrice = pyth.getEmaPriceUnsafe(
+            priceFeed.id
+        );
+        assertEq(emaPrice.price, priceFeed.emaPrice.price);
+        assertEq(emaPrice.conf, priceFeed.emaPrice.conf);
+        assertEq(emaPrice.expo, priceFeed.emaPrice.expo);
+        assertEq(emaPrice.publishTime, priceFeed.emaPrice.publishTime);
     }
 
     function generateRandomPriceFeedMessage(
@@ -186,6 +207,32 @@ contract PythWormholeMerkleAccumulatorTest is
         assertPriceFeedMessageStored(priceFeedMessages1[1]);
         assertPriceFeedMessageStored(priceFeedMessages2[0]);
         assertPriceFeedMessageStored(priceFeedMessages2[1]);
+
+        bytes32[] memory priceIds1 = new bytes32[](1);
+        priceIds1[0] = priceFeedMessages1[1].priceId;
+        bytes[] memory parseUpdateDataInput1 = new bytes[](1);
+        parseUpdateDataInput1[0] = updateData[0];
+
+        PythStructs.PriceFeed[] memory priceFeeds1 = pyth.parsePriceFeedUpdates{
+            value: updateFee
+        }(parseUpdateDataInput1, priceIds1, 0, MAX_UINT64);
+
+        for (uint i = 0; i < priceFeeds1.length; i++) {
+            assertParsedPriceFeedStored(priceFeeds1[i]);
+        }
+
+        bytes32[] memory priceIds2 = new bytes32[](2);
+        priceIds2[0] = priceFeedMessages2[0].priceId;
+        priceIds2[1] = priceFeedMessages2[1].priceId;
+        bytes[] memory parseUpdateDataInput2 = new bytes[](1);
+        parseUpdateDataInput2[0] = updateData[1];
+
+        PythStructs.PriceFeed[] memory priceFeeds2 = pyth.parsePriceFeedUpdates{
+            value: updateFee
+        }(parseUpdateDataInput2, priceIds2, 0, MAX_UINT64);
+        for (uint i = 0; i < priceFeeds2.length; i++) {
+            assertParsedPriceFeedStored(priceFeeds2[i]);
+        }
     }
 
     function testUpdatePriceFeedWithWormholeMerkleIgnoresOutOfOrderUpdateSingleCall()
@@ -224,6 +271,14 @@ contract PythWormholeMerkleAccumulatorTest is
         pyth.updatePriceFeeds{value: updateFee}(updateData);
 
         assertPriceFeedMessageStored(priceFeedMessages1[0]);
+
+        bytes32[] memory priceIds2 = new bytes32[](1);
+        priceIds2[0] = priceFeedMessages1[0].priceId;
+
+        PythStructs.PriceFeed[] memory priceFeeds2 = pyth.parsePriceFeedUpdates{
+            value: updateFee
+        }(updateData, priceIds2, 0, MAX_UINT64);
+        assertParsedPriceFeedStored(priceFeeds2[0]);
     }
 
     function testUpdatePriceFeedWithWormholeMerkleIgnoresOutOfOrderUpdateMultiCall()
@@ -248,12 +303,22 @@ contract PythWormholeMerkleAccumulatorTest is
         pyth.updatePriceFeeds{value: updateFee}(updateData);
         assertPriceFeedMessageStored(priceFeedMessages1[0]);
 
+        bytes[] memory updateData1 = updateData;
+
         (updateData, updateFee) = createWormholeMerkleUpdateData(
             priceFeedMessages2
         );
         pyth.updatePriceFeeds{value: updateFee}(updateData);
         // Make sure that the old value is still stored
         assertPriceFeedMessageStored(priceFeedMessages1[0]);
+
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = priceFeedMessages1[0].priceId;
+
+        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
+            value: updateFee
+        }(updateData1, priceIds, 0, MAX_UINT64);
+        assertParsedPriceFeedStored(priceFeeds[0]);
     }
 
     function isNotMatch(
@@ -268,12 +333,23 @@ contract PythWormholeMerkleAccumulatorTest is
     /// expected value, that item will be forged to be invalid.
     function createAndForgeWormholeMerkleUpdateData(
         bytes memory forgeItem
-    ) public returns (bytes[] memory updateData, uint updateFee) {
+    )
+        public
+        returns (
+            bytes[] memory updateData,
+            uint updateFee,
+            bytes32[] memory priceIds
+        )
+    {
         uint numPriceFeeds = 10;
         PriceFeedMessage[]
             memory priceFeedMessages = generateRandomPriceFeedMessage(
                 numPriceFeeds
             );
+        priceIds = new bytes32[](numPriceFeeds);
+        for (uint i = 0; i < numPriceFeeds; i++) {
+            priceIds[i] = priceFeedMessages[i].priceId;
+        }
 
         bytes[] memory encodedPriceFeedMessages = encodePriceFeedMessages(
             priceFeedMessages
@@ -346,11 +422,21 @@ contract PythWormholeMerkleAccumulatorTest is
         // In this test the Wormhole accumulator magic is wrong and the update gets reverted.
         (
             bytes[] memory updateData,
-            uint updateFee
+            uint updateFee,
+            bytes32[] memory priceIds
         ) = createAndForgeWormholeMerkleUpdateData("whMagic");
 
         vm.expectRevert(PythErrors.InvalidUpdateData.selector);
         pyth.updatePriceFeeds{value: updateFee}(updateData);
+
+        vm.expectRevert(PythErrors.InvalidUpdateData.selector);
+
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64
+        );
     }
 
     function testUpdatePriceFeedWithWormholeMerkleRevertsOnWrongVAAPayloadUpdateType()
@@ -361,11 +447,20 @@ contract PythWormholeMerkleAccumulatorTest is
 
         (
             bytes[] memory updateData,
-            uint updateFee
+            uint updateFee,
+            bytes32[] memory priceIds
         ) = createAndForgeWormholeMerkleUpdateData("whUpdateType");
         vm.expectRevert(); // Reason: Conversion into non-existent enum type. However it
         // was not possible to check the revert reason in the test.
         pyth.updatePriceFeeds{value: updateFee}(updateData);
+
+        vm.expectRevert();
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64
+        );
     }
 
     function testUpdatePriceFeedWithWormholeMerkleRevertsOnWrongVAASource()
@@ -374,15 +469,34 @@ contract PythWormholeMerkleAccumulatorTest is
         // In this test the Wormhole message source is wrong.
         (
             bytes[] memory updateData,
-            uint updateFee
+            uint updateFee,
+            bytes32[] memory priceIds
         ) = createAndForgeWormholeMerkleUpdateData("whSourceAddress");
         vm.expectRevert(PythErrors.InvalidUpdateDataSource.selector);
         pyth.updatePriceFeeds{value: updateFee}(updateData);
-        (updateData, updateFee) = createAndForgeWormholeMerkleUpdateData(
-            "whSourceChain"
+        vm.expectRevert(PythErrors.InvalidUpdateDataSource.selector);
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64
         );
+
+        (
+            updateData,
+            updateFee,
+            priceIds
+        ) = createAndForgeWormholeMerkleUpdateData("whSourceChain");
         vm.expectRevert(PythErrors.InvalidUpdateDataSource.selector);
         pyth.updatePriceFeeds{value: updateFee}(updateData);
+
+        vm.expectRevert(PythErrors.InvalidUpdateDataSource.selector);
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64
+        );
     }
 
     function testUpdatePriceFeedWithWormholeMerkleRevertsOnWrongRootDigest()
@@ -391,10 +505,19 @@ contract PythWormholeMerkleAccumulatorTest is
         // In this test the Wormhole merkle proof digest is wrong
         (
             bytes[] memory updateData,
-            uint updateFee
+            uint updateFee,
+            bytes32[] memory priceIds
         ) = createAndForgeWormholeMerkleUpdateData("rootDigest");
         vm.expectRevert(PythErrors.InvalidUpdateData.selector);
         pyth.updatePriceFeeds{value: updateFee}(updateData);
+
+        vm.expectRevert(PythErrors.InvalidUpdateData.selector);
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64
+        );
     }
 
     function testUpdatePriceFeedWithWormholeMerkleRevertsOnWrongProofItem()
@@ -403,10 +526,19 @@ contract PythWormholeMerkleAccumulatorTest is
         // In this test all Wormhole merkle proof items are the first item proof
         (
             bytes[] memory updateData,
-            uint updateFee
+            uint updateFee,
+            bytes32[] memory priceIds
         ) = createAndForgeWormholeMerkleUpdateData("proofItem");
         vm.expectRevert(PythErrors.InvalidUpdateData.selector);
         pyth.updatePriceFeeds{value: updateFee}(updateData);
+
+        vm.expectRevert(PythErrors.InvalidUpdateData.selector);
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64
+        );
     }
 
     function testUpdatePriceFeedWithWormholeMerkleRevertsOnWrongHeader()
@@ -415,17 +547,35 @@ contract PythWormholeMerkleAccumulatorTest is
         // In this test the message headers are wrong
         (
             bytes[] memory updateData,
-            uint updateFee
+            uint updateFee,
+            bytes32[] memory priceIds
         ) = createAndForgeWormholeMerkleUpdateData("headerMagic");
         vm.expectRevert(); // The revert reason is not deterministic because when it doesn't match it goes through
         // the old approach.
         pyth.updatePriceFeeds{value: updateFee}(updateData);
-
-        (updateData, updateFee) = createAndForgeWormholeMerkleUpdateData(
-            "headerMajorVersion"
+        vm.expectRevert();
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64
         );
+
+        (
+            updateData,
+            updateFee,
+            priceIds
+        ) = createAndForgeWormholeMerkleUpdateData("headerMajorVersion");
         vm.expectRevert(PythErrors.InvalidUpdateData.selector);
         pyth.updatePriceFeeds{value: updateFee}(updateData);
+
+        vm.expectRevert(PythErrors.InvalidUpdateData.selector);
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64
+        );
     }
 
     function testUpdatePriceFeedWithWormholeMerkleRevertsIfUpdateFeeIsNotPaid()
@@ -440,8 +590,20 @@ contract PythWormholeMerkleAccumulatorTest is
             priceFeedMessages
         );
 
+        bytes32[] memory priceIds = new bytes32[](numPriceFeeds);
+        for (uint i = 0; i < numPriceFeeds; i++) {
+            priceIds[i] = priceFeedMessages[i].priceId;
+        }
         vm.expectRevert(PythErrors.InsufficientFee.selector);
         pyth.updatePriceFeeds{value: 0}(updateData);
+
+        vm.expectRevert(PythErrors.InsufficientFee.selector);
+        pyth.parsePriceFeedUpdates{value: 0}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64
+        );
     }
 
     function testParsePriceFeedWithWormholeMerkleWorks(uint seed) public {
@@ -456,19 +618,19 @@ contract PythWormholeMerkleAccumulatorTest is
             bytes[] memory updateData,
             uint updateFee
         ) = createWormholeMerkleUpdateData(priceFeedMessages);
-        bytes32[] memory priceIds = new bytes32[](numPriceFeeds);
+        bytes32[] memory priceIds2 = new bytes32[](numPriceFeeds);
         for (uint i = 0; i < numPriceFeeds; i++) {
-            priceIds[i] = priceFeedMessages[i].priceId;
+            priceIds2[i] = priceFeedMessages[i].priceId;
         }
-        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
+        PythStructs.PriceFeed[] memory priceFeeds2 = pyth.parsePriceFeedUpdates{
             value: updateFee
-        }(updateData, priceIds, 0, MAX_UINT64);
+        }(updateData, priceIds2, 0, MAX_UINT64);
 
-        for (uint i = 0; i < priceFeeds.length; i++) {
+        for (uint i = 0; i < priceFeeds2.length; i++) {
             assertParsedPriceFeed(
-                priceFeeds[i],
+                priceFeeds2[i],
                 priceFeedMessages[i],
-                priceIds[i]
+                priceIds2[i]
             );
         }
 
@@ -491,18 +653,18 @@ contract PythWormholeMerkleAccumulatorTest is
         );
 
         // reparse
-        priceFeeds = pyth.parsePriceFeedUpdates{value: updateFee}(
+        priceFeeds2 = pyth.parsePriceFeedUpdates{value: updateFee}(
             updateData,
-            priceIds,
+            priceIds2,
             0,
             MAX_UINT64
         );
 
-        for (uint i = 0; i < priceFeeds.length; i++) {
+        for (uint i = 0; i < priceFeeds2.length; i++) {
             assertParsedPriceFeed(
-                priceFeeds[i],
+                priceFeeds2[i],
                 priceFeedMessages[i],
-                priceIds[i]
+                priceIds2[i]
             );
         }
     }

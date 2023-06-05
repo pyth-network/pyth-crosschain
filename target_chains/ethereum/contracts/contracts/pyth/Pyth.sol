@@ -80,7 +80,7 @@ abstract contract Pyth is
                 updateData[i].length > 4 &&
                 UnsafeBytesLib.toUint32(updateData[i], 0) == ACCUMULATOR_MAGIC
             ) {
-                updatePricesUsingAccumulator(updateData[i]);
+                updatePriceInfosFromAccumulatorUpdate(updateData[i]);
             } else {
                 updatePriceBatchFromVm(updateData[i]);
             }
@@ -442,7 +442,7 @@ abstract contract Pyth is
                         PythInternalStructs.PriceInfo[]
                             memory accumulatorPriceInfos,
                         bytes32[] memory accumulatorPriceIds
-                    ) = parsePricesUsingAccumulator(updateData[i]);
+                    ) = extractPriceInfosFromAccumulatorUpdate(updateData[i]);
 
                     for (
                         uint accDataIdx = 0;
@@ -453,7 +453,7 @@ abstract contract Pyth is
                             accDataIdx
                         ];
                         // check whether caller requested for this data
-                        uint k = getPriceFeedsIndex(
+                        uint k = findIndexOfPriceId(
                             priceIds,
                             accumulatorPriceId
                         );
@@ -469,15 +469,13 @@ abstract contract Pyth is
 
                         uint publishTime = uint(info.publishTime);
                         // Check the publish time of the price is within the given range
-                        // if it is not, then set the id to 0 to indicate that this price id
-                        // still does not have a valid price feed. This will allow other updates
-                        // for this price id to be processed.
+                        // and only fill the priceFeedsInfo if it is.
+                        // If is not, default id value of 0 will still be set and
+                        // this will allow other updates for this price id to be processed.
                         if (
-                            publishTime < minPublishTime ||
-                            publishTime > maxPublishTime
+                            publishTime >= minPublishTime &&
+                            publishTime <= maxPublishTime
                         ) {
-                            priceFeeds[k].id = 0;
-                        } else {
                             fillPriceFeedsInfo(
                                 priceFeeds,
                                 k,
@@ -498,6 +496,7 @@ abstract contract Pyth is
                     }
 
                     /** Batch price logic */
+                    // TODO: gas optimization
                     (
                         uint index,
                         uint nAttestations,
@@ -519,13 +518,8 @@ abstract contract Pyth is
                             index + attestationIndex
                         );
 
-                        // Check whether the caller requested for this data.
-                        uint k = 0;
-                        for (; k < priceIds.length; k++) {
-                            if (priceIds[k] == priceId) {
-                                break;
-                            }
-                        }
+                        // check whether caller requested for this data
+                        uint k = findIndexOfPriceId(priceIds, priceId);
 
                         // If priceFeed[k].id != 0 then it means that there was a valid
                         // update for priceIds[k] and we don't need to process this one.
@@ -543,29 +537,22 @@ abstract contract Pyth is
                                 attestationSize
                             );
 
-                        priceFeeds[k].id = priceId;
-                        priceFeeds[k].price.price = info.price;
-                        priceFeeds[k].price.conf = info.conf;
-                        priceFeeds[k].price.expo = info.expo;
-                        priceFeeds[k].price.publishTime = uint(
-                            info.publishTime
-                        );
-                        priceFeeds[k].emaPrice.price = info.emaPrice;
-                        priceFeeds[k].emaPrice.conf = info.emaConf;
-                        priceFeeds[k].emaPrice.expo = info.expo;
-                        priceFeeds[k].emaPrice.publishTime = uint(
-                            info.publishTime
-                        );
-
+                        uint publishTime = uint(info.publishTime);
                         // Check the publish time of the price is within the given range
-                        // if it is not, then set the id to 0 to indicate that this price id
-                        // still does not have a valid price feed. This will allow other updates
-                        // for this price id to be processed.
+                        // and only fill the priceFeedsInfo if it is.
+                        // If is not, default id value of 0 will still be set and
+                        // this will allow other updates for this price id to be processed.
                         if (
-                            priceFeeds[k].price.publishTime < minPublishTime ||
-                            priceFeeds[k].price.publishTime > maxPublishTime
+                            publishTime >= minPublishTime &&
+                            publishTime <= maxPublishTime
                         ) {
-                            priceFeeds[k].id = 0;
+                            fillPriceFeedsInfo(
+                                priceFeeds,
+                                k,
+                                priceId,
+                                info,
+                                publishTime
+                            );
                         }
 
                         index += attestationSize;
@@ -581,7 +568,7 @@ abstract contract Pyth is
         }
     }
 
-    function getPriceFeedsIndex(
+    function findIndexOfPriceId(
         bytes32[] calldata priceIds,
         bytes32 targetPriceId
     ) private pure returns (uint index) {
