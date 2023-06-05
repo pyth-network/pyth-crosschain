@@ -15,7 +15,7 @@ import "./utils/RandTestUtils.t.sol";
 contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
     IPyth public pyth;
 
-    // -1 is equal to 0x111111 which is the biggest uint if converted back
+    // -1 is equal to 0xffffff which is the biggest uint if converted back
     uint64 constant MAX_UINT64 = uint64(int64(-1));
 
     function setUp() public {
