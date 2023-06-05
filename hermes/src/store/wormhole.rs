@@ -27,7 +27,7 @@ use {
     },
 };
 
-/// Parses and verifies a VAA to ensure it is signed by the Wormhole guardian set.
+/// Verifies a VAA to ensure it is signed by the Wormhole guardian set.
 pub async fn verify_vaa<'a>(
     store: &Store,
     vaa: Vaa<&'a RawMessage>,

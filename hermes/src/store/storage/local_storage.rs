@@ -4,6 +4,7 @@ use {
         MessageState,
         MessageStateFilter,
         MessageStateKey,
+        MessageStateTime,
         RequestTime,
         Storage,
         StorageInstance,
@@ -36,10 +37,7 @@ impl LocalStorage {
     pub fn new_instance(cache_size: u64) -> StorageInstance {
         Box::new(Self {
             message_cache: Arc::new(DashMap::new()),
-            accumulator_cache: Cache::builder()
-                .max_capacity(cache_size)
-                .time_to_live(std::time::Duration::from_secs(60 * 60 * 24))
-                .build(),
+            accumulator_cache: Cache::builder().max_capacity(cache_size).build(),
             cache_size,
         })
     }
@@ -62,12 +60,17 @@ impl LocalStorage {
                             }
                         }
 
+                        let lookup_time = MessageStateTime {
+                            publish_time: time,
+                            slot:         0,
+                        };
+
                         // Binary search returns Ok(idx) if the element is found at index idx or Err(idx) if it's not
                         // found which idx is the index where the element should be inserted to keep the vector sorted.
                         // Getting idx within any of the match arms will give us the index of the element that is
                         // closest after or equal to the requested time.
                         let idx = match key_cache
-                            .binary_search_by_key(&time, |record| record.time().publish_time)
+                            .binary_search_by_key(&lookup_time, |record| record.time())
                         {
                             Ok(idx) => idx,
                             Err(idx) => idx,
