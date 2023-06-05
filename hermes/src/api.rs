@@ -1,5 +1,5 @@
 use {
-    self::ws::dispatch_updates,
+    self::ws::notify_updates,
     crate::store::Store,
     anyhow::Result,
     axum::{
@@ -65,7 +65,7 @@ pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: Strin
                 .await
                 .expect("state update channel is closed");
 
-            dispatch_updates(state.clone()).await;
+            notify_updates(state.ws.clone()).await;
         }
     });
 
