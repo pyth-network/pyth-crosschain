@@ -55,7 +55,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         (
             uint offset,
             UpdateType updateType
-        ) = extractAccumulatorUpdateHeaderUpdateType(accumulatorUpdate);
+        ) = extractUpdateTypeFromAccumulatorHeader(accumulatorUpdate);
 
         if (updateType != UpdateType.WormholeMerkle) {
             revert PythErrors.InvalidUpdateData();
@@ -69,7 +69,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         );
     }
 
-    function extractAccumulatorUpdateHeaderUpdateType(
+    function extractUpdateTypeFromAccumulatorHeader(
         bytes memory accumulatorUpdate
     ) internal pure returns (uint offset, UpdateType updateType) {
         unchecked {
@@ -242,55 +242,42 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         )
     {
         unchecked {
-            (
-                uint proofOffset,
-                bytes memory encodedMessage
-            ) = extractMessageFromProof(encoded, offset);
-
-            offset = validateMessageWithProof(
+            bytes memory encodedMessage;
+            (endOffset, encodedMessage) = extractMessageFromProof(
                 encoded,
-                proofOffset,
-                digest,
-                encodedMessage
+                offset,
+                digest
             );
+
             (priceInfo, priceId) = extractPriceFeedMessage(encodedMessage);
 
-            return (offset, priceInfo, priceId);
+            return (endOffset, priceInfo, priceId);
         }
     }
 
     function extractMessageFromProof(
         bytes memory encodedProof,
-        uint offset
-    ) private pure returns (uint proofOffset, bytes memory encodedMessage) {
-        uint16 messageSize = UnsafeBytesLib.toUint16(encodedProof, offset);
-        offset += 2;
-
-        encodedMessage = UnsafeBytesLib.slice(
-            encodedProof,
-            offset,
-            messageSize
-        );
-        offset += messageSize;
-
-        proofOffset = offset;
-    }
-
-    function validateMessageWithProof(
-        bytes memory encodedProof,
-        uint proofOffset,
-        bytes20 merkleRoot,
-        bytes memory encodedMessage
-    ) private pure returns (uint endOffset) {
+        uint offset,
+        bytes20 merkleRoot
+    ) private pure returns (uint endOffset, bytes memory encodedMessage) {
         unchecked {
+            uint16 messageSize = UnsafeBytesLib.toUint16(encodedProof, offset);
+            offset += 2;
+
+            encodedMessage = UnsafeBytesLib.slice(
+                encodedProof,
+                offset,
+                messageSize
+            );
+            offset += messageSize;
+
             bool valid;
             (valid, endOffset) = MerkleTree.isProofValid(
                 encodedProof,
-                proofOffset,
+                offset, // proofOffset
                 merkleRoot,
                 encodedMessage
             );
-
             if (!valid) {
                 revert PythErrors.InvalidUpdateData();
             }
@@ -305,7 +292,8 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         returns (PythInternalStructs.PriceInfo memory info, bytes32 priceId)
     {
         unchecked {
-            if (isPriceFeedMessage(encodedMessage)) {
+            MessageType messageType = getMessageType(encodedMessage);
+            if (messageType == MessageType.PriceFeed) {
                 (info, priceId) = parsePriceFeedMessage(
                     UnsafeBytesLib.slice(
                         encodedMessage,
@@ -319,13 +307,10 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
-    function isPriceFeedMessage(
+    function getMessageType(
         bytes memory encodedMessage
-    ) private pure returns (bool isPriceFeedMessage) {
-        MessageType messageType = MessageType(
-            UnsafeBytesLib.toUint8(encodedMessage, 0)
-        );
-        return messageType == MessageType.PriceFeed;
+    ) private pure returns (MessageType messageType) {
+        return MessageType(UnsafeBytesLib.toUint8(encodedMessage, 0));
     }
 
     function parsePriceFeedMessage(
@@ -394,7 +379,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         (
             uint offset,
             UpdateType updateType
-        ) = extractAccumulatorUpdateHeaderUpdateType(accumulatorUpdate);
+        ) = extractUpdateTypeFromAccumulatorHeader(accumulatorUpdate);
 
         if (updateType != UpdateType.WormholeMerkle) {
             revert PythErrors.InvalidUpdateData();

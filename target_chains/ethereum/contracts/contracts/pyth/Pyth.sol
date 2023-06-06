@@ -476,7 +476,7 @@ abstract contract Pyth is
                             publishTime >= minPublishTime &&
                             publishTime <= maxPublishTime
                         ) {
-                            fillPriceFeedsInfo(
+                            fillPriceFeedFromPriceInfo(
                                 priceFeeds,
                                 k,
                                 accumulatorPriceId,
@@ -546,7 +546,7 @@ abstract contract Pyth is
                             publishTime >= minPublishTime &&
                             publishTime <= maxPublishTime
                         ) {
-                            fillPriceFeedsInfo(
+                            fillPriceFeedFromPriceInfo(
                                 priceFeeds,
                                 k,
                                 priceId,
@@ -582,7 +582,7 @@ abstract contract Pyth is
         return k;
     }
 
-    function fillPriceFeedsInfo(
+    function fillPriceFeedFromPriceInfo(
         PythStructs.PriceFeed[] memory priceFeeds,
         uint k,
         bytes32 priceId,

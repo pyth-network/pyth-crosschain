@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
+//TOOD: remove after.
 import "forge-std/console.sol";
 
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
@@ -50,7 +51,7 @@ contract PythWormholeMerkleAccumulatorTest is
         assertEq(emaPrice.publishTime, priceFeedMessage.publishTime);
     }
 
-    function assertParsedPriceFeed(
+    function assertParsedPriceFeedEqualsMessage(
         PythStructs.PriceFeed memory priceFeed,
         PriceFeedMessage memory priceFeedMessage,
         bytes32 priceId
@@ -202,36 +203,59 @@ contract PythWormholeMerkleAccumulatorTest is
 
         uint updateFee = pyth.getUpdateFee(updateData);
 
+        bytes32[] memory priceIds = new bytes32[](3);
+        priceIds[0] = priceFeedMessages1[0].priceId;
+        priceIds[1] = priceFeedMessages1[1].priceId;
+        priceIds[2] = priceFeedMessages2[0].priceId;
+        // parse price feeds before updating since parsing price feeds should be independent
+        // of whatever is currently stored in the contract.
+        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
+            value: updateFee
+        }(updateData, priceIds, 0, MAX_UINT64);
+
+        PriceFeedMessage[]
+            memory expectedPriceFeedMessages = new PriceFeedMessage[](3);
+        // Only the first occurrence of a valid priceFeedMessage for a paritcular priceFeed.id
+        // within an updateData will be parsed which is why we exclude priceFeedMessages2[1]
+        // since it has the same priceFeed.id as priceFeedMessages1[0] even though it has a later publishTime.
+        // This is different than how updatePriceFeed behaves which will always update using the data
+        // of the priceFeedMessage with the latest publishTime for a particular priceFeed.id
+        expectedPriceFeedMessages[0] = priceFeedMessages1[0];
+        expectedPriceFeedMessages[1] = priceFeedMessages1[1];
+        expectedPriceFeedMessages[2] = priceFeedMessages2[0];
+        for (uint i = 0; i < expectedPriceFeedMessages.length; i++) {
+            assertParsedPriceFeedEqualsMessage(
+                priceFeeds[i],
+                expectedPriceFeedMessages[i],
+                priceIds[i]
+            );
+        }
+
+        // parse updateData[1] for priceFeedMessages1[0].priceId since this has the latest publishTime
+        // for that priceId and should be the one that is stored.
+        bytes32[] memory priceIds1 = new bytes32[](1);
+        priceIds1[0] = priceFeedMessages1[0].priceId;
+        bytes[] memory parseUpdateDataInput1 = new bytes[](1);
+        parseUpdateDataInput1[0] = updateData[1];
+
+        PythStructs.PriceFeed[] memory priceFeeds1 = pyth.parsePriceFeedUpdates{
+            value: updateFee
+        }(parseUpdateDataInput1, priceIds1, 0, MAX_UINT64);
+
         pyth.updatePriceFeeds{value: updateFee}(updateData);
 
         assertPriceFeedMessageStored(priceFeedMessages1[1]);
         assertPriceFeedMessageStored(priceFeedMessages2[0]);
         assertPriceFeedMessageStored(priceFeedMessages2[1]);
 
-        bytes32[] memory priceIds1 = new bytes32[](1);
-        priceIds1[0] = priceFeedMessages1[1].priceId;
-        bytes[] memory parseUpdateDataInput1 = new bytes[](1);
-        parseUpdateDataInput1[0] = updateData[0];
+        PythStructs.PriceFeed[]
+            memory expectedPriceFeeds = new PythStructs.PriceFeed[](3);
+        expectedPriceFeeds[0] = priceFeeds1[0];
+        expectedPriceFeeds[1] = priceFeeds[1];
+        expectedPriceFeeds[2] = priceFeeds[2];
 
-        PythStructs.PriceFeed[] memory priceFeeds1 = pyth.parsePriceFeedUpdates{
-            value: updateFee
-        }(parseUpdateDataInput1, priceIds1, 0, MAX_UINT64);
-
-        for (uint i = 0; i < priceFeeds1.length; i++) {
-            assertParsedPriceFeedStored(priceFeeds1[i]);
-        }
-
-        bytes32[] memory priceIds2 = new bytes32[](2);
-        priceIds2[0] = priceFeedMessages2[0].priceId;
-        priceIds2[1] = priceFeedMessages2[1].priceId;
-        bytes[] memory parseUpdateDataInput2 = new bytes[](1);
-        parseUpdateDataInput2[0] = updateData[1];
-
-        PythStructs.PriceFeed[] memory priceFeeds2 = pyth.parsePriceFeedUpdates{
-            value: updateFee
-        }(parseUpdateDataInput2, priceIds2, 0, MAX_UINT64);
-        for (uint i = 0; i < priceFeeds2.length; i++) {
-            assertParsedPriceFeedStored(priceFeeds2[i]);
+        for (uint i = 0; i < expectedPriceFeeds.length; i++) {
+            assertParsedPriceFeedStored(expectedPriceFeeds[i]);
         }
     }
 
@@ -272,13 +296,26 @@ contract PythWormholeMerkleAccumulatorTest is
 
         assertPriceFeedMessageStored(priceFeedMessages1[0]);
 
-        bytes32[] memory priceIds2 = new bytes32[](1);
-        priceIds2[0] = priceFeedMessages1[0].priceId;
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = priceFeedMessages1[0].priceId;
 
-        PythStructs.PriceFeed[] memory priceFeeds2 = pyth.parsePriceFeedUpdates{
+        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
             value: updateFee
-        }(updateData, priceIds2, 0, MAX_UINT64);
-        assertParsedPriceFeedStored(priceFeeds2[0]);
+        }(updateData, priceIds, 0, MAX_UINT64);
+        assertEq(priceFeeds.length, 1);
+        assertParsedPriceFeedStored(priceFeeds[0]);
+
+        // swap updateData
+        bytes[] memory updateData1 = new bytes[](2);
+        updateData1[0] = updateData[1];
+        updateData1[1] = updateData[0];
+
+        // parse should use the first occurrence
+        PythStructs.PriceFeed[] memory priceFeeds1 = pyth.parsePriceFeedUpdates{
+            value: updateFee
+        }(updateData1, priceIds, 0, MAX_UINT64);
+        assertEq(priceFeeds1.length, 1);
+        assertEq(priceFeeds1[0].price.publishTime, 5);
     }
 
     function testUpdatePriceFeedWithWormholeMerkleIgnoresOutOfOrderUpdateMultiCall()
@@ -301,9 +338,6 @@ contract PythWormholeMerkleAccumulatorTest is
             uint updateFee
         ) = createWormholeMerkleUpdateData(priceFeedMessages1);
         pyth.updatePriceFeeds{value: updateFee}(updateData);
-        assertPriceFeedMessageStored(priceFeedMessages1[0]);
-
-        bytes[] memory updateData1 = updateData;
 
         (updateData, updateFee) = createWormholeMerkleUpdateData(
             priceFeedMessages2
@@ -311,14 +345,6 @@ contract PythWormholeMerkleAccumulatorTest is
         pyth.updatePriceFeeds{value: updateFee}(updateData);
         // Make sure that the old value is still stored
         assertPriceFeedMessageStored(priceFeedMessages1[0]);
-
-        bytes32[] memory priceIds = new bytes32[](1);
-        priceIds[0] = priceFeedMessages1[0].priceId;
-
-        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
-            value: updateFee
-        }(updateData1, priceIds, 0, MAX_UINT64);
-        assertParsedPriceFeedStored(priceFeeds[0]);
     }
 
     function isNotMatch(
@@ -618,19 +644,19 @@ contract PythWormholeMerkleAccumulatorTest is
             bytes[] memory updateData,
             uint updateFee
         ) = createWormholeMerkleUpdateData(priceFeedMessages);
-        bytes32[] memory priceIds2 = new bytes32[](numPriceFeeds);
+        bytes32[] memory priceIds = new bytes32[](numPriceFeeds);
         for (uint i = 0; i < numPriceFeeds; i++) {
-            priceIds2[i] = priceFeedMessages[i].priceId;
+            priceIds[i] = priceFeedMessages[i].priceId;
         }
-        PythStructs.PriceFeed[] memory priceFeeds2 = pyth.parsePriceFeedUpdates{
+        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
             value: updateFee
-        }(updateData, priceIds2, 0, MAX_UINT64);
+        }(updateData, priceIds, 0, MAX_UINT64);
 
-        for (uint i = 0; i < priceFeeds2.length; i++) {
-            assertParsedPriceFeed(
-                priceFeeds2[i],
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            assertParsedPriceFeedEqualsMessage(
+                priceFeeds[i],
                 priceFeedMessages[i],
-                priceIds2[i]
+                priceIds[i]
             );
         }
 
@@ -639,11 +665,7 @@ contract PythWormholeMerkleAccumulatorTest is
             priceFeedMessages[i].price = getRandInt64();
             priceFeedMessages[i].conf = getRandUint64();
             priceFeedMessages[i].expo = getRandInt32();
-
-            // Increase the publish time if it is not causing an overflow
-            if (priceFeedMessages[i].publishTime != type(uint64).max) {
-                priceFeedMessages[i].publishTime += 1;
-            }
+            priceFeedMessages[i].publishTime = getRandUint64();
             priceFeedMessages[i].emaPrice = getRandInt64();
             priceFeedMessages[i].emaConf = getRandUint64();
         }
@@ -653,19 +675,154 @@ contract PythWormholeMerkleAccumulatorTest is
         );
 
         // reparse
-        priceFeeds2 = pyth.parsePriceFeedUpdates{value: updateFee}(
+        priceFeeds = pyth.parsePriceFeedUpdates{value: updateFee}(
             updateData,
-            priceIds2,
+            priceIds,
             0,
             MAX_UINT64
         );
 
-        for (uint i = 0; i < priceFeeds2.length; i++) {
-            assertParsedPriceFeed(
-                priceFeeds2[i],
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            assertParsedPriceFeedEqualsMessage(
+                priceFeeds[i],
                 priceFeedMessages[i],
-                priceIds2[i]
+                priceIds[i]
             );
         }
     }
+
+    function testParsePriceFeedWithWormholeMerkleWorksRandomDistinctUpdatesInput(
+        uint seed
+    ) public {
+        setRandSeed(seed);
+
+        uint numPriceFeeds = (getRandUint() % 10) + 1;
+        PriceFeedMessage[]
+            memory priceFeedMessages = generateRandomPriceFeedMessage(
+                numPriceFeeds
+            );
+
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createWormholeMerkleUpdateData(priceFeedMessages);
+        bytes32[] memory priceIds = new bytes32[](numPriceFeeds);
+        for (uint i = 0; i < numPriceFeeds; i++) {
+            priceIds[i] = priceFeedMessages[i].priceId;
+        }
+
+        // Shuffle the priceFeedMessages
+        for (uint i = 1; i < numPriceFeeds; i++) {
+            uint swapWith = getRandUint() % (i + 1);
+            (priceFeedMessages[i], priceFeedMessages[swapWith]) = (
+                priceFeedMessages[swapWith],
+                priceFeedMessages[i]
+            );
+            (priceIds[i], priceIds[swapWith]) = (
+                priceIds[swapWith],
+                priceIds[i]
+            );
+        }
+
+        // Select only first numSelectedPriceFeeds. numSelectedPriceFeeds will be in [0, numPriceFeeds]
+        uint numSelectedPriceFeeds = getRandUint() % (numPriceFeeds + 1);
+
+        PriceFeedMessage[]
+            memory selectedPriceFeedsMessages = new PriceFeedMessage[](
+                numSelectedPriceFeeds
+            );
+        bytes32[] memory selectedPriceIds = new bytes32[](
+            numSelectedPriceFeeds
+        );
+
+        for (uint i = 0; i < numSelectedPriceFeeds; i++) {
+            selectedPriceFeedsMessages[i] = priceFeedMessages[i];
+            selectedPriceIds[i] = priceIds[i];
+        }
+
+        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
+            value: updateFee
+        }(updateData, selectedPriceIds, 0, MAX_UINT64);
+        for (uint i = 0; i < numSelectedPriceFeeds; i++) {
+            assertParsedPriceFeedEqualsMessage(
+                priceFeeds[i],
+                selectedPriceFeedsMessages[i],
+                selectedPriceIds[i]
+            );
+        }
+    }
+
+    function testParsePriceFeedWithWormholeMerkleRevertsIfPriceIdNotIncluded()
+        public
+    {
+        PriceFeedMessage[] memory priceFeedMessages = new PriceFeedMessage[](1);
+        priceFeedMessages[0] = PriceFeedMessage({
+            priceId: bytes32(uint(1)),
+            price: getRandInt64(),
+            conf: getRandUint64(),
+            expo: getRandInt32(),
+            publishTime: getRandUint64(),
+            prevPublishTime: getRandUint64(),
+            emaPrice: getRandInt64(),
+            emaConf: getRandUint64()
+        });
+
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createWormholeMerkleUpdateData(priceFeedMessages);
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = bytes32(uint(2));
+
+        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64
+        );
+    }
+
+    function testParsePriceFeedUpdateRevertsIfPricesOutOfTimeRange() public {
+        uint numPriceFeeds = (getRandUint() % 10) + 1;
+        PriceFeedMessage[]
+            memory priceFeedMessages = generateRandomPriceFeedMessage(
+                numPriceFeeds
+            );
+        for (uint i = 0; i < numPriceFeeds; i++) {
+            priceFeedMessages[i].publishTime = uint64(
+                100 + (getRandUint() % 101)
+            ); // All between [100, 200]
+        }
+
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createWormholeMerkleUpdateData(priceFeedMessages);
+
+        bytes32[] memory priceIds = new bytes32[](numPriceFeeds);
+        for (uint i = 0; i < numPriceFeeds; i++) {
+            priceIds[i] = priceFeedMessages[i].priceId;
+        }
+
+        // Request for parse within the given time range should work
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            100,
+            200
+        );
+
+        // Request for parse after the time range should revert.
+        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            300,
+            MAX_UINT64
+        );
+    }
+
+    //TODO: add some tests of forward compatibility.
+    // I.e., create a message where each part that can be expanded in size is expanded and make sure that parsing still works
 }
