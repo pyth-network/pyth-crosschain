@@ -29,6 +29,7 @@ import {
   proposeArbitraryPayload,
   proposeInstructions,
   WORMHOLE_ADDRESS,
+  WormholeMultisigInstruction,
 } from "xc_admin_common";
 import { pythOracleProgram } from "@pythnetwork/client";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
@@ -297,6 +298,10 @@ program
         2
       )
     );
+
+    if (parsed[0] instanceof WormholeMultisigInstruction) {
+      console.log(parsed[0].args.payload.toString("hex"));
+    }
   });
 
 multisigCommand("approve", "Approve a transaction sitting in the multisig")
