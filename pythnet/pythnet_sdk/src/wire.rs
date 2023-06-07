@@ -72,7 +72,7 @@ pub mod v1 {
 
         pub fn try_from_slice(bytes: &[u8]) -> Result<Self, Error> {
             let message = from_slice::<byteorder::BE, Self>(bytes).unwrap();
-            require!(&message.magic[..] != b"PNAU", Error::InvalidMagic);
+            require!(&message.magic[..] == b"PNAU", Error::InvalidMagic);
             require!(message.major_version == 1, Error::InvalidVersion);
             require!(message.minor_version == 0, Error::InvalidVersion);
             Ok(message)
@@ -130,6 +130,8 @@ mod tests {
         Deserializer,
         PrefixedVec,
         Serializer,
+        v1::AccumulatorUpdateData,
+        v1::Proof,
     };
 
     // Test the arbitrary fixed sized array serialization implementation.
@@ -340,5 +342,27 @@ mod tests {
             golden_struct,
             crate::wire::from_slice::<byteorder::LE, _>(&buffer).unwrap()
         );
+    }
+
+    // Test if the AccumulatorUpdateData type can be serialized and deserialized
+    // and still be the same as the original.
+    #[test]
+    fn test_accumulator_update_data_serde() {
+        use serde::Serialize;
+        // Serialize an empty update into a buffer.
+        let empty_update = AccumulatorUpdateData::new(Proof::WormholeMerkle {
+            vaa: PrefixedVec::from(vec![]),
+            updates: vec![],
+        });
+        let mut buffer = Vec::new();
+        let mut cursor = std::io::Cursor::new(&mut buffer);
+        let mut serializer: Serializer<_, byteorder::LE> = Serializer::new(&mut cursor);
+        empty_update.serialize(&mut serializer).unwrap();
+
+        // Test if it can be deserialized back into the original type.
+        let deserialized_update = AccumulatorUpdateData::try_from_slice(&buffer).unwrap();
+
+        // The deserialized value should be the same as the original.
+        assert_eq!(deserialized_update, empty_update);
     }
 }
