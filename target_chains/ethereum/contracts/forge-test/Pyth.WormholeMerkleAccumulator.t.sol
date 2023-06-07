@@ -4,8 +4,6 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
-//TOOD: remove after.
-import "forge-std/console.sol";
 
 import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
@@ -244,6 +242,7 @@ contract PythWormholeMerkleAccumulatorTest is
 
         pyth.updatePriceFeeds{value: updateFee}(updateData);
 
+        // check stored price feed information matches updateData
         assertPriceFeedMessageStored(priceFeedMessages1[1]);
         assertPriceFeedMessageStored(priceFeedMessages2[0]);
         assertPriceFeedMessageStored(priceFeedMessages2[1]);
@@ -254,6 +253,7 @@ contract PythWormholeMerkleAccumulatorTest is
         expectedPriceFeeds[1] = priceFeeds[1];
         expectedPriceFeeds[2] = priceFeeds[2];
 
+        // check stored price feed information matches parsed price feeds
         for (uint i = 0; i < expectedPriceFeeds.length; i++) {
             assertParsedPriceFeedStored(expectedPriceFeeds[i]);
         }
@@ -305,12 +305,13 @@ contract PythWormholeMerkleAccumulatorTest is
         assertEq(priceFeeds.length, 1);
         assertParsedPriceFeedStored(priceFeeds[0]);
 
-        // swap updateData
+        // parsePriceFeedUpdates should return the first priceFeed in the case
+        // that the updateData contains multiple feeds with the same id.
+        // Swap the order of updates in updateData to verify that the other priceFeed is returned
         bytes[] memory updateData1 = new bytes[](2);
         updateData1[0] = updateData[1];
         updateData1[1] = updateData[0];
 
-        // parse should use the first occurrence
         PythStructs.PriceFeed[] memory priceFeeds1 = pyth.parsePriceFeedUpdates{
             value: updateFee
         }(updateData1, priceIds, 0, MAX_UINT64);
@@ -900,6 +901,15 @@ contract PythWormholeMerkleAccumulatorTest is
             priceIds,
             300,
             MAX_UINT64
+        );
+
+        // Request for parse before the time range should revert.
+        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
+        pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            99
         );
     }
 

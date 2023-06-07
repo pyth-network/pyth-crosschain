@@ -274,7 +274,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             bool valid;
             (valid, endOffset) = MerkleTree.isProofValid(
                 encodedProof,
-                offset, // proofOffset
+                offset,
                 merkleRoot,
                 encodedMessage
             );
