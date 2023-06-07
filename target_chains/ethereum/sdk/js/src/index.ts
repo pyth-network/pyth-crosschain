@@ -49,4 +49,6 @@ export const CONTRACT_ADDR: Record<string, string> = {
   mantle_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   conflux_espace: "0xe9d69CdD6Fe41e7B621B4A688C5D1a68cB5c8ADc",
   conflux_espace_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  kava_testnet: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
+  kava: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
 };
