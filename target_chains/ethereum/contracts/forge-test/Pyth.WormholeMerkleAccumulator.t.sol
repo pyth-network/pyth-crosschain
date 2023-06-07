@@ -347,6 +347,86 @@ contract PythWormholeMerkleAccumulatorTest is
         assertPriceFeedMessageStored(priceFeedMessages1[0]);
     }
 
+    function testParsePriceFeedUpdatesWithWormholeMerklWorksWithOurOfOrderUpdateMultiCall()
+        public
+    {
+        PriceFeedMessage[]
+            memory priceFeedMessages1 = generateRandomPriceFeedMessage(1);
+        PriceFeedMessage[]
+            memory priceFeedMessages2 = generateRandomPriceFeedMessage(1);
+
+        // Make the price ids the same
+        priceFeedMessages2[0].priceId = priceFeedMessages1[0].priceId;
+        // Adjust the timestamps so the second timestamp is smaller than the first
+        // Parse should work regardless of what's stored on chain.
+        priceFeedMessages1[0].publishTime = 10;
+        priceFeedMessages2[0].publishTime = 5;
+
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createWormholeMerkleUpdateData(priceFeedMessages1);
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = priceFeedMessages1[0].priceId;
+        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
+            value: updateFee
+        }(updateData, priceIds, 0, MAX_UINT64);
+
+        // Parse should always return the same value regardless of what's stored on chain.
+        assertEq(priceFeeds.length, 1);
+        assertParsedPriceFeedEqualsMessage(
+            priceFeeds[0],
+            priceFeedMessages1[0],
+            priceIds[0]
+        );
+        pyth.updatePriceFeeds{value: updateFee}(updateData);
+        priceFeeds = pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64
+        );
+        assertEq(priceFeeds.length, 1);
+        assertParsedPriceFeedEqualsMessage(
+            priceFeeds[0],
+            priceFeedMessages1[0],
+            priceIds[0]
+        );
+
+        (
+            bytes[] memory updateData1,
+            uint updateFee1
+        ) = createWormholeMerkleUpdateData(priceFeedMessages2);
+        pyth.updatePriceFeeds{value: updateFee1}(updateData1);
+        // reparse the original updateData should still return the same thing
+        priceFeeds = pyth.parsePriceFeedUpdates{value: updateFee}(
+            updateData,
+            priceIds,
+            0,
+            MAX_UINT64
+        );
+        assertEq(priceFeeds.length, 1);
+        assertParsedPriceFeedEqualsMessage(
+            priceFeeds[0],
+            priceFeedMessages1[0],
+            priceIds[0]
+        );
+
+        // parsing the second message should return the data based on the second messagef
+        priceFeeds = pyth.parsePriceFeedUpdates{value: updateFee1}(
+            updateData1,
+            priceIds,
+            0,
+            MAX_UINT64
+        );
+        assertEq(priceFeeds.length, 1);
+        assertParsedPriceFeedEqualsMessage(
+            priceFeeds[0],
+            priceFeedMessages2[0],
+            priceIds[0]
+        );
+    }
+
     function isNotMatch(
         bytes memory a,
         bytes memory b
