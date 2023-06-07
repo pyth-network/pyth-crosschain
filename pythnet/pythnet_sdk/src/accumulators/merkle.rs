@@ -54,6 +54,23 @@ fn hash_null<H: Hasher>() -> H::Hash {
 #[derive(Clone, Default, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MerklePath<H: Hasher>(Vec<H::Hash>);
 
+#[derive(Clone, Default, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MerkleRoot<H: Hasher>(H::Hash);
+
+impl<H: Hasher> MerkleRoot<H> {
+    pub fn new(root: H::Hash) -> Self {
+        Self(root)
+    }
+
+    pub fn check(&self, proof: MerklePath<H>, item: &[u8]) -> bool {
+        let mut current: <H as Hasher>::Hash = hash_leaf::<H>(item);
+        for hash in proof.0 {
+            current = hash_node::<H>(&current, &hash);
+        }
+        current == self.0
+    }
+}
+
 impl<H: Hasher> MerklePath<H> {
     pub fn new(path: Vec<H::Hash>) -> Self {
         Self(path)
@@ -69,7 +86,7 @@ impl<H: Hasher> MerklePath<H> {
     Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize, Serialize, Deserialize, Default,
 )]
 pub struct MerkleAccumulator<H: Hasher = Keccak256> {
-    pub root:  H::Hash,
+    pub root:  MerkleRoot<H>,
     #[serde(skip)]
     pub nodes: Vec<H::Hash>,
 }
@@ -92,7 +109,7 @@ impl<'a, H: Hasher + 'a> MerkleAccumulator<H> {
         serialized.extend_from_slice(0u8.to_be_bytes().as_ref());
         serialized.extend_from_slice(slot.to_be_bytes().as_ref());
         serialized.extend_from_slice(ring_size.to_be_bytes().as_ref());
-        serialized.extend_from_slice(self.root.as_ref());
+        serialized.extend_from_slice(self.root.0.as_ref());
         serialized
     }
 }
@@ -127,11 +144,7 @@ impl<'a, H: Hasher + 'a> Accumulator<'a> for MerkleAccumulator<H> {
     //
     // But to stick to the Accumulator trait we do it via the trait method.
     fn check(&'a self, proof: Self::Proof, item: &[u8]) -> bool {
-        let mut current = hash_leaf::<H>(item);
-        for hash in proof.0 {
-            current = hash_node::<H>(&current, &hash);
-        }
-        current == self.root
+        self.root.check(proof, item)
     }
 }
 
@@ -164,7 +177,7 @@ impl<H: Hasher> MerkleAccumulator<H> {
         }
 
         Some(Self {
-            root:  tree[1],
+            root:  MerkleRoot::new(tree[1]),
             nodes: tree,
         })
     }
