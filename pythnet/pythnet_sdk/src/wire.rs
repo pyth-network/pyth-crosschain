@@ -127,11 +127,13 @@ pub mod v1 {
 mod tests {
     use crate::wire::{
         array,
+        v1::{
+            AccumulatorUpdateData,
+            Proof,
+        },
         Deserializer,
         PrefixedVec,
         Serializer,
-        v1::AccumulatorUpdateData,
-        v1::Proof,
     };
 
     // Test the arbitrary fixed sized array serialization implementation.
@@ -351,7 +353,7 @@ mod tests {
         use serde::Serialize;
         // Serialize an empty update into a buffer.
         let empty_update = AccumulatorUpdateData::new(Proof::WormholeMerkle {
-            vaa: PrefixedVec::from(vec![]),
+            vaa:     PrefixedVec::from(vec![]),
             updates: vec![],
         });
         let mut buffer = Vec::new();
