@@ -35,11 +35,11 @@ const LEAF_PREFIX: &[u8] = &[0];
 const NODE_PREFIX: &[u8] = &[1];
 const NULL_PREFIX: &[u8] = &[2];
 
-fn hash_leaf<H: Hasher>(leaf: &[u8]) -> H::Hash {
+pub fn hash_leaf<H: Hasher>(leaf: &[u8]) -> H::Hash {
     H::hashv(&[LEAF_PREFIX, leaf])
 }
 
-fn hash_node<H: Hasher>(l: &H::Hash, r: &H::Hash) -> H::Hash {
+pub fn hash_node<H: Hasher>(l: &H::Hash, r: &H::Hash) -> H::Hash {
     H::hashv(&[
         NODE_PREFIX,
         (if l <= r { l } else { r }).as_ref(),
@@ -47,7 +47,7 @@ fn hash_node<H: Hasher>(l: &H::Hash, r: &H::Hash) -> H::Hash {
     ])
 }
 
-fn hash_null<H: Hasher>() -> H::Hash {
+pub fn hash_null<H: Hasher>() -> H::Hash {
     H::hashv(&[NULL_PREFIX])
 }
 
