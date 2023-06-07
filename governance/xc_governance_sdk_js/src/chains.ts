@@ -27,8 +27,6 @@ export const RECEIVER_CHAINS = {
   meter: 60010,
   mantle: 60011,
   conflux_espace: 60012,
-
-  // for cosmos
   injective_testnet: 60013,
   osmosis: 60014,
   osmosis_testnet_4: 60015,
@@ -39,6 +37,7 @@ export const RECEIVER_CHAINS = {
   neutron_testnet_pion_1: 60020,
   juno: 60020,
   juno_testnet: 60021,
+  kava: 60022,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
