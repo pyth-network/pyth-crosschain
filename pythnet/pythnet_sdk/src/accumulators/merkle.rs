@@ -36,11 +36,33 @@ const NODE_PREFIX: &[u8] = &[1];
 const NULL_PREFIX: &[u8] = &[2];
 
 /// A MerklePath contains a list of hashes that form a proof for membership in a tree.
-#[derive(Clone, Default, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Clone,
+    Default,
+    Debug,
+    Hash,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    BorshSerialize,
+    BorshDeserialize,
+)]
 pub struct MerklePath<H: Hasher>(Vec<H::Hash>);
 
 /// A MerkleRoot contains the root hash of a MerkleTree.
-#[derive(Clone, Default, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Clone,
+    Default,
+    Debug,
+    Hash,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    BorshSerialize,
+    BorshDeserialize,
+)]
 pub struct MerkleRoot<H: Hasher>(H::Hash);
 
 /// A MerkleTree is a binary tree where each node is the hash of its children.
@@ -48,8 +70,10 @@ pub struct MerkleRoot<H: Hasher>(H::Hash);
     Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize, Serialize, Deserialize, Default,
 )]
 pub struct MerkleTree<H: Hasher = Keccak256> {
-    pub root:  MerkleRoot<H>,
+    pub root: MerkleRoot<H>,
+
     #[serde(skip)]
+    #[borsh_skip]
     pub nodes: Vec<H::Hash>,
 }
 
