@@ -1,3 +1,5 @@
+edition = "2021"
+
 # Merge all imports into a clean vertical list of module imports.
 imports_granularity = "One"
 group_imports = "One"
