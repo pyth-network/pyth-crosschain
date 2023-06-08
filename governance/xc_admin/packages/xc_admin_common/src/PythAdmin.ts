@@ -14,202 +14,9 @@ import {
 import { MultisigAccount } from "@sqds/mesh/lib/types";
 import { BN } from "bn.js";
 
-class PythComponentManager {
-  public tokenAccount(cluster: PythCluster) {}
-
-  public oracleProgram(cluster: PythCluster) {}
-}
-
-export interface TxWrapper {
-  wrap: (
-    instructions: TransactionInstruction[]
-  ) => Promise<TransactionInstruction[]>;
-}
-
-export class SquadWrapper {
-  private admin: PythAdmin;
-
-  constructor(admin: PythAdmin) {
-    this.admin = admin;
-  }
-
-  public async wrap(
-    instructions: TransactionInstruction[]
-  ): Promise<TransactionInstruction[]> {
-    const ixToSend: TransactionInstruction[] = [];
-    const newProposals = [];
-
-    const msAccount = await this.admin.getMultisigAccount();
-    for (
-      let j = 0;
-      j < instructions.length;
-      j += MAX_INSTRUCTIONS_PER_PROPOSAL
-    ) {
-      const proposalIndex =
-        msAccount.transactionIndex + 1 + j / MAX_INSTRUCTIONS_PER_PROPOSAL;
-      ixToSend.push(
-        await this.admin.squad.buildCreateTransaction(
-          msAccount.publicKey,
-          msAccount.authorityIndex,
-          proposalIndex
-        )
-      );
-      const newProposalAddress = getTxPDA(
-        this.admin.vault,
-        new BN(proposalIndex),
-        this.admin.squad.multisigProgramId
-      )[0];
-      newProposals.push(newProposalAddress);
-
-      for (let [i, instruction] of instructions
-        .slice(j, j + MAX_INSTRUCTIONS_PER_PROPOSAL)
-        .entries()) {
-        ixToSend.push(
-          await this.admin.squad.buildAddInstruction(
-            this.admin.vault,
-            newProposalAddress,
-            instruction,
-            i + 1
-          )
-        );
-      }
-      ixToSend.push(
-        await this.admin.squad.buildActivateTransaction(
-          this.admin.vault,
-          newProposalAddress
-        )
-      );
-      ixToSend.push(
-        await this.admin.squad.buildApproveTransaction(
-          this.admin.vault,
-          newProposalAddress
-        )
-      );
-    }
-
-    return ixToSend;
-  }
-}
-
-export class RemoteWrapper implements TxWrapper {
-  private admin: PythAdmin;
-
-  constructor(admin: PythAdmin) {
-    this.admin = admin;
-  }
-
-  public async wrap(
-    instructions: TransactionInstruction[]
-  ): Promise<TransactionInstruction[]> {
-    const ixToSend: TransactionInstruction[] = [];
-    const newProposals = [];
-
-    const msAccount = await this.admin.getMultisigAccount();
-    for (
-      let j = 0;
-      j < instructions.length;
-      j += MAX_INSTRUCTIONS_PER_PROPOSAL
-    ) {
-      const proposalIndex =
-        msAccount.transactionIndex + 1 + j / MAX_INSTRUCTIONS_PER_PROPOSAL;
-      ixToSend.push(
-        await this.admin.squad.buildCreateTransaction(
-          msAccount.publicKey,
-          msAccount.authorityIndex,
-          proposalIndex
-        )
-      );
-      const newProposalAddress = getTxPDA(
-        this.admin.vault,
-        new BN(proposalIndex),
-        this.admin.squad.multisigProgramId
-      )[0];
-      newProposals.push(newProposalAddress);
-
-      for (let [i, instruction] of instructions
-        .slice(j, j + MAX_INSTRUCTIONS_PER_PROPOSAL)
-        .entries()) {
-        ixToSend.push(
-          await this.admin.squad.buildAddInstruction(
-            this.admin.vault,
-            newProposalAddress,
-            instruction,
-            i + 1
-          )
-        );
-      }
-      ixToSend.push(
-        await this.admin.squad.buildActivateTransaction(
-          this.admin.vault,
-          newProposalAddress
-        )
-      );
-      ixToSend.push(
-        await this.admin.squad.buildApproveTransaction(
-          this.admin.vault,
-          newProposalAddress
-        )
-      );
-    }
-
-    return ixToSend;
-  }
-}
-
-class DefaultBuilder implements TxBuilder {
-  public build() {}
-}
-
-class TokenAccountTxBuilder implements TxBuilder {
-  private admin: PythAdmin;
-
-  // Tokens will be sent from this account / cluster.
-  private fromPubkey: PublicKey;
-
-  private instructions: TransactionInstruction[];
-
-  private wrapper: TxWrapper;
-
-  constructor(admin: PythAdmin) {
-    this.admin = admin;
-    this.instructions = [];
-  }
-
-  // TODO: this needs to be a bignumber
-  public transferSol(qtyLamports: number, to: PublicKey) {
-    const proposalInstruction: TransactionInstruction = SystemProgram.transfer({
-      fromPubkey: this.fromPubkey,
-      toPubkey: to,
-      lamports: qtyLamports,
-    });
-
-    this.instructions.push(proposalInstruction);
-  }
-
-  public build(): TransactionInstruction[] {
-    return this.wrapper.wrap(this.instructions);
-  }
-}
-
-class RemoteExecutorTxBuilder {
-  private admin: PythAdmin;
-
-  constructor(admin: PythAdmin) {
-    this.admin = admin;
-  }
-}
-
-class OracleProgramTxBuilder {
-  private admin: PythAdmin;
-
-  constructor(admin: PythAdmin) {
-    this.admin = admin;
-  }
-}
-
-// todo extract to an interface
-class PythAdmin {
+export class PythMultisig {
   public wallet: Wallet;
+  /// The cluster that this multisig lives on
   public cluster: PythCluster;
   public squad: SquadsMesh;
   public vault: PublicKey;
@@ -230,8 +37,23 @@ class PythAdmin {
     return this.squad.getMultisig(this.vault);
   }
 
+  public async getVaultAuthorityPDA(cluster?: PythCluster): Promise<PublicKey> {
+    const msAccount = await this.getMultisigAccount();
+    const localAuthorityPDA = await this.squad.getAuthorityPDA(
+      msAccount.publicKey,
+      msAccount.authorityIndex
+    );
+
+    if (cluster === undefined || cluster === this.cluster) {
+      return localAuthorityPDA
+    } else {
+      return mapKey(localAuthorityPDA);
+    }
+  }
+
+  // TODO: does this need a cluster argument?
   public async getAuthorityPDA(authorityIndex: number = 1): Promise<PublicKey> {
-    return await this.squad.getAuthorityPDA(this.vault, authorityIndex);
+    return this.squad.getAuthorityPDA(this.vault, authorityIndex);
   }
 
   public async createProposalIx(
@@ -271,16 +93,27 @@ class PythAdmin {
       proposalAddress
     );
   }
+}
 
-  public tokenAccount() {}
+export class PythGovernor {
+  public multisig: PythMultisig;
 
-  public remoteExecutor() {
-    return new RemoteExecutorTxBuilder(this);
+  constructor(multisig: PythMultisig) {
+    this.multisig = multisig;
+  }
+
+  public async ixBuilder(cluster?: PythCluster): Promise<MultisigBuilder> {
+    // WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
+  }
+
+  public async batchedIxBuilder(cluster?: PythCluster): Promise<BatchedBuilder> {
+
   }
 }
 
+
 export class MultisigBuilder {
-  private admin: PythAdmin;
+  private admin: PythMultisig;
   // msAccount.transactionIndex + 1
   private nextProposalIndex: number;
 
@@ -328,14 +161,14 @@ export interface IProposalBuilder extends IBuilder {
 }
 
 export class ProposalBuilder implements IProposalBuilder {
-  private admin: PythAdmin;
+  private admin: PythMultisig;
   public proposalIndex: number;
 
   public proposalAddress: PublicKey;
   private instructions: TransactionInstruction[];
 
   constructor(
-    admin: PythAdmin,
+    admin: PythMultisig,
     proposalIndex: number,
     proposalAddress: PublicKey,
     createProposalIx: TransactionInstruction
@@ -489,6 +322,37 @@ export class CosmosTxBuilder {
         payload
       );
     });
+  }
+}
+
+class TokenAccountTxBuilder implements TxBuilder {
+  private admin: PythMultisig;
+
+  // Tokens will be sent from this account / cluster.
+  private fromPubkey: PublicKey;
+
+  private instructions: TransactionInstruction[];
+
+  private wrapper: TxWrapper;
+
+  constructor(admin: PythMultisig) {
+    this.admin = admin;
+    this.instructions = [];
+  }
+
+  // TODO: this needs to be a bignumber
+  public transferSol(qtyLamports: number, to: PublicKey) {
+    const proposalInstruction: TransactionInstruction = SystemProgram.transfer({
+      fromPubkey: this.fromPubkey,
+      toPubkey: to,
+      lamports: qtyLamports,
+    });
+
+    this.instructions.push(proposalInstruction);
+  }
+
+  public build(): TransactionInstruction[] {
+    return this.wrapper.wrap(this.instructions);
   }
 }
 

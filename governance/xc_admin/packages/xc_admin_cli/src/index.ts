@@ -29,6 +29,7 @@ import {
   proposeArbitraryPayload,
   proposeInstructions,
   WORMHOLE_ADDRESS,
+  PythMultisig, PythGovernor
 } from "xc_admin_common";
 import { pythOracleProgram } from "@pythnetwork/client";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
@@ -54,6 +55,35 @@ export async function loadHotWalletOrLedger(
       )
     );
   }
+}
+
+async function loadGovernorFromOptions(
+  options: any,
+): PythGovernor {
+  const wallet = await loadHotWalletOrLedger(
+    options.wallet,
+    options.ledgerDerivationAccount,
+    options.ledgerDerivationChange
+  );
+  // This is the cluster where we want to perform the action
+  const cluster: PythCluster = options.cluster;
+  // This is the cluster where the multisig lives that can perform actions on ^
+  const multisigCluster = getMultisigCluster(cluster);
+  const vault: PublicKey = new PublicKey(options.vault);
+
+  const squad = SquadsMesh.endpoint(
+    getPythClusterApiUrl(multisigCluster),
+    wallet
+  );
+
+  const multisig = new PythMultisig(
+    wallet,
+    multisigCluster,
+    squad,
+    vault,
+  )
+
+  return new PythGovernor(multisig);
 }
 
 const multisigCommand = (name: string, description: string) =>
@@ -97,26 +127,11 @@ multisigCommand(
   )
 
   .action(async (options: any) => {
-    const wallet = await loadHotWalletOrLedger(
-      options.wallet,
-      options.ledgerDerivationAccount,
-      options.ledgerDerivationChange
-    );
+    const governor = await loadGovernorFromOptions(options);
     const cluster: PythCluster = options.cluster;
+
     const programId: PublicKey = new PublicKey(options.programId);
     const current: PublicKey = new PublicKey(options.current);
-    const vault: PublicKey = new PublicKey(options.vault);
-
-    const isRemote = isRemoteCluster(cluster);
-    const squad = SquadsMesh.endpoint(
-      getPythClusterApiUrl(getMultisigCluster(cluster)),
-      wallet
-    );
-    const msAccount = await squad.getMultisig(vault);
-    const vaultAuthority = squad.getAuthorityPDA(
-      msAccount.publicKey,
-      msAccount.authorityIndex
-    );
 
     const programAuthorityEscrowIdl = await Program.fetchIdl(
       PROGRAM_AUTHORITY_ESCROW,
@@ -145,13 +160,18 @@ multisigCommand(
       .accept()
       .accounts({
         currentAuthority: current,
-        newAuthority: isRemote ? mapKey(vaultAuthority) : vaultAuthority,
+        newAuthority: governor.multisig.getVaultAuthorityPDA(cluster),
         programAccount: programId,
         programDataAccount,
         bpfUpgradableLoader: BPF_UPGRADABLE_LOADER,
       })
       .instruction();
 
+    const builder = governor.batchedIxBuilder(cluster);
+    await builder.addInstruction(proposalInstruction);
+    await builder.submit();
+
+    /*
     await proposeInstructions(
       squad,
       vault,
@@ -159,6 +179,7 @@ multisigCommand(
       isRemote,
       WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
     );
+     */
   });
 
 multisigCommand("upgrade-program", "Upgrade a program from a buffer")
