@@ -398,11 +398,16 @@ multisigCommand("propose-sol-transfer", "Propose sol transfer")
       msAccount.authorityIndex
     );
 
+    const admin = new PythAdmin(wallet, cluster, squad, vault);
+    admin;
+
+    /*
     const proposalInstruction: TransactionInstruction = SystemProgram.transfer({
       fromPubkey: isRemote ? mapKey(vaultAuthority) : vaultAuthority,
       toPubkey: destination,
       lamports: amount * LAMPORTS_PER_SOL,
     });
+     */
 
     await proposeInstructions(
       squad,
