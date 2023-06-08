@@ -438,53 +438,79 @@ abstract contract Pyth is
                     UnsafeBytesLib.toUint32(updateData[i], 0) ==
                     ACCUMULATOR_MAGIC
                 ) {
-                    (
-                        PythInternalStructs.PriceInfo[]
-                            memory accumulatorPriceInfos,
-                        bytes32[] memory accumulatorPriceIds
-                    ) = extractPriceInfosFromAccumulatorUpdate(updateData[i]);
-
-                    for (
-                        uint accDataIdx = 0;
-                        accDataIdx < accumulatorPriceIds.length;
-                        accDataIdx++
-                    ) {
-                        bytes32 accumulatorPriceId = accumulatorPriceIds[
-                            accDataIdx
-                        ];
-                        // check whether caller requested for this data
-                        uint k = findIndexOfPriceId(
-                            priceIds,
-                            accumulatorPriceId
+                    bytes memory accumulatorUpdate = updateData[i];
+                    uint offset;
+                    {
+                        UpdateType updateType;
+                        (
+                            offset,
+                            updateType
+                        ) = extractUpdateTypeFromAccumulatorHeader(
+                            accumulatorUpdate
                         );
 
-                        // If priceFeed[k].id != 0 then it means that there was a valid
-                        // update for priceIds[k] and we don't need to process this one.
-                        if (k == priceIds.length || priceFeeds[k].id != 0) {
-                            continue;
-                        }
-
-                        PythInternalStructs.PriceInfo
-                            memory info = accumulatorPriceInfos[accDataIdx];
-
-                        uint publishTime = uint(info.publishTime);
-                        // Check the publish time of the price is within the given range
-                        // and only fill the priceFeedsInfo if it is.
-                        // If is not, default id value of 0 will still be set and
-                        // this will allow other updates for this price id to be processed.
-                        if (
-                            publishTime >= minPublishTime &&
-                            publishTime <= maxPublishTime
-                        ) {
-                            fillPriceFeedFromPriceInfo(
-                                priceFeeds,
-                                k,
-                                accumulatorPriceId,
-                                info,
-                                publishTime
-                            );
+                        if (updateType != UpdateType.WormholeMerkle) {
+                            revert PythErrors.InvalidUpdateData();
                         }
                     }
+                    bytes20 digest;
+                    uint8 numUpdates;
+                    bytes memory encoded = UnsafeBytesLib.slice(
+                        accumulatorUpdate,
+                        offset,
+                        accumulatorUpdate.length - offset
+                    );
+
+                    (
+                        offset,
+                        digest,
+                        numUpdates
+                    ) = extractWormholeMerkleHeaderDigestAndNumUpdates(encoded);
+
+                    for (uint j = 0; j < numUpdates; j++) {
+                        PythInternalStructs.PriceInfo memory info;
+                        bytes32 priceId;
+
+                        (
+                            offset,
+                            info,
+                            priceId
+                        ) = extractPriceInfoFromMerkleProof(
+                            digest,
+                            encoded,
+                            offset
+                        );
+                        {
+                            // check whether caller requested for this data
+                            uint k = findIndexOfPriceId(priceIds, priceId);
+
+                            // If priceFeed[k].id != 0 then it means that there was a valid
+                            // update for priceIds[k] and we don't need to process this one.
+                            if (k == priceIds.length || priceFeeds[k].id != 0) {
+                                continue;
+                            }
+
+                            uint publishTime = uint(info.publishTime);
+                            // Check the publish time of the price is within the given range
+                            // and only fill the priceFeedsInfo if it is.
+                            // If is not, default id value of 0 will still be set and
+                            // this will allow other updates for this price id to be processed.
+                            if (
+                                publishTime >= minPublishTime &&
+                                publishTime <= maxPublishTime
+                            ) {
+                                fillPriceFeedFromPriceInfo(
+                                    priceFeeds,
+                                    k,
+                                    priceId,
+                                    info,
+                                    publishTime
+                                );
+                            }
+                        }
+                    }
+                    if (offset != encoded.length)
+                        revert PythErrors.InvalidUpdateData();
                 } else {
                     bytes memory encoded;
                     {
@@ -573,8 +599,7 @@ abstract contract Pyth is
         bytes32 targetPriceId
     ) private pure returns (uint index) {
         uint k = 0;
-        uint len = priceIds.length;
-        for (; k < len; k++) {
+        for (; k < priceIds.length; k++) {
             if (priceIds[k] == targetPriceId) {
                 break;
             }
