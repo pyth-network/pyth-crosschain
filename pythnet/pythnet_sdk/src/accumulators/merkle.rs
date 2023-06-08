@@ -68,6 +68,10 @@ impl<H: Hasher> MerkleRoot<H> {
         }
         current == self.0
     }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        self.0.as_ref()
+    }
 }
 
 /// Implements functionality for working with MerklePath (proofs).
@@ -75,6 +79,13 @@ impl<H: Hasher> MerklePath<H> {
     /// Given a Vector of hashes representing a merkle proof, construct a MerklePath.
     pub fn new(path: Vec<H::Hash>) -> Self {
         Self(path)
+    }
+
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.0
+            .iter()
+            .flat_map(|hash| hash.as_ref().to_vec())
+            .collect()
     }
 }
 
