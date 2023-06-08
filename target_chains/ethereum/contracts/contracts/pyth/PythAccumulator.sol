@@ -120,7 +120,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             bytes32 priceId
         )
     {
-        (endOffset, priceInfo, priceId) = extractPriceFeedFromMerkleProof(
+        (endOffset, priceInfo, priceId) = extractPriceInfoFromMerkleProof(
             digest,
             encoded,
             offset
@@ -190,7 +190,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
-    function extractPriceFeedFromMerkleProof(
+    function extractPriceInfoFromMerkleProof(
         bytes20 digest,
         bytes memory encoded,
         uint offset
@@ -211,7 +211,9 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 digest
             );
 
-            (priceInfo, priceId) = extractPriceFeedMessage(encodedMessage);
+            (priceInfo, priceId) = extractPriceInfoAndIdFromPriceFeedMessage(
+                encodedMessage
+            );
 
             return (endOffset, priceInfo, priceId);
         }
@@ -246,7 +248,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
-    function extractPriceFeedMessage(
+    function extractPriceInfoAndIdFromPriceFeedMessage(
         bytes memory encodedMessage
     )
         private
@@ -362,7 +364,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             for (uint i = 0; i < numUpdates; i++) {
                 PythInternalStructs.PriceInfo memory priceInfo;
                 bytes32 priceId;
-                (offset, priceInfo, priceId) = extractPriceFeedFromMerkleProof(
+                (offset, priceInfo, priceId) = extractPriceInfoFromMerkleProof(
                     digest,
                     encoded,
                     offset
