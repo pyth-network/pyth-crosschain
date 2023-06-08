@@ -597,8 +597,5 @@
       "name": "TargetSizeExceedsMaxLen",
       "msg": "Target size exceeds MessageBuffer::MAX_LEN"
     }
-  ],
-  "metadata": {
-    "address": "7Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM"
-  }
+  ]
 }
