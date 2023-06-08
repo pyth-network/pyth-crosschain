@@ -1,4 +1,8 @@
 use {
+    borsh::{
+        BorshDeserialize,
+        BorshSerialize,
+    },
     serde::{
         Deserialize,
         Serialize,
@@ -21,17 +25,18 @@ where
     Self: Clone,
     Self: Debug,
     Self: Default,
-    Self: Serialize,
 {
     type Hash: Copy
         + AsRef<[u8]>
+        + BorshSerialize
+        + BorshDeserialize
         + Debug
         + Default
         + Eq
         + std::hash::Hash
         + PartialOrd
         + PartialEq
-        + serde::Serialize
+        + Serialize
         + for<'a> Deserialize<'a>;
 
     fn hashv(data: &[impl AsRef<[u8]>]) -> Self::Hash;
