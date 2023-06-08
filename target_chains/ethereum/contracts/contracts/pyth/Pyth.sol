@@ -475,10 +475,10 @@ abstract contract Pyth is
                             offset,
                             info,
                             priceId
-                        ) = extractPriceInfoFromWormholeMerkle(
+                        ) = extractPriceInfoFromMerkleProof(
+                            digest,
                             encoded,
-                            offset,
-                            digest
+                            offset
                         );
                         {
                             // check whether caller requested for this data

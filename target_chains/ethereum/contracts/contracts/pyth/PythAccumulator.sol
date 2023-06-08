@@ -107,26 +107,6 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
-    function extractPriceInfoFromWormholeMerkle(
-        bytes memory encoded,
-        uint offset,
-        bytes20 digest
-    )
-        internal
-        view
-        returns (
-            uint endOffset,
-            PythInternalStructs.PriceInfo memory priceInfo,
-            bytes32 priceId
-        )
-    {
-        (endOffset, priceInfo, priceId) = extractPriceInfoFromMerkleProof(
-            digest,
-            encoded,
-            offset
-        );
-    }
-
     function extractWormholeMerkleHeaderDigestAndNumUpdates(
         bytes memory encoded
     ) internal view returns (uint offset, bytes20 digest, uint8 numUpdates) {
@@ -195,7 +175,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         bytes memory encoded,
         uint offset
     )
-        private
+        internal
         pure
         returns (
             uint endOffset,
