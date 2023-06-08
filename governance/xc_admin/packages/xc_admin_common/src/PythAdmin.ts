@@ -316,12 +316,15 @@ export class MultisigBuilder {
    */
 }
 
-export interface IProposalBuilder {
+export interface IBuilder {
   addInstruction(instruction: TransactionInstruction): Promise<void>;
+  build(): Promise<TransactionInstruction[]>;
+}
+
+export interface IProposalBuilder extends IBuilder {
   addInstructionWithAuthority(
     factory: (authority: SquadsAuthority) => Promise<TransactionInstruction>
   ): Promise<void>;
-  build(): Promise<TransactionInstruction[]>;
 }
 
 export class ProposalBuilder implements IProposalBuilder {
@@ -435,7 +438,7 @@ export class BatchedBuilder implements IProposalBuilder {
  * Executes instructions on a remote Solana network (e.g., Pythnet) using
  * the remote executor program.
  */
-export class RemoteBuilder {
+export class RemoteBuilder implements IBuilder {
   private builder: IProposalBuilder;
   private wormholeAddress: PublicKey;
 
@@ -464,21 +467,34 @@ export class RemoteBuilder {
   }
 }
 
+export class OracleProgramAdmin {
+  private builder: IBuilder;
+
+  public async addPublisher() {
+    // builder.addInstruction()
+  }
+}
+
+export class CosmosTxBuilder {
+  private builder: IProposalBuilder;
+  private wormholeAddress: PublicKey;
+
+  public async addSetFee() {
+    // make wh governance payload,
+    this.builder.addInstructionWithAuthority(async (authority) => {
+      return await getPostMessageInstruction(
+        builder.admin,
+        authority,
+        wormholeAddress,
+        payload
+      );
+    });
+  }
+}
+
 export interface SquadsAuthority {
   pda: PublicKey;
   index: number;
   bump: number;
   type: string;
 }
-
-/*
-class RemoteTxBuilder {
-  private builder MultisigBuilder;
-
-  private curProposal: ProposalBuilder;
-
-  public async addInstructionDynamic(factory: (proposalAddress: PublicKey, instructionIndex: number) => TransactionInstruction) {
-
-  }
-}
-*/
