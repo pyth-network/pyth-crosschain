@@ -18,7 +18,7 @@ import {
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
 import { getOpsKey, PRICE_FEED_OPS_KEY } from "./multisig";
-import {BatchedBuilder, MultisigBuilder, SquadsAuthority} from "./PythAdmin";
+import {BatchedBuilder, ProposalsBuilder, ProposalIxAuthority} from "./PythAdmin";
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE = PACKET_DATA_SIZE - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
 export const SIZE_OF_SIGNED_BATCH = 30;
@@ -30,7 +30,7 @@ export async function proposeArbitraryPayload(
   payload: Buffer,
   wormholeAddress: PublicKey
 ): Promise<PublicKey> {
-  const builder: MultisigBuilder = null;
+  const builder: ProposalsBuilder = null;
   const proposal = await builder.addProposal();
 
   proposal.addInstructionWithAuthority(async authority => {
@@ -235,7 +235,7 @@ export function getSizeOfCompressedU16(n: number) {
  */
 export async function wrapAsRemoteInstruction(
   admin: PythAdmin,
-  authority: SquadsAuthority,
+  authority: ProposalIxAuthority,
   wormholeAddress: PublicKey,
   instructions: TransactionInstruction[],
 ): Promise<TransactionInstruction> {
@@ -260,7 +260,7 @@ export async function wrapAsRemoteInstruction(
  */
 async function getPostMessageInstruction(
   admin: PythAdmin,
-  authority: SquadsAuthority,
+  authority: ProposalIxAuthority,
   wormholeAddress: PublicKey,
   payload: Buffer
 ): Promise<TransactionInstruction> {

@@ -13,9 +13,22 @@ import {
 } from "./propose";
 import { MultisigAccount } from "@sqds/mesh/lib/types";
 import { BN } from "bn.js";
-import {mapKey} from "./remote_executor";
+import { mapKey } from "./remote_executor";
+import { WORMHOLE_ADDRESS } from "./wormhole";
 
-export class PythMultisig {
+/**
+ * A multisig vault can sign arbitrary instructions with various vault-controlled PDAs, if the multisig approves.
+ * This of course allows the vault to interact with programs on the same blockchain, but a vault also has two
+ * other significant capabilities:
+ * 1. It can execute arbitrary transactions on other blockchains that have the Remote Executor program.
+ *    This allows e.g., a vault on solana mainnet to control programs deployed on PythNet.
+ * 2. It can send wormhole messages from the vault authority. This allows the vault to control programs
+ *    on other chains using Pyth governance messages.
+ *
+ * This class encapsulates the parameters of the vault and provides a set of builder interfaces for
+ * the
+ */
+export class MultisigVault {
   public wallet: Wallet;
   /// The cluster that this multisig lives on
   public cluster: PythCluster;
@@ -38,6 +51,11 @@ export class PythMultisig {
     return this.squad.getMultisig(this.vault);
   }
 
+  /**
+   * Get the PDA that the vault can sign for on `cluster`. If `cluster` is remote, this PDA
+   * is the PDA of the remote executor program representing the vault's Wormhole emitter address.
+   * @param cluster
+   */
   public async getVaultAuthorityPDA(cluster?: PythCluster): Promise<PublicKey> {
     const msAccount = await this.getMultisigAccount();
     const localAuthorityPDA = await this.squad.getAuthorityPDA(
@@ -46,7 +64,7 @@ export class PythMultisig {
     );
 
     if (cluster === undefined || cluster === this.cluster) {
-      return localAuthorityPDA
+      return localAuthorityPDA;
     } else {
       return mapKey(localAuthorityPDA);
     }
@@ -57,13 +75,29 @@ export class PythMultisig {
     return this.squad.getAuthorityPDA(this.vault, authorityIndex);
   }
 
-  public async ixBuilder(cluster?: PythCluster): Promise<MultisigBuilder> {
-    // WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
+  public async proposalsBuilder(): Promise<ProposalsBuilder> {
+    const msAccount = await this.getMultisigAccount();
+    return new ProposalsBuilder(this, msAccount.transactionIndex + 1);
   }
 
-  public async batchedIxBuilder(cluster?: PythCluster): Promise<IBuilder> {
-
+  /**
+   * Get a builder interface for executing instructions on `cluster`. The cluster can either
+   * be the same as the one the multisig is on, or it can represent a remote cluster that is
+   * connected via wormhole and the remote executor program. (Note that it is the caller's responsibility to
+   * ensure that such a connection exists.)
+   *
+   * @param cluster the cluster on which you would like to execute transactions
+   */
+  public async ixsBuilder(cluster?: PythCluster): Promise<IxsBuilder> {
+    if (cluster === undefined || cluster === this.cluster) {
+      return new BatchedBuilder(await this.proposalsBuilder());
+    } else {
+      // TODO: we should configure the wormhole address as a vault parameter.
+      return new RemoteExecutorBuilder(this, WORMHOLE_ADDRESS[this.cluster]!);
+    }
   }
+
+  // Convenience wrappers around squads methods
 
   public async createProposalIx(
     proposalIndex: number
@@ -104,12 +138,26 @@ export class PythMultisig {
   }
 }
 
-export class MultisigBuilder {
-  private admin: PythMultisig;
-  // msAccount.transactionIndex + 1
+/**
+ * A builder for construction a set of multisig proposals. The expected usage is to call
+ * `addProposal` for each new proposal, then use those proposal builders to add
+ * individual instructions to each one.
+ *
+ * Note that you should only have one active builder for any given vault, as
+ * each vault proposal has a global index on the blockchain. If you have multiple active builders,
+ * they will attempt to create proposals with the same index.
+ */
+export class ProposalsBuilder {
+  private admin: MultisigVault;
+  // The index that the next created proposal should use
   private nextProposalIndex: number;
-
   private proposals: ProposalBuilder[];
+
+  constructor(admin: MultisigVault, nextProposalIndex: number) {
+    this.admin = admin;
+    this.nextProposalIndex = nextProposalIndex;
+    this.proposals = [];
+  }
 
   public async addProposal(): Promise<ProposalBuilder> {
     const curProposalIndex = this.nextProposalIndex;
@@ -133,34 +181,43 @@ export class MultisigBuilder {
     }
     return ixs;
   }
-
-  /*
-  public async buildTxs(): Promise<Transaction[]> {
-
-  }
-   */
 }
 
-export interface IBuilder {
-  addInstruction(instruction: TransactionInstruction): Promise<void>;
+/**
+ * Interface for building a collection of instructions. The builder may internally transform
+ * the instructions, i.e., the result of `build()` may not exactly equal the added instructions.
+ */
+export interface IxsBuilder {
+  addInstruction(instruction: TransactionInstruction): Promise<IxsBuilder>;
   build(): Promise<TransactionInstruction[]>;
 }
 
-export interface IAuthorizedBuilder extends IBuilder {
+/**
+ * Authorized version of `IxsBuilder` that allows you to sign instructions with an authority
+ * that is specific to that single instruction.
+ */
+export interface AuthorizedIxsBuilder extends IxsBuilder {
   addInstructionWithAuthority(
-    factory: (authority: SquadsAuthority) => Promise<TransactionInstruction>
-  ): Promise<void>;
+    factory: (authority: ProposalIxAuthority) => Promise<TransactionInstruction>
+  ): Promise<AuthorizedIxsBuilder>;
 }
 
-export class ProposalBuilder implements IAuthorizedBuilder {
-  private admin: PythMultisig;
+/**
+ * Builder that puts the added instructions into a multisig proposal, then activates and
+ * approves the proposal.
+ *
+ * Note that squads multisig proposals have a limited size. If too many instructions are added
+ * to this builder and the size limit is exceeded, the built instructions will not execute successfully.
+ */
+export class ProposalBuilder implements AuthorizedIxsBuilder {
+  private admin: MultisigVault;
   public proposalIndex: number;
 
   public proposalAddress: PublicKey;
   private instructions: TransactionInstruction[];
 
   constructor(
-    admin: PythMultisig,
+    admin: MultisigVault,
     proposalIndex: number,
     proposalAddress: PublicKey,
     createProposalIx: TransactionInstruction
@@ -181,11 +238,11 @@ export class ProposalBuilder implements IAuthorizedBuilder {
         this.instructions.length
       )
     );
+    return this;
   }
 
-  // Each instruction within a proposal can sign with its own PDA
   public async addInstructionWithAuthority(
-    factory: (authority: SquadsAuthority) => Promise<TransactionInstruction>
+    factory: (authority: ProposalIxAuthority) => Promise<TransactionInstruction>
   ) {
     const instructionIndex = this.instructions.length;
     const authorityType = "custom";
@@ -210,34 +267,52 @@ export class ProposalBuilder implements IAuthorizedBuilder {
       authorityType
     );
     this.instructions.push(instruction);
+    return this;
   }
 
   public async build(): Promise<TransactionInstruction[]> {
-    // TODO: maybe this should be a separate method ?
-    this.instructions.push(
-      await this.admin.activateProposalIx(this.proposalAddress)
-    );
-    this.instructions.push(
-      await this.admin.approveProposalIx(this.proposalAddress)
-    );
+    const txs = [...this.instructions];
+    txs.push(await this.admin.activateProposalIx(this.proposalAddress));
+    txs.push(await this.admin.approveProposalIx(this.proposalAddress));
 
-    return this.instructions;
+    return txs;
   }
 
+  /**
+   * Gets the number of instructions added to this builder. Note this is not equivalent to the
+   * number of instructions returned by `build()`.
+   */
   public length() {
-    // FIXME: this fails once you call build
     return this.instructions.length - 1;
   }
 }
 
-export class BatchedBuilder implements IAuthorizedBuilder {
-  private builder: MultisigBuilder;
+/**
+ * A builder that puts the added instructions into one or more multisig proposals, automatically
+ * creating new proposals as needed to accommodate however many instructions are added.
+ * This class is a workaround to the squads proposal size limit.
+ */
+export class BatchedBuilder implements AuthorizedIxsBuilder {
+  private builder: ProposalsBuilder;
+  private maxInstructionsPerProposal;
+
   private currentProposal: ProposalBuilder | undefined;
+
+  constructor(
+    builder: ProposalsBuilder,
+    maxInstructionsPerProposal = MAX_INSTRUCTIONS_PER_PROPOSAL
+  ) {
+    this.builder = builder;
+    this.maxInstructionsPerProposal = maxInstructionsPerProposal;
+    this.currentProposal = undefined;
+  }
 
   private async advanceProposalIfNeeded() {
     if (this.currentProposal === undefined) {
       this.currentProposal = await this.builder.addProposal();
-    } else if (this.currentProposal.length() == MAX_INSTRUCTIONS_PER_PROPOSAL) {
+    } else if (
+      this.currentProposal.length() == this.maxInstructionsPerProposal
+    ) {
       this.currentProposal = await this.builder.addProposal();
     }
   }
@@ -245,13 +320,15 @@ export class BatchedBuilder implements IAuthorizedBuilder {
   public async addInstruction(instruction: TransactionInstruction) {
     await this.advanceProposalIfNeeded();
     await this.currentProposal!.addInstruction(instruction);
+    return this;
   }
 
   public async addInstructionWithAuthority(
-    factory: (authority: SquadsAuthority) => Promise<TransactionInstruction>
+    factory: (authority: ProposalIxAuthority) => Promise<TransactionInstruction>
   ) {
     await this.advanceProposalIfNeeded();
     await this.currentProposal!.addInstructionWithAuthority(factory);
+    return this;
   }
 
   public async build(): Promise<TransactionInstruction[]> {
@@ -260,26 +337,33 @@ export class BatchedBuilder implements IAuthorizedBuilder {
 }
 
 /**
- * Executes instructions on a remote Solana network (e.g., Pythnet) using
- * the remote executor program.
+ * Builder that executes the added instructions on a remote Solana network
+ * (e.g., Pythnet) using the remote executor program.
  */
-export class RemoteBuilder implements IBuilder {
-  private builder: IAuthorizedBuilder;
+export class RemoteExecutorBuilder implements IxsBuilder {
+  private vault: MultisigVault;
   private wormholeAddress: PublicKey;
-
   private instructions: TransactionInstruction[];
+
+  constructor(vault: MultisigVault, wormholeAddress: PublicKey) {
+    this.vault = vault;
+    this.wormholeAddress = wormholeAddress;
+    this.instructions = [];
+  }
 
   public async addInstruction(instruction: TransactionInstruction) {
     this.instructions.push(instruction);
+    return this;
   }
 
   public async build(): Promise<TransactionInstruction[]> {
+    const builder = new BatchedBuilder(await this.vault.proposalsBuilder());
     const batches = batchIntoExecutorPayload(this.instructions);
     for (const [i, batch] of batches.entries()) {
-      this.builder.addInstructionWithAuthority(
-        async (authority: SquadsAuthority) => {
+      await builder.addInstructionWithAuthority(
+        async (authority: ProposalIxAuthority) => {
           return await wrapAsRemoteInstruction(
-            this.builder.admin,
+            this.vault,
             authority,
             this.wormholeAddress,
             batch
@@ -288,11 +372,12 @@ export class RemoteBuilder implements IBuilder {
       );
     }
 
-    return await this.builder.build();
+    return await builder.build();
   }
 }
 
-export interface SquadsAuthority {
+/** A PDA that can act as the signer for a specific instruction in a multisig proposal. */
+export interface ProposalIxAuthority {
   pda: PublicKey;
   index: number;
   bump: number;
