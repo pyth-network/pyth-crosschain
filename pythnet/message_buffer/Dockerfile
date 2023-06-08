@@ -3,8 +3,6 @@ FROM rust:${RUST_VERSION}
 
 RUN apt-get update && apt-get install -qq nodejs npm curl
 
-RUN npm install --global yarn
-
 RUN rustup default ${RUST_VERSION}
 
 ARG SOLANA_VERSION=v1.14.11
