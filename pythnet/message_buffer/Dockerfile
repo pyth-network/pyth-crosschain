@@ -1,4 +1,5 @@
-ARG RUST_VERSION=1.69
+ARG RUST_VERSION=1.66.1
+
 FROM rust:${RUST_VERSION}
 
 RUN apt-get update && apt-get install -qq nodejs npm curl
