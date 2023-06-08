@@ -4,6 +4,7 @@
     "target": "esnext",
     "module": "commonjs",
     "declaration": true,
+    "rootDir": "src/",
     "outDir": "./lib",
     "strict": true,
     "esModuleInterop": true,
