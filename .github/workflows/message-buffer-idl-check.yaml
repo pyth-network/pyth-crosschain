@@ -37,7 +37,7 @@ jobs:
       - name: Run prettier (to avoid pre-commit failures)
         uses: actionsx/prettier@v2
         with:
-          args: --write idl/*
+          args: --write ./idl/*
       - name: Check ABI changes
         # Fails if the IDL files are not up to date. Please use anchor build to regenerate the IDL files for
         # the current version of the contract and update idl directory.
