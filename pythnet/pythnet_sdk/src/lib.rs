@@ -1,6 +1,7 @@
 pub mod accumulators;
 pub mod error;
 pub mod hashers;
+pub mod messages;
 pub mod wire;
 pub mod wormhole;
 
@@ -47,6 +48,8 @@ pub mod pythnet {
 
 #[cfg(test)]
 pub(crate) mod tests {
+    mod test_message;
+
     use super::*;
 
     #[test]
