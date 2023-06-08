@@ -13,6 +13,7 @@ import {
 } from "./propose";
 import { MultisigAccount } from "@sqds/mesh/lib/types";
 import { BN } from "bn.js";
+import {mapKey} from "./remote_executor";
 
 export class PythMultisig {
   public wallet: Wallet;
@@ -56,6 +57,14 @@ export class PythMultisig {
     return this.squad.getAuthorityPDA(this.vault, authorityIndex);
   }
 
+  public async ixBuilder(cluster?: PythCluster): Promise<MultisigBuilder> {
+    // WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
+  }
+
+  public async batchedIxBuilder(cluster?: PythCluster): Promise<IBuilder> {
+
+  }
+
   public async createProposalIx(
     proposalIndex: number
   ): Promise<[TransactionInstruction, PublicKey]> {
@@ -94,23 +103,6 @@ export class PythMultisig {
     );
   }
 }
-
-export class PythGovernor {
-  public multisig: PythMultisig;
-
-  constructor(multisig: PythMultisig) {
-    this.multisig = multisig;
-  }
-
-  public async ixBuilder(cluster?: PythCluster): Promise<MultisigBuilder> {
-    // WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
-  }
-
-  public async batchedIxBuilder(cluster?: PythCluster): Promise<BatchedBuilder> {
-
-  }
-}
-
 
 export class MultisigBuilder {
   private admin: PythMultisig;
@@ -154,13 +146,13 @@ export interface IBuilder {
   build(): Promise<TransactionInstruction[]>;
 }
 
-export interface IProposalBuilder extends IBuilder {
+export interface IAuthorizedBuilder extends IBuilder {
   addInstructionWithAuthority(
     factory: (authority: SquadsAuthority) => Promise<TransactionInstruction>
   ): Promise<void>;
 }
 
-export class ProposalBuilder implements IProposalBuilder {
+export class ProposalBuilder implements IAuthorizedBuilder {
   private admin: PythMultisig;
   public proposalIndex: number;
 
@@ -238,7 +230,7 @@ export class ProposalBuilder implements IProposalBuilder {
   }
 }
 
-export class BatchedBuilder implements IProposalBuilder {
+export class BatchedBuilder implements IAuthorizedBuilder {
   private builder: MultisigBuilder;
   private currentProposal: ProposalBuilder | undefined;
 
@@ -272,7 +264,7 @@ export class BatchedBuilder implements IProposalBuilder {
  * the remote executor program.
  */
 export class RemoteBuilder implements IBuilder {
-  private builder: IProposalBuilder;
+  private builder: IAuthorizedBuilder;
   private wormholeAddress: PublicKey;
 
   private instructions: TransactionInstruction[];
@@ -297,62 +289,6 @@ export class RemoteBuilder implements IBuilder {
     }
 
     return await this.builder.build();
-  }
-}
-
-export class OracleProgramAdmin {
-  private builder: IBuilder;
-
-  public async addPublisher() {
-    // builder.addInstruction()
-  }
-}
-
-export class CosmosTxBuilder {
-  private builder: IProposalBuilder;
-  private wormholeAddress: PublicKey;
-
-  public async addSetFee() {
-    // make wh governance payload,
-    this.builder.addInstructionWithAuthority(async (authority) => {
-      return await getPostMessageInstruction(
-        builder.admin,
-        authority,
-        wormholeAddress,
-        payload
-      );
-    });
-  }
-}
-
-class TokenAccountTxBuilder implements TxBuilder {
-  private admin: PythMultisig;
-
-  // Tokens will be sent from this account / cluster.
-  private fromPubkey: PublicKey;
-
-  private instructions: TransactionInstruction[];
-
-  private wrapper: TxWrapper;
-
-  constructor(admin: PythMultisig) {
-    this.admin = admin;
-    this.instructions = [];
-  }
-
-  // TODO: this needs to be a bignumber
-  public transferSol(qtyLamports: number, to: PublicKey) {
-    const proposalInstruction: TransactionInstruction = SystemProgram.transfer({
-      fromPubkey: this.fromPubkey,
-      toPubkey: to,
-      lamports: qtyLamports,
-    });
-
-    this.instructions.push(proposalInstruction);
-  }
-
-  public build(): TransactionInstruction[] {
-    return this.wrapper.wrap(this.instructions);
   }
 }
 

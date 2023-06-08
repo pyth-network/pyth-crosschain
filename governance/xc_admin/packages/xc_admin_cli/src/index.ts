@@ -133,17 +133,9 @@ multisigCommand(
     const programId: PublicKey = new PublicKey(options.programId);
     const current: PublicKey = new PublicKey(options.current);
 
-    const programAuthorityEscrowIdl = await Program.fetchIdl(
-      PROGRAM_AUTHORITY_ESCROW,
-      new AnchorProvider(
-        squad.connection,
-        squad.wallet,
-        AnchorProvider.defaultOptions()
-      )
-    );
-
-    const programAuthorityEscrow = new Program(
-      programAuthorityEscrowIdl!,
+    // NOTE: Jayant: I think this code used to query the multisig network for the ProgramAuthorityEscrow
+    // even if the cluster was set to something remote
+    const programAuthorityEscrow = await Program.at(
       PROGRAM_AUTHORITY_ESCROW,
       new AnchorProvider(
         squad.connection,
