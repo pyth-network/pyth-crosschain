@@ -33,7 +33,7 @@ jobs:
       - name: Build and generate IDLs
         run: anchor build
       - name: Copy anchor target files
-        run: cp ./target/idl/* idl/ && cp ./target/types/* idl/
+        run: cp ./target/idl/message_buffer.json idl/ && cp ./target/types/message_buffer.ts idl/
       - name: Run prettier (to avoid pre-commit failures)
         run: |
           npx prettier --write "./idl/*"
