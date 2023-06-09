@@ -92,8 +92,7 @@
 //! Integers:
 //!
 //! - `{u,i}8` are serialized as a single byte
-//! - `{u,i}16/32/64` are serialized as bytes specified by the parser endianess type param.
-//! - `{u,i}128` is not supported.
+//! - `{u,i}16/32/64/128` are serialized as bytes specified by the parser endianess type param.
 //!
 //! Floats:
 //!
@@ -273,6 +272,13 @@ impl<'a, W: Write, B: ByteOrder> serde::Serializer for &'a mut Serializer<W, B> 
     }
 
     #[inline]
+    fn serialize_i128(self, v: i128) -> Result<Self::Ok, Self::Error> {
+        self.writer
+            .write_i128::<B>(v)
+            .map_err(SerializerError::from)
+    }
+
+    #[inline]
     fn serialize_u8(self, v: u8) -> Result<Self::Ok, Self::Error> {
         self.writer.write_all(&[v]).map_err(SerializerError::from)
     }
@@ -290,6 +296,13 @@ impl<'a, W: Write, B: ByteOrder> serde::Serializer for &'a mut Serializer<W, B> 
     #[inline]
     fn serialize_u64(self, v: u64) -> Result<Self::Ok, Self::Error> {
         self.writer.write_u64::<B>(v).map_err(SerializerError::from)
+    }
+
+    #[inline]
+    fn serialize_u128(self, v: u128) -> Result<Self::Ok, Self::Error> {
+        self.writer
+            .write_u128::<B>(v)
+            .map_err(SerializerError::from)
     }
 
     #[inline]
