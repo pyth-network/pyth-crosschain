@@ -9,7 +9,7 @@ import {
   PACKET_DATA_SIZE,
 } from "@solana/web3.js";
 import { BN } from "bn.js";
-import { AnchorProvider } from "@project-serum/anchor";
+import { AnchorProvider } from "@coral-xyz/anchor";
 import {
   createWormholeProgramInterface,
   deriveWormholeBridgeDataKey,
