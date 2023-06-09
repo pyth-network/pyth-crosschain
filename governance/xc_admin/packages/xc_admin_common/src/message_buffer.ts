@@ -1,0 +1,45 @@
+import { getPythProgramKeyForCluster, PythCluster } from "@pythnetwork/client";
+import { PublicKey } from "@solana/web3.js";
+
+/**
+ * Address of the remote executor (same on all networks)
+ */
+export const MESSAGE_BUFFER_PROGRAM_ID: PublicKey = new PublicKey(
+  "7Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM"
+);
+
+export const MESSAGE_BUFFER_WHITELIST_ADDRESS: PublicKey =
+  PublicKey.findProgramAddressSync(
+    [Buffer.from("message"), Buffer.from("whitelist")],
+    MESSAGE_BUFFER_PROGRAM_ID
+  )[0];
+
+export const MESSAGE_BUFFER_BUFFER_SIZE = 2048;
+
+export function isMessageBufferAvailable(cluster: PythCluster): boolean {
+  return cluster === "pythtest-crosschain";
+}
+
+export function getPythOracleMessageBufferCpiAuth(
+  cluster: PythCluster
+): PublicKey {
+  const pythOracleProgramId = getPythProgramKeyForCluster(cluster);
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("upd_price_write"), MESSAGE_BUFFER_PROGRAM_ID.toBuffer()],
+    pythOracleProgramId
+  )[0];
+}
+
+export function getMessageBufferAddressForPrice(
+  cluster: PythCluster,
+  priceAccount: PublicKey
+): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [
+      getPythOracleMessageBufferCpiAuth(cluster).toBuffer(),
+      Buffer.from("message"),
+      priceAccount.toBuffer(),
+    ],
+    MESSAGE_BUFFER_PROGRAM_ID
+  )[0];
+}
