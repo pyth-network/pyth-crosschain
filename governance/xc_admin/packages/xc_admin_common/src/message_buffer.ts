@@ -2,17 +2,11 @@ import { getPythProgramKeyForCluster, PythCluster } from "@pythnetwork/client";
 import { PublicKey } from "@solana/web3.js";
 
 /**
- * Address of the remote executor (same on all networks)
+ * Address of the message buffer program.
  */
 export const MESSAGE_BUFFER_PROGRAM_ID: PublicKey = new PublicKey(
   "7Vbmv1jt4vyuqBZcpYPpnVhrqVe5e6ZPb6JxDcffRHUM"
 );
-
-export const MESSAGE_BUFFER_WHITELIST_ADDRESS: PublicKey =
-  PublicKey.findProgramAddressSync(
-    [Buffer.from("message"), Buffer.from("whitelist")],
-    MESSAGE_BUFFER_PROGRAM_ID
-  )[0];
 
 export const MESSAGE_BUFFER_BUFFER_SIZE = 2048;
 

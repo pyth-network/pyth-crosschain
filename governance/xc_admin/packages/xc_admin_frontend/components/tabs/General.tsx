@@ -2,12 +2,7 @@ import { AnchorProvider, Idl, Program } from '@coral-xyz/anchor'
 import { AccountType, getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
 import { useWallet } from '@solana/wallet-adapter-react'
-import {
-  Cluster,
-  PublicKey,
-  SystemProgram,
-  TransactionInstruction,
-} from '@solana/web3.js'
+import { Cluster, PublicKey, TransactionInstruction } from '@solana/web3.js'
 import messageBuffer from 'message_buffer/idl/message_buffer.json'
 import { MessageBuffer } from 'message_buffer/idl/message_buffer'
 import axios from 'axios'
@@ -25,7 +20,6 @@ import {
   PRICE_FEED_MULTISIG,
   proposeInstructions,
   WORMHOLE_ADDRESS,
-  MESSAGE_BUFFER_WHITELIST_ADDRESS,
   PRICE_FEED_OPS_KEY,
   getMessageBufferAddressForPrice,
 } from 'xc_admin_common'
@@ -350,10 +344,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
                   MESSAGE_BUFFER_BUFFER_SIZE
                 )
                 .accounts({
-                  whitelist: MESSAGE_BUFFER_WHITELIST_ADDRESS,
                   admin: fundingAccount,
                   payer: PRICE_FEED_OPS_KEY,
-                  systemProgram: SystemProgram.programId,
                 })
                 .remainingAccounts([
                   {
@@ -432,7 +424,6 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
                   priceAccount
                 )
                 .accounts({
-                  whitelist: MESSAGE_BUFFER_WHITELIST_ADDRESS,
                   admin: fundingAccount,
                   payer: PRICE_FEED_OPS_KEY,
                   messageBuffer: getMessageBufferAddressForPrice(

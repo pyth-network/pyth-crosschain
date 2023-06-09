@@ -36,10 +36,8 @@ test("Message buffer multisig instruction parse: create buffer", (done) => {
   messageBufferProgram.methods
     .createBuffer(allowedProgramAuth, baseAccountKey, 100)
     .accounts({
-      whitelist: PublicKey.unique(),
       admin: PublicKey.unique(),
       payer: PublicKey.unique(),
-      systemProgram: PublicKey.unique(),
     })
     .remainingAccounts([
       {
@@ -158,7 +156,6 @@ test("Message buffer multisig instruction parse: delete buffer", (done) => {
   messageBufferProgram.methods
     .deleteBuffer(allowedProgramAuth, baseAccountKey)
     .accounts({
-      whitelist: PublicKey.unique(),
       admin: PublicKey.unique(),
       payer: PublicKey.unique(),
       messageBuffer: PublicKey.unique(),
