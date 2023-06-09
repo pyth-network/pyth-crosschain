@@ -1,4 +1,4 @@
-#[cfg(test)]
+#[cfg(feature = "quickcheck")]
 use quickcheck::Arbitrary;
 use serde::{
     Deserialize,
@@ -57,7 +57,7 @@ impl Message {
     }
 }
 
-#[cfg(test)]
+#[cfg(feature = "quickcheck")]
 impl Arbitrary for Message {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
         match u8::arbitrary(g) % 2 {
@@ -94,7 +94,7 @@ pub struct PriceFeedMessage {
     pub ema_conf:          u64,
 }
 
-#[cfg(test)]
+#[cfg(feature = "quickcheck")]
 impl Arbitrary for PriceFeedMessage {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
         let mut id = [0u8; 32];
@@ -131,7 +131,7 @@ pub struct TwapMessage {
     pub publish_slot:      u64,
 }
 
-#[cfg(test)]
+#[cfg(feature = "quickcheck")]
 impl Arbitrary for TwapMessage {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
         let mut id = [0u8; 32];
