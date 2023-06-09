@@ -149,7 +149,13 @@ export class MultisigVault {
 
   // Propose instructions
 
-  public async proposeArbitraryPayload(payload: Buffer): Promise<PublicKey> {
+  /**
+   * Propose submitting `payload` as a wormhole message. If the proposal is approved, the sent message
+   * will have `this.getVaultAuthorityPda()` as its emitter address.
+   * @param payload the bytes to send as the wormhole message's payload.
+   * @returns the newly created proposal's public key
+   */
+  public async proposeWormholeMessage(payload: Buffer): Promise<PublicKey> {
     const msAccount = await this.getMultisigAccount();
 
     let ixToSend: TransactionInstruction[] = [];
@@ -182,9 +188,7 @@ export class MultisigVault {
     ixToSend.push(await this.activateProposalIx(newProposalAddress));
     ixToSend.push(await this.approveProposalIx(newProposalAddress));
 
-    // TODO: go get this function
     const txToSend = batchIntoTransactions(ixToSend);
-
     for (let i = 0; i < txToSend.length; i += SIZE_OF_SIGNED_BATCH) {
       await this.getAnchorProvider().sendAll(
         txToSend.slice(i, i + SIZE_OF_SIGNED_BATCH).map((tx) => {
@@ -196,12 +200,11 @@ export class MultisigVault {
   }
 
   /**
-   * Propose an array of `TransactionInstructions` as a proposal
-   * @param squad Squads client
-   * @param vault vault public key (the id of the multisig where these instructions should be proposed)
+   * Propose an array of `TransactionInstructions` as one or more proposals
    * @param instructions instructions that will be proposed
-   * @param remote whether the instructions should be executed in the chain of the multisig or remotely on Pythnet
-   * @returns the newly created proposal's pubkey
+   * @param targetCluster the cluster where the instructions should be executed. If the cluster is not the
+   * same as the one this multisig is on, execution will use wormhole and the remote executor program.
+   * @returns the newly created proposals' public keys
    */
   public async proposeInstructions(
     instructions: TransactionInstruction[],
@@ -295,7 +298,6 @@ export class MultisigVault {
       }
     }
 
-    // TODO: refactor this too
     const txToSend = batchIntoTransactions(ixToSend);
 
     for (let i = 0; i < txToSend.length; i += SIZE_OF_SIGNED_BATCH) {

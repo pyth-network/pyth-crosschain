@@ -335,7 +335,7 @@ multisigCommand("propose-arbitrary-payload", "Propose arbitrary payload")
       payload = payload.substring(2);
     }
 
-    await vault.proposeArbitraryPayload(Buffer.from(payload, "hex"));
+    await vault.proposeWormholeMessage(Buffer.from(payload, "hex"));
   });
 
 /**
