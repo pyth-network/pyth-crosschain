@@ -1,8 +1,9 @@
+#[cfg(test)]
+use quickcheck::Arbitrary;
 use serde::{
     Deserialize,
     Serialize,
 };
-
 
 /// Message format for sending data to other chains via the accumulator program
 /// When serialized with PythNet serialization format, each message starts with a unique
@@ -56,6 +57,16 @@ impl Message {
     }
 }
 
+#[cfg(test)]
+impl Arbitrary for Message {
+    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+        match u8::arbitrary(g) % 2 {
+            0 => Message::PriceFeedMessage(Arbitrary::arbitrary(g)),
+            _ => Message::TwapMessage(Arbitrary::arbitrary(g)),
+        }
+    }
+}
+
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
@@ -83,6 +94,29 @@ pub struct PriceFeedMessage {
     pub ema_conf:          u64,
 }
 
+#[cfg(test)]
+impl Arbitrary for PriceFeedMessage {
+    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+        let mut id = [0u8; 32];
+        for item in &mut id {
+            *item = u8::arbitrary(g);
+        }
+
+        let publish_time = i64::arbitrary(g);
+
+        PriceFeedMessage {
+            id,
+            price: i64::arbitrary(g),
+            conf: u64::arbitrary(g),
+            exponent: i32::arbitrary(g),
+            publish_time,
+            prev_publish_time: publish_time.saturating_sub(i64::arbitrary(g)),
+            ema_price: i64::arbitrary(g),
+            ema_conf: u64::arbitrary(g),
+        }
+    }
+}
+
 /// Message format for sending Twap data via the accumulator program
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
@@ -95,4 +129,27 @@ pub struct TwapMessage {
     pub publish_time:      i64,
     pub prev_publish_time: i64,
     pub publish_slot:      u64,
+}
+
+#[cfg(test)]
+impl Arbitrary for TwapMessage {
+    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+        let mut id = [0u8; 32];
+        for item in &mut id {
+            *item = u8::arbitrary(g);
+        }
+
+        let publish_time = i64::arbitrary(g);
+
+        TwapMessage {
+            id,
+            cumulative_price: i128::arbitrary(g),
+            cumulative_conf: u128::arbitrary(g),
+            num_down_slots: u64::arbitrary(g),
+            exponent: i32::arbitrary(g),
+            publish_time,
+            prev_publish_time: publish_time.saturating_sub(i64::arbitrary(g)),
+            publish_slot: u64::arbitrary(g),
+        }
+    }
 }
