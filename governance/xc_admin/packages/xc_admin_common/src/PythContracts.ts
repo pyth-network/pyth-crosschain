@@ -14,32 +14,26 @@ import {
 import { MultisigAccount } from "@sqds/mesh/lib/types";
 import { BN } from "bn.js";
 
-
-export class PythGovernor {
-  public multisig: PythMultisig;
-
-  constructor(multisig: PythMultisig) {
+export class PythContracts {
+  constructor() {
     this.multisig = multisig;
   }
 
-  public async oracleContract(cluster?: PythCluster): Promise<OracleContract> {
+  public async oracleContract(cluster?: PythCluster): Promise<OracleContract> {}
 
-  }
+  public async messageBufferContract(
+    cluster?: PythCluster
+  ): Promise<MessageBufferContract> {}
 
-  public async messageBufferContract(cluster?: PythCluster): Promise<MessageBufferContract> {
-
-  }
-
-  public async cosmosContract(chainId: number): Promise<MessageBufferContract> {
-
-  }
+  public async cosmosContract(
+    chainId: number
+  ): Promise<MessageBufferContract> {}
 }
 
 export class OracleContract {
-
   // Put getters here that
 
-  public async updater(): Promise<OracleContractUpdater>
+  public async updater(): Promise<OracleContractUpdater>;
 }
 
 export class OracleContractUpdater {

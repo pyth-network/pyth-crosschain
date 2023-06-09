@@ -18,7 +18,12 @@ import {
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
 import { getOpsKey, PRICE_FEED_OPS_KEY } from "./multisig";
-import {BatchedBuilder, ProposalsBuilder, ProposalIxAuthority} from "./PythAdmin";
+import {
+  BatchedBuilder,
+  ProposalsBuilder,
+  ProposalIxAuthority,
+} from "./PythAdmin";
+import { MultisigVault } from "./MultisigVault";
 
 export const MAX_EXECUTOR_PAYLOAD_SIZE = PACKET_DATA_SIZE - 687; // Bigger payloads won't fit in one addInstruction call when adding to the proposal
 export const SIZE_OF_SIGNED_BATCH = 30;
@@ -33,7 +38,7 @@ export async function proposeArbitraryPayload(
   const builder: ProposalsBuilder = null;
   const proposal = await builder.addProposal();
 
-  proposal.addInstructionWithAuthority(async authority => {
+  proposal.addInstructionWithAuthority(async (authority) => {
     return await getPostMessageInstruction(
       builder.admin,
       authority,
@@ -65,7 +70,7 @@ export async function proposeArbitraryPayload(
  * @param vault vault public key (the id of the multisig where these instructions should be proposed)
  * @param instructions instructions that will be proposed
  * @param remote whether the instructions should be executed in the chain of the multisig or remotely on Pythnet
- * @returns the newly created proposal's pubkeyopoer
+ * @returns the newly created proposal's pubkey
  */
 export async function proposeInstructions(
   squad: Squads,
@@ -84,30 +89,20 @@ export async function proposeInstructions(
     for (const instruction of instructions) {
       remoteBuilder.addInstruction(instruction);
     }
-
-
   } else {
-      for (let [i, instruction] of instructions.entries()) {
-        builder.addInstruction(instruction);
-      }
+    for (let [i, instruction] of instructions.entries()) {
+      builder.addInstruction(instruction);
     }
   }
 
   // fixme needs to be remoteBuilder
   const ixToSend = await builder.build();
+  const provider = await new AnchorProvider(squad.connection, squad.wallet, {
+    preflightCommitment: "processed",
+    commitment: "confirmed",
+  });
+  await sendTransactions(provider, batchIntoTransactions(ixToSend));
 
-  const txToSend = batchIntoTransactions(ixToSend);
-
-  for (let i = 0; i < txToSend.length; i += SIZE_OF_SIGNED_BATCH) {
-    await new AnchorProvider(squad.connection, squad.wallet, {
-      preflightCommitment: "processed",
-      commitment: "confirmed",
-    }).sendAll(
-      txToSend.slice(i, i + SIZE_OF_SIGNED_BATCH).map((tx) => {
-        return { tx, signers: [] };
-      })
-    );
-  }
   return newProposals[0];
 }
 
@@ -136,6 +131,19 @@ export function batchIntoExecutorPayload(
     batches.push(batch);
   }
   return batches;
+}
+
+export async function sendTransactions(
+  provider: AnchorProvider,
+  transactions: Transaction[]
+) {
+  for (let i = 0; i < txToSend.length; i += SIZE_OF_SIGNED_BATCH) {
+    provider.sendAll(
+      txToSend.slice(i, i + SIZE_OF_SIGNED_BATCH).map((tx) => {
+        return { tx, signers: [] };
+      })
+    );
+  }
 }
 
 /**
@@ -234,10 +242,10 @@ export function getSizeOfCompressedU16(n: number) {
  * @returns an instruction to be proposed
  */
 export async function wrapAsRemoteInstruction(
-  admin: PythAdmin,
+  admin: MultisigVault,
   authority: ProposalIxAuthority,
   wormholeAddress: PublicKey,
-  instructions: TransactionInstruction[],
+  instructions: TransactionInstruction[]
 ): Promise<TransactionInstruction> {
   const buffer: Buffer = new ExecutePostedVaa("pythnet", instructions).encode();
 
@@ -258,13 +266,13 @@ export async function wrapAsRemoteInstruction(
  * @param wormholeAddress address of the Wormhole bridge
  * @param payload the payload to be posted
  */
-async function getPostMessageInstruction(
-  admin: PythAdmin,
+export async function getPostMessageInstruction(
+  admin: MultisigVault,
   authority: ProposalIxAuthority,
   wormholeAddress: PublicKey,
   payload: Buffer
 ): Promise<TransactionInstruction> {
-  const emitter = admin.getAuthorityPDA();
+  const emitter = await admin.getAuthorityPDA();
   const provider = new AnchorProvider(
     admin.squad.connection,
     admin.squad.wallet,
@@ -283,9 +291,9 @@ async function getPostMessageInstruction(
   );
 
   return await wormholeProgram.methods
-      .postMessage(0, payload, 0)
-      .accounts(accounts)
-      .instruction();
+    .postMessage(0, payload, 0)
+    .accounts(accounts)
+    .instruction();
 }
 
 function getPostMessageAccounts(

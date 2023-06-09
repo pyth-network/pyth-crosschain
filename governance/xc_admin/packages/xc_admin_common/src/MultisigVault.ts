@@ -8,13 +8,17 @@ import {
 } from "@solana/web3.js";
 import {
   batchIntoExecutorPayload,
+  batchIntoTransactions,
+  getPostMessageInstruction,
   MAX_INSTRUCTIONS_PER_PROPOSAL,
+  sendTransactions,
   wrapAsRemoteInstruction,
 } from "./propose";
 import { MultisigAccount } from "@sqds/mesh/lib/types";
 import { BN } from "bn.js";
 import { mapKey } from "./remote_executor";
 import { WORMHOLE_ADDRESS } from "./wormhole";
+import { AnchorProvider } from "@project-serum/anchor";
 
 /**
  * A multisig vault can sign arbitrary instructions with various vault-controlled PDAs, if the multisig approves.
@@ -70,6 +74,11 @@ export class MultisigVault {
     }
   }
 
+  public wormholeAddress(): PublicKey | undefined {
+    // TODO: we should configure the wormhole address as a vault parameter.
+    return WORMHOLE_ADDRESS[this.cluster];
+  }
+
   // TODO: does this need a cluster argument?
   public async getAuthorityPDA(authorityIndex: number = 1): Promise<PublicKey> {
     return this.squad.getAuthorityPDA(this.vault, authorityIndex);
@@ -92,9 +101,54 @@ export class MultisigVault {
     if (cluster === undefined || cluster === this.cluster) {
       return new BatchedBuilder(await this.proposalsBuilder());
     } else {
-      // TODO: we should configure the wormhole address as a vault parameter.
-      return new RemoteExecutorBuilder(this, WORMHOLE_ADDRESS[this.cluster]!);
+      return new RemoteExecutorBuilder(this, this.wormholeAddress()!);
     }
+  }
+
+  public async proposeInstructions(
+    instructions: TransactionInstruction[],
+    cluster?: PythCluster
+  ): Promise<PublicKey[]> {
+    const builder = await this.ixsBuilder(cluster);
+    for (const instruction of instructions) {
+      await builder.addInstruction(instruction);
+    }
+
+    const ixsToSend = await builder.build();
+    const provider = await new AnchorProvider(
+      this.squad.connection,
+      this.wallet,
+      {
+        preflightCommitment: "processed",
+        commitment: "confirmed",
+      }
+    );
+    await sendTransactions(provider, batchIntoTransactions(ixsToSend));
+  }
+
+  public async proposeWormholePayload(payload: Buffer) {
+    const builder = await this.proposalsBuilder();
+    const proposal = await builder.addProposal();
+
+    proposal.addInstructionWithAuthority(async (authority) => {
+      return await getPostMessageInstruction(
+        this,
+        authority,
+        this.wormholeAddress()!,
+        payload
+      );
+    });
+
+    const ixsToSend = await builder.build();
+    const provider = await new AnchorProvider(
+      this.squad.connection,
+      this.wallet,
+      {
+        preflightCommitment: "processed",
+        commitment: "confirmed",
+      }
+    );
+    await sendTransactions(provider, batchIntoTransactions(ixsToSend));
   }
 
   // Convenience wrappers around squads methods
