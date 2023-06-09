@@ -12,7 +12,6 @@ import {
   isRemoteCluster,
   mapKey,
   PRICE_FEED_MULTISIG,
-  proposeInstructions,
   WORMHOLE_ADDRESS,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'

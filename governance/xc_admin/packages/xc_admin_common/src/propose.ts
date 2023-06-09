@@ -1,4 +1,3 @@
-import Squads, { getIxAuthorityPDA, getTxPDA } from "@sqds/mesh";
 import {
   PublicKey,
   Transaction,
@@ -7,6 +6,7 @@ import {
   SYSVAR_CLOCK_PUBKEY,
   SystemProgram,
   PACKET_DATA_SIZE,
+  ConfirmOptions,
 } from "@solana/web3.js";
 import { BN } from "bn.js";
 import { AnchorProvider } from "@project-serum/anchor";
@@ -99,12 +99,12 @@ export class MultisigVault {
 
   // NOTE: this function probably doesn't belong on this class, but it makes it easier to refactor so we'll leave
   // it here for now.
-  public getAnchorProvider(): AnchorProvider {
-    return new AnchorProvider(
-      this.squad.connection,
-      this.squad.wallet,
-      AnchorProvider.defaultOptions()
-    );
+  public getAnchorProvider(opts?: ConfirmOptions): AnchorProvider {
+    if (opts === undefined) {
+      opts = AnchorProvider.defaultOptions();
+    }
+
+    return new AnchorProvider(this.squad.connection, this.squad.wallet, opts);
   }
 
   // Convenience wrappers around squads methods
@@ -299,7 +299,7 @@ export class MultisigVault {
     const txToSend = batchIntoTransactions(ixToSend);
 
     for (let i = 0; i < txToSend.length; i += SIZE_OF_SIGNED_BATCH) {
-      await new AnchorProvider(squad.connection, squad.wallet, {
+      await this.getAnchorProvider({
         preflightCommitment: "processed",
         commitment: "confirmed",
       }).sendAll(
@@ -435,7 +435,7 @@ export function getSizeOfCompressedU16(n: number) {
  * @returns an instruction to be proposed
  */
 export async function wrapAsRemoteInstruction(
-  squad: Squads,
+  squad: SquadsMesh,
   vault: PublicKey,
   proposalAddress: PublicKey,
   instructions: TransactionInstruction[],
@@ -463,7 +463,7 @@ export async function wrapAsRemoteInstruction(
  * @param payload the payload to be posted
  */
 async function getPostMessageInstruction(
-  squad: Squads,
+  squad: SquadsMesh,
   vault: PublicKey,
   proposalAddress: PublicKey,
   instructionIndex: number,

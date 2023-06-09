@@ -7,6 +7,7 @@ import {
   AccountMeta,
   SystemProgram,
   LAMPORTS_PER_SOL,
+  Connection,
 } from "@solana/web3.js";
 import { program } from "commander";
 import {
@@ -52,9 +53,7 @@ export async function loadHotWalletOrLedger(
   }
 }
 
-async function loadVaultFromOptions(
-  options: any,
-): MultisigVault {
+async function loadVaultFromOptions(options: any): Promise<MultisigVault> {
   const wallet = await loadHotWalletOrLedger(
     options.wallet,
     options.ledgerDerivationAccount,
@@ -71,14 +70,8 @@ async function loadVaultFromOptions(
     wallet
   );
 
-  return new MultisigVault(
-    wallet,
-    multisigCluster,
-    squad,
-    vault,
-  );
+  return new MultisigVault(wallet, multisigCluster, squad, vault);
 }
-
 
 const multisigCommand = (name: string, description: string) =>
   program
@@ -121,8 +114,8 @@ multisigCommand(
   )
 
   .action(async (options: any) => {
-    const vault = loadVaultFromOptions(options);
-    const targetCluster: PythCluster = options.cluster
+    const vault = await loadVaultFromOptions(options);
+    const targetCluster: PythCluster = options.cluster;
 
     const programId: PublicKey = new PublicKey(options.programId);
     const current: PublicKey = new PublicKey(options.current);
@@ -146,17 +139,14 @@ multisigCommand(
       .accept()
       .accounts({
         currentAuthority: current,
-        newAuthority: vault.getVaultAuthorityPDA(targetCluster),
+        newAuthority: await vault.getVaultAuthorityPDA(targetCluster),
         programAccount: programId,
         programDataAccount,
         bpfUpgradableLoader: BPF_UPGRADABLE_LOADER,
       })
       .instruction();
 
-    await vault.proposeInstructions(
-      [proposalInstruction],
-      targetCluster,
-    );
+    await vault.proposeInstructions([proposalInstruction], targetCluster);
   });
 
 multisigCommand("upgrade-program", "Upgrade a program from a buffer")
@@ -167,7 +157,7 @@ multisigCommand("upgrade-program", "Upgrade a program from a buffer")
   .requiredOption("-b, --buffer <pubkey>", "buffer account")
 
   .action(async (options: any) => {
-    const vault = loadVaultFromOptions(options);
+    const vault = await loadVaultFromOptions(options);
     const cluster: PythCluster = options.cluster;
     const programId: PublicKey = new PublicKey(options.programId);
     const buffer: PublicKey = new PublicKey(options.buffer);
@@ -190,17 +180,14 @@ multisigCommand("upgrade-program", "Upgrade a program from a buffer")
         { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
         { pubkey: SYSVAR_CLOCK_PUBKEY, isSigner: false, isWritable: false },
         {
-          pubkey: vault.getVaultAuthorityPDA(cluster),
+          pubkey: await vault.getVaultAuthorityPDA(cluster),
           isSigner: true,
           isWritable: false,
         },
       ],
     };
 
-    await vault.proposeInstructions(
-      [proposalInstruction],
-      cluster,
-    );
+    await vault.proposeInstructions([proposalInstruction], cluster);
   });
 
 multisigCommand(
@@ -210,7 +197,7 @@ multisigCommand(
   .requiredOption("-p, --price <pubkey>", "Price account to modify")
   .requiredOption("-e, --exponent <number>", "New exponent")
   .action(async (options: any) => {
-    const vault = loadVaultFromOptions(options);
+    const vault = await loadVaultFromOptions(options);
     const cluster: PythCluster = options.cluster;
     const priceAccount: PublicKey = new PublicKey(options.price);
     const exponent = options.exponent;
@@ -220,7 +207,10 @@ multisigCommand(
       vault.getAnchorProvider()
     )
       .methods.setExponent(exponent, 1)
-      .accounts({ fundingAccount: vault.getVaultAuthorityPDA(cluster), priceAccount })
+      .accounts({
+        fundingAccount: await vault.getVaultAuthorityPDA(cluster),
+        priceAccount,
+      })
       .instruction();
     await vault.proposeInstructions([proposalInstruction], cluster);
   });
@@ -284,7 +274,7 @@ multisigCommand("propose-token-transfer", "Propose token transfer")
     const vault = await loadVaultFromOptions(options);
 
     const cluster: PythCluster = options.cluster;
-    const connection = ???; // from cluster
+    const connection = new Connection(getPythClusterApiUrl(cluster)); // from cluster
     const destination: PublicKey = new PublicKey(options.destination);
     const mint: PublicKey = new PublicKey(options.mint);
     const amount: number = options.amount;
@@ -297,7 +287,7 @@ multisigCommand("propose-token-transfer", "Propose token transfer")
     );
     const sourceTokenAccount = await getAssociatedTokenAddress(
       mint,
-      vault.getVaultAuthorityPDA(cluster),
+      await vault.getVaultAuthorityPDA(cluster),
       true
     );
     const destinationTokenAccount = await getAssociatedTokenAddress(
@@ -309,7 +299,7 @@ multisigCommand("propose-token-transfer", "Propose token transfer")
       createTransferInstruction(
         sourceTokenAccount,
         destinationTokenAccount,
-        vault.getVaultAuthorityPDA(cluster),
+        await vault.getVaultAuthorityPDA(cluster),
         BigInt(amount) * BigInt(10) ** BigInt(mintAccount.decimals)
       );
 
@@ -327,15 +317,12 @@ multisigCommand("propose-sol-transfer", "Propose sol transfer")
     const amount: number = options.amount;
 
     const proposalInstruction: TransactionInstruction = SystemProgram.transfer({
-      fromPubkey: vault.getVaultAuthorityPDA(cluster),
+      fromPubkey: await vault.getVaultAuthorityPDA(cluster),
       toPubkey: destination,
       lamports: amount * LAMPORTS_PER_SOL,
     });
 
-    await vault.proposeInstructions(
-      [proposalInstruction],
-      cluster
-    );
+    await vault.proposeInstructions([proposalInstruction], cluster);
   });
 
 multisigCommand("propose-arbitrary-payload", "Propose arbitrary payload")
@@ -348,9 +335,7 @@ multisigCommand("propose-arbitrary-payload", "Propose arbitrary payload")
       payload = payload.substring(2);
     }
 
-    await vault.proposeArbitraryPayload(
-      Buffer.from(payload, "hex"),
-    );
+    await vault.proposeArbitraryPayload(Buffer.from(payload, "hex"));
   });
 
 /**
