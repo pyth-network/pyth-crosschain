@@ -4,7 +4,6 @@
   "exclude": ["node_modules", "**/__tests__/*"],
   "compilerOptions": {
     "rootDir": "src/",
-    "outDir": "./lib",
-    "skipLibCheck": true
+    "outDir": "./lib"
   }
 }

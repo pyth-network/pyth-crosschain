@@ -1,4 +1,5 @@
-ARG RUST_VERSION=1.69
+ARG RUST_VERSION=1.66.1
+
 FROM rust:${RUST_VERSION}
 
 RUN apt-get update && apt-get install -qq nodejs npm curl
@@ -7,7 +8,7 @@ RUN npm install --global yarn
 
 RUN rustup default ${RUST_VERSION}
 
-ARG SOLANA_VERSION=v1.14.11
+ARG SOLANA_VERSION=v1.14.17
 RUN curl -sSfL https://release.solana.com/${SOLANA_VERSION}/install > install_solana.sh
 RUN sh install_solana.sh
 ENV PATH="/root/.local/share/solana/install/active_release/bin:$PATH"

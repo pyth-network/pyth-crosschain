@@ -1,4 +1,4 @@
-import * as WebSocket from "isomorphic-ws";
+import WebSocket from "isomorphic-ws";
 import { Logger } from "ts-log";
 
 const PING_TIMEOUT_DURATION = 30000 + 3000; // It is 30s on the server and 3s is added for delays

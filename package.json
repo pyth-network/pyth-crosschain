@@ -8,6 +8,7 @@
     "price_service/server",
     "price_service/sdk/js",
     "price_service/client/js",
+    "pythnet/message_buffer",
     "target_chains/aptos/sdk/js",
     "target_chains/cosmwasm/sdk/js",
     "target_chains/cosmwasm/tools",
