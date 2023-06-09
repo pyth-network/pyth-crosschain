@@ -271,17 +271,17 @@ async function main() {
 
   const messageBufferKeys = priceIds.map((priceId) => {
     return {
-      messageBufferKey: getMessageBufferPubkey(
+      messageBuffer: getMessageBufferPubkey(
         pythOracleCpiAuth,
         priceId,
         messageBufferPid
       ),
-      priceAccountKey: priceId,
+      priceAccount: priceId,
     };
   });
 
   let accounts = await messageBufferProgram.account.messageBuffer.fetchMultiple(
-    messageBufferKeys.map((k) => k.messageBufferKey)
+    messageBufferKeys.map((k) => k.messageBuffer)
   );
 
   const msgBufferKeysAndData = messageBufferKeys.map((k, i) => {
@@ -291,15 +291,20 @@ async function main() {
     };
   });
 
-  alreadyInitializedAccounts = msgBufferKeysAndData.filter((idAndAccount) => {
-    return idAndAccount.messageBufferData !== null;
-  });
+  alreadyInitializedAccounts = msgBufferKeysAndData
+    .filter((idAndAccount) => {
+      return idAndAccount.messageBufferData !== null;
+    })
+    .map((v) => {
+      return {
+        priceAccount: v.priceAccount.toString(),
+        messageBuffer: v.messageBuffer.toString(),
+      };
+    });
 
   console.log(`
-  ${
-    alreadyInitializedAccounts.length
-  } message buffer accounts already initialized.
-  alreadyInitializedAccounts: ${JSON.stringify(alreadyInitializedAccounts)}`);
+  ${alreadyInitializedAccounts.length} message buffer accounts already initialized`);
+  console.table(alreadyInitializedAccounts);
 
   const priceAccountPubkeysForNewlyInitializedMessageBuffers =
     msgBufferKeysAndData.filter((idAndAccount) => {
@@ -307,15 +312,14 @@ async function main() {
     });
 
   if (priceAccountPubkeysForNewlyInitializedMessageBuffers.length === 0) {
-    console.info(`no new message buffers to initialize. exiting...`);
-    process.exit(1);
+    console.info(`no new message buffers to initialize`);
   }
   // TODO: optimize with batching
   await Promise.all(
     priceAccountPubkeysForNewlyInitializedMessageBuffers.map(
       async (idAndAccount) => {
-        const priceId = idAndAccount.priceAccountKey;
-        const messageBufferPda = idAndAccount.messageBufferKey;
+        const priceId = idAndAccount.priceAccount;
+        const messageBufferPda = idAndAccount.messageBuffer;
         const msgBufferPdaMetas = [
           {
             pubkey: messageBufferPda,
@@ -360,6 +364,7 @@ async function main() {
     console.info(`Accounts with errors: ${JSON.stringify(errorAccounts)}`);
   }
   console.log(`Initialized ${newlyInitializedAccounts.length} accounts`);
+  console.table(newlyInitializedAccounts);
 
   // Update whitelist admin at the end otherwise all the message buffer PDAs
   // will have to be initialized by the whitelist admin (which could be the multisig)

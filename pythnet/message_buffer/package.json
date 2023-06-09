@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": "true",
   "scripts": {
-    "init-buffer": "yarn ts-node scripts/setup_message_buffer.ts"
+    "init-buffer": "npx ts-node scripts/setup_message_buffer.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.27.0",
