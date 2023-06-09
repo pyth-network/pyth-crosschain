@@ -97,6 +97,16 @@ export class MultisigVault {
     return this.squad.getAuthorityPDA(this.vault, authorityIndex);
   }
 
+  // NOTE: this function probably doesn't belong on this class, but it makes it easier to refactor so we'll leave
+  // it here for now.
+  public getAnchorProvider(): AnchorProvider {
+    return new AnchorProvider(
+      this.squad.connection,
+      this.squad.wallet,
+      AnchorProvider.defaultOptions()
+    );
+  }
+
   // Convenience wrappers around squads methods
 
   public async createProposalIx(
@@ -176,11 +186,7 @@ export class MultisigVault {
     const txToSend = batchIntoTransactions(ixToSend);
 
     for (let i = 0; i < txToSend.length; i += SIZE_OF_SIGNED_BATCH) {
-      await new AnchorProvider(
-        squad.connection,
-        squad.wallet,
-        AnchorProvider.defaultOptions()
-      ).sendAll(
+      await this.getAnchorProvider().sendAll(
         txToSend.slice(i, i + SIZE_OF_SIGNED_BATCH).map((tx) => {
           return { tx, signers: [] };
         })
@@ -199,10 +205,12 @@ export class MultisigVault {
    */
   public async proposeInstructions(
     instructions: TransactionInstruction[],
-    remote: boolean
+    targetCluster?: PythCluster
   ): Promise<PublicKey[]> {
     const msAccount = await this.getMultisigAccount();
     const newProposals = [];
+
+    const remote = targetCluster === undefined || targetCluster != this.cluster;
 
     let ixToSend: TransactionInstruction[] = [];
     if (remote) {

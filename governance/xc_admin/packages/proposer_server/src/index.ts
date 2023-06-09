@@ -10,7 +10,7 @@ import {
 import {
   envOrErr,
   getMultisigCluster,
-  isRemoteCluster,
+  isRemoteCluster, MultisigVault,
   PRICE_FEED_MULTISIG,
   proposeInstructions,
   WORMHOLE_ADDRESS,
@@ -65,19 +65,25 @@ app.post("/api/propose", async (req: Request, res: Response) => {
 
     const cluster: PythCluster = req.body.cluster;
 
+    const wallet = new NodeWallet(KEYPAIR);
     const proposeSquads: SquadsMesh = new SquadsMesh({
       connection: new Connection(RPC_URLS[getMultisigCluster(cluster)]),
-      wallet: new NodeWallet(KEYPAIR),
+      wallet,
     });
 
-    const proposalPubkey = await proposeInstructions(
+    const vault = new MultisigVault(
+      wallet,
+      getMultisigCluster(cluster),
       proposeSquads,
-      PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
-      instructions,
-      isRemoteCluster(cluster),
-      WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
+      PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
     );
-    res.status(200).json({ proposalPubkey });
+
+    const proposalPubkeys = vault.proposeInstructions(
+      instructions,
+      cluster
+    );
+    // preserve the existing API by returning only the first pubkey
+    res.status(200).json({ proposalPubkeys[0] });
   } catch (error) {
     if (error instanceof Error) {
       res.status(500).json(error.message);
