@@ -24,6 +24,8 @@ export function getPythOracleMessageBufferCpiAuth(
   )[0];
 }
 
+// TODO: We can remove this when createBuffer takes message buffer account
+// as a named account because Anchor can automatically find the address.
 export function getMessageBufferAddressForPrice(
   cluster: PythCluster,
   priceAccount: PublicKey
