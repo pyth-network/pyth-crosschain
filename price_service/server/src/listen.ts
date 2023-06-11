@@ -191,12 +191,12 @@ export class Listener implements PriceStore {
     this.spyServiceHost = config.spyServiceHost;
     this.loadFilters(config.filtersRaw);
     // Don't store any prices received from wormhole that are over 5 minutes old.
-    this.ignorePricesOlderThanSecs = 5 * 60;
+    this.ignorePricesOlderThanSecs = 60;
     this.readinessConfig = config.readiness;
     this.updateCallbacks = [];
     this.observedVaas = new LRUCache({
-      max: 100000, // At most 100000 items
-      ttl: 6 * 60 * 1000, // 6 minutes which is longer than ignorePricesOlderThanSecs
+      max: 10000, // At most 10000 items
+      ttl: 60 * 1000, // 1 minutes which is equal to ignorePricesOlderThanSecs
     });
     this.vaasCache = new VaaCache(
       config.cacheTtl,
