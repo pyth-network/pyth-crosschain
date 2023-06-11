@@ -195,7 +195,7 @@ export class Listener implements PriceStore {
     this.readinessConfig = config.readiness;
     this.updateCallbacks = [];
     this.observedVaas = new LRUCache({
-      max: 10000, // At most 100000 items
+      max: 10000, // At most 10000 items
       ttl: 60 * 1000, // 1 minutes which is equal to ignorePricesOlderThanSecs
     });
     this.vaasCache = new VaaCache(

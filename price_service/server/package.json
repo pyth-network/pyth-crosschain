@@ -7,7 +7,7 @@
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\"",
     "build": "tsc",
-    "start": "node --inspect lib/index.js",
+    "start": "node lib/index.js",
     "test": "jest src/",
     "lint": "tslint -p tsconfig.json",
     "preversion": "npm run lint",
