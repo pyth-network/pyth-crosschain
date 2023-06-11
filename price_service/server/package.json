@@ -1,13 +1,13 @@
 {
   "name": "@pythnetwork/price-service-server",
-  "version": "3.0.5",
+  "version": "3.0.6",
   "description": "Webservice for retrieving prices from the Pyth oracle.",
   "private": "true",
   "main": "index.js",
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\"",
     "build": "tsc",
-    "start": "node lib/index.js",
+    "start": "node --inspect lib/index.js",
     "test": "jest src/",
     "lint": "tslint -p tsconfig.json",
     "preversion": "npm run lint",
