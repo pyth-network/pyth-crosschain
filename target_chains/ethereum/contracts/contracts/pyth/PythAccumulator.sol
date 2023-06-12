@@ -185,6 +185,19 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         }
     }
 
+    function parseWormholeMerkleHeaderNumUpdates(
+        bytes calldata wormholeMerkleUpdate,
+        uint offset
+    ) internal view returns (uint8 numUpdates) {
+        uint16 whProofSize = UnsafeBytesLib.toUint16(
+            wormholeMerkleUpdate,
+            offset
+        );
+        offset += 2;
+        offset += whProofSize;
+        numUpdates = UnsafeBytesLib.toUint8(wormholeMerkleUpdate, offset);
+    }
+
     function extractPriceInfoFromMerkleProof(
         bytes20 digest,
         bytes memory encoded,

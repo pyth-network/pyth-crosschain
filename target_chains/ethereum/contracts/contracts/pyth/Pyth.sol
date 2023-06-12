@@ -118,16 +118,10 @@ abstract contract Pyth is
                 if (updateType != UpdateType.WormholeMerkle) {
                     revert PythErrors.InvalidUpdateData();
                 }
-                (
-                    ,
-                    ,
-                    uint8 numUpdates,
-
-                ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
-                        updateData[i],
-                        offset
-                    );
-                totalNumUpdates += numUpdates;
+                totalNumUpdates += parseWormholeMerkleHeaderNumUpdates(
+                    updateData[i],
+                    offset
+                );
             }
         }
 
