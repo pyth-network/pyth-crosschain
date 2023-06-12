@@ -71,7 +71,7 @@ abstract contract Pyth is
     function updatePriceFeeds(
         bytes[] calldata updateData
     ) public payable override {
-        uint8 totalNumUpdates = 0;
+        uint totalNumUpdates = 0;
         for (uint i = 0; i < updateData.length; ) {
             if (
                 updateData[i].length > 4 &&
@@ -88,7 +88,10 @@ abstract contract Pyth is
                 i++;
             }
         }
-        uint requiredFee = getRequiredFee(totalNumUpdates, updateData.length);
+        if (totalNumUpdates == 0) {
+            totalNumUpdates = updateData.length;
+        }
+        uint requiredFee = getTotalFee(totalNumUpdates);
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
     }
 
@@ -102,7 +105,7 @@ abstract contract Pyth is
     function getUpdateFee(
         bytes[] calldata updateData
     ) public view override returns (uint feeAmount) {
-        uint8 totalNumUpdates = 0;
+        uint totalNumUpdates = 0;
         for (uint i = 0; i < updateData.length; i++) {
             if (
                 updateData[i].length > 4 &&
@@ -115,17 +118,23 @@ abstract contract Pyth is
                 if (updateType != UpdateType.WormholeMerkle) {
                     revert PythErrors.InvalidUpdateData();
                 }
-                totalNumUpdates += parseWormholeMerkleHeaderNumUpdates(
-                    updateData[i],
-                    offset
-                );
+                (
+                    ,
+                    ,
+                    uint8 numUpdates,
+
+                ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
+                        updateData[i],
+                        offset
+                    );
+                totalNumUpdates += numUpdates;
             }
         }
-        if (totalNumUpdates > 0) {
-            return totalNumUpdates * singleUpdateFeeInWei();
-        } else {
-            return updateData.length * singleUpdateFeeInWei();
+
+        if (totalNumUpdates == 0) {
+            totalNumUpdates = updateData.length;
         }
+        return getTotalFee(totalNumUpdates);
     }
 
     function verifyPythVM(
@@ -449,7 +458,7 @@ abstract contract Pyth is
         returns (PythStructs.PriceFeed[] memory priceFeeds)
     {
         unchecked {
-            uint8 totalNumUpdates = 0;
+            uint totalNumUpdates = 0;
             priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
             for (uint i = 0; i < updateData.length; i++) {
                 if (
@@ -611,28 +620,26 @@ abstract contract Pyth is
             }
 
             {
-                uint requiredFee = getRequiredFee(
-                    totalNumUpdates,
-                    updateData.length
-                );
+                if (totalNumUpdates == 0) {
+                    totalNumUpdates = updateData.length;
+                }
+                uint requiredFee = getTotalFee(totalNumUpdates);
                 if (msg.value < requiredFee)
                     revert PythErrors.InsufficientFee();
             }
         }
     }
 
-    // We should only ever get one type of updateData in a single call.
-    // if we get batch price, use the old fee calculation otherwise
-    // use the new per price feed fee calculation.
-    function getRequiredFee(
-        uint8 totalNumUpdates,
+    function getTotalFee(
+        uint totalNumUpdates
+    ) private view returns (uint requiredFee) {
+        return totalNumUpdates * singleUpdateFeeInWei();
+    }
+
+    function getFeeBatch(
         uint updateDataLength
     ) private view returns (uint requiredFee) {
-        if (totalNumUpdates > 0) {
-            return totalNumUpdates * singleUpdateFeeInWei();
-        } else {
-            return updateDataLength * singleUpdateFeeInWei();
-        }
+        return updateDataLength * singleUpdateFeeInWei();
     }
 
     function findIndexOfPriceId(
