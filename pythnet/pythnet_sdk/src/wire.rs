@@ -45,6 +45,7 @@ pub mod v1 {
             Serialize,
         },
     };
+    pub const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: &[u8; 4] = b"PNAU";
 
     // Transfer Format.
     // --------------------------------------------------------------------------------
@@ -62,7 +63,7 @@ pub mod v1 {
     impl AccumulatorUpdateData {
         pub fn new(proof: Proof) -> Self {
             Self {
-                magic: *b"PNAU",
+                magic: *PYTHNET_ACCUMULATOR_UPDATE_MAGIC,
                 major_version: 1,
                 minor_version: 0,
                 trailing: vec![],
@@ -72,7 +73,10 @@ pub mod v1 {
 
         pub fn try_from_slice(bytes: &[u8]) -> Result<Self, Error> {
             let message = from_slice::<byteorder::BE, Self>(bytes).unwrap();
-            require!(&message.magic[..] == b"PNAU", Error::InvalidMagic);
+            require!(
+                &message.magic[..] == PYTHNET_ACCUMULATOR_UPDATE_MAGIC,
+                Error::InvalidMagic
+            );
             require!(message.major_version == 1, Error::InvalidVersion);
             require!(message.minor_version == 0, Error::InvalidVersion);
             Ok(message)
@@ -102,10 +106,15 @@ pub mod v1 {
         pub payload: WormholePayload,
     }
 
+    pub const ACCUMULATOR_UPDATE_WORMHOLE_VERIFICATION_MAGIC: &[u8; 4] = b"AUWV";
+
     impl WormholeMessage {
         pub fn try_from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, Error> {
             let message = from_slice::<byteorder::BE, Self>(bytes.as_ref()).unwrap();
-            require!(&message.magic[..] == b"AUWV", Error::InvalidMagic);
+            require!(
+                &message.magic[..] == ACCUMULATOR_UPDATE_WORMHOLE_VERIFICATION_MAGIC,
+                Error::InvalidMagic
+            );
             Ok(message)
         }
     }
