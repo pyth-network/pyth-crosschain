@@ -398,23 +398,23 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         pyth.getUpdateFee(freshPricesWhBatchUpdateData);
     }
 
-    function testBenchrmarkGetUpdateFeeWhMerkle1() public view {
+    function testBenchmarkGetUpdateFeeWhMerkle1() public view {
         pyth.getUpdateFee(freshPricesWhMerkleUpdateData[0]);
     }
 
-    function testBenchrmarkGetUpdateFeeWhMerkle2() public view {
+    function testBenchmarkGetUpdateFeeWhMerkle2() public view {
         pyth.getUpdateFee(freshPricesWhMerkleUpdateData[1]);
     }
 
-    function testBenchrmarkGetUpdateFeeWhMerkle3() public view {
+    function testBenchmarkGetUpdateFeeWhMerkle3() public view {
         pyth.getUpdateFee(freshPricesWhMerkleUpdateData[2]);
     }
 
-    function testBenchrmarkGetUpdateFeeWhMerkle4() public view {
+    function testBenchmarkGetUpdateFeeWhMerkle4() public view {
         pyth.getUpdateFee(freshPricesWhMerkleUpdateData[3]);
     }
 
-    function testBenchrmarkGetUpdateFeeWhMerkle5() public view {
+    function testBenchmarkGetUpdateFeeWhMerkle5() public view {
         pyth.getUpdateFee(freshPricesWhMerkleUpdateData[4]);
     }
 }

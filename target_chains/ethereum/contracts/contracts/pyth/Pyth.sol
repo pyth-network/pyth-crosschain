@@ -624,12 +624,6 @@ abstract contract Pyth is
         return totalNumUpdates * singleUpdateFeeInWei();
     }
 
-    function getFeeBatch(
-        uint updateDataLength
-    ) private view returns (uint requiredFee) {
-        return updateDataLength * singleUpdateFeeInWei();
-    }
-
     function findIndexOfPriceId(
         bytes32[] calldata priceIds,
         bytes32 targetPriceId
