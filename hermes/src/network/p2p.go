@@ -32,6 +32,9 @@ import (
 	"strings"
 	"time"
 
+    "net/http"
+    _ "net/http/pprof"
+
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
@@ -54,6 +57,11 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 	networkID := C.GoString(network_id)
 	bootstrapAddrs := strings.Split(C.GoString(bootstrap_addrs), ",")
 	listenAddrs := strings.Split(C.GoString(listen_addrs), ",")
+
+    // Bind pprof to 6060 for debugging Go code.
+    go func() {
+        http.ListenAndServe("127.0.0.1:6060", nil)
+    }()
 
 	var startTime int64
 	var recoverRerun func()
