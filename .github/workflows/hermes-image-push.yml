@@ -1,4 +1,4 @@
-name: Build and Push Price Service Image
+name: Build and Push Hermes Image
 on:
   push:
     tags:
@@ -13,7 +13,7 @@ permissions:
   contents: read
   id-token: write
 jobs:
-  price-server-image:
+  hermes-image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
