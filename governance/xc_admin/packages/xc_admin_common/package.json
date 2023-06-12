@@ -17,14 +17,17 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test": "jest"
+    "test": "jest",
+    "cli": "npm run build && node lib/contracts/cli.js"
   },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.8",
     "@pythnetwork/client": "^2.17.0",
+    "@pythnetwork/pyth-sdk-solidity": "*",
     "@solana/buffer-layout": "^4.0.1",
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
+    "ethers": "^6.5.1",
     "lodash": "^4.17.21",
     "typescript": "^4.9.4"
   },
