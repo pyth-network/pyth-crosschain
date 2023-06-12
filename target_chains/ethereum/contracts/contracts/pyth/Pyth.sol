@@ -82,14 +82,12 @@ abstract contract Pyth is
                 );
             } else {
                 updatePriceBatchFromVm(updateData[i]);
+                totalNumUpdates += 1;
             }
 
             unchecked {
                 i++;
             }
-        }
-        if (totalNumUpdates == 0) {
-            totalNumUpdates = updateData.length;
         }
         uint requiredFee = getTotalFee(totalNumUpdates);
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
@@ -122,11 +120,9 @@ abstract contract Pyth is
                     updateData[i],
                     offset
                 );
+            } else {
+                totalNumUpdates += 1;
             }
-        }
-
-        if (totalNumUpdates == 0) {
-            totalNumUpdates = updateData.length;
         }
         return getTotalFee(totalNumUpdates);
     }
@@ -604,6 +600,7 @@ abstract contract Pyth is
 
                         index += attestationSize;
                     }
+                    totalNumUpdates += 1;
                 }
             }
 
@@ -614,9 +611,6 @@ abstract contract Pyth is
             }
 
             {
-                if (totalNumUpdates == 0) {
-                    totalNumUpdates = updateData.length;
-                }
                 uint requiredFee = getTotalFee(totalNumUpdates);
                 if (msg.value < requiredFee)
                     revert PythErrors.InsufficientFee();
