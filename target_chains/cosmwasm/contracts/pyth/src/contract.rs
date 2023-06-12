@@ -1234,7 +1234,7 @@ mod test {
         }
     }
 
-    fn to_price_feed(msg: &mut Message) -> &mut PriceFeedMessage {
+    fn as_mut_price_feed(msg: &mut Message) -> &mut PriceFeedMessage {
         match msg {
             Message::PriceFeedMessage(ref mut price_feed) => price_feed,
             _ => {
@@ -1253,12 +1253,12 @@ mod test {
         let mut feed2 = create_dummy_price_feed_message(200);
         let mut feed3 = create_dummy_price_feed_message(300);
         let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed2, feed3], false);
-        to_price_feed(&mut feed1).publish_time += 1;
-        to_price_feed(&mut feed2).publish_time += 1;
-        to_price_feed(&mut feed3).publish_time += 1;
-        to_price_feed(&mut feed1).price *= 2;
-        to_price_feed(&mut feed2).price *= 2;
-        to_price_feed(&mut feed3).price *= 2;
+        as_mut_price_feed(&mut feed1).publish_time += 1;
+        as_mut_price_feed(&mut feed2).publish_time += 1;
+        as_mut_price_feed(&mut feed3).publish_time += 1;
+        as_mut_price_feed(&mut feed1).price *= 2;
+        as_mut_price_feed(&mut feed2).price *= 2;
+        as_mut_price_feed(&mut feed3).price *= 2;
         let msg2 =
             create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed2, feed3], false);
         let info = mock_info("123", &[]);
@@ -1279,8 +1279,8 @@ mod test {
         let feed1 = create_dummy_price_feed_message(100);
         let mut feed2 = create_dummy_price_feed_message(100);
         let feed3 = create_dummy_price_feed_message(300);
-        to_price_feed(&mut feed2).publish_time -= 1;
-        to_price_feed(&mut feed2).price *= 2;
+        as_mut_price_feed(&mut feed2).publish_time -= 1;
+        as_mut_price_feed(&mut feed2).price *= 2;
         let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed2, feed3], false);
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
@@ -1299,8 +1299,8 @@ mod test {
         let feed1 = create_dummy_price_feed_message(100);
         let mut feed2 = create_dummy_price_feed_message(100);
         let feed3 = create_dummy_price_feed_message(300);
-        to_price_feed(&mut feed2).publish_time -= 1;
-        to_price_feed(&mut feed2).price *= 2;
+        as_mut_price_feed(&mut feed2).publish_time -= 1;
+        as_mut_price_feed(&mut feed2).price *= 2;
         let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed3], false);
 
         let msg2 = create_accumulator_message(&[feed1, feed2, feed3], &[feed2, feed3], false);
