@@ -19,6 +19,7 @@ import {
   TxResponse,
   createTransactionFromMsg,
 } from "@injectivelabs/sdk-ts";
+import { Account } from "@injectivelabs/sdk-ts/dist/cjs/client/chain/types/auth";
 
 const DEFAULT_GAS_PRICE = 500000000;
 
@@ -93,6 +94,7 @@ type InjectiveConfig = {
 export class InjectivePricePusher implements IPricePusher {
   private wallet: PrivateKey;
   private chainConfig: InjectiveConfig;
+  private account: Account | null = null;
 
   constructor(
     private priceServiceConnection: PriceServiceConnection,
@@ -116,12 +118,14 @@ export class InjectivePricePusher implements IPricePusher {
 
   private async signAndBroadcastMsg(msg: Msgs): Promise<TxResponse> {
     const chainGrpcAuthApi = new ChainGrpcAuthApi(this.grpcEndpoint);
-    const account = await chainGrpcAuthApi.fetchAccount(
+    // Fetch the latest account details only if it's not stored.
+    this.account ??= await chainGrpcAuthApi.fetchAccount(
       this.injectiveAddress()
     );
+
     const { txRaw: simulateTxRaw } = createTransactionFromMsg({
-      sequence: account.baseAccount.sequence,
-      accountNumber: account.baseAccount.accountNumber,
+      sequence: this.account.baseAccount.sequence,
+      accountNumber: this.account.baseAccount.accountNumber,
       message: msg,
       chainId: this.chainConfig.chainId,
       pubKey: this.wallet.toPublicKey().toBase64(),
@@ -137,23 +141,20 @@ export class InjectivePricePusher implements IPricePusher {
     // gas passed with the transaction should be more than that
     // in order for it to be successfully executed
     // this multiplier takes care of that
+    const gas = (gasUsed * this.chainConfig.gasMultiplier).toFixed();
     const fee = {
       amount: [
         {
           denom: "inj",
-          amount: (
-            gasUsed *
-            this.chainConfig.gasPrice *
-            this.chainConfig.gasMultiplier
-          ).toFixed(),
+          amount: (Number(gas) * this.chainConfig.gasPrice).toFixed(),
         },
       ],
-      gas: (gasUsed * this.chainConfig.gasMultiplier).toFixed(),
+      gas,
     };
 
     const { signBytes, txRaw } = createTransactionFromMsg({
-      sequence: account.baseAccount.sequence,
-      accountNumber: account.baseAccount.accountNumber,
+      sequence: this.account.baseAccount.sequence,
+      accountNumber: this.account.baseAccount.accountNumber,
       message: msg,
       chainId: this.chainConfig.chainId,
       fee,
@@ -162,11 +163,23 @@ export class InjectivePricePusher implements IPricePusher {
 
     const sig = await this.wallet.sign(Buffer.from(signBytes));
 
-    /** Append Signatures */
-    txRaw.signatures = [sig];
-    const txResponse = await txService.broadcast(txRaw);
+    try {
+      this.account.baseAccount.sequence++;
 
-    return txResponse;
+      /** Append Signatures */
+      txRaw.signatures = [sig];
+      // this takes approx 5 seconds
+      const txResponse = await txService.broadcast(txRaw);
+
+      return txResponse;
+    } catch (e: any) {
+      // The sequence number was invalid and hence we will have to fetch it again.
+      if (e.message.match(/account sequence mismatch/) !== null) {
+        // We need to fetch the account details again.
+        this.account = null;
+      }
+      throw e;
+    }
   }
 
   async getPriceFeedUpdateObject(priceIds: string[]): Promise<any> {
@@ -200,27 +213,12 @@ export class InjectivePricePusher implements IPricePusher {
       return;
     }
 
-    let updateFeeQueryResponse: UpdateFeeResponse;
-    try {
-      const api = new ChainGrpcWasmApi(this.grpcEndpoint);
-      const { data } = await api.fetchSmartContractState(
-        this.pythContractAddress,
-        Buffer.from(
-          JSON.stringify({
-            get_update_fee: {
-              vaas: priceFeedUpdateObject.update_price_feeds.data,
-            },
-          })
-        ).toString("base64")
-      );
-
-      const json = Buffer.from(data).toString();
-      updateFeeQueryResponse = JSON.parse(json);
-    } catch (e) {
-      console.error("Error fetching update fee");
-      console.error(e);
-      return;
-    }
+    // In order to reduce the number of API calls
+    // We are calculating the fee using the same logic as in contract.
+    const updateFeeQueryResponse: UpdateFeeResponse = {
+      denom: "inj",
+      amount: priceFeedUpdateObject.update_price_feeds.data.length.toFixed(),
+    };
 
     try {
       const executeMsg = MsgExecuteContract.fromJSON({
@@ -231,9 +229,6 @@ export class InjectivePricePusher implements IPricePusher {
       });
 
       const rs = await this.signAndBroadcastMsg(executeMsg);
-
-      if (rs.code !== 0) throw new Error("Error: transaction failed");
-
       console.log("Succesfully broadcasted txHash:", rs.txHash);
     } catch (e: any) {
       if (e.message.match(/account inj[a-zA-Z0-9]+ not found/) !== null) {
