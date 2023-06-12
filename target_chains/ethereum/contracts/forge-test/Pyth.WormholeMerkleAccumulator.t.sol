@@ -520,7 +520,10 @@ contract PythWormholeMerkleAccumulatorTest is
             );
         }
 
-        updateFee = pyth.getUpdateFee(updateData);
+        // manually calculate the fee
+        // so this helper method doesn't trigger the error.
+        // updateFee = pyth.getUpdateFee(numPriceFeeds);
+        updateFee = singleUpdateFeeInWei() * numPriceFeeds;
     }
 
     function testUpdatePriceFeedWithWormholeMerkleRevertsOnWrongVAAPayloadMagic()

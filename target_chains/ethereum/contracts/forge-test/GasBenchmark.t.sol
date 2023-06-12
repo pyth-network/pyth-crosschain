@@ -340,9 +340,12 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         ids[0] = priceIds[4];
         ids[1] = priceIds[2];
         ids[2] = priceIds[0];
-        pyth.parsePriceFeedUpdates{
-            value: freshPricesWhMerkleUpdateFee[numIds - 1]
-        }(freshPricesWhMerkleUpdateData[4], ids, 0, 50);
+        pyth.parsePriceFeedUpdates{value: freshPricesWhMerkleUpdateFee[4]}( // updateFee based on number of priceFeeds in updateData
+            freshPricesWhMerkleUpdateData[4],
+            ids,
+            0,
+            50
+        );
     }
 
     function testBenchmarkParsePriceFeedUpdatesWhMerkleForOnePriceFeedNotWithinRange()
