@@ -41,7 +41,6 @@ type UpdateFeeResponse = {
 };
 
 // this use price without leading 0x
-// TODO: don't poll and only push when a new price is received.
 export class InjectivePriceListener extends ChainPriceListener {
   constructor(
     private pythContractAddress: string,
@@ -119,7 +118,7 @@ export class InjectivePricePusher implements IPricePusher {
 
   private async signAndBroadcastMsg(msg: Msgs): Promise<TxResponse> {
     const chainGrpcAuthApi = new ChainGrpcAuthApi(this.grpcEndpoint);
-    // Fetch the latest account details only if it's not stored in the variable.
+    // Fetch the latest account details only if it's not stored.
     this.account ??= await chainGrpcAuthApi.fetchAccount(
       this.injectiveAddress()
     );
@@ -133,7 +132,7 @@ export class InjectivePricePusher implements IPricePusher {
     });
 
     const txService = new TxGrpcClient(this.grpcEndpoint);
-    // simulation: approx 0.8secs
+    // simulation
     const {
       gasInfo: { gasUsed },
     } = await txService.simulate(simulateTxRaw);
@@ -214,31 +213,12 @@ export class InjectivePricePusher implements IPricePusher {
       return;
     }
 
-    // TODO: HOW ABOUT CALCULATING FEE HERE INSTEAD OF IN THE CONTRACT?
+    // In order to reduce the number of API calls
+    // We are calculating the fee using the same logic as in contract.
     const updateFeeQueryResponse: UpdateFeeResponse = {
       denom: "inj",
       amount: priceFeedUpdateObject.update_price_feeds.data.length.toFixed(),
     };
-    // try {
-    //   const api = new ChainGrpcWasmApi(this.grpcEndpoint);
-    //   const { data } = await api.fetchSmartContractState(
-    //     this.pythContractAddress,
-    //     Buffer.from(
-    //       JSON.stringify({
-    //         get_update_fee: {
-    //           vaas: priceFeedUpdateObject.update_price_feeds.data,
-    //         },
-    //       })
-    //     ).toString("base64")
-    //   );
-
-    //   const json = Buffer.from(data).toString();
-    //   updateFeeQueryResponse = JSON.parse(json);
-    // } catch (e) {
-    //   console.error("Error fetching update fee");
-    //   console.error(e);
-    //   return;
-    // }
 
     try {
       const executeMsg = MsgExecuteContract.fromJSON({
