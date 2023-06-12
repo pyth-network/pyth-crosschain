@@ -93,6 +93,8 @@
 //!
 //! - `{u,i}8` are serialized as a single byte
 //! - `{u,i}16/32/64/128` are serialized as bytes specified by the parser endianess type param.
+//! - Custom {U,I}128/256 wrappers may be implemented later (similar to Borsh) for better support 
+//!   in JS, debugging, logging, etc.
 //!
 //! Floats:
 //!
