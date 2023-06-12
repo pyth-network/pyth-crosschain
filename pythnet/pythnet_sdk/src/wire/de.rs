@@ -180,6 +180,18 @@ where
         visitor.visit_i64(value)
     }
 
+    fn deserialize_i128<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    where
+        V: serde::de::Visitor<'de>,
+    {
+        let value = self
+            .cursor
+            .read_i128::<B>()
+            .map_err(DeserializerError::from)?;
+
+        visitor.visit_i128(value)
+    }
+
     fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
@@ -222,6 +234,18 @@ where
             .map_err(DeserializerError::from)?;
 
         visitor.visit_u64(value)
+    }
+
+    fn deserialize_u128<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    where
+        V: serde::de::Visitor<'de>,
+    {
+        let value = self
+            .cursor
+            .read_u128::<B>()
+            .map_err(DeserializerError::from)?;
+
+        visitor.visit_u128(value)
     }
 
     fn deserialize_f32<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
