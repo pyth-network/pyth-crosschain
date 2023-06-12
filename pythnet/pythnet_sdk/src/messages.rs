@@ -30,11 +30,9 @@ use serde::{
         strum::EnumString,
         strum::IntoStaticStr,
         strum::ToString,
-    )),
-    cfg_attr(
-        feature = "serde",
-        strum_discriminants(derive(serde::Serialize, serde::Deserialize))
-    )
+        Serialize,
+        Deserialize
+    ))
 )]
 pub enum Message {
     PriceFeedMessage(PriceFeedMessage),
