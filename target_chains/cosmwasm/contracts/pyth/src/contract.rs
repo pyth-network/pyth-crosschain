@@ -269,7 +269,7 @@ fn update_price_feeds(
         let header = datum.get(0..4);
         let (num_attestations, new_feeds) =
             if header == Some(PYTHNET_ACCUMULATOR_UPDATE_MAGIC.as_slice()) {
-                process_merkle(&mut deps, &env, datum)?
+                process_accumulator(&mut deps, &env, datum)?
             } else {
                 let vaa = parse_and_verify_vaa(deps.branch(), env.block.time.seconds(), datum)?;
                 verify_vaa_from_data_source(&state, &vaa)?;
@@ -500,7 +500,7 @@ fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> Std
     Ok(())
 }
 
-fn process_merkle(
+fn process_accumulator(
     deps: &mut DepsMut,
     env: &Env,
     data: &[u8],
@@ -1126,6 +1126,8 @@ mod test {
         price_updates: Vec<MerklePriceUpdate>,
         tree: MerkleTree<Keccak160>,
         corrupt_wormhole_message: bool,
+        emitter_address: Vec<u8>,
+        emitter_chain: u16,
     ) -> Binary {
         let mut root_hash = [0u8; 20];
         root_hash.copy_from_slice(&to_vec::<_, BigEndian>(&tree.root).unwrap()[..20]);
@@ -1136,8 +1138,8 @@ mod test {
         }));
 
         let mut vaa = create_zero_vaa();
-        vaa.emitter_address = default_emitter_addr().to_vec();
-        vaa.emitter_chain = EMITTER_CHAIN;
+        vaa.emitter_address = emitter_address;
+        vaa.emitter_chain = emitter_chain;
         vaa.payload = to_vec::<_, BigEndian>(&wormhole_message).unwrap();
         if corrupt_wormhole_message {
             vaa.payload[0] = 0;
@@ -1173,7 +1175,13 @@ mod test {
                 proof,
             });
         }
-        create_accumulator_message_from_updates(price_updates, tree, corrupt_wormhole_message)
+        create_accumulator_message_from_updates(
+            price_updates,
+            tree,
+            corrupt_wormhole_message,
+            default_emitter_addr(),
+            EMITTER_CHAIN,
+        )
     }
 
 
@@ -1197,6 +1205,45 @@ mod test {
             }
             _ => assert!(false, "invalid message type"),
         };
+    }
+
+    fn test_accumulator_wrong_source(emitter_address: Vec<u8>, emitter_chain: u16) {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage)
+            .save(&default_config_info())
+            .unwrap();
+
+        let feed1 = create_dummy_price_feed_message(100);
+        let feed1_bytes = to_vec::<_, BigEndian>(&feed1).unwrap();
+        let tree = MerkleTree::<Keccak160>::new(&[feed1_bytes.as_slice()]).unwrap();
+        let mut price_updates: Vec<MerklePriceUpdate> = vec![];
+        let proof1 = tree.prove(&feed1_bytes).unwrap();
+        price_updates.push(MerklePriceUpdate {
+            message: PrefixedVec::from(feed1_bytes),
+            proof:   proof1,
+        });
+        let msg = create_accumulator_message_from_updates(
+            price_updates,
+            tree,
+            false,
+            emitter_address,
+            emitter_chain,
+        );
+        let info = mock_info("123", &[]);
+        let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
+        assert!(result.is_err());
+        assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
+    }
+
+    #[test]
+    fn test_accumulator_verify_vaa_sender_fail_wrong_emitter_address() {
+        let emitter_address = [17, 23, 14];
+        test_accumulator_wrong_source(emitter_address.to_vec(), EMITTER_CHAIN);
+    }
+
+    #[test]
+    fn test_accumulator_verify_vaa_sender_fail_wrong_emitter_chain() {
+        test_accumulator_wrong_source(default_emitter_addr(), EMITTER_CHAIN + 1);
     }
 
     #[test]
@@ -1355,6 +1402,8 @@ mod test {
         config(&mut deps.storage)
             .save(&default_config_info())
             .unwrap();
+        // Although Twap Message is a valid message but it won't get stored on-chain via
+        // `update_price_feeds` and (will be) used in other methods
         let feed1 = Message::TwapMessage(TwapMessage {
             id:                [0; 32],
             cumulative_price:  0,
@@ -1395,7 +1444,13 @@ mod test {
             message: PrefixedVec::from(feed2_bytes),
             proof:   proof1,
         });
-        let msg = create_accumulator_message_from_updates(price_updates, tree, false);
+        let msg = create_accumulator_message_from_updates(
+            price_updates,
+            tree,
+            false,
+            default_emitter_addr(),
+            EMITTER_CHAIN,
+        );
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
         assert!(result.is_err());
@@ -1423,7 +1478,13 @@ mod test {
             message: PrefixedVec::from(feed1_bytes),
             proof:   proof1,
         });
-        let msg = create_accumulator_message_from_updates(price_updates, tree, false);
+        let msg = create_accumulator_message_from_updates(
+            price_updates,
+            tree,
+            false,
+            default_emitter_addr(),
+            EMITTER_CHAIN,
+        );
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
         assert!(result.is_err());
