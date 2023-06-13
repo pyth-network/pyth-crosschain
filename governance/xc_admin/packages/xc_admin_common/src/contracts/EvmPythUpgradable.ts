@@ -55,7 +55,7 @@ export class EvmPythUpgradable implements Contract<EvmPythUpgradableState> {
   }
 
   public async getState(): Promise<EvmPythUpgradableState> {
-    const bytecodeSha = ethers.sha256(
+    const bytecodeSha = ethers.utils.sha256(
       (await this.contract.getDeployedCode()) as string
     );
     const validTimePeriod = (await this.getValidTimePeriod()) as bigint;

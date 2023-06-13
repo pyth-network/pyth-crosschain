@@ -7,7 +7,7 @@ import { EvmWormholeReceiver } from "./EvmWormholeReceiver";
 export function getEvmProvider(
   networkId: NetworkId,
   networksConfig: any
-): ethers.Provider {
+): ethers.providers.Provider {
   const networkConfig = networksConfig["evm"][networkId]!;
   return ethers.getDefaultProvider(networkConfig.url);
 }
