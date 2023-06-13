@@ -1,4 +1,4 @@
-import {ContractType, loadFromConfig} from "./Contract";
+import { ContractType, EvmPythUpgradable, loadFromConfig } from "./Contract";
 
 const contractsConfig = [
   {
@@ -20,8 +20,8 @@ const contractsConfig = [
     type: ContractType.EvmPythUpgradable,
     networkId: "avalanche",
     address: "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
-  }
-]
+  },
+];
 
 const networksConfig = {
   evm: {
@@ -31,17 +31,25 @@ const networksConfig = {
       network_id: 420,
     },
     arbitrum: {
-      url: 'https://arb1.arbitrum.io/rpc',
+      url: "https://arb1.arbitrum.io/rpc",
       network_id: "0xa4b1",
     },
     avalanche: {
-      url: 'https://api.avax.network/ext/bc/C/rpc',
+      url: "https://api.avax.network/ext/bc/C/rpc",
       network_id: "0xa86a",
     },
     canto: {
-      url: 'https://canto.gravitychain.io',
-      network_id: 7700
-    }
+      url: "https://canto.gravitychain.io",
+      network_id: 7700,
+    },
+  },
+};
+
+async function checkEvmPythUpgradableState(
+  contract: EvmPythUpgradable,
+  state: EvmPythUpgradableState
+) {
+  if ((await contract.wormholeAddress()) !== state.wormholeAddress) {
   }
 }
 
