@@ -62,6 +62,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                     accumulatorUpdate,
                     offset
                 );
+
                 offset += 1;
 
                 if (majorVersion != MAJOR_VERSION)
@@ -71,6 +72,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                     accumulatorUpdate,
                     offset
                 );
+
                 offset += 1;
 
                 // Minor versions are forward compatible, so we only check
@@ -100,6 +102,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             updateType = UpdateType(
                 UnsafeBytesLib.toUint8(accumulatorUpdate, offset)
             );
+
             offset += 1;
 
             if (accumulatorUpdate.length < offset)
@@ -108,7 +111,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     }
 
     function extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
-        bytes calldata accumulatorUpdate,
+        bytes memory accumulatorUpdate,
         uint encodedOffset
     )
         internal
@@ -132,17 +135,20 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             offset += 2;
 
             {
-                IWormhole.VM memory vm = parseAndVerifyPythVM(
-                    UnsafeBytesLib.slice(encoded, offset, whProofSize)
-                );
-                offset += whProofSize;
+                bytes memory encodedPayload;
+                {
+                    IWormhole.VM memory vm = parseAndVerifyPythVM(
+                        UnsafeBytesLib.slice(encoded, offset, whProofSize)
+                    );
+                    offset += whProofSize;
 
-                // TODO: Do we need to emit an update for accumulator update? If so what should we emit?
-                // emit AccumulatorUpdate(vm.chainId, vm.sequence);
+                    // TODO: Do we need to emit an update for accumulator update? If so what should we emit?
+                    // emit AccumulatorUpdate(vm.chainId, vm.sequence);
 
-                bytes memory encodedPayload = vm.payload;
+                    encodedPayload = vm.payload;
+                }
+
                 uint payloadOffset = 0;
-
                 {
                     uint32 magic = UnsafeBytesLib.toUint32(
                         encodedPayload,
@@ -156,7 +162,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                     UpdateType updateType = UpdateType(
                         UnsafeBytesLib.toUint8(encodedPayload, payloadOffset)
                     );
-                    payloadOffset += 1;
+                    ++payloadOffset;
 
                     if (updateType != UpdateType.WormholeMerkle)
                         revert PythErrors.InvalidUpdateData();
@@ -234,16 +240,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 UnsafeBytesLib.toUint8(encodedMessage, 0)
             );
             if (messageType == MessageType.PriceFeed) {
-                (priceInfo, priceId) = parsePriceFeedMessage(
-                    UnsafeBytesLib.slice(
-                        encodedMessage,
-                        1,
-                        encodedMessage.length - 1
-                    )
-                    // encodedMessage,
-                    // 1
-                    // encodedMessage.length
-                );
+                (priceInfo, priceId) = parsePriceFeedMessage(encodedMessage, 1);
             } else {
                 revert PythErrors.InvalidUpdateData();
             }
@@ -253,7 +250,8 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     }
 
     function parsePriceFeedMessage(
-        bytes memory encodedPriceFeed
+        bytes memory encodedPriceFeed,
+        uint offset
     )
         private
         pure
@@ -263,8 +261,6 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         )
     {
         unchecked {
-            uint offset = 0;
-
             priceId = UnsafeBytesLib.toBytes32(encodedPriceFeed, offset);
             offset += 32;
 
@@ -306,78 +302,13 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             );
             offset += 8;
 
-            // We don't check equality to enable future compatibility.
             if (offset > encodedPriceFeed.length)
                 revert PythErrors.InvalidUpdateData();
         }
     }
 
-    // function parsePriceFeedMessage(
-    //     bytes memory encodedPriceFeed,
-    //     uint startOffset
-    //     // uint length
-    // )
-    //     private
-    //     pure
-    //     returns (
-    //         PythInternalStructs.PriceInfo memory priceInfo,
-    //         bytes32 priceId
-    //     )
-    // {
-    //     unchecked {
-    //         uint offset = startOffset;
-
-    //         priceId = UnsafeBytesLib.toBytes32(encodedPriceFeed, offset);
-    //         offset += 32;
-
-    //         priceInfo.price = int64(
-    //             UnsafeBytesLib.toUint64(encodedPriceFeed, offset)
-    //         );
-    //         offset += 8;
-
-    //         priceInfo.conf = UnsafeBytesLib.toUint64(encodedPriceFeed, offset);
-    //         offset += 8;
-
-    //         priceInfo.expo = int32(
-    //             UnsafeBytesLib.toUint32(encodedPriceFeed, offset)
-    //         );
-    //         offset += 4;
-
-    //         // Publish time is i64 in some environments due to the standard in that
-    //         // environment. This would not cause any problem because since the signed
-    //         // integer is represented in two's complement, the value would be the same
-    //         // in both cases (for a million year at least)
-    //         priceInfo.publishTime = UnsafeBytesLib.toUint64(
-    //             encodedPriceFeed,
-    //             offset
-    //         );
-    //         offset += 8;
-
-    //         // We do not store this field because it is not used on the latest feed queries.
-    //         // uint64 prevPublishTime = UnsafeBytesLib.toUint64(encodedPriceFeed, offset);
-    //         offset += 8;
-
-    //         priceInfo.emaPrice = int64(
-    //             UnsafeBytesLib.toUint64(encodedPriceFeed, offset)
-    //         );
-    //         offset += 8;
-
-    //         priceInfo.emaConf = UnsafeBytesLib.toUint64(
-    //             encodedPriceFeed,
-    //             offset
-    //         );
-    //         offset += 8;
-
-    //         // // We don't check equality to enable future compatibility.
-    //         // if (offset > length)
-    //         //     revert PythErrors.InvalidUpdateData();
-    //         if (offset > encodedPriceFeed.length)
-    //             revert PythErrors.InvalidUpdateData();
-    //     }
-    // }
-
     function updatePriceInfosFromAccumulatorUpdate(
-        bytes calldata accumulatorUpdate
+        bytes memory accumulatorUpdate
     ) internal returns (uint8 numUpdates) {
         (
             uint encodedOffset,
