@@ -24,6 +24,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
     uint16 constant GOVERNANCE_EMITTER_CHAIN_ID = 0x1;
     bytes32 constant GOVERNANCE_EMITTER_ADDRESS =
         0x0000000000000000000000000000000000000000000000000000000000000011;
+    uint constant SINGLE_UPDATE_FEE_IN_WEI = 1;
 
     function setUpPyth(address wormhole) public returns (address) {
         PythUpgradable implementation = new PythUpgradable();
@@ -47,10 +48,14 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
             GOVERNANCE_EMITTER_ADDRESS,
             0, // Initial governance sequence
             60, // Valid time period in seconds
-            1 // single update fee in wei
+            SINGLE_UPDATE_FEE_IN_WEI // single update fee in wei
         );
 
         return address(pyth);
+    }
+
+    function singleUpdateFeeInWei() public view returns (uint) {
+        return SINGLE_UPDATE_FEE_IN_WEI;
     }
 
     /// Utilities to help generating price attestations and VAAs for them

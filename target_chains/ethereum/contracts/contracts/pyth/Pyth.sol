@@ -71,24 +71,26 @@ abstract contract Pyth is
     function updatePriceFeeds(
         bytes[] calldata updateData
     ) public payable override {
-        // TODO: Is this fee model still good for accumulator?
-        uint requiredFee = getUpdateFee(updateData);
-        if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
-
+        uint totalNumUpdates = 0;
         for (uint i = 0; i < updateData.length; ) {
             if (
                 updateData[i].length > 4 &&
                 UnsafeBytesLib.toUint32(updateData[i], 0) == ACCUMULATOR_MAGIC
             ) {
-                updatePriceInfosFromAccumulatorUpdate(updateData[i]);
+                totalNumUpdates += updatePriceInfosFromAccumulatorUpdate(
+                    updateData[i]
+                );
             } else {
                 updatePriceBatchFromVm(updateData[i]);
+                totalNumUpdates += 1;
             }
 
             unchecked {
                 i++;
             }
         }
+        uint requiredFee = getTotalFee(totalNumUpdates);
+        if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
     }
 
     /// This method is deprecated, please use the `getUpdateFee(bytes[])` instead.
@@ -101,7 +103,28 @@ abstract contract Pyth is
     function getUpdateFee(
         bytes[] calldata updateData
     ) public view override returns (uint feeAmount) {
-        return singleUpdateFeeInWei() * updateData.length;
+        uint totalNumUpdates = 0;
+        for (uint i = 0; i < updateData.length; i++) {
+            if (
+                updateData[i].length > 4 &&
+                UnsafeBytesLib.toUint32(updateData[i], 0) == ACCUMULATOR_MAGIC
+            ) {
+                (
+                    uint offset,
+                    UpdateType updateType
+                ) = extractUpdateTypeFromAccumulatorHeader(updateData[i]);
+                if (updateType != UpdateType.WormholeMerkle) {
+                    revert PythErrors.InvalidUpdateData();
+                }
+                totalNumUpdates += parseWormholeMerkleHeaderNumUpdates(
+                    updateData[i],
+                    offset
+                );
+            } else {
+                totalNumUpdates += 1;
+            }
+        }
+        return getTotalFee(totalNumUpdates);
     }
 
     function verifyPythVM(
@@ -425,12 +448,7 @@ abstract contract Pyth is
         returns (PythStructs.PriceFeed[] memory priceFeeds)
     {
         unchecked {
-            {
-                uint requiredFee = getUpdateFee(updateData);
-                if (msg.value < requiredFee)
-                    revert PythErrors.InsufficientFee();
-            }
-
+            uint totalNumUpdates = 0;
             priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
             for (uint i = 0; i < updateData.length; i++) {
                 if (
@@ -438,7 +456,6 @@ abstract contract Pyth is
                     UnsafeBytesLib.toUint32(updateData[i], 0) ==
                     ACCUMULATOR_MAGIC
                 ) {
-                    bytes memory accumulatorUpdate = updateData[i];
                     uint offset;
                     {
                         UpdateType updateType;
@@ -446,31 +463,30 @@ abstract contract Pyth is
                             offset,
                             updateType
                         ) = extractUpdateTypeFromAccumulatorHeader(
-                            accumulatorUpdate
+                            updateData[i]
                         );
 
                         if (updateType != UpdateType.WormholeMerkle) {
                             revert PythErrors.InvalidUpdateData();
                         }
                     }
+
                     bytes20 digest;
                     uint8 numUpdates;
-                    bytes memory encoded = UnsafeBytesLib.slice(
-                        accumulatorUpdate,
-                        offset,
-                        accumulatorUpdate.length - offset
-                    );
-
+                    bytes memory encoded;
                     (
                         offset,
                         digest,
-                        numUpdates
-                    ) = extractWormholeMerkleHeaderDigestAndNumUpdates(encoded);
+                        numUpdates,
+                        encoded
+                    ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
+                        updateData[i],
+                        offset
+                    );
 
                     for (uint j = 0; j < numUpdates; j++) {
                         PythInternalStructs.PriceInfo memory info;
                         bytes32 priceId;
-
                         (
                             offset,
                             info,
@@ -509,6 +525,7 @@ abstract contract Pyth is
                             }
                         }
                     }
+                    totalNumUpdates += numUpdates;
                     if (offset != encoded.length)
                         revert PythErrors.InvalidUpdateData();
                 } else {
@@ -583,6 +600,7 @@ abstract contract Pyth is
 
                         index += attestationSize;
                     }
+                    totalNumUpdates += 1;
                 }
             }
 
@@ -591,7 +609,19 @@ abstract contract Pyth is
                     revert PythErrors.PriceFeedNotFoundWithinRange();
                 }
             }
+
+            {
+                uint requiredFee = getTotalFee(totalNumUpdates);
+                if (msg.value < requiredFee)
+                    revert PythErrors.InsufficientFee();
+            }
         }
+    }
+
+    function getTotalFee(
+        uint totalNumUpdates
+    ) private view returns (uint requiredFee) {
+        return totalNumUpdates * singleUpdateFeeInWei();
     }
 
     function findIndexOfPriceId(
