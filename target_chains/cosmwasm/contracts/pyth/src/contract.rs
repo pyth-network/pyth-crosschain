@@ -675,25 +675,43 @@ pub fn query_price_feed(deps: &Deps, feed_id: &[u8]) -> StdResult<PriceFeedRespo
     }
 }
 
+pub fn get_update_fee_amount(deps: &Deps, vaas: &[Binary]) -> StdResult<u128> {
+    let config = config_read(deps.storage).load()?;
+
+    let mut total_updates: u128 = 0;
+    for datum in vaas {
+        let header = datum.get(0..4);
+        if header == Some(PYTHNET_ACCUMULATOR_UPDATE_MAGIC.as_slice()) {
+            let update_data = AccumulatorUpdateData::try_from_slice(datum)
+                .map_err(|_| PythContractError::InvalidAccumulatorPayload)?;
+            match update_data.proof {
+                Proof::WormholeMerkle { vaa: _, updates } => {
+                    total_updates += updates.len() as u128;
+                }
+            }
+        } else {
+            total_updates += 1;
+        }
+    }
+
+    Ok(config
+        .fee
+        .amount
+        .u128()
+        .checked_mul(total_updates)
+        .ok_or(OverflowError::new(
+            OverflowOperation::Mul,
+            config.fee.amount,
+            total_updates,
+        ))?)
+}
+
 /// Get the fee that a caller must pay in order to submit a price update.
 /// The fee depends on both the current contract configuration and the update data `vaas`.
 /// The fee is in the denoms as stored in the current configuration
 pub fn get_update_fee(deps: &Deps, vaas: &[Binary]) -> StdResult<Coin> {
     let config = config_read(deps.storage).load()?;
-
-    Ok(coin(
-        config
-            .fee
-            .amount
-            .u128()
-            .checked_mul(vaas.len() as u128)
-            .ok_or(OverflowError::new(
-                OverflowOperation::Mul,
-                config.fee.amount,
-                vaas.len(),
-            ))?,
-        config.fee.denom,
-    ))
+    Ok(coin(get_update_fee_amount(deps, vaas)?, config.fee.denom))
 }
 
 #[cfg(feature = "osmosis")]
@@ -714,19 +732,7 @@ pub fn get_update_fee_for_denom(deps: &Deps, vaas: &[Binary], denom: String) -> 
     // base amount is multiplied to number of vaas to get the total amount
 
     // this will be change later on to add custom logic using spot price for valid tokens
-    Ok(coin(
-        config
-            .fee
-            .amount
-            .u128()
-            .checked_mul(vaas.len() as u128)
-            .ok_or(OverflowError::new(
-                OverflowOperation::Mul,
-                config.fee.amount,
-                vaas.len(),
-            ))?,
-        denom,
-    ))
+    Ok(coin(get_update_fee_amount(deps, vaas)?, denom))
 }
 
 pub fn get_valid_time_period(deps: &Deps) -> StdResult<Duration> {
@@ -1245,6 +1251,64 @@ mod test {
     fn test_accumulator_verify_vaa_sender_fail_wrong_emitter_chain() {
         test_accumulator_wrong_source(default_emitter_addr(), EMITTER_CHAIN + 1);
     }
+
+    #[test]
+    fn test_accumulator_is_fee_sufficient() {
+        let mut config_info = default_config_info();
+        config_info.fee = Coin::new(100, "foo");
+
+        let (mut deps, _env) = setup_test();
+        config(&mut deps.storage).save(&config_info).unwrap();
+
+
+        let feed1 = create_dummy_price_feed_message(100);
+        let feed2 = create_dummy_price_feed_message(200);
+        let feed3 = create_dummy_price_feed_message(300);
+        let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed3], false);
+        let data = &[msg];
+        let mut info = mock_info("123", coins(200, "foo").as_slice());
+        // sufficient fee -> true
+        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), data);
+        assert_eq!(result, Ok(true));
+
+        // insufficient fee -> false
+        info.funds = coins(100, "foo");
+        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), data);
+        assert_eq!(result, Ok(false));
+
+        // insufficient fee -> false
+        info.funds = coins(300, "bar");
+        let result = is_fee_sufficient(&deps.as_ref(), info, data);
+        assert_eq!(result, Ok(false));
+    }
+
+    #[test]
+    fn test_accumulator_get_update_fee_amount() {
+        let mut config_info = default_config_info();
+        config_info.fee = Coin::new(100, "foo");
+
+        let (mut deps, _env) = setup_test();
+        config(&mut deps.storage).save(&config_info).unwrap();
+
+
+        let feed1 = create_dummy_price_feed_message(100);
+        let feed2 = create_dummy_price_feed_message(200);
+        let feed3 = create_dummy_price_feed_message(300);
+
+        let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed3], false);
+        assert_eq!(get_update_fee_amount(&deps.as_ref(), &[msg]).unwrap(), 200);
+
+        let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1], false);
+        assert_eq!(get_update_fee_amount(&deps.as_ref(), &[msg]).unwrap(), 100);
+
+        let msg = create_accumulator_message(
+            &[feed1, feed2, feed3],
+            &[feed1, feed2, feed3, feed1, feed3],
+            false,
+        );
+        assert_eq!(get_update_fee_amount(&deps.as_ref(), &[msg]).unwrap(), 500);
+    }
+
 
     #[test]
     fn test_accumulator_message_single_update() {
