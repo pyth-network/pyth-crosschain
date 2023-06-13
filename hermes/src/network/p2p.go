@@ -203,11 +203,11 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 					case *GossipMessage_SignedVaaWithQuorum:
 						vaaBytes := msg.GetSignedVaaWithQuorum().GetVaa()
 						cBytes := C.CBytes(vaaBytes)
-						defer C.free(cBytes)
 						C.invoke(f, C.observation_t{
 							vaa:     (*C.char)(cBytes),
 							vaa_len: C.size_t(len(vaaBytes)),
 						})
+						C.free(cBytes)
 					}
 				}
 			}
