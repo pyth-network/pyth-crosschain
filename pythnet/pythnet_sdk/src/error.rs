@@ -7,6 +7,9 @@ pub enum Error {
 
     #[error("Invalid Version")]
     InvalidVersion,
+
+    #[error("Deserialization error")]
+    DeserializationError,
 }
 
 #[macro_export]

@@ -57,7 +57,7 @@ pub mod v1 {
         major_version: u8,
         minor_version: u8,
         trailing:      Vec<u8>,
-        proof:         Proof,
+        pub proof:     Proof,
     }
 
     impl AccumulatorUpdateData {
@@ -72,7 +72,8 @@ pub mod v1 {
         }
 
         pub fn try_from_slice(bytes: &[u8]) -> Result<Self, Error> {
-            let message = from_slice::<byteorder::BE, Self>(bytes).unwrap();
+            let message = from_slice::<byteorder::BE, Self>(bytes)
+                .map_err(|_| Error::DeserializationError)?;
             require!(
                 &message.magic[..] == PYTHNET_ACCUMULATOR_UPDATE_MAGIC,
                 Error::InvalidMagic
@@ -109,8 +110,16 @@ pub mod v1 {
     pub const ACCUMULATOR_UPDATE_WORMHOLE_VERIFICATION_MAGIC: &[u8; 4] = b"AUWV";
 
     impl WormholeMessage {
+        pub fn new(payload: WormholePayload) -> Self {
+            Self {
+                magic: *ACCUMULATOR_UPDATE_WORMHOLE_VERIFICATION_MAGIC,
+                payload,
+            }
+        }
+
         pub fn try_from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, Error> {
-            let message = from_slice::<byteorder::BE, Self>(bytes.as_ref()).unwrap();
+            let message = from_slice::<byteorder::BE, Self>(bytes.as_ref())
+                .map_err(|_| Error::DeserializationError)?;
             require!(
                 &message.magic[..] == ACCUMULATOR_UPDATE_WORMHOLE_VERIFICATION_MAGIC,
                 Error::InvalidMagic
