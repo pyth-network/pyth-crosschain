@@ -85,6 +85,24 @@ contract PythWormholeMerkleAccumulatorTest is
         assertEq(emaPrice.publishTime, priceFeed.emaPrice.publishTime);
     }
 
+    function assertParsedPriceFeed(
+        PythStructs.PriceFeed memory priceFeeds1,
+        PythStructs.PriceFeed memory priceFeed2
+    ) internal {
+        assertEq(priceFeeds1.id, priceFeed2.id);
+        assertEq(priceFeeds1.price.price, priceFeed2.price.price);
+        assertEq(priceFeeds1.price.conf, priceFeed2.price.conf);
+        assertEq(priceFeeds1.price.expo, priceFeed2.price.expo);
+        assertEq(priceFeeds1.price.publishTime, priceFeed2.price.publishTime);
+        assertEq(priceFeeds1.emaPrice.price, priceFeed2.emaPrice.price);
+        assertEq(priceFeeds1.emaPrice.conf, priceFeed2.emaPrice.conf);
+        assertEq(priceFeeds1.emaPrice.expo, priceFeed2.emaPrice.expo);
+        assertEq(
+            priceFeeds1.emaPrice.publishTime,
+            priceFeed2.emaPrice.publishTime
+        );
+    }
+
     function generateRandomPriceFeedMessage(
         uint numPriceFeeds
     ) internal returns (PriceFeedMessage[] memory priceFeedMessages) {
@@ -116,6 +134,36 @@ contract PythWormholeMerkleAccumulatorTest is
         depth += getRandUint8() % 3;
 
         updateData[0] = generateWhMerkleUpdate(priceFeedMessages, depth, 1);
+
+        updateFee = pyth.getUpdateFee(updateData);
+    }
+
+    /// @notice This method creates a forward compatible wormhole update data by using a newer minor version,
+    /// setting a trailing header size and generating additional trailing header data of size `trailingHeaderSize`
+    function createFowardCompatibleWormholeMerkleUpdateData(
+        PriceFeedMessage[] memory priceFeedMessages,
+        uint8 minorVersion,
+        uint8 trailingHeaderSize
+    ) internal returns (bytes[] memory updateData, uint updateFee) {
+        updateData = new bytes[](1);
+
+        uint8 depth = 0;
+        while ((1 << depth) < priceFeedMessages.length) {
+            depth++;
+        }
+
+        depth += getRandUint8() % 3;
+        bytes memory trailingHeaderData = new bytes(uint8(0));
+        for (uint i = 0; i < trailingHeaderSize; i++) {
+            trailingHeaderData = abi.encodePacked(trailingHeaderData, uint8(i));
+        }
+        updateData[0] = generateForwardCompatibleWhMerkleUpdate(
+            priceFeedMessages,
+            depth,
+            1,
+            minorVersion,
+            trailingHeaderData
+        );
 
         updateFee = pyth.getUpdateFee(updateData);
     }
@@ -947,6 +995,77 @@ contract PythWormholeMerkleAccumulatorTest is
         assertEq(updateFee, SINGLE_UPDATE_FEE_IN_WEI * numPriceFeeds);
     }
 
-    //TODO: add some tests of forward compatibility.
-    // I.e., create a message where each part that can be expanded in size is expanded and make sure that parsing still works
+    function testParsePriceFeedUpdatesWithWhMerkleUpdateWorksForForwardCompatibility()
+        public
+    {
+        uint numPriceFeeds = (getRandUint() % 10) + 1;
+        PriceFeedMessage[]
+            memory priceFeedMessages = generateRandomPriceFeedMessage(
+                numPriceFeeds
+            );
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createWormholeMerkleUpdateData(priceFeedMessages);
+
+        bytes32[] memory priceIds = new bytes32[](numPriceFeeds);
+        for (uint i = 0; i < numPriceFeeds; i++) {
+            priceIds[i] = priceFeedMessages[i].priceId;
+        }
+        PythStructs.PriceFeed[] memory priceFeeds = pyth.parsePriceFeedUpdates{
+            value: updateFee
+        }(updateData, priceIds, 0, MAX_UINT64);
+        uint8 futureMinorVersion = uint8(2);
+        uint8 futureTrailingHeaderSize = uint8(20);
+        (
+            bytes[] memory updateDataFromFuture,
+            uint updateFeeFromFuture
+        ) = createFowardCompatibleWormholeMerkleUpdateData(
+                priceFeedMessages,
+                futureMinorVersion,
+                futureTrailingHeaderSize
+            );
+
+        PythStructs.PriceFeed[] memory priceFeedsFromFutureUpdateData = pyth
+            .parsePriceFeedUpdates{value: updateFeeFromFuture}(
+            updateDataFromFuture,
+            priceIds,
+            0,
+            MAX_UINT64
+        );
+        assertEq(updateFee, updateFeeFromFuture);
+
+        for (uint i = 0; i < priceFeeds.length; i++) {
+            assertParsedPriceFeed(
+                priceFeeds[i],
+                priceFeedsFromFutureUpdateData[i]
+            );
+        }
+    }
+
+    function testUpdatePriceFeedUpdatesWithWhMerkleUpdateWorksForForwardCompatibility()
+        public
+    {
+        uint numPriceFeeds = (getRandUint() % 10) + 1;
+        PriceFeedMessage[]
+            memory priceFeedMessages = generateRandomPriceFeedMessage(
+                numPriceFeeds
+            );
+        uint8 futureMinorVersion = uint8(2);
+        uint8 futureTrailingHeaderSize = uint8(20);
+        (
+            bytes[] memory forwardCompatibleUpdateData,
+            uint updateFee
+        ) = createFowardCompatibleWormholeMerkleUpdateData(
+                priceFeedMessages,
+                futureMinorVersion,
+                futureTrailingHeaderSize
+            );
+
+        pyth.updatePriceFeeds{value: updateFee}(forwardCompatibleUpdateData);
+
+        for (uint i = 0; i < priceFeedMessages.length; i++) {
+            assertPriceFeedMessageStored(priceFeedMessages[i]);
+        }
+    }
 }
