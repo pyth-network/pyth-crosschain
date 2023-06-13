@@ -81,6 +81,8 @@ extern "C" fn proxy(o: ObservationC) {
     {
         log::error!("Failed to send observation: {}", e);
     }
+
+    unsafe { libc::free(o.vaa as *mut std::ffi::c_void) };
 }
 
 /// This function handles bootstrapping libp2p (in Go) and listening for Wormhole Observations.
