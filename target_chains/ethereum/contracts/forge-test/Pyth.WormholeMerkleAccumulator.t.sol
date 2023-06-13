@@ -85,20 +85,20 @@ contract PythWormholeMerkleAccumulatorTest is
         assertEq(emaPrice.publishTime, priceFeed.emaPrice.publishTime);
     }
 
-    function assertParsedPriceFeed(
-        PythStructs.PriceFeed memory priceFeeds1,
+    function assertPriceFeedEqual(
+        PythStructs.PriceFeed memory priceFeed1,
         PythStructs.PriceFeed memory priceFeed2
     ) internal {
-        assertEq(priceFeeds1.id, priceFeed2.id);
-        assertEq(priceFeeds1.price.price, priceFeed2.price.price);
-        assertEq(priceFeeds1.price.conf, priceFeed2.price.conf);
-        assertEq(priceFeeds1.price.expo, priceFeed2.price.expo);
-        assertEq(priceFeeds1.price.publishTime, priceFeed2.price.publishTime);
-        assertEq(priceFeeds1.emaPrice.price, priceFeed2.emaPrice.price);
-        assertEq(priceFeeds1.emaPrice.conf, priceFeed2.emaPrice.conf);
-        assertEq(priceFeeds1.emaPrice.expo, priceFeed2.emaPrice.expo);
+        assertEq(priceFeed1.id, priceFeed2.id);
+        assertEq(priceFeed1.price.price, priceFeed2.price.price);
+        assertEq(priceFeed1.price.conf, priceFeed2.price.conf);
+        assertEq(priceFeed1.price.expo, priceFeed2.price.expo);
+        assertEq(priceFeed1.price.publishTime, priceFeed2.price.publishTime);
+        assertEq(priceFeed1.emaPrice.price, priceFeed2.emaPrice.price);
+        assertEq(priceFeed1.emaPrice.conf, priceFeed2.emaPrice.conf);
+        assertEq(priceFeed1.emaPrice.expo, priceFeed2.emaPrice.expo);
         assertEq(
-            priceFeeds1.emaPrice.publishTime,
+            priceFeed1.emaPrice.publishTime,
             priceFeed2.emaPrice.publishTime
         );
     }
@@ -1036,7 +1036,7 @@ contract PythWormholeMerkleAccumulatorTest is
         assertEq(updateFee, updateFeeFromFuture);
 
         for (uint i = 0; i < priceFeeds.length; i++) {
-            assertParsedPriceFeed(
+            assertPriceFeedEqual(
                 priceFeeds[i],
                 priceFeedsFromFutureUpdateData[i]
             );
