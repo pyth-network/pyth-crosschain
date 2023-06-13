@@ -1,5 +1,6 @@
 import { program } from "commander";
-import { loadContractConfig, ContractType } from "xc_admin_common";
+import { loadContractConfig, ContractType, SyncOp } from "xc_admin_common";
+import * as fs from "fs";
 
 const contractsConfig = [
   {
@@ -41,6 +42,7 @@ const networksConfig = {
   },
 };
 
+// TODO: we will need configuration of this stuff to decide which multisig to run.
 const multisigs = [
   {
     name: "",
@@ -88,9 +90,38 @@ program
     }
   });
 
+class Cache {
+  private path: string;
+
+  constructor(path: string) {
+    this.path = path;
+  }
+
+  private opFilePath(op: SyncOp): string {
+    return `${this.path}/${op.id()}.json`;
+  }
+
+  public readOpCache(op: SyncOp): Record<string, any> {
+    const path = this.opFilePath(op);
+    if (fs.existsSync(path)) {
+      return JSON.parse(fs.readFileSync(path).toString("utf-8"));
+    } else {
+      return {};
+    }
+  }
+
+  public writeOpCache(op: SyncOp, cache: Record<string, any>) {
+    fs.writeFileSync(this.opFilePath(op), JSON.stringify(cache));
+  }
+
+  public deleteCache(op: SyncOp) {
+    fs.rmSync(this.opFilePath(op));
+  }
+}
+
 program
   .command("set")
-  .description("Set a configuration parameter for one or more Pyth contract")
+  .description("Set a configuration parameter for one or more Pyth contracts")
   .option("-n, --network <network-id>", "Find contracts on the given network")
   .option("-a, --address <address>", "Find contracts with the given address")
   .option("-t, --type <type-id>", "Find contracts of the given type")
@@ -127,7 +158,20 @@ program
       ops.push(...(await contract.sync(state)));
     }
 
-    console.log(ops);
+    // TODO: extract constant
+    const cacheDir = "cache";
+    fs.mkdirSync(cacheDir, { recursive: true });
+    const cache = new Cache(cacheDir);
+
+    for (const op of ops) {
+      const opCache = cache.readOpCache(op);
+      const isDone = await op.run(opCache);
+      if (isDone) {
+        cache.deleteCache(op);
+      } else {
+        cache.writeOpCache(op, opCache);
+      }
+    }
   });
 
 program.parse();

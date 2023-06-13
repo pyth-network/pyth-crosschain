@@ -1,4 +1,5 @@
 import { ChainId, Instruction } from "@pythnetwork/xc-governance-sdk";
+import { ethers } from "ethers";
 
 export enum ContractType {
   Oracle,
@@ -45,7 +46,10 @@ export interface Contract<State> {
   sync(target: State): Promise<SyncOp[]>;
 }
 
-export interface SyncOp {}
+export interface SyncOp {
+  id(): string;
+  run(cache: Record<string, any>): Promise<boolean>;
+}
 
 export class SendGovernanceInstruction implements SyncOp {
   private instruction: Instruction;
@@ -60,6 +64,11 @@ export class SendGovernanceInstruction implements SyncOp {
     this.instruction = instruction;
     this.sender = from;
     this.submitVaa = submitVaa;
+  }
+
+  public id(): string {
+    // TODO: use a more understandable identifier (also this may not be unique)
+    return ethers.utils.sha256(this.instruction.serialize());
   }
 
   public async run(cache: Record<string, any>): Promise<boolean> {
