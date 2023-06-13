@@ -46,8 +46,22 @@ export interface Contract<State> {
   sync(target: State): Promise<SyncOp[]>;
 }
 
+/** A stateful synchronization operation. This operation can be run */
 export interface SyncOp {
+  /**
+   * A unique identifier for this operation. The id represents the content of the operation (e.g., "sets the X
+   * field to Y on contract Z"), so can be used to identify the "same" operation across multiple runs of this program.
+   */
   id(): string;
+  /**
+   * Run this operation from a previous state (recorded in cache). The operation can modify cache
+   * to record progress, then returns true if the operation has completed. If this function returns false,
+   * it is waiting on an external operation to complete (e.g., a multisig transaction to be approved).
+   * Re-run this function again once that operation is completed to continue making progress.
+   *
+   * The caller of this function is responsible for preserving the contents of `cache` between calls to
+   * this function.
+   */
   run(cache: Record<string, any>): Promise<boolean>;
 }
 
