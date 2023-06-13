@@ -1307,6 +1307,13 @@ mod test {
             false,
         );
         assert_eq!(get_update_fee_amount(&deps.as_ref(), &[msg]).unwrap(), 500);
+
+        let batch_msg = create_price_update_msg(default_emitter_addr().as_slice(), EMITTER_CHAIN);
+        let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed2, feed3], false);
+        assert_eq!(
+            get_update_fee_amount(&deps.as_ref(), &[msg, batch_msg]).unwrap(),
+            400
+        );
     }
 
 
