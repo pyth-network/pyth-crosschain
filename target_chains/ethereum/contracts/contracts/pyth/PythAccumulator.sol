@@ -186,9 +186,9 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     }
 
     function parseWormholeMerkleHeaderNumUpdates(
-        bytes calldata wormholeMerkleUpdate,
+        bytes memory wormholeMerkleUpdate,
         uint offset
-    ) internal view returns (uint8 numUpdates) {
+    ) internal pure returns (uint8 numUpdates) {
         uint16 whProofSize = UnsafeBytesLib.toUint16(
             wormholeMerkleUpdate,
             offset
@@ -240,6 +240,9 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                         1,
                         encodedMessage.length - 1
                     )
+                    // encodedMessage,
+                    // 1
+                    // encodedMessage.length
                 );
             } else {
                 revert PythErrors.InvalidUpdateData();
@@ -308,6 +311,70 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 revert PythErrors.InvalidUpdateData();
         }
     }
+
+    // function parsePriceFeedMessage(
+    //     bytes memory encodedPriceFeed,
+    //     uint startOffset
+    //     // uint length
+    // )
+    //     private
+    //     pure
+    //     returns (
+    //         PythInternalStructs.PriceInfo memory priceInfo,
+    //         bytes32 priceId
+    //     )
+    // {
+    //     unchecked {
+    //         uint offset = startOffset;
+
+    //         priceId = UnsafeBytesLib.toBytes32(encodedPriceFeed, offset);
+    //         offset += 32;
+
+    //         priceInfo.price = int64(
+    //             UnsafeBytesLib.toUint64(encodedPriceFeed, offset)
+    //         );
+    //         offset += 8;
+
+    //         priceInfo.conf = UnsafeBytesLib.toUint64(encodedPriceFeed, offset);
+    //         offset += 8;
+
+    //         priceInfo.expo = int32(
+    //             UnsafeBytesLib.toUint32(encodedPriceFeed, offset)
+    //         );
+    //         offset += 4;
+
+    //         // Publish time is i64 in some environments due to the standard in that
+    //         // environment. This would not cause any problem because since the signed
+    //         // integer is represented in two's complement, the value would be the same
+    //         // in both cases (for a million year at least)
+    //         priceInfo.publishTime = UnsafeBytesLib.toUint64(
+    //             encodedPriceFeed,
+    //             offset
+    //         );
+    //         offset += 8;
+
+    //         // We do not store this field because it is not used on the latest feed queries.
+    //         // uint64 prevPublishTime = UnsafeBytesLib.toUint64(encodedPriceFeed, offset);
+    //         offset += 8;
+
+    //         priceInfo.emaPrice = int64(
+    //             UnsafeBytesLib.toUint64(encodedPriceFeed, offset)
+    //         );
+    //         offset += 8;
+
+    //         priceInfo.emaConf = UnsafeBytesLib.toUint64(
+    //             encodedPriceFeed,
+    //             offset
+    //         );
+    //         offset += 8;
+
+    //         // // We don't check equality to enable future compatibility.
+    //         // if (offset > length)
+    //         //     revert PythErrors.InvalidUpdateData();
+    //         if (offset > encodedPriceFeed.length)
+    //             revert PythErrors.InvalidUpdateData();
+    //     }
+    // }
 
     function updatePriceInfosFromAccumulatorUpdate(
         bytes calldata accumulatorUpdate
