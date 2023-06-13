@@ -1,19 +1,26 @@
-import { AnchorProvider, Program } from '@coral-xyz/anchor'
+import { AnchorProvider, Idl, Program } from '@coral-xyz/anchor'
 import { AccountType, getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { PythOracle, pythOracleProgram } from '@pythnetwork/client/lib/anchor'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Cluster, PublicKey, TransactionInstruction } from '@solana/web3.js'
+import messageBuffer from 'message_buffer/idl/message_buffer.json'
+import { MessageBuffer } from 'message_buffer/idl/message_buffer'
 import axios from 'axios'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
   findDetermisticAccountAddress,
   getMultisigCluster,
+  getPythOracleMessageBufferCpiAuth,
+  isMessageBufferAvailable,
   isRemoteCluster,
   mapKey,
+  MESSAGE_BUFFER_PROGRAM_ID,
+  MESSAGE_BUFFER_BUFFER_SIZE,
   PRICE_FEED_MULTISIG,
-  proposeInstructions,
   WORMHOLE_ADDRESS,
+  PRICE_FEED_OPS_KEY,
+  getMessageBufferAddressForPrice,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
@@ -41,6 +48,9 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
   const { connected } = useWallet()
   const [pythProgramClient, setPythProgramClient] =
     useState<Program<PythOracle>>()
+
+  const [messageBufferClient, setMessageBufferClient] =
+    useState<Program<MessageBuffer>>()
 
   const openModal = () => {
     setIsModalOpen(true)
@@ -323,6 +333,33 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
               .instruction()
           )
 
+          if (isMessageBufferAvailable(cluster) && messageBufferClient) {
+            // create create buffer instruction for the price account
+            instructions.push(
+              await messageBufferClient.methods
+                .createBuffer(
+                  getPythOracleMessageBufferCpiAuth(cluster),
+                  priceAccountKey,
+                  MESSAGE_BUFFER_BUFFER_SIZE
+                )
+                .accounts({
+                  admin: fundingAccount,
+                  payer: PRICE_FEED_OPS_KEY,
+                })
+                .remainingAccounts([
+                  {
+                    pubkey: getMessageBufferAddressForPrice(
+                      cluster,
+                      priceAccountKey
+                    ),
+                    isSigner: false,
+                    isWritable: true,
+                  },
+                ])
+                .instruction()
+            )
+          }
+
           // create add publisher instruction if there are any publishers
 
           for (let publisherKey of newChanges.priceAccounts[0].publishers) {
@@ -350,6 +387,8 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             )
           }
         } else if (!newChanges) {
+          const priceAccount = new PublicKey(prev.priceAccounts[0].address)
+
           // if new is undefined, it means that the symbol is deleted
           // create delete price account instruction
           instructions.push(
@@ -358,10 +397,11 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
               .accounts({
                 fundingAccount,
                 productAccount: new PublicKey(prev.address),
-                priceAccount: new PublicKey(prev.priceAccounts[0].address),
+                priceAccount,
               })
               .instruction()
           )
+
           // create delete product account instruction
           instructions.push(
             await pythProgramClient.methods
@@ -373,6 +413,26 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
               })
               .instruction()
           )
+
+          if (isMessageBufferAvailable(cluster) && messageBufferClient) {
+            // create delete buffer instruction for the price buffer
+            instructions.push(
+              await messageBufferClient.methods
+                .deleteBuffer(
+                  getPythOracleMessageBufferCpiAuth(cluster),
+                  priceAccount
+                )
+                .accounts({
+                  admin: fundingAccount,
+                  payer: PRICE_FEED_OPS_KEY,
+                  messageBuffer: getMessageBufferAddressForPrice(
+                    cluster,
+                    priceAccount
+                  ),
+                })
+                .instruction()
+            )
+          }
         } else {
           // check if metadata has changed
           if (
@@ -741,6 +801,16 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
       setPythProgramClient(
         pythOracleProgram(getPythProgramKeyForCluster(cluster), provider)
       )
+
+      if (isMessageBufferAvailable(cluster)) {
+        setMessageBufferClient(
+          new Program(
+            messageBuffer as Idl,
+            new PublicKey(MESSAGE_BUFFER_PROGRAM_ID),
+            provider
+          ) as unknown as Program<MessageBuffer>
+        )
+      }
     }
   }, [connection, connected, cluster, proposeSquads])
 

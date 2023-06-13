@@ -126,6 +126,42 @@ pub async fn latest_price_feeds(
 }
 
 #[derive(Debug, serde::Deserialize)]
+pub struct GetPriceFeedQueryParams {
+    id:           PriceIdInput,
+    publish_time: UnixTimestamp,
+    #[serde(default)]
+    verbose:      bool,
+    #[serde(default)]
+    binary:       bool,
+}
+
+pub async fn get_price_feed(
+    State(state): State<super::State>,
+    QsQuery(params): QsQuery<GetPriceFeedQueryParams>,
+) -> Result<Json<RpcPriceFeed>, RestError> {
+    let price_id: PriceIdentifier = params.id.into();
+
+    let price_feeds_with_update_data = state
+        .store
+        .get_price_feeds_with_update_data(
+            vec![price_id],
+            RequestTime::FirstAfter(params.publish_time),
+        )
+        .await
+        .map_err(|_| RestError::UpdateDataNotFound)?;
+
+    Ok(Json(RpcPriceFeed::from_price_feed_update(
+        price_feeds_with_update_data
+            .price_feeds
+            .into_iter()
+            .next()
+            .ok_or(RestError::UpdateDataNotFound)?,
+        params.verbose,
+        params.binary,
+    )))
+}
+
+#[derive(Debug, serde::Deserialize)]
 pub struct GetVaaQueryParams {
     id:           PriceIdInput,
     publish_time: UnixTimestamp,
@@ -133,9 +169,9 @@ pub struct GetVaaQueryParams {
 
 #[derive(Debug, serde::Serialize)]
 pub struct GetVaaResponse {
-    pub vaa:          String,
+    vaa:          String,
     #[serde(rename = "publishTime")]
-    pub publish_time: UnixTimestamp,
+    publish_time: UnixTimestamp,
 }
 
 pub async fn get_vaa(
@@ -228,6 +264,7 @@ pub async fn index() -> impl IntoResponse {
         "/api/price_feed_ids",
         "/api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..(&verbose=true)(&binary=true)",
         "/api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&...",
+        "/api/get_price_feed?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>(&verbose=true)(&binary=true)",
         "/api/get_vaa?id=<price_feed_id>&publish_time=<publish_time_in_unix_timestamp>",
         "/api/get_vaa_ccip?data=<0x<price_feed_id_32_bytes>+<publish_time_unix_timestamp_be_8_bytes>>",
     ])

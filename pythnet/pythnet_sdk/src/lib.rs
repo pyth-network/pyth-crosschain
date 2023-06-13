@@ -1,6 +1,7 @@
 pub mod accumulators;
 pub mod error;
 pub mod hashers;
+pub mod messages;
 pub mod wire;
 pub mod wormhole;
 
@@ -31,7 +32,7 @@ pub mod pythnet {
     ];
 
     /// Pubkey::find_program_address(&[b"Sequence", &emitter_pda_key.to_bytes()], &WORMHOLE_PID);
-    /// pubkey!("HiqU8jiyUoFbRjf4YFAKRFWq5NZykEYC6mWhXXnoszJR");
+    /// pubkey!("8MuVR15V86sSELdpW4UYTyx7WTXRARF1Bj7GJHgTJP3K");
     pub const ACCUMULATOR_SEQUENCE_ADDR: Pubkey = [
         109, 92, 198, 114, 10, 119, 5, 31, 13, 197, 193, 195, 132, 17, 12, 3, 77, 111, 158, 247,
         194, 137, 236, 50, 8, 185, 1, 61, 85, 94, 54, 198,

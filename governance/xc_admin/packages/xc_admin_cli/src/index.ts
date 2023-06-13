@@ -7,6 +7,7 @@ import {
   AccountMeta,
   SystemProgram,
   LAMPORTS_PER_SOL,
+  Connection,
 } from "@solana/web3.js";
 import { program } from "commander";
 import {
@@ -22,13 +23,9 @@ import {
   BPF_UPGRADABLE_LOADER,
   getMultisigCluster,
   getProposalInstructions,
-  isRemoteCluster,
-  mapKey,
   MultisigParser,
   PROGRAM_AUTHORITY_ESCROW,
-  proposeArbitraryPayload,
-  proposeInstructions,
-  WORMHOLE_ADDRESS,
+  MultisigVault,
 } from "xc_admin_common";
 import { pythOracleProgram } from "@pythnetwork/client";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
@@ -54,6 +51,26 @@ export async function loadHotWalletOrLedger(
       )
     );
   }
+}
+
+async function loadVaultFromOptions(options: any): Promise<MultisigVault> {
+  const wallet = await loadHotWalletOrLedger(
+    options.wallet,
+    options.ledgerDerivationAccount,
+    options.ledgerDerivationChange
+  );
+  // This is the cluster where we want to perform the action
+  const cluster: PythCluster = options.cluster;
+  // This is the cluster where the multisig lives that can perform actions on ^
+  const multisigCluster = getMultisigCluster(cluster);
+  const vault: PublicKey = new PublicKey(options.vault);
+
+  const squad = SquadsMesh.endpoint(
+    getPythClusterApiUrl(multisigCluster),
+    wallet
+  );
+
+  return new MultisigVault(wallet, multisigCluster, squad, vault);
 }
 
 const multisigCommand = (name: string, description: string) =>
@@ -97,44 +114,21 @@ multisigCommand(
   )
 
   .action(async (options: any) => {
-    const wallet = await loadHotWalletOrLedger(
-      options.wallet,
-      options.ledgerDerivationAccount,
-      options.ledgerDerivationChange
-    );
-    const cluster: PythCluster = options.cluster;
+    const vault = await loadVaultFromOptions(options);
+    const targetCluster: PythCluster = options.cluster;
+
     const programId: PublicKey = new PublicKey(options.programId);
     const current: PublicKey = new PublicKey(options.current);
-    const vault: PublicKey = new PublicKey(options.vault);
-
-    const isRemote = isRemoteCluster(cluster);
-    const squad = SquadsMesh.endpoint(
-      getPythClusterApiUrl(getMultisigCluster(cluster)),
-      wallet
-    );
-    const msAccount = await squad.getMultisig(vault);
-    const vaultAuthority = squad.getAuthorityPDA(
-      msAccount.publicKey,
-      msAccount.authorityIndex
-    );
 
     const programAuthorityEscrowIdl = await Program.fetchIdl(
       PROGRAM_AUTHORITY_ESCROW,
-      new AnchorProvider(
-        squad.connection,
-        squad.wallet,
-        AnchorProvider.defaultOptions()
-      )
+      vault.getAnchorProvider()
     );
 
     const programAuthorityEscrow = new Program(
       programAuthorityEscrowIdl!,
       PROGRAM_AUTHORITY_ESCROW,
-      new AnchorProvider(
-        squad.connection,
-        squad.wallet,
-        AnchorProvider.defaultOptions()
-      )
+      vault.getAnchorProvider()
     );
     const programDataAccount = PublicKey.findProgramAddressSync(
       [programId.toBuffer()],
@@ -145,20 +139,14 @@ multisigCommand(
       .accept()
       .accounts({
         currentAuthority: current,
-        newAuthority: isRemote ? mapKey(vaultAuthority) : vaultAuthority,
+        newAuthority: await vault.getVaultAuthorityPDA(targetCluster),
         programAccount: programId,
         programDataAccount,
         bpfUpgradableLoader: BPF_UPGRADABLE_LOADER,
       })
       .instruction();
 
-    await proposeInstructions(
-      squad,
-      vault,
-      [proposalInstruction],
-      isRemote,
-      WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
-    );
+    await vault.proposeInstructions([proposalInstruction], targetCluster);
   });
 
 multisigCommand("upgrade-program", "Upgrade a program from a buffer")
@@ -169,26 +157,10 @@ multisigCommand("upgrade-program", "Upgrade a program from a buffer")
   .requiredOption("-b, --buffer <pubkey>", "buffer account")
 
   .action(async (options: any) => {
-    const wallet = await loadHotWalletOrLedger(
-      options.wallet,
-      options.ledgerDerivationAccount,
-      options.ledgerDerivationChange
-    );
+    const vault = await loadVaultFromOptions(options);
     const cluster: PythCluster = options.cluster;
     const programId: PublicKey = new PublicKey(options.programId);
     const buffer: PublicKey = new PublicKey(options.buffer);
-    const vault: PublicKey = new PublicKey(options.vault);
-
-    const isRemote = isRemoteCluster(cluster);
-    const squad = SquadsMesh.endpoint(
-      getPythClusterApiUrl(getMultisigCluster(cluster)),
-      wallet
-    );
-    const msAccount = await squad.getMultisig(vault);
-    const vaultAuthority = squad.getAuthorityPDA(
-      msAccount.publicKey,
-      msAccount.authorityIndex
-    );
 
     const programDataAccount = PublicKey.findProgramAddressSync(
       [programId.toBuffer()],
@@ -204,24 +176,18 @@ multisigCommand("upgrade-program", "Upgrade a program from a buffer")
         { pubkey: programDataAccount, isSigner: false, isWritable: true },
         { pubkey: programId, isSigner: false, isWritable: true },
         { pubkey: buffer, isSigner: false, isWritable: true },
-        { pubkey: wallet.publicKey, isSigner: false, isWritable: true },
+        { pubkey: vault.wallet.publicKey, isSigner: false, isWritable: true },
         { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
         { pubkey: SYSVAR_CLOCK_PUBKEY, isSigner: false, isWritable: false },
         {
-          pubkey: isRemote ? mapKey(vaultAuthority) : vaultAuthority,
+          pubkey: await vault.getVaultAuthorityPDA(cluster),
           isSigner: true,
           isWritable: false,
         },
       ],
     };
 
-    await proposeInstructions(
-      squad,
-      vault,
-      [proposalInstruction],
-      isRemote,
-      WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
-    );
+    await vault.proposeInstructions([proposalInstruction], cluster);
   });
 
 multisigCommand(
@@ -231,36 +197,22 @@ multisigCommand(
   .requiredOption("-p, --price <pubkey>", "Price account to modify")
   .requiredOption("-e, --exponent <number>", "New exponent")
   .action(async (options: any) => {
-    const wallet = await loadHotWalletOrLedger(
-      options.wallet,
-      options.ledgerDerivationAccount,
-      options.ledgerDerivationChange
-    );
+    const vault = await loadVaultFromOptions(options);
     const cluster: PythCluster = options.cluster;
-    const vault: PublicKey = new PublicKey(options.vault);
     const priceAccount: PublicKey = new PublicKey(options.price);
     const exponent = options.exponent;
-    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
 
-    const msAccount = await squad.getMultisig(vault);
-    const vaultAuthority = squad.getAuthorityPDA(
-      msAccount.publicKey,
-      msAccount.authorityIndex
-    );
-
-    const provider = new AnchorProvider(
-      squad.connection,
-      wallet,
-      AnchorProvider.defaultOptions()
-    );
     const proposalInstruction: TransactionInstruction = await pythOracleProgram(
       getPythProgramKeyForCluster(cluster),
-      provider
+      vault.getAnchorProvider()
     )
       .methods.setExponent(exponent, 1)
-      .accounts({ fundingAccount: vaultAuthority, priceAccount })
+      .accounts({
+        fundingAccount: await vault.getVaultAuthorityPDA(cluster),
+        priceAccount,
+      })
       .instruction();
-    await proposeInstructions(squad, vault, [proposalInstruction], false);
+    await vault.proposeInstructions([proposalInstruction], cluster);
   });
 
 program
@@ -305,16 +257,9 @@ multisigCommand("approve", "Approve a transaction sitting in the multisig")
     "address of the outstanding transaction"
   )
   .action(async (options: any) => {
-    const wallet = await loadHotWalletOrLedger(
-      options.wallet,
-      options.ledgerDerivationAccount,
-      options.ledgerDerivationChange
-    );
+    const vault = await loadVaultFromOptions(options);
     const transaction: PublicKey = new PublicKey(options.transaction);
-    const cluster: PythCluster = options.cluster;
-
-    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
-    await squad.approveTransaction(transaction);
+    await vault.squad.approveTransaction(transaction);
   });
 
 multisigCommand("propose-token-transfer", "Propose token transfer")
@@ -326,34 +271,23 @@ multisigCommand("propose-token-transfer", "Propose token transfer")
     "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" // default value is solana mainnet USDC SPL
   )
   .action(async (options: any) => {
-    const wallet = await loadHotWalletOrLedger(
-      options.wallet,
-      options.ledgerDerivationAccount,
-      options.ledgerDerivationChange
-    );
+    const vault = await loadVaultFromOptions(options);
 
     const cluster: PythCluster = options.cluster;
+    const connection = new Connection(getPythClusterApiUrl(cluster)); // from cluster
     const destination: PublicKey = new PublicKey(options.destination);
     const mint: PublicKey = new PublicKey(options.mint);
-    const vault: PublicKey = new PublicKey(options.vault);
     const amount: number = options.amount;
 
-    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
-    const msAccount = await squad.getMultisig(vault);
-    const vaultAuthority = squad.getAuthorityPDA(
-      msAccount.publicKey,
-      msAccount.authorityIndex
-    );
-
     const mintAccount = await getMint(
-      squad.connection,
+      connection,
       mint,
       undefined,
       TOKEN_PROGRAM_ID
     );
     const sourceTokenAccount = await getAssociatedTokenAddress(
       mint,
-      vaultAuthority,
+      await vault.getVaultAuthorityPDA(cluster),
       true
     );
     const destinationTokenAccount = await getAssociatedTokenAddress(
@@ -365,79 +299,43 @@ multisigCommand("propose-token-transfer", "Propose token transfer")
       createTransferInstruction(
         sourceTokenAccount,
         destinationTokenAccount,
-        vaultAuthority,
+        await vault.getVaultAuthorityPDA(cluster),
         BigInt(amount) * BigInt(10) ** BigInt(mintAccount.decimals)
       );
 
-    await proposeInstructions(squad, vault, [proposalInstruction], false);
+    await vault.proposeInstructions([proposalInstruction], cluster);
   });
 
 multisigCommand("propose-sol-transfer", "Propose sol transfer")
   .requiredOption("-a, --amount <number>", "amount in sol")
   .requiredOption("-d, --destination <pubkey>", "destination address")
   .action(async (options: any) => {
-    const wallet = await loadHotWalletOrLedger(
-      options.wallet,
-      options.ledgerDerivationAccount,
-      options.ledgerDerivationChange
-    );
+    const vault = await loadVaultFromOptions(options);
 
     const cluster: PythCluster = options.cluster;
-    const isRemote = isRemoteCluster(cluster);
     const destination: PublicKey = new PublicKey(options.destination);
-    const vault: PublicKey = new PublicKey(options.vault);
     const amount: number = options.amount;
 
-    const squad = SquadsMesh.endpoint(
-      getPythClusterApiUrl(getMultisigCluster(cluster)),
-      wallet
-    );
-    const msAccount = await squad.getMultisig(vault);
-    const vaultAuthority = squad.getAuthorityPDA(
-      msAccount.publicKey,
-      msAccount.authorityIndex
-    );
-
     const proposalInstruction: TransactionInstruction = SystemProgram.transfer({
-      fromPubkey: isRemote ? mapKey(vaultAuthority) : vaultAuthority,
+      fromPubkey: await vault.getVaultAuthorityPDA(cluster),
       toPubkey: destination,
       lamports: amount * LAMPORTS_PER_SOL,
     });
 
-    await proposeInstructions(
-      squad,
-      vault,
-      [proposalInstruction],
-      isRemote,
-      WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
-    );
+    await vault.proposeInstructions([proposalInstruction], cluster);
   });
 
 multisigCommand("propose-arbitrary-payload", "Propose arbitrary payload")
   .option("-p, --payload <hex-string>", "Wormhole VAA payload")
   .action(async (options: any) => {
-    const wallet = await loadHotWalletOrLedger(
-      options.wallet,
-      options.ledgerDerivationAccount,
-      options.ledgerDerivationChange
-    );
-
-    const cluster: PythCluster = options.cluster;
-    const vault: PublicKey = new PublicKey(options.vault);
-
-    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
+    const vault = await loadVaultFromOptions(options);
 
     let payload = options.payload;
     if (payload.startsWith("0x")) {
       payload = payload.substring(2);
     }
 
-    await proposeArbitraryPayload(
-      squad,
-      vault,
-      Buffer.from(payload, "hex"),
-      WORMHOLE_ADDRESS[cluster]!
-    );
+    await vault.proposeWormholeMessage(Buffer.from(payload, "hex"));
   });
 
 /**
@@ -449,17 +347,9 @@ multisigCommand("activate", "Activate a transaction sitting in the multisig")
     "address of the draft transaction"
   )
   .action(async (options: any) => {
-    const wallet = await loadHotWalletOrLedger(
-      options.wallet,
-      options.ledgerDerivationAccount,
-      options.ledgerDerivationChange
-    );
-
+    const vault = await loadVaultFromOptions(options);
     const transaction: PublicKey = new PublicKey(options.transaction);
-    const cluster: PythCluster = options.cluster;
-
-    const squad = SquadsMesh.endpoint(getPythClusterApiUrl(cluster), wallet);
-    await squad.activateTransaction(transaction);
+    await vault.squad.activateTransaction(transaction);
   });
 
 program.parse();

@@ -52,6 +52,26 @@ pub enum PythContractError {
     /// The message did not include a sufficient fee.
     #[error("InvalidFeeDenom")]
     InvalidFeeDenom { denom: String },
+
+    /// Message starts with accumulator magic but is not parsable
+    #[error("InvalidAccumulatorPayload")]
+    InvalidAccumulatorPayload,
+
+    /// Message type is not supported yet
+    #[error("InvalidAccumulatorMessageType")]
+    InvalidAccumulatorMessageType,
+
+    /// Accumulator message can not be parsed
+    #[error("InvalidAccumulatorMessage")]
+    InvalidAccumulatorMessage,
+
+    /// Wormhole message inside the accumulator payload can not be parsed
+    #[error("InvalidWormholeMessage")]
+    InvalidWormholeMessage,
+
+    /// Merkle proof is invalid
+    #[error("InvalidMerkleProof")]
+    InvalidMerkleProof,
 }
 
 impl From<PythContractError> for StdError {

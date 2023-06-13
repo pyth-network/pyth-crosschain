@@ -17,9 +17,11 @@ import {
   getMultisigCluster,
   getProposals,
   MultisigInstruction,
+  MultisigInstructionProgram,
   MultisigParser,
   PRICE_FEED_MULTISIG,
   PythMultisigInstruction,
+  MessageBufferMultisigInstruction,
   UnrecognizedProgram,
   WormholeMultisigInstruction,
 } from 'xc_admin_common'
@@ -788,9 +790,12 @@ const Proposal = ({
                                 {parsedInstruction instanceof
                                 PythMultisigInstruction
                                   ? 'Pyth Oracle'
-                                  : innerInstruction instanceof
+                                  : parsedInstruction instanceof
                                     WormholeMultisigInstruction
                                   ? 'Wormhole'
+                                  : parsedInstruction instanceof
+                                    MessageBufferMultisigInstruction
+                                  ? 'Message Buffer'
                                   : 'Unknown'}
                               </div>
                             </div>
@@ -803,7 +808,9 @@ const Proposal = ({
                                 {parsedInstruction instanceof
                                   PythMultisigInstruction ||
                                 parsedInstruction instanceof
-                                  WormholeMultisigInstruction
+                                  WormholeMultisigInstruction ||
+                                parsedInstruction instanceof
+                                  MessageBufferMultisigInstruction
                                   ? parsedInstruction.name
                                   : 'Unknown'}
                               </div>
@@ -816,7 +823,9 @@ const Proposal = ({
                               {parsedInstruction instanceof
                                 PythMultisigInstruction ||
                               parsedInstruction instanceof
-                                WormholeMultisigInstruction ? (
+                                WormholeMultisigInstruction ||
+                              parsedInstruction instanceof
+                                MessageBufferMultisigInstruction ? (
                                 Object.keys(parsedInstruction.args).length >
                                 0 ? (
                                   <div className="col-span-4 mt-2 bg-[#444157] p-4 lg:col-span-3 lg:mt-0">
@@ -906,7 +915,9 @@ const Proposal = ({
                             {parsedInstruction instanceof
                               PythMultisigInstruction ||
                             parsedInstruction instanceof
-                              WormholeMultisigInstruction ? (
+                              WormholeMultisigInstruction ||
+                            parsedInstruction instanceof
+                              MessageBufferMultisigInstruction ? (
                               <div
                                 key={`${index}_accounts`}
                                 className="grid grid-cols-4 justify-between"
@@ -983,9 +994,36 @@ const Proposal = ({
                                         ) : null}
                                       </>
                                     ))}
+                                    {parsedInstruction.accounts.remaining.map(
+                                      (accountMeta, index) => (
+                                        <>
+                                          <div
+                                            key="rem-{index}"
+                                            className="flex justify-between border-t border-beige-300 py-3"
+                                          >
+                                            <div className="max-w-[80px] break-words sm:max-w-none sm:break-normal">
+                                              Remaining {index + 1}
+                                            </div>
+                                            <div className="space-y-2 sm:flex sm:space-y-0 sm:space-x-2">
+                                              <div className="flex items-center space-x-2 sm:ml-2">
+                                                {accountMeta.isSigner ? (
+                                                  <SignerTag />
+                                                ) : null}
+                                                {accountMeta.isWritable ? (
+                                                  <WritableTag />
+                                                ) : null}
+                                              </div>
+                                              <CopyPubkey
+                                                pubkey={accountMeta.pubkey.toBase58()}
+                                              />
+                                            </div>
+                                          </div>
+                                        </>
+                                      )
+                                    )}
                                   </div>
                                 ) : (
-                                  <div>No arguments</div>
+                                  <div>No accounts</div>
                                 )}
                               </div>
                             ) : parsedInstruction instanceof
@@ -1125,7 +1163,10 @@ const Proposals = ({
                       keys: remoteIx.keys as AccountMeta[],
                     })
                   return (
-                    parsedRemoteInstruction instanceof PythMultisigInstruction
+                    parsedRemoteInstruction instanceof
+                      PythMultisigInstruction ||
+                    parsedRemoteInstruction instanceof
+                      MessageBufferMultisigInstruction
                   )
                 }) &&
                 ix.governanceAction.targetChainId === 'pythnet')

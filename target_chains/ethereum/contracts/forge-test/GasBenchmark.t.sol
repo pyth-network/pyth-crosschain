@@ -340,9 +340,12 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         ids[0] = priceIds[4];
         ids[1] = priceIds[2];
         ids[2] = priceIds[0];
-        pyth.parsePriceFeedUpdates{
-            value: freshPricesWhMerkleUpdateFee[numIds - 1]
-        }(freshPricesWhMerkleUpdateData[4], ids, 0, 50);
+        pyth.parsePriceFeedUpdates{value: freshPricesWhMerkleUpdateFee[4]}( // updateFee based on number of priceFeeds in updateData
+            freshPricesWhMerkleUpdateData[4],
+            ids,
+            0,
+            50
+        );
     }
 
     function testBenchmarkParsePriceFeedUpdatesWhMerkleForOnePriceFeedNotWithinRange()
@@ -391,7 +394,27 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         pyth.getEmaPrice(priceIds[0]);
     }
 
-    function testBenchmarkGetUpdateFee() public view {
+    function testBenchmarkGetUpdateFeeWhBatch() public view {
         pyth.getUpdateFee(freshPricesWhBatchUpdateData);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle1() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[0]);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle2() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[1]);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle3() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[2]);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle4() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[3]);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle5() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[4]);
     }
 }

@@ -520,7 +520,10 @@ contract PythWormholeMerkleAccumulatorTest is
             );
         }
 
-        updateFee = pyth.getUpdateFee(updateData);
+        // manually calculate the fee
+        // so this helper method doesn't trigger the error.
+        // updateFee = pyth.getUpdateFee(numPriceFeeds);
+        updateFee = singleUpdateFeeInWei() * numPriceFeeds;
     }
 
     function testUpdatePriceFeedWithWormholeMerkleRevertsOnWrongVAAPayloadMagic()
@@ -911,6 +914,37 @@ contract PythWormholeMerkleAccumulatorTest is
             0,
             99
         );
+    }
+
+    function testGetUpdateFeeWorksForWhMerkle() public {
+        uint numPriceFeeds = (getRandUint() % 10) + 1;
+        PriceFeedMessage[]
+            memory priceFeedMessages = generateRandomPriceFeedMessage(
+                numPriceFeeds
+            );
+        (bytes[] memory updateData, ) = createWormholeMerkleUpdateData(
+            priceFeedMessages
+        );
+
+        uint updateFee = pyth.getUpdateFee(updateData);
+        assertEq(updateFee, SINGLE_UPDATE_FEE_IN_WEI * numPriceFeeds);
+    }
+
+    function testGetUpdateFeeWorksForWhMerkleBasedOnNumUpdates() public {
+        uint numPriceFeeds = (getRandUint() % 10) + 1;
+        PriceFeedMessage[]
+            memory priceFeedMessages = generateRandomPriceFeedMessage(
+                numPriceFeeds
+            );
+        // Set the priceId of the second message to be the same as the first.
+        priceFeedMessages[1].priceId = priceFeedMessages[0].priceId;
+        (bytes[] memory updateData, ) = createWormholeMerkleUpdateData(
+            priceFeedMessages
+        );
+
+        uint updateFee = pyth.getUpdateFee(updateData);
+        // updateFee should still be based on numUpdates not distinct number of priceIds
+        assertEq(updateFee, SINGLE_UPDATE_FEE_IN_WEI * numPriceFeeds);
     }
 
     //TODO: add some tests of forward compatibility.

@@ -48,6 +48,7 @@ pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: Strin
         .route("/ws", get(ws::ws_route_handler))
         .route("/api/latest_price_feeds", get(rest::latest_price_feeds))
         .route("/api/latest_vaas", get(rest::latest_vaas))
+        .route("/api/get_price_feed", get(rest::get_price_feed))
         .route("/api/get_vaa", get(rest::get_vaa))
         .route("/api/get_vaa_ccip", get(rest::get_vaa_ccip))
         .route("/api/price_feed_ids", get(rest::price_feed_ids))

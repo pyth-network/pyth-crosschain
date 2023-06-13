@@ -523,7 +523,32 @@ export class RestAPI {
     endpoints.push("ready");
 
     app.get("/live", (_, res: Response) => {
-      res.sendStatus(StatusCodes.OK);
+      const threshold = 60;
+      const stalePriceTreshold = 10;
+      const minimumNumPrices = 100;
+
+      const currentTime: TimestampInSec = Math.floor(Date.now() / 1000);
+
+      const priceIds = [...this.priceFeedVaaInfo.getPriceIds()];
+      let stalePriceCnt = 0;
+
+      for (const priceId of priceIds) {
+        const latency =
+          currentTime -
+          this.priceFeedVaaInfo.getLatestPriceInfo(priceId)!.attestationTime;
+        if (latency > threshold) {
+          stalePriceCnt++;
+        }
+      }
+
+      if (
+        priceIds.length < minimumNumPrices ||
+        stalePriceCnt > stalePriceTreshold
+      ) {
+        res.sendStatus(StatusCodes.SERVICE_UNAVAILABLE);
+      } else {
+        res.sendStatus(StatusCodes.OK);
+      }
     });
     endpoints.push("live");
 

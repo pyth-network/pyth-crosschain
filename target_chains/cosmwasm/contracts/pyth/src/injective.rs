@@ -4,7 +4,7 @@ use {
         CosmosMsg,
         CustomMsg,
     },
-    pyth_wormhole_attester_sdk::PriceAttestation,
+    pyth_sdk_cw::PriceFeed,
     schemars::JsonSchema,
     serde::{
         Deserialize,
@@ -24,17 +24,19 @@ pub struct InjectivePriceAttestation {
     pub publish_time: i64,
 }
 
-impl From<&PriceAttestation> for InjectivePriceAttestation {
-    fn from(pa: &PriceAttestation) -> Self {
+impl From<&PriceFeed> for InjectivePriceAttestation {
+    fn from(pa: &PriceFeed) -> Self {
+        let price = pa.get_price_unchecked();
+        let ema_price = pa.get_ema_price_unchecked();
         InjectivePriceAttestation {
-            price_id:     pa.price_id.to_hex(),
-            price:        pa.price,
-            conf:         pa.conf,
-            expo:         pa.expo,
-            ema_price:    pa.ema_price,
-            ema_conf:     pa.ema_conf,
-            ema_expo:     pa.expo,
-            publish_time: pa.publish_time,
+            price_id:     pa.id.to_hex(),
+            price:        price.price,
+            conf:         price.conf,
+            expo:         price.expo,
+            ema_price:    ema_price.price,
+            ema_conf:     ema_price.conf,
+            ema_expo:     ema_price.expo,
+            publish_time: price.publish_time,
         }
     }
 }
@@ -58,13 +60,13 @@ pub struct InjectiveMsgWrapper {
 
 pub fn create_relay_pyth_prices_msg(
     sender: Addr,
-    price_attestations: Vec<PriceAttestation>,
+    price_feeds: Vec<PriceFeed>,
 ) -> CosmosMsg<InjectiveMsgWrapper> {
     InjectiveMsgWrapper {
         route:    "oracle".to_string(),
         msg_data: InjectiveMsg::RelayPythPrices {
             sender,
-            price_attestations: price_attestations
+            price_attestations: price_feeds
                 .iter()
                 .map(InjectivePriceAttestation::from)
                 .collect(),

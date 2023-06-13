@@ -14,8 +14,8 @@ use {
     pythnet_sdk::{
         accumulators::{
             merkle::{
-                MerkleAccumulator,
                 MerklePath,
+                MerkleTree,
             },
             Accumulator,
         },
@@ -84,12 +84,12 @@ pub fn construct_message_states_proofs(
 
     // Check whether the state is valid
     let merkle_acc =
-        match MerkleAccumulator::<Keccak160>::from_set(raw_messages.iter().map(|m| m.as_ref())) {
+        match MerkleTree::<Keccak160>::from_set(raw_messages.iter().map(|m| m.as_ref())) {
             Some(merkle_acc) => merkle_acc,
             None => return Ok(vec![]), // It only happens when the message set is empty
         };
 
-    if merkle_acc.root != wormhole_merkle_state.root.root {
+    if merkle_acc.root.as_bytes() != wormhole_merkle_state.root.root {
         return Err(anyhow!("Invalid merkle root"));
     }
 
