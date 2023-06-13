@@ -16,14 +16,37 @@ export enum ContractType {
 // A unique identifier for a blockchain. Note that we cannot use ChainId for this, as ChainId currently reuses
 // some ids across mainnet / testnet chains (e.g., ethereum goerli has the same id as ethereum mainnet).
 export type NetworkId = string;
+export type WormholeNetwork = "mainnet" | "testnet";
 
-export interface Contract {
+export interface Contract<State> {
   type: ContractType;
   networkId: NetworkId;
   // note: not a unified format across chains
   getAddress(): string;
+
   // Must return an object that can be rendered as JSON
-  getState(): Promise<any>;
+  getState(): Promise<State>;
+  sync(target: State): Promise<SyncOp[]>;
+}
+
+export interface SyncOp {}
+
+export class SendGovernanceInstruction implements SyncOp {
+  private instruction: Instruction;
+  private fromEmitter: string;
+  private wormholeNetwork: WormholeNetwork;
+
+  constructor(
+    instruction: Instruction,
+    fromEmitter: string,
+    wormholeNetwork: WormholeNetwork
+  ) {
+    this.instruction = instruction;
+    this.fromEmitter = fromEmitter;
+    this.wormholeNetwork = wormholeNetwork;
+  }
+
+  public async run(): Promise<boolean> {}
 }
 
 export class EvmPythUpgradable implements Contract {
@@ -52,6 +75,11 @@ export class EvmPythUpgradable implements Contract {
     return (await this.contract["getValidTimePeriod"].staticCallResult())[0];
   }
 
+  public async getWhChainId(): Promise<[ChainId, WormholeNetwork]> {
+    // get wormhole contract
+    // get chainId from there.
+  }
+
   public async getState(): Promise<any> {
     const bytecodeSha = ethers.sha256(
       (await this.contract.getDeployedCode()) as string
@@ -66,9 +94,15 @@ export class EvmPythUpgradable implements Contract {
 
   public async sync(target: any): Promise<Instruction[]> {
     const myState = await getState();
+    const [chainId, wormholeNetwork] = await this.getWhChainId();
     const instructions = [];
     if (myState.validTimePeriod !== target.validTimePeriod) {
-      instructions.push();
+      instructions.push(
+        new governance.SetValidPeriodInstruction(
+          governance.CHAINS[chainName],
+          BigInt(desiredValidTimePeriod)
+        )
+      );
     }
   }
 }

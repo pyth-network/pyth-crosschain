@@ -27,20 +27,15 @@ const networksConfig = {
   evm: {
     optimism_goerli: {
       url: `https://rpc.ankr.com/optimism_testnet`,
-      // TODO:
-      network_id: 420,
     },
     arbitrum: {
       url: "https://arb1.arbitrum.io/rpc",
-      network_id: "0xa4b1",
     },
     avalanche: {
       url: "https://api.avax.network/ext/bc/C/rpc",
-      network_id: "0xa86a",
     },
     canto: {
       url: "https://canto.gravitychain.io",
-      network_id: 7700,
     },
   },
 };
