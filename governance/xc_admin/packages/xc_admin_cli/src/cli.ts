@@ -2,6 +2,7 @@ import { program } from "commander";
 import { loadContractConfig, ContractType, SyncOp } from "xc_admin_common";
 import * as fs from "fs";
 
+// TODO: extract this configuration to a file
 const contractsConfig = [
   {
     type: ContractType.EvmPythUpgradable,
@@ -56,7 +57,7 @@ program
   .version("0.1.0");
 
 program
-  .command("search")
+  .command("get")
   .description("Find Pyth contracts matching the given search criteria")
   .option("-n, --network <network-id>", "Find contracts on the given network")
   .option("-a, --address <address>", "Find contracts with the given address")

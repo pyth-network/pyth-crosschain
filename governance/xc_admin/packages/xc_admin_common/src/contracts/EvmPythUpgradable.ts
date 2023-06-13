@@ -34,11 +34,7 @@ export class EvmPythUpgradable implements Contract<EvmPythUpgradableState> {
     return this.address;
   }
 
-  // ??? do we want this?
-  public async getValidTimePeriod(): Promise<bigint> {
-    return await this.contract.getValidTimePeriod();
-  }
-
+  // TODO: these getters will need the full PythUpgradable ABI
   public async getAuthority(): Promise<WormholeAddress> {
     // FIXME: read from data sources
     return {
@@ -58,8 +54,8 @@ export class EvmPythUpgradable implements Contract<EvmPythUpgradableState> {
     const bytecodeSha = ethers.utils.sha256(
       (await this.contract.provider.getCode(this.contract.address)) as string
     );
-    const validTimePeriod = (await this.getValidTimePeriod()) as bigint;
-    // TODO: add more state info here -- this will need the full PythUpgradable ABI
+    const validTimePeriod =
+      (await this.contract.getValidTimePeriod()) as bigint;
     return {
       bytecodeSha,
       validTimePeriod: validTimePeriod.toString(),
@@ -89,7 +85,7 @@ export class EvmPythUpgradable implements Contract<EvmPythUpgradableState> {
   }
 
   public async submitGovernanceVaa(vaa: string): Promise<boolean> {
-    // FIXME
+    // FIXME: also needs the full PythUpgradable ABI
     // await this.contract.executeGovernanceInstruction("0x" + vaa)
     return true;
   }
