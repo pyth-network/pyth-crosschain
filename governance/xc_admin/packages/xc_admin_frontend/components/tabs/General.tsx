@@ -18,7 +18,6 @@ import {
   MESSAGE_BUFFER_PROGRAM_ID,
   MESSAGE_BUFFER_BUFFER_SIZE,
   PRICE_FEED_MULTISIG,
-  proposeInstructions,
   WORMHOLE_ADDRESS,
   PRICE_FEED_OPS_KEY,
   getMessageBufferAddressForPrice,
