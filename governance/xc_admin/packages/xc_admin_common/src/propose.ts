@@ -213,7 +213,7 @@ export class MultisigVault {
     const msAccount = await this.getMultisigAccount();
     const newProposals = [];
 
-    const remote = targetCluster === undefined || targetCluster != this.cluster;
+    const remote = targetCluster != this.cluster;
 
     let ixToSend: TransactionInstruction[] = [];
     if (remote) {
