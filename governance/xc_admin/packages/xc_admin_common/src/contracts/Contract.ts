@@ -1,11 +1,4 @@
-/** A contract is the basic unit that is managed by xc_admin. */
-import { ChainId, RECEIVER_CHAINS } from "@pythnetwork/xc-governance-sdk";
-import { ethers } from "ethers";
-import PythAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
-import {
-  Instruction,
-  SetValidPeriodInstruction,
-} from "@pythnetwork/xc-governance-sdk";
+import { ChainId, Instruction } from "@pythnetwork/xc-governance-sdk";
 
 export enum ContractType {
   Oracle,
@@ -13,19 +6,42 @@ export enum ContractType {
   EvmWormholeReceiver,
 }
 
-// A unique identifier for a blockchain. Note that we cannot use ChainId for this, as ChainId currently reuses
-// some ids across mainnet / testnet chains (e.g., ethereum goerli has the same id as ethereum mainnet).
+/**
+ * A unique identifier for a blockchain. Note that we cannot use ChainId for this, as ChainId currently reuses
+ * some ids across mainnet / testnet chains (e.g., ethereum goerli has the same id as ethereum mainnet).
+ */
 export type NetworkId = string;
+
+/** A unique identifier for message senders across all wormhole networks. */
+export interface WormholeAddress {
+  emitter: string;
+  chainId: ChainId;
+  // which network this sender is on
+  network: WormholeNetwork;
+}
 export type WormholeNetwork = "mainnet" | "testnet";
 
+/**
+ * A Contract is the basic unit of on-chain state that is managed by xc_admin.
+ * Each contracts lives at a specific address of a specific network, and has a type
+ * representing which of several known contract types (evm target chain, wormhole receiver, etc)
+ * that it is.
+ *
+ * Contracts further expose a state representing values that can be modified by governance.
+ * The fields of the state object vary depending on what type of contract this is.
+ * Finally, contracts expose a sync method that generates the needed operations to bring the on-chain state
+ * in sync with a provided desired state.
+ */
 export interface Contract<State> {
   type: ContractType;
   networkId: NetworkId;
-  // note: not a unified format across chains
+  /** The address of the contract. The address may be written in different formats for different networks. */
   getAddress(): string;
 
-  // Must return an object that can be rendered as JSON
+  /** Get the on-chain state of all governance-controllable fields of this contract. */
   getState(): Promise<State>;
+
+  /** Generate a set of operations that, if executed, will update the on-chain contract state to be `target`. */
   sync(target: State): Promise<SyncOp[]>;
 }
 
@@ -33,161 +49,62 @@ export interface SyncOp {}
 
 export class SendGovernanceInstruction implements SyncOp {
   private instruction: Instruction;
-  private fromEmitter: string;
-  private wormholeNetwork: WormholeNetwork;
+  private sender: WormholeAddress;
+  private submitVaa: (vaa: string) => Promise<boolean>;
 
   constructor(
     instruction: Instruction,
-    fromEmitter: string,
-    wormholeNetwork: WormholeNetwork
+    from: WormholeAddress,
+    submitVaa: (vaa: string) => Promise<boolean>
   ) {
     this.instruction = instruction;
-    this.fromEmitter = fromEmitter;
-    this.wormholeNetwork = wormholeNetwork;
+    this.sender = from;
+    this.submitVaa = submitVaa;
   }
 
-  public async run(): Promise<boolean> {}
-}
-
-export class EvmPythUpgradable implements Contract {
-  public type = ContractType.EvmPythUpgradable;
-  public networkId;
-  private address;
-
-  private contract: ethers.Contract;
-
-  constructor(
-    networkId: NetworkId,
-    address: string,
-    contract: ethers.Contract
-  ) {
-    this.networkId = networkId;
-    this.address = address;
-    this.contract = contract;
-  }
-
-  public getAddress() {
-    return this.address;
-  }
-
-  // ??? do we want this?
-  public async getValidTimePeriod(): Promise<bigint> {
-    return (await this.contract["getValidTimePeriod"].staticCallResult())[0];
-  }
-
-  public async getWhChainId(): Promise<[ChainId, WormholeNetwork]> {
-    // get wormhole contract
-    // get chainId from there.
-  }
-
-  public async getState(): Promise<any> {
-    const bytecodeSha = ethers.sha256(
-      (await this.contract.getDeployedCode()) as string
-    );
-    const validTimePeriod = await this.getValidTimePeriod();
-    // TODO: add more state info here -- this will need the full PythUpgradable ABI
-    return {
-      bytecodeSha,
-      validTimePeriod,
-    };
-  }
-
-  public async sync(target: any): Promise<Instruction[]> {
-    const myState = await getState();
-    const [chainId, wormholeNetwork] = await this.getWhChainId();
-    const instructions = [];
-    if (myState.validTimePeriod !== target.validTimePeriod) {
-      instructions.push(
-        new governance.SetValidPeriodInstruction(
-          governance.CHAINS[chainName],
-          BigInt(desiredValidTimePeriod)
-        )
-      );
+  public async run(cache: Record<string, any>): Promise<boolean> {
+    if (cache["multisigTx"] === undefined) {
+      cache["multisigTx"] = "fooooo";
+      return false;
     }
-  }
-}
 
-export class EvmWormholeReceiver implements Contract {
-  public type = ContractType.EvmWormholeReceiver;
-  public networkId;
-  private address;
-
-  private contract: ethers.Contract;
-
-  constructor(
-    networkId: NetworkId,
-    address: string,
-    contract: ethers.Contract
-  ) {
-    this.networkId = networkId;
-    this.address = address;
-    this.contract = contract;
-  }
-
-  public getAddress() {
-    return this.address;
-  }
-
-  public async getState(): Promise<any> {
-    const bytecodeSha = ethers.sha256(
-      (await this.contract.getDeployedCode()) as string
-    );
-
-    return {
-      bytecodeSha,
-    };
-  }
-}
-
-export function loadFromConfig(
-  contractsConfig: any,
-  networksConfig: any
-): Contract[] {
-  const contracts = [];
-  for (const contractConfig of contractsConfig) {
-    contracts.push(fromConfig(contractConfig, networksConfig));
-  }
-  return contracts;
-}
-
-export function fromConfig(contractConfig: any, networksConfig: any): Contract {
-  switch (contractConfig.type) {
-    case ContractType.EvmPythUpgradable: {
-      const ethersContract = new ethers.Contract(
-        contractConfig.address,
-        PythAbi,
-        getEvmProvider(contractConfig.networkId, networksConfig)
-      );
-
-      return new EvmPythUpgradable(
-        contractConfig.networkId,
-        contractConfig.address,
-        ethersContract
-      );
+    if (cache["vaa"] === undefined) {
+      return false;
     }
-    case ContractType.EvmWormholeReceiver: {
-      const ethersContract = new ethers.Contract(
-        contractConfig.address,
-        // TODO: pass in an appropriate ABI here
-        [],
-        getEvmProvider(contractConfig.networkId, networksConfig)
-      );
 
-      return new EvmWormholeReceiver(
-        contractConfig.networkId,
-        contractConfig.address,
-        ethersContract
-      );
-    }
-    default:
-      throw new Error(`unknown contract type: ${contractConfig.type}`);
+    // VAA is guaranteed to be defined here
+    const vaa = cache["vaa"];
+
+    // assertVaaPayloadEquals(vaa, payload);
+
+    return await this.submitVaa(vaa);
   }
-}
 
-export function getEvmProvider(
-  networkId: NetworkId,
-  networksConfig: any
-): ethers.Provider {
-  const networkConfig = networksConfig["evm"][networkId]!;
-  return ethers.getDefaultProvider(networkConfig.url);
+  /*
+  public async run(cache: Record<string,any>): Promise<boolean> {
+    if (cache["multisigTx"] === undefined) {
+      // Have not yet submitted this operation to the multisig.
+      const payload = this.instruction.serialize();
+      const txKey = vault.sendWormholeInstruction(payload);
+      cache["multisigTx"] = txKey;
+      return false;
+    }
+
+    if (cache["vaa"] === undefined) {
+      const vaa = await executeMultisigTxAndGetVaa(txKey, payloadHex);
+      if (vaa === undefined) {
+        return false;
+      }
+      cache["vaa"] = vaa;
+    }
+
+    // VAA is guaranteed to be defined here
+    const vaa = cache["vaa"];
+
+    assertVaaPayloadEquals(vaa, payload);
+
+    // await proxy.executeGovernanceInstruction("0x" + vaa);
+    await submitVaa(vaa);
+  }
+   */
 }

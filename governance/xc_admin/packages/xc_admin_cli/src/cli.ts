@@ -1,5 +1,7 @@
-import { ContractType, EvmPythUpgradable, loadFromConfig } from "./Contract";
+import { ContractType } from "xc_admin_common/lib/contracts/Contract";
+import { loadContractConfig } from "xc_admin_common/lib/contracts/config";
 
+// TODO: load these from files
 const contractsConfig = [
   {
     type: ContractType.EvmPythUpgradable,
@@ -40,16 +42,15 @@ const networksConfig = {
   },
 };
 
-async function checkEvmPythUpgradableState(
-  contract: EvmPythUpgradable,
-  state: EvmPythUpgradableState
-) {
-  if ((await contract.wormholeAddress()) !== state.wormholeAddress) {
-  }
-}
+const multisigs = [
+  {
+    name: "",
+    wormholeNetwork: "mainnet",
+  },
+];
 
 async function main() {
-  const contracts = loadFromConfig(contractsConfig, networksConfig);
+  const contracts = loadContractConfig(contractsConfig, networksConfig);
 
   for (const contract of contracts) {
     const state = await contract.getState();
@@ -59,6 +60,14 @@ async function main() {
       type: contract.type,
       state: state,
     });
+  }
+
+  const state = await contracts[0].getState();
+  state["validTimePeriod"] = 30;
+
+  const ops = await contracts[0].sync(state);
+  for (const op of ops) {
+    console.log(op);
   }
 }
 

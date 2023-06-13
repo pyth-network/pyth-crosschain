@@ -17,8 +17,7 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test": "jest",
-    "cli": "npm run build && node lib/contracts/cli.js"
+    "test": "jest"
   },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.8",
