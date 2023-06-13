@@ -46,7 +46,11 @@ export interface Contract<State> {
   sync(target: State): Promise<SyncOp[]>;
 }
 
-/** A stateful synchronization operation. This operation can be run */
+/**
+ * An idempotent synchronization operation to update on-chain state. The operation may depend on
+ * external approvals or actions to complete, in which case the operation will pause and need to
+ * be resumed later.
+ */
 export interface SyncOp {
   /**
    * A unique identifier for this operation. The id represents the content of the operation (e.g., "sets the X
@@ -68,6 +72,7 @@ export interface SyncOp {
 export class SendGovernanceInstruction implements SyncOp {
   private instruction: Instruction;
   private sender: WormholeAddress;
+  // function to submit the signed VAA to the target chain contract
   private submitVaa: (vaa: string) => Promise<boolean>;
 
   constructor(
@@ -86,6 +91,7 @@ export class SendGovernanceInstruction implements SyncOp {
   }
 
   public async run(cache: Record<string, any>): Promise<boolean> {
+    // FIXME: this implementation is temporary. replace with something like the commented out code below.
     if (cache["multisigTx"] === undefined) {
       cache["multisigTx"] = "fooooo";
       return false;
