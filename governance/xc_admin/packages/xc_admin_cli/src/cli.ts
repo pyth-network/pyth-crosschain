@@ -1,3 +1,4 @@
+import { program } from "commander";
 import { loadContractConfig, ContractType } from "xc_admin_common";
 
 const contractsConfig = [
@@ -47,26 +48,86 @@ const multisigs = [
   },
 ];
 
-async function main() {
-  const contracts = loadContractConfig(contractsConfig, networksConfig);
+program
+  .name("pyth_governance")
+  .description("CLI for governing Pyth contracts")
+  .version("0.1.0");
 
-  for (const contract of contracts) {
-    const state = await contract.getState();
-    console.log({
-      networkId: contract.networkId,
-      address: contract.getAddress(),
-      type: contract.type,
-      state: state,
-    });
-  }
+program
+  .command("search")
+  .description("Find Pyth contracts matching the given search criteria")
+  .option("-n, --network <network-id>", "Find contracts on the given network")
+  .option("-a, --address <address>", "Find contracts with the given address")
+  .option("-t, --type <type-id>", "Find contracts of the given type")
+  .action(async (options: any) => {
+    const contracts = loadContractConfig(contractsConfig, networksConfig);
 
-  const state = await contracts[0].getState();
-  state["validTimePeriod"] = 30;
+    console.log(JSON.stringify(options));
 
-  const ops = await contracts[0].sync(state);
-  for (const op of ops) {
-    console.log(op);
-  }
-}
+    const matches = [];
+    for (const contract of contracts) {
+      if (
+        (options.network === undefined ||
+          contract.networkId == options.network) &&
+        (options.address === undefined ||
+          contract.getAddress() == options.address) &&
+        (options.type === undefined || contract.type == options.type)
+      ) {
+        matches.push(contract);
+      }
+    }
 
-main();
+    for (const contract of matches) {
+      const state = await contract.getState();
+      console.log({
+        networkId: contract.networkId,
+        address: contract.getAddress(),
+        type: contract.type,
+        state: state,
+      });
+    }
+  });
+
+program
+  .command("set")
+  .description("Set a configuration parameter for one or more Pyth contract")
+  .option("-n, --network <network-id>", "Find contracts on the given network")
+  .option("-a, --address <address>", "Find contracts with the given address")
+  .option("-t, --type <type-id>", "Find contracts of the given type")
+  .argument("<fields...>", "Fields to set on the given contracts")
+  .action(async (fields, options: any, command) => {
+    const contracts = loadContractConfig(contractsConfig, networksConfig);
+
+    console.log(JSON.stringify(fields));
+    console.log(JSON.stringify(options));
+
+    const setters = fields.map((value: string) => value.split("="));
+
+    const matches = [];
+    for (const contract of contracts) {
+      if (
+        (options.network === undefined ||
+          contract.networkId == options.network) &&
+        (options.address === undefined ||
+          contract.getAddress() == options.address) &&
+        (options.type === undefined || contract.type == options.type)
+      ) {
+        matches.push(contract);
+      }
+    }
+
+    const ops = [];
+    for (const contract of matches) {
+      const state = await contract.getState();
+      // TODO: make a decent format for this
+      for (const [field, value] of setters) {
+        state[field] = value;
+      }
+
+      ops.push(...(await contract.sync(state)));
+    }
+
+    console.log(ops);
+  });
+
+program.parse();

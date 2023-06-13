@@ -62,7 +62,7 @@ export class EvmPythUpgradable implements Contract<EvmPythUpgradableState> {
     // TODO: add more state info here -- this will need the full PythUpgradable ABI
     return {
       bytecodeSha,
-      validTimePeriod: validTimePeriod.toString(10),
+      validTimePeriod: validTimePeriod.toString(),
     };
   }
 
