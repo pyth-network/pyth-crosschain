@@ -24,7 +24,7 @@ export class EvmWormholeReceiver implements Contract<EvmWormholeReceiverState> {
 
   public async getState(): Promise<EvmWormholeReceiverState> {
     const bytecodeSha = ethers.utils.sha256(
-      (await this.contract.getDeployedCode()) as string
+      (await this.contract.provider.getCode(this.contract.address)) as string
     );
 
     return {

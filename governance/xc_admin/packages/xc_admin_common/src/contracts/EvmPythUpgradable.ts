@@ -36,7 +36,7 @@ export class EvmPythUpgradable implements Contract<EvmPythUpgradableState> {
 
   // ??? do we want this?
   public async getValidTimePeriod(): Promise<bigint> {
-    return (await this.contract["getValidTimePeriod"].staticCallResult())[0];
+    return await this.contract.getValidTimePeriod();
   }
 
   public async getAuthority(): Promise<WormholeAddress> {
@@ -56,7 +56,7 @@ export class EvmPythUpgradable implements Contract<EvmPythUpgradableState> {
 
   public async getState(): Promise<EvmPythUpgradableState> {
     const bytecodeSha = ethers.utils.sha256(
-      (await this.contract.getDeployedCode()) as string
+      (await this.contract.provider.getCode(this.contract.address)) as string
     );
     const validTimePeriod = (await this.getValidTimePeriod()) as bigint;
     // TODO: add more state info here -- this will need the full PythUpgradable ABI
