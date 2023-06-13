@@ -525,6 +525,7 @@ export class RestAPI {
     app.get("/live", (_, res: Response) => {
       const threshold = 60;
       const stalePriceTreshold = 10;
+      const minimumNumPrices = 100;
 
       const currentTime: TimestampInSec = Math.floor(Date.now() / 1000);
 
@@ -540,7 +541,10 @@ export class RestAPI {
         }
       }
 
-      if (stalePriceCnt > stalePriceTreshold) {
+      if (
+        priceIds.length < minimumNumPrices ||
+        stalePriceCnt > stalePriceTreshold
+      ) {
         res.sendStatus(StatusCodes.SERVICE_UNAVAILABLE);
       } else {
         res.sendStatus(StatusCodes.OK);
