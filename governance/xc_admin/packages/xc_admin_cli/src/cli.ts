@@ -1,7 +1,5 @@
-import { ContractType } from "xc_admin_common/lib/contracts/Contract";
-import { loadContractConfig } from "xc_admin_common/lib/contracts/config";
+import { loadContractConfig, ContractType } from "xc_admin_common";
 
-// TODO: load these from files
 const contractsConfig = [
   {
     type: ContractType.EvmPythUpgradable,

@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\"",
-    "cli": "npm run build && node lib/contracts/cli.js"
+    "cli": "npm run build && node lib/cli.js"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.26.0",
