@@ -369,7 +369,7 @@ multisigCommand("add-and-delete", "Change the roster of the multisig")
     const vault: MultisigVault = await loadVaultFromOptions(options);
 
     const targetVaults: PublicKey[] = options.targetVaults
-      ? options.add.split(",").map((m: string) => new PublicKey(m))
+      ? options.targetVaults.split(",").map((m: string) => new PublicKey(m))
       : [];
 
     let proposalInstructions: TransactionInstruction[] = [];
@@ -384,8 +384,8 @@ multisigCommand("add-and-delete", "Change the roster of the multisig")
       }
     }
 
-    const membersToRemove: PublicKey[] = options.delete
-      ? options.delete.split(",").map((m: string) => new PublicKey(m))
+    const membersToRemove: PublicKey[] = options.remove
+      ? options.remove.split(",").map((m: string) => new PublicKey(m))
       : [];
 
     for (const member of membersToRemove) {
