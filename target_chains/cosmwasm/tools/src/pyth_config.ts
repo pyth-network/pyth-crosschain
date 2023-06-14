@@ -154,6 +154,19 @@ export const CONFIG: Config = {
     },
     ...PYTH_SOURCES_TESTNET,
   },
+  [NETWORKS.OSMOSIS_TESTNET_5]: {
+    wormhole_contract:
+      "osmo1hggkxr0hpw83f8vuft7ruvmmamsxmwk2hzz6nytdkzyup9krt0dq27sgyx",
+    governance_source_index: 0,
+    governance_sequence_number: 0,
+    chain_id: 20,
+    valid_time_period_secs: 60,
+    fee: {
+      amount: "1",
+      denom: "uosmo",
+    },
+    ...PYTH_SOURCES_TESTNET,
+  },
   // this details below are invalid and random
   // they are to be used only for for testing purposes
   [NETWORKS.OSMOSIS_LOCAL]: {

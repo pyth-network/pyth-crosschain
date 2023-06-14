@@ -73,7 +73,7 @@ pub enum DeserializerError {
     Unsupported,
 
     #[error("sequence too large ({0} elements), max supported is 255")]
-    SequenceTooLarge(usize),
+    SequenceTooLarge(u16),
 
     #[error("message: {0}")]
     Message(Box<str>),

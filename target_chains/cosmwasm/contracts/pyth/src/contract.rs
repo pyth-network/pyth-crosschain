@@ -505,63 +505,65 @@ fn process_accumulator(
     env: &Env,
     data: &[u8],
 ) -> StdResult<(usize, Vec<PriceFeed>)> {
+    
     let update_data = AccumulatorUpdateData::try_from_slice(data)
         .map_err(|_| PythContractError::InvalidAccumulatorPayload)?;
-    match update_data.proof {
-        Proof::WormholeMerkle { vaa, updates } => {
-            let parsed_vaa = parse_and_verify_vaa(
-                deps.branch(),
-                env.block.time.seconds(),
-                &Binary::from(Vec::from(vaa)),
-            )?;
-            let state = config_read(deps.storage).load()?;
-            verify_vaa_from_data_source(&state, &parsed_vaa)?;
+    return Ok((0, vec![]));
+    // match update_data.proof {
+    //     Proof::WormholeMerkle { vaa, updates } => {
+    //         let parsed_vaa = parse_and_verify_vaa(
+    //             deps.branch(),
+    //             env.block.time.seconds(),
+    //             &Binary::from(Vec::from(vaa)),
+    //         )?;
+    //         let state = config_read(deps.storage).load()?;
+    //         verify_vaa_from_data_source(&state, &parsed_vaa)?;
 
-            let msg = WormholeMessage::try_from_bytes(parsed_vaa.payload)
-                .map_err(|_| PythContractError::InvalidWormholeMessage)?;
+    //         let msg = WormholeMessage::try_from_bytes(parsed_vaa.payload)
+    //             .map_err(|_| PythContractError::InvalidWormholeMessage)?;
 
-            let root: MerkleRoot<Keccak160> = MerkleRoot::new(match msg.payload {
-                WormholePayload::Merkle(merkle_root) => merkle_root.root,
-            });
-            let update_len = updates.len();
-            let mut new_feeds = vec![];
-            for update in updates {
-                let message_vec = Vec::from(update.message);
-                if !root.check(update.proof, &message_vec) {
-                    return Err(PythContractError::InvalidMerkleProof)?;
-                }
+    //         let root: MerkleRoot<Keccak160> = MerkleRoot::new(match msg.payload {
+    //             WormholePayload::Merkle(merkle_root) => merkle_root.root,
+    //         });
+    //         let update_len = updates.len();
+    //         let mut new_feeds = vec![];
+    //         for update in updates {
+    //             let message_vec = Vec::from(update.message);
+    //             if !root.check(update.proof, &message_vec) {
+    //                 return Err(PythContractError::InvalidMerkleProof)?;
+    //             }
 
-                let msg = from_slice::<BigEndian, Message>(&message_vec)
-                    .map_err(|_| PythContractError::InvalidAccumulatorMessage)?;
+    //             let msg = from_slice::<BigEndian, Message>(&message_vec)
+    //                 .map_err(|_| PythContractError::InvalidAccumulatorMessage)?;
 
-                match msg {
-                    Message::PriceFeedMessage(price_feed_message) => {
-                        let price_feed = PriceFeed::new(
-                            PriceIdentifier::new(price_feed_message.id),
-                            Price {
-                                price:        price_feed_message.price,
-                                conf:         price_feed_message.conf,
-                                expo:         price_feed_message.exponent,
-                                publish_time: price_feed_message.publish_time,
-                            },
-                            Price {
-                                price:        price_feed_message.ema_price,
-                                conf:         price_feed_message.ema_conf,
-                                expo:         price_feed_message.exponent,
-                                publish_time: price_feed_message.publish_time,
-                            },
-                        );
+    //             match msg {
+    //                 Message::PriceFeedMessage(price_feed_message) => {
+    //                     let price_feed = PriceFeed::new(
+    //                         PriceIdentifier::new(price_feed_message.id),
+    //                         Price {
+    //                             price:        price_feed_message.price,
+    //                             conf:         price_feed_message.conf,
+    //                             expo:         price_feed_message.exponent,
+    //                             publish_time: price_feed_message.publish_time,
+    //                         },
+    //                         Price {
+    //                             price:        price_feed_message.ema_price,
+    //                             conf:         price_feed_message.ema_conf,
+    //                             expo:         price_feed_message.exponent,
+    //                             publish_time: price_feed_message.publish_time,
+    //                         },
+    //                     );
 
-                        if update_price_feed_if_new(deps, env, price_feed)? {
-                            new_feeds.push(price_feed);
-                        }
-                    }
-                    _ => return Err(PythContractError::InvalidAccumulatorMessageType)?,
-                }
-            }
-            Ok((update_len, new_feeds))
-        }
-    }
+    //                     if update_price_feed_if_new(deps, env, price_feed)? {
+    //                         new_feeds.push(price_feed);
+    //                     }
+    //                 }
+    //                 _ => return Err(PythContractError::InvalidAccumulatorMessageType)?,
+    //             }
+    //         }
+    //         Ok((update_len, new_feeds))
+    //     }
+    // }
 }
 
 /// Update the on-chain storage for any new price updates provided in `batch_attestation`.
@@ -680,18 +682,18 @@ pub fn get_update_fee_amount(deps: &Deps, vaas: &[Binary]) -> StdResult<u128> {
 
     let mut total_updates: u128 = 0;
     for datum in vaas {
-        let header = datum.get(0..4);
-        if header == Some(PYTHNET_ACCUMULATOR_UPDATE_MAGIC.as_slice()) {
-            let update_data = AccumulatorUpdateData::try_from_slice(datum)
-                .map_err(|_| PythContractError::InvalidAccumulatorPayload)?;
-            match update_data.proof {
-                Proof::WormholeMerkle { vaa: _, updates } => {
-                    total_updates += updates.len() as u128;
-                }
-            }
-        } else {
+        // let header = datum.get(0..4);
+        // if header == Some(PYTHNET_ACCUMULATOR_UPDATE_MAGIC.as_slice()) {
+        //     let update_data = AccumulatorUpdateData::try_from_slice(datum)
+        //         .map_err(|_| PythContractError::InvalidAccumulatorPayload)?;
+        //     match update_data.proof {
+        //         Proof::WormholeMerkle { vaa: _, updates } => {
+        //             total_updates += updates.len() as u128;
+        //         }
+        //     }
+        // } else {
             total_updates += 1;
-        }
+        // }
     }
 
     Ok(config

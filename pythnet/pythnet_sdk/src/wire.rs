@@ -88,10 +88,15 @@ pub mod v1 {
     pub type Hash = [u8; 20];
 
     #[derive(Clone, Debug, Hash, PartialEq, Serialize, Deserialize)]
+    pub struct Poof {
+        pub dummy: u64,
+    }
+
+    #[derive(Clone, Debug, Hash, PartialEq, Serialize, Deserialize)]
     pub enum Proof {
         WormholeMerkle {
-            vaa:     PrefixedVec<u16, u8>,
-            updates: Vec<MerklePriceUpdate>,
+            vaa:     u8,
+            updates: u8,
         },
     }
 

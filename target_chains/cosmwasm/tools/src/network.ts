@@ -5,6 +5,7 @@ export enum NETWORKS {
   INJECTIVE_MAINNET = "injective_mainnet",
   INJECTIVE_TESTNET = "injective_testnet",
   OSMOSIS_TESTNET = "osmosis_testnet",
+  OSMOSIS_TESTNET_5 = "osmosis_testnet_5",
   OSMOSIS_LOCAL = "osmosis_local",
 }
 
