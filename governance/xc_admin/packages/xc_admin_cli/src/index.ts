@@ -352,4 +352,41 @@ multisigCommand("activate", "Activate a transaction sitting in the multisig")
     await vault.squad.activateTransaction(transaction);
   });
 
+multisigCommand("add-and-delete", "Change the roster of the multisig")
+  .option(
+    "-a, --add <comma_separated_members>",
+    "addresses to add to the multisig"
+  )
+  .option(
+    "-r, --remove <comma_separated_members>",
+    "addresses to remove from the multisig"
+  )
+  .requiredOption(
+    "-t, --target-vault <pubkey>",
+    "the vault whose roster we want to change"
+  )
+  .action(async (options: any) => {
+    const vault: MultisigVault = await loadVaultFromOptions(options);
+
+    let proposalInstructions: TransactionInstruction[] = [];
+
+    const membersToAdd: PublicKey[] = options.add
+      ? options.add.split(",").map((m: string) => new PublicKey(m))
+      : [];
+
+    for (const member of membersToAdd) {
+      proposalInstructions.push(await vault.addMemberIx(member));
+    }
+
+    const membersToRemove: PublicKey[] = options.delete
+      ? options.delete.split(",").map((m: string) => new PublicKey(m))
+      : [];
+
+    for (const member of membersToRemove) {
+      proposalInstructions.push(await vault.addMemberIx(member));
+    }
+
+    vault.proposeInstructions(proposalInstructions, options.cluster);
+  });
+
 program.parse();
