@@ -147,7 +147,10 @@ export class MultisigVault {
     );
   }
 
-  public async addMemberIx(member: PublicKey): Promise<TransactionInstruction> {
+  public async addMemberIx(
+    member: PublicKey,
+    targetVault: PublicKey
+  ): Promise<TransactionInstruction> {
     return await this.squad.buildAddMember(
       this.vault,
       await this.getAuthorityPDA(),
@@ -156,7 +159,8 @@ export class MultisigVault {
   }
 
   public async removeMemberIx(
-    member: PublicKey
+    member: PublicKey,
+    targetVault: PublicKey
   ): Promise<TransactionInstruction> {
     return await this.squad.buildRemoveMember(
       this.vault,
