@@ -11,7 +11,7 @@ export const MESSAGE_BUFFER_PROGRAM_ID: PublicKey = new PublicKey(
 export const MESSAGE_BUFFER_BUFFER_SIZE = 2048;
 
 export function isMessageBufferAvailable(cluster: PythCluster): boolean {
-  return cluster === "pythtest-crosschain";
+  return cluster === "pythtest-crosschain" || cluster === "pythnet";
 }
 
 export function getPythOracleMessageBufferCpiAuth(
