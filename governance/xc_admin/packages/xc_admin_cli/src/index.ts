@@ -399,4 +399,18 @@ multisigCommand("add-and-delete", "Change the roster of the multisig")
     vault.proposeInstructions(proposalInstructions, options.cluster);
   });
 
+/**
+ * READ THIS BEFORE USING THIS COMMAND
+ * This command exists because of a bug in mesh where
+ * roster change proposals executed through executeInstruction don't work.
+ * https://github.com/Squads-Protocol/squads-mpl/pull/32
+ */
+multisigCommand("execute-add-and-delete", "Execute a roster change proposal")
+  .requiredOption("-t, --transaction <pubkey>", "address of the proposal")
+  .action(async (options: any) => {
+    const vault: MultisigVault = await loadVaultFromOptions(options);
+    const proposal = new PublicKey(options.transaction);
+    await vault.squad.executeTransaction(proposal);
+  });
+
 program.parse();
