@@ -107,7 +107,8 @@ abstract contract Pyth is
         for (uint i = 0; i < updateData.length; i++) {
             if (
                 updateData[i].length > 4 &&
-                UnsafeBytesLib.toUint32(updateData[i], 0) == ACCUMULATOR_MAGIC
+                UnsafeCalldataBytesLib.toUint32(updateData[i], 0) ==
+                ACCUMULATOR_MAGIC
             ) {
                 (
                     uint offset,
@@ -447,13 +448,16 @@ abstract contract Pyth is
         override
         returns (PythStructs.PriceFeed[] memory priceFeeds)
     {
+        {
+            uint requiredFee = getUpdateFee(updateData);
+            if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
+        }
         unchecked {
-            uint totalNumUpdates = 0;
             priceFeeds = new PythStructs.PriceFeed[](priceIds.length);
             for (uint i = 0; i < updateData.length; i++) {
                 if (
                     updateData[i].length > 4 &&
-                    UnsafeBytesLib.toUint32(updateData[i], 0) ==
+                    UnsafeCalldataBytesLib.toUint32(updateData[i], 0) ==
                     ACCUMULATOR_MAGIC
                 ) {
                     uint offset;
@@ -473,7 +477,7 @@ abstract contract Pyth is
 
                     bytes20 digest;
                     uint8 numUpdates;
-                    bytes memory encoded;
+                    bytes calldata encoded;
                     (
                         offset,
                         digest,
@@ -525,7 +529,6 @@ abstract contract Pyth is
                             }
                         }
                     }
-                    totalNumUpdates += numUpdates;
                     if (offset != encoded.length)
                         revert PythErrors.InvalidUpdateData();
                 } else {
@@ -600,7 +603,6 @@ abstract contract Pyth is
 
                         index += attestationSize;
                     }
-                    totalNumUpdates += 1;
                 }
             }
 
@@ -608,12 +610,6 @@ abstract contract Pyth is
                 if (priceFeeds[k].id == 0) {
                     revert PythErrors.PriceFeedNotFoundWithinRange();
                 }
-            }
-
-            {
-                uint requiredFee = getTotalFee(totalNumUpdates);
-                if (msg.value < requiredFee)
-                    revert PythErrors.InsufficientFee();
             }
         }
     }
