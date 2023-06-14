@@ -36,7 +36,7 @@ library MerkleTree {
         return hash(abi.encodePacked(MERKLE_NODE_PREFIX, childA, childB));
     }
 
-    /// @notice Verify Merkle Tree proof for given leaf data based on data on memory.
+    /// @notice Verify Merkle Tree proof for given leaf data.
     /// @dev To optimize gas usage, this method doesn't take the proof as a bytes array
     /// but rather takes the encoded proof and the offset of the proof in the
     /// encoded proof array possibly containing multiple proofs. Also, the method

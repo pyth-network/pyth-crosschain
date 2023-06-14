@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: Unlicense
 /*
- * @title Solidity Bytes Arrays Utils
- * @author Gonçalo Sá <goncalo.sa@consensys.net>
+ * @title Solidity Calldata Bytes Arrays Utils
  *
  * @dev Bytes tightly packed arrays utility library for ethereum contracts written in Solidity.
- *      The library lets you concatenate, slice and type cast bytes arrays both in memory and storage.
+ *      The library lets you slice and type cast bytes arrays in calldata.
  *
  * @notice This is the **unsafe** version of BytesLib which removed all the checks (out of bound, ...)
  * to be more gas efficient.
