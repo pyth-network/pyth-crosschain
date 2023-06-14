@@ -362,7 +362,7 @@ multisigCommand("add-and-delete", "Change the roster of the multisig")
     "addresses to remove from the multisig"
   )
   .requiredOption(
-    "-t, --target-vaults <pubkey>",
+    "-t, --target-vaults <comma_separated_vaults>",
     "the vault whose roster we want to change"
   )
   .action(async (options: any) => {
