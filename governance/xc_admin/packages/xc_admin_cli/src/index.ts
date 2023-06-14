@@ -390,7 +390,9 @@ multisigCommand("add-and-delete", "Change the roster of the multisig")
 
     for (const member of membersToRemove) {
       for (const targetVault of targetVaults) {
-        proposalInstructions.push(await vault.addMemberIx(member, targetVault));
+        proposalInstructions.push(
+          await vault.removeMemberIx(member, targetVault)
+        );
       }
     }
 
