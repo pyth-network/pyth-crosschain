@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../libraries/external/UnsafeBytesLib.sol";
+import "../libraries/external/UnsafeCalldataBytesLib.sol";
 import "@pythnetwork/pyth-sdk-solidity/AbstractPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
@@ -43,13 +44,13 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     }
 
     function extractUpdateTypeFromAccumulatorHeader(
-        bytes memory accumulatorUpdate
+        bytes calldata accumulatorUpdate
     ) internal pure returns (uint offset, UpdateType updateType) {
         unchecked {
             offset = 0;
 
             {
-                uint32 magic = UnsafeBytesLib.toUint32(
+                uint32 magic = UnsafeCalldataBytesLib.toUint32(
                     accumulatorUpdate,
                     offset
                 );
@@ -58,7 +59,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 if (magic != ACCUMULATOR_MAGIC)
                     revert PythErrors.InvalidUpdateData();
 
-                uint8 majorVersion = UnsafeBytesLib.toUint8(
+                uint8 majorVersion = UnsafeCalldataBytesLib.toUint8(
                     accumulatorUpdate,
                     offset
                 );
@@ -68,7 +69,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 if (majorVersion != MAJOR_VERSION)
                     revert PythErrors.InvalidUpdateData();
 
-                uint8 minorVersion = UnsafeBytesLib.toUint8(
+                uint8 minorVersion = UnsafeCalldataBytesLib.toUint8(
                     accumulatorUpdate,
                     offset
                 );
@@ -82,7 +83,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
 
                 // This field ensure that we can add headers in the future
                 // without breaking the contract (future compatibility)
-                uint8 trailingHeaderSize = UnsafeBytesLib.toUint8(
+                uint8 trailingHeaderSize = UnsafeCalldataBytesLib.toUint8(
                     accumulatorUpdate,
                     offset
                 );
@@ -100,7 +101,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             }
 
             updateType = UpdateType(
-                UnsafeBytesLib.toUint8(accumulatorUpdate, offset)
+                UnsafeCalldataBytesLib.toUint8(accumulatorUpdate, offset)
             );
 
             offset += 1;
@@ -111,7 +112,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     }
 
     function extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
-        bytes memory accumulatorUpdate,
+        bytes calldata accumulatorUpdate,
         uint encodedOffset
     )
         internal
@@ -120,25 +121,32 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             uint offset,
             bytes20 digest,
             uint8 numUpdates,
-            bytes memory encoded
+            bytes calldata encoded
         )
     {
-        encoded = UnsafeBytesLib.slice(
-            accumulatorUpdate,
-            encodedOffset,
-            accumulatorUpdate.length - encodedOffset
-        );
         unchecked {
+            encoded = UnsafeCalldataBytesLib.slice(
+                accumulatorUpdate,
+                encodedOffset,
+                accumulatorUpdate.length - encodedOffset
+            );
             offset = 0;
 
-            uint16 whProofSize = UnsafeBytesLib.toUint16(encoded, offset);
+            uint16 whProofSize = UnsafeCalldataBytesLib.toUint16(
+                encoded,
+                offset
+            );
             offset += 2;
 
             {
                 bytes memory encodedPayload;
                 {
                     IWormhole.VM memory vm = parseAndVerifyPythVM(
-                        UnsafeBytesLib.slice(encoded, offset, whProofSize)
+                        UnsafeCalldataBytesLib.slice(
+                            encoded,
+                            offset,
+                            whProofSize
+                        )
                     );
                     offset += whProofSize;
 
@@ -186,7 +194,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 }
             }
 
-            numUpdates = UnsafeBytesLib.toUint8(encoded, offset);
+            numUpdates = UnsafeCalldataBytesLib.toUint8(encoded, offset);
             offset += 1;
         }
     }
@@ -206,7 +214,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
 
     function extractPriceInfoFromMerkleProof(
         bytes20 digest,
-        bytes memory encoded,
+        bytes calldata encoded,
         uint offset
     )
         internal
@@ -218,11 +226,18 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         )
     {
         unchecked {
-            bytes memory encodedMessage;
-            uint16 messageSize = UnsafeBytesLib.toUint16(encoded, offset);
+            bytes calldata encodedMessage;
+            uint16 messageSize = UnsafeCalldataBytesLib.toUint16(
+                encoded,
+                offset
+            );
             offset += 2;
 
-            encodedMessage = UnsafeBytesLib.slice(encoded, offset, messageSize);
+            encodedMessage = UnsafeCalldataBytesLib.slice(
+                encoded,
+                offset,
+                messageSize
+            );
             offset += messageSize;
 
             bool valid;
@@ -237,7 +252,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             }
 
             MessageType messageType = MessageType(
-                UnsafeBytesLib.toUint8(encodedMessage, 0)
+                UnsafeCalldataBytesLib.toUint8(encodedMessage, 0)
             );
             if (messageType == MessageType.PriceFeed) {
                 (priceInfo, priceId) = parsePriceFeedMessage(encodedMessage, 1);
@@ -250,7 +265,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     }
 
     function parsePriceFeedMessage(
-        bytes memory encodedPriceFeed,
+        bytes calldata encodedPriceFeed,
         uint offset
     )
         private
@@ -261,19 +276,25 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         )
     {
         unchecked {
-            priceId = UnsafeBytesLib.toBytes32(encodedPriceFeed, offset);
+            priceId = UnsafeCalldataBytesLib.toBytes32(
+                encodedPriceFeed,
+                offset
+            );
             offset += 32;
 
             priceInfo.price = int64(
-                UnsafeBytesLib.toUint64(encodedPriceFeed, offset)
+                UnsafeCalldataBytesLib.toUint64(encodedPriceFeed, offset)
             );
             offset += 8;
 
-            priceInfo.conf = UnsafeBytesLib.toUint64(encodedPriceFeed, offset);
+            priceInfo.conf = UnsafeCalldataBytesLib.toUint64(
+                encodedPriceFeed,
+                offset
+            );
             offset += 8;
 
             priceInfo.expo = int32(
-                UnsafeBytesLib.toUint32(encodedPriceFeed, offset)
+                UnsafeCalldataBytesLib.toUint32(encodedPriceFeed, offset)
             );
             offset += 4;
 
@@ -281,7 +302,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             // environment. This would not cause any problem because since the signed
             // integer is represented in two's complement, the value would be the same
             // in both cases (for a million year at least)
-            priceInfo.publishTime = UnsafeBytesLib.toUint64(
+            priceInfo.publishTime = UnsafeCalldataBytesLib.toUint64(
                 encodedPriceFeed,
                 offset
             );
@@ -292,11 +313,11 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             offset += 8;
 
             priceInfo.emaPrice = int64(
-                UnsafeBytesLib.toUint64(encodedPriceFeed, offset)
+                UnsafeCalldataBytesLib.toUint64(encodedPriceFeed, offset)
             );
             offset += 8;
 
-            priceInfo.emaConf = UnsafeBytesLib.toUint64(
+            priceInfo.emaConf = UnsafeCalldataBytesLib.toUint64(
                 encodedPriceFeed,
                 offset
             );
@@ -308,7 +329,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     }
 
     function updatePriceInfosFromAccumulatorUpdate(
-        bytes memory accumulatorUpdate
+        bytes calldata accumulatorUpdate
     ) internal returns (uint8 numUpdates) {
         (
             uint encodedOffset,
@@ -321,7 +342,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
 
         uint offset;
         bytes20 digest;
-        bytes memory encoded;
+        bytes calldata encoded;
         (
             offset,
             digest,
