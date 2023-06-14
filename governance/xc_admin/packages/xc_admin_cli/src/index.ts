@@ -403,6 +403,9 @@ multisigCommand("add-and-delete", "Change the roster of the multisig")
  * READ THIS BEFORE USING THIS COMMAND
  * This command exists because of a bug in mesh where
  * roster change proposals executed through executeInstruction don't work.
+ * It is equivalent to executing proposals through the mesh UI.
+ * It might not work for some types of proposals that require the crank to
+ * execute them.
  * https://github.com/Squads-Protocol/squads-mpl/pull/32
  */
 multisigCommand("execute-add-and-delete", "Execute a roster change proposal")
