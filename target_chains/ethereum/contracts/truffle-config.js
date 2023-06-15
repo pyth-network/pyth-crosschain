@@ -305,5 +305,6 @@ module.exports = {
     optimistic_etherscan: process.env.OPTIMISTIC_ETHERSCAN_KEY,
     aurorascan: process.env.AURORASCAN_KEY,
     arbiscan: process.env.ARBISCAN_KEY,
+    gnosisscan: process.env.GNOSISSCAN_KEY,
   },
 };
