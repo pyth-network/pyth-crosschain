@@ -352,4 +352,68 @@ multisigCommand("activate", "Activate a transaction sitting in the multisig")
     await vault.squad.activateTransaction(transaction);
   });
 
+multisigCommand("add-and-delete", "Change the roster of the multisig")
+  .option(
+    "-a, --add <comma_separated_members>",
+    "addresses to add to the multisig"
+  )
+  .option(
+    "-r, --remove <comma_separated_members>",
+    "addresses to remove from the multisig"
+  )
+  .requiredOption(
+    "-t, --target-vaults <comma_separated_vaults>",
+    "the vault whose roster we want to change"
+  )
+  .action(async (options: any) => {
+    const vault: MultisigVault = await loadVaultFromOptions(options);
+
+    const targetVaults: PublicKey[] = options.targetVaults
+      ? options.targetVaults.split(",").map((m: string) => new PublicKey(m))
+      : [];
+
+    let proposalInstructions: TransactionInstruction[] = [];
+
+    const membersToAdd: PublicKey[] = options.add
+      ? options.add.split(",").map((m: string) => new PublicKey(m))
+      : [];
+
+    for (const member of membersToAdd) {
+      for (const targetVault of targetVaults) {
+        proposalInstructions.push(await vault.addMemberIx(member, targetVault));
+      }
+    }
+
+    const membersToRemove: PublicKey[] = options.remove
+      ? options.remove.split(",").map((m: string) => new PublicKey(m))
+      : [];
+
+    for (const member of membersToRemove) {
+      for (const targetVault of targetVaults) {
+        proposalInstructions.push(
+          await vault.removeMemberIx(member, targetVault)
+        );
+      }
+    }
+
+    vault.proposeInstructions(proposalInstructions, options.cluster);
+  });
+
+/**
+ * READ THIS BEFORE USING THIS COMMAND
+ * This command exists because of a bug in mesh where
+ * roster change proposals executed through executeInstruction don't work.
+ * It is equivalent to executing proposals through the mesh UI.
+ * It might not work for some types of proposals that require the crank to
+ * execute them.
+ * https://github.com/Squads-Protocol/squads-mpl/pull/32
+ */
+multisigCommand("execute-add-and-delete", "Execute a roster change proposal")
+  .requiredOption("-t, --transaction <pubkey>", "address of the proposal")
+  .action(async (options: any) => {
+    const vault: MultisigVault = await loadVaultFromOptions(options);
+    const proposal = new PublicKey(options.transaction);
+    await vault.squad.executeTransaction(proposal);
+  });
+
 program.parse();

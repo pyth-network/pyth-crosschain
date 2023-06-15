@@ -147,6 +147,28 @@ export class MultisigVault {
     );
   }
 
+  public async addMemberIx(
+    member: PublicKey,
+    targetVault: PublicKey
+  ): Promise<TransactionInstruction> {
+    return await this.squad.buildAddMember(
+      targetVault,
+      await this.getAuthorityPDA(),
+      member
+    );
+  }
+
+  public async removeMemberIx(
+    member: PublicKey,
+    targetVault: PublicKey
+  ): Promise<TransactionInstruction> {
+    return await this.squad.buildRemoveMember(
+      targetVault,
+      await this.getAuthorityPDA(),
+      member
+    );
+  }
+
   // Propose instructions
 
   /**
