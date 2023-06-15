@@ -12,6 +12,7 @@ use {
             RequestTime,
             Update,
         },
+        wormhole::GuardianSet,
     },
     crate::store::{
         proof::wormhole_merkle::{
@@ -43,7 +44,10 @@ use {
         WormholePayload,
     },
     std::{
-        collections::HashSet,
+        collections::{
+            BTreeMap,
+            HashSet,
+        },
         sync::Arc,
         time::{
             Duration,
@@ -58,7 +62,6 @@ use {
     wormhole_sdk::{
         Address,
         Chain,
-        GuardianAddress,
         Vaa,
     },
 };
@@ -71,7 +74,7 @@ pub mod wormhole;
 pub struct Store {
     pub storage:           StorageInstance,
     pub observed_vaa_seqs: Cache<u64, bool>,
-    pub guardian_set:      RwLock<Option<Vec<GuardianAddress>>>,
+    pub guardian_set:      RwLock<BTreeMap<u32, GuardianSet>>,
     pub update_tx:         Sender<()>,
 }
 
@@ -83,7 +86,7 @@ impl Store {
                 .max_capacity(cache_size)
                 .time_to_live(Duration::from_secs(60 * 5))
                 .build(),
-            guardian_set: RwLock::new(None),
+            guardian_set: RwLock::new(Default::default()),
             update_tx,
         })
     }
@@ -202,8 +205,9 @@ impl Store {
         Ok(())
     }
 
-    pub async fn update_guardian_set(&self, guardian_set: Vec<GuardianAddress>) {
-        self.guardian_set.write().await.replace(guardian_set);
+    pub async fn update_guardian_set(&self, id: u32, guardian_set: GuardianSet) {
+        let mut guardian_sets = self.guardian_set.write().await;
+        guardian_sets.insert(id, guardian_set);
     }
 
     pub async fn get_price_feeds_with_update_data(

@@ -22,10 +22,56 @@ use {
             Body,
             Header,
         },
-        GuardianAddress,
         Vaa,
     },
 };
+
+/// A small wrapper around [u8; 20] guardian set key types.
+#[derive(Eq, PartialEq, Clone, Hash, Debug)]
+pub struct GuardianSet {
+    pub keys: Vec<[u8; 20]>,
+}
+
+impl std::fmt::Display for GuardianSet {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[")?;
+        for (i, key) in self.keys.iter().enumerate() {
+            // Comma seperated printing of the keys using hex encoding.
+            if i != 0 {
+                write!(f, ", ")?;
+            }
+
+            write!(f, "{}", hex::encode(key))?;
+        }
+        write!(f, "]")
+    }
+}
+
+/// BridgeData extracted from wormhole bridge account, due to no API.
+#[derive(borsh::BorshDeserialize)]
+#[allow(dead_code)]
+pub struct BridgeData {
+    pub guardian_set_index: u32,
+    pub last_lamports:      u64,
+    pub config:             BridgeConfig,
+}
+
+/// BridgeConfig extracted from wormhole bridge account, due to no API.
+#[derive(borsh::BorshDeserialize)]
+#[allow(dead_code)]
+pub struct BridgeConfig {
+    pub guardian_set_expiration_time: u32,
+    pub fee:                          u64,
+}
+
+/// GuardianSetData extracted from wormhole bridge account, due to no API.
+#[derive(borsh::BorshDeserialize)]
+pub struct GuardianSetData {
+    pub index:           u32,
+    pub keys:            Vec<[u8; 20]>,
+    pub creation_time:   u32,
+    pub expiration_time: u32,
+}
 
 /// Verifies a VAA to ensure it is signed by the Wormhole guardian set.
 pub async fn verify_vaa<'a>(
@@ -34,13 +80,15 @@ pub async fn verify_vaa<'a>(
 ) -> Result<Vaa<&'a RawMessage>> {
     let (header, body): (Header, Body<&RawMessage>) = vaa.into();
     let digest = body.digest()?;
-
-    let guardian_set = match store.guardian_set.read().await.as_ref() {
-        Some(guardian_set) => guardian_set.clone(),
-        None => {
-            return Err(anyhow!("Guardian set is not initialized"));
-        }
-    };
+    let guardian_set = store.guardian_set.read().await;
+    let guardian_set = guardian_set
+        .get(&header.guardian_set_index)
+        .ok_or_else(|| {
+            anyhow!(
+                "Message signed by an unknown guardian set: {}",
+                header.guardian_set_index
+            )
+        })?;
 
     let mut num_correct_signers = 0;
     for sig in header.signatures.iter() {
@@ -64,16 +112,15 @@ pub async fn verify_vaa<'a>(
         // The address is the last 20 bytes of the Keccak256 hash of the public key
         let mut keccak = Keccak256::new();
         keccak.update(&pubkey[1..]);
-
         let address: [u8; 32] = keccak.finalize().into();
-        let address = GuardianAddress(address[address.len() - 20..].try_into()?);
+        let address: [u8; 20] = address[address.len() - 20..].try_into()?;
 
-        if guardian_set.get(signer_id) == Some(&address) {
+        if guardian_set.keys.get(signer_id) == Some(&address) {
             num_correct_signers += 1;
         }
     }
 
-    let quorum = (guardian_set.len() * 2 + 2) / 3;
+    let quorum = (guardian_set.keys.len() * 2 + 2) / 3;
     if num_correct_signers < quorum {
         return Err(anyhow!(
             "Not enough correct signatures. Expected {:?}, received {:?}",
