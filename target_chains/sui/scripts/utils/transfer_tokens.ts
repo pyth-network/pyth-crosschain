@@ -32,7 +32,7 @@ async function main() {
   );
   let sender = await wallet.getAddress();
   let recipient =
-    "0x4ed01b6abcc271a5c7a1e05ee9344d6eb72d0c1f2483a1c600b46d73a22ba764";
+    "0x893a6889c5252ce9945148675ab414a90f820ca91d927f14fb7cd781bc09512a";
   console.log("Sender: ", sender);
   transfer_tokens(wallet, recipient);
 }
@@ -42,7 +42,7 @@ main();
 async function transfer_tokens(signer: RawSigner, recipient: string) {
   const tx = new TransactionBlock();
 
-  let coin = tx.splitCoins(tx.gas, [tx.pure(100000000000)]);
+  let coin = tx.splitCoins(tx.gas, [tx.pure(971000000)]);
 
   tx.transferObjects([coin], tx.pure(recipient));
 

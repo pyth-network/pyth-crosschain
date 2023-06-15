@@ -49,7 +49,8 @@ async function main() {
   // For a full list of testnet price feed ids, see:
   // https://pyth.network/developers/price-feed-ids#pyth-evm-testnet
   const price_feed_ids = [
-    "0x63f341689d98a12ef60a5cff1d7f85c70a9e17bf1575f0e7c0b2512d48b1c8b3",
+    //"0xec2bf6a3087d222ce960afcf75b42b96985d580a80fcd4c45c76a5d5e5713cc7" //testnet
+    "0x2b9ab1e972a281585084148ba1389800799bd4be63b957507db1349314e47445", // mainnet
     // INSERT YOUR PRICE FEED ID HERE!
   ];
 
@@ -108,6 +109,16 @@ async function update_price_feeds(
     });
     verified_vaas = verified_vaas.concat(verified_vaa);
   }
+
+  // // For testing only (take the VAA payload then drop it without using it)
+  // for (let verified_vaa of verified_vaas){
+  //   tx.moveCall({
+  //     target: `${WORM_PACKAGE}::vaa::take_payload`,
+  //     arguments: [
+  //       verified_vaa
+  //     ],
+  //   });
+  // }
 
   // Create a hot potato vector of price feed updates that will
   // be used to update price feeds.
