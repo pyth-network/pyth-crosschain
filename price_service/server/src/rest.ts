@@ -514,7 +514,7 @@ export class RestAPI {
     endpoints.push("/api/stale_feeds?threshold=<staleness_threshold_seconds>");
 
     app.get("/ready", (_, res: Response) => {
-      if (this.isReady!()) {
+      if (this.isReady === undefined || this.isReady!()) {
         res.sendStatus(StatusCodes.OK);
       } else {
         res.sendStatus(StatusCodes.SERVICE_UNAVAILABLE);
@@ -523,31 +523,17 @@ export class RestAPI {
     endpoints.push("ready");
 
     app.get("/live", (_, res: Response) => {
-      const threshold = 60;
-      const stalePriceTreshold = 10;
-      const minimumNumPrices = 100;
-
-      const currentTime: TimestampInSec = Math.floor(Date.now() / 1000);
-
-      const priceIds = [...this.priceFeedVaaInfo.getPriceIds()];
-      let stalePriceCnt = 0;
-
-      for (const priceId of priceIds) {
-        const latency =
-          currentTime -
-          this.priceFeedVaaInfo.getLatestPriceInfo(priceId)!.attestationTime;
-        if (latency > threshold) {
-          stalePriceCnt++;
-        }
-      }
-
-      if (
-        priceIds.length < minimumNumPrices ||
-        stalePriceCnt > stalePriceTreshold
-      ) {
-        res.sendStatus(StatusCodes.SERVICE_UNAVAILABLE);
-      } else {
+      // Reuse the same readiness check for liveness
+      // This is because the readiness check might fail because of
+      // a problem in the spy and in that case there is no way to recover
+      // without restarting the spy. If the spy and price service run in the
+      // same pod, the liveness check will fail and the pod will be restarted.
+      // This will result into spy restarting. We are doing it because
+      // we have no control over the spy code.
+      if (this.isReady === undefined || this.isReady!()) {
         res.sendStatus(StatusCodes.OK);
+      } else {
+        res.sendStatus(StatusCodes.SERVICE_UNAVAILABLE);
       }
     });
     endpoints.push("live");

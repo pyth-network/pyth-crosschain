@@ -440,6 +440,30 @@ export class Listener implements PriceStore {
       return false;
     }
 
+    // Check whether we have stale feeds and report false if we have too many.
+    // This is not related to price service and is probably related to
+    // upstream dependencies.(spy, wormhole, attester, ...). However, as this
+    // has been mostly related to the spy and spy doesn't get recover from this
+    // automatically, we are adding it to the price service readiness to stop
+    // serving traffic from this unrecoverable state..
+    const stalenessThreshold = 60;
+    const maxToleratedStaleFeeds = 10;
+
+    const priceIds = [...this.getPriceIds()];
+    let stalePriceCnt = 0;
+
+    for (const priceId of priceIds) {
+      const latency =
+        currentTime - this.getLatestPriceInfo(priceId)!.attestationTime;
+      if (latency > stalenessThreshold) {
+        stalePriceCnt++;
+      }
+    }
+
+    if (stalePriceCnt > maxToleratedStaleFeeds) {
+      return false;
+    }
+
     return true;
   }
 
