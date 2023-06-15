@@ -523,7 +523,7 @@ export class RestAPI {
     endpoints.push("ready");
 
     app.get("/live", (_, res: Response) => {
-      // Reuse the same readiness check for liveness
+      // Reuse the same readiness check for liveness.
       // This is because the readiness check might fail because of
       // a problem in the spy and in that case there is no way to recover
       // without restarting the spy. If the spy and price service run in the
