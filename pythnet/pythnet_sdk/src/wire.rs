@@ -364,6 +364,126 @@ mod tests {
         );
     }
 
+    #[test]
+    #[rustfmt::skip]
+    /// This method tests that our EnumAccess workaround does not violate any memory safety rules.
+    /// In particular we want to make sure we avoid transmuting to any type that is not a u8 (we do
+    /// not support > 255 variants anyway).
+    fn test_serde_enum_access_behaviour() {
+        use serde::Deserialize;
+        use serde::Serialize;
+
+        // Small-sized enums should all deserialize safely as single u8.
+        #[derive(PartialEq, Serialize, Deserialize, Debug)]
+        enum Singleton { A }
+
+        #[derive(PartialEq, Serialize, Deserialize, Debug)]
+        enum Pair { A, B }
+
+        #[derive(PartialEq, Serialize, Deserialize, Debug)]
+        enum Triple { A, B, C }
+
+        // Intentionally numbered enums with primitive representation (as long as u8) are safe.
+        #[derive(PartialEq, Serialize, Deserialize, Debug)]
+        enum CustomIndices {
+            A = 33,
+            B = 55,
+            C = 255,
+        }
+
+        // Complex enum's should still serialize as u8, and we expect the serde EnumAccess to work
+        // the same.
+        #[derive(PartialEq, Serialize, Deserialize, Debug)]
+        enum Complex {
+            A,
+            B(u8, u8),
+            C { a: u8, b: u8 },
+        }
+
+        // Forces the compiler to use a 16-bit discriminant. This must force the serde EnumAccess
+        // implementation to return an error. Otherwise we run the risk of the __Field enum in our
+        // transmute workaround becoming trash memory leading to UB.
+        #[derive(PartialEq, Serialize, Deserialize, Debug)]
+        enum ManyVariants {
+            _000, _001, _002, _003, _004, _005, _006, _007, _008, _009, _00A, _00B, _00C, _00D,
+            _00E, _00F, _010, _011, _012, _013, _014, _015, _016, _017, _018, _019, _01A, _01B,
+            _01C, _01D, _01E, _01F, _020, _021, _022, _023, _024, _025, _026, _027, _028, _029,
+            _02A, _02B, _02C, _02D, _02E, _02F, _030, _031, _032, _033, _034, _035, _036, _037,
+            _038, _039, _03A, _03B, _03C, _03D, _03E, _03F, _040, _041, _042, _043, _044, _045,
+            _046, _047, _048, _049, _04A, _04B, _04C, _04D, _04E, _04F, _050, _051, _052, _053,
+            _054, _055, _056, _057, _058, _059, _05A, _05B, _05C, _05D, _05E, _05F, _060, _061,
+            _062, _063, _064, _065, _066, _067, _068, _069, _06A, _06B, _06C, _06D, _06E, _06F,
+            _070, _071, _072, _073, _074, _075, _076, _077, _078, _079, _07A, _07B, _07C, _07D,
+            _07E, _07F, _080, _081, _082, _083, _084, _085, _086, _087, _088, _089, _08A, _08B,
+            _08C, _08D, _08E, _08F, _090, _091, _092, _093, _094, _095, _096, _097, _098, _099,
+            _09A, _09B, _09C, _09D, _09E, _09F, _0A0, _0A1, _0A2, _0A3, _0A4, _0A5, _0A6, _0A7,
+            _0A8, _0A9, _0AA, _0AB, _0AC, _0AD, _0AE, _0AF, _0B0, _0B1, _0B2, _0B3, _0B4, _0B5,
+            _0B6, _0B7, _0B8, _0B9, _0BA, _0BB, _0BC, _0BD, _0BE, _0BF, _0C0, _0C1, _0C2, _0C3,
+            _0C4, _0C5, _0C6, _0C7, _0C8, _0C9, _0CA, _0CB, _0CC, _0CD, _0CE, _0CF, _0D0, _0D1,
+            _0D2, _0D3, _0D4, _0D5, _0D6, _0D7, _0D8, _0D9, _0DA, _0DB, _0DC, _0DD, _0DE, _0DF,
+            _0E0, _0E1, _0E2, _0E3, _0E4, _0E5, _0E6, _0E7, _0E8, _0E9, _0EA, _0EB, _0EC, _0ED,
+            _0EE, _0EF, _0F0, _0F1, _0F2, _0F3, _0F4, _0F5, _0F6, _0F7, _0F8, _0F9, _0FA, _0FB,
+            _0FC, _0FD, _0FE, _0FF,
+
+            // > 255
+            _100
+        }
+
+        #[derive(PartialEq, Serialize, Deserialize, Debug)]
+        struct AllValid {
+            singleton:  Singleton,
+            pair:       Pair,
+            triple:     Triple,
+            complex:    Complex,
+            custom:     CustomIndices,
+        }
+
+        #[derive(PartialEq, Serialize, Deserialize, Debug)]
+        struct Invalid {
+            many_variants: ManyVariants,
+        }
+
+        let valid_buffer = [
+            // Singleton (A)
+            0,
+            // Pair (B)
+            1,
+            // Triple (C)
+            2,
+            // Complex
+            1, 0, 0,
+            // Custom
+            2,
+        ];
+
+        let valid_struct = AllValid {
+            singleton:  Singleton::A,
+            pair:       Pair::B,
+            triple:     Triple::C,
+            complex:    Complex::B(0, 0),
+            custom:     CustomIndices::C,
+        };
+
+        let valid_serialized = crate::wire::ser::to_vec::<_, byteorder::BE>(&valid_struct).unwrap();
+
+        // Confirm that the valid buffer can be deserialized.
+        let valid = crate::wire::from_slice::<byteorder::BE, AllValid>(&valid_buffer).unwrap();
+        let valid_deserialized = crate::wire::from_slice::<byteorder::BE, AllValid>(&valid_serialized).unwrap();
+        assert_eq!(valid, valid_struct);
+        assert_eq!(valid_deserialized, valid_struct);
+
+        // Invalid buffer tests that types > u8 fail to deserialize, it's important to note that
+        // there is nothing stopping someone compiling a program with an invalid enum deserialize
+        // but we can at least ensure an error in deserialization occurs.
+        let invalid_buffer = [
+            // ManyVariants (256)
+            1, 0
+        ];
+
+        let result = crate::wire::from_slice::<byteorder::BE, Invalid>(&invalid_buffer);
+        assert!(result.is_err());
+    }
+
     // Test if the AccumulatorUpdateData type can be serialized and deserialized
     // and still be the same as the original.
     #[test]

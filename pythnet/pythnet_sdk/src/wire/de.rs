@@ -23,6 +23,7 @@
 //! https://serde.rs/impl-deserializer.html
 
 use {
+    crate::require,
     byteorder::{
         ByteOrder,
         ReadBytesExt,
@@ -30,17 +31,19 @@ use {
     serde::{
         de::{
             EnumAccess,
-            IntoDeserializer,
             MapAccess,
             SeqAccess,
             VariantAccess,
         },
         Deserialize,
     },
-    std::io::{
-        Cursor,
-        Seek,
-        SeekFrom,
+    std::{
+        io::{
+            Cursor,
+            Seek,
+            SeekFrom,
+        },
+        mem::size_of,
     },
     thiserror::Error,
 };
@@ -77,6 +80,9 @@ pub enum DeserializerError {
 
     #[error("message: {0}")]
     Message(Box<str>),
+
+    #[error("invalid enum variant, higher than expected variant range")]
+    InvalidEnumVariant,
 
     #[error("eof")]
     Eof,
@@ -417,7 +423,7 @@ where
     fn deserialize_enum<V>(
         self,
         _name: &'static str,
-        _variants: &'static [&'static str],
+        variants: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value, Self::Error>
     where
@@ -426,6 +432,10 @@ where
         // We read the discriminator here so that we can make the expected enum variant available
         // to the `visit_enum` call.
         let variant = self.cursor.read_u8().map_err(DeserializerError::from)?;
+        if variant >= variants.len() as u8 {
+            return Err(DeserializerError::InvalidEnumVariant);
+        }
+
         visitor.visit_enum(Enum { de: self, variant })
     }
 
@@ -537,17 +547,39 @@ impl<'de, 'a, B: ByteOrder> EnumAccess<'de> for Enum<'de, 'a, B> {
     type Error = DeserializerError;
     type Variant = &'a mut Deserializer<'de, B>;
 
-    fn variant_seed<V>(self, seed: V) -> Result<(V::Value, Self::Variant), Self::Error>
+    fn variant_seed<V>(self, _: V) -> Result<(V::Value, Self::Variant), Self::Error>
     where
         V: serde::de::DeserializeSeed<'de>,
     {
-        // This is a trick to get around Serde's expectation of a u32 for discriminants. The `seed`
-        // here is the generated `Field` type from the `#[derive(Deserialize)]` macro. If we
-        // attempt to deserialize this normally it will attempt to deserialize a u32 and fail.
-        // Instead we take the already parsed  variant and generate a deserializer for that which
-        // will feed the u8 wire format into the deserialization logic, which overrides the default
-        // deserialize call on the the `Field` type.
-        seed.deserialize(self.variant.into_deserializer())
-            .map(|v| (v, self.de))
+        // When serializing/deserializing, serde passes a variant_index into the handlers. We
+        // currently write these as u8's and have already parsed' them during deserialize_enum
+        // before we reach this point.
+        //
+        // Normally, when deserializing enum tags from a wire format that does not match the
+        // expected size, we would use a u*.into_deserializer() to feed the already parsed
+        // result into the visit_u64 visitor method during `__Field` deserialize.
+        //
+        // The problem with this however is during `visit_u64`, there is a possibility the
+        // enum variant is not valid, which triggers Serde to return an `Unexpected` error.
+        // These errors have the unfortunate side effect of triggering Rust including float
+        // operations in the resulting binary, which breaks WASM environments.
+        //
+        // To work around this, we rely on the following facts:
+        //
+        // - variant_index in Serde is always 0 indexed and contiguous
+        // - transmute_copy into a 0 sized type is safe
+        // - transmute_copy is safe to cast into __Field as long as u8 >= size_of::<__Field>()
+        //
+        // This behaviour relies on serde not changing its enum deserializer generation, but
+        // this would be a major backwards compatibility break for them so we should be safe.
+        require!(
+            size_of::<u8>() >= size_of::<V::Value>(),
+            DeserializerError::InvalidEnumVariant
+        );
+
+        Ok((
+            unsafe { std::mem::transmute_copy::<u8, V::Value>(&self.variant) },
+            self.de,
+        ))
     }
 }
