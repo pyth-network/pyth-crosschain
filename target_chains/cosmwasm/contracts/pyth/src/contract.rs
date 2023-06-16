@@ -483,9 +483,9 @@ fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> Std
 fn parse_update(deps: &Deps, env: &Env, data: &Binary) -> StdResult<Vec<PriceFeed>> {
     let header = data.get(0..4);
     let feeds = if header == Some(PYTHNET_ACCUMULATOR_UPDATE_MAGIC.as_slice()) {
-        process_accumulator(deps, env, data)?
+        parse_accumulator(deps, env, data)?
     } else {
-        process_batch_attestation(deps, env, data)?
+        parse_batch_attestation(deps, env, data)?
     };
     Ok(feeds)
 }
@@ -510,7 +510,7 @@ fn apply_updates(
     Ok((num_total_attestations, total_new_feeds))
 }
 
-fn process_accumulator(deps: &Deps, env: &Env, data: &[u8]) -> StdResult<Vec<PriceFeed>> {
+fn parse_accumulator(deps: &Deps, env: &Env, data: &[u8]) -> StdResult<Vec<PriceFeed>> {
     let update_data = AccumulatorUpdateData::try_from_slice(data)
         .map_err(|_| PythContractError::InvalidAccumulatorPayload)?;
     match update_data.proof {
@@ -567,7 +567,7 @@ fn process_accumulator(deps: &Deps, env: &Env, data: &[u8]) -> StdResult<Vec<Pri
 }
 
 /// Update the on-chain storage for any new price updates provided in `batch_attestation`.
-fn process_batch_attestation(deps: &Deps, env: &Env, data: &Binary) -> StdResult<Vec<PriceFeed>> {
+fn parse_batch_attestation(deps: &Deps, env: &Env, data: &Binary) -> StdResult<Vec<PriceFeed>> {
     let vaa = parse_and_verify_vaa(*deps, env.block.time.seconds(), data)?;
     let state = config_read(deps.storage).load()?;
     verify_vaa_from_data_source(&state, &vaa)?;
@@ -1169,7 +1169,7 @@ mod test {
     }
 
     #[test]
-    fn test_process_batch_attestation_empty_array() {
+    fn test_parse_batch_attestation_empty_array() {
         let (num_attestations, new_attestations) = apply_price_update(
             &default_config_info(),
             default_emitter_addr().as_slice(),
@@ -1691,11 +1691,8 @@ mod test {
         assert_eq!(ema_price.publish_time, 99);
     }
 
-    // this is testing the function process_batch_attestation
-    // process_batch_attestation is calling update_price_feed_if_new
-    // changes to update_price_feed_if_new might cause this test
     #[test]
-    fn test_process_batch_attestation_status_not_trading() {
+    fn test_parse_batch_attestation_status_not_trading() {
         let (mut deps, env) = setup_test();
 
         let price_attestation = PriceAttestation {
@@ -1718,17 +1715,10 @@ mod test {
             .save(&default_config_info())
             .unwrap();
         let msg = create_batch_price_update_msg_from_attestations(vec![price_attestation]);
-        let (num_attestations, new_attestations) =
-            apply_updates(&mut deps.as_mut(), &env, &[msg]).unwrap();
-
-        let stored_price_feed = price_feed_read_bucket(&deps.storage)
-            .load(&[0u8; 32])
-            .unwrap();
-        let price = stored_price_feed.get_price_unchecked();
-        let ema_price = stored_price_feed.get_ema_price_unchecked();
-
-        assert_eq!(num_attestations, 1);
-        assert_eq!(new_attestations.len(), 1);
+        let feeds = parse_batch_attestation(&deps.as_ref(), &env, &msg).unwrap();
+        assert_eq!(feeds.len(), 1);
+        let price = feeds[0].get_price_unchecked();
+        let ema_price = feeds[0].get_ema_price_unchecked();
 
         // for price
         assert_eq!(price.price, 99);
@@ -1743,11 +1733,8 @@ mod test {
         assert_eq!(ema_price.publish_time, 99);
     }
 
-    // this is testing the function process_batch_attestation
-    // process_batch_attestation is calling update_price_feed_if_new
-    // changes to update_price_feed_if_new might affect this test
     #[test]
-    fn test_process_batch_attestation_status_trading() {
+    fn test_parse_batch_attestation_status_trading() {
         let (mut deps, env) = setup_test();
 
         let price_attestation = PriceAttestation {
@@ -1770,17 +1757,10 @@ mod test {
             .save(&default_config_info())
             .unwrap();
         let msg = create_batch_price_update_msg_from_attestations(vec![price_attestation]);
-        let (num_attestations, new_attestations) =
-            apply_updates(&mut deps.as_mut(), &env, &[msg]).unwrap();
-
-        let stored_price_feed = price_feed_read_bucket(&deps.storage)
-            .load(&[0u8; 32])
-            .unwrap();
-        let price = stored_price_feed.get_price_unchecked();
-        let ema_price = stored_price_feed.get_ema_price_unchecked();
-
-        assert_eq!(num_attestations, 1);
-        assert_eq!(new_attestations.len(), 1);
+        let feeds = parse_batch_attestation(&deps.as_ref(), &env, &msg).unwrap();
+        assert_eq!(feeds.len(), 1);
+        let price = feeds[0].get_price_unchecked();
+        let ema_price = feeds[0].get_ema_price_unchecked();
 
         // for price
         assert_eq!(price.price, 100);
