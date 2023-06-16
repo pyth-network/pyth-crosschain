@@ -22,7 +22,7 @@ use {
     borsh::BorshDeserialize,
     byteorder::BE,
     futures::stream::StreamExt,
-    pyth_oracle::Message,
+    pythnet_sdk::messages::Message,
     solana_account_decoder::UiAccountEncoding,
     solana_client::{
         nonblocking::{

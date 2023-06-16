@@ -39,7 +39,7 @@ moka                   = { version = "0.11.0", features = ["future"] }
 pyth-sdk               = { version = "0.7.0" }
 
 # Parse Wormhole attester price attestations.
-pythnet-sdk            = { path = "../pythnet/pythnet_sdk/", version = "=1.13.6" }
+pythnet-sdk            = { path = "../pythnet/pythnet_sdk/", version = "=1.13.6", features = ["strum"] }
 
 rand                   = { version = "0.8.5" }
 reqwest                = { version = "0.11.14", features = ["blocking", "json"] }
@@ -60,12 +60,6 @@ strum                  = { version = "0.24.1", features = ["derive"] }
 tokio                  = { version = "1.26.0", features = ["full"] }
 tower-http             = { version = "0.4.0", features = ["cors"] }
 wormhole-sdk           = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
-
-# Oracle message types
-[dependencies.pyth-oracle]
-git = "https://github.com/pyth-network/pyth-client"
-rev = "1bdac0d2ee39a5a9f27eb86e4fd01229bd68aa5a"
-features = ["library", "strum", "serde"]
 
 [patch.crates-io]
 serde_wormhole         = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }

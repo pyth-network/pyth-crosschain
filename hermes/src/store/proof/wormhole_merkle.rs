@@ -79,8 +79,10 @@ pub fn construct_message_states_proofs(
     let raw_messages = accumulator_messages
         .messages
         .iter()
-        .map(|m| m.to_bytes())
-        .collect::<Vec<Vec<u8>>>();
+        .map(|m| {
+            to_vec::<_, byteorder::BE>(m).map_err(|e| anyhow!("Failed to serialize message: {}", e))
+        })
+        .collect::<Result<Vec<Vec<u8>>>>()?;
 
     // Check whether the state is valid
     let merkle_acc =
@@ -129,11 +131,15 @@ pub fn construct_update_data(mut message_states: Vec<&MessageState>) -> Result<V
                     vaa:     vaa.into(),
                     updates: messages
                         .iter()
-                        .map(|message| MerklePriceUpdate {
-                            message: message.message.to_bytes().into(),
-                            proof:   message.proof_set.wormhole_merkle_proof.proof.clone(),
+                        .map(|message| {
+                            Ok(MerklePriceUpdate {
+                                message: to_vec::<_, byteorder::BE>(&message.message)
+                                    .map_err(|e| anyhow!("Failed to serialize message: {}", e))?
+                                    .into(),
+                                proof:   message.proof_set.wormhole_merkle_proof.proof.clone(),
+                            })
                         })
-                        .collect(),
+                        .collect::<Result<_>>()?,
                 },
             ))?)
         })

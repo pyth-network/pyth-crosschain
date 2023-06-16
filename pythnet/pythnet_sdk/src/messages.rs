@@ -29,7 +29,7 @@ use serde::{
         strum::EnumIter,
         strum::EnumString,
         strum::IntoStaticStr,
-        strum::ToString,
+        strum::Display,
         Serialize,
         Deserialize
     ))
