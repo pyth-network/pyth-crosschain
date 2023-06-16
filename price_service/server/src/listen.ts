@@ -440,6 +440,26 @@ export class Listener implements PriceStore {
       return false;
     }
 
+    // if too many price feeds are stale it probably means that the price service
+    // is not receiving messages from Wormhole at all and is essentially dead.
+    const stalenessThreshold = 60;
+    const maxToleratedStaleFeeds = 10;
+
+    const priceIds = [...this.getPriceIds()];
+    let stalePriceCnt = 0;
+
+    for (const priceId of priceIds) {
+      const latency =
+        currentTime - this.getLatestPriceInfo(priceId)!.attestationTime;
+      if (latency > stalenessThreshold) {
+        stalePriceCnt++;
+      }
+    }
+
+    if (stalePriceCnt > maxToleratedStaleFeeds) {
+      return false;
+    }
+
     return true;
   }
 
