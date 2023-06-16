@@ -440,12 +440,8 @@ export class Listener implements PriceStore {
       return false;
     }
 
-    // Check whether we have stale feeds and report false if we have too many.
-    // This is not related to price service and is probably related to
-    // upstream dependencies (like spy, wormhole, attester, ...). However, as this
-    // has been mostly related to the spy and spy doesn't get recover from this
-    // automatically, we are adding it to the price service readiness to stop
-    // serving traffic from this unrecoverable state..
+    // if too many price feeds are stale it probably means that the price service
+    // is not receiving messages from Wormhole at all and is essentially dead.
     const stalenessThreshold = 60;
     const maxToleratedStaleFeeds = 10;
 

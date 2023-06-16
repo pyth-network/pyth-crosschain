@@ -523,18 +523,7 @@ export class RestAPI {
     endpoints.push("ready");
 
     app.get("/live", (_, res: Response) => {
-      // Reuse the same readiness check for liveness.
-      // This is because the readiness check might fail because of
-      // a problem in the spy and in that case there is no way to recover
-      // without restarting the spy. If the spy and price service run in the
-      // same pod, the liveness check will fail and the pod will be restarted.
-      // This will result into spy restarting. We are doing it because
-      // we have no control over the spy code.
-      if (this.isReady === undefined || this.isReady!()) {
-        res.sendStatus(StatusCodes.OK);
-      } else {
-        res.sendStatus(StatusCodes.SERVICE_UNAVAILABLE);
-      }
+      res.sendStatus(StatusCodes.OK);
     });
     endpoints.push("live");
 
