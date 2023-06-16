@@ -1,40 +1,42 @@
-import { PythGovernanceActionImpl, PythGovernanceHeader } from ".";
+import {
+  ActionName,
+  PythGovernanceAction,
+  PythGovernanceActionImpl,
+  PythGovernanceHeader,
+} from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
-import * as BufferLayoutExt from "./BufferLayoutExt";
 import { ChainName } from "@certusone/wormhole-sdk";
 
-export class AuthorizeGovernanceDataSourceTransfer extends PythGovernanceActionImpl {
-  constructor(targetChainId: ChainName, readonly claimVaa: Buffer) {
-    super(targetChainId, "AuthorizeGovernanceDataSourceTransfer");
-  }
+export class AuthorizeGovernanceDataSourceTransfer
+  implements PythGovernanceAction
+{
+  readonly actionName: ActionName;
 
-  static layout(
-    vaaLength: number
-  ): BufferLayout.Structure<Readonly<{ claimVaa: Buffer }>> {
-    return BufferLayout.struct([BufferLayoutExt.buffer(vaaLength)]);
+  constructor(readonly targetChainId: ChainName, readonly claimVaa: Buffer) {
+    this.actionName = "AuthorizeGovernanceDataSourceTransfer";
   }
 
   static decode(
     data: Buffer
   ): AuthorizeGovernanceDataSourceTransfer | undefined {
-    const decoded = PythGovernanceActionImpl.decodeWithPayload(
-      data,
-      "AuthorizeGovernanceDataSourceTransfer",
-      this.layout(data.length - PythGovernanceHeader.span)
-    );
-    if (!decoded) return undefined;
+    const header = PythGovernanceHeader.decode(data);
+    if (!header || header.action !== "AuthorizeGovernanceDataSourceTransfer")
+      return undefined;
+
+    const payload = data.subarray(PythGovernanceHeader.span);
 
     return new AuthorizeGovernanceDataSourceTransfer(
-      decoded[0].targetChainId,
-      decoded[1].claimVaa
+      header.targetChainId,
+      payload
     );
   }
 
-  /** Encode AptosAuthorizeUpgradeContractInstruction */
   encode(): Buffer {
-    return super.encodeWithPayload(this.layout(this.claimVaa.length), {
-      claimVaa: this.claimVaa,
-    });
+    const headerBuffer = new PythGovernanceHeader(
+      this.targetChainId,
+      this.actionName
+    ).encode();
+    return Buffer.concat([headerBuffer, this.claimVaa]);
   }
 }
 
@@ -43,7 +45,7 @@ export class RequestGovernanceDataSourceTransfer extends PythGovernanceActionImp
     Readonly<{ governanceDataSourceIndex: number }>
   > = BufferLayout.struct([BufferLayout.u32be()]);
 
-  protected constructor(
+  constructor(
     targetChainId: ChainName,
     readonly governanceDataSourceIndex: number
   ) {

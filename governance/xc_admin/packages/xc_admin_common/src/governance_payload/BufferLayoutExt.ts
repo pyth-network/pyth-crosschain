@@ -10,7 +10,6 @@ export class UInt64BE extends Layout<bigint> {
   }
 
   override encode(src: bigint, b: Uint8Array, offset?: number): number {
-    console.info(`here: ${src.toString()}`);
     uint8ArrayToBuffer(b).writeBigUint64BE(src, offset);
     return this.span;
 
@@ -45,6 +44,7 @@ export class HexBytes extends Layout<string> {
   }
 }
 
+// TODO: handle negative numbers properly
 export function u64be(property?: string | undefined): UInt64BE {
   return new UInt64BE(8, property);
 }

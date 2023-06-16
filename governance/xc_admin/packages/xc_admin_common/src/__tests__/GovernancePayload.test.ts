@@ -7,6 +7,8 @@ import {
   TargetAction,
   ExecutorAction,
   ActionName,
+  PythGovernanceAction,
+  decodeGovernancePayload,
 } from "..";
 import * as fc from "fast-check";
 import {
@@ -17,6 +19,13 @@ import {
   toChainName,
 } from "@certusone/wormhole-sdk";
 import { Arbitrary } from "fast-check";
+import { CosmosUpgradeContract } from "../governance_payload/UpgradeContract";
+import {
+  AuthorizeGovernanceDataSourceTransfer,
+  RequestGovernanceDataSourceTransfer,
+} from "../governance_payload/GovernanceDataSourceTransfer";
+import { SetFee } from "../governance_payload/SetFee";
+import { SetValidPeriod } from "../governance_payload/SetValidPeriod";
 
 test("GovernancePayload ser/de", (done) => {
   jest.setTimeout(60000);
@@ -156,7 +165,60 @@ function governanceHeaderArb(): Arbitrary<PythGovernanceHeader> {
   });
 }
 
-test("Serialization round-trip test", (done) => {
+function bufferArb(): Arbitrary<Buffer> {
+  return fc.uint8Array().map((a) => Buffer.from(a));
+}
+
+function governanceActionArb(): Arbitrary<PythGovernanceAction> {
+  return governanceHeaderArb().chain<PythGovernanceAction>((header) => {
+    if (header.action === "ExecutePostedVaa") {
+      // NOTE: the instructions are hard to generatively test, so we're using the hardcoded
+      // tests above instead.
+      return fc.constant(new ExecutePostedVaa(header.targetChainId, []));
+    } else if (header.action === "UpgradeContract") {
+      // TODO: other upgrade contracts
+      return fc.bigIntN(64).map((codeId) => {
+        return new CosmosUpgradeContract(header.targetChainId, codeId);
+      });
+    } else if (header.action === "AuthorizeGovernanceDataSourceTransfer") {
+      return bufferArb().map((claimVaa) => {
+        return new AuthorizeGovernanceDataSourceTransfer(
+          header.targetChainId,
+          claimVaa
+        );
+      });
+    } else if (header.action === "SetDataSources") {
+      // FIXME
+      return bufferArb().map((claimVaa) => {
+        return new AuthorizeGovernanceDataSourceTransfer(
+          header.targetChainId,
+          claimVaa
+        );
+      });
+    } else if (header.action === "SetFee") {
+      return fc
+        .record({ v: fc.bigUintN(64), e: fc.bigUintN(64) })
+        .map(({ v, e }) => {
+          return new SetFee(header.targetChainId, v, e);
+        });
+    } else if (header.action === "SetValidPeriod") {
+      return fc.bigIntN(64).map((period) => {
+        return new SetValidPeriod(header.targetChainId, period);
+      });
+    } else if (header.action === "RequestGovernanceDataSourceTransfer") {
+      return fc.bigIntN(32).map((index) => {
+        return new RequestGovernanceDataSourceTransfer(
+          header.targetChainId,
+          parseInt(index.toString())
+        );
+      });
+    } else {
+      throw new Error("Unsupported action type");
+    }
+  });
+}
+
+test("Header serialization round-trip test", (done) => {
   fc.assert(
     fc.property(governanceHeaderArb(), (original) => {
       const decoded = PythGovernanceHeader.decode(original.encode());
@@ -168,6 +230,22 @@ test("Serialization round-trip test", (done) => {
         decoded.action === original.action &&
         decoded.targetChainId === original.targetChainId
       );
+    })
+  );
+
+  done();
+});
+
+test("Governance action serialization round-trip test", (done) => {
+  fc.assert(
+    fc.property(governanceActionArb(), (original) => {
+      const decoded = decodeGovernancePayload(original.encode());
+      if (decoded === undefined) {
+        return false;
+      }
+
+      // TODO: not sure if i love this test.
+      return decoded.encode().equals(original.encode());
     })
   );
 

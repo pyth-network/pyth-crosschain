@@ -160,7 +160,6 @@ export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
   ) {
     const headerBuffer = this.header().encode();
 
-    console.info("in encodeWithPayload");
     const payloadBuffer = Buffer.alloc(payloadLayout.span);
     payloadLayout.encode(payload, payloadBuffer);
     console.info("now here");
