@@ -28,18 +28,8 @@ use {
 #[derive(Eq)]
 #[cw_serde]
 pub enum ExecuteMsg {
-    UpdatePriceFeeds {
-        data: Vec<Binary>,
-    },
-    ExecuteGovernanceInstruction {
-        data: Binary,
-    },
-    ParsePriceFeedUpdates {
-        updates:          Vec<Binary>,
-        price_feeds:      Vec<PriceIdentifier>,
-        min_publish_time: UnixTimestamp,
-        max_publish_time: UnixTimestamp,
-    },
+    UpdatePriceFeeds { data: Vec<Binary> },
+    ExecuteGovernanceInstruction { data: Binary },
 }
 
 #[cw_serde]

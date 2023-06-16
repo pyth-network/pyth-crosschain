@@ -174,20 +174,6 @@ pub fn execute(
         ExecuteMsg::ExecuteGovernanceInstruction { data } => {
             execute_governance_instruction(deps, env, info, &data)
         }
-        ExecuteMsg::ParsePriceFeedUpdates {
-            updates,
-            price_feeds,
-            min_publish_time,
-            max_publish_time,
-        } => parse_price_feed_updates(
-            deps,
-            env,
-            info,
-            &updates,
-            price_feeds,
-            min_publish_time,
-            max_publish_time,
-        ),
     }
 }
 
@@ -682,6 +668,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
+
+/// This function is not used in the contract yet but mimicks the behavior implemented
+/// in the EVM contract. We are yet to finalize how the parsed prices should be consumed
+/// in injective as well as other chains.
 pub fn parse_price_feed_updates(
     deps: DepsMut,
     env: Env,
@@ -727,20 +717,7 @@ pub fn parse_price_feed_updates(
         .map(|(_, feed)| feed.unwrap())
         .collect::<Vec<PriceFeed>>();
     let response = Response::new();
-    #[cfg(feature = "injective")]
-    {
-        let inj_message = create_relay_pyth_prices_msg(env.contract.address, total_new_feeds);
-        Ok(response
-            .add_message(inj_message)
-            .add_attribute("action", "update_price_feeds")
-            .add_attribute("num_attestations", format!("{num_total_attestations}"))
-            .add_attribute("num_updated", format!("{num_total_new_attestations}")))
-    }
-
-    #[cfg(not(feature = "injective"))]
-    {
-        Ok(response.add_attribute("action", "update_price_feeds"))
-    }
+    Ok(response.add_attribute("action", "parse_price_feeds"))
 }
 
 /// Get the most recent value of the price feed indicated by `feed_id`.
