@@ -22,13 +22,12 @@ async fn init() -> Result<()> {
     match config::Options::from_args() {
         config::Options::Run {
             pythnet_ws_endpoint,
+            pythnet_http_endpoint,
             wh_network_id,
             wh_bootstrap_addrs,
             wh_listen_addrs,
+            wh_contract_addr,
             api_addr,
-            eth_rpc_endpoint,
-            wormhole_eth_contract_address,
-            eth_polling_interval,
         } => {
             // A channel to emit state updates to api
             let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
@@ -46,22 +45,15 @@ async fn init() -> Result<()> {
             )
             .await?;
 
-            // Spawn the Ethereum guardian set watcher
-            log::info!(
-                "Starting Ethereum guardian set watcher using {}",
-                eth_rpc_endpoint
-            );
-            network::ethereum::spawn(
-                store.clone(),
-                eth_rpc_endpoint,
-                wormhole_eth_contract_address,
-                eth_polling_interval.into(),
-            )
-            .await?;
-
             // Spawn the Pythnet listener
             log::info!("Starting Pythnet listener using {}", pythnet_ws_endpoint);
-            network::pythnet::spawn(store.clone(), pythnet_ws_endpoint).await?;
+            network::pythnet::spawn(
+                store.clone(),
+                pythnet_ws_endpoint,
+                pythnet_http_endpoint,
+                wh_contract_addr,
+            )
+            .await?;
 
             // Run the RPC server and wait for it to shutdown gracefully.
             log::info!("Starting RPC server on {}", api_addr);

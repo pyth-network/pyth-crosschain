@@ -1,5 +1,6 @@
 use {
     libp2p::Multiaddr,
+    solana_sdk::pubkey::Pubkey,
     std::net::SocketAddr,
     structopt::StructOpt,
 };
@@ -14,6 +15,9 @@ pub enum Options {
     Run {
         #[structopt(long, env = "PYTHNET_WS_ENDPOINT")]
         pythnet_ws_endpoint: String,
+
+        #[structopt(long, env = "PYTHNET_HTTP_ENDPOINT")]
+        pythnet_http_endpoint: String,
 
         /// Network ID for Wormhole
         #[structopt(
@@ -45,20 +49,8 @@ pub enum Options {
         #[structopt(long, default_value = "127.0.0.1:33999")]
         api_addr: SocketAddr,
 
-        /// Ethereum RPC endpoint
-        #[structopt(long, env = "ETH_RPC_ENDPOINT")]
-        eth_rpc_endpoint: String,
-
-        /// Wormhole contract address on Ethereum
-        #[structopt(
-            long,
-            env = "WORMHOLE_CONTRACT_ADDRESS",
-            default_value = "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
-        )]
-        wormhole_eth_contract_address: String,
-
-        /// Ethereum RPC polling duration
-        #[structopt(long, env = "ETH_POLLING_INTERVAL", default_value = "10s")]
-        eth_polling_interval: humantime::Duration,
+        /// Address of the Wormhole contract on the target PythNet cluster.
+        #[structopt(long, default_value = "H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU")]
+        wh_contract_addr: Pubkey,
     },
 }

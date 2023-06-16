@@ -514,7 +514,7 @@ export class RestAPI {
     endpoints.push("/api/stale_feeds?threshold=<staleness_threshold_seconds>");
 
     app.get("/ready", (_, res: Response) => {
-      if (this.isReady!()) {
+      if (this.isReady === undefined || this.isReady!()) {
         res.sendStatus(StatusCodes.OK);
       } else {
         res.sendStatus(StatusCodes.SERVICE_UNAVAILABLE);
@@ -523,32 +523,7 @@ export class RestAPI {
     endpoints.push("ready");
 
     app.get("/live", (_, res: Response) => {
-      const threshold = 60;
-      const stalePriceTreshold = 10;
-      const minimumNumPrices = 100;
-
-      const currentTime: TimestampInSec = Math.floor(Date.now() / 1000);
-
-      const priceIds = [...this.priceFeedVaaInfo.getPriceIds()];
-      let stalePriceCnt = 0;
-
-      for (const priceId of priceIds) {
-        const latency =
-          currentTime -
-          this.priceFeedVaaInfo.getLatestPriceInfo(priceId)!.attestationTime;
-        if (latency > threshold) {
-          stalePriceCnt++;
-        }
-      }
-
-      if (
-        priceIds.length < minimumNumPrices ||
-        stalePriceCnt > stalePriceTreshold
-      ) {
-        res.sendStatus(StatusCodes.SERVICE_UNAVAILABLE);
-      } else {
-        res.sendStatus(StatusCodes.OK);
-      }
+      res.sendStatus(StatusCodes.OK);
     });
     endpoints.push("live");
 
