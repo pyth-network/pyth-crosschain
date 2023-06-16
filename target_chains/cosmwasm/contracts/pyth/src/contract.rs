@@ -1114,73 +1114,32 @@ mod test {
         assert!(res.is_err());
     }
 
-    #[cfg(not(feature = "osmosis"))]
-    #[test]
-    fn test_is_fee_sufficient() {
-        let mut config_info = default_config_info();
-        config_info.fee = Coin::new(100, "foo");
-
-        let (mut deps, _env) = setup_test();
-        config(&mut deps.storage).save(&config_info).unwrap();
-
-        let mut info = mock_info("123", coins(100, "foo").as_slice());
-        let data =
-            create_batch_price_update_msg_from_attestations(vec![PriceAttestation::default()]);
-
-        // sufficient fee -> true
-        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), &[data.clone()]);
-        assert_eq!(result, Ok(true));
-
-        // insufficient fee -> false
-        info.funds = coins(50, "foo");
-        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), &[data.clone()]);
-        assert_eq!(result, Ok(false));
-
-        // insufficient fee -> false
-        info.funds = coins(150, "bar");
-        let result = is_fee_sufficient(&deps.as_ref(), info, &[data]);
-        assert_eq!(result, Ok(false));
-    }
 
     #[cfg(feature = "osmosis")]
-    #[test]
-    fn test_is_fee_sufficient() {
-        // setup config with base fee
-        let base_denom = "foo";
-        let base_amount = 100;
-        let mut config_info = default_config_info();
-        config_info.fee = Coin::new(base_amount, base_denom);
-        let (mut deps, _env) = setup_test();
-        config(&mut deps.storage).save(&config_info).unwrap();
-
-        // a dummy price data
-        let data =
-            create_batch_price_update_msg_from_attestations(vec![PriceAttestation::default()]);
-
-        // sufficient fee in base denom -> true
-        let info = mock_info("123", coins(base_amount, base_denom).as_slice());
-        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), &[data.clone()]);
+    fn check_sufficient_fee(deps: &Deps, data: &[Binary]) {
+        let mut info = mock_info("123", coins(100, "foo").as_slice());
+        let result = is_fee_sufficient(&deps, info.clone(), &data);
         assert_eq!(result, Ok(true));
 
         // insufficient fee in base denom -> false
-        let info = mock_info("123", coins(50, base_denom).as_slice());
-        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        info.funds = coins(50, "foo");
+        let result = is_fee_sufficient(&deps, info.clone(), &data);
         assert_eq!(result, Ok(false));
 
         // valid denoms are 'uion' or 'ibc/FF3065989E34457F342D4EFB8692406D49D4E2B5C70F725F127862E22CE6BDCD'
         // a valid denom other than base denom with sufficient fee
-        let info = mock_info("123", coins(100, "uion").as_slice());
-        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        info.funds = coins(100, "uion");
+        let result = is_fee_sufficient(&deps, info.clone(), &data);
         assert_eq!(result, Ok(true));
 
         // insufficient fee in valid denom -> false
-        let info = mock_info("123", coins(50, "uion").as_slice());
-        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        info.funds = coins(50, "uion");
+        let result = is_fee_sufficient(&deps, info.clone(), &data);
         assert_eq!(result, Ok(false));
 
         // an invalid denom -> Err invalid fee denom
-        let info = mock_info("123", coins(100, "invalid_denom").as_slice());
-        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        info.funds = coins(100, "invalid_denom");
+        let result = is_fee_sufficient(&deps, info, &data);
         assert_eq!(
             result,
             Err(PythContractError::InvalidFeeDenom {
@@ -1188,6 +1147,48 @@ mod test {
             }
             .into())
         );
+    }
+
+    #[cfg(not(feature = "osmosis"))]
+    fn check_sufficient_fee(deps: &Deps, data: &[Binary]) {
+        let mut info = mock_info("123", coins(100, "foo").as_slice());
+
+        // sufficient fee -> true
+        let result = is_fee_sufficient(deps, info.clone(), data);
+        assert_eq!(result, Ok(true));
+
+        // insufficient fee -> false
+        info.funds = coins(50, "foo");
+        let result = is_fee_sufficient(deps, info.clone(), data);
+        assert_eq!(result, Ok(false));
+
+        // insufficient fee -> false
+        info.funds = coins(150, "bar");
+        let result = is_fee_sufficient(deps, info, data);
+        assert_eq!(result, Ok(false));
+    }
+
+    #[test]
+    fn test_is_fee_sufficient() {
+        let mut config_info = default_config_info();
+        config_info.fee = Coin::new(100, "foo");
+
+        let (mut deps, _env) = setup_test();
+        config(&mut deps.storage).save(&config_info).unwrap();
+        let data = [create_batch_price_update_msg_from_attestations(vec![
+            PriceAttestation::default(),
+        ])];
+        check_sufficient_fee(&deps.as_ref(), &data);
+
+        let feed1 = create_dummy_price_feed_message(100);
+        let feed2 = create_dummy_price_feed_message(200);
+        let feed3 = create_dummy_price_feed_message(300);
+        let data = [create_accumulator_message(
+            &[feed1, feed2, feed3],
+            &[feed1],
+            false,
+        )];
+        check_sufficient_fee(&deps.as_ref(), &data)
     }
 
     #[test]
@@ -1342,36 +1343,6 @@ mod test {
     #[test]
     fn test_accumulator_verify_vaa_sender_fail_wrong_emitter_chain() {
         test_accumulator_wrong_source(default_emitter_addr(), EMITTER_CHAIN + 1);
-    }
-
-    #[test]
-    fn test_accumulator_is_fee_sufficient() {
-        let mut config_info = default_config_info();
-        config_info.fee = Coin::new(100, "foo");
-
-        let (mut deps, _env) = setup_test();
-        config(&mut deps.storage).save(&config_info).unwrap();
-
-
-        let feed1 = create_dummy_price_feed_message(100);
-        let feed2 = create_dummy_price_feed_message(200);
-        let feed3 = create_dummy_price_feed_message(300);
-        let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed3], false);
-        let data = &[msg];
-        let mut info = mock_info("123", coins(200, "foo").as_slice());
-        // sufficient fee -> true
-        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), data);
-        assert_eq!(result, Ok(true));
-
-        // insufficient fee -> false
-        info.funds = coins(100, "foo");
-        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), data);
-        assert_eq!(result, Ok(false));
-
-        // insufficient fee -> false
-        info.funds = coins(300, "bar");
-        let result = is_fee_sufficient(&deps.as_ref(), info, data);
-        assert_eq!(result, Ok(false));
     }
 
     #[test]
