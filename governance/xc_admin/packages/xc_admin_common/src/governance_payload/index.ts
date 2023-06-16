@@ -182,6 +182,7 @@ export class PythGovernanceHeader {
 export const MAGIC_NUMBER = 0x4d475450;
 export const MODULE_EXECUTOR = 0;
 export const MODULE_TARGET = 1;
+export const MODULES = [MODULE_EXECUTOR, MODULE_TARGET];
 
 /** Decode a governance payload */
 export function decodeGovernancePayload(

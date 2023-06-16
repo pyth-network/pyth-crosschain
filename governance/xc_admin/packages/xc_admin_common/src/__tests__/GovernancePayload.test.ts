@@ -1,5 +1,22 @@
 import { PublicKey, SystemProgram } from "@solana/web3.js";
-import { PythGovernanceHeader, ExecutePostedVaa } from "..";
+import {
+  PythGovernanceHeader,
+  ExecutePostedVaa,
+  MODULES,
+  MODULE_EXECUTOR,
+  TargetAction,
+  ExecutorAction,
+  ActionName,
+} from "..";
+import * as fc from "fast-check";
+import {
+  ChainId,
+  ChainName,
+  CHAINS,
+  toChainId,
+  toChainName,
+} from "@certusone/wormhole-sdk";
+import { Arbitrary } from "fast-check";
 
 test("GovernancePayload ser/de", (done) => {
   jest.setTimeout(60000);
@@ -117,6 +134,38 @@ test("GovernancePayload ser/de", (done) => {
     executePostedVaaArgs?.instructions[0].data.equals(
       Buffer.from([2, 0, 0, 0, 0, 152, 13, 0, 0, 0, 0, 0])
     )
+  );
+
+  done();
+});
+
+function governanceHeaderArb(): Arbitrary<PythGovernanceHeader> {
+  const actions = [
+    ...Object.keys(ExecutorAction),
+    ...Object.keys(TargetAction),
+  ] as ActionName[];
+  const actionArb = fc.constantFrom(...actions);
+  const targetChainIdArb = fc.constantFrom(
+    ...(Object.keys(CHAINS) as ChainName[])
+  );
+
+  return actionArb.chain((action) => {
+    return targetChainIdArb.chain((chainId) => {
+      return fc.constant(new PythGovernanceHeader(chainId, action));
+    });
+  });
+}
+
+test("Serialization round-trip test", (done) => {
+  fc.assert(
+    fc.property(governanceHeaderArb(), (header) => {
+      const decoded = PythGovernanceHeader.decode(header.encode());
+      if (decoded === undefined) {
+        return false;
+      }
+
+      return decoded === header;
+    })
   );
 
   done();

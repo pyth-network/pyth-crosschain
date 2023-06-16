@@ -63,7 +63,7 @@ export const instructionDataLayout = BufferLayout.struct<InstructionData>([
 ]);
 
 export class ExecutePostedVaa implements PythGovernanceAction {
-  readonly targetChainId: ChainName;
+  readonly header: PythGovernanceHeader;
   readonly instructions: TransactionInstruction[];
   static layout: Vector<InstructionData> = new Vector<InstructionData>(
     instructionDataLayout,
@@ -74,8 +74,13 @@ export class ExecutePostedVaa implements PythGovernanceAction {
     targetChainId: ChainName,
     instructions: TransactionInstruction[]
   ) {
-    this.targetChainId = targetChainId;
+    // TODO: this is a hack to make existing code work. we should just pass the header in as an argument
+    this.header = new PythGovernanceHeader(targetChainId, "ExecutePostedVaa");
     this.instructions = instructions;
+  }
+
+  public targetChainId(): ChainName {
+    return this.header.targetChainId;
   }
 
   /** Decode ExecutePostedVaa */
