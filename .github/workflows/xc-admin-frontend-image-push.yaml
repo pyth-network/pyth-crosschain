@@ -1,4 +1,4 @@
-name: Build and Push Cross Chain Admin Frontend
+name: xc_admin_frontend Docker Image
 on:
   push:
     branches: [main]
