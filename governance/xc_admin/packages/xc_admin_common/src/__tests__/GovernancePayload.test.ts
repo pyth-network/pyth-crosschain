@@ -158,13 +158,16 @@ function governanceHeaderArb(): Arbitrary<PythGovernanceHeader> {
 
 test("Serialization round-trip test", (done) => {
   fc.assert(
-    fc.property(governanceHeaderArb(), (header) => {
-      const decoded = PythGovernanceHeader.decode(header.encode());
+    fc.property(governanceHeaderArb(), (original) => {
+      const decoded = PythGovernanceHeader.decode(original.encode());
       if (decoded === undefined) {
         return false;
       }
 
-      return decoded === header;
+      return (
+        decoded.action === original.action &&
+        decoded.targetChainId === original.targetChainId
+      );
     })
   );
 

@@ -1,13 +1,7 @@
-import { ChainName } from "@certusone/wormhole-sdk";
 import {
-  PythGovernanceAction,
   PythGovernanceActionImpl,
   PythGovernanceHeader,
-} from ".";
-import {
-  HexString20Bytes,
-  HexString32Bytes,
-} from "@pythnetwork/xc-governance-sdk";
+} from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
 import * as BufferLayoutExt from "./BufferLayoutExt";
 
@@ -40,10 +34,10 @@ export class CosmosUpgradeContract extends PythGovernanceActionImpl {
 }
 
 export class AptosAuthorizeUpgradeContract extends PythGovernanceActionImpl {
-  static layout: BufferLayout.Structure<Readonly<{ hash: HexString32Bytes }>> =
-    BufferLayout.struct([BufferLayoutExt.hex32()]);
+  static layout: BufferLayout.Structure<Readonly<{ hash: string }>> =
+    BufferLayout.struct([BufferLayoutExt.hexBytes(32)]);
 
-  constructor(header: PythGovernanceHeader, readonly hash: HexString32Bytes) {
+  constructor(header: PythGovernanceHeader, readonly hash: string) {
     super(header);
   }
 
@@ -66,14 +60,10 @@ export class AptosAuthorizeUpgradeContract extends PythGovernanceActionImpl {
 }
 
 export class EthereumUpgradeContract extends PythGovernanceActionImpl {
-  static layout: BufferLayout.Structure<
-    Readonly<{ address: HexString20Bytes }>
-  > = BufferLayout.struct([BufferLayoutExt.hex20()]);
+  static layout: BufferLayout.Structure<Readonly<{ address: string }>> =
+    BufferLayout.struct([BufferLayoutExt.hexBytes(20)]);
 
-  constructor(
-    header: PythGovernanceHeader,
-    readonly address: HexString20Bytes
-  ) {
+  constructor(header: PythGovernanceHeader, readonly address: string) {
     super(header);
   }
 

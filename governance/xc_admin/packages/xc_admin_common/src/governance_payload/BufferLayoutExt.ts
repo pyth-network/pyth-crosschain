@@ -19,6 +19,33 @@ export class UInt64BE extends Layout<bigint> {
   }
 }
 
+export class HexBytes extends Layout<string> {
+  // span is the number of bytes to read
+  constructor(span: number, property?: string) {
+    super(span, property);
+  }
+
+  override decode(b: Uint8Array, offset?: number): string {
+    return Buffer.from(b.slice(offset, this.span)).toString("hex");
+  }
+
+  override encode(src: string, b: Uint8Array, offset?: number): number {
+    const buffer = Buffer.alloc(this.span);
+    buffer.write(src, "hex");
+
+    b.set(buffer, offset);
+
+    return this.span;
+  }
+}
+
 export function u64be(property?: string | undefined): UInt64BE {
   return new UInt64BE(8, property);
+}
+
+export function hexBytes(
+  numBytes: number,
+  property?: string | undefined
+): HexBytes {
+  return new HexBytes(numBytes, property);
 }
