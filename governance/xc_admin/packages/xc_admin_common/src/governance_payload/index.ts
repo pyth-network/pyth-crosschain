@@ -10,8 +10,52 @@ import { ExecutePostedVaa } from "./ExecutePostedVaa";
 import { CosmosUpgradeContract } from "./UpgradeContract";
 
 export interface PythGovernanceAction {
-  readonly targetChainId: ChainName;
+  readonly header: PythGovernanceHeader;
+  targetChainId(): ChainName;
   encode(): Buffer;
+}
+
+export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
+  readonly header: PythGovernanceHeader;
+
+  protected constructor(header: PythGovernanceHeader) {
+    this.header = header;
+  }
+
+  targetChainId(): ChainName {
+    return this.header.targetChainId;
+  }
+
+  abstract encode(): Buffer;
+
+  protected encodeWithPayload<T>(
+    payloadLayout: BufferLayout.Layout<T>,
+    payload: T
+  ) {
+    const headerBuffer = this.header.encode();
+
+    const payloadBuffer = Buffer.alloc(payloadLayout.span);
+    payloadLayout.encode(payload, payloadBuffer);
+
+    return Buffer.concat([headerBuffer, payloadBuffer]);
+  }
+
+  protected static decodeWithPayload<T>(
+    buffer: Buffer,
+    requiredAction: ActionName,
+    payloadLayout: BufferLayout.Layout<T>
+  ): [PythGovernanceHeader, T] | undefined {
+    const header = PythGovernanceHeader.decode(buffer);
+    if (!header || header.action !== requiredAction) return undefined;
+
+    const payload = safeLayoutDecode(
+      payloadLayout,
+      buffer.subarray(PythGovernanceHeader.span)
+    );
+    if (!payload) return undefined;
+
+    return [header, payload];
+  }
 }
 
 /** Each of the actions that can be directed to the Executor Module */
