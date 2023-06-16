@@ -1,4 +1,4 @@
-import { Layout } from "@solana/buffer-layout";
+import { Layout, uint8ArrayToBuffer } from "@solana/buffer-layout";
 
 export class UInt64BE extends Layout<bigint> {
   constructor(span: number, property?: string) {
@@ -10,12 +10,18 @@ export class UInt64BE extends Layout<bigint> {
   }
 
   override encode(src: bigint, b: Uint8Array, offset?: number): number {
+    console.info(`here: ${src.toString()}`);
+    uint8ArrayToBuffer(b).writeBigUint64BE(src, offset);
+    return this.span;
+
+    /*
     const buffer = Buffer.alloc(this.span);
     buffer.writeBigUint64BE(src);
 
     b.set(buffer, offset);
 
     return this.span;
+     */
   }
 }
 

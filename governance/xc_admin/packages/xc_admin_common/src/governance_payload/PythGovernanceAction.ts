@@ -140,24 +140,30 @@ export interface PythGovernanceAction {
 
 export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
   readonly targetChainId: ChainName;
-  readonly header: PythGovernanceHeader;
+  readonly action: ActionName;
 
   // TODO: refactor arguments here
-  protected constructor(header: PythGovernanceHeader) {
-    this.header = header;
-    this.targetChainId = header.targetChainId;
+  protected constructor(targetChainId: ChainName, action: ActionName) {
+    this.targetChainId = targetChainId;
+    this.action = action;
   }
 
   abstract encode(): Buffer;
+
+  protected header(): PythGovernanceHeader {
+    return new PythGovernanceHeader(this.targetChainId, this.action);
+  }
 
   protected encodeWithPayload<T>(
     payloadLayout: BufferLayout.Layout<T>,
     payload: T
   ) {
-    const headerBuffer = this.header.encode();
+    const headerBuffer = this.header().encode();
 
+    console.info("in encodeWithPayload");
     const payloadBuffer = Buffer.alloc(payloadLayout.span);
     payloadLayout.encode(payload, payloadBuffer);
+    console.info("now here");
 
     return Buffer.concat([headerBuffer, payloadBuffer]);
   }

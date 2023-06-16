@@ -1,13 +1,11 @@
 import { PythGovernanceActionImpl, PythGovernanceHeader } from ".";
 import * as BufferLayout from "@solana/buffer-layout";
 import * as BufferLayoutExt from "./BufferLayoutExt";
+import { ChainName } from "@certusone/wormhole-sdk";
 
 export class AuthorizeGovernanceDataSourceTransfer extends PythGovernanceActionImpl {
-  protected constructor(
-    header: PythGovernanceHeader,
-    readonly claimVaa: Buffer
-  ) {
-    super(header);
+  constructor(targetChainId: ChainName, readonly claimVaa: Buffer) {
+    super(targetChainId, "AuthorizeGovernanceDataSourceTransfer");
   }
 
   static layout(
@@ -27,7 +25,7 @@ export class AuthorizeGovernanceDataSourceTransfer extends PythGovernanceActionI
     if (!decoded) return undefined;
 
     return new AuthorizeGovernanceDataSourceTransfer(
-      decoded[0],
+      decoded[0].targetChainId,
       decoded[1].claimVaa
     );
   }
@@ -46,10 +44,10 @@ export class RequestGovernanceDataSourceTransfer extends PythGovernanceActionImp
   > = BufferLayout.struct([BufferLayout.u32be()]);
 
   protected constructor(
-    header: PythGovernanceHeader,
+    targetChainId: ChainName,
     readonly governanceDataSourceIndex: number
   ) {
-    super(header);
+    super(targetChainId, "RequestGovernanceDataSourceTransfer");
   }
 
   static decode(data: Buffer): RequestGovernanceDataSourceTransfer | undefined {
@@ -61,7 +59,7 @@ export class RequestGovernanceDataSourceTransfer extends PythGovernanceActionImp
     if (!decoded) return undefined;
 
     return new RequestGovernanceDataSourceTransfer(
-      decoded[0],
+      decoded[0].targetChainId,
       decoded[1].governanceDataSourceIndex
     );
   }
