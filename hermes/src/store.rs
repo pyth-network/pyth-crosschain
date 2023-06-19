@@ -269,7 +269,7 @@ impl Store {
             .collect()
     }
 
-    pub async fn is_healthy(&self) -> bool {
+    pub async fn is_ready(&self) -> bool {
         const STALENESS_THRESHOLD: Duration = Duration::from_secs(30);
 
         let last_completed_update_at = self.last_completed_update_at.read().await;

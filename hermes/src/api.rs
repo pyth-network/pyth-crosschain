@@ -46,7 +46,6 @@ pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: Strin
         .route("/", get(rest::index))
         .route("/live", get(rest::live))
         .route("/ready", get(rest::ready))
-        .route("/health", get(rest::health))
         .route("/ws", get(ws::ws_route_handler))
         .route("/api/latest_price_feeds", get(rest::latest_price_feeds))
         .route("/api/latest_vaas", get(rest::latest_vaas))

@@ -254,18 +254,7 @@ pub async fn live() -> Response {
     (StatusCode::OK, "OK").into_response()
 }
 
-// This endpoint is the same as health and is provided for backward compatibility
-// with the price service.
 pub async fn ready(State(state): State<super::State>) -> Response {
-    match state.store.is_healthy().await {
-        true => (StatusCode::OK, "OK").into_response(),
-        false => (StatusCode::SERVICE_UNAVAILABLE, "Service Unavailable").into_response(),
-    }
-}
-
-// This endpoint serves as a health check for this service. Previously `ready` was used
-// for this purpose, but now health is used because it is more standard.
-pub async fn health(State(state): State<super::State>) -> Response {
     match state.store.is_healthy().await {
         true => (StatusCode::OK, "OK").into_response(),
         false => (StatusCode::SERVICE_UNAVAILABLE, "Service Unavailable").into_response(),
@@ -278,7 +267,6 @@ pub async fn index() -> impl IntoResponse {
     Json([
         "/live",
         "/ready",
-        "/health",
         "/api/price_feed_ids",
         "/api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..(&verbose=true)(&binary=true)",
         "/api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&...",
