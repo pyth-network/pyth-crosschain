@@ -52,14 +52,19 @@ use {
         },
         sync::Arc,
         time::{
-            Duration,
             SystemTime,
             UNIX_EPOCH,
         },
     },
-    tokio::sync::{
-        mpsc::Sender,
-        RwLock,
+    tokio::{
+        sync::{
+            mpsc::Sender,
+            RwLock,
+        },
+        time::{
+            Duration,
+            Instant,
+        },
     },
     wormhole_sdk::{
         Address,
@@ -74,10 +79,11 @@ pub mod types;
 pub mod wormhole;
 
 pub struct Store {
-    pub storage:           StorageInstance,
-    pub observed_vaa_seqs: Cache<u64, bool>,
-    pub guardian_set:      RwLock<BTreeMap<u32, GuardianSet>>,
-    pub update_tx:         Sender<()>,
+    pub storage:                  StorageInstance,
+    pub observed_vaa_seqs:        Cache<u64, bool>,
+    pub guardian_set:             RwLock<BTreeMap<u32, GuardianSet>>,
+    pub update_tx:                Sender<()>,
+    pub last_completed_update_at: RwLock<Option<Instant>>,
 }
 
 impl Store {
@@ -90,6 +96,7 @@ impl Store {
                 .build(),
             guardian_set: RwLock::new(Default::default()),
             update_tx,
+            last_completed_update_at: RwLock::new(None),
         })
     }
 
@@ -169,6 +176,11 @@ impl Store {
         self.build_message_states(completed_state).await?;
 
         self.update_tx.send(()).await?;
+
+        self.last_completed_update_at
+            .write()
+            .await
+            .replace(Instant::now());
 
         Ok(())
     }
@@ -257,5 +269,17 @@ impl Store {
             .iter()
             .map(|key| PriceIdentifier::new(key.id))
             .collect()
+    }
+
+    pub async fn is_ready(&self) -> bool {
+        const STALENESS_THRESHOLD: Duration = Duration::from_secs(30);
+
+        let last_completed_update_at = self.last_completed_update_at.read().await;
+        match last_completed_update_at.as_ref() {
+            Some(last_completed_update_at) => {
+                last_completed_update_at.elapsed() < STALENESS_THRESHOLD
+            }
+            None => false,
+        }
     }
 }

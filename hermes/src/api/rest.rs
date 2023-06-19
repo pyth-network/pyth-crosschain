@@ -250,10 +250,15 @@ pub async fn get_vaa_ccip(
     }))
 }
 
-// This function implements the `/live` endpoint. It returns a `200` status code. This endpoint is
-// used by the Kubernetes liveness probe.
-pub async fn live() -> Result<impl IntoResponse, std::convert::Infallible> {
-    Ok(())
+pub async fn live() -> Response {
+    (StatusCode::OK, "OK").into_response()
+}
+
+pub async fn ready(State(state): State<super::State>) -> Response {
+    match state.store.is_ready().await {
+        true => (StatusCode::OK, "OK").into_response(),
+        false => (StatusCode::SERVICE_UNAVAILABLE, "Service Unavailable").into_response(),
+    }
 }
 
 // This is the index page for the REST service. It will list all the available endpoints.
@@ -261,6 +266,7 @@ pub async fn live() -> Result<impl IntoResponse, std::convert::Infallible> {
 pub async fn index() -> impl IntoResponse {
     Json([
         "/live",
+        "/ready",
         "/api/price_feed_ids",
         "/api/latest_price_feeds?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&..(&verbose=true)(&binary=true)",
         "/api/latest_vaas?ids[]=<price_feed_id>&ids[]=<price_feed_id_2>&...",
