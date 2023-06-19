@@ -34,14 +34,16 @@ use {
         Result,
     },
     moka::future::Cache,
-    pyth_oracle::{
-        Message,
-        MessageType,
-    },
     pyth_sdk::PriceIdentifier,
-    pythnet_sdk::wire::v1::{
-        WormholeMessage,
-        WormholePayload,
+    pythnet_sdk::{
+        messages::{
+            Message,
+            MessageType,
+        },
+        wire::v1::{
+            WormholeMessage,
+            WormholePayload,
+        },
     },
     std::{
         collections::{

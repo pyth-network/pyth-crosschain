@@ -1,6 +1,6 @@
 use {
     super::proof::wormhole_merkle::WormholeMerkleMessageProof,
-    pyth_oracle::{
+    pythnet_sdk::messages::{
         Message,
         PriceFeedMessage,
     },

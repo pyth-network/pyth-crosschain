@@ -17,8 +17,8 @@ use {
     async_trait::async_trait,
     dashmap::DashMap,
     moka::sync::Cache,
-    pyth_oracle::MessageType,
     pyth_sdk::PriceIdentifier,
+    pythnet_sdk::messages::MessageType,
     std::{
         collections::VecDeque,
         sync::Arc,

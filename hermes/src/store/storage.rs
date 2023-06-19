@@ -14,11 +14,11 @@ use {
         Result,
     },
     async_trait::async_trait,
-    pyth_oracle::{
+    pyth_sdk::PriceIdentifier,
+    pythnet_sdk::messages::{
         Message,
         MessageType,
     },
-    pyth_sdk::PriceIdentifier,
 };
 
 pub mod local_storage;
