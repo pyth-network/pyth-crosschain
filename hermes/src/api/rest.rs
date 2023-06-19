@@ -255,7 +255,7 @@ pub async fn live() -> Response {
 }
 
 pub async fn ready(State(state): State<super::State>) -> Response {
-    match state.store.is_healthy().await {
+    match state.store.is_ready().await {
         true => (StatusCode::OK, "OK").into_response(),
         false => (StatusCode::SERVICE_UNAVAILABLE, "Service Unavailable").into_response(),
     }
