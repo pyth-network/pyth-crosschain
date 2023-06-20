@@ -20,10 +20,6 @@ interface IWormhole is Structs {
         uint8 consistencyLevel
     ) external payable returns (uint64 sequence);
 
-    function verifyVM(
-        Structs.VM memory vm
-    ) external view returns (bool valid, string memory reason);
-
     function parseAndVerifyVM(
         bytes calldata encodedVM
     )
@@ -37,6 +33,10 @@ interface IWormhole is Structs {
             uint64 sequence,
             bytes calldata vmPayload
         );
+
+    function verifyVM(
+        Structs.VM memory vm
+    ) external view returns (bool valid, string memory reason);
 
     function verifySignatures(
         bytes32 hash,

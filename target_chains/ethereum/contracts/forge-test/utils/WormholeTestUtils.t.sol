@@ -115,7 +115,7 @@ abstract contract WormholeTestUtils is Test {
 
 contract WormholeTestUtilsTest is Test, WormholeTestUtils {
     function testGenerateVaaWorks() public {
-        IWormhole wormhole = IWormhole(setUpWormhole(5));
+        IWormhole wormhole = IWormhole(setUpWormholeReceiver(5));
 
         bytes memory vaa = generateVaa(
             112,
