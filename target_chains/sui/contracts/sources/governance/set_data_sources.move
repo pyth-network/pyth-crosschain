@@ -4,11 +4,13 @@ module pyth::set_data_sources {
     use wormhole::cursor;
     use wormhole::external_address::{Self};
     use wormhole::bytes32::{Self};
+    use wormhole::governance_message::{Self, DecreeTicket};
 
     use pyth::deserialize;
     use pyth::data_source::{Self, DataSource};
-    use pyth::state::{Self, State};
-    use pyth::version_control::{SetDataSources};
+    use pyth::state::{Self, State, LatestOnly};
+    use pyth::governance_action::{Self};
+    use pyth::governance_witness::{Self, GovernanceWitness};
 
     friend pyth::governance;
 
@@ -16,11 +18,36 @@ module pyth::set_data_sources {
         sources: vector<DataSource>,
     }
 
-    public(friend) fun execute(state: &mut State, payload: vector<u8>) {
-        state::check_minimum_requirement<SetDataSources>(state);
+    public fun authorize_governance(
+        pyth_state: &State,
+        global: bool
+    ): DecreeTicket<GovernanceWitness> {
+        if (global) {
+            governance_message::authorize_verify_global(
+                governance_witness::new_governance_witness(),
+                state::governance_chain(pyth_state),
+                state::governance_contract(pyth_state),
+                state::governance_module(),
+                governance_action::get_value(governance_action::new_set_data_sources())
+            )
+        } else {
+            governance_message::authorize_verify_local(
+                governance_witness::new_governance_witness(),
+                state::governance_chain(pyth_state),
+                state::governance_contract(pyth_state),
+                state::governance_module(),
+                governance_action::get_value(governance_action::new_set_data_sources())
+            )
+        }
+    }
 
+    public(friend) fun execute(
+        latest_only: &LatestOnly,
+        state: &mut State,
+        payload: vector<u8>
+    ) {
         let DataSources { sources } = from_byte_vec(payload);
-        state::set_data_sources(state, sources);
+        state::set_data_sources(latest_only, state, sources);
     }
 
     fun from_byte_vec(bytes: vector<u8>): DataSources {

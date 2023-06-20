@@ -1,50 +1,36 @@
 // SPDX-License-Identifier: Apache 2
 
-/// Note: This module is largely taken from the Sui Wormhole package:
-/// https://github.com/wormhole-foundation/wormhole/blob/sui/integration_v2/sui/wormhole/sources/migrate.move
 
-/// This module implements an entry method intended to be called after an
+/// Note: this module is adapted from Wormhole's migrade.move module.
+///
+/// This module implements a public method intended to be called after an
 /// upgrade has been commited. The purpose is to add one-off migration logic
-/// that would alter pyth `State`.
+/// that would alter Pyth `State`.
 ///
 /// Included in migration is the ability to ensure that breaking changes for
-/// any of pyth's methods by enforcing the current build version as their
-/// required minimum version.
+/// any of Pyth's methods by enforcing the current build version as
+/// their required minimum version.
 module pyth::migrate {
+    use sui::object::{ID};
+    use wormhole::governance_message::{Self, DecreeReceipt};
+
     use pyth::state::{Self, State};
+    use pyth::contract_upgrade::{Self};
+    use pyth::governance_witness::{GovernanceWitness};
 
-    // This import is only used when `state::require_current_version` is used.
-    // use pyth::version_control::{Self as control};
+    struct MigrateComplete has drop, copy {
+        package: ID
+    }
 
-    /// Upgrade procedure is not complete (most likely due to an upgrade not
-    /// being initialized since upgrades can only be performed via programmable
-    /// transaction).
-    const E_CANNOT_MIGRATE: u64 = 0;
+    public fun migrate(
+        pyth_state: &mut State,
+        receipt: DecreeReceipt<GovernanceWitness>
+    ) {
+        // This should be removed in an upgrade from 0.1.1.
+        state::migrate__v__0_1_1(pyth_state);
 
-    /// Execute migration logic. See `pyth::migrate` description for more
-    /// info.
-    public entry fun migrate(pyth_state: &mut State) {
-        // pyth `State` only allows one to call `migrate` after the upgrade
-        // procedure completed.
-        assert!(state::can_migrate(pyth_state), E_CANNOT_MIGRATE);
-
-        ////////////////////////////////////////////////////////////////////////
-        //
-        // If there are any methods that require the current build, we need to
-        // explicity require them here.
-        //
-        // Calls to `require_current_version` are commented out for convenience.
-        //
-        ////////////////////////////////////////////////////////////////////////
-
-
-        // state::require_current_version<control::SetDataSources>(pyth_state);
-        // state::require_current_version<control::SetGovernanceDataSource>(pyth_state);
-        // state::require_current_version<control::SetStalePriceThreshold>(pyth_state);
-        // state::require_current_version<control::SetUpdateFee>(pyth_state);
-        // state::require_current_version<control::TransferFee>(pyth_state);
-        // state::require_current_version<control::UpdatePriceFeeds>(pyth_state);
-        // state::require_current_version<control::CreatePriceFeeds>(pyth_state);
+        // Perform standard migrate.
+        handle_migrate(pyth_state, receipt);
 
         ////////////////////////////////////////////////////////////////////////
         //
@@ -56,14 +42,46 @@ module pyth::migrate {
         //
         // WARNING: The migration does *not* proceed atomically with the
         // upgrade (as they are done in separate transactions).
-        // If the nature of your migration absolutely requires the migration to
+        // If the nature of this migration absolutely requires the migration to
         // happen before certain other functionality is available, then guard
         // that functionality with the `assert!` from above.
         //
         ////////////////////////////////////////////////////////////////////////
 
         ////////////////////////////////////////////////////////////////////////
-        // Ensure that `migrate` cannot be called again.
-        state::disable_migration(pyth_state);
+    }
+
+    fun handle_migrate(
+        pyth_state: &mut State,
+        receipt: DecreeReceipt<GovernanceWitness>
+    ) {
+        // Update the version first.
+        //
+        // See `version_control` module for hard-coded configuration.
+        state::migrate_version(pyth_state);
+
+        // This capability ensures that the current build version is used.
+        let latest_only = state::assert_latest_only(pyth_state);
+
+        // Check if build digest is the current one.
+        let digest =
+            contract_upgrade::take_digest(
+                governance_message::payload(&receipt)
+            );
+        state::assert_authorized_digest(
+            &latest_only,
+            pyth_state,
+            digest
+        );
+        governance_message::destroy(receipt);
+
+        // Finally emit an event reflecting a successful migrate.
+        let package = state::current_package(&latest_only, pyth_state);
+        sui::event::emit(MigrateComplete { package });
+    }
+
+    #[test_only]
+    public fun set_up_migrate(pyth_state: &mut State) {
+        state::reverse_migrate__v__0_1_0(pyth_state);
     }
 }

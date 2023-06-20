@@ -8,10 +8,12 @@ subdir = "crates/sui-framework/packages/sui-framework"
 rev = "09b2081498366df936abae26eea4b2d5cafb2788"
 
 [dependencies.Wormhole]
-git = "https://github.com/wormhole-foundation/wormhole.git"
-subdir = "sui/wormhole"
-rev = "d050ad1d67a5b7da9fb65030aad12ef5d774ccad"
+local = "../../../../wormhole/sui/wormhole"
 
 [addresses]
-pyth = "0xa446c4a37c0bb69d03357c1a52d60da0b434048226d5f3feffdb693586bea861"
+pyth = "0x0"
 wormhole = "0x5306f64e312b581766351c07af79c72fcb1cd25147157fdc2f8ad76de9a3fb6a"
+
+[dev-addresses]
+pyth = "0x100"
+wormhole = "0x200"

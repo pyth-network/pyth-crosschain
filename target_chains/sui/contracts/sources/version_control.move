@@ -1,50 +1,76 @@
 // SPDX-License-Identifier: Apache 2
 
-/// Note: This module is based on the version_control module in
-/// the Sui Wormhole package:
-/// https://github.com/wormhole-foundation/wormhole/blob/sui/integration_v2/sui/wormhole/sources/version_control.move
-
-/// This module implements dynamic field keys as empty structs. These keys with
-/// `RequiredVersion` are used to determine minimum build requirements for
-/// particular Pyth methods and breaking backward compatibility for these
-/// methods if an upgrade requires the latest upgrade version for its
-/// functionality.
+/// Note: this module is adapted from Wormhole's version_control.move module.
 ///
-/// See `pyth::required_version` and `pyth::state` for more info.
+/// This module implements dynamic field keys as empty structs. These keys are
+/// used to determine the latest version for this build. If the current version
+/// is not this build's, then paths through the `state` module will abort.
+///
+/// See `pyth::state` and `wormhole::package_utils` for more info.
 module pyth::version_control {
-    /// This value tracks the current Pyth contract version. We are
-    /// placing this constant value at the top, which goes against Move style
-    /// guides so that we bring special attention to changing this value when
-    /// a new implementation is built for a contract upgrade.
-    const CURRENT_BUILD_VERSION: u64 = 1;
+    ////////////////////////////////////////////////////////////////////////////
+    //
+    //  Hard-coded Version Control
+    //
+    //  Before upgrading, please set the types for `current_version` and
+    //  `previous_version` to match the correct types (current being the latest
+    //  version reflecting this build).
+    //
+    ////////////////////////////////////////////////////////////////////////////
 
-    /// Key used to check minimum version requirement for `set_data_sources`
-    struct SetDataSources {}
+    public(friend) fun current_version(): V__0_1_1 {
+       V__0_1_1 {}
+    }
 
-    /// Key used to check minimum version requirement for `set_governance_data_source`
-    struct SetGovernanceDataSource {}
+    public(friend) fun previous_version(): V__DUMMY {
+        V__DUMMY {}
+    }
 
-    /// Key used to check minimum version requirement for `set_stale_price_threshold`
-    struct SetStalePriceThreshold {}
+    ////////////////////////////////////////////////////////////////////////////
+    //
+    //  Change Log
+    //
+    //  Please write release notes as doc strings for each version struct. These
+    //  notes will be our attempt at tracking upgrades. Wish us luck.
+    //
+    ////////////////////////////////////////////////////////////////////////////
 
-    /// Key used to check minimum version requirement for `set_update_fee`
-    struct SetUpdateFee {}
+    /// RELEASE NOTES
+    ///
+    /// - Refactor state to use package management via
+    ///   `wormhole::package_utils`.
+    /// - Add `MigrateComplete` event in `migrate`.
+    ///
+    /// Also added `migrate__v__0_1_1` in `wormhole::state`, which is
+    /// meant to perform a one-time `State` modification via `migrate`.
+    struct V__0_1_1 has store, drop, copy {}
 
-    /// Key used to check minimum version requirement for `transfer_fee`
-    struct TransferFee {}
+    // Dummy.
+    struct V__DUMMY has store, drop, copy {}
 
-    /// Key used to check minimum version requirement for `update_price_feeds`
-    struct UpdatePriceFeeds {}
+    ////////////////////////////////////////////////////////////////////////////
+    //
+    //  Implementation and Test-Only Methods
+    //
+    ////////////////////////////////////////////////////////////////////////////
 
-    /// Key used to check minimum version requirement for `create_price_feeds`
-    struct CreatePriceFeeds {}
+    friend pyth::state;
 
-    //=======================================================================
+    #[test_only]
+    public fun dummy(): V__DUMMY {
+        V__DUMMY {}
+    }
 
-    /// Return const value `CURRENT_BUILD_VERSION` for this particular build.
-    /// This value is used to determine whether this implementation meets
-    /// minimum requirements for various Pyth methods required by `State`.
-    public fun version(): u64 {
-        CURRENT_BUILD_VERSION
+    #[test_only]
+    struct V__MIGRATED has store, drop, copy {}
+
+    #[test_only]
+    public fun next_version(): V__MIGRATED {
+        V__MIGRATED {}
+    }
+
+    #[test_only]
+    public fun previous_version_test_only(): V__DUMMY {
+        previous_version()
     }
 }

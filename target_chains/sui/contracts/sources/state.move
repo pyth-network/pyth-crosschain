@@ -1,27 +1,21 @@
 module pyth::state {
     use std::vector;
     use sui::object::{Self, UID, ID};
-    use sui::transfer::{Self};
     use sui::tx_context::{Self, TxContext};
-    use sui::dynamic_field::{Self as field};
-    use sui::package::{Self, UpgradeCap, UpgradeReceipt, UpgradeTicket};
-    use sui::balance::{Balance};
-    use sui::sui::SUI;
+    use sui::package::{UpgradeCap, UpgradeTicket, UpgradeReceipt};
 
     use pyth::data_source::{Self, DataSource};
     use pyth::price_info::{Self};
-    use pyth::price_identifier::{PriceIdentifier};
-    use pyth::required_version::{Self, RequiredVersion};
-    use pyth::version_control::{Self as control};
+    use pyth::price_identifier::{Self, PriceIdentifier};
+    use pyth::version_control::{Self};
 
-    use wormhole::setup::{assert_package_upgrade_cap};
     use wormhole::consumed_vaas::{Self, ConsumedVAAs};
     use wormhole::bytes32::{Self, Bytes32};
-    use wormhole::fee_collector::{Self, FeeCollector};
-
-    use wormhole::setup::{assert_package_upgrade_cap};
+    use wormhole::package_utils::{Self};
+    use wormhole::external_address::{ExternalAddress};
 
     friend pyth::pyth;
+    #[test_only]
     friend pyth::pyth_tests;
     friend pyth::governance_action;
     friend pyth::set_update_fee;
@@ -31,88 +25,43 @@ module pyth::state {
     friend pyth::set_governance_data_source;
     friend pyth::migrate;
     friend pyth::contract_upgrade;
-    friend pyth::transfer_fee;
+    friend pyth::set_fee_recipient;
+    friend pyth::setup;
 
-    const E_BUILD_VERSION_MISMATCH: u64 = 0;
-    const E_INVALID_BUILD_VERSION: u64 = 1;
-    const E_VAA_ALREADY_CONSUMED: u64 = 2;
+    /// Build digest does not agree with current implementation.
+    const E_INVALID_BUILD_DIGEST: u64 = 0;
+    /// Specified version does not match this build's version.
+    const E_VERSION_MISMATCH: u64 = 1;
 
-    /// Capability for creating a bridge state object, granted to sender when this
-    /// module is deployed
-    struct DeployerCap has key, store {
-        id: UID
-    }
+    /// Sui's chain ID is hard-coded to one value.
+    const CHAIN_ID: u16 = 21;
 
-    /// Used as key for dynamic field reflecting whether `migrate` can be
-    /// called.
-    ///
-    /// See `migrate` module for more info.
-    struct MigrationControl has store, drop, copy {}
+    /// Capability reflecting that the current build version is used to invoke
+    /// state methods.
+    struct LatestOnly has drop {}
 
-    struct State has key {
+    struct State has key, store {
         id: UID,
         governance_data_source: DataSource,
         stale_price_threshold: u64,
         base_update_fee: u64,
+        fee_recipient_address: address,
+        last_executed_governance_sequence: u64,
         consumed_vaas: ConsumedVAAs,
 
         // Upgrade capability.
+        upgrade_cap: UpgradeCap
+    }
+
+    public(friend) fun new(
         upgrade_cap: UpgradeCap,
-
-        // Fee collector.
-        fee_collector: FeeCollector,
-
-        /// Contract build version tracker.
-        required_version: RequiredVersion
-    }
-
-    fun init(ctx: &mut TxContext) {
-        transfer::public_transfer(
-            DeployerCap {
-                id: object::new(ctx)
-            },
-            tx_context::sender(ctx)
-        );
-    }
-
-    #[test_only]
-    public fun init_test_only(ctx: &mut TxContext) {
-        init(ctx);
-
-        // This will be created and sent to the transaction sender
-        // automatically when the contract is published.
-        transfer::public_transfer(
-            sui::package::test_publish(object::id_from_address(@pyth), ctx),
-            tx_context::sender(ctx)
-        );
-    }
-
-    /// Initialization
-    public(friend) fun init_and_share_state(
-        deployer: DeployerCap,
-        upgrade_cap: UpgradeCap,
+        sources: vector<DataSource>,
+        governance_data_source: DataSource,
         stale_price_threshold: u64,
         base_update_fee: u64,
-        governance_data_source: DataSource,
-        sources: vector<DataSource>,
         ctx: &mut TxContext
-    ) {
-        // Only init and share state once (in the initial deployment).
-        let version = wormhole::version_control::version();
-        assert!(version == 1, E_INVALID_BUILD_VERSION);
-
-        let DeployerCap { id } = deployer;
-        object::delete(id);
-
-        assert_package_upgrade_cap<DeployerCap>(
-            &upgrade_cap,
-            package::compatible_policy(),
-            1 // version
-        );
-
+    ): State {
         let uid = object::new(ctx);
-
-        field::add(&mut uid, MigrationControl {}, false);
 
         // Create a set that contains all registered data sources and
         // attach it to uid as a dynamic field to minimize the
@@ -124,144 +73,51 @@ module pyth::state {
         // size of State.
         price_info::new_price_info_registry(&mut uid, ctx);
 
-        // Iterate through data sources and add them to the data source
-        // registry in state.
         while (!vector::is_empty(&sources)) {
             data_source::add(&mut uid, vector::pop_back(&mut sources));
         };
 
         let consumed_vaas = consumed_vaas::new(ctx);
 
-        let required_version = required_version::new(control::version(), ctx);
-        required_version::add<control::SetDataSources>(&mut required_version);
-        required_version::add<control::SetGovernanceDataSource>(&mut required_version);
-        required_version::add<control::SetStalePriceThreshold>(&mut required_version);
-        required_version::add<control::SetUpdateFee>(&mut required_version);
-        required_version::add<control::TransferFee>(&mut required_version);
-        required_version::add<control::UpdatePriceFeeds>(&mut required_version);
-        required_version::add<control::CreatePriceFeeds>(&mut required_version);
-
-        // Share state so that is a shared Sui object.
-        transfer::share_object(
-            State {
-                id: uid,
-                upgrade_cap,
-                governance_data_source,
-                stale_price_threshold,
-                base_update_fee,
-                consumed_vaas,
-                fee_collector: fee_collector::new(base_update_fee),
-                required_version
-            }
-        );
-    }
-
-    /// Retrieve current build version of latest upgrade.
-    public fun current_version(self: &State): u64 {
-        required_version::current(&self.required_version)
-    }
-
-    /// Issue an `UpgradeTicket` for the upgrade.
-    public(friend) fun authorize_upgrade(
-        self: &mut State,
-        implementation_digest: Bytes32
-    ): UpgradeTicket {
-        let policy = package::upgrade_policy(&self.upgrade_cap);
-
-        // TODO: grab package ID from `UpgradeCap` and store it
-        // in a dynamic field. This will be the old ID after the upgrade.
-        // Both IDs will be emitted in a `ContractUpgraded` event.
-        package::authorize_upgrade(
-            &mut self.upgrade_cap,
-            policy,
-            bytes32::to_bytes(implementation_digest),
-        )
-    }
-
-    /// Finalize the upgrade that ran to produce the given `receipt`.
-    public(friend) fun commit_upgrade(
-        self: &mut State,
-        receipt: UpgradeReceipt
-    ): ID {
-        // Uptick the upgrade cap version number using this receipt.
-        package::commit_upgrade(&mut self.upgrade_cap, receipt);
-
-        // Check that the upticked hard-coded version version agrees with the
-        // upticked version number.
-        assert!(
-            package::version(&self.upgrade_cap) == control::version() + 1,
-            E_BUILD_VERSION_MISMATCH
+        // Initialize package info. This will be used for emitting information
+        // of successful migrations.
+        package_utils::init_package_info(
+            &mut uid,
+            version_control::current_version(),
+            &upgrade_cap
         );
 
-        // Update global version.
-        required_version::update_latest(
-            &mut self.required_version,
-            &self.upgrade_cap
-        );
-
-        // Enable `migrate` to be called after commiting the upgrade.
-        //
-        // A separate method is required because `state` is a dependency of
-        // `migrate`. This method warehouses state modifications required
-        // for the new implementation plus enabling any methods required to be
-        // gated by the current implementation version. In most cases `migrate`
-        // is a no-op. But it still must be called in order to reset the
-        // migration control to `false`.
-        //
-        // See `migrate` module for more info.
-        enable_migration(self);
-
-        package::upgrade_package(&self.upgrade_cap)
+        State {
+            id: uid,
+            upgrade_cap,
+            governance_data_source,
+            stale_price_threshold,
+            fee_recipient_address: tx_context::sender(ctx),
+            base_update_fee,
+            consumed_vaas,
+            last_executed_governance_sequence: 0
+        }
     }
 
-    /// Enforce a particular method to use the current build version as its
-    /// minimum required version. This method ensures that a method is not
-    /// backwards compatible with older builds.
-    public(friend) fun require_current_version<ControlType>(self: &mut State) {
-        required_version::require_current_version<ControlType>(
-            &mut self.required_version,
-        )
-    }
+    ////////////////////////////////////////////////////////////////////////////
+    //
+    //  Simple Getters
+    //
+    //  These methods do not require `LatestOnly` for access. Anyone is free to
+    //  access these values.
+    //
+    ////////////////////////////////////////////////////////////////////////////
 
-    /// Check whether a particular method meets the minimum build version for
-    /// the latest Wormhole implementation.
-    public(friend) fun check_minimum_requirement<ControlType>(self: &State) {
-        required_version::check_minimum_requirement<ControlType>(
-            &self.required_version,
-            control::version()
-        )
-    }
-
-    // Upgrade and migration-related functionality
-
-    /// Check whether `migrate` can be called.
-    ///
-    /// See `wormhole::migrate` module for more info.
-    public fun can_migrate(self: &State): bool {
-        *field::borrow(&self.id, MigrationControl {})
-    }
-
-    /// Allow `migrate` to be called after upgrade.
-    ///
-    /// See `wormhole::migrate` module for more info.
-    public(friend) fun enable_migration(self: &mut State) {
-        *field::borrow_mut(&mut self.id, MigrationControl {}) = true;
-    }
-
-    /// Disallow `migrate` to be called.
-    ///
-    /// See `wormhole::migrate` module for more info.
-    public(friend) fun disable_migration(self: &mut State) {
-        *field::borrow_mut(&mut self.id, MigrationControl {}) = false;
-    }
-
-    // Accessors
     public fun get_stale_price_threshold_secs(s: &State): u64 {
         s.stale_price_threshold
     }
 
     public fun get_base_update_fee(s: &State): u64 {
         s.base_update_fee
+    }
+
+    public fun get_fee_recipient(s: &State): address {
+        s.fee_recipient_address
     }
 
     public fun is_valid_data_source(s: &State, data_source: DataSource): bool {
@@ -276,32 +132,103 @@ module pyth::state {
         price_info::contains(&s.id, p)
     }
 
-    // Mutators and Setters
+    /// Retrieve governance chain ID, which is governance's emitter chain ID.
+    public fun governance_data_source(self: &State): DataSource {
+        self.governance_data_source
+    }
 
-    /// Withdraw collected fees when governance action to transfer fees to a
-    /// particular recipient.
+    public fun get_last_executed_governance_sequence(self: &State): u64{
+        return self.last_executed_governance_sequence
+    }
+
+    /// Retrieve governance module name.
+    public fun governance_module(): Bytes32 {
+        bytes32::new(
+            x"0000000000000000000000000000000000000000000000000000000000000001"
+        )
+    }
+
+    /// Retrieve governance chain ID, which is governance's emitter chain ID.
+    public fun governance_chain(self: &State): u16 {
+        let governance_data_source = governance_data_source(self);
+        (data_source::emitter_chain(&governance_data_source) as u16)
+    }
+
+    /// Retrieve governance emitter address.
+    public fun governance_contract(self: &State): ExternalAddress {
+                let governance_data_source = governance_data_source(self);
+        data_source::emitter_address(&governance_data_source)
+    }
+
+    public fun get_price_info_object_id(self: &State, price_identifier_bytes: vector<u8>): ID {
+        let price_identifier = price_identifier::from_byte_vec(price_identifier_bytes);
+        price_info::get_id(&self.id, price_identifier)
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    //
+    //  Privileged `State` Access
+    //
+    //  This section of methods require a `LatestOnly`, which can only be created
+    //  within the Wormhole package. This capability allows special access to
+    //  the `State` object.
+    //
+    //  NOTE: A lot of these methods are still marked as `(friend)` as a safety
+    //  precaution. When a package is upgraded, friend modifiers can be
+    //  removed.
+    //
+    ////////////////////////////////////////////////////////////////////////////
+
+    /// Obtain a capability to interact with `State` methods. This method checks
+    /// that we are running the current build.
     ///
-    /// See `pyth::transfer_fee` for more info.
-    public(friend) fun withdraw_fee(
+    /// NOTE: This method allows caching the current version check so we avoid
+    /// multiple checks to dynamic fields.
+    public(friend) fun assert_latest_only(self: &State): LatestOnly {
+        package_utils::assert_version(
+            &self.id,
+            version_control::current_version()
+        );
+
+        LatestOnly {}
+    }
+
+    public(friend) fun set_fee_recipient(
+        _: &LatestOnly,
         self: &mut State,
-        amount: u64
-    ): Balance<SUI> {
-        fee_collector::withdraw_balance(&mut self.fee_collector, amount)
+        addr: address
+    ) {
+        self.fee_recipient_address = addr;
     }
 
-    public(friend) fun deposit_fee(self: &mut State, fee: Balance<SUI>) {
-        fee_collector::deposit_balance(&mut self.fee_collector, fee);
+    /// Store `VAA` hash as a way to claim a VAA. This method prevents a VAA
+    /// from being replayed. For Wormhole, the only VAAs that it cares about
+    /// being replayed are its governance actions.
+    public(friend) fun borrow_mut_consumed_vaas(
+        _: &LatestOnly,
+        self: &mut State
+    ): &mut ConsumedVAAs {
+        borrow_mut_consumed_vaas_unchecked(self)
     }
 
-    public(friend) fun set_fee_collector_fee(self: &mut State, amount: u64) {
-        fee_collector::change_fee(&mut self.fee_collector, amount);
+    /// Store `VAA` hash as a way to claim a VAA. This method prevents a VAA
+    /// from being replayed. For Wormhole, the only VAAs that it cares about
+    /// being replayed are its governance actions.
+    ///
+    /// NOTE: This method does not require `LatestOnly`. Only methods in the
+    /// `upgrade_contract` module requires this to be unprotected to prevent
+    /// a corrupted upgraded contract from bricking upgradability.
+    public(friend) fun borrow_mut_consumed_vaas_unchecked(
+        self: &mut State
+    ): &mut ConsumedVAAs {
+        &mut self.consumed_vaas
     }
 
-    public(friend) fun consume_vaa(state: &mut State, vaa_digest: Bytes32){
-        consumed_vaas::consume(&mut state.consumed_vaas, vaa_digest);
+    public(friend) fun current_package(_: &LatestOnly, self: &State): ID {
+        package_utils::current_package(&self.id)
     }
 
-    public(friend) fun set_data_sources(s: &mut State, new_sources: vector<DataSource>) {
+    public(friend) fun set_data_sources(_: &LatestOnly, s: &mut State, new_sources: vector<DataSource>) {
         // Empty the existing table of data sources registered in state.
         data_source::empty(&mut s.id);
         // Add the new data sources to the dynamic field registry.
@@ -310,23 +237,136 @@ module pyth::state {
         };
     }
 
-    public(friend) fun register_price_info_object(s: &mut State, price_identifier: PriceIdentifier, id: ID) {
+    public(friend) fun register_price_info_object(_: &LatestOnly, s: &mut State, price_identifier: PriceIdentifier, id: ID) {
         price_info::add(&mut s.id, price_identifier, id);
     }
 
-    public(friend) fun set_governance_data_source(s: &mut State, source: DataSource) {
-        s. governance_data_source = source;
+    public(friend) fun set_governance_data_source(_: &LatestOnly, s: &mut State, source: DataSource) {
+        s.governance_data_source = source;
     }
 
-    public(friend) fun set_base_update_fee(s: &mut State, fee: u64) {
+    public(friend) fun set_last_executed_governance_sequence(_: &LatestOnly, s: &mut State, sequence: u64) {
+        s.last_executed_governance_sequence = sequence;
+    }
+
+    public(friend) fun set_base_update_fee(_: &LatestOnly, s: &mut State, fee: u64) {
         s.base_update_fee = fee;
     }
 
-    public(friend) fun set_stale_price_threshold_secs(s: &mut State, threshold_secs: u64) {
+    public(friend) fun set_stale_price_threshold_secs(_: &LatestOnly, s: &mut State, threshold_secs: u64) {
         s.stale_price_threshold = threshold_secs;
     }
 
-    public(friend) fun register_price_feed(s: &mut State, p: PriceIdentifier, id: ID){
-        price_info::add(&mut s.id, p, id);
+    ////////////////////////////////////////////////////////////////////////////
+    //
+    //  Upgradability
+    //
+    //  A special space that controls upgrade logic. These methods are invoked
+    //  via the `upgrade_contract` module.
+    //
+    //  Also in this section is managing contract migrations, which uses the
+    //  `migrate` module to officially roll state access to the latest build.
+    //  Only those methods that require `LatestOnly` will be affected by an
+    //  upgrade.
+    //
+    ////////////////////////////////////////////////////////////////////////////
+
+    /// Issue an `UpgradeTicket` for the upgrade.
+    ///
+    /// NOTE: The Sui VM performs a check that this method is executed from the
+    /// latest published package. If someone were to try to execute this using
+    /// a stale build, the transaction will revert with `PackageUpgradeError`,
+    /// specifically `PackageIDDoesNotMatch`.
+    public(friend) fun authorize_upgrade(
+        self: &mut State,
+        package_digest: Bytes32
+    ): UpgradeTicket {
+        let cap = &mut self.upgrade_cap;
+        package_utils::authorize_upgrade(&mut self.id, cap, package_digest)
     }
+
+    /// Finalize the upgrade that ran to produce the given `receipt`.
+    ///
+    /// NOTE: The Sui VM performs a check that this method is executed from the
+    /// latest published package. If someone were to try to execute this using
+    /// a stale build, the transaction will revert with `PackageUpgradeError`,
+    /// specifically `PackageIDDoesNotMatch`.
+    public(friend) fun commit_upgrade(
+        self: &mut State,
+        receipt: UpgradeReceipt
+    ): (ID, ID) {
+        let cap = &mut self.upgrade_cap;
+        package_utils::commit_upgrade(&mut self.id, cap, receipt)
+    }
+
+    /// Method executed by the `migrate` module to roll access from one package
+    /// to another. This method will be called from the upgraded package.
+    public(friend) fun migrate_version(self: &mut State) {
+        package_utils::migrate_version(
+            &mut self.id,
+            version_control::previous_version(),
+            version_control::current_version()
+        );
+    }
+
+    /// As a part of the migration, we verify that the upgrade contract VAA's
+    /// encoded package digest used in `migrate` equals the one used to conduct
+    /// the upgrade.
+    public(friend) fun assert_authorized_digest(
+        _: &LatestOnly,
+        self: &State,
+        digest: Bytes32
+    ) {
+        let authorized = package_utils::authorized_digest(&self.id);
+        assert!(digest == authorized, E_INVALID_BUILD_DIGEST);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    //
+    //  Special State Interaction via Migrate
+    //
+    //  A VERY special space that manipulates `State` via calling `migrate`.
+    //
+    //  PLEASE KEEP ANY METHODS HERE AS FRIENDS. We want the ability to remove
+    //  these for future builds.
+    //
+    ////////////////////////////////////////////////////////////////////////////
+
+    public(friend) fun migrate__v__0_1_1(self: &mut State) {
+        // We need to add dynamic fields via the new package utils method. These
+        // fields do not exist in the previous build (0.1.0).
+        // See `state::new` above.
+
+        // Initialize package info. This will be used for emitting information
+        // of successful migrations.
+        let upgrade_cap = &self.upgrade_cap;
+        package_utils::init_package_info(
+            &mut self.id,
+            version_control::current_version(),
+            upgrade_cap,
+        );
+    }
+
+    #[test_only]
+    /// Bloody hack.
+    public fun reverse_migrate__v__0_1_0(self: &mut State) {
+        package_utils::remove_package_info(&mut self.id);
+
+        // Add back in old dynamic field(s)...
+
+        // Add dummy hash since this is the first time the package is published.
+        sui::dynamic_field::add(&mut self.id, CurrentDigest {}, bytes32::from_bytes(b"new build"));
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    //
+    //  Deprecated
+    //
+    //  Dumping grounds for old structs and methods. These things should not
+    //  be used in future builds.
+    //
+    ////////////////////////////////////////////////////////////////////////////
+
+    struct CurrentDigest has store, drop, copy {}
+
 }
