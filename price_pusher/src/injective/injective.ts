@@ -174,7 +174,7 @@ export class InjectivePricePusher implements IPricePusher {
       return txResponse;
     } catch (e: any) {
       // The sequence number was invalid and hence we will have to fetch it again.
-      if (e.message.match(/account sequence mismatch/) !== null) {
+      if (JSON.stringify(e).match(/account sequence mismatch/) !== null) {
         // We need to fetch the account details again.
         this.account = null;
       }
