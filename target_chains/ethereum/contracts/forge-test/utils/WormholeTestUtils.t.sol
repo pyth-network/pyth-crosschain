@@ -126,28 +126,19 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
             4
         );
 
-        (
-            bool valid,
-            ,
-            uint16 emitterChainId,
-            bytes32 emitterAddress,
-            uint64 sequence,
-            bytes memory vmPayload
-        ) = wormhole.parseAndVerifyVM(vaa);
+        (Structs.VM memory vm, bool valid, ) = wormhole.parseAndVerifyVM(vaa);
         assertTrue(valid);
-        assertEq(emitterChainId, 7);
+
+        assertEq(vm.timestamp, 112);
+        assertEq(vm.emitterChainId, 7);
         assertEq(
-            emitterAddress,
+            vm.emitterAddress,
             0x0000000000000000000000000000000000000000000000000000000000000bad
         );
-        assertEq(sequence, 10);
-        assertEq(vmPayload, hex"deadbeaf");
-
-        Structs.VM memory vm = wormhole.parseVM(vaa);
-        assertEq(vm.timestamp, 112);
-        assertEq(vm.emitterChainId, emitterChainId);
-        assertEq(vm.emitterAddress, emitterAddress);
-        assertEq(vm.payload, vmPayload);
+        assertEq(vm.payload, hex"deadbeaf");
+        // parseAndVerifyVM() returns an empty signatures array for gas savings since it's not used
+        // after its been verified. parseVM() returns the full signatures array.
+        vm = wormhole.parseVM(vaa);
         assertEq(vm.signatures.length, 4);
     }
 }

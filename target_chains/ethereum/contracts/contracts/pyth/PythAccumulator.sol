@@ -32,17 +32,14 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     // as the batch attestation will deprecate soon.
     function parseAndVerifyPythVM(
         bytes calldata encodedVm
-    ) internal view returns (bytes memory payload) {
-        uint16 emitterChainId;
-        bytes32 emitterAddress;
+    ) internal view returns (IWormhole.VM memory vm) {
         {
             bool valid;
-            (valid, , emitterChainId, emitterAddress, , payload) = wormhole()
-                .parseAndVerifyVM(encodedVm);
+            (vm, valid, ) = wormhole().parseAndVerifyVM(encodedVm);
             if (!valid) revert PythErrors.InvalidWormholeVaa();
         }
 
-        if (!isValidDataSource(emitterChainId, emitterAddress))
+        if (!isValidDataSource(vm.emitterChainId, vm.emitterAddress))
             revert PythErrors.InvalidUpdateDataSource();
     }
 
@@ -144,7 +141,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             {
                 bytes memory encodedPayload;
                 {
-                    encodedPayload = parseAndVerifyPythVM(
+                    IWormhole.VM memory vm = parseAndVerifyPythVM(
                         UnsafeCalldataBytesLib.slice(
                             encoded,
                             offset,
@@ -155,6 +152,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
 
                     // TODO: Do we need to emit an update for accumulator update? If so what should we emit?
                     // emit AccumulatorUpdate(vm.chainId, vm.sequence);
+                    encodedPayload = vm.payload;
                 }
 
                 uint payloadOffset = 0;

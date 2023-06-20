@@ -63,13 +63,9 @@ abstract contract Pyth is
     }
 
     function updatePriceBatchFromVm(bytes calldata encodedVm) private {
-        (
-            uint16 emitterChainId,
-            uint64 sequence,
-            bytes memory payload
-        ) = parseAndVerifyBatchAttestationVM(encodedVm);
-
-        parseAndProcessBatchPriceAttestation(emitterChainId, sequence, payload);
+        parseAndProcessBatchPriceAttestation(
+            parseAndVerifyBatchAttestationVM(encodedVm)
+        );
     }
 
     function updatePriceFeeds(
@@ -140,15 +136,14 @@ abstract contract Pyth is
     }
 
     function parseAndProcessBatchPriceAttestation(
-        uint16 emitterChainId,
-        uint64 sequence,
-        bytes memory encoded
+        IWormhole.VM memory vm
     ) internal {
         // Most of the math operations below are simple additions.
         // In the places that there is more complex operation there is
         // a comment explaining why it is safe. Also, byteslib
         // operations have proper require.
         unchecked {
+            bytes memory encoded = vm.payload;
             (
                 uint index,
                 uint nAttestations,
@@ -183,7 +178,7 @@ abstract contract Pyth is
                 }
             }
 
-            emit BatchPriceFeedUpdate(emitterChainId, sequence);
+            emit BatchPriceFeedUpdate(vm.emitterChainId, vm.sequence);
         }
     }
 
@@ -432,28 +427,14 @@ abstract contract Pyth is
 
     function parseAndVerifyBatchAttestationVM(
         bytes calldata encodedVm
-    )
-        internal
-        view
-        returns (uint16 emitterChainId, uint64 sequence, bytes memory payload)
-    {
-        bytes32 emitterAddress;
+    ) internal view returns (IWormhole.VM memory vm) {
         {
             bool valid;
-            (
-                valid,
-                ,
-                emitterChainId,
-                emitterAddress,
-                sequence,
-                payload
-            ) = wormhole().parseAndVerifyVM(encodedVm);
-
+            (vm, valid, ) = wormhole().parseAndVerifyVM(encodedVm);
             if (!valid) revert PythErrors.InvalidWormholeVaa();
         }
 
-        if (!isValidDataSource(emitterChainId, emitterAddress))
-            revert PythErrors.InvalidUpdateDataSource();
+        if (!verifyPythVM(vm)) revert PythErrors.InvalidUpdateDataSource();
     }
 
     function parsePriceFeedUpdates(
@@ -553,9 +534,11 @@ abstract contract Pyth is
                 } else {
                     bytes memory encoded;
                     {
-                        (, , encoded) = parseAndVerifyBatchAttestationVM(
-                            updateData[i]
-                        );
+                        IWormhole.VM
+                            memory vm = parseAndVerifyBatchAttestationVM(
+                                updateData[i]
+                            );
+                        encoded = vm.payload;
                     }
 
                     /** Batch price logic */

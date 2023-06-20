@@ -37,37 +37,30 @@ abstract contract PythGovernance is
 
     function verifyGovernanceVM(
         bytes memory encodedVM
-    ) internal returns (bytes memory vmPayload) {
-        bool valid;
-        uint16 emitterChainId;
-        bytes32 emitterAddress;
-        uint64 sequence;
-        (
-            valid,
-            ,
-            emitterChainId,
-            emitterAddress,
-            sequence,
-            vmPayload
-        ) = wormhole().parseAndVerifyVM(encodedVM);
+    ) internal returns (IWormhole.VM memory parsedVM) {
+        (IWormhole.VM memory vm, bool valid, ) = wormhole().parseAndVerifyVM(
+            encodedVM
+        );
 
         if (!valid) revert PythErrors.InvalidWormholeVaa();
 
-        if (!isValidGovernanceDataSource(emitterChainId, emitterAddress))
+        if (!isValidGovernanceDataSource(vm.emitterChainId, vm.emitterAddress))
             revert PythErrors.InvalidGovernanceDataSource();
 
-        if (sequence <= lastExecutedGovernanceSequence())
+        if (vm.sequence <= lastExecutedGovernanceSequence())
             revert PythErrors.OldGovernanceMessage();
 
-        setLastExecutedGovernanceSequence(sequence);
+        setLastExecutedGovernanceSequence(vm.sequence);
 
-        return vmPayload;
+        return vm;
     }
 
     function executeGovernanceInstruction(bytes calldata encodedVM) public {
-        bytes memory vmPayload = verifyGovernanceVM(encodedVM);
+        IWormhole.VM memory vm = verifyGovernanceVM(encodedVM);
 
-        GovernanceInstruction memory gi = parseGovernanceInstruction(vmPayload);
+        GovernanceInstruction memory gi = parseGovernanceInstruction(
+            vm.payload
+        );
 
         if (gi.targetChainId != chainId() && gi.targetChainId != 0)
             revert PythErrors.InvalidGovernanceTarget();
@@ -120,22 +113,14 @@ abstract contract PythGovernance is
         // If it's valid then its emitter can take over the governance from the current emitter.
         // The VAA is checked here to ensure that the new governance data source is valid and can send message
         // through wormhole.
-        bool valid;
-        uint16 emitterChainId;
-        bytes32 emitterAddress;
-        uint64 sequence;
-        bytes memory vmPayload;
-        (
-            valid,
-            ,
-            emitterChainId,
-            emitterAddress,
-            sequence,
-            vmPayload
-        ) = wormhole().parseAndVerifyVM(payload.claimVaa);
+        (IWormhole.VM memory vm, bool valid, ) = wormhole().parseAndVerifyVM(
+            payload.claimVaa
+        );
         if (!valid) revert PythErrors.InvalidWormholeVaa();
 
-        GovernanceInstruction memory gi = parseGovernanceInstruction(vmPayload);
+        GovernanceInstruction memory gi = parseGovernanceInstruction(
+            vm.payload
+        );
         if (gi.targetChainId != chainId() && gi.targetChainId != 0)
             revert PythErrors.InvalidGovernanceTarget();
 
@@ -157,14 +142,14 @@ abstract contract PythGovernance is
 
         PythInternalStructs.DataSource
             memory newGovernanceDS = PythInternalStructs.DataSource(
-                emitterChainId,
-                emitterAddress
+                vm.emitterChainId,
+                vm.emitterAddress
             );
 
         setGovernanceDataSource(newGovernanceDS);
 
         // Setting the last executed governance to the claimVaa sequence to avoid using older sequences.
-        setLastExecutedGovernanceSequence(sequence);
+        setLastExecutedGovernanceSequence(vm.sequence);
 
         emit GovernanceDataSourceSet(
             oldGovernanceDatSource,
