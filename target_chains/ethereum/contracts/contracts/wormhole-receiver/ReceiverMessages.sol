@@ -71,6 +71,9 @@ contract ReceiverMessages is ReceiverGetters {
             index += 1;
             {
                 uint hashIndex = index + (signersLen * 66);
+                if (hashIndex > encodedVM.length) {
+                    return (vm, false, "invalid signature length");
+                }
                 // Hash the body
                 vm.hash = keccak256(
                     abi.encodePacked(
@@ -165,6 +168,9 @@ contract ReceiverMessages is ReceiverGetters {
             index += 1;
 
             vm.payload = UnsafeCalldataBytesLib.sliceFrom(encodedVM, index);
+            if (index > encodedVM.length) {
+                return (vm, false, "invalid payload length");
+            }
 
             return (vm, true, "");
         }
