@@ -10,6 +10,10 @@
 //! their infrastructure.
 
 use {
+    crate::store::{
+        types::Update,
+        Store,
+    },
     anyhow::Result,
     libp2p::Multiaddr,
     std::{
@@ -22,6 +26,7 @@ use {
                 Receiver,
                 Sender,
             },
+            Arc,
             Mutex,
         },
     },
@@ -66,7 +71,14 @@ lazy_static::lazy_static! {
 extern "C" fn proxy(o: ObservationC) {
     // Create a fixed slice from the pointer and length.
     let vaa = unsafe { std::slice::from_raw_parts(o.vaa, o.vaa_len) }.to_owned();
-    if let Err(e) = OBSERVATIONS.0.lock().unwrap().send(vaa) {
+    // The chances of the mutex getting poisioned is very low and if it happens
+    // there is no way for us to recover from it.
+    if let Err(e) = OBSERVATIONS
+        .0
+        .lock()
+        .expect("Cannot acquire p2p channel lock")
+        .send(vaa)
+    {
         log::error!("Failed to send observation: {}", e);
     }
 }
@@ -76,15 +88,11 @@ extern "C" fn proxy(o: ObservationC) {
 /// TODO: handle_message should be capable of handling more than just Observations. But we don't
 /// have our own P2P network, we pass it in to keep the code structure and read directly from the
 /// OBSERVATIONS channel in the RPC for now.
-pub fn bootstrap<H>(
-    _handle_message: H,
+pub fn bootstrap(
     network_id: String,
     wh_bootstrap_addrs: Vec<Multiaddr>,
     wh_listen_addrs: Vec<Multiaddr>,
-) -> Result<()>
-where
-    H: Fn(Observation) -> Result<()> + 'static,
-{
+) -> Result<()> {
     let network_id_cstr = CString::new(network_id)?;
     let wh_bootstrap_addrs_cstr = CString::new(
         wh_bootstrap_addrs
@@ -114,20 +122,49 @@ where
 }
 
 // Spawn's the P2P layer as a separate thread via Go.
-pub async fn spawn<H>(
-    handle_message: H,
+pub async fn spawn(
+    store: Arc<Store>,
     network_id: String,
     wh_bootstrap_addrs: Vec<Multiaddr>,
     wh_listen_addrs: Vec<Multiaddr>,
-) -> Result<()>
-where
-    H: Fn(Observation) -> Result<()> + Send + 'static,
-{
-    bootstrap(
-        handle_message,
-        network_id,
-        wh_bootstrap_addrs,
-        wh_listen_addrs,
-    )?;
+) -> Result<()> {
+    std::thread::spawn(|| bootstrap(network_id, wh_bootstrap_addrs, wh_listen_addrs).unwrap());
+
+    tokio::spawn(async move {
+        // Listen in the background for new VAA's from the p2p layer
+        // and update the state accordingly.
+        loop {
+            let vaa_bytes = tokio::task::spawn_blocking(|| {
+                let observation = OBSERVATIONS.1.lock();
+                let observation = match observation {
+                    Ok(observation) => observation,
+                    Err(e) => {
+                        // This should never happen, but if it does, we want to panic and crash
+                        // as it is not recoverable.
+                        panic!("Failed to lock p2p observation channel: {e}");
+                    }
+                };
+
+                match observation.recv() {
+                    Ok(vaa_bytes) => vaa_bytes,
+                    Err(e) => {
+                        // This should never happen, but if it does, we want to panic and crash
+                        // as it is not recoverable.
+                        panic!("Failed to receive p2p observation: {e}");
+                    }
+                }
+            })
+            .await
+            .unwrap();
+
+            let store = store.clone();
+            tokio::spawn(async move {
+                if let Err(e) = store.store_update(Update::Vaa(vaa_bytes)).await {
+                    log::error!("Failed to process VAA: {:?}", e);
+                }
+            });
+        }
+    });
+
     Ok(())
 }

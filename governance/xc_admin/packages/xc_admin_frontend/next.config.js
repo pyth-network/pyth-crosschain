@@ -5,6 +5,7 @@ const nextConfig = {
     externalDir: true,
   },
   webpack(config) {
+    config.experiments = { asyncWebAssembly: true }
     config.resolve.fallback = { fs: false }
     const fileLoaderRule = config.module.rules.find(
       (rule) => rule.test && rule.test.test('.svg')

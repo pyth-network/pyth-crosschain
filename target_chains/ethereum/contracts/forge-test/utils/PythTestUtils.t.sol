@@ -24,6 +24,7 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
     uint16 constant GOVERNANCE_EMITTER_CHAIN_ID = 0x1;
     bytes32 constant GOVERNANCE_EMITTER_ADDRESS =
         0x0000000000000000000000000000000000000000000000000000000000000011;
+    uint constant SINGLE_UPDATE_FEE_IN_WEI = 1;
 
     function setUpPyth(address wormhole) public returns (address) {
         PythUpgradable implementation = new PythUpgradable();
@@ -47,10 +48,14 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
             GOVERNANCE_EMITTER_ADDRESS,
             0, // Initial governance sequence
             60, // Valid time period in seconds
-            1 // single update fee in wei
+            SINGLE_UPDATE_FEE_IN_WEI // single update fee in wei
         );
 
         return address(pyth);
+    }
+
+    function singleUpdateFeeInWei() public view returns (uint) {
+        return SINGLE_UPDATE_FEE_IN_WEI;
     }
 
     /// Utilities to help generating price attestations and VAAs for them
@@ -124,7 +129,8 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
         bytes memory wormholePayload = abi.encodePacked(
             uint32(0x41555756), // PythAccumulator.ACCUMULATOR_WORMHOLE_MAGIC
             uint8(PythAccumulator.UpdateType.WormholeMerkle),
-            uint32(0), // Storage index, not used in target networks
+            uint64(0), // Slot, not used in target networks
+            uint32(0), // Ring size, not used in target networks
             rootDigest
         );
 
@@ -156,6 +162,85 @@ abstract contract PythTestUtils is Test, WormholeTestUtils {
                 proofs[i]
             );
         }
+    }
+
+    function generateForwardCompatibleWhMerkleUpdate(
+        PriceFeedMessage[] memory priceFeedMessages,
+        uint8 depth,
+        uint8 numSigners,
+        uint8 minorVersion,
+        bytes memory trailingHeaderData
+    ) internal returns (bytes memory whMerkleUpdateData) {
+        bytes[] memory encodedPriceFeedMessages = encodePriceFeedMessages(
+            priceFeedMessages
+        );
+
+        (bytes20 rootDigest, bytes[] memory proofs) = MerkleTree
+            .constructProofs(encodedPriceFeedMessages, depth);
+        // refactoring some of these generateWormhole functions was necessary
+        // to workaround the stack too deep limit.
+        bytes
+            memory wormholeMerkleVaa = generateForwardCompatibleWormholeMerkleVaa(
+                rootDigest,
+                trailingHeaderData,
+                numSigners
+            );
+        {
+            whMerkleUpdateData = abi.encodePacked(
+                generateForwardCompatibleWormholeMerkleUpdateHeader(
+                    minorVersion,
+                    trailingHeaderData
+                ),
+                uint16(wormholeMerkleVaa.length),
+                wormholeMerkleVaa,
+                uint8(priceFeedMessages.length)
+            );
+        }
+
+        for (uint i = 0; i < priceFeedMessages.length; i++) {
+            whMerkleUpdateData = abi.encodePacked(
+                whMerkleUpdateData,
+                uint16(encodedPriceFeedMessages[i].length),
+                encodedPriceFeedMessages[i],
+                proofs[i]
+            );
+        }
+    }
+
+    function generateForwardCompatibleWormholeMerkleUpdateHeader(
+        uint8 minorVersion,
+        bytes memory trailingHeaderData
+    ) private returns (bytes memory whMerkleUpdateHeader) {
+        whMerkleUpdateHeader = abi.encodePacked(
+            uint32(0x504e4155), // PythAccumulator.ACCUMULATOR_MAGIC
+            uint8(1), // major version
+            minorVersion,
+            uint8(trailingHeaderData.length), // trailing header size
+            trailingHeaderData,
+            uint8(PythAccumulator.UpdateType.WormholeMerkle)
+        );
+    }
+
+    function generateForwardCompatibleWormholeMerkleVaa(
+        bytes20 rootDigest,
+        bytes memory futureData,
+        uint8 numSigners
+    ) internal returns (bytes memory wormholeMerkleVaa) {
+        wormholeMerkleVaa = generateVaa(
+            0,
+            SOURCE_EMITTER_CHAIN_ID,
+            SOURCE_EMITTER_ADDRESS,
+            0,
+            abi.encodePacked(
+                uint32(0x41555756), // PythAccumulator.ACCUMULATOR_WORMHOLE_MAGIC
+                uint8(PythAccumulator.UpdateType.WormholeMerkle),
+                uint64(0), // Slot, not used in target networks
+                uint32(0), // Ring size, not used in target networks
+                rootDigest, // this can have bytes past this for future versions
+                futureData
+            ),
+            numSigners
+        );
     }
 
     // Generates byte-encoded payload for the given price attestations. You can use this to mock wormhole

@@ -31,7 +31,7 @@ const DEFAULT_GAS_PRICE = 500000000;
 export class InjectiveExecutor implements ChainExecutor {
   private readonly wallet: PrivateKey;
   private readonly chainId = "injective-888";
-  private readonly gasMultiplier = 1.8;
+  private readonly gasMultiplier = 2;
   private readonly gasPrice = DEFAULT_GAS_PRICE;
 
   constructor(

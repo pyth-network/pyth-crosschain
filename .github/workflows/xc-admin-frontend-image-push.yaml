@@ -1,5 +1,6 @@
 name: Build and Push Cross Chain Admin Frontend
 on:
+  pull_request:
   push:
     branches: [main]
     paths: [governance/xc_admin/**]
@@ -22,9 +23,16 @@ jobs:
           aws-region: eu-west-2
       - uses: aws-actions/amazon-ecr-login@v1
         id: ecr_login
-      - run: |
+      - name: Build docker image
+        run: |
           DOCKER_BUILDKIT=1 docker build -t lerna -f tilt_devnet/docker_images/Dockerfile.lerna .
           DOCKER_BUILDKIT=1 docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f governance/xc_admin/packages/xc_admin_frontend/Dockerfile .
+        env:
+          ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}
+          ECR_REPOSITORY: xc-admin-frontend
+      - name: Push docker image
+        if: github.ref == 'refs/heads/main'
+        run: |
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         env:
           ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}

@@ -1,7 +1,7 @@
 [profile.default]
 solc_version = '0.8.4'
 optimizer = true
-optimizer_runs = 10000
+optimizer_runs = 2000
 src = 'contracts'
 # We put the tests into the forge-test directory (instead of test) so that
 # truffle doesn't try to build them

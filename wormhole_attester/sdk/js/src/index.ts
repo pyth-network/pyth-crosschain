@@ -34,6 +34,7 @@ export type PriceAttestation = {
   prevPublishTime: UnixTimestamp;
   prevPrice: string;
   prevConf: string;
+  lastAttestedPublishTime: UnixTimestamp;
 };
 
 export type BatchPriceAttestation = {
@@ -94,6 +95,9 @@ export function parsePriceAttestation(bytes: Buffer): PriceAttestation {
   const prevConf = bytes.readBigUint64BE(offset).toString();
   offset += 8;
 
+  const lastAttestedPublishTime = Number(bytes.readBigInt64BE(offset));
+  offset += 8;
+
   return {
     productId,
     priceId,
@@ -110,6 +114,7 @@ export function parsePriceAttestation(bytes: Buffer): PriceAttestation {
     prevPublishTime,
     prevPrice,
     prevConf,
+    lastAttestedPublishTime,
   };
 }
 

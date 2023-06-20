@@ -1,62 +1,71 @@
 [package]
-name                           = "hermes"
-version                        = "0.1.0"
-edition                        = "2021"
+name                   = "hermes"
+version                = "0.1.2"
+edition                = "2021"
 
 [dependencies]
-axum                           = { version = "0.6.9", features = ["json", "ws", "macros"] }
-axum-extra                     = { version = "0.7.2", features = ["query"] }
-axum-macros                    = { version = "0.3.4" }
-anyhow                         = { version = "1.0.69" }
-base64                         = { version = "0.21.0" }
-borsh                          = { version = "0.9.0" }
-bs58                           = { version = "0.4.0" }
-dashmap                        = { version = "5.4.0" }
-der                            = { version = "0.7.0" }
-derive_more                    = { version = "0.99.17" }
-env_logger                     = { version = "0.10.0" }
-futures                        = { version = "0.3.26" }
-hex                            = { version = "0.4.3" }
-rand                           = { version = "0.8.5" }
-reqwest                        = { version = "0.11.14", features = ["blocking", "json"] }
-ring                           = { version = "0.16.20" }
-rusqlite                       = { version = "0.28.0", features = ["bundled"] }
-lazy_static                    = { version = "1.4.0" }
-libc                           = { version = "0.2.140" }
-pyth-sdk                       = { version = "0.7.0" }
-secp256k1                      = { version = "0.26.0", features = ["rand", "recovery", "serde"] }
-serde                          = { version = "1.0.152", features = ["derive"] }
-serde_arrays                   = { version = "0.1.0" }
-serde_cbor                     = { version = "0.11.2" }
-serde_json                     = { version = "1.0.93" }
-sha256                         = { version = "1.1.2" }
-structopt                      = { version = "0.3.26" }
-tokio                          = { version = "1.26.0", features = ["full"] }
-typescript-type-def            = { version = "0.5.5" }
-log                            = { version = "0.4.17" }
-
-# Parse Wormhole VAAs from our own patch. TODO: Replace with released version when wormhole releases it
-wormhole-core                  = { git = "https://github.com/guibescos/wormhole", branch = "reisen/sdk-solana"}
-
-# Parse Wormhole attester price attestations.
-pyth-wormhole-attester-sdk     = { path = "../wormhole_attester/sdk/rust/", version = "0.1.2" }
+anyhow                 = { version = "1.0.69" }
+async-trait            = { version = "0.1.68" }
+axum                   = { version = "0.6.9", features = ["json", "ws", "macros"] }
+axum-macros            = { version = "0.3.4" }
+base64                 = { version = "0.21.0" }
+borsh                  = { version = "0.9.0" }
+byteorder              = { version = "1.4.3" }
+dashmap                = { version = "5.4.0" }
+derive_more            = { version = "0.99.17" }
+env_logger             = { version = "0.10.0" }
+futures                = { version = "0.3.28" }
+hex                    = { version = "0.4.3" }
+humantime              = { version = "2.1.0" }
+lazy_static            = { version = "1.4.0" }
+libc                   = { version = "0.2.140" }
 
 # Setup LibP2P. Unfortunately the dependencies required by libp2p are shared
 # with the dependencies required by solana's geyser plugin. This means that we
 # would have to use the same version of libp2p as solana. Luckily we don't need
 # to do this yet but it's something to keep in mind.
-libp2p                         = { version = "0.51.1", features = [
-    "dns",
+libp2p                 = { version = "0.42.2", features = [
     "gossipsub",
     "identify",
-    "macros",
     "mplex",
     "noise",
-    "quic",
     "secp256k1",
-    "tcp",
-    "tls",
-    "tokio",
     "websocket",
     "yamux",
 ]}
+
+log                    = { version = "0.4.17" }
+moka                   = { version = "0.11.0", features = ["future"] }
+pyth-sdk               = { version = "0.7.0" }
+
+# Parse Wormhole attester price attestations.
+pythnet-sdk            = { path = "../pythnet/pythnet_sdk/", version = "=1.13.6", features = ["strum"] }
+
+rand                   = { version = "0.8.5" }
+reqwest                = { version = "0.11.14", features = ["blocking", "json"] }
+secp256k1              = { version = "0.26.0", features = ["rand", "recovery", "serde"] }
+serde                  = { version = "1.0.152", features = ["derive"] }
+serde_json             = { version = "1.0.93" }
+serde_qs               = { version = "0.12.0", features = ["axum"] }
+serde_wormhole         = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
+sha3                   = { version = "0.10.4" }
+
+# We around bound to this version because of pyth-oracle
+solana-client          = { version = "=1.13.3" }
+solana-sdk             = { version = "=1.13.3" }
+solana-account-decoder = { version = "=1.13.3" }
+
+structopt              = { version = "0.3.26" }
+strum                  = { version = "0.24.1", features = ["derive"] }
+tokio                  = { version = "1.26.0", features = ["full"] }
+tower-http             = { version = "0.4.0", features = ["cors"] }
+wormhole-sdk           = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
+
+[patch.crates-io]
+serde_wormhole         = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
+
+[profile.release]
+panic                  = 'abort'
+
+[profile.dev]
+panic                  = 'abort'

@@ -272,6 +272,97 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         );
     }
 
+    function testBenchmarkParsePriceFeedUpdatesForWhMerkle1() public {
+        uint numIds = 1;
+
+        bytes32[] memory ids = new bytes32[](numIds);
+        for (uint i = 0; i < numIds; i++) {
+            ids[i] = priceIds[i];
+        }
+        pyth.parsePriceFeedUpdates{
+            value: freshPricesWhMerkleUpdateFee[numIds - 1]
+        }(freshPricesWhMerkleUpdateData[numIds - 1], ids, 0, 50);
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForWhMerkle2() public {
+        uint numIds = 2;
+
+        bytes32[] memory ids = new bytes32[](numIds);
+        for (uint i = 0; i < numIds; i++) {
+            ids[i] = priceIds[i];
+        }
+        pyth.parsePriceFeedUpdates{
+            value: freshPricesWhMerkleUpdateFee[numIds - 1]
+        }(freshPricesWhMerkleUpdateData[numIds - 1], ids, 0, 50);
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForWhMerkle3() public {
+        uint numIds = 3;
+
+        bytes32[] memory ids = new bytes32[](numIds);
+        for (uint i = 0; i < numIds; i++) {
+            ids[i] = priceIds[i];
+        }
+        pyth.parsePriceFeedUpdates{
+            value: freshPricesWhMerkleUpdateFee[numIds - 1]
+        }(freshPricesWhMerkleUpdateData[numIds - 1], ids, 0, 50);
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForWhMerkle4() public {
+        uint numIds = 4;
+
+        bytes32[] memory ids = new bytes32[](numIds);
+        for (uint i = 0; i < numIds; i++) {
+            ids[i] = priceIds[i];
+        }
+        pyth.parsePriceFeedUpdates{
+            value: freshPricesWhMerkleUpdateFee[numIds - 1]
+        }(freshPricesWhMerkleUpdateData[numIds - 1], ids, 0, 50);
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForWhMerkle5() public {
+        uint numIds = 5;
+
+        bytes32[] memory ids = new bytes32[](numIds);
+        for (uint i = 0; i < numIds; i++) {
+            ids[i] = priceIds[i];
+        }
+        pyth.parsePriceFeedUpdates{
+            value: freshPricesWhMerkleUpdateFee[numIds - 1]
+        }(freshPricesWhMerkleUpdateData[numIds - 1], ids, 0, 50);
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForAllPriceFeedsShuffledSubsetPriceIds()
+        public
+    {
+        uint numIds = 3;
+        bytes32[] memory ids = new bytes32[](numIds);
+        ids[0] = priceIds[4];
+        ids[1] = priceIds[2];
+        ids[2] = priceIds[0];
+        pyth.parsePriceFeedUpdates{value: freshPricesWhMerkleUpdateFee[4]}( // updateFee based on number of priceFeeds in updateData
+            freshPricesWhMerkleUpdateData[4],
+            ids,
+            0,
+            50
+        );
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesWhMerkleForOnePriceFeedNotWithinRange()
+        public
+    {
+        bytes32[] memory ids = new bytes32[](1);
+        ids[0] = priceIds[0];
+
+        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
+        pyth.parsePriceFeedUpdates{value: freshPricesWhMerkleUpdateFee[0]}(
+            freshPricesWhMerkleUpdateData[0],
+            ids,
+            50,
+            100
+        );
+    }
+
     function testBenchmarkParsePriceFeedUpdatesForOnePriceFeedNotWithinRange()
         public
     {
@@ -303,7 +394,27 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         pyth.getEmaPrice(priceIds[0]);
     }
 
-    function testBenchmarkGetUpdateFee() public view {
+    function testBenchmarkGetUpdateFeeWhBatch() public view {
         pyth.getUpdateFee(freshPricesWhBatchUpdateData);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle1() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[0]);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle2() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[1]);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle3() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[2]);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle4() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[3]);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle5() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[4]);
     }
 }

@@ -228,7 +228,7 @@ module.exports = {
       verify: {
         apiUrl: "https://api-goerli.basescan.org/api",
         explorerUrl: "https://goerli.basescan.org/",
-        apiKey: "",
+        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
       },
     },
     evmos: {
@@ -263,6 +263,23 @@ module.exports = {
       provider: payerProvider("https://evmtestnet.confluxrpc.com"),
       network_id: 71,
     },
+    neon: {
+      provider: payerProvider("NEON_RPC_PLACEHOLDER"), // Replace this by the neon RPC node endpoint
+      network_id: 245022934,
+    },
+    kava: {
+      provider: payerProvider("https://evm.kava.io"),
+      network_id: 2222,
+      verify: {
+        apiUrl: "https://explorer.kava.io/api",
+        explorerUrl: "https://explorer.kava.io/",
+        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
+      },
+    },
+    kava_testnet: {
+      provider: payerProvider("https://evm.testnet.kava.io"),
+      network_id: 2221,
+    },
   },
 
   compilers: {
@@ -271,7 +288,7 @@ module.exports = {
       settings: {
         optimizer: {
           enabled: true,
-          runs: 10000,
+          runs: 5000,
         },
       },
     },
@@ -288,5 +305,6 @@ module.exports = {
     optimistic_etherscan: process.env.OPTIMISTIC_ETHERSCAN_KEY,
     aurorascan: process.env.AURORASCAN_KEY,
     arbiscan: process.env.ARBISCAN_KEY,
+    gnosisscan: process.env.GNOSISSCAN_KEY,
   },
 };

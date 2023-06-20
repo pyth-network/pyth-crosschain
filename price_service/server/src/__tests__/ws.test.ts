@@ -31,6 +31,7 @@ function dummyPriceInfo(id: HexString, vaa: HexString): PriceInfo {
     priceFeed: dummyPriceFeed(id),
     vaa: Buffer.from(vaa, "hex"),
     priceServiceReceiveTime: 4,
+    lastAttestedPublishTime: -1,
   };
 }
 

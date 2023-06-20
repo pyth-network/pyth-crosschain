@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./external/UnsafeBytesLib.sol";
+import "./external/UnsafeCalldataBytesLib.sol";
 
 /**
  * @dev This library provides methods to construct and verify Merkle Tree proofs efficiently.
@@ -36,7 +36,7 @@ library MerkleTree {
         return hash(abi.encodePacked(MERKLE_NODE_PREFIX, childA, childB));
     }
 
-    /// @notice Verify Merkle Tree proof for given leaf data.
+    /// @notice Verify Merkle Tree proof for given leaf data based on data on memory.
     /// @dev To optimize gas usage, this method doesn't take the proof as a bytes array
     /// but rather takes the encoded proof and the offset of the proof in the
     /// encoded proof array possibly containing multiple proofs. Also, the method
@@ -45,20 +45,23 @@ library MerkleTree {
     /// that the `encodedProof` is long enough to contain the proof and the
     /// `proofOffset` is not out of bound.
     function isProofValid(
-        bytes memory encodedProof,
+        bytes calldata encodedProof,
         uint proofOffset,
         bytes20 root,
-        bytes memory leafData
+        bytes calldata leafData
     ) internal pure returns (bool valid, uint endOffset) {
         unchecked {
             bytes20 currentDigest = MerkleTree.leafHash(leafData);
 
-            uint8 proofSize = UnsafeBytesLib.toUint8(encodedProof, proofOffset);
+            uint8 proofSize = UnsafeCalldataBytesLib.toUint8(
+                encodedProof,
+                proofOffset
+            );
             proofOffset += 1;
 
             for (uint i = 0; i < proofSize; i++) {
                 bytes20 siblingDigest = bytes20(
-                    UnsafeBytesLib.toAddress(encodedProof, proofOffset)
+                    UnsafeCalldataBytesLib.toAddress(encodedProof, proofOffset)
                 );
                 proofOffset += 20;
 

@@ -1,6 +1,19 @@
 import { CHAINS as WORMHOLE_CHAINS } from "@certusone/wormhole-sdk";
 
 export { CHAINS as WORMHOLE_CHAINS } from "@certusone/wormhole-sdk";
+// GUIDELINES to add a chain
+// PYTH will have:
+// 1. Mainnet Deployment - which will have pyth mainnet governance and data sources
+// 2. Testnet Stable Deployment - which will also have pyth mainnet governance and data sources
+// 3. Testnet Edge Deployment - which will have pyth testnet governance and data sources.
+// Different chains will have different chain ids i.e., mainnet and testnet will have different chain ids.
+// Though stable and edge contracts on testnet will share the same chain id. They are governed by different
+// sources hence there is no chance of collision.
+
+// If there is already a chain id in wormhole sdk. Use that for Mainnet
+// Else add a chain id for mainnet too.
+// Add an id for the testnet
+// Currently we are deploying this for cosmos chains only. But this will be for all the chains in future.
 export const RECEIVER_CHAINS = {
   cronos: 60001,
   kcc: 60002,
@@ -14,9 +27,17 @@ export const RECEIVER_CHAINS = {
   meter: 60010,
   mantle: 60011,
   conflux_espace: 60012,
-  sei: 60013,
+  injective_testnet: 60013,
   osmosis: 60014,
-  neutron: 60015,
+  osmosis_testnet_4: 60015,
+  osmosis_testnet_5: 60016,
+  sei_pacific_1: 60017,
+  sei_testnet_atlantic_2: 60018,
+  neutron: 60019,
+  neutron_testnet_pion_1: 60020,
+  juno: 60020,
+  juno_testnet: 60021,
+  kava: 60022,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

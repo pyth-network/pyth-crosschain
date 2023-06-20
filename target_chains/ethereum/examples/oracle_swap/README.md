@@ -17,7 +17,7 @@ All of the commands in this section expect to be run from the `contract` directo
 ### Building
 
 You need to have [Foundry](https://getfoundry.sh/) and `node` installed to run this example.
-Once you have installed these tools, run the following commands from this directory:
+Once you have installed these tools, run the following commands from the [`contract`](./contract) directory:
 
 ```
 forge install foundry-rs/forge-std@2c7cbfc6fbede6d7c9e6b17afe997e3fdfe22fef --no-git --no-commit
@@ -65,19 +65,29 @@ forge inspect OracleSwap abi > ../app/src/abi/OracleSwapAbi.json
 
 ## Frontend Application
 
-All of the commands in this section assume you are in the `app` directory.
-
 By default, the frontend is configured to use the already deployed version of the oracle AMM
 at address [`0x15F9ccA28688F5E6Cbc8B00A8f33e8cE73eD7B02`](https://mumbai.polygonscan.com/address/0x15F9ccA28688F5E6Cbc8B00A8f33e8cE73eD7B02) on Polygon Mumbai.
 This means you can start playing with the application without going through the steps above (Remember to switch your wallet to Mumbai and to claim funds from a faucet to pay for the gas).
 
 ### Build
 
-`npm ci`
+From the root of the pyth-crosschain repository, run:
+
+```
+npm ci
+npx lerna run build
+```
+
+This command will install dependencies for all packages within the typescript monorepo, and also build some
+typescript SDKs that this example depends on.
 
 ### Run
 
+After building, you can start the frontend by navigating to the `app/` directory and running:
+
 `npm run start`
+
+Then navigate your browser to `localhost:3000`.
 
 ### Other configurations:
 

@@ -1,7 +1,7 @@
 services:
   spy:
     # Find latest Guardian images in https://github.com/wormhole-foundation/wormhole/pkgs/container/guardiand
-    image: ghcr.io/wormhole-foundation/guardiand:v2.14.8.1
+    image: ghcr.io/wormhole-foundation/guardiand:v2.17.0
     restart: on-failure
     command:
       - "spy"
@@ -17,7 +17,7 @@ services:
       - "warn"
   price-service:
     # Find latest price service images https://gallery.ecr.aws/pyth-network/xc-server
-    image: public.ecr.aws/pyth-network/xc-server:v3.0.0
+    image: public.ecr.aws/pyth-network/xc-server:v3.0.3
     restart: on-failure
     # Or alternatively use a locally built image
     # image: pyth_price_server
@@ -39,6 +39,7 @@ services:
       READINESS_SPY_SYNC_TIME_SECONDS: "20"
       READINESS_NUM_LOADED_SYMBOLS: "50"
       LOG_LEVEL: warning
+      WORMHOLE_CLUSTER: testnet
       DB_API_CLUSTER: devnet
       REMOVE_EXPIRED_VALUES_INTERVAL_SECONDS: "60"
       CACHE_TTL_SECONDS: "300"

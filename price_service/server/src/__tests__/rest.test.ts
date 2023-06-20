@@ -8,7 +8,7 @@ import express, { Express } from "express";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
 import { PriceInfo, PriceStore, VaaCache, VaaConfig } from "../listen";
-import { RestAPI } from "../rest";
+import { RestAPI, VaaResponse } from "../rest";
 
 let priceInfo: PriceStore;
 let app: Express;
@@ -52,8 +52,16 @@ function dummyPriceInfoPair(
       vaa: Buffer.from(vaa, "hex"),
       emitterChainId: 0,
       priceServiceReceiveTime: 0,
+      lastAttestedPublishTime: 0,
     },
   ];
+}
+
+// Add some dummy data to the provided vaa cache.
+function addAbcdDataToCache(id: string, cache: VaaCache) {
+  cache.set(id, 10, 9, "abcd10");
+  cache.set(id, 20, 19, "abcd20");
+  cache.set(id, 30, 29, "abcd30");
 }
 
 beforeAll(async () => {
@@ -258,16 +266,14 @@ describe("Latest Vaa Bytes Endpoint", () => {
 describe("Get VAA endpoint and Get VAA CCIP", () => {
   test("When called with valid id and timestamp in the cache returns the correct answer", async () => {
     const id = expandTo64Len("abcd");
-    vaasCache.set(id, 10, "abcd10");
-    vaasCache.set(id, 20, "abcd20");
-    vaasCache.set(id, 30, "abcd30");
+    addAbcdDataToCache(id, vaasCache);
 
     const resp = await request(app).get("/api/get_vaa").query({
       id,
       publish_time: 16,
     });
     expect(resp.status).toBe(StatusCodes.OK);
-    expect(resp.body).toEqual<VaaConfig>({
+    expect(resp.body).toEqual<VaaResponse>({
       vaa: "abcd20",
       publishTime: 20,
     });
@@ -286,9 +292,7 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
 
   test("When called with valid id with leading 0x and timestamp in the cache returns the correct answer", async () => {
     const id = expandTo64Len("abcd");
-    vaasCache.set(id, 10, "abcd10");
-    vaasCache.set(id, 20, "abcd20");
-    vaasCache.set(id, 30, "abcd30");
+    addAbcdDataToCache(id, vaasCache);
 
     const resp = await request(app)
       .get("/api/get_vaa")
@@ -297,7 +301,7 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
         publish_time: 16,
       });
     expect(resp.status).toBe(StatusCodes.OK);
-    expect(resp.body).toEqual<VaaConfig>({
+    expect(resp.body).toEqual<VaaResponse>({
       vaa: "abcd20",
       publishTime: 20,
     });
@@ -305,9 +309,7 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
 
   test("When called with target_chain, encodes resulting VAA in the right format", async () => {
     const id = expandTo64Len("abcd");
-    vaasCache.set(id, 10, "abcd10");
-    vaasCache.set(id, 20, "abcd20");
-    vaasCache.set(id, 30, "abcd30");
+    addAbcdDataToCache(id, vaasCache);
 
     const resp = await request(app)
       .get("/api/get_vaa")
@@ -317,7 +319,7 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
         target_chain: "evm",
       });
     expect(resp.status).toBe(StatusCodes.OK);
-    expect(resp.body).toEqual<VaaConfig>({
+    expect(resp.body).toEqual<VaaResponse>({
       vaa: "0x" + Buffer.from("abcd20", "base64").toString("hex"),
       publishTime: 20,
     });
@@ -346,9 +348,7 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
 
   test("When called with valid id and timestamp not in the cache without db returns vaa not found", async () => {
     const id = expandTo64Len("abcd");
-    vaasCache.set(id, 10, "abcd10");
-    vaasCache.set(id, 20, "abcd20");
-    vaasCache.set(id, 30, "abcd30");
+    addAbcdDataToCache(id, vaasCache);
 
     const resp = await request(app)
       .get("/api/get_vaa")
@@ -396,9 +396,7 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
     const appWithDb = await apiWithDb.createApp();
 
     const id = expandTo64Len("abcd");
-    vaasCache.set(id, 10, "abcd10");
-    vaasCache.set(id, 20, "abcd20");
-    vaasCache.set(id, 30, "abcd30");
+    addAbcdDataToCache(id, vaasCache);
 
     const resp = await request(appWithDb)
       .get("/api/get_vaa")
@@ -407,7 +405,7 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
         publish_time: 5,
       });
     expect(resp.status).toBe(StatusCodes.OK);
-    expect(resp.body).toEqual<VaaConfig>({
+    expect(resp.body).toEqual<VaaResponse>({
       vaa: `pythnet${id}5`,
       publishTime: 5,
     });
@@ -451,9 +449,7 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
       const appWithDb = await apiWithDb.createApp();
 
       const id = expandTo64Len("abcd");
-      vaasCache.set(id, 10, "abcd10");
-      vaasCache.set(id, 20, "abcd20");
-      vaasCache.set(id, 30, "abcd30");
+      addAbcdDataToCache(id, vaasCache);
 
       const resp = await request(appWithDb)
         .get("/api/get_vaa")
@@ -493,9 +489,7 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
       const appWithDb = await apiWithDb.createApp();
 
       const id = expandTo64Len("abcd");
-      vaasCache.set(id, 10, "abcd10");
-      vaasCache.set(id, 20, "abcd20");
-      vaasCache.set(id, 30, "abcd30");
+      addAbcdDataToCache(id, vaasCache);
 
       const resp = await request(appWithDb)
         .get("/api/get_vaa")
