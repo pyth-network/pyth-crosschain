@@ -7,6 +7,10 @@ import "../../contracts/wormhole/Setup.sol";
 import "../../contracts/wormhole/Wormhole.sol";
 import "../../contracts/wormhole/interfaces/IWormhole.sol";
 
+import "../../contracts/wormhole-receiver/ReceiverImplementation.sol";
+import "../../contracts/wormhole-receiver/ReceiverSetup.sol";
+import "../../contracts/wormhole-receiver/WormholeReceiver.sol";
+
 import "forge-std/Test.sol";
 
 abstract contract WormholeTestUtils is Test {
@@ -33,6 +37,36 @@ abstract contract WormholeTestUtils is Test {
         );
 
         return address(wormhole);
+    }
+
+    function setUpWormholeReceiver(
+        uint8 numGuardians
+    ) public returns (address) {
+        ReceiverImplementation wormholeReceiverImpl = new ReceiverImplementation();
+        ReceiverSetup wormholeReceiverSetup = new ReceiverSetup();
+
+        WormholeReceiver wormholeReceiver = new WormholeReceiver(
+            address(wormholeReceiverSetup),
+            new bytes(0)
+        );
+
+        address[] memory initSigners = new address[](numGuardians);
+
+        for (uint256 i = 0; i < numGuardians; ++i) {
+            initSigners[i] = vm.addr(i + 1); // i+1 is the private key for the i-th signer.
+        }
+
+        // These values are the default values used in our tilt test environment
+        // and are not important.
+        ReceiverSetup(address(wormholeReceiver)).setup(
+            address(wormholeReceiverImpl),
+            initSigners,
+            2, // Ethereum chain ID
+            1, // Governance source chain ID (1 = solana)
+            0x0000000000000000000000000000000000000000000000000000000000000004 // Governance source address
+        );
+
+        return address(wormholeReceiver);
     }
 
     function generateVaa(
@@ -92,16 +126,28 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
             4
         );
 
-        (Structs.VM memory vm, bool valid, ) = wormhole.parseAndVerifyVM(vaa);
+        (
+            bool valid,
+            ,
+            uint16 emitterChainId,
+            bytes32 emitterAddress,
+            uint64 sequence,
+            bytes memory vmPayload
+        ) = wormhole.parseAndVerifyVM(vaa);
         assertTrue(valid);
-
-        assertEq(vm.timestamp, 112);
-        assertEq(vm.emitterChainId, 7);
+        assertEq(emitterChainId, 7);
         assertEq(
-            vm.emitterAddress,
+            emitterAddress,
             0x0000000000000000000000000000000000000000000000000000000000000bad
         );
-        assertEq(vm.payload, hex"deadbeaf");
+        assertEq(sequence, 10);
+        assertEq(vmPayload, hex"deadbeaf");
+
+        Structs.VM memory vm = wormhole.parseVM(vaa);
+        assertEq(vm.timestamp, 112);
+        assertEq(vm.emitterChainId, emitterChainId);
+        assertEq(vm.emitterAddress, emitterAddress);
+        assertEq(vm.payload, vmPayload);
         assertEq(vm.signatures.length, 4);
     }
 }

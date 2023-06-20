@@ -415,10 +415,14 @@ contract PythExperimental is Pyth {
         bytes memory data,
         bytes32[] memory proof
     ) public payable {
-        IWormhole.VM memory vm = parseAndVerifyBatchAttestationVM(rootVaa);
-        assert(vm.payload.length == 32);
+        (
+            uint16 emitterChainId,
+            uint64 sequence,
+            bytes memory payload
+        ) = parseAndVerifyBatchAttestationVM(rootVaa);
+        assert(payload.length == 32);
 
-        bytes32 expectedRoot = UnsafeBytesLib.toBytes32(vm.payload, 0);
+        bytes32 expectedRoot = UnsafeBytesLib.toBytes32(payload, 0);
         bool validProof = isValidMerkleProof(expectedRoot, data, proof);
         if (!validProof) revert PythErrors.InvalidArgument();
 

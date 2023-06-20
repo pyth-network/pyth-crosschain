@@ -31,15 +31,18 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     // This method is also used by batch attestation but moved here
     // as the batch attestation will deprecate soon.
     function parseAndVerifyPythVM(
-        bytes memory encodedVm
-    ) internal view returns (IWormhole.VM memory vm) {
+        bytes calldata encodedVm
+    ) internal view returns (bytes memory payload) {
+        uint16 emitterChainId;
+        bytes32 emitterAddress;
         {
             bool valid;
-            (vm, valid, ) = wormhole().parseAndVerifyVM(encodedVm);
+            (valid, , emitterChainId, emitterAddress, , payload) = wormhole()
+                .parseAndVerifyVM(encodedVm);
             if (!valid) revert PythErrors.InvalidWormholeVaa();
         }
 
-        if (!isValidDataSource(vm.emitterChainId, vm.emitterAddress))
+        if (!isValidDataSource(emitterChainId, emitterAddress))
             revert PythErrors.InvalidUpdateDataSource();
     }
 
@@ -141,7 +144,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             {
                 bytes memory encodedPayload;
                 {
-                    IWormhole.VM memory vm = parseAndVerifyPythVM(
+                    encodedPayload = parseAndVerifyPythVM(
                         UnsafeCalldataBytesLib.slice(
                             encoded,
                             offset,
@@ -152,8 +155,6 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
 
                     // TODO: Do we need to emit an update for accumulator update? If so what should we emit?
                     // emit AccumulatorUpdate(vm.chainId, vm.sequence);
-
-                    encodedPayload = vm.payload;
                 }
 
                 uint payloadOffset = 0;
@@ -200,16 +201,19 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     }
 
     function parseWormholeMerkleHeaderNumUpdates(
-        bytes memory wormholeMerkleUpdate,
+        bytes calldata wormholeMerkleUpdate,
         uint offset
     ) internal pure returns (uint8 numUpdates) {
-        uint16 whProofSize = UnsafeBytesLib.toUint16(
+        uint16 whProofSize = UnsafeCalldataBytesLib.toUint16(
             wormholeMerkleUpdate,
             offset
         );
         offset += 2;
         offset += whProofSize;
-        numUpdates = UnsafeBytesLib.toUint8(wormholeMerkleUpdate, offset);
+        numUpdates = UnsafeCalldataBytesLib.toUint8(
+            wormholeMerkleUpdate,
+            offset
+        );
     }
 
     function extractPriceInfoFromMerkleProof(

@@ -25,6 +25,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     // We will have less than 512 price for a foreseeable future.
     uint8 constant MERKLE_TREE_DEPTH = 9;
 
+    IWormhole public wormhole;
     IPyth public pyth;
 
     bytes32[] priceIds;
@@ -51,7 +52,9 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     uint randSeed;
 
     function setUp() public {
-        pyth = IPyth(setUpPyth(setUpWormhole(NUM_GUARDIANS)));
+        address wormholeAddr = setUpWormholeReceiver(NUM_GUARDIANS);
+        wormhole = IWormhole(wormholeAddr);
+        pyth = IPyth(setUpPyth(wormholeAddr));
 
         priceIds = new bytes32[](NUM_PRICES);
         priceIds[0] = bytes32(
@@ -101,7 +104,6 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
             freshPricesWhMerkleUpdateData.push(updateData);
             freshPricesWhMerkleUpdateFee.push(updateFee);
         }
-
         // Populate the contract with the initial prices
         (
             cachedPricesWhBatchUpdateData,
@@ -416,5 +418,9 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
 
     function testBenchmarkGetUpdateFeeWhMerkle5() public view {
         pyth.getUpdateFee(freshPricesWhMerkleUpdateData[4]);
+    }
+
+    function testBenchmarkWormholeParseAndVerifyVMBatchAttestation() public {
+        wormhole.parseAndVerifyVM(freshPricesWhBatchUpdateData[0]);
     }
 }
