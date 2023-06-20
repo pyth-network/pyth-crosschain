@@ -15,8 +15,6 @@ import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
 import "./utils/RandTestUtils.t.sol";
 
-import "forge-std/console.sol";
-
 // Experiments to measure the gas usage of different ways of verifying prices in the EVM contract.
 contract VerificationExperiments is
     Test,
@@ -98,7 +96,6 @@ contract VerificationExperiments is
             1 // single update fee in wei
         );
 
-        console.log("initialized pyth");
         priceIds = new bytes32[](NUM_PRICES);
         priceIds[0] = bytes32(
             0x1000000000000000000000000000000000000000000000000000000000000f00
@@ -134,18 +131,14 @@ contract VerificationExperiments is
         }
 
         // Populate the contract with the initial prices
-        console.log("generateWormholeUpdateDataAndFee cachedPrices");
         (
             cachedPricesUpdateData,
             cachedPricesUpdateFee
         ) = generateWormholeUpdateDataAndFee(cachedPrices);
-        console.log("updatePriceFeeds cachedPrices");
 
         pyth.updatePriceFeeds{value: cachedPricesUpdateFee}(
             cachedPricesUpdateData
         );
-
-        console.log("generateWormholeUpdateDataAndFee freshPrices");
 
         (
             freshPricesUpdateData,
@@ -153,8 +146,6 @@ contract VerificationExperiments is
         ) = generateWormholeUpdateDataAndFee(freshPrices);
 
         // Generate the update payloads for the various verification systems
-
-        console.log("generateWhMerkleUpdate depth 0");
 
         whMerkleUpdateDepth0 = generateWhMerkleUpdate(
             priceIds[0],
@@ -171,8 +162,6 @@ contract VerificationExperiments is
             freshPrices[0],
             8
         );
-
-        console.log("generateThresholdMerkleUpdate depth 0");
 
         thresholdMerkleUpdateDepth0 = generateThresholdMerkleUpdate(
             priceIds[0],
@@ -268,14 +257,11 @@ contract VerificationExperiments is
         PythStructs.Price memory price,
         uint depth
     ) internal returns (WormholeMerkleUpdate memory update) {
-        console.log("[generateWhMerkleUpdate] generating merkle proof");
-
         (
             bytes32 root,
             bytes memory data,
             bytes32[] memory proof
         ) = generateMerkleProof(priceId, price, depth);
-        console.log("[generateWhMerkleUpdate] generated merkle proof");
 
         bytes memory rootVaa = generateVaa(
             uint32(block.timestamp),
@@ -286,7 +272,6 @@ contract VerificationExperiments is
             NUM_GUARDIAN_SIGNERS
         );
 
-        console.log("[generateWhMerkleUpdate] generatedVaa");
         ++sequence;
 
         return WormholeMerkleUpdate(rootVaa, data, proof);

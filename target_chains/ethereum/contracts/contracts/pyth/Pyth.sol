@@ -12,8 +12,6 @@ import "./PythGetters.sol";
 import "./PythSetters.sol";
 import "./PythInternalStructs.sol";
 
-import "forge-std/console.sol";
-
 abstract contract Pyth is
     PythGetters,
     PythSetters,
@@ -65,15 +63,11 @@ abstract contract Pyth is
     }
 
     function updatePriceBatchFromVm(bytes calldata encodedVm) private {
-        console.log("[updatePriceBatchFromVm]");
         (
             uint16 emitterChainId,
             uint64 sequence,
             bytes memory payload
         ) = parseAndVerifyBatchAttestationVM(encodedVm);
-        console.log(
-            "[updatePriceBatchFromVm] - finished parseAndVerifyBatchAttestationVM"
-        );
 
         parseAndProcessBatchPriceAttestation(emitterChainId, sequence, payload);
     }
@@ -81,7 +75,6 @@ abstract contract Pyth is
     function updatePriceFeeds(
         bytes[] calldata updateData
     ) public payable override {
-        console.log("[pyth.sol] updatePriceFeeds");
         uint totalNumUpdates = 0;
         for (uint i = 0; i < updateData.length; ) {
             if (
@@ -89,15 +82,10 @@ abstract contract Pyth is
                 UnsafeCalldataBytesLib.toUint32(updateData[i], 0) ==
                 ACCUMULATOR_MAGIC
             ) {
-                console.log(
-                    "updatePriceFeeds updatePriceInfosFromAccumulatorUpdate"
-                );
-
                 totalNumUpdates += updatePriceInfosFromAccumulatorUpdate(
                     updateData[i]
                 );
             } else {
-                console.log("updatePriceFeeds updatePriceBatchFromVm");
                 updatePriceBatchFromVm(updateData[i]);
                 totalNumUpdates += 1;
             }
@@ -107,11 +95,6 @@ abstract contract Pyth is
             }
         }
         uint requiredFee = getTotalFee(totalNumUpdates);
-        console.log(
-            "[pyth.sol] msg.value: %s, requiredFee: %s",
-            msg.value,
-            requiredFee
-        );
         if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
     }
 
@@ -454,8 +437,6 @@ abstract contract Pyth is
         view
         returns (uint16 emitterChainId, uint64 sequence, bytes memory payload)
     {
-        console.log("[parseAndVerifyBatchAttestationVM]");
-
         bytes32 emitterAddress;
         {
             bool valid;
@@ -467,10 +448,7 @@ abstract contract Pyth is
                 sequence,
                 payload
             ) = wormhole().parseAndVerifyVM(encodedVm);
-            console.log(
-                "[parseAndVerifyBatchAttestationVM] parseAndVerifyVM valid: %s",
-                valid
-            );
+
             if (!valid) revert PythErrors.InvalidWormholeVaa();
         }
 
