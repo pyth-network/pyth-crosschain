@@ -63,8 +63,18 @@ abstract contract Pyth is
     }
 
     function updatePriceBatchFromVm(bytes calldata encodedVm) private {
+        (
+            uint16 emitterChainId,
+            bytes32 emitterAddress,
+            uint64 sequence,
+            bytes calldata payload
+        ) = parseAndVerifyBatchAttestationVM(encodedVm);
         parseAndProcessBatchPriceAttestation(
-            parseAndVerifyBatchAttestationVM(encodedVm)
+            // parseAndVerifyBatchAttestationVM(encodedVm)
+            emitterChainId,
+            emitterAddress,
+            sequence,
+            payload
         );
     }
 
@@ -129,20 +139,28 @@ abstract contract Pyth is
     }
 
     function verifyPythVM(
-        IWormhole.VM memory vm
+        uint16 emitterChainId,
+        bytes32 emitterAddress
     ) private view returns (bool valid) {
-        return isValidDataSource(vm.emitterChainId, vm.emitterAddress);
+        return isValidDataSource(emitterChainId, emitterAddress);
     }
 
     function parseAndProcessBatchPriceAttestation(
-        IWormhole.VM memory vm
+        // IWormhole.VM memory vm
+        // bytes calldata encoded,
+        // uint16 emitterChainId,
+        // bytes32 emitterAddress
+        uint16 emitterChainId,
+        bytes32 emitterAddress,
+        uint64 sequence,
+        bytes calldata encoded
     ) internal {
         // Most of the math operations below are simple additions.
         // In the places that there is more complex operation there is
         // a comment explaining why it is safe. Also, byteslib
         // operations have proper require.
         unchecked {
-            bytes memory encoded = vm.payload;
+            // bytes memory encoded = vm.payload;
 
             (
                 uint index,
@@ -178,7 +196,7 @@ abstract contract Pyth is
                 }
             }
 
-            emit BatchPriceFeedUpdate(vm.emitterChainId, vm.sequence);
+            emit BatchPriceFeedUpdate(emitterChainId, sequence);
         }
     }
 
@@ -427,14 +445,53 @@ abstract contract Pyth is
 
     function parseAndVerifyBatchAttestationVM(
         bytes calldata encodedVm
-    ) internal view returns (IWormhole.VM memory vm) {
+    )
+        internal
+        view
+        returns (
+            uint16 emitterChainId,
+            bytes32 emitterAddress,
+            uint64 sequence,
+            bytes calldata payload
+        )
+    {
+        // uint16 emitterChainId;
+        // bytes32 emitterAddress;
+        // uint64 sequence;
+        string memory _unusedReason;
         {
             bool valid;
-            (vm, valid, ) = wormhole().parseAndVerifyVM(encodedVm);
+            // (vm, valid, ) = wormhole().parseAndVerifyVM(encodedVm);
+            (
+                valid,
+                _unusedReason,
+                emitterChainId,
+                emitterAddress,
+                sequence,
+                payload
+            ) = wormhole().parseAndVerifyVMNew(encodedVm);
             if (!valid) revert PythErrors.InvalidWormholeVaa();
         }
 
-        if (!verifyPythVM(vm)) revert PythErrors.InvalidUpdateDataSource();
+        if (!verifyPythVM(emitterChainId, emitterAddress))
+            revert PythErrors.InvalidUpdateDataSource();
+    }
+
+    function test(
+        bytes calldata encodedVm
+    ) public view returns (bytes calldata payload) {
+        uint16 emitterChainId;
+        bytes32 emitterAddress;
+        {
+            bool valid;
+            // (vm, valid, ) = wormhole().parseAndVerifyVM(encodedVm);
+            (valid, , emitterChainId, emitterAddress, payload) = wormhole()
+                .parseAndVerifyVMNew(encodedVm);
+            if (!valid) revert PythErrors.InvalidWormholeVaa();
+        }
+
+        if (!verifyPythVM(emitterChainId, emitterAddress))
+            revert PythErrors.InvalidUpdateDataSource();
     }
 
     function parsePriceFeedUpdates(

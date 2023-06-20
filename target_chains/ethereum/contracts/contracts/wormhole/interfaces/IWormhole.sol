@@ -27,6 +27,20 @@ interface IWormhole is Structs {
         view
         returns (Structs.VM memory vm, bool valid, string memory reason);
 
+    function parseAndVerifyVMNew(
+        bytes calldata encodedVM
+    )
+        external
+        view
+        returns (
+            bool valid,
+            string memory reason,
+            uint16 emitterChainId,
+            bytes32 emitterAddress,
+            uint64 sequence,
+            bytes calldata vmPayload
+        );
+
     function verifyVM(
         Structs.VM memory vm
     ) external view returns (bool valid, string memory reason);

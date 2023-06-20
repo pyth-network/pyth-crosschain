@@ -7,11 +7,12 @@ pragma experimental ABIEncoderV2;
 import "./ReceiverGetters.sol";
 import "./ReceiverStructs.sol";
 import "../libraries/external/BytesLib.sol";
+import "../libraries/external/UnsafeCalldataBytesLib.sol";
 
 contract ReceiverMessages is ReceiverGetters {
-    using BytesLib for bytes;
+    // using BytesLib for bytes;
 
-    /// @dev parseAndVerifyVM serves to parse an encodedVM and wholy validate it for consumption
+    // @dev parseAndVerifyVM serves to parse an encodedVM and wholy validate it for consumption
     function parseAndVerifyVM(
         bytes calldata encodedVM
     )
@@ -23,6 +24,179 @@ contract ReceiverMessages is ReceiverGetters {
         (valid, reason) = verifyVM(vm);
     }
 
+    function parseAndVerifyVMNew(
+        bytes calldata encodedVM
+    )
+        public
+        view
+        returns (
+            bool valid,
+            string memory reason,
+            uint16 emitterChainId,
+            bytes32 emitterAddress,
+            uint64 sequence,
+            bytes calldata vmPayload
+        )
+    {
+        vmPayload = encodedVM;
+        uint index = 0;
+
+        {
+            uint8 version = UnsafeCalldataBytesLib.toUint8(encodedVM, index);
+            index += 1;
+            require(version == 1, "VM version incompatible");
+        }
+
+        ReceiverStructs.GuardianSet memory guardianSet;
+        {
+            uint32 guardianSetIndex = UnsafeCalldataBytesLib.toUint32(
+                encodedVM,
+                index
+            );
+            index += 4;
+            guardianSet = getGuardianSet(guardianSetIndex);
+
+            /**
+             * @dev Checks whether the guardianSet has zero keys
+             * WARNING: This keys check is critical to ensure the guardianSet has keys present AND to ensure
+             * that guardianSet key size doesn't fall to zero and negatively impact quorum assessment.  If guardianSet
+             * key length is 0 and vm.signatures length is 0, this could compromise the integrity of both vm and
+             * signature verification.
+             */
+            if (guardianSet.keys.length == 0) {
+                return (
+                    false,
+                    "invalid guardian set",
+                    emitterChainId,
+                    emitterAddress,
+                    sequence,
+                    vmPayload
+                );
+            }
+
+            /// @dev Checks if VM guardian set index matches the current index (unless the current set is expired).
+            if (
+                guardianSetIndex != getCurrentGuardianSetIndex() &&
+                guardianSet.expirationTime < block.timestamp
+            ) {
+                return (
+                    false,
+                    "guardian set has expired",
+                    emitterChainId,
+                    emitterAddress,
+                    sequence,
+                    vmPayload
+                );
+            }
+        }
+
+        // Parse Signatures
+        uint256 signersLen = UnsafeCalldataBytesLib.toUint8(encodedVM, index);
+        index += 1;
+        ReceiverStructs.Signature[] memory signatures;
+        {
+            signatures = new ReceiverStructs.Signature[](signersLen);
+            for (uint i = 0; i < signersLen; i++) {
+                signatures[i].guardianIndex = UnsafeCalldataBytesLib.toUint8(
+                    encodedVM,
+                    index
+                );
+                index += 1;
+
+                signatures[i].r = UnsafeCalldataBytesLib.toBytes32(
+                    encodedVM,
+                    index
+                );
+                index += 32;
+                signatures[i].s = UnsafeCalldataBytesLib.toBytes32(
+                    encodedVM,
+                    index
+                );
+                index += 32;
+                signatures[i].v =
+                    UnsafeCalldataBytesLib.toUint8(encodedVM, index) +
+                    27;
+                index += 1;
+            }
+
+            /**
+             * @dev We're using a fixed point number transformation with 1 decimal to deal with rounding.
+             *   WARNING: This quorum check is critical to assessing whether we have enough Guardian signatures to validate a VM
+             *   if making any changes to this, obtain additional peer review. If guardianSet key length is 0 and
+             *   vm.signatures length is 0, this could compromise the integrity of both vm and signature verification.
+             */
+
+            if (
+                (((guardianSet.keys.length * 10) / 3) * 2) / 10 + 1 >
+                signatures.length
+            ) {
+                return (
+                    false,
+                    "no quorum",
+                    emitterChainId,
+                    emitterAddress,
+                    sequence,
+                    vmPayload
+                );
+            }
+        }
+
+        // Hash the body
+        // bytes memory body = encodedVM.slice(index, encodedVM.length - index);
+        // bytes calldata body = encodedVM[index: encodedVM.length];
+        // bytes32 hash = keccak256(abi.encodePacked(keccak256(body)));
+        bytes32 hash = keccak256(
+            abi.encodePacked(keccak256(encodedVM[index:encodedVM.length]))
+        );
+        // bytes32 hash = keccak256(abi.encodePacked(keccak256(UnsafeCalldataBytesLib.slice(encodedVM, index, encodedVM.length - index))));
+
+        {
+            /// @dev Verify the proposed vm.signatures against the guardianSet
+            (
+                bool signaturesValid,
+                string memory invalidReason
+            ) = verifySignatures(hash, signatures, guardianSet);
+            if (!signaturesValid) {
+                return (
+                    false,
+                    invalidReason,
+                    emitterChainId,
+                    emitterAddress,
+                    sequence,
+                    vmPayload
+                );
+            }
+        }
+
+        // Parse the body
+        // uint32 timestamp = encodedVM.toUint32(index);
+        index += 4;
+
+        // uint32 nonce = encodedVM.toUint32(index);
+        index += 4;
+
+        emitterChainId = UnsafeCalldataBytesLib.toUint16(encodedVM, index);
+        index += 2;
+
+        emitterAddress = UnsafeCalldataBytesLib.toBytes32(encodedVM, index);
+        index += 32;
+
+        sequence = UnsafeCalldataBytesLib.toUint64(encodedVM, index);
+        index += 8;
+
+        // uint8 consistencyLevel = encodedVM.toUint8(index);
+        index += 1;
+        // vmPayload = UnsafeCalldataBytesLib.slice(encodedVM, index, encodedVM.length - index);
+
+        vmPayload = UnsafeCalldataBytesLib.slice(
+            encodedVM,
+            index,
+            encodedVM.length - index
+        );
+
+        return (true, "", emitterChainId, emitterAddress, sequence, vmPayload);
+    }
+
     /**
      * @dev `verifyVM` serves to validate an arbitrary vm against a valid Guardian set
      *  - it aims to make sure the VM is for a known guardianSet
@@ -31,7 +205,7 @@ contract ReceiverMessages is ReceiverGetters {
      *  - it aims to verify the signatures provided against the guardianSet
      */
     function verifyVM(
-        ReceiverStructs.VM memory vm
+        ReceiverStructs.VM calldata vm
     ) public view returns (bool valid, string memory reason) {
         /// @dev Obtain the current guardianSet for the guardianSetIndex provided
         ReceiverStructs.GuardianSet memory guardianSet = getGuardianSet(
@@ -123,57 +297,129 @@ contract ReceiverMessages is ReceiverGetters {
      * @dev parseVM serves to parse an encodedVM into a vm struct
      *  - it intentionally performs no validation functions, it simply parses raw into a struct
      */
+    // function parseVM(
+    //     bytes memory encodedVM
+    // ) public pure virtual returns (ReceiverStructs.VM memory vm) {
+    //     uint index = 0;
+
+    //     vm.version = encodedVM.toUint8(index);
+    //     index += 1;
+    //     require(vm.version == 1, "VM version incompatible");
+
+    //     vm.guardianSetIndex = encodedVM.toUint32(index);
+    //     index += 4;
+
+    //     // Parse Signatures
+    //     uint256 signersLen = encodedVM.toUint8(index);
+    //     index += 1;
+    //     vm.signatures = new ReceiverStructs.Signature[](signersLen);
+    //     for (uint i = 0; i < signersLen; i++) {
+    //         vm.signatures[i].guardianIndex = encodedVM.toUint8(index);
+    //         index += 1;
+
+    //         vm.signatures[i].r = encodedVM.toBytes32(index);
+    //         index += 32;
+    //         vm.signatures[i].s = encodedVM.toBytes32(index);
+    //         index += 32;
+    //         vm.signatures[i].v = encodedVM.toUint8(index) + 27;
+    //         index += 1;
+    //     }
+
+    //     // Hash the body
+    //     bytes memory body = encodedVM.slice(index, encodedVM.length - index);
+    //     vm.hash = keccak256(abi.encodePacked(keccak256(body)));
+
+    //     // Parse the body
+    //     vm.timestamp = encodedVM.toUint32(index);
+    //     index += 4;
+
+    //     vm.nonce = encodedVM.toUint32(index);
+    //     index += 4;
+
+    //     vm.emitterChainId = encodedVM.toUint16(index);
+    //     index += 2;
+
+    //     vm.emitterAddress = encodedVM.toBytes32(index);
+    //     index += 32;
+
+    //     vm.sequence = encodedVM.toUint64(index);
+    //     index += 8;
+
+    //     vm.consistencyLevel = encodedVM.toUint8(index);
+    //     index += 1;
+
+    //     vm.payload = encodedVM.slice(index, encodedVM.length - index);
+    // }
     function parseVM(
-        bytes memory encodedVM
+        bytes calldata encodedVM
     ) public pure virtual returns (ReceiverStructs.VM memory vm) {
         uint index = 0;
 
-        vm.version = encodedVM.toUint8(index);
+        vm.version = UnsafeCalldataBytesLib.toUint8(encodedVM, index);
         index += 1;
         require(vm.version == 1, "VM version incompatible");
 
-        vm.guardianSetIndex = encodedVM.toUint32(index);
+        vm.guardianSetIndex = UnsafeCalldataBytesLib.toUint32(encodedVM, index);
         index += 4;
 
         // Parse Signatures
-        uint256 signersLen = encodedVM.toUint8(index);
+        uint256 signersLen = UnsafeCalldataBytesLib.toUint8(encodedVM, index);
         index += 1;
         vm.signatures = new ReceiverStructs.Signature[](signersLen);
         for (uint i = 0; i < signersLen; i++) {
-            vm.signatures[i].guardianIndex = encodedVM.toUint8(index);
+            vm.signatures[i].guardianIndex = UnsafeCalldataBytesLib.toUint8(
+                encodedVM,
+                index
+            );
             index += 1;
 
-            vm.signatures[i].r = encodedVM.toBytes32(index);
+            vm.signatures[i].r = UnsafeCalldataBytesLib.toBytes32(
+                encodedVM,
+                index
+            );
             index += 32;
-            vm.signatures[i].s = encodedVM.toBytes32(index);
+            vm.signatures[i].s = UnsafeCalldataBytesLib.toBytes32(
+                encodedVM,
+                index
+            );
             index += 32;
-            vm.signatures[i].v = encodedVM.toUint8(index) + 27;
+            vm.signatures[i].v =
+                UnsafeCalldataBytesLib.toUint8(encodedVM, index) +
+                27;
             index += 1;
         }
 
         // Hash the body
-        bytes memory body = encodedVM.slice(index, encodedVM.length - index);
+        bytes memory body = UnsafeCalldataBytesLib.slice(
+            encodedVM,
+            index,
+            encodedVM.length - index
+        );
         vm.hash = keccak256(abi.encodePacked(keccak256(body)));
 
         // Parse the body
-        vm.timestamp = encodedVM.toUint32(index);
+        vm.timestamp = UnsafeCalldataBytesLib.toUint32(encodedVM, index);
         index += 4;
 
-        vm.nonce = encodedVM.toUint32(index);
+        vm.nonce = UnsafeCalldataBytesLib.toUint32(encodedVM, index);
         index += 4;
 
-        vm.emitterChainId = encodedVM.toUint16(index);
+        vm.emitterChainId = UnsafeCalldataBytesLib.toUint16(encodedVM, index);
         index += 2;
 
-        vm.emitterAddress = encodedVM.toBytes32(index);
+        vm.emitterAddress = UnsafeCalldataBytesLib.toBytes32(encodedVM, index);
         index += 32;
 
-        vm.sequence = encodedVM.toUint64(index);
+        vm.sequence = UnsafeCalldataBytesLib.toUint64(encodedVM, index);
         index += 8;
 
-        vm.consistencyLevel = encodedVM.toUint8(index);
+        vm.consistencyLevel = UnsafeCalldataBytesLib.toUint8(encodedVM, index);
         index += 1;
 
-        vm.payload = encodedVM.slice(index, encodedVM.length - index);
+        vm.payload = UnsafeCalldataBytesLib.slice(
+            encodedVM,
+            index,
+            encodedVM.length - index
+        );
     }
 }
