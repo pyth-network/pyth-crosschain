@@ -9,6 +9,8 @@ module pyth::pyth {
     use pyth::price;
     use pyth::data_source::{Self, DataSource};
     use aptos_framework::timestamp;
+    use pyth::deserialize::{Self};
+    use wormhole::cursor::{Self, Cursor};
     use std::vector;
     use pyth::state;
     use wormhole::vaa;
@@ -19,12 +21,18 @@ module pyth::pyth {
     use deployer::deployer;
     use pyth::error;
     use pyth::event;
+    use pyth::merkle;
+    use pyth::keccak160;
 
     #[test_only]
     friend pyth::pyth_test;
 
-// -----------------------------------------------------------------------------
-// Initialisation functions
+    const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: u64 = 1347305813;
+    const ACCUMULATOR_UPDATE_WORMHOLE_VERIFICATION_MAGIC: u64 = 1096111958;
+
+
+    // -----------------------------------------------------------------------------
+    // Initialisation functions
 
     public entry fun init(
         deployer: &signer,
@@ -163,20 +171,115 @@ module pyth::pyth {
         };
     }
 
-    fun update_price_feed_from_single_vaa(vaa: vector<u8>) {
-        // Deserialize the VAA
-        let vaa = vaa::parse_and_verify(vaa);
-
-        // Check that the VAA is from a valid data source (emitter)
+    fun verify_data_source(vaa: &vaa::VAA) {
         assert!(
             state::is_valid_data_source(
                 data_source::new(
-                    u16::to_u64(vaa::get_emitter_chain(&vaa)),
-                    vaa::get_emitter_address(&vaa))),
+                    u16::to_u64(vaa::get_emitter_chain(vaa)),
+                    vaa::get_emitter_address(vaa))),
             error::invalid_data_source());
+    }
 
-        // Deserialize the batch price attestation
-        update_cache(batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::destroy(vaa))));
+    fun parse_accumulator_merkle_root(message: vector<u8>): vector<u8> {
+        let msg_payload_cursor = cursor::init(message);
+        let payload_type = deserialize::deserialize_u32(&mut msg_payload_cursor);
+        assert!(payload_type == ACCUMULATOR_UPDATE_WORMHOLE_VERIFICATION_MAGIC, error::invalid_wormhole_message());
+        let wh_message_payload_type = deserialize::deserialize_u8(&mut msg_payload_cursor);
+        assert!(wh_message_payload_type == 0, error::invalid_wormhole_message()); // Merkle variant
+        let _merkle_root_slot = deserialize::deserialize_u64(&mut msg_payload_cursor);
+        let _merkle_root_ring_size = deserialize::deserialize_u32(&mut msg_payload_cursor);
+        let merkle_root_hash = deserialize::deserialize_vector(&mut msg_payload_cursor, 20);
+        cursor::rest(msg_payload_cursor);
+        merkle_root_hash
+    }
+
+    fun parse_accumulator_update_message(message: vector<u8>): PriceInfo {
+        let message_cur = cursor::init(message);
+        let message_type = deserialize::deserialize_u8(&mut message_cur);
+
+        assert!(message_type == 0, error::invalid_accumulator_message()); // PriceFeedMessage variant
+        let price_identifier = price_identifier::from_byte_vec(deserialize::deserialize_vector(&mut message_cur, 32));
+        let price = deserialize::deserialize_i64(&mut message_cur);
+
+        let conf = deserialize::deserialize_u64(&mut message_cur);
+        let expo = deserialize::deserialize_i32(&mut message_cur);
+        let publish_time = deserialize::deserialize_u64(&mut message_cur);
+        let current_price = pyth::price::new(price, conf, expo, publish_time);
+        let _prev_publish_time = deserialize::deserialize_i64(&mut message_cur);
+        let ema_price = deserialize::deserialize_i64(&mut message_cur);
+        let ema_conf = deserialize::deserialize_u64(&mut message_cur);
+        let price_info = price_info::new(
+            timestamp::now_seconds(),
+            timestamp::now_seconds(),
+            price_feed::new(
+                price_identifier,
+                current_price,
+                pyth::price::new(ema_price, ema_conf, expo, publish_time),
+            )
+        );
+        cursor::rest(message_cur);
+        price_info
+    }
+
+    fun parse_accumulator_updates(cursor: &mut Cursor<u8>, merkle_root: &vector<u8>): vector<PriceInfo> {
+        let update_size = deserialize::deserialize_u8(cursor);
+        let updates: vector<PriceInfo> = vector[];
+        while (update_size > 0) {
+            let message_size = deserialize::deserialize_u16(cursor);
+            let message = deserialize::deserialize_vector(cursor, message_size);
+            let update = parse_accumulator_update_message(message);
+            vector::push_back(&mut updates, update);
+            let path_size = deserialize::deserialize_u8(cursor);
+            let merkle_path: vector<vector<u8>> = vector[];
+            while (path_size > 0) {
+                let hash = deserialize::deserialize_vector(cursor, keccak160::get_hash_length());
+                vector::push_back(&mut merkle_path, hash);
+                path_size = path_size - 1;
+            };
+            assert!(merkle::check(&merkle_path, merkle_root, message), error::invalid_proof());
+            update_size = update_size - 1;
+        };
+        updates
+    }
+
+
+    fun parse_accumulator(cursor: &mut Cursor<u8>): vector<PriceInfo> {
+        let major = deserialize::deserialize_u8(cursor);
+        assert!(major == 1, error::invalid_accumulator_payload());
+        let minor = deserialize::deserialize_u8(cursor);
+        assert!(minor == 0, error::invalid_accumulator_payload());
+
+        let trailing_size = deserialize::deserialize_u8(cursor);
+        deserialize::deserialize_vector(cursor, (trailing_size as u64));
+
+        let proof_type = deserialize::deserialize_u8(cursor);
+        assert!(proof_type == 0, error::invalid_accumulator_payload());
+
+        let vaa_size = deserialize::deserialize_u16(cursor);
+        let vaa = deserialize::deserialize_vector(cursor, vaa_size);
+        let msg_vaa = vaa::parse_and_verify(vaa); // TODO: replace with parse_and_verify
+        verify_data_source(&msg_vaa);
+        let merkle_root_hash = parse_accumulator_merkle_root(vaa::get_payload(&msg_vaa));
+        vaa::destroy(msg_vaa);
+        parse_accumulator_updates(cursor, &merkle_root_hash)
+    }
+
+    fun update_price_feed_from_single_vaa(vaa: vector<u8>) {
+        let cur = cursor::init(vaa);
+        let header: u64 = deserialize::deserialize_u32(&mut cur);
+        let updates = if (header == PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
+            parse_accumulator(&mut cur)
+        }
+        else {
+            // Deserialize the VAA
+            let vaa = vaa::parse_and_verify(vaa);
+            // Check that the VAA is from a valid data source (emitter)
+            verify_data_source(&vaa);
+            // Deserialize the batch price attestation
+            batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::destroy(vaa)))
+        };
+        update_cache(updates);
+        cursor::rest(cur);
     }
 
     /// Update the cache with given price updates, if they are newer than the ones currently cached.
@@ -376,7 +479,22 @@ module pyth::pyth {
     ///
     /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public fun get_update_fee(update_data: &vector<vector<u8>>): u64 {
-        state::get_base_update_fee() * vector::length(update_data)
+        let i = 0;
+        let total_updates = 0;
+        while (i < vector::length(update_data)) {
+            let cur = cursor::init(*vector::borrow(update_data, i));
+            let header: u64 = deserialize::deserialize_u32(&mut cur);
+            if (header == PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
+                let updates = parse_accumulator(&mut cur);
+                total_updates = total_updates + vector::length(&updates);
+            }
+            else {
+                total_updates = total_updates + 1;
+            };
+            cursor::rest(cur);
+            i = i + 1;
+        };
+        state::get_base_update_fee() * total_updates
     }
 }
 
@@ -398,6 +516,7 @@ module pyth::pyth_test {
     use wormhole::external_address;
     use std::account;
     use std::signer;
+    use wormhole::wormhole;
 
     #[test_only]
     fun setup_test(
@@ -470,7 +589,7 @@ module pyth::pyth_test {
                         price::new(i64::new(1508, false), 3, i64::new(5, true), 1663680745),
                     ),
                 ),
-            ]
+        ]
     }
 
     #[test_only]
@@ -479,6 +598,13 @@ module pyth::pyth_test {
     /// - emitter address 0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b
     /// - payload corresponding to the batch price attestation of the prices returned by get_mock_price_infos()
     const TEST_VAAS: vector<vector<u8>> = vector[x"0100000000010036eb563b80a24f4253bee6150eb8924e4bdf6e4fa1dfc759a6664d2e865b4b134651a7b021b7f1ce3bd078070b688b6f2e37ce2de0d9b48e6a78684561e49d5201527e4f9b00000001001171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000001005032574800030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001"];
+
+    #[test_only]
+    const TEST_ACCUMULATOR: vector<u8> = x"504e41550100000000a0010000000001005d461ac1dfffa8451edda17e4b28a46c8ae912422b2dc0cb7732828c497778ea27147fb95b4d250651931845e7f3e22c46326716bcf82be2874a9c9ab94b6e42000000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000000004155575600000000000000000000000000da936d73429246d131873a0bab90ad7b416510be01005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf65f958f4883f9d2a8b5b1008d1fa01db95cf4a8c7000000006491cc757be59f3f377c0d3f423a695e81ad1eb504f8554c3620c3fd02f2ee15ea639b73fa3db9b34a245bdfa015c260c5a8a1180177cf30b2c0bebbb1adfe8f7985d051d2";
+    #[test_only]
+    const TEST_ACCUMULATOR_INVALID_ACC_MSG: vector<u8> = x"504e41550100000000a0010000000001005d461ac1dfffa8451edda17e4b28a46c8ae912422b2dc0cb7732828c497778ea27147fb95b4d250651931845e7f3e22c46326716bcf82be2874a9c9ab94b6e42000000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000000004155575600000000000000000000000000da936d73429246d131873a0bab90ad7b416510be01005540b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf65f958f4883f9d2a8b5b1008d1fa01db95cf4a8c7000000006491cc757be59f3f377c0d3f423a695e81ad1eb504f8554c3620c3fd02f2ee15ea639b73fa3db9b34a245bdfa015c260c5a8a1180177cf30b2c0bebbb1adfe8f7985d051d2";
+    #[test_only]
+    const TEST_ACCUMULATOR_INVALID_WH_MSG: vector<u8> = x"504e41550100000000a001000000000100e87f98238c5357730936cfdfde3a37249e5219409a4f41b301924b8eb10815a43ea2f96e4fe1bc8cd398250f39448d3b8ca57c96f9cf7a2be292517280683caa010000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b00000000000000000041555755000000000000000000000000000fb6f9f2b3b6cc1c9ef6708985fef226d92a3c0801005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6fa75cd3aa3bb5ace5e2516446f71f85be36bd19b000000006491cc747be59f3f377c0d3f44661d9a8736c68884c8169e8b636ee301f2ee15ea639b73fa3db9b34a245bdfa015c260c5";
 
     #[test_only]
     /// Allow anyone to update the cache with given updates. For testing purpose only.
@@ -544,10 +670,12 @@ module pyth::pyth_test {
         vector<DataSource>[
             data_source::new(
                 1, external_address::from_bytes(x"0000000000000000000000000000000000000000000000000000000000000004")),
-                data_source::new(
+            data_source::new(
                 5, external_address::from_bytes(x"0000000000000000000000000000000000000000000000000000000000007637")),
-                data_source::new(
-                17, external_address::from_bytes(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b"))
+            data_source::new(
+                17, external_address::from_bytes(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b")),
+            data_source::new(
+                1, external_address::from_bytes(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b")),
         ]
     }
 
@@ -581,11 +709,148 @@ module pyth::pyth_test {
         cleanup_test(burn_capability, mint_capability);
     }
 
+    #[test_only]
+    fun setup_accumulator_test(
+        aptos_framework: &signer,
+        data_sources: vector<DataSource>,
+    ): (BurnCapability<AptosCoin>, MintCapability<AptosCoin>, Coin<AptosCoin>) {
+        let aptos_framework_account = std::account::create_account_for_test(@aptos_framework);
+        std::timestamp::set_time_has_started_for_testing(&aptos_framework_account);
+        wormhole::init_test(
+            22,
+            1,
+            x"0000000000000000000000000000000000000000000000000000000000000004",
+            x"7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
+            100000
+        );
+
+        // Set the current time
+        timestamp::update_global_time_for_test_secs(1663680745);
+
+        // Deploy and initialize a test instance of the Pyth contract
+        let deployer = account::create_signer_with_capability(
+            &account::create_test_signer_cap(@0x277fa055b6a73c42c0662d5236c65c864ccbf2d4abd21f174a30c8b786eab84b)
+        );
+        let (_pyth, signer_capability) = account::create_resource_account(&deployer, b"pyth");
+        pyth::init_test(signer_capability,
+            500,
+            1,
+            x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92",
+            data_sources,
+            50);
+
+        let (burn_capability, mint_capability) = aptos_coin::initialize_for_test(aptos_framework);
+        let coins = coin::mint(100, &mint_capability);
+        (burn_capability, mint_capability, coins)
+    }
+
+    #[test(aptos_framework = @aptos_framework)]
+    fun test_update_price_accumulator(aptos_framework: &signer) {
+        let (burn_capability, mint_capability, coins) = setup_accumulator_test(
+            aptos_framework,
+            data_sources_for_test_vaa()
+        );
+
+        // Update the price feeds from the VAA
+        timestamp::update_global_time_for_test_secs(1687276659);
+        pyth::update_price_feeds(vector[TEST_ACCUMULATOR], coins);
+
+        // Check that the cache has been updated
+        let expected = vector<PriceInfo>[
+            price_info::new(
+                1663680747,
+                1663074349,
+                price_feed::new(
+                    price_identifier::from_byte_vec(
+                        x"b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
+                    ),
+                    price::new(
+                        i64::new(6887568746747646632, false),
+                        13092246197863718329,
+                        i64::new(1559537863, false),
+                        1687276661
+                    ),
+                    price::new(
+                        i64::new(4772242609775910581, false),
+                        358129956189946877,
+                        i64::new(1559537863, false),
+                        1687276661
+                    ),
+                ),
+            )];
+        check_price_feeds_cached(&expected);
+
+        cleanup_test(burn_capability, mint_capability);
+    }
+
+    #[test(aptos_framework = @aptos_framework)]
+    #[expected_failure(abort_code = 65562)]
+    fun test_accumulator_invalid_payload(aptos_framework: &signer) {
+        let (burn_capability, mint_capability, coins) = setup_accumulator_test(
+            aptos_framework,
+            data_sources_for_test_vaa()
+        );
+        pyth::update_price_feeds(vector[x"504e415500000000"], coins);
+        cleanup_test(burn_capability, mint_capability);
+    }
+
+    #[test(aptos_framework = @aptos_framework)]
+    #[expected_failure(abort_code = 65563)]
+    fun test_accumulator_invalid_accumulator_message(aptos_framework: &signer) {
+        let (burn_capability, mint_capability, coins) = setup_accumulator_test(
+            aptos_framework,
+            data_sources_for_test_vaa()
+        );
+        pyth::update_price_feeds(vector[TEST_ACCUMULATOR_INVALID_ACC_MSG], coins);
+        cleanup_test(burn_capability, mint_capability);
+    }
+
+    #[test(aptos_framework = @aptos_framework)]
+    #[expected_failure(abort_code = 65564)]
+    fun test_accumulator_invalid_wormhole_message(aptos_framework: &signer) {
+        let (burn_capability, mint_capability, coins) = setup_accumulator_test(
+            aptos_framework,
+            data_sources_for_test_vaa()
+        );
+
+        pyth::update_price_feeds(vector[TEST_ACCUMULATOR_INVALID_WH_MSG], coins);
+        cleanup_test(burn_capability, mint_capability);
+    }
+
+    #[test(aptos_framework = @aptos_framework)]
+    #[expected_failure(abort_code = 65539)]
+    fun test_accumulator_invalid_data_source(aptos_framework: &signer) {
+        let (burn_capability, mint_capability, coins) = setup_accumulator_test(aptos_framework, vector[data_source::new(
+            2, // correct emitter chain is 1
+            external_address::from_bytes(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b")
+        )]);
+        pyth::update_price_feeds(vector[TEST_ACCUMULATOR], coins);
+        cleanup_test(burn_capability, mint_capability);
+    }
+
+    //TODO:
+    //test_accumulator_update_fee
+    //test_accumulator_message_single_update
+    //test_accumulator_message_multi_update_many_feeds
+    //test_accumulator_multi_message_multi_update
+    //test_accumulator_multi_message_multi_update_out_of_order
+    //test_invalid_accumulator_update
+    //test_invalid_accumulator_message_type
+    //test_invalid_proof
+
     #[test(aptos_framework = @aptos_framework)]
     fun test_update_price_feeds_with_funder(aptos_framework: &signer) {
         let update_fee = 50;
         let initial_balance = 75;
-        let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), update_fee, initial_balance);
+        let (burn_capability, mint_capability, coins) = setup_test(
+            aptos_framework,
+            500,
+            23,
+            x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92",
+            data_sources_for_test_vaa(),
+            update_fee,
+            initial_balance
+        );
 
         // Create a test funder account and register it to store funds
         let funder_addr = @0xbfbffd8e2af9a3e3ce20d2d2b22bd640;

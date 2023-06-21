@@ -102,4 +102,23 @@ module pyth::error {
    public fun data_source_emitter_address_and_chain_ids_different_lengths(): u64 {
         error::invalid_argument(25)
    }
+
+   public fun invalid_accumulator_payload(): u64 {
+        error::invalid_argument(26)
+   }
+
+   public fun invalid_accumulator_message(): u64 {
+        error::invalid_argument(27)
+   }
+
+   public fun invalid_wormhole_message(): u64 {
+        error::invalid_argument(28)
+   }
+
+   public fun invalid_proof(): u64 {
+        error::invalid_argument(29)
+   }
+    public fun invalid_keccak160_length(): u64 {
+        error::invalid_argument(30)
+    }
 }
