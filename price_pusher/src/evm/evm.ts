@@ -224,7 +224,7 @@ export class EvmPricePusher implements IPricePusher {
           // the update data is valid there is no possible rejection cause other than
           // the target chain price being already updated.
           console.log(
-            "Execution reverted. With high probablity, the target chain price " +
+            "Execution reverted. With high probability, the target chain price " +
               "has already updated, Skipping this push."
           );
           return;
