@@ -16,7 +16,8 @@ contract ReceiverMessages is ReceiverGetters {
     using BytesLib for bytes;
 
     /// @dev parseAndVerifyVM serves to parse an encodedVM and wholy validate it for consumption
-    ///     - it intentionally sets vm.signatures to an empty array since it is not needed after it is validated in this function
+    /// WARNING: it intentionally sets vm.signatures to an empty array since it is not needed after it is validated in this function
+    /// since it not used anywhere. If you need to use vm.signatures, use parseVM and verifyVM separately.
     function parseAndVerifyVM(
         bytes calldata encodedVM
     )
@@ -70,6 +71,8 @@ contract ReceiverMessages is ReceiverGetters {
             );
             index += 1;
             {
+                // 66 is the length of each signature
+                // 1 (guardianIndex) + 32 (r) + 32 (s) + 1 (v)
                 uint hashIndex = index + (signersLen * 66);
                 if (hashIndex > encodedVM.length) {
                     return (vm, false, "invalid signature length");
@@ -105,15 +108,17 @@ contract ReceiverMessages is ReceiverGetters {
                         UnsafeCalldataBytesLib.toUint8(encodedVM, index) +
                         27;
                     index += 1;
-
                     bool signatureValid;
                     string memory invalidReason;
                     (signatureValid, invalidReason) = verifySignature(
                         i,
                         lastIndex,
                         vm.hash,
-                        sig,
-                        guardianSet
+                        sig.guardianIndex,
+                        sig.r,
+                        sig.s,
+                        sig.v,
+                        guardianSet.keys[sig.guardianIndex]
                     );
                     if (!signatureValid) {
                         return (vm, false, invalidReason);
@@ -167,10 +172,11 @@ contract ReceiverMessages is ReceiverGetters {
             );
             index += 1;
 
-            vm.payload = UnsafeCalldataBytesLib.sliceFrom(encodedVM, index);
             if (index > encodedVM.length) {
                 return (vm, false, "invalid payload length");
             }
+
+            vm.payload = UnsafeCalldataBytesLib.sliceFrom(encodedVM, index);
 
             return (vm, true, "");
         }
@@ -241,18 +247,18 @@ contract ReceiverMessages is ReceiverGetters {
         uint i,
         uint8 lastIndex,
         bytes32 hash,
-        ReceiverStructs.Signature memory sig,
-        ReceiverStructs.GuardianSet memory guardianSet
+        uint8 guardianIndex,
+        bytes32 r,
+        bytes32 s,
+        uint8 v,
+        address guardianSetKey
     ) private pure returns (bool valid, string memory reason) {
         /// Ensure that provided signature indices are ascending only
-        if (i != 0 && sig.guardianIndex <= lastIndex) {
+        if (i != 0 && guardianIndex <= lastIndex) {
             revert SignatureIndexesNotAscending();
         }
         /// Check to see if the signer of the signature does not match a specific Guardian key at the provided index
-        if (
-            ecrecover(hash, sig.v, sig.r, sig.s) !=
-            guardianSet.keys[sig.guardianIndex]
-        ) {
+        if (ecrecover(hash, v, r, s) != guardianSetKey) {
             return (false, "VM signature invalid");
         }
         return (true, "");
@@ -276,8 +282,11 @@ contract ReceiverMessages is ReceiverGetters {
                 i,
                 lastIndex,
                 hash,
-                sig,
-                guardianSet
+                sig.guardianIndex,
+                sig.r,
+                sig.s,
+                sig.v,
+                guardianSet.keys[sig.guardianIndex]
             );
             if (!valid) {
                 return (false, reason);
