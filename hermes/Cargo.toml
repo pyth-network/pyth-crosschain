@@ -1,6 +1,6 @@
 [package]
 name                   = "hermes"
-version                = "0.1.2"
+version                = "0.1.3"
 edition                = "2021"
 
 [dependencies]
@@ -35,7 +35,6 @@ libp2p                 = { version = "0.42.2", features = [
 ]}
 
 log                    = { version = "0.4.17" }
-moka                   = { version = "0.11.0", features = ["future"] }
 pyth-sdk               = { version = "0.7.0" }
 
 # Parse Wormhole attester price attestations.

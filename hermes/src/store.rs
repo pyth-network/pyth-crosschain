@@ -48,6 +48,7 @@ use {
     std::{
         collections::{
             BTreeMap,
+            BTreeSet,
             HashSet,
         },
         sync::Arc,
@@ -78,9 +79,11 @@ pub mod storage;
 pub mod types;
 pub mod wormhole;
 
+const OBSERVED_CACHE_SIZE: usize = 1000;
+
 pub struct Store {
     pub storage:                  StorageInstance,
-    pub observed_vaa_seqs:        Cache<u64, bool>,
+    pub observed_vaa_seqs:        RwLock<BTreeSet<u64>>,
     pub guardian_set:             RwLock<BTreeMap<u32, GuardianSet>>,
     pub update_tx:                Sender<()>,
     pub last_completed_update_at: RwLock<Option<Instant>>,
@@ -90,10 +93,7 @@ impl Store {
     pub fn new_with_local_cache(update_tx: Sender<()>, cache_size: u64) -> Arc<Self> {
         Arc::new(Self {
             storage: storage::local_storage::LocalStorage::new_instance(cache_size),
-            observed_vaa_seqs: Cache::builder()
-                .max_capacity(cache_size)
-                .time_to_live(Duration::from_secs(60 * 5))
-                .build(),
+            observed_vaa_seqs: RwLock::new(Default::default()),
             guardian_set: RwLock::new(Default::default()),
             update_tx,
             last_completed_update_at: RwLock::new(None),
@@ -113,7 +113,7 @@ impl Store {
                     return Ok(()); // Ignore VAA from other emitters
                 }
 
-                if self.observed_vaa_seqs.get(&vaa.sequence).is_some() {
+                if self.observed_vaa_seqs.read().await.contains(&vaa.sequence) {
                     return Ok(()); // Ignore VAA if we have already seen it
                 }
 
@@ -127,7 +127,11 @@ impl Store {
                     }
                 };
 
-                self.observed_vaa_seqs.insert(vaa.sequence, true).await;
+                let mut observed_vaa_seqs = self.observed_vaa_seqs.write().await;
+                observed_vaa_seqs.insert(vaa.sequence);
+                if observed_vaa_seqs.len() > OBSERVED_CACHE_SIZE {
+                    observed_vaa_seqs.pop_first();
+                }
 
                 match WormholeMessage::try_from_bytes(vaa.payload)?.payload {
                     WormholePayload::Merkle(proof) => {
@@ -232,7 +236,10 @@ impl Store {
         let messages = self
             .storage
             .fetch_message_states(
-                price_ids,
+                price_ids
+                    .iter()
+                    .map(|price_id| price_id.to_bytes())
+                    .collect(),
                 request_time,
                 MessageStateFilter::Only(MessageType::PriceFeedMessage),
             )
@@ -267,7 +274,7 @@ impl Store {
             .message_state_keys()
             .await
             .iter()
-            .map(|key| PriceIdentifier::new(key.id))
+            .map(|key| PriceIdentifier::new(key.feed_id))
             .collect()
     }
 
