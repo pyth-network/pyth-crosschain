@@ -200,11 +200,9 @@ module pyth::pyth {
         assert!(message_type == 0, error::invalid_accumulator_message()); // PriceFeedMessage variant
         let price_identifier = price_identifier::from_byte_vec(deserialize::deserialize_vector(&mut message_cur, 32));
         let price = deserialize::deserialize_i64(&mut message_cur);
-
         let conf = deserialize::deserialize_u64(&mut message_cur);
         let expo = deserialize::deserialize_i32(&mut message_cur);
         let publish_time = deserialize::deserialize_u64(&mut message_cur);
-        let current_price = pyth::price::new(price, conf, expo, publish_time);
         let _prev_publish_time = deserialize::deserialize_i64(&mut message_cur);
         let ema_price = deserialize::deserialize_i64(&mut message_cur);
         let ema_conf = deserialize::deserialize_u64(&mut message_cur);
@@ -213,7 +211,7 @@ module pyth::pyth {
             timestamp::now_seconds(),
             price_feed::new(
                 price_identifier,
-                current_price,
+                pyth::price::new(price, conf, expo, publish_time),
                 pyth::price::new(ema_price, ema_conf, expo, publish_time),
             )
         );
@@ -257,7 +255,7 @@ module pyth::pyth {
 
         let vaa_size = deserialize::deserialize_u16(cursor);
         let vaa = deserialize::deserialize_vector(cursor, vaa_size);
-        let msg_vaa = vaa::parse_and_verify(vaa); // TODO: replace with parse_and_verify
+        let msg_vaa = vaa::parse_and_verify(vaa);
         verify_data_source(&msg_vaa);
         let merkle_root_hash = parse_accumulator_merkle_root(vaa::get_payload(&msg_vaa));
         vaa::destroy(msg_vaa);
