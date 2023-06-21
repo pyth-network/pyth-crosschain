@@ -269,7 +269,7 @@ module pyth::merkle_tree {
     }
 
     #[test]
-    fun testMerkleTreeDepth1ProofInvalid(){
+    fun testMerkleTreeDepth1InvalidProofs(){
         let messages = vector::empty<vector<u8>>();
         vector::push_back(&mut messages, x"1234");
 
@@ -286,7 +286,7 @@ module pyth::merkle_tree {
     }
 
     #[test]
-    fun testMerkleTreeDepth2ProofInvalid(){
+    fun testMerkleTreeDepth2InvalidProofs(){
         let messages = vector::empty<vector<u8>>();
         vector::push_back(&mut messages, x"1234");
         vector::push_back(&mut messages, x"4321");
@@ -310,7 +310,7 @@ module pyth::merkle_tree {
     }
 
     #[test]
-    fun testMerkleTreeDepth3ProofInvalid(){
+    fun testMerkleTreeDepth3InvalidProofs(){
         let messages = vector::empty<vector<u8>>();
         vector::push_back(&mut messages, x"00");
         vector::push_back(&mut messages, x"4321");
