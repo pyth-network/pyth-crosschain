@@ -269,6 +269,77 @@ module pyth::merkle_tree {
     }
 
     #[test]
+    fun testMerkleTreeDepth1ProofInvalid(){
+        let messages = vector::empty<vector<u8>>();
+        vector::push_back(&mut messages, x"1234");
+
+        let (root, proofs) = constructProofs(&messages, 1);
+
+        let proofsCursor = cursor::new(proofs);
+
+        // use wrong leaf data (it is not included in the tree)
+        let valid = isProofValid(&mut proofsCursor, root, x"432222");
+        assert!(valid==false, 0);
+
+        // destroy cursor
+        cursor::take_rest<u8>(proofsCursor);
+    }
+
+    #[test]
+    fun testMerkleTreeDepth2ProofInvalid(){
+        let messages = vector::empty<vector<u8>>();
+        vector::push_back(&mut messages, x"1234");
+        vector::push_back(&mut messages, x"4321");
+        vector::push_back(&mut messages, x"11");
+        vector::push_back(&mut messages, x"22");
+
+        let (root, proofs) = constructProofs(&messages, 2);
+
+        let proofsCursor = cursor::new(proofs);
+        // proof fails because we used the proof of x"1234" to try to prove that x"4321" is in the tree
+        assert!(isProofValid(&mut proofsCursor, root, x"4321")==false, 0);
+        // proof succeeds
+        assert!(isProofValid(&mut proofsCursor, root, x"4321")==true, 0);
+        // proof fails because we used the proof of x"11" to try to prove that x"22" is in the tree
+        assert!(isProofValid(&mut proofsCursor, root, x"22")==false, 0);
+        // proof succeeds
+        assert!(isProofValid(&mut proofsCursor, root, x"22")==true, 0);
+
+        // destroy cursor
+        cursor::take_rest<u8>(proofsCursor);
+    }
+
+    #[test]
+    fun testMerkleTreeDepth3ProofInvalid(){
+        let messages = vector::empty<vector<u8>>();
+        vector::push_back(&mut messages, x"00");
+        vector::push_back(&mut messages, x"4321");
+        vector::push_back(&mut messages, x"444444");
+        vector::push_back(&mut messages, x"22222222");
+        vector::push_back(&mut messages, x"22");
+        vector::push_back(&mut messages, x"11");
+        vector::push_back(&mut messages, x"100000");
+        vector::push_back(&mut messages, x"eeeeee");
+
+        let (root, proofs) = constructProofs(&messages, 3);
+
+        let proofsCursor = cursor::new(proofs);
+
+        // test various proof failure cases (because of mismatch between proof and leaf data)
+        assert!(isProofValid(&mut proofsCursor, root, x"00")==true, 0);
+        assert!(isProofValid(&mut proofsCursor, root, x"22")==false, 0);
+        assert!(isProofValid(&mut proofsCursor, root, x"22222222")==false, 0);
+        assert!(isProofValid(&mut proofsCursor, root, x"22222222")==true, 0);
+        assert!(isProofValid(&mut proofsCursor, root, x"22")==true, 0);
+        assert!(isProofValid(&mut proofsCursor, root, x"eeeeee")==false, 0);
+        assert!(isProofValid(&mut proofsCursor, root, x"4321")==false, 0);
+        assert!(isProofValid(&mut proofsCursor, root, x"eeeeee")==true, 0);
+
+        // destroy cursor
+        cursor::take_rest<u8>(proofsCursor);
+    }
+
+    #[test]
     #[expected_failure(abort_code = pyth::merkle_tree::E_DEPTH_NOT_LARGE_ENOUGH_FOR_MESSAGES)]
     fun testMerkleTreeDepthExceeded1(){
         let messages = vector::empty<vector<u8>>();
@@ -291,7 +362,5 @@ module pyth::merkle_tree {
 
         constructProofs(&messages, 2); // depth 2
     }
-
-
 
 }
