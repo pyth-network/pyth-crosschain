@@ -600,6 +600,8 @@ module pyth::pyth_test {
     #[test_only]
     const TEST_ACCUMULATOR: vector<u8> = x"504e41550100000000a0010000000001005d461ac1dfffa8451edda17e4b28a46c8ae912422b2dc0cb7732828c497778ea27147fb95b4d250651931845e7f3e22c46326716bcf82be2874a9c9ab94b6e42000000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000000004155575600000000000000000000000000da936d73429246d131873a0bab90ad7b416510be01005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf65f958f4883f9d2a8b5b1008d1fa01db95cf4a8c7000000006491cc757be59f3f377c0d3f423a695e81ad1eb504f8554c3620c3fd02f2ee15ea639b73fa3db9b34a245bdfa015c260c5a8a1180177cf30b2c0bebbb1adfe8f7985d051d2";
     #[test_only]
+    const TEST_ACCUMULATOR_3_MSGS: vector<u8> = x"504e41550100000000a001000000000100d39b55fa311213959f91866d52624f3a9c07350d8956f6d42cfbb037883f31575c494a2f09fea84e4884dc9c244123fd124bc7825cd64d7c11e33ba5cfbdea7e010000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b000000000000000000415557560000000000000000000000000029da4c066b6e03b16a71e77811570dd9e19f258103005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf60000000000000064000000000000003200000009000000006491cc747be59f3f377c0d3f000000000000006300000000000000340436992facb15658a7e9f08c4df4848ca80750f61fadcd96993de66b1fe7aef94e29e3bbef8b12db2305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d950055006e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af000000000000006500000000000000330000000a000000006491cc7504f8554c3620c3fd0000000000000064000000000000003504171ed10ac4f1eacf3a4951e1da6b119f07c45da5adcd96993de66b1fe7aef94e29e3bbef8b12db2305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d9500550031ecc21a745e3968a04e9570e4425bc18fa8019c68028196b546d1669c200c68000000000000006600000000000000340000000b000000006491cc76e87d69c7b51242890000000000000065000000000000003604f2ee15ea639b73fa3db9b34a245bdfa015c260c5fe83e4772e0e346613de00e5348158a01bcb27b305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d95";
+    #[test_only]
     const TEST_ACCUMULATOR_INVALID_ACC_MSG: vector<u8> = x"504e41550100000000a0010000000001005d461ac1dfffa8451edda17e4b28a46c8ae912422b2dc0cb7732828c497778ea27147fb95b4d250651931845e7f3e22c46326716bcf82be2874a9c9ab94b6e42000000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000000004155575600000000000000000000000000da936d73429246d131873a0bab90ad7b416510be01005540b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf65f958f4883f9d2a8b5b1008d1fa01db95cf4a8c7000000006491cc757be59f3f377c0d3f423a695e81ad1eb504f8554c3620c3fd02f2ee15ea639b73fa3db9b34a245bdfa015c260c5a8a1180177cf30b2c0bebbb1adfe8f7985d051d2";
     #[test_only]
     const TEST_ACCUMULATOR_INVALID_WH_MSG: vector<u8> = x"504e41550100000000a001000000000100e87f98238c5357730936cfdfde3a37249e5219409a4f41b301924b8eb10815a43ea2f96e4fe1bc8cd398250f39448d3b8ca57c96f9cf7a2be292517280683caa010000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b00000000000000000041555755000000000000000000000000000fb6f9f2b3b6cc1c9ef6708985fef226d92a3c0801005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6fa75cd3aa3bb5ace5e2516446f71f85be36bd19b000000006491cc747be59f3f377c0d3f44661d9a8736c68884c8169e8b636ee301f2ee15ea639b73fa3db9b34a245bdfa015c260c5";
@@ -711,6 +713,7 @@ module pyth::pyth_test {
     fun setup_accumulator_test(
         aptos_framework: &signer,
         data_sources: vector<DataSource>,
+        to_mint: u64
     ): (BurnCapability<AptosCoin>, MintCapability<AptosCoin>, Coin<AptosCoin>) {
         let aptos_framework_account = std::account::create_account_for_test(@aptos_framework);
         std::timestamp::set_time_has_started_for_testing(&aptos_framework_account);
@@ -738,15 +741,16 @@ module pyth::pyth_test {
             50);
 
         let (burn_capability, mint_capability) = aptos_coin::initialize_for_test(aptos_framework);
-        let coins = coin::mint(100, &mint_capability);
+        let coins = coin::mint(to_mint, &mint_capability);
         (burn_capability, mint_capability, coins)
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    fun test_update_price_accumulator(aptos_framework: &signer) {
+    fun test_accumulator_update_price(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_accumulator_test(
             aptos_framework,
-            data_sources_for_test_vaa()
+            data_sources_for_test_vaa(),
+            100
         );
 
         // Update the price feeds from the VAA
@@ -782,11 +786,58 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
+    fun test_accumulator_update_price_multi_feed(aptos_framework: &signer) {
+        let (burn_capability, mint_capability, coins) = setup_accumulator_test(
+            aptos_framework,
+            data_sources_for_test_vaa(),
+            150
+        );
+
+        // Update the price feeds from the VAA
+        timestamp::update_global_time_for_test_secs(1687276659);
+        pyth::update_price_feeds(vector[TEST_ACCUMULATOR_3_MSGS], coins);
+
+        // Check that the cache has been updated
+        let feed_ids = vector[x"b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
+            x"6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af",
+            x"31ecc21a745e3968a04e9570e4425bc18fa8019c68028196b546d1669c200c68"];
+        let i = 0;
+        let expected: vector<PriceInfo> = vector[];
+        while (i < 3) {
+            vector::push_back(&mut expected, price_info::new(
+                1663680747,
+                1663074349,
+                price_feed::new(
+                    price_identifier::from_byte_vec(
+                        *vector::borrow(&feed_ids, i)
+                    ),
+                    price::new(
+                        i64::new(100 + i, false),
+                        50 + i,
+                        i64::new(9 + i, false),
+                        1687276660 + i
+                    ),
+                    price::new(
+                        i64::new(99 + i, false),
+                        52 + i,
+                        i64::new(9 + i, false),
+                        1687276660 + i
+                    ),
+                ),
+            ));
+            i = i + 1;
+        };
+        check_price_feeds_cached(&expected);
+        cleanup_test(burn_capability, mint_capability);
+    }
+
+    #[test(aptos_framework = @aptos_framework)]
     #[expected_failure(abort_code = 65562)]
     fun test_accumulator_invalid_payload(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_accumulator_test(
             aptos_framework,
-            data_sources_for_test_vaa()
+            data_sources_for_test_vaa(),
+            100
         );
         pyth::update_price_feeds(vector[x"504e415500000000"], coins);
         cleanup_test(burn_capability, mint_capability);
@@ -797,7 +848,8 @@ module pyth::pyth_test {
     fun test_accumulator_invalid_accumulator_message(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_accumulator_test(
             aptos_framework,
-            data_sources_for_test_vaa()
+            data_sources_for_test_vaa(),
+            100
         );
         pyth::update_price_feeds(vector[TEST_ACCUMULATOR_INVALID_ACC_MSG], coins);
         cleanup_test(burn_capability, mint_capability);
@@ -808,7 +860,8 @@ module pyth::pyth_test {
     fun test_accumulator_invalid_wormhole_message(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_accumulator_test(
             aptos_framework,
-            data_sources_for_test_vaa()
+            data_sources_for_test_vaa(),
+            100
         );
 
         pyth::update_price_feeds(vector[TEST_ACCUMULATOR_INVALID_WH_MSG], coins);
@@ -821,15 +874,47 @@ module pyth::pyth_test {
         let (burn_capability, mint_capability, coins) = setup_accumulator_test(aptos_framework, vector[data_source::new(
             2, // correct emitter chain is 1
             external_address::from_bytes(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b")
-        )]);
+        )], 100);
         pyth::update_price_feeds(vector[TEST_ACCUMULATOR], coins);
         cleanup_test(burn_capability, mint_capability);
     }
 
+    #[test(aptos_framework = @aptos_framework)]
+    fun test_accumulator_update_fee(aptos_framework: &signer) {
+        let (burn_capability, mint_capability, coins) = setup_accumulator_test(
+            aptos_framework,
+            data_sources_for_test_vaa(),
+            0
+        );
+        let single_update_fee = 50;
+        // pyth::update_price_feeds(vector[TEST_ACCUMULATOR], coins);
+        assert!(pyth::get_update_fee(&vector[
+            TEST_ACCUMULATOR,
+        ]) == single_update_fee, 1);
+
+        // Pass in multiple VAAs
+        assert!(pyth::get_update_fee(&vector[
+            TEST_ACCUMULATOR,
+            TEST_ACCUMULATOR,
+        ]) == single_update_fee * 2, 1);
+
+        assert!(pyth::get_update_fee(&vector[
+            TEST_ACCUMULATOR,
+            TEST_ACCUMULATOR_3_MSGS,
+        ]) == single_update_fee * 4, 1);
+
+        assert!(pyth::get_update_fee(&vector[
+            TEST_ACCUMULATOR,
+            TEST_ACCUMULATOR_3_MSGS,
+            x"deaddeaddead", // random non-accumulator data
+        ]) == single_update_fee * 5, 1);
+
+        coin::destroy_zero(coins);
+        cleanup_test(burn_capability, mint_capability);
+    }
+
     //TODO:
-    //test_accumulator_update_fee
     //test_accumulator_message_single_update
-    //test_accumulator_message_multi_update_many_feeds
     //test_accumulator_multi_message_multi_update
     //test_accumulator_multi_message_multi_update_out_of_order
     //test_invalid_accumulator_update

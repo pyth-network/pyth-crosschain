@@ -36,7 +36,7 @@ module pyth::merkle {
             current = hash_node(current, node);
             i = i + 1;
         };
-        &current == &keccak160::new(*root)
+        current == keccak160::new(*root)
     }
 
     #[test]
