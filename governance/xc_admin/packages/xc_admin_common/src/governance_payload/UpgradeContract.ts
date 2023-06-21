@@ -1,17 +1,10 @@
-import {
-  ChainId,
-  ChainName,
-  toChainId,
-  toChainName,
-} from "@certusone/wormhole-sdk";
-import {
-  PythGovernanceActionImpl,
-  PythGovernanceHeader,
-  ActionName,
-} from "./PythGovernanceAction";
+import { ChainName } from "@certusone/wormhole-sdk";
+import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
 import * as BufferLayoutExt from "./BufferLayoutExt";
 
+/** Upgrade a cosmos contract to the implementation at codeId. (Note that this requires someone to upload the new
+ * contract code first to obtain a codeId.) */
 export class CosmosUpgradeContract extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ codeId: bigint }>> =
     BufferLayout.struct([BufferLayoutExt.u64be("codeId")]);

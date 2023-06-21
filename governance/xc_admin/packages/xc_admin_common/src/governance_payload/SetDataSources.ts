@@ -8,6 +8,7 @@ import { ChainName } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
 import * as BufferLayoutExt from "./BufferLayoutExt";
 
+/** A data source is a wormhole emitter, i.e., a specific contract on a specific chain. */
 export interface DataSource {
   emitterChain: number;
   emitterAddress: string;
@@ -18,6 +19,7 @@ const DataSourceLayout: BufferLayout.Structure<DataSource> =
     BufferLayoutExt.hexBytes(32, "emitterAddress"),
   ]);
 
+/** Set the data sources (where price updates must come from) on targetChainId to the provided values. */
 export class SetDataSources implements PythGovernanceAction {
   readonly actionName: ActionName;
 

@@ -23,7 +23,6 @@ export function decodeGovernancePayload(
   const header = PythGovernanceHeader.decode(data);
   if (!header) return undefined;
 
-  console.log(`Switching on action: ${header.action}`);
   switch (header.action) {
     case "ExecutePostedVaa":
       return ExecutePostedVaa.decode(data);

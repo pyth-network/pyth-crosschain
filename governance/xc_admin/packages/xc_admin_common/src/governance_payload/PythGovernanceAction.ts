@@ -138,6 +138,7 @@ export interface PythGovernanceAction {
   encode(): Buffer;
 }
 
+/** Helper class for implementing PythGovernanceAction using a BufferLayout.Layout for the payload. */
 export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
   readonly targetChainId: ChainName;
   readonly action: ActionName;
@@ -153,10 +154,11 @@ export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
     return new PythGovernanceHeader(this.targetChainId, this.action);
   }
 
+  /** Encode this action as a buffer with the given payload (encoded using the given layout). */
   protected encodeWithPayload<T>(
     payloadLayout: BufferLayout.Layout<T>,
     payload: T
-  ) {
+  ): Buffer {
     const headerBuffer = this.header().encode();
 
     const payloadBuffer = Buffer.alloc(payloadLayout.span);
@@ -165,6 +167,7 @@ export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
     return Buffer.concat([headerBuffer, payloadBuffer]);
   }
 
+  /** Decode this action from a buffer using the given layout for the payload. */
   protected static decodeWithPayload<T>(
     buffer: Buffer,
     requiredAction: ActionName,
@@ -173,13 +176,11 @@ export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
     const header = PythGovernanceHeader.decode(buffer);
     if (!header || header.action !== requiredAction) return undefined;
 
-    console.log("BEFORE PAYLOAD");
     const payload = safeLayoutDecode(
       payloadLayout,
       buffer.subarray(PythGovernanceHeader.span, buffer.length)
     );
     if (!payload) return undefined;
-    console.log("AFTER PAYLOAD");
 
     return [header, payload];
   }

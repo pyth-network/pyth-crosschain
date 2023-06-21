@@ -179,16 +179,12 @@ function bufferArb(constraints?: IntArrayConstraints): Arbitrary<Buffer> {
   return fc.uint8Array(constraints).map((a) => Buffer.from(a));
 }
 
-/*
-function intArb(numBits: number): Arbitrary<number> {
-
-}
- */
-
+/** Fastcheck generator for a uint of numBits bits. Warning: don't pass numBits > float precision */
 function uintArb(numBits: number): Arbitrary<number> {
   return fc.bigUintN(numBits).map((x) => Number.parseInt(x.toString()));
 }
 
+/** Fastcheck generator for a byte array encoded as a hex string. */
 function hexBytesArb(constraints?: IntArrayConstraints): Arbitrary<string> {
   return fc.uint8Array(constraints).map((a) => Buffer.from(a).toString("hex"));
 }
@@ -200,7 +196,11 @@ function dataSourceArb(): Arbitrary<DataSource> {
   });
 }
 
-/** Fastcheck generator for arbitrary PythGovernanceActions. This generator has some caveats */
+/**
+ * Fastcheck generator for arbitrary PythGovernanceActions.
+ *
+ * Note that this generator doesn't generate ExecutePostedVaa instruction payloads because they're hard to generate.
+ */
 function governanceActionArb(): Arbitrary<PythGovernanceAction> {
   return governanceHeaderArb().chain<PythGovernanceAction>((header) => {
     if (header.action === "ExecutePostedVaa") {
@@ -283,9 +283,6 @@ test("Governance action serialization round-trip test", (done) => {
     fc.property(governanceActionArb(), (original) => {
       const encoded = original.encode();
       const decoded = decodeGovernancePayload(encoded);
-      console.log(original);
-      console.log(encoded);
-      console.log(decoded);
       if (decoded === undefined) {
         return false;
       }

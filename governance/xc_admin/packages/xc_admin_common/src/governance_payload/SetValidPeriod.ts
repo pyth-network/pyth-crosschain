@@ -6,6 +6,7 @@ import * as BufferLayout from "@solana/buffer-layout";
 import * as BufferLayoutExt from "./BufferLayoutExt";
 import { ChainName } from "@certusone/wormhole-sdk";
 
+/** Set the valid period (the default amount of time in which prices are considered fresh) to the provided value */
 export class SetValidPeriod extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ newValidPeriod: bigint }>> =
     BufferLayout.struct([BufferLayoutExt.u64be("newValidPeriod")]);

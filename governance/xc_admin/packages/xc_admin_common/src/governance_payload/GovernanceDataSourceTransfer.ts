@@ -7,6 +7,10 @@ import {
 import * as BufferLayout from "@solana/buffer-layout";
 import { ChainName } from "@certusone/wormhole-sdk";
 
+/**
+ * Authorize transferring the governance data source from the sender's emitter address to another emitter.
+ * The receiving emitter address is the sender of claimVaa, which must be a RequestGovernanceDataSourceTransfer message.
+ */
 export class AuthorizeGovernanceDataSourceTransfer
   implements PythGovernanceAction
 {
@@ -43,6 +47,9 @@ export class AuthorizeGovernanceDataSourceTransfer
   }
 }
 
+/**
+ * Request a transfer of the governance data source to the emitter of this message.
+ */
 export class RequestGovernanceDataSourceTransfer extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<
     Readonly<{ governanceDataSourceIndex: number }>
