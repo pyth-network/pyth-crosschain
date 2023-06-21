@@ -30,7 +30,9 @@ module pyth::merkle {
     }
 
     fun leafHash(data: &vector<u8>): Bytes20 {
-        bytes::push_u8(&mut *data, MERKLE_LEAF_PREFIX);
+        let v = vector::empty<u8>();
+        vector::push_back(&mut v, MERKLE_LEAF_PREFIX);
+        vector::append(&mut v, *data);
         hash(data)
     }
 
@@ -41,11 +43,16 @@ module pyth::merkle {
         if (greaterThan(childA, childB)) {
             (childA, childB) = (childB, childA);
         };
+        // append data_B to data_A
         let data_A = bytes20::data(&childA);
         let data_B = bytes20::data(&childB);
         vector::append(&mut data_A, data_B);
-        bytes::push_u8(&mut data_A, MERKLE_NODE_PREFIX);
-        hash(&data_A)
+
+        // create a vector containing MERKLE_NODE_PREFIX and append data_A to back
+        let v = vector::empty<u8>();
+        vector::push_back(&mut v, MERKLE_NODE_PREFIX);
+        vector::append(&mut v, data_A);
+        hash(&v)
     }
 
     // greaterThan returns whether a is strictly greater than b
