@@ -24,14 +24,12 @@ module pyth::merkle_tree {
     }
 
     fun emptyLeafHash(): Bytes20 {
-        let v = vector::empty();
-        bytes::push_u8(&mut v, MERKLE_EMPTY_LEAF_PREFIX);
+        let v = vector<u8>[MERKLE_EMPTY_LEAF_PREFIX];
         hash(&v)
     }
 
     fun leafHash(data: &vector<u8>): Bytes20 {
-        let v = vector::empty<u8>();
-        vector::push_back(&mut v, MERKLE_LEAF_PREFIX);
+        let v = vector<u8>[MERKLE_LEAF_PREFIX];
         vector::append(&mut v, *data);
         hash(data)
     }
