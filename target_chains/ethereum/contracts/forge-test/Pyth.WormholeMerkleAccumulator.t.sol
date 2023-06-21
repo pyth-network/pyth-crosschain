@@ -522,6 +522,7 @@ contract PythWormholeMerkleAccumulatorTest is
                 isNotMatch(forgeItem, "whUpdateType")
                     ? uint8(PythAccumulator.UpdateType.WormholeMerkle)
                     : uint8(PythAccumulator.UpdateType.WormholeMerkle) + 1,
+                uint64(0), // Slot, not used in target networks
                 uint32(0), // Storage index, not used in target networks
                 isNotMatch(forgeItem, "rootDigest")
                     ? rootDigest
@@ -595,6 +596,18 @@ contract PythWormholeMerkleAccumulatorTest is
             0,
             MAX_UINT64
         );
+    }
+
+    function testUpdatePriceFeedWithWormholeMerkleWorksWithoutForging() public {
+        // In this test we make sure the structure returned by createAndForgeWormholeMerkleUpdateData
+        // is valid if no particular forge flag is set
+        (
+            bytes[] memory updateData,
+            uint updateFee,
+            bytes32[] memory priceIds
+        ) = createAndForgeWormholeMerkleUpdateData("");
+
+        pyth.updatePriceFeeds{value: updateFee}(updateData);
     }
 
     function testUpdatePriceFeedWithWormholeMerkleRevertsOnWrongVAAPayloadUpdateType()
