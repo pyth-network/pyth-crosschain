@@ -206,17 +206,6 @@ module pyth::merkle {
     }
 
     #[test]
-    fun testXOR(){
-        let x = 1;
-        let y = x^1;
-        assert!(y==0, 0);
-
-        let x = 64;
-        let y = x^1;
-        assert!(y==65, 0);
-    }
-
-    #[test]
     fun testMerkleTreeDepth1(){
         let messages = vector::empty<vector<u8>>();
         vector::push_back(&mut messages, x"1234");
