@@ -4,11 +4,10 @@ version = "0.0.1"
 upgrade_policy = "compatible"
 
 [dependencies]
-# TODO: pin versions before mainnet release
-AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "main" }
-MoveStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/move-stdlib/", rev = "main" }
-AptosStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-stdlib/", rev = "main" }
-AptosToken = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-token/", rev = "main" }
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "2c74a456298fcd520241a562119b6fe30abdaae2" }
+MoveStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/move-stdlib/", rev = "2c74a456298fcd520241a562119b6fe30abdaae2" }
+AptosStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-stdlib/", rev = "2c74a456298fcd520241a562119b6fe30abdaae2" }
+AptosToken = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-token/", rev = "2c74a456298fcd520241a562119b6fe30abdaae2" }
 Wormhole = { git = "https://github.com/wormhole-foundation/wormhole.git", subdir = "aptos/wormhole", rev = "aptos/integration" }
 Deployer = { git = "https://github.com/wormhole-foundation/wormhole.git", subdir = "aptos/deployer", rev = "aptos/integration" }
 
