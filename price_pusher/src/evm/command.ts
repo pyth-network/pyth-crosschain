@@ -91,6 +91,11 @@ export default {
       mnemonic,
       pythContractAddress
     );
+    console.log(
+      `Pushing updates from wallet address: ${pythContractFactory
+        .createWeb3PayerProvider()
+        .getAddress()}`
+    );
 
     const evmListener = new EvmPriceListener(pythContractFactory, priceItems, {
       pollingFrequency,
