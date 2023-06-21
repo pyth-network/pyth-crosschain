@@ -18,14 +18,22 @@ import {
   toChainId,
   toChainName,
 } from "@certusone/wormhole-sdk";
-import { Arbitrary } from "fast-check";
-import { CosmosUpgradeContract } from "../governance_payload/UpgradeContract";
+import { Arbitrary, IntArrayConstraints } from "fast-check";
+import {
+  AptosAuthorizeUpgradeContract,
+  CosmosUpgradeContract,
+  EvmUpgradeContract,
+} from "../governance_payload/UpgradeContract";
 import {
   AuthorizeGovernanceDataSourceTransfer,
   RequestGovernanceDataSourceTransfer,
 } from "../governance_payload/GovernanceDataSourceTransfer";
 import { SetFee } from "../governance_payload/SetFee";
 import { SetValidPeriod } from "../governance_payload/SetValidPeriod";
+import {
+  DataSource,
+  SetDataSources,
+} from "../governance_payload/SetDataSources";
 
 test("GovernancePayload ser/de", (done) => {
   jest.setTimeout(60000);
@@ -148,6 +156,7 @@ test("GovernancePayload ser/de", (done) => {
   done();
 });
 
+/** Fastcheck generator for arbitrary PythGovernanceHeaders */
 function governanceHeaderArb(): Arbitrary<PythGovernanceHeader> {
   const actions = [
     ...Object.keys(ExecutorAction),
@@ -165,10 +174,33 @@ function governanceHeaderArb(): Arbitrary<PythGovernanceHeader> {
   });
 }
 
-function bufferArb(): Arbitrary<Buffer> {
-  return fc.uint8Array().map((a) => Buffer.from(a));
+/** Fastcheck generator for arbitrary Buffers */
+function bufferArb(constraints?: IntArrayConstraints): Arbitrary<Buffer> {
+  return fc.uint8Array(constraints).map((a) => Buffer.from(a));
 }
 
+/*
+function intArb(numBits: number): Arbitrary<number> {
+
+}
+ */
+
+function uintArb(numBits: number): Arbitrary<number> {
+  return fc.bigUintN(numBits).map((x) => Number.parseInt(x.toString()));
+}
+
+function hexBytesArb(constraints?: IntArrayConstraints): Arbitrary<string> {
+  return fc.uint8Array(constraints).map((a) => Buffer.from(a).toString("hex"));
+}
+
+function dataSourceArb(): Arbitrary<DataSource> {
+  return fc.record({
+    emitterChain: uintArb(16),
+    emitterAddress: hexBytesArb({ minLength: 32, maxLength: 32 }),
+  });
+}
+
+/** Fastcheck generator for arbitrary PythGovernanceActions. This generator has some caveats */
 function governanceActionArb(): Arbitrary<PythGovernanceAction> {
   return governanceHeaderArb().chain<PythGovernanceAction>((header) => {
     if (header.action === "ExecutePostedVaa") {
@@ -176,10 +208,24 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
       // tests above instead.
       return fc.constant(new ExecutePostedVaa(header.targetChainId, []));
     } else if (header.action === "UpgradeContract") {
-      // TODO: other upgrade contracts
-      return fc.bigUintN(64).map((codeId) => {
+      const cosmosArb = fc.bigUintN(64).map((codeId) => {
         return new CosmosUpgradeContract(header.targetChainId, codeId);
       });
+      const aptosArb = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
+        (buffer) => {
+          return new AptosAuthorizeUpgradeContract(
+            header.targetChainId,
+            buffer
+          );
+        }
+      );
+      const evmArb = hexBytesArb({ minLength: 20, maxLength: 20 }).map(
+        (address) => {
+          return new EvmUpgradeContract(header.targetChainId, address);
+        }
+      );
+
+      return fc.oneof(cosmosArb, aptosArb, evmArb);
     } else if (header.action === "AuthorizeGovernanceDataSourceTransfer") {
       return bufferArb().map((claimVaa) => {
         return new AuthorizeGovernanceDataSourceTransfer(
@@ -188,12 +234,8 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
         );
       });
     } else if (header.action === "SetDataSources") {
-      // FIXME
-      return bufferArb().map((claimVaa) => {
-        return new AuthorizeGovernanceDataSourceTransfer(
-          header.targetChainId,
-          claimVaa
-        );
+      return fc.array(dataSourceArb()).map((dataSources) => {
+        return new SetDataSources(header.targetChainId, dataSources);
       });
     } else if (header.action === "SetFee") {
       return fc

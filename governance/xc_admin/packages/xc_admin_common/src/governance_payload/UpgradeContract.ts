@@ -34,7 +34,6 @@ export class CosmosUpgradeContract extends PythGovernanceActionImpl {
     );
   }
 
-  /** Encode CosmosUpgradeContract */
   encode(): Buffer {
     return super.encodeWithPayload(CosmosUpgradeContract.layout, {
       codeId: this.codeId,
@@ -71,7 +70,7 @@ export class AptosAuthorizeUpgradeContract extends PythGovernanceActionImpl {
   }
 }
 
-export class EthereumUpgradeContract extends PythGovernanceActionImpl {
+export class EvmUpgradeContract extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ address: string }>> =
     BufferLayout.struct([BufferLayoutExt.hexBytes(20, "address")]);
 
@@ -79,7 +78,7 @@ export class EthereumUpgradeContract extends PythGovernanceActionImpl {
     super(targetChainId, "UpgradeContract");
   }
 
-  static decode(data: Buffer): EthereumUpgradeContract | undefined {
+  static decode(data: Buffer): EvmUpgradeContract | undefined {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "UpgradeContract",
@@ -87,14 +86,11 @@ export class EthereumUpgradeContract extends PythGovernanceActionImpl {
     );
     if (!decoded) return undefined;
 
-    return new EthereumUpgradeContract(
-      decoded[0].targetChainId,
-      decoded[1].address
-    );
+    return new EvmUpgradeContract(decoded[0].targetChainId, decoded[1].address);
   }
 
   encode(): Buffer {
-    return super.encodeWithPayload(EthereumUpgradeContract.layout, {
+    return super.encodeWithPayload(EvmUpgradeContract.layout, {
       address: this.address,
     });
   }

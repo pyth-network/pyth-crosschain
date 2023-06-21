@@ -1,5 +1,9 @@
 import { ExecutePostedVaa } from "./ExecutePostedVaa";
-import { CosmosUpgradeContract } from "./UpgradeContract";
+import {
+  AptosAuthorizeUpgradeContract,
+  CosmosUpgradeContract,
+  EvmUpgradeContract,
+} from "./UpgradeContract";
 import {
   PythGovernanceAction,
   PythGovernanceHeader,
@@ -24,8 +28,19 @@ export function decodeGovernancePayload(
     case "ExecutePostedVaa":
       return ExecutePostedVaa.decode(data);
     case "UpgradeContract":
-      //TO DO : Support non-cosmos upgrades
-      return CosmosUpgradeContract.decode(data);
+      // NOTE: the only way to distinguish the different types of upgrade contract instructions
+      // is their payload lengths. We're getting a little lucky here that all of these upgrade instructions
+      // have different-length payloads.
+      const payloadLength = data.length - PythGovernanceHeader.span;
+      if (payloadLength == CosmosUpgradeContract.layout.span) {
+        return CosmosUpgradeContract.decode(data);
+      } else if (payloadLength == AptosAuthorizeUpgradeContract.layout.span) {
+        return AptosAuthorizeUpgradeContract.decode(data);
+      } else if (payloadLength == EvmUpgradeContract.layout.span) {
+        return EvmUpgradeContract.decode(data);
+      } else {
+        return undefined;
+      }
     case "AuthorizeGovernanceDataSourceTransfer":
       return AuthorizeGovernanceDataSourceTransfer.decode(data);
     case "SetDataSources":
