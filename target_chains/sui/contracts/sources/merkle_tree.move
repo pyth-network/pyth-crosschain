@@ -74,14 +74,14 @@ module pyth::merkle_tree {
     }
 
     // The Sui Move stdlb insert function shifts v[i] and subsequent elements to the right.
-    // We don't want this behavior, so we define our own vector insert function using swapping.
+    // We don't want this behavior, so we define our own setElement function that instead replaces the ith element.
     // Reference: https://github.com/MystenLabs/sui/blob/main/crates/sui-framework/packages/move-stdlib/sources/vector.move
     fun setElement<T: drop>(a: &mut vector<T>, value: T, index: u64){
         vector::push_back<T>(a, value); // push value to end
         vector::swap_remove(a, index); // swap value to correct position and pop last value
     }
 
-    // isProofValid checks whether a merkle proof is valid and returns (valid, offset)
+    // isProofValid returns whether a merkle proof is valid
     fun isProofValid(
         encodedProof: &mut Cursor<u8>,
         root: Bytes20,
