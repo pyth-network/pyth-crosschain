@@ -79,45 +79,46 @@ module pyth::error {
         error::invalid_state(19)
     }
 
-   public fun invalid_governance_magic_value(): u64 {
+    public fun invalid_governance_magic_value(): u64 {
         error::invalid_argument(20)
-   }
+    }
 
-   public fun magnitude_too_large(): u64 {
+    public fun magnitude_too_large(): u64 {
         error::invalid_argument(21)
-   }
+    }
 
-   public fun governance_contract_upgrade_chain_id_zero(): u64 {
+    public fun governance_contract_upgrade_chain_id_zero(): u64 {
         error::invalid_argument(22)
-   }
+    }
 
-   public fun invalid_price_status(): u64 {
+    public fun invalid_price_status(): u64 {
         error::invalid_argument(23)
-   }
+    }
 
-   public fun invalid_attestation_magic_value(): u64 {
+    public fun invalid_attestation_magic_value(): u64 {
         error::invalid_argument(24)
-   }
+    }
 
-   public fun data_source_emitter_address_and_chain_ids_different_lengths(): u64 {
+    public fun data_source_emitter_address_and_chain_ids_different_lengths(): u64 {
         error::invalid_argument(25)
-   }
+    }
 
-   public fun invalid_accumulator_payload(): u64 {
+    public fun invalid_accumulator_payload(): u64 {
         error::invalid_argument(26)
-   }
+    }
 
-   public fun invalid_accumulator_message(): u64 {
+    public fun invalid_accumulator_message(): u64 {
         error::invalid_argument(27)
-   }
+    }
 
-   public fun invalid_wormhole_message(): u64 {
+    public fun invalid_wormhole_message(): u64 {
         error::invalid_argument(28)
-   }
+    }
 
-   public fun invalid_proof(): u64 {
+    public fun invalid_proof(): u64 {
         error::invalid_argument(29)
-   }
+    }
+
     public fun invalid_keccak160_length(): u64 {
         error::invalid_argument(30)
     }
