@@ -1,45 +1,61 @@
-import { PythGovernanceActionImpl, PythGovernanceHeader } from ".";
+import {
+  ActionName,
+  PythGovernanceAction,
+  PythGovernanceActionImpl,
+  PythGovernanceHeader,
+} from "./PythGovernanceAction";
+import { ChainName } from "@certusone/wormhole-sdk";
 import * as BufferLayout from "@solana/buffer-layout";
 import * as BufferLayoutExt from "./BufferLayoutExt";
 
-export class SetDataSources extends PythGovernanceActionImpl {
-  static layout: BufferLayout.Structure<
-    Readonly<{ dataSources: DataSource[] }>
-  > = BufferLayout.struct([BufferLayout.seq()]);
-
-  constructor(header: PythGovernanceHeader, readonly codeId: bigint) {
-    super(header);
-    this.codeId = codeId;
-  }
-
-  static decode(data: Buffer): CosmosUpgradeContract | undefined {
-    const decoded = PythGovernanceActionImpl.decodeWithPayload(
-      data,
-      "UpgradeContract",
-      this.layout
-    );
-    if (!decoded) return undefined;
-
-    return new CosmosUpgradeContract(decoded[0], decoded[1].codeId);
-  }
-
-  /** Encode CosmosUpgradeContract */
-  encode(): Buffer {
-    return super.encodeWithPayload(CosmosUpgradeContract.layout, {
-      codeId: this.codeId,
-    });
-  }
+export interface DataSource {
+  emitterChain: number;
+  emitterAddress: string;
 }
+const DataSourceLayout: BufferLayout.Structure<DataSource> =
+  BufferLayout.struct([
+    BufferLayout.u16("emitterChain"),
+    BufferLayoutExt.hexBytes(32, "emitterAddress"),
+  ]);
 
-export class SetDataSourcesInstruction extends TargetInstruction {
-  constructor(targetChainId: ChainId, private dataSources: DataSource[]) {
-    super(TargetAction.SetDataSources, targetChainId);
+export class SetDataSources implements PythGovernanceAction {
+  readonly actionName: ActionName;
+
+  constructor(
+    readonly targetChainId: ChainName,
+    readonly dataSources: DataSource[]
+  ) {
+    this.actionName = "SetDataSources";
   }
 
-  protected serializePayload(): Buffer {
-    const builder = new BufferBuilder();
-    builder.addUint8(this.dataSources.length);
-    this.dataSources.forEach((datasource) => builder.addObject(datasource));
-    return builder.build();
+  static decode(data: Buffer): SetDataSources | undefined {
+    const header = PythGovernanceHeader.decode(data);
+    if (!header || header.action !== "SetDataSources") {
+      return undefined;
+    }
+
+    let index = PythGovernanceHeader.span;
+    const dataSources = [];
+    while (index < data.length) {
+      dataSources.push(DataSourceLayout.decode(data, index));
+      index += DataSourceLayout.span;
+    }
+
+    return new SetDataSources(header.targetChainId, dataSources);
+  }
+
+  encode(): Buffer {
+    const headerBuffer = new PythGovernanceHeader(
+      this.targetChainId,
+      "SetDataSources"
+    ).encode();
+
+    const dataSourceBufs = this.dataSources.map((source) => {
+      const buf = Buffer.alloc(DataSourceLayout.span);
+      DataSourceLayout.encode(source, buf);
+      return buf;
+    });
+
+    return Buffer.concat([headerBuffer, ...dataSourceBufs]);
   }
 }

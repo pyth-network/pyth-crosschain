@@ -142,7 +142,6 @@ export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
   readonly targetChainId: ChainName;
   readonly action: ActionName;
 
-  // TODO: refactor arguments here
   protected constructor(targetChainId: ChainName, action: ActionName) {
     this.targetChainId = targetChainId;
     this.action = action;
@@ -162,7 +161,6 @@ export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
 
     const payloadBuffer = Buffer.alloc(payloadLayout.span);
     payloadLayout.encode(payload, payloadBuffer);
-    console.info("now here");
 
     return Buffer.concat([headerBuffer, payloadBuffer]);
   }
@@ -175,11 +173,13 @@ export abstract class PythGovernanceActionImpl implements PythGovernanceAction {
     const header = PythGovernanceHeader.decode(buffer);
     if (!header || header.action !== requiredAction) return undefined;
 
+    console.log("BEFORE PAYLOAD");
     const payload = safeLayoutDecode(
       payloadLayout,
-      buffer.subarray(PythGovernanceHeader.span)
+      buffer.subarray(PythGovernanceHeader.span, buffer.length)
     );
     if (!payload) return undefined;
+    console.log("AFTER PAYLOAD");
 
     return [header, payload];
   }

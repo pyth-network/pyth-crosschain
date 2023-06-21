@@ -172,12 +172,12 @@ function bufferArb(): Arbitrary<Buffer> {
 function governanceActionArb(): Arbitrary<PythGovernanceAction> {
   return governanceHeaderArb().chain<PythGovernanceAction>((header) => {
     if (header.action === "ExecutePostedVaa") {
-      // NOTE: the instructions are hard to generatively test, so we're using the hardcoded
+      // NOTE: the instructions field is hard to generatively test, so we're using the hardcoded
       // tests above instead.
       return fc.constant(new ExecutePostedVaa(header.targetChainId, []));
     } else if (header.action === "UpgradeContract") {
       // TODO: other upgrade contracts
-      return fc.bigIntN(64).map((codeId) => {
+      return fc.bigUintN(64).map((codeId) => {
         return new CosmosUpgradeContract(header.targetChainId, codeId);
       });
     } else if (header.action === "AuthorizeGovernanceDataSourceTransfer") {
@@ -202,11 +202,11 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
           return new SetFee(header.targetChainId, v, e);
         });
     } else if (header.action === "SetValidPeriod") {
-      return fc.bigIntN(64).map((period) => {
+      return fc.bigUintN(64).map((period) => {
         return new SetValidPeriod(header.targetChainId, period);
       });
     } else if (header.action === "RequestGovernanceDataSourceTransfer") {
-      return fc.bigIntN(32).map((index) => {
+      return fc.bigUintN(32).map((index) => {
         return new RequestGovernanceDataSourceTransfer(
           header.targetChainId,
           parseInt(index.toString())
@@ -239,7 +239,11 @@ test("Header serialization round-trip test", (done) => {
 test("Governance action serialization round-trip test", (done) => {
   fc.assert(
     fc.property(governanceActionArb(), (original) => {
-      const decoded = decodeGovernancePayload(original.encode());
+      const encoded = original.encode();
+      const decoded = decodeGovernancePayload(encoded);
+      console.log(original);
+      console.log(encoded);
+      console.log(decoded);
       if (decoded === undefined) {
         return false;
       }

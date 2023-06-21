@@ -1,4 +1,4 @@
-import { Layout, uint8ArrayToBuffer } from "@solana/buffer-layout";
+import { Layout } from "@solana/buffer-layout";
 
 export class UInt64BE extends Layout<bigint> {
   constructor(span: number, property?: string) {
@@ -6,21 +6,15 @@ export class UInt64BE extends Layout<bigint> {
   }
 
   override decode(b: Uint8Array, offset?: number): bigint {
-    return Buffer.from(b.slice(offset, this.span)).readBigUInt64BE();
+    let o = offset === undefined ? 0 : offset!;
+    return Buffer.from(b.slice(o, o + this.span)).readBigUInt64BE();
   }
 
   override encode(src: bigint, b: Uint8Array, offset?: number): number {
-    uint8ArrayToBuffer(b).writeBigUint64BE(src, offset);
-    return this.span;
-
-    /*
     const buffer = Buffer.alloc(this.span);
     buffer.writeBigUint64BE(src);
-
     b.set(buffer, offset);
-
     return this.span;
-     */
   }
 }
 
@@ -31,24 +25,24 @@ export class HexBytes extends Layout<string> {
   }
 
   override decode(b: Uint8Array, offset?: number): string {
-    return Buffer.from(b.slice(offset, this.span)).toString("hex");
+    let o = offset === undefined ? 0 : offset!;
+    return Buffer.from(b.slice(o, o + this.span)).toString("hex");
   }
 
   override encode(src: string, b: Uint8Array, offset?: number): number {
     const buffer = Buffer.alloc(this.span);
     buffer.write(src, "hex");
-
     b.set(buffer, offset);
-
     return this.span;
   }
 }
 
-// TODO: handle negative numbers properly
+/** A big-endian u64, returned as a bigint. */
 export function u64be(property?: string | undefined): UInt64BE {
   return new UInt64BE(8, property);
 }
 
+/** An array of numBytes bytes, returned as a hexadecimal string. */
 export function hexBytes(
   numBytes: number,
   property?: string | undefined

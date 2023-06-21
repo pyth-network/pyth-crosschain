@@ -1,4 +1,9 @@
-import { PythGovernanceActionImpl, PythGovernanceHeader } from ".";
+import {
+  ActionName,
+  PythGovernanceAction,
+  PythGovernanceActionImpl,
+  PythGovernanceHeader,
+} from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
 import * as BufferLayoutExt from "./BufferLayoutExt";
 import { ChainName } from "@certusone/wormhole-sdk";
@@ -6,7 +11,10 @@ import { ChainName } from "@certusone/wormhole-sdk";
 export class SetFee extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<
     Readonly<{ newFeeValue: bigint; newFeeExpo: bigint }>
-  > = BufferLayout.struct([BufferLayoutExt.u64be(), BufferLayoutExt.u64be()]);
+  > = BufferLayout.struct([
+    BufferLayoutExt.u64be("newFeeValue"),
+    BufferLayoutExt.u64be("newFeeExpo"),
+  ]);
 
   constructor(
     targetChainId: ChainName,
@@ -17,12 +25,16 @@ export class SetFee extends PythGovernanceActionImpl {
   }
 
   static decode(data: Buffer): SetFee | undefined {
+    console.log("Decoding here!");
+
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "SetFee",
-      this.layout
+      SetFee.layout
     );
     if (!decoded) return undefined;
+
+    console.log("header OK!");
 
     return new SetFee(
       decoded[0].targetChainId,

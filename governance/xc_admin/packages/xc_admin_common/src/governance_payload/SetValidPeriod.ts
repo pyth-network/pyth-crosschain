@@ -1,11 +1,14 @@
-import { PythGovernanceActionImpl, PythGovernanceHeader } from ".";
+import {
+  PythGovernanceActionImpl,
+  PythGovernanceHeader,
+} from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
 import * as BufferLayoutExt from "./BufferLayoutExt";
 import { ChainName } from "@certusone/wormhole-sdk";
 
 export class SetValidPeriod extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<Readonly<{ newValidPeriod: bigint }>> =
-    BufferLayout.struct([BufferLayoutExt.u64be()]);
+    BufferLayout.struct([BufferLayoutExt.u64be("newValidPeriod")]);
 
   constructor(targetChainId: ChainName, readonly newValidPeriod: bigint) {
     super(targetChainId, "SetValidPeriod");
@@ -15,7 +18,7 @@ export class SetValidPeriod extends PythGovernanceActionImpl {
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "SetValidPeriod",
-      this.layout
+      SetValidPeriod.layout
     );
     if (!decoded) return undefined;
 

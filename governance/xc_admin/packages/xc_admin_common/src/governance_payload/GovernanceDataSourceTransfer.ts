@@ -11,19 +11,22 @@ export class AuthorizeGovernanceDataSourceTransfer
   implements PythGovernanceAction
 {
   readonly actionName: ActionName;
+  readonly claimVaa: Buffer;
 
-  constructor(readonly targetChainId: ChainName, readonly claimVaa: Buffer) {
+  constructor(readonly targetChainId: ChainName, vaa: Buffer) {
     this.actionName = "AuthorizeGovernanceDataSourceTransfer";
+    this.claimVaa = new Buffer(vaa);
   }
 
   static decode(
     data: Buffer
   ): AuthorizeGovernanceDataSourceTransfer | undefined {
     const header = PythGovernanceHeader.decode(data);
-    if (!header || header.action !== "AuthorizeGovernanceDataSourceTransfer")
+    if (!header || header.action !== "AuthorizeGovernanceDataSourceTransfer") {
       return undefined;
+    }
 
-    const payload = data.subarray(PythGovernanceHeader.span);
+    const payload = data.subarray(PythGovernanceHeader.span, data.length);
 
     return new AuthorizeGovernanceDataSourceTransfer(
       header.targetChainId,
@@ -56,7 +59,7 @@ export class RequestGovernanceDataSourceTransfer extends PythGovernanceActionImp
     const decoded = PythGovernanceActionImpl.decodeWithPayload(
       data,
       "RequestGovernanceDataSourceTransfer",
-      this.layout
+      RequestGovernanceDataSourceTransfer.layout
     );
     if (!decoded) return undefined;
 
@@ -66,7 +69,6 @@ export class RequestGovernanceDataSourceTransfer extends PythGovernanceActionImp
     );
   }
 
-  /** Encode CosmosUpgradeContract */
   encode(): Buffer {
     return super.encodeWithPayload(RequestGovernanceDataSourceTransfer.layout, {
       governanceDataSourceIndex: this.governanceDataSourceIndex,
