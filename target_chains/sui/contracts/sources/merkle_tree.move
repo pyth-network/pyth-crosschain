@@ -1,6 +1,6 @@
 // Implementation of a Merkle tree in Move. Supports constructing a new tree
 // with a given depth, as well as proving that a leaf node belongs to the tree.
-module pyth::merkle {
+module pyth::merkle_tree {
     use std::vector::{Self};
     use sui::hash::{keccak256};
     use wormhole::bytes::{Self};
@@ -76,7 +76,7 @@ module pyth::merkle {
     // The Sui Move stdlb insert function shifts v[i] and subsequent elements to the right.
     // We don't want this behavior, so we define our own vector insert function using swapping.
     // Reference: https://github.com/MystenLabs/sui/blob/main/crates/sui-framework/packages/move-stdlib/sources/vector.move
-    fun vectorInsert<T: drop>(a: &mut vector<T>, value: T, index: u64){
+    fun setElement<T: drop>(a: &mut vector<T>, value: T, index: u64){
         vector::push_back<T>(a, value); // push value to end
         vector::swap_remove(a, index); // swap value to correct position and pop last value
     }
@@ -141,7 +141,7 @@ module pyth::merkle {
         // Fill in bottom row with leaf hashes
         let j: u64 = 0;
         while (j < vector::length(messages)){
-            vectorInsert<Bytes20>(&mut tree, leafHash(vector::borrow(messages, j)), (1 << depth) + j);
+            setElement<Bytes20>(&mut tree, leafHash(vector::borrow(messages, j)), (1 << depth) + j);
             j = j + 1;
         };
 
@@ -154,7 +154,7 @@ module pyth::merkle {
             while (i < levelNumNodes ){
                 let id = (1 << level) + i;
                 let nodeHash = nodeHash(*vector::borrow(&tree, id * 2), *vector::borrow(&tree, id * 2 + 1));
-                vectorInsert<Bytes20>(&mut tree, nodeHash, id);
+                setElement<Bytes20>(&mut tree, nodeHash, id);
                 i = i + 1;
             };
             k = k - 1;
@@ -240,7 +240,6 @@ module pyth::merkle {
         cursor::take_rest<u8>(proofsCursor);
     }
 
-
     #[test]
     fun testMerkleTreeDepth3(){
         let messages = vector::empty<vector<u8>>();
@@ -268,4 +267,31 @@ module pyth::merkle {
         // destroy cursor
         cursor::take_rest<u8>(proofsCursor);
     }
+
+    #[test]
+    #[expected_failure(abort_code = pyth::merkle_tree::E_DEPTH_NOT_LARGE_ENOUGH_FOR_MESSAGES)]
+    fun testMerkleTreeDepthExceeded1(){
+        let messages = vector::empty<vector<u8>>();
+        vector::push_back(&mut messages, x"00");
+        vector::push_back(&mut messages, x"4321");
+        vector::push_back(&mut messages, x"444444");
+
+        constructProofs(&messages, 1); //depth 1
+    }
+
+    #[test]
+    #[expected_failure(abort_code = pyth::merkle_tree::E_DEPTH_NOT_LARGE_ENOUGH_FOR_MESSAGES)]
+    fun testMerkleTreeDepthExceeded2(){
+        let messages = vector::empty<vector<u8>>();
+        vector::push_back(&mut messages, x"00");
+        vector::push_back(&mut messages, x"4321");
+        vector::push_back(&mut messages, x"444444");
+        vector::push_back(&mut messages, x"22222222");
+        vector::push_back(&mut messages, x"22");
+
+        constructProofs(&messages, 2); // depth 2
+    }
+
+
+
 }
