@@ -14,13 +14,12 @@ module pyth::merkle {
 
     const E_DEPTH_NOT_LARGE_ENOUGH_FOR_MESSAGES: u64 = 1212121;
 
-    // take keccak256 of input data, then return 20 rightmost bytes of result
+    // take keccak256 of input data, then return 20 leftmost bytes of result
     fun hash(bytes: &vector<u8>): Bytes20 {
-        let hashed_bytes = keccak256(bytes); // 32 byte hash
+        let hashed_bytes = keccak256(bytes);
         let cursor = cursor::new(hashed_bytes);
-        let _ = bytes::take_bytes(&mut cursor, 12);
         let bytes20 = bytes::take_bytes(&mut cursor, 20);
-        cursor::destroy_empty(cursor);
+        cursor::take_rest(cursor);
         bytes20::from_bytes(bytes20)
     }
 
@@ -222,7 +221,7 @@ module pyth::merkle {
         assert!(valid==true, 0);
 
         // destroy cursor
-        let _ = cursor::take_rest<u8>(proofsCursor);
+        cursor::take_rest<u8>(proofsCursor);
     }
 
     #[test]
@@ -242,7 +241,7 @@ module pyth::merkle {
         assert!(isProofValid(&mut proofsCursor, root, x"22")==true, 0);
 
         // destroy cursor
-        let _ = cursor::take_rest<u8>(proofsCursor);
+        cursor::take_rest<u8>(proofsCursor);
     }
 
 
@@ -271,6 +270,6 @@ module pyth::merkle {
         assert!(isProofValid(&mut proofsCursor, root, x"eeeeee")==true, 0);
 
         // destroy cursor
-        let _ = cursor::take_rest<u8>(proofsCursor);
+        cursor::take_rest<u8>(proofsCursor);
     }
 }
