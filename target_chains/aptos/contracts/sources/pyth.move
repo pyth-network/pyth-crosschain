@@ -730,7 +730,7 @@ module pyth::pyth_test {
         );
 
         // Set the current time
-        timestamp::update_global_time_for_test_secs(1663680745);
+        timestamp::update_global_time_for_test_secs(1687276659);
 
         // Deploy and initialize a test instance of the Pyth contract
         let deployer = account::create_signer_with_capability(
@@ -757,7 +757,6 @@ module pyth::pyth_test {
             50
         );
 
-        timestamp::update_global_time_for_test_secs(1687276659);
         pyth::update_price_feeds(vector[TEST_ACCUMULATOR], coins);
 
         let expected = vector<PriceInfo>[
@@ -843,10 +842,7 @@ module pyth::pyth_test {
             150
         );
 
-        // Update the price feeds from the VAA
-        timestamp::update_global_time_for_test_secs(1687276659);
         pyth::update_price_feeds(vector[TEST_ACCUMULATOR_3_MSGS], coins);
-        // Check that the cache has been updated
         check_accumulator_test_price_feeds(0);
         cleanup_test(burn_capability, mint_capability);
     }
@@ -858,7 +854,7 @@ module pyth::pyth_test {
             data_sources_for_test_vaa(),
             300
         );
-        timestamp::update_global_time_for_test_secs(1687276659);
+
         pyth::update_price_feeds(vector[TEST_ACCUMULATOR_3_MSGS_LATER, TEST_ACCUMULATOR_3_MSGS], coins);
         check_accumulator_test_price_feeds(10);
 
@@ -877,7 +873,6 @@ module pyth::pyth_test {
             150
         );
 
-        timestamp::update_global_time_for_test_secs(1687276659);
         pyth::update_price_feeds(vector[TEST_ACCUMULATOR_3_MSGS], coins);
         check_accumulator_test_price_feeds(0);
         let coins_second_call = coin::mint(150, &mint_capability);
