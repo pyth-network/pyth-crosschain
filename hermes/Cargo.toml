@@ -38,7 +38,7 @@ log                    = { version = "0.4.17" }
 pyth-sdk               = { version = "0.7.0" }
 
 # Parse Wormhole attester price attestations.
-pythnet-sdk            = { path = "../pythnet/pythnet_sdk/", version = "=1.13.6", features = ["strum"] }
+pythnet-sdk            = { path = "../pythnet/pythnet_sdk/", version = "2.0.0", features = ["strum"] }
 
 rand                   = { version = "0.8.5" }
 reqwest                = { version = "0.11.14", features = ["blocking", "json"] }

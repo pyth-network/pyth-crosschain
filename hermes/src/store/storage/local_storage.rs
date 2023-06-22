@@ -291,7 +291,7 @@ mod test {
                 )
                 .await
                 .unwrap(),
-            vec![new_message_state.clone()]
+            vec![new_message_state]
         );
     }
 
@@ -318,7 +318,7 @@ mod test {
                 )
                 .await
                 .unwrap(),
-            vec![new_message_state.clone()]
+            vec![new_message_state]
         );
     }
 
@@ -528,19 +528,26 @@ mod test {
         }
     }
 
+    pub async fn create_and_store_empty_accumulator_state_at_slot(
+        storage: &StorageInstance,
+        slot: Slot,
+    ) -> AccumulatorState {
+        let accumulator_state = create_empty_accumulator_state_at_slot(slot);
+        storage
+            .store_accumulator_state(accumulator_state.clone())
+            .await
+            .unwrap();
+        accumulator_state
+    }
+
     #[tokio::test]
     pub async fn test_store_and_receive_accumulator_state_works() {
         // Initialize a storage with a cache size of 2 per key and the accumulator state.
         let storage = LocalStorage::new_instance(2);
 
         // Create and store an accumulator state with slot 10.
-        let accumulator_state = create_empty_accumulator_state_at_slot(10);
-
-        // Store the accumulator state.
-        storage
-            .store_accumulator_state(accumulator_state.clone())
-            .await
-            .unwrap();
+        let accumulator_state =
+            create_and_store_empty_accumulator_state_at_slot(&storage, 10).await;
 
         // Make sure the retrieved accumulator state is what we stored.
         assert_eq!(
@@ -555,13 +562,8 @@ mod test {
         let storage = LocalStorage::new_instance(2);
 
         // Create and store an accumulator state with slot 10.
-        let mut accumulator_state = create_empty_accumulator_state_at_slot(10);
-
-        // Store the accumulator state.
-        storage
-            .store_accumulator_state(accumulator_state.clone())
-            .await
-            .unwrap();
+        let mut accumulator_state =
+            create_and_store_empty_accumulator_state_at_slot(&storage, 10).await;
 
         // Retrieve the accumulator state and make sure it is what we stored.
         assert_eq!(
@@ -596,19 +598,10 @@ mod test {
         // Initialize a storage with a cache size of 2 per key and the accumulator state.
         let storage = LocalStorage::new_instance(2);
 
-        let accumulator_state_at_slot_10 = create_empty_accumulator_state_at_slot(10);
-        let accumulator_state_at_slot_20 = create_empty_accumulator_state_at_slot(20);
-
-        // Store the accumulator states.
-        storage
-            .store_accumulator_state(accumulator_state_at_slot_10.clone())
-            .await
-            .unwrap();
-
-        storage
-            .store_accumulator_state(accumulator_state_at_slot_20.clone())
-            .await
-            .unwrap();
+        let accumulator_state_at_slot_10 =
+            create_and_store_empty_accumulator_state_at_slot(&storage, 10).await;
+        let accumulator_state_at_slot_20 =
+            create_and_store_empty_accumulator_state_at_slot(&storage, 20).await;
 
         // Retrieve the accumulator states and make sure it is what we stored.
         assert_eq!(
@@ -627,27 +620,15 @@ mod test {
         // Initialize a storage with a cache size of 2 per key and the accumulator state.
         let storage = LocalStorage::new_instance(2);
 
-        let accumulator_state_at_slot_10 = create_empty_accumulator_state_at_slot(10);
-        storage
-            .store_accumulator_state(accumulator_state_at_slot_10.clone())
-            .await
-            .unwrap();
-
-        let accumulator_state_at_slot_20 = create_empty_accumulator_state_at_slot(20);
-        storage
-            .store_accumulator_state(accumulator_state_at_slot_20.clone())
-            .await
-            .unwrap();
-
-        let accumulator_state_at_slot_30 = create_empty_accumulator_state_at_slot(30);
-        storage
-            .store_accumulator_state(accumulator_state_at_slot_30.clone())
-            .await
-            .unwrap();
+        let _accumulator_state_at_slot_10 =
+            create_and_store_empty_accumulator_state_at_slot(&storage, 10).await;
+        let accumulator_state_at_slot_20 =
+            create_and_store_empty_accumulator_state_at_slot(&storage, 20).await;
+        let accumulator_state_at_slot_30 =
+            create_and_store_empty_accumulator_state_at_slot(&storage, 30).await;
 
         // The accumulator state at slot 10 should be evicted from the cache.
         assert_eq!(storage.fetch_accumulator_state(10).await.unwrap(), None);
-
 
         // Retrieve the rest of accumulator states and make sure it is what we stored.
         assert_eq!(

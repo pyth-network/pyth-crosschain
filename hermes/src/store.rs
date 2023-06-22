@@ -33,7 +33,6 @@ use {
         anyhow,
         Result,
     },
-    moka::future::Cache,
     pyth_sdk::PriceIdentifier,
     pythnet_sdk::{
         messages::{
@@ -127,10 +126,12 @@ impl Store {
                     }
                 };
 
-                let mut observed_vaa_seqs = self.observed_vaa_seqs.write().await;
-                observed_vaa_seqs.insert(vaa.sequence);
-                if observed_vaa_seqs.len() > OBSERVED_CACHE_SIZE {
-                    observed_vaa_seqs.pop_first();
+                {
+                    let mut observed_vaa_seqs = self.observed_vaa_seqs.write().await;
+                    observed_vaa_seqs.insert(vaa.sequence);
+                    while observed_vaa_seqs.len() > OBSERVED_CACHE_SIZE {
+                        observed_vaa_seqs.pop_first();
+                    }
                 }
 
                 match WormholeMessage::try_from_bytes(vaa.payload)?.payload {
