@@ -757,7 +757,6 @@ module pyth::pyth_test {
             50
         );
 
-        // Update the price feeds from the VAA
         timestamp::update_global_time_for_test_secs(1687276659);
         pyth::update_price_feeds(vector[TEST_ACCUMULATOR], coins);
 
@@ -823,6 +822,20 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
+    #[expected_failure(abort_code = 65542)]
+    fun test_accumulator_update_price_feeds_insufficient_fee(aptos_framework: &signer) {
+        let (burn_capability, mint_capability, coins) = setup_accumulator_test(
+            aptos_framework,
+            data_sources_for_test_vaa(),
+            149
+        );
+
+        pyth::update_price_feeds(vector[TEST_ACCUMULATOR_3_MSGS], coins);
+
+        cleanup_test(burn_capability, mint_capability);
+    }
+
+    #[test(aptos_framework = @aptos_framework)]
     fun test_accumulator_update_price_multi_feed(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_accumulator_test(
             aptos_framework,
@@ -847,8 +860,10 @@ module pyth::pyth_test {
         );
         timestamp::update_global_time_for_test_secs(1687276659);
         pyth::update_price_feeds(vector[TEST_ACCUMULATOR_3_MSGS_LATER, TEST_ACCUMULATOR_3_MSGS], coins);
-        let coins_second_call = coin::mint(150, &mint_capability);
+        check_accumulator_test_price_feeds(10);
+
         // we pass the old message again in a separate call to make sure it will not overwrite the recent values in neither case
+        let coins_second_call = coin::mint(150, &mint_capability);
         pyth::update_price_feeds(vector[TEST_ACCUMULATOR_3_MSGS], coins_second_call);
         check_accumulator_test_price_feeds(10);
         cleanup_test(burn_capability, mint_capability);
@@ -927,12 +942,10 @@ module pyth::pyth_test {
             0
         );
         let single_update_fee = 50;
-        // pyth::update_price_feeds(vector[TEST_ACCUMULATOR], coins);
         assert!(pyth::get_update_fee(&vector[
             TEST_ACCUMULATOR,
         ]) == single_update_fee, 1);
 
-        // Pass in multiple VAAs
         assert!(pyth::get_update_fee(&vector[
             TEST_ACCUMULATOR,
             TEST_ACCUMULATOR,
