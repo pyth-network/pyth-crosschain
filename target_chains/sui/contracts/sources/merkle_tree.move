@@ -249,6 +249,8 @@ module pyth::merkle_tree {
         vector::push_back(&mut messages, x"22");
 
         let (root, proofs) = constructProofs(&messages, 2);
+        print(&x"5555555555");
+        print(&root);
 
         let proofsCursor = cursor::new(proofs);
         assert!(isProofValid(&mut proofsCursor, root, x"1234")==true, 0);
