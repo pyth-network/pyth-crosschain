@@ -46,6 +46,7 @@ pub mod v1 {
         },
     };
     pub const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: &[u8; 4] = b"PNAU";
+    pub const CURRENT_MINOR_VERSION: u8 = 0;
 
     // Transfer Format.
     // --------------------------------------------------------------------------------
@@ -79,7 +80,10 @@ pub mod v1 {
                 Error::InvalidMagic
             );
             require!(message.major_version == 1, Error::InvalidVersion);
-            require!(message.minor_version == 0, Error::InvalidVersion);
+            require!(
+                message.minor_version >= CURRENT_MINOR_VERSION,
+                Error::InvalidVersion
+            );
             Ok(message)
         }
     }
@@ -384,5 +388,29 @@ mod tests {
 
         // The deserialized value should be the same as the original.
         assert_eq!(deserialized_update, empty_update);
+    }
+
+    // Test if the AccumulatorUpdateData major and minor version increases work as expected
+    #[test]
+    fn test_accumulator_forward_compatibility() {
+        use serde::Serialize;
+        // Serialize an empty update into a buffer.
+
+        let empty_update = AccumulatorUpdateData::new(Proof::WormholeMerkle {
+            vaa:     PrefixedVec::from(vec![]),
+            updates: vec![],
+        });
+        let mut buffer = Vec::new();
+        let mut cursor = std::io::Cursor::new(&mut buffer);
+        let mut serializer: Serializer<_, byteorder::LE> = Serializer::new(&mut cursor);
+        empty_update.serialize(&mut serializer).unwrap();
+
+        // Test if bumping minor version is still compatible
+        buffer[5] = 0x03;
+        AccumulatorUpdateData::try_from_slice(&buffer).unwrap();
+
+        // Test if bumping major version makes it incompatible
+        buffer[4] = 0x03;
+        AccumulatorUpdateData::try_from_slice(&buffer).unwrap_err();
     }
 }
