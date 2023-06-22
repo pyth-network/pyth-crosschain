@@ -155,11 +155,19 @@ abstract contract WormholeTestUtils is Test {
         bytes memory signatures = new bytes(0);
 
         for (uint256 i = 0; i < numSigners; ++i) {
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentSigners[i], hash);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+                isNotMatch(forgeItem, "vaaSignature")
+                    ? currentSigners[i]
+                    : currentSigners[i] + 1000,
+                hash
+            );
             // encodePacked uses padding for arrays and we don't want it, so we manually concat them.
             signatures = abi.encodePacked(
                 signatures,
-                uint8(i), // Guardian index of the signature
+                (i == numSigners - 1 &&
+                    isNotMatch(forgeItem, "vaaSignatureIndex"))
+                    ? uint8(i)
+                    : uint8(0), // Guardian index of the signature
                 r,
                 s,
                 v - 27 // v is either 27 or 28. 27 is added to v in Eth (following BTC) but Wormhole doesn't use it.
@@ -171,8 +179,10 @@ abstract contract WormholeTestUtils is Test {
             isNotMatch(forgeItem, "vaaGuardianSetIndex")
                 ? uint32(0)
                 : uint32(1), // Guardian set index. it is initialized by 0
-            isNotMatch(forgeItem, "vaaNumSigners")
-                ? numSigners
+            isNotMatch(forgeItem, "vaaNumSigners+")
+                ? isNotMatch(forgeItem, "vaaNumSigners-")
+                    ? numSigners
+                    : numSigners - 1
                 : numSigners + 1,
             signatures,
             body
@@ -380,5 +390,88 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         (, bool valid, string memory reason) = wormhole.parseAndVerifyVM(vaa);
         assertEq(valid, false);
         assertEq(reason, "guardian set has expired");
+    }
+
+    function testParseAndVerifyFailsIfInvalidGuardianSignature() public {
+        uint8 numGuardians = 5;
+        address whAddr = setUpWormholeReceiver(numGuardians);
+        IWormhole wormhole = IWormhole(whAddr);
+        ReceiverImplementation whReceiverImpl = ReceiverImplementation(
+            payable(whAddr)
+        );
+        // generate the vaa and sign with the current wormhole guardian set
+        bytes memory vaa = forgeVaa(
+            112,
+            7,
+            0x0000000000000000000000000000000000000000000000000000000000000bad,
+            10,
+            hex"deadbeaf",
+            4,
+            "vaaSignature"
+        );
+
+        (, bool valid, string memory reason) = wormhole.parseAndVerifyVM(vaa);
+        assertEq(valid, false);
+        assertEq(reason, "VM signature invalid");
+    }
+
+    function testParseAndVerifyFailsIfInvalidGuardianSignatureIndex() public {
+        uint8 numGuardians = 5;
+        address whAddr = setUpWormholeReceiver(numGuardians);
+        IWormhole wormhole = IWormhole(whAddr);
+        ReceiverImplementation whReceiverImpl = ReceiverImplementation(
+            payable(whAddr)
+        );
+        // generate the vaa and sign with the initial wormhole guardian set
+        bytes memory vaa = forgeVaa(
+            112,
+            7,
+            0x0000000000000000000000000000000000000000000000000000000000000bad,
+            10,
+            hex"deadbeaf",
+            4,
+            "vaaSignatureIndex"
+        );
+        vm.expectRevert(
+            abi.encodeWithSignature("SignatureIndexesNotAscending()")
+        );
+        wormhole.parseAndVerifyVM(vaa);
+    }
+
+    function testParseAndVerifyFailsIfInvalidNumSignatures() public {
+        uint8 numGuardians = 5;
+        address whAddr = setUpWormholeReceiver(numGuardians);
+        IWormhole wormhole = IWormhole(whAddr);
+        ReceiverImplementation whReceiverImpl = ReceiverImplementation(
+            payable(whAddr)
+        );
+        // generate the vaa and sign with the current wormhole guardian set
+        bytes memory vaa = forgeVaa(
+            112,
+            7,
+            0x0000000000000000000000000000000000000000000000000000000000000bad,
+            10,
+            hex"deadbeaf",
+            4,
+            "vaaNumSigners+"
+        );
+
+        (, bool valid, string memory reason) = wormhole.parseAndVerifyVM(vaa);
+        assertEq(valid, false);
+        assertEq(reason, "invalid signature length");
+
+        vaa = forgeVaa(
+            112,
+            7,
+            0x0000000000000000000000000000000000000000000000000000000000000bad,
+            10,
+            hex"deadbeaf",
+            4,
+            "vaaNumSigners-"
+        );
+
+        (, valid, reason) = wormhole.parseAndVerifyVM(vaa);
+        assertEq(valid, false);
+        assertEq(reason, "VM signature invalid");
     }
 }
