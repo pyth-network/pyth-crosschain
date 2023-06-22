@@ -1,13 +1,18 @@
 module pyth::accumulator {
     use std::vector::{Self};
-    use sui::hash::{keccak256};
-    use wormhole::bytes::{Self};
-    use wormhole::bytes20::{Self, Bytes20, data};
-    use wormhole::cursor::{Self, Cursor};
+    use sui::clock::{Clock, Self};
+    use wormhole::bytes20::{Self, Bytes20};
+    use wormhole::cursor::{Cursor};
     use pyth::deserialize::{Self};
+    use pyth::price_status::{Self};
+    use pyth::price_identifier::{Self};
+    use pyth::price_info::{Self, PriceInfo};
+    use pyth::price_feed::{Self};
+    use pyth::merkle_tree::{Self};
 
     const PRICE_FEED_MESSAGE_TYPE: u64 = 0;
     const E_INVALID_UPDATE_DATA: u64 = 245;
+    const E_INVALID_PROOF: u64 = 345;
 
     fun parse_price_feed_message(cur: &mut Cursor<u8>, clock: &Clock): PriceInfo {
 
@@ -60,88 +65,28 @@ module pyth::accumulator {
         )
     }
 
-    // extractPriceInfoFromMerkleProof decodes the next price info
-    // from an encoded accumulator update and returns a (PriceInfo, priceId) pair
-    fun extract_price_info_from_merkle_proof(
-        digest: Bytes20,
-        cursor: Cursor<u8>,
-    ): (PriceInfo, Bytes32) {
-            //bytes calldata encodedMessage;
-            let messageSize: u16 = cursor::deserialize_u16(cursor);
-            let encodedMessage: vector<u8> = cursor::deserialize_vector(cursor, messageSize);
-
-            // check if encoded message is a valid update (part of the merkle tree)
-            let valid: bool = isProofValid(
-                encoded,
-                digest, // root
-                encodedMessage // leaf
-            );
-            if (!valid) {
-                abort E_INVALID_UPDATE_DATA
+    // parse_and_verify_accumulator_updates takes as input a merkle root and cursor over the encoded update message (containing encoded
+    // leafs and merkle proofs), iterates over each leaf/proof pair and verifies it is part of the tree, and finally outputs the set of
+    // decoded and authenticated PriceInfos.
+    fun parse_and_verify_accumulator_updates(cursor: &mut Cursor<u8>, merkle_root: &vector<u8>, clock: &Clock): vector<PriceInfo> {
+        let update_size = deserialize::deserialize_u8(cursor);
+        let price_info_updates: vector<PriceInfo> = vector[];
+        while (update_size > 0) {
+            let message_size = deserialize::deserialize_u16(cursor);
+            let message = deserialize::deserialize_vector(cursor, (message_size as u64)); //should be safe to go from u16 to u16
+            let price_info = parse_price_feed_message(cursor, clock);
+            vector::push_back(&mut price_info_updates, price_info);
+            let path_size = deserialize::deserialize_u8(cursor);
+            let merkle_path: vector<Bytes20> = vector[];
+            while (path_size > 0) {
+                let hash_bytes = deserialize::deserialize_vector(cursor, 20); // 20 is number of bytes in a keccak hash
+                vector::push_back(&mut merkle_path, bytes20::new(hash_bytes));
+                path_size = path_size - 1;
             };
-
-            // parse encoded message
-            let encodedMessageCursor = cursor::new(encodedMessage);
-            let messageType = cursor::deserialize_u8(encodedMessageCursor);
-
-            if (messageType != PRICE_FEED_MESSAGE_TYPE) {
-                (priceInfo, priceId) = parse_price_feed_message(encodedMessageCursor, 1);
-            } else {
-                abort E_INVALID_UPDATE_DATA
-            };
-
-            return (priceInfo, priceId);
-        }
+            assert!(merkle_tree::isValidProof(&merkle_path, merkle_root, message), E_INVALID_PROOF);
+            update_size = update_size - 1;
+        };
+        price_info_updates
     }
-
-    fun extractPriceInfosFromAccumulatorUpdate(
-        accumulatorUpdate: vector<u8>
-    ) internal returns (uint8 numUpdates) {
-        (
-            uint encodedOffset,
-            UpdateType updateType
-        ) = extractUpdateTypeFromAccumulatorHeader(accumulatorUpdate);
-
-        if (updateType != UpdateType.WormholeMerkle) {
-            revert PythErrors.InvalidUpdateData();
-        }
-
-        uint offset;
-        bytes20 digest;
-        bytes calldata encoded;
-        (
-            offset,
-            digest,
-            numUpdates,
-            encoded
-        ) = extractWormholeMerkleHeaderDigestAndNumUpdatesAndEncodedFromAccumulatorUpdate(
-            accumulatorUpdate,
-            encodedOffset
-        );
-
-        unchecked {
-            for (uint i = 0; i < numUpdates; i++) {
-                PythInternalStructs.PriceInfo memory priceInfo;
-                bytes32 priceId;
-                (offset, priceInfo, priceId) = extractPriceInfoFromMerkleProof(
-                    digest,
-                    encoded,
-                    offset
-                );
-                uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
-                if (priceInfo.publishTime > latestPublishTime) {
-                    setLatestPriceInfo(priceId, priceInfo);
-                    emit PriceFeedUpdate(
-                        priceId,
-                        priceInfo.publishTime,
-                        priceInfo.price,
-                        priceInfo.conf
-                    );
-                }
-            }
-        }
-        if (offset != encoded.length) revert PythErrors.InvalidUpdateData();
-    }
-}
 
 }
