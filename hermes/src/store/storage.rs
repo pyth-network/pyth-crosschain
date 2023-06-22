@@ -14,8 +14,8 @@ use {
         Result,
     },
     async_trait::async_trait,
-    pyth_sdk::PriceIdentifier,
     pythnet_sdk::messages::{
+        FeedId,
         Message,
         MessageType,
     },
@@ -57,8 +57,8 @@ impl TryFrom<AccumulatorState> for CompletedAccumulatorState {
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
 pub struct MessageStateKey {
-    pub id:    [u8; 32],
-    pub type_: MessageType,
+    pub feed_id: FeedId,
+    pub type_:   MessageType,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, PartialOrd, Ord)]
@@ -85,8 +85,8 @@ impl MessageState {
 
     pub fn key(&self) -> MessageStateKey {
         MessageStateKey {
-            id:    self.message.id(),
-            type_: self.message.into(),
+            feed_id: self.message.feed_id(),
+            type_:   self.message.into(),
         }
     }
 
@@ -125,13 +125,99 @@ pub trait Storage: Send + Sync {
     async fn store_message_states(&self, message_states: Vec<MessageState>) -> Result<()>;
     async fn fetch_message_states(
         &self,
-        ids: Vec<PriceIdentifier>,
+        ids: Vec<FeedId>,
         request_time: RequestTime,
         filter: MessageStateFilter,
     ) -> Result<Vec<MessageState>>;
 
     async fn store_accumulator_state(&self, state: AccumulatorState) -> Result<()>;
-    async fn fetch_accumulator_state(&self, slot: u64) -> Result<Option<AccumulatorState>>;
+    async fn fetch_accumulator_state(&self, slot: Slot) -> Result<Option<AccumulatorState>>;
 }
 
 pub type StorageInstance = Box<dyn Storage>;
+
+#[cfg(test)]
+mod test {
+    use {
+        super::*,
+        pythnet_sdk::wire::v1::WormholeMerkleRoot,
+    };
+
+    #[test]
+    pub fn test_complete_accumulator_state_try_from_accumulator_state_works() {
+        let accumulator_state = AccumulatorState {
+            slot:                  1,
+            accumulator_messages:  None,
+            wormhole_merkle_state: None,
+        };
+
+        assert!(CompletedAccumulatorState::try_from(accumulator_state.clone()).is_err());
+
+        let accumulator_state = AccumulatorState {
+            slot:                  1,
+            accumulator_messages:  Some(AccumulatorMessages {
+                slot:      1,
+                magic:     [0; 4],
+                ring_size: 10,
+                messages:  vec![],
+            }),
+            wormhole_merkle_state: None,
+        };
+
+        assert!(CompletedAccumulatorState::try_from(accumulator_state.clone()).is_err());
+
+        let accumulator_state = AccumulatorState {
+            slot:                  1,
+            accumulator_messages:  None,
+            wormhole_merkle_state: Some(WormholeMerkleState {
+                vaa:  vec![],
+                root: WormholeMerkleRoot {
+                    slot:      1,
+                    ring_size: 10,
+                    root:      [0; 20],
+                },
+            }),
+        };
+
+        assert!(CompletedAccumulatorState::try_from(accumulator_state.clone()).is_err());
+
+        let accumulator_state = AccumulatorState {
+            slot:                  1,
+            accumulator_messages:  Some(AccumulatorMessages {
+                slot:      1,
+                magic:     [0; 4],
+                ring_size: 10,
+                messages:  vec![],
+            }),
+            wormhole_merkle_state: Some(WormholeMerkleState {
+                vaa:  vec![],
+                root: WormholeMerkleRoot {
+                    slot:      1,
+                    ring_size: 10,
+                    root:      [0; 20],
+                },
+            }),
+        };
+
+        assert_eq!(
+            CompletedAccumulatorState::try_from(accumulator_state.clone()).unwrap(),
+            CompletedAccumulatorState {
+                slot:                  1,
+                accumulator_messages:  AccumulatorMessages {
+                    slot:      1,
+                    magic:     [0; 4],
+                    ring_size: 10,
+                    messages:  vec![],
+                },
+                wormhole_merkle_state: WormholeMerkleState {
+                    vaa:  vec![],
+                    root: WormholeMerkleRoot {
+                        slot:      1,
+                        ring_size: 10,
+                        root:      [0; 20],
+                    },
+                },
+            }
+        );
+    }
+}

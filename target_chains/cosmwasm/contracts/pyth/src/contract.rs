@@ -542,7 +542,7 @@ fn parse_accumulator(deps: &Deps, env: &Env, data: &[u8]) -> StdResult<Vec<Price
                 match msg {
                     Message::PriceFeedMessage(price_feed_message) => {
                         let price_feed = PriceFeed::new(
-                            PriceIdentifier::new(price_feed_message.id),
+                            PriceIdentifier::new(price_feed_message.feed_id),
                             Price {
                                 price:        price_feed_message.price,
                                 conf:         price_feed_message.conf,
@@ -1186,7 +1186,7 @@ mod test {
         let mut dummy_id = [0; 32];
         dummy_id[0] = value as u8;
         let msg = PriceFeedMessage {
-            id:                dummy_id,
+            feed_id:           dummy_id,
             price:             value,
             conf:              value as u64,
             exponent:          value as i32,
@@ -1265,7 +1265,7 @@ mod test {
         match msg {
             Message::PriceFeedMessage(feed_msg) => {
                 let feed = price_feed_read_bucket(&deps.storage)
-                    .load(&feed_msg.id)
+                    .load(&feed_msg.feed_id)
                     .unwrap();
                 let price = feed.get_price_unchecked();
                 let ema_price = feed.get_ema_price_unchecked();
@@ -1517,7 +1517,7 @@ mod test {
         // Although Twap Message is a valid message but it won't get stored on-chain via
         // `update_price_feeds` and (will be) used in other methods
         let feed1 = Message::TwapMessage(TwapMessage {
-            id:                [0; 32],
+            feed_id:           [0; 32],
             cumulative_price:  0,
             cumulative_conf:   0,
             num_down_slots:    0,

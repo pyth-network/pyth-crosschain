@@ -1,6 +1,6 @@
 [package]
 name = "pythnet-sdk"
-version = "1.13.6"
+version = "2.0.0"
 description = "Pyth Runtime for Solana"
 authors = ["Pyth Data Association"]
 repository = "https://github.com/pyth-network/pythnet"
