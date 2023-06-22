@@ -263,6 +263,25 @@ module pyth::merkle_tree {
     }
 
     #[test]
+    fun testMerkleTreeDepth2AptosComparison(){
+        let h1 = leafHash(&x"1234");
+        let h2 = leafHash(&x"4321");
+        let h3 = leafHash(&x"11");
+        let h4 = leafHash(&x"22");
+        let h5 = nodeHash(h1, h2);
+        let h6 = nodeHash(h3, h4);
+        let h7 = nodeHash(h5, h6);
+        print(&x"123456789876543210");
+        print(&h1);
+        print(&h2);
+        print(&h3);
+        print(&h4);
+        print(&h5);
+        print(&h6);
+        print(&h7);
+    }
+
+    #[test]
     fun testMerkleTreeDepth3(){
         let messages = vector::empty<vector<u8>>();
         vector::push_back(&mut messages, x"00");
