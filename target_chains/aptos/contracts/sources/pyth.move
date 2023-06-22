@@ -321,7 +321,7 @@ module pyth::pyth {
     ///
     /// For a given price update i in the batch, that price is considered fresh if the current cached
     /// price for price_identifiers[i] is older than publish_times[i].
-    public entry fun update_price_feeds_if_fresh(
+    public fun update_price_feeds_if_fresh(
         vaas: vector<vector<u8>>,
         price_identifiers: vector<vector<u8>>,
         publish_times: vector<u64>,
@@ -640,7 +640,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 6)]
+    #[expected_failure(abort_code = 6, location = wormhole::vaa)]
     fun test_update_price_feeds_corrupt_vaa(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 50, 100);
 
@@ -652,7 +652,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 65539)]
+    #[expected_failure(abort_code = 65539, location = pyth::pyth)]
     fun test_update_price_feeds_invalid_data_source(aptos_framework: &signer) {
         // Initialize the contract with some valid data sources, excluding our test VAA's source
         let data_sources = vector<DataSource>[
@@ -684,7 +684,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 65542)]
+    #[expected_failure(abort_code = 65542, location = pyth::pyth)]
     fun test_update_price_feeds_insufficient_fee(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 1,
             x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92",
@@ -821,7 +821,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 65542)]
+    #[expected_failure(abort_code = 65542, location = pyth::pyth)]
     fun test_accumulator_update_price_feeds_insufficient_fee(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_accumulator_test(
             aptos_framework,
@@ -882,7 +882,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 65562)]
+    #[expected_failure(abort_code = 65562, location = pyth::pyth)]
     fun test_accumulator_invalid_payload(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_accumulator_test(
             aptos_framework,
@@ -894,7 +894,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 65563)]
+    #[expected_failure(abort_code = 65563, location = pyth::pyth)]
     fun test_accumulator_invalid_accumulator_message(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_accumulator_test(
             aptos_framework,
@@ -906,7 +906,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 65564)]
+    #[expected_failure(abort_code = 65564, location = pyth::pyth)]
     fun test_accumulator_invalid_wormhole_message(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_accumulator_test(
             aptos_framework,
@@ -919,7 +919,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 65539)]
+    #[expected_failure(abort_code = 65539, location = pyth::pyth)]
     fun test_accumulator_invalid_data_source(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_accumulator_test(aptos_framework, vector[data_source::new(
             2, // correct emitter chain is 1
@@ -962,7 +962,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 65565)]
+    #[expected_failure(abort_code = 65565, location = pyth::pyth)]
     fun test_accumulator_invalid_proof(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_accumulator_test(
             aptos_framework,
@@ -1014,7 +1014,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 65542)]
+    #[expected_failure(abort_code = 65542, location = aptos_framework::coin)]
     fun test_update_price_feeds_with_funder_insufficient_balance(aptos_framework: &signer) {
         let update_fee = 50;
         let initial_balance = 25;
@@ -1149,7 +1149,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 524292)]
+    #[expected_failure(abort_code = 524292, location = pyth::pyth)]
     fun test_stale_price_threshold_exceeded(aptos_framework: &signer) {
         let stale_price_threshold = 500;
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, stale_price_threshold, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 0);
@@ -1186,7 +1186,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 524292)]
+    #[expected_failure(abort_code = 524292, location = pyth::pyth)]
     fun test_stale_price_threshold_exceeded_ema(aptos_framework: &signer) {
         let stale_price_threshold = 500;
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, stale_price_threshold, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 0);
@@ -1225,7 +1225,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 65541)]
+    #[expected_failure(abort_code = 65541, location = pyth::pyth)]
     fun test_update_price_feeds_if_fresh_invalid_length(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 0);
 
@@ -1310,7 +1310,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 524295)]
+    #[expected_failure(abort_code = 524295, location = pyth::pyth)]
     fun test_update_price_feeds_if_fresh_stale_data(aptos_framework: &signer) {
         let (burn_capability, mint_capability, coins) = setup_test(aptos_framework, 500, 1, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), 50, 50);
 
@@ -1335,7 +1335,7 @@ module pyth::pyth_test {
     }
 
     #[test(aptos_framework = @aptos_framework)]
-    #[expected_failure(abort_code = 524295)]
+    #[expected_failure(abort_code = 524295, location = pyth::pyth)]
     fun test_update_price_feeds_if_fresh_with_funder_stale_data(aptos_framework: &signer) {
         let update_fee = 50;
         let initial_balance = 75;

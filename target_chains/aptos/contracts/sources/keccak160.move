@@ -67,7 +67,7 @@ module pyth::keccak160 {
     }
 
     #[test]
-    #[expected_failure(abort_code = 65566)]
+    #[expected_failure(abort_code = 65566, location = pyth::keccak160)]
     fun test_new_wrong_size() {
         new(vector[1, 2, 3]);
     }
