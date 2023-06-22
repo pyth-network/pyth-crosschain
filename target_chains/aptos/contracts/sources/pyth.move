@@ -207,7 +207,7 @@ module pyth::pyth {
         let ema_price = deserialize::deserialize_i64(&mut message_cur);
         let ema_conf = deserialize::deserialize_u64(&mut message_cur);
         let price_info = price_info::new(
-            timestamp::now_seconds(),
+            timestamp::now_seconds(), // not used anywhere kept for backward compatibility
             timestamp::now_seconds(),
             price_feed::new(
                 price_identifier,
@@ -228,10 +228,10 @@ module pyth::pyth {
             let update = parse_accumulator_update_message(message);
             vector::push_back(&mut updates, update);
             let path_size = deserialize::deserialize_u8(cursor);
-            let merkle_path: vector<vector<u8>> = vector[];
+            let merkle_path: vector<keccak160::Hash> = vector[];
             while (path_size > 0) {
                 let hash = deserialize::deserialize_vector(cursor, keccak160::get_hash_length());
-                vector::push_back(&mut merkle_path, hash);
+                vector::push_back(&mut merkle_path, keccak160::new(hash));
                 path_size = path_size - 1;
             };
             assert!(merkle::check(&merkle_path, merkle_root, message), error::invalid_proof());

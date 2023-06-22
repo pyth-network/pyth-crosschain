@@ -13,27 +13,26 @@ module pyth::merkle {
         keccak160::from_data(leaf_data)
     }
 
-    fun hash_node(node1: Hash, node2: Hash): Hash {
+    fun hash_node(node1: &Hash, node2: &Hash): Hash {
         let node_data: vector<u8> = vector[NODE_PREFIX];
 
-        if (keccak160::is_smaller(&node2, &node1)) {
-            vector::append(&mut node_data, keccak160::get_data(&node2));
-            vector::append(&mut node_data, keccak160::get_data(&node1));
+        if (keccak160::is_smaller(node2, node1)) {
+            vector::append(&mut node_data, keccak160::get_data(node2));
+            vector::append(&mut node_data, keccak160::get_data(node1));
         }
         else {
-            vector::append(&mut node_data, keccak160::get_data(&node1));
-            vector::append(&mut node_data, keccak160::get_data(&node2));
+            vector::append(&mut node_data, keccak160::get_data(node1));
+            vector::append(&mut node_data, keccak160::get_data(node2));
         };
         keccak160::from_data(node_data)
     }
 
-    public fun check(path: &vector<vector<u8>>, root: &vector<u8>, _leaf: vector<u8>): bool {
+    public fun check(path: &vector<Hash>, root: &vector<u8>, _leaf: vector<u8>): bool {
         let i = 0;
 
         let current = hash_leaf(_leaf);
         while (i < vector::length(path)) {
-            let node = keccak160::new(*vector::borrow(path, i));
-            current = hash_node(current, node);
+            current = hash_node(&current, vector::borrow(path, i));
             i = i + 1;
         };
         current == keccak160::new(*root)
@@ -52,7 +51,7 @@ module pyth::merkle {
     fun test_hash_node() {
         let h1 = keccak160::new(x"05c51b04b820c0f704e3fdd2e4fc1e70aff26dff");
         let h2 = keccak160::new(x"1e108841c8d21c7a5c4860c8c3499c918ea9e0ac");
-        let hash = hash_node(h1, h2);
+        let hash = hash_node(&h1, &h2);
         let expected = keccak160::new(x"2d0e4fde68184c7ce8af426a0865bd41ef84dfa4");
         assert!(&hash == &expected, 1);
     }
