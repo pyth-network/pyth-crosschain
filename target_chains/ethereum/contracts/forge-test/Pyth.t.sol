@@ -19,7 +19,7 @@ contract PythTest is Test, WormholeTestUtils, PythTestUtils, RandTestUtils {
     uint64 constant MAX_UINT64 = uint64(int64(-1));
 
     function setUp() public {
-        pyth = IPyth(setUpPyth(setUpWormhole(1)));
+        pyth = IPyth(setUpPyth(setUpWormholeReceiver(1)));
     }
 
     function generateRandomPriceAttestations(

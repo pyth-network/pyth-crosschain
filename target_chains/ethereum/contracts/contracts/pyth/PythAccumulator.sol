@@ -31,7 +31,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     // This method is also used by batch attestation but moved here
     // as the batch attestation will deprecate soon.
     function parseAndVerifyPythVM(
-        bytes memory encodedVm
+        bytes calldata encodedVm
     ) internal view returns (IWormhole.VM memory vm) {
         {
             bool valid;
@@ -152,7 +152,6 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
 
                     // TODO: Do we need to emit an update for accumulator update? If so what should we emit?
                     // emit AccumulatorUpdate(vm.chainId, vm.sequence);
-
                     encodedPayload = vm.payload;
                 }
 
@@ -200,16 +199,19 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
     }
 
     function parseWormholeMerkleHeaderNumUpdates(
-        bytes memory wormholeMerkleUpdate,
+        bytes calldata wormholeMerkleUpdate,
         uint offset
     ) internal pure returns (uint8 numUpdates) {
-        uint16 whProofSize = UnsafeBytesLib.toUint16(
+        uint16 whProofSize = UnsafeCalldataBytesLib.toUint16(
             wormholeMerkleUpdate,
             offset
         );
         offset += 2;
         offset += whProofSize;
-        numUpdates = UnsafeBytesLib.toUint8(wormholeMerkleUpdate, offset);
+        numUpdates = UnsafeCalldataBytesLib.toUint8(
+            wormholeMerkleUpdate,
+            offset
+        );
     }
 
     function extractPriceInfoFromMerkleProof(

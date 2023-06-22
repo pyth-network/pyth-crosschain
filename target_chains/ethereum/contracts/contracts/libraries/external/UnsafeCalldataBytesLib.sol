@@ -20,6 +20,13 @@ library UnsafeCalldataBytesLib {
         return _bytes[_start:_start + _length];
     }
 
+    function sliceFrom(
+        bytes calldata _bytes,
+        uint256 _start
+    ) internal pure returns (bytes calldata) {
+        return _bytes[_start:_bytes.length];
+    }
+
     function toAddress(
         bytes calldata _bytes,
         uint256 _start

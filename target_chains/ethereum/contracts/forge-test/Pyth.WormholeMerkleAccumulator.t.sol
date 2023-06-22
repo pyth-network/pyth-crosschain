@@ -26,7 +26,7 @@ contract PythWormholeMerkleAccumulatorTest is
     uint64 constant MAX_UINT64 = uint64(int64(-1));
 
     function setUp() public {
-        pyth = IPyth(setUpPyth(setUpWormhole(1)));
+        pyth = IPyth(setUpPyth(setUpWormholeReceiver(1)));
     }
 
     function assertPriceFeedMessageStored(
@@ -474,13 +474,6 @@ contract PythWormholeMerkleAccumulatorTest is
             priceFeedMessages2[0],
             priceIds[0]
         );
-    }
-
-    function isNotMatch(
-        bytes memory a,
-        bytes memory b
-    ) public pure returns (bool) {
-        return keccak256(a) != keccak256(b);
     }
 
     /// @notice This method creates a forged invalid wormhole update data.
