@@ -14,8 +14,6 @@ module pyth::merkle_tree {
 
     const E_DEPTH_NOT_LARGE_ENOUGH_FOR_MESSAGES: u64 = 1212121;
 
-    use std::debug::print;
-
     // take keccak256 of input data, then return 20 leftmost bytes of result
     fun hash(bytes: &vector<u8>): Bytes20 {
         let hashed_bytes = keccak256(bytes);
@@ -99,11 +97,6 @@ module pyth::merkle_tree {
                 siblingDigest
             );
             proofSize = proofSize - 1;
-        };
-        if (bytes20::data(&currentDigest) != bytes20::data(&root)){
-            print(&x"000000");
-            print(&root);
-            print(&currentDigest);
         };
         bytes20::data(&currentDigest) == bytes20::data(&root)
     }
@@ -249,8 +242,6 @@ module pyth::merkle_tree {
         vector::push_back(&mut messages, x"22");
 
         let (root, proofs) = constructProofs(&messages, 2);
-        print(&x"5555555555");
-        print(&root);
 
         let proofsCursor = cursor::new(proofs);
         assert!(isProofValid(&mut proofsCursor, root, x"1234")==true, 0);
@@ -260,25 +251,6 @@ module pyth::merkle_tree {
 
         // destroy cursor
         cursor::take_rest<u8>(proofsCursor);
-    }
-
-    #[test]
-    fun testMerkleTreeDepth2AptosComparison(){
-        let h1 = leafHash(&x"1234");
-        let h2 = leafHash(&x"4321");
-        let h3 = leafHash(&x"11");
-        let h4 = leafHash(&x"22");
-        let h5 = nodeHash(h1, h2);
-        let h6 = nodeHash(h3, h4);
-        let h7 = nodeHash(h5, h6);
-        print(&x"123456789876543210");
-        print(&h1);
-        print(&h2);
-        print(&h3);
-        print(&h4);
-        print(&h5);
-        print(&h6);
-        print(&h7);
     }
 
     #[test]

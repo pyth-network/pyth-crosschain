@@ -1,13 +1,11 @@
 module pyth::accumulator {
     use std::vector::{Self};
-    use std::debug::print;
     use sui::clock::{Clock, Self};
     use wormhole::bytes20::{Self, Bytes20};
     use wormhole::cursor::{Self, Cursor};
     use wormhole::vaa::{Self};
     use wormhole::state::{State as WormState};
     use pyth::deserialize::{Self};
-    //use pyth::price_status::{Self};
     use pyth::price_identifier::{Self};
     use pyth::price_info::{Self, PriceInfo};
     use pyth::price_feed::{Self};
@@ -127,11 +125,7 @@ module pyth::accumulator {
 
             // isProofValid pops the next merkle proof from the front of cursor and checks if it proves that message is part of the
             // merkle tree defined by merkle_root
-            print(&x"1111");
-            print(&message);
-
-            let _valid = merkle_tree::isProofValid(cursor, merkle_root, message);
-            //assert!(valid==true, E_INVALID_PROOF);
+            assert!(merkle_tree::isProofValid(cursor, merkle_root, message), E_INVALID_PROOF);
             update_size = update_size - 1;
         };
         price_info_updates
@@ -144,7 +138,6 @@ module pyth::accumulator {
 
     #[test]
     fun test_parse_and_verify_accumulator_updates(){
-        use std::debug::print;
         use sui::test_scenario::{Self, take_shared, return_shared};
         use sui::transfer::{Self};
 
@@ -155,7 +148,6 @@ module pyth::accumulator {
         test_scenario::next_tx(&mut scenario, @0x123);
 
         let _price_info_updates = test_get_price_feed_updates_from_single_vaa(TEST_ACCUMULATOR_3_MSGS, &worm_state, &clock);
-        print(&_price_info_updates);
 
         // clean-up
         transfer::public_transfer(coins, @0x1234);
