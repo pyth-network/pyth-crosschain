@@ -31,7 +31,7 @@ module pyth::merkle_tree {
     fun leafHash(data: &vector<u8>): Bytes20 {
         let v = vector<u8>[MERKLE_LEAF_PREFIX];
         vector::append(&mut v, *data);
-        hash(data)
+        hash(&v)
     }
 
     fun nodeHash(
@@ -201,6 +201,23 @@ module pyth::merkle_tree {
         y = bytes20::new(x"1100000000000000000000000000000000001001");
         res = greaterThan(x, y);
         assert!(res==false, 0);
+    }
+
+    #[test]
+    fun test_hash_leaf() {
+        let data: vector<u8> = x"00640000000000000000000000000000000000000000000000000000000000000000000000000000640000000000000064000000640000000000000064000000000000006400000000000000640000000000000064";
+        let hash = leafHash(&data);
+        let expected = bytes20::new(x"afc6a8ac466430f35895055f8a4c951785dad5ce");
+        assert!(hash == expected, 1);
+    }
+
+    #[test]
+    fun test_hash_node() {
+        let h1 = bytes20::new(x"05c51b04b820c0f704e3fdd2e4fc1e70aff26dff");
+        let h2 = bytes20::new(x"1e108841c8d21c7a5c4860c8c3499c918ea9e0ac");
+        let hash = nodeHash(h1, h2);
+        let expected = bytes20::new(x"2d0e4fde68184c7ce8af426a0865bd41ef84dfa4");
+        assert!(hash == expected, 1);
     }
 
     #[test]
