@@ -29,9 +29,11 @@ abstract contract WormholeTestUtils is Test {
         Wormhole wormhole = new Wormhole(address(wormholeSetup), new bytes(0));
 
         address[] memory initSigners = new address[](numGuardians);
+        currentSigners = new uint256[](numGuardians);
 
         for (uint256 i = 0; i < numGuardians; ++i) {
-            initSigners[i] = vm.addr(i + 1); // i+1 is the private key for the i-th signer.
+            currentSigners[i] = i + 1;
+            initSigners[i] = vm.addr(currentSigners[i]); // i+1 is the private key for the i-th signer.
         }
 
         // These values are the default values used in our tilt test environment
@@ -289,6 +291,54 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         assertEq(reason, "invalid guardian set");
     }
 
+    function testParseAndVerifyFailsIfInvalidGuardianSignatureIndex() public {
+        uint8 numGuardians = 5;
+        address whAddr = setUpWormholeReceiver(numGuardians);
+        IWormhole wormhole = IWormhole(whAddr);
+        ReceiverImplementation whReceiverImpl = ReceiverImplementation(
+            payable(whAddr)
+        );
+        // generate the vaa and sign with the initial wormhole guardian set
+        bytes memory vaa = forgeVaa(
+            112,
+            7,
+            0x0000000000000000000000000000000000000000000000000000000000000bad,
+            10,
+            hex"deadbeaf",
+            4,
+            "vaaSignatureIndex"
+        );
+        vm.expectRevert(
+            // workaround for this error not being in an external library
+            abi.encodeWithSignature("SignatureIndexesNotAscending()")
+        );
+        wormhole.parseAndVerifyVM(vaa);
+    }
+
+    function testParseAndVerifyFailsIfIncorrectVersion() public {
+        uint8 numGuardians = 5;
+        address whAddr = setUpWormholeReceiver(numGuardians);
+        IWormhole wormhole = IWormhole(whAddr);
+        ReceiverImplementation whReceiverImpl = ReceiverImplementation(
+            payable(whAddr)
+        );
+        // generate the vaa and sign with the initial wormhole guardian set
+        bytes memory vaa = forgeVaa(
+            112,
+            7,
+            0x0000000000000000000000000000000000000000000000000000000000000bad,
+            10,
+            hex"deadbeaf",
+            4,
+            "vaaVersion"
+        );
+        vm.expectRevert(
+            // workaround for this error not being in an external library
+            abi.encodeWithSignature("VmVersionIncompatible()")
+        );
+        wormhole.parseAndVerifyVM(vaa);
+    }
+
     function testUpgradeGuardianSetWorks() public {
         uint8 numGuardians = 5;
         address whAddr = setUpWormholeReceiver(numGuardians);
@@ -413,29 +463,6 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         (, bool valid, string memory reason) = wormhole.parseAndVerifyVM(vaa);
         assertEq(valid, false);
         assertEq(reason, "VM signature invalid");
-    }
-
-    function testParseAndVerifyFailsIfInvalidGuardianSignatureIndex() public {
-        uint8 numGuardians = 5;
-        address whAddr = setUpWormholeReceiver(numGuardians);
-        IWormhole wormhole = IWormhole(whAddr);
-        ReceiverImplementation whReceiverImpl = ReceiverImplementation(
-            payable(whAddr)
-        );
-        // generate the vaa and sign with the initial wormhole guardian set
-        bytes memory vaa = forgeVaa(
-            112,
-            7,
-            0x0000000000000000000000000000000000000000000000000000000000000bad,
-            10,
-            hex"deadbeaf",
-            4,
-            "vaaSignatureIndex"
-        );
-        vm.expectRevert(
-            abi.encodeWithSignature("SignatureIndexesNotAscending()")
-        );
-        wormhole.parseAndVerifyVM(vaa);
     }
 
     function testParseAndVerifyFailsIfInvalidNumSignatures() public {
