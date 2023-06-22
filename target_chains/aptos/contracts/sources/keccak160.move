@@ -57,8 +57,17 @@ module pyth::keccak160 {
         let h2 = new(x"0000000000000000000300000000000000000000");
         let h3 = new(x"0000000000000000000200000000000000000000");
         assert!(is_smaller(&h3, &h2), 1);
+        assert!(!is_smaller(&h2, &h3), 1);
+
         assert!(is_smaller(&h2, &h1), 1);
+        assert!(!is_smaller(&h1, &h2), 1);
+
         assert!(is_smaller(&h3, &h1), 1);
+        assert!(!is_smaller(&h1, &h3), 1);
+
+        assert!(!is_smaller(&h1, &h1), 1);
+        assert!(!is_smaller(&h2, &h2), 1);
+        assert!(!is_smaller(&h3, &h3), 1);
     }
 
     #[test]

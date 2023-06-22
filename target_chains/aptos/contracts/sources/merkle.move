@@ -27,15 +27,15 @@ module pyth::merkle {
         keccak160::from_data(node_data)
     }
 
-    public fun check(path: &vector<Hash>, root: &vector<u8>, _leaf: vector<u8>): bool {
+    public fun check(path: &vector<Hash>, root: &Hash, leaf: vector<u8>): bool {
         let i = 0;
 
-        let current = hash_leaf(_leaf);
+        let current = hash_leaf(leaf);
         while (i < vector::length(path)) {
             current = hash_node(&current, vector::borrow(path, i));
             i = i + 1;
         };
-        current == keccak160::new(*root)
+        &current == root
     }
 
     #[test]
@@ -54,5 +54,47 @@ module pyth::merkle {
         let hash = hash_node(&h1, &h2);
         let expected = keccak160::new(x"2d0e4fde68184c7ce8af426a0865bd41ef84dfa4");
         assert!(&hash == &expected, 1);
+    }
+
+    #[test_only]
+    fun setup_tree(): (Hash, Hash, Hash, Hash, Hash, Hash, Hash) {
+        // h1  h2  h3   h4
+        //  \ /     \  /
+        //   h5      h6
+        //      \  /
+        //       h7
+        let h1 = hash_leaf(x"adad11");
+        let h2 = hash_leaf(x"adad12");
+        let h3 = hash_leaf(x"adad13");
+        let h4 = hash_leaf(x"adad14");
+        let h5 = hash_node(&h1, &h2);
+        let h6 = hash_node(&h3, &h4);
+        let h7 = hash_node(&h5, &h6);
+        (h1, h2, h3, h4, h5, h6, h7)
+    }
+
+    #[test]
+    fun test_check_valid_proofs() {
+        let (h1, h2, h3, h4, h5, h6, h7) = setup_tree();
+        assert!(check(&vector[h2, h6], &h7, x"adad11"), 1);
+        assert!(check(&vector[h3, h5], &h7, x"adad14"), 1);
+        assert!(!check(&vector[h1, h4], &h7, x"adad14"), 1);
+    }
+
+    #[test]
+    fun test_check_valid_proofs_subtree() {
+        let (h1, h2, h3, h4, h5, h6, _) = setup_tree();
+        assert!(check(&vector[h1], &h5, x"adad12"), 1);
+        assert!(check(&vector[h2], &h5, x"adad11"), 1);
+        assert!(check(&vector[h3], &h6, x"adad14"), 1);
+        assert!(check(&vector[h4], &h6, x"adad13"), 1);
+    }
+
+    #[test]
+    fun test_check_invalid_proofs() {
+        let (h1, h2, h3, h4, h5, h6, h7) = setup_tree();
+        assert!(!check(&vector[h2, h6], &h7, x"dead"), 1);
+        assert!(!check(&vector[h3, h5], &h7, x"dead"), 1);
+        assert!(!check(&vector[h1, h4], &h7, x"dead"), 1);
     }
 }
