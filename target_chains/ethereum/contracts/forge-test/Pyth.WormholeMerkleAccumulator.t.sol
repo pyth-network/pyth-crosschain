@@ -476,13 +476,6 @@ contract PythWormholeMerkleAccumulatorTest is
         );
     }
 
-    function isNotMatch(
-        bytes memory a,
-        bytes memory b
-    ) public pure returns (bool) {
-        return keccak256(a) != keccak256(b);
-    }
-
     /// @notice This method creates a forged invalid wormhole update data.
     /// The caller should pass the forgeItem as string and if it matches the
     /// expected value, that item will be forged to be invalid.
