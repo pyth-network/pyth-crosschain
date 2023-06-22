@@ -147,12 +147,60 @@ module pyth::accumulator {
         let worm_state = take_shared<WormState>(&scenario);
         test_scenario::next_tx(&mut scenario, @0x123);
 
-        let _price_info_updates = test_get_price_feed_updates_from_single_vaa(TEST_ACCUMULATOR_3_MSGS, &worm_state, &clock);
+        let price_info_updates = test_get_price_feed_updates_from_single_vaa(TEST_ACCUMULATOR_3_MSGS, &worm_state, &clock);
+        let expected_price_infos = accumulator_test_3_price_feeds(0);
+        let num_updates = vector::length(&price_info_updates);
+        let i = 0;
+        while (i < num_updates){
+            assert!(price_feeds_equal(vector::borrow(&price_info_updates, i), vector::borrow(&expected_price_infos, i)), 0);
+            i = i + 1;
+        };
 
         // clean-up
         transfer::public_transfer(coins, @0x1234);
         clock::destroy_for_testing(clock);
         return_shared(worm_state);
         test_scenario::end(scenario);
+    }
+
+    #[test_only]
+    fun price_feeds_equal(p1: &PriceInfo, p2: &PriceInfo): bool{
+        price_info::get_price_feed(p1)== price_info::get_price_feed(p2)
+    }
+
+    #[test_only]
+    fun accumulator_test_3_price_feeds(offset: u64): vector<PriceInfo> {
+        use pyth::i64::{Self};
+        use pyth::price::{Self};
+        let i = 0;
+        let feed_ids = vector[x"b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
+            x"6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af",
+            x"31ecc21a745e3968a04e9570e4425bc18fa8019c68028196b546d1669c200c68"];
+        let expected: vector<PriceInfo> = vector[];
+        while (i < 3) {
+            vector::push_back(&mut expected, price_info::new_price_info(
+                1663680747,
+                1663074349,
+                price_feed::new(
+                    price_identifier::from_byte_vec(
+                        *vector::borrow(&feed_ids, i)
+                    ),
+                    price::new(
+                        i64::new(100 + i + offset, false),
+                        50 + i + offset,
+                        i64::new(9 + i + offset, false),
+                        1687276660 + i + offset
+                    ),
+                    price::new(
+                        i64::new(99 + i + offset, false),
+                        52 + i + offset,
+                        i64::new(9 + i + offset, false),
+                        1687276660 + i + offset
+                    ),
+                ),
+            ));
+            i = i + 1;
+        };
+        return expected
     }
 }
