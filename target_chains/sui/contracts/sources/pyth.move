@@ -397,11 +397,12 @@ module pyth::pyth_tests{
     /// Init Pyth state.
     /// Set initial Sui clock time.
     /// Mint some SUI fee coins.
-    fun setup_test(
+    public fun setup_test(
         stale_price_threshold: u64,
         governance_emitter_chain_id: u64,
         governance_emitter_address: vector<u8>,
         data_sources: vector<DataSource>,
+        initial_guardians: vector<vector<u8>>,
         base_update_fee: u64,
         to_mint: u64
     ): (Scenario, Coin<SUI>, Clock) {
@@ -430,10 +431,10 @@ module pyth::pyth_tests{
         let governance_chain = 1234;
         let governance_contract =
             x"deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
-        let initial_guardians =
-            vector[
-                x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"
-            ];
+        // let initial_guardians =
+        //     vector[
+        //         x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"
+        //     ];
         let guardian_set_seconds_to_live = 5678;
         let message_fee = 350;
         let guardian_set_index = 0;
@@ -579,7 +580,8 @@ module pyth::pyth_tests{
     #[test]
     #[expected_failure(abort_code = wormhole::vaa::E_WRONG_VERSION)]
     fun test_create_price_feeds_corrupt_vaa() {
-        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], 50, 0);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], 50, 0);
+        
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         let pyth_state = take_shared<PythState>(&scenario);
         let worm_state = take_shared<WormState>(&scenario);
@@ -656,7 +658,7 @@ module pyth::pyth_tests{
         let base_update_fee = 50;
         let coins_to_mint = 5000;
 
-        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, base_update_fee, coins_to_mint);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], base_update_fee, coins_to_mint);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);

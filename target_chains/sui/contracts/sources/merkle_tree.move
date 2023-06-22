@@ -14,6 +14,8 @@ module pyth::merkle_tree {
 
     const E_DEPTH_NOT_LARGE_ENOUGH_FOR_MESSAGES: u64 = 1212121;
 
+    use std::debug::print;
+
     // take keccak256 of input data, then return 20 leftmost bytes of result
     fun hash(bytes: &vector<u8>): Bytes20 {
         let hashed_bytes = keccak256(bytes);
@@ -80,12 +82,11 @@ module pyth::merkle_tree {
     }
 
     // isProofValid returns whether a merkle proof is valid
-    fun isProofValid(
+    public fun isProofValid(
         encodedProof: &mut Cursor<u8>,
         root: Bytes20,
         leafData: vector<u8>,
     ): bool {
-
         let currentDigest: Bytes20 = leafHash(&leafData);
         let proofSize: u8 = deserialize::deserialize_u8(encodedProof);
         let i: u8 = 0;
@@ -100,12 +101,17 @@ module pyth::merkle_tree {
             );
             i = i + 1;
         };
+        if (bytes20::data(&currentDigest) != bytes20::data(&root)){
+            print(&x"000000");
+            print(&root);
+            print(&currentDigest);
+        };
         bytes20::data(&currentDigest) == bytes20::data(&root)
     }
 
     // constructProofs constructs a merkle tree and returns the root of the tree as
     // a Bytes20 as well as the vector of encoded proofs
-    fun constructProofs(
+    public fun constructProofs(
         messages: &vector<vector<u8>>,
         depth: u8
     ) : (Bytes20, vector<u8>) {
