@@ -166,8 +166,7 @@ abstract contract WormholeTestUtils is Test {
             // encodePacked uses padding for arrays and we don't want it, so we manually concat them.
             signatures = abi.encodePacked(
                 signatures,
-                (i == numSigners - 1 &&
-                    isNotMatch(forgeItem, "vaaSignatureIndex"))
+                isNotMatch(forgeItem, "vaaSignatureIndex")
                     ? uint8(i)
                     : uint8(0), // Guardian index of the signature
                 r,
@@ -231,42 +230,75 @@ abstract contract WormholeTestUtils is Test {
 }
 
 contract WormholeTestUtilsTest is Test, WormholeTestUtils {
+    uint32 constant TEST_VAA_TIMESTAMP = 112;
+    uint16 constant TEST_EMITTER_CHAIN_ID = 7;
+    bytes32 constant TEST_EMITTER_ADDR =
+        0x0000000000000000000000000000000000000000000000000000000000000bad;
+    uint64 constant TEST_SEQUENCE = 10;
+    bytes constant TEST_PAYLOAD = hex"deadbeaf";
+    uint8 constant TEST_NUM_SIGNERS = 4;
+
+    function assertVmMatchesTestValues(
+        Structs.VM memory vm,
+        bool valid,
+        string memory reason,
+        bytes memory vaa
+    ) private {
+        assertTrue(valid);
+        assertEq(reason, "");
+        assertEq(vm.timestamp, TEST_VAA_TIMESTAMP);
+        assertEq(vm.emitterChainId, TEST_EMITTER_CHAIN_ID);
+        assertEq(vm.emitterAddress, TEST_EMITTER_ADDR);
+        assertEq(vm.sequence, TEST_SEQUENCE);
+        assertEq(vm.payload, TEST_PAYLOAD);
+        // parseAndVerifyVM() returns an empty signatures array for gas savings since it's not used
+        // after its been verified. parseVM() returns the full signatures array.
+        vm = IWormhole(wormholeReceiverAddr).parseVM(vaa);
+        assertEq(vm.signatures.length, TEST_NUM_SIGNERS);
+    }
+
     function testGenerateVaaWorks() public {
         IWormhole wormhole = IWormhole(setUpWormholeReceiver(5));
 
         bytes memory vaa = generateVaa(
-            112,
-            7,
-            0x0000000000000000000000000000000000000000000000000000000000000bad,
-            10,
-            hex"deadbeaf",
-            4
+            TEST_VAA_TIMESTAMP,
+            TEST_EMITTER_CHAIN_ID,
+            TEST_EMITTER_ADDR,
+            TEST_SEQUENCE,
+            TEST_PAYLOAD,
+            TEST_NUM_SIGNERS
         );
 
-        (Structs.VM memory vm, bool valid, ) = wormhole.parseAndVerifyVM(vaa);
-        assertTrue(valid);
+        (Structs.VM memory vm, bool valid, string memory reason) = wormhole
+            .parseAndVerifyVM(vaa);
+        assertVmMatchesTestValues(vm, valid, reason, vaa);
+    }
 
-        assertEq(vm.timestamp, 112);
-        assertEq(vm.emitterChainId, 7);
-        assertEq(
-            vm.emitterAddress,
-            0x0000000000000000000000000000000000000000000000000000000000000bad
+    function testParseAndVerifyWorksWithoutForging() public {
+        uint8 numGuardians = 5;
+        IWormhole wormhole = IWormhole(setUpWormholeReceiver(numGuardians));
+        bytes memory vaa = forgeVaa(
+            TEST_VAA_TIMESTAMP,
+            TEST_EMITTER_CHAIN_ID,
+            TEST_EMITTER_ADDR,
+            TEST_SEQUENCE,
+            TEST_PAYLOAD,
+            TEST_NUM_SIGNERS,
+            ""
         );
-        assertEq(vm.payload, hex"deadbeaf");
-        // parseAndVerifyVM() returns an empty signatures array for gas savings since it's not used
-        // after its been verified. parseVM() returns the full signatures array.
-        vm = wormhole.parseVM(vaa);
-        assertEq(vm.signatures.length, 4);
+        (Structs.VM memory vm, bool valid, string memory reason) = wormhole
+            .parseAndVerifyVM(vaa);
+        assertVmMatchesTestValues(vm, valid, reason, vaa);
     }
 
     function testParseAndVerifyFailsIfVaaIsNotSignedByEnoughGuardians() public {
         IWormhole wormhole = IWormhole(setUpWormholeReceiver(5));
         bytes memory vaa = generateVaa(
-            112,
-            7,
-            0x0000000000000000000000000000000000000000000000000000000000000bad,
-            10,
-            hex"deadbeaf",
+            TEST_VAA_TIMESTAMP,
+            TEST_EMITTER_CHAIN_ID,
+            TEST_EMITTER_ADDR,
+            TEST_SEQUENCE,
+            TEST_PAYLOAD,
             1 //numSigners
         );
         (, bool valid, string memory reason) = wormhole.parseAndVerifyVM(vaa);
@@ -278,12 +310,12 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         uint8 numGuardians = 5;
         IWormhole wormhole = IWormhole(setUpWormholeReceiver(numGuardians));
         bytes memory vaa = forgeVaa(
-            112,
-            7,
-            0x0000000000000000000000000000000000000000000000000000000000000bad,
-            10,
-            hex"deadbeaf",
-            4,
+            TEST_VAA_TIMESTAMP,
+            TEST_EMITTER_CHAIN_ID,
+            TEST_EMITTER_ADDR,
+            TEST_SEQUENCE,
+            TEST_PAYLOAD,
+            TEST_NUM_SIGNERS,
             "vaaGuardianSetIndex"
         );
         (, bool valid, string memory reason) = wormhole.parseAndVerifyVM(vaa);
@@ -300,12 +332,12 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         );
         // generate the vaa and sign with the initial wormhole guardian set
         bytes memory vaa = forgeVaa(
-            112,
-            7,
-            0x0000000000000000000000000000000000000000000000000000000000000bad,
-            10,
-            hex"deadbeaf",
-            4,
+            TEST_VAA_TIMESTAMP,
+            TEST_EMITTER_CHAIN_ID,
+            TEST_EMITTER_ADDR,
+            TEST_SEQUENCE,
+            TEST_PAYLOAD,
+            TEST_NUM_SIGNERS,
             "vaaSignatureIndex"
         );
         vm.expectRevert(
@@ -324,12 +356,12 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         );
         // generate the vaa and sign with the initial wormhole guardian set
         bytes memory vaa = forgeVaa(
-            112,
-            7,
-            0x0000000000000000000000000000000000000000000000000000000000000bad,
-            10,
-            hex"deadbeaf",
-            4,
+            TEST_VAA_TIMESTAMP,
+            TEST_EMITTER_CHAIN_ID,
+            TEST_EMITTER_ADDR,
+            TEST_SEQUENCE,
+            TEST_PAYLOAD,
+            TEST_NUM_SIGNERS,
             "vaaVersion"
         );
         vm.expectRevert(
@@ -349,30 +381,19 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         upgradeGuardianSet(5);
         // generate the vaa and sign with the new wormhole guardian set
         bytes memory vaa = generateVaa(
-            112,
-            7,
-            0x0000000000000000000000000000000000000000000000000000000000000bad,
-            10,
-            hex"deadbeaf",
-            4
+            TEST_VAA_TIMESTAMP,
+            TEST_EMITTER_CHAIN_ID,
+            TEST_EMITTER_ADDR,
+            TEST_SEQUENCE,
+            TEST_PAYLOAD,
+            TEST_NUM_SIGNERS
         );
         uint32 guardianSetIdx = wormhole.getCurrentGuardianSetIndex();
         vm.warp(block.timestamp + 5 days);
 
-        (
-            Structs.VM memory parsedVm,
-            bool valid,
-            string memory reason
-        ) = wormhole.parseAndVerifyVM(vaa);
-        assertTrue(valid);
-        assertEq(reason, "");
-        assertEq(parsedVm.timestamp, 112);
-        assertEq(parsedVm.emitterChainId, 7);
-        assertEq(
-            parsedVm.emitterAddress,
-            0x0000000000000000000000000000000000000000000000000000000000000bad
-        );
-        assertEq(parsedVm.payload, hex"deadbeaf");
+        (Structs.VM memory vm, bool valid, string memory reason) = wormhole
+            .parseAndVerifyVM(vaa);
+        assertVmMatchesTestValues(vm, valid, reason, vaa);
     }
 
     function testParseAndVerifyWorksIfUsingPreviousVaaGuardianSetBeforeItExpires()
@@ -386,12 +407,12 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         );
         // generate the vaa and sign with the initial wormhole guardian set
         bytes memory vaa = generateVaa(
-            112,
-            7,
-            0x0000000000000000000000000000000000000000000000000000000000000bad,
-            10,
-            hex"deadbeaf",
-            4
+            TEST_VAA_TIMESTAMP,
+            TEST_EMITTER_CHAIN_ID,
+            TEST_EMITTER_ADDR,
+            TEST_SEQUENCE,
+            TEST_PAYLOAD,
+            TEST_NUM_SIGNERS
         );
 
         upgradeGuardianSet(numGuardians);
@@ -401,20 +422,9 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
             .expirationTime;
         // warp to 5 seconds before the previous guardian set expires
         vm.warp(previousGuardianSetExpiration - 5);
-        (
-            Structs.VM memory parsedVm,
-            bool valid,
-            string memory reason
-        ) = wormhole.parseAndVerifyVM(vaa);
-        assertTrue(valid);
-        assertEq(reason, "");
-        assertEq(parsedVm.timestamp, 112);
-        assertEq(parsedVm.emitterChainId, 7);
-        assertEq(
-            parsedVm.emitterAddress,
-            0x0000000000000000000000000000000000000000000000000000000000000bad
-        );
-        assertEq(parsedVm.payload, hex"deadbeaf");
+        (Structs.VM memory vm, bool valid, string memory reason) = wormhole
+            .parseAndVerifyVM(vaa);
+        assertVmMatchesTestValues(vm, valid, reason, vaa);
     }
 
     function testParseAndVerifyFailsIfVaaGuardianSetHasExpired() public {
@@ -426,12 +436,12 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         );
         // generate the vaa and sign with the current wormhole guardian set
         bytes memory vaa = generateVaa(
-            112,
-            7,
-            0x0000000000000000000000000000000000000000000000000000000000000bad,
-            10,
-            hex"deadbeaf",
-            4
+            TEST_VAA_TIMESTAMP,
+            TEST_EMITTER_CHAIN_ID,
+            TEST_EMITTER_ADDR,
+            TEST_SEQUENCE,
+            TEST_PAYLOAD,
+            TEST_NUM_SIGNERS
         );
 
         upgradeGuardianSet(numGuardians);
@@ -451,12 +461,12 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         );
         // generate the vaa and sign with the current wormhole guardian set
         bytes memory vaa = forgeVaa(
-            112,
-            7,
-            0x0000000000000000000000000000000000000000000000000000000000000bad,
-            10,
-            hex"deadbeaf",
-            4,
+            TEST_VAA_TIMESTAMP,
+            TEST_EMITTER_CHAIN_ID,
+            TEST_EMITTER_ADDR,
+            TEST_SEQUENCE,
+            TEST_PAYLOAD,
+            TEST_NUM_SIGNERS,
             "vaaSignature"
         );
 
@@ -474,12 +484,12 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         );
         // generate the vaa and sign with the current wormhole guardian set
         bytes memory vaa = forgeVaa(
-            112,
-            7,
-            0x0000000000000000000000000000000000000000000000000000000000000bad,
-            10,
-            hex"deadbeaf",
-            4,
+            TEST_VAA_TIMESTAMP,
+            TEST_EMITTER_CHAIN_ID,
+            TEST_EMITTER_ADDR,
+            TEST_SEQUENCE,
+            TEST_PAYLOAD,
+            TEST_NUM_SIGNERS,
             "vaaNumSigners+"
         );
 
@@ -488,12 +498,12 @@ contract WormholeTestUtilsTest is Test, WormholeTestUtils {
         assertEq(reason, "invalid signature length");
 
         vaa = forgeVaa(
-            112,
-            7,
-            0x0000000000000000000000000000000000000000000000000000000000000bad,
-            10,
-            hex"deadbeaf",
-            4,
+            TEST_VAA_TIMESTAMP,
+            TEST_EMITTER_CHAIN_ID,
+            TEST_EMITTER_ADDR,
+            TEST_SEQUENCE,
+            TEST_PAYLOAD,
+            TEST_NUM_SIGNERS,
             "vaaNumSigners-"
         );
 
