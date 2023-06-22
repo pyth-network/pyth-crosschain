@@ -90,6 +90,7 @@ export class SuiPricePusher implements IPricePusher {
     private wormholePackageId: string,
     private wormholeStateId: string,
     private priceFeedToPriceInfoObjectTableId: string,
+    private maxVaasPerPtb: number,
     endpoint: string,
     mnemonic: string
   ) {
@@ -110,10 +111,21 @@ export class SuiPricePusher implements IPricePusher {
     if (priceIds.length !== pubTimesToPush.length)
       throw new Error("Invalid arguments");
 
+    const priceFeeds = await this.priceServiceConnection.getLatestPriceFeeds(
+      priceIds
+    );
+    const vaaToPriceFeedId: Record<string, string[]> = {};
+    for (const priceFeed of priceFeeds) {
+      const vaa = priceFeed.getVAA()!;
+      if (vaaToPriceFeedId[vaa] === undefined) {
+        vaaToPriceFeedId[vaa] = [];
+      }
+      vaaToPriceFeedId[vaa].push(priceFeed.id);
+    }
+  }
+
+  private async sendVaasInTransactionBlock(vaas: string[]) {
     const tx = new TransactionBlock();
-
-    const vaas = await this.priceServiceConnection.getLatestVaas(priceIds);
-
     // Parse our batch price attestation VAA bytes using Wormhole.
     // Check out the Wormhole cross-chain bridge and generic messaging protocol here:
     //     https://github.com/wormhole-foundation/wormhole

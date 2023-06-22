@@ -111,9 +111,7 @@ export class PriceServiceConnection {
    * @param priceIds Array of hex-encoded price ids.
    * @returns Array of PriceFeeds
    */
-  async getLatestPriceFeeds(
-    priceIds: HexString[]
-  ): Promise<PriceFeed[] | undefined> {
+  async getLatestPriceFeeds(priceIds: HexString[]): Promise<PriceFeed[]> {
     if (priceIds.length === 0) {
       return [];
     }
