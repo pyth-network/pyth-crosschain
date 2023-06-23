@@ -58,6 +58,13 @@ export default {
       type: "string",
       required: true,
     } as Options,
+    "max-vaas-per-ptb": {
+      description:
+        "Maximum number of VAAs that can be included in a single PTB.",
+      type: "number",
+      required: true,
+      default: 1,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.mnemonicFile,
@@ -77,6 +84,7 @@ export default {
       wormholePackageId,
       wormholeStateId,
       priceFeedToPriceInfoObjectTableId,
+      maxVaasPerPtb,
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
@@ -90,6 +98,9 @@ export default {
           error: console.error,
           debug: () => undefined,
           trace: () => undefined,
+        },
+        priceFeedRequestConfig: {
+          binary: true,
         },
       }
     );
@@ -116,6 +127,7 @@ export default {
       wormholePackageId,
       wormholeStateId,
       priceFeedToPriceInfoObjectTableId,
+      maxVaasPerPtb,
       endpoint,
       mnemonic
     );
