@@ -1,13 +1,12 @@
 name: Publish Pyth JS packages
 
 on:
-  release:
-    types:
-      - created
+  push:
+    tags:
+      - pyth-js-v*
 jobs:
   publish-js:
     name: Publish Javascript Packages to NPM
-    if: ${{ startsWith(github.ref, 'refs/tags/pyth-js-v') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
