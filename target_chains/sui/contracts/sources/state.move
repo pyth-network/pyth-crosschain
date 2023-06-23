@@ -40,6 +40,11 @@ module pyth::state {
     /// state methods.
     struct LatestOnly has drop {}
 
+    #[test_only]
+    public fun create_latest_only_for_test():LatestOnly {
+        LatestOnly{}
+    }
+
     struct State has key, store {
         id: UID,
         governance_data_source: DataSource,
