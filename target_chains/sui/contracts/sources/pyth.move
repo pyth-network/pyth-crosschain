@@ -16,7 +16,7 @@ module pyth::pyth {
     use pyth::price::{Self, Price};
     use pyth::price_identifier::{PriceIdentifier};
     use pyth::setup::{Self, DeployerCap};
-    use pyth::hot_potato_vector::{Self, HotPotatoVector};
+    use pyth::authenticated_price_infos::{Self, AuthenticatedPriceInfos};
 
     use wormhole::external_address::{Self};
     use wormhole::vaa::{Self, VAA};
@@ -140,11 +140,11 @@ module pyth::pyth {
         vector::destroy_empty(verified_vaas);
     }
 
-    public fun create_price_infos_hot_potato(
+    public fun create_authenticated_price_infos(
         pyth_state: &PythState,
         verified_vaas: vector<VAA>,
         clock: &Clock
-    ): HotPotatoVector<PriceInfo> {
+    ): AuthenticatedPriceInfos<PriceInfo> {
         let _ = state::assert_latest_only(pyth_state);
 
         let price_updates = vector::empty<PriceInfo>();
@@ -167,11 +167,11 @@ module pyth::pyth {
             }
         };
         vector::destroy_empty(verified_vaas);
-        return hot_potato_vector::new(price_updates)
+        return authenticated_price_infos::new(price_updates)
     }
 
     /// Update a singular Pyth PriceInfoObject (containing a price feed) with the
-    /// price data in the given hot potato vector (a vector of PriceInfo objects).
+    /// price data in the authenticated price infos vector (a vector of PriceInfo objects).
     ///
     /// The javascript https://github.com/pyth-network/pyth-js/tree/main/pyth-sui-js package
     /// should be used to fetch these VAAs from the Price Service. More information about this
@@ -183,11 +183,11 @@ module pyth::pyth {
     /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public fun update_single_price_feed(
         pyth_state: &PythState,
-        price_updates: HotPotatoVector<PriceInfo>,
+        price_updates: AuthenticatedPriceInfos<PriceInfo>,
         price_info_object: &mut PriceInfoObject,
         fee: Coin<SUI>,
         clock: &Clock
-    ): HotPotatoVector<PriceInfo> {
+    ): AuthenticatedPriceInfos<PriceInfo> {
         let latest_only = state::assert_latest_only(pyth_state);
 
         // Since we charge the base update fee per 5 price updates, here we check that
@@ -200,8 +200,8 @@ module pyth::pyth {
         // and use it to update PriceInfoObject.
         let i = 0;
         let found = false;
-        while (i < hot_potato_vector::length<PriceInfo>(&price_updates)){
-            let cur_price_info = hot_potato_vector::borrow<PriceInfo>(&price_updates, i);
+        while (i < authenticated_price_infos::length<PriceInfo>(&price_updates)){
+            let cur_price_info = authenticated_price_infos::borrow<PriceInfo>(&price_updates, i);
             if (has_same_price_identifier(cur_price_info, price_info_object)){
                 found = true;
                 update_cache(latest_only, cur_price_info, price_info_object, clock);
@@ -354,8 +354,8 @@ module pyth::pyth_tests{
     use pyth::data_source::{Self, DataSource};
     //use pyth::i64::{Self};
     //use pyth::price::{Self};
-    use pyth::pyth::{Self, create_price_infos_hot_potato, update_single_price_feed};
-    use pyth::hot_potato_vector::{Self};
+    use pyth::pyth::{Self, create_authenticated_price_infos, update_single_price_feed};
+    use pyth::authenticated_price_infos::{Self};
 
     use wormhole::setup::{Self as wormhole_setup, DeployerCap};
     use wormhole::external_address::{Self};
@@ -699,24 +699,24 @@ module pyth::pyth_tests{
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        // Create hot potato.
-        let potato = create_price_infos_hot_potato(
+        // Create authenticated price infos
+        let vec = create_authenticated_price_infos(
             &pyth_state,
             vector[vaa_1],
             &clock
         );
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        potato = update_single_price_feed(
+        vec = update_single_price_feed(
             &mut pyth_state,
-            potato,
+            vec,
             &mut price_info_object_1,
             test_coins,
             &clock
         );
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        hot_potato_vector::destroy<PriceInfo>(potato);
+        authenticated_price_infos::destroy<PriceInfo>(vec);
 
         vector::destroy_empty(verified_vaas);
         return_shared(pyth_state);
