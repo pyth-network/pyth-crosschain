@@ -10,27 +10,25 @@ module pyth::accumulator {
     use pyth::price_info::{Self, PriceInfo};
     use pyth::price_feed::{Self};
     use pyth::merkle_tree::{Self};
-    #[test_only]
-    use pyth::pyth_tests::{Self};
-
     const PRICE_FEED_MESSAGE_TYPE: u64 = 0;
     const E_INVALID_UPDATE_DATA: u64 = 245;
     const E_INVALID_PROOF: u64 = 345;
     const E_INVALID_WORMHOLE_MESSAGE: u64 = 454;
     const E_INVALID_ACCUMULATOR_PAYLOAD: u64 = 554;
 
-
-    const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: u64 = 1347305813;
     const ACCUMULATOR_UPDATE_WORMHOLE_VERIFICATION_MAGIC: u32 = 1096111958;
+
+    friend pyth::pyth;
 
     #[test_only]
     // get_price_feed_updates_from_single_vaa is a test_only function that gets the vector of price info updates
     // from a Wormhole VAA message.
-    fun test_get_price_feed_updates_from_single_vaa(vaa: vector<u8>, wormhole_state: &WormState, clock: &Clock): vector<PriceInfo> {
-        let cur = cursor::new(vaa);
+    public fun test_get_price_feed_updates_from_accumulator(accumulator_message: vector<u8>, wormhole_state: &WormState, clock: &Clock): vector<PriceInfo> {
+        let _PYTHNET_ACCUMULATOR_UPDATE_MAGIC = 1347305813;
+        let cur = cursor::new(accumulator_message);
         let header: u32 = deserialize::deserialize_u32(&mut cur);
-        let updates = if ((header as u64) == PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
-            parse_and_verify_accumulator_message(&mut cur, wormhole_state, clock)
+        let updates = if ((header as u64) == _PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
+            parse_and_verify_accumulator_message_with_worm_state(&mut cur, wormhole_state, clock)
         }
         else {
             // don't handle this code path here
@@ -42,10 +40,14 @@ module pyth::accumulator {
         updates
     }
 
+    #[test_only]
     /// Given a cursor at the beginning of an accumulator message, verifies the validity of the message and the
     /// embedded VAA, parses and verifies the price updates and returns an array of PriceInfo representing the updates
     /// Note: this function is adapted from the Aptos pyth accumulator
-     fun parse_and_verify_accumulator_message(cursor: &mut Cursor<u8>, wormhole_state: &WormState, clock: &Clock): vector<PriceInfo> {
+    /// Note: this function is test-only because it is not used in prod, since the verified VAA would be passed into this function.
+    ///       We don't verify the VAA inside of there, because in that case the wormhole package effectively becomes hard-coded,
+    ///       so when the WH package upgrades, this code will be broken.
+    public fun parse_and_verify_accumulator_message_with_worm_state(cursor: &mut Cursor<u8>, wormhole_state: &WormState, clock: &Clock): vector<PriceInfo> {
         let major = deserialize::deserialize_u8(cursor);
         assert!(major == 1, E_INVALID_ACCUMULATOR_PAYLOAD);
         let _minor = deserialize::deserialize_u8(cursor);
@@ -63,6 +65,28 @@ module pyth::accumulator {
         //verify_data_source(&msg_vaa);
         let merkle_root_hash = parse_accumulator_merkle_root_from_vaa_payload(vaa::payload(&msg_vaa));
         vaa::destroy(msg_vaa);
+        parse_and_verify_accumulator_updates(cursor, merkle_root_hash, clock)
+    }
+
+    // parse_and_verify_accumulator_message verifies that the merkle root contained a pre-verified VAA
+    // matches the rest of the content in the accumulator message (encapsulated by cursor).
+    public(friend) fun parse_and_verify_accumulator_message(cursor: &mut Cursor<u8>, vaa_payload: vector<u8>, clock: &Clock): vector<PriceInfo> {
+        let major = deserialize::deserialize_u8(cursor);
+        assert!(major == 1, E_INVALID_ACCUMULATOR_PAYLOAD);
+        let _minor = deserialize::deserialize_u8(cursor);
+
+        let trailing_size = deserialize::deserialize_u8(cursor);
+        deserialize::deserialize_vector(cursor, (trailing_size as u64));
+
+        let proof_type = deserialize::deserialize_u8(cursor);
+        assert!(proof_type == 0, E_INVALID_ACCUMULATOR_PAYLOAD);
+
+        // Ignore the vaa in the accumulator message because presumably it has already been verified
+        // and passed to this function as input.
+        let vaa_size = deserialize::deserialize_u16(cursor);
+        let _ = deserialize::deserialize_vector(cursor, (vaa_size as u64));
+
+        let merkle_root_hash = parse_accumulator_merkle_root_from_vaa_payload(vaa_payload);
         parse_and_verify_accumulator_updates(cursor, merkle_root_hash, clock)
     }
 
@@ -129,78 +153,5 @@ module pyth::accumulator {
             update_size = update_size - 1;
         };
         price_info_updates
-    }
-
-    #[test_only]
-    const TEST_ACCUMULATOR_3_MSGS: vector<u8> = x"504e41550100000000a001000000000100d39b55fa311213959f91866d52624f3a9c07350d8956f6d42cfbb037883f31575c494a2f09fea84e4884dc9c244123fd124bc7825cd64d7c11e33ba5cfbdea7e010000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b000000000000000000415557560000000000000000000000000029da4c066b6e03b16a71e77811570dd9e19f258103005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf60000000000000064000000000000003200000009000000006491cc747be59f3f377c0d3f000000000000006300000000000000340436992facb15658a7e9f08c4df4848ca80750f61fadcd96993de66b1fe7aef94e29e3bbef8b12db2305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d950055006e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af000000000000006500000000000000330000000a000000006491cc7504f8554c3620c3fd0000000000000064000000000000003504171ed10ac4f1eacf3a4951e1da6b119f07c45da5adcd96993de66b1fe7aef94e29e3bbef8b12db2305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d9500550031ecc21a745e3968a04e9570e4425bc18fa8019c68028196b546d1669c200c68000000000000006600000000000000340000000b000000006491cc76e87d69c7b51242890000000000000065000000000000003604f2ee15ea639b73fa3db9b34a245bdfa015c260c5fe83e4772e0e346613de00e5348158a01bcb27b305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d95";
-    #[test_only]
-    const TEST_ACCUMULATOR_SINGLE_FEED: vector<u8> = x"504e41550100000000a0010000000001005d461ac1dfffa8451edda17e4b28a46c8ae912422b2dc0cb7732828c497778ea27147fb95b4d250651931845e7f3e22c46326716bcf82be2874a9c9ab94b6e42000000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000000004155575600000000000000000000000000da936d73429246d131873a0bab90ad7b416510be01005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf65f958f4883f9d2a8b5b1008d1fa01db95cf4a8c7000000006491cc757be59f3f377c0d3f423a695e81ad1eb504f8554c3620c3fd02f2ee15ea639b73fa3db9b34a245bdfa015c260c5a8a1180177cf30b2c0bebbb1adfe8f7985d051d2";
-
-    #[test]
-    fun test_parse_and_verify_accumulator_updates(){
-        use sui::test_scenario::{Self, take_shared, return_shared};
-        use sui::transfer::{Self};
-
-        let emitter_address = x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
-        let initial_guardians = vector[x"7E5F4552091A69125d5DfCb7b8C2659029395Bdf"];
-        let (scenario, coins, clock) = pyth_tests::setup_test(500, 23, emitter_address, vector[], initial_guardians, 50, 0);
-        let worm_state = take_shared<WormState>(&scenario);
-        test_scenario::next_tx(&mut scenario, @0x123);
-
-        let price_info_updates = test_get_price_feed_updates_from_single_vaa(TEST_ACCUMULATOR_3_MSGS, &worm_state, &clock);
-        let expected_price_infos = accumulator_test_3_price_feeds(0);
-        let num_updates = vector::length(&price_info_updates);
-        let i = 0;
-        while (i < num_updates){
-            assert!(price_feeds_equal(vector::borrow(&price_info_updates, i), vector::borrow(&expected_price_infos, i)), 0);
-            i = i + 1;
-        };
-
-        // clean-up
-        transfer::public_transfer(coins, @0x1234);
-        clock::destroy_for_testing(clock);
-        return_shared(worm_state);
-        test_scenario::end(scenario);
-    }
-
-    #[test_only]
-    fun price_feeds_equal(p1: &PriceInfo, p2: &PriceInfo): bool{
-        price_info::get_price_feed(p1)== price_info::get_price_feed(p2)
-    }
-
-    #[test_only]
-    fun accumulator_test_3_price_feeds(offset: u64): vector<PriceInfo> {
-        use pyth::i64::{Self};
-        use pyth::price::{Self};
-        let i = 0;
-        let feed_ids = vector[x"b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
-            x"6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af",
-            x"31ecc21a745e3968a04e9570e4425bc18fa8019c68028196b546d1669c200c68"];
-        let expected: vector<PriceInfo> = vector[];
-        while (i < 3) {
-            vector::push_back(&mut expected, price_info::new_price_info(
-                1663680747,
-                1663074349,
-                price_feed::new(
-                    price_identifier::from_byte_vec(
-                        *vector::borrow(&feed_ids, i)
-                    ),
-                    price::new(
-                        i64::new(100 + i + offset, false),
-                        50 + i + offset,
-                        i64::new(9 + i + offset, false),
-                        1687276660 + i + offset
-                    ),
-                    price::new(
-                        i64::new(99 + i + offset, false),
-                        52 + i + offset,
-                        i64::new(9 + i + offset, false),
-                        1687276660 + i + offset
-                    ),
-                ),
-            ));
-            i = i + 1;
-        };
-        return expected
     }
 }
