@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - pyth-cosmwasm-contract-v*
-
 jobs:
   release-contract:
     name: Build and Release cosmwasm contract

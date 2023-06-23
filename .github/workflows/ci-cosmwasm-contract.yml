@@ -1,4 +1,4 @@
-name: Pyth CosmWasm Contract
+name: Test CosmWasm Contract
 
 on:
   pull_request:

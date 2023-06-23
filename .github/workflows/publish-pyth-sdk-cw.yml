@@ -1,13 +1,12 @@
 name: Publish Pyth SDK for Cosmwasm to crates.io
 
 on:
-  release:
-    types:
-      - created
+  push:
+    tags:
+      - pyth-sdk-cw-v*
 jobs:
   publish-pyth-sdk-cw:
     name: Publish Pyth SDK CW
-    if: ${{ startsWith(github.ref, 'refs/tags/pyth-sdk-cw-v') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
