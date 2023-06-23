@@ -152,3 +152,41 @@ impl Arbitrary for TwapMessage {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+
+    use crate::{
+        messages::{
+            Message,
+            PriceFeedMessage,
+        },
+        wire::Serializer,
+    };
+
+    // Test if additional payload to the end of a message is forward compatible
+    #[test]
+    fn test_forward_compatibility() {
+        use {
+            serde::Serialize,
+            std::iter,
+        };
+        let msg = Message::PriceFeedMessage(PriceFeedMessage {
+            feed_id:           [1u8; 32],
+            price:             1,
+            conf:              1,
+            exponent:          1,
+            publish_time:      1,
+            prev_publish_time: 1,
+            ema_price:         1,
+            ema_conf:          1,
+        });
+        let mut buffer = Vec::new();
+        let mut cursor = std::io::Cursor::new(&mut buffer);
+        let mut serializer: Serializer<_, byteorder::LE> = Serializer::new(&mut cursor);
+        msg.serialize(&mut serializer).unwrap();
+        buffer.extend(iter::repeat(0).take(10));
+        let deserialized = crate::wire::from_slice::<byteorder::LE, Message>(&buffer).unwrap();
+        assert_eq!(deserialized, msg);
+    }
+}
