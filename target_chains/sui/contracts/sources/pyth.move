@@ -232,9 +232,10 @@ module pyth::pyth {
     ): AuthenticatedVector<PriceInfo> {
         let latest_only = state::assert_latest_only(pyth_state);
 
-        // Since we charge the base update fee per 5 price updates, here we check that
-        // Coin Value >= update_fee / 5 (we only update a single price feed in this function).
-        assert!(state::get_base_update_fee(pyth_state) <= 5 * coin::value(&fee), E_INSUFFICIENT_FEE);
+        // On Sui, users get to choose which price feeds to update. They specify a single price feed to
+        // update at a time. We therefore charge the base fee for each such individual update.
+        // This is a departure from Eth, where users don't get to necessarily choose.
+        assert!(state::get_base_update_fee(pyth_state) <= coin::value(&fee), E_INSUFFICIENT_FEE);
 
         transfer::public_transfer(fee, state::get_fee_recipient(pyth_state));
 
@@ -692,7 +693,7 @@ module pyth::pyth_tests{
     }
 
     #[test]
-    fun test_create_and_update_price_feeds_success() {
+    fun test_create_and_update_price_feeds_with_batch_attestation_success() {
         let data_sources = data_sources_for_test_vaa();
         let base_update_fee = 50;
         let coins_to_mint = 5000;
