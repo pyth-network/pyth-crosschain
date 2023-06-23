@@ -84,7 +84,7 @@ module pyth::accumulator {
         // Ignore the vaa in the accumulator message because presumably it has already been verified
         // and passed to this function as input.
         let vaa_size = deserialize::deserialize_u16(cursor);
-        let _ = deserialize::deserialize_vector(cursor, (vaa_size as u64));
+        deserialize::deserialize_vector(cursor, (vaa_size as u64));
 
         let merkle_root_hash = parse_accumulator_merkle_root_from_vaa_payload(vaa_payload);
         parse_and_verify_accumulator_updates(cursor, merkle_root_hash, clock)
@@ -129,7 +129,6 @@ module pyth::accumulator {
                 pyth::price::new(ema_price, ema_conf, expo, publish_time),
             )
         );
-        //cursor::rest(message_cur);
         price_info
     }
 

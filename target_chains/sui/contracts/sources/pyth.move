@@ -152,7 +152,7 @@ module pyth::pyth {
         accumulator_message: vector<u8>,
         verified_vaa: VAA,
         clock: &Clock,
-    ):AuthenticatedPriceInfos<PriceInfo> {
+    ): AuthenticatedPriceInfos<PriceInfo> {
         let _ = state::assert_latest_only(pyth_state);
 
         // verify that the VAA originates from a valid data source
