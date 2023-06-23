@@ -211,6 +211,7 @@ mod test {
     ) -> MessageState {
         MessageState {
             slot,
+            raw_message: vec![],
             message: Message::PriceFeedMessage(PriceFeedMessage {
                 feed_id,
                 publish_time,
@@ -574,10 +575,10 @@ mod test {
         // Change the state to have accumulator messages
         // We mutate the existing state because the normal flow is like this.
         accumulator_state.accumulator_messages = Some(AccumulatorMessages {
-            magic:     [0; 4],
-            slot:      10,
-            ring_size: 3,
-            messages:  vec![],
+            magic:        [0; 4],
+            slot:         10,
+            ring_size:    3,
+            raw_messages: vec![],
         });
 
         // Store the accumulator state again.

@@ -33,15 +33,19 @@ use {
         anyhow,
         Result,
     },
+    byteorder::BigEndian,
     pyth_sdk::PriceIdentifier,
     pythnet_sdk::{
         messages::{
             Message,
             MessageType,
         },
-        wire::v1::{
-            WormholeMessage,
-            WormholePayload,
+        wire::{
+            from_slice,
+            v1::{
+                WormholeMessage,
+                WormholePayload,
+            },
         },
     },
     std::{
@@ -199,12 +203,14 @@ impl Store {
 
         let message_states = completed_state
             .accumulator_messages
-            .messages
-            .iter()
+            .raw_messages
+            .into_iter()
             .enumerate()
-            .map(|(idx, message)| {
+            .map(|(idx, raw_message)| {
                 Ok(MessageState::new(
-                    *message,
+                    from_slice::<BigEndian, _>(raw_message.as_ref())
+                        .map_err(|e| anyhow!("Failed to deserialize message: {:?}", e))?,
+                    raw_message,
                     ProofSet {
                         wormhole_merkle_proof: wormhole_merkle_message_states_proofs
                             .get(idx)

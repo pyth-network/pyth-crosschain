@@ -4,6 +4,7 @@ use {
         types::{
             AccumulatorMessages,
             ProofSet,
+            RawMessage,
             RequestTime,
             Slot,
             UnixTimestamp,
@@ -71,6 +72,7 @@ pub struct MessageStateTime {
 pub struct MessageState {
     pub slot:        Slot,
     pub message:     Message,
+    pub raw_message: RawMessage,
     pub proof_set:   ProofSet,
     pub received_at: UnixTimestamp,
 }
@@ -92,6 +94,7 @@ impl MessageState {
 
     pub fn new(
         message: Message,
+        raw_message: RawMessage,
         proof_set: ProofSet,
         slot: Slot,
         received_at: UnixTimestamp,
@@ -99,6 +102,7 @@ impl MessageState {
         Self {
             slot,
             message,
+            raw_message,
             proof_set,
             received_at,
         }
@@ -151,20 +155,20 @@ mod test {
             wormhole_merkle_state: None,
         };
 
-        assert!(CompletedAccumulatorState::try_from(accumulator_state.clone()).is_err());
+        assert!(CompletedAccumulatorState::try_from(accumulator_state).is_err());
 
         let accumulator_state = AccumulatorState {
             slot:                  1,
             accumulator_messages:  Some(AccumulatorMessages {
-                slot:      1,
-                magic:     [0; 4],
-                ring_size: 10,
-                messages:  vec![],
+                slot:         1,
+                magic:        [0; 4],
+                ring_size:    10,
+                raw_messages: vec![],
             }),
             wormhole_merkle_state: None,
         };
 
-        assert!(CompletedAccumulatorState::try_from(accumulator_state.clone()).is_err());
+        assert!(CompletedAccumulatorState::try_from(accumulator_state).is_err());
 
         let accumulator_state = AccumulatorState {
             slot:                  1,
@@ -179,15 +183,15 @@ mod test {
             }),
         };
 
-        assert!(CompletedAccumulatorState::try_from(accumulator_state.clone()).is_err());
+        assert!(CompletedAccumulatorState::try_from(accumulator_state).is_err());
 
         let accumulator_state = AccumulatorState {
             slot:                  1,
             accumulator_messages:  Some(AccumulatorMessages {
-                slot:      1,
-                magic:     [0; 4],
-                ring_size: 10,
-                messages:  vec![],
+                slot:         1,
+                magic:        [0; 4],
+                ring_size:    10,
+                raw_messages: vec![],
             }),
             wormhole_merkle_state: Some(WormholeMerkleState {
                 vaa:  vec![],
@@ -200,14 +204,14 @@ mod test {
         };
 
         assert_eq!(
-            CompletedAccumulatorState::try_from(accumulator_state.clone()).unwrap(),
+            CompletedAccumulatorState::try_from(accumulator_state).unwrap(),
             CompletedAccumulatorState {
                 slot:                  1,
                 accumulator_messages:  AccumulatorMessages {
-                    slot:      1,
-                    magic:     [0; 4],
-                    ring_size: 10,
-                    messages:  vec![],
+                    slot:         1,
+                    magic:        [0; 4],
+                    ring_size:    10,
+                    raw_messages: vec![],
                 },
                 wormhole_merkle_state: WormholeMerkleState {
                     vaa:  vec![],

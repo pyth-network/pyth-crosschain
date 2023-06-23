@@ -76,26 +76,20 @@ pub fn construct_message_states_proofs(
     let accumulator_messages = &completed_accumulator_state.accumulator_messages;
     let wormhole_merkle_state = &completed_accumulator_state.wormhole_merkle_state;
 
-    let raw_messages = accumulator_messages
-        .messages
-        .iter()
-        .map(|m| {
-            to_vec::<_, byteorder::BE>(m).map_err(|e| anyhow!("Failed to serialize message: {}", e))
-        })
-        .collect::<Result<Vec<Vec<u8>>>>()?;
-
     // Check whether the state is valid
-    let merkle_acc =
-        match MerkleTree::<Keccak160>::from_set(raw_messages.iter().map(|m| m.as_ref())) {
-            Some(merkle_acc) => merkle_acc,
-            None => return Ok(vec![]), // It only happens when the message set is empty
-        };
+    let merkle_acc = match MerkleTree::<Keccak160>::from_set(
+        accumulator_messages.raw_messages.iter().map(|m| m.as_ref()),
+    ) {
+        Some(merkle_acc) => merkle_acc,
+        None => return Ok(vec![]), // It only happens when the message set is empty
+    };
 
     if merkle_acc.root.as_bytes() != wormhole_merkle_state.root.root {
         return Err(anyhow!("Invalid merkle root"));
     }
 
-    raw_messages
+    accumulator_messages
+        .raw_messages
         .iter()
         .map(|m| {
             Ok(WormholeMerkleMessageProof {
