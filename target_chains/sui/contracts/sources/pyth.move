@@ -474,10 +474,6 @@ module pyth::pyth_tests{
         let governance_chain = 1234;
         let governance_contract =
             x"deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
-        // let initial_guardians =
-        //     vector[
-        //         x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"
-        //     ];
         let guardian_set_seconds_to_live = 5678;
         let message_fee = 350;
         let guardian_set_index = 0;
