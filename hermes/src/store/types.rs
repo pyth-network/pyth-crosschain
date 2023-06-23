@@ -1,9 +1,7 @@
 use {
     super::proof::wormhole_merkle::WormholeMerkleMessageProof,
-    pythnet_sdk::messages::{
-        Message,
-        PriceFeedMessage,
-    },
+    borsh::BorshDeserialize,
+    pythnet_sdk::messages::PriceFeedMessage,
 };
 
 #[derive(Clone, PartialEq, Debug)]
@@ -20,12 +18,20 @@ pub enum RequestTime {
     FirstAfter(UnixTimestamp),
 }
 
-#[derive(Clone, PartialEq, Debug)]
+pub type RawMessage = Vec<u8>;
+
+/// Accumulator messages coming from Pythnet validators.
+///
+/// The validators writes the accumulator messages using Borsh with
+/// the following struct. We cannot directly have messages as Vec<Messages>
+/// because they are serialized using big-endian byte order and Borsh
+/// uses little-endian byte order.
+#[derive(Clone, PartialEq, Debug, BorshDeserialize)]
 pub struct AccumulatorMessages {
-    pub magic:     [u8; 4],
-    pub slot:      Slot,
-    pub ring_size: u32,
-    pub messages:  Vec<Message>,
+    pub magic:        [u8; 4],
+    pub slot:         u64,
+    pub ring_size:    u32,
+    pub raw_messages: Vec<RawMessage>,
 }
 
 impl AccumulatorMessages {
