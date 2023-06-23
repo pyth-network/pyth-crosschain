@@ -1,6 +1,5 @@
 name: xc_admin_frontend Docker Image
 on:
-  pull_request:
   push:
     branches: [main]
     paths: [governance/xc_admin/**]
