@@ -144,7 +144,7 @@ export class SuiPricePusher implements IPricePusher {
     const txs = [];
     let currentBatchVaas = [];
     let currentBatchPriceFeedIds = [];
-    for (const [vaa, priceFeedIds] of Object.entries(vaaToPriceFeedIds)) {
+    for (const [vaa, priceFeedIds] of vaaToPriceFeedIds.entries()) {
       currentBatchVaas.push(vaa);
       currentBatchPriceFeedIds.push(...priceFeedIds);
       if (currentBatchVaas.length >= this.maxVaasPerPtb) {

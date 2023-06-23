@@ -6,6 +6,7 @@ import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
 import { Options } from "yargs";
 import { SuiPriceListener, SuiPricePusher } from "./sui";
+import { Ed25519Keypair } from "@mysten/sui.js";
 
 export default {
   command: "sui",
@@ -105,6 +106,13 @@ export default {
       }
     );
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
+    console.log(
+      `Pushing updates from wallet address: ${Ed25519Keypair.deriveKeypair(
+        mnemonic
+      )
+        .getPublicKey()
+        .toSuiAddress()}`
+    );
 
     const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
