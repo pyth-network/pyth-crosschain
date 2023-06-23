@@ -123,6 +123,8 @@ export class SuiPricePusher implements IPricePusher {
       return;
     }
 
+    const time0 = Date.now();
+
     const priceFeeds = await this.priceServiceConnection.getLatestPriceFeeds(
       priceIds
     );
@@ -130,6 +132,8 @@ export class SuiPricePusher implements IPricePusher {
       console.log("Failed to fetch price updates. Skipping push.");
       return;
     }
+
+    const time1 = Date.now();
 
     const vaaToPriceFeedIds: Map<string, string[]> = new Map();
     for (const priceFeed of priceFeeds) {
@@ -161,13 +165,44 @@ export class SuiPricePusher implements IPricePusher {
       }
     }
 
+    const time2 = Date.now();
+
+    const txBytes = await Promise.all(
+      txs.map(async (tx) => {
+        tx.setSenderIfNotSet((await this.signer.getAddress()).toString());
+        return tx.build({ provider: this.signer.provider });
+      })
+    );
+
+    const time3 = Date.now();
+
     try {
       this.isAwaitingTx = true;
-      await this.sendTransactionBlocks(txs);
+
+      // const gasCoins = await this.setupGasCoins(txs.length);
+
+      await this.sendTransactionBlocks(txBytes);
     } finally {
       this.isAwaitingTx = false;
     }
+
+    const time4 = Date.now();
+
+    let printTimeDiff = (label: string, t2: number, t1: number) => {
+      console.log(`TIME ${label}: ${t2 - t1} ms`);
+    };
+
+    printTimeDiff("getLatestPriceFeeds", time1, time0);
+    printTimeDiff("createPriceUpdateTransaction", time2, time1);
+    printTimeDiff("buildTransactionBytes", time3, time2);
+    printTimeDiff("sendTransactionBlocks", time4, time3);
   }
+
+  /*
+  private async setupGasCoins(num: number): Promise<string[]> {
+    const coins = await this.signer.provider.getCoins({owner: await this.signer.getAddress()});
+  }
+   */
 
   private async createPriceUpdateTransaction(
     vaas: string[],
@@ -245,7 +280,7 @@ export class SuiPricePusher implements IPricePusher {
   }
 
   /** Send every transaction in txs sequentially, returning when all transactions have completed. */
-  private async sendTransactionBlocks(txs: TransactionBlock[]): Promise<void> {
+  private async sendTransactionBlocks(txs: Uint8Array[]): Promise<void> {
     for (const tx of txs) {
       try {
         const result = await this.signer.signAndExecuteTransactionBlock({
