@@ -16,7 +16,7 @@ module pyth::pyth {
     use pyth::price::{Self, Price};
     use pyth::price_identifier::{PriceIdentifier};
     use pyth::setup::{Self, DeployerCap};
-    use pyth::authenticated_price_infos::{Self, AuthenticatedPriceInfos};
+    use pyth::authenticated_vector::{Self, AuthenticatedVector};
     use pyth::accumulator::{Self};
     use pyth::deserialize::{Self};
 
@@ -152,7 +152,7 @@ module pyth::pyth {
         accumulator_message: vector<u8>,
         verified_vaa: VAA,
         clock: &Clock,
-    ): AuthenticatedPriceInfos<PriceInfo> {
+    ): AuthenticatedVector<PriceInfo> {
         let _ = state::assert_latest_only(pyth_state);
 
         // verify that the VAA originates from a valid data source
@@ -179,14 +179,14 @@ module pyth::pyth {
         };
         // check that accumulator message has been fully consumed
         cursor::destroy_empty(accumulator_message_cursor);
-        authenticated_price_infos::new(_price_infos)
+        authenticated_vector::new(_price_infos)
     }
 
     public fun create_authenticated_price_infos_using_batch_price_attestation(
         pyth_state: &PythState,
         verified_vaas: vector<VAA>,
         clock: &Clock
-    ): AuthenticatedPriceInfos<PriceInfo> {
+    ): AuthenticatedVector<PriceInfo> {
         let _ = state::assert_latest_only(pyth_state);
 
         let price_updates = vector::empty<PriceInfo>();
@@ -209,7 +209,7 @@ module pyth::pyth {
             }
         };
         vector::destroy_empty(verified_vaas);
-        return authenticated_price_infos::new(price_updates)
+        return authenticated_vector::new(price_updates)
     }
 
     /// Update a singular Pyth PriceInfoObject (containing a price feed) with the
@@ -225,11 +225,11 @@ module pyth::pyth {
     /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public fun update_single_price_feed(
         pyth_state: &PythState,
-        price_updates: AuthenticatedPriceInfos<PriceInfo>,
+        price_updates: AuthenticatedVector<PriceInfo>,
         price_info_object: &mut PriceInfoObject,
         fee: Coin<SUI>,
         clock: &Clock
-    ): AuthenticatedPriceInfos<PriceInfo> {
+    ): AuthenticatedVector<PriceInfo> {
         let latest_only = state::assert_latest_only(pyth_state);
 
         // Since we charge the base update fee per 5 price updates, here we check that
@@ -242,8 +242,8 @@ module pyth::pyth {
         // and use it to update PriceInfoObject.
         let i = 0;
         let found = false;
-        while (i < authenticated_price_infos::length<PriceInfo>(&price_updates)){
-            let cur_price_info = authenticated_price_infos::borrow<PriceInfo>(&price_updates, i);
+        while (i < authenticated_vector::length<PriceInfo>(&price_updates)){
+            let cur_price_info = authenticated_vector::borrow<PriceInfo>(&price_updates, i);
             if (has_same_price_identifier(cur_price_info, price_info_object)){
                 found = true;
                 update_cache(latest_only, cur_price_info, price_info_object, clock);
@@ -395,7 +395,7 @@ module pyth::pyth_tests{
     //use pyth::i64::{Self};
     //use pyth::price::{Self};
     use pyth::pyth::{Self, create_authenticated_price_infos_using_batch_price_attestation, update_single_price_feed};
-    use pyth::authenticated_price_infos::{Self};
+    use pyth::authenticated_vector::{Self};
     use pyth::price_identifier::{Self};
     use pyth::price_feed::{Self};
     use pyth::accumulator::{Self};
@@ -755,7 +755,7 @@ module pyth::pyth_tests{
         );
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        authenticated_price_infos::destroy<PriceInfo>(vec);
+        authenticated_vector::destroy<PriceInfo>(vec);
 
         vector::destroy_empty(verified_vaas);
         return_shared(pyth_state);
