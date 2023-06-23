@@ -131,14 +131,14 @@ export class SuiPricePusher implements IPricePusher {
       return;
     }
 
-    const vaaToPriceFeedIds: Record<string, string[]> = {};
+    const vaaToPriceFeedIds: Map<string, string[]> = new Map();
     for (const priceFeed of priceFeeds) {
       // The ! will succeed as long as the priceServiceConnection is configured to return binary vaa data (which it is).
       const vaa = priceFeed.getVAA()!;
-      if (vaaToPriceFeedIds[vaa] === undefined) {
-        vaaToPriceFeedIds[vaa] = [];
+      if (!vaaToPriceFeedIds.has(vaa)) {
+        vaaToPriceFeedIds.set(vaa, []);
       }
-      vaaToPriceFeedIds[vaa].push(priceFeed.id);
+      vaaToPriceFeedIds.get(vaa)!.push(priceFeed.id);
     }
 
     const txs = [];
