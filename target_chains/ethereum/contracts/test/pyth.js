@@ -10,7 +10,13 @@ const {
 const { assert, expect } = require("chai");
 
 // Use "WormholeReceiver" if you are testing with Wormhole Receiver
+const Setup = artifacts.require("Setup");
+const Implementation = artifacts.require("Implementation");
 const Wormhole = artifacts.require("Wormhole");
+
+const wormholeGovernanceChainId = governance.CHAINS.solana;
+const wormholeGovernanceContract =
+  "0x0000000000000000000000000000000000000000000000000000000000000004";
 
 const PythUpgradable = artifacts.require("PythUpgradable");
 const MockPythUpgrade = artifacts.require("MockPythUpgrade");
@@ -1067,6 +1073,88 @@ contract("Pyth", function () {
 
     // The behaviour of valid time period is extensively tested before,
     // and adding it here will cause more complexity (and is not so short).
+  });
+
+  it("Setting wormhole address should work", async function () {
+    // Deploy a new wormhole contract
+    const newSetup = await Setup.new();
+    const newImpl = await Implementation.new();
+
+    // encode initialisation data
+    const initData = newSetup.contract.methods
+      .setup(
+        newImpl.address,
+        [testSigner1.address],
+        governance.CHAINS.polygon, // changing the chain id to polygon
+        wormholeGovernanceChainId,
+        wormholeGovernanceContract
+      )
+      .encodeABI();
+
+    const newWormhole = await Wormhole.new(newSetup.address, initData);
+
+    // Creating the vaa to set the new wormhole address
+    const data = new governance.EthereumSetWormholeAddress(
+      governance.CHAINS.ethereum,
+      new governance.HexString20Bytes(newWormhole.address)
+    ).serialize();
+
+    const vaa = await createVAAFromUint8Array(
+      data,
+      testGovernanceChainId,
+      testGovernanceEmitter,
+      1
+    );
+
+    assert.equal(await this.pythProxy.chainId(), governance.CHAINS.ethereum);
+
+    const oldWormholeAddress = await this.pythProxy.wormhole();
+
+    const receipt = await this.pythProxy.executeGovernanceInstruction(vaa);
+    expectEvent(receipt, "WormholeAddressSet", {
+      oldWormholeAddress: oldWormholeAddress,
+      newWormholeAddress: newWormhole.address,
+    });
+
+    assert.equal(await this.pythProxy.wormhole(), newWormhole.address);
+    assert.equal(await this.pythProxy.chainId(), governance.CHAINS.polygon);
+  });
+
+  it("Setting wormhole address to a wrong contract should reject", async function () {
+    // Deploy a new wormhole contract
+    const newSetup = await Setup.new();
+    const newImpl = await Implementation.new();
+
+    // encode initialisation data
+    const initData = newSetup.contract.methods
+      .setup(
+        newImpl.address,
+        [testSigner2.address], // A wrong signer
+        governance.CHAINS.ethereum,
+        wormholeGovernanceChainId,
+        wormholeGovernanceContract
+      )
+      .encodeABI();
+
+    const newWormhole = await Wormhole.new(newSetup.address, initData);
+
+    // Creating the vaa to set the new wormhole address
+    const data = new governance.EthereumSetWormholeAddress(
+      governance.CHAINS.ethereum,
+      new governance.HexString20Bytes(newWormhole.address)
+    ).serialize();
+
+    const wrongVaa = await createVAAFromUint8Array(
+      data,
+      testGovernanceChainId,
+      testGovernanceEmitter,
+      1
+    );
+
+    await expectRevertCustomError(
+      this.pythProxy.executeGovernanceInstruction(wrongVaa),
+      "InvalidGovernanceMessage"
+    );
   });
 
   // Version

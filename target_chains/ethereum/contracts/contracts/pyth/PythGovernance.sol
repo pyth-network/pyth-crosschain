@@ -34,6 +34,10 @@ abstract contract PythGovernance is
     );
     event FeeSet(uint oldFee, uint newFee);
     event ValidPeriodSet(uint oldValidPeriod, uint newValidPeriod);
+    event WormholeAddressSet(
+        address oldWormholeAddress,
+        address newWormholeAddress
+    );
 
     function verifyGovernanceVM(
         bytes memory encodedVM
@@ -86,6 +90,13 @@ abstract contract PythGovernance is
         ) {
             // RequestGovernanceDataSourceTransfer can be only part of AuthorizeGovernanceDataSourceTransfer message
             revert PythErrors.InvalidGovernanceMessage();
+        } else if (gi.action == GovernanceAction.SetWormholeAddress) {
+            if (gi.targetChainId == 0)
+                revert PythErrors.InvalidGovernanceTarget();
+            setWormholeAddress(
+                parseSetWormholeAddressPayload(gi.payload),
+                encodedVM
+            );
         } else {
             revert PythErrors.InvalidGovernanceMessage();
         }
@@ -189,5 +200,45 @@ abstract contract PythGovernance is
         setValidTimePeriodSeconds(payload.newValidPeriod);
 
         emit ValidPeriodSet(oldValidPeriod, validTimePeriodSeconds());
+    }
+
+    function setWormholeAddress(
+        SetWormholeAddressPayload memory payload,
+        bytes memory encodedVM
+    ) internal {
+        address oldWormholeAddress = address(wormhole());
+        setWormhole(payload.newWormholeAddress);
+
+        // We want to verify that the new wormhole address is valid, so we make sure that it can
+        // parse and verify the same governance VAA that is used to set it.
+        (IWormhole.VM memory vm, bool valid, ) = wormhole().parseAndVerifyVM(
+            encodedVM
+        );
+
+        if (!valid) revert PythErrors.InvalidGovernanceMessage();
+
+        if (!isValidGovernanceDataSource(vm.emitterChainId, vm.emitterAddress))
+            revert PythErrors.InvalidGovernanceMessage();
+
+        if (vm.sequence != lastExecutedGovernanceSequence())
+            revert PythErrors.InvalidGovernanceMessage();
+
+        GovernanceInstruction memory gi = parseGovernanceInstruction(
+            vm.payload
+        );
+
+        if (gi.action != GovernanceAction.SetWormholeAddress)
+            revert PythErrors.InvalidGovernanceMessage();
+
+        // Purposefully, we don't check whether the chainId is the same as the current chainId because
+        // we might want to change the chain id of the wormhole contract.
+
+        SetWormholeAddressPayload
+            memory newPayload = parseSetWormholeAddressPayload(gi.payload);
+
+        if (newPayload.newWormholeAddress != payload.newWormholeAddress)
+            revert PythErrors.InvalidGovernanceMessage();
+
+        emit WormholeAddressSet(oldWormholeAddress, address(wormhole()));
     }
 }
