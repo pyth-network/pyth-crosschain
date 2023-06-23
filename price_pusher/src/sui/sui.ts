@@ -83,6 +83,8 @@ export class SuiPriceListener extends ChainPriceListener {
 
 export class SuiPricePusher implements IPricePusher {
   private readonly signer: RawSigner;
+  // Sui transactions can error if they're sent concurrently. This flag tracks whether an update is in-flight,
+  // so we can skip sending another update at the same time.
   private isAwaitingTx: boolean;
 
   constructor(
@@ -131,6 +133,7 @@ export class SuiPricePusher implements IPricePusher {
 
     const vaaToPriceFeedIds: Record<string, string[]> = {};
     for (const priceFeed of priceFeeds) {
+      // The ! will succeed as long as the priceServiceConnection is configured to return binary vaa data (which it is).
       const vaa = priceFeed.getVAA()!;
       if (vaaToPriceFeedIds[vaa] === undefined) {
         vaaToPriceFeedIds[vaa] = [];
@@ -144,7 +147,7 @@ export class SuiPricePusher implements IPricePusher {
     for (const [vaa, priceFeedIds] of Object.entries(vaaToPriceFeedIds)) {
       currentBatchVaas.push(vaa);
       currentBatchPriceFeedIds.push(...priceFeedIds);
-      if (currentBatchVaas.length > this.maxVaasPerPtb) {
+      if (currentBatchVaas.length >= this.maxVaasPerPtb) {
         const tx = await this.createPriceUpdateTransaction(
           currentBatchVaas,
           currentBatchPriceFeedIds
