@@ -16,9 +16,10 @@ import {
   getCreatedObjects,
   SuiObjectRef,
   getTransactionEffects,
+  getExecutionStatusError,
 } from "@mysten/sui.js";
 
-const GAS_FEE_FOR_SPLIT = 1_000_000_000;
+const GAS_FEE_FOR_SPLIT = 2_000_000_000;
 export class SuiPriceListener extends ChainPriceListener {
   constructor(
     private pythPackageId: string,
@@ -112,6 +113,8 @@ export class SuiPricePusher implements IPricePusher {
     this.isInitializing = false;
   }
 
+  // This function will smash all coins owned by the signer into one, and then
+  // split them equally into numGasObjects.
   async initializeGasPool(): Promise<void> {
     const tx = new TransactionBlock();
     const signerAddress = await this.signer.getAddress();
@@ -143,6 +146,16 @@ export class SuiPricePusher implements IPricePusher {
       transactionBlock: tx,
       options: { showEffects: true },
     });
+    // TODO: there's a weird bug where if you already split the coins in the previous run,
+    // the transaction will fail with InsufficientCoinBalance in command 0. Re-running the script
+    // will fix it.
+    const error = getExecutionStatusError(result);
+    if (error) {
+      throw new Error(
+        `Failed to initialize gas pool: ${error}. Try re-running the script`
+      );
+    }
+
     this.gasPool = getCreatedObjects(result)!.map((obj) => obj.reference);
     if (this.gasPool.length !== this.numGasObjects) {
       throw new Error(`Failed to initialize gas pool, ${this.gasPool}`);
@@ -295,12 +308,12 @@ export class SuiPricePusher implements IPricePusher {
   /** Send every transaction in txs sequentially, returning when all transactions have completed. */
   private async sendTransactionBlocks(txs: TransactionBlock[]): Promise<void> {
     for (const tx of txs) {
+      const gasObject = this.gasPool.shift();
+      if (gasObject === undefined) {
+        console.warn("No available gas coin. Skipping push.");
+        return;
+      }
       try {
-        const gasObject = this.gasPool.shift();
-        if (gasObject === undefined) {
-          console.warn("No available gas coin. Skipping push.");
-          return;
-        }
         tx.setGasPayment([gasObject]);
         tx.setGasBudget(this.gasBudget);
         const result = await this.signer.signAndExecuteTransactionBlock({
@@ -322,8 +335,9 @@ export class SuiPricePusher implements IPricePusher {
       } catch (e) {
         console.log("Error when signAndExecuteTransactionBlock");
         if (String(e).includes("GasBalanceTooLow")) {
-          console.log("Insufficient Gas Amount. Please top up your account");
-          process.exit();
+          console.warn(
+            `The balance of gas object ${gasObject.objectId} is too low. Removing from pool.`
+          );
         }
         console.error(e);
       }
