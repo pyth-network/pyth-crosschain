@@ -72,6 +72,12 @@ export default {
       required: true,
       default: 30,
     } as Options,
+    "gas-budget": {
+      description: "Gas budget for each price update",
+      type: "number",
+      required: true,
+      default: 500_000_000,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.mnemonicFile,
@@ -93,6 +99,7 @@ export default {
       priceFeedToPriceInfoObjectTableId,
       maxVaasPerPtb,
       numGasObjects,
+      gasBudget,
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
@@ -145,7 +152,8 @@ export default {
       maxVaasPerPtb,
       endpoint,
       mnemonic,
-      numGasObjects
+      numGasObjects,
+      gasBudget
     );
 
     const controller = new Controller(

@@ -101,7 +101,8 @@ export class SuiPricePusher implements IPricePusher {
     private maxVaasPerPtb: number,
     endpoint: string,
     mnemonic: string,
-    private numGasObjects: number
+    private numGasObjects: number,
+    private gasBudget: number
   ) {
     this.signer = new RawSigner(
       Ed25519Keypair.deriveKeypair(mnemonic),
@@ -298,6 +299,7 @@ export class SuiPricePusher implements IPricePusher {
           return;
         }
         tx.setGasPayment([gasObject]);
+        tx.setGasBudget(this.gasBudget);
         const result = await this.signer.signAndExecuteTransactionBlock({
           transactionBlock: tx,
           options: {
