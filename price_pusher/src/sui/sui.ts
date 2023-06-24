@@ -130,11 +130,14 @@ export class SuiPricePusher implements IPricePusher {
       );
     }
 
-    // TODO: we should not need this for loop
-    for (let i = 0; i < this.numGasObjects; i++) {
-      const coin = tx.splitCoins(tx.gas, [tx.pure(split_amount)]);
-      tx.transferObjects([coin], tx.pure(signerAddress));
-    }
+    const coins = tx.splitCoins(
+      tx.gas,
+      Array.from({ length: this.numGasObjects }, () => tx.pure(split_amount))
+    );
+    tx.transferObjects(
+      Array.from({ length: this.numGasObjects }, (_, i) => coins[i]),
+      tx.pure(signerAddress)
+    );
 
     const result = await this.signer.signAndExecuteTransactionBlock({
       transactionBlock: tx,
