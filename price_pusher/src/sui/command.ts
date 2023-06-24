@@ -66,6 +66,12 @@ export default {
       required: true,
       default: 1,
     } as Options,
+    "num-gas-objects": {
+      description: "Number of gas objects in the pool.",
+      type: "number",
+      required: true,
+      default: 30,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.mnemonicFile,
@@ -86,6 +92,7 @@ export default {
       wormholeStateId,
       priceFeedToPriceInfoObjectTableId,
       maxVaasPerPtb,
+      numGasObjects,
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
@@ -137,7 +144,8 @@ export default {
       priceFeedToPriceInfoObjectTableId,
       maxVaasPerPtb,
       endpoint,
-      mnemonic
+      mnemonic,
+      numGasObjects
     );
 
     const controller = new Controller(

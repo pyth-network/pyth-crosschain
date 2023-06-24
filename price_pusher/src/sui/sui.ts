@@ -13,8 +13,12 @@ import {
   RawSigner,
   TransactionBlock,
   SUI_CLOCK_OBJECT_ID,
+  getCreatedObjects,
+  SuiObjectRef,
+  getTransactionEffects,
 } from "@mysten/sui.js";
 
+const GAS_FEE_FOR_SPLIT = 1_000_000_000;
 export class SuiPriceListener extends ChainPriceListener {
   constructor(
     private pythPackageId: string,
@@ -83,9 +87,9 @@ export class SuiPriceListener extends ChainPriceListener {
 
 export class SuiPricePusher implements IPricePusher {
   private readonly signer: RawSigner;
-  // Sui transactions can error if they're sent concurrently. This flag tracks whether an update is in-flight,
-  // so we can skip sending another update at the same time.
-  private isAwaitingTx: boolean;
+  private isInitialized: boolean;
+  private isInitializing: boolean;
+  private gasPool: SuiObjectRef[] = [];
 
   constructor(
     private priceServiceConnection: PriceServiceConnection,
@@ -96,19 +100,66 @@ export class SuiPricePusher implements IPricePusher {
     private priceFeedToPriceInfoObjectTableId: string,
     private maxVaasPerPtb: number,
     endpoint: string,
-    mnemonic: string
+    mnemonic: string,
+    private numGasObjects: number
   ) {
     this.signer = new RawSigner(
       Ed25519Keypair.deriveKeypair(mnemonic),
       new JsonRpcProvider(new Connection({ fullnode: endpoint }))
     );
-    this.isAwaitingTx = false;
+    this.isInitialized = false;
+    this.isInitializing = false;
+  }
+
+  async initializeGasPool(): Promise<void> {
+    const tx = new TransactionBlock();
+    const signerAddress = await this.signer.getAddress();
+    const balance = (
+      await this.signer.provider.getBalance({
+        owner: signerAddress,
+      })
+    ).totalBalance;
+    const split_amount =
+      (BigInt(balance) - BigInt(GAS_FEE_FOR_SPLIT)) /
+      BigInt(this.numGasObjects);
+
+    if (split_amount <= GAS_FEE_FOR_SPLIT) {
+      throw new Error(
+        `Balance is too low ${balance} to initialize gas pool. Split amount is ${split_amount}`
+      );
+    }
+
+    // TODO: we should not need this for loop
+    for (let i = 0; i < this.numGasObjects; i++) {
+      const coin = tx.splitCoins(tx.gas, [tx.pure(split_amount)]);
+      tx.transferObjects([coin], tx.pure(signerAddress));
+    }
+
+    const result = await this.signer.signAndExecuteTransactionBlock({
+      transactionBlock: tx,
+      options: { showEffects: true },
+    });
+    this.gasPool = getCreatedObjects(result)!.map((obj) => obj.reference);
+    if (this.gasPool.length !== this.numGasObjects) {
+      throw new Error(`Failed to initialize gas pool, ${this.gasPool}`);
+    }
+    console.log("Gas pool is filled with coins: ", this.gasPool);
   }
 
   async updatePriceFeed(
     priceIds: string[],
     pubTimesToPush: number[]
   ): Promise<void> {
+    if (!this.isInitialized && !this.isInitializing) {
+      this.isInitializing = true;
+      await this.initializeGasPool();
+      this.isInitializing = false;
+      this.isInitialized = true;
+    } else if (!this.isInitialized && this.isInitializing) {
+      console.warn("Skipping update: the gas pool has not been initialized.");
+      return;
+    }
+
     if (priceIds.length === 0) {
       return;
     }
@@ -116,10 +167,8 @@ export class SuiPricePusher implements IPricePusher {
     if (priceIds.length !== pubTimesToPush.length)
       throw new Error("Invalid arguments");
 
-    if (this.isAwaitingTx) {
-      console.log(
-        "Skipping update: previous price update transaction(s) have not completed."
-      );
+    if (this.gasPool.length === 0) {
+      console.warn("Skipping update: no available gas coin.");
       return;
     }
 
@@ -127,7 +176,7 @@ export class SuiPricePusher implements IPricePusher {
       priceIds
     );
     if (priceFeeds === undefined) {
-      console.log("Failed to fetch price updates. Skipping push.");
+      console.warn("Failed to fetch price updates. Skipping push.");
       return;
     }
 
@@ -161,12 +210,7 @@ export class SuiPricePusher implements IPricePusher {
       }
     }
 
-    try {
-      this.isAwaitingTx = true;
-      await this.sendTransactionBlocks(txs);
-    } finally {
-      this.isAwaitingTx = false;
-    }
+    await this.sendTransactionBlocks(txs);
   }
 
   private async createPriceUpdateTransaction(
@@ -248,16 +292,23 @@ export class SuiPricePusher implements IPricePusher {
   private async sendTransactionBlocks(txs: TransactionBlock[]): Promise<void> {
     for (const tx of txs) {
       try {
+        const gasObject = this.gasPool.shift();
+        if (gasObject === undefined) {
+          console.warn("No available gas coin. Skipping push.");
+          return;
+        }
+        tx.setGasPayment([gasObject]);
         const result = await this.signer.signAndExecuteTransactionBlock({
           transactionBlock: tx,
           options: {
-            showInput: true,
             showEffects: true,
-            showEvents: true,
-            showObjectChanges: true,
-            showBalanceChanges: true,
           },
         });
+
+        const updatedGasObject = getTransactionEffects(result)
+          ?.mutated!.map((obj) => obj.reference)
+          .find((ref) => ref.objectId === gasObject.objectId)!;
+        this.gasPool.push(updatedGasObject);
 
         console.log(
           "Successfully updated price with transaction digest ",
