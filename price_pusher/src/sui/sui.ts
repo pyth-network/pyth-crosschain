@@ -13,6 +13,8 @@ import {
   RawSigner,
   TransactionBlock,
   SUI_CLOCK_OBJECT_ID,
+  SharedObjectRef,
+  getSharedObjectInitialVersion,
 } from "@mysten/sui.js";
 
 export class SuiPriceListener extends ChainPriceListener {
@@ -43,7 +45,7 @@ export class SuiPriceListener extends ChainPriceListener {
 
       // Fetching the price info object for the above priceInfoObjectId
       const priceInfoObject = await provider.getObject({
-        id: priceInfoObjectId,
+        id: priceInfoObjectId.objectId,
         options: { showContent: true },
       });
 
@@ -87,6 +89,9 @@ export class SuiPricePusher implements IPricePusher {
   // so we can skip sending another update at the same time.
   private isAwaitingTx: boolean;
 
+  private pythStateReference: SharedObjectRef | undefined;
+  private wormholeStateReference: SharedObjectRef | undefined;
+
   constructor(
     private priceServiceConnection: PriceServiceConnection,
     private pythPackageId: string,
@@ -103,6 +108,34 @@ export class SuiPricePusher implements IPricePusher {
       new JsonRpcProvider(new Connection({ fullnode: endpoint }))
     );
     this.isAwaitingTx = false;
+  }
+
+  async resolveSharedReferences() {
+    if (!this.pythStateReference || !this.wormholeStateReference) {
+      const [pythStateObject, wormholeStateObject] =
+        await this.signer.provider.multiGetObjects({
+          ids: [this.pythStateId, this.wormholeStateId],
+          options: { showOwner: true },
+        });
+
+      this.pythStateReference = {
+        objectId: this.pythStateId,
+        initialSharedVersion: getSharedObjectInitialVersion(pythStateObject)!,
+        mutable: false,
+      };
+
+      this.wormholeStateReference = {
+        objectId: this.wormholeStateId,
+        initialSharedVersion:
+          getSharedObjectInitialVersion(wormholeStateObject)!,
+        mutable: false,
+      };
+    }
+
+    return {
+      pythStateReference: this.pythStateReference,
+      wormholeStateReference: this.wormholeStateReference,
+    };
   }
 
   async updatePriceFeed(
@@ -173,6 +206,9 @@ export class SuiPricePusher implements IPricePusher {
     vaas: string[],
     priceIds: string[]
   ): Promise<TransactionBlock | undefined> {
+    const { pythStateReference, wormholeStateReference } =
+      await this.resolveSharedReferences();
+
     const tx = new TransactionBlock();
     // Parse our batch price attestation VAA bytes using Wormhole.
     // Check out the Wormhole cross-chain bridge and generic messaging protocol here:
@@ -182,9 +218,13 @@ export class SuiPricePusher implements IPricePusher {
       const [verified_vaa] = tx.moveCall({
         target: `${this.wormholePackageId}::vaa::parse_and_verify`,
         arguments: [
-          tx.object(this.wormholeStateId),
-          tx.pure([...Buffer.from(vaa, "base64")]),
-          tx.object(SUI_CLOCK_OBJECT_ID),
+          tx.sharedObjectRef(wormholeStateReference),
+          tx.pure(new Uint8Array(Buffer.from(vaa, "base64"))),
+          tx.sharedObjectRef({
+            objectId: SUI_CLOCK_OBJECT_ID,
+            initialSharedVersion: 1,
+            mutable: false,
+          }),
         ],
       });
       verified_vaas = verified_vaas.concat(verified_vaa);
@@ -195,12 +235,16 @@ export class SuiPricePusher implements IPricePusher {
     let [price_updates_hot_potato] = tx.moveCall({
       target: `${this.pythPackageId}::pyth::create_price_infos_hot_potato`,
       arguments: [
-        tx.object(this.pythStateId),
+        tx.sharedObjectRef(pythStateReference),
         tx.makeMoveVec({
           type: `${this.wormholePackageId}::vaa::VAA`,
           objects: verified_vaas,
         }),
-        tx.object(SUI_CLOCK_OBJECT_ID),
+        tx.sharedObjectRef({
+          objectId: SUI_CLOCK_OBJECT_ID,
+          initialSharedVersion: 1,
+          mutable: false,
+        }),
       ],
     });
 
@@ -224,11 +268,15 @@ export class SuiPricePusher implements IPricePusher {
       [price_updates_hot_potato] = tx.moveCall({
         target: `${this.pythPackageId}::pyth::update_single_price_feed`,
         arguments: [
-          tx.object(this.pythStateId),
+          tx.sharedObjectRef(pythStateReference),
           price_updates_hot_potato,
-          tx.object(priceInfoObjectId),
+          tx.sharedObjectRef(priceInfoObjectId),
           coin,
-          tx.object(SUI_CLOCK_OBJECT_ID),
+          tx.sharedObjectRef({
+            objectId: SUI_CLOCK_OBJECT_ID,
+            initialSharedVersion: 1,
+            mutable: false,
+          }),
         ],
       });
     }
@@ -277,7 +325,7 @@ export class SuiPricePusher implements IPricePusher {
 
 // We are calculating stored price info object id for given price id
 // The mapping between which is static. Hence, we are caching it here.
-const CACHE: { [priceId: string]: string } = {};
+const CACHE: { [priceId: string]: SharedObjectRef } = {};
 
 // For given priceid, this method will fetch the price info object id
 // where the price information for the corresponding price feed is stored
@@ -286,7 +334,7 @@ async function priceIdToPriceInfoObjectId(
   pythPackageId: string,
   priceFeedToPriceInfoObjectTableId: string,
   priceId: string
-) {
+): Promise<SharedObjectRef> {
   // Check if this was fetched before.
   if (CACHE[priceId] !== undefined) return CACHE[priceId];
 
@@ -313,8 +361,17 @@ async function priceIdToPriceInfoObjectId(
   // This ID points to the price info object for the given price id stored on chain
   const priceInfoObjectId = storedObjectID.data.content.fields.value;
 
-  // cache the price info object id
-  CACHE[priceId] = priceInfoObjectId;
+  const object = await provider.getObject({
+    id: priceInfoObjectId,
+    options: { showOwner: true },
+  });
 
-  return priceInfoObjectId;
+  // cache the price info object id
+  CACHE[priceId] = {
+    objectId: priceInfoObjectId,
+    initialSharedVersion: getSharedObjectInitialVersion(object)!,
+    mutable: true,
+  };
+
+  return CACHE[priceId];
 }
