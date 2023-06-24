@@ -83,14 +83,19 @@ export class SuiPriceListener extends ChainPriceListener {
   }
 }
 
+// Gas price is cached for one minute to balance minimal fetching and risk of stale prices
+// across epoch boundaries.
+const GAS_PRICE_CACHE_DURATION = 60 * 1000;
+
 export class SuiPricePusher implements IPricePusher {
   private readonly signer: RawSigner;
   // Sui transactions can error if they're sent concurrently. This flag tracks whether an update is in-flight,
   // so we can skip sending another update at the same time.
   private isAwaitingTx: boolean;
 
-  private pythStateReference: SharedObjectRef | undefined;
-  private wormholeStateReference: SharedObjectRef | undefined;
+  private gasPriceCache?: { price: bigint; expiry: number };
+  private pythStateReference?: SharedObjectRef;
+  private wormholeStateReference?: SharedObjectRef;
 
   constructor(
     private priceServiceConnection: PriceServiceConnection,
@@ -108,6 +113,20 @@ export class SuiPricePusher implements IPricePusher {
       new JsonRpcProvider(new Connection({ fullnode: endpoint }))
     );
     this.isAwaitingTx = false;
+  }
+
+  async getGasPrice() {
+    if (this.gasPriceCache && this.gasPriceCache.expiry > Date.now()) {
+      return this.gasPriceCache.price;
+    }
+
+    const price = await this.signer.provider.getReferenceGasPrice();
+    this.gasPriceCache = {
+      price,
+      expiry: Date.now() + GAS_PRICE_CACHE_DURATION,
+    };
+
+    return price;
   }
 
   async resolveSharedReferences() {
@@ -294,8 +313,11 @@ export class SuiPricePusher implements IPricePusher {
 
   /** Send every transaction in txs sequentially, returning when all transactions have completed. */
   private async sendTransactionBlocks(txs: TransactionBlock[]): Promise<void> {
+    const gasPrice = await this.getGasPrice();
+
     for (const tx of txs) {
       try {
+        tx.setGasPrice(gasPrice);
         const result = await this.signer.signAndExecuteTransactionBlock({
           transactionBlock: tx,
           options: {
@@ -306,6 +328,11 @@ export class SuiPricePusher implements IPricePusher {
             showBalanceChanges: true,
           },
         });
+
+        // In the event of a transaction failure, remove the gas price cache just in case it was a gas-price-related issue:
+        if (result.effects?.status.status === "failure") {
+          this.gasPriceCache = undefined;
+        }
 
         console.log(
           "Successfully updated price with transaction digest ",
