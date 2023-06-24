@@ -17,9 +17,14 @@ import {
   SuiObjectRef,
   getTransactionEffects,
   getExecutionStatusError,
+  PaginatedCoins,
+  SuiAddress,
 } from "@mysten/sui.js";
 
 const GAS_FEE_FOR_SPLIT = 2_000_000_000;
+// TODO: read this from on chain config
+const MAX_NUM_GAS_OBJECTS_IN_PTB = 256;
+const MAX_NUM_OBJECTS_IN_ARGUMENT = 510;
 export class SuiPriceListener extends ChainPriceListener {
   constructor(
     private pythPackageId: string,
@@ -111,55 +116,38 @@ export class SuiPricePusher implements IPricePusher {
     );
     this.isInitialized = false;
     this.isInitializing = false;
+    if (numGasObjects > MAX_NUM_OBJECTS_IN_ARGUMENT) {
+      throw new Error(
+        `numGasObjects cannot be greater than ${MAX_NUM_OBJECTS_IN_ARGUMENT} until we implment split chunking`
+      );
+    }
   }
 
   // This function will smash all coins owned by the signer into one, and then
   // split them equally into numGasObjects.
   async initializeGasPool(): Promise<void> {
-    const tx = new TransactionBlock();
     const signerAddress = await this.signer.getAddress();
-    const balance = (
-      await this.signer.provider.getBalance({
-        owner: signerAddress,
-      })
-    ).totalBalance;
-    const split_amount =
+    const { totalBalance: balance } = await this.signer.provider.getBalance({
+      owner: signerAddress,
+    });
+    const splitAmount =
       (BigInt(balance) - BigInt(GAS_FEE_FOR_SPLIT)) /
       BigInt(this.numGasObjects);
 
-    if (split_amount <= GAS_FEE_FOR_SPLIT) {
+    if (splitAmount <= GAS_FEE_FOR_SPLIT) {
       throw new Error(
-        `Balance is too low ${balance} to initialize gas pool. Split amount is ${split_amount}`
+        `Balance is too low ${balance} to initialize gas pool. Split amount is ${splitAmount}`
       );
     }
 
-    const coins = tx.splitCoins(
-      tx.gas,
-      Array.from({ length: this.numGasObjects }, () => tx.pure(split_amount))
-    );
-    tx.transferObjects(
-      Array.from({ length: this.numGasObjects }, (_, i) => coins[i]),
-      tx.pure(signerAddress)
-    );
+    const consolidatedCoin = await this.mergeGasCoinsIntoOne(signerAddress);
 
-    const result = await this.signer.signAndExecuteTransactionBlock({
-      transactionBlock: tx,
-      options: { showEffects: true },
-    });
-    // TODO: there's a weird bug where if you already split the coins in the previous run,
-    // the transaction will fail with InsufficientCoinBalance in command 0. Re-running the script
-    // will fix it.
-    const error = getExecutionStatusError(result);
-    if (error) {
-      throw new Error(
-        `Failed to initialize gas pool: ${error}. Try re-running the script`
-      );
-    }
-
-    this.gasPool = getCreatedObjects(result)!.map((obj) => obj.reference);
-    if (this.gasPool.length !== this.numGasObjects) {
-      throw new Error(`Failed to initialize gas pool, ${this.gasPool}`);
-    }
+    this.gasPool = await this.splitGasCoinEqually(
+      signerAddress,
+      Number(splitAmount),
+      this.numGasObjects,
+      consolidatedCoin
+    );
     console.log("Gas pool is filled with coins: ", this.gasPool);
   }
 
@@ -343,6 +331,110 @@ export class SuiPricePusher implements IPricePusher {
       }
     }
   }
+
+  private async getAllGasCoins(owner: SuiAddress): Promise<SuiObjectRef[]> {
+    let hasNextPage = true;
+    let cursor;
+    const coins = new Set<string>([]);
+    let num_coins = 0;
+    while (hasNextPage) {
+      const paginatedCoins: PaginatedCoins =
+        await this.signer.provider.getCoins({
+          owner,
+          cursor,
+        });
+      num_coins += paginatedCoins.data.length;
+      paginatedCoins.data.forEach((c) =>
+        coins.add(
+          JSON.stringify({
+            objectId: c.coinObjectId,
+            version: c.version,
+            digest: c.digest,
+          })
+        )
+      );
+      hasNextPage = paginatedCoins.hasNextPage;
+      cursor = paginatedCoins.nextCursor;
+    }
+    // TODO: remove this check
+    if (num_coins !== coins.size) {
+      throw new Error("Unexpected getCoins result: duplicate coins found");
+    }
+    return [...coins].map((item) => JSON.parse(item));
+  }
+
+  private async splitGasCoinEqually(
+    signerAddress: SuiAddress,
+    splitAmount: number,
+    numGasObjects: number,
+    gasCoin: SuiObjectRef
+  ): Promise<SuiObjectRef[]> {
+    // TODO: implment chunking if numGasObjects exceeds MAX_NUM_CREATED_OBJECTS
+    const tx = new TransactionBlock();
+    const coins = tx.splitCoins(
+      tx.gas,
+      Array.from({ length: numGasObjects }, () => tx.pure(splitAmount))
+    );
+
+    tx.transferObjects(
+      Array.from({ length: this.numGasObjects }, (_, i) => coins[i]),
+      tx.pure(signerAddress)
+    );
+    tx.setGasPayment([gasCoin]);
+    const result = await this.signer.signAndExecuteTransactionBlock({
+      transactionBlock: tx,
+      options: { showEffects: true },
+    });
+    const error = getExecutionStatusError(result);
+    if (error) {
+      throw new Error(
+        `Failed to initialize gas pool: ${error}. Try re-running the script`
+      );
+    }
+    const newCoins = getCreatedObjects(result)!.map((obj) => obj.reference);
+    if (newCoins.length !== numGasObjects) {
+      throw new Error(`Failed to initialize gas pool, ${this.gasPool}`);
+    }
+    return newCoins;
+  }
+
+  private async mergeGasCoinsIntoOne(owner: SuiAddress): Promise<SuiObjectRef> {
+    const gasCoins = await this.getAllGasCoins(owner);
+    // skip merging if there is only one coin
+    if (gasCoins.length === 1) {
+      return gasCoins[0];
+    }
+
+    const gasCoinsChunks = chunkArray<SuiObjectRef>(
+      gasCoins,
+      MAX_NUM_GAS_OBJECTS_IN_PTB - 2
+    );
+    let finalCoin;
+
+    for (let i = 0; i < gasCoinsChunks.length; i++) {
+      const mergeTx = new TransactionBlock();
+      let coins = gasCoinsChunks[i];
+      if (finalCoin) {
+        coins = [finalCoin, ...coins];
+      }
+      console.log("setGasPayment: ", coins.length);
+      mergeTx.setGasPayment(coins);
+      const mergeResult = await this.signer.signAndExecuteTransactionBlock({
+        transactionBlock: mergeTx,
+        options: { showEffects: true },
+      });
+      const error = getExecutionStatusError(mergeResult);
+      if (error) {
+        throw new Error(
+          `Failed to merge coins when initializing gas pool: ${error}. Try re-running the script`
+        );
+      }
+      finalCoin = getTransactionEffects(mergeResult)!.mutated!.map(
+        (obj) => obj.reference
+      )[0];
+    }
+    return finalCoin as SuiObjectRef;
+  }
 }
 
 // We are calculating stored price info object id for given price id
@@ -387,4 +479,14 @@ async function priceIdToPriceInfoObjectId(
   CACHE[priceId] = priceInfoObjectId;
 
   return priceInfoObjectId;
+}
+
+function chunkArray<T>(array: Array<T>, size: number): Array<Array<T>> {
+  const chunked = [];
+  let index = 0;
+  while (index < array.length) {
+    chunked.push(array.slice(index, size + index));
+    index += size;
+  }
+  return chunked;
 }
