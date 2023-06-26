@@ -221,23 +221,25 @@ abstract contract PythGovernance is
             revert PythErrors.InvalidGovernanceMessage();
 
         if (vm.sequence != lastExecutedGovernanceSequence())
-            revert PythErrors.InvalidGovernanceMessage();
+            revert PythErrors.InvalidWormholeAddressToSet();
 
         GovernanceInstruction memory gi = parseGovernanceInstruction(
             vm.payload
         );
 
         if (gi.action != GovernanceAction.SetWormholeAddress)
-            revert PythErrors.InvalidGovernanceMessage();
+            revert PythErrors.InvalidWormholeAddressToSet();
 
         // Purposefully, we don't check whether the chainId is the same as the current chainId because
         // we might want to change the chain id of the wormhole contract.
 
+        // The following check is not necessary for security, but is a sanity check that the new wormhole
+        // contract parses the payload correctly.
         SetWormholeAddressPayload
             memory newPayload = parseSetWormholeAddressPayload(gi.payload);
 
         if (newPayload.newWormholeAddress != payload.newWormholeAddress)
-            revert PythErrors.InvalidGovernanceMessage();
+            revert PythErrors.InvalidWormholeAddressToSet();
 
         emit WormholeAddressSet(oldWormholeAddress, address(wormhole()));
     }

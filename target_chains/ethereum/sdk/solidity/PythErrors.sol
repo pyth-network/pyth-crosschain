@@ -29,4 +29,6 @@ library PythErrors {
     error InvalidGovernanceDataSource();
     // Governance message is old.
     error OldGovernanceMessage();
+    // The wormhole address to set in SetWormholeAddress governance is invalid.
+    error InvalidWormholeAddressToSet();
 }

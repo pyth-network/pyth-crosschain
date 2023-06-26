@@ -14,6 +14,10 @@ const Setup = artifacts.require("Setup");
 const Implementation = artifacts.require("Implementation");
 const Wormhole = artifacts.require("Wormhole");
 
+const ReceiverSetup = artifacts.require("ReceiverSetup");
+const ReceiverImplementation = artifacts.require("ReceiverImplementation");
+const WormholeReceiver = artifacts.require("WormholeReceiver");
+
 const wormholeGovernanceChainId = governance.CHAINS.solana;
 const wormholeGovernanceContract =
   "0x0000000000000000000000000000000000000000000000000000000000000004";
@@ -1117,6 +1121,54 @@ contract("Pyth", function () {
     });
 
     assert.equal(await this.pythProxy.wormhole(), newWormhole.address);
+    assert.equal(await this.pythProxy.chainId(), governance.CHAINS.polygon);
+  });
+
+  it("Setting wormhole address to WormholeReceiver should work", async function () {
+    // Deploy a new wormhole receiver contract
+    const newReceiverSetup = await ReceiverSetup.new();
+    const newReceiverImpl = await ReceiverImplementation.new();
+
+    // encode initialisation data
+    const initData = newReceiverSetup.contract.methods
+      .setup(
+        newReceiverImpl.address,
+        [testSigner1.address],
+        governance.CHAINS.polygon, // changing the chain id to polygon
+        wormholeGovernanceChainId,
+        wormholeGovernanceContract
+      )
+      .encodeABI();
+
+    const newWormholeReceiver = await WormholeReceiver.new(
+      newReceiverSetup.address,
+      initData
+    );
+
+    // Creating the vaa to set the new wormhole address
+    const data = new governance.EthereumSetWormholeAddress(
+      governance.CHAINS.ethereum,
+      new governance.HexString20Bytes(newWormholeReceiver.address)
+    ).serialize();
+
+    const vaa = await createVAAFromUint8Array(
+      data,
+      testGovernanceChainId,
+      testGovernanceEmitter,
+      1
+    );
+
+    assert.equal(await this.pythProxy.chainId(), governance.CHAINS.ethereum);
+
+    const oldWormholeAddress = await this.pythProxy.wormhole();
+
+    const receipt = await this.pythProxy.executeGovernanceInstruction(vaa);
+    expectEvent(receipt, "WormholeAddressSet", {
+      oldWormholeAddress: oldWormholeAddress,
+      newWormholeAddress: newWormholeReceiver.address,
+    });
+
+    assert.equal(await this.pythProxy.wormhole(), newWormholeReceiver.address);
     assert.equal(await this.pythProxy.chainId(), governance.CHAINS.polygon);
   });
 
