@@ -30,7 +30,8 @@ contract PythGovernanceInstructions {
         SetDataSources, // 2
         SetFee, // 3
         SetValidPeriod, // 4
-        RequestGovernanceDataSourceTransfer // 5
+        RequestGovernanceDataSourceTransfer, // 5
+        SetWormholeAddress // 6
     }
 
     struct GovernanceInstruction {
@@ -67,6 +68,10 @@ contract PythGovernanceInstructions {
 
     struct SetValidPeriodPayload {
         uint newValidPeriod;
+    }
+
+    struct SetWormholeAddressPayload {
+        address newWormholeAddress;
     }
 
     /// @dev Parse a GovernanceInstruction
@@ -195,6 +200,19 @@ contract PythGovernanceInstructions {
 
         svp.newValidPeriod = uint256(encodedPayload.toUint64(index));
         index += 8;
+
+        if (encodedPayload.length != index)
+            revert PythErrors.InvalidGovernanceMessage();
+    }
+
+    /// @dev Parse a UpdateWormholeAddressPayload (action 6) with minimal validation
+    function parseSetWormholeAddressPayload(
+        bytes memory encodedPayload
+    ) public pure returns (SetWormholeAddressPayload memory sw) {
+        uint index = 0;
+
+        sw.newWormholeAddress = address(encodedPayload.toAddress(index));
+        index += 20;
 
         if (encodedPayload.length != index)
             revert PythErrors.InvalidGovernanceMessage();
