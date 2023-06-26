@@ -1480,7 +1480,7 @@ mod test {
 
         let feed1 = create_dummy_price_feed_message(100);
         let mut msg = create_accumulator_message(&[feed1], &[feed1], false);
-        msg.0[5] = 3;
+        msg.0[4] = 3; // major version
         let info = mock_info("123", &[]);
         let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
         assert!(result.is_err());
