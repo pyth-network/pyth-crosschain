@@ -461,6 +461,14 @@ module pyth::pyth_tests{
     use wormhole::cursor::{Self};
 
     const DEPLOYER: address = @0x1234;
+    const ACCUMULATOR_TESTS_EMITTER_ADDRESS: vector<u8> = x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
+    const ACCUMULATOR_TESTS_INITIAL_GUARDIANS: vector<vector<u8>> = vector[x"7E5F4552091A69125d5DfCb7b8C2659029395Bdf"];
+    const DEFAULT_BASE_UPDATE_FEE: u64 = 50;
+    const DEFAULT_COIN_TO_MINT: u64 = 5000;
+
+    fun ACCUMULATOR_TESTS_DATA_SOURCE(): vector<DataSource> {
+        vector[data_source::new(1, external_address::new(bytes32::from_bytes(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b")))]
+    }
 
     // /// A vector containing a single VAA with:
     // /// - emitter chain ID 17
@@ -666,7 +674,7 @@ module pyth::pyth_tests{
     fun test_get_update_fee() {
         let single_update_fee = 50;
         let initial_guardians = vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"];
-        let (scenario, test_coins, _clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], initial_guardians, single_update_fee, 0);
+        let (scenario, test_coins, _clock) =  setup_test(500 /* stale_price_threshold */, 23 /* governance emitter chain */, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], initial_guardians, single_update_fee, 0);
         test_scenario::next_tx(&mut scenario, DEPLOYER, );
         let pyth_state = take_shared<PythState>(&scenario);
         // Pass in a single VAA
@@ -697,7 +705,7 @@ module pyth::pyth_tests{
     #[test]
     #[expected_failure(abort_code = wormhole::vaa::E_WRONG_VERSION)]
     fun test_create_price_feeds_corrupt_vaa() {
-        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], 50, 0);
+        let (scenario, test_coins, clock) =  setup_test(500 /* stale_price_threshold */, 23 /* governance emitter chain */, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], 50, 0);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         let pyth_state = take_shared<PythState>(&scenario);
@@ -764,17 +772,15 @@ module pyth::pyth_tests{
                 data_source::new(
                 5, external_address::new(bytes32::new(x"0000000000000000000000000000000000000000000000000000000000007637"))),
                 data_source::new(
-                17, external_address::new(bytes32::new(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b")))
+                17, external_address::new(bytes32::new(ACCUMULATOR_TESTS_EMITTER_ADDRESS)))
         ]
     }
 
     #[test]
     fun test_create_and_update_price_feeds_with_batch_attestation_success() {
         let data_sources = data_sources_for_test_vaa();
-        let base_update_fee = 50;
-        let coins_to_mint = 5000;
 
-        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], base_update_fee, coins_to_mint);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);
@@ -859,14 +865,7 @@ module pyth::pyth_tests{
     //      Published Time: 1687276661
     #[test]
     fun test_create_and_update_single_price_feed_with_accumulator_success() {
-        use pyth::data_source::Self;
-
-        let base_update_fee = 50;
-        let coins_to_mint = 5000;
-        let emitter_address = x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
-        let initial_guardians = vector[x"7E5F4552091A69125d5DfCb7b8C2659029395Bdf"];
-        let data_sources = vector[data_source::new(1, external_address::new(bytes32::from_bytes(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b")))];
-        let (scenario, coins, clock) = setup_test(500, 23, emitter_address, data_sources, initial_guardians, base_update_fee, coins_to_mint);
+        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
@@ -933,16 +932,9 @@ module pyth::pyth_tests{
     #[test]
     #[expected_failure(abort_code = pyth::accumulator::E_INVALID_PROOF)]
     fun test_create_and_update_single_price_feed_with_accumulator_failure() {
-        use pyth::data_source::Self;
         use pyth::price_info::Self;
 
-        let base_update_fee = 50;
-        let coins_to_mint = 5000;
-        let emitter_address = x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
-        let initial_guardians = vector[x"7E5F4552091A69125d5DfCb7b8C2659029395Bdf"];
-        let data_sources = vector[data_source::new(1, external_address::new(bytes32::from_bytes(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b")))];
-        //new(emitter_chain: u64, emitter_address: ExternalAddress)
-        let (scenario, coins, clock) = setup_test(500, 23, emitter_address, data_sources, initial_guardians, base_update_fee, coins_to_mint);
+        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
@@ -1037,15 +1029,9 @@ module pyth::pyth_tests{
 
     #[test]
     fun test_create_and_update_multiple_price_feeds_with_accumulator_success() {
-        use pyth::data_source::Self;
         use sui::coin::Self;
 
-        let base_update_fee = 50;
-        let coins_to_mint = 5000;
-        let emitter_address = x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
-        let initial_guardians = vector[x"7E5F4552091A69125d5DfCb7b8C2659029395Bdf"];
-        let data_sources = vector[data_source::new(1, external_address::new(bytes32::from_bytes(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b")))];
-        let (scenario, coins, clock) = setup_test(500, 23, emitter_address, data_sources, initial_guardians, base_update_fee, coins_to_mint);
+        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
