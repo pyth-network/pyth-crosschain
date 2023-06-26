@@ -315,8 +315,8 @@ export class SuiPricePusher implements IPricePusher {
       });
 
       nextGasObject = getTransactionEffects(result)
-        ?.mutated!.map((obj) => obj.reference)
-        .find((ref) => ref.objectId === gasObject.objectId)!;
+        ?.mutated?.map((obj) => obj.reference)
+        .find((ref) => ref.objectId === gasObject.objectId);
 
       console.log(
         "Successfully updated price with transaction digest ",
