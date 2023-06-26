@@ -107,6 +107,10 @@ export class SuiPricePusher implements IPricePusher {
     private gasPool: SuiObjectRef[]
   ) {}
 
+  /**
+   * Create a price pusher with a pool of `numGasObjects` gas coins that will be used to send transactions.
+   * The gas coins of the wallet for the provided mnemonic will be merged and then evenly split into `numGasObjects`.
+   */
   static async createWithAutomaticGasPool(
     priceServiceConnection: PriceServiceConnection,
     pythPackageId: string,
@@ -118,7 +122,7 @@ export class SuiPricePusher implements IPricePusher {
     endpoint: string,
     mnemonic: string,
     gasBudget: number,
-    numGasObjects: number,
+    numGasObjects: number
   ): Promise<SuiPricePusher> {
     if (numGasObjects > MAX_NUM_OBJECTS_IN_ARGUMENT) {
       throw new Error(
@@ -131,7 +135,10 @@ export class SuiPricePusher implements IPricePusher {
       new JsonRpcProvider(new Connection({ fullnode: endpoint }))
     );
 
-    const gasPool = await SuiPricePusher.initializeGasPool(signer, numGasObjects);
+    const gasPool = await SuiPricePusher.initializeGasPool(
+      signer,
+      numGasObjects
+    );
 
     return new SuiPricePusher(
       signer,
@@ -145,8 +152,8 @@ export class SuiPricePusher implements IPricePusher {
       endpoint,
       mnemonic,
       gasBudget,
-      gasPool,
-    )
+      gasPool
+    );
   }
 
   async updatePriceFeed(
@@ -282,10 +289,13 @@ export class SuiPricePusher implements IPricePusher {
   }
 
   /** Send every transaction in txs in parallel, returning when all transactions have completed. */
-  private async sendTransactionBlocks(txs: TransactionBlock[]): Promise<void[]> {
-    return Promise.all(txs.map((tx) => this.sendTransactionBlock(tx)))
+  private async sendTransactionBlocks(
+    txs: TransactionBlock[]
+  ): Promise<void[]> {
+    return Promise.all(txs.map((tx) => this.sendTransactionBlock(tx)));
   }
 
+  /** Send a single transaction block using a gas coin from the pool. */
   private async sendTransactionBlock(tx: TransactionBlock): Promise<void> {
     const gasObject = this.gasPool.shift();
     if (gasObject === undefined) {
@@ -331,16 +341,21 @@ export class SuiPricePusher implements IPricePusher {
 
   // This function will smash all coins owned by the signer into one, and then
   // split them equally into numGasObjects.
-  private static async initializeGasPool(signer: RawSigner, numGasObjects: number): Promise<SuiObjectRef[]> {
+  private static async initializeGasPool(
+    signer: RawSigner,
+    numGasObjects: number
+  ): Promise<SuiObjectRef[]> {
     const signerAddress = await signer.getAddress();
     const { totalBalance: balance } = await signer.provider.getBalance({
       owner: signerAddress,
     });
     const splitAmount =
-      (BigInt(balance) - BigInt(GAS_FEE_FOR_SPLIT)) /
-      BigInt(numGasObjects);
+      (BigInt(balance) - BigInt(GAS_FEE_FOR_SPLIT)) / BigInt(numGasObjects);
 
-    const consolidatedCoin = await SuiPricePusher.mergeGasCoinsIntoOne(signer, signerAddress);
+    const consolidatedCoin = await SuiPricePusher.mergeGasCoinsIntoOne(
+      signer,
+      signerAddress
+    );
 
     const gasPool = await SuiPricePusher.splitGasCoinEqually(
       signer,
@@ -353,19 +368,20 @@ export class SuiPricePusher implements IPricePusher {
     return gasPool;
   }
 
-
-  private static async getAllGasCoins(provider: JsonRpcProvider, owner: SuiAddress): Promise<SuiObjectRef[]> {
+  private static async getAllGasCoins(
+    provider: JsonRpcProvider,
+    owner: SuiAddress
+  ): Promise<SuiObjectRef[]> {
     let hasNextPage = true;
     let cursor;
     const coins = new Set<string>([]);
-    let num_coins = 0;
+    let numCoins = 0;
     while (hasNextPage) {
-      const paginatedCoins: PaginatedCoins =
-        await provider.getCoins({
-          owner,
-          cursor,
-        });
-      num_coins += paginatedCoins.data.length;
+      const paginatedCoins: PaginatedCoins = await provider.getCoins({
+        owner,
+        cursor,
+      });
+      numCoins += paginatedCoins.data.length;
       paginatedCoins.data.forEach((c) =>
         coins.add(
           JSON.stringify({
@@ -378,8 +394,8 @@ export class SuiPricePusher implements IPricePusher {
       hasNextPage = paginatedCoins.hasNextPage;
       cursor = paginatedCoins.nextCursor;
     }
-    // TODO: remove this check
-    if (num_coins !== coins.size) {
+
+    if (numCoins !== coins.size) {
       throw new Error("Unexpected getCoins result: duplicate coins found");
     }
     return [...coins].map((item) => JSON.parse(item));
@@ -416,13 +432,21 @@ export class SuiPricePusher implements IPricePusher {
     }
     const newCoins = getCreatedObjects(result)!.map((obj) => obj.reference);
     if (newCoins.length !== numGasObjects) {
-      throw new Error(`Failed to initialize gas pool. Expected ${numGasObjects}, got: ${newCoins}`);
+      throw new Error(
+        `Failed to initialize gas pool. Expected ${numGasObjects}, got: ${newCoins}`
+      );
     }
     return newCoins;
   }
 
-  private static async mergeGasCoinsIntoOne(signer: RawSigner, owner: SuiAddress): Promise<SuiObjectRef> {
-    const gasCoins = await SuiPricePusher.getAllGasCoins(signer.provider, owner);
+  private static async mergeGasCoinsIntoOne(
+    signer: RawSigner,
+    owner: SuiAddress
+  ): Promise<SuiObjectRef> {
+    const gasCoins = await SuiPricePusher.getAllGasCoins(
+      signer.provider,
+      owner
+    );
     // skip merging if there is only one coin
     if (gasCoins.length === 1) {
       return gasCoins[0];

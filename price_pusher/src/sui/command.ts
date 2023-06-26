@@ -153,7 +153,7 @@ export default {
       endpoint,
       mnemonic,
       gasBudget,
-      numGasObjects,
+      numGasObjects
     );
 
     const controller = new Controller(
