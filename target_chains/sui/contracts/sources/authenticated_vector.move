@@ -1,5 +1,6 @@
-/// This class represents a vector of objects wrapped
-/// inside of a hot potato struct.
+/// This class represents a collection of objects wrapped inside of a struct
+/// called AuthenticatedVector. Its constructor is non-public and can only be called
+/// by friend modules, making the creation of new AuthenticatedVector protected.
 module pyth::authenticated_vector {
     use std::vector;
 
