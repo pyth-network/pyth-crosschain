@@ -21,8 +21,6 @@ module pyth::accumulator {
     friend pyth::pyth;
 
     #[test_only]
-    // get_price_feed_updates_from_single_vaa is a test_only function that gets the vector of price info updates
-    // from a Wormhole VAA message.
     public fun test_get_price_feed_updates_from_accumulator(accumulator_message: vector<u8>, wormhole_state: &WormState, clock: &Clock): vector<PriceInfo> {
         let _PYTHNET_ACCUMULATOR_UPDATE_MAGIC = 1347305813;
         let cur = cursor::new(accumulator_message);
@@ -108,7 +106,6 @@ module pyth::accumulator {
 
     // Note: this parsing function is adapted from the Aptos Pyth parse_price_feed_message function
     fun parse_price_feed_message(message_cur: &mut Cursor<u8>, clock: &Clock): PriceInfo {
-        //let message_cur = cursor::new(message);
         let message_type = deserialize::deserialize_u8(message_cur);
 
         assert!(message_type == 0, 0); // PriceFeedMessage variant
