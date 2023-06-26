@@ -465,6 +465,7 @@ module pyth::pyth_tests{
     const ACCUMULATOR_TESTS_INITIAL_GUARDIANS: vector<vector<u8>> = vector[x"7E5F4552091A69125d5DfCb7b8C2659029395Bdf"];
     const DEFAULT_BASE_UPDATE_FEE: u64 = 50;
     const DEFAULT_COIN_TO_MINT: u64 = 5000;
+    const BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS: vector<vector<u8>> = vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"];
 
     fun ACCUMULATOR_TESTS_DATA_SOURCE(): vector<DataSource> {
         vector[data_source::new(1, external_address::new(bytes32::from_bytes(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b")))]
@@ -672,9 +673,7 @@ module pyth::pyth_tests{
 
     #[test]
     fun test_get_update_fee() {
-        let single_update_fee = 50;
-        let initial_guardians = vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"];
-        let (scenario, test_coins, _clock) =  setup_test(500 /* stale_price_threshold */, 23 /* governance emitter chain */, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], initial_guardians, single_update_fee, 0);
+        let (scenario, test_coins, _clock) =  setup_test(500 /* stale_price_threshold */, 23 /* governance emitter chain */, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, 0);
         test_scenario::next_tx(&mut scenario, DEPLOYER, );
         let pyth_state = take_shared<PythState>(&scenario);
         // Pass in a single VAA
@@ -683,7 +682,7 @@ module pyth::pyth_tests{
             x"fb1543888001083cf2e6ef3afdcf827e89b11efd87c563638df6e1995ada9f93",
         ];
 
-        assert!(pyth::get_total_update_fee(&pyth_state, vector::length<vector<u8>>(&single_vaa)) == single_update_fee, 1);
+        assert!(pyth::get_total_update_fee(&pyth_state, vector::length<vector<u8>>(&single_vaa)) == DEFAULT_BASE_UPDATE_FEE, 1);
 
         let multiple_vaas = vector[
             x"4ee17a1a4524118de513fddcf82b77454e51be5d6fc9e29fc72dd6c204c0e4fa",
@@ -694,7 +693,7 @@ module pyth::pyth_tests{
         ];
 
         // Pass in multiple VAAs
-        assert!(pyth::get_total_update_fee(&pyth_state, vector::length<vector<u8>>(&multiple_vaas)) == 5*single_update_fee, 1);
+        assert!(pyth::get_total_update_fee(&pyth_state, vector::length<vector<u8>>(&multiple_vaas)) == 5*DEFAULT_BASE_UPDATE_FEE, 1);
 
         return_shared(pyth_state);
         coin::burn_for_testing<SUI>(test_coins);
@@ -741,8 +740,7 @@ module pyth::pyth_tests{
                 5, external_address::new(bytes32::new(x"0000000000000000000000000000000000000000000000000000000000007637"))
             )
         ];
-        let initial_guardians = vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"];
-        let (scenario, test_coins, clock) = setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, initial_guardians, 50, 0);
+        let (scenario, test_coins, clock) = setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, 50, 0);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);
@@ -778,9 +776,7 @@ module pyth::pyth_tests{
 
     #[test]
     fun test_create_and_update_price_feeds_with_batch_attestation_success() {
-        let data_sources = data_sources_for_test_vaa();
-
-        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);
@@ -1131,13 +1127,11 @@ module pyth::pyth_tests{
     #[test]
     #[expected_failure(abort_code = pyth::pyth::E_INSUFFICIENT_FEE)]
     fun test_create_and_update_price_feeds_insufficient_fee() {
-        let data_sources = data_sources_for_test_vaa();
-        let base_update_fee = 50;
 
         // this is not enough fee
         let coins_to_mint = 1;
 
-        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], base_update_fee, coins_to_mint);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, coins_to_mint);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);
@@ -1212,12 +1206,7 @@ module pyth::pyth_tests{
 
     #[test]
     fun test_update_cache(){
-        let data_sources = data_sources_for_test_vaa();
-        let base_update_fee = 50;
-        let coins_to_mint = 5000;
-        let initial_guardians = vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"];
-
-        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, initial_guardians, base_update_fee, coins_to_mint);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);
@@ -1276,12 +1265,7 @@ module pyth::pyth_tests{
         use pyth::i64::Self;
         use pyth::price::Self;
 
-        let data_sources = data_sources_for_test_vaa();
-        let base_update_fee = 50;
-        let coins_to_mint = 5000;
-        let initial_guardians = vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"];
-
-        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, initial_guardians, base_update_fee, coins_to_mint);
+        let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let pyth_state = take_shared<PythState>(&scenario);
@@ -1379,9 +1363,7 @@ module pyth::pyth_tests{
         use sui::test_scenario::{Self, take_shared, return_shared};
         use sui::transfer::{Self};
 
-        let emitter_address = x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b";
-        let initial_guardians = vector[x"7E5F4552091A69125d5DfCb7b8C2659029395Bdf"];
-        let (scenario, coins, clock) = setup_test(500, 23, emitter_address, vector[], initial_guardians, 50, 0);
+        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, vector[], ACCUMULATOR_TESTS_INITIAL_GUARDIANS, 50, 0);
         let worm_state = take_shared<WormState>(&scenario);
         test_scenario::next_tx(&mut scenario, @0x123);
 
