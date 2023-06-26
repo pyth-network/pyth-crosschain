@@ -111,7 +111,6 @@ module pyth::accumulator {
     public fun test_get_price_feed_updates_from_accumulator(accumulator_message: vector<u8>, wormhole_state: &WormState, clock: &Clock): vector<PriceInfo> {
         let vaa_bytes = parse_vaa_bytes_from_accumulator_message(copy accumulator_message);
 
-        //let _PYTHNET_ACCUMULATOR_UPDATE_MAGIC = 1347305813;
         let cur = cursor::new(accumulator_message);
         let header: u32 = deserialize::deserialize_u32(&mut cur);
 
@@ -121,6 +120,7 @@ module pyth::accumulator {
 
         let verified_vaa = vaa::parse_and_verify(wormhole_state, vaa_bytes, clock);
 
+        // main entry-point
         let price_infos = parse_and_verify_accumulator_message(&mut cur, vaa::take_payload(verified_vaa), clock);
 
         //TODO -  update_cache(updates);
