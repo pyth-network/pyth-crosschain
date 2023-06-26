@@ -118,16 +118,13 @@ module pyth::pyth {
         let accumulator_message_cursor = cursor::new(accumulator_message);
         let header = deserialize::deserialize_u32(&mut accumulator_message_cursor);
 
-        let _price_infos = vector::empty<PriceInfo>();
-        if ((header as u64) == PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
-            _price_infos = accumulator::parse_and_verify_accumulator_message(&mut accumulator_message_cursor, vaa::take_payload(vaa), clock);
-        }
-        else {
+        if ((header as u64) != PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
             abort E_INVALID_ACCUMULATOR_HEADER
         };
+        let price_infos = accumulator::parse_and_verify_accumulator_message(&mut accumulator_message_cursor, vaa::take_payload(vaa), clock);
 
         // Create and share new price info objects, if not already exists.
-        create_and_share_price_feeds_using_verified_price_infos(&latest_only, pyth_state, _price_infos, ctx);
+        create_and_share_price_feeds_using_verified_price_infos(&latest_only, pyth_state, price_infos, ctx);
 
         // check that accumulator message has been fully consumed
         cursor::destroy_empty(accumulator_message_cursor);
@@ -465,7 +462,6 @@ module pyth::pyth_tests{
 
     const DEPLOYER: address = @0x1234;
 
-    #[test_only]
     // /// A vector containing a single VAA with:
     // /// - emitter chain ID 17
     // /// - emitter address 0x71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b
