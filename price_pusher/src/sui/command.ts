@@ -6,6 +6,7 @@ import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
 import { Options } from "yargs";
 import { SuiPriceListener, SuiPricePusher } from "./sui";
+import { Ed25519Keypair } from "@mysten/sui.js";
 
 export default {
   command: "sui",
@@ -58,6 +59,13 @@ export default {
       type: "string",
       required: true,
     } as Options,
+    "max-vaas-per-ptb": {
+      description:
+        "Maximum number of VAAs that can be included in a single PTB.",
+      type: "number",
+      required: true,
+      default: 1,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.mnemonicFile,
@@ -77,6 +85,7 @@ export default {
       wormholePackageId,
       wormholeStateId,
       priceFeedToPriceInfoObjectTableId,
+      maxVaasPerPtb,
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
@@ -91,9 +100,19 @@ export default {
           debug: () => undefined,
           trace: () => undefined,
         },
+        priceFeedRequestConfig: {
+          binary: true,
+        },
       }
     );
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
+    console.log(
+      `Pushing updates from wallet address: ${Ed25519Keypair.deriveKeypair(
+        mnemonic
+      )
+        .getPublicKey()
+        .toSuiAddress()}`
+    );
 
     const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 
@@ -116,6 +135,7 @@ export default {
       wormholePackageId,
       wormholeStateId,
       priceFeedToPriceInfoObjectTableId,
+      maxVaasPerPtb,
       endpoint,
       mnemonic
     );

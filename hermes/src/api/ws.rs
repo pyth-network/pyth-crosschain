@@ -165,7 +165,7 @@ impl Subscriber {
         {
             let config = self
                 .price_feeds_with_config
-                .get(&PriceIdentifier::new(update.price_feed.id))
+                .get(&PriceIdentifier::new(update.price_feed.feed_id))
                 .ok_or(anyhow::anyhow!(
                     "Config missing, price feed list was poisoned during iteration."
                 ))?;

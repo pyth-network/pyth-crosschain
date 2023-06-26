@@ -36,6 +36,11 @@
   },
   {
     "inputs": [],
+    "name": "InvalidWormholeAddressToSet",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InvalidWormholeVaa",
     "type": "error"
   },

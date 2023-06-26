@@ -37,8 +37,19 @@ The parameters above are configured per price feed in a price configuration YAML
   time_difference: 60 # Time difference threshold (in seconds) to push a newer price feed.
   price_deviation: 0.5 # The price deviation (%) threshold to push a newer price feed.
   confidence_ratio: 1 # The confidence/price (%) threshold to push a newer price feed.
+  # Optional block to configure whether this feed can be early updated. If at least one feed meets the
+  # triggering conditions above, all other feeds who meet the early update conditions will be included in
+  # the submitted batch of prices. This logic takes advantage of the fact that adding a feed to a larger
+  # batch of updates incurs a minimal gas cost. All fields below are optional (and interpreted as infinity if omitted)
+  # and have the same semantics as the corresponding fields above.
+  early_update:
+    time_difference: 30
+    price_deviation: 0.1
+    confidence_ratio: 0.5
 - ...
 ```
+
+Two sample YAML configuration files are available in the root of this repo.
 
 You can get the list of available price feeds from
 [here](https://pyth.network/developers/price-feed-ids/).
@@ -57,7 +68,7 @@ cd price_pusher
 npm run start -- evm --endpoint wss://example-rpc.com \
     --pyth-contract-address 0xff1a0f4744e8582DF...... \
     --price-service-endpoint https://example-pyth-price.com \
-    --price-config-file "path/to/price-config-file.yaml.testnet.sample.yaml" \
+    --price-config-file "path/to/price-config.testnet.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
     [--pushing-frequency 10] \
     [--polling-frequency 5] \
@@ -66,7 +77,7 @@ npm run start -- evm --endpoint wss://example-rpc.com \
 # For Injective
 npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
     --pyth-contract-address inj1z60tg0... --price-service-endpoint "https://example-pyth-price.com" \
-    --price-config-file "path/to/price-config-file.yaml.testnet.sample.yaml" \
+    --price-config-file "path/to/price-config.testnet.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
     [--pushing-frequency 10] \
     [--polling-frequency 5] \
@@ -92,15 +103,6 @@ npm run start -- sui
   --price-config-file ./price-config.testnet.sample.yaml
   [--pushing-frequency 10] \
   [--polling-frequency 5] \
-
-
-
---endpoint https://fullnode.testnet.aptoslabs.com/v1 \
-    --pyth-contract-address 0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387 --price-service-endpoint "https://xc-testnet.pyth.network" \
-    --price-config-file "./price-config.testnet.sample.yaml" \
-    --mnemonic-file "path/to/mnemonic.txt" \
-    [--pushing-frequency 10] \
-    [--polling-frequency 5] \
 
 
 # Or, run the price pusher docker image instead of building from the source

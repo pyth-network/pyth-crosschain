@@ -368,7 +368,7 @@ contract PythTestUtilsTest is
     function testGenerateWhBatchUpdateWorks() public {
         IPyth pyth = IPyth(
             setUpPyth(
-                setUpWormhole(
+                setUpWormholeReceiver(
                     1 // Number of guardians
                 )
             )

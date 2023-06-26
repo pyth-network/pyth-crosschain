@@ -26,7 +26,7 @@ contract PythWormholeMerkleAccumulatorTest is
     uint64 constant MAX_UINT64 = uint64(int64(-1));
 
     function setUp() public {
-        pyth = IPyth(setUpPyth(setUpWormhole(1)));
+        pyth = IPyth(setUpPyth(setUpWormholeReceiver(1)));
     }
 
     function assertPriceFeedMessageStored(
@@ -476,13 +476,6 @@ contract PythWormholeMerkleAccumulatorTest is
         );
     }
 
-    function isNotMatch(
-        bytes memory a,
-        bytes memory b
-    ) public pure returns (bool) {
-        return keccak256(a) != keccak256(b);
-    }
-
     /// @notice This method creates a forged invalid wormhole update data.
     /// The caller should pass the forgeItem as string and if it matches the
     /// expected value, that item will be forged to be invalid.
@@ -522,6 +515,7 @@ contract PythWormholeMerkleAccumulatorTest is
                 isNotMatch(forgeItem, "whUpdateType")
                     ? uint8(PythAccumulator.UpdateType.WormholeMerkle)
                     : uint8(PythAccumulator.UpdateType.WormholeMerkle) + 1,
+                uint64(0), // Slot, not used in target networks
                 uint32(0), // Storage index, not used in target networks
                 isNotMatch(forgeItem, "rootDigest")
                     ? rootDigest
@@ -595,6 +589,18 @@ contract PythWormholeMerkleAccumulatorTest is
             0,
             MAX_UINT64
         );
+    }
+
+    function testUpdatePriceFeedWithWormholeMerkleWorksWithoutForging() public {
+        // In this test we make sure the structure returned by createAndForgeWormholeMerkleUpdateData
+        // is valid if no particular forge flag is set
+        (
+            bytes[] memory updateData,
+            uint updateFee,
+            bytes32[] memory priceIds
+        ) = createAndForgeWormholeMerkleUpdateData("");
+
+        pyth.updatePriceFeeds{value: updateFee}(updateData);
     }
 
     function testUpdatePriceFeedWithWormholeMerkleRevertsOnWrongVAAPayloadUpdateType()

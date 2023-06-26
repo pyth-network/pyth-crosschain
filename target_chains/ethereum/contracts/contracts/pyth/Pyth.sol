@@ -75,7 +75,8 @@ abstract contract Pyth is
         for (uint i = 0; i < updateData.length; ) {
             if (
                 updateData[i].length > 4 &&
-                UnsafeBytesLib.toUint32(updateData[i], 0) == ACCUMULATOR_MAGIC
+                UnsafeCalldataBytesLib.toUint32(updateData[i], 0) ==
+                ACCUMULATOR_MAGIC
             ) {
                 totalNumUpdates += updatePriceInfosFromAccumulatorUpdate(
                     updateData[i]
@@ -143,7 +144,6 @@ abstract contract Pyth is
         // operations have proper require.
         unchecked {
             bytes memory encoded = vm.payload;
-
             (
                 uint index,
                 uint nAttestations,

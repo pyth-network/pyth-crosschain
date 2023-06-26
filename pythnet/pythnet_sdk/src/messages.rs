@@ -17,7 +17,6 @@ use serde::{
 /// some of the methods for PriceFeedMessage and TwapMessage are not used by the oracle
 /// for the same reason. Rust compiler doesn't include the unused methods in the contract.
 /// Once we start using the unused structs and methods, the contract size will increase.
-
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(
     feature = "strum",
@@ -47,10 +46,10 @@ impl Message {
         }
     }
 
-    pub fn id(&self) -> [u8; 32] {
+    pub fn feed_id(&self) -> FeedId {
         match self {
-            Self::PriceFeedMessage(msg) => msg.id,
-            Self::TwapMessage(msg) => msg.id,
+            Self::PriceFeedMessage(msg) => msg.feed_id,
+            Self::TwapMessage(msg) => msg.feed_id,
         }
     }
 }
@@ -65,11 +64,13 @@ impl Arbitrary for Message {
     }
 }
 
+/// Id of a feed producing the message. One feed produces one or more messages.
+pub type FeedId = [u8; 32];
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PriceFeedMessage {
-    pub id:                [u8; 32],
+    pub feed_id:           FeedId,
     pub price:             i64,
     pub conf:              u64,
     pub exponent:          i32,
@@ -119,7 +120,7 @@ impl Arbitrary for PriceFeedMessage {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TwapMessage {
-    pub id:                [u8; 32],
+    pub feed_id:           FeedId,
     pub cumulative_price:  i128,
     pub cumulative_conf:   u128,
     pub num_down_slots:    u64,
@@ -149,5 +150,43 @@ impl Arbitrary for TwapMessage {
             prev_publish_time: publish_time.saturating_sub(i64::arbitrary(g)),
             publish_slot: u64::arbitrary(g),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use crate::{
+        messages::{
+            Message,
+            PriceFeedMessage,
+        },
+        wire::Serializer,
+    };
+
+    // Test if additional payload to the end of a message is forward compatible
+    #[test]
+    fn test_forward_compatibility() {
+        use {
+            serde::Serialize,
+            std::iter,
+        };
+        let msg = Message::PriceFeedMessage(PriceFeedMessage {
+            feed_id:           [1u8; 32],
+            price:             1,
+            conf:              1,
+            exponent:          1,
+            publish_time:      1,
+            prev_publish_time: 1,
+            ema_price:         1,
+            ema_conf:          1,
+        });
+        let mut buffer = Vec::new();
+        let mut cursor = std::io::Cursor::new(&mut buffer);
+        let mut serializer: Serializer<_, byteorder::LE> = Serializer::new(&mut cursor);
+        msg.serialize(&mut serializer).unwrap();
+        buffer.extend(iter::repeat(0).take(10));
+        let deserialized = crate::wire::from_slice::<byteorder::LE, Message>(&buffer).unwrap();
+        assert_eq!(deserialized, msg);
     }
 }

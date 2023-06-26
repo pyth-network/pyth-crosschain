@@ -70,7 +70,7 @@ impl RpcPriceFeed {
         let price_feed_message = price_feed_update.price_feed;
 
         Self {
-            id:        PriceIdentifier::new(price_feed_message.id),
+            id:        PriceIdentifier::new(price_feed_message.feed_id),
             price:     Price {
                 price:        price_feed_message.price,
                 conf:         price_feed_message.conf,

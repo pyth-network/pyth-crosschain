@@ -20,9 +20,7 @@ use {
         Result,
     },
     borsh::BorshDeserialize,
-    byteorder::BE,
     futures::stream::StreamExt,
-    pythnet_sdk::messages::Message,
     solana_account_decoder::UiAccountEncoding,
     solana_client::{
         nonblocking::{
@@ -157,44 +155,9 @@ pub async fn run(store: Arc<Store>, pythnet_ws_endpoint: String) -> Result<!> {
                     }
                 };
 
-                // The validators writes the accumulator messages using Borsh with
-                // the following struct. We cannot directly have messages as Vec<Messages>
-                // because they are serialized using big-endian byte order and Borsh
-                // uses little-endian byte order.
-                #[derive(BorshDeserialize)]
-                struct RawAccumulatorMessages {
-                    pub magic:        [u8; 4],
-                    pub slot:         u64,
-                    pub ring_size:    u32,
-                    pub raw_messages: Vec<Vec<u8>>,
-                }
-
-                let accumulator_messages = RawAccumulatorMessages::try_from_slice(&account.data);
+                let accumulator_messages = AccumulatorMessages::try_from_slice(&account.data);
                 match accumulator_messages {
                     Ok(accumulator_messages) => {
-                        let messages = accumulator_messages
-                            .raw_messages
-                            .iter()
-                            .map(|message| {
-                                pythnet_sdk::wire::from_slice::<BE, Message>(message.as_slice())
-                            })
-                            .collect::<Result<Vec<Message>, _>>();
-
-                        let messages = match messages {
-                            Ok(messages) => messages,
-                            Err(err) => {
-                                log::error!("Failed to parse messages: {:?}", err);
-                                continue;
-                            }
-                        };
-
-                        let accumulator_messages = AccumulatorMessages {
-                            magic: accumulator_messages.magic,
-                            slot: accumulator_messages.slot,
-                            ring_size: accumulator_messages.ring_size,
-                            messages,
-                        };
-
                         let (candidate, _) = Pubkey::find_program_address(
                             &[
                                 b"AccumulatorState",

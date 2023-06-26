@@ -46,7 +46,7 @@ module pyth::price_status {
     }
 
     #[test]
-    #[expected_failure(abort_code = 65559)]
+    #[expected_failure(abort_code = 65559, location = pyth::price_status)]
     fun test_invalid_price_status() {
         from_u64(3);
     }
