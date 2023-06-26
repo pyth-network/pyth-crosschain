@@ -21,9 +21,9 @@ module pyth::accumulator {
 
     friend pyth::pyth;
 
-    // parse_and_verify_accumulator_message verifies that the merkle root contained a vaa payload (gotten
-    // by verifying a vaa and extracting its payload) matches the rest of the content in the
-    // accumulator message (encapsulated by cursor).
+    // parse_and_verify_accumulator_message verifies that the price updates encoded in the
+    // accumulator message (accessed via cursor) belong to the merkle tree defined by the merkle root encoded in
+    // vaa_payload.
     public(friend) fun parse_and_verify_accumulator_message(cursor: &mut Cursor<u8>, vaa_payload: vector<u8>, clock: &Clock): vector<PriceInfo> {
         let major = deserialize::deserialize_u8(cursor);
         assert!(major == 1, E_INVALID_ACCUMULATOR_PAYLOAD);
