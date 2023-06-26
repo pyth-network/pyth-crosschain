@@ -913,6 +913,12 @@ module pyth::pyth_tests{
             &clock
         );
 
+        // assert that price info obejct is as expected
+        let expected = accumulator_test_1_to_price_info();
+        assert!(price_feeds_equal(&expected, &price_info::get_price_info_from_price_info_object(&price_info_object_1)), 0);
+
+        // clean up test scenario
+
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         authenticated_vector::destroy<PriceInfo>(auth_price_infos);
 
@@ -928,6 +934,7 @@ module pyth::pyth_tests{
     #[expected_failure(abort_code = pyth::accumulator::E_INVALID_PROOF)]
     fun test_create_and_update_single_price_feed_with_accumulator_failure() {
         use pyth::data_source::Self;
+        use pyth::price_info::Self;
 
         let base_update_fee = 50;
         let coins_to_mint = 5000;
@@ -983,6 +990,11 @@ module pyth::pyth_tests{
             &clock
         );
 
+        // assert that price info obejct is as expected
+        let expected = accumulator_test_1_to_price_info();
+        assert!(price_feeds_equal(&expected, &price_info::get_price_info_from_price_info_object(&price_info_object_1)), 0);
+
+        // clean up test scenario
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         authenticated_vector::destroy<PriceInfo>(auth_price_infos);
 
@@ -993,7 +1005,6 @@ module pyth::pyth_tests{
         clock::destroy_for_testing(clock);
         test_scenario::end(scenario);
     }
-
 
     const TEST_ACCUMULATOR_3_MSGS: vector<u8> = x"504e41550100000000a001000000000100d39b55fa311213959f91866d52624f3a9c07350d8956f6d42cfbb037883f31575c494a2f09fea84e4884dc9c244123fd124bc7825cd64d7c11e33ba5cfbdea7e010000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b000000000000000000415557560000000000000000000000000029da4c066b6e03b16a71e77811570dd9e19f258103005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf60000000000000064000000000000003200000009000000006491cc747be59f3f377c0d3f000000000000006300000000000000340436992facb15658a7e9f08c4df4848ca80750f61fadcd96993de66b1fe7aef94e29e3bbef8b12db2305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d950055006e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af000000000000006500000000000000330000000a000000006491cc7504f8554c3620c3fd0000000000000064000000000000003504171ed10ac4f1eacf3a4951e1da6b119f07c45da5adcd96993de66b1fe7aef94e29e3bbef8b12db2305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d9500550031ecc21a745e3968a04e9570e4425bc18fa8019c68028196b546d1669c200c68000000000000006600000000000000340000000b000000006491cc76e87d69c7b51242890000000000000065000000000000003604f2ee15ea639b73fa3db9b34a245bdfa015c260c5fe83e4772e0e346613de00e5348158a01bcb27b305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d95";
     // Info about the price infos encoded in the accumulator message:
@@ -1078,6 +1089,8 @@ module pyth::pyth_tests{
         let coins3 = coin::split(&mut coins, 1000, ctx(&mut scenario));
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        // Update price feeds
         auth_price_infos = update_single_price_feed(
             &mut pyth_state,
             auth_price_infos,
@@ -1102,6 +1115,20 @@ module pyth::pyth_tests{
             &clock
         );
 
+        // assert price feeds are as expected
+        let expected_price_infos = accumulator_test_3_to_price_info(0 /*offset argument*/);
+
+        let price_info_1 = price_info::get_price_info_from_price_info_object(&price_info_object_1);
+        assert!(price_feeds_equal(&price_info_1, vector::borrow(&expected_price_infos, 0)), 0);
+
+        let price_info_2 = price_info::get_price_info_from_price_info_object(&price_info_object_2);
+        assert!(price_feeds_equal(&price_info_2, vector::borrow(&expected_price_infos, 1)), 0);
+
+        let price_info_3 = price_info::get_price_info_from_price_info_object(&price_info_object_3);
+        assert!(price_feeds_equal(&price_info_3, vector::borrow(&expected_price_infos, 2)), 0);
+
+
+        // clean up test scenario
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         authenticated_vector::destroy<PriceInfo>(auth_price_infos);
 
@@ -1361,7 +1388,6 @@ module pyth::pyth_tests{
     }
 
     // pyth accumulator tests (included in this file instead of pyth_accumulator.move to avoid dependency cycle - as we need pyth_tests::setup_test)
-
     #[test]
     fun test_parse_and_verify_accumulator_updates(){
         use sui::test_scenario::{Self, take_shared, return_shared};
@@ -1374,7 +1400,7 @@ module pyth::pyth_tests{
         test_scenario::next_tx(&mut scenario, @0x123);
 
         let price_info_updates = accumulator::test_get_price_feed_updates_from_accumulator(TEST_ACCUMULATOR_3_MSGS, &worm_state, &clock);
-        let expected_price_infos = accumulator_test_3_price_feeds(0);
+        let expected_price_infos = accumulator_test_3_to_price_info(0);
         let num_updates = vector::length<PriceInfo>(&price_info_updates);
         let i = 0;
         while (i < num_updates){
@@ -1393,7 +1419,8 @@ module pyth::pyth_tests{
         price_info::get_price_feed(p1)== price_info::get_price_feed(p2)
     }
 
-    fun accumulator_test_3_price_feeds(offset: u64): vector<PriceInfo> {
+    // accumulator_test_3_to_price_info gets the data encoded within TEST_ACCUMULATOR_3_MSGS
+    fun accumulator_test_3_to_price_info(offset: u64): vector<PriceInfo> {
         use pyth::i64::{Self};
         use pyth::price::{Self};
         let i = 0;
@@ -1426,5 +1453,32 @@ module pyth::pyth_tests{
             i = i + 1;
         };
         return expected
+    }
+
+    // accumulator_test_1_to_price_info gets the data encoded within TEST_ACCUMULATOR_SINGLE_FEED
+    fun accumulator_test_1_to_price_info(): PriceInfo {
+        use pyth::i64::{Self};
+        use pyth::price::{Self};
+       price_info::new_price_info(
+                1663680747,
+                1663074349,
+                price_feed::new(
+                    price_identifier::from_byte_vec(
+                        x"b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
+                    ),
+                    price::new(
+                        i64::new(6887568746747646632, false),
+                        13092246197863718329,
+                        i64::new(1559537863, false),
+                        1687276661
+                    ),
+                    price::new(
+                        i64::new(4772242609775910581, false),
+                        358129956189946877,
+                        i64::new(1559537863, false),
+                        1687276661
+                    ),
+                ),
+            )
     }
 }
