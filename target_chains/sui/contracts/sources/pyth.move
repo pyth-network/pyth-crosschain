@@ -825,6 +825,7 @@ module pyth::pyth_tests{
         );
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
+
         vec = update_single_price_feed(
             &mut pyth_state,
             vec,
@@ -832,6 +833,10 @@ module pyth::pyth_tests{
             test_coins,
             &clock
         );
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        assert!(price_feeds_equal(authenticated_vector::borrow(&vec, 3), &price_info::get_price_info_from_price_info_object(&price_info_object_1)), 0);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         authenticated_vector::destroy<PriceInfo>(vec);
