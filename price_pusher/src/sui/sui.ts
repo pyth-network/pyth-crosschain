@@ -92,12 +92,8 @@ export class SuiPriceListener extends ChainPriceListener {
 }
 
 export class SuiPricePusher implements IPricePusher {
-  private readonly signer: RawSigner;
-  private isInitialized: boolean;
-  private isInitializing: boolean;
-  private gasPool: SuiObjectRef[] = [];
-
   constructor(
+    private readonly signer: RawSigner,
     private priceServiceConnection: PriceServiceConnection,
     private pythPackageId: string,
     private pythStateId: string,
@@ -107,64 +103,56 @@ export class SuiPricePusher implements IPricePusher {
     private maxVaasPerPtb: number,
     endpoint: string,
     mnemonic: string,
-    private numGasObjects: number,
-    private gasBudget: number
-  ) {
-    this.signer = new RawSigner(
+    private gasBudget: number,
+    private gasPool: SuiObjectRef[]
+  ) {}
+
+  static async createWithAutomaticGasPool(
+    priceServiceConnection: PriceServiceConnection,
+    pythPackageId: string,
+    pythStateId: string,
+    wormholePackageId: string,
+    wormholeStateId: string,
+    priceFeedToPriceInfoObjectTableId: string,
+    maxVaasPerPtb: number,
+    endpoint: string,
+    mnemonic: string,
+    gasBudget: number,
+    numGasObjects: number,
+  ): Promise<SuiPricePusher> {
+    if (numGasObjects > MAX_NUM_OBJECTS_IN_ARGUMENT) {
+      throw new Error(
+        `numGasObjects cannot be greater than ${MAX_NUM_OBJECTS_IN_ARGUMENT} until we implement split chunking`
+      );
+    }
+
+    const signer = new RawSigner(
       Ed25519Keypair.deriveKeypair(mnemonic),
       new JsonRpcProvider(new Connection({ fullnode: endpoint }))
     );
-    this.isInitialized = false;
-    this.isInitializing = false;
-    if (numGasObjects > MAX_NUM_OBJECTS_IN_ARGUMENT) {
-      throw new Error(
-        `numGasObjects cannot be greater than ${MAX_NUM_OBJECTS_IN_ARGUMENT} until we implment split chunking`
-      );
-    }
-  }
 
-  // This function will smash all coins owned by the signer into one, and then
-  // split them equally into numGasObjects.
-  async initializeGasPool(): Promise<void> {
-    const signerAddress = await this.signer.getAddress();
-    const { totalBalance: balance } = await this.signer.provider.getBalance({
-      owner: signerAddress,
-    });
-    const splitAmount =
-      (BigInt(balance) - BigInt(GAS_FEE_FOR_SPLIT)) /
-      BigInt(this.numGasObjects);
+    const gasPool = await SuiPricePusher.initializeGasPool(signer, numGasObjects);
 
-    if (splitAmount <= GAS_FEE_FOR_SPLIT) {
-      throw new Error(
-        `Balance is too low ${balance} to initialize gas pool. Split amount is ${splitAmount}`
-      );
-    }
-
-    const consolidatedCoin = await this.mergeGasCoinsIntoOne(signerAddress);
-
-    this.gasPool = await this.splitGasCoinEqually(
-      signerAddress,
-      Number(splitAmount),
-      this.numGasObjects,
-      consolidatedCoin
-    );
-    console.log("Gas pool is filled with coins: ", this.gasPool);
+    return new SuiPricePusher(
+      signer,
+      priceServiceConnection,
+      pythPackageId,
+      pythStateId,
+      wormholePackageId,
+      wormholeStateId,
+      priceFeedToPriceInfoObjectTableId,
+      maxVaasPerPtb,
+      endpoint,
+      mnemonic,
+      gasBudget,
+      gasPool,
+    )
   }
 
   async updatePriceFeed(
     priceIds: string[],
     pubTimesToPush: number[]
   ): Promise<void> {
-    if (!this.isInitialized && !this.isInitializing) {
-      this.isInitializing = true;
-      await this.initializeGasPool();
-      this.isInitializing = false;
-      this.isInitialized = true;
-    } else if (!this.isInitialized && this.isInitializing) {
-      console.warn("Skipping update: the gas pool has not been initialized.");
-      return;
-    }
-
     if (priceIds.length === 0) {
       return;
     }
@@ -293,53 +281,87 @@ export class SuiPricePusher implements IPricePusher {
     return tx;
   }
 
-  /** Send every transaction in txs sequentially, returning when all transactions have completed. */
-  private async sendTransactionBlocks(txs: TransactionBlock[]): Promise<void> {
-    for (const tx of txs) {
-      const gasObject = this.gasPool.shift();
-      if (gasObject === undefined) {
-        console.warn("No available gas coin. Skipping push.");
-        return;
-      }
-      try {
-        tx.setGasPayment([gasObject]);
-        tx.setGasBudget(this.gasBudget);
-        const result = await this.signer.signAndExecuteTransactionBlock({
-          transactionBlock: tx,
-          options: {
-            showEffects: true,
-          },
-        });
+  /** Send every transaction in txs in parallel, returning when all transactions have completed. */
+  private async sendTransactionBlocks(txs: TransactionBlock[]): Promise<void[]> {
+    return Promise.all(txs.map((tx) => this.sendTransactionBlock(tx)))
+  }
 
-        const updatedGasObject = getTransactionEffects(result)
-          ?.mutated!.map((obj) => obj.reference)
-          .find((ref) => ref.objectId === gasObject.objectId)!;
-        this.gasPool.push(updatedGasObject);
+  private async sendTransactionBlock(tx: TransactionBlock): Promise<void> {
+    const gasObject = this.gasPool.shift();
+    if (gasObject === undefined) {
+      console.warn("No available gas coin. Skipping push.");
+      return;
+    }
 
-        console.log(
-          "Successfully updated price with transaction digest ",
-          result.digest
+    let nextGasObject: SuiObjectRef | undefined = undefined;
+    try {
+      tx.setGasPayment([gasObject]);
+      tx.setGasBudget(this.gasBudget);
+      const result = await this.signer.signAndExecuteTransactionBlock({
+        transactionBlock: tx,
+        options: {
+          showEffects: true,
+        },
+      });
+
+      nextGasObject = getTransactionEffects(result)
+        ?.mutated!.map((obj) => obj.reference)
+        .find((ref) => ref.objectId === gasObject.objectId)!;
+
+      console.log(
+        "Successfully updated price with transaction digest ",
+        result.digest
+      );
+    } catch (e) {
+      console.log("Error when signAndExecuteTransactionBlock");
+      if (String(e).includes("GasBalanceTooLow")) {
+        console.warn(
+          `The balance of gas object ${gasObject.objectId} is too low. Removing from pool.`
         );
-      } catch (e) {
-        console.log("Error when signAndExecuteTransactionBlock");
-        if (String(e).includes("GasBalanceTooLow")) {
-          console.warn(
-            `The balance of gas object ${gasObject.objectId} is too low. Removing from pool.`
-          );
-        }
-        console.error(e);
+      } else {
+        nextGasObject = gasObject;
       }
+      console.error(e);
+    }
+
+    if (nextGasObject !== undefined) {
+      this.gasPool.push(nextGasObject);
     }
   }
 
-  private async getAllGasCoins(owner: SuiAddress): Promise<SuiObjectRef[]> {
+  // This function will smash all coins owned by the signer into one, and then
+  // split them equally into numGasObjects.
+  private static async initializeGasPool(signer: RawSigner, numGasObjects: number): Promise<SuiObjectRef[]> {
+    const signerAddress = await signer.getAddress();
+    const { totalBalance: balance } = await signer.provider.getBalance({
+      owner: signerAddress,
+    });
+    const splitAmount =
+      (BigInt(balance) - BigInt(GAS_FEE_FOR_SPLIT)) /
+      BigInt(numGasObjects);
+
+    const consolidatedCoin = await SuiPricePusher.mergeGasCoinsIntoOne(signer, signerAddress);
+
+    const gasPool = await SuiPricePusher.splitGasCoinEqually(
+      signer,
+      signerAddress,
+      Number(splitAmount),
+      numGasObjects,
+      consolidatedCoin
+    );
+    console.log("Gas pool is filled with coins: ", gasPool);
+    return gasPool;
+  }
+
+
+  private static async getAllGasCoins(provider: JsonRpcProvider, owner: SuiAddress): Promise<SuiObjectRef[]> {
     let hasNextPage = true;
     let cursor;
     const coins = new Set<string>([]);
     let num_coins = 0;
     while (hasNextPage) {
       const paginatedCoins: PaginatedCoins =
-        await this.signer.provider.getCoins({
+        await provider.getCoins({
           owner,
           cursor,
         });
@@ -363,13 +385,14 @@ export class SuiPricePusher implements IPricePusher {
     return [...coins].map((item) => JSON.parse(item));
   }
 
-  private async splitGasCoinEqually(
+  private static async splitGasCoinEqually(
+    signer: RawSigner,
     signerAddress: SuiAddress,
     splitAmount: number,
     numGasObjects: number,
     gasCoin: SuiObjectRef
   ): Promise<SuiObjectRef[]> {
-    // TODO: implment chunking if numGasObjects exceeds MAX_NUM_CREATED_OBJECTS
+    // TODO: implement chunking if numGasObjects exceeds MAX_NUM_CREATED_OBJECTS
     const tx = new TransactionBlock();
     const coins = tx.splitCoins(
       tx.gas,
@@ -377,11 +400,11 @@ export class SuiPricePusher implements IPricePusher {
     );
 
     tx.transferObjects(
-      Array.from({ length: this.numGasObjects }, (_, i) => coins[i]),
+      Array.from({ length: numGasObjects }, (_, i) => coins[i]),
       tx.pure(signerAddress)
     );
     tx.setGasPayment([gasCoin]);
-    const result = await this.signer.signAndExecuteTransactionBlock({
+    const result = await signer.signAndExecuteTransactionBlock({
       transactionBlock: tx,
       options: { showEffects: true },
     });
@@ -393,13 +416,13 @@ export class SuiPricePusher implements IPricePusher {
     }
     const newCoins = getCreatedObjects(result)!.map((obj) => obj.reference);
     if (newCoins.length !== numGasObjects) {
-      throw new Error(`Failed to initialize gas pool, ${this.gasPool}`);
+      throw new Error(`Failed to initialize gas pool. Expected ${numGasObjects}, got: ${newCoins}`);
     }
     return newCoins;
   }
 
-  private async mergeGasCoinsIntoOne(owner: SuiAddress): Promise<SuiObjectRef> {
-    const gasCoins = await this.getAllGasCoins(owner);
+  private static async mergeGasCoinsIntoOne(signer: RawSigner, owner: SuiAddress): Promise<SuiObjectRef> {
+    const gasCoins = await SuiPricePusher.getAllGasCoins(signer.provider, owner);
     // skip merging if there is only one coin
     if (gasCoins.length === 1) {
       return gasCoins[0];
@@ -417,9 +440,8 @@ export class SuiPricePusher implements IPricePusher {
       if (finalCoin) {
         coins = [finalCoin, ...coins];
       }
-      console.log("setGasPayment: ", coins.length);
       mergeTx.setGasPayment(coins);
-      const mergeResult = await this.signer.signAndExecuteTransactionBlock({
+      const mergeResult = await signer.signAndExecuteTransactionBlock({
         transactionBlock: mergeTx,
         options: { showEffects: true },
       });
@@ -433,6 +455,7 @@ export class SuiPricePusher implements IPricePusher {
         (obj) => obj.reference
       )[0];
     }
+
     return finalCoin as SuiObjectRef;
   }
 }

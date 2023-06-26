@@ -84,7 +84,7 @@ export default {
     ...options.pollingFrequency,
     ...options.pushingFrequency,
   },
-  handler: function (argv: any) {
+  handler: async function (argv: any) {
     const {
       endpoint,
       priceConfigFile,
@@ -142,7 +142,7 @@ export default {
       priceItems,
       { pollingFrequency }
     );
-    const suiPusher = new SuiPricePusher(
+    const suiPusher = await SuiPricePusher.createWithAutomaticGasPool(
       priceServiceConnection,
       pythPackageId,
       pythStateId,
@@ -152,8 +152,8 @@ export default {
       maxVaasPerPtb,
       endpoint,
       mnemonic,
+      gasBudget,
       numGasObjects,
-      gasBudget
     );
 
     const controller = new Controller(
