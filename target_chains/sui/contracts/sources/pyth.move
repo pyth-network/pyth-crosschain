@@ -692,7 +692,7 @@ module pyth::pyth_tests{
         ];
 
         // Pass in multiple VAAs
-        assert!(pyth::get_total_update_fee(&pyth_state, vector::length<vector<u8>>(&multiple_vaas)) == 250, 1);
+        assert!(pyth::get_total_update_fee(&pyth_state, vector::length<vector<u8>>(&multiple_vaas)) == 5*single_update_fee, 1);
 
         return_shared(pyth_state);
         coin::burn_for_testing<SUI>(test_coins);
