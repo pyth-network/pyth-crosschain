@@ -10,7 +10,8 @@ import "./PythAssetRegistrySetter.sol";
 
 contract PythPriceOracleGetter is
     PythAssetRegistrySetter,
-    PythAssetRegistryGetter
+    PythAssetRegistryGetter,
+    IPriceOracleGetter
 {
     address public immutable override BASE_CURRENCY;
     uint256 public immutable override BASE_CURRENCY_UNIT;
