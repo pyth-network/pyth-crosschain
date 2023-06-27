@@ -66,13 +66,25 @@ export default {
       required: true,
       default: 1,
     } as Options,
+    "num-gas-objects": {
+      description: "Number of gas objects in the pool.",
+      type: "number",
+      required: true,
+      default: 30,
+    } as Options,
+    "gas-budget": {
+      description: "Gas budget for each price update",
+      type: "number",
+      required: true,
+      default: 500_000_000,
+    } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
     ...options.mnemonicFile,
     ...options.pollingFrequency,
     ...options.pushingFrequency,
   },
-  handler: function (argv: any) {
+  handler: async function (argv: any) {
     const {
       endpoint,
       priceConfigFile,
@@ -86,6 +98,8 @@ export default {
       wormholeStateId,
       priceFeedToPriceInfoObjectTableId,
       maxVaasPerPtb,
+      numGasObjects,
+      gasBudget,
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
@@ -128,7 +142,7 @@ export default {
       priceItems,
       { pollingFrequency }
     );
-    const suiPusher = new SuiPricePusher(
+    const suiPusher = await SuiPricePusher.createWithAutomaticGasPool(
       priceServiceConnection,
       pythPackageId,
       pythStateId,
@@ -137,7 +151,9 @@ export default {
       priceFeedToPriceInfoObjectTableId,
       maxVaasPerPtb,
       endpoint,
-      mnemonic
+      mnemonic,
+      gasBudget,
+      numGasObjects
     );
 
     const controller = new Controller(
