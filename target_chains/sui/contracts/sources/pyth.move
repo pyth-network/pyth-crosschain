@@ -266,9 +266,7 @@ module pyth::pyth {
     /// Update a singular Pyth PriceInfoObject (containing a price feed) with the
     /// price data in the authenticated price infos vector (a vector of PriceInfo objects).
     ///
-    /// The javascript https://github.com/pyth-network/pyth-js/tree/main/pyth-sui-js package
-    /// should be used to fetch these VAAs from the Price Service. More information about this
-    /// process can be found at https://docs.pyth.network/consume-data.
+    /// For more information on the end-to-end process for updating a price feed, please see the README.
     ///
     /// The given fee must contain a sufficient number of coins to pay the update fee for the given vaas.
     /// The update fee amount can be queried by calling get_update_fee(&vaas).
@@ -468,7 +466,7 @@ module pyth::pyth_tests{
     const BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS: vector<vector<u8>> = vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"];
 
     fun ACCUMULATOR_TESTS_DATA_SOURCE(): vector<DataSource> {
-        vector[data_source::new(1, external_address::new(bytes32::from_bytes(x"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b")))]
+        vector[data_source::new(1, external_address::new(bytes32::from_bytes(ACCUMULATOR_TESTS_EMITTER_ADDRESS)))]
     }
 
     // /// A vector containing a single VAA with:
@@ -1372,7 +1370,14 @@ module pyth::pyth_tests{
         let worm_state = take_shared<WormState>(&scenario);
         test_scenario::next_tx(&mut scenario, @0x123);
 
-        let price_info_updates = accumulator::test_get_price_feed_updates_from_accumulator(TEST_ACCUMULATOR_3_MSGS, &worm_state, &clock);
+        let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_3_MSGS, &clock);
+
+        let cur = cursor::new(TEST_ACCUMULATOR_3_MSGS);
+        // pop header from cursor before passing to parse_and_verify_accumulator_message
+        let _header: u32 = deserialize::deserialize_u32(&mut cur);
+
+        let price_info_updates = accumulator::parse_and_verify_accumulator_message(&mut cur, vaa::take_payload(verified_vaa), &clock);
+
         let expected_price_infos = accumulator_test_3_to_price_info(0);
         let num_updates = vector::length<PriceInfo>(&price_info_updates);
         let i = 0;
@@ -1382,6 +1387,7 @@ module pyth::pyth_tests{
         };
 
         // clean-up
+        cursor::take_rest(cur);
         transfer::public_transfer(coins, @0x1234);
         clock::destroy_for_testing(clock);
         return_shared(worm_state);

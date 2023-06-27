@@ -3,8 +3,6 @@ module pyth::accumulator {
     use sui::clock::{Clock, Self};
     use wormhole::bytes20::{Self, Bytes20};
     use wormhole::cursor::{Self, Cursor};
-    use wormhole::vaa::{Self};
-    use wormhole::state::{State as WormState};
     use pyth::deserialize::{Self};
     use pyth::price_identifier::{Self};
     use pyth::price_info::{Self, PriceInfo};
@@ -24,6 +22,8 @@ module pyth::accumulator {
     const MAJOR_VERSION: u8 = 1;
 
     friend pyth::pyth;
+    #[test_only]
+    friend pyth::pyth_tests;
 
     // parse_and_verify_accumulator_message verifies that the price updates encoded in the
     // accumulator message (accessed via cursor) belong to the merkle tree defined by the merkle root encoded in
@@ -102,7 +102,8 @@ module pyth::accumulator {
             let message = deserialize::deserialize_vector(cursor, (message_size as u64)); //should be safe to go from u16 to u16
             let message_cur = cursor::new(message);
             let price_info = parse_price_feed_message(&mut message_cur, clock);
-            cursor::destroy_empty(message_cur);
+            cursor::take_rest(message_cur);
+
             vector::push_back(&mut price_info_updates, price_info);
 
             // isProofValid pops the next merkle proof from the front of cursor and checks if it proves that message is part of the
@@ -111,55 +112,5 @@ module pyth::accumulator {
             update_size = update_size - 1;
         };
         price_info_updates
-    }
-
-    #[test_only]
-    public fun test_get_price_feed_updates_from_accumulator(accumulator_message: vector<u8>, wormhole_state: &WormState, clock: &Clock): vector<PriceInfo> {
-        let vaa_bytes = parse_vaa_bytes_from_accumulator_message(copy accumulator_message);
-
-        let cur = cursor::new(accumulator_message);
-        let header: u32 = deserialize::deserialize_u32(&mut cur);
-
-        if ((header as u64) != PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
-            abort 99
-        };
-
-        let verified_vaa = vaa::parse_and_verify(wormhole_state, vaa_bytes, clock);
-
-        // main entry-point
-        let price_infos = parse_and_verify_accumulator_message(&mut cur, vaa::take_payload(verified_vaa), clock);
-
-        //TODO -  update_cache(updates);
-        // cursor should be empty after parsing the header and accumulator message
-        cursor::destroy_empty(cur);
-        price_infos
-    }
-
-    #[test_only]
-    // parse the vaa bytes from an accumulator message
-    public fun parse_vaa_bytes_from_accumulator_message(accumulator_message: vector<u8>): vector<u8>{
-        let c = cursor::new(accumulator_message);
-        let cursor = &mut c;
-        let header: u32 = deserialize::deserialize_u32(cursor);
-
-        if ((header as u64) != PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
-            abort 99
-        };
-
-        let major = deserialize::deserialize_u8(cursor);
-        assert!(major == MAJOR_VERSION, E_INVALID_ACCUMULATOR_PAYLOAD);
-        let minor = deserialize::deserialize_u8(cursor);
-        assert!(minor >= MINIMUM_SUPPORTED_MINOR_VERSION, E_INVALID_ACCUMULATOR_PAYLOAD);
-
-        let trailing_size = deserialize::deserialize_u8(cursor);
-        deserialize::deserialize_vector(cursor, (trailing_size as u64));
-
-        let proof_type = deserialize::deserialize_u8(cursor);
-        assert!(proof_type == 0, E_INVALID_ACCUMULATOR_PAYLOAD);
-
-        let vaa_size = deserialize::deserialize_u16(cursor);
-        let vaa_bytes = deserialize::deserialize_vector(cursor, (vaa_size as u64));
-        cursor::take_rest(c);
-        vaa_bytes
     }
 }
