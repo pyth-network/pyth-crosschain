@@ -87,7 +87,7 @@ module pyth::merkle_tree {
     ): bool {
         let currentDigest: Bytes20 = leafHash(&leafData);
         let proofSize: u8 = deserialize::deserialize_u8(encodedProof);
-        while (proofSize>0){
+        while (proofSize > 0){
             let siblingDigest: Bytes20 = bytes20::new(
                 deserialize::deserialize_vector(encodedProof, 20)
             );

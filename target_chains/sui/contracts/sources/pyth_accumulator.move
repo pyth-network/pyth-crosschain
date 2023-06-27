@@ -10,6 +10,7 @@ module pyth::accumulator {
     use pyth::price_info::{Self, PriceInfo};
     use pyth::price_feed::{Self};
     use pyth::merkle_tree::{Self};
+
     const PRICE_FEED_MESSAGE_TYPE: u64 = 0;
     const E_INVALID_UPDATE_DATA: u64 = 245;
     const E_INVALID_PROOF: u64 = 345;
@@ -19,6 +20,9 @@ module pyth::accumulator {
     const ACCUMULATOR_UPDATE_WORMHOLE_VERIFICATION_MAGIC: u32 = 1096111958;
     const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: u64 = 1347305813;
 
+    const MINIMUM_SUPPORTED_MINOR_VERSION: u8 = 0;
+    const MAJOR_VERSION: u8 = 1;
+
     friend pyth::pyth;
 
     // parse_and_verify_accumulator_message verifies that the price updates encoded in the
@@ -26,8 +30,10 @@ module pyth::accumulator {
     // vaa_payload.
     public(friend) fun parse_and_verify_accumulator_message(cursor: &mut Cursor<u8>, vaa_payload: vector<u8>, clock: &Clock): vector<PriceInfo> {
         let major = deserialize::deserialize_u8(cursor);
-        assert!(major == 1, E_INVALID_ACCUMULATOR_PAYLOAD);
-        let _minor = deserialize::deserialize_u8(cursor);
+        assert!(major == MAJOR_VERSION, E_INVALID_ACCUMULATOR_PAYLOAD);
+
+        let minor = deserialize::deserialize_u8(cursor);
+        assert!(minor >= MINIMUM_SUPPORTED_MINOR_VERSION, E_INVALID_ACCUMULATOR_PAYLOAD);
 
         let trailing_size = deserialize::deserialize_u8(cursor);
         deserialize::deserialize_vector(cursor, (trailing_size as u64));
@@ -141,8 +147,9 @@ module pyth::accumulator {
         };
 
         let major = deserialize::deserialize_u8(cursor);
-        assert!(major == 1, E_INVALID_ACCUMULATOR_PAYLOAD);
-        let _minor = deserialize::deserialize_u8(cursor);
+        assert!(major == MAJOR_VERSION, E_INVALID_ACCUMULATOR_PAYLOAD);
+        let minor = deserialize::deserialize_u8(cursor);
+        assert!(minor >= MINIMUM_SUPPORTED_MINOR_VERSION, E_INVALID_ACCUMULATOR_PAYLOAD);
 
         let trailing_size = deserialize::deserialize_u8(cursor);
         deserialize::deserialize_vector(cursor, (trailing_size as u64));
