@@ -1,18 +1,12 @@
 // SPDX-License-Identifier: Apache 2
 pragma solidity ^0.8.0;
 
-import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 import "@pythnetwork/pyth-sdk-solidity/PythErrors.sol";
 
 import "../aave/interfaces/IPriceOracleGetter.sol";
-import "./PythAssetRegistryGetter.sol";
-import "./PythAssetRegistrySetter.sol";
+import "./PythAssetRegistry.sol";
 
-contract PythPriceOracleGetter is
-    PythAssetRegistrySetter,
-    PythAssetRegistryGetter,
-    IPriceOracleGetter
-{
+contract PythPriceOracleGetter is PythAssetRegistry, IPriceOracleGetter {
     address public immutable override BASE_CURRENCY;
     uint256 public immutable override BASE_CURRENCY_UNIT;
 
