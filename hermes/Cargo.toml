@@ -1,6 +1,6 @@
 [package]
 name                   = "hermes"
-version                = "0.1.3"
+version                = "0.1.4"
 edition                = "2021"
 
 [dependencies]
@@ -35,6 +35,7 @@ libp2p                 = { version = "0.42.2", features = [
 ]}
 
 log                    = { version = "0.4.17" }
+prometheus-client      = { version = "0.21.1" }
 pyth-sdk               = { version = "0.7.0" }
 
 # Parse Wormhole attester price attestations.

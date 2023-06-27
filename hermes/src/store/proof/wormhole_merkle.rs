@@ -1,7 +1,6 @@
 use {
     crate::store::{
         storage::{
-            AccumulatorState,
             CompletedAccumulatorState,
             MessageState,
         },
@@ -49,23 +48,18 @@ pub async fn store_wormhole_merkle_verified_message(
     root: WormholeMerkleRoot,
     vaa_bytes: Vec<u8>,
 ) -> Result<()> {
-    let mut accumulator_state = store
-        .storage
-        .fetch_accumulator_state(root.slot)
-        .await?
-        .unwrap_or(AccumulatorState {
-            slot:                  root.slot,
-            accumulator_messages:  None,
-            wormhole_merkle_state: None,
-        });
-
-    accumulator_state.wormhole_merkle_state = Some(WormholeMerkleState {
-        root,
-        vaa: vaa_bytes,
-    });
     store
         .storage
-        .store_accumulator_state(accumulator_state)
+        .update_accumulator_state(
+            root.slot,
+            Box::new(|mut state| {
+                state.wormhole_merkle_state = Some(WormholeMerkleState {
+                    root,
+                    vaa: vaa_bytes,
+                });
+                state
+            }),
+        )
         .await?;
     Ok(())
 }
