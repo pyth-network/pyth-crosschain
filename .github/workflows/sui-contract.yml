@@ -6,34 +6,19 @@ on:
     branches:
       - main
     paths:
-      - target_chains/aptos/contracts/**
+      - target_chains/sui/contracts/**
 
 name: Sui Contracts
 
 jobs:
-  aptos-tests:
+  sui-tests:
     name: Sui tests
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: target_chains/aptos/contracts/
     steps:
       - uses: actions/checkout@v3
-
-      - name: Install brew
-        run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-      - name: Install curl
-        run: brew install curl
-
-      - name: Install cmake
-        run: brew install cmake
-
-      - name: Install git
-        run: brew install git
-
-      - name: Install rust
-        run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
       - name: Update rust
         run: rustup update stable
