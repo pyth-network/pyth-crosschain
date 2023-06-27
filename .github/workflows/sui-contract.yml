@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: target_chains/aptos/contracts/
+        working-directory: target_chains/sui/contracts/
     steps:
       - uses: actions/checkout@v3
 
