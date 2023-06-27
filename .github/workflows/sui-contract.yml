@@ -24,7 +24,7 @@ jobs:
         run: rustup update stable
 
       - name: Install Sui CLI
-        run: cargo install --locked --git https://github.com/MystenLabs/sui.git#09b2081498366df936abae26eea4b2d5cafb2788 --branch devnet sui
+        run: cargo install --git https://github.com/MystenLabs/sui.git --rev 09b2081498366df936abae26eea4b2d5cafb2788 sui
 
       - name: Run tests
         run: sui move test
