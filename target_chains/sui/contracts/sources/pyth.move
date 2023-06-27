@@ -126,8 +126,8 @@ module pyth::pyth {
         // Create and share new price info objects, if not already exists.
         create_and_share_price_feeds_using_verified_price_infos(&latest_only, pyth_state, price_infos, ctx);
 
-        // check that accumulator message has been fully consumed
-        cursor::destroy_empty(accumulator_message_cursor);
+        // destroy rest of cursor
+        cursor::take_rest(accumulator_message_cursor);
     }
 
 
@@ -1394,6 +1394,43 @@ module pyth::pyth_tests{
         test_scenario::end(scenario);
     }
 
+    #[test]
+    fun test_parse_and_verify_accumulator_updates_with_extra_bytes_at_end_of_message(){
+        use sui::test_scenario::{Self, take_shared, return_shared};
+        use sui::transfer::{Self};
+
+        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, vector[], ACCUMULATOR_TESTS_INITIAL_GUARDIANS, 50, 0);
+        let worm_state = take_shared<WormState>(&scenario);
+        test_scenario::next_tx(&mut scenario, @0x123);
+
+        let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_3_MSGS, &clock);
+
+        // append some extra garbage bytes at the end of the accumulator message, and make sure
+        // that test does not error out
+        vector::append(&mut TEST_ACCUMULATOR_3_MSGS, x"1234123412341234");
+
+        let cur = cursor::new(TEST_ACCUMULATOR_3_MSGS);
+        // pop header from cursor before passing to parse_and_verify_accumulator_message
+        let _header: u32 = deserialize::deserialize_u32(&mut cur);
+
+        let price_info_updates = accumulator::parse_and_verify_accumulator_message(&mut cur, vaa::take_payload(verified_vaa), &clock);
+
+        let expected_price_infos = accumulator_test_3_to_price_info(0);
+        let num_updates = vector::length<PriceInfo>(&price_info_updates);
+        let i = 0;
+        while (i < num_updates){
+            assert!(price_feeds_equal(vector::borrow(&price_info_updates, i), vector::borrow(&expected_price_infos, i)), 0);
+            i = i + 1;
+        };
+
+        // clean-up
+        cursor::take_rest(cur);
+        transfer::public_transfer(coins, @0x1234);
+        clock::destroy_for_testing(clock);
+        return_shared(worm_state);
+        test_scenario::end(scenario);
+    }
+
     fun price_feeds_equal(p1: &PriceInfo, p2: &PriceInfo): bool{
         price_info::get_price_feed(p1)== price_info::get_price_feed(p2)
     }
@@ -1438,7 +1475,7 @@ module pyth::pyth_tests{
     fun accumulator_test_1_to_price_info(): PriceInfo {
         use pyth::i64::{Self};
         use pyth::price::{Self};
-       price_info::new_price_info(
+        price_info::new_price_info(
                 1663680747,
                 1663074349,
                 price_feed::new(
