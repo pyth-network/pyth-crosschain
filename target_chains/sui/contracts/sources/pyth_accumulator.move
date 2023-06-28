@@ -108,7 +108,7 @@ module pyth::accumulator {
 
             // isProofValid pops the next merkle proof from the front of cursor and checks if it proves that message is part of the
             // merkle tree defined by merkle_root
-            assert!(merkle_tree::isProofValid(cursor, merkle_root, message), E_INVALID_PROOF);
+            assert!(merkle_tree::is_proof_valid(cursor, merkle_root, message), E_INVALID_PROOF);
             update_size = update_size - 1;
         };
         price_info_updates
