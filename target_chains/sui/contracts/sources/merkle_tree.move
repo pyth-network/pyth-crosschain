@@ -80,16 +80,14 @@ module pyth::merkle_tree {
     }
 
     // isProofValid returns whether a merkle proof is valid
-    fun isProofValid(
+    public fun isProofValid(
         encodedProof: &mut Cursor<u8>,
         root: Bytes20,
         leafData: vector<u8>,
     ): bool {
-
         let currentDigest: Bytes20 = leafHash(&leafData);
         let proofSize: u8 = deserialize::deserialize_u8(encodedProof);
-        let i: u8 = 0;
-        while (i < proofSize){
+        while (proofSize > 0){
             let siblingDigest: Bytes20 = bytes20::new(
                 deserialize::deserialize_vector(encodedProof, 20)
             );
@@ -98,14 +96,14 @@ module pyth::merkle_tree {
                 currentDigest,
                 siblingDigest
             );
-            i = i + 1;
+            proofSize = proofSize - 1;
         };
         bytes20::data(&currentDigest) == bytes20::data(&root)
     }
 
     // constructProofs constructs a merkle tree and returns the root of the tree as
     // a Bytes20 as well as the vector of encoded proofs
-    fun constructProofs(
+    public fun constructProofs(
         messages: &vector<vector<u8>>,
         depth: u8
     ) : (Bytes20, vector<u8>) {
