@@ -134,8 +134,20 @@ pub trait Storage: Send + Sync {
         filter: MessageStateFilter,
     ) -> Result<Vec<MessageState>>;
 
+    /// Store the accumulator state. Please note that this call will replace the
+    /// existing accumulator state for the given state's slot. If you wish to
+    /// update the accumulator state, use `update_accumulator_state` instead.
     async fn store_accumulator_state(&self, state: AccumulatorState) -> Result<()>;
     async fn fetch_accumulator_state(&self, slot: Slot) -> Result<Option<AccumulatorState>>;
+
+    /// Update the accumulator state inplace using the provided callback. The callback
+    /// takes the current state and returns the new state. If there is no accumulator
+    /// state for the given slot, the callback will be called with an empty accumulator state.
+    async fn update_accumulator_state(
+        &self,
+        slot: Slot,
+        callback: Box<dyn (FnOnce(AccumulatorState) -> AccumulatorState) + Send>,
+    ) -> Result<()>;
 }
 
 pub type StorageInstance = Box<dyn Storage>;

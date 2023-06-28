@@ -19,10 +19,7 @@ use {
             construct_message_states_proofs,
             store_wormhole_merkle_verified_message,
         },
-        storage::{
-            AccumulatorState,
-            CompletedAccumulatorState,
-        },
+        storage::CompletedAccumulatorState,
         types::{
             ProofSet,
             UnixTimestamp,
@@ -150,18 +147,14 @@ impl Store {
             Update::AccumulatorMessages(accumulator_messages) => {
                 let slot = accumulator_messages.slot;
                 log::info!("Storing accumulator messages for slot {:?}.", slot,);
-                let mut accumulator_state = self
-                    .storage
-                    .fetch_accumulator_state(slot)
-                    .await?
-                    .unwrap_or(AccumulatorState {
-                        slot,
-                        accumulator_messages: None,
-                        wormhole_merkle_state: None,
-                    });
-                accumulator_state.accumulator_messages = Some(accumulator_messages);
                 self.storage
-                    .store_accumulator_state(accumulator_state)
+                    .update_accumulator_state(
+                        slot,
+                        Box::new(|mut state| {
+                            state.accumulator_messages = Some(accumulator_messages);
+                            state
+                        }),
+                    )
                     .await?;
                 slot
             }

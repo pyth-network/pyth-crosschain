@@ -87,6 +87,25 @@ impl LocalStorage {
             None => None,
         }
     }
+
+    /// Store the accumulator state in the cache assuming that the lock is already acquired.
+    fn store_accumulator_state_impl(
+        &self,
+        state: AccumulatorState,
+        cache: &mut VecDeque<AccumulatorState>,
+    ) {
+        cache.push_back(state);
+
+        let mut i = cache.len().saturating_sub(1);
+        while i > 0 && cache[i - 1].slot > cache[i].slot {
+            cache.swap(i - 1, i);
+            i -= 1;
+        }
+
+        if cache.len() > self.cache_size as usize {
+            cache.pop_front();
+        }
+    }
 }
 
 #[async_trait]
@@ -158,18 +177,7 @@ impl Storage for LocalStorage {
 
     async fn store_accumulator_state(&self, state: super::AccumulatorState) -> Result<()> {
         let mut accumulator_cache = self.accumulator_cache.write().await;
-        accumulator_cache.push_back(state);
-
-        let mut i = accumulator_cache.len().saturating_sub(1);
-        while i > 0 && accumulator_cache[i - 1].slot > accumulator_cache[i].slot {
-            accumulator_cache.swap(i - 1, i);
-            i -= 1;
-        }
-
-        if accumulator_cache.len() > self.cache_size as usize {
-            accumulator_cache.pop_front();
-        }
-
+        self.store_accumulator_state_impl(state, &mut accumulator_cache);
         Ok(())
     }
 
@@ -180,6 +188,30 @@ impl Storage for LocalStorage {
             Err(_) => Ok(None),
         }
     }
+
+    async fn update_accumulator_state(
+        &self,
+        slot: Slot,
+        callback: Box<dyn (FnOnce(AccumulatorState) -> AccumulatorState) + Send>,
+    ) -> Result<()> {
+        let mut accumulator_cache = self.accumulator_cache.write().await;
+        match accumulator_cache.binary_search_by_key(&slot, |state| state.slot) {
+            Ok(idx) => {
+                let state = accumulator_cache.get_mut(idx).unwrap();
+                *state = callback(state.clone());
+            }
+            Err(_) => {
+                let state = callback(AccumulatorState {
+                    slot,
+                    accumulator_messages: None,
+                    wormhole_merkle_state: None,
+                });
+                self.store_accumulator_state_impl(state, &mut accumulator_cache);
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -187,12 +219,16 @@ mod test {
     use {
         super::*,
         crate::store::{
-            proof::wormhole_merkle::WormholeMerkleMessageProof,
+            proof::wormhole_merkle::{
+                WormholeMerkleMessageProof,
+                WormholeMerkleState,
+            },
             types::{
                 AccumulatorMessages,
                 ProofSet,
             },
         },
+        futures::future::join_all,
         pyth_sdk::UnixTimestamp,
         pythnet_sdk::{
             accumulators::merkle::MerklePath,
@@ -201,6 +237,7 @@ mod test {
                 Message,
                 PriceFeedMessage,
             },
+            wire::v1::WormholeMerkleRoot,
         },
     };
 
@@ -640,6 +677,186 @@ mod test {
         assert_eq!(
             storage.fetch_accumulator_state(30).await.unwrap().unwrap(),
             accumulator_state_at_slot_30
+        );
+    }
+
+    #[tokio::test]
+    pub async fn test_update_accumulator_state_works() {
+        // Initialize a storage with a cache size of 2 per key and the accumulator state.
+        let storage = LocalStorage::new_instance(2);
+
+        // Create an empty accumulator state at slot 10.
+        create_and_store_empty_accumulator_state_at_slot(&storage, 10).await;
+
+        // Update the accumulator state with slot 10.
+        let accumulator_messages = AccumulatorMessages {
+            magic:        [0; 4],
+            slot:         10,
+            ring_size:    3,
+            raw_messages: vec![],
+        };
+
+        let accumulator_messages_clone = accumulator_messages.clone();
+
+        storage
+            .update_accumulator_state(
+                10,
+                Box::new(|mut accumulator_state| {
+                    accumulator_state.accumulator_messages = Some(accumulator_messages_clone);
+                    accumulator_state
+                }),
+            )
+            .await
+            .unwrap();
+
+        // Make sure the retrieved accumulator state is what we stored.
+        assert_eq!(
+            storage.fetch_accumulator_state(10).await.unwrap(),
+            Some(AccumulatorState {
+                slot:                  10,
+                accumulator_messages:  Some(accumulator_messages),
+                wormhole_merkle_state: None,
+            })
+        );
+    }
+
+    #[tokio::test]
+    pub async fn test_update_accumulator_state_works_on_nonexistent_state() {
+        // Initialize an empty storage with a cache size of 2 per key and the accumulator state.
+        let storage = LocalStorage::new_instance(2);
+
+        // Update the accumulator state with slot 10.
+        let accumulator_messages = AccumulatorMessages {
+            magic:        [0; 4],
+            slot:         10,
+            ring_size:    3,
+            raw_messages: vec![],
+        };
+        let accumulator_messages_clone = accumulator_messages.clone();
+        storage
+            .update_accumulator_state(
+                10,
+                Box::new(|mut accumulator_state| {
+                    accumulator_state.accumulator_messages = Some(accumulator_messages_clone);
+                    accumulator_state
+                }),
+            )
+            .await
+            .unwrap();
+
+        // Make sure the retrieved accumulator state is what we stored.
+        assert_eq!(
+            storage.fetch_accumulator_state(10).await.unwrap(),
+            Some(AccumulatorState {
+                slot:                  10,
+                accumulator_messages:  Some(accumulator_messages),
+                wormhole_merkle_state: None,
+            })
+        );
+    }
+
+    #[tokio::test]
+    pub async fn test_update_accumulator_state_works_on_concurrent_updates() {
+        // Initialize an empty storage with a cache size of 20 per key and the accumulator state.
+        let storage = LocalStorage::new_instance(20);
+
+
+        // Run this check 10 times to make sure the concurrent updates work.
+        let mut futures = vec![];
+
+        for slot in 1..10 {
+            futures.push(storage.update_accumulator_state(
+                slot,
+                Box::new(|mut accumulator_state| {
+                    accumulator_state.accumulator_messages = Some(AccumulatorMessages {
+                        magic:        [0; 4],
+                        slot:         123,
+                        ring_size:    3,
+                        raw_messages: vec![],
+                    });
+                    accumulator_state
+                }),
+            ));
+            futures.push(storage.update_accumulator_state(
+                slot,
+                Box::new(|mut accumulator_state| {
+                    accumulator_state.wormhole_merkle_state = Some(WormholeMerkleState {
+                        root: WormholeMerkleRoot {
+                            root:      [0; 20],
+                            slot:      123,
+                            ring_size: 3,
+                        },
+                        vaa:  vec![],
+                    });
+                    accumulator_state
+                }),
+            ));
+        }
+
+        join_all(futures).await;
+
+        for slot in 1..10 {
+            assert_eq!(
+                storage.fetch_accumulator_state(slot).await.unwrap(),
+                Some(AccumulatorState {
+                    slot,
+                    accumulator_messages: Some(AccumulatorMessages {
+                        magic:        [0; 4],
+                        slot:         123,
+                        ring_size:    3,
+                        raw_messages: vec![],
+                    }),
+                    wormhole_merkle_state: Some(WormholeMerkleState {
+                        root: WormholeMerkleRoot {
+                            root:      [0; 20],
+                            slot:      123,
+                            ring_size: 3,
+                        },
+                        vaa:  vec![],
+                    }),
+                })
+            )
+        }
+    }
+
+    #[tokio::test]
+    pub async fn test_update_accumulator_state_evicts_cache() {
+        // Initialize a storage with a cache size of 2 per key and the accumulator state.
+        let storage = LocalStorage::new_instance(2);
+
+        storage
+            .update_accumulator_state(10, Box::new(|accumulator_state| accumulator_state))
+            .await
+            .unwrap();
+        storage
+            .update_accumulator_state(20, Box::new(|accumulator_state| accumulator_state))
+            .await
+            .unwrap();
+        storage
+            .update_accumulator_state(30, Box::new(|accumulator_state| accumulator_state))
+            .await
+            .unwrap();
+
+        // The accumulator state at slot 10 should be evicted from the cache.
+        assert_eq!(storage.fetch_accumulator_state(10).await.unwrap(), None);
+
+        // Retrieve the rest of accumulator states and make sure it is what we stored.
+        assert_eq!(
+            storage.fetch_accumulator_state(20).await.unwrap().unwrap(),
+            AccumulatorState {
+                slot:                  20,
+                accumulator_messages:  None,
+                wormhole_merkle_state: None,
+            }
+        );
+
+        assert_eq!(
+            storage.fetch_accumulator_state(30).await.unwrap().unwrap(),
+            AccumulatorState {
+                slot:                  30,
+                accumulator_messages:  None,
+                wormhole_merkle_state: None,
+            }
         );
     }
 }
