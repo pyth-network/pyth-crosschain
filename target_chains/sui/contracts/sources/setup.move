@@ -23,6 +23,12 @@ module pyth::setup {
         id: UID
     }
 
+    // The AdminCap gives one the ability to withdraw fee coins paid by
+    // users to update price feeds and stored in PriceInfoObjects
+    struct AdminCap has key, store {
+        id: UID
+    }
+
     fun init(ctx: &mut TxContext) {
         transfer::public_transfer(
             DeployerCap {

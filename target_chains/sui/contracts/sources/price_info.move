@@ -3,6 +3,7 @@ module pyth::price_info {
     use sui::tx_context::{TxContext};
     use sui::dynamic_object_field::{Self};
     use sui::table::{Self};
+    use sui::balance::{Self, Balance};
 
     use pyth::price_feed::{Self, PriceFeed};
     use pyth::price_identifier::{PriceIdentifier};
@@ -19,7 +20,8 @@ module pyth::price_info {
     /// Has a key ability, is unique for each price identifier, and lives in global store.
     struct PriceInfoObject has key, store {
         id: UID,
-        price_info: PriceInfo
+        price_info: PriceInfo,
+        fee_storage: Balance<sui::sui::SUI>
     }
 
     /// Copyable and droppable.
@@ -97,7 +99,8 @@ module pyth::price_info {
     ): PriceInfoObject {
         PriceInfoObject {
             id: object::new(ctx),
-            price_info: price_info
+            price_info: price_info,
+            fee_storage: balance::zero<sui::sui::SUI>()
         }
     }
 
