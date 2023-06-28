@@ -182,23 +182,23 @@ export class PriceServiceConnection {
    *
    * @param priceId Hex-encoded price id.
    * @param publishTime Epoch timestamp in seconds.
-   * @returns PriceFeed 
+   * @returns PriceFeed
    */
-    async getPriceFeed(
-      priceId: HexString,
-      publishTime: EpochTimeStamp
-    ): Promise<PriceFeed> {
-      const response = await this.httpClient.get("/api/get_price_feed", {
-        params: {
-          id: priceId,
-          publish_time: publishTime,
-          verbose: this.priceFeedRequestConfig.verbose,
-          binary: this.priceFeedRequestConfig.binary,
-        },
-      });
+  async getPriceFeed(
+    priceId: HexString,
+    publishTime: EpochTimeStamp
+  ): Promise<PriceFeed> {
+    const response = await this.httpClient.get("/api/get_price_feed", {
+      params: {
+        id: priceId,
+        publish_time: publishTime,
+        verbose: this.priceFeedRequestConfig.verbose,
+        binary: this.priceFeedRequestConfig.binary,
+      },
+    });
 
-      return PriceFeed.fromJson(response.data)
-    }
+    return PriceFeed.fromJson(response.data);
+  }
 
   /**
    * Fetch the list of available price feed ids.
