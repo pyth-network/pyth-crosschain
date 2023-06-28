@@ -69,8 +69,8 @@ contract PythAssetRegistry {
         emit BaseCurrencySet(baseCurrency, baseCurrencyUnit);
     }
 
-    function setValidTimePeriodSeconds(uint validTimePeriodSeconds) internal {
-        _registryState.validTimePeriodSeconds = validTimePeriodSeconds;
+    function setValidTimePeriodSeconds(uint validTimePeriodInSeconds) internal {
+        _registryState.validTimePeriodSeconds = validTimePeriodInSeconds;
     }
 
     function validTimePeriodSeconds() public view returns (uint) {
