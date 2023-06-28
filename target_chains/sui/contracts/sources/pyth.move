@@ -705,7 +705,7 @@ module pyth::pyth_tests{
             ctx(&mut scenario)
         );
 
-        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         coin::burn_for_testing<SUI>(test_coins);
         test_scenario::end(scenario);
     }
@@ -736,7 +736,7 @@ module pyth::pyth_tests{
             ctx(&mut scenario)
         );
 
-        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         coin::burn_for_testing<SUI>(test_coins);
         test_scenario::end(scenario);
     }
@@ -825,7 +825,7 @@ module pyth::pyth_tests{
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
 
-        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -900,7 +900,7 @@ module pyth::pyth_tests{
 
         return_shared(price_info_object_1);
 
-        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -966,7 +966,7 @@ module pyth::pyth_tests{
 
         return_shared(price_info_object_1);
 
-        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1094,7 +1094,7 @@ module pyth::pyth_tests{
         return_shared(price_info_object_2);
         return_shared(price_info_object_3);
 
-        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1102,7 +1102,7 @@ module pyth::pyth_tests{
     #[expected_failure(abort_code = pyth::pyth::E_INSUFFICIENT_FEE)]
     fun test_create_and_update_price_feeds_insufficient_fee() {
 
-        // this is not enough fee
+        // this is not enough fee and will cause a failure
         let coins_to_mint = 1;
 
         let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, coins_to_mint);
@@ -1171,7 +1171,7 @@ module pyth::pyth_tests{
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
 
-        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1225,7 +1225,7 @@ module pyth::pyth_tests{
         return_shared(price_info_object_4);
         coin::burn_for_testing<SUI>(test_coins);
 
-        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1319,7 +1319,7 @@ module pyth::pyth_tests{
         return_shared(price_info_object_4);
 
         coin::burn_for_testing<SUI>(test_coins);
-        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1367,7 +1367,7 @@ module pyth::pyth_tests{
         let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_3_MSGS, &clock);
 
         // append some extra garbage bytes at the end of the accumulator message, and make sure
-        // that test does not error out
+        // that parse_and_verify_accumulator_message does not error out
         vector::append(&mut TEST_ACCUMULATOR_3_MSGS, x"1234123412341234");
 
         let cur = cursor::new(TEST_ACCUMULATOR_3_MSGS);
@@ -1393,6 +1393,8 @@ module pyth::pyth_tests{
     fun price_feeds_equal(p1: &PriceInfo, p2: &PriceInfo): bool{
         price_info::get_price_feed(p1)== price_info::get_price_feed(p2)
     }
+
+    // helper functions for setting up tests
 
     // accumulator_test_3_to_price_info gets the data encoded within TEST_ACCUMULATOR_3_MSGS
     fun accumulator_test_3_to_price_info(offset: u64): vector<PriceInfo> {
@@ -1457,8 +1459,7 @@ module pyth::pyth_tests{
             )
     }
 
-    // helper functions for setting up tests
-    fun cleanup_wormstate_pyth_state_and_clock(worm_state: WormState, pyth_state: PythState, clock: Clock){
+    fun cleanup_worm_state_pyth_state_and_clock(worm_state: WormState, pyth_state: PythState, clock: Clock){
         return_shared(worm_state);
         return_shared(pyth_state);
         clock::destroy_for_testing(clock);
