@@ -691,8 +691,8 @@ module pyth::pyth_tests{
         let (scenario, test_coins, clock) =  setup_test(500 /* stale_price_threshold */, 23 /* governance emitter chain */, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], 50, 0);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         // Pass in a corrupt VAA, which should fail deseriaizing
         let corrupt_vaa = x"90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
@@ -725,8 +725,7 @@ module pyth::pyth_tests{
         let (scenario, test_coins, clock) = setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, 50, 0);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
@@ -759,8 +758,7 @@ module pyth::pyth_tests{
         let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
@@ -849,8 +847,7 @@ module pyth::pyth_tests{
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_SINGLE_FEED, &clock);
 
@@ -916,8 +913,7 @@ module pyth::pyth_tests{
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         // the verified vaa here contains the wrong merkle root
         let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_3_MSGS, &clock);
@@ -1012,8 +1008,7 @@ module pyth::pyth_tests{
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_3_MSGS, &clock);
 
@@ -1113,8 +1108,7 @@ module pyth::pyth_tests{
         let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, coins_to_mint);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
@@ -1187,8 +1181,7 @@ module pyth::pyth_tests{
         let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
@@ -1244,8 +1237,7 @@ module pyth::pyth_tests{
         let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
         let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
         pyth::create_price_feeds_using_batch_attestation(
@@ -1465,9 +1457,14 @@ module pyth::pyth_tests{
             )
     }
 
+    // helper functions for setting up tests
     fun cleanup_wormstate_pyth_state_and_clock(worm_state: WormState, pyth_state: PythState, clock: Clock){
         return_shared(worm_state);
         return_shared(pyth_state);
         clock::destroy_for_testing(clock);
+    }
+
+    fun take_wormhole_and_pyth_states(scenario: &Scenario): (PythState, WormState){
+        (take_shared<PythState>(scenario), take_shared<WormState>(scenario))
     }
 }
