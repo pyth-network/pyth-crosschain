@@ -705,9 +705,7 @@ module pyth::pyth_tests{
             ctx(&mut scenario)
         );
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
-        clock::destroy_for_testing(clock);
+        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
         coin::burn_for_testing<SUI>(test_coins);
         test_scenario::end(scenario);
     }
@@ -739,9 +737,7 @@ module pyth::pyth_tests{
             ctx(&mut scenario)
         );
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
-        clock::destroy_for_testing(clock);
+        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
         coin::burn_for_testing<SUI>(test_coins);
         test_scenario::end(scenario);
     }
@@ -826,14 +822,12 @@ module pyth::pyth_tests{
         authenticated_vector::destroy<PriceInfo>(vec);
 
         vector::destroy_empty(verified_vaas);
-        return_shared(pyth_state);
-        return_shared(worm_state);
         return_shared(price_info_object_1);
         return_shared(price_info_object_2);
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
 
-        clock::destroy_for_testing(clock);
+        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -907,11 +901,9 @@ module pyth::pyth_tests{
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         authenticated_vector::destroy<PriceInfo>(auth_price_infos);
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
         return_shared(price_info_object_1);
 
-        clock::destroy_for_testing(clock);
+        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -976,11 +968,9 @@ module pyth::pyth_tests{
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         authenticated_vector::destroy<PriceInfo>(auth_price_infos);
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
         return_shared(price_info_object_1);
 
-        clock::destroy_for_testing(clock);
+        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1105,13 +1095,11 @@ module pyth::pyth_tests{
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         authenticated_vector::destroy<PriceInfo>(auth_price_infos);
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
         return_shared(price_info_object_1);
         return_shared(price_info_object_2);
         return_shared(price_info_object_3);
 
-        clock::destroy_for_testing(clock);
+        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1183,14 +1171,13 @@ module pyth::pyth_tests{
         authenticated_vector::destroy<PriceInfo>(vec);
 
         vector::destroy_empty(verified_vaas);
-        return_shared(pyth_state);
-        return_shared(worm_state);
+
         return_shared(price_info_object_1);
         return_shared(price_info_object_2);
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
 
-        clock::destroy_for_testing(clock);
+        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1239,15 +1226,13 @@ module pyth::pyth_tests{
         price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
         vector::destroy_empty(price_info_object_vec);
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
         return_shared(price_info_object_1);
         return_shared(price_info_object_2);
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
         coin::burn_for_testing<SUI>(test_coins);
 
-        clock::destroy_for_testing(clock);
+        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1336,15 +1321,13 @@ module pyth::pyth_tests{
         assert!(current_price==fresh_price, 0);
         assert!(current_ema_price==fresh_ema_price, 0);
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
         return_shared(price_info_object_1);
         return_shared(price_info_object_2);
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
-        coin::burn_for_testing<SUI>(test_coins);
 
-        clock::destroy_for_testing(clock);
+        coin::burn_for_testing<SUI>(test_coins);
+        cleanup_wormstate_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1480,5 +1463,11 @@ module pyth::pyth_tests{
                     ),
                 ),
             )
+    }
+
+    fun cleanup_wormstate_pyth_state_and_clock(worm_state: WormState, pyth_state: PythState, clock: Clock){
+        return_shared(worm_state);
+        return_shared(pyth_state);
+        clock::destroy_for_testing(clock);
     }
 }
