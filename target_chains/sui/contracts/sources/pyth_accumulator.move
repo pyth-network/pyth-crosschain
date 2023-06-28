@@ -14,6 +14,7 @@ module pyth::accumulator {
     const E_INVALID_PROOF: u64 = 345;
     const E_INVALID_WORMHOLE_MESSAGE: u64 = 454;
     const E_INVALID_ACCUMULATOR_PAYLOAD: u64 = 554;
+    const E_INVALID_ACCUMULATOR_HEADER: u64 = 657;
 
     const ACCUMULATOR_UPDATE_WORMHOLE_VERIFICATION_MAGIC: u32 = 1096111958;
     const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: u64 = 1347305813;
@@ -29,6 +30,12 @@ module pyth::accumulator {
     // accumulator message (accessed via cursor) belong to the merkle tree defined by the merkle root encoded in
     // vaa_payload.
     public(friend) fun parse_and_verify_accumulator_message(cursor: &mut Cursor<u8>, vaa_payload: vector<u8>, clock: &Clock): vector<PriceInfo> {
+        let header = deserialize::deserialize_u32(cursor);
+
+        if ((header as u64) != PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
+            abort E_INVALID_ACCUMULATOR_HEADER
+        };
+
         let major = deserialize::deserialize_u8(cursor);
         assert!(major == MAJOR_VERSION, E_INVALID_ACCUMULATOR_PAYLOAD);
 
@@ -51,7 +58,7 @@ module pyth::accumulator {
     }
 
     // parse_accumulator_merkle_root_from_vaa_payload takes in some VAA bytes, verifies that the vaa
-    // corresponds to a merkle update, and finally returns the keccak hash of the merkle root.
+    // corresponds to a merkle update, and finally returns the merkle root.
     // Note: this function is adapted from the Aptos Pyth accumulator
     fun parse_accumulator_merkle_root_from_vaa_payload(message: vector<u8>): Bytes20 {
         let msg_payload_cursor = cursor::new(message);

@@ -18,7 +18,6 @@ module pyth::pyth {
     use pyth::setup::{Self, DeployerCap};
     use pyth::authenticated_vector::{Self, AuthenticatedVector};
     use pyth::accumulator::{Self};
-    use pyth::deserialize::{Self};
 
     use wormhole::external_address::{Self};
     use wormhole::vaa::{Self, VAA};
@@ -31,7 +30,6 @@ module pyth::pyth {
     const E_STALE_PRICE_UPDATE: u64 = 3;
     const E_UPDATE_AND_PRICE_INFO_OBJECT_MISMATCH: u64 = 4;
     const E_PRICE_UPDATE_NOT_FOUND_FOR_PRICE_INFO_OBJECT: u64 = 5;
-    const E_INVALID_ACCUMULATOR_HEADER: u64 = 6;
     const E_INVALID_ACCUMULATOR_MAGIC: u64 = 7;
 
     const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: u64 = 1347305813;
@@ -116,11 +114,6 @@ module pyth::pyth {
 
         // decode the price info updates from the VAA payload (first check if it is an accumulator or batch price update)
         let accumulator_message_cursor = cursor::new(accumulator_message);
-        let header = deserialize::deserialize_u32(&mut accumulator_message_cursor);
-
-        if ((header as u64) != PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
-            abort E_INVALID_ACCUMULATOR_HEADER
-        };
         let price_infos = accumulator::parse_and_verify_accumulator_message(&mut accumulator_message_cursor, vaa::take_payload(vaa), clock);
 
         // Create and share new price info objects, if not already exists.
@@ -219,18 +212,11 @@ module pyth::pyth {
 
         // decode the price info updates from the VAA payload (first check if it is an accumulator or batch price update)
         let accumulator_message_cursor = cursor::new(accumulator_message);
-        let header = deserialize::deserialize_u32(&mut accumulator_message_cursor);
+        let price_infos = accumulator::parse_and_verify_accumulator_message(&mut accumulator_message_cursor, vaa::take_payload(verified_vaa), clock);
 
-        let _price_infos = vector::empty<PriceInfo>();
-        if ((header as u64) == PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
-            _price_infos = accumulator::parse_and_verify_accumulator_message(&mut accumulator_message_cursor, vaa::take_payload(verified_vaa), clock);
-        }
-        else {
-            abort E_INVALID_ACCUMULATOR_HEADER
-        };
         // check that accumulator message has been fully consumed
         cursor::destroy_empty(accumulator_message_cursor);
-        authenticated_vector::new(_price_infos)
+        authenticated_vector::new(price_infos)
     }
 
     public fun create_authenticated_price_infos_using_batch_price_attestation(
@@ -1375,8 +1361,6 @@ module pyth::pyth_tests{
         let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_3_MSGS, &clock);
 
         let cur = cursor::new(TEST_ACCUMULATOR_3_MSGS);
-        // pop header from cursor before passing to parse_and_verify_accumulator_message
-        let _header: u32 = deserialize::deserialize_u32(&mut cur);
 
         let price_info_updates = accumulator::parse_and_verify_accumulator_message(&mut cur, vaa::take_payload(verified_vaa), &clock);
 
@@ -1412,8 +1396,6 @@ module pyth::pyth_tests{
         vector::append(&mut TEST_ACCUMULATOR_3_MSGS, x"1234123412341234");
 
         let cur = cursor::new(TEST_ACCUMULATOR_3_MSGS);
-        // pop header from cursor before passing to parse_and_verify_accumulator_message
-        let _header: u32 = deserialize::deserialize_u32(&mut cur);
 
         let price_info_updates = accumulator::parse_and_verify_accumulator_message(&mut cur, vaa::take_payload(verified_vaa), &clock);
 
