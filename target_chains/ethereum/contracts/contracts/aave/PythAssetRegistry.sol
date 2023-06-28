@@ -12,15 +12,15 @@ contract PythAssetRegistryStorage {
         uint256 BASE_CURRENCY_UNIT;
         // Map of asset priceIds (asset => priceId)
         mapping(address => bytes32) assetsPriceIds;
+        /// Maximum acceptable time period before price is considered to be stale.
+        /// This includes attestation delay, block time, and potential clock drift
+        /// between the source/target chains.
+        uint validTimePeriodSeconds;
     }
 }
 
 contract PythAssetRegistry {
     PythAssetRegistryStorage.State _registryState;
-
-    function pyth() public view returns (IPyth) {
-        return IPyth(_registryState.pyth);
-    }
 
     /**
      * @dev Emitted after the base currency is set
@@ -38,6 +38,10 @@ contract PythAssetRegistry {
      * @param source The priceId of the asset
      */
     event AssetSourceUpdated(address indexed asset, bytes32 indexed source);
+
+    function pyth() public view returns (IPyth) {
+        return IPyth(_registryState.pyth);
+    }
 
     function setPyth(address pythAddress) internal {
         _registryState.pyth = payable(pythAddress);
@@ -63,5 +67,13 @@ contract PythAssetRegistry {
         _registryState.BASE_CURRENCY = baseCurrency;
         _registryState.BASE_CURRENCY_UNIT = baseCurrencyUnit;
         emit BaseCurrencySet(baseCurrency, baseCurrencyUnit);
+    }
+
+    function setValidTimePeriodSeconds(uint validTimePeriodSeconds) internal {
+        _registryState.validTimePeriodSeconds = validTimePeriodSeconds;
+    }
+
+    function validTimePeriodSeconds() public view returns (uint) {
+        return _registryState.validTimePeriodSeconds;
     }
 }
