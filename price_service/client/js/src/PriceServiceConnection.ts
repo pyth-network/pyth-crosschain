@@ -175,6 +175,32 @@ export class PriceServiceConnection {
   }
 
   /**
+   * Fetch the PriceFeed of the given price id that is published since the given publish time.
+   * This will throw an error if the given publish time is in the future, or if the publish time
+   * is old and the price service endpoint does not have a db backend for historical requests.
+   * This will throw an axios error if there is a network problem or the price service returns a non-ok response (e.g: Invalid price id)
+   *
+   * @param priceId Hex-encoded price id.
+   * @param publishTime Epoch timestamp in seconds.
+   * @returns PriceFeed
+   */
+  async getPriceFeed(
+    priceId: HexString,
+    publishTime: EpochTimeStamp
+  ): Promise<PriceFeed> {
+    const response = await this.httpClient.get("/api/get_price_feed", {
+      params: {
+        id: priceId,
+        publish_time: publishTime,
+        verbose: this.priceFeedRequestConfig.verbose,
+        binary: this.priceFeedRequestConfig.binary,
+      },
+    });
+
+    return PriceFeed.fromJson(response.data);
+  }
+
+  /**
    * Fetch the list of available price feed ids.
    * This will throw an axios error if there is a network problem or the price service returns a non-ok response.
    *
