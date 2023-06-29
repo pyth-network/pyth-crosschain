@@ -145,7 +145,7 @@ module pyth::price_info {
     #[test_only]
     public fun destroy(price_info: PriceInfoObject){
         let PriceInfoObject {
-            id: id,
+            id,
             price_info: _,
         } = price_info;
         object::delete(id);

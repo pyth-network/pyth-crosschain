@@ -48,11 +48,11 @@ module pyth::batch_price_attestation {
         let _unknown = bytes::take_bytes(cur, (unknown_header_bytes as u64));
 
         Header {
-            magic: magic,
+            magic,
             header_size: (header_size as u64),
             version_minor: (version_minor as u64),
             version_major: (version_major as u64),
-            payload_id: payload_id,
+            payload_id,
         }
     }
 
@@ -105,7 +105,7 @@ module pyth::batch_price_attestation {
             header,
             attestation_count: (attestation_count as u64),
             attestation_size: (attestation_size as u64),
-            price_infos: price_infos,
+            price_infos,
         }
     }
 
