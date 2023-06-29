@@ -414,7 +414,7 @@ module pyth::pyth {
     }
 
     // withdraw_fee_coins allows the holder of AdminCap to withdraw fee coins accumulated in any PriceInfoObject.
-    // pyth_state is passed in only for the purpose of version-checking / making this function upgradeable
+    // pyth_state is passed in only for the purpose of version-checking via assert_latest_only, or making this function upgradeable
     public fun withdraw_fee_coins(_admin_cap: &AdminCap, pyth_state: &PythState, price_info_object: &mut PriceInfoObject, ctx: &mut TxContext): coin::Coin<SUI>  {
         let _ = state::assert_latest_only(pyth_state);
         price_info::withdraw_fee_coins(price_info_object, ctx)
