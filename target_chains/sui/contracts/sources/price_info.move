@@ -95,6 +95,10 @@ module pyth::price_info {
         table::contains<PriceIdentifier, ID>(ref, price_identifier)
     }
 
+    public fun get_balance(price_info_object: &PriceInfoObject): u64 {
+        balance::value(&price_info_object.fee_storage)
+    }
+
     public fun deposit_fee_coins(price_info_object: &mut PriceInfoObject, fee_coins: Coin<SUI>) {
         balance::join(&mut price_info_object.fee_storage, coin::into_balance(fee_coins));
     }
