@@ -427,7 +427,7 @@ module pyth::pyth_tests{
 
     use sui::sui::SUI;
     use sui::coin::{Self, Coin};
-    use sui::test_scenario::{Self, Scenario, ctx, take_shared, return_shared};
+    use sui::test_scenario::{Self, Scenario, ctx, take_shared, return_shared, take_from_address, return_to_address};
     use sui::package::Self;
     use sui::object::{Self, ID};
     use sui::clock::{Self, Clock};
@@ -436,8 +436,7 @@ module pyth::pyth_tests{
     use pyth::setup::{Self};
     use pyth::price_info::{Self, PriceInfo, PriceInfoObject};//, PriceInfo, PriceInfoObject};
     use pyth::data_source::{Self, DataSource};
-    //use pyth::i64::{Self};
-    //use pyth::price::{Self};
+    use pyth::setup::{AdminCap};
     use pyth::pyth::{Self, create_authenticated_price_infos_using_batch_price_attestation, update_single_price_feed};
     use pyth::authenticated_vector::{Self};
     use pyth::price_identifier::{Self};
@@ -767,6 +766,8 @@ module pyth::pyth_tests{
     }
 
     #[test]
+    // test_create_and_update_price_feeds_with_batch_attestation_success tests the creation and updating of price
+    // feeds, as well as depositing and withdrawing fee coins from a price info object using an AdminCap
     fun test_create_and_update_price_feeds_with_batch_attestation_success() {
         let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
@@ -818,17 +819,27 @@ module pyth::pyth_tests{
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
+        let fee_coins = coin::split(&mut test_coins, DEFAULT_BASE_UPDATE_FEE, ctx(&mut scenario));
         vec = update_single_price_feed(
             &mut pyth_state,
             vec,
             &mut price_info_object_1,
-            test_coins,
+            fee_coins,
             &clock
         );
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
+        // check price feed updated
         assert!(price_feeds_equal(authenticated_vector::borrow(&vec, 3), &price_info::get_price_info_from_price_info_object(&price_info_object_1)), 0);
+
+        // check fee coins are deposited in the price info object
+        assert!(price_info::get_balance(&price_info_object_1)==DEFAULT_BASE_UPDATE_FEE, 0);
+
+        // check fee coins can be withdrawn
+        let admin_cap = take_from_address<AdminCap>(&scenario, DEPLOYER);
+        let coins = pyth::withdraw_fee_coins(&admin_cap, &pyth_state, &mut price_info_object_1, ctx(&mut scenario));
+        assert!(coin::value(&coins)==DEFAULT_BASE_UPDATE_FEE, 0);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         authenticated_vector::destroy<PriceInfo>(vec);
@@ -840,8 +851,11 @@ module pyth::pyth_tests{
         return_shared(price_info_object_2);
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
+        return_to_address(DEPLOYER, admin_cap);
 
         clock::destroy_for_testing(clock);
+        coin::burn_for_testing(test_coins);
+        coin::burn_for_testing(coins);
         test_scenario::end(scenario);
     }
 
