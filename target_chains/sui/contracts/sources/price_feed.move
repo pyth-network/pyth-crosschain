@@ -17,9 +17,9 @@ module pyth::price_feed {
         price: Price,
         ema_price: Price): PriceFeed {
         PriceFeed {
-            price_identifier: price_identifier,
-            price: price,
-            ema_price: ema_price,
+            price_identifier,
+            price,
+            ema_price,
         }
     }
 
