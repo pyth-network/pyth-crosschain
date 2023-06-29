@@ -4,6 +4,8 @@ module pyth::price_info {
     use sui::dynamic_object_field::{Self};
     use sui::table::{Self};
     use sui::balance::{Self, Balance};
+    use sui::coin::{Self, Coin};
+    use sui::sui::SUI;
 
     use pyth::price_feed::{Self, PriceFeed};
     use pyth::price_identifier::{PriceIdentifier};
@@ -93,6 +95,16 @@ module pyth::price_info {
         table::contains<PriceIdentifier, ID>(ref, price_identifier)
     }
 
+    public fun deposit_fee_coins(price_info_object: &mut PriceInfoObject, fee_coins: Coin<SUI>) {
+        balance::join(&mut price_info_object.fee_storage, coin::into_balance(fee_coins));
+    }
+
+    public(friend) fun withdraw_fee_coins(price_info_object: &mut PriceInfoObject, ctx: &mut TxContext): coin::Coin<SUI>  {
+        let bal = balance::withdraw_all<SUI>(&mut price_info_object.fee_storage);
+        let coin = coin::from_balance(bal, ctx);
+        coin
+    }
+
     public(friend) fun new_price_info_object(
         price_info: PriceInfo,
         ctx: &mut TxContext
@@ -150,7 +162,9 @@ module pyth::price_info {
         let PriceInfoObject {
             id: id,
             price_info: _,
+            fee_storage: fee_storage
         } = price_info;
+        balance::destroy_for_testing(fee_storage);
         object::delete(id);
     }
 

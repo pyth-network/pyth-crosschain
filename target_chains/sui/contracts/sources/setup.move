@@ -24,7 +24,10 @@ module pyth::setup {
     }
 
     // The AdminCap gives one the ability to withdraw fee coins paid by
-    // users to update price feeds and stored in PriceInfoObjects
+    // users to update price feeds and stored in PriceInfoObjects. Only a single
+    // admin cap is ever created (namely within the init function, which is called
+    // only once upon initialization - it is not called again even when this
+    // contract upgrades).
     struct AdminCap has key, store {
         id: UID
     }
@@ -32,6 +35,12 @@ module pyth::setup {
     fun init(ctx: &mut TxContext) {
         transfer::public_transfer(
             DeployerCap {
+                id: object::new(ctx)
+            },
+            tx_context::sender(ctx)
+        );
+        transfer::public_transfer(
+            AdminCap {
                 id: object::new(ctx)
             },
             tx_context::sender(ctx)

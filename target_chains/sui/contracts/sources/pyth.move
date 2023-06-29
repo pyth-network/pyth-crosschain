@@ -15,7 +15,7 @@ module pyth::pyth {
     use pyth::price_feed::{Self};
     use pyth::price::{Self, Price};
     use pyth::price_identifier::{PriceIdentifier};
-    use pyth::setup::{Self, DeployerCap};
+    use pyth::setup::{Self, AdminCap, DeployerCap};
     use pyth::authenticated_vector::{Self, AuthenticatedVector};
     use pyth::accumulator::{Self};
 
@@ -272,7 +272,8 @@ module pyth::pyth {
         // This is a departure from Eth, where users don't get to necessarily choose.
         assert!(state::get_base_update_fee(pyth_state) <= coin::value(&fee), E_INSUFFICIENT_FEE);
 
-        transfer::public_transfer(fee, state::get_fee_recipient(pyth_state));
+        // store fee coins within price info object
+        price_info::deposit_fee_coins(price_info_object, fee);
 
         // Find price update corresponding to PriceInfoObject within the array of price_updates
         // and use it to update PriceInfoObject.
@@ -410,6 +411,11 @@ module pyth::pyth {
     /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public fun get_total_update_fee(pyth_state: &PythState, n: u64): u64 {
         state::get_base_update_fee(pyth_state) * n
+    }
+
+    // withdraw_fee_coins allows the holder of AdminCap to withdraw fee coins accumulated in any PriceInfoObject
+    public fun withdraw_fee_coins(_admin_cap: &AdminCap, price_info_object: &mut PriceInfoObject, ctx: &mut TxContext): coin::Coin<SUI>  {
+        price_info::withdraw_fee_coins(price_info_object, ctx)
     }
 }
 
