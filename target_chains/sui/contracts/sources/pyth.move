@@ -495,9 +495,9 @@ module pyth::pyth_tests{
         verified_vaas
     }
 
-    // get_verified_vaa_from_accumulator_message parses the accumulator message up until the vaa, then
-    // parses the vaa, yielding a verified wormhole::vaa::VAA object
-    fun get_verified_vaa_from_accumulator_message(worm_state: &WormState, accumulator_message: vector<u8>, clock: &Clock): VAA {
+    // get_vaa_bytes_from_accumulator_message extracts the vaa bytes in an accumulator message.
+    // This is exposed as a public
+    public fun get_vaa_bytes_from_accumulator_message(accumulator_message: vector<u8>): vector<u8> {
         let _PYTHNET_ACCUMULATOR_UPDATE_MAGIC: u64 = 1347305813;
 
         let cursor = cursor::new(accumulator_message);
@@ -516,7 +516,14 @@ module pyth::pyth_tests{
         let vaa_size = deserialize::deserialize_u16(&mut cursor);
         let vaa = deserialize::deserialize_vector(&mut cursor, (vaa_size as u64));
         cursor::take_rest(cursor);
-        vaa::parse_and_verify(worm_state, vaa, clock)
+        vaa
+    }
+
+    // get_verified_vaa_from_accumulator_message parses the accumulator message up until the vaa, then
+    // parses the vaa, yielding a verified wormhole::vaa::VAA object
+    fun get_verified_vaa_from_accumulator_message(worm_state: &WormState, accumulator_message: vector<u8>, clock: &Clock): VAA {
+        let vaa_bytes = get_vaa_bytes_from_accumulator_message(accumulator_message);
+        vaa::parse_and_verify(worm_state, vaa_bytes, clock)
     }
 
     #[test_only]
