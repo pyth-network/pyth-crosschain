@@ -99,24 +99,26 @@ function App() {
     // The Pyth price service client is used to retrieve the current Pyth prices and the price update data that
     // needs to be posted on-chain with each transaction.
     const pythPriceService = new EvmPriceServiceConnection(
-      CONFIG.priceServiceUrl
+      CONFIG.priceServiceUrl,
+      {
+        logger: {
+          error: console.error,
+          warn: console.warn,
+          info: () => undefined,
+          debug: () => undefined,
+          trace: () => undefined,
+        },
+      }
     );
 
     pythPriceService.subscribePriceFeedUpdates(
       [CONFIG.baseToken.pythPriceFeedId, CONFIG.quoteToken.pythPriceFeedId],
       (priceFeed: PriceFeed) => {
         const price = priceFeed.getPriceUnchecked(); // Fine to use unchecked (not checking for staleness) because this must be a recent price given that it comes from a websocket subscription.
-        setPythOffChainPrice({
-          ...pythOffChainPrice,
-          [priceFeed.id]: price,
-        });
+        setPythOffChainPrice((prev) => ({ ...prev, [priceFeed.id]: price }));
       }
     );
-
-    return () => {
-      pythPriceService.closeWebSocket();
-    };
-  }, [pythOffChainPrice]);
+  }, []);
 
   const [exchangeRateMeta, setExchangeRateMeta] = useState<
     ExchangeRateMeta | undefined

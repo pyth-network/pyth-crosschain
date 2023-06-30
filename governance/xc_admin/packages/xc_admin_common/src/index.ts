@@ -8,3 +8,5 @@ export * from "./remote_executor";
 export * from "./bpf_upgradable_loader";
 export * from "./deterministic_oracle_accounts";
 export * from "./cranks";
+export * from "./message_buffer";
+export * from "./contracts";

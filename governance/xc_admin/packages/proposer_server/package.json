@@ -1,0 +1,30 @@
+{
+  "name": "proposer_server",
+  "version": "0.0.0",
+  "description": "A server that proposes the instructions that it receives to the multisig",
+  "private": "true",
+  "author": "",
+  "homepage": "https://github.com/pyth-network/pyth-crosschain",
+  "license": "ISC",
+  "main": "src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pyth-network/pyth-crosschain/issues"
+  },
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.27.0",
+    "@pythnetwork/client": "^2.17.0",
+    "@solana/web3.js": "^1.76.0",
+    "@sqds/mesh": "^1.0.6",
+    "cors": "^2.8.5",
+    "ts-node": "^10.9.1",
+    "xc_admin_common": "*"
+  }
+}

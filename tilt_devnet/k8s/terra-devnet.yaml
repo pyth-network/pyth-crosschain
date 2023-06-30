@@ -77,13 +77,14 @@ spec:
           command:
             - /bin/sh
             - -c
-            - "sh /app/tools/deploy.sh && touch /app/tools/success && sleep infinity"
+            - "sh /home/node/target_chains/cosmwasm/tools/deploy.sh &&
+              touch /home/node/success && sleep infinity"
           readinessProbe:
             exec:
               command:
                 - test
                 - -e
-                - "/app/tools/success"
+                - "/home/node/success"
             initialDelaySeconds: 5
             periodSeconds: 5
       restartPolicy: Always

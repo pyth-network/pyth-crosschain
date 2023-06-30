@@ -6,6 +6,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletModalButton } from '@solana/wallet-adapter-react-ui'
 import { Cluster, PublicKey, TransactionInstruction } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
+import axios from 'axios'
 import { Fragment, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
@@ -13,7 +14,6 @@ import {
   isRemoteCluster,
   mapKey,
   PRICE_FEED_MULTISIG,
-  proposeInstructions,
   WORMHOLE_ADDRESS,
 } from 'xc_admin_common'
 import { ClusterContext } from '../contexts/ClusterContext'
@@ -30,10 +30,12 @@ const PermissionDepermissionKey = ({
   isPermission,
   pythProgramClient,
   squads,
+  proposerServerUrl,
 }: {
   isPermission: boolean
   pythProgramClient?: Program<PythOracle>
   squads?: SquadsMesh
+  proposerServerUrl: string
 }) => {
   const [publisherKey, setPublisherKey] = useState(
     'JTmFx5zX9mM94itfk2nQcJnQQDPjcv4UPD7SYj6xDCV'
@@ -77,39 +79,46 @@ const PermissionDepermissionKey = ({
       const fundingAccount = isRemote
         ? mapKey(multisigAuthority)
         : multisigAuthority
-      priceAccounts.map((priceAccount) => {
-        isPermission
-          ? pythProgramClient.methods
+
+      for (const priceAccount of priceAccounts) {
+        if (isPermission) {
+          instructions.push(
+            await pythProgramClient.methods
               .addPublisher(new PublicKey(publisherKey))
               .accounts({
                 fundingAccount,
                 priceAccount: priceAccount,
               })
               .instruction()
-              .then((instruction) => instructions.push(instruction))
-          : pythProgramClient.methods
+          )
+        } else {
+          instructions.push(
+            await pythProgramClient.methods
               .delPublisher(new PublicKey(publisherKey))
               .accounts({
                 fundingAccount,
                 priceAccount: priceAccount,
               })
               .instruction()
-              .then((instruction) => instructions.push(instruction))
-      })
+          )
+        }
+      }
       setIsSubmitButtonLoading(true)
       try {
-        const proposalPubkey = await proposeInstructions(
-          squads,
-          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)],
+        const response = await axios.post(proposerServerUrl + '/api/propose', {
           instructions,
-          isRemote,
-          wormholeAddress
-        )
+          cluster,
+        })
+        const { proposalPubkey } = response.data
         toast.success(`Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`)
         setIsSubmitButtonLoading(false)
         closeModal()
-      } catch (e: any) {
-        toast.error(capitalizeFirstLetter(e.message))
+      } catch (error: any) {
+        if (error.response) {
+          toast.error(capitalizeFirstLetter(error.response.data))
+        } else {
+          toast.error(capitalizeFirstLetter(error.message))
+        }
         setIsSubmitButtonLoading(false)
       }
     }

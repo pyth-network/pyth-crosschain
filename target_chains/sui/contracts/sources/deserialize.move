@@ -1,7 +1,9 @@
  module pyth::deserialize {
     use wormhole::bytes::{Self};
-    use wormhole::cursor::{take_rest, Cursor};
+    use wormhole::cursor::{Cursor};
     use pyth::i64::{Self, I64};
+    #[test_only]
+    use wormhole::cursor::{take_rest};
 
     #[test_only]
     use wormhole::cursor::{Self};

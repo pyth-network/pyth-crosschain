@@ -76,7 +76,7 @@ module pyth::i64 {
     }
 
     #[test]
-    #[expected_failure(abort_code = 65557)]
+    #[expected_failure(abort_code = 65557, location = pyth::i64)]
     fun test_magnitude_too_large_positive() {
         new(0x8000000000000000, false);
     }
@@ -88,7 +88,7 @@ module pyth::i64 {
     }
 
     #[test]
-    #[expected_failure(abort_code = 65557)]
+    #[expected_failure(abort_code = 65557, location = pyth::i64)]
     fun test_magnitude_too_large_negative() {
         new(0x8000000000000001, true);
     }
@@ -115,7 +115,7 @@ module pyth::i64 {
     }
 
     #[test]
-    #[expected_failure(abort_code = 196609)]
+    #[expected_failure(abort_code = 196609, location = pyth::i64)]
     fun test_get_magnitude_if_positive_negative() {
         assert!(get_magnitude_if_positive(&new(7686, true)) == 7686, 1);
     }
@@ -126,7 +126,7 @@ module pyth::i64 {
     }
 
     #[test]
-    #[expected_failure(abort_code = 196627)]
+    #[expected_failure(abort_code = 196627, location = pyth::i64)]
     fun test_get_magnitude_if_negative_positive() {
         assert!(get_magnitude_if_negative(&new(7686, false)) == 7686, 1);
     }

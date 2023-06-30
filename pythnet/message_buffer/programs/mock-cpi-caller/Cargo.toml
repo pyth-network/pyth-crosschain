@@ -1,0 +1,31 @@
+[package]
+name = "mock-cpi-caller"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "mock_cpi_caller"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+test-bpf = []
+
+[dependencies]
+anchor-lang = "0.27.0"
+message_buffer = { path = "../message_buffer", features = ["cpi"] }
+# needed for the new #[account(zero_copy)] in anchor 0.27.0
+bytemuck = { version = "1.4.0", features = ["derive", "min_const_generics"]}
+
+[dev-dependencies]
+solana-sdk = "1.14.16"
+solana-program-test = "1.14.16"
+solana-validator = "1.14.16"
+assert_matches = "1.4.0"
+solana-logger = "1.14.16"
+byteorder = "1.4.3"

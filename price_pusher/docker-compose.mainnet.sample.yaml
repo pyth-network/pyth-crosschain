@@ -1,7 +1,7 @@
 services:
   spy:
     # Find latest Guardian images in https://github.com/wormhole-foundation/wormhole/pkgs/container/guardiand
-    image: ghcr.io/wormhole-foundation/guardiand:v2.14.8.1
+    image: ghcr.io/wormhole-foundation/guardiand:v2.17.0
     command:
       - "spy"
       - "--nodeKey"
@@ -16,7 +16,7 @@ services:
       - "warn"
   price-service:
     # Find latest price service images https://gallery.ecr.aws/pyth-network/xc-server
-    image: public.ecr.aws/pyth-network/xc-server:v3.0.0
+    image: public.ecr.aws/pyth-network/xc-server:v3.0.3
     environment:
       SPY_SERVICE_HOST: "spy:7072"
       SPY_SERVICE_FILTERS: |
@@ -35,6 +35,7 @@ services:
       READINESS_SPY_SYNC_TIME_SECONDS: "20"
       READINESS_NUM_LOADED_SYMBOLS: "50"
       LOG_LEVEL: warning
+      WORMHOLE_CLUSTER: mainnet
     healthcheck:
       test:
         [

@@ -35,6 +35,12 @@ export const CONFIG: Config = {
       name: "localterra",
     },
   },
+  [NETWORKS.INJECTIVE_MAINNET]: {
+    type: CONFIG_TYPE.INJECTIVE,
+    host: {
+      network: Network.Mainnet,
+    },
+  },
   [NETWORKS.INJECTIVE_TESTNET]: {
     type: CONFIG_TYPE.INJECTIVE,
     host: {

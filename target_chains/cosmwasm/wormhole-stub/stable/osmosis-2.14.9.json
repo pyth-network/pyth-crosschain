@@ -1,0 +1,40 @@
+{
+  "deploy-wormhole-code": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "THIS WAS GENERATED THROUGH A PROPOSAL. CODE LINK: https://celatone.osmosis.zone/mainnet/codes/46",
+      "codeId": 46
+    }
+  },
+  "instantiate-contract": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "38CF004A945F732D4616E330B79922EF2CAEB4C13608C7878C74C21FDC6DE8F8",
+      "contractAddr": "osmo1t7qham5kle36rs28se2xd7cckm9mpwzgt65t40lrdf8fcq3837qqjvw80s"
+    }
+  },
+  "set-own-admin": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "043B049A6FEBD93C00D58FC10ECE2E887553DA4FF18DB4B3D2373D6DC8247974"
+    }
+  },
+  "GUARDIAN_SET_UPGRADE_1_VAA": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "FF1A1999088B7848A04BA132108A6638915A0260AAC667F213BA1CEEC358F288"
+    }
+  },
+  "GUARDIAN_SET_UPGRADE_2_VAA": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "2A324FB5341DA73FF39F640987AB3E25EB197E851C898D8DA928D8A13CF83E1A"
+    }
+  },
+  "GUARDIAN_SET_UPGRADE_3_VAA": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "E1097EF9DDF29345E375B44F48A671B9441AC7CF7DB60ECE7EC83DCBA1F885AE"
+    }
+  }
+}

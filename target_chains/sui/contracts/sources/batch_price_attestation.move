@@ -163,27 +163,23 @@ module pyth::batch_price_attestation {
     #[test]
     #[expected_failure]
     fun test_deserialize_batch_price_attestation_invalid_magic() {
-        use sui::test_scenario::{Self, take_shared, return_shared, ctx};
+        use sui::test_scenario::{Self, ctx};
         let test = test_scenario::begin(@0x1234);
-        clock::create_for_testing(ctx(&mut test));
-        test_scenario::next_tx(&mut test, @0x1234);
-        let test_clock = take_shared<Clock>(&test);
-
+        let test_clock = clock::create_for_testing(ctx(&mut test));
         // A batch price attestation with a magic number of 0x50325749
         let bytes = x"5032574900030000000102000400951436e0be37536be96f0896366089506a59763d036728332d3e3038047851aea7c6c75c89f14810ec1c54c03ab8f1864a4c4032791f05747f560faec380a695d1000000000000049a0000000000000008fffffffb00000000000005dc0000000000000003000000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000006150000000000000007215258d81468614f6b7e194c5d145609394f67b041e93e6695dcc616faadd0603b9551a68d01d954d6387aff4df1529027ffb2fee413082e509feb29cc4904fe000000000000041a0000000000000003fffffffb00000000000005cb0000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e4000000000000048600000000000000078ac9cf3ab299af710d735163726fdae0db8465280502eb9f801f74b3c1bd190333832fad6e36eb05a8972fe5f219b27b5b2bb2230a79ce79beb4c5c5e7ecc76d00000000000003f20000000000000002fffffffb00000000000005e70000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e40000000000000685000000000000000861db714e9ff987b6fedf00d01f9fea6db7c30632d6fc83b7bc9459d7192bc44a21a28b4c6619968bd8c20e95b0aaed7df2187fd310275347e0376a2cd7427db800000000000006cb0000000000000001fffffffb00000000000005e40000000000000003010000000100000001000000006329c0eb000000006329c0e9000000006329c0e400000000000007970000000000000001";
         let _ = destroy(deserialize(bytes, &test_clock));
-        return_shared(test_clock);
+        clock::destroy_for_testing(test_clock);
         test_scenario::end(test);
     }
 
     #[test]
     fun test_deserialize_batch_price_attestation() {
-        use sui::test_scenario::{Self, take_shared, return_shared, ctx};
+        use sui::test_scenario::{Self, ctx};
         // Set the arrival time
         let test = test_scenario::begin(@0x1234);
-        clock::create_for_testing(ctx(&mut test));
+        let test_clock = clock::create_for_testing(ctx(&mut test));
         test_scenario::next_tx(&mut test, @0x1234);
-        let test_clock = take_shared<Clock>(&test);
         let arrival_time_in_seconds = clock::timestamp_ms(&test_clock) / 1000;
 
         // let arrival_time = tx_context::epoch(ctx(&mut test));
@@ -244,7 +240,7 @@ module pyth::batch_price_attestation {
         assert!(&expected == &deserialized, 1);
         destroy(expected);
         destroy(deserialized);
-        return_shared(test_clock);
+        clock::destroy_for_testing(test_clock);
         test_scenario::end(test);
     }
 }

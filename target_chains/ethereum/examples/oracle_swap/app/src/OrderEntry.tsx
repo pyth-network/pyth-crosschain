@@ -43,7 +43,7 @@ export function OrderEntry(props: {
     } else {
       setSpentToken(props.baseToken);
     }
-  }, [props.isBuy]);
+  }, [props.isBuy, props.baseToken, props.quoteToken]);
 
   useEffect(() => {
     async function helper() {
@@ -67,7 +67,7 @@ export function OrderEntry(props: {
     return () => {
       clearInterval(interval);
     };
-  }, [props.web3, props.account, spentToken]);
+  }, [props.web3, props.account, props.swapContractAddress, spentToken]);
 
   useEffect(() => {
     try {
@@ -76,7 +76,7 @@ export function OrderEntry(props: {
     } catch (error) {
       setQtyBn(undefined);
     }
-  }, [qty]);
+  }, [props.baseToken.decimals, qty]);
 
   useEffect(() => {
     if (qtyBn !== undefined) {
@@ -94,7 +94,7 @@ export function OrderEntry(props: {
     } else {
       setApproxQuoteSize(undefined);
     }
-  }, [props.approxPrice, qtyBn]);
+  }, [props.approxPrice, props.baseToken.decimals, qtyBn]);
 
   return (
     <div>
@@ -201,7 +201,7 @@ async function sendSwapTx(
   );
 
   const updateFee = await pythContract.methods
-    .getUpdateFee(priceFeedUpdateData.length)
+    .getUpdateFee(priceFeedUpdateData)
     .call();
 
   const swapContract = new web3.eth.Contract(

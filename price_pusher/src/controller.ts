@@ -1,7 +1,7 @@
 import { UnixTimestamp } from "@pythnetwork/price-service-client";
 import { DurationInSeconds, sleep } from "./utils";
-import { IPricePusher, IPriceListener } from "./interface";
-import { PriceConfig, shouldUpdate } from "./price-config";
+import { IPriceListener, IPricePusher } from "./interface";
+import { PriceConfig, shouldUpdate, UpdateCondition } from "./price-config";
 
 export class Controller {
   private pushingFrequency: DurationInSeconds;
@@ -28,6 +28,9 @@ export class Controller {
     await sleep(this.pushingFrequency * 1000);
 
     for (;;) {
+      // We will push all prices whose update condition is YES or EARLY as long as there is
+      // at least one YES.
+      let pushThresholdMet = false;
       const pricesToPush: PriceConfig[] = [];
       const pubTimesToPush: UnixTimestamp[] = [];
 
@@ -39,12 +42,24 @@ export class Controller {
         const sourceLatestPrice =
           this.sourcePriceListener.getLatestPriceInfo(priceId);
 
-        if (shouldUpdate(priceConfig, sourceLatestPrice, targetLatestPrice)) {
+        const priceShouldUpdate = shouldUpdate(
+          priceConfig,
+          sourceLatestPrice,
+          targetLatestPrice
+        );
+        if (priceShouldUpdate == UpdateCondition.YES) {
+          pushThresholdMet = true;
+        }
+
+        if (
+          priceShouldUpdate == UpdateCondition.YES ||
+          priceShouldUpdate == UpdateCondition.EARLY
+        ) {
           pricesToPush.push(priceConfig);
           pubTimesToPush.push((targetLatestPrice?.publishTime || 0) + 1);
         }
       }
-      if (pricesToPush.length !== 0) {
+      if (pushThresholdMet) {
         console.log(
           "Some of the above values passed the threshold. Will push the price."
         );

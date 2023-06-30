@@ -15,6 +15,11 @@ const PriceConfigFileSchema: Joi.Schema = Joi.array()
       time_difference: Joi.number().required(),
       price_deviation: Joi.number().required(),
       confidence_ratio: Joi.number().required(),
+      early_update: Joi.object({
+        time_difference: Joi.number().optional(),
+        price_deviation: Joi.number().optional(),
+        confidence_ratio: Joi.number().optional(),
+      }).optional(),
     })
   )
   .unique("id")
@@ -27,6 +32,12 @@ export type PriceConfig = {
   timeDifference: DurationInSeconds;
   priceDeviation: PctNumber;
   confidenceRatio: PctNumber;
+
+  // An early update happens when another price has met the conditions to be pushed, so this
+  // price can be included in a batch update for minimal gas cost.
+  earlyUpdateTimeDifference: DurationInSeconds | undefined;
+  earlyUpdatePriceDeviation: PctNumber | undefined;
+  earlyUpdateConfidenceRatio: PctNumber | undefined;
 };
 
 export function readPriceConfigFile(path: string): PriceConfig[] {
@@ -44,9 +55,22 @@ export function readPriceConfigFile(path: string): PriceConfig[] {
       timeDifference: priceConfigRaw.time_difference,
       priceDeviation: priceConfigRaw.price_deviation,
       confidenceRatio: priceConfigRaw.confidence_ratio,
+
+      earlyUpdateTimeDifference: priceConfigRaw.early_update?.time_difference,
+      earlyUpdatePriceDeviation: priceConfigRaw.early_update?.price_deviation,
+      earlyUpdateConfidenceRatio: priceConfigRaw.early_update?.confidence_ratio,
     };
     return priceConfig;
   });
+}
+
+export enum UpdateCondition {
+  // This price feed must be updated
+  YES,
+  // This price feed may be updated as part of a larger batch
+  EARLY,
+  // This price feed shouldn't be updated
+  NO,
 }
 
 /**
@@ -59,12 +83,12 @@ export function shouldUpdate(
   priceConfig: PriceConfig,
   sourceLatestPrice: PriceInfo | undefined,
   targetLatestPrice: PriceInfo | undefined
-): boolean {
+): UpdateCondition {
   const priceId = priceConfig.id;
 
   // There is no price to update the target with.
   if (sourceLatestPrice === undefined) {
-    return false;
+    return UpdateCondition.YES;
   }
 
   // It means that price never existed there. So we should push the latest price feed.
@@ -72,12 +96,12 @@ export function shouldUpdate(
     console.log(
       `${priceConfig.alias} (${priceId}) is not available on the target network. Pushing the price.`
     );
-    return true;
+    return UpdateCondition.YES;
   }
 
   // The current price is not newer than the price onchain
   if (sourceLatestPrice.publishTime < targetLatestPrice.publishTime) {
-    return false;
+    return UpdateCondition.NO;
   }
 
   const timeDifference =
@@ -99,19 +123,31 @@ export function shouldUpdate(
   console.log("Target latest price: ", targetLatestPrice);
 
   console.log(
-    `Time difference: ${timeDifference} (< ${priceConfig.timeDifference}?) OR ` +
+    `Time difference: ${timeDifference} (< ${priceConfig.timeDifference}? / early: < ${priceConfig.earlyUpdateTimeDifference}) OR ` +
       `Price deviation: ${priceDeviationPct.toFixed(5)}% (< ${
         priceConfig.priceDeviation
-      }%?) OR ` +
+      }%? / early: < ${priceConfig.earlyUpdatePriceDeviation}%?) OR ` +
       `Confidence ratio: ${confidenceRatioPct.toFixed(5)}% (< ${
         priceConfig.confidenceRatio
-      }%?)`
+      }%? / early: < ${priceConfig.earlyUpdatePriceDeviation}%?)`
   );
 
-  const result =
+  if (
     timeDifference >= priceConfig.timeDifference ||
     priceDeviationPct >= priceConfig.priceDeviation ||
-    confidenceRatioPct >= priceConfig.confidenceRatio;
-
-  return result;
+    confidenceRatioPct >= priceConfig.confidenceRatio
+  ) {
+    return UpdateCondition.YES;
+  } else if (
+    (priceConfig.earlyUpdateTimeDifference !== undefined &&
+      timeDifference >= priceConfig.earlyUpdateTimeDifference) ||
+    (priceConfig.earlyUpdatePriceDeviation !== undefined &&
+      priceDeviationPct >= priceConfig.earlyUpdatePriceDeviation) ||
+    (priceConfig.earlyUpdateConfidenceRatio !== undefined &&
+      confidenceRatioPct >= priceConfig.earlyUpdateConfidenceRatio)
+  ) {
+    return UpdateCondition.EARLY;
+  } else {
+    return UpdateCondition.NO;
+  }
 }

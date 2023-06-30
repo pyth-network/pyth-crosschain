@@ -7,6 +7,13 @@ module pyth::data_source {
 
     use wormhole::external_address::ExternalAddress;
 
+    friend pyth::state;
+    friend pyth::set_data_sources;
+    friend pyth::pyth;
+    friend pyth::set_governance_data_source;
+    #[test_only]
+    friend pyth::pyth_tests;
+
     const KEY: vector<u8> = b"data_sources";
     const E_DATA_SOURCE_REGISTRY_ALREADY_EXISTS: u64 = 0;
     const E_DATA_SOURCE_ALREADY_REGISTERED: u64 = 1;
@@ -16,7 +23,7 @@ module pyth::data_source {
         emitter_address: ExternalAddress,
     }
 
-    public fun new_data_source_registry(parent_id: &mut UID, ctx: &mut TxContext) {
+    public(friend) fun new_data_source_registry(parent_id: &mut UID, ctx: &mut TxContext) {
         assert!(
             !dynamic_field::exists_(parent_id, KEY),
             E_DATA_SOURCE_REGISTRY_ALREADY_EXISTS // TODO - add custom error type
@@ -28,7 +35,7 @@ module pyth::data_source {
         )
     }
 
-    public fun add(parent_id: &mut UID, data_source: DataSource) {
+    public(friend) fun add(parent_id: &mut UID, data_source: DataSource) {
         assert!(
             !contains(parent_id, data_source),
             E_DATA_SOURCE_ALREADY_REGISTERED
@@ -39,7 +46,7 @@ module pyth::data_source {
         )
     }
 
-    public fun empty(parent_id: &mut UID){
+    public(friend) fun empty(parent_id: &mut UID){
         set::empty<DataSource>(
             dynamic_field::borrow_mut(parent_id, KEY)
         )
@@ -50,10 +57,18 @@ module pyth::data_source {
         set::contains<DataSource>(ref, data_source)
     }
 
-    public fun new(emitter_chain: u64, emitter_address: ExternalAddress): DataSource {
+    public(friend) fun new(emitter_chain: u64, emitter_address: ExternalAddress): DataSource {
         DataSource {
             emitter_chain: emitter_chain,
             emitter_address: emitter_address,
         }
+    }
+
+    public fun emitter_chain(data_source: &DataSource): u64{
+        data_source.emitter_chain
+    }
+
+    public fun emitter_address(data_source: &DataSource): ExternalAddress{
+        data_source.emitter_address
     }
 }

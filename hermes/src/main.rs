@@ -1,88 +1,63 @@
 #![feature(never_type)]
+#![feature(slice_group_by)]
 
 use {
     crate::store::Store,
     anyhow::Result,
-    futures::{
-        channel::mpsc::Receiver,
-        SinkExt,
-    },
-    std::time::Duration,
     structopt::StructOpt,
-    tokio::{
-        spawn,
-        time::sleep,
-    },
 };
 
+mod api;
 mod config;
 mod macros;
 mod network;
 mod store;
 
-/// A Wormhole VAA is an array of bytes. TODO: Decoding.
-#[derive(Debug, Clone, Eq, Hash, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct Vaa {
-    pub data: Vec<u8>,
-}
-
-/// A PythNet AccountUpdate is a 32-byte address and a variable length data field.
-///
-/// This type is emitted by the Geyser plugin when an observed account is updated and is forwrarded
-/// to this process via IPC.
-#[derive(Debug, Clone, Eq, Hash, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct AccountUpdate {
-    addr: [u8; 32],
-    data: Vec<u8>,
-}
-
-/// Handler for LibP2P messages. Currently these consist only of Wormhole Observations.
-fn handle_message(_observation: network::p2p::Observation) -> Result<()> {
-    println!("Rust: Received Observation");
-    Ok(())
-}
-
 /// Initialize the Application. This can be invoked either by real main, or by the Geyser plugin.
-async fn init(_update_channel: Receiver<AccountUpdate>) -> Result<()> {
-    log::info!("Initializing PythNet...");
+async fn init() -> Result<()> {
+    log::info!("Initializing Hermes...");
 
     // Parse the command line arguments with StructOpt, will exit automatically on `--help` or
     // with invalid arguments.
     match config::Options::from_args() {
         config::Options::Run {
-            id: _,
-            id_secp256k1: _,
+            pythnet_ws_endpoint,
+            pythnet_http_endpoint,
             wh_network_id,
             wh_bootstrap_addrs,
             wh_listen_addrs,
-            rpc_addr,
-            p2p_addr,
-            p2p_peer: _,
+            wh_contract_addr,
+            api_addr,
         } => {
-            log::info!("Starting PythNet...");
+            // A channel to emit state updates to api
+            let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
+
+            log::info!("Running Hermes...");
+            let store = Store::new_with_local_cache(update_tx, 1000);
 
             // Spawn the P2P layer.
-            log::info!("Starting P2P server on {}", p2p_addr);
+            log::info!("Starting P2P server on {:?}", wh_listen_addrs);
             network::p2p::spawn(
-                handle_message,
+                store.clone(),
                 wh_network_id.to_string(),
                 wh_bootstrap_addrs,
                 wh_listen_addrs,
             )
             .await?;
 
-            // Spawn the RPC server.
-            log::info!("Starting RPC server on {}", rpc_addr);
+            // Spawn the Pythnet listener
+            log::info!("Starting Pythnet listener using {}", pythnet_ws_endpoint);
+            network::pythnet::spawn(
+                store.clone(),
+                pythnet_ws_endpoint,
+                pythnet_http_endpoint,
+                wh_contract_addr,
+            )
+            .await?;
 
-            // TODO: Add max size to the config
-            network::rpc::spawn(rpc_addr.to_string(), Store::new_with_local_cache(1000)).await?;
-
-            // Wait on Ctrl+C similar to main.
-            tokio::signal::ctrl_c().await?;
-        }
-
-        config::Options::Keygen { output: _ } => {
-            println!("Currently not implemented.");
+            // Run the RPC server and wait for it to shutdown gracefully.
+            log::info!("Starting RPC server on {}", api_addr);
+            api::run(store.clone(), update_rx, api_addr.to_string()).await?;
         }
     }
 
@@ -93,43 +68,15 @@ async fn init(_update_channel: Receiver<AccountUpdate>) -> Result<()> {
 async fn main() -> Result<!> {
     env_logger::init();
 
-    // Generate a stream of fake AccountUpdates when run in binary mode. This is temporary until
-    // the Geyser component of the accumulator work is complete.
-    let (mut tx, rx) = futures::channel::mpsc::channel(1);
-
-    spawn(async move {
-        let mut data = 0u32;
-
-        loop {
-            // Simulate PythNet block time.
-            sleep(Duration::from_millis(200)).await;
-
-            // Ignore the return type of `send`, since we don't care if the receiver is closed.
-            // It's better to let the process continue to run as this is just a temporary hack.
-            let _ = SinkExt::send(
-                &mut tx,
-                AccountUpdate {
-                    addr: [0; 32],
-                    data: {
-                        data += 1;
-                        let mut data = data.to_be_bytes().to_vec();
-                        data.resize(32, 0);
-                        data
-                    },
-                },
-            )
-            .await;
-        }
-    });
-
     tokio::spawn(async move {
         // Launch the application. If it fails, print the full backtrace and exit. RUST_BACKTRACE
         // should be set to 1 for this otherwise it will only print the top-level error.
-        if let Err(result) = init(rx).await {
+        if let Err(result) = init().await {
             eprintln!("{}", result.backtrace());
             for cause in result.chain() {
                 eprintln!("{cause}");
             }
+            std::process::exit(1);
         }
     });
 

@@ -1,2 +1,5 @@
 artifacts/
+lib
+
 !bin
+!wormhole-stub/artifacts
