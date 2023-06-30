@@ -1,7 +1,7 @@
 services:
   spy:
     # Find latest Guardian images in https://github.com/wormhole-foundation/wormhole/pkgs/container/guardiand
-    image: ghcr.io/wormhole-foundation/guardiand:v2.17.0
+    image: ghcr.io/wormhole-foundation/guardiand:v2.19.0
     command:
       - "spy"
       - "--nodeKey"
@@ -16,7 +16,7 @@ services:
       - "warn"
   price-service:
     # Find latest price service images https://gallery.ecr.aws/pyth-network/xc-server
-    image: public.ecr.aws/pyth-network/xc-server:v3.0.3
+    image: public.ecr.aws/pyth-network/xc-server:v3.0.8
     environment:
       SPY_SERVICE_HOST: "spy:7072"
       SPY_SERVICE_FILTERS: |
@@ -32,8 +32,8 @@ services:
         ]
       REST_PORT: "4200"
       PROM_PORT: "8081"
-      READINESS_SPY_SYNC_TIME_SECONDS: "20"
-      READINESS_NUM_LOADED_SYMBOLS: "50"
+      READINESS_SPY_SYNC_TIME_SECONDS: "5"
+      READINESS_NUM_LOADED_SYMBOLS: "280"
       LOG_LEVEL: warning
       WORMHOLE_CLUSTER: mainnet
     healthcheck:
@@ -50,12 +50,20 @@ services:
     depends_on:
       - spy
   price-pusher:
-    build:
-      context: .
-    # Uncomment this line (and comment out the above lines) to use a prebuilt image. Replace <version>
-    # with the latest released image of the price pusher from this repo release page:
-    # https://github.com/pyth-network/pyth-crosschain/releases
-    # image: public.ecr.aws/pyth-network/xc-price-pusher:v<version>
+    # Use this to build the price pusher from source. A dependency of the pusher docker
+    # image is the pyth-crosschain monorepo lerna docker image. Build lerna image
+    # using the following command from the repo root:
+    # `docker buildx build -f tilt_devnet/docker_images/Dockerfile.lerna -t lerna .`
+    #
+    # Please note that the docker build from source only works in x86_64 platforms
+    # and doesn't work on arm platforms (like Apple M1/M2).
+    #
+    # build:
+    #   context: .
+
+    # Replace <version> with the latest released image of the price pusher from here:
+    # https://gallery.ecr.aws/pyth-network/xc-price-pusher
+    image: public.ecr.aws/pyth-network/xc-price-pusher:v<version>
     restart: always
     command:
       - "--"
