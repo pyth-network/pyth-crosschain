@@ -39,6 +39,7 @@ use {
             WormholeQueryMsg,
         },
     },
+    byteorder::BigEndian,
     cosmwasm_std::{
         coin,
         entry_point,
@@ -59,6 +60,10 @@ use {
         WasmMsg,
         WasmQuery,
     },
+    pyth_sdk::{
+        Identifier,
+        UnixTimestamp,
+    },
     pyth_sdk_cw::{
         error::PythContractError,
         ExecuteMsg,
@@ -72,6 +77,21 @@ use {
         BatchPriceAttestation,
         PriceAttestation,
         PriceStatus,
+    },
+    pythnet_sdk::{
+        accumulators::merkle::MerkleRoot,
+        hashers::keccak256_160::Keccak160,
+        messages::Message,
+        wire::{
+            from_slice,
+            v1::{
+                AccumulatorUpdateData,
+                Proof,
+                WormholeMessage,
+                WormholePayload,
+                PYTHNET_ACCUMULATOR_UPDATE_MAGIC,
+            },
+        },
     },
     std::{
         collections::HashSet,
@@ -130,7 +150,7 @@ pub fn instantiate(
 /// *Warning* this function does not verify the emitter of the wormhole message; it only checks
 /// that the wormhole signatures are valid. The caller is responsible for checking that the message
 /// originates from the expected emitter.
-pub fn parse_and_verify_vaa(deps: DepsMut, block_time: u64, data: &Binary) -> StdResult<ParsedVAA> {
+pub fn parse_and_verify_vaa(deps: Deps, block_time: u64, data: &Binary) -> StdResult<ParsedVAA> {
     let cfg = config_read(deps.storage).load()?;
     let vaa: ParsedVAA = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: cfg.wormhole_contract.to_string(),
@@ -240,39 +260,19 @@ fn update_price_feeds(
     info: MessageInfo,
     data: &[Binary],
 ) -> StdResult<Response<MsgWrapper>> {
-    let state = config_read(deps.storage).load()?;
-
     if !is_fee_sufficient(&deps.as_ref(), info, data)? {
         return Err(PythContractError::InsufficientFee)?;
     }
 
-    let mut num_total_attestations: usize = 0;
-    let mut total_new_attestations: Vec<PriceAttestation> = vec![];
+    let (num_total_attestations, total_new_feeds) = apply_updates(&mut deps, &env, data)?;
 
-    for datum in data {
-        let vaa = parse_and_verify_vaa(deps.branch(), env.block.time.seconds(), datum)?;
-        verify_vaa_from_data_source(&state, &vaa)?;
-
-        let data = &vaa.payload;
-        let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
-            .map_err(|_| PythContractError::InvalidUpdatePayload)?;
-
-        let (num_attestations, new_attestations) =
-            process_batch_attestation(&mut deps, &env, &batch_attestation)?;
-        num_total_attestations += num_attestations;
-        for new_attestation in new_attestations {
-            total_new_attestations.push(new_attestation.to_owned());
-        }
-    }
-
-    let num_total_new_attestations = total_new_attestations.len();
+    let num_total_new_attestations = total_new_feeds.len();
 
     let response = Response::new();
 
     #[cfg(feature = "injective")]
     {
-        let inj_message =
-            create_relay_pyth_prices_msg(env.contract.address, total_new_attestations);
+        let inj_message = create_relay_pyth_prices_msg(env.contract.address, total_new_feeds);
         Ok(response
             .add_message(inj_message)
             .add_attribute("action", "update_price_feeds")
@@ -293,12 +293,12 @@ fn update_price_feeds(
 /// The VAA must come from an authorized governance emitter.
 /// See [GovernanceInstruction] for descriptions of the supported operations.
 fn execute_governance_instruction(
-    mut deps: DepsMut,
+    deps: DepsMut,
     env: Env,
     _info: MessageInfo,
     data: &Binary,
 ) -> StdResult<Response<MsgWrapper>> {
-    let vaa = parse_and_verify_vaa(deps.branch(), env.block.time.seconds(), data)?;
+    let vaa = parse_and_verify_vaa(deps.as_ref(), env.block.time.seconds(), data)?;
     let state = config_read(deps.storage).load()?;
     verify_vaa_from_governance_source(&state, &vaa)?;
 
@@ -338,7 +338,7 @@ fn execute_governance_instruction(
         }
         AuthorizeGovernanceDataSourceTransfer { claim_vaa } => {
             let parsed_claim_vaa =
-                parse_and_verify_vaa(deps.branch(), env.block.time.seconds(), &claim_vaa)?;
+                parse_and_verify_vaa(deps.as_ref(), env.block.time.seconds(), &claim_vaa)?;
             transfer_governance(&mut updated_config, &state, &parsed_claim_vaa)?
         }
         SetDataSources { data_sources } => {
@@ -480,24 +480,109 @@ fn verify_vaa_from_governance_source(state: &ConfigInfo, vaa: &ParsedVAA) -> Std
     Ok(())
 }
 
-/// Update the on-chain storage for any new price updates provided in `batch_attestation`.
-fn process_batch_attestation<'a>(
+fn parse_update(deps: &Deps, env: &Env, data: &Binary) -> StdResult<Vec<PriceFeed>> {
+    let header = data.get(0..4);
+    let feeds = if header == Some(PYTHNET_ACCUMULATOR_UPDATE_MAGIC.as_slice()) {
+        parse_accumulator(deps, env, data)?
+    } else {
+        parse_batch_attestation(deps, env, data)?
+    };
+    Ok(feeds)
+}
+
+fn apply_updates(
     deps: &mut DepsMut,
     env: &Env,
-    batch_attestation: &'a BatchPriceAttestation,
-) -> StdResult<(usize, Vec<&'a PriceAttestation>)> {
-    let mut new_attestations = vec![];
+    data: &[Binary],
+) -> StdResult<(usize, Vec<PriceFeed>)> {
+    let mut num_total_attestations: usize = 0;
+    let mut total_new_feeds: Vec<PriceFeed> = vec![];
+
+    for datum in data {
+        let feeds = parse_update(&deps.as_ref(), env, datum)?;
+        num_total_attestations += feeds.len();
+        for feed in feeds {
+            if update_price_feed_if_new(deps, env, feed)? {
+                total_new_feeds.push(feed);
+            }
+        }
+    }
+    Ok((num_total_attestations, total_new_feeds))
+}
+
+fn parse_accumulator(deps: &Deps, env: &Env, data: &[u8]) -> StdResult<Vec<PriceFeed>> {
+    let update_data = AccumulatorUpdateData::try_from_slice(data)
+        .map_err(|_| PythContractError::InvalidAccumulatorPayload)?;
+    match update_data.proof {
+        Proof::WormholeMerkle { vaa, updates } => {
+            let parsed_vaa = parse_and_verify_vaa(
+                *deps,
+                env.block.time.seconds(),
+                &Binary::from(Vec::from(vaa)),
+            )?;
+            let state = config_read(deps.storage).load()?;
+            verify_vaa_from_data_source(&state, &parsed_vaa)?;
+
+            let msg = WormholeMessage::try_from_bytes(parsed_vaa.payload)
+                .map_err(|_| PythContractError::InvalidWormholeMessage)?;
+
+            let root: MerkleRoot<Keccak160> = MerkleRoot::new(match msg.payload {
+                WormholePayload::Merkle(merkle_root) => merkle_root.root,
+            });
+            let mut feeds = vec![];
+            for update in updates {
+                let message_vec = Vec::from(update.message);
+                if !root.check(update.proof, &message_vec) {
+                    return Err(PythContractError::InvalidMerkleProof)?;
+                }
+
+                let msg = from_slice::<BigEndian, Message>(&message_vec)
+                    .map_err(|_| PythContractError::InvalidAccumulatorMessage)?;
+
+                match msg {
+                    Message::PriceFeedMessage(price_feed_message) => {
+                        let price_feed = PriceFeed::new(
+                            PriceIdentifier::new(price_feed_message.feed_id),
+                            Price {
+                                price:        price_feed_message.price,
+                                conf:         price_feed_message.conf,
+                                expo:         price_feed_message.exponent,
+                                publish_time: price_feed_message.publish_time,
+                            },
+                            Price {
+                                price:        price_feed_message.ema_price,
+                                conf:         price_feed_message.ema_conf,
+                                expo:         price_feed_message.exponent,
+                                publish_time: price_feed_message.publish_time,
+                            },
+                        );
+                        feeds.push(price_feed);
+                    }
+                    _ => return Err(PythContractError::InvalidAccumulatorMessageType)?,
+                }
+            }
+            Ok(feeds)
+        }
+    }
+}
+
+/// Update the on-chain storage for any new price updates provided in `batch_attestation`.
+fn parse_batch_attestation(deps: &Deps, env: &Env, data: &Binary) -> StdResult<Vec<PriceFeed>> {
+    let vaa = parse_and_verify_vaa(*deps, env.block.time.seconds(), data)?;
+    let state = config_read(deps.storage).load()?;
+    verify_vaa_from_data_source(&state, &vaa)?;
+    let data = &vaa.payload;
+    let batch_attestation = BatchPriceAttestation::deserialize(&data[..])
+        .map_err(|_| PythContractError::InvalidUpdatePayload)?;
+    let mut feeds = vec![];
 
     // Update prices
     for price_attestation in batch_attestation.price_attestations.iter() {
         let price_feed = create_price_feed_from_price_attestation(price_attestation);
-
-        if update_price_feed_if_new(deps, env, price_feed)? {
-            new_attestations.push(price_attestation);
-        }
+        feeds.push(price_feed);
     }
 
-    Ok((batch_attestation.price_attestations.len(), new_attestations))
+    Ok(feeds)
 }
 
 fn create_price_feed_from_price_attestation(price_attestation: &PriceAttestation) -> PriceFeed {
@@ -583,6 +668,58 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
+
+/// This function is not used in the contract yet but mimicks the behavior implemented
+/// in the EVM contract. We are yet to finalize how the parsed prices should be consumed
+/// in injective as well as other chains.
+pub fn parse_price_feed_updates(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    updates: &[Binary],
+    price_feeds: Vec<Identifier>,
+    min_publish_time: UnixTimestamp,
+    max_publish_time: UnixTimestamp,
+) -> StdResult<Response<MsgWrapper>> {
+    let _config = config_read(deps.storage).load()?;
+    if !is_fee_sufficient(&deps.as_ref(), info, updates)? {
+        return Err(PythContractError::InsufficientFee)?;
+    }
+    let mut found_feeds = 0;
+    let mut results: Vec<(Identifier, Option<PriceFeed>)> =
+        price_feeds.iter().map(|id| (*id, None)).collect();
+    for datum in updates {
+        let feeds = parse_update(&deps.as_ref(), &env, datum)?;
+        for result in results.as_mut_slice() {
+            if result.1.is_some() {
+                continue;
+            }
+            for feed in feeds.as_slice() {
+                if feed.get_price_unchecked().publish_time < min_publish_time
+                    || feed.get_price_unchecked().publish_time > max_publish_time
+                {
+                    continue;
+                }
+                if result.0 == feed.id {
+                    result.1 = Some(*feed);
+                    found_feeds += 1;
+                    break;
+                }
+            }
+        }
+    }
+    if found_feeds != price_feeds.len() {
+        return Err(PythContractError::InvalidUpdatePayload)?;
+    }
+
+    let _unwrapped_feeds = results
+        .into_iter()
+        .map(|(_, feed)| feed.unwrap())
+        .collect::<Vec<PriceFeed>>();
+    let response = Response::new();
+    Ok(response.add_attribute("action", "parse_price_feeds"))
+}
+
 /// Get the most recent value of the price feed indicated by `feed_id`.
 pub fn query_price_feed(deps: &Deps, feed_id: &[u8]) -> StdResult<PriceFeedResponse> {
     match price_feed_read_bucket(deps.storage).load(feed_id) {
@@ -591,25 +728,43 @@ pub fn query_price_feed(deps: &Deps, feed_id: &[u8]) -> StdResult<PriceFeedRespo
     }
 }
 
+pub fn get_update_fee_amount(deps: &Deps, vaas: &[Binary]) -> StdResult<u128> {
+    let config = config_read(deps.storage).load()?;
+
+    let mut total_updates: u128 = 0;
+    for datum in vaas {
+        let header = datum.get(0..4);
+        if header == Some(PYTHNET_ACCUMULATOR_UPDATE_MAGIC.as_slice()) {
+            let update_data = AccumulatorUpdateData::try_from_slice(datum)
+                .map_err(|_| PythContractError::InvalidAccumulatorPayload)?;
+            match update_data.proof {
+                Proof::WormholeMerkle { vaa: _, updates } => {
+                    total_updates += updates.len() as u128;
+                }
+            }
+        } else {
+            total_updates += 1;
+        }
+    }
+
+    Ok(config
+        .fee
+        .amount
+        .u128()
+        .checked_mul(total_updates)
+        .ok_or(OverflowError::new(
+            OverflowOperation::Mul,
+            config.fee.amount,
+            total_updates,
+        ))?)
+}
+
 /// Get the fee that a caller must pay in order to submit a price update.
 /// The fee depends on both the current contract configuration and the update data `vaas`.
 /// The fee is in the denoms as stored in the current configuration
 pub fn get_update_fee(deps: &Deps, vaas: &[Binary]) -> StdResult<Coin> {
     let config = config_read(deps.storage).load()?;
-
-    Ok(coin(
-        config
-            .fee
-            .amount
-            .u128()
-            .checked_mul(vaas.len() as u128)
-            .ok_or(OverflowError::new(
-                OverflowOperation::Mul,
-                config.fee.amount,
-                vaas.len(),
-            ))?,
-        config.fee.denom,
-    ))
+    Ok(coin(get_update_fee_amount(deps, vaas)?, config.fee.denom))
 }
 
 #[cfg(feature = "osmosis")]
@@ -630,19 +785,7 @@ pub fn get_update_fee_for_denom(deps: &Deps, vaas: &[Binary], denom: String) -> 
     // base amount is multiplied to number of vaas to get the total amount
 
     // this will be change later on to add custom logic using spot price for valid tokens
-    Ok(coin(
-        config
-            .fee
-            .amount
-            .u128()
-            .checked_mul(vaas.len() as u128)
-            .ok_or(OverflowError::new(
-                OverflowOperation::Mul,
-                config.fee.amount,
-                vaas.len(),
-            ))?,
-        denom,
-    ))
+    Ok(coin(get_update_fee_amount(deps, vaas)?, denom))
 }
 
 pub fn get_valid_time_period(deps: &Deps) -> StdResult<Duration> {
@@ -675,6 +818,7 @@ mod test {
             ContractResult,
             OwnedDeps,
             QuerierResult,
+            StdError,
             SystemError,
             SystemResult,
             Uint128,
@@ -682,6 +826,24 @@ mod test {
         pyth_sdk::UnixTimestamp,
         pyth_sdk_cw::PriceIdentifier,
         pyth_wormhole_attester_sdk::PriceAttestation,
+        pythnet_sdk::{
+            accumulators::{
+                merkle::MerkleTree,
+                Accumulator,
+            },
+            messages::{
+                PriceFeedMessage,
+                TwapMessage,
+            },
+            wire::{
+                to_vec,
+                v1::{
+                    MerklePriceUpdate,
+                    WormholeMerkleRoot,
+                },
+                PrefixedVec,
+            },
+        },
         std::time::Duration,
     };
 
@@ -773,9 +935,13 @@ mod test {
         }
     }
 
-    fn create_price_update_msg(emitter_address: &[u8], emitter_chain: u16) -> Binary {
+    fn create_batch_price_update_msg(
+        emitter_address: &[u8],
+        emitter_chain: u16,
+        attestations: Vec<PriceAttestation>,
+    ) -> Binary {
         let batch_attestation = BatchPriceAttestation {
-            price_attestations: vec![PriceAttestation::default()],
+            price_attestations: attestations,
         };
 
         let mut vaa = create_zero_vaa();
@@ -785,6 +951,17 @@ mod test {
 
         to_binary(&vaa).unwrap()
     }
+
+    fn create_batch_price_update_msg_from_attestations(
+        attestations: Vec<PriceAttestation>,
+    ) -> Binary {
+        create_batch_price_update_msg(
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN,
+            attestations,
+        )
+    }
+
 
     fn create_zero_config_info() -> ConfigInfo {
         ConfigInfo {
@@ -837,14 +1014,12 @@ mod test {
         config_info: &ConfigInfo,
         emitter_address: &[u8],
         emitter_chain: u16,
-        funds: &[Coin],
-    ) -> StdResult<Response<MsgWrapper>> {
+        attestations: Vec<PriceAttestation>,
+    ) -> StdResult<(usize, Vec<PriceFeed>)> {
         let (mut deps, env) = setup_test();
         config(&mut deps.storage).save(config_info).unwrap();
-
-        let info = mock_info("123", funds);
-        let msg = create_price_update_msg(emitter_address, emitter_chain);
-        update_price_feeds(deps.as_mut(), env, info, &[msg])
+        let msg = create_batch_price_update_msg(emitter_address, emitter_chain, attestations);
+        apply_updates(&mut deps.as_mut(), &env, &[msg])
     }
 
     #[test]
@@ -916,71 +1091,32 @@ mod test {
         assert!(res.is_err());
     }
 
-    #[cfg(not(feature = "osmosis"))]
-    #[test]
-    fn test_is_fee_sufficient() {
-        let mut config_info = default_config_info();
-        config_info.fee = Coin::new(100, "foo");
-
-        let (mut deps, _env) = setup_test();
-        config(&mut deps.storage).save(&config_info).unwrap();
-
-        let mut info = mock_info("123", coins(100, "foo").as_slice());
-        let data = create_price_update_msg(default_emitter_addr().as_slice(), EMITTER_CHAIN);
-
-        // sufficient fee -> true
-        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), &[data.clone()]);
-        assert_eq!(result, Ok(true));
-
-        // insufficient fee -> false
-        info.funds = coins(50, "foo");
-        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), &[data.clone()]);
-        assert_eq!(result, Ok(false));
-
-        // insufficient fee -> false
-        info.funds = coins(150, "bar");
-        let result = is_fee_sufficient(&deps.as_ref(), info, &[data]);
-        assert_eq!(result, Ok(false));
-    }
 
     #[cfg(feature = "osmosis")]
-    #[test]
-    fn test_is_fee_sufficient() {
-        // setup config with base fee
-        let base_denom = "foo";
-        let base_amount = 100;
-        let mut config_info = default_config_info();
-        config_info.fee = Coin::new(base_amount, base_denom);
-        let (mut deps, _env) = setup_test();
-        config(&mut deps.storage).save(&config_info).unwrap();
-
-        // a dummy price data
-        let data = create_price_update_msg(default_emitter_addr().as_slice(), EMITTER_CHAIN);
-
-        // sufficient fee in base denom -> true
-        let info = mock_info("123", coins(base_amount, base_denom).as_slice());
-        let result = is_fee_sufficient(&deps.as_ref(), info.clone(), &[data.clone()]);
+    fn check_sufficient_fee(deps: &Deps, data: &[Binary]) {
+        let mut info = mock_info("123", coins(100, "foo").as_slice());
+        let result = is_fee_sufficient(&deps, info.clone(), &data);
         assert_eq!(result, Ok(true));
 
         // insufficient fee in base denom -> false
-        let info = mock_info("123", coins(50, base_denom).as_slice());
-        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        info.funds = coins(50, "foo");
+        let result = is_fee_sufficient(&deps, info.clone(), &data);
         assert_eq!(result, Ok(false));
 
         // valid denoms are 'uion' or 'ibc/FF3065989E34457F342D4EFB8692406D49D4E2B5C70F725F127862E22CE6BDCD'
         // a valid denom other than base denom with sufficient fee
-        let info = mock_info("123", coins(100, "uion").as_slice());
-        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        info.funds = coins(100, "uion");
+        let result = is_fee_sufficient(&deps, info.clone(), &data);
         assert_eq!(result, Ok(true));
 
         // insufficient fee in valid denom -> false
-        let info = mock_info("123", coins(50, "uion").as_slice());
-        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        info.funds = coins(50, "uion");
+        let result = is_fee_sufficient(&deps, info.clone(), &data);
         assert_eq!(result, Ok(false));
 
         // an invalid denom -> Err invalid fee denom
-        let info = mock_info("123", coins(100, "invalid_denom").as_slice());
-        let result = is_fee_sufficient(&deps.as_ref(), info, &[data.clone()]);
+        info.funds = coins(100, "invalid_denom");
+        let result = is_fee_sufficient(&deps, info, &data);
         assert_eq!(
             result,
             Err(PythContractError::InvalidFeeDenom {
@@ -990,17 +1126,484 @@ mod test {
         );
     }
 
+    #[cfg(not(feature = "osmosis"))]
+    fn check_sufficient_fee(deps: &Deps, data: &[Binary]) {
+        let mut info = mock_info("123", coins(100, "foo").as_slice());
+
+        // sufficient fee -> true
+        let result = is_fee_sufficient(deps, info.clone(), data);
+        assert_eq!(result, Ok(true));
+
+        // insufficient fee -> false
+        info.funds = coins(50, "foo");
+        let result = is_fee_sufficient(deps, info.clone(), data);
+        assert_eq!(result, Ok(false));
+
+        // insufficient fee -> false
+        info.funds = coins(150, "bar");
+        let result = is_fee_sufficient(deps, info, data);
+        assert_eq!(result, Ok(false));
+    }
+
     #[test]
-    fn test_process_batch_attestation_empty_array() {
-        let (mut deps, env) = setup_test();
-        let attestations = BatchPriceAttestation {
-            price_attestations: vec![],
-        };
-        let (num_attestations, new_attestations) =
-            process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
+    fn test_is_fee_sufficient() {
+        let mut config_info = default_config_info();
+        config_info.fee = Coin::new(100, "foo");
+
+        let (mut deps, _env) = setup_test();
+        config(&mut deps.storage).save(&config_info).unwrap();
+        let data = [create_batch_price_update_msg_from_attestations(vec![
+            PriceAttestation::default(),
+        ])];
+        check_sufficient_fee(&deps.as_ref(), &data);
+
+        let feed1 = create_dummy_price_feed_message(100);
+        let feed2 = create_dummy_price_feed_message(200);
+        let feed3 = create_dummy_price_feed_message(300);
+        let data = [create_accumulator_message(
+            &[feed1, feed2, feed3],
+            &[feed1],
+            false,
+        )];
+        check_sufficient_fee(&deps.as_ref(), &data)
+    }
+
+    #[test]
+    fn test_parse_batch_attestation_empty_array() {
+        let (num_attestations, new_attestations) = apply_price_update(
+            &default_config_info(),
+            default_emitter_addr().as_slice(),
+            EMITTER_CHAIN,
+            vec![],
+        )
+        .unwrap();
 
         assert_eq!(num_attestations, 0);
         assert_eq!(new_attestations.len(), 0);
+    }
+
+    fn create_dummy_price_feed_message(value: i64) -> Message {
+        let mut dummy_id = [0; 32];
+        dummy_id[0] = value as u8;
+        let msg = PriceFeedMessage {
+            feed_id:           dummy_id,
+            price:             value,
+            conf:              value as u64,
+            exponent:          value as i32,
+            publish_time:      value,
+            prev_publish_time: value,
+            ema_price:         value,
+            ema_conf:          value as u64,
+        };
+        Message::PriceFeedMessage(msg)
+    }
+
+    fn create_accumulator_message_from_updates(
+        price_updates: Vec<MerklePriceUpdate>,
+        tree: MerkleTree<Keccak160>,
+        corrupt_wormhole_message: bool,
+        emitter_address: Vec<u8>,
+        emitter_chain: u16,
+    ) -> Binary {
+        let mut root_hash = [0u8; 20];
+        root_hash.copy_from_slice(&to_vec::<_, BigEndian>(&tree.root).unwrap()[..20]);
+        let wormhole_message = WormholeMessage::new(WormholePayload::Merkle(WormholeMerkleRoot {
+            slot:      0,
+            ring_size: 0,
+            root:      root_hash,
+        }));
+
+        let mut vaa = create_zero_vaa();
+        vaa.emitter_address = emitter_address;
+        vaa.emitter_chain = emitter_chain;
+        vaa.payload = to_vec::<_, BigEndian>(&wormhole_message).unwrap();
+        if corrupt_wormhole_message {
+            vaa.payload[0] = 0;
+        }
+
+        let vaa_binary = to_binary(&vaa).unwrap();
+        let accumulator_update_data = AccumulatorUpdateData::new(Proof::WormholeMerkle {
+            vaa:     PrefixedVec::from(vaa_binary.to_vec()),
+            updates: price_updates,
+        });
+
+        Binary::from(to_vec::<_, BigEndian>(&accumulator_update_data).unwrap())
+    }
+
+    fn create_accumulator_message(
+        all_feeds: &[Message],
+        updates: &[Message],
+        corrupt_wormhole_message: bool,
+    ) -> Binary {
+        let all_feeds_bytes: Vec<_> = all_feeds
+            .iter()
+            .map(|f| to_vec::<_, BigEndian>(f).unwrap())
+            .collect();
+        let all_feeds_bytes_refs: Vec<_> = all_feeds_bytes.iter().map(|f| f.as_ref()).collect();
+        let tree = MerkleTree::<Keccak160>::new(all_feeds_bytes_refs.as_slice()).unwrap();
+        let mut price_updates: Vec<MerklePriceUpdate> = vec![];
+        for update in updates {
+            let proof = tree
+                .prove(&to_vec::<_, BigEndian>(update).unwrap())
+                .unwrap();
+            price_updates.push(MerklePriceUpdate {
+                message: PrefixedVec::from(to_vec::<_, BigEndian>(update).unwrap()),
+                proof,
+            });
+        }
+        create_accumulator_message_from_updates(
+            price_updates,
+            tree,
+            corrupt_wormhole_message,
+            default_emitter_addr(),
+            EMITTER_CHAIN,
+        )
+    }
+
+
+    fn check_price_match(deps: &OwnedDeps<MockStorage, MockApi, MockQuerier>, msg: &Message) {
+        match msg {
+            Message::PriceFeedMessage(feed_msg) => {
+                let feed = price_feed_read_bucket(&deps.storage)
+                    .load(&feed_msg.feed_id)
+                    .unwrap();
+                let price = feed.get_price_unchecked();
+                let ema_price = feed.get_ema_price_unchecked();
+                assert_eq!(price.price, feed_msg.price);
+                assert_eq!(price.conf, feed_msg.conf);
+                assert_eq!(price.expo, feed_msg.exponent);
+                assert_eq!(price.publish_time, feed_msg.publish_time);
+
+                assert_eq!(ema_price.price, feed_msg.ema_price);
+                assert_eq!(ema_price.conf, feed_msg.ema_conf);
+                assert_eq!(ema_price.expo, feed_msg.exponent);
+                assert_eq!(ema_price.publish_time, feed_msg.publish_time);
+            }
+            _ => assert!(false, "invalid message type"),
+        };
+    }
+
+    fn test_accumulator_wrong_source(emitter_address: Vec<u8>, emitter_chain: u16) {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage)
+            .save(&default_config_info())
+            .unwrap();
+
+        let feed1 = create_dummy_price_feed_message(100);
+        let feed1_bytes = to_vec::<_, BigEndian>(&feed1).unwrap();
+        let tree = MerkleTree::<Keccak160>::new(&[feed1_bytes.as_slice()]).unwrap();
+        let mut price_updates: Vec<MerklePriceUpdate> = vec![];
+        let proof1 = tree.prove(&feed1_bytes).unwrap();
+        price_updates.push(MerklePriceUpdate {
+            message: PrefixedVec::from(feed1_bytes),
+            proof:   proof1,
+        });
+        let msg = create_accumulator_message_from_updates(
+            price_updates,
+            tree,
+            false,
+            emitter_address,
+            emitter_chain,
+        );
+        let info = mock_info("123", &[]);
+        let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
+        assert!(result.is_err());
+        assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
+    }
+
+    #[test]
+    fn test_accumulator_verify_vaa_sender_fail_wrong_emitter_address() {
+        let emitter_address = [17, 23, 14];
+        test_accumulator_wrong_source(emitter_address.to_vec(), EMITTER_CHAIN);
+    }
+
+    #[test]
+    fn test_accumulator_verify_vaa_sender_fail_wrong_emitter_chain() {
+        test_accumulator_wrong_source(default_emitter_addr(), EMITTER_CHAIN + 1);
+    }
+
+    #[test]
+    fn test_accumulator_get_update_fee_amount() {
+        let mut config_info = default_config_info();
+        config_info.fee = Coin::new(100, "foo");
+
+        let (mut deps, _env) = setup_test();
+        config(&mut deps.storage).save(&config_info).unwrap();
+
+
+        let feed1 = create_dummy_price_feed_message(100);
+        let feed2 = create_dummy_price_feed_message(200);
+        let feed3 = create_dummy_price_feed_message(300);
+
+        let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed3], false);
+        assert_eq!(get_update_fee_amount(&deps.as_ref(), &[msg]).unwrap(), 200);
+
+        let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1], false);
+        assert_eq!(get_update_fee_amount(&deps.as_ref(), &[msg]).unwrap(), 100);
+
+        let msg = create_accumulator_message(
+            &[feed1, feed2, feed3],
+            &[feed1, feed2, feed3, feed1, feed3],
+            false,
+        );
+        assert_eq!(get_update_fee_amount(&deps.as_ref(), &[msg]).unwrap(), 500);
+
+        let batch_msg =
+            create_batch_price_update_msg_from_attestations(vec![PriceAttestation::default()]);
+        let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed2, feed3], false);
+        assert_eq!(
+            get_update_fee_amount(&deps.as_ref(), &[msg, batch_msg]).unwrap(),
+            400
+        );
+    }
+
+
+    #[test]
+    fn test_accumulator_message_single_update() {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage)
+            .save(&default_config_info())
+            .unwrap();
+
+        let feed1 = create_dummy_price_feed_message(100);
+        let feed2 = create_dummy_price_feed_message(200);
+        let msg = create_accumulator_message(&[feed1, feed2], &[feed1], false);
+        let info = mock_info("123", &[]);
+        let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
+        assert!(result.is_ok());
+        check_price_match(&deps, &feed1);
+    }
+
+    #[test]
+    fn test_accumulator_message_multi_update_many_feeds() {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage)
+            .save(&default_config_info())
+            .unwrap();
+        let mut all_feeds: Vec<Message> = vec![];
+        for i in 0..10000 {
+            all_feeds.push(create_dummy_price_feed_message(i));
+        }
+        let msg = create_accumulator_message(&all_feeds, &all_feeds[100..110], false);
+        let info = mock_info("123", &[]);
+        let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
+        assert!(result.is_ok());
+        for i in 100..110 {
+            check_price_match(&deps, &all_feeds[i]);
+        }
+    }
+
+    fn as_mut_price_feed(msg: &mut Message) -> &mut PriceFeedMessage {
+        match msg {
+            Message::PriceFeedMessage(ref mut price_feed) => price_feed,
+            _ => {
+                panic!("unexpected message type");
+            }
+        }
+    }
+
+    #[test]
+    fn test_accumulator_multi_message_multi_update() {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage)
+            .save(&default_config_info())
+            .unwrap();
+        let mut feed1 = create_dummy_price_feed_message(100);
+        let mut feed2 = create_dummy_price_feed_message(200);
+        let mut feed3 = create_dummy_price_feed_message(300);
+        let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed2, feed3], false);
+        as_mut_price_feed(&mut feed1).publish_time += 1;
+        as_mut_price_feed(&mut feed2).publish_time += 1;
+        as_mut_price_feed(&mut feed3).publish_time += 1;
+        as_mut_price_feed(&mut feed1).price *= 2;
+        as_mut_price_feed(&mut feed2).price *= 2;
+        as_mut_price_feed(&mut feed3).price *= 2;
+        let msg2 =
+            create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed2, feed3], false);
+        let info = mock_info("123", &[]);
+        let result = update_price_feeds(deps.as_mut(), env, info, &[msg, msg2]);
+
+        assert!(result.is_ok());
+        check_price_match(&deps, &feed1);
+        check_price_match(&deps, &feed2);
+        check_price_match(&deps, &feed3);
+    }
+
+    #[test]
+    fn test_accumulator_multi_update_out_of_order() {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage)
+            .save(&default_config_info())
+            .unwrap();
+        let feed1 = create_dummy_price_feed_message(100);
+        let mut feed2 = create_dummy_price_feed_message(100);
+        let feed3 = create_dummy_price_feed_message(300);
+        as_mut_price_feed(&mut feed2).publish_time -= 1;
+        as_mut_price_feed(&mut feed2).price *= 2;
+        let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed2, feed3], false);
+        let info = mock_info("123", &[]);
+        let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
+
+        assert!(result.is_ok());
+        check_price_match(&deps, &feed1);
+        check_price_match(&deps, &feed3);
+    }
+
+    #[test]
+    fn test_accumulator_multi_message_multi_update_out_of_order() {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage)
+            .save(&default_config_info())
+            .unwrap();
+        let feed1 = create_dummy_price_feed_message(100);
+        let mut feed2 = create_dummy_price_feed_message(100);
+        let feed3 = create_dummy_price_feed_message(300);
+        as_mut_price_feed(&mut feed2).publish_time -= 1;
+        as_mut_price_feed(&mut feed2).price *= 2;
+        let msg = create_accumulator_message(&[feed1, feed2, feed3], &[feed1, feed3], false);
+
+        let msg2 = create_accumulator_message(&[feed1, feed2, feed3], &[feed2, feed3], false);
+        let info = mock_info("123", &[]);
+        let result = update_price_feeds(deps.as_mut(), env, info, &[msg, msg2]);
+
+        assert!(result.is_ok());
+        check_price_match(&deps, &feed1);
+        check_price_match(&deps, &feed3);
+    }
+
+    #[test]
+    fn test_invalid_accumulator_update() {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage)
+            .save(&default_config_info())
+            .unwrap();
+
+        let feed1 = create_dummy_price_feed_message(100);
+        let mut msg = create_accumulator_message(&[feed1], &[feed1], false);
+        msg.0[4] = 3; // major version
+        let info = mock_info("123", &[]);
+        let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            StdError::from(PythContractError::InvalidAccumulatorPayload)
+        );
+    }
+
+    #[test]
+    fn test_invalid_wormhole_message() {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage)
+            .save(&default_config_info())
+            .unwrap();
+
+        let feed1 = create_dummy_price_feed_message(100);
+        let msg = create_accumulator_message(&[feed1], &[feed1], true);
+        let info = mock_info("123", &[]);
+        let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            StdError::from(PythContractError::InvalidWormholeMessage)
+        );
+    }
+
+    #[test]
+    fn test_invalid_accumulator_message_type() {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage)
+            .save(&default_config_info())
+            .unwrap();
+        // Although Twap Message is a valid message but it won't get stored on-chain via
+        // `update_price_feeds` and (will be) used in other methods
+        let feed1 = Message::TwapMessage(TwapMessage {
+            feed_id:           [0; 32],
+            cumulative_price:  0,
+            cumulative_conf:   0,
+            num_down_slots:    0,
+            exponent:          0,
+            publish_time:      0,
+            prev_publish_time: 0,
+            publish_slot:      0,
+        });
+        let msg = create_accumulator_message(&[feed1], &[feed1], false);
+        let info = mock_info("123", &[]);
+        let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            StdError::from(PythContractError::InvalidAccumulatorMessageType)
+        );
+    }
+
+    #[test]
+    fn test_invalid_proof() {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage)
+            .save(&default_config_info())
+            .unwrap();
+
+        let feed1 = create_dummy_price_feed_message(100);
+        let feed2 = create_dummy_price_feed_message(200);
+        let feed1_bytes = to_vec::<_, BigEndian>(&feed1).unwrap();
+        let feed2_bytes = to_vec::<_, BigEndian>(&feed2).unwrap();
+        let tree = MerkleTree::<Keccak160>::new(&[feed1_bytes.as_slice()]).unwrap();
+        let mut price_updates: Vec<MerklePriceUpdate> = vec![];
+
+        let proof1 = tree.prove(&feed1_bytes).unwrap();
+        price_updates.push(MerklePriceUpdate {
+            // proof1 is valid for feed1, but not feed2
+            message: PrefixedVec::from(feed2_bytes),
+            proof:   proof1,
+        });
+        let msg = create_accumulator_message_from_updates(
+            price_updates,
+            tree,
+            false,
+            default_emitter_addr(),
+            EMITTER_CHAIN,
+        );
+        let info = mock_info("123", &[]);
+        let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            StdError::from(PythContractError::InvalidMerkleProof)
+        );
+    }
+
+    #[test]
+    fn test_invalid_message() {
+        let (mut deps, env) = setup_test();
+        config(&mut deps.storage)
+            .save(&default_config_info())
+            .unwrap();
+
+        let feed1 = create_dummy_price_feed_message(100);
+        let mut feed1_bytes = to_vec::<_, BigEndian>(&feed1).unwrap();
+        feed1_bytes.pop();
+        let tree = MerkleTree::<Keccak160>::new(&[feed1_bytes.as_slice()]).unwrap();
+        let mut price_updates: Vec<MerklePriceUpdate> = vec![];
+
+        let proof1 = tree.prove(&feed1_bytes).unwrap();
+        price_updates.push(MerklePriceUpdate {
+            message: PrefixedVec::from(feed1_bytes),
+            proof:   proof1,
+        });
+        let msg = create_accumulator_message_from_updates(
+            price_updates,
+            tree,
+            false,
+            default_emitter_addr(),
+            EMITTER_CHAIN,
+        );
+        let info = mock_info("123", &[]);
+        let result = update_price_feeds(deps.as_mut(), env, info, &[msg]);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            StdError::from(PythContractError::InvalidAccumulatorMessage)
+        );
     }
 
     #[test]
@@ -1088,11 +1691,8 @@ mod test {
         assert_eq!(ema_price.publish_time, 99);
     }
 
-    // this is testing the function process_batch_attestation
-    // process_batch_attestation is calling update_price_feed_if_new
-    // changes to update_price_feed_if_new might cause this test
     #[test]
-    fn test_process_batch_attestation_status_not_trading() {
+    fn test_parse_batch_attestation_status_not_trading() {
         let (mut deps, env) = setup_test();
 
         let price_attestation = PriceAttestation {
@@ -1111,20 +1711,14 @@ mod test {
             ..Default::default()
         };
 
-        let attestations = BatchPriceAttestation {
-            price_attestations: vec![price_attestation],
-        };
-        let (num_attestations, new_attestations) =
-            process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
-
-        let stored_price_feed = price_feed_read_bucket(&deps.storage)
-            .load(&[0u8; 32])
+        config(&mut deps.storage)
+            .save(&default_config_info())
             .unwrap();
-        let price = stored_price_feed.get_price_unchecked();
-        let ema_price = stored_price_feed.get_ema_price_unchecked();
-
-        assert_eq!(num_attestations, 1);
-        assert_eq!(new_attestations.len(), 1);
+        let msg = create_batch_price_update_msg_from_attestations(vec![price_attestation]);
+        let feeds = parse_batch_attestation(&deps.as_ref(), &env, &msg).unwrap();
+        assert_eq!(feeds.len(), 1);
+        let price = feeds[0].get_price_unchecked();
+        let ema_price = feeds[0].get_ema_price_unchecked();
 
         // for price
         assert_eq!(price.price, 99);
@@ -1139,11 +1733,8 @@ mod test {
         assert_eq!(ema_price.publish_time, 99);
     }
 
-    // this is testing the function process_batch_attestation
-    // process_batch_attestation is calling update_price_feed_if_new
-    // changes to update_price_feed_if_new might affect this test
     #[test]
-    fn test_process_batch_attestation_status_trading() {
+    fn test_parse_batch_attestation_status_trading() {
         let (mut deps, env) = setup_test();
 
         let price_attestation = PriceAttestation {
@@ -1162,20 +1753,14 @@ mod test {
             ..Default::default()
         };
 
-        let attestations = BatchPriceAttestation {
-            price_attestations: vec![price_attestation],
-        };
-        let (num_attestations, new_attestations) =
-            process_batch_attestation(&mut deps.as_mut(), &env, &attestations).unwrap();
-
-        let stored_price_feed = price_feed_read_bucket(&deps.storage)
-            .load(&[0u8; 32])
+        config(&mut deps.storage)
+            .save(&default_config_info())
             .unwrap();
-        let price = stored_price_feed.get_price_unchecked();
-        let ema_price = stored_price_feed.get_ema_price_unchecked();
-
-        assert_eq!(num_attestations, 1);
-        assert_eq!(new_attestations.len(), 1);
+        let msg = create_batch_price_update_msg_from_attestations(vec![price_attestation]);
+        let feeds = parse_batch_attestation(&deps.as_ref(), &env, &msg).unwrap();
+        assert_eq!(feeds.len(), 1);
+        let price = feeds[0].get_price_unchecked();
+        let ema_price = feeds[0].get_ema_price_unchecked();
 
         // for price
         assert_eq!(price.price, 100);
@@ -1196,7 +1781,7 @@ mod test {
             &default_config_info(),
             default_emitter_addr().as_slice(),
             EMITTER_CHAIN,
-            &[],
+            vec![PriceAttestation::default()],
         );
         assert!(result.is_ok());
     }
@@ -1208,7 +1793,7 @@ mod test {
             &default_config_info(),
             emitter_address.as_slice(),
             EMITTER_CHAIN,
-            &[],
+            vec![PriceAttestation::default()],
         );
         assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
     }
@@ -1219,7 +1804,7 @@ mod test {
             &default_config_info(),
             default_emitter_addr().as_slice(),
             EMITTER_CHAIN + 1,
-            &[],
+            vec![PriceAttestation::default()],
         );
         assert_eq!(result, Err(PythContractError::InvalidUpdateEmitter.into()));
     }

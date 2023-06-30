@@ -22,8 +22,8 @@ First, build the contracts within [the current directory](./). You must have Doc
 cd ./tools
 npm ci
 
-# if you want to build specifically for injective
-npm run build-contract -- --injective
+# if you want to build specifically for one chain
+npm run build-contract -- --[injective|osmosis]
 
 # else a generic cosmwasm contract can be build using
 npm run build-contract -- --cosmwasm
