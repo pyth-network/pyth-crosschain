@@ -24,7 +24,7 @@ export enum ChainId {
   INJECTIVE = "injective",
   OSMOSIS = "osmosis",
   SEI_PACIFIC_1 = "sei_pacific_1",
-  NEUTRON = 'neutron',
+  NEUTRON = "neutron",
 }
 
 export const ChainIds = Object.values(ChainId);
