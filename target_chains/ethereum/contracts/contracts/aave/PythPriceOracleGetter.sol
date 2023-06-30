@@ -6,7 +6,6 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 import "./interfaces/IPriceOracleGetter.sol";
 import "./PythAssetRegistry.sol";
-import "forge-std/console.sol";
 
 contract PythPriceOracleGetter is PythAssetRegistry, IPriceOracleGetter {
     /// @inheritdoc IPriceOracleGetter
