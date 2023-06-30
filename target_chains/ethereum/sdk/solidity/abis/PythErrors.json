@@ -1,0 +1,72 @@
+[
+  {
+    "inputs": [],
+    "name": "InsufficientFee",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidArgument",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidGovernanceDataSource",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidGovernanceMessage",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidGovernanceTarget",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidUpdateData",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidUpdateDataSource",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidWormholeAddressToSet",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidWormholeVaa",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoFreshUpdate",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OldGovernanceMessage",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "PriceFeedNotFound",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "PriceFeedNotFoundWithinRange",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "StalePrice",
+    "type": "error"
+  }
+]

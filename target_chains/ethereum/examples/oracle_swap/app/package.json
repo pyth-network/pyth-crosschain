@@ -1,5 +1,5 @@
 {
-  "name": "transfer-usd-in-eth",
+  "name": "@pythnetwork/eth-oracle-swap-example-frontend",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -26,7 +26,6 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
     "eject": "react-scripts eject",
     "format": "prettier --write src/"
   },

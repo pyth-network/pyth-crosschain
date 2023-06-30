@@ -24,4 +24,4 @@ WORKDIR /code
 RUN --mount=type=cache,target=/code/target,id=cosmwasm_wormhole_target --mount=type=cache,target=/usr/local/cargo/registry optimize_workspace.sh
 
 FROM scratch AS export-stage
-COPY --from=builder /code/artifacts/wormhole* /
+COPY --from=builder /code/artifacts/ /

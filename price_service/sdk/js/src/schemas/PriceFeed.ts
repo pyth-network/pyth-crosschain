@@ -68,7 +68,7 @@ export interface PriceFeedMetadata {
   /**
    * Attestation time of the price
    */
-  attestation_time: number;
+  attestation_time?: number;
   /**
    * Chain of the emitter
    */
@@ -76,11 +76,15 @@ export interface PriceFeedMetadata {
   /**
    * The time that the price service received the price
    */
-  price_service_receive_time: number;
+  price_service_receive_time?: number;
   /**
    * Sequence number of the price
    */
-  sequence_number: number;
+  sequence_number?: number;
+  /**
+   * Pythnet slot number of the price
+   */
+  slot?: number;
 }
 
 // Converts JSON types to/from your types
@@ -284,14 +288,19 @@ const typeMap: any = {
   ),
   PriceFeedMetadata: o(
     [
-      { json: "attestation_time", js: "attestation_time", typ: 0 },
+      {
+        json: "attestation_time",
+        js: "attestation_time",
+        typ: u(undefined, 0),
+      },
       { json: "emitter_chain", js: "emitter_chain", typ: 0 },
       {
         json: "price_service_receive_time",
         js: "price_service_receive_time",
-        typ: 0,
+        typ: u(undefined, 0),
       },
-      { json: "sequence_number", js: "sequence_number", typ: 0 },
+      { json: "sequence_number", js: "sequence_number", typ: u(undefined, 0) },
+      { json: "slot", js: "slot", typ: u(undefined, 0) },
     ],
     "any"
   ),

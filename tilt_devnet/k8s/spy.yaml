@@ -35,7 +35,7 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
         - name: spy
-          image: ghcr.io/certusone/guardiand:v2.8.9
+          image: ghcr.io/wormhole-foundation/guardiand:v2.17.0
           command:
             - /guardiand
             - spy

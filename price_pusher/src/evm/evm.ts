@@ -18,6 +18,7 @@ import {
 } from "@pythnetwork/price-service-client";
 import { CustomGasStation } from "./custom-gas-station";
 import { Provider } from "web3/providers";
+import { PushAttempt } from "../common";
 
 export class EvmPriceListener extends ChainPriceListener {
   private pythContractFactory: PythContractFactory;
@@ -116,11 +117,6 @@ export class EvmPriceListener extends ChainPriceListener {
     };
   }
 }
-
-type PushAttempt = {
-  nonce: number;
-  gasPrice: number;
-};
 
 export class EvmPricePusher implements IPricePusher {
   private customGasStation?: CustomGasStation;
@@ -228,7 +224,7 @@ export class EvmPricePusher implements IPricePusher {
           // the update data is valid there is no possible rejection cause other than
           // the target chain price being already updated.
           console.log(
-            "Execution reverted. With high probablity, the target chain price " +
+            "Execution reverted. With high probability, the target chain price " +
               "has already updated, Skipping this push."
           );
           return;
@@ -240,6 +236,17 @@ export class EvmPricePusher implements IPricePusher {
         ) {
           console.log(
             "Multiple users are using the same accounts and nonce is incorrect. Skipping this push."
+          );
+          return;
+        }
+
+        if (err.message.includes("max fee per gas less than block base fee")) {
+          // We just have to handle this error and return.
+          // LastPushAttempt was stored with the class
+          // Next time the update will be executing, it will check the last attempt
+          // and increase the gas price accordingly.
+          console.log(
+            "The transaction failed with error: max fee per gas less than block base fee "
           );
           return;
         }

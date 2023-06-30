@@ -21,9 +21,9 @@ import {
   getMultisigCluster,
   isRemoteCluster,
   mapKey,
-  proposeInstructions,
   WORMHOLE_ADDRESS,
   UPGRADE_MULTISIG,
+  MultisigVault,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
@@ -266,13 +266,16 @@ const UpdatePermissions = () => {
           if (!isMultisigLoading) {
             setIsSendProposalButtonLoading(true)
             try {
-              const proposalPubkey = await proposeInstructions(
+              const vault = new MultisigVault(
+                proposeSquads.wallet,
+                getMultisigCluster(cluster),
                 proposeSquads,
-                UPGRADE_MULTISIG[getMultisigCluster(cluster)],
-                [instruction],
-                isRemoteCluster(cluster),
-                WORMHOLE_ADDRESS[getMultisigCluster(cluster)]
+                UPGRADE_MULTISIG[getMultisigCluster(cluster)]
               )
+
+              const proposalPubkey = (
+                await vault.proposeInstructions([instruction], cluster)
+              )[0]
               toast.success(
                 `Proposal sent! 🚀 Proposal Pubkey: ${proposalPubkey}`
               )

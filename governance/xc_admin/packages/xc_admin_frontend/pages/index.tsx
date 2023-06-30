@@ -17,11 +17,6 @@ import { StatusFilterProvider } from '../contexts/StatusFilterContext'
 import { classNames } from '../utils/classNames'
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  const KEYPAIR_BASE_PATH = process.env.KEYPAIR_BASE_PATH || ''
-  const OPS_WALLET = fs.existsSync(`${KEYPAIR_BASE_PATH}/ops-key`)
-    ? JSON.parse(fs.readFileSync(`${KEYPAIR_BASE_PATH}/ops-key`, 'ascii'))
-    : null
-
   const MAPPINGS_BASE_PATH = process.env.MAPPINGS_BASE_PATH || ''
   const PUBLISHER_PYTHNET_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/publishers-pythnet.json`
   const PUBLISHER_PYTHTEST_MAPPING_PATH = `${MAPPINGS_BASE_PATH}/publishers-pythtest.json`
@@ -51,9 +46,11 @@ export const getServerSideProps: GetServerSideProps = async () => {
       )
     : {}
 
+  const proposerServerUrl =
+    process.env.PROPOSER_SERVER_URL || 'http://localhost:4000'
   return {
     props: {
-      OPS_WALLET,
+      proposerServerUrl,
       publisherKeyToNameMapping,
       multisigSignerKeyToNameMapping,
     },
@@ -81,22 +78,18 @@ const TAB_INFO = {
 const DEFAULT_TAB = 'general'
 
 const Home: NextPage<{
-  OPS_WALLET: number[] | null
   publisherKeyToNameMapping: Record<string, Record<string, string>>
   multisigSignerKeyToNameMapping: Record<string, string>
+  proposerServerUrl: string
 }> = ({
-  OPS_WALLET,
   publisherKeyToNameMapping,
   multisigSignerKeyToNameMapping,
+  proposerServerUrl,
 }) => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
   const tabInfoArray = Object.values(TAB_INFO)
   const anchorWallet = useAnchorWallet()
-  const wallet = OPS_WALLET
-    ? (new NodeWallet(
-        Keypair.fromSecretKey(Uint8Array.from(OPS_WALLET))
-      ) as Wallet)
-    : (anchorWallet as Wallet)
+  const wallet = anchorWallet as Wallet
 
   const router = useRouter()
 
@@ -158,7 +151,7 @@ const Home: NextPage<{
           </div>
           {tabInfoArray[currentTabIndex].queryString ===
           TAB_INFO.General.queryString ? (
-            <General />
+            <General proposerServerUrl={proposerServerUrl} />
           ) : tabInfoArray[currentTabIndex].queryString ===
             TAB_INFO.UpdatePermissions.queryString ? (
             <UpdatePermissions />

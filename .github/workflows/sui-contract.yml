@@ -1,0 +1,30 @@
+on:
+  pull_request:
+    paths:
+      - target_chains/sui/contracts/**
+  push:
+    branches:
+      - main
+    paths:
+      - target_chains/sui/contracts/**
+
+name: Sui Contracts
+
+jobs:
+  sui-tests:
+    name: Sui tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: target_chains/sui/contracts/
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Update rust
+        run: rustup update stable
+
+      - name: Install Sui CLI
+        run: cargo install --locked --git https://github.com/MystenLabs/sui.git --rev 09b2081498366df936abae26eea4b2d5cafb2788 sui
+
+      - name: Run tests
+        run: sui move test

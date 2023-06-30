@@ -1,4 +1,13 @@
 #![deny(warnings)]
+
+use {
+    serde_wormhole::RawMessage,
+    wormhole_sdk::vaa::{
+        Body,
+        Header,
+        Vaa,
+    },
+};
 pub mod cli;
 use {
     anchor_client::{
@@ -43,14 +52,10 @@ use {
             Keypair,
         },
         signer::Signer,
-        system_instruction::{
-            self,
-            transfer,
-        },
+        system_instruction::{self,},
         transaction::Transaction,
     },
     std::str::FromStr,
-    wormhole::VAA,
     wormhole_solana::{
         instructions::{
             post_message,
@@ -89,31 +94,10 @@ fn main() -> Result<()> {
 
             let signature_set_keypair = Keypair::new();
 
-            let vaa = VAA::from_bytes(vaa_bytes.clone())?;
+            let vaa: Vaa<&RawMessage> = serde_wormhole::from_slice(&vaa_bytes)?;
+            let (header, body): (Header, Body<&RawMessage>) = vaa.into();
 
-            // RENT HACK STARTS HERE
-            let signature_set_size = 4 + 19 + 32 + 4;
-            let posted_vaa_size = 3 + 1 + 1 + 4 + 32 + 4 + 4 + 8 + 2 + 32 + 4 + vaa.payload.len();
-            let posted_vaa_key = PostedVAA::key(&wormhole, vaa.digest().unwrap().hash);
-
-            process_transaction(
-                &rpc_client,
-                vec![
-                    transfer(
-                        &payer.pubkey(),
-                        &signature_set_keypair.pubkey(),
-                        rpc_client.get_minimum_balance_for_rent_exemption(signature_set_size)?,
-                    ),
-                    transfer(
-                        &payer.pubkey(),
-                        &posted_vaa_key,
-                        rpc_client.get_minimum_balance_for_rent_exemption(posted_vaa_size)?,
-                    ),
-                ],
-                &vec![&payer],
-            )?;
-
-            // RENT HACK ENDS HERE
+            let posted_vaa_key = PostedVAA::key(&wormhole, body.digest().unwrap().hash);
 
             // First verify VAA
             let verify_txs = verify_signatures_txs(
@@ -131,15 +115,15 @@ fn main() -> Result<()> {
 
             // Post VAA
             let post_vaa_data = PostVAAData {
-                version:            vaa.version,
-                guardian_set_index: vaa.guardian_set_index,
-                timestamp:          vaa.timestamp,
-                nonce:              vaa.nonce,
-                emitter_chain:      vaa.emitter_chain.into(),
-                emitter_address:    vaa.emitter_address,
-                sequence:           vaa.sequence,
-                consistency_level:  vaa.consistency_level,
-                payload:            vaa.payload,
+                version:            header.version,
+                guardian_set_index: header.guardian_set_index,
+                timestamp:          body.timestamp,
+                nonce:              body.nonce,
+                emitter_chain:      body.emitter_chain.into(),
+                emitter_address:    body.emitter_address.0,
+                sequence:           body.sequence,
+                consistency_level:  body.consistency_level,
+                payload:            body.payload.to_vec(),
             };
 
             process_transaction(

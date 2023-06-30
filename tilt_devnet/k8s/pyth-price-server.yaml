@@ -62,6 +62,8 @@ spec:
               value: spy:7072
             - name: SPY_SERVICE_FILTERS
               value: '[{"chain_id":1,"emitter_address":"71f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b"}]'
+            - name: WORMHOLE_CLUSTER
+              value: localnet
             - name: REST_PORT
               value: "4200"
             - name: PROM_PORT

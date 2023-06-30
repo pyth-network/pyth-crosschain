@@ -12,7 +12,7 @@ import {
 } from "@terra-money/terra.js";
 import { readFileSync } from "fs";
 import { Bech32, toHex } from "@cosmjs/encoding";
-import { zeroPad } from "ethers/lib/utils.js";
+import { ethers } from "ethers";
 import assert from "assert";
 import { ContractInfo, Deployer } from ".";
 
@@ -179,7 +179,7 @@ export class TerraDeployer implements Deployer {
 // Terra addresses are "human-readable", but for cross-chain registrations, we
 // want the "canonical" version
 export function convert_terra_address_to_hex(human_addr: string) {
-  return "0x" + toHex(zeroPad(Bech32.decode(human_addr).data, 32));
+  return "0x" + toHex(ethers.utils.zeroPad(Bech32.decode(human_addr).data, 32));
 }
 
 // enter key of what to extract

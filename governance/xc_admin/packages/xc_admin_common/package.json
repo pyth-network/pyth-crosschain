@@ -21,10 +21,14 @@
   },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.8",
+    "@coral-xyz/anchor": "^0.26.0",
     "@pythnetwork/client": "^2.17.0",
+    "@pythnetwork/pyth-sdk-solidity": "*",
+    "@pythnetwork/xc-governance-sdk": "*",
     "@solana/buffer-layout": "^4.0.1",
     "@solana/web3.js": "^1.73.0",
     "@sqds/mesh": "^1.0.6",
+    "ethers": "^5.7.2",
     "lodash": "^4.17.21",
     "typescript": "^4.9.4"
   },

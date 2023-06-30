@@ -120,6 +120,9 @@ export class OsmosisDeployer implements Deployer {
       cosmwasm.wasm.v1.MessageComposer.withTypeUrl.instantiateContract({
         sender: accAddress,
         admin: accAddress,
+        // FIXME: soon this file will be removed
+        // not spending any time on this bug
+        // @ts-ignore
         codeId: Long.fromNumber(codeId),
         label,
         msg: Buffer.from(JSON.stringify(inst_msg)),
@@ -155,6 +158,7 @@ export class OsmosisDeployer implements Deployer {
       cosmwasm.wasm.v1.MessageComposer.withTypeUrl.migrateContract({
         sender: await this.getAccountAddress(),
         contract,
+        // @ts-ignore
         codeId: Long.fromNumber(codeId),
         msg: Buffer.from(
           JSON.stringify({

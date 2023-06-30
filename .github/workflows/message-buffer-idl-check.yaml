@@ -1,0 +1,43 @@
+name: Message Buffer IDL Check
+on:
+  pull_request:
+    paths:
+      - pythnet/message_buffer/**
+  push:
+    branches:
+      - main
+    paths:
+      - pythnet/message_buffer/**
+jobs:
+  abi-check:
+    name: Check Message Buffer IDL files are up to date
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pythnet/message_buffer
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly-2023-03-01
+          components: rustfmt, clippy
+      - name: Install Solana
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.14.18/install)"
+          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+      - name: Install Anchor
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor --tag v0.27.0 anchor-cli --locked
+      - name: Build and generate IDLs
+        run: anchor build
+      - name: Copy anchor target files
+        run: cp ./target/idl/message_buffer.json idl/ && cp ./target/types/message_buffer.ts idl/
+      - name: Run prettier (to avoid pre-commit failures)
+        run: |
+          npx prettier --write "./idl/*"
+      - name: Check IDL changes
+        # Fails if the IDL files are not up to date. Please use anchor build to regenerate the IDL files for
+        # the current version of the contract and update idl directory.
+        run: git diff --exit-code idl/*

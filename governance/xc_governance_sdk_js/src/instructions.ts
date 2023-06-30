@@ -14,6 +14,7 @@ enum TargetAction {
   SetFee,
   SetValidPeriod,
   RequestGovernanceDataSourceTransfer,
+  SetWormholeAddress,
 }
 
 abstract class HexString implements Serializable {
@@ -192,5 +193,15 @@ export class RequestGovernanceDataSourceTransferInstruction extends TargetInstru
     return new BufferBuilder()
       .addUint32(this.governanceDataSourceIndex)
       .build();
+  }
+}
+
+export class EthereumSetWormholeAddress extends TargetInstruction {
+  constructor(targetChainId: ChainId, private address: HexString20Bytes) {
+    super(TargetAction.SetWormholeAddress, targetChainId);
+  }
+
+  protected serializePayload(): Buffer {
+    return this.address.serialize();
   }
 }

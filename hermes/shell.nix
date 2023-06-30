@@ -7,7 +7,7 @@ with pkgs; mkShell {
     clang
     llvmPackages.libclang
     nettle
-    openssl
+    openssl_1_1
     pkgconfig
     rustup
     systemd

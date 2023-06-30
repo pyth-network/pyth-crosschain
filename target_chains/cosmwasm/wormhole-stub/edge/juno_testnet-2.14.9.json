@@ -1,0 +1,22 @@
+{
+  "deploy-wormhole-code": {
+    "status": "fulfilled",
+    "result": {
+      "codeId": 1885,
+      "txHash": "32BDB4863384BC2FA3AEF2F9D72AD0F8B92296862409CC934AEFF4003A255E87"
+    }
+  },
+  "instantiate-contract": {
+    "status": "fulfilled",
+    "result": {
+      "contractAddr": "juno1g9xhl5jzhlm6lqc2earxkzyazwl2cshr5cnemxtjy0le64s4w22skukkxj",
+      "txHash": "A69B6651EEB76E41F5D5884EDAA7EC43925750B4A277D27ED2E53359465F482B"
+    }
+  },
+  "set-own-admin": {
+    "status": "fulfilled",
+    "result": {
+      "txHash": "791389480F1CBBD7777F859F300065E8A2F75048A09A615605723263A98C7D8A"
+    }
+  }
+}

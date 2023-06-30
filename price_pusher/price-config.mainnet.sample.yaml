@@ -8,3 +8,7 @@
   time_difference: 60
   price_deviation: 1
   confidence_ratio: 1
+  early_update:
+    time_difference: 30
+    price_deviation: 0.5
+    confidence_ratio: 0.1

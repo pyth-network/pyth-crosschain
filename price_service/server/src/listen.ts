@@ -21,12 +21,14 @@ import LRUCache from "lru-cache";
 import { DurationInSec, sleep, TimestampInSec } from "./helpers";
 import { logger } from "./logging";
 import { PromClient } from "./promClient";
+import { isValidVaa, WormholeCluster, wormholeClusterFromString } from "./vaa";
 
 export type PriceInfo = {
   vaa: Buffer;
   seqNum: number;
   publishTime: TimestampInSec;
   attestationTime: TimestampInSec;
+  lastAttestedPublishTime: TimestampInSec;
   priceFeed: PriceFeed;
   emitterChainId: number;
   priceServiceReceiveTime: number;
@@ -44,6 +46,7 @@ export function createPriceInfo(
     vaa,
     publishTime: priceAttestation.publishTime,
     attestationTime: priceAttestation.attestationTime,
+    lastAttestedPublishTime: priceAttestation.lastAttestedPublishTime,
     priceFeed,
     emitterChainId: emitterChain,
     priceServiceReceiveTime: Math.floor(new Date().getTime() / 1000),
@@ -64,6 +67,7 @@ type ListenerReadinessConfig = {
 
 type ListenerConfig = {
   spyServiceHost: string;
+  wormholeCluster?: string;
   filtersRaw?: string;
   readiness: ListenerReadinessConfig;
   webApiEndpoint?: string;
@@ -76,6 +80,7 @@ type VaaKey = string;
 
 export type VaaConfig = {
   publishTime: number;
+  lastAttestedPublishTime: number;
   vaa: string;
 };
 
@@ -93,11 +98,16 @@ export class VaaCache {
     this.cacheCleanupLoopInterval = cacheCleanupLoopInterval;
   }
 
-  set(key: VaaKey, publishTime: TimestampInSec, vaa: string): void {
+  set(
+    key: VaaKey,
+    publishTime: TimestampInSec,
+    lastAttestedPublishTime: TimestampInSec,
+    vaa: string
+  ): void {
     if (this.cache.has(key)) {
-      this.cache.get(key)!.push({ publishTime, vaa });
+      this.cache.get(key)!.push({ publishTime, lastAttestedPublishTime, vaa });
     } else {
-      this.cache.set(key, [{ publishTime, vaa }]);
+      this.cache.set(key, [{ publishTime, lastAttestedPublishTime, vaa }]);
     }
   }
 
@@ -126,7 +136,10 @@ export class VaaCache {
 
     while (left <= right) {
       const middle = Math.floor((left + right) / 2);
-      if (arr[middle].publishTime === publishTime) {
+      if (
+        arr[middle].publishTime === publishTime &&
+        arr[middle].lastAttestedPublishTime < publishTime
+      ) {
         return arr[middle];
       } else if (arr[middle].publishTime < publishTime) {
         left = middle + 1;
@@ -171,23 +184,29 @@ export class Listener implements PriceStore {
   private updateCallbacks: ((priceInfo: PriceInfo) => any)[];
   private observedVaas: LRUCache<VaaKey, boolean>;
   private vaasCache: VaaCache;
+  private wormholeCluster: WormholeCluster;
 
   constructor(config: ListenerConfig, promClient?: PromClient) {
     this.promClient = promClient;
     this.spyServiceHost = config.spyServiceHost;
     this.loadFilters(config.filtersRaw);
     // Don't store any prices received from wormhole that are over 5 minutes old.
-    this.ignorePricesOlderThanSecs = 5 * 60;
+    this.ignorePricesOlderThanSecs = 60;
     this.readinessConfig = config.readiness;
     this.updateCallbacks = [];
     this.observedVaas = new LRUCache({
-      max: 100000, // At most 100000 items
-      ttl: 6 * 60 * 1000, // 6 minutes which is longer than ignorePricesOlderThanSecs
+      max: 10000, // At most 10000 items
+      ttl: 60 * 1000, // 1 minutes which is equal to ignorePricesOlderThanSecs
     });
     this.vaasCache = new VaaCache(
       config.cacheTtl,
       config.cacheCleanupLoopInterval
     );
+    if (config.wormholeCluster !== undefined) {
+      this.wormholeCluster = wormholeClusterFromString(config.wormholeCluster);
+    } else {
+      this.wormholeCluster = "mainnet";
+    }
   }
 
   private loadFilters(filtersRaw?: string) {
@@ -305,6 +324,11 @@ export class Listener implements PriceStore {
       return;
     }
 
+    if (!isValidVaa(parsedVaa, this.wormholeCluster)) {
+      logger.info("Ignoring an invalid VAA");
+      return;
+    }
+
     let batchAttestation;
 
     try {
@@ -355,6 +379,7 @@ export class Listener implements PriceStore {
         this.vaasCache.set(
           priceInfo.priceFeed.id,
           priceInfo.publishTime,
+          priceInfo.lastAttestedPublishTime,
           priceInfo.vaa.toString("base64")
         );
         this.priceFeedVaaMap.set(key, priceInfo);
@@ -412,6 +437,26 @@ export class Listener implements PriceStore {
       return false;
     }
     if (this.priceFeedVaaMap.size < this.readinessConfig.numLoadedSymbols) {
+      return false;
+    }
+
+    // if too many price feeds are stale it probably means that the price service
+    // is not receiving messages from Wormhole at all and is essentially dead.
+    const stalenessThreshold = 60;
+    const maxToleratedStaleFeeds = 10;
+
+    const priceIds = [...this.getPriceIds()];
+    let stalePriceCnt = 0;
+
+    for (const priceId of priceIds) {
+      const latency =
+        currentTime - this.getLatestPriceInfo(priceId)!.attestationTime;
+      if (latency > stalenessThreshold) {
+        stalePriceCnt++;
+      }
+    }
+
+    if (stalePriceCnt > maxToleratedStaleFeeds) {
       return false;
     }
 

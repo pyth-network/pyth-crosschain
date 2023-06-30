@@ -38,4 +38,8 @@ contract RandTestUtils is Test {
     function getRandInt32() internal returns (int32) {
         return int32(getRandUint32());
     }
+
+    function getRandUint8() internal returns (uint8) {
+        return uint8(getRandUint());
+    }
 }
