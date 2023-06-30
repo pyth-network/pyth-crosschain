@@ -97,7 +97,7 @@ module pyth::price_info {
     ): PriceInfoObject {
         PriceInfoObject {
             id: object::new(ctx),
-            price_info: price_info
+            price_info
         }
     }
 
@@ -107,9 +107,9 @@ module pyth::price_info {
         price_feed: PriceFeed,
     ): PriceInfo {
         PriceInfo {
-            attestation_time: attestation_time,
-            arrival_time: arrival_time,
-            price_feed: price_feed,
+            attestation_time,
+            arrival_time,
+            price_feed,
         }
     }
 
@@ -145,7 +145,7 @@ module pyth::price_info {
     #[test_only]
     public fun destroy(price_info: PriceInfoObject){
         let PriceInfoObject {
-            id: id,
+            id,
             price_info: _,
         } = price_info;
         object::delete(id);

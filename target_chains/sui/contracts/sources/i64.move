@@ -31,8 +31,8 @@ module pyth::i64 {
         };
 
         I64 {
-            magnitude: magnitude,
-            negative: negative,
+            magnitude,
+            negative,
         }
     }
 
