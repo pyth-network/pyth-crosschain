@@ -67,7 +67,9 @@ contract VerificationExperiments is
     uint64 sequence;
 
     function setUp() public {
-        address payable wormhole = payable(setUpWormhole(NUM_GUARDIANS));
+        address payable wormhole = payable(
+            setUpWormholeReceiver(NUM_GUARDIANS)
+        );
 
         // Deploy experimental contract
         PythExperimental implementation = new PythExperimental();
@@ -82,7 +84,6 @@ contract VerificationExperiments is
 
         bytes32[] memory emitterAddresses = new bytes32[](1);
         emitterAddresses[0] = PythTestUtils.SOURCE_EMITTER_ADDRESS;
-
         pyth.initialize(
             wormhole,
             vm.addr(THRESHOLD_KEY),
@@ -134,6 +135,7 @@ contract VerificationExperiments is
             cachedPricesUpdateData,
             cachedPricesUpdateFee
         ) = generateWormholeUpdateDataAndFee(cachedPrices);
+
         pyth.updatePriceFeeds{value: cachedPricesUpdateFee}(
             cachedPricesUpdateData
         );
@@ -186,7 +188,7 @@ contract VerificationExperiments is
     function generateWormholeUpdateDataAndFee(
         PythStructs.Price[] memory prices
     ) internal returns (bytes[] memory updateData, uint updateFee) {
-        bytes memory vaa = generatePriceFeedUpdateVAA(
+        bytes memory vaa = generateWhBatchUpdate(
             pricesToPriceAttestations(priceIds, prices),
             sequence,
             NUM_GUARDIAN_SIGNERS
@@ -310,7 +312,7 @@ contract VerificationExperiments is
         return ThresholdUpdate(signature, data);
     }
 
-    function testWormholeBatchUpdate() public {
+    function testWhBatchUpdate() public {
         pyth.updatePriceFeeds{value: freshPricesUpdateFee}(
             freshPricesUpdateData
         );

@@ -22,28 +22,39 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     // We use 5 prices to form a batch of 5 prices, close to our mainnet transactions.
     uint8 constant NUM_PRICES = 5;
 
+    // We will have less than 512 price for a foreseeable future.
+    uint8 constant MERKLE_TREE_DEPTH = 9;
+
+    IWormhole public wormhole;
     IPyth public pyth;
 
     bytes32[] priceIds;
 
     // Cached prices are populated in the setUp
     PythStructs.Price[] cachedPrices;
-    bytes[] cachedPricesUpdateData;
-    uint cachedPricesUpdateFee;
+    bytes[] cachedPricesWhBatchUpdateData;
+    uint cachedPricesWhBatchUpdateFee;
     uint64[] cachedPricesPublishTimes;
+
+    bytes[][] cachedPricesWhMerkleUpdateData; // i th element contains the update data for the first i prices
+    uint[] cachedPricesWhMerkleUpdateFee; // i th element contains the update fee for the first i prices
 
     // Fresh prices are different prices that can be used
     // as a fresh price to update the prices
     PythStructs.Price[] freshPrices;
-    bytes[] freshPricesUpdateData;
-    uint freshPricesUpdateFee;
+    bytes[] freshPricesWhBatchUpdateData;
+    uint freshPricesWhBatchUpdateFee;
     uint64[] freshPricesPublishTimes;
+    bytes[][] freshPricesWhMerkleUpdateData; // i th element contains the update data for the first i prices
+    uint[] freshPricesWhMerkleUpdateFee; // i th element contains the update fee for the first i prices
 
     uint64 sequence;
     uint randSeed;
 
     function setUp() public {
-        pyth = IPyth(setUpPyth(setUpWormhole(NUM_GUARDIANS)));
+        address wormholeAddr = setUpWormholeReceiver(NUM_GUARDIANS);
+        wormhole = IWormhole(wormholeAddr);
+        pyth = IPyth(setUpPyth(wormholeAddr));
 
         priceIds = new bytes32[](NUM_PRICES);
         priceIds[0] = bytes32(
@@ -76,21 +87,36 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
                 )
             );
             freshPricesPublishTimes.push(publishTime);
-        }
 
+            // Generate Wormhole Merkle update data and fee for the first i th prices
+            (
+                bytes[] memory updateData,
+                uint updateFee
+            ) = generateWhMerkleUpdateDataAndFee(cachedPrices);
+
+            cachedPricesWhMerkleUpdateData.push(updateData);
+            cachedPricesWhMerkleUpdateFee.push(updateFee);
+
+            (updateData, updateFee) = generateWhMerkleUpdateDataAndFee(
+                freshPrices
+            );
+
+            freshPricesWhMerkleUpdateData.push(updateData);
+            freshPricesWhMerkleUpdateFee.push(updateFee);
+        }
         // Populate the contract with the initial prices
         (
-            cachedPricesUpdateData,
-            cachedPricesUpdateFee
-        ) = generateUpdateDataAndFee(cachedPrices);
-        pyth.updatePriceFeeds{value: cachedPricesUpdateFee}(
-            cachedPricesUpdateData
+            cachedPricesWhBatchUpdateData,
+            cachedPricesWhBatchUpdateFee
+        ) = generateWhBatchUpdateDataAndFee(cachedPrices);
+        pyth.updatePriceFeeds{value: cachedPricesWhBatchUpdateFee}(
+            cachedPricesWhBatchUpdateData
         );
 
         (
-            freshPricesUpdateData,
-            freshPricesUpdateFee
-        ) = generateUpdateDataAndFee(freshPrices);
+            freshPricesWhBatchUpdateData,
+            freshPricesWhBatchUpdateFee
+        ) = generateWhBatchUpdateDataAndFee(freshPrices);
     }
 
     function getRand() internal returns (uint val) {
@@ -98,10 +124,10 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         val = uint(keccak256(abi.encode(randSeed)));
     }
 
-    function generateUpdateDataAndFee(
+    function generateWhBatchUpdateDataAndFee(
         PythStructs.Price[] memory prices
     ) internal returns (bytes[] memory updateData, uint updateFee) {
-        bytes memory vaa = generatePriceFeedUpdateVAA(
+        bytes memory vaa = generateWhBatchUpdate(
             pricesToPriceAttestations(priceIds, prices),
             sequence,
             NUM_GUARDIAN_SIGNERS
@@ -115,35 +141,109 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         updateFee = pyth.getUpdateFee(updateData);
     }
 
-    function testBenchmarkUpdatePriceFeedsFresh() public {
-        pyth.updatePriceFeeds{value: freshPricesUpdateFee}(
-            freshPricesUpdateData
+    function generateWhMerkleUpdateDataAndFee(
+        PythStructs.Price[] memory prices
+    ) internal returns (bytes[] memory updateData, uint updateFee) {
+        updateData = new bytes[](1);
+
+        updateData[0] = generateWhMerkleUpdate(
+            pricesToPriceFeedMessages(priceIds, prices),
+            MERKLE_TREE_DEPTH,
+            NUM_GUARDIAN_SIGNERS
+        );
+
+        updateFee = pyth.getUpdateFee(updateData);
+    }
+
+    function testBenchmarkUpdatePriceFeedsWhBatchFresh() public {
+        pyth.updatePriceFeeds{value: freshPricesWhBatchUpdateFee}(
+            freshPricesWhBatchUpdateData
         );
     }
 
-    function testBenchmarkUpdatePriceFeedsNotFresh() public {
-        pyth.updatePriceFeeds{value: cachedPricesUpdateFee}(
-            cachedPricesUpdateData
+    function testBenchmarkUpdatePriceFeedsWhBatchNotFresh() public {
+        pyth.updatePriceFeeds{value: cachedPricesWhBatchUpdateFee}(
+            cachedPricesWhBatchUpdateData
         );
     }
 
-    function testBenchmarkUpdatePriceFeedsIfNecessaryFresh() public {
+    function testBenchmarkUpdatePriceFeedsWhMerkle1FeedFresh() public {
+        pyth.updatePriceFeeds{value: freshPricesWhMerkleUpdateFee[0]}(
+            freshPricesWhMerkleUpdateData[0]
+        );
+    }
+
+    function testBenchmarkUpdatePriceFeedsWhMerkle2FeedsFresh() public {
+        pyth.updatePriceFeeds{value: freshPricesWhMerkleUpdateFee[1]}(
+            freshPricesWhMerkleUpdateData[1]
+        );
+    }
+
+    function testBenchmarkUpdatePriceFeedsWhMerkle3FeedsFresh() public {
+        pyth.updatePriceFeeds{value: freshPricesWhMerkleUpdateFee[2]}(
+            freshPricesWhMerkleUpdateData[2]
+        );
+    }
+
+    function testBenchmarkUpdatePriceFeedsWhMerkle4FeedsFresh() public {
+        pyth.updatePriceFeeds{value: freshPricesWhMerkleUpdateFee[3]}(
+            freshPricesWhMerkleUpdateData[3]
+        );
+    }
+
+    function testBenchmarkUpdatePriceFeedsWhMerkle5FeedsFresh() public {
+        pyth.updatePriceFeeds{value: freshPricesWhMerkleUpdateFee[4]}(
+            freshPricesWhMerkleUpdateData[4]
+        );
+    }
+
+    function testBenchmarkUpdatePriceFeedsWhMerkle1FeedNotFresh() public {
+        pyth.updatePriceFeeds{value: cachedPricesWhMerkleUpdateFee[0]}(
+            cachedPricesWhMerkleUpdateData[0]
+        );
+    }
+
+    function testBenchmarkUpdatePriceFeedsWhMerkle2FeedsNotFresh() public {
+        pyth.updatePriceFeeds{value: cachedPricesWhMerkleUpdateFee[1]}(
+            cachedPricesWhMerkleUpdateData[1]
+        );
+    }
+
+    function testBenchmarkUpdatePriceFeedsWhMerkle3FeedsNotFresh() public {
+        pyth.updatePriceFeeds{value: cachedPricesWhMerkleUpdateFee[2]}(
+            cachedPricesWhMerkleUpdateData[2]
+        );
+    }
+
+    function testBenchmarkUpdatePriceFeedsWhMerkle4FeedsNotFresh() public {
+        pyth.updatePriceFeeds{value: cachedPricesWhMerkleUpdateFee[3]}(
+            cachedPricesWhMerkleUpdateData[3]
+        );
+    }
+
+    function testBenchmarkUpdatePriceFeedsWhMerkle5FeedsNotFresh() public {
+        pyth.updatePriceFeeds{value: cachedPricesWhMerkleUpdateFee[4]}(
+            cachedPricesWhMerkleUpdateData[4]
+        );
+    }
+
+    function testBenchmarkUpdatePriceFeedsIfNecessaryWhBatchFresh() public {
         // Since the prices have advanced, the publishTimes are newer than one in
         // the contract and hence, the call should succeed.
-        pyth.updatePriceFeedsIfNecessary{value: freshPricesUpdateFee}(
-            freshPricesUpdateData,
+        pyth.updatePriceFeedsIfNecessary{value: freshPricesWhBatchUpdateFee}(
+            freshPricesWhBatchUpdateData,
             priceIds,
             freshPricesPublishTimes
         );
     }
 
-    function testBenchmarkUpdatePriceFeedsIfNecessaryNotFresh() public {
+    function testBenchmarkUpdatePriceFeedsIfNecessaryWhBatchNotFresh() public {
         // Since the price is not advanced, the publishTimes are the same as the
         // ones in the contract.
         vm.expectRevert(PythErrors.NoFreshUpdate.selector);
 
-        pyth.updatePriceFeedsIfNecessary{value: cachedPricesUpdateFee}(
-            cachedPricesUpdateData,
+        pyth.updatePriceFeedsIfNecessary{value: cachedPricesWhBatchUpdateFee}(
+            cachedPricesWhBatchUpdateData,
             priceIds,
             cachedPricesPublishTimes
         );
@@ -153,8 +253,8 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         bytes32[] memory ids = new bytes32[](1);
         ids[0] = priceIds[0];
 
-        pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee}(
-            freshPricesUpdateData,
+        pyth.parsePriceFeedUpdates{value: freshPricesWhBatchUpdateFee}(
+            freshPricesWhBatchUpdateData,
             ids,
             0,
             50
@@ -166,11 +266,102 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         ids[0] = priceIds[0];
         ids[1] = priceIds[1];
 
-        pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee}(
-            freshPricesUpdateData,
+        pyth.parsePriceFeedUpdates{value: freshPricesWhBatchUpdateFee}(
+            freshPricesWhBatchUpdateData,
             ids,
             0,
             50
+        );
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForWhMerkle1() public {
+        uint numIds = 1;
+
+        bytes32[] memory ids = new bytes32[](numIds);
+        for (uint i = 0; i < numIds; i++) {
+            ids[i] = priceIds[i];
+        }
+        pyth.parsePriceFeedUpdates{
+            value: freshPricesWhMerkleUpdateFee[numIds - 1]
+        }(freshPricesWhMerkleUpdateData[numIds - 1], ids, 0, 50);
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForWhMerkle2() public {
+        uint numIds = 2;
+
+        bytes32[] memory ids = new bytes32[](numIds);
+        for (uint i = 0; i < numIds; i++) {
+            ids[i] = priceIds[i];
+        }
+        pyth.parsePriceFeedUpdates{
+            value: freshPricesWhMerkleUpdateFee[numIds - 1]
+        }(freshPricesWhMerkleUpdateData[numIds - 1], ids, 0, 50);
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForWhMerkle3() public {
+        uint numIds = 3;
+
+        bytes32[] memory ids = new bytes32[](numIds);
+        for (uint i = 0; i < numIds; i++) {
+            ids[i] = priceIds[i];
+        }
+        pyth.parsePriceFeedUpdates{
+            value: freshPricesWhMerkleUpdateFee[numIds - 1]
+        }(freshPricesWhMerkleUpdateData[numIds - 1], ids, 0, 50);
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForWhMerkle4() public {
+        uint numIds = 4;
+
+        bytes32[] memory ids = new bytes32[](numIds);
+        for (uint i = 0; i < numIds; i++) {
+            ids[i] = priceIds[i];
+        }
+        pyth.parsePriceFeedUpdates{
+            value: freshPricesWhMerkleUpdateFee[numIds - 1]
+        }(freshPricesWhMerkleUpdateData[numIds - 1], ids, 0, 50);
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForWhMerkle5() public {
+        uint numIds = 5;
+
+        bytes32[] memory ids = new bytes32[](numIds);
+        for (uint i = 0; i < numIds; i++) {
+            ids[i] = priceIds[i];
+        }
+        pyth.parsePriceFeedUpdates{
+            value: freshPricesWhMerkleUpdateFee[numIds - 1]
+        }(freshPricesWhMerkleUpdateData[numIds - 1], ids, 0, 50);
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesForAllPriceFeedsShuffledSubsetPriceIds()
+        public
+    {
+        uint numIds = 3;
+        bytes32[] memory ids = new bytes32[](numIds);
+        ids[0] = priceIds[4];
+        ids[1] = priceIds[2];
+        ids[2] = priceIds[0];
+        pyth.parsePriceFeedUpdates{value: freshPricesWhMerkleUpdateFee[4]}( // updateFee based on number of priceFeeds in updateData
+            freshPricesWhMerkleUpdateData[4],
+            ids,
+            0,
+            50
+        );
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesWhMerkleForOnePriceFeedNotWithinRange()
+        public
+    {
+        bytes32[] memory ids = new bytes32[](1);
+        ids[0] = priceIds[0];
+
+        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
+        pyth.parsePriceFeedUpdates{value: freshPricesWhMerkleUpdateFee[0]}(
+            freshPricesWhMerkleUpdateData[0],
+            ids,
+            50,
+            100
         );
     }
 
@@ -181,8 +372,8 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         ids[0] = priceIds[0];
 
         vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
-        pyth.parsePriceFeedUpdates{value: freshPricesUpdateFee}(
-            freshPricesUpdateData,
+        pyth.parsePriceFeedUpdates{value: freshPricesWhBatchUpdateFee}(
+            freshPricesWhBatchUpdateData,
             ids,
             50,
             100
@@ -205,7 +396,31 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         pyth.getEmaPrice(priceIds[0]);
     }
 
-    function testBenchmarkGetUpdateFee() public view {
-        pyth.getUpdateFee(freshPricesUpdateData);
+    function testBenchmarkGetUpdateFeeWhBatch() public view {
+        pyth.getUpdateFee(freshPricesWhBatchUpdateData);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle1() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[0]);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle2() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[1]);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle3() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[2]);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle4() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[3]);
+    }
+
+    function testBenchmarkGetUpdateFeeWhMerkle5() public view {
+        pyth.getUpdateFee(freshPricesWhMerkleUpdateData[4]);
+    }
+
+    function testBenchmarkWormholeParseAndVerifyVMBatchAttestation() public {
+        wormhole.parseAndVerifyVM(freshPricesWhBatchUpdateData[0]);
     }
 }
