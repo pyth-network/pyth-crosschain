@@ -61,7 +61,7 @@ module pyth::governance_instruction {
             module_: _,
             action: _,
             target_chain_id: _,
-            payload: payload
+            payload
         } = instruction;
         payload
     }
