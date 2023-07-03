@@ -115,10 +115,6 @@ module pyth::price_info {
         };
     }
 
-    public(friend) fun withdraw_fee_coins(price_info_object: &mut PriceInfoObject): coin::Coin<SUI> {
-        dynamic_object_field::remove(&mut price_info_object.id, FEE_STORAGE_KEY)
-    }
-
     public(friend) fun new_price_info_object(
         price_info: PriceInfo,
         ctx: &mut TxContext

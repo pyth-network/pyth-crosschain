@@ -15,7 +15,7 @@ module pyth::pyth {
     use pyth::price_feed::{Self};
     use pyth::price::{Self, Price};
     use pyth::price_identifier::{PriceIdentifier};
-    use pyth::setup::{Self, AdminCap, DeployerCap};
+    use pyth::setup::{Self, DeployerCap};
     use pyth::hot_potato_vector::{Self, HotPotatoVector};
     use pyth::accumulator::{Self};
 
@@ -198,7 +198,7 @@ module pyth::pyth {
         verified_vaa: VAA,
         clock: &Clock,
     ): HotPotatoVector<PriceInfo> {
-        let _ = state::assert_latest_only(pyth_state);
+        state::assert_latest_only(pyth_state);
 
         // verify that the VAA originates from a valid data source
         assert!(
@@ -227,7 +227,7 @@ module pyth::pyth {
         verified_vaas: vector<VAA>,
         clock: &Clock
     ): HotPotatoVector<PriceInfo> {
-        let _ = state::assert_latest_only(pyth_state);
+        state::assert_latest_only(pyth_state);
 
         let price_updates = vector::empty<PriceInfo>();
         while (vector::length(&verified_vaas) != 0){
@@ -415,17 +415,6 @@ module pyth::pyth {
     public fun get_total_update_fee(pyth_state: &PythState, n: u64): u64 {
         state::get_base_update_fee(pyth_state) * n
     }
-
-    // withdraw_fee_coins allows the holder of AdminCap to withdraw fee coins accumulated in any PriceInfoObject.
-    // pyth_state is passed in only for the purpose of version-checking via assert_latest_only, or making this function upgradeable
-    public fun withdraw_fee_coins(
-        _admin_cap: &AdminCap,
-        pyth_state: &PythState,
-        price_info_object: &mut PriceInfoObject
-    ): coin::Coin<SUI> {
-        let _ = state::assert_latest_only(pyth_state);
-        price_info::withdraw_fee_coins(price_info_object)
-    }
 }
 
 #[test_only]
@@ -434,7 +423,7 @@ module pyth::pyth_tests{
 
     use sui::sui::SUI;
     use sui::coin::{Self, Coin};
-    use sui::test_scenario::{Self, Scenario, ctx, take_shared, return_shared, take_from_address, return_to_address};
+    use sui::test_scenario::{Self, Scenario, ctx, take_shared, return_shared};
     use sui::package::Self;
     use sui::object::{Self, ID};
     use sui::clock::{Self, Clock};
@@ -443,7 +432,6 @@ module pyth::pyth_tests{
     use pyth::setup::{Self};
     use pyth::price_info::{Self, PriceInfo, PriceInfoObject};//, PriceInfo, PriceInfoObject};
     use pyth::data_source::{Self, DataSource};
-    use pyth::setup::{AdminCap};
     use pyth::pyth::{Self, create_price_infos_hot_potato, update_single_price_feed};
     use pyth::hot_potato_vector::{Self};
     use pyth::price_identifier::{Self};
@@ -768,7 +756,7 @@ module pyth::pyth_tests{
 
     #[test]
     // test_create_and_update_price_feeds_with_batch_attestation_success tests the creation and updating of price
-    // feeds, as well as depositing and withdrawing fee coins from a price info object using an AdminCap
+    // feeds, as well as depositing fee coins into price info objects
     fun test_create_and_update_price_feeds_with_batch_attestation_success() {
         let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
@@ -836,11 +824,6 @@ module pyth::pyth_tests{
         // check fee coins are deposited in the price info object
         assert!(price_info::get_balance(&price_info_object_1)==DEFAULT_BASE_UPDATE_FEE, 0);
 
-        // check fee coins can be withdrawn
-        let admin_cap = take_from_address<AdminCap>(&scenario, DEPLOYER);
-        let coins = pyth::withdraw_fee_coins(&admin_cap, &pyth_state, &mut price_info_object_1);
-        assert!(coin::value(&coins)==DEFAULT_BASE_UPDATE_FEE, 0);
-
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         hot_potato_vector::destroy<PriceInfo>(vec);
 
@@ -849,10 +832,8 @@ module pyth::pyth_tests{
         return_shared(price_info_object_2);
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
-        return_to_address(DEPLOYER, admin_cap);
 
         coin::burn_for_testing(test_coins);
-        coin::burn_for_testing(coins);
         cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
