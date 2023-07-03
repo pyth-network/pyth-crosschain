@@ -24,6 +24,7 @@ export enum ChainId {
   INJECTIVE = "injective",
   OSMOSIS = "osmosis",
   SEI_PACIFIC_1 = "sei_pacific_1",
+  NEUTRON = "neutron",
 }
 
 export const ChainIds = Object.values(ChainId);
@@ -128,6 +129,14 @@ export const CHAINS_NETWORK_CONFIG: Record<ChainId, ChainNetworkConfig> = {
     querierEndpoint: "https://sei-rpc.polkachu.com",
     prefix: "sei",
     gasPrice: "0.025usei",
+  },
+  [ChainId.NEUTRON]: {
+    chainId: ChainId.NEUTRON,
+    chainType: ChainType.COSMWASM,
+    executorEndpoint: "https://rpc-kralum.neutron-1.neutron.org",
+    querierEndpoint: "https://rpc-kralum.neutron-1.neutron.org",
+    prefix: "neutron",
+    gasPrice: "0.025untrn",
   },
 };
 

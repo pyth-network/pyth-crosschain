@@ -59,8 +59,8 @@ module pyth::data_source {
 
     public(friend) fun new(emitter_chain: u64, emitter_address: ExternalAddress): DataSource {
         DataSource {
-            emitter_chain: emitter_chain,
-            emitter_address: emitter_address,
+            emitter_chain,
+            emitter_address,
         }
     }
 

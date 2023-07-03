@@ -21,10 +21,10 @@ module pyth::price {
 
     public fun new(price: I64, conf: u64, expo: I64, timestamp: u64): Price {
         Price {
-            price: price,
-            conf: conf,
-            expo: expo,
-            timestamp: timestamp,
+            price,
+            conf,
+            expo,
+            timestamp,
         }
     }
 
