@@ -415,9 +415,13 @@ module pyth::pyth {
 
     // withdraw_fee_coins allows the holder of AdminCap to withdraw fee coins accumulated in any PriceInfoObject.
     // pyth_state is passed in only for the purpose of version-checking via assert_latest_only, or making this function upgradeable
-    public fun withdraw_fee_coins(_admin_cap: &AdminCap, pyth_state: &PythState, price_info_object: &mut PriceInfoObject, ctx: &mut TxContext): coin::Coin<SUI>  {
+    public fun withdraw_fee_coins(
+        _admin_cap: &AdminCap,
+        pyth_state: &PythState,
+        price_info_object: &mut PriceInfoObject
+    ): coin::Coin<SUI> {
         let _ = state::assert_latest_only(pyth_state);
-        price_info::withdraw_fee_coins(price_info_object, ctx)
+        price_info::withdraw_fee_coins(price_info_object)
     }
 }
 
@@ -831,7 +835,7 @@ module pyth::pyth_tests{
 
         // check fee coins can be withdrawn
         let admin_cap = take_from_address<AdminCap>(&scenario, DEPLOYER);
-        let coins = pyth::withdraw_fee_coins(&admin_cap, &pyth_state, &mut price_info_object_1, ctx(&mut scenario));
+        let coins = pyth::withdraw_fee_coins(&admin_cap, &pyth_state, &mut price_info_object_1);
         assert!(coin::value(&coins)==DEFAULT_BASE_UPDATE_FEE, 0);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
