@@ -15,6 +15,7 @@ import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
 
 import "forge-std/Test.sol";
 import "./WormholeTestUtils.t.sol";
+import "./RandTestUtils.t.sol";
 
 abstract contract PythTestUtils is Test, WormholeTestUtils {
     uint16 constant SOURCE_EMITTER_CHAIN_ID = 0x1;
