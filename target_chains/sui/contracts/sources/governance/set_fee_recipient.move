@@ -1,3 +1,5 @@
+/// The previous version of the contract sent the fees to a recipient address but this state is not used anymore
+/// This module is kept for backward compatibility
 module pyth::set_fee_recipient {
     use wormhole::cursor;
     use wormhole::external_address::{Self};
