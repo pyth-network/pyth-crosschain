@@ -5,7 +5,12 @@ import fs from "fs";
 import { PythPriceListener } from "../pyth-price-listener";
 import { Controller } from "../controller";
 import { Options } from "yargs";
-import { AptosPriceListener, AptosPricePusher } from "./aptos";
+import {
+  AptosPriceListener,
+  AptosPricePusher,
+  APTOS_ACCOUNT_HD_PATH,
+} from "./aptos";
+import { AptosAccount } from "aptos";
 
 export default {
   command: "aptos",
@@ -61,6 +66,11 @@ export default {
       }
     );
     const mnemonic = fs.readFileSync(mnemonicFile, "utf-8").trim();
+    const account = AptosAccount.fromDerivePath(
+      APTOS_ACCOUNT_HD_PATH,
+      mnemonic
+    );
+    console.log(`Pushing from account address: ${account.address()}`);
 
     const priceItems = priceConfigs.map(({ id, alias }) => ({ id, alias }));
 

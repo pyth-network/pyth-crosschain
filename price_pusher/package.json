@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/price-pusher",
-  "version": "5.4.2",
+  "version": "5.4.3",
   "description": "Pyth Price Pusher",
   "homepage": "https://pyth.network",
   "main": "lib/index.js",
