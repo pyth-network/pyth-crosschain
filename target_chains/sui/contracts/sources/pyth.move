@@ -16,7 +16,7 @@ module pyth::pyth {
     use pyth::price::{Self, Price};
     use pyth::price_identifier::{PriceIdentifier};
     use pyth::setup::{Self, DeployerCap};
-    use pyth::authenticated_vector::{Self, AuthenticatedVector};
+    use pyth::hot_potato_vector::{Self, HotPotatoVector};
     use pyth::accumulator::{Self};
 
     use wormhole::external_address::{Self};
@@ -125,7 +125,8 @@ module pyth::pyth {
 
 
     /// Create and share new price feed objects if they don't already exist using batch price attestation.
-    public fun create_price_feeds_using_batch_attestation(
+    /// The name of the function is kept as is to remain backward compatible
+    public fun create_price_feeds(
         pyth_state: &mut PythState,
         // These vaas have been verified and consumed, so we don't have to worry about
         // doing replay protection for them.
@@ -160,7 +161,7 @@ module pyth::pyth {
     }
 
     // create_and_share_price_feeds_using_verified_price_infos is a private function used by
-    // 1) create_price_feeds_using_batch_attestation
+    // 1) create_price_feeds
     // 2) create_price_feeds_using_accumulator
     // to create new price feeds for symbols.
     fun create_and_share_price_feeds_using_verified_price_infos(latest_only: &LatestOnly, pyth_state: &mut PythState, price_infos: vector<PriceInfo>, ctx: &mut TxContext){
@@ -196,8 +197,8 @@ module pyth::pyth {
         accumulator_message: vector<u8>,
         verified_vaa: VAA,
         clock: &Clock,
-    ): AuthenticatedVector<PriceInfo> {
-        let _ = state::assert_latest_only(pyth_state);
+    ): HotPotatoVector<PriceInfo> {
+        state::assert_latest_only(pyth_state);
 
         // verify that the VAA originates from a valid data source
         assert!(
@@ -216,15 +217,17 @@ module pyth::pyth {
 
         // check that accumulator message has been fully consumed
         cursor::destroy_empty(accumulator_message_cursor);
-        authenticated_vector::new(price_infos)
+        hot_potato_vector::new(price_infos)
     }
 
-    public fun create_authenticated_price_infos_using_batch_price_attestation(
+    /// Creates authenticated price infos using batch price attestation
+    /// Name is kept as is to remain backward compatible
+    public fun create_price_infos_hot_potato(
         pyth_state: &PythState,
         verified_vaas: vector<VAA>,
         clock: &Clock
-    ): AuthenticatedVector<PriceInfo> {
-        let _ = state::assert_latest_only(pyth_state);
+    ): HotPotatoVector<PriceInfo> {
+        state::assert_latest_only(pyth_state);
 
         let price_updates = vector::empty<PriceInfo>();
         while (vector::length(&verified_vaas) != 0){
@@ -246,7 +249,7 @@ module pyth::pyth {
             }
         };
         vector::destroy_empty(verified_vaas);
-        return authenticated_vector::new(price_updates)
+        return hot_potato_vector::new(price_updates)
     }
 
     /// Update a singular Pyth PriceInfoObject (containing a price feed) with the
@@ -260,11 +263,11 @@ module pyth::pyth {
     /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public fun update_single_price_feed(
         pyth_state: &PythState,
-        price_updates: AuthenticatedVector<PriceInfo>,
+        price_updates: HotPotatoVector<PriceInfo>,
         price_info_object: &mut PriceInfoObject,
         fee: Coin<SUI>,
         clock: &Clock
-    ): AuthenticatedVector<PriceInfo> {
+    ): HotPotatoVector<PriceInfo> {
         let latest_only = state::assert_latest_only(pyth_state);
 
         // On Sui, users get to choose which price feeds to update. They specify a single price feed to
@@ -272,14 +275,15 @@ module pyth::pyth {
         // This is a departure from Eth, where users don't get to necessarily choose.
         assert!(state::get_base_update_fee(pyth_state) <= coin::value(&fee), E_INSUFFICIENT_FEE);
 
-        transfer::public_transfer(fee, state::get_fee_recipient(pyth_state));
+        // store fee coins within price info object
+        price_info::deposit_fee_coins(price_info_object, fee);
 
         // Find price update corresponding to PriceInfoObject within the array of price_updates
         // and use it to update PriceInfoObject.
         let i = 0;
         let found = false;
-        while (i < authenticated_vector::length<PriceInfo>(&price_updates)){
-            let cur_price_info = authenticated_vector::borrow<PriceInfo>(&price_updates, i);
+        while (i < hot_potato_vector::length<PriceInfo>(&price_updates)){
+            let cur_price_info = hot_potato_vector::borrow<PriceInfo>(&price_updates, i);
             if (has_same_price_identifier(cur_price_info, price_info_object)){
                 found = true;
                 update_cache(latest_only, cur_price_info, price_info_object, clock);
@@ -428,10 +432,8 @@ module pyth::pyth_tests{
     use pyth::setup::{Self};
     use pyth::price_info::{Self, PriceInfo, PriceInfoObject};//, PriceInfo, PriceInfoObject};
     use pyth::data_source::{Self, DataSource};
-    //use pyth::i64::{Self};
-    //use pyth::price::{Self};
-    use pyth::pyth::{Self, create_authenticated_price_infos_using_batch_price_attestation, update_single_price_feed};
-    use pyth::authenticated_vector::{Self};
+    use pyth::pyth::{Self, create_price_infos_hot_potato, update_single_price_feed};
+    use pyth::hot_potato_vector::{Self};
     use pyth::price_identifier::{Self};
     use pyth::price_feed::{Self};
     use pyth::accumulator::{Self};
@@ -697,7 +699,7 @@ module pyth::pyth_tests{
         let corrupt_vaa = x"90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
         let verified_vaas = vector[vaa::parse_and_verify(&worm_state, corrupt_vaa, &clock)];
         // Create Pyth price feed
-        pyth::create_price_feeds_using_batch_attestation(
+        pyth::create_price_feeds(
             &mut pyth_state,
             verified_vaas,
             &clock,
@@ -728,7 +730,7 @@ module pyth::pyth_tests{
 
         let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
-        pyth::create_price_feeds_using_batch_attestation(
+        pyth::create_price_feeds(
             &mut pyth_state,
             verified_vaas,
             &clock,
@@ -753,6 +755,8 @@ module pyth::pyth_tests{
     }
 
     #[test]
+    // test_create_and_update_price_feeds_with_batch_attestation_success tests the creation and updating of price
+    // feeds, as well as depositing fee coins into price info objects
     fun test_create_and_update_price_feeds_with_batch_attestation_success() {
         let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
@@ -763,7 +767,7 @@ module pyth::pyth_tests{
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        pyth::create_price_feeds_using_batch_attestation(
+        pyth::create_price_feeds(
             &mut pyth_state,
             verified_vaas,
             &clock,
@@ -795,7 +799,7 @@ module pyth::pyth_tests{
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         // Create authenticated price infos
-        let vec = create_authenticated_price_infos_using_batch_price_attestation(
+        let vec = create_price_infos_hot_potato(
             &pyth_state,
             vector[vaa_1],
             &clock
@@ -803,20 +807,25 @@ module pyth::pyth_tests{
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
+        let fee_coins = coin::split(&mut test_coins, DEFAULT_BASE_UPDATE_FEE, ctx(&mut scenario));
         vec = update_single_price_feed(
             &mut pyth_state,
             vec,
             &mut price_info_object_1,
-            test_coins,
+            fee_coins,
             &clock
         );
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        assert!(price_feeds_equal(authenticated_vector::borrow(&vec, 3), &price_info::get_price_info_from_price_info_object(&price_info_object_1)), 0);
+        // check price feed updated
+        assert!(price_feeds_equal(hot_potato_vector::borrow(&vec, 3), &price_info::get_price_info_from_price_info_object(&price_info_object_1)), 0);
+
+        // check fee coins are deposited in the price info object
+        assert!(price_info::get_balance(&price_info_object_1)==DEFAULT_BASE_UPDATE_FEE, 0);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        authenticated_vector::destroy<PriceInfo>(vec);
+        hot_potato_vector::destroy<PriceInfo>(vec);
 
         vector::destroy_empty(verified_vaas);
         return_shared(price_info_object_1);
@@ -824,6 +833,7 @@ module pyth::pyth_tests{
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
 
+        coin::burn_for_testing(test_coins);
         cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
@@ -895,7 +905,7 @@ module pyth::pyth_tests{
         // clean up test scenario
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        authenticated_vector::destroy<PriceInfo>(auth_price_infos);
+        hot_potato_vector::destroy<PriceInfo>(auth_price_infos);
 
         return_shared(price_info_object_1);
 
@@ -1167,7 +1177,7 @@ module pyth::pyth_tests{
 
         // clean up test scenario
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        authenticated_vector::destroy<PriceInfo>(auth_price_infos);
+        hot_potato_vector::destroy<PriceInfo>(auth_price_infos);
 
         cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
@@ -1189,7 +1199,7 @@ module pyth::pyth_tests{
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        pyth::create_price_feeds_using_batch_attestation(
+        pyth::create_price_feeds(
             &mut pyth_state,
             verified_vaas,
             &clock,
@@ -1221,7 +1231,7 @@ module pyth::pyth_tests{
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         // Create authenticated price infos
-        let vec = create_authenticated_price_infos_using_batch_price_attestation(
+        let vec = create_price_infos_hot_potato(
             &pyth_state,
             vector[vaa_1],
             &clock
@@ -1237,7 +1247,7 @@ module pyth::pyth_tests{
         );
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        authenticated_vector::destroy<PriceInfo>(vec);
+        hot_potato_vector::destroy<PriceInfo>(vec);
 
         vector::destroy_empty(verified_vaas);
 
@@ -1261,7 +1271,7 @@ module pyth::pyth_tests{
         let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
         // Update cache is called by create_price_feeds.
-        pyth::create_price_feeds_using_batch_attestation(
+        pyth::create_price_feeds(
             &mut pyth_state,
             verified_vaas,
             &clock,
@@ -1315,7 +1325,7 @@ module pyth::pyth_tests{
         let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
         let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
-        pyth::create_price_feeds_using_batch_attestation(
+        pyth::create_price_feeds(
             &mut pyth_state,
             verified_vaas,
             &clock,
