@@ -27,7 +27,7 @@ To activate a transaction:
 
 ```
 npm install
-npx lerna run build --scope "xc_admin_common"
+npx lerna run build --scope "xc_admin_common"  --include-dependencies
 npx ts-node src/index.ts activate -t <TRANSACTION_HASH> -c <CLUSTER: [mainnet|devnet|testnet] -v <VAULT_ADDRESS> -w <WALLET_SECRET_KEY_FILEPATH: [filepath|"ledger"]> -lda <LEDGER_DERIVATION_ACCOUNT> -ldc <LEDGER_DERIVATION_CHANGE>
 
 ```
