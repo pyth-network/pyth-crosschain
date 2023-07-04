@@ -2,6 +2,7 @@
 /// inside of a hot potato struct.
 module pyth::hot_potato_vector {
     use std::vector;
+
     const E_EMPTY_HOT_POTATO: u64 = 0;
 
     friend pyth::pyth;
@@ -12,12 +13,12 @@ module pyth::hot_potato_vector {
     }
 
     // A public destroy function.
-    public fun destroy<T: copy + drop>(hot_potato_vector: HotPotatoVector<T>){
-        let HotPotatoVector {contents: _} = hot_potato_vector;
+    public fun destroy<T: copy + drop>(hot_potato_vector: HotPotatoVector<T>) {
+        let HotPotatoVector { contents: _ } = hot_potato_vector;
     }
 
     // Only certain on-chain functions are allowed to create a new hot potato vector.
-    public(friend) fun new<T: copy + drop>(vec: vector<T>): HotPotatoVector<T>{
+    public(friend) fun new<T: copy + drop>(vec: vector<T>): HotPotatoVector<T> {
         HotPotatoVector {
             contents: vec
         }
@@ -35,30 +36,30 @@ module pyth::hot_potato_vector {
         vector::borrow<T>(&potato.contents, i)
     }
 
-    public(friend) fun pop_back<T: copy + drop>(hot_potato_vector: HotPotatoVector<T>): (T, HotPotatoVector<T>){
+    public(friend) fun pop_back<T: copy + drop>(hot_potato_vector: HotPotatoVector<T>): (T, HotPotatoVector<T>) {
         let elem = vector::pop_back<T>(&mut hot_potato_vector.contents);
         return (elem, hot_potato_vector)
     }
 
     #[test_only]
     struct A has copy, drop {
-        a : u64
+        a: u64
     }
 
     #[test]
-    fun test_hot_potato_vector(){
+    fun test_hot_potato_vector() {
         let vec_of_a = vector::empty<A>();
-        vector::push_back(&mut vec_of_a, A{a:5});
-        vector::push_back(&mut vec_of_a, A{a:11});
-        vector::push_back(&mut vec_of_a, A{a:23});
+        vector::push_back(&mut vec_of_a, A { a: 5 });
+        vector::push_back(&mut vec_of_a, A { a: 11 });
+        vector::push_back(&mut vec_of_a, A { a: 23 });
 
         let hot_potato = new<A>(vec_of_a);
         let (b, hot_potato) = pop_back<A>(hot_potato);
-        assert!(b.a==23, 0);
+        assert!(b.a == 23, 0);
         (b, hot_potato) = pop_back<A>(hot_potato);
-        assert!(b.a==11, 0);
+        assert!(b.a == 11, 0);
         let (b, hot_potato) = pop_back<A>(hot_potato);
-        assert!(b.a==5, 0);
+        assert!(b.a == 5, 0);
 
         destroy<A>(hot_potato);
     }
