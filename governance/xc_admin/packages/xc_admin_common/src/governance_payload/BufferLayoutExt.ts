@@ -6,7 +6,7 @@ export class UInt64BE extends Layout<bigint> {
   }
 
   override decode(b: Uint8Array, offset?: number): bigint {
-    let o = offset === undefined ? 0 : offset!;
+    let o = offset ?? 0;
     return Buffer.from(b.slice(o, o + this.span)).readBigUInt64BE();
   }
 
@@ -25,7 +25,7 @@ export class HexBytes extends Layout<string> {
   }
 
   override decode(b: Uint8Array, offset?: number): string {
-    let o = offset === undefined ? 0 : offset!;
+    let o = offset ?? 0;
     return Buffer.from(b.slice(o, o + this.span)).toString("hex");
   }
 

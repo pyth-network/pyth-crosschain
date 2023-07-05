@@ -15,7 +15,7 @@ export interface DataSource {
 }
 const DataSourceLayout: BufferLayout.Structure<DataSource> =
   BufferLayout.struct([
-    BufferLayout.u16("emitterChain"),
+    BufferLayout.u16be("emitterChain"),
     BufferLayoutExt.hexBytes(32, "emitterAddress"),
   ]);
 
@@ -37,8 +37,10 @@ export class SetDataSources implements PythGovernanceAction {
     }
 
     let index = PythGovernanceHeader.span;
+    const numSources = BufferLayout.u8().decode(data, index);
+    index += 1;
     const dataSources = [];
-    while (index < data.length) {
+    for (let i = 0; i < numSources; i++) {
       dataSources.push(DataSourceLayout.decode(data, index));
       index += DataSourceLayout.span;
     }
@@ -52,12 +54,15 @@ export class SetDataSources implements PythGovernanceAction {
       "SetDataSources"
     ).encode();
 
+    const numSourcesBuf = Buffer.alloc(1);
+    BufferLayout.u8().encode(this.dataSources.length, numSourcesBuf);
+
     const dataSourceBufs = this.dataSources.map((source) => {
       const buf = Buffer.alloc(DataSourceLayout.span);
       DataSourceLayout.encode(source, buf);
       return buf;
     });
 
-    return Buffer.concat([headerBuffer, ...dataSourceBufs]);
+    return Buffer.concat([headerBuffer, numSourcesBuf, ...dataSourceBufs]);
   }
 }
