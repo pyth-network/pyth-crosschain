@@ -11,6 +11,8 @@ import "./PythAssetRegistry.sol";
 error InvalidNonPositivePrice();
 /// Normalization overflow
 error NormalizationOverflow();
+/// Invalid Base Currency Unit value. Must be power of 10.
+error InvalidBaseCurrencyUnit();
 
 contract PythPriceOracleGetter is PythAssetRegistry, IPriceOracleGetter {
     /// @inheritdoc IPriceOracleGetter
@@ -32,12 +34,18 @@ contract PythPriceOracleGetter is PythAssetRegistry, IPriceOracleGetter {
         uint256 baseCurrencyUnit,
         uint validTimePeriodSeconds
     ) {
+        if (baseCurrencyUnit == 0) {
+            revert InvalidBaseCurrencyUnit();
+        }
         PythAssetRegistry.setPyth(pyth);
         PythAssetRegistry.setAssetsSources(assets, priceIds);
         PythAssetRegistry.setBaseCurrency(baseCurrency, baseCurrencyUnit);
         BASE_CURRENCY = _registryState.BASE_CURRENCY;
         BASE_CURRENCY_UNIT = _registryState.BASE_CURRENCY_UNIT;
-        BASE_NUM_DECIMALS = baseNumExponents(baseCurrencyUnit);
+        if ((10 ** baseNumDecimals(baseCurrencyUnit)) != baseCurrencyUnit) {
+            revert InvalidBaseCurrencyUnit();
+        }
+        BASE_NUM_DECIMALS = baseNumDecimals(baseCurrencyUnit);
         PythAssetRegistry.setValidTimePeriodSeconds(validTimePeriodSeconds);
     }
 
@@ -62,13 +70,13 @@ contract PythPriceOracleGetter is PythAssetRegistry, IPriceOracleGetter {
             revert InvalidNonPositivePrice();
         }
         uint256 normalizedPrice = uint64(price.price);
-        // price.expo is bound between [-12, 12]
         int32 normalizerExpo = price.expo + int8(BASE_NUM_DECIMALS);
         bool isNormalizerExpoNeg = normalizerExpo < 0;
         uint256 normalizer = isNormalizerExpoNeg
             ? 10 ** uint32(-normalizerExpo)
             : 10 ** uint32(normalizerExpo);
 
+        // this check prevents overflow in normalized price
         if (!isNormalizerExpoNeg && normalizer > type(uint192).max) {
             revert NormalizationOverflow();
         }
@@ -84,7 +92,7 @@ contract PythPriceOracleGetter is PythAssetRegistry, IPriceOracleGetter {
         return normalizedPrice;
     }
 
-    function baseNumExponents(uint number) private pure returns (uint8) {
+    function baseNumDecimals(uint number) private pure returns (uint8) {
         uint8 digits = 0;
         while (number != 0) {
             number /= 10;

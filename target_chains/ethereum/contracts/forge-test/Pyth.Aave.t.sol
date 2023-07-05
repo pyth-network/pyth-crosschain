@@ -55,14 +55,18 @@ contract PythAaveTest is PythWormholeMerkleAccumulatorTest {
         );
     }
 
-    function testGetAssetPriceWorks() public {
+    function testConversion(
+        int64 pythPrice,
+        int32 pythExpo,
+        uint256 aavePrice,
+        uint256 baseCurrencyUnit
+    ) private {
         PriceFeedMessage[] memory priceFeedMessages = new PriceFeedMessage[](1);
-        // "display" price is 529.30903
         PriceFeedMessage memory priceFeedMessage = PriceFeedMessage({
             priceId: getRandBytes32(),
-            price: int64(52_930_903),
+            price: pythPrice,
             conf: getRandUint64(),
-            expo: int32(-5),
+            expo: pythExpo,
             publishTime: uint64(1),
             prevPublishTime: getRandUint64(),
             emaPrice: getRandInt64(),
@@ -88,12 +92,41 @@ contract PythAaveTest is PythWormholeMerkleAccumulatorTest {
             assets,
             priceIds,
             address(0x0),
-            BASE_CURRENCY_UNIT,
+            baseCurrencyUnit,
             VALID_TIME_PERIOD_SECS
         );
 
-        uint256 aavePrice = pythOracleGetter.getAssetPrice(assets[0]);
-        assertEq(aavePrice, 52_930_903_000);
+        assertEq(pythOracleGetter.getAssetPrice(assets[0]), aavePrice);
+    }
+
+    function testGetAssetPriceWorks() public {
+        // "display" price is 529.30903
+        testConversion(52_930_903, -5, 52_930_903_000, BASE_CURRENCY_UNIT);
+    }
+
+    function testGetAssetPriceWorksWithPositiveExponent() public {
+        // "display" price is 5_293_000
+        testConversion(5_293, 3, 529_300_000_000_000, BASE_CURRENCY_UNIT);
+    }
+
+    function testGetAssetPriceWorksWithZeroExponent() public {
+        // "display" price is 5_293
+        testConversion(5_293, 0, 529_300_000_000, BASE_CURRENCY_UNIT);
+    }
+
+    function testGetAssetPriceWorksWithNegativeNormalizerExponent() public {
+        // "display" price is 5_293
+        testConversion(
+            5_293_000_000_000_000,
+            -12,
+            529_300_000_000,
+            BASE_CURRENCY_UNIT
+        );
+    }
+
+    function testGetAssetPriceWorksWithBaseCurrencyUnitOfOne() public {
+        // "display" price is 529.30903
+        testConversion(52_930_903, -5, 529, 1);
     }
 
     function testGetAssetPriceWorksWithBoundedRandomValues(uint seed) public {
@@ -151,9 +184,9 @@ contract PythAaveTest is PythWormholeMerkleAccumulatorTest {
         PriceFeedMessage[] memory priceFeedMessages = new PriceFeedMessage[](1);
         PriceFeedMessage memory priceFeedMessage = PriceFeedMessage({
             priceId: getRandBytes32(),
-            price: int64(-5), // assuming price should always be positive
+            price: int64(-5),
             conf: getRandUint64(),
-            expo: int32(getRandInt8() % 13), // pyth contract guarantees that expo between [-12, 12]
+            expo: getRandInt32(),
             publishTime: uint64(1),
             prevPublishTime: getRandUint64(),
             emaPrice: getRandInt64(),
@@ -268,5 +301,68 @@ contract PythAaveTest is PythWormholeMerkleAccumulatorTest {
 
         vm.expectRevert(abi.encodeWithSignature("InvalidNonPositivePrice()"));
         pythOracleGetter.getAssetPrice(assets[0]);
+    }
+
+    function testPythPriceOracleGetterConstructorRevertsIfAssetsAndPriceIdsLengthAreDifferent()
+        public
+    {
+        priceIds = new bytes32[](2);
+        priceIds[0] = getRandBytes32();
+        priceIds[1] = getRandBytes32();
+        assets = new address[](1);
+        assets[0] = address(
+            uint160(uint(keccak256(abi.encodePacked(uint(100)))))
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("InconsistentParamsLength()"));
+        pythOracleGetter = new PythPriceOracleGetter(
+            address(pyth),
+            assets,
+            priceIds,
+            address(0x0),
+            BASE_CURRENCY_UNIT,
+            VALID_TIME_PERIOD_SECS
+        );
+    }
+
+    function testPythPriceOracleGetterConstructorRevertsIfInvalidBaseCurrencyUnit()
+        public
+    {
+        priceIds = new bytes32[](1);
+        priceIds[0] = getRandBytes32();
+        assets = new address[](1);
+        assets[0] = address(
+            uint160(uint(keccak256(abi.encodePacked(uint(100)))))
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("InvalidBaseCurrencyUnit()"));
+        pythOracleGetter = new PythPriceOracleGetter(
+            address(pyth),
+            assets,
+            priceIds,
+            address(0x0),
+            0,
+            VALID_TIME_PERIOD_SECS
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("InvalidBaseCurrencyUnit()"));
+        pythOracleGetter = new PythPriceOracleGetter(
+            address(pyth),
+            assets,
+            priceIds,
+            address(0x0),
+            11,
+            VALID_TIME_PERIOD_SECS
+        );
+
+        vm.expectRevert(abi.encodeWithSignature("InvalidBaseCurrencyUnit()"));
+        pythOracleGetter = new PythPriceOracleGetter(
+            address(pyth),
+            assets,
+            priceIds,
+            address(0x0),
+            20,
+            VALID_TIME_PERIOD_SECS
+        );
     }
 }
