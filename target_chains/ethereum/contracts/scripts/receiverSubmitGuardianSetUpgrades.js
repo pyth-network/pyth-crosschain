@@ -28,6 +28,7 @@ module.exports = async function (callback) {
         value: 0,
         from: accounts[0],
         gasLimit: 2000000,
+        gasPrice: 200000000000
       });
     // Upgrade set 1 to set 2
     console.log("Upgrading to guardian set 2.");
@@ -37,6 +38,7 @@ module.exports = async function (callback) {
         value: 0,
         from: accounts[0],
         gasLimit: 2000000,
+        gasPrice: 200000000000
       });
     // Upgrade set 2 to set 3
     console.log("Upgrading to guardian set 3.");
@@ -46,6 +48,7 @@ module.exports = async function (callback) {
         value: 0,
         from: accounts[0],
         gasLimit: 2000000,
+        gasPrice: 200000000000
       });
     console.log("Updated the guardian set successfully.");
     callback();

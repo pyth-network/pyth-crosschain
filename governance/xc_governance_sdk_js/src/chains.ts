@@ -38,6 +38,7 @@ export const RECEIVER_CHAINS = {
   juno: 60020,
   juno_testnet: 60021,
   kava: 60022,
+  wemix: 60023,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
