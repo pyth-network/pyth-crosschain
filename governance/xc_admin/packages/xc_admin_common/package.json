@@ -38,6 +38,7 @@
     "@types/lodash": "^4.14.191",
     "jest": "^29.3.1",
     "prettier": "^2.8.1",
-    "ts-jest": "^29.0.3"
+    "ts-jest": "^29.0.3",
+    "fast-check": "^3.10.0"
   }
 }
