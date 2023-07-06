@@ -52,4 +52,6 @@ export const CONTRACT_ADDR: Record<string, string> = {
   conflux_espace_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   kava_testnet: "0x98046Bd286715D3B0BC227Dd7a956b83D8978603",
   kava: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  wemix: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  wemix_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
 };

@@ -56,6 +56,11 @@ export const CHAINS_CONTRACT_CONFIG: Record<ChainId, ChainContractConfig> = {
     pythArtifactZipName: "cosmwasm",
     wormholeChainId: CHAINS.sei_pacific_1,
   },
+  [ChainId.NEUTRON]: {
+    feeDenom: "untrn",
+    pythArtifactZipName: "cosmwasm",
+    wormholeChainId: CHAINS.neutron,
+  },
 };
 
 function getPythSources(deploymentType: DeploymentType) {

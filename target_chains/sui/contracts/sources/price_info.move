@@ -3,11 +3,14 @@ module pyth::price_info {
     use sui::tx_context::{TxContext};
     use sui::dynamic_object_field::{Self};
     use sui::table::{Self};
+    use sui::coin::{Self, Coin};
+    use sui::sui::SUI;
 
     use pyth::price_feed::{Self, PriceFeed};
     use pyth::price_identifier::{PriceIdentifier};
 
     const KEY: vector<u8> = b"price_info";
+    const FEE_STORAGE_KEY: vector<u8> = b"fee_storage";
     const E_PRICE_INFO_REGISTRY_ALREADY_EXISTS: u64 = 0;
     const E_PRICE_IDENTIFIER_ALREADY_REGISTERED: u64 = 1;
     const E_PRICE_IDENTIFIER_NOT_REGISTERED: u64 = 2;
@@ -91,13 +94,34 @@ module pyth::price_info {
         table::contains<PriceIdentifier, ID>(ref, price_identifier)
     }
 
+    public fun get_balance(price_info_object: &PriceInfoObject): u64 {
+        if (!dynamic_object_field::exists_with_type<vector<u8>, Coin<SUI>>(&price_info_object.id, FEE_STORAGE_KEY)) {
+            return 0
+        };
+        let fee = dynamic_object_field::borrow<vector<u8>, Coin<SUI>>(&price_info_object.id, FEE_STORAGE_KEY);
+        coin::value(fee)
+    }
+
+    public fun deposit_fee_coins(price_info_object: &mut PriceInfoObject, fee_coins: Coin<SUI>) {
+        if (!dynamic_object_field::exists_with_type<vector<u8>, Coin<SUI>>(&price_info_object.id, FEE_STORAGE_KEY)) {
+            dynamic_object_field::add(&mut price_info_object.id, FEE_STORAGE_KEY, fee_coins);
+        }
+        else {
+            let current_fee = dynamic_object_field::borrow_mut<vector<u8>, Coin<SUI>>(
+                &mut price_info_object.id,
+                FEE_STORAGE_KEY
+            );
+            coin::join(current_fee, fee_coins);
+        };
+    }
+
     public(friend) fun new_price_info_object(
         price_info: PriceInfo,
         ctx: &mut TxContext
     ): PriceInfoObject {
         PriceInfoObject {
             id: object::new(ctx),
-            price_info: price_info
+            price_info
         }
     }
 
@@ -107,9 +131,9 @@ module pyth::price_info {
         price_feed: PriceFeed,
     ): PriceInfo {
         PriceInfo {
-            attestation_time: attestation_time,
-            arrival_time: arrival_time,
-            price_feed: price_feed,
+            attestation_time,
+            arrival_time,
+            price_feed,
         }
     }
 
@@ -143,9 +167,9 @@ module pyth::price_info {
     }
 
     #[test_only]
-    public fun destroy(price_info: PriceInfoObject){
+    public fun destroy(price_info: PriceInfoObject) {
         let PriceInfoObject {
-            id: id,
+            id,
             price_info: _,
         } = price_info;
         object::delete(id);

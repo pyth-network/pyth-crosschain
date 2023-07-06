@@ -280,6 +280,18 @@ module.exports = {
       provider: payerProvider("https://evm.testnet.kava.io"),
       network_id: 2221,
     },
+    wemix: {
+      provider: payerProvider("https://api.wemix.com"),
+      network_id: 1111,
+      gas: 10000000,
+      gasPrice: 200000000000,
+    },
+    wemix_testnet: {
+      provider: payerProvider("https://api.test.wemix.com"),
+      network_id: 1112,
+      gas: 10000000,
+      gasPrice: 200000000000,
+    },
   },
 
   compilers: {

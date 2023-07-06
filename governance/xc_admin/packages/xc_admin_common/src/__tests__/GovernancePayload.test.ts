@@ -1,5 +1,39 @@
 import { PublicKey, SystemProgram } from "@solana/web3.js";
-import { PythGovernanceHeader, ExecutePostedVaa } from "..";
+import {
+  PythGovernanceHeader,
+  ExecutePostedVaa,
+  MODULES,
+  MODULE_EXECUTOR,
+  TargetAction,
+  ExecutorAction,
+  ActionName,
+  PythGovernanceAction,
+  decodeGovernancePayload,
+} from "..";
+import * as fc from "fast-check";
+import {
+  ChainId,
+  ChainName,
+  CHAINS,
+  toChainId,
+  toChainName,
+} from "@certusone/wormhole-sdk";
+import { Arbitrary, IntArrayConstraints } from "fast-check";
+import {
+  AptosAuthorizeUpgradeContract,
+  CosmosUpgradeContract,
+  EvmUpgradeContract,
+} from "../governance_payload/UpgradeContract";
+import {
+  AuthorizeGovernanceDataSourceTransfer,
+  RequestGovernanceDataSourceTransfer,
+} from "../governance_payload/GovernanceDataSourceTransfer";
+import { SetFee } from "../governance_payload/SetFee";
+import { SetValidPeriod } from "../governance_payload/SetValidPeriod";
+import {
+  DataSource,
+  SetDataSources,
+} from "../governance_payload/SetDataSources";
 
 test("GovernancePayload ser/de", (done) => {
   jest.setTimeout(60000);
@@ -117,6 +151,145 @@ test("GovernancePayload ser/de", (done) => {
     executePostedVaaArgs?.instructions[0].data.equals(
       Buffer.from([2, 0, 0, 0, 0, 152, 13, 0, 0, 0, 0, 0])
     )
+  );
+
+  done();
+});
+
+/** Fastcheck generator for arbitrary PythGovernanceHeaders */
+function governanceHeaderArb(): Arbitrary<PythGovernanceHeader> {
+  const actions = [
+    ...Object.keys(ExecutorAction),
+    ...Object.keys(TargetAction),
+  ] as ActionName[];
+  const actionArb = fc.constantFrom(...actions);
+  const targetChainIdArb = fc.constantFrom(
+    ...(Object.keys(CHAINS) as ChainName[])
+  );
+
+  return actionArb.chain((action) => {
+    return targetChainIdArb.chain((chainId) => {
+      return fc.constant(new PythGovernanceHeader(chainId, action));
+    });
+  });
+}
+
+/** Fastcheck generator for arbitrary Buffers */
+function bufferArb(constraints?: IntArrayConstraints): Arbitrary<Buffer> {
+  return fc.uint8Array(constraints).map((a) => Buffer.from(a));
+}
+
+/** Fastcheck generator for a uint of numBits bits. Warning: don't pass numBits > float precision */
+function uintArb(numBits: number): Arbitrary<number> {
+  return fc.bigUintN(numBits).map((x) => Number.parseInt(x.toString()));
+}
+
+/** Fastcheck generator for a byte array encoded as a hex string. */
+function hexBytesArb(constraints?: IntArrayConstraints): Arbitrary<string> {
+  return fc.uint8Array(constraints).map((a) => Buffer.from(a).toString("hex"));
+}
+
+function dataSourceArb(): Arbitrary<DataSource> {
+  return fc.record({
+    emitterChain: uintArb(16),
+    emitterAddress: hexBytesArb({ minLength: 32, maxLength: 32 }),
+  });
+}
+
+/**
+ * Fastcheck generator for arbitrary PythGovernanceActions.
+ *
+ * Note that this generator doesn't generate ExecutePostedVaa instruction payloads because they're hard to generate.
+ */
+function governanceActionArb(): Arbitrary<PythGovernanceAction> {
+  return governanceHeaderArb().chain<PythGovernanceAction>((header) => {
+    if (header.action === "ExecutePostedVaa") {
+      // NOTE: the instructions field is hard to generatively test, so we're using the hardcoded
+      // tests above instead.
+      return fc.constant(new ExecutePostedVaa(header.targetChainId, []));
+    } else if (header.action === "UpgradeContract") {
+      const cosmosArb = fc.bigUintN(64).map((codeId) => {
+        return new CosmosUpgradeContract(header.targetChainId, codeId);
+      });
+      const aptosArb = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
+        (buffer) => {
+          return new AptosAuthorizeUpgradeContract(
+            header.targetChainId,
+            buffer
+          );
+        }
+      );
+      const evmArb = hexBytesArb({ minLength: 20, maxLength: 20 }).map(
+        (address) => {
+          return new EvmUpgradeContract(header.targetChainId, address);
+        }
+      );
+
+      return fc.oneof(cosmosArb, aptosArb, evmArb);
+    } else if (header.action === "AuthorizeGovernanceDataSourceTransfer") {
+      return bufferArb().map((claimVaa) => {
+        return new AuthorizeGovernanceDataSourceTransfer(
+          header.targetChainId,
+          claimVaa
+        );
+      });
+    } else if (header.action === "SetDataSources") {
+      return fc.array(dataSourceArb()).map((dataSources) => {
+        return new SetDataSources(header.targetChainId, dataSources);
+      });
+    } else if (header.action === "SetFee") {
+      return fc
+        .record({ v: fc.bigUintN(64), e: fc.bigUintN(64) })
+        .map(({ v, e }) => {
+          return new SetFee(header.targetChainId, v, e);
+        });
+    } else if (header.action === "SetValidPeriod") {
+      return fc.bigUintN(64).map((period) => {
+        return new SetValidPeriod(header.targetChainId, period);
+      });
+    } else if (header.action === "RequestGovernanceDataSourceTransfer") {
+      return fc.bigUintN(32).map((index) => {
+        return new RequestGovernanceDataSourceTransfer(
+          header.targetChainId,
+          parseInt(index.toString())
+        );
+      });
+    } else {
+      throw new Error("Unsupported action type");
+    }
+  });
+}
+
+test("Header serialization round-trip test", (done) => {
+  fc.assert(
+    fc.property(governanceHeaderArb(), (original) => {
+      const decoded = PythGovernanceHeader.decode(original.encode());
+      if (decoded === undefined) {
+        return false;
+      }
+
+      return (
+        decoded.action === original.action &&
+        decoded.targetChainId === original.targetChainId
+      );
+    })
+  );
+
+  done();
+});
+
+test("Governance action serialization round-trip test", (done) => {
+  fc.assert(
+    fc.property(governanceActionArb(), (original) => {
+      const encoded = original.encode();
+      const decoded = decodeGovernancePayload(encoded);
+      if (decoded === undefined) {
+        return false;
+      }
+
+      // TODO: not sure if i love this test.
+      return decoded.encode().equals(original.encode());
+    })
   );
 
   done();

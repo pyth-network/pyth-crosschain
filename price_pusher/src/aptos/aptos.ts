@@ -7,7 +7,6 @@ import {
 import { AptosAccount, AptosClient, TxnBuilderTypes } from "aptos";
 import { DurationInSeconds } from "../utils";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
-import { PushAttempt } from "../common";
 
 export class AptosPriceListener extends ChainPriceListener {
   constructor(
@@ -68,17 +67,23 @@ export class AptosPriceListener extends ChainPriceListener {
   }
 }
 
+// Derivation path for aptos accounts
+export const APTOS_ACCOUNT_HD_PATH = "m/44'/637'/0'/0'/0'";
 export class AptosPricePusher implements IPricePusher {
-  private lastPushAttempt: PushAttempt | undefined;
+  // The last sequence number that has a transaction submitted.
+  private lastSequenceNumber: number | undefined;
+  // If true, we are trying to fetch the most recent sequence number from the blockchain.
+  private sequenceNumberLocked: boolean;
 
-  private readonly accountHDPath = "m/44'/637'/0'/0'/0'";
   constructor(
     private priceServiceConnection: PriceServiceConnection,
     private pythContractAddress: string,
     private endpoint: string,
     private mnemonic: string,
     private overrideGasPriceMultiplier: number
-  ) {}
+  ) {
+    this.sequenceNumberLocked = false;
+  }
 
   /**
    * Gets price update data which then can be submitted to the Pyth contract to update the prices.
@@ -118,73 +123,75 @@ export class AptosPricePusher implements IPricePusher {
 
     try {
       const account = AptosAccount.fromDerivePath(
-        this.accountHDPath,
+        APTOS_ACCOUNT_HD_PATH,
         this.mnemonic
       );
       const client = new AptosClient(this.endpoint);
 
-      const rawTx = await client.generateTransaction(account.address(), {
-        function: `${this.pythContractAddress}::pyth::update_price_feeds_if_fresh_with_funder`,
-        type_arguments: [],
-        arguments: [
-          priceFeedUpdateData,
-          priceIds.map((priceId) => Buffer.from(priceId, "hex")),
-          pubTimesToPush,
-        ],
-      });
-
-      const simulation = await client.simulateTransaction(account, rawTx, {
-        estimateGasUnitPrice: true,
-        estimateMaxGasAmount: true,
-        estimatePrioritizedGasUnitPrice: true,
-      });
-
-      // Transactions on Aptos can be prioritized by paying a higher gas unit price.
-      // We are storing the gas unit price paid for the last transaction.
-      // If that transaction is not added to the block, we are increasing the gas unit price
-      // by multiplying the old gas unit price with `this.overrideGasPriceMultiplier`.
-      // After which we are sending a transaction with the same sequence number as the last
-      // transaction. Since they have the same sequence number only one of them will be added to
-      // the block and we won't be paying fees twice.
-      let gasUnitPrice = Number(simulation[0].gas_unit_price);
-      if (
-        this.lastPushAttempt !== undefined &&
-        Number(simulation[0].sequence_number) === this.lastPushAttempt.nonce
-      ) {
-        const newGasUnitPrice = Number(
-          this.lastPushAttempt.gasPrice * this.overrideGasPriceMultiplier
-        );
-        if (gasUnitPrice < newGasUnitPrice) gasUnitPrice = newGasUnitPrice;
-      }
-
-      const gasUsed = Number(simulation[0].gas_used) * 1.5;
-      const maxGasAmount = Number(gasUnitPrice * gasUsed);
-
-      const rawTxWithFee = new TxnBuilderTypes.RawTransaction(
-        rawTx.sender,
-        rawTx.sequence_number,
-        rawTx.payload,
-        BigInt(maxGasAmount.toFixed()),
-        BigInt(gasUnitPrice.toFixed()),
-        rawTx.expiration_timestamp_secs,
-        rawTx.chain_id
+      const sequenceNumber = await this.tryGetNextSequenceNumber(
+        client,
+        account
+      );
+      const rawTx = await client.generateTransaction(
+        account.address(),
+        {
+          function: `${this.pythContractAddress}::pyth::update_price_feeds_with_funder`,
+          type_arguments: [],
+          arguments: [priceFeedUpdateData],
+        },
+        {
+          sequence_number: sequenceNumber.toFixed(),
+        }
       );
 
-      const signedTx = await client.signTransaction(account, rawTxWithFee);
+      const signedTx = await client.signTransaction(account, rawTx);
       const pendingTx = await client.submitTransaction(signedTx);
 
-      console.log("Succesfully broadcasted txHash:", pendingTx.hash);
-
-      // Update lastAttempt
-      this.lastPushAttempt = {
-        nonce: Number(pendingTx.sequence_number),
-        gasPrice: gasUnitPrice,
-      };
+      console.log("Successfully broadcasted txHash:", pendingTx.hash);
       return;
     } catch (e: any) {
       console.error("Error executing messages");
       console.log(e);
+
+      // Reset the sequence number to re-sync it (in case that was the issue)
+      this.lastSequenceNumber = undefined;
+
       return;
+    }
+  }
+
+  // Try to get the next sequence number for account. This function uses a local cache
+  // to predict the next sequence number if possible; if not, it fetches the number from
+  // the blockchain itself (and caches it for later).
+  private async tryGetNextSequenceNumber(
+    client: AptosClient,
+    account: AptosAccount
+  ): Promise<number> {
+    if (this.lastSequenceNumber !== undefined) {
+      this.lastSequenceNumber += 1;
+      return this.lastSequenceNumber;
+    } else {
+      // Fetch from the blockchain if we don't have the local cache.
+      // Note that this is locked so that only 1 fetch occurs regardless of how many updates
+      // happen during that fetch.
+      if (!this.sequenceNumberLocked) {
+        try {
+          this.sequenceNumberLocked = true;
+          this.lastSequenceNumber = Number(
+            (await client.getAccount(account.address())).sequence_number
+          );
+          console.log(
+            `Fetched account sequence number: ${this.lastSequenceNumber}`
+          );
+          return this.lastSequenceNumber;
+        } catch (e: any) {
+          throw new Error("Failed to retrieve sequence number");
+        } finally {
+          this.sequenceNumberLocked = false;
+        }
+      } else {
+        throw new Error("Waiting for sequence number in another thread.");
+      }
     }
   }
 }

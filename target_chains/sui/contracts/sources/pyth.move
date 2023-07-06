@@ -16,9 +16,8 @@ module pyth::pyth {
     use pyth::price::{Self, Price};
     use pyth::price_identifier::{PriceIdentifier};
     use pyth::setup::{Self, DeployerCap};
-    use pyth::authenticated_vector::{Self, AuthenticatedVector};
+    use pyth::hot_potato_vector::{Self, HotPotatoVector};
     use pyth::accumulator::{Self};
-    use pyth::deserialize::{Self};
 
     use wormhole::external_address::{Self};
     use wormhole::vaa::{Self, VAA};
@@ -31,7 +30,6 @@ module pyth::pyth {
     const E_STALE_PRICE_UPDATE: u64 = 3;
     const E_UPDATE_AND_PRICE_INFO_OBJECT_MISMATCH: u64 = 4;
     const E_PRICE_UPDATE_NOT_FOUND_FOR_PRICE_INFO_OBJECT: u64 = 5;
-    const E_INVALID_ACCUMULATOR_HEADER: u64 = 6;
     const E_INVALID_ACCUMULATOR_MAGIC: u64 = 7;
 
     const PYTHNET_ACCUMULATOR_UPDATE_MAGIC: u64 = 1347305813;
@@ -116,11 +114,6 @@ module pyth::pyth {
 
         // decode the price info updates from the VAA payload (first check if it is an accumulator or batch price update)
         let accumulator_message_cursor = cursor::new(accumulator_message);
-        let header = deserialize::deserialize_u32(&mut accumulator_message_cursor);
-
-        if ((header as u64) != PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
-            abort E_INVALID_ACCUMULATOR_HEADER
-        };
         let price_infos = accumulator::parse_and_verify_accumulator_message(&mut accumulator_message_cursor, vaa::take_payload(vaa), clock);
 
         // Create and share new price info objects, if not already exists.
@@ -132,7 +125,8 @@ module pyth::pyth {
 
 
     /// Create and share new price feed objects if they don't already exist using batch price attestation.
-    public fun create_price_feeds_using_batch_attestation(
+    /// The name of the function is kept as is to remain backward compatible
+    public fun create_price_feeds(
         pyth_state: &mut PythState,
         // These vaas have been verified and consumed, so we don't have to worry about
         // doing replay protection for them.
@@ -167,7 +161,7 @@ module pyth::pyth {
     }
 
     // create_and_share_price_feeds_using_verified_price_infos is a private function used by
-    // 1) create_price_feeds_using_batch_attestation
+    // 1) create_price_feeds
     // 2) create_price_feeds_using_accumulator
     // to create new price feeds for symbols.
     fun create_and_share_price_feeds_using_verified_price_infos(latest_only: &LatestOnly, pyth_state: &mut PythState, price_infos: vector<PriceInfo>, ctx: &mut TxContext){
@@ -203,8 +197,8 @@ module pyth::pyth {
         accumulator_message: vector<u8>,
         verified_vaa: VAA,
         clock: &Clock,
-    ): AuthenticatedVector<PriceInfo> {
-        let _ = state::assert_latest_only(pyth_state);
+    ): HotPotatoVector<PriceInfo> {
+        state::assert_latest_only(pyth_state);
 
         // verify that the VAA originates from a valid data source
         assert!(
@@ -219,26 +213,21 @@ module pyth::pyth {
 
         // decode the price info updates from the VAA payload (first check if it is an accumulator or batch price update)
         let accumulator_message_cursor = cursor::new(accumulator_message);
-        let header = deserialize::deserialize_u32(&mut accumulator_message_cursor);
+        let price_infos = accumulator::parse_and_verify_accumulator_message(&mut accumulator_message_cursor, vaa::take_payload(verified_vaa), clock);
 
-        let _price_infos = vector::empty<PriceInfo>();
-        if ((header as u64) == PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
-            _price_infos = accumulator::parse_and_verify_accumulator_message(&mut accumulator_message_cursor, vaa::take_payload(verified_vaa), clock);
-        }
-        else {
-            abort E_INVALID_ACCUMULATOR_HEADER
-        };
         // check that accumulator message has been fully consumed
         cursor::destroy_empty(accumulator_message_cursor);
-        authenticated_vector::new(_price_infos)
+        hot_potato_vector::new(price_infos)
     }
 
-    public fun create_authenticated_price_infos_using_batch_price_attestation(
+    /// Creates authenticated price infos using batch price attestation
+    /// Name is kept as is to remain backward compatible
+    public fun create_price_infos_hot_potato(
         pyth_state: &PythState,
         verified_vaas: vector<VAA>,
         clock: &Clock
-    ): AuthenticatedVector<PriceInfo> {
-        let _ = state::assert_latest_only(pyth_state);
+    ): HotPotatoVector<PriceInfo> {
+        state::assert_latest_only(pyth_state);
 
         let price_updates = vector::empty<PriceInfo>();
         while (vector::length(&verified_vaas) != 0){
@@ -260,7 +249,7 @@ module pyth::pyth {
             }
         };
         vector::destroy_empty(verified_vaas);
-        return authenticated_vector::new(price_updates)
+        return hot_potato_vector::new(price_updates)
     }
 
     /// Update a singular Pyth PriceInfoObject (containing a price feed) with the
@@ -274,11 +263,11 @@ module pyth::pyth {
     /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
     public fun update_single_price_feed(
         pyth_state: &PythState,
-        price_updates: AuthenticatedVector<PriceInfo>,
+        price_updates: HotPotatoVector<PriceInfo>,
         price_info_object: &mut PriceInfoObject,
         fee: Coin<SUI>,
         clock: &Clock
-    ): AuthenticatedVector<PriceInfo> {
+    ): HotPotatoVector<PriceInfo> {
         let latest_only = state::assert_latest_only(pyth_state);
 
         // On Sui, users get to choose which price feeds to update. They specify a single price feed to
@@ -286,14 +275,15 @@ module pyth::pyth {
         // This is a departure from Eth, where users don't get to necessarily choose.
         assert!(state::get_base_update_fee(pyth_state) <= coin::value(&fee), E_INSUFFICIENT_FEE);
 
-        transfer::public_transfer(fee, state::get_fee_recipient(pyth_state));
+        // store fee coins within price info object
+        price_info::deposit_fee_coins(price_info_object, fee);
 
         // Find price update corresponding to PriceInfoObject within the array of price_updates
         // and use it to update PriceInfoObject.
         let i = 0;
         let found = false;
-        while (i < authenticated_vector::length<PriceInfo>(&price_updates)){
-            let cur_price_info = authenticated_vector::borrow<PriceInfo>(&price_updates, i);
+        while (i < hot_potato_vector::length<PriceInfo>(&price_updates)){
+            let cur_price_info = hot_potato_vector::borrow<PriceInfo>(&price_updates, i);
             if (has_same_price_identifier(cur_price_info, price_info_object)){
                 found = true;
                 update_cache(latest_only, cur_price_info, price_info_object, clock);
@@ -442,10 +432,8 @@ module pyth::pyth_tests{
     use pyth::setup::{Self};
     use pyth::price_info::{Self, PriceInfo, PriceInfoObject};//, PriceInfo, PriceInfoObject};
     use pyth::data_source::{Self, DataSource};
-    //use pyth::i64::{Self};
-    //use pyth::price::{Self};
-    use pyth::pyth::{Self, create_authenticated_price_infos_using_batch_price_attestation, update_single_price_feed};
-    use pyth::authenticated_vector::{Self};
+    use pyth::pyth::{Self, create_price_infos_hot_potato, update_single_price_feed};
+    use pyth::hot_potato_vector::{Self};
     use pyth::price_identifier::{Self};
     use pyth::price_feed::{Self};
     use pyth::accumulator::{Self};
@@ -503,8 +491,7 @@ module pyth::pyth_tests{
         let cursor = cursor::new(accumulator_message);
         let header: u32 = deserialize::deserialize_u32(&mut cursor);
         assert!((header as u64) == _PYTHNET_ACCUMULATOR_UPDATE_MAGIC, 0);
-        let major = deserialize::deserialize_u8(&mut cursor);
-        assert!(major == 1, 0);
+        let _major = deserialize::deserialize_u8(&mut cursor);
         let _minor = deserialize::deserialize_u8(&mut cursor);
 
         let trailing_size = deserialize::deserialize_u8(&mut cursor);
@@ -705,23 +692,21 @@ module pyth::pyth_tests{
         let (scenario, test_coins, clock) =  setup_test(500 /* stale_price_threshold */, 23 /* governance emitter chain */, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", vector[], vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], 50, 0);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         // Pass in a corrupt VAA, which should fail deseriaizing
         let corrupt_vaa = x"90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
         let verified_vaas = vector[vaa::parse_and_verify(&worm_state, corrupt_vaa, &clock)];
         // Create Pyth price feed
-        pyth::create_price_feeds_using_batch_attestation(
+        pyth::create_price_feeds(
             &mut pyth_state,
             verified_vaas,
             &clock,
             ctx(&mut scenario)
         );
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
-        clock::destroy_for_testing(clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         coin::burn_for_testing<SUI>(test_coins);
         test_scenario::end(scenario);
     }
@@ -741,21 +726,18 @@ module pyth::pyth_tests{
         let (scenario, test_coins, clock) = setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources, BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, 50, 0);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
-        pyth::create_price_feeds_using_batch_attestation(
+        pyth::create_price_feeds(
             &mut pyth_state,
             verified_vaas,
             &clock,
             ctx(&mut scenario)
         );
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
-        clock::destroy_for_testing(clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         coin::burn_for_testing<SUI>(test_coins);
         test_scenario::end(scenario);
     }
@@ -773,18 +755,19 @@ module pyth::pyth_tests{
     }
 
     #[test]
+    // test_create_and_update_price_feeds_with_batch_attestation_success tests the creation and updating of price
+    // feeds, as well as depositing fee coins into price info objects
     fun test_create_and_update_price_feeds_with_batch_attestation_success() {
         let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        pyth::create_price_feeds_using_batch_attestation(
+        pyth::create_price_feeds(
             &mut pyth_state,
             verified_vaas,
             &clock,
@@ -816,7 +799,7 @@ module pyth::pyth_tests{
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         // Create authenticated price infos
-        let vec = create_authenticated_price_infos_using_batch_price_attestation(
+        let vec = create_price_infos_hot_potato(
             &pyth_state,
             vector[vaa_1],
             &clock
@@ -824,36 +807,39 @@ module pyth::pyth_tests{
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
+        let fee_coins = coin::split(&mut test_coins, DEFAULT_BASE_UPDATE_FEE, ctx(&mut scenario));
         vec = update_single_price_feed(
             &mut pyth_state,
             vec,
             &mut price_info_object_1,
-            test_coins,
+            fee_coins,
             &clock
         );
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        assert!(price_feeds_equal(authenticated_vector::borrow(&vec, 3), &price_info::get_price_info_from_price_info_object(&price_info_object_1)), 0);
+        // check price feed updated
+        assert!(price_feeds_equal(hot_potato_vector::borrow(&vec, 3), &price_info::get_price_info_from_price_info_object(&price_info_object_1)), 0);
+
+        // check fee coins are deposited in the price info object
+        assert!(price_info::get_balance(&price_info_object_1)==DEFAULT_BASE_UPDATE_FEE, 0);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        authenticated_vector::destroy<PriceInfo>(vec);
+        hot_potato_vector::destroy<PriceInfo>(vec);
 
         vector::destroy_empty(verified_vaas);
-        return_shared(pyth_state);
-        return_shared(worm_state);
         return_shared(price_info_object_1);
         return_shared(price_info_object_2);
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
 
-        clock::destroy_for_testing(clock);
+        coin::burn_for_testing(test_coins);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
 
-    const TEST_ACCUMULATOR_SINGLE_FEED: vector<u8> = x"504e41550100000000a0010000000001005d461ac1dfffa8451edda17e4b28a46c8ae912422b2dc0cb7732828c497778ea27147fb95b4d250651931845e7f3e22c46326716bcf82be2874a9c9ab94b6e42000000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000000004155575600000000000000000000000000da936d73429246d131873a0bab90ad7b416510be01005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf65f958f4883f9d2a8b5b1008d1fa01db95cf4a8c7000000006491cc757be59f3f377c0d3f423a695e81ad1eb504f8554c3620c3fd02f2ee15ea639b73fa3db9b34a245bdfa015c260c5a8a1180177cf30b2c0bebbb1adfe8f7985d051d2";
-    // Info about the accumulator message:
+    // TEST_ACCUMULATOR_SINGLE_FEED details:
     //      Price Identifier: 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
     //      Price: 6887568746747646632
     //      Conf: 13092246197863718329
@@ -862,14 +848,15 @@ module pyth::pyth_tests{
     //      EMA Conf: 358129956189946877
     //      EMA Expo: 1559537863
     //      Published Time: 1687276661
+    const TEST_ACCUMULATOR_SINGLE_FEED: vector<u8> = x"504e41550100000000a0010000000001005d461ac1dfffa8451edda17e4b28a46c8ae912422b2dc0cb7732828c497778ea27147fb95b4d250651931845e7f3e22c46326716bcf82be2874a9c9ab94b6e42000000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000000004155575600000000000000000000000000da936d73429246d131873a0bab90ad7b416510be01005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf65f958f4883f9d2a8b5b1008d1fa01db95cf4a8c7000000006491cc757be59f3f377c0d3f423a695e81ad1eb504f8554c3620c3fd02f2ee15ea639b73fa3db9b34a245bdfa015c260c5a8a1180177cf30b2c0bebbb1adfe8f7985d051d2";
+
     #[test]
     fun test_create_and_update_single_price_feed_with_accumulator_success() {
         let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_SINGLE_FEED, &clock);
 
@@ -918,27 +905,23 @@ module pyth::pyth_tests{
         // clean up test scenario
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        authenticated_vector::destroy<PriceInfo>(auth_price_infos);
+        hot_potato_vector::destroy<PriceInfo>(auth_price_infos);
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
         return_shared(price_info_object_1);
 
-        clock::destroy_for_testing(clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
     #[test]
     #[expected_failure(abort_code = pyth::accumulator::E_INVALID_PROOF)]
     fun test_create_and_update_single_price_feed_with_accumulator_failure() {
-        use pyth::price_info::Self;
 
         let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         // the verified vaa here contains the wrong merkle root
         let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_3_MSGS, &clock);
@@ -953,52 +936,158 @@ module pyth::pyth_tests{
             ctx(&mut scenario)
         );
 
-        // Affirm that 1 object, which correspond to the 1 new price info object
-        // containing the price feeds were created and shared.
-        let effects = test_scenario::next_tx(&mut scenario, DEPLOYER);
-        let shared_ids = test_scenario::shared(&effects);
-        let created_ids = test_scenario::created(&effects);
-        assert!(vector::length<ID>(&shared_ids)==1, 0);
-        assert!(vector::length<ID>(&created_ids)==1, 0);
-
-        let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
-
-        // Create authenticated price infos
-        verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_SINGLE_FEED, &clock);
-        let auth_price_infos = pyth::create_authenticated_price_infos_using_accumulator(
-            &pyth_state,
-            TEST_ACCUMULATOR_SINGLE_FEED,
-            verified_vaa,
-            &clock
-        );
-
-        test_scenario::next_tx(&mut scenario, DEPLOYER);
-        auth_price_infos = update_single_price_feed(
-            &mut pyth_state,
-            auth_price_infos,
-            &mut price_info_object_1,
-            coins,
-            &clock
-        );
-
-        // assert that price info obejct is as expected
-        let expected = accumulator_test_1_to_price_info();
-        assert!(price_feeds_equal(&expected, &price_info::get_price_info_from_price_info_object(&price_info_object_1)), 0);
-
         // clean up test scenario
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        authenticated_vector::destroy<PriceInfo>(auth_price_infos);
+        coin::burn_for_testing<SUI>(coins);
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
-        return_shared(price_info_object_1);
-
-        clock::destroy_for_testing(clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
-    const TEST_ACCUMULATOR_3_MSGS: vector<u8> = x"504e41550100000000a001000000000100d39b55fa311213959f91866d52624f3a9c07350d8956f6d42cfbb037883f31575c494a2f09fea84e4884dc9c244123fd124bc7825cd64d7c11e33ba5cfbdea7e010000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b000000000000000000415557560000000000000000000000000029da4c066b6e03b16a71e77811570dd9e19f258103005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf60000000000000064000000000000003200000009000000006491cc747be59f3f377c0d3f000000000000006300000000000000340436992facb15658a7e9f08c4df4848ca80750f61fadcd96993de66b1fe7aef94e29e3bbef8b12db2305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d950055006e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af000000000000006500000000000000330000000a000000006491cc7504f8554c3620c3fd0000000000000064000000000000003504171ed10ac4f1eacf3a4951e1da6b119f07c45da5adcd96993de66b1fe7aef94e29e3bbef8b12db2305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d9500550031ecc21a745e3968a04e9570e4425bc18fa8019c68028196b546d1669c200c68000000000000006600000000000000340000000b000000006491cc76e87d69c7b51242890000000000000065000000000000003604f2ee15ea639b73fa3db9b34a245bdfa015c260c5fe83e4772e0e346613de00e5348158a01bcb27b305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d95";
-    // Info about the price infos encoded in the accumulator message:
+    #[test_only]
+    const TEST_ACCUMULATOR_INVALID_PROOF_1: vector<u8> = x"504e41550100000000a001000000000100110db9cd8325ccfab0dae92eeb9ea70a1faba5c5e96dc21ff46a8ddc560afc9a60df096b8ff21172804692bbdc958153e838437d8b474cbf45f0dc2a8acae831000000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b0000000000000000004155575600000000000000000000000000a8bea2b5f12f3177ff9b3929d77c3476ab2d32c602005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6fa75cd3aa3bb5ace5e2516446f71f85be36bd19bb0703f3154bb3db07be59f3f377c0d3f44661d9a8736c68884c8169e8b636ee3043202397384073120dce9e5d0efe24b44b4a0d62da8a1180177cf30b2c0bebbb1adfe8f7985d051d205a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d950055006e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af5f958f4883f9d2a8b5b1008d1fa01db95cf4a8c7423a695e81ad1eb504f8554c3620c3fd40b40f7d581ac802e2de5cb82a9ae672043202397384073120dce9e5d0efe24b44b4a0d62da8a1180177cf30b2c0bebbb1adfe8f7985d051d205a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d95";
+
+     #[test]
+    #[expected_failure(abort_code = pyth::accumulator::E_INVALID_PROOF)]
+    fun test_accumulator_invalid_proof() {
+
+        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+
+        let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_INVALID_PROOF_1, &clock);
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        pyth::create_price_feeds_using_accumulator(
+            &mut pyth_state,
+            TEST_ACCUMULATOR_INVALID_PROOF_1,
+            verified_vaa,
+            &clock,
+            ctx(&mut scenario)
+        );
+
+        // clean up test scenario
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        coin::burn_for_testing<SUI>(coins);
+
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
+        test_scenario::end(scenario);
+    }
+
+    #[test_only]
+    const TEST_ACCUMULATOR_INVALID_MAJOR_VERSION: vector<u8> = x"504e41553c00000000a001000000000100496b7fbd18dca2f0e690712fd8ca522ff79ca7d9d6d22e9f5d753fba4bd16fff440a811bad710071c79859290bcb1700de49dd8400db90b048437b521200123e010000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b000000000000000000415557560000000000000000000000000005f5db4488a7cae9f9a6c1938340c0fbf4beb9090200550031ecc21a745e3968a04e9570e4425bc18fa8019c68028196b546d1669c200c6879bc5a3617ec3444d93c06501cf6a0909c38d4ec81d96026b71ec475e87d69c7b5124289adbf24212bed8c15db354391d2378d2e0454d2655c6c34e7e50580fd8c94511322968bbc6da8a1180177cf30b2c0bebbb1adfe8f7985d051d205a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d95005500944998273e477b495144fb8794c914197f3ccb46be2900f4698fd0ef743c9695a573a6ff665ff63edb5f9a85ad579dc14500a2112c09680fc146134f9a539ca82cb6e3501c801278fd08d80732a24118292866bb049e6e88181a1e1e8b6d3c6bbb95135a73041f3b56a8a1180177cf30b2c0bebbb1adfe8f7985d051d205a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d95";
+
+    #[test]
+    #[expected_failure(abort_code = pyth::accumulator::E_INVALID_ACCUMULATOR_PAYLOAD)]
+    fun test_accumulator_invalid_major_version() {
+
+        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+
+        let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_INVALID_MAJOR_VERSION, &clock);
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        pyth::create_price_feeds_using_accumulator(
+            &mut pyth_state,
+            TEST_ACCUMULATOR_INVALID_MAJOR_VERSION,
+            verified_vaa,
+            &clock,
+            ctx(&mut scenario)
+        );
+
+        // clean up test scenario
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        coin::burn_for_testing<SUI>(coins);
+
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
+        test_scenario::end(scenario);
+    }
+
+    #[test_only]
+    const TEST_ACCUMULATOR_INVALID_WH_MSG: vector<u8> = x"504e41550100000000a001000000000100e87f98238c5357730936cfdfde3a37249e5219409a4f41b301924b8eb10815a43ea2f96e4fe1bc8cd398250f39448d3b8ca57c96f9cf7a2be292517280683caa010000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b00000000000000000041555755000000000000000000000000000fb6f9f2b3b6cc1c9ef6708985fef226d92a3c0801005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6fa75cd3aa3bb5ace5e2516446f71f85be36bd19b000000006491cc747be59f3f377c0d3f44661d9a8736c68884c8169e8b636ee301f2ee15ea639b73fa3db9b34a245bdfa015c260c5";
+
+    #[test]
+    #[expected_failure(abort_code = pyth::accumulator::E_INVALID_WORMHOLE_MESSAGE)]
+    fun test_accumulator_invalid_wormhole_message() {
+
+        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+
+        let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_INVALID_WH_MSG, &clock);
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        pyth::create_price_feeds_using_accumulator(
+            &mut pyth_state,
+            TEST_ACCUMULATOR_INVALID_WH_MSG,
+            verified_vaa,
+            &clock,
+            ctx(&mut scenario)
+        );
+
+        // clean up test scenario
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        coin::burn_for_testing<SUI>(coins);
+
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
+        test_scenario::end(scenario);
+    }
+
+
+    #[test_only]
+    const TEST_ACCUMULATOR_INCREASED_MINOR_VERSION: vector<u8> = x"504e4155010a000000a001000000000100496b7fbd18dca2f0e690712fd8ca522ff79ca7d9d6d22e9f5d753fba4bd16fff440a811bad710071c79859290bcb1700de49dd8400db90b048437b521200123e010000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b000000000000000000415557560000000000000000000000000005f5db4488a7cae9f9a6c1938340c0fbf4beb9090200550031ecc21a745e3968a04e9570e4425bc18fa8019c68028196b546d1669c200c6879bc5a3617ec3444d93c06501cf6a0909c38d4ec81d96026b71ec475e87d69c7b5124289adbf24212bed8c15db354391d2378d2e0454d2655c6c34e7e50580fd8c94511322968bbc6da8a1180177cf30b2c0bebbb1adfe8f7985d051d205a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d95005500944998273e477b495144fb8794c914197f3ccb46be2900f4698fd0ef743c9695a573a6ff665ff63edb5f9a85ad579dc14500a2112c09680fc146134f9a539ca82cb6e3501c801278fd08d80732a24118292866bb049e6e88181a1e1e8b6d3c6bbb95135a73041f3b56a8a1180177cf30b2c0bebbb1adfe8f7985d051d205a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d95";
+    #[test_only]
+    const TEST_ACCUMULATOR_EXTRA_PAYLOAD: vector<u8> = x"504e41550100000000a001000000000100b2d11f181d81b4ff10beca30091754b464dc48bc1f7432d114f64a7a8f660e7964f2a0c6121bae6c1977514d46ee7a29d9395b20a45f2086071715c1dc19ab74000000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b000000000000000000415557560000000000000000000000000013f83cfdf63a5a1b3189182fa0a52e6de53ba7d002005d0031ecc21a745e3968a04e9570e4425bc18fa8019c68028196b546d1669c200c6879bc5a3617ec3444d93c06501cf6a0909c38d4ec81d96026b71ec475e87d69c7b5124289adbf24212bed8c15db354391d2378d2e000000000000000004a576f4a87f443f7d961a682f508c4f7b06ee1595a8a1180177cf30b2c0bebbb1adfe8f7985d051d205a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d95005d00944998273e477b495144fb8794c914197f3ccb46be2900f4698fd0ef743c9695a573a6ff665ff63edb5f9a85ad579dc14500a2112c09680fc146134f9a539ca82cb6e3501c801278fd08d80732a24118292866bb0000000000000000045be67ba87a8dfbea404827ccbf07790299b6c023a8a1180177cf30b2c0bebbb1adfe8f7985d051d205a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d95";
+
+    #[test]
+    fun test_accumulator_forward_compatibility() {
+
+        let (scenario, coins, clock) = setup_test(500, 23, ACCUMULATOR_TESTS_EMITTER_ADDRESS, ACCUMULATOR_TESTS_DATA_SOURCE(), ACCUMULATOR_TESTS_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        pyth::create_price_feeds_using_accumulator(
+            &mut pyth_state,
+            TEST_ACCUMULATOR_EXTRA_PAYLOAD,
+            get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_EXTRA_PAYLOAD, &clock),
+            &clock,
+            ctx(&mut scenario)
+        );
+
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+
+        pyth::create_price_feeds_using_accumulator(
+            &mut pyth_state,
+            TEST_ACCUMULATOR_INCREASED_MINOR_VERSION,
+            get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_INCREASED_MINOR_VERSION, &clock),
+            &clock,
+            ctx(&mut scenario)
+        );
+
+        // clean up test scenario
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        coin::burn_for_testing<SUI>(coins);
+
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
+        test_scenario::end(scenario);
+    }
+
+
+    // TEST_ACCUMULATOR_3_MSGS details:
     //      Price Identifier: 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
     //      Price: 100
     //      Conf: 50
@@ -1025,6 +1114,7 @@ module pyth::pyth_tests{
     //      EMA Conf: 54
     //      EMA Expo: 11
     //      Published Time: 1687276662
+    const TEST_ACCUMULATOR_3_MSGS: vector<u8> = x"504e41550100000000a001000000000100d39b55fa311213959f91866d52624f3a9c07350d8956f6d42cfbb037883f31575c494a2f09fea84e4884dc9c244123fd124bc7825cd64d7c11e33ba5cfbdea7e010000000000000000000171f8dcb863d176e2c420ad6610cf687359612b6fb392e0642b0ca6b1f186aa3b000000000000000000415557560000000000000000000000000029da4c066b6e03b16a71e77811570dd9e19f258103005500b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf60000000000000064000000000000003200000009000000006491cc747be59f3f377c0d3f000000000000006300000000000000340436992facb15658a7e9f08c4df4848ca80750f61fadcd96993de66b1fe7aef94e29e3bbef8b12db2305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d950055006e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af000000000000006500000000000000330000000a000000006491cc7504f8554c3620c3fd0000000000000064000000000000003504171ed10ac4f1eacf3a4951e1da6b119f07c45da5adcd96993de66b1fe7aef94e29e3bbef8b12db2305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d9500550031ecc21a745e3968a04e9570e4425bc18fa8019c68028196b546d1669c200c68000000000000006600000000000000340000000b000000006491cc76e87d69c7b51242890000000000000065000000000000003604f2ee15ea639b73fa3db9b34a245bdfa015c260c5fe83e4772e0e346613de00e5348158a01bcb27b305a01e2504d9f0c06e7e7cb0cf24116098ca202ac5f6ade2e8f5a12ec006b16d46be1f0228b94d95";
 
     #[test]
     fun test_create_and_update_multiple_price_feeds_with_accumulator_success() {
@@ -1034,8 +1124,7 @@ module pyth::pyth_tests{
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_3_MSGS, &clock);
 
@@ -1057,10 +1146,6 @@ module pyth::pyth_tests{
         assert!(vector::length<ID>(&shared_ids)==3, 0);
         assert!(vector::length<ID>(&created_ids)==3, 0);
 
-        let price_info_object_1 = take_shared<PriceInfoObject>(&scenario);
-        let price_info_object_2 = take_shared<PriceInfoObject>(&scenario);
-        let price_info_object_3 = take_shared<PriceInfoObject>(&scenario);
-
         // Create authenticated price infos
         verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_3_MSGS, &clock);
         let auth_price_infos = pyth::create_authenticated_price_infos_using_accumulator(
@@ -1070,60 +1155,31 @@ module pyth::pyth_tests{
             &clock
         );
 
-        let coins2 = coin::split(&mut coins, 1000, ctx(&mut scenario));
-        let coins3 = coin::split(&mut coins, 1000, ctx(&mut scenario));
-
-        test_scenario::next_tx(&mut scenario, DEPLOYER);
-
-        // Update price feeds
-        auth_price_infos = update_single_price_feed(
-            &mut pyth_state,
-            auth_price_infos,
-            &mut price_info_object_1,
-            coins,
-            &clock
-        );
-
-        auth_price_infos = update_single_price_feed(
-            &mut pyth_state,
-            auth_price_infos,
-            &mut price_info_object_2,
-            coins2,
-            &clock
-        );
-
-        auth_price_infos = update_single_price_feed(
-            &mut pyth_state,
-            auth_price_infos,
-            &mut price_info_object_3,
-            coins3,
-            &clock
-        );
-
-        // assert price feeds are as expected
+        let idx = 0;
         let expected_price_infos = accumulator_test_3_to_price_info(0 /*offset argument*/);
 
-        let price_info_1 = price_info::get_price_info_from_price_info_object(&price_info_object_1);
-        assert!(price_feeds_equal(&price_info_1, vector::borrow(&expected_price_infos, 0)), 0);
-
-        let price_info_2 = price_info::get_price_info_from_price_info_object(&price_info_object_2);
-        assert!(price_feeds_equal(&price_info_2, vector::borrow(&expected_price_infos, 1)), 0);
-
-        let price_info_3 = price_info::get_price_info_from_price_info_object(&price_info_object_3);
-        assert!(price_feeds_equal(&price_info_3, vector::borrow(&expected_price_infos, 2)), 0);
-
+        while (idx < 3){
+            let coin_split = coin::split(&mut coins, 1000, ctx(&mut scenario));
+            let price_info_object = take_shared<PriceInfoObject>(&scenario);
+            auth_price_infos = update_single_price_feed(
+                &mut pyth_state,
+                auth_price_infos,
+                &mut price_info_object,
+                coin_split,
+                &clock
+            );
+            let price_info = price_info::get_price_info_from_price_info_object(&price_info_object);
+            assert!(price_feeds_equal(&price_info, vector::borrow(&expected_price_infos, idx)), 0);
+            return_shared(price_info_object);
+            idx = idx + 1;
+        };
+        coin::burn_for_testing<SUI>(coins);
 
         // clean up test scenario
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        authenticated_vector::destroy<PriceInfo>(auth_price_infos);
+        hot_potato_vector::destroy<PriceInfo>(auth_price_infos);
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
-        return_shared(price_info_object_1);
-        return_shared(price_info_object_2);
-        return_shared(price_info_object_3);
-
-        clock::destroy_for_testing(clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1131,20 +1187,19 @@ module pyth::pyth_tests{
     #[expected_failure(abort_code = pyth::pyth::E_INSUFFICIENT_FEE)]
     fun test_create_and_update_price_feeds_insufficient_fee() {
 
-        // this is not enough fee
+        // this is not enough fee and will cause a failure
         let coins_to_mint = 1;
 
         let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, coins_to_mint);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        pyth::create_price_feeds_using_batch_attestation(
+        pyth::create_price_feeds(
             &mut pyth_state,
             verified_vaas,
             &clock,
@@ -1176,7 +1231,7 @@ module pyth::pyth_tests{
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         // Create authenticated price infos
-        let vec = create_authenticated_price_infos_using_batch_price_attestation(
+        let vec = create_price_infos_hot_potato(
             &pyth_state,
             vector[vaa_1],
             &clock
@@ -1192,17 +1247,16 @@ module pyth::pyth_tests{
         );
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
-        authenticated_vector::destroy<PriceInfo>(vec);
+        hot_potato_vector::destroy<PriceInfo>(vec);
 
         vector::destroy_empty(verified_vaas);
-        return_shared(pyth_state);
-        return_shared(worm_state);
+
         return_shared(price_info_object_1);
         return_shared(price_info_object_2);
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
 
-        clock::destroy_for_testing(clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1212,13 +1266,12 @@ module pyth::pyth_tests{
         let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
         let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
         // Update cache is called by create_price_feeds.
-        pyth::create_price_feeds_using_batch_attestation(
+        pyth::create_price_feeds(
             &mut pyth_state,
             verified_vaas,
             &clock,
@@ -1251,15 +1304,13 @@ module pyth::pyth_tests{
         price_info_object_1 = vector::pop_back(&mut price_info_object_vec);
         vector::destroy_empty(price_info_object_vec);
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
         return_shared(price_info_object_1);
         return_shared(price_info_object_2);
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
         coin::burn_for_testing<SUI>(test_coins);
 
-        clock::destroy_for_testing(clock);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1271,11 +1322,10 @@ module pyth::pyth_tests{
         let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        let pyth_state = take_shared<PythState>(&scenario);
-        let worm_state = take_shared<WormState>(&scenario);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
         let verified_vaas = get_verified_test_vaas(&worm_state, &clock);
 
-        pyth::create_price_feeds_using_batch_attestation(
+        pyth::create_price_feeds(
             &mut pyth_state,
             verified_vaas,
             &clock,
@@ -1348,15 +1398,13 @@ module pyth::pyth_tests{
         assert!(current_price==fresh_price, 0);
         assert!(current_ema_price==fresh_ema_price, 0);
 
-        return_shared(pyth_state);
-        return_shared(worm_state);
         return_shared(price_info_object_1);
         return_shared(price_info_object_2);
         return_shared(price_info_object_3);
         return_shared(price_info_object_4);
-        coin::burn_for_testing<SUI>(test_coins);
 
-        clock::destroy_for_testing(clock);
+        coin::burn_for_testing<SUI>(test_coins);
+        cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
         test_scenario::end(scenario);
     }
 
@@ -1373,8 +1421,6 @@ module pyth::pyth_tests{
         let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_3_MSGS, &clock);
 
         let cur = cursor::new(TEST_ACCUMULATOR_3_MSGS);
-        // pop header from cursor before passing to parse_and_verify_accumulator_message
-        let _header: u32 = deserialize::deserialize_u32(&mut cur);
 
         let price_info_updates = accumulator::parse_and_verify_accumulator_message(&mut cur, vaa::take_payload(verified_vaa), &clock);
 
@@ -1406,12 +1452,10 @@ module pyth::pyth_tests{
         let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, TEST_ACCUMULATOR_3_MSGS, &clock);
 
         // append some extra garbage bytes at the end of the accumulator message, and make sure
-        // that test does not error out
+        // that parse_and_verify_accumulator_message does not error out
         vector::append(&mut TEST_ACCUMULATOR_3_MSGS, x"1234123412341234");
 
         let cur = cursor::new(TEST_ACCUMULATOR_3_MSGS);
-        // pop header from cursor before passing to parse_and_verify_accumulator_message
-        let _header: u32 = deserialize::deserialize_u32(&mut cur);
 
         let price_info_updates = accumulator::parse_and_verify_accumulator_message(&mut cur, vaa::take_payload(verified_vaa), &clock);
 
@@ -1434,6 +1478,8 @@ module pyth::pyth_tests{
     fun price_feeds_equal(p1: &PriceInfo, p2: &PriceInfo): bool{
         price_info::get_price_feed(p1)== price_info::get_price_feed(p2)
     }
+
+    // helper functions for setting up tests
 
     // accumulator_test_3_to_price_info gets the data encoded within TEST_ACCUMULATOR_3_MSGS
     fun accumulator_test_3_to_price_info(offset: u64): vector<PriceInfo> {
@@ -1496,5 +1542,15 @@ module pyth::pyth_tests{
                     ),
                 ),
             )
+    }
+
+    fun cleanup_worm_state_pyth_state_and_clock(worm_state: WormState, pyth_state: PythState, clock: Clock){
+        return_shared(worm_state);
+        return_shared(pyth_state);
+        clock::destroy_for_testing(clock);
+    }
+
+    fun take_wormhole_and_pyth_states(scenario: &Scenario): (PythState, WormState){
+        (take_shared<PythState>(scenario), take_shared<WormState>(scenario))
     }
 }
