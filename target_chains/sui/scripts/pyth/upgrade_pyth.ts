@@ -24,7 +24,7 @@ dotenv.config({ path: "~/.env" });
 let network = NETWORK.TESTNET; // <= NOTE: Update this when changing network
 const walletPrivateKey = process.env.SUI_TESTNET_BASE_64; // <= NOTE: Update this when changing network
 
-const guardianPrivateKey = "0x1234" // TODO - get the actual TESTNET_GUARDIAN_PRIVATE_KEY;
+const guardianPrivateKey = process.env.WH_TESTNET_GUARDIAN_PRIVATE_KEY
 
 const registry = REGISTRY[network];
 const provider = new JsonRpcProvider(
@@ -69,7 +69,6 @@ async function main() {
 
   // We will use the signed VAA when we execute the upgrade.
   const guardians = new mock.MockGuardians(0, [guardianPrivateKey]);
-
   const timestamp = 12345678;
   const governance = new mock.GovernanceEmitter(GOVERNANCE_EMITTER);
   const published = governance.publishWormholeUpgradeContract(
@@ -89,18 +88,18 @@ async function main() {
   console.log("Upgrade VAA:", signedVaa.toString("hex"));
 
   // // And execute upgrade with governance VAA.
-  // const upgradeResults = await upgradePyth(
-  //   wallet,
-  //   PYTH_STATE_ID,
-  //   WORMHOLE_STATE_ID,
-  //   modules,
-  //   dependencies,
-  //   signedVaa
-  // );
+  const upgradeResults = await upgradePyth(
+    wallet,
+    PYTH_STATE_ID,
+    WORMHOLE_STATE_ID,
+    modules,
+    dependencies,
+    signedVaa
+  );
 
-  // console.log("tx digest", upgradeResults.digest);
-  // console.log("tx effects", JSON.stringify(upgradeResults.effects!));
-  // console.log("tx events", JSON.stringify(upgradeResults.events!));
+  console.log("tx digest", upgradeResults.digest);
+  console.log("tx effects", JSON.stringify(upgradeResults.effects!));
+  console.log("tx events", JSON.stringify(upgradeResults.events!));
 
 //   const migrateResults = await migratePyth(
 //     wallet,
@@ -186,20 +185,20 @@ async function upgradePyth(
     ],
   });
   const [decreeTicket] = tx.moveCall({
-    target: `${pythPackage}::upgrade_contract::authorize_governance`,
+    target: `${pythPackage}::contract_upgrade::authorize_governance`,
     arguments: [tx.object(pythStateId)],
   });
   const [decreeReceipt] = tx.moveCall({
     target: `${wormholePackage}::governance_message::verify_vaa`,
     arguments: [tx.object(wormholeStateId), verifiedVaa, decreeTicket],
     typeArguments: [
-      `${pythPackage}::upgrade_contract::GovernanceWitness`,
+      `${pythPackage}::governance_witness::GovernanceWitness`,
     ],
   });
 
   // Authorize upgrade.
   const [upgradeTicket] = tx.moveCall({
-    target: `${pythPackage}::upgrade_contract::authorize_upgrade`,
+    target: `${pythPackage}::contract_upgrade::authorize_upgrade`,
     arguments: [tx.object(pythStateId), decreeReceipt],
   });
 
@@ -213,11 +212,11 @@ async function upgradePyth(
 
   // Commit upgrade.
   tx.moveCall({
-    target: `${pythPackage}::upgrade_contract::commit_upgrade`,
+    target: `${pythPackage}::contract_upgrade::commit_upgrade`,
     arguments: [tx.object(pythStateId), upgradeReceipt],
   });
 
-  //tx.setGasBudget(1_000_000_000n);
+  tx.setGasBudget(2_000_000_000n);
 
   return signer.signAndExecuteTransactionBlock({
     transactionBlock: tx,
@@ -251,14 +250,14 @@ async function migratePyth(
     ],
   });
   const [decreeTicket] = tx.moveCall({
-    target: `${pythPackage}::upgrade_contract::authorize_governance`,
+    target: `${pythPackage}::contract_upgrade::authorize_governance`,
     arguments: [tx.object(pythStateId)],
   });
   const [decreeReceipt] = tx.moveCall({
     target: `${wormholePackage}::governance_message::verify_vaa`,
     arguments: [tx.object(wormholeStateId), verifiedVaa, decreeTicket],
     typeArguments: [
-      `${pythPackage}::upgrade_contract::GovernanceWitness`,
+      `${pythPackage}::governance_witness::GovernanceWitness`,
     ],
   });
   tx.moveCall({
