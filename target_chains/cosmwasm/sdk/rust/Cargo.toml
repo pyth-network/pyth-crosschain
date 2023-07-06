@@ -1,6 +1,6 @@
 [package]
 name = "pyth-sdk-cw"
-version = "1.2.0"
+version = "1.2.1"
 authors = ["Pyth Data Foundation"]
 edition = "2018"
 license = "Apache-2.0"
