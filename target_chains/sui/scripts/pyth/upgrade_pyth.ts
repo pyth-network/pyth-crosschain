@@ -17,6 +17,7 @@ import { resolve } from "path";
 import * as fs from "fs";
 
 import { REGISTRY, NETWORK } from "../registry";
+import { modifySignTransaction } from "@certusone/wormhole-sdk/lib/cjs/solana";
 
 dotenv.config({ path: "~/.env" });
 
@@ -75,9 +76,10 @@ async function main() {
   const timestamp = 12345678;
   const governance = new mock.GovernanceEmitter(GOVERNANCE_EMITTER);
 
-  //const module = Buffer.alloc(32)
-  //module.write("1", 31)
-  const module = "1"
+  // const moduleName = Buffer.alloc(32);
+  // moduleName.write("31")
+  //moduleName.writeUInt8(1, 31);
+  //const module = "1"
   const action = 0
   const chain = 21
 
@@ -86,15 +88,19 @@ async function main() {
   const magic = Buffer.alloc(4);
   magic.write("PTGM", 0); // magic
   console.log("magic buffer: ", magic)
-  let inner_payload = Buffer.alloc(100)
+
+  let inner_payload = Buffer.alloc(40)
   inner_payload.write(magic.toString(), 0) // magic = "PTGM"
   inner_payload.writeUInt8(1, 4); // moduleName = 1
   inner_payload.writeUInt8(0, 5); // action = 0
   inner_payload.writeUInt16BE(21, 6); // target chain = 21
+  inner_payload.write(digest.toString(), 8) // 32-byte digest
 
   // create governance message
-  let msg = governance.publishGovernanceMessage(timestamp, module, inner_payload, action, chain)
+  let msg = governance.publishGovernanceMessage(timestamp, "", inner_payload, action, chain)
+  msg.writeUInt8(0x1, 84 - 33 + 31);
 
+  console.log("msg: ", msg.toString("hex"))
   // const published = governance.publishWormholeUpgradeContract(
   //   timestamp,
   //   2,
@@ -128,6 +134,7 @@ async function main() {
 //   console.log("tx digest", migrateResults.digest);
 //   console.log("tx effects", JSON.stringify(migrateResults.effects!));
 //   console.log("tx events", JSON.stringify(migrateResults.events!));
+
 }
 
 main();
@@ -219,25 +226,28 @@ async function upgradePyth(
     ],
   });
 
-  // // Authorize upgrade.
-  // const [upgradeTicket] = tx.moveCall({
-  //   target: `${pythPackage}::contract_upgrade::authorize_upgrade`,
-  //   arguments: [tx.object(pythStateId), decreeReceipt],
-  // });
 
-  // // Build and generate modules and dependencies for upgrade.
-  // const [upgradeReceipt] = tx.upgrade({
-  //   modules,
-  //   dependencies,
-  //   packageId: pythPackage,
-  //   ticket: upgradeTicket,
-  // });
+  // Authorize upgrade.
+  const [upgradeTicket] = tx.moveCall({
+    target: `${pythPackage}::contract_upgrade::authorize_upgrade`,
+    arguments: [tx.object(pythStateId), decreeReceipt],
+  });
 
-  // // Commit upgrade.
-  // tx.moveCall({
-  //   target: `${pythPackage}::contract_upgrade::commit_upgrade`,
-  //   arguments: [tx.object(pythStateId), upgradeReceipt],
-  // });
+  // =========================
+
+  // Build and generate modules and dependencies for upgrade.
+  const [upgradeReceipt] = tx.upgrade({
+    modules,
+    dependencies,
+    packageId: pythPackage,
+    ticket: upgradeTicket,
+  });
+
+  // Commit upgrade.
+  tx.moveCall({
+    target: `${pythPackage}::contract_upgrade::commit_upgrade`,
+    arguments: [tx.object(pythStateId), upgradeReceipt],
+  });
 
   tx.setGasBudget(2_000_000_000n);
 
