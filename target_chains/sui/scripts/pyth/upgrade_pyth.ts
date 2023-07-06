@@ -85,19 +85,21 @@ async function main() {
   magic.write("PTGM", 0); // magic
   console.log("magic buffer: ", magic)
 
-  let inner_payload = Buffer.alloc(40) // 4 (magic) + 1 (module name) + 1 (action) + 2 (target chain) + 32 (digest) = 40
+  let inner_payload = Buffer.alloc(8) // 4 (magic) + 1 (module name) + 1 (action) + 2 (target chain) = 8
   inner_payload.write(magic.toString(), 0) // magic = "PTGM"
   inner_payload.writeUInt8(1, 4); // moduleName = 1
   inner_payload.writeUInt8(0, 5); // action = 0
   inner_payload.writeUInt16BE(21, 6); // target chain = 21
-  inner_payload.write(digest.toString("hex"), 8) // 32-byte digest
+  inner_payload = Buffer.concat([inner_payload, digest])
+
   console.log("digest: ", digest.toString("hex"))
+  console.log("inner payload: ", inner_payload.toString("hex"))
 
   // create governance message
   let msg = governance.publishGovernanceMessage(timestamp, "", inner_payload, action, chain)
   msg.writeUInt8(0x1, 84 - 33 + 31); // some obscure offsets - we are trying to insert an 0x1 to make the module name "0x00000000000000000000000000000001"
 
-  console.log("msg: ", msg.toString("hex"))
+  console.log("governance msg: ", msg.toString("hex"))
 
   // sign governance message
   const signedVaa = guardians.addSignatures(msg, [0]);
