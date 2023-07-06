@@ -290,11 +290,18 @@ async function migratePyth(
     arguments: [tx.object(pythStateId), decreeReceipt],
   });
 
-  return signer.signAndExecuteTransactionBlock({
-    transactionBlock: tx,
-    options: {
-      showEffects: true,
-      showEvents: true,
-    },
+  return signer.devInspectTransactionBlock({
+    transactionBlock: tx
+    // options: {
+    //   showEffects: true,
+    //   showEvents: true,
+    // },
   });
+  // return signer.signAndExecuteTransactionBlock({
+  //   transactionBlock: tx,
+  //   options: {
+  //     showEffects: true,
+  //     showEvents: true,
+  //   },
+  // });
 }
