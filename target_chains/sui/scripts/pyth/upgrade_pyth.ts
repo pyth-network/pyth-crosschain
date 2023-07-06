@@ -197,7 +197,6 @@ async function upgradePyth(
 
   const tx = new TransactionBlock();
 
-  // this works
   const [verifiedVaa] = tx.moveCall({
     target: `${wormholePackage}::vaa::parse_and_verify`,
     arguments: [
@@ -207,7 +206,6 @@ async function upgradePyth(
     ],
   });
 
-  // does this work?
   const [decreeTicket] = tx.moveCall({
     target: `${pythPackage}::contract_upgrade::authorize_governance`,
     arguments: [tx.object(pythStateId)],
