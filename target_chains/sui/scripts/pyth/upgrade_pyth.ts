@@ -71,47 +71,39 @@ async function main() {
   console.log("dependencies", dependencies);
   console.log("digest", digest.toString("hex"));
 
-  // We will use the signed VAA when we execute the upgrade.
+  // Construct VAA. We will use the signed VAA when we execute the upgrade.
   const guardians = new mock.MockGuardians(0, [guardianPrivateKey]);
   const timestamp = 12345678;
   const governance = new mock.GovernanceEmitter(GOVERNANCE_EMITTER);
 
-  // const moduleName = Buffer.alloc(32);
-  // moduleName.write("31")
-  //moduleName.writeUInt8(1, 31);
-  //const module = "1"
   const action = 0
   const chain = 21
 
-  // construct payload
+  // construct VAA inner payload
 
   const magic = Buffer.alloc(4);
   magic.write("PTGM", 0); // magic
   console.log("magic buffer: ", magic)
 
-  let inner_payload = Buffer.alloc(40)
+  let inner_payload = Buffer.alloc(40) // 4 (magic) + 1 (module name) + 1 (action) + 2 (target chain) + 32 (digest) = 40
   inner_payload.write(magic.toString(), 0) // magic = "PTGM"
   inner_payload.writeUInt8(1, 4); // moduleName = 1
   inner_payload.writeUInt8(0, 5); // action = 0
   inner_payload.writeUInt16BE(21, 6); // target chain = 21
-  inner_payload.write(digest.toString(), 8) // 32-byte digest
+  inner_payload.write(digest.toString("hex"), 8) // 32-byte digest
+  console.log("digest: ", digest.toString("hex"))
 
   // create governance message
   let msg = governance.publishGovernanceMessage(timestamp, "", inner_payload, action, chain)
-  msg.writeUInt8(0x1, 84 - 33 + 31);
+  msg.writeUInt8(0x1, 84 - 33 + 31); // some obscure offsets - we are trying to insert an 0x1 to make the module name "0x00000000000000000000000000000001"
 
   console.log("msg: ", msg.toString("hex"))
-  // const published = governance.publishWormholeUpgradeContract(
-  //   timestamp,
-  //   2,
-  //   "0x" + digest.toString("hex") // where is contract address (digest) used, if at all?
-  // );
 
   // sign governance message
   const signedVaa = guardians.addSignatures(msg, [0]);
   console.log("Upgrade VAA:", signedVaa.toString("hex"));
 
-  // // And execute upgrade with governance VAA.
+  // Execute upgrade with governance VAA.
   const upgradeResults = await upgradePyth(
     wallet,
     PYTH_STATE_ID,
