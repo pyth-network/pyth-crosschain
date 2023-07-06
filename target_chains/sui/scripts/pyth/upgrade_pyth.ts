@@ -22,7 +22,7 @@ dotenv.config({ path: "~/.env" });
 
 // Network dependent settings.
 let network = NETWORK.TESTNET; // <= NOTE: Update this when changing network
-const walletPrivateKey = process.env.SUI_TESTNET_BASE_64; // <= NOTE: Update this when changing network
+const walletPrivateKey = process.env.SUI_TESTNET_ALT_KEY_BASE_64 // <= NOTE: Update this when changing network
 
 const guardianPrivateKey = process.env.WH_TESTNET_GUARDIAN_PRIVATE_KEY
 
@@ -35,9 +35,12 @@ const PYTH_STATE_ID = registry["PYTH_STATE_ID"]
 const PYTH_PACKAGE_ID = registry["PYTH_PACKAGE_ID"]
 const WORMHOLE_STATE_ID = registry["WORMHOLE_STATE_ID"]
 const WORMHOLE_PACKAGE_ID = registry["WORMHOLE_PACKAGE_ID"]
+console.log("WORMHOLE_STATE_ID: ", WORMHOLE_STATE_ID)
+console.log("PYTH_STATE_ID: ", WORMHOLE_STATE_ID)
 
 const GOVERNANCE_EMITTER =
-  "0000000000000000000000000000000000000000000000000000000000000004";
+  //"0000000000000000000000000000000000000000000000000000000000000004";
+  "63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385";
 
 async function main() {
   if (guardianPrivateKey === undefined) {
@@ -52,7 +55,7 @@ async function main() {
     Ed25519Keypair.fromSecretKey(
       network == "MAINNET"
         ? Buffer.from(walletPrivateKey, "hex")
-        : Buffer.from(walletPrivateKey, "base64").subarray(1)
+        : Buffer.from(walletPrivateKey, "base64")
     ),
     provider
   );
@@ -71,20 +74,35 @@ async function main() {
   const guardians = new mock.MockGuardians(0, [guardianPrivateKey]);
   const timestamp = 12345678;
   const governance = new mock.GovernanceEmitter(GOVERNANCE_EMITTER);
-  const published = governance.publishWormholeUpgradeContract(
-    timestamp,
-    2,
-    "0x" + digest.toString("hex")
-  );
-  const moduleName = Buffer.alloc(32);
-  moduleName.write("Pyth", 32 - "Pyth".length);
-  published.write(moduleName.toString(), 84 - 33);
-  published.writeUInt16BE(21, 84);
-  published.writeUInt8(2, 83);
-  //message.writeUInt8(1, 83);
-  published.writeUInt16BE(21, published.length - 34);
 
-  const signedVaa = guardians.addSignatures(published, [0]);
+  //const module = Buffer.alloc(32)
+  //module.write("1", 31)
+  const module = "1"
+  const action = 0
+  const chain = 21
+
+  // construct payload
+
+  const magic = Buffer.alloc(4);
+  magic.write("PTGM", 0); // magic
+  console.log("magic buffer: ", magic)
+  let inner_payload = Buffer.alloc(100)
+  inner_payload.write(magic.toString(), 0) // magic = "PTGM"
+  inner_payload.writeUInt8(1, 4); // moduleName = 1
+  inner_payload.writeUInt8(0, 5); // action = 0
+  inner_payload.writeUInt16BE(21, 6); // target chain = 21
+
+  // create governance message
+  let msg = governance.publishGovernanceMessage(timestamp, module, inner_payload, action, chain)
+
+  // const published = governance.publishWormholeUpgradeContract(
+  //   timestamp,
+  //   2,
+  //   "0x" + digest.toString("hex") // where is contract address (digest) used, if at all?
+  // );
+
+  // sign governance message
+  const signedVaa = guardians.addSignatures(msg, [0]);
   console.log("Upgrade VAA:", signedVaa.toString("hex"));
 
   // // And execute upgrade with governance VAA.
@@ -174,8 +192,12 @@ async function upgradePyth(
   );
   const wormholePackage = await getPackageId(signer.provider, wormholeStateId);
 
+  console.log("pythPackage: ", pythPackage)
+  console.log("wormholePackage: ", wormholePackage)
+
   const tx = new TransactionBlock();
 
+  // this works
   const [verifiedVaa] = tx.moveCall({
     target: `${wormholePackage}::vaa::parse_and_verify`,
     arguments: [
@@ -184,10 +206,13 @@ async function upgradePyth(
       tx.object(SUI_CLOCK_OBJECT_ID),
     ],
   });
+
+  // does this work?
   const [decreeTicket] = tx.moveCall({
     target: `${pythPackage}::contract_upgrade::authorize_governance`,
     arguments: [tx.object(pythStateId)],
   });
+
   const [decreeReceipt] = tx.moveCall({
     target: `${wormholePackage}::governance_message::verify_vaa`,
     arguments: [tx.object(wormholeStateId), verifiedVaa, decreeTicket],
@@ -196,25 +221,25 @@ async function upgradePyth(
     ],
   });
 
-  // Authorize upgrade.
-  const [upgradeTicket] = tx.moveCall({
-    target: `${pythPackage}::contract_upgrade::authorize_upgrade`,
-    arguments: [tx.object(pythStateId), decreeReceipt],
-  });
+  // // Authorize upgrade.
+  // const [upgradeTicket] = tx.moveCall({
+  //   target: `${pythPackage}::contract_upgrade::authorize_upgrade`,
+  //   arguments: [tx.object(pythStateId), decreeReceipt],
+  // });
 
-  // Build and generate modules and dependencies for upgrade.
-  const [upgradeReceipt] = tx.upgrade({
-    modules,
-    dependencies,
-    packageId: pythPackage,
-    ticket: upgradeTicket,
-  });
+  // // Build and generate modules and dependencies for upgrade.
+  // const [upgradeReceipt] = tx.upgrade({
+  //   modules,
+  //   dependencies,
+  //   packageId: pythPackage,
+  //   ticket: upgradeTicket,
+  // });
 
-  // Commit upgrade.
-  tx.moveCall({
-    target: `${pythPackage}::contract_upgrade::commit_upgrade`,
-    arguments: [tx.object(pythStateId), upgradeReceipt],
-  });
+  // // Commit upgrade.
+  // tx.moveCall({
+  //   target: `${pythPackage}::contract_upgrade::commit_upgrade`,
+  //   arguments: [tx.object(pythStateId), upgradeReceipt],
+  // });
 
   tx.setGasBudget(2_000_000_000n);
 
