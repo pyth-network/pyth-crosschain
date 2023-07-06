@@ -25,7 +25,7 @@ contract PythWormholeMerkleAccumulatorTest is
     // -1 is equal to 0xffffff which is the biggest uint if converted back
     uint64 constant MAX_UINT64 = uint64(int64(-1));
 
-    function setUp() public {
+    function setUp() public virtual {
         pyth = IPyth(setUpPyth(setUpWormholeReceiver(1)));
     }
 
@@ -114,6 +114,28 @@ contract PythWormholeMerkleAccumulatorTest is
                 conf: getRandUint64(),
                 expo: getRandInt32(),
                 publishTime: getRandUint64(),
+                prevPublishTime: getRandUint64(),
+                emaPrice: getRandInt64(),
+                emaConf: getRandUint64()
+            });
+        }
+    }
+
+    /**
+     * @notice Returns `numPriceFeeds` random price feed messages with price & expo bounded
+     * to realistic values and publishTime set to 1.
+     */
+    function generateRandomBoundedPriceFeedMessage(
+        uint numPriceFeeds
+    ) internal returns (PriceFeedMessage[] memory priceFeedMessages) {
+        priceFeedMessages = new PriceFeedMessage[](numPriceFeeds);
+        for (uint i = 0; i < numPriceFeeds; i++) {
+            priceFeedMessages[i] = PriceFeedMessage({
+                priceId: getRandBytes32(),
+                price: int64(getRandUint64() / 10), // assuming price should always be positive
+                conf: getRandUint64(),
+                expo: int32(getRandInt8() % 13), // pyth contract guarantees that expo between [-12, 12]
+                publishTime: uint64(1),
                 prevPublishTime: getRandUint64(),
                 emaPrice: getRandInt64(),
                 emaConf: getRandUint64()

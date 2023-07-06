@@ -49,7 +49,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     uint[] freshPricesWhMerkleUpdateFee; // i th element contains the update fee for the first i prices
 
     uint64 sequence;
-    uint randSeed;
+    uint randomSeed;
 
     function setUp() public {
         address wormholeAddr = setUpWormholeReceiver(NUM_GUARDIANS);
@@ -120,8 +120,8 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
     }
 
     function getRand() internal returns (uint val) {
-        ++randSeed;
-        val = uint(keccak256(abi.encode(randSeed)));
+        ++randomSeed;
+        val = uint(keccak256(abi.encode(randomSeed)));
     }
 
     function generateWhBatchUpdateDataAndFee(
