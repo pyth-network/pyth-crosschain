@@ -10,7 +10,7 @@ import {
   JsonRpcProvider,
   Ed25519Keypair,
   Connection,
-} from "@optke3/sui.js";
+} from "@mysten/sui.js";
 
 dotenv.config({ path: "~/.env" });
 
