@@ -1,0 +1,9 @@
+{
+  "querierEndpoint": "https://rpc.osmotest5.osmosis.zone/",
+  "executorEndpoint": "https://rpc.osmotest5.osmosis.zone/",
+  "id": "osmosis_testnet_5",
+  "gasPrice": "0.025",
+  "prefix": "osmo",
+  "feeDenom": "uosmo",
+  "type": "cosmwasm_chain"
+}
