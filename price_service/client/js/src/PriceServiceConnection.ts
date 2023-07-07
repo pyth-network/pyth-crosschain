@@ -62,7 +62,7 @@ export class PriceServiceConnection {
   private wsClient: undefined | ResilientWebSocket;
   private wsEndpoint: undefined | string;
 
-  private logger: undefined | Logger;
+  private logger: Logger;
 
   private priceFeedRequestConfig: PriceFeedRequestConfig;
 
@@ -96,9 +96,30 @@ export class PriceServiceConnection {
 
     this.priceFeedCallbacks = new Map();
 
-    this.logger = config?.logger;
+    // Default logger is console for only warnings and errors.
+    this.logger = config?.logger || {
+      trace: () => {},
+      debug: () => {},
+      info: () => {},
+      warn: console.warn,
+      error: console.error,
+    };
+
     this.onWsError = (error: Error) => {
-      this.logger?.error(error);
+      this.logger.error(error);
+
+      // Exit the process if it is running in node.
+      if (
+        typeof process !== "undefined" &&
+        typeof process.exit === "function"
+      ) {
+        this.logger.error("Halting the process due to the websocket error");
+        process.exit(1);
+      } else {
+        this.logger.error(
+          "Cannot halt process. Please handle the websocket error."
+        );
+      }
     };
 
     this.wsEndpoint = makeWebsocketUrl(endpoint);
@@ -333,28 +354,28 @@ export class PriceServiceConnection {
           binary: this.priceFeedRequestConfig.binary,
         };
 
-        this.logger?.info("Resubscribing to existing price feeds.");
+        this.logger.info("Resubscribing to existing price feeds.");
         this.wsClient?.send(JSON.stringify(message));
       }
     };
 
     this.wsClient.onMessage = (data: WebSocket.Data) => {
-      this.logger?.info(`Received message ${data.toString()}`);
+      this.logger.info(`Received message ${data.toString()}`);
 
       let message: ServerMessage;
 
       try {
         message = JSON.parse(data.toString()) as ServerMessage;
       } catch (e: any) {
-        this.logger?.error(`Error parsing message ${data.toString()} as JSON.`);
-        this.logger?.error(e);
+        this.logger.error(`Error parsing message ${data.toString()} as JSON.`);
+        this.logger.error(e);
         this.onWsError(e);
         return;
       }
 
       if (message.type === "response") {
         if (message.status === "error") {
-          this.logger?.error(
+          this.logger.error(
             `Error response from the websocket server ${message.error}.`
           );
           this.onWsError(new Error(message.error));
@@ -364,10 +385,10 @@ export class PriceServiceConnection {
         try {
           priceFeed = PriceFeed.fromJson(message.price_feed);
         } catch (e: any) {
-          this.logger?.error(
+          this.logger.error(
             `Error parsing price feeds from message ${data.toString()}.`
           );
-          this.logger?.error(e);
+          this.logger.error(e);
           this.onWsError(e);
           return;
         }
@@ -378,7 +399,7 @@ export class PriceServiceConnection {
           }
         }
       } else {
-        this.logger?.warn(
+        this.logger.warn(
           `Ignoring unsupported server response ${data.toString()}.`
         );
       }
