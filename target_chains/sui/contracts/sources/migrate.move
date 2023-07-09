@@ -27,7 +27,7 @@ module pyth::migrate {
         receipt: DecreeReceipt<GovernanceWitness>
     ) {
         // This should be removed in an upgrade from 0.1.1.
-        state::migrate__v__0_1_1(pyth_state);
+        // state::migrate__v__0_1_1(pyth_state);
 
         // Perform standard migrate.
         handle_migrate(pyth_state, receipt);

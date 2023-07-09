@@ -97,7 +97,7 @@ async function main() {
 
   // create governance message
   let msg = governance.publishGovernanceMessage(timestamp, "", inner_payload, action, chain)
-  msg.writeUInt8(0x1, 84 - 33 + 31); // some obscure offsets - we are trying to insert an 0x1 to make the module name "0x00000000000000000000000000000001"
+  msg.writeUInt8(0x1, 84 - 33 + 31); // here we insert an 0x1 in the right place to make the module name "0x00000000000000000000000000000001"
 
   console.log("governance msg: ", msg.toString("hex"))
 
@@ -105,7 +105,7 @@ async function main() {
   const signedVaa = guardians.addSignatures(msg, [0]);
   console.log("Upgrade VAA:", signedVaa.toString("hex"));
 
-  // Execute upgrade with governance VAA.
+  //Execute upgrade with governance VAA.
   const upgradeResults = await upgradePyth(
     wallet,
     PYTH_STATE_ID,
@@ -119,16 +119,15 @@ async function main() {
   console.log("tx effects", JSON.stringify(upgradeResults.effects!));
   console.log("tx events", JSON.stringify(upgradeResults.events!));
 
-//   const migrateResults = await migratePyth(
-//     wallet,
-//     PYTH_STATE_ID,
-//     WORMHOLE_STATE_ID,
-//     signedVaa
-//   );
-//   console.log("tx digest", migrateResults.digest);
-//   console.log("tx effects", JSON.stringify(migrateResults.effects!));
-//   console.log("tx events", JSON.stringify(migrateResults.events!));
-
+  const migrateResults = await migratePyth(
+    wallet,
+    PYTH_STATE_ID,
+    WORMHOLE_STATE_ID,
+    signedVaa
+  );
+  console.log("tx digest", migrateResults.digest);
+  console.log("tx effects", JSON.stringify(migrateResults.effects!));
+  console.log("tx events", JSON.stringify(migrateResults.events!));
 }
 
 main();
@@ -220,14 +219,11 @@ async function upgradePyth(
     ],
   });
 
-
   // Authorize upgrade.
   const [upgradeTicket] = tx.moveCall({
     target: `${pythPackage}::contract_upgrade::authorize_upgrade`,
     arguments: [tx.object(pythStateId), decreeReceipt],
   });
-
-  // =========================
 
   // Build and generate modules and dependencies for upgrade.
   const [upgradeReceipt] = tx.upgrade({
@@ -292,18 +288,13 @@ async function migratePyth(
     arguments: [tx.object(pythStateId), decreeReceipt],
   });
 
-  return signer.devInspectTransactionBlock({
-    transactionBlock: tx
-    // options: {
-    //   showEffects: true,
-    //   showEvents: true,
-    // },
+  tx.setGasBudget(2_000_000_000n);
+
+  return signer.signAndExecuteTransactionBlock({
+    transactionBlock: tx,
+    options: {
+      showEffects: true,
+      showEvents: true,
+    },
   });
-  // return signer.signAndExecuteTransactionBlock({
-  //   transactionBlock: tx,
-  //   options: {
-  //     showEffects: true,
-  //     showEvents: true,
-  //   },
-  // });
 }

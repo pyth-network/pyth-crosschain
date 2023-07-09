@@ -8,7 +8,7 @@ import {
   JsonRpcProvider,
   Ed25519Keypair,
   Connection,
-} from "@optke3/sui.js";
+} from "@mysten/sui.js";
 import { execSync } from "child_process";
 
 import dotenv from "dotenv";
@@ -18,8 +18,8 @@ import { REGISTRY, NETWORK } from "../registry";
 dotenv.config({ path: "~/.env" });
 
 // Network dependent settings.
-let network = NETWORK.MAINNET; // <= NOTE: Update this when changing network
-const walletPrivateKey = process.env.SUI_MAINNET; // <= NOTE: Update this when changing network
+let network = NETWORK.TESTNET; // <= NOTE: Update this when changing network
+const walletPrivateKey = process.env.SUI_TESTNET_ALT_KEY; // <= NOTE: Update this when changing network
 
 const registry = REGISTRY[network];
 const provider = new JsonRpcProvider(
@@ -47,7 +47,7 @@ async function publishPackage(signer: RawSigner, packagePath: string) {
       dependencies: string[];
     } = JSON.parse(
       execSync(
-        `sui move build --dump-bytecode-as-base64 --path ${packagePath} 2> /dev/null`,
+        `sui move build --dump-bytecode-as-base64 --path ${__dirname}/${packagePath} 2> /dev/null`,
         {
           encoding: "utf-8",
         }

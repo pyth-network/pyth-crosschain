@@ -12,6 +12,7 @@ module pyth::contract_upgrade {
     use sui::object::{ID};
     use sui::package::{UpgradeReceipt, UpgradeTicket};
     use wormhole::bytes32::{Self, Bytes32};
+    use wormhole::bytes::{Self};
     use wormhole::cursor::{Self};
     use wormhole::governance_message::{Self, DecreeTicket, DecreeReceipt};
 
@@ -37,6 +38,8 @@ module pyth::contract_upgrade {
         old_contract: ID,
         new_contract: ID
     }
+
+    struct DELETE_ME {}
 
     struct UpgradeContract {
         digest: Bytes32
@@ -123,13 +126,17 @@ module pyth::contract_upgrade {
 
     fun deserialize(payload: vector<u8>): UpgradeContract {
         let cur = cursor::new(payload);
+        // Pyth upgrade governance message payloads are 40 bytes long. The breakdown looks like
+        // 4 (magic) + 1 (module name) + 1 (action) + 2 (target chain) + 32 (digest)
 
+        bytes::take_bytes(&mut cur, 8); // ignore the first 8 bytes here (they were used for verification in a different code path)
         // This amount cannot be greater than max u64.
         let digest = bytes32::take_bytes(&mut cur);
         assert!(bytes32::is_nonzero(&digest), E_DIGEST_ZERO_BYTES);
 
-        cursor::destroy_empty(cur);
+        // there might be additional appended to payload in the future
 
+        cursor::take_rest(cur);
         UpgradeContract { digest }
     }
 
