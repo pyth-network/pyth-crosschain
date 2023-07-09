@@ -23,26 +23,25 @@ dotenv.config({ path: "~/.env" });
 
 // Network dependent settings.
 let network = NETWORK.TESTNET; // <= NOTE: Update this when changing network
-const walletPrivateKey = process.env.SUI_TESTNET_ALT_KEY_BASE_64 // <= NOTE: Update this when changing network
+const walletPrivateKey = process.env.SUI_TESTNET_ALT_KEY_BASE_64; // <= NOTE: Update this when changing network
 
-const guardianPrivateKey = process.env.WH_TESTNET_GUARDIAN_PRIVATE_KEY
+const guardianPrivateKey = process.env.WH_TESTNET_GUARDIAN_PRIVATE_KEY;
 
 const registry = REGISTRY[network];
 const provider = new JsonRpcProvider(
   new Connection({ fullnode: registry["RPC_URL"] })
 );
 
-const PYTH_STATE_ID = registry["PYTH_STATE_ID"]
-const PYTH_PACKAGE_ID = registry["PYTH_PACKAGE_ID"]
-const WORMHOLE_STATE_ID = registry["WORMHOLE_STATE_ID"]
-const WORMHOLE_PACKAGE_ID = registry["WORMHOLE_PACKAGE_ID"]
-console.log("WORMHOLE_STATE_ID: ", WORMHOLE_STATE_ID)
-console.log("PYTH_STATE_ID: ", WORMHOLE_STATE_ID)
+const PYTH_STATE_ID = registry["PYTH_STATE_ID"];
+const PYTH_PACKAGE_ID = registry["PYTH_PACKAGE_ID"];
+const WORMHOLE_STATE_ID = registry["WORMHOLE_STATE_ID"];
+const WORMHOLE_PACKAGE_ID = registry["WORMHOLE_PACKAGE_ID"];
+console.log("WORMHOLE_STATE_ID: ", WORMHOLE_STATE_ID);
+console.log("PYTH_STATE_ID: ", WORMHOLE_STATE_ID);
 
 const GOVERNANCE_EMITTER =
   //"0000000000000000000000000000000000000000000000000000000000000004";
   "63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385";
-
 
 // To upgrade Pyth, take the following steps.
 // 0. Make contract changes in the "contracts" folder. These updated contracts will be posted on chain as an
@@ -62,7 +61,7 @@ async function main() {
   if (walletPrivateKey === undefined) {
     throw new Error("TESTNET_WALLET_PRIVATE_KEY unset in environment");
   }
-  console.log("priv key: ", walletPrivateKey)
+  console.log("priv key: ", walletPrivateKey);
 
   const wallet = new RawSigner(
     Ed25519Keypair.fromSecretKey(
@@ -91,30 +90,36 @@ async function main() {
   const timestamp = 12345678;
   const governance = new mock.GovernanceEmitter(GOVERNANCE_EMITTER);
 
-  const action = 0
-  const chain = 21
+  const action = 0;
+  const chain = 21;
 
   // construct VAA inner payload
 
   const magic = Buffer.alloc(4);
   magic.write("PTGM", 0); // magic
-  console.log("magic buffer: ", magic)
+  console.log("magic buffer: ", magic);
 
-  let inner_payload = Buffer.alloc(8) // 4 (magic) + 1 (module name) + 1 (action) + 2 (target chain) = 8
-  inner_payload.write(magic.toString(), 0) // magic = "PTGM"
+  let inner_payload = Buffer.alloc(8); // 4 (magic) + 1 (module name) + 1 (action) + 2 (target chain) = 8
+  inner_payload.write(magic.toString(), 0); // magic = "PTGM"
   inner_payload.writeUInt8(1, 4); // moduleName = 1
   inner_payload.writeUInt8(0, 5); // action = 0
   inner_payload.writeUInt16BE(21, 6); // target chain = 21
-  inner_payload = Buffer.concat([inner_payload, digest])
+  inner_payload = Buffer.concat([inner_payload, digest]);
 
-  console.log("digest: ", digest.toString("hex"))
-  console.log("inner payload: ", inner_payload.toString("hex"))
+  console.log("digest: ", digest.toString("hex"));
+  console.log("inner payload: ", inner_payload.toString("hex"));
 
   // create governance message
-  let msg = governance.publishGovernanceMessage(timestamp, "", inner_payload, action, chain)
+  let msg = governance.publishGovernanceMessage(
+    timestamp,
+    "",
+    inner_payload,
+    action,
+    chain
+  );
   msg.writeUInt8(0x1, 84 - 33 + 31); // here we insert an 0x1 in the right place to make the module name "0x00000000000000000000000000000001"
 
-  console.log("governance msg: ", msg.toString("hex"))
+  console.log("governance msg: ", msg.toString("hex"));
 
   // sign governance message
   const signedVaa = guardians.addSignatures(msg, [0]);
@@ -202,14 +207,11 @@ async function upgradePyth(
   dependencies: string[],
   signedVaa: Buffer
 ) {
-  const pythPackage = await getPackageId(
-    signer.provider,
-    pythStateId
-  );
+  const pythPackage = await getPackageId(signer.provider, pythStateId);
   const wormholePackage = await getPackageId(signer.provider, wormholeStateId);
 
-  console.log("pythPackage: ", pythPackage)
-  console.log("wormholePackage: ", wormholePackage)
+  console.log("pythPackage: ", pythPackage);
+  console.log("wormholePackage: ", wormholePackage);
 
   const tx = new TransactionBlock();
 
@@ -230,9 +232,7 @@ async function upgradePyth(
   const [decreeReceipt] = tx.moveCall({
     target: `${wormholePackage}::governance_message::verify_vaa`,
     arguments: [tx.object(wormholeStateId), verifiedVaa, decreeTicket],
-    typeArguments: [
-      `${pythPackage}::governance_witness::GovernanceWitness`,
-    ],
+    typeArguments: [`${pythPackage}::governance_witness::GovernanceWitness`],
   });
 
   // Authorize upgrade.
@@ -272,10 +272,7 @@ async function migratePyth(
   wormholeStateId: string,
   signedUpgradeVaa: Buffer
 ) {
-  const pythPackage = await getPackageId(
-    signer.provider,
-    pythStateId
-  );
+  const pythPackage = await getPackageId(signer.provider, pythStateId);
   const wormholePackage = await getPackageId(signer.provider, wormholeStateId);
 
   const tx = new TransactionBlock();
@@ -295,9 +292,7 @@ async function migratePyth(
   const [decreeReceipt] = tx.moveCall({
     target: `${wormholePackage}::governance_message::verify_vaa`,
     arguments: [tx.object(wormholeStateId), verifiedVaa, decreeTicket],
-    typeArguments: [
-      `${pythPackage}::governance_witness::GovernanceWitness`,
-    ],
+    typeArguments: [`${pythPackage}::governance_witness::GovernanceWitness`],
   });
   tx.moveCall({
     target: `${pythPackage}::migrate::migrate`,
