@@ -69,6 +69,17 @@ export class AptosPriceListener extends ChainPriceListener {
 
 // Derivation path for aptos accounts
 export const APTOS_ACCOUNT_HD_PATH = "m/44'/637'/0'/0'/0'";
+
+/**
+ * The `AptosPricePusher` is designed for high-throughput of price updates.
+ * Achieving this property requires sacrificing some nice-to-have features of other
+ * pusher implementations that can reduce cost when running multiple pushers. Specifically,
+ * this implementation does not use `update_price_feeds_if_necssary` and simulate the transaction
+ * before submission.
+ *
+ * If multiple instances of this pusher are running in parallel, both of them will
+ * land all of their pushed updates on-chain.
+ */
 export class AptosPricePusher implements IPricePusher {
   // The last sequence number that has a transaction submitted.
   private lastSequenceNumber: number | undefined;

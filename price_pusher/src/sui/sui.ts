@@ -91,6 +91,20 @@ export class SuiPriceListener extends ChainPriceListener {
   }
 }
 
+/**
+ * The `SuiPricePusher` is designed for high-throughput of price updates.
+ * Achieving this property requires sacrificing some nice-to-have features of other
+ * pusher implementations that can reduce cost when running multiple pushers. It also requires
+ * jumping through some Sui-specific hoops in order to maximize parallelism.
+ *
+ * The two main design features are:
+ * 1. This implementation does not use `update_price_feeds_if_necssary` and simulate the transaction
+ *    before submission. If multiple instances of this pusher are running in parallel, all of them will
+ *    land all of their pushed updates on-chain.
+ * 2. The pusher will split the Coin balance in the provided account into a pool of different Coin objects.
+ *    Each transaction will be allocated a Coin object from this pool as needed. This process enables the
+ *    transactions to avoid referencing the same owned objects, which allows them to be processed in parallel.
+ */
 export class SuiPricePusher implements IPricePusher {
   constructor(
     private readonly signer: RawSigner,
