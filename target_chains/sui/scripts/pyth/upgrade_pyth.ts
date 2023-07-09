@@ -43,6 +43,18 @@ const GOVERNANCE_EMITTER =
   //"0000000000000000000000000000000000000000000000000000000000000004";
   "63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385";
 
+
+// To upgrade Pyth, take the following steps.
+// 0. Make contract changes in the "contracts" folder. These updated contracts will be posted on chain as an
+//    entirely new package. The old package will still be valid unless we "brick" its call-sites explicitly
+//    (this is done for you via the version control logic built into the Pyth contracts).
+// 1. Make sure that in version_control.move, you create a new struct for the new version and update the
+//    current_version() and previous_version() functions accordingly. The former should point to the new version,
+//    and the latter should point to the old version.
+// 2. Update the Move.toml file so that it points to a wormhole dependency whose Move.toml file has a "published-at" field
+//    specified at the top with the correct address.
+// 3. Execute this script!
+//
 async function main() {
   if (guardianPrivateKey === undefined) {
     throw new Error("TESTNET_GUARDIAN_PRIVATE_KEY unset in environment");
@@ -71,7 +83,10 @@ async function main() {
   console.log("dependencies", dependencies);
   console.log("digest", digest.toString("hex"));
 
+  // ===========================================================================================
   // Construct VAA. We will use the signed VAA when we execute the upgrade.
+  // For a mainnet contract upgrade, we would not construct AND sign the VAA here. Instead, all
+  // the guardians would have to sign the upgrade VAA.
   const guardians = new mock.MockGuardians(0, [guardianPrivateKey]);
   const timestamp = 12345678;
   const governance = new mock.GovernanceEmitter(GOVERNANCE_EMITTER);
@@ -104,8 +119,9 @@ async function main() {
   // sign governance message
   const signedVaa = guardians.addSignatures(msg, [0]);
   console.log("Upgrade VAA:", signedVaa.toString("hex"));
+  // ===========================================================================================
 
-  //Execute upgrade with governance VAA.
+  //Execute upgrade with signed governance VAA.
   const upgradeResults = await upgradePyth(
     wallet,
     PYTH_STATE_ID,

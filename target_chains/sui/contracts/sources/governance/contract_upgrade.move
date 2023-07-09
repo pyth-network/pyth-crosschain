@@ -39,8 +39,6 @@ module pyth::contract_upgrade {
         new_contract: ID
     }
 
-    struct DELETE_ME {}
-
     struct UpgradeContract {
         digest: Bytes32
     }
@@ -134,8 +132,8 @@ module pyth::contract_upgrade {
         let digest = bytes32::take_bytes(&mut cur);
         assert!(bytes32::is_nonzero(&digest), E_DIGEST_ZERO_BYTES);
 
-        // there might be additional appended to payload in the future
-
+        // there might be additional appended to payload in the future,
+        // which is why we don't cursor::destroy_empty(&mut cur)
         cursor::take_rest(cur);
         UpgradeContract { digest }
     }
