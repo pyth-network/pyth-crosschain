@@ -1,6 +1,6 @@
 {
   "chain": "sei_testnet_atlantic_2",
   "address": "sei1w2rxq6eckak47s25crxlhmq96fzjwdtjgdwavn56ggc0qvxvw7rqczxyfy",
-  "type": "cosmwasm_contract",
+  "type": "CosmWasmContract",
   "deploymentType": "stable"
 }

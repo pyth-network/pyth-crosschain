@@ -8,50 +8,80 @@ import {
 } from "@mysten/sui.js";
 import {readFileSync, writeFileSync} from "fs";
 import {Chains, SuiChain} from "./chains";
-import {CHAINS, SetFeeInstruction} from "@pythnetwork/xc-governance-sdk";
+import {
+    CHAINS,
+    HexString32Bytes,
+    SetFeeInstruction,
+    SuiAuthorizeUpgradeContractInstruction
+} from "@pythnetwork/xc-governance-sdk";
 import {BufferBuilder} from "@pythnetwork/xc-governance-sdk/lib/serialize";
 
 export class SuiContract {
-    static type = 'sui_contract';
+    static type = 'SuiContract';
 
     constructor(public chain: SuiChain,
-                public package_id: string,
-                public state_id: string,
-                public wormhole_package_id: string,
-                public wormhole_state_id: string) {
+                public stateId: string,
+                public wormholeStateId: string) {
     }
 
     static from(path: string): SuiContract {
         let parsed = JSON.parse(readFileSync(path, 'utf-8'));
         if (parsed.type !== SuiContract.type) throw new Error('Invalid type');
         if (!Chains[parsed.chain]) throw new Error(`Chain ${parsed.chain} not found`);
-        return new SuiContract(Chains[parsed.chain] as SuiChain, parsed.package_id, parsed.state_id,
-            parsed.wormhole_package_id, parsed.wormhole_state_id);
+        return new SuiContract(Chains[parsed.chain] as SuiChain, parsed.stateId, parsed.wormholeStateId);
     }
 
 
     to(path: string): void {
         writeFileSync(`${path}/${this.getId()}.${SuiContract.type}.json`, JSON.stringify({
             chain: this.chain.id,
-            package_id: this.package_id,
-            state_id: this.state_id,
-            wormhole_package_id: this.wormhole_package_id,
-            wormhole_state_id: this.wormhole_state_id,
+            stateId: this.stateId,
+            wormholeStateId: this.wormholeStateId,
             type: SuiContract.type
         }, undefined, 2));
     }
 
+    async getPackageId(stateId: string): Promise<string> {
+        const provider = this.getProvider();
+        const state = await provider
+            .getObject({
+                id: stateId,
+                options: {
+                    showContent: true,
+                },
+            })
+            .then((result) => {
+                if (result.data?.content?.dataType == "moveObject") {
+                    return result.data.content.fields;
+                }
+
+                throw new Error("not move object");
+            });
+
+        if ("upgrade_cap" in state) {
+            return state.upgrade_cap.fields.package;
+        }
+
+        throw new Error("upgrade_cap not found");
+    }
+
+    async getPythPackageId(): Promise<string> {
+        return await this.getPackageId(this.stateId);
+    }
+
+    async getWormholePackageId(): Promise<string> {
+        return await this.getPackageId(this.wormholeStateId);
+    }
+
 
     getId(): string {
-        return `${this.chain.getId()}_${this.package_id}`;
+        return `${this.chain.getId()}_${this.stateId}`;
     }
 
     async getPriceTableId() {
-        const provider = new JsonRpcProvider(
-            new Connection({fullnode: this.chain.rpc_url})
-        );
+        const provider = this.getProvider();
         let result = await provider.getDynamicFieldObject({
-            parentId: this.state_id,
+            parentId: this.stateId,
             name: {
                 type: 'vector<u8>',
                 value: 'price_info'
@@ -64,19 +94,17 @@ export class SuiContract {
     }
 
     async getPriceFeed(
-        feed_id: string,
+        feedId: string,
     ): Promise<any> {
 
         const tableId = await this.getPriceTableId();
-        const provider = new JsonRpcProvider(
-            new Connection({fullnode: this.chain.rpc_url})
-        );
+        const provider = this.getProvider();
         let result = await provider.getDynamicFieldObject({
             parentId: tableId,
             name: {
-                type: `${this.package_id}::price_identifier::PriceIdentifier`,
+                type: `${await this.getPythPackageId()}::price_identifier::PriceIdentifier`,
                 value: {
-                    bytes: Array.from(Buffer.from(feed_id, 'hex'))
+                    bytes: Array.from(Buffer.from(feedId, 'hex'))
                 }
             }
         });
@@ -97,13 +125,13 @@ export class SuiContract {
         return priceInfo.data.content.fields;
     }
 
-    setUpdateFee(fee: number): Buffer {
+    getSetUpdateFeePayload(fee: number): Buffer {
         let builder = new BufferBuilder();
         builder.addBuffer(Buffer.from("0000000000000000000000000000000000000000000000000000000000000001", 'hex'));
         builder.addUint8(3); // SET_UPDATE_FEE
         builder.addUint16(CHAINS['sui']); // should always be sui (21) no matter devnet or testnet
         let setFee = new SetFeeInstruction(
-            CHAINS[this.chain.getId() as keyof typeof CHAINS],
+            CHAINS['sui'],
             BigInt(fee),
             BigInt(0)
         ).serialize();
@@ -112,50 +140,47 @@ export class SuiContract {
     }
 
     async executeGovernanceInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
-        const provider = new JsonRpcProvider(
-            new Connection({fullnode: this.chain.rpc_url})
-        );
+        const provider = this.getProvider();
         const tx = new TransactionBlock();
-
-        let [decree_ticket] = tx.moveCall({
-            target: `${this.package_id}::set_update_fee::authorize_governance`,
-            arguments: [tx.object(this.state_id), tx.pure(false)],
+        const packageId = await this.getPythPackageId();
+        const wormholePackageId = await this.getWormholePackageId();
+        let [decreeTicket] = tx.moveCall({
+            target: `${packageId}::set_update_fee::authorize_governance`,
+            arguments: [tx.object(this.stateId), tx.pure(false)],
         });
 
-        let [verified_vaa] = tx.moveCall({
-            target: `${this.wormhole_package_id}::vaa::parse_and_verify`,
+        let [verifiedVAA] = tx.moveCall({
+            target: `${wormholePackageId}::vaa::parse_and_verify`,
             arguments: [
-                tx.object(this.wormhole_state_id),
+                tx.object(this.wormholeStateId),
                 tx.pure(Array.from(vaa)),
                 tx.object(SUI_CLOCK_OBJECT_ID),
             ],
         });
 
-        let [decree_receipt] = tx.moveCall({
-            target: `${this.wormhole_package_id}::governance_message::verify_vaa`,
+        let [decreeReceipt] = tx.moveCall({
+            target: `${wormholePackageId}::governance_message::verify_vaa`,
             arguments: [
-                tx.object(this.wormhole_state_id),
-                verified_vaa,
-                decree_ticket
+                tx.object(this.wormholeStateId),
+                verifiedVAA,
+                decreeTicket
             ],
             typeArguments: [
-                `${this.package_id}::governance_witness::GovernanceWitness`,
+                `${packageId}::governance_witness::GovernanceWitness`,
             ],
         });
 
         tx.moveCall({
-            target: `${this.package_id}::governance::execute_governance_instruction`,
+            target: `${packageId}::governance::execute_governance_instruction`,
             arguments: [
-                tx.object(this.state_id),
-                decree_receipt
+                tx.object(this.stateId),
+                decreeReceipt
             ],
         });
 
 
-        tx.setGasBudget(200000000);
-
         const wallet = new RawSigner(keypair, provider);
-        let result = await wallet.signAndExecuteTransactionBlock({
+        let txBlock = {
             transactionBlock: tx,
             options: {
                 showInput: true,
@@ -164,8 +189,157 @@ export class SuiContract {
                 showObjectChanges: true,
                 showBalanceChanges: true,
             },
-        });
+        };
+        let gasCost = await wallet.getGasCostEstimation(txBlock);
+        tx.setGasBudget(gasCost * BigInt(2));
+        let result = await wallet.signAndExecuteTransactionBlock(txBlock);
         console.log(result);
+    }
+
+    getUpgradePackagePayload(digest: string): Buffer {
+        let builder = new BufferBuilder();
+        builder.addBuffer(Buffer.from("0000000000000000000000000000000000000000000000000000000000000001", 'hex'));
+        builder.addUint8(0); // Contract_upgrade
+        builder.addUint16(CHAINS['sui']); // should always be sui (21) no matter devnet or testnet
+        let setFee = new SuiAuthorizeUpgradeContractInstruction(
+            CHAINS['sui'],
+            new HexString32Bytes(digest),
+        ).serialize();
+        builder.addBuffer(setFee);
+        return builder.build();
+    }
+
+    async executeUpgradeInstruction(vaa: Buffer,
+                                    keypair: Ed25519Keypair,
+                                    modules: number[][],
+                                    dependencies: string[],) {
+        const provider = this.getProvider();
+        const tx = new TransactionBlock();
+        const packageId = await this.getPythPackageId();
+        const wormholePackageId = await this.getWormholePackageId();
+
+        let [decree_ticket] = tx.moveCall({
+            target: `${packageId}::contract_upgrade::authorize_governance`,
+            arguments: [tx.object(this.stateId)],
+        });
+
+        let [verified_vaa] = tx.moveCall({
+            target: `${wormholePackageId}::vaa::parse_and_verify`,
+            arguments: [
+                tx.object(this.wormholeStateId),
+                tx.pure(Array.from(vaa)),
+                tx.object(SUI_CLOCK_OBJECT_ID),
+            ],
+        });
+
+        let [decreeReceipt] = tx.moveCall({
+            target: `${wormholePackageId}::governance_message::verify_vaa`,
+            arguments: [
+                tx.object(this.wormholeStateId),
+                verified_vaa,
+                decree_ticket
+            ],
+            typeArguments: [
+                `${packageId}::governance_witness::GovernanceWitness`,
+            ],
+        });
+        // Authorize upgrade.
+        const [upgradeTicket] = tx.moveCall({
+            target: `${packageId}::contract_upgrade::authorize_upgrade`,
+            arguments: [tx.object(this.stateId), decreeReceipt],
+        });
+
+        const [upgradeReceipt] = tx.upgrade({
+            modules,
+            dependencies,
+            packageId: packageId,
+            ticket: upgradeTicket,
+        });
+
+        // Commit upgrade.
+        tx.moveCall({
+            target: `${packageId}::contract_upgrade::commit_upgrade`,
+            arguments: [tx.object(this.stateId), upgradeReceipt],
+        });
+
+
+        const wallet = new RawSigner(keypair, provider);
+
+        let txBlock = {
+            transactionBlock: tx,
+            options: {
+                showInput: true,
+                showEffects: true,
+                showEvents: true,
+                showObjectChanges: true,
+                showBalanceChanges: true,
+            },
+        };
+        let gasCost = await wallet.getGasCostEstimation(txBlock);
+        tx.setGasBudget(gasCost * BigInt(2));
+        let result = await wallet.signAndExecuteTransactionBlock(txBlock);
+        console.log(result);
+    }
+
+    async executeMigrateInstruction(
+        vaa: Buffer,
+        keypair: Ed25519Keypair,
+    ) {
+        const provider = this.getProvider();
+        const tx = new TransactionBlock();
+        const packageId = await this.getPythPackageId();
+        const wormholePackageId = await this.getWormholePackageId();
+
+        let [decreeTicket] = tx.moveCall({
+            target: `${packageId}::contract_upgrade::authorize_governance`,
+            arguments: [tx.object(this.stateId)],
+        });
+
+        let [verifiedVAA] = tx.moveCall({
+            target: `${wormholePackageId}::vaa::parse_and_verify`,
+            arguments: [
+                tx.object(this.wormholeStateId),
+                tx.pure(Array.from(vaa)),
+                tx.object(SUI_CLOCK_OBJECT_ID),
+            ],
+        });
+
+        let [decreeReceipt] = tx.moveCall({
+            target: `${wormholePackageId}::governance_message::verify_vaa`,
+            arguments: [
+                tx.object(this.wormholeStateId),
+                verifiedVAA,
+                decreeTicket
+            ],
+            typeArguments: [
+                `${packageId}::governance_witness::GovernanceWitness`,
+            ],
+        });
+
+
+        tx.moveCall({
+            target: `${packageId}::migrate::migrate`,
+            arguments: [tx.object(this.stateId), decreeReceipt],
+        });
+
+
+        let txBlock = {
+            transactionBlock: tx,
+            options: {
+                showEffects: true,
+                showEvents: true,
+            },
+        };
+        const wallet = new RawSigner(keypair, provider);
+        let gasCost = await wallet.getGasCostEstimation(txBlock);
+        tx.setGasBudget(gasCost * BigInt(2));
+        return wallet.signAndExecuteTransactionBlock(txBlock);
+    }
+
+    private getProvider() {
+        return new JsonRpcProvider(
+            new Connection({fullnode: this.chain.rpcURL})
+        );
     }
 
 

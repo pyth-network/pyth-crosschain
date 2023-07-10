@@ -1,5 +1,5 @@
 {
   "id": "sui_devnet",
   "rpc_url": "https://fullnode.devnet.sui.io:443",
-  "type": "sui_chain"
+  "type": "SuiChain"
 }

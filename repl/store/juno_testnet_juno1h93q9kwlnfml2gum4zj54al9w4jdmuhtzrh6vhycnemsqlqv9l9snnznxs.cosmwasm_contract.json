@@ -2,5 +2,5 @@
   "chain": "juno_testnet",
   "address": "juno1h93q9kwlnfml2gum4zj54al9w4jdmuhtzrh6vhycnemsqlqv9l9snnznxs",
   "deploymentType": "edge",
-  "type": "cosmwasm_contract"
+  "type": "CosmWasmContract"
 }

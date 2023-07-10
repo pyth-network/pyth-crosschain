@@ -5,5 +5,5 @@
   "gasPrice": "0.05",
   "prefix": "neutron",
   "feeDenom": "untrn",
-  "type": "cosmwasm_chain"
+  "type": "CosmWasmChain"
 }

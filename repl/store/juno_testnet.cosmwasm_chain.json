@@ -5,5 +5,5 @@
   "gasPrice": "0.025",
   "prefix": "juno",
   "feeDenom": "ujunox",
-  "type": "cosmwasm_chain"
+  "type": "CosmWasmChain"
 }

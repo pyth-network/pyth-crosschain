@@ -31,7 +31,7 @@ namespace CosmWasmContract {
 }
 
 export class CosmWasmContract {
-    static type = 'cosmwasm_contract';
+    static type = 'CosmWasmContract';
 
     constructor(public chain: CosmWasmChain, public address: string) {
     }
@@ -117,20 +117,20 @@ export class CosmWasmContract {
     // TODO: Cleanup and more strict linter to convert let to const
 
     async getPriceFeed(
-        feed_id: string,
+        feedId: string,
     ): Promise<any> {
         let querier = await this.getQuerier();
-        return querier.getPriceFeed(this.address, feed_id);
+        return querier.getPriceFeed(this.address, feedId);
     }
 
-    equalDataSources(data_sources1: CosmWasmContract.WormholeSource[],
-                     data_sources2: CosmWasmContract.WormholeSource[]): boolean {
-        if (data_sources1.length !== data_sources2.length) return false;
-        for (let i = 0; i < data_sources1.length; i++) {
+    equalDataSources(dataSources1: CosmWasmContract.WormholeSource[],
+                     dataSources2: CosmWasmContract.WormholeSource[]): boolean {
+        if (dataSources1.length !== dataSources2.length) return false;
+        for (let i = 0; i < dataSources1.length; i++) {
             let found = false;
-            for (let j = 0; j < data_sources2.length; j++) {
-                if (data_sources1[i].emitter === data_sources2[j].emitter &&
-                    data_sources1[i].chain_id === data_sources2[j].chain_id) {
+            for (let j = 0; j < dataSources2.length; j++) {
+                if (dataSources1[i].emitter === dataSources2[j].emitter &&
+                    dataSources1[i].chain_id === dataSources2[j].chain_id) {
                     found = true;
                     break;
                 }
@@ -164,7 +164,7 @@ export class CosmWasmContract {
             return "unknown";
     }
 
-    async updatePriceFeed(mnemonic: string) {
+    async executeUpdatePriceFeed(mnemonic: string) {
         const deploymentType = await this.getDeploymentType();
         const priceServiceConnection = new PriceServiceConnection(
             deploymentType === "stable"
@@ -205,7 +205,7 @@ export class CosmWasmContract {
         return querier.getUpdateFee(this.address, msgs);
     }
 
-    setUpdateFee(fee: number): Buffer {
+    getSetUpdateFeePayload(fee: number): Buffer {
         return (new SetFeeInstruction(
             CHAINS[this.chain.getId() as keyof typeof CHAINS],
             BigInt(fee),

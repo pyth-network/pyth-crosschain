@@ -7,7 +7,7 @@ export class Chain {
 }
 
 export class CosmWasmChain extends Chain {
-    static type: string = 'cosmwasm_chain';
+    static type: string = 'CosmWasmChain';
 
     constructor(id: string, public querierEndpoint: string, public executorEndpoint: string,
                 public gasPrice: string, public prefix: string, public feeDenom: string) {
@@ -39,9 +39,9 @@ export class CosmWasmChain extends Chain {
 
 
 export class SuiChain extends Chain {
-    static type: string = 'sui_chain';
+    static type: string = 'SuiChain';
 
-    constructor(id: string, public rpc_url: string) {
+    constructor(id: string, public rpcURL: string) {
         super(id);
     }
 
@@ -58,7 +58,7 @@ export class SuiChain extends Chain {
     to(path: string): void {
         writeFileSync(`${path}/${this.getId()}.${SuiChain.type}.json`, JSON.stringify({
             id: this.id,
-            rpc_url: this.rpc_url,
+            rpcURL: this.rpcURL,
             type: SuiChain.type
         }, undefined, 2));
     }
