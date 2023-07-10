@@ -260,7 +260,7 @@ module pyth::pyth {
     /// The given fee must contain a sufficient number of coins to pay the update fee for the given vaas.
     /// The update fee amount can be queried by calling get_update_fee(&vaas).
     ///
-    /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
+    /// Please read more information about the update fee here: https://docs.pyth.network/documentation/consume-data/on-demand#fees
     public fun update_single_price_feed(
         pyth_state: &PythState,
         price_updates: HotPotatoVector<PriceInfo>,
@@ -353,11 +353,11 @@ module pyth::pyth {
     /// Get the latest available price cached for the given price identifier, if that price is
     /// no older than the stale price threshold.
     ///
-    /// Please refer to the documentation at https://docs.pyth.network/consumers/best-practices for
+    /// Please refer to the documentation at https://docs.pyth.network/documentation/consumers/best-practices for
     /// how to how this price safely.
     ///
     /// Important: Pyth uses an on-demand update model, where consumers need to update the
-    /// cached prices before using them. Please read more about this at https://docs.pyth.network/consume-data/on-demand.
+    /// cached prices before using them. Please read more about this at https://docs.pyth.network/documentation/consume-data/on-demand.
     /// get_price() is likely to abort unless you call update_price_feeds() to update the cached price
     /// beforehand, as the cached prices may be older than the stale price threshold.
     ///
@@ -411,7 +411,7 @@ module pyth::pyth {
         assert!(age < max_age_secs, E_STALE_PRICE_UPDATE);
     }
 
-    /// Please read more information about the update fee here: https://docs.pyth.network/consume-data/on-demand#fees
+    /// Please read more information about the update fee here: https://docs.pyth.network/documentation/consume-data/on-demand#fees
     public fun get_total_update_fee(pyth_state: &PythState, n: u64): u64 {
         state::get_base_update_fee(pyth_state) * n
     }

@@ -19,7 +19,7 @@ $ yarn add @pythnetwork/pyth-evm-js
 ## Quickstart
 
 Pyth stores prices off-chain to minimize gas fees, which allows us to offer a wider selection of products and faster update times.
-See [On-Demand Updates](https://docs.pyth.network/consume-data/on-demand) for more information about this approach. In order to use Pyth prices on chain,
+See [On-Demand Updates](https://docs.pyth.network/documentation/consume-data/on-demand) for more information about this approach. In order to use Pyth prices on chain,
 they must be fetched from an off-chain price service. The `EvmPriceServiceConnection` class can be used to interact with these services,
 providing a way to fetch these prices directly in your code. The following example wraps an existing RPC provider and shows how to obtain
 Pyth prices and submit them to the network:
@@ -41,7 +41,7 @@ const priceIds = [
 const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
 
 // If the user is paying the price update fee, you need to fetch it from the Pyth contract.
-// Please refer to https://docs.pyth.network/consume-data/on-demand#fees for more information.
+// Please refer to https://docs.pyth.network/documentation/consume-data/on-demand#fees for more information.
 //
 // `pythContract` below is a web3.js contract; if you wish to use ethers, you need to change it accordingly.
 // You can find the Pyth interface ABI in @pythnetwork/pyth-sdk-solidity npm package.
@@ -87,7 +87,7 @@ contract SomeContract {
 
 ```
 
-We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/consume-data/best-practices).
+We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/documentation/consume-data/best-practices).
 
 ### Off-chain prices
 

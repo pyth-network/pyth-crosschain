@@ -99,7 +99,7 @@ fn query_fetch_price(deps: Deps, env: Env) -> StdResult<FetchPriceResponse> {
     // specific times, or network outages may prevent the price feed from updating.
     //
     // The example code below throws an error if the price is not available. It is recommended that
-    // you handle this scenario more carefully. Consult the [consumer best practices](https://docs.pyth.network/consumers/best-practices)
+    // you handle this scenario more carefully. Consult the [consumer best practices](https://docs.pyth.network/documentation/consumers/best-practices)
     // for recommendations.
     let current_price = price_feed
         .get_price_no_older_than(env.block.time.seconds() as i64, 60)
@@ -161,7 +161,7 @@ mod test {
     use std::time::Duration;
 
     // Dummy contract address for testing.
-    // For real deployments, see list of contract addresses here https://docs.pyth.network/pythnet-price-feeds/cosmwasm
+    // For real deployments, see list of contract addresses here https://docs.pyth.network/documentation/pythnet-price-feeds/cosmwasm
     const PYTH_CONTRACT_ADDR: &str = "pyth_contract_addr";
     // For real deployments, see list of price feed ids here https://pyth.network/developers/price-feed-ids
     const PRICE_ID: &str = "63f341689d98a12ef60a5cff1d7f85c70a9e17bf1575f0e7c0b2512d48b1c8b3";
