@@ -260,7 +260,7 @@ module pyth::pyth {
     /// The given fee must contain a sufficient number of coins to pay the update fee for the given vaas.
     /// The update fee amount can be queried by calling get_update_fee(&vaas).
     ///
-    /// Please read more information about the update fee here: https://docs.pyth.network/documentation/consume-data/on-demand#fees
+    /// Please read more information about the update fee here: https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand#fees
     public fun update_single_price_feed(
         pyth_state: &PythState,
         price_updates: HotPotatoVector<PriceInfo>,

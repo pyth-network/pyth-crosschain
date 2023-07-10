@@ -1,37 +1,38 @@
-use std::time::Duration;
-
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{
-    to_binary,
-    Binary,
-    Deps,
-    DepsMut,
-    Env,
-    MessageInfo,
-    Response,
-    StdError,
-    StdResult,
-    Coin,
-};
-
-use pyth_sdk_cw::{
-    PriceFeedResponse,
-    get_update_fee,
-    get_valid_time_period,
-    query_price_feed,
-};
-
-use crate::msg::{
-    ExecuteMsg,
-    FetchPriceResponse,
-    InstantiateMsg,
-    MigrateMsg,
-    QueryMsg,
-};
-use crate::state::{
-    State,
-    STATE,
+use {
+    crate::{
+        msg::{
+            ExecuteMsg,
+            FetchPriceResponse,
+            InstantiateMsg,
+            MigrateMsg,
+            QueryMsg,
+        },
+        state::{
+            State,
+            STATE,
+        },
+    },
+    cosmwasm_std::{
+        to_binary,
+        Binary,
+        Coin,
+        Deps,
+        DepsMut,
+        Env,
+        MessageInfo,
+        Response,
+        StdError,
+        StdResult,
+    },
+    pyth_sdk_cw::{
+        get_update_fee,
+        get_valid_time_period,
+        query_price_feed,
+        PriceFeedResponse,
+    },
+    std::time::Duration,
 };
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -90,7 +91,8 @@ fn query_fetch_price(deps: Deps, env: Env) -> StdResult<FetchPriceResponse> {
     // price feed. The result is a PriceFeed object with fields for the current price and other
     // useful information. The function will fail if the contract address or price feed id are
     // invalid.
-    let price_feed_response: PriceFeedResponse = query_price_feed(&deps.querier, state.pyth_contract_addr, state.price_feed_id)?;
+    let price_feed_response: PriceFeedResponse =
+        query_price_feed(&deps.querier, state.pyth_contract_addr, state.price_feed_id)?;
     let price_feed = price_feed_response.price_feed;
 
     // Get the current price and confidence interval from the price feed.
@@ -99,7 +101,7 @@ fn query_fetch_price(deps: Deps, env: Env) -> StdResult<FetchPriceResponse> {
     // specific times, or network outages may prevent the price feed from updating.
     //
     // The example code below throws an error if the price is not available. It is recommended that
-    // you handle this scenario more carefully. Consult the [consumer best practices](https://docs.pyth.network/documentation/consumers/best-practices)
+    // you handle this scenario more carefully. Consult the [consumer best practices](https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices)
     // for recommendations.
     let current_price = price_feed
         .get_price_no_older_than(env.block.time.seconds() as i64, 60)
@@ -131,34 +133,38 @@ fn query_fetch_valid_time_period(deps: Deps) -> StdResult<Duration> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use cosmwasm_std::testing::{
-        mock_dependencies,
-        mock_env,
-        MockApi,
-        MockQuerier,
-        MockStorage,
+    use {
+        super::*,
+        cosmwasm_std::{
+            from_binary,
+            testing::{
+                mock_dependencies,
+                mock_env,
+                MockApi,
+                MockQuerier,
+                MockStorage,
+            },
+            Addr,
+            Coin,
+            OwnedDeps,
+            QuerierResult,
+            SystemError,
+            SystemResult,
+            Timestamp,
+            WasmQuery,
+        },
+        pyth_sdk_cw::{
+            testing::MockPyth,
+            Price,
+            PriceFeed,
+            PriceIdentifier,
+            UnixTimestamp,
+        },
+        std::{
+            convert::TryFrom,
+            time::Duration,
+        },
     };
-    use cosmwasm_std::{
-        from_binary,
-        Addr,
-        Coin,
-        OwnedDeps,
-        QuerierResult,
-        SystemError,
-        SystemResult,
-        Timestamp,
-        WasmQuery,
-    };
-    use pyth_sdk_cw::testing::MockPyth;
-    use pyth_sdk_cw::{
-        Price,
-        PriceFeed,
-        PriceIdentifier,
-        UnixTimestamp,
-    };
-    use std::convert::TryFrom;
-    use std::time::Duration;
 
     // Dummy contract address for testing.
     // For real deployments, see list of contract addresses here https://docs.pyth.network/documentation/pythnet-price-feeds/cosmwasm
@@ -261,8 +267,8 @@ mod test {
         let (deps, env) = setup_test(&default_state(), &mock_pyth, current_unix_time);
 
         let msg = QueryMsg::FetchValidTimePeriod {};
-        let result = query(deps.as_ref(), env, msg)
-            .and_then(|binary| from_binary::<Duration>(&binary));
+        let result =
+            query(deps.as_ref(), env, msg).and_then(|binary| from_binary::<Duration>(&binary));
 
         assert_eq!(result.map(|r| r.as_secs()), Ok(60));
     }
@@ -275,9 +281,10 @@ mod test {
         let mock_pyth = MockPyth::new(Duration::from_secs(60), Coin::new(1, "foo"), &[]);
         let (deps, env) = setup_test(&default_state(), &mock_pyth, current_unix_time);
 
-        let msg = QueryMsg::FetchUpdateFee { vaas: vec![Binary(vec![1,2,3])] };
-        let result = query(deps.as_ref(), env, msg)
-            .and_then(|binary| from_binary::<Coin>(&binary));
-        assert_eq!(result.map( |r| r.to_string()), Ok(String::from("1foo")))
+        let msg = QueryMsg::FetchUpdateFee {
+            vaas: vec![Binary(vec![1, 2, 3])],
+        };
+        let result = query(deps.as_ref(), env, msg).and_then(|binary| from_binary::<Coin>(&binary));
+        assert_eq!(result.map(|r| r.to_string()), Ok(String::from("1foo")))
     }
 }

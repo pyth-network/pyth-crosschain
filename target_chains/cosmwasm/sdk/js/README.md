@@ -67,7 +67,7 @@ const tx = await wallet.createAndSignTx({
 });
 ```
 
-We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/documentation/consume-data/best-practices).
+We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices).
 
 ### Examples
 
