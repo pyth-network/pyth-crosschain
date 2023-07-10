@@ -4,7 +4,7 @@ import React from "react";
 import "./App.css";
 import logo from "./logo.svg";
 
-// Please read https://docs.pyth.network/documentation/consume-data before building on Pyth
+// Please read https://docs.pyth.network/documentation/pythnet-price-feeds before building on Pyth
 
 // Rpc endpoint
 const TESTNET_PRICE_SERVICE = "https://xc-testnet.pyth.network";
@@ -18,7 +18,7 @@ const testnetConnection = new AptosPriceServiceConnection(
 const APT_USD_TESTNET_PRICE_ID =
   "0x44a93dddd8effa54ea51076c4e851b6cbbfd938e82eb90197de38fe8876bb66e";
 
-// Aptos modules : These are testnet addresses https://docs.pyth.network/documentation/consume-data/aptos#addresses
+// Aptos modules : These are testnet addresses https://docs.pyth.network/documentation/pythnet-price-feeds/aptos
 const MINT_NFT_MODULE =
   "0x19f8503273cdb5aa93ffe4539277684615242127aa2e65ef91424136a316c9c7";
 

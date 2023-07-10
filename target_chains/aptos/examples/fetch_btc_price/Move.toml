@@ -9,7 +9,7 @@ Pyth = { git = "https://github.com/pyth-network/pyth-crosschain.git", subdir = "
 [addresses]
 example = "0xac74082dfffb80824955aaefb2b0a98634b1368e37f42cbff14564ea430b97dc"
 # On deployment, these should be overridden with --named-addresses using the addresses
-# documented at https://docs.pyth.network/documentation/consume-data/aptos#addresses
+# documented at https://docs.pyth.network/documentation/pythnet-price-feeds/aptos#addresses
 pyth = "_"
 deployer = "_"
 wormhole = "_"
