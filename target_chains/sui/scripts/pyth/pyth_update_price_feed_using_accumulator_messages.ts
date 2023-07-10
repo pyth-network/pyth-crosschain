@@ -39,12 +39,12 @@ async function main() {
 
   // get accumulator msg in base 64
   let {data} = await axios.get(`https://hermes-beta.pyth.network/api/latest_vaas?ids[]=${price_feed_id}`)
+  let accumulator_message = data[0]
 
-  console.log("data: ", data[0])
-  parse_vaa_bytes_from_accumulator_message(data[0])
+  console.log("data: ", accumulator_message)
+  parse_vaa_bytes_from_accumulator_message(accumulator_message)
   //console.log(data);
-
-  //update_price_feeds(wallet, registry, data, price_info_object_id)
+  update_price_feeds(wallet, registry, accumulator_message, price_info_object_id)
 }
 main();
 
@@ -52,7 +52,7 @@ async function update_price_feeds(
   signer: RawSigner,
   registry: any,
   accumulator_message: string,
-  object_id: string
+  price_info_object_id: string
 ) {
   const tx = new TransactionBlock();
 
@@ -66,25 +66,53 @@ async function update_price_feeds(
   console.log("WORM_STATE: ", WORM_STATE);
   console.log("SUI_CLOCK_OBJECT_ID: ", SUI_CLOCK_OBJECT_ID);
 
+  // verify VAA (that encodes the merkle root) in accumulator message
   let [verified_vaa] = tx.moveCall({
     target: `${WORM_PACKAGE}::vaa::parse_and_verify`,
     arguments: [
       tx.object(WORM_STATE),
-      tx.pure([...Buffer.from(accumulator_message, "base64")]),
+      tx.pure(parse_vaa_bytes_from_accumulator_message(accumulator_message)),
       tx.object(SUI_CLOCK_OBJECT_ID),
     ],
   });
 
-  // let [coin] = tx.moveCall({
-  //   target: "0x2::coin::split",
-  //   arguments: [
-  //     tx.object(
-  //       "0xab59f054a27f97adb14c4d5eca7ee4dbccade998285b9c5c5400ab00f8ee672d"
-  //     ),
-  //     tx.pure(1),
-  //   ],
-  //   typeArguments: ["0x2::sui::SUI"],
-  // });
+  // obtain fee coin by splitting it off from the gas coin
+  let [fee_coin] = tx.moveCall({
+    target: "0x2::coin::split",
+    arguments: [
+      tx.gas,
+      tx.pure(1),
+    ],
+    typeArguments: ["0x2::sui::SUI"],
+  });
+
+  let [authenticated_price_infos_vector] = tx.moveCall({
+    target: `${PYTH_PACKAGE}::pyth::create_authenticated_price_infos_using_accumulator`,
+    arguments: [
+      tx.object(PYTH_STATE),
+      tx.pure(accumulator_message),
+      verified_vaa,
+      tx.object(SUI_CLOCK_OBJECT_ID),
+    ]
+  })
+
+  authenticated_price_infos_vector = tx.moveCall({
+    target: `${PYTH_PACKAGE}::pyth::update_single_price_feed`,
+    arguments: [
+      tx.object(PYTH_STATE),
+      authenticated_price_infos_vector,
+      tx.object(price_info_object_id),
+      fee_coin,
+      tx.object(SUI_CLOCK_OBJECT_ID),
+    ]
+  })
+
+  tx.moveCall({
+    target: `${PYTH_PACKAGE}::hot_potato_vector::destroy`,
+    arguments: [
+      authenticated_price_infos_vector
+    ]
+  })
 
   // tx.moveCall({
   //   target: `${PYTH_PACKAGE}::pyth::update_price_feeds`,
@@ -124,7 +152,12 @@ async function update_price_feeds(
 
 function parse_vaa_bytes_from_accumulator_message(accumulator_message: string){
   console.log("parse_vaa_bytes_from_accumulator_message msg: ", accumulator_message)
-  let b = Buffer.from(accumulator_message, "base64")
-  console.log(b)
+  let b = [...Buffer.from(accumulator_message, "base64")]
+  let vaa_size_bytes = b.slice(8,10)
+  let vaa_size = vaa_size_bytes[1] + 16*vaa_size_bytes[0]
+  console.log("vaa_size: ", vaa_size)
+  let vaa = b.slice(10,10+vaa_size)
+  console.log("vaa is: ", vaa)
+  console.log(Buffer.from(vaa).toString("hex"))
+  return vaa
 }
-
