@@ -395,7 +395,7 @@ module pyth::pyth {
     /// Get the latest available price cached for the given price identifier, if that price is
     /// no older than the stale price threshold.
     ///
-    /// Please refer to the documentation at https://docs.pyth.network/documentation/solana-price-feeds/best-practices for
+    /// Please refer to the documentation at https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices for
     /// how to how this price safely.
     ///
     /// Important: Pyth uses an on-demand update model, where consumers need to update the

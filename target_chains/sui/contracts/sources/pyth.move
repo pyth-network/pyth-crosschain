@@ -411,7 +411,7 @@ module pyth::pyth {
         assert!(age < max_age_secs, E_STALE_PRICE_UPDATE);
     }
 
-    /// Please read more information about the update fee here: https://docs.pyth.network/documentation/consume-data/on-demand#fees
+    /// Please read more information about the update fee here: https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand#fees
     public fun get_total_update_fee(pyth_state: &PythState, n: u64): u64 {
         state::get_base_update_fee(pyth_state) * n
     }
