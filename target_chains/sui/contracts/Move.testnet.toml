@@ -12,7 +12,7 @@ local = "../../../../wormhole/sui/wormhole"
 
 [addresses]
 pyth = "0x0"
-wormhole = "0x80c60bff35fe5026e319cf3d66ae671f2b4e12923c92c45df75eaf4de79e3ce7"
+wormhole = "0xf47329f4344f3bf0f8e436e2f7b485466cff300f12a166563995d3888c296a94"
 
 [dev-addresses]
 pyth = "0x100"
