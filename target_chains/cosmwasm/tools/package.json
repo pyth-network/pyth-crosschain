@@ -2,7 +2,7 @@
   "name": "@pythnetwork/cosmwasm-deploy-tools",
   "version": "1.1.0",
   "description": "",
-  "main": "deploy-pyth-bridge.ts",
+  "main": "./src/index.ts",
   "private": "true",
   "scripts": {
     "build": "tsc",
