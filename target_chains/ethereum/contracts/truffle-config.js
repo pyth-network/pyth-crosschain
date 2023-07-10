@@ -292,6 +292,10 @@ module.exports = {
       gas: 10000000,
       gasPrice: 200000000000,
     },
+    linea_goerli: {
+      provider: payerProvider("https://rpc.goerli.linea.build"),
+      network_id: 59140,
+    },
   },
 
   compilers: {
