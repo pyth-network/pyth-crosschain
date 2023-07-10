@@ -154,7 +154,7 @@ module pyth::pyth {
     ///
     /// The javascript https://github.com/pyth-network/pyth-js/tree/main/pyth-aptos-js package
     /// should be used to fetch these VAAs from the Price Service. More information about this
-    /// process can be found at https://docs.pyth.network/documentation/consume-data.
+    /// process can be found at https://docs.pyth.network/documentation/pythnet-price-feeds.
     ///
     /// The given fee must contain a sufficient number of coins to pay the update fee for the given vaas.
     /// The update fee amount can be queried by calling get_update_fee(&vaas).
