@@ -75,7 +75,6 @@ export class CosmWasmContract {
       chain.prefix,
       chain.gasPrice + chain.feeDenom
     );
-    console.log(executor);
     let result = await executor.instantiateContract({
       codeId: codeId,
       instMsg: config,
@@ -186,11 +185,6 @@ export class CosmWasmContract {
       wormholeContract,
       deploymentType: "edge",
     });
-    console.log(
-      config.config_v1.data_sources,
-      stableConfig.data_sources,
-      edgeConfig.data_sources
-    );
     if (
       this.equalDataSources(
         config.config_v1.data_sources,
@@ -208,7 +202,7 @@ export class CosmWasmContract {
     else return "unknown";
   }
 
-  async executeUpdatePriceFeed(mnemonic: string) {
+  async executeUpdatePriceFeed(feedId: string, mnemonic: string) {
     const deploymentType = await this.getDeploymentType();
     const priceServiceConnection = new PriceServiceConnection(
       deploymentType === "stable"
@@ -216,14 +210,8 @@ export class CosmWasmContract {
         : "https://xc-testnet.pyth.network"
     );
 
-    const priceFeedId =
-      deploymentType === "stable"
-        ? "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
-        : "f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b";
-    const vaas = await priceServiceConnection.getLatestVaas([priceFeedId]);
-    console.log(vaas);
+    const vaas = await priceServiceConnection.getLatestVaas([feedId]);
     const fund = await this.getUpdateFee(vaas);
-    console.log(fund);
     let executor = new CosmwasmExecutor(
       this.chain.executorEndpoint,
       mnemonic,
