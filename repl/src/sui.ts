@@ -95,7 +95,7 @@ export class SuiContract {
 
     async getPriceFeed(
         feedId: string,
-    ): Promise<any> {
+    ) {
 
         const tableId = await this.getPriceTableId();
         const provider = this.getProvider();
@@ -125,24 +125,96 @@ export class SuiContract {
         return priceInfo.data.content.fields;
     }
 
-    getSetUpdateFeePayload(fee: number): Buffer {
-        let builder = new BufferBuilder();
+    wrapWithWormholeGovernancePayload(actionVariant: number, payload: Buffer): Buffer {
+        const builder = new BufferBuilder();
         builder.addBuffer(Buffer.from("0000000000000000000000000000000000000000000000000000000000000001", 'hex'));
-        builder.addUint8(3); // SET_UPDATE_FEE
+        builder.addUint8(actionVariant);
         builder.addUint16(CHAINS['sui']); // should always be sui (21) no matter devnet or testnet
+        builder.addBuffer(payload);
+        return builder.build();
+    }
+
+    getUpgradePackagePayload(digest: string): Buffer {
+        let setFee = new SuiAuthorizeUpgradeContractInstruction(
+            CHAINS['sui'],
+            new HexString32Bytes(digest),
+        ).serialize();
+        return this.wrapWithWormholeGovernancePayload(0, setFee);
+
+    }
+
+    getSetUpdateFeePayload(fee: number): Buffer {
         let setFee = new SetFeeInstruction(
             CHAINS['sui'],
             BigInt(fee),
             BigInt(0)
         ).serialize();
-        builder.addBuffer(setFee);
-        return builder.build();
+        return this.wrapWithWormholeGovernancePayload(3, setFee);
     }
 
     async executeGovernanceInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
-        const provider = this.getProvider();
         const tx = new TransactionBlock();
         const packageId = await this.getPythPackageId();
+        let decreeReceipt = await this.getVAADecreeReceipt(tx, packageId, vaa);
+
+        tx.moveCall({
+            target: `${packageId}::governance::execute_governance_instruction`,
+            arguments: [
+                tx.object(this.stateId),
+                decreeReceipt
+            ],
+        });
+
+        return this.executeTransaction(tx, keypair);
+    }
+
+    async executeUpgradeInstruction(vaa: Buffer,
+                                    keypair: Ed25519Keypair,
+                                    modules: number[][],
+                                    dependencies: string[],) {
+        const tx = new TransactionBlock();
+        const packageId = await this.getPythPackageId();
+        let decreeReceipt = await this.getVAADecreeReceipt(tx, packageId, vaa);
+
+        const [upgradeTicket] = tx.moveCall({
+            target: `${packageId}::contract_upgrade::authorize_upgrade`,
+            arguments: [tx.object(this.stateId), decreeReceipt],
+        });
+
+        const [upgradeReceipt] = tx.upgrade({
+            modules,
+            dependencies,
+            packageId: packageId,
+            ticket: upgradeTicket,
+        });
+
+        tx.moveCall({
+            target: `${packageId}::contract_upgrade::commit_upgrade`,
+            arguments: [tx.object(this.stateId), upgradeReceipt],
+        });
+        return this.executeTransaction(tx, keypair);
+    }
+
+
+    async executeMigrateInstruction(
+        vaa: Buffer,
+        keypair: Ed25519Keypair,
+    ) {
+        const tx = new TransactionBlock();
+        const packageId = await this.getPythPackageId();
+        let decreeReceipt = await this.getVAADecreeReceipt(tx, packageId, vaa);
+
+
+        tx.moveCall({
+            target: `${packageId}::migrate::migrate`,
+            arguments: [tx.object(this.stateId), decreeReceipt],
+        });
+
+
+        return this.executeTransaction(tx, keypair);
+    }
+
+    private async getVAADecreeReceipt(tx: TransactionBlock, packageId: string, vaa: Buffer) {
         const wormholePackageId = await this.getWormholePackageId();
         let [decreeTicket] = tx.moveCall({
             target: `${packageId}::set_update_fee::authorize_governance`,
@@ -169,160 +241,11 @@ export class SuiContract {
                 `${packageId}::governance_witness::GovernanceWitness`,
             ],
         });
-
-        tx.moveCall({
-            target: `${packageId}::governance::execute_governance_instruction`,
-            arguments: [
-                tx.object(this.stateId),
-                decreeReceipt
-            ],
-        });
-
-
-        const wallet = new RawSigner(keypair, provider);
-        let txBlock = {
-            transactionBlock: tx,
-            options: {
-                showInput: true,
-                showEffects: true,
-                showEvents: true,
-                showObjectChanges: true,
-                showBalanceChanges: true,
-            },
-        };
-        let gasCost = await wallet.getGasCostEstimation(txBlock);
-        tx.setGasBudget(gasCost * BigInt(2));
-        let result = await wallet.signAndExecuteTransactionBlock(txBlock);
-        console.log(result);
+        return decreeReceipt;
     }
 
-    getUpgradePackagePayload(digest: string): Buffer {
-        let builder = new BufferBuilder();
-        builder.addBuffer(Buffer.from("0000000000000000000000000000000000000000000000000000000000000001", 'hex'));
-        builder.addUint8(0); // Contract_upgrade
-        builder.addUint16(CHAINS['sui']); // should always be sui (21) no matter devnet or testnet
-        let setFee = new SuiAuthorizeUpgradeContractInstruction(
-            CHAINS['sui'],
-            new HexString32Bytes(digest),
-        ).serialize();
-        builder.addBuffer(setFee);
-        return builder.build();
-    }
-
-    async executeUpgradeInstruction(vaa: Buffer,
-                                    keypair: Ed25519Keypair,
-                                    modules: number[][],
-                                    dependencies: string[],) {
+    private async executeTransaction(tx: TransactionBlock, keypair: Ed25519Keypair) {
         const provider = this.getProvider();
-        const tx = new TransactionBlock();
-        const packageId = await this.getPythPackageId();
-        const wormholePackageId = await this.getWormholePackageId();
-
-        let [decree_ticket] = tx.moveCall({
-            target: `${packageId}::contract_upgrade::authorize_governance`,
-            arguments: [tx.object(this.stateId)],
-        });
-
-        let [verified_vaa] = tx.moveCall({
-            target: `${wormholePackageId}::vaa::parse_and_verify`,
-            arguments: [
-                tx.object(this.wormholeStateId),
-                tx.pure(Array.from(vaa)),
-                tx.object(SUI_CLOCK_OBJECT_ID),
-            ],
-        });
-
-        let [decreeReceipt] = tx.moveCall({
-            target: `${wormholePackageId}::governance_message::verify_vaa`,
-            arguments: [
-                tx.object(this.wormholeStateId),
-                verified_vaa,
-                decree_ticket
-            ],
-            typeArguments: [
-                `${packageId}::governance_witness::GovernanceWitness`,
-            ],
-        });
-        // Authorize upgrade.
-        const [upgradeTicket] = tx.moveCall({
-            target: `${packageId}::contract_upgrade::authorize_upgrade`,
-            arguments: [tx.object(this.stateId), decreeReceipt],
-        });
-
-        const [upgradeReceipt] = tx.upgrade({
-            modules,
-            dependencies,
-            packageId: packageId,
-            ticket: upgradeTicket,
-        });
-
-        // Commit upgrade.
-        tx.moveCall({
-            target: `${packageId}::contract_upgrade::commit_upgrade`,
-            arguments: [tx.object(this.stateId), upgradeReceipt],
-        });
-
-
-        const wallet = new RawSigner(keypair, provider);
-
-        let txBlock = {
-            transactionBlock: tx,
-            options: {
-                showInput: true,
-                showEffects: true,
-                showEvents: true,
-                showObjectChanges: true,
-                showBalanceChanges: true,
-            },
-        };
-        let gasCost = await wallet.getGasCostEstimation(txBlock);
-        tx.setGasBudget(gasCost * BigInt(2));
-        let result = await wallet.signAndExecuteTransactionBlock(txBlock);
-        console.log(result);
-    }
-
-    async executeMigrateInstruction(
-        vaa: Buffer,
-        keypair: Ed25519Keypair,
-    ) {
-        const provider = this.getProvider();
-        const tx = new TransactionBlock();
-        const packageId = await this.getPythPackageId();
-        const wormholePackageId = await this.getWormholePackageId();
-
-        let [decreeTicket] = tx.moveCall({
-            target: `${packageId}::contract_upgrade::authorize_governance`,
-            arguments: [tx.object(this.stateId)],
-        });
-
-        let [verifiedVAA] = tx.moveCall({
-            target: `${wormholePackageId}::vaa::parse_and_verify`,
-            arguments: [
-                tx.object(this.wormholeStateId),
-                tx.pure(Array.from(vaa)),
-                tx.object(SUI_CLOCK_OBJECT_ID),
-            ],
-        });
-
-        let [decreeReceipt] = tx.moveCall({
-            target: `${wormholePackageId}::governance_message::verify_vaa`,
-            arguments: [
-                tx.object(this.wormholeStateId),
-                verifiedVAA,
-                decreeTicket
-            ],
-            typeArguments: [
-                `${packageId}::governance_witness::GovernanceWitness`,
-            ],
-        });
-
-
-        tx.moveCall({
-            target: `${packageId}::migrate::migrate`,
-            arguments: [tx.object(this.stateId), decreeReceipt],
-        });
-
-
         let txBlock = {
             transactionBlock: tx,
             options: {
