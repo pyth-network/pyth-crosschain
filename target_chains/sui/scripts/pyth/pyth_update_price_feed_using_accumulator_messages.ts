@@ -66,6 +66,8 @@ async function update_price_feeds(
   console.log("WORM_STATE: ", WORM_STATE);
   console.log("SUI_CLOCK_OBJECT_ID: ", SUI_CLOCK_OBJECT_ID);
 
+  console.log("vaa parsed from accumulator: ", parse_vaa_bytes_from_accumulator_message(accumulator_message))
+
   // verify VAA (that encodes the merkle root) in accumulator message
   let [verified_vaa] = tx.moveCall({
     target: `${WORM_PACKAGE}::vaa::parse_and_verify`,
