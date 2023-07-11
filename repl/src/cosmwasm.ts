@@ -14,6 +14,7 @@ import {
 } from "@pythnetwork/cosmwasm-deploy-tools/lib/chains-manager/chain-querier";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { Contract } from "./base";
 
 namespace CosmWasmContract {
   export interface WormholeSource {
@@ -33,13 +34,14 @@ namespace CosmWasmContract {
   }
 }
 
-export class CosmWasmContract {
+export class CosmWasmContract extends Contract {
   static type = "CosmWasmContract";
 
-  constructor(public chain: CosmWasmChain, public address: string) {}
+  constructor(public chain: CosmWasmChain, public address: string) {
+    super();
+  }
 
-  static from(path: string): CosmWasmContract {
-    let parsed = JSON.parse(readFileSync(path, "utf-8"));
+  static fromJSON(parsed: any): CosmWasmContract {
     if (parsed.type !== CosmWasmContract.type) throw new Error("Invalid type");
     if (!Chains[parsed.chain])
       throw new Error(`Chain ${parsed.chain} not found`);
@@ -47,6 +49,10 @@ export class CosmWasmContract {
       Chains[parsed.chain] as CosmWasmChain,
       parsed.address
     );
+  }
+
+  getType(): string {
+    return CosmWasmContract.type;
   }
 
   //TODO : make deploymentType enum stable  | edge
@@ -91,19 +97,12 @@ export class CosmWasmContract {
     return `${this.chain.getId()}_${this.address}`;
   }
 
-  to(path: string): void {
-    writeFileSync(
-      `${path}/${this.getId()}.${CosmWasmContract.type}.json`,
-      JSON.stringify(
-        {
-          chain: this.chain.id,
-          address: this.address,
-          type: CosmWasmContract.type,
-        },
-        undefined,
-        2
-      )
-    );
+  toJSON() {
+    return {
+      chain: this.chain.id,
+      address: this.address,
+      type: CosmWasmContract.type,
+    };
   }
 
   async getQuerier(): Promise<PythWrapperQuerier> {

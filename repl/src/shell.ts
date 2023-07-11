@@ -8,7 +8,9 @@ repl.evalCode(
   "import { Contracts, Vaults, loadHotWallet } from './src/entities';" +
     "import { Chains,SuiChain,CosmWasmChain } from './src/chains';" +
     "import { SuiContract } from './src/sui';" +
-    "import { CosmWasmContract } from './src/cosmwasm';"
+    "import { CosmWasmContract } from './src/cosmwasm';" +
+    "import { DefaultStore } from './src/store';" +
+    "DefaultStore"
 );
 
 // import * as repl from 'node:repl';

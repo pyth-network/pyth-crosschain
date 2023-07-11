@@ -1,9 +1,9 @@
 {
   "querierEndpoint": "https://rpc-kralum.neutron-1.neutron.org",
   "executorEndpoint": "https://rpc-kralum.neutron-1.neutron.org",
-  "prefix": "neutron",
-  "gasPrice": "0.025",
-  "feeDenom": "untrn",
   "id": "neutron",
+  "gasPrice": "0.025",
+  "prefix": "neutron",
+  "feeDenom": "untrn",
   "type": "CosmWasmChain"
 }

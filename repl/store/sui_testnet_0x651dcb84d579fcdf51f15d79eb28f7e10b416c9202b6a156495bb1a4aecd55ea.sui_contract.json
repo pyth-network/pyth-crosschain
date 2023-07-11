@@ -1,8 +1,0 @@
-{
-  "chain": "sui_testnet",
-  "package_id": "0x651dcb84d579fcdf51f15d79eb28f7e10b416c9202b6a156495bb1a4aecd55ea",
-  "state_id": "0xe8c2ddcd5b10e8ed98e53b12fcf8f0f6fd9315f810ae61fa4001858851f21c88",
-  "wormhole_package_id": "0xcc029e2810f17f9f43f52262f40026a71fbdca40ed3803ad2884994361910b7e",
-  "wormhole_state_id": "0xebba4cc4d614f7a7cdbe883acc76d1cc767922bc96778e7b68be0d15fce27c02",
-  "type": "SuiContract"
-}

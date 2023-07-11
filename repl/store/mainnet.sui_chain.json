@@ -1,5 +1,0 @@
-{
-  "id": "sui_mainnet",
-  "rpc_url": "https://fullnode.mainnet.sui.io:443",
-  "type": "SuiChain"
-}

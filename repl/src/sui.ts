@@ -5,6 +5,7 @@ import {
   JsonRpcProvider,
   Ed25519Keypair,
   Connection,
+  ObjectId,
 } from "@mysten/sui.js";
 import { readFileSync, writeFileSync } from "fs";
 import { Chains, SuiChain } from "./chains";
@@ -15,18 +16,28 @@ import {
   SuiAuthorizeUpgradeContractInstruction,
 } from "@pythnetwork/xc-governance-sdk";
 import { BufferBuilder } from "@pythnetwork/xc-governance-sdk/lib/serialize";
+import { Contract } from "./base";
 
-export class SuiContract {
+export class SuiContract extends Contract {
   static type = "SuiContract";
 
+  /**
+   * Given the ids of the pyth state and wormhole state, create a new SuiContract
+   * The package ids are derived based on the state ids
+   *
+   * @param chain the chain which this contract is deployed on
+   * @param stateId id of the pyth state for the deployed contract
+   * @param wormholeStateId id of the wormhole state for the wormhole contract that pyth binds to
+   */
   constructor(
     public chain: SuiChain,
     public stateId: string,
     public wormholeStateId: string
-  ) {}
+  ) {
+    super();
+  }
 
-  static from(path: string): SuiContract {
-    let parsed = JSON.parse(readFileSync(path, "utf-8"));
+  static fromJSON(parsed: any): SuiContract {
     if (parsed.type !== SuiContract.type) throw new Error("Invalid type");
     if (!Chains[parsed.chain])
       throw new Error(`Chain ${parsed.chain} not found`);
@@ -37,27 +48,28 @@ export class SuiContract {
     );
   }
 
-  to(path: string): void {
-    writeFileSync(
-      `${path}/${this.getId()}.${SuiContract.type}.json`,
-      JSON.stringify(
-        {
-          chain: this.chain.id,
-          stateId: this.stateId,
-          wormholeStateId: this.wormholeStateId,
-          type: SuiContract.type,
-        },
-        undefined,
-        2
-      )
-    );
+  getType(): string {
+    return SuiContract.type;
   }
 
-  async getPackageId(stateId: string): Promise<string> {
+  toJSON() {
+    return {
+      chain: this.chain.id,
+      stateId: this.stateId,
+      wormholeStateId: this.wormholeStateId,
+      type: SuiContract.type,
+    };
+  }
+
+  /**
+   * Given a objectId, returns the id for the package that the object belongs to.
+   * @param objectId
+   */
+  async getPackageId(objectId: ObjectId): Promise<ObjectId> {
     const provider = this.getProvider();
     const state = await provider
       .getObject({
-        id: stateId,
+        id: objectId,
         options: {
           showContent: true,
         },
@@ -77,11 +89,11 @@ export class SuiContract {
     throw new Error("upgrade_cap not found");
   }
 
-  async getPythPackageId(): Promise<string> {
+  async getPythPackageId(): Promise<ObjectId> {
     return await this.getPackageId(this.stateId);
   }
 
-  async getWormholePackageId(): Promise<string> {
+  async getWormholePackageId(): Promise<ObjectId> {
     return await this.getPackageId(this.wormholeStateId);
   }
 
@@ -89,7 +101,10 @@ export class SuiContract {
     return `${this.chain.getId()}_${this.stateId}`;
   }
 
-  async getPriceTableId() {
+  /**
+   * Fetches the price table object id for the current state id
+   */
+  async getPriceTableId(): Promise<ObjectId> {
     const provider = this.getProvider();
     let result = await provider.getDynamicFieldObject({
       parentId: this.stateId,
@@ -140,21 +155,23 @@ export class SuiContract {
     return priceInfo.data.content.fields;
   }
 
-  wrapWithWormholeGovernancePayload(
-    actionVariant: number,
-    payload: Buffer
-  ): Buffer {
-    const builder = new BufferBuilder();
-    builder.addBuffer(
-      Buffer.from(
-        "0000000000000000000000000000000000000000000000000000000000000001",
-        "hex"
-      )
-    );
-    builder.addUint8(actionVariant);
-    builder.addUint16(CHAINS["sui"]); // should always be sui (21) no matter devnet or testnet
-    builder.addBuffer(payload);
-    return builder.build();
+  /**
+   * Given a signed VAA, execute the migration instruction on the pyth contract.
+   * The payload of the VAA can be obtained from the `getUpgradePackagePayload` method.
+   * @param vaa
+   * @param keypair used to sign the transaction
+   */
+  async executeMigrateInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
+    const tx = new TransactionBlock();
+    const packageId = await this.getPythPackageId();
+    let decreeReceipt = await this.getVAADecreeReceipt(tx, packageId, vaa);
+
+    tx.moveCall({
+      target: `${packageId}::migrate::migrate`,
+      arguments: [tx.object(this.stateId), decreeReceipt],
+    });
+
+    return this.executeTransaction(tx, keypair);
   }
 
   getUpgradePackagePayload(digest: string): Buffer {
@@ -216,19 +233,31 @@ export class SuiContract {
     return this.executeTransaction(tx, keypair);
   }
 
-  async executeMigrateInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
-    const tx = new TransactionBlock();
-    const packageId = await this.getPythPackageId();
-    let decreeReceipt = await this.getVAADecreeReceipt(tx, packageId, vaa);
-
-    tx.moveCall({
-      target: `${packageId}::migrate::migrate`,
-      arguments: [tx.object(this.stateId), decreeReceipt],
-    });
-
-    return this.executeTransaction(tx, keypair);
+  private wrapWithWormholeGovernancePayload(
+    actionVariant: number,
+    payload: Buffer
+  ): Buffer {
+    const builder = new BufferBuilder();
+    builder.addBuffer(
+      Buffer.from(
+        "0000000000000000000000000000000000000000000000000000000000000001",
+        "hex"
+      )
+    );
+    builder.addUint8(actionVariant);
+    builder.addUint16(CHAINS["sui"]); // should always be sui (21) no matter devnet or testnet
+    builder.addBuffer(payload);
+    return builder.build();
   }
 
+  /**
+   * Utility function to get the decree receipt object for a VAA that can be
+   * used to authorize a governance instruction.
+   * @param tx
+   * @param packageId pyth package id
+   * @param vaa
+   * @private
+   */
   private async getVAADecreeReceipt(
     tx: TransactionBlock,
     packageId: string,
@@ -257,6 +286,13 @@ export class SuiContract {
     return decreeReceipt;
   }
 
+  /**
+   * Given a transaction block and a keypair, sign and execute it
+   * Sets the gas budget to 2x the estimated gas cost
+   * @param tx
+   * @param keypair
+   * @private
+   */
   private async executeTransaction(
     tx: TransactionBlock,
     keypair: Ed25519Keypair

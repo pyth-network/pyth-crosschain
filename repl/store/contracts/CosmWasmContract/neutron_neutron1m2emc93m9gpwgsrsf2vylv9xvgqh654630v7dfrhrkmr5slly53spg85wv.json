@@ -1,6 +1,5 @@
 {
   "chain": "neutron",
   "address": "neutron1m2emc93m9gpwgsrsf2vylv9xvgqh654630v7dfrhrkmr5slly53spg85wv",
-  "deploymentType": "stable",
   "type": "CosmWasmContract"
 }

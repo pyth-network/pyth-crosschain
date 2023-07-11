@@ -1,6 +1,5 @@
 {
   "chain": "neutron_testnet_pion_1",
   "address": "neutron1xxmcu6wxgawjlajx8jalyk9cxsudnygjg0tvjesfyurh4utvtpes5wmpjp",
-  "deploymentType": "edge",
   "type": "CosmWasmContract"
 }

@@ -26,20 +26,7 @@ import {
 import { SuiContract } from "./sui";
 import { CosmWasmContract } from "./cosmwasm";
 
-let allContractClasses = {
-  [CosmWasmContract.type]: CosmWasmContract,
-  [SuiContract.type]: SuiContract,
-};
-
 export const Contracts: Record<string, CosmWasmContract | SuiContract> = {};
-
-readdirSync("./store").forEach((jsonFile) => {
-  let path = `./store/${jsonFile}`;
-  let parsed = JSON.parse(readFileSync(path, "utf-8"));
-  if (allContractClasses[parsed.type] === undefined) return;
-  let chainContract = allContractClasses[parsed.type].from(path);
-  Contracts[chainContract.getId()] = chainContract;
-});
 
 export class SubmittedWormholeMessage {
   constructor(
@@ -269,13 +256,13 @@ export class Vault {
 
 export const Vaults: Record<string, Vault> = {};
 
-readdirSync("./store").forEach((jsonFile) => {
-  let path = `./store/${jsonFile}`;
-  let parsed = JSON.parse(readFileSync(path, "utf-8"));
-  if (parsed.type !== Vault.type) return;
-  let vault = Vault.from(path);
-  Vaults[vault.getId()] = vault;
-});
+// readdirSync("./store").forEach((jsonFile) => {
+//   let path = `./store/${jsonFile}`;
+//   let parsed = JSON.parse(readFileSync(path, "utf-8"));
+//   if (parsed.type !== Vault.type) return;
+//   let vault = Vault.from(path);
+//   Vaults[vault.getId()] = vault;
+// });
 
 export async function loadHotWallet(wallet: string): Promise<Wallet> {
   return new NodeWallet(
