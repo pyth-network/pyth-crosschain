@@ -1,5 +1,5 @@
 {
-  "name": "@pythnetwork/pyth-repl",
+  "name": "@pythnetwork/pyth-contract-manager",
   "version": "1.0.0",
   "description": "Set of tools to manage pyth contracts",
   "private": true,
