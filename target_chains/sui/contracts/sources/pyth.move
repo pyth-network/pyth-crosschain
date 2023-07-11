@@ -36,6 +36,14 @@ module pyth::pyth {
 
     #[test_only]
     friend pyth::pyth_tests;
+    #[test_only]
+    friend pyth::set_data_sources_tests;
+    #[test_only]
+    friend pyth::set_stale_price_threshold_test;
+    #[test_only]
+    friend pyth::set_update_fee_tests;
+    #[test_only]
+    friend pyth::set_governance_data_source_tests;
 
     /// Init state and emit event corresponding to Pyth initialization.
     public entry fun init_pyth(
@@ -742,7 +750,7 @@ module pyth::pyth_tests{
         test_scenario::end(scenario);
     }
 
-    fun data_sources_for_test_vaa(): vector<DataSource> {
+    public fun data_sources_for_test_vaa(): vector<DataSource> {
         // Set some valid data sources, including our test VAA's source
         vector<DataSource>[
             data_source::new(
@@ -1544,13 +1552,13 @@ module pyth::pyth_tests{
             )
     }
 
-    fun cleanup_worm_state_pyth_state_and_clock(worm_state: WormState, pyth_state: PythState, clock: Clock){
+    public fun cleanup_worm_state_pyth_state_and_clock(worm_state: WormState, pyth_state: PythState, clock: Clock){
         return_shared(worm_state);
         return_shared(pyth_state);
         clock::destroy_for_testing(clock);
     }
 
-    fun take_wormhole_and_pyth_states(scenario: &Scenario): (PythState, WormState){
+    public fun take_wormhole_and_pyth_states(scenario: &Scenario): (PythState, WormState){
         (take_shared<PythState>(scenario), take_shared<WormState>(scenario))
     }
 }
