@@ -80,7 +80,7 @@ module pyth::set_governance_data_source_tests {
     //   module name: 0x1
     //   action: 2
     //   chain: 21
-    //   data sources (chain, addr) pairs: [(1, 0xf346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0), (26, 0xa27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6), (26, 0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71)]
+    //   governance data source (chain, addr): (1, a346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0)
 
     const DEPLOYER: address = @0x1234;
     const DEFAULT_BASE_UPDATE_FEE: u64 = 0;
@@ -101,12 +101,15 @@ module pyth::set_governance_data_source_tests {
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         pyth::governance::execute_governance_instruction(&mut pyth_state, receipt);
+        std::debug::print(&state::governance_data_source(&pyth_state));
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        // assert data sources are set correctly
+        // assert governance data source set correctly
+        std::debug::print(&state::governance_data_source(&pyth_state));
+        //std::debug::print();
 
-        assert!(state::is_valid_data_source(&pyth_state, data_source::new(1, external_address::new(bytes32::from_bytes(x"a346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0")))), 0);
+        assert!(state::is_valid_governance_data_source(&pyth_state, data_source::new(1, external_address::new(bytes32::from_bytes(x"a346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0")))), 0);
 
         // clean up
         coin::burn_for_testing(test_coins);
