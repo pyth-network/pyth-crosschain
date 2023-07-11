@@ -79,4 +79,29 @@ export class SuiChain extends Chain {
   }
 }
 
+export class EVMChain extends Chain {
+  static type: string = "EVMChain";
+
+  constructor(id: string, public rpcURL: string) {
+    super(id);
+  }
+
+  static fromJSON(parsed: any): SuiChain {
+    if (parsed.type !== EVMChain.type) throw new Error("Invalid type");
+    return new EVMChain(parsed.id, parsed.rpcURL);
+  }
+
+  toJSON(): any {
+    return {
+      id: this.id,
+      rpcURL: this.rpcURL,
+      type: EVMChain.type,
+    };
+  }
+
+  getType(): string {
+    return EVMChain.type;
+  }
+}
+
 export const Chains: Record<string, Chain> = {};

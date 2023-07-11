@@ -17,4 +17,9 @@ export abstract class Storable {
   abstract toJSON(): any;
 }
 
-export abstract class Contract extends Storable {}
+export abstract class Contract extends Storable {
+  /**
+   * Returns the time period in seconds that stale data is considered valid for.
+   */
+  abstract getValidTimePeriod(): Promise<number>;
+}

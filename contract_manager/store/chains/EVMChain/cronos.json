@@ -1,0 +1,5 @@
+{
+  "id": "cronos",
+  "rpcURL": "https://cronosrpc-1.xstaking.sg",
+  "type": "EVMChain"
+}

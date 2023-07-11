@@ -252,12 +252,12 @@ export class CosmWasmContract extends Contract {
     ).serialize();
   }
 
-  async getValidTimePeriod(): Promise<any> {
+  async getValidTimePeriod() {
     let client = await CosmWasmClient.connect(this.chain.querierEndpoint);
     let result = await client.queryContractSmart(
       this.address,
       "get_valid_time_period"
     );
-    return result;
+    return Number(result.secs + result.nanos * 1e-9);
   }
 }

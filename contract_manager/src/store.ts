@@ -1,4 +1,4 @@
-import { Chain, CosmWasmChain, SuiChain, Chains } from "./chains";
+import { Chain, CosmWasmChain, SuiChain, Chains, EVMChain } from "./chains";
 import { CosmWasmContract } from "./cosmwasm";
 import { SuiContract } from "./sui";
 import { Contract } from "./base";
@@ -11,6 +11,7 @@ import {
   statSync,
 } from "fs";
 import { Contracts } from "./entities";
+import { EVMContract } from "./evm";
 
 class Store {
   static Chains: Record<string, Chain> = {};
@@ -69,6 +70,7 @@ class Store {
     let allChainClasses = {
       [CosmWasmChain.type]: CosmWasmChain,
       [SuiChain.type]: SuiChain,
+      [EVMChain.type]: EVMChain,
     };
 
     this.getJSONFiles(`${this.path}/chains/`).forEach((jsonFile) => {
@@ -85,6 +87,7 @@ class Store {
     let allContractClasses = {
       [CosmWasmContract.type]: CosmWasmContract,
       [SuiContract.type]: SuiContract,
+      [EVMContract.type]: EVMContract,
     };
     this.getJSONFiles(`${this.path}/contracts/`).forEach((jsonFile) => {
       let parsed = JSON.parse(readFileSync(jsonFile, "utf-8"));

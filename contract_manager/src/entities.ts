@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, writeFileSync } from "fs";
+import { readFileSync } from "fs";
 
 import {
   Connection,
@@ -23,11 +23,9 @@ import {
   deriveFeeCollectorKey,
   deriveWormholeBridgeDataKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { SuiContract } from "./sui";
-import { CosmWasmContract } from "./cosmwasm";
-import { Storable } from "./base";
+import { Contract, Storable } from "./base";
 
-export const Contracts: Record<string, CosmWasmContract | SuiContract> = {};
+export const Contracts: Record<string, Contract> = {};
 
 export class SubmittedWormholeMessage {
   constructor(

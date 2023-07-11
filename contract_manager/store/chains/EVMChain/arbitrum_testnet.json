@@ -1,0 +1,5 @@
+{
+  "id": "arbitrum_testnet",
+  "rpcURL": "https://goerli-rollup.arbitrum.io/rpc",
+  "type": "EVMChain"
+}

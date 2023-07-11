@@ -311,6 +311,21 @@ export class SuiContract extends Contract {
     return wallet.signAndExecuteTransactionBlock(txBlock);
   }
 
+  async getValidTimePeriod() {
+    const provider = this.getProvider();
+    const result = await provider.getObject({
+      id: this.stateId,
+      options: { showContent: true },
+    });
+    if (
+      !result.data ||
+      !result.data.content ||
+      result.data.content.dataType !== "moveObject"
+    )
+      throw new Error("Unable to fetch pyth state object");
+    return Number(result.data.content.fields.stale_price_threshold);
+  }
+
   private getProvider() {
     return new JsonRpcProvider(new Connection({ fullnode: this.chain.rpcURL }));
   }
