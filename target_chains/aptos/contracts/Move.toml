@@ -18,7 +18,7 @@ wormhole = "_"
 
 [dev-addresses]
 # Note that these are localnet addresses, for use in testing. The contracts are deployed to the real networks at the
-# addresses documented at https://docs.pyth.network/consume-data/aptos#addresses
+# addresses documented at https://docs.pyth.network/documentation/pythnet-price-feeds/aptos#addresses
 pyth = "0x377f0d7c4aaeea8dd73a7a2c6bc817e59aea569e1f9ae0d2f4a80ea1be93bf01"
 deployer = "0x277fa055b6a73c42c0662d5236c65c864ccbf2d4abd21f174a30c8b786eab84b"
 wormhole = "0xde0036a9600559e295d5f6802ef6f3f802f510366e0c23912b0655d972166017"

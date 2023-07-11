@@ -271,12 +271,12 @@ impl Pyth {
     /// Get the latest available price cached for the given price identifier, if that price is
     /// no older than the stale price threshold.
     ///
-    /// Please refer to the documentation at https://docs.pyth.network/consumers/best-practices for
+    /// Please refer to the documentation at https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices for
     /// how to how this price safely.
     ///
     /// IMPORTANT:
     /// Pyth uses an on-demand update model, where consumers need to update the cached prices
-    /// before using them. Please read more about this at https://docs.pyth.network/consume-data/on-demand.
+    /// before using them. Please read more about this at https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand.
     pub fn get_price(&self, price_identifier: PriceIdentifier) -> Option<Price> {
         self.get_price_no_older_than(price_identifier, self.stale_threshold)
     }

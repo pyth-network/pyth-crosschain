@@ -4,7 +4,7 @@
 # (e.g., this deploys to goerli optimism testnet)
 RPC_URL=https://endpoints.omniatech.io/v1/matic/mumbai/public
 
-# The address of the Pyth contract on your network. See the list of contract addresses here https://docs.pyth.network/pythnet-price-feeds/evm
+# The address of the Pyth contract on your network. See the list of contract addresses here https://docs.pyth.network/documentation/pythnet-price-feeds/evm
 PYTH_CONTRACT_ADDRESS="0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
 # The Pyth price feed ids of the base and quote tokens. The list of ids is available here https://pyth.network/developers/price-feed-ids
 # Note that each feed has different ids on mainnet and testnet.

@@ -27,35 +27,35 @@ export default {
     "pyth-package-id": {
       description:
         "Pyth Package Id. Can be found here" +
-        "https://docs.pyth.network/pythnet-price-feeds/sui",
+        "https://docs.pyth.network/documentation/pythnet-price-feeds/sui",
       type: "string",
       required: true,
     } as Options,
     "pyth-state-id": {
       description:
         "Pyth State Id. Can be found here" +
-        "https://docs.pyth.network/pythnet-price-feeds/sui",
+        "https://docs.pyth.network/documentation/pythnet-price-feeds/sui",
       type: "string",
       required: true,
     } as Options,
     "wormhole-package-id": {
       description:
         "Wormhole Package Id. Can be found here" +
-        "https://docs.pyth.network/pythnet-price-feeds/sui",
+        "https://docs.pyth.network/documentation/pythnet-price-feeds/sui",
       type: "string",
       required: true,
     } as Options,
     "wormhole-state-id": {
       description:
         "Wormhole State Id. Can be found here" +
-        "https://docs.pyth.network/pythnet-price-feeds/sui",
+        "https://docs.pyth.network/documentation/pythnet-price-feeds/sui",
       type: "string",
       required: true,
     } as Options,
     "price-feed-to-price-info-object-table-id": {
       description:
         "This is the id of the table which stored the information related to price data. You can find it here: " +
-        "https://docs.pyth.network/pythnet-price-feeds/sui",
+        "https://docs.pyth.network/documentation/pythnet-price-feeds/sui",
       type: "string",
       required: true,
     } as Options,

@@ -2,7 +2,7 @@
 
 The Pyth JavaScript SDK provides definitions and utilities for Pyth data structures.
 
-Please see the [pyth.network documentation](https://docs.pyth.network/) for more information on how to use Pyth prices in various blockchains.
+Please see the [pyth.network documentation](https://docs.pyth.network/documentation/) for more information on how to use Pyth prices in various blockchains.
 
 ## Releases
 
