@@ -99,4 +99,4 @@ class Store {
   }
 }
 
-export const DefaultStore = new Store("./store");
+export const DefaultStore = new Store(`${__dirname}/../store`);
