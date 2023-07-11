@@ -84,6 +84,7 @@ contract SomeContract {
     PythStructs.Price price = pyth.getPrice(priceId);
   }
 }
+
 ```
 
 We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices).

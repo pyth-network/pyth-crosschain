@@ -47,6 +47,7 @@ contract ExampleContract {
     return pyth.getPrice(priceID);
   }
 }
+
 ```
 
 ## How Pyth Works on EVM Chains
