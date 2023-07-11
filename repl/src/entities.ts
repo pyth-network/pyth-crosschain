@@ -25,6 +25,7 @@ import {
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { SuiContract } from "./sui";
 import { CosmWasmContract } from "./cosmwasm";
+import { Storable } from "./base";
 
 export const Contracts: Record<string, CosmWasmContract | SuiContract> = {};
 
@@ -35,6 +36,11 @@ export class SubmittedWormholeMessage {
     public cluster: string
   ) {}
 
+  /**
+   * Tries to fetch the VAA from the wormhole bridge API waiting for a certain amount of time
+   * before giving up and throwing an error
+   * @param waitingSeconds how long to wait before giving up
+   */
   async fetchVAA(waitingSeconds: number = 1): Promise<Buffer> {
     let rpcUrl =
       WORMHOLE_API_ENDPOINT[this.cluster as keyof typeof WORMHOLE_API_ENDPOINT];
@@ -57,6 +63,12 @@ export class SubmittedWormholeMessage {
   }
 }
 
+/**
+ * A simple emitter that can send messages to the wormhole bridge
+ * This can be used instead of multisig as a simple way to send messages
+ * and debug contracts deployed on testing networks
+ * You need to set your pyth contract data source / governance source address to this emitter
+ */
 export class WormholeEmitter {
   cluster: string;
   wallet: Wallet;
@@ -125,15 +137,20 @@ export class WormholeEmitter {
   }
 }
 
-export class Vault {
+export class Vault extends Storable {
   static type: string = "vault";
   key: PublicKey;
   squad?: SquadsMesh;
   cluster: string;
 
   constructor(key: string, cluster: string) {
+    super();
     this.key = new PublicKey(key);
     this.cluster = cluster;
+  }
+
+  getType(): string {
+    return Vault.type;
   }
 
   static from(path: string): Vault {
@@ -146,19 +163,12 @@ export class Vault {
     return `${this.cluster}_${this.key.toString()}`;
   }
 
-  to(path: string): void {
-    writeFileSync(
-      `${path}/${this.getId()}.${Vault.type}.json`,
-      JSON.stringify(
-        {
-          key: this.key.toString(),
-          cluster: this.cluster,
-          type: Vault.type,
-        },
-        undefined,
-        2
-      )
-    );
+  toJSON(): any {
+    return {
+      key: this.key.toString(),
+      cluster: this.cluster,
+      type: Vault.type,
+    };
   }
 
   public connect(wallet: Wallet): void {
@@ -255,14 +265,6 @@ export class Vault {
 }
 
 export const Vaults: Record<string, Vault> = {};
-
-// readdirSync("./store").forEach((jsonFile) => {
-//   let path = `./store/${jsonFile}`;
-//   let parsed = JSON.parse(readFileSync(path, "utf-8"));
-//   if (parsed.type !== Vault.type) return;
-//   let vault = Vault.from(path);
-//   Vaults[vault.getId()] = vault;
-// });
 
 export async function loadHotWallet(wallet: string): Promise<Wallet> {
   return new NodeWallet(
