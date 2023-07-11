@@ -74,7 +74,7 @@ module pyth::set_stale_price_threshold_test {
     const DEFAULT_COIN_TO_MINT: u64 = 0;
 
     #[test]
-    fun set_update_fee(){
+    fun set_stale_price_threshold(){
 
         let (scenario, test_coins, clock) =  setup_test(500, 1, x"63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385", pyth_tests::data_sources_for_test_vaa(), vector[x"13947bd48b18e53fdaeee77f3473391ac727c638"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
