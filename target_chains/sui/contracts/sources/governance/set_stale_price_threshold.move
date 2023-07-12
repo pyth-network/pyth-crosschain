@@ -92,7 +92,7 @@ module pyth::set_stale_price_threshold_test {
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-        // assert fee is set correctly
+        // assert stale price threshold is set correctly
         assert!(state::get_stale_price_threshold_secs(&pyth_state)==716323, 0);
 
         // clean up
