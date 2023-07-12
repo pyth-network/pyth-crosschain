@@ -11,7 +11,7 @@ export class EVMContract extends Contract {
     super();
   }
 
-  static fromJSON(parsed: any): EVMContract {
+  static fromJson(parsed: any): EVMContract {
     if (parsed.type !== EVMContract.type) throw new Error("Invalid type");
     if (!Chains[parsed.chain])
       throw new Error(`Chain ${parsed.chain} not found`);
@@ -27,7 +27,7 @@ export class EVMContract extends Contract {
   }
 
   getContract() {
-    const web3 = new Web3(this.chain.rpcURL);
+    const web3 = new Web3(this.chain.rpcUrl);
     const pythContract = new web3.eth.Contract(
       [
         {
@@ -124,7 +124,7 @@ export class EVMContract extends Contract {
     );
   }
 
-  toJSON() {
+  toJson() {
     return {
       chain: this.chain.id,
       address: this.address,

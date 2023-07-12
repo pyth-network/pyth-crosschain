@@ -28,12 +28,12 @@ class Store {
       let contract = obj;
       dir = `${this.path}/contracts/${contract.getType()}`;
       file = contract.getId();
-      content = contract.toJSON();
+      content = contract.toJson();
     } else if (obj instanceof Chain) {
       let chain = obj;
       dir = `${this.path}/chains/${chain.getType()}`;
       file = chain.getId();
-      content = chain.toJSON();
+      content = chain.toJson();
     } else {
       throw new Error("Invalid type");
     }
@@ -76,7 +76,7 @@ class Store {
     this.getJSONFiles(`${this.path}/chains/`).forEach((jsonFile) => {
       let parsed = JSON.parse(readFileSync(jsonFile, "utf-8"));
       if (allChainClasses[parsed.type] === undefined) return;
-      let chain = allChainClasses[parsed.type].fromJSON(parsed);
+      let chain = allChainClasses[parsed.type].fromJson(parsed);
       if (Chains[chain.getId()])
         throw new Error(`Multiple chains with id ${chain.getId()} found`);
       Chains[chain.getId()] = chain;
@@ -92,7 +92,7 @@ class Store {
     this.getJSONFiles(`${this.path}/contracts/`).forEach((jsonFile) => {
       let parsed = JSON.parse(readFileSync(jsonFile, "utf-8"));
       if (allContractClasses[parsed.type] === undefined) return;
-      let chainContract = allContractClasses[parsed.type].fromJSON(parsed);
+      let chainContract = allContractClasses[parsed.type].fromJson(parsed);
       if (Contracts[chainContract.getId()])
         throw new Error(
           `Multiple contracts with id ${chainContract.getId()} found`

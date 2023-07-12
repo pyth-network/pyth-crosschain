@@ -71,7 +71,7 @@ export class CosmWasmContract extends Contract {
     super();
   }
 
-  static fromJSON(parsed: any): CosmWasmContract {
+  static fromJson(parsed: any): CosmWasmContract {
     if (parsed.type !== CosmWasmContract.type) throw new Error("Invalid type");
     if (!Chains[parsed.chain])
       throw new Error(`Chain ${parsed.chain} not found`);
@@ -127,7 +127,7 @@ export class CosmWasmContract extends Contract {
     return `${this.chain.getId()}_${this.address}`;
   }
 
-  toJSON() {
+  toJson() {
     return {
       chain: this.chain.id,
       address: this.address,

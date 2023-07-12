@@ -1,5 +1,5 @@
 {
   "id": "cronos",
-  "rpcURL": "https://cronosrpc-1.xstaking.sg",
+  "rpcUrl": "https://cronosrpc-1.xstaking.sg",
   "type": "EVMChain"
 }

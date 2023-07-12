@@ -14,9 +14,9 @@ export abstract class Storable {
 
   /**
    * Returns a JSON representation of this object. It should be possible to
-   * reconstruct the object from the JSON using the fromJSON method.
+   * reconstruct the object from the JSON using the fromJson method.
    */
-  abstract toJSON(): any;
+  abstract toJson(): any;
 }
 
 export abstract class Contract extends Storable {

@@ -38,7 +38,7 @@ export class SuiContract extends Contract {
     super();
   }
 
-  static fromJSON(parsed: any): SuiContract {
+  static fromJson(parsed: any): SuiContract {
     if (parsed.type !== SuiContract.type) throw new Error("Invalid type");
     if (!Chains[parsed.chain])
       throw new Error(`Chain ${parsed.chain} not found`);
@@ -53,7 +53,7 @@ export class SuiContract extends Contract {
     return SuiContract.type;
   }
 
-  toJSON() {
+  toJson() {
     return {
       chain: this.chain.id,
       stateId: this.stateId,
@@ -165,7 +165,7 @@ export class SuiContract extends Contract {
   async executeMigrateInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    let decreeReceipt = await this.getVAADecreeReceipt(tx, packageId, vaa);
+    let decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
 
     tx.moveCall({
       target: `${packageId}::migrate::migrate`,
@@ -195,7 +195,7 @@ export class SuiContract extends Contract {
   async executeGovernanceInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    let decreeReceipt = await this.getVAADecreeReceipt(tx, packageId, vaa);
+    let decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
 
     tx.moveCall({
       target: `${packageId}::governance::execute_governance_instruction`,
@@ -213,7 +213,7 @@ export class SuiContract extends Contract {
   ) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    let decreeReceipt = await this.getVAADecreeReceipt(tx, packageId, vaa);
+    let decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
 
     const [upgradeTicket] = tx.moveCall({
       target: `${packageId}::contract_upgrade::authorize_upgrade`,
@@ -259,7 +259,7 @@ export class SuiContract extends Contract {
    * @param vaa
    * @private
    */
-  private async getVAADecreeReceipt(
+  private async getVaaDecreeReceipt(
     tx: TransactionBlock,
     packageId: string,
     vaa: Buffer
@@ -361,7 +361,7 @@ export class SuiContract extends Contract {
   }
 
   private getProvider() {
-    return new JsonRpcProvider(new Connection({ fullnode: this.chain.rpcURL }));
+    return new JsonRpcProvider(new Connection({ fullnode: this.chain.rpcUrl }));
   }
 
   private async getStateFields() {

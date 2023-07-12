@@ -39,7 +39,7 @@ export class SubmittedWormholeMessage {
    * before giving up and throwing an error
    * @param waitingSeconds how long to wait before giving up
    */
-  async fetchVAA(waitingSeconds: number = 1): Promise<Buffer> {
+  async fetchVaa(waitingSeconds: number = 1): Promise<Buffer> {
     let rpcUrl =
       WORMHOLE_API_ENDPOINT[this.cluster as keyof typeof WORMHOLE_API_ENDPOINT];
 
@@ -161,7 +161,7 @@ export class Vault extends Storable {
     return `${this.cluster}_${this.key.toString()}`;
   }
 
-  toJSON(): any {
+  toJson(): any {
     return {
       key: this.key.toString(),
       cluster: this.cluster,

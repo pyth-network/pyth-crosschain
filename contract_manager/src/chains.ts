@@ -25,7 +25,7 @@ export class CosmWasmChain extends Chain {
     super(id);
   }
 
-  static fromJSON(parsed: any): CosmWasmChain {
+  static fromJson(parsed: any): CosmWasmChain {
     if (parsed.type !== CosmWasmChain.type) throw new Error("Invalid type");
     return new CosmWasmChain(
       parsed.id,
@@ -37,7 +37,7 @@ export class CosmWasmChain extends Chain {
     );
   }
 
-  toJSON(): any {
+  toJson(): any {
     return {
       querierEndpoint: this.querierEndpoint,
       executorEndpoint: this.executorEndpoint,
@@ -57,19 +57,19 @@ export class CosmWasmChain extends Chain {
 export class SuiChain extends Chain {
   static type: string = "SuiChain";
 
-  constructor(id: string, public rpcURL: string) {
+  constructor(id: string, public rpcUrl: string) {
     super(id);
   }
 
-  static fromJSON(parsed: any): SuiChain {
+  static fromJson(parsed: any): SuiChain {
     if (parsed.type !== SuiChain.type) throw new Error("Invalid type");
-    return new SuiChain(parsed.id, parsed.rpcURL);
+    return new SuiChain(parsed.id, parsed.rpcUrl);
   }
 
-  toJSON(): any {
+  toJson(): any {
     return {
       id: this.id,
-      rpcURL: this.rpcURL,
+      rpcUrl: this.rpcUrl,
       type: SuiChain.type,
     };
   }
@@ -82,19 +82,19 @@ export class SuiChain extends Chain {
 export class EVMChain extends Chain {
   static type: string = "EVMChain";
 
-  constructor(id: string, public rpcURL: string) {
+  constructor(id: string, public rpcUrl: string) {
     super(id);
   }
 
-  static fromJSON(parsed: any): SuiChain {
+  static fromJson(parsed: any): SuiChain {
     if (parsed.type !== EVMChain.type) throw new Error("Invalid type");
-    return new EVMChain(parsed.id, parsed.rpcURL);
+    return new EVMChain(parsed.id, parsed.rpcUrl);
   }
 
-  toJSON(): any {
+  toJson(): any {
     return {
       id: this.id,
-      rpcURL: this.rpcURL,
+      rpcUrl: this.rpcUrl,
       type: EVMChain.type,
     };
   }
