@@ -39,10 +39,10 @@ async function main() {
 
   // get accumulator msg in base 64
   let {data} = await axios.get(`https://hermes-beta.pyth.network/api/latest_vaas?ids[]=${price_feed_id}`)
-  let accumulator_message = data[0]
-
-  console.log("data: ", accumulator_message)
-  parse_vaa_bytes_from_accumulator_message(accumulator_message)
+  //let accumulator_message = data[0]
+  let accumulator_message = "504e41550100000000a0010000000001000c8a0725e651012b232cec63e33511502b6fbae413fd9b289132c07765b440f1231d2390dbdb3a5922c2ea104e065b2f048cf2c45360a5ba07bde3fcac651de70064aef35900000000001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71000000000093e5020141555756000000000004ef51310000271053fe324f96fed4a65bf488cd8f3fb3013c9682c201005500f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b000002c6eb94fd3f0000000030fbd300fffffff80000000064aef3580000000064aef356000002c5c2cfa140000000002aeae87a095c1bd32561d27add4f59cf4dc2a8b36d38f7eaab8c6b699d546dde8cadd614565ed4428382eae7febc76f5ac8f777e9e1d617539f965b3e4531fe60f8097d21ffd8b803e67200e416c14ef1dfd2bee45115af802d65322ad2f3cd882fc1b60975ce13af3d6c098464baf0e014734e59b139ca788b2ff54b34459858f08908707a29c60ff56f4f1e4f2be3d47dd38f0da18fcb0f7ead4d1de56db6c0442b948835ef5ff868a4e22b03ce5239adf63beba03a40da8";
+  console.log("accumulator_message: ", accumulator_message)
+  //parse_vaa_bytes_from_accumulator_message(accumulator_message)
   //console.log(data);
   update_price_feeds(wallet, registry, accumulator_message, price_info_object_id)
 }
@@ -66,14 +66,14 @@ async function update_price_feeds(
   console.log("WORM_STATE: ", WORM_STATE);
   console.log("SUI_CLOCK_OBJECT_ID: ", SUI_CLOCK_OBJECT_ID);
 
-  console.log("vaa parsed from accumulator: ", parse_vaa_bytes_from_accumulator_message(accumulator_message))
+  console.log("vaa parsed from accumulator: ", parse_vaa_bytes_from_accumulator_message(accumulator_message, true))
 
   // verify VAA (that encodes the merkle root) in accumulator message
   let [verified_vaa] = tx.moveCall({
     target: `${WORM_PACKAGE}::vaa::parse_and_verify`,
     arguments: [
       tx.object(WORM_STATE),
-      tx.pure(parse_vaa_bytes_from_accumulator_message(accumulator_message)),
+      tx.pure(parse_vaa_bytes_from_accumulator_message(accumulator_message, true)),
       tx.object(SUI_CLOCK_OBJECT_ID),
     ],
   });
@@ -92,7 +92,7 @@ async function update_price_feeds(
     target: `${PYTH_PACKAGE}::pyth::create_authenticated_price_infos_using_accumulator`,
     arguments: [
       tx.object(PYTH_STATE),
-      tx.pure(accumulator_message),
+      tx.pure([...Buffer.from(accumulator_message, "hex")]),
       verified_vaa,
       tx.object(SUI_CLOCK_OBJECT_ID),
     ]
@@ -134,32 +134,42 @@ async function update_price_feeds(
   // });
 
   tx.setGasBudget(2000000000);
-  let result = await signer.dryRunTransactionBlock({
-    transactionBlock: tx,
-  })
-
-  // let result = await signer.signAndExecuteTransactionBlock({
+  // let result = await signer.dryRunTransactionBlock({
   //   transactionBlock: tx,
-  //   options: {
-  //     showInput: true,
-  //     showEffects: true,
-  //     showEvents: true,
-  //     showObjectChanges: true,
-  //     showBalanceChanges: true,
-  //   },
-  // });
+  // })
+
+  let result = await signer.signAndExecuteTransactionBlock({
+    transactionBlock: tx,
+    options: {
+      showInput: true,
+      showEffects: true,
+      showEvents: true,
+      showObjectChanges: true,
+      showBalanceChanges: true,
+    },
+  });
   console.log(result);
   return result;
 }
 
-function parse_vaa_bytes_from_accumulator_message(accumulator_message: string){
+// parse_vaa_bytes_from_accumulator_message parses the vaa bytes from an accumulator message,
+// which can either be in hex or base64 format.
+function parse_vaa_bytes_from_accumulator_message(accumulator_message: string, isHex: boolean){
   console.log("parse_vaa_bytes_from_accumulator_message msg: ", accumulator_message)
-  let b = [...Buffer.from(accumulator_message, "base64")]
-  let vaa_size_bytes = b.slice(8,10)
+  let b = []
+  if (isHex) {
+    b = [...Buffer.from(accumulator_message, "hex")]
+  } else {
+    b = [...Buffer.from(accumulator_message, "base64")]
+  }
+  let trailing_size = b.slice(6,7)[0]
+  let vaa_size_offset = 7 + trailing_size + 1
+  let vaa_size_bytes = b.slice(vaa_size_offset, vaa_size_offset+2)
+  console.log("vaa_size_bytes: ", vaa_size_bytes)
   let vaa_size = vaa_size_bytes[1] + 16*vaa_size_bytes[0]
+  let vaa_offset = vaa_size_offset + 2
   console.log("vaa_size: ", vaa_size)
-  let vaa = b.slice(10,10+vaa_size)
-  console.log("vaa is: ", vaa)
-  console.log(Buffer.from(vaa).toString("hex"))
+  let vaa = b.slice(vaa_offset, vaa_offset + vaa_size)
+  console.log("vaa from acc msg: ", Buffer.from(vaa).toString("hex"))
   return vaa
 }

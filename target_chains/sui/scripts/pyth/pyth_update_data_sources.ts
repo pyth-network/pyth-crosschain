@@ -32,8 +32,14 @@ async function main() {
   );
   console.log(wallet.getAddress());
 
- let set_data_sources_vaa_base64 = "AQAAAAABAOC+gEJW02mEvpVekg5IdvzJe57GL/q3DKdQzqYgFr5mKx0w3HovoKAKwaMWXB3KJMjAJafyofaTN/OgSXBfNNgAZH8RXAAAAAAAAWMnjScQmb/UkZUbPmSPCLHHFjHkpTZ0rUPo+fmAaMOFAAAAAAAAAB0BUFRHTQECAAADAAHzRhlawC831g1NuP+m73TLG+NVAEdUOkqe6az014aXsAAaong51kGwd0PAy19oxR+M0x0sB2K+wA3G/NJUM+8atbYAGuEB+u2sWFHjK5sjtflBGowrrEquPtTde4Ed0acupKpx";
- let set_data_sources_vaa_hex = Buffer.from(set_data_sources_vaa_base64, "base64").toString("hex")
+ //let set_data_sources_vaa_base64 = "";
+ //let set_data_sources_vaa_hex = Buffer.from(set_data_sources_vaa_base64, "base64").toString("hex")
+
+ //not working
+ //let set_data_sources_vaa_hex = "0100000000010062230e627afc81fa80f64b3aee088ae853a69ec06867751a8c3c242bb82b05083016e5a570d79a069d5af3aa0198fff477bced39a171435d3bd81531130adb8e0100bc614e00000000000163278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c38500000000000000010100000000000000000000000000000000000000000000000000000000000000010200155054474d01010000030001f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0001aa27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71";
+
+ // works in test
+ let set_data_sources_vaa_hex = "01000000000100ac52663a7e50ab23db4f00f0607d930ffd438c5a214b3013418b57117590f76c32d2f790ec62be5f6e69d96273b1a567b8a698a8f5069c1ccd27a6874af2adc00100bc614e00000000000163278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c38500000000000000010100000000000000000000000000000000000000000000000000000000000000010200155054474d01020015030001f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0001aa27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71";
  console.log("set_data_sources_vaa_hex: ", set_data_sources_vaa_hex)
 
  update_data_sources(wallet, registry, set_data_sources_vaa_hex)
@@ -66,7 +72,7 @@ async function update_data_sources(
     target: `${PYTH_PACKAGE}::set_data_sources::authorize_governance`,
     arguments: [
       tx.object(PYTH_STATE),
-      tx.pure(true)
+      tx.pure(false) // global or local action
     ],
    });
 

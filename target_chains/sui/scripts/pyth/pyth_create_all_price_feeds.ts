@@ -10,15 +10,15 @@ import {
   JsonRpcProvider,
   Ed25519Keypair,
   Connection,
-} from "@mysten/sui.js";
+} from "@optke3/sui.js";
 
 dotenv.config({ path: "~/.env" });
 
 import { REGISTRY, NETWORK } from "../registry";
 
 // Network dependent settings.
-let network = NETWORK.MAINNET; // <= NOTE: Update this when changing network
-const walletPrivateKey = process.env.SUI_MAINNET; // <= NOTE: Update this when changing network
+let network = NETWORK.TESTNET; // <= NOTE: Update this when changing network
+const walletPrivateKey = process.env.SUI_TESTNET_ALT_KEY; // <= NOTE: Update this when changing network
 
 const registry = REGISTRY[network];
 const provider = new JsonRpcProvider(
@@ -26,7 +26,7 @@ const provider = new JsonRpcProvider(
 );
 
 const connection = new PriceServiceConnection(
-  "https://xc-mainnet.pyth.network",
+  "https://xc-testnet.pyth.network", // <= NOTE: Update this when changing network
   {
     priceFeedRequestConfig: {
       binary: true,
@@ -46,14 +46,14 @@ async function main() {
 
   // Fetch all price IDs
   let { data } = await axios.get(
-    "https://xc-mainnet.pyth.network/api/price_feed_ids"
+    "https://xc-testnet.pyth.network/api/price_feed_ids" // <= NOTE: Update this when changing network
   );
   const price_feed_ids = data;
   console.log("num price feed ids: ", price_feed_ids.length);
 
   //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(0, 20));
   //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(20, 21));
-  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(20, 40));
+  //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(21, 40));
   //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(40, 60));
   //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(60, 80));
   //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(80, 100));
@@ -63,8 +63,20 @@ async function main() {
   //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(160, 180));
   //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(180, 200));
   //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(200, 220));
+  // const priceFeedVAAs = await connection.getLatestVaas( // ???
+  //   price_feed_ids.slice(220, 240)
+  // );
+  // const priceFeedVAAs = await connection.getLatestVaas(
+  //   price_feed_ids.slice(240, 260)
+  // );
+  // const priceFeedVAAs = await connection.getLatestVaas( // ???
+  //   price_feed_ids.slice(260, 280)
+  // );
+  // const priceFeedVAAs = await connection.getLatestVaas(// didn't work  TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["0"]
+  //   price_feed_ids.slice(280, 300)
+  // );
   const priceFeedVAAs = await connection.getLatestVaas(
-    price_feed_ids.slice(220, 240)
+    price_feed_ids.slice(300)
   );
 
   console.log("price feed VAAs len: ", priceFeedVAAs.length);
