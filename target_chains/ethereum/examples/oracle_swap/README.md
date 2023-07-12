@@ -6,7 +6,7 @@ The oracle AMM manages a pool of two tokens and allows a user to trade with the 
 This application has two components. The first component is a smart contract (in the `contract` directory) that manages the pool and implements the trading functionality.
 The second is a frontend application (in the `app` directory) that communicates with the smart contract.
 
-Please see the [Pyth documentation](https://docs.pyth.network/pythnet-price-feeds) for more information about Pyth and how to integrate it into your application.
+Please see the [Pyth documentation](https://docs.pyth.network/documentation/pythnet-price-feeds) for more information about Pyth and how to integrate it into your application.
 
 **Warning** this AMM is intended only as a demonstration of Pyth price feeds and is **not for production use**.
 

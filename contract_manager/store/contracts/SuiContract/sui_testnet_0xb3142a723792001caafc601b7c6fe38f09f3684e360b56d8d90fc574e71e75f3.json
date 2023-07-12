@@ -1,0 +1,6 @@
+{
+  "chain": "sui_testnet",
+  "stateId": "0xb3142a723792001caafc601b7c6fe38f09f3684e360b56d8d90fc574e71e75f3",
+  "wormholeStateId": "0xebba4cc4d614f7a7cdbe883acc76d1cc767922bc96778e7b68be0d15fce27c02",
+  "type": "SuiContract"
+}

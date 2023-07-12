@@ -251,6 +251,10 @@ module.exports = {
       provider: payerProvider("https://rpc-meter.jellypool.xyz"),
       network_id: 82,
     },
+    mantle: {
+      provider: payerProvider("https://rpc.mantle.xyz/"),
+      network_id: 5000,
+    },
     mantle_testnet: {
       provider: payerProvider("https://rpc.testnet.mantle.xyz/"),
       network_id: 5001,
@@ -291,6 +295,10 @@ module.exports = {
       network_id: 1112,
       gas: 10000000,
       gasPrice: 200000000000,
+    },
+    linea_goerli: {
+      provider: payerProvider("https://rpc.goerli.linea.build"),
+      network_id: 59140,
     },
   },
 

@@ -97,7 +97,7 @@ module mint_nft::minting {
         coin::transfer<aptos_coin::AptosCoin>(receiver, @mint_nft, price_in_aptos_coin); // Pay for the NFT
     }
 
-    /// Please read https://docs.pyth.network/consume-data/best-practices before using a `Price` in your application
+    /// Please read https://docs.pyth.network/documentation/pythnet-price-feeds before using a `Price` in your application
     fun update_and_fetch_price(receiver : &signer,  vaas : vector<vector<u8>>) : Price {
             let coins = coin::withdraw<aptos_coin::AptosCoin>(receiver, pyth::get_update_fee(&vaas)); // Get coins to pay for the update
             pyth::update_price_feeds(vaas, coins); // Update price feed with the provided vaas

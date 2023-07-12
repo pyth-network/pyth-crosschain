@@ -8,7 +8,7 @@ Pyth is a cross-chain oracle that streams price updates over the peer-to-peer [W
 These price updates can be consumed on any chain that has a deployment of the Pyth contract.
 By default, Pyth does not automatically update the on-chain price every time the off-chain price changes;
 instead, anyone can permissionlessly update the on-chain price prior to using it.
-For more information please refer to [this document](https://docs.pyth.network/design-overview).
+For more information please refer to [this document](https://docs.pyth.network/documentation/how-pyth-works).
 
 Protocols integrating with can update the on-chain Pyth prices in two different ways.
 The first approach is on-demand updates: package a Pyth price update together with each transaction that depends on it.

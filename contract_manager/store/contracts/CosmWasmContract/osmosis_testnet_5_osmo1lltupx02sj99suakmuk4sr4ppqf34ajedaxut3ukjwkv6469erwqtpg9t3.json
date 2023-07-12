@@ -1,0 +1,5 @@
+{
+  "chain": "osmosis_testnet_5",
+  "address": "osmo1lltupx02sj99suakmuk4sr4ppqf34ajedaxut3ukjwkv6469erwqtpg9t3",
+  "type": "CosmWasmContract"
+}

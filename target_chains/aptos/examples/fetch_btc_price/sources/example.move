@@ -9,7 +9,7 @@ module example::example {
     ///
     /// https://github.com/pyth-network/pyth-js/tree/main/pyth-aptos-js should be used to
     /// fetch the pyth_update_data off-chain and pass it in. More information about how this
-    /// works can be found at https://docs.pyth.network/consume-data
+    /// works can be found at https://docs.pyth.network/documentation/pythnet-price-feeds/aptos
     public fun get_btc_usd_price(user: &signer, pyth_update_data: vector<vector<u8>>): Price {
 
         // First update the Pyth price feeds
