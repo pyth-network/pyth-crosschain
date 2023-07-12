@@ -13,6 +13,8 @@ module pyth::data_source {
     friend pyth::set_governance_data_source;
     #[test_only]
     friend pyth::pyth_tests;
+    #[test_only]
+    friend pyth::set_data_sources_tests;
 
     const KEY: vector<u8> = b"data_sources";
     const E_DATA_SOURCE_REGISTRY_ALREADY_EXISTS: u64 = 0;
