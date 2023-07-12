@@ -11,6 +11,7 @@ import { readFileSync, writeFileSync } from "fs";
 import { Chains, SuiChain } from "./chains";
 import {
   CHAINS,
+  DataSource,
   HexString32Bytes,
   SetFeeInstruction,
   SuiAuthorizeUpgradeContractInstruction,
@@ -312,6 +313,58 @@ export class SuiContract extends Contract {
   }
 
   async getValidTimePeriod() {
+    const fields = await this.getStateFields();
+    return Number(fields.stale_price_threshold);
+  }
+
+  async getDataSources(): Promise<DataSource[]> {
+    const provider = this.getProvider();
+    let result = await provider.getDynamicFieldObject({
+      parentId: this.stateId,
+      name: {
+        type: "vector<u8>",
+        value: "data_sources",
+      },
+    });
+    if (!result.data || !result.data.content) {
+      throw new Error(
+        "Data Sources not found, contract may not be initialized"
+      );
+    }
+    if (result.data.content.dataType !== "moveObject") {
+      throw new Error("Data Sources type mismatch");
+    }
+    return result.data.content.fields.value.fields.keys.map(
+      ({ fields }: any) => {
+        return new DataSource(
+          Number(fields.emitter_chain),
+          new HexString32Bytes(
+            Buffer.from(
+              fields.emitter_address.fields.value.fields.data
+            ).toString("hex")
+          )
+        );
+      }
+    );
+  }
+
+  async getGovernanceDataSource(): Promise<DataSource> {
+    const fields = await this.getStateFields();
+    const governanceFields = fields.governance_data_source.fields;
+    const chainId = governanceFields.emitter_chain;
+    const emitterAddress =
+      governanceFields.emitter_address.fields.value.fields.data;
+    return new DataSource(
+      Number(chainId),
+      new HexString32Bytes(Buffer.from(emitterAddress).toString("hex"))
+    );
+  }
+
+  private getProvider() {
+    return new JsonRpcProvider(new Connection({ fullnode: this.chain.rpcURL }));
+  }
+
+  private async getStateFields() {
     const provider = this.getProvider();
     const result = await provider.getObject({
       id: this.stateId,
@@ -323,10 +376,6 @@ export class SuiContract extends Contract {
       result.data.content.dataType !== "moveObject"
     )
       throw new Error("Unable to fetch pyth state object");
-    return Number(result.data.content.fields.stale_price_threshold);
-  }
-
-  private getProvider() {
-    return new JsonRpcProvider(new Connection({ fullnode: this.chain.rpcURL }));
+    return result.data.content.fields;
   }
 }

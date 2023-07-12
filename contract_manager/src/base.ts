@@ -1,3 +1,5 @@
+import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
+
 export abstract class Storable {
   /**
    * Returns the unique identifier for this object
@@ -22,4 +24,14 @@ export abstract class Contract extends Storable {
    * Returns the time period in seconds that stale data is considered valid for.
    */
   abstract getValidTimePeriod(): Promise<number>;
+
+  /**
+   * Returns an array of data sources that this contract accepts price feed messages from
+   */
+  abstract getDataSources(): Promise<DataSource[]>;
+
+  /**
+   * Returns the single data source that this contract accepts governance messages from
+   */
+  abstract getGovernanceDataSource(): Promise<DataSource>;
 }

@@ -2,6 +2,7 @@ import Web3 from "web3";
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import { Contract } from "./base";
 import { Chains, EVMChain } from "./chains";
+import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
 
 export class EVMContract extends Contract {
   static type = "EVMContract";
@@ -29,6 +30,31 @@ export class EVMContract extends Contract {
     const web3 = new Web3(this.chain.rpcURL);
     const pythContract = new web3.eth.Contract(
       [
+        {
+          inputs: [],
+          name: "governanceDataSource",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "uint16",
+                  name: "chainId",
+                  type: "uint16",
+                },
+                {
+                  internalType: "bytes32",
+                  name: "emitterAddress",
+                  type: "bytes32",
+                },
+              ],
+              internalType: "struct PythInternalStructs.DataSource",
+              name: "",
+              type: "tuple",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
         {
           inputs: [],
           name: "validDataSources",
@@ -76,10 +102,26 @@ export class EVMContract extends Contract {
     return Number(result);
   }
 
-  async getValidDataSources() {
+  async getDataSources(): Promise<DataSource[]> {
     const pythContract = this.getContract();
     const result = await pythContract.methods.validDataSources().call();
-    return result;
+    return result.map(({ chainId, emitterAddress }: any) => {
+      return new DataSource(
+        Number(chainId),
+        new HexString32Bytes(emitterAddress)
+      );
+    });
+  }
+
+  async getGovernanceDataSource(): Promise<DataSource> {
+    const pythContract = this.getContract();
+    const [chainId, emitterAddress] = await pythContract.methods
+      .governanceDataSource()
+      .call();
+    return new DataSource(
+      Number(chainId),
+      new HexString32Bytes(emitterAddress)
+    );
   }
 
   toJSON() {

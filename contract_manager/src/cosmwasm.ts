@@ -1,7 +1,12 @@
 import { Chains, CosmWasmChain } from "./chains";
 import { readFileSync, writeFileSync } from "fs";
 import { getPythConfig } from "@pythnetwork/cosmwasm-deploy-tools/lib/configs";
-import { CHAINS, SetFeeInstruction } from "@pythnetwork/xc-governance-sdk";
+import {
+  CHAINS,
+  DataSource,
+  HexString32Bytes,
+  SetFeeInstruction,
+} from "@pythnetwork/xc-governance-sdk";
 import { DeploymentType } from "@pythnetwork/cosmwasm-deploy-tools/lib/helper";
 import {
   CosmwasmExecutor,
@@ -16,6 +21,9 @@ import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { Contract } from "./base";
 
+/**
+ * Variables here need to be snake case to match the on-chain contract configs
+ */
 namespace CosmWasmContract {
   export interface WormholeSource {
     emitter: string;
@@ -35,6 +43,28 @@ namespace CosmWasmContract {
 }
 
 export class CosmWasmContract extends Contract {
+  async getDataSources(): Promise<DataSource[]> {
+    const config = await this.getConfig();
+    return config.config_v1.data_sources.map(({ emitter, chain_id }: any) => {
+      return new DataSource(
+        Number(chain_id),
+        new HexString32Bytes(Buffer.from(emitter, "base64").toString("hex"))
+      );
+    });
+  }
+
+  async getGovernanceDataSource(): Promise<DataSource> {
+    const config = await this.getConfig();
+    const { emitter: emitterAddress, chain_id: chainId } =
+      config.config_v1.governance_source;
+    return new DataSource(
+      Number(chainId),
+      new HexString32Bytes(
+        Buffer.from(emitterAddress, "base64").toString("hex")
+      )
+    );
+  }
+
   static type = "CosmWasmContract";
 
   constructor(public chain: CosmWasmChain, public address: string) {
