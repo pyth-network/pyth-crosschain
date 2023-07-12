@@ -111,6 +111,16 @@ export class AptosAuthorizeUpgradeContractInstruction extends TargetInstruction 
   }
 }
 
+export class SuiAuthorizeUpgradeContractInstruction extends TargetInstruction {
+  constructor(targetChainId: ChainId, private digest: HexString32Bytes) {
+    super(TargetAction.UpgradeContract, targetChainId);
+  }
+
+  protected serializePayload(): Buffer {
+    return this.digest.serialize();
+  }
+}
+
 export class EthereumUpgradeContractInstruction extends TargetInstruction {
   constructor(targetChainId: ChainId, private address: HexString20Bytes) {
     super(TargetAction.UpgradeContract, targetChainId);
