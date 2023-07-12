@@ -95,7 +95,7 @@ This is the deployment process:
    which need to be committed (if they are result of a production deployment). Create a PR for them.
 9. If you are deploying to a new network, please add the new contract address to consumer facing libraries
    and documentations. Please update the following resources:
-   - [Pyth Gitbook EVM Page](https://github.com/pyth-network/pyth-gitbook/blob/main/pythnet-price-feeds/evm.md#networks)
+   - [Pyth Gitbook EVM Page](https://github.com/pyth-network/documentation/blob/main/pages/documentation/pythnet-price-feeds/evm.mdx)
    - [pyth-evm-js package](../sdk/js/)
 10. (Optional) You can test the deployed contract by sending and fetching a price update as described in the
     [Testing](#testing) section below.
