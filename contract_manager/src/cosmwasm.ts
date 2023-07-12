@@ -1,5 +1,5 @@
 import { Chains, CosmWasmChain } from "./chains";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync } from "fs";
 import { getPythConfig } from "@pythnetwork/cosmwasm-deploy-tools/lib/configs";
 import {
   CHAINS,
@@ -100,24 +100,36 @@ export class CosmWasmContract extends Contract {
   }
 
   /**
-   * Deploys a new contract to the specified chain using the uploaded wasm code codeId
-   * @param chain The chain to deploy to
-   * @param codeId The codeId of the uploaded wasm code
-   * @param config The deployment config for initializing the contract (data sources, governance source, etc)
-   * @param mnemonic The mnemonic to use for signing the transaction
+   * Stores the wasm code on the specified chain using the provided mnemonic as the signer
+   * You can find the wasm artifacts from the repo releases
+   * @param chain chain to store the code on
+   * @param mnemonic mnemonic to use for signing the transaction
+   * @param wasmPath path in your local filesystem to the wasm artifact
    */
-  static async deploy(
+  static async storeCode(
+    chain: CosmWasmChain,
+    mnemonic: string,
+    wasmPath: string
+  ) {
+    const contractBytes = readFileSync(wasmPath);
+    let executor = this.getExecutor(chain, mnemonic);
+    return executor.storeCode({ contractBytes });
+  }
+
+  /**
+   * Deploys a new contract to the specified chain using the uploaded wasm code codeId
+   * @param chain chain to deploy to
+   * @param codeId codeId of the uploaded wasm code. You can get this from the storeCode result
+   * @param config deployment config for initializing the contract (data sources, governance source, etc)
+   * @param mnemonic mnemonic to use for signing the transaction
+   */
+  static async initialize(
     chain: CosmWasmChain,
     codeId: number,
     config: CosmWasmContract.DeploymentConfig,
     mnemonic: string
-  ): Promise<any> {
-    let executor = new CosmwasmExecutor(
-      chain.executorEndpoint,
-      mnemonic,
-      chain.prefix,
-      chain.gasPrice + chain.feeDenom
-    );
+  ): Promise<CosmWasmContract> {
+    let executor = this.getExecutor(chain, mnemonic);
     let result = await executor.instantiateContract({
       codeId: codeId,
       instMsg: config,
@@ -128,6 +140,38 @@ export class CosmWasmContract extends Contract {
       contractAddr: result.contractAddr,
     });
     return new CosmWasmContract(chain, result.contractAddr);
+  }
+
+  /**
+   * Uploads the wasm code and initializes a new contract to the specified chain.
+   * Use this method if you are deploying to a new chain, or you want a fresh contract in
+   * a testnet environment. Uses the default deployment configurations for governance, data sources,
+   * valid time period, etc. You can manually run the storeCode and initialize methods if you want
+   * more control over the deployment process.
+   * @param chain
+   * @param wormholeContract
+   * @param mnemonic
+   * @param wasmPath
+   */
+  static async deploy(
+    chain: CosmWasmChain,
+    wormholeContract: string,
+    mnemonic: string,
+    wasmPath: string
+  ): Promise<CosmWasmContract> {
+    let config = this.getDeploymentConfig(chain, "edge", wormholeContract);
+    const { codeId } = await this.storeCode(chain, mnemonic, wasmPath);
+    return this.initialize(chain, codeId, config, mnemonic);
+  }
+
+  private static getExecutor(chain: CosmWasmChain, mnemonic: string) {
+    // TODO: logic for injective
+    return new CosmwasmExecutor(
+      chain.executorEndpoint,
+      mnemonic,
+      chain.prefix,
+      chain.gasPrice + chain.feeDenom
+    );
   }
 
   getId(): string {
