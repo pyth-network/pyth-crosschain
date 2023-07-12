@@ -24,8 +24,7 @@ dotenv.config({ path: "~/.env" });
 // Network dependent settings.
 let network = NETWORK.TESTNET; // <= NOTE: Update this when changing network
 const walletPrivateKey = process.env.SUI_TESTNET_ALT_KEY_BASE_64; // <= NOTE: Update this when changing network
-
-const guardianPrivateKey = process.env.WH_TESTNET_GUARDIAN_PRIVATE_KEY;
+const guardianPrivateKey = process.env.WH_TESTNET_GUARDIAN_PRIVATE_KEY; // <= NOTE: Update this when changing network
 
 const registry = REGISTRY[network];
 const provider = new JsonRpcProvider(
@@ -81,7 +80,8 @@ async function main() {
     new DataSource(CHAINS.pythnet, new HexString32Bytes("0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71"))
   ]);
 
-  // create and sign governance message
+  // ==================================================================================================
+
   let msg = governance.publishGovernanceMessage(
     timestamp,
     "",
@@ -89,13 +89,16 @@ async function main() {
     action,
     chain
   );
-  msg.writeUInt8(0x1, 84 - 33 + 31); // here we insert an 0x1 in the right place to make the module name "0x00000000000000000000000000000001"
 
-  console.log("msg: ", msg.toString("hex"));
+  // Pyth expects the module name for an action to be "0x00000000000000000000000000000001", so
+  // we write 0x1 in the right position to turn the module name "0x00000000000000000000000000000000" -> "0x00000000000000000000000000000001"
+  msg.writeUInt8(0x1, 84 - 33 + 31);
+
+  console.log("governance msg: ", msg.toString("hex"));
 
   // ===============================================================================================
 
-  // Sign governance message using wallet
+  // Sign governance message
   const signedVaa = guardians.addSignatures(msg, [0]);
   console.log("Signed VAA:", signedVaa.toString("hex"));
 }

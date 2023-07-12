@@ -928,9 +928,7 @@ module pyth::pyth_tests{
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
-        std::debug::print(&x"00000000");
         let verified_vaa = get_verified_vaa_from_accumulator_message(&worm_state, my_accumulator_message, &clock);
-        std::debug::print(&x"12121212");
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
@@ -941,7 +939,6 @@ module pyth::pyth_tests{
             &clock,
             ctx(&mut scenario)
         );
-        std::debug::print(&x"33333333");
 
         // Affirm that 1 object, which correspond to the 1 new price info object
         // containing the price feeds were created and shared.
