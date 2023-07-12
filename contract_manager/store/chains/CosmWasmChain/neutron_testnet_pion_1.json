@@ -1,0 +1,9 @@
+{
+  "querierEndpoint": "https://rpc.pion.rs-testnet.polypore.xyz/",
+  "executorEndpoint": "https://rpc.pion.rs-testnet.polypore.xyz/",
+  "id": "neutron_testnet_pion_1",
+  "gasPrice": "0.05",
+  "prefix": "neutron",
+  "feeDenom": "untrn",
+  "type": "CosmWasmChain"
+}

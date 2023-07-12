@@ -1,0 +1,9 @@
+{
+  "querierEndpoint": "https://rpc.atlantic-2.seinetwork.io/",
+  "executorEndpoint": "https://rpc.atlantic-2.seinetwork.io/",
+  "id": "sei_testnet_atlantic_2",
+  "gasPrice": "0.01",
+  "prefix": "sei",
+  "feeDenom": "usei",
+  "type": "CosmWasmChain"
+}

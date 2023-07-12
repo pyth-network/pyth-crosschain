@@ -1,6 +1,7 @@
 export {
   DataSource,
   AptosAuthorizeUpgradeContractInstruction,
+  SuiAuthorizeUpgradeContractInstruction,
   EthereumUpgradeContractInstruction,
   EthereumSetWormholeAddress,
   HexString20Bytes,
