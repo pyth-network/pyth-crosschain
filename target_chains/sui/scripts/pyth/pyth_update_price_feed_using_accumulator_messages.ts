@@ -64,7 +64,6 @@ async function update_price_feeds(
   console.log("PYTH_STATE: ", PYTH_STATE);
   console.log("WORM_PACKAGE: ", WORM_PACKAGE);
   console.log("WORM_STATE: ", WORM_STATE);
-  console.log("SUI_CLOCK_OBJECT_ID: ", SUI_CLOCK_OBJECT_ID);
 
   console.log("vaa parsed from accumulator: ", parse_vaa_bytes_from_accumulator_message(accumulator_message, true))
 
@@ -88,6 +87,7 @@ async function update_price_feeds(
     typeArguments: ["0x2::sui::SUI"],
   });
 
+  // get authenticated price info vector, containing price updates
   let [authenticated_price_infos_vector] = tx.moveCall({
     target: `${PYTH_PACKAGE}::pyth::create_authenticated_price_infos_using_accumulator`,
     arguments: [
@@ -98,6 +98,7 @@ async function update_price_feeds(
     ]
   })
 
+  // use authenticated prices to update target price info object
   authenticated_price_infos_vector = tx.moveCall({
     target: `${PYTH_PACKAGE}::pyth::update_single_price_feed`,
     arguments: [
@@ -109,6 +110,7 @@ async function update_price_feeds(
     ]
   })
 
+  // clean-up (destroy authenticated vector)
   tx.moveCall({
     target: `${PYTH_PACKAGE}::hot_potato_vector::destroy`,
     arguments: [
@@ -116,24 +118,8 @@ async function update_price_feeds(
     ]
   })
 
-  // tx.moveCall({
-  //   target: `${PYTH_PACKAGE}::pyth::update_price_feeds`,
-  //   arguments: [
-  //     tx.object(PYTH_STATE),
-  //     tx.makeMoveVec({
-  //       type: `${WORM_PACKAGE}::vaa::VAA`,
-  //       objects: [verified_vaa],
-  //     }),
-  //     tx.makeMoveVec({
-  //       type: `${PYTH_PACKAGE}::price_info::PriceInfoObject`,
-  //       objects: [tx.object(object_id)],
-  //     }),
-  //     coin,
-  //     tx.object(SUI_CLOCK_OBJECT_ID),
-  //   ],
-  // });
-
   tx.setGasBudget(2000000000);
+
   // let result = await signer.dryRunTransactionBlock({
   //   transactionBlock: tx,
   // })
@@ -153,23 +139,21 @@ async function update_price_feeds(
 }
 
 // parse_vaa_bytes_from_accumulator_message parses the vaa bytes from an accumulator message,
-// which can either be in hex or base64 format.
+// which can either be hex or base64.
+// If isHex==false, then the accumulator_message is assumed to be in base64.
 function parse_vaa_bytes_from_accumulator_message(accumulator_message: string, isHex: boolean){
   console.log("parse_vaa_bytes_from_accumulator_message msg: ", accumulator_message)
-  let b = []
+  var b: number[]
   if (isHex) {
     b = [...Buffer.from(accumulator_message, "hex")]
   } else {
     b = [...Buffer.from(accumulator_message, "base64")]
   }
   let trailing_size = b.slice(6,7)[0]
-  let vaa_size_offset = 7 + trailing_size + 1
+  let vaa_size_offset = 7 /* initial bytes */ + trailing_size /* trailing size (variable bytes) */ + 1 /* proof_type (1 byte) */
   let vaa_size_bytes = b.slice(vaa_size_offset, vaa_size_offset+2)
-  console.log("vaa_size_bytes: ", vaa_size_bytes)
   let vaa_size = vaa_size_bytes[1] + 16*vaa_size_bytes[0]
   let vaa_offset = vaa_size_offset + 2
-  console.log("vaa_size: ", vaa_size)
   let vaa = b.slice(vaa_offset, vaa_offset + vaa_size)
-  console.log("vaa from acc msg: ", Buffer.from(vaa).toString("hex"))
   return vaa
 }
