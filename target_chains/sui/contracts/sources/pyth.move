@@ -42,8 +42,6 @@ module pyth::pyth {
     friend pyth::set_stale_price_threshold_test;
     #[test_only]
     friend pyth::set_update_fee_tests;
-    #[test_only]
-    friend pyth::set_governance_data_source_tests;
 
     /// Init state and emit event corresponding to Pyth initialization.
     public entry fun init_pyth(
