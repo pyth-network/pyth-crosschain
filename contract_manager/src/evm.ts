@@ -1,4 +1,4 @@
-import Web3 from "web3";
+import Web3 from "web3"; //TODO: decide on using web3 or ethers.js
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import { Contract } from "./base";
 import { Chains, EVMChain } from "./chains";

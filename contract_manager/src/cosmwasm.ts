@@ -99,6 +99,13 @@ export class CosmWasmContract extends Contract {
     });
   }
 
+  /**
+   * Deploys a new contract to the specified chain using the uploaded wasm code codeId
+   * @param chain The chain to deploy to
+   * @param codeId The codeId of the uploaded wasm code
+   * @param config The deployment config for initializing the contract (data sources, governance source, etc)
+   * @param mnemonic The mnemonic to use for signing the transaction
+   */
   static async deploy(
     chain: CosmWasmChain,
     codeId: number,
