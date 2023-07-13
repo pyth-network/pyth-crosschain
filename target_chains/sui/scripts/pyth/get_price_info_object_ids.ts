@@ -5,7 +5,7 @@ const provider = new JsonRpcProvider(
   new Connection({ fullnode: "https://fullnode.testnet.sui.io:443" }) // <= NOTE: Update this when changing network
 );
 const objectId =
-  "0x14b4697477d24c30c8eecc31dd1bd49a3115a9fe0db6bd4fd570cf14640b79a0"; // <= NOTE: Update this when changing network AND with new deployment
+  "0xa17b30c3d280de33ef50bdd23219a037108a8ccb1ad74f334fcbb7d64eb57647"; // <= NOTE: Update this when changing network AND with new deployment
 // ================================================================
 
 async function main() {

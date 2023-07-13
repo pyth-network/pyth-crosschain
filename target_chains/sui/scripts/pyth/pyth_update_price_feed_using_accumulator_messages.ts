@@ -35,17 +35,17 @@ async function main() {
 
   // make sure that the price feed id corresponds to the price info object id!
   let price_feed_id =
-    "0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b";
+    "0x5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280";
   let price_info_object_id =
-    "0x878b118488aeb5763b5f191675c3739a844ce132cb98150a465d9407d7971e7c";
+    "0x848d1c941e117f515757b77aa562eee8bb179eee6f37ec6dad97ae0279ff4bd4";
 
   // get accumulator msg in base 64
   let { data } = await axios.get(
     `https://hermes-beta.pyth.network/api/latest_vaas?ids[]=${price_feed_id}`
   );
-  //let accumulator_message = data[0]
-  let accumulator_message =
-    "504e41550100000000a0010000000001000c8a0725e651012b232cec63e33511502b6fbae413fd9b289132c07765b440f1231d2390dbdb3a5922c2ea104e065b2f048cf2c45360a5ba07bde3fcac651de70064aef35900000000001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71000000000093e5020141555756000000000004ef51310000271053fe324f96fed4a65bf488cd8f3fb3013c9682c201005500f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b000002c6eb94fd3f0000000030fbd300fffffff80000000064aef3580000000064aef356000002c5c2cfa140000000002aeae87a095c1bd32561d27add4f59cf4dc2a8b36d38f7eaab8c6b699d546dde8cadd614565ed4428382eae7febc76f5ac8f777e9e1d617539f965b3e4531fe60f8097d21ffd8b803e67200e416c14ef1dfd2bee45115af802d65322ad2f3cd882fc1b60975ce13af3d6c098464baf0e014734e59b139ca788b2ff54b34459858f08908707a29c60ff56f4f1e4f2be3d47dd38f0da18fcb0f7ead4d1de56db6c0442b948835ef5ff868a4e22b03ce5239adf63beba03a40da8";
+  let accumulator_message = Buffer.from(data[0], "base64").toString("hex")
+  //let accumulator_message =
+  //  "504e41550100000000a0010000000001000c8a0725e651012b232cec63e33511502b6fbae413fd9b289132c07765b440f1231d2390dbdb3a5922c2ea104e065b2f048cf2c45360a5ba07bde3fcac651de70064aef35900000000001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71000000000093e5020141555756000000000004ef51310000271053fe324f96fed4a65bf488cd8f3fb3013c9682c201005500f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b000002c6eb94fd3f0000000030fbd300fffffff80000000064aef3580000000064aef356000002c5c2cfa140000000002aeae87a095c1bd32561d27add4f59cf4dc2a8b36d38f7eaab8c6b699d546dde8cadd614565ed4428382eae7febc76f5ac8f777e9e1d617539f965b3e4531fe60f8097d21ffd8b803e67200e416c14ef1dfd2bee45115af802d65322ad2f3cd882fc1b60975ce13af3d6c098464baf0e014734e59b139ca788b2ff54b34459858f08908707a29c60ff56f4f1e4f2be3d47dd38f0da18fcb0f7ead4d1de56db6c0442b948835ef5ff868a4e22b03ce5239adf63beba03a40da8";
   console.log("accumulator_message: ", accumulator_message);
   //parse_vaa_bytes_from_accumulator_message(accumulator_message)
   //console.log(data);
@@ -80,7 +80,7 @@ async function update_price_feeds(
     parse_vaa_bytes_from_accumulator_message(accumulator_message, true)
   );
 
-  // verify VAA (that encodes the merkle root) in accumulator message
+  // 0. verify VAA (that encodes the merkle root) in accumulator message
   let [verified_vaa] = tx.moveCall({
     target: `${WORM_PACKAGE}::vaa::parse_and_verify`,
     arguments: [
@@ -92,14 +92,14 @@ async function update_price_feeds(
     ],
   });
 
-  // obtain fee coin by splitting it off from the gas coin
+  // 1. obtain fee coin by splitting it off from the gas coin
   let [fee_coin] = tx.moveCall({
     target: "0x2::coin::split",
     arguments: [tx.gas, tx.pure(1)],
     typeArguments: ["0x2::sui::SUI"],
   });
 
-  // get authenticated price info vector, containing price updates
+  // 2. get authenticated price info vector, containing price updates
   let [authenticated_price_infos_vector] = tx.moveCall({
     target: `${PYTH_PACKAGE}::pyth::create_authenticated_price_infos_using_accumulator`,
     arguments: [
@@ -110,7 +110,7 @@ async function update_price_feeds(
     ],
   });
 
-  // use authenticated prices to update target price info object
+  // 3. use authenticated prices to update target price info object
   authenticated_price_infos_vector = tx.moveCall({
     target: `${PYTH_PACKAGE}::pyth::update_single_price_feed`,
     arguments: [
@@ -122,10 +122,11 @@ async function update_price_feeds(
     ],
   });
 
-  // clean-up (destroy authenticated vector)
+  // 4. clean-up (destroy authenticated vector)
   tx.moveCall({
     target: `${PYTH_PACKAGE}::hot_potato_vector::destroy`,
     arguments: [authenticated_price_infos_vector],
+    typeArguments: [`${PYTH_PACKAGE}::price_info::PriceInfo`],
   });
 
   tx.setGasBudget(2000000000);
@@ -156,7 +157,7 @@ function parse_vaa_bytes_from_accumulator_message(
   isHex: boolean
 ): number[] {
   console.log(
-    "parse_vaa_bytes_from_accumulator_message msg: ",
+    "(parse_vaa_bytes_from_accumulator_message) accumulator_message: ",
     accumulator_message
   );
   var b: number[];
@@ -174,5 +175,6 @@ function parse_vaa_bytes_from_accumulator_message(
   let vaa_size = vaa_size_bytes[1] + 16 * vaa_size_bytes[0];
   let vaa_offset = vaa_size_offset + 2;
   let vaa = b.slice(vaa_offset, vaa_offset + vaa_size);
+  console.log("(parse_vaa_bytes_from_accumulator_message) vaa: ", vaa)
   return vaa;
 }
