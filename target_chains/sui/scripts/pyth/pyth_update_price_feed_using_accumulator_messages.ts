@@ -45,7 +45,7 @@ async function main() {
   );
 
   // convert accumulator msg to hex
-  let accumulator_message = Buffer.from(data[0], "base64").toString("hex")
+  let accumulator_message = Buffer.from(data[0], "base64").toString("hex");
 
   console.log("accumulator_message: ", accumulator_message);
   //parse_vaa_bytes_from_accumulator_message(accumulator_message)
@@ -176,6 +176,6 @@ function parse_vaa_bytes_from_accumulator_message(
   let vaa_size = vaa_size_bytes[1] + 16 * vaa_size_bytes[0];
   let vaa_offset = vaa_size_offset + 2;
   let vaa = b.slice(vaa_offset, vaa_offset + vaa_size);
-  console.log("(parse_vaa_bytes_from_accumulator_message) vaa: ", vaa)
+  console.log("(parse_vaa_bytes_from_accumulator_message) vaa: ", vaa);
   return vaa;
 }

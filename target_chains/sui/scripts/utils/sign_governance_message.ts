@@ -17,7 +17,15 @@ import { resolve } from "path";
 import * as fs from "fs";
 
 import { REGISTRY, NETWORK } from "../registry";
-import {SetDataSourcesInstruction, DataSource, CHAINS, HexString32Bytes, SetFeeInstruction, AuthorizeGovernanceDataSourceTransferInstruction, SetValidPeriodInstruction} from "../../../../governance/xc_governance_sdk_js/src/index"
+import {
+  SetDataSourcesInstruction,
+  DataSource,
+  CHAINS,
+  HexString32Bytes,
+  SetFeeInstruction,
+  AuthorizeGovernanceDataSourceTransferInstruction,
+  SetValidPeriodInstruction,
+} from "../../../../governance/xc_governance_sdk_js/src/index";
 
 dotenv.config({ path: "~/.env" });
 
@@ -75,9 +83,24 @@ async function main() {
   console.log("magic buffer: ", magic);
 
   let ds = new SetDataSourcesInstruction(21, [
-    new DataSource(CHAINS.solana, new HexString32Bytes("0xf346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0")),
-    new DataSource(CHAINS.pythnet, new HexString32Bytes("0xa27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6")),
-    new DataSource(CHAINS.pythnet, new HexString32Bytes("0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71"))
+    new DataSource(
+      CHAINS.solana,
+      new HexString32Bytes(
+        "0xf346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0"
+      )
+    ),
+    new DataSource(
+      CHAINS.pythnet,
+      new HexString32Bytes(
+        "0xa27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6"
+      )
+    ),
+    new DataSource(
+      CHAINS.pythnet,
+      new HexString32Bytes(
+        "0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71"
+      )
+    ),
   ]);
 
   // ==================================================================================================
