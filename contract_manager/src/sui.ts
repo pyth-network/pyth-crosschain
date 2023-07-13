@@ -192,7 +192,7 @@ export class SuiContract extends Contract {
     return this.wrapWithWormholeGovernancePayload(3, setFee);
   }
 
-  async executeGovernanceInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
+  async executeGovernanceInstruction(keypair: Ed25519Keypair, vaa: Buffer) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
     let decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);

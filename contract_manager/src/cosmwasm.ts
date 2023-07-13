@@ -306,7 +306,7 @@ export class CosmWasmContract extends Contract {
     });
   }
 
-  async executeGovernanceInstruction(mnemonic: string, vaa: string) {
+  async executeGovernanceInstruction(mnemonic: string, vaa: Buffer) {
     let executor = new CosmwasmExecutor(
       this.chain.executorEndpoint,
       mnemonic,
@@ -316,7 +316,7 @@ export class CosmWasmContract extends Contract {
     let pythExecutor = new PythWrapperExecutor(executor);
     return pythExecutor.executeGovernanceInstruction({
       contractAddr: this.address,
-      vaa,
+      vaa: vaa.toString("base64"),
     });
   }
 

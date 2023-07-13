@@ -239,8 +239,7 @@ export class Vault extends Storable {
     return Vault.type;
   }
 
-  static from(path: string): Vault {
-    let parsed = JSON.parse(readFileSync(path, "utf-8"));
+  static from(parsed: any): Vault {
     if (parsed.type !== Vault.type) throw new Error("Invalid type");
     return new Vault(parsed.key, parsed.cluster);
   }

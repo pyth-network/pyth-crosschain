@@ -34,7 +34,14 @@ export abstract class Contract extends Storable {
    * Returns the base update fee for this contract
    * This is the required fee for updating the price feeds in the contract
    */
-  abstract getBaseUpdateFee(): Promise<any>;
+  abstract getBaseUpdateFee(): Promise<{ amount: string; denom: string }>;
+
+  /**
+   * Executes the governance instruction contained in the VAA using the sender credentials
+   * @param sender based on the contract type, this can be a private key, a mnemonic, a wallet, etc.
+   * @param vaa the VAA to execute
+   */
+  abstract executeGovernanceInstruction(sender: any, vaa: Buffer): Promise<any>;
 
   /**
    * Returns the single data source that this contract accepts governance messages from
