@@ -434,6 +434,8 @@ module pyth::pyth_tests{
     use sui::object::{Self, ID};
     use sui::clock::{Self, Clock};
 
+    use pyth::i64::Self;
+    use pyth::price::Self;
     use pyth::state::{State as PythState};
     use pyth::setup::{Self};
     use pyth::price_info::{Self, PriceInfo, PriceInfoObject};//, PriceInfo, PriceInfoObject};
@@ -925,7 +927,7 @@ module pyth::pyth_tests{
     }
 
     #[test]
-    // for debugging purposes (TODO: remove this test)
+    // for testnet debugging
     fun test_create_and_update_single_price_feed_with_custom_accumulator_message_debug() {
         let my_accumulator_message = x"504e41550100000000a0010000000001000c8a0725e651012b232cec63e33511502b6fbae413fd9b289132c07765b440f1231d2390dbdb3a5922c2ea104e065b2f048cf2c45360a5ba07bde3fcac651de70064aef35900000000001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71000000000093e5020141555756000000000004ef51310000271053fe324f96fed4a65bf488cd8f3fb3013c9682c201005500f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b000002c6eb94fd3f0000000030fbd300fffffff80000000064aef3580000000064aef356000002c5c2cfa140000000002aeae87a095c1bd32561d27add4f59cf4dc2a8b36d38f7eaab8c6b699d546dde8cadd614565ed4428382eae7febc76f5ac8f777e9e1d617539f965b3e4531fe60f8097d21ffd8b803e67200e416c14ef1dfd2bee45115af802d65322ad2f3cd882fc1b60975ce13af3d6c098464baf0e014734e59b139ca788b2ff54b34459858f08908707a29c60ff56f4f1e4f2be3d47dd38f0da18fcb0f7ead4d1de56db6c0442b948835ef5ff868a4e22b03ce5239adf63beba03a40da8";
 
@@ -975,8 +977,28 @@ module pyth::pyth_tests{
         );
 
         // assert that price info obejct is as expected
-        //let expected = accumulator_test_1_to_price_info();
-        //assert!(price_feeds_equal(&expected, &price_info::get_price_info_from_price_info_object(&price_info_object_1)), 0);
+        let expected_price_info = price_info::new_price_info(
+                0,
+                0,
+                price_feed::new(
+                    price_identifier::from_byte_vec(
+                        x"f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b"
+                    ),
+                    price::new(
+                        i64::new(3053379190079, false),
+                        821809920,
+                        i64::new(8, true),
+                        1689187160
+                    ),
+                    price::new(
+                        i64::new(3048400200000, false),
+                        720038010,
+                        i64::new(8, true),
+                        1689187160
+                    ),
+                ),
+            );
+        assert!(price_feeds_equal(&expected_price_info, &price_info::get_price_info_from_price_info_object(&price_info_object_1)), 0);
 
         // clean up test scenario
 
@@ -1392,8 +1414,6 @@ module pyth::pyth_tests{
 
     #[test]
     fun test_update_cache_old_update() {
-        use pyth::i64::Self;
-        use pyth::price::Self;
 
         let (scenario, test_coins, clock) =  setup_test(500, 23, x"5d1f252d5de865279b00c84bce362774c2804294ed53299bc4a0389a5defef92", data_sources_for_test_vaa(), BATCH_ATTESTATION_TEST_INITIAL_GUARDIANS, DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);

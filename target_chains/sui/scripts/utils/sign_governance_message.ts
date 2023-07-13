@@ -3,18 +3,10 @@ import dotenv from "dotenv";
 
 import {
   RawSigner,
-  SUI_CLOCK_OBJECT_ID,
-  TransactionBlock,
-  fromB64,
-  normalizeSuiObjectId,
   JsonRpcProvider,
   Ed25519Keypair,
-  testnetConnection,
   Connection,
 } from "@mysten/sui.js";
-import { execSync } from "child_process";
-import { resolve } from "path";
-import * as fs from "fs";
 
 import { REGISTRY, NETWORK } from "../registry";
 import {
@@ -51,12 +43,11 @@ const GOVERNANCE_EMITTER =
 
 async function main() {
   if (guardianPrivateKey === undefined) {
-    throw new Error("TESTNET_GUARDIAN_PRIVATE_KEY unset in environment");
+    throw new Error("guardianPrivateKey unset in environment");
   }
   if (walletPrivateKey === undefined) {
-    throw new Error("TESTNET_WALLET_PRIVATE_KEY unset in environment");
+    throw new Error("walletPrivateKey unset in environment");
   }
-  console.log("priv key: ", walletPrivateKey);
 
   const wallet = new RawSigner(
     Ed25519Keypair.fromSecretKey(
@@ -103,12 +94,14 @@ async function main() {
     ),
   ]);
 
+  let payload = ds.serialize()
+
   // ==================================================================================================
 
   let msg = governance.publishGovernanceMessage(
     timestamp,
     "",
-    ds.serialize(),
+    payload,
     action,
     chain
   );
@@ -123,7 +116,7 @@ async function main() {
 
   // Sign governance message
   const signedVaa = guardians.addSignatures(msg, [0]);
-  console.log("Signed VAA:", signedVaa.toString("hex"));
+  console.log("signed VAA:", signedVaa.toString("hex"));
 }
 
 main();

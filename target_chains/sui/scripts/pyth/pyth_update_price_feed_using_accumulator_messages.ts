@@ -33,7 +33,8 @@ async function main() {
   );
   console.log(wallet.getAddress());
 
-  // make sure that the price feed id corresponds to the price info object id!
+  // set the price_feed_id and price_info_object_id when trying to update a price feed
+  // make sure that the price feed id corresponds to the price info object id
   let price_feed_id =
     "0x5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280";
   let price_info_object_id =
@@ -47,9 +48,6 @@ async function main() {
   // convert accumulator msg to hex
   let accumulator_message = Buffer.from(data[0], "base64").toString("hex");
 
-  console.log("accumulator_message: ", accumulator_message);
-  //parse_vaa_bytes_from_accumulator_message(accumulator_message)
-  //console.log(data);
   update_price_feeds(
     wallet,
     registry,
@@ -132,10 +130,6 @@ async function update_price_feeds(
 
   tx.setGasBudget(2000000000);
 
-  // let result = await signer.dryRunTransactionBlock({
-  //   transactionBlock: tx,
-  // })
-
   let result = await signer.signAndExecuteTransactionBlock({
     transactionBlock: tx,
     options: {
@@ -155,27 +149,19 @@ async function update_price_feeds(
 // If isHex==false, then the accumulator_message is assumed to be in base64.
 function parse_vaa_bytes_from_accumulator_message(
   accumulator_message: string,
-  isHex: boolean
+  isHex: boolean,
 ): number[] {
-  console.log(
-    "(parse_vaa_bytes_from_accumulator_message) accumulator_message: ",
-    accumulator_message
-  );
-  var b: number[];
-  if (isHex) {
-    b = [...Buffer.from(accumulator_message, "hex")];
-  } else {
-    b = [...Buffer.from(accumulator_message, "base64")];
-  }
+  let b = isHex ? [...Buffer.from(accumulator_message, "hex")] : [...Buffer.from(accumulator_message, "base64")]
+  // the bytes at offsets 0-5 in the accumulator msg encode the header, major, minor bytes
+  // we ignore them, since we are only interested in the VAA bytes
   let trailing_size = b.slice(6, 7)[0];
   let vaa_size_offset =
-    7 /* initial bytes */ +
-    trailing_size /* trailing size (variable bytes) */ +
+    7 /* initial bytes (header, major, minor, trailing size) */ +
+    trailing_size /* trailing size (variable number of bytes) */ +
     1; /* proof_type (1 byte) */
   let vaa_size_bytes = b.slice(vaa_size_offset, vaa_size_offset + 2);
   let vaa_size = vaa_size_bytes[1] + 16 * vaa_size_bytes[0];
   let vaa_offset = vaa_size_offset + 2;
   let vaa = b.slice(vaa_offset, vaa_offset + vaa_size);
-  console.log("(parse_vaa_bytes_from_accumulator_message) vaa: ", vaa);
   return vaa;
 }
