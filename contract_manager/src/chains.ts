@@ -181,4 +181,44 @@ export class EVMChain extends Chain {
   }
 }
 
+export class AptosChain extends Chain {
+  static type = "AptosChain";
+
+  constructor(id: string, public rpcUrl: string) {
+    super(id);
+  }
+
+  generateGovernanceUpgradePayload(digest: string): Buffer {
+    return new SuiAuthorizeUpgradeContractInstruction(
+      CHAINS["aptos"],
+      new HexString32Bytes(digest)
+    ).serialize();
+  }
+
+  generateGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
+    return new SetFeeInstruction(
+      CHAINS["aptos"], // should always be aptos (22) no matter devnet or testnet or mainnet
+      BigInt(fee),
+      BigInt(exponent)
+    ).serialize();
+  }
+
+  getType(): string {
+    return AptosChain.type;
+  }
+
+  toJson(): any {
+    return {
+      id: this.id,
+      rpcUrl: this.rpcUrl,
+      type: AptosChain.type,
+    };
+  }
+
+  static fromJson(parsed: any): AptosChain {
+    if (parsed.type !== AptosChain.type) throw new Error("Invalid type");
+    return new AptosChain(parsed.id, parsed.rpcUrl);
+  }
+}
+
 export const Chains: Record<string, Chain> = {};

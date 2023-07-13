@@ -1,4 +1,11 @@
-import { Chain, CosmWasmChain, SuiChain, Chains, EVMChain } from "./chains";
+import {
+  Chains,
+  Chain,
+  CosmWasmChain,
+  SuiChain,
+  EVMChain,
+  AptosChain,
+} from "./chains";
 import { CosmWasmContract } from "./cosmwasm";
 import { SuiContract } from "./sui";
 import { Contract } from "./base";
@@ -13,6 +20,7 @@ import {
 } from "fs";
 import { Contracts } from "./entities";
 import { EVMContract } from "./evm";
+import { AptosContract } from "./aptos";
 
 class Store {
   static Chains: Record<string, Chain> = {};
@@ -69,6 +77,7 @@ class Store {
       [CosmWasmChain.type]: CosmWasmChain,
       [SuiChain.type]: SuiChain,
       [EVMChain.type]: EVMChain,
+      [AptosChain.type]: AptosChain,
     };
 
     this.getYamlFiles(`${this.path}/chains/`).forEach((yamlFile) => {
@@ -86,6 +95,7 @@ class Store {
       [CosmWasmContract.type]: CosmWasmContract,
       [SuiContract.type]: SuiContract,
       [EVMContract.type]: EVMContract,
+      [AptosContract.type]: AptosContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
       let parsed = parse(readFileSync(yamlFile, "utf-8"));
