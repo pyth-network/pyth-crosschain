@@ -322,7 +322,7 @@ export class SuiPricePusher implements IPricePusher {
         "Successfully updated price with transaction digest ",
         result.digest
       );
-    } catch (e) {
+    } catch (e: any) {
       console.log("Error when signAndExecuteTransactionBlock");
       if (String(e).includes("GasBalanceTooLow")) {
         console.warn(
@@ -332,6 +332,11 @@ export class SuiPricePusher implements IPricePusher {
         nextGasObject = gasObject;
       }
       console.error(e);
+
+      if ("data" in e) {
+        console.error("Error has .data field:");
+        console.error(JSON.stringify(e.data));
+      }
     }
 
     if (nextGasObject !== undefined) {
