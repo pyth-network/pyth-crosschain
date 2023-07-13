@@ -48,7 +48,7 @@ async function main() {
   // convert accumulator msg to hex
   let accumulator_message = Buffer.from(data[0], "base64").toString("hex");
 
-  update_price_feeds(
+  update_price_feed_using_accumulator_message(
     wallet,
     registry,
     accumulator_message,
@@ -57,7 +57,7 @@ async function main() {
 }
 main();
 
-async function update_price_feeds(
+async function update_price_feed_using_accumulator_message(
   signer: RawSigner,
   registry: any,
   accumulator_message: string,
