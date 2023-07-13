@@ -172,12 +172,26 @@ export class MultisigVault {
   // Propose instructions
 
   /**
-   * Propose submitting `payload` as a wormhole message. If the proposal is approved, the sent message
-   * will have `this.getVaultAuthorityPda()` as its emitter address.
+   * Same as proposeWormholeMessageWithPayer, but uses the predefined ops key for the vault
+   * If the vault is not configured with an ops key, this will throw an error.
    * @param payload the bytes to send as the wormhole message's payload.
    * @returns the newly created proposal's public key
    */
   public async proposeWormholeMessage(payload: Buffer): Promise<PublicKey> {
+    return this.proposeWormholeMessageWithPayer(payload, getOpsKey(this.vault));
+  }
+
+  /**
+   * Propose submitting `payload` as a wormhole message. If the proposal is approved, the sent message
+   * will have `this.getVaultAuthorityPda()` as its emitter address.
+   * @param payload the bytes to send as the wormhole message's payload.
+   * @param messagePayer key used as the payer for the wormhole message instruction
+   * @returns the newly created proposal's public key
+   */
+  public async proposeWormholeMessageWithPayer(
+    payload: Buffer,
+    messagePayer: PublicKey
+  ): Promise<PublicKey> {
     const msAccount = await this.getMultisigAccount();
 
     let ixToSend: TransactionInstruction[] = [];
@@ -194,7 +208,8 @@ export class MultisigVault {
       newProposalAddress,
       1,
       this.wormholeAddress()!,
-      payload
+      payload,
+      messagePayer
     );
     ixToSend.push(
       await this.squad.buildAddInstruction(
@@ -473,7 +488,8 @@ export async function wrapAsRemoteInstruction(
     proposalAddress,
     instructionIndex,
     wormholeAddress,
-    buffer
+    buffer,
+    getOpsKey(vault)
   );
 }
 
@@ -485,6 +501,7 @@ export async function wrapAsRemoteInstruction(
  * @param instructionIndex index of the instruction within the proposal
  * @param wormholeAddress address of the Wormhole bridge
  * @param payload the payload to be posted
+ * @param messagePayer key used as the payer for the wormhole message instruction
  */
 async function getPostMessageInstruction(
   squad: SquadsMesh,
@@ -492,7 +509,8 @@ async function getPostMessageInstruction(
   proposalAddress: PublicKey,
   instructionIndex: number,
   wormholeAddress: PublicKey,
-  payload: Buffer
+  payload: Buffer,
+  messagePayer: PublicKey
 ): Promise<SquadInstruction> {
   const [messagePDA, messagePdaBump] = getIxAuthorityPDA(
     proposalAddress,
@@ -514,7 +532,7 @@ async function getPostMessageInstruction(
   const accounts = getPostMessageAccounts(
     wormholeAddress,
     emitter,
-    getOpsKey(vault),
+    messagePayer,
     messagePDA
   );
 
