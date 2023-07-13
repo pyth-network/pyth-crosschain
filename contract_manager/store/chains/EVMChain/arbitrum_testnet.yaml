@@ -1,0 +1,3 @@
+id: arbitrum_testnet
+rpcUrl: https://goerli-rollup.arbitrum.io/rpc
+type: EVMChain

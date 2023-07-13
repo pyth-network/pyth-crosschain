@@ -2,6 +2,7 @@ import { Chain, CosmWasmChain, SuiChain, Chains, EVMChain } from "./chains";
 import { CosmWasmContract } from "./cosmwasm";
 import { SuiContract } from "./sui";
 import { Contract } from "./base";
+import { stringify, parse } from "yaml";
 import {
   readdirSync,
   readFileSync,
@@ -40,13 +41,10 @@ class Store {
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
-    writeFileSync(
-      `${dir}/${file}.json`,
-      JSON.stringify(content, undefined, 2) + "\n"
-    );
+    writeFileSync(`${dir}/${file}.yaml`, stringify(content));
   }
 
-  getJSONFiles(path: string) {
+  getYamlFiles(path: string) {
     const walk = function (dir: string) {
       let results: string[] = [];
       const list = readdirSync(dir);
@@ -63,7 +61,7 @@ class Store {
       });
       return results;
     };
-    return walk(path).filter((file) => file.endsWith(".json"));
+    return walk(path).filter((file) => file.endsWith(".yaml"));
   }
 
   loadAllChains() {
@@ -73,8 +71,8 @@ class Store {
       [EVMChain.type]: EVMChain,
     };
 
-    this.getJSONFiles(`${this.path}/chains/`).forEach((jsonFile) => {
-      let parsed = JSON.parse(readFileSync(jsonFile, "utf-8"));
+    this.getYamlFiles(`${this.path}/chains/`).forEach((yamlFile) => {
+      let parsed = parse(readFileSync(yamlFile, "utf-8"));
       if (allChainClasses[parsed.type] === undefined) return;
       let chain = allChainClasses[parsed.type].fromJson(parsed);
       if (Chains[chain.getId()])
@@ -89,8 +87,8 @@ class Store {
       [SuiContract.type]: SuiContract,
       [EVMContract.type]: EVMContract,
     };
-    this.getJSONFiles(`${this.path}/contracts/`).forEach((jsonFile) => {
-      let parsed = JSON.parse(readFileSync(jsonFile, "utf-8"));
+    this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
+      let parsed = parse(readFileSync(yamlFile, "utf-8"));
       if (allContractClasses[parsed.type] === undefined) return;
       let chainContract = allContractClasses[parsed.type].fromJson(parsed);
       if (Contracts[chainContract.getId()])

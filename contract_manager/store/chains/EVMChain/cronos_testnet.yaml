@@ -1,0 +1,3 @@
+id: cronos_testnet
+rpcUrl: https://evm-t3.cronos.org
+type: EVMChain

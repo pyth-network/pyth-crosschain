@@ -1,5 +1,0 @@
-{
-  "id": "sui_testnet",
-  "rpcUrl": "https://fullnode.testnet.sui.io:443",
-  "type": "SuiChain"
-}
