@@ -158,8 +158,8 @@ function parse_vaa_bytes_from_accumulator_message(
   // we ignore them, since we are only interested in the VAA bytes
   let trailing_size = b.slice(6, 7)[0];
   let vaa_size_offset =
-    7 /* initial bytes (header, major, minor, trailing size) */ +
-    trailing_size /* trailing size (variable number of bytes) */ +
+    7 /* initial bytes (header, major, minor, trailing stuff size) */ +
+    trailing_size /* trailing stuff (variable number of bytes) */ +
     1; /* proof_type (1 byte) */
   let vaa_size_bytes = b.slice(vaa_size_offset, vaa_size_offset + 2);
   let vaa_size = vaa_size_bytes[1] + 16 * vaa_size_bytes[0];

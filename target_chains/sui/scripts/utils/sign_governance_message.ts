@@ -60,7 +60,7 @@ async function main() {
 
   console.log("wallet address: ", wallet.getAddress());
 
-  // =============================== construct your own VAA payload here ===============================
+  // =============================== construct governance VAA payload ===============================
 
   const guardians = new mock.MockGuardians(0, [guardianPrivateKey]);
   const timestamp = 12345678;
@@ -96,7 +96,7 @@ async function main() {
 
   let payload = ds.serialize();
 
-  // ==================================================================================================
+  // =============================== construct governance message ===============================
 
   let msg = governance.publishGovernanceMessage(
     timestamp,
@@ -107,14 +107,13 @@ async function main() {
   );
 
   // Pyth expects the module name for an action to be "0x00000000000000000000000000000001", so
-  // we write 0x1 in the right position to turn the module name "0x00000000000000000000000000000000" -> "0x00000000000000000000000000000001"
+  // we write 0x1 in the right position to convert the module name from "0x00000000000000000000000000000000" -> "0x00000000000000000000000000000001"
   msg.writeUInt8(0x1, 84 - 33 + 31);
 
   console.log("governance msg: ", msg.toString("hex"));
 
-  // ===============================================================================================
+  // =============================== sign governance message ===============================
 
-  // Sign governance message
   const signedVaa = guardians.addSignatures(msg, [0]);
   console.log("signed VAA:", signedVaa.toString("hex"));
 }
