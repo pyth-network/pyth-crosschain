@@ -325,6 +325,11 @@ export class CosmWasmContract extends Contract {
     return querier.getUpdateFee(this.address, msgs);
   }
 
+  async getBaseUpdateFee(): Promise<any> {
+    const config = await this.getConfig();
+    return config.config_v1.fee;
+  }
+
   getSetUpdateFeePayload(fee: number): Buffer {
     return new SetFeeInstruction(
       CHAINS[this.chain.getId() as keyof typeof CHAINS],

@@ -269,6 +269,14 @@ export class Vault extends Storable {
     return this.squad;
   }
 
+  public async getEmitter() {
+    const squad = SquadsMesh.endpoint(
+      getPythClusterApiUrl(this.cluster),
+      new NodeWallet(Keypair.generate()) // dummy wallet
+    );
+    return squad.getAuthorityPDA(this.key, 1);
+  }
+
   public async proposeWormholeMessage(
     payload: Buffer
   ): Promise<WormholeMultiSigTransaction> {

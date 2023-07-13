@@ -360,6 +360,11 @@ export class SuiContract extends Contract {
     );
   }
 
+  async getBaseUpdateFee() {
+    const fields = await this.getStateFields();
+    return { amount: fields.base_update_fee, denom: "mist" };
+  }
+
   private getProvider() {
     return new JsonRpcProvider(new Connection({ fullnode: this.chain.rpcUrl }));
   }

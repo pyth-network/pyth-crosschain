@@ -31,6 +31,12 @@ export abstract class Contract extends Storable {
   abstract getDataSources(): Promise<DataSource[]>;
 
   /**
+   * Returns the base update fee for this contract
+   * This is the required fee for updating the price feeds in the contract
+   */
+  abstract getBaseUpdateFee(): Promise<any>;
+
+  /**
    * Returns the single data source that this contract accepts governance messages from
    */
   abstract getGovernanceDataSource(): Promise<DataSource>;

@@ -57,6 +57,19 @@ export class EVMContract extends Contract {
         },
         {
           inputs: [],
+          name: "singleUpdateFeeInWei",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "validDataSources",
           outputs: [
             {
@@ -100,6 +113,12 @@ export class EVMContract extends Contract {
     const pythContract = this.getContract();
     const result = await pythContract.methods.getValidTimePeriod().call();
     return Number(result);
+  }
+
+  async getBaseUpdateFee() {
+    const pythContract = this.getContract();
+    const result = await pythContract.methods.singleUpdateFeeInWei().call();
+    return { amount: result, denom: "wei" };
   }
 
   async getDataSources(): Promise<DataSource[]> {
