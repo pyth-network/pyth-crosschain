@@ -179,7 +179,7 @@ export class SuiContract extends Contract {
     return this.executeTransaction(tx, keypair);
   }
 
-  getUpgradePackagePayload(digest: string): Buffer {
+  getGovernanceUpgradePayload(digest: string): Buffer {
     let setFee = new SuiAuthorizeUpgradeContractInstruction(
       CHAINS["sui"],
       new HexString32Bytes(digest)

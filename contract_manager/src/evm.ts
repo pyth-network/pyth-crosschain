@@ -2,7 +2,13 @@ import Web3 from "web3"; //TODO: decide on using web3 or ethers.js
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import { Contract } from "./base";
 import { Chains, EVMChain } from "./chains";
-import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
+import {
+  CHAINS,
+  EthereumUpgradeContractInstruction,
+  DataSource,
+  HexString32Bytes,
+  HexString20Bytes,
+} from "@pythnetwork/xc-governance-sdk";
 
 const EXTENDED_PYTH_ABI = [
   {
@@ -153,6 +159,13 @@ export class EVMContract extends Contract {
       Number(chainId),
       new HexString32Bytes(emitterAddress)
     );
+  }
+
+  getGovernanceUpgradePayload(address: HexString20Bytes): Buffer {
+    return new EthereumUpgradeContractInstruction(
+      CHAINS[this.getChain().getId() as keyof typeof CHAINS],
+      address
+    ).serialize();
   }
 
   async executeGovernanceInstruction(privateKey: string, vaa: Buffer) {

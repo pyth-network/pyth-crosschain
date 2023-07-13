@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { getPythConfig } from "@pythnetwork/cosmwasm-deploy-tools/lib/configs";
 import {
   CHAINS,
+  CosmwasmUpgradeContractInstruction,
   DataSource,
   HexString32Bytes,
 } from "@pythnetwork/xc-governance-sdk";
@@ -50,6 +51,13 @@ export class CosmWasmContract extends Contract {
         new HexString32Bytes(Buffer.from(emitter, "base64").toString("hex"))
       );
     });
+  }
+
+  getGovernanceUpgradePayload(codeId: bigint): Buffer {
+    return new CosmwasmUpgradeContractInstruction(
+      CHAINS[this.getChain().getId() as keyof typeof CHAINS],
+      codeId
+    ).serialize();
   }
 
   async getGovernanceDataSource(): Promise<DataSource> {

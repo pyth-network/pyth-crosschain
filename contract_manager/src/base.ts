@@ -68,6 +68,12 @@ export abstract class Contract extends Storable {
   }
 
   /**
+   * Returns the payload for a governance Contract Upgrade instruction
+   * @param upgradeInfo based on the contract type, this can be a contract address, codeId, package digest, etc.
+   */
+  abstract getGovernanceUpgradePayload(upgradeInfo: any): Buffer;
+
+  /**
    * Returns the single data source that this contract accepts governance messages from
    */
   abstract getGovernanceDataSource(): Promise<DataSource>;
