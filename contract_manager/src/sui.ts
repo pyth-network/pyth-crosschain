@@ -1,22 +1,14 @@
 import {
+  Connection,
+  Ed25519Keypair,
+  JsonRpcProvider,
+  ObjectId,
   RawSigner,
   SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
-  JsonRpcProvider,
-  Ed25519Keypair,
-  Connection,
-  ObjectId,
 } from "@mysten/sui.js";
-import { readFileSync, writeFileSync } from "fs";
 import { Chains, SuiChain } from "./chains";
-import {
-  CHAINS,
-  DataSource,
-  HexString32Bytes,
-  SetFeeInstruction,
-  SuiAuthorizeUpgradeContractInstruction,
-} from "@pythnetwork/xc-governance-sdk";
-import { BufferBuilder } from "@pythnetwork/xc-governance-sdk/lib/serialize";
+import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
 import { Contract } from "./base";
 
 export class SuiContract extends Contract {
@@ -179,23 +171,6 @@ export class SuiContract extends Contract {
     return this.executeTransaction(tx, keypair);
   }
 
-  getGovernanceUpgradePayload(digest: string): Buffer {
-    let setFee = new SuiAuthorizeUpgradeContractInstruction(
-      CHAINS["sui"],
-      new HexString32Bytes(digest)
-    ).serialize();
-    return this.wrapWithWormholeGovernancePayload(0, setFee);
-  }
-
-  getGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
-    let setFee = new SetFeeInstruction(
-      CHAINS["sui"],
-      BigInt(fee),
-      BigInt(exponent)
-    ).serialize();
-    return this.wrapWithWormholeGovernancePayload(3, setFee);
-  }
-
   async executeGovernanceInstruction(keypair: Ed25519Keypair, vaa: Buffer) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
@@ -236,23 +211,6 @@ export class SuiContract extends Contract {
       arguments: [tx.object(this.stateId), upgradeReceipt],
     });
     return this.executeTransaction(tx, keypair);
-  }
-
-  private wrapWithWormholeGovernancePayload(
-    actionVariant: number,
-    payload: Buffer
-  ): Buffer {
-    const builder = new BufferBuilder();
-    builder.addBuffer(
-      Buffer.from(
-        "0000000000000000000000000000000000000000000000000000000000000001",
-        "hex"
-      )
-    );
-    builder.addUint8(actionVariant);
-    builder.addUint16(CHAINS["sui"]); // should always be sui (21) no matter devnet or testnet
-    builder.addBuffer(payload);
-    return builder.build();
   }
 
   /**

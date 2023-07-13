@@ -55,25 +55,6 @@ export abstract class Contract extends Storable {
   abstract executeGovernanceInstruction(sender: any, vaa: Buffer): Promise<any>;
 
   /**
-   * Returns the payload for a governance SetFee instruction
-   * @param fee the new fee to set
-   * @param exponent the new fee exponent to set
-   */
-  getGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
-    return new SetFeeInstruction(
-      CHAINS[this.getChain().getId() as keyof typeof CHAINS],
-      BigInt(fee),
-      BigInt(exponent)
-    ).serialize();
-  }
-
-  /**
-   * Returns the payload for a governance Contract Upgrade instruction
-   * @param upgradeInfo based on the contract type, this can be a contract address, codeId, package digest, etc.
-   */
-  abstract getGovernanceUpgradePayload(upgradeInfo: any): Buffer;
-
-  /**
    * Returns the single data source that this contract accepts governance messages from
    */
   abstract getGovernanceDataSource(): Promise<DataSource>;
