@@ -5,7 +5,6 @@ import {
   CHAINS,
   DataSource,
   HexString32Bytes,
-  SetFeeInstruction,
 } from "@pythnetwork/xc-governance-sdk";
 import { DeploymentType } from "@pythnetwork/cosmwasm-deploy-tools/lib/helper";
 import {
@@ -220,7 +219,6 @@ export class CosmWasmContract extends Contract {
     return config;
   }
 
-  // TODO: function for uploading the code and getting the code id
   // TODO: function for upgrading the contract
   // TODO: Cleanup and more strict linter to convert let to const
 
@@ -330,12 +328,8 @@ export class CosmWasmContract extends Contract {
     return config.config_v1.fee;
   }
 
-  getSetUpdateFeePayload(fee: number): Buffer {
-    return new SetFeeInstruction(
-      CHAINS[this.chain.getId() as keyof typeof CHAINS],
-      BigInt(fee),
-      BigInt(0)
-    ).serialize();
+  getChain(): CosmWasmChain {
+    return this.chain;
   }
 
   async getValidTimePeriod() {

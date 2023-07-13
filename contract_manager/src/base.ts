@@ -1,4 +1,10 @@
-import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
+import {
+  CHAINS,
+  DataSource,
+  HexString32Bytes,
+  SetFeeInstruction,
+} from "@pythnetwork/xc-governance-sdk";
+import { Chain } from "./chains";
 
 export abstract class Storable {
   /**
@@ -26,6 +32,11 @@ export abstract class Contract extends Storable {
   abstract getValidTimePeriod(): Promise<number>;
 
   /**
+   * Returns the chain that this contract is deployed on
+   */
+  abstract getChain(): Chain;
+
+  /**
    * Returns an array of data sources that this contract accepts price feed messages from
    */
   abstract getDataSources(): Promise<DataSource[]>;
@@ -42,6 +53,19 @@ export abstract class Contract extends Storable {
    * @param vaa the VAA to execute
    */
   abstract executeGovernanceInstruction(sender: any, vaa: Buffer): Promise<any>;
+
+  /**
+   * Returns the payload for a governance SetFee instruction
+   * @param fee the new fee to set
+   * @param exponent the new fee exponent to set
+   */
+  getGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
+    return new SetFeeInstruction(
+      CHAINS[this.getChain().getId() as keyof typeof CHAINS],
+      BigInt(fee),
+      BigInt(exponent)
+    ).serialize();
+  }
 
   /**
    * Returns the single data source that this contract accepts governance messages from

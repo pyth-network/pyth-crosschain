@@ -53,6 +53,10 @@ export class SuiContract extends Contract {
     return SuiContract.type;
   }
 
+  getChain(): SuiChain {
+    return this.chain;
+  }
+
   toJson() {
     return {
       chain: this.chain.id,
@@ -183,11 +187,11 @@ export class SuiContract extends Contract {
     return this.wrapWithWormholeGovernancePayload(0, setFee);
   }
 
-  getSetUpdateFeePayload(fee: number): Buffer {
+  getGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
     let setFee = new SetFeeInstruction(
       CHAINS["sui"],
       BigInt(fee),
-      BigInt(0)
+      BigInt(exponent)
     ).serialize();
     return this.wrapWithWormholeGovernancePayload(3, setFee);
   }

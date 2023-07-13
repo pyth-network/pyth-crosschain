@@ -2,12 +2,7 @@ import Web3 from "web3"; //TODO: decide on using web3 or ethers.js
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import { Contract } from "./base";
 import { Chains, EVMChain } from "./chains";
-import {
-  CHAINS,
-  DataSource,
-  HexString32Bytes,
-  SetFeeInstruction,
-} from "@pythnetwork/xc-governance-sdk";
+import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
 
 const EXTENDED_PYTH_ABI = [
   {
@@ -89,6 +84,7 @@ const EXTENDED_PYTH_ABI = [
   },
   ...PythInterfaceAbi,
 ] as any;
+
 export class EVMContract extends Contract {
   static type = "EVMContract";
 
@@ -173,12 +169,8 @@ export class EVMContract extends Contract {
     return transactionObject.send({ from: address, gas: gasEstiamte * 2 });
   }
 
-  getSetUpdateFeePayload(fee: number): Buffer {
-    return new SetFeeInstruction(
-      CHAINS[this.chain.getId() as keyof typeof CHAINS],
-      BigInt(fee),
-      BigInt(0)
-    ).serialize();
+  getChain(): EVMChain {
+    return this.chain;
   }
 
   toJson() {
