@@ -65,16 +65,7 @@ async function main() {
   //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(200, 220));
   // const priceFeedVAAs = await connection.getLatestVaas( // ???
   //   price_feed_ids.slice(220, 240)
-  // );
-  // const priceFeedVAAs = await connection.getLatestVaas(
-  //   price_feed_ids.slice(240, 260)
-  // );
-  // const priceFeedVAAs = await connection.getLatestVaas( // ???
-  //   price_feed_ids.slice(260, 280)
-  // );
-  // const priceFeedVAAs = await connection.getLatestVaas(// didn't work  TypeError [ERR_INVALID_CHAR]: Invalid character in header content ["0"]
-  //   price_feed_ids.slice(280, 300)
-  // );
+
   const priceFeedVAAs = await connection.getLatestVaas(
     price_feed_ids.slice(300)
   );
