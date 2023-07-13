@@ -94,7 +94,7 @@ async function main() {
     ),
   ]);
 
-  let payload = ds.serialize()
+  let payload = ds.serialize();
 
   // ==================================================================================================
 

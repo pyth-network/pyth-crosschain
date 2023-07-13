@@ -61,7 +61,9 @@ async function main() {
   //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(140, 160));
   //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(160, 180));
   //const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(180, 200));
-  const priceFeedVAAs = await connection.getLatestVaas(price_feed_ids.slice(200, 220));
+  const priceFeedVAAs = await connection.getLatestVaas(
+    price_feed_ids.slice(200, 220)
+  );
 
   console.log("price feed VAAs len: ", priceFeedVAAs.length);
 

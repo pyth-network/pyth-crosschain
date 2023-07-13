@@ -149,9 +149,11 @@ async function update_price_feeds(
 // If isHex==false, then the accumulator_message is assumed to be in base64.
 function parse_vaa_bytes_from_accumulator_message(
   accumulator_message: string,
-  isHex: boolean,
+  isHex: boolean
 ): number[] {
-  let b = isHex ? [...Buffer.from(accumulator_message, "hex")] : [...Buffer.from(accumulator_message, "base64")]
+  let b = isHex
+    ? [...Buffer.from(accumulator_message, "hex")]
+    : [...Buffer.from(accumulator_message, "base64")];
   // the bytes at offsets 0-5 in the accumulator msg encode the header, major, minor bytes
   // we ignore them, since we are only interested in the VAA bytes
   let trailing_size = b.slice(6, 7)[0];
