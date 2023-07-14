@@ -31,9 +31,7 @@ import {
   deriveFeeCollectorKey,
   deriveWormholeBridgeDataKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { Contract, Storable } from "./base";
-
-export const Contracts: Record<string, Contract> = {};
+import { Storable } from "./base";
 
 class InvalidTransactionError extends Error {
   constructor(message: string) {
@@ -293,8 +291,6 @@ export class Vault extends Storable {
     return new WormholeMultiSigTransaction(txAccount, squad, this.cluster);
   }
 }
-
-export const Vaults: Record<string, Vault> = {};
 
 export async function loadHotWallet(wallet: string): Promise<Wallet> {
   return new NodeWallet(

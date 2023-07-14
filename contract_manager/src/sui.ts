@@ -7,7 +7,7 @@ import {
   SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
 } from "@mysten/sui.js";
-import { Chains, SuiChain } from "./chains";
+import { Chain, SuiChain } from "./chains";
 import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
 import { Contract } from "./base";
 
@@ -30,15 +30,11 @@ export class SuiContract extends Contract {
     super();
   }
 
-  static fromJson(parsed: any): SuiContract {
+  static fromJson(chain: Chain, parsed: any): SuiContract {
     if (parsed.type !== SuiContract.type) throw new Error("Invalid type");
-    if (!Chains[parsed.chain])
-      throw new Error(`Chain ${parsed.chain} not found`);
-    return new SuiContract(
-      Chains[parsed.chain] as SuiChain,
-      parsed.stateId,
-      parsed.wormholeStateId
-    );
+    if (!(chain instanceof SuiChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new SuiContract(chain, parsed.stateId, parsed.wormholeStateId);
   }
 
   getType(): string {

@@ -5,10 +5,12 @@ const service = tsNode.create({ ...repl.evalAwarePartialHost });
 repl.setService(service);
 repl.start();
 repl.evalCode(
-  "import { Contracts, Vaults, loadHotWallet } from './src/entities';" +
-    "import { Chains,SuiChain,CosmWasmChain } from './src/chains';" +
+  "import { loadHotWallet } from './src/entities';" +
+    "import { SuiChain, CosmWasmChain, AptosChain, EVMChain } from './src/chains';" +
     "import { SuiContract } from './src/sui';" +
     "import { CosmWasmContract } from './src/cosmwasm';" +
+    "import { EVMContract } from './src/evm';" +
+    "import { AptosContract } from './src/aptos';" +
     "import { DefaultStore } from './src/store';" +
     "DefaultStore"
 );

@@ -1,30 +1,22 @@
-import {
-  Chains,
-  Chain,
-  CosmWasmChain,
-  SuiChain,
-  EVMChain,
-  AptosChain,
-} from "./chains";
+import { AptosChain, Chain, CosmWasmChain, EVMChain, SuiChain } from "./chains";
 import { CosmWasmContract } from "./cosmwasm";
 import { SuiContract } from "./sui";
 import { Contract } from "./base";
-import { stringify, parse } from "yaml";
+import { parse, stringify } from "yaml";
 import {
+  existsSync,
+  mkdirSync,
   readdirSync,
   readFileSync,
-  writeFileSync,
-  mkdirSync,
-  existsSync,
   statSync,
+  writeFileSync,
 } from "fs";
-import { Contracts } from "./entities";
 import { EVMContract } from "./evm";
 import { AptosContract } from "./aptos";
 
 class Store {
-  static Chains: Record<string, Chain> = {};
-  static Contracts: Record<string, CosmWasmContract | SuiContract> = {};
+  public chains: Record<string, Chain> = {};
+  public contracts: Record<string, Contract> = {};
 
   constructor(public path: string) {
     this.loadAllChains();
@@ -84,9 +76,9 @@ class Store {
       let parsed = parse(readFileSync(yamlFile, "utf-8"));
       if (allChainClasses[parsed.type] === undefined) return;
       let chain = allChainClasses[parsed.type].fromJson(parsed);
-      if (Chains[chain.getId()])
+      if (this.chains[chain.getId()])
         throw new Error(`Multiple chains with id ${chain.getId()} found`);
-      Chains[chain.getId()] = chain;
+      this.chains[chain.getId()] = chain;
     });
   }
 
@@ -100,12 +92,18 @@ class Store {
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
       let parsed = parse(readFileSync(yamlFile, "utf-8"));
       if (allContractClasses[parsed.type] === undefined) return;
-      let chainContract = allContractClasses[parsed.type].fromJson(parsed);
-      if (Contracts[chainContract.getId()])
+      if (!this.chains[parsed.chain])
+        throw new Error(`Chain ${parsed.chain} not found`);
+      const chain = this.chains[parsed.chain];
+      let chainContract = allContractClasses[parsed.type].fromJson(
+        chain,
+        parsed
+      );
+      if (this.contracts[chainContract.getId()])
         throw new Error(
           `Multiple contracts with id ${chainContract.getId()} found`
         );
-      Contracts[chainContract.getId()] = chainContract;
+      this.contracts[chainContract.getId()] = chainContract;
     });
   }
 }

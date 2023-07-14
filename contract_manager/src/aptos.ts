@@ -1,5 +1,5 @@
 import { Contract } from "./base";
-import { AptosChain, Chains } from "./chains";
+import { AptosChain, Chain } from "./chains";
 import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
 import { AptosClient } from "aptos";
 
@@ -22,15 +22,11 @@ export class AptosContract extends Contract {
     super();
   }
 
-  static fromJson(parsed: any): AptosContract {
+  static fromJson(chain: Chain, parsed: any): AptosContract {
     if (parsed.type !== AptosContract.type) throw new Error("Invalid type");
-    if (!Chains[parsed.chain])
-      throw new Error(`Chain ${parsed.chain} not found`);
-    return new AptosContract(
-      Chains[parsed.chain] as AptosChain,
-      parsed.stateId,
-      parsed.wormholeStateId
-    );
+    if (!(chain instanceof AptosChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new AptosContract(chain, parsed.stateId, parsed.wormholeStateId);
   }
 
   executeGovernanceInstruction(sender: any, vaa: Buffer): Promise<any> {

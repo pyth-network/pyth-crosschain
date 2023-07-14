@@ -1,7 +1,7 @@
 import Web3 from "web3"; //TODO: decide on using web3 or ethers.js
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import { Contract } from "./base";
-import { Chains, EVMChain } from "./chains";
+import { Chain, EVMChain } from "./chains";
 import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
 
 const EXTENDED_PYTH_ABI = [
@@ -92,11 +92,11 @@ export class EVMContract extends Contract {
     super();
   }
 
-  static fromJson(parsed: any): EVMContract {
+  static fromJson(chain: Chain, parsed: any): EVMContract {
     if (parsed.type !== EVMContract.type) throw new Error("Invalid type");
-    if (!Chains[parsed.chain])
-      throw new Error(`Chain ${parsed.chain} not found`);
-    return new EVMContract(Chains[parsed.chain] as EVMChain, parsed.address);
+    if (!(chain instanceof EVMChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new EVMContract(chain, parsed.address);
   }
 
   getId(): string {

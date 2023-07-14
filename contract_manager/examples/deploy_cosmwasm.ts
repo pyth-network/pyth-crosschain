@@ -1,6 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { Chains, CosmWasmChain } from "../src/chains";
+import { CosmWasmChain } from "../src/chains";
 import { CosmWasmContract } from "../src/cosmwasm";
 import { DefaultStore } from "../src/store";
 
@@ -35,10 +35,9 @@ const parser = yargs(hideBin(process.argv))
 async function main() {
   const argv = await parser.argv;
   const { code, wormholeContract } = argv;
-  await DefaultStore.loadAllChains();
   console.log(
     await CosmWasmContract.deploy(
-      Chains[argv.chain] as CosmWasmChain,
+      DefaultStore.chains[argv.chain] as CosmWasmChain,
       wormholeContract,
       argv.mnemonic,
       code

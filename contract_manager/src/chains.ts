@@ -220,5 +220,3 @@ export class AptosChain extends Chain {
     return new AptosChain(parsed.id, parsed.rpcUrl);
   }
 }
-
-export const Chains: Record<string, Chain> = {};

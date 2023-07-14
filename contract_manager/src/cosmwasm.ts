@@ -1,4 +1,4 @@
-import { Chains, CosmWasmChain } from "./chains";
+import { Chain, CosmWasmChain } from "./chains";
 import { readFileSync } from "fs";
 import { getPythConfig } from "@pythnetwork/cosmwasm-deploy-tools/lib/configs";
 import {
@@ -70,14 +70,11 @@ export class CosmWasmContract extends Contract {
     super();
   }
 
-  static fromJson(parsed: any): CosmWasmContract {
+  static fromJson(chain: Chain, parsed: any): CosmWasmContract {
     if (parsed.type !== CosmWasmContract.type) throw new Error("Invalid type");
-    if (!Chains[parsed.chain])
-      throw new Error(`Chain ${parsed.chain} not found`);
-    return new CosmWasmContract(
-      Chains[parsed.chain] as CosmWasmChain,
-      parsed.address
-    );
+    if (!(chain instanceof CosmWasmChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new CosmWasmContract(chain, parsed.address);
   }
 
   getType(): string {
