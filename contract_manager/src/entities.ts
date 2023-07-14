@@ -3,29 +3,42 @@ import { readFileSync } from "fs";
 import {
   Connection,
   Keypair,
+  ParsedInstruction,
+  PartiallyDecodedInstruction,
   PublicKey,
   SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   Transaction,
-  TransactionInstruction,
 } from "@solana/web3.js";
-
-import { BN } from "bn.js";
-import { getPythClusterApiUrl } from "@pythnetwork/client/lib/cluster";
-import SquadsMesh, { getTxPDA } from "@sqds/mesh";
+import * as bs58 from "bs58";
+import {
+  getPythClusterApiUrl,
+  PythCluster,
+} from "@pythnetwork/client/lib/cluster";
+import SquadsMesh from "@sqds/mesh";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { WORMHOLE_ADDRESS, WORMHOLE_API_ENDPOINT } from "xc_admin_common";
+import {
+  executeProposal,
+  MultisigVault,
+  WORMHOLE_ADDRESS,
+  WORMHOLE_API_ENDPOINT,
+} from "xc_admin_common";
 import {
   createWormholeProgramInterface,
   deriveEmitterSequenceKey,
   deriveFeeCollectorKey,
   deriveWormholeBridgeDataKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { Contract, Storable } from "./base";
+import { Storable } from "./base";
 
-export const Contracts: Record<string, Contract> = {};
+class InvalidTransactionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidTransactionError";
+  }
+}
 
 export class SubmittedWormholeMessage {
   constructor(
@@ -33,6 +46,57 @@ export class SubmittedWormholeMessage {
     public sequenceNumber: number,
     public cluster: string
   ) {}
+
+  /**
+   * Attempts to find the emitter and sequence number of a wormhole message from a transaction
+   * Parses the transaction and looks for the wormhole postMessage instruction to find the emitter
+   * Inspects the transaction logs to find the sequence number
+   * @param signature signature of the transaction to inspect
+   * @param cluster the cluster the transaction was submitted to
+   */
+  static async fromTransactionSignature(
+    signature: string,
+    cluster: PythCluster
+  ): Promise<SubmittedWormholeMessage> {
+    const connection = new Connection(
+      getPythClusterApiUrl(cluster),
+      "confirmed"
+    );
+
+    const txDetails = await connection.getParsedTransaction(signature);
+    const sequenceLogPrefix = "Sequence: ";
+    const txLog = txDetails?.meta?.logMessages?.find((s) =>
+      s.includes(sequenceLogPrefix)
+    );
+
+    const sequenceNumber = Number(
+      txLog?.substring(
+        txLog.indexOf(sequenceLogPrefix) + sequenceLogPrefix.length
+      )
+    );
+
+    const wormholeAddress =
+      WORMHOLE_ADDRESS[cluster as keyof typeof WORMHOLE_ADDRESS]!;
+    let emitter: PublicKey | undefined = undefined;
+
+    let allInstructions: (ParsedInstruction | PartiallyDecodedInstruction)[] =
+      txDetails?.transaction?.message?.instructions || [];
+    txDetails?.meta?.innerInstructions?.forEach((instruction) => {
+      allInstructions = allInstructions.concat(instruction.instructions);
+    });
+    allInstructions.forEach((instruction) => {
+      if (!instruction.programId.equals(wormholeAddress)) return;
+      // we assume RPC can not parse wormhole instructions and the type is not ParsedInstruction
+      const wormholeInstruction = instruction as PartiallyDecodedInstruction;
+      if (bs58.decode(wormholeInstruction.data)[0] !== 1) return; // 1 is wormhole postMessage Instruction discriminator
+      emitter = wormholeInstruction.accounts[2];
+    });
+    if (!emitter)
+      throw new InvalidTransactionError(
+        "Could not find wormhole postMessage instruction"
+      );
+    return new SubmittedWormholeMessage(emitter, sequenceNumber, cluster);
+  }
 
   /**
    * Tries to fetch the VAA from the wormhole bridge API waiting for a certain amount of time
@@ -61,6 +125,12 @@ export class SubmittedWormholeMessage {
   }
 }
 
+function asPythCluster(cluster: string): PythCluster {
+  const pythCluster = cluster as PythCluster;
+  getPythClusterApiUrl(pythCluster); // throws if cluster is invalid
+  return pythCluster;
+}
+
 /**
  * A simple emitter that can send messages to the wormhole bridge
  * This can be used instead of multisig as a simple way to send messages
@@ -68,17 +138,17 @@ export class SubmittedWormholeMessage {
  * You need to set your pyth contract data source / governance source address to this emitter
  */
 export class WormholeEmitter {
-  cluster: string;
+  cluster: PythCluster;
   wallet: Wallet;
 
   constructor(cluster: string, wallet: Wallet) {
-    this.cluster = cluster;
     this.wallet = wallet;
+    this.cluster = asPythCluster(cluster);
   }
 
   async sendMessage(payload: Buffer) {
     const provider = new AnchorProvider(
-      new Connection(getPythClusterApiUrl(this.cluster as any), "confirmed"),
+      new Connection(getPythClusterApiUrl(this.cluster), "confirmed"),
       this.wallet,
       {
         commitment: "confirmed",
@@ -119,19 +189,44 @@ export class WormholeEmitter {
         .accounts(accounts)
         .instruction()
     );
-    const txSig = await provider.sendAndConfirm(transaction, [kp]);
-    const txDetails = await provider.connection.getParsedTransaction(txSig);
-    const sequenceLogPrefix = "Sequence: ";
-    const txLog = txDetails?.meta?.logMessages?.find((s) =>
-      s.includes(sequenceLogPrefix)
+    const signature = await provider.sendAndConfirm(transaction, [kp]);
+    return SubmittedWormholeMessage.fromTransactionSignature(
+      signature,
+      this.cluster
     );
+  }
+}
 
-    const sequenceNumber = Number(
-      txLog?.substring(
-        txLog.indexOf(sequenceLogPrefix) + sequenceLogPrefix.length
-      )
+export class WormholeMultiSigTransaction {
+  constructor(
+    public address: PublicKey,
+    public squad: SquadsMesh,
+    public cluster: PythCluster
+  ) {}
+
+  async getState() {
+    const proposal = await this.squad.getTransaction(this.address);
+    return proposal.status; //TODO: make it typed and parse the status to a more readable format
+  }
+
+  async execute(): Promise<SubmittedWormholeMessage> {
+    const proposal = await this.squad.getTransaction(this.address);
+    const signatures = await executeProposal(
+      proposal,
+      this.squad,
+      this.cluster
     );
-    return new SubmittedWormholeMessage(emitter, sequenceNumber, this.cluster);
+    for (const signature of signatures) {
+      try {
+        return SubmittedWormholeMessage.fromTransactionSignature(
+          signature,
+          this.cluster
+        );
+      } catch (e: any) {
+        if (!(e instanceof InvalidTransactionError)) throw e;
+      }
+    }
+    throw new Error("No transactions with wormhole messages found");
   }
 }
 
@@ -139,20 +234,19 @@ export class Vault extends Storable {
   static type: string = "vault";
   key: PublicKey;
   squad?: SquadsMesh;
-  cluster: string;
+  cluster: PythCluster;
 
   constructor(key: string, cluster: string) {
     super();
     this.key = new PublicKey(key);
-    this.cluster = cluster;
+    this.cluster = asPythCluster(cluster);
   }
 
   getType(): string {
     return Vault.type;
   }
 
-  static from(path: string): Vault {
-    let parsed = JSON.parse(readFileSync(path, "utf-8"));
+  static fromJson(parsed: any): Vault {
     if (parsed.type !== Vault.type) throw new Error("Invalid type");
     return new Vault(parsed.key, parsed.cluster);
   }
@@ -171,44 +265,9 @@ export class Vault extends Storable {
 
   public connect(wallet: Wallet): void {
     this.squad = SquadsMesh.endpoint(
-      getPythClusterApiUrl(this.cluster as any), // TODO Fix any
+      getPythClusterApiUrl(this.cluster),
       wallet
     );
-  }
-
-  public async createProposalIx(
-    proposalIndex: number
-  ): Promise<[TransactionInstruction, PublicKey]> {
-    const squad = this.getSquadOrThrow();
-    const msAccount = await squad.getMultisig(this.key);
-
-    const ix = await squad.buildCreateTransaction(
-      msAccount.publicKey,
-      msAccount.authorityIndex,
-      proposalIndex
-    );
-
-    const newProposalAddress = getTxPDA(
-      this.key,
-      new BN(proposalIndex),
-      squad.multisigProgramId
-    )[0];
-
-    return [ix, newProposalAddress];
-  }
-
-  public async activateProposalIx(
-    proposalAddress: PublicKey
-  ): Promise<TransactionInstruction> {
-    const squad = this.getSquadOrThrow();
-    return await squad.buildActivateTransaction(this.key, proposalAddress);
-  }
-
-  public async approveProposalIx(
-    proposalAddress: PublicKey
-  ): Promise<TransactionInstruction> {
-    const squad = this.getSquadOrThrow();
-    return await squad.buildApproveTransaction(this.key, proposalAddress);
   }
 
   getSquadOrThrow(): SquadsMesh {
@@ -216,53 +275,31 @@ export class Vault extends Storable {
     return this.squad;
   }
 
-  public async proposeWormholeMessage(payload: Buffer): Promise<any> {
-    const squad = this.getSquadOrThrow();
-    const msAccount = await squad.getMultisig(this.key);
-
-    let ixToSend: TransactionInstruction[] = [];
-    const [proposalIx, newProposalAddress] = await this.createProposalIx(
-      msAccount.transactionIndex + 1
+  public async getEmitter() {
+    const squad = SquadsMesh.endpoint(
+      getPythClusterApiUrl(this.cluster),
+      new NodeWallet(Keypair.generate()) // dummy wallet
     );
+    return squad.getAuthorityPDA(this.key, 1);
+  }
 
-    const proposalIndex = msAccount.transactionIndex + 1;
-    ixToSend.push(proposalIx);
-    return ixToSend;
-    // const instructionToPropose = await getPostMessageInstruction(
-    //     squad,
-    //     this.key,
-    //     newProposalAddress,
-    //     1,
-    //     this.wormholeAddress()!,
-    //     payload
-    // );
-    // ixToSend.push(
-    //     await squad.buildAddInstruction(
-    //         this.key,
-    //         newProposalAddress,
-    //         instructionToPropose.instruction,
-    //         1,
-    //         instructionToPropose.authorityIndex,
-    //         instructionToPropose.authorityBump,
-    //         instructionToPropose.authorityType
-    //     )
-    // );
-    // ixToSend.push(await this.activateProposalIx(newProposalAddress));
-    // ixToSend.push(await this.approveProposalIx(newProposalAddress));
-
-    // const txToSend = batchIntoTransactions(ixToSend);
-    // for (let i = 0; i < txToSend.length; i += SIZE_OF_SIGNED_BATCH) {
-    //     await this.getAnchorProvider().sendAll(
-    //         txToSend.slice(i, i + SIZE_OF_SIGNED_BATCH).map((tx) => {
-    //             return { tx, signers: [] };
-    //         })
-    //     );
-    // }
-    // return newProposalAddress;
+  public async proposeWormholeMessage(
+    payload: Buffer
+  ): Promise<WormholeMultiSigTransaction> {
+    const squad = this.getSquadOrThrow();
+    const multisigVault = new MultisigVault(
+      squad.wallet,
+      this.cluster,
+      squad,
+      this.key
+    );
+    const txAccount = await multisigVault.proposeWormholeMessageWithPayer(
+      payload,
+      squad.wallet.publicKey
+    );
+    return new WormholeMultiSigTransaction(txAccount, squad, this.cluster);
   }
 }
-
-export const Vaults: Record<string, Vault> = {};
 
 export async function loadHotWallet(wallet: string): Promise<Wallet> {
   return new NodeWallet(

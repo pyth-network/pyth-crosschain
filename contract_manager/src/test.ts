@@ -4,12 +4,15 @@ import {
   Vaults,
   loadHotWallet,
   WormholeEmitter,
+  SubmittedWormholeMessage,
 } from "./entities";
 import { SuiContract } from "./sui";
 import { CosmWasmContract } from "./cosmwasm";
 import { Ed25519Keypair, RawSigner } from "@mysten/sui.js";
 import { DefaultStore } from "./store";
 import { Chains } from "./chains";
+import { executeProposal } from "xc_admin_common";
+import { EVMContract } from "./evm";
 
 async function test() {
   // Deploy the same cosmwasm code with different config

@@ -1,22 +1,14 @@
 import {
+  Connection,
+  Ed25519Keypair,
+  JsonRpcProvider,
+  ObjectId,
   RawSigner,
   SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
-  JsonRpcProvider,
-  Ed25519Keypair,
-  Connection,
-  ObjectId,
 } from "@mysten/sui.js";
-import { readFileSync, writeFileSync } from "fs";
-import { Chains, SuiChain } from "./chains";
-import {
-  CHAINS,
-  DataSource,
-  HexString32Bytes,
-  SetFeeInstruction,
-  SuiAuthorizeUpgradeContractInstruction,
-} from "@pythnetwork/xc-governance-sdk";
-import { BufferBuilder } from "@pythnetwork/xc-governance-sdk/lib/serialize";
+import { Chain, SuiChain } from "./chains";
+import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
 import { Contract } from "./base";
 
 export class SuiContract extends Contract {
@@ -38,19 +30,19 @@ export class SuiContract extends Contract {
     super();
   }
 
-  static fromJson(parsed: any): SuiContract {
+  static fromJson(chain: Chain, parsed: any): SuiContract {
     if (parsed.type !== SuiContract.type) throw new Error("Invalid type");
-    if (!Chains[parsed.chain])
-      throw new Error(`Chain ${parsed.chain} not found`);
-    return new SuiContract(
-      Chains[parsed.chain] as SuiChain,
-      parsed.stateId,
-      parsed.wormholeStateId
-    );
+    if (!(chain instanceof SuiChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new SuiContract(chain, parsed.stateId, parsed.wormholeStateId);
   }
 
   getType(): string {
     return SuiContract.type;
+  }
+
+  getChain(): SuiChain {
+    return this.chain;
   }
 
   toJson() {
@@ -175,24 +167,7 @@ export class SuiContract extends Contract {
     return this.executeTransaction(tx, keypair);
   }
 
-  getUpgradePackagePayload(digest: string): Buffer {
-    let setFee = new SuiAuthorizeUpgradeContractInstruction(
-      CHAINS["sui"],
-      new HexString32Bytes(digest)
-    ).serialize();
-    return this.wrapWithWormholeGovernancePayload(0, setFee);
-  }
-
-  getSetUpdateFeePayload(fee: number): Buffer {
-    let setFee = new SetFeeInstruction(
-      CHAINS["sui"],
-      BigInt(fee),
-      BigInt(0)
-    ).serialize();
-    return this.wrapWithWormholeGovernancePayload(3, setFee);
-  }
-
-  async executeGovernanceInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
+  async executeGovernanceInstruction(keypair: Ed25519Keypair, vaa: Buffer) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
     let decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
@@ -232,23 +207,6 @@ export class SuiContract extends Contract {
       arguments: [tx.object(this.stateId), upgradeReceipt],
     });
     return this.executeTransaction(tx, keypair);
-  }
-
-  private wrapWithWormholeGovernancePayload(
-    actionVariant: number,
-    payload: Buffer
-  ): Buffer {
-    const builder = new BufferBuilder();
-    builder.addBuffer(
-      Buffer.from(
-        "0000000000000000000000000000000000000000000000000000000000000001",
-        "hex"
-      )
-    );
-    builder.addUint8(actionVariant);
-    builder.addUint16(CHAINS["sui"]); // should always be sui (21) no matter devnet or testnet
-    builder.addBuffer(payload);
-    return builder.build();
   }
 
   /**
@@ -358,6 +316,11 @@ export class SuiContract extends Contract {
       Number(chainId),
       new HexString32Bytes(Buffer.from(emitterAddress).toString("hex"))
     );
+  }
+
+  async getBaseUpdateFee() {
+    const fields = await this.getStateFields();
+    return { amount: fields.base_update_fee };
   }
 
   private getProvider() {

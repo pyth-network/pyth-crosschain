@@ -1,11 +1,10 @@
-import { Chains, CosmWasmChain } from "./chains";
+import { Chain, CosmWasmChain } from "./chains";
 import { readFileSync } from "fs";
 import { getPythConfig } from "@pythnetwork/cosmwasm-deploy-tools/lib/configs";
 import {
   CHAINS,
   DataSource,
   HexString32Bytes,
-  SetFeeInstruction,
 } from "@pythnetwork/xc-governance-sdk";
 import { DeploymentType } from "@pythnetwork/cosmwasm-deploy-tools/lib/helper";
 import {
@@ -71,14 +70,11 @@ export class CosmWasmContract extends Contract {
     super();
   }
 
-  static fromJson(parsed: any): CosmWasmContract {
+  static fromJson(chain: Chain, parsed: any): CosmWasmContract {
     if (parsed.type !== CosmWasmContract.type) throw new Error("Invalid type");
-    if (!Chains[parsed.chain])
-      throw new Error(`Chain ${parsed.chain} not found`);
-    return new CosmWasmContract(
-      Chains[parsed.chain] as CosmWasmChain,
-      parsed.address
-    );
+    if (!(chain instanceof CosmWasmChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new CosmWasmContract(chain, parsed.address);
   }
 
   getType(): string {
@@ -220,7 +216,6 @@ export class CosmWasmContract extends Contract {
     return config;
   }
 
-  // TODO: function for uploading the code and getting the code id
   // TODO: function for upgrading the contract
   // TODO: Cleanup and more strict linter to convert let to const
 
@@ -306,7 +301,7 @@ export class CosmWasmContract extends Contract {
     });
   }
 
-  async executeGovernanceInstruction(mnemonic: string, vaa: string) {
+  async executeGovernanceInstruction(mnemonic: string, vaa: Buffer) {
     let executor = new CosmwasmExecutor(
       this.chain.executorEndpoint,
       mnemonic,
@@ -316,7 +311,7 @@ export class CosmWasmContract extends Contract {
     let pythExecutor = new PythWrapperExecutor(executor);
     return pythExecutor.executeGovernanceInstruction({
       contractAddr: this.address,
-      vaa,
+      vaa: vaa.toString("base64"),
     });
   }
 
@@ -325,12 +320,13 @@ export class CosmWasmContract extends Contract {
     return querier.getUpdateFee(this.address, msgs);
   }
 
-  getSetUpdateFeePayload(fee: number): Buffer {
-    return new SetFeeInstruction(
-      CHAINS[this.chain.getId() as keyof typeof CHAINS],
-      BigInt(fee),
-      BigInt(0)
-    ).serialize();
+  async getBaseUpdateFee(): Promise<any> {
+    const config = await this.getConfig();
+    return config.config_v1.fee;
+  }
+
+  getChain(): CosmWasmChain {
+    return this.chain;
   }
 
   async getValidTimePeriod() {

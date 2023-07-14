@@ -17,7 +17,8 @@
     "target_chains/ethereum/sdk/solidity",
     "target_chains/ethereum/examples/oracle_swap/app",
     "third_party/pyth/p2w-relay",
-    "wormhole_attester/sdk/js"
+    "wormhole_attester/sdk/js",
+    "contract_manager"
   ],
   "dependencies": {
     "pre-commit": "^1.2.2",
