@@ -33,12 +33,8 @@ export class AptosContract extends Contract {
     throw new Error("Method not implemented.");
   }
 
-  getClient(): AptosClient {
-    return new AptosClient(this.chain.rpcUrl);
-  }
-
   getStateResources() {
-    const client = this.getClient();
+    const client = this.chain.getClient();
     return client.getAccountResources(this.stateId);
   }
 

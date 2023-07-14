@@ -10,6 +10,7 @@ import {
   SuiAuthorizeUpgradeContractInstruction,
 } from "@pythnetwork/xc-governance-sdk";
 import { BufferBuilder } from "@pythnetwork/xc-governance-sdk/lib/serialize";
+import { AptosClient } from "aptos";
 
 export abstract class Chain extends Storable {
   protected constructor(public id: string) {
@@ -186,6 +187,10 @@ export class AptosChain extends Chain {
 
   constructor(id: string, public rpcUrl: string) {
     super(id);
+  }
+
+  getClient(): AptosClient {
+    return new AptosClient(this.rpcUrl);
   }
 
   generateGovernanceUpgradePayload(digest: string): Buffer {
