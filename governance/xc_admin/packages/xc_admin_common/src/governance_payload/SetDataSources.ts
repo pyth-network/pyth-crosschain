@@ -4,7 +4,7 @@ import {
   PythGovernanceActionImpl,
   PythGovernanceHeader,
 } from "./PythGovernanceAction";
-import { ChainName } from "@certusone/wormhole-sdk";
+import { ChainName } from "../chains";
 import * as BufferLayout from "@solana/buffer-layout";
 import * as BufferLayoutExt from "./BufferLayoutExt";
 

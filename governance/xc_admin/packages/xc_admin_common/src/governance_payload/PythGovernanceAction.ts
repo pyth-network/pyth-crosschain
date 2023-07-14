@@ -1,9 +1,4 @@
-import {
-  ChainId,
-  ChainName,
-  toChainId,
-  toChainName,
-} from "@certusone/wormhole-sdk";
+import { ChainId, ChainName, toChainId, toChainName } from "../chains";
 import * as BufferLayout from "@solana/buffer-layout";
 import { PACKET_DATA_SIZE } from "@solana/web3.js";
 

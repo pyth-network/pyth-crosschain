@@ -57,3 +57,9 @@ export function decodeGovernancePayload(
 
 export { ExecutePostedVaa } from "./ExecutePostedVaa";
 export * from "./PythGovernanceAction";
+export * from "./UpgradeContract";
+export * from "./PythGovernanceAction";
+export * from "./GovernanceDataSourceTransfer";
+export * from "./SetDataSources";
+export * from "./SetValidPeriod";
+export * from "./SetFee";

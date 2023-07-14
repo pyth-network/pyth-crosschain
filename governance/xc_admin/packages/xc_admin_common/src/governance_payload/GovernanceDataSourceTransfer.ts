@@ -5,7 +5,7 @@ import {
   PythGovernanceHeader,
 } from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
-import { ChainName } from "@certusone/wormhole-sdk";
+import { ChainName } from "../chains";
 
 /**
  * Authorize transferring the governance data source from the sender's emitter address to another emitter.

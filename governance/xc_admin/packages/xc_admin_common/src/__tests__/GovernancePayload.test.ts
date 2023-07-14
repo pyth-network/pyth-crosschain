@@ -11,18 +11,13 @@ import {
   decodeGovernancePayload,
 } from "..";
 import * as fc from "fast-check";
-import {
-  ChainId,
-  ChainName,
-  CHAINS,
-  toChainId,
-  toChainName,
-} from "@certusone/wormhole-sdk";
+import { ChainName, CHAINS } from "../chains";
 import { Arbitrary, IntArrayConstraints } from "fast-check";
 import {
   AptosAuthorizeUpgradeContract,
   CosmosUpgradeContract,
   EvmUpgradeContract,
+  SuiAuthorizeUpgradeContract,
 } from "../governance_payload/UpgradeContract";
 import {
   AuthorizeGovernanceDataSourceTransfer,
@@ -217,6 +212,12 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
             header.targetChainId,
             buffer
           );
+        }
+      );
+
+      const suiArb = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
+        (buffer) => {
+          return new SuiAuthorizeUpgradeContract(header.targetChainId, buffer);
         }
       );
       const evmArb = hexBytesArb({ minLength: 20, maxLength: 20 }).map(

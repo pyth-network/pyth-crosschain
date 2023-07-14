@@ -1,9 +1,4 @@
-import {
-  CHAINS,
-  DataSource,
-  HexString32Bytes,
-  SetFeeInstruction,
-} from "@pythnetwork/xc-governance-sdk";
+import { DataSource } from "xc_admin_common";
 import { Chain } from "./chains";
 
 export abstract class Storable {
