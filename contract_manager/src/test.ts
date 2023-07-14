@@ -1,18 +1,4 @@
-import {
-  Vault,
-  Contracts,
-  Vaults,
-  loadHotWallet,
-  WormholeEmitter,
-  SubmittedWormholeMessage,
-} from "./entities";
-import { SuiContract } from "./sui";
-import { CosmWasmContract } from "./cosmwasm";
-import { Ed25519Keypair, RawSigner } from "@mysten/sui.js";
 import { DefaultStore } from "./store";
-import { Chains } from "./chains";
-import { executeProposal } from "xc_admin_common";
-import { EVMContract } from "./evm";
 
 async function test() {
   // Deploy the same cosmwasm code with different config
@@ -26,12 +12,12 @@ async function test() {
   // console.log(await CosmWasmContract.deploy(c.chain, await c.getCodeId(), config, mnemonic));
 
   let s = DefaultStore;
-  Object.values(Contracts).forEach((c) => {
+  Object.values(DefaultStore.contracts).forEach((c) => {
     console.log(c);
     s.save(c);
   });
 
-  Object.values(Chains).forEach((c) => {
+  Object.values(DefaultStore.chains).forEach((c) => {
     console.log(c);
     s.save(c);
   });

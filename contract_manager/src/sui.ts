@@ -209,6 +209,33 @@ export class SuiContract extends Contract {
     return this.executeTransaction(tx, keypair);
   }
 
+  async executeCreatePriceFeeds(keypair: Ed25519Keypair, vaa: Buffer) {
+    const packageId = await this.getPythPackageId();
+    const wormholePackageId = await this.getWormholePackageId();
+    const tx = new TransactionBlock();
+    let [verifiedVaa] = tx.moveCall({
+      target: `${wormholePackageId}::vaa::parse_and_verify`,
+      arguments: [
+        tx.object(this.wormholeStateId),
+        tx.pure(Array.from(vaa)),
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
+
+    tx.moveCall({
+      target: `${packageId}::pyth::create_price_feeds`,
+      arguments: [
+        tx.object(this.stateId),
+        tx.makeMoveVec({
+          type: `${wormholePackageId}::vaa::VAA`,
+          objects: [verifiedVaa],
+        }),
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
+    return this.executeTransaction(tx, keypair);
+  }
+
   /**
    * Utility function to get the decree receipt object for a VAA that can be
    * used to authorize a governance instruction.

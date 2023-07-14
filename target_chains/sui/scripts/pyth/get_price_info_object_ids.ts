@@ -1,16 +1,30 @@
 import { Connection, JsonRpcProvider } from "@mysten/sui.js";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import {
+  DefaultStore,
+  SuiContract,
+} from "@pythnetwork/pyth-contract-manager/lib";
 
-// ================== Network dependent settings ==================
-const provider = new JsonRpcProvider(
-  new Connection({ fullnode: "https://fullnode.mainnet.sui.io:443" }) // <= NOTE: Update this when changing network
-);
-const objectId =
-  "0x14b4697477d24c30c8eecc31dd1bd49a3115a9fe0db6bd4fd570cf14640b79a0"; // <= NOTE: Update this when changing network AND with new deployment
-// ================================================================
-
+const parser = yargs(hideBin(process.argv))
+  .scriptName("get_price_info_object_ids.ts")
+  .usage("Usage: $0 --contract <contract_id>")
+  .options({
+    contract: {
+      type: "string",
+      demandOption: true,
+      desc: "Contract id",
+    },
+  });
 async function main() {
-  // Table of Sui Pyth PriceIdentifier => Price Info Object IDs
+  const argv = await parser.argv;
+  const contract = DefaultStore.contracts[argv.contract] as SuiContract;
+  const provider = new JsonRpcProvider(
+    new Connection({ fullnode: contract.chain.rpcUrl })
+  );
+  const objectId = await contract.getPriceTableId();
 
+  // Table of Sui Pyth PriceIdentifier => Price Info Object IDs
   let nextCursor;
   let hasNextPage = false;
   let map = new Map<string, string>();

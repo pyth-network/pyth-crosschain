@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "Set of tools to manage pyth contracts",
   "private": true,
-  "main": "index.js",
+  "main": "src/index.ts",
   "scripts": {
-    "shell": "ts-node ./src/shell.ts"
+    "shell": "ts-node ./src/shell.ts",
+    "build": "tsc"
   },
   "author": "",
   "license": "Apache-2.0",
