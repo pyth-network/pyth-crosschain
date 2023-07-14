@@ -310,7 +310,7 @@ module.exports = {
         explorerUrl: "https://explorer.linea.build/",
         apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
       },
-    }
+    },
   },
 
   compilers: {
