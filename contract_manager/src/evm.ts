@@ -130,7 +130,7 @@ export class EVMContract extends Contract {
   async getBaseUpdateFee() {
     const pythContract = this.getContract();
     const result = await pythContract.methods.singleUpdateFeeInWei().call();
-    return { amount: result, denom: "wei" };
+    return { amount: result };
   }
 
   async getDataSources(): Promise<DataSource[]> {

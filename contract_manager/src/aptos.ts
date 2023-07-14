@@ -50,7 +50,7 @@ export class AptosContract extends Contract {
 
   async getBaseUpdateFee() {
     const data = (await this.findResource("BaseUpdateFee")) as any;
-    return { amount: data.fee, denom: "uAPT" };
+    return { amount: data.fee };
   }
 
   getChain(): AptosChain {

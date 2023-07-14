@@ -320,7 +320,7 @@ export class SuiContract extends Contract {
 
   async getBaseUpdateFee() {
     const fields = await this.getStateFields();
-    return { amount: fields.base_update_fee, denom: "mist" };
+    return { amount: fields.base_update_fee };
   }
 
   private getProvider() {
