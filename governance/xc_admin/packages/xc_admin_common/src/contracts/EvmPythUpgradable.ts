@@ -7,11 +7,9 @@ import {
   WormholeAddress,
   WormholeNetwork,
 } from "./Contract";
-import {
-  ChainId,
-  SetValidPeriodInstruction,
-} from "@pythnetwork/xc-governance-sdk";
 import { ethers } from "ethers";
+import { ChainName } from "../chains";
+import { SetValidPeriod } from "../governance_payload";
 
 export class EvmPythUpgradable implements Contract<EvmPythUpgradableState> {
   public type = ContractType.EvmPythUpgradable;
@@ -45,9 +43,9 @@ export class EvmPythUpgradable implements Contract<EvmPythUpgradableState> {
   }
 
   // get the chainId that identifies this contract
-  public async getChainId(): Promise<ChainId> {
+  public async getChain(): Promise<ChainName> {
     // FIXME: read from data sources
-    return 23;
+    return "polygon";
   }
 
   public async getState(): Promise<EvmPythUpgradableState> {
@@ -65,12 +63,12 @@ export class EvmPythUpgradable implements Contract<EvmPythUpgradableState> {
   public async sync(target: EvmPythUpgradableState): Promise<SyncOp[]> {
     const myState = await this.getState();
     const authority = await this.getAuthority();
-    const myChainId = await this.getChainId();
+    const myChainId = await this.getChain();
     const whInstructions = [];
 
     if (myState.validTimePeriod !== target.validTimePeriod) {
       whInstructions.push(
-        new SetValidPeriodInstruction(myChainId, BigInt(target.validTimePeriod))
+        new SetValidPeriod(myChainId, BigInt(target.validTimePeriod))
       );
     }
 

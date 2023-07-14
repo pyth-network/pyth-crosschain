@@ -1,5 +1,6 @@
-import { ChainId, Instruction } from "@pythnetwork/xc-governance-sdk";
+import { ChainId } from "../chains";
 import { ethers } from "ethers";
+import { PythGovernanceAction } from "../governance_payload";
 
 export enum ContractType {
   Oracle,
@@ -70,13 +71,13 @@ export interface SyncOp {
 }
 
 export class SendGovernanceInstruction implements SyncOp {
-  private instruction: Instruction;
+  private instruction: PythGovernanceAction;
   private sender: WormholeAddress;
   // function to submit the signed VAA to the target chain contract
   private submitVaa: (vaa: string) => Promise<boolean>;
 
   constructor(
-    instruction: Instruction,
+    instruction: PythGovernanceAction,
     from: WormholeAddress,
     submitVaa: (vaa: string) => Promise<boolean>
   ) {
@@ -87,7 +88,7 @@ export class SendGovernanceInstruction implements SyncOp {
 
   public id(): string {
     // TODO: use a more understandable identifier (also this may not be unique)
-    return ethers.utils.sha256(this.instruction.serialize());
+    return ethers.utils.sha256(this.instruction.encode());
   }
 
   public async run(cache: Record<string, any>): Promise<boolean> {

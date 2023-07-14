@@ -14,6 +14,7 @@ export const TargetAction = {
   SetFee: 3,
   SetValidPeriod: 4,
   RequestGovernanceDataSourceTransfer: 5,
+  SetWormholeAddress: 6,
 } as const;
 
 /** Helper to get the ActionName from a (moduleId, actionId) tuple*/
@@ -36,6 +37,8 @@ export function toActionName(
         return "SetValidPeriod";
       case 5:
         return "RequestGovernanceDataSourceTransfer";
+      case 6:
+        return "SetWormholeAddress";
     }
   }
   return undefined;

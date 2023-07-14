@@ -2,6 +2,7 @@ import { ExecutePostedVaa } from "./ExecutePostedVaa";
 import {
   AptosAuthorizeUpgradeContract,
   CosmosUpgradeContract,
+  EvmSetWormholeAddress,
   EvmUpgradeContract,
 } from "./UpgradeContract";
 import {
@@ -50,6 +51,8 @@ export function decodeGovernancePayload(
       return SetValidPeriod.decode(data);
     case "RequestGovernanceDataSourceTransfer":
       return RequestGovernanceDataSourceTransfer.decode(data);
+    case "SetWormholeAddress":
+      return EvmSetWormholeAddress.decode(data);
     default:
       return undefined;
   }
