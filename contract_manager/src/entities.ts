@@ -246,7 +246,7 @@ export class Vault extends Storable {
     return Vault.type;
   }
 
-  static from(parsed: any): Vault {
+  static fromJson(parsed: any): Vault {
     if (parsed.type !== Vault.type) throw new Error("Invalid type");
     return new Vault(parsed.key, parsed.cluster);
   }

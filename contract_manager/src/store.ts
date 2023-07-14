@@ -13,14 +13,17 @@ import {
 } from "fs";
 import { EVMContract } from "./evm";
 import { AptosContract } from "./aptos";
+import { Vault } from "./entities";
 
 class Store {
   public chains: Record<string, Chain> = {};
   public contracts: Record<string, Contract> = {};
+  public vaults: Record<string, Vault> = {};
 
   constructor(public path: string) {
     this.loadAllChains();
     this.loadAllContracts();
+    this.loadAllVaults();
   }
 
   save(obj: any) {
@@ -35,6 +38,11 @@ class Store {
       dir = `${this.path}/chains/${chain.getType()}`;
       file = chain.getId();
       content = chain.toJson();
+    } else if (obj instanceof Vault) {
+      let vault = obj;
+      dir = `${this.path}/vaults`;
+      file = vault.getId();
+      content = vault.toJson();
     } else {
       throw new Error("Invalid type");
     }
@@ -104,6 +112,18 @@ class Store {
           `Multiple contracts with id ${chainContract.getId()} found`
         );
       this.contracts[chainContract.getId()] = chainContract;
+    });
+  }
+
+  loadAllVaults() {
+    this.getYamlFiles(`${this.path}/vaults/`).forEach((yamlFile) => {
+      let parsed = parse(readFileSync(yamlFile, "utf-8"));
+      if (parsed.type !== Vault.type) return;
+
+      const vault = Vault.fromJson(parsed);
+      if (this.vaults[vault.getId()])
+        throw new Error(`Multiple vaults with id ${vault.getId()} found`);
+      this.vaults[vault.getId()] = vault;
     });
   }
 }
