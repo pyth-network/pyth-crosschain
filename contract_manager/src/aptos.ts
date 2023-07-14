@@ -38,6 +38,10 @@ export class AptosContract extends Contract {
     return client.getAccountResources(this.stateId);
   }
 
+  /**
+   * Returns the first occurrence of a resource with the given type in the pyth package state
+   * @param type
+   */
   async findResource(type: string) {
     const resources = await this.getStateResources();
     for (const resource of resources) {

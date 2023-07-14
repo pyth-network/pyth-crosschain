@@ -47,10 +47,17 @@ export class SubmittedWormholeMessage {
     public cluster: string
   ) {}
 
-  static async fromTrasactionSignature(
+  /**
+   * Attempts to find the emitter and sequence number of a wormhole message from a transaction
+   * Parses the transaction and looks for the wormhole postMessage instruction to find the emitter
+   * Inspects the transaction logs to find the sequence number
+   * @param signature signature of the transaction to inspect
+   * @param cluster the cluster the transaction was submitted to
+   */
+  static async fromTransactionSignature(
     signature: string,
     cluster: PythCluster
-  ): Promise<any> {
+  ): Promise<SubmittedWormholeMessage> {
     const connection = new Connection(
       getPythClusterApiUrl(cluster),
       "confirmed"
@@ -118,6 +125,12 @@ export class SubmittedWormholeMessage {
   }
 }
 
+function asPythCluster(cluster: string): PythCluster {
+  const pythCluster = cluster as PythCluster;
+  getPythClusterApiUrl(pythCluster); // throws if cluster is invalid
+  return pythCluster;
+}
+
 /**
  * A simple emitter that can send messages to the wormhole bridge
  * This can be used instead of multisig as a simple way to send messages
@@ -130,8 +143,7 @@ export class WormholeEmitter {
 
   constructor(cluster: string, wallet: Wallet) {
     this.wallet = wallet;
-    this.cluster = cluster as PythCluster;
-    getPythClusterApiUrl(this.cluster); // throws if cluster is invalid
+    this.cluster = asPythCluster(cluster);
   }
 
   async sendMessage(payload: Buffer) {
@@ -178,7 +190,7 @@ export class WormholeEmitter {
         .instruction()
     );
     const signature = await provider.sendAndConfirm(transaction, [kp]);
-    return SubmittedWormholeMessage.fromTrasactionSignature(
+    return SubmittedWormholeMessage.fromTransactionSignature(
       signature,
       this.cluster
     );
@@ -190,9 +202,7 @@ export class WormholeMultiSigTransaction {
     public address: PublicKey,
     public squad: SquadsMesh,
     public cluster: PythCluster
-  ) {
-    getPythClusterApiUrl(this.cluster); // throws if cluster is invalid
-  }
+  ) {}
 
   async getState() {
     const proposal = await this.squad.getTransaction(this.address);
@@ -208,7 +218,7 @@ export class WormholeMultiSigTransaction {
     );
     for (const signature of signatures) {
       try {
-        return SubmittedWormholeMessage.fromTrasactionSignature(
+        return SubmittedWormholeMessage.fromTransactionSignature(
           signature,
           this.cluster
         );
@@ -229,8 +239,7 @@ export class Vault extends Storable {
   constructor(key: string, cluster: string) {
     super();
     this.key = new PublicKey(key);
-    this.cluster = cluster as PythCluster;
-    getPythClusterApiUrl(this.cluster); // throws if cluster is invalid
+    this.cluster = asPythCluster(cluster);
   }
 
   getType(): string {
