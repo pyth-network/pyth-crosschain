@@ -34,16 +34,23 @@ After installing the dependencies. Run `forge build` to build the contracts and 
 test the contracts using tests in `forge-test` directory.
 
 ### Governance tests
-There is a separate test suite executed by truffle for testing governance messages and contract upgrades. You can either use tilt to test automatically or run ganache-cli as a blockchain instance and test it manually. To do the latter, run the following commands in the `contracts` folder:  
+
+There is a separate test suite executed by truffle for testing governance messages and contract upgrades. You can either use tilt to test automatically or run ganache-cli as a blockchain instance and test it manually. To do the latter, run the following commands in the `contracts` folder:
+
 1. Spawn a new network on a seperate terminal (do not close it while running tests):
+
 ```bash
 npx ganache-cli -e 10000 --deterministic --time="1970-01-02T00:00:00+00:00" --host=0.0.0.0
 ```
+
 2. deploy the contracts:
+
 ```bash
 cp .env.test .env && npx truffle compile --all && npx truffle migrate
 ```
+
 3. Run the test suite:
+
 ```bash
 npm run test-contract
 ```
