@@ -53,7 +53,7 @@ export class AuthorizeGovernanceDataSourceTransfer
 export class RequestGovernanceDataSourceTransfer extends PythGovernanceActionImpl {
   static layout: BufferLayout.Structure<
     Readonly<{ governanceDataSourceIndex: number }>
-  > = BufferLayout.struct([BufferLayout.u32be()]);
+  > = BufferLayout.struct([BufferLayout.u32be("governanceDataSourceIndex")]);
 
   constructor(
     targetChainId: ChainName,
