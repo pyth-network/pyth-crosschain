@@ -93,8 +93,8 @@ export const CHAINS_NETWORK_CONFIG: Record<ChainId, ChainNetworkConfig> = {
   [ChainId.NEUTRON_TESTNET_PION_1]: {
     chainId: ChainId.NEUTRON_TESTNET_PION_1,
     chainType: ChainType.COSMWASM,
-    executorEndpoint: "https://rpc.pion.rs-testnet.polypore.xyz/",
-    querierEndpoint: "https://rpc.pion.rs-testnet.polypore.xyz/",
+    executorEndpoint: "https://rpc-palvus.pion-1.ntrn.tech/",
+    querierEndpoint: "https://rpc-palvus.pion-1.ntrn.tech/",
     prefix: "neutron",
     gasPrice: "0.025untrn",
   },

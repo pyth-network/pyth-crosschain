@@ -32,12 +32,12 @@ export const RECEIVER_CHAINS = {
   sei_pacific_1: 60017,
   sei_testnet_atlantic_2: 60018,
   neutron: 60019,
-  neutron_testnet_pion_1: 60020,
   juno: 60020,
   juno_testnet: 60021,
   kava: 60022,
   wemix: 60023,
   linea: 60024,
+  neutron_testnet_pion_1: 60025,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole
