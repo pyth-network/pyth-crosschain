@@ -74,7 +74,7 @@ contract ReceiverMessages is ReceiverGetters {
                 // 66 is the length of each signature
                 // 1 (guardianIndex) + 32 (r) + 32 (s) + 1 (v)
                 uint hashIndex = index + (signersLen * 66);
-                if (hashIndex > encodedVM.length) {
+                if (hashIndex >= encodedVM.length) {
                     return (vm, false, "invalid signature length");
                 }
                 // Hash the body
