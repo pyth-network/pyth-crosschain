@@ -22,10 +22,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install XC-governance sdk dependencies
-        run: npm ci
-        working-directory: governance/xc_governance_sdk_js
-
       - name: Install contract npm dependencies
         run: npm ci
 

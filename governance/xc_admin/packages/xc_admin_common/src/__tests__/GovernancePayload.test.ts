@@ -9,6 +9,7 @@ import {
   ActionName,
   PythGovernanceAction,
   decodeGovernancePayload,
+  EvmSetWormholeAddress,
 } from "..";
 import * as fc from "fast-check";
 import { ChainName, CHAINS } from "../chains";
@@ -254,6 +255,10 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
           header.targetChainId,
           parseInt(index.toString())
         );
+      });
+    } else if (header.action === "SetWormholeAddress") {
+      return hexBytesArb({ minLength: 20, maxLength: 20 }).map((address) => {
+        return new EvmSetWormholeAddress(header.targetChainId, address);
       });
     } else {
       throw new Error("Unsupported action type");
