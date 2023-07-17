@@ -35,7 +35,7 @@ while [[ $# -ne 0 ]]; do
         echo "Skipping truffle migration on $NETWORK. If you wish to deploy a fresh contract read Deploying.md."
     else
         echo "Migrating..."
-        npx truffle migrate --network $MIGRATIONS_NETWORK
+        npx truffle migrate --network $MIGRATIONS_NETWORK --compile-none
         echo "Deployment to $NETWORK finished successfully"
     fi
 

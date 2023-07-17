@@ -300,6 +300,17 @@ module.exports = {
       provider: payerProvider("https://rpc.goerli.linea.build"),
       network_id: 59140,
     },
+    linea: {
+      provider: payerProvider(
+        `https://linea-mainnet.infura.io/v3/` + process.env.INFURA_KEY
+      ),
+      network_id: 59144,
+      verify: {
+        apiUrl: "http://explorer.linea.build/api",
+        explorerUrl: "https://explorer.linea.build/",
+        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
+      },
+    },
   },
 
   compilers: {
