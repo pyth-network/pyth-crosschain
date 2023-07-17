@@ -2,7 +2,6 @@ import { ExecutePostedVaa } from "./ExecutePostedVaa";
 import {
   AptosAuthorizeUpgradeContract,
   CosmosUpgradeContract,
-  EvmSetWormholeAddress,
   EvmUpgradeContract,
 } from "./UpgradeContract";
 import {
@@ -16,6 +15,7 @@ import {
 import { SetDataSources } from "./SetDataSources";
 import { SetValidPeriod } from "./SetValidPeriod";
 import { SetFee } from "./SetFee";
+import { EvmSetWormholeAddress } from "./SetWormholeAddress";
 
 /** Decode a governance payload */
 export function decodeGovernancePayload(
@@ -66,3 +66,4 @@ export * from "./GovernanceDataSourceTransfer";
 export * from "./SetDataSources";
 export * from "./SetValidPeriod";
 export * from "./SetFee";
+export * from "./SetWormholeAddress";
