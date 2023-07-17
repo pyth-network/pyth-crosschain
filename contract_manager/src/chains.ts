@@ -1,15 +1,13 @@
-import { readdirSync, readFileSync, writeFileSync } from "fs";
 import { Storable } from "./base";
 import {
+  ChainName,
   CHAINS,
-  CosmwasmUpgradeContractInstruction,
-  EthereumUpgradeContractInstruction,
-  HexString20Bytes,
-  HexString32Bytes,
-  SetFeeInstruction,
-  SuiAuthorizeUpgradeContractInstruction,
-} from "@pythnetwork/xc-governance-sdk";
-import { BufferBuilder } from "@pythnetwork/xc-governance-sdk/lib/serialize";
+  SetFee,
+  CosmosUpgradeContract,
+  EvmUpgradeContract,
+  SuiAuthorizeUpgradeContract,
+  AptosAuthorizeUpgradeContract,
+} from "xc_admin_common";
 import { AptosClient } from "aptos";
 
 export abstract class Chain extends Storable {
@@ -27,11 +25,11 @@ export abstract class Chain extends Storable {
    * @param exponent the new fee exponent to set
    */
   generateGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
-    return new SetFeeInstruction(
-      CHAINS[this.getId() as keyof typeof CHAINS],
+    return new SetFee(
+      this.getId() as ChainName,
       BigInt(fee),
       BigInt(exponent)
-    ).serialize();
+    ).encode();
   }
 
   /**
@@ -84,10 +82,10 @@ export class CosmWasmChain extends Chain {
   }
 
   generateGovernanceUpgradePayload(codeId: bigint): Buffer {
-    return new CosmwasmUpgradeContractInstruction(
-      CHAINS[this.getId() as keyof typeof CHAINS],
+    return new CosmosUpgradeContract(
+      this.getId() as ChainName,
       codeId
-    ).serialize();
+    ).encode();
   }
 }
 
@@ -115,37 +113,42 @@ export class SuiChain extends Chain {
     return SuiChain.type;
   }
 
+  //TODO: Move this logic to xc_admin_common
   private wrapWithWormholeGovernancePayload(
     actionVariant: number,
     payload: Buffer
   ): Buffer {
-    const builder = new BufferBuilder();
-    builder.addBuffer(
+    const actionVariantBuffer = Buffer.alloc(1);
+    actionVariantBuffer.writeUint8(actionVariant, 0);
+    const chainBuffer = Buffer.alloc(2);
+    chainBuffer.writeUint16BE(CHAINS["sui"], 0);
+    const result = Buffer.concat([
       Buffer.from(
         "0000000000000000000000000000000000000000000000000000000000000001",
         "hex"
-      )
-    );
-    builder.addUint8(actionVariant);
-    builder.addUint16(CHAINS["sui"]); // should always be sui (21) no matter devnet or testnet
-    builder.addBuffer(payload);
-    return builder.build();
+      ),
+      actionVariantBuffer,
+      chainBuffer,
+      payload,
+    ]);
+    return result;
   }
 
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
+   */
   generateGovernanceUpgradePayload(digest: string): Buffer {
-    let setFee = new SuiAuthorizeUpgradeContractInstruction(
-      CHAINS["sui"],
-      new HexString32Bytes(digest)
-    ).serialize();
+    let setFee = new SuiAuthorizeUpgradeContract("sui", digest).encode();
     return this.wrapWithWormholeGovernancePayload(0, setFee);
   }
 
   generateGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
-    let setFee = new SetFeeInstruction(
-      CHAINS["sui"],
+    let setFee = new SetFee(
+      "sui", // should always be sui no matter devnet or testnet or mainnet
       BigInt(fee),
       BigInt(exponent)
-    ).serialize();
+    ).encode();
     return this.wrapWithWormholeGovernancePayload(3, setFee);
   }
 }
@@ -162,11 +165,12 @@ export class EVMChain extends Chain {
     return new EVMChain(parsed.id, parsed.rpcUrl);
   }
 
-  generateGovernanceUpgradePayload(address: HexString20Bytes): Buffer {
-    return new EthereumUpgradeContractInstruction(
-      CHAINS[this.getId() as keyof typeof CHAINS],
-      address
-    ).serialize();
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param address hex string of the 20 byte address of the contract to upgrade to without the 0x prefix
+   */
+  generateGovernanceUpgradePayload(address: string): Buffer {
+    return new EvmUpgradeContract(this.getId() as ChainName, address).encode();
   }
 
   toJson(): any {
@@ -193,19 +197,20 @@ export class AptosChain extends Chain {
     return new AptosClient(this.rpcUrl);
   }
 
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
+   */
   generateGovernanceUpgradePayload(digest: string): Buffer {
-    return new SuiAuthorizeUpgradeContractInstruction(
-      CHAINS["aptos"],
-      new HexString32Bytes(digest)
-    ).serialize();
+    return new AptosAuthorizeUpgradeContract("aptos", digest).encode();
   }
 
   generateGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
-    return new SetFeeInstruction(
-      CHAINS["aptos"], // should always be aptos (22) no matter devnet or testnet or mainnet
+    return new SetFee(
+      "aptos", // should always be aptos no matter devnet or testnet or mainnet
       BigInt(fee),
       BigInt(exponent)
-    ).serialize();
+    ).encode();
   }
 
   getType(): string {

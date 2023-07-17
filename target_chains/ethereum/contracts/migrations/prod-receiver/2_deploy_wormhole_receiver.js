@@ -2,7 +2,7 @@ const loadEnv = require("../../scripts/loadEnv");
 loadEnv("../../");
 
 const tdr = require("truffle-deploy-registry");
-const governance = require("@pythnetwork/xc-governance-sdk");
+const governance = require("xc_admin_common");
 const { assert } = require("chai");
 
 const ReceiverSetup = artifacts.require("ReceiverSetup");

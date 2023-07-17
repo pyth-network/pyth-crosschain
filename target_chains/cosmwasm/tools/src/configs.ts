@@ -1,4 +1,4 @@
-import { CHAINS } from "@pythnetwork/xc-governance-sdk";
+import { CHAINS } from "xc_admin_common";
 import { ChainId } from "./chains-manager/chains";
 import { DeploymentType } from "./helper";
 

@@ -1,5 +1,5 @@
 const elliptic = require("elliptic");
-const governance = require("@pythnetwork/xc-governance-sdk");
+const governance = require("xc_admin_common");
 
 const { deployProxy, upgradeProxy } = require("@openzeppelin/truffle-upgrades");
 const {
@@ -8,6 +8,7 @@ const {
   time,
 } = require("@openzeppelin/test-helpers");
 const { assert, expect } = require("chai");
+const { EvmSetWormholeAddress } = require("xc_admin_common");
 
 // Use "WormholeReceiver" if you are testing with Wormhole Receiver
 const Setup = artifacts.require("Setup");
@@ -226,7 +227,7 @@ contract("Pyth", function () {
    * Create a governance instruction VAA from the Instruction object. Then
    * Submit and execute it on the contract.
    * @param contract Pyth contract
-   * @param {governance.Instruction} governanceInstruction
+   * @param {governance.PythGovernanceAction} governanceInstruction
    * @param {number} sequence
    */
   async function createAndThenSubmitGovernanceInstructionVaa(
@@ -236,7 +237,7 @@ contract("Pyth", function () {
   ) {
     await contract.executeGovernanceInstruction(
       await createVAAFromUint8Array(
-        governanceInstruction.serialize(),
+        governanceInstruction.encode(),
         testGovernanceChainId,
         testGovernanceEmitter,
         sequence
@@ -299,11 +300,7 @@ contract("Pyth", function () {
   async function setFeeTo(contract, newFee, governanceSequence) {
     await createAndThenSubmitGovernanceInstructionVaa(
       contract,
-      new governance.SetFeeInstruction(
-        governance.CHAINS.ethereum,
-        BigInt(newFee),
-        BigInt(0)
-      ),
+      new governance.SetFee("ethereum", BigInt(newFee), BigInt(0)),
       governanceSequence ?? 1
     );
   }
@@ -514,10 +511,7 @@ contract("Pyth", function () {
   ) {
     await createAndThenSubmitGovernanceInstructionVaa(
       contract,
-      new governance.SetValidPeriodInstruction(
-        governance.CHAINS.ethereum,
-        BigInt(newValidPeriod)
-      ),
+      new governance.SetValidPeriod("ethereum", BigInt(newValidPeriod)),
       governanceSequence ?? 1
     );
   }
@@ -606,10 +600,7 @@ contract("Pyth", function () {
   // Logics that apply to all governance messages
   it("Make sure invalid magic and module won't work", async function () {
     // First 4 bytes of data are magic and the second byte after that is module
-    const data = new governance.SetValidPeriodInstruction(
-      governance.CHAINS.ethereum,
-      BigInt(10)
-    ).serialize();
+    const data = new governance.SetValidPeriod("ethereum", BigInt(10)).encode();
 
     const wrongMagic = Buffer.from(data);
     wrongMagic[1] = 0;
@@ -658,10 +649,7 @@ contract("Pyth", function () {
   });
 
   it("Make sure governance with wrong sender won't work", async function () {
-    const data = new governance.SetValidPeriodInstruction(
-      governance.CHAINS.ethereum,
-      BigInt(10)
-    ).serialize();
+    const data = new governance.SetValidPeriod("ethereum", BigInt(10)).encode();
 
     const vaaWrongEmitter = await createVAAFromUint8Array(
       data,
@@ -689,10 +677,10 @@ contract("Pyth", function () {
   });
 
   it("Make sure governance with only target chain id and 0 work", async function () {
-    const wrongChainData = new governance.SetValidPeriodInstruction(
-      governance.CHAINS.solana,
+    const wrongChainData = new governance.SetValidPeriod(
+      "solana",
       BigInt(10)
-    ).serialize();
+    ).encode();
 
     const wrongChainVaa = await createVAAFromUint8Array(
       wrongChainData,
@@ -706,10 +694,10 @@ contract("Pyth", function () {
       "InvalidGovernanceTarget"
     );
 
-    const dataForAllChains = new governance.SetValidPeriodInstruction(
-      governance.CHAINS.unset,
+    const dataForAllChains = new governance.SetValidPeriod(
+      "unset",
       BigInt(10)
-    ).serialize();
+    ).encode();
 
     const vaaForAllChains = await createVAAFromUint8Array(
       dataForAllChains,
@@ -720,10 +708,10 @@ contract("Pyth", function () {
 
     await this.pythProxy.executeGovernanceInstruction(vaaForAllChains);
 
-    const dataForEth = new governance.SetValidPeriodInstruction(
-      governance.CHAINS.ethereum,
+    const dataForEth = new governance.SetValidPeriod(
+      "ethereum",
       BigInt(10)
-    ).serialize();
+    ).encode();
 
     const vaaForEth = await createVAAFromUint8Array(
       dataForEth,
@@ -736,10 +724,7 @@ contract("Pyth", function () {
   });
 
   it("Make sure that governance messages are executed in order and cannot be reused", async function () {
-    const data = new governance.SetValidPeriodInstruction(
-      governance.CHAINS.ethereum,
-      BigInt(10)
-    ).serialize();
+    const data = new governance.SetValidPeriod("ethereum", BigInt(10)).encode();
 
     const vaaSeq1 = await createVAAFromUint8Array(
       data,
@@ -778,10 +763,10 @@ contract("Pyth", function () {
   it("Upgrading the contract with chain id 0 is invalid", async function () {
     const newImplementation = await PythUpgradable.new();
 
-    const data = new governance.EthereumUpgradeContractInstruction(
-      governance.CHAINS.unset, // 0
-      new governance.HexString20Bytes(newImplementation.address)
-    ).serialize();
+    const data = new governance.EvmUpgradeContract(
+      "unset", // 0
+      newImplementation.address.replace("0x", "")
+    ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
@@ -799,10 +784,10 @@ contract("Pyth", function () {
   it("Upgrading the contract should work", async function () {
     const newImplementation = await PythUpgradable.new();
 
-    const data = new governance.EthereumUpgradeContractInstruction(
-      governance.CHAINS.ethereum,
-      new governance.HexString20Bytes(newImplementation.address)
-    ).serialize();
+    const data = new governance.EvmUpgradeContract(
+      "ethereum",
+      newImplementation.address.replace("0x", "")
+    ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
@@ -825,10 +810,10 @@ contract("Pyth", function () {
   it("Upgrading the contract to a non-pyth contract won't work", async function () {
     const newImplementation = await MockUpgradeableProxy.new();
 
-    const data = new governance.EthereumUpgradeContractInstruction(
-      governance.CHAINS.ethereum,
-      new governance.HexString20Bytes(newImplementation.address)
-    ).serialize();
+    const data = new governance.EvmUpgradeContract(
+      "ethereum",
+      newImplementation.address.replace("0x", "")
+    ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
@@ -850,10 +835,7 @@ contract("Pyth", function () {
     const newEmitterChain = governance.CHAINS.acala;
 
     const claimInstructionData =
-      new governance.RequestGovernanceDataSourceTransferInstruction(
-        governance.CHAINS.unset,
-        1
-      ).serialize();
+      new governance.RequestGovernanceDataSourceTransfer("unset", 1).encode();
 
     const claimVaaHexString = await createVAAFromUint8Array(
       claimInstructionData,
@@ -869,11 +851,10 @@ contract("Pyth", function () {
 
     const claimVaa = Buffer.from(claimVaaHexString.substring(2), "hex");
 
-    const data =
-      new governance.AuthorizeGovernanceDataSourceTransferInstruction(
-        governance.CHAINS.unset,
-        claimVaa
-      ).serialize();
+    const data = new governance.AuthorizeGovernanceDataSourceTransfer(
+      "unset",
+      claimVaa
+    ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
@@ -904,11 +885,10 @@ contract("Pyth", function () {
 
     // Make sure a claim vaa does not get executed
 
-    const claimLonely =
-      new governance.RequestGovernanceDataSourceTransferInstruction(
-        governance.CHAINS.unset,
-        2
-      ).serialize();
+    const claimLonely = new governance.RequestGovernanceDataSourceTransfer(
+      "unset",
+      2
+    ).encode();
 
     const claimLonelyVaa = await createVAAFromUint8Array(
       claimLonely,
@@ -927,10 +907,10 @@ contract("Pyth", function () {
 
     // A wrong vaa that does not move the governance index
     const transferBackClaimInstructionDataWrong =
-      new governance.RequestGovernanceDataSourceTransferInstruction(
-        governance.CHAINS.unset,
+      new governance.RequestGovernanceDataSourceTransfer(
+        "unset",
         1 // The same governance data source index => Should fail
-      ).serialize();
+      ).encode();
 
     const transferBackClaimVaaHexStringWrong = await createVAAFromUint8Array(
       transferBackClaimInstructionDataWrong,
@@ -945,10 +925,10 @@ contract("Pyth", function () {
     );
 
     const transferBackDataWrong =
-      new governance.AuthorizeGovernanceDataSourceTransferInstruction(
-        governance.CHAINS.unset,
+      new governance.AuthorizeGovernanceDataSourceTransfer(
+        "unset",
         transferBackClaimVaaWrong
-      ).serialize();
+      ).encode();
 
     const transferBackVaaWrong = await createVAAFromUint8Array(
       transferBackDataWrong,
@@ -964,17 +944,13 @@ contract("Pyth", function () {
   });
 
   it("Setting data sources should work", async function () {
-    const data = new governance.SetDataSourcesInstruction(
-      governance.CHAINS.ethereum,
-      [
-        new governance.DataSource(
-          governance.CHAINS.acala,
-          new governance.HexString32Bytes(
-            "0x0000000000000000000000000000000000000000000000000000000000001111"
-          )
-        ),
-      ]
-    ).serialize();
+    const data = new governance.SetDataSources("ethereum", [
+      {
+        emitterChain: governance.CHAINS.acala,
+        emitterAddress:
+          "0000000000000000000000000000000000000000000000000000000000001111",
+      },
+    ]).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
@@ -1020,11 +996,11 @@ contract("Pyth", function () {
   });
 
   it("Setting fee should work", async function () {
-    const data = new governance.SetFeeInstruction(
-      governance.CHAINS.ethereum,
+    const data = new governance.SetFee(
+      "ethereum",
       BigInt(5),
       BigInt(3) // 5*10**3 = 5000
-    ).serialize();
+    ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
@@ -1053,10 +1029,7 @@ contract("Pyth", function () {
   });
 
   it("Setting valid period should work", async function () {
-    const data = new governance.SetValidPeriodInstruction(
-      governance.CHAINS.ethereum,
-      BigInt(0)
-    ).serialize();
+    const data = new governance.SetValidPeriod("ethereum", BigInt(0)).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
@@ -1098,10 +1071,10 @@ contract("Pyth", function () {
     const newWormhole = await Wormhole.new(newSetup.address, initData);
 
     // Creating the vaa to set the new wormhole address
-    const data = new governance.EthereumSetWormholeAddress(
-      governance.CHAINS.ethereum,
-      new governance.HexString20Bytes(newWormhole.address)
-    ).serialize();
+    const data = new governance.EvmSetWormholeAddress(
+      "ethereum",
+      newWormhole.address.replace("0x", "")
+    ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
@@ -1146,10 +1119,10 @@ contract("Pyth", function () {
     );
 
     // Creating the vaa to set the new wormhole address
-    const data = new governance.EthereumSetWormholeAddress(
-      governance.CHAINS.ethereum,
-      new governance.HexString20Bytes(newWormholeReceiver.address)
-    ).serialize();
+    const data = new governance.EvmSetWormholeAddress(
+      "ethereum",
+      newWormholeReceiver.address.replace("0x", "")
+    ).encode();
 
     const vaa = await createVAAFromUint8Array(
       data,
@@ -1191,10 +1164,10 @@ contract("Pyth", function () {
     const newWormhole = await Wormhole.new(newSetup.address, initData);
 
     // Creating the vaa to set the new wormhole address
-    const data = new governance.EthereumSetWormholeAddress(
-      governance.CHAINS.ethereum,
-      new governance.HexString20Bytes(newWormhole.address)
-    ).serialize();
+    const data = new governance.EvmSetWormholeAddress(
+      "ethereum",
+      newWormhole.address.replace("0x", "")
+    ).encode();
 
     const wrongVaa = await createVAAFromUint8Array(
       data,

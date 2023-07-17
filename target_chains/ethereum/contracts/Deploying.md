@@ -26,7 +26,7 @@ Each network that Pyth is deployed on has some configuration stored on this repo
    - `MIGRATIONS_NETWORK`: Network name in the [`truffle-config.js`](./truffle-config.js) file.
    - `WORMHOLE_CHAIN_NAME`: Chain name in Wormhole. It is either defined in the
      [Wormhole SDK constants](https://github.com/wormhole-foundation/wormhole/blob/dev.v2/sdk/js/src/utils/consts.ts)
-     or is defined in [Wormhole Receiver names](../../../governance/xc_governance_sdk_js/src/chains.ts). If the new
+     or is defined in [Wormhole Receiver names](../../../governance/xc_admin/packages/xc_admin_common/src/chains.ts). If the new
      network requires a Receiver contract you need to update the latter file and add the network there.
    - `CLUSTER`: Cluster of this network. It is either `testnet` or `mainnet`. There are some cluster specific
      configuration that are loaded from [`.env.cluster.testnet`](./.env.cluster.testnet) or
@@ -69,7 +69,7 @@ This is the deployment process:
 5. Make sure the deployment account has proper balance on this network and top it up if needed. Search
    for testnet faucets if it is a testnet network. Sometimes you need to bridge the network token (e.g., L2s).
 6. Deploy the new contract or changes using the [`deploy.sh`](./deploy.sh) script. If you have made changes
-   to [`chains.ts`](../../../governance/xc_governance_sdk_js/src/chains.ts), please make sure to
+   to [`chains.ts`](../../../governance/xc_admin/packages/xc_admin_common/src/chains.ts), please make sure to
    run `npx lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies` in the
    root directory before running the deployment script.
    You might need to repeat this script because of busy RPCs. Repeating would not cause any problem even

@@ -8,7 +8,7 @@ import {
   TransactionBlock,
 } from "@mysten/sui.js";
 import { Chain, SuiChain } from "./chains";
-import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
+import { DataSource } from "xc_admin_common";
 import { Contract } from "./base";
 
 export class SuiContract extends Contract {
@@ -294,14 +294,12 @@ export class SuiContract extends Contract {
     }
     return result.data.content.fields.value.fields.keys.map(
       ({ fields }: any) => {
-        return new DataSource(
-          Number(fields.emitter_chain),
-          new HexString32Bytes(
-            Buffer.from(
-              fields.emitter_address.fields.value.fields.data
-            ).toString("hex")
-          )
-        );
+        return {
+          emitterChain: Number(fields.emitter_chain),
+          emitterAddress: Buffer.from(
+            fields.emitter_address.fields.value.fields.data
+          ).toString("hex"),
+        };
       }
     );
   }
@@ -312,10 +310,10 @@ export class SuiContract extends Contract {
     const chainId = governanceFields.emitter_chain;
     const emitterAddress =
       governanceFields.emitter_address.fields.value.fields.data;
-    return new DataSource(
-      Number(chainId),
-      new HexString32Bytes(Buffer.from(emitterAddress).toString("hex"))
-    );
+    return {
+      emitterChain: Number(chainId),
+      emitterAddress: Buffer.from(emitterAddress).toString("hex"),
+    };
   }
 
   async getBaseUpdateFee() {

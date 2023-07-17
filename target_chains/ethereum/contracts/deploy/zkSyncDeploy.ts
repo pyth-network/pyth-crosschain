@@ -2,7 +2,7 @@ import { utils, Wallet } from "zksync-web3";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import loadEnv from "../scripts/loadEnv";
-import { CHAINS } from "@pythnetwork/xc-governance-sdk";
+import { CHAINS } from "xc_admin_common";
 import { assert } from "chai";
 import { writeFileSync } from "fs";
 

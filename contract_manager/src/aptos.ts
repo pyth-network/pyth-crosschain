@@ -1,7 +1,6 @@
 import { Contract } from "./base";
 import { AptosChain, Chain } from "./chains";
-import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
-import { AptosClient } from "aptos";
+import { DataSource } from "xc_admin_common";
 
 export class AptosContract extends Contract {
   static type: string = "AptosContract";
@@ -64,19 +63,25 @@ export class AptosContract extends Contract {
   async getDataSources(): Promise<DataSource[]> {
     const data = (await this.findResource("DataSources")) as any;
     return data.sources.keys.map((source: any) => {
-      return new DataSource(
-        Number(source.emitter_chain),
-        new HexString32Bytes(source.emitter_address.external_address)
-      );
+      return {
+        emitterChain: Number(source.emitter_chain),
+        emitterAddress: source.emitter_address.external_address.replace(
+          "0x",
+          ""
+        ),
+      };
     });
   }
 
   async getGovernanceDataSource(): Promise<DataSource> {
     const data = (await this.findResource("GovernanceDataSource")) as any;
-    return new DataSource(
-      Number(data.source.emitter_chain),
-      new HexString32Bytes(data.source.emitter_address.external_address)
-    );
+    return {
+      emitterChain: Number(data.source.emitter_chain),
+      emitterAddress: data.source.emitter_address.external_address.replace(
+        "0x",
+        ""
+      ),
+    };
   }
 
   getId(): string {

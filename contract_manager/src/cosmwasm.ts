@@ -1,11 +1,7 @@
 import { Chain, CosmWasmChain } from "./chains";
 import { readFileSync } from "fs";
 import { getPythConfig } from "@pythnetwork/cosmwasm-deploy-tools/lib/configs";
-import {
-  CHAINS,
-  DataSource,
-  HexString32Bytes,
-} from "@pythnetwork/xc-governance-sdk";
+import { CHAINS, DataSource } from "xc_admin_common";
 import { DeploymentType } from "@pythnetwork/cosmwasm-deploy-tools/lib/helper";
 import {
   CosmwasmExecutor,
@@ -45,10 +41,10 @@ export class CosmWasmContract extends Contract {
   async getDataSources(): Promise<DataSource[]> {
     const config = await this.getConfig();
     return config.config_v1.data_sources.map(({ emitter, chain_id }: any) => {
-      return new DataSource(
-        Number(chain_id),
-        new HexString32Bytes(Buffer.from(emitter, "base64").toString("hex"))
-      );
+      return {
+        emitterChain: Number(chain_id),
+        emitterAddress: Buffer.from(emitter, "base64").toString("hex"),
+      };
     });
   }
 
@@ -56,12 +52,10 @@ export class CosmWasmContract extends Contract {
     const config = await this.getConfig();
     const { emitter: emitterAddress, chain_id: chainId } =
       config.config_v1.governance_source;
-    return new DataSource(
-      Number(chainId),
-      new HexString32Bytes(
-        Buffer.from(emitterAddress, "base64").toString("hex")
-      )
-    );
+    return {
+      emitterChain: Number(chainId),
+      emitterAddress: Buffer.from(emitterAddress, "base64").toString("hex"),
+    };
   }
 
   static type = "CosmWasmContract";

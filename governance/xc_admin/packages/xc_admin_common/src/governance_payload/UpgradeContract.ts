@@ -1,4 +1,4 @@
-import { ChainName } from "@certusone/wormhole-sdk";
+import { ChainName } from "../chains";
 import { PythGovernanceActionImpl } from "./PythGovernanceAction";
 import * as BufferLayout from "@solana/buffer-layout";
 import * as BufferLayoutExt from "./BufferLayoutExt";
@@ -58,6 +58,35 @@ export class AptosAuthorizeUpgradeContract extends PythGovernanceActionImpl {
 
   encode(): Buffer {
     return super.encodeWithPayload(AptosAuthorizeUpgradeContract.layout, {
+      hash: this.hash,
+    });
+  }
+}
+
+export class SuiAuthorizeUpgradeContract extends PythGovernanceActionImpl {
+  static layout: BufferLayout.Structure<Readonly<{ hash: string }>> =
+    BufferLayout.struct([BufferLayoutExt.hexBytes(32, "hash")]);
+
+  constructor(targetChainId: ChainName, readonly hash: string) {
+    super(targetChainId, "UpgradeContract");
+  }
+
+  static decode(data: Buffer): SuiAuthorizeUpgradeContract | undefined {
+    const decoded = PythGovernanceActionImpl.decodeWithPayload(
+      data,
+      "UpgradeContract",
+      this.layout
+    );
+    if (!decoded) return undefined;
+
+    return new SuiAuthorizeUpgradeContract(
+      decoded[0].targetChainId,
+      decoded[1].hash
+    );
+  }
+
+  encode(): Buffer {
+    return super.encodeWithPayload(SuiAuthorizeUpgradeContract.layout, {
       hash: this.hash,
     });
   }

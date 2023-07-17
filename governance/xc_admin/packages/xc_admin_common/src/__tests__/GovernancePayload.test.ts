@@ -9,20 +9,16 @@ import {
   ActionName,
   PythGovernanceAction,
   decodeGovernancePayload,
+  EvmSetWormholeAddress,
 } from "..";
 import * as fc from "fast-check";
-import {
-  ChainId,
-  ChainName,
-  CHAINS,
-  toChainId,
-  toChainName,
-} from "@certusone/wormhole-sdk";
+import { ChainName, CHAINS } from "../chains";
 import { Arbitrary, IntArrayConstraints } from "fast-check";
 import {
   AptosAuthorizeUpgradeContract,
   CosmosUpgradeContract,
   EvmUpgradeContract,
+  SuiAuthorizeUpgradeContract,
 } from "../governance_payload/UpgradeContract";
 import {
   AuthorizeGovernanceDataSourceTransfer,
@@ -219,6 +215,12 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
           );
         }
       );
+
+      const suiArb = hexBytesArb({ minLength: 32, maxLength: 32 }).map(
+        (buffer) => {
+          return new SuiAuthorizeUpgradeContract(header.targetChainId, buffer);
+        }
+      );
       const evmArb = hexBytesArb({ minLength: 20, maxLength: 20 }).map(
         (address) => {
           return new EvmUpgradeContract(header.targetChainId, address);
@@ -253,6 +255,10 @@ function governanceActionArb(): Arbitrary<PythGovernanceAction> {
           header.targetChainId,
           parseInt(index.toString())
         );
+      });
+    } else if (header.action === "SetWormholeAddress") {
+      return hexBytesArb({ minLength: 20, maxLength: 20 }).map((address) => {
+        return new EvmSetWormholeAddress(header.targetChainId, address);
       });
     } else {
       throw new Error("Unsupported action type");

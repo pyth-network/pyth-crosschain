@@ -2,7 +2,7 @@ import Web3 from "web3"; //TODO: decide on using web3 or ethers.js
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import { Contract } from "./base";
 import { Chain, EVMChain } from "./chains";
-import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
+import { DataSource } from "xc_admin_common";
 
 const EXTENDED_PYTH_ABI = [
   {
@@ -136,12 +136,20 @@ export class EVMContract extends Contract {
   async getDataSources(): Promise<DataSource[]> {
     const pythContract = this.getContract();
     const result = await pythContract.methods.validDataSources().call();
-    return result.map(({ chainId, emitterAddress }: any) => {
-      return new DataSource(
-        Number(chainId),
-        new HexString32Bytes(emitterAddress)
-      );
-    });
+    return result.map(
+      ({
+        chainId,
+        emitterAddress,
+      }: {
+        chainId: string;
+        emitterAddress: string;
+      }) => {
+        return {
+          emitterChain: Number(chainId),
+          emitterAddress: emitterAddress.replace("0x", ""),
+        };
+      }
+    );
   }
 
   async getGovernanceDataSource(): Promise<DataSource> {
@@ -149,10 +157,10 @@ export class EVMContract extends Contract {
     const [chainId, emitterAddress] = await pythContract.methods
       .governanceDataSource()
       .call();
-    return new DataSource(
-      Number(chainId),
-      new HexString32Bytes(emitterAddress)
-    );
+    return {
+      emitterChain: Number(chainId),
+      emitterAddress: emitterAddress.replace("0x", ""),
+    };
   }
 
   async executeGovernanceInstruction(privateKey: string, vaa: Buffer) {
