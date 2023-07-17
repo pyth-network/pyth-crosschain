@@ -2,13 +2,13 @@ on:
   pull_request:
     paths:
       - target_chains/ethereum/contracts/**
-      - governance/xc_governance_sdk_js/**
+      - governance/xc_admin/packages/xc_admin_common/**
   push:
     branches:
       - main
     paths:
       - target_chains/ethereum/contracts/**
-      - governance/xc_governance_sdk_js/**
+      - governance/xc_admin/packages/xc_admin_common/**
 
 name: Ethereum Contract
 
