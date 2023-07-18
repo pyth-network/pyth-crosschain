@@ -36,16 +36,6 @@ module.exports = {
       timeoutBlocks: 200,
       skipDryRun: false,
     },
-    ropsten: {
-      provider: payerProvider(
-        `https://ropsten.infura.io/v3/` + process.env.INFURA_KEY
-      ),
-      network_id: 3,
-      gas: 5500000,
-      confirmations: 2,
-      timeoutBlocks: 200,
-      skipDryRun: true,
-    },
     rinkeby: {
       provider: payerProvider(
         `https://rinkeby.infura.io/v3/` + process.env.INFURA_KEY
@@ -204,15 +194,6 @@ module.exports = {
       provider: payerProvider(`https://zkevm-rpc.com`),
       network_id: 1101,
     },
-    shimmer_testnet: {
-      provider: payerProvider(`https://json-rpc.evm.testnet.shimmer.network`),
-      network_id: 1071,
-      verify: {
-        apiUrl: "https://explorer.evm.testnet.shimmer.network/api",
-        explorerUrl: "https://explorer.evm.testnet.shimmer.network",
-        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
-      },
-    },
     gnosis: {
       provider: payerProvider(`https://rpc.gnosischain.com`),
       network_id: 100,
@@ -268,7 +249,7 @@ module.exports = {
       network_id: 71,
     },
     neon: {
-      provider: payerProvider("NEON_RPC_PLACEHOLDER"), // Replace this by the neon RPC node endpoint
+      provider: payerProvider("https://neon-proxy-mainnet.solana.p2p.org"),
       network_id: 245022934,
     },
     kava: {
