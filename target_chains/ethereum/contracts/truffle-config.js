@@ -292,6 +292,24 @@ module.exports = {
         apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
       },
     },
+    eos: {
+      provider: payerProvider("https://api.evm.eosnetwork.com"),
+      network_id: 17777,
+      verify: {
+        apiUrl: "https://explorer.evm.eosnetwork.com/api",
+        explorerUrl: "https://explorer.evm.eosnetwork.com",
+        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
+      },
+    },
+    eos_testnet: {
+      provider: payerProvider("https://api.testnet.evm.eosnetwork.com"),
+      network_id: 15557,
+      verify: {
+        apiUrl: "https://explorer.testnet.evm.eosnetwork.com/api",
+        explorerUrl: "https://explorer.testnet.evm.eosnetwork.com",
+        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
+      },
+    },
   },
 
   compilers: {
