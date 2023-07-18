@@ -1,0 +1,3 @@
+chain: zksync_goerli
+address: "0xC38B1dd611889Abc95d4E0a472A667c3671c08DE"
+type: EVMContract

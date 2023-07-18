@@ -1,0 +1,5 @@
+id: kcc_testnet
+mainnet: false
+rpcUrl: https://rpc-testnet.kcc.network
+networkId: 322
+type: EVMChain

@@ -1,0 +1,5 @@
+id: zksync_goerli
+mainnet: false
+rpcUrl: https://zksync2-testnet.zksync.dev
+networkId: 280
+type: EVMChain

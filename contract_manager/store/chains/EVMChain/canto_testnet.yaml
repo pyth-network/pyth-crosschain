@@ -1,0 +1,5 @@
+id: canto_testnet
+mainnet: false
+rpcUrl: https://canto-testnet.plexnode.wtf
+networkId: 7701
+type: EVMChain

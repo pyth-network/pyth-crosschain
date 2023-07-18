@@ -1,0 +1,3 @@
+chain: bnb_testnet
+address: "0xd7308b14BF4008e7C7196eC35610B1427C5702EA"
+type: EVMContract

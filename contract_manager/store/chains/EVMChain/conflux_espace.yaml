@@ -1,0 +1,5 @@
+id: conflux_espace
+mainnet: true
+rpcUrl: https://evm.confluxrpc.org
+networkId: 1030
+type: EVMChain

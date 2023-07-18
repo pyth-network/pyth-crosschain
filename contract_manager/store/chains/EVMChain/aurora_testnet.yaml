@@ -1,0 +1,5 @@
+id: aurora_testnet
+mainnet: false
+rpcUrl: https://testnet.aurora.dev
+networkId: 1313161555
+type: EVMChain

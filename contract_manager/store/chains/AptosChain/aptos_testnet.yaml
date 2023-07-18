@@ -1,3 +1,4 @@
 id: aptos_testnet
+mainnet: false
 rpcUrl: https://fullnode.testnet.aptoslabs.com/v1
 type: AptosChain

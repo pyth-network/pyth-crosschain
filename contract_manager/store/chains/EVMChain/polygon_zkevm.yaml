@@ -1,0 +1,5 @@
+id: polygon_zkevm
+mainnet: true
+rpcUrl: https://zkevm-rpc.com
+networkId: 1101
+type: EVMChain

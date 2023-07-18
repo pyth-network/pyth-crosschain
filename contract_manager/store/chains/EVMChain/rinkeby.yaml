@@ -1,0 +1,5 @@
+id: rinkeby
+mainnet: false
+rpcUrl: https://rinkeby.infura.io/v3/$INFURA_KEY
+networkId: 4
+type: EVMChain

@@ -1,0 +1,5 @@
+id: kava_testnet
+mainnet: false
+rpcUrl: https://evm.testnet.kava.io
+networkId: 2221
+type: EVMChain

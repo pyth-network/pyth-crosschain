@@ -1,0 +1,5 @@
+id: evmos
+mainnet: true
+rpcUrl: https://eth.bd.evmos.org:8545/
+networkId: 9001
+type: EVMChain

@@ -45,6 +45,13 @@ const EXTENDED_PYTH_ABI = [
   },
   {
     inputs: [],
+    name: "version",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "singleUpdateFeeInWei",
     outputs: [
       {
@@ -107,8 +114,40 @@ export class EVMContract extends Contract {
     return EVMContract.type;
   }
 
+  async getVersion(): Promise<string> {
+    const pythContract = this.getContract();
+    const result = await pythContract.methods.version().call();
+    return result;
+  }
+
+  static async deploy(
+    chain: EVMChain,
+    privateKey: string,
+    abi: any,
+    bytecode: string
+  ): Promise<EVMContract> {
+    const web3 = new Web3(chain.getRpcUrl());
+    const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
+    web3.eth.accounts.wallet.add(signer);
+    const contract = new web3.eth.Contract(abi);
+    contract.options.data = bytecode;
+    const deployTx = contract.deploy({ data: "" });
+    const gas = await deployTx.estimateGas();
+    let gasPrice = await web3.eth.getGasPrice();
+
+    if (!chain.isMainnet()) {
+      gasPrice = (BigInt(gasPrice) * 2n).toString();
+    }
+    const deployedContract = await deployTx.send({
+      from: signer.address,
+      gas,
+      gasPrice,
+    });
+    return new EVMContract(chain, deployedContract.options.address);
+  }
+
   getContract() {
-    const web3 = new Web3(this.chain.rpcUrl);
+    const web3 = new Web3(this.chain.getRpcUrl());
     const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
     return pythContract;
   }
@@ -164,7 +203,7 @@ export class EVMContract extends Contract {
   }
 
   async executeGovernanceInstruction(privateKey: string, vaa: Buffer) {
-    const web3 = new Web3(this.chain.rpcUrl);
+    const web3 = new Web3(this.chain.getRpcUrl());
     const { address } = web3.eth.accounts.wallet.add(privateKey);
     const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
     const transactionObject = pythContract.methods.executeGovernanceInstruction(

@@ -1,0 +1,5 @@
+id: meter
+mainnet: true
+rpcUrl: https://rpc-meter.jellypool.xyz
+networkId: 82
+type: EVMChain

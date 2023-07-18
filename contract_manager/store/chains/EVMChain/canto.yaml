@@ -1,0 +1,5 @@
+id: canto
+mainnet: true
+rpcUrl: https://canto.gravitychain.io
+networkId: 7700
+type: EVMChain

@@ -1,6 +1,7 @@
 querierEndpoint: https://rpc-palvus.pion-1.ntrn.tech/
 executorEndpoint: https://rpc-palvus.pion-1.ntrn.tech/
 id: neutron_testnet_pion_1
+mainnet: false
 gasPrice: "0.05"
 prefix: neutron
 feeDenom: untrn

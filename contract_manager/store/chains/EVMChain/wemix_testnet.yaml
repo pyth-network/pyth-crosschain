@@ -1,0 +1,5 @@
+id: wemix_testnet
+mainnet: false
+rpcUrl: https://api.test.wemix.com
+networkId: 1112
+type: EVMChain

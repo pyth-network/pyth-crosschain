@@ -1,0 +1,5 @@
+id: base_goerli
+mainnet: false
+rpcUrl: https://goerli.base.org
+networkId: 84531
+type: EVMChain

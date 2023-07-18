@@ -1,0 +1,5 @@
+id: ethereum
+mainnet: true
+rpcUrl: https://mainnet.infura.io/v3/$INFURA_KEY
+networkId: 1
+type: EVMChain

@@ -1,0 +1,5 @@
+id: polygon_zkevm_testnet
+mainnet: false
+rpcUrl: https://rpc.public.zkevm-test.net/
+networkId: 1442
+type: EVMChain

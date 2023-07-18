@@ -1,0 +1,5 @@
+id: optimism_goerli
+mainnet: false
+rpcUrl: https://rpc.ankr.com/optimism_testnet
+networkId: 420
+type: EVMChain

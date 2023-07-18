@@ -1,3 +1,5 @@
 id: cronos_testnet
+mainnet: false
 rpcUrl: https://evm-t3.cronos.org
+networkId: 338
 type: EVMChain

@@ -1,0 +1,5 @@
+id: bnb_testnet
+mainnet: false
+rpcUrl: https://rpc.ankr.com/bsc_testnet_chapel
+networkId: 97
+type: EVMChain

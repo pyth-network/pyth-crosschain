@@ -1,0 +1,5 @@
+id: linea_goerli
+mainnet: false
+rpcUrl: https://rpc.goerli.linea.build
+networkId: 59140
+type: EVMChain

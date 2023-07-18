@@ -206,7 +206,7 @@ export class WormholeMultiSigTransaction {
 
   async getState() {
     const proposal = await this.squad.getTransaction(this.address);
-    return proposal.status; //TODO: make it typed and parse the status to a more readable format
+    return Object.keys(proposal.status)[0];
   }
 
   async execute(): Promise<SubmittedWormholeMessage> {
@@ -284,7 +284,7 @@ export class Vault extends Storable {
   }
 
   public async proposeWormholeMessage(
-    payload: Buffer
+    payloads: Buffer[]
   ): Promise<WormholeMultiSigTransaction> {
     const squad = this.getSquadOrThrow();
     const multisigVault = new MultisigVault(
@@ -293,10 +293,11 @@ export class Vault extends Storable {
       squad,
       this.key
     );
-    const txAccount = await multisigVault.proposeWormholeMessageWithPayer(
-      payload,
-      squad.wallet.publicKey
-    );
+    const txAccount =
+      await multisigVault.proposeWormholeMultipleMessagesWithPayer(
+        payloads,
+        squad.wallet.publicKey
+      );
     return new WormholeMultiSigTransaction(txAccount, squad, this.cluster);
   }
 }

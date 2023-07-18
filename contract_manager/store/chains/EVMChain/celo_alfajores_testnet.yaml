@@ -1,0 +1,5 @@
+id: celo_alfajores_testnet
+mainnet: false
+rpcUrl: https://alfajores-forno.celo-testnet.org
+networkId: 44787
+type: EVMChain

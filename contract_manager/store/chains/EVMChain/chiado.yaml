@@ -1,0 +1,5 @@
+id: chiado
+mainnet: true
+rpcUrl: https://rpc.chiadochain.net
+networkId: 10200
+type: EVMChain

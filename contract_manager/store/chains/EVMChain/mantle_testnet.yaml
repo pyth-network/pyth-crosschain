@@ -1,0 +1,5 @@
+id: mantle_testnet
+mainnet: false
+rpcUrl: https://rpc.testnet.mantle.xyz/
+networkId: 5001
+type: EVMChain

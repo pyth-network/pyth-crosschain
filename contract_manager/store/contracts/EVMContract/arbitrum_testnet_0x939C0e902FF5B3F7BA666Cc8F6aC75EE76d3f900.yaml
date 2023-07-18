@@ -1,0 +1,3 @@
+chain: arbitrum_testnet
+address: "0x939C0e902FF5B3F7BA666Cc8F6aC75EE76d3f900"
+type: EVMContract

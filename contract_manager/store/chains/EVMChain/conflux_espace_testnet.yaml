@@ -1,0 +1,5 @@
+id: conflux_espace_testnet
+mainnet: false
+rpcUrl: https://evmtestnet.confluxrpc.com
+networkId: 71
+type: EVMChain

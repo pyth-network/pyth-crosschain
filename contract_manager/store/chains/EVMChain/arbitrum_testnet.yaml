@@ -1,3 +1,5 @@
 id: arbitrum_testnet
+mainnet: false
 rpcUrl: https://goerli-rollup.arbitrum.io/rpc
+networkId: 421613
 type: EVMChain

@@ -1,5 +1,6 @@
 querierEndpoint: https://rpc.uni.junonetwork.io/
 executorEndpoint: https://rpc.uni.junonetwork.io/
+mainnet: false
 id: juno_testnet
 gasPrice: "0.025"
 prefix: juno

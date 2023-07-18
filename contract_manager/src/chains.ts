@@ -11,12 +11,16 @@ import {
 import { AptosClient } from "aptos";
 
 export abstract class Chain extends Storable {
-  protected constructor(public id: string) {
+  protected constructor(public id: string, public mainnet: boolean) {
     super();
   }
 
   getId(): string {
     return this.id;
+  }
+
+  isMainnet(): boolean {
+    return this.mainnet;
   }
 
   /**
@@ -44,19 +48,21 @@ export class CosmWasmChain extends Chain {
 
   constructor(
     id: string,
+    mainnet: boolean,
     public querierEndpoint: string,
     public executorEndpoint: string,
     public gasPrice: string,
     public prefix: string,
     public feeDenom: string
   ) {
-    super(id);
+    super(id, mainnet);
   }
 
   static fromJson(parsed: any): CosmWasmChain {
     if (parsed.type !== CosmWasmChain.type) throw new Error("Invalid type");
     return new CosmWasmChain(
       parsed.id,
+      parsed.mainnet,
       parsed.querierEndpoint,
       parsed.executorEndpoint,
       parsed.gasPrice,
@@ -70,6 +76,7 @@ export class CosmWasmChain extends Chain {
       querierEndpoint: this.querierEndpoint,
       executorEndpoint: this.executorEndpoint,
       id: this.id,
+      mainnet: this.mainnet,
       gasPrice: this.gasPrice,
       prefix: this.prefix,
       feeDenom: this.feeDenom,
@@ -92,18 +99,19 @@ export class CosmWasmChain extends Chain {
 export class SuiChain extends Chain {
   static type: string = "SuiChain";
 
-  constructor(id: string, public rpcUrl: string) {
-    super(id);
+  constructor(id: string, mainnet: boolean, public rpcUrl: string) {
+    super(id, mainnet);
   }
 
   static fromJson(parsed: any): SuiChain {
     if (parsed.type !== SuiChain.type) throw new Error("Invalid type");
-    return new SuiChain(parsed.id, parsed.rpcUrl);
+    return new SuiChain(parsed.id, parsed.mainnet, parsed.rpcUrl);
   }
 
   toJson(): any {
     return {
       id: this.id,
+      mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       type: SuiChain.type,
     };
@@ -156,13 +164,21 @@ export class SuiChain extends Chain {
 export class EVMChain extends Chain {
   static type: string = "EVMChain";
 
-  constructor(id: string, public rpcUrl: string) {
-    super(id);
+  constructor(id: string, mainnet: boolean, private rpcUrl: string) {
+    super(id, mainnet);
   }
 
   static fromJson(parsed: any): EVMChain {
     if (parsed.type !== EVMChain.type) throw new Error("Invalid type");
-    return new EVMChain(parsed.id, parsed.rpcUrl);
+    return new EVMChain(parsed.id, parsed.mainnet, parsed.rpcUrl);
+  }
+
+  getRpcUrl(): string {
+    if (this.rpcUrl.includes("$INFURA_KEY") && !process.env.INFURA_KEY)
+      throw new Error(
+        `INFURA_KEY not set in env but present in rpcUrl ${this.rpcUrl}`
+      );
+    return this.rpcUrl.replace("$INFURA_KEY", process.env.INFURA_KEY || "");
   }
 
   /**
@@ -176,6 +192,7 @@ export class EVMChain extends Chain {
   toJson(): any {
     return {
       id: this.id,
+      mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       type: EVMChain.type,
     };
@@ -189,8 +206,8 @@ export class EVMChain extends Chain {
 export class AptosChain extends Chain {
   static type = "AptosChain";
 
-  constructor(id: string, public rpcUrl: string) {
-    super(id);
+  constructor(id: string, mainnet: boolean, public rpcUrl: string) {
+    super(id, mainnet);
   }
 
   getClient(): AptosClient {
@@ -220,6 +237,7 @@ export class AptosChain extends Chain {
   toJson(): any {
     return {
       id: this.id,
+      mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       type: AptosChain.type,
     };
@@ -227,6 +245,6 @@ export class AptosChain extends Chain {
 
   static fromJson(parsed: any): AptosChain {
     if (parsed.type !== AptosChain.type) throw new Error("Invalid type");
-    return new AptosChain(parsed.id, parsed.rpcUrl);
+    return new AptosChain(parsed.id, parsed.mainnet, parsed.rpcUrl);
   }
 }

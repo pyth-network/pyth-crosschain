@@ -1,0 +1,5 @@
+id: zksync
+mainnet: true
+rpcUrl: https://zksync2-mainnet.zksync.io
+networkId: 324
+type: EVMChain

@@ -1,6 +1,7 @@
 querierEndpoint: https://rpc-kralum.neutron-1.neutron.org
 executorEndpoint: https://rpc-kralum.neutron-1.neutron.org
 id: neutron
+mainnet: true
 gasPrice: "0.025"
 prefix: neutron
 feeDenom: untrn

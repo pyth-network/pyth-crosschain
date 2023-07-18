@@ -1,0 +1,5 @@
+id: neon_devnet
+mainnet: false
+rpcUrl: https://devnet.neonevm.org
+networkId: 245022926
+type: EVMChain

@@ -1,0 +1,5 @@
+id: bnb
+mainnet: true
+rpcUrl: https://rpc.ankr.com/bsc
+networkId: 56
+type: EVMChain
