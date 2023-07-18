@@ -38,6 +38,7 @@ export const RECEIVER_CHAINS = {
   wemix: 60023,
   linea: 60024,
   neutron_testnet_pion_1: 60025,
+  eos: 60026,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

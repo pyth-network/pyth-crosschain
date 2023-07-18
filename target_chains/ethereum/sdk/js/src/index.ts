@@ -57,4 +57,6 @@ export const CONTRACT_ADDR: Record<string, string> = {
   wemix_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   linea_goerli: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   linea: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  eos: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  eos_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
 };
