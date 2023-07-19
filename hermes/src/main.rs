@@ -47,13 +47,13 @@ async fn init() -> Result<()> {
 
             // Spawn the Pythnet listener
             log::info!("Starting Pythnet listener using {}", pythnet_ws_endpoint);
-            network::pythnet::spawn(
-                store.clone(),
-                pythnet_ws_endpoint,
-                pythnet_http_endpoint,
-                wh_contract_addr,
-            )
-            .await?;
+            // network::pythnet::spawn(
+            //     store.clone(),
+            //     pythnet_ws_endpoint,
+            //     pythnet_http_endpoint,
+            //     wh_contract_addr,
+            // )
+            // .await?;
 
             // Run the RPC server and wait for it to shutdown gracefully.
             log::info!("Starting RPC server on {}", api_addr);

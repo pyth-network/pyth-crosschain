@@ -81,6 +81,8 @@ extern "C" fn proxy(o: ObservationC) {
     {
         log::error!("Failed to send observation: {}", e);
     }
+
+    // log::warn!("Received Observation");
 }
 
 /// This function handles bootstrapping libp2p (in Go) and listening for Wormhole Observations.
@@ -133,8 +135,10 @@ pub async fn spawn(
     tokio::spawn(async move {
         // Listen in the background for new VAA's from the p2p layer
         // and update the state accordingly.
+        let mut counter = 0;
         loop {
-            let vaa_bytes = tokio::task::spawn_blocking(|| {
+            let counter_c = counter;
+            let vaa_bytes = tokio::task::spawn_blocking(move || {
                 let observation = OBSERVATIONS.1.lock();
                 let observation = match observation {
                     Ok(observation) => observation,
@@ -146,7 +150,10 @@ pub async fn spawn(
                 };
 
                 match observation.recv() {
-                    Ok(vaa_bytes) => vaa_bytes,
+                    Ok(vaa_bytes) => {
+                        // log::warn!("Received Counter: {}", counter_c);
+                        vaa_bytes
+                    }
                     Err(e) => {
                         // This should never happen, but if it does, we want to panic and crash
                         // as it is not recoverable.
@@ -157,12 +164,13 @@ pub async fn spawn(
             .await
             .unwrap();
 
-            let store = store.clone();
-            tokio::spawn(async move {
-                if let Err(e) = store.store_update(Update::Vaa(vaa_bytes)).await {
-                    log::error!("Failed to process VAA: {:?}", e);
-                }
-            });
+            // let store = store.clone();
+            // tokio::spawn(async move {
+            //     if let Err(e) = store.store_update(Update::Vaa(vaa_bytes)).await {
+            //         log::error!("Failed to process VAA: {:?}", e);
+            //     }
+            // });
+            counter += 1;
         }
     });
 
