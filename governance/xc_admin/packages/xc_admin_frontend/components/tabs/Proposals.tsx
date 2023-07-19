@@ -1126,6 +1126,7 @@ const Proposals = ({
     priceFeedMultisigProposals,
     allProposalsIxsParsed,
     isLoading: isMultisigLoading,
+    refreshData,
   } = useMultisigContext()
   const [filteredProposals, setFilteredProposals] = useState<ClientProposal[]>(
     []
@@ -1283,6 +1284,18 @@ const Proposals = ({
               <div className="mb-4 md:mb-0">
                 <ClusterSwitch />
               </div>
+              {refreshData && (
+                <button
+                  disabled={isMultisigLoading}
+                  className="sub-action-btn text-base"
+                  onClick={() => {
+                    const { fetchData } = refreshData()
+                    fetchData()
+                  }}
+                >
+                  Refresh
+                </button>
+              )}
             </div>
             <div className="relative mt-6">
               {isMultisigLoading ? (

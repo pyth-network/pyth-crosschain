@@ -11,7 +11,7 @@ import {
 } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
-import { useContext, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
   ExecutePostedVaa,
   getManyProposalsInstructions,
@@ -29,7 +29,7 @@ import {
 import { ClusterContext } from '../contexts/ClusterContext'
 import { pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 
-interface MultisigHookData {
+export interface MultisigHookData {
   isLoading: boolean
   error: any // TODO: fix any
   proposeSquads: SquadsMesh | undefined
@@ -39,6 +39,7 @@ interface MultisigHookData {
   upgradeMultisigProposals: TransactionAccount[]
   priceFeedMultisigProposals: TransactionAccount[]
   allProposalsIxsParsed: MultisigInstruction[][]
+  refreshData?: () => { fetchData: () => Promise<void>; cancel: () => void }
   setpriceFeedMultisigProposals: React.Dispatch<
     React.SetStateAction<TransactionAccount[]>
   >
@@ -75,7 +76,6 @@ export const useMultisig = (): MultisigHookData => {
   const [urlsIndex, setUrlsIndex] = useState(0)
 
   useEffect(() => {
-    setIsLoading(true)
     setError(null)
   }, [urlsIndex, cluster])
 
@@ -101,7 +101,7 @@ export const useMultisig = (): MultisigHookData => {
     }
   }, [wallet, urlsIndex, cluster])
 
-  useEffect(() => {
+  const refreshData = useCallback(() => {
     let cancelled = false
     const urls = pythClusterApiUrls(getMultisigCluster(cluster))
     const connection = new Connection(urls[urlsIndex].rpcUrl, {
@@ -109,7 +109,8 @@ export const useMultisig = (): MultisigHookData => {
       wsEndpoint: urls[urlsIndex].wsUrl,
     })
 
-    ;(async () => {
+    const fetchData = async () => {
+      setIsLoading(true)
       try {
         // mock wallet to allow users to view proposals without connecting their wallet
         const readOnlySquads = new SquadsMesh({
@@ -135,11 +136,11 @@ export const useMultisig = (): MultisigHookData => {
         }
 
         if (cancelled) return
-        const proposals = await getSortedProposals(
+        const upgradeProposals = await getSortedProposals(
           readOnlySquads,
           UPGRADE_MULTISIG[getMultisigCluster(cluster)]
         )
-        setUpgradeMultisigProposals(proposals)
+        setUpgradeMultisigProposals(upgradeProposals)
         try {
           if (cancelled) return
           const sortedPriceFeedMultisigProposals = await getSortedProposals(
@@ -169,12 +170,19 @@ export const useMultisig = (): MultisigHookData => {
           )
         }
       }
-    })()
-
-    return () => {
+    }
+    const cancel = () => {
       cancelled = true
     }
-  }, [urlsIndex, cluster])
+
+    return { cancel, fetchData }
+  }, [cluster, urlsIndex])
+
+  useEffect(() => {
+    const { cancel, fetchData } = refreshData()
+    fetchData()
+    return cancel
+  }, [refreshData])
 
   return {
     isLoading,
@@ -186,6 +194,7 @@ export const useMultisig = (): MultisigHookData => {
     upgradeMultisigProposals,
     priceFeedMultisigProposals,
     allProposalsIxsParsed,
+    refreshData,
     setpriceFeedMultisigProposals,
   }
 }
