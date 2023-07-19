@@ -150,20 +150,20 @@ const Home: NextPage<{
             </div>
           </div>
           {tabInfoArray[currentTabIndex].queryString ===
-          TAB_INFO.General.queryString ? (
+            TAB_INFO.General.queryString && (
             <General proposerServerUrl={proposerServerUrl} />
-          ) : tabInfoArray[currentTabIndex].queryString ===
-            TAB_INFO.UpdatePermissions.queryString ? (
-            <UpdatePermissions />
-          ) : tabInfoArray[currentTabIndex].queryString ===
-            TAB_INFO.Proposals.queryString ? (
+          )}
+          {tabInfoArray[currentTabIndex].queryString ===
+            TAB_INFO.UpdatePermissions.queryString && <UpdatePermissions />}
+          {tabInfoArray[currentTabIndex].queryString ===
+            TAB_INFO.Proposals.queryString && (
             <StatusFilterProvider>
               <Proposals
                 publisherKeyToNameMapping={publisherKeyToNameMapping}
                 multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
               />
             </StatusFilterProvider>
-          ) : null}
+          )}
         </MultisigContextProvider>
       </PythContextProvider>
     </Layout>

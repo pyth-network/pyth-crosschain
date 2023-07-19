@@ -58,14 +58,10 @@ const getMappingCluster = (cluster: string) => {
 
 const ProposalRow = ({
   proposal,
-  verified,
-  voted,
   setCurrentProposalPubkey,
   multisig,
 }: {
   proposal: TransactionAccount
-  verified: boolean
-  voted: boolean
   setCurrentProposalPubkey: Dispatch<SetStateAction<string | undefined>>
   multisig: MultisigAccount | undefined
 }) => {
@@ -105,10 +101,6 @@ const ProposalRow = ({
               '...' +
               proposal.publicKey.toBase58().slice(-6)}
           </span>{' '}
-          <div className="mr-2 items-center flex">
-            {verified ? <VerifiedIconWithTooltip /> : null}
-          </div>
-          {voted ? <VotedIconWithTooltip /> : null}
         </div>
         <div>
           <StatusTag proposalStatus={status} />
@@ -233,18 +225,16 @@ const Proposal = ({
   multisigSignerKeyToNameMapping,
   proposal,
   proposalIndex,
-  instructions,
-  verified,
   multisig,
 }: {
   publisherKeyToNameMapping: Record<string, Record<string, string>>
   multisigSignerKeyToNameMapping: Record<string, string>
   proposal: TransactionAccount | undefined
   proposalIndex: number
-  instructions: MultisigInstruction[]
-  verified: boolean
   multisig: MultisigAccount | undefined
 }) => {
+  const verified = true
+  const instructions: any[] = []
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
   const [isTransactionLoading, setIsTransactionLoading] = useState(false)
   const [
@@ -1313,8 +1303,6 @@ const Proposals = ({
                         <ProposalRow
                           key={idx}
                           proposal={proposal}
-                          verified={proposal.verified}
-                          voted={proposal.voted}
                           setCurrentProposalPubkey={setCurrentProposalPubkey}
                           multisig={priceFeedMultisigAccount}
                         />
@@ -1344,8 +1332,6 @@ const Proposals = ({
                 multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
                 proposal={currentProposal}
                 proposalIndex={currentProposalIndex}
-                instructions={allProposalsIxsParsed[currentProposalIndex]}
-                verified={allProposalsVerifiedArr[currentProposalIndex]}
                 multisig={priceFeedMultisigAccount}
               />
             </div>

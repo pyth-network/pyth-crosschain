@@ -142,67 +142,18 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
         }
 
         if (cancelled) return
-        setUpgradeMultisigProposals(
-          await getSortedProposals(
-            readOnlySquads,
-            UPGRADE_MULTISIG[getMultisigCluster(cluster)]
-          )
+        const proposals = await getSortedProposals(
+          readOnlySquads,
+          UPGRADE_MULTISIG[getMultisigCluster(cluster)]
         )
+        setUpgradeMultisigProposals(proposals)
         try {
           if (cancelled) return
           const sortedPriceFeedMultisigProposals = await getSortedProposals(
             readOnlySquads,
             PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
           )
-          const allProposalsIxs = await getManyProposalsInstructions(
-            readOnlySquads,
-            sortedPriceFeedMultisigProposals
-          )
-          const multisigParser = MultisigParser.fromCluster(
-            getMultisigCluster(cluster)
-          )
-          const parsedAllProposalsIxs = allProposalsIxs.map((ixs) =>
-            ixs.map((ix) =>
-              multisigParser.parseInstruction({
-                programId: ix.programId,
-                data: ix.data as Buffer,
-                keys: ix.keys as AccountMeta[],
-              })
-            )
-          )
-          const proposalsRes: TransactionAccount[] = []
-          const instructionsRes: MultisigInstruction[][] = []
-          // filter proposals for respective devnet/pythtest and mainnet-beta/pythnet clusters
-          parsedAllProposalsIxs.map((ixs, idx) => {
-            // pythtest/pythnet proposals
-            if (
-              isRemoteCluster(cluster) &&
-              ixs.length > 0 &&
-              ixs.some(
-                (ix) =>
-                  ix instanceof WormholeMultisigInstruction &&
-                  ix.governanceAction instanceof ExecutePostedVaa &&
-                  ix.governanceAction.instructions.some((ix) =>
-                    ix.programId.equals(getPythProgramKeyForCluster(cluster))
-                  )
-              )
-            ) {
-              proposalsRes.push(sortedPriceFeedMultisigProposals[idx])
-              instructionsRes.push(ixs)
-            }
-            // devnet/testnet/mainnet-beta proposals
-            if (
-              !isRemoteCluster(cluster) &&
-              (ixs.length === 0 ||
-                ixs.some((ix) => ix instanceof PythMultisigInstruction) ||
-                ixs.some((ix) => ix instanceof UnrecognizedProgram))
-            ) {
-              proposalsRes.push(sortedPriceFeedMultisigProposals[idx])
-              instructionsRes.push(ixs)
-            }
-          })
-          setAllProposalsIxsParsed(instructionsRes)
-          setpriceFeedMultisigProposals(proposalsRes)
+          setpriceFeedMultisigProposals(sortedPriceFeedMultisigProposals)
         } catch (e) {
           console.error(e)
           setAllProposalsIxsParsed([])
