@@ -5,6 +5,7 @@ import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
 import {
   Dispatch,
+  Fragment,
   SetStateAction,
   useCallback,
   useContext,
@@ -188,6 +189,36 @@ const getProposalStatus = (
   } else {
     return 'unkwown'
   }
+}
+
+const AccountList = ({
+  listName,
+  accounts,
+}: {
+  listName: string
+  accounts: PublicKey[]
+}) => {
+  const { multisigSignerKeyToNameMapping } = usePythContext()
+  return (
+    <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
+      <h4 className="h4 font-semibold">
+        {listName}: {accounts.length}
+      </h4>
+      <hr className="border-gray-700" />
+      {accounts.map((pubkey, idx) => (
+        <div key={pubkey.toBase58()}>
+          <div className="flex justify-between" key={pubkey.toBase58()}>
+            <div>
+              Key {idx + 1}{' '}
+              {pubkey.toBase58() in multisigSignerKeyToNameMapping &&
+                `(${multisigSignerKeyToNameMapping[pubkey.toBase58()]})`}
+            </div>
+            <CopyPubkey pubkey={pubkey.toBase58()} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 const Proposal = ({
@@ -496,74 +527,25 @@ const Proposal = ({
           </div>
         ) : null}
       </div>
-      {currentProposal.approved.length > 0 ? (
-        <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
-          <h4 className="h4 font-semibold">
-            Confirmed: {currentProposal.approved.length}
-          </h4>
-          <hr className="border-gray-700" />
-          {currentProposal.approved.map((pubkey, idx) => (
-            <>
-              <div className="flex justify-between" key={pubkey.toBase58()}>
-                <div>
-                  Key {idx + 1}{' '}
-                  {pubkey.toBase58() in multisigSignerKeyToNameMapping
-                    ? `(${multisigSignerKeyToNameMapping[pubkey.toBase58()]})`
-                    : null}
-                </div>
-                <CopyPubkey pubkey={pubkey.toBase58()} />
-              </div>
-            </>
-          ))}
-        </div>
-      ) : null}
-      {currentProposal.rejected.length > 0 ? (
-        <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
-          <h4 className="h4 font-semibold">
-            Rejected: {currentProposal.rejected.length}
-          </h4>
-          <hr className="border-gray-700" />
-          {currentProposal.rejected.map((pubkey, idx) => (
-            <>
-              <div className="flex justify-between" key={pubkey.toBase58()}>
-                <div>
-                  Key {idx + 1}{' '}
-                  {pubkey.toBase58() in multisigSignerKeyToNameMapping
-                    ? `(${multisigSignerKeyToNameMapping[pubkey.toBase58()]})`
-                    : null}
-                </div>
-                <CopyPubkey pubkey={pubkey.toBase58()} />
-              </div>
-            </>
-          ))}
-        </div>
-      ) : null}
-      {currentProposal.cancelled.length > 0 ? (
-        <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
-          <h4 className="h4 font-semibold">
-            Cancelled: {currentProposal.cancelled.length}
-          </h4>
-          <hr className="border-gray-700" />
-          {currentProposal.cancelled.map((pubkey, idx) => (
-            <div className="flex justify-between" key={pubkey.toBase58()}>
-              <div>
-                Key {idx + 1}{' '}
-                {pubkey.toBase58() in multisigSignerKeyToNameMapping
-                  ? `(${multisigSignerKeyToNameMapping[pubkey.toBase58()]})`
-                  : null}
-              </div>
-              <CopyPubkey pubkey={pubkey.toBase58()} />
-            </div>
-          ))}
-        </div>
-      ) : null}
+      {currentProposal.approved.length > 0 && (
+        <AccountList listName="Confirmed" accounts={currentProposal.approved} />
+      )}
+      {currentProposal.rejected.length > 0 && (
+        <AccountList listName="Rejected" accounts={currentProposal.rejected} />
+      )}
+      {currentProposal.cancelled.length > 0 && (
+        <AccountList
+          listName="Cancelled"
+          accounts={currentProposal.cancelled}
+        />
+      )}
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
         <h4 className="h4 font-semibold">
           Total Instructions: {instructions.length}
         </h4>
         <hr className="border-gray-700" />
         {instructions?.map((instruction, index) => (
-          <>
+          <Fragment key={index}>
             <h4 className="h4 text-[20px] font-semibold">
               Instruction {index + 1}
             </h4>
@@ -787,7 +769,7 @@ const Proposal = ({
             {index !== instructions.length - 1 ? (
               <hr className="border-gray-700" />
             ) : null}
-          </>
+          </Fragment>
         ))}
       </div>
     </div>
