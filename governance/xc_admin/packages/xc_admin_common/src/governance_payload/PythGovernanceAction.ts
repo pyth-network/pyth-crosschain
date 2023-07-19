@@ -113,6 +113,8 @@ export class PythGovernanceHeader {
       module = MODULE_TARGET;
       action = TargetAction[this.action as keyof typeof TargetAction];
     }
+    if (toChainId(this.targetChainId) === undefined)
+      throw new Error(`Invalid chain id ${this.targetChainId}`);
     const span = PythGovernanceHeader.layout.encode(
       {
         magicNumber: MAGIC_NUMBER,
