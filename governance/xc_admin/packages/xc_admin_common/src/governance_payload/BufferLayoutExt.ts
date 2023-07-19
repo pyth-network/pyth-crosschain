@@ -5,14 +5,21 @@ export class UInt64BE extends Layout<bigint> {
     super(span, property);
   }
 
+  // Note: we can not use read/writeBigUInt64BE because it is not supported in the browsers
   override decode(b: Uint8Array, offset?: number): bigint {
     let o = offset ?? 0;
-    return Buffer.from(b.slice(o, o + this.span)).readBigUInt64BE();
+    const buffer = Buffer.from(b.slice(o, o + this.span));
+    const hi32 = buffer.readUInt32BE();
+    const lo32 = buffer.readUInt32BE(4);
+    return BigInt(lo32) + (BigInt(hi32) << BigInt(32));
   }
 
   override encode(src: bigint, b: Uint8Array, offset?: number): number {
     const buffer = Buffer.alloc(this.span);
-    buffer.writeBigUint64BE(src);
+    const hi32 = Number(src >> BigInt(32));
+    const lo32 = Number(src & BigInt(0xffffffff));
+    buffer.writeUInt32BE(hi32, 0);
+    buffer.writeUInt32BE(lo32, 4);
     b.set(buffer, offset);
     return this.span;
   }
