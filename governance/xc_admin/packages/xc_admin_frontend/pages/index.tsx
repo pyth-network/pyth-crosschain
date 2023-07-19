@@ -1,8 +1,4 @@
-import { Wallet } from '@coral-xyz/anchor'
-import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { Tab } from '@headlessui/react'
-import { useAnchorWallet } from '@solana/wallet-adapter-react'
-import { Keypair } from '@solana/web3.js'
 import * as fs from 'fs'
 import type { GetServerSideProps, NextPage } from 'next'
 import { useRouter } from 'next/router'
@@ -121,7 +117,10 @@ const Home: NextPage<{
 
   return (
     <Layout>
-      <PythContextProvider>
+      <PythContextProvider
+        publisherKeyToNameMapping={publisherKeyToNameMapping}
+        multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
+      >
         <MultisigContextProvider>
           <div className="container relative pt-16 md:pt-20">
             <div className="py-8 md:py-16">
@@ -156,10 +155,7 @@ const Home: NextPage<{
           {tabInfoArray[currentTabIndex].queryString ===
             TAB_INFO.Proposals.queryString && (
             <StatusFilterProvider>
-              <Proposals
-                publisherKeyToNameMapping={publisherKeyToNameMapping}
-                multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
-              />
+              <Proposals />
             </StatusFilterProvider>
           )}
         </MultisigContextProvider>
