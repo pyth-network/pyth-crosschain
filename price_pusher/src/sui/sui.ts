@@ -329,7 +329,11 @@ export class SuiPricePusher implements IPricePusher {
           `The balance of gas object ${gasObject.objectId} is too low. Removing from pool.`
         );
       } else {
-        nextGasObject = gasObject;
+        // Refresh the coin object here in case the error is caused by an object version mismatch.
+        nextGasObject = await SuiPricePusher.tryRefreshObjectReference(
+          this.signer.provider,
+          gasObject
+        );
       }
       console.error(e);
 
@@ -371,6 +375,29 @@ export class SuiPricePusher implements IPricePusher {
     );
     console.log("Gas pool is filled with coins: ", gasPool);
     return gasPool;
+  }
+
+  // Attempt to refresh the version of the provided object reference to point to the current version
+  // of the object. Return the provided object reference if an error occurs or the object could not
+  // be retrieved.
+  private static async tryRefreshObjectReference(
+    provider: JsonRpcProvider,
+    ref: SuiObjectRef
+  ): Promise<SuiObjectRef> {
+    try {
+      const objectResponse = await provider.getObject({ id: ref.objectId });
+      if (objectResponse.data !== undefined) {
+        return {
+          digest: objectResponse.data.digest,
+          objectId: objectResponse.data.objectId,
+          version: objectResponse.data.version,
+        };
+      } else {
+        return ref;
+      }
+    } catch (error) {
+      return ref;
+    }
   }
 
   private static async getAllGasCoins(
