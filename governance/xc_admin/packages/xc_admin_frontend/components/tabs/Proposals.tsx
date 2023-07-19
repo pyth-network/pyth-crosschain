@@ -26,6 +26,7 @@ import {
   UnrecognizedProgram,
   WormholeMultisigInstruction,
   getManyProposalsInstructions,
+  UPGRADE_MULTISIG,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
@@ -221,14 +222,18 @@ const AccountList = ({
   )
 }
 
+type ProposalType = 'priceFeed' | 'governance'
+
 const Proposal = ({
   proposal,
   proposalIndex,
   multisig,
+  proposalType,
 }: {
   proposal: TransactionAccount | undefined
   proposalIndex: number
   multisig: MultisigAccount | undefined
+  proposalType: ProposalType
 }) => {
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
   const [instructions, setInstructions] = useState<MultisigInstruction[]>([])
@@ -335,14 +340,19 @@ const Proposal = ({
     fetchInstructions().catch(console.error)
   }, [cluster, currentProposal, voteSquads, connection])
 
-  const handleClickApprove = async () => {
+  const handleClick = async (
+    handler: (squad: SquadsMesh, proposalKey: PublicKey) => any,
+    msg: string
+  ) => {
     if (proposal && voteSquads) {
       try {
         setIsTransactionLoading(true)
-        await voteSquads.approveTransaction(proposal.publicKey)
+        await handler(voteSquads, proposal.publicKey)
         const proposals = await getProposals(
           voteSquads,
-          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
+          proposalType === 'priceFeed'
+            ? PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
+            : UPGRADE_MULTISIG[getMultisigCluster(cluster)]
         )
         setCurrentProposal(
           proposals.find(
@@ -351,88 +361,37 @@ const Proposal = ({
               currentProposal?.publicKey.toBase58()
           )
         )
-        toast.success(`Approved proposal ${proposal.publicKey.toBase58()}`)
-        setIsTransactionLoading(false)
+        toast.success(msg)
       } catch (e: any) {
-        setIsTransactionLoading(false)
         toast.error(capitalizeFirstLetter(e.message))
+      } finally {
+        setIsTransactionLoading(false)
       }
     }
+  }
+
+  const handleClickApprove = async () => {
+    await handleClick(async (squad: SquadsMesh, proposalKey: PublicKey) => {
+      await squad.approveTransaction(proposalKey)
+    }, `Approved proposal ${proposal?.publicKey.toBase58()}`)
   }
 
   const handleClickReject = async () => {
-    if (proposal && voteSquads) {
-      try {
-        setIsTransactionLoading(true)
-        await voteSquads.rejectTransaction(proposal.publicKey)
-        const proposals = await getProposals(
-          voteSquads,
-          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
-        )
-        setCurrentProposal(
-          proposals.find(
-            (proposal) =>
-              proposal.publicKey.toBase58() ===
-              currentProposal?.publicKey.toBase58()
-          )
-        )
-        toast.success(`Rejected proposal ${proposal.publicKey.toBase58()}`)
-        setIsTransactionLoading(false)
-      } catch (e: any) {
-        setIsTransactionLoading(false)
-        toast.error(capitalizeFirstLetter(e.message))
-      }
-    }
+    await handleClick(async (squad: SquadsMesh, proposalKey: PublicKey) => {
+      await squad.rejectTransaction(proposalKey)
+    }, `Rejected proposal ${proposal?.publicKey.toBase58()}`)
   }
 
   const handleClickExecute = async () => {
-    if (proposal && voteSquads) {
-      try {
-        setIsTransactionLoading(true)
-        await voteSquads.executeTransaction(proposal.publicKey)
-        const proposals = await getProposals(
-          voteSquads,
-          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
-        )
-        setCurrentProposal(
-          proposals.find(
-            (proposal) =>
-              proposal.publicKey.toBase58() ===
-              currentProposal?.publicKey.toBase58()
-          )
-        )
-        toast.success(`Executed proposal ${proposal.publicKey.toBase58()}`)
-        setIsTransactionLoading(false)
-      } catch (e: any) {
-        setIsTransactionLoading(false)
-        toast.error(capitalizeFirstLetter(e.message))
-      }
-    }
+    await handleClick(async (squad: SquadsMesh, proposalKey: PublicKey) => {
+      await squad.executeTransaction(proposalKey)
+    }, `Executed proposal ${proposal?.publicKey.toBase58()}`)
   }
 
   const handleClickCancel = async () => {
-    if (proposal && voteSquads) {
-      try {
-        setIsTransactionLoading(true)
-        await voteSquads.cancelTransaction(proposal.publicKey)
-        const proposals = await getProposals(
-          voteSquads,
-          PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
-        )
-        setCurrentProposal(
-          proposals.find(
-            (proposal) =>
-              proposal.publicKey.toBase58() ===
-              currentProposal?.publicKey.toBase58()
-          )
-        )
-        toast.success(`Cancelled proposal ${proposal.publicKey.toBase58()}`)
-        setIsTransactionLoading(false)
-      } catch (e: any) {
-        setIsTransactionLoading(false)
-        toast.error(capitalizeFirstLetter(e.message))
-      }
-    }
+    await handleClick(async (squad: SquadsMesh, proposalKey: PublicKey) => {
+      await squad.cancelTransaction(proposalKey)
+    }, `Cancelled proposal ${proposal?.publicKey.toBase58()}`)
   }
 
   return currentProposal !== undefined &&
@@ -498,12 +457,14 @@ const Proposal = ({
         {proposalStatus === 'active' ? (
           <div className="flex items-center justify-center space-x-8 pt-3">
             <button
+              disabled={isTransactionLoading}
               className="action-btn text-base"
               onClick={handleClickApprove}
             >
               {isTransactionLoading ? <Spinner /> : 'Approve'}
             </button>
             <button
+              disabled={isTransactionLoading}
               className="sub-action-btn text-base"
               onClick={handleClickReject}
             >
@@ -513,12 +474,14 @@ const Proposal = ({
         ) : proposalStatus === 'executeReady' ? (
           <div className="flex items-center justify-center space-x-8 pt-3">
             <button
+              disabled={isTransactionLoading}
               className="action-btn text-base"
               onClick={handleClickExecute}
             >
               {isTransactionLoading ? <Spinner /> : 'Execute'}
             </button>
             <button
+              disabled={isTransactionLoading}
               className="sub-action-btn text-base"
               onClick={handleClickCancel}
             >
@@ -788,17 +751,31 @@ const Proposals = () => {
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
   const { cluster } = useContext(ClusterContext)
   const { statusFilter } = useContext(StatusFilterContext)
+
   const {
+    upgradeMultisigAccount,
     priceFeedMultisigAccount,
     priceFeedMultisigProposals,
+    upgradeMultisigProposals,
     isLoading: isMultisigLoading,
     refreshData,
   } = useMultisigContext()
+
+  const [proposalType, setProposalType] = useState<ProposalType>('priceFeed')
+
+  const multisigAccount =
+    proposalType === 'priceFeed'
+      ? priceFeedMultisigAccount
+      : upgradeMultisigAccount
+  const multisigProposals =
+    proposalType === 'priceFeed'
+      ? priceFeedMultisigProposals
+      : upgradeMultisigProposals
   const [filteredProposals, setFilteredProposals] = useState<
     TransactionAccount[]
   >([])
 
-  const handleClickBackToPriceFeeds = () => {
+  const handleClickBackToProposals = () => {
     delete router.query.proposal
     router.push(
       {
@@ -816,41 +793,63 @@ const Proposals = () => {
     }
   }, [router.query.proposal])
 
+  const switchProposalType = useCallback(() => {
+    if (proposalType === 'priceFeed') {
+      setProposalType('governance')
+    } else {
+      setProposalType('priceFeed')
+    }
+  }, [proposalType])
+
   useEffect(() => {
     if (currentProposalPubkey) {
-      const currProposal = priceFeedMultisigProposals.find(
+      const currProposal = multisigProposals.find(
         (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
       )
-      const currProposalIndex = priceFeedMultisigProposals.findIndex(
+      const currProposalIndex = multisigProposals.findIndex(
         (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
       )
       setCurrentProposal(currProposal)
       setCurrentProposalIndex(
         currProposalIndex === -1 ? undefined : currProposalIndex
       )
+      if (currProposalIndex === -1) {
+        const otherProposals =
+          proposalType !== 'priceFeed'
+            ? priceFeedMultisigProposals
+            : upgradeMultisigProposals
+        if (
+          otherProposals.findIndex(
+            (proposal) =>
+              proposal.publicKey.toBase58() === currentProposalPubkey
+          ) !== -1
+        ) {
+          switchProposalType()
+        }
+      }
     }
-  }, [currentProposalPubkey, priceFeedMultisigProposals, cluster])
+  }, [currentProposalPubkey, multisigProposals, cluster])
 
   useEffect(() => {
     // filter price feed multisig proposals by status
     if (statusFilter === 'all') {
-      setFilteredProposals(priceFeedMultisigProposals)
+      setFilteredProposals(multisigProposals)
     } else {
       setFilteredProposals(
-        priceFeedMultisigProposals.filter(
+        multisigProposals.filter(
           (proposal) =>
-            getProposalStatus(proposal, priceFeedMultisigAccount) ===
-            statusFilter
+            getProposalStatus(proposal, multisigAccount) === statusFilter
         )
       )
     }
-  }, [statusFilter, priceFeedMultisigAccount, priceFeedMultisigProposals])
+  }, [statusFilter, multisigAccount, multisigProposals])
 
   return (
     <div className="relative">
       <div className="container flex flex-col items-center justify-between lg:flex-row">
         <div className="mb-4 w-full text-left lg:mb-0">
           <h1 className="h1 mb-4">
+            {proposalType === 'priceFeed' ? 'Price Feed ' : 'Governance '}{' '}
             {router.query.proposal === undefined ? 'Proposals' : 'Proposal'}
           </h1>
         </div>
@@ -862,18 +861,31 @@ const Proposals = () => {
               <div className="mb-4 md:mb-0">
                 <ClusterSwitch />
               </div>
-              {refreshData && (
+              <div className="flex space-x-2">
+                {refreshData && (
+                  <button
+                    disabled={isMultisigLoading}
+                    className="sub-action-btn text-base"
+                    onClick={() => {
+                      const { fetchData } = refreshData()
+                      fetchData()
+                    }}
+                  >
+                    Refresh
+                  </button>
+                )}
                 <button
                   disabled={isMultisigLoading}
-                  className="sub-action-btn text-base"
-                  onClick={() => {
-                    const { fetchData } = refreshData()
-                    fetchData()
-                  }}
+                  className="action-btn text-base"
+                  onClick={switchProposalType}
                 >
-                  Refresh
+                  Show
+                  {proposalType !== 'priceFeed'
+                    ? ' Price Feed '
+                    : ' Governance '}
+                  Proposals
                 </button>
-              )}
+              </div>
             </div>
             <div className="relative mt-6">
               {isMultisigLoading ? (
@@ -892,17 +904,17 @@ const Proposals = () => {
                     <div className="flex flex-col">
                       {filteredProposals.map((proposal, idx) => (
                         <ProposalRow
-                          key={idx}
+                          key={proposal.publicKey.toBase58()}
                           proposal={proposal}
                           setCurrentProposalPubkey={setCurrentProposalPubkey}
-                          multisig={priceFeedMultisigAccount}
+                          multisig={multisigAccount}
                         />
                       ))}
                     </div>
                   ) : (
                     <div className="mt-4">
-                      No proposals found. If you&apos;re a member of the price
-                      feed multisig, you can create a proposal.
+                      No proposals found. If you&apos;re a member of the
+                      multisig, you can create a proposal.
                     </div>
                   )}
                 </>
@@ -913,7 +925,7 @@ const Proposals = () => {
           <>
             <div
               className="max-w-fit cursor-pointer bg-darkGray2 p-3 text-xs font-semibold outline-none transition-colors hover:bg-darkGray3 md:text-base"
-              onClick={handleClickBackToPriceFeeds}
+              onClick={handleClickBackToProposals}
             >
               &#8592; back to proposals
             </div>
@@ -921,7 +933,8 @@ const Proposals = () => {
               <Proposal
                 proposal={currentProposal}
                 proposalIndex={currentProposalIndex}
-                multisig={priceFeedMultisigAccount}
+                multisig={multisigAccount}
+                proposalType={proposalType}
               />
             </div>
           </>
