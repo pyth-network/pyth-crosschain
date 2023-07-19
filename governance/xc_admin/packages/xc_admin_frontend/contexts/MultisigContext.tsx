@@ -1,4 +1,3 @@
-import { Wallet } from '@coral-xyz/anchor'
 import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import React, { createContext, useContext, useMemo } from 'react'
@@ -36,12 +35,11 @@ export const useMultisigContext = () => useContext(MultisigContext)
 
 interface MultisigContextProviderProps {
   children?: React.ReactNode
-  wallet: Wallet
 }
 
 export const MultisigContextProvider: React.FC<
   MultisigContextProviderProps
-> = ({ children, wallet }) => {
+> = ({ children }) => {
   const {
     isLoading,
     error,
@@ -53,7 +51,7 @@ export const MultisigContextProvider: React.FC<
     priceFeedMultisigProposals,
     allProposalsIxsParsed,
     setpriceFeedMultisigProposals,
-  } = useMultisig(wallet)
+  } = useMultisig()
 
   const value = useMemo(
     () => ({

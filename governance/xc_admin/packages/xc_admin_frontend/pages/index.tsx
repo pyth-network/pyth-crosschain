@@ -88,8 +88,6 @@ const Home: NextPage<{
 }) => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
   const tabInfoArray = Object.values(TAB_INFO)
-  const anchorWallet = useAnchorWallet()
-  const wallet = anchorWallet as Wallet
 
   const router = useRouter()
 
@@ -124,7 +122,7 @@ const Home: NextPage<{
   return (
     <Layout>
       <PythContextProvider>
-        <MultisigContextProvider wallet={wallet}>
+        <MultisigContextProvider>
           <div className="container relative pt-16 md:pt-20">
             <div className="py-8 md:py-16">
               <Tab.Group

@@ -52,7 +52,8 @@ const getSortedProposals = async (
   return proposals.sort((a, b) => b.transactionIndex - a.transactionIndex)
 }
 
-export const useMultisig = (wallet: Wallet): MultisigHookData => {
+export const useMultisig = (): MultisigHookData => {
+  const wallet = useAnchorWallet()
   const { cluster } = useContext(ClusterContext)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -69,9 +70,7 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
   const [allProposalsIxsParsed, setAllProposalsIxsParsed] = useState<
     MultisigInstruction[][]
   >([])
-  const [proposeSquads, setProposeSquads] = useState<SquadsMesh>()
-  const [voteSquads, setVoteSquads] = useState<SquadsMesh>()
-  const anchorWallet = useAnchorWallet()
+  const [squads, setSquads] = useState<SquadsMesh | undefined>()
 
   const [urlsIndex, setUrlsIndex] = useState(0)
 
@@ -91,22 +90,16 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
       wsEndpoint: urls[urlsIndex].wsUrl,
     })
     if (wallet) {
-      setProposeSquads(
+      setSquads(
         new SquadsMesh({
           connection,
           wallet,
         })
       )
+    } else {
+      setSquads(undefined)
     }
-    if (anchorWallet) {
-      setVoteSquads(
-        new SquadsMesh({
-          connection,
-          wallet: anchorWallet as Wallet,
-        })
-      )
-    }
-  }, [wallet, urlsIndex, cluster, anchorWallet])
+  }, [wallet, urlsIndex, cluster])
 
   useEffect(() => {
     let cancelled = false
@@ -186,8 +179,8 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
   return {
     isLoading,
     error,
-    proposeSquads,
-    voteSquads,
+    proposeSquads: squads,
+    voteSquads: squads,
     upgradeMultisigAccount,
     priceFeedMultisigAccount,
     upgradeMultisigProposals,
