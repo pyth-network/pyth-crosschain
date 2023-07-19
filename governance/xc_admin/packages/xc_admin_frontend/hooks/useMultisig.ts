@@ -1,30 +1,15 @@
-import { Wallet } from '@coral-xyz/anchor'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
-import { getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { useAnchorWallet } from '@solana/wallet-adapter-react'
-import {
-  AccountMeta,
-  Cluster,
-  Connection,
-  Keypair,
-  PublicKey,
-} from '@solana/web3.js'
+import { Connection, Keypair, PublicKey } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
-  ExecutePostedVaa,
-  getManyProposalsInstructions,
   getMultisigCluster,
   getProposals,
-  isRemoteCluster,
   MultisigInstruction,
-  MultisigParser,
   PRICE_FEED_MULTISIG,
-  PythMultisigInstruction,
-  UnrecognizedProgram,
   UPGRADE_MULTISIG,
-  WormholeMultisigInstruction,
 } from 'xc_admin_common'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { pythClusterApiUrls } from '../utils/pythClusterApiUrl'
@@ -39,6 +24,7 @@ export interface MultisigHookData {
   upgradeMultisigProposals: TransactionAccount[]
   priceFeedMultisigProposals: TransactionAccount[]
   allProposalsIxsParsed: MultisigInstruction[][]
+  connection?: Connection
   refreshData?: () => { fetchData: () => Promise<void>; cancel: () => void }
   setpriceFeedMultisigProposals: React.Dispatch<
     React.SetStateAction<TransactionAccount[]>
@@ -83,12 +69,15 @@ export const useMultisig = (): MultisigHookData => {
     setUrlsIndex(0)
   }, [cluster])
 
-  useEffect(() => {
+  const connection = useMemo(() => {
     const urls = pythClusterApiUrls(getMultisigCluster(cluster))
-    const connection = new Connection(urls[urlsIndex].rpcUrl, {
+    return new Connection(urls[urlsIndex].rpcUrl, {
       commitment: 'confirmed',
       wsEndpoint: urls[urlsIndex].wsUrl,
     })
+  }, [urlsIndex, cluster])
+
+  useEffect(() => {
     if (wallet) {
       setSquads(
         new SquadsMesh({
@@ -99,15 +88,10 @@ export const useMultisig = (): MultisigHookData => {
     } else {
       setSquads(undefined)
     }
-  }, [wallet, urlsIndex, cluster])
+  }, [wallet, urlsIndex, cluster, connection])
 
   const refreshData = useCallback(() => {
     let cancelled = false
-    const urls = pythClusterApiUrls(getMultisigCluster(cluster))
-    const connection = new Connection(urls[urlsIndex].rpcUrl, {
-      commitment: 'confirmed',
-      wsEndpoint: urls[urlsIndex].wsUrl,
-    })
 
     const fetchData = async () => {
       setIsLoading(true)
@@ -158,6 +142,7 @@ export const useMultisig = (): MultisigHookData => {
       } catch (e) {
         console.log(e)
         if (cancelled) return
+        const urls = pythClusterApiUrls(getMultisigCluster(cluster))
         if (urlsIndex === urls.length - 1) {
           // @ts-ignore
           setError(e)
@@ -176,7 +161,7 @@ export const useMultisig = (): MultisigHookData => {
     }
 
     return { cancel, fetchData }
-  }, [cluster, urlsIndex])
+  }, [cluster, urlsIndex, connection])
 
   useEffect(() => {
     const { cancel, fetchData } = refreshData()
@@ -195,6 +180,7 @@ export const useMultisig = (): MultisigHookData => {
     priceFeedMultisigProposals,
     allProposalsIxsParsed,
     refreshData,
+    connection,
     setpriceFeedMultisigProposals,
   }
 }

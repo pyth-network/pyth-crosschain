@@ -15,6 +15,7 @@ const MultisigContext = createContext<MultisigHookData>({
   proposeSquads: undefined,
   voteSquads: undefined,
   refreshData: undefined,
+  connection: undefined,
   setpriceFeedMultisigProposals: () => {},
 })
 
@@ -39,6 +40,7 @@ export const MultisigContextProvider: React.FC<
     allProposalsIxsParsed,
     setpriceFeedMultisigProposals,
     refreshData,
+    connection,
   } = useMultisig()
 
   const value = useMemo(
@@ -54,6 +56,7 @@ export const MultisigContextProvider: React.FC<
       proposeSquads,
       voteSquads,
       refreshData,
+      connection,
     }),
     [
       proposeSquads,
@@ -67,6 +70,7 @@ export const MultisigContextProvider: React.FC<
       allProposalsIxsParsed,
       setpriceFeedMultisigProposals,
       refreshData,
+      connection,
     ]
   )
 
