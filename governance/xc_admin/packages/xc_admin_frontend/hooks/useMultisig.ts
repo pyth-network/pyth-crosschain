@@ -69,13 +69,15 @@ export const useMultisig = (): MultisigHookData => {
     setUrlsIndex(0)
   }, [cluster])
 
+  const multisigCluster = useMemo(() => getMultisigCluster(cluster), [cluster])
+
   const connection = useMemo(() => {
-    const urls = pythClusterApiUrls(getMultisigCluster(cluster))
+    const urls = pythClusterApiUrls(multisigCluster)
     return new Connection(urls[urlsIndex].rpcUrl, {
       commitment: 'confirmed',
       wsEndpoint: urls[urlsIndex].wsUrl,
     })
-  }, [urlsIndex, cluster])
+  }, [urlsIndex, multisigCluster])
 
   useEffect(() => {
     if (wallet) {
@@ -103,15 +105,13 @@ export const useMultisig = (): MultisigHookData => {
         })
         if (cancelled) return
         setUpgradeMultisigAccount(
-          await readOnlySquads.getMultisig(
-            UPGRADE_MULTISIG[getMultisigCluster(cluster)]
-          )
+          await readOnlySquads.getMultisig(UPGRADE_MULTISIG[multisigCluster])
         )
         try {
           if (cancelled) return
           setpriceFeedMultisigAccount(
             await readOnlySquads.getMultisig(
-              PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
+              PRICE_FEED_MULTISIG[multisigCluster]
             )
           )
         } catch (e) {
@@ -122,14 +122,14 @@ export const useMultisig = (): MultisigHookData => {
         if (cancelled) return
         const upgradeProposals = await getSortedProposals(
           readOnlySquads,
-          UPGRADE_MULTISIG[getMultisigCluster(cluster)]
+          UPGRADE_MULTISIG[multisigCluster]
         )
         setUpgradeMultisigProposals(upgradeProposals)
         try {
           if (cancelled) return
           const sortedPriceFeedMultisigProposals = await getSortedProposals(
             readOnlySquads,
-            PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
+            PRICE_FEED_MULTISIG[multisigCluster]
           )
           setpriceFeedMultisigProposals(sortedPriceFeedMultisigProposals)
         } catch (e) {
@@ -142,7 +142,7 @@ export const useMultisig = (): MultisigHookData => {
       } catch (e) {
         console.log(e)
         if (cancelled) return
-        const urls = pythClusterApiUrls(getMultisigCluster(cluster))
+        const urls = pythClusterApiUrls(multisigCluster)
         if (urlsIndex === urls.length - 1) {
           // @ts-ignore
           setError(e)
@@ -161,7 +161,7 @@ export const useMultisig = (): MultisigHookData => {
     }
 
     return { cancel, fetchData }
-  }, [cluster, urlsIndex, connection])
+  }, [multisigCluster, urlsIndex, connection])
 
   useEffect(() => {
     const { cancel, fetchData } = refreshData()
