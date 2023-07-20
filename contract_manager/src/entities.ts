@@ -209,23 +209,27 @@ export class WormholeMultiSigTransaction {
     return Object.keys(proposal.status)[0];
   }
 
-  async execute(): Promise<SubmittedWormholeMessage> {
+  async execute(): Promise<SubmittedWormholeMessage[]> {
     const proposal = await this.squad.getTransaction(this.address);
     const signatures = await executeProposal(
       proposal,
       this.squad,
       this.cluster
     );
+    const msgs: SubmittedWormholeMessage[] = [];
     for (const signature of signatures) {
       try {
-        return SubmittedWormholeMessage.fromTransactionSignature(
-          signature,
-          this.cluster
+        msgs.push(
+          await SubmittedWormholeMessage.fromTransactionSignature(
+            signature,
+            this.cluster
+          )
         );
       } catch (e: any) {
         if (!(e instanceof InvalidTransactionError)) throw e;
       }
     }
+    if (msgs.length > 0) return msgs;
     throw new Error("No transactions with wormhole messages found");
   }
 }
