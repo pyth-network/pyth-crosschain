@@ -1,35 +1,20 @@
-import { Wallet } from '@coral-xyz/anchor'
 import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
-import { getPythProgramKeyForCluster } from '@pythnetwork/client'
 import { useAnchorWallet } from '@solana/wallet-adapter-react'
-import {
-  AccountMeta,
-  Cluster,
-  Connection,
-  Keypair,
-  PublicKey,
-} from '@solana/web3.js'
+import { Connection, Keypair, PublicKey } from '@solana/web3.js'
 import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
-import { useContext, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
-  ExecutePostedVaa,
-  getManyProposalsInstructions,
   getMultisigCluster,
   getProposals,
-  isRemoteCluster,
   MultisigInstruction,
-  MultisigParser,
   PRICE_FEED_MULTISIG,
-  PythMultisigInstruction,
-  UnrecognizedProgram,
   UPGRADE_MULTISIG,
-  WormholeMultisigInstruction,
 } from 'xc_admin_common'
 import { ClusterContext } from '../contexts/ClusterContext'
 import { pythClusterApiUrls } from '../utils/pythClusterApiUrl'
 
-interface MultisigHookData {
+export interface MultisigHookData {
   isLoading: boolean
   error: any // TODO: fix any
   proposeSquads: SquadsMesh | undefined
@@ -39,6 +24,8 @@ interface MultisigHookData {
   upgradeMultisigProposals: TransactionAccount[]
   priceFeedMultisigProposals: TransactionAccount[]
   allProposalsIxsParsed: MultisigInstruction[][]
+  connection?: Connection
+  refreshData?: () => { fetchData: () => Promise<void>; cancel: () => void }
   setpriceFeedMultisigProposals: React.Dispatch<
     React.SetStateAction<TransactionAccount[]>
   >
@@ -52,7 +39,8 @@ const getSortedProposals = async (
   return proposals.sort((a, b) => b.transactionIndex - a.transactionIndex)
 }
 
-export const useMultisig = (wallet: Wallet): MultisigHookData => {
+export const useMultisig = (): MultisigHookData => {
+  const wallet = useAnchorWallet()
   const { cluster } = useContext(ClusterContext)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -69,14 +57,11 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
   const [allProposalsIxsParsed, setAllProposalsIxsParsed] = useState<
     MultisigInstruction[][]
   >([])
-  const [proposeSquads, setProposeSquads] = useState<SquadsMesh>()
-  const [voteSquads, setVoteSquads] = useState<SquadsMesh>()
-  const anchorWallet = useAnchorWallet()
+  const [squads, setSquads] = useState<SquadsMesh | undefined>()
 
   const [urlsIndex, setUrlsIndex] = useState(0)
 
   useEffect(() => {
-    setIsLoading(true)
     setError(null)
   }, [urlsIndex, cluster])
 
@@ -84,39 +69,34 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
     setUrlsIndex(0)
   }, [cluster])
 
-  useEffect(() => {
-    const urls = pythClusterApiUrls(getMultisigCluster(cluster))
-    const connection = new Connection(urls[urlsIndex].rpcUrl, {
+  const multisigCluster = useMemo(() => getMultisigCluster(cluster), [cluster])
+
+  const connection = useMemo(() => {
+    const urls = pythClusterApiUrls(multisigCluster)
+    return new Connection(urls[urlsIndex].rpcUrl, {
       commitment: 'confirmed',
       wsEndpoint: urls[urlsIndex].wsUrl,
     })
+  }, [urlsIndex, multisigCluster])
+
+  useEffect(() => {
     if (wallet) {
-      setProposeSquads(
+      setSquads(
         new SquadsMesh({
           connection,
           wallet,
         })
       )
+    } else {
+      setSquads(undefined)
     }
-    if (anchorWallet) {
-      setVoteSquads(
-        new SquadsMesh({
-          connection,
-          wallet: anchorWallet as Wallet,
-        })
-      )
-    }
-  }, [wallet, urlsIndex, cluster, anchorWallet])
+  }, [wallet, urlsIndex, cluster, connection])
 
-  useEffect(() => {
+  const refreshData = useCallback(() => {
     let cancelled = false
-    const urls = pythClusterApiUrls(getMultisigCluster(cluster))
-    const connection = new Connection(urls[urlsIndex].rpcUrl, {
-      commitment: 'confirmed',
-      wsEndpoint: urls[urlsIndex].wsUrl,
-    })
 
-    ;(async () => {
+    const fetchData = async () => {
+      setIsLoading(true)
       try {
         // mock wallet to allow users to view proposals without connecting their wallet
         const readOnlySquads = new SquadsMesh({
@@ -125,15 +105,13 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
         })
         if (cancelled) return
         setUpgradeMultisigAccount(
-          await readOnlySquads.getMultisig(
-            UPGRADE_MULTISIG[getMultisigCluster(cluster)]
-          )
+          await readOnlySquads.getMultisig(UPGRADE_MULTISIG[multisigCluster])
         )
         try {
           if (cancelled) return
           setpriceFeedMultisigAccount(
             await readOnlySquads.getMultisig(
-              PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
+              PRICE_FEED_MULTISIG[multisigCluster]
             )
           )
         } catch (e) {
@@ -142,67 +120,18 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
         }
 
         if (cancelled) return
-        setUpgradeMultisigProposals(
-          await getSortedProposals(
-            readOnlySquads,
-            UPGRADE_MULTISIG[getMultisigCluster(cluster)]
-          )
+        const upgradeProposals = await getSortedProposals(
+          readOnlySquads,
+          UPGRADE_MULTISIG[multisigCluster]
         )
+        setUpgradeMultisigProposals(upgradeProposals)
         try {
           if (cancelled) return
           const sortedPriceFeedMultisigProposals = await getSortedProposals(
             readOnlySquads,
-            PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
+            PRICE_FEED_MULTISIG[multisigCluster]
           )
-          const allProposalsIxs = await getManyProposalsInstructions(
-            readOnlySquads,
-            sortedPriceFeedMultisigProposals
-          )
-          const multisigParser = MultisigParser.fromCluster(
-            getMultisigCluster(cluster)
-          )
-          const parsedAllProposalsIxs = allProposalsIxs.map((ixs) =>
-            ixs.map((ix) =>
-              multisigParser.parseInstruction({
-                programId: ix.programId,
-                data: ix.data as Buffer,
-                keys: ix.keys as AccountMeta[],
-              })
-            )
-          )
-          const proposalsRes: TransactionAccount[] = []
-          const instructionsRes: MultisigInstruction[][] = []
-          // filter proposals for respective devnet/pythtest and mainnet-beta/pythnet clusters
-          parsedAllProposalsIxs.map((ixs, idx) => {
-            // pythtest/pythnet proposals
-            if (
-              isRemoteCluster(cluster) &&
-              ixs.length > 0 &&
-              ixs.some(
-                (ix) =>
-                  ix instanceof WormholeMultisigInstruction &&
-                  ix.governanceAction instanceof ExecutePostedVaa &&
-                  ix.governanceAction.instructions.some((ix) =>
-                    ix.programId.equals(getPythProgramKeyForCluster(cluster))
-                  )
-              )
-            ) {
-              proposalsRes.push(sortedPriceFeedMultisigProposals[idx])
-              instructionsRes.push(ixs)
-            }
-            // devnet/testnet/mainnet-beta proposals
-            if (
-              !isRemoteCluster(cluster) &&
-              (ixs.length === 0 ||
-                ixs.some((ix) => ix instanceof PythMultisigInstruction) ||
-                ixs.some((ix) => ix instanceof UnrecognizedProgram))
-            ) {
-              proposalsRes.push(sortedPriceFeedMultisigProposals[idx])
-              instructionsRes.push(ixs)
-            }
-          })
-          setAllProposalsIxsParsed(instructionsRes)
-          setpriceFeedMultisigProposals(proposalsRes)
+          setpriceFeedMultisigProposals(sortedPriceFeedMultisigProposals)
         } catch (e) {
           console.error(e)
           setAllProposalsIxsParsed([])
@@ -213,6 +142,7 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
       } catch (e) {
         console.log(e)
         if (cancelled) return
+        const urls = pythClusterApiUrls(multisigCluster)
         if (urlsIndex === urls.length - 1) {
           // @ts-ignore
           setError(e)
@@ -225,23 +155,32 @@ export const useMultisig = (wallet: Wallet): MultisigHookData => {
           )
         }
       }
-    })()
-
-    return () => {
+    }
+    const cancel = () => {
       cancelled = true
     }
-  }, [urlsIndex, cluster])
+
+    return { cancel, fetchData }
+  }, [multisigCluster, urlsIndex, connection])
+
+  useEffect(() => {
+    const { cancel, fetchData } = refreshData()
+    fetchData()
+    return cancel
+  }, [refreshData])
 
   return {
     isLoading,
     error,
-    proposeSquads,
-    voteSquads,
+    proposeSquads: squads,
+    voteSquads: squads,
     upgradeMultisigAccount,
     priceFeedMultisigAccount,
     upgradeMultisigProposals,
     priceFeedMultisigProposals,
     allProposalsIxsParsed,
+    refreshData,
+    connection,
     setpriceFeedMultisigProposals,
   }
 }
