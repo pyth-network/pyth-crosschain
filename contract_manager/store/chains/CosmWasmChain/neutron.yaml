@@ -1,6 +1,7 @@
 querierEndpoint: https://rpc-kralum.neutron-1.neutron.org
 executorEndpoint: https://rpc-kralum.neutron-1.neutron.org
 id: neutron
+wormholeChainName: neutron
 mainnet: true
 gasPrice: "0.025"
 prefix: neutron

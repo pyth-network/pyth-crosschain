@@ -1,4 +1,5 @@
 id: mumbai
+wormholeChainName: polygon
 mainnet: false
 rpcUrl: https://polygon-testnet-rpc.allthatnode.com:8545
 networkId: 80001

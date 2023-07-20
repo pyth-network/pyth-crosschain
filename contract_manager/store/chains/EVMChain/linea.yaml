@@ -1,4 +1,5 @@
 id: linea
+wormholeChainName: linea
 mainnet: true
 rpcUrl: https://linea-mainnet.infura.io/v3/$INFURA_KEY
 networkId: 59144

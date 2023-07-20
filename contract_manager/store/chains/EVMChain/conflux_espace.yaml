@@ -1,4 +1,5 @@
 id: conflux_espace
+wormholeChainName: conflux_espace
 mainnet: true
 rpcUrl: https://evm.confluxrpc.org
 networkId: 1030

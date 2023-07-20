@@ -1,4 +1,5 @@
 id: wemix_testnet
+wormholeChainName: wemix
 mainnet: false
 rpcUrl: https://api.test.wemix.com
 networkId: 1112

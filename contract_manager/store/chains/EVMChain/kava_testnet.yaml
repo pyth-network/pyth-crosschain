@@ -1,4 +1,5 @@
 id: kava_testnet
+wormholeChainName: kava
 mainnet: false
 rpcUrl: https://evm.testnet.kava.io
 networkId: 2221

@@ -1,4 +1,5 @@
 id: base_goerli
+wormholeChainName: base
 mainnet: false
 rpcUrl: https://goerli.base.org
 networkId: 84531

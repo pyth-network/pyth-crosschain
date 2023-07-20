@@ -1,4 +1,5 @@
 id: polygon_zkevm
+wormholeChainName: polygon_zkevm
 mainnet: true
 rpcUrl: https://zkevm-rpc.com
 networkId: 1101

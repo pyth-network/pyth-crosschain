@@ -1,4 +1,5 @@
 id: chiado
+wormholeChainName: gnosis
 mainnet: true
 rpcUrl: https://rpc.chiadochain.net
 networkId: 10200

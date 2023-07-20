@@ -1,4 +1,5 @@
 id: meter_testnet
+wormholeChainName: meter
 mainnet: false
 rpcUrl: https://rpctest.meter.io
 networkId: 83

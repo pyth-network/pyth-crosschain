@@ -1,6 +1,7 @@
 querierEndpoint: https://rpc.atlantic-2.seinetwork.io/
 executorEndpoint: https://rpc.atlantic-2.seinetwork.io/
 id: sei_testnet_atlantic_2
+wormholeChainName: sei_testnet_atlantic_2
 mainnet: false
 gasPrice: "0.01"
 prefix: sei

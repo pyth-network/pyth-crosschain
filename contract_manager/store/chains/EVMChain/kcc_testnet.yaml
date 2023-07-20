@@ -1,4 +1,5 @@
 id: kcc_testnet
+wormholeChainName: kcc
 mainnet: false
 rpcUrl: https://rpc-testnet.kcc.network
 networkId: 322

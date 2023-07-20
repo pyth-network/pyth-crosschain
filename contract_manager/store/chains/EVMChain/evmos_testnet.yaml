@@ -1,4 +1,5 @@
 id: evmos_testnet
+wormholeChainName: evmos
 mainnet: false
 rpcUrl: https://eth.bd.evmos.dev:8545/
 networkId: 9000

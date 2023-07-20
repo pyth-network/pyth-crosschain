@@ -1,6 +1,7 @@
 querierEndpoint: https://sei-rpc.polkachu.com
 executorEndpoint: https://sei-rpc.polkachu.com
 id: sei_pacific_1
+wormholeChainName: sei_pacific_1
 mainnet: true
 gasPrice: "0.025"
 prefix: sei

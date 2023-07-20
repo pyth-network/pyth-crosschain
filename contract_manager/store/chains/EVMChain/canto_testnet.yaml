@@ -1,4 +1,5 @@
 id: canto_testnet
+wormholeChainName: canto
 mainnet: false
 rpcUrl: https://canto-testnet.plexnode.wtf
 networkId: 7701

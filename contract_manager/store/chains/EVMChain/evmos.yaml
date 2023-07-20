@@ -1,4 +1,5 @@
 id: evmos
+wormholeChainName: evmos
 mainnet: true
 rpcUrl: https://eth.bd.evmos.org:8545/
 networkId: 9001

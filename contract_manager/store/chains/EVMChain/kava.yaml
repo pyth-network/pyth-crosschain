@@ -1,4 +1,5 @@
 id: kava
+wormholeChainName: kava
 mainnet: true
 rpcUrl: https://evm.kava.io
 networkId: 2222

@@ -1,4 +1,5 @@
 id: fantom
+wormholeChainName: fantom
 mainnet: true
 rpcUrl: https://rpc.ankr.com/fantom
 networkId: 250

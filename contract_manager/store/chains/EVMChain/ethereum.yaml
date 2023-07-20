@@ -1,4 +1,5 @@
 id: ethereum
+wormholeChainName: ethereum
 mainnet: true
 rpcUrl: https://mainnet.infura.io/v3/$INFURA_KEY
 networkId: 1

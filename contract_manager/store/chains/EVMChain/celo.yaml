@@ -1,4 +1,5 @@
 id: celo
+wormholeChainName: celo
 mainnet: true
 rpcUrl: https://forno.celo.org
 networkId: 42220

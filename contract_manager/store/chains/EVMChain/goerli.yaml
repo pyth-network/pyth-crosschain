@@ -1,4 +1,5 @@
 id: goerli
+wormholeChainName: ethereum
 mainnet: false
 rpcUrl: https://goerli.infura.io/v3/$INFURA_KEY
 networkId: 5

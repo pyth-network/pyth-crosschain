@@ -1,4 +1,5 @@
 id: optimism_goerli
+wormholeChainName: optimism
 mainnet: false
 rpcUrl: https://rpc.ankr.com/optimism_testnet
 networkId: 420

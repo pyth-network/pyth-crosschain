@@ -1,4 +1,5 @@
 id: conflux_espace_testnet
+wormholeChainName: conflux_espace
 mainnet: false
 rpcUrl: https://evmtestnet.confluxrpc.com
 networkId: 71
