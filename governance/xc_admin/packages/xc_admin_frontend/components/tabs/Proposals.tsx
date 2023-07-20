@@ -790,6 +790,8 @@ const Proposals = () => {
   useEffect(() => {
     if (router.query.proposal) {
       setCurrentProposalPubkey(router.query.proposal as string)
+    } else {
+      setCurrentProposalPubkey(undefined)
     }
   }, [router.query.proposal])
 
@@ -828,7 +830,15 @@ const Proposals = () => {
         }
       }
     }
-  }, [currentProposalPubkey, multisigProposals, cluster])
+  }, [
+    switchProposalType,
+    priceFeedMultisigProposals,
+    proposalType,
+    upgradeMultisigProposals,
+    currentProposalPubkey,
+    multisigProposals,
+    cluster,
+  ])
 
   useEffect(() => {
     // filter price feed multisig proposals by status
@@ -857,8 +867,8 @@ const Proposals = () => {
       <div className="container min-h-[50vh]">
         {router.query.proposal === undefined ? (
           <>
-            <div className="flex flex-col md:flex-row justify-between">
-              <div className="mb-4 md:mb-0 items-center flex">
+            <div className="flex flex-col justify-between md:flex-row">
+              <div className="mb-4 flex items-center md:mb-0">
                 <ClusterSwitch />
               </div>
               <div className="flex space-x-2">
