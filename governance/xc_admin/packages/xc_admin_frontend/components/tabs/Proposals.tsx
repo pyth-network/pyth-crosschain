@@ -543,7 +543,7 @@ const Proposal = ({
                   className="flex justify-between"
                 >
                   <div>Target Chain</div>
-                  <div>{cluster}</div>
+                  <div>{instruction.governanceAction.targetChainId}</div>
                 </div>
               </>
             ) : null}
