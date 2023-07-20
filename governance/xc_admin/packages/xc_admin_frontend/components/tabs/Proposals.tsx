@@ -53,11 +53,9 @@ import {
 import { getMappingCluster, isPubkey } from '../InstructionViews/utils'
 const ProposalRow = ({
   proposal,
-  setCurrentProposalPubkey,
   multisig,
 }: {
   proposal: TransactionAccount
-  setCurrentProposalPubkey: Dispatch<SetStateAction<string | undefined>>
   multisig: MultisigAccount | undefined
 }) => {
   const status = getProposalStatus(proposal, multisig)
@@ -67,7 +65,6 @@ const ProposalRow = ({
   const handleClickIndividualProposal = useCallback(
     (proposalPubkey: string) => {
       router.query.proposal = proposalPubkey
-      setCurrentProposalPubkey(proposalPubkey)
       router.push(
         {
           pathname: router.pathname,
@@ -77,7 +74,7 @@ const ProposalRow = ({
         { scroll: true }
       )
     },
-    [setCurrentProposalPubkey, router]
+    [router]
   )
   return (
     <div
@@ -226,16 +223,11 @@ type ProposalType = 'priceFeed' | 'governance'
 
 const Proposal = ({
   proposal,
-  proposalIndex,
   multisig,
-  proposalType,
 }: {
   proposal: TransactionAccount | undefined
-  proposalIndex: number
   multisig: MultisigAccount | undefined
-  proposalType: ProposalType
 }) => {
-  const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
   const [instructions, setInstructions] = useState<MultisigInstruction[]>([])
   const [isTransactionLoading, setIsTransactionLoading] = useState(false)
   const { cluster } = useContext(ClusterContext)
@@ -243,38 +235,23 @@ const Proposal = ({
   const {
     voteSquads,
     isLoading: isMultisigLoading,
-    setpriceFeedMultisigProposals,
     connection,
+    refreshData,
   } = useMultisigContext()
   const {
     priceAccountKeyToSymbolMapping,
     productAccountKeyToSymbolMapping,
     publisherKeyToNameMapping,
-    multisigSignerKeyToNameMapping,
   } = usePythContext()
   const publisherKeyToNameMappingCluster =
     publisherKeyToNameMapping[getMappingCluster(cluster)]
   const { publicKey: signerPublicKey } = useWallet()
 
-  useEffect(() => {
-    setCurrentProposal(proposal)
-  }, [proposal])
-
   const proposalStatus = getProposalStatus(proposal, multisig)
 
-  useEffect(() => {
-    // update the priceFeedMultisigProposals with previous value but replace the current proposal with the updated one at the specific index
-    if (currentProposal) {
-      setpriceFeedMultisigProposals((prevProposals: TransactionAccount[]) => {
-        prevProposals.splice(proposalIndex, 1, currentProposal)
-        return [...prevProposals]
-      })
-    }
-  }, [currentProposal, setpriceFeedMultisigProposals, proposalIndex])
-
   const verified =
-    currentProposal &&
-    Object.keys(currentProposal.status)[0] !== 'draft' &&
+    proposal &&
+    Object.keys(proposal.status)[0] !== 'draft' &&
     instructions.length > 0 &&
     instructions.every(
       (ix) =>
@@ -300,27 +277,28 @@ const Proposal = ({
     )
 
   const voted =
-    currentProposal &&
+    proposal &&
     signerPublicKey &&
-    (currentProposal.approved.some(
+    (proposal.approved.some(
       (p) => p.toBase58() === signerPublicKey.toBase58()
     ) ||
-      currentProposal.cancelled.some(
+      proposal.cancelled.some(
         (p) => p.toBase58() === signerPublicKey.toBase58()
       ) ||
-      currentProposal.rejected.some(
+      proposal.rejected.some(
         (p) => p.toBase58() === signerPublicKey.toBase58()
       ))
 
   useEffect(() => {
+    let isCancelled = false
     const fetchInstructions = async () => {
-      if (currentProposal && connection) {
+      if (proposal && connection) {
         const readOnlySquads = new SquadsMesh({
           connection,
           wallet: new NodeWallet(new Keypair()),
         })
         const proposalInstructions = (
-          await getManyProposalsInstructions(readOnlySquads, [currentProposal])
+          await getManyProposalsInstructions(readOnlySquads, [proposal])
         )[0]
         const multisigParser = MultisigParser.fromCluster(
           getMultisigCluster(cluster)
@@ -332,13 +310,16 @@ const Proposal = ({
             keys: ix.keys as AccountMeta[],
           })
         )
-        setInstructions(parsedInstructions)
+        if (!isCancelled) setInstructions(parsedInstructions)
       } else {
-        setInstructions([])
+        if (!isCancelled) setInstructions([])
       }
     }
     fetchInstructions().catch(console.error)
-  }, [cluster, currentProposal, voteSquads, connection])
+    return () => {
+      isCancelled = true
+    }
+  }, [cluster, proposal, voteSquads, connection])
 
   const handleClick = async (
     handler: (squad: SquadsMesh, proposalKey: PublicKey) => any,
@@ -348,19 +329,7 @@ const Proposal = ({
       try {
         setIsTransactionLoading(true)
         await handler(voteSquads, proposal.publicKey)
-        const proposals = await getProposals(
-          voteSquads,
-          proposalType === 'priceFeed'
-            ? PRICE_FEED_MULTISIG[getMultisigCluster(cluster)]
-            : UPGRADE_MULTISIG[getMultisigCluster(cluster)]
-        )
-        setCurrentProposal(
-          proposals.find(
-            (proposal) =>
-              proposal.publicKey.toBase58() ===
-              currentProposal?.publicKey.toBase58()
-          )
-        )
+        if (refreshData) await refreshData().fetchData()
         toast.success(msg)
       } catch (e: any) {
         toast.error(capitalizeFirstLetter(e.message))
@@ -394,7 +363,7 @@ const Proposal = ({
     }, `Cancelled proposal ${proposal?.publicKey.toBase58()}`)
   }
 
-  return currentProposal !== undefined &&
+  return proposal !== undefined &&
     multisig !== undefined &&
     !isMultisigLoading ? (
     <div className="grid grid-cols-3 gap-4">
@@ -417,15 +386,15 @@ const Proposal = ({
         </div>
         <div className="flex justify-between">
           <div>Proposal</div>
-          <CopyPubkey pubkey={currentProposal.publicKey.toBase58()} />
+          <CopyPubkey pubkey={proposal.publicKey.toBase58()} />
         </div>
         <div className="flex justify-between">
           <div>Creator</div>
-          <CopyPubkey pubkey={currentProposal.creator.toBase58()} />
+          <CopyPubkey pubkey={proposal.creator.toBase58()} />
         </div>
         <div className="flex justify-between">
           <div>Multisig</div>
-          <CopyPubkey pubkey={currentProposal.ms.toBase58()} />
+          <CopyPubkey pubkey={proposal.ms.toBase58()} />
         </div>
       </div>
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-1">
@@ -434,17 +403,17 @@ const Proposal = ({
         <div className="grid grid-cols-3 justify-center gap-4 text-center align-middle">
           <div>
             <div className="font-bold">Confirmed</div>
-            <div className="text-lg">{currentProposal.approved.length}</div>
+            <div className="text-lg">{proposal.approved.length}</div>
           </div>
           {proposalStatus === 'active' || proposalStatus === 'rejected' ? (
             <div>
               <div className="font-bold">Rejected</div>
-              <div className="text-lg">{currentProposal.rejected.length}</div>
+              <div className="text-lg">{proposal.rejected.length}</div>
             </div>
           ) : (
             <div>
               <div className="font-bold">Cancelled</div>
-              <div className="text-lg">{currentProposal.cancelled.length}</div>
+              <div className="text-lg">{proposal.cancelled.length}</div>
             </div>
           )}
           <div>
@@ -490,17 +459,14 @@ const Proposal = ({
           </div>
         ) : null}
       </div>
-      {currentProposal.approved.length > 0 && (
-        <AccountList listName="Confirmed" accounts={currentProposal.approved} />
+      {proposal.approved.length > 0 && (
+        <AccountList listName="Confirmed" accounts={proposal.approved} />
       )}
-      {currentProposal.rejected.length > 0 && (
-        <AccountList listName="Rejected" accounts={currentProposal.rejected} />
+      {proposal.rejected.length > 0 && (
+        <AccountList listName="Rejected" accounts={proposal.rejected} />
       )}
-      {currentProposal.cancelled.length > 0 && (
-        <AccountList
-          listName="Cancelled"
-          accounts={currentProposal.cancelled}
-        />
+      {proposal.cancelled.length > 0 && (
+        <AccountList listName="Cancelled" accounts={proposal.cancelled} />
       )}
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
         <h4 className="h4 font-semibold">
@@ -562,11 +528,8 @@ const Proposal = ({
                         <div>Value</div>
                       </div>
                       {Object.keys(instruction.args).map((key, index) => (
-                        <>
-                          <div
-                            key={index}
-                            className="flex justify-between border-t border-beige-300 py-3"
-                          >
+                        <Fragment key={index}>
+                          <div className="flex justify-between border-t border-beige-300 py-3">
                             <div>{key}</div>
                             {instruction.args[key] instanceof PublicKey ? (
                               <CopyPubkey
@@ -597,7 +560,7 @@ const Proposal = ({
                               pubkey={instruction.args[key].toBase58()}
                             />
                           ) : null}
-                        </>
+                        </Fragment>
                       ))}
                     </div>
                   ) : (
@@ -747,7 +710,6 @@ const Proposals = () => {
   const router = useRouter()
   const { connected, publicKey: signerPublicKey } = useWallet()
   const [currentProposal, setCurrentProposal] = useState<TransactionAccount>()
-  const [currentProposalIndex, setCurrentProposalIndex] = useState<number>()
   const [currentProposalPubkey, setCurrentProposalPubkey] = useState<string>()
   const { cluster } = useContext(ClusterContext)
   const { statusFilter } = useContext(StatusFilterContext)
@@ -808,14 +770,8 @@ const Proposals = () => {
       const currProposal = multisigProposals.find(
         (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
       )
-      const currProposalIndex = multisigProposals.findIndex(
-        (proposal) => proposal.publicKey.toBase58() === currentProposalPubkey
-      )
       setCurrentProposal(currProposal)
-      setCurrentProposalIndex(
-        currProposalIndex === -1 ? undefined : currProposalIndex
-      )
-      if (currProposalIndex === -1) {
+      if (currProposal === undefined) {
         const otherProposals =
           proposalType !== 'priceFeed'
             ? priceFeedMultisigProposals
@@ -916,7 +872,6 @@ const Proposals = () => {
                         <ProposalRow
                           key={proposal.publicKey.toBase58()}
                           proposal={proposal}
-                          setCurrentProposalPubkey={setCurrentProposalPubkey}
                           multisig={multisigAccount}
                         />
                       ))}
@@ -931,7 +886,7 @@ const Proposals = () => {
               )}
             </div>
           </>
-        ) : !isMultisigLoading && currentProposalIndex !== undefined ? (
+        ) : !isMultisigLoading && currentProposal !== undefined ? (
           <>
             <div
               className="max-w-fit cursor-pointer bg-darkGray2 p-3 text-xs font-semibold outline-none transition-colors hover:bg-darkGray3 md:text-base"
@@ -940,12 +895,7 @@ const Proposals = () => {
               &#8592; back to proposals
             </div>
             <div className="relative mt-6">
-              <Proposal
-                proposal={currentProposal}
-                proposalIndex={currentProposalIndex}
-                multisig={multisigAccount}
-                proposalType={proposalType}
-              />
+              <Proposal proposal={currentProposal} multisig={multisigAccount} />
             </div>
           </>
         ) : (
