@@ -857,8 +857,8 @@ const Proposals = () => {
       <div className="container min-h-[50vh]">
         {router.query.proposal === undefined ? (
           <>
-            <div className="flex justify-between">
-              <div className="mb-4 md:mb-0">
+            <div className="flex flex-col md:flex-row justify-between">
+              <div className="mb-4 md:mb-0 items-center flex">
                 <ClusterSwitch />
               </div>
               <div className="flex space-x-2">
