@@ -56,7 +56,10 @@ async function run() {
       )
     );
 
-    const chainExecutor = createExecutorForChain(chainConfig, argv.mnemonic);
+    const chainExecutor = await createExecutorForChain(
+      chainConfig,
+      argv.mnemonic
+    );
     const pythExecutor = new PythWrapperExecutor(chainExecutor);
     const chainQuerier = await CosmwasmQuerier.connect(
       chainConfig.querierEndpoint

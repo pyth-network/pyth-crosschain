@@ -202,9 +202,9 @@ export class EVMContract extends Contract {
     };
   }
 
-  async executeGovernanceInstruction(privateKey: string, vaa: Buffer) {
+  async executeGovernanceInstruction(senderPrivateKey: string, vaa: Buffer) {
     const web3 = new Web3(this.chain.getRpcUrl());
-    const { address } = web3.eth.accounts.wallet.add(privateKey);
+    const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
     const transactionObject = pythContract.methods.executeGovernanceInstruction(
       "0x" + vaa.toString("hex")

@@ -44,10 +44,13 @@ export abstract class Contract extends Storable {
 
   /**
    * Executes the governance instruction contained in the VAA using the sender credentials
-   * @param sender based on the contract type, this can be a private key, a mnemonic, a wallet, etc.
+   * @param senderPrivateKey private key of the sender in hex format without 0x prefix
    * @param vaa the VAA to execute
    */
-  abstract executeGovernanceInstruction(sender: any, vaa: Buffer): Promise<any>;
+  abstract executeGovernanceInstruction(
+    senderPrivateKey: string,
+    vaa: Buffer
+  ): Promise<any>;
 
   /**
    * Returns the single data source that this contract accepts governance messages from

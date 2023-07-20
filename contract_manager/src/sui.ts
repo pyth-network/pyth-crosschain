@@ -167,7 +167,10 @@ export class SuiContract extends Contract {
     return this.executeTransaction(tx, keypair);
   }
 
-  async executeGovernanceInstruction(keypair: Ed25519Keypair, vaa: Buffer) {
+  async executeGovernanceInstruction(senderPrivateKey: string, vaa: Buffer) {
+    const keypair = Ed25519Keypair.fromSecretKey(
+      Buffer.from(senderPrivateKey, "hex")
+    );
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
     let decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);

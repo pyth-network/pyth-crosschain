@@ -143,10 +143,10 @@ export const CHAINS_NETWORK_CONFIG: Record<ChainId, ChainNetworkConfig> = {
 /**
  * This method will return an executor for given chainConfig.
  */
-export function createExecutorForChain(
+export async function createExecutorForChain(
   chainConfig: ChainNetworkConfig,
   mnemonic: string
-): ChainExecutor {
+): Promise<ChainExecutor> {
   const chainType = chainConfig.chainType;
 
   if (chainType === ChainType.INJECTIVE) {
@@ -154,8 +154,10 @@ export function createExecutorForChain(
   } else
     return new CosmwasmExecutor(
       chainConfig.executorEndpoint,
-      mnemonic,
-      chainConfig.prefix,
+      await CosmwasmExecutor.getSignerFromMnemonic(
+        mnemonic,
+        chainConfig.prefix
+      ),
       chainConfig.gasPrice
     );
 }

@@ -93,16 +93,16 @@ export class CosmWasmContract extends Contract {
    * Stores the wasm code on the specified chain using the provided mnemonic as the signer
    * You can find the wasm artifacts from the repo releases
    * @param chain chain to store the code on
-   * @param mnemonic mnemonic to use for signing the transaction
+   * @param privateKey private key to use for signing the transaction in hex format without 0x prefix
    * @param wasmPath path in your local filesystem to the wasm artifact
    */
   static async storeCode(
     chain: CosmWasmChain,
-    mnemonic: string,
+    privateKey: string,
     wasmPath: string
   ) {
     const contractBytes = readFileSync(wasmPath);
-    let executor = this.getExecutor(chain, mnemonic);
+    let executor = await this.getExecutor(chain, privateKey);
     return executor.storeCode({ contractBytes });
   }
 
@@ -111,15 +111,15 @@ export class CosmWasmContract extends Contract {
    * @param chain chain to deploy to
    * @param codeId codeId of the uploaded wasm code. You can get this from the storeCode result
    * @param config deployment config for initializing the contract (data sources, governance source, etc)
-   * @param mnemonic mnemonic to use for signing the transaction
+   * @param privateKey private key to use for signing the transaction in hex format without 0x prefix
    */
   static async initialize(
     chain: CosmWasmChain,
     codeId: number,
     config: CosmWasmContract.DeploymentConfig,
-    mnemonic: string
+    privateKey: string
   ): Promise<CosmWasmContract> {
-    let executor = this.getExecutor(chain, mnemonic);
+    let executor = await this.getExecutor(chain, privateKey);
     let result = await executor.instantiateContract({
       codeId: codeId,
       instMsg: config,
@@ -140,26 +140,25 @@ export class CosmWasmContract extends Contract {
    * more control over the deployment process.
    * @param chain
    * @param wormholeContract
-   * @param mnemonic
+   * @param privateKey private key to use for signing the transaction in hex format without 0x prefix
    * @param wasmPath
    */
   static async deploy(
     chain: CosmWasmChain,
     wormholeContract: string,
-    mnemonic: string,
+    privateKey: string,
     wasmPath: string
   ): Promise<CosmWasmContract> {
     let config = this.getDeploymentConfig(chain, "edge", wormholeContract);
-    const { codeId } = await this.storeCode(chain, mnemonic, wasmPath);
-    return this.initialize(chain, codeId, config, mnemonic);
+    const { codeId } = await this.storeCode(chain, privateKey, wasmPath);
+    return this.initialize(chain, codeId, config, privateKey);
   }
 
-  private static getExecutor(chain: CosmWasmChain, mnemonic: string) {
+  private static async getExecutor(chain: CosmWasmChain, privateKey: string) {
     // TODO: logic for injective
     return new CosmwasmExecutor(
       chain.executorEndpoint,
-      mnemonic,
-      chain.prefix,
+      await CosmwasmExecutor.getSignerFromPrivateKey(privateKey, chain.prefix),
       chain.gasPrice + chain.feeDenom
     );
   }
@@ -271,7 +270,7 @@ export class CosmWasmContract extends Contract {
     else return "unknown";
   }
 
-  async executeUpdatePriceFeed(feedId: string, mnemonic: string) {
+  async executeUpdatePriceFeed(feedId: string, privateKey: string) {
     const deploymentType = await this.getDeploymentType();
     const priceServiceConnection = new PriceServiceConnection(
       deploymentType === "stable"
@@ -281,12 +280,7 @@ export class CosmWasmContract extends Contract {
 
     const vaas = await priceServiceConnection.getLatestVaas([feedId]);
     const fund = await this.getUpdateFee(vaas);
-    let executor = new CosmwasmExecutor(
-      this.chain.executorEndpoint,
-      mnemonic,
-      this.chain.prefix,
-      this.chain.gasPrice + this.chain.feeDenom
-    );
+    let executor = await CosmWasmContract.getExecutor(this.chain, privateKey);
     let pythExecutor = new PythWrapperExecutor(executor);
     return pythExecutor.executeUpdatePriceFeeds({
       contractAddr: this.address,
@@ -295,13 +289,8 @@ export class CosmWasmContract extends Contract {
     });
   }
 
-  async executeGovernanceInstruction(mnemonic: string, vaa: Buffer) {
-    let executor = new CosmwasmExecutor(
-      this.chain.executorEndpoint,
-      mnemonic,
-      this.chain.prefix,
-      this.chain.gasPrice + this.chain.feeDenom
-    );
+  async executeGovernanceInstruction(privateKey: string, vaa: Buffer) {
+    let executor = await CosmWasmContract.getExecutor(this.chain, privateKey);
     let pythExecutor = new PythWrapperExecutor(executor);
     return pythExecutor.executeGovernanceInstruction({
       contractAddr: this.address,

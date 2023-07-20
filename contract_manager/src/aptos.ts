@@ -28,7 +28,10 @@ export class AptosContract extends Contract {
     return new AptosContract(chain, parsed.stateId, parsed.wormholeStateId);
   }
 
-  executeGovernanceInstruction(sender: any, vaa: Buffer): Promise<any> {
+  executeGovernanceInstruction(
+    senderPrivateKey: string,
+    vaa: Buffer
+  ): Promise<any> {
     throw new Error("Method not implemented.");
   }
 
