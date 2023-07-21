@@ -20,6 +20,7 @@ import SquadsMesh from "@sqds/mesh";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
+  decodeGovernancePayload,
   executeProposal,
   MultisigVault,
   WORMHOLE_ADDRESS,
@@ -32,6 +33,8 @@ import {
   deriveWormholeBridgeDataKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { Storable } from "./base";
+import { parseVaa } from "@certusone/wormhole-sdk";
+import { DefaultStore } from "./store";
 
 class InvalidTransactionError extends Error {
   constructor(message: string) {
@@ -122,6 +125,33 @@ export class SubmittedWormholeMessage {
       return Buffer.from(vaaBytes, "base64");
     }
     throw new Error("VAA not found, maybe too soon to fetch?");
+  }
+}
+
+/**
+ * A general executor that tries to find any contract that can execute a given VAA and executes it
+ * @param senderPrivateKey the private key to execute the governance instruction with
+ * @param vaa the VAA to execute
+ */
+async function executeVaa(senderPrivateKey: string, vaa: Buffer) {
+  const parsedVaa = parseVaa(vaa);
+  const action = decodeGovernancePayload(parsedVaa.payload);
+  if (!action) return; //TODO: handle other actions
+  for (const contract of Object.values(DefaultStore.contracts)) {
+    if (
+      action.targetChainId === "unset" ||
+      contract.getChain().wormholeChainName === action.targetChainId
+    ) {
+      const governanceSource = await contract.getGovernanceDataSource();
+      if (
+        governanceSource.emitterAddress ===
+          parsedVaa.emitterAddress.toString("hex") &&
+        governanceSource.emitterChain === parsedVaa.emitterChain
+      ) {
+        // TODO: check governance sequence number as well
+        await contract.executeGovernanceInstruction(senderPrivateKey, vaa);
+      }
+    }
   }
 }
 
