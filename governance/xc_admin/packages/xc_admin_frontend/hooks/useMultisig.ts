@@ -26,9 +26,6 @@ export interface MultisigHookData {
   allProposalsIxsParsed: MultisigInstruction[][]
   connection?: Connection
   refreshData?: () => { fetchData: () => Promise<void>; cancel: () => void }
-  setpriceFeedMultisigProposals: React.Dispatch<
-    React.SetStateAction<TransactionAccount[]>
-  >
 }
 
 const getSortedProposals = async (
@@ -46,12 +43,12 @@ export const useMultisig = (): MultisigHookData => {
   const [error, setError] = useState(null)
   const [upgradeMultisigAccount, setUpgradeMultisigAccount] =
     useState<MultisigAccount>()
-  const [priceFeedMultisigAccount, setpriceFeedMultisigAccount] =
+  const [priceFeedMultisigAccount, setPriceFeedMultisigAccount] =
     useState<MultisigAccount>()
   const [upgradeMultisigProposals, setUpgradeMultisigProposals] = useState<
     TransactionAccount[]
   >([])
-  const [priceFeedMultisigProposals, setpriceFeedMultisigProposals] = useState<
+  const [priceFeedMultisigProposals, setPriceFeedMultisigProposals] = useState<
     TransactionAccount[]
   >([])
   const [allProposalsIxsParsed, setAllProposalsIxsParsed] = useState<
@@ -109,14 +106,14 @@ export const useMultisig = (): MultisigHookData => {
         )
         try {
           if (cancelled) return
-          setpriceFeedMultisigAccount(
+          setPriceFeedMultisigAccount(
             await readOnlySquads.getMultisig(
               PRICE_FEED_MULTISIG[multisigCluster]
             )
           )
         } catch (e) {
           console.error(e)
-          setpriceFeedMultisigAccount(undefined)
+          setPriceFeedMultisigAccount(undefined)
         }
 
         if (cancelled) return
@@ -131,11 +128,11 @@ export const useMultisig = (): MultisigHookData => {
             readOnlySquads,
             PRICE_FEED_MULTISIG[multisigCluster]
           )
-          setpriceFeedMultisigProposals(sortedPriceFeedMultisigProposals)
+          setPriceFeedMultisigProposals(sortedPriceFeedMultisigProposals)
         } catch (e) {
           console.error(e)
           setAllProposalsIxsParsed([])
-          setpriceFeedMultisigProposals([])
+          setPriceFeedMultisigProposals([])
         }
 
         setIsLoading(false)
@@ -181,6 +178,5 @@ export const useMultisig = (): MultisigHookData => {
     allProposalsIxsParsed,
     refreshData,
     connection,
-    setpriceFeedMultisigProposals,
   }
 }

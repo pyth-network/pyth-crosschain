@@ -20,7 +20,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@certusone/wormhole-sdk": "^0.9.8",
+    "@certusone/wormhole-sdk": "^0.9.22",
     "@coral-xyz/anchor": "^0.26.0",
     "@pythnetwork/client": "^2.17.0",
     "@pythnetwork/pyth-sdk-solidity": "*",

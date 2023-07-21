@@ -16,7 +16,6 @@ const MultisigContext = createContext<MultisigHookData>({
   voteSquads: undefined,
   refreshData: undefined,
   connection: undefined,
-  setpriceFeedMultisigProposals: () => {},
 })
 
 export const useMultisigContext = () => useContext(MultisigContext)
@@ -38,7 +37,6 @@ export const MultisigContextProvider: React.FC<
     upgradeMultisigProposals,
     priceFeedMultisigProposals,
     allProposalsIxsParsed,
-    setpriceFeedMultisigProposals,
     refreshData,
     connection,
   } = useMultisig()
@@ -50,7 +48,6 @@ export const MultisigContextProvider: React.FC<
       upgradeMultisigProposals,
       priceFeedMultisigProposals,
       allProposalsIxsParsed,
-      setpriceFeedMultisigProposals,
       isLoading,
       error,
       proposeSquads,
@@ -68,7 +65,6 @@ export const MultisigContextProvider: React.FC<
       upgradeMultisigProposals,
       priceFeedMultisigProposals,
       allProposalsIxsParsed,
-      setpriceFeedMultisigProposals,
       refreshData,
       connection,
     ]
