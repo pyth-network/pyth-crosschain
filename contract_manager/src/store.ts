@@ -1,4 +1,11 @@
-import { AptosChain, Chain, CosmWasmChain, EVMChain, SuiChain } from "./chains";
+import {
+  AptosChain,
+  Chain,
+  CosmWasmChain,
+  EVMChain,
+  GlobalChain,
+  SuiChain,
+} from "./chains";
 import { CosmWasmContract } from "./cosmwasm";
 import { SuiContract } from "./sui";
 import { Contract } from "./base";
@@ -16,7 +23,7 @@ import { AptosContract } from "./aptos";
 import { Vault } from "./entities";
 
 class Store {
-  public chains: Record<string, Chain> = {};
+  public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, Contract> = {};
   public vaults: Record<string, Vault> = {};
 

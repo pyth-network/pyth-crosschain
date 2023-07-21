@@ -8,6 +8,8 @@ import {
   SuiAuthorizeUpgradeContract,
   AptosAuthorizeUpgradeContract,
   toChainId,
+  SetDataSources,
+  DataSource,
 } from "xc_admin_common";
 import { AptosClient } from "aptos";
 
@@ -47,10 +49,43 @@ export abstract class Chain extends Storable {
   }
 
   /**
+   * Returns the payload for a governance SetDataSources instruction for contracts deployed on this chain
+   * @param datasources the new datasources
+   */
+  generateGovernanceSetDataSources(datasources: DataSource[]): Buffer {
+    return new SetDataSources(this.wormholeChainName, datasources).encode();
+  }
+
+  /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
    * @param upgradeInfo based on the contract type, this can be a contract address, codeId, package digest, etc.
    */
   abstract generateGovernanceUpgradePayload(upgradeInfo: any): Buffer;
+}
+
+export class GlobalChain extends Chain {
+  static type: string = "GlobalChain";
+  constructor() {
+    super("global", true, "unset");
+  }
+  generateGovernanceUpgradePayload(upgradeInfo: any): Buffer {
+    throw new Error(
+      "Can not create a governance message for upgrading contracts on all chains!"
+    );
+  }
+
+  getType(): string {
+    return GlobalChain.type;
+  }
+
+  toJson(): any {
+    return {
+      id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
+      type: GlobalChain.type,
+    };
+  }
 }
 
 export class CosmWasmChain extends Chain {
