@@ -170,6 +170,15 @@ export class EVMContract extends Contract {
     if (!chain.isMainnet()) {
       gasPrice = (BigInt(gasPrice) * 2n).toString();
     }
+    const deployerBalance = await web3.eth.getBalance(signer.address);
+    if (BigInt(deployerBalance) < BigInt(gas) * BigInt(gasPrice)) {
+      throw new Error(
+        `Insufficient funds to deploy contract. Need ${gas} * ${gasPrice} = ${
+          BigInt(gas) * BigInt(gasPrice)
+        } wei, but only have ${deployerBalance} wei`
+      );
+    }
+
     const deployedContract = await deployTx.send({
       from: signer.address,
       gas,
