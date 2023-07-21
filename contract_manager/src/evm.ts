@@ -262,6 +262,28 @@ export class EVMContract extends Contract {
     };
   }
 
+  async executeUpdatePriceFeed(senderPrivateKey: string, vaas: Buffer[]) {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
+    const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
+    const priceFeedUpdateData = vaas.map((vaa) => "0x" + vaa.toString("hex"));
+    const updateFee = await pythContract.methods
+      .getUpdateFee(priceFeedUpdateData)
+      .call();
+    const transactionObject =
+      pythContract.methods.updatePriceFeeds(priceFeedUpdateData);
+    const gasEstiamte = await transactionObject.estimateGas({
+      from: address,
+      gas: 100000000,
+      value: updateFee,
+    });
+    return transactionObject.send({
+      from: address,
+      value: updateFee,
+      gas: gasEstiamte * 2,
+    });
+  }
+
   async executeGovernanceInstruction(senderPrivateKey: string, vaa: Buffer) {
     const web3 = new Web3(this.chain.getRpcUrl());
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
