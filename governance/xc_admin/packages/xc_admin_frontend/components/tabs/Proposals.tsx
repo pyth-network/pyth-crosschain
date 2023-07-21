@@ -95,15 +95,39 @@ const ProposalRow = ({
               proposal.publicKey.toBase58().slice(-6)}
           </span>{' '}
         </div>
-        <div>
-          <StatusTag proposalStatus={status} />
+        <div className="flex space-x-2">
+          {proposal.approved.length > 0 && status === 'active' && (
+            <div>
+              <StatusTag
+                proposalStatus="executed"
+                text={`Approved: ${proposal.approved.length}`}
+              />
+            </div>
+          )}
+          {proposal.rejected.length > 0 && status === 'active' && (
+            <div>
+              <StatusTag
+                proposalStatus="rejected"
+                text={`Rejected: ${proposal.rejected.length}`}
+              />
+            </div>
+          )}
+          <div>
+            <StatusTag proposalStatus={status} />
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-const StatusTag = ({ proposalStatus }: { proposalStatus: string }) => {
+const StatusTag = ({
+  proposalStatus,
+  text,
+}: {
+  proposalStatus: string
+  text?: string
+}) => {
   return (
     <div
       className={`flex items-center justify-center rounded-full ${
@@ -120,7 +144,7 @@ const StatusTag = ({ proposalStatus }: { proposalStatus: string }) => {
           : 'bg-pythPurple'
       } py-1 px-2 text-xs`}
     >
-      {proposalStatus}
+      {text || proposalStatus}
     </div>
   )
 }
