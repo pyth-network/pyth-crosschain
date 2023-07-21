@@ -203,11 +203,28 @@ export class SuiChain extends Chain {
    * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
    */
   generateGovernanceUpgradePayload(digest: string): Buffer {
-    let setFee = new SuiAuthorizeUpgradeContract(
+    const upgrade = new SuiAuthorizeUpgradeContract(
       this.wormholeChainName,
       digest
     ).encode();
-    return this.wrapWithWormholeGovernancePayload(0, setFee);
+    return this.wrapWithWormholeGovernancePayload(0, upgrade);
+  }
+
+  generateGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
+    const setFee = new SetFee(
+      this.wormholeChainName,
+      BigInt(fee),
+      BigInt(exponent)
+    ).encode();
+    return this.wrapWithWormholeGovernancePayload(3, setFee);
+  }
+
+  generateGovernanceSetDataSources(datasources: DataSource[]): Buffer {
+    const setDataSource = new SetDataSources(
+      this.wormholeChainName,
+      datasources
+    ).encode();
+    return this.wrapWithWormholeGovernancePayload(2, setDataSource);
   }
 }
 
