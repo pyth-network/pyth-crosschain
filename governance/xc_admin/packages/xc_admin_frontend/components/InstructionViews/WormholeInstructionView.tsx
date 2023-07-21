@@ -24,6 +24,7 @@ import { ParsedAccountPubkeyRow, SignerTag, WritableTag } from './AccountUtils'
 import { usePythContext } from '../../contexts/PythContext'
 
 import { getMappingCluster, isPubkey } from './utils'
+import { PythCluster } from '@pythnetwork/client'
 
 const GovernanceInstructionView = ({
   instruction,
@@ -48,10 +49,11 @@ const GovernanceInstructionView = ({
 }
 export const WormholeInstructionView = ({
   instruction,
+  cluster,
 }: {
   instruction: WormholeMultisigInstruction
+  cluster: PythCluster
 }) => {
-  const { cluster } = useContext(ClusterContext)
   const {
     priceAccountKeyToSymbolMapping,
     productAccountKeyToSymbolMapping,

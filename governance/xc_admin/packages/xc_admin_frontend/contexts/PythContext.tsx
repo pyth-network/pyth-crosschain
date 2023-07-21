@@ -86,6 +86,8 @@ export const PythContextProvider: React.FC<PythContextProviderProps> = ({
       connection,
       publisherKeyToNameMapping,
       multisigSignerKeyToNameMapping,
+      priceAccountKeyToSymbolMapping,
+      productAccountKeyToSymbolMapping,
     ]
   )
 

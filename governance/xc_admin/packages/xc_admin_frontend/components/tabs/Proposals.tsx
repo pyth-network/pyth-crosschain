@@ -51,6 +51,7 @@ import {
 } from '../InstructionViews/AccountUtils'
 
 import { getMappingCluster, isPubkey } from '../InstructionViews/utils'
+import { getPythProgramKeyForCluster, PythCluster } from '@pythnetwork/client'
 const ProposalRow = ({
   proposal,
   multisig,
@@ -94,15 +95,39 @@ const ProposalRow = ({
               proposal.publicKey.toBase58().slice(-6)}
           </span>{' '}
         </div>
-        <div>
-          <StatusTag proposalStatus={status} />
+        <div className="flex space-x-2">
+          {proposal.approved.length > 0 && status === 'active' && (
+            <div>
+              <StatusTag
+                proposalStatus="executed"
+                text={`Approved: ${proposal.approved.length}`}
+              />
+            </div>
+          )}
+          {proposal.rejected.length > 0 && status === 'active' && (
+            <div>
+              <StatusTag
+                proposalStatus="rejected"
+                text={`Rejected: ${proposal.rejected.length}`}
+              />
+            </div>
+          )}
+          <div>
+            <StatusTag proposalStatus={status} />
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-const StatusTag = ({ proposalStatus }: { proposalStatus: string }) => {
+const StatusTag = ({
+  proposalStatus,
+  text,
+}: {
+  proposalStatus: string
+  text?: string
+}) => {
   return (
     <div
       className={`flex items-center justify-center rounded-full ${
@@ -119,7 +144,7 @@ const StatusTag = ({ proposalStatus }: { proposalStatus: string }) => {
           : 'bg-pythPurple'
       } py-1 px-2 text-xs`}
     >
-      {proposalStatus}
+      {text || proposalStatus}
     </div>
   )
 }
@@ -230,7 +255,40 @@ const Proposal = ({
 }) => {
   const [instructions, setInstructions] = useState<MultisigInstruction[]>([])
   const [isTransactionLoading, setIsTransactionLoading] = useState(false)
-  const { cluster } = useContext(ClusterContext)
+  const { cluster: contextCluster } = useContext(ClusterContext)
+  const multisigCluster = getMultisigCluster(contextCluster)
+  const targetClusters: (PythCluster | 'unknown')[] = []
+  instructions.map((ix) => {
+    if (ix instanceof PythMultisigInstruction) {
+      targetClusters.push(multisigCluster)
+    } else if (
+      ix instanceof WormholeMultisigInstruction &&
+      ix.governanceAction instanceof ExecutePostedVaa
+    ) {
+      ix.governanceAction.instructions.map((ix) => {
+        const remoteClusters: PythCluster[] = [
+          'pythnet',
+          'pythtest-conformance',
+          'pythtest-crosschain',
+        ]
+        for (const remoteCluster of remoteClusters) {
+          if (
+            multisigCluster === getMultisigCluster(remoteCluster) &&
+            ix.programId.equals(getPythProgramKeyForCluster(remoteCluster))
+          ) {
+            targetClusters.push(remoteCluster)
+          }
+        }
+      })
+    } else {
+      targetClusters.push('unknown')
+    }
+  })
+  const uniqueTargetCluster = new Set(targetClusters).size === 1
+  const cluster =
+    uniqueTargetCluster && targetClusters[0] !== 'unknown'
+      ? targetClusters[0]
+      : contextCluster
 
   const {
     voteSquads,
@@ -243,6 +301,7 @@ const Proposal = ({
     productAccountKeyToSymbolMapping,
     publisherKeyToNameMapping,
   } = usePythContext()
+
   const publisherKeyToNameMappingCluster =
     publisherKeyToNameMapping[getMappingCluster(cluster)]
   const { publicKey: signerPublicKey } = useWallet()
@@ -367,6 +426,17 @@ const Proposal = ({
     multisig !== undefined &&
     !isMultisigLoading ? (
     <div className="grid grid-cols-3 gap-4">
+      <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
+        <h4 className="h4 font-semibold">
+          {uniqueTargetCluster
+            ? `Target Pyth Program: ${targetClusters[0]}`
+            : targetClusters.length == 0
+            ? 'No target Pyth program detected'
+            : `Multiple target Pyth programs detected ${targetClusters.join(
+                ' '
+              )}`}
+        </h4>
+      </div>
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-2">
         <div className="flex justify-between">
           <h4 className="h4 font-semibold">Info</h4>
@@ -689,7 +759,10 @@ const Proposal = ({
               </>
             ) : null}
             {instruction instanceof WormholeMultisigInstruction && (
-              <WormholeInstructionView instruction={instruction} />
+              <WormholeInstructionView
+                cluster={cluster}
+                instruction={instruction}
+              />
             )}
 
             {index !== instructions.length - 1 ? (
