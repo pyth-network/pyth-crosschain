@@ -277,10 +277,15 @@ export class EVMContract extends Contract {
       gas: 100000000,
       value: updateFee,
     });
+    let gasPrice = await web3.eth.getGasPrice();
+    if (!this.chain.isMainnet()) {
+      gasPrice = (BigInt(gasPrice) * 2n).toString();
+    }
     return transactionObject.send({
       from: address,
       value: updateFee,
       gas: gasEstiamte * 2,
+      gasPrice,
     });
   }
 
@@ -295,7 +300,15 @@ export class EVMContract extends Contract {
       from: address,
       gas: 100000000,
     });
-    return transactionObject.send({ from: address, gas: gasEstiamte * 2 });
+    let gasPrice = await web3.eth.getGasPrice();
+    if (!this.chain.isMainnet()) {
+      gasPrice = (BigInt(gasPrice) * 2n).toString();
+    }
+    return transactionObject.send({
+      from: address,
+      gas: gasEstiamte * 2,
+      gasPrice,
+    });
   }
 
   getChain(): EVMChain {
