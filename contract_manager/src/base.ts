@@ -43,6 +43,15 @@ export abstract class Contract extends Storable {
   abstract getBaseUpdateFee(): Promise<{ amount: string; denom?: string }>;
 
   /**
+   * Returns the last governance sequence that was executed on this contract
+   * this number increases based on the sequence number of the governance messages
+   * that are executed on this contract
+   *
+   * This is used to determine which governance messages are stale and can not be executed
+   */
+  abstract getLastExecutedGovernanceSequence(): Promise<number>;
+
+  /**
    * Executes the governance instruction contained in the VAA using the sender credentials
    * @param senderPrivateKey private key of the sender in hex format without 0x prefix
    * @param vaa the VAA to execute

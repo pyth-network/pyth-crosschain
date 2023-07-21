@@ -209,6 +209,11 @@ export class CosmWasmContract extends Contract {
     return config;
   }
 
+  async getLastExecutedGovernanceSequence() {
+    const config = await this.getConfig();
+    return Number(config.config_v1.governance_sequence_number);
+  }
+
   // TODO: function for upgrading the contract
   // TODO: Cleanup and more strict linter to convert let to const
 

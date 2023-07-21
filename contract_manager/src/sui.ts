@@ -324,6 +324,11 @@ export class SuiContract extends Contract {
     return { amount: fields.base_update_fee };
   }
 
+  async getLastExecutedGovernanceSequence() {
+    const fields = await this.getStateFields();
+    return Number(fields.last_executed_governance_sequence);
+  }
+
   private getProvider() {
     return new JsonRpcProvider(new Connection({ fullnode: this.chain.rpcUrl }));
   }

@@ -89,6 +89,19 @@ const EXTENDED_PYTH_ABI = [
     type: "function",
     constant: true,
   },
+  {
+    inputs: [],
+    name: "lastExecutedGovernanceSequence",
+    outputs: [
+      {
+        internalType: "uint64",
+        name: "",
+        type: "uint64",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
   ...PythInterfaceAbi,
 ] as any;
 
@@ -150,6 +163,18 @@ export class EVMContract extends Contract {
     const web3 = new Web3(this.chain.getRpcUrl());
     const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
     return pythContract;
+  }
+
+  async getCode() {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    return web3.eth.getCode(this.address);
+  }
+
+  async getLastExecutedGovernanceSequence() {
+    const pythContract = await this.getContract();
+    return Number(
+      await pythContract.methods.lastExecutedGovernanceSequence().call()
+    );
   }
 
   async getPriceFeed(feedId: string) {

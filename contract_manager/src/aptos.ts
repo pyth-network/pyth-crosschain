@@ -87,6 +87,13 @@ export class AptosContract extends Contract {
     };
   }
 
+  async getLastExecutedGovernanceSequence() {
+    const data = (await this.findResource(
+      "LastExecutedGovernanceSequence"
+    )) as any;
+    return Number(data.sequence);
+  }
+
   getId(): string {
     return `${this.chain.getId()}_${this.stateId}`;
   }
