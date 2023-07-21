@@ -102,6 +102,25 @@ const EXTENDED_PYTH_ABI = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "id",
+        type: "bytes32",
+      },
+    ],
+    name: "priceFeedExists",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
   ...PythInterfaceAbi,
 ] as any;
 
@@ -179,10 +198,26 @@ export class EVMContract extends Contract {
 
   async getPriceFeed(feedId: string) {
     const pythContract = this.getContract();
+    const feed = "0x" + feedId;
+    const exists = await pythContract.methods.priceFeedExists(feed).call();
+    if (!exists) {
+      return undefined;
+    }
     const [price, conf, expo, publishTime] = await pythContract.methods
-      .getPriceUnsafe(feedId)
+      .getPriceUnsafe(feed)
       .call();
-    return { price, conf, expo, publishTime };
+
+    const [emaPrice, emaConf, emaExpo, emaPublishTime] =
+      await pythContract.methods.getEmaPriceUnsafe(feed).call();
+    return {
+      price: { price, conf, expo, publishTime },
+      emaPrice: {
+        price: emaPrice,
+        conf: emaConf,
+        expo: emaExpo,
+        publishTime: emaPublishTime,
+      },
+    };
   }
 
   async getValidTimePeriod() {

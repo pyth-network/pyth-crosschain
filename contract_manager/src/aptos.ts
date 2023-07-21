@@ -63,6 +63,41 @@ export class AptosContract extends Contract {
     return this.chain;
   }
 
+  private parsePrice(priceInfo: any) {
+    let expo = priceInfo.expo.magnitude;
+    if (priceInfo.expo.negative) expo = "-" + expo;
+    let price = priceInfo.price.magnitude;
+    if (priceInfo.price.negative) price = "-" + price;
+    return {
+      conf: priceInfo.conf,
+      publishTime: priceInfo.timestamp,
+      expo,
+      price,
+    };
+  }
+
+  async getPriceFeed(feedId: string) {
+    const client = this.chain.getClient();
+    const res = (await this.findResource("LatestPriceInfo")) as any;
+    const handle = res.info.handle;
+    try {
+      const priceItemRes = await client.getTableItem(handle, {
+        key_type: `${this.stateId}::price_identifier::PriceIdentifier`,
+        value_type: `${this.stateId}::price_info::PriceInfo`,
+        key: {
+          bytes: feedId,
+        },
+      });
+      return {
+        price: this.parsePrice(priceItemRes.price_feed.price),
+        emaPrice: this.parsePrice(priceItemRes.price_feed.ema_price),
+      };
+    } catch (e: any) {
+      if (e.errorCode === "table_item_not_found") return undefined;
+      throw e;
+    }
+  }
+
   async getDataSources(): Promise<DataSource[]> {
     const data = (await this.findResource("DataSources")) as any;
     return data.sources.keys.map((source: any) => {

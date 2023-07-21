@@ -75,7 +75,7 @@ export class PythWrapperQuerier {
         },
       });
 
-      return priceFeedResponse as PriceFeedResponse;
+      return (priceFeedResponse as any).price_feed as PriceFeedResponse;
     } catch (e) {
       throw new Error("Error fetching update fee");
     }

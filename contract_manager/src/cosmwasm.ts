@@ -5,6 +5,7 @@ import { CHAINS, DataSource } from "xc_admin_common";
 import { DeploymentType } from "@pythnetwork/cosmwasm-deploy-tools/lib/helper";
 import {
   CosmwasmExecutor,
+  Price,
   PythWrapperExecutor,
   PythWrapperQuerier,
 } from "@pythnetwork/cosmwasm-deploy-tools";
@@ -217,9 +218,26 @@ export class CosmWasmContract extends Contract {
   // TODO: function for upgrading the contract
   // TODO: Cleanup and more strict linter to convert let to const
 
-  async getPriceFeed(feedId: string): Promise<any> {
+  private parsePrice(priceInfo: Price) {
+    return {
+      conf: priceInfo.conf.toString(),
+      publishTime: priceInfo.publish_time.toString(),
+      expo: priceInfo.expo.toString(),
+      price: priceInfo.price.toString(),
+    };
+  }
+
+  async getPriceFeed(feedId: string) {
     let querier = await this.getQuerier();
-    return querier.getPriceFeed(this.address, feedId);
+    try {
+      const response = await querier.getPriceFeed(this.address, feedId);
+      return {
+        price: this.parsePrice(response.price),
+        emaPrice: this.parsePrice(response.ema_price),
+      };
+    } catch (e) {
+      return undefined;
+    }
   }
 
   equalDataSources(

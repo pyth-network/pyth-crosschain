@@ -112,6 +112,26 @@ export class SuiContract extends Contract {
     return result.data.objectId;
   }
 
+  private async parsePrice(priceInfo: any) {
+    const packageId = await this.getPythPackageId();
+    const expectedType = `${packageId}::price::Price`;
+    if (priceInfo.type !== expectedType) {
+      throw new Error(
+        `Price type mismatch, expected ${expectedType} but found ${priceInfo.type}`
+      );
+    }
+    let expo = priceInfo.fields.expo.fields.magnitude;
+    if (priceInfo.fields.expo.fields.negative) expo = "-" + expo;
+    let price = priceInfo.fields.price.fields.magnitude;
+    if (priceInfo.fields.price.fields.negative) price = "-" + price;
+    return {
+      conf: priceInfo.fields.conf,
+      publishTime: priceInfo.fields.timestamp,
+      expo,
+      price,
+    };
+  }
+
   async getPriceFeed(feedId: string) {
     const tableId = await this.getPriceTableId();
     const provider = this.getProvider();
@@ -125,7 +145,7 @@ export class SuiContract extends Contract {
       },
     });
     if (!result.data || !result.data.content) {
-      throw new Error("Price feed not found");
+      return undefined;
     }
     if (result.data.content.dataType !== "moveObject") {
       throw new Error("Price feed type mismatch");
@@ -145,7 +165,15 @@ export class SuiContract extends Contract {
         `Expected ${priceInfoObjectId} to be a moveObject (PriceInfoObject)`
       );
     }
-    return priceInfo.data.content.fields;
+    return {
+      emaPrice: await this.parsePrice(
+        priceInfo.data.content.fields.price_info.fields.price_feed.fields
+          .ema_price
+      ),
+      price: await this.parsePrice(
+        priceInfo.data.content.fields.price_info.fields.price_feed.fields.price
+      ),
+    };
   }
 
   /**
