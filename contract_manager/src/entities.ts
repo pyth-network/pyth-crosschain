@@ -133,7 +133,7 @@ export class SubmittedWormholeMessage {
  * @param senderPrivateKey the private key to execute the governance instruction with
  * @param vaa the VAA to execute
  */
-async function executeVaa(senderPrivateKey: string, vaa: Buffer) {
+export async function executeVaa(senderPrivateKey: string, vaa: Buffer) {
   const parsedVaa = parseVaa(vaa);
   const action = decodeGovernancePayload(parsedVaa.payload);
   if (!action) return; //TODO: handle other actions
