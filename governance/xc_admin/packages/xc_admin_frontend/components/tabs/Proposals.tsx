@@ -429,10 +429,10 @@ const Proposal = ({
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
         <h4 className="h4 font-semibold">
           {uniqueTargetCluster
-            ? `Target Pyth Program: ${targetClusters[0]}`
+            ? `Target Pyth oracle program: ${targetClusters[0]}`
             : targetClusters.length == 0
-            ? 'No target Pyth program detected'
-            : `Multiple target Pyth programs detected ${targetClusters.join(
+            ? 'No target Pyth oracle program detected'
+            : `Multiple target Pyth oracle programs detected ${targetClusters.join(
                 ' '
               )}`}
         </h4>
