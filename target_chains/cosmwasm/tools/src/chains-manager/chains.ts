@@ -14,7 +14,6 @@ export enum ChainType {
 // chainname{_optional-identifier}
 export enum ChainId {
   INJECTIVE_TESTNET = "injective_testnet",
-  OSMOSIS_TESTNET_4 = "osmosis_testnet_4",
   OSMOSIS_TESTNET_5 = "osmosis_testnet_5",
   SEI_TESTNET_ATLANTIC_2 = "sei_testnet_atlantic_2",
   NEUTRON_TESTNET_PION_1 = "neutron_testnet_pion_1",
@@ -71,14 +70,6 @@ export const CHAINS_NETWORK_CONFIG: Record<ChainId, ChainNetworkConfig> = {
     chainType: ChainType.COSMWASM,
     executorEndpoint: "https://rpc.osmotest5.osmosis.zone/",
     querierEndpoint: "https://rpc.osmotest5.osmosis.zone/",
-    prefix: "osmo",
-    gasPrice: "0.025uosmo",
-  },
-  [ChainId.OSMOSIS_TESTNET_4]: {
-    chainId: ChainId.OSMOSIS_TESTNET_4,
-    chainType: ChainType.COSMWASM,
-    executorEndpoint: "https://rpc-test.osmosis.zone:443",
-    querierEndpoint: "https://rpc-test.osmosis.zone:443",
     prefix: "osmo",
     gasPrice: "0.025uosmo",
   },
