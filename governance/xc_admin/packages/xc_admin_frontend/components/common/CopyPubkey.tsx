@@ -6,7 +6,7 @@ const CopyPubkey: React.FC<{
 }> = ({ pubkey }) => {
   return (
     <div
-      className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3"
+      className="-ml-1 inline-flex cursor-pointer items-center px-1 hover:bg-dark hover:text-white active:bg-darkGray3 break-all"
       onClick={() => {
         copy(pubkey)
       }}
