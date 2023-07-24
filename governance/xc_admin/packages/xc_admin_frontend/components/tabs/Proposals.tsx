@@ -428,6 +428,9 @@ const Proposal = ({
     <div className="grid grid-cols-3 gap-4">
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4">
         <h4 className="h4 font-semibold">
+          Multisig network: {multisigCluster}
+        </h4>
+        <h4 className="h4 font-semibold">
           {uniqueTargetCluster
             ? `Target Pyth oracle program: ${targetClusters[0]}`
             : targetClusters.length == 0
