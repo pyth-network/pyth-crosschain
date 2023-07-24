@@ -76,7 +76,7 @@ export class AptosContract extends Contract {
     };
   }
 
-  async getPriceFeed(feedId: string) {
+  async getPriceFeed(feedId: string): Promise<PriceFeed | undefined> {
     const client = this.chain.getClient();
     const res = (await this.findResource("LatestPriceInfo")) as any;
     const handle = res.info.handle;
@@ -144,7 +144,7 @@ export class AptosContract extends Contract {
 
   toJson() {
     return {
-      chain: this.chain.id,
+      chain: this.chain.getId(),
       stateId: this.stateId,
       wormholeStateId: this.wormholeStateId,
       type: AptosContract.type,

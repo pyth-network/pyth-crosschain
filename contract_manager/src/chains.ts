@@ -17,9 +17,17 @@ import Web3 from "web3";
 export abstract class Chain extends Storable {
   public wormholeChainName: ChainName;
 
+  /**
+   * Creates a new Chain object
+   * @param id unique id representing this chain
+   * @param mainnet whether this chain is mainnet or testnet/devnet
+   * @param wormholeChainName the name of the wormhole chain that this chain is associated with.
+   * Note that pyth has included additional chain names and ids to the wormhole spec.
+   * @protected
+   */
   protected constructor(
-    public id: string,
-    public mainnet: boolean,
+    protected id: string,
+    protected mainnet: boolean,
     wormholeChainName: string
   ) {
     super();

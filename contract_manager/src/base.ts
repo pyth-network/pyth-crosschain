@@ -64,7 +64,7 @@ export abstract class Contract extends Storable {
   abstract getLastExecutedGovernanceSequence(): Promise<number>;
 
   /**
-   * Returns the price feed for the given feed id
+   * Returns the price feed for the given feed id or undefined if not found
    * @param feedId hex encoded feed id without 0x prefix
    */
   abstract getPriceFeed(feedId: string): Promise<PriceFeed | undefined>;

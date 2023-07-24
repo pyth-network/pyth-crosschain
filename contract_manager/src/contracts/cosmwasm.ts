@@ -170,7 +170,7 @@ export class CosmWasmContract extends Contract {
 
   toJson() {
     return {
-      chain: this.chain.id,
+      chain: this.chain.getId(),
       address: this.address,
       type: CosmWasmContract.type,
     };

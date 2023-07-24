@@ -190,7 +190,10 @@ export class EVMContract extends Contract {
     return pythContract;
   }
 
-  async getCode() {
+  /**
+   * Returns the bytecode of the contract in hex format
+   */
+  async getCode(): Promise<string> {
     const web3 = new Web3(this.chain.getRpcUrl());
     return web3.eth.getCode(this.address);
   }
@@ -315,7 +318,7 @@ export class EVMContract extends Contract {
 
   toJson() {
     return {
-      chain: this.chain.id,
+      chain: this.chain.getId(),
       address: this.address,
       type: EVMContract.type,
     };

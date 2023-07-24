@@ -47,7 +47,7 @@ export class SuiContract extends Contract {
 
   toJson() {
     return {
-      chain: this.chain.id,
+      chain: this.chain.getId(),
       stateId: this.stateId,
       wormholeStateId: this.wormholeStateId,
       type: SuiContract.type,
