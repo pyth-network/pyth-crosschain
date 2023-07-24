@@ -7,9 +7,9 @@ import {
   SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
 } from "@mysten/sui.js";
-import { Chain, SuiChain } from "./chains";
+import { Chain, SuiChain } from "../chains";
 import { DataSource } from "xc_admin_common";
-import { Contract } from "./base";
+import { Contract } from "../base";
 
 export class SuiContract extends Contract {
   static type = "SuiContract";

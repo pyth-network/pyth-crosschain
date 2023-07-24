@@ -1,4 +1,4 @@
-import { Chain, CosmWasmChain } from "./chains";
+import { Chain, CosmWasmChain } from "../chains";
 import { readFileSync } from "fs";
 import { getPythConfig } from "@pythnetwork/cosmwasm-deploy-tools/lib/configs";
 import { CHAINS, DataSource } from "xc_admin_common";
@@ -8,14 +8,14 @@ import {
   Price,
   PythWrapperExecutor,
   PythWrapperQuerier,
-} from "@pythnetwork/cosmwasm-deploy-tools";
+} from "@pythnetwork/cosmwasm-deploy-tools/lib";
 import {
   ContractInfoResponse,
   CosmwasmQuerier,
 } from "@pythnetwork/cosmwasm-deploy-tools/lib/chains-manager/chain-querier";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
-import { Contract } from "./base";
+import { Contract } from "../base";
 
 /**
  * Variables here need to be snake case to match the on-chain contract configs

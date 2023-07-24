@@ -48,7 +48,6 @@ export class CosmwasmExecutor implements ChainExecutor {
       mnemonic,
       { prefix }
     );
-    await directSecp256k1HdWallet.getAccounts();
     return directSecp256k1HdWallet;
   }
 

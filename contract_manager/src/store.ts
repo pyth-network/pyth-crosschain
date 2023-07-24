@@ -6,8 +6,8 @@ import {
   GlobalChain,
   SuiChain,
 } from "./chains";
-import { CosmWasmContract } from "./cosmwasm";
-import { SuiContract } from "./sui";
+import { CosmWasmContract } from "./contracts/cosmwasm";
+import { SuiContract } from "./contracts/sui";
 import { Contract } from "./base";
 import { parse, stringify } from "yaml";
 import {
@@ -18,9 +18,9 @@ import {
   statSync,
   writeFileSync,
 } from "fs";
-import { EVMContract } from "./evm";
-import { AptosContract } from "./aptos";
-import { Vault } from "./entities";
+import { EVMContract } from "./contracts/evm";
+import { AptosContract } from "./contracts/aptos";
+import { Vault } from "./governance";
 
 class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };

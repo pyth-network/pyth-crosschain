@@ -236,6 +236,8 @@ export class WormholeMultiSigTransaction {
 
   async getState() {
     const proposal = await this.squad.getTransaction(this.address);
+    // Converts the status object to a string e.g
+    // { "active":{} } => "active"
     return Object.keys(proposal.status)[0];
   }
 

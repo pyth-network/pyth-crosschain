@@ -12,6 +12,7 @@ import {
   DataSource,
 } from "xc_admin_common";
 import { AptosClient } from "aptos";
+import Web3 from "web3";
 
 export abstract class Chain extends Storable {
   public wormholeChainName: ChainName;
@@ -281,6 +282,15 @@ export class EVMChain extends Chain {
 
   getType(): string {
     return EVMChain.type;
+  }
+
+  async getGasPrice() {
+    const web3 = new Web3(this.getRpcUrl());
+    let gasPrice = await web3.eth.getGasPrice();
+    if (!this.isMainnet()) {
+      gasPrice = (BigInt(gasPrice) * 2n).toString();
+    }
+    return gasPrice;
   }
 }
 

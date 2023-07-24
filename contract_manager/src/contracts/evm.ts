@@ -1,9 +1,11 @@
 import Web3 from "web3"; //TODO: decide on using web3 or ethers.js
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
-import { Contract } from "./base";
-import { Chain, EVMChain } from "./chains";
+import { Contract } from "../base";
+import { Chain, EVMChain } from "../chains";
 import { DataSource } from "xc_admin_common";
 
+// Just to make sure tx gas limit is enough
+const GAS_ESTIMATE_MULTIPLIER = 2;
 const EXTENDED_PYTH_ABI = [
   {
     inputs: [],
@@ -162,14 +164,9 @@ export class EVMContract extends Contract {
     const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
     web3.eth.accounts.wallet.add(signer);
     const contract = new web3.eth.Contract(abi);
-    contract.options.data = bytecode;
-    const deployTx = contract.deploy({ data: "" });
+    const deployTx = contract.deploy({ data: bytecode });
     const gas = await deployTx.estimateGas();
-    let gasPrice = await web3.eth.getGasPrice();
-
-    if (!chain.isMainnet()) {
-      gasPrice = (BigInt(gasPrice) * 2n).toString();
-    }
+    const gasPrice = await chain.getGasPrice();
     const deployerBalance = await web3.eth.getBalance(signer.address);
     if (BigInt(deployerBalance) < BigInt(gas) * BigInt(gasPrice)) {
       throw new Error(
@@ -286,15 +283,11 @@ export class EVMContract extends Contract {
       gas: 100000000,
       value: updateFee,
     });
-    let gasPrice = await web3.eth.getGasPrice();
-    if (!this.chain.isMainnet()) {
-      gasPrice = (BigInt(gasPrice) * 2n).toString();
-    }
     return transactionObject.send({
       from: address,
       value: updateFee,
-      gas: gasEstiamte * 2,
-      gasPrice,
+      gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
+      gasPrice: await this.chain.getGasPrice(),
     });
   }
 
@@ -309,14 +302,10 @@ export class EVMContract extends Contract {
       from: address,
       gas: 100000000,
     });
-    let gasPrice = await web3.eth.getGasPrice();
-    if (!this.chain.isMainnet()) {
-      gasPrice = (BigInt(gasPrice) * 2n).toString();
-    }
     return transactionObject.send({
       from: address,
-      gas: gasEstiamte * 2,
-      gasPrice,
+      gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
+      gasPrice: await this.chain.getGasPrice(),
     });
   }
 

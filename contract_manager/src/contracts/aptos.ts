@@ -1,5 +1,5 @@
-import { Contract } from "./base";
-import { AptosChain, Chain } from "./chains";
+import { Contract } from "../base";
+import { AptosChain, Chain } from "../chains";
 import { DataSource } from "xc_admin_common";
 
 export class AptosContract extends Contract {
