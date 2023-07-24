@@ -262,11 +262,7 @@ export class EVMChain extends Chain {
   }
 
   getRpcUrl(): string {
-    if (this.rpcUrl.includes("$INFURA_KEY") && !process.env.INFURA_KEY)
-      throw new Error(
-        `INFURA_KEY not set in env but present in rpcUrl ${this.rpcUrl}`
-      );
-    return this.rpcUrl.replace("$INFURA_KEY", process.env.INFURA_KEY || "");
+    return this.rpcUrl;
   }
 
   /**

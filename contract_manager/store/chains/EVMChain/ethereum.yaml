@@ -1,6 +1,6 @@
 id: ethereum
 wormholeChainName: ethereum
 mainnet: true
-rpcUrl: https://mainnet.infura.io/v3/$INFURA_KEY
+rpcUrl: https://eth.llamarpc.com
 networkId: 1
 type: EVMChain

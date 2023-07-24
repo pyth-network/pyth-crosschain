@@ -1,6 +1,6 @@
 id: linea
 wormholeChainName: linea
 mainnet: true
-rpcUrl: https://linea-mainnet.infura.io/v3/$INFURA_KEY
+rpcUrl: https://linea.rpc.thirdweb.com
 networkId: 59144
 type: EVMChain
