@@ -1,25 +1,29 @@
-import { Chain, CosmWasmChain, SuiChain, Chains, EVMChain } from "./chains";
+import { AptosChain, Chain, CosmWasmChain, EVMChain, SuiChain } from "./chains";
 import { CosmWasmContract } from "./cosmwasm";
 import { SuiContract } from "./sui";
 import { Contract } from "./base";
+import { parse, stringify } from "yaml";
 import {
+  existsSync,
+  mkdirSync,
   readdirSync,
   readFileSync,
-  writeFileSync,
-  mkdirSync,
-  existsSync,
   statSync,
+  writeFileSync,
 } from "fs";
-import { Contracts } from "./entities";
 import { EVMContract } from "./evm";
+import { AptosContract } from "./aptos";
+import { Vault } from "./entities";
 
 class Store {
-  static Chains: Record<string, Chain> = {};
-  static Contracts: Record<string, CosmWasmContract | SuiContract> = {};
+  public chains: Record<string, Chain> = {};
+  public contracts: Record<string, Contract> = {};
+  public vaults: Record<string, Vault> = {};
 
   constructor(public path: string) {
     this.loadAllChains();
     this.loadAllContracts();
+    this.loadAllVaults();
   }
 
   save(obj: any) {
@@ -34,19 +38,21 @@ class Store {
       dir = `${this.path}/chains/${chain.getType()}`;
       file = chain.getId();
       content = chain.toJson();
+    } else if (obj instanceof Vault) {
+      let vault = obj;
+      dir = `${this.path}/vaults`;
+      file = vault.getId();
+      content = vault.toJson();
     } else {
       throw new Error("Invalid type");
     }
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
-    writeFileSync(
-      `${dir}/${file}.json`,
-      JSON.stringify(content, undefined, 2) + "\n"
-    );
+    writeFileSync(`${dir}/${file}.yaml`, stringify(content));
   }
 
-  getJSONFiles(path: string) {
+  getYamlFiles(path: string) {
     const walk = function (dir: string) {
       let results: string[] = [];
       const list = readdirSync(dir);
@@ -63,7 +69,7 @@ class Store {
       });
       return results;
     };
-    return walk(path).filter((file) => file.endsWith(".json"));
+    return walk(path).filter((file) => file.endsWith(".yaml"));
   }
 
   loadAllChains() {
@@ -71,15 +77,16 @@ class Store {
       [CosmWasmChain.type]: CosmWasmChain,
       [SuiChain.type]: SuiChain,
       [EVMChain.type]: EVMChain,
+      [AptosChain.type]: AptosChain,
     };
 
-    this.getJSONFiles(`${this.path}/chains/`).forEach((jsonFile) => {
-      let parsed = JSON.parse(readFileSync(jsonFile, "utf-8"));
+    this.getYamlFiles(`${this.path}/chains/`).forEach((yamlFile) => {
+      let parsed = parse(readFileSync(yamlFile, "utf-8"));
       if (allChainClasses[parsed.type] === undefined) return;
       let chain = allChainClasses[parsed.type].fromJson(parsed);
-      if (Chains[chain.getId()])
+      if (this.chains[chain.getId()])
         throw new Error(`Multiple chains with id ${chain.getId()} found`);
-      Chains[chain.getId()] = chain;
+      this.chains[chain.getId()] = chain;
     });
   }
 
@@ -88,16 +95,35 @@ class Store {
       [CosmWasmContract.type]: CosmWasmContract,
       [SuiContract.type]: SuiContract,
       [EVMContract.type]: EVMContract,
+      [AptosContract.type]: AptosContract,
     };
-    this.getJSONFiles(`${this.path}/contracts/`).forEach((jsonFile) => {
-      let parsed = JSON.parse(readFileSync(jsonFile, "utf-8"));
+    this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
+      let parsed = parse(readFileSync(yamlFile, "utf-8"));
       if (allContractClasses[parsed.type] === undefined) return;
-      let chainContract = allContractClasses[parsed.type].fromJson(parsed);
-      if (Contracts[chainContract.getId()])
+      if (!this.chains[parsed.chain])
+        throw new Error(`Chain ${parsed.chain} not found`);
+      const chain = this.chains[parsed.chain];
+      let chainContract = allContractClasses[parsed.type].fromJson(
+        chain,
+        parsed
+      );
+      if (this.contracts[chainContract.getId()])
         throw new Error(
           `Multiple contracts with id ${chainContract.getId()} found`
         );
-      Contracts[chainContract.getId()] = chainContract;
+      this.contracts[chainContract.getId()] = chainContract;
+    });
+  }
+
+  loadAllVaults() {
+    this.getYamlFiles(`${this.path}/vaults/`).forEach((yamlFile) => {
+      let parsed = parse(readFileSync(yamlFile, "utf-8"));
+      if (parsed.type !== Vault.type) return;
+
+      const vault = Vault.fromJson(parsed);
+      if (this.vaults[vault.getId()])
+        throw new Error(`Multiple vaults with id ${vault.getId()} found`);
+      this.vaults[vault.getId()] = vault;
     });
   }
 }

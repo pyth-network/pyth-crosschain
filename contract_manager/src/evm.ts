@@ -1,8 +1,89 @@
 import Web3 from "web3"; //TODO: decide on using web3 or ethers.js
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import { Contract } from "./base";
-import { Chains, EVMChain } from "./chains";
+import { Chain, EVMChain } from "./chains";
 import { DataSource, HexString32Bytes } from "@pythnetwork/xc-governance-sdk";
+
+const EXTENDED_PYTH_ABI = [
+  {
+    inputs: [],
+    name: "governanceDataSource",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint16",
+            name: "chainId",
+            type: "uint16",
+          },
+          {
+            internalType: "bytes32",
+            name: "emitterAddress",
+            type: "bytes32",
+          },
+        ],
+        internalType: "struct PythInternalStructs.DataSource",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes",
+        name: "encodedVM",
+        type: "bytes",
+      },
+    ],
+    name: "executeGovernanceInstruction",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "singleUpdateFeeInWei",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "validDataSources",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint16",
+            name: "chainId",
+            type: "uint16",
+          },
+          {
+            internalType: "bytes32",
+            name: "emitterAddress",
+            type: "bytes32",
+          },
+        ],
+        internalType: "struct PythInternalStructs.DataSource[]",
+        name: "",
+        type: "tuple[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+    constant: true,
+  },
+  ...PythInterfaceAbi,
+] as any;
 
 export class EVMContract extends Contract {
   static type = "EVMContract";
@@ -11,11 +92,11 @@ export class EVMContract extends Contract {
     super();
   }
 
-  static fromJson(parsed: any): EVMContract {
+  static fromJson(chain: Chain, parsed: any): EVMContract {
     if (parsed.type !== EVMContract.type) throw new Error("Invalid type");
-    if (!Chains[parsed.chain])
-      throw new Error(`Chain ${parsed.chain} not found`);
-    return new EVMContract(Chains[parsed.chain] as EVMChain, parsed.address);
+    if (!(chain instanceof EVMChain))
+      throw new Error(`Wrong chain type ${chain}`);
+    return new EVMContract(chain, parsed.address);
   }
 
   getId(): string {
@@ -28,63 +109,7 @@ export class EVMContract extends Contract {
 
   getContract() {
     const web3 = new Web3(this.chain.rpcUrl);
-    const pythContract = new web3.eth.Contract(
-      [
-        {
-          inputs: [],
-          name: "governanceDataSource",
-          outputs: [
-            {
-              components: [
-                {
-                  internalType: "uint16",
-                  name: "chainId",
-                  type: "uint16",
-                },
-                {
-                  internalType: "bytes32",
-                  name: "emitterAddress",
-                  type: "bytes32",
-                },
-              ],
-              internalType: "struct PythInternalStructs.DataSource",
-              name: "",
-              type: "tuple",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "validDataSources",
-          outputs: [
-            {
-              components: [
-                {
-                  internalType: "uint16",
-                  name: "chainId",
-                  type: "uint16",
-                },
-                {
-                  internalType: "bytes32",
-                  name: "emitterAddress",
-                  type: "bytes32",
-                },
-              ],
-              internalType: "struct PythInternalStructs.DataSource[]",
-              name: "",
-              type: "tuple[]",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-          constant: true,
-        },
-        ...PythInterfaceAbi,
-      ] as any,
-      this.address
-    );
+    const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
     return pythContract;
   }
 
@@ -100,6 +125,12 @@ export class EVMContract extends Contract {
     const pythContract = this.getContract();
     const result = await pythContract.methods.getValidTimePeriod().call();
     return Number(result);
+  }
+
+  async getBaseUpdateFee() {
+    const pythContract = this.getContract();
+    const result = await pythContract.methods.singleUpdateFeeInWei().call();
+    return { amount: result };
   }
 
   async getDataSources(): Promise<DataSource[]> {
@@ -122,6 +153,24 @@ export class EVMContract extends Contract {
       Number(chainId),
       new HexString32Bytes(emitterAddress)
     );
+  }
+
+  async executeGovernanceInstruction(privateKey: string, vaa: Buffer) {
+    const web3 = new Web3(this.chain.rpcUrl);
+    const { address } = web3.eth.accounts.wallet.add(privateKey);
+    const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
+    const transactionObject = pythContract.methods.executeGovernanceInstruction(
+      "0x" + vaa.toString("hex")
+    );
+    const gasEstiamte = await transactionObject.estimateGas({
+      from: address,
+      gas: 100000000,
+    });
+    return transactionObject.send({ from: address, gas: gasEstiamte * 2 });
+  }
+
+  getChain(): EVMChain {
+    return this.chain;
   }
 
   toJson() {
