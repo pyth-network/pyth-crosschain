@@ -1,12 +1,16 @@
 use {
     self::{
-        proof::wormhole_merkle::construct_update_data,
+        proof::wormhole_merkle::{
+            construct_update_data,
+            WormholeMerkleState,
+        },
         storage::{
             MessageState,
             MessageStateFilter,
-            StorageInstance,
+            Storage,
         },
         types::{
+            AccumulatorMessages,
             PriceFeedUpdate,
             PriceFeedsWithUpdateData,
             RequestTime,
@@ -19,7 +23,6 @@ use {
             construct_message_states_proofs,
             store_wormhole_merkle_verified_message,
         },
-        storage::CompletedAccumulatorState,
         types::{
             ProofSet,
             UnixTimestamp,
@@ -82,17 +85,27 @@ pub mod wormhole;
 const OBSERVED_CACHE_SIZE: usize = 1000;
 
 pub struct Store {
-    pub storage:                  StorageInstance,
+    /// Storage is a short-lived cache of the state of all the updates
+    /// that have been passed to the store.
+    pub storage:                  Storage,
+    /// Sequence numbers of lately observed Vaas. Store uses this set
+    /// to ignore the previously observed Vaas as a performance boost.
     pub observed_vaa_seqs:        RwLock<BTreeSet<u64>>,
+    /// Wormhole guardian sets. It is used to verify Vaas before using
+    /// them.
     pub guardian_set:             RwLock<BTreeMap<u32, GuardianSet>>,
+    /// The sender to the channel between Store and Api to notify
+    /// completed updates.
     pub update_tx:                Sender<()>,
+    /// Time of the last completed update. This is used for the health
+    /// probes.
     pub last_completed_update_at: RwLock<Option<Instant>>,
 }
 
 impl Store {
-    pub fn new_with_local_cache(update_tx: Sender<()>, cache_size: u64) -> Arc<Self> {
+    pub fn new(update_tx: Sender<()>, cache_size: u64) -> Arc<Self> {
         Arc::new(Self {
-            storage: storage::local_storage::LocalStorage::new_instance(cache_size),
+            storage: Storage::new(cache_size),
             observed_vaa_seqs: RwLock::new(Default::default()),
             guardian_set: RwLock::new(Default::default()),
             update_tx,
@@ -148,34 +161,27 @@ impl Store {
                 let slot = accumulator_messages.slot;
                 log::info!("Storing accumulator messages for slot {:?}.", slot,);
                 self.storage
-                    .update_accumulator_state(
-                        slot,
-                        Box::new(|mut state| {
-                            state.accumulator_messages = Some(accumulator_messages);
-                            state
-                        }),
-                    )
+                    .store_accumulator_messages(accumulator_messages)
                     .await?;
                 slot
             }
         };
 
-        let state = match self.storage.fetch_accumulator_state(slot).await? {
-            Some(state) => state,
-            None => return Ok(()),
-        };
+        let accumulator_messages = self.storage.fetch_accumulator_messages(slot).await?;
+        let wormhole_merkle_state = self.storage.fetch_wormhole_merkle_state(slot).await?;
 
-        let completed_state = state.try_into();
-        let completed_state: CompletedAccumulatorState = match completed_state {
-            Ok(completed_state) => completed_state,
-            Err(_) => {
-                return Ok(());
-            }
-        };
+        let (accumulator_messages, wormhole_merkle_state) =
+            match (accumulator_messages, wormhole_merkle_state) {
+                (Some(accumulator_messages), Some(wormhole_merkle_state)) => {
+                    (accumulator_messages, wormhole_merkle_state)
+                }
+                _ => return Ok(()),
+            };
 
         // Once the accumulator reaches a complete state for a specific slot
         // we can build the message states
-        self.build_message_states(completed_state).await?;
+        self.build_message_states(accumulator_messages, wormhole_merkle_state)
+            .await?;
 
         self.update_tx.send(()).await?;
 
@@ -187,15 +193,18 @@ impl Store {
         Ok(())
     }
 
-    async fn build_message_states(&self, completed_state: CompletedAccumulatorState) -> Result<()> {
+    async fn build_message_states(
+        &self,
+        accumulator_messages: AccumulatorMessages,
+        wormhole_merkle_state: WormholeMerkleState,
+    ) -> Result<()> {
         let wormhole_merkle_message_states_proofs =
-            construct_message_states_proofs(&completed_state)?;
+            construct_message_states_proofs(&accumulator_messages, &wormhole_merkle_state)?;
 
         let current_time: UnixTimestamp =
             SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as _;
 
-        let message_states = completed_state
-            .accumulator_messages
+        let message_states = accumulator_messages
             .raw_messages
             .into_iter()
             .enumerate()
@@ -210,7 +219,7 @@ impl Store {
                             .ok_or(anyhow!("Missing proof for message"))?
                             .clone(),
                     },
-                    completed_state.slot,
+                    accumulator_messages.slot,
                     current_time,
                 ))
             })

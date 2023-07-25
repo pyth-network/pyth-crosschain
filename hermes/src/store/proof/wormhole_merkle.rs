@@ -1,9 +1,7 @@
 use {
     crate::store::{
-        storage::{
-            CompletedAccumulatorState,
-            MessageState,
-        },
+        storage::MessageState,
+        types::AccumulatorMessages,
         Store,
     },
     anyhow::{
@@ -50,26 +48,18 @@ pub async fn store_wormhole_merkle_verified_message(
 ) -> Result<()> {
     store
         .storage
-        .update_accumulator_state(
-            root.slot,
-            Box::new(|mut state| {
-                state.wormhole_merkle_state = Some(WormholeMerkleState {
-                    root,
-                    vaa: vaa_bytes,
-                });
-                state
-            }),
-        )
+        .store_wormhole_merkle_state(WormholeMerkleState {
+            root,
+            vaa: vaa_bytes,
+        })
         .await?;
     Ok(())
 }
 
 pub fn construct_message_states_proofs(
-    completed_accumulator_state: &CompletedAccumulatorState,
+    accumulator_messages: &AccumulatorMessages,
+    wormhole_merkle_state: &WormholeMerkleState,
 ) -> Result<Vec<WormholeMerkleMessageProof>> {
-    let accumulator_messages = &completed_accumulator_state.accumulator_messages;
-    let wormhole_merkle_state = &completed_accumulator_state.wormhole_merkle_state;
-
     // Check whether the state is valid
     let merkle_acc = match MerkleTree::<Keccak160>::from_set(
         accumulator_messages.raw_messages.iter().map(|m| m.as_ref()),
