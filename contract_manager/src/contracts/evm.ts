@@ -168,11 +168,14 @@ export class EvmContract extends Contract {
     const gas = await deployTx.estimateGas();
     const gasPrice = await chain.getGasPrice();
     const deployerBalance = await web3.eth.getBalance(signer.address);
-    if (BigInt(deployerBalance) < BigInt(gas) * BigInt(gasPrice)) {
+    const gasDiff = BigInt(gas) * BigInt(gasPrice) - BigInt(deployerBalance);
+    if (gasDiff > 0n) {
       throw new Error(
-        `Insufficient funds to deploy contract. Need ${gas} * ${gasPrice} = ${
+        `Insufficient funds to deploy contract. Need ${gas} (gas) * ${gasPrice} (gasPrice)= ${
           BigInt(gas) * BigInt(gasPrice)
-        } wei, but only have ${deployerBalance} wei`
+        } wei, but only have ${deployerBalance} wei. We need ${
+          Number(gasDiff) / 10 ** 18
+        } ETH more.`
       );
     }
 

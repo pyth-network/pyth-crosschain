@@ -291,6 +291,7 @@ export class EvmChain extends Chain {
   async getGasPrice() {
     const web3 = new Web3(this.getRpcUrl());
     let gasPrice = await web3.eth.getGasPrice();
+    // some testnets have inaccuarte gas prices that leads to transactions not being mined, we double it since it's free!
     if (!this.isMainnet()) {
       gasPrice = (BigInt(gasPrice) * 2n).toString();
     }
