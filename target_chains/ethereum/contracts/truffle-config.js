@@ -91,12 +91,6 @@ module.exports = {
       provider: payerProvider(`https://api.avax-test.network/ext/bc/C/rpc`),
       network_id: "43113",
     },
-    oasis: {
-      provider: payerProvider(`https://emerald.oasis.dev/`),
-      network_id: 42262,
-      gas: 4465030,
-      gasPrice: 30000000000,
-    },
     aurora: {
       provider: payerProvider(`https://mainnet.aurora.dev`),
       network_id: 0x4e454152,
