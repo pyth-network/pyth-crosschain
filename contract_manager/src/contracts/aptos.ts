@@ -1,4 +1,5 @@
 import { Contract, PriceFeed } from "../base";
+import { AptosAccount, BCS, TxnBuilderTypes } from "aptos";
 import { AptosChain, Chain } from "../chains";
 import { DataSource } from "xc_admin_common";
 
@@ -28,11 +29,47 @@ export class AptosContract extends Contract {
     return new AptosContract(chain, parsed.stateId, parsed.wormholeStateId);
   }
 
-  executeGovernanceInstruction(
+  async executeGovernanceInstruction(
     senderPrivateKey: string,
     vaa: Buffer
   ): Promise<any> {
-    throw new Error("Method not implemented.");
+    const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
+      TxnBuilderTypes.EntryFunction.natural(
+        `${this.stateId}::governance`,
+        "execute_governance_instruction",
+        [],
+        [BCS.bcsSerializeBytes(vaa)]
+      )
+    );
+    return this.sendTransaction(senderPrivateKey, txPayload);
+  }
+
+  private sendTransaction(
+    senderPrivateKey: string,
+    txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction
+  ) {
+    const client = this.chain.getClient();
+    const sender = new AptosAccount(
+      new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
+    );
+    return client.generateSignSubmitWaitForTransaction(sender, txPayload, {
+      maxGasAmount: BigInt(30000),
+    });
+  }
+
+  async executeUpdatePriceFeed(
+    senderPrivateKey: string,
+    vaas: Buffer[]
+  ): Promise<any> {
+    const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
+      TxnBuilderTypes.EntryFunction.natural(
+        `${this.stateId}::pyth`,
+        "update_price_feeds_with_funder",
+        [],
+        [BCS.serializeVectorWithFunc(vaas, "serializeBytes")]
+      )
+    );
+    return this.sendTransaction(senderPrivateKey, txPayload);
   }
 
   getStateResources() {
