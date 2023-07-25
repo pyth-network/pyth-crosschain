@@ -1,0 +1,6 @@
+querierEndpoint: https://k8s.testnet.tm.injective.network:443
+executorEndpoint: https://k8s.testnet.chain.grpc-web.injective.network
+id: injective_testnet
+wormholeChainName: injective_testnet
+mainnet: false
+type: CosmWasmChain

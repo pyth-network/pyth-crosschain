@@ -1,0 +1,9 @@
+querierEndpoint: https://rpc.osmosis.zone:443
+executorEndpoint: https://rpc.osmosis.zone:443
+id: osmosis
+wormholeChainName: osmosis
+mainnet: true
+gasPrice: "0.025"
+prefix: osmo
+feeDenom: uosmo
+type: CosmWasmChain

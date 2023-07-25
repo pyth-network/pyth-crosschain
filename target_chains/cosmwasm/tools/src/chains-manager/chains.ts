@@ -141,7 +141,10 @@ export async function createExecutorForChain(
   const chainType = chainConfig.chainType;
 
   if (chainType === ChainType.INJECTIVE) {
-    return new InjectiveExecutor(chainConfig.executorEndpoint, mnemonic);
+    return InjectiveExecutor.fromMnemonic(
+      chainConfig.executorEndpoint,
+      mnemonic
+    );
   } else
     return new CosmwasmExecutor(
       chainConfig.executorEndpoint,
