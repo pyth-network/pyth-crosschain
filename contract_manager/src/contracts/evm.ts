@@ -1,7 +1,7 @@
 import Web3 from "web3"; //TODO: decide on using web3 or ethers.js
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import { Contract } from "../base";
-import { Chain, EVMChain } from "../chains";
+import { Chain, EvmChain } from "../chains";
 import { DataSource } from "xc_admin_common";
 
 // Just to make sure tx gas limit is enough
@@ -126,18 +126,18 @@ const EXTENDED_PYTH_ABI = [
   ...PythInterfaceAbi,
 ] as any;
 
-export class EVMContract extends Contract {
-  static type = "EVMContract";
+export class EvmContract extends Contract {
+  static type = "EvmContract";
 
-  constructor(public chain: EVMChain, public address: string) {
+  constructor(public chain: EvmChain, public address: string) {
     super();
   }
 
-  static fromJson(chain: Chain, parsed: any): EVMContract {
-    if (parsed.type !== EVMContract.type) throw new Error("Invalid type");
-    if (!(chain instanceof EVMChain))
+  static fromJson(chain: Chain, parsed: any): EvmContract {
+    if (parsed.type !== EvmContract.type) throw new Error("Invalid type");
+    if (!(chain instanceof EvmChain))
       throw new Error(`Wrong chain type ${chain}`);
-    return new EVMContract(chain, parsed.address);
+    return new EvmContract(chain, parsed.address);
   }
 
   getId(): string {
@@ -145,7 +145,7 @@ export class EVMContract extends Contract {
   }
 
   getType(): string {
-    return EVMContract.type;
+    return EvmContract.type;
   }
 
   async getVersion(): Promise<string> {
@@ -155,11 +155,11 @@ export class EVMContract extends Contract {
   }
 
   static async deploy(
-    chain: EVMChain,
+    chain: EvmChain,
     privateKey: string,
     abi: any,
     bytecode: string
-  ): Promise<EVMContract> {
+  ): Promise<EvmContract> {
     const web3 = new Web3(chain.getRpcUrl());
     const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
     web3.eth.accounts.wallet.add(signer);
@@ -181,7 +181,7 @@ export class EVMContract extends Contract {
       gas,
       gasPrice,
     });
-    return new EVMContract(chain, deployedContract.options.address);
+    return new EvmContract(chain, deployedContract.options.address);
   }
 
   getContract() {
@@ -312,7 +312,7 @@ export class EVMContract extends Contract {
     });
   }
 
-  getChain(): EVMChain {
+  getChain(): EvmChain {
     return this.chain;
   }
 
@@ -320,7 +320,7 @@ export class EVMContract extends Contract {
     return {
       chain: this.chain.getId(),
       address: this.address,
-      type: EVMContract.type,
+      type: EvmContract.type,
     };
   }
 }

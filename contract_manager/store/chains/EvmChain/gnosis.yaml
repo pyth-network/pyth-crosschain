@@ -1,0 +1,6 @@
+id: gnosis
+wormholeChainName: gnosis
+mainnet: true
+rpcUrl: https://rpc.gnosischain.com
+networkId: 100
+type: EvmChain

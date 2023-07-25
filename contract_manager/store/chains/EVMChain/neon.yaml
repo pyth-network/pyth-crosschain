@@ -1,6 +1,0 @@
-id: neon
-wormholeChainName: neon
-mainnet: true
-rpcUrl: https://neon-proxy-mainnet.solana.p2p.org
-networkId: 245022934
-type: EVMChain

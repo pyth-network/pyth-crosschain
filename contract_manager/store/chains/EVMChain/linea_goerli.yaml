@@ -1,6 +1,0 @@
-id: linea_goerli
-wormholeChainName: linea
-mainnet: false
-rpcUrl: https://rpc.goerli.linea.build
-networkId: 59140
-type: EVMChain

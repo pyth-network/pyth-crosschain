@@ -6,10 +6,10 @@ repl.setService(service);
 repl.start();
 repl.evalCode(
   "import { loadHotWallet, Vault } from './src/entities';" +
-    "import { SuiChain, CosmWasmChain, AptosChain, EVMChain } from './src/chains';" +
+    "import { SuiChain, CosmWasmChain, AptosChain, EvmChain } from './src/chains';" +
     "import { SuiContract } from './src/sui';" +
     "import { CosmWasmContract } from './src/cosmwasm';" +
-    "import { EVMContract } from './src/evm';" +
+    "import { EvmContract } from './src/evm';" +
     "import { AptosContract } from './src/aptos';" +
     "import { DefaultStore } from './src/store';" +
     "DefaultStore"

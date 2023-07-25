@@ -1,6 +1,0 @@
-id: fuji
-wormholeChainName: avalanche
-mainnet: true
-rpcUrl: https://api.avax-test.network/ext/bc/C/rpc
-networkId: 43113
-type: EVMChain

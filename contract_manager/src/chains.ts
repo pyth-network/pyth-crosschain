@@ -237,8 +237,8 @@ export class SuiChain extends Chain {
   }
 }
 
-export class EVMChain extends Chain {
-  static type: string = "EVMChain";
+export class EvmChain extends Chain {
+  static type: string = "EvmChain";
 
   constructor(
     id: string,
@@ -250,9 +250,9 @@ export class EVMChain extends Chain {
     super(id, mainnet, wormholeChainName);
   }
 
-  static fromJson(parsed: any): EVMChain {
-    if (parsed.type !== EVMChain.type) throw new Error("Invalid type");
-    return new EVMChain(
+  static fromJson(parsed: any): EvmChain {
+    if (parsed.type !== EvmChain.type) throw new Error("Invalid type");
+    return new EvmChain(
       parsed.id,
       parsed.mainnet,
       parsed.wormholeChainName,
@@ -280,12 +280,12 @@ export class EVMChain extends Chain {
       mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       networkId: this.networkId,
-      type: EVMChain.type,
+      type: EvmChain.type,
     };
   }
 
   getType(): string {
-    return EVMChain.type;
+    return EvmChain.type;
   }
 
   async getGasPrice() {

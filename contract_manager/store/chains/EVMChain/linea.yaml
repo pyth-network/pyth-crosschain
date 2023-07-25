@@ -1,6 +1,0 @@
-id: linea
-wormholeChainName: linea
-mainnet: true
-rpcUrl: https://linea.rpc.thirdweb.com
-networkId: 59144
-type: EVMChain

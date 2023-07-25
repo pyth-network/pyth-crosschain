@@ -1,6 +1,0 @@
-id: arbitrum
-wormholeChainName: arbitrum
-mainnet: true
-rpcUrl: https://arb1.arbitrum.io/rpc
-networkId: 42161
-type: EVMChain

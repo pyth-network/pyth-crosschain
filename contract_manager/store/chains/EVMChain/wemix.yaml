@@ -1,6 +1,0 @@
-id: wemix
-wormholeChainName: wemix
-mainnet: true
-rpcUrl: https://api.wemix.com
-networkId: 1111
-type: EVMChain

@@ -1,0 +1,6 @@
+id: zksync_goerli
+wormholeChainName: zksync
+mainnet: false
+rpcUrl: https://zksync2-testnet.zksync.dev
+networkId: 280
+type: EvmChain

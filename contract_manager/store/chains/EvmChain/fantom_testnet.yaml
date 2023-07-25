@@ -1,0 +1,6 @@
+id: fantom_testnet
+wormholeChainName: fantom
+mainnet: false
+rpcUrl: https://rpc.ankr.com/fantom_testnet
+networkId: 4002
+type: EvmChain
