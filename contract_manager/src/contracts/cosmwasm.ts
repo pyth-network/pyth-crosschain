@@ -293,21 +293,17 @@ export class CosmWasmContract extends Contract {
     else return "unknown";
   }
 
-  async executeUpdatePriceFeed(feedId: string, privateKey: string) {
-    const deploymentType = await this.getDeploymentType();
-    const priceServiceConnection = new PriceServiceConnection(
-      deploymentType === "stable"
-        ? "https://xc-mainnet.pyth.network"
-        : "https://xc-testnet.pyth.network"
+  async executeUpdatePriceFeed(senderPrivateKey: string, vaas: Buffer[]) {
+    const base64Vaas = vaas.map((v) => v.toString("base64"));
+    const fund = await this.getUpdateFee(base64Vaas);
+    let executor = await CosmWasmContract.getExecutor(
+      this.chain,
+      senderPrivateKey
     );
-
-    const vaas = await priceServiceConnection.getLatestVaas([feedId]);
-    const fund = await this.getUpdateFee(vaas);
-    let executor = await CosmWasmContract.getExecutor(this.chain, privateKey);
     let pythExecutor = new PythWrapperExecutor(executor);
     return pythExecutor.executeUpdatePriceFeeds({
       contractAddr: this.address,
-      vaas,
+      vaas: base64Vaas,
       fund,
     });
   }
