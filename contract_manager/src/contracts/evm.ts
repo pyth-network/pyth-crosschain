@@ -278,8 +278,22 @@ export class EvmContract extends Contract {
    * Returns the bytecode of the contract in hex format
    */
   async getCode(): Promise<string> {
+    // TODO: handle proxy contracts
     const web3 = new Web3(this.chain.getRpcUrl());
     return web3.eth.getCode(this.address);
+  }
+
+  /**
+   * Returns the keccak256 digest of the contract bytecode after replacing any occurences of the contract addr in the bytecode with 0
+   * This is used to verify that the contract code is the same on all chains
+   */
+  async getCodeDigestWithoutAddress(): Promise<string> {
+    const code = await this.getCode();
+    const strippedCode = code.replaceAll(
+      this.address.toLowerCase().replace("0x", ""),
+      "0000000000000000000000000000000000000000"
+    );
+    return Web3.utils.keccak256(strippedCode);
   }
 
   async getLastExecutedGovernanceSequence() {
