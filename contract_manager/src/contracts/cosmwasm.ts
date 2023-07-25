@@ -5,6 +5,7 @@ import { CHAINS, DataSource } from "xc_admin_common";
 import { DeploymentType } from "@pythnetwork/cosmwasm-deploy-tools/lib/helper";
 import {
   CosmwasmExecutor,
+  InjectiveExecutor,
   Price,
   PythWrapperExecutor,
   PythWrapperQuerier,
@@ -156,7 +157,9 @@ export class CosmWasmContract extends Contract {
   }
 
   private static async getExecutor(chain: CosmWasmChain, privateKey: string) {
-    // TODO: logic for injective
+    if (chain.getId().indexOf("injective") > -1) {
+      return new InjectiveExecutor(chain.executorEndpoint, privateKey);
+    }
     return new CosmwasmExecutor(
       chain.executorEndpoint,
       await CosmwasmExecutor.getSignerFromPrivateKey(privateKey, chain.prefix),
@@ -325,6 +328,11 @@ export class CosmWasmContract extends Contract {
   async getBaseUpdateFee(): Promise<any> {
     const config = await this.getConfig();
     return config.config_v1.fee;
+  }
+
+  async getVersion(): Promise<any> {
+    const config = await this.getConfig();
+    return config.contract_version;
   }
 
   getChain(): CosmWasmChain {

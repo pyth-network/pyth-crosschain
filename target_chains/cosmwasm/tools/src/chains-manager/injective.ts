@@ -36,9 +36,14 @@ export class InjectiveExecutor implements ChainExecutor {
 
   constructor(
     private readonly grpcEndpoint: string,
-    readonly mnemonic: string
+    readonly privateKey: string
   ) {
-    this.wallet = PrivateKey.fromMnemonic(mnemonic);
+    this.wallet = PrivateKey.fromHex(privateKey);
+  }
+
+  static fromMnemonic(grpcEndpoint: string, mnemonic: string) {
+    const wallet = PrivateKey.fromMnemonic(mnemonic);
+    return new InjectiveExecutor(grpcEndpoint, wallet.toHex());
   }
 
   private getAddress(): string {
