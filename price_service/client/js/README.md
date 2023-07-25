@@ -65,6 +65,14 @@ setTimeout(() => {
 }, 60000);
 ```
 
+### On-chain Applications
+
+On-chain applications will need to submit the price updates returned by the price service to the Pyth contract on their blockchain.
+These applications should pass the `binary: true` option to the constructor as shown above, to ensure that all methods on `PriceServiceConnection` return the required information.
+This option will add a `vaa` field to `PriceFeed` that represents a signed price update.
+The `vaa` is a binary blob serialized as a base64 string.
+Depending on the blockchain, you may need to reformat this into hex or another format before submitting it to the Pyth contract.
+
 ### Examples
 
 The [PriceServiceClient](./src/examples/PriceServiceClient.ts) example demonstrates both the HTTP and websocket APIs described above.
