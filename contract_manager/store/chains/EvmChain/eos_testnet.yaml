@@ -1,0 +1,6 @@
+id: eos_testnet
+wormholeChainName: eos
+mainnet: false
+rpcUrl: https://api.testnet.evm.eosnetwork.com
+networkId: 15557
+type: EvmChain
