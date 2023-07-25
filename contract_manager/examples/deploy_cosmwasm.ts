@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { CosmWasmChain } from "../src/chains";
-import { CosmWasmContract } from "../src/cosmwasm";
+import { CosmWasmContract } from "../src/contracts/cosmwasm";
 import { DefaultStore } from "../src/store";
 
 const parser = yargs(hideBin(process.argv))

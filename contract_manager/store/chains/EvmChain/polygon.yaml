@@ -1,0 +1,6 @@
+id: polygon
+wormholeChainName: polygon
+mainnet: true
+rpcUrl: https://polygon-rpc.com
+networkId: 137
+type: EvmChain

@@ -1,0 +1,3 @@
+chain: base_goerli
+address: "0x5955C1478F0dAD753C7E2B4dD1b4bC530C64749f"
+type: EvmContract

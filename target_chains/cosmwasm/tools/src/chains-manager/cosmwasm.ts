@@ -1,4 +1,9 @@
-import { DirectSecp256k1HdWallet, EncodeObject } from "@cosmjs/proto-signing";
+import {
+  DirectSecp256k1HdWallet,
+  DirectSecp256k1Wallet,
+  EncodeObject,
+  OfflineSigner,
+} from "@cosmjs/proto-signing";
 import {
   ChainExecutor,
   ExecuteContractRequest,
@@ -16,48 +21,60 @@ import {
   DeliverTxResponse,
   MsgExecuteContractEncodeObject,
   MsgInstantiateContractEncodeObject,
-  MsgStoreCodeEncodeObject,
-  SigningCosmWasmClient,
   MsgMigrateContractEncodeObject,
+  MsgStoreCodeEncodeObject,
   MsgUpdateAdminEncodeObject,
+  SigningCosmWasmClient,
 } from "@cosmjs/cosmwasm-stargate";
-import { GasPrice, calculateFee } from "@cosmjs/stargate";
+import { GasPrice } from "@cosmjs/stargate";
 import Long from "long";
 import assert from "assert";
 
 export class CosmwasmExecutor implements ChainExecutor {
   constructor(
     private readonly endpoint: string,
-    private readonly mnemonic: string,
-    // chain addresses prefix
-    // example osmo
-    private readonly prefix: string,
+    private readonly signer: OfflineSigner,
     // example - 0.025uosmo
     private readonly gasPrice: string
   ) {}
 
+  /**
+   * Returns a signer from a mnemonic and prefix to use for the executor
+   * @param mnemonic
+   * @param prefix chain address prefix (example - osmo)
+   */
+  static async getSignerFromMnemonic(mnemonic: string, prefix: string) {
+    const directSecp256k1HdWallet = await DirectSecp256k1HdWallet.fromMnemonic(
+      mnemonic,
+      { prefix }
+    );
+    return directSecp256k1HdWallet;
+  }
+
+  /**
+   * Returns a signer from a private key and prefix to use for the executor
+   * @param privateKey hex encoded private key with no 0x prefix
+   * @param prefix chain address prefix (example - osmo)
+   */
+  static async getSignerFromPrivateKey(privateKey: string, prefix: string) {
+    return await DirectSecp256k1Wallet.fromKey(
+      Buffer.from(privateKey, "hex"),
+      prefix
+    );
+  }
+
   private async getAddress(): Promise<string> {
-    const wallet = await DirectSecp256k1HdWallet.fromMnemonic(this.mnemonic, {
-      prefix: this.prefix,
-    });
-
-    const address = (await wallet.getAccounts())[0].address;
-
-    return address;
+    return (await this.signer.getAccounts())[0].address;
   }
 
   private async signAndBroadcastMsg(
     encodedMsgObject: EncodeObject
   ): Promise<DeliverTxResponse> {
-    const wallet = await DirectSecp256k1HdWallet.fromMnemonic(this.mnemonic, {
-      prefix: this.prefix,
-    });
-
-    const address = (await wallet.getAccounts())[0].address;
+    const address = (await this.signer.getAccounts())[0].address;
 
     const cosmwasmClient = await SigningCosmWasmClient.connectWithSigner(
       this.endpoint,
-      wallet,
+      this.signer,
       {
         gasPrice: GasPrice.fromString(this.gasPrice),
       }

@@ -1,0 +1,6 @@
+id: ethereum
+wormholeChainName: ethereum
+mainnet: true
+rpcUrl: https://eth.llamarpc.com
+networkId: 1
+type: EvmChain

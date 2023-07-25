@@ -1,0 +1,6 @@
+id: mantle_testnet
+wormholeChainName: mantle
+mainnet: false
+rpcUrl: https://rpc.testnet.mantle.xyz/
+networkId: 5001
+type: EvmChain

@@ -1,0 +1,6 @@
+id: oasis
+wormholeChainName: oasis
+mainnet: true
+rpcUrl: https://emerald.oasis.dev/
+networkId: 42262
+type: EvmChain

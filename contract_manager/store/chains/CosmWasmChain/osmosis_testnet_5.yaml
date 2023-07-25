@@ -1,6 +1,8 @@
 querierEndpoint: https://rpc.osmotest5.osmosis.zone/
 executorEndpoint: https://rpc.osmotest5.osmosis.zone/
 id: osmosis_testnet_5
+wormholeChainName: osmosis_testnet_5
+mainnet: false
 gasPrice: "0.025"
 prefix: osmo
 feeDenom: uosmo

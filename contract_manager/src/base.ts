@@ -20,6 +20,18 @@ export abstract class Storable {
   abstract toJson(): any;
 }
 
+export interface Price {
+  price: string;
+  conf: string;
+  publishTime: string;
+  expo: string;
+}
+
+export interface PriceFeed {
+  price: Price;
+  emaPrice: Price;
+}
+
 export abstract class Contract extends Storable {
   /**
    * Returns the time period in seconds that stale data is considered valid for.
@@ -43,11 +55,29 @@ export abstract class Contract extends Storable {
   abstract getBaseUpdateFee(): Promise<{ amount: string; denom?: string }>;
 
   /**
+   * Returns the last governance sequence that was executed on this contract
+   * this number increases based on the sequence number of the governance messages
+   * that are executed on this contract
+   *
+   * This is used to determine which governance messages are stale and can not be executed
+   */
+  abstract getLastExecutedGovernanceSequence(): Promise<number>;
+
+  /**
+   * Returns the price feed for the given feed id or undefined if not found
+   * @param feedId hex encoded feed id without 0x prefix
+   */
+  abstract getPriceFeed(feedId: string): Promise<PriceFeed | undefined>;
+
+  /**
    * Executes the governance instruction contained in the VAA using the sender credentials
-   * @param sender based on the contract type, this can be a private key, a mnemonic, a wallet, etc.
+   * @param senderPrivateKey private key of the sender in hex format without 0x prefix
    * @param vaa the VAA to execute
    */
-  abstract executeGovernanceInstruction(sender: any, vaa: Buffer): Promise<any>;
+  abstract executeGovernanceInstruction(
+    senderPrivateKey: string,
+    vaa: Buffer
+  ): Promise<any>;
 
   /**
    * Returns the single data source that this contract accepts governance messages from

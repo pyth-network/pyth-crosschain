@@ -1,0 +1,6 @@
+id: bnb_testnet
+wormholeChainName: bsc
+mainnet: false
+rpcUrl: https://rpc.ankr.com/bsc_testnet_chapel
+networkId: 97
+type: EvmChain
