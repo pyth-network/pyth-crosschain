@@ -1,4 +1,4 @@
-import { Contract } from "../base";
+import { Contract, PriceFeed } from "../base";
 import { AptosChain, Chain } from "../chains";
 import { DataSource } from "xc_admin_common";
 
