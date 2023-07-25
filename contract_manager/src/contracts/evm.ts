@@ -9,6 +9,19 @@ const GAS_ESTIMATE_MULTIPLIER = 2;
 const EXTENDED_PYTH_ABI = [
   {
     inputs: [],
+    name: "wormhole",
+    outputs: [
+      {
+        internalType: "contract IWormhole",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "governanceDataSource",
     outputs: [
       {
@@ -126,6 +139,74 @@ const EXTENDED_PYTH_ABI = [
   ...PythInterfaceAbi,
 ] as any;
 
+const WORMHOLE_ABI = [
+  {
+    inputs: [],
+    name: "getCurrentGuardianSetIndex",
+    outputs: [
+      {
+        internalType: "uint32",
+        name: "",
+        type: "uint32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint32",
+        name: "index",
+        type: "uint32",
+      },
+    ],
+    name: "getGuardianSet",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "address[]",
+            name: "keys",
+            type: "address[]",
+          },
+          {
+            internalType: "uint32",
+            name: "expirationTime",
+            type: "uint32",
+          },
+        ],
+        internalType: "struct Structs.GuardianSet",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+] as any;
+export class WormholeEvmContract {
+  constructor(public chain: EvmChain, public address: string) {}
+  getContract() {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    return new web3.eth.Contract(WORMHOLE_ABI, this.address);
+  }
+
+  /**
+   * Returns an array of guardian addresses used for VAA verification in this contract
+   */
+  async getGuardianSet(): Promise<string[]> {
+    const wormholeContract = this.getContract();
+    const currentIndex = await wormholeContract.methods
+      .getCurrentGuardianSetIndex()
+      .call();
+    const [currentSet] = await wormholeContract.methods
+      .getGuardianSet(currentIndex)
+      .call();
+    return currentSet;
+  }
+}
+
 export class EvmContract extends Contract {
   static type = "EvmContract";
 
@@ -236,6 +317,15 @@ export class EvmContract extends Contract {
     const pythContract = this.getContract();
     const result = await pythContract.methods.getValidTimePeriod().call();
     return Number(result);
+  }
+
+  /**
+   * Returns the wormhole contract which is being used for VAA verification
+   */
+  async getWormholeContract(): Promise<WormholeEvmContract> {
+    const pythContract = this.getContract();
+    const address = await pythContract.methods.wormhole().call();
+    return new WormholeEvmContract(this.chain, address);
   }
 
   async getBaseUpdateFee() {
