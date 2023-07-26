@@ -158,7 +158,10 @@ export class CosmWasmContract extends Contract {
 
   private static async getExecutor(chain: CosmWasmChain, privateKey: string) {
     if (chain.getId().indexOf("injective") > -1) {
-      return new InjectiveExecutor(chain.executorEndpoint, privateKey);
+      return InjectiveExecutor.fromPrivateKey(
+        chain.executorEndpoint,
+        privateKey
+      );
     }
     return new CosmwasmExecutor(
       chain.executorEndpoint,

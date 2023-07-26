@@ -29,21 +29,23 @@ import assert from "assert";
 const DEFAULT_GAS_PRICE = 500000000;
 
 export class InjectiveExecutor implements ChainExecutor {
-  private readonly wallet: PrivateKey;
   private readonly chainId = "injective-888";
   private readonly gasMultiplier = 2;
   private readonly gasPrice = DEFAULT_GAS_PRICE;
 
   constructor(
     private readonly grpcEndpoint: string,
-    readonly privateKey: string
-  ) {
-    this.wallet = PrivateKey.fromHex(privateKey);
-  }
+    private readonly wallet: PrivateKey
+  ) {}
 
   static fromMnemonic(grpcEndpoint: string, mnemonic: string) {
     const wallet = PrivateKey.fromMnemonic(mnemonic);
-    return new InjectiveExecutor(grpcEndpoint, wallet.toHex());
+    return new InjectiveExecutor(grpcEndpoint, wallet);
+  }
+
+  static fromPrivateKey(grpcEndpoint: string, privateKey: string) {
+    const wallet = PrivateKey.fromHex(privateKey);
+    return new InjectiveExecutor(grpcEndpoint, wallet);
   }
 
   private getAddress(): string {
