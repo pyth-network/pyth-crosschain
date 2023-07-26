@@ -45,6 +45,11 @@ pub struct MessageStateTime {
 pub struct MessageState {
     pub slot:        Slot,
     pub message:     Message,
+    /// The raw updated message.
+    ///
+    /// We need to store the raw message binary because the Message
+    /// struct might lose some data due to its support for forward
+    /// compatibility.
     pub raw_message: RawMessage,
     pub proof_set:   ProofSet,
     pub received_at: UnixTimestamp,
