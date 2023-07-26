@@ -7,7 +7,7 @@ import { DefaultStore } from "../src/store";
 const parser = yargs(hideBin(process.argv))
   .scriptName("deploy_cosmwasm.ts")
   .usage(
-    "Usage: $0 --code <path/to/artifact.wasm> --mnemonic <mnemonic> --chain <chain>"
+    "Usage: $0 --code <path/to/artifact.wasm> --private-key <private-key> --chain <chain>"
   )
   .options({
     code: {
@@ -15,10 +15,10 @@ const parser = yargs(hideBin(process.argv))
       demandOption: true,
       desc: "Path to the artifact .wasm file",
     },
-    mnemonic: {
+    "private-key": {
       type: "string",
       demandOption: true,
-      desc: "Mnemonic to use for the deployment",
+      desc: "Private key to use for the deployment",
     },
     chain: {
       type: "string",
@@ -39,7 +39,7 @@ async function main() {
     await CosmWasmContract.deploy(
       DefaultStore.chains[argv.chain] as CosmWasmChain,
       wormholeContract,
-      argv.mnemonic,
+      argv["private-key"],
       code
     )
   );
