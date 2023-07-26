@@ -1,0 +1,3 @@
+chain: neutron_testnet_pion_1
+address: neutron15ldst8t80982akgr8w8ekcytejzkmfpgdkeq4xgtge48qs7435jqp87u3t
+type: CosmWasmContract
