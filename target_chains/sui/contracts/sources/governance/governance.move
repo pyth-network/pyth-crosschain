@@ -73,10 +73,6 @@ module pyth::governance {
 
         let payload = vaa::take_payload(verified_vaa);
 
-        std::debug::print(&x"12341234");
-
-        std::debug::print(&payload);
-
         WormholeVAAVerificationReceipt { payload, digest, sequence }
     }
 
