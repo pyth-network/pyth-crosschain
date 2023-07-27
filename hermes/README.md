@@ -14,10 +14,15 @@ stack. Anyone can run the Node to:
 
 To set up and run a Hermes node, follow the steps below:
 
-1. **Install Rust**: If you haven't already, you'll need to install Rust. You can
-   do so by following the official instructions.
+1. **Install Rust nightly-2023-07-23**: If you haven't already, you'll need to install Rust. You can
+   do so by following the official instructions. Then, run the following command to install the required
+   nightly version of Rust:
+   ```bash
+    rustup toolchain install nightly-2023-07-23
+   ```
 2. **Install Go**: If you haven't already, you'll also need to install Go. You can
-   do so by following the official instructions.
+   do so by following the official instructions. If you are on a Mac with M series
+   chips, make sure to install the **arm64** version of Go.
 3. **Clone the repository**: Clone the Pyth Crosschain repository to your local
    machine using the following command:
    ```bash
@@ -29,16 +34,14 @@ To set up and run a Hermes node, follow the steps below:
    cargo build --release
    ```
    This will create a binary in the target/release directory.
-5. **Run the node**: To run Hermes, use the following command:
+5. **Run the node**: To run Hermes for Pythnet, use the following command:
    ```bash
-   ./target/release/hermes run --geyser-socket /tmp/geyser.ipc
+   ./target/release/hermes run \
+     --pythnet-http-endpoint https://pythnet-rpc/ \
+     --pythnet-ws-endpoint wss://pythnet-rpc/
    ```
    Your Hermes node will now start and connect to the specified networks. You
-   can interact with the node using the REST and Websocket APIs as described
-   in the [API Documentation](). You can leave off the `--geyser-socket` arg
-   if you are planning to run the node without a Pythnet validator, it will
-   extract data only from the Pyth P2P network. Running a Pythnet node will
-   improve the speed and accuracy of network observations.
+   can interact with the node using the REST and Websocket APIs on port 33999.
 
 ## Architecture Overview
 
