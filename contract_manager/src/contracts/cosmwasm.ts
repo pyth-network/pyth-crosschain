@@ -12,6 +12,7 @@ import {
   PythWrapperExecutor,
   PythWrapperQuerier,
 } from "@pythnetwork/cosmwasm-deploy-tools";
+import { Network } from "@injectivelabs/networks";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { Contract } from "../base";
 
@@ -156,7 +157,7 @@ export class CosmWasmContract extends Contract {
   private static async getExecutor(chain: CosmWasmChain, privateKey: string) {
     if (chain.getId().indexOf("injective") > -1) {
       return InjectiveExecutor.fromPrivateKey(
-        chain.executorEndpoint,
+        chain.isMainnet() ? Network.Mainnet : Network.Testnet,
         privateKey
       );
     }
