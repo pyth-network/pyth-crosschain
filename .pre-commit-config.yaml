@@ -62,7 +62,7 @@ repos:
       - id: cargo-fmt-hermes
         name: Cargo format for Pyth Hermes
         language: "rust"
-        entry: cargo +nightly-2023-03-01 fmt --manifest-path ./hermes/Cargo.toml --all -- --config-path rustfmt.toml
+        entry: cargo +nightly-2023-07-23 fmt --manifest-path ./hermes/Cargo.toml --all -- --config-path rustfmt.toml
         pass_filenames: false
         files: hermes
       # Hooks for message buffer contract
