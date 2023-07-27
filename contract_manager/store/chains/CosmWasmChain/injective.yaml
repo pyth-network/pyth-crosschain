@@ -1,5 +1,3 @@
-querierEndpoint: https://injective-rpc.quickapi.com:443
-executorEndpoint: https://k8s.global.mainnet.chain.grpc-web.injective.network:443
 id: injective
 wormholeChainName: injective
 mainnet: true

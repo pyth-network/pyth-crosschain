@@ -1,6 +1,7 @@
 import { ChainExecutor } from "./chain-executor";
 import { CosmwasmExecutor } from "./cosmwasm";
 import { InjectiveExecutor } from "./injective";
+import { Network } from "@injectivelabs/networks";
 
 export enum ChainType {
   INJECTIVE = "injective",
@@ -142,7 +143,9 @@ export async function createExecutorForChain(
 
   if (chainType === ChainType.INJECTIVE) {
     return InjectiveExecutor.fromMnemonic(
-      chainConfig.executorEndpoint,
+      chainConfig.chainId === ChainId.INJECTIVE_TESTNET
+        ? Network.Testnet
+        : Network.Mainnet,
       mnemonic
     );
   } else

@@ -1,20 +1,18 @@
 import { Chain, CosmWasmChain } from "../chains";
 import { readFileSync } from "fs";
-import { getPythConfig } from "@pythnetwork/cosmwasm-deploy-tools/lib/configs";
-import { CHAINS, DataSource } from "xc_admin_common";
-import { DeploymentType } from "@pythnetwork/cosmwasm-deploy-tools/lib/helper";
 import {
+  ContractInfoResponse,
   CosmwasmExecutor,
+  CosmwasmQuerier,
+  DeploymentType,
+  getPythConfig,
   InjectiveExecutor,
   Price,
   PythWrapperExecutor,
   PythWrapperQuerier,
-} from "@pythnetwork/cosmwasm-deploy-tools/lib";
-import {
-  ContractInfoResponse,
-  CosmwasmQuerier,
-} from "@pythnetwork/cosmwasm-deploy-tools/lib/chains-manager/chain-querier";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
+} from "@pythnetwork/cosmwasm-deploy-tools";
+import { CHAINS, DataSource } from "xc_admin_common";
+import { Network } from "@injectivelabs/networks";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { Contract } from "../base";
 
@@ -92,7 +90,7 @@ export class CosmWasmContract extends Contract {
   }
 
   /**
-   * Stores the wasm code on the specified chain using the provided mnemonic as the signer
+   * Stores the wasm code on the specified chain using the provided private key as the signer
    * You can find the wasm artifacts from the repo releases
    * @param chain chain to store the code on
    * @param privateKey private key to use for signing the transaction in hex format without 0x prefix
@@ -158,7 +156,10 @@ export class CosmWasmContract extends Contract {
 
   private static async getExecutor(chain: CosmWasmChain, privateKey: string) {
     if (chain.getId().indexOf("injective") > -1) {
-      return new InjectiveExecutor(chain.executorEndpoint, privateKey);
+      return InjectiveExecutor.fromPrivateKey(
+        chain.isMainnet() ? Network.Mainnet : Network.Testnet,
+        privateKey
+      );
     }
     return new CosmwasmExecutor(
       chain.executorEndpoint,

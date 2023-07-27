@@ -13,6 +13,7 @@ import {
 } from "xc_admin_common";
 import { AptosClient } from "aptos";
 import Web3 from "web3";
+import { CosmwasmQuerier } from "@pythnetwork/cosmwasm-deploy-tools";
 
 export abstract class Chain extends Storable {
   public wormholeChainName: ChainName;
@@ -143,6 +144,11 @@ export class CosmWasmChain extends Chain {
 
   getType(): string {
     return CosmWasmChain.type;
+  }
+
+  async getCode(codeId: number): Promise<Buffer> {
+    const chainQuerier = await CosmwasmQuerier.connect(this.querierEndpoint);
+    return await chainQuerier.getCode({ codeId });
   }
 
   generateGovernanceUpgradePayload(codeId: bigint): Buffer {

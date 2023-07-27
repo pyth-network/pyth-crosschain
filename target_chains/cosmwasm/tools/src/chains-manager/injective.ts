@@ -25,25 +25,32 @@ import {
   UpdateContractAdminResponse,
 } from "./chain-executor";
 import assert from "assert";
+import {
+  getNetworkEndpoints,
+  getNetworkInfo,
+  Network,
+} from "@injectivelabs/networks";
+import * as net from "net";
 
 const DEFAULT_GAS_PRICE = 500000000;
 
 export class InjectiveExecutor implements ChainExecutor {
-  private readonly wallet: PrivateKey;
-  private readonly chainId = "injective-888";
   private readonly gasMultiplier = 2;
   private readonly gasPrice = DEFAULT_GAS_PRICE;
 
   constructor(
-    private readonly grpcEndpoint: string,
-    readonly privateKey: string
-  ) {
-    this.wallet = PrivateKey.fromHex(privateKey);
+    private readonly network: Network,
+    private readonly wallet: PrivateKey
+  ) {}
+
+  static fromMnemonic(network: Network, mnemonic: string) {
+    const wallet = PrivateKey.fromMnemonic(mnemonic);
+    return new InjectiveExecutor(network, wallet);
   }
 
-  static fromMnemonic(grpcEndpoint: string, mnemonic: string) {
-    const wallet = PrivateKey.fromMnemonic(mnemonic);
-    return new InjectiveExecutor(grpcEndpoint, wallet.toHex());
+  static fromPrivateKey(network: Network, privateKey: string) {
+    const wallet = PrivateKey.fromHex(privateKey);
+    return new InjectiveExecutor(network, wallet);
   }
 
   private getAddress(): string {
@@ -51,17 +58,20 @@ export class InjectiveExecutor implements ChainExecutor {
   }
 
   private async signAndBroadcastMsg(msg: Msgs): Promise<TxResponse> {
-    const chainGrpcAuthApi = new ChainGrpcAuthApi(this.grpcEndpoint);
+    const networkInfo = getNetworkInfo(this.network);
+    const endpoints = getNetworkEndpoints(this.network);
+
+    const chainGrpcAuthApi = new ChainGrpcAuthApi(endpoints.grpc);
     const account = await chainGrpcAuthApi.fetchAccount(this.getAddress());
     const { txRaw: simulateTxRaw } = createTransactionFromMsg({
       sequence: account.baseAccount.sequence,
       accountNumber: account.baseAccount.accountNumber,
       message: msg,
-      chainId: this.chainId,
+      chainId: networkInfo.chainId,
       pubKey: this.wallet.toPublicKey().toBase64(),
     });
 
-    const txService = new TxGrpcClient(this.grpcEndpoint);
+    const txService = new TxGrpcClient(endpoints.grpc);
     // simulation
     const {
       gasInfo: { gasUsed },
@@ -85,7 +95,7 @@ export class InjectiveExecutor implements ChainExecutor {
       sequence: account.baseAccount.sequence,
       accountNumber: account.baseAccount.accountNumber,
       message: msg,
-      chainId: this.chainId,
+      chainId: networkInfo.chainId,
       fee,
       pubKey: this.wallet.toPublicKey().toBase64(),
     });
