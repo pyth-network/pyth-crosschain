@@ -45,6 +45,7 @@ pub enum Update {
     AccumulatorMessages(AccumulatorMessages),
 }
 
+#[derive(Debug, PartialEq)]
 pub struct PriceFeedUpdate {
     pub price_feed:                  PriceFeedMessage,
     pub slot:                        Slot,
@@ -55,6 +56,7 @@ pub struct PriceFeedUpdate {
     pub wormhole_merkle_update_data: Vec<u8>,
 }
 
+#[derive(Debug, PartialEq)]
 pub struct PriceFeedsWithUpdateData {
     pub price_feeds:                 Vec<PriceFeedUpdate>,
     pub wormhole_merkle_update_data: Vec<Vec<u8>>,
