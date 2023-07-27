@@ -75,6 +75,8 @@ fn main() {
         .output()
         .expect("failed to generate protobuf definitions");
 
+    let rust_target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+
     // Build the Go library.
     let mut cmd = Command::new("go");
     cmd.arg("build")
@@ -84,11 +86,30 @@ fn main() {
         .arg("src/network/p2p.go")
         .arg("src/network/p2p.pb.go");
 
+    // Cross-compile the Go binary based on the Rust target architecture
+    match &*rust_target_arch {
+        "x86_64" => {
+            // CGO_ENABLED required for building amd64 on mac os
+            cmd.env("GOARCH", "amd64").env("CGO_ENABLED", "1");
+        }
+        "aarch64" => {
+            cmd.env("GOARCH", "arm64");
+        }
+        // Add other target architectures as needed
+        _ => {
+            panic!("Unsupported target architecture: {}", rust_target_arch);
+        }
+    }
+
+
     // Tell Rust to link our Go library at compile time.
     println!("cargo:rustc-link-search=native={out_var}");
     println!("cargo:rustc-link-lib=static=pythnet");
     println!("cargo:rustc-link-lib=resolv");
 
-    let status = cmd.status().unwrap();
-    assert!(status.success());
+    let go_build_output = cmd.output().expect("Failed to execute Go build command");
+    if !go_build_output.status.success() {
+        let error_message = String::from_utf8_lossy(&go_build_output.stderr);
+        panic!("Go build failed:\n{}", error_message);
+    }
 }

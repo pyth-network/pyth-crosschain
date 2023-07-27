@@ -12,6 +12,16 @@ use {
         sync::mpsc::Receiver,
     },
     tower_http::cors::CorsLayer,
+    utoipa::{
+        openapi::security::{
+            ApiKey,
+            ApiKeyValue,
+            SecurityScheme,
+        },
+        Modify,
+        OpenApi,
+    },
+    utoipa_swagger_ui::SwaggerUi,
 };
 
 mod rest;
@@ -38,12 +48,27 @@ impl State {
 /// Currently this is based on Axum due to the simplicity and strong ecosystem support for the
 /// packages they are based on (tokio & hyper).
 pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: String) -> Result<()> {
+    #[derive(OpenApi)]
+    #[openapi(
+    paths(
+      rest::latest_price_feeds,
+    ),
+    components(
+      schemas(types::RpcPriceFeedMetadata, types::RpcPriceFeed)
+    ),
+    tags(
+      (name = "hermes", description = "Pyth Real-Time Pricing API")
+    )
+    )]
+    struct ApiDoc;
+
     let state = State::new(store);
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
     let app = Router::new();
     let app = app
+        .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
         .route("/", get(rest::index))
         .route("/live", get(rest::live))
         .route("/ready", get(rest::ready))

@@ -19,6 +19,14 @@ use {
         Price,
         PriceIdentifier,
     },
+    utoipa::{
+        openapi::{
+            RefOr,
+            Schema,
+        },
+        IntoParams,
+        ToSchema,
+    },
     wormhole_sdk::Chain,
 };
 
@@ -40,14 +48,16 @@ impl From<PriceIdInput> for PriceIdentifier {
 
 type Base64String = String;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct RpcPriceFeedMetadata {
+    #[schema(value_type = u64)]
     pub slot:                       Slot,
     pub emitter_chain:              u16,
+    #[schema(value_type = i64)]
     pub price_service_receive_time: UnixTimestamp,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct RpcPriceFeed {
     pub id:        PriceIdentifier,
     pub price:     Price,
@@ -56,6 +66,7 @@ pub struct RpcPriceFeed {
     pub metadata:  Option<RpcPriceFeedMetadata>,
     /// Vaa binary represented in base64.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schema(value_type = Option<String>)]
     pub vaa:       Option<Base64String>,
 }
 

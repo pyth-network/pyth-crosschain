@@ -58,6 +58,8 @@ structopt              = { version = "0.3.26" }
 strum                  = { version = "0.24.1", features = ["derive"] }
 tokio                  = { version = "1.26.0", features = ["full"] }
 tower-http             = { version = "0.4.0", features = ["cors"] }
+utoipa = { version = "3.4.0", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "3.1.4", features = ["axum"] }
 wormhole-sdk           = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
 
 [patch.crates-io]

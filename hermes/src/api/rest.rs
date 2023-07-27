@@ -31,6 +31,7 @@ use {
     pyth_sdk::PriceIdentifier,
     serde_qs::axum::QsQuery,
     std::collections::HashSet,
+    utoipa::IntoParams,
 };
 
 pub enum RestError {
@@ -95,15 +96,32 @@ pub async fn latest_vaas(
     ))
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize, IntoParams)]
 pub struct LatestPriceFeedsQueryParams {
+    #[param(value_type = String)]
     ids:     Vec<PriceIdInput>,
     #[serde(default)]
+    #[param(value_type = Option<bool>, required = false, nullable = true)]
     verbose: bool,
     #[serde(default)]
+    #[param(value_type = Option<bool>, required = false, nullable = true)]
     binary:  bool,
 }
 
+/// Get the latest prices by price feed ids.
+///
+/// Get the latest price updates for a provided collection of price feed ids.
+///
+#[utoipa::path(
+get,
+path = "/api/latest_price_feeds",
+responses(
+(status = 200, description = "Price feeds retrieved successfully", body = [Vec<RpcPriceFeed>])
+),
+params(
+LatestPriceFeedsQueryParams
+)
+)]
 pub async fn latest_price_feeds(
     State(state): State<super::State>,
     QsQuery(params): QsQuery<LatestPriceFeedsQueryParams>,
