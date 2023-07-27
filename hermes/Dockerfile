@@ -13,7 +13,7 @@ RUN sh -c "$(curl -sSfL https://release.solana.com/v1.14.17/install)"
 ENV PATH="/root/.local/share/solana/install/active_release/bin:$PATH"
 
 # Set default toolchain
-RUN rustup default nightly-2023-01-15
+RUN rustup default nightly-2023-07-23
 
 # Build
 WORKDIR /src
