@@ -1,17 +1,17 @@
 import { Chain, CosmWasmChain } from "../chains";
 import { readFileSync } from "fs";
-import { getPythConfig } from "@pythnetwork/cosmwasm-deploy-tools/lib/configs";
-import { CHAINS, DataSource } from "xc_admin_common";
-import { DeploymentType } from "@pythnetwork/cosmwasm-deploy-tools/lib/helper";
 import {
   ContractInfoResponse,
   CosmwasmExecutor,
   CosmwasmQuerier,
+  DeploymentType,
+  getPythConfig,
   InjectiveExecutor,
   Price,
   PythWrapperExecutor,
   PythWrapperQuerier,
 } from "@pythnetwork/cosmwasm-deploy-tools";
+import { CHAINS, DataSource } from "xc_admin_common";
 import { Network } from "@injectivelabs/networks";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { Contract } from "../base";
