@@ -25,6 +25,7 @@ module pyth::governance_instruction {
 
     public fun from_byte_vec(bytes: vector<u8>): GovernanceInstruction {
         let cursor = cursor::new(bytes);
+        std::debug::print(&bytes);
         let magic = deserialize::deserialize_vector(&mut cursor, 4);
         assert!(magic == MAGIC, E_INVALID_GOVERNANCE_MAGIC_VALUE);
         // "module" is a reserved keyword, so we use "module_" instead.
@@ -39,6 +40,8 @@ module pyth::governance_instruction {
             target_chain_id : (target_chain_id as u64),
             payload
         };
+
+        // validate validates that module and target chain are correct
         validate(&instruction);
 
         instruction
@@ -63,6 +66,7 @@ module pyth::governance_instruction {
             target_chain_id: _,
             payload
         } = instruction;
+        std::debug::print(&payload);
         payload
     }
 

@@ -7,43 +7,105 @@ module pyth::governance {
     use pyth::set_fee_recipient;
     use pyth::state::{Self, State};
     use pyth::set_update_fee;
-    use pyth::governance_witness::{GovernanceWitness};
 
-    use wormhole::governance_message::{Self, DecreeReceipt};
+    use wormhole::state::{State as WormState, Self as worm_state};
+    use wormhole::vaa::{Self, VAA};
+    use wormhole::bytes32::Bytes32;
 
     const E_INVALID_GOVERNANCE_ACTION: u64 = 0;
     const E_MUST_USE_CONTRACT_UPGRADE_MODULE_TO_DO_UPGRADES: u64 = 1;
     const E_CANNOT_EXECUTE_GOVERNANCE_ACTION_WITH_OBSOLETE_SEQUENCE_NUMBER: u64 = 2;
+    const E_OLD_GUARDIAN_SET_GOVERNANCE: u64 = 3;
+    const E_INVALID_GOVERNANCE_CHAIN: u64 = 4;
+    const E_INVALID_GOVERNANCE_EMITTER: u64 = 5;
+
+    // this struct does not have the store or key ability so it must be
+    // used in the same txn chain in which it is created
+    struct WormholeVAAVerificationReceipt{
+        payload: vector<u8>,
+        digest: Bytes32,
+        sequence: u64,  // used for replay protection
+    }
+
+    public fun take_payload(receipt: &WormholeVAAVerificationReceipt): vector<u8> {
+        receipt.payload
+    }
+
+    public fun take_digest(receipt: &WormholeVAAVerificationReceipt): Bytes32 {
+        receipt.digest
+    }
+
+    public fun destroy(receipt: WormholeVAAVerificationReceipt) {
+        let WormholeVAAVerificationReceipt{payload: _, digest: _, sequence: _} = receipt;
+    }
+
+   // We define a custom verify_vaa function instead of using wormhole::governance_message::verify_vaa
+   // because that function makes extra assumptions about the VAA payload headers. Pyth uses a
+   // different header format compared to Wormhole, so
+    public fun verify_vaa(
+        pyth_state: &State,
+        wormhole_state: &WormState,
+        verified_vaa: VAA,
+    ): WormholeVAAVerificationReceipt {
+        state::assert_latest_only(pyth_state);
+
+        // Protect against governance actions enacted using an old guardian set.
+        // This is not a protection found in the other Wormhole contracts.
+        assert!(
+            vaa::guardian_set_index(&verified_vaa) == worm_state::guardian_set_index(wormhole_state),
+            E_OLD_GUARDIAN_SET_GOVERNANCE
+        );
+
+        // Both the emitter chain and address must equal.
+        assert!(
+            vaa::emitter_chain(&verified_vaa) == state::governance_chain(pyth_state),
+            E_INVALID_GOVERNANCE_CHAIN
+        );
+
+        assert!(
+            vaa::emitter_address(&verified_vaa) == state::governance_contract(pyth_state),
+            E_INVALID_GOVERNANCE_EMITTER
+        );
+
+        let digest = vaa::digest(&verified_vaa);
+
+        let sequence = vaa::sequence(&verified_vaa);
+
+        let payload = vaa::take_payload(verified_vaa);
+
+        std::debug::print(&x"12341234");
+
+        std::debug::print(&payload);
+
+        WormholeVAAVerificationReceipt { payload, digest, sequence }
+    }
 
     /// Execute a governance instruction other than contract upgrade, which is
     /// handled separately in the contract_upgrade.move module.
     public fun execute_governance_instruction(
         pyth_state : &mut State,
-        receipt: DecreeReceipt<GovernanceWitness>,
+        receipt: WormholeVAAVerificationReceipt,
     ) {
         // This capability ensures that the current build version is used.
         let latest_only = state::assert_latest_only(pyth_state);
 
         // Get the sequence number of the governance VAA that was used to
         // generate the receipt.
-        let sequence = governance_message::sequence(&receipt);
+        let sequence = receipt.sequence;
 
         // Require that new sequence number is greater than last executed sequence number.
         assert!(sequence > state::get_last_executed_governance_sequence(pyth_state),
             E_CANNOT_EXECUTE_GOVERNANCE_ACTION_WITH_OBSOLETE_SEQUENCE_NUMBER);
 
+        // consume VAA digest for replay protection
+        wormhole::consumed_vaas::consume(state::borrow_mut_consumed_vaas(&latest_only, pyth_state), receipt.digest);
+
         // Update latest executed sequence number to current one.
         state::set_last_executed_governance_sequence(&latest_only, pyth_state, sequence);
 
-        // governance_message::take_payload takes care of replay protection.
-        let payload =
-            governance_message::take_payload(
-                state::borrow_mut_consumed_vaas(
-                    &latest_only,
-                    pyth_state
-                ),
-                receipt
-            );
+        let payload = receipt.payload;
+
+        destroy(receipt);
 
         let instruction = governance_instruction::from_byte_vec(payload);
 

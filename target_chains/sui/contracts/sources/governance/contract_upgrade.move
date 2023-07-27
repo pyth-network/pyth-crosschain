@@ -14,12 +14,11 @@ module pyth::contract_upgrade {
     use wormhole::bytes32::{Self, Bytes32};
     use wormhole::bytes::{Self};
     use wormhole::cursor::{Self};
-    use wormhole::governance_message::{Self, DecreeTicket, DecreeReceipt};
 
     use pyth::state::{Self, State};
-    use pyth::governance_witness::{GovernanceWitness, new_governance_witness};
     use pyth::governance_instruction::{Self};
     use pyth::governance_action::{Self};
+    use pyth::governance::{Self, WormholeVAAVerificationReceipt};
 
     friend pyth::migrate;
 
@@ -43,35 +42,19 @@ module pyth::contract_upgrade {
         digest: Bytes32
     }
 
-    public fun authorize_governance(
-        pyth_state: &State
-    ): DecreeTicket<GovernanceWitness> {
-        governance_message::authorize_verify_local(
-            new_governance_witness(),
-            state::governance_chain(pyth_state),
-            state::governance_contract(pyth_state),
-            state::governance_module(),
-            CONTRACT_UPGRADE
-        )
-    }
-
     /// Redeem governance VAA to issue an `UpgradeTicket` for the upgrade given
     /// a contract upgrade VAA. This governance message is only relevant for Sui
     /// because a contract upgrade is only relevant to one particular network
     /// (in this case Sui), whose build digest is encoded in this message.
     public fun authorize_upgrade(
         pyth_state: &mut State,
-        receipt: DecreeReceipt<GovernanceWitness>
+        receipt: WormholeVAAVerificationReceipt,
     ): UpgradeTicket {
 
-        // Current package checking when consuming VAA hashes. This is because
-        // upgrades are protected by the Sui VM, enforcing the latest package
-        // is the one performing the upgrade.
-        let consumed =
-            state::borrow_mut_consumed_vaas_unchecked(pyth_state);
+        // Consume digest for replay protection.
+        wormhole::consumed_vaas::consume(state::borrow_mut_consumed_vaas_unchecked(pyth_state), governance::take_digest(&receipt));
 
-        // And consume.
-        let payload = governance_message::take_payload(consumed, receipt);
+        let payload = governance::take_payload(&receipt);
 
         let instruction = governance_instruction::from_byte_vec(payload);
 
@@ -86,6 +69,8 @@ module pyth::contract_upgrade {
 
         // upgrade_payload contains a 32-byte digest
         let upgrade_payload = governance_instruction::destroy(instruction);
+
+        governance::destroy(receipt);
 
         // Proceed with processing new implementation version.
         handle_upgrade_contract(pyth_state, upgrade_payload)
