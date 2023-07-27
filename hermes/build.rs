@@ -95,10 +95,8 @@ fn main() {
         "aarch64" => {
             cmd.env("GOARCH", "arm64");
         }
-        // Add other target architectures as needed
-        _ => {
-            panic!("Unsupported target architecture: {}", rust_target_arch);
-        }
+        // Add other target architectures as needed.
+        _ => {}
     }
 
 
