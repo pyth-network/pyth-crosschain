@@ -113,14 +113,14 @@ pub struct LatestPriceFeedsQueryParams {
 /// Get the latest price updates for a provided collection of price feed ids.
 ///
 #[utoipa::path(
-get,
-path = "/api/latest_price_feeds",
-responses(
-(status = 200, description = "Price feeds retrieved successfully", body = [Vec<RpcPriceFeed>])
-),
-params(
-LatestPriceFeedsQueryParams
-)
+  get,
+  path = "/api/latest_price_feeds",
+  responses(
+    (status = 200, description = "Price feeds retrieved successfully", body = [Vec<RpcPriceFeed>])
+  ),
+  params(
+    LatestPriceFeedsQueryParams
+  )
 )]
 pub async fn latest_price_feeds(
     State(state): State<super::State>,
