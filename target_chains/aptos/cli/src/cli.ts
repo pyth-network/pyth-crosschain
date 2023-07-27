@@ -385,13 +385,17 @@ export const builder: CommandBuilder = (yargs) =>
 
         await executeTransaction(argv.network, txPayload);
       }
-    );
+    )
+    .demandCommand();
 
 async function executeTransaction(
   network: string,
   txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction
 ) {
   const client = new AptosClient(networks.get(network)!.endpoint);
+  if (networks.get(network)!.key === undefined) {
+    throw new Error("No key for network " + network);
+  }
   const sender = new AptosAccount(
     new Uint8Array(Buffer.from(networks.get(network)!.key!, "hex"))
   );
