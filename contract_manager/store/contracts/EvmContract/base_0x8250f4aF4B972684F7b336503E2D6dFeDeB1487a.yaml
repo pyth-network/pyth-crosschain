@@ -1,0 +1,3 @@
+chain: base
+address: "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a"
+type: EvmContract
