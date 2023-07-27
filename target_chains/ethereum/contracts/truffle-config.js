@@ -206,6 +206,15 @@ module.exports = {
         apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
       },
     },
+    base: {
+      provider: payerProvider("https://developer-access-mainnet.base.org/"),
+      network_id: 8453,
+      verify: {
+        apiUrl: "https://api.basescan.org/api",
+        explorerUrl: "https://basescan.org/",
+        apiKey: process.env.BASESCAN_KEY,
+      },
+    },
     evmos: {
       provider: payerProvider(`https://eth.bd.evmos.org:8545/`),
       network_id: 9001,
@@ -303,6 +312,12 @@ module.exports = {
         explorerUrl: "https://explorer.testnet.evm.eosnetwork.com",
         apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
       },
+    },
+    syndr_nitro_testnet: {
+      provider: payerProvider(
+        "https://syndr-nitro-testnet.calderachain.xyz/http"
+      ),
+      network_id: 412346,
     },
   },
 
