@@ -20,8 +20,8 @@ Deploying the CosmWasm contract has three steps:
 
 1. Upload the code. This step will give you a code id.
 2. Either create a new contract or migrate an existing one:
-    1. Create a new contract that has an address with a code id as its program.
-    2. Migrating an existing contract code id to the new code id.
+   1. Create a new contract that has an address with a code id as its program.
+   2. Migrating an existing contract code id to the new code id.
 3. Update contract's admin to itself.
 
 This directory contains the code to perform all the steps. Read below for the details.
@@ -60,7 +60,8 @@ Deployed Code ID:  11
 ```
 
 #### Permissoned networks:
-We currently have two permissioned networks: injective and osmosis. Uploading the code on their mainnet is not possible without an authority or a governance proposal. 
+
+We currently have two permissioned networks: injective and osmosis. Uploading the code on their mainnet is not possible without an authority or a governance proposal.
 
 ### Instantiating new contract
 
