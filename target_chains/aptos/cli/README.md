@@ -2,6 +2,9 @@
 
 Install aptos cli with the same version specified in the ci workflows.
 
+All the commands which submit transactions require an environment variable for the private key to be set.
+Depending on the network, this can be either `APTOS_LOCALNET_KEY`, `APTOS_TESTNET_KEY` or `APTOS_MAINNET_KEY`.
+
 # Deploying from scratch
 
 In addition to the wormhole dependency we depend on the deployer contract that facilitates the ownership of package upgrade
@@ -12,6 +15,8 @@ Assuming the wormhole and deployer contracts are already deployed, we can deploy
 ```bash
 ts-node cli.ts deploy-pyth ../../contracts <seed> -n testnet
 ```
+
+`seed` can be any random string that is used for determining a specific contract address based on the seed value and the signer address.
 
 You can manually specify the address of wormhole and deployer contracts too.
 This requires the addresses to be empty in the `Move.toml` file for the pyth package:
