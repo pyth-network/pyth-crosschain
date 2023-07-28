@@ -20,12 +20,27 @@ interface Network {
   key: string | undefined;
 }
 
-const network = {
+const NETWORK_OPTION = {
   alias: "n",
   describe: "network",
   type: "string",
   choices: [LOCALNET, TESTNET, MAINNET],
   demandOption: true,
+} as const;
+const DEPLOYER_OPTION = {
+  describe: "deployer contract address deployed in the network",
+  type: "string",
+  default: "0xb31e712b26fd295357355f6845e77c888298636609e93bc9b05f0f604049f434",
+} as const;
+const WORMHOLE_OPTION = {
+  describe: "wormhole contract address deployed in the network",
+  type: "string",
+  default: "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625",
+} as const;
+const PYTH_OPTION = {
+  describe: "pyth contract address deployed in the network",
+  type: "string",
+  default: "0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387",
 } as const;
 
 interface Package {
@@ -62,7 +77,6 @@ const networks = new Map<string, Network>([
     },
   ],
 ]);
-
 export const builder: CommandBuilder = (yargs) =>
   yargs
     .command(
@@ -73,7 +87,7 @@ export const builder: CommandBuilder = (yargs) =>
           .positional("package-dir", { type: "string" })
           .positional("account", { type: "string" })
           .option("named-addresses", { type: "string" })
-          .option("network", network);
+          .option("network", NETWORK_OPTION);
       },
       async (argv) => {
         const artefact = serializePackage(
@@ -98,24 +112,12 @@ export const builder: CommandBuilder = (yargs) =>
         return yargs
           .positional("package-dir", { type: "string" })
           .positional("seed", { type: "string" })
-          .option("deployer", {
-            describe: "deployer contract address deployed in the network",
-            type: "string",
-            default:
-              "0xb31e712b26fd295357355f6845e77c888298636609e93bc9b05f0f604049f434",
-          })
-          .option("wormhole", {
-            describe: "wormhole contract address deployed in the network",
-            type: "string",
-            default:
-              "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625",
-          })
-          .option("network", network);
+          .option("deployer", DEPLOYER_OPTION)
+          .option("wormhole", WORMHOLE_OPTION)
+          .option("network", NETWORK_OPTION);
       },
       async (argv) => {
-        const sender = new AptosAccount(
-          new Uint8Array(Buffer.from(networks.get(argv.network)!.key!, "hex"))
-        );
+        const sender = getSender(argv.network);
         const derivedAddress = generateDerivedAddress(
           sender.address().toString(),
           argv.seed!
@@ -163,7 +165,7 @@ export const builder: CommandBuilder = (yargs) =>
       "Init Wormhole core contract",
       (yargs) => {
         return yargs
-          .option("network", network)
+          .option("network", NETWORK_OPTION)
           .option("chain-id", {
             describe: "Chain id",
             type: "number",
@@ -210,9 +212,7 @@ export const builder: CommandBuilder = (yargs) =>
           BCS.bcsSerializeBytes(Buffer.from(governance_address, "hex")),
           guardian_addresses_serializer.getBytes(),
         ];
-        const sender = new AptosAccount(
-          new Uint8Array(Buffer.from(networks.get(argv.network)!.key!, "hex"))
-        );
+        const sender = getSender(argv.network);
         const wormholeAddress = generateDerivedAddress(
           sender.address().hex(),
           "wormhole"
@@ -235,7 +235,7 @@ export const builder: CommandBuilder = (yargs) =>
       (yargs) => {
         return yargs
           .positional("seed", { type: "string", demandOption: true })
-          .option("network", network)
+          .option("network", NETWORK_OPTION)
           .option("stale-price-threshold", {
             describe: "Stale price threshold",
             type: "number",
@@ -301,9 +301,7 @@ export const builder: CommandBuilder = (yargs) =>
           dataSourceEmitterAddressesSerializer.getBytes(),
           BCS.bcsSerializeUint64(update_fee),
         ];
-        const sender = new AptosAccount(
-          new Uint8Array(Buffer.from(networks.get(argv.network)!.key!, "hex"))
-        );
+        const sender = getSender(argv.network);
         const pythAddress = generateDerivedAddress(
           sender.address().hex(),
           argv.seed
@@ -329,16 +327,19 @@ export const builder: CommandBuilder = (yargs) =>
             type: "string",
             required: true,
           })
-          .option("named-addresses", { type: "string" });
+          .option("deployer", DEPLOYER_OPTION)
+          .option("wormhole", WORMHOLE_OPTION)
+          .option("pyth", PYTH_OPTION);
       },
       (argv) => {
-        const p = buildPackage(argv["package-dir"]!, argv["named-addresses"]);
+        const namedAddresses = `wormhole=${argv.wormhole},deployer=${argv.deployer},pyth=${argv.pyth}`;
+        const p = buildPackage(argv["package-dir"]!, namedAddresses);
         const b = serializePackage(p);
         console.log(Buffer.from(b.codeHash).toString("hex"));
       }
     )
     .command(
-      "upgrade <package-dir> <pyth-address>",
+      "upgrade <package-dir>",
       "Perform Pyth contract upgrade after governance VAA has been submitted",
       (_yargs) => {
         return yargs
@@ -346,19 +347,18 @@ export const builder: CommandBuilder = (yargs) =>
             type: "string",
             required: true,
           })
-          .positional("pyth-address", {
-            type: "string",
-            required: true,
-          })
-          .option("network", network)
-          .option("named-addresses", { type: "string" });
+          .option("network", NETWORK_OPTION)
+          .option("deployer", DEPLOYER_OPTION)
+          .option("wormhole", WORMHOLE_OPTION)
+          .option("pyth", PYTH_OPTION);
       },
       async (argv) => {
+        const namedAddresses = `wormhole=${argv.wormhole},deployer=${argv.deployer},pyth=${argv.pyth}`;
         const artefact = serializePackage(
-          buildPackage(argv["package-dir"]!, argv["named-addresses"])
+          buildPackage(argv["package-dir"]!, namedAddresses)
         );
 
-        let pythAddress = argv["pyth-address"];
+        let pythAddress = argv.pyth;
         const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
           TxnBuilderTypes.EntryFunction.natural(
             `${pythAddress}::contract_upgrade`,
@@ -373,17 +373,22 @@ export const builder: CommandBuilder = (yargs) =>
     )
     .demandCommand();
 
+function getSender(network: string) {
+  if (networks.get(network)!.key === undefined) {
+    throw new Error(
+      `No key for network ${network}. Please set the APTOS_${network.toUpperCase()}_KEY environment variable.`
+    );
+  }
+  return new AptosAccount(
+    new Uint8Array(Buffer.from(networks.get(network)!.key!, "hex"))
+  );
+}
 async function executeTransaction(
   network: string,
   txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction
 ) {
   const client = new AptosClient(networks.get(network)!.endpoint);
-  if (networks.get(network)!.key === undefined) {
-    throw new Error("No key for network " + network);
-  }
-  const sender = new AptosAccount(
-    new Uint8Array(Buffer.from(networks.get(network)!.key!, "hex"))
-  );
+  const sender = getSender(network);
   console.log(
     await client.generateSignSubmitWaitForTransaction(sender, txPayload, {
       maxGasAmount: BigInt(30000),
