@@ -4,15 +4,15 @@ This directory contains the Pyth contract for CosmWasm and utilities to deploy i
 
 ## Deployment types
 
-We have two kinds of deployment possible on each chain. Stable and Edge.
+We have two kinds of deployment possible on each chain. Stable and Beta.
 On mainnets we only deploy the stable version. On testnets we deploy both.
 The purpose of deploying the stable version on testnets is allowing dApps to test their protocol using real accurate price feeds.
 
 - Stable deployments are controlled by the upgrade multisig deployed on mainnet and accept price feeds that originate from pythnet.
-- Edge deployments are controlled by the upgrade multisig deployed on devnet and accept price feeds that originate from pythtest-crosschain.
+- Beta deployments are controlled by the upgrade multisig deployed on devnet and accept price feeds that originate from pythtest-crosschain.
 
 This also means we need to somehow distinguish between stable deployments on testnet and mainnets, otherwise a single governance message can affect both of them and have undesired side effects.
-We do this on cosmwasm by assigning unique chain ids to the testnet and mainnet. On EVM or other chains, both testnet and mainnet (e.g goerli and ethereum) have the same chain id, but this is not the case for cosmwasm chains.
+We do this on cosmwasm by assigning unique chain ids to the testnet and mainnet.
 
 ## Deployment
 

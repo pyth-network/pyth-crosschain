@@ -60,7 +60,7 @@ A general upgrade process has the following steps, these steps can vary slightly
 
 Deploying a contract on a new chain consists of the following steps:
 
-1. Add the chain configuration via the contract manager (this includes chainId, rpc information, etc.)
+1. Add the chain configuration via the [contract manager](../contract_manager) (this includes chainId, rpc information, etc.)
 2. [Optional] Deploy the wormhole contract, if not already deployed.
 3. Deploy and instantiate the contract on the target chain
 4. Make sure the configurations are up-to-date.

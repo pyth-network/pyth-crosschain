@@ -12,3 +12,5 @@ On each of these chains two multisigs are deployed:
 Here is a diagram on which programs consume which multisig messages and how it works in general:
 
 ![Overview](./overview.svg)
+
+You can edit the diagram by opening the [overview.excalidraw](./overview.excalidraw) file in [excalidraw.com](https://excalidraw.com/).
