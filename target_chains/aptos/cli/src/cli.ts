@@ -18,10 +18,6 @@ interface Network {
   endpoint: string;
   // Private key of the network
   key: string | undefined;
-  // Address of the Pyth deployer contract
-  deployer: string;
-  // The Pyth deployer contract seed used to generate the derived address of the Pyth contract
-  pythDeployerSeed: string;
 }
 
 const network = {
@@ -49,9 +45,6 @@ const networks = new Map<string, Network>([
     {
       key: process.env["APTOS_LOCALNET_KEY"],
       endpoint: "http://0.0.0.0:8080",
-      deployer:
-        "0x277fa055b6a73c42c0662d5236c65c864ccbf2d4abd21f174a30c8b786eab84b",
-      pythDeployerSeed: "pyth",
     },
   ],
   [
@@ -59,10 +52,6 @@ const networks = new Map<string, Network>([
     {
       key: process.env["APTOS_TESTNET_KEY"],
       endpoint: "https://fullnode.testnet.aptoslabs.com/v1",
-      deployer:
-        "0x3bda7d07b2c9ec5bb282102ee2ca0c40163bd8d6d8ceb6c4efab1deeec261ebc",
-      // A Wormhole redeploy meant we had to use different seeds for testnet and mainnet
-      pythDeployerSeed: "pyth-gasgas",
     },
   ],
   [
@@ -70,14 +59,9 @@ const networks = new Map<string, Network>([
     {
       key: process.env["APTOS_MAINNET_KEY"],
       endpoint: "https://fullnode.mainnet.aptoslabs.com/v1",
-      deployer:
-        "0xb31e712b26fd295357355f6845e77c888298636609e93bc9b05f0f604049f434",
-      pythDeployerSeed: "pyth-a8d0d",
     },
   ],
 ]);
-
-export const command: string = "aptos <command>";
 
 export const builder: CommandBuilder = (yargs) =>
   yargs
@@ -148,7 +132,7 @@ export const builder: CommandBuilder = (yargs) =>
 
         const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
           TxnBuilderTypes.EntryFunction.natural(
-            networks.get(argv.network)!.deployer + "::deployer",
+            argv.deployer + "::deployer",
             "deploy_derived",
             [],
             [
@@ -163,15 +147,15 @@ export const builder: CommandBuilder = (yargs) =>
       }
     )
     .command(
-      "derived-address <seed> <deployer>",
-      "Generate the derived address for the given deployer seed",
+      "derived-address <seed> <signer>",
+      "Generate the derived address for the given seed and sender address",
       (yargs) => {
         return yargs
           .positional("seed", { type: "string", demandOption: true })
-          .positional("deployer", { type: "string", demandOption: true });
+          .positional("signer", { type: "string", demandOption: true });
       },
       async (argv) => {
-        console.log(generateDerivedAddress(argv.deployer, argv.seed));
+        console.log(generateDerivedAddress(argv.signer, argv.seed));
       }
     )
     .command(
@@ -226,8 +210,11 @@ export const builder: CommandBuilder = (yargs) =>
           BCS.bcsSerializeBytes(Buffer.from(governance_address, "hex")),
           guardian_addresses_serializer.getBytes(),
         ];
+        const sender = new AptosAccount(
+          new Uint8Array(Buffer.from(networks.get(argv.network)!.key!, "hex"))
+        );
         const wormholeAddress = generateDerivedAddress(
-          networks.get(argv.network)!.deployer!,
+          sender.address().hex(),
           "wormhole"
         );
         const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
@@ -384,33 +371,6 @@ export const builder: CommandBuilder = (yargs) =>
         await executeTransaction(argv.network, txPayload);
       }
     )
-    .command(
-      "execute-governance <vaa-bytes>",
-      "Execute a governance instruction on the Pyth contract",
-      (_yargs) => {
-        return yargs
-          .positional("vaa-bytes", {
-            type: "string",
-          })
-          .option("network", network);
-      },
-      async (argv) => {
-        let pythAddress = generateDerivedAddress(
-          networks.get(argv.network)!.deployer!,
-          networks.get(argv.network)!.pythDeployerSeed!
-        );
-        const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
-          TxnBuilderTypes.EntryFunction.natural(
-            `${pythAddress}::governance`,
-            "execute_governance_instruction",
-            [],
-            [BCS.bcsSerializeBytes(Buffer.from(argv.vaaBytes!, "hex"))]
-          )
-        );
-
-        await executeTransaction(argv.network, txPayload);
-      }
-    )
     .demandCommand();
 
 async function executeTransaction(
@@ -446,15 +406,12 @@ function hexStringToByteArray(hexString: string) {
   return byteArray;
 }
 
-function generateDerivedAddress(
-  deployer_address: string,
-  seed: string
-): string {
+function generateDerivedAddress(signer_address: string, seed: string): string {
   let derive_resource_account_scheme = Buffer.alloc(1);
   derive_resource_account_scheme.writeUInt8(255);
   return sha3.sha3_256(
     Buffer.concat([
-      hexStringToByteArray(deployer_address),
+      hexStringToByteArray(signer_address),
       Buffer.from(seed, "ascii"),
       derive_resource_account_scheme,
     ])
