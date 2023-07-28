@@ -18,7 +18,7 @@ ts-node cli.ts deploy-pyth ../../contracts <seed> -n testnet
 
 `seed` can be any random string that is used for determining a specific contract address based on the seed value and the signer address.
 
-You can manually specify the address of wormhole and deployer contracts too.
+You can manually specify the address of wormhole and deployer contracts with `--wormhole` and `--deployer` flags.
 This requires the addresses to be empty in the `Move.toml` file for the pyth package:
 
 ```toml
