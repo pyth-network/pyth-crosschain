@@ -2,14 +2,26 @@
 
 This directory contains the Pyth contract for CosmWasm and utilities to deploy it on CosmWasm chains.
 
+## Deployment types
+
+We have two kinds of deployment possible on each chain. Stable and Edge.
+On mainnets we only deploy the stable version. On testnets we deploy both.
+The purpose of deploying the stable version on testnets is allowing dApps to test their protocol using real accurate price feeds.
+
+- Stable deployments are controlled by the upgrade multisig deployed on mainnet and accept price feeds that originate from pythnet.
+- Edge deployments are controlled by the upgrade multisig deployed on devnet and accept price feeds that originate from pythtest-crosschain.
+
+This also means we need to somehow distinguish between stable deployments on testnet and mainnets, otherwise a single governance message can affect both of them and have undesired side effects.
+We do this on cosmwasm by assigning unique chain ids to the testnet and mainnet. On EVM or other chains, both testnet and mainnet (e.g goerli and ethereum) have the same chain id, but this is not the case for cosmwasm chains.
+
 ## Deployment
 
 Deploying the CosmWasm contract has three steps:
 
 1. Upload the code. This step will give you a code id.
 2. Either create a new contract or migrate an existing one:
-   1. Create a new contract that has an address with a code id as its program.
-   2. Migrating an existing contract code id to the new code id.
+    1. Create a new contract that has an address with a code id as its program.
+    2. Migrating an existing contract code id to the new code id.
 3. Update contract's admin to itself.
 
 This directory contains the code to perform all the steps. Read below for the details.
@@ -46,6 +58,9 @@ Storing WASM: ../artifacts/pyth_cosmwasm.wasm (230813 bytes)
 Broadcasted transaction hash: "BBD2E5DF5046B24287E63C53852D251D4F7DDD7755E663C9EB67A9B5560DFE4C"
 Deployed Code ID:  11
 ```
+
+#### Permissoned networks:
+We currently have two permissioned networks: injective and osmosis. Uploading the code on their mainnet is not possible without an authority or a governance proposal. 
 
 ### Instantiating new contract
 
