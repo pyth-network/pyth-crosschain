@@ -320,7 +320,8 @@ export class Vault extends Storable {
   }
 
   public async proposeWormholeMessage(
-    payloads: Buffer[]
+    payloads: Buffer[],
+    proposalAddress?: PublicKey
   ): Promise<WormholeMultiSigTransaction> {
     const squad = this.getSquadOrThrow();
     const multisigVault = new MultisigVault(
@@ -332,7 +333,8 @@ export class Vault extends Storable {
     const txAccount =
       await multisigVault.proposeWormholeMultipleMessagesWithPayer(
         payloads,
-        squad.wallet.publicKey
+        squad.wallet.publicKey,
+        proposalAddress
       );
     return new WormholeMultiSigTransaction(txAccount, squad, this.cluster);
   }
