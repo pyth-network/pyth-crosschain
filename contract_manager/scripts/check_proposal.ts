@@ -81,7 +81,6 @@ async function main() {
         for (const chain of Object.values(DefaultStore.chains)) {
           if (
             chain instanceof CosmWasmChain &&
-            chain.isMainnet() === (cluster === "mainnet-beta") &&
             chain.wormholeChainName ===
               instruction.governanceAction.targetChainId
           ) {
