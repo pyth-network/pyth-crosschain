@@ -47,7 +47,7 @@ export class SubmittedWormholeMessage {
   constructor(
     public emitter: PublicKey,
     public sequenceNumber: number,
-    public cluster: string
+    public cluster: PythCluster
   ) {}
 
   /**
@@ -107,8 +107,7 @@ export class SubmittedWormholeMessage {
    * @param waitingSeconds how long to wait before giving up
    */
   async fetchVaa(waitingSeconds: number = 1): Promise<Buffer> {
-    let rpcUrl =
-      WORMHOLE_API_ENDPOINT[this.cluster as keyof typeof WORMHOLE_API_ENDPOINT];
+    let rpcUrl = WORMHOLE_API_ENDPOINT[this.cluster];
 
     let startTime = Date.now();
     while (Date.now() - startTime < waitingSeconds * 1000) {
@@ -174,6 +173,10 @@ export class WormholeEmitter {
   constructor(cluster: string, wallet: Wallet) {
     this.wallet = wallet;
     this.cluster = asPythCluster(cluster);
+  }
+
+  public getEmitter() {
+    return this.wallet.publicKey;
   }
 
   async sendMessage(payload: Buffer) {
