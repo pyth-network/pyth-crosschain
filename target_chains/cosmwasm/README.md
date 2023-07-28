@@ -2,6 +2,18 @@
 
 This directory contains the Pyth contract for CosmWasm and utilities to deploy it on CosmWasm chains.
 
+## Deployment types
+
+We have two kinds of deployment possible on each chain. Stable and Beta.
+On mainnets we only deploy the stable version. On testnets we deploy both.
+The purpose of deploying the stable version on testnets is allowing dApps to test their protocol using real accurate price feeds.
+
+- Stable deployments are controlled by the upgrade multisig deployed on mainnet and accept price feeds that originate from pythnet.
+- Beta deployments are controlled by the upgrade multisig deployed on devnet and accept price feeds that originate from pythtest-crosschain.
+
+This also means we need to somehow distinguish between stable deployments on testnet and mainnets, otherwise a single governance message can affect both of them and have undesired side effects.
+We do this on cosmwasm by assigning unique chain ids to the testnet and mainnet.
+
 ## Deployment
 
 Deploying the CosmWasm contract has three steps:
@@ -46,6 +58,10 @@ Storing WASM: ../artifacts/pyth_cosmwasm.wasm (230813 bytes)
 Broadcasted transaction hash: "BBD2E5DF5046B24287E63C53852D251D4F7DDD7755E663C9EB67A9B5560DFE4C"
 Deployed Code ID:  11
 ```
+
+#### Permissoned networks:
+
+We currently have two permissioned networks: injective and osmosis. Uploading the code on their mainnet is not possible without an authority or a governance proposal.
 
 ### Instantiating new contract
 
