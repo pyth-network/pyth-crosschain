@@ -29,7 +29,7 @@ const network = {
   describe: "network",
   type: "string",
   choices: [LOCALNET, TESTNET, MAINNET],
-  required: true,
+  demandOption: true,
 } as const;
 
 interface Package {
@@ -108,27 +108,52 @@ export const builder: CommandBuilder = (yargs) =>
       }
     )
     .command(
-      "deploy-resource <package-dir> <seed>",
-      "Deploy a package using a resource account. This command is used for deploying the pyth package.",
+      "deploy-pyth <package-dir> <seed>",
+      "Deploy the pyth package using a resource account.",
       (yargs) => {
         return yargs
           .positional("package-dir", { type: "string" })
           .positional("seed", { type: "string" })
-          .option("named-addresses", { type: "string" })
+          .option("deployer", {
+            describe: "deployer contract address deployed in the network",
+            type: "string",
+            default:
+              "0xb31e712b26fd295357355f6845e77c888298636609e93bc9b05f0f604049f434",
+          })
+          .option("wormhole", {
+            describe: "wormhole contract address deployed in the network",
+            type: "string",
+            default:
+              "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625",
+          })
           .option("network", network);
       },
       async (argv) => {
-        const artefact = serializePackage(
-          buildPackage(argv["package-dir"]!, argv["named-addresses"])
+        const sender = new AptosAccount(
+          new Uint8Array(Buffer.from(networks.get(argv.network)!.key!, "hex"))
         );
+        const derivedAddress = generateDerivedAddress(
+          sender.address().toString(),
+          argv.seed!
+        );
+
+        const namedAddresses = `wormhole=${argv.wormhole},deployer=${argv.deployer},pyth=0x${derivedAddress}`;
+        console.log("Building the package with the following named addresses:");
+        console.log(`Wormhole=${argv.wormhole}`);
+        console.log(`Deployer=${argv.deployer}`);
+        console.log(`Pyth=${derivedAddress}`);
+        const artifact = serializePackage(
+          buildPackage(argv["package-dir"]!, namedAddresses)
+        );
+
         const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
           TxnBuilderTypes.EntryFunction.natural(
             networks.get(argv.network)!.deployer + "::deployer",
             "deploy_derived",
             [],
             [
-              artefact.meta,
-              artefact.bytecodes,
+              artifact.meta,
+              artifact.bytecodes,
               BCS.bcsSerializeBytes(Buffer.from(argv["seed"]!, "ascii")),
             ]
           )
@@ -138,20 +163,15 @@ export const builder: CommandBuilder = (yargs) =>
       }
     )
     .command(
-      "derived-address <seed>",
+      "derived-address <seed> <deployer>",
       "Generate the derived address for the given deployer seed",
       (yargs) => {
         return yargs
-          .positional("seed", { type: "string" })
-          .option("network", network);
+          .positional("seed", { type: "string", demandOption: true })
+          .positional("deployer", { type: "string", demandOption: true });
       },
       async (argv) => {
-        console.log(
-          generateDerivedAddress(
-            networks.get(argv.network)!.deployer,
-            argv.seed!
-          )
-        );
+        console.log(generateDerivedAddress(argv.deployer, argv.seed));
       }
     )
     .command(
@@ -164,24 +184,24 @@ export const builder: CommandBuilder = (yargs) =>
             describe: "Chain id",
             type: "number",
             default: 22,
-            required: false,
+            demandOption: false,
           })
           .option("governance-chain-id", {
             describe: "Governance chain id",
             type: "number",
             default: 1,
-            required: false,
+            demandOption: false,
           })
           .option("governance-address", {
             describe: "Governance address",
             type: "string",
             default:
               "0x0000000000000000000000000000000000000000000000000000000000000004",
-            required: false,
+            demandOption: false,
           })
           .option("guardian-address", {
             alias: "g",
-            required: true,
+            demandOption: true,
             describe: "Initial guardian's address",
             type: "string",
           });
@@ -223,40 +243,41 @@ export const builder: CommandBuilder = (yargs) =>
       }
     )
     .command(
-      "init-pyth",
+      "init-pyth <seed>",
       "Init Pyth contract",
       (yargs) => {
         return yargs
+          .positional("seed", { type: "string", demandOption: true })
           .option("network", network)
           .option("stale-price-threshold", {
             describe: "Stale price threshold",
             type: "number",
-            required: true,
+            demandOption: true,
           })
           .option("governance-emitter-chain-id", {
             describe: "Governance emitter chain id",
             type: "number",
-            required: true,
+            demandOption: true,
           })
           .option("governance-emitter-address", {
             describe: "Governance emitter address",
             type: "string",
-            required: true,
+            demandOption: true,
           })
           .option("update-fee", {
             describe: "Update fee",
             type: "number",
-            required: true,
+            demandOption: true,
           })
           .option("data-source-chain-ids", {
             describe: "Data source chain IDs",
             type: "array",
-            required: true,
+            demandOption: true,
           })
           .option("data-source-emitter-addresses", {
             describe: "Data source emitter addresses",
             type: "array",
-            required: true,
+            demandOption: true,
           });
       },
       async (argv) => {
@@ -293,9 +314,12 @@ export const builder: CommandBuilder = (yargs) =>
           dataSourceEmitterAddressesSerializer.getBytes(),
           BCS.bcsSerializeUint64(update_fee),
         ];
+        const sender = new AptosAccount(
+          new Uint8Array(Buffer.from(networks.get(argv.network)!.key!, "hex"))
+        );
         const pythAddress = generateDerivedAddress(
-          networks.get(argv.network)!.deployer!,
-          networks.get(argv.network)!.pythDeployerSeed!
+          sender.address().hex(),
+          argv.seed
         );
         const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
           TxnBuilderTypes.EntryFunction.natural(
@@ -311,7 +335,7 @@ export const builder: CommandBuilder = (yargs) =>
     )
     .command(
       "hash-contracts <package-dir>",
-      "Hash contract bytecodes for upgrade",
+      "Hash contract bytecodes for upgrade, the named addresses should be the same as the currently deployed ones",
       (yargs) => {
         return yargs
           .positional("package-dir", {
@@ -327,11 +351,15 @@ export const builder: CommandBuilder = (yargs) =>
       }
     )
     .command(
-      "upgrade <package-dir>",
+      "upgrade <package-dir> <pyth-address>",
       "Perform Pyth contract upgrade after governance VAA has been submitted",
       (_yargs) => {
         return yargs
           .positional("package-dir", {
+            type: "string",
+            required: true,
+          })
+          .positional("pyth-address", {
             type: "string",
             required: true,
           })
@@ -343,10 +371,7 @@ export const builder: CommandBuilder = (yargs) =>
           buildPackage(argv["package-dir"]!, argv["named-addresses"])
         );
 
-        let pythAddress = generateDerivedAddress(
-          networks.get(argv.network)!.deployer!,
-          networks.get(argv.network)!.pythDeployerSeed!
-        );
+        let pythAddress = argv["pyth-address"];
         const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
           TxnBuilderTypes.EntryFunction.natural(
             `${pythAddress}::contract_upgrade`,
