@@ -7,7 +7,9 @@ it is not always possible to execute the proposal directly from the multisig ui.
 This tool helps with crafting the correct execution transaction and runs them automatically.
 
 ## How to run:
+
 For a single run you can execute:
+
 ```bash
 CLUSTER=<devnet or mainnet-beta> VAULT=<vault-address> WALLET=<path-to-ops-wallet> ts-node index.ts
 ```
