@@ -97,26 +97,34 @@ pub async fn latest_vaas(
 }
 
 #[derive(Debug, serde::Deserialize, IntoParams)]
+#[into_params(parameter_in=Query)]
 pub struct LatestPriceFeedsQueryParams {
-    #[param(value_type = String)]
+    /// Get the most recent price update for these price feed ids.
+    /// Provide this parameter multiple times to retrieve multiple price updates,
+    /// ids[]=a12...&ids[]=b4c...
+    #[param(
+        rename = "ids[]",
+        example = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
+    )]
     ids:     Vec<PriceIdInput>,
+    /// If true, include the `metadata` field in the response with additional metadata about
+    /// the price update.
     #[serde(default)]
-    #[param(value_type = Option<bool>, required = false, nullable = true)]
     verbose: bool,
+    /// If true, include the binary price update in the `vaa` field of each returned feed.
+    /// This binary data can be submitted to Pyth contracts to update the on-chain price.
     #[serde(default)]
-    #[param(value_type = Option<bool>, required = false, nullable = true)]
     binary:  bool,
 }
 
-/// Get the latest prices by price feed ids.
+/// Get the latest price updates by price feed id.
 ///
-/// Get the latest price updates for a provided collection of price feed ids.
-///
+/// Given a collection of price feed ids, retrieve the latest Pyth price for each price feed.
 #[utoipa::path(
   get,
   path = "/api/latest_price_feeds",
   responses(
-    (status = 200, description = "Price feeds retrieved successfully", body = [Vec<RpcPriceFeed>])
+    (status = 200, description = "Price updates retrieved successfully", body = [Vec<RpcPriceFeed>])
   ),
   params(
     LatestPriceFeedsQueryParams

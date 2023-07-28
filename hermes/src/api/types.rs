@@ -19,23 +19,21 @@ use {
         Price,
         PriceIdentifier,
     },
-    utoipa::{
-        openapi::{
-            RefOr,
-            Schema,
-        },
-        IntoParams,
-        ToSchema,
-    },
+    utoipa::ToSchema,
     wormhole_sdk::Chain,
 };
 
 
-/// PriceIdInput is a wrapper around a 32-byte hex string.
-/// that supports a flexible deserialization from a hex string.
-/// It supports both 0x-prefixed and non-prefixed hex strings,
-/// and also supports both lower and upper case characters.
-#[derive(Debug, Clone, Deref, DerefMut)]
+/// A price id is a 32-byte hex string, optionally prefixed with "0x".
+/// Price ids are case insensitive.
+///
+/// Examples:
+/// * 0x63f341689d98a12ef60a5cff1d7f85c70a9e17bf1575f0e7c0b2512d48b1c8b3
+/// * 63f341689d98a12ef60a5cff1d7f85c70a9e17bf1575f0e7c0b2512d48b1c8b3
+///
+/// See https://pyth.network/developers/price-feed-ids for a list of all price feed ids.
+#[derive(Debug, Clone, Deref, DerefMut, ToSchema)]
+#[schema(value_type=String)]
 pub struct PriceIdInput([u8; 32]);
 // TODO: Use const generics instead of macro.
 impl_deserialize_for_hex_string_wrapper!(PriceIdInput, 32);
@@ -50,15 +48,17 @@ type Base64String = String;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct RpcPriceFeedMetadata {
-    #[schema(value_type = u64)]
+    #[schema(value_type = u64, example=85480034)]
     pub slot:                       Slot,
+    #[schema(example = 26)]
     pub emitter_chain:              u16,
-    #[schema(value_type = i64)]
+    #[schema(value_type = i64, example=1690576641)]
     pub price_service_receive_time: UnixTimestamp,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct RpcPriceFeed {
+    #[schema(example = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43")]
     pub id:        PriceIdentifier,
     pub price:     Price,
     pub ema_price: Price,
@@ -66,7 +66,7 @@ pub struct RpcPriceFeed {
     pub metadata:  Option<RpcPriceFeedMetadata>,
     /// Vaa binary represented in base64.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[schema(value_type = Option<String>)]
+    #[schema(value_type = Option<String>, example="UE5BVQEAAAADuAEAAAADDQC1H7meY5fTed0FsykIb8dt+7nKpbuzfvU2DplDi+dcUl8MC+UIkS65+rkiq+zmNBxE2gaxkBkjdIicZ/fBo+X7AAEqp+WtlWb84np8jJfLpuQ2W+l5KXTigsdAhz5DyVgU3xs+EnaIZxBwcE7EKzjMam+V9rlRy0CGsiQ1kjqqLzfAAQLsoVO0Vu5gVmgc8XGQ7xYhoz36rsBgMjG+e3l/B01esQi/KzPuBf/Ar8Sg5aSEOvEU0muSDb+KIr6d8eEC+FtcAAPZEaBSt4ysXVL84LUcJemQD3SiG30kOfUpF8o7/wI2M2Jf/LyCsbKEQUyLtLbZqnJBSfZJR5AMsrnHDqngMLEGAAY4UDG9GCpRuPvg8hOlsrXuPP3zq7yVPqyG0SG+bNo8rEhP5b1vXlHdG4bZsutX47d5VZ6xnFROKudx3T3/fnWUAQgAU1+kUFc3e0ZZeX1dLRVEryNIVyxMQIcxWwdey+jlIAYowHRM0fJX3Scs80OnT/CERwh5LMlFyU1w578NqxW+AQl2E/9fxjgUTi8crOfDpwsUsmOWw0+Q5OUGhELv/2UZoHAjsaw9OinWUggKACo4SdpPlHYldoWF+J2yGWOW+F4iAQre4c+ocb6a9uSWOnTldFkioqhd9lhmV542+VonCvuy4Tu214NP+2UNd/4Kk3KJCf3iziQJrCBeLi1cLHdLUikgAQtvRFR/nepcF9legl+DywAkUHi5/1MNjlEQvlHyh2XbMiS85yu7/9LgM6Sr+0ukfZY5mSkOcvUkpHn+T+Nw/IrQAQ7lty5luvKUmBpI3ITxSmojJ1aJ0kj/dc0ZcQk+/qo0l0l3/eRLkYjw5j+MZKA8jEubrHzUCke98eSoj8l08+PGAA+DAKNtCwNZe4p6J1Ucod8Lo5RKFfA84CPLVyEzEPQFZ25U9grUK6ilF4GhEia/ndYXLBt3PGW3qa6CBBPM7rH3ABGAyYEtUwzB4CeVedA5o6cKpjRkIebqDNSOqltsr+w7kXdfFVtsK2FMGFZNt5rbpIR+ppztoJ6eOKHmKmi9nQ99ARKkTxRErOs9wJXNHaAuIRV38o1pxRrlQRzGsRuKBqxcQEpC8OPFpyKYcp6iD5l7cO/gRDTamLFyhiUBwKKMP07FAWTEJv8AAAAAABrhAfrtrFhR4yubI7X5QRqMK6xKrj7U3XuBHdGnLqSqcQAAAAAAGp0GAUFVV1YAAAAAAAUYUmIAACcQBsfKUtr4PgZbIXRxRESU79PjE4IBAFUA5i32yLSoX+GmfbRNwS3l2zMPesZrctxliv7fD0pBW0MAAAKqqMJFwAAAAAAqE/NX////+AAAAABkxCb7AAAAAGTEJvoAAAKqIcWxYAAAAAAlR5m4CP/mPsh1IezjYpDlJ4GRb5q4fTs2LjtyO6M0XgVimrIQ4kSh1qg7JKW4gbGkyRntVFR9JO/GNd3FPDit0BK6M+JzXh/h12YNCz9wxlZTvXrNtWNbzqT+91pvl5cphhSPMfAHyEzTPaGR9tKDy9KNu56pmhaY32d2vfEWQmKo22guegeR98oDxs67MmnUraco46a3zEnac2Bm80pasUgMO24=")]
     pub vaa:       Option<Base64String>,
 }
 
