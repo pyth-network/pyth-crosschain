@@ -74,8 +74,11 @@ pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: Strin
         .route("/api/get_vaa_ccip", get(rest::get_vaa_ccip))
         .route("/api/price_feed_ids", get(rest::price_feed_ids))
         .with_state(state.clone())
-        .layer(CorsLayer::permissive()) // Permissive CORS layer to allow all origins
-        .layer(Extension(QsQueryConfig::new(5, false))); // non-strict mode permits escaped [] in URL parameters
+        // Permissive CORS layer to allow all origins
+        .layer(CorsLayer::permissive())
+        // non-strict mode permits escaped [] in URL parameters.
+        // 5 is the allowed depth (also the default value for this parameter).
+        .layer(Extension(QsQueryConfig::new(false)));
 
 
     // Call dispatch updates to websocket every 1 seconds
