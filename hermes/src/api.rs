@@ -3,24 +3,18 @@ use {
     crate::store::Store,
     anyhow::Result,
     axum::{
+        extract::Extension,
         routing::get,
         Router,
     },
+    serde_qs::axum::QsQueryConfig,
     std::sync::Arc,
     tokio::{
         signal,
         sync::mpsc::Receiver,
     },
     tower_http::cors::CorsLayer,
-    utoipa::{
-        openapi::security::{
-            ApiKey,
-            ApiKeyValue,
-            SecurityScheme,
-        },
-        Modify,
-        OpenApi,
-    },
+    utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
 };
 
@@ -54,7 +48,7 @@ pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: Strin
       rest::latest_price_feeds,
     ),
     components(
-      schemas(types::RpcPriceFeedMetadata, types::RpcPriceFeed)
+      schemas(types::RpcPriceFeedMetadata, types::RpcPriceFeed, types::PriceIdInput)
     ),
     tags(
       (name = "hermes", description = "Pyth Real-Time Pricing API")
@@ -80,7 +74,11 @@ pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: Strin
         .route("/api/get_vaa_ccip", get(rest::get_vaa_ccip))
         .route("/api/price_feed_ids", get(rest::price_feed_ids))
         .with_state(state.clone())
-        .layer(CorsLayer::permissive()); // Permissive CORS layer to allow all origins
+        // Permissive CORS layer to allow all origins
+        .layer(CorsLayer::permissive())
+        // non-strict mode permits escaped [] in URL parameters.
+        // 5 is the allowed depth (also the default value for this parameter).
+        .layer(Extension(QsQueryConfig::new(false)));
 
 
     // Call dispatch updates to websocket every 1 seconds

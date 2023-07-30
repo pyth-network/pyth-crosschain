@@ -35,13 +35,22 @@ To set up and run a Hermes node, follow the steps below:
    ```
    This will create a binary in the target/release directory.
 5. **Run the node**: To run Hermes for Pythnet, use the following command:
+
    ```bash
    ./target/release/hermes run \
      --pythnet-http-endpoint https://pythnet-rpc/ \
      --pythnet-ws-endpoint wss://pythnet-rpc/
    ```
+
    Your Hermes node will now start and connect to the specified networks. You
    can interact with the node using the REST and Websocket APIs on port 33999.
+
+   For local development, you can also run the node with cargo watch to restart
+   it automatically when the code changes:
+
+   ```bash
+   cargo watch -w src -x "run -- run --pythnet-http-endpoint https://pythnet.rpcpool.com --pythnet-ws-endpoint wss://pythnet.rpcpool.com"
+   ```
 
 ## Architecture Overview
 
