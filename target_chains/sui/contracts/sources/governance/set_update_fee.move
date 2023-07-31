@@ -47,12 +47,12 @@ module pyth::set_update_fee_tests {
     use pyth::pyth_tests::{Self, setup_test, take_wormhole_and_pyth_states};
     use pyth::state::Self;
 
-    const SET_FEE_VAA: vector<u8> = x"010000000001009f843a3359e75940cad00eaec50a1ac075aca3248634576437cfd53d95c2e29859a3a1902a3ef3e0529b434cf63ce96b21e4e6c05204ba62a446371aa132174000527e4f9b000000010032f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf0000000000000001005054474d0103001600000000000000110000000000000003";
+    const SET_FEE_VAA: vector<u8> = x"01000000000100189d01616814b185b5a26bde6123d48e0d44dd490bbb3bde5d12076247b2180068a8261165777076ae532b7b0739aaee6411c8ba0695d20d4fa548227ce15d8d010000000000000000000163278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c3850000000000000001015054474d0103001500000000000000050000000000000005";
     // VAA Info:
     //   module name: 0x1
     //   action: 3
     //   chain: 21
-    //   new fee: 3, new exponent: 2
+    //   new fee: 5, new exponent: 5
 
     const DEPLOYER: address = @0x1234;
     const DEFAULT_BASE_UPDATE_FEE: u64 = 0;
@@ -61,7 +61,7 @@ module pyth::set_update_fee_tests {
     #[test]
     fun test_set_update_fee(){
 
-        let (scenario, test_coins, clock) =  setup_test(500, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", pyth_tests::data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+        let (scenario, test_coins, clock) =  setup_test(500, 1, x"63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385", pyth_tests::data_sources_for_test_vaa(), vector[x"13947bd48b18e53fdaeee77f3473391ac727c638"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
@@ -76,7 +76,7 @@ module pyth::set_update_fee_tests {
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         // assert fee is set correctly
-        assert!(state::get_base_update_fee(&pyth_state)==17000, 0);
+        assert!(state::get_base_update_fee(&pyth_state)==500000, 0);
 
         // clean up
         coin::burn_for_testing(test_coins);
