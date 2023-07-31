@@ -74,13 +74,13 @@ impl IntoResponse for RestError {
 get,
 path = "/api/price_feed_ids",
 responses(
-(status = 200, description = "Price feed ids retrieved successfully", body = [Vec<RpcPriceIdentifier>])
+(status = 200, description = "Price feed ids retrieved successfully", body = Vec<RpcPriceIdentifier>)
 ),
 params()
 )]
 pub async fn price_feed_ids(
     State(state): State<super::State>,
-) -> Result<Json<HashSet<RpcPriceIdentifier>>, RestError> {
+) -> Result<Json<Vec<RpcPriceIdentifier>>, RestError> {
     let price_feed_ids = state
         .store
         .get_price_feed_ids()
@@ -112,7 +112,7 @@ pub struct LatestVaasQueryParams {
 get,
 path = "/api/latest_vaas",
 responses(
-(status = 200, description = "VAAs retrieved successfully", body = [Vec<String>])
+(status = 200, description = "VAAs retrieved successfully", body = Vec<String>)
 ),
 params(
 LatestVaasQueryParams
@@ -166,7 +166,7 @@ pub struct LatestPriceFeedsQueryParams {
   get,
   path = "/api/latest_price_feeds",
   responses(
-    (status = 200, description = "Price updates retrieved successfully", body = [Vec<RpcPriceFeed>])
+    (status = 200, description = "Price updates retrieved successfully", body = Vec<RpcPriceFeed>)
   ),
   params(
     LatestPriceFeedsQueryParams
@@ -219,7 +219,7 @@ pub struct GetPriceFeedQueryParams {
 get,
 path = "/api/get_price_feed",
 responses(
-(status = 200, description = "Price update retrieved successfully", body = [RpcPriceFeed])
+(status = 200, description = "Price update retrieved successfully", body = RpcPriceFeed)
 ),
 params(
 GetPriceFeedQueryParams
@@ -333,12 +333,13 @@ pub struct GetVaaCcipResponse {
 
 /// Get a VAA for a price feed using CCIP
 ///
-/// TODO ???
+/// This endpoint accepts a single argument which is a hex-encoded byte string of the following form:
+/// `<price feed id (32 bytes> <publish time as unix timestamp (8 bytes, big endian)>`
 #[utoipa::path(
 get,
 path = "/api/get_vaa_ccip",
 responses(
-(status = 200, description = "Price update retrieved successfully", body = [GetVaaCcipResponse])
+(status = 200, description = "Price update retrieved successfully", body = GetVaaCcipResponse)
 ),
 params(
 GetVaaCcipQueryParams

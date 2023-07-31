@@ -35,7 +35,7 @@ use {
 ///
 /// See https://pyth.network/developers/price-feed-ids for a list of all price feed ids.
 #[derive(Debug, Clone, Deref, DerefMut, ToSchema)]
-#[schema(value_type=String)]
+#[schema(value_type=String, example="63f341689d98a12ef60a5cff1d7f85c70a9e17bf1575f0e7c0b2512d48b1c8b3")]
 pub struct PriceIdInput([u8; 32]);
 // TODO: Use const generics instead of macro.
 impl_deserialize_for_hex_string_wrapper!(PriceIdInput, 32);
@@ -60,7 +60,6 @@ pub struct RpcPriceFeedMetadata {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct RpcPriceFeed {
-    #[schema(example = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43")]
     pub id:        RpcPriceIdentifier,
     pub price:     RpcPrice,
     pub ema_price: RpcPrice,
@@ -111,26 +110,9 @@ impl RpcPriceFeed {
 /// A price with a degree of uncertainty at a certain time, represented as a price +- a confidence
 /// interval.
 ///
-/// Please refer to the documentation at https://docs.pyth.network/consumers/best-practices for
-/// using this price safely.
-///
 /// The confidence interval roughly corresponds to the standard error of a normal distribution.
 /// Both the price and confidence are stored in a fixed-point numeric representation, `x *
 /// 10^expo`, where `expo` is the exponent. For example:
-///
-/// ```
-/// use pyth_sdk::Price;
-/// Price { price: 12345, conf: 267, expo: -2, publish_time: 100 }; // represents 123.45 +- 2.67 published at UnixTimestamp 100
-/// Price { price: 123, conf: 1, expo: 2,  publish_time: 100 }; // represents 12300 +- 100 published at UnixTimestamp 100
-/// ```
-///
-/// `Price` supports a limited set of mathematical operations. All of these operations will
-/// propagate any uncertainty in the arguments into the result. However, the uncertainty in the
-/// result may overestimate the true uncertainty (by at most a factor of `sqrt(2)`) due to
-/// computational limitations. Furthermore, all of these operations may return `None` if their
-/// result cannot be represented within the numeric representation (e.g., the exponent is so
-/// small that the price does not fit into an i64). Users of these methods should (1) select
-/// their exponents to avoid this problem, and (2) handle the `None` case gracefully.
 #[derive(
     Clone,
     Copy,
@@ -145,15 +127,20 @@ impl RpcPriceFeed {
     ToSchema,
 )]
 pub struct RpcPrice {
-    /// Price.
-    #[serde(with = "pyth_sdk::utils::as_string")] // To ensure accuracy on conversion to json.
-    pub price: i64,
-    /// Confidence interval.
+    /// The price itself, stored as a string to avoid precision loss
     #[serde(with = "pyth_sdk::utils::as_string")]
+    #[schema(value_type = String, example="2920679499999")]
+    pub price:        i64,
+    /// The confidence interval associated with the price, stored as a string to avoid precision loss
+    #[serde(with = "pyth_sdk::utils::as_string")]
+    #[schema(value_type = String, example="509500001")]
     pub conf:         u64,
-    /// Exponent.
+    /// The exponent associated with both the price and confidence interval. Multiply those values
+    /// by `10^expo` to get the real value.
+    #[schema(example=-8)]
     pub expo:         i32,
-    /// Publish time.
+    /// When the price was published. The `publish_time` is a unix timestamp, i.e., the number of
+    /// seconds since the Unix epoch (00:00:00 UTC on 1 Jan 1970).
     #[schema(value_type = i64, example=1690576641)]
     pub publish_time: UnixTimestamp,
 }
@@ -176,6 +163,7 @@ pub struct RpcPrice {
     ToSchema,
 )]
 #[repr(C)]
+#[schema(value_type = String, example = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43")]
 pub struct RpcPriceIdentifier(#[serde(with = "hex")] [u8; 32]);
 
 impl RpcPriceIdentifier {
