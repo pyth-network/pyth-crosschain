@@ -13,7 +13,7 @@ capability. You can read more about it [here](https://github.com/wormhole-founda
 Assuming the wormhole and deployer contracts are already deployed, we can deploy the pyth oracle with the following command:
 
 ```bash
-ts-node cli.ts deploy-pyth ../../contracts <seed> -n testnet
+npm run cli deploy-pyth ../contracts <seed> -n testnet
 ```
 
 `seed` can be any random string that is used for determining a specific contract address based on the seed value and the signer address.
@@ -33,7 +33,7 @@ wormhole = "_"
 You can run the following to initialize the pyth contract, the following is a sample (testnet) config:
 
 ```bash
-ts-node cli.ts init-pyth <seed> -n testnet \
+npm run cli init-pyth <seed> -n testnet \
 --stale-price-threshold 60 \
 --update-fee 1 \
 --governance-emitter-chain-id 1 \
@@ -45,6 +45,8 @@ ts-node cli.ts init-pyth <seed> -n testnet \
 --data-source-emitter-addresses a27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6 \
 --data-source-emitter-addresses e101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71
 ```
+
+Note that the `data-source-chain-ids` are paired with `data-source-emitter-addresses` and their order matters.
 
 # Upgrade process:
 
@@ -60,7 +62,7 @@ The following steps are needed to upgrade our aptos contracts:
 Run the following command to generate the new hash, this will assume the default deployed addresses of deployer, wormhole, and pyth, but you can override them if necessary.
 
 ```bash
-ts-node cli.ts hash-contracts ../../contracts
+npm run cli hash-contracts ../contracts
 ```
 
 ## Upgrading the contract
@@ -68,5 +70,5 @@ ts-node cli.ts hash-contracts ../../contracts
 To upgrade the contract after the governance vaa was executed run:
 
 ```bash
-ts-node cli.ts upgrade ../../contracts
+npm run cli upgrade ../contracts
 ```
