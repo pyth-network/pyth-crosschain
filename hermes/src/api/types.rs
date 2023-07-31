@@ -11,14 +11,16 @@ use {
         engine::general_purpose::STANDARD as base64_standard_engine,
         Engine as _,
     },
+    borsh::{
+        BorshDeserialize,
+        BorshSerialize,
+    },
     derive_more::{
         Deref,
         DerefMut,
     },
-    pyth_sdk::{
-        Price,
-        PriceIdentifier,
-    },
+    hex::FromHexError,
+    pyth_sdk::PriceIdentifier,
     utoipa::ToSchema,
     wormhole_sdk::Chain,
 };
@@ -59,9 +61,9 @@ pub struct RpcPriceFeedMetadata {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct RpcPriceFeed {
     #[schema(example = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43")]
-    pub id:        PriceIdentifier,
-    pub price:     Price,
-    pub ema_price: Price,
+    pub id:        RpcPriceIdentifier,
+    pub price:     RpcPrice,
+    pub ema_price: RpcPrice,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata:  Option<RpcPriceFeedMetadata>,
     /// The VAA binary represented as a base64 string.
@@ -81,14 +83,14 @@ impl RpcPriceFeed {
         let price_feed_message = price_feed_update.price_feed;
 
         Self {
-            id:        PriceIdentifier::new(price_feed_message.feed_id),
-            price:     Price {
+            id:        RpcPriceIdentifier::new(price_feed_message.feed_id),
+            price:     RpcPrice {
                 price:        price_feed_message.price,
                 conf:         price_feed_message.conf,
                 expo:         price_feed_message.exponent,
                 publish_time: price_feed_message.publish_time,
             },
-            ema_price: Price {
+            ema_price: RpcPrice {
                 price:        price_feed_message.ema_price,
                 conf:         price_feed_message.ema_conf,
                 expo:         price_feed_message.exponent,
@@ -103,5 +105,99 @@ impl RpcPriceFeed {
                 base64_standard_engine.encode(price_feed_update.wormhole_merkle_update_data),
             ),
         }
+    }
+}
+
+/// A price with a degree of uncertainty at a certain time, represented as a price +- a confidence
+/// interval.
+///
+/// Please refer to the documentation at https://docs.pyth.network/consumers/best-practices for
+/// using this price safely.
+///
+/// The confidence interval roughly corresponds to the standard error of a normal distribution.
+/// Both the price and confidence are stored in a fixed-point numeric representation, `x *
+/// 10^expo`, where `expo` is the exponent. For example:
+///
+/// ```
+/// use pyth_sdk::Price;
+/// Price { price: 12345, conf: 267, expo: -2, publish_time: 100 }; // represents 123.45 +- 2.67 published at UnixTimestamp 100
+/// Price { price: 123, conf: 1, expo: 2,  publish_time: 100 }; // represents 12300 +- 100 published at UnixTimestamp 100
+/// ```
+///
+/// `Price` supports a limited set of mathematical operations. All of these operations will
+/// propagate any uncertainty in the arguments into the result. However, the uncertainty in the
+/// result may overestimate the true uncertainty (by at most a factor of `sqrt(2)`) due to
+/// computational limitations. Furthermore, all of these operations may return `None` if their
+/// result cannot be represented within the numeric representation (e.g., the exponent is so
+/// small that the price does not fit into an i64). Users of these methods should (1) select
+/// their exponents to avoid this problem, and (2) handle the `None` case gracefully.
+#[derive(
+    Clone,
+    Copy,
+    Default,
+    Debug,
+    PartialEq,
+    Eq,
+    BorshSerialize,
+    BorshDeserialize,
+    serde::Serialize,
+    serde::Deserialize,
+    ToSchema,
+)]
+pub struct RpcPrice {
+    /// Price.
+    #[serde(with = "pyth_sdk::utils::as_string")] // To ensure accuracy on conversion to json.
+    pub price: i64,
+    /// Confidence interval.
+    #[serde(with = "pyth_sdk::utils::as_string")]
+    pub conf:         u64,
+    /// Exponent.
+    pub expo:         i32,
+    /// Publish time.
+    #[schema(value_type = i64, example=1690576641)]
+    pub publish_time: UnixTimestamp,
+}
+
+
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    BorshSerialize,
+    BorshDeserialize,
+    serde::Serialize,
+    serde::Deserialize,
+    ToSchema,
+)]
+#[repr(C)]
+pub struct RpcPriceIdentifier(#[serde(with = "hex")] [u8; 32]);
+
+impl RpcPriceIdentifier {
+    pub fn new(bytes: [u8; 32]) -> RpcPriceIdentifier {
+        RpcPriceIdentifier(bytes)
+    }
+
+    pub fn from(id: &PriceIdentifier) -> RpcPriceIdentifier {
+        RpcPriceIdentifier(id.to_bytes().clone())
+    }
+
+    pub fn to_bytes(&self) -> [u8; 32] {
+        self.0
+    }
+
+    pub fn to_hex(&self) -> String {
+        hex::encode(self.0)
+    }
+
+    pub fn from_hex<T: AsRef<[u8]>>(s: T) -> Result<RpcPriceIdentifier, FromHexError> {
+        let mut bytes = [0u8; 32];
+        hex::decode_to_slice(s, &mut bytes)?;
+        Ok(RpcPriceIdentifier::new(bytes))
     }
 }

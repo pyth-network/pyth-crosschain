@@ -2,6 +2,7 @@ use {
     super::types::{
         PriceIdInput,
         RpcPriceFeed,
+        RpcPriceIdentifier,
     },
     crate::{
         impl_deserialize_for_hex_string_wrapper,
@@ -73,15 +74,21 @@ impl IntoResponse for RestError {
 get,
 path = "/api/price_feed_ids",
 responses(
-(status = 200, description = "Price feed ids retrieved successfully", body = [Vec<PriceIdentifier>])
+(status = 200, description = "Price feed ids retrieved successfully", body = [Vec<RpcPriceIdentifier>])
 ),
 params()
 )]
 pub async fn price_feed_ids(
     State(state): State<super::State>,
-) -> Result<Json<HashSet<PriceIdentifier>>, RestError> {
-    let price_feeds = state.store.get_price_feed_ids().await;
-    Ok(Json(price_feeds))
+) -> Result<Json<HashSet<RpcPriceIdentifier>>, RestError> {
+    let price_feed_ids = state
+        .store
+        .get_price_feed_ids()
+        .await
+        .iter()
+        .map(|id| RpcPriceIdentifier::from(&id))
+        .collect();
+    Ok(Json(price_feed_ids))
 }
 
 #[derive(Debug, serde::Deserialize, IntoParams)]
@@ -193,6 +200,7 @@ pub struct GetPriceFeedQueryParams {
     id:           PriceIdInput,
     /// The unix timestamp in seconds. This endpoint will return the first update
     /// whose publish_time is >= the provided value.
+    #[param(value_type = i64, example=1690576641)]
     publish_time: UnixTimestamp,
     /// If true, include the `metadata` field in the response with additional metadata about
     /// the price update.
@@ -250,6 +258,7 @@ pub struct GetVaaQueryParams {
     id:           PriceIdInput,
     /// The unix timestamp in seconds. This endpoint will return the first update
     /// whose publish_time is >= the provided value.
+    #[param(value_type = i64, example=1690576641)]
     publish_time: UnixTimestamp,
 }
 
@@ -258,6 +267,7 @@ pub struct GetVaaResponse {
     /// The VAA binary represented as a base64 string.
     vaa:          String,
     #[serde(rename = "publishTime")]
+    #[schema(value_type = i64, example=1690576641)]
     publish_time: UnixTimestamp,
 }
 

@@ -53,7 +53,7 @@ pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: Strin
       rest::price_feed_ids,
     ),
     components(
-      schemas(types::RpcPriceFeedMetadata, types::RpcPriceFeed, types::PriceIdInput, rest::GetVaaResponse, rest::GetVaaCcipResponse, rest::GetVaaCcipInput)
+      schemas(types::RpcPriceFeedMetadata, types::RpcPriceFeed, types::RpcPrice, types::RpcPriceIdentifier, types::PriceIdInput, rest::GetVaaResponse, rest::GetVaaCcipResponse, rest::GetVaaCcipInput)
     ),
     tags(
       (name = "hermes", description = "Pyth Real-Time Pricing API")
