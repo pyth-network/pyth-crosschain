@@ -70,12 +70,12 @@ impl IntoResponse for RestError {
 ///
 /// Get all of the price feed ids for which price updates can be retrieved.
 #[utoipa::path(
-get,
-path = "/api/price_feed_ids",
-responses(
-(status = 200, description = "Price feed ids retrieved successfully", body = Vec<RpcPriceIdentifier>)
-),
-params()
+  get,
+  path = "/api/price_feed_ids",
+  responses(
+    (status = 200, description = "Price feed ids retrieved successfully", body = Vec<RpcPriceIdentifier>)
+  ),
+  params()
 )]
 pub async fn price_feed_ids(
     State(state): State<super::State>,
@@ -108,14 +108,14 @@ pub struct LatestVaasQueryParams {
 /// Given a collection of price feed ids, retrieve the latest VAA for them. The returned
 /// VAA(s) can be submitted to the Pyth contract to update the on-chain price
 #[utoipa::path(
-get,
-path = "/api/latest_vaas",
-responses(
-(status = 200, description = "VAAs retrieved successfully", body = Vec<String>)
-),
-params(
-LatestVaasQueryParams
-)
+  get,
+  path = "/api/latest_vaas",
+  responses(
+    (status = 200, description = "VAAs retrieved successfully", body = Vec<String>)
+  ),
+  params(
+    LatestVaasQueryParams
+  )
 )]
 pub async fn latest_vaas(
     State(state): State<super::State>,
@@ -215,14 +215,14 @@ pub struct GetPriceFeedQueryParams {
 ///
 /// Given a price feed id and timestamp, retrieve the Pyth price update closest to that timestamp.
 #[utoipa::path(
-get,
-path = "/api/get_price_feed",
-responses(
-(status = 200, description = "Price update retrieved successfully", body = RpcPriceFeed)
-),
-params(
-GetPriceFeedQueryParams
-)
+  get,
+  path = "/api/get_price_feed",
+  responses(
+    (status = 200, description = "Price update retrieved successfully", body = RpcPriceFeed)
+  ),
+  params(
+    GetPriceFeedQueryParams
+  )
 )]
 pub async fn get_price_feed(
     State(state): State<super::State>,
@@ -274,15 +274,15 @@ pub struct GetVaaResponse {
 ///
 /// Given a price feed id and timestamp, retrieve the Pyth price update closest to that timestamp.
 #[utoipa::path(
-get,
-path = "/api/get_vaa",
-responses(
-(status = 200, description = "Price update retrieved successfully", body = GetVaaResponse),
-(status = 404, description = "Price update not found", body = String)
-),
-params(
-GetVaaQueryParams
-)
+  get,
+  path = "/api/get_vaa",
+  responses(
+    (status = 200, description = "Price update retrieved successfully", body = GetVaaResponse),
+    (status = 404, description = "Price update not found", body = String)
+  ),
+  params(
+    GetVaaQueryParams
+  )
 )]
 pub async fn get_vaa(
     State(state): State<super::State>,
@@ -335,14 +335,14 @@ pub struct GetVaaCcipResponse {
 /// This endpoint accepts a single argument which is a hex-encoded byte string of the following form:
 /// `<price feed id (32 bytes> <publish time as unix timestamp (8 bytes, big endian)>`
 #[utoipa::path(
-get,
-path = "/api/get_vaa_ccip",
-responses(
-(status = 200, description = "Price update retrieved successfully", body = GetVaaCcipResponse)
-),
-params(
-GetVaaCcipQueryParams
-)
+  get,
+  path = "/api/get_vaa_ccip",
+  responses(
+    (status = 200, description = "Price update retrieved successfully", body = GetVaaCcipResponse)
+  ),
+  params(
+    GetVaaCcipQueryParams
+  )
 )]
 pub async fn get_vaa_ccip(
     State(state): State<super::State>,
