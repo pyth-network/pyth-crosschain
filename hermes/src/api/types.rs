@@ -174,18 +174,4 @@ impl RpcPriceIdentifier {
     pub fn from(id: &PriceIdentifier) -> RpcPriceIdentifier {
         RpcPriceIdentifier(id.to_bytes().clone())
     }
-
-    pub fn to_bytes(&self) -> [u8; 32] {
-        self.0
-    }
-
-    pub fn to_hex(&self) -> String {
-        hex::encode(self.0)
-    }
-
-    pub fn from_hex<T: AsRef<[u8]>>(s: T) -> Result<RpcPriceIdentifier, FromHexError> {
-        let mut bytes = [0u8; 32];
-        hex::decode_to_slice(s, &mut bytes)?;
-        Ok(RpcPriceIdentifier::new(bytes))
-    }
 }

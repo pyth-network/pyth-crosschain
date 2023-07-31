@@ -31,7 +31,6 @@ use {
     },
     pyth_sdk::PriceIdentifier,
     serde_qs::axum::QsQuery,
-    std::collections::HashSet,
     utoipa::{
         IntoParams,
         ToSchema,
