@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "cli": "ts-node src/cli.ts",
     "build": "npx tsc && pkg . --targets node14-linux-x64 --output build/pyth"
   },
   "author": "",
