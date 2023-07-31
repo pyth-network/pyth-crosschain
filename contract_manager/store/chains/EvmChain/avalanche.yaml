@@ -1,6 +1,0 @@
-id: avalanche
-wormholeChainName: avalanche
-mainnet: true
-rpcUrl: https://api.avax.network/ext/bc/C/rpc
-networkId: 43114
-type: EvmChain

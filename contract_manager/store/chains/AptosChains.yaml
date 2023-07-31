@@ -1,0 +1,10 @@
+- id: aptos_testnet
+  wormholeChainName: aptos
+  mainnet: false
+  rpcUrl: https://fullnode.testnet.aptoslabs.com/v1
+  type: AptosChain
+- id: aptos_mainnet
+  wormholeChainName: aptos
+  mainnet: true
+  rpcUrl: https://fullnode.mainnet.aptoslabs.com/v1
+  type: AptosChain

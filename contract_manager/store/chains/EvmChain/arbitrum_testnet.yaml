@@ -1,6 +1,0 @@
-id: arbitrum_testnet
-wormholeChainName: arbitrum
-mainnet: false
-rpcUrl: https://goerli-rollup.arbitrum.io/rpc
-networkId: 421613
-type: EvmChain

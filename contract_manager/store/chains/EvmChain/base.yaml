@@ -1,6 +1,0 @@
-id: base
-wormholeChainName: base
-mainnet: true
-rpcUrl: https://developer-access-mainnet.base.org/
-networkId: 8453
-type: EvmChain

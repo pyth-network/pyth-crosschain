@@ -1,6 +1,0 @@
-id: bnb
-wormholeChainName: bsc
-mainnet: true
-rpcUrl: https://rpc.ankr.com/bsc
-networkId: 56
-type: EvmChain

@@ -1,6 +1,0 @@
-id: eos
-wormholeChainName: eos
-mainnet: true
-rpcUrl: https://api.evm.eosnetwork.com
-networkId: 17777
-type: EvmChain

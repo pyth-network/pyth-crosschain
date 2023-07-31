@@ -1,6 +1,0 @@
-id: cronos
-wormholeChainName: cronos
-mainnet: true
-rpcUrl: https://cronosrpc-1.xstaking.sg
-networkId: 25
-type: EvmChain

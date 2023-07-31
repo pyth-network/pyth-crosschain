@@ -88,12 +88,14 @@ class Store {
     };
 
     this.getYamlFiles(`${this.path}/chains/`).forEach((yamlFile) => {
-      let parsed = parse(readFileSync(yamlFile, "utf-8"));
-      if (allChainClasses[parsed.type] === undefined) return;
-      let chain = allChainClasses[parsed.type].fromJson(parsed);
-      if (this.chains[chain.getId()])
-        throw new Error(`Multiple chains with id ${chain.getId()} found`);
-      this.chains[chain.getId()] = chain;
+      let parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+      for (const parsed of parsedArray) {
+        if (allChainClasses[parsed.type] === undefined) return;
+        let chain = allChainClasses[parsed.type].fromJson(parsed);
+        if (this.chains[chain.getId()])
+          throw new Error(`Multiple chains with id ${chain.getId()} found`);
+        this.chains[chain.getId()] = chain;
+      }
     });
   }
 
@@ -105,32 +107,36 @@ class Store {
       [AptosContract.type]: AptosContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
-      let parsed = parse(readFileSync(yamlFile, "utf-8"));
-      if (allContractClasses[parsed.type] === undefined) return;
-      if (!this.chains[parsed.chain])
-        throw new Error(`Chain ${parsed.chain} not found`);
-      const chain = this.chains[parsed.chain];
-      let chainContract = allContractClasses[parsed.type].fromJson(
-        chain,
-        parsed
-      );
-      if (this.contracts[chainContract.getId()])
-        throw new Error(
-          `Multiple contracts with id ${chainContract.getId()} found`
+      let parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+      for (const parsed of parsedArray) {
+        if (allContractClasses[parsed.type] === undefined) return;
+        if (!this.chains[parsed.chain])
+          throw new Error(`Chain ${parsed.chain} not found`);
+        const chain = this.chains[parsed.chain];
+        let chainContract = allContractClasses[parsed.type].fromJson(
+          chain,
+          parsed
         );
-      this.contracts[chainContract.getId()] = chainContract;
+        if (this.contracts[chainContract.getId()])
+          throw new Error(
+            `Multiple contracts with id ${chainContract.getId()} found`
+          );
+        this.contracts[chainContract.getId()] = chainContract;
+      }
     });
   }
 
   loadAllVaults() {
     this.getYamlFiles(`${this.path}/vaults/`).forEach((yamlFile) => {
-      let parsed = parse(readFileSync(yamlFile, "utf-8"));
-      if (parsed.type !== Vault.type) return;
+      let parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+      for (const parsed of parsedArray) {
+        if (parsed.type !== Vault.type) return;
 
-      const vault = Vault.fromJson(parsed);
-      if (this.vaults[vault.getId()])
-        throw new Error(`Multiple vaults with id ${vault.getId()} found`);
-      this.vaults[vault.getId()] = vault;
+        const vault = Vault.fromJson(parsed);
+        if (this.vaults[vault.getId()])
+          throw new Error(`Multiple vaults with id ${vault.getId()} found`);
+        this.vaults[vault.getId()] = vault;
+      }
     });
   }
 }

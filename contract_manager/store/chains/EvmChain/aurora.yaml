@@ -1,6 +1,0 @@
-id: aurora
-wormholeChainName: aurora
-mainnet: true
-rpcUrl: https://mainnet.aurora.dev
-networkId: 1313161554
-type: EvmChain

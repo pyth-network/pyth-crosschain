@@ -1,6 +1,0 @@
-id: polygon_zkevm_testnet
-wormholeChainName: polygon_zkevm
-mainnet: false
-rpcUrl: https://rpc.public.zkevm-test.net/
-networkId: 1442
-type: EvmChain
