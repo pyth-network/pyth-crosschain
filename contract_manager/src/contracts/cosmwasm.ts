@@ -162,7 +162,7 @@ export class CosmWasmContract extends Contract {
       );
     }
     return new CosmwasmExecutor(
-      chain.executorEndpoint,
+      chain.endpoint,
       await CosmwasmExecutor.getSignerFromPrivateKey(privateKey, chain.prefix),
       chain.gasPrice + chain.feeDenom
     );
@@ -181,9 +181,7 @@ export class CosmWasmContract extends Contract {
   }
 
   async getQuerier(): Promise<PythWrapperQuerier> {
-    const chainQuerier = await CosmwasmQuerier.connect(
-      this.chain.querierEndpoint
-    );
+    const chainQuerier = await CosmwasmQuerier.connect(this.chain.endpoint);
     const pythQuerier = new PythWrapperQuerier(chainQuerier);
     return pythQuerier;
   }
@@ -194,16 +192,12 @@ export class CosmWasmContract extends Contract {
   }
 
   async getWasmContractInfo(): Promise<ContractInfoResponse> {
-    const chainQuerier = await CosmwasmQuerier.connect(
-      this.chain.querierEndpoint
-    );
+    const chainQuerier = await CosmwasmQuerier.connect(this.chain.endpoint);
     return chainQuerier.getContractInfo({ contractAddr: this.address });
   }
 
   async getConfig() {
-    const chainQuerier = await CosmwasmQuerier.connect(
-      this.chain.querierEndpoint
-    );
+    const chainQuerier = await CosmwasmQuerier.connect(this.chain.endpoint);
     let allStates = (await chainQuerier.getAllContractState({
       contractAddr: this.address,
     })) as any;
@@ -341,7 +335,7 @@ export class CosmWasmContract extends Contract {
   }
 
   async getValidTimePeriod() {
-    let client = await CosmWasmClient.connect(this.chain.querierEndpoint);
+    let client = await CosmWasmClient.connect(this.chain.endpoint);
     let result = await client.queryContractSmart(
       this.address,
       "get_valid_time_period"

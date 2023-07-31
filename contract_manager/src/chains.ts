@@ -105,8 +105,7 @@ export class CosmWasmChain extends Chain {
     id: string,
     mainnet: boolean,
     wormholeChainName: string,
-    public querierEndpoint: string,
-    public executorEndpoint: string,
+    public endpoint: string,
     public gasPrice: string,
     public prefix: string,
     public feeDenom: string
@@ -120,8 +119,7 @@ export class CosmWasmChain extends Chain {
       parsed.id,
       parsed.mainnet,
       parsed.wormholeChainName,
-      parsed.querierEndpoint,
-      parsed.executorEndpoint,
+      parsed.endpoint,
       parsed.gasPrice,
       parsed.prefix,
       parsed.feeDenom
@@ -130,8 +128,7 @@ export class CosmWasmChain extends Chain {
 
   toJson(): any {
     return {
-      querierEndpoint: this.querierEndpoint,
-      executorEndpoint: this.executorEndpoint,
+      endpoint: this.endpoint,
       id: this.id,
       wormholeChainName: this.wormholeChainName,
       mainnet: this.mainnet,
@@ -147,7 +144,7 @@ export class CosmWasmChain extends Chain {
   }
 
   async getCode(codeId: number): Promise<Buffer> {
-    const chainQuerier = await CosmwasmQuerier.connect(this.querierEndpoint);
+    const chainQuerier = await CosmwasmQuerier.connect(this.endpoint);
     return await chainQuerier.getCode({ codeId });
   }
 

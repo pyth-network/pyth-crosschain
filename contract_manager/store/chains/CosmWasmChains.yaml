@@ -1,10 +1,9 @@
-- querierEndpoint: https://injective-rpc.quickapi.com:443
+- endpoint: https://injective-rpc.quickapi.com:443
   id: injective
   wormholeChainName: injective
   mainnet: true
   type: CosmWasmChain
-- querierEndpoint: https://rpc.atlantic-2.seinetwork.io/
-  executorEndpoint: https://rpc.atlantic-2.seinetwork.io/
+- endpoint: https://rpc.atlantic-2.seinetwork.io/
   id: sei_testnet_atlantic_2
   wormholeChainName: sei_testnet_atlantic_2
   mainnet: false
@@ -12,8 +11,7 @@
   prefix: sei
   feeDenom: usei
   type: CosmWasmChain
-- querierEndpoint: https://rpc.osmosis.zone:443
-  executorEndpoint: https://rpc.osmosis.zone:443
+- endpoint: https://rpc.osmosis.zone:443
   id: osmosis
   wormholeChainName: osmosis
   mainnet: true
@@ -21,13 +19,12 @@
   prefix: osmo
   feeDenom: uosmo
   type: CosmWasmChain
-- querierEndpoint: https://k8s.testnet.tm.injective.network:443
+- endpoint: https://k8s.testnet.tm.injective.network:443
   id: injective_testnet
   wormholeChainName: injective_testnet
   mainnet: false
   type: CosmWasmChain
-- querierEndpoint: https://rpc-palvus.pion-1.ntrn.tech/
-  executorEndpoint: https://rpc-palvus.pion-1.ntrn.tech/
+- endpoint: https://rpc-palvus.pion-1.ntrn.tech/
   id: neutron_testnet_pion_1
   wormholeChainName: neutron_testnet_pion_1
   mainnet: false
@@ -35,8 +32,7 @@
   prefix: neutron
   feeDenom: untrn
   type: CosmWasmChain
-- querierEndpoint: https://rpc.osmotest5.osmosis.zone/
-  executorEndpoint: https://rpc.osmotest5.osmosis.zone/
+- endpoint: https://rpc.osmotest5.osmosis.zone/
   id: osmosis_testnet_5
   wormholeChainName: osmosis_testnet_5
   mainnet: false
@@ -44,8 +40,7 @@
   prefix: osmo
   feeDenom: uosmo
   type: CosmWasmChain
-- querierEndpoint: https://sei-rpc.polkachu.com
-  executorEndpoint: https://sei-rpc.polkachu.com
+- endpoint: https://sei-rpc.polkachu.com
   id: sei_pacific_1
   wormholeChainName: sei_pacific_1
   mainnet: true
@@ -53,8 +48,7 @@
   prefix: sei
   feeDenom: usei
   type: CosmWasmChain
-- querierEndpoint: https://rpc-kralum.neutron-1.neutron.org
-  executorEndpoint: https://rpc-kralum.neutron-1.neutron.org
+- endpoint: https://rpc-kralum.neutron-1.neutron.org
   id: neutron
   wormholeChainName: neutron
   mainnet: true
@@ -62,8 +56,7 @@
   prefix: neutron
   feeDenom: untrn
   type: CosmWasmChain
-- querierEndpoint: https://rpc.uni.junonetwork.io/
-  executorEndpoint: https://rpc.uni.junonetwork.io/
+- endpoint: https://rpc.uni.junonetwork.io/
   id: juno_testnet
   wormholeChainName: juno_testnet
   mainnet: false
