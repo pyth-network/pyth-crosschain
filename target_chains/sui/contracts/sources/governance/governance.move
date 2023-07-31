@@ -56,6 +56,11 @@ module pyth::governance {
             E_OLD_GUARDIAN_SET_GOVERNANCE
         );
 
+        if ( vaa::emitter_chain(&verified_vaa) != state::governance_chain(pyth_state)){
+            std::debug::print(&state::governance_chain(pyth_state));
+            std::debug::print(&vaa::emitter_chain(&verified_vaa));
+        };
+
         // Both the emitter chain and address must equal.
         assert!(
             vaa::emitter_chain(&verified_vaa) == state::governance_chain(pyth_state),

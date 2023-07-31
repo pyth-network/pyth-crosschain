@@ -39,48 +39,48 @@ module pyth::set_update_fee {
     }
 }
 
-// #[test_only]
-// module pyth::set_update_fee_tests {
-//     use sui::test_scenario::{Self};
-//     use sui::coin::Self;
+#[test_only]
+module pyth::set_update_fee_tests {
+    use sui::test_scenario::{Self};
+    use sui::coin::Self;
 
-//     use pyth::pyth_tests::{Self, setup_test, take_wormhole_and_pyth_states};
-//     use pyth::state::Self;
+    use pyth::pyth_tests::{Self, setup_test, take_wormhole_and_pyth_states};
+    use pyth::state::Self;
 
-//     const SET_FEE_VAA: vector<u8> = x"01000000000100e773bfd4a262ecd012333a953aadd243b8c116cc059b970ecb91216675eff89a39438570efb6eedcea15dad71d6ad0a18a7d01617e3cf61d53339df705a36df00100bc614e00000000000163278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c38500000000000000010100000000000000000000000000000000000000000000000000000000000000010300155054474d0103001500000000000000030000000000000002";
-//     // VAA Info:
-//     //   module name: 0x1
-//     //   action: 3
-//     //   chain: 21
-//     //   new fee: 3, new exponent: 2
+    const SET_FEE_VAA: vector<u8> = x"010000000001009f843a3359e75940cad00eaec50a1ac075aca3248634576437cfd53d95c2e29859a3a1902a3ef3e0529b434cf63ce96b21e4e6c05204ba62a446371aa132174000527e4f9b000000010032f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf0000000000000001005054474d0103001600000000000000110000000000000003";
+    // VAA Info:
+    //   module name: 0x1
+    //   action: 3
+    //   chain: 21
+    //   new fee: 3, new exponent: 2
 
-//     const DEPLOYER: address = @0x1234;
-//     const DEFAULT_BASE_UPDATE_FEE: u64 = 0;
-//     const DEFAULT_COIN_TO_MINT: u64 = 0;
+    const DEPLOYER: address = @0x1234;
+    const DEFAULT_BASE_UPDATE_FEE: u64 = 0;
+    const DEFAULT_COIN_TO_MINT: u64 = 0;
 
-//     #[test]
-//     fun test_set_update_fee(){
+    #[test]
+    fun test_set_update_fee(){
 
-//         let (scenario, test_coins, clock) =  setup_test(500, 1, x"63278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c385", pyth_tests::data_sources_for_test_vaa(), vector[x"13947bd48b18e53fdaeee77f3473391ac727c638"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
-//         test_scenario::next_tx(&mut scenario, DEPLOYER);
-//         let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
+        let (scenario, test_coins, clock) =  setup_test(500, 50, x"f06413c0148c78916554f134dcd17a7c8029a3a2bda475a4a1182305c53078bf", pyth_tests::data_sources_for_test_vaa(), vector[x"beFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"], DEFAULT_BASE_UPDATE_FEE, DEFAULT_COIN_TO_MINT);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
+        let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
-//         let verified_vaa = wormhole::vaa::parse_and_verify(&mut worm_state, SET_FEE_VAA, &clock);
+        let verified_vaa = wormhole::vaa::parse_and_verify(&mut worm_state, SET_FEE_VAA, &clock);
 
-//         let receipt = pyth::governance::verify_vaa(&pyth_state, &worm_state, verified_vaa);
+        let receipt = pyth::governance::verify_vaa(&pyth_state, &worm_state, verified_vaa);
 
-//         test_scenario::next_tx(&mut scenario, DEPLOYER);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-//         pyth::governance::execute_governance_instruction(&mut pyth_state, receipt);
+        pyth::governance::execute_governance_instruction(&mut pyth_state, receipt);
 
-//         test_scenario::next_tx(&mut scenario, DEPLOYER);
+        test_scenario::next_tx(&mut scenario, DEPLOYER);
 
-//         // assert fee is set correctly
-//         assert!(state::get_base_update_fee(&pyth_state)==300, 0);
+        // assert fee is set correctly
+        assert!(state::get_base_update_fee(&pyth_state)==17000, 0);
 
-//         // clean up
-//         coin::burn_for_testing(test_coins);
-//         pyth_tests::cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
-//         test_scenario::end(scenario);
-//     }
-// }
+        // clean up
+        coin::burn_for_testing(test_coins);
+        pyth_tests::cleanup_worm_state_pyth_state_and_clock(worm_state, pyth_state, clock);
+        test_scenario::end(scenario);
+    }
+}
