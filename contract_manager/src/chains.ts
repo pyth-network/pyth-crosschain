@@ -9,6 +9,7 @@ import {
   AptosAuthorizeUpgradeContract,
   toChainId,
   SetDataSources,
+  SetValidPeriod,
   DataSource,
 } from "xc_admin_common";
 import { AptosClient } from "aptos";
@@ -192,27 +193,6 @@ export class SuiChain extends Chain {
     return SuiChain.type;
   }
 
-  //TODO: Move this logic to xc_admin_common
-  private wrapWithWormholeGovernancePayload(
-    actionVariant: number,
-    payload: Buffer
-  ): Buffer {
-    const actionVariantBuffer = Buffer.alloc(1);
-    actionVariantBuffer.writeUint8(actionVariant, 0);
-    const chainBuffer = Buffer.alloc(2);
-    chainBuffer.writeUint16BE(CHAINS["sui"], 0);
-    const result = Buffer.concat([
-      Buffer.from(
-        "0000000000000000000000000000000000000000000000000000000000000001",
-        "hex"
-      ),
-      actionVariantBuffer,
-      chainBuffer,
-      payload,
-    ]);
-    return result;
-  }
-
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
    * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
@@ -222,7 +202,7 @@ export class SuiChain extends Chain {
       this.wormholeChainName,
       digest
     ).encode();
-    return this.wrapWithWormholeGovernancePayload(0, upgrade);
+    return upgrade;
   }
 
   generateGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
@@ -231,7 +211,7 @@ export class SuiChain extends Chain {
       BigInt(fee),
       BigInt(exponent)
     ).encode();
-    return this.wrapWithWormholeGovernancePayload(3, setFee);
+    return setFee
   }
 
   generateGovernanceSetDataSources(datasources: DataSource[]): Buffer {
@@ -239,8 +219,17 @@ export class SuiChain extends Chain {
       this.wormholeChainName,
       datasources
     ).encode();
-    return this.wrapWithWormholeGovernancePayload(2, setDataSource);
+    return setDataSource
   }
+
+  generateGovernanceSetStalePriceThreshold(newValidStalePriceThreshold: bigint): Buffer {
+    const setStalePriceThreshold = new SetValidPeriod(
+      this.wormholeChainName,
+      newValidStalePriceThreshold
+    ).encode();
+    return setStalePriceThreshold
+  }
+
 }
 
 export class EvmChain extends Chain {
