@@ -60,57 +60,61 @@ async function main() {
 
   console.log("wallet address: ", wallet.getAddress());
 
-  // =============================== construct governance VAA payload ===============================
-
+  // =============================== define mock emitter and guardians ===============================
   const guardians = new mock.MockGuardians(0, [guardianPrivateKey]);
-  const timestamp = 12345678;
   const governance = new mock.GovernanceEmitter(GOVERNANCE_EMITTER);
 
-  const action = 2; // set data sources
-  const chain = 21;
+  // =============================== construct governance VAA payload ===============================
 
-  const magic = Buffer.alloc(4);
-  magic.write("PTGM", 0); // magic
-  console.log("magic buffer: ", magic);
+  // const action = 2; // set data sources
+  // const chain = 21;
 
-  let ds = new SetDataSourcesInstruction(21, [
-    new DataSource(
-      CHAINS.solana,
-      new HexString32Bytes(
-        "0xf346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0"
-      )
-    ),
-    new DataSource(
-      CHAINS.pythnet,
-      new HexString32Bytes(
-        "0xa27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6"
-      )
-    ),
-    new DataSource(
-      CHAINS.pythnet,
-      new HexString32Bytes(
-        "0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71"
-      )
-    ),
-  ]);
+  // const magic = Buffer.alloc(4);
+  // magic.write("PTGM", 0); // magic
+  // console.log("magic buffer: ", magic);
 
-  let payload = ds.serialize();
+  // let ds = new SetDataSourcesInstruction(21, [
+  //   new DataSource(
+  //     CHAINS.solana,
+  //     new HexString32Bytes(
+  //       "0xf346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0"
+  //     )
+  //   ),
+  //   new DataSource(
+  //     CHAINS.pythnet,
+  //     new HexString32Bytes(
+  //       "0xa27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6"
+  //     )
+  //   ),
+  //   new DataSource(
+  //     CHAINS.pythnet,
+  //     new HexString32Bytes(
+  //       "0xe101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71"
+  //     )
+  //   ),
+  // ]);
+
+  // let payload = ds.serialize();
+
+  let payload = Buffer.from("5054474d0103001500000000000000050000000000000005", "hex");
 
   // =============================== construct governance message ===============================
 
-  let msg = governance.publishGovernanceMessage(
-    timestamp,
-    "",
-    payload,
-    action,
-    chain
-  );
+  let msg = governance.publishMessage(0, payload, 1)
+  console.log("msg: ", msg)
+  // let msg = governance.publishGovernanceMessage(
+  //   timestamp,
+  //   "",
+  //   payload,
+  //   action,
+  //   chain
+  // );
 
-  // Pyth expects the module name for an action to be "0x00000000000000000000000000000001", so
-  // we write 0x1 in the right position to convert the module name from "0x00000000000000000000000000000000" -> "0x00000000000000000000000000000001"
-  msg.writeUInt8(0x1, 84 - 33 + 31);
+  // // Pyth expects the module name for an action to be "0x00000000000000000000000000000001", so
+  // // we write 0x1 in the right position to convert the module name from "0x00000000000000000000000000000000" -> "0x00000000000000000000000000000001"
+  // msg.writeUInt8(0x1, 84 - 33 + 31);
 
-  console.log("governance msg: ", msg.toString("hex"));
+  // console.log("governance msg: ", msg.toString("hex"));
 
   // =============================== sign governance message ===============================
 
