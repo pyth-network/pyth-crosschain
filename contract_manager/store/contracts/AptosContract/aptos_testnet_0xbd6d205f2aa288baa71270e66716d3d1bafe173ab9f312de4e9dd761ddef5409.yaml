@@ -1,4 +1,4 @@
 chain: aptos_testnet
-stateId: "0xbd6d205f2aa288baa71270e66716d3d1bafe173ab9f312de4e9dd761ddef5409"
+stateId: "0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387"
 wormholeStateId: "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625"
 type: AptosContract
