@@ -68,6 +68,19 @@ export abstract class Chain extends Storable {
   }
 
   /**
+   * Returns the payload for a governance SetStalePriceThreshold instruction for contracts deployed on this chain
+   * @param newValidStalePriceThreshold the new stale price threshold in seconds
+   */
+  generateGovernanceSetStalePriceThreshold(
+    newValidStalePriceThreshold: bigint
+  ): Buffer {
+    return new SetValidPeriod(
+      this.wormholeChainName,
+      newValidStalePriceThreshold
+    ).encode();
+  }
+
+  /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
    * @param upgradeInfo based on the contract type, this can be a contract address, codeId, package digest, etc.
    */
@@ -198,38 +211,11 @@ export class SuiChain extends Chain {
    * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
    */
   generateGovernanceUpgradePayload(digest: string): Buffer {
-    const upgrade = new SuiAuthorizeUpgradeContract(
+    return new SuiAuthorizeUpgradeContract(
       this.wormholeChainName,
       digest
     ).encode();
-    return upgrade;
   }
-
-  generateGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
-    const setFee = new SetFee(
-      this.wormholeChainName,
-      BigInt(fee),
-      BigInt(exponent)
-    ).encode();
-    return setFee
-  }
-
-  generateGovernanceSetDataSources(datasources: DataSource[]): Buffer {
-    const setDataSource = new SetDataSources(
-      this.wormholeChainName,
-      datasources
-    ).encode();
-    return setDataSource
-  }
-
-  generateGovernanceSetStalePriceThreshold(newValidStalePriceThreshold: bigint): Buffer {
-    const setStalePriceThreshold = new SetValidPeriod(
-      this.wormholeChainName,
-      newValidStalePriceThreshold
-    ).encode();
-    return setStalePriceThreshold
-  }
-
 }
 
 export class EvmChain extends Chain {
