@@ -36,12 +36,6 @@ module pyth::pyth {
 
     #[test_only]
     friend pyth::pyth_tests;
-    // #[test_only]
-    // friend pyth::set_data_sources_tests;
-    // #[test_only]
-    // friend pyth::set_stale_price_threshold_test;
-    // #[test_only]
-    // friend pyth::set_update_fee_tests;
 
     /// Init state and emit event corresponding to Pyth initialization.
     public entry fun init_pyth(
