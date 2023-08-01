@@ -36,7 +36,7 @@ const WORMHOLE_OPTION = {
 const PYTH_OPTION = {
   describe: "pyth contract address deployed in the network",
   type: "string",
-  default: "0xbd6d205f2aa288baa71270e66716d3d1bafe173ab9f312de4e9dd761ddef5409",
+  default: "0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387",
 } as const;
 
 interface Package {
