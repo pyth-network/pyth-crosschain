@@ -13,7 +13,12 @@ import {
 } from "xc_admin_common";
 import { AptosClient } from "aptos";
 import Web3 from "web3";
-import { CosmwasmQuerier } from "@pythnetwork/cosmwasm-deploy-tools";
+import {
+  CosmwasmExecutor,
+  CosmwasmQuerier,
+  InjectiveExecutor,
+} from "@pythnetwork/cosmwasm-deploy-tools";
+import { Network } from "@injectivelabs/networks";
 
 export abstract class Chain extends Storable {
   public wormholeChainName: ChainName;
@@ -150,6 +155,20 @@ export class CosmWasmChain extends Chain {
 
   generateGovernanceUpgradePayload(codeId: bigint): Buffer {
     return new CosmosUpgradeContract(this.wormholeChainName, codeId).encode();
+  }
+
+  async getExecutor(privateKey: string) {
+    if (this.getId().indexOf("injective") > -1) {
+      return InjectiveExecutor.fromPrivateKey(
+        this.isMainnet() ? Network.Mainnet : Network.Testnet,
+        privateKey
+      );
+    }
+    return new CosmwasmExecutor(
+      this.endpoint,
+      await CosmwasmExecutor.getSignerFromPrivateKey(privateKey, this.prefix),
+      this.gasPrice + this.feeDenom
+    );
   }
 }
 
