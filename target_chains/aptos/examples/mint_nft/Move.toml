@@ -12,7 +12,7 @@ Pyth = { git = "https://github.com/pyth-network/pyth-crosschain.git", subdir = "
 # These are testnet addresses https://docs.pyth.network/documentation/pythnet-price-feeds/aptos#addresses
 aptos_framework = "0x1"
 mint_nft = "0x19f8503273cdb5aa93ffe4539277684615242127aa2e65ef91424136a316c9c7"
-pyth = "0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387"
+pyth = "0xbd6d205f2aa288baa71270e66716d3d1bafe173ab9f312de4e9dd761ddef5409"
 deployer = "0xb31e712b26fd295357355f6845e77c888298636609e93bc9b05f0f604049f434"
 wormhole = "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625"
 

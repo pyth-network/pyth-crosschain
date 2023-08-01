@@ -36,7 +36,7 @@ const WORMHOLE_OPTION = {
 const PYTH_OPTION = {
   describe: "pyth contract address deployed in the network",
   type: "string",
-  default: "0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387",
+  default: "0xbd6d205f2aa288baa71270e66716d3d1bafe173ab9f312de4e9dd761ddef5409",
 } as const;
 
 interface Package {
@@ -365,6 +365,52 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
         );
 
         await executeTransaction(argv.network, txPayload);
+      }
+    )
+    .command(
+      "diff-abi <addr-1> <addr-2>",
+      "Finds the differences between the ABIs of two published packages, can be used to make sure that the upgrade will be backward compatible",
+      (_yargs) => {
+        return yargs
+          .positional("addr-1", {
+            type: "string",
+            required: true,
+          })
+          .positional("addr-2", {
+            type: "string",
+            required: true,
+          })
+          .option("network", NETWORK_OPTION);
+      },
+      async (argv) => {
+        const endpoint = networks.get(argv.network)!.endpoint;
+        const addr1 = argv["addr-1"];
+        const addr2 = argv["addr-2"];
+        const url = `${endpoint}/accounts/${addr1}/resource/0x1::code::PackageRegistry`;
+        const response = await (await fetch(url)).json();
+        for (const module of response.data.packages[0].modules) {
+          const moduleName = module.name;
+          const addr1Module = `${endpoint}/accounts/${addr1}/module/${moduleName}`;
+          const addr2Module = `${endpoint}/accounts/${addr2}/module/${moduleName}`;
+          const module1Response = await (await fetch(addr1Module)).text();
+          const module2Response = await (await fetch(addr2Module)).text();
+          const module1Stripped = module1Response.replace(
+            new RegExp(addr1, "g"),
+            "0x0"
+          );
+          const module2Stripped = module2Response.replace(
+            new RegExp(addr2, "g"),
+            "0x0"
+          );
+          if (
+            JSON.stringify(JSON.parse(module1Stripped).abi) !==
+            JSON.stringify(JSON.parse(module2Stripped).abi)
+          ) {
+            console.log(`Module ${moduleName} ABI changed`);
+          } else {
+            console.log(`Module ${moduleName} ABI not changed`);
+          }
+        }
       }
     )
     .demandCommand();
