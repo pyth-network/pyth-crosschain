@@ -1,8 +1,0 @@
-- chain: aptos_mainnet
-  stateId: "0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387"
-  wormholeStateId: "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625"
-  type: AptosContract
-- chain: aptos_testnet
-  stateId: "0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387"
-  wormholeStateId: "0x5bc11445584a763c1fa7ed39081f1b920954da14e04b32440cba863d03e19625"
-  type: AptosContract

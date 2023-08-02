@@ -6,8 +6,12 @@ import {
   GlobalChain,
   SuiChain,
 } from "./chains";
-import { CosmWasmContract } from "./contracts/cosmwasm";
-import { SuiContract } from "./contracts/sui";
+import {
+  AptosContract,
+  CosmWasmContract,
+  EvmContract,
+  SuiContract,
+} from "./contracts";
 import { Contract } from "./base";
 import { parse, stringify } from "yaml";
 import {
@@ -18,8 +22,6 @@ import {
   statSync,
   writeFileSync,
 } from "fs";
-import { EvmContract } from "./contracts/evm";
-import { AptosContract } from "./contracts/aptos";
 import { Vault } from "./governance";
 
 class Store {
@@ -141,4 +143,4 @@ class Store {
   }
 }
 
-export const DefaultStore = new Store(`${__dirname}/../store`);
+export const DefaultStore = new Store(`${__dirname}/store`);
