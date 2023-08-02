@@ -1,0 +1,6 @@
+id: shimmer_testnet
+wormholeChainName: shimmer
+mainnet: false
+rpcUrl: https://json-rpc.evm.testnet.shimmer.network
+networkId: 1072
+type: EvmChain
