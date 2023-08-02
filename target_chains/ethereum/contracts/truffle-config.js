@@ -313,6 +313,10 @@ module.exports = {
         apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
       },
     },
+    shimmer_testnet: {
+      provider: payerProvider(`https://json-rpc.evm.testnet.shimmer.network`),
+      network_id: 1072,
+    },
     syndr_nitro_testnet: {
       provider: payerProvider(
         "https://syndr-nitro-testnet.calderachain.xyz/http"

@@ -34,7 +34,7 @@ export const CONTRACT_ADDR: Record<string, string> = {
   arbitrum_goerli: "0x939C0e902FF5B3F7BA666Cc8F6aC75EE76d3f900",
   zksync_goerli: "0xC38B1dd611889Abc95d4E0a472A667c3671c08DE",
   base_goerli: "0x5955C1478F0dAD753C7E2B4dD1b4bC530C64749f",
-  shimmer_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  shimmer_testnet: "0x5f3c61944CEb01B3eAef861251Fb1E0f14b848fb",
   chiado: "0xdDAf6D29b8bc81c1F0798a5e4c264ae89c16a72B", // Gnosis testnet
   gnosis: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   zksync: "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834",
