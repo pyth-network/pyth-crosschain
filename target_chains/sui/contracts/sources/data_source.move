@@ -11,6 +11,7 @@ module pyth::data_source {
     friend pyth::set_data_sources;
     friend pyth::pyth;
     friend pyth::set_governance_data_source;
+    friend pyth::governance;
     #[test_only]
     friend pyth::pyth_tests;
     #[test_only]

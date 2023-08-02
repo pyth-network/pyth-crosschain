@@ -15,8 +15,7 @@ module pyth::governance {
     const E_MUST_USE_CONTRACT_UPGRADE_MODULE_TO_DO_UPGRADES: u64 = 1;
     const E_CANNOT_EXECUTE_GOVERNANCE_ACTION_WITH_OBSOLETE_SEQUENCE_NUMBER: u64 = 2;
     const E_OLD_GUARDIAN_SET_GOVERNANCE: u64 = 3;
-    const E_INVALID_GOVERNANCE_CHAIN: u64 = 4;
-    const E_INVALID_GOVERNANCE_EMITTER: u64 = 5;
+    const E_INVALID_GOVERNANCE_DATA_SOURCE: u64 = 4;
 
     // this struct does not have the store or key ability so it must be
     // used in the same txn chain in which it is created
@@ -47,15 +46,12 @@ module pyth::governance {
     ): WormholeVAAVerificationReceipt {
         state::assert_latest_only(pyth_state);
 
-        // Both the emitter chain and address must equal.
-        assert!(
-            vaa::emitter_chain(&verified_vaa) == state::governance_chain(pyth_state),
-            E_INVALID_GOVERNANCE_CHAIN
-        );
+        let vaa_data_source = pyth::data_source::new((vaa::emitter_chain(&verified_vaa) as u64), vaa::emitter_address(&verified_vaa));
 
+        // The emitter chain and address must correspond to the Pyth governance emitter chain and contract.
         assert!(
-            vaa::emitter_address(&verified_vaa) == state::governance_contract(pyth_state),
-            E_INVALID_GOVERNANCE_EMITTER
+            pyth::state::is_valid_governance_data_source(pyth_state, vaa_data_source),
+            E_INVALID_GOVERNANCE_DATA_SOURCE
         );
 
         let digest = vaa::digest(&verified_vaa);
