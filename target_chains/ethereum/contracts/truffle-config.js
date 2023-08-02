@@ -25,6 +25,10 @@ module.exports = {
       port: 8545,
       network_id: "*",
     },
+    [process.env.MIGRATIONS_NETWORK]: {
+      provider: payerProvider(process.env.RPC_URL),
+      network_id: process.env.NETWORK_ID,
+    },
     ethereum: {
       provider: payerProvider(
         `https://mainnet.infura.io/v3/` + process.env.INFURA_KEY

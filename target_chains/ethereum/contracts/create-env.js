@@ -26,6 +26,8 @@ async function main() {
       `MIGRATIONS_NETWORK=${contract.getChain().getId()}\n` +
       `WORMHOLE_CHAIN_NAME=${contract.getChain().wormholeChainName}\n` +
       `CLUSTER=${cluster}\n` +
+      `NETWORK_ID=${contract.getChain().networkId}\n` +
+      `RPC_URL=${contract.getChain().getRpcUrl()}\n` +
       `VALID_TIME_PERIOD_SECONDS=${await contract.getValidTimePeriod()}`
   );
 }

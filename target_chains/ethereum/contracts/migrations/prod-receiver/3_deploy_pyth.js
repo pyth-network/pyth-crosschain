@@ -3,8 +3,10 @@ loadEnv("../../");
 
 const PythUpgradable = artifacts.require("PythUpgradable");
 const WormholeReceiver = artifacts.require("WormholeReceiver");
+
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 const tdr = require("truffle-deploy-registry");
+const printConfig = require("../../scripts/printContractManagerConfig");
 
 const emitterChainIds = [
   process.env.SOLANA_CHAIN_ID,
@@ -57,4 +59,5 @@ module.exports = async function (deployer, network) {
   if (!tdr.isDryRunNetworkName(network)) {
     await tdr.appendInstance(proxyInstance);
   }
+  printConfig();
 };

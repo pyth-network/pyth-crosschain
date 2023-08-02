@@ -24,7 +24,7 @@ import {
 } from "fs";
 import { Vault } from "./governance";
 
-class Store {
+export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, Contract> = {};
   public vaults: Record<string, Vault> = {};
@@ -35,30 +35,8 @@ class Store {
     this.loadAllVaults();
   }
 
-  save(obj: any) {
-    let dir, file, content;
-    if (obj instanceof Contract) {
-      let contract = obj;
-      dir = `${this.path}/contracts/${contract.getType()}`;
-      file = contract.getId();
-      content = contract.toJson();
-    } else if (obj instanceof Chain) {
-      let chain = obj;
-      dir = `${this.path}/chains/${chain.getType()}`;
-      file = chain.getId();
-      content = chain.toJson();
-    } else if (obj instanceof Vault) {
-      let vault = obj;
-      dir = `${this.path}/vaults`;
-      file = vault.getId();
-      content = vault.toJson();
-    } else {
-      throw new Error("Invalid type");
-    }
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
-    writeFileSync(`${dir}/${file}.yaml`, stringify(content));
+  static serialize(obj: Contract | Chain | Vault) {
+    return stringify([obj.toJson()]);
   }
 
   getYamlFiles(path: string) {
