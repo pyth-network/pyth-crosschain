@@ -78,7 +78,7 @@ module pyth::set_data_sources_tests {
 
         let verified_vaa = wormhole::vaa::parse_and_verify(&mut worm_state, SET_DATA_SOURCES_VAA, &clock);
 
-        let receipt = pyth::governance::verify_vaa(&pyth_state, &worm_state, verified_vaa);
+        let receipt = pyth::governance::verify_vaa(&pyth_state, verified_vaa);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 

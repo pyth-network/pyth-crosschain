@@ -8,7 +8,6 @@ module pyth::governance {
     use pyth::state::{Self, State};
     use pyth::set_update_fee;
 
-    use wormhole::state::{State as WormState, Self as worm_state};
     use wormhole::vaa::{Self, VAA};
     use wormhole::bytes32::Bytes32;
 
@@ -44,22 +43,9 @@ module pyth::governance {
    // different header format compared to Wormhole, so
     public fun verify_vaa(
         pyth_state: &State,
-        wormhole_state: &WormState,
         verified_vaa: VAA,
     ): WormholeVAAVerificationReceipt {
         state::assert_latest_only(pyth_state);
-
-        // Protect against governance actions enacted using an old guardian set.
-        // This is not a protection found in the other Wormhole contracts.
-        assert!(
-            vaa::guardian_set_index(&verified_vaa) == worm_state::guardian_set_index(wormhole_state),
-            E_OLD_GUARDIAN_SET_GOVERNANCE
-        );
-
-        if ( vaa::emitter_chain(&verified_vaa) != state::governance_chain(pyth_state)){
-            std::debug::print(&state::governance_chain(pyth_state));
-            std::debug::print(&vaa::emitter_chain(&verified_vaa));
-        };
 
         // Both the emitter chain and address must equal.
         assert!(
