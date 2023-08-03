@@ -351,6 +351,16 @@ export class EvmContract extends Contract {
     return web3.eth.getCode(this.address);
   }
 
+  async getImplementationAddress(): Promise<string> {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    // bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1) according to EIP-1967
+    let storagePosition =
+      "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+    let address = await web3.eth.getStorageAt(this.address, storagePosition);
+    address = "0x" + address.slice(26);
+    return address;
+  }
+
   /**
    * Returns the keccak256 digest of the contract bytecode after replacing any occurrences of the contract addr in
    * the bytecode with 0.The bytecode stores the deployment address as an immutable variable.
