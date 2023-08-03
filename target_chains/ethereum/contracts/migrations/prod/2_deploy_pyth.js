@@ -6,7 +6,7 @@ const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 const tdr = require("truffle-deploy-registry");
 const { CONTRACTS } = require("@certusone/wormhole-sdk");
 const { assert } = require("chai");
-const printConfig = require("../../scripts/printContractManagerConfig");
+const saveConfig = require("../../scripts/saveContractManagerConfig");
 
 const emitterChainIds = [
   process.env.SOLANA_CHAIN_ID,
@@ -70,5 +70,5 @@ module.exports = async function (deployer, network) {
   if (!tdr.isDryRunNetworkName(network)) {
     await tdr.appendInstance(proxyInstance);
   }
-  printConfig();
+  saveConfig(process.env.MIGRATIONS_NETWORK, proxyInstance.address);
 };
