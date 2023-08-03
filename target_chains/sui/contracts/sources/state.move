@@ -254,6 +254,13 @@ module pyth::state {
         s.last_executed_governance_sequence = sequence;
     }
 
+    // We have an unchecked version of set_last_executed_governance_sequence, because in the governance contract
+    // upgrade code path, no LatestOnly is created (for example, see authorize_upgrade and commit_upgrade in
+    // governance/contract_upgrade.move)
+    public(friend) fun set_last_executed_governance_sequence_unchecked(s: &mut State, sequence: u64) {
+        s.last_executed_governance_sequence = sequence;
+    }
+
     public(friend) fun set_base_update_fee(_: &LatestOnly, s: &mut State, fee: u64) {
         s.base_update_fee = fee;
     }

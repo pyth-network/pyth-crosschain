@@ -33,13 +33,17 @@ module pyth::governance {
         receipt.digest
     }
 
+    public fun take_sequence(receipt: &WormholeVAAVerificationReceipt): u64 {
+        receipt.sequence
+    }
+
     public fun destroy(receipt: WormholeVAAVerificationReceipt) {
         let WormholeVAAVerificationReceipt{payload: _, digest: _, sequence: _} = receipt;
     }
 
-   // We define a custom verify_vaa function instead of using wormhole::governance_message::verify_vaa
-   // because that function makes extra assumptions about the VAA payload headers. Pyth uses a
-   // different header format compared to Wormhole, so
+    // We define a custom verify_vaa function instead of using wormhole::governance_message::verify_vaa
+    // because that function makes extra assumptions about the VAA payload headers. Pyth uses a
+    // different header format compared to Wormhole, so
     public fun verify_vaa(
         pyth_state: &State,
         verified_vaa: VAA,
@@ -79,9 +83,6 @@ module pyth::governance {
         // Require that new sequence number is greater than last executed sequence number.
         assert!(sequence > state::get_last_executed_governance_sequence(pyth_state),
             E_CANNOT_EXECUTE_GOVERNANCE_ACTION_WITH_OBSOLETE_SEQUENCE_NUMBER);
-
-        // consume VAA digest for replay protection
-        wormhole::consumed_vaas::consume(state::borrow_mut_consumed_vaas(&latest_only, pyth_state), receipt.digest);
 
         // Update latest executed sequence number to current one.
         state::set_last_executed_governance_sequence(&latest_only, pyth_state, sequence);

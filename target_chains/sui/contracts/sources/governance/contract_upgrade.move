@@ -26,6 +26,7 @@ module pyth::contract_upgrade {
     const E_DIGEST_ZERO_BYTES: u64 = 0;
     const E_GOVERNANCE_ACTION_MUST_BE_CONTRACT_UPGRADE: u64 = 1;
     const E_GOVERNANCE_CONTRACT_UPGRADE_CHAIN_ID_ZERO: u64 = 2;
+    const E_CANNOT_EXECUTE_GOVERNANCE_ACTION_WITH_OBSOLETE_SEQUENCE_NUMBER: u64 = 3;
 
     /// Specific governance payload ID (action) to complete upgrading the
     /// contract.
@@ -53,6 +54,17 @@ module pyth::contract_upgrade {
 
         // Consume digest for replay protection.
         wormhole::consumed_vaas::consume(state::borrow_mut_consumed_vaas_unchecked(pyth_state), governance::take_digest(&receipt));
+
+        // Get the sequence number of the governance VAA that was used to
+        // generate the receipt.
+        let sequence = governance::take_sequence(&receipt);
+
+        // Require that new sequence number is greater than last executed sequence number.
+        assert!(sequence > state::get_last_executed_governance_sequence(pyth_state),
+            E_CANNOT_EXECUTE_GOVERNANCE_ACTION_WITH_OBSOLETE_SEQUENCE_NUMBER);
+
+        // Update latest executed sequence number to current one.
+        state::set_last_executed_governance_sequence_unchecked(pyth_state, sequence);
 
         let payload = governance::take_payload(&receipt);
 
