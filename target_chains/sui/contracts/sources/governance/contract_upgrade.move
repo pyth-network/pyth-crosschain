@@ -52,9 +52,6 @@ module pyth::contract_upgrade {
         receipt: WormholeVAAVerificationReceipt,
     ): UpgradeTicket {
 
-        // Consume digest for replay protection.
-        wormhole::consumed_vaas::consume(state::borrow_mut_consumed_vaas_unchecked(pyth_state), governance::take_digest(&receipt));
-
         // Get the sequence number of the governance VAA that was used to
         // generate the receipt.
         let sequence = governance::take_sequence(&receipt);
