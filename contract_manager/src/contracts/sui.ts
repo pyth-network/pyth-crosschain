@@ -195,6 +195,10 @@ export class SuiContract extends Contract {
     return this.executeTransaction(tx, keypair);
   }
 
+  async executeUpdatePriceFeed(senderPrivateKey: string, vaas: Buffer[]) {
+    throw new Error("Not implemented");
+  }
+
   async executeGovernanceInstruction(senderPrivateKey: string, vaa: Buffer) {
     const keypair = Ed25519Keypair.fromSecretKey(
       Buffer.from(senderPrivateKey, "hex")

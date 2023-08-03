@@ -70,6 +70,16 @@ export abstract class Contract extends Storable {
   abstract getPriceFeed(feedId: string): Promise<PriceFeed | undefined>;
 
   /**
+   * Executes the update instructions contained in the VAAs using the sender credentials
+   * @param senderPrivateKey private key of the sender in hex format without 0x prefix
+   * @param vaas an array of VAAs containing price update messages to execute
+   */
+  abstract executeUpdatePriceFeed(
+    senderPrivateKey: string,
+    vaas: Buffer[]
+  ): Promise<any>;
+
+  /**
    * Executes the governance instruction contained in the VAA using the sender credentials
    * @param senderPrivateKey private key of the sender in hex format without 0x prefix
    * @param vaa the VAA to execute
