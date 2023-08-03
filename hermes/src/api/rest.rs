@@ -317,7 +317,6 @@ pub async fn get_vaa(
     Ok(Json(GetVaaResponse { vaa, publish_time }))
 }
 
-// TODO: doc this
 #[derive(Debug, Clone, Deref, DerefMut, ToSchema)]
 pub struct GetVaaCcipInput([u8; 40]);
 impl_deserialize_for_hex_string_wrapper!(GetVaaCcipInput, 40);

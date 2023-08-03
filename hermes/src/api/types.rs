@@ -20,7 +20,6 @@ use {
         Deref,
         DerefMut,
     },
-    hex::FromHexError,
     pyth_sdk::PriceIdentifier,
     utoipa::ToSchema,
     wormhole_sdk::Chain,
@@ -35,7 +34,7 @@ use {
 ///
 /// See https://pyth.network/developers/price-feed-ids for a list of all price feed ids.
 #[derive(Debug, Clone, Deref, DerefMut, ToSchema)]
-#[schema(value_type=String, example=doc_examples::price_feed_example)]
+#[schema(value_type=String, example=doc_examples::price_feed_id_example)]
 pub struct PriceIdInput([u8; 32]);
 // TODO: Use const generics instead of macro.
 impl_deserialize_for_hex_string_wrapper!(PriceIdInput, 32);
@@ -141,7 +140,7 @@ pub struct RpcPrice {
     pub expo:         i32,
     /// When the price was published. The `publish_time` is a unix timestamp, i.e., the number of
     /// seconds since the Unix epoch (00:00:00 UTC on 1 Jan 1970).
-    #[schema(value_type = i64, example=1690576641)]
+    #[schema(value_type = i64, example=doc_examples::timestamp_example)]
     pub publish_time: UnixTimestamp,
 }
 
@@ -163,7 +162,7 @@ pub struct RpcPrice {
     ToSchema,
 )]
 #[repr(C)]
-#[schema(value_type = String, example = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43")]
+#[schema(value_type = String, example = doc_examples::price_feed_id_example)]
 pub struct RpcPriceIdentifier(#[serde(with = "hex")] [u8; 32]);
 
 impl RpcPriceIdentifier {
