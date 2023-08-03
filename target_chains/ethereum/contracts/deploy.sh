@@ -29,7 +29,8 @@ while [[ $# -ne 0 ]]; do
 
     # Load the configuration environment variables for deploying your network. make sure to use right env file.
     # If it is a new chain you are deploying to, create a new env file and commit it to the repo.
-    rm -f .env; ln -s .env.prod.$NETWORK .env && set -o allexport && source .env set && set +o allexport
+    node create-env.js $NETWORK
+    set -o allexport && source .env set && set +o allexport
 
     if [[ $NETWORK == zksync* ]]; then
         echo "Skipping truffle migration on $NETWORK. If you wish to deploy a fresh contract read Deploying.md."
@@ -38,9 +39,6 @@ while [[ $# -ne 0 ]]; do
         npx truffle migrate --network $MIGRATIONS_NETWORK --compile-none
         echo "Deployment to $NETWORK finished successfully"
     fi
-
-    echo "=========== Syncing contract state ==========="
-    npx truffle exec scripts/syncPythState.js --network $MIGRATIONS_NETWORK || echo "Syncing failed/incomplete.. skipping"
 done
 
 echo "=========== Finished ==========="

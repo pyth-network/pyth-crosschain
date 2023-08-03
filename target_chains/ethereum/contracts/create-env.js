@@ -4,31 +4,25 @@
  *  node create-env.js <contract-id>
  */
 
-const { DefaultStore, EvmContract } = require("contract_manager");
+const { DefaultStore, EvmChain } = require("contract_manager");
+const { writeFileSync } = require("fs");
 
 async function main() {
-  const contractId = process.argv[2];
-  const contract = DefaultStore.contracts[contractId];
-  if (!contract) {
-    throw new Error(`Contract ${contractId} not found`);
+  const chainId = process.argv[2];
+  const chain = DefaultStore.chains[chainId];
+  if (!chain) {
+    throw new Error(`Chain ${chainId} not found`);
   }
-  if (!(contract instanceof EvmContract)) {
-    throw new Error(`${contractId} is not an EVM contract`);
+  if (!(chain instanceof EvmChain)) {
+    throw new Error(`${chainId} is not an EVM chain`);
   }
-  const migrationDir = (await (
-    await contract.getWormholeContract()
-  ).isWormholeReceiver())
-    ? "prod-receiver"
-    : "prod";
-  const cluster = contract.getChain().isMainnet() ? "mainnet" : "testnet";
-  console.log(
-    `MIGRATIONS_DIR=./migrations/${migrationDir}\n` +
-      `MIGRATIONS_NETWORK=${contract.getChain().getId()}\n` +
-      `WORMHOLE_CHAIN_NAME=${contract.getChain().wormholeChainName}\n` +
-      `CLUSTER=${cluster}\n` +
-      `NETWORK_ID=${contract.getChain().networkId}\n` +
-      `RPC_URL=${contract.getChain().getRpcUrl()}\n` +
-      `VALID_TIME_PERIOD_SECONDS=${await contract.getValidTimePeriod()}`
+  writeFileSync(
+    `.env`,
+    `MIGRATIONS_DIR=./migrations/prod-receiver\n` +
+      `MIGRATIONS_NETWORK=${chain.getId()}\n` +
+      `WORMHOLE_CHAIN_NAME=${chain.wormholeChainName}\n` +
+      `NETWORK_ID=${chain.networkId}\n` +
+      `RPC_URL=${chain.getRpcUrl()}\n`
   );
 }
 
