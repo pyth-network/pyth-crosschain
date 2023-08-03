@@ -20,7 +20,6 @@ import SquadsMesh from "@sqds/mesh";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
-  decodeGovernancePayload,
   executeProposal,
   MultisigVault,
   WORMHOLE_ADDRESS,
@@ -33,8 +32,6 @@ import {
   deriveWormholeBridgeDataKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { Storable } from "./base";
-import { parseVaa } from "@certusone/wormhole-sdk";
-import { DefaultStore } from "./store";
 
 class InvalidTransactionError extends Error {
   constructor(message: string) {
