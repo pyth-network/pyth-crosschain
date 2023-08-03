@@ -14,7 +14,7 @@ import {
 } from "./contracts";
 import { Contract } from "./base";
 import { parse, stringify } from "yaml";
-import { readdirSync, readFileSync, statSync } from "fs";
+import { readdirSync, readFileSync, statSync, writeFileSync } from "fs";
 import { Vault } from "./governance";
 
 export class Store {
@@ -72,6 +72,38 @@ export class Store {
     });
   }
 
+  saveAllContracts() {
+    let contractsByType: Record<string, Contract[]> = {};
+    for (const contract of Object.values(this.contracts)) {
+      if (!contractsByType[contract.getType()]) {
+        contractsByType[contract.getType()] = [];
+      }
+      contractsByType[contract.getType()].push(contract);
+    }
+    for (const [type, contracts] of Object.entries(contractsByType)) {
+      writeFileSync(
+        `${this.path}/contracts/${type}s.yaml`,
+        stringify(contracts.map((c) => c.toJson()))
+      );
+    }
+  }
+
+  saveAllChains() {
+    let chainsByType: Record<string, Chain[]> = {};
+    for (const chain of Object.values(this.chains)) {
+      if (!chainsByType[chain.getType()]) {
+        chainsByType[chain.getType()] = [];
+      }
+      chainsByType[chain.getType()].push(chain);
+    }
+    for (const [type, chains] of Object.entries(chainsByType)) {
+      writeFileSync(
+        `${this.path}/chains/${type}s.yaml`,
+        stringify(chains.map((c) => c.toJson()))
+      );
+    }
+  }
+
   loadAllContracts() {
     let allContractClasses = {
       [CosmWasmContract.type]: CosmWasmContract,
@@ -114,4 +146,4 @@ export class Store {
   }
 }
 
-export const DefaultStore = new Store(`${__dirname}/store`);
+export const DefaultStore = new Store(`${__dirname}/../store`);

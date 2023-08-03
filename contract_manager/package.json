@@ -9,7 +9,7 @@
     "lib/**/*"
   ],
   "scripts": {
-    "build": "tsc && cp -r src/store lib/store",
+    "build": "tsc",
     "shell": "ts-node ./src/shell.ts"
   },
   "author": "",
