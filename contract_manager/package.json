@@ -4,6 +4,10 @@
   "description": "Set of tools to manage pyth contracts",
   "private": true,
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
   "scripts": {
     "build": "tsc && cp -r src/store lib/store",
     "shell": "ts-node ./src/shell.ts"

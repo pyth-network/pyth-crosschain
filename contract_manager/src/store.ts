@@ -14,14 +14,7 @@ import {
 } from "./contracts";
 import { Contract } from "./base";
 import { parse, stringify } from "yaml";
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  statSync,
-  writeFileSync,
-} from "fs";
+import { readdirSync, readFileSync, statSync } from "fs";
 import { Vault } from "./governance";
 
 export class Store {
