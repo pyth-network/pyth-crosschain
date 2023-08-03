@@ -1,5 +1,11 @@
 use crate::store::types::UnixTimestamp;
 
+// Example values for the utoipa API docs.
+// Note that each of these expressions is only evaluated once when the documentation is created,
+// so the examples don't auto-update over time. We may want to adjust these examples for
+// stable/beta in the future so that the example values in the docs work for both hermes and hermes-beta.
+// (Currently all example values are for stable.)
+
 /// Example value for a price feed id
 pub fn price_feed_id_example() -> &'static str {
     return "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43";
