@@ -151,3 +151,6 @@
 - chain: zksync
   address: "0xf087c864AEccFb6A2Bf1Af6A0382B0d0f6c5D834"
   type: EvmContract
+- chain: shimmer_testnet
+  address: "0x5f3c61944CEb01B3eAef861251Fb1E0f14b848fb"
+  type: EvmContract

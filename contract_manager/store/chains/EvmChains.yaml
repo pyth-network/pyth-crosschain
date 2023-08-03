@@ -13,7 +13,7 @@
 - id: evmos
   wormholeChainName: evmos
   mainnet: true
-  rpcUrl: https://eth.bd.evmos.org:8545/
+  rpcUrl: https://json-rpc.evmos.blockhunters.org
   networkId: 9001
   type: EvmChain
 - id: goerli
@@ -303,4 +303,10 @@
   mainnet: true
   rpcUrl: https://linea.rpc.thirdweb.com
   networkId: 59144
+  type: EvmChain
+- id: shimmer_testnet
+  wormholeChainName: shimmer
+  mainnet: false
+  rpcUrl: https://json-rpc.evm.testnet.shimmer.network
+  networkId: 1072
   type: EvmChain
