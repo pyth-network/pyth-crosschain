@@ -10,6 +10,7 @@ use {
 
 mod api;
 mod config;
+mod doc_examples;
 mod macros;
 mod network;
 mod store;

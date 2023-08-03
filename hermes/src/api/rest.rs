@@ -5,6 +5,7 @@ use {
         RpcPriceIdentifier,
     },
     crate::{
+        doc_examples,
         impl_deserialize_for_hex_string_wrapper,
         store::types::{
             RequestTime,
@@ -111,7 +112,7 @@ pub struct LatestVaasQueryParams {
   get,
   path = "/api/latest_vaas",
   responses(
-    (status = 200, description = "VAAs retrieved successfully", body = Vec<String>)
+    (status = 200, description = "VAAs retrieved successfully", body = Vec<String>, example=json!([doc_examples::vaa_example()]))
   ),
   params(
     LatestVaasQueryParams
@@ -199,7 +200,7 @@ pub struct GetPriceFeedQueryParams {
     id:           PriceIdInput,
     /// The unix timestamp in seconds. This endpoint will return the first update
     /// whose publish_time is >= the provided value.
-    #[param(value_type = i64, example=1690576641)]
+    #[param(value_type = i64, example=doc_examples::timestamp_example)]
     publish_time: UnixTimestamp,
     /// If true, include the `metadata` field in the response with additional metadata about
     /// the price update.
@@ -264,6 +265,7 @@ pub struct GetVaaQueryParams {
 #[derive(Debug, serde::Serialize, ToSchema)]
 pub struct GetVaaResponse {
     /// The VAA binary represented as a base64 string.
+    #[schema(example=doc_examples::vaa_example)]
     vaa:          String,
     #[serde(rename = "publishTime")]
     #[schema(value_type = i64, example=1690576641)]
