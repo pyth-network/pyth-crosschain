@@ -37,7 +37,7 @@ const priceIds = [
 ];
 
 // In order to use Pyth prices in your protocol you need to submit the price update data to Pyth contract in your target
-// chain. `getPriceUpdateData` creates the update data which can be submitted to your contract. 
+// chain. `getPriceUpdateData` creates the update data which can be submitted to your contract.
 
 const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
 
