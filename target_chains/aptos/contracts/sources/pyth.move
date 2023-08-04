@@ -323,6 +323,7 @@ module pyth::pyth {
         update_price_feeds_if_fresh(vaas, price_identifiers, publish_times, coins);
     }
 
+    #[legacy_entry_fun]
     /// Update the cached price feeds with the data in the given VAAs, using
     /// update_price_feeds(). However, this function will only have an effect if any of the
     /// prices in the update are fresh. The price_identifiers and publish_times parameters
@@ -332,7 +333,7 @@ module pyth::pyth {
     ///
     /// For a given price update i in the batch, that price is considered fresh if the current cached
     /// price for price_identifiers[i] is older than publish_times[i].
-    public fun update_price_feeds_if_fresh(
+    public entry fun update_price_feeds_if_fresh(
         vaas: vector<vector<u8>>,
         price_identifiers: vector<vector<u8>>,
         publish_times: vector<u64>,

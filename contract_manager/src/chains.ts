@@ -9,6 +9,7 @@ import {
   AptosAuthorizeUpgradeContract,
   toChainId,
   SetDataSources,
+  SetValidPeriod,
   DataSource,
 } from "xc_admin_common";
 import { AptosClient } from "aptos";
@@ -69,6 +70,19 @@ export abstract class Chain extends Storable {
    */
   generateGovernanceSetDataSources(datasources: DataSource[]): Buffer {
     return new SetDataSources(this.wormholeChainName, datasources).encode();
+  }
+
+  /**
+   * Returns the payload for a governance SetStalePriceThreshold instruction for contracts deployed on this chain
+   * @param newValidStalePriceThreshold the new stale price threshold in seconds
+   */
+  generateGovernanceSetStalePriceThreshold(
+    newValidStalePriceThreshold: bigint
+  ): Buffer {
+    return new SetValidPeriod(
+      this.wormholeChainName,
+      newValidStalePriceThreshold
+    ).encode();
   }
 
   /**
@@ -208,54 +222,15 @@ export class SuiChain extends Chain {
     return SuiChain.type;
   }
 
-  //TODO: Move this logic to xc_admin_common
-  private wrapWithWormholeGovernancePayload(
-    actionVariant: number,
-    payload: Buffer
-  ): Buffer {
-    const actionVariantBuffer = Buffer.alloc(1);
-    actionVariantBuffer.writeUint8(actionVariant, 0);
-    const chainBuffer = Buffer.alloc(2);
-    chainBuffer.writeUint16BE(CHAINS["sui"], 0);
-    const result = Buffer.concat([
-      Buffer.from(
-        "0000000000000000000000000000000000000000000000000000000000000001",
-        "hex"
-      ),
-      actionVariantBuffer,
-      chainBuffer,
-      payload,
-    ]);
-    return result;
-  }
-
   /**
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
    * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
    */
   generateGovernanceUpgradePayload(digest: string): Buffer {
-    const upgrade = new SuiAuthorizeUpgradeContract(
+    return new SuiAuthorizeUpgradeContract(
       this.wormholeChainName,
       digest
     ).encode();
-    return this.wrapWithWormholeGovernancePayload(0, upgrade);
-  }
-
-  generateGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
-    const setFee = new SetFee(
-      this.wormholeChainName,
-      BigInt(fee),
-      BigInt(exponent)
-    ).encode();
-    return this.wrapWithWormholeGovernancePayload(3, setFee);
-  }
-
-  generateGovernanceSetDataSources(datasources: DataSource[]): Buffer {
-    const setDataSource = new SetDataSources(
-      this.wormholeChainName,
-      datasources
-    ).encode();
-    return this.wrapWithWormholeGovernancePayload(2, setDataSource);
   }
 }
 

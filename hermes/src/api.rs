@@ -46,9 +46,14 @@ pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: Strin
     #[openapi(
     paths(
       rest::latest_price_feeds,
+      rest::latest_vaas,
+      rest::get_price_feed,
+      rest::get_vaa,
+      rest::get_vaa_ccip,
+      rest::price_feed_ids,
     ),
     components(
-      schemas(types::RpcPriceFeedMetadata, types::RpcPriceFeed, types::PriceIdInput)
+      schemas(types::RpcPriceFeedMetadata, types::RpcPriceFeed, types::RpcPrice, types::RpcPriceIdentifier, types::PriceIdInput, rest::GetVaaResponse, rest::GetVaaCcipResponse, rest::GetVaaCcipInput)
     ),
     tags(
       (name = "hermes", description = "Pyth Real-Time Pricing API")
@@ -78,7 +83,7 @@ pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: Strin
         .layer(CorsLayer::permissive())
         // non-strict mode permits escaped [] in URL parameters.
         // 5 is the allowed depth (also the default value for this parameter).
-        .layer(Extension(QsQueryConfig::new(false)));
+        .layer(Extension(QsQueryConfig::new(5, false)));
 
 
     // Call dispatch updates to websocket every 1 seconds
