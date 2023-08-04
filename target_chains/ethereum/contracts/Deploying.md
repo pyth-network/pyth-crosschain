@@ -2,43 +2,25 @@
 
 ## EVM network configuration
 
-Each network that Pyth is deployed on has some configuration stored on this repo as described below:
+Each network that Pyth is deployed on has some configuration stored on this repo in the contract manager package as described below:
 
-1. [`truffle-config.js`](./truffle-config.js) contains list of different networks with their configuration that includes:
-   - `provider`: The network provider is an HDWalletProvider with mnemonic stored in the $MNEMONIC
-     environment variable and the RPC URL of the network.
-   - `network_id`: Network ID of the chain.
-   - `gas`, `gasPrice` (optional): Usually RPCs estimate gas and gas price efficiently. Although some networks are not
-     good at it and you need to specify them manually.
-   - `timeoutBlocks` (optional): Number of blocks to wait for a transaction to make it to a block. If you specify a low
-     gas price the transaction will be sent but it will never get in a block. Sometimes the network gas price is volatile
-     (like Ethereum) and you need to wait longer than the default timeout.
-   - `networkCheckTimeout` (optional): RPC timeout for requests. Some RPCs might be very slow and you need to have this.
-   - `confirmations` (optional): Number of blocks to wait to consider the transaction final.
-   - `from` (optional): Public address of the mnemonic. Although it can be derived from `provider` some networks that
-     are not entirely EVM based need it.
-2. `.env.prod.<network>` contains the contract specific configuration for each network. It contains:
-   - `MIGRATIONS_DIR`: This is either [`./migrations/prod`](./migrations/prod) or
-     [`./migrations/prod-receiver`](./migrations/prod-receiver). The `prod-receiver` migrations should be used when you
-     need to deploy to a chain that is unsupported by the Wormhole network. The Wormhole Receiver contract acts as a
-     read-only Wormhole endpoint that can verify Wormhole messages even if the Wormhole network has not yet connected
-     the chain.
-   - `MIGRATIONS_NETWORK`: Network name in the [`truffle-config.js`](./truffle-config.js) file.
-   - `WORMHOLE_CHAIN_NAME`: Chain name in Wormhole. It is either defined in the
+1. Chain configuration in [EvmChains.yaml](../../../contract_manager/store/chains/EvmChains.yaml) contains:
+   - `id`: id of the chain. This will be used for identifying which chain we want to deploy to.
+   - `wormholeChainName`: Chain name in Wormhole. It is either defined in the
      [Wormhole SDK constants](https://github.com/wormhole-foundation/wormhole/blob/dev.v2/sdk/js/src/utils/consts.ts)
      or is defined in [Wormhole Receiver names](../../../governance/xc_admin/packages/xc_admin_common/src/chains.ts). If the new
      network requires a Receiver contract you need to update the latter file and add the network there.
-   - `CLUSTER`: Cluster of this network. It is either `testnet` or `mainnet`. There are some cluster specific
+   - `mainnet`: A boolean which indicates whether the network is `mainnet` or `testnet`/`devnet`. There are some cluster specific
      configuration that are loaded from [`.env.cluster.testnet`](./.env.cluster.testnet) or
      [`.env.cluster.mainnet`](./.env.cluster.mainnet) such as data and governance sources. It is also used to get
-     the wormhole contract address. You can override those variable in the network environment file.
-   - `VALID_TIME_PERIOD_SECONDS`: The period that we consider a price to be still valid since its `publishTime`
-     on Pythnet. For the time being, set this value to at least 60 seconds. If the network block time or transaction
-     landing time is high please increase this value accordingly. For example, Ethereum has the value of 120 seconds.
-     It is good to keep this value the same in testnet and mainnet clusters of the same network.
-     Please look at similar networks when you want to add a new network.
+     the wormhole contract address.
+   - `rpcUrl`: RPC endpoint of the network.
+   - `networkId`: id of the network. Used in RPC calls.
+2. Contract configuration in [EvmContracts.yaml](../../../contract_manager/store/contracts/EvmContracts.yaml) contains:
+   - `address`: The address the pyth contract is deployed on (this will refer to the proxy contract).
+   - `chain`: Name of the chain (`id` field in chain configuration) the contract is deployed on.
 
-If you wish to deploy to a new network you need to add the above confiugrations. You can find `network_id` and public
+If you wish to deploy to a new network you need to add the chain configurations as described above. You can find `networkId` and public
 RPCs of most of the networks in [ChainList](https://chainlist.org/). Rest of the parameters are optional and avoid
 adding them unless it is necessary. Wormhole's
 [truffle-config.js](https://github.com/wormhole-foundation/wormhole/blob/main/ethereum/truffle-config.js)
@@ -63,12 +45,10 @@ This is the deployment process:
 4. Prepare the required keys for deployment. You can find more information about them on notion. Then:
    - Export the secret recovery phrase for the deployment account. Please store it in a file and read
      the file into `MNEMONIC` environment variable like so: `export MNEMONIC=$(cat path/to/mnemonic)`.
-   - If you are modifying an existing contract, make sure that the multisig-cli has the operational
-     key stored in `governance/multisig_wh_message_builder/keys/key.json`.
-   - export the Infura RPC API key to `INFURA_KEY` if you are deploying to a network that uses an Infura RPC.
 5. Make sure the deployment account has proper balance on this network and top it up if needed. Search
    for testnet faucets if it is a testnet network. Sometimes you need to bridge the network token (e.g., L2s).
-6. Deploy the new contract or changes using the [`deploy.sh`](./deploy.sh) script. If you have made changes
+6. Add the required chain configuration in the contract manager file [EvmChains.yaml](../../../contract_manager/store/chains/EvmChains.yaml)
+7. Deploy the new contract or changes using the [`deploy.sh`](./deploy.sh) script. If you have made changes
    to [`chains.ts`](../../../governance/xc_admin/packages/xc_admin_common/src/chains.ts), please make sure to
    run `npx lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies` in the
    root directory before running the deployment script.
@@ -87,19 +67,19 @@ This is the deployment process:
    If the deployment script runs successfully you should see many ✅s and no ❌s with a successful message.
    Please note that if you need to deploy/upgrade a zkSync network contract, you should deploy/upgrade it manually first
    as described below.
-7. On first time deployments for a **mainnet** network with Wormhole Receiver contract, run this command:
+8. On first time deployments for a **mainnet** network with Wormhole Receiver contract, run this command:
    ```bash
    npm run receiver-submit-guardian-sets -- --network <network>
    ```
-8. As a result of this process for some files (with the network id in their name) in `networks` and directory might change
+9. As a result of this process for some files (with the network id in their name) in `networks` and directory might change
    which need to be committed (if they are result of a production deployment). Create a PR for them.
-9. If you are deploying to a new network, please add the new contract address to consumer facing libraries
-   and documentations. Please update the following resources:
-   - [Pyth Gitbook EVM Page](https://github.com/pyth-network/documentation/blob/main/pages/documentation/pythnet-price-feeds/evm.mdx)
-   - [pyth-evm-js package](../sdk/js/)
-10. (Optional) You can test the deployed contract by sending and fetching a price update as described in the
+10. If you are deploying to a new network, please add the new contract address to consumer facing libraries
+    and documentations. The deployment script should automatically add the contract to the contract manager store. Please update the following resources:
+    - [Pyth Gitbook EVM Page](https://github.com/pyth-network/documentation/blob/main/pages/documentation/pythnet-price-feeds/evm.mdx)
+    - [pyth-evm-js package](../sdk/js/)
+11. (Optional) You can test the deployed contract by sending and fetching a price update as described in the
     [Testing](#testing) section below.
-11. (Optional) Verify the contract as described in the [Verifying the contract](#verifying-the-contract) section.
+12. (Optional) Verify the contract as described in the [Verifying the contract](#verifying-the-contract) section.
 
 ### `networks` directory
 
