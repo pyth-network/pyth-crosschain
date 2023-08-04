@@ -9,16 +9,26 @@ import {
   SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
 } from "@mysten/sui.js";
-import {getProvider, getWormholePackageId, getPythPackageId} from "../helpers"
+import {
+  getProvider,
+  getWormholePackageId,
+  getPythPackageId,
+  updatePriceFeedWithAccumulator
+} from "../helpers"
 import { SuiPriceServiceConnection } from "../index";
 //import { AptosAccount, AptosClient, TxnBuilderTypes } from "aptos";
 
 const argv = yargs(hideBin(process.argv))
-  .option("price-ids", {
+  .option("price-id", {
     description:
-      "Space separated price feed ids (in hex) to fetch" +
+      "Space separated price feed id (in hex) to fetch" +
       " e.g: 0xf9c0172ba10dfa4d19088d...",
-    type: "array",
+    type: "string",
+    required: true,
+  })
+  .option("price-info-object", {
+    description: "Sui price info object corresponding to price-id",
+    type: "string",
     required: true,
   })
   .option("price-service", {
@@ -56,29 +66,35 @@ async function run() {
     argv.priceIds as string[]
   );
 
-  const provider = getProvider(argv["full-node"])
-  const wormholePackageId = getWormholePackageId(argv["wormhole-state-id"], provider)
-  const pythPackageId = getPythPackageId(argv["pyth-state-id"], provider)
+  // only use the first acc msg for now
+  let accumulator_message = Buffer.from(priceFeedUpdateData[0]).toString("hex");
 
-  // Update the Pyth Contract using this update data
+  const provider = getProvider(argv["full-node"])
+  const wormholeStateId = argv["wormhole-state-id"]
+  const pythStateId = argv["pyth-state-id"]
+  const wormholePackageId = await getWormholePackageId(wormholeStateId, provider)
+  const pythPackageId = await getPythPackageId(pythStateId, provider)
+
   if (process.env.SUI_KEY === undefined) {
     throw new Error(`SUI_KEY environment variable should be set.`);
   }
 
+  const wallet = new RawSigner(
+    Ed25519Keypair.fromSecretKey(Buffer.from(process.env.SUI_KEY, "hex")),
+    provider
+  );
+  console.log(wallet.getAddress());
 
-  // const sender = new AptosAccount(Buffer.from(process.env.SUI_KEY, "hex"));
-  // const client = new AptosClient(argv.fullNode);
-  // const result = await client.generateSignSubmitWaitForTransaction(
-  //   sender,
-  //   new TxnBuilderTypes.TransactionPayloadEntryFunction(
-  //     TxnBuilderTypes.EntryFunction.natural(
-  //       argv.pythContract + "::pyth",
-  //       "update_price_feeds_with_funder",
-  //       [],
-  //       [SuiPriceServiceConnection.serializeUpdateData(priceFeedUpdateData)]
-  //     )
-  //   )
-  // );
+  let result = await updatePriceFeedWithAccumulator(
+    wallet,
+    accumulator_message,
+    argv["price-info-object"],
+    wormholePackageId,
+    wormholeStateId,
+    pythPackageId,
+    pythStateId,
+  )
+
   console.dir(result, { depth: null });
 }
 

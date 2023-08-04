@@ -19,4 +19,3 @@ export class SuiPriceServiceConnection extends PriceServiceConnection {
   }
 
 }
-
