@@ -161,17 +161,25 @@ $ npx truffle console --network $MIGRATIONS_NETWORK
 
 [pyth-js]: https://github.com/pyth-network/pyth-js/tree/main/pyth-evm-js#evmrelay
 
-# Verifying the contract
+# Contract verification
 
-Please first try verifying the contract using truffle as described in [VERIFY.md](./VERIFY.md). It that doesn't work
-Try to manually verify the contract using the explorer UI. You can try to upload the standard json output in `build/contracts`
-directory. If that doesn't work either, you can flatten the contract and try to verify it.
+## Creating verification assets for a new release
 
-To flatten the contract, run the following command:
+We include artifacts required for verifying the contract in each release. To create these artifacts, run the following commands:
 
-`npx sol-merger contracts/pyth/PythUpgradable.sol`
+```
+npx sol-merger contracts/pyth/PythUpgradable.sol
+npx truffle run stdjsonin PythUpgradable
+```
 
-It will create a new file `PythUpgradable_merged.sol` which you can use in the explorer to verify the implementation contract (using exact sol version and optimization flag). After verifying implementation, you can verify the proxy.
+These commands create the files `contracts/pyth/PythUpgradable_merged.sol` and `PythUpgradable-input.json` respectively.
+The first file is a flattened version of the contract, and the second file is the standard json input of the contract.
+
+Please include both of these in the verification folder of the release.
+
+## Verifying the contract
+
+Read [VERIFY.md](./VERIFY.md) for how to use these files to verify the contract.
 
 # Troubleshooting
 

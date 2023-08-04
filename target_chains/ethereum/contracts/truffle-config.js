@@ -337,17 +337,9 @@ module.exports = {
     },
   },
 
-  plugins: ["truffle-plugin-verify", "truffle-contract-size"],
-
-  api_keys: {
-    etherscan: process.env.ETHERSCAN_KEY,
-    bscscan: process.env.BSCSCAN_KEY,
-    snowtrace: process.env.SNOWTRACE_KEY,
-    ftmscan: process.env.FTMSCAN_KEY,
-    polygonscan: process.env.POLYGONSCAN_KEY,
-    optimistic_etherscan: process.env.OPTIMISTIC_ETHERSCAN_KEY,
-    aurorascan: process.env.AURORASCAN_KEY,
-    arbiscan: process.env.ARBISCAN_KEY,
-    gnosisscan: process.env.GNOSISSCAN_KEY,
-  },
+  plugins: [
+    "truffle-plugin-verify",
+    "truffle-contract-size",
+    "truffle-plugin-stdjsonin",
+  ],
 };
