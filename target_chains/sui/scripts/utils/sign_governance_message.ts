@@ -96,12 +96,15 @@ async function main() {
 
   // let payload = ds.serialize();
 
-  let payload = Buffer.from("5054474d0103001500000000000000050000000000000005", "hex");
+  let payload = Buffer.from(
+    "5054474d0103001500000000000000050000000000000005",
+    "hex"
+  );
 
   // =============================== construct governance message ===============================
 
-  let msg = governance.publishMessage(0, payload, 1)
-  console.log("msg: ", msg)
+  let msg = governance.publishMessage(0, payload, 1);
+  console.log("msg: ", msg);
   // let msg = governance.publishGovernanceMessage(
   //   timestamp,
   //   "",
