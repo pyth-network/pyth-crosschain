@@ -2,7 +2,7 @@
 
 The Pyth price service is a webservice that listens to the Wormhole Network for Pyth price updates and serves them via a
 convenient web API. The service allows users to easily query for recent price updates via a REST API, or subscribe to
-a websocket for streaming updates. [The Pyth Network Javascript SDKs](https://github.com/pyth-network/pyth-crosschain) connect
+a websocket for streaming updates. [The Pyth Network Javascript SDKs](https://github.com/pyth-network/pyth-crosschain/tree/main/price_service/sdk/js) connect
 to an instance of the price service in order to fetch on-demand price updates.
 
 ## Public Endpoints
