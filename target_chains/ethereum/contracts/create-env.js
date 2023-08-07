@@ -21,6 +21,9 @@ async function main() {
     `MIGRATIONS_DIR=./migrations/prod-receiver\n` +
       `MIGRATIONS_NETWORK=${chain.getId()}\n` +
       `WORMHOLE_CHAIN_NAME=${chain.wormholeChainName}\n` +
+      `VALID_TIME_PERIOD_SECONDS=60\n` +
+      `SINGLE_UPDATE_FEE_IN_WEI=1\n` +
+      `CLUSTER=${chain.isMainnet() ? "mainnet" : "testnet"}\n` +
       `NETWORK_ID=${chain.networkId}\n` +
       `RPC_URL=${chain.getRpcUrl()}\n`
   );

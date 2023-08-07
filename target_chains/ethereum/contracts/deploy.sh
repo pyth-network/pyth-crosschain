@@ -32,7 +32,11 @@ while [[ $# -ne 0 ]]; do
 
     # Load the configuration environment variables for deploying your network. make sure to use right env file.
     # If it is a new chain you are deploying to, create a new env file and commit it to the repo.
-    node create-env.js $NETWORK
+    if [[ $NETWORK != development ]]; then
+        node create-env.js $NETWORK
+    else
+        echo "Skipping env file creation for development network"
+    fi
     set -o allexport && source .env set && set +o allexport
 
     if [[ $NETWORK == zksync* ]]; then

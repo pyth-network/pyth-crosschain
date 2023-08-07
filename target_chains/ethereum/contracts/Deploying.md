@@ -10,10 +10,7 @@ Each network that Pyth is deployed on has some configuration stored on this repo
      [Wormhole SDK constants](https://github.com/wormhole-foundation/wormhole/blob/dev.v2/sdk/js/src/utils/consts.ts)
      or is defined in [Wormhole Receiver names](../../../governance/xc_admin/packages/xc_admin_common/src/chains.ts). If the new
      network requires a Receiver contract you need to update the latter file and add the network there.
-   - `mainnet`: A boolean which indicates whether the network is `mainnet` or `testnet`/`devnet`. There are some cluster specific
-     configuration that are loaded from [`.env.cluster.testnet`](./.env.cluster.testnet) or
-     [`.env.cluster.mainnet`](./.env.cluster.mainnet) such as data and governance sources. It is also used to get
-     the wormhole contract address.
+   - `mainnet`: A boolean which indicates whether the network is `mainnet` or `testnet`/`devnet`.
    - `rpcUrl`: RPC endpoint of the network.
    - `networkId`: id of the network. Used in RPC calls.
 2. Contract configuration in [EvmContracts.yaml](../../../contract_manager/store/contracts/EvmContracts.yaml) contains:

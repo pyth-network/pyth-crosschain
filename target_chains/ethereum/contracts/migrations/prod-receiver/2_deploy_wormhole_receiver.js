@@ -8,9 +8,9 @@ const { assert } = require("chai");
 const ReceiverSetup = artifacts.require("ReceiverSetup");
 const ReceiverImplementation = artifacts.require("ReceiverImplementation");
 const WormholeReceiver = artifacts.require("WormholeReceiver");
+const { getDefaultConfig } = require("../../scripts/contractManagerConfig");
 
 // CONFIG
-const initialSigners = JSON.parse(process.env.INIT_SIGNERS);
 
 const chainName = process.env.WORMHOLE_CHAIN_NAME;
 assert(chainName !== undefined);
@@ -18,8 +18,11 @@ assert(chainName !== undefined);
 const wormholeReceiverChainId = governance.CHAINS[chainName];
 assert(wormholeReceiverChainId !== undefined);
 
-const governanceChainId = process.env.INIT_GOV_CHAIN_ID;
-const governanceContract = process.env.INIT_GOV_CONTRACT; // bytes32
+const {
+  wormholeGovernanceChainId,
+  wormholeGovernanceContract,
+  wormholeInitialSigners,
+} = getDefaultConfig(process.env.MIGRATIONS_NETWORK);
 
 module.exports = async function (deployer, network) {
   // deploy setup
@@ -33,10 +36,10 @@ module.exports = async function (deployer, network) {
   const initData = setup.methods
     .setup(
       ReceiverImplementation.address,
-      initialSigners,
+      wormholeInitialSigners,
       wormholeReceiverChainId,
-      governanceChainId,
-      governanceContract
+      wormholeGovernanceChainId,
+      wormholeGovernanceContract
     )
     .encodeABI();
 
