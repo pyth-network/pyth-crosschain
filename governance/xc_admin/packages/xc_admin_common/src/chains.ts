@@ -40,6 +40,7 @@ export const RECEIVER_CHAINS = {
   neutron_testnet_pion_1: 60025,
   eos: 60026,
   syndr: 60027,
+  scroll: 60028,
 };
 
 // If there is any overlapping value the receiver chain will replace the wormhole

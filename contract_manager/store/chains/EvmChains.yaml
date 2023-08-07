@@ -310,3 +310,9 @@
   rpcUrl: https://json-rpc.evm.testnet.shimmer.network
   networkId: 1072
   type: EvmChain
+- id: scroll_sepolia
+  wormholeChainName: scroll
+  mainnet: false
+  rpcUrl: https://sepolia-rpc.scroll.io/
+  networkId: 534351
+  type: EvmChain
