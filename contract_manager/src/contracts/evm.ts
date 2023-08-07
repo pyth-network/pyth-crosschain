@@ -3,6 +3,7 @@ import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import { Contract } from "../base";
 import { Chain, EvmChain } from "../chains";
 import { DataSource } from "xc_admin_common";
+import { WormholeContract } from "./wormhole";
 
 // Just to make sure tx gas limit is enough
 const GAS_ESTIMATE_MULTIPLIER = 2;
@@ -184,12 +185,47 @@ const WORMHOLE_ABI = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [
+      {
+        internalType: "bytes",
+        name: "_vm",
+        type: "bytes",
+      },
+    ],
+    name: "submitNewGuardianSet",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "messageFee",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
 ] as any;
-export class WormholeEvmContract {
-  constructor(public chain: EvmChain, public address: string) {}
+export class WormholeEvmContract extends WormholeContract {
+  constructor(public chain: EvmChain, public address: string) {
+    super();
+  }
   getContract() {
     const web3 = new Web3(this.chain.getRpcUrl());
     return new web3.eth.Contract(WORMHOLE_ABI, this.address);
+  }
+
+  async getCurrentGuardianSetIndex(): Promise<number> {
+    const wormholeContract = this.getContract();
+    return Number(
+      await wormholeContract.methods.getCurrentGuardianSetIndex().call()
+    );
   }
 
   /**
@@ -197,13 +233,45 @@ export class WormholeEvmContract {
    */
   async getGuardianSet(): Promise<string[]> {
     const wormholeContract = this.getContract();
-    const currentIndex = await wormholeContract.methods
-      .getCurrentGuardianSetIndex()
-      .call();
+    const currentIndex = await this.getCurrentGuardianSetIndex();
     const [currentSet] = await wormholeContract.methods
       .getGuardianSet(currentIndex)
       .call();
     return currentSet;
+  }
+
+  /**
+   * Checks whether this contract is a deployment of wormhole-receiver or wormhole.
+   * The wormhole-receiver is a subset of the wormhole contract optimized for just verifying the VAAs.
+   * The check is done by calling a function that only exists in the wormhole contract and not in the wormhole-receiver.
+   * If the function call fails, we know that this is a wormhole-receiver contract.
+   */
+  async isWormholeReceiver(): Promise<boolean> {
+    const wormholeContract = this.getContract();
+    try {
+      await wormholeContract.methods.messageFee().call();
+      return false;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  async upgradeGuardianSets(senderPrivateKey: string, vaa: Buffer) {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
+    const wormholeContract = new web3.eth.Contract(WORMHOLE_ABI, this.address);
+    const transactionObject = wormholeContract.methods.submitNewGuardianSet(
+      "0x" + vaa.toString("hex")
+    );
+    const gasEstiamte = await transactionObject.estimateGas({
+      from: address,
+      gas: 100000000,
+    });
+    return transactionObject.send({
+      from: address,
+      gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
+      gasPrice: await this.chain.getGasPrice(),
+    });
   }
 }
 
@@ -281,6 +349,16 @@ export class EvmContract extends Contract {
     // TODO: handle proxy contracts
     const web3 = new Web3(this.chain.getRpcUrl());
     return web3.eth.getCode(this.address);
+  }
+
+  async getImplementationAddress(): Promise<string> {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    // bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1) according to EIP-1967
+    let storagePosition =
+      "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+    let address = await web3.eth.getStorageAt(this.address, storagePosition);
+    address = "0x" + address.slice(26);
+    return address;
   }
 
   /**

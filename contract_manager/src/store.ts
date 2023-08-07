@@ -6,23 +6,18 @@ import {
   GlobalChain,
   SuiChain,
 } from "./chains";
-import { CosmWasmContract } from "./contracts/cosmwasm";
-import { SuiContract } from "./contracts/sui";
+import {
+  AptosContract,
+  CosmWasmContract,
+  EvmContract,
+  SuiContract,
+} from "./contracts";
 import { Contract } from "./base";
 import { parse, stringify } from "yaml";
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  statSync,
-  writeFileSync,
-} from "fs";
-import { EvmContract } from "./contracts/evm";
-import { AptosContract } from "./contracts/aptos";
+import { readdirSync, readFileSync, statSync, writeFileSync } from "fs";
 import { Vault } from "./governance";
 
-class Store {
+export class Store {
   public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, Contract> = {};
   public vaults: Record<string, Vault> = {};
@@ -33,30 +28,8 @@ class Store {
     this.loadAllVaults();
   }
 
-  save(obj: any) {
-    let dir, file, content;
-    if (obj instanceof Contract) {
-      let contract = obj;
-      dir = `${this.path}/contracts/${contract.getType()}`;
-      file = contract.getId();
-      content = contract.toJson();
-    } else if (obj instanceof Chain) {
-      let chain = obj;
-      dir = `${this.path}/chains/${chain.getType()}`;
-      file = chain.getId();
-      content = chain.toJson();
-    } else if (obj instanceof Vault) {
-      let vault = obj;
-      dir = `${this.path}/vaults`;
-      file = vault.getId();
-      content = vault.toJson();
-    } else {
-      throw new Error("Invalid type");
-    }
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
-    writeFileSync(`${dir}/${file}.yaml`, stringify(content));
+  static serialize(obj: Contract | Chain | Vault) {
+    return stringify([obj.toJson()]);
   }
 
   getYamlFiles(path: string) {
@@ -88,13 +61,47 @@ class Store {
     };
 
     this.getYamlFiles(`${this.path}/chains/`).forEach((yamlFile) => {
-      let parsed = parse(readFileSync(yamlFile, "utf-8"));
-      if (allChainClasses[parsed.type] === undefined) return;
-      let chain = allChainClasses[parsed.type].fromJson(parsed);
-      if (this.chains[chain.getId()])
-        throw new Error(`Multiple chains with id ${chain.getId()} found`);
-      this.chains[chain.getId()] = chain;
+      let parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+      for (const parsed of parsedArray) {
+        if (allChainClasses[parsed.type] === undefined) return;
+        let chain = allChainClasses[parsed.type].fromJson(parsed);
+        if (this.chains[chain.getId()])
+          throw new Error(`Multiple chains with id ${chain.getId()} found`);
+        this.chains[chain.getId()] = chain;
+      }
     });
+  }
+
+  saveAllContracts() {
+    let contractsByType: Record<string, Contract[]> = {};
+    for (const contract of Object.values(this.contracts)) {
+      if (!contractsByType[contract.getType()]) {
+        contractsByType[contract.getType()] = [];
+      }
+      contractsByType[contract.getType()].push(contract);
+    }
+    for (const [type, contracts] of Object.entries(contractsByType)) {
+      writeFileSync(
+        `${this.path}/contracts/${type}s.yaml`,
+        stringify(contracts.map((c) => c.toJson()))
+      );
+    }
+  }
+
+  saveAllChains() {
+    let chainsByType: Record<string, Chain[]> = {};
+    for (const chain of Object.values(this.chains)) {
+      if (!chainsByType[chain.getType()]) {
+        chainsByType[chain.getType()] = [];
+      }
+      chainsByType[chain.getType()].push(chain);
+    }
+    for (const [type, chains] of Object.entries(chainsByType)) {
+      writeFileSync(
+        `${this.path}/chains/${type}s.yaml`,
+        stringify(chains.map((c) => c.toJson()))
+      );
+    }
   }
 
   loadAllContracts() {
@@ -105,32 +112,36 @@ class Store {
       [AptosContract.type]: AptosContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
-      let parsed = parse(readFileSync(yamlFile, "utf-8"));
-      if (allContractClasses[parsed.type] === undefined) return;
-      if (!this.chains[parsed.chain])
-        throw new Error(`Chain ${parsed.chain} not found`);
-      const chain = this.chains[parsed.chain];
-      let chainContract = allContractClasses[parsed.type].fromJson(
-        chain,
-        parsed
-      );
-      if (this.contracts[chainContract.getId()])
-        throw new Error(
-          `Multiple contracts with id ${chainContract.getId()} found`
+      let parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+      for (const parsed of parsedArray) {
+        if (allContractClasses[parsed.type] === undefined) return;
+        if (!this.chains[parsed.chain])
+          throw new Error(`Chain ${parsed.chain} not found`);
+        const chain = this.chains[parsed.chain];
+        let chainContract = allContractClasses[parsed.type].fromJson(
+          chain,
+          parsed
         );
-      this.contracts[chainContract.getId()] = chainContract;
+        if (this.contracts[chainContract.getId()])
+          throw new Error(
+            `Multiple contracts with id ${chainContract.getId()} found`
+          );
+        this.contracts[chainContract.getId()] = chainContract;
+      }
     });
   }
 
   loadAllVaults() {
     this.getYamlFiles(`${this.path}/vaults/`).forEach((yamlFile) => {
-      let parsed = parse(readFileSync(yamlFile, "utf-8"));
-      if (parsed.type !== Vault.type) return;
+      let parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+      for (const parsed of parsedArray) {
+        if (parsed.type !== Vault.type) return;
 
-      const vault = Vault.fromJson(parsed);
-      if (this.vaults[vault.getId()])
-        throw new Error(`Multiple vaults with id ${vault.getId()} found`);
-      this.vaults[vault.getId()] = vault;
+        const vault = Vault.fromJson(parsed);
+        if (this.vaults[vault.getId()])
+          throw new Error(`Multiple vaults with id ${vault.getId()} found`);
+        this.vaults[vault.getId()] = vault;
+      }
     });
   }
 }

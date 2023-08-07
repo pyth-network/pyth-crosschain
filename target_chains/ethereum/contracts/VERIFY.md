@@ -6,18 +6,26 @@ and they verify that the uploaded source code compiles to the same bytecode
 that's actually deployed. This enables the explorer to properly parse the
 transaction payloads according to the contract ABI.
 
-This document outlines the process of verification. In general, you will need an
-API key for the relevant explorer (this can be obtained by creating an account),
+Our contracts are structured as a separate proxy (ERC1967) and an implementation. Both of
+these components need to be verified.
+
+In each contract release all the assets needed for verification are included.
+Most of the explorers accept the standard json-input format, while some only accept a flattened (single file) solidity source code.
+
+## Verifying the contract via explorers
+
+Pyth contract address refers to the proxy contract. After verifying the proxy contract, the implementation contract needs to be verified as well.
+
+Use the verification files in the release to verify the contracts on the explorer sites.
+You can find the compiler configurations in [`truffle-config.js`](./truffle-config.js) by searching for `compilers`.
+The required configurations are the _solc version_ and the _optimizer runs_.
+
+## Verifying the contract via truffle or hardhat
+
+Although, verification via explorers is the recommended way, you can also verify the contracts using truffle or hardhat.
+In general, you will need an API key for the relevant explorer (this can be obtained by creating an account),
 and also know which address the contract code lives. The API key is expected to
-be set in the `ETHERSCAN_KEY` environment variable for all APIs (not just
-etherscan, bit of a misnomer).
-
-Our contracts are structured as a separate proxy and an implementation. Both of
-these components need to be verified, and truffle handles it.
-
-## Verifying the contract
-
-Our contract is called `PythUpgradable`. To verify it on e.g. avalanche, at contract address `0x0e082F06FF657D94310cB8cE8B0D9a04541d8052`, run
+be set in the `ETHERSCAN_KEY` environment variable for all APIs (not just etherscan, bit of a misnomer).
 
 ```
 ETHERSCAN_KEY=... npm run verify --module=PythUpgradable --contract_address=0x0e082F06FF657D94310cB8cE8B0D9a04541d8052 --network=avalanche
@@ -27,7 +35,21 @@ ETHERSCAN_KEY=... npm run verify --module=PythUpgradable --contract_address=0x0e
 (Note: In this case, the `ETHERSCAN_KEY` is your snowtrace API key).
 
 **You might need to add the the explorer api keys in [the truffle config](./truffle-config.js) `api_keys`.** Please look at
-`truffle-plugin-verify/utils.js` to find the key names.
+`truffle-plugin-verify/utils.js` to find the key names. Here is an example:
+
+```js
+{
+    compilers: [...],
+
+    api_keys: {
+        etherscan: process.env.ETHERSCAN_KEY,
+        bscscan: process.env.BSCSCAN_KEY,
+        snowtrace: process.env.SNOWTRACE_KEY,
+    },
+
+    plugins: [...]
+}
+```
 
 # Note
 
@@ -40,7 +62,7 @@ dependencies, so it fails to parse the `HDWallet` arguments in our
 by applying the `truffle-verify-constants.patch` file, which the `npm run verify` script does transparently. Once the toolchain has been upgraded and the
 errors fixed, this patch can be removed.
 
-## Verifying with hardhat
+### Verifying with hardhat
 
 Some chains might require users to verify with hardhat. Here are the additional steps :
 

@@ -11,7 +11,15 @@
 # $ ./deploy.sh ethereum bnb avalanche
 set -euo pipefail
 
+echo "=========== Building dependencies ==========="
+npx lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies
+
 echo "=========== Compiling ==========="
+
+if [[ -e contracts/pyth/PythUpgradable_merged.sol ]]; then
+    echo "Flattened contract PythUpgradable_merged.sol exists. Removing before compiling."
+    rm contracts/pyth/PythUpgradable_merged.sol
+fi
 
 echo "Building the contract..."
 # Ensure that we deploy a fresh build with up-to-date dependencies.
@@ -29,7 +37,12 @@ while [[ $# -ne 0 ]]; do
 
     # Load the configuration environment variables for deploying your network. make sure to use right env file.
     # If it is a new chain you are deploying to, create a new env file and commit it to the repo.
-    rm -f .env; ln -s .env.prod.$NETWORK .env && set -o allexport && source .env set && set +o allexport
+    if [[ $NETWORK != development ]]; then
+        node create-env.js $NETWORK
+    else
+        echo "Skipping env file creation for development network"
+    fi
+    set -o allexport && source .env set && set +o allexport
 
     if [[ $NETWORK == zksync* ]]; then
         echo "Skipping truffle migration on $NETWORK. If you wish to deploy a fresh contract read Deploying.md."
@@ -38,9 +51,6 @@ while [[ $# -ne 0 ]]; do
         npx truffle migrate --network $MIGRATIONS_NETWORK --compile-none
         echo "Deployment to $NETWORK finished successfully"
     fi
-
-    echo "=========== Syncing contract state ==========="
-    npx truffle exec scripts/syncPythState.js --network $MIGRATIONS_NETWORK || echo "Syncing failed/incomplete.. skipping"
 done
 
 echo "=========== Finished ==========="

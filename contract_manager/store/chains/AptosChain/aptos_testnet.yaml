@@ -1,5 +1,0 @@
-id: aptos_testnet
-wormholeChainName: aptos
-mainnet: false
-rpcUrl: https://fullnode.testnet.aptoslabs.com/v1
-type: AptosChain

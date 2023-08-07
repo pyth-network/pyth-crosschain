@@ -1,10 +1,15 @@
 {
-  "name": "@pythnetwork/pyth-contract-manager",
+  "name": "contract_manager",
   "version": "1.0.0",
   "description": "Set of tools to manage pyth contracts",
   "private": true,
-  "main": "index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
   "scripts": {
+    "build": "tsc",
     "shell": "ts-node ./src/shell.ts"
   },
   "author": "",

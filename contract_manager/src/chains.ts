@@ -14,7 +14,12 @@ import {
 } from "xc_admin_common";
 import { AptosClient } from "aptos";
 import Web3 from "web3";
-import { CosmwasmQuerier } from "@pythnetwork/cosmwasm-deploy-tools";
+import {
+  CosmwasmExecutor,
+  CosmwasmQuerier,
+  InjectiveExecutor,
+} from "@pythnetwork/cosmwasm-deploy-tools";
+import { Network } from "@injectivelabs/networks";
 
 export abstract class Chain extends Storable {
   public wormholeChainName: ChainName;
@@ -119,8 +124,7 @@ export class CosmWasmChain extends Chain {
     id: string,
     mainnet: boolean,
     wormholeChainName: string,
-    public querierEndpoint: string,
-    public executorEndpoint: string,
+    public endpoint: string,
     public gasPrice: string,
     public prefix: string,
     public feeDenom: string
@@ -134,8 +138,7 @@ export class CosmWasmChain extends Chain {
       parsed.id,
       parsed.mainnet,
       parsed.wormholeChainName,
-      parsed.querierEndpoint,
-      parsed.executorEndpoint,
+      parsed.endpoint,
       parsed.gasPrice,
       parsed.prefix,
       parsed.feeDenom
@@ -144,8 +147,7 @@ export class CosmWasmChain extends Chain {
 
   toJson(): any {
     return {
-      querierEndpoint: this.querierEndpoint,
-      executorEndpoint: this.executorEndpoint,
+      endpoint: this.endpoint,
       id: this.id,
       wormholeChainName: this.wormholeChainName,
       mainnet: this.mainnet,
@@ -161,12 +163,26 @@ export class CosmWasmChain extends Chain {
   }
 
   async getCode(codeId: number): Promise<Buffer> {
-    const chainQuerier = await CosmwasmQuerier.connect(this.querierEndpoint);
+    const chainQuerier = await CosmwasmQuerier.connect(this.endpoint);
     return await chainQuerier.getCode({ codeId });
   }
 
   generateGovernanceUpgradePayload(codeId: bigint): Buffer {
     return new CosmosUpgradeContract(this.wormholeChainName, codeId).encode();
+  }
+
+  async getExecutor(privateKey: string) {
+    if (this.getId().indexOf("injective") > -1) {
+      return InjectiveExecutor.fromPrivateKey(
+        this.isMainnet() ? Network.Mainnet : Network.Testnet,
+        privateKey
+      );
+    }
+    return new CosmwasmExecutor(
+      this.endpoint,
+      await CosmwasmExecutor.getSignerFromPrivateKey(privateKey, this.prefix),
+      this.gasPrice + this.feeDenom
+    );
   }
 }
 

@@ -1,6 +1,0 @@
-id: mantle
-wormholeChainName: mantle
-mainnet: true
-rpcUrl: https://rpc.mantle.xyz/
-networkId: 5000
-type: EvmChain

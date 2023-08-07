@@ -1,6 +1,0 @@
-id: celo_alfajores_testnet
-wormholeChainName: celo
-mainnet: false
-rpcUrl: https://alfajores-forno.celo-testnet.org
-networkId: 44787
-type: EvmChain

@@ -1,9 +1,0 @@
-querierEndpoint: https://rpc.uni.junonetwork.io/
-executorEndpoint: https://rpc.uni.junonetwork.io/
-id: juno_testnet
-wormholeChainName: juno_testnet
-mainnet: false
-gasPrice: "0.025"
-prefix: juno
-feeDenom: ujunox
-type: CosmWasmChain

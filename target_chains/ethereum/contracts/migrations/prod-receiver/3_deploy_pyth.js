@@ -3,19 +3,21 @@ loadEnv("../../");
 
 const PythUpgradable = artifacts.require("PythUpgradable");
 const WormholeReceiver = artifacts.require("WormholeReceiver");
+
 const { deployProxy } = require("@openzeppelin/truffle-upgrades");
 const tdr = require("truffle-deploy-registry");
+const {
+  saveConfig,
+  getDefaultConfig,
+} = require("../../scripts/contractManagerConfig");
 
-const emitterChainIds = [
-  process.env.SOLANA_CHAIN_ID,
-  process.env.PYTHNET_CHAIN_ID,
-];
-const emitterAddresses = [
-  process.env.SOLANA_EMITTER,
-  process.env.PYTHNET_EMITTER,
-];
-const governanceChainId = process.env.GOVERNANCE_CHAIN_ID;
-const governanceEmitter = process.env.GOVERNANCE_EMITTER;
+const {
+  governanceEmitter,
+  governanceChainId,
+  emitterAddresses,
+  emitterChainIds,
+} = getDefaultConfig(process.env.MIGRATIONS_NETWORK);
+
 // Default value for this field is 0
 const governanceInitialSequence = Number(
   process.env.GOVERNANCE_INITIAL_SEQUENCE ?? "0"
@@ -57,4 +59,5 @@ module.exports = async function (deployer, network) {
   if (!tdr.isDryRunNetworkName(network)) {
     await tdr.appendInstance(proxyInstance);
   }
+  saveConfig(process.env.MIGRATIONS_NETWORK, proxyInstance.address);
 };

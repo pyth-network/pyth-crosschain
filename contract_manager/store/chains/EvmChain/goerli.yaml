@@ -1,6 +1,0 @@
-id: goerli
-wormholeChainName: ethereum
-mainnet: false
-rpcUrl: https://rpc.goerli.eth.gateway.fm
-networkId: 5
-type: EvmChain

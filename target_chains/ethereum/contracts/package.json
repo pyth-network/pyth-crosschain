@@ -12,6 +12,7 @@
     "mocha": "^8.2.1",
     "truffle": "^5.7.4",
     "truffle-deploy-registry": "^0.5.1",
+    "truffle-plugin-stdjsonin": "github:mhrsalehi/truffle-plugin-stdjsonin",
     "truffle-plugin-verify": "^0.6.1"
   },
   "scripts": {
@@ -34,6 +35,7 @@
     "@openzeppelin/hardhat-upgrades": "^1.22.1",
     "@pythnetwork/pyth-multisig-wh-message-builder": "*",
     "@pythnetwork/pyth-sdk-solidity": "^2.2.0",
+    "contract_manager": "*",
     "dotenv": "^10.0.0",
     "elliptic": "^6.5.2",
     "ethers": "^5.7.2",

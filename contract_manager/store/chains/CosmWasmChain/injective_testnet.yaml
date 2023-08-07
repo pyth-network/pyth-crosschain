@@ -1,5 +1,0 @@
-querierEndpoint: https://k8s.testnet.tm.injective.network:443
-id: injective_testnet
-wormholeChainName: injective_testnet
-mainnet: false
-type: CosmWasmChain
