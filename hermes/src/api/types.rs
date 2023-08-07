@@ -1,5 +1,6 @@
 use {
     crate::{
+        doc_examples,
         impl_deserialize_for_hex_string_wrapper,
         store::types::{
             PriceFeedUpdate,
@@ -11,23 +12,29 @@ use {
         engine::general_purpose::STANDARD as base64_standard_engine,
         Engine as _,
     },
+    borsh::{
+        BorshDeserialize,
+        BorshSerialize,
+    },
     derive_more::{
         Deref,
         DerefMut,
     },
-    pyth_sdk::{
-        Price,
-        PriceIdentifier,
-    },
+    pyth_sdk::PriceIdentifier,
+    utoipa::ToSchema,
     wormhole_sdk::Chain,
 };
 
-
-/// PriceIdInput is a wrapper around a 32-byte hex string.
-/// that supports a flexible deserialization from a hex string.
-/// It supports both 0x-prefixed and non-prefixed hex strings,
-/// and also supports both lower and upper case characters.
-#[derive(Debug, Clone, Deref, DerefMut)]
+/// A price id is a 32-byte hex string, optionally prefixed with "0x".
+/// Price ids are case insensitive.
+///
+/// Examples:
+/// * 0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
+/// * e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
+///
+/// See https://pyth.network/developers/price-feed-ids for a list of all price feed ids.
+#[derive(Debug, Clone, Deref, DerefMut, ToSchema)]
+#[schema(value_type=String, example=doc_examples::price_feed_id_example)]
 pub struct PriceIdInput([u8; 32]);
 // TODO: Use const generics instead of macro.
 impl_deserialize_for_hex_string_wrapper!(PriceIdInput, 32);
@@ -40,22 +47,26 @@ impl From<PriceIdInput> for PriceIdentifier {
 
 type Base64String = String;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct RpcPriceFeedMetadata {
+    #[schema(value_type = u64, example=85480034)]
     pub slot:                       Slot,
+    #[schema(example = 26)]
     pub emitter_chain:              u16,
+    #[schema(value_type = i64, example=doc_examples::timestamp_example)]
     pub price_service_receive_time: UnixTimestamp,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct RpcPriceFeed {
-    pub id:        PriceIdentifier,
-    pub price:     Price,
-    pub ema_price: Price,
+    pub id:        RpcPriceIdentifier,
+    pub price:     RpcPrice,
+    pub ema_price: RpcPrice,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata:  Option<RpcPriceFeedMetadata>,
-    /// Vaa binary represented in base64.
+    /// The VAA binary represented as a base64 string.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schema(value_type = Option<String>, example=doc_examples::vaa_example)]
     pub vaa:       Option<Base64String>,
 }
 
@@ -70,14 +81,14 @@ impl RpcPriceFeed {
         let price_feed_message = price_feed_update.price_feed;
 
         Self {
-            id:        PriceIdentifier::new(price_feed_message.feed_id),
-            price:     Price {
+            id:        RpcPriceIdentifier::new(price_feed_message.feed_id),
+            price:     RpcPrice {
                 price:        price_feed_message.price,
                 conf:         price_feed_message.conf,
                 expo:         price_feed_message.exponent,
                 publish_time: price_feed_message.publish_time,
             },
-            ema_price: Price {
+            ema_price: RpcPrice {
                 price:        price_feed_message.ema_price,
                 conf:         price_feed_message.ema_conf,
                 expo:         price_feed_message.exponent,
@@ -92,5 +103,74 @@ impl RpcPriceFeed {
                 base64_standard_engine.encode(price_feed_update.wormhole_merkle_update_data),
             ),
         }
+    }
+}
+
+/// A price with a degree of uncertainty at a certain time, represented as a price +- a confidence
+/// interval.
+///
+/// The confidence interval roughly corresponds to the standard error of a normal distribution.
+/// Both the price and confidence are stored in a fixed-point numeric representation, `x *
+/// 10^expo`, where `expo` is the exponent. For example:
+#[derive(
+    Clone,
+    Copy,
+    Default,
+    Debug,
+    PartialEq,
+    Eq,
+    BorshSerialize,
+    BorshDeserialize,
+    serde::Serialize,
+    serde::Deserialize,
+    ToSchema,
+)]
+pub struct RpcPrice {
+    /// The price itself, stored as a string to avoid precision loss
+    #[serde(with = "pyth_sdk::utils::as_string")]
+    #[schema(value_type = String, example="2920679499999")]
+    pub price:        i64,
+    /// The confidence interval associated with the price, stored as a string to avoid precision loss
+    #[serde(with = "pyth_sdk::utils::as_string")]
+    #[schema(value_type = String, example="509500001")]
+    pub conf:         u64,
+    /// The exponent associated with both the price and confidence interval. Multiply those values
+    /// by `10^expo` to get the real value.
+    #[schema(example=-8)]
+    pub expo:         i32,
+    /// When the price was published. The `publish_time` is a unix timestamp, i.e., the number of
+    /// seconds since the Unix epoch (00:00:00 UTC on 1 Jan 1970).
+    #[schema(value_type = i64, example=doc_examples::timestamp_example)]
+    pub publish_time: UnixTimestamp,
+}
+
+
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    BorshSerialize,
+    BorshDeserialize,
+    serde::Serialize,
+    serde::Deserialize,
+    ToSchema,
+)]
+#[repr(C)]
+#[schema(value_type = String, example = doc_examples::price_feed_id_example)]
+pub struct RpcPriceIdentifier(#[serde(with = "hex")] [u8; 32]);
+
+impl RpcPriceIdentifier {
+    pub fn new(bytes: [u8; 32]) -> RpcPriceIdentifier {
+        RpcPriceIdentifier(bytes)
+    }
+
+    pub fn from(id: &PriceIdentifier) -> RpcPriceIdentifier {
+        RpcPriceIdentifier(id.to_bytes().clone())
     }
 }

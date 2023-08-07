@@ -1,0 +1,6 @@
+id: optimism
+wormholeChainName: optimism
+mainnet: true
+rpcUrl: https://rpc.ankr.com/optimism
+networkId: 10
+type: EvmChain

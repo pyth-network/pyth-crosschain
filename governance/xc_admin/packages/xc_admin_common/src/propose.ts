@@ -17,7 +17,7 @@ import {
   deriveFeeCollectorKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
 import { ExecutePostedVaa } from "./governance_payload/ExecutePostedVaa";
-import { getOpsKey, PRICE_FEED_OPS_KEY } from "./multisig";
+import { getOpsKey, getProposalInstructions } from "./multisig";
 import { PythCluster } from "@pythnetwork/client/lib/cluster";
 import { Wallet } from "@coral-xyz/anchor/dist/cjs/provider";
 import SquadsMesh, { getIxAuthorityPDA, getTxPDA } from "@sqds/mesh";
@@ -192,38 +192,68 @@ export class MultisigVault {
     payload: Buffer,
     messagePayer: PublicKey
   ): Promise<PublicKey> {
+    return this.proposeWormholeMultipleMessagesWithPayer(
+      [payload],
+      messagePayer
+    );
+  }
+
+  /**
+   * Propose submitting `payload` as a wormhole message. If the proposal is approved, the sent message
+   * will have `this.getVaultAuthorityPda()` as its emitter address.
+   * @param payloads array of the bytes to send as the wormhole message's payload.
+   * @param messagePayer key used as the payer for the wormhole message instruction
+   * @param proposalAddress the proposal address to use. If not provided, a new proposal will be created. This is useful when because of RPC issues the script can not run until the end successfully.
+   * @returns the newly created proposal's public key
+   */
+  public async proposeWormholeMultipleMessagesWithPayer(
+    payloads: Buffer[],
+    messagePayer: PublicKey,
+    proposalAddress?: PublicKey
+  ): Promise<PublicKey> {
     const msAccount = await this.getMultisigAccount();
 
     let ixToSend: TransactionInstruction[] = [];
-    const [proposalIx, newProposalAddress] = await this.createProposalIx(
-      msAccount.transactionIndex + 1
-    );
+    let startingIndex = 0;
+    if (proposalAddress === undefined) {
+      const [proposalIx, newProposalAddress] = await this.createProposalIx(
+        msAccount.transactionIndex + 1
+      );
+      ixToSend.push(proposalIx);
+      proposalAddress = newProposalAddress;
+    } else {
+      const transaction = await this.squad.getTransaction(proposalAddress);
+      startingIndex = transaction.instructionIndex;
+    }
+    if (payloads.length > MAX_INSTRUCTIONS_PER_PROPOSAL)
+      throw new Error(
+        "Too many messages in proposal, multiple proposal not supported yet"
+      );
 
-    const proposalIndex = msAccount.transactionIndex + 1;
-    ixToSend.push(proposalIx);
-
-    const instructionToPropose = await getPostMessageInstruction(
-      this.squad,
-      this.vault,
-      newProposalAddress,
-      1,
-      this.wormholeAddress()!,
-      payload,
-      messagePayer
-    );
-    ixToSend.push(
-      await this.squad.buildAddInstruction(
+    for (let i = startingIndex; i < payloads.length; i++) {
+      const instructionToPropose = await getPostMessageInstruction(
+        this.squad,
         this.vault,
-        newProposalAddress,
-        instructionToPropose.instruction,
-        1,
-        instructionToPropose.authorityIndex,
-        instructionToPropose.authorityBump,
-        instructionToPropose.authorityType
-      )
-    );
-    ixToSend.push(await this.activateProposalIx(newProposalAddress));
-    ixToSend.push(await this.approveProposalIx(newProposalAddress));
+        proposalAddress,
+        1 + i,
+        this.wormholeAddress()!,
+        payloads[i],
+        messagePayer
+      );
+      ixToSend.push(
+        await this.squad.buildAddInstruction(
+          this.vault,
+          proposalAddress,
+          instructionToPropose.instruction,
+          1 + i,
+          instructionToPropose.authorityIndex,
+          instructionToPropose.authorityBump,
+          instructionToPropose.authorityType
+        )
+      );
+    }
+    ixToSend.push(await this.activateProposalIx(proposalAddress));
+    ixToSend.push(await this.approveProposalIx(proposalAddress));
 
     const txToSend = batchIntoTransactions(ixToSend);
     for (let i = 0; i < txToSend.length; i += SIZE_OF_SIGNED_BATCH) {
@@ -233,7 +263,7 @@ export class MultisigVault {
         })
       );
     }
-    return newProposalAddress;
+    return proposalAddress;
   }
 
   /**

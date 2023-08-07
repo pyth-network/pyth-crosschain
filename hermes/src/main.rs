@@ -1,5 +1,6 @@
 #![feature(never_type)]
 #![feature(slice_group_by)]
+#![feature(btree_cursors)]
 
 use {
     crate::store::Store,
@@ -9,6 +10,7 @@ use {
 
 mod api;
 mod config;
+mod doc_examples;
 mod macros;
 mod network;
 mod store;
@@ -33,7 +35,7 @@ async fn init() -> Result<()> {
             let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
 
             log::info!("Running Hermes...");
-            let store = Store::new_with_local_cache(update_tx, 1000);
+            let store = Store::new(update_tx, 1000);
 
             // Spawn the P2P layer.
             log::info!("Starting P2P server on {:?}", wh_listen_addrs);

@@ -1,0 +1,5 @@
+id: aptos_mainnet
+wormholeChainName: aptos
+mainnet: true
+rpcUrl: https://fullnode.mainnet.aptoslabs.com/v1
+type: AptosChain

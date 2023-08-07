@@ -2,8 +2,10 @@ use {
     super::types::{
         PriceIdInput,
         RpcPriceFeed,
+        RpcPriceIdentifier,
     },
     crate::{
+        doc_examples,
         impl_deserialize_for_hex_string_wrapper,
         store::types::{
             RequestTime,
@@ -30,7 +32,10 @@ use {
     },
     pyth_sdk::PriceIdentifier,
     serde_qs::axum::QsQuery,
-    std::collections::HashSet,
+    utoipa::{
+        IntoParams,
+        ToSchema,
+    },
 };
 
 pub enum RestError {
@@ -62,19 +67,57 @@ impl IntoResponse for RestError {
     }
 }
 
+/// Get the set of price feed ids.
+///
+/// Get all of the price feed ids for which price updates can be retrieved.
+#[utoipa::path(
+  get,
+  path = "/api/price_feed_ids",
+  responses(
+    (status = 200, description = "Price feed ids retrieved successfully", body = Vec<RpcPriceIdentifier>)
+  ),
+  params()
+)]
 pub async fn price_feed_ids(
     State(state): State<super::State>,
-) -> Result<Json<HashSet<PriceIdentifier>>, RestError> {
-    let price_feeds = state.store.get_price_feed_ids().await;
-    Ok(Json(price_feeds))
+) -> Result<Json<Vec<RpcPriceIdentifier>>, RestError> {
+    let price_feed_ids = state
+        .store
+        .get_price_feed_ids()
+        .await
+        .iter()
+        .map(|id| RpcPriceIdentifier::from(&id))
+        .collect();
+    Ok(Json(price_feed_ids))
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize, IntoParams)]
+#[into_params(parameter_in=Query)]
 pub struct LatestVaasQueryParams {
+    /// Get the VAAs for these price feed ids.
+    /// Provide this parameter multiple times to retrieve multiple price updates,
+    /// ids[]=a12...&ids[]=b4c...
+    #[param(
+        rename = "ids[]",
+        example = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
+    )]
     ids: Vec<PriceIdInput>,
 }
 
-
+/// Get VAAs for a set of price feed ids.
+///
+/// Given a collection of price feed ids, retrieve the latest VAA for them. The returned
+/// VAA(s) can be submitted to the Pyth contract to update the on-chain price
+#[utoipa::path(
+  get,
+  path = "/api/latest_vaas",
+  responses(
+    (status = 200, description = "VAAs retrieved successfully", body = Vec<String>, example=json!([doc_examples::vaa_example()]))
+  ),
+  params(
+    LatestVaasQueryParams
+  )
+)]
 pub async fn latest_vaas(
     State(state): State<super::State>,
     QsQuery(params): QsQuery<LatestVaasQueryParams>,
@@ -95,15 +138,40 @@ pub async fn latest_vaas(
     ))
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize, IntoParams)]
+#[into_params(parameter_in=Query)]
 pub struct LatestPriceFeedsQueryParams {
+    /// Get the most recent price update for these price feed ids.
+    /// Provide this parameter multiple times to retrieve multiple price updates,
+    /// ids[]=a12...&ids[]=b4c...
+    #[param(
+        rename = "ids[]",
+        example = "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
+    )]
     ids:     Vec<PriceIdInput>,
+    /// If true, include the `metadata` field in the response with additional metadata about
+    /// the price update.
     #[serde(default)]
     verbose: bool,
+    /// If true, include the binary price update in the `vaa` field of each returned feed.
+    /// This binary data can be submitted to Pyth contracts to update the on-chain price.
     #[serde(default)]
     binary:  bool,
 }
 
+/// Get the latest price updates by price feed id.
+///
+/// Given a collection of price feed ids, retrieve the latest Pyth price for each price feed.
+#[utoipa::path(
+  get,
+  path = "/api/latest_price_feeds",
+  responses(
+    (status = 200, description = "Price updates retrieved successfully", body = Vec<RpcPriceFeed>)
+  ),
+  params(
+    LatestPriceFeedsQueryParams
+  )
+)]
 pub async fn latest_price_feeds(
     State(state): State<super::State>,
     QsQuery(params): QsQuery<LatestPriceFeedsQueryParams>,
@@ -125,16 +193,38 @@ pub async fn latest_price_feeds(
     ))
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize, IntoParams)]
+#[into_params(parameter_in=Query)]
 pub struct GetPriceFeedQueryParams {
+    /// The id of the price feed to get an update for.
     id:           PriceIdInput,
+    /// The unix timestamp in seconds. This endpoint will return the first update
+    /// whose publish_time is >= the provided value.
+    #[param(value_type = i64, example=doc_examples::timestamp_example)]
     publish_time: UnixTimestamp,
+    /// If true, include the `metadata` field in the response with additional metadata about
+    /// the price update.
     #[serde(default)]
     verbose:      bool,
+    /// If true, include the binary price update in the `vaa` field of each returned feed.
+    /// This binary data can be submitted to Pyth contracts to update the on-chain price.
     #[serde(default)]
     binary:       bool,
 }
 
+/// Get a price update for a price feed with a specific timestamp
+///
+/// Given a price feed id and timestamp, retrieve the Pyth price update closest to that timestamp.
+#[utoipa::path(
+  get,
+  path = "/api/get_price_feed",
+  responses(
+    (status = 200, description = "Price update retrieved successfully", body = RpcPriceFeed)
+  ),
+  params(
+    GetPriceFeedQueryParams
+  )
+)]
 pub async fn get_price_feed(
     State(state): State<super::State>,
     QsQuery(params): QsQuery<GetPriceFeedQueryParams>,
@@ -161,19 +251,41 @@ pub async fn get_price_feed(
     )))
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize, IntoParams)]
+#[into_params(parameter_in=Query)]
 pub struct GetVaaQueryParams {
+    /// The id of the price feed to get an update for.
     id:           PriceIdInput,
+    /// The unix timestamp in seconds. This endpoint will return the first update
+    /// whose publish_time is >= the provided value.
+    #[param(value_type = i64, example=1690576641)]
     publish_time: UnixTimestamp,
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, ToSchema)]
 pub struct GetVaaResponse {
+    /// The VAA binary represented as a base64 string.
+    #[schema(example=doc_examples::vaa_example)]
     vaa:          String,
     #[serde(rename = "publishTime")]
+    #[schema(value_type = i64, example=1690576641)]
     publish_time: UnixTimestamp,
 }
 
+/// Get a VAA for a price feed with a specific timestamp
+///
+/// Given a price feed id and timestamp, retrieve the Pyth price update closest to that timestamp.
+#[utoipa::path(
+  get,
+  path = "/api/get_vaa",
+  responses(
+    (status = 200, description = "Price update retrieved successfully", body = GetVaaResponse),
+    (status = 404, description = "Price update not found", body = String)
+  ),
+  params(
+    GetVaaQueryParams
+  )
+)]
 pub async fn get_vaa(
     State(state): State<super::State>,
     QsQuery(params): QsQuery<GetVaaQueryParams>,
@@ -205,20 +317,35 @@ pub async fn get_vaa(
     Ok(Json(GetVaaResponse { vaa, publish_time }))
 }
 
-#[derive(Debug, Clone, Deref, DerefMut)]
+#[derive(Debug, Clone, Deref, DerefMut, ToSchema)]
 pub struct GetVaaCcipInput([u8; 40]);
 impl_deserialize_for_hex_string_wrapper!(GetVaaCcipInput, 40);
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize, IntoParams)]
+#[into_params(parameter_in=Query)]
 pub struct GetVaaCcipQueryParams {
     data: GetVaaCcipInput,
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, ToSchema)]
 pub struct GetVaaCcipResponse {
     data: String, // TODO: Use a typed wrapper for the hex output with leading 0x.
 }
 
+/// Get a VAA for a price feed using CCIP
+///
+/// This endpoint accepts a single argument which is a hex-encoded byte string of the following form:
+/// `<price feed id (32 bytes> <publish time as unix timestamp (8 bytes, big endian)>`
+#[utoipa::path(
+  get,
+  path = "/api/get_vaa_ccip",
+  responses(
+    (status = 200, description = "Price update retrieved successfully", body = GetVaaCcipResponse)
+  ),
+  params(
+    GetVaaCcipQueryParams
+  )
+)]
 pub async fn get_vaa_ccip(
     State(state): State<super::State>,
     QsQuery(params): QsQuery<GetVaaCcipQueryParams>,

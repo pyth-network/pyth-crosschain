@@ -1,0 +1,6 @@
+id: cronos_testnet
+wormholeChainName: cronos
+mainnet: false
+rpcUrl: https://evm-t3.cronos.org
+networkId: 338
+type: EvmChain

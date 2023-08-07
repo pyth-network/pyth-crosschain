@@ -1,0 +1,6 @@
+id: chiado
+wormholeChainName: gnosis
+mainnet: false
+rpcUrl: https://rpc.chiadochain.net
+networkId: 10200
+type: EvmChain

@@ -15,6 +15,7 @@ import {
 import { SetDataSources } from "./SetDataSources";
 import { SetValidPeriod } from "./SetValidPeriod";
 import { SetFee } from "./SetFee";
+import { EvmSetWormholeAddress } from "./SetWormholeAddress";
 
 /** Decode a governance payload */
 export function decodeGovernancePayload(
@@ -50,6 +51,8 @@ export function decodeGovernancePayload(
       return SetValidPeriod.decode(data);
     case "RequestGovernanceDataSourceTransfer":
       return RequestGovernanceDataSourceTransfer.decode(data);
+    case "SetWormholeAddress":
+      return EvmSetWormholeAddress.decode(data);
     default:
       return undefined;
   }
@@ -57,3 +60,10 @@ export function decodeGovernancePayload(
 
 export { ExecutePostedVaa } from "./ExecutePostedVaa";
 export * from "./PythGovernanceAction";
+export * from "./UpgradeContract";
+export * from "./PythGovernanceAction";
+export * from "./GovernanceDataSourceTransfer";
+export * from "./SetDataSources";
+export * from "./SetValidPeriod";
+export * from "./SetFee";
+export * from "./SetWormholeAddress";

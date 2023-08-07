@@ -1,4 +1,4 @@
-import { CHAINS } from "@pythnetwork/xc-governance-sdk";
+import { CHAINS } from "xc_admin_common";
 import { ChainId } from "./chains-manager/chains";
 import { DeploymentType } from "./helper";
 
@@ -13,11 +13,6 @@ export const CHAINS_CONTRACT_CONFIG: Record<ChainId, ChainContractConfig> = {
     feeDenom: "inj",
     pythArtifactZipName: "injective",
     wormholeChainId: CHAINS.injective_testnet,
-  },
-  [ChainId.OSMOSIS_TESTNET_4]: {
-    feeDenom: "uosmo",
-    pythArtifactZipName: "osmosis",
-    wormholeChainId: CHAINS.osmosis_testnet_4,
   },
   [ChainId.OSMOSIS_TESTNET_5]: {
     feeDenom: "uosmo",

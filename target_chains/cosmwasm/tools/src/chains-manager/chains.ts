@@ -1,6 +1,7 @@
 import { ChainExecutor } from "./chain-executor";
 import { CosmwasmExecutor } from "./cosmwasm";
 import { InjectiveExecutor } from "./injective";
+import { Network } from "@injectivelabs/networks";
 
 export enum ChainType {
   INJECTIVE = "injective",
@@ -14,7 +15,6 @@ export enum ChainType {
 // chainname{_optional-identifier}
 export enum ChainId {
   INJECTIVE_TESTNET = "injective_testnet",
-  OSMOSIS_TESTNET_4 = "osmosis_testnet_4",
   OSMOSIS_TESTNET_5 = "osmosis_testnet_5",
   SEI_TESTNET_ATLANTIC_2 = "sei_testnet_atlantic_2",
   NEUTRON_TESTNET_PION_1 = "neutron_testnet_pion_1",
@@ -74,14 +74,6 @@ export const CHAINS_NETWORK_CONFIG: Record<ChainId, ChainNetworkConfig> = {
     prefix: "osmo",
     gasPrice: "0.025uosmo",
   },
-  [ChainId.OSMOSIS_TESTNET_4]: {
-    chainId: ChainId.OSMOSIS_TESTNET_4,
-    chainType: ChainType.COSMWASM,
-    executorEndpoint: "https://rpc-test.osmosis.zone:443",
-    querierEndpoint: "https://rpc-test.osmosis.zone:443",
-    prefix: "osmo",
-    gasPrice: "0.025uosmo",
-  },
   [ChainId.SEI_TESTNET_ATLANTIC_2]: {
     chainId: ChainId.SEI_TESTNET_ATLANTIC_2,
     chainType: ChainType.COSMWASM,
@@ -93,8 +85,8 @@ export const CHAINS_NETWORK_CONFIG: Record<ChainId, ChainNetworkConfig> = {
   [ChainId.NEUTRON_TESTNET_PION_1]: {
     chainId: ChainId.NEUTRON_TESTNET_PION_1,
     chainType: ChainType.COSMWASM,
-    executorEndpoint: "https://rpc.pion.rs-testnet.polypore.xyz/",
-    querierEndpoint: "https://rpc.pion.rs-testnet.polypore.xyz/",
+    executorEndpoint: "https://rpc-palvus.pion-1.ntrn.tech/",
+    querierEndpoint: "https://rpc-palvus.pion-1.ntrn.tech/",
     prefix: "neutron",
     gasPrice: "0.025untrn",
   },
@@ -143,19 +135,26 @@ export const CHAINS_NETWORK_CONFIG: Record<ChainId, ChainNetworkConfig> = {
 /**
  * This method will return an executor for given chainConfig.
  */
-export function createExecutorForChain(
+export async function createExecutorForChain(
   chainConfig: ChainNetworkConfig,
   mnemonic: string
-): ChainExecutor {
+): Promise<ChainExecutor> {
   const chainType = chainConfig.chainType;
 
   if (chainType === ChainType.INJECTIVE) {
-    return new InjectiveExecutor(chainConfig.executorEndpoint, mnemonic);
+    return InjectiveExecutor.fromMnemonic(
+      chainConfig.chainId === ChainId.INJECTIVE_TESTNET
+        ? Network.Testnet
+        : Network.Mainnet,
+      mnemonic
+    );
   } else
     return new CosmwasmExecutor(
       chainConfig.executorEndpoint,
-      mnemonic,
-      chainConfig.prefix,
+      await CosmwasmExecutor.getSignerFromMnemonic(
+        mnemonic,
+        chainConfig.prefix
+      ),
       chainConfig.gasPrice
     );
 }

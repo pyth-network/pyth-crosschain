@@ -1,24 +1,49 @@
-import { readdirSync, readFileSync, writeFileSync } from "fs";
 import { Storable } from "./base";
 import {
+  ChainName,
   CHAINS,
-  CosmwasmUpgradeContractInstruction,
-  EthereumUpgradeContractInstruction,
-  HexString20Bytes,
-  HexString32Bytes,
-  SetFeeInstruction,
-  SuiAuthorizeUpgradeContractInstruction,
-} from "@pythnetwork/xc-governance-sdk";
-import { BufferBuilder } from "@pythnetwork/xc-governance-sdk/lib/serialize";
+  SetFee,
+  CosmosUpgradeContract,
+  EvmUpgradeContract,
+  SuiAuthorizeUpgradeContract,
+  AptosAuthorizeUpgradeContract,
+  toChainId,
+  SetDataSources,
+  SetValidPeriod,
+  DataSource,
+} from "xc_admin_common";
 import { AptosClient } from "aptos";
+import Web3 from "web3";
+import { CosmwasmQuerier } from "@pythnetwork/cosmwasm-deploy-tools";
 
 export abstract class Chain extends Storable {
-  protected constructor(public id: string) {
+  public wormholeChainName: ChainName;
+
+  /**
+   * Creates a new Chain object
+   * @param id unique id representing this chain
+   * @param mainnet whether this chain is mainnet or testnet/devnet
+   * @param wormholeChainName the name of the wormhole chain that this chain is associated with.
+   * Note that pyth has included additional chain names and ids to the wormhole spec.
+   * @protected
+   */
+  protected constructor(
+    protected id: string,
+    protected mainnet: boolean,
+    wormholeChainName: string
+  ) {
     super();
+    this.wormholeChainName = wormholeChainName as ChainName;
+    if (toChainId(this.wormholeChainName) === undefined)
+      throw new Error(`Invalid chain name ${wormholeChainName}`);
   }
 
   getId(): string {
     return this.id;
+  }
+
+  isMainnet(): boolean {
+    return this.mainnet;
   }
 
   /**
@@ -27,11 +52,32 @@ export abstract class Chain extends Storable {
    * @param exponent the new fee exponent to set
    */
   generateGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
-    return new SetFeeInstruction(
-      CHAINS[this.getId() as keyof typeof CHAINS],
+    return new SetFee(
+      this.wormholeChainName,
       BigInt(fee),
       BigInt(exponent)
-    ).serialize();
+    ).encode();
+  }
+
+  /**
+   * Returns the payload for a governance SetDataSources instruction for contracts deployed on this chain
+   * @param datasources the new datasources
+   */
+  generateGovernanceSetDataSources(datasources: DataSource[]): Buffer {
+    return new SetDataSources(this.wormholeChainName, datasources).encode();
+  }
+
+  /**
+   * Returns the payload for a governance SetStalePriceThreshold instruction for contracts deployed on this chain
+   * @param newValidStalePriceThreshold the new stale price threshold in seconds
+   */
+  generateGovernanceSetStalePriceThreshold(
+    newValidStalePriceThreshold: bigint
+  ): Buffer {
+    return new SetValidPeriod(
+      this.wormholeChainName,
+      newValidStalePriceThreshold
+    ).encode();
   }
 
   /**
@@ -41,24 +87,53 @@ export abstract class Chain extends Storable {
   abstract generateGovernanceUpgradePayload(upgradeInfo: any): Buffer;
 }
 
+export class GlobalChain extends Chain {
+  static type: string = "GlobalChain";
+  constructor() {
+    super("global", true, "unset");
+  }
+  generateGovernanceUpgradePayload(upgradeInfo: any): Buffer {
+    throw new Error(
+      "Can not create a governance message for upgrading contracts on all chains!"
+    );
+  }
+
+  getType(): string {
+    return GlobalChain.type;
+  }
+
+  toJson(): any {
+    return {
+      id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
+      type: GlobalChain.type,
+    };
+  }
+}
+
 export class CosmWasmChain extends Chain {
   static type: string = "CosmWasmChain";
 
   constructor(
     id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
     public querierEndpoint: string,
     public executorEndpoint: string,
     public gasPrice: string,
     public prefix: string,
     public feeDenom: string
   ) {
-    super(id);
+    super(id, mainnet, wormholeChainName);
   }
 
   static fromJson(parsed: any): CosmWasmChain {
     if (parsed.type !== CosmWasmChain.type) throw new Error("Invalid type");
     return new CosmWasmChain(
       parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName,
       parsed.querierEndpoint,
       parsed.executorEndpoint,
       parsed.gasPrice,
@@ -72,6 +147,8 @@ export class CosmWasmChain extends Chain {
       querierEndpoint: this.querierEndpoint,
       executorEndpoint: this.executorEndpoint,
       id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
       gasPrice: this.gasPrice,
       prefix: this.prefix,
       feeDenom: this.feeDenom,
@@ -83,29 +160,43 @@ export class CosmWasmChain extends Chain {
     return CosmWasmChain.type;
   }
 
+  async getCode(codeId: number): Promise<Buffer> {
+    const chainQuerier = await CosmwasmQuerier.connect(this.querierEndpoint);
+    return await chainQuerier.getCode({ codeId });
+  }
+
   generateGovernanceUpgradePayload(codeId: bigint): Buffer {
-    return new CosmwasmUpgradeContractInstruction(
-      CHAINS[this.getId() as keyof typeof CHAINS],
-      codeId
-    ).serialize();
+    return new CosmosUpgradeContract(this.wormholeChainName, codeId).encode();
   }
 }
 
 export class SuiChain extends Chain {
   static type: string = "SuiChain";
 
-  constructor(id: string, public rpcUrl: string) {
-    super(id);
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    public rpcUrl: string
+  ) {
+    super(id, mainnet, wormholeChainName);
   }
 
   static fromJson(parsed: any): SuiChain {
     if (parsed.type !== SuiChain.type) throw new Error("Invalid type");
-    return new SuiChain(parsed.id, parsed.rpcUrl);
+    return new SuiChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName,
+      parsed.rpcUrl
+    );
   }
 
   toJson(): any {
     return {
       id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       type: SuiChain.type,
     };
@@ -115,97 +206,105 @@ export class SuiChain extends Chain {
     return SuiChain.type;
   }
 
-  private wrapWithWormholeGovernancePayload(
-    actionVariant: number,
-    payload: Buffer
-  ): Buffer {
-    const builder = new BufferBuilder();
-    builder.addBuffer(
-      Buffer.from(
-        "0000000000000000000000000000000000000000000000000000000000000001",
-        "hex"
-      )
-    );
-    builder.addUint8(actionVariant);
-    builder.addUint16(CHAINS["sui"]); // should always be sui (21) no matter devnet or testnet
-    builder.addBuffer(payload);
-    return builder.build();
-  }
-
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
+   */
   generateGovernanceUpgradePayload(digest: string): Buffer {
-    let setFee = new SuiAuthorizeUpgradeContractInstruction(
-      CHAINS["sui"],
-      new HexString32Bytes(digest)
-    ).serialize();
-    return this.wrapWithWormholeGovernancePayload(0, setFee);
-  }
-
-  generateGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
-    let setFee = new SetFeeInstruction(
-      CHAINS["sui"],
-      BigInt(fee),
-      BigInt(exponent)
-    ).serialize();
-    return this.wrapWithWormholeGovernancePayload(3, setFee);
+    return new SuiAuthorizeUpgradeContract(
+      this.wormholeChainName,
+      digest
+    ).encode();
   }
 }
 
-export class EVMChain extends Chain {
-  static type: string = "EVMChain";
+export class EvmChain extends Chain {
+  static type: string = "EvmChain";
 
-  constructor(id: string, public rpcUrl: string) {
-    super(id);
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    private rpcUrl: string,
+    private networkId: number
+  ) {
+    super(id, mainnet, wormholeChainName);
   }
 
-  static fromJson(parsed: any): EVMChain {
-    if (parsed.type !== EVMChain.type) throw new Error("Invalid type");
-    return new EVMChain(parsed.id, parsed.rpcUrl);
+  static fromJson(parsed: any): EvmChain {
+    if (parsed.type !== EvmChain.type) throw new Error("Invalid type");
+    return new EvmChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName,
+      parsed.rpcUrl,
+      parsed.networkId
+    );
   }
 
-  generateGovernanceUpgradePayload(address: HexString20Bytes): Buffer {
-    return new EthereumUpgradeContractInstruction(
-      CHAINS[this.getId() as keyof typeof CHAINS],
-      address
-    ).serialize();
+  getRpcUrl(): string {
+    return this.rpcUrl;
+  }
+
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param address hex string of the 20 byte address of the contract to upgrade to without the 0x prefix
+   */
+  generateGovernanceUpgradePayload(address: string): Buffer {
+    return new EvmUpgradeContract(this.wormholeChainName, address).encode();
   }
 
   toJson(): any {
     return {
       id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
-      type: EVMChain.type,
+      networkId: this.networkId,
+      type: EvmChain.type,
     };
   }
 
   getType(): string {
-    return EVMChain.type;
+    return EvmChain.type;
+  }
+
+  async getGasPrice() {
+    const web3 = new Web3(this.getRpcUrl());
+    let gasPrice = await web3.eth.getGasPrice();
+    // some testnets have inaccuarte gas prices that leads to transactions not being mined, we double it since it's free!
+    if (!this.isMainnet()) {
+      gasPrice = (BigInt(gasPrice) * 2n).toString();
+    }
+    return gasPrice;
   }
 }
 
 export class AptosChain extends Chain {
   static type = "AptosChain";
 
-  constructor(id: string, public rpcUrl: string) {
-    super(id);
+  constructor(
+    id: string,
+    mainnet: boolean,
+    wormholeChainName: string,
+    public rpcUrl: string
+  ) {
+    super(id, mainnet, wormholeChainName);
   }
 
   getClient(): AptosClient {
     return new AptosClient(this.rpcUrl);
   }
 
+  /**
+   * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
+   * @param digest hex string of the 32 byte digest for the new package without the 0x prefix
+   */
   generateGovernanceUpgradePayload(digest: string): Buffer {
-    return new SuiAuthorizeUpgradeContractInstruction(
-      CHAINS["aptos"],
-      new HexString32Bytes(digest)
-    ).serialize();
-  }
-
-  generateGovernanceSetFeePayload(fee: number, exponent: number): Buffer {
-    return new SetFeeInstruction(
-      CHAINS["aptos"], // should always be aptos (22) no matter devnet or testnet or mainnet
-      BigInt(fee),
-      BigInt(exponent)
-    ).serialize();
+    return new AptosAuthorizeUpgradeContract(
+      this.wormholeChainName,
+      digest
+    ).encode();
   }
 
   getType(): string {
@@ -215,6 +314,8 @@ export class AptosChain extends Chain {
   toJson(): any {
     return {
       id: this.id,
+      wormholeChainName: this.wormholeChainName,
+      mainnet: this.mainnet,
       rpcUrl: this.rpcUrl,
       type: AptosChain.type,
     };
@@ -222,6 +323,11 @@ export class AptosChain extends Chain {
 
   static fromJson(parsed: any): AptosChain {
     if (parsed.type !== AptosChain.type) throw new Error("Invalid type");
-    return new AptosChain(parsed.id, parsed.rpcUrl);
+    return new AptosChain(
+      parsed.id,
+      parsed.mainnet,
+      parsed.wormholeChainName,
+      parsed.rpcUrl
+    );
   }
 }

@@ -36,16 +36,6 @@ module.exports = {
       timeoutBlocks: 200,
       skipDryRun: false,
     },
-    ropsten: {
-      provider: payerProvider(
-        `https://ropsten.infura.io/v3/` + process.env.INFURA_KEY
-      ),
-      network_id: 3,
-      gas: 5500000,
-      confirmations: 2,
-      timeoutBlocks: 200,
-      skipDryRun: true,
-    },
     rinkeby: {
       provider: payerProvider(
         `https://rinkeby.infura.io/v3/` + process.env.INFURA_KEY
@@ -100,12 +90,6 @@ module.exports = {
     fuji: {
       provider: payerProvider(`https://api.avax-test.network/ext/bc/C/rpc`),
       network_id: "43113",
-    },
-    oasis: {
-      provider: payerProvider(`https://emerald.oasis.dev/`),
-      network_id: 42262,
-      gas: 4465030,
-      gasPrice: 30000000000,
     },
     aurora: {
       provider: payerProvider(`https://mainnet.aurora.dev`),
@@ -204,15 +188,6 @@ module.exports = {
       provider: payerProvider(`https://zkevm-rpc.com`),
       network_id: 1101,
     },
-    shimmer_testnet: {
-      provider: payerProvider(`https://json-rpc.evm.testnet.shimmer.network`),
-      network_id: 1071,
-      verify: {
-        apiUrl: "https://explorer.evm.testnet.shimmer.network/api",
-        explorerUrl: "https://explorer.evm.testnet.shimmer.network",
-        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
-      },
-    },
     gnosis: {
       provider: payerProvider(`https://rpc.gnosischain.com`),
       network_id: 100,
@@ -229,6 +204,15 @@ module.exports = {
         apiUrl: "https://api-goerli.basescan.org/api",
         explorerUrl: "https://goerli.basescan.org/",
         apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
+      },
+    },
+    base: {
+      provider: payerProvider("https://developer-access-mainnet.base.org/"),
+      network_id: 8453,
+      verify: {
+        apiUrl: "https://api.basescan.org/api",
+        explorerUrl: "https://basescan.org/",
+        apiKey: process.env.BASESCAN_KEY,
       },
     },
     evmos: {
@@ -268,7 +252,7 @@ module.exports = {
       network_id: 71,
     },
     neon: {
-      provider: payerProvider("NEON_RPC_PLACEHOLDER"), // Replace this by the neon RPC node endpoint
+      provider: payerProvider("https://neon-proxy-mainnet.solana.p2p.org"),
       network_id: 245022934,
     },
     kava: {
@@ -299,6 +283,45 @@ module.exports = {
     linea_goerli: {
       provider: payerProvider("https://rpc.goerli.linea.build"),
       network_id: 59140,
+    },
+    linea: {
+      provider: payerProvider(
+        `https://linea-mainnet.infura.io/v3/` + process.env.INFURA_KEY
+      ),
+      network_id: 59144,
+      verify: {
+        apiUrl: "http://explorer.linea.build/api",
+        explorerUrl: "https://explorer.linea.build/",
+        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
+      },
+    },
+    eos: {
+      provider: payerProvider("https://api.evm.eosnetwork.com"),
+      network_id: 17777,
+      verify: {
+        apiUrl: "https://explorer.evm.eosnetwork.com/api",
+        explorerUrl: "https://explorer.evm.eosnetwork.com",
+        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
+      },
+    },
+    eos_testnet: {
+      provider: payerProvider("https://api.testnet.evm.eosnetwork.com"),
+      network_id: 15557,
+      verify: {
+        apiUrl: "https://explorer.testnet.evm.eosnetwork.com/api",
+        explorerUrl: "https://explorer.testnet.evm.eosnetwork.com",
+        apiKey: "there_should_be_a_dummy_value_here_to_avoid_error",
+      },
+    },
+    shimmer_testnet: {
+      provider: payerProvider(`https://json-rpc.evm.testnet.shimmer.network`),
+      network_id: 1072,
+    },
+    syndr_nitro_testnet: {
+      provider: payerProvider(
+        "https://syndr-nitro-testnet.calderachain.xyz/http"
+      ),
+      network_id: 412346,
     },
   },
 

@@ -778,14 +778,18 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
         ) : (
           <p className="mb-8 leading-6">No proposed changes.</p>
         )}
-        {Object.keys(changes).length > 0 ? (
-          <button
-            className="action-btn text-base"
-            onClick={handleSendProposalButtonClick}
-          >
-            {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
-          </button>
-        ) : null}
+        {Object.keys(changes).length > 0 && (
+          <>
+            <button
+              className="action-btn text-base"
+              onClick={handleSendProposalButtonClick}
+              disabled={isSendProposalButtonLoading || !proposeSquads}
+            >
+              {isSendProposalButtonLoading ? <Spinner /> : 'Send Proposal'}
+            </button>
+            {!proposeSquads && <div>Please connect your wallet</div>}
+          </>
+        )}
       </>
     )
   }

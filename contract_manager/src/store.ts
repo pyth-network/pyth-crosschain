@@ -1,6 +1,13 @@
-import { AptosChain, Chain, CosmWasmChain, EVMChain, SuiChain } from "./chains";
-import { CosmWasmContract } from "./cosmwasm";
-import { SuiContract } from "./sui";
+import {
+  AptosChain,
+  Chain,
+  CosmWasmChain,
+  EvmChain,
+  GlobalChain,
+  SuiChain,
+} from "./chains";
+import { CosmWasmContract } from "./contracts/cosmwasm";
+import { SuiContract } from "./contracts/sui";
 import { Contract } from "./base";
 import { parse, stringify } from "yaml";
 import {
@@ -11,12 +18,12 @@ import {
   statSync,
   writeFileSync,
 } from "fs";
-import { EVMContract } from "./evm";
-import { AptosContract } from "./aptos";
-import { Vault } from "./entities";
+import { EvmContract } from "./contracts/evm";
+import { AptosContract } from "./contracts/aptos";
+import { Vault } from "./governance";
 
 class Store {
-  public chains: Record<string, Chain> = {};
+  public chains: Record<string, Chain> = { global: new GlobalChain() };
   public contracts: Record<string, Contract> = {};
   public vaults: Record<string, Vault> = {};
 
@@ -76,7 +83,7 @@ class Store {
     let allChainClasses = {
       [CosmWasmChain.type]: CosmWasmChain,
       [SuiChain.type]: SuiChain,
-      [EVMChain.type]: EVMChain,
+      [EvmChain.type]: EvmChain,
       [AptosChain.type]: AptosChain,
     };
 
@@ -94,7 +101,7 @@ class Store {
     let allContractClasses = {
       [CosmWasmContract.type]: CosmWasmContract,
       [SuiContract.type]: SuiContract,
-      [EVMContract.type]: EVMContract,
+      [EvmContract.type]: EvmContract,
       [AptosContract.type]: AptosContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {

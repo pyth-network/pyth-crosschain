@@ -86,12 +86,17 @@ export type RawContractStateRequest = {
   key: Buffer;
 };
 
+export type GetCodeRequest = {
+  codeId: number;
+};
+
 export type AllContractStateRequest = {
   contractAddr: string;
 };
 
 export class CosmwasmQuerier implements ChainQuerier {
   private readonly wasmQueryClient: WasmExtension;
+
   private constructor(readonly tendermintClient: Tendermint34Client) {
     this.wasmQueryClient = setupWasmExtension(
       new QueryClient(tendermintClient)
@@ -134,6 +139,15 @@ export class CosmwasmQuerier implements ChainQuerier {
 
     const { data } = await wasmQueryClient.queryContractRaw(contractAddr, key);
     return JSON.parse(Buffer.from(data).toString());
+  }
+
+  async getCode(req: GetCodeRequest): Promise<Buffer> {
+    const { codeId } = req;
+
+    const { wasm: wasmQueryClient } = this.wasmQueryClient;
+
+    const { data } = await wasmQueryClient.getCode(codeId);
+    return Buffer.from(data);
   }
 
   async getAllContractState(req: AllContractStateRequest): Promise<Object> {

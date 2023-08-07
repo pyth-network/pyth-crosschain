@@ -3,15 +3,19 @@ use {
     crate::store::Store,
     anyhow::Result,
     axum::{
+        extract::Extension,
         routing::get,
         Router,
     },
+    serde_qs::axum::QsQueryConfig,
     std::sync::Arc,
     tokio::{
         signal,
         sync::mpsc::Receiver,
     },
     tower_http::cors::CorsLayer,
+    utoipa::OpenApi,
+    utoipa_swagger_ui::SwaggerUi,
 };
 
 mod rest;
@@ -38,12 +42,32 @@ impl State {
 /// Currently this is based on Axum due to the simplicity and strong ecosystem support for the
 /// packages they are based on (tokio & hyper).
 pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: String) -> Result<()> {
+    #[derive(OpenApi)]
+    #[openapi(
+    paths(
+      rest::latest_price_feeds,
+      rest::latest_vaas,
+      rest::get_price_feed,
+      rest::get_vaa,
+      rest::get_vaa_ccip,
+      rest::price_feed_ids,
+    ),
+    components(
+      schemas(types::RpcPriceFeedMetadata, types::RpcPriceFeed, types::RpcPrice, types::RpcPriceIdentifier, types::PriceIdInput, rest::GetVaaResponse, rest::GetVaaCcipResponse, rest::GetVaaCcipInput)
+    ),
+    tags(
+      (name = "hermes", description = "Pyth Real-Time Pricing API")
+    )
+    )]
+    struct ApiDoc;
+
     let state = State::new(store);
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
     let app = Router::new();
     let app = app
+        .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
         .route("/", get(rest::index))
         .route("/live", get(rest::live))
         .route("/ready", get(rest::ready))
@@ -55,7 +79,11 @@ pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: Strin
         .route("/api/get_vaa_ccip", get(rest::get_vaa_ccip))
         .route("/api/price_feed_ids", get(rest::price_feed_ids))
         .with_state(state.clone())
-        .layer(CorsLayer::permissive()); // Permissive CORS layer to allow all origins
+        // Permissive CORS layer to allow all origins
+        .layer(CorsLayer::permissive())
+        // non-strict mode permits escaped [] in URL parameters.
+        // 5 is the allowed depth (also the default value for this parameter).
+        .layer(Extension(QsQueryConfig::new(5, false)));
 
 
     // Call dispatch updates to websocket every 1 seconds

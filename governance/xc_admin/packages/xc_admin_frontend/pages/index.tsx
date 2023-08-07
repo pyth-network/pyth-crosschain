@@ -1,8 +1,4 @@
-import { Wallet } from '@coral-xyz/anchor'
-import NodeWallet from '@coral-xyz/anchor/dist/cjs/nodewallet'
 import { Tab } from '@headlessui/react'
-import { useAnchorWallet } from '@solana/wallet-adapter-react'
-import { Keypair } from '@solana/web3.js'
 import * as fs from 'fs'
 import type { GetServerSideProps, NextPage } from 'next'
 import { useRouter } from 'next/router'
@@ -88,8 +84,6 @@ const Home: NextPage<{
 }) => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0)
   const tabInfoArray = Object.values(TAB_INFO)
-  const anchorWallet = useAnchorWallet()
-  const wallet = anchorWallet as Wallet
 
   const router = useRouter()
 
@@ -123,8 +117,11 @@ const Home: NextPage<{
 
   return (
     <Layout>
-      <PythContextProvider>
-        <MultisigContextProvider wallet={wallet}>
+      <PythContextProvider
+        publisherKeyToNameMapping={publisherKeyToNameMapping}
+        multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
+      >
+        <MultisigContextProvider>
           <div className="container relative pt-16 md:pt-20">
             <div className="py-8 md:py-16">
               <Tab.Group
@@ -150,20 +147,17 @@ const Home: NextPage<{
             </div>
           </div>
           {tabInfoArray[currentTabIndex].queryString ===
-          TAB_INFO.General.queryString ? (
+            TAB_INFO.General.queryString && (
             <General proposerServerUrl={proposerServerUrl} />
-          ) : tabInfoArray[currentTabIndex].queryString ===
-            TAB_INFO.UpdatePermissions.queryString ? (
-            <UpdatePermissions />
-          ) : tabInfoArray[currentTabIndex].queryString ===
-            TAB_INFO.Proposals.queryString ? (
+          )}
+          {tabInfoArray[currentTabIndex].queryString ===
+            TAB_INFO.UpdatePermissions.queryString && <UpdatePermissions />}
+          {tabInfoArray[currentTabIndex].queryString ===
+            TAB_INFO.Proposals.queryString && (
             <StatusFilterProvider>
-              <Proposals
-                publisherKeyToNameMapping={publisherKeyToNameMapping}
-                multisigSignerKeyToNameMapping={multisigSignerKeyToNameMapping}
-              />
+              <Proposals />
             </StatusFilterProvider>
-          ) : null}
+          )}
         </MultisigContextProvider>
       </PythContextProvider>
     </Layout>

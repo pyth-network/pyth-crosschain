@@ -1,0 +1,6 @@
+id: aurora_testnet
+wormholeChainName: aurora
+mainnet: false
+rpcUrl: https://testnet.aurora.dev
+networkId: 1313161555
+type: EvmChain

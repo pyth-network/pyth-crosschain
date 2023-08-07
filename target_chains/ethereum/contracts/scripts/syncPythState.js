@@ -11,7 +11,7 @@
  * the previous step in the next run.
  */
 
-const governance = require("@pythnetwork/xc-governance-sdk");
+const governance = require("xc_admin_common");
 const wormhole = require("@certusone/wormhole-sdk");
 const assertVaaPayloadEquals = require("./assertVaaPayloadEquals");
 const { assert } = require("chai");
@@ -233,10 +233,10 @@ async function upgradeContract(proxy, desiredVersion) {
     newImplementationAddress = newImplementation.address;
   }
 
-  const upgradePayload = new governance.EthereumUpgradeContractInstruction(
-    governance.CHAINS[chainName],
-    new governance.HexString20Bytes(newImplementationAddress)
-  ).serialize();
+  const upgradePayload = new governance.EvmUpgradeContract(
+    chainName,
+    newImplementationAddress.replace("0x", "")
+  ).encode();
 
   const upgradePayloadHex = upgradePayload.toString("hex");
 
@@ -277,11 +277,11 @@ async function syncUpdateFee(proxy) {
         `desired update fee: ${desiredUpdateFee}. Updating...`
     );
 
-    const setFeePayload = new governance.SetFeeInstruction(
-      governance.CHAINS[chainName],
+    const setFeePayload = new governance.SetFee(
+      chainName,
       BigInt(desiredUpdateFee),
       BigInt(0)
-    ).serialize();
+    ).encode();
 
     await createAndExecuteVaaFromPayloadThroughMultiSig(proxy, setFeePayload);
 
@@ -308,10 +308,10 @@ async function syncValidTimePeriod(proxy) {
         `desired valid time period: ${desiredValidTimePeriod}s. Updating...`
     );
 
-    const setValidPeriodPayload = new governance.SetValidPeriodInstruction(
-      governance.CHAINS[chainName],
+    const setValidPeriodPayload = new governance.SetValidPeriod(
+      chainName,
       BigInt(desiredValidTimePeriod)
-    ).serialize();
+    ).encode();
 
     await createAndExecuteVaaFromPayloadThroughMultiSig(
       proxy,
@@ -357,16 +357,13 @@ async function syncDataSources(proxy) {
 
     // Usually this change is universal, so the Payload is generated for all
     // the chains.
-    const setDataSourcesPayload = new governance.SetDataSourcesInstruction(
-      governance.CHAINS[chainName],
-      Array.from(desiredDataSources).map(
-        (ds) =>
-          new governance.DataSource(
-            Number(ds[0]),
-            new governance.HexString32Bytes(ds[1])
-          )
-      )
-    ).serialize();
+    const setDataSourcesPayload = new governance.SetDataSources(
+      chainName,
+      Array.from(desiredDataSources).map((ds) => ({
+        emitterChain: Number(ds[0]),
+        emitterAddress: ds[1].replace("0x", ""),
+      }))
+    ).encode();
     await createAndExecuteVaaFromPayloadThroughMultiSig(
       proxy,
       setDataSourcesPayload

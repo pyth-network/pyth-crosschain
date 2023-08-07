@@ -37,7 +37,7 @@ COPY --from=pyth_builder /code/artifacts/pyth_cosmwasm.wasm /home/node/target_ch
 
 WORKDIR /home/node/
 
-COPY --chown=1000:1000 governance/xc_governance_sdk_js governance/xc_governance_sdk_js
+COPY --chown=1000:1000 governance/xc_admin/packages/xc_admin_common/ governance/xc_admin/packages/xc_admin_common/
 COPY --chown=1000:1000 target_chains/cosmwasm/tools target_chains/cosmwasm/tools
 
 RUN npx lerna run build --scope="@pythnetwork/cosmwasm-deploy-tools" --include-dependencies

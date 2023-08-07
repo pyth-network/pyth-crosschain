@@ -1,0 +1,6 @@
+id: kcc
+wormholeChainName: kcc
+mainnet: true
+rpcUrl: https://rpc-mainnet.kcc.network
+networkId: 321
+type: EvmChain

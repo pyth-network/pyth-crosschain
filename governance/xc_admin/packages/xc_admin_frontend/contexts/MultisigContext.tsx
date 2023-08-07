@@ -1,25 +1,10 @@
-import { Wallet } from '@coral-xyz/anchor'
 import SquadsMesh from '@sqds/mesh'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import React, { createContext, useContext, useMemo } from 'react'
 import { MultisigInstruction } from 'xc_admin_common'
-import { useMultisig } from '../hooks/useMultisig'
+import { useMultisig, MultisigHookData } from '../hooks/useMultisig'
 
-// TODO: fix any
-interface MultisigContextProps {
-  isLoading: boolean
-  error: any // TODO: fix any
-  proposeSquads: SquadsMesh | undefined
-  voteSquads: SquadsMesh | undefined
-  upgradeMultisigAccount: MultisigAccount | undefined
-  priceFeedMultisigAccount: MultisigAccount | undefined
-  upgradeMultisigProposals: TransactionAccount[]
-  priceFeedMultisigProposals: TransactionAccount[]
-  allProposalsIxsParsed: MultisigInstruction[][]
-  setpriceFeedMultisigProposals: any
-}
-
-const MultisigContext = createContext<MultisigContextProps>({
+const MultisigContext = createContext<MultisigHookData>({
   upgradeMultisigAccount: undefined,
   priceFeedMultisigAccount: undefined,
   upgradeMultisigProposals: [],
@@ -29,19 +14,19 @@ const MultisigContext = createContext<MultisigContextProps>({
   error: null,
   proposeSquads: undefined,
   voteSquads: undefined,
-  setpriceFeedMultisigProposals: () => {},
+  refreshData: undefined,
+  connection: undefined,
 })
 
 export const useMultisigContext = () => useContext(MultisigContext)
 
 interface MultisigContextProviderProps {
   children?: React.ReactNode
-  wallet: Wallet
 }
 
 export const MultisigContextProvider: React.FC<
   MultisigContextProviderProps
-> = ({ children, wallet }) => {
+> = ({ children }) => {
   const {
     isLoading,
     error,
@@ -52,8 +37,9 @@ export const MultisigContextProvider: React.FC<
     upgradeMultisigProposals,
     priceFeedMultisigProposals,
     allProposalsIxsParsed,
-    setpriceFeedMultisigProposals,
-  } = useMultisig(wallet)
+    refreshData,
+    connection,
+  } = useMultisig()
 
   const value = useMemo(
     () => ({
@@ -62,11 +48,12 @@ export const MultisigContextProvider: React.FC<
       upgradeMultisigProposals,
       priceFeedMultisigProposals,
       allProposalsIxsParsed,
-      setpriceFeedMultisigProposals,
       isLoading,
       error,
       proposeSquads,
       voteSquads,
+      refreshData,
+      connection,
     }),
     [
       proposeSquads,
@@ -78,7 +65,8 @@ export const MultisigContextProvider: React.FC<
       upgradeMultisigProposals,
       priceFeedMultisigProposals,
       allProposalsIxsParsed,
-      setpriceFeedMultisigProposals,
+      refreshData,
+      connection,
     ]
   )
 

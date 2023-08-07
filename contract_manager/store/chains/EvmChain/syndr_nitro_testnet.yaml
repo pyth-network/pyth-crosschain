@@ -1,0 +1,6 @@
+id: syndr_nitro_testnet
+wormholeChainName: syndr
+mainnet: false
+rpcUrl: https://syndr-nitro-testnet.calderachain.xyz/http
+networkId: 412346
+type: EvmChain

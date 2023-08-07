@@ -1,3 +1,5 @@
 id: sui_devnet
+wormholeChainName: sui
+mainnet: false
 rpcUrl: https://fullnode.devnet.sui.io:443
 type: SuiChain

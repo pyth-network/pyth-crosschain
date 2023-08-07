@@ -1,0 +1,5 @@
+querierEndpoint: https://injective-rpc.quickapi.com:443
+id: injective
+wormholeChainName: injective
+mainnet: true
+type: CosmWasmChain

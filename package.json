@@ -2,7 +2,6 @@
   "name": "root",
   "workspaces": [
     "governance/xc_admin/packages/*",
-    "governance/xc_governance_sdk_js",
     "governance/multisig_wh_message_builder",
     "price_pusher",
     "price_service/server",

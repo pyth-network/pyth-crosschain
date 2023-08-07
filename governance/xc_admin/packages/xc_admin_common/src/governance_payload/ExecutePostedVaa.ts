@@ -1,4 +1,4 @@
-import { ChainId, ChainName } from "@certusone/wormhole-sdk";
+import { ChainName } from "../chains";
 import * as BufferLayout from "@solana/buffer-layout";
 import {
   PythGovernanceAction,

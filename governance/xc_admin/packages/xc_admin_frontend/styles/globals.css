@@ -278,13 +278,13 @@
 }
 
 .dialogTitle {
-  @apply mb-8 text-center font-body text-[32px] leading-[1.1] lg:mb-11 lg:text-[44px] px-10;
+  @apply mb-8 px-10 text-center font-body text-[32px] leading-[1.1] lg:mb-11 lg:text-[44px];
 }
 
 .action-btn {
-  @apply h-[45px] rounded-full bg-pythPurple  px-8 font-mono  font-semibold uppercase  leading-none transition-colors  hover:bg-mediumSlateBlue disabled:opacity-70 disabled:hover:bg-pythPurple;
+  @apply h-[45px] rounded-full bg-pythPurple px-8 font-mono font-semibold uppercase leading-none transition-colors  hover:bg-mediumSlateBlue disabled:opacity-70 disabled:hover:bg-pythPurple;
 }
 
 .sub-action-btn {
-  @apply h-[45px] rounded-full bg-darkGray2  px-8 font-mono  font-semibold uppercase  leading-none transition-colors  hover:bg-darkGray4 disabled:opacity-70 disabled:hover:bg-darkGray2;
+  @apply h-[45px] rounded-full bg-darkGray2 px-8 font-mono font-semibold uppercase leading-none transition-colors hover:bg-darkGray4 disabled:opacity-70 disabled:hover:bg-darkGray2;
 }

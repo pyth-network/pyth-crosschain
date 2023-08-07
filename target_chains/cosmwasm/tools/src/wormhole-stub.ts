@@ -74,7 +74,10 @@ async function run() {
     );
     const pipeline = new Pipeline(chainId, pipelineStoreFilePath);
 
-    const chainExecutor = createExecutorForChain(chainConfig, argv.mnemonic);
+    const chainExecutor = await createExecutorForChain(
+      chainConfig,
+      argv.mnemonic
+    );
 
     // add stages
     // 1 deploy artifact
