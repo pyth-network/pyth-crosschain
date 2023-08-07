@@ -48,10 +48,7 @@ This is the deployment process:
 5. Make sure the deployment account has proper balance on this network and top it up if needed. Search
    for testnet faucets if it is a testnet network. Sometimes you need to bridge the network token (e.g., L2s).
 6. Add the required chain configuration in the contract manager file [EvmChains.yaml](../../../contract_manager/store/chains/EvmChains.yaml)
-7. Deploy the new contract or changes using the [`deploy.sh`](./deploy.sh) script. If you have made changes
-   to [`chains.ts`](../../../governance/xc_admin/packages/xc_admin_common/src/chains.ts), please make sure to
-   run `npx lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies` in the
-   root directory before running the deployment script.
+7. Deploy the new contract or changes using the [`deploy.sh`](./deploy.sh) script.
    You might need to repeat this script because of busy RPCs. Repeating would not cause any problem even
    if the changes are already made. Also, sometimes the gases are not adjusted and it will cause the tx to
    remain on the mempool for a long time (so there is no progress until timeout). Please update them with
@@ -61,12 +58,6 @@ This is the deployment process:
    ```bash
    ./deploy.sh bnb_testnet fantom_testnet mumbai
    ```
-   Upon contract upgrade/state change the script needs to be run a couple of times as the multisig owners
-   need to approve the created transactions. Links to the multisig transactions are printed during the
-   script execution and you can use them. You need to run the script when the transactions are approved.
-   If the deployment script runs successfully you should see many ✅s and no ❌s with a successful message.
-   Please note that if you need to deploy/upgrade a zkSync network contract, you should deploy/upgrade it manually first
-   as described below.
 8. On first time deployments for a **mainnet** network with Wormhole Receiver contract, run this command:
    ```bash
    npm run receiver-submit-guardian-sets -- --network <network>

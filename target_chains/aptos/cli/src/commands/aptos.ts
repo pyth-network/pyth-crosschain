@@ -394,6 +394,7 @@ export const builder: (args: Argv<any>) => Argv<any> = (yargs) =>
           const addr2Module = `${endpoint}/accounts/${addr2}/module/${moduleName}`;
           const module1Response = await (await fetch(addr1Module)).text();
           const module2Response = await (await fetch(addr2Module)).text();
+          // Replace the addresses with 0x0 so that we can compare the ABIs skipping the irrelevant address differences
           const module1Stripped = module1Response.replace(
             new RegExp(addr1, "g"),
             "0x0"

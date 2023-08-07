@@ -11,6 +11,9 @@
 # $ ./deploy.sh ethereum bnb avalanche
 set -euo pipefail
 
+echo "=========== Building dependencies ==========="
+npx lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependencies
+
 echo "=========== Compiling ==========="
 
 echo "Building the contract..."
