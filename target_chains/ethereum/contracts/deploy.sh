@@ -16,6 +16,11 @@ npx lerna run build --scope="@pythnetwork/pyth-evm-contract" --include-dependenc
 
 echo "=========== Compiling ==========="
 
+if [[ -e contracts/pyth/PythUpgradable_merged.sol ]]; then
+    echo "Flattened contract PythUpgradable_merged.sol exists. Removing before compiling."
+    rm contracts/pyth/PythUpgradable_merged.sol
+fi
+
 echo "Building the contract..."
 # Ensure that we deploy a fresh build with up-to-date dependencies.
 rm -rf build && npx truffle compile --all
