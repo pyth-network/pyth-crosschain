@@ -39,7 +39,6 @@ use {
     },
     std::{
         collections::HashMap,
-        pin::Pin,
         sync::{
             atomic::{
                 AtomicUsize,
@@ -88,7 +87,7 @@ pub struct Subscriber {
     receiver:                SplitStream<WebSocket>,
     sender:                  SplitSink<WebSocket, Message>,
     price_feeds_with_config: HashMap<PriceIdentifier, PriceFeedClientConfig>,
-    ping_interval_future:    Pin<Box<tokio::time::Sleep>>,
+    ping_interval:           tokio::time::Interval,
     responded_to_ping:       bool,
 }
 
@@ -108,7 +107,7 @@ impl Subscriber {
             receiver,
             sender,
             price_feeds_with_config: HashMap::new(),
-            ping_interval_future: Box::pin(tokio::time::sleep(PING_INTERVAL_DURATION)),
+            ping_interval: tokio::time::interval(PING_INTERVAL_DURATION),
             responded_to_ping: true, // We start with true so we don't close the connection immediately
         }
     }
@@ -116,7 +115,7 @@ impl Subscriber {
     pub async fn run(&mut self) {
         while !self.closed {
             if let Err(e) = self.handle_next().await {
-                log::warn!("Subscriber {}: Error handling next message: {}", self.id, e);
+                log::debug!("Subscriber {}: Error handling next message: {}", self.id, e);
                 break;
             }
         }
@@ -128,31 +127,22 @@ impl Subscriber {
                 if maybe_update_feeds.is_none() {
                     return Err(anyhow!("Update channel closed. This should never happen. Closing connection."));
                 };
-                self.handle_price_feeds_update().await?;
+                self.handle_price_feeds_update().await
             },
             maybe_message_or_err = self.receiver.next() => {
-                match maybe_message_or_err {
-                    None => {
-                        log::debug!("Subscriber {} closed connection unexpectedly.", self.id);
-                        self.closed = true;
-                        return Ok(());
-                    },
-                    Some(message_or_err) => self.handle_client_message(message_or_err?).await?
-                }
+                self.handle_client_message(
+                    maybe_message_or_err.ok_or(anyhow!("Client channel is closed"))??
+                ).await
             },
-            _  = &mut self.ping_interval_future => {
+            _  = self.ping_interval.tick() => {
                 if !self.responded_to_ping {
-                    log::debug!("Subscriber {} did not respond to ping. Closing connection.", self.id);
-                    self.closed = true;
-                    return Ok(());
+                    return Err(anyhow!("Subscriber did not respond to ping. Closing connection."));
                 }
                 self.responded_to_ping = false;
                 self.sender.send(Message::Ping(vec![])).await?;
-                self.ping_interval_future = Box::pin(tokio::time::sleep(PING_INTERVAL_DURATION));
+                Ok(())
             }
         }
-
-        Ok(())
     }
 
     async fn handle_price_feeds_update(&mut self) -> Result<()> {
@@ -170,6 +160,8 @@ impl Subscriber {
                     "Config missing, price feed list was poisoned during iteration."
                 ))?;
 
+            // `sender.feed` buffers a message to the client but does not flush it, so we can send
+            // multiple messages and flush them all at once.
             self.sender
                 .feed(Message::Text(serde_json::to_string(
                     &ServerMessage::PriceUpdate {
@@ -188,13 +180,22 @@ impl Subscriber {
     }
 
     async fn handle_client_message(&mut self, message: Message) -> Result<()> {
-        if let Message::Close(_) = message {
-            log::debug!("Subscriber {} closed connection", self.id);
-            self.closed = true;
-            return Ok(());
-        }
-
         let maybe_client_message = match message {
+            Message::Close(_) => {
+                // Closing the connection. We don't remove it from the subscribers
+                // list, instead when the Subscriber struct is dropped the channel
+                // to subscribers list will be closed and it will eventually get
+                // removed.
+                log::trace!("Subscriber {} closed connection", self.id);
+
+                // Send the close message to gracefully shut down the connection
+                // Otherwise the client might get an abnormal Websocket closure
+                // error.
+                self.sender.close().await?;
+
+                self.closed = true;
+                return Ok(());
+            }
             Message::Text(text) => serde_json::from_str::<ClientMessage>(&text),
             Message::Binary(data) => serde_json::from_slice::<ClientMessage>(&data),
             Message::Ping(_) => {
@@ -203,9 +204,6 @@ impl Subscriber {
             }
             Message::Pong(_) => {
                 self.responded_to_ping = true;
-                return Ok(());
-            }
-            _ => {
                 return Ok(());
             }
         };
@@ -261,8 +259,11 @@ pub async fn notify_updates(ws_state: Arc<WsState>) {
             .map(|subscriber| async move {
                 match subscriber.send(()).await {
                     Ok(_) => None,
-                    Err(e) => {
-                        log::debug!("Error sending update to subscriber: {}", e);
+                    Err(_) => {
+                        // An error here indicates the channel is closed (which may happen either when the
+                        // client has sent Message::Close or some other abrupt disconnection). We remove
+                        // subscribers only when send fails so we can handle closure only once when we are
+                        // able to see send() fail.
                         Some(*subscriber.key())
                     }
                 }
