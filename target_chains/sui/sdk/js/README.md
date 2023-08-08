@@ -42,13 +42,14 @@ const priceIds = [
 const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
 ```
 
-## Important Notes for Integrators
+## ***Important Note for Integrators***
 
-Due to the way contract upgrades work on Sui, your Sui Move module should NOT have a hard-coded call to `pyth::update_single_price_feed`. When a Sui contract is [upgraded](https://docs.sui.io/build/package-upgrades), the new address is different from the original. As such, there could be multiple call-sites for a single function. Our implementation bricks all previous call-site when the Pyth contract is upgraded and only allows users to interact with the most recent package version.
+Your Sui Move module should NOT have a hard-coded call to `pyth::update_single_price_feed`. In other words, the Sui Pyth `pyth::update_single_price_feed` entry point should never be called by a contract, instead it should be called directly from client code (e.g. Typescript or Rust). 
 
-Therefore, you should build a [Sui programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates the price by calling `pyth::update_single_price_feed` at the latest call-site (there exists a helper function in `helpers.ts` for identifying the latest Pyth package) and then call an entry function in your contract that invokes `pyth::get_price` on the `PriceInfoObject` to get the recently updated price.
+This is because when a Sui contract is [upgraded](https://docs.sui.io/build/package-upgrades), the new address is different from the original. If your module has a hard-coded call to `pyth::update_single_price_feed` living at a fixed call-site, it may eventually get bricked due to the way Pyth upgrades are implemented. (We only allows users to interact with the most recent package version for security reasons).
 
-In other words, the Sui Pyth `pyth::update_single_price_feed` entry point should never be called by a contract, instead it should be called from client code (e.g. Typescript or Rust). 
+Therefore, you should build a [Sui programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates the price by calling `pyth::update_single_price_feed` at the latest call-site from the client-side and then call an entry function in your contract that invokes `pyth::get_price` on the `PriceInfoObject` to get the recently updated price. We provide a helper function in `helpers.ts` for identifying the latest Pyth and Wormhole packages.
+
 
 ### Off-chain prices
 
