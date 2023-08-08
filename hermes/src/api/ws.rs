@@ -243,7 +243,8 @@ impl Subscriber {
 
         self.sender
             .send(
-                serde_json::to_string(&ServerMessage::Response(ServerResponseMessage::Ok))?.into(),
+                serde_json::to_string(&ServerMessage::Response(ServerResponseMessage::Success))?
+                    .into(),
             )
             .await?;
 
@@ -328,8 +329,8 @@ enum ServerMessage {
 #[derive(Serialize, Debug, Clone)]
 #[serde(tag = "status")]
 enum ServerResponseMessage {
-    #[serde(rename = "ok")]
-    Ok,
+    #[serde(rename = "success")]
+    Success,
     #[serde(rename = "error")]
     Err { error: String },
 }
