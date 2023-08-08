@@ -3,10 +3,20 @@ import {
   HexString,
 } from "@pythnetwork/price-service-client";
 import { Buffer } from "buffer";
+import axios from "axios";
 
+/**
+ * There are two types of price update messages for Pyth: batch price attestation messages and accumulator messages.
+ * The Sui contract supports both, but batch price attestations may be deprecated in the future. It is cheaper
+ * to use accumulator messages to do price updates. Update data for these two kinds of messages are retrieved
+ * from different endpoints.
+ *
+ * Examples:
+ *
+ */
 export class SuiPriceServiceConnection extends PriceServiceConnection {
   /**
-   * Gets price update data which then can be submitted to the Pyth contract to update the prices.
+   * Gets price update data (batch price attestation VAAs) which then can be submitted to the Pyth contract to update the prices.
    * This will throw an axios error if there is a network problem or the price service returns a non-ok response (e.g: Invalid price ids)
    *
    * @param priceIds Array of hex-encoded price ids.

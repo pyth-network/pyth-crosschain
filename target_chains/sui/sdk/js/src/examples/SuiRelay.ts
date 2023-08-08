@@ -10,8 +10,11 @@ import {
 } from "../helpers";
 import { SuiPriceServiceConnection } from "../index";
 
-// example usage for testnet:
+// example usage for testnet with batch price attestation (with xc-testnet price service endpoint):
 //      SUI_TESTNET=YOUR_PRIV_KEY npx ts-node SuiRelay.ts --price-id "0xd6b3bc030a8bbb7dd9de46fb564c34bb7f860dead8985eb16a49cdc62f8ab3a5" --price-info-object-id "0x0b819c7687a09ad9cf4e0bde19ed1ab92743a60f8d2396da8121cc22e4d0fa54" --price-service "https://xc-testnet.pyth.network" --full-node "https://fullnode.testnet.sui.io:443" --pyth-state-id "0xd3e79c2c083b934e78b3bd58a490ec6b092561954da6e7322e1e2b3c8abfddc0" --wormhole-state-id "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790"
+//
+// example usage for testnet with accumulator message (with hermes price service endpoint):
+//      SUI_TESTNET=YOUR_PRIV_KEY npx ts-node SuiRelay.ts --price-id "0xd6b3bc030a8bbb7dd9de46fb564c34bb7f860dead8985eb16a49cdc62f8ab3a5" --price-info-object-id "0x0b819c7687a09ad9cf4e0bde19ed1ab92743a60f8d2396da8121cc22e4d0fa54" --price-service "https://hermes-beta.pyth.network" --full-node "https://fullnode.testnet.sui.io:443" --pyth-state-id "0xd3e79c2c083b934e78b3bd58a490ec6b092561954da6e7322e1e2b3c8abfddc0" --wormhole-state-id "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790"
 const argv = yargs(hideBin(process.argv))
   .option("price-id", {
     description:
@@ -83,20 +86,9 @@ async function run() {
     Ed25519Keypair.fromSecretKey(Buffer.from(process.env.SUI_TESTNET, "hex")),
     provider
   );
-  console.log(wallet.getAddress());
+  console.log("wallet public key: ", wallet.getAddress());
 
-  // let result = await updatePriceFeedWithAccumulator(
-  //   wallet,
-  //   update_msg,
-  //    //@ts-ignore
-  //   argv["price-info-object-id"],
-  //   wormholePackageId,
-  //   wormholeStateId,
-  //   pythPackageId,
-  //   pythStateId
-  // );
-
-  let result = await updatePriceFeedWithBatchPriceAttestation(
+  let result = await updatePriceFeedWithAccumulator(
     wallet,
     update_msg,
     //@ts-ignore
@@ -106,6 +98,17 @@ async function run() {
     pythPackageId,
     pythStateId
   );
+
+  // let result = await updatePriceFeedWithBatchPriceAttestation(
+  //   wallet,
+  //   update_msg,
+  //   //@ts-ignore
+  //   argv["price-info-object-id"],
+  //   wormholePackageId,
+  //   wormholeStateId,
+  //   pythPackageId,
+  //   pythStateId
+  // );
 
   console.dir(result, { depth: null });
 }
