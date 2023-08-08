@@ -130,8 +130,83 @@ export async function updatePriceFeedWithAccumulator(
   });
 }
 
-export function updatePriceFeedWithBatchPriceAttestation(url: string) {
-  // TODO
+export async function updatePriceFeedWithBatchPriceAttestation(
+  signer: RawSigner,
+  vaa: string, // batch price attestation VAA
+  price_info_object_id: string,
+  worm_package_id: string,
+  worm_state_id: string,
+  pyth_package_id: string,
+  pyth_state_id: string
+): Promise<any> {
+  const tx = new TransactionBlock();
+
+  // Parse our batch price attestation VAA bytes using Wormhole.
+  // Check out the Wormhole cross-chain bridge and generic messaging protocol here:
+  //     https://github.com/wormhole-foundation/wormhole
+  // @ts-ignore
+  let verified_vaas = [];
+  let [verified_vaa] = tx.moveCall({
+    target: `${worm_package_id}::vaa::parse_and_verify`,
+    arguments: [
+      tx.object(worm_state_id),
+      tx.pure([...Buffer.from(vaa, "base64")]),
+      tx.object(SUI_CLOCK_OBJECT_ID),
+    ],
+  });
+  // @ts-ignore
+  verified_vaas = verified_vaas.concat(verified_vaa);
+
+  // Create a hot potato vector of price feed updates that will
+  // be used to update price feeds.
+  let [price_updates_hot_potato] = tx.moveCall({
+    target: `${pyth_package_id}::pyth::create_price_infos_hot_potato`,
+    arguments: [
+      tx.object(pyth_state_id),
+      tx.makeMoveVec({
+        type: `${worm_package_id}::vaa::VAA`,
+        objects: verified_vaas,
+      }),
+      tx.object(SUI_CLOCK_OBJECT_ID),
+    ],
+  });
+
+  // Update each price info object (containing our price feeds of interest)
+  // using the hot potato vector.
+  let coin = tx.splitCoins(tx.gas, [tx.pure(1)]);
+  [price_updates_hot_potato] = tx.moveCall({
+    target: `${pyth_package_id}::pyth::update_single_price_feed`,
+    arguments: [
+      tx.object(pyth_state_id),
+      price_updates_hot_potato,
+      tx.object(price_info_object_id),
+      coin,
+      tx.object(SUI_CLOCK_OBJECT_ID),
+    ],
+  });
+
+  // Explicitly destroy the hot potato vector, since it can't be dropped
+  // automatically.
+  tx.moveCall({
+    target: `${pyth_package_id}::hot_potato_vector::destroy`,
+    arguments: [price_updates_hot_potato],
+    typeArguments: [`${pyth_package_id}::price_info::PriceInfo`],
+  });
+
+  tx.setGasBudget(2000000000);
+
+  let result = await signer.signAndExecuteTransactionBlock({
+    transactionBlock: tx,
+    options: {
+      showInput: true,
+      showEffects: true,
+      showEvents: true,
+      showObjectChanges: true,
+      showBalanceChanges: true,
+    },
+  });
+  console.log(result);
+  return result;
 }
 
 // parse_vaa_bytes_from_accumulator_message obtains the vaa bytes embedded in an accumulator message,
@@ -181,6 +256,7 @@ export async function get_price_feed_ids_to_price_info_object_ids_table(
   let hasNextPage = false;
   let map = new Map<string, string>();
   do {
+    //@ts-ignore
     const dynamic_fields = await provider.getDynamicFields({
       parentId: table_id,
       cursor: nextCursor,
@@ -188,6 +264,7 @@ export async function get_price_feed_ids_to_price_info_object_ids_table(
     console.log(dynamic_fields);
 
     let promises = await Promise.all(
+      //@ts-ignore
       dynamic_fields.data.map((x) =>
         provider.getObject({ id: x.objectId, options: { showContent: true } })
       )

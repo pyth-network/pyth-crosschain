@@ -40,7 +40,6 @@ const priceIds = [
 // chain. `getPriceUpdateData` creates the update data which can be submitted to your contract.
 
 const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
-
 ```
 
 Due to the way contract upgrades work on Sui, your module should NOT have a hard-coded call to `pyth::update_single_price_feed` (since there could be multiple call-sites, and a call-site can be deprecated when the Pyth contract is upgraded). Instead, you should build a [Sui programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates the price by calling `pyth::update_single_price_feed` at the latest call-site (there exists a helper function in `helpers.ts` for identifying the latest Pyth package) and then calls an entry function in your contract that invokes `pyth::get_price` on the `PriceInfoObject` to get the recently updated price.
