@@ -97,12 +97,10 @@ npm run example-relay -- --endpoint https://xc-testnet.pyth.network --price-ids 
 
 ## Price Service endpoints for accumulator updates
 
-We provide public endpoints for the price service, although it is strongly recommended to host your own instance.
-
 | Sui Network | Price Service URL               |
 | ----------- | ------------------------------- |
-| Testnet     | https://xc-testnet.pyth.network |
-| Mainnet     | https://xc-mainnet.pyth.network |
+| Testnet     | https://hermes-beta.pyth.network|
+| Mainnet     | TBA                             |  
 
 ## Price Service endpoints for batch price attestation updates (soon to be deprecated)
 
