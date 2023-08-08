@@ -95,7 +95,16 @@ export SUI_KEY = "0x...";
 npm run example-relay -- --endpoint https://xc-testnet.pyth.network --price-ids 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b 0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6 --full-node https://fullnode.testnet.sui.io:443 --pyth-contract 0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541
 ```
 
-## Price Service endpoints
+## Price Service endpoints for accumulator updates
+
+We provide public endpoints for the price service, although it is strongly recommended to host your own instance.
+
+| Sui Network | Price Service URL               |
+| ----------- | ------------------------------- |
+| Testnet     | https://xc-testnet.pyth.network |
+| Mainnet     | https://xc-mainnet.pyth.network |
+
+## Price Service endpoints for batch price attestation updates (soon to be deprecated)
 
 We provide public endpoints for the price service, although it is strongly recommended to host your own instance.
 
