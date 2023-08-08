@@ -1,12 +1,12 @@
 [package]
 name                   = "hermes"
-version                = "0.1.7"
+version                = "0.1.8"
 edition                = "2021"
 
 [dependencies]
 anyhow                 = { version = "1.0.69" }
-axum                   = { version = "0.6.9", features = ["json", "ws", "macros"] }
-axum-macros            = { version = "0.3.4" }
+axum                   = { version = "0.6.20", features = ["json", "ws", "macros"] }
+axum-macros            = { version = "0.3.8" }
 base64                 = { version = "0.21.0" }
 borsh                  = { version = "0.10.3" }
 byteorder              = { version = "1.4.3" }
