@@ -41,45 +41,9 @@ const priceIds = [
 
 const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
 
-// Create a transaction and submit to your contract using the price update data
-const client = SuiClient(endpoint);
-let result = await client.generateSignSubmitWaitForTransaction(
-  sender,
-  new TxnBuilderTypes.TransactionPayloadEntryFunction(
-    TxnBuilderTypes.EntryFunction.natural(
-      "0x..::your_module",
-      "do_something",
-      [],
-      [priceUpdateData]
-    )
-  )
-);
 ```
 
-`your_module::do_something` should NOT call `pyth::update_single_price_feed` directly before querying the data using `pyth::get_price`:
-
-```move
-module example::your_module {
-    use pyth::pyth;
-    use pyth::price_identifier;
-    use sui_framework::coin;
-
-    public fun do_something(user: &signer, pyth_update_data: vector<vector<u8>>) {
-        // First update the Pyth price feeds. The user pays the fee for the update.
-        let coins = coin::withdraw(user, pyth::get_update_fee(pyth_update_data));
-
-        pyth::update_price_feeds(pyth_update_data, coins);
-
-        // Now we can use the prices which we have just updated
-        let btc_usd_price_id = price_identifier::from_byte_vec(
-            x"e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43");
-        let price = pyth::get_price(btc_usd_price_id);
-
-    }
-}
-```
-
-Instead, you should build a [Sui programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates the price, then inputs the updated price data to an entry point in your contract.
+Due to the way contract upgrades work on Sui, your module should NOT have a hard-coded call to `pyth::update_single_price_feed` (since there could be multiple call-sites, and a call-site can be deprecated when the Pyth contract is upgraded). Instead, you should build a [Sui programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates the price by calling `pyth::update_single_price_feed` at the latest call-site (there exists a helper function in `helpers.ts` for identifying the latest Pyth package) and then calls an entry function in your contract that invokes `pyth::get_price` on the `PriceInfoObject` to get the recently updated price.
 
 We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices).
 
