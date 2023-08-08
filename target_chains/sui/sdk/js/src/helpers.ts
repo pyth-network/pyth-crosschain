@@ -67,7 +67,7 @@ export async function updatePriceFeedWithAccumulator(
   pyth_package_id: string,
   pyth_state_id: string
 ): Promise<any> {
-  console.log("in updatePriceFeedWithAccumulator");
+  console.log("=== updatePriceFeedWithAccumulator ===");
   console.log("signer: ", signer);
   console.log("accumulator_msg: ", accumulator_msg);
   console.log("price_info_object_id: ", price_info_object_id);
@@ -148,7 +148,7 @@ export async function updatePriceFeedWithBatchPriceAttestation(
   pyth_package_id: string,
   pyth_state_id: string
 ): Promise<any> {
-  console.log("in updatePriceFeedWithBatchPriceAttestation");
+  console.log("=== updatePriceFeedWithBatchPriceAttestation ===");
   console.log("signer: ", signer);
   console.log("accumulator_msg: ", vaa);
   console.log("price_info_object_id: ", price_info_object_id);

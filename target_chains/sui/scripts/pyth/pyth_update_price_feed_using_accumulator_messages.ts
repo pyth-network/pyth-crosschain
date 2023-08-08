@@ -73,6 +73,8 @@ async function update_price_feed_using_accumulator_message(
   console.log("PYTH_STATE: ", PYTH_STATE);
   console.log("WORM_PACKAGE: ", WORM_PACKAGE);
   console.log("WORM_STATE: ", WORM_STATE);
+  console.log("accumulator_message: ", accumulator_message);
+  console.log("price_info_object_id: ", price_info_object_id);
 
   console.log(
     "vaa parsed from accumulator: ",

@@ -10,11 +10,9 @@ import {
 } from "../helpers";
 import { SuiPriceServiceConnection } from "../index";
 
-// example usage for testnet with batch price attestation (with xc-testnet price service endpoint):
-//      SUI_TESTNET=YOUR_PRIV_KEY npx ts-node SuiRelay.ts --price-id "0xd6b3bc030a8bbb7dd9de46fb564c34bb7f860dead8985eb16a49cdc62f8ab3a5" --price-info-object-id "0x0b819c7687a09ad9cf4e0bde19ed1ab92743a60f8d2396da8121cc22e4d0fa54" --price-service "https://xc-testnet.pyth.network" --full-node "https://fullnode.testnet.sui.io:443" --pyth-state-id "0xd3e79c2c083b934e78b3bd58a490ec6b092561954da6e7322e1e2b3c8abfddc0" --wormhole-state-id "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790"
-//
 // example usage for testnet with accumulator message (with hermes price service endpoint):
-//      SUI_TESTNET=YOUR_PRIV_KEY npx ts-node SuiRelay.ts --price-id "0xd6b3bc030a8bbb7dd9de46fb564c34bb7f860dead8985eb16a49cdc62f8ab3a5" --price-info-object-id "0x0b819c7687a09ad9cf4e0bde19ed1ab92743a60f8d2396da8121cc22e4d0fa54" --price-service "https://hermes-beta.pyth.network" --full-node "https://fullnode.testnet.sui.io:443" --pyth-state-id "0xd3e79c2c083b934e78b3bd58a490ec6b092561954da6e7322e1e2b3c8abfddc0" --wormhole-state-id "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790"
+//
+//      SUI_KEY=YOUR_PRIV_KEY npx ts-node SuiRelay.ts --price-id "0x5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" --price-info-object-id "0x848d1c941e117f515757b77aa562eee8bb179eee6f37ec6dad97ae0279ff4bd4" --price-service "https://hermes-beta.pyth.network" --full-node "https://fullnode.testnet.sui.io:443" --pyth-state-id "0xd3e79c2c083b934e78b3bd58a490ec6b092561954da6e7322e1e2b3c8abfddc0" --wormhole-state-id "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790"
 const argv = yargs(hideBin(process.argv))
   .option("price-id", {
     description:
@@ -78,15 +76,17 @@ async function run() {
 
   const pythPackageId = await getPythPackageId(pythStateId, provider);
 
-  if (process.env.SUI_TESTNET === undefined) {
-    throw new Error(`SUI_TESTNET environment variable should be set.`);
+  if (process.env.SUI_KEY === undefined) {
+    throw new Error(`SUI_KEY environment variable should be set.`);
   }
 
   const wallet = new RawSigner(
-    Ed25519Keypair.fromSecretKey(Buffer.from(process.env.SUI_TESTNET, "hex")),
+    Ed25519Keypair.fromSecretKey(Buffer.from(process.env.SUI_KEY, "hex")),
     provider
   );
   console.log("wallet public key: ", wallet.getAddress());
+
+  console.log(wallet.getAddress());
 
   let result = await updatePriceFeedWithAccumulator(
     wallet,
@@ -98,17 +98,6 @@ async function run() {
     pythPackageId,
     pythStateId
   );
-
-  // let result = await updatePriceFeedWithBatchPriceAttestation(
-  //   wallet,
-  //   update_msg,
-  //   //@ts-ignore
-  //   argv["price-info-object-id"],
-  //   wormholePackageId,
-  //   wormholeStateId,
-  //   pythPackageId,
-  //   pythStateId
-  // );
 
   console.dir(result, { depth: null });
 }
