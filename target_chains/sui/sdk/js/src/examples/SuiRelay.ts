@@ -13,8 +13,8 @@ import {
   getProvider,
   getWormholePackageId,
   getPythPackageId,
-  updatePriceFeedWithAccumulator
-} from "../helpers"
+  updatePriceFeedWithAccumulator,
+} from "../helpers";
 import { SuiPriceServiceConnection } from "../index";
 //import { AptosAccount, AptosClient, TxnBuilderTypes } from "aptos";
 
@@ -69,11 +69,14 @@ async function run() {
   // only use the first acc msg for now
   let accumulator_message = Buffer.from(priceFeedUpdateData[0]).toString("hex");
 
-  const provider = getProvider(argv["full-node"])
-  const wormholeStateId = argv["wormhole-state-id"]
-  const pythStateId = argv["pyth-state-id"]
-  const wormholePackageId = await getWormholePackageId(wormholeStateId, provider)
-  const pythPackageId = await getPythPackageId(pythStateId, provider)
+  const provider = getProvider(argv["full-node"]);
+  const wormholeStateId = argv["wormhole-state-id"];
+  const pythStateId = argv["pyth-state-id"];
+  const wormholePackageId = await getWormholePackageId(
+    wormholeStateId,
+    provider
+  );
+  const pythPackageId = await getPythPackageId(pythStateId, provider);
 
   if (process.env.SUI_KEY === undefined) {
     throw new Error(`SUI_KEY environment variable should be set.`);
@@ -92,8 +95,8 @@ async function run() {
     wormholePackageId,
     wormholeStateId,
     pythPackageId,
-    pythStateId,
-  )
+    pythStateId
+  );
 
   console.dir(result, { depth: null });
 }

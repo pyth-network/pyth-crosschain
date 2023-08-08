@@ -9,8 +9,4 @@ export {
   UnixTimestamp,
 } from "@pythnetwork/price-service-client";
 
-export {
-  getProvider,
-  getWormholePackageId,
-  getPythPackageId
-} from "./helpers"
+export { getProvider, getWormholePackageId, getPythPackageId } from "./helpers";

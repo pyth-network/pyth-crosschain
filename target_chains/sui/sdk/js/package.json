@@ -55,6 +55,5 @@
     "@pythnetwork/price-service-client": "*",
     "@mysten/sui.js": "^0.32.2",
     "buffer": "^6.0.3"
-    "@pythnetwork/pyth-contract-manager"
   }
 }

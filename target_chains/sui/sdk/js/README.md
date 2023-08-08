@@ -81,7 +81,6 @@ module example::your_module {
 
 Instead, you should build a [Sui programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates the price, then inputs the updated price data to an entry point in your contract.
 
-
 We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices).
 
 ### Off-chain prices
@@ -137,7 +136,7 @@ npm run example-relay -- --endpoint https://xc-testnet.pyth.network --price-ids 
 
 We provide public endpoints for the price service, although it is strongly recommended to host your own instance.
 
-| Sui Network   | Price Service URL               |
-| ------------- | ------------------------------- |
-| Testnet       | https://xc-testnet.pyth.network |
-| Mainnet       | https://xc-mainnet.pyth.network |
+| Sui Network | Price Service URL               |
+| ----------- | ------------------------------- |
+| Testnet     | https://xc-testnet.pyth.network |
+| Mainnet     | https://xc-mainnet.pyth.network |

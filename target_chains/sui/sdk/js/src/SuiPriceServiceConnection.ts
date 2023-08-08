@@ -17,5 +17,4 @@ export class SuiPriceServiceConnection extends PriceServiceConnection {
     const latestVaas = await this.getLatestVaas(priceIds);
     return latestVaas.map((vaa) => Array.from(Buffer.from(vaa, "base64")));
   }
-
 }
