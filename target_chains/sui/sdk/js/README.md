@@ -88,11 +88,11 @@ setTimeout(() => {
 1. Fetches update data from the Price Service for the given price feeds.
 2. Calls the Pyth Sui contract with the update data.
 
-You can run this example with `npm run example-relay`. A full command that updates BTC and ETH prices on the BNB Chain testnet network looks like this:
+You can run this example with `npm run example-relay`. A full command that updates prices on Sui testnet looks like:
 
 ```bash
-export SUI_KEY = "0x...";
-npm run example-relay -- --endpoint https://xc-testnet.pyth.network --price-ids 0xf9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b 0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6 --full-node https://fullnode.testnet.sui.io:443 --pyth-contract 0xaa706d631cde8c634fe1876b0c93e4dec69d0c6ccac30a734e9e257042e81541
+export SUI_KEY=YOUR_PRIV_KEY;
+npm run example-relay -- --price-id "0x5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" --price-info-object-id "0x848d1c941e117f515757b77aa562eee8bb179eee6f37ec6dad97ae0279ff4bd4" --price-service "https://hermes-beta.pyth.network" --full-node "https://fullnode.testnet.sui.io:443" --pyth-state-id "0xd3e79c2c083b934e78b3bd58a490ec6b092561954da6e7322e1e2b3c8abfddc0" --wormhole-state-id "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790"
 ```
 
 ## Price Service endpoints for accumulator updates
