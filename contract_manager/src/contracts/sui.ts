@@ -2,6 +2,7 @@ import {
   Connection,
   Ed25519Keypair,
   JsonRpcProvider,
+  MIST_PER_SUI,
   ObjectId,
   RawSigner,
   SUI_CLOCK_OBJECT_ID,
@@ -132,7 +133,7 @@ export class SuiContract extends Contract {
     };
   }
 
-  async getPriceFeed(feedId: string) {
+  async getPriceFeedObjectId(feedId: string): Promise<ObjectId | undefined> {
     const tableId = await this.getPriceTableId();
     const provider = this.getProvider();
     let result = await provider.getDynamicFieldObject({
@@ -150,7 +151,13 @@ export class SuiContract extends Contract {
     if (result.data.content.dataType !== "moveObject") {
       throw new Error("Price feed type mismatch");
     }
-    let priceInfoObjectId = result.data.content.fields.value;
+    return result.data.content.fields.value;
+  }
+
+  async getPriceFeed(feedId: string) {
+    const provider = this.getProvider();
+    let priceInfoObjectId = await this.getPriceFeedObjectId(feedId);
+    if (!priceInfoObjectId) return undefined;
     let priceInfo = await provider.getObject({
       id: priceInfoObjectId,
       options: { showContent: true },
@@ -196,7 +203,99 @@ export class SuiContract extends Contract {
   }
 
   async executeUpdatePriceFeed(senderPrivateKey: string, vaas: Buffer[]) {
-    throw new Error("Not implemented");
+    throw new Error("Use executeUpdatePriceFeedWithFeeds instead");
+  }
+
+  async verifyVaas(vaas: Buffer[], tx: TransactionBlock) {
+    const wormholePackageId = await this.getWormholePackageId();
+    const verifiedVaas = [];
+    for (const vaa of vaas) {
+      const [verifiedVaa] = tx.moveCall({
+        target: `${wormholePackageId}::vaa::parse_and_verify`,
+        arguments: [
+          tx.object(this.wormholeStateId),
+          tx.pure([...vaa]),
+          tx.object(SUI_CLOCK_OBJECT_ID),
+        ],
+      });
+      verifiedVaas.push(verifiedVaa);
+    }
+    return verifiedVaas;
+  }
+
+  async executeUpdatePriceFeedWithFeeds(
+    senderPrivateKey: string,
+    vaas: Buffer[],
+    feedIds: string[]
+  ) {
+    const tx = new TransactionBlock();
+    const wormholePackageId = await this.getWormholePackageId();
+    const packageId = await this.getPythPackageId();
+    const verifiedVaas = await this.verifyVaas(vaas, tx);
+    const keypair = Ed25519Keypair.fromSecretKey(
+      Buffer.from(senderPrivateKey, "hex")
+    );
+
+    let [priceUpdatesHotPotato] = tx.moveCall({
+      target: `${packageId}::pyth::create_price_infos_hot_potato`,
+      arguments: [
+        tx.object(this.stateId),
+        tx.makeMoveVec({
+          type: `${wormholePackageId}::vaa::VAA`,
+          objects: verifiedVaas,
+        }),
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
+
+    for (const feedId of feedIds) {
+      let priceInfoObjectId = await this.getPriceFeedObjectId(feedId);
+      if (!priceInfoObjectId) {
+        throw new Error(`Price feed ${feedId} not found`);
+      }
+      let coin = tx.splitCoins(tx.gas, [tx.pure(1)]);
+      [priceUpdatesHotPotato] = tx.moveCall({
+        target: `${packageId}::pyth::update_single_price_feed`,
+        arguments: [
+          tx.object(this.stateId),
+          priceUpdatesHotPotato,
+          tx.object(priceInfoObjectId),
+          coin,
+          tx.object(SUI_CLOCK_OBJECT_ID),
+        ],
+      });
+    }
+    tx.moveCall({
+      target: `${packageId}::hot_potato_vector::destroy`,
+      arguments: [priceUpdatesHotPotato],
+      typeArguments: [`${packageId}::price_info::PriceInfo`],
+    });
+    let result = await this.executeTransaction(tx, keypair);
+    return result.digest;
+  }
+  async executeCreatePriceFeed(senderPrivateKey: string, vaas: Buffer[]) {
+    const tx = new TransactionBlock();
+    const wormholePackageId = await this.getWormholePackageId();
+    const packageId = await this.getPythPackageId();
+    const verifiedVaas = await this.verifyVaas(vaas, tx);
+    tx.moveCall({
+      target: `${packageId}::pyth::create_price_feeds`,
+      arguments: [
+        tx.object(this.stateId),
+        tx.makeMoveVec({
+          type: `${wormholePackageId}::vaa::VAA`,
+          objects: verifiedVaas,
+        }), // has type vector<VAA>,
+        tx.object(SUI_CLOCK_OBJECT_ID),
+      ],
+    });
+
+    const keypair = Ed25519Keypair.fromSecretKey(
+      Buffer.from(senderPrivateKey, "hex")
+    );
+
+    let result = await this.executeTransaction(tx, keypair);
+    return result.digest;
   }
 
   async executeGovernanceInstruction(senderPrivateKey: string, vaa: Buffer) {
@@ -361,7 +460,7 @@ export class SuiContract extends Contract {
     return Number(fields.last_executed_governance_sequence);
   }
 
-  private getProvider() {
+  getProvider() {
     return new JsonRpcProvider(new Connection({ fullnode: this.chain.rpcUrl }));
   }
 
