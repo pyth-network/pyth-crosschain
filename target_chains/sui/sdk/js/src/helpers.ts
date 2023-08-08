@@ -88,42 +88,42 @@ export async function updatePriceFeedWithAccumulator(
     ],
   });
 
-  // // 1. obtain fee coin by splitting it off from the gas coin
-  // let [fee_coin] = tx.moveCall({
-  //   target: "0x2::coin::split",
-  //   arguments: [tx.gas, tx.pure(1)],
-  //   typeArguments: ["0x2::sui::SUI"],
-  // });
+  // 1. obtain fee coin by splitting it off from the gas coin
+  let [fee_coin] = tx.moveCall({
+    target: "0x2::coin::split",
+    arguments: [tx.gas, tx.pure(1)],
+    typeArguments: ["0x2::sui::SUI"],
+  });
 
-  // // 2. get authenticated price info vector, containing price updates
-  // let [authenticated_price_infos_vector] = tx.moveCall({
-  //   target: `${pyth_package_id}::pyth::create_authenticated_price_infos_using_accumulator`,
-  //   arguments: [
-  //     tx.object(pyth_state_id),
-  //     tx.pure([...Buffer.from(accumulator_msg, "hex")]),
-  //     verified_vaa,
-  //     tx.object(SUI_CLOCK_OBJECT_ID),
-  //   ],
-  // });
+  // 2. get authenticated price info vector, containing price updates
+  let [authenticated_price_infos_vector] = tx.moveCall({
+    target: `${pyth_package_id}::pyth::create_authenticated_price_infos_using_accumulator`,
+    arguments: [
+      tx.object(pyth_state_id),
+      tx.pure([...Buffer.from(accumulator_msg, "hex")]),
+      verified_vaa,
+      tx.object(SUI_CLOCK_OBJECT_ID),
+    ],
+  });
 
-  // // 3. use authenticated prices to update target price info object
-  // authenticated_price_infos_vector = tx.moveCall({
-  //   target: `${pyth_package_id}::pyth::update_single_price_feed`,
-  //   arguments: [
-  //     tx.object(pyth_state_id),
-  //     authenticated_price_infos_vector,
-  //     tx.object(price_info_object_id),
-  //     fee_coin,
-  //     tx.object(SUI_CLOCK_OBJECT_ID),
-  //   ],
-  // });
+  // 3. use authenticated prices to update target price info object
+  authenticated_price_infos_vector = tx.moveCall({
+    target: `${pyth_package_id}::pyth::update_single_price_feed`,
+    arguments: [
+      tx.object(pyth_state_id),
+      authenticated_price_infos_vector,
+      tx.object(price_info_object_id),
+      fee_coin,
+      tx.object(SUI_CLOCK_OBJECT_ID),
+    ],
+  });
 
-  // // 4. clean-up (destroy authenticated vector)
-  // tx.moveCall({
-  //   target: `${pyth_package_id}::hot_potato_vector::destroy`,
-  //   arguments: [authenticated_price_infos_vector],
-  //   typeArguments: [`${pyth_package_id}::price_info::PriceInfo`],
-  // });
+  // 4. clean-up (destroy authenticated vector)
+  tx.moveCall({
+    target: `${pyth_package_id}::hot_potato_vector::destroy`,
+    arguments: [authenticated_price_infos_vector],
+    typeArguments: [`${pyth_package_id}::price_info::PriceInfo`],
+  });
 
   tx.setGasBudget(2000000000);
 
@@ -148,6 +148,15 @@ export async function updatePriceFeedWithBatchPriceAttestation(
   pyth_package_id: string,
   pyth_state_id: string
 ): Promise<any> {
+  console.log("in updatePriceFeedWithBatchPriceAttestation");
+  console.log("signer: ", signer);
+  console.log("accumulator_msg: ", vaa);
+  console.log("price_info_object_id: ", price_info_object_id);
+  console.log("worm_package_id: ", worm_package_id);
+  console.log("worm_state_id: ", worm_state_id);
+  console.log("pyth_package_id: ", pyth_package_id);
+  console.log("pyth_state_id: ", pyth_state_id);
+
   const tx = new TransactionBlock();
 
   // Parse our batch price attestation VAA bytes using Wormhole.
