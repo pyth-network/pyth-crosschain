@@ -167,13 +167,11 @@ export function parse_vaa_bytes_from_accumulator_message(
 *
 * Example usage:
 *
-* const provider = new JsonRpcProvider(
-       new Connection({ fullnode: "https://fullnode.mainnet.sui.io:443" })
-   );
-* const table_id =
-   "0xc4a7182984a662b159a18a8754dbc15e11048b42494b2c4ddcf1ec3bcc7004fe";
-* let table = await get_price_feed_ids_to_price_info_object_ids_table(table_id, provider)
-*
+*     const provider = new JsonRpcProvider(
+           new Connection({ fullnode: "https://fullnode.mainnet.sui.io:443" })
+       );
+*     const table_id = "0xc4a7182984a662b159a18a8754dbc15e11048b42494b2c4ddcf1ec3bcc7004fe";
+*     let table = await get_price_feed_ids_to_price_info_object_ids_table(table_id, provider;
 */
 export async function get_price_feed_ids_to_price_info_object_ids_table(
   table_id: string,
