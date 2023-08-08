@@ -50,8 +50,6 @@ Therefore, you should build a [Sui programmable transaction](https://docs.sui.io
 
 In other words, the Sui Pyth `pyth::update_single_price_feed` entry point should never be called by a contract, instead it should be called from client code (e.g. Typescript or Rust). 
 
-We strongly recommend reading our guide which explains [how to work with Pyth price feeds](https://docs.pyth.network/documentation/pythnet-price-feeds/best-practices).
-
 ### Off-chain prices
 
 Many applications additionally need to display Pyth prices off-chain, for example, in their frontend application.
