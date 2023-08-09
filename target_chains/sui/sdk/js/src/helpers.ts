@@ -9,9 +9,7 @@ import {
 } from "@mysten/sui.js";
 
 /**
- * Given a objectId, returns the latest package id that the object belongs to.
- * This is important, since packages can be upgraded, and a hard-coded package
- * id is likely to become obsolete or bricked at some point.
+ * getPackageId returns the latest package id that the object belongs to.
  * @param objectId
  * @param provider
  */
@@ -41,6 +39,14 @@ export async function getPackageId(
   throw new Error("upgrade_cap not found");
 }
 
+/**
+ * getPythPackageId obtains the latest Pyth package ID given a Pyth state object ID.
+ * (The state object ID is invariant across Sui contract upgrades, while the package ID necessarily
+ * changes after each upgrade)
+ * @param stateId - Sui Pyth state object ID
+ * @param provider
+ * @returns
+ */
 export async function getPythPackageId(
   stateId: string,
   provider: JsonRpcProvider
@@ -48,6 +54,14 @@ export async function getPythPackageId(
   return await getPackageId(stateId, provider);
 }
 
+/**
+ * getWormholePackageId obtains the latest Wormhole package ID given a Wormhole state object ID.
+ * (The state object ID is invariant across Sui contract upgrades, while the package ID necessarily
+ * changes after each upgrade)
+ * @param stateId - Sui Wormhole state object ID
+ * @param provider
+ * @returns
+ */
 export async function getWormholePackageId(
   stateId: string,
   provider: JsonRpcProvider
@@ -61,13 +75,13 @@ export function getProvider(url: string) {
 
 /**
  *
- * @param signer
- * @param price_update_msg - price udpate message in base64 (either accumulator or batch price attestation)
- * @param price_info_object_id
- * @param worm_package_id
- * @param worm_state_id
- * @param pyth_package_id
- * @param pyth_state_id
+ * @param signer - signer representing a pivate/public keypair
+ * @param price_update_msg - price udpate message in base64 format (either accumulator or batch price attestation)
+ * @param price_info_object_id - Sui object ID of price info object corresponding to a price feed
+ * @param worm_package_id - Sui package ID of Wormhole core bridge
+ * @param worm_state_id - Sui object ID of Wormhole state object
+ * @param pyth_package_id - Sui package ID of Pyth package
+ * @param pyth_state_id - Sui object ID of Pyth state object
  * @returns result of executed sui transaction
  */
 export async function updatePriceFeed(
@@ -103,13 +117,13 @@ export async function updatePriceFeed(
 }
 
 /**
- * @param signer
+ * @param signer - signer representing a pivate/public keypair
  * @param accumulator_msg - accumulator message in base64
- * @param price_info_object_id
- * @param worm_package_id
- * @param worm_state_id
- * @param pyth_package_id
- * @param pyth_state_id
+ * @param price_info_object_id - Sui object ID of price info object corresponding to a price feed
+ * @param worm_package_id - Sui package ID of Wormhole core bridge
+ * @param worm_state_id - Sui object ID of Wormhole state object
+ * @param pyth_package_id - Sui package ID of Pyth package
+ * @param pyth_state_id - Sui object ID of Pyth state object
  * @returns result of executed sui transaction
  */
 async function updatePriceFeedWithAccumulator(
@@ -199,13 +213,13 @@ async function updatePriceFeedWithAccumulator(
 
 /**
  *
- * @param signer
- * @param vaa - vaa in hex
- * @param price_info_object_id
- * @param worm_package_id
- * @param worm_state_id
- * @param pyth_package_id
- * @param pyth_state_id
+ * @param signer - signer representing a pivate/public keypair
+ * @param vaa - Wormhole VAA bytes in hex format
+ * @param price_info_object_id - Sui object ID of price info object corresponding to a price feed
+ * @param worm_package_id - Sui package ID of Wormhole core bridge
+ * @param worm_state_id - Sui object ID of Wormhole state object
+ * @param pyth_package_id - Sui package ID of Pyth package
+ * @param pyth_state_id - Sui object ID of Pyth state object
  * @returns result of executing the sui transaction
  */
 async function updatePriceFeedWithBatchPriceAttestation(
@@ -297,9 +311,14 @@ async function updatePriceFeedWithBatchPriceAttestation(
   return result;
 }
 
-// parse_vaa_bytes_from_accumulator_message obtains the vaa bytes embedded in an accumulator message,
-// which can either be hex or base64.
-// If isHex==false, then the accumulator_message is assumed to be in base64.
+/**
+ * parse_vaa_bytes_from_accumulator_message obtains the vaa bytes embedded in an accumulator message,
+ * which can either be hex or base64.
+ * If isHex==false, then the accumulator_message is assumed to be in base64.
+ * @param accumulator_message - the accumulator price update message
+ * @param isHex - whether the accumulator message is in hex format or not
+ * @returns vaa bytes as a uint8 array
+ */
 function parse_vaa_bytes_from_accumulator_message(
   accumulator_message: string,
   isHex: boolean
