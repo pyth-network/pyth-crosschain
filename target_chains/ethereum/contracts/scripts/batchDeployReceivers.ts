@@ -1,9 +1,13 @@
+/**
+ * This script deploys the receiver contracts on all the chains and creates a governance proposal to update the
+ * wormhole addresses to the deployed receiver contracts.
+ */
+
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
   DefaultStore,
   EvmChain,
-  EvmContract,
   loadHotWallet,
   WormholeEvmContract,
 } from "contract_manager";
@@ -66,14 +70,6 @@ async function main() {
       chain instanceof EvmChain &&
       chain.isMainnet() === (network === "mainnet")
     ) {
-      if (
-        chain.getId() === "fantom" ||
-        chain.getId() === "cronos" ||
-        chain.getId() === "ethereum" ||
-        chain.getId() === "polygon_zkevm" ||
-        chain.getId() === "zksync"
-      )
-        continue;
       const {
         wormholeGovernanceChainId,
         wormholeGovernanceContract,
@@ -126,10 +122,13 @@ async function main() {
       payloads.push(payload);
     }
   }
-  const vault =
-    DefaultStore.vaults[
-      "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj"
-    ];
+  let vaultName;
+  if (network === "mainnet") {
+    vaultName = "mainnet-beta_FVQyHcooAtThJ83XFrNnv74BcinbRH3bRmfFamAHBfuj";
+  } else {
+    vaultName = "devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3";
+  }
+  const vault = DefaultStore.vaults[vaultName];
   vault.connect(await loadHotWallet(argv["ops-wallet"]));
   await vault.proposeWormholeMessage(payloads);
 }
