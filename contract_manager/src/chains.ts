@@ -11,6 +11,7 @@ import {
   SetDataSources,
   SetValidPeriod,
   DataSource,
+  EvmSetWormholeAddress,
 } from "xc_admin_common";
 import { AptosClient } from "aptos";
 import Web3 from "web3";
@@ -40,7 +41,9 @@ export abstract class Chain extends Storable {
     super();
     this.wormholeChainName = wormholeChainName as ChainName;
     if (toChainId(this.wormholeChainName) === undefined)
-      throw new Error(`Invalid chain name ${wormholeChainName}`);
+      throw new Error(
+        `Invalid chain name ${wormholeChainName}. Try rebuilding xc_admin_common package`
+      );
   }
 
   getId(): string {
@@ -270,6 +273,10 @@ export class EvmChain extends Chain {
     return new EvmUpgradeContract(this.wormholeChainName, address).encode();
   }
 
+  generateGovernanceSetWormholeAddressPayload(address: string): Buffer {
+    return new EvmSetWormholeAddress(this.wormholeChainName, address).encode();
+  }
+
   toJson(): any {
     return {
       id: this.id,
@@ -293,6 +300,47 @@ export class EvmChain extends Chain {
       gasPrice = (BigInt(gasPrice) * 2n).toString();
     }
     return gasPrice;
+  }
+
+  /**
+   * Deploys a contract on this chain
+   * @param privateKey hex string of the 32 byte private key without the 0x prefix
+   * @param abi the abi of the contract, can be obtained from the compiled contract json file
+   * @param bytecode bytecode of the contract, can be obtained from the compiled contract json file
+   * @param deployArgs arguments to pass to the constructor
+   * @returns the address of the deployed contract
+   */
+  async deploy(
+    privateKey: string,
+    abi: any,
+    bytecode: string,
+    deployArgs: any[]
+  ): Promise<string> {
+    const web3 = new Web3(this.getRpcUrl());
+    const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
+    web3.eth.accounts.wallet.add(signer);
+    const contract = new web3.eth.Contract(abi);
+    const deployTx = contract.deploy({ data: bytecode, arguments: deployArgs });
+    const gas = await deployTx.estimateGas();
+    const gasPrice = await this.getGasPrice();
+    const deployerBalance = await web3.eth.getBalance(signer.address);
+    const gasDiff = BigInt(gas) * BigInt(gasPrice) - BigInt(deployerBalance);
+    if (gasDiff > 0n) {
+      throw new Error(
+        `Insufficient funds to deploy contract. Need ${gas} (gas) * ${gasPrice} (gasPrice)= ${
+          BigInt(gas) * BigInt(gasPrice)
+        } wei, but only have ${deployerBalance} wei. We need ${
+          Number(gasDiff) / 10 ** 18
+        } ETH more.`
+      );
+    }
+
+    const deployedContract = await deployTx.send({
+      from: signer.address,
+      gas,
+      gasPrice,
+    });
+    return deployedContract.options.address;
   }
 }
 

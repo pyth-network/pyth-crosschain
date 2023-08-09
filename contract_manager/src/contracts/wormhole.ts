@@ -30,6 +30,10 @@ export abstract class WormholeContract {
     for (let i = currentIndex; i < MAINNET_UPGRADE_VAAS.length; i++) {
       const vaa = MAINNET_UPGRADE_VAAS[i];
       await this.upgradeGuardianSets(senderPrivateKey, Buffer.from(vaa, "hex"));
+      // make sure the upgrade is complete before continuing
+      while ((await this.getCurrentGuardianSetIndex()) <= i) {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
     }
   }
 }

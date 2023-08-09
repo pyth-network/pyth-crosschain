@@ -303,39 +303,6 @@ export class EvmContract extends Contract {
     return result;
   }
 
-  static async deploy(
-    chain: EvmChain,
-    privateKey: string,
-    abi: any,
-    bytecode: string
-  ): Promise<EvmContract> {
-    const web3 = new Web3(chain.getRpcUrl());
-    const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
-    web3.eth.accounts.wallet.add(signer);
-    const contract = new web3.eth.Contract(abi);
-    const deployTx = contract.deploy({ data: bytecode });
-    const gas = await deployTx.estimateGas();
-    const gasPrice = await chain.getGasPrice();
-    const deployerBalance = await web3.eth.getBalance(signer.address);
-    const gasDiff = BigInt(gas) * BigInt(gasPrice) - BigInt(deployerBalance);
-    if (gasDiff > 0n) {
-      throw new Error(
-        `Insufficient funds to deploy contract. Need ${gas} (gas) * ${gasPrice} (gasPrice)= ${
-          BigInt(gas) * BigInt(gasPrice)
-        } wei, but only have ${deployerBalance} wei. We need ${
-          Number(gasDiff) / 10 ** 18
-        } ETH more.`
-      );
-    }
-
-    const deployedContract = await deployTx.send({
-      from: signer.address,
-      gas,
-      gasPrice,
-    });
-    return new EvmContract(chain, deployedContract.options.address);
-  }
-
   getContract() {
     const web3 = new Web3(this.chain.getRpcUrl());
     const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
