@@ -42,14 +42,13 @@ const priceIds = [
 const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
 ```
 
-## ***Important Note for Integrators***
+## **_Important Note for Integrators_**
 
-Your Sui Move module should NOT have a hard-coded call to `pyth::update_single_price_feed`. In other words, the Sui Pyth `pyth::update_single_price_feed` entry point should never be called by a contract, instead it should be called directly from client code (e.g. Typescript or Rust). 
+Your Sui Move module should NOT have a hard-coded call to `pyth::update_single_price_feed`. In other words, the Sui Pyth `pyth::update_single_price_feed` entry point should never be called by a contract, instead it should be called directly from client code (e.g. Typescript or Rust).
 
 This is because when a Sui contract is [upgraded](https://docs.sui.io/build/package-upgrades), the new address is different from the original. If your module has a hard-coded call to `pyth::update_single_price_feed` living at a fixed call-site, it may eventually get bricked due to the way Pyth upgrades are implemented. (We only allows users to interact with the most recent package version for security reasons).
 
 Therefore, you should build a [Sui programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates the price by calling `pyth::update_single_price_feed` at the latest call-site from the client-side and then call a function in your contract that invokes `pyth::get_price` on the `PriceInfoObject` to get the recently updated price. We provide a helper function in `helpers.ts` for identifying the latest Pyth and Wormhole packages.
-
 
 ### Off-chain prices
 
@@ -102,10 +101,10 @@ npm run example-relay -- --price-id "0x5a035d5440f5c163069af66062bac6c79377bf883
 
 ## Price Service endpoints for accumulator updates
 
-| Sui Network | Price Service URL               |
-| ----------- | ------------------------------- |
-| Testnet     | https://hermes-beta.pyth.network|
-| Mainnet     | TBA                             |  
+| Sui Network | Price Service URL                |
+| ----------- | -------------------------------- |
+| Testnet     | https://hermes-beta.pyth.network |
+| Mainnet     | TBA                              |
 
 ## Price Service endpoints for batch price attestation updates (soon to be deprecated)
 

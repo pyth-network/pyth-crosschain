@@ -6,7 +6,7 @@ import { Buffer } from "buffer";
 
 export class SuiPriceServiceConnection extends PriceServiceConnection {
   /**
-   * Gets price update data (either batch price attestation VAAs or accumulator messages, depending on the chosen endpoint), which then 
+   * Gets price update data (either batch price attestation VAAs or accumulator messages, depending on the chosen endpoint), which then
    * can be submitted to the Pyth contract to update the prices. This will throw an axios error if there is a network problem or
    * the price service returns a non-ok response (e.g: Invalid price ids)
    *

@@ -5,8 +5,7 @@ import {
   getProvider,
   getWormholePackageId,
   getPythPackageId,
-  updatePriceFeedWithAccumulator,
-  updatePriceFeedWithBatchPriceAttestation,
+  updatePriceFeed,
 } from "../helpers";
 import { SuiPriceServiceConnection } from "../index";
 
@@ -62,6 +61,7 @@ async function run() {
   console.log("priceFeedUpdateData: ", priceFeedUpdateData);
   // only use the first acc msg for now
   let update_msg = Buffer.from(priceFeedUpdateData[0]).toString("base64");
+
   //@ts-ignore
   const provider = getProvider(argv["full-node"]);
   //@ts-ignore
@@ -84,11 +84,10 @@ async function run() {
     Ed25519Keypair.fromSecretKey(Buffer.from(process.env.SUI_KEY, "hex")),
     provider
   );
+
   console.log("wallet public key: ", wallet.getAddress());
 
-  console.log(wallet.getAddress());
-
-  let result = await updatePriceFeedWithAccumulator(
+  let result = await updatePriceFeed(
     wallet,
     update_msg,
     //@ts-ignore

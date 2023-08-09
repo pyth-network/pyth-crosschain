@@ -13,6 +13,7 @@ import {
  * This is important, since packages can be upgraded, and a hard-coded package
  * id is likely to become obsolete or bricked at some point.
  * @param objectId
+ * @param provider
  */
 export async function getPackageId(
   objectId: ObjectId,
@@ -61,6 +62,48 @@ export function getProvider(url: string) {
 /**
  *
  * @param signer
+ * @param price_update_msg - price udpate message in base64 (either accumulator or batch price attestation)
+ * @param price_info_object_id
+ * @param worm_package_id
+ * @param worm_state_id
+ * @param pyth_package_id
+ * @param pyth_state_id
+ * @returns result of executed sui transaction
+ */
+export async function updatePriceFeed(
+  signer: RawSigner,
+  price_update_msg: string,
+  price_info_object_id: string,
+  worm_package_id: string,
+  worm_state_id: string,
+  pyth_package_id: string,
+  pyth_state_id: string
+): Promise<any> {
+  if (is_accumulator_message(price_update_msg)) {
+    return updatePriceFeedWithAccumulator(
+      signer,
+      price_update_msg,
+      price_info_object_id,
+      worm_package_id,
+      worm_state_id,
+      pyth_package_id,
+      pyth_state_id
+    );
+  } else {
+    return updatePriceFeedWithBatchPriceAttestation(
+      signer,
+      price_update_msg,
+      price_info_object_id,
+      worm_package_id,
+      worm_state_id,
+      pyth_package_id,
+      pyth_state_id
+    );
+  }
+}
+
+/**
+ * @param signer
  * @param accumulator_msg - accumulator message in base64
  * @param price_info_object_id
  * @param worm_package_id
@@ -69,7 +112,7 @@ export function getProvider(url: string) {
  * @param pyth_state_id
  * @returns result of executed sui transaction
  */
-export async function updatePriceFeedWithAccumulator(
+async function updatePriceFeedWithAccumulator(
   signer: RawSigner,
   accumulator_msg: string,
   price_info_object_id: string,
@@ -78,14 +121,15 @@ export async function updatePriceFeedWithAccumulator(
   pyth_package_id: string,
   pyth_state_id: string
 ): Promise<any> {
-  console.log("=== updatePriceFeedWithAccumulator ===");
-  console.log("signer: ", signer);
+  console.log("======== updatePriceFeedWithAccumulator =========");
+  console.log("signer: ", await signer.getAddress());
   console.log("accumulator_msg: ", accumulator_msg);
   console.log("price_info_object_id: ", price_info_object_id);
   console.log("worm_package_id: ", worm_package_id);
   console.log("worm_state_id: ", worm_state_id);
   console.log("pyth_package_id: ", pyth_package_id);
   console.log("pyth_state_id: ", pyth_state_id);
+  console.log("================================================");
 
   // convert base64 str to hex
   accumulator_msg = Buffer.from(accumulator_msg, "base64").toString("hex");
@@ -164,7 +208,7 @@ export async function updatePriceFeedWithAccumulator(
  * @param pyth_state_id
  * @returns result of executing the sui transaction
  */
-export async function updatePriceFeedWithBatchPriceAttestation(
+async function updatePriceFeedWithBatchPriceAttestation(
   signer: RawSigner,
   vaa: string, // batch price attestation VAA in base64
   price_info_object_id: string,
@@ -173,14 +217,15 @@ export async function updatePriceFeedWithBatchPriceAttestation(
   pyth_package_id: string,
   pyth_state_id: string
 ): Promise<any> {
-  console.log("=== updatePriceFeedWithBatchPriceAttestation ===");
-  console.log("signer: ", signer);
+  console.log("====== updatePriceFeedWithBatchPriceAttestation ======");
+  console.log("signer: ", await signer.getAddress());
   console.log("accumulator_msg: ", vaa);
   console.log("price_info_object_id: ", price_info_object_id);
   console.log("worm_package_id: ", worm_package_id);
   console.log("worm_state_id: ", worm_state_id);
   console.log("pyth_package_id: ", pyth_package_id);
   console.log("pyth_state_id: ", pyth_state_id);
+  console.log("=====================================================");
 
   const tx = new TransactionBlock();
 
@@ -255,7 +300,7 @@ export async function updatePriceFeedWithBatchPriceAttestation(
 // parse_vaa_bytes_from_accumulator_message obtains the vaa bytes embedded in an accumulator message,
 // which can either be hex or base64.
 // If isHex==false, then the accumulator_message is assumed to be in base64.
-export function parse_vaa_bytes_from_accumulator_message(
+function parse_vaa_bytes_from_accumulator_message(
   accumulator_message: string,
   isHex: boolean
 ): number[] {
@@ -338,10 +383,9 @@ export async function get_price_feed_ids_to_price_info_object_ids_table(
   return map;
 }
 
-function is_batch_price_attestation_payload() {
-  // check magic bytes
-}
-
-function is_accumulator_message_payload(msg: string) {
-  0x504e4155;
+/**
+ * @param msg - accumulator message in base64
+ */
+function is_accumulator_message(msg: string) {
+  return Buffer.from(msg, "base64").toString("hex").slice(0, 8) === "504e4155";
 }
