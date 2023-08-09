@@ -79,8 +79,9 @@ npm run start -- injective --grpc-endpoint https://grpc-endpoint.com \
     --pyth-contract-address inj1z60tg0... --price-service-endpoint "https://example-pyth-price.com" \
     --price-config-file "path/to/price-config.testnet.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
+    --network testnet \
     [--pushing-frequency 10] \
-    [--polling-frequency 5] \
+    [--polling-frequency 5]
 
 # For Aptos
 npm run start -- aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
@@ -88,7 +89,7 @@ npm run start -- aptos --endpoint https://fullnode.testnet.aptoslabs.com/v1 \
     --price-config-file "./price-config.testnet.sample.yaml" \
     --mnemonic-file "path/to/mnemonic.txt" \
     [--pushing-frequency 10] \
-    [--polling-frequency 5] \
+    [--polling-frequency 5]
 
 # For Sui
 npm run start -- sui \

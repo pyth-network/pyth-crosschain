@@ -213,12 +213,27 @@ export class InjectivePricePusher implements IPricePusher {
       return;
     }
 
-    // In order to reduce the number of API calls
-    // We are calculating the fee using the same logic as in contract.
-    const updateFeeQueryResponse: UpdateFeeResponse = {
-      denom: "inj",
-      amount: priceFeedUpdateObject.update_price_feeds.data.length.toFixed(),
-    };
+    let updateFeeQueryResponse: UpdateFeeResponse;
+    try {
+      const api = new ChainGrpcWasmApi(this.grpcEndpoint);
+      const { data } = await api.fetchSmartContractState(
+        this.pythContractAddress,
+        Buffer.from(
+          JSON.stringify({
+            get_update_fee: {
+              vaas: priceFeedUpdateObject.update_price_feeds.data,
+            },
+          })
+        ).toString("base64")
+      );
+
+      const json = Buffer.from(data).toString();
+      updateFeeQueryResponse = JSON.parse(json);
+    } catch (e) {
+      console.error("Error fetching update fee");
+      console.error(e);
+      return;
+    }
 
     try {
       const executeMsg = MsgExecuteContract.fromJSON({
