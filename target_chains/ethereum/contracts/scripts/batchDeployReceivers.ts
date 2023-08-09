@@ -70,6 +70,7 @@ async function main() {
       chain instanceof EvmChain &&
       chain.isMainnet() === (network === "mainnet")
     ) {
+      if (chain.wormholeChainName === "zksync") continue; // deploy zksync receiver separately
       const {
         wormholeGovernanceChainId,
         wormholeGovernanceContract,
