@@ -5,6 +5,7 @@ import { createHash } from "crypto";
 import { DefaultStore } from "../src/store";
 import {
   CosmosUpgradeContract,
+  EvmSetWormholeAddress,
   EvmUpgradeContract,
   getProposalInstructions,
   MultisigParser,
@@ -17,7 +18,8 @@ import {
 } from "@pythnetwork/client/lib/cluster";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { AccountMeta, Keypair, PublicKey } from "@solana/web3.js";
-import { EvmContract } from "../src/contracts/evm";
+import { EvmContract, WormholeEvmContract } from "../src/contracts/evm";
+import Web3 from "web3";
 
 const parser = yargs(hideBin(process.argv))
   .scriptName("check_proposal.ts")
@@ -55,6 +57,42 @@ async function main() {
 
   for (const instruction of parsedInstructions) {
     if (instruction instanceof WormholeMultisigInstruction) {
+      if (instruction.governanceAction instanceof EvmSetWormholeAddress) {
+        console.log(
+          `Verifying EVM set wormhole address on ${instruction.governanceAction.targetChainId}`
+        );
+        for (const chain of Object.values(DefaultStore.chains)) {
+          if (
+            chain instanceof EvmChain &&
+            chain.isMainnet() === (cluster === "mainnet-beta") &&
+            chain.wormholeChainName ===
+              instruction.governanceAction.targetChainId
+          ) {
+            const address = instruction.governanceAction.address;
+            const contract = new WormholeEvmContract(chain, address);
+            const currentIndex = await contract.getCurrentGuardianSetIndex();
+            const guardianSet = await contract.getGuardianSet();
+
+            const proxyContract = new EvmContract(chain, address);
+            const proxyCode = await proxyContract.getCode();
+            const receiverImplementation =
+              await proxyContract.getImplementationAddress();
+            const implementationCode = await new EvmContract(
+              chain,
+              receiverImplementation
+            ).getCode();
+            const proxyDigest = Web3.utils.keccak256(proxyCode);
+            const implementationDigest =
+              Web3.utils.keccak256(implementationCode);
+            const guardianSetDigest = Web3.utils.keccak256(
+              JSON.stringify(guardianSet)
+            );
+            console.log(
+              `Address:\t\t${address}\nproxy digest:\t\t${proxyDigest}\nimplementation digest:\t${implementationDigest} \nguardian set index:\t${currentIndex} \nguardian set:\t\t${guardianSetDigest}`
+            );
+          }
+        }
+      }
       if (instruction.governanceAction instanceof EvmUpgradeContract) {
         console.log(
           `Verifying EVM Upgrade Contract on ${instruction.governanceAction.targetChainId}`
