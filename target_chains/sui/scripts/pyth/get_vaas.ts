@@ -25,7 +25,7 @@ async function main() {
   ];
   const priceFeedVAAs = await connection.getLatestVaas(data);
   //console.log("number of VAAs: ", priceFeedVAAs.length)
-  console.log(priceFeedVAAs);
+  console.log(Buffer.from(priceFeedVAAs[0], "base64").toString("hex"));
 }
 
 main();

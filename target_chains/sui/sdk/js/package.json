@@ -40,7 +40,7 @@
     "@types/jest": "^29.4.0",
     "@types/node": "^18.11.18",
     "@types/web3-provider-engine": "^14.0.1",
-    "@types/yargs": "^17.0.10",
+    "@types/yargs": "^17.7.2",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
     "eslint": "^8.14.0",

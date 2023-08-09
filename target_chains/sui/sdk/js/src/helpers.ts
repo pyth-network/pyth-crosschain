@@ -58,6 +58,17 @@ export function getProvider(url: string) {
   return new JsonRpcProvider(new Connection({ fullnode: url }));
 }
 
+/**
+ *
+ * @param signer
+ * @param accumulator_msg - accumulator message in base64
+ * @param price_info_object_id
+ * @param worm_package_id
+ * @param worm_state_id
+ * @param pyth_package_id
+ * @param pyth_state_id
+ * @returns result of executed sui transaction
+ */
 export async function updatePriceFeedWithAccumulator(
   signer: RawSigner,
   accumulator_msg: string,
@@ -75,6 +86,9 @@ export async function updatePriceFeedWithAccumulator(
   console.log("worm_state_id: ", worm_state_id);
   console.log("pyth_package_id: ", pyth_package_id);
   console.log("pyth_state_id: ", pyth_state_id);
+
+  // convert base64 str to hex
+  accumulator_msg = Buffer.from(accumulator_msg, "base64").toString("hex");
 
   const tx = new TransactionBlock();
 
@@ -139,9 +153,20 @@ export async function updatePriceFeedWithAccumulator(
   });
 }
 
+/**
+ *
+ * @param signer
+ * @param vaa - vaa in hex
+ * @param price_info_object_id
+ * @param worm_package_id
+ * @param worm_state_id
+ * @param pyth_package_id
+ * @param pyth_state_id
+ * @returns result of executing the sui transaction
+ */
 export async function updatePriceFeedWithBatchPriceAttestation(
   signer: RawSigner,
-  vaa: string, // batch price attestation VAA
+  vaa: string, // batch price attestation VAA in base64
   price_info_object_id: string,
   worm_package_id: string,
   worm_state_id: string,
@@ -311,4 +336,12 @@ export async function get_price_feed_ids_to_price_info_object_ids_table(
   console.log("map size: ", map.size);
   console.log("map is: ", map);
   return map;
+}
+
+function is_batch_price_attestation_payload() {
+  // check magic bytes
+}
+
+function is_accumulator_message_payload(msg: string) {
+  0x504e4155;
 }

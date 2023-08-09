@@ -61,7 +61,7 @@ async function run() {
   );
   console.log("priceFeedUpdateData: ", priceFeedUpdateData);
   // only use the first acc msg for now
-  let update_msg = Buffer.from(priceFeedUpdateData[0]).toString("hex");
+  let update_msg = Buffer.from(priceFeedUpdateData[0]).toString("base64");
   //@ts-ignore
   const provider = getProvider(argv["full-node"]);
   //@ts-ignore
