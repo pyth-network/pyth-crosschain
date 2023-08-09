@@ -137,13 +137,15 @@ We include artifacts required for verifying the contract in each release. To cre
 
 ```
 npx sol-merger contracts/pyth/PythUpgradable.sol
+npx sol-merger contracts/pyth/ReceiverImplementation.sol
 npx truffle run stdjsonin PythUpgradable
+npx truffle run stdjsonin ReceiverImplementation
 ```
 
-These commands create the files `contracts/pyth/PythUpgradable_merged.sol` and `PythUpgradable-input.json` respectively.
-The first file is a flattened version of the contract, and the second file is the standard json input of the contract.
+These commands create the files `contracts/pyth/PythUpgradable_merged.sol`, `contracts/pyth/ReceiverImplementation_merged.sol`, `PythUpgradable-input.json`, and `ReceiverImplementation-input.json` respectively.
+The `.sol` files are the flattened version of the contracts, and the `.json` files are the standard json input of the contracts.
 
-Please include both of these in the verification folder of the release.
+Please include all of these in the release.
 
 ## Verifying the contract
 
