@@ -170,14 +170,13 @@ compile it to their binary format (zk-solc) and deploy it. As of this writing th
 contract or a new contract do the following steps in addition to the steps described above:
 
 1. Update the [`hardhad.config.ts`](./hardhat.config.ts) file.
-2. Add the configuration files to `truffle-config.js` and `.env.prod.<network>` file as described above. Truffle
-   config is required as the above deployment script still works in changing the contract (except upgrades).
+2. Add the required chain configuration in the contract manager files as described above.
 3. Run `npx hardhat clean && npx hardhat compile` to have a clean compile the contracts.
 4. Prepare the enviornment:
 
 - Export the secret recovery phrase for the deployment account. Please store it in a file and read
   the file into `MNEMONIC` environment variable like so: `export MNEMONIC=$(cat path/to/mnemonic)`.
-- Copy the correct env file (e.g: `.env.production.zksync`) to `.env`.
+- Create the env settings by running `node create-env.js zksync` and verifying the `.env` file.
 
 5. If you wish to deploy the contract run `npx hardhat deploy-zksync --network <network> --script deploy/zkSyncDeploy` to deploy it to the new network. Otherwise
    run `npx hardhat deploy-zksync --network <network> --script deploy/zkSyncDeployNewPythImpl.ts` to get a new implementation address. Then put it in

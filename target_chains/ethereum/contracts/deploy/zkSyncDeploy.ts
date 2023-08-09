@@ -6,6 +6,7 @@ import { CHAINS } from "xc_admin_common";
 import { assert } from "chai";
 import { writeFileSync } from "fs";
 
+const { getDefaultConfig } = require("../scripts/contractManagerConfig");
 loadEnv("./");
 
 function envOrErr(name: string): string {
@@ -36,9 +37,16 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   // await depositHandle.wait();
 
   // Deploy WormholeReceiver contract.
-  const initialSigners = JSON.parse(envOrErr("INIT_SIGNERS"));
-  const whGovernanceChainId = envOrErr("INIT_GOV_CHAIN_ID");
-  const whGovernanceContract = envOrErr("INIT_GOV_CONTRACT"); // bytes32
+
+  const {
+    wormholeGovernanceChainId,
+    wormholeGovernanceContract,
+    wormholeInitialSigners,
+    governanceEmitter,
+    governanceChainId,
+    emitterAddresses,
+    emitterChainIds,
+  } = getDefaultConfig(envOrErr("MIGRATIONS_NETWORK"));
 
   const chainName = envOrErr("WORMHOLE_CHAIN_NAME");
   const wormholeReceiverChainId = CHAINS[chainName];
@@ -62,10 +70,10 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     "setup",
     [
       receiverImplContract.address,
-      initialSigners,
+      wormholeInitialSigners,
       wormholeReceiverChainId,
-      whGovernanceChainId,
-      whGovernanceContract,
+      wormholeGovernanceChainId,
+      wormholeGovernanceContract,
     ]
   );
 
@@ -79,18 +87,6 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     `Deployed WormholeReceiver on ${wormholeReceiverContract.address}`
   );
 
-  // Deploy Pyth contract.
-  const emitterChainIds = [
-    envOrErr("SOLANA_CHAIN_ID"),
-    envOrErr("PYTHNET_CHAIN_ID"),
-  ];
-  const emitterAddresses = [
-    envOrErr("SOLANA_EMITTER"),
-    envOrErr("PYTHNET_EMITTER"),
-  ];
-  const governanceChainId = envOrErr("GOVERNANCE_CHAIN_ID");
-  const governanceEmitter = envOrErr("GOVERNANCE_EMITTER");
-  // Default value for this field is 0
   const governanceInitialSequence = Number(
     process.env.GOVERNANCE_INITIAL_SEQUENCE ?? "0"
   );
