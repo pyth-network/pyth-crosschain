@@ -22,44 +22,18 @@ async fn init() -> Result<()> {
     // Parse the command line arguments with StructOpt, will exit automatically on `--help` or
     // with invalid arguments.
     match config::Options::from_args() {
-        config::Options::Run {
-            pythnet_ws_endpoint,
-            pythnet_http_endpoint,
-            wh_network_id,
-            wh_bootstrap_addrs,
-            wh_listen_addrs,
-            wh_contract_addr,
-            api_addr,
-        } => {
-            // A channel to emit state updates to api
+        config::Options::Run(opts) => {
+            log::info!("Starting hermes service...");
+
+            // The update channel is used to send store update notifications to the public API.
             let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
 
-            log::info!("Running Hermes...");
+            // Initialize a cache store with a 1000 element circular buffer.
             let store = Store::new(update_tx, 1000);
 
-            // Spawn the P2P layer.
-            log::info!("Starting P2P server on {:?}", wh_listen_addrs);
-            network::p2p::spawn(
-                store.clone(),
-                wh_network_id.to_string(),
-                wh_bootstrap_addrs,
-                wh_listen_addrs,
-            )
-            .await?;
-
-            // Spawn the Pythnet listener
-            log::info!("Starting Pythnet listener using {}", pythnet_ws_endpoint);
-            network::pythnet::spawn(
-                store.clone(),
-                pythnet_ws_endpoint,
-                pythnet_http_endpoint,
-                wh_contract_addr,
-            )
-            .await?;
-
-            // Run the RPC server and wait for it to shutdown gracefully.
-            log::info!("Starting RPC server on {}", api_addr);
-            api::run(store.clone(), update_rx, api_addr.to_string()).await?;
+            network::p2p::spawn(opts.clone(), store.clone()).await?;
+            network::pythnet::spawn(opts.clone(), store.clone()).await?;
+            api::run(opts.clone(), store.clone(), update_rx).await?;
         }
     }
 

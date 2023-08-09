@@ -1,6 +1,9 @@
 use {
     self::ws::notify_updates,
-    crate::store::Store,
+    crate::{
+        config::RunOptions,
+        store::Store,
+    },
     anyhow::Result,
     axum::{
         extract::Extension,
@@ -41,23 +44,34 @@ impl State {
 ///
 /// Currently this is based on Axum due to the simplicity and strong ecosystem support for the
 /// packages they are based on (tokio & hyper).
-pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: String) -> Result<()> {
+pub async fn run(opts: RunOptions, store: Arc<Store>, mut update_rx: Receiver<()>) -> Result<()> {
+    log::info!("Starting RPC server on {}", opts.api_addr);
+
     #[derive(OpenApi)]
     #[openapi(
-    paths(
-      rest::latest_price_feeds,
-      rest::latest_vaas,
-      rest::get_price_feed,
-      rest::get_vaa,
-      rest::get_vaa_ccip,
-      rest::price_feed_ids,
-    ),
-    components(
-      schemas(types::RpcPriceFeedMetadata, types::RpcPriceFeed, types::RpcPrice, types::RpcPriceIdentifier, types::PriceIdInput, rest::GetVaaResponse, rest::GetVaaCcipResponse, rest::GetVaaCcipInput)
-    ),
-    tags(
-      (name = "hermes", description = "Pyth Real-Time Pricing API")
-    )
+        paths(
+            rest::get_price_feed,
+            rest::get_vaa,
+            rest::get_vaa_ccip,
+            rest::latest_price_feeds,
+            rest::latest_vaas,
+            rest::price_feed_ids,
+        ),
+        components(
+            schemas(
+                rest::GetVaaCcipInput,
+                rest::GetVaaCcipResponse,
+                rest::GetVaaResponse,
+                types::PriceIdInput,
+                types::RpcPrice,
+                types::RpcPriceFeed,
+                types::RpcPriceFeedMetadata,
+                types::RpcPriceIdentifier,
+            )
+        ),
+        tags(
+            (name = "hermes", description = "Pyth Real-Time Pricing API")
+        )
     )]
     struct ApiDoc;
 
@@ -103,7 +117,7 @@ pub async fn run(store: Arc<Store>, mut update_rx: Receiver<()>, rpc_addr: Strin
 
     // Binds the axum's server to the configured address and port. This is a blocking call and will
     // not return until the server is shutdown.
-    axum::Server::try_bind(&rpc_addr.parse()?)?
+    axum::Server::try_bind(&opts.api_addr)?
         .serve(app.into_make_service())
         .with_graceful_shutdown(async {
             signal::ctrl_c()

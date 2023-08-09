@@ -3,17 +3,20 @@
 //! storage.
 
 use {
-    crate::store::{
-        types::{
-            AccumulatorMessages,
-            Update,
+    crate::{
+        config::RunOptions,
+        store::{
+            types::{
+                AccumulatorMessages,
+                Update,
+            },
+            wormhole::{
+                BridgeData,
+                GuardianSet,
+                GuardianSetData,
+            },
+            Store,
         },
-        wormhole::{
-            BridgeData,
-            GuardianSet,
-            GuardianSetData,
-        },
-        Store,
     },
     anyhow::{
         anyhow,
@@ -248,23 +251,22 @@ async fn fetch_existing_guardian_sets(
     Ok(())
 }
 
+pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
+    log::info!(
+        "Starting Pythnet listener using {}",
+        opts.pythnet_ws_endpoint
+    );
 
-pub async fn spawn(
-    store: Arc<Store>,
-    pythnet_ws_endpoint: String,
-    pythnet_http_endpoint: String,
-    wormhole_contract_addr: Pubkey,
-) -> Result<()> {
     fetch_existing_guardian_sets(
         store.clone(),
-        pythnet_http_endpoint.clone(),
-        wormhole_contract_addr,
+        opts.pythnet_http_endpoint.clone(),
+        opts.wh_contract_addr,
     )
     .await?;
 
     {
         let store = store.clone();
-        let pythnet_ws_endpoint = pythnet_ws_endpoint.clone();
+        let pythnet_ws_endpoint = opts.pythnet_ws_endpoint.clone();
         tokio::spawn(async move {
             loop {
                 let current_time = Instant::now();
@@ -285,7 +287,7 @@ pub async fn spawn(
 
     {
         let store = store.clone();
-        let pythnet_http_endpoint = pythnet_http_endpoint.clone();
+        let pythnet_http_endpoint = opts.pythnet_http_endpoint.clone();
         tokio::spawn(async move {
             loop {
                 tokio::time::sleep(Duration::from_secs(60)).await;
@@ -293,7 +295,7 @@ pub async fn spawn(
                 match fetch_existing_guardian_sets(
                     store.clone(),
                     pythnet_http_endpoint.clone(),
-                    wormhole_contract_addr,
+                    opts.wh_contract_addr,
                 )
                 .await
                 {
