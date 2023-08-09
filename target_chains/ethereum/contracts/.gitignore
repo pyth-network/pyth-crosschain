@@ -8,3 +8,5 @@ cache
 cache-zk
 artifacts-zk
 artifacts
+lcov.info
+filtered-lcov.info

@@ -21,7 +21,8 @@
     "migrate": "truffle migrate",
     "receiver-submit-guardian-sets": "truffle exec scripts/receiverSubmitGuardianSetUpgrades.js",
     "verify": "truffle run verify $npm_config_module@$npm_config_contract_address --network $npm_config_network",
-    "install-forge-deps": "forge install foundry-rs/forge-std@2c7cbfc6fbede6d7c9e6b17afe997e3fdfe22fef --no-git --no-commit"
+    "install-forge-deps": "forge install foundry-rs/forge-std@2c7cbfc6fbede6d7c9e6b17afe997e3fdfe22fef --no-git --no-commit",
+    "coverage": "./coverage.sh"
   },
   "author": "",
   "license": "ISC",
