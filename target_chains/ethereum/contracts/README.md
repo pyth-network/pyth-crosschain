@@ -31,7 +31,13 @@ npm run install-forge-deps
 ```
 
 After installing the dependencies. Run `forge build` to build the contracts and `forge test` to
-test the contracts using tests in `forge-test` directory.
+test the contracts using tests in `forge-test` directory. To see line by line test coverage:
+
+```
+npm run coverage
+```
+
+Open `coverage/index.html` in your web browser to see the results.
 
 ### Governance tests
 
