@@ -15,7 +15,7 @@ module pyth::migrate {
 
     use pyth::state::{Self, State};
     use pyth::contract_upgrade::{Self};
-    use pyth::governance::{Self, WormholeVAAVerificationReceipt};
+    use pyth::governance::{WormholeVAAVerificationReceipt};
 
     struct MigrateComplete has drop, copy {
         package: ID
@@ -58,18 +58,12 @@ module pyth::migrate {
         // This capability ensures that the current build version is used.
         let latest_only = state::assert_latest_only(pyth_state);
 
-        // Check if build digest is the current one.
-        let digest =
-            contract_upgrade::take_digest(
-                governance::take_payload(&receipt)
-            );
+        let digest = contract_upgrade::take_upgrade_digest(receipt);
         state::assert_authorized_digest(
             &latest_only,
             pyth_state,
             digest
         );
-
-        governance::destroy(receipt);
 
         // Finally emit an event reflecting a successful migrate.
         let package = state::current_package(&latest_only, pyth_state);
