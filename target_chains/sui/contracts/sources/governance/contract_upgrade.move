@@ -118,11 +118,6 @@ module pyth::contract_upgrade {
 
     fun deserialize(payload: vector<u8>): UpgradeContract {
         let cur = cursor::new(payload);
-        // Pyth upgrade governance message payloads are 40 bytes long. The breakdown looks like
-        // 4 (magic) + 1 (module name) + 1 (action) + 2 (target chain) + 32 (digest)
-
-        bytes::take_bytes(&mut cur, 8); // ignore the first 8 bytes here (they were used for verification in a different code path)
-        // This amount cannot be greater than max u64.
         let digest = bytes32::take_bytes(&mut cur);
         assert!(bytes32::is_nonzero(&digest), E_DIGEST_ZERO_BYTES);
 
