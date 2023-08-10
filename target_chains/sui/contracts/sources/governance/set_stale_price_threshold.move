@@ -1,39 +1,13 @@
 module pyth::set_stale_price_threshold {
     use wormhole::cursor;
-    use wormhole::governance_message::{Self, DecreeTicket};
 
     use pyth::deserialize;
     use pyth::state::{Self, State, LatestOnly};
-    use pyth::governance_action::{Self};
-    use pyth::governance_witness::{Self, GovernanceWitness};
 
     friend pyth::governance;
 
     struct StalePriceThreshold {
         threshold: u64,
-    }
-
-    public fun authorize_governance(
-        pyth_state: &State,
-        global: bool
-    ): DecreeTicket<GovernanceWitness> {
-        if (global){
-            governance_message::authorize_verify_global(
-                governance_witness::new_governance_witness(),
-                state::governance_chain(pyth_state),
-                state::governance_contract(pyth_state),
-                state::governance_module(),
-                governance_action::get_value(governance_action::new_set_stale_price_threshold())
-            )
-        } else{
-            governance_message::authorize_verify_local(
-                governance_witness::new_governance_witness(),
-                state::governance_chain(pyth_state),
-                state::governance_contract(pyth_state),
-                state::governance_module(),
-                governance_action::get_value(governance_action::new_set_stale_price_threshold())
-            )
-        }
     }
 
     public(friend) fun execute(latest_only: &LatestOnly, state: &mut State, payload: vector<u8>) {
@@ -56,18 +30,15 @@ module pyth::set_stale_price_threshold_test {
     use sui::test_scenario::{Self};
     use sui::coin::Self;
 
-    use wormhole::governance_message::verify_vaa;
-
     use pyth::pyth_tests::{Self, setup_test, take_wormhole_and_pyth_states};
-    use pyth::set_stale_price_threshold::{Self};
     use pyth::state::Self;
 
-    const SET_STALE_PRICE_THRESHOLD_VAA: vector<u8> = x"01000000000100196a91724d472b6c160c44ddcc9f9cef531aa95442739300023048bd066b77ca1a02bbfd9ff1799f3d63a4dd10c5348ab3b231e3bb66232e0cb4c07daa3647090100bc614e00000000000163278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c38500000000000000010100000000000000000000000000000000000000000000000000000000000000010400155054474d0104001500000000000aee23";
+    const SET_STALE_PRICE_THRESHOLD_VAA: vector<u8> = x"010000000001000393eabdb4983e91e0fcfe7e6b2fc5c8fca2847fde52fd2f51a9b26b12298da13af09c271ce7723af8e0b1f52afa02b56f0b64764739b1b05e2f2c5cec80567c000000000000000000000163278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c3850000000000000001015054474d0104001500000000000f4020";
     // VAA Info:
     //   module name: 0x1
     //   action: 4
     //   chain: 21
-    //   stale price threshold: 716323
+    //   stale price threshold: 999456
 
     const DEPLOYER: address = @0x1234;
     const DEFAULT_BASE_UPDATE_FEE: u64 = 0;
@@ -80,11 +51,9 @@ module pyth::set_stale_price_threshold_test {
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
-        let ticket = set_stale_price_threshold::authorize_governance(&pyth_state, false);
-
         let verified_vaa = wormhole::vaa::parse_and_verify(&mut worm_state, SET_STALE_PRICE_THRESHOLD_VAA, &clock);
 
-        let receipt = verify_vaa(&worm_state, verified_vaa, ticket);
+        let receipt = pyth::governance::verify_vaa(&pyth_state, verified_vaa);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
@@ -93,7 +62,7 @@ module pyth::set_stale_price_threshold_test {
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 
         // assert stale price threshold is set correctly
-        assert!(state::get_stale_price_threshold_secs(&pyth_state)==716323, 0);
+        assert!(state::get_stale_price_threshold_secs(&pyth_state)==999456, 0);
 
         // clean up
         coin::burn_for_testing(test_coins);

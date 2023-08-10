@@ -4,41 +4,15 @@ module pyth::set_data_sources {
     use wormhole::cursor;
     use wormhole::external_address::{Self};
     use wormhole::bytes32::{Self};
-    use wormhole::governance_message::{Self, DecreeTicket};
 
     use pyth::deserialize;
     use pyth::data_source::{Self, DataSource};
     use pyth::state::{Self, State, LatestOnly};
-    use pyth::governance_action::{Self};
-    use pyth::governance_witness::{Self, GovernanceWitness};
 
     friend pyth::governance;
 
     struct DataSources {
         sources: vector<DataSource>,
-    }
-
-    public fun authorize_governance(
-        pyth_state: &State,
-        global: bool
-    ): DecreeTicket<GovernanceWitness> {
-        if (global) {
-            governance_message::authorize_verify_global(
-                governance_witness::new_governance_witness(),
-                state::governance_chain(pyth_state),
-                state::governance_contract(pyth_state),
-                state::governance_module(),
-                governance_action::get_value(governance_action::new_set_data_sources())
-            )
-        } else {
-            governance_message::authorize_verify_local(
-                governance_witness::new_governance_witness(),
-                state::governance_chain(pyth_state),
-                state::governance_contract(pyth_state),
-                state::governance_module(),
-                governance_action::get_value(governance_action::new_set_data_sources())
-            )
-        }
     }
 
     public(friend) fun execute(
@@ -78,16 +52,14 @@ module pyth::set_data_sources_tests {
     use sui::test_scenario::{Self};
     use sui::coin::Self;
 
-    use wormhole::governance_message::verify_vaa;
     use wormhole::external_address::{Self};
     use wormhole::bytes32::{Self};
 
     use pyth::pyth_tests::{Self, setup_test, take_wormhole_and_pyth_states};
-    use pyth::set_data_sources::{Self};
     use pyth::state::Self;
     use pyth::data_source::Self;
 
-    const SET_DATA_SOURCES_VAA: vector<u8> = x"01000000000100ac52663a7e50ab23db4f00f0607d930ffd438c5a214b3013418b57117590f76c32d2f790ec62be5f6e69d96273b1a567b8a698a8f5069c1ccd27a6874af2adc00100bc614e00000000000163278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c38500000000000000010100000000000000000000000000000000000000000000000000000000000000010200155054474d01020015030001f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0001aa27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b6001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71";
+    const SET_DATA_SOURCES_VAA: vector<u8> = x"01000000000100b29ee59868b9066b04d8d59e1c7cc66f0678eaf4c58b8c87e4405d6de615f64b04da4025719aeed349e03900f37829454d62cc7fc7bca80328c31fe40be7b21b010000000000000000000163278d271099bfd491951b3e648f08b1c71631e4a53674ad43e8f9f98068c3850000000000000001015054474d0102001503001ae101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71001aa27839d641b07743c0cb5f68c51f8cd31d2c0762bec00dc6fcd25433ef1ab5b60001f346195ac02f37d60d4db8ffa6ef74cb1be3550047543a4a9ee9acf4d78697b0";
     // VAA Info:
     //   module name: 0x1
     //   action: 2
@@ -104,11 +76,9 @@ module pyth::set_data_sources_tests {
         test_scenario::next_tx(&mut scenario, DEPLOYER);
         let (pyth_state, worm_state) = take_wormhole_and_pyth_states(&scenario);
 
-        let ticket = set_data_sources::authorize_governance(&pyth_state, false);
-
         let verified_vaa = wormhole::vaa::parse_and_verify(&mut worm_state, SET_DATA_SOURCES_VAA, &clock);
 
-        let receipt = verify_vaa(&worm_state, verified_vaa, ticket);
+        let receipt = pyth::governance::verify_vaa(&pyth_state, verified_vaa);
 
         test_scenario::next_tx(&mut scenario, DEPLOYER);
 

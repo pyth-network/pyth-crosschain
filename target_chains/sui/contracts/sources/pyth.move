@@ -36,12 +36,6 @@ module pyth::pyth {
 
     #[test_only]
     friend pyth::pyth_tests;
-    #[test_only]
-    friend pyth::set_data_sources_tests;
-    #[test_only]
-    friend pyth::set_stale_price_threshold_test;
-    #[test_only]
-    friend pyth::set_update_fee_tests;
 
     /// Init state and emit event corresponding to Pyth initialization.
     public entry fun init_pyth(
@@ -753,9 +747,9 @@ module pyth::pyth_tests{
         vector<DataSource>[
             data_source::new(
                 1, external_address::new(bytes32::from_bytes(x"0000000000000000000000000000000000000000000000000000000000000004"))),
-                data_source::new(
+            data_source::new(
                 5, external_address::new(bytes32::new(x"0000000000000000000000000000000000000000000000000000000000007637"))),
-                data_source::new(
+            data_source::new(
                 17, external_address::new(bytes32::new(ACCUMULATOR_TESTS_EMITTER_ADDRESS)))
         ]
     }
