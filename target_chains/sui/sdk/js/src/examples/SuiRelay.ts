@@ -7,16 +7,10 @@ import {
   RawSigner,
   TransactionBlock,
 } from "@mysten/sui.js";
+
 import { SuiPythClient } from "../client";
 import { SuiPriceServiceConnection } from "../index";
 
-// example usage for testnet with accumulator message (with hermes price service endpoint):
-//
-// SUI_KEY=YOUR_PRIV_KEY_IN_HEX npx ts-node SuiRelay.ts --price-id "5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" \
-// --price-service "https://hermes-beta.pyth.network" \
-// --full-node "https://fullnode.testnet.sui.io:443" \
-// --pyth-state-id "0xd3e79c2c083b934e78b3bd58a490ec6b092561954da6e7322e1e2b3c8abfddc0" \
-// --wormhole-state-id "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790"
 const argv = yargs(hideBin(process.argv))
   .option("price-id", {
     description:
@@ -75,6 +69,7 @@ async function run() {
     Ed25519Keypair.fromSecretKey(Buffer.from(process.env.SUI_KEY, "hex")),
     provider
   );
+
   const txBlock = {
     transactionBlock: tx,
     options: {
@@ -82,8 +77,6 @@ async function run() {
       showEvents: true,
     },
   };
-  const gasCost = await wallet.getGasCostEstimation(txBlock);
-  tx.setGasBudget(gasCost * BigInt(2));
   const result = await wallet.signAndExecuteTransactionBlock(txBlock);
   console.dir(result, { depth: null });
 }

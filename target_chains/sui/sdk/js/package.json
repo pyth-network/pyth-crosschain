@@ -1,7 +1,7 @@
 {
   "name": "@pythnetwork/pyth-sui-js",
   "version": "1.2.0",
-  "description": "Pyth Network Aptos Utilities",
+  "description": "Pyth Network Sui Utilities",
   "homepage": "https://pyth.network",
   "author": {
     "name": "Pyth Data Association"

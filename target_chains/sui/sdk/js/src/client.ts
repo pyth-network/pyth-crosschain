@@ -81,7 +81,7 @@ export class SuiPythClient {
     tx: TransactionBlock,
     updates: number[][],
     feedIds: HexString[]
-  ) {
+  ): Promise<ObjectId[]> {
     const wormholePackageId = await this.getWormholePackageId();
     const packageId = await this.getPythPackageId();
 

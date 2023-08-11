@@ -1,4 +1,4 @@
-# Pyth Sui JS
+# Pyth Sui JS SDK
 
 [Pyth](https://pyth.network/) provides real-time pricing data in a variety of asset classes, including cryptocurrency, equities, FX and commodities. This library allows you to use these real-time prices on the [Sui network](https://sui.io/).
 
@@ -42,15 +42,78 @@ const priceIds = [
 const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds);
 ```
 
-## **_Important Note for Integrators_**
+## On-chain prices
 
-Your Sui Move module should NOT have a hard-coded call to `pyth::update_single_price_feed`. In other words, the Sui Pyth `pyth::update_single_price_feed` entry point should never be called by a contract, instead it should be called directly from client code (e.g. Typescript or Rust).
+### **_Important Note for Integrators_**
+
+Your Sui Move module **should NOT** have a hard-coded call to `pyth::update_single_price_feed`. In other words, the Sui Pyth `pyth::update_single_price_feed` entry point should never be called by a contract, instead it should be called directly from client code (e.g. Typescript or Rust).
 
 This is because when a Sui contract is [upgraded](https://docs.sui.io/build/package-upgrades), the new address is different from the original. If your module has a hard-coded call to `pyth::update_single_price_feed` living at a fixed call-site, it may eventually get bricked due to the way Pyth upgrades are implemented. (We only allows users to interact with the most recent package version for security reasons).
 
-Therefore, you should build a [Sui programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates the price by calling `pyth::update_single_price_feed` at the latest call-site from the client-side and then call a function in your contract that invokes `pyth::get_price` on the `PriceInfoObject` to get the recently updated price. We provide a helper function in `helpers.ts` for identifying the latest Pyth and Wormhole packages.
+Therefore, you should build a [Sui programmable transaction](https://docs.sui.io/build/prog-trans-ts-sdk) that first updates the price by calling `pyth::update_single_price_feed` at the latest call-site from the client-side and then call a function in your contract that invokes `pyth::get_price` on the `PriceInfoObject` to get the recently updated price.
+You can use `SuiPythClient` to build such transactions.
 
-### Off-chain prices
+### Example
+
+```ts
+import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
+import { TransactionBlock } from "@mysten/sui.js";
+
+const priceUpdateData = await connection.getPriceFeedsUpdateData(priceIds); // see quickstart section
+
+
+// It is either injected from browser or instantiated in backend via some private key
+const wallet: SignerWithProvider = getWallet();
+// Get the state ids of the Pyth and Wormhole contracts from
+// https://docs.pyth.network/documentation/pythnet-price-feeds/sui
+const wormholeStateId = " 0xFILL_ME";
+const pythStateId = "0xFILL_ME";
+
+const client = new SuiPythClient(wallet.provider, pythStateId, wormholeStateId);
+const tx = new TransactionBlock();
+const priceInfoObjectIds = await client.updatePriceFeeds(tx, priceFeedUpdateData, priceIds);
+
+tx.moveCall({
+    target: `YOUR_PACKAGE::YOUR_MODULE::use_pyth_for_defi`,
+    arguments: [
+        ..., // other arguments needed for your contract
+        tx.object(pythStateId),
+        tx.object(priceInfoObjectIds[0]),
+    ],
+});
+
+const txBlock = {
+    transactionBlock: tx,
+    options: {
+        showEffects: true,
+        showEvents: true,
+    },
+};
+
+const result = await wallet.signAndExecuteTransactionBlock(txBlock);
+```
+
+Now in your contract you can consume the price by calling `pyth::get_price` or other utility functions on the `PriceInfoObject`.
+
+### CLI Example
+
+[This example](./src/examples/SuiRelay.ts) shows how to update prices on an Sui network. It does the following:
+
+1. Fetches update data from the Price Service for the given price feeds.
+2. Calls the Pyth Sui contract with the update data.
+
+You can run this example with `npm run example-relay`. A full command that updates prices on Sui testnet looks like:
+
+```bash
+export SUI_KEY=YOUR_PRIV_KEY;
+npm run example-relay -- --price-id "5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" \
+--price-service "https://hermes-beta.pyth.network" \
+--full-node "https://fullnode.testnet.sui.io:443" \
+--pyth-state-id "0xd3e79c2c083b934e78b3bd58a490ec6b092561954da6e7322e1e2b3c8abfddc0" \
+--wormhole-state-id "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790"
+```
+
+## Off-chain prices
 
 Many applications additionally need to display Pyth prices off-chain, for example, in their frontend application.
 The `SuiPriceServiceConnection` provides two different ways to fetch the current Pyth price.
@@ -85,32 +148,4 @@ setTimeout(() => {
 }, 60000);
 ```
 
-### Example
-
-[This example](./src/examples/SuiRelay.ts) shows how to update prices on an Sui network. It does the following:
-
-1. Fetches update data from the Price Service for the given price feeds.
-2. Calls the Pyth Sui contract with the update data.
-
-You can run this example with `npm run example-relay`. A full command that updates prices on Sui testnet looks like:
-
-```bash
-export SUI_KEY=YOUR_PRIV_KEY;
-npm run example-relay -- --price-id "0x5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" --price-info-object-id "0x848d1c941e117f515757b77aa562eee8bb179eee6f37ec6dad97ae0279ff4bd4" --price-service "https://hermes-beta.pyth.network" --full-node "https://fullnode.testnet.sui.io:443" --pyth-state-id "0xd3e79c2c083b934e78b3bd58a490ec6b092561954da6e7322e1e2b3c8abfddc0" --wormhole-state-id "0x31358d198147da50db32eda2562951d53973a0c0ad5ed738e9b17d88b213d790"
-```
-
-## Price Service endpoints for accumulator updates
-
-| Sui Network | Price Service URL                |
-| ----------- | -------------------------------- |
-| Testnet     | https://hermes-beta.pyth.network |
-| Mainnet     | TBA                              |
-
-## Price Service endpoints for batch price attestation updates (soon to be deprecated)
-
-We provide public endpoints for the price service, although it is strongly recommended to host your own instance.
-
-| Sui Network | Price Service URL               |
-| ----------- | ------------------------------- |
-| Testnet     | https://xc-testnet.pyth.network |
-| Mainnet     | https://xc-mainnet.pyth.network |
+## [Price Service endpoints](https://docs.pyth.network/documentation/pythnet-price-feeds/price-service#public-endpoints)
