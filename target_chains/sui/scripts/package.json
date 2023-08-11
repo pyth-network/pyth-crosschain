@@ -6,7 +6,7 @@
   "license": "MIT",
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.12",
-    "@mysten/sui.js": "^0.32.2",
+    "@mysten/sui.js": "^0.37.1",
     "@pythnetwork/client": "^2.17.0",
     "@pythnetwork/price-service-client": "^1.4.0",
     "@pythnetwork/price-service-sdk": "^1.2.0",

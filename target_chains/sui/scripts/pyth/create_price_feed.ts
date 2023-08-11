@@ -11,7 +11,7 @@ const parser = yargs(hideBin(process.argv))
     contract: {
       type: "string",
       demandOption: true,
-      desc: "Contract to update price feeds for (e.g mumbai_0xff1a0f4744e8582DF1aE09D5611b887B6a12925C)",
+      desc: "Contract to update price feeds for (e.g sui_testnet_0xe8c2ddcd5b10e8ed98e53b12fcf8f0f6fd9315f810ae61fa4001858851f21c88)",
     },
     "feed-id": {
       type: "array",

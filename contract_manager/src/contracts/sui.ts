@@ -192,11 +192,15 @@ export class SuiContract extends Contract {
   async executeMigrateInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    let decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
+    let verificationReceipt = await this.getVaaVerificationReceipt(
+      tx,
+      packageId,
+      vaa
+    );
 
     tx.moveCall({
       target: `${packageId}::migrate::migrate`,
-      arguments: [tx.object(this.stateId), decreeReceipt],
+      arguments: [tx.object(this.stateId), verificationReceipt],
     });
 
     return this.executeTransaction(tx, keypair);
@@ -304,11 +308,15 @@ export class SuiContract extends Contract {
     );
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    let decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
+    let verificationReceipt = await this.getVaaVerificationReceipt(
+      tx,
+      packageId,
+      vaa
+    );
 
     tx.moveCall({
       target: `${packageId}::governance::execute_governance_instruction`,
-      arguments: [tx.object(this.stateId), decreeReceipt],
+      arguments: [tx.object(this.stateId), verificationReceipt],
     });
 
     return this.executeTransaction(tx, keypair);
@@ -322,11 +330,15 @@ export class SuiContract extends Contract {
   ) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    let decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
+    let verificationReceipt = await this.getVaaVerificationReceipt(
+      tx,
+      packageId,
+      vaa
+    );
 
     const [upgradeTicket] = tx.moveCall({
       target: `${packageId}::contract_upgrade::authorize_upgrade`,
-      arguments: [tx.object(this.stateId), decreeReceipt],
+      arguments: [tx.object(this.stateId), verificationReceipt],
     });
 
     const [upgradeReceipt] = tx.upgrade({
@@ -344,23 +356,19 @@ export class SuiContract extends Contract {
   }
 
   /**
-   * Utility function to get the decree receipt object for a VAA that can be
+   * Utility function to get the verification receipt object for a VAA that can be
    * used to authorize a governance instruction.
    * @param tx
    * @param packageId pyth package id
    * @param vaa
    * @private
    */
-  private async getVaaDecreeReceipt(
+  async getVaaVerificationReceipt(
     tx: TransactionBlock,
     packageId: string,
     vaa: Buffer
   ) {
     const wormholePackageId = await this.getWormholePackageId();
-    let [decreeTicket] = tx.moveCall({
-      target: `${packageId}::set_update_fee::authorize_governance`,
-      arguments: [tx.object(this.stateId), tx.pure(false)],
-    });
 
     let [verifiedVAA] = tx.moveCall({
       target: `${wormholePackageId}::vaa::parse_and_verify`,
@@ -371,12 +379,11 @@ export class SuiContract extends Contract {
       ],
     });
 
-    let [decreeReceipt] = tx.moveCall({
-      target: `${wormholePackageId}::governance_message::verify_vaa`,
-      arguments: [tx.object(this.wormholeStateId), verifiedVAA, decreeTicket],
-      typeArguments: [`${packageId}::governance_witness::GovernanceWitness`],
+    let [verificationReceipt] = tx.moveCall({
+      target: `${packageId}::governance::verify_vaa`,
+      arguments: [tx.object(this.stateId), verifiedVAA],
     });
-    return decreeReceipt;
+    return verificationReceipt;
   }
 
   /**
