@@ -6,6 +6,7 @@ import {
   RawSigner,
   SUI_CLOCK_OBJECT_ID,
   TransactionBlock,
+  TransactionArgument,
 } from "@mysten/sui.js";
 
 /**
@@ -93,7 +94,7 @@ export async function updatePriceFeed(
   pyth_package_id: string,
   pyth_state_id: string
 ): Promise<any> {
-  if (is_accumulator_message(price_update_msg)) {
+  if (isAccumulatorMsg(price_update_msg)) {
     return updatePriceFeedWithAccumulator(
       signer,
       price_update_msg,
@@ -151,7 +152,7 @@ async function updatePriceFeedWithAccumulator(
   const tx = new TransactionBlock();
 
   // 0. verify VAA (that encodes the merkle root) in accumulator message
-  let [verified_vaa] = tx.moveCall({
+  const [verified_vaa] = tx.moveCall({
     target: `${worm_package_id}::vaa::parse_and_verify`,
     arguments: [
       tx.object(worm_state_id),
@@ -161,7 +162,7 @@ async function updatePriceFeedWithAccumulator(
   });
 
   // 1. obtain fee coin by splitting it off from the gas coin
-  let [fee_coin] = tx.moveCall({
+  const [fee_coin] = tx.moveCall({
     target: "0x2::coin::split",
     arguments: [tx.gas, tx.pure(1)],
     typeArguments: ["0x2::sui::SUI"],
@@ -246,9 +247,8 @@ async function updatePriceFeedWithBatchPriceAttestation(
   // Parse our batch price attestation VAA bytes using Wormhole.
   // Check out the Wormhole cross-chain bridge and generic messaging protocol here:
   //     https://github.com/wormhole-foundation/wormhole
-  // @ts-ignore
-  let verified_vaas = [];
-  let [verified_vaa] = tx.moveCall({
+  let verified_vaas: TransactionArgument[] = [];
+  const [verified_vaa] = tx.moveCall({
     target: `${worm_package_id}::vaa::parse_and_verify`,
     arguments: [
       tx.object(worm_state_id),
@@ -256,7 +256,6 @@ async function updatePriceFeedWithBatchPriceAttestation(
       tx.object(SUI_CLOCK_OBJECT_ID),
     ],
   });
-  // @ts-ignore
   verified_vaas = verified_vaas.concat(verified_vaa);
 
   // Create a hot potato vector of price feed updates that will
@@ -275,7 +274,7 @@ async function updatePriceFeedWithBatchPriceAttestation(
 
   // Update each price info object (containing our price feeds of interest)
   // using the hot potato vector.
-  let coin = tx.splitCoins(tx.gas, [tx.pure(1)]);
+  const coin = tx.splitCoins(tx.gas, [tx.pure(1)]);
   [price_updates_hot_potato] = tx.moveCall({
     target: `${pyth_package_id}::pyth::update_single_price_feed`,
     arguments: [
@@ -297,7 +296,7 @@ async function updatePriceFeedWithBatchPriceAttestation(
 
   tx.setGasBudget(2000000000);
 
-  let result = await signer.signAndExecuteTransactionBlock({
+  const result = await signer.signAndExecuteTransactionBlock({
     transactionBlock: tx,
     options: {
       showInput: true,
@@ -323,20 +322,20 @@ function parse_vaa_bytes_from_accumulator_message(
   accumulator_message: string,
   isHex: boolean
 ): number[] {
-  let b = isHex
+  const b = isHex
     ? [...Buffer.from(accumulator_message, "hex")]
     : [...Buffer.from(accumulator_message, "base64")];
   // the bytes at offsets 0-5 in the accumulator msg encode the header, major, minor bytes
   // we ignore them, since we are only interested in the VAA bytes
-  let trailing_size = b.slice(6, 7)[0];
-  let vaa_size_offset =
+  const trailing_size = b.slice(6, 7)[0];
+  const vaa_size_offset =
     7 /* initial bytes (header, major, minor, trailing stuff size) */ +
     trailing_size /* trailing stuff (variable number of bytes) */ +
     1; /* proof_type (1 byte) */
-  let vaa_size_bytes = b.slice(vaa_size_offset, vaa_size_offset + 2);
-  let vaa_size = vaa_size_bytes[1] + 16 * vaa_size_bytes[0];
-  let vaa_offset = vaa_size_offset + 2;
-  let vaa = b.slice(vaa_offset, vaa_offset + vaa_size);
+  const vaa_size_bytes = b.slice(vaa_size_offset, vaa_size_offset + 2);
+  const vaa_size = vaa_size_bytes[1] + 16 * vaa_size_bytes[0];
+  const vaa_offset = vaa_size_offset + 2;
+  const vaa = b.slice(vaa_offset, vaa_offset + vaa_size);
   return vaa;
 }
 
@@ -405,6 +404,9 @@ export async function get_price_feed_ids_to_price_info_object_ids_table(
 /**
  * @param msg - accumulator message in base64
  */
-function is_accumulator_message(msg: string) {
-  return Buffer.from(msg, "base64").toString("hex").slice(0, 8) === "504e4155";
+function isAccumulatorMsg(msg: string) {
+  const ACCUMULATOR_MAGIC = "504e4155";
+  return (
+    Buffer.from(msg, "base64").toString("hex").slice(0, 8) === ACCUMULATOR_MAGIC
+  );
 }
