@@ -4,7 +4,7 @@ import {
   PriceInfo,
   PriceItem,
 } from "../interface";
-import { AptosAccount, AptosClient, TxnBuilderTypes } from "aptos";
+import { AptosAccount, AptosClient } from "aptos";
 import { DurationInSeconds } from "../utils";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 
@@ -148,15 +148,42 @@ export class AptosPricePusher implements IPricePusher {
       const pendingTx = await client.submitTransaction(signedTx);
 
       console.log("Successfully broadcasted txHash:", pendingTx.hash);
+
+      // Sometimes broadcasted txs don't make it on-chain and they cause our sequence number
+      // to go out of sync. Missing transactions are rare and we don't want this check to block
+      // the next price update. So we use spawn a promise without awaiting on it to wait for the
+      // transaction to be confirmed and if it fails, it resets the sequence number and return.
+      this.waitForTransactionConfirmation(client, pendingTx.hash);
+
       return;
     } catch (e: any) {
       console.error("Error executing messages");
-      console.log(e);
+      console.error(e);
 
       // Reset the sequence number to re-sync it (in case that was the issue)
       this.lastSequenceNumber = undefined;
 
       return;
+    }
+  }
+
+  // Wait for the transaction to be confirmed. If it fails, reset the sequence number.
+  private async waitForTransactionConfirmation(
+    client: AptosClient,
+    txHash: string
+  ): Promise<void> {
+    try {
+      await client.waitForTransaction(txHash, {
+        checkSuccess: true,
+        timeoutSecs: 10,
+      });
+
+      console.log(`Transaction with txHash "${txHash}" confirmed.`);
+    } catch (e) {
+      console.error(`Transaction with txHash "${txHash}" failed to confirm.`);
+      console.error(e);
+
+      this.lastSequenceNumber = undefined;
     }
   }
 
