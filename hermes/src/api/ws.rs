@@ -227,10 +227,36 @@ impl Subscriber {
                 verbose,
                 binary,
             }) => {
-                for id in ids {
-                    let price_id: PriceIdentifier = id.into();
-                    self.price_feeds_with_config
-                        .insert(price_id, PriceFeedClientConfig { verbose, binary });
+                let price_ids: Vec<PriceIdentifier> = ids.into_iter().map(|id| id.into()).collect();
+                let available_price_ids = self.store.get_price_feed_ids().await;
+
+                let not_found_price_ids: Vec<&PriceIdentifier> = price_ids
+                    .iter()
+                    .filter(|price_id| !available_price_ids.contains(price_id))
+                    .collect();
+
+                // If there is a single price id that is not found, we don't subscribe to any of the
+                // asked correct price feed ids and return an error to be more explicit and clear.
+                if !not_found_price_ids.is_empty() {
+                    self.sender
+                        .send(
+                            serde_json::to_string(&ServerMessage::Response(
+                                ServerResponseMessage::Err {
+                                    error: format!(
+                                        "Price feed(s) with id(s) {:?} not found",
+                                        not_found_price_ids
+                                    ),
+                                },
+                            ))?
+                            .into(),
+                        )
+                        .await?;
+                    return Ok(());
+                } else {
+                    for price_id in price_ids {
+                        self.price_feeds_with_config
+                            .insert(price_id, PriceFeedClientConfig { verbose, binary });
+                    }
                 }
             }
             Ok(ClientMessage::Unsubscribe { ids }) => {
