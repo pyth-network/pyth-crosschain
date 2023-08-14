@@ -9,7 +9,7 @@ import {
 } from "@mysten/sui.js";
 import { Chain, SuiChain } from "../chains";
 import { DataSource } from "xc_admin_common";
-import { Contract } from "../base";
+import { Contract, TxResult } from "../base";
 
 export class SuiContract extends Contract {
   static type = "SuiContract";
@@ -195,7 +195,10 @@ export class SuiContract extends Contract {
     return this.executeTransaction(tx, keypair);
   }
 
-  async executeUpdatePriceFeed(senderPrivateKey: string, vaas: Buffer[]) {
+  async executeUpdatePriceFeed(
+    senderPrivateKey: string,
+    vaas: Buffer[]
+  ): Promise<TxResult> {
     throw new Error("Not implemented");
   }
 
@@ -212,7 +215,8 @@ export class SuiContract extends Contract {
       arguments: [tx.object(this.stateId), decreeReceipt],
     });
 
-    return this.executeTransaction(tx, keypair);
+    const result = await this.executeTransaction(tx, keypair);
+    return { id: result.digest, info: result };
   }
 
   async executeUpgradeInstruction(
@@ -241,7 +245,8 @@ export class SuiContract extends Contract {
       target: `${packageId}::contract_upgrade::commit_upgrade`,
       arguments: [tx.object(this.stateId), upgradeReceipt],
     });
-    return this.executeTransaction(tx, keypair);
+    const result = await this.executeTransaction(tx, keypair);
+    return { id: result.digest, info: result };
   }
 
   /**

@@ -267,11 +267,12 @@ export class WormholeEvmContract extends WormholeContract {
       from: address,
       gas: 100000000,
     });
-    return transactionObject.send({
+    const result = await transactionObject.send({
       from: address,
       gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
       gasPrice: await this.chain.getGasPrice(),
     });
+    return { id: result.transactionHash, info: result };
   }
 }
 
@@ -443,12 +444,13 @@ export class EvmContract extends Contract {
       gas: 100000000,
       value: updateFee,
     });
-    return transactionObject.send({
+    const result = await transactionObject.send({
       from: address,
       value: updateFee,
       gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
       gasPrice: await this.chain.getGasPrice(),
     });
+    return { id: result.transactionHash, info: result };
   }
 
   async executeGovernanceInstruction(senderPrivateKey: string, vaa: Buffer) {
@@ -462,11 +464,12 @@ export class EvmContract extends Contract {
       from: address,
       gas: 100000000,
     });
-    return transactionObject.send({
+    const result = await transactionObject.send({
       from: address,
       gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
       gasPrice: await this.chain.getGasPrice(),
     });
+    return { id: result.transactionHash, info: result };
   }
 
   getChain(): EvmChain {

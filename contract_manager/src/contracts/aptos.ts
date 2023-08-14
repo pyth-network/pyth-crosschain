@@ -1,4 +1,4 @@
-import { Contract, PriceFeed } from "../base";
+import { Contract, PriceFeed, TxResult } from "../base";
 import { AptosAccount, BCS, TxnBuilderTypes } from "aptos";
 import { AptosChain, Chain } from "../chains";
 import { DataSource } from "xc_admin_common";
@@ -32,7 +32,7 @@ export class AptosContract extends Contract {
   async executeGovernanceInstruction(
     senderPrivateKey: string,
     vaa: Buffer
-  ): Promise<any> {
+  ): Promise<TxResult> {
     const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
       TxnBuilderTypes.EntryFunction.natural(
         `${this.stateId}::governance`,
@@ -44,7 +44,7 @@ export class AptosContract extends Contract {
     return this.sendTransaction(senderPrivateKey, txPayload);
   }
 
-  private sendTransaction(
+  private async sendTransaction(
     senderPrivateKey: string,
     txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction
   ) {
@@ -52,15 +52,20 @@ export class AptosContract extends Contract {
     const sender = new AptosAccount(
       new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
     );
-    return client.generateSignSubmitWaitForTransaction(sender, txPayload, {
-      maxGasAmount: BigInt(30000),
-    });
+    const result = await client.generateSignSubmitWaitForTransaction(
+      sender,
+      txPayload,
+      {
+        maxGasAmount: BigInt(30000),
+      }
+    );
+    return { id: result.hash, info: result };
   }
 
   async executeUpdatePriceFeed(
     senderPrivateKey: string,
     vaas: Buffer[]
-  ): Promise<any> {
+  ): Promise<TxResult> {
     const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
       TxnBuilderTypes.EntryFunction.natural(
         `${this.stateId}::pyth`,

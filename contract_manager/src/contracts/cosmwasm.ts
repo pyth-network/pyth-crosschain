@@ -326,20 +326,22 @@ export class CosmWasmContract extends Contract {
     const fund = await this.getUpdateFee(base64Vaas);
     let executor = await this.chain.getExecutor(senderPrivateKey);
     let pythExecutor = new PythWrapperExecutor(executor);
-    return pythExecutor.executeUpdatePriceFeeds({
+    const result = await pythExecutor.executeUpdatePriceFeeds({
       contractAddr: this.address,
       vaas: base64Vaas,
       fund,
     });
+    return { id: result.txHash, info: result };
   }
 
   async executeGovernanceInstruction(privateKey: string, vaa: Buffer) {
     let executor = await this.chain.getExecutor(privateKey);
     let pythExecutor = new PythWrapperExecutor(executor);
-    return pythExecutor.executeGovernanceInstruction({
+    const result = await pythExecutor.executeGovernanceInstruction({
       contractAddr: this.address,
       vaa: vaa.toString("base64"),
     });
+    return { id: result.txHash, info: result };
   }
 
   async getWormholeContract(): Promise<WormholeCosmWasmContract> {

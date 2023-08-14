@@ -1,6 +1,11 @@
 import { DataSource } from "xc_admin_common";
 import { Chain } from "./chains";
 
+export interface TxResult {
+  id: string;
+  info: any; // chain specific info
+}
+
 export abstract class Storable {
   /**
    * Returns the unique identifier for this object
@@ -77,7 +82,7 @@ export abstract class Contract extends Storable {
   abstract executeUpdatePriceFeed(
     senderPrivateKey: string,
     vaas: Buffer[]
-  ): Promise<any>;
+  ): Promise<TxResult>;
 
   /**
    * Executes the governance instruction contained in the VAA using the sender credentials
@@ -87,7 +92,7 @@ export abstract class Contract extends Storable {
   abstract executeGovernanceInstruction(
     senderPrivateKey: string,
     vaa: Buffer
-  ): Promise<any>;
+  ): Promise<TxResult>;
 
   /**
    * Returns the single data source that this contract accepts governance messages from

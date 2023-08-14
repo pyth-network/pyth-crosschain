@@ -92,7 +92,7 @@ export abstract class Chain extends Storable {
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
    * @param upgradeInfo based on the contract type, this can be a contract address, codeId, package digest, etc.
    */
-  abstract generateGovernanceUpgradePayload(upgradeInfo: any): Buffer;
+  abstract generateGovernanceUpgradePayload(upgradeInfo: unknown): Buffer;
 }
 
 export class GlobalChain extends Chain {
@@ -100,7 +100,7 @@ export class GlobalChain extends Chain {
   constructor() {
     super("global", true, "unset");
   }
-  generateGovernanceUpgradePayload(upgradeInfo: any): Buffer {
+  generateGovernanceUpgradePayload(upgradeInfo: unknown): Buffer {
     throw new Error(
       "Can not create a governance message for upgrading contracts on all chains!"
     );
