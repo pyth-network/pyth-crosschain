@@ -12,21 +12,21 @@ import { SuiPythClient } from "../client";
 import { SuiPriceServiceConnection } from "../index";
 
 const argv = yargs(hideBin(process.argv))
-  .option("price-id", {
+  .option("price-feed", {
     description:
-      "Space separated price feed id (in hex) to fetch" +
-      " e.g: 0xf9c0172ba10dfa4d19088d...",
+      "Price feed id (in hex) to fetch e.g: 0xf9c0172ba10dfa4d19088d...",
     type: "string",
     demandOption: true,
   })
   .option("price-service", {
     description:
-      "Endpoint URL for the price service. e.g: https://endpoint/example",
+      "Endpoint URL for the price service. e.g: https://xc-mainnet.pyth.network",
     type: "string",
     demandOption: true,
   })
   .option("full-node", {
-    description: "URL of the full Sui node RPC endpoint.",
+    description:
+      "URL of the full Sui node RPC endpoint. e.g: https://fullnode.testnet.sui.io:443",
     type: "string",
     demandOption: true,
   })
@@ -52,9 +52,8 @@ async function run() {
 
   // Fetch the latest price feed update data from the Price Service
   const connection = new SuiPriceServiceConnection(argv["price-service"]);
-  console.log("argv.priceIds: ", argv.priceId);
   const priceFeedUpdateData = await connection.getPriceFeedsUpdateData([
-    argv.priceId,
+    argv["price-feed"],
   ]);
 
   const provider = getProvider(argv["full-node"]);
@@ -63,7 +62,7 @@ async function run() {
 
   const client = new SuiPythClient(provider, pythStateId, wormholeStateId);
   const tx = new TransactionBlock();
-  await client.updatePriceFeeds(tx, priceFeedUpdateData, [argv.priceId]);
+  await client.updatePriceFeeds(tx, priceFeedUpdateData, [argv["price-feed"]]);
 
   const wallet = new RawSigner(
     Ed25519Keypair.fromSecretKey(Buffer.from(process.env.SUI_KEY, "hex")),

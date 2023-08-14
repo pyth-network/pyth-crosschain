@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-sui-js",
-  "version": "1.2.0",
+  "version": "1.0.0",
   "description": "Pyth Network Sui Utilities",
   "homepage": "https://pyth.network",
   "author": {
@@ -31,7 +31,8 @@
   },
   "keywords": [
     "pyth",
-    "oracle"
+    "oracle",
+    "sui"
   ],
   "license": "Apache-2.0",
   "devDependencies": {
