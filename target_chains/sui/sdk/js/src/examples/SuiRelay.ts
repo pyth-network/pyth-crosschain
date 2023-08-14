@@ -12,10 +12,10 @@ import { SuiPythClient } from "../client";
 import { SuiPriceServiceConnection } from "../index";
 
 const argv = yargs(hideBin(process.argv))
-  .option("price-feed", {
+  .option("feed-id", {
     description:
-      "Price feed id (in hex) to fetch e.g: 0xf9c0172ba10dfa4d19088d...",
-    type: "string",
+      "Price feed ids to update without the leading 0x (e.g f9c0172ba10dfa4d19088d94f5bf61d3b54d5bd7483a322a982e1373ee8ea31b). Can be provided multiple times for multiple feed updates",
+    type: "array",
     demandOption: true,
   })
   .option("price-service", {
@@ -52,9 +52,8 @@ async function run() {
 
   // Fetch the latest price feed update data from the Price Service
   const connection = new SuiPriceServiceConnection(argv["price-service"]);
-  const priceFeedUpdateData = await connection.getPriceFeedsUpdateData([
-    argv["price-feed"],
-  ]);
+  const feeds = argv["feed-id"] as string[];
+  const priceFeedUpdateData = await connection.getPriceFeedsUpdateData(feeds);
 
   const provider = getProvider(argv["full-node"]);
   const wormholeStateId = argv["wormhole-state-id"];
@@ -62,7 +61,7 @@ async function run() {
 
   const client = new SuiPythClient(provider, pythStateId, wormholeStateId);
   const tx = new TransactionBlock();
-  await client.updatePriceFeeds(tx, priceFeedUpdateData, [argv["price-feed"]]);
+  await client.updatePriceFeeds(tx, priceFeedUpdateData, feeds);
 
   const wallet = new RawSigner(
     Ed25519Keypair.fromSecretKey(Buffer.from(process.env.SUI_KEY, "hex")),

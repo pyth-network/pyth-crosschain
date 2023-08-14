@@ -11,6 +11,7 @@ export class SuiPythClient {
   private wormholePackageId: ObjectId | undefined;
   private priceTableId: ObjectId | undefined;
   private priceFeedObjectIdCache: Map<HexString, ObjectId> = new Map();
+  private baseUpdateFee: number | undefined;
   constructor(
     public provider: JsonRpcProvider,
     public pythStateId: ObjectId,
@@ -18,6 +19,24 @@ export class SuiPythClient {
   ) {
     this.pythPackageId = undefined;
     this.wormholePackageId = undefined;
+  }
+
+  async getBaseUpdateFee(): Promise<number> {
+    if (this.baseUpdateFee === undefined) {
+      const result = await this.provider.getObject({
+        id: this.pythStateId,
+        options: { showContent: true },
+      });
+      if (
+        !result.data ||
+        !result.data.content ||
+        result.data.content.dataType !== "moveObject"
+      )
+        throw new Error("Unable to fetch pyth state object");
+      this.baseUpdateFee = result.data.content.fields.base_update_fee as number;
+    }
+
+    return this.baseUpdateFee;
   }
 
   /**
@@ -54,7 +73,7 @@ export class SuiPythClient {
    * @param vaas array of vaas to verify
    * @param tx transaction block to add commands to
    */
-  async verifyVaas(vaas: number[][], tx: TransactionBlock) {
+  async verifyVaas(vaas: Buffer[], tx: TransactionBlock) {
     const wormholePackageId = await this.getWormholePackageId();
     const verifiedVaas = [];
     for (const vaa of vaas) {
@@ -62,7 +81,7 @@ export class SuiPythClient {
         target: `${wormholePackageId}::vaa::parse_and_verify`,
         arguments: [
           tx.object(this.wormholeStateId),
-          tx.pure(vaa),
+          tx.pure(Array.from(vaa)),
           tx.object(SUI_CLOCK_OBJECT_ID),
         ],
       });
@@ -79,7 +98,7 @@ export class SuiPythClient {
    */
   async updatePriceFeeds(
     tx: TransactionBlock,
-    updates: number[][],
+    updates: Buffer[],
     feedIds: HexString[]
   ): Promise<ObjectId[]> {
     const wormholePackageId = await this.getWormholePackageId();
@@ -98,7 +117,7 @@ export class SuiPythClient {
         target: `${packageId}::pyth::create_authenticated_price_infos_using_accumulator`,
         arguments: [
           tx.object(this.pythStateId),
-          tx.pure(updates[0]),
+          tx.pure(Array.from(updates[0])),
           verifiedVaas[0],
           tx.object(SUI_CLOCK_OBJECT_ID),
         ],
@@ -129,7 +148,9 @@ export class SuiPythClient {
         );
       }
       priceInfoObjects.push(priceInfoObjectId);
-      const coin = tx.splitCoins(tx.gas, [tx.pure(1)]);
+      const coin = tx.splitCoins(tx.gas, [
+        tx.pure(await this.getBaseUpdateFee()),
+      ]);
       [priceUpdatesHotPotato] = tx.moveCall({
         target: `${packageId}::pyth::update_single_price_feed`,
         arguments: [
@@ -148,7 +169,7 @@ export class SuiPythClient {
     });
     return priceInfoObjects;
   }
-  async createPriceFeed(tx: TransactionBlock, updates: number[][]) {
+  async createPriceFeed(tx: TransactionBlock, updates: Buffer[]) {
     const wormholePackageId = await this.getWormholePackageId();
     const packageId = await this.getPythPackageId();
     if (updates.every((update) => this.isAccumulatorMsg(update))) {
@@ -264,9 +285,9 @@ export class SuiPythClient {
    * Checks if a message is an accumulator message or not
    * @param msg - update message from price service
    */
-  isAccumulatorMsg(msg: number[]) {
+  isAccumulatorMsg(msg: Buffer) {
     const ACCUMULATOR_MAGIC = "504e4155";
-    return Buffer.from(msg).toString("hex").slice(0, 8) === ACCUMULATOR_MAGIC;
+    return msg.toString("hex").slice(0, 8) === ACCUMULATOR_MAGIC;
   }
 
   /**
@@ -274,25 +295,19 @@ export class SuiPythClient {
    * @param accumulatorMessage - the accumulator price update message
    * @returns vaa bytes as a uint8 array
    */
-  extractVaaBytesFromAccumulatorMessage(
-    accumulatorMessage: number[]
-  ): number[] {
+  extractVaaBytesFromAccumulatorMessage(accumulatorMessage: Buffer): Buffer {
     if (!this.isAccumulatorMsg(accumulatorMessage)) {
       throw new Error("Not an accumulator message");
     }
     // the first 6 bytes in the accumulator message encode the header, major, and minor bytes
     // we ignore them, since we are only interested in the VAA bytes
-    const trailingPayloadSize = accumulatorMessage.slice(6, 7)[0];
+    const trailingPayloadSize = accumulatorMessage.readUint8(6);
     const vaaSizeOffset =
       7 + // header bytes (header(4) + major(1) + minor(1) + trailing payload size(1))
       trailingPayloadSize + // trailing payload (variable number of bytes)
       1; // proof_type (1 byte)
-    const vaaSizeBytes = accumulatorMessage.slice(
-      vaaSizeOffset,
-      vaaSizeOffset + 2
-    );
-    const vaaSize = vaaSizeBytes[1] + 16 * vaaSizeBytes[0];
+    const vaaSize = accumulatorMessage.readUint16BE(vaaSizeOffset);
     const vaaOffset = vaaSizeOffset + 2;
-    return accumulatorMessage.slice(vaaOffset, vaaOffset + vaaSize);
+    return accumulatorMessage.subarray(vaaOffset, vaaOffset + vaaSize);
   }
 }

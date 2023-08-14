@@ -11,11 +11,11 @@ export class SuiPriceServiceConnection extends PriceServiceConnection {
    * the price service returns a non-ok response (e.g: Invalid price ids)
    *
    * @param priceIds Array of hex-encoded price ids.
-   * @returns Array of price update data.
+   * @returns Array of buffers containing the price update data.
    */
-  async getPriceFeedsUpdateData(priceIds: HexString[]): Promise<number[][]> {
+  async getPriceFeedsUpdateData(priceIds: HexString[]): Promise<Buffer[]> {
     // Fetch the latest price feed update VAAs from the price service
     const latestVaas = await this.getLatestVaas(priceIds);
-    return latestVaas.map((vaa) => Array.from(Buffer.from(vaa, "base64")));
+    return latestVaas.map((vaa) => Buffer.from(vaa, "base64"));
   }
 }
