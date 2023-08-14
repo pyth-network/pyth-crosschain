@@ -1,43 +1,15 @@
 import {
-  Connection,
-  Ed25519Keypair,
   fromB64,
   getPublishedObjectChanges,
-  JsonRpcProvider,
   MIST_PER_SUI,
   normalizeSuiObjectId,
   RawSigner,
   TransactionBlock,
 } from "@mysten/sui.js";
 import { execSync } from "child_process";
-
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
-import {
-  DefaultStore,
-  getDefaultDeploymentConfig,
-  SuiChain,
-} from "contract_manager";
 import { DataSource } from "xc_admin_common";
 
-const parser = yargs(hideBin(process.argv))
-  .usage(
-    "Usage: $0  --private-key <private-key> --chain [sui_mainnet|sui_testnet]"
-  )
-  .options({
-    "private-key": {
-      type: "string",
-      demandOption: true,
-      desc: "Private key to use for the deployment",
-    },
-    chain: {
-      type: "string",
-      demandOption: true,
-      desc: "Chain to deploy the code to. Can be sui_mainnet or sui_testnet",
-    },
-  });
-
-async function publishPackage(
+export async function publishPackage(
   signer: RawSigner,
   packagePath: string
 ): Promise<{ packageId: string; upgradeCapId: string; deployerCapId: string }> {
@@ -110,7 +82,7 @@ async function publishPackage(
   return { packageId, upgradeCapId, deployerCapId };
 }
 
-async function initPyth(
+export async function initPyth(
   signer: RawSigner,
   pythPackageId: string,
   deployerCapId: string,
@@ -177,28 +149,3 @@ async function initPyth(
   }
   return result;
 }
-
-async function main() {
-  const argv = await parser.argv;
-  const walletPrivateKey = argv["private-key"];
-  const chain = DefaultStore.chains[argv.chain] as SuiChain;
-  const provider = new JsonRpcProvider(
-    new Connection({ fullnode: chain.rpcUrl })
-  );
-  const wallet = new RawSigner(
-    Ed25519Keypair.fromSecretKey(Buffer.from(walletPrivateKey, "hex")),
-    provider
-  );
-  const result = await publishPackage(wallet, "../../contracts");
-  const deploymentType = chain.isMainnet() ? "stable" : "edge";
-  const config = getDefaultDeploymentConfig(deploymentType);
-  await initPyth(
-    wallet,
-    result.packageId,
-    result.deployerCapId,
-    result.upgradeCapId,
-    config
-  );
-}
-
-main();

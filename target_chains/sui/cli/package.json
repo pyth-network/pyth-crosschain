@@ -1,9 +1,12 @@
 {
-  "name": "pyth-sui-integration-test-and-deploy-scripts",
+  "name": "pyth-sui-cli",
   "version": "0.0.1",
-  "description": "Pyth Sui Integration Tests and Scripts",
+  "description": "Pyth Sui Integration Cli tools",
   "main": "index.js",
-  "license": "MIT",
+  "license": "Apache-2.0",
+  "scripts": {
+    "cli": "ts-node src/cli.ts"
+  },
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.12",
     "@mysten/sui.js": "^0.37.1",
