@@ -1,6 +1,6 @@
 import Web3 from "web3"; //TODO: decide on using web3 or ethers.js
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
-import { Contract } from "../base";
+import { Contract, PrivateKey } from "../base";
 import { Chain, EvmChain } from "../chains";
 import { DataSource } from "xc_admin_common";
 import { WormholeContract } from "./wormhole";
@@ -256,7 +256,7 @@ export class WormholeEvmContract extends WormholeContract {
     }
   }
 
-  async upgradeGuardianSets(senderPrivateKey: string, vaa: Buffer) {
+  async upgradeGuardianSets(senderPrivateKey: PrivateKey, vaa: Buffer) {
     const web3 = new Web3(this.chain.getRpcUrl());
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const wormholeContract = new web3.eth.Contract(WORMHOLE_ABI, this.address);
@@ -429,7 +429,7 @@ export class EvmContract extends Contract {
     };
   }
 
-  async executeUpdatePriceFeed(senderPrivateKey: string, vaas: Buffer[]) {
+  async executeUpdatePriceFeed(senderPrivateKey: PrivateKey, vaas: Buffer[]) {
     const web3 = new Web3(this.chain.getRpcUrl());
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
@@ -453,7 +453,10 @@ export class EvmContract extends Contract {
     return { id: result.transactionHash, info: result };
   }
 
-  async executeGovernanceInstruction(senderPrivateKey: string, vaa: Buffer) {
+  async executeGovernanceInstruction(
+    senderPrivateKey: PrivateKey,
+    vaa: Buffer
+  ) {
     const web3 = new Web3(this.chain.getRpcUrl());
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);

@@ -1,4 +1,4 @@
-import { Storable } from "./base";
+import { PrivateKey, Storable } from "./base";
 import {
   ChainName,
   CHAINS,
@@ -174,7 +174,7 @@ export class CosmWasmChain extends Chain {
     return new CosmosUpgradeContract(this.wormholeChainName, codeId).encode();
   }
 
-  async getExecutor(privateKey: string) {
+  async getExecutor(privateKey: PrivateKey) {
     if (this.getId().indexOf("injective") > -1) {
       return InjectiveExecutor.fromPrivateKey(
         this.isMainnet() ? Network.Mainnet : Network.Testnet,
@@ -311,7 +311,7 @@ export class EvmChain extends Chain {
    * @returns the address of the deployed contract
    */
   async deploy(
-    privateKey: string,
+    privateKey: PrivateKey,
     abi: any,
     bytecode: string,
     deployArgs: any[]

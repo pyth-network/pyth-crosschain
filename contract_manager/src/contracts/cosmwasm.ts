@@ -11,7 +11,7 @@ import {
 } from "@pythnetwork/cosmwasm-deploy-tools";
 import { CHAINS, DataSource } from "xc_admin_common";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
-import { Contract } from "../base";
+import { Contract, PrivateKey } from "../base";
 import { WormholeContract } from "./wormhole";
 
 /**
@@ -68,7 +68,7 @@ export class WormholeCosmWasmContract extends WormholeContract {
   }
 
   async upgradeGuardianSets(
-    senderPrivateKey: string,
+    senderPrivateKey: PrivateKey,
     vaa: Buffer
   ): Promise<any> {
     const executor = await this.chain.getExecutor(senderPrivateKey);
@@ -142,7 +142,7 @@ export class CosmWasmContract extends Contract {
    */
   static async storeCode(
     chain: CosmWasmChain,
-    privateKey: string,
+    privateKey: PrivateKey,
     wasmPath: string
   ) {
     const contractBytes = readFileSync(wasmPath);
@@ -161,7 +161,7 @@ export class CosmWasmContract extends Contract {
     chain: CosmWasmChain,
     codeId: number,
     config: CosmWasmContract.DeploymentConfig,
-    privateKey: string
+    privateKey: PrivateKey
   ): Promise<CosmWasmContract> {
     let executor = await chain.getExecutor(privateKey);
     let result = await executor.instantiateContract({
@@ -190,7 +190,7 @@ export class CosmWasmContract extends Contract {
   static async deploy(
     chain: CosmWasmChain,
     wormholeContract: string,
-    privateKey: string,
+    privateKey: PrivateKey,
     wasmPath: string
   ): Promise<CosmWasmContract> {
     let config = this.getDeploymentConfig(chain, "edge", wormholeContract);
@@ -321,7 +321,7 @@ export class CosmWasmContract extends Contract {
     else return "unknown";
   }
 
-  async executeUpdatePriceFeed(senderPrivateKey: string, vaas: Buffer[]) {
+  async executeUpdatePriceFeed(senderPrivateKey: PrivateKey, vaas: Buffer[]) {
     const base64Vaas = vaas.map((v) => v.toString("base64"));
     const fund = await this.getUpdateFee(base64Vaas);
     let executor = await this.chain.getExecutor(senderPrivateKey);
@@ -334,7 +334,7 @@ export class CosmWasmContract extends Contract {
     return { id: result.txHash, info: result };
   }
 
-  async executeGovernanceInstruction(privateKey: string, vaa: Buffer) {
+  async executeGovernanceInstruction(privateKey: PrivateKey, vaa: Buffer) {
     let executor = await this.chain.getExecutor(privateKey);
     let pythExecutor = new PythWrapperExecutor(executor);
     const result = await pythExecutor.executeGovernanceInstruction({

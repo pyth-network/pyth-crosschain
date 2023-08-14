@@ -1,13 +1,14 @@
 import { parseVaa } from "@certusone/wormhole-sdk";
 import { decodeGovernancePayload } from "xc_admin_common";
 import { DefaultStore } from "./store";
+import { PrivateKey } from "./base";
 
 /**
  * A general executor that tries to find any contract that can execute a given VAA and executes it
  * @param senderPrivateKey the private key to execute the governance instruction with
  * @param vaa the VAA to execute
  */
-export async function executeVaa(senderPrivateKey: string, vaa: Buffer) {
+export async function executeVaa(senderPrivateKey: PrivateKey, vaa: Buffer) {
   const parsedVaa = parseVaa(vaa);
   const action = decodeGovernancePayload(parsedVaa.payload);
   if (!action) return; //TODO: handle other actions

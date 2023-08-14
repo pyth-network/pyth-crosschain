@@ -6,6 +6,17 @@ export interface TxResult {
   info: any; // chain specific info
 }
 
+export type PrivateKey = string & { __type: "PrivateKey" };
+
+function checkIsPrivateKey(key: string): asserts key is PrivateKey {
+  if (Buffer.from(key, "hex").length !== 32)
+    throw new Error("Invalid private key, must be 64 hex chars");
+}
+export function toPrivateKey(key: string): PrivateKey {
+  checkIsPrivateKey(key);
+  return key;
+}
+
 export abstract class Storable {
   /**
    * Returns the unique identifier for this object
@@ -80,7 +91,7 @@ export abstract class Contract extends Storable {
    * @param vaas an array of VAAs containing price update messages to execute
    */
   abstract executeUpdatePriceFeed(
-    senderPrivateKey: string,
+    senderPrivateKey: PrivateKey,
     vaas: Buffer[]
   ): Promise<TxResult>;
 
@@ -90,7 +101,7 @@ export abstract class Contract extends Storable {
    * @param vaa the VAA to execute
    */
   abstract executeGovernanceInstruction(
-    senderPrivateKey: string,
+    senderPrivateKey: PrivateKey,
     vaa: Buffer
   ): Promise<TxResult>;
 

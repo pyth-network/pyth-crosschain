@@ -1,4 +1,4 @@
-import { Contract, PriceFeed, TxResult } from "../base";
+import { Contract, PriceFeed, PrivateKey, TxResult } from "../base";
 import { AptosAccount, BCS, TxnBuilderTypes } from "aptos";
 import { AptosChain, Chain } from "../chains";
 import { DataSource } from "xc_admin_common";
@@ -30,7 +30,7 @@ export class AptosContract extends Contract {
   }
 
   async executeGovernanceInstruction(
-    senderPrivateKey: string,
+    senderPrivateKey: PrivateKey,
     vaa: Buffer
   ): Promise<TxResult> {
     const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(
@@ -45,7 +45,7 @@ export class AptosContract extends Contract {
   }
 
   private async sendTransaction(
-    senderPrivateKey: string,
+    senderPrivateKey: PrivateKey,
     txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction
   ) {
     const client = this.chain.getClient();
@@ -63,7 +63,7 @@ export class AptosContract extends Contract {
   }
 
   async executeUpdatePriceFeed(
-    senderPrivateKey: string,
+    senderPrivateKey: PrivateKey,
     vaas: Buffer[]
   ): Promise<TxResult> {
     const txPayload = new TxnBuilderTypes.TransactionPayloadEntryFunction(

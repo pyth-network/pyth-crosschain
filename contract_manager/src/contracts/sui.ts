@@ -9,7 +9,7 @@ import {
 } from "@mysten/sui.js";
 import { Chain, SuiChain } from "../chains";
 import { DataSource } from "xc_admin_common";
-import { Contract, TxResult } from "../base";
+import { Contract, PrivateKey, TxResult } from "../base";
 
 export class SuiContract extends Contract {
   static type = "SuiContract";
@@ -196,13 +196,16 @@ export class SuiContract extends Contract {
   }
 
   async executeUpdatePriceFeed(
-    senderPrivateKey: string,
+    senderPrivateKey: PrivateKey,
     vaas: Buffer[]
   ): Promise<TxResult> {
     throw new Error("Not implemented");
   }
 
-  async executeGovernanceInstruction(senderPrivateKey: string, vaa: Buffer) {
+  async executeGovernanceInstruction(
+    senderPrivateKey: PrivateKey,
+    vaa: Buffer
+  ) {
     const keypair = Ed25519Keypair.fromSecretKey(
       Buffer.from(senderPrivateKey, "hex")
     );
