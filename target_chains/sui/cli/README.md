@@ -35,6 +35,10 @@ npm run cli -- update-feeds --feed-id --private-key <private-key> --contract <co
 
 The following steps are needed to upgrade our sui contracts:
 
+- Contract changes:
+  - Create a new struct for the new version and update `current_version` and `previous_version` functions in `version_control` module
+  - Implement any custom logic needed to migrate the data from the old struct to the new one in the `migrate` module
+  - Update dependency (e.g. wormhole) addresses if needed
 - Generate the digest for the new contract build
 - Create a governance proposal, proposing the sui package to be upgraded to this specific digest
 - Approve and execute the governance proposal
@@ -55,6 +59,9 @@ To upgrade the contract after the governance vaa was executed run:
 ```bash
 npm run cli -- upgrade --private-key <private-key> --contract <contract-id> --vaa <upgrade-vaa>
 ```
+
+The upgrade procedure consists of 2 transactions. The first one is to upgrade the contract (sui level) and the second one is to run the `migrate` function and upgrade the version (package level).
+Since clients try to fetch the latest version of the package automatically, it's important to run the second transaction as soon as possible after the first one.
 
 ### FAQ:
 

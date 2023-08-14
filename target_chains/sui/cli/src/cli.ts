@@ -263,6 +263,7 @@ yargs(hideBin(process.argv))
       //Execute upgrade with signed governance VAA.
       console.log("Digest is", digest.toString("hex"));
       const pythPackageOld = await contract.getPackageId(contract.stateId);
+      console.log("Old package id:", pythPackageOld);
       const signedVaa = Buffer.from(argv.vaa, "hex");
       const upgradeResults = await upgradePyth(
         wallet,
@@ -280,6 +281,9 @@ yargs(hideBin(process.argv))
         "Upgrade successful, Executing the migrate function in a separate transaction..."
       );
 
+      // We can not do the migration in the same transaction since the newly published package is not found
+      // on chain at the beginning of the transaction.
+
       const migrateResults = await migratePyth(
         wallet,
         signedVaa,
@@ -288,7 +292,9 @@ yargs(hideBin(process.argv))
       );
       console.log("Tx digest", migrateResults.digest);
       if (migrateResults.effects.status.status !== "success") {
-        throw new Error("Migrate failed");
+        throw new Error(
+          `Migrate failed. Old package id is ${pythPackageOld}. Please do the migration manually`
+        );
       }
       console.log("Migrate successful");
     }

@@ -8,16 +8,6 @@ import {
 import { execSync } from "child_process";
 import { SuiContract } from "contract_manager";
 
-// To upgrade Pyth, take the following steps.
-// 0. Make contract changes in the "contracts" folder. These updated contracts will be posted on chain as an
-//    entirely new package. The old package will still be valid unless we "brick" its call-sites explicitly
-//    (this is done for you via the version control logic built into the Pyth contracts).
-// 1. Make sure that in version_control.move, you create a new struct for the new version and update the
-//    current_version() and previous_version() functions accordingly. The former should point to the new version,
-//    and the latter should point to the old version.
-// 2. Update the Move.toml file so that it points to a wormhole dependency whose Move.toml file has a "published-at" field
-//    specified at the top with the correct address.
-// 3. Execute this script!
 export function buildForBytecodeAndDigest(packagePath: string) {
   const buildOutput: {
     modules: string[];
