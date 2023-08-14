@@ -32,7 +32,7 @@ module pyth::hot_potato_vector {
         vector::is_empty(&potato.contents)
     }
 
-    public fun borrow<T: copy + drop>(potato: &HotPotatoVector<T>, i: u64): &T {
+    public(friend) fun borrow<T: copy + drop>(potato: &HotPotatoVector<T>, i: u64): &T {
         vector::borrow<T>(&potato.contents, i)
     }
 
