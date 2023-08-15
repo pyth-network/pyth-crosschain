@@ -6,6 +6,8 @@ module pyth::hot_potato_vector {
     const E_EMPTY_HOT_POTATO: u64 = 0;
 
     friend pyth::pyth;
+    #[test_only]
+    friend pyth::pyth_tests;
 
     // A hot potato containing a vector of elements
     struct HotPotatoVector<T: copy + drop> {
@@ -32,7 +34,7 @@ module pyth::hot_potato_vector {
         vector::is_empty(&potato.contents)
     }
 
-    public fun borrow<T: copy + drop>(potato: &HotPotatoVector<T>, i: u64): &T {
+    public(friend) fun borrow<T: copy + drop>(potato: &HotPotatoVector<T>, i: u64): &T {
         vector::borrow<T>(&potato.contents, i)
     }
 
