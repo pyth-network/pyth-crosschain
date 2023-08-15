@@ -2,7 +2,6 @@ import {
   Connection,
   Ed25519Keypair,
   JsonRpcProvider,
-  MIST_PER_SUI,
   ObjectId,
   RawSigner,
   SUI_CLOCK_OBJECT_ID,
@@ -11,6 +10,7 @@ import {
 import { Chain, SuiChain } from "../chains";
 import { DataSource } from "xc_admin_common";
 import { Contract } from "../base";
+import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 
 export class SuiContract extends Contract {
   static type = "SuiContract";
@@ -60,27 +60,8 @@ export class SuiContract extends Contract {
    * @param objectId
    */
   async getPackageId(objectId: ObjectId): Promise<ObjectId> {
-    const provider = this.getProvider();
-    const state = await provider
-      .getObject({
-        id: objectId,
-        options: {
-          showContent: true,
-        },
-      })
-      .then((result) => {
-        if (result.data?.content?.dataType == "moveObject") {
-          return result.data.content.fields;
-        }
-
-        throw new Error("not move object");
-      });
-
-    if ("upgrade_cap" in state) {
-      return state.upgrade_cap.fields.package;
-    }
-
-    throw new Error("upgrade_cap not found");
+    const client = this.getSdkClient();
+    return client.getPackageId(objectId);
   }
 
   async getPythPackageId(): Promise<ObjectId> {
@@ -210,21 +191,12 @@ export class SuiContract extends Contract {
     throw new Error("Use executeUpdatePriceFeedWithFeeds instead");
   }
 
-  async verifyVaas(vaas: Buffer[], tx: TransactionBlock) {
-    const wormholePackageId = await this.getWormholePackageId();
-    const verifiedVaas = [];
-    for (const vaa of vaas) {
-      const [verifiedVaa] = tx.moveCall({
-        target: `${wormholePackageId}::vaa::parse_and_verify`,
-        arguments: [
-          tx.object(this.wormholeStateId),
-          tx.pure([...vaa]),
-          tx.object(SUI_CLOCK_OBJECT_ID),
-        ],
-      });
-      verifiedVaas.push(verifiedVaa);
-    }
-    return verifiedVaas;
+  getSdkClient(): SuiPythClient {
+    return new SuiPythClient(
+      this.getProvider(),
+      this.stateId,
+      this.wormholeStateId
+    );
   }
 
   async executeUpdatePriceFeedWithFeeds(
@@ -233,67 +205,18 @@ export class SuiContract extends Contract {
     feedIds: string[]
   ) {
     const tx = new TransactionBlock();
-    const wormholePackageId = await this.getWormholePackageId();
-    const packageId = await this.getPythPackageId();
-    const verifiedVaas = await this.verifyVaas(vaas, tx);
+    const client = this.getSdkClient();
+    await client.updatePriceFeeds(tx, vaas, feedIds);
     const keypair = Ed25519Keypair.fromSecretKey(
       Buffer.from(senderPrivateKey, "hex")
     );
-
-    let [priceUpdatesHotPotato] = tx.moveCall({
-      target: `${packageId}::pyth::create_price_infos_hot_potato`,
-      arguments: [
-        tx.object(this.stateId),
-        tx.makeMoveVec({
-          type: `${wormholePackageId}::vaa::VAA`,
-          objects: verifiedVaas,
-        }),
-        tx.object(SUI_CLOCK_OBJECT_ID),
-      ],
-    });
-
-    for (const feedId of feedIds) {
-      let priceInfoObjectId = await this.getPriceFeedObjectId(feedId);
-      if (!priceInfoObjectId) {
-        throw new Error(`Price feed ${feedId} not found`);
-      }
-      let coin = tx.splitCoins(tx.gas, [tx.pure(1)]);
-      [priceUpdatesHotPotato] = tx.moveCall({
-        target: `${packageId}::pyth::update_single_price_feed`,
-        arguments: [
-          tx.object(this.stateId),
-          priceUpdatesHotPotato,
-          tx.object(priceInfoObjectId),
-          coin,
-          tx.object(SUI_CLOCK_OBJECT_ID),
-        ],
-      });
-    }
-    tx.moveCall({
-      target: `${packageId}::hot_potato_vector::destroy`,
-      arguments: [priceUpdatesHotPotato],
-      typeArguments: [`${packageId}::price_info::PriceInfo`],
-    });
     let result = await this.executeTransaction(tx, keypair);
     return result.digest;
   }
   async executeCreatePriceFeed(senderPrivateKey: string, vaas: Buffer[]) {
     const tx = new TransactionBlock();
-    const wormholePackageId = await this.getWormholePackageId();
-    const packageId = await this.getPythPackageId();
-    const verifiedVaas = await this.verifyVaas(vaas, tx);
-    tx.moveCall({
-      target: `${packageId}::pyth::create_price_feeds`,
-      arguments: [
-        tx.object(this.stateId),
-        tx.makeMoveVec({
-          type: `${wormholePackageId}::vaa::VAA`,
-          objects: verifiedVaas,
-        }), // has type vector<VAA>,
-        tx.object(SUI_CLOCK_OBJECT_ID),
-      ],
-    });
-
+    const client = this.getSdkClient();
+    await client.createPriceFeed(tx, vaas);
     const keypair = Ed25519Keypair.fromSecretKey(
       Buffer.from(senderPrivateKey, "hex")
     );
