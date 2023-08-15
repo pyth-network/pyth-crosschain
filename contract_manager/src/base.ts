@@ -6,8 +6,8 @@ export interface TxResult {
   info: any; // chain specific info
 }
 
+export type DeploymentType = "stable" | "edge";
 export type PrivateKey = string & { __type: "PrivateKey" };
-
 function checkIsPrivateKey(key: string): asserts key is PrivateKey {
   if (Buffer.from(key, "hex").length !== 32)
     throw new Error("Invalid private key, must be 64 hex chars");
@@ -111,7 +111,7 @@ export abstract class Contract extends Storable {
   abstract getGovernanceDataSource(): Promise<DataSource>;
 }
 
-export function getDefaultDeploymentConfig(deploymentType: "stable" | "edge"): {
+export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
   dataSources: DataSource[];
   governanceDataSource: DataSource;
   wormholeConfig: {

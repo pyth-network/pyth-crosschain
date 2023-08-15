@@ -119,17 +119,16 @@ export class CosmWasmContract extends Contract {
     return CosmWasmContract.type;
   }
 
-  //TODO : make deploymentType enum stable  | edge
   static getDeploymentConfig(
     chain: CosmWasmChain,
-    deploymentType: string,
+    deploymentType: DeploymentType,
     wormholeContract: string
   ): CosmWasmContract.DeploymentConfig {
     return getPythConfig({
       feeDenom: chain.feeDenom,
-      wormholeChainId: CHAINS[chain.getId() as keyof typeof CHAINS],
+      wormholeChainId: CHAINS[chain.wormholeChainName],
       wormholeContract,
-      deploymentType: deploymentType as DeploymentType,
+      deploymentType: deploymentType,
     });
   }
 
