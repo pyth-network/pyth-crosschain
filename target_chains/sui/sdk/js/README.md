@@ -106,7 +106,7 @@ You can run this example with `npm run example-relay`. A full command that updat
 
 ```bash
 export SUI_KEY=YOUR_PRIV_KEY;
-npm run example-relay -- --price-id "5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" \
+npm run example-relay -- --feed-id "5a035d5440f5c163069af66062bac6c79377bf88396fa27e6067bfca8096d280" \
 --price-service "https://hermes-beta.pyth.network" \
 --full-node "https://fullnode.testnet.sui.io:443" \
 --pyth-state-id "0xd3e79c2c083b934e78b3bd58a490ec6b092561954da6e7322e1e2b3c8abfddc0" \

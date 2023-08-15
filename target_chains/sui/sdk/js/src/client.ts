@@ -184,7 +184,7 @@ export class SuiPythClient {
         target: `${packageId}::pyth::create_price_feeds_using_accumulator`,
         arguments: [
           tx.object(this.pythStateId),
-          tx.pure(updates[0]),
+          tx.pure(Array.from(updates[0])),
           verifiedVaas[0],
           tx.object(SUI_CLOCK_OBJECT_ID),
         ],
