@@ -109,8 +109,8 @@ yargs(hideBin(process.argv))
     async (argv) => {
       const contract = getContract(argv.contract);
       const defaultEndpoint = contract.getChain().isMainnet()
-        ? "https://xc-mainnet.pyth.network"
-        : "https://xc-testnet.pyth.network";
+        ? "https://hermes.pyth.network"
+        : "https://hermes-beta.pyth.network";
       const priceService = new PriceServiceConnection(
         argv.endpoint || defaultEndpoint
       );

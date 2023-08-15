@@ -188,6 +188,10 @@ export class SuiContract extends Contract {
   }
 
   async executeUpdatePriceFeed(senderPrivateKey: string, vaas: Buffer[]) {
+    // We need the feed ids to be able to execute the transaction
+    // it may be possible to get them from the VAA but in batch transactions,
+    // it is also possible to hava fewer feeds that user wants to update compared to
+    // what exists in the VAA.
     throw new Error("Use executeUpdatePriceFeedWithFeeds instead");
   }
 
