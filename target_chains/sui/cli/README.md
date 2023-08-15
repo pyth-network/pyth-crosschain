@@ -24,11 +24,11 @@ npm run cli -- create-all --private-key <private-key> --contract <contract-id>
 You can use the `create` and `update-feeds` commands to create and update price feeds respectively.
 
 ```bash
-npm run cli -- create --feed-id --private-key <private-key> --contract <contract-id>
+npm run cli -- create --feed-id <feed-id> --private-key <private-key> --contract <contract-id>
 ```
 
 ```bash
-npm run cli -- update-feeds --feed-id --private-key <private-key> --contract <contract-id>
+npm run cli -- update-feeds --feed-id <feed-id> --private-key <private-key> --contract <contract-id>
 ```
 
 # Upgrade process:
