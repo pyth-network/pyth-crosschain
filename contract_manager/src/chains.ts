@@ -1,7 +1,6 @@
 import { PrivateKey, Storable } from "./base";
 import {
   ChainName,
-  CHAINS,
   SetFee,
   CosmosUpgradeContract,
   EvmUpgradeContract,
@@ -96,11 +95,11 @@ export abstract class Chain extends Storable {
 }
 
 export class GlobalChain extends Chain {
-  static type: string = "GlobalChain";
+  static type = "GlobalChain";
   constructor() {
     super("global", true, "unset");
   }
-  generateGovernanceUpgradePayload(upgradeInfo: unknown): Buffer {
+  generateGovernanceUpgradePayload(): Buffer {
     throw new Error(
       "Can not create a governance message for upgrading contracts on all chains!"
     );
@@ -121,7 +120,7 @@ export class GlobalChain extends Chain {
 }
 
 export class CosmWasmChain extends Chain {
-  static type: string = "CosmWasmChain";
+  static type = "CosmWasmChain";
 
   constructor(
     id: string,
@@ -190,7 +189,7 @@ export class CosmWasmChain extends Chain {
 }
 
 export class SuiChain extends Chain {
-  static type: string = "SuiChain";
+  static type = "SuiChain";
 
   constructor(
     id: string,
@@ -238,7 +237,7 @@ export class SuiChain extends Chain {
 }
 
 export class EvmChain extends Chain {
-  static type: string = "EvmChain";
+  static type = "EvmChain";
 
   constructor(
     id: string,

@@ -17,22 +17,20 @@ import { WormholeContract } from "./wormhole";
 /**
  * Variables here need to be snake case to match the on-chain contract configs
  */
-namespace CosmWasmContract {
-  export interface WormholeSource {
-    emitter: string;
-    chain_id: number;
-  }
+export interface WormholeSource {
+  emitter: string;
+  chain_id: number;
+}
 
-  export interface DeploymentConfig {
-    data_sources: WormholeSource[];
-    governance_source: WormholeSource;
-    wormhole_contract: string;
-    governance_source_index: number;
-    governance_sequence_number: number;
-    chain_id: number;
-    valid_time_period_secs: number;
-    fee: { amount: string; denom: string };
-  }
+export interface DeploymentConfig {
+  data_sources: WormholeSource[];
+  governance_source: WormholeSource;
+  wormhole_contract: string;
+  governance_source_index: number;
+  governance_sequence_number: number;
+  chain_id: number;
+  valid_time_period_secs: number;
+  fee: { amount: string; denom: string };
 }
 
 export class WormholeCosmWasmContract extends WormholeContract {
@@ -123,7 +121,7 @@ export class CosmWasmContract extends Contract {
     chain: CosmWasmChain,
     deploymentType: DeploymentType,
     wormholeContract: string
-  ): CosmWasmContract.DeploymentConfig {
+  ): DeploymentConfig {
     return getPythConfig({
       feeDenom: chain.feeDenom,
       wormholeChainId: CHAINS[chain.wormholeChainName],
@@ -145,7 +143,7 @@ export class CosmWasmContract extends Contract {
     wasmPath: string
   ) {
     const contractBytes = readFileSync(wasmPath);
-    let executor = await chain.getExecutor(privateKey);
+    const executor = await chain.getExecutor(privateKey);
     return executor.storeCode({ contractBytes });
   }
 
@@ -159,11 +157,11 @@ export class CosmWasmContract extends Contract {
   static async initialize(
     chain: CosmWasmChain,
     codeId: number,
-    config: CosmWasmContract.DeploymentConfig,
+    config: DeploymentConfig,
     privateKey: PrivateKey
   ): Promise<CosmWasmContract> {
-    let executor = await chain.getExecutor(privateKey);
-    let result = await executor.instantiateContract({
+    const executor = await chain.getExecutor(privateKey);
+    const result = await executor.instantiateContract({
       codeId: codeId,
       instMsg: config,
       label: "pyth",
@@ -192,7 +190,7 @@ export class CosmWasmContract extends Contract {
     privateKey: PrivateKey,
     wasmPath: string
   ): Promise<CosmWasmContract> {
-    let config = this.getDeploymentConfig(chain, "edge", wormholeContract);
+    const config = this.getDeploymentConfig(chain, "edge", wormholeContract);
     const { codeId } = await this.storeCode(chain, privateKey, wasmPath);
     return this.initialize(chain, codeId, config, privateKey);
   }
@@ -216,7 +214,7 @@ export class CosmWasmContract extends Contract {
   }
 
   async getCodeId(): Promise<number> {
-    let result = await this.getWasmContractInfo();
+    const result = await this.getWasmContractInfo();
     return result.codeId;
   }
 
@@ -227,10 +225,10 @@ export class CosmWasmContract extends Contract {
 
   async getConfig() {
     const chainQuerier = await CosmwasmQuerier.connect(this.chain.endpoint);
-    let allStates = (await chainQuerier.getAllContractState({
+    const allStates = (await chainQuerier.getAllContractState({
       contractAddr: this.address,
     })) as any;
-    let config = {
+    const config = {
       config_v1: JSON.parse(allStates["\x00\tconfig_v1"]),
       contract_version: JSON.parse(allStates["\x00\x10contract_version"]),
     };
@@ -255,7 +253,7 @@ export class CosmWasmContract extends Contract {
   }
 
   async getPriceFeed(feedId: string) {
-    let querier = await this.getQuerier();
+    const querier = await this.getQuerier();
     try {
       const response = await querier.getPriceFeed(this.address, feedId);
       return {
@@ -268,8 +266,8 @@ export class CosmWasmContract extends Contract {
   }
 
   equalDataSources(
-    dataSources1: CosmWasmContract.WormholeSource[],
-    dataSources2: CosmWasmContract.WormholeSource[]
+    dataSources1: WormholeSource[],
+    dataSources2: WormholeSource[]
   ): boolean {
     if (dataSources1.length !== dataSources2.length) return false;
     for (let i = 0; i < dataSources1.length; i++) {
@@ -289,15 +287,15 @@ export class CosmWasmContract extends Contract {
   }
 
   async getDeploymentType(): Promise<string> {
-    let config = await this.getConfig();
-    let wormholeContract = config.config_v1.wormhole_contract;
-    let stableConfig = getPythConfig({
+    const config = await this.getConfig();
+    const wormholeContract = config.config_v1.wormhole_contract;
+    const stableConfig = getPythConfig({
       feeDenom: this.chain.feeDenom,
       wormholeChainId: CHAINS[this.chain.getId() as keyof typeof CHAINS],
       wormholeContract,
       deploymentType: "stable",
     });
-    let edgeConfig = getPythConfig({
+    const edgeConfig = getPythConfig({
       feeDenom: this.chain.feeDenom,
       wormholeChainId: CHAINS[this.chain.getId() as keyof typeof CHAINS],
       wormholeContract,
@@ -323,8 +321,8 @@ export class CosmWasmContract extends Contract {
   async executeUpdatePriceFeed(senderPrivateKey: PrivateKey, vaas: Buffer[]) {
     const base64Vaas = vaas.map((v) => v.toString("base64"));
     const fund = await this.getUpdateFee(base64Vaas);
-    let executor = await this.chain.getExecutor(senderPrivateKey);
-    let pythExecutor = new PythWrapperExecutor(executor);
+    const executor = await this.chain.getExecutor(senderPrivateKey);
+    const pythExecutor = new PythWrapperExecutor(executor);
     const result = await pythExecutor.executeUpdatePriceFeeds({
       contractAddr: this.address,
       vaas: base64Vaas,
@@ -334,8 +332,8 @@ export class CosmWasmContract extends Contract {
   }
 
   async executeGovernanceInstruction(privateKey: PrivateKey, vaa: Buffer) {
-    let executor = await this.chain.getExecutor(privateKey);
-    let pythExecutor = new PythWrapperExecutor(executor);
+    const executor = await this.chain.getExecutor(privateKey);
+    const pythExecutor = new PythWrapperExecutor(executor);
     const result = await pythExecutor.executeGovernanceInstruction({
       contractAddr: this.address,
       vaa: vaa.toString("base64"),
@@ -344,14 +342,13 @@ export class CosmWasmContract extends Contract {
   }
 
   async getWormholeContract(): Promise<WormholeCosmWasmContract> {
-    let config = await this.getConfig();
-    const chainQuerier = await CosmwasmQuerier.connect(this.chain.endpoint);
+    const config = await this.getConfig();
     const wormholeAddress = config.config_v1.wormhole_contract;
     return new WormholeCosmWasmContract(this.chain, wormholeAddress);
   }
 
   async getUpdateFee(msgs: string[]): Promise<any> {
-    let querier = await this.getQuerier();
+    const querier = await this.getQuerier();
     return querier.getUpdateFee(this.address, msgs);
   }
 
@@ -370,8 +367,8 @@ export class CosmWasmContract extends Contract {
   }
 
   async getValidTimePeriod() {
-    let client = await CosmWasmClient.connect(this.chain.endpoint);
-    let result = await client.queryContractSmart(
+    const client = await CosmWasmClient.connect(this.chain.endpoint);
+    const result = await client.queryContractSmart(
       this.address,
       "get_valid_time_period"
     );

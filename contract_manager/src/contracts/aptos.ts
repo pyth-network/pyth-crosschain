@@ -4,7 +4,7 @@ import { AptosChain, Chain } from "../chains";
 import { DataSource } from "xc_admin_common";
 
 export class AptosContract extends Contract {
-  static type: string = "AptosContract";
+  static type = "AptosContract";
 
   /**
    * Given the ids of the pyth state and wormhole state, create a new AptosContract

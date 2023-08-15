@@ -99,7 +99,7 @@ export class SuiContract extends Contract {
    */
   async getPriceTableId(): Promise<ObjectId> {
     const provider = this.getProvider();
-    let result = await provider.getDynamicFieldObject({
+    const result = await provider.getDynamicFieldObject({
       parentId: this.stateId,
       name: {
         type: "vector<u8>",
@@ -135,7 +135,7 @@ export class SuiContract extends Contract {
   async getPriceFeed(feedId: string) {
     const tableId = await this.getPriceTableId();
     const provider = this.getProvider();
-    let result = await provider.getDynamicFieldObject({
+    const result = await provider.getDynamicFieldObject({
       parentId: tableId,
       name: {
         type: `${await this.getPythPackageId()}::price_identifier::PriceIdentifier`,
@@ -150,8 +150,8 @@ export class SuiContract extends Contract {
     if (result.data.content.dataType !== "moveObject") {
       throw new Error("Price feed type mismatch");
     }
-    let priceInfoObjectId = result.data.content.fields.value;
-    let priceInfo = await provider.getObject({
+    const priceInfoObjectId = result.data.content.fields.value;
+    const priceInfo = await provider.getObject({
       id: priceInfoObjectId,
       options: { showContent: true },
     });
@@ -185,7 +185,7 @@ export class SuiContract extends Contract {
   async executeMigrateInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    let decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
+    const decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
 
     tx.moveCall({
       target: `${packageId}::migrate::migrate`,
@@ -195,10 +195,7 @@ export class SuiContract extends Contract {
     return this.executeTransaction(tx, keypair);
   }
 
-  async executeUpdatePriceFeed(
-    senderPrivateKey: PrivateKey,
-    vaas: Buffer[]
-  ): Promise<TxResult> {
+  async executeUpdatePriceFeed(): Promise<TxResult> {
     throw new Error("Not implemented");
   }
 
@@ -211,7 +208,7 @@ export class SuiContract extends Contract {
     );
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    let decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
+    const decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
 
     tx.moveCall({
       target: `${packageId}::governance::execute_governance_instruction`,
@@ -230,7 +227,7 @@ export class SuiContract extends Contract {
   ) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    let decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
+    const decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
 
     const [upgradeTicket] = tx.moveCall({
       target: `${packageId}::contract_upgrade::authorize_upgrade`,
@@ -266,12 +263,12 @@ export class SuiContract extends Contract {
     vaa: Buffer
   ) {
     const wormholePackageId = await this.getWormholePackageId();
-    let [decreeTicket] = tx.moveCall({
+    const [decreeTicket] = tx.moveCall({
       target: `${packageId}::set_update_fee::authorize_governance`,
       arguments: [tx.object(this.stateId), tx.pure(false)],
     });
 
-    let [verifiedVAA] = tx.moveCall({
+    const [verifiedVAA] = tx.moveCall({
       target: `${wormholePackageId}::vaa::parse_and_verify`,
       arguments: [
         tx.object(this.wormholeStateId),
@@ -280,7 +277,7 @@ export class SuiContract extends Contract {
       ],
     });
 
-    let [decreeReceipt] = tx.moveCall({
+    const [decreeReceipt] = tx.moveCall({
       target: `${wormholePackageId}::governance_message::verify_vaa`,
       arguments: [tx.object(this.wormholeStateId), verifiedVAA, decreeTicket],
       typeArguments: [`${packageId}::governance_witness::GovernanceWitness`],
@@ -300,7 +297,7 @@ export class SuiContract extends Contract {
     keypair: Ed25519Keypair
   ) {
     const provider = this.getProvider();
-    let txBlock = {
+    const txBlock = {
       transactionBlock: tx,
       options: {
         showEffects: true,
@@ -308,7 +305,7 @@ export class SuiContract extends Contract {
       },
     };
     const wallet = new RawSigner(keypair, provider);
-    let gasCost = await wallet.getGasCostEstimation(txBlock);
+    const gasCost = await wallet.getGasCostEstimation(txBlock);
     tx.setGasBudget(gasCost * BigInt(2));
     return wallet.signAndExecuteTransactionBlock(txBlock);
   }
@@ -320,7 +317,7 @@ export class SuiContract extends Contract {
 
   async getDataSources(): Promise<DataSource[]> {
     const provider = this.getProvider();
-    let result = await provider.getDynamicFieldObject({
+    const result = await provider.getDynamicFieldObject({
       parentId: this.stateId,
       name: {
         type: "vector<u8>",

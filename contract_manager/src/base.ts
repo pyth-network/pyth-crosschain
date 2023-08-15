@@ -115,7 +115,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
   dataSources: DataSource[];
   governanceDataSource: DataSource;
   wormholeConfig: {
-    governanceChainId: Number;
+    governanceChainId: number;
     governanceContract: string; // 32 byte address in 64 char hex format
     initialGuardianSet: string[]; // 20 byte addresses in 40 char hex format
   };

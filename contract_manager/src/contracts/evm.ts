@@ -1,4 +1,4 @@
-import Web3 from "web3"; //TODO: decide on using web3 or ethers.js
+import Web3 from "web3";
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
 import { Contract, PrivateKey } from "../base";
 import { Chain, EvmChain } from "../chains";
@@ -322,7 +322,7 @@ export class EvmContract extends Contract {
   async getImplementationAddress(): Promise<string> {
     const web3 = new Web3(this.chain.getRpcUrl());
     // bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1) according to EIP-1967
-    let storagePosition =
+    const storagePosition =
       "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
     let address = await web3.eth.getStorageAt(this.address, storagePosition);
     address = "0x" + address.slice(26);
