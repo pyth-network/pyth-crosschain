@@ -59,6 +59,16 @@ function getContract(contractId: string): SuiContract {
   return contract;
 }
 
+function getPriceService(
+  contract: SuiContract,
+  endpointOverride: string | undefined
+): PriceServiceConnection {
+  const defaultEndpoint = contract.getChain().isMainnet()
+    ? "https://hermes.pyth.network"
+    : "https://hermes-beta.pyth.network";
+  return new PriceServiceConnection(endpointOverride || defaultEndpoint);
+}
+
 yargs(hideBin(process.argv))
   .command(
     "create",
@@ -77,12 +87,7 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const defaultEndpoint = contract.getChain().isMainnet()
-        ? "https://xc-mainnet.pyth.network"
-        : "https://xc-testnet.pyth.network";
-      const priceService = new PriceServiceConnection(
-        argv.endpoint || defaultEndpoint
-      );
+      const priceService = getPriceService(contract, argv.endpoint);
       const feedIds = argv["feed-id"] as string[];
       const vaas = await priceService.getLatestVaas(feedIds);
       const digest = await contract.executeCreatePriceFeed(
@@ -108,12 +113,7 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const defaultEndpoint = contract.getChain().isMainnet()
-        ? "https://hermes.pyth.network"
-        : "https://hermes-beta.pyth.network";
-      const priceService = new PriceServiceConnection(
-        argv.endpoint || defaultEndpoint
-      );
+      const priceService = getPriceService(contract, argv.endpoint);
       const feedIds = await priceService.getPriceFeedIds();
       const BATCH_SIZE = 10;
       for (let i = 0; i < feedIds.length; i += BATCH_SIZE) {
@@ -212,12 +212,7 @@ yargs(hideBin(process.argv))
     },
     async (argv) => {
       const contract = getContract(argv.contract);
-      const defaultEndpoint = contract.getChain().isMainnet()
-        ? "https://xc-mainnet.pyth.network"
-        : "https://xc-testnet.pyth.network";
-      const priceService = new PriceServiceConnection(
-        argv.endpoint || defaultEndpoint
-      );
+      const priceService = getPriceService(contract, argv.endpoint);
       const feedIds = argv["feed-id"] as string[];
       const vaas = await priceService.getLatestVaas(feedIds);
       const digest = await contract.executeUpdatePriceFeedWithFeeds(
