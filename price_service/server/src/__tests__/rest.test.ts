@@ -508,4 +508,59 @@ describe("Get VAA endpoint and Get VAA CCIP", () => {
       expect(ccipResp.status).toBe(StatusCodes.INTERNAL_SERVER_ERROR);
     }
   );
+
+  test("vaaToPriceInfo works with accumulator update data", () => {
+    // An update data taken from Hermes with the following price feed:
+    // {
+    //   "id":"e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+    //   "price":{"price":"2836040669135","conf":"3282830965","expo":-8,"publish_time":1692280808},
+    //   "ema_price":{"price":"2845324900000","conf":"3211773100","expo":-8,"publish_time":1692280808},
+    //   "metadata":{"slot":89783664,"emitter_chain":26,"price_service_receive_time":1692280809}
+    // }
+    const updateData = Buffer.from(
+      "UE5BVQEAAAADuAEAAAADDQAsKPsmb7Vz7io3taJQKgoi1m/z0kqKgtpmlkv+ZuunX2Iegsf+8fuUtpHPLKgCWPU8PN2x9NyAZz5" +
+        "BY9M3SWwJAALYlM0U7f2GFWfEjKwSJlHZ5sf+n6KXCocVC66ImS2o0TD0SBhTWcp0KdcuzR1rY1jfIHaFpVneroRLbTjNrk/WAA" +
+        "MuAYxPVPf1DR30wYQo12Dbf+in3akTjhKERNQ+nPwRjxAyIQD+52LU3Rh2VL7nOIStMNTiBMaiWHywaPoXowWAAQbillhhX4MR+" +
+        "7h81PfxHIbiXBmER4c5M7spilWKkROb+VXhrqnVJL162t9TdhYk56PDIhvXO1Tm/ldjVJw130y0AAk6qpccfsxDZEmVN8LI4z87" +
+        "39Ni/kb+CB3yW2l2dWhKTjBeNanhK6TCCoNH/jRzWfrjrEk5zjNrUr82JwL4fR1OAQrYZescxbH26m8QHiH+RHzwlXpUKJgbHD5" +
+        "NnWtB7oFb9AFM15jbjd4yIEBEtAlXPE0Q4j+X+DLnCtZbLSQiYNh5AQvz70LTbYry1lEExuUcO+IRJiysw5AFyqZ9Y1E//WKIqg" +
+        "EysfcnHwoOxtDtAc5Z9sTUEYfPqQ1d27k3Yk0X7dvCAQ10cdG0qYHb+bQrYRIKKnb0aeCjkCs0HZQY2fXYmimyfTNfECclmPW9k" +
+        "+CfOvW0JKuFxC1l11zJ3zjsgN/peA8BAQ5oIFQGjq9qmf5gegE1DjuzXsGksKao6nsjTXYIspCczCe2h5KNQ9l5hws11hauUKS2" +
+        "0JoOYjHwxPD2x0adJKvkAQ+4UjVcZgVEQP8y3caqUDH81Ikcadz2bESpYg93dpnzZTH6A7Ue+RL34PTNx6cCRzukwQuhiStuyL1" +
+        "WYEIrLI4nABAjGv3EBXjWaPLUj59OzVnGkzxkr6C4KDjMmpsYNzx7I2lp2iQV46TM78El8i9h7twiEDUOSdC5CmfQjRpkP72yAB" +
+        "GVAQELUm2/SjkpF0O+/rVDgA/Y2/wMacD1ZDahdyvSNSFThn5NyRYA1JXGgIDxoYeAZgkr1gL1cjCLWiO+Bs9QARIiCvHfIkn2a" +
+        "YhYHQq/u6cHB/2DxE3OgbCZyTv8OVO55hQDkJ1gDwAec+IJ4M5Od4OxWEu+OywhJT7zUmwZko9MAGTeJ+kAAAAAABrhAfrtrFhR" +
+        "4yubI7X5QRqMK6xKrj7U3XuBHdGnLqSqcQAAAAAAWllxAUFVV1YAAAAAAAVZ/XAAACcQ8Xfx5wQ+nj1rn6IeTUAy+VER1nUBAFU" +
+        "A5i32yLSoX+GmfbRNwS3l2zMPesZrctxliv7fD0pBW0MAAAKUUTJXzwAAAADDrAZ1////+AAAAABk3ifoAAAAAGTeJ+cAAAKWep" +
+        "R2oAAAAAC/b8SsCasjFzENKvXWwOycuzCVaDWfm0IuuuesmamDKl2lNXss15orlNN+xHVNEEIIq7Xg8GRZGVLt43fkg7xli6EPQ" +
+        "/Nyxl6SixiYteNt1uTTh4M1lQTUjPxKnkE5JEea4RnhOWgmSAWMf8ft4KgE7hvRifV1JP0rOsNgsOYFRbs6iDKW1qLpxgZLMAiO" +
+        "clwS3Tjw2hj8sPfq1NHeVttsBEK5SIM14GjAuD/p2V0+NqHqMHxU/kfftg==",
+      "base64"
+    );
+
+    const priceInfo = RestAPI.vaaToPriceInfo(
+      "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+      updateData
+    );
+
+    expect(priceInfo).toBeDefined();
+    expect(priceInfo?.priceFeed).toEqual(
+      new PriceFeed({
+        id: "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+        price: new Price({
+          price: "2836040669135",
+          conf: "3282830965",
+          publishTime: 1692280808,
+          expo: -8,
+        }),
+        emaPrice: new Price({
+          price: "2845324900000",
+          conf: "3211773100",
+          publishTime: 1692280808,
+          expo: -8,
+        }),
+      })
+    );
+    expect(priceInfo?.emitterChainId).toEqual(26);
+  });
 });
