@@ -4,7 +4,7 @@ version = "0.0.1"
 upgrade_policy = "compatible"
 
 [dependencies]
-Pyth = { git = "https://github.com/pyth-network/pyth-crosschain.git", subdir = "aptos/contracts", rev = "main" }
+Pyth = { git = "https://github.com/pyth-network/pyth-crosschain.git", subdir = "target_chains/aptos/contracts", rev = "main" }
 
 [addresses]
 example = "0xac74082dfffb80824955aaefb2b0a98634b1368e37f42cbff14564ea430b97dc"
