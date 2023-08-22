@@ -19,7 +19,7 @@
     "url": "git+https://github.com/pyth-network/pyth-crosschain.git"
   },
   "dependencies": {
-    "@mysten/sui.js": "^0.32.2",
+    "@mysten/sui.js": "^0.37.1",
     "@certusone/wormhole-sdk": "^0.9.8",
     "@pythnetwork/cosmwasm-deploy-tools": "*",
     "@pythnetwork/price-service-client": "*",

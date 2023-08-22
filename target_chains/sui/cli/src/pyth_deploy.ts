@@ -56,7 +56,7 @@ export async function publishPackage(
   });
 
   const publishEvents = getPublishedObjectChanges(result);
-  if (publishEvents.length !== 1) {
+  if (!result.objectChanges || publishEvents.length !== 1) {
     throw new Error(
       "No publish event found in transaction:" +
         JSON.stringify(result.objectChanges, null, 2)
@@ -77,9 +77,16 @@ export async function publishPackage(
       }
     }
   }
+  if (!upgradeCapId || !deployerCapId) {
+    throw new Error("Could not find upgrade cap or deployer cap");
+  }
   console.log("UpgradeCapId: ", upgradeCapId);
   console.log("DeployerCapId: ", deployerCapId);
-  return { packageId, upgradeCapId, deployerCapId };
+  return {
+    packageId,
+    upgradeCapId: upgradeCapId,
+    deployerCapId: deployerCapId,
+  };
 }
 
 export async function initPyth(
@@ -136,6 +143,9 @@ export async function initPyth(
       showBalanceChanges: true,
     },
   });
+  if (!result.effects || !result.objectChanges) {
+    throw new Error("No effects or object changes found in transaction");
+  }
   if (result.effects.status.status === "success") {
     console.log("Pyth init successful");
     console.log("Tx digest", result.digest);

@@ -1,6 +1,6 @@
 {
   "name": "@pythnetwork/pyth-sui-js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Pyth Network Sui Utilities",
   "homepage": "https://pyth.network",
   "author": {
@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "@pythnetwork/price-service-client": "*",
-    "@mysten/sui.js": "^0.32.2",
+    "@mysten/sui.js": "^0.37.1",
     "buffer": "^6.0.3"
   }
 }
