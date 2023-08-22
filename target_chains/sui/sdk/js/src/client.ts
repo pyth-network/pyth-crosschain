@@ -7,6 +7,8 @@ import {
 } from "@mysten/sui.js";
 import { HexString } from "@pythnetwork/price-service-client";
 
+const MAX_ARGUMENT_SIZE = 16 * 1024;
+
 export class SuiPythClient {
   private pythPackageId: ObjectId | undefined;
   private wormholePackageId: ObjectId | undefined;
@@ -82,7 +84,13 @@ export class SuiPythClient {
         target: `${wormholePackageId}::vaa::parse_and_verify`,
         arguments: [
           tx.object(this.wormholeStateId),
-          tx.pure(Array.from(vaa)),
+          tx.pure(
+            builder
+              .ser("vector<u8>", Array.from(vaa), {
+                maxSize: MAX_ARGUMENT_SIZE,
+              })
+              .toBytes()
+          ),
           tx.object(SUI_CLOCK_OBJECT_ID),
         ],
       });
@@ -120,7 +128,9 @@ export class SuiPythClient {
           tx.object(this.pythStateId),
           tx.pure(
             builder
-              .ser("vector<u8>", Array.from(updates[0]), { maxSize: 16 * 1024 })
+              .ser("vector<u8>", Array.from(updates[0]), {
+                maxSize: MAX_ARGUMENT_SIZE,
+              })
               .toBytes()
           ),
           verifiedVaas[0],
@@ -191,7 +201,9 @@ export class SuiPythClient {
           tx.object(this.pythStateId),
           tx.pure(
             builder
-              .ser("vector<u8>", Array.from(updates[0]), { maxSize: 16 * 1024 })
+              .ser("vector<u8>", Array.from(updates[0]), {
+                maxSize: MAX_ARGUMENT_SIZE,
+              })
               .toBytes()
           ),
           verifiedVaas[0],

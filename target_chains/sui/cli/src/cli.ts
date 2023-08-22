@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
@@ -268,7 +266,10 @@ yargs(hideBin(process.argv))
         contract
       );
       console.log("Tx digest", upgradeResults.digest);
-      if (upgradeResults.effects.status.status !== "success") {
+      if (
+        !upgradeResults.effects ||
+        upgradeResults.effects.status.status !== "success"
+      ) {
         throw new Error("Upgrade failed");
       }
 
@@ -286,7 +287,10 @@ yargs(hideBin(process.argv))
         pythPackageOld
       );
       console.log("Tx digest", migrateResults.digest);
-      if (migrateResults.effects.status.status !== "success") {
+      if (
+        !migrateResults.effects ||
+        migrateResults.effects.status.status !== "success"
+      ) {
         throw new Error(
           `Migrate failed. Old package id is ${pythPackageOld}. Please do the migration manually`
         );
