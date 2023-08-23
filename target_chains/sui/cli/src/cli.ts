@@ -182,7 +182,7 @@ yargs(hideBin(process.argv))
         provider
       );
       const result = await publishPackage(wallet, argv.path);
-      const deploymentType = chain.isMainnet() ? "stable" : "edge";
+      const deploymentType = chain.isMainnet() ? "stable" : "beta";
       const config = getDefaultDeploymentConfig(deploymentType);
       await initPyth(
         wallet,

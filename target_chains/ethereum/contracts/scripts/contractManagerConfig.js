@@ -16,7 +16,7 @@ function convertChainId(number) {
 function getDefaultConfig(chainName) {
   const chain = DefaultStore.chains[chainName];
   const { dataSources, governanceDataSource, wormholeConfig } =
-    getDefaultDeploymentConfig(chain.isMainnet() ? "stable" : "edge");
+    getDefaultDeploymentConfig(chain.isMainnet() ? "stable" : "beta");
 
   const emitterChainIds = dataSources.map((dataSource) =>
     convertChainId(dataSource.emitterChain)

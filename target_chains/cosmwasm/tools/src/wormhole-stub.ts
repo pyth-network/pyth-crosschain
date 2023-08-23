@@ -12,7 +12,7 @@ import {
 import { Pipeline } from "./pipeline";
 import {
   DeploymentType,
-  getChainIdsForEdgeDeployment,
+  getChainIdsForBetaDeployment,
   getChainIdsForStableDeployment,
   getWormholeFileName,
   hexToBase64,
@@ -33,7 +33,7 @@ const argv = yargs(hideBin(process.argv))
   .option("deploy", {
     type: "string",
     desc: "Execute this script for the given deployment type.",
-    choices: ["stable", "edge"],
+    choices: ["stable", "beta"],
     demandOption: "Please provide the deployment type",
   })
   .help()
@@ -60,7 +60,7 @@ async function run() {
   if (argv.deploy === "stable") {
     chainIds = getChainIdsForStableDeployment();
   } else {
-    chainIds = getChainIdsForEdgeDeployment();
+    chainIds = getChainIdsForBetaDeployment();
   }
 
   for (let chainId of chainIds) {

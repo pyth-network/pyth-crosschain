@@ -190,7 +190,7 @@ export class CosmWasmContract extends Contract {
     privateKey: PrivateKey,
     wasmPath: string
   ): Promise<CosmWasmContract> {
-    const config = this.getDeploymentConfig(chain, "edge", wormholeContract);
+    const config = this.getDeploymentConfig(chain, "beta", wormholeContract);
     const { codeId } = await this.storeCode(chain, privateKey, wasmPath);
     return this.initialize(chain, codeId, config, privateKey);
   }
@@ -295,11 +295,11 @@ export class CosmWasmContract extends Contract {
       wormholeContract,
       deploymentType: "stable",
     });
-    const edgeConfig = getPythConfig({
+    const betaConfig = getPythConfig({
       feeDenom: this.chain.feeDenom,
       wormholeChainId: CHAINS[this.chain.getId() as keyof typeof CHAINS],
       wormholeContract,
-      deploymentType: "edge",
+      deploymentType: "beta",
     });
     if (
       this.equalDataSources(
@@ -311,10 +311,10 @@ export class CosmWasmContract extends Contract {
     else if (
       this.equalDataSources(
         config.config_v1.data_sources,
-        edgeConfig.data_sources
+        betaConfig.data_sources
       )
     )
-      return "edge";
+      return "beta";
     else return "unknown";
   }
 

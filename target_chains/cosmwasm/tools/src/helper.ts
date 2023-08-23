@@ -18,7 +18,7 @@ export function getChainIdsForStableDeployment(): ChainId[] {
   ];
 }
 
-export function getChainIdsForEdgeDeployment(): ChainId[] {
+export function getChainIdsForBetaDeployment(): ChainId[] {
   return [
     ChainId.INJECTIVE_TESTNET,
     ChainId.OSMOSIS_TESTNET_5,
@@ -28,7 +28,7 @@ export function getChainIdsForEdgeDeployment(): ChainId[] {
   ];
 }
 
-export type DeploymentType = "stable" | "edge";
+export type DeploymentType = "stable" | "beta";
 
 // We have released the compile contacts on github. If a chain needs some specific
 // feature in a contract, a version of the contract with that specific features is

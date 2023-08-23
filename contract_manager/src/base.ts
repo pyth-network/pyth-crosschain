@@ -6,7 +6,7 @@ export interface TxResult {
   info: any; // chain specific info
 }
 
-export type DeploymentType = "stable" | "edge";
+export type DeploymentType = "stable" | "beta";
 export type PrivateKey = string & { __type: "PrivateKey" };
 function checkIsPrivateKey(key: string): asserts key is PrivateKey {
   if (Buffer.from(key, "hex").length !== 32)
@@ -151,7 +151,7 @@ export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
         initialGuardianSet: ["58cc3ae5c097b213ce3c81979e1b9f9570746aa5"],
       },
     };
-  else if (deploymentType === "edge")
+  else if (deploymentType === "beta")
     return {
       dataSources: [
         {
