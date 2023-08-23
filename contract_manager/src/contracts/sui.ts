@@ -10,6 +10,7 @@ import {
 import { Chain, SuiChain } from "../chains";
 import { DataSource } from "xc_admin_common";
 import { Contract, PrivateKey, TxResult } from "../base";
+import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 
 export class SuiContract extends Contract {
   static type = "SuiContract";
@@ -59,27 +60,8 @@ export class SuiContract extends Contract {
    * @param objectId
    */
   async getPackageId(objectId: ObjectId): Promise<ObjectId> {
-    const provider = this.getProvider();
-    const state = await provider
-      .getObject({
-        id: objectId,
-        options: {
-          showContent: true,
-        },
-      })
-      .then((result) => {
-        if (result.data?.content?.dataType == "moveObject") {
-          return result.data.content.fields;
-        }
-
-        throw new Error("not move object");
-      });
-
-    if ("upgrade_cap" in state) {
-      return state.upgrade_cap.fields.package;
-    }
-
-    throw new Error("upgrade_cap not found");
+    const client = this.getSdkClient();
+    return client.getPackageId(objectId);
   }
 
   async getPythPackageId(): Promise<ObjectId> {
@@ -132,7 +114,7 @@ export class SuiContract extends Contract {
     };
   }
 
-  async getPriceFeed(feedId: string) {
+  async getPriceFeedObjectId(feedId: string): Promise<ObjectId | undefined> {
     const tableId = await this.getPriceTableId();
     const provider = this.getProvider();
     const result = await provider.getDynamicFieldObject({
@@ -150,7 +132,13 @@ export class SuiContract extends Contract {
     if (result.data.content.dataType !== "moveObject") {
       throw new Error("Price feed type mismatch");
     }
-    const priceInfoObjectId = result.data.content.fields.value;
+    return result.data.content.fields.value;
+  }
+
+  async getPriceFeed(feedId: string) {
+    const provider = this.getProvider();
+    const priceInfoObjectId = await this.getPriceFeedObjectId(feedId);
+    if (!priceInfoObjectId) return undefined;
     const priceInfo = await provider.getObject({
       id: priceInfoObjectId,
       options: { showContent: true },
@@ -185,34 +173,83 @@ export class SuiContract extends Contract {
   async executeMigrateInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    const decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
+    const verificationReceipt = await this.getVaaVerificationReceipt(
+      tx,
+      packageId,
+      vaa
+    );
 
     tx.moveCall({
       target: `${packageId}::migrate::migrate`,
-      arguments: [tx.object(this.stateId), decreeReceipt],
+      arguments: [tx.object(this.stateId), verificationReceipt],
     });
 
     return this.executeTransaction(tx, keypair);
   }
 
   async executeUpdatePriceFeed(): Promise<TxResult> {
-    throw new Error("Not implemented");
+    // We need the feed ids to be able to execute the transaction
+    // it may be possible to get them from the VAA but in batch transactions,
+    // it is also possible to hava fewer feeds that user wants to update compared to
+    // what exists in the VAA.
+    throw new Error("Use executeUpdatePriceFeedWithFeeds instead");
+  }
+
+  getSdkClient(): SuiPythClient {
+    return new SuiPythClient(
+      this.getProvider(),
+      this.stateId,
+      this.wormholeStateId
+    );
+  }
+
+  async executeUpdatePriceFeedWithFeeds(
+    senderPrivateKey: string,
+    vaas: Buffer[],
+    feedIds: string[]
+  ): Promise<TxResult> {
+    const tx = new TransactionBlock();
+    const client = this.getSdkClient();
+    await client.updatePriceFeeds(tx, vaas, feedIds);
+    const keypair = Ed25519Keypair.fromSecretKey(
+      Buffer.from(senderPrivateKey, "hex")
+    );
+    const result = await this.executeTransaction(tx, keypair);
+    return { id: result.digest, info: result };
+  }
+  async executeCreatePriceFeed(
+    senderPrivateKey: string,
+    vaas: Buffer[]
+  ): Promise<TxResult> {
+    const tx = new TransactionBlock();
+    const client = this.getSdkClient();
+    await client.createPriceFeed(tx, vaas);
+    const keypair = Ed25519Keypair.fromSecretKey(
+      Buffer.from(senderPrivateKey, "hex")
+    );
+
+    const result = await this.executeTransaction(tx, keypair);
+    return { id: result.digest, info: result };
   }
 
   async executeGovernanceInstruction(
     senderPrivateKey: PrivateKey,
     vaa: Buffer
-  ) {
+  ): Promise<TxResult> {
     const keypair = Ed25519Keypair.fromSecretKey(
       Buffer.from(senderPrivateKey, "hex")
     );
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    const decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
+    const verificationReceipt = await this.getVaaVerificationReceipt(
+      tx,
+      packageId,
+      vaa
+    );
 
     tx.moveCall({
       target: `${packageId}::governance::execute_governance_instruction`,
-      arguments: [tx.object(this.stateId), decreeReceipt],
+      arguments: [tx.object(this.stateId), verificationReceipt],
     });
 
     const result = await this.executeTransaction(tx, keypair);
@@ -227,11 +264,15 @@ export class SuiContract extends Contract {
   ) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    const decreeReceipt = await this.getVaaDecreeReceipt(tx, packageId, vaa);
+    const verificationReceipt = await this.getVaaVerificationReceipt(
+      tx,
+      packageId,
+      vaa
+    );
 
     const [upgradeTicket] = tx.moveCall({
       target: `${packageId}::contract_upgrade::authorize_upgrade`,
-      arguments: [tx.object(this.stateId), decreeReceipt],
+      arguments: [tx.object(this.stateId), verificationReceipt],
     });
 
     const [upgradeReceipt] = tx.upgrade({
@@ -250,23 +291,19 @@ export class SuiContract extends Contract {
   }
 
   /**
-   * Utility function to get the decree receipt object for a VAA that can be
+   * Utility function to get the verification receipt object for a VAA that can be
    * used to authorize a governance instruction.
    * @param tx
    * @param packageId pyth package id
    * @param vaa
    * @private
    */
-  private async getVaaDecreeReceipt(
+  async getVaaVerificationReceipt(
     tx: TransactionBlock,
     packageId: string,
     vaa: Buffer
   ) {
     const wormholePackageId = await this.getWormholePackageId();
-    const [decreeTicket] = tx.moveCall({
-      target: `${packageId}::set_update_fee::authorize_governance`,
-      arguments: [tx.object(this.stateId), tx.pure(false)],
-    });
 
     const [verifiedVAA] = tx.moveCall({
       target: `${wormholePackageId}::vaa::parse_and_verify`,
@@ -277,12 +314,11 @@ export class SuiContract extends Contract {
       ],
     });
 
-    const [decreeReceipt] = tx.moveCall({
-      target: `${wormholePackageId}::governance_message::verify_vaa`,
-      arguments: [tx.object(this.wormholeStateId), verifiedVAA, decreeTicket],
-      typeArguments: [`${packageId}::governance_witness::GovernanceWitness`],
+    const [verificationReceipt] = tx.moveCall({
+      target: `${packageId}::governance::verify_vaa`,
+      arguments: [tx.object(this.stateId), verifiedVAA],
     });
-    return decreeReceipt;
+    return verificationReceipt;
   }
 
   /**
@@ -366,7 +402,7 @@ export class SuiContract extends Contract {
     return Number(fields.last_executed_governance_sequence);
   }
 
-  private getProvider() {
+  getProvider() {
     return new JsonRpcProvider(new Connection({ fullnode: this.chain.rpcUrl }));
   }
 

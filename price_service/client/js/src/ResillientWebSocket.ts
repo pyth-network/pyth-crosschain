@@ -133,7 +133,7 @@ export class ResilientWebSocket {
       this.wsClient !== undefined &&
       this.wsClient.readyState !== this.wsClient.OPEN
     ) {
-      if (waitedTime > 1000) {
+      if (waitedTime > 5000) {
         this.wsClient.close();
         return;
       } else {

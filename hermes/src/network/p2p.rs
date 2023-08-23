@@ -10,9 +10,12 @@
 //! their infrastructure.
 
 use {
-    crate::store::{
-        types::Update,
-        Store,
+    crate::{
+        config::RunOptions,
+        store::{
+            types::Update,
+            Store,
+        },
     },
     anyhow::Result,
     libp2p::Multiaddr,
@@ -122,13 +125,17 @@ pub fn bootstrap(
 }
 
 // Spawn's the P2P layer as a separate thread via Go.
-pub async fn spawn(
-    store: Arc<Store>,
-    network_id: String,
-    wh_bootstrap_addrs: Vec<Multiaddr>,
-    wh_listen_addrs: Vec<Multiaddr>,
-) -> Result<()> {
-    std::thread::spawn(|| bootstrap(network_id, wh_bootstrap_addrs, wh_listen_addrs).unwrap());
+pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
+    log::info!("Starting P2P server on {:?}", opts.wh_listen_addrs);
+
+    std::thread::spawn(|| {
+        bootstrap(
+            opts.wh_network_id,
+            opts.wh_bootstrap_addrs,
+            opts.wh_listen_addrs,
+        )
+        .unwrap()
+    });
 
     tokio::spawn(async move {
         // Listen in the background for new VAA's from the p2p layer
