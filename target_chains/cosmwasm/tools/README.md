@@ -4,8 +4,11 @@
 2. If the wormhole contract is not deployed on the target chain run the following command:
 
    ```
-   ts-node src/wormhole-stub.ts --private-key <YOUR_PRIVATE_KEY_HEX> --deploy <stable or edge> --chain <chain id>
+   ts-node src/instantiate-wormhole.ts --private-key <YOUR_PRIVATE_KEY_HEX> --deploy <stable or edge> --chain <chain id>
    ```
+
+   You can re-build the wormhole contract using the scripts given in `wormhole-stub`.
+   Run `build.sh` and you will get the compiled contract code in `wormhole-stub/artifacts`
 
 3. Deploy the pyth contract:
 
