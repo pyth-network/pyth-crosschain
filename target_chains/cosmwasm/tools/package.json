@@ -7,8 +7,7 @@
   "scripts": {
     "build": "tsc",
     "build-contract": "ts-node ./src/build-contract.ts",
-    "deploy-pyth": "ts-node ./src/deploy-pyth-bridge.ts",
-    "deploy": "ts-node ./src/deploy.ts"
+    "deploy": "ts-node ./src/ci/deploy.ts"
   },
   "author": "",
   "license": "ISC",

@@ -1,32 +1,8 @@
-import { readFileSync, existsSync, mkdirSync } from "fs";
+import { existsSync, mkdirSync, readFileSync } from "fs";
 import { rimrafSync } from "rimraf";
 import AdmZip from "adm-zip";
 import path from "path";
 import { DownloaderHelper } from "node-downloader-helper";
-import { ChainId } from "./chains-manager/chains";
-
-export function getChainIdsForStableDeployment(): ChainId[] {
-  return [
-    ChainId.INJECTIVE_TESTNET,
-    ChainId.OSMOSIS_TESTNET_5,
-    ChainId.OSMOSIS,
-    ChainId.SEI_TESTNET_ATLANTIC_2,
-    ChainId.NEUTRON_TESTNET_PION_1,
-    ChainId.JUNO_TESTNET,
-    ChainId.SEI_PACIFIC_1,
-    ChainId.NEUTRON,
-  ];
-}
-
-export function getChainIdsForBetaDeployment(): ChainId[] {
-  return [
-    ChainId.INJECTIVE_TESTNET,
-    ChainId.OSMOSIS_TESTNET_5,
-    ChainId.SEI_TESTNET_ATLANTIC_2,
-    ChainId.NEUTRON_TESTNET_PION_1,
-    ChainId.JUNO_TESTNET,
-  ];
-}
 
 export type DeploymentType = "stable" | "beta";
 
