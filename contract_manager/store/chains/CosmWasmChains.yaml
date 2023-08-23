@@ -3,6 +3,7 @@
   wormholeChainName: injective
   mainnet: true
   type: CosmWasmChain
+  feeDenom: inj
 - endpoint: https://rpc.atlantic-2.seinetwork.io/
   id: sei_testnet_atlantic_2
   wormholeChainName: sei_testnet_atlantic_2
