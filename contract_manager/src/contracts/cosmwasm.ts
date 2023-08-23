@@ -9,9 +9,10 @@ import {
   PythWrapperExecutor,
   PythWrapperQuerier,
 } from "@pythnetwork/cosmwasm-deploy-tools";
+import { Coin } from "@cosmjs/stargate";
 import { CHAINS, DataSource } from "xc_admin_common";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
-import { Contract, PrivateKey } from "../base";
+import { Contract, PrivateKey, TxResult } from "../base";
 import { WormholeContract } from "./wormhole";
 
 /**
@@ -42,7 +43,7 @@ export class WormholeCosmWasmContract extends WormholeContract {
     const chainQuerier = await CosmwasmQuerier.connect(this.chain.endpoint);
     return (await chainQuerier.getAllContractState({
       contractAddr: this.address,
-    })) as any;
+    })) as Record<string, string>;
   }
 
   async getCurrentGuardianSetIndex(): Promise<number> {
@@ -68,26 +69,29 @@ export class WormholeCosmWasmContract extends WormholeContract {
   async upgradeGuardianSets(
     senderPrivateKey: PrivateKey,
     vaa: Buffer
-  ): Promise<any> {
+  ): Promise<TxResult> {
     const executor = await this.chain.getExecutor(senderPrivateKey);
-    return executor.executeContract({
+    const result = await executor.executeContract({
       contractAddr: this.address,
       msg: {
         submit_v_a_a: { vaa: vaa.toString("base64") },
       },
     });
+    return { id: result.txHash, info: result };
   }
 }
 
 export class CosmWasmContract extends Contract {
   async getDataSources(): Promise<DataSource[]> {
     const config = await this.getConfig();
-    return config.config_v1.data_sources.map(({ emitter, chain_id }: any) => {
-      return {
-        emitterChain: Number(chain_id),
-        emitterAddress: Buffer.from(emitter, "base64").toString("hex"),
-      };
-    });
+    return config.config_v1.data_sources.map(
+      ({ emitter, chain_id }: { emitter: string; chain_id: string }) => {
+        return {
+          emitterChain: Number(chain_id),
+          emitterAddress: Buffer.from(emitter, "base64").toString("hex"),
+        };
+      }
+    );
   }
 
   async getGovernanceDataSource(): Promise<DataSource> {
@@ -227,7 +231,7 @@ export class CosmWasmContract extends Contract {
     const chainQuerier = await CosmwasmQuerier.connect(this.chain.endpoint);
     const allStates = (await chainQuerier.getAllContractState({
       contractAddr: this.address,
-    })) as any;
+    })) as Record<string, string>;
     const config = {
       config_v1: JSON.parse(allStates["\x00\tconfig_v1"]),
       contract_version: JSON.parse(allStates["\x00\x10contract_version"]),
@@ -347,17 +351,17 @@ export class CosmWasmContract extends Contract {
     return new WormholeCosmWasmContract(this.chain, wormholeAddress);
   }
 
-  async getUpdateFee(msgs: string[]): Promise<any> {
+  async getUpdateFee(msgs: string[]): Promise<Coin> {
     const querier = await this.getQuerier();
     return querier.getUpdateFee(this.address, msgs);
   }
 
-  async getBaseUpdateFee(): Promise<any> {
+  async getBaseUpdateFee(): Promise<{ amount: string; denom: string }> {
     const config = await this.getConfig();
     return config.config_v1.fee;
   }
 
-  async getVersion(): Promise<any> {
+  async getVersion(): Promise<string> {
     const config = await this.getConfig();
     return config.contract_version;
   }

@@ -230,7 +230,7 @@ export class WormholeMultiSigTransaction {
             this.cluster
           )
         );
-      } catch (e: any) {
+      } catch (e) {
         if (!(e instanceof InvalidTransactionError)) throw e;
       }
     }

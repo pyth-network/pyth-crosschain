@@ -1,5 +1,5 @@
 import { Contract, PriceFeed, PrivateKey, TxResult } from "../base";
-import { AptosAccount, BCS, TxnBuilderTypes } from "aptos";
+import { ApiError, AptosAccount, BCS, TxnBuilderTypes } from "aptos";
 import { AptosChain, Chain } from "../chains";
 import { DataSource } from "xc_admin_common";
 
@@ -47,7 +47,7 @@ export class AptosContract extends Contract {
   private async sendTransaction(
     senderPrivateKey: PrivateKey,
     txPayload: TxnBuilderTypes.TransactionPayloadEntryFunction
-  ) {
+  ): Promise<TxResult> {
     const client = this.chain.getClient();
     const sender = new AptosAccount(
       new Uint8Array(Buffer.from(senderPrivateKey, "hex"))
@@ -97,7 +97,7 @@ export class AptosContract extends Contract {
   }
 
   async getBaseUpdateFee() {
-    const data = (await this.findResource("BaseUpdateFee")) as any;
+    const data = (await this.findResource("BaseUpdateFee")) as { fee: string };
     return { amount: data.fee };
   }
 
@@ -105,7 +105,12 @@ export class AptosContract extends Contract {
     return this.chain;
   }
 
-  private parsePrice(priceInfo: any) {
+  private parsePrice(priceInfo: {
+    expo: { magnitude: string; negative: boolean };
+    price: { magnitude: string; negative: boolean };
+    conf: string;
+    timestamp: string;
+  }) {
     let expo = priceInfo.expo.magnitude;
     if (priceInfo.expo.negative) expo = "-" + expo;
     let price = priceInfo.price.magnitude;
@@ -120,7 +125,9 @@ export class AptosContract extends Contract {
 
   async getPriceFeed(feedId: string): Promise<PriceFeed | undefined> {
     const client = this.chain.getClient();
-    const res = (await this.findResource("LatestPriceInfo")) as any;
+    const res = (await this.findResource("LatestPriceInfo")) as {
+      info: { handle: string };
+    };
     const handle = res.info.handle;
     try {
       const priceItemRes = await client.getTableItem(handle, {
@@ -134,15 +141,23 @@ export class AptosContract extends Contract {
         price: this.parsePrice(priceItemRes.price_feed.price),
         emaPrice: this.parsePrice(priceItemRes.price_feed.ema_price),
       };
-    } catch (e: any) {
-      if (e.errorCode === "table_item_not_found") return undefined;
+    } catch (e) {
+      if (e instanceof ApiError && e.errorCode === "table_item_not_found")
+        return undefined;
       throw e;
     }
   }
 
   async getDataSources(): Promise<DataSource[]> {
-    const data = (await this.findResource("DataSources")) as any;
-    return data.sources.keys.map((source: any) => {
+    const data = (await this.findResource("DataSources")) as {
+      sources: {
+        keys: {
+          emitter_chain: string;
+          emitter_address: { external_address: string };
+        }[];
+      };
+    };
+    return data.sources.keys.map((source) => {
       return {
         emitterChain: Number(source.emitter_chain),
         emitterAddress: source.emitter_address.external_address.replace(
@@ -154,7 +169,12 @@ export class AptosContract extends Contract {
   }
 
   async getGovernanceDataSource(): Promise<DataSource> {
-    const data = (await this.findResource("GovernanceDataSource")) as any;
+    const data = (await this.findResource("GovernanceDataSource")) as {
+      source: {
+        emitter_chain: string;
+        emitter_address: { external_address: string };
+      };
+    };
     return {
       emitterChain: Number(data.source.emitter_chain),
       emitterAddress: data.source.emitter_address.external_address.replace(
@@ -167,7 +187,7 @@ export class AptosContract extends Contract {
   async getLastExecutedGovernanceSequence() {
     const data = (await this.findResource(
       "LastExecutedGovernanceSequence"
-    )) as any;
+    )) as { sequence: string };
     return Number(data.sequence);
   }
 
@@ -180,7 +200,9 @@ export class AptosContract extends Contract {
   }
 
   async getValidTimePeriod() {
-    const data = (await this.findResource("StalePriceThreshold")) as any;
+    const data = (await this.findResource("StalePriceThreshold")) as {
+      threshold_secs: string;
+    };
     return Number(data.threshold_secs);
   }
 

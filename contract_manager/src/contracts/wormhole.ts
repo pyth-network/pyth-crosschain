@@ -1,4 +1,4 @@
-import { PrivateKey } from "../base";
+import { PrivateKey, TxResult } from "../base";
 
 export abstract class WormholeContract {
   abstract getCurrentGuardianSetIndex(): Promise<number>;
@@ -16,7 +16,7 @@ export abstract class WormholeContract {
   abstract upgradeGuardianSets(
     senderPrivateKey: PrivateKey,
     vaa: Buffer
-  ): Promise<any>;
+  ): Promise<TxResult>;
 
   /**
    * Upgrades the guardian set of this contract with the 3 pre-configured VAAs for mainnet assuming this is a mainnet contract
