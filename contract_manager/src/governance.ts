@@ -31,7 +31,7 @@ import {
   deriveFeeCollectorKey,
   deriveWormholeBridgeDataKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { Storable } from "./base";
+import { KeyValueConfig, Storable } from "./base";
 
 class InvalidTransactionError extends Error {
   constructor(message: string) {
@@ -255,7 +255,11 @@ export class Vault extends Storable {
     return Vault.type;
   }
 
-  static fromJson(parsed: any): Vault {
+  static fromJson(parsed: {
+    type: string;
+    key: string;
+    cluster: string;
+  }): Vault {
     if (parsed.type !== Vault.type) throw new Error("Invalid type");
     return new Vault(parsed.key, parsed.cluster);
   }
@@ -264,7 +268,7 @@ export class Vault extends Storable {
     return `${this.cluster}_${this.key.toString()}`;
   }
 
-  toJson(): any {
+  toJson(): KeyValueConfig {
     return {
       key: this.key.toString(),
       cluster: this.cluster,

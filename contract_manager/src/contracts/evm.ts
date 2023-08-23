@@ -138,7 +138,7 @@ const EXTENDED_PYTH_ABI = [
     type: "function",
   },
   ...PythInterfaceAbi,
-] as any;
+] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 
 const WORMHOLE_ABI = [
   {
@@ -211,7 +211,7 @@ const WORMHOLE_ABI = [
     stateMutability: "view",
     type: "function",
   },
-] as any;
+] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 export class WormholeEvmContract extends WormholeContract {
   constructor(public chain: EvmChain, public address: string) {
     super();
@@ -283,7 +283,10 @@ export class EvmContract extends Contract {
     super();
   }
 
-  static fromJson(chain: Chain, parsed: any): EvmContract {
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; address: string }
+  ): EvmContract {
     if (parsed.type !== EvmContract.type) throw new Error("Invalid type");
     if (!(chain instanceof EvmChain))
       throw new Error(`Wrong chain type ${chain}`);

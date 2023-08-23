@@ -31,7 +31,10 @@ export class SuiContract extends Contract {
     super();
   }
 
-  static fromJson(chain: Chain, parsed: any): SuiContract {
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; stateId: string; wormholeStateId: string }
+  ): SuiContract {
     if (parsed.type !== SuiContract.type) throw new Error("Invalid type");
     if (!(chain instanceof SuiChain))
       throw new Error(`Wrong chain type ${chain}`);
@@ -94,7 +97,15 @@ export class SuiContract extends Contract {
     return result.data.objectId;
   }
 
-  private async parsePrice(priceInfo: any) {
+  private async parsePrice(priceInfo: {
+    type: string;
+    fields: {
+      expo: { fields: { magnitude: string; negative: boolean } };
+      price: { fields: { magnitude: string; negative: boolean } };
+      conf: string;
+      timestamp: string;
+    };
+  }) {
     const packageId = await this.getPythPackageId();
     const expectedType = `${packageId}::price::Price`;
     if (priceInfo.type !== expectedType) {
@@ -369,7 +380,14 @@ export class SuiContract extends Contract {
       throw new Error("Data Sources type mismatch");
     }
     return result.data.content.fields.value.fields.keys.map(
-      ({ fields }: any) => {
+      ({
+        fields,
+      }: {
+        fields: {
+          emitter_address: { fields: { value: { fields: { data: string } } } };
+          emitter_chain: string;
+        };
+      }) => {
         return {
           emitterChain: Number(fields.emitter_chain),
           emitterAddress: Buffer.from(

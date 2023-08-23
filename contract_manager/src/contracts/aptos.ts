@@ -22,7 +22,10 @@ export class AptosContract extends Contract {
     super();
   }
 
-  static fromJson(chain: Chain, parsed: any): AptosContract {
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; stateId: string; wormholeStateId: string }
+  ): AptosContract {
     if (parsed.type !== AptosContract.type) throw new Error("Invalid type");
     if (!(chain instanceof AptosChain))
       throw new Error(`Wrong chain type ${chain}`);

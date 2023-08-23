@@ -3,7 +3,7 @@ import { Chain } from "./chains";
 
 export interface TxResult {
   id: string;
-  info: any; // chain specific info
+  info: unknown; // chain specific info
 }
 
 export type DeploymentType = "stable" | "beta";
@@ -16,6 +16,8 @@ export function toPrivateKey(key: string): PrivateKey {
   checkIsPrivateKey(key);
   return key;
 }
+
+export type KeyValueConfig = Record<string, string | number | boolean>;
 
 export abstract class Storable {
   /**
@@ -33,7 +35,7 @@ export abstract class Storable {
    * Returns a JSON representation of this object. It should be possible to
    * reconstruct the object from the JSON using the fromJson method.
    */
-  abstract toJson(): any;
+  abstract toJson(): KeyValueConfig;
 }
 
 export interface Price {
