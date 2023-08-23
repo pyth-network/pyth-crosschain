@@ -9,7 +9,7 @@ import {
 } from "@mysten/sui.js";
 import { Chain, SuiChain } from "../chains";
 import { DataSource } from "xc_admin_common";
-import { Contract } from "../base";
+import { Contract, PrivateKey, TxResult } from "../base";
 import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 
 export class SuiContract extends Contract {
@@ -31,7 +31,10 @@ export class SuiContract extends Contract {
     super();
   }
 
-  static fromJson(chain: Chain, parsed: any): SuiContract {
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; stateId: string; wormholeStateId: string }
+  ): SuiContract {
     if (parsed.type !== SuiContract.type) throw new Error("Invalid type");
     if (!(chain instanceof SuiChain))
       throw new Error(`Wrong chain type ${chain}`);
@@ -81,7 +84,7 @@ export class SuiContract extends Contract {
    */
   async getPriceTableId(): Promise<ObjectId> {
     const provider = this.getProvider();
-    let result = await provider.getDynamicFieldObject({
+    const result = await provider.getDynamicFieldObject({
       parentId: this.stateId,
       name: {
         type: "vector<u8>",
@@ -94,7 +97,15 @@ export class SuiContract extends Contract {
     return result.data.objectId;
   }
 
-  private async parsePrice(priceInfo: any) {
+  private async parsePrice(priceInfo: {
+    type: string;
+    fields: {
+      expo: { fields: { magnitude: string; negative: boolean } };
+      price: { fields: { magnitude: string; negative: boolean } };
+      conf: string;
+      timestamp: string;
+    };
+  }) {
     const packageId = await this.getPythPackageId();
     const expectedType = `${packageId}::price::Price`;
     if (priceInfo.type !== expectedType) {
@@ -117,7 +128,7 @@ export class SuiContract extends Contract {
   async getPriceFeedObjectId(feedId: string): Promise<ObjectId | undefined> {
     const tableId = await this.getPriceTableId();
     const provider = this.getProvider();
-    let result = await provider.getDynamicFieldObject({
+    const result = await provider.getDynamicFieldObject({
       parentId: tableId,
       name: {
         type: `${await this.getPythPackageId()}::price_identifier::PriceIdentifier`,
@@ -137,9 +148,9 @@ export class SuiContract extends Contract {
 
   async getPriceFeed(feedId: string) {
     const provider = this.getProvider();
-    let priceInfoObjectId = await this.getPriceFeedObjectId(feedId);
+    const priceInfoObjectId = await this.getPriceFeedObjectId(feedId);
     if (!priceInfoObjectId) return undefined;
-    let priceInfo = await provider.getObject({
+    const priceInfo = await provider.getObject({
       id: priceInfoObjectId,
       options: { showContent: true },
     });
@@ -173,7 +184,7 @@ export class SuiContract extends Contract {
   async executeMigrateInstruction(vaa: Buffer, keypair: Ed25519Keypair) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    let verificationReceipt = await this.getVaaVerificationReceipt(
+    const verificationReceipt = await this.getVaaVerificationReceipt(
       tx,
       packageId,
       vaa
@@ -187,7 +198,7 @@ export class SuiContract extends Contract {
     return this.executeTransaction(tx, keypair);
   }
 
-  async executeUpdatePriceFeed(senderPrivateKey: string, vaas: Buffer[]) {
+  async executeUpdatePriceFeed(): Promise<TxResult> {
     // We need the feed ids to be able to execute the transaction
     // it may be possible to get them from the VAA but in batch transactions,
     // it is also possible to hava fewer feeds that user wants to update compared to
@@ -207,17 +218,20 @@ export class SuiContract extends Contract {
     senderPrivateKey: string,
     vaas: Buffer[],
     feedIds: string[]
-  ) {
+  ): Promise<TxResult> {
     const tx = new TransactionBlock();
     const client = this.getSdkClient();
     await client.updatePriceFeeds(tx, vaas, feedIds);
     const keypair = Ed25519Keypair.fromSecretKey(
       Buffer.from(senderPrivateKey, "hex")
     );
-    let result = await this.executeTransaction(tx, keypair);
-    return result.digest;
+    const result = await this.executeTransaction(tx, keypair);
+    return { id: result.digest, info: result };
   }
-  async executeCreatePriceFeed(senderPrivateKey: string, vaas: Buffer[]) {
+  async executeCreatePriceFeed(
+    senderPrivateKey: string,
+    vaas: Buffer[]
+  ): Promise<TxResult> {
     const tx = new TransactionBlock();
     const client = this.getSdkClient();
     await client.createPriceFeed(tx, vaas);
@@ -225,17 +239,20 @@ export class SuiContract extends Contract {
       Buffer.from(senderPrivateKey, "hex")
     );
 
-    let result = await this.executeTransaction(tx, keypair);
-    return result.digest;
+    const result = await this.executeTransaction(tx, keypair);
+    return { id: result.digest, info: result };
   }
 
-  async executeGovernanceInstruction(senderPrivateKey: string, vaa: Buffer) {
+  async executeGovernanceInstruction(
+    senderPrivateKey: PrivateKey,
+    vaa: Buffer
+  ): Promise<TxResult> {
     const keypair = Ed25519Keypair.fromSecretKey(
       Buffer.from(senderPrivateKey, "hex")
     );
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    let verificationReceipt = await this.getVaaVerificationReceipt(
+    const verificationReceipt = await this.getVaaVerificationReceipt(
       tx,
       packageId,
       vaa
@@ -246,7 +263,8 @@ export class SuiContract extends Contract {
       arguments: [tx.object(this.stateId), verificationReceipt],
     });
 
-    return this.executeTransaction(tx, keypair);
+    const result = await this.executeTransaction(tx, keypair);
+    return { id: result.digest, info: result };
   }
 
   async executeUpgradeInstruction(
@@ -257,7 +275,7 @@ export class SuiContract extends Contract {
   ) {
     const tx = new TransactionBlock();
     const packageId = await this.getPythPackageId();
-    let verificationReceipt = await this.getVaaVerificationReceipt(
+    const verificationReceipt = await this.getVaaVerificationReceipt(
       tx,
       packageId,
       vaa
@@ -279,7 +297,8 @@ export class SuiContract extends Contract {
       target: `${packageId}::contract_upgrade::commit_upgrade`,
       arguments: [tx.object(this.stateId), upgradeReceipt],
     });
-    return this.executeTransaction(tx, keypair);
+    const result = await this.executeTransaction(tx, keypair);
+    return { id: result.digest, info: result };
   }
 
   /**
@@ -297,7 +316,7 @@ export class SuiContract extends Contract {
   ) {
     const wormholePackageId = await this.getWormholePackageId();
 
-    let [verifiedVAA] = tx.moveCall({
+    const [verifiedVAA] = tx.moveCall({
       target: `${wormholePackageId}::vaa::parse_and_verify`,
       arguments: [
         tx.object(this.wormholeStateId),
@@ -306,7 +325,7 @@ export class SuiContract extends Contract {
       ],
     });
 
-    let [verificationReceipt] = tx.moveCall({
+    const [verificationReceipt] = tx.moveCall({
       target: `${packageId}::governance::verify_vaa`,
       arguments: [tx.object(this.stateId), verifiedVAA],
     });
@@ -325,7 +344,7 @@ export class SuiContract extends Contract {
     keypair: Ed25519Keypair
   ) {
     const provider = this.getProvider();
-    let txBlock = {
+    const txBlock = {
       transactionBlock: tx,
       options: {
         showEffects: true,
@@ -333,7 +352,7 @@ export class SuiContract extends Contract {
       },
     };
     const wallet = new RawSigner(keypair, provider);
-    let gasCost = await wallet.getGasCostEstimation(txBlock);
+    const gasCost = await wallet.getGasCostEstimation(txBlock);
     tx.setGasBudget(gasCost * BigInt(2));
     return wallet.signAndExecuteTransactionBlock(txBlock);
   }
@@ -345,7 +364,7 @@ export class SuiContract extends Contract {
 
   async getDataSources(): Promise<DataSource[]> {
     const provider = this.getProvider();
-    let result = await provider.getDynamicFieldObject({
+    const result = await provider.getDynamicFieldObject({
       parentId: this.stateId,
       name: {
         type: "vector<u8>",
@@ -361,7 +380,14 @@ export class SuiContract extends Contract {
       throw new Error("Data Sources type mismatch");
     }
     return result.data.content.fields.value.fields.keys.map(
-      ({ fields }: any) => {
+      ({
+        fields,
+      }: {
+        fields: {
+          emitter_address: { fields: { value: { fields: { data: string } } } };
+          emitter_chain: string;
+        };
+      }) => {
         return {
           emitterChain: Number(fields.emitter_chain),
           emitterAddress: Buffer.from(

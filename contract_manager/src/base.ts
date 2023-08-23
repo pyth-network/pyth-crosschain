@@ -1,6 +1,24 @@
 import { DataSource } from "xc_admin_common";
 import { Chain } from "./chains";
 
+export interface TxResult {
+  id: string;
+  info: unknown; // chain specific info
+}
+
+export type DeploymentType = "stable" | "beta";
+export type PrivateKey = string & { __type: "PrivateKey" };
+function checkIsPrivateKey(key: string): asserts key is PrivateKey {
+  if (Buffer.from(key, "hex").length !== 32)
+    throw new Error("Invalid private key, must be 64 hex chars");
+}
+export function toPrivateKey(key: string): PrivateKey {
+  checkIsPrivateKey(key);
+  return key;
+}
+
+export type KeyValueConfig = Record<string, string | number | boolean>;
+
 export abstract class Storable {
   /**
    * Returns the unique identifier for this object
@@ -17,7 +35,7 @@ export abstract class Storable {
    * Returns a JSON representation of this object. It should be possible to
    * reconstruct the object from the JSON using the fromJson method.
    */
-  abstract toJson(): any;
+  abstract toJson(): KeyValueConfig;
 }
 
 export interface Price {
@@ -75,9 +93,9 @@ export abstract class Contract extends Storable {
    * @param vaas an array of VAAs containing price update messages to execute
    */
   abstract executeUpdatePriceFeed(
-    senderPrivateKey: string,
+    senderPrivateKey: PrivateKey,
     vaas: Buffer[]
-  ): Promise<any>;
+  ): Promise<TxResult>;
 
   /**
    * Executes the governance instruction contained in the VAA using the sender credentials
@@ -85,9 +103,9 @@ export abstract class Contract extends Storable {
    * @param vaa the VAA to execute
    */
   abstract executeGovernanceInstruction(
-    senderPrivateKey: string,
+    senderPrivateKey: PrivateKey,
     vaa: Buffer
-  ): Promise<any>;
+  ): Promise<TxResult>;
 
   /**
    * Returns the single data source that this contract accepts governance messages from
@@ -95,11 +113,11 @@ export abstract class Contract extends Storable {
   abstract getGovernanceDataSource(): Promise<DataSource>;
 }
 
-export function getDefaultDeploymentConfig(deploymentType: "stable" | "edge"): {
+export function getDefaultDeploymentConfig(deploymentType: DeploymentType): {
   dataSources: DataSource[];
   governanceDataSource: DataSource;
   wormholeConfig: {
-    governanceChainId: Number;
+    governanceChainId: number;
     governanceContract: string; // 32 byte address in 64 char hex format
     initialGuardianSet: string[]; // 20 byte addresses in 40 char hex format
   };
@@ -135,7 +153,7 @@ export function getDefaultDeploymentConfig(deploymentType: "stable" | "edge"): {
         initialGuardianSet: ["58cc3ae5c097b213ce3c81979e1b9f9570746aa5"],
       },
     };
-  else if (deploymentType === "edge")
+  else if (deploymentType === "beta")
     return {
       dataSources: [
         {

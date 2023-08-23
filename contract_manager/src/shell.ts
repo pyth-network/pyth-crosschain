@@ -12,5 +12,6 @@ repl.evalCode(
     "import { WormholeEvmContract, EvmContract } from './src/contracts/evm';" +
     "import { AptosContract } from './src/contracts/aptos';" +
     "import { DefaultStore } from './src/store';" +
+    "import { toPrivateKey } from './src/base';" +
     "DefaultStore"
 );

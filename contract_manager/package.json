@@ -10,7 +10,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "shell": "ts-node ./src/shell.ts"
+    "shell": "ts-node ./src/shell.ts",
+    "lint": "eslint src/"
   },
   "author": "",
   "license": "Apache-2.0",

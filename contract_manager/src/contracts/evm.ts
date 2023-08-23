@@ -1,6 +1,6 @@
-import Web3 from "web3"; //TODO: decide on using web3 or ethers.js
+import Web3 from "web3";
 import PythInterfaceAbi from "@pythnetwork/pyth-sdk-solidity/abis/IPyth.json";
-import { Contract } from "../base";
+import { Contract, PrivateKey } from "../base";
 import { Chain, EvmChain } from "../chains";
 import { DataSource } from "xc_admin_common";
 import { WormholeContract } from "./wormhole";
@@ -138,7 +138,7 @@ const EXTENDED_PYTH_ABI = [
     type: "function",
   },
   ...PythInterfaceAbi,
-] as any;
+] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 
 const WORMHOLE_ABI = [
   {
@@ -211,7 +211,7 @@ const WORMHOLE_ABI = [
     stateMutability: "view",
     type: "function",
   },
-] as any;
+] as any; // eslint-disable-line  @typescript-eslint/no-explicit-any
 export class WormholeEvmContract extends WormholeContract {
   constructor(public chain: EvmChain, public address: string) {
     super();
@@ -256,7 +256,7 @@ export class WormholeEvmContract extends WormholeContract {
     }
   }
 
-  async upgradeGuardianSets(senderPrivateKey: string, vaa: Buffer) {
+  async upgradeGuardianSets(senderPrivateKey: PrivateKey, vaa: Buffer) {
     const web3 = new Web3(this.chain.getRpcUrl());
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const wormholeContract = new web3.eth.Contract(WORMHOLE_ABI, this.address);
@@ -267,11 +267,12 @@ export class WormholeEvmContract extends WormholeContract {
       from: address,
       gas: 100000000,
     });
-    return transactionObject.send({
+    const result = await transactionObject.send({
       from: address,
       gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
       gasPrice: await this.chain.getGasPrice(),
     });
+    return { id: result.transactionHash, info: result };
   }
 }
 
@@ -282,7 +283,10 @@ export class EvmContract extends Contract {
     super();
   }
 
-  static fromJson(chain: Chain, parsed: any): EvmContract {
+  static fromJson(
+    chain: Chain,
+    parsed: { type: string; address: string }
+  ): EvmContract {
     if (parsed.type !== EvmContract.type) throw new Error("Invalid type");
     if (!(chain instanceof EvmChain))
       throw new Error(`Wrong chain type ${chain}`);
@@ -321,7 +325,7 @@ export class EvmContract extends Contract {
   async getImplementationAddress(): Promise<string> {
     const web3 = new Web3(this.chain.getRpcUrl());
     // bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1) according to EIP-1967
-    let storagePosition =
+    const storagePosition =
       "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
     let address = await web3.eth.getStorageAt(this.address, storagePosition);
     address = "0x" + address.slice(26);
@@ -433,7 +437,7 @@ export class EvmContract extends Contract {
     };
   }
 
-  async executeUpdatePriceFeed(senderPrivateKey: string, vaas: Buffer[]) {
+  async executeUpdatePriceFeed(senderPrivateKey: PrivateKey, vaas: Buffer[]) {
     const web3 = new Web3(this.chain.getRpcUrl());
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
@@ -448,15 +452,19 @@ export class EvmContract extends Contract {
       gas: 100000000,
       value: updateFee,
     });
-    return transactionObject.send({
+    const result = await transactionObject.send({
       from: address,
       value: updateFee,
       gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
       gasPrice: await this.chain.getGasPrice(),
     });
+    return { id: result.transactionHash, info: result };
   }
 
-  async executeGovernanceInstruction(senderPrivateKey: string, vaa: Buffer) {
+  async executeGovernanceInstruction(
+    senderPrivateKey: PrivateKey,
+    vaa: Buffer
+  ) {
     const web3 = new Web3(this.chain.getRpcUrl());
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
     const pythContract = new web3.eth.Contract(EXTENDED_PYTH_ABI, this.address);
@@ -467,11 +475,12 @@ export class EvmContract extends Contract {
       from: address,
       gas: 100000000,
     });
-    return transactionObject.send({
+    const result = await transactionObject.send({
       from: address,
       gas: gasEstiamte * GAS_ESTIMATE_MULTIPLIER,
       gasPrice: await this.chain.getGasPrice(),
     });
+    return { id: result.transactionHash, info: result };
   }
 
   getChain(): EvmChain {

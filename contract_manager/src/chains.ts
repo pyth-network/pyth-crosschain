@@ -1,7 +1,6 @@
-import { Storable } from "./base";
+import { KeyValueConfig, PrivateKey, Storable } from "./base";
 import {
   ChainName,
-  CHAINS,
   SetFee,
   CosmosUpgradeContract,
   EvmUpgradeContract,
@@ -22,6 +21,10 @@ import {
 } from "@pythnetwork/cosmwasm-deploy-tools";
 import { Network } from "@injectivelabs/networks";
 
+export type ChainConfig = Record<string, string> & {
+  mainnet: boolean;
+  id: string;
+};
 export abstract class Chain extends Storable {
   public wormholeChainName: ChainName;
 
@@ -92,15 +95,15 @@ export abstract class Chain extends Storable {
    * Returns the payload for a governance contract upgrade instruction for contracts deployed on this chain
    * @param upgradeInfo based on the contract type, this can be a contract address, codeId, package digest, etc.
    */
-  abstract generateGovernanceUpgradePayload(upgradeInfo: any): Buffer;
+  abstract generateGovernanceUpgradePayload(upgradeInfo: unknown): Buffer;
 }
 
 export class GlobalChain extends Chain {
-  static type: string = "GlobalChain";
+  static type = "GlobalChain";
   constructor() {
     super("global", true, "unset");
   }
-  generateGovernanceUpgradePayload(upgradeInfo: any): Buffer {
+  generateGovernanceUpgradePayload(): Buffer {
     throw new Error(
       "Can not create a governance message for upgrading contracts on all chains!"
     );
@@ -110,7 +113,7 @@ export class GlobalChain extends Chain {
     return GlobalChain.type;
   }
 
-  toJson(): any {
+  toJson(): KeyValueConfig {
     return {
       id: this.id,
       wormholeChainName: this.wormholeChainName,
@@ -121,7 +124,7 @@ export class GlobalChain extends Chain {
 }
 
 export class CosmWasmChain extends Chain {
-  static type: string = "CosmWasmChain";
+  static type = "CosmWasmChain";
 
   constructor(
     id: string,
@@ -135,7 +138,7 @@ export class CosmWasmChain extends Chain {
     super(id, mainnet, wormholeChainName);
   }
 
-  static fromJson(parsed: any): CosmWasmChain {
+  static fromJson(parsed: ChainConfig): CosmWasmChain {
     if (parsed.type !== CosmWasmChain.type) throw new Error("Invalid type");
     return new CosmWasmChain(
       parsed.id,
@@ -148,7 +151,7 @@ export class CosmWasmChain extends Chain {
     );
   }
 
-  toJson(): any {
+  toJson(): KeyValueConfig {
     return {
       endpoint: this.endpoint,
       id: this.id,
@@ -174,7 +177,7 @@ export class CosmWasmChain extends Chain {
     return new CosmosUpgradeContract(this.wormholeChainName, codeId).encode();
   }
 
-  async getExecutor(privateKey: string) {
+  async getExecutor(privateKey: PrivateKey) {
     if (this.getId().indexOf("injective") > -1) {
       return InjectiveExecutor.fromPrivateKey(
         this.isMainnet() ? Network.Mainnet : Network.Testnet,
@@ -190,7 +193,7 @@ export class CosmWasmChain extends Chain {
 }
 
 export class SuiChain extends Chain {
-  static type: string = "SuiChain";
+  static type = "SuiChain";
 
   constructor(
     id: string,
@@ -201,7 +204,7 @@ export class SuiChain extends Chain {
     super(id, mainnet, wormholeChainName);
   }
 
-  static fromJson(parsed: any): SuiChain {
+  static fromJson(parsed: ChainConfig): SuiChain {
     if (parsed.type !== SuiChain.type) throw new Error("Invalid type");
     return new SuiChain(
       parsed.id,
@@ -211,7 +214,7 @@ export class SuiChain extends Chain {
     );
   }
 
-  toJson(): any {
+  toJson(): KeyValueConfig {
     return {
       id: this.id,
       wormholeChainName: this.wormholeChainName,
@@ -238,7 +241,7 @@ export class SuiChain extends Chain {
 }
 
 export class EvmChain extends Chain {
-  static type: string = "EvmChain";
+  static type = "EvmChain";
 
   constructor(
     id: string,
@@ -250,7 +253,7 @@ export class EvmChain extends Chain {
     super(id, mainnet, wormholeChainName);
   }
 
-  static fromJson(parsed: any): EvmChain {
+  static fromJson(parsed: ChainConfig & { networkId: number }): EvmChain {
     if (parsed.type !== EvmChain.type) throw new Error("Invalid type");
     return new EvmChain(
       parsed.id,
@@ -277,7 +280,7 @@ export class EvmChain extends Chain {
     return new EvmSetWormholeAddress(this.wormholeChainName, address).encode();
   }
 
-  toJson(): any {
+  toJson(): KeyValueConfig {
     return {
       id: this.id,
       wormholeChainName: this.wormholeChainName,
@@ -311,10 +314,10 @@ export class EvmChain extends Chain {
    * @returns the address of the deployed contract
    */
   async deploy(
-    privateKey: string,
-    abi: any,
+    privateKey: PrivateKey,
+    abi: any, // eslint-disable-line  @typescript-eslint/no-explicit-any
     bytecode: string,
-    deployArgs: any[]
+    deployArgs: any[] // eslint-disable-line  @typescript-eslint/no-explicit-any
   ): Promise<string> {
     const web3 = new Web3(this.getRpcUrl());
     const signer = web3.eth.accounts.privateKeyToAccount(privateKey);
@@ -375,7 +378,7 @@ export class AptosChain extends Chain {
     return AptosChain.type;
   }
 
-  toJson(): any {
+  toJson(): KeyValueConfig {
     return {
       id: this.id,
       wormholeChainName: this.wormholeChainName,
@@ -385,7 +388,7 @@ export class AptosChain extends Chain {
     };
   }
 
-  static fromJson(parsed: any): AptosChain {
+  static fromJson(parsed: ChainConfig): AptosChain {
     if (parsed.type !== AptosChain.type) throw new Error("Invalid type");
     return new AptosChain(
       parsed.id,

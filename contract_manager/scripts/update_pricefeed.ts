@@ -1,6 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { DefaultStore } from "../src";
+import { DefaultStore, toPrivateKey } from "../src";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 
 const parser = yargs(hideBin(process.argv))
@@ -43,9 +43,12 @@ async function main() {
     argv.endpoint || defaultEndpoint
   );
   const vaas = await priceService.getLatestVaas(argv["feed-id"] as string[]);
-  await contract.executeUpdatePriceFeed(
-    argv["private-key"],
-    vaas.map((vaa) => Buffer.from(vaa, "base64"))
+  const privateKey = toPrivateKey(argv["private-key"]);
+  console.log(
+    await contract.executeUpdatePriceFeed(
+      privateKey,
+      vaas.map((vaa) => Buffer.from(vaa, "base64"))
+    )
   );
 }
 

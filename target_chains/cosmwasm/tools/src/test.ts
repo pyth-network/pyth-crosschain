@@ -8,7 +8,7 @@ import { Pipeline } from "./pipeline";
 import { PythWrapperExecutor, PythWrapperQuerier } from "./pyth-wrapper";
 import {
   DeploymentType,
-  getChainIdsForEdgeDeployment,
+  getChainIdsForBetaDeployment,
   getChainIdsForStableDeployment,
   getPythContractAddress,
   getTestPythContractFileName,
@@ -29,7 +29,7 @@ const argv = yargs(hideBin(process.argv))
   .option("deploy", {
     type: "string",
     desc: "test the following deployment type.",
-    choices: ["stable", "edge"],
+    choices: ["stable", "beta"],
     demandOption: "Please provide the deployment type",
   })
   .help()
@@ -42,7 +42,7 @@ async function run() {
   if (argv.deploy === "stable") {
     chainIds = getChainIdsForStableDeployment();
   } else {
-    chainIds = getChainIdsForEdgeDeployment();
+    chainIds = getChainIdsForBetaDeployment();
   }
 
   for (let chainId of chainIds) {

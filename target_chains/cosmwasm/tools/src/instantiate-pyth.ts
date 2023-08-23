@@ -12,7 +12,7 @@ import { Pipeline } from "./pipeline";
 import {
   DeploymentType,
   WORMHOLE_CONTRACT_VERSION,
-  getChainIdsForEdgeDeployment,
+  getChainIdsForBetaDeployment,
   getChainIdsForStableDeployment,
   getContractBytesDict,
   getPythInstantiateFileName,
@@ -35,7 +35,7 @@ const argv = yargs(hideBin(process.argv))
   .option("deploy", {
     type: "string",
     desc: "Execute this script for the given networks.",
-    choices: ["edge", "stable"],
+    choices: ["beta", "stable"],
     demandOption: "Please provide the deployment type",
   })
   .help()
@@ -48,7 +48,7 @@ async function run() {
   if (argv.deploy === "stable") {
     chainIds = getChainIdsForStableDeployment();
   } else {
-    chainIds = getChainIdsForEdgeDeployment();
+    chainIds = getChainIdsForBetaDeployment();
   }
 
   // get the wasm code from github

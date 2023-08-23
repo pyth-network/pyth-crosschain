@@ -31,7 +31,7 @@ import {
   deriveFeeCollectorKey,
   deriveWormholeBridgeDataKey,
 } from "@certusone/wormhole-sdk/lib/cjs/solana/wormhole";
-import { Storable } from "./base";
+import { KeyValueConfig, Storable } from "./base";
 
 class InvalidTransactionError extends Error {
   constructor(message: string) {
@@ -75,8 +75,8 @@ export class SubmittedWormholeMessage {
       )
     );
 
-    const wormholeAddress =
-      WORMHOLE_ADDRESS[cluster as keyof typeof WORMHOLE_ADDRESS]!;
+    const wormholeAddress = WORMHOLE_ADDRESS[cluster];
+    if (!wormholeAddress) throw new Error(`Invalid cluster ${cluster}`);
     let emitter: PublicKey | undefined = undefined;
 
     let allInstructions: (ParsedInstruction | PartiallyDecodedInstruction)[] =
@@ -103,10 +103,10 @@ export class SubmittedWormholeMessage {
    * before giving up and throwing an error
    * @param waitingSeconds how long to wait before giving up
    */
-  async fetchVaa(waitingSeconds: number = 1): Promise<Buffer> {
-    let rpcUrl = WORMHOLE_API_ENDPOINT[this.cluster];
+  async fetchVaa(waitingSeconds = 1): Promise<Buffer> {
+    const rpcUrl = WORMHOLE_API_ENDPOINT[this.cluster];
 
-    let startTime = Date.now();
+    const startTime = Date.now();
     while (Date.now() - startTime < waitingSeconds * 1000) {
       const response = await fetch(
         `${rpcUrl}/v1/signed_vaa/1/${this.emitter.toBuffer().toString("hex")}/${
@@ -158,12 +158,12 @@ export class WormholeEmitter {
         preflightCommitment: "confirmed",
       }
     );
-    let wormholeAddress =
-      WORMHOLE_ADDRESS[this.cluster as keyof typeof WORMHOLE_ADDRESS]!;
-    let kp = Keypair.generate();
-    let feeCollector = deriveFeeCollectorKey(wormholeAddress);
-    let emitter = this.wallet.publicKey;
-    let accounts = {
+    const wormholeAddress = WORMHOLE_ADDRESS[this.cluster];
+    if (!wormholeAddress) throw new Error(`Invalid cluster ${this.cluster}`);
+    const kp = Keypair.generate();
+    const feeCollector = deriveFeeCollectorKey(wormholeAddress);
+    const emitter = this.wallet.publicKey;
+    const accounts = {
       bridge: deriveWormholeBridgeDataKey(wormholeAddress),
       message: kp.publicKey,
       emitter: emitter,
@@ -230,7 +230,7 @@ export class WormholeMultiSigTransaction {
             this.cluster
           )
         );
-      } catch (e: any) {
+      } catch (e) {
         if (!(e instanceof InvalidTransactionError)) throw e;
       }
     }
@@ -240,7 +240,7 @@ export class WormholeMultiSigTransaction {
 }
 
 export class Vault extends Storable {
-  static type: string = "vault";
+  static type = "vault";
   key: PublicKey;
   squad?: SquadsMesh;
   cluster: PythCluster;
@@ -255,7 +255,11 @@ export class Vault extends Storable {
     return Vault.type;
   }
 
-  static fromJson(parsed: any): Vault {
+  static fromJson(parsed: {
+    type: string;
+    key: string;
+    cluster: string;
+  }): Vault {
     if (parsed.type !== Vault.type) throw new Error("Invalid type");
     return new Vault(parsed.key, parsed.cluster);
   }
@@ -264,7 +268,7 @@ export class Vault extends Storable {
     return `${this.cluster}_${this.key.toString()}`;
   }
 
-  toJson(): any {
+  toJson(): KeyValueConfig {
     return {
       key: this.key.toString(),
       cluster: this.cluster,

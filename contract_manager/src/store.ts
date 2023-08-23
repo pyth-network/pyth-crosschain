@@ -53,7 +53,7 @@ export class Store {
   }
 
   loadAllChains() {
-    let allChainClasses = {
+    const allChainClasses = {
       [CosmWasmChain.type]: CosmWasmChain,
       [SuiChain.type]: SuiChain,
       [EvmChain.type]: EvmChain,
@@ -61,10 +61,10 @@ export class Store {
     };
 
     this.getYamlFiles(`${this.path}/chains/`).forEach((yamlFile) => {
-      let parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+      const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
       for (const parsed of parsedArray) {
         if (allChainClasses[parsed.type] === undefined) return;
-        let chain = allChainClasses[parsed.type].fromJson(parsed);
+        const chain = allChainClasses[parsed.type].fromJson(parsed);
         if (this.chains[chain.getId()])
           throw new Error(`Multiple chains with id ${chain.getId()} found`);
         this.chains[chain.getId()] = chain;
@@ -73,7 +73,7 @@ export class Store {
   }
 
   saveAllContracts() {
-    let contractsByType: Record<string, Contract[]> = {};
+    const contractsByType: Record<string, Contract[]> = {};
     for (const contract of Object.values(this.contracts)) {
       if (!contractsByType[contract.getType()]) {
         contractsByType[contract.getType()] = [];
@@ -89,7 +89,7 @@ export class Store {
   }
 
   saveAllChains() {
-    let chainsByType: Record<string, Chain[]> = {};
+    const chainsByType: Record<string, Chain[]> = {};
     for (const chain of Object.values(this.chains)) {
       if (!chainsByType[chain.getType()]) {
         chainsByType[chain.getType()] = [];
@@ -105,20 +105,20 @@ export class Store {
   }
 
   loadAllContracts() {
-    let allContractClasses = {
+    const allContractClasses = {
       [CosmWasmContract.type]: CosmWasmContract,
       [SuiContract.type]: SuiContract,
       [EvmContract.type]: EvmContract,
       [AptosContract.type]: AptosContract,
     };
     this.getYamlFiles(`${this.path}/contracts/`).forEach((yamlFile) => {
-      let parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+      const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
       for (const parsed of parsedArray) {
         if (allContractClasses[parsed.type] === undefined) return;
         if (!this.chains[parsed.chain])
           throw new Error(`Chain ${parsed.chain} not found`);
         const chain = this.chains[parsed.chain];
-        let chainContract = allContractClasses[parsed.type].fromJson(
+        const chainContract = allContractClasses[parsed.type].fromJson(
           chain,
           parsed
         );
@@ -133,7 +133,7 @@ export class Store {
 
   loadAllVaults() {
     this.getYamlFiles(`${this.path}/vaults/`).forEach((yamlFile) => {
-      let parsedArray = parse(readFileSync(yamlFile, "utf-8"));
+      const parsedArray = parse(readFileSync(yamlFile, "utf-8"));
       for (const parsed of parsedArray) {
         if (parsed.type !== Vault.type) return;
 
