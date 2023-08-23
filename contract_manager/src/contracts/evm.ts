@@ -346,6 +346,11 @@ export class EvmContract extends Contract {
     return Web3.utils.keccak256(strippedCode);
   }
 
+  async getTotalFee(): Promise<bigint> {
+    const web3 = new Web3(this.chain.getRpcUrl());
+    return BigInt(await web3.eth.getBalance(this.address));
+  }
+
   async getLastExecutedGovernanceSequence() {
     const pythContract = await this.getContract();
     return Number(

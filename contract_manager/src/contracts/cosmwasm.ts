@@ -368,6 +368,15 @@ export class CosmWasmContract extends Contract {
     return this.chain;
   }
 
+  async getTotalFee(): Promise<bigint> {
+    const client = await CosmWasmClient.connect(this.chain.endpoint);
+    const coin = await client.getBalance(
+      this.address,
+      this.getChain().feeDenom
+    );
+    return BigInt(coin.amount);
+  }
+
   async getValidTimePeriod() {
     let client = await CosmWasmClient.connect(this.chain.endpoint);
     let result = await client.queryContractSmart(

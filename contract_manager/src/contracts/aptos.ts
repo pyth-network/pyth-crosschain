@@ -2,6 +2,7 @@ import { Contract, PriceFeed } from "../base";
 import { AptosAccount, BCS, TxnBuilderTypes } from "aptos";
 import { AptosChain, Chain } from "../chains";
 import { DataSource } from "xc_admin_common";
+import { CoinClient } from "aptos";
 
 export class AptosContract extends Contract {
   static type: string = "AptosContract";
@@ -172,6 +173,11 @@ export class AptosContract extends Contract {
 
   getType(): string {
     return AptosContract.type;
+  }
+
+  async getTotalFee(): Promise<bigint> {
+    const client = new CoinClient(this.chain.getClient());
+    return await client.checkBalance(this.stateId);
   }
 
   async getValidTimePeriod() {
