@@ -24,6 +24,7 @@
   id: injective_testnet
   wormholeChainName: injective_testnet
   mainnet: false
+  feeDenom: inj
   type: CosmWasmChain
 - endpoint: https://rpc-palvus.pion-1.ntrn.tech/
   id: neutron_testnet_pion_1
