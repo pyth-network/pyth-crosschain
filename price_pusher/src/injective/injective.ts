@@ -133,37 +133,37 @@ export class InjectivePricePusher implements IPricePusher {
 
     const txService = new TxGrpcClient(this.grpcEndpoint);
     // simulation
-    const {
-      gasInfo: { gasUsed },
-    } = await txService.simulate(simulateTxRaw);
-
-    // simulation returns us the approximate gas used
-    // gas passed with the transaction should be more than that
-    // in order for it to be successfully executed
-    // this multiplier takes care of that
-    const gas = (gasUsed * this.chainConfig.gasMultiplier).toFixed();
-    const fee = {
-      amount: [
-        {
-          denom: "inj",
-          amount: (Number(gas) * this.chainConfig.gasPrice).toFixed(),
-        },
-      ],
-      gas,
-    };
-
-    const { signBytes, txRaw } = createTransactionFromMsg({
-      sequence: this.account.baseAccount.sequence,
-      accountNumber: this.account.baseAccount.accountNumber,
-      message: msg,
-      chainId: this.chainConfig.chainId,
-      fee,
-      pubKey: this.wallet.toPublicKey().toBase64(),
-    });
-
-    const sig = await this.wallet.sign(Buffer.from(signBytes));
-
     try {
+      const {
+        gasInfo: { gasUsed },
+      } = await txService.simulate(simulateTxRaw);
+
+      // simulation returns us the approximate gas used
+      // gas passed with the transaction should be more than that
+      // in order for it to be successfully executed
+      // this multiplier takes care of that
+      const gas = (gasUsed * this.chainConfig.gasMultiplier).toFixed();
+      const fee = {
+        amount: [
+          {
+            denom: "inj",
+            amount: (Number(gas) * this.chainConfig.gasPrice).toFixed(),
+          },
+        ],
+        gas,
+      };
+
+      const { signBytes, txRaw } = createTransactionFromMsg({
+        sequence: this.account.baseAccount.sequence,
+        accountNumber: this.account.baseAccount.accountNumber,
+        message: msg,
+        chainId: this.chainConfig.chainId,
+        fee,
+        pubKey: this.wallet.toPublicKey().toBase64(),
+      });
+
+      const sig = await this.wallet.sign(Buffer.from(signBytes));
+
       this.account.baseAccount.sequence++;
 
       /** Append Signatures */
