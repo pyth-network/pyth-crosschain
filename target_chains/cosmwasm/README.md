@@ -24,7 +24,7 @@ Deploying the CosmWasm contract has three steps:
    2. Upgrade an existing contract code id to the new code id using governance messages.
 3. Update contract's admin to itself.
 
-The [tools](./tools/README.md) directory contains the instructions and scripts to perform all the steps.
+The [scripts](./deploy-scripts/README.md) directory contains the instructions and scripts to perform all the steps.
 
 #### Permissoned networks:
 
