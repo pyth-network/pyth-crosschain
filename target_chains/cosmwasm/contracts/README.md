@@ -20,24 +20,6 @@ A typical query requires to pass the price feed id as a hex string. it will look
 }
 ```
 
-## Contracts and Price Feeds
-
-Pyth is currently available on the following cosmwasm chains:
-
-### Testnet
-
-| Network   | Contract address                             |
-| --------- | -------------------------------------------- |
-| Injective | `inj1z60tg0tekdzcasenhuuwq3htjcd5slmgf7gpez` |
-
-Available price feeds on these networks can be find below:
-
-### Price Feeds
-
-| Network           | Available Price Feeds                                                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Injective Testnet | [https://pyth.network/developers/price-feed-ids#injective-testnet](https://pyth.network/developers/price-feed-ids#injective-testnet) |
-
 ## Developing
 
 The cosmwasm contract lives in the `pyth` subdirectory.

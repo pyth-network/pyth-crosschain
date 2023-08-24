@@ -29,7 +29,7 @@ This is the deployment process:
 
 1. Follow the installation instructions in the [README.md](./README.md).
 2. As a sanity check on deploying changes for the first time, it is recommended to deploy the migrations
-   in `migrations/prod` to the Truffle `development` network first. You can do this by using the configuration
+   in `migrations/prod-receiver` to the Truffle `development` network first. You can do this by using the configuration
    values in [`.env.prod.development`](.env.prod.development).
 3. If you have changed the contract make sure that:
    - The change is not breaking the storage.

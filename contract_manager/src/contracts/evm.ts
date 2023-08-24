@@ -240,22 +240,6 @@ export class WormholeEvmContract extends WormholeContract {
     return currentSet;
   }
 
-  /**
-   * Checks whether this contract is a deployment of wormhole-receiver or wormhole.
-   * The wormhole-receiver is a subset of the wormhole contract optimized for just verifying the VAAs.
-   * The check is done by calling a function that only exists in the wormhole contract and not in the wormhole-receiver.
-   * If the function call fails, we know that this is a wormhole-receiver contract.
-   */
-  async isWormholeReceiver(): Promise<boolean> {
-    const wormholeContract = this.getContract();
-    try {
-      await wormholeContract.methods.messageFee().call();
-      return false;
-    } catch (e) {
-      return true;
-    }
-  }
-
   async upgradeGuardianSets(senderPrivateKey: PrivateKey, vaa: Buffer) {
     const web3 = new Web3(this.chain.getRpcUrl());
     const { address } = web3.eth.accounts.wallet.add(senderPrivateKey);
