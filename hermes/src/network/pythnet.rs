@@ -47,7 +47,10 @@ use {
         system_program,
     },
     std::{
-        sync::Arc,
+        sync::{
+            atomic::Ordering,
+            Arc,
+        },
         time::Duration,
     },
     tokio::time::Instant,
@@ -125,7 +128,7 @@ async fn fetch_bridge_data(
     }
 }
 
-pub async fn run(store: Arc<Store>, pythnet_ws_endpoint: String) -> Result<!> {
+pub async fn run(store: Arc<Store>, pythnet_ws_endpoint: String) -> Result<()> {
     let client = PubsubClient::new(pythnet_ws_endpoint.as_ref()).await?;
 
     let config = RpcProgramAccountsConfig {
@@ -147,7 +150,7 @@ pub async fn run(store: Arc<Store>, pythnet_ws_endpoint: String) -> Result<!> {
         .program_subscribe(&system_program::id(), Some(config))
         .await?;
 
-    loop {
+    while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
         match notif.next().await {
             Some(update) => {
                 let account: Account = match update.value.account.decode() {
@@ -198,6 +201,8 @@ pub async fn run(store: Arc<Store>, pythnet_ws_endpoint: String) -> Result<!> {
             }
         }
     }
+
+    Ok(())
 }
 
 /// Fetch existing GuardianSet accounts from Wormhole.
@@ -264,33 +269,42 @@ pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
     )
     .await?;
 
-    {
+    let task_listener = {
         let store = store.clone();
         let pythnet_ws_endpoint = opts.pythnet_ws_endpoint.clone();
         tokio::spawn(async move {
-            loop {
+            while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
                 let current_time = Instant::now();
 
                 if let Err(ref e) = run(store.clone(), pythnet_ws_endpoint.clone()).await {
                     log::error!("Error in Pythnet network listener: {:?}", e);
-                }
-
-                if current_time.elapsed() < Duration::from_secs(30) {
-                    log::error!(
-                        "Pythnet network listener is restarting too quickly. Sleeping for 1s"
-                    );
-                    tokio::time::sleep(Duration::from_secs(1)).await;
+                    if current_time.elapsed() < Duration::from_secs(30) {
+                        log::error!(
+                            "Pythnet network listener restarting too quickly. Sleeping for 1s"
+                        );
+                        tokio::time::sleep(Duration::from_secs(1)).await;
+                    }
                 }
             }
-        });
-    }
 
-    {
+            log::info!("Shutting down Pythnet listener...");
+        })
+    };
+
+    let task_guadian_watcher = {
         let store = store.clone();
         let pythnet_http_endpoint = opts.pythnet_http_endpoint.clone();
         tokio::spawn(async move {
-            loop {
-                tokio::time::sleep(Duration::from_secs(60)).await;
+            while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
+                // Poll for new guardian sets every 60 seconds. We use a short wait time so we can
+                // properly exit if a quit signal was received. This isn't a perfect solution, but
+                // it's good enough for now.
+                for _ in 0..60 {
+                    if crate::SHOULD_EXIT.load(Ordering::Acquire) {
+                        break;
+                    }
+                    tokio::time::sleep(Duration::from_secs(1)).await;
+                }
 
                 match fetch_existing_guardian_sets(
                     store.clone(),
@@ -305,8 +319,11 @@ pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
                     }
                 }
             }
-        });
-    }
 
+            log::info!("Shutting down Pythnet guardian set poller...");
+        })
+    };
+
+    let _ = tokio::join!(task_listener, task_guadian_watcher);
     Ok(())
 }

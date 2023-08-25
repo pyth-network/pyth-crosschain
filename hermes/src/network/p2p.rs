@@ -25,6 +25,7 @@ use {
             CString,
         },
         sync::{
+            atomic::Ordering,
             mpsc::{
                 Receiver,
                 Sender,
@@ -76,13 +77,15 @@ extern "C" fn proxy(o: ObservationC) {
     let vaa = unsafe { std::slice::from_raw_parts(o.vaa, o.vaa_len) }.to_owned();
     // The chances of the mutex getting poisioned is very low and if it happens
     // there is no way for us to recover from it.
-    if let Err(e) = OBSERVATIONS
+    if OBSERVATIONS
         .0
         .lock()
-        .expect("Cannot acquire p2p channel lock")
-        .send(vaa)
+        .map_err(|_| ())
+        .and_then(|tx| tx.send(vaa).map_err(|_| ()))
+        .is_err()
     {
-        log::error!("Failed to send observation: {}", e);
+        log::error!("Failed to lock p2p observation channel or to send observation.");
+        crate::SHOULD_EXIT.store(true, Ordering::Release);
     }
 }
 
@@ -129,18 +132,22 @@ pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
     log::info!("Starting P2P server on {:?}", opts.wh_listen_addrs);
 
     std::thread::spawn(|| {
-        bootstrap(
+        if bootstrap(
             opts.wh_network_id,
             opts.wh_bootstrap_addrs,
             opts.wh_listen_addrs,
         )
-        .unwrap()
+        .is_err()
+        {
+            log::error!("Failed to bootstrap P2P server.");
+            crate::SHOULD_EXIT.store(true, Ordering::Release);
+        }
     });
 
     tokio::spawn(async move {
         // Listen in the background for new VAA's from the p2p layer
         // and update the state accordingly.
-        loop {
+        while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
             let vaa_bytes = tokio::task::spawn_blocking(|| {
                 let observation = OBSERVATIONS.1.lock();
                 let observation = match observation {
@@ -148,21 +155,24 @@ pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
                     Err(e) => {
                         // This should never happen, but if it does, we want to panic and crash
                         // as it is not recoverable.
-                        panic!("Failed to lock p2p observation channel: {e}");
+                        log::error!("Failed to lock p2p observation channel: {e}");
+                        crate::SHOULD_EXIT.store(true, Ordering::Release);
+                        return Err(anyhow::anyhow!("Failed to lock p2p observation channel"));
                     }
                 };
 
                 match observation.recv() {
-                    Ok(vaa_bytes) => vaa_bytes,
+                    Ok(vaa_bytes) => Ok(vaa_bytes),
                     Err(e) => {
-                        // This should never happen, but if it does, we want to panic and crash
-                        // as it is not recoverable.
-                        panic!("Failed to receive p2p observation: {e}");
+                        // This should never happen, but if it does, we want to shutdown the
+                        // application as it is unrecoverable.
+                        log::error!("Failed to receive p2p observation: {e}");
+                        crate::SHOULD_EXIT.store(true, Ordering::Release);
+                        Err(anyhow::anyhow!("Failed to receive p2p observation."))
                     }
                 }
             })
-            .await
-            .unwrap();
+            .await??;
 
             let store = store.clone();
             tokio::spawn(async move {
@@ -171,6 +181,9 @@ pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
                 }
             });
         }
+
+        log::info!("Shutting down P2P server...");
+        Ok::<(), anyhow::Error>(())
     });
 
     Ok(())
