@@ -1,11 +1,12 @@
 use {
-    crate::{
-        network::p2p::Vaa,
-        store::{
-            storage::MessageState,
-            types::AccumulatorMessages,
-            Store,
+    crate::store::{
+        storage::MessageState,
+        types::{
+            AccumulatorMessages,
+            RawMessage,
+            Slot,
         },
+        Store,
     },
     anyhow::{
         anyhow,
@@ -36,6 +37,8 @@ use {
 // u8 in the wire format. So, we can't have more than 255 messages.
 pub const MAX_MESSAGE_IN_SINGLE_UPDATE_DATA: usize = 255;
 
+pub type Vaa = Vec<u8>;
+
 #[derive(Clone, PartialEq, Debug)]
 pub struct WormholeMerkleState {
     pub root: WormholeMerkleRoot,
@@ -46,6 +49,23 @@ pub struct WormholeMerkleState {
 pub struct WormholeMerkleMessageProof {
     pub proof: MerklePath<Keccak160>,
     pub vaa:   Vaa,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct RawMessageWithMerkleProof {
+    pub slot:        Slot,
+    pub raw_message: RawMessage,
+    pub proof:       WormholeMerkleMessageProof,
+}
+
+impl From<MessageState> for RawMessageWithMerkleProof {
+    fn from(message_state: MessageState) -> Self {
+        Self {
+            slot:        message_state.slot,
+            raw_message: message_state.raw_message,
+            proof:       message_state.proof_set.wormhole_merkle_proof,
+        }
+    }
 }
 
 pub async fn store_wormhole_merkle_verified_message(
@@ -90,60 +110,54 @@ pub fn construct_message_states_proofs(
         .collect::<Result<Vec<WormholeMerkleMessageProof>>>()
 }
 
-pub fn construct_update_data(mut message_states: Vec<&MessageState>) -> Result<Vec<Vec<u8>>> {
-    message_states.sort_by_key(|m| m.slot);
+pub fn construct_update_data(mut messages: Vec<RawMessageWithMerkleProof>) -> Result<Vec<Vec<u8>>> {
+    tracing::info!("Constructing update data for {} messages", messages.len());
 
-    message_states
-        .group_by(|a, b| a.slot == b.slot) // States on the same slot share the same merkle root
-        .flat_map(|messages| {
-            messages
-                // Group messages by the number of messages in a single update data
-                .chunks(MAX_MESSAGE_IN_SINGLE_UPDATE_DATA)
-                .map(|messages| {
-                    let vaa = messages
-                        .get(0)
-                        .ok_or(anyhow!("Empty message set"))?
-                        .proof_set
-                        .wormhole_merkle_proof
-                        .vaa
-                        .clone();
+    messages.sort_by_key(|m| m.slot);
 
-                    vaa.span.in_scope(|| {
-                        tracing::info!("Constructing update data for {} Messages.", messages.len())
-                    });
+    let mut iter = messages.into_iter().peekable();
+    let mut result: Vec<Vec<u8>> = vec![];
 
-                    Ok(to_vec::<_, byteorder::BE>(&AccumulatorUpdateData::new(
-                        Proof::WormholeMerkle {
-                            vaa:     (*vaa).to_owned().into(),
-                            updates: messages
-                                .iter()
-                                .map(|message| {
-                                    Ok(MerklePriceUpdate {
-                                        message: to_vec::<_, byteorder::BE>(&message.message)
-                                            .map_err(|e| {
-                                                anyhow!("Failed to serialize message: {}", e)
-                                            })?
-                                            .into(),
-                                        proof:   message
-                                            .proof_set
-                                            .wormhole_merkle_proof
-                                            .proof
-                                            .clone(),
-                                    })
-                                })
-                                .collect::<Result<_>>()?,
-                        },
-                    ))?)
-                })
-        })
-        .collect::<Result<Vec<Vec<u8>>>>()
+    while let Some(message) = iter.next() {
+        let slot = message.slot;
+        let vaa = message.proof.vaa;
+        let mut updates = vec![MerklePriceUpdate {
+            message: message.raw_message.into(),
+            proof:   message.proof.proof,
+        }];
+
+        while updates.len() < MAX_MESSAGE_IN_SINGLE_UPDATE_DATA {
+            if let Some(message) = iter.next_if(|m| m.slot == slot) {
+                updates.push(MerklePriceUpdate {
+                    message: message.raw_message.into(),
+                    proof:   message.proof.proof,
+                });
+            } else {
+                break;
+            }
+        }
+
+        tracing::info!(
+            slot = slot,
+            "Combining {} messages in a single updateData",
+            updates.len()
+        );
+
+        result.push(to_vec::<_, byteorder::BE>(&AccumulatorUpdateData::new(
+            Proof::WormholeMerkle {
+                vaa: vaa.into(),
+                updates,
+            },
+        ))?);
+    }
+
+    Ok(result)
 }
 
 #[cfg(test)]
 mod test {
     use {
         super::*,
-        crate::store::types::ProofSet,
         pythnet_sdk::{
             messages::{
                 Message,
@@ -153,45 +167,44 @@ mod test {
         },
     };
 
-    fn create_dummy_message_state(slot_and_pubtime: u64) -> MessageState {
-        MessageState::new(
-            Message::PriceFeedMessage(PriceFeedMessage {
-                conf:              0,
-                price:             0,
-                feed_id:           [0; 32],
-                exponent:          0,
-                ema_conf:          0,
-                ema_price:         0,
-                publish_time:      slot_and_pubtime as i64,
-                prev_publish_time: 0,
-            }),
-            vec![],
-            ProofSet {
-                wormhole_merkle_proof: WormholeMerkleMessageProof {
-                    vaa:   vec![],
-                    proof: MerklePath::default(),
-                },
+    fn create_dummy_raw_message_with_merkle_proof(
+        slot_and_pubtime: u64,
+    ) -> RawMessageWithMerkleProof {
+        let price_feed_message = Message::PriceFeedMessage(PriceFeedMessage {
+            conf:              0,
+            price:             0,
+            feed_id:           [0; 32],
+            exponent:          0,
+            ema_conf:          0,
+            ema_price:         0,
+            publish_time:      slot_and_pubtime as i64,
+            prev_publish_time: 0,
+        });
+        RawMessageWithMerkleProof {
+            slot:        slot_and_pubtime,
+            proof:       WormholeMerkleMessageProof {
+                vaa:   vec![],
+                proof: MerklePath::default(),
             },
-            slot_and_pubtime,
-            0,
-        )
+            raw_message: to_vec::<_, byteorder::BE>(&price_feed_message).unwrap(),
+        }
     }
 
     #[test]
     fn test_construct_update_data_works_on_mixed_slot_and_big_size() {
-        let mut message_states = vec![];
+        let mut messages = vec![];
 
         // Messages slot and publish_time 11 share the same merkle root
-        for i in 0..MAX_MESSAGE_IN_SINGLE_UPDATE_DATA * 2 - 10 {
-            message_states.push(create_dummy_message_state(11));
+        for _ in 0..MAX_MESSAGE_IN_SINGLE_UPDATE_DATA * 2 - 10 {
+            messages.push(create_dummy_raw_message_with_merkle_proof(11));
         }
 
         // Messages on slot and publish_time 10 that share different root from the messages above
-        for i in 0..MAX_MESSAGE_IN_SINGLE_UPDATE_DATA * 2 - 10 {
-            message_states.push(create_dummy_message_state(10));
+        for _ in 0..MAX_MESSAGE_IN_SINGLE_UPDATE_DATA * 2 - 10 {
+            messages.push(create_dummy_raw_message_with_merkle_proof(10));
         }
 
-        let update_data = construct_update_data(message_states.iter().collect()).unwrap();
+        let update_data = construct_update_data(messages).unwrap();
 
         assert_eq!(update_data.len(), 4);
 

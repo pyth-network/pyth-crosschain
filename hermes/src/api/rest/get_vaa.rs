@@ -82,7 +82,7 @@ pub async fn get_vaa(
         .map_err(|_| RestError::UpdateDataNotFound)?;
 
     let vaa = price_feeds_with_update_data
-        .wormhole_merkle_update_data
+        .update_data
         .get(0)
         .map(|bytes| base64_standard_engine.encode(bytes))
         .ok_or(RestError::UpdateDataNotFound)?;
@@ -92,6 +92,7 @@ pub async fn get_vaa(
         .get(0)
         .ok_or(RestError::UpdateDataNotFound)?
         .price_feed
+        .get_price_unchecked()
         .publish_time;
 
     Ok(Json(GetVaaResponse { vaa, publish_time }))

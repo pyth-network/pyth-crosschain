@@ -2,7 +2,7 @@ use {
     super::proof::wormhole_merkle::WormholeMerkleMessageProof,
     crate::network::p2p::Vaa,
     borsh::BorshDeserialize,
-    pythnet_sdk::messages::PriceFeedMessage,
+    pyth_sdk::PriceFeed,
 };
 
 #[derive(Clone, PartialEq, Debug)]
@@ -53,17 +53,14 @@ pub enum Update {
 
 #[derive(Debug, PartialEq)]
 pub struct PriceFeedUpdate {
-    pub price_feed:                  PriceFeedMessage,
-    pub slot:                        Slot,
-    pub received_at:                 UnixTimestamp,
-    /// Wormhole merkle update data for this single price feed update.
-    /// This field is available for backward compatibility and will be
-    /// removed in the future.
-    pub wormhole_merkle_update_data: Vec<u8>,
+    pub price_feed:  PriceFeed,
+    pub slot:        Option<Slot>,
+    pub received_at: Option<UnixTimestamp>,
+    pub update_data: Option<Vec<u8>>,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct PriceFeedsWithUpdateData {
-    pub price_feeds:                 Vec<PriceFeedUpdate>,
-    pub wormhole_merkle_update_data: Vec<Vec<u8>>,
+    pub price_feeds: Vec<PriceFeedUpdate>,
+    pub update_data: Vec<Vec<u8>>,
 }

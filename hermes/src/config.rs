@@ -1,5 +1,6 @@
 use {
     libp2p::Multiaddr,
+    reqwest::Url,
     solana_sdk::pubkey::Pubkey,
     std::net::SocketAddr,
     structopt::StructOpt,
@@ -61,4 +62,9 @@ pub struct RunOptions {
     #[structopt(default_value = DEFAULT_NETWORK_ID)]
     #[structopt(env = "WORMHOLE_NETWORK_ID")]
     pub wh_network_id: String,
+
+    /// Benchmarks endpoint to retrieve historical update data from.
+    #[structopt(long)]
+    #[structopt(env = "BENCHMARKS_ENDPOINT")]
+    pub benchmarks_endpoint: Option<Url>,
 }

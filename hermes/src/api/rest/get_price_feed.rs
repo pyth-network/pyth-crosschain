@@ -74,12 +74,19 @@ pub async fn get_price_feed(
         .await
         .map_err(|_| RestError::UpdateDataNotFound)?;
 
+    let mut price_feed = price_feeds_with_update_data
+        .price_feeds
+        .into_iter()
+        .next()
+        .ok_or(RestError::UpdateDataNotFound)?;
+
+    // Note: This is a hack to get around the fact that Benchmark doesn't give per price feed
+    // update data. Since we request only for a single feed then the whole prices update data
+    // is this price feed update data.
+    price_feed.update_data = price_feeds_with_update_data.update_data.into_iter().next();
+
     Ok(Json(RpcPriceFeed::from_price_feed_update(
-        price_feeds_with_update_data
-            .price_feeds
-            .into_iter()
-            .next()
-            .ok_or(RestError::UpdateDataNotFound)?,
+        price_feed,
         params.verbose,
         params.binary,
     )))

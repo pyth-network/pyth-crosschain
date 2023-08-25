@@ -46,7 +46,11 @@ use {
         Result,
     },
     byteorder::BigEndian,
-    pyth_sdk::PriceIdentifier,
+    pyth_sdk::{
+        Price,
+        PriceFeed,
+        PriceIdentifier,
+    },
     pythnet_sdk::{
         messages::{
             Message,
@@ -60,6 +64,7 @@ use {
             },
         },
     },
+    reqwest::Url,
     std::{
         collections::{
             BTreeMap,
@@ -76,6 +81,7 @@ use {
     wormhole_sdk::Vaa,
 };
 
+pub mod benchmarks;
 pub mod proof;
 pub mod storage;
 pub mod types;
@@ -100,16 +106,23 @@ pub struct Store {
     /// Time of the last completed update. This is used for the health
     /// probes.
     pub last_completed_update_at: RwLock<Option<Instant>>,
+    /// Benchmarks endpoint
+    pub benchmarks_endpoint:      Option<Url>,
 }
 
 impl Store {
-    pub fn new(update_tx: Sender<()>, cache_size: u64) -> Arc<Self> {
+    pub fn new(
+        update_tx: Sender<()>,
+        cache_size: u64,
+        benchmarks_endpoint: Option<Url>,
+    ) -> Arc<Self> {
         Arc::new(Self {
             storage: Storage::new(cache_size),
             observed_vaa_seqs: RwLock::new(Default::default()),
             guardian_set: RwLock::new(Default::default()),
             update_tx,
             last_completed_update_at: RwLock::new(None),
+            benchmarks_endpoint,
         })
     }
 
@@ -151,9 +164,7 @@ impl Store {
 
                 match WormholeMessage::try_from_bytes(vaa.payload)?.payload {
                     WormholePayload::Merkle(proof) => {
-                        update_vaa.span.in_scope(|| {
-                            tracing::info!(slot = proof.slot, "Storing VAA Merkle Proof.");
-                        });
+                        tracing::info!(slot = proof.slot, "Storing VAA Merkle Proof.");
 
                         store_wormhole_merkle_verified_message(
                             self,
@@ -169,16 +180,7 @@ impl Store {
 
             Update::AccumulatorMessages(accumulator_messages) => {
                 let slot = accumulator_messages.slot;
-                if let Some(state) = self.storage.fetch_wormhole_merkle_state(slot).await? {
-                    state.vaa.span.in_scope(|| {
-                        tracing::info!(
-                            slot = slot,
-                            "Storing Accumulator Messages (existing Proof)."
-                        );
-                    });
-                } else {
-                    tracing::info!(slot = slot, "Storing Accumulator Messages.");
-                }
+                tracing::info!(slot = slot, "Storing Accumulator Messages.");
 
                 self.storage
                     .store_accumulator_messages(accumulator_messages)
@@ -198,9 +200,7 @@ impl Store {
                 _ => return Ok(()),
             };
 
-        wormhole_merkle_state.vaa.span.in_scope(|| {
-            tracing::info!(slot = wormhole_merkle_state.root.slot, "Completed Update.");
-        });
+        tracing::info!(slot = wormhole_merkle_state.root.slot, "Completed Update.");
 
         // Once the accumulator reaches a complete state for a specific slot
         // we can build the message states
@@ -262,7 +262,7 @@ impl Store {
         guardian_sets.insert(id, guardian_set);
     }
 
-    pub async fn get_price_feeds_with_update_data(
+    async fn get_price_feeds_with_update_data_from_storage(
         &self,
         price_ids: Vec<PriceIdentifier>,
         request_time: RequestTime,
@@ -283,24 +283,66 @@ impl Store {
             .iter()
             .map(|message_state| match message_state.message {
                 Message::PriceFeedMessage(price_feed) => Ok(PriceFeedUpdate {
-                    price_feed,
-                    received_at: message_state.received_at,
-                    slot: message_state.slot,
-                    wormhole_merkle_update_data: construct_update_data(vec![message_state])?
-                        .into_iter()
-                        .next()
-                        .ok_or(anyhow!("Missing update data for message"))?,
+                    price_feed:  PriceFeed::new(
+                        PriceIdentifier::new(price_feed.feed_id),
+                        Price {
+                            price:        price_feed.price,
+                            conf:         price_feed.conf,
+                            expo:         price_feed.exponent,
+                            publish_time: price_feed.publish_time,
+                        },
+                        Price {
+                            price:        price_feed.ema_price,
+                            conf:         price_feed.ema_conf,
+                            expo:         price_feed.exponent,
+                            publish_time: price_feed.publish_time,
+                        },
+                    ),
+                    received_at: Some(message_state.received_at),
+                    slot:        Some(message_state.slot),
+                    update_data: Some(
+                        construct_update_data(vec![message_state.clone().into()])?
+                            .into_iter()
+                            .next()
+                            .ok_or(anyhow!("Missing update data for message"))?,
+                    ),
                 }),
                 _ => Err(anyhow!("Invalid message state type")),
             })
             .collect::<Result<Vec<_>>>()?;
 
-        let update_data = construct_update_data(messages.iter().collect())?;
+        let update_data = construct_update_data(messages.into_iter().map(|m| m.into()).collect())?;
 
         Ok(PriceFeedsWithUpdateData {
             price_feeds,
-            wormhole_merkle_update_data: update_data,
+            update_data,
         })
+    }
+
+    pub async fn get_price_feeds_with_update_data(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+        request_time: RequestTime,
+    ) -> Result<PriceFeedsWithUpdateData> {
+        match self
+            .get_price_feeds_with_update_data_from_storage(price_ids.clone(), request_time.clone())
+            .await
+        {
+            Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
+            Err(e) => {
+                if let RequestTime::FirstAfter(publish_time) = request_time {
+                    if let Some(endpoint) = &self.benchmarks_endpoint {
+                        return benchmarks::get_price_feeds_with_update_data_from_benchmarks(
+                            endpoint.clone(),
+                            price_ids,
+                            publish_time,
+                        )
+                        .await;
+                    }
+                }
+                Err(e)
+            }
+        }
     }
 
     pub async fn get_price_feed_ids(&self) -> HashSet<PriceIdentifier> {
@@ -354,6 +396,10 @@ mod test {
         rand::seq::SliceRandom,
         serde_wormhole::RawMessage,
         tokio::sync::mpsc::Receiver,
+        wormhole_sdk::{
+            Address,
+            Chain,
+        },
     };
 
     /// Generate list of updates for the given list of messages at a given slot with given sequence
@@ -403,10 +449,7 @@ mod test {
             payload: serde_wormhole::RawMessage::new(wormhole_message.as_ref()),
         };
 
-        updates.push(Update::Vaa(crate::network::p2p::Vaa {
-            span: tracing::Span::current(),
-            data: serde_wormhole::to_vec(&vaa).unwrap(),
-        }));
+        updates.push(Update::Vaa(serde_wormhole::to_vec(&vaa).unwrap()));
 
         updates
     }
@@ -432,7 +475,7 @@ mod test {
 
     pub async fn setup_store(cache_size: u64) -> (Arc<Store>, Receiver<()>) {
         let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
-        let store = Store::new(update_tx, cache_size);
+        let store = Store::new(update_tx, cache_size, None);
 
         // Add an initial guardian set with public key 0
         store
@@ -488,27 +531,32 @@ mod test {
         assert_eq!(
             price_feeds_with_update_data.price_feeds,
             vec![PriceFeedUpdate {
-                price_feed:                  price_feed_message,
-                slot:                        10,
-                received_at:                 price_feeds_with_update_data.price_feeds[0]
-                    .received_at, // Ignore checking this field.
-                wormhole_merkle_update_data: price_feeds_with_update_data.price_feeds[0]
-                    .wormhole_merkle_update_data
+                price_feed:  PriceFeed::new(
+                    PriceIdentifier::new(price_feed_message.feed_id),
+                    Price {
+                        price:        price_feed_message.price,
+                        conf:         price_feed_message.conf,
+                        expo:         price_feed_message.exponent,
+                        publish_time: price_feed_message.publish_time,
+                    },
+                    Price {
+                        price:        price_feed_message.ema_price,
+                        conf:         price_feed_message.ema_conf,
+                        expo:         price_feed_message.exponent,
+                        publish_time: price_feed_message.publish_time,
+                    }
+                ),
+                slot:        Some(10),
+                received_at: price_feeds_with_update_data.price_feeds[0].received_at, // Ignore checking this field.
+                update_data: price_feeds_with_update_data.price_feeds[0]
+                    .update_data
                     .clone(), // Ignore checking this field.
             }]
         );
 
         // Check the update data is correct.
-        assert_eq!(
-            price_feeds_with_update_data
-                .wormhole_merkle_update_data
-                .len(),
-            1
-        );
-        let update_data = price_feeds_with_update_data
-            .wormhole_merkle_update_data
-            .get(0)
-            .unwrap();
+        assert_eq!(price_feeds_with_update_data.update_data.len(), 1);
+        let update_data = price_feeds_with_update_data.update_data.get(0).unwrap();
         let update_data = AccumulatorUpdateData::try_from_slice(update_data.as_ref()).unwrap();
         match update_data.proof {
             Proof::WormholeMerkle { vaa, updates } => {
@@ -604,7 +652,7 @@ mod test {
         assert_eq!(price_feeds_with_update_data.price_feeds.len(), 1);
         assert_eq!(
             price_feeds_with_update_data.price_feeds[0].received_at,
-            unix_timestamp as i64
+            Some(unix_timestamp as i64)
         );
 
         // Check the store is ready
@@ -668,8 +716,8 @@ mod test {
                 .await
                 .unwrap();
             assert_eq!(price_feeds_with_update_data.price_feeds.len(), 2);
-            assert_eq!(price_feeds_with_update_data.price_feeds[0].slot, slot);
-            assert_eq!(price_feeds_with_update_data.price_feeds[1].slot, slot);
+            assert_eq!(price_feeds_with_update_data.price_feeds[0].slot, Some(slot));
+            assert_eq!(price_feeds_with_update_data.price_feeds[1].slot, Some(slot));
         }
 
         // Check nothing else is retained
