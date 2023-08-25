@@ -4,7 +4,6 @@ import { DefaultStore, toPrivateKey } from "../src";
 import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 
 const parser = yargs(hideBin(process.argv))
-  .scriptName("update_pricefeed.ts")
   .usage(
     "Usage: $0 --contract <contract_id> --feed-id <feed-id> --private-key <private-key>"
   )

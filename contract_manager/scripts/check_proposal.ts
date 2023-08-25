@@ -22,7 +22,6 @@ import { EvmContract, WormholeEvmContract } from "../src/contracts/evm";
 import Web3 from "web3";
 
 const parser = yargs(hideBin(process.argv))
-  .scriptName("check_proposal.ts")
   .usage("Usage: $0 --cluster <cluster_id> --proposal <proposal_address>")
   .options({
     cluster: {

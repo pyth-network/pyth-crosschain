@@ -6,7 +6,6 @@ import {
   DefaultStore,
   EvmContract,
 } from "../src";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 
 const parser = yargs(hideBin(process.argv))
   .usage("Usage: $0")

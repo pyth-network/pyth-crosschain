@@ -1,7 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { DefaultStore } from "../src/store";
-import { PriceServiceConnection } from "@pythnetwork/price-service-client";
 import { SubmittedWormholeMessage, Vault } from "../src/governance";
 import { parseVaa } from "@certusone/wormhole-sdk";
 import { decodeGovernancePayload } from "xc_admin_common";
