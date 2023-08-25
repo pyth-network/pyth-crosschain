@@ -33,7 +33,11 @@ async function main() {
   const argv = await parser.argv;
   const contract = DefaultStore.contracts[argv.contract];
   if (!contract) {
-    throw new Error(`Contract ${argv.contract} not found`);
+    throw new Error(
+      `Contract ${argv.contract} not found. Contracts found: ${Object.keys(
+        DefaultStore.contracts
+      )}`
+    );
   }
   const defaultEndpoint = contract.getChain().isMainnet()
     ? "https://xc-mainnet.pyth.network"
