@@ -1,5 +1,4 @@
 #![feature(never_type)]
-#![feature(slice_group_by)]
 #![feature(btree_cursors)]
 
 use {
@@ -44,7 +43,7 @@ async fn init() -> Result<()> {
             let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
 
             // Initialize a cache store with a 1000 element circular buffer.
-            let store = Store::new(update_tx.clone(), 1000);
+            let store = Store::new(update_tx.clone(), 1000, opts.benchmarks_endpoint.clone());
 
             // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown. We
             // also send off any notifications needed to close off any waiting tasks.

@@ -120,6 +120,12 @@ impl<L, T> From<PrefixedVec<L, T>> for Vec<T> {
     }
 }
 
+impl<L, T> AsRef<Vec<T>> for PrefixedVec<L, T> {
+    fn as_ref(&self) -> &Vec<T> {
+        &self.data.inner
+    }
+}
+
 impl<L, T> IntoIterator for PrefixedVec<L, T> {
     type Item = T;
     type IntoIter = std::vec::IntoIter<Self::Item>;

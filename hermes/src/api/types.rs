@@ -49,12 +49,12 @@ type Base64String = String;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct RpcPriceFeedMetadata {
-    #[schema(value_type = u64, example=85480034)]
-    pub slot:                       Slot,
+    #[schema(value_type = Option<u64>, example=85480034)]
+    pub slot:                       Option<Slot>,
     #[schema(example = 26)]
     pub emitter_chain:              u16,
-    #[schema(value_type = i64, example=doc_examples::timestamp_example)]
-    pub price_service_receive_time: UnixTimestamp,
+    #[schema(value_type = Option<i64>, example=doc_examples::timestamp_example)]
+    pub price_service_receive_time: Option<UnixTimestamp>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
@@ -78,30 +78,33 @@ impl RpcPriceFeed {
         verbose: bool,
         binary: bool,
     ) -> Self {
-        let price_feed_message = price_feed_update.price_feed;
+        let price_feed = price_feed_update.price_feed;
 
         Self {
-            id:        RpcPriceIdentifier::new(price_feed_message.feed_id),
+            id:        RpcPriceIdentifier::new(price_feed.id.to_bytes()),
             price:     RpcPrice {
-                price:        price_feed_message.price,
-                conf:         price_feed_message.conf,
-                expo:         price_feed_message.exponent,
-                publish_time: price_feed_message.publish_time,
+                price:        price_feed.get_price_unchecked().price,
+                conf:         price_feed.get_price_unchecked().conf,
+                expo:         price_feed.get_price_unchecked().expo,
+                publish_time: price_feed.get_price_unchecked().publish_time,
             },
             ema_price: RpcPrice {
-                price:        price_feed_message.ema_price,
-                conf:         price_feed_message.ema_conf,
-                expo:         price_feed_message.exponent,
-                publish_time: price_feed_message.publish_time,
+                price:        price_feed.get_ema_price_unchecked().price,
+                conf:         price_feed.get_ema_price_unchecked().conf,
+                expo:         price_feed.get_ema_price_unchecked().expo,
+                publish_time: price_feed.get_ema_price_unchecked().publish_time,
             },
             metadata:  verbose.then_some(RpcPriceFeedMetadata {
                 emitter_chain:              Chain::Pythnet.into(),
                 price_service_receive_time: price_feed_update.received_at,
                 slot:                       price_feed_update.slot,
             }),
-            vaa:       binary.then_some(
-                base64_standard_engine.encode(price_feed_update.wormhole_merkle_update_data),
-            ),
+            vaa:       match binary {
+                false => None,
+                true => price_feed_update
+                    .update_data
+                    .map(|data| base64_standard_engine.encode(data)),
+            },
         }
     }
 }
@@ -171,6 +174,6 @@ impl RpcPriceIdentifier {
     }
 
     pub fn from(id: &PriceIdentifier) -> RpcPriceIdentifier {
-        RpcPriceIdentifier(id.to_bytes().clone())
+        RpcPriceIdentifier(id.to_bytes())
     }
 }

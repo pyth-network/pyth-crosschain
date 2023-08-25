@@ -29,7 +29,7 @@ pub async fn price_feed_ids(
         .get_price_feed_ids()
         .await
         .iter()
-        .map(|id| RpcPriceIdentifier::from(&id))
+        .map(RpcPriceIdentifier::from)
         .collect();
 
     Ok(Json(price_feed_ids))

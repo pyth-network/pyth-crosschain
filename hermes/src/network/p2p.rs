@@ -61,32 +61,7 @@ pub struct ObservationC {
     pub vaa_len: usize,
 }
 
-/// A wrapper around a VAA observed from Wormhole.
-///
-/// This wrapper tracks a Span that allows tracking the VAA through the system. This Span is
-/// expected to be tied to the `proxy` Span and so logging will always be traced back to the
-/// associated `proxy` Span regardless of where in the system it is being used.
-#[derive(Clone, Debug)]
-pub struct Vaa {
-    pub span: tracing::Span,
-    pub data: Vec<u8>,
-}
-
-// Allow PartialEq on Vaa that ignores the Span.
-impl PartialEq for Vaa {
-    fn eq(&self, other: &Self) -> bool {
-        self.data == other.data
-    }
-}
-
-/// Deref to &[u8] so we can ignore the wrapper when passing it to the store.
-impl std::ops::Deref for Vaa {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        &self.data
-    }
-}
+pub type Vaa = Vec<u8>;
 
 // A Static Channel to pipe the `Observation` from the callback into the local Rust handler for
 // observation messages. It has to be static for now because there's no way to capture state in
@@ -134,19 +109,11 @@ extern "C" fn proxy(o: ObservationC) {
         WormholePayload::Merkle(proof) => proof.slot,
     };
 
-    // Create a Span tied to the Span of the curent proxy.
-    let span = tracing::span!(
-        parent: tracing::Span::current(),
-        tracing::Level::INFO,
-        "Observation",
-        slot = slot,
-    );
-
     // Find the observation time for said VAA (which is a unix timestamp) and serialize as a ISO 8601 string.
-    let observed_time = deserialized_vaa.timestamp;
-    let observed_time = chrono::NaiveDateTime::from_timestamp_opt(observed_time as i64, 0).unwrap();
-    let observed_time = observed_time.format("%Y-%m-%dT%H:%M:%S.%fZ").to_string();
-    span.in_scope(|| tracing::info!(vaa_timestamp = observed_time, "Observed VAA"));
+    let vaa_timestamp = deserialized_vaa.timestamp;
+    let vaa_timestamp = chrono::NaiveDateTime::from_timestamp_opt(vaa_timestamp as i64, 0).unwrap();
+    let vaa_timestamp = vaa_timestamp.format("%Y-%m-%dT%H:%M:%S.%fZ").to_string();
+    tracing::info!(slot = slot, vaa_timestamp = vaa_timestamp, "Observed VAA");
 
     // The chances of the mutex getting poisioned is very low and if it happens there is no way for
     // us to recover from it.
@@ -154,7 +121,7 @@ extern "C" fn proxy(o: ObservationC) {
         .0
         .lock()
         .map_err(|_| ())
-        .and_then(|tx| tx.send(Vaa { span, data: vaa }).map_err(|_| ()))
+        .and_then(|tx| tx.send(vaa).map_err(|_| ()))
         .is_err()
     {
         crate::SHOULD_EXIT.store(true, Ordering::Release);
@@ -251,9 +218,6 @@ pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
                 }
             })
             .await??;
-
-            vaa.span
-                .in_scope(|| tracing::info!("Received VAA from P2P layer."));
 
             let store = store.clone();
             tokio::spawn(async move {

@@ -66,7 +66,7 @@ pub async fn latest_vaas(
 
     Ok(Json(
         price_feeds_with_update_data
-            .wormhole_merkle_update_data
+            .update_data
             .iter()
             .map(|bytes| base64_standard_engine.encode(bytes)) // TODO: Support multiple
             // encoding formats
