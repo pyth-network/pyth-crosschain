@@ -296,6 +296,7 @@ mod test {
         }
     }
 
+    #[cfg(test)]
     pub async fn create_and_store_dummy_price_feed_message_state(
         storage: &Storage,
         feed_id: FeedId,

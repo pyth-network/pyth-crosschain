@@ -341,7 +341,7 @@ mod test {
     /// Generate list of updates for the given list of messages at a given slot with given sequence
     ///
     /// Sequence in Vaas is used to filter duplicate messages (as by wormhole design there is only
-    /// one message per sequence)
+    /// one message per sequence).
     pub fn generate_update(messages: Vec<Message>, slot: Slot, sequence: u64) -> Vec<Update> {
         let mut updates = Vec::new();
 

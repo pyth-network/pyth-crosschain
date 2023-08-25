@@ -11,7 +11,10 @@ use {
         Router,
     },
     serde_qs::axum::QsQueryConfig,
-    std::sync::Arc,
+    std::sync::{
+        atomic::Ordering,
+        Arc,
+    },
     tokio::{
         signal,
         sync::mpsc::Receiver,
@@ -95,24 +98,26 @@ pub async fn run(opts: RunOptions, store: Arc<Store>, mut update_rx: Receiver<()
         .with_state(state.clone())
         // Permissive CORS layer to allow all origins
         .layer(CorsLayer::permissive())
-        // non-strict mode permits escaped [] in URL parameters.
-        // 5 is the allowed depth (also the default value for this parameter).
+        // Non-strict mode permits escaped [] in URL parameters. 5 is the allowed depth (also the
+        // default value for this parameter).
         .layer(Extension(QsQueryConfig::new(5, false)));
-
 
     // Call dispatch updates to websocket every 1 seconds
     // FIXME use a channel to get updates from the store
     tokio::spawn(async move {
-        loop {
-            // Panics if the update channel is closed, which should never happen.
-            // If it happens we have no way to recover, so we just panic.
-            update_rx
-                .recv()
-                .await
-                .expect("state update channel is closed");
+        while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
+            // Causes a full application shutdown if an error occurs, we can't recover from this so
+            // we just quit.
+            if update_rx.recv().await.is_none() {
+                log::error!("Failed to receive update from store.");
+                crate::SHOULD_EXIT.store(true, Ordering::Release);
+                break;
+            }
 
             notify_updates(state.ws.clone()).await;
         }
+
+        log::info!("Shutting down websocket updates...")
     });
 
     // Binds the axum's server to the configured address and port. This is a blocking call and will
@@ -120,9 +125,10 @@ pub async fn run(opts: RunOptions, store: Arc<Store>, mut update_rx: Receiver<()
     axum::Server::try_bind(&opts.api_addr)?
         .serve(app.into_make_service())
         .with_graceful_shutdown(async {
-            signal::ctrl_c()
-                .await
-                .expect("Ctrl-c signal handler failed.");
+            // Ignore Ctrl+C errors, either way we need to shut down. The main Ctrl+C handler
+            // should also have triggered so we will let that one print the shutdown warning.
+            let _ = signal::ctrl_c().await;
+            crate::SHOULD_EXIT.store(true, Ordering::Release);
         })
         .await?;
 
