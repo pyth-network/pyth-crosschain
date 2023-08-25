@@ -316,3 +316,15 @@
   rpcUrl: https://sepolia-rpc.scroll.io/
   networkId: 534351
   type: EvmChain
+- id: saigon
+  wormholeChainName: ronin
+  mainnet: false
+  rpcUrl: https://api-gateway.skymavis.com/rpc/testnet?apikey=put-me-here-from-ronin-wallet
+  networkId: 2021
+  type: EvmChain
+- id: ronin
+  wormholeChainName: ronin
+  mainnet: true
+  rpcUrl: https://api-gateway.skymavis.com/rpc?apikey=put-me-here-from-ronin-wallet
+  networkId: 2020
+  type: EvmChain
