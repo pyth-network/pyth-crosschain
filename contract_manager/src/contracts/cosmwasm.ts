@@ -3,16 +3,19 @@ import { readFileSync } from "fs";
 import {
   ContractInfoResponse,
   CosmwasmQuerier,
-  DeploymentType,
-  getPythConfig,
   Price,
   PythWrapperExecutor,
   PythWrapperQuerier,
 } from "@pythnetwork/cosmwasm-deploy-tools";
 import { Coin } from "@cosmjs/stargate";
-import { CHAINS, DataSource } from "xc_admin_common";
+import { DataSource } from "xc_admin_common";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
-import { Contract, PrivateKey, TxResult } from "../base";
+import {
+  Contract,
+  getDefaultDeploymentConfig,
+  PrivateKey,
+  TxResult,
+} from "../base";
 import { WormholeContract } from "./wormhole";
 
 /**
@@ -85,7 +88,7 @@ export class CosmWasmContract extends Contract {
   async getDataSources(): Promise<DataSource[]> {
     const config = await this.getConfig();
     return config.config_v1.data_sources.map(
-      ({ emitter, chain_id }: { emitter: string; chain_id: string }) => {
+      ({ emitter, chain_id }: WormholeSource) => {
         return {
           emitterChain: Number(chain_id),
           emitterAddress: Buffer.from(emitter, "base64").toString("hex"),
@@ -122,19 +125,6 @@ export class CosmWasmContract extends Contract {
 
   getType(): string {
     return CosmWasmContract.type;
-  }
-
-  static getDeploymentConfig(
-    chain: CosmWasmChain,
-    deploymentType: DeploymentType,
-    wormholeContract: string
-  ): DeploymentConfig {
-    return getPythConfig({
-      feeDenom: chain.feeDenom,
-      wormholeChainId: CHAINS[chain.wormholeChainName],
-      wormholeContract,
-      deploymentType: deploymentType,
-    });
   }
 
   /**
@@ -178,28 +168,6 @@ export class CosmWasmContract extends Contract {
       contractAddr: result.contractAddr,
     });
     return new CosmWasmContract(chain, result.contractAddr);
-  }
-
-  /**
-   * Uploads the wasm code and initializes a new contract to the specified chain.
-   * Use this method if you are deploying to a new chain, or you want a fresh contract in
-   * a testnet environment. Uses the default deployment configurations for governance, data sources,
-   * valid time period, etc. You can manually run the storeCode and initialize methods if you want
-   * more control over the deployment process.
-   * @param chain
-   * @param wormholeContract
-   * @param privateKey private key to use for signing the transaction in hex format without 0x prefix
-   * @param wasmPath
-   */
-  static async deploy(
-    chain: CosmWasmChain,
-    wormholeContract: string,
-    privateKey: PrivateKey,
-    wasmPath: string
-  ): Promise<CosmWasmContract> {
-    const config = this.getDeploymentConfig(chain, "beta", wormholeContract);
-    const { codeId } = await this.storeCode(chain, privateKey, wasmPath);
-    return this.initialize(chain, codeId, config, privateKey);
   }
 
   getId(): string {
@@ -247,9 +215,6 @@ export class CosmWasmContract extends Contract {
     return Number(config.config_v1.governance_sequence_number);
   }
 
-  // TODO: function for upgrading the contract
-  // TODO: Cleanup and more strict linter to convert let to const
-
   private parsePrice(priceInfo: Price) {
     return {
       conf: priceInfo.conf.toString(),
@@ -295,31 +260,20 @@ export class CosmWasmContract extends Contract {
 
   async getDeploymentType(): Promise<string> {
     const config = await this.getConfig();
-    const wormholeContract = config.config_v1.wormhole_contract;
-    const stableConfig = getPythConfig({
-      feeDenom: this.chain.feeDenom,
-      wormholeChainId: CHAINS[this.chain.getId() as keyof typeof CHAINS],
-      wormholeContract,
-      deploymentType: "stable",
-    });
-    const betaConfig = getPythConfig({
-      feeDenom: this.chain.feeDenom,
-      wormholeChainId: CHAINS[this.chain.getId() as keyof typeof CHAINS],
-      wormholeContract,
-      deploymentType: "beta",
-    });
-    if (
-      this.equalDataSources(
-        config.config_v1.data_sources,
-        stableConfig.data_sources
-      )
-    )
+    const convertDataSource = (source: DataSource) => {
+      return {
+        emitter: Buffer.from(source.emitterAddress, "hex").toString("base64"),
+        chain_id: source.emitterChain,
+      };
+    };
+    const stableDataSources =
+      getDefaultDeploymentConfig("stable").dataSources.map(convertDataSource);
+    const betaDataSources =
+      getDefaultDeploymentConfig("beta").dataSources.map(convertDataSource);
+    if (this.equalDataSources(config.config_v1.data_sources, stableDataSources))
       return "stable";
     else if (
-      this.equalDataSources(
-        config.config_v1.data_sources,
-        betaConfig.data_sources
-      )
+      this.equalDataSources(config.config_v1.data_sources, betaDataSources)
     )
       return "beta";
     else return "unknown";

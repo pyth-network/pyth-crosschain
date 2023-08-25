@@ -6,12 +6,10 @@
   "private": "true",
   "scripts": {
     "build": "tsc",
-    "build-contract": "ts-node ./src/build-contract.ts",
-    "deploy-pyth": "ts-node ./src/deploy-pyth-bridge.ts",
-    "deploy": "ts-node ./src/deploy.ts"
+    "deploy": "ts-node ./src/ci/deploy.ts"
   },
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "@cosmjs/cosmwasm-stargate": "^0.29.5",
     "@cosmjs/encoding": "^0.26.2",
@@ -28,7 +26,6 @@
     "ethers": "^5.4.4",
     "node-downloader-helper": "^2.1.7",
     "osmojs": "^13.0.0-rc.7-i-alpha",
-    "rimraf": "^5.0.0",
     "yargs": "^17.0.1",
     "@pythnetwork/price-service-client": "*"
   },

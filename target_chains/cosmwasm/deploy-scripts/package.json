@@ -1,0 +1,19 @@
+{
+  "name": "@pythnetwork/cosmwasm-deploy-scripts",
+  "version": "1.0.0",
+  "description": "",
+  "private": "true",
+  "scripts": {
+    "build": "tsc",
+    "build-contract": "ts-node ./src/build-contract.ts",
+    "instantiate-wormhole": "ts-node ./src/instantiate-wormhole.ts",
+    "instantiate-pyth": "ts-node ./src/instantiate-pyth.ts"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "rimraf": "^5.0.0",
+    "@pythnetwork/cosmwasm-deploy-tools": "*",
+    "contract_manager": "*"
+  }
+}
