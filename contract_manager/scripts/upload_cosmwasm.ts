@@ -3,9 +3,9 @@ import { hideBin } from "yargs/helpers";
 import { CosmWasmChain } from "../src/chains";
 import { CosmWasmContract } from "../src/contracts/cosmwasm";
 import { DefaultStore } from "../src/store";
+import { toPrivateKey } from "../src";
 
 const parser = yargs(hideBin(process.argv))
-  .scriptName("upload_cosmwasm.ts")
   .usage(
     "Usage: $0 --code <path/to/artifact.wasm> --private-key <private-key> --chain <chain>"
   )
@@ -32,7 +32,7 @@ async function main() {
   const { code } = argv;
   const { codeId } = await CosmWasmContract.storeCode(
     DefaultStore.chains[argv.chain] as CosmWasmChain,
-    argv["private-key"],
+    toPrivateKey(argv["private-key"]),
     code
   );
   console.log(`Successfully uploaded code with id ${codeId}`);
