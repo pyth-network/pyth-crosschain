@@ -62,4 +62,6 @@ export const CONTRACT_ADDR: Record<string, string> = {
   base: "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a",
   syndr_nitro_testnet: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   scroll_sepolia: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  saigon: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  ronin: "0x2880aB155794e7179c9eE2e38200202908C17B43",
 };
