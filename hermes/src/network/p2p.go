@@ -46,10 +46,11 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	dht "github.com/libp2p/go-libp2p-kad-dht"
-	pubsub "github.com/libp2p/go-libp2p-pubsub"
-	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	libp2pquic "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	libp2pquicreuse "github.com/libp2p/go-libp2p/p2p/transport/quicreuse"
+	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	golog "github.com/ipfs/go-log/v2"
 )
 
 //export RegisterObservationCallback
@@ -57,6 +58,12 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 	networkID := C.GoString(network_id)
 	bootstrapAddrs := strings.Split(C.GoString(bootstrap_addrs), ",")
 	listenAddrs := strings.Split(C.GoString(listen_addrs), ",")
+
+	// Check ENV variable "GO_LOG_ALL", and set all Go loggers (accross all libp2p
+	// protocols) to INFO level.
+	if os.Getenv("GO_LOG_ALL") == "1" {
+		golog.SetAllLoggers(golog.LevelInfo)
+	}
 
 	// Bind pprof to 6060 for debugging Go code.
 	go func() {
