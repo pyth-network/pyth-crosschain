@@ -264,7 +264,23 @@ export class EvmChain extends Chain {
     );
   }
 
+  /**
+   * Returns the chain rpc url with any environment variables replaced or throws an error if any are missing
+   */
   getRpcUrl(): string {
+    const envMatches = this.rpcUrl.match(/\$ENV_\w+/);
+    if (envMatches) {
+      for (const envMatch of envMatches) {
+        const envName = envMatch.replace("$ENV_", "");
+        const envValue = process.env[envName];
+        if (!envValue) {
+          throw new Error(
+            `Missing env variable ${envName} required for chain ${this.id} rpc: ${this.rpcUrl}`
+          );
+        }
+        this.rpcUrl = this.rpcUrl.replace(envMatch, envValue);
+      }
+    }
     return this.rpcUrl;
   }
 

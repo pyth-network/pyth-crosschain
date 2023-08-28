@@ -26,7 +26,11 @@ async function main() {
       contract instanceof EvmContract ||
       contract instanceof CosmWasmContract
     ) {
-      console.log(`${contract.getId()} ${await contract.getTotalFee()}`);
+      try {
+        console.log(`${contract.getId()} ${await contract.getTotalFee()}`);
+      } catch (e) {
+        console.error(e);
+      }
     }
   }
 }
