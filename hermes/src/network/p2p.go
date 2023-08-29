@@ -44,13 +44,14 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/net/connmgr"
 	"github.com/multiformats/go-multiaddr"
 	"google.golang.org/protobuf/proto"
+	"gopkg.in/DataDog/dd-trace-go.v1/profiler"
 
+	golog "github.com/ipfs/go-log/v2"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
+	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	libp2pquic "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	libp2pquicreuse "github.com/libp2p/go-libp2p/p2p/transport/quicreuse"
-	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
-	pubsub "github.com/libp2p/go-libp2p-pubsub"
-	golog "github.com/ipfs/go-log/v2"
 )
 
 //export RegisterObservationCallback
@@ -58,11 +59,13 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 	networkID := C.GoString(network_id)
 	bootstrapAddrs := strings.Split(C.GoString(bootstrap_addrs), ",")
 	listenAddrs := strings.Split(C.GoString(listen_addrs), ",")
+	ctx := context.Background()
 
 	// Check ENV variable "GO_LOG_ALL", and set all Go loggers (accross all libp2p
 	// protocols) to INFO level.
-	if os.Getenv("GO_LOG_ALL") == "1" {
-		golog.SetAllLoggers(golog.LevelInfo)
+	if os.Getenv("GO_LOG") != "" {
+		level, _ := golog.LevelFromString(os.Getenv("GO_LOG"))
+		golog.SetAllLoggers(level)
 	}
 
 	// Bind pprof to 6060 for debugging Go code.
@@ -74,12 +77,35 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 	var recoverRerun func()
 
 	routine := func() {
+		// If the current goroutine fails for any reasons, recoverRerun will be
+		// triggered which will sleep for 1 second and rerun the routine.
 		defer recoverRerun()
 
-		// Record the current time
+		// Record the current time for profiling and backoff purposes.
 		startTime = time.Now().UnixNano()
 
-		ctx := context.Background()
+		// Start the datadog profiler. Only starts if an environment is
+		// specified and a datadog API key is provided.
+		if os.Getenv("DD_PROFILING_ENV") != "" && os.Getenv("DD_AGENT_ADDR") != "" {
+			err := profiler.Start(
+				profiler.WithAgentAddr(os.Getenv("DD_AGENT_ADDR")),
+				profiler.WithService("hermes-p2p"),
+				profiler.WithEnv(os.Getenv("DD_PROFILING_ENV")),
+				profiler.WithProfileTypes(
+					profiler.CPUProfile,
+					profiler.HeapProfile,
+					profiler.GoroutineProfile,
+				),
+			)
+
+			if err != nil {
+				err := fmt.Errorf("Failed to start profiler: %w", err)
+				fmt.Println(err)
+				return
+			}
+
+			defer profiler.Stop()
+		}
 
 		// Setup base network configuration.
 		priv, _, err := crypto.GenerateKeyPair(crypto.Ed25519, -1)
