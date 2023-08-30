@@ -1,29 +1,50 @@
 [package]
-name                   = "hermes"
-version                = "0.1.12"
-edition                = "2021"
+name    = "hermes"
+version = "0.1.12"
+edition = "2021"
 
 [dependencies]
-anyhow                 = { version = "1.0.69" }
-axum                   = { version = "0.6.20", features = ["json", "ws", "macros"] }
-axum-macros            = { version = "0.3.8" }
-base64                 = { version = "0.21.0" }
-borsh                  = { version = "0.10.3" }
-byteorder              = { version = "1.4.3" }
-dashmap                = { version = "5.4.0" }
-derive_more            = { version = "0.99.17" }
-env_logger             = { version = "0.10.0" }
-futures                = { version = "0.3.28" }
-hex                    = { version = "0.4.3" }
-humantime              = { version = "2.1.0" }
-lazy_static            = { version = "1.4.0" }
-libc                   = { version = "0.2.140" }
+anyhow            = { version = "1.0.69" }
+axum              = { version = "0.6.20", features = ["json", "ws", "macros"] }
+axum-macros       = { version = "0.3.8" }
+base64            = { version = "0.21.0" }
+borsh             = { version = "0.10.3" }
+byteorder         = { version = "1.4.3" }
+dashmap           = { version = "5.4.0" }
+derive_more       = { version = "0.99.17" }
+env_logger        = { version = "0.10.0" }
+futures           = { version = "0.3.28" }
+hex               = { version = "0.4.3" }
+humantime         = { version = "2.1.0" }
+lazy_static       = { version = "1.4.0" }
+libc              = { version = "0.2.140" }
+log               = { version = "0.4.17" }
+mock_instant      = { version = "0.3.1", features = ["sync"] }
+prometheus-client = { version = "0.21.1" }
+pyth-sdk          = { version = "0.8.0" }
+pythnet-sdk       = { path = "../pythnet/pythnet_sdk/", version = "2.0.0", features = ["strum"] }
+rand              = { version = "0.8.5" }
+reqwest           = { version = "0.11.14", features = ["blocking", "json"] }
+secp256k1         = { version = "0.27.0", features = ["rand", "recovery", "serde"] }
+serde             = { version = "1.0.152", features = ["derive"] }
+serde_json        = { version = "1.0.93" }
+serde_qs          = { version = "0.12.0", features = ["axum"] }
+serde_wormhole    = { git     = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
+sha3              = { version = "0.10.4" }
+structopt         = { version = "0.3.26" }
+strum             = { version = "0.24.1", features = ["derive"] }
+tokio             = { version = "1.26.0", features = ["full"] }
+tower-http        = { version = "0.4.0", features = ["cors"] }
+utoipa            = { version = "3.4.0", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "3.1.4", features = ["axum"] }
+wormhole-sdk      = { git     = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
 
 # Setup LibP2P. Unfortunately the dependencies required by libp2p are shared
-# with the dependencies required by solana's geyser plugin. This means that we
+# with the dependencies required by many Solana components. This means that we
 # would have to use the same version of libp2p as solana. Luckily we don't need
-# to do this yet but it's something to keep in mind.
-libp2p                 = { version = "0.42.2", features = [
+# to worry about this until we want to hoist the libp2p portion of Hermes into
+# Rust land.
+libp2p = { version = "0.42.2", features = [
     "gossipsub",
     "identify",
     "mplex",
@@ -33,36 +54,14 @@ libp2p                 = { version = "0.42.2", features = [
     "yamux",
 ]}
 
-log                    = { version = "0.4.17" }
-mock_instant           = { version = "0.3.1", features = ["sync"] }
-prometheus-client      = { version = "0.21.1" }
-pyth-sdk               = { version = "0.8.0" }
-
-# Parse Wormhole attester price attestations.
-pythnet-sdk            = { path = "../pythnet/pythnet_sdk/", version = "2.0.0", features = ["strum"] }
-
-rand                   = { version = "0.8.5" }
-reqwest                = { version = "0.11.14", features = ["blocking", "json"] }
-secp256k1              = { version = "0.27.0", features = ["rand", "recovery", "serde"] }
-serde                  = { version = "1.0.152", features = ["derive"] }
-serde_json             = { version = "1.0.93" }
-serde_qs               = { version = "0.12.0", features = ["axum"] }
-serde_wormhole         = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
-sha3                   = { version = "0.10.4" }
-
-# We are bound to this version because of pyth-oracle
+# We are bound to this Solana version in order to match pyth-oracle.
 solana-client          = { version = "=1.13.3" }
 solana-sdk             = { version = "=1.13.3" }
 solana-account-decoder = { version = "=1.13.3" }
 
-structopt              = { version = "0.3.26" }
-strum                  = { version = "0.24.1", features = ["derive"] }
-tokio                  = { version = "1.26.0", features = ["full"] }
-tower-http             = { version = "0.4.0", features = ["cors"] }
-utoipa                 = { version = "3.4.0", features = ["axum_extras"] }
-utoipa-swagger-ui      = { version = "3.1.4", features = ["axum"] }
-wormhole-sdk           = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
-
+# Wormhole uses patching to resolve some of its own dependencies. We need to
+# make sure that we use the same patch instead of simply pointing the original
+# dependency at git otherwise those relative imports will fail.
 [patch.crates-io]
 serde_wormhole         = { git = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
 
