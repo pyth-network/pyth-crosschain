@@ -98,7 +98,10 @@ abstract contract Pyth is
     function getUpdateFee(
         uint updateDataSize
     ) public view returns (uint feeAmount) {
-        return singleUpdateFeeInWei() * updateDataSize;
+        // In the accumulator update data a single update can contain
+        // up to 255 messages and we charge a singleUpdateFee per each
+        // message
+        return 255 * singleUpdateFeeInWei() * updateDataSize;
     }
 
     function getUpdateFee(
@@ -679,6 +682,6 @@ abstract contract Pyth is
     }
 
     function version() public pure returns (string memory) {
-        return "1.3.0";
+        return "1.3.1";
     }
 }
