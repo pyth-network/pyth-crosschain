@@ -61,10 +61,11 @@ pub async fn ws_route_handler(
     ws.on_upgrade(|socket| websocket_handler(socket, state))
 }
 
+#[tracing::instrument(skip(stream, state))]
 async fn websocket_handler(stream: WebSocket, state: super::State) {
     let ws_state = state.ws.clone();
     let id = ws_state.subscriber_counter.fetch_add(1, Ordering::SeqCst);
-    log::debug!("New websocket connection, assigning id: {}", id);
+    tracing::debug!(id, "New Websocket Connection");
 
     let (notify_sender, notify_receiver) = mpsc::channel::<()>(NOTIFICATIONS_CHAN_LEN);
     let (sender, receiver) = stream.split();
@@ -112,10 +113,11 @@ impl Subscriber {
         }
     }
 
+    #[tracing::instrument(skip(self))]
     pub async fn run(&mut self) {
         while !self.closed {
             if let Err(e) = self.handle_next().await {
-                log::debug!("Subscriber {}: Error handling next message: {}", self.id, e);
+                tracing::debug!(subscriber = self.id, error = ?e, "Error Handling Subscriber Message.");
                 break;
             }
         }
@@ -179,6 +181,7 @@ impl Subscriber {
         Ok(())
     }
 
+    #[tracing::instrument(skip(self, message))]
     async fn handle_client_message(&mut self, message: Message) -> Result<()> {
         let maybe_client_message = match message {
             Message::Close(_) => {
@@ -186,13 +189,12 @@ impl Subscriber {
                 // list, instead when the Subscriber struct is dropped the channel
                 // to subscribers list will be closed and it will eventually get
                 // removed.
-                log::trace!("Subscriber {} closed connection", self.id);
+                tracing::trace!(id = self.id, "Subscriber Closed Connection.");
 
                 // Send the close message to gracefully shut down the connection
                 // Otherwise the client might get an abnormal Websocket closure
                 // error.
                 self.sender.close().await?;
-
                 self.closed = true;
                 return Ok(());
             }
@@ -222,6 +224,7 @@ impl Subscriber {
                     .await?;
                 return Ok(());
             }
+
             Ok(ClientMessage::Subscribe {
                 ids,
                 verbose,

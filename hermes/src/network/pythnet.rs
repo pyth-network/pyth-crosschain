@@ -156,7 +156,7 @@ pub async fn run(store: Arc<Store>, pythnet_ws_endpoint: String) -> Result<()> {
                 let account: Account = match update.value.account.decode() {
                     Some(account) => account,
                     None => {
-                        log::error!("Failed to decode account from update: {:?}", update);
+                        tracing::error!(?update, "Failed to decode account from update.");
                         continue;
                     }
                 };
@@ -179,20 +179,20 @@ pub async fn run(store: Arc<Store>, pythnet_ws_endpoint: String) -> Result<()> {
                                     .store_update(Update::AccumulatorMessages(accumulator_messages))
                                     .await
                                 {
-                                    log::error!("Failed to store accumulator messages: {:?}", err);
+                                    tracing::error!(error = ?err, "Failed to store accumulator messages.");
                                 }
                             });
                         } else {
-                            log::error!(
-                                "Failed to verify the messages public key: {:?} != {:?}",
-                                candidate,
-                                update.value.pubkey
+                            tracing::error!(
+                                ?candidate,
+                                ?update.value.pubkey,
+                                "Failed to verify message public keys.",
                             );
                         }
                     }
 
                     Err(err) => {
-                        log::error!("Failed to parse AccumulatorMessages: {:?}", err);
+                        tracing::error!(error = ?err, "Failed to parse AccumulatorMessages.");
                     }
                 };
             }
@@ -222,10 +222,10 @@ async fn fetch_existing_guardian_sets(
     let current =
         fetch_guardian_set(&client, wormhole_contract_addr, bridge.guardian_set_index).await?;
 
-    log::info!(
-        "Retrieved Current GuardianSet ({}): {}",
-        bridge.guardian_set_index,
-        current
+    tracing::info!(
+        guardian_set_index = bridge.guardian_set_index,
+        %current,
+        "Retrieved Current GuardianSet.",
     );
 
     store
@@ -242,10 +242,10 @@ async fn fetch_existing_guardian_sets(
         )
         .await?;
 
-        log::info!(
-            "Retrieved Previous GuardianSet ({}): {}",
-            bridge.guardian_set_index - 1,
-            previous
+        tracing::info!(
+            previous_guardian_set_index = bridge.guardian_set_index - 1,
+            %previous,
+            "Retrieved Previous GuardianSet.",
         );
 
         store
@@ -256,10 +256,11 @@ async fn fetch_existing_guardian_sets(
     Ok(())
 }
 
+#[tracing::instrument(skip(opts, store))]
 pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
-    log::info!(
-        "Starting Pythnet listener using {}",
-        opts.pythnet_ws_endpoint
+    tracing::info!(
+        endpoint = opts.pythnet_ws_endpoint,
+        "Started Pythnet Listener."
     );
 
     fetch_existing_guardian_sets(
@@ -277,17 +278,15 @@ pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
                 let current_time = Instant::now();
 
                 if let Err(ref e) = run(store.clone(), pythnet_ws_endpoint.clone()).await {
-                    log::error!("Error in Pythnet network listener: {:?}", e);
+                    tracing::error!(error = ?e, "Error in Pythnet network listener.");
                     if current_time.elapsed() < Duration::from_secs(30) {
-                        log::error!(
-                            "Pythnet network listener restarting too quickly. Sleeping for 1s"
-                        );
+                        tracing::error!("Pythnet listener restarting too quickly. Sleep 1s.");
                         tokio::time::sleep(Duration::from_secs(1)).await;
                     }
                 }
             }
 
-            log::info!("Shutting down Pythnet listener...");
+            tracing::info!("Shutting down Pythnet listener...");
         })
     };
 
@@ -315,12 +314,12 @@ pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
                 {
                     Ok(_) => {}
                     Err(err) => {
-                        log::error!("Failed to poll for new guardian sets: {:?}", err);
+                        tracing::error!(error = ?err, "Failed to poll for new guardian sets.")
                     }
                 }
             }
 
-            log::info!("Shutting down Pythnet guardian set poller...");
+            tracing::info!("Shutting down Pythnet guardian set poller...");
         })
     };
 

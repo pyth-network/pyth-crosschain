@@ -1,8 +1,11 @@
 use {
-    crate::store::{
-        storage::MessageState,
-        types::AccumulatorMessages,
-        Store,
+    crate::{
+        network::p2p::Vaa,
+        store::{
+            storage::MessageState,
+            types::AccumulatorMessages,
+            Store,
+        },
     },
     anyhow::{
         anyhow,
@@ -36,26 +39,23 @@ pub const MAX_MESSAGE_IN_SINGLE_UPDATE_DATA: usize = 255;
 #[derive(Clone, PartialEq, Debug)]
 pub struct WormholeMerkleState {
     pub root: WormholeMerkleRoot,
-    pub vaa:  Vec<u8>,
+    pub vaa:  Vaa,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct WormholeMerkleMessageProof {
-    pub vaa:   Vec<u8>,
     pub proof: MerklePath<Keccak160>,
+    pub vaa:   Vaa,
 }
 
 pub async fn store_wormhole_merkle_verified_message(
     store: &Store,
     root: WormholeMerkleRoot,
-    vaa_bytes: Vec<u8>,
+    vaa: Vaa,
 ) -> Result<()> {
     store
         .storage
-        .store_wormhole_merkle_state(WormholeMerkleState {
-            root,
-            vaa: vaa_bytes,
-        })
+        .store_wormhole_merkle_state(WormholeMerkleState { root, vaa })
         .await?;
     Ok(())
 }
@@ -108,9 +108,13 @@ pub fn construct_update_data(mut message_states: Vec<&MessageState>) -> Result<V
                         .vaa
                         .clone();
 
+                    vaa.span.in_scope(|| {
+                        tracing::info!("Constructing update data for {} Messages.", messages.len())
+                    });
+
                     Ok(to_vec::<_, byteorder::BE>(&AccumulatorUpdateData::new(
                         Proof::WormholeMerkle {
-                            vaa:     vaa.into(),
+                            vaa:     (*vaa).to_owned().into(),
                             updates: messages
                                 .iter()
                                 .map(|message| {

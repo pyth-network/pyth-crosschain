@@ -27,14 +27,15 @@ mod store;
 pub(crate) static SHOULD_EXIT: AtomicBool = AtomicBool::new(false);
 
 /// Initialize the Application. This can be invoked either by real main, or by the Geyser plugin.
+#[tracing::instrument]
 async fn init() -> Result<()> {
-    log::info!("Initializing Hermes...");
+    tracing::info!("Initializing Hermes...");
 
     // Parse the command line arguments with StructOpt, will exit automatically on `--help` or
     // with invalid arguments.
     match config::Options::from_args() {
         config::Options::Run(opts) => {
-            log::info!("Starting hermes service...");
+            tracing::info!("Starting hermes service...");
 
             // The update channel is used to send store update notifications to the public API.
             let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
@@ -45,8 +46,9 @@ async fn init() -> Result<()> {
             // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown. We
             // also send off any notifications needed to close off any waiting tasks.
             spawn(async move {
+                tracing::info!("Registered shutdown signal handler...");
                 tokio::signal::ctrl_c().await.unwrap();
-                log::info!("Shut down signal received, waiting for tasks...");
+                tracing::info!("Shut down signal received, waiting for tasks...");
                 SHOULD_EXIT.store(true, std::sync::atomic::Ordering::Release);
                 let _ = update_tx.send(()).await;
             });
@@ -70,8 +72,19 @@ async fn init() -> Result<()> {
 }
 
 #[tokio::main]
+#[tracing::instrument]
 async fn main() -> Result<()> {
     env_logger::init();
+
+    // Initialize a Tracing Subscriber
+    tracing::subscriber::set_global_default(
+        tracing_subscriber::fmt()
+            .compact()
+            .with_file(false)
+            .with_line_number(true)
+            .with_thread_ids(true)
+            .finish(),
+    )?;
 
     // Launch the application. If it fails, print the full backtrace and exit. RUST_BACKTRACE
     // should be set to 1 for this otherwise it will only print the top-level error.

@@ -73,11 +73,7 @@ use {
         mpsc::Sender,
         RwLock,
     },
-    wormhole_sdk::{
-        Address,
-        Chain,
-        Vaa,
-    },
+    wormhole_sdk::Vaa,
 };
 
 pub mod proof;
@@ -118,20 +114,15 @@ impl Store {
     }
 
     /// Stores the update data in the store
+    #[tracing::instrument(skip(self, update))]
     pub async fn store_update(&self, update: Update) -> Result<()> {
         // The slot that the update is originating from. It should be available
         // in all the updates.
         let slot = match update {
-            Update::Vaa(vaa_bytes) => {
+            Update::Vaa(update_vaa) => {
                 // FIXME: Move to wormhole.rs
                 let vaa =
-                    serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(&vaa_bytes)?;
-
-                if vaa.emitter_chain != Chain::Pythnet
-                    || vaa.emitter_address != Address(pythnet_sdk::ACCUMULATOR_EMITTER_ADDRESS)
-                {
-                    return Ok(()); // Ignore VAA from other emitters
-                }
+                    serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(&update_vaa)?;
 
                 if self.observed_vaa_seqs.read().await.contains(&vaa.sequence) {
                     return Ok(()); // Ignore VAA if we have already seen it
@@ -142,13 +133,16 @@ impl Store {
                 let vaa = match vaa {
                     Ok(vaa) => vaa,
                     Err(err) => {
-                        log::info!("Ignoring invalid VAA: {:?}", err);
+                        tracing::warn!(error = ?err, "Ignoring invalid VAA.");
                         return Ok(());
                     }
                 };
 
                 {
                     let mut observed_vaa_seqs = self.observed_vaa_seqs.write().await;
+                    if observed_vaa_seqs.contains(&vaa.sequence) {
+                        return Ok(()); // Ignore VAA if we have already seen it
+                    }
                     observed_vaa_seqs.insert(vaa.sequence);
                     while observed_vaa_seqs.len() > OBSERVED_CACHE_SIZE {
                         observed_vaa_seqs.pop_first();
@@ -157,16 +151,35 @@ impl Store {
 
                 match WormholeMessage::try_from_bytes(vaa.payload)?.payload {
                     WormholePayload::Merkle(proof) => {
-                        log::info!("Storing merkle proof for slot {:?}", proof.slot,);
-                        store_wormhole_merkle_verified_message(self, proof.clone(), vaa_bytes)
-                            .await?;
+                        update_vaa.span.in_scope(|| {
+                            tracing::info!(slot = proof.slot, "Storing VAA Merkle Proof.");
+                        });
+
+                        store_wormhole_merkle_verified_message(
+                            self,
+                            proof.clone(),
+                            update_vaa.to_owned(),
+                        )
+                        .await?;
+
                         proof.slot
                     }
                 }
             }
+
             Update::AccumulatorMessages(accumulator_messages) => {
                 let slot = accumulator_messages.slot;
-                log::info!("Storing accumulator messages for slot {:?}.", slot,);
+                if let Some(state) = self.storage.fetch_wormhole_merkle_state(slot).await? {
+                    state.vaa.span.in_scope(|| {
+                        tracing::info!(
+                            slot = slot,
+                            "Storing Accumulator Messages (existing Proof)."
+                        );
+                    });
+                } else {
+                    tracing::info!(slot = slot, "Storing Accumulator Messages.");
+                }
+
                 self.storage
                     .store_accumulator_messages(accumulator_messages)
                     .await?;
@@ -185,6 +198,10 @@ impl Store {
                 _ => return Ok(()),
             };
 
+        wormhole_merkle_state.vaa.span.in_scope(|| {
+            tracing::info!(slot = wormhole_merkle_state.root.slot, "Completed Update.");
+        });
+
         // Once the accumulator reaches a complete state for a specific slot
         // we can build the message states
         self.build_message_states(accumulator_messages, wormhole_merkle_state)
@@ -200,6 +217,7 @@ impl Store {
         Ok(())
     }
 
+    #[tracing::instrument(skip(self, accumulator_messages, wormhole_merkle_state))]
     async fn build_message_states(
         &self,
         accumulator_messages: AccumulatorMessages,
@@ -232,7 +250,7 @@ impl Store {
             })
             .collect::<Result<Vec<_>>>()?;
 
-        log::info!("Message states len: {:?}", message_states.len());
+        tracing::info!(len = message_states.len(), "Storing Message States.");
 
         self.storage.store_message_states(message_states).await?;
 
@@ -385,7 +403,10 @@ mod test {
             payload: serde_wormhole::RawMessage::new(wormhole_message.as_ref()),
         };
 
-        updates.push(Update::Vaa(serde_wormhole::to_vec(&vaa).unwrap()));
+        updates.push(Update::Vaa(crate::network::p2p::Vaa {
+            span: tracing::Span::current(),
+            data: serde_wormhole::to_vec(&vaa).unwrap(),
+        }));
 
         updates
     }
