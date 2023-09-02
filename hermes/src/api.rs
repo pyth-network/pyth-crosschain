@@ -47,8 +47,9 @@ impl State {
 ///
 /// Currently this is based on Axum due to the simplicity and strong ecosystem support for the
 /// packages they are based on (tokio & hyper).
+#[tracing::instrument(skip(opts, store, update_rx))]
 pub async fn run(opts: RunOptions, store: Arc<Store>, mut update_rx: Receiver<()>) -> Result<()> {
-    log::info!("Starting RPC server on {}", opts.api_addr);
+    tracing::info!(endpoint = %opts.api_addr, "Starting RPC Server.");
 
     #[derive(OpenApi)]
     #[openapi(
@@ -109,7 +110,7 @@ pub async fn run(opts: RunOptions, store: Arc<Store>, mut update_rx: Receiver<()
             // Causes a full application shutdown if an error occurs, we can't recover from this so
             // we just quit.
             if update_rx.recv().await.is_none() {
-                log::error!("Failed to receive update from store.");
+                tracing::error!("Failed to receive update from store.");
                 crate::SHOULD_EXIT.store(true, Ordering::Release);
                 break;
             }
@@ -117,7 +118,7 @@ pub async fn run(opts: RunOptions, store: Arc<Store>, mut update_rx: Receiver<()
             notify_updates(state.ws.clone()).await;
         }
 
-        log::info!("Shutting down websocket updates...")
+        tracing::info!("Shutting down websocket updates...")
     });
 
     // Binds the axum's server to the configured address and port. This is a blocking call and will

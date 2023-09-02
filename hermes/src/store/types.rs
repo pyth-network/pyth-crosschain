@@ -1,5 +1,6 @@
 use {
     super::proof::wormhole_merkle::WormholeMerkleMessageProof,
+    crate::network::p2p::Vaa,
     borsh::BorshDeserialize,
     pythnet_sdk::messages::PriceFeedMessage,
 };
@@ -44,8 +45,9 @@ impl AccumulatorMessages {
     }
 }
 
+#[derive(Debug)]
 pub enum Update {
-    Vaa(Vec<u8>),
+    Vaa(Vaa),
     AccumulatorMessages(AccumulatorMessages),
 }
 

@@ -189,7 +189,11 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 		defer h.Close()
 
 		topic := fmt.Sprintf("%s/%s", networkID, "broadcast")
-		ps, err := pubsub.NewGossipSub(ctx, h)
+		ps, err := pubsub.NewGossipSub(
+			ctx,
+			h,
+			pubsub.WithValidateQueueSize(1024),
+		)
 		if err != nil {
 			err := fmt.Errorf("Failed to create Pubsub: %w", err)
 			fmt.Println(err)
@@ -205,7 +209,7 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 
 		defer th.Close()
 
-		sub, err := th.Subscribe()
+		sub, err := th.Subscribe(pubsub.WithBufferSize(1024))
 		if err != nil {
 			err := fmt.Errorf("Failed to subscribe topic: %w", err)
 			fmt.Println(err)
