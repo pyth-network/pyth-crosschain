@@ -101,7 +101,7 @@ contract OracleSwap {
 
         uint8 priceDecimals = uint8(uint32(-1 * price.expo));
 
-        if (targetDecimals - priceDecimals >= 0) {
+        if (targetDecimals >= priceDecimals) {
             return
                 uint(uint64(price.price)) *
                 10 ** uint32(targetDecimals - priceDecimals);
