@@ -10,6 +10,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import { PRICE_FEED_OPS_KEY } from "./multisig";
+import { isRemoteCluster } from "./cluster";
 
 /**
  * Get seed for deterministic creation of a price/product account
@@ -33,10 +34,17 @@ function getSeed(accountType: AccountType, symbol: string): string {
  * @param accountType Type of the account
  * @returns
  */
-function getAccountTypeSize(accountType: AccountType): number {
+function getAccountTypeSize(
+  accountType: AccountType,
+  cluster: PythCluster
+): number {
   switch (accountType) {
     case AccountType.Price:
-      return 3312;
+      if (isRemoteCluster(cluster)) {
+        return 12576;
+      } else {
+        return 3312;
+      }
     case AccountType.Product:
       return 512;
     default:
@@ -88,9 +96,9 @@ export async function getCreateAccountWithSeedInstruction(
     basePubkey: base,
     newAccountPubkey: address,
     seed: seed,
-    space: getAccountTypeSize(accountType),
+    space: getAccountTypeSize(accountType, cluster),
     lamports: await connection.getMinimumBalanceForRentExemption(
-      getAccountTypeSize(accountType)
+      getAccountTypeSize(accountType, cluster)
     ),
     programId: getPythProgramKeyForCluster(cluster),
   });
