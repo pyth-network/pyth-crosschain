@@ -9,8 +9,10 @@ with pkgs; mkShell {
     nettle
     openssl_1_1
     pkgconfig
+    iconv
+    protobuf
+    go
     rustup
-    systemd
   ];
 
   shellHook = ''

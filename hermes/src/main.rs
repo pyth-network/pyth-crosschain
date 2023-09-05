@@ -6,7 +6,10 @@ use {
     crate::store::Store,
     anyhow::Result,
     futures::future::join_all,
-    std::sync::atomic::AtomicBool,
+    std::{
+        io::IsTerminal,
+        sync::atomic::AtomicBool,
+    },
     structopt::StructOpt,
     tokio::spawn,
 };
@@ -74,8 +77,6 @@ async fn init() -> Result<()> {
 #[tokio::main]
 #[tracing::instrument]
 async fn main() -> Result<()> {
-    env_logger::init();
-
     // Initialize a Tracing Subscriber
     tracing::subscriber::set_global_default(
         tracing_subscriber::fmt()
@@ -83,6 +84,8 @@ async fn main() -> Result<()> {
             .with_file(false)
             .with_line_number(true)
             .with_thread_ids(true)
+            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+            .with_ansi(std::io::stderr().is_terminal())
             .finish(),
     )?;
 
