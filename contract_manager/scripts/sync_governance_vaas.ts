@@ -4,6 +4,7 @@ import { DefaultStore } from "../src/store";
 import { SubmittedWormholeMessage, Vault } from "../src/governance";
 import { parseVaa } from "@certusone/wormhole-sdk";
 import { decodeGovernancePayload } from "xc_admin_common";
+import { toPrivateKey } from "../src";
 
 const parser = yargs(hideBin(process.argv))
   .usage(
@@ -89,7 +90,10 @@ async function main() {
       contract.getChain().wormholeChainName === action.targetChainId
     ) {
       console.log("executing vaa", lastExecuted + 1);
-      await contract.executeGovernanceInstruction(argv["private-key"], vaa);
+      await contract.executeGovernanceInstruction(
+        toPrivateKey(argv["private-key"]),
+        vaa
+      );
     } else {
       console.log(
         `vaa is not for this chain (${

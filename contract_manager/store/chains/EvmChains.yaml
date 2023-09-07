@@ -13,7 +13,7 @@
 - id: evmos
   wormholeChainName: evmos
   mainnet: true
-  rpcUrl: https://json-rpc.evmos.blockhunters.org
+  rpcUrl: https://evmos-evm.publicnode.com
   networkId: 9001
   type: EvmChain
 - id: goerli
