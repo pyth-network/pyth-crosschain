@@ -29,7 +29,7 @@ async function main() {
       try {
         console.log(`${contract.getId()} ${await contract.getTotalFee()}`);
       } catch (e) {
-        console.error(e);
+        console.error(`Error fetching fees for ${contract.getId()}`, e);
       }
     }
   }
