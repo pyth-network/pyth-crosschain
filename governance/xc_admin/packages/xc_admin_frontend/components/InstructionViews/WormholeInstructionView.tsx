@@ -138,7 +138,7 @@ export const WormholeInstructionView = ({
                             {key === 'lamports' &&
                             typeof parsedInstruction.args[key] === 'bigint' ? (
                               <>
-                                <div>{'PGAS'}</div>
+                                <div>{'◎'}</div>
                                 <div>
                                   {lamportsToSol(parsedInstruction.args[key])}
                                 </div>
