@@ -1,32 +1,21 @@
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { AccountMeta, Keypair, PublicKey } from '@solana/web3.js'
+import { AccountMeta, Keypair, PublicKey, SystemProgram } from '@solana/web3.js'
 import { MultisigAccount, TransactionAccount } from '@sqds/mesh/lib/types'
 import { useRouter } from 'next/router'
-import {
-  Dispatch,
-  Fragment,
-  SetStateAction,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from 'react'
+import { Fragment, useCallback, useContext, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
   ExecutePostedVaa,
   getMultisigCluster,
-  getProposals,
   MultisigInstruction,
-  MultisigInstructionProgram,
   MultisigParser,
-  PRICE_FEED_MULTISIG,
   PythMultisigInstruction,
   MessageBufferMultisigInstruction,
   UnrecognizedProgram,
   WormholeMultisigInstruction,
   getManyProposalsInstructions,
-  UPGRADE_MULTISIG,
+  SystemProgramMultisigInstruction,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
@@ -274,7 +263,8 @@ const Proposal = ({
         for (const remoteCluster of remoteClusters) {
           if (
             multisigCluster === getMultisigCluster(remoteCluster) &&
-            ix.programId.equals(getPythProgramKeyForCluster(remoteCluster))
+            (ix.programId.equals(getPythProgramKeyForCluster(remoteCluster)) ||
+              ix.programId.equals(SystemProgram.programId))
           ) {
             targetClusters.push(remoteCluster)
           }
@@ -329,7 +319,9 @@ const Proposal = ({
             return (
               parsedRemoteInstruction instanceof PythMultisigInstruction ||
               parsedRemoteInstruction instanceof
-                MessageBufferMultisigInstruction
+                MessageBufferMultisigInstruction ||
+              parsedRemoteInstruction instanceof
+                SystemProgramMultisigInstruction
             )
           }) &&
           ix.governanceAction.targetChainId === 'pythnet')
@@ -432,12 +424,10 @@ const Proposal = ({
         </h4>
         <h4 className="h4 font-semibold">
           {uniqueTargetCluster
-            ? `Target Pyth oracle program: ${targetClusters[0]}`
+            ? `Target network: ${targetClusters[0]}`
             : targetClusters.length == 0
-            ? 'No target Pyth oracle program detected'
-            : `Multiple target Pyth oracle programs detected ${targetClusters.join(
-                ' '
-              )}`}
+            ? 'No target network detected'
+            : `Multiple target networks detected ${targetClusters.join(' ')}`}
         </h4>
       </div>
       <div className="col-span-3 my-2 space-y-4 bg-[#1E1B2F] p-4 lg:col-span-2">

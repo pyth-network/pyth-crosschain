@@ -2,18 +2,24 @@ import {
   getPythProgramKeyForCluster,
   PythCluster,
 } from "@pythnetwork/client/lib/cluster";
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import {
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import { MESSAGE_BUFFER_PROGRAM_ID } from "../message_buffer";
 import { WORMHOLE_ADDRESS } from "../wormhole";
 import { MessageBufferMultisigInstruction } from "./MessageBufferMultisigInstruction";
 import { PythMultisigInstruction } from "./PythMultisigInstruction";
 import { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
+import { SystemProgramMultisigInstruction } from "./SystemProgramInstruction";
 
 export const UNRECOGNIZED_INSTRUCTION = "unrecognizedInstruction";
 export enum MultisigInstructionProgram {
   PythOracle,
   WormholeBridge,
   MessageBuffer,
+  SystemProgram,
   UnrecognizedProgram,
 }
 
@@ -67,6 +73,10 @@ export class MultisigParser {
       return MessageBufferMultisigInstruction.fromTransactionInstruction(
         instruction
       );
+    } else if (instruction.programId.equals(SystemProgram.programId)) {
+      return SystemProgramMultisigInstruction.fromTransactionInstruction(
+        instruction
+      );
     } else {
       return UnrecognizedProgram.fromTransactionInstruction(instruction);
     }
@@ -76,3 +86,4 @@ export class MultisigParser {
 export { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
 export { PythMultisigInstruction } from "./PythMultisigInstruction";
 export { MessageBufferMultisigInstruction } from "./MessageBufferMultisigInstruction";
+export { SystemProgramMultisigInstruction } from "./SystemProgramInstruction";
