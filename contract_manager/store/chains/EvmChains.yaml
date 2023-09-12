@@ -328,3 +328,15 @@
   rpcUrl: https://api-gateway.skymavis.com/rpc?apikey=$ENV_RONIN_API_KEY
   networkId: 2020
   type: EvmChain
+- id: horizen_eon
+  wormholeChainName: horizen
+  mainnet: true
+  rpcUrl: https://eon-rpc.horizenlabs.io/ethv1
+  networkId: 7332
+  type: EvmChain
+- id: horizen_gobi
+  wormholeChainName: horizen
+  mainnet: false
+  rpcUrl: https://gobi-rpc.horizenlabs.io/ethv1
+  networkId: 1663
+  type: EvmChain
