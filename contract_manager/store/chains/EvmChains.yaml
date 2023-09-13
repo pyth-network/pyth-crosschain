@@ -340,3 +340,9 @@
   rpcUrl: https://gobi-rpc.horizenlabs.io/ethv1
   networkId: 1663
   type: EvmChain
+- id: sepolia
+  wormholeChainName: ethereum
+  mainnet: false
+  rpcUrl: https://ethereum-sepolia.blockpi.network/v1/rpc/public
+  networkId: 11155111
+  type: EvmChain
