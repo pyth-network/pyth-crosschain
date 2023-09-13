@@ -9,7 +9,10 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          # Need to grab the history of the PR
+          fetch-depth: 0
       - uses: actions/setup-python@v2
       - uses: actions-rs/toolchain@v1
         with:
@@ -21,4 +24,10 @@ jobs:
           profile: minimal
           toolchain: nightly-2023-07-23
           components: rustfmt, clippy
-      - uses: pre-commit/action@v2.0.3
+      - uses: pre-commit/action@v3.0.0
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          # Run only on files changed in the PR
+          extra_args: --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }}
+      - uses: pre-commit/action@v3.0.0
+        if: ${{ github.event_name != 'pull_request' }}
