@@ -68,11 +68,13 @@ pub async fn get_vaa_ccip(
             .map_err(|_| RestError::InvalidCCIPInput)?,
     );
 
-    let price_feeds_with_update_data = state
-        .store
-        .get_price_feeds_with_update_data(vec![price_id], RequestTime::FirstAfter(publish_time))
-        .await
-        .map_err(|_| RestError::CcipUpdateDataNotFound)?;
+    let price_feeds_with_update_data = crate::store::get_price_feeds_with_update_data(
+        &state.store,
+        vec![price_id],
+        RequestTime::FirstAfter(publish_time),
+    )
+    .await
+    .map_err(|_| RestError::CcipUpdateDataNotFound)?;
 
     let bytes = price_feeds_with_update_data
         .update_data

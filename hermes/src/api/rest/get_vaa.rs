@@ -5,9 +5,12 @@ use {
             types::PriceIdInput,
         },
         doc_examples,
-        store::types::{
-            RequestTime,
-            UnixTimestamp,
+        store::{
+            self,
+            types::{
+                RequestTime,
+                UnixTimestamp,
+            },
         },
     },
     anyhow::Result,
@@ -72,14 +75,13 @@ pub async fn get_vaa(
 ) -> Result<Json<GetVaaResponse>, RestError> {
     let price_id: PriceIdentifier = params.id.into();
 
-    let price_feeds_with_update_data = state
-        .store
-        .get_price_feeds_with_update_data(
-            vec![price_id],
-            RequestTime::FirstAfter(params.publish_time),
-        )
-        .await
-        .map_err(|_| RestError::UpdateDataNotFound)?;
+    let price_feeds_with_update_data = store::get_price_feeds_with_update_data(
+        &state.store,
+        vec![price_id],
+        RequestTime::FirstAfter(params.publish_time),
+    )
+    .await
+    .map_err(|_| RestError::UpdateDataNotFound)?;
 
     let vaa = price_feeds_with_update_data
         .update_data

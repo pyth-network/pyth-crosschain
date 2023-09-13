@@ -213,7 +213,7 @@ pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
 
             let store = store.clone();
             tokio::spawn(async move {
-                if let Err(e) = store.store_update(Update::Vaa(vaa)).await {
+                if let Err(e) = crate::store::store_update(&store, Update::Vaa(vaa)).await {
                     tracing::error!(error = ?e, "Failed to process VAA.");
                 }
             });

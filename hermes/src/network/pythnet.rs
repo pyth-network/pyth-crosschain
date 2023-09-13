@@ -175,9 +175,11 @@ pub async fn run(store: Arc<Store>, pythnet_ws_endpoint: String) -> Result<()> {
                         if candidate.to_string() == update.value.pubkey {
                             let store = store.clone();
                             tokio::spawn(async move {
-                                if let Err(err) = store
-                                    .store_update(Update::AccumulatorMessages(accumulator_messages))
-                                    .await
+                                if let Err(err) = crate::store::store_update(
+                                    &store,
+                                    Update::AccumulatorMessages(accumulator_messages),
+                                )
+                                .await
                                 {
                                     tracing::error!(error = ?err, "Failed to store accumulator messages.");
                                 }
@@ -228,9 +230,7 @@ async fn fetch_existing_guardian_sets(
         "Retrieved Current GuardianSet.",
     );
 
-    store
-        .update_guardian_set(bridge.guardian_set_index, current)
-        .await;
+    crate::store::update_guardian_set(&store, bridge.guardian_set_index, current).await;
 
     // If there are more than one guardian set, we want to fetch the previous one as well as it
     // may still be in transition phase if a guardian upgrade has just occurred.
@@ -248,9 +248,7 @@ async fn fetch_existing_guardian_sets(
             "Retrieved Previous GuardianSet.",
         );
 
-        store
-            .update_guardian_set(bridge.guardian_set_index - 1, previous)
-            .await;
+        crate::store::update_guardian_set(&store, bridge.guardian_set_index - 1, previous).await;
     }
 
     Ok(())

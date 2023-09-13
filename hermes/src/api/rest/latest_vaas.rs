@@ -58,11 +58,13 @@ pub async fn latest_vaas(
     QsQuery(params): QsQuery<LatestVaasQueryParams>,
 ) -> Result<Json<Vec<String>>, RestError> {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
-    let price_feeds_with_update_data = state
-        .store
-        .get_price_feeds_with_update_data(price_ids, RequestTime::Latest)
-        .await
-        .map_err(|_| RestError::UpdateDataNotFound)?;
+    let price_feeds_with_update_data = crate::store::get_price_feeds_with_update_data(
+        &state.store,
+        price_ids,
+        RequestTime::Latest,
+    )
+    .await
+    .map_err(|_| RestError::UpdateDataNotFound)?;
 
     Ok(Json(
         price_feeds_with_update_data
