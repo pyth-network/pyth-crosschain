@@ -24,9 +24,7 @@ use {
 pub async fn price_feed_ids(
     State(state): State<crate::api::State>,
 ) -> Result<Json<Vec<RpcPriceIdentifier>>, RestError> {
-    let price_feed_ids = state
-        .store
-        .get_price_feed_ids()
+    let price_feed_ids = crate::store::get_price_feed_ids(&state.store)
         .await
         .iter()
         .map(RpcPriceIdentifier::from)

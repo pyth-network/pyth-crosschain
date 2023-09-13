@@ -149,11 +149,13 @@ impl Subscriber {
 
     async fn handle_price_feeds_update(&mut self) -> Result<()> {
         let price_feed_ids = self.price_feeds_with_config.keys().cloned().collect();
-        for update in self
-            .store
-            .get_price_feeds_with_update_data(price_feed_ids, RequestTime::Latest)
-            .await?
-            .price_feeds
+        for update in crate::store::get_price_feeds_with_update_data(
+            &self.store,
+            price_feed_ids,
+            RequestTime::Latest,
+        )
+        .await?
+        .price_feeds
         {
             let config = self
                 .price_feeds_with_config
@@ -231,7 +233,7 @@ impl Subscriber {
                 binary,
             }) => {
                 let price_ids: Vec<PriceIdentifier> = ids.into_iter().map(|id| id.into()).collect();
-                let available_price_ids = self.store.get_price_feed_ids().await;
+                let available_price_ids = crate::store::get_price_feed_ids(&self.store).await;
 
                 let not_found_price_ids: Vec<&PriceIdentifier> = price_ids
                     .iter()
