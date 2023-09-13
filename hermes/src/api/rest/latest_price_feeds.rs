@@ -63,11 +63,13 @@ pub async fn latest_price_feeds(
     QsQuery(params): QsQuery<LatestPriceFeedsQueryParams>,
 ) -> Result<Json<Vec<RpcPriceFeed>>, RestError> {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
-    let price_feeds_with_update_data = state
-        .store
-        .get_price_feeds_with_update_data(price_ids, RequestTime::Latest)
-        .await
-        .map_err(|_| RestError::UpdateDataNotFound)?;
+    let price_feeds_with_update_data = crate::store::get_price_feeds_with_update_data(
+        &state.store,
+        price_ids,
+        RequestTime::Latest,
+    )
+    .await
+    .map_err(|_| RestError::UpdateDataNotFound)?;
 
     Ok(Json(
         price_feeds_with_update_data

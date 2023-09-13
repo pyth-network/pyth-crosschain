@@ -3,6 +3,7 @@ use {
         proof::wormhole_merkle::WormholeMerkleState,
         types::{
             AccumulatorMessages,
+            PriceFeedsWithUpdateData,
             ProofSet,
             RawMessage,
             RequestTime,
@@ -747,4 +748,22 @@ mod test {
             .unwrap()
             .is_none());
     }
+}
+
+#[async_trait::async_trait]
+pub trait Cache {
+    async fn get_price_feeds(
+        &self,
+        price_ids: Vec<pyth_sdk::PriceIdentifier>,
+        request_time: RequestTime,
+    ) -> Result<Vec<PriceFeedsWithUpdateData>>;
+}
+
+#[async_trait::async_trait]
+pub trait Benchmarks {
+    async fn get_price_feeds(
+        &self,
+        price_ids: Vec<pyth_sdk::PriceIdentifier>,
+        request_time: RequestTime,
+    ) -> Result<Vec<PriceFeedsWithUpdateData>>;
 }

@@ -91,20 +91,17 @@ const OBSERVED_CACHE_SIZE: usize = 1000;
 const READINESS_STALENESS_THRESHOLD: Duration = Duration::from_secs(30);
 
 pub struct Store {
-    /// Storage is a short-lived cache of the state of all the updates
-    /// that have been passed to the store.
+    /// Storage is a short-lived cache of the state of all the updates that have been passed to the
+    /// store.
     pub storage:                  Storage,
     /// Sequence numbers of lately observed Vaas. Store uses this set
     /// to ignore the previously observed Vaas as a performance boost.
     pub observed_vaa_seqs:        RwLock<BTreeSet<u64>>,
-    /// Wormhole guardian sets. It is used to verify Vaas before using
-    /// them.
+    /// Wormhole guardian sets. It is used to verify Vaas before using them.
     pub guardian_set:             RwLock<BTreeMap<u32, GuardianSet>>,
-    /// The sender to the channel between Store and Api to notify
-    /// completed updates.
+    /// The sender to the channel between Store and Api to notify completed updates.
     pub update_tx:                Sender<()>,
-    /// Time of the last completed update. This is used for the health
-    /// probes.
+    /// Time of the last completed update. This is used for the health probes.
     pub last_completed_update_at: RwLock<Option<Instant>>,
     /// Benchmarks endpoint
     pub benchmarks_endpoint:      Option<Url>,
@@ -125,148 +122,261 @@ impl Store {
             benchmarks_endpoint,
         })
     }
+}
 
-    /// Stores the update data in the store
-    #[tracing::instrument(skip(self, update))]
-    pub async fn store_update(&self, update: Update) -> Result<()> {
-        // The slot that the update is originating from. It should be available
-        // in all the updates.
-        let slot = match update {
-            Update::Vaa(update_vaa) => {
-                // FIXME: Move to wormhole.rs
-                let vaa =
-                    serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(&update_vaa)?;
+/// Stores the update data in the store
+#[tracing::instrument(skip(store, update))]
+pub async fn store_update(store: &Store, update: Update) -> Result<()> {
+    // The slot that the update is originating from. It should be available
+    // in all the updates.
+    let slot = match update {
+        Update::Vaa(update_vaa) => {
+            // FIXME: Move to wormhole.rs
+            let vaa = serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(&update_vaa)?;
 
-                if self.observed_vaa_seqs.read().await.contains(&vaa.sequence) {
-                    return Ok(()); // Ignore VAA if we have already seen it
-                }
-
-                let vaa = verify_vaa(self, vaa).await;
-
-                let vaa = match vaa {
-                    Ok(vaa) => vaa,
-                    Err(err) => {
-                        tracing::warn!(error = ?err, "Ignoring invalid VAA.");
-                        return Ok(());
-                    }
-                };
-
-                {
-                    let mut observed_vaa_seqs = self.observed_vaa_seqs.write().await;
-                    if observed_vaa_seqs.contains(&vaa.sequence) {
-                        return Ok(()); // Ignore VAA if we have already seen it
-                    }
-                    observed_vaa_seqs.insert(vaa.sequence);
-                    while observed_vaa_seqs.len() > OBSERVED_CACHE_SIZE {
-                        observed_vaa_seqs.pop_first();
-                    }
-                }
-
-                match WormholeMessage::try_from_bytes(vaa.payload)?.payload {
-                    WormholePayload::Merkle(proof) => {
-                        tracing::info!(slot = proof.slot, "Storing VAA Merkle Proof.");
-
-                        store_wormhole_merkle_verified_message(
-                            self,
-                            proof.clone(),
-                            update_vaa.to_owned(),
-                        )
-                        .await?;
-
-                        proof.slot
-                    }
-                }
+            if store.observed_vaa_seqs.read().await.contains(&vaa.sequence) {
+                return Ok(()); // Ignore VAA if we have already seen it
             }
 
-            Update::AccumulatorMessages(accumulator_messages) => {
-                let slot = accumulator_messages.slot;
-                tracing::info!(slot = slot, "Storing Accumulator Messages.");
+            let vaa = verify_vaa(store, vaa).await;
 
-                self.storage
-                    .store_accumulator_messages(accumulator_messages)
-                    .await?;
-                slot
-            }
-        };
-
-        let accumulator_messages = self.storage.fetch_accumulator_messages(slot).await?;
-        let wormhole_merkle_state = self.storage.fetch_wormhole_merkle_state(slot).await?;
-
-        let (accumulator_messages, wormhole_merkle_state) =
-            match (accumulator_messages, wormhole_merkle_state) {
-                (Some(accumulator_messages), Some(wormhole_merkle_state)) => {
-                    (accumulator_messages, wormhole_merkle_state)
+            let vaa = match vaa {
+                Ok(vaa) => vaa,
+                Err(err) => {
+                    tracing::warn!(error = ?err, "Ignoring invalid VAA.");
+                    return Ok(());
                 }
-                _ => return Ok(()),
             };
 
-        tracing::info!(slot = wormhole_merkle_state.root.slot, "Completed Update.");
+            {
+                let mut observed_vaa_seqs = store.observed_vaa_seqs.write().await;
+                if observed_vaa_seqs.contains(&vaa.sequence) {
+                    return Ok(()); // Ignore VAA if we have already seen it
+                }
+                observed_vaa_seqs.insert(vaa.sequence);
+                while observed_vaa_seqs.len() > OBSERVED_CACHE_SIZE {
+                    observed_vaa_seqs.pop_first();
+                }
+            }
 
-        // Once the accumulator reaches a complete state for a specific slot
-        // we can build the message states
-        self.build_message_states(accumulator_messages, wormhole_merkle_state)
-            .await?;
+            match WormholeMessage::try_from_bytes(vaa.payload)?.payload {
+                WormholePayload::Merkle(proof) => {
+                    tracing::info!(slot = proof.slot, "Storing VAA Merkle Proof.");
 
-        self.update_tx.send(()).await?;
+                    store_wormhole_merkle_verified_message(
+                        store,
+                        proof.clone(),
+                        update_vaa.to_owned(),
+                    )
+                    .await?;
 
-        self.last_completed_update_at
-            .write()
-            .await
-            .replace(Instant::now());
+                    proof.slot
+                }
+            }
+        }
 
-        Ok(())
-    }
+        Update::AccumulatorMessages(accumulator_messages) => {
+            let slot = accumulator_messages.slot;
+            tracing::info!(slot = slot, "Storing Accumulator Messages.");
 
-    #[tracing::instrument(skip(self, accumulator_messages, wormhole_merkle_state))]
-    async fn build_message_states(
-        &self,
-        accumulator_messages: AccumulatorMessages,
-        wormhole_merkle_state: WormholeMerkleState,
-    ) -> Result<()> {
-        let wormhole_merkle_message_states_proofs =
-            construct_message_states_proofs(&accumulator_messages, &wormhole_merkle_state)?;
+            store
+                .storage
+                .store_accumulator_messages(accumulator_messages)
+                .await?;
+            slot
+        }
+    };
 
-        let current_time: UnixTimestamp =
-            SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as _;
+    let accumulator_messages = store.storage.fetch_accumulator_messages(slot).await?;
+    let wormhole_merkle_state = store.storage.fetch_wormhole_merkle_state(slot).await?;
 
-        let message_states = accumulator_messages
-            .raw_messages
-            .into_iter()
-            .enumerate()
-            .map(|(idx, raw_message)| {
-                Ok(MessageState::new(
-                    from_slice::<BigEndian, _>(raw_message.as_ref())
-                        .map_err(|e| anyhow!("Failed to deserialize message: {:?}", e))?,
-                    raw_message,
-                    ProofSet {
-                        wormhole_merkle_proof: wormhole_merkle_message_states_proofs
-                            .get(idx)
-                            .ok_or(anyhow!("Missing proof for message"))?
-                            .clone(),
+    let (accumulator_messages, wormhole_merkle_state) =
+        match (accumulator_messages, wormhole_merkle_state) {
+            (Some(accumulator_messages), Some(wormhole_merkle_state)) => {
+                (accumulator_messages, wormhole_merkle_state)
+            }
+            _ => return Ok(()),
+        };
+
+    tracing::info!(slot = wormhole_merkle_state.root.slot, "Completed Update.");
+
+    // Once the accumulator reaches a complete state for a specific slot
+    // we can build the message states
+    build_message_states(store, accumulator_messages, wormhole_merkle_state).await?;
+
+    store.update_tx.send(()).await?;
+
+    store
+        .last_completed_update_at
+        .write()
+        .await
+        .replace(Instant::now());
+
+    Ok(())
+}
+
+#[tracing::instrument(skip(store, accumulator_messages, wormhole_merkle_state))]
+async fn build_message_states(
+    store: &Store,
+    accumulator_messages: AccumulatorMessages,
+    wormhole_merkle_state: WormholeMerkleState,
+) -> Result<()> {
+    let wormhole_merkle_message_states_proofs =
+        construct_message_states_proofs(&accumulator_messages, &wormhole_merkle_state)?;
+
+    let current_time: UnixTimestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as _;
+
+    let message_states = accumulator_messages
+        .raw_messages
+        .into_iter()
+        .enumerate()
+        .map(|(idx, raw_message)| {
+            Ok(MessageState::new(
+                from_slice::<BigEndian, _>(raw_message.as_ref())
+                    .map_err(|e| anyhow!("Failed to deserialize message: {:?}", e))?,
+                raw_message,
+                ProofSet {
+                    wormhole_merkle_proof: wormhole_merkle_message_states_proofs
+                        .get(idx)
+                        .ok_or(anyhow!("Missing proof for message"))?
+                        .clone(),
+                },
+                accumulator_messages.slot,
+                current_time,
+            ))
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    tracing::info!(len = message_states.len(), "Storing Message States.");
+
+    store.storage.store_message_states(message_states).await?;
+
+    Ok(())
+}
+
+pub async fn update_guardian_set(store: &Store, id: u32, guardian_set: GuardianSet) {
+    let mut guardian_sets = store.guardian_set.write().await;
+    guardian_sets.insert(id, guardian_set);
+}
+
+async fn get_price_feeds_with_update_data_from_storage(
+    store: &Store,
+    price_ids: Vec<PriceIdentifier>,
+    request_time: RequestTime,
+) -> Result<PriceFeedsWithUpdateData> {
+    let messages = store
+        .storage
+        .fetch_message_states(
+            price_ids
+                .iter()
+                .map(|price_id| price_id.to_bytes())
+                .collect(),
+            request_time,
+            MessageStateFilter::Only(MessageType::PriceFeedMessage),
+        )
+        .await?;
+
+    let price_feeds = messages
+        .iter()
+        .map(|message_state| match message_state.message {
+            Message::PriceFeedMessage(price_feed) => Ok(PriceFeedUpdate {
+                price_feed:  PriceFeed::new(
+                    PriceIdentifier::new(price_feed.feed_id),
+                    Price {
+                        price:        price_feed.price,
+                        conf:         price_feed.conf,
+                        expo:         price_feed.exponent,
+                        publish_time: price_feed.publish_time,
                     },
-                    accumulator_messages.slot,
-                    current_time,
-                ))
-            })
-            .collect::<Result<Vec<_>>>()?;
+                    Price {
+                        price:        price_feed.ema_price,
+                        conf:         price_feed.ema_conf,
+                        expo:         price_feed.exponent,
+                        publish_time: price_feed.publish_time,
+                    },
+                ),
+                received_at: Some(message_state.received_at),
+                slot:        Some(message_state.slot),
+                update_data: Some(
+                    construct_update_data(vec![message_state.clone().into()])?
+                        .into_iter()
+                        .next()
+                        .ok_or(anyhow!("Missing update data for message"))?,
+                ),
+            }),
+            _ => Err(anyhow!("Invalid message state type")),
+        })
+        .collect::<Result<Vec<_>>>()?;
 
-        tracing::info!(len = message_states.len(), "Storing Message States.");
+    let update_data = construct_update_data(messages.into_iter().map(|m| m.into()).collect())?;
 
-        self.storage.store_message_states(message_states).await?;
+    Ok(PriceFeedsWithUpdateData {
+        price_feeds,
+        update_data,
+    })
+}
 
-        Ok(())
+pub async fn get_price_feeds_with_update_data<S>(
+    store: S,
+    price_ids: Vec<PriceIdentifier>,
+    request_time: RequestTime,
+) -> Result<PriceFeedsWithUpdateData>
+where
+    S: Benchmarks,
+    S: PriceFeedCache,
+    S: ThresholdCache,
+{
+    match get_price_feeds_with_update_data_from_storage(
+        store,
+        price_ids.clone(),
+        request_time.clone(),
+    )
+    .await
+    {
+        Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
+        Err(e) => {
+            if let RequestTime::FirstAfter(publish_time) = request_time {
+                if let Some(endpoint) = &store.benchmarks_endpoint {
+                    return benchmarks::get_price_feeds_with_update_data_from_benchmarks(
+                        endpoint.clone(),
+                        price_ids,
+                        publish_time,
+                    )
+                    .await;
+                }
+            }
+            Err(e)
+        }
     }
+}
 
-    pub async fn update_guardian_set(&self, id: u32, guardian_set: GuardianSet) {
-        let mut guardian_sets = self.guardian_set.write().await;
-        guardian_sets.insert(id, guardian_set);
+pub async fn get_price_feed_ids(store: &Store) -> HashSet<PriceIdentifier> {
+    store
+        .storage
+        .message_state_keys()
+        .await
+        .iter()
+        .map(|key| PriceIdentifier::new(key.feed_id))
+        .collect()
+}
+
+pub async fn is_ready(store: &Store) -> bool {
+    let last_completed_update_at = store.last_completed_update_at.read().await;
+    match last_completed_update_at.as_ref() {
+        Some(last_completed_update_at) => {
+            last_completed_update_at.elapsed() < READINESS_STALENESS_THRESHOLD
+        }
+        None => false,
     }
+}
 
-    async fn get_price_feeds_with_update_data_from_storage(
+#[async_trait::async_trait]
+impl crate::store::storage::Cache for Store {
+    async fn get_price_feeds(
         &self,
         price_ids: Vec<PriceIdentifier>,
         request_time: RequestTime,
-    ) -> Result<PriceFeedsWithUpdateData> {
+    ) -> Result<Vec<PriceFeedsWithUpdateData>> {
         let messages = self
             .storage
             .fetch_message_states(
@@ -318,52 +428,8 @@ impl Store {
             update_data,
         })
     }
-
-    pub async fn get_price_feeds_with_update_data(
-        &self,
-        price_ids: Vec<PriceIdentifier>,
-        request_time: RequestTime,
-    ) -> Result<PriceFeedsWithUpdateData> {
-        match self
-            .get_price_feeds_with_update_data_from_storage(price_ids.clone(), request_time.clone())
-            .await
-        {
-            Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
-            Err(e) => {
-                if let RequestTime::FirstAfter(publish_time) = request_time {
-                    if let Some(endpoint) = &self.benchmarks_endpoint {
-                        return benchmarks::get_price_feeds_with_update_data_from_benchmarks(
-                            endpoint.clone(),
-                            price_ids,
-                            publish_time,
-                        )
-                        .await;
-                    }
-                }
-                Err(e)
-            }
-        }
-    }
-
-    pub async fn get_price_feed_ids(&self) -> HashSet<PriceIdentifier> {
-        self.storage
-            .message_state_keys()
-            .await
-            .iter()
-            .map(|key| PriceIdentifier::new(key.feed_id))
-            .collect()
-    }
-
-    pub async fn is_ready(&self) -> bool {
-        let last_completed_update_at = self.last_completed_update_at.read().await;
-        match last_completed_update_at.as_ref() {
-            Some(last_completed_update_at) => {
-                last_completed_update_at.elapsed() < READINESS_STALENESS_THRESHOLD
-            }
-            None => false,
-        }
-    }
 }
+
 
 #[cfg(test)]
 mod test {
@@ -478,20 +544,20 @@ mod test {
         let store = Store::new(update_tx, cache_size, None);
 
         // Add an initial guardian set with public key 0
-        store
-            .update_guardian_set(
-                0,
-                GuardianSet {
-                    keys: vec![[0; 20]],
-                },
-            )
-            .await;
+        update_guardian_set(
+            &store,
+            0,
+            GuardianSet {
+                keys: vec![[0; 20]],
+            },
+        )
+        .await;
 
         (store, update_rx)
     }
 
     pub async fn store_multiple_concurrent_valid_updates(store: Arc<Store>, updates: Vec<Update>) {
-        let res = join_all(updates.into_iter().map(|u| store.store_update(u))).await;
+        let res = join_all(updates.into_iter().map(|u| store_update(&store, u))).await;
         // Check that all store_update calls succeeded
         assert!(res.into_iter().all(|r| r.is_ok()));
     }
@@ -514,19 +580,19 @@ mod test {
 
         // Check the price ids are stored correctly
         assert_eq!(
-            store.get_price_feed_ids().await,
+            get_price_feed_ids(&store).await,
             vec![PriceIdentifier::new([100; 32])].into_iter().collect()
         );
 
         // Check get_price_feeds_with_update_data retrieves the correct
         // price feed with correct update data.
-        let price_feeds_with_update_data = store
-            .get_price_feeds_with_update_data(
-                vec![PriceIdentifier::new([100; 32])],
-                RequestTime::Latest,
-            )
-            .await
-            .unwrap();
+        let price_feeds_with_update_data = get_price_feeds_with_update_data(
+            &store,
+            vec![PriceIdentifier::new([100; 32])],
+            RequestTime::Latest,
+        )
+        .await
+        .unwrap();
 
         assert_eq!(
             price_feeds_with_update_data.price_feeds,
@@ -640,13 +706,13 @@ mod test {
         MockClock::advance(Duration::from_secs(1));
 
         // Get the price feeds with update data
-        let price_feeds_with_update_data = store
-            .get_price_feeds_with_update_data(
-                vec![PriceIdentifier::new([100; 32])],
-                RequestTime::Latest,
-            )
-            .await
-            .unwrap();
+        let price_feeds_with_update_data = get_price_feeds_with_update_data(
+            &store,
+            vec![PriceIdentifier::new([100; 32])],
+            RequestTime::Latest,
+        )
+        .await
+        .unwrap();
 
         // check received_at is correct
         assert_eq!(price_feeds_with_update_data.price_feeds.len(), 1);
@@ -656,13 +722,13 @@ mod test {
         );
 
         // Check the store is ready
-        assert!(store.is_ready().await);
+        assert!(is_ready(&store).await);
 
         // Advance the clock to make the prices stale
         MockClock::advance_system_time(READINESS_STALENESS_THRESHOLD);
         MockClock::advance(READINESS_STALENESS_THRESHOLD);
         // Check the store is not ready
-        assert!(!store.is_ready().await);
+        assert!(!is_ready(&store).await);
     }
 
     /// Test that the store retains the latest slots upon cache eviction.
@@ -705,16 +771,16 @@ mod test {
 
         // Check the last 100 slots are retained
         for slot in 900..1000 {
-            let price_feeds_with_update_data = store
-                .get_price_feeds_with_update_data(
-                    vec![
-                        PriceIdentifier::new([100; 32]),
-                        PriceIdentifier::new([200; 32]),
-                    ],
-                    RequestTime::FirstAfter(slot as i64),
-                )
-                .await
-                .unwrap();
+            let price_feeds_with_update_data = get_price_feeds_with_update_data(
+                &store,
+                vec![
+                    PriceIdentifier::new([100; 32]),
+                    PriceIdentifier::new([200; 32]),
+                ],
+                RequestTime::FirstAfter(slot as i64),
+            )
+            .await
+            .unwrap();
             assert_eq!(price_feeds_with_update_data.price_feeds.len(), 2);
             assert_eq!(price_feeds_with_update_data.price_feeds[0].slot, Some(slot));
             assert_eq!(price_feeds_with_update_data.price_feeds[1].slot, Some(slot));
@@ -722,16 +788,16 @@ mod test {
 
         // Check nothing else is retained
         for slot in 0..900 {
-            assert!(store
-                .get_price_feeds_with_update_data(
-                    vec![
-                        PriceIdentifier::new([100; 32]),
-                        PriceIdentifier::new([200; 32]),
-                    ],
-                    RequestTime::FirstAfter(slot as i64),
-                )
-                .await
-                .is_err());
+            assert!(get_price_feeds_with_update_data(
+                &store,
+                vec![
+                    PriceIdentifier::new([100; 32]),
+                    PriceIdentifier::new([200; 32]),
+                ],
+                RequestTime::FirstAfter(slot as i64),
+            )
+            .await
+            .is_err());
         }
     }
 }

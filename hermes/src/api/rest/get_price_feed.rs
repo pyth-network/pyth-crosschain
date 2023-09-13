@@ -65,14 +65,13 @@ pub async fn get_price_feed(
 ) -> Result<Json<RpcPriceFeed>, RestError> {
     let price_id: PriceIdentifier = params.id.into();
 
-    let price_feeds_with_update_data = state
-        .store
-        .get_price_feeds_with_update_data(
-            vec![price_id],
-            RequestTime::FirstAfter(params.publish_time),
-        )
-        .await
-        .map_err(|_| RestError::UpdateDataNotFound)?;
+    let price_feeds_with_update_data = crate::store::get_price_feeds_with_update_data(
+        &state.store,
+        vec![price_id],
+        RequestTime::FirstAfter(params.publish_time),
+    )
+    .await
+    .map_err(|_| RestError::UpdateDataNotFound)?;
 
     let mut price_feed = price_feeds_with_update_data
         .price_feeds
