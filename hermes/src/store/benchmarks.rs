@@ -15,7 +15,6 @@ use {
         PriceFeed,
         PriceIdentifier,
     },
-    reqwest::Url,
 };
 
 const BENCHMARKS_REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
@@ -76,36 +75,43 @@ impl TryFrom<BenchmarkUpdates> for PriceFeedsWithUpdateData {
     }
 }
 
-trait Benchmarks {
-    fn get_verified_price_feeds(
+#[async_trait::async_trait]
+pub trait Benchmarks {
+    async fn get_verified_price_feeds(
         &self,
         price_ids: Vec<PriceIdentifier>,
         publish_time: UnixTimestamp,
     ) -> Result<PriceFeedsWithUpdateData>;
 }
 
-pub async fn get_price_feeds_with_update_data_from_benchmarks(
-    endpoint: Url,
-    price_ids: Vec<PriceIdentifier>,
-    publish_time: UnixTimestamp,
-) -> Result<PriceFeedsWithUpdateData> {
-    let endpoint = endpoint
-        .join(&format!("/v1/updates/price/{}", publish_time))
-        .unwrap();
+#[async_trait::async_trait]
+impl Benchmarks for crate::store::Store {
+    async fn get_verified_price_feeds(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+        publish_time: UnixTimestamp,
+    ) -> Result<PriceFeedsWithUpdateData> {
+        let endpoint = self
+            .benchmarks_endpoint
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Benchmarks endpoint is not set"))?
+            .join(&format!("/v1/updates/price/{}", publish_time))
+            .unwrap();
 
-    let client = reqwest::Client::new();
-    let mut request = client
-        .get(endpoint)
-        .timeout(BENCHMARKS_REQUEST_TIMEOUT)
-        .query(&[("encoding", "hex")])
-        .query(&[("parsed", "true")]);
+        let client = reqwest::Client::new();
+        let mut request = client
+            .get(endpoint)
+            .timeout(BENCHMARKS_REQUEST_TIMEOUT)
+            .query(&[("encoding", "hex")])
+            .query(&[("parsed", "true")]);
 
-    for price_id in price_ids {
-        request = request.query(&[("ids", price_id)])
+        for price_id in price_ids {
+            request = request.query(&[("ids", price_id)])
+        }
+
+        let response = request.send().await?;
+
+        let benchmark_updates: BenchmarkUpdates = response.json().await?;
+        benchmark_updates.try_into()
     }
-
-    let response = request.send().await?;
-
-    let benchmark_updates: BenchmarkUpdates = response.json().await?;
-    benchmark_updates.try_into()
 }

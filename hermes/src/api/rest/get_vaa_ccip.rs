@@ -69,7 +69,7 @@ pub async fn get_vaa_ccip(
     );
 
     let price_feeds_with_update_data = crate::store::get_price_feeds_with_update_data(
-        &state.store,
+        &*state.store,
         vec![price_id],
         RequestTime::FirstAfter(publish_time),
     )
