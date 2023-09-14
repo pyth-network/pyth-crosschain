@@ -150,7 +150,7 @@ impl Subscriber {
     async fn handle_price_feeds_update(&mut self) -> Result<()> {
         let price_feed_ids = self.price_feeds_with_config.keys().cloned().collect();
         for update in crate::store::get_price_feeds_with_update_data(
-            &self.store,
+            &*self.store,
             price_feed_ids,
             RequestTime::Latest,
         )

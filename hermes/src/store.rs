@@ -12,6 +12,7 @@ use std::time::{
 };
 use {
     self::{
+        benchmarks::Benchmarks,
         cache::{
             Cache,
             CacheStore,
@@ -329,23 +330,20 @@ where
     })
 }
 
-pub async fn get_price_feeds_with_update_data(
-    store: &Store,
+pub async fn get_price_feeds_with_update_data<S>(
+    store: &S,
     price_ids: Vec<PriceIdentifier>,
     request_time: RequestTime,
-) -> Result<PriceFeedsWithUpdateData> {
+) -> Result<PriceFeedsWithUpdateData>
+where
+    S: CacheStore,
+    S: Benchmarks,
+{
     match get_verified_price_feeds(store, price_ids.clone(), request_time.clone()).await {
         Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
         Err(e) => {
             if let RequestTime::FirstAfter(publish_time) = request_time {
-                if let Some(endpoint) = &store.benchmarks_endpoint {
-                    return benchmarks::get_price_feeds_with_update_data_from_benchmarks(
-                        endpoint.clone(),
-                        price_ids,
-                        publish_time,
-                    )
-                    .await;
-                }
+                return Benchmarks::get_verified_price_feeds(store, price_ids, publish_time).await;
             }
             Err(e)
         }
