@@ -4,8 +4,7 @@
 
 use {
     crate::{
-        config::RunOptions,
-        store::{
+        aggregate::{
             types::{
                 AccumulatorMessages,
                 Update,
@@ -15,8 +14,9 @@ use {
                 GuardianSet,
                 GuardianSetData,
             },
-            Store,
         },
+        config::RunOptions,
+        state::State,
     },
     anyhow::{
         anyhow,
@@ -128,7 +128,7 @@ async fn fetch_bridge_data(
     }
 }
 
-pub async fn run(store: Arc<Store>, pythnet_ws_endpoint: String) -> Result<()> {
+pub async fn run(store: Arc<State>, pythnet_ws_endpoint: String) -> Result<()> {
     let client = PubsubClient::new(pythnet_ws_endpoint.as_ref()).await?;
 
     let config = RpcProgramAccountsConfig {
@@ -175,7 +175,7 @@ pub async fn run(store: Arc<Store>, pythnet_ws_endpoint: String) -> Result<()> {
                         if candidate.to_string() == update.value.pubkey {
                             let store = store.clone();
                             tokio::spawn(async move {
-                                if let Err(err) = crate::store::store_update(
+                                if let Err(err) = crate::aggregate::store_update(
                                     &store,
                                     Update::AccumulatorMessages(accumulator_messages),
                                 )
@@ -213,7 +213,7 @@ pub async fn run(store: Arc<Store>, pythnet_ws_endpoint: String) -> Result<()> {
 /// sets from a deployed Wormhole contract. Note that we only fetch the last two accounts due to
 /// the fact that during a Wormhole upgrade, there will only be messages produces from those two.
 async fn fetch_existing_guardian_sets(
-    store: Arc<Store>,
+    store: Arc<State>,
     pythnet_http_endpoint: String,
     wormhole_contract_addr: Pubkey,
 ) -> Result<()> {
@@ -230,7 +230,7 @@ async fn fetch_existing_guardian_sets(
         "Retrieved Current GuardianSet.",
     );
 
-    crate::store::update_guardian_set(&store, bridge.guardian_set_index, current).await;
+    crate::aggregate::update_guardian_set(&store, bridge.guardian_set_index, current).await;
 
     // If there are more than one guardian set, we want to fetch the previous one as well as it
     // may still be in transition phase if a guardian upgrade has just occurred.
@@ -248,14 +248,15 @@ async fn fetch_existing_guardian_sets(
             "Retrieved Previous GuardianSet.",
         );
 
-        crate::store::update_guardian_set(&store, bridge.guardian_set_index - 1, previous).await;
+        crate::aggregate::update_guardian_set(&store, bridge.guardian_set_index - 1, previous)
+            .await;
     }
 
     Ok(())
 }
 
 #[tracing::instrument(skip(opts, store))]
-pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
+pub async fn spawn(opts: RunOptions, store: Arc<State>) -> Result<()> {
     tracing::info!(
         endpoint = opts.pythnet_ws_endpoint,
         "Started Pythnet Listener."

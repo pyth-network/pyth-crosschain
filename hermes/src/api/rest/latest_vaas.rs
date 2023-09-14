@@ -1,11 +1,11 @@
 use {
     crate::{
+        aggregate::types::RequestTime,
         api::{
             rest::RestError,
             types::PriceIdInput,
         },
         doc_examples,
-        store::types::RequestTime,
     },
     anyhow::Result,
     axum::{
@@ -54,12 +54,12 @@ pub struct LatestVaasQueryParams {
     ),
 )]
 pub async fn latest_vaas(
-    State(state): State<crate::api::State>,
+    State(state): State<crate::api::ApiState>,
     QsQuery(params): QsQuery<LatestVaasQueryParams>,
 ) -> Result<Json<Vec<String>>, RestError> {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
-    let price_feeds_with_update_data = crate::store::get_price_feeds_with_update_data(
-        &*state.store,
+    let price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
+        &*state.state,
         price_ids,
         RequestTime::Latest,
     )

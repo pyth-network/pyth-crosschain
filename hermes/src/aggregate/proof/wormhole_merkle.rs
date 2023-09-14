@@ -1,13 +1,13 @@
 use {
-    crate::store::{
-        cache::{
-            CacheStore,
-            MessageState,
-        },
-        types::{
+    crate::{
+        aggregate::types::{
             AccumulatorMessages,
             RawMessage,
             Slot,
+        },
+        state::cache::{
+            CacheStore,
+            MessageState,
         },
     },
     anyhow::{

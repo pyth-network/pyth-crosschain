@@ -1,5 +1,5 @@
 use {
-    super::Store,
+    super::State,
     anyhow::{
         anyhow,
         Result,
@@ -74,12 +74,12 @@ pub struct GuardianSetData {
 
 /// Verifies a VAA to ensure it is signed by the Wormhole guardian set.
 pub async fn verify_vaa<'a>(
-    store: &Store,
+    state: &State,
     vaa: Vaa<&'a RawMessage>,
 ) -> Result<Vaa<&'a RawMessage>> {
     let (header, body): (Header, Body<&RawMessage>) = vaa.into();
     let digest = body.digest()?;
-    let guardian_set = store.guardian_set.read().await;
+    let guardian_set = state.guardian_set.read().await;
     let guardian_set = guardian_set
         .get(&header.guardian_set_index)
         .ok_or_else(|| {

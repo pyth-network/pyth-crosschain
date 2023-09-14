@@ -2,7 +2,7 @@ use {
     self::ws::notify_updates,
     crate::{
         config::RunOptions,
-        store::Store,
+        state::State,
     },
     anyhow::Result,
     axum::{
@@ -29,15 +29,15 @@ mod types;
 mod ws;
 
 #[derive(Clone)]
-pub struct State {
-    pub store: Arc<Store>,
+pub struct ApiState {
+    pub state: Arc<State>,
     pub ws:    Arc<ws::WsState>,
 }
 
-impl State {
-    pub fn new(store: Arc<Store>) -> Self {
+impl ApiState {
+    pub fn new(state: Arc<State>) -> Self {
         Self {
-            store,
+            state,
             ws: Arc::new(ws::WsState::new()),
         }
     }
@@ -47,8 +47,8 @@ impl State {
 ///
 /// Currently this is based on Axum due to the simplicity and strong ecosystem support for the
 /// packages they are based on (tokio & hyper).
-#[tracing::instrument(skip(opts, store, update_rx))]
-pub async fn run(opts: RunOptions, store: Arc<Store>, mut update_rx: Receiver<()>) -> Result<()> {
+#[tracing::instrument(skip(opts, state, update_rx))]
+pub async fn run(opts: RunOptions, state: Arc<State>, mut update_rx: Receiver<()>) -> Result<()> {
     tracing::info!(endpoint = %opts.api_addr, "Starting RPC Server.");
 
     #[derive(OpenApi)]
@@ -79,7 +79,7 @@ pub async fn run(opts: RunOptions, store: Arc<Store>, mut update_rx: Receiver<()
     )]
     struct ApiDoc;
 
-    let state = State::new(store);
+    let state = ApiState::new(state);
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.

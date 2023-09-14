@@ -12,13 +12,6 @@ use std::time::{
 };
 use {
     self::{
-        benchmarks::Benchmarks,
-        cache::{
-            Cache,
-            CacheStore,
-            MessageState,
-            MessageStateFilter,
-        },
         proof::wormhole_merkle::{
             construct_update_data,
             WormholeMerkleState,
@@ -32,16 +25,27 @@ use {
         },
         wormhole::GuardianSet,
     },
-    crate::store::{
-        proof::wormhole_merkle::{
-            construct_message_states_proofs,
-            store_wormhole_merkle_verified_message,
+    crate::{
+        aggregate::{
+            proof::wormhole_merkle::{
+                construct_message_states_proofs,
+                store_wormhole_merkle_verified_message,
+            },
+            types::{
+                ProofSet,
+                UnixTimestamp,
+            },
+            wormhole::verify_vaa,
         },
-        types::{
-            ProofSet,
-            UnixTimestamp,
+        state::{
+            benchmarks::Benchmarks,
+            cache::{
+                CacheStore,
+                MessageState,
+                MessageStateFilter,
+            },
+            State,
         },
-        wormhole::verify_vaa,
     },
     anyhow::{
         anyhow,
@@ -66,25 +70,13 @@ use {
             },
         },
     },
-    reqwest::Url,
     std::{
-        collections::{
-            BTreeMap,
-            BTreeSet,
-            HashSet,
-        },
-        sync::Arc,
+        collections::HashSet,
         time::Duration,
-    },
-    tokio::sync::{
-        mpsc::Sender,
-        RwLock,
     },
     wormhole_sdk::Vaa,
 };
 
-pub mod benchmarks;
-pub mod cache;
 pub mod proof;
 pub mod types;
 pub mod wormhole;
@@ -92,54 +84,9 @@ pub mod wormhole;
 const OBSERVED_CACHE_SIZE: usize = 1000;
 const READINESS_STALENESS_THRESHOLD: Duration = Duration::from_secs(30);
 
-pub struct Store {
-    /// Storage is a short-lived cache of the state of all the updates that have been passed to the
-    /// store.
-    pub cache: Cache,
-
-    /// Sequence numbers of lately observed Vaas. Store uses this set
-    /// to ignore the previously observed Vaas as a performance boost.
-    pub observed_vaa_seqs: RwLock<BTreeSet<u64>>,
-
-    /// Wormhole guardian sets. It is used to verify Vaas before using them.
-    pub guardian_set: RwLock<BTreeMap<u32, GuardianSet>>,
-
-    /// The sender to the channel between Store and Api to notify completed updates.
-    pub update_tx: Sender<()>,
-
-    /// Time of the last completed update. This is used for the health probes.
-    pub last_completed_update_at: RwLock<Option<Instant>>,
-
-    /// Benchmarks endpoint
-    pub benchmarks_endpoint: Option<Url>,
-}
-
-// impl CacheStore for Store {
-// }
-//
-// impl Benchmarks for Store {
-// }
-
-impl Store {
-    pub fn new(
-        update_tx: Sender<()>,
-        cache_size: u64,
-        benchmarks_endpoint: Option<Url>,
-    ) -> Arc<Self> {
-        Arc::new(Self {
-            cache: Cache::new(cache_size),
-            observed_vaa_seqs: RwLock::new(Default::default()),
-            guardian_set: RwLock::new(Default::default()),
-            update_tx,
-            last_completed_update_at: RwLock::new(None),
-            benchmarks_endpoint,
-        })
-    }
-}
-
 /// Stores the update data in the store
-#[tracing::instrument(skip(store, update))]
-pub async fn store_update(store: &Store, update: Update) -> Result<()> {
+#[tracing::instrument(skip(state, update))]
+pub async fn store_update(state: &State, update: Update) -> Result<()> {
     // The slot that the update is originating from. It should be available
     // in all the updates.
     let slot = match update {
@@ -147,11 +94,11 @@ pub async fn store_update(store: &Store, update: Update) -> Result<()> {
             // FIXME: Move to wormhole.rs
             let vaa = serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(&update_vaa)?;
 
-            if store.observed_vaa_seqs.read().await.contains(&vaa.sequence) {
+            if state.observed_vaa_seqs.read().await.contains(&vaa.sequence) {
                 return Ok(()); // Ignore VAA if we have already seen it
             }
 
-            let vaa = verify_vaa(store, vaa).await;
+            let vaa = verify_vaa(state, vaa).await;
 
             let vaa = match vaa {
                 Ok(vaa) => vaa,
@@ -162,7 +109,7 @@ pub async fn store_update(store: &Store, update: Update) -> Result<()> {
             };
 
             {
-                let mut observed_vaa_seqs = store.observed_vaa_seqs.write().await;
+                let mut observed_vaa_seqs = state.observed_vaa_seqs.write().await;
                 if observed_vaa_seqs.contains(&vaa.sequence) {
                     return Ok(()); // Ignore VAA if we have already seen it
                 }
@@ -177,7 +124,7 @@ pub async fn store_update(store: &Store, update: Update) -> Result<()> {
                     tracing::info!(slot = proof.slot, "Storing VAA Merkle Proof.");
 
                     store_wormhole_merkle_verified_message(
-                        store,
+                        state,
                         proof.clone(),
                         update_vaa.to_owned(),
                     )
@@ -192,15 +139,15 @@ pub async fn store_update(store: &Store, update: Update) -> Result<()> {
             let slot = accumulator_messages.slot;
             tracing::info!(slot = slot, "Storing Accumulator Messages.");
 
-            store
+            state
                 .store_accumulator_messages(accumulator_messages)
                 .await?;
             slot
         }
     };
 
-    let accumulator_messages = store.fetch_accumulator_messages(slot).await?;
-    let wormhole_merkle_state = store.fetch_wormhole_merkle_state(slot).await?;
+    let accumulator_messages = state.fetch_accumulator_messages(slot).await?;
+    let wormhole_merkle_state = state.fetch_wormhole_merkle_state(slot).await?;
 
     let (accumulator_messages, wormhole_merkle_state) =
         match (accumulator_messages, wormhole_merkle_state) {
@@ -214,11 +161,11 @@ pub async fn store_update(store: &Store, update: Update) -> Result<()> {
 
     // Once the accumulator reaches a complete state for a specific slot
     // we can build the message states
-    build_message_states(store, accumulator_messages, wormhole_merkle_state).await?;
+    build_message_states(state, accumulator_messages, wormhole_merkle_state).await?;
 
-    store.update_tx.send(()).await?;
+    state.update_tx.send(()).await?;
 
-    store
+    state
         .last_completed_update_at
         .write()
         .await
@@ -227,9 +174,9 @@ pub async fn store_update(store: &Store, update: Update) -> Result<()> {
     Ok(())
 }
 
-#[tracing::instrument(skip(store, accumulator_messages, wormhole_merkle_state))]
+#[tracing::instrument(skip(state, accumulator_messages, wormhole_merkle_state))]
 async fn build_message_states(
-    store: &Store,
+    state: &State,
     accumulator_messages: AccumulatorMessages,
     wormhole_merkle_state: WormholeMerkleState,
 ) -> Result<()> {
@@ -261,25 +208,25 @@ async fn build_message_states(
 
     tracing::info!(len = message_states.len(), "Storing Message States.");
 
-    store.store_message_states(message_states).await?;
+    state.store_message_states(message_states).await?;
 
     Ok(())
 }
 
-pub async fn update_guardian_set(store: &Store, id: u32, guardian_set: GuardianSet) {
-    let mut guardian_sets = store.guardian_set.write().await;
+pub async fn update_guardian_set(state: &State, id: u32, guardian_set: GuardianSet) {
+    let mut guardian_sets = state.guardian_set.write().await;
     guardian_sets.insert(id, guardian_set);
 }
 
 async fn get_verified_price_feeds<S>(
-    store: &S,
+    state: &S,
     price_ids: Vec<PriceIdentifier>,
     request_time: RequestTime,
 ) -> Result<PriceFeedsWithUpdateData>
 where
     S: CacheStore,
 {
-    let messages = store
+    let messages = state
         .fetch_message_states(
             price_ids
                 .iter()
@@ -331,7 +278,7 @@ where
 }
 
 pub async fn get_price_feeds_with_update_data<S>(
-    store: &S,
+    state: &S,
     price_ids: Vec<PriceIdentifier>,
     request_time: RequestTime,
 ) -> Result<PriceFeedsWithUpdateData>
@@ -339,22 +286,22 @@ where
     S: CacheStore,
     S: Benchmarks,
 {
-    match get_verified_price_feeds(store, price_ids.clone(), request_time.clone()).await {
+    match get_verified_price_feeds(state, price_ids.clone(), request_time.clone()).await {
         Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
         Err(e) => {
             if let RequestTime::FirstAfter(publish_time) = request_time {
-                return Benchmarks::get_verified_price_feeds(store, price_ids, publish_time).await;
+                return Benchmarks::get_verified_price_feeds(state, price_ids, publish_time).await;
             }
             Err(e)
         }
     }
 }
 
-pub async fn get_price_feed_ids<S>(store: &S) -> HashSet<PriceIdentifier>
+pub async fn get_price_feed_ids<S>(state: &S) -> HashSet<PriceIdentifier>
 where
     S: CacheStore,
 {
-    store
+    state
         .message_state_keys()
         .await
         .iter()
@@ -362,8 +309,8 @@ where
         .collect()
 }
 
-pub async fn is_ready(store: &Store) -> bool {
-    let last_completed_update_at = store.last_completed_update_at.read().await;
+pub async fn is_ready(state: &State) -> bool {
+    let last_completed_update_at = state.last_completed_update_at.read().await;
     match last_completed_update_at.as_ref() {
         Some(last_completed_update_at) => {
             last_completed_update_at.elapsed() < READINESS_STALENESS_THRESHOLD
@@ -480,13 +427,13 @@ mod test {
         }
     }
 
-    pub async fn setup_store(cache_size: u64) -> (Arc<Store>, Receiver<()>) {
+    pub async fn setup_store(cache_size: u64) -> (Arc<State>, Receiver<()>) {
         let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
-        let store = Store::new(update_tx, cache_size, None);
+        let state = State::new(update_tx, cache_size, None);
 
         // Add an initial guardian set with public key 0
         update_guardian_set(
-            &store,
+            &state,
             0,
             GuardianSet {
                 keys: vec![[0; 20]],
@@ -494,24 +441,24 @@ mod test {
         )
         .await;
 
-        (store, update_rx)
+        (state, update_rx)
     }
 
-    pub async fn store_multiple_concurrent_valid_updates(store: Arc<Store>, updates: Vec<Update>) {
-        let res = join_all(updates.into_iter().map(|u| store_update(&store, u))).await;
+    pub async fn store_multiple_concurrent_valid_updates(state: Arc<State>, updates: Vec<Update>) {
+        let res = join_all(updates.into_iter().map(|u| store_update(&state, u))).await;
         // Check that all store_update calls succeeded
         assert!(res.into_iter().all(|r| r.is_ok()));
     }
 
     #[tokio::test]
     pub async fn test_store_works() {
-        let (store, mut update_rx) = setup_store(10).await;
+        let (state, mut update_rx) = setup_store(10).await;
 
         let price_feed_message = create_dummy_price_feed_message(100, 10, 9);
 
-        // Populate the store
+        // Populate the state
         store_multiple_concurrent_valid_updates(
-            store.clone(),
+            state.clone(),
             generate_update(vec![Message::PriceFeedMessage(price_feed_message)], 10, 20),
         )
         .await;
@@ -521,14 +468,14 @@ mod test {
 
         // Check the price ids are stored correctly
         assert_eq!(
-            get_price_feed_ids(&*store).await,
+            get_price_feed_ids(&*state).await,
             vec![PriceIdentifier::new([100; 32])].into_iter().collect()
         );
 
         // Check get_price_feeds_with_update_data retrieves the correct
         // price feed with correct update data.
         let price_feeds_with_update_data = get_price_feeds_with_update_data(
-            &store,
+            &state,
             vec![PriceIdentifier::new([100; 32])],
             RequestTime::Latest,
         )
@@ -616,10 +563,10 @@ mod test {
 
     #[tokio::test]
     pub async fn test_metadata_times_and_readiness_work() {
-        // The receiver channel should stay open for the store to work
+        // The receiver channel should stay open for the state to work
         // properly. That is why we don't use _ here as it drops the channel
         // immediately.
-        let (store, _receiver_tx) = setup_store(10).await;
+        let (state, _receiver_tx) = setup_store(10).await;
 
         let price_feed_message = create_dummy_price_feed_message(100, 10, 9);
 
@@ -635,9 +582,9 @@ mod test {
             .unwrap()
             .as_secs();
 
-        // Populate the store
+        // Populate the state
         store_multiple_concurrent_valid_updates(
-            store.clone(),
+            state.clone(),
             generate_update(vec![Message::PriceFeedMessage(price_feed_message)], 10, 20),
         )
         .await;
@@ -648,7 +595,7 @@ mod test {
 
         // Get the price feeds with update data
         let price_feeds_with_update_data = get_price_feeds_with_update_data(
-            &store,
+            &state,
             vec![PriceIdentifier::new([100; 32])],
             RequestTime::Latest,
         )
@@ -662,28 +609,28 @@ mod test {
             Some(unix_timestamp as i64)
         );
 
-        // Check the store is ready
-        assert!(is_ready(&store).await);
+        // Check the state is ready
+        assert!(is_ready(&state).await);
 
         // Advance the clock to make the prices stale
         MockClock::advance_system_time(READINESS_STALENESS_THRESHOLD);
         MockClock::advance(READINESS_STALENESS_THRESHOLD);
-        // Check the store is not ready
-        assert!(!is_ready(&store).await);
+        // Check the state is not ready
+        assert!(!is_ready(&state).await);
     }
 
-    /// Test that the store retains the latest slots upon cache eviction.
+    /// Test that the state retains the latest slots upon cache eviction.
     ///
-    /// Store is set up with cache size of 100 and 1000 slot updates will
+    /// state is set up with cache size of 100 and 1000 slot updates will
     /// be stored all at the same time with random order.
-    /// After the cache eviction, the store should retain the latest 100
+    /// After the cache eviction, the state should retain the latest 100
     /// slots regardless of the order.
     #[tokio::test]
     pub async fn test_store_retains_latest_slots_upon_cache_eviction() {
         // The receiver channel should stay open for the store to work
         // properly. That is why we don't use _ here as it drops the channel
         // immediately.
-        let (store, _receiver_tx) = setup_store(100).await;
+        let (state, _receiver_tx) = setup_store(100).await;
 
         let mut updates: Vec<Update> = (0..1000)
             .flat_map(|slot| {
@@ -708,12 +655,12 @@ mod test {
         updates.shuffle(&mut rng);
 
         // Store the updates
-        store_multiple_concurrent_valid_updates(store.clone(), updates).await;
+        store_multiple_concurrent_valid_updates(state.clone(), updates).await;
 
         // Check the last 100 slots are retained
         for slot in 900..1000 {
             let price_feeds_with_update_data = get_price_feeds_with_update_data(
-                &store,
+                &state,
                 vec![
                     PriceIdentifier::new([100; 32]),
                     PriceIdentifier::new([200; 32]),
@@ -730,7 +677,7 @@ mod test {
         // Check nothing else is retained
         for slot in 0..900 {
             assert!(get_price_feeds_with_update_data(
-                &store,
+                &state,
                 vec![
                     PriceIdentifier::new([100; 32]),
                     PriceIdentifier::new([200; 32]),

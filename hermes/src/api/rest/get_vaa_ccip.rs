@@ -1,11 +1,11 @@
 use {
     crate::{
-        api::rest::RestError,
-        impl_deserialize_for_hex_string_wrapper,
-        store::types::{
+        aggregate::types::{
             RequestTime,
             UnixTimestamp,
         },
+        api::rest::RestError,
+        impl_deserialize_for_hex_string_wrapper,
     },
     anyhow::Result,
     axum::{
@@ -54,7 +54,7 @@ pub struct GetVaaCcipResponse {
     )
 )]
 pub async fn get_vaa_ccip(
-    State(state): State<crate::api::State>,
+    State(state): State<crate::api::ApiState>,
     QsQuery(params): QsQuery<GetVaaCcipQueryParams>,
 ) -> Result<Json<GetVaaCcipResponse>, RestError> {
     let price_id: PriceIdentifier = PriceIdentifier::new(
@@ -68,8 +68,8 @@ pub async fn get_vaa_ccip(
             .map_err(|_| RestError::InvalidCCIPInput)?,
     );
 
-    let price_feeds_with_update_data = crate::store::get_price_feeds_with_update_data(
-        &*state.store,
+    let price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
+        &*state.state,
         vec![price_id],
         RequestTime::FirstAfter(publish_time),
     )

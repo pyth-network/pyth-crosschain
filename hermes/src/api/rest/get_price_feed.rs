@@ -1,5 +1,9 @@
 use {
     crate::{
+        aggregate::types::{
+            RequestTime,
+            UnixTimestamp,
+        },
         api::{
             rest::RestError,
             types::{
@@ -8,10 +12,6 @@ use {
             },
         },
         doc_examples,
-        store::types::{
-            RequestTime,
-            UnixTimestamp,
-        },
     },
     anyhow::Result,
     axum::{
@@ -60,13 +60,13 @@ pub struct GetPriceFeedQueryParams {
     )
 )]
 pub async fn get_price_feed(
-    State(state): State<crate::api::State>,
+    State(state): State<crate::api::ApiState>,
     QsQuery(params): QsQuery<GetPriceFeedQueryParams>,
 ) -> Result<Json<RpcPriceFeed>, RestError> {
     let price_id: PriceIdentifier = params.id.into();
 
-    let price_feeds_with_update_data = crate::store::get_price_feeds_with_update_data(
-        &*state.store,
+    let price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
+        &*state.state,
         vec![price_id],
         RequestTime::FirstAfter(params.publish_time),
     )
