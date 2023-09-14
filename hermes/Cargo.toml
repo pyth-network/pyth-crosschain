@@ -4,6 +4,7 @@ version = "0.1.16"
 edition = "2021"
 
 [dependencies]
+async-trait        = { version = "0.1.73" }
 anyhow             = { version = "1.0.69" }
 axum               = { version = "0.6.20", features = ["json", "ws", "macros"] }
 axum-macros        = { version = "0.3.8" }

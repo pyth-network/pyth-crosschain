@@ -94,20 +94,79 @@ pub enum MessageStateFilter {
     Only(MessageType),
 }
 
-pub struct Storage {
-    message_cache: Arc<DashMap<MessageStateKey, BTreeMap<MessageStateTime, MessageState>>>,
+pub struct Cache {
     /// Accumulator messages cache
     ///
     /// We do not write to this cache much, so we can use a simple RwLock instead of a DashMap.
-    accumulator_messages_cache:  Arc<RwLock<BTreeMap<Slot, AccumulatorMessages>>>,
+    accumulator_messages_cache: Arc<RwLock<BTreeMap<Slot, AccumulatorMessages>>>,
+
     /// Wormhole merkle state cache
     ///
     /// We do not write to this cache much, so we can use a simple RwLock instead of a DashMap.
     wormhole_merkle_state_cache: Arc<RwLock<BTreeMap<Slot, WormholeMerkleState>>>,
-    cache_size:                  u64,
+
+    message_cache: Arc<DashMap<MessageStateKey, BTreeMap<MessageStateTime, MessageState>>>,
+    cache_size:    u64,
 }
 
-impl Storage {
+fn retrieve_message_state(
+    cache: &Cache,
+    key: MessageStateKey,
+    request_time: RequestTime,
+) -> Option<MessageState> {
+    match cache.message_cache.get(&key) {
+        Some(key_cache) => {
+            match request_time {
+                RequestTime::Latest => key_cache.last_key_value().map(|(_, v)| v).cloned(),
+                RequestTime::FirstAfter(time) => {
+                    // If the requested time is before the first element in the vector, we are
+                    // not sure that the first element is the closest one.
+                    if let Some((_, oldest_record_value)) = key_cache.first_key_value() {
+                        if time < oldest_record_value.time().publish_time {
+                            return None;
+                        }
+                    }
+
+                    let lookup_time = MessageStateTime {
+                        publish_time: time,
+                        slot:         0,
+                    };
+
+                    // Get the first element that is greater than or equal to the lookup time.
+                    key_cache
+                        .lower_bound(Bound::Included(&lookup_time))
+                        .value()
+                        .cloned()
+                }
+            }
+        }
+        None => None,
+    }
+}
+
+#[async_trait::async_trait]
+pub trait CacheStore {
+    async fn message_state_keys(&self) -> Vec<MessageStateKey>;
+    async fn store_message_states(&self, message_states: Vec<MessageState>) -> Result<()>;
+    async fn fetch_message_states(
+        &self,
+        ids: Vec<FeedId>,
+        request_time: RequestTime,
+        filter: MessageStateFilter,
+    ) -> Result<Vec<MessageState>>;
+    async fn store_accumulator_messages(
+        &self,
+        accumulator_messages: AccumulatorMessages,
+    ) -> Result<()>;
+    async fn fetch_accumulator_messages(&self, slot: Slot) -> Result<Option<AccumulatorMessages>>;
+    async fn store_wormhole_merkle_state(
+        &self,
+        wormhole_merkle_state: WormholeMerkleState,
+    ) -> Result<()>;
+    async fn fetch_wormhole_merkle_state(&self, slot: Slot) -> Result<Option<WormholeMerkleState>>;
+}
+
+impl Cache {
     pub fn new(cache_size: u64) -> Self {
         Self {
             message_cache: Arc::new(DashMap::new()),
@@ -116,66 +175,39 @@ impl Storage {
             cache_size,
         }
     }
+}
 
-    pub async fn message_state_keys(&self) -> Vec<MessageStateKey> {
-        self.message_cache
+#[async_trait::async_trait]
+impl CacheStore for crate::store::Store {
+    async fn message_state_keys(&self) -> Vec<MessageStateKey> {
+        self.cache
+            .message_cache
             .iter()
             .map(|entry| entry.key().clone())
             .collect::<Vec<_>>()
     }
 
-    pub async fn store_message_states(&self, message_states: Vec<MessageState>) -> Result<()> {
+    async fn store_message_states(&self, message_states: Vec<MessageState>) -> Result<()> {
         for message_state in message_states {
             let key = message_state.key();
             let time = message_state.time();
-            let mut cache = self.message_cache.entry(key).or_insert_with(BTreeMap::new);
+            let mut cache = self
+                .cache
+                .message_cache
+                .entry(key)
+                .or_insert_with(BTreeMap::new);
 
             cache.insert(time, message_state);
 
             // Remove the earliest message states if the cache size is exceeded
-            while cache.len() > self.cache_size as usize {
+            while cache.len() > self.cache.cache_size as usize {
                 cache.pop_first();
             }
         }
         Ok(())
     }
 
-    fn retrieve_message_state(
-        &self,
-        key: MessageStateKey,
-        request_time: RequestTime,
-    ) -> Option<MessageState> {
-        match self.message_cache.get(&key) {
-            Some(key_cache) => {
-                match request_time {
-                    RequestTime::Latest => key_cache.last_key_value().map(|(_, v)| v).cloned(),
-                    RequestTime::FirstAfter(time) => {
-                        // If the requested time is before the first element in the vector, we are
-                        // not sure that the first element is the closest one.
-                        if let Some((_, oldest_record_value)) = key_cache.first_key_value() {
-                            if time < oldest_record_value.time().publish_time {
-                                return None;
-                            }
-                        }
-
-                        let lookup_time = MessageStateTime {
-                            publish_time: time,
-                            slot:         0,
-                        };
-
-                        // Get the first element that is greater than or equal to the lookup time.
-                        key_cache
-                            .lower_bound(Bound::Included(&lookup_time))
-                            .value()
-                            .cloned()
-                    }
-                }
-            }
-            None => None,
-        }
-    }
-
-    pub async fn fetch_message_states(
+    async fn fetch_message_states(
         &self,
         ids: Vec<FeedId>,
         request_time: RequestTime,
@@ -194,50 +226,44 @@ impl Storage {
                         feed_id: id,
                         type_:   message_type,
                     };
-                    self.retrieve_message_state(key, request_time.clone())
+                    retrieve_message_state(&self.cache, key, request_time.clone())
                         .ok_or(anyhow!("Message not found"))
                 })
             })
             .collect()
     }
 
-    pub async fn store_accumulator_messages(
+    async fn store_accumulator_messages(
         &self,
         accumulator_messages: AccumulatorMessages,
     ) -> Result<()> {
-        let mut cache = self.accumulator_messages_cache.write().await;
+        let mut cache = self.cache.accumulator_messages_cache.write().await;
         cache.insert(accumulator_messages.slot, accumulator_messages);
-        while cache.len() > self.cache_size as usize {
+        while cache.len() > self.cache.cache_size as usize {
             cache.pop_first();
         }
         Ok(())
     }
 
-    pub async fn fetch_accumulator_messages(
-        &self,
-        slot: Slot,
-    ) -> Result<Option<AccumulatorMessages>> {
-        let cache = self.accumulator_messages_cache.read().await;
+    async fn fetch_accumulator_messages(&self, slot: Slot) -> Result<Option<AccumulatorMessages>> {
+        let cache = self.cache.accumulator_messages_cache.read().await;
         Ok(cache.get(&slot).cloned())
     }
 
-    pub async fn store_wormhole_merkle_state(
+    async fn store_wormhole_merkle_state(
         &self,
         wormhole_merkle_state: WormholeMerkleState,
     ) -> Result<()> {
-        let mut cache = self.wormhole_merkle_state_cache.write().await;
+        let mut cache = self.cache.wormhole_merkle_state_cache.write().await;
         cache.insert(wormhole_merkle_state.root.slot, wormhole_merkle_state);
-        while cache.len() > self.cache_size as usize {
+        while cache.len() > self.cache.cache_size as usize {
             cache.pop_first();
         }
         Ok(())
     }
 
-    pub async fn fetch_wormhole_merkle_state(
-        &self,
-        slot: Slot,
-    ) -> Result<Option<WormholeMerkleState>> {
-        let cache = self.wormhole_merkle_state_cache.read().await;
+    async fn fetch_wormhole_merkle_state(&self, slot: Slot) -> Result<Option<WormholeMerkleState>> {
+        let cache = self.cache.wormhole_merkle_state_cache.read().await;
         Ok(cache.get(&slot).cloned())
     }
 }
@@ -298,7 +324,7 @@ mod test {
 
     #[cfg(test)]
     pub async fn create_and_store_dummy_price_feed_message_state(
-        storage: &Storage,
+        storage: &Cache,
         feed_id: FeedId,
         publish_time: UnixTimestamp,
         slot: Slot,
@@ -314,7 +340,7 @@ mod test {
     #[tokio::test]
     pub async fn test_store_and_retrieve_latest_message_state_works() {
         // Initialize a storage with a cache size of 2 per key.
-        let storage = Storage::new(2);
+        let storage = Cache::new(2);
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         let message_state =
@@ -337,7 +363,7 @@ mod test {
     #[tokio::test]
     pub async fn test_store_and_retrieve_latest_message_state_with_multiple_update_works() {
         // Initialize a storage with a cache size of 2 per key.
-        let storage = Storage::new(2);
+        let storage = Cache::new(2);
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         let _old_message_state =
@@ -364,7 +390,7 @@ mod test {
     #[tokio::test]
     pub async fn test_store_and_retrieve_latest_message_state_with_out_of_order_update_works() {
         // Initialize a storage with a cache size of 2 per key.
-        let storage = Storage::new(2);
+        let storage = Cache::new(2);
 
         // Create and store a message state with feed id [1....] and publish time 20 at slot 10.
         let new_message_state =
@@ -391,7 +417,7 @@ mod test {
     #[tokio::test]
     pub async fn test_store_and_retrieve_first_after_message_state_works() {
         // Initialize a storage with a cache size of 2 per key.
-        let storage = Storage::new(2);
+        let storage = Cache::new(2);
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         let old_message_state =
@@ -433,7 +459,7 @@ mod test {
     #[tokio::test]
     pub async fn test_store_and_retrieve_latest_message_state_with_same_pubtime_works() {
         // Initialize a storage with a cache size of 2 per key.
-        let storage = Storage::new(2);
+        let storage = Cache::new(2);
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         let slightly_older_message_state =
@@ -474,7 +500,7 @@ mod test {
     #[tokio::test]
     pub async fn test_store_and_retrieve_first_after_message_state_fails_for_past_time() {
         // Initialize a storage with a cache size of 2 per key.
-        let storage = Storage::new(2);
+        let storage = Cache::new(2);
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
@@ -497,7 +523,7 @@ mod test {
     #[tokio::test]
     pub async fn test_store_and_retrieve_first_after_message_state_fails_for_future_time() {
         // Initialize a storage with a cache size of 2 per key.
-        let storage = Storage::new(2);
+        let storage = Cache::new(2);
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
@@ -519,7 +545,7 @@ mod test {
     #[tokio::test]
     pub async fn test_store_more_message_states_than_cache_size_evicts_old_messages() {
         // Initialize a storage with a cache size of 2 per key.
-        let storage = Storage::new(2);
+        let storage = Cache::new(2);
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
@@ -544,7 +570,7 @@ mod test {
     #[tokio::test]
     pub async fn test_store_and_fetch_multiple_message_feed_ids_works() {
         // Initialize a storage with a cache size of 1 per key.
-        let storage = Storage::new(1);
+        let storage = Cache::new(1);
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         let message_state_1 =
@@ -571,7 +597,7 @@ mod test {
     #[tokio::test]
     pub async fn test_fetch_not_existent_message_fails() {
         // Initialize a storage with a cache size of 2 per key.
-        let storage = Storage::new(2);
+        let storage = Cache::new(2);
 
         create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
 
@@ -598,7 +624,7 @@ mod test {
     #[tokio::test]
     pub async fn test_store_and_fetch_accumulator_messages_works() {
         // Initialize a storage with a cache size of 2 per key and the accumulator state.
-        let storage = Storage::new(2);
+        let storage = Cache::new(2);
 
         // Make sure the retrieved accumulator messages is what we store.
         let mut accumulator_messages_at_10 = create_empty_accumulator_messages_at_slot(10);
@@ -680,7 +706,7 @@ mod test {
     #[tokio::test]
     pub async fn test_store_and_fetch_wormhole_merkle_state_works() {
         // Initialize a storage with a cache size of 2 per key and the accumulator state.
-        let storage = Storage::new(2);
+        let storage = Cache::new(2);
 
         // Make sure the retrieved wormhole merkle state is what we store
         let mut wormhole_merkle_state_at_10 = create_empty_wormhole_merkle_state_at_slot(10);
