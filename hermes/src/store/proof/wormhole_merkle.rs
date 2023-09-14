@@ -1,12 +1,14 @@
 use {
     crate::store::{
-        storage::MessageState,
+        cache::{
+            CacheStore,
+            MessageState,
+        },
         types::{
             AccumulatorMessages,
             RawMessage,
             Slot,
         },
-        Store,
     },
     anyhow::{
         anyhow,
@@ -68,13 +70,15 @@ impl From<MessageState> for RawMessageWithMerkleProof {
     }
 }
 
-pub async fn store_wormhole_merkle_verified_message(
-    store: &Store,
+pub async fn store_wormhole_merkle_verified_message<S>(
+    store: &S,
     root: WormholeMerkleRoot,
     vaa: Vaa,
-) -> Result<()> {
+) -> Result<()>
+where
+    S: CacheStore,
+{
     store
-        .storage
         .store_wormhole_merkle_state(WormholeMerkleState { root, vaa })
         .await?;
     Ok(())

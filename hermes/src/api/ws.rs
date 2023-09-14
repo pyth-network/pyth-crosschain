@@ -233,7 +233,7 @@ impl Subscriber {
                 binary,
             }) => {
                 let price_ids: Vec<PriceIdentifier> = ids.into_iter().map(|id| id.into()).collect();
-                let available_price_ids = crate::store::get_price_feed_ids(&self.store).await;
+                let available_price_ids = crate::store::get_price_feed_ids(&*self.store).await;
 
                 let not_found_price_ids: Vec<&PriceIdentifier> = price_ids
                     .iter()

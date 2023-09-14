@@ -76,6 +76,13 @@ impl TryFrom<BenchmarkUpdates> for PriceFeedsWithUpdateData {
     }
 }
 
+trait Benchmarks {
+    fn get_verified_price_feeds(
+        &self,
+        price_ids: Vec<PriceIdentifier>,
+        publish_time: UnixTimestamp,
+    ) -> Result<PriceFeedsWithUpdateData>;
+}
 
 pub async fn get_price_feeds_with_update_data_from_benchmarks(
     endpoint: Url,

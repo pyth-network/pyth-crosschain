@@ -12,14 +12,15 @@ use std::time::{
 };
 use {
     self::{
+        cache::{
+            Cache,
+            CacheStore,
+            MessageState,
+            MessageStateFilter,
+        },
         proof::wormhole_merkle::{
             construct_update_data,
             WormholeMerkleState,
-        },
-        storage::{
-            MessageState,
-            MessageStateFilter,
-            Storage,
         },
         types::{
             AccumulatorMessages,
@@ -82,8 +83,8 @@ use {
 };
 
 pub mod benchmarks;
+pub mod cache;
 pub mod proof;
-pub mod storage;
 pub mod types;
 pub mod wormhole;
 
@@ -93,19 +94,30 @@ const READINESS_STALENESS_THRESHOLD: Duration = Duration::from_secs(30);
 pub struct Store {
     /// Storage is a short-lived cache of the state of all the updates that have been passed to the
     /// store.
-    pub storage:                  Storage,
+    pub cache: Cache,
+
     /// Sequence numbers of lately observed Vaas. Store uses this set
     /// to ignore the previously observed Vaas as a performance boost.
-    pub observed_vaa_seqs:        RwLock<BTreeSet<u64>>,
+    pub observed_vaa_seqs: RwLock<BTreeSet<u64>>,
+
     /// Wormhole guardian sets. It is used to verify Vaas before using them.
-    pub guardian_set:             RwLock<BTreeMap<u32, GuardianSet>>,
+    pub guardian_set: RwLock<BTreeMap<u32, GuardianSet>>,
+
     /// The sender to the channel between Store and Api to notify completed updates.
-    pub update_tx:                Sender<()>,
+    pub update_tx: Sender<()>,
+
     /// Time of the last completed update. This is used for the health probes.
     pub last_completed_update_at: RwLock<Option<Instant>>,
+
     /// Benchmarks endpoint
-    pub benchmarks_endpoint:      Option<Url>,
+    pub benchmarks_endpoint: Option<Url>,
 }
+
+// impl CacheStore for Store {
+// }
+//
+// impl Benchmarks for Store {
+// }
 
 impl Store {
     pub fn new(
@@ -114,7 +126,7 @@ impl Store {
         benchmarks_endpoint: Option<Url>,
     ) -> Arc<Self> {
         Arc::new(Self {
-            storage: Storage::new(cache_size),
+            cache: Cache::new(cache_size),
             observed_vaa_seqs: RwLock::new(Default::default()),
             guardian_set: RwLock::new(Default::default()),
             update_tx,
@@ -180,15 +192,14 @@ pub async fn store_update(store: &Store, update: Update) -> Result<()> {
             tracing::info!(slot = slot, "Storing Accumulator Messages.");
 
             store
-                .storage
                 .store_accumulator_messages(accumulator_messages)
                 .await?;
             slot
         }
     };
 
-    let accumulator_messages = store.storage.fetch_accumulator_messages(slot).await?;
-    let wormhole_merkle_state = store.storage.fetch_wormhole_merkle_state(slot).await?;
+    let accumulator_messages = store.fetch_accumulator_messages(slot).await?;
+    let wormhole_merkle_state = store.fetch_wormhole_merkle_state(slot).await?;
 
     let (accumulator_messages, wormhole_merkle_state) =
         match (accumulator_messages, wormhole_merkle_state) {
@@ -249,7 +260,7 @@ async fn build_message_states(
 
     tracing::info!(len = message_states.len(), "Storing Message States.");
 
-    store.storage.store_message_states(message_states).await?;
+    store.store_message_states(message_states).await?;
 
     Ok(())
 }
@@ -259,13 +270,15 @@ pub async fn update_guardian_set(store: &Store, id: u32, guardian_set: GuardianS
     guardian_sets.insert(id, guardian_set);
 }
 
-async fn get_price_feeds_with_update_data_from_storage(
-    store: &Store,
+async fn get_verified_price_feeds<S>(
+    store: &S,
     price_ids: Vec<PriceIdentifier>,
     request_time: RequestTime,
-) -> Result<PriceFeedsWithUpdateData> {
+) -> Result<PriceFeedsWithUpdateData>
+where
+    S: CacheStore,
+{
     let messages = store
-        .storage
         .fetch_message_states(
             price_ids
                 .iter()
@@ -321,13 +334,7 @@ pub async fn get_price_feeds_with_update_data(
     price_ids: Vec<PriceIdentifier>,
     request_time: RequestTime,
 ) -> Result<PriceFeedsWithUpdateData> {
-    match get_price_feeds_with_update_data_from_storage(
-        store,
-        price_ids.clone(),
-        request_time.clone(),
-    )
-    .await
-    {
+    match get_verified_price_feeds(store, price_ids.clone(), request_time.clone()).await {
         Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
         Err(e) => {
             if let RequestTime::FirstAfter(publish_time) = request_time {
@@ -345,9 +352,11 @@ pub async fn get_price_feeds_with_update_data(
     }
 }
 
-pub async fn get_price_feed_ids(store: &Store) -> HashSet<PriceIdentifier> {
+pub async fn get_price_feed_ids<S>(store: &S) -> HashSet<PriceIdentifier>
+where
+    S: CacheStore,
+{
     store
-        .storage
         .message_state_keys()
         .await
         .iter()
@@ -514,7 +523,7 @@ mod test {
 
         // Check the price ids are stored correctly
         assert_eq!(
-            get_price_feed_ids(&store).await,
+            get_price_feed_ids(&*store).await,
             vec![PriceIdentifier::new([100; 32])].into_iter().collect()
         );
 
