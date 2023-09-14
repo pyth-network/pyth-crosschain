@@ -11,11 +11,9 @@
 
 use {
     crate::{
+        aggregate::types::Update,
         config::RunOptions,
-        store::{
-            types::Update,
-            Store,
-        },
+        state::State,
     },
     anyhow::Result,
     libp2p::Multiaddr,
@@ -176,7 +174,7 @@ pub fn bootstrap(
 
 // Spawn's the P2P layer as a separate thread via Go.
 #[tracing::instrument(skip(opts, store))]
-pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
+pub async fn spawn(opts: RunOptions, store: Arc<State>) -> Result<()> {
     tracing::info!(listeners = ?opts.wh_listen_addrs, "Starting P2P Server");
 
     std::thread::spawn(|| {
@@ -213,7 +211,7 @@ pub async fn spawn(opts: RunOptions, store: Arc<Store>) -> Result<()> {
 
             let store = store.clone();
             tokio::spawn(async move {
-                if let Err(e) = crate::store::store_update(&store, Update::Vaa(vaa)).await {
+                if let Err(e) = crate::aggregate::store_update(&store, Update::Vaa(vaa)).await {
                     tracing::error!(error = ?e, "Failed to process VAA.");
                 }
             });

@@ -3,9 +3,9 @@ use {
         PriceIdInput,
         RpcPriceFeed,
     },
-    crate::store::{
-        types::RequestTime,
-        Store,
+    crate::{
+        aggregate::types::RequestTime,
+        state::State,
     },
     anyhow::{
         anyhow,
@@ -18,7 +18,7 @@ use {
                 WebSocket,
                 WebSocketUpgrade,
             },
-            State,
+            State as AxumState,
         },
         response::IntoResponse,
     },
@@ -56,13 +56,13 @@ pub const NOTIFICATIONS_CHAN_LEN: usize = 1000;
 
 pub async fn ws_route_handler(
     ws: WebSocketUpgrade,
-    State(state): State<super::State>,
+    AxumState(state): AxumState<super::ApiState>,
 ) -> impl IntoResponse {
     ws.on_upgrade(|socket| websocket_handler(socket, state))
 }
 
 #[tracing::instrument(skip(stream, state))]
-async fn websocket_handler(stream: WebSocket, state: super::State) {
+async fn websocket_handler(stream: WebSocket, state: super::ApiState) {
     let ws_state = state.ws.clone();
     let id = ws_state.subscriber_counter.fetch_add(1, Ordering::SeqCst);
     tracing::debug!(id, "New Websocket Connection");
@@ -70,7 +70,7 @@ async fn websocket_handler(stream: WebSocket, state: super::State) {
     let (notify_sender, notify_receiver) = mpsc::channel::<()>(NOTIFICATIONS_CHAN_LEN);
     let (sender, receiver) = stream.split();
     let mut subscriber =
-        Subscriber::new(id, state.store.clone(), notify_receiver, receiver, sender);
+        Subscriber::new(id, state.state.clone(), notify_receiver, receiver, sender);
 
     ws_state.subscribers.insert(id, notify_sender);
     subscriber.run().await;
@@ -83,7 +83,7 @@ pub type SubscriberId = usize;
 pub struct Subscriber {
     id:                      SubscriberId,
     closed:                  bool,
-    store:                   Arc<Store>,
+    store:                   Arc<State>,
     notify_receiver:         mpsc::Receiver<()>,
     receiver:                SplitStream<WebSocket>,
     sender:                  SplitSink<WebSocket, Message>,
@@ -95,7 +95,7 @@ pub struct Subscriber {
 impl Subscriber {
     pub fn new(
         id: SubscriberId,
-        store: Arc<Store>,
+        store: Arc<State>,
         notify_receiver: mpsc::Receiver<()>,
         receiver: SplitStream<WebSocket>,
         sender: SplitSink<WebSocket, Message>,
@@ -149,7 +149,7 @@ impl Subscriber {
 
     async fn handle_price_feeds_update(&mut self) -> Result<()> {
         let price_feed_ids = self.price_feeds_with_config.keys().cloned().collect();
-        for update in crate::store::get_price_feeds_with_update_data(
+        for update in crate::aggregate::get_price_feeds_with_update_data(
             &*self.store,
             price_feed_ids,
             RequestTime::Latest,
@@ -233,7 +233,7 @@ impl Subscriber {
                 binary,
             }) => {
                 let price_ids: Vec<PriceIdentifier> = ids.into_iter().map(|id| id.into()).collect();
-                let available_price_ids = crate::store::get_price_feed_ids(&*self.store).await;
+                let available_price_ids = crate::aggregate::get_price_feed_ids(&*self.store).await;
 
                 let not_found_price_ids: Vec<&PriceIdentifier> = price_ids
                     .iter()

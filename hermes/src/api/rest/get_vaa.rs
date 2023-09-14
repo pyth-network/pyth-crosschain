@@ -1,17 +1,17 @@
 use {
     crate::{
-        api::{
-            rest::RestError,
-            types::PriceIdInput,
-        },
-        doc_examples,
-        store::{
+        aggregate::{
             self,
             types::{
                 RequestTime,
                 UnixTimestamp,
             },
         },
+        api::{
+            rest::RestError,
+            types::PriceIdInput,
+        },
+        doc_examples,
     },
     anyhow::Result,
     axum::{
@@ -70,13 +70,13 @@ pub struct GetVaaResponse {
     )
 )]
 pub async fn get_vaa(
-    State(state): State<crate::api::State>,
+    State(state): State<crate::api::ApiState>,
     QsQuery(params): QsQuery<GetVaaQueryParams>,
 ) -> Result<Json<GetVaaResponse>, RestError> {
     let price_id: PriceIdentifier = params.id.into();
 
-    let price_feeds_with_update_data = store::get_price_feeds_with_update_data(
-        &*state.store,
+    let price_feeds_with_update_data = aggregate::get_price_feeds_with_update_data(
+        &*state.state,
         vec![price_id],
         RequestTime::FirstAfter(params.publish_time),
     )

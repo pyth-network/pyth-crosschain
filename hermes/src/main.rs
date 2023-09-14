@@ -2,7 +2,7 @@
 #![feature(btree_cursors)]
 
 use {
-    crate::store::Store,
+    crate::state::State,
     anyhow::Result,
     futures::future::join_all,
     std::{
@@ -13,12 +13,13 @@ use {
     tokio::spawn,
 };
 
+mod aggregate;
 mod api;
 mod config;
 mod doc_examples;
 mod macros;
 mod network;
-mod store;
+mod state;
 
 // A static exit flag to indicate to running threads that we're shutting down. This is used to
 // gracefully shutdown the application.
@@ -43,7 +44,7 @@ async fn init() -> Result<()> {
             let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
 
             // Initialize a cache store with a 1000 element circular buffer.
-            let store = Store::new(update_tx.clone(), 1000, opts.benchmarks_endpoint.clone());
+            let store = State::new(update_tx.clone(), 1000, opts.benchmarks_endpoint.clone());
 
             // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown. We
             // also send off any notifications needed to close off any waiting tasks.

@@ -1,5 +1,5 @@
 use {
-    super::{
+    crate::aggregate::{
         proof::wormhole_merkle::WormholeMerkleState,
         types::{
             AccumulatorMessages,
@@ -178,7 +178,7 @@ impl Cache {
 }
 
 #[async_trait::async_trait]
-impl CacheStore for crate::store::Store {
+impl CacheStore for crate::state::State {
     async fn message_state_keys(&self) -> Vec<MessageStateKey> {
         self.cache
             .message_cache
@@ -272,7 +272,7 @@ impl CacheStore for crate::store::Store {
 mod test {
     use {
         super::*,
-        crate::store::{
+        crate::aggregate::{
             proof::wormhole_merkle::{
                 WormholeMerkleMessageProof,
                 WormholeMerkleState,

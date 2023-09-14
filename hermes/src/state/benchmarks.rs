@@ -1,7 +1,7 @@
 //! This module communicates with Pyth Benchmarks, an API for historical price feeds and their updates.
 
 use {
-    super::types::{
+    crate::aggregate::types::{
         PriceFeedUpdate,
         PriceFeedsWithUpdateData,
         UnixTimestamp,
@@ -85,7 +85,7 @@ pub trait Benchmarks {
 }
 
 #[async_trait::async_trait]
-impl Benchmarks for crate::store::Store {
+impl Benchmarks for crate::state::State {
     async fn get_verified_price_feeds(
         &self,
         price_ids: Vec<PriceIdentifier>,

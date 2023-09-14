@@ -1,12 +1,12 @@
 use {
     crate::{
-        doc_examples,
-        impl_deserialize_for_hex_string_wrapper,
-        store::types::{
+        aggregate::types::{
             PriceFeedUpdate,
             Slot,
             UnixTimestamp,
         },
+        doc_examples,
+        impl_deserialize_for_hex_string_wrapper,
     },
     base64::{
         engine::general_purpose::STANDARD as base64_standard_engine,
