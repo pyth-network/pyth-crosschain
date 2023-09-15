@@ -1,14 +1,12 @@
 use {
     crate::aggregate::{
-        proof::wormhole_merkle::WormholeMerkleState,
-        types::{
-            AccumulatorMessages,
-            ProofSet,
-            RawMessage,
-            RequestTime,
-            Slot,
-            UnixTimestamp,
-        },
+        wormhole_merkle::WormholeMerkleState,
+        AccumulatorMessages,
+        ProofSet,
+        RawMessage,
+        RequestTime,
+        Slot,
+        UnixTimestamp,
     },
     anyhow::{
         anyhow,
@@ -144,8 +142,19 @@ fn retrieve_message_state(
     }
 }
 
+impl Cache {
+    pub fn new(cache_size: u64) -> Self {
+        Self {
+            message_cache: Arc::new(DashMap::new()),
+            accumulator_messages_cache: Arc::new(RwLock::new(BTreeMap::new())),
+            wormhole_merkle_state_cache: Arc::new(RwLock::new(BTreeMap::new())),
+            cache_size,
+        }
+    }
+}
+
 #[async_trait::async_trait]
-pub trait CacheStore {
+pub trait AggregateCache {
     async fn message_state_keys(&self) -> Vec<MessageStateKey>;
     async fn store_message_states(&self, message_states: Vec<MessageState>) -> Result<()>;
     async fn fetch_message_states(
@@ -166,19 +175,8 @@ pub trait CacheStore {
     async fn fetch_wormhole_merkle_state(&self, slot: Slot) -> Result<Option<WormholeMerkleState>>;
 }
 
-impl Cache {
-    pub fn new(cache_size: u64) -> Self {
-        Self {
-            message_cache: Arc::new(DashMap::new()),
-            accumulator_messages_cache: Arc::new(RwLock::new(BTreeMap::new())),
-            wormhole_merkle_state_cache: Arc::new(RwLock::new(BTreeMap::new())),
-            cache_size,
-        }
-    }
-}
-
 #[async_trait::async_trait]
-impl CacheStore for crate::state::State {
+impl AggregateCache for crate::state::State {
     async fn message_state_keys(&self) -> Vec<MessageStateKey> {
         self.cache
             .message_cache

@@ -11,46 +11,30 @@ use std::time::{
     UNIX_EPOCH,
 };
 use {
-    self::{
-        proof::wormhole_merkle::{
-            construct_update_data,
-            WormholeMerkleState,
-        },
-        types::{
-            AccumulatorMessages,
-            PriceFeedUpdate,
-            PriceFeedsWithUpdateData,
-            RequestTime,
-            Update,
-        },
-        wormhole::GuardianSet,
+    self::wormhole_merkle::{
+        construct_message_states_proofs,
+        construct_update_data,
+        store_wormhole_merkle_verified_message,
+        WormholeMerkleMessageProof,
+        WormholeMerkleState,
     },
     crate::{
-        aggregate::{
-            proof::wormhole_merkle::{
-                construct_message_states_proofs,
-                store_wormhole_merkle_verified_message,
-            },
-            types::{
-                ProofSet,
-                UnixTimestamp,
-            },
-            wormhole::verify_vaa,
-        },
         state::{
             benchmarks::Benchmarks,
             cache::{
-                CacheStore,
+                AggregateCache,
                 MessageState,
                 MessageStateFilter,
             },
             State,
         },
+        wormhole::VaaBytes,
     },
     anyhow::{
         anyhow,
         Result,
     },
+    borsh::BorshDeserialize,
     byteorder::BigEndian,
     pyth_sdk::{
         Price,
@@ -77,11 +61,68 @@ use {
     wormhole_sdk::Vaa,
 };
 
-pub mod proof;
-pub mod types;
-pub mod wormhole;
+pub mod wormhole_merkle;
 
-const OBSERVED_CACHE_SIZE: usize = 1000;
+#[derive(Clone, PartialEq, Debug)]
+pub struct ProofSet {
+    pub wormhole_merkle_proof: WormholeMerkleMessageProof,
+}
+
+pub type Slot = u64;
+
+/// The number of seconds since the Unix epoch (00:00:00 UTC on 1 Jan 1970). The timestamp is
+/// always positive, but represented as a signed integer because that's the standard on Unix
+/// systems and allows easy subtraction to compute durations.
+pub type UnixTimestamp = i64;
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub enum RequestTime {
+    Latest,
+    FirstAfter(UnixTimestamp),
+}
+
+pub type RawMessage = Vec<u8>;
+
+/// Accumulator messages coming from Pythnet validators.
+///
+/// The validators writes the accumulator messages using Borsh with
+/// the following struct. We cannot directly have messages as Vec<Messages>
+/// because they are serialized using big-endian byte order and Borsh
+/// uses little-endian byte order.
+#[derive(Clone, PartialEq, Debug, BorshDeserialize)]
+pub struct AccumulatorMessages {
+    pub magic:        [u8; 4],
+    pub slot:         u64,
+    pub ring_size:    u32,
+    pub raw_messages: Vec<RawMessage>,
+}
+
+impl AccumulatorMessages {
+    pub fn ring_index(&self) -> u32 {
+        (self.slot % self.ring_size as u64) as u32
+    }
+}
+
+#[derive(Debug)]
+pub enum Update {
+    Vaa(VaaBytes),
+    AccumulatorMessages(AccumulatorMessages),
+}
+
+#[derive(Debug, PartialEq)]
+pub struct PriceFeedUpdate {
+    pub price_feed:  PriceFeed,
+    pub slot:        Option<Slot>,
+    pub received_at: Option<UnixTimestamp>,
+    pub update_data: Option<Vec<u8>>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct PriceFeedsWithUpdateData {
+    pub price_feeds: Vec<PriceFeedUpdate>,
+    pub update_data: Vec<Vec<u8>>,
+}
+
 const READINESS_STALENESS_THRESHOLD: Duration = Duration::from_secs(30);
 
 /// Stores the update data in the store
@@ -91,34 +132,9 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
     // in all the updates.
     let slot = match update {
         Update::Vaa(update_vaa) => {
-            // FIXME: Move to wormhole.rs
-            let vaa = serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(&update_vaa)?;
-
-            if state.observed_vaa_seqs.read().await.contains(&vaa.sequence) {
-                return Ok(()); // Ignore VAA if we have already seen it
-            }
-
-            let vaa = verify_vaa(state, vaa).await;
-
-            let vaa = match vaa {
-                Ok(vaa) => vaa,
-                Err(err) => {
-                    tracing::warn!(error = ?err, "Ignoring invalid VAA.");
-                    return Ok(());
-                }
-            };
-
-            {
-                let mut observed_vaa_seqs = state.observed_vaa_seqs.write().await;
-                if observed_vaa_seqs.contains(&vaa.sequence) {
-                    return Ok(()); // Ignore VAA if we have already seen it
-                }
-                observed_vaa_seqs.insert(vaa.sequence);
-                while observed_vaa_seqs.len() > OBSERVED_CACHE_SIZE {
-                    observed_vaa_seqs.pop_first();
-                }
-            }
-
+            let vaa = serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(
+                update_vaa.as_ref(),
+            )?;
             match WormholeMessage::try_from_bytes(vaa.payload)?.payload {
                 WormholePayload::Merkle(proof) => {
                     tracing::info!(slot = proof.slot, "Storing VAA Merkle Proof.");
@@ -213,18 +229,13 @@ async fn build_message_states(
     Ok(())
 }
 
-pub async fn update_guardian_set(state: &State, id: u32, guardian_set: GuardianSet) {
-    let mut guardian_sets = state.guardian_set.write().await;
-    guardian_sets.insert(id, guardian_set);
-}
-
 async fn get_verified_price_feeds<S>(
     state: &S,
     price_ids: Vec<PriceIdentifier>,
     request_time: RequestTime,
 ) -> Result<PriceFeedsWithUpdateData>
 where
-    S: CacheStore,
+    S: AggregateCache,
 {
     let messages = state
         .fetch_message_states(
@@ -283,7 +294,7 @@ pub async fn get_price_feeds_with_update_data<S>(
     request_time: RequestTime,
 ) -> Result<PriceFeedsWithUpdateData>
 where
-    S: CacheStore,
+    S: AggregateCache,
     S: Benchmarks,
 {
     match get_verified_price_feeds(state, price_ids.clone(), request_time.clone()).await {
@@ -299,7 +310,7 @@ where
 
 pub async fn get_price_feed_ids<S>(state: &S) -> HashSet<PriceIdentifier>
 where
-    S: CacheStore,
+    S: AggregateCache,
 {
     state
         .message_state_keys()

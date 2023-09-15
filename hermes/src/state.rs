@@ -1,3 +1,5 @@
+//! This module contains the global state of the application.
+
 #[cfg(test)]
 use mock_instant::{
     Instant,
@@ -8,7 +10,7 @@ use mock_instant::{
 use std::time::Instant;
 use {
     self::cache::Cache,
-    crate::aggregate::wormhole::GuardianSet,
+    crate::wormhole::GuardianSet,
     reqwest::Url,
     std::{
         collections::{

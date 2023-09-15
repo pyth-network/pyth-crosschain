@@ -1,8 +1,13 @@
 use {
     super::State,
+    crate::aggregate::Update,
     anyhow::{
         anyhow,
         Result,
+    },
+    pythnet_sdk::wire::v1::{
+        WormholeMessage,
+        WormholePayload,
     },
     secp256k1::{
         ecdsa::{
@@ -17,14 +22,22 @@ use {
         Digest,
         Keccak256,
     },
+    std::sync::Arc,
+    tracing::trace,
     wormhole_sdk::{
         vaa::{
             Body,
             Header,
         },
+        Address,
+        Chain,
         Vaa,
     },
 };
+
+
+pub type VaaBytes = Vec<u8>;
+const OBSERVED_CACHE_SIZE: usize = 1000;
 
 #[derive(Eq, PartialEq, Clone, Hash, Debug)]
 pub struct GuardianSet {
@@ -137,4 +150,76 @@ pub async fn verify_vaa<'a>(
     }
 
     Ok((header, body).into())
+}
+
+/// Update the guardian set with the given ID in the state.
+pub async fn update_guardian_set(state: &State, id: u32, guardian_set: GuardianSet) {
+    let mut guardian_sets = state.guardian_set.write().await;
+    guardian_sets.insert(id, guardian_set);
+}
+
+/// Process a VAA from the Wormhole p2p and aggregate it if it is
+/// verified and is new and belongs to the Accumulator.
+pub async fn forward_vaa(state: Arc<State>, vaa_bytes: VaaBytes) {
+    // Deserialize VAA
+    let vaa = match serde_wormhole::from_slice::<Vaa<&serde_wormhole::RawMessage>>(&vaa_bytes) {
+        Ok(vaa) => vaa,
+        Err(e) => {
+            tracing::error!(error = ?e, "Failed to deserialize VAA.");
+            return;
+        }
+    };
+
+    if vaa.emitter_chain != Chain::Pythnet
+        || vaa.emitter_address != Address(pythnet_sdk::ACCUMULATOR_EMITTER_ADDRESS)
+    {
+        return; // Ignore VAA from other emitters
+    }
+
+    // Get the slot from the VAA.
+    let slot = match WormholeMessage::try_from_bytes(vaa.payload)
+        .unwrap()
+        .payload
+    {
+        WormholePayload::Merkle(proof) => proof.slot,
+    };
+
+    // Find the observation time for said VAA (which is a unix timestamp) and serialize as a ISO 8601 string.
+    let vaa_timestamp = vaa.timestamp;
+    let vaa_timestamp = chrono::NaiveDateTime::from_timestamp_opt(vaa_timestamp as i64, 0).unwrap();
+    let vaa_timestamp = vaa_timestamp.format("%Y-%m-%dT%H:%M:%S.%fZ").to_string();
+    tracing::info!(slot = slot, vaa_timestamp = vaa_timestamp, "Observed VAA");
+
+    if state.observed_vaa_seqs.read().await.contains(&vaa.sequence) {
+        return; // Ignore VAA if we have already seen it
+    }
+
+    let vaa = match verify_vaa(&state, vaa).await {
+        Ok(vaa) => vaa,
+        Err(e) => {
+            trace!(error = ?e, "Ignoring invalid VAA.");
+            return;
+        }
+    };
+
+    {
+        let mut observed_vaa_seqs = state.observed_vaa_seqs.write().await;
+
+        // Check again if we have already seen the VAA. Due to concurrency
+        // the above check might not catch all the cases.
+        if observed_vaa_seqs.contains(&vaa.sequence) {
+            return; // Ignore VAA if we have already seen it
+        }
+        observed_vaa_seqs.insert(vaa.sequence);
+        while observed_vaa_seqs.len() > OBSERVED_CACHE_SIZE {
+            observed_vaa_seqs.pop_first();
+        }
+    }
+
+    let state = state.clone();
+    tokio::spawn(async move {
+        if let Err(e) = crate::aggregate::store_update(&state, Update::Vaa(vaa_bytes)).await {
+            tracing::error!(error = ?e, "Failed to process VAA.");
+        }
+    });
 }

@@ -1,11 +1,9 @@
 use {
     crate::{
         aggregate::{
-            self,
-            types::{
-                RequestTime,
-                UnixTimestamp,
-            },
+            get_price_feeds_with_update_data,
+            RequestTime,
+            UnixTimestamp,
         },
         api::{
             rest::RestError,
@@ -75,7 +73,7 @@ pub async fn get_vaa(
 ) -> Result<Json<GetVaaResponse>, RestError> {
     let price_id: PriceIdentifier = params.id.into();
 
-    let price_feeds_with_update_data = aggregate::get_price_feeds_with_update_data(
+    let price_feeds_with_update_data = get_price_feeds_with_update_data(
         &*state.state,
         vec![price_id],
         RequestTime::FirstAfter(params.publish_time),

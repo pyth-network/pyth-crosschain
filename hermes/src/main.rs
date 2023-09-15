@@ -20,6 +20,7 @@ mod doc_examples;
 mod macros;
 mod network;
 mod state;
+mod wormhole;
 
 // A static exit flag to indicate to running threads that we're shutting down. This is used to
 // gracefully shutdown the application.
