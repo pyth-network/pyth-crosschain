@@ -333,10 +333,8 @@ pub async fn is_ready(state: &State) -> bool {
 #[cfg(test)]
 mod test {
     use {
-        super::{
-            types::Slot,
-            *,
-        },
+        super::*,
+        crate::state::test::setup_state,
         futures::future::join_all,
         mock_instant::MockClock,
         pythnet_sdk::{
@@ -360,7 +358,7 @@ mod test {
         },
         rand::seq::SliceRandom,
         serde_wormhole::RawMessage,
-        tokio::sync::mpsc::Receiver,
+        std::sync::Arc,
         wormhole_sdk::{
             Address,
             Chain,
@@ -438,23 +436,6 @@ mod test {
         }
     }
 
-    pub async fn setup_store(cache_size: u64) -> (Arc<State>, Receiver<()>) {
-        let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
-        let state = State::new(update_tx, cache_size, None);
-
-        // Add an initial guardian set with public key 0
-        update_guardian_set(
-            &state,
-            0,
-            GuardianSet {
-                keys: vec![[0; 20]],
-            },
-        )
-        .await;
-
-        (state, update_rx)
-    }
-
     pub async fn store_multiple_concurrent_valid_updates(state: Arc<State>, updates: Vec<Update>) {
         let res = join_all(updates.into_iter().map(|u| store_update(&state, u))).await;
         // Check that all store_update calls succeeded
@@ -463,7 +444,7 @@ mod test {
 
     #[tokio::test]
     pub async fn test_store_works() {
-        let (state, mut update_rx) = setup_store(10).await;
+        let (state, mut update_rx) = setup_state(10).await;
 
         let price_feed_message = create_dummy_price_feed_message(100, 10, 9);
 
@@ -486,7 +467,7 @@ mod test {
         // Check get_price_feeds_with_update_data retrieves the correct
         // price feed with correct update data.
         let price_feeds_with_update_data = get_price_feeds_with_update_data(
-            &state,
+            &*state,
             vec![PriceIdentifier::new([100; 32])],
             RequestTime::Latest,
         )
@@ -577,7 +558,7 @@ mod test {
         // The receiver channel should stay open for the state to work
         // properly. That is why we don't use _ here as it drops the channel
         // immediately.
-        let (state, _receiver_tx) = setup_store(10).await;
+        let (state, _receiver_tx) = setup_state(10).await;
 
         let price_feed_message = create_dummy_price_feed_message(100, 10, 9);
 
@@ -606,7 +587,7 @@ mod test {
 
         // Get the price feeds with update data
         let price_feeds_with_update_data = get_price_feeds_with_update_data(
-            &state,
+            &*state,
             vec![PriceIdentifier::new([100; 32])],
             RequestTime::Latest,
         )
@@ -641,7 +622,7 @@ mod test {
         // The receiver channel should stay open for the store to work
         // properly. That is why we don't use _ here as it drops the channel
         // immediately.
-        let (state, _receiver_tx) = setup_store(100).await;
+        let (state, _receiver_tx) = setup_state(100).await;
 
         let mut updates: Vec<Update> = (0..1000)
             .flat_map(|slot| {
@@ -671,7 +652,7 @@ mod test {
         // Check the last 100 slots are retained
         for slot in 900..1000 {
             let price_feeds_with_update_data = get_price_feeds_with_update_data(
-                &state,
+                &*state,
                 vec![
                     PriceIdentifier::new([100; 32]),
                     PriceIdentifier::new([200; 32]),
@@ -688,7 +669,7 @@ mod test {
         // Check nothing else is retained
         for slot in 0..900 {
             assert!(get_price_feeds_with_update_data(
-                &state,
+                &*state,
                 vec![
                     PriceIdentifier::new([100; 32]),
                     PriceIdentifier::new([200; 32]),

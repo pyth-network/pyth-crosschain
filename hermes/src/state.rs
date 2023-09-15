@@ -1,11 +1,7 @@
 //! This module contains the global state of the application.
 
 #[cfg(test)]
-use mock_instant::{
-    Instant,
-    SystemTime,
-    UNIX_EPOCH,
-};
+use mock_instant::Instant;
 #[cfg(not(test))]
 use std::time::Instant;
 use {
@@ -64,5 +60,31 @@ impl State {
             last_completed_update_at: RwLock::new(None),
             benchmarks_endpoint,
         })
+    }
+}
+
+#[cfg(test)]
+pub mod test {
+    use {
+        super::*,
+        crate::wormhole::update_guardian_set,
+        tokio::sync::mpsc::Receiver,
+    };
+
+    pub async fn setup_state(cache_size: u64) -> (Arc<State>, Receiver<()>) {
+        let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
+        let state = State::new(update_tx, cache_size, None);
+
+        // Add an initial guardian set with public key 0
+        update_guardian_set(
+            &state,
+            0,
+            GuardianSet {
+                keys: vec![[0; 20]],
+            },
+        )
+        .await;
+
+        (state, update_rx)
     }
 }
