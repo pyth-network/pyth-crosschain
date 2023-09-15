@@ -270,15 +270,16 @@ impl AggregateCache for crate::state::State {
 mod test {
     use {
         super::*,
-        crate::aggregate::{
-            proof::wormhole_merkle::{
-                WormholeMerkleMessageProof,
-                WormholeMerkleState,
-            },
-            types::{
+        crate::{
+            aggregate::{
+                wormhole_merkle::{
+                    WormholeMerkleMessageProof,
+                    WormholeMerkleState,
+                },
                 AccumulatorMessages,
                 ProofSet,
             },
+            state::test::setup_state,
         },
         pyth_sdk::UnixTimestamp,
         pythnet_sdk::{
@@ -321,14 +322,17 @@ mod test {
     }
 
     #[cfg(test)]
-    pub async fn create_and_store_dummy_price_feed_message_state(
-        storage: &Cache,
+    pub async fn create_and_store_dummy_price_feed_message_state<S>(
+        state: &S,
         feed_id: FeedId,
         publish_time: UnixTimestamp,
         slot: Slot,
-    ) -> MessageState {
+    ) -> MessageState
+    where
+        S: AggregateCache,
+    {
         let message_state = create_dummy_price_feed_message_state(feed_id, publish_time, slot);
-        storage
+        state
             .store_message_states(vec![message_state.clone()])
             .await
             .unwrap();
@@ -337,16 +341,16 @@ mod test {
 
     #[tokio::test]
     pub async fn test_store_and_retrieve_latest_message_state_works() {
-        // Initialize a storage with a cache size of 2 per key.
-        let storage = Cache::new(2);
+        // Initialize state with a cache size of 2 per key.
+        let (state, _) = setup_state(2).await;
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         let message_state =
-            create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 5).await;
 
         // The latest message state should be the one we just stored.
         assert_eq!(
-            storage
+            state
                 .fetch_message_states(
                     vec![[1; 32]],
                     RequestTime::Latest,
@@ -360,20 +364,20 @@ mod test {
 
     #[tokio::test]
     pub async fn test_store_and_retrieve_latest_message_state_with_multiple_update_works() {
-        // Initialize a storage with a cache size of 2 per key.
-        let storage = Cache::new(2);
+        // Initialize state with a cache size of 2 per key.
+        let (state, _) = setup_state(2).await;
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         let _old_message_state =
-            create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 5).await;
 
         // Create and store a message state with feed id [1....] and publish time 20 at slot 10.
         let new_message_state =
-            create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 20, 10).await;
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 20, 10).await;
 
         // The latest message state should be the one with publish time 20.
         assert_eq!(
-            storage
+            state
                 .fetch_message_states(
                     vec![[1; 32]],
                     RequestTime::Latest,
@@ -387,20 +391,20 @@ mod test {
 
     #[tokio::test]
     pub async fn test_store_and_retrieve_latest_message_state_with_out_of_order_update_works() {
-        // Initialize a storage with a cache size of 2 per key.
-        let storage = Cache::new(2);
+        // Initialize state with a cache size of 2 per key.
+        let (state, _) = setup_state(2).await;
 
         // Create and store a message state with feed id [1....] and publish time 20 at slot 10.
         let new_message_state =
-            create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 20, 10).await;
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 20, 10).await;
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         let _old_message_state =
-            create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 5).await;
 
         // The latest message state should be the one with publish time 20.
         assert_eq!(
-            storage
+            state
                 .fetch_message_states(
                     vec![[1; 32]],
                     RequestTime::Latest,
@@ -414,20 +418,20 @@ mod test {
 
     #[tokio::test]
     pub async fn test_store_and_retrieve_first_after_message_state_works() {
-        // Initialize a storage with a cache size of 2 per key.
-        let storage = Cache::new(2);
+        // Initialize state with a cache size of 2 per key.
+        let (state, _) = setup_state(2).await;
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         let old_message_state =
-            create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 5).await;
 
         // Create and store a message state with feed id [1....] and publish time 13 at slot 10.
         let new_message_state =
-            create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 13, 10).await;
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 13, 10).await;
 
         // The first message state after time 10 should be the old message state.
         assert_eq!(
-            storage
+            state
                 .fetch_message_states(
                     vec![[1; 32]],
                     RequestTime::FirstAfter(10),
@@ -441,7 +445,7 @@ mod test {
         // Querying the first after pub time 11, 12, 13 should all return the new message state.
         for request_time in 11..14 {
             assert_eq!(
-                storage
+                state
                     .fetch_message_states(
                         vec![[1; 32]],
                         RequestTime::FirstAfter(request_time),
@@ -456,20 +460,20 @@ mod test {
 
     #[tokio::test]
     pub async fn test_store_and_retrieve_latest_message_state_with_same_pubtime_works() {
-        // Initialize a storage with a cache size of 2 per key.
-        let storage = Cache::new(2);
+        // Initialize state with a cache size of 2 per key.
+        let (state, _) = setup_state(2).await;
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         let slightly_older_message_state =
-            create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 5).await;
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 7.
         let slightly_newer_message_state =
-            create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 7).await;
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 7).await;
 
         // The latest message state should be the one with the higher slot.
         assert_eq!(
-            storage
+            state
                 .fetch_message_states(
                     vec![[1; 32]],
                     RequestTime::Latest,
@@ -482,7 +486,7 @@ mod test {
 
         // Querying the first message state after time 10 should return the one with the lower slot.
         assert_eq!(
-            storage
+            state
                 .fetch_message_states(
                     vec![[1; 32]],
                     RequestTime::FirstAfter(10),
@@ -497,18 +501,18 @@ mod test {
 
     #[tokio::test]
     pub async fn test_store_and_retrieve_first_after_message_state_fails_for_past_time() {
-        // Initialize a storage with a cache size of 2 per key.
-        let storage = Cache::new(2);
+        // Initialize state with a cache size of 2 per key.
+        let (state, _) = setup_state(2).await;
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
-        create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
+        create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 5).await;
 
         // Create and store a message state with feed id [1....] and publish time 13 at slot 10.
-        create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 13, 10).await;
+        create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 13, 10).await;
 
         // Query the message state before the available times should return an error.
         // This is because we are not sure that the first available message is really the first.
-        assert!(storage
+        assert!(state
             .fetch_message_states(
                 vec![[1; 32]],
                 RequestTime::FirstAfter(9),
@@ -520,17 +524,17 @@ mod test {
 
     #[tokio::test]
     pub async fn test_store_and_retrieve_first_after_message_state_fails_for_future_time() {
-        // Initialize a storage with a cache size of 2 per key.
-        let storage = Cache::new(2);
+        // Initialize state with a cache size of 2 per key.
+        let (state, _) = setup_state(2).await;
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
-        create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
+        create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 5).await;
 
         // Create and store a message state with feed id [1....] and publish time 13 at slot 10.
-        create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 13, 10).await;
+        create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 13, 10).await;
 
         // Query the message state after the available times should return an error.
-        assert!(storage
+        assert!(state
             .fetch_message_states(
                 vec![[1; 32]],
                 RequestTime::FirstAfter(14),
@@ -542,20 +546,20 @@ mod test {
 
     #[tokio::test]
     pub async fn test_store_more_message_states_than_cache_size_evicts_old_messages() {
-        // Initialize a storage with a cache size of 2 per key.
-        let storage = Cache::new(2);
+        // Initialize state with a cache size of 2 per key.
+        let (state, _) = setup_state(2).await;
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
-        create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
+        create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 5).await;
 
         // Create and store a message state with feed id [1....] and publish time 13 at slot 10.
-        create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 13, 10).await;
+        create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 13, 10).await;
 
         // Create and store a message state with feed id [1....] and publish time 20 at slot 14.
-        create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 20, 14).await;
+        create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 20, 14).await;
 
         // The message at time 10 should be evicted and querying for it should return an error.
-        assert!(storage
+        assert!(state
             .fetch_message_states(
                 vec![[1; 32]],
                 RequestTime::FirstAfter(10),
@@ -567,20 +571,20 @@ mod test {
 
     #[tokio::test]
     pub async fn test_store_and_fetch_multiple_message_feed_ids_works() {
-        // Initialize a storage with a cache size of 1 per key.
-        let storage = Cache::new(1);
+        // Initialize state with a cache size of 2 per key.
+        let (state, _) = setup_state(2).await;
 
         // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
         let message_state_1 =
-            create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 5).await;
 
         // Create and store a message state with feed id [2....] and publish time 13 at slot 10.
         let message_state_2 =
-            create_and_store_dummy_price_feed_message_state(&storage, [2; 32], 10, 5).await;
+            create_and_store_dummy_price_feed_message_state(&*state, [2; 32], 10, 5).await;
 
         // Check both message states can be retrieved.
         assert_eq!(
-            storage
+            state
                 .fetch_message_states(
                     vec![[1; 32], [2; 32]],
                     RequestTime::Latest,
@@ -594,13 +598,13 @@ mod test {
 
     #[tokio::test]
     pub async fn test_fetch_not_existent_message_fails() {
-        // Initialize a storage with a cache size of 2 per key.
-        let storage = Cache::new(2);
+        // Initialize state with a cache size of 2 per key.
+        let (state, _) = setup_state(2).await;
 
-        create_and_store_dummy_price_feed_message_state(&storage, [1; 32], 10, 5).await;
+        create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 5).await;
 
         // Check both message states can be retrieved.
-        assert!(storage
+        assert!(state
             .fetch_message_states(
                 vec![[2; 32]],
                 RequestTime::Latest,
@@ -621,73 +625,53 @@ mod test {
 
     #[tokio::test]
     pub async fn test_store_and_fetch_accumulator_messages_works() {
-        // Initialize a storage with a cache size of 2 per key and the accumulator state.
-        let storage = Cache::new(2);
+        // Initialize state with a cache size of 2 per key.
+        let (state, _) = setup_state(2).await;
 
         // Make sure the retrieved accumulator messages is what we store.
         let mut accumulator_messages_at_10 = create_empty_accumulator_messages_at_slot(10);
-        storage
+        state
             .store_accumulator_messages(accumulator_messages_at_10.clone())
             .await
             .unwrap();
         assert_eq!(
-            storage
-                .fetch_accumulator_messages(10)
-                .await
-                .unwrap()
-                .unwrap(),
+            state.fetch_accumulator_messages(10).await.unwrap().unwrap(),
             accumulator_messages_at_10
         );
 
         // Make sure overwriting the accumulator messages works.
         accumulator_messages_at_10.ring_size = 5; // Change the ring size from 3 to 5.
-        storage
+        state
             .store_accumulator_messages(accumulator_messages_at_10.clone())
             .await
             .unwrap();
         assert_eq!(
-            storage
-                .fetch_accumulator_messages(10)
-                .await
-                .unwrap()
-                .unwrap(),
+            state.fetch_accumulator_messages(10).await.unwrap().unwrap(),
             accumulator_messages_at_10
         );
 
         // Create and store an accumulator messages with slot 5 and check it's stored.
         let accumulator_messages_at_5 = create_empty_accumulator_messages_at_slot(5);
-        storage
+        state
             .store_accumulator_messages(accumulator_messages_at_5.clone())
             .await
             .unwrap();
         assert_eq!(
-            storage
-                .fetch_accumulator_messages(5)
-                .await
-                .unwrap()
-                .unwrap(),
+            state.fetch_accumulator_messages(5).await.unwrap().unwrap(),
             accumulator_messages_at_5
         );
 
         // Add a newer accumulator messages with slot 15 to exceed cache size and make sure the earliest is evicted.
         let accumulator_messages_at_15 = create_empty_accumulator_messages_at_slot(15);
-        storage
+        state
             .store_accumulator_messages(accumulator_messages_at_15.clone())
             .await
             .unwrap();
         assert_eq!(
-            storage
-                .fetch_accumulator_messages(15)
-                .await
-                .unwrap()
-                .unwrap(),
+            state.fetch_accumulator_messages(15).await.unwrap().unwrap(),
             accumulator_messages_at_15
         );
-        assert!(storage
-            .fetch_accumulator_messages(5)
-            .await
-            .unwrap()
-            .is_none());
+        assert!(state.fetch_accumulator_messages(5).await.unwrap().is_none());
     }
 
     pub fn create_empty_wormhole_merkle_state_at_slot(slot: Slot) -> WormholeMerkleState {
@@ -703,17 +687,17 @@ mod test {
 
     #[tokio::test]
     pub async fn test_store_and_fetch_wormhole_merkle_state_works() {
-        // Initialize a storage with a cache size of 2 per key and the accumulator state.
-        let storage = Cache::new(2);
+        // Initialize state with a cache size of 2 per key.
+        let (state, _) = setup_state(2).await;
 
         // Make sure the retrieved wormhole merkle state is what we store
         let mut wormhole_merkle_state_at_10 = create_empty_wormhole_merkle_state_at_slot(10);
-        storage
+        state
             .store_wormhole_merkle_state(wormhole_merkle_state_at_10.clone())
             .await
             .unwrap();
         assert_eq!(
-            storage
+            state
                 .fetch_wormhole_merkle_state(10)
                 .await
                 .unwrap()
@@ -723,12 +707,12 @@ mod test {
 
         // Make sure overwriting the wormhole merkle state works.
         wormhole_merkle_state_at_10.root.ring_size = 5; // Change the ring size from 3 to 5.
-        storage
+        state
             .store_wormhole_merkle_state(wormhole_merkle_state_at_10.clone())
             .await
             .unwrap();
         assert_eq!(
-            storage
+            state
                 .fetch_wormhole_merkle_state(10)
                 .await
                 .unwrap()
@@ -738,34 +722,30 @@ mod test {
 
         // Create and store an wormhole merkle state with slot 5 and check it's stored.
         let wormhole_merkle_state_at_5 = create_empty_wormhole_merkle_state_at_slot(5);
-        storage
+        state
             .store_wormhole_merkle_state(wormhole_merkle_state_at_5.clone())
             .await
             .unwrap();
         assert_eq!(
-            storage
-                .fetch_wormhole_merkle_state(5)
-                .await
-                .unwrap()
-                .unwrap(),
+            state.fetch_wormhole_merkle_state(5).await.unwrap().unwrap(),
             wormhole_merkle_state_at_5
         );
 
         // Add a newer wormhole merkle state with slot 15 to exceed cache size and make sure the earliest is evicted.
         let wormhole_merkle_state_at_15 = create_empty_wormhole_merkle_state_at_slot(15);
-        storage
+        state
             .store_wormhole_merkle_state(wormhole_merkle_state_at_15.clone())
             .await
             .unwrap();
         assert_eq!(
-            storage
+            state
                 .fetch_wormhole_merkle_state(15)
                 .await
                 .unwrap()
                 .unwrap(),
             wormhole_merkle_state_at_15
         );
-        assert!(storage
+        assert!(state
             .fetch_wormhole_merkle_state(5)
             .await
             .unwrap()
