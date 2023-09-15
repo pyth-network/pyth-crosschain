@@ -5,18 +5,17 @@
 use {
     crate::{
         aggregate::{
-            types::{
-                AccumulatorMessages,
-                Update,
-            },
-            wormhole::{
-                BridgeData,
-                GuardianSet,
-                GuardianSetData,
-            },
+            AccumulatorMessages,
+            Update,
         },
         config::RunOptions,
         state::State,
+        wormhole::{
+            update_guardian_set,
+            BridgeData,
+            GuardianSet,
+            GuardianSetData,
+        },
     },
     anyhow::{
         anyhow,
@@ -213,7 +212,7 @@ pub async fn run(store: Arc<State>, pythnet_ws_endpoint: String) -> Result<()> {
 /// sets from a deployed Wormhole contract. Note that we only fetch the last two accounts due to
 /// the fact that during a Wormhole upgrade, there will only be messages produces from those two.
 async fn fetch_existing_guardian_sets(
-    store: Arc<State>,
+    state: Arc<State>,
     pythnet_http_endpoint: String,
     wormhole_contract_addr: Pubkey,
 ) -> Result<()> {
@@ -230,7 +229,7 @@ async fn fetch_existing_guardian_sets(
         "Retrieved Current GuardianSet.",
     );
 
-    crate::aggregate::update_guardian_set(&store, bridge.guardian_set_index, current).await;
+    update_guardian_set(&state, bridge.guardian_set_index, current).await;
 
     // If there are more than one guardian set, we want to fetch the previous one as well as it
     // may still be in transition phase if a guardian upgrade has just occurred.
@@ -248,29 +247,28 @@ async fn fetch_existing_guardian_sets(
             "Retrieved Previous GuardianSet.",
         );
 
-        crate::aggregate::update_guardian_set(&store, bridge.guardian_set_index - 1, previous)
-            .await;
+        update_guardian_set(&state, bridge.guardian_set_index - 1, previous).await;
     }
 
     Ok(())
 }
 
-#[tracing::instrument(skip(opts, store))]
-pub async fn spawn(opts: RunOptions, store: Arc<State>) -> Result<()> {
+#[tracing::instrument(skip(opts, state))]
+pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
     tracing::info!(
         endpoint = opts.pythnet_ws_endpoint,
         "Started Pythnet Listener."
     );
 
     fetch_existing_guardian_sets(
-        store.clone(),
+        state.clone(),
         opts.pythnet_http_endpoint.clone(),
         opts.wh_contract_addr,
     )
     .await?;
 
     let task_listener = {
-        let store = store.clone();
+        let store = state.clone();
         let pythnet_ws_endpoint = opts.pythnet_ws_endpoint.clone();
         tokio::spawn(async move {
             while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
@@ -290,7 +288,7 @@ pub async fn spawn(opts: RunOptions, store: Arc<State>) -> Result<()> {
     };
 
     let task_guadian_watcher = {
-        let store = store.clone();
+        let store = state.clone();
         let pythnet_http_endpoint = opts.pythnet_http_endpoint.clone();
         tokio::spawn(async move {
             while !crate::SHOULD_EXIT.load(Ordering::Acquire) {

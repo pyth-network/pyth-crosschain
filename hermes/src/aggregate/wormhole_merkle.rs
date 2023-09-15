@@ -1,14 +1,15 @@
 use {
+    super::{
+        AccumulatorMessages,
+        RawMessage,
+        Slot,
+    },
     crate::{
-        aggregate::types::{
-            AccumulatorMessages,
-            RawMessage,
-            Slot,
-        },
         state::cache::{
-            CacheStore,
+            AggregateCache,
             MessageState,
         },
+        wormhole::VaaBytes,
     },
     anyhow::{
         anyhow,
@@ -39,18 +40,16 @@ use {
 // u8 in the wire format. So, we can't have more than 255 messages.
 pub const MAX_MESSAGE_IN_SINGLE_UPDATE_DATA: usize = 255;
 
-pub type Vaa = Vec<u8>;
-
 #[derive(Clone, PartialEq, Debug)]
 pub struct WormholeMerkleState {
     pub root: WormholeMerkleRoot,
-    pub vaa:  Vaa,
+    pub vaa:  VaaBytes,
 }
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct WormholeMerkleMessageProof {
     pub proof: MerklePath<Keccak160>,
-    pub vaa:   Vaa,
+    pub vaa:   VaaBytes,
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -73,10 +72,10 @@ impl From<MessageState> for RawMessageWithMerkleProof {
 pub async fn store_wormhole_merkle_verified_message<S>(
     store: &S,
     root: WormholeMerkleRoot,
-    vaa: Vaa,
+    vaa: VaaBytes,
 ) -> Result<()>
 where
-    S: CacheStore,
+    S: AggregateCache,
 {
     store
         .store_wormhole_merkle_state(WormholeMerkleState { root, vaa })

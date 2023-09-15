@@ -1,6 +1,6 @@
 use {
     crate::{
-        aggregate::types::RequestTime,
+        aggregate::RequestTime,
         api::{
             rest::RestError,
             types::PriceIdInput,

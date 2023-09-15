@@ -1,4 +1,4 @@
-use crate::aggregate::types::UnixTimestamp;
+use crate::aggregate::UnixTimestamp;
 
 // Example values for the utoipa API docs.
 // Note that each of these expressions is only evaluated once when the documentation is created,

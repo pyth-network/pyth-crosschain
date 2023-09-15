@@ -4,7 +4,7 @@ use {
         RpcPriceFeed,
     },
     crate::{
-        aggregate::types::RequestTime,
+        aggregate::RequestTime,
         state::State,
     },
     anyhow::{

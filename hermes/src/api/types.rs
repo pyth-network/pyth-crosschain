@@ -1,6 +1,6 @@
 use {
     crate::{
-        aggregate::types::{
+        aggregate::{
             PriceFeedUpdate,
             Slot,
             UnixTimestamp,

@@ -1,7 +1,7 @@
 //! This module communicates with Pyth Benchmarks, an API for historical price feeds and their updates.
 
 use {
-    crate::aggregate::types::{
+    crate::aggregate::{
         PriceFeedUpdate,
         PriceFeedsWithUpdateData,
         UnixTimestamp,

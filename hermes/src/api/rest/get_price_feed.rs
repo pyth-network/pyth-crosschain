@@ -1,6 +1,6 @@
 use {
     crate::{
-        aggregate::types::{
+        aggregate::{
             RequestTime,
             UnixTimestamp,
         },

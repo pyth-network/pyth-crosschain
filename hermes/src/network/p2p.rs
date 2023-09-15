@@ -11,16 +11,15 @@
 
 use {
     crate::{
-        aggregate::types::Update,
         config::RunOptions,
         state::State,
+        wormhole::{
+            forward_vaa,
+            VaaBytes,
+        },
     },
     anyhow::Result,
     libp2p::Multiaddr,
-    pythnet_sdk::wire::v1::{
-        WormholeMessage,
-        WormholePayload,
-    },
     std::{
         ffi::{
             c_char,
@@ -37,10 +36,6 @@ use {
             Sender,
         },
         Mutex,
-    },
-    wormhole_sdk::{
-        Address,
-        Chain,
     },
 };
 
@@ -61,17 +56,15 @@ pub struct ObservationC {
     pub vaa_len: usize,
 }
 
-pub type Vaa = Vec<u8>;
-
-pub const CHANNEL_SIZE: usize = 1000;
+const CHANNEL_SIZE: usize = 1000;
 
 // A Static Channel to pipe the `Observation` from the callback into the local Rust handler for
 // observation messages. It has to be static for now because there's no way to capture state in
 // the callback passed into Go-land.
 lazy_static::lazy_static! {
     pub static ref OBSERVATIONS: (
-        Mutex<Sender<Vaa>>,
-        Mutex<Receiver<Vaa>>,
+        Mutex<Sender<VaaBytes>>,
+        Mutex<Receiver<VaaBytes>>,
     ) = {
         let (tx, rc) = tokio::sync::mpsc::channel(CHANNEL_SIZE);
         (Mutex::new(tx), Mutex::new(rc))
@@ -85,36 +78,6 @@ lazy_static::lazy_static! {
 extern "C" fn proxy(o: ObservationC) {
     // Create a fixed slice from the pointer and length.
     let vaa = unsafe { std::slice::from_raw_parts(o.vaa, o.vaa_len) }.to_owned();
-
-    // Deserialize VAA to check Creation Time
-    let deserialized_vaa = {
-        serde_wormhole::from_slice::<wormhole_sdk::Vaa<&serde_wormhole::RawMessage>>(&vaa)
-            .map_err(|e| {
-                tracing::error!(error = ?e, "Failed to deserialize VAA.");
-            })
-            .ok()
-    }
-    .unwrap();
-
-    if deserialized_vaa.emitter_chain != Chain::Pythnet
-        || deserialized_vaa.emitter_address != Address(pythnet_sdk::ACCUMULATOR_EMITTER_ADDRESS)
-    {
-        return; // Ignore VAA from other emitters
-    }
-
-    // Get the slot from the VAA.
-    let slot = match WormholeMessage::try_from_bytes(deserialized_vaa.payload)
-        .unwrap()
-        .payload
-    {
-        WormholePayload::Merkle(proof) => proof.slot,
-    };
-
-    // Find the observation time for said VAA (which is a unix timestamp) and serialize as a ISO 8601 string.
-    let vaa_timestamp = deserialized_vaa.timestamp;
-    let vaa_timestamp = chrono::NaiveDateTime::from_timestamp_opt(vaa_timestamp as i64, 0).unwrap();
-    let vaa_timestamp = vaa_timestamp.format("%Y-%m-%dT%H:%M:%S.%fZ").to_string();
-    tracing::info!(slot = slot, vaa_timestamp = vaa_timestamp, "Observed VAA");
 
     // The chances of the mutex getting poisioned is very low and if it happens there is no way for
     // us to recover from it.
@@ -173,8 +136,8 @@ pub fn bootstrap(
 }
 
 // Spawn's the P2P layer as a separate thread via Go.
-#[tracing::instrument(skip(opts, store))]
-pub async fn spawn(opts: RunOptions, store: Arc<State>) -> Result<()> {
+#[tracing::instrument(skip(opts, state))]
+pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
     tracing::info!(listeners = ?opts.wh_listen_addrs, "Starting P2P Server");
 
     std::thread::spawn(|| {
@@ -194,7 +157,7 @@ pub async fn spawn(opts: RunOptions, store: Arc<State>) -> Result<()> {
         // Listen in the background for new VAA's from the p2p layer
         // and update the state accordingly.
         while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
-            let vaa = {
+            let vaa_bytes = {
                 let mut observation = OBSERVATIONS.1.lock().await;
 
                 match observation.recv().await {
@@ -209,12 +172,7 @@ pub async fn spawn(opts: RunOptions, store: Arc<State>) -> Result<()> {
                 }
             };
 
-            let store = store.clone();
-            tokio::spawn(async move {
-                if let Err(e) = crate::aggregate::store_update(&store, Update::Vaa(vaa)).await {
-                    tracing::error!(error = ?e, "Failed to process VAA.");
-                }
-            });
+            forward_vaa(state.clone(), vaa_bytes).await;
         }
 
         tracing::info!("Shutting down P2P server...");
