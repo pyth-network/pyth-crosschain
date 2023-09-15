@@ -346,3 +346,9 @@
   rpcUrl: https://ethereum-sepolia.blockpi.network/v1/rpc/public
   networkId: 11155111
   type: EvmChain
+- id: shimmer
+  wormholeChainName: shimmer
+  mainnet: true
+  rpcUrl: https://json-rpc.evm.shimmer.network
+  networkId: 148
+  type: EvmChain
