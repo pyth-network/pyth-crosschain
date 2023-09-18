@@ -10,11 +10,11 @@ async function sleep(duration: DurationInMs): Promise<void> {
   return new Promise((res) => setTimeout(res, duration));
 }
 
-// The endpoint is set to the price service endpoint in Tilt.
+// The endpoint is set to the price service endpoint.
 // Please note that if you change it to a mainnet/testnet endpoint
-// some tests might fail due to the huge response size of a request
-// , i.e. requesting latest price feeds or vaas of all price ids.
-const PRICE_SERVICE_ENDPOINT = "http://pyth-price-server:4200";
+// some tests might fail due to the huge response size of a request.
+// i.e. requesting latest price feeds or vaas of all price ids.
+const PRICE_SERVICE_ENDPOINT = "http://127.0.0.1:7575";
 
 describe("Test http endpoints", () => {
   test("Get price feed (without verbose/binary) works", async () => {
@@ -193,4 +193,39 @@ describe("Test websocket endpoints", () => {
       expect(observedFeeds.has(id)).toBe(true);
     }
   });
+
+  // This test only works on Hermes and is not stable because there might
+  // be no out of order updates. Hence the last check is commented out.
+  test.concurrent(
+    "websocket subscription works with allow out of order",
+    async () => {
+      const connection = new PriceServiceConnection(PRICE_SERVICE_ENDPOINT, {
+        priceFeedRequestConfig: { allowOutOfOrder: true, verbose: true },
+      });
+
+      const ids = await connection.getPriceFeedIds();
+      expect(ids.length).toBeGreaterThan(0);
+
+      const observedSlots: number[] = [];
+
+      await connection.subscribePriceFeedUpdates(ids, (priceFeed) => {
+        expect(priceFeed.getMetadata()).toBeDefined();
+        expect(priceFeed.getVAA()).toBeUndefined();
+        observedSlots.push(priceFeed.getMetadata()!.slot!);
+      });
+
+      // Wait for 20 seconds
+      await sleep(20000);
+      connection.closeWebSocket();
+
+      let seenOutOfOrder = false;
+      for (let i = 1; i < observedSlots.length; i++) {
+        if (observedSlots[i] < observedSlots[i - 1]) {
+          seenOutOfOrder = true;
+        }
+      }
+
+      // expect(seenOutOfOrder).toBe(true);
+    }
+  );
 });

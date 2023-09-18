@@ -13,6 +13,8 @@ export type PriceFeedRequestConfig = {
   verbose?: boolean;
   /* Optional binary to include the price feeds binary update data */
   binary?: boolean;
+  /* Optional config for the websocket subscription to receive out of order updates */
+  allowOutOfOrder?: boolean;
 };
 
 export type PriceServiceConnectionConfig = {
@@ -38,6 +40,7 @@ type ClientMessage = {
   ids: HexString[];
   verbose?: boolean;
   binary?: boolean;
+  allow_out_of_order?: boolean;
 };
 
 type ServerResponse = {
@@ -92,6 +95,7 @@ export class PriceServiceConnection {
     this.priceFeedRequestConfig = {
       binary: config?.priceFeedRequestConfig?.binary,
       verbose: config?.priceFeedRequestConfig?.verbose ?? config?.verbose,
+      allowOutOfOrder: config?.priceFeedRequestConfig?.allowOutOfOrder,
     };
 
     this.priceFeedCallbacks = new Map();
@@ -269,6 +273,7 @@ export class PriceServiceConnection {
       type: "subscribe",
       verbose: this.priceFeedRequestConfig.verbose,
       binary: this.priceFeedRequestConfig.binary,
+      allow_out_of_order: this.priceFeedRequestConfig.allowOutOfOrder,
     };
 
     await this.wsClient?.send(JSON.stringify(message));
@@ -352,6 +357,7 @@ export class PriceServiceConnection {
           type: "subscribe",
           verbose: this.priceFeedRequestConfig.verbose,
           binary: this.priceFeedRequestConfig.binary,
+          allow_out_of_order: this.priceFeedRequestConfig.allowOutOfOrder,
         };
 
         this.logger.info("Resubscribing to existing price feeds.");
