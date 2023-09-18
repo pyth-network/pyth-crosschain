@@ -1,6 +1,7 @@
 use {
     self::ws::notify_updates,
     crate::{
+        aggregate::AggregationEvent,
         config::RunOptions,
         state::State,
     },
@@ -48,7 +49,11 @@ impl ApiState {
 /// Currently this is based on Axum due to the simplicity and strong ecosystem support for the
 /// packages they are based on (tokio & hyper).
 #[tracing::instrument(skip(opts, state, update_rx))]
-pub async fn run(opts: RunOptions, state: Arc<State>, mut update_rx: Receiver<()>) -> Result<()> {
+pub async fn run(
+    opts: RunOptions,
+    state: Arc<State>,
+    mut update_rx: Receiver<AggregationEvent>,
+) -> Result<()> {
     tracing::info!(endpoint = %opts.api_addr, "Starting RPC Server.");
 
     #[derive(OpenApi)]
@@ -103,19 +108,21 @@ pub async fn run(opts: RunOptions, state: Arc<State>, mut update_rx: Receiver<()
         // default value for this parameter).
         .layer(Extension(QsQueryConfig::new(5, false)));
 
-    // Call dispatch updates to websocket every 1 seconds
-    // FIXME use a channel to get updates from the store
     tokio::spawn(async move {
         while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
-            // Causes a full application shutdown if an error occurs, we can't recover from this so
-            // we just quit.
-            if update_rx.recv().await.is_none() {
-                tracing::error!("Failed to receive update from store.");
-                crate::SHOULD_EXIT.store(true, Ordering::Release);
-                break;
+            match update_rx.recv().await {
+                None => {
+                    // When the received message is None it means the channel has been closed. This
+                    // should never happen as the channel is never closed. As we can't recover from
+                    // this we shut down the application.
+                    tracing::error!("Failed to receive update from store.");
+                    crate::SHOULD_EXIT.store(true, Ordering::Release);
+                    break;
+                }
+                Some(event) => {
+                    notify_updates(state.ws.clone(), event).await;
+                }
             }
-
-            notify_updates(state.ws.clone()).await;
         }
 
         tracing::info!("Shutting down websocket updates...")

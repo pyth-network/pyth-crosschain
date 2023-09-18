@@ -79,9 +79,50 @@ pub type UnixTimestamp = i64;
 pub enum RequestTime {
     Latest,
     FirstAfter(UnixTimestamp),
+    AtSlot(Slot),
 }
 
 pub type RawMessage = Vec<u8>;
+
+/// An event that is emitted when an aggregation is completed.
+#[derive(Clone, PartialEq, Debug)]
+pub enum AggregationEvent {
+    New { slot: Slot },
+    OutOfOrder { slot: Slot },
+}
+
+impl AggregationEvent {
+    pub fn slot(&self) -> Slot {
+        match self {
+            AggregationEvent::New { slot } => *slot,
+            AggregationEvent::OutOfOrder { slot } => *slot,
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct AggregateState {
+    /// The latest completed slot. This is used to check whether a completed state is new or out of
+    /// order.
+    pub latest_completed_slot: Option<Slot>,
+
+    /// Time of the latest completed update. This is used for the health probes.
+    pub latest_completed_update_at: Option<Instant>,
+
+    /// The latest observed slot among different Aggregate updates. This is used for the health
+    /// probes.
+    pub latest_observed_slot: Option<Slot>,
+}
+
+impl AggregateState {
+    pub fn new() -> Self {
+        Self {
+            latest_completed_slot:      None,
+            latest_completed_update_at: None,
+            latest_observed_slot:       None,
+        }
+    }
+}
 
 /// Accumulator messages coming from Pythnet validators.
 ///
@@ -125,6 +166,10 @@ pub struct PriceFeedsWithUpdateData {
 
 const READINESS_STALENESS_THRESHOLD: Duration = Duration::from_secs(30);
 
+/// The maximum allowed slot lag between the latest observed slot and the latest completed slot.
+/// 10 slots is almost 5 seconds.
+const READINESS_MAX_ALLOWED_SLOT_LAG: Slot = 10;
+
 /// Stores the update data in the store
 #[tracing::instrument(skip(state, update))]
 pub async fn store_update(state: &State, update: Update) -> Result<()> {
@@ -150,7 +195,6 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
                 }
             }
         }
-
         Update::AccumulatorMessages(accumulator_messages) => {
             let slot = accumulator_messages.slot;
             tracing::info!(slot = slot, "Storing Accumulator Messages.");
@@ -161,6 +205,14 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
             slot
         }
     };
+
+    // Update the aggregate state with the latest observed slot
+    {
+        let mut aggregate_state = state.aggregate_state.write().await;
+        aggregate_state.latest_observed_slot = aggregate_state
+            .latest_observed_slot
+            .map(|latest| latest.max(slot));
+    }
 
     let accumulator_messages = state.fetch_accumulator_messages(slot).await?;
     let wormhole_merkle_state = state.fetch_wormhole_merkle_state(slot).await?;
@@ -179,12 +231,39 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
     // we can build the message states
     build_message_states(state, accumulator_messages, wormhole_merkle_state).await?;
 
-    state.update_tx.send(()).await?;
+    // Update the aggregate state
+    let mut aggregate_state = state.aggregate_state.write().await;
 
-    state
-        .last_completed_update_at
-        .write()
-        .await
+    // Check if the update is new or out of order
+    match aggregate_state.latest_completed_slot {
+        None => {
+            aggregate_state.latest_completed_slot.replace(slot);
+            state
+                .api_update_tx
+                .send(AggregationEvent::New { slot })
+                .await?;
+        }
+        Some(latest) if slot > latest => {
+            aggregate_state.latest_completed_slot.replace(slot);
+            state
+                .api_update_tx
+                .send(AggregationEvent::New { slot })
+                .await?;
+        }
+        _ => {
+            state
+                .api_update_tx
+                .send(AggregationEvent::OutOfOrder { slot })
+                .await?;
+        }
+    }
+
+    aggregate_state.latest_completed_slot = aggregate_state
+        .latest_completed_slot
+        .map(|latest| latest.max(slot));
+
+    aggregate_state
+        .latest_completed_update_at
         .replace(Instant::now());
 
     Ok(())
@@ -321,13 +400,26 @@ where
 }
 
 pub async fn is_ready(state: &State) -> bool {
-    let last_completed_update_at = state.last_completed_update_at.read().await;
-    match last_completed_update_at.as_ref() {
-        Some(last_completed_update_at) => {
-            last_completed_update_at.elapsed() < READINESS_STALENESS_THRESHOLD
+    let metadata = state.aggregate_state.read().await;
+
+    let has_completed_recently = match metadata.latest_completed_update_at.as_ref() {
+        Some(latest_completed_update_time) => {
+            latest_completed_update_time.elapsed() < READINESS_STALENESS_THRESHOLD
         }
         None => false,
-    }
+    };
+
+    let is_not_behind = match (
+        metadata.latest_completed_slot,
+        metadata.latest_observed_slot,
+    ) {
+        (Some(latest_completed_slot), Some(latest_observed_slot)) => {
+            latest_observed_slot - latest_completed_slot <= READINESS_MAX_ALLOWED_SLOT_LAG
+        }
+        _ => false,
+    };
+
+    has_completed_recently && is_not_behind
 }
 
 #[cfg(test)]
@@ -456,7 +548,10 @@ mod test {
         .await;
 
         // Check that the update_rx channel has received a message
-        assert_eq!(update_rx.recv().await, Some(()));
+        assert_eq!(
+            update_rx.recv().await,
+            Some(AggregationEvent::New { slot: 10 })
+        );
 
         // Check the price ids are stored correctly
         assert_eq!(

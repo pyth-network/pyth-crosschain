@@ -136,6 +136,15 @@ fn retrieve_message_state(
                         .value()
                         .cloned()
                 }
+                RequestTime::AtSlot(slot) => {
+                    // Get the state with slot equal to the lookup slot.
+                    key_cache
+                        .iter()
+                        .rev() // Usually the slot lies at the end of the map
+                        .find(|(k, _)| k.slot == slot)
+                        .map(|(_, v)| v)
+                        .cloned()
+                }
             }
         }
         None => None,
@@ -456,6 +465,58 @@ mod test {
                 vec![new_message_state.clone()]
             );
         }
+    }
+
+    #[tokio::test]
+    pub async fn test_store_and_retrieve_at_slot_message_state_works() {
+        // Initialize state with a cache size of 2 per key.
+        let (state, _) = setup_state(2).await;
+
+        // Create and store a message state with feed id [1....] and publish time 10 at slot 5.
+        let old_message_state =
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 10, 5).await;
+
+        // Create and store a message state with feed id [1....] and publish time 13 at slot 10.
+        let new_message_state =
+            create_and_store_dummy_price_feed_message_state(&*state, [1; 32], 13, 10).await;
+
+        // The first message state at slot 5 should be the old message state.
+        assert_eq!(
+            state
+                .fetch_message_states(
+                    vec![[1; 32]],
+                    RequestTime::AtSlot(5),
+                    MessageStateFilter::Only(MessageType::PriceFeedMessage)
+                )
+                .await
+                .unwrap(),
+            vec![old_message_state]
+        );
+
+        // Querying the slot at for slots 6..9 should all return None.
+        for request_slot in 6..10 {
+            assert!(state
+                .fetch_message_states(
+                    vec![[1; 32]],
+                    RequestTime::AtSlot(request_slot),
+                    MessageStateFilter::Only(MessageType::PriceFeedMessage)
+                )
+                .await
+                .is_err());
+        }
+
+        // The first message state at slot 10 should be the new message state.
+        assert_eq!(
+            state
+                .fetch_message_states(
+                    vec![[1; 32]],
+                    RequestTime::AtSlot(10),
+                    MessageStateFilter::Only(MessageType::PriceFeedMessage)
+                )
+                .await
+                .unwrap(),
+            vec![new_message_state]
+        );
     }
 
     #[tokio::test]
