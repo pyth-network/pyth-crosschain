@@ -4,7 +4,10 @@ use {
         RpcPriceFeed,
     },
     crate::{
-        aggregate::RequestTime,
+        aggregate::{
+            AggregationEvent,
+            RequestTime,
+        },
         state::State,
     },
     anyhow::{
@@ -54,6 +57,64 @@ use {
 pub const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
 pub const NOTIFICATIONS_CHAN_LEN: usize = 1000;
 
+#[derive(Clone)]
+pub struct PriceFeedClientConfig {
+    verbose:            bool,
+    binary:             bool,
+    allow_out_of_order: bool,
+}
+
+pub struct WsState {
+    pub subscriber_counter: AtomicUsize,
+    pub subscribers:        DashMap<SubscriberId, mpsc::Sender<AggregationEvent>>,
+}
+
+impl WsState {
+    pub fn new() -> Self {
+        Self {
+            subscriber_counter: AtomicUsize::new(0),
+            subscribers:        DashMap::new(),
+        }
+    }
+}
+
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(tag = "type")]
+enum ClientMessage {
+    #[serde(rename = "subscribe")]
+    Subscribe {
+        ids:                Vec<PriceIdInput>,
+        #[serde(default)]
+        verbose:            bool,
+        #[serde(default)]
+        binary:             bool,
+        #[serde(default)]
+        allow_out_of_order: bool,
+    },
+    #[serde(rename = "unsubscribe")]
+    Unsubscribe { ids: Vec<PriceIdInput> },
+}
+
+
+#[derive(Serialize, Debug, Clone)]
+#[serde(tag = "type")]
+enum ServerMessage {
+    #[serde(rename = "response")]
+    Response(ServerResponseMessage),
+    #[serde(rename = "price_update")]
+    PriceUpdate { price_feed: RpcPriceFeed },
+}
+
+#[derive(Serialize, Debug, Clone)]
+#[serde(tag = "status")]
+enum ServerResponseMessage {
+    #[serde(rename = "success")]
+    Success,
+    #[serde(rename = "error")]
+    Err { error: String },
+}
+
 pub async fn ws_route_handler(
     ws: WebSocketUpgrade,
     AxumState(state): AxumState<super::ApiState>,
@@ -67,7 +128,7 @@ async fn websocket_handler(stream: WebSocket, state: super::ApiState) {
     let id = ws_state.subscriber_counter.fetch_add(1, Ordering::SeqCst);
     tracing::debug!(id, "New Websocket Connection");
 
-    let (notify_sender, notify_receiver) = mpsc::channel::<()>(NOTIFICATIONS_CHAN_LEN);
+    let (notify_sender, notify_receiver) = mpsc::channel(NOTIFICATIONS_CHAN_LEN);
     let (sender, receiver) = stream.split();
     let mut subscriber =
         Subscriber::new(id, state.state.clone(), notify_receiver, receiver, sender);
@@ -84,7 +145,7 @@ pub struct Subscriber {
     id:                      SubscriberId,
     closed:                  bool,
     store:                   Arc<State>,
-    notify_receiver:         mpsc::Receiver<()>,
+    notify_receiver:         mpsc::Receiver<AggregationEvent>,
     receiver:                SplitStream<WebSocket>,
     sender:                  SplitSink<WebSocket, Message>,
     price_feeds_with_config: HashMap<PriceIdentifier, PriceFeedClientConfig>,
@@ -96,7 +157,7 @@ impl Subscriber {
     pub fn new(
         id: SubscriberId,
         store: Arc<State>,
-        notify_receiver: mpsc::Receiver<()>,
+        notify_receiver: mpsc::Receiver<AggregationEvent>,
         receiver: SplitStream<WebSocket>,
         sender: SplitSink<WebSocket, Message>,
     ) -> Self {
@@ -125,11 +186,11 @@ impl Subscriber {
 
     async fn handle_next(&mut self) -> Result<()> {
         tokio::select! {
-            maybe_update_feeds = self.notify_receiver.recv() => {
-                if maybe_update_feeds.is_none() {
-                    return Err(anyhow!("Update channel closed. This should never happen. Closing connection."));
-                };
-                self.handle_price_feeds_update().await
+            maybe_update_feeds_event = self.notify_receiver.recv() => {
+                match maybe_update_feeds_event {
+                    Some(event) => self.handle_price_feeds_update(event).await,
+                    None => Err(anyhow!("Update channel closed. This should never happen. Closing connection."))
+                }
             },
             maybe_message_or_err = self.receiver.next() => {
                 self.handle_client_message(
@@ -147,12 +208,12 @@ impl Subscriber {
         }
     }
 
-    async fn handle_price_feeds_update(&mut self) -> Result<()> {
+    async fn handle_price_feeds_update(&mut self, event: AggregationEvent) -> Result<()> {
         let price_feed_ids = self.price_feeds_with_config.keys().cloned().collect();
         for update in crate::aggregate::get_price_feeds_with_update_data(
             &*self.store,
             price_feed_ids,
-            RequestTime::Latest,
+            RequestTime::AtSlot(event.slot()),
         )
         .await?
         .price_feeds
@@ -163,6 +224,12 @@ impl Subscriber {
                 .ok_or(anyhow::anyhow!(
                     "Config missing, price feed list was poisoned during iteration."
                 ))?;
+
+            if let AggregationEvent::OutOfOrder { slot: _ } = event {
+                if !config.allow_out_of_order {
+                    continue;
+                }
+            }
 
             // `sender.feed` buffers a message to the client but does not flush it, so we can send
             // multiple messages and flush them all at once.
@@ -231,6 +298,7 @@ impl Subscriber {
                 ids,
                 verbose,
                 binary,
+                allow_out_of_order,
             }) => {
                 let price_ids: Vec<PriceIdentifier> = ids.into_iter().map(|id| id.into()).collect();
                 let available_price_ids = crate::aggregate::get_price_feed_ids(&*self.store).await;
@@ -259,8 +327,14 @@ impl Subscriber {
                     return Ok(());
                 } else {
                     for price_id in price_ids {
-                        self.price_feeds_with_config
-                            .insert(price_id, PriceFeedClientConfig { verbose, binary });
+                        self.price_feeds_with_config.insert(
+                            price_id,
+                            PriceFeedClientConfig {
+                                verbose,
+                                binary,
+                                allow_out_of_order,
+                            },
+                        );
                     }
                 }
             }
@@ -283,13 +357,12 @@ impl Subscriber {
     }
 }
 
-pub async fn notify_updates(ws_state: Arc<WsState>) {
-    let closed_subscribers: Vec<Option<SubscriberId>> = join_all(
-        ws_state
-            .subscribers
-            .iter_mut()
-            .map(|subscriber| async move {
-                match subscriber.send(()).await {
+pub async fn notify_updates(ws_state: Arc<WsState>, event: AggregationEvent) {
+    let closed_subscribers: Vec<Option<SubscriberId>> =
+        join_all(ws_state.subscribers.iter_mut().map(|subscriber| {
+            let event = event.clone();
+            async move {
+                match subscriber.send(event).await {
                     Ok(_) => None,
                     Err(_) => {
                         // An error here indicates the channel is closed (which may happen either when the
@@ -299,9 +372,9 @@ pub async fn notify_updates(ws_state: Arc<WsState>) {
                         Some(*subscriber.key())
                     }
                 }
-            }),
-    )
-    .await;
+            }
+        }))
+        .await;
 
     // Remove closed_subscribers from ws_state
     closed_subscribers.into_iter().for_each(|id| {
@@ -309,59 +382,4 @@ pub async fn notify_updates(ws_state: Arc<WsState>) {
             ws_state.subscribers.remove(&id);
         }
     });
-}
-
-#[derive(Clone)]
-pub struct PriceFeedClientConfig {
-    verbose: bool,
-    binary:  bool,
-}
-
-pub struct WsState {
-    pub subscriber_counter: AtomicUsize,
-    pub subscribers:        DashMap<SubscriberId, mpsc::Sender<()>>,
-}
-
-impl WsState {
-    pub fn new() -> Self {
-        Self {
-            subscriber_counter: AtomicUsize::new(0),
-            subscribers:        DashMap::new(),
-        }
-    }
-}
-
-
-#[derive(Deserialize, Debug, Clone)]
-#[serde(tag = "type")]
-enum ClientMessage {
-    #[serde(rename = "subscribe")]
-    Subscribe {
-        ids:     Vec<PriceIdInput>,
-        #[serde(default)]
-        verbose: bool,
-        #[serde(default)]
-        binary:  bool,
-    },
-    #[serde(rename = "unsubscribe")]
-    Unsubscribe { ids: Vec<PriceIdInput> },
-}
-
-
-#[derive(Serialize, Debug, Clone)]
-#[serde(tag = "type")]
-enum ServerMessage {
-    #[serde(rename = "response")]
-    Response(ServerResponseMessage),
-    #[serde(rename = "price_update")]
-    PriceUpdate { price_feed: RpcPriceFeed },
-}
-
-#[derive(Serialize, Debug, Clone)]
-#[serde(tag = "status")]
-enum ServerResponseMessage {
-    #[serde(rename = "success")]
-    Success,
-    #[serde(rename = "error")]
-    Err { error: String },
 }

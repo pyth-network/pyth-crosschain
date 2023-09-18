@@ -1,12 +1,14 @@
 //! This module contains the global state of the application.
 
-#[cfg(test)]
-use mock_instant::Instant;
-#[cfg(not(test))]
-use std::time::Instant;
 use {
     self::cache::Cache,
-    crate::wormhole::GuardianSet,
+    crate::{
+        aggregate::{
+            AggregateState,
+            AggregationEvent,
+        },
+        wormhole::GuardianSet,
+    },
     reqwest::Url,
     std::{
         collections::{
@@ -37,10 +39,10 @@ pub struct State {
     pub guardian_set: RwLock<BTreeMap<u32, GuardianSet>>,
 
     /// The sender to the channel between Store and Api to notify completed updates.
-    pub update_tx: Sender<()>,
+    pub api_update_tx: Sender<AggregationEvent>,
 
-    /// Time of the last completed update. This is used for the health probes.
-    pub last_completed_update_at: RwLock<Option<Instant>>,
+    /// The aggregate module state.
+    pub aggregate_state: RwLock<AggregateState>,
 
     /// Benchmarks endpoint
     pub benchmarks_endpoint: Option<Url>,
@@ -48,7 +50,7 @@ pub struct State {
 
 impl State {
     pub fn new(
-        update_tx: Sender<()>,
+        update_tx: Sender<AggregationEvent>,
         cache_size: u64,
         benchmarks_endpoint: Option<Url>,
     ) -> Arc<Self> {
@@ -56,8 +58,8 @@ impl State {
             cache: Cache::new(cache_size),
             observed_vaa_seqs: RwLock::new(Default::default()),
             guardian_set: RwLock::new(Default::default()),
-            update_tx,
-            last_completed_update_at: RwLock::new(None),
+            api_update_tx: update_tx,
+            aggregate_state: RwLock::new(AggregateState::new()),
             benchmarks_endpoint,
         })
     }
@@ -71,7 +73,7 @@ pub mod test {
         tokio::sync::mpsc::Receiver,
     };
 
-    pub async fn setup_state(cache_size: u64) -> (Arc<State>, Receiver<()>) {
+    pub async fn setup_state(cache_size: u64) -> (Arc<State>, Receiver<AggregationEvent>) {
         let (update_tx, update_rx) = tokio::sync::mpsc::channel(1000);
         let state = State::new(update_tx, cache_size, None);
 

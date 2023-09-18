@@ -47,14 +47,12 @@ async fn init() -> Result<()> {
             // Initialize a cache store with a 1000 element circular buffer.
             let store = State::new(update_tx.clone(), 1000, opts.benchmarks_endpoint.clone());
 
-            // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown. We
-            // also send off any notifications needed to close off any waiting tasks.
+            // Listen for Ctrl+C so we can set the exit flag and wait for a graceful shutdown.
             spawn(async move {
                 tracing::info!("Registered shutdown signal handler...");
                 tokio::signal::ctrl_c().await.unwrap();
                 tracing::info!("Shut down signal received, waiting for tasks...");
                 SHOULD_EXIT.store(true, std::sync::atomic::Ordering::Release);
-                let _ = update_tx.send(()).await;
             });
 
             // Spawn all worker tasks, and wait for all to complete (which will happen if a shutdown
