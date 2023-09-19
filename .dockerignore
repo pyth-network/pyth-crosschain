@@ -16,3 +16,4 @@
 .git
 
 hermes/wormhole
+!hermes/src/state/cache.rs
