@@ -211,7 +211,8 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
         let mut aggregate_state = state.aggregate_state.write().await;
         aggregate_state.latest_observed_slot = aggregate_state
             .latest_observed_slot
-            .map(|latest| latest.max(slot));
+            .map(|latest| latest.max(slot))
+            .or(Some(slot));
     }
 
     let accumulator_messages = state.fetch_accumulator_messages(slot).await?;
@@ -260,7 +261,8 @@ pub async fn store_update(state: &State, update: Update) -> Result<()> {
 
     aggregate_state.latest_completed_slot = aggregate_state
         .latest_completed_slot
-        .map(|latest| latest.max(slot));
+        .map(|latest| latest.max(slot))
+        .or(Some(slot));
 
     aggregate_state
         .latest_completed_update_at
