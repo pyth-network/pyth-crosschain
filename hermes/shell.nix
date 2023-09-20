@@ -8,14 +8,16 @@ with pkgs; mkShell {
     llvmPackages.libclang
     nettle
     openssl_1_1
-    pkgconfig
+    pkg-config
     iconv
     protobuf
     go
     rustup
+    curl
   ];
 
   shellHook = ''
     export LIBCLANG_PATH="${llvmPackages.libclang.lib}/lib";
+    export CPATH="${darwin.Libsystem}/include";
   '';
 }
