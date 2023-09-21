@@ -152,10 +152,11 @@ pub enum Update {
 
 #[derive(Debug, PartialEq)]
 pub struct PriceFeedUpdate {
-    pub price_feed:  PriceFeed,
-    pub slot:        Option<Slot>,
-    pub received_at: Option<UnixTimestamp>,
-    pub update_data: Option<Vec<u8>>,
+    pub price_feed:        PriceFeed,
+    pub slot:              Option<Slot>,
+    pub received_at:       Option<UnixTimestamp>,
+    pub update_data:       Option<Vec<u8>>,
+    pub prev_publish_time: Option<UnixTimestamp>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -333,7 +334,7 @@ where
         .iter()
         .map(|message_state| match message_state.message {
             Message::PriceFeedMessage(price_feed) => Ok(PriceFeedUpdate {
-                price_feed:  PriceFeed::new(
+                price_feed:        PriceFeed::new(
                     PriceIdentifier::new(price_feed.feed_id),
                     Price {
                         price:        price_feed.price,
@@ -348,14 +349,15 @@ where
                         publish_time: price_feed.publish_time,
                     },
                 ),
-                received_at: Some(message_state.received_at),
-                slot:        Some(message_state.slot),
-                update_data: Some(
+                received_at:       Some(message_state.received_at),
+                slot:              Some(message_state.slot),
+                update_data:       Some(
                     construct_update_data(vec![message_state.clone().into()])?
                         .into_iter()
                         .next()
                         .ok_or(anyhow!("Missing update data for message"))?,
                 ),
+                prev_publish_time: Some(price_feed.prev_publish_time),
             }),
             _ => Err(anyhow!("Invalid message state type")),
         })
@@ -574,7 +576,7 @@ mod test {
         assert_eq!(
             price_feeds_with_update_data.price_feeds,
             vec![PriceFeedUpdate {
-                price_feed:  PriceFeed::new(
+                price_feed:        PriceFeed::new(
                     PriceIdentifier::new(price_feed_message.feed_id),
                     Price {
                         price:        price_feed_message.price,
@@ -589,11 +591,12 @@ mod test {
                         publish_time: price_feed_message.publish_time,
                     }
                 ),
-                slot:        Some(10),
-                received_at: price_feeds_with_update_data.price_feeds[0].received_at, // Ignore checking this field.
-                update_data: price_feeds_with_update_data.price_feeds[0]
+                slot:              Some(10),
+                received_at:       price_feeds_with_update_data.price_feeds[0].received_at, // Ignore checking this field.
+                update_data:       price_feeds_with_update_data.price_feeds[0]
                     .update_data
                     .clone(), // Ignore checking this field.
+                prev_publish_time: Some(9),
             }]
         );
 

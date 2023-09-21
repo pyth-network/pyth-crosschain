@@ -55,6 +55,8 @@ pub struct RpcPriceFeedMetadata {
     pub emitter_chain:              u16,
     #[schema(value_type = Option<i64>, example=doc_examples::timestamp_example)]
     pub price_service_receive_time: Option<UnixTimestamp>,
+    #[schema(value_type = Option<i64>, example=doc_examples::timestamp_example)]
+    pub prev_publish_time:          Option<UnixTimestamp>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, ToSchema)]
@@ -98,6 +100,7 @@ impl RpcPriceFeed {
                 emitter_chain:              Chain::Pythnet.into(),
                 price_service_receive_time: price_feed_update.received_at,
                 slot:                       price_feed_update.slot,
+                prev_publish_time:          price_feed_update.prev_publish_time,
             }),
             vaa:       match binary {
                 false => None,
