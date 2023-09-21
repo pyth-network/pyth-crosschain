@@ -175,6 +175,16 @@ func RegisterObservationCallback(f C.callback_t, network_id, bootstrap_addrs, li
 				idht, err := dht.New(ctx, h, dht.Mode(dht.ModeServer),
 					dht.ProtocolPrefix(protocol.ID("/"+networkID)),
 					dht.BootstrapPeers(bootstrappers...),
+					dht.RoutingTableFilter(func(dht interface{}, p peer.ID) bool {
+						peerInfo := h.Peerstore().PeerInfo(p)
+						fmt.Printf("Accepted Peer: %s; Addresses: ", peerInfo.ID)
+						for _, addr := range peerInfo.Addrs {
+							fmt.Printf("%s ", addr)
+						}
+						fmt.Println("")
+
+						return true
+					}),
 				)
 				return idht, err
 			}),
