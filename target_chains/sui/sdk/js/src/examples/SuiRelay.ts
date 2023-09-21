@@ -18,9 +18,8 @@ const argvPromise = yargs(hideBin(process.argv))
     type: "array",
     demandOption: true,
   })
-  .option("price-service", {
-    description:
-      "Endpoint URL for the price service. e.g: https://xc-mainnet.pyth.network",
+  .option("hermes", {
+    description: "Endpoint URL for Hermes. e.g: https://hermes.pyth.network",
     type: "string",
     demandOption: true,
   })
@@ -52,7 +51,7 @@ async function run() {
   const argv = await argvPromise;
 
   // Fetch the latest price feed update data from the Price Service
-  const connection = new SuiPriceServiceConnection(argv["price-service"]);
+  const connection = new SuiPriceServiceConnection(argv["hermes"]);
   const feeds = argv["feed-id"] as string[];
   const priceFeedUpdateData = await connection.getPriceFeedsUpdateData(feeds);
 

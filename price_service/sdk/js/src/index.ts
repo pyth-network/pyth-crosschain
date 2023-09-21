@@ -100,6 +100,10 @@ export class PriceFeedMetadata {
    * Pythnet slot number of the price
    */
   slot?: number;
+  /**
+   * The time that the previous price was published
+   */
+  prevPublishTime?: number;
 
   constructor(metadata: {
     attestationTime?: number;
@@ -107,12 +111,14 @@ export class PriceFeedMetadata {
     receiveTime?: number;
     sequenceNumber?: number;
     slot?: number;
+    prevPublishTime?: number;
   }) {
     this.attestationTime = metadata.attestationTime;
     this.emitterChain = metadata.emitterChain;
     this.priceServiceReceiveTime = metadata.receiveTime;
     this.sequenceNumber = metadata.sequenceNumber;
     this.slot = metadata.slot;
+    this.prevPublishTime = metadata.prevPublishTime;
   }
 
   static fromJson(json: any): PriceFeedMetadata | undefined {
@@ -126,6 +132,7 @@ export class PriceFeedMetadata {
       receiveTime: jsonFeed.price_service_receive_time,
       sequenceNumber: jsonFeed.sequence_number,
       slot: jsonFeed.slot,
+      prevPublishTime: jsonFeed.prev_publish_time,
     });
   }
 
@@ -136,6 +143,7 @@ export class PriceFeedMetadata {
       price_service_receive_time: this.priceServiceReceiveTime,
       sequence_number: this.sequenceNumber,
       slot: this.slot,
+      prev_publish_time: this.prevPublishTime,
     };
     // this is done to avoid sending undefined values to the server
     return Convert.priceFeedMetadataToJson(jsonFeed);
