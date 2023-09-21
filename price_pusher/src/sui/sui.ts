@@ -378,14 +378,13 @@ export class SuiPricePusher implements IPricePusher {
       id: consolidatedCoin.objectId,
       options: { showContent: true },
     });
-    let balance = "0";
+    let balance;
     if (
       coinResult.data &&
       coinResult.data.content &&
       coinResult.data.content.dataType == "moveObject"
     ) {
       balance = coinResult.data.content.fields.balance;
-      console.log(balance);
     } else throw new Error("Bad coin object");
     const splitAmount =
       (BigInt(balance) - BigInt(GAS_FEE_FOR_SPLIT)) / BigInt(numGasObjects);
