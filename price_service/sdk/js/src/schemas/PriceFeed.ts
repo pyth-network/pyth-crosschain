@@ -74,6 +74,10 @@ export interface PriceFeedMetadata {
    */
   emitter_chain: number;
   /**
+   * The time that the previous price was published
+   */
+  prev_publish_time?: number;
+  /**
    * The time that the price service received the price
    */
   price_service_receive_time?: number;
@@ -294,6 +298,11 @@ const typeMap: any = {
         typ: u(undefined, 0),
       },
       { json: "emitter_chain", js: "emitter_chain", typ: 0 },
+      {
+        json: "prev_publish_time",
+        js: "prev_publish_time",
+        typ: u(undefined, 0),
+      },
       {
         json: "price_service_receive_time",
         js: "price_service_receive_time",
