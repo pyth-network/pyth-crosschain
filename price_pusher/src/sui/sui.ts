@@ -369,16 +369,25 @@ export class SuiPricePusher implements IPricePusher {
     numGasObjects: number
   ): Promise<SuiObjectRef[]> {
     const signerAddress = await signer.getAddress();
-    const { totalBalance: balance } = await signer.provider.getBalance({
-      owner: signerAddress,
-    });
-    const splitAmount =
-      (BigInt(balance) - BigInt(GAS_FEE_FOR_SPLIT)) / BigInt(numGasObjects);
 
     const consolidatedCoin = await SuiPricePusher.mergeGasCoinsIntoOne(
       signer,
       signerAddress
     );
+    const coinResult = await signer.provider.getObject({
+      id: consolidatedCoin.objectId,
+      options: { showContent: true },
+    });
+    let balance;
+    if (
+      coinResult.data &&
+      coinResult.data.content &&
+      coinResult.data.content.dataType == "moveObject"
+    ) {
+      balance = coinResult.data.content.fields.balance;
+    } else throw new Error("Bad coin object");
+    const splitAmount =
+      (BigInt(balance) - BigInt(GAS_FEE_FOR_SPLIT)) / BigInt(numGasObjects);
 
     const gasPool = await SuiPricePusher.splitGasCoinEqually(
       signer,
@@ -503,18 +512,38 @@ export class SuiPricePusher implements IPricePusher {
       MAX_NUM_GAS_OBJECTS_IN_PTB - 2
     );
     let finalCoin;
-
+    const lockedAddresses: Set<string> = new Set();
     for (let i = 0; i < gasCoinsChunks.length; i++) {
       const mergeTx = new TransactionBlock();
       let coins = gasCoinsChunks[i];
+      coins = coins.filter((coin) => !lockedAddresses.has(coin.objectId));
       if (finalCoin) {
         coins = [finalCoin, ...coins];
       }
       mergeTx.setGasPayment(coins);
-      const mergeResult = await signer.signAndExecuteTransactionBlock({
-        transactionBlock: mergeTx,
-        options: { showEffects: true },
-      });
+      let mergeResult;
+      try {
+        mergeResult = await signer.signAndExecuteTransactionBlock({
+          transactionBlock: mergeTx,
+          options: { showEffects: true },
+        });
+      } catch (e) {
+        if (
+          String(e).includes(
+            "quorum of validators because of locked objects. Retried a conflicting transaction"
+          )
+        ) {
+          Object.values((e as any).data).forEach((lockedObjects: any) => {
+            lockedObjects.forEach((lockedObject: [string, number, string]) => {
+              lockedAddresses.add(lockedObject[0]);
+            });
+          });
+          // retry merging without the locked coins
+          i--;
+          continue;
+        }
+        throw e;
+      }
       const error = getExecutionStatusError(mergeResult);
       if (error) {
         throw new Error(
