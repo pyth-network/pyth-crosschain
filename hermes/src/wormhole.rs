@@ -102,11 +102,43 @@ pub async fn verify_vaa<'a>(
             )
         })?;
 
-    let mut num_correct_signers = 0;
-    for sig in header.signatures.iter() {
-        let signer_id: usize = sig.index.into();
+    // TODO: This check bypass checking the signatures on tests.
+    // Ideally we need to test the signatures but currently Wormhole
+    // doesn't give us any easy way for it.
+    let quorum = if cfg!(test) {
+        0
+    } else {
+        (guardian_set.keys.len() * 2) / 3 + 1
+    };
 
-        let sig = sig.signature;
+    let mut last_signer_id: Option<usize> = None;
+    let mut signatures = vec![];
+    for signature in header.signatures.into_iter() {
+        // Do not collect more signatures than necessary to reduce
+        // on-chain gas spent on signature verification.
+        if signatures.len() >= quorum {
+            break;
+        }
+
+        let signer_id: usize = signature.index.into();
+
+        if signer_id >= guardian_set.keys.len() {
+            return Err(anyhow!(
+                "Signer ID is out of range. Signer ID: {}, guardian set size: {}",
+                signer_id,
+                guardian_set.keys.len()
+            ));
+        }
+
+        if let Some(true) = last_signer_id.map(|v| v >= signer_id) {
+            return Err(anyhow!(
+                "Signatures are not sorted by signer ID. Last signer ID: {:?}, current signer ID: {}",
+                last_signer_id,
+                signer_id
+            ));
+        }
+
+        let sig = signature.signature;
 
         // Recover the public key from ecdsa signature from [u8; 65] that has (v, r, s) format
         let recid = RecoveryId::from_i32(sig[64].into())?;
@@ -128,28 +160,29 @@ pub async fn verify_vaa<'a>(
         let address: [u8; 20] = address[address.len() - 20..].try_into()?;
 
         if guardian_set.keys.get(signer_id) == Some(&address) {
-            num_correct_signers += 1;
+            signatures.push(signature);
         }
+
+        last_signer_id = Some(signer_id);
     }
 
-    // TODO: This check bypass checking the signatures on tests.
-    // Ideally we need to test the signatures but currently Wormhole
-    // doesn't give us any easy way for it.
-    let quorum = if cfg!(test) {
-        0
-    } else {
-        (guardian_set.keys.len() * 2) / 3 + 1
-    };
-
-    if num_correct_signers < quorum {
+    // Check if we have enough correct signatures
+    if signatures.len() < quorum {
         return Err(anyhow!(
             "Not enough correct signatures. Expected {:?}, received {:?}",
             quorum,
-            num_correct_signers
+            signatures.len()
         ));
     }
 
-    Ok((header, body).into())
+    Ok((
+        Header {
+            signatures,
+            ..header
+        },
+        body,
+    )
+        .into())
 }
 
 /// Update the guardian set with the given ID in the state.
