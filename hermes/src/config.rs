@@ -1,98 +1,58 @@
-use {
-    libp2p::Multiaddr,
-    reqwest::Url,
-    solana_sdk::pubkey::Pubkey,
-    std::net::SocketAddr,
-    structopt::StructOpt,
+use clap::{
+    crate_authors,
+    crate_description,
+    crate_name,
+    crate_version,
+    Args,
+    Parser,
 };
 
-const DEFAULT_NETWORK_ID: &str = "/wormhole/mainnet/2";
-const DEFAULT_WORMHOLE_BOOTSTRAP_ADDRS: &str = "/dns4/wormhole-mainnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWQp644DK27fd3d4Km3jr7gHiuJJ5ZGmy8hH4py7fP4FP7,/dns4/wormhole-v2-mainnet-bootstrap.xlabs.xyz/udp/8999/quic/p2p/12D3KooWNQ9tVrcb64tw6bNs2CaNrUGPM7yRrKvBBheQ5yCyPHKC";
-const DEFAULT_WORMHOLE_LISTEN_ADDRS: &str = "/ip4/0.0.0.0/udp/30910/quic,/ip6/::/udp/30910/quic";
-const DEFAULT_API_ADDR: &str = "127.0.0.1:33999";
+mod benchmarks;
+mod pythnet;
+mod rpc;
+mod wormhole;
 
-/// `Options` is a structup definition to provide clean command-line args for Hermes.
-#[derive(StructOpt, Debug)]
-#[structopt(name = "hermes", about = "Hermes")]
+// `Options` is a structup definition to provide clean command-line args for Hermes.
+#[derive(Parser, Debug)]
+#[command(name = crate_name!())]
+#[command(author = crate_authors!())]
+#[command(about = crate_description!())]
+#[command(version = crate_version!())]
+#[allow(clippy::large_enum_variant)]
 pub enum Options {
-    /// Run the hermes service.
+    /// Run the Hermes Price Service.
     Run(RunOptions),
+
+    /// Show Overridden Environment Variables.
+    ShowEnv(ShowEnvOptions),
 }
 
-#[derive(Clone, Debug, StructOpt)]
+#[derive(Args, Clone, Debug)]
 pub struct RunOptions {
     /// Wormhole Options.
-    #[structopt(flatten)]
-    pub wormhole: WormholeOptions,
+    #[command(flatten)]
+    pub wormhole: wormhole::Options,
 
     /// PythNet Options
-    #[structopt(flatten)]
-    pub pythnet: PythNetOptions,
+    #[command(flatten)]
+    pub pythnet: pythnet::Options,
 
     /// RPC Options
-    #[structopt(flatten)]
-    pub rpc: RpcOptions,
+    #[command(flatten)]
+    pub rpc: rpc::Options,
 
     /// Benchmarks Options
-    #[structopt(flatten)]
-    pub benchmarks: BenchmarksOptions,
+    #[command(flatten)]
+    pub benchmarks: benchmarks::Options,
 }
 
-#[derive(Clone, Debug, StructOpt)]
-pub struct WormholeOptions {
-    /// Multiaddresses for Wormhole bootstrap peers (separated by comma).
-    #[structopt(long)]
-    #[structopt(use_delimiter = true)]
-    #[structopt(default_value = DEFAULT_WORMHOLE_BOOTSTRAP_ADDRS)]
-    #[structopt(env = "WORMHOLE_BOOTSTRAP_ADDRS")]
-    pub bootstrap_addrs: Vec<Multiaddr>,
-
-    /// Address of the Wormhole contract on the target PythNet cluster.
-    #[structopt(long)]
-    #[structopt(default_value = "H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU")]
-    #[structopt(env = "WORMHOLE_CONTRACT_ADDR")]
-    pub contract_addr: Pubkey,
-
-    /// Multiaddresses to bind Wormhole P2P to (separated by comma)
-    #[structopt(long)]
-    #[structopt(use_delimiter = true)]
-    #[structopt(default_value = DEFAULT_WORMHOLE_LISTEN_ADDRS)]
-    #[structopt(env = "WORMHOLE_LISTEN_ADDRS")]
-    pub listen_addrs: Vec<Multiaddr>,
-
-    /// Network ID for Wormhole
-    #[structopt(long)]
-    #[structopt(default_value = DEFAULT_NETWORK_ID)]
-    #[structopt(env = "WORMHOLE_NETWORK_ID")]
-    pub network_id: String,
-}
-
-#[derive(Clone, Debug, StructOpt)]
-pub struct PythNetOptions {
-    /// Address of a PythNet compatible websocket RPC endpoint.
-    #[structopt(long)]
-    #[structopt(env = "PYTHNET_WS_ENDPOINT")]
-    pub ws_endpoint: String,
-
-    /// Addres of a PythNet compatible HTP RPC endpoint.
-    #[structopt(long)]
-    #[structopt(env = "PYTHNET_HTTP_ENDPOINT")]
-    pub http_endpoint: String,
-}
-
-#[derive(Clone, Debug, StructOpt)]
-pub struct RpcOptions {
-    /// Address to bind the API server to.
-    #[structopt(long)]
-    #[structopt(default_value = DEFAULT_API_ADDR)]
-    #[structopt(env = "API_ADDR")]
-    pub addr: SocketAddr,
-}
-
-#[derive(Clone, Debug, StructOpt)]
-pub struct BenchmarksOptions {
-    /// Benchmarks endpoint to retrieve historical update data from.
-    #[structopt(long)]
-    #[structopt(env = "BENCHMARKS_ENDPOINT")]
-    pub endpoint: Option<Url>,
+#[derive(Args, Clone, Debug)]
+pub struct ShowEnvOptions {
+    /// Show Hermes environment variables.
+    ///
+    /// By default this command will attempt to read the variable from the environment and fall
+    /// back to the argument default if not present. Set this flag if you want only the defaults
+    /// and to ignore the current environment.
+    #[arg(long = "defaults")]
+    pub defaults: bool,
 }
