@@ -6,7 +6,6 @@ use {
             UnixTimestamp,
         },
         doc_examples,
-        impl_deserialize_for_hex_string_wrapper,
     },
     base64::{
         engine::general_purpose::STANDARD as base64_standard_engine,
@@ -21,6 +20,10 @@ use {
         DerefMut,
     },
     pyth_sdk::PriceIdentifier,
+    serde::{
+        Deserialize,
+        Serialize,
+    },
     utoipa::ToSchema,
     wormhole_sdk::Chain,
 };
@@ -33,11 +36,9 @@ use {
 /// * e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43
 ///
 /// See https://pyth.network/developers/price-feed-ids for a list of all price feed ids.
-#[derive(Debug, Clone, Deref, DerefMut, ToSchema)]
+#[derive(Clone, Debug, Deref, DerefMut, Deserialize, Serialize, ToSchema)]
 #[schema(value_type=String, example=doc_examples::price_feed_id_example)]
-pub struct PriceIdInput([u8; 32]);
-// TODO: Use const generics instead of macro.
-impl_deserialize_for_hex_string_wrapper!(PriceIdInput, 32);
+pub struct PriceIdInput(#[serde(with = "crate::serde::hex")] [u8; 32]);
 
 impl From<PriceIdInput> for PriceIdentifier {
     fn from(id: PriceIdInput) -> Self {
