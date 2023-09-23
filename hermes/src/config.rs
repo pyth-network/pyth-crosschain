@@ -21,50 +21,78 @@ pub enum Options {
 
 #[derive(Clone, Debug, StructOpt)]
 pub struct RunOptions {
-    /// The address to bind the API server to.
-    #[structopt(long)]
-    #[structopt(default_value = DEFAULT_API_ADDR)]
-    #[structopt(env = "API_ADDR")]
-    pub api_addr: SocketAddr,
+    /// Wormhole Options.
+    #[structopt(flatten)]
+    pub wormhole: WormholeOptions,
 
-    /// Address of a PythNet compatible websocket RPC endpoint.
-    #[structopt(long)]
-    #[structopt(env = "PYTHNET_WS_ENDPOINT")]
-    pub pythnet_ws_endpoint: String,
+    /// PythNet Options
+    #[structopt(flatten)]
+    pub pythnet: PythNetOptions,
 
-    /// Addres of a PythNet compatible HTP RPC endpoint.
-    #[structopt(long)]
-    #[structopt(env = "PYTHNET_HTTP_ENDPOINT")]
-    pub pythnet_http_endpoint: String,
+    /// RPC Options
+    #[structopt(flatten)]
+    pub rpc: RpcOptions,
 
+    /// Benchmarks Options
+    #[structopt(flatten)]
+    pub benchmarks: BenchmarksOptions,
+}
+
+#[derive(Clone, Debug, StructOpt)]
+pub struct WormholeOptions {
     /// Multiaddresses for Wormhole bootstrap peers (separated by comma).
     #[structopt(long)]
     #[structopt(use_delimiter = true)]
     #[structopt(default_value = DEFAULT_WORMHOLE_BOOTSTRAP_ADDRS)]
     #[structopt(env = "WORMHOLE_BOOTSTRAP_ADDRS")]
-    pub wh_bootstrap_addrs: Vec<Multiaddr>,
+    pub bootstrap_addrs: Vec<Multiaddr>,
 
     /// Address of the Wormhole contract on the target PythNet cluster.
     #[structopt(long)]
     #[structopt(default_value = "H3fxXJ86ADW2PNuDDmZJg6mzTtPxkYCpNuQUTgmJ7AjU")]
     #[structopt(env = "WORMHOLE_CONTRACT_ADDR")]
-    pub wh_contract_addr: Pubkey,
+    pub contract_addr: Pubkey,
 
     /// Multiaddresses to bind Wormhole P2P to (separated by comma)
     #[structopt(long)]
     #[structopt(use_delimiter = true)]
     #[structopt(default_value = DEFAULT_WORMHOLE_LISTEN_ADDRS)]
     #[structopt(env = "WORMHOLE_LISTEN_ADDRS")]
-    pub wh_listen_addrs: Vec<Multiaddr>,
+    pub listen_addrs: Vec<Multiaddr>,
 
     /// Network ID for Wormhole
     #[structopt(long)]
     #[structopt(default_value = DEFAULT_NETWORK_ID)]
     #[structopt(env = "WORMHOLE_NETWORK_ID")]
-    pub wh_network_id: String,
+    pub network_id: String,
+}
 
+#[derive(Clone, Debug, StructOpt)]
+pub struct PythNetOptions {
+    /// Address of a PythNet compatible websocket RPC endpoint.
+    #[structopt(long)]
+    #[structopt(env = "PYTHNET_WS_ENDPOINT")]
+    pub ws_endpoint: String,
+
+    /// Addres of a PythNet compatible HTP RPC endpoint.
+    #[structopt(long)]
+    #[structopt(env = "PYTHNET_HTTP_ENDPOINT")]
+    pub http_endpoint: String,
+}
+
+#[derive(Clone, Debug, StructOpt)]
+pub struct RpcOptions {
+    /// Address to bind the API server to.
+    #[structopt(long)]
+    #[structopt(default_value = DEFAULT_API_ADDR)]
+    #[structopt(env = "API_ADDR")]
+    pub addr: SocketAddr,
+}
+
+#[derive(Clone, Debug, StructOpt)]
+pub struct BenchmarksOptions {
     /// Benchmarks endpoint to retrieve historical update data from.
     #[structopt(long)]
     #[structopt(env = "BENCHMARKS_ENDPOINT")]
-    pub benchmarks_endpoint: Option<Url>,
+    pub endpoint: Option<Url>,
 }

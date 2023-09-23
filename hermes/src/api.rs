@@ -54,7 +54,7 @@ pub async fn run(
     state: Arc<State>,
     mut update_rx: Receiver<AggregationEvent>,
 ) -> Result<()> {
-    tracing::info!(endpoint = %opts.api_addr, "Starting RPC Server.");
+    tracing::info!(endpoint = %opts.rpc.addr, "Starting RPC Server.");
 
     #[derive(OpenApi)]
     #[openapi(
@@ -130,7 +130,7 @@ pub async fn run(
 
     // Binds the axum's server to the configured address and port. This is a blocking call and will
     // not return until the server is shutdown.
-    axum::Server::try_bind(&opts.api_addr)?
+    axum::Server::try_bind(&opts.rpc.addr)?
         .serve(app.into_make_service())
         .with_graceful_shutdown(async {
             // Ignore Ctrl+C errors, either way we need to shut down. The main Ctrl+C handler

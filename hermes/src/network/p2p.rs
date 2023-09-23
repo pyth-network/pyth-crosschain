@@ -138,13 +138,13 @@ pub fn bootstrap(
 // Spawn's the P2P layer as a separate thread via Go.
 #[tracing::instrument(skip(opts, state))]
 pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
-    tracing::info!(listeners = ?opts.wh_listen_addrs, "Starting P2P Server");
+    tracing::info!(listeners = ?opts.wormhole.listen_addrs, "Starting P2P Server");
 
     std::thread::spawn(|| {
         if bootstrap(
-            opts.wh_network_id,
-            opts.wh_bootstrap_addrs,
-            opts.wh_listen_addrs,
+            opts.wormhole.network_id,
+            opts.wormhole.bootstrap_addrs,
+            opts.wormhole.listen_addrs,
         )
         .is_err()
         {
