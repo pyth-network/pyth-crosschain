@@ -1,7 +1,8 @@
 [package]
-name    = "hermes"
-version = "0.1.20"
-edition = "2021"
+name        = "hermes"
+version     = "0.1.21"
+description = "Hermes is an agent that provides Verified Prices from the Pythnet Pyth Oracle."
+edition     = "2021"
 
 [dependencies]
 async-trait        = { version = "0.1.73" }
@@ -33,7 +34,7 @@ serde_json         = { version = "1.0.93" }
 serde_qs           = { version = "0.12.0", features = ["axum"] }
 serde_wormhole     = { git     = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
 sha3               = { version = "0.10.4" }
-structopt          = { version = "0.3.26" }
+clap               = { version = "4.4.4", features = ["derive", "env", "cargo"] }
 strum              = { version = "0.24.1", features = ["derive"] }
 tokio              = { version = "1.26.0", features = ["full"] }
 tower-http         = { version = "0.4.0", features = ["cors"] }

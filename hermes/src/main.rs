@@ -4,12 +4,15 @@
 use {
     crate::state::State,
     anyhow::Result,
+    clap::{
+        CommandFactory,
+        Parser,
+    },
     futures::future::join_all,
     std::{
         io::IsTerminal,
         sync::atomic::AtomicBool,
     },
-    structopt::StructOpt,
     tokio::spawn,
 };
 
@@ -37,7 +40,7 @@ async fn init() -> Result<()> {
 
     // Parse the command line arguments with StructOpt, will exit automatically on `--help` or
     // with invalid arguments.
-    match config::Options::from_args() {
+    match config::Options::parse() {
         config::Options::Run(opts) => {
             tracing::info!("Starting hermes service...");
 
@@ -66,6 +69,33 @@ async fn init() -> Result<()> {
 
             for task in tasks {
                 task??;
+            }
+        }
+
+        config::Options::ShowEnv(opts) => {
+            // For each subcommand, scan for arguments that allow overriding with an ENV variable
+            // and print that variable.
+            for subcommand in config::Options::command().get_subcommands() {
+                for arg in subcommand.get_arguments() {
+                    if let Some(env) = arg.get_env().and_then(|env| env.to_str()) {
+                        // Find the defaults for this argument, if present.
+                        let defaults = arg
+                            .get_default_values()
+                            .iter()
+                            .map(|v| v.to_str().unwrap())
+                            .collect::<Vec<_>>()
+                            .join(",");
+
+                        println!(
+                            "{}={}",
+                            env,
+                            match opts.defaults {
+                                true => defaults,
+                                false => std::env::var(env).unwrap_or(defaults),
+                            }
+                        );
+                    }
+                }
             }
         }
     }
