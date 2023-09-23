@@ -5,7 +5,6 @@ use {
             UnixTimestamp,
         },
         api::rest::RestError,
-        impl_deserialize_for_hex_string_wrapper,
     },
     anyhow::Result,
     axum::{
@@ -17,6 +16,10 @@ use {
         DerefMut,
     },
     pyth_sdk::PriceIdentifier,
+    serde::{
+        Deserialize,
+        Serialize,
+    },
     serde_qs::axum::QsQuery,
     utoipa::{
         IntoParams,
@@ -24,9 +27,8 @@ use {
     },
 };
 
-#[derive(Debug, Clone, Deref, DerefMut, ToSchema)]
-pub struct GetVaaCcipInput([u8; 40]);
-impl_deserialize_for_hex_string_wrapper!(GetVaaCcipInput, 40);
+#[derive(Clone, Debug, Deref, DerefMut, Deserialize, Serialize, ToSchema)]
+pub struct GetVaaCcipInput(#[serde(with = "crate::serde::hex")] [u8; 40]);
 
 #[derive(Debug, serde::Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]

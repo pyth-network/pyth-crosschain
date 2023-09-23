@@ -16,7 +16,7 @@ dashmap            = { version = "5.4.0" }
 derive_more        = { version = "0.99.17" }
 env_logger         = { version = "0.10.0" }
 futures            = { version = "0.3.28" }
-hex                = { version = "0.4.3" }
+hex                = { version = "0.4.3", features = ["serde"] }
 humantime          = { version = "2.1.0" }
 lazy_static        = { version = "1.4.0" }
 libc               = { version = "0.2.140" }

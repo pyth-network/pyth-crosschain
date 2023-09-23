@@ -17,8 +17,8 @@ mod aggregate;
 mod api;
 mod config;
 mod doc_examples;
-mod macros;
 mod network;
+mod serde;
 mod state;
 mod wormhole;
 
