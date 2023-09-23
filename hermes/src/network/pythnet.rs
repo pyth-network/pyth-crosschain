@@ -256,20 +256,20 @@ async fn fetch_existing_guardian_sets(
 #[tracing::instrument(skip(opts, state))]
 pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
     tracing::info!(
-        endpoint = opts.pythnet_ws_endpoint,
+        endpoint = opts.pythnet.ws_endpoint,
         "Started Pythnet Listener."
     );
 
     fetch_existing_guardian_sets(
         state.clone(),
-        opts.pythnet_http_endpoint.clone(),
-        opts.wh_contract_addr,
+        opts.pythnet.http_endpoint.clone(),
+        opts.wormhole.contract_addr,
     )
     .await?;
 
     let task_listener = {
         let store = state.clone();
-        let pythnet_ws_endpoint = opts.pythnet_ws_endpoint.clone();
+        let pythnet_ws_endpoint = opts.pythnet.ws_endpoint.clone();
         tokio::spawn(async move {
             while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
                 let current_time = Instant::now();
@@ -289,7 +289,7 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
 
     let task_guadian_watcher = {
         let store = state.clone();
-        let pythnet_http_endpoint = opts.pythnet_http_endpoint.clone();
+        let pythnet_http_endpoint = opts.pythnet.http_endpoint.clone();
         tokio::spawn(async move {
             while !crate::SHOULD_EXIT.load(Ordering::Acquire) {
                 // Poll for new guardian sets every 60 seconds. We use a short wait time so we can
@@ -305,7 +305,7 @@ pub async fn spawn(opts: RunOptions, state: Arc<State>) -> Result<()> {
                 match fetch_existing_guardian_sets(
                     store.clone(),
                     pythnet_http_endpoint.clone(),
-                    opts.wh_contract_addr,
+                    opts.wormhole.contract_addr,
                 )
                 .await
                 {
