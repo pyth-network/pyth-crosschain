@@ -5,11 +5,11 @@ use {
         Slot,
     },
     crate::{
+        network::wormhole::VaaBytes,
         state::cache::{
             AggregateCache,
             MessageState,
         },
-        wormhole::VaaBytes,
     },
     anyhow::{
         anyhow,

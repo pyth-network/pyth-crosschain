@@ -19,6 +19,7 @@ use {
         WormholeMerkleState,
     },
     crate::{
+        network::wormhole::VaaBytes,
         state::{
             benchmarks::Benchmarks,
             cache::{
@@ -28,7 +29,6 @@ use {
             },
             State,
         },
-        wormhole::VaaBytes,
     },
     anyhow::{
         anyhow,

@@ -2,13 +2,13 @@
 #![feature(btree_cursors)]
 
 use {
-    crate::state::State,
     anyhow::Result,
     clap::{
         CommandFactory,
         Parser,
     },
     futures::future::join_all,
+    state::State,
     std::{
         io::IsTerminal,
         sync::atomic::AtomicBool,
@@ -23,7 +23,6 @@ mod doc_examples;
 mod network;
 mod serde;
 mod state;
-mod wormhole;
 
 // A static exit flag to indicate to running threads that we're shutting down. This is used to
 // gracefully shutdown the application.
@@ -61,7 +60,7 @@ async fn init() -> Result<()> {
             // Spawn all worker tasks, and wait for all to complete (which will happen if a shutdown
             // signal has been observed).
             let tasks = join_all([
-                Box::pin(spawn(network::p2p::spawn(opts.clone(), store.clone()))),
+                Box::pin(spawn(network::wormhole::spawn(opts.clone(), store.clone()))),
                 Box::pin(spawn(network::pythnet::spawn(opts.clone(), store.clone()))),
                 Box::pin(spawn(api::run(opts.clone(), store.clone(), update_rx))),
             ])

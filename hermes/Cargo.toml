@@ -5,14 +5,15 @@ description = "Hermes is an agent that provides Verified Prices from the Pythnet
 edition     = "2021"
 
 [dependencies]
-async-trait        = { version = "0.1.73" }
 anyhow             = { version = "1.0.69" }
+async-trait        = { version = "0.1.73" }
 axum               = { version = "0.6.20", features = ["json", "ws", "macros"] }
 axum-macros        = { version = "0.3.8" }
 base64             = { version = "0.21.0" }
 borsh              = { version = "0.10.3" }
 byteorder          = { version = "1.4.3" }
 chrono             = { version = "0.4.28" }
+clap               = { version = "4.4.4", features = ["derive", "env", "cargo"] }
 dashmap            = { version = "5.4.0" }
 derive_more        = { version = "0.99.17" }
 env_logger         = { version = "0.10.0" }
@@ -27,6 +28,7 @@ log                = { version = "0.4.17" }
 mock_instant       = { version = "0.3.1", features = ["sync"] }
 nonzero_ext        = { version = "0.3.0" }
 prometheus-client  = { version = "0.21.1" }
+prost              = { version = "0.12.1" }
 pyth-sdk           = { version = "0.8.0" }
 pythnet-sdk        = { path = "../pythnet/pythnet_sdk/", version = "2.0.0", features = ["strum"] }
 rand               = { version = "0.8.5" }
@@ -37,9 +39,9 @@ serde_json         = { version = "1.0.93" }
 serde_qs           = { version = "0.12.0", features = ["axum"] }
 serde_wormhole     = { git     = "https://github.com/wormhole-foundation/wormhole", tag = "v2.17.1" }
 sha3               = { version = "0.10.4" }
-clap               = { version = "4.4.4", features = ["derive", "env", "cargo"] }
 strum              = { version = "0.24.1", features = ["derive"] }
 tokio              = { version = "1.26.0", features = ["full"] }
+tonic              = { version = "0.10.1", features = ["tls"] }
 tower-http         = { version = "0.4.0", features = ["cors"] }
 tracing            = { version = "0.1.37", features = ["log"] }
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
@@ -66,6 +68,12 @@ libp2p = { version = "0.42.2", features = [
 solana-client          = { version = "=1.13.3" }
 solana-sdk             = { version = "=1.13.3" }
 solana-account-decoder = { version = "=1.13.3" }
+
+
+[build-dependencies]
+prost-build = { version = "0.12.1" }
+tonic-build = { version = "0.10.1" }
+
 
 # Wormhole uses patching to resolve some of its own dependencies. We need to
 # make sure that we use the same patch instead of simply pointing the original
