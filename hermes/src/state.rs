@@ -7,7 +7,7 @@ use {
             AggregateState,
             AggregationEvent,
         },
-        wormhole::GuardianSet,
+        network::wormhole::GuardianSet,
     },
     reqwest::Url,
     std::{
@@ -69,7 +69,7 @@ impl State {
 pub mod test {
     use {
         super::*,
-        crate::wormhole::update_guardian_set,
+        crate::network::wormhole::update_guardian_set,
         tokio::sync::mpsc::Receiver,
     };
 

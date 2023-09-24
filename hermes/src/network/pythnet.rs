@@ -9,13 +9,13 @@ use {
             Update,
         },
         config::RunOptions,
-        state::State,
-        wormhole::{
+        network::wormhole::{
             update_guardian_set,
             BridgeData,
             GuardianSet,
             GuardianSetData,
         },
+        state::State,
     },
     anyhow::{
         anyhow,
