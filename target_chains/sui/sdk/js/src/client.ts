@@ -6,6 +6,7 @@ import {
   TransactionBlock,
 } from "@mysten/sui.js";
 import { HexString } from "@pythnetwork/price-service-client";
+import { Buffer } from "buffer";
 
 const MAX_ARGUMENT_SIZE = 16 * 1024;
 
