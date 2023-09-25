@@ -7,7 +7,7 @@ import {
   RawSigner,
   TransactionBlock,
 } from "@mysten/sui.js";
-
+import { Buffer } from "buffer";
 import { SuiPythClient } from "../client";
 import { SuiPriceServiceConnection } from "../index";
 

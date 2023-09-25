@@ -40,7 +40,7 @@ const OPTIONS = {
   },
   endpoint: {
     type: "string",
-    desc: "Price service endpoint to use, defaults to https://xc-mainnet.pyth.network for mainnet and https://xc-testnet.pyth.network for testnet",
+    desc: "Price service endpoint to use, defaults to https://hermes.pyth.network for mainnet and https://hermes-beta.pyth.network for testnet",
   },
   "feed-id": {
     type: "array",
