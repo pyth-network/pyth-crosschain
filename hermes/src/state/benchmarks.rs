@@ -68,6 +68,7 @@ impl TryFrom<BenchmarkUpdates> for PriceFeedsWithUpdateData {
                     slot: None,
                     received_at: None,
                     update_data: None,
+                    prev_publish_time: None, // TODO: Set this field when Benchmarks API supports it.
                 })
                 .collect::<Vec<_>>(),
             update_data: benchmark_updates.binary.try_into()?,

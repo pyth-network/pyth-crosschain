@@ -84,6 +84,11 @@
           "description": "Pythnet slot number of the price",
           "type": "integer",
           "format": "int64"
+        },
+        "prev_publish_time": {
+          "description": "The time that the previous price was published",
+          "type": "integer",
+          "format": "int64"
         }
       }
     }
