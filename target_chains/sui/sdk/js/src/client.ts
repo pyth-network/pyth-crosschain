@@ -155,6 +155,12 @@ export class SuiPythClient {
     }
 
     const priceInfoObjects: ObjectId[] = [];
+    const baseUpdateFee = await this.getBaseUpdateFee();
+    const coins = tx.splitCoins(
+      tx.gas,
+      feedIds.map(() => tx.pure(baseUpdateFee))
+    );
+    let coinId = 0;
     for (const feedId of feedIds) {
       const priceInfoObjectId = await this.getPriceFeedObjectId(feedId);
       if (!priceInfoObjectId) {
@@ -163,19 +169,17 @@ export class SuiPythClient {
         );
       }
       priceInfoObjects.push(priceInfoObjectId);
-      const coin = tx.splitCoins(tx.gas, [
-        tx.pure(await this.getBaseUpdateFee()),
-      ]);
       [priceUpdatesHotPotato] = tx.moveCall({
         target: `${packageId}::pyth::update_single_price_feed`,
         arguments: [
           tx.object(this.pythStateId),
           priceUpdatesHotPotato,
           tx.object(priceInfoObjectId),
-          coin,
+          coins[coinId],
           tx.object(SUI_CLOCK_OBJECT_ID),
         ],
       });
+      coinId++;
     }
     tx.moveCall({
       target: `${packageId}::hot_potato_vector::destroy`,
