@@ -313,7 +313,7 @@ async fn build_message_states(
 
 async fn get_verified_price_feeds<S>(
     state: &S,
-    price_ids: Vec<PriceIdentifier>,
+    price_ids: &[PriceIdentifier],
     request_time: RequestTime,
 ) -> Result<PriceFeedsWithUpdateData>
 where
@@ -373,14 +373,14 @@ where
 
 pub async fn get_price_feeds_with_update_data<S>(
     state: &S,
-    price_ids: Vec<PriceIdentifier>,
+    price_ids: &[PriceIdentifier],
     request_time: RequestTime,
 ) -> Result<PriceFeedsWithUpdateData>
 where
     S: AggregateCache,
     S: Benchmarks,
 {
-    match get_verified_price_feeds(state, price_ids.clone(), request_time.clone()).await {
+    match get_verified_price_feeds(state, price_ids, request_time.clone()).await {
         Ok(price_feeds_with_update_data) => Ok(price_feeds_with_update_data),
         Err(e) => {
             if let RequestTime::FirstAfter(publish_time) = request_time {
@@ -567,7 +567,7 @@ mod test {
         // price feed with correct update data.
         let price_feeds_with_update_data = get_price_feeds_with_update_data(
             &*state,
-            vec![PriceIdentifier::new([100; 32])],
+            &[PriceIdentifier::new([100; 32])],
             RequestTime::Latest,
         )
         .await
@@ -688,7 +688,7 @@ mod test {
         // Get the price feeds with update data
         let price_feeds_with_update_data = get_price_feeds_with_update_data(
             &*state,
-            vec![PriceIdentifier::new([100; 32])],
+            &[PriceIdentifier::new([100; 32])],
             RequestTime::Latest,
         )
         .await
@@ -753,7 +753,7 @@ mod test {
         for slot in 900..1000 {
             let price_feeds_with_update_data = get_price_feeds_with_update_data(
                 &*state,
-                vec![
+                &[
                     PriceIdentifier::new([100; 32]),
                     PriceIdentifier::new([200; 32]),
                 ],
@@ -770,9 +770,9 @@ mod test {
         for slot in 0..900 {
             assert!(get_price_feeds_with_update_data(
                 &*state,
-                vec![
+                &[
                     PriceIdentifier::new([100; 32]),
-                    PriceIdentifier::new([200; 32]),
+                    PriceIdentifier::new([200; 32])
                 ],
                 RequestTime::FirstAfter(slot as i64),
             )

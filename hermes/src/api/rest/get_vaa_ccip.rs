@@ -1,4 +1,5 @@
 use {
+    super::verify_price_ids_exist,
     crate::{
         aggregate::{
             RequestTime,
@@ -70,13 +71,22 @@ pub async fn get_vaa_ccip(
             .map_err(|_| RestError::InvalidCCIPInput)?,
     );
 
+    verify_price_ids_exist(&state, &[price_id]).await?;
+
     let price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
         &*state.state,
-        vec![price_id],
+        &[price_id],
         RequestTime::FirstAfter(publish_time),
     )
     .await
-    .map_err(|_| RestError::CcipUpdateDataNotFound)?;
+    .map_err(|e| {
+        tracing::warn!(
+            "Error getting price feed {:?} with update data: {:?}",
+            price_id,
+            e
+        );
+        RestError::CcipUpdateDataNotFound
+    })?;
 
     let bytes = price_feeds_with_update_data
         .update_data

@@ -80,7 +80,7 @@ impl TryFrom<BenchmarkUpdates> for PriceFeedsWithUpdateData {
 pub trait Benchmarks {
     async fn get_verified_price_feeds(
         &self,
-        price_ids: Vec<PriceIdentifier>,
+        price_ids: &[PriceIdentifier],
         publish_time: UnixTimestamp,
     ) -> Result<PriceFeedsWithUpdateData>;
 }
@@ -89,7 +89,7 @@ pub trait Benchmarks {
 impl Benchmarks for crate::state::State {
     async fn get_verified_price_feeds(
         &self,
-        price_ids: Vec<PriceIdentifier>,
+        price_ids: &[PriceIdentifier],
         publish_time: UnixTimestamp,
     ) -> Result<PriceFeedsWithUpdateData> {
         let endpoint = self
