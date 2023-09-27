@@ -112,9 +112,6 @@
 - chain: wemix_testnet
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmContract
-- chain: arbitrum_testnet
-  address: "0x939C0e902FF5B3F7BA666Cc8F6aC75EE76d3f900"
-  type: EvmContract
 - chain: celo
   address: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C"
   type: EvmContract
@@ -173,5 +170,8 @@
   address: "0x2880aB155794e7179c9eE2e38200202908C17B43"
   type: EvmContract
 - chain: shimmer
+  address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
+  type: EvmContract
+- chain: arbitrum_sepolia
   address: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
   type: EvmContract

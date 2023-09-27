@@ -52,12 +52,6 @@
   rpcUrl: https://evm-t3.cronos.org
   networkId: 338
   type: EvmChain
-- id: arbitrum_testnet
-  wormholeChainName: arbitrum
-  mainnet: false
-  rpcUrl: https://goerli-rollup.arbitrum.io/rpc
-  networkId: 421613
-  type: EvmChain
 - id: zksync_goerli
   wormholeChainName: zksync
   mainnet: false
@@ -351,4 +345,10 @@
   mainnet: true
   rpcUrl: https://json-rpc.evm.shimmer.network
   networkId: 148
+  type: EvmChain
+- id: arbitrum_sepolia
+  wormholeChainName: arbitrum
+  mainnet: false
+  rpcUrl: https://sepolia-rollup.arbitrum.io/rpc
+  networkId: 421614
   type: EvmChain
