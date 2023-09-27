@@ -31,7 +31,6 @@ export const CONTRACT_ADDR: Record<string, string> = {
   kcc_testnet: "0x15D35b8985e350f783fe3d95401401E194ff1E6f",
   cronos: "0xE0d0e68297772Dd5a1f1D99897c581E2082dbA5B",
   cronos_testnet: "0xBAEA4A1A2Eaa4E9bb78f2303C213Da152933170E",
-  arbitrum_goerli: "0x939C0e902FF5B3F7BA666Cc8F6aC75EE76d3f900",
   zksync_goerli: "0xC38B1dd611889Abc95d4E0a472A667c3671c08DE",
   base_goerli: "0x5955C1478F0dAD753C7E2B4dD1b4bC530C64749f",
   shimmer_testnet: "0x5f3c61944CEb01B3eAef861251Fb1E0f14b848fb",
@@ -68,4 +67,5 @@ export const CONTRACT_ADDR: Record<string, string> = {
   horizen_eon: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
   sepolia: "0x2880aB155794e7179c9eE2e38200202908C17B43",
   shimmer: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
+  arbitrum_sepolia: "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729",
 };
