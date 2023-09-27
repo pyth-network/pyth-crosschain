@@ -25,7 +25,7 @@
 - id: canto
   wormholeChainName: canto
   mainnet: true
-  rpcUrl: https://canto.gravitychain.io
+  rpcUrl: https://canto.slingshot.finance
   networkId: 7700
   type: EvmChain
 - id: fuji
