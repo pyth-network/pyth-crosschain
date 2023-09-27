@@ -1,4 +1,5 @@
 use {
+    super::verify_price_ids_exist,
     crate::{
         aggregate::RequestTime,
         api::{
@@ -58,13 +59,23 @@ pub async fn latest_vaas(
     QsQuery(params): QsQuery<LatestVaasQueryParams>,
 ) -> Result<Json<Vec<String>>, RestError> {
     let price_ids: Vec<PriceIdentifier> = params.ids.into_iter().map(|id| id.into()).collect();
+
+    verify_price_ids_exist(&state, &price_ids).await?;
+
     let price_feeds_with_update_data = crate::aggregate::get_price_feeds_with_update_data(
         &*state.state,
-        price_ids,
+        &price_ids,
         RequestTime::Latest,
     )
     .await
-    .map_err(|_| RestError::UpdateDataNotFound)?;
+    .map_err(|e| {
+        tracing::warn!(
+            "Error getting price feeds {:?} with update data: {:?}",
+            price_ids,
+            e
+        );
+        RestError::UpdateDataNotFound
+    })?;
 
     Ok(Json(
         price_feeds_with_update_data

@@ -209,13 +209,25 @@ impl Subscriber {
     }
 
     async fn handle_price_feeds_update(&mut self, event: AggregationEvent) -> Result<()> {
-        let price_feed_ids = self.price_feeds_with_config.keys().cloned().collect();
+        let price_feed_ids = self
+            .price_feeds_with_config
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>();
         for update in crate::aggregate::get_price_feeds_with_update_data(
             &*self.store,
-            price_feed_ids,
+            &price_feed_ids,
             RequestTime::AtSlot(event.slot()),
         )
-        .await?
+        .await
+        .map_err(|e| {
+            tracing::warn!(
+                "Failed to get price feeds {:?} with update data: {:?}",
+                price_feed_ids,
+                e
+            );
+            e
+        })?
         .price_feeds
         {
             let config = self

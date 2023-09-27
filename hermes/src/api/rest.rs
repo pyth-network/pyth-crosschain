@@ -1,9 +1,13 @@
-use axum::{
-    http::StatusCode,
-    response::{
-        IntoResponse,
-        Response,
+use {
+    super::ApiState,
+    axum::{
+        http::StatusCode,
+        response::{
+            IntoResponse,
+            Response,
+        },
     },
+    pyth_sdk::PriceIdentifier,
 };
 
 mod get_price_feed;
@@ -32,6 +36,7 @@ pub enum RestError {
     UpdateDataNotFound,
     CcipUpdateDataNotFound,
     InvalidCCIPInput,
+    PriceIdsNotFound { missing_ids: Vec<PriceIdentifier> },
 }
 
 impl IntoResponse for RestError {
@@ -53,6 +58,38 @@ impl IntoResponse for RestError {
             RestError::InvalidCCIPInput => {
                 (StatusCode::BAD_REQUEST, "Invalid CCIP input").into_response()
             }
+            RestError::PriceIdsNotFound { missing_ids } => {
+                let missing_ids = missing_ids
+                    .into_iter()
+                    .map(|id| id.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                (
+                    StatusCode::NOT_FOUND,
+                    format!("Price ids not found: {}", missing_ids),
+                )
+                    .into_response()
+            }
         }
     }
+}
+
+/// Verify that the price ids exist in the aggregate state.
+pub async fn verify_price_ids_exist(
+    state: &ApiState,
+    price_ids: &[PriceIdentifier],
+) -> Result<(), RestError> {
+    let all_ids = crate::aggregate::get_price_feed_ids(&*state.state).await;
+    let missing_ids = price_ids
+        .iter()
+        .filter(|id| !all_ids.contains(id))
+        .cloned()
+        .collect::<Vec<_>>();
+
+    if !missing_ids.is_empty() {
+        return Err(RestError::PriceIdsNotFound { missing_ids });
+    }
+
+    Ok(())
 }
