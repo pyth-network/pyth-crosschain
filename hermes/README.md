@@ -38,8 +38,8 @@ To set up and run a Hermes node, follow the steps below:
 
    ```bash
    ./target/release/hermes run \
-     --pythnet-http-endpoint https://pythnet-rpc/ \
-     --pythnet-ws-endpoint wss://pythnet-rpc/
+     --pythnet-http-addr https://pythnet-rpc/ \
+     --pythnet-ws-addr wss://pythnet-rpc/
    ```
 
    Your Hermes node will now start and connect to the specified networks. You
@@ -49,5 +49,5 @@ To set up and run a Hermes node, follow the steps below:
    it automatically when the code changes:
 
    ```bash
-   cargo watch -w src -x "run -- run --pythnet-http-endpoint https://pythnet-rpc/ --pythnet-ws-endpoint wss://pythnet-rpc/"
+   cargo watch -w src -x "run -- run --pythnet-http-addr https://pythnet-rpc/ --pythnet-ws-addr wss://pythnet-rpc/"
    ```
