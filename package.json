@@ -17,6 +17,7 @@
     "target_chains/ethereum/sdk/solidity",
     "target_chains/ethereum/examples/oracle_swap/app",
     "target_chains/sui/sdk/js",
+    "target_chains/sui/cli",
     "third_party/pyth/p2w-relay",
     "wormhole_attester/sdk/js",
     "contract_manager"
