@@ -3,7 +3,6 @@
 module pyth::merkle_tree {
     use std::vector::{Self};
     use sui::hash::{keccak256};
-    use wormhole::bytes::{Self};
     use wormhole::bytes20::{Self, Bytes20, data};
     use wormhole::cursor::{Self, Cursor};
     use pyth::deserialize::{Self};
@@ -17,10 +16,13 @@ module pyth::merkle_tree {
     // take keccak256 of input data, then return 20 leftmost bytes of result
     fun hash(bytes: &vector<u8>): Bytes20 {
         let hashed_bytes = keccak256(bytes);
-        let cursor = cursor::new(hashed_bytes);
-        let bytes20 = bytes::take_bytes(&mut cursor, 20);
-        cursor::take_rest(cursor);
-        bytes20::from_bytes(bytes20)
+        let hash_prefix = vector::empty<u8>();
+        let i = 0;
+        while (i < 20) {
+            vector::push_back(&mut hash_prefix, *vector::borrow(&hashed_bytes, i));
+            i = i + 1;
+        };
+        bytes20::new(hash_prefix)
     }
 
     fun empty_leaf_hash(): Bytes20 {
@@ -30,7 +32,11 @@ module pyth::merkle_tree {
 
     fun leaf_hash(data: &vector<u8>): Bytes20 {
         let v = vector<u8>[MERKLE_LEAF_PREFIX];
-        vector::append(&mut v, *data);
+        let i = 0;
+        while (i < vector::length(data)) {
+            vector::push_back(&mut v, *vector::borrow(data, i));
+            i = i + 1;
+        };
         hash(&v)
     }
 
@@ -38,32 +44,41 @@ module pyth::merkle_tree {
         childA: Bytes20,
         childB: Bytes20
     ): Bytes20 {
-        if (greater_than(childA, childB)) {
+        if (greater_than(&childA, &childB)) {
             (childA, childB) = (childB, childA);
         };
         // append data_B to data_A
         let data_A = bytes20::data(&childA);
         let data_B = bytes20::data(&childB);
-        vector::append(&mut data_A, data_B);
 
-        // create a vector containing MERKLE_NODE_PREFIX and append data_A to back
-        let v = vector::empty<u8>();
-        vector::push_back(&mut v, MERKLE_NODE_PREFIX);
-        vector::append(&mut v, data_A);
+        // create a vector containing MERKLE_NODE_PREFIX + data_A + data_B
+        let v = vector<u8>[MERKLE_NODE_PREFIX];
+        let i = 0;
+        while (i < 20) {
+            vector::push_back(&mut v, *vector::borrow(&data_A, i));
+            i = i + 1;
+        };
+        let i = 0;
+        while (i < 20) {
+            vector::push_back(&mut v, *vector::borrow(&data_B, i));
+            i = i + 1;
+        };
         hash(&v)
     }
 
     // greater_than returns whether a is strictly greater than b
     // note that data(&a) and data(&b) are both vector<u8>s of length 20
-    fun greater_than(a: Bytes20, b: Bytes20): bool{
+    fun greater_than(a: &Bytes20, b: &Bytes20): bool {
         // aa and bb both have length 20
-        let aa = data(&a);
-        let bb = data(&b);
+        let a_vector = data(a);
+        let b_vector = data(b);
         let i = 0;
-        while (i < 20){
-            if (*vector::borrow(&aa, i) > *vector::borrow(&bb, i)){
+        while (i < 20) {
+            let a_value = *vector::borrow(&a_vector, i);
+            let b_value = *vector::borrow(&b_vector, i);
+            if (a_value > b_value) {
                 return true
-            } else if (*vector::borrow(&bb, i) > *vector::borrow(&aa, i)){
+            } else if (b_value > a_value) {
                 return false
             };
             i = i + 1;
@@ -183,21 +198,21 @@ module pyth::merkle_tree {
         // test 1
         let x = bytes20::new(x"0000000000000000000000000000000000001000");
         let y = bytes20::new(x"0000000000000000000000000000000000000001");
-        let res = greater_than(x, y);
+        let res = greater_than(&x, &y);
         assert!(res==true, 0);
-        res = greater_than(y, x);
+        res = greater_than(&y, &x);
         assert!(res==false, 0);
 
         // test 2
         x = bytes20::new(x"1100000000000000000000000000000000001000");
         y = bytes20::new(x"1100000000000000000000000000000000000001");
-        res = greater_than(x, y);
+        res = greater_than(&x, &y);
         assert!(res==true, 0);
 
         // equality case
         x = bytes20::new(x"1100000000000000000000000000000000001001");
         y = bytes20::new(x"1100000000000000000000000000000000001001");
-        res = greater_than(x, y);
+        res = greater_than(&x, &y);
         assert!(res==false, 0);
     }
 
