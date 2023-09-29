@@ -24,13 +24,6 @@ export default {
       type: "string",
       required: true,
     } as Options,
-    "pyth-package-id": {
-      description:
-        "Pyth Package Id. Can be found here" +
-        "https://docs.pyth.network/documentation/pythnet-price-feeds/sui",
-      type: "string",
-      required: true,
-    } as Options,
     "pyth-state-id": {
       description:
         "Pyth State Id. Can be found here" +
@@ -38,23 +31,9 @@ export default {
       type: "string",
       required: true,
     } as Options,
-    "wormhole-package-id": {
-      description:
-        "Wormhole Package Id. Can be found here" +
-        "https://docs.pyth.network/documentation/pythnet-price-feeds/sui",
-      type: "string",
-      required: true,
-    } as Options,
     "wormhole-state-id": {
       description:
         "Wormhole State Id. Can be found here" +
-        "https://docs.pyth.network/documentation/pythnet-price-feeds/sui",
-      type: "string",
-      required: true,
-    } as Options,
-    "price-feed-to-price-info-object-table-id": {
-      description:
-        "This is the id of the table which stored the information related to price data. You can find it here: " +
         "https://docs.pyth.network/documentation/pythnet-price-feeds/sui",
       type: "string",
       required: true,
@@ -92,11 +71,8 @@ export default {
       mnemonicFile,
       pushingFrequency,
       pollingFrequency,
-      pythPackageId,
       pythStateId,
-      wormholePackageId,
       wormholeStateId,
-      priceFeedToPriceInfoObjectTableId,
       maxVaasPerPtb,
       numGasObjects,
       gasBudget,
@@ -136,19 +112,15 @@ export default {
     );
 
     const suiListener = new SuiPriceListener(
-      pythPackageId,
-      priceFeedToPriceInfoObjectTableId,
+      pythStateId,
       endpoint,
       priceItems,
       { pollingFrequency }
     );
     const suiPusher = await SuiPricePusher.createWithAutomaticGasPool(
       priceServiceConnection,
-      pythPackageId,
       pythStateId,
-      wormholePackageId,
       wormholeStateId,
-      priceFeedToPriceInfoObjectTableId,
       maxVaasPerPtb,
       endpoint,
       mnemonic,

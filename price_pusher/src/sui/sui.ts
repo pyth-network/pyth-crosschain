@@ -19,16 +19,46 @@ import {
   getExecutionStatusError,
   PaginatedCoins,
   SuiAddress,
+  ObjectId,
 } from "@mysten/sui.js";
 
 const GAS_FEE_FOR_SPLIT = 2_000_000_000;
 // TODO: read this from on chain config
 const MAX_NUM_GAS_OBJECTS_IN_PTB = 256;
 const MAX_NUM_OBJECTS_IN_ARGUMENT = 510;
+
+type PriceTableInfo = {
+  id: ObjectId;
+  fieldType: ObjectId;
+};
+
+async function getPriceTableInfo(
+  provider: JsonRpcProvider,
+  pythStateId: ObjectId
+): Promise<PriceTableInfo> {
+  const result = await provider.getDynamicFieldObject({
+    parentId: pythStateId,
+    name: {
+      type: "vector<u8>",
+      value: "price_info",
+    },
+  });
+  if (!result.data || !result.data.type) {
+    throw new Error("Price Table not found, contract may not be initialized");
+  }
+  let type = result.data.type.replace("0x2::table::Table<", "");
+  type = type.replace(
+    "::price_identifier::PriceIdentifier, 0x2::object::ID>",
+    ""
+  );
+  return { id: result.data.objectId, fieldType: type };
+}
+
 export class SuiPriceListener extends ChainPriceListener {
+  private priceTableInfo: PriceTableInfo | undefined;
+
   constructor(
-    private pythPackageId: string,
-    private priceFeedToPriceInfoObjectTableId: string,
+    private pythStateId: ObjectId,
     private endpoint: string,
     priceItems: PriceItem[],
     config: {
@@ -43,11 +73,16 @@ export class SuiPriceListener extends ChainPriceListener {
       const provider = new JsonRpcProvider(
         new Connection({ fullnode: this.endpoint })
       );
+      if (this.priceTableInfo === undefined) {
+        this.priceTableInfo = await getPriceTableInfo(
+          provider,
+          this.pythStateId
+        );
+      }
 
       const priceInfoObjectId = await priceIdToPriceInfoObjectId(
         provider,
-        this.pythPackageId,
-        this.priceFeedToPriceInfoObjectTableId,
+        this.priceTableInfo,
         priceId
       );
 
@@ -113,7 +148,7 @@ export class SuiPricePusher implements IPricePusher {
     private pythStateId: string,
     private wormholePackageId: string,
     private wormholeStateId: string,
-    private priceFeedToPriceInfoObjectTableId: string,
+    private priceTableInfo: PriceTableInfo,
     private maxVaasPerPtb: number,
     endpoint: string,
     mnemonic: string,
@@ -122,16 +157,46 @@ export class SuiPricePusher implements IPricePusher {
   ) {}
 
   /**
+   * getPackageId returns the latest package id that the object belongs to. Use this to
+   * fetch the latest package id for a given object id and handle package upgrades automatically.
+   * @param provider
+   * @param objectId
+   * @returns package id
+   */
+  static async getPackageId(
+    provider: JsonRpcProvider,
+    objectId: ObjectId
+  ): Promise<ObjectId> {
+    const state = await provider
+      .getObject({
+        id: objectId,
+        options: {
+          showContent: true,
+        },
+      })
+      .then((result) => {
+        if (result.data?.content?.dataType == "moveObject") {
+          return result.data.content.fields;
+        }
+
+        throw new Error("not move object");
+      });
+
+    if ("upgrade_cap" in state) {
+      return state.upgrade_cap.fields.package;
+    }
+
+    throw new Error("upgrade_cap not found");
+  }
+
+  /**
    * Create a price pusher with a pool of `numGasObjects` gas coins that will be used to send transactions.
    * The gas coins of the wallet for the provided mnemonic will be merged and then evenly split into `numGasObjects`.
    */
   static async createWithAutomaticGasPool(
     priceServiceConnection: PriceServiceConnection,
-    pythPackageId: string,
     pythStateId: string,
-    wormholePackageId: string,
     wormholeStateId: string,
-    priceFeedToPriceInfoObjectTableId: string,
     maxVaasPerPtb: number,
     endpoint: string,
     mnemonic: string,
@@ -144,9 +209,21 @@ export class SuiPricePusher implements IPricePusher {
       );
     }
 
+    const provider = new JsonRpcProvider(
+      new Connection({ fullnode: endpoint })
+    );
     const signer = new RawSigner(
       Ed25519Keypair.deriveKeypair(mnemonic),
-      new JsonRpcProvider(new Connection({ fullnode: endpoint }))
+      provider
+    );
+    const priceTableInfo = await getPriceTableInfo(provider, pythStateId);
+    const pythPackageId = await SuiPricePusher.getPackageId(
+      provider,
+      pythStateId
+    );
+    const wormholePackageId = await SuiPricePusher.getPackageId(
+      provider,
+      wormholeStateId
     );
 
     const gasPool = await SuiPricePusher.initializeGasPool(
@@ -161,7 +238,7 @@ export class SuiPricePusher implements IPricePusher {
       pythStateId,
       wormholePackageId,
       wormholeStateId,
-      priceFeedToPriceInfoObjectTableId,
+      priceTableInfo,
       maxVaasPerPtb,
       endpoint,
       mnemonic,
@@ -269,8 +346,7 @@ export class SuiPricePusher implements IPricePusher {
       try {
         priceInfoObjectId = await priceIdToPriceInfoObjectId(
           this.signer.provider,
-          this.pythPackageId,
-          this.priceFeedToPriceInfoObjectTableId,
+          this.priceTableInfo,
           priceId
         );
       } catch (e) {
@@ -567,17 +643,16 @@ const CACHE: { [priceId: string]: string } = {};
 // where the price information for the corresponding price feed is stored
 async function priceIdToPriceInfoObjectId(
   provider: JsonRpcProvider,
-  pythPackageId: string,
-  priceFeedToPriceInfoObjectTableId: string,
+  priceTableInfo: PriceTableInfo,
   priceId: string
 ) {
   // Check if this was fetched before.
   if (CACHE[priceId] !== undefined) return CACHE[priceId];
 
   const storedObjectID = await provider.getDynamicFieldObject({
-    parentId: priceFeedToPriceInfoObjectTableId,
+    parentId: priceTableInfo.id,
     name: {
-      type: `${pythPackageId}::price_identifier::PriceIdentifier`,
+      type: `${priceTableInfo.fieldType}::price_identifier::PriceIdentifier`,
       value: {
         bytes: "0x" + priceId,
       },
