@@ -14,6 +14,7 @@ import { SuiPythClient } from "@pythnetwork/pyth-sui-js";
 
 export class SuiContract extends Contract {
   static type = "SuiContract";
+  private client: SuiPythClient;
 
   /**
    * Given the ids of the pyth state and wormhole state, create a new SuiContract
@@ -29,6 +30,11 @@ export class SuiContract extends Contract {
     public wormholeStateId: string
   ) {
     super();
+    this.client = new SuiPythClient(
+      this.getProvider(),
+      this.stateId,
+      this.wormholeStateId
+    );
   }
 
   static fromJson(
@@ -63,8 +69,7 @@ export class SuiContract extends Contract {
    * @param objectId
    */
   async getPackageId(objectId: ObjectId): Promise<ObjectId> {
-    const client = this.getSdkClient();
-    return client.getPackageId(objectId);
+    return this.client.getPackageId(objectId);
   }
 
   async getPythPackageId(): Promise<ObjectId> {
@@ -77,24 +82,6 @@ export class SuiContract extends Contract {
 
   getId(): string {
     return `${this.chain.getId()}_${this.stateId}`;
-  }
-
-  /**
-   * Fetches the price table object id for the current state id
-   */
-  async getPriceTableId(): Promise<ObjectId> {
-    const provider = this.getProvider();
-    const result = await provider.getDynamicFieldObject({
-      parentId: this.stateId,
-      name: {
-        type: "vector<u8>",
-        value: "price_info",
-      },
-    });
-    if (!result.data) {
-      throw new Error("Price Table not found, contract may not be initialized");
-    }
-    return result.data.objectId;
   }
 
   private async parsePrice(priceInfo: {
@@ -125,30 +112,9 @@ export class SuiContract extends Contract {
     };
   }
 
-  async getPriceFeedObjectId(feedId: string): Promise<ObjectId | undefined> {
-    const tableId = await this.getPriceTableId();
-    const provider = this.getProvider();
-    const result = await provider.getDynamicFieldObject({
-      parentId: tableId,
-      name: {
-        type: `${await this.getPythPackageId()}::price_identifier::PriceIdentifier`,
-        value: {
-          bytes: Array.from(Buffer.from(feedId, "hex")),
-        },
-      },
-    });
-    if (!result.data || !result.data.content) {
-      return undefined;
-    }
-    if (result.data.content.dataType !== "moveObject") {
-      throw new Error("Price feed type mismatch");
-    }
-    return result.data.content.fields.value;
-  }
-
   async getPriceFeed(feedId: string) {
     const provider = this.getProvider();
-    const priceInfoObjectId = await this.getPriceFeedObjectId(feedId);
+    const priceInfoObjectId = await this.client.getPriceFeedObjectId(feedId);
     if (!priceInfoObjectId) return undefined;
     const priceInfo = await provider.getObject({
       id: priceInfoObjectId,
@@ -206,22 +172,13 @@ export class SuiContract extends Contract {
     throw new Error("Use executeUpdatePriceFeedWithFeeds instead");
   }
 
-  getSdkClient(): SuiPythClient {
-    return new SuiPythClient(
-      this.getProvider(),
-      this.stateId,
-      this.wormholeStateId
-    );
-  }
-
   async executeUpdatePriceFeedWithFeeds(
     senderPrivateKey: string,
     vaas: Buffer[],
     feedIds: string[]
   ): Promise<TxResult> {
     const tx = new TransactionBlock();
-    const client = this.getSdkClient();
-    await client.updatePriceFeeds(tx, vaas, feedIds);
+    await this.client.updatePriceFeeds(tx, vaas, feedIds);
     const keypair = Ed25519Keypair.fromSecretKey(
       Buffer.from(senderPrivateKey, "hex")
     );
@@ -233,8 +190,7 @@ export class SuiContract extends Contract {
     vaas: Buffer[]
   ): Promise<TxResult> {
     const tx = new TransactionBlock();
-    const client = this.getSdkClient();
-    await client.createPriceFeed(tx, vaas);
+    await this.client.createPriceFeed(tx, vaas);
     const keypair = Ed25519Keypair.fromSecretKey(
       Buffer.from(senderPrivateKey, "hex")
     );

@@ -13,7 +13,7 @@ const MAX_ARGUMENT_SIZE = 16 * 1024;
 export class SuiPythClient {
   private pythPackageId: ObjectId | undefined;
   private wormholePackageId: ObjectId | undefined;
-  private priceTableId: ObjectId | undefined;
+  private priceTableInfo: { id: ObjectId; fieldType: ObjectId } | undefined;
   private priceFeedObjectIdCache: Map<HexString, ObjectId> = new Map();
   private baseUpdateFee: number | undefined;
   constructor(
@@ -260,11 +260,11 @@ export class SuiPythClient {
   async getPriceFeedObjectId(feedId: HexString): Promise<ObjectId | undefined> {
     const normalizedFeedId = feedId.replace("0x", "");
     if (!this.priceFeedObjectIdCache.has(normalizedFeedId)) {
-      const tableId = await this.getPriceTableId();
+      const { id: tableId, fieldType } = await this.getPriceTableInfo();
       const result = await this.provider.getDynamicFieldObject({
         parentId: tableId,
         name: {
-          type: `${await this.getPythPackageId()}::price_identifier::PriceIdentifier`,
+          type: `${fieldType}::price_identifier::PriceIdentifier`,
           value: {
             bytes: Array.from(Buffer.from(normalizedFeedId, "hex")),
           },
@@ -288,8 +288,8 @@ export class SuiPythClient {
    * Fetches the price table object id for the current state id if not cached
    * @returns price table object id
    */
-  async getPriceTableId(): Promise<ObjectId> {
-    if (this.priceTableId === undefined) {
+  async getPriceTableInfo(): Promise<{ id: ObjectId; fieldType: ObjectId }> {
+    if (this.priceTableInfo === undefined) {
       const result = await this.provider.getDynamicFieldObject({
         parentId: this.pythStateId,
         name: {
@@ -297,14 +297,19 @@ export class SuiPythClient {
           value: "price_info",
         },
       });
-      if (!result.data) {
+      if (!result.data || !result.data.type) {
         throw new Error(
           "Price Table not found, contract may not be initialized"
         );
       }
-      this.priceTableId = result.data.objectId;
+      let type = result.data.type.replace("0x2::table::Table<", "");
+      type = type.replace(
+        "::price_identifier::PriceIdentifier, 0x2::object::ID>",
+        ""
+      );
+      this.priceTableInfo = { id: result.data.objectId, fieldType: type };
     }
-    return this.priceTableId;
+    return this.priceTableInfo;
   }
 
   /**
