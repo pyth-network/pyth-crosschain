@@ -46,6 +46,22 @@ npm run cli init-pyth -- <seed> -n testnet \
 --data-source-emitter-addresses e101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71
 ```
 
+The following is a sample mainnet config:
+
+```bash
+npm run cli init-pyth -- <seed> -n mainnet \
+--stale-price-threshold 60 \
+--update-fee 1 \
+--governance-emitter-chain-id 1 \
+--governance-emitter-address 5635979a221c34931e32620b9293a463065555ea71fe97cd6237ade875b12e9e \
+--data-source-chain-ids 1 \
+--data-source-chain-ids 26 \
+--data-source-chain-ids 26 \
+--data-source-emitter-addresses 6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25 \
+--data-source-emitter-addresses f8cd23c2ab91237730770bbea08d61005cdda0984348f3f6eecb559638c0bba0 \
+--data-source-emitter-addresses e101faedac5851e32b9b23b5f9411a8c2bac4aae3ed4dd7b811dd1a72ea4aa71
+```
+
 Note that the `data-source-chain-ids` are paired with `data-source-emitter-addresses` and their order matters.
 
 # Upgrade process:
@@ -55,6 +71,7 @@ The following steps are needed to upgrade our aptos contracts:
 - Generate the hash for the new contract build
 - Create a governance proposal, proposing the aptos package to be upgraded to this specific hash
 - Approve and execute the governance proposal
+- Submit the created wormhole VAA to the contract to allow an upgrade with the specified hash.
 - Run the upgrade transaction and publish the new package
 
 ## Generating the new contract hash:
@@ -63,6 +80,42 @@ Run the following command to generate the new hash, this will assume the default
 
 ```bash
 npm run cli hash-contracts -- ../contracts
+```
+
+## Creating a proposal
+
+Here are sample steps you can take to create a proposal via the contract manager shell (`npm run shell` in contract manager package):
+
+```js
+let wallet = await loadHotWallet("/path/to/solana/wallet.json");
+let vault =
+  DefaultStore.vaults.devnet_6baWtW1zTUVMSJHJQVxDUXWzqrQeYBr6mu31j3bTKwY3;
+await vault.connect(wallet);
+let payload =
+  DefaultStore.chains.aptos_testnet.generateGovernanceUpgradePayload(
+    "CONTRACT_HASH_TO_USE"
+  );
+await vault.proposeWormholeMessage([payload]);
+```
+
+## VAA submission
+
+After the approval process, you can fetch the VAA for the transaction and execute it by running:
+
+```js
+import { SubmittedWormholeMessage } from "./src/governance";
+let msg = await SubmittedWormholeMessage.fromTransactionSignature(
+  "tx_signature",
+  "devnet or mainnet-beta"
+);
+let vaa = await msg.fetchVaa();
+let contract =
+  DefaultStore.contracts
+    .aptos_testnet_0x7e783b349d3e89cf5931af376ebeadbfab855b3fa239b7ada8f5a92fbea6b387;
+await contract.executeGovernanceInstruction(
+  "private-key-of-account-inaptos",
+  vaa
+);
 ```
 
 ## Upgrading the contract
