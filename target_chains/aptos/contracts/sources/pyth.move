@@ -145,8 +145,15 @@ module pyth::pyth {
     ///
     /// Please read more information about the update fee here: https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand#fees
     public entry fun update_price_feeds_with_funder(account: &signer, vaas: vector<vector<u8>>) {
-        let coins = coin::withdraw<AptosCoin>(account, get_update_fee(&vaas));
-        update_price_feeds(vaas, coins);
+        let total_updates = 0;
+        // Update the price feed from each VAA
+        while (!vector::is_empty(&vaas)) {
+            total_updates = total_updates + update_price_feed_from_single_vaa(vector::pop_back(&mut vaas));
+        };
+        // Charge the message update fee
+        let update_fee = state::get_base_update_fee() * total_updates;
+        let fee = coin::withdraw<AptosCoin>(account, update_fee);
+        coin::deposit(@pyth, fee);
     }
 
     /// Update the cached price feeds with the data in the given VAAs.
@@ -161,14 +168,15 @@ module pyth::pyth {
     ///
     /// Please read more information about the update fee here: https://docs.pyth.network/documentation/pythnet-price-feeds/on-demand#fees
     public fun update_price_feeds(vaas: vector<vector<u8>>, fee: Coin<AptosCoin>) {
-        // Charge the message update fee
-        assert!(get_update_fee(&vaas) <= coin::value(&fee), error::insufficient_fee());
-        coin::deposit(@pyth, fee);
-
+        let total_updates = 0;
         // Update the price feed from each VAA
         while (!vector::is_empty(&vaas)) {
-            update_price_feed_from_single_vaa(vector::pop_back(&mut vaas));
+            total_updates = total_updates + update_price_feed_from_single_vaa(vector::pop_back(&mut vaas));
         };
+        // Charge the message update fee
+        let update_fee = state::get_base_update_fee() * total_updates;
+        assert!(update_fee <= coin::value(&fee), error::insufficient_fee());
+        coin::deposit(@pyth, fee);
     }
 
     fun verify_data_source(vaa: &vaa::VAA) {
@@ -273,11 +281,14 @@ module pyth::pyth {
         parse_and_verify_accumulator_updates(cursor, &merkle_root_hash)
     }
 
-    fun update_price_feed_from_single_vaa(vaa: vector<u8>) {
+    fun update_price_feed_from_single_vaa(vaa: vector<u8>): u64 {
         let cur = cursor::init(vaa);
         let header: u64 = deserialize::deserialize_u32(&mut cur);
+        let total_updates;
         let updates = if (header == PYTHNET_ACCUMULATOR_UPDATE_MAGIC) {
-            parse_and_verify_accumulator_message(&mut cur)
+            let result = parse_and_verify_accumulator_message(&mut cur);
+            total_updates = vector::length(&result);
+            result
         }
         else {
             // Deserialize the VAA
@@ -285,10 +296,12 @@ module pyth::pyth {
             // Check that the VAA is from a valid data source (emitter)
             verify_data_source(&vaa);
             // Deserialize the batch price attestation
+            total_updates = 1;
             batch_price_attestation::destroy(batch_price_attestation::deserialize(vaa::destroy(vaa)))
         };
         update_cache(updates);
         cursor::rest(cur);
+        total_updates
     }
 
     /// Update the cache with given price updates, if they are newer than the ones currently cached.
