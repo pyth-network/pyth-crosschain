@@ -352,3 +352,15 @@
   rpcUrl: https://sepolia-rollup.arbitrum.io/rpc
   networkId: 421614
   type: EvmChain
+- id: boba
+  wormholeChainName: boba
+  mainnet: true
+  rpcUrl: https://replica.boba.network
+  networkId: 288
+  type: EvmChain
+- id: boba_goerli
+  wormholeChainName: boba
+  mainnet: false
+  rpcUrl: https://goerli.boba.network
+  networkId: 2888
+  type: EvmChain
