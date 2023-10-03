@@ -16,6 +16,13 @@ module.exports = {
   },
   defaultNetwork: "zkSyncTestnet",
   networks: {
+    [process.env.MIGRATIONS_NETWORK!]: {
+      url: process.env.RPC_URL,
+      chainId: Number(process.env.NETWORK_ID),
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+      },
+    },
     goerli: {
       url: `https://goerli.infura.io/v3/${process.env.INFURA_KEY}`,
       zksync: false,
@@ -55,6 +62,8 @@ module.exports = {
     apiKey: {
       neon_devnet: "there_should_be_a_dummy_value_here_to_avoid_error",
       shimmer_testnet: "there_should_be_a_dummy_value_here_to_avoid_error",
+      boba_goerli: "there_should_be_a_dummy_value_here_to_avoid_error",
+      boba: "there_should_be_a_dummy_value_here_to_avoid_error",
     },
     customChains: [
       {
@@ -71,6 +80,24 @@ module.exports = {
         urls: {
           apiURL: "https://explorer.evm.testnet.shimmer.network/api",
           browserURL: "https://explorer.evm.testnet.shimmer.network",
+        },
+      },
+      {
+        network: "boba",
+        chainId: 288,
+        urls: {
+          apiURL:
+            "https://api.routescan.io/v2/network/mainnet/evm/288/etherscan",
+          browserURL: "https://boba.routescan.io",
+        },
+      },
+      {
+        network: "boba_goerli",
+        chainId: 2888,
+        urls: {
+          apiURL:
+            "https://api.routescan.io/v2/network/testnet/evm/2888/etherscan",
+          browserURL: "https://boba.testnet.routescan.io",
         },
       },
     ],
