@@ -442,7 +442,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             // create update product account instruction
             instructions.push(
               await pythProgramClient.methods
-                .updProduct({ ...newChanges.metadata, symbol: symbol })
+                .updProduct({symbol, ...newChanges.metadata}) // If there's a symbol in newChanges.metadata, it will overwrite the current symbol
                 .accounts({
                   fundingAccount,
                   productAccount: new PublicKey(prev.address),
@@ -547,7 +547,6 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
 
   const MetadataChangesRows = ({ changes }: { changes: any }) => {
     const addPriceFeed = changes.prev === undefined && changes.new !== undefined
-
     return (
       <>
         {Object.keys(changes.new).map(
