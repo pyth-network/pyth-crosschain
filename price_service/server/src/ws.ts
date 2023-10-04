@@ -215,7 +215,11 @@ export class WebSocketAPI {
   }
 
   run(server: http.Server): WebSocketServer {
-    const wss = new WebSocketServer({ server, path: "/ws" });
+    const wss = new WebSocketServer({
+      server,
+      path: "/ws",
+      maxPayload: 100 * 1024, // 100 KiB
+    });
 
     wss.on("connection", (ws: WebSocket, request: http.IncomingMessage) => {
       logger.info(
