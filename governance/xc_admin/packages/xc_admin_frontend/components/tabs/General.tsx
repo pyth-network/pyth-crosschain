@@ -442,7 +442,7 @@ const General = ({ proposerServerUrl }: { proposerServerUrl: string }) => {
             // create update product account instruction
             instructions.push(
               await pythProgramClient.methods
-                .updProduct({symbol, ...newChanges.metadata}) // If there's a symbol in newChanges.metadata, it will overwrite the current symbol
+                .updProduct({ symbol, ...newChanges.metadata }) // If there's a symbol in newChanges.metadata, it will overwrite the current symbol
                 .accounts({
                   fundingAccount,
                   productAccount: new PublicKey(prev.address),
