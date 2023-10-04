@@ -11,10 +11,14 @@ use {
         routing::get,
         Router,
     },
+    ipnet::IpNet,
     serde_qs::axum::QsQueryConfig,
-    std::sync::{
-        atomic::Ordering,
-        Arc,
+    std::{
+        net::SocketAddr,
+        sync::{
+            atomic::Ordering,
+            Arc,
+        },
     },
     tokio::{
         signal,
@@ -36,10 +40,10 @@ pub struct ApiState {
 }
 
 impl ApiState {
-    pub fn new(state: Arc<State>) -> Self {
+    pub fn new(state: Arc<State>, ws_whitelist: Vec<IpNet>) -> Self {
         Self {
             state,
-            ws: Arc::new(ws::WsState::new()),
+            ws: Arc::new(ws::WsState::new(ws_whitelist)),
         }
     }
 }
@@ -84,7 +88,7 @@ pub async fn run(
     )]
     struct ApiDoc;
 
-    let state = ApiState::new(state);
+    let state = ApiState::new(state, opts.rpc.ws_whitelist);
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
@@ -131,7 +135,7 @@ pub async fn run(
     // Binds the axum's server to the configured address and port. This is a blocking call and will
     // not return until the server is shutdown.
     axum::Server::try_bind(&opts.rpc.addr)?
-        .serve(app.into_make_service())
+        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
         .with_graceful_shutdown(async {
             // Ignore Ctrl+C errors, either way we need to shut down. The main Ctrl+C handler
             // should also have triggered so we will let that one print the shutdown warning.

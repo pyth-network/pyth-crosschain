@@ -1,6 +1,6 @@
 [package]
 name        = "hermes"
-version     = "0.2.0"
+version     = "0.2.1"
 description = "Hermes is an agent that provides Verified Prices from the Pythnet Pyth Oracle."
 edition     = "2021"
 
@@ -19,10 +19,13 @@ env_logger         = { version = "0.10.0" }
 futures            = { version = "0.3.28" }
 hex                = { version = "0.4.3", features = ["serde"] }
 humantime          = { version = "2.1.0" }
+ipnet              = { version = "2.8.0" }
+governor           = { version = "0.6.0" }
 lazy_static        = { version = "1.4.0" }
 libc               = { version = "0.2.140" }
 log                = { version = "0.4.17" }
 mock_instant       = { version = "0.3.1", features = ["sync"] }
+nonzero_ext        = { version = "0.3.0" }
 prometheus-client  = { version = "0.21.1" }
 pyth-sdk           = { version = "0.8.0" }
 pythnet-sdk        = { path = "../pythnet/pythnet_sdk/", version = "2.0.0", features = ["strum"] }

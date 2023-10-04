@@ -21,6 +21,7 @@ use {
                 WebSocket,
                 WebSocketUpgrade,
             },
+            ConnectInfo,
             State as AxumState,
         },
         response::IntoResponse,
@@ -35,6 +36,13 @@ use {
         SinkExt,
         StreamExt,
     },
+    governor::{
+        DefaultKeyedRateLimiter,
+        Quota,
+        RateLimiter,
+    },
+    ipnet::IpNet,
+    nonzero_ext::nonzero,
     pyth_sdk::PriceIdentifier,
     serde::{
         Deserialize,
@@ -42,6 +50,11 @@ use {
     },
     std::{
         collections::HashMap,
+        net::{
+            IpAddr,
+            SocketAddr,
+        },
+        num::NonZeroU32,
         sync::{
             atomic::{
                 AtomicUsize,
@@ -54,8 +67,13 @@ use {
     tokio::sync::mpsc,
 };
 
-pub const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
-pub const NOTIFICATIONS_CHAN_LEN: usize = 1000;
+const PING_INTERVAL_DURATION: Duration = Duration::from_secs(30);
+const NOTIFICATIONS_CHAN_LEN: usize = 1000;
+const MAX_CLIENT_MESSAGE_SIZE: usize = 100 * 1024; // 100 KiB
+
+/// The maximum number of bytes that can be sent per second per IP address.
+/// If the limit is exceeded, the connection is closed.
+const BYTES_LIMIT_PER_IP_PER_SECOND: u32 = 256 * 1024; // 256 KiB
 
 #[derive(Clone)]
 pub struct PriceFeedClientConfig {
@@ -65,15 +83,21 @@ pub struct PriceFeedClientConfig {
 }
 
 pub struct WsState {
-    pub subscriber_counter: AtomicUsize,
-    pub subscribers:        DashMap<SubscriberId, mpsc::Sender<AggregationEvent>>,
+    pub subscriber_counter:    AtomicUsize,
+    pub subscribers:           DashMap<SubscriberId, mpsc::Sender<AggregationEvent>>,
+    pub bytes_limit_whitelist: Vec<IpNet>,
+    pub rate_limiter:          DefaultKeyedRateLimiter<IpAddr>,
 }
 
 impl WsState {
-    pub fn new() -> Self {
+    pub fn new(whitelist: Vec<IpNet>) -> Self {
         Self {
-            subscriber_counter: AtomicUsize::new(0),
-            subscribers:        DashMap::new(),
+            subscriber_counter:    AtomicUsize::new(0),
+            subscribers:           DashMap::new(),
+            rate_limiter:          RateLimiter::dashmap(Quota::per_second(nonzero!(
+                BYTES_LIMIT_PER_IP_PER_SECOND
+            ))),
+            bytes_limit_whitelist: whitelist,
         }
     }
 }
@@ -118,20 +142,29 @@ enum ServerResponseMessage {
 pub async fn ws_route_handler(
     ws: WebSocketUpgrade,
     AxumState(state): AxumState<super::ApiState>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
 ) -> impl IntoResponse {
-    ws.on_upgrade(|socket| websocket_handler(socket, state))
+    ws.max_message_size(MAX_CLIENT_MESSAGE_SIZE)
+        .on_upgrade(move |socket| websocket_handler(socket, state, addr))
 }
 
-#[tracing::instrument(skip(stream, state))]
-async fn websocket_handler(stream: WebSocket, state: super::ApiState) {
+#[tracing::instrument(skip(stream, state, addr))]
+async fn websocket_handler(stream: WebSocket, state: super::ApiState, addr: SocketAddr) {
     let ws_state = state.ws.clone();
     let id = ws_state.subscriber_counter.fetch_add(1, Ordering::SeqCst);
-    tracing::debug!(id, "New Websocket Connection");
+    tracing::debug!(id, %addr, "New Websocket Connection");
 
     let (notify_sender, notify_receiver) = mpsc::channel(NOTIFICATIONS_CHAN_LEN);
     let (sender, receiver) = stream.split();
-    let mut subscriber =
-        Subscriber::new(id, state.state.clone(), notify_receiver, receiver, sender);
+    let mut subscriber = Subscriber::new(
+        id,
+        addr.ip(),
+        state.state.clone(),
+        state.ws.clone(),
+        notify_receiver,
+        receiver,
+        sender,
+    );
 
     ws_state.subscribers.insert(id, notify_sender);
     subscriber.run().await;
@@ -143,8 +176,10 @@ pub type SubscriberId = usize;
 /// It listens to the store for updates and sends them to the client.
 pub struct Subscriber {
     id:                      SubscriberId,
+    ip_addr:                 IpAddr,
     closed:                  bool,
     store:                   Arc<State>,
+    ws_state:                Arc<WsState>,
     notify_receiver:         mpsc::Receiver<AggregationEvent>,
     receiver:                SplitStream<WebSocket>,
     sender:                  SplitSink<WebSocket, Message>,
@@ -156,15 +191,19 @@ pub struct Subscriber {
 impl Subscriber {
     pub fn new(
         id: SubscriberId,
+        ip_addr: IpAddr,
         store: Arc<State>,
+        ws_state: Arc<WsState>,
         notify_receiver: mpsc::Receiver<AggregationEvent>,
         receiver: SplitStream<WebSocket>,
         sender: SplitSink<WebSocket, Message>,
     ) -> Self {
         Self {
             id,
+            ip_addr,
             closed: false,
             store,
+            ws_state,
             notify_receiver,
             receiver,
             sender,
@@ -243,19 +282,45 @@ impl Subscriber {
                 }
             }
 
+            let message = serde_json::to_string(&ServerMessage::PriceUpdate {
+                price_feed: RpcPriceFeed::from_price_feed_update(
+                    update,
+                    config.verbose,
+                    config.binary,
+                ),
+            })?;
+
+            // Close the connection if rate limit is exceeded and the ip is not whitelisted.
+            if !self
+                .ws_state
+                .bytes_limit_whitelist
+                .contains(&self.ip_addr.into())
+                && self.ws_state.rate_limiter.check_key_n(
+                    &self.ip_addr,
+                    NonZeroU32::new(message.len().try_into()?).ok_or(anyhow!("Empty message"))?,
+                ) != Ok(Ok(()))
+            {
+                tracing::info!(
+                    self.id,
+                    ip = %self.ip_addr,
+                    "Rate limit exceeded. Closing connection.",
+                );
+                self.sender
+                    .send(
+                        serde_json::to_string(&ServerResponseMessage::Err {
+                            error: "Rate limit exceeded".to_string(),
+                        })?
+                        .into(),
+                    )
+                    .await?;
+                self.sender.close().await?;
+                self.closed = true;
+                return Ok(());
+            }
+
             // `sender.feed` buffers a message to the client but does not flush it, so we can send
             // multiple messages and flush them all at once.
-            self.sender
-                .feed(Message::Text(serde_json::to_string(
-                    &ServerMessage::PriceUpdate {
-                        price_feed: RpcPriceFeed::from_price_feed_update(
-                            update,
-                            config.verbose,
-                            config.binary,
-                        ),
-                    },
-                )?))
-                .await?;
+            self.sender.feed(message.into()).await?;
         }
 
         self.sender.flush().await?;
@@ -394,4 +459,7 @@ pub async fn notify_updates(ws_state: Arc<WsState>, event: AggregationEvent) {
             ws_state.subscribers.remove(&id);
         }
     });
+
+    // Clean the bytes limiting dictionary
+    ws_state.rate_limiter.retain_recent();
 }

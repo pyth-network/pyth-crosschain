@@ -1,5 +1,6 @@
 use {
     clap::Args,
+    ipnet::IpNet,
     std::net::SocketAddr,
 };
 
@@ -14,4 +15,10 @@ pub struct Options {
     #[arg(default_value = DEFAULT_RPC_ADDR)]
     #[arg(env = "RPC_ADDR")]
     pub addr: SocketAddr,
+
+    /// Whitelisted websocket ip network addresses (separated by comma).
+    #[arg(long = "rpc-ws-whitelist")]
+    #[arg(value_delimiter = ',')]
+    #[arg(env = "RPC_WS_WHITELIST")]
+    pub ws_whitelist: Vec<IpNet>,
 }
