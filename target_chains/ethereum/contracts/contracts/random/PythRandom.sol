@@ -26,33 +26,35 @@ contract PythRandom is PythRandomState {
         _state.pythFeeInWei = pythFeeInWei;
     }
 
-    function register(uint feeInWei, bytes20 initialCommitment, uint64 commitmentEnd) public {
+    function register(uint feeInWei, bytes20 commitment, bytes32 commitmentMetadata, uint64 commitmentEnd) public {
         PythRandomStructs.ProviderInfo storage provider = _state.providers[msg.sender];
 
-        if (_state.providers[msg.sender].currentCommitment != bytes20(0)) revert PythRandomErrors.AlreadyRegistered();
+        if (_state.providers[msg.sender].commitment != bytes20(0)) revert PythRandomErrors.ProviderAlreadyRegistered();
         provider.feeInWei = feeInWei;
         provider.accruedFeesInWei = 0;
         provider.sequenceNumber = 0;
-        provider.currentCommitment = initialCommitment;
-        provider.finalSequenceNumber = commitmentEnd;
-        provider.nextCommitment = bytes20(0);
-        provider.nextFinalSequenceNumber = 0;
+        provider.commitment = commitment;
+        provider.commitmentMetadata = commitmentMetadata;
+        provider.commitmentEnd = commitmentEnd;
     }
 
-    // FIXME
-    function rotate(bytes20 commitment, uint64 commitmentEnd) public {
-        // TODO: check nonzero ?
+    // TODO: this function signature needs some work. Maybe we can just re-use register
+    function rotate(bytes20 commitment, bytes32 commitmentMetadata, uint64 commitmentEnd) public {
         PythRandomStructs.ProviderInfo storage provider = _state.providers[msg.sender];
-        provider.currentCommitment = commitment;
-        provider.finalSequenceNumber = commitmentEnd;
+        if (_state.providers[msg.sender].commitment == bytes20(0)) revert PythRandomErrors.NoSuchProvider();
+
+        provider.commitment = commitment;
+        provider.commitmentMetadata = commitmentMetadata;
+        provider.commitmentEnd = commitmentEnd;
     }
 
-    function requestRandomNumber(address provider, bytes32 userCommitment) public payable returns (uint64 assignedSequenceNumber) {
+    function requestRandomNumber(address provider, bytes32 userCommitment) public payable returns (uint64 assignedSequenceNumber, bytes32 assignedCommitmentMetadata) {
         PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[provider];
 
         // Assign a sequence number to the request
         assignedSequenceNumber = providerInfo.sequenceNumber;
-        if (assignedSequenceNumber >= providerInfo.finalSequenceNumber) revert PythRandomErrors.OutOfRandomness();
+        assignedCommitmentMetadata = providerInfo.commitmentMetadata;
+        if (assignedSequenceNumber >= providerInfo.commitmentEnd) revert PythRandomErrors.OutOfRandomness();
         // TODO: Pretty sure this mutates the stored thing, but I don't know how solidity works
         providerInfo.sequenceNumber += 1;
 
@@ -65,21 +67,27 @@ contract PythRandom is PythRandomState {
         // Store the user's commitment so that we can fulfill the request later.
         PythRandomStructs.Request storage request = _state.requests[requestKey(provider, assignedSequenceNumber)];
         request.provider = provider;
-        request.commitment = userCommitment;
+        request.providerCommitment = providerInfo.commitment;
+        request.userCommitment = userCommitment;
         request.sequenceNumber = assignedSequenceNumber;
     }
 
     function fulfillRequest(address provider, uint64 sequenceNumber, uint256 userRandomness, bytes calldata proof) public returns (uint256 randomNumber) {
         // TODO: do i need to check that these are nonzero?
-        PythRandomStructs.Request storage request = _state.requests[requestKey(provider, sequenceNumber)];
-        PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[provider];
+        bytes32 key = requestKey(provider, sequenceNumber);
+        PythRandomStructs.Request storage request = _state.requests[key];
 
-        // TODO: need to handle rotation
-        (bool valid, uint256 providerRevelation) = isProofValid(providerInfo.currentCommitment, sequenceNumber, proof);
+        (bool valid, uint256 providerRevelation) = isProofValid(request.providerCommitment, sequenceNumber, proof);
         if (!valid) revert PythRandomErrors.IncorrectProviderRevelation();
-        if (constructUserCommitment(userRandomness) != request.commitment) revert PythRandomErrors.IncorrectUserRevelation();
+        if (constructUserCommitment(userRandomness) != request.userCommitment) revert PythRandomErrors.IncorrectUserRevelation();
 
         randomNumber = combineRandomValues(userRandomness, providerRevelation);
+
+        delete _state.requests[key];
+    }
+
+    function nextSequenceNumber(address provider) public view returns (uint64 sequenceNumber) {
+        sequenceNumber = _state.providers[provider].sequenceNumber;
     }
 
     function getFee(

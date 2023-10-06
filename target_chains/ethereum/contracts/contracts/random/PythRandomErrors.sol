@@ -6,7 +6,10 @@ pragma solidity ^0.8.0;
 library PythRandomErrors {
     // Function arguments are invalid (e.g., the arguments lengths mismatch)
     // Signature: TODO
-    error AlreadyRegistered();
+    error ProviderAlreadyRegistered();
+
+    error NoSuchProvider();
+
     // Update data is coming from an invalid data source.
     // Signature: TODO
     error OutOfRandomness();

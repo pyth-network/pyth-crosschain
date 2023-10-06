@@ -24,6 +24,8 @@ contract PythRandomTest is Test, RandTestUtils {
     uint providerOneFeeInWei = 8;
 
     address public providerTwo = address(2);
+    bytes[] providerTwoProofs;
+    uint providerTwoFeeInWei = 20;
 
     address public user = address(3);
 
@@ -31,16 +33,19 @@ contract PythRandomTest is Test, RandTestUtils {
         random = new PythRandom();
         random.initialize(7);
 
-        (bytes20 rootDigest, bytes[] memory proofs) = generateMerkleTree(0, 100);
-        providerOneProofs = proofs;
-
+        (bytes20 rootDigest, bytes[] memory proofs1) = generateMerkleTree(providerOne, 0, 100);
+        providerOneProofs = proofs1;
         vm.prank(providerOne);
-        random.register(providerOneFeeInWei, rootDigest, 100);
+        random.register(providerOneFeeInWei, rootDigest, bytes32(keccak256(abi.encodePacked(uint256(0x0100)))), 100);
+
+        (bytes20 providerTwoRoot, bytes[] memory proofs2) = generateMerkleTree(providerTwo, 0, 100);
+        providerTwoProofs = proofs2;
+        vm.prank(providerTwo);
+        random.register(providerTwoFeeInWei, providerTwoRoot, bytes32(keccak256(abi.encodePacked(uint256(0x0200)))), 100);
     }
 
-    // TODO: provider
-    function sequenceNumberToRandomValue(uint64 sequenceNumber) public view returns (uint256 result) {
-        result = uint256(sequenceNumber) + 1;
+    function sequenceNumberToRandomValue(address provider, uint64 sequenceNumber) public view returns (uint256 result) {
+        result = uint256(sequenceNumber) + 1 + uint256(keccak256(abi.encodePacked(provider)));
     }
 
     function packLeaf(uint64 sequenceNumber, uint256 random) public view returns (bytes memory packedData) {
@@ -60,29 +65,24 @@ contract PythRandomTest is Test, RandTestUtils {
         }
     }
 
-    function getIthProof(bytes[] memory proofs, uint64 i) public view returns (bytes memory packedData) {
-        bytes memory proof = proofs[i];
-        bytes memory leaf = packLeaf(i, sequenceNumberToRandomValue(i));
+    function packProof(bytes memory proof, uint64 sequenceNumber, uint256 randomValue) public view returns (bytes memory packedData) {
+        bytes memory leaf = packLeaf(sequenceNumber, randomValue);
 
-        packedData = new bytes(40 + proof.length); // 8 bytes for uint64 + 32 bytes for uint256
-
-        // FIXME: extract constant for 40
-        // Copy the bytes of x and y into packedData
-        for (uint256 i = 0; i < 40; i++) {
+        packedData = new bytes(leaf.length + proof.length);
+        for (uint256 i = 0; i < leaf.length; i++) {
             packedData[i] = leaf[i];
         }
         for (uint256 i = 0; i < proof.length; i++) {
-            packedData[i + 40] = proof[i];
+            packedData[i + leaf.length] = proof[i];
         }
-
     }
 
-    function generateMerkleTree(uint64 startSequenceNumber, uint64 size) public view returns (bytes20 rootDigest, bytes[] memory proofs) {
+    function generateMerkleTree(address provider, uint64 startSequenceNumber, uint64 size) public view returns (bytes20 rootDigest, bytes[] memory proofs) {
         bytes[] memory messages = new bytes[](size);
         for (uint64 i = 0; i < size; i++) {
             // TODO: actual random numbers
             uint64 sequenceNumber = startSequenceNumber + i;
-            messages[i] = packLeaf(sequenceNumber, sequenceNumberToRandomValue(sequenceNumber));
+            messages[i] = packLeaf(sequenceNumber, sequenceNumberToRandomValue(provider, sequenceNumber));
         }
 
         // TODO: fix depth
@@ -95,17 +95,14 @@ contract PythRandomTest is Test, RandTestUtils {
 
         vm.deal(user, 100000);
         vm.prank(user);
-        uint64 sequenceNumber = random.requestRandomNumber{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment);
+        (uint64 sequenceNumber, bytes32 identifier) = random.requestRandomNumber{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment);
 
-        console.log(sequenceNumber);
-
-        bytes memory proof = getIthProof(providerOneProofs,sequenceNumber);
-        console.log(vm.toString(proof));
+        bytes memory proof = packProof(providerOneProofs[sequenceNumber], sequenceNumber, sequenceNumberToRandomValue(providerOne, sequenceNumber));
 
         vm.prank(user);
         uint256 randomNumber = random.fulfillRequest(providerOne, sequenceNumber, userRandom, proof);
 
-        assertEq(randomNumber, random.combineRandomValues(userRandom, sequenceNumberToRandomValue(sequenceNumber)));
+        assertEq(randomNumber, random.combineRandomValues(userRandom, sequenceNumberToRandomValue(providerOne, sequenceNumber)));
 
     }
 }

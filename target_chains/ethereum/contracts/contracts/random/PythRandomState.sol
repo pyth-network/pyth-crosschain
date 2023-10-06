@@ -16,17 +16,16 @@ contract PythRandomStructs {
         uint accruedFeesInWei;
         uint64 sequenceNumber;
         // Current commitment and the last sequence number included in the commitment
-        bytes20 currentCommitment;
-        uint64 finalSequenceNumber;
-        // TODO: must be nullable somehow. could be all zero i guess
-        bytes20 nextCommitment;
-        uint64 nextFinalSequenceNumber;
+        bytes20 commitment;
+        bytes32 commitmentMetadata; // use to encode identifying information for which tree this is.
+        uint64 commitmentEnd;
     }
 
     // TODO: add block number?
     struct Request {
         address provider;
-        bytes32 commitment;
+        bytes20 providerCommitment;
+        bytes32 userCommitment;
         uint64 sequenceNumber;
     }
 }
