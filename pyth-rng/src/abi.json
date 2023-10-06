@@ -1,0 +1,463 @@
+[
+  {
+    "inputs": [],
+    "name": "AssertionFailure",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "IncorrectProviderRevelation",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "IncorrectUserRevelation",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsufficientFee",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoSuchProvider",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OutOfRandomness",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "provider",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "userCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "providerCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "providerCommitmentSequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "providerCommitmentMetadata",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "blockNumber",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct PythRandomStructs.Request",
+        "name": "request",
+        "type": "tuple"
+      }
+    ],
+    "name": "Requested",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "provider",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "userCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "providerCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "providerCommitmentSequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "providerCommitmentMetadata",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "blockNumber",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct PythRandomStructs.Request",
+        "name": "request",
+        "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "userRevelation",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "providerRevelation",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "blockHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "randomNumber",
+        "type": "bytes32"
+      }
+    ],
+    "name": "Revealed",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "userRandomness",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "providerRandomness",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "blockHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "combineRandomValues",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "combinedRandomness",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "userRandomness",
+        "type": "bytes32"
+      }
+    ],
+    "name": "constructUserCommitment",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "userCommitment",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      }
+    ],
+    "name": "getFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "feeAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      }
+    ],
+    "name": "getProviderInfo",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "feeInWei",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedFeesInWei",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "currentCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "currentCommitmentSequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "commitmentMetadata",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "endSequenceNumber",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct PythRandomStructs.ProviderInfo",
+        "name": "info",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "internalType": "uint64",
+        "name": "sequenceNumber",
+        "type": "uint64"
+      }
+    ],
+    "name": "getRequest",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "provider",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "userCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "providerCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "providerCommitmentSequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "providerCommitmentMetadata",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "blockNumber",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct PythRandomStructs.Request",
+        "name": "req",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "pythFeeInWei",
+        "type": "uint256"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      }
+    ],
+    "name": "nextSequenceNumber",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "sequenceNumber",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "feeInWei",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "commitment",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "commitmentMetadata",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "chainLength",
+        "type": "uint64"
+      }
+    ],
+    "name": "register",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "userCommitment",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bool",
+        "name": "useBlockHash",
+        "type": "bool"
+      }
+    ],
+    "name": "request",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "assignedSequenceNumber",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "provider",
+        "type": "address"
+      },
+      {
+        "internalType": "uint64",
+        "name": "sequenceNumber",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "userRandomness",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "providerRevelation",
+        "type": "bytes32"
+      }
+    ],
+    "name": "reveal",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "randomNumber",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
