@@ -3,29 +3,30 @@
 
 pragma solidity ^0.8.0;
 
-import "./PythInternalStructs.sol";
-import "./PythDeprecatedStructs.sol";
-
 contract PythRandomStructs {
     struct State {
         uint pythFeeInWei;
+        uint accruedPythFeesInWei;
         mapping(address => ProviderInfo) providers;
         mapping(bytes32 => Request) requests;
     }
 
     struct ProviderInfo {
         uint feeInWei;
+        uint accruedFeesInWei;
         uint64 sequenceNumber;
+        // Current commitment and the last sequence number included in the commitment
         bytes20 currentCommitment;
-        // The first sequence number that isn't in the merkle tree covered by currentCommitment
         uint64 finalSequenceNumber;
         // TODO: must be nullable somehow. could be all zero i guess
         bytes20 nextCommitment;
+        uint64 nextFinalSequenceNumber;
     }
 
+    // TODO: add block number?
     struct Request {
         address provider;
-        uint256 commitment;
+        bytes32 commitment;
         uint64 sequenceNumber;
     }
 }
