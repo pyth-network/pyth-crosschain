@@ -1,0 +1,15 @@
+[package]
+name    = "pyth-rng"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+byteorder   = "1.5.0"
+ethabi      = "18.0.0"
+pythnet-sdk = { git = "https://github.com/pyth-network/pyth-crosschain", version = "2.0.0", features = ["strum"] }
+rand        = "0.8.5"
+reqwest     = { version = "0.11.22", features = ["json", "blocking"] }
+hex         = "0.4.3"
+serde       = { version = "1.0.188", features = ["derive"] }
+serde_json  = "1.0.107"
+sha3        = "0.10.8"
