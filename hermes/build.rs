@@ -18,8 +18,8 @@ fn main() {
         git clean -df
         git remote add wormhole https://github.com/wormhole-foundation/wormhole.git
         git remote add googleapis https://github.com/googleapis/googleapis.git
-        git fetch --depth=1 --porcelain wormhole main
-        git fetch --depth=1 --porcelain googleapis master
+        git fetch --depth=1 wormhole main
+        git fetch --depth=1 googleapis master
         git read-tree --prefix=proto/ -u wormhole/main:proto
         git read-tree --prefix=proto/google/api/ -u googleapis/master:google/api
     "#;
