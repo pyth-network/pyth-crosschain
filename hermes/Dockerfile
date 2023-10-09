@@ -2,7 +2,7 @@ FROM docker.io/golang:1.20.4@sha256:6dd5c5f8936d7d4487802fb10a77f31b1776740be0fc
 
 # Install OS packages
 RUN apt-get update && apt-get install --yes \
-    build-essential curl clang libssl-dev
+    build-essential curl clang libssl-dev protobuf-compiler
 
 # Install Rust
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --quiet --no-modify-path
