@@ -2,6 +2,7 @@
 const WormholeReceiver = artifacts.require("WormholeReceiver");
 
 const { WormholeEvmContract, DefaultStore } = require("contract_manager");
+const { Wallet } = require("ethers");
 module.exports = async function (callback) {
   try {
     const contract = new WormholeEvmContract(
