@@ -38,13 +38,6 @@ export default {
       type: "string",
       required: true,
     } as Options,
-    "max-vaas-per-ptb": {
-      description:
-        "Maximum number of VAAs that can be included in a single PTB.",
-      type: "number",
-      required: true,
-      default: 1,
-    } as Options,
     "num-gas-objects": {
       description: "Number of gas objects in the pool.",
       type: "number",
@@ -73,7 +66,6 @@ export default {
       pollingFrequency,
       pythStateId,
       wormholeStateId,
-      maxVaasPerPtb,
       numGasObjects,
       gasBudget,
     } = argv;
@@ -113,6 +105,7 @@ export default {
 
     const suiListener = new SuiPriceListener(
       pythStateId,
+      wormholeStateId,
       endpoint,
       priceItems,
       { pollingFrequency }
@@ -121,7 +114,6 @@ export default {
       priceServiceConnection,
       pythStateId,
       wormholeStateId,
-      maxVaasPerPtb,
       endpoint,
       mnemonic,
       gasBudget,
