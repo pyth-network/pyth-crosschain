@@ -129,6 +129,7 @@ export class EvmPricePusher implements IPricePusher {
     private connection: PriceServiceConnection,
     pythContractFactory: PythContractFactory,
     private overrideGasPriceMultiplier: number,
+    private overrideGasPriceMultiplierCap: number,
     customGasStation?: CustomGasStation
   ) {
     this.customGasStation = customGasStation;
@@ -200,7 +201,10 @@ export class EvmPricePusher implements IPricePusher {
     }
 
     if (gasPriceToOverride !== undefined && gasPriceToOverride > gasPrice) {
-      gasPrice = gasPriceToOverride;
+      gasPrice = Math.min(
+        gasPriceToOverride,
+        gasPrice * this.overrideGasPriceMultiplierCap
+      );
     }
 
     const txNonce = lastExecutedNonce + 1;

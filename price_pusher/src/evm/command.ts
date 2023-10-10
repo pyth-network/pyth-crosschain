@@ -36,10 +36,21 @@ export default {
     } as Options,
     "override-gas-price-multiplier": {
       description:
-        "Multiply the gas price by this number if the transaction is not landing to override it. Default to 1.1",
+        "Multiply the previous gas price by this number if the transaction is not landing to override. " +
+        "Please note that the gas price can grow exponentially on consecutive failures; " +
+        "to set a cap on the multiplier, use the `override-gas-price-multiplier-cap` option." +
+        "Default to 1.1",
       type: "number",
       required: false,
       default: 1.1,
+    } as Options,
+    "override-gas-price-multiplier-cap": {
+      description:
+        "Maximum gas price multiplier to use in override compared to the RPC returned " +
+        "gas price. Default to 5",
+      type: "number",
+      required: false,
+      default: 5,
     } as Options,
     ...options.priceConfigFile,
     ...options.priceServiceEndpoint,
@@ -61,6 +72,7 @@ export default {
       customGasStation,
       txSpeed,
       overrideGasPriceMultiplier,
+      overrideGasPriceMultiplierCap,
     } = argv;
 
     const priceConfigs = readPriceConfigFile(priceConfigFile);
@@ -106,6 +118,7 @@ export default {
       priceServiceConnection,
       pythContractFactory,
       overrideGasPriceMultiplier,
+      overrideGasPriceMultiplierCap,
       gasStation
     );
 
