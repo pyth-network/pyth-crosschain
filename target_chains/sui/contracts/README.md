@@ -8,7 +8,7 @@ cargo install --locked --git https://github.com/MystenLabs/sui.git --rev 09b2081
 
 ## Gas Profiling
 
-Using the `sui-tool` binary, you can profile gas usage of transactions by running:
+Using the [`sui-tool` binary](https://github.com/MystenLabs/sui/pull/12680), you can profile gas usage of transactions by running:
 
 ```bash
 env MOVE_VM_PROFILE=1  ./sui-tool replay --rpc https://fullnode.mainnet.sui.io:443 tx -t <tx-signature>
