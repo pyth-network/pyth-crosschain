@@ -76,6 +76,7 @@ import "../libraries/MerkleTree.sol";
 // - bound fees to prevent overflows
 // - governance??
 // - add blockhash as optional additional randomness source
+// - withdraw accumulated fees
 contract PythRandom is PythRandomState {
 
     // TODO: Use an upgradeable proxy
@@ -116,19 +117,19 @@ contract PythRandom is PythRandomState {
     // generate a random number x and keep it secret. The user should then compute hash(x) and pass that
     // as the userCommitment argument. (You may call the constructUserCommitment method to compute the hash.)
     //
-    // This method returns both a sequence number and commitment metadata. The user should pass both of these
-    // to their chosen provider (the exact method for doing so will depend on the provider) to retrieve a proof
-    // of the provider's random number. This proof should be passed to fulfillRequest below to get the random number.
+    // This method returns a sequence number. The user should pass this sequence number to
+    // their chosen provider (the exact method for doing so will depend on the provider) to retrieve the provider's
+    // number. The user should then call fulfillRequest to construct the final random number.
     //
     // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
     // Note that excess value is *not* refunded to the caller.
-    function requestRandomNumber(address provider, bytes32 userCommitment) public payable returns (uint64 assignedSequenceNumber, bytes32 assignedCommitmentMetadata) {
+    function requestRandomNumber(address provider, bytes32 userCommitment) public payable returns (uint64 assignedSequenceNumber) {
         PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[provider];
         // TODO: check that this provider exists?
 
         // Assign a sequence number to the request
         assignedSequenceNumber = providerInfo.sequenceNumber;
-        assignedCommitmentMetadata = providerInfo.commitmentMetadata;
+        bytes32 assignedCommitmentMetadata = providerInfo.commitmentMetadata;
         if (assignedSequenceNumber >= providerInfo.commitmentEnd) revert PythRandomErrors.OutOfRandomness();
         providerInfo.sequenceNumber += 1;
 
@@ -146,7 +147,7 @@ contract PythRandom is PythRandomState {
         request.lastProviderRevelation = providerInfo.lastRevelation;
         request.lastProviderRevelationSequenceNumber = providerInfo.lastRevelationSequenceNumber;
 
-        // TODO: log an event so it's easy for providers to track requests
+        // TODO: log an event so it's easy for providers to track requests. Include the assignedCommitmentMetadata field
     }
 
     // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
@@ -156,7 +157,7 @@ contract PythRandom is PythRandomState {
     // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
     // request information (so that the contract doesn't use a linear amount of storage in the number of requests).
     // If you need to use the returned random number more than once, you are responsible for storing it.
-    function fulfillRequest(address provider, uint64 sequenceNumber, uint256 userRandomness, bytes32 providerRevelation) public returns (uint256 randomNumber) {
+    function fulfillRequest(address provider, uint64 sequenceNumber, bytes32 userRandomness, bytes32 providerRevelation) public returns (bytes32 randomNumber) {
         // TODO: do i need to check that these are nonzero?
         bytes32 key = requestKey(provider, sequenceNumber);
         PythRandomStructs.Request storage request = _state.requests[key];
@@ -190,12 +191,12 @@ contract PythRandom is PythRandomState {
         return _state.providers[provider].feeInWei + _state.pythFeeInWei;
     }
 
-    function constructUserCommitment(uint256 userRandomness) public pure returns (bytes32 userCommitment) {
-       userCommitment = keccak256(abi.encodePacked(userRandomness));
+    function constructUserCommitment(bytes32 userRandomness) public pure returns (bytes32 userCommitment) {
+       userCommitment = keccak256(bytes.concat(userRandomness));
     }
 
-    function combineRandomValues(uint256 userRandomness, bytes32 providerRandomness) public pure returns (uint256 combinedRandomness) {
-       combinedRandomness = uint256(keccak256(abi.encodePacked(userRandomness, providerRandomness)));
+    function combineRandomValues(bytes32 userRandomness, bytes32 providerRandomness) public pure returns (bytes32 combinedRandomness) {
+       combinedRandomness = keccak256(abi.encodePacked(userRandomness, providerRandomness));
     }
 
     function requestKey(address provider, uint64 sequenceNumber) internal pure returns (bytes32 hash) {
