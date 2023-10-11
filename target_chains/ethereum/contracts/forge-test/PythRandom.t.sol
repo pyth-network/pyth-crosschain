@@ -52,12 +52,12 @@ contract PythRandomTest is Test, RandTestUtils {
         }
     }
 
-    function assertFulfillSucceeds(address provider, uint64 sequenceNumber, bytes32 userRandom, bytes32 providerRevelation) public {
+    function assertRevealSucceeds(address provider, uint64 sequenceNumber, bytes32 userRandom, bytes32 providerRevelation) public {
         bytes32 randomNumber = random.reveal(providerOne, sequenceNumber, userRandom, providerRevelation);
         assertEq(randomNumber, random.combineRandomValues(userRandom, providerRevelation, bytes32(uint256(0))));
     }
 
-    function assertFulfillReverts(address provider, uint64 sequenceNumber, bytes32 userRandom, bytes32 providerRevelation) public {
+    function assertRevealReverts(address provider, uint64 sequenceNumber, bytes32 userRandom, bytes32 providerRevelation) public {
         vm.expectRevert();
         random.reveal(providerOne, sequenceNumber, userRandom, providerRevelation);
     }
@@ -70,7 +70,11 @@ contract PythRandomTest is Test, RandTestUtils {
         vm.prank(user);
         uint64 sequenceNumber = random.request{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment, false);
 
-        assertFulfillSucceeds(providerOne, sequenceNumber, userRandom, providerOneProofs[sequenceNumber]);
+        assertRevealSucceeds(providerOne, sequenceNumber, userRandom, providerOneProofs[sequenceNumber]);
+
+        // You can only reveal the random number once. This isn't a feature of the contract per se, but it is
+        // the expected behavior.
+        assertRevealReverts(providerOne, sequenceNumber, userRandom, providerOneProofs[sequenceNumber]);
     }
 
     function testRotate() public {
@@ -97,12 +101,21 @@ contract PythRandomTest is Test, RandTestUtils {
 
         // Requests that were in-flight at the time of rotation use the commitment from the time of request
         for (uint256 i = 0; i < 10; i++) {
-            assertFulfillReverts(providerOne, sequenceNumber1, userRandom, newHashChain[i]);
+            assertRevealReverts(providerOne, sequenceNumber1, userRandom, newHashChain[i]);
         }
-        assertFulfillSucceeds(providerOne, sequenceNumber1, userRandom, providerOneProofs[sequenceNumber1]);
+        assertRevealSucceeds(providerOne, sequenceNumber1, userRandom, providerOneProofs[sequenceNumber1]);
 
         // Requests after the rotation use the new commitment
-        assertFulfillReverts(providerOne, sequenceNumber3, userRandom, providerOneProofs[sequenceNumber3]);
-        assertFulfillSucceeds(providerOne, sequenceNumber3, userRandom, newHashChain[sequenceNumber3 - newHashChainOffset]);
+        assertRevealReverts(providerOne, sequenceNumber3, userRandom, providerOneProofs[sequenceNumber3]);
+        assertRevealSucceeds(providerOne, sequenceNumber3, userRandom, newHashChain[sequenceNumber3 - newHashChainOffset]);
     }
+
+    // TODO
+    // - fee arithmetic overflows revert
+    // - multiple concurrent requests
+    // - what's the impact of # of in-flight requests on gas usage?
+    // - fee accounting, withdrawal, and getFee
+    // - fee payment is required
+    // - what happens if you run out of randomness
+    // - test all reverts
 }

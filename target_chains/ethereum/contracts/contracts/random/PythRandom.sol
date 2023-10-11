@@ -74,12 +74,11 @@ import "../libraries/MerkleTree.sol";
 // cases where the user chooses not to reveal.
 //
 // TODOs:
-// - bound fees to prevent overflows
 // - governance??
-// - add blockhash as optional additional randomness source
 // - withdraw accumulated fees
 // - correct method access modifiers (public vs external)
 // - gas optimizations
+// - function to check invariants??
 contract PythRandom is PythRandomState, PythRandomEvents {
 
     // TODO: Use an upgradeable proxy
@@ -89,10 +88,13 @@ contract PythRandom is PythRandomState, PythRandomEvents {
     }
 
     // Register msg.sender as a randomness provider. The arguments are the provider's configuration parameters
-    // and initial commitment.
+    // and initial commitment. Re-registering the same provider rotates the provider's commitment (and updates
+    // the feeInWei).
     //
-    // Re-registering the same provider rotates the provider's commitment.
+    // chainLength is the number of values in the hash chain *including* the commitment, that is, chainLength >= 1.
     function register(uint feeInWei, bytes32 commitment, bytes32 commitmentMetadata, uint64 chainLength) public {
+        if (chainLength == 0) revert PythRandomErrors.AssertionFailure();
+
         PythRandomStructs.ProviderInfo storage provider = _state.providers[msg.sender];
 
         // NOTE: this method implementation depends on the fact that ProviderInfo will be initialized to all-zero.
@@ -105,10 +107,23 @@ contract PythRandom is PythRandomState, PythRandomEvents {
         provider.currentCommitment = commitment;
         provider.currentCommitmentSequenceNumber = provider.sequenceNumber;
         provider.commitmentMetadata = commitmentMetadata;
-        // TODO: is this index correct or off by one?
         provider.endSequenceNumber = provider.sequenceNumber + chainLength;
 
         provider.sequenceNumber += 1;
+
+        emit Registered(provider);
+    }
+
+    // FIXME
+    function withdraw(uint256 amount) public {
+        PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[msg.sender];
+
+        require(providerInfo.accruedFeesInWei >= amount, "Insufficient balance");
+        providerInfo.accruedFeesInWei -= amount;
+
+        // Interaction with an external contract or token transfer
+        (bool sent, bytes memory data) = msg.sender.call{value: amount}("");
+        require(sent, "withdrawal to msg.sender failed");
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -205,7 +220,6 @@ contract PythRandom is PythRandomState, PythRandomEvents {
     function getFee(
         address provider
     ) public view returns (uint feeAmount) {
-        // TODO: note why this can't overflow
         return _state.providers[provider].feeInWei + _state.pythFeeInWei;
     }
 
@@ -217,13 +231,13 @@ contract PythRandom is PythRandomState, PythRandomEvents {
        combinedRandomness = keccak256(abi.encodePacked(userRandomness, providerRandomness, blockHash));
     }
 
+    // Create a unique key for an in-flight randomness request (to store it in the contract state)
     function requestKey(address provider, uint64 sequenceNumber) internal pure returns (bytes32 hash) {
-        // Create a unique key for the mapping based on the tuple
         hash = keccak256(abi.encodePacked(provider, sequenceNumber));
     }
 
-    // Validate that the provided proof is valid for sequence number. Note that the proof includes the
-    // leaf being proven, which consists of the 8 byte sequenceNumber followed by the
+    // Validate that revelation at sequenceNumber is the correct value in the hash chain for a provider whose
+    // last known revealed random number was lastRevelation at lastSequenceNumber.
     function isProofValid(uint64 lastSequenceNumber, bytes32 lastRevelation, uint64 sequenceNumber, bytes32 revelation) internal pure returns (bool valid) {
         if (sequenceNumber <= lastSequenceNumber) revert PythRandomErrors.AssertionFailure();
 
