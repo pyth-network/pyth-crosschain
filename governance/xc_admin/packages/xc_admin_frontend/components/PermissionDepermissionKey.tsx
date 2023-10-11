@@ -24,7 +24,7 @@ import { capitalizeFirstLetter } from '../utils/capitalizeFirstLetter'
 import Spinner from './common/Spinner'
 import CloseIcon from './icons/CloseIcon'
 
-const assetTypes = ['All', 'Crypto', 'Equity', 'FX', 'Metal']
+const assetTypes = ['All', 'Crypto', 'Equity', 'FX', 'Metal', 'Rates']
 
 const PermissionDepermissionKey = ({
   isPermission,
