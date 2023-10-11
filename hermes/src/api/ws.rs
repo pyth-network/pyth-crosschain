@@ -294,7 +294,8 @@ impl Subscriber {
             if !self
                 .ws_state
                 .bytes_limit_whitelist
-                .contains(&self.ip_addr.into())
+                .iter()
+                .any(|ip_net| ip_net.contains(&self.ip_addr))
                 && self.ws_state.rate_limiter.check_key_n(
                     &self.ip_addr,
                     NonZeroU32::new(message.len().try_into()?).ok_or(anyhow!("Empty message"))?,
