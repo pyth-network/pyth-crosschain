@@ -101,39 +101,31 @@ export const useMultisig = (): MultisigHookData => {
           wallet: new NodeWallet(new Keypair()),
         })
         if (cancelled) return
-        setUpgradeMultisigAccount(
-          await readOnlySquads.getMultisig(UPGRADE_MULTISIG[multisigCluster])
+        const upgradeMultisigAccount = await readOnlySquads.getMultisig(
+          UPGRADE_MULTISIG[multisigCluster]
         )
-        try {
-          if (cancelled) return
-          setPriceFeedMultisigAccount(
-            await readOnlySquads.getMultisig(
-              PRICE_FEED_MULTISIG[multisigCluster]
-            )
-          )
-        } catch (e) {
-          console.error(e)
-          setPriceFeedMultisigAccount(undefined)
-        }
+
+        if (cancelled) return
+        const priceFeedMultisigAccount = await readOnlySquads.getMultisig(
+          PRICE_FEED_MULTISIG[multisigCluster]
+        )
 
         if (cancelled) return
         const upgradeProposals = await getSortedProposals(
           readOnlySquads,
           UPGRADE_MULTISIG[multisigCluster]
         )
+
+        if (cancelled) return
+        const sortedPriceFeedMultisigProposals = await getSortedProposals(
+          readOnlySquads,
+          PRICE_FEED_MULTISIG[multisigCluster]
+        )
+
+        setUpgradeMultisigAccount(upgradeMultisigAccount)
+        setPriceFeedMultisigAccount(priceFeedMultisigAccount)
         setUpgradeMultisigProposals(upgradeProposals)
-        try {
-          if (cancelled) return
-          const sortedPriceFeedMultisigProposals = await getSortedProposals(
-            readOnlySquads,
-            PRICE_FEED_MULTISIG[multisigCluster]
-          )
-          setPriceFeedMultisigProposals(sortedPriceFeedMultisigProposals)
-        } catch (e) {
-          console.error(e)
-          setAllProposalsIxsParsed([])
-          setPriceFeedMultisigProposals([])
-        }
+        setPriceFeedMultisigProposals(sortedPriceFeedMultisigProposals)
 
         setIsLoading(false)
       } catch (e) {
