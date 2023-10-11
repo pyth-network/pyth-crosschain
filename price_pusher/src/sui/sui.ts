@@ -248,7 +248,9 @@ export class SuiPricePusher implements IPricePusher {
           priceIdChunk
         );
         if (vaas.length !== 1) {
-          throw new Error("Expected a single VAA for all priceIds");
+          throw new Error(
+            `Expected a single VAA for all priceIds ${priceIdChunk} but received ${vaas.length} VAAs: ${vaas}`
+          );
         }
         const vaa = vaas[0];
         const tx = new TransactionBlock();
