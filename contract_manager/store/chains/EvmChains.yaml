@@ -364,3 +364,15 @@
   rpcUrl: https://goerli.boba.network
   networkId: 2888
   type: EvmChain
+- id: manta
+  wormholeChainName: manta
+  mainnet: true
+  rpcUrl: https://pacific-rpc.manta.network/http
+  networkId: 169
+  type: EvmChain
+- id: manta_testnet
+  wormholeChainName: manta
+  mainnet: false
+  rpcUrl: https://pacific-rpc.testnet.manta.network/http
+  networkId: 3441005
+  type: EvmChain
