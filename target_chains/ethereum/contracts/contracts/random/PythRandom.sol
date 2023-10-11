@@ -86,31 +86,25 @@ contract PythRandom is PythRandomState {
     }
 
     // Register msg.sender as a randomness provider. The arguments are the provider's configuration parameters
-    // and initial commitment:
+    // and initial commitment.
+    //
+    // Re-registering the same provider rotates the provider's commitment.
     function register(uint feeInWei, bytes32 commitment, bytes32 commitmentMetadata, uint64 commitmentEnd) public {
         PythRandomStructs.ProviderInfo storage provider = _state.providers[msg.sender];
 
-        if (_state.providers[msg.sender].sequenceNumber != 0) revert PythRandomErrors.ProviderAlreadyRegistered();
+        // NOTE: this method implementation depends on the fact that ProviderInfo will be initialized to all-zero.
+        // Specifically, accruedFeesInWei is intentionally not set. On initial registration, it will be zero,
+        // then on future registrations, it will be unchanged. Similarly, provider.sequenceNumber defaults to 0
+        // on initial registration.
+
         provider.feeInWei = feeInWei;
-        provider.accruedFeesInWei = 0;
-        provider.sequenceNumber = 1;
+
+        provider.currentCommitment = commitment;
+        provider.currentCommitmentSequenceNumber = provider.sequenceNumber;
         provider.commitmentMetadata = commitmentMetadata;
-        provider.commitmentEnd = commitmentEnd;
-        provider.lastRevelation = commitment;
-        provider.lastRevelationSequenceNumber = 0;
-    }
+        provider.endSequenceNumber = commitmentEnd;
 
-    // TODO: this function signature needs some work. Maybe we can just re-use register
-    function rotate(bytes32 commitment, bytes32 commitmentMetadata, uint64 commitmentEnd) public {
-        PythRandomStructs.ProviderInfo storage provider = _state.providers[msg.sender];
-        if (_state.providers[msg.sender].sequenceNumber == 0) revert PythRandomErrors.NoSuchProvider();
-
-        provider.lastRevelationSequenceNumber = provider.sequenceNumber;
-        provider.lastRevelation = commitment;
         provider.sequenceNumber += 1;
-
-        provider.commitmentMetadata = commitmentMetadata;
-        provider.commitmentEnd = commitmentEnd;
     }
 
     // As a user, request a random number from `provider`. Prior to calling this method, the user should
@@ -123,14 +117,14 @@ contract PythRandom is PythRandomState {
     //
     // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
     // Note that excess value is *not* refunded to the caller.
-    function requestRandomNumber(address provider, bytes32 userCommitment) public payable returns (uint64 assignedSequenceNumber) {
+    function request(address provider, bytes32 userCommitment) public payable returns (uint64 assignedSequenceNumber) {
         PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[provider];
-        // TODO: check that this provider exists?
+        if (_state.providers[provider].sequenceNumber == 0) revert PythRandomErrors.NoSuchProvider();
 
         // Assign a sequence number to the request
         assignedSequenceNumber = providerInfo.sequenceNumber;
         bytes32 assignedCommitmentMetadata = providerInfo.commitmentMetadata;
-        if (assignedSequenceNumber >= providerInfo.commitmentEnd) revert PythRandomErrors.OutOfRandomness();
+        if (assignedSequenceNumber >= providerInfo.endSequenceNumber) revert PythRandomErrors.OutOfRandomness();
         providerInfo.sequenceNumber += 1;
 
         // Check that fees were paid and increment the pyth / provider balances.
@@ -144,8 +138,8 @@ contract PythRandom is PythRandomState {
         request.provider = provider;
         request.sequenceNumber = assignedSequenceNumber;
         request.userCommitment = userCommitment;
-        request.lastProviderRevelation = providerInfo.lastRevelation;
-        request.lastProviderRevelationSequenceNumber = providerInfo.lastRevelationSequenceNumber;
+        request.providerCommitment = providerInfo.currentCommitment;
+        request.providerCommitmentSequenceNumber = providerInfo.currentCommitmentSequenceNumber;
 
         // TODO: log an event so it's easy for providers to track requests. Include the assignedCommitmentMetadata field
     }
@@ -157,15 +151,15 @@ contract PythRandom is PythRandomState {
     // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
     // request information (so that the contract doesn't use a linear amount of storage in the number of requests).
     // If you need to use the returned random number more than once, you are responsible for storing it.
-    function fulfillRequest(address provider, uint64 sequenceNumber, bytes32 userRandomness, bytes32 providerRevelation) public returns (bytes32 randomNumber) {
-        // TODO: do i need to check that these are nonzero?
+    function reveal(address provider, uint64 sequenceNumber, bytes32 userRandomness, bytes32 providerRevelation) public returns (bytes32 randomNumber) {
+        // TODO: do we need to check that this request exists?
         bytes32 key = requestKey(provider, sequenceNumber);
         PythRandomStructs.Request storage request = _state.requests[key];
         // This invariant should be guaranteed to hold by the key construction procedure above, but check it
         // explicitly to be extra cautious.
         if (request.sequenceNumber != sequenceNumber) revert PythRandomErrors.AssertionFailure();
 
-        bool valid = isProofValid(request.lastProviderRevelationSequenceNumber, request.lastProviderRevelation, sequenceNumber, providerRevelation);
+        bool valid = isProofValid(request.providerCommitmentSequenceNumber, request.providerCommitment, sequenceNumber, providerRevelation);
         if (!valid) revert PythRandomErrors.IncorrectProviderRevelation();
         if (constructUserCommitment(userRandomness) != request.userCommitment) revert PythRandomErrors.IncorrectUserRevelation();
 
@@ -174,9 +168,9 @@ contract PythRandom is PythRandomState {
         delete _state.requests[key];
 
         PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[provider];
-        if (providerInfo.lastRevelationSequenceNumber < sequenceNumber) {
-            providerInfo.lastRevelationSequenceNumber = sequenceNumber;
-            providerInfo.lastRevelation = providerRevelation;
+        if (providerInfo.currentCommitmentSequenceNumber < sequenceNumber) {
+            providerInfo.currentCommitmentSequenceNumber = sequenceNumber;
+            providerInfo.currentCommitment = providerRevelation;
         }
     }
 
