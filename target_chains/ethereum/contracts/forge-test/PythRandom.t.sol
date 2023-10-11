@@ -12,7 +12,6 @@ import "./utils/WormholeTestUtils.t.sol";
 import "./utils/PythTestUtils.t.sol";
 import "./utils/RandTestUtils.t.sol";
 import "../contracts/random/PythRandom.sol";
-import "../contracts/libraries/MerkleTree.sol";
 
 contract PythRandomTest is Test, RandTestUtils {
     PythRandom public random;

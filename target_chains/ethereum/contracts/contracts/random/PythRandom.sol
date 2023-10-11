@@ -20,14 +20,15 @@ import "../libraries/MerkleTree.sol";
 // Thus, neither party needs to trust the other -- as long as they are themselves honest, they can
 // ensure that the result r is random.
 //
-// FIXME: comment needs rewritten from here
 // PythRandom implements a version of this protocol that is optimized for on-chain usage. The
 // key difference is that one of the participants (the provider) commits to a sequence of random numbers
-// up-front using a merkle tree. This variation reduces the number of transactions required for each random
-// draw.
+// up-front using a hash chain. Users of the protocol then simply grab the next random number in the sequence.
 //
-// Setup: The provider P computes a sequence of N random numbers, x_i (i = 1...N) constructs a merkle tree,
-// and submits to the root of the merkle tree to this contract. The root is the provider's commitment h_P.
+// Setup: The provider P computes a sequence of N random numbers, x_i (i = 0...N-1):
+// x_{N-1} = random()
+// x_i = hash(x_{i + 1})
+// The provider commits to x_0 by posting it to the contract. Each random number in the sequence can then be
+// verified against the previous one in the sequence by hashing it, i.e., hash(x_i) == x_{i - 1}
 //
 // Request: To produce a random number, the following steps occur.
 // 1. The user draws a random number x_U, and submits h_U = hash(x_U) to this contract
@@ -36,16 +37,18 @@ import "../libraries/MerkleTree.sol";
 // 3. The user submits an off-chain request (e.g. via HTTP) to the provider to reveal the i'th random number.
 // 4. The provider checks the on-chain sequence number and ensures it is > i. If it is not, the provider
 //    refuses to reveal the ith random number.
-// 5. The provider reveals x_i to the user, along with a merkle proof p_i.
-// 6. The user submits both the provider's revealed number (x_i, p_i) and their own x_U to the contract.
-// 7. The contract verifies that the proof p_i proves that x_i is the i'th random number in the merkle tree
-//    whose root is x_P. The contract also checks that hash(x_U) == h_U.
-// 8. If both of the above conditions are satisfied, the random number r = hash(x_P, x_U)
+// 5. The provider reveals x_i to the user.
+// 6. The user submits both the provider's revealed number x_i and their own x_U to the contract.
+// 7. The contract verifies hash(x_i) == x_{i-1} to prove that x_i is the i'th random number. The contract also checks that hash(x_U) == h_U.
+//    The contract stores x_i as the i'th random number to reuse for future verifications.
+// 8. If both of the above conditions are satisfied, the random number r = hash(x_i, x_U).
+//    (Optional) as an added security mechanism, this step can further incorporate the blockhash of the request transaction,
+//    r = hash(x_i, x_U, blockhash).
 //
-// This protocol has the same security properties as the 2-party randomness protocol above. As long as either
+// This protocol has the same security properties as the 2-party randomness protocol above: as long as either
 // the provider or user is honest, the number r is random. Honesty here means that the participant keeps their
 // random number x a secret until the revelation phase (step 5) of the protocol. Note that providers need to
-// be careful to ensure their off-chain service isn't compromised to reveal the merkle tree -- if this occurs,
+// be careful to ensure their off-chain service isn't compromised to reveal the random numbers -- if this occurs,
 // then users will be able to influence the random number r.
 //
 // The PythRandom implementation of the above protocol allows anyone to permissionlessly register to be a
@@ -53,31 +56,26 @@ import "../libraries/MerkleTree.sol";
 // their own fee for the service. In addition, the PythRandom contract charges a flat fee that goes to the
 // Pyth protocol for each requested random number. Fees are paid in the native token of the network.
 //
-// This implementation also allows providers to rotate their merkle root at any time. This operation allows
-// providers to commit to additional random numbers, or rotate out a compromised merkle root. On rotation, any
-// in-flight requests are continue to use the pre-rotation merkle root (i.e., the root at the time of the request).
-// Each merkle root has a metadata field that providers can use to identify which merkle tree a request is for;
-// the user must pass the metadata field to the provider when requesting the revelation of a random number.
+// This implementation has two intricacies that merit further explanation. First, the implementation supports
+// multiple concurrent requests for randomness by checking the provider's random number against their last known
+// random number. Verification therefore may require computing multiple hashes (~ the number of concurrent requests).
+// Second, the implementation allows providers to rotate their commitment at any time. This operation allows
+// providers to commit to additional random numbers once they reach the end of their initial sequence, or rotate out
+// a compromised sequence. On rotation, any in-flight requests are continue to use the pre-rotation commitment.
+// Each commitment has a metadata field that providers can use to determine which commitment a request is for.
+// Providers *must* retrieve the metadata for a request from the blockchain itself to prevent user manipulation of this field.
 //
 // Warning to integrators:
 // An important caveat for users of this protocol is that the user can compute the random number r before
-// revealing their own number x_U to the contract. This property means that the user can choose to halt the
-// protocol before the random number is revealed. Integrators should ensure that the user is always incentivized
-// to reveal their random number, even if the outcome is "bad" for the user. That is, the value to the user of
-// revealing should always be greater than the value of not revealing.
+// revealing their own number to the contract. This property means that the user can choose to halt the
+// protocol prior to the random number being revealed (i.e., prior to step (6) above). Integrators should ensure that
+// the user is always incentivized to reveal their random number, and that the protocol has an escape hatch for
+// cases where the user chooses not to reveal.
 //
 // TODOs:
 // - bound fees to prevent overflows
 // - governance??
 // - add blockhash as optional additional randomness source
-// - are there attacks caused by forging the commitmentMetadata when calling the server?
-//
-// 0 hash(hash(hash(r)))  <-- last provider revelation
-// 1 hash(hash(r)) <-- user A requests
-// 2 hash(r) <-- user B requests
-// 3 r
-//
-// verify user B => hash(hash(x)) == hash(hash(hash(r)))
 contract PythRandom is PythRandomState {
 
     // TODO: Use an upgradeable proxy
