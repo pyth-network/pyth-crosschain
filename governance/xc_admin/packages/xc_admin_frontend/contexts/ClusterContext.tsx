@@ -1,5 +1,6 @@
 import { PythCluster } from '@pythnetwork/client/lib/cluster'
-import { createContext, useMemo, useState } from 'react'
+import router from 'next/router'
+import { createContext, useEffect, useMemo, useState } from 'react'
 
 export const DEFAULT_CLUSTER: PythCluster = 'mainnet-beta'
 
@@ -22,5 +23,12 @@ export const ClusterProvider = (props: any) => {
     }),
     [cluster]
   )
+
+  useEffect(() => {
+    router.query && router.query.cluster
+      ? setCluster(router.query.cluster as PythCluster)
+      : setCluster(DEFAULT_CLUSTER)
+  }, [router])
+
   return <ClusterContext.Provider {...props} value={contextValue} />
 }

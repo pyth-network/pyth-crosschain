@@ -26,12 +26,6 @@ const ClusterSwitch = ({ light }: { light?: boolean | null }) => {
     [setCluster, router]
   )
 
-  useEffect(() => {
-    router.query && router.query.cluster
-      ? setCluster(router.query.cluster)
-      : setCluster(DEFAULT_CLUSTER)
-  }, [setCluster, router])
-
   const clusters = [
     {
       value: 'pythnet',
