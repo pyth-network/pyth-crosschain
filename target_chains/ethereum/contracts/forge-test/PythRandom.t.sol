@@ -54,7 +54,7 @@ contract PythRandomTest is Test, RandTestUtils {
 
     function assertFulfillSucceeds(address provider, uint64 sequenceNumber, bytes32 userRandom, bytes32 providerRevelation) public {
         bytes32 randomNumber = random.reveal(providerOne, sequenceNumber, userRandom, providerRevelation);
-        assertEq(randomNumber, random.combineRandomValues(userRandom, providerRevelation));
+        assertEq(randomNumber, random.combineRandomValues(userRandom, providerRevelation, bytes32(uint256(0))));
     }
 
     function assertFulfillReverts(address provider, uint64 sequenceNumber, bytes32 userRandom, bytes32 providerRevelation) public {
@@ -68,7 +68,7 @@ contract PythRandomTest is Test, RandTestUtils {
 
         vm.deal(user, 100000);
         vm.prank(user);
-        uint64 sequenceNumber = random.request{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment);
+        uint64 sequenceNumber = random.request{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment, false);
 
         assertFulfillSucceeds(providerOne, sequenceNumber, userRandom, providerOneProofs[sequenceNumber]);
     }
@@ -79,10 +79,10 @@ contract PythRandomTest is Test, RandTestUtils {
 
         vm.deal(user, 100000000);
         vm.prank(user);
-        uint64 sequenceNumber1 = random.request{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment);
+        uint64 sequenceNumber1 = random.request{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment, false);
 
         vm.prank(user);
-        uint64 sequenceNumber2 = random.request{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment);
+        uint64 sequenceNumber2 = random.request{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment, false);
         assertEq(sequenceNumber2, sequenceNumber1 + 1);
 
         uint64 newHashChainOffset = sequenceNumber2 + 1;
@@ -91,7 +91,7 @@ contract PythRandomTest is Test, RandTestUtils {
         random.register(providerOneFeeInWei, newHashChain[0], bytes32(keccak256(abi.encodePacked(uint256(0x0100)))), newHashChainOffset + 10);
 
         vm.prank(user);
-        uint64 sequenceNumber3 = random.request{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment);
+        uint64 sequenceNumber3 = random.request{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment, false);
         // Rotating the provider key uses a sequence number
         assertEq(sequenceNumber3, sequenceNumber2 + 2);
 

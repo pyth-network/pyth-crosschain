@@ -44,6 +44,10 @@ contract PythRandomStructs {
 
         bytes32 providerCommitment;
         uint64 providerCommitmentSequenceNumber;
+        bytes32 providerCommitmentMetadata;
+
+        // If nonzero, the randomness requester wants the blockhash of this block to be incorporated into the random number.
+        uint256 blockNumber;
     }
 }
 
