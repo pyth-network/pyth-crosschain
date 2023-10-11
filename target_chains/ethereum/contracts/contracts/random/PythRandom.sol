@@ -7,55 +7,131 @@ import "./PythRandomErrors.sol";
 import "../libraries/MerkleTree.sol";
 
 
-// here’s a sketch of how this could work:
-// 1. user generates a random number x and computed h = hash(x).
-// 2. user submits h in a transaction to the pyth random number contract. the contract assigns an incrementing sequence number i to the request. the contract stores (h, i)
-//an off chain service watches the contract to see which sequence numbers have been requested
-//user queries the off chain service for the ith random number. the service returns the number y along with the merkle proof p. the service refuses to return this number unless the request for i has been submitted to the blockchain.
-//user submits a transaction with (y, p, x, i). the pyth contract verifies that the proof p is valid for y,i and that hash(x) == h. the random number is then hash(y,x) (or you can xor them or whatever).
-
+// PythRandom implements a secure 2-party random number generation procedure. The protocol
+// is an extension of a simple commit/reveal protocol. The original version has the following steps:
+//
+// 1. Two parties A and B each draw a random number x_{A,B}
+// 2. A and B then share h_{A,B} = hash(x_{A,B})
+// 3. A and B reveal x_{A,B}
+// 4. Both parties verify that hash(x_{A, B}) == h_{A,B}
+// 5. The random number r = hash(x_A, x_B)
+//
+// This protocol has the property that the result is random as long as either A or B are honest.
+// Thus, neither party needs to trust the other -- as long as they are themselves honest, they can
+// ensure that the result r is random.
+//
+// FIXME: comment needs rewritten from here
+// PythRandom implements a version of this protocol that is optimized for on-chain usage. The
+// key difference is that one of the participants (the provider) commits to a sequence of random numbers
+// up-front using a merkle tree. This variation reduces the number of transactions required for each random
+// draw.
+//
+// Setup: The provider P computes a sequence of N random numbers, x_i (i = 1...N) constructs a merkle tree,
+// and submits to the root of the merkle tree to this contract. The root is the provider's commitment h_P.
+//
+// Request: To produce a random number, the following steps occur.
+// 1. The user draws a random number x_U, and submits h_U = hash(x_U) to this contract
+// 2. The contract remembers h_U and assigns it an incrementing sequence number i, representing which
+//    of the provider's random numbers the user will receive.
+// 3. The user submits an off-chain request (e.g. via HTTP) to the provider to reveal the i'th random number.
+// 4. The provider checks the on-chain sequence number and ensures it is > i. If it is not, the provider
+//    refuses to reveal the ith random number.
+// 5. The provider reveals x_i to the user, along with a merkle proof p_i.
+// 6. The user submits both the provider's revealed number (x_i, p_i) and their own x_U to the contract.
+// 7. The contract verifies that the proof p_i proves that x_i is the i'th random number in the merkle tree
+//    whose root is x_P. The contract also checks that hash(x_U) == h_U.
+// 8. If both of the above conditions are satisfied, the random number r = hash(x_P, x_U)
+//
+// This protocol has the same security properties as the 2-party randomness protocol above. As long as either
+// the provider or user is honest, the number r is random. Honesty here means that the participant keeps their
+// random number x a secret until the revelation phase (step 5) of the protocol. Note that providers need to
+// be careful to ensure their off-chain service isn't compromised to reveal the merkle tree -- if this occurs,
+// then users will be able to influence the random number r.
+//
+// The PythRandom implementation of the above protocol allows anyone to permissionlessly register to be a
+// randomness provider. Users then choose which provider to request randomness from. Each provider can set
+// their own fee for the service. In addition, the PythRandom contract charges a flat fee that goes to the
+// Pyth protocol for each requested random number. Fees are paid in the native token of the network.
+//
+// This implementation also allows providers to rotate their merkle root at any time. This operation allows
+// providers to commit to additional random numbers, or rotate out a compromised merkle root. On rotation, any
+// in-flight requests are continue to use the pre-rotation merkle root (i.e., the root at the time of the request).
+// Each merkle root has a metadata field that providers can use to identify which merkle tree a request is for;
+// the user must pass the metadata field to the provider when requesting the revelation of a random number.
+//
+// Warning to integrators:
+// An important caveat for users of this protocol is that the user can compute the random number r before
+// revealing their own number x_U to the contract. This property means that the user can choose to halt the
+// protocol before the random number is revealed. Integrators should ensure that the user is always incentivized
+// to reveal their random number, even if the outcome is "bad" for the user. That is, the value to the user of
+// revealing should always be greater than the value of not revealing.
+//
 // TODOs:
-// - Add a warning for integrators: you must incentivize the user to reveal their draw. They know the number and can choose to reveal or not.
 // - bound fees to prevent overflows
 // - governance??
+// - add blockhash as optional additional randomness source
+// - are there attacks caused by forging the commitmentMetadata when calling the server?
+//
+// 0 hash(hash(hash(r)))  <-- last provider revelation
+// 1 hash(hash(r)) <-- user A requests
+// 2 hash(r) <-- user B requests
+// 3 r
+//
+// verify user B => hash(hash(x)) == hash(hash(hash(r)))
 contract PythRandom is PythRandomState {
 
-    // TODO: Move to upgradeable proxy
+    // TODO: Use an upgradeable proxy
     function initialize(uint pythFeeInWei) public {
         _state.accruedPythFeesInWei = 0;
         _state.pythFeeInWei = pythFeeInWei;
     }
 
-    function register(uint feeInWei, bytes20 commitment, bytes32 commitmentMetadata, uint64 commitmentEnd) public {
+    // Register msg.sender as a randomness provider. The arguments are the provider's configuration parameters
+    // and initial commitment:
+    function register(uint feeInWei, bytes32 commitment, bytes32 commitmentMetadata, uint64 commitmentEnd) public {
         PythRandomStructs.ProviderInfo storage provider = _state.providers[msg.sender];
 
-        if (_state.providers[msg.sender].commitment != bytes20(0)) revert PythRandomErrors.ProviderAlreadyRegistered();
+        if (_state.providers[msg.sender].sequenceNumber != 0) revert PythRandomErrors.ProviderAlreadyRegistered();
         provider.feeInWei = feeInWei;
         provider.accruedFeesInWei = 0;
-        provider.sequenceNumber = 0;
-        provider.commitment = commitment;
+        provider.sequenceNumber = 1;
         provider.commitmentMetadata = commitmentMetadata;
         provider.commitmentEnd = commitmentEnd;
+        provider.lastRevelation = commitment;
+        provider.lastRevelationSequenceNumber = 0;
     }
 
     // TODO: this function signature needs some work. Maybe we can just re-use register
-    function rotate(bytes20 commitment, bytes32 commitmentMetadata, uint64 commitmentEnd) public {
+    function rotate(bytes32 commitment, bytes32 commitmentMetadata, uint64 commitmentEnd) public {
         PythRandomStructs.ProviderInfo storage provider = _state.providers[msg.sender];
-        if (_state.providers[msg.sender].commitment == bytes20(0)) revert PythRandomErrors.NoSuchProvider();
+        if (_state.providers[msg.sender].sequenceNumber == 0) revert PythRandomErrors.NoSuchProvider();
 
-        provider.commitment = commitment;
+        provider.lastRevelationSequenceNumber = provider.sequenceNumber;
+        provider.lastRevelation = commitment;
+        provider.sequenceNumber += 1;
+
         provider.commitmentMetadata = commitmentMetadata;
         provider.commitmentEnd = commitmentEnd;
     }
 
+    // As a user, request a random number from `provider`. Prior to calling this method, the user should
+    // generate a random number x and keep it secret. The user should then compute hash(x) and pass that
+    // as the userCommitment argument. (You may call the constructUserCommitment method to compute the hash.)
+    //
+    // This method returns both a sequence number and commitment metadata. The user should pass both of these
+    // to their chosen provider (the exact method for doing so will depend on the provider) to retrieve a proof
+    // of the provider's random number. This proof should be passed to fulfillRequest below to get the random number.
+    //
+    // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
+    // Note that excess value is *not* refunded to the caller.
     function requestRandomNumber(address provider, bytes32 userCommitment) public payable returns (uint64 assignedSequenceNumber, bytes32 assignedCommitmentMetadata) {
         PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[provider];
+        // TODO: check that this provider exists?
 
         // Assign a sequence number to the request
         assignedSequenceNumber = providerInfo.sequenceNumber;
         assignedCommitmentMetadata = providerInfo.commitmentMetadata;
         if (assignedSequenceNumber >= providerInfo.commitmentEnd) revert PythRandomErrors.OutOfRandomness();
-        // TODO: Pretty sure this mutates the stored thing, but I don't know how solidity works
         providerInfo.sequenceNumber += 1;
 
         // Check that fees were paid and increment the pyth / provider balances.
@@ -67,23 +143,42 @@ contract PythRandom is PythRandomState {
         // Store the user's commitment so that we can fulfill the request later.
         PythRandomStructs.Request storage request = _state.requests[requestKey(provider, assignedSequenceNumber)];
         request.provider = provider;
-        request.providerCommitment = providerInfo.commitment;
-        request.userCommitment = userCommitment;
         request.sequenceNumber = assignedSequenceNumber;
+        request.userCommitment = userCommitment;
+        request.lastProviderRevelation = providerInfo.lastRevelation;
+        request.lastProviderRevelationSequenceNumber = providerInfo.lastRevelationSequenceNumber;
+
+        // TODO: log an event so it's easy for providers to track requests
     }
 
-    function fulfillRequest(address provider, uint64 sequenceNumber, uint256 userRandomness, bytes calldata proof) public returns (uint256 randomNumber) {
+    // Fulfill a request for a random number. This method validates the provided userRandomness and provider's proof
+    // against the corresponding commitments in the in-flight request. If both values are validated, this function returns
+    // the corresponding random number.
+    //
+    // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
+    // request information (so that the contract doesn't use a linear amount of storage in the number of requests).
+    // If you need to use the returned random number more than once, you are responsible for storing it.
+    function fulfillRequest(address provider, uint64 sequenceNumber, uint256 userRandomness, bytes32 providerRevelation) public returns (uint256 randomNumber) {
         // TODO: do i need to check that these are nonzero?
         bytes32 key = requestKey(provider, sequenceNumber);
         PythRandomStructs.Request storage request = _state.requests[key];
+        // This invariant should be guaranteed to hold by the key construction procedure above, but check it
+        // explicitly to be extra cautious.
+        if (request.sequenceNumber != sequenceNumber) revert PythRandomErrors.AssertionFailure();
 
-        (bool valid, uint256 providerRevelation) = isProofValid(request.providerCommitment, sequenceNumber, proof);
+        bool valid = isProofValid(request.lastProviderRevelationSequenceNumber, request.lastProviderRevelation, sequenceNumber, providerRevelation);
         if (!valid) revert PythRandomErrors.IncorrectProviderRevelation();
         if (constructUserCommitment(userRandomness) != request.userCommitment) revert PythRandomErrors.IncorrectUserRevelation();
 
         randomNumber = combineRandomValues(userRandomness, providerRevelation);
 
         delete _state.requests[key];
+
+        PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[provider];
+        if (providerInfo.lastRevelationSequenceNumber < sequenceNumber) {
+            providerInfo.lastRevelationSequenceNumber = sequenceNumber;
+            providerInfo.lastRevelation = providerRevelation;
+        }
     }
 
     function nextSequenceNumber(address provider) public view returns (uint64 sequenceNumber) {
@@ -101,25 +196,26 @@ contract PythRandom is PythRandomState {
        userCommitment = keccak256(abi.encodePacked(userRandomness));
     }
 
-    function combineRandomValues(uint256 userRandomness, uint256 providerRandomness) public pure returns (uint256 combinedRandomness) {
+    function combineRandomValues(uint256 userRandomness, bytes32 providerRandomness) public pure returns (uint256 combinedRandomness) {
        combinedRandomness = uint256(keccak256(abi.encodePacked(userRandomness, providerRandomness)));
     }
 
-    function requestKey(address provider, uint64 sequenceNumber) internal returns (bytes32 hash) {
+    function requestKey(address provider, uint64 sequenceNumber) internal pure returns (bytes32 hash) {
         // Create a unique key for the mapping based on the tuple
         hash = keccak256(abi.encodePacked(provider, sequenceNumber));
     }
 
-    function isProofValid(bytes20 root, uint64 sequenceNumber, bytes calldata proof) internal returns (bool valid, uint256 providerRevelation) {
-        // 8 + 32 = sequenceNumber (uint64) + random value (uint256)
-        uint16 leafSize = 40;
-        bytes calldata leafData = UnsafeCalldataBytesLib.slice(proof, 0, leafSize);
-        uint64 providerSequenceNumber = UnsafeCalldataBytesLib.toUint64(leafData, 0);
-        bool sequenceNumberValid = providerSequenceNumber == sequenceNumber;
+    // Validate that the provided proof is valid for sequence number. Note that the proof includes the
+    // leaf being proven, which consists of the 8 byte sequenceNumber followed by the
+    function isProofValid(uint64 lastSequenceNumber, bytes32 lastRevelation, uint64 sequenceNumber, bytes32 revelation) internal pure returns (bool valid) {
+        if (sequenceNumber <= lastSequenceNumber) revert PythRandomErrors.AssertionFailure();
 
-        providerRevelation = UnsafeCalldataBytesLib.toUint256(leafData, 8);
-        (bool proofValid, ) = MerkleTree.isProofValid(proof, leafSize, root, leafData);
+        bytes32 currentHash = revelation;
+        while (sequenceNumber > lastSequenceNumber) {
+            currentHash = keccak256(bytes.concat(currentHash));
+            sequenceNumber -= 1;
+        }
 
-        valid = proofValid && sequenceNumberValid;
+        valid = currentHash == lastRevelation;
     }
 }

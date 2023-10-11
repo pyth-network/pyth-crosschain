@@ -20,11 +20,11 @@ contract PythRandomTest is Test, RandTestUtils {
     uint pythFeeInWei = 7;
 
     address public providerOne = address(1);
-    bytes[] providerOneProofs;
+    bytes32[] providerOneProofs;
     uint providerOneFeeInWei = 8;
 
     address public providerTwo = address(2);
-    bytes[] providerTwoProofs;
+    bytes32[] providerTwoProofs;
     uint providerTwoFeeInWei = 20;
 
     address public user = address(3);
@@ -33,60 +33,34 @@ contract PythRandomTest is Test, RandTestUtils {
         random = new PythRandom();
         random.initialize(7);
 
-        (bytes20 rootDigest, bytes[] memory proofs1) = generateMerkleTree(providerOne, 0, 100);
-        providerOneProofs = proofs1;
+        bytes32[] memory hashChain1 = generateHashChain(providerOne, 0, 100);
+        providerOneProofs = hashChain1;
         vm.prank(providerOne);
-        random.register(providerOneFeeInWei, rootDigest, bytes32(keccak256(abi.encodePacked(uint256(0x0100)))), 100);
+        random.register(providerOneFeeInWei, providerOneProofs[0], bytes32(keccak256(abi.encodePacked(uint256(0x0100)))), 100);
 
-        (bytes20 providerTwoRoot, bytes[] memory proofs2) = generateMerkleTree(providerTwo, 0, 100);
-        providerTwoProofs = proofs2;
+        bytes32[] memory hashChain2 = generateHashChain(providerTwo, 0, 100);
+        providerTwoProofs = hashChain2;
         vm.prank(providerTwo);
-        random.register(providerTwoFeeInWei, providerTwoRoot, bytes32(keccak256(abi.encodePacked(uint256(0x0200)))), 100);
+        random.register(providerTwoFeeInWei, providerTwoProofs[0], bytes32(keccak256(abi.encodePacked(uint256(0x0200)))), 100);
     }
 
-    function sequenceNumberToRandomValue(address provider, uint64 sequenceNumber) public view returns (uint256 result) {
-        result = uint256(sequenceNumber) + 1 + uint256(keccak256(abi.encodePacked(provider)));
-    }
-
-    function packLeaf(uint64 sequenceNumber, uint256 random) public view returns (bytes memory packedData) {
-        packedData = new bytes(40); // 8 bytes for uint64 + 32 bytes for uint256
-
-        // Convert uint64 to bytes
-        bytes8 bytesX = bytes8(uint64(sequenceNumber));
-        // Convert uint256 to bytes
-        bytes32 bytesY = bytes32(random);
-
-        // Copy the bytes of x and y into packedData
-        for (uint256 i = 0; i < 8; i++) {
-            packedData[i] = bytesX[i];
-        }
-        for (uint256 i = 0; i < 32; i++) {
-            packedData[i + 8] = bytesY[i];
-        }
-    }
-
-    function packProof(bytes memory proof, uint64 sequenceNumber, uint256 randomValue) public view returns (bytes memory packedData) {
-        bytes memory leaf = packLeaf(sequenceNumber, randomValue);
-
-        packedData = new bytes(leaf.length + proof.length);
-        for (uint256 i = 0; i < leaf.length; i++) {
-            packedData[i] = leaf[i];
-        }
-        for (uint256 i = 0; i < proof.length; i++) {
-            packedData[i + leaf.length] = proof[i];
-        }
-    }
-
-    function generateMerkleTree(address provider, uint64 startSequenceNumber, uint64 size) public view returns (bytes20 rootDigest, bytes[] memory proofs) {
-        bytes[] memory messages = new bytes[](size);
+    function generateHashChain(address provider, uint64 startSequenceNumber, uint64 size) public view returns (bytes32[] memory hashChain) {
+        bytes32 initialValue = keccak256(abi.encodePacked(startSequenceNumber));
+        hashChain = new bytes32[](size);
         for (uint64 i = 0; i < size; i++) {
-            // TODO: actual random numbers
-            uint64 sequenceNumber = startSequenceNumber + i;
-            messages[i] = packLeaf(sequenceNumber, sequenceNumberToRandomValue(provider, sequenceNumber));
+            hashChain[size - (i + 1)] = initialValue;
+            initialValue = keccak256(bytes.concat(initialValue));
         }
+    }
 
-        // TODO: fix depth
-        (rootDigest, proofs) = MerkleTree.constructProofs(messages, 10);
+    function assertFulfillSucceeds(address provider, uint64 sequenceNumber, uint256 userRandom, bytes32 providerRevelation) public {
+        uint256 randomNumber = random.fulfillRequest(providerOne, sequenceNumber, userRandom, providerRevelation);
+        assertEq(randomNumber, random.combineRandomValues(userRandom, providerRevelation));
+    }
+
+    function assertFulfillReverts(address provider, uint64 sequenceNumber, uint256 userRandom, bytes32 providerRevelation) public {
+        vm.expectRevert();
+        random.fulfillRequest(providerOne, sequenceNumber, userRandom, providerRevelation);
     }
 
     function testBasic() public {
@@ -97,12 +71,39 @@ contract PythRandomTest is Test, RandTestUtils {
         vm.prank(user);
         (uint64 sequenceNumber, bytes32 identifier) = random.requestRandomNumber{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment);
 
-        bytes memory proof = packProof(providerOneProofs[sequenceNumber], sequenceNumber, sequenceNumberToRandomValue(providerOne, sequenceNumber));
+        assertFulfillSucceeds(providerOne, sequenceNumber, userRandom, providerOneProofs[sequenceNumber]);
+    }
+
+    function testRotate() public {
+        uint256 userRandom = 42;
+        bytes32 commitment = random.constructUserCommitment(userRandom);
+
+        vm.deal(user, 100000000);
+        vm.prank(user);
+        (uint64 sequenceNumber1, bytes32 identifier) = random.requestRandomNumber{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment);
 
         vm.prank(user);
-        uint256 randomNumber = random.fulfillRequest(providerOne, sequenceNumber, userRandom, proof);
+        (uint64 sequenceNumber2, bytes32 identifier2) = random.requestRandomNumber{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment);
+        assertEq(sequenceNumber2, sequenceNumber1 + 1);
 
-        assertEq(randomNumber, random.combineRandomValues(userRandom, sequenceNumberToRandomValue(providerOne, sequenceNumber)));
+        uint64 newHashChainOffset = sequenceNumber2 + 1;
+        bytes32[] memory newHashChain = generateHashChain(providerOne, newHashChainOffset, 10);
+        vm.prank(providerOne);
+        random.rotate(newHashChain[0], bytes32(keccak256(abi.encodePacked(uint256(0x0100)))), newHashChainOffset + 10);
 
+        vm.prank(user);
+        (uint64 sequenceNumber3, bytes32 identifier3) = random.requestRandomNumber{value: pythFeeInWei + providerOneFeeInWei}(providerOne, commitment);
+        // Rotating the provider key uses a sequence number
+        assertEq(sequenceNumber3, sequenceNumber2 + 2);
+
+        // Requests that were in-flight at the time of rotation use the commitment from the time of request
+        for (uint256 i = 0; i < 10; i++) {
+            assertFulfillReverts(providerOne, sequenceNumber1, userRandom, newHashChain[i]);
+        }
+        assertFulfillSucceeds(providerOne, sequenceNumber1, userRandom, providerOneProofs[sequenceNumber1]);
+
+        // Requests after the rotation use the new commitment
+        assertFulfillReverts(providerOne, sequenceNumber3, userRandom, providerOneProofs[sequenceNumber3]);
+        assertFulfillSucceeds(providerOne, sequenceNumber3, userRandom, newHashChain[sequenceNumber3 - newHashChainOffset]);
     }
 }
