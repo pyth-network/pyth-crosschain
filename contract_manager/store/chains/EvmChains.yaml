@@ -376,3 +376,9 @@
   rpcUrl: https://pacific-rpc.testnet.manta.network/http
   networkId: 3441005
   type: EvmChain
+- id: optimism_sepolia
+  wormholeChainName: optimism
+  mainnet: false
+  rpcUrl: https://sepolia.optimism.io
+  networkId: 11155420
+  type: EvmChain
