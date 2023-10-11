@@ -111,6 +111,15 @@ contract MockPyth is AbstractPyth {
         }
     }
 
+    function parsePriceFeedUpdatesUnique(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minPublishTime,
+        uint64 maxPublishTime
+    ) external payable override returns (PythStructs.PriceFeed[] memory feeds) {
+        revert PythErrors.InvalidArgument();
+    }
+
     function createPriceFeedUpdateData(
         bytes32 id,
         int64 price,

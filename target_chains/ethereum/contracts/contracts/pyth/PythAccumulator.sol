@@ -224,7 +224,8 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         returns (
             uint endOffset,
             PythInternalStructs.PriceInfo memory priceInfo,
-            bytes32 priceId
+            bytes32 priceId,
+            uint64 prevPublishTime
         )
     {
         unchecked {
@@ -257,12 +258,15 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
                 UnsafeCalldataBytesLib.toUint8(encodedMessage, 0)
             );
             if (messageType == MessageType.PriceFeed) {
-                (priceInfo, priceId) = parsePriceFeedMessage(encodedMessage, 1);
+                (priceInfo, priceId, prevPublishTime) = parsePriceFeedMessage(
+                    encodedMessage,
+                    1
+                );
             } else {
                 revert PythErrors.InvalidUpdateData();
             }
 
-            return (endOffset, priceInfo, priceId);
+            return (endOffset, priceInfo, priceId, prevPublishTime);
         }
     }
 
@@ -274,7 +278,8 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
         pure
         returns (
             PythInternalStructs.PriceInfo memory priceInfo,
-            bytes32 priceId
+            bytes32 priceId,
+            uint64 prevPublishTime
         )
     {
         unchecked {
@@ -311,7 +316,7 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             offset += 8;
 
             // We do not store this field because it is not used on the latest feed queries.
-            // uint64 prevPublishTime = UnsafeBytesLib.toUint64(encodedPriceFeed, offset);
+            prevPublishTime = UnsafeBytesLib.toUint64(encodedPriceFeed, offset);
             offset += 8;
 
             priceInfo.emaPrice = int64(
@@ -359,11 +364,13 @@ abstract contract PythAccumulator is PythGetters, PythSetters, AbstractPyth {
             for (uint i = 0; i < numUpdates; i++) {
                 PythInternalStructs.PriceInfo memory priceInfo;
                 bytes32 priceId;
-                (offset, priceInfo, priceId) = extractPriceInfoFromMerkleProof(
-                    digest,
-                    encoded,
-                    offset
-                );
+                uint64 prevPublishTime;
+                (
+                    offset,
+                    priceInfo,
+                    priceId,
+                    prevPublishTime
+                ) = extractPriceInfoFromMerkleProof(digest, encoded, offset);
                 uint64 latestPublishTime = latestPriceInfoPublishTime(priceId);
                 if (priceInfo.publishTime > latestPublishTime) {
                     setLatestPriceInfo(priceId, priceInfo);

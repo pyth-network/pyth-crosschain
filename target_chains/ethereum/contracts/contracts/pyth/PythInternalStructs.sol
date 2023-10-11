@@ -9,6 +9,12 @@ import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 contract PythInternalStructs {
     using BytesLib for bytes;
 
+    struct ParseConfig {
+        uint64 minPublishTime;
+        uint64 maxPublishTime;
+        bool checkUniqueness;
+    }
+
     struct PriceInfo {
         // slot 1
         uint64 publishTime;

@@ -440,17 +440,11 @@ abstract contract Pyth is
         if (!verifyPythVM(vm)) revert PythErrors.InvalidUpdateDataSource();
     }
 
-    function parsePriceFeedUpdates(
+    function parsePriceFeedUpdatesInternal(
         bytes[] calldata updateData,
         bytes32[] calldata priceIds,
-        uint64 minPublishTime,
-        uint64 maxPublishTime
-    )
-        external
-        payable
-        override
-        returns (PythStructs.PriceFeed[] memory priceFeeds)
-    {
+        PythInternalStructs.ParseConfig memory config
+    ) internal returns (PythStructs.PriceFeed[] memory priceFeeds) {
         {
             uint requiredFee = getUpdateFee(updateData);
             if (msg.value < requiredFee) revert PythErrors.InsufficientFee();
@@ -494,10 +488,12 @@ abstract contract Pyth is
                     for (uint j = 0; j < numUpdates; j++) {
                         PythInternalStructs.PriceInfo memory info;
                         bytes32 priceId;
+                        uint64 prevPublishTime;
                         (
                             offset,
                             info,
-                            priceId
+                            priceId,
+                            prevPublishTime
                         ) = extractPriceInfoFromMerkleProof(
                             digest,
                             encoded,
@@ -519,8 +515,10 @@ abstract contract Pyth is
                             // If is not, default id value of 0 will still be set and
                             // this will allow other updates for this price id to be processed.
                             if (
-                                publishTime >= minPublishTime &&
-                                publishTime <= maxPublishTime
+                                publishTime >= config.minPublishTime &&
+                                publishTime <= config.maxPublishTime &&
+                                (!config.checkUniqueness ||
+                                    config.minPublishTime > prevPublishTime)
                             ) {
                                 fillPriceFeedFromPriceInfo(
                                     priceFeeds,
@@ -592,8 +590,9 @@ abstract contract Pyth is
                         // If is not, default id value of 0 will still be set and
                         // this will allow other updates for this price id to be processed.
                         if (
-                            publishTime >= minPublishTime &&
-                            publishTime <= maxPublishTime
+                            publishTime >= config.minPublishTime &&
+                            publishTime <= config.maxPublishTime &&
+                            !config.checkUniqueness // do not allow batch updates to be used by parsePriceFeedUpdatesUnique
                         ) {
                             fillPriceFeedFromPriceInfo(
                                 priceFeeds,
@@ -615,6 +614,52 @@ abstract contract Pyth is
                 }
             }
         }
+    }
+
+    function parsePriceFeedUpdates(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minPublishTime,
+        uint64 maxPublishTime
+    )
+        external
+        payable
+        override
+        returns (PythStructs.PriceFeed[] memory priceFeeds)
+    {
+        return
+            parsePriceFeedUpdatesInternal(
+                updateData,
+                priceIds,
+                PythInternalStructs.ParseConfig(
+                    minPublishTime,
+                    maxPublishTime,
+                    false
+                )
+            );
+    }
+
+    function parsePriceFeedUpdatesUnique(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minPublishTime,
+        uint64 maxPublishTime
+    )
+        external
+        payable
+        override
+        returns (PythStructs.PriceFeed[] memory priceFeeds)
+    {
+        return
+            parsePriceFeedUpdatesInternal(
+                updateData,
+                priceIds,
+                PythInternalStructs.ParseConfig(
+                    minPublishTime,
+                    maxPublishTime,
+                    true
+                )
+            );
     }
 
     function getTotalFee(

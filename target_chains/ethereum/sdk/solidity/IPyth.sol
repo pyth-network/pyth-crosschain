@@ -136,4 +136,23 @@ interface IPyth is IPythEvents {
         uint64 minPublishTime,
         uint64 maxPublishTime
     ) external payable returns (PythStructs.PriceFeed[] memory priceFeeds);
+
+    /// @notice Similar to `parsePriceFeedUpdates` but ensures the updates returned are
+    /// the first updates published in minPublishTime. That is, if there are multiple updates for a given timestamp,
+    /// this method will return the first update.
+    ///
+    ///
+    /// @dev Reverts if the transferred fee is not sufficient or the updateData is invalid or there is
+    /// no update for any of the given `priceIds` within the given time range and uniqueness condition.
+    /// @param updateData Array of price update data.
+    /// @param priceIds Array of price ids.
+    /// @param minPublishTime minimum acceptable publishTime for the given `priceIds`.
+    /// @param maxPublishTime maximum acceptable publishTime for the given `priceIds`.
+    /// @return priceFeeds Array of the price feeds corresponding to the given `priceIds` (with the same order).
+    function parsePriceFeedUpdatesUnique(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minPublishTime,
+        uint64 maxPublishTime
+    ) external payable returns (PythStructs.PriceFeed[] memory priceFeeds);
 }
