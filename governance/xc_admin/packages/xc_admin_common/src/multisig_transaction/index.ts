@@ -13,6 +13,8 @@ import { MessageBufferMultisigInstruction } from "./MessageBufferMultisigInstruc
 import { PythMultisigInstruction } from "./PythMultisigInstruction";
 import { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
 import { SystemProgramMultisigInstruction } from "./SystemProgramInstruction";
+import { BpfUpgradableLoaderInstruction } from "./BpfUpgradableLoaderMultisigInstruction";
+import { BPF_UPGRADABLE_LOADER } from "../bpf_upgradable_loader";
 
 export const UNRECOGNIZED_INSTRUCTION = "unrecognizedInstruction";
 export enum MultisigInstructionProgram {
@@ -20,6 +22,7 @@ export enum MultisigInstructionProgram {
   WormholeBridge,
   MessageBuffer,
   SystemProgram,
+  BpfUpgradableLoader,
   UnrecognizedProgram,
 }
 
@@ -77,6 +80,10 @@ export class MultisigParser {
       return SystemProgramMultisigInstruction.fromTransactionInstruction(
         instruction
       );
+    } else if (instruction.programId.equals(BPF_UPGRADABLE_LOADER)) {
+      return BpfUpgradableLoaderInstruction.fromTransactionInstruction(
+        instruction
+      );
     } else {
       return UnrecognizedProgram.fromTransactionInstruction(instruction);
     }
@@ -87,3 +94,4 @@ export { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
 export { PythMultisigInstruction } from "./PythMultisigInstruction";
 export { MessageBufferMultisigInstruction } from "./MessageBufferMultisigInstruction";
 export { SystemProgramMultisigInstruction } from "./SystemProgramInstruction";
+export { BpfUpgradableLoaderInstruction } from "./BpfUpgradableLoaderMultisigInstruction";

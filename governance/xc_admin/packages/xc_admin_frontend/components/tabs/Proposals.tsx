@@ -16,6 +16,7 @@ import {
   WormholeMultisigInstruction,
   getManyProposalsInstructions,
   SystemProgramMultisigInstruction,
+  BpfUpgradableLoaderInstruction,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
@@ -321,7 +322,8 @@ const Proposal = ({
               parsedRemoteInstruction instanceof
                 MessageBufferMultisigInstruction ||
               parsedRemoteInstruction instanceof
-                SystemProgramMultisigInstruction
+                SystemProgramMultisigInstruction ||
+              parsedRemoteInstruction instanceof BpfUpgradableLoaderInstruction
             )
           }) &&
           ix.governanceAction.targetChainId === 'pythnet')
