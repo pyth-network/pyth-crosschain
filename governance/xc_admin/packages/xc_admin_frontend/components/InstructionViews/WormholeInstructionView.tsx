@@ -25,7 +25,6 @@ import { usePythContext } from '../../contexts/PythContext'
 import { getMappingCluster, isPubkey } from './utils'
 import { PythCluster } from '@pythnetwork/client'
 import { lamportsToSol } from '../../utils/lamportsToSol'
-import { parse } from 'path'
 
 const GovernanceInstructionView = ({
   instruction,
