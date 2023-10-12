@@ -74,10 +74,10 @@ import "../libraries/MerkleTree.sol";
 //
 // TODOs:
 // - governance??
-// - withdraw accumulated fees
 // - correct method access modifiers (public vs external)
 // - gas optimizations
 // - function to check invariants??
+// - need to increment pyth fees if someone transfers funds to the contract via another method
 contract PythRandom is PythRandomState, PythRandomEvents {
     // TODO: Use an upgradeable proxy
     function initialize(uint pythFeeInWei) public {
@@ -119,12 +119,15 @@ contract PythRandom is PythRandomState, PythRandomEvents {
         emit Registered(provider);
     }
 
-    // FIXME
+    // Withdraw a portion of the accumulated fees for the provider msg.sender.
+    // Calling this function will transfer `amount` wei to the caller (provided that they have accrued a sufficient
+    // balance of fees in the contract).
     function withdraw(uint256 amount) public {
         PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[
             msg.sender
         ];
 
+        // Use checks-effects-interactions pattern to prevent reentrancy attacks.
         require(
             providerInfo.accruedFeesInWei >= amount,
             "Insufficient balance"
@@ -202,6 +205,7 @@ contract PythRandom is PythRandomState, PythRandomEvents {
         bytes32 providerRevelation
     ) public returns (bytes32 randomNumber) {
         // TODO: do we need to check that this request exists?
+        // TODO: this method may need to be authenticated to prevent griefing
         bytes32 key = requestKey(provider, sequenceNumber);
         PythRandomStructs.Request storage req = _state.requests[key];
         // This invariant should be guaranteed to hold by the key construction procedure above, but check it
@@ -263,14 +267,12 @@ contract PythRandom is PythRandomState, PythRandomEvents {
         req = _state.requests[key];
     }
 
-    function nextSequenceNumber(
-        address provider
-    ) public view returns (uint64 sequenceNumber) {
-        sequenceNumber = _state.providers[provider].sequenceNumber;
-    }
-
     function getFee(address provider) public view returns (uint feeAmount) {
         return _state.providers[provider].feeInWei + _state.pythFeeInWei;
+    }
+
+    function getAccruedPythFees() public view returns (uint accruedPythFeesInWei) {
+        return _state.accruedPythFeesInWei;
     }
 
     function constructUserCommitment(
