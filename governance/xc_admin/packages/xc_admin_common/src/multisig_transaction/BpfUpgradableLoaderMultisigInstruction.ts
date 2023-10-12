@@ -75,7 +75,7 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
               remaining: instruction.keys.slice(4),
             }
           );
-        default: // I couldn't find the decode function for this
+        default: // Many more cases are not supported
           throw Error("Not implemented");
       }
     } catch {
