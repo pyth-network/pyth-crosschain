@@ -131,6 +131,11 @@
         "internalType": "uint64",
         "name": "publishTime",
         "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "prevPublishTime",
+        "type": "uint64"
       }
     ],
     "name": "createPriceFeedUpdateData",
