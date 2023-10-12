@@ -364,7 +364,6 @@ const Proposal = ({
             keys: ix.keys as AccountMeta[],
           })
         )
-        console.log(parsedInstructions)
         if (!isCancelled) setInstructions(parsedInstructions)
       } else {
         if (!isCancelled) setInstructions([])
