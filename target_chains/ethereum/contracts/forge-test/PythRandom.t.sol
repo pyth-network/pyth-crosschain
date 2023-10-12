@@ -85,10 +85,10 @@ contract PythRandomTest is Test, RandTestUtils {
     }
 
     function assertRequestReverts(address user, uint fee, address provider, uint randomNumber, bool useBlockhash) public {
-        vm.deal(user, fee);
-        vm.expectRevert();
+        vm.deal(user, );
         vm.prank(user);
-        uint64 sequenceNumber = random.request{
+        vm.expectRevert();
+        random.request{
         value: fee
         }(provider, random.constructUserCommitment(bytes32(randomNumber)), useBlockhash);
     }
@@ -100,7 +100,7 @@ contract PythRandomTest is Test, RandTestUtils {
         bytes32 providerRevelation
     ) public {
         bytes32 randomNumber = random.reveal(
-            provider,
+            provider1,
             sequenceNumber,
             bytes32(userRandom),
             providerRevelation
@@ -123,7 +123,7 @@ contract PythRandomTest is Test, RandTestUtils {
     ) public {
         vm.expectRevert();
         random.reveal(
-            provider,
+            provider1,
             sequenceNumber,
             bytes32(uint256(userRandom)),
             providerRevelation
@@ -294,15 +294,6 @@ contract PythRandomTest is Test, RandTestUtils {
         // assertRequestReverts(user2, 0, provider1, 42, false);
 
         // assertRequestReverts(user2, pythFeeInWei + provider1FeeInWei - 1, provider1, 42, false);
-
-        uint fee = pythFeeInWei + provider1FeeInWei - 1;
-        vm.deal(user2, fee);
-        vm.expectRevert();
-        vm.prank(user2);
-        uint64 sequenceNumber = random.request{
-        value: fee
-        }(provider1, random.constructUserCommitment(bytes32(42)), false);
-
         // assertRequestReverts(user2, 0, provider2, 42, false);
         // assertRequestReverts(user2, pythFeeInWei + provider2FeeInWei - 1, provider2, 42, false);
 
@@ -310,7 +301,7 @@ contract PythRandomTest is Test, RandTestUtils {
         for (uint i = 0; i < 3; i++) {
             request(user2, provider1, 42, false);
         }
-        if (false) {
+
         request(user2, provider2, 42, false);
         // this call overpays for the random number
         requestWithFee(user2, pythFeeInWei + provider2FeeInWei + 10000, provider2, 42, false);
@@ -350,7 +341,6 @@ contract PythRandomTest is Test, RandTestUtils {
         vm.prank(provider1);
         vm.expectRevert();
         random.withdraw(providerOneBalance);
-        }
     }
 
     // TODO
