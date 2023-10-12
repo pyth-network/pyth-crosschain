@@ -7,7 +7,6 @@ import "./PythRandomErrors.sol";
 import "./PythRandomEvents.sol";
 import "../libraries/MerkleTree.sol";
 
-
 // PythRandom implements a secure 2-party random number generation procedure. The protocol
 // is an extension of a simple commit/reveal protocol. The original version has the following steps:
 //
@@ -80,7 +79,6 @@ import "../libraries/MerkleTree.sol";
 // - gas optimizations
 // - function to check invariants??
 contract PythRandom is PythRandomState, PythRandomEvents {
-
     // TODO: Use an upgradeable proxy
     function initialize(uint pythFeeInWei) public {
         _state.accruedPythFeesInWei = 0;
@@ -92,10 +90,17 @@ contract PythRandom is PythRandomState, PythRandomEvents {
     // the feeInWei).
     //
     // chainLength is the number of values in the hash chain *including* the commitment, that is, chainLength >= 1.
-    function register(uint feeInWei, bytes32 commitment, bytes32 commitmentMetadata, uint64 chainLength) public {
+    function register(
+        uint feeInWei,
+        bytes32 commitment,
+        bytes32 commitmentMetadata,
+        uint64 chainLength
+    ) public {
         if (chainLength == 0) revert PythRandomErrors.AssertionFailure();
 
-        PythRandomStructs.ProviderInfo storage provider = _state.providers[msg.sender];
+        PythRandomStructs.ProviderInfo storage provider = _state.providers[
+            msg.sender
+        ];
 
         // NOTE: this method implementation depends on the fact that ProviderInfo will be initialized to all-zero.
         // Specifically, accruedFeesInWei is intentionally not set. On initial registration, it will be zero,
@@ -116,9 +121,14 @@ contract PythRandom is PythRandomState, PythRandomEvents {
 
     // FIXME
     function withdraw(uint256 amount) public {
-        PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[msg.sender];
+        PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[
+            msg.sender
+        ];
 
-        require(providerInfo.accruedFeesInWei >= amount, "Insufficient balance");
+        require(
+            providerInfo.accruedFeesInWei >= amount,
+            "Insufficient balance"
+        );
         providerInfo.accruedFeesInWei -= amount;
 
         // Interaction with an external contract or token transfer
@@ -136,13 +146,21 @@ contract PythRandom is PythRandomState, PythRandomEvents {
     //
     // This method will revert unless the caller provides a sufficient fee (at least getFee(provider)) as msg.value.
     // Note that excess value is *not* refunded to the caller.
-    function request(address provider, bytes32 userCommitment, bool useBlockHash) public payable returns (uint64 assignedSequenceNumber) {
-        PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[provider];
-        if (_state.providers[provider].sequenceNumber == 0) revert PythRandomErrors.NoSuchProvider();
+    function request(
+        address provider,
+        bytes32 userCommitment,
+        bool useBlockHash
+    ) public payable returns (uint64 assignedSequenceNumber) {
+        PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[
+            provider
+        ];
+        if (_state.providers[provider].sequenceNumber == 0)
+            revert PythRandomErrors.NoSuchProvider();
 
         // Assign a sequence number to the request
         assignedSequenceNumber = providerInfo.sequenceNumber;
-        if (assignedSequenceNumber >= providerInfo.endSequenceNumber) revert PythRandomErrors.OutOfRandomness();
+        if (assignedSequenceNumber >= providerInfo.endSequenceNumber)
+            revert PythRandomErrors.OutOfRandomness();
         providerInfo.sequenceNumber += 1;
 
         // Check that fees were paid and increment the pyth / provider balances.
@@ -152,12 +170,15 @@ contract PythRandom is PythRandomState, PythRandomEvents {
         _state.accruedPythFeesInWei += (msg.value - providerInfo.feeInWei);
 
         // Store the user's commitment so that we can fulfill the request later.
-        PythRandomStructs.Request storage req = _state.requests[requestKey(provider, assignedSequenceNumber)];
+        PythRandomStructs.Request storage req = _state.requests[
+            requestKey(provider, assignedSequenceNumber)
+        ];
         req.provider = provider;
         req.sequenceNumber = assignedSequenceNumber;
         req.userCommitment = userCommitment;
         req.providerCommitment = providerInfo.currentCommitment;
-        req.providerCommitmentSequenceNumber = providerInfo.currentCommitmentSequenceNumber;
+        req.providerCommitmentSequenceNumber = providerInfo
+            .currentCommitmentSequenceNumber;
         req.providerCommitmentMetadata = providerInfo.commitmentMetadata;
 
         if (useBlockHash) {
@@ -174,72 +195,118 @@ contract PythRandom is PythRandomState, PythRandomEvents {
     // Note that this function can only be called once per in-flight request. Calling this function deletes the stored
     // request information (so that the contract doesn't use a linear amount of storage in the number of requests).
     // If you need to use the returned random number more than once, you are responsible for storing it.
-    function reveal(address provider, uint64 sequenceNumber, bytes32 userRandomness, bytes32 providerRevelation) public returns (bytes32 randomNumber) {
+    function reveal(
+        address provider,
+        uint64 sequenceNumber,
+        bytes32 userRandomness,
+        bytes32 providerRevelation
+    ) public returns (bytes32 randomNumber) {
         // TODO: do we need to check that this request exists?
         bytes32 key = requestKey(provider, sequenceNumber);
         PythRandomStructs.Request storage req = _state.requests[key];
         // This invariant should be guaranteed to hold by the key construction procedure above, but check it
         // explicitly to be extra cautious.
-        if (req.sequenceNumber != sequenceNumber) revert PythRandomErrors.AssertionFailure();
+        if (req.sequenceNumber != sequenceNumber)
+            revert PythRandomErrors.AssertionFailure();
 
-        bool valid = isProofValid(req.providerCommitmentSequenceNumber, req.providerCommitment, sequenceNumber, providerRevelation);
+        bool valid = isProofValid(
+            req.providerCommitmentSequenceNumber,
+            req.providerCommitment,
+            sequenceNumber,
+            providerRevelation
+        );
         if (!valid) revert PythRandomErrors.IncorrectProviderRevelation();
-        if (constructUserCommitment(userRandomness) != req.userCommitment) revert PythRandomErrors.IncorrectUserRevelation();
+        if (constructUserCommitment(userRandomness) != req.userCommitment)
+            revert PythRandomErrors.IncorrectUserRevelation();
 
         bytes32 blockHash = bytes32(uint256(0));
         if (req.blockNumber != 0) {
             blockHash = blockhash(req.blockNumber);
         }
 
-        randomNumber = combineRandomValues(userRandomness, providerRevelation, blockHash);
+        randomNumber = combineRandomValues(
+            userRandomness,
+            providerRevelation,
+            blockHash
+        );
 
-        emit Revealed(req, userRandomness, providerRevelation, blockHash, randomNumber);
+        emit Revealed(
+            req,
+            userRandomness,
+            providerRevelation,
+            blockHash,
+            randomNumber
+        );
 
         delete _state.requests[key];
 
-        PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[provider];
+        PythRandomStructs.ProviderInfo storage providerInfo = _state.providers[
+            provider
+        ];
         if (providerInfo.currentCommitmentSequenceNumber < sequenceNumber) {
             providerInfo.currentCommitmentSequenceNumber = sequenceNumber;
             providerInfo.currentCommitment = providerRevelation;
         }
     }
 
-    function getProviderInfo(address provider) public view returns (PythRandomStructs.ProviderInfo memory info) {
+    function getProviderInfo(
+        address provider
+    ) public view returns (PythRandomStructs.ProviderInfo memory info) {
         info = _state.providers[provider];
     }
 
-    function getRequest(address provider, uint64 sequenceNumber) public view returns (PythRandomStructs.Request memory req) {
+    function getRequest(
+        address provider,
+        uint64 sequenceNumber
+    ) public view returns (PythRandomStructs.Request memory req) {
         bytes32 key = requestKey(provider, sequenceNumber);
         req = _state.requests[key];
     }
 
-    function nextSequenceNumber(address provider) public view returns (uint64 sequenceNumber) {
+    function nextSequenceNumber(
+        address provider
+    ) public view returns (uint64 sequenceNumber) {
         sequenceNumber = _state.providers[provider].sequenceNumber;
     }
 
-    function getFee(
-        address provider
-    ) public view returns (uint feeAmount) {
+    function getFee(address provider) public view returns (uint feeAmount) {
         return _state.providers[provider].feeInWei + _state.pythFeeInWei;
     }
 
-    function constructUserCommitment(bytes32 userRandomness) public pure returns (bytes32 userCommitment) {
-       userCommitment = keccak256(bytes.concat(userRandomness));
+    function constructUserCommitment(
+        bytes32 userRandomness
+    ) public pure returns (bytes32 userCommitment) {
+        userCommitment = keccak256(bytes.concat(userRandomness));
     }
 
-    function combineRandomValues(bytes32 userRandomness, bytes32 providerRandomness, bytes32 blockHash) public pure returns (bytes32 combinedRandomness) {
-       combinedRandomness = keccak256(abi.encodePacked(userRandomness, providerRandomness, blockHash));
+    function combineRandomValues(
+        bytes32 userRandomness,
+        bytes32 providerRandomness,
+        bytes32 blockHash
+    ) public pure returns (bytes32 combinedRandomness) {
+        combinedRandomness = keccak256(
+            abi.encodePacked(userRandomness, providerRandomness, blockHash)
+        );
     }
 
     // Create a unique key for an in-flight randomness request (to store it in the contract state)
-    function requestKey(address provider, uint64 sequenceNumber) internal pure returns (bytes32 hash) {
+    function requestKey(
+        address provider,
+        uint64 sequenceNumber
+    ) internal pure returns (bytes32 hash) {
         hash = keccak256(abi.encodePacked(provider, sequenceNumber));
     }
 
     // Validate that revelation at sequenceNumber is the correct value in the hash chain for a provider whose
     // last known revealed random number was lastRevelation at lastSequenceNumber.
-    function isProofValid(uint64 lastSequenceNumber, bytes32 lastRevelation, uint64 sequenceNumber, bytes32 revelation) internal pure returns (bool valid) {
-        if (sequenceNumber <= lastSequenceNumber) revert PythRandomErrors.AssertionFailure();
+    function isProofValid(
+        uint64 lastSequenceNumber,
+        bytes32 lastRevelation,
+        uint64 sequenceNumber,
+        bytes32 revelation
+    ) internal pure returns (bool valid) {
+        if (sequenceNumber <= lastSequenceNumber)
+            revert PythRandomErrors.AssertionFailure();
 
         bytes32 currentHash = revelation;
         while (sequenceNumber > lastSequenceNumber) {

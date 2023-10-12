@@ -8,5 +8,11 @@ interface PythRandomEvents {
 
     event Requested(PythRandomStructs.Request request);
 
-    event Revealed(PythRandomStructs.Request request, bytes32 userRevelation, bytes32 providerRevelation, bytes32 blockHash, bytes32 randomNumber);
+    event Revealed(
+        PythRandomStructs.Request request,
+        bytes32 userRevelation,
+        bytes32 providerRevelation,
+        bytes32 blockHash,
+        bytes32 randomNumber
+    );
 }

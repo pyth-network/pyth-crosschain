@@ -16,7 +16,6 @@ contract PythRandomStructs {
         uint accruedFeesInWei;
         // The sequence number that will be assigned to the next inbound user request.
         uint64 sequenceNumber;
-
         // The current commitment represents an index/value in the provider's hash chain.
         // These values are used to verify requests for future sequence numbers. Note that
         // currentCommitmentSequenceNumber < sequenceNumber.
@@ -25,7 +24,6 @@ contract PythRandomStructs {
         // are revealed on-chain.
         bytes32 currentCommitment;
         uint64 currentCommitmentSequenceNumber;
-
         // Metadata for the current commitment. Providers may optionally use this field to to help
         // manage rotations (i.e., to pick the sequence number from the correct hash chain).
         bytes32 commitmentMetadata;
@@ -39,13 +37,10 @@ contract PythRandomStructs {
     struct Request {
         address provider;
         uint64 sequenceNumber;
-
         bytes32 userCommitment;
-
         bytes32 providerCommitment;
         uint64 providerCommitmentSequenceNumber;
         bytes32 providerCommitmentMetadata;
-
         // If nonzero, the randomness requester wants the blockhash of this block to be incorporated into the random number.
         uint256 blockNumber;
     }
