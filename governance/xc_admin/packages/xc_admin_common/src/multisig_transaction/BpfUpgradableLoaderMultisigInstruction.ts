@@ -7,6 +7,7 @@ import {
 import { AnchorAccounts } from "./anchor";
 import * as BufferLayout from "@solana/buffer-layout";
 
+// Source: https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html
 export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.BpfUpgradableLoader;
   readonly name: string;
@@ -47,7 +48,6 @@ export class BpfUpgradableLoaderInstruction implements MultisigInstruction {
               remaining: instruction.keys.slice(7),
             }
           );
-          break;
         case 4:
           return new BpfUpgradableLoaderInstruction(
             "SetAuthority",

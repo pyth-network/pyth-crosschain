@@ -190,6 +190,39 @@ multisigCommand("upgrade-program", "Upgrade a program from a buffer")
     await vault.proposeInstructions([proposalInstruction], cluster);
   });
 
+multisigCommand("close-program", "Upgrade a program from a buffer")
+  .requiredOption("-p, --program-id <pubkey>", "program that you want to close")
+  .requiredOption("-s, --spill <pubkey>", "address to receive the funds")
+  .action(async (options: any) => {
+    const vault = await loadVaultFromOptions(options);
+    const spill = new PublicKey(options.spill);
+    const cluster: PythCluster = options.cluster;
+    const programId: PublicKey = new PublicKey(options.programId);
+
+    const programDataAccount = PublicKey.findProgramAddressSync(
+      [programId.toBuffer()],
+      BPF_UPGRADABLE_LOADER
+    )[0];
+
+    const proposalInstruction: TransactionInstruction = {
+      programId: BPF_UPGRADABLE_LOADER,
+      // 4-bytes instruction discriminator, got it from https://docs.rs/solana-program/latest/src/solana_program/loader_upgradeable_instruction.rs.html
+      data: Buffer.from([5, 0, 0, 0]),
+      keys: [
+        { pubkey: programDataAccount, isSigner: false, isWritable: true },
+        { pubkey: spill, isSigner: false, isWritable: true },
+        {
+          pubkey: await vault.getVaultAuthorityPDA(cluster),
+          isSigner: true,
+          isWritable: false,
+        },
+        { pubkey: programId, isSigner: false, isWritable: true },
+      ],
+    };
+
+    await vault.proposeInstructions([proposalInstruction], cluster);
+  });
+
 multisigCommand(
   "init-price",
   "Init price (useful for changing the exponent), only to be used on unused price feeds"
