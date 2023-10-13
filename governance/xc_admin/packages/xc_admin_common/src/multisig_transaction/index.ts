@@ -15,6 +15,7 @@ import { WormholeMultisigInstruction } from "./WormholeMultisigInstruction";
 import { SystemProgramMultisigInstruction } from "./SystemProgramInstruction";
 import { BpfUpgradableLoaderInstruction } from "./BpfUpgradableLoaderMultisigInstruction";
 import { BPF_UPGRADABLE_LOADER } from "../bpf_upgradable_loader";
+import { AnchorAccounts } from "./anchor";
 
 export const UNRECOGNIZED_INSTRUCTION = "unrecognizedInstruction";
 export enum MultisigInstructionProgram {
@@ -26,22 +27,54 @@ export enum MultisigInstructionProgram {
   UnrecognizedProgram,
 }
 
+export function getProgramName(program: MultisigInstructionProgram) {
+  switch (program) {
+    case MultisigInstructionProgram.PythOracle:
+      return "Pyth Oracle";
+    case MultisigInstructionProgram.WormholeBridge:
+      return "Wormhole";
+    case MultisigInstructionProgram.MessageBuffer:
+      return "Message Buffer";
+    case MultisigInstructionProgram.SystemProgram:
+      return "System Program";
+    case MultisigInstructionProgram.BpfUpgradableLoader:
+      return "BPF Upgradable Loader";
+    case MultisigInstructionProgram.UnrecognizedProgram:
+      return "Unknown";
+  }
+}
+
 export interface MultisigInstruction {
   readonly program: MultisigInstructionProgram;
+  readonly name: string;
+  readonly args: { [key: string]: any };
+  readonly accounts: AnchorAccounts;
 }
 
 export class UnrecognizedProgram implements MultisigInstruction {
   readonly program = MultisigInstructionProgram.UnrecognizedProgram;
-  readonly instruction: TransactionInstruction;
+  readonly name: string;
+  readonly args: { [key: string]: any };
+  readonly accounts: AnchorAccounts;
 
-  constructor(instruction: TransactionInstruction) {
-    this.instruction = instruction;
+  constructor(
+    name: string,
+    args: { [key: string]: any },
+    accounts: AnchorAccounts
+  ) {
+    this.name = name;
+    this.args = args;
+    this.accounts = accounts;
   }
 
   static fromTransactionInstruction(
     instruction: TransactionInstruction
   ): UnrecognizedProgram {
-    return new UnrecognizedProgram(instruction);
+    return new UnrecognizedProgram(
+      UNRECOGNIZED_INSTRUCTION,
+      { data: instruction.data },
+      { named: {}, remaining: instruction.keys }
+    );
   }
 }
 export class MultisigParser {
