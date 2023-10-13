@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{
     http::StatusCode,
     response::{
@@ -6,18 +8,13 @@ use axum::{
     },
 };
 
-use std::sync::{
-Arc,
-};
-
-mod get_randomness_proof;
-
-use crate::PebbleHashChain;
-
 pub use {
     get_randomness_proof::*,
 };
 
+use crate::PebbleHashChain;
+
+mod get_randomness_proof;
 
 #[derive(Clone)]
 pub struct ApiState {

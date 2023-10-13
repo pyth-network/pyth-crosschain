@@ -11,6 +11,7 @@ use std::sync::Arc;
 
 mod register_provider;
 mod request_randomness;
+mod check_request;
 
 pub use register_provider::register_provider;
 pub use request_randomness::request_randomness;

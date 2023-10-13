@@ -12,9 +12,7 @@ use {
         Router,
         routing::get,
     },
-    crate::{
-        config::RunOptions,
-    },
+    crate::config::RunOptions,
     serde_qs::axum::QsQueryConfig,
     std::sync::{
         Arc,
@@ -70,8 +68,6 @@ async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     // Try a PebbleChain.
     let mut chain = PebbleHashChain::new(SECRET, 32);
     let mut state = ApiState{ state: Arc::new(chain)};
-
-
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
