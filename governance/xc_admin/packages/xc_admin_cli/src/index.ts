@@ -190,7 +190,10 @@ multisigCommand("upgrade-program", "Upgrade a program from a buffer")
     await vault.proposeInstructions([proposalInstruction], cluster);
   });
 
-multisigCommand("close-program", "Upgrade a program from a buffer")
+multisigCommand(
+  "close-program",
+  "Close a program, retrieve the funds. WARNING : THIS WILL BRICK THE PROGRAM AND THE ACCOUNTS IT OWNS FOREVER"
+)
   .requiredOption("-p, --program-id <pubkey>", "program that you want to close")
   .requiredOption("-s, --spill <pubkey>", "address to receive the funds")
   .action(async (options: any) => {
