@@ -16,6 +16,7 @@ import {
   WormholeMultisigInstruction,
   getManyProposalsInstructions,
   SystemProgramMultisigInstruction,
+  BpfUpgradableLoaderInstruction,
 } from 'xc_admin_common'
 import { ClusterContext } from '../../contexts/ClusterContext'
 import { useMultisigContext } from '../../contexts/MultisigContext'
@@ -248,7 +249,11 @@ const Proposal = ({
   const multisigCluster = getMultisigCluster(contextCluster)
   const targetClusters: (PythCluster | 'unknown')[] = []
   instructions.map((ix) => {
-    if (ix instanceof PythMultisigInstruction) {
+    if (
+      ix instanceof PythMultisigInstruction ||
+      ix instanceof SystemProgramMultisigInstruction ||
+      ix instanceof BpfUpgradableLoaderInstruction
+    ) {
       targetClusters.push(multisigCluster)
     } else if (
       ix instanceof WormholeMultisigInstruction &&
@@ -319,9 +324,7 @@ const Proposal = ({
             return (
               parsedRemoteInstruction instanceof PythMultisigInstruction ||
               parsedRemoteInstruction instanceof
-                MessageBufferMultisigInstruction ||
-              parsedRemoteInstruction instanceof
-                SystemProgramMultisigInstruction
+                MessageBufferMultisigInstruction
             )
           }) &&
           ix.governanceAction.targetChainId === 'pythnet')
@@ -551,11 +554,17 @@ const Proposal = ({
                   ? 'Pyth Oracle'
                   : instruction instanceof WormholeMultisigInstruction
                   ? 'Wormhole'
+                  : instruction instanceof SystemProgramMultisigInstruction
+                  ? 'System Program'
+                  : instruction instanceof BpfUpgradableLoaderInstruction
+                  ? 'BPF Upgradable Loader'
                   : 'Unknown'}
               </div>
             </div>
             {instruction instanceof PythMultisigInstruction ||
-            instruction instanceof WormholeMultisigInstruction ? (
+            instruction instanceof WormholeMultisigInstruction ||
+            instruction instanceof BpfUpgradableLoaderInstruction ||
+            instruction instanceof SystemProgramMultisigInstruction ? (
               <div
                 key={`${index}_instructionName`}
                 className="flex justify-between"
@@ -583,7 +592,9 @@ const Proposal = ({
                 className="grid grid-cols-4 justify-between"
               >
                 <div>Arguments</div>
-                {instruction instanceof PythMultisigInstruction ? (
+                {instruction instanceof PythMultisigInstruction ||
+                instruction instanceof SystemProgramMultisigInstruction ||
+                instruction instanceof BpfUpgradableLoaderInstruction ? (
                   Object.keys(instruction.args).length > 0 ? (
                     <div className="col-span-4 mt-2 bg-darkGray2 p-4 lg:col-span-3 lg:mt-0">
                       <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
@@ -634,7 +645,9 @@ const Proposal = ({
                 )}
               </div>
             )}
-            {instruction instanceof PythMultisigInstruction ? (
+            {instruction instanceof PythMultisigInstruction ||
+            instruction instanceof SystemProgramMultisigInstruction ||
+            instruction instanceof BpfUpgradableLoaderInstruction ? (
               <div
                 key={`${index}_accounts`}
                 className="grid grid-cols-4 justify-between"

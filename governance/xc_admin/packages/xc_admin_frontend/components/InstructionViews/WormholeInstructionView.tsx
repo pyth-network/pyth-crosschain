@@ -1,6 +1,7 @@
 import {
   AptosAuthorizeUpgradeContract,
   AuthorizeGovernanceDataSourceTransfer,
+  BpfUpgradableLoaderInstruction,
   CosmosUpgradeContract,
   EvmSetWormholeAddress,
   EvmUpgradeContract,
@@ -95,6 +96,9 @@ export const WormholeInstructionView = ({
                     : parsedInstruction instanceof
                       SystemProgramMultisigInstruction
                     ? 'System Program'
+                    : parsedInstruction instanceof
+                      BpfUpgradableLoaderInstruction
+                    ? 'BPF Upgradable Loader'
                     : 'Unknown'}
                 </div>
               </div>
@@ -108,7 +112,9 @@ export const WormholeInstructionView = ({
                   parsedInstruction instanceof WormholeMultisigInstruction ||
                   parsedInstruction instanceof
                     MessageBufferMultisigInstruction ||
-                  parsedInstruction instanceof SystemProgramMultisigInstruction
+                  parsedInstruction instanceof
+                    SystemProgramMultisigInstruction ||
+                  parsedInstruction instanceof BpfUpgradableLoaderInstruction
                     ? parsedInstruction.name
                     : 'Unknown'}
                 </div>
@@ -121,8 +127,8 @@ export const WormholeInstructionView = ({
                 {parsedInstruction instanceof PythMultisigInstruction ||
                 parsedInstruction instanceof WormholeMultisigInstruction ||
                 parsedInstruction instanceof MessageBufferMultisigInstruction ||
-                parsedInstruction instanceof
-                  SystemProgramMultisigInstruction ? (
+                parsedInstruction instanceof SystemProgramMultisigInstruction ||
+                parsedInstruction instanceof BpfUpgradableLoaderInstruction ? (
                   Object.keys(parsedInstruction.args).length > 0 ? (
                     <div className="col-span-4 mt-2 bg-[#444157] p-4 lg:col-span-3 lg:mt-0">
                       <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
@@ -204,7 +210,8 @@ export const WormholeInstructionView = ({
               {parsedInstruction instanceof PythMultisigInstruction ||
               parsedInstruction instanceof WormholeMultisigInstruction ||
               parsedInstruction instanceof MessageBufferMultisigInstruction ||
-              parsedInstruction instanceof SystemProgramMultisigInstruction ? (
+              parsedInstruction instanceof SystemProgramMultisigInstruction ||
+              parsedInstruction instanceof BpfUpgradableLoaderInstruction ? (
                 <div
                   key={`${index}_accounts`}
                   className="grid grid-cols-4 justify-between"
