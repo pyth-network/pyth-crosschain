@@ -121,4 +121,16 @@ abstract contract AbstractPyth is IPyth {
         virtual
         override
         returns (PythStructs.PriceFeed[] memory priceFeeds);
+
+    function parsePriceFeedUpdatesUnique(
+        bytes[] calldata updateData,
+        bytes32[] calldata priceIds,
+        uint64 minPublishTime,
+        uint64 maxPublishTime
+    )
+        external
+        payable
+        virtual
+        override
+        returns (PythStructs.PriceFeed[] memory priceFeeds);
 }

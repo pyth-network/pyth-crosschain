@@ -418,7 +418,7 @@ contract PythWormholeMerkleAccumulatorTest is
         assertPriceFeedMessageStored(priceFeedMessages1[0]);
     }
 
-    function testParsePriceFeedUpdatesWithWormholeMerklWorksWithOurOfOrderUpdateMultiCall()
+    function testParsePriceFeedUpdatesWithWormholeMerkleWorksWithOutOfOrderUpdateMultiCall()
         public
     {
         PriceFeedMessage[]
@@ -849,6 +849,53 @@ contract PythWormholeMerkleAccumulatorTest is
                 priceIds[i]
             );
         }
+    }
+
+    function testParsePriceFeedUniqueWithWormholeMerkleWorks(uint seed) public {
+        setRandSeed(seed);
+
+        uint numPriceFeeds = (getRandUint() % 10) + 1;
+        PriceFeedMessage[]
+            memory priceFeedMessages = generateRandomPriceFeedMessage(
+                numPriceFeeds
+            );
+        uint64 publishTime = getRandUint64();
+        bytes32[] memory priceIds = new bytes32[](1);
+        priceIds[0] = priceFeedMessages[0].priceId;
+        for (uint i = 0; i < numPriceFeeds; i++) {
+            priceFeedMessages[i].priceId = priceFeedMessages[0].priceId;
+            priceFeedMessages[i].publishTime = publishTime;
+            priceFeedMessages[i].prevPublishTime = publishTime;
+        }
+        uint firstUpdate = (getRandUint() % numPriceFeeds);
+        priceFeedMessages[firstUpdate].prevPublishTime = publishTime - 1;
+        (
+            bytes[] memory updateData,
+            uint updateFee
+        ) = createWormholeMerkleUpdateData(priceFeedMessages);
+
+        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
+        PythStructs.PriceFeed[] memory priceFeeds = pyth
+            .parsePriceFeedUpdatesUnique{value: updateFee}(
+            updateData,
+            priceIds,
+            publishTime - 1,
+            MAX_UINT64
+        );
+
+        priceFeeds = pyth.parsePriceFeedUpdatesUnique{value: updateFee}(
+            updateData,
+            priceIds,
+            publishTime,
+            MAX_UINT64
+        );
+        assertEq(priceFeeds.length, 1);
+
+        assertParsedPriceFeedEqualsMessage(
+            priceFeeds[0],
+            priceFeedMessages[firstUpdate],
+            priceIds[0]
+        );
     }
 
     function testParsePriceFeedWithWormholeMerkleWorksRandomDistinctUpdatesInput(
