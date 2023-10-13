@@ -65,7 +65,7 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
         }
 
         for (uint i = 0; i < NUM_PRICES; ++i) {
-            uint64 publishTime = uint64(getRand() % 10);
+            uint64 publishTime = uint64(getRand() % 10) + 1; // to make sure prevPublishTime is >= 0
 
             cachedPrices.push(
                 PythStructs.Price(
@@ -271,6 +271,37 @@ contract GasBenchmark is Test, WormholeTestUtils, PythTestUtils {
             ids,
             0,
             50
+        );
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesUniqueForWhMerkle() public {
+        bytes32[] memory ids = new bytes32[](1);
+        ids[0] = priceIds[0];
+
+        pyth.parsePriceFeedUpdatesUnique{
+            value: freshPricesWhMerkleUpdateFee[0]
+        }(
+            freshPricesWhMerkleUpdateData[0],
+            ids,
+            uint64(freshPrices[0].publishTime),
+            100
+        );
+    }
+
+    function testBenchmarkParsePriceFeedUpdatesUniqueWhMerkleForOnePriceFeedNotWithinRange()
+        public
+    {
+        bytes32[] memory ids = new bytes32[](1);
+        ids[0] = priceIds[0];
+
+        vm.expectRevert(PythErrors.PriceFeedNotFoundWithinRange.selector);
+        pyth.parsePriceFeedUpdatesUnique{
+            value: freshPricesWhMerkleUpdateFee[0]
+        }(
+            freshPricesWhMerkleUpdateData[0],
+            ids,
+            uint64(freshPrices[0].publishTime) - 1,
+            100
         );
     }
 

@@ -418,7 +418,7 @@ contract PythWormholeMerkleAccumulatorTest is
         assertPriceFeedMessageStored(priceFeedMessages1[0]);
     }
 
-    function testParsePriceFeedUpdatesWithWormholeMerklWorksWithOutOfOrderUpdateMultiCall()
+    function testParsePriceFeedUpdatesWithWormholeMerkleWorksWithOutOfOrderUpdateMultiCall()
         public
     {
         PriceFeedMessage[]
