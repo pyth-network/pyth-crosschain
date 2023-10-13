@@ -13,6 +13,9 @@ import "./utils/PythTestUtils.t.sol";
 import "./utils/RandTestUtils.t.sol";
 import "../contracts/random/PythRandom.sol";
 
+// TODO
+// - what's the impact of # of in-flight requests on gas usage?
+// - fuzz test?
 contract PythRandomTest is Test, RandTestUtils {
     PythRandom public random;
 
@@ -32,6 +35,7 @@ contract PythRandomTest is Test, RandTestUtils {
 
     address public unregisteredProvider = address(7);
     uint256 MAX_UINT256 = 2**256 - 1;
+    bytes32 ALL_ZEROS = bytes32(uint256(0));
 
     function setUp() public {
         random = new PythRandom();
@@ -84,23 +88,29 @@ contract PythRandomTest is Test, RandTestUtils {
         }(provider, random.constructUserCommitment(bytes32(randomNumber)), useBlockhash);
     }
 
-    function assertRequestReverts(address user, uint fee, address provider, uint randomNumber, bool useBlockhash) public {
-        vm.deal(user, );
-        vm.prank(user);
-        vm.expectRevert();
-        random.request{
-        value: fee
-        }(provider, random.constructUserCommitment(bytes32(randomNumber)), useBlockhash);
+    function assertRequestReverts(uint fee, address provider, uint randomNumber, bool useBlockhash) public {
+        // Note: for some reason vm.expectRevert() won't catch errors from the request function (?!),
+        // even though they definitely revert. Use a try/catch instead for the moment, though the try/catch
+        // doesn't let you simulate the msg.sender. However, it's fine if the msg.sender is the test contract.
+        bool requestSucceeds = false;
+        try random.request{value: fee}(provider, random.constructUserCommitment(bytes32(uint256(randomNumber))), useBlockhash) returns (uint64 sequenceNumber) {
+            requestSucceeds = true;
+        } catch {
+            requestSucceeds = false;
+        }
+
+        assert(!requestSucceeds);
     }
 
     function assertRevealSucceeds(
         address provider,
         uint64 sequenceNumber,
         uint userRandom,
-        bytes32 providerRevelation
+        bytes32 providerRevelation,
+        bytes32 hash
     ) public {
         bytes32 randomNumber = random.reveal(
-            provider1,
+            provider,
             sequenceNumber,
             bytes32(userRandom),
             providerRevelation
@@ -110,7 +120,7 @@ contract PythRandomTest is Test, RandTestUtils {
             random.combineRandomValues(
                 bytes32(userRandom),
                 providerRevelation,
-                bytes32(uint256(0))
+                hash
             )
         );
     }
@@ -123,7 +133,7 @@ contract PythRandomTest is Test, RandTestUtils {
     ) public {
         vm.expectRevert();
         random.reveal(
-            provider1,
+            provider,
             sequenceNumber,
             bytes32(uint256(userRandom)),
             providerRevelation
@@ -142,14 +152,16 @@ contract PythRandomTest is Test, RandTestUtils {
         assert(info2.sequenceNumber <= info2.endSequenceNumber);
     }
 
-    function testBasic() public {
+    function testBasicFlow() public {
         uint64 sequenceNumber = request(user2, provider1, 42, false);
+        assertEq(random.getRequest(provider1, sequenceNumber).blockNumber, 0);
 
         assertRevealSucceeds(
             provider1,
             sequenceNumber,
             42,
-            provider1Proofs[sequenceNumber]
+            provider1Proofs[sequenceNumber],
+            ALL_ZEROS
         );
 
         // You can only reveal the random number once. This isn't a feature of the contract per se, but it is
@@ -162,7 +174,54 @@ contract PythRandomTest is Test, RandTestUtils {
         );
     }
 
-    function testConcurrent() public {
+    function testNoSuchProvider() public {
+        assertRequestReverts(10000000, unregisteredProvider, 42, false);
+    }
+
+    function testAdversarialReveal() public {
+        uint64 sequenceNumber = request(user2, provider1, 42, false);
+
+        // test revealing with the wrong hashes in the same chain
+        for (uint256 i = 0; i < 10; i++) {
+            if (i != sequenceNumber) {
+                assertRevealReverts(
+                    provider1,
+                    sequenceNumber,
+                    42,
+                    provider1Proofs[i]
+                );
+            }
+        }
+
+        // test revealing with the wrong user revealed value.
+        for (uint256 i = 0; i < 42; i++) {
+            assertRevealReverts(
+                provider1,
+                    sequenceNumber,
+                    i,
+                    provider1Proofs[sequenceNumber]
+                );
+        }
+
+
+        for (uint64 i = sequenceNumber + 1; i < sequenceNumber + 3; i++) {
+            assertRevealReverts(
+                provider1,
+                i,
+                42,
+                provider1Proofs[sequenceNumber]
+            );
+
+           assertRevealReverts(
+              provider1,
+              i,
+              42,
+              provider1Proofs[i]
+           );
+        }
+    }
+
+    function testConcurrentRequests() public {
         uint64 s1 = request(user1, provider1, 1, false);
         uint64 s2 = request(user2, provider1, 2, false);
         uint64 s3 = request(user1, provider1, 3, false);
@@ -172,8 +231,10 @@ contract PythRandomTest is Test, RandTestUtils {
             provider1,
             s3,
             3,
-            provider1Proofs[s3]
+            provider1Proofs[s3],
+            ALL_ZEROS
         );
+        assertInvariants();
 
         uint64 s5 = request(user1, provider1, 5, false);
 
@@ -181,28 +242,60 @@ contract PythRandomTest is Test, RandTestUtils {
             provider1,
             s4,
             4,
-            provider1Proofs[s4]
+            provider1Proofs[s4],
+            ALL_ZEROS
         );
+        assertInvariants();
 
         assertRevealSucceeds(
             provider1,
             s1,
             1,
-            provider1Proofs[s1]
+            provider1Proofs[s1],
+            ALL_ZEROS
         );
+        assertInvariants();
 
         assertRevealSucceeds(
             provider1,
             s2,
             2,
-            provider1Proofs[s2]
+            provider1Proofs[s2],
+            ALL_ZEROS
         );
+        assertInvariants();
 
         assertRevealSucceeds(
             provider1,
             s5,
             5,
-            provider1Proofs[s5]
+            provider1Proofs[s5],
+            ALL_ZEROS
+        );
+        assertInvariants();
+    }
+
+    function testBlockhash() public {
+        vm.roll(1234);
+        uint64 sequenceNumber = request(user2, provider1, 42, true);
+
+        assertEq(random.getRequest(provider1, sequenceNumber).blockNumber, 1234);
+
+        assertRevealSucceeds(
+            provider1,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber],
+            blockhash(1234)
+        );
+
+        // You can only reveal the random number once. This isn't a feature of the contract per se, but it is
+        // the expected behavior.
+        assertRevealReverts(
+            provider1,
+            sequenceNumber,
+            42,
+            provider1Proofs[sequenceNumber]
         );
     }
 
@@ -210,6 +303,8 @@ contract PythRandomTest is Test, RandTestUtils {
         uint userRandom = 42;
         uint64 sequenceNumber1 = request(user2, provider1, userRandom, false);
         uint64 sequenceNumber2 = request(user2, provider1, userRandom, false);
+        assertInvariants();
+
 
         uint64 newHashChainOffset = sequenceNumber2 + 1;
         bytes32[] memory newHashChain = generateHashChain(
@@ -224,6 +319,7 @@ contract PythRandomTest is Test, RandTestUtils {
             bytes32(keccak256(abi.encodePacked(uint256(0x0100)))),
             newHashChainOffset + 10
         );
+        assertInvariants();
 
         uint64 sequenceNumber3 = request(user2, provider1, 42, false);
         // Rotating the provider key uses a sequence number
@@ -242,8 +338,10 @@ contract PythRandomTest is Test, RandTestUtils {
             provider1,
             sequenceNumber1,
             userRandom,
-            provider1Proofs[sequenceNumber1]
+            provider1Proofs[sequenceNumber1],
+            ALL_ZEROS
         );
+        assertInvariants();
 
         // Requests after the rotation use the new commitment
         assertRevealReverts(
@@ -256,8 +354,10 @@ contract PythRandomTest is Test, RandTestUtils {
             provider1,
             sequenceNumber3,
             userRandom,
-            newHashChain[sequenceNumber3 - newHashChainOffset]
+            newHashChain[sequenceNumber3 - newHashChainOffset],
+            ALL_ZEROS
         );
+        assertInvariants();
     }
 
     function testOutOfRandomness() public {
@@ -266,8 +366,7 @@ contract PythRandomTest is Test, RandTestUtils {
             request(user1, provider1, i, false);
         }
 
-        // FIXME
-        // assertRequestReverts(user1, random.getFee(provider1), provider1, provider1ChainLength - 1, false);
+        assertRequestReverts(random.getFee(provider1), provider1, provider1ChainLength - 1, false);
     }
 
     function testGetFee() public {
@@ -291,11 +390,10 @@ contract PythRandomTest is Test, RandTestUtils {
 
     function testFees() public {
         // Insufficient fees causes a revert
-        // assertRequestReverts(user2, 0, provider1, 42, false);
-
-        // assertRequestReverts(user2, pythFeeInWei + provider1FeeInWei - 1, provider1, 42, false);
-        // assertRequestReverts(user2, 0, provider2, 42, false);
-        // assertRequestReverts(user2, pythFeeInWei + provider2FeeInWei - 1, provider2, 42, false);
+        assertRequestReverts(0, provider1, 42, false);
+        assertRequestReverts(pythFeeInWei + provider1FeeInWei - 1, provider1, 42, false);
+        assertRequestReverts(0, provider2, 42, false);
+        assertRequestReverts(pythFeeInWei + provider2FeeInWei - 1, provider2, 42, false);
 
         // Accrue some fees for both providers
         for (uint i = 0; i < 3; i++) {
@@ -320,8 +418,7 @@ contract PythRandomTest is Test, RandTestUtils {
             100
         );
 
-        assertRequestReverts(user2, pythFeeInWei + 12345 - 1, provider1, 42, false);
-
+        assertRequestReverts(pythFeeInWei + 12345 - 1, provider1, 42, false);
         requestWithFee(user2, pythFeeInWei + 12345, provider1, 42, false);
 
         uint providerOneBalance = provider1FeeInWei * 3 + 12345;
@@ -342,11 +439,4 @@ contract PythRandomTest is Test, RandTestUtils {
         vm.expectRevert();
         random.withdraw(providerOneBalance);
     }
-
-    // TODO
-    // - what's the impact of # of in-flight requests on gas usage?
-    // - what happens if you run out of randomness
-    // - test all reverts
-    // - test blockhash feature
-    // - fuzz test?
 }
