@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import "./PythRandomState.sol";
 import "./PythRandomErrors.sol";
 import "./PythRandomEvents.sol";
-import "../libraries/MerkleTree.sol";
 
 // PythRandom implements a secure 2-party random number generation procedure. The protocol
 // is an extension of a simple commit/reveal protocol. The original version has the following steps:
@@ -80,7 +79,7 @@ import "../libraries/MerkleTree.sol";
 // - need to increment pyth fees if someone transfers funds to the contract via another method
 contract PythRandom is PythRandomState, PythRandomEvents {
     // TODO: Use an upgradeable proxy
-    constructor(uint pythFeeInWei) public {
+    constructor(uint pythFeeInWei) {
         _state.accruedPythFeesInWei = 0;
         _state.pythFeeInWei = pythFeeInWei;
     }
@@ -135,7 +134,7 @@ contract PythRandom is PythRandomState, PythRandomEvents {
         providerInfo.accruedFeesInWei -= amount;
 
         // Interaction with an external contract or token transfer
-        (bool sent, bytes memory data) = msg.sender.call{value: amount}("");
+        (bool sent, ) = msg.sender.call{value: amount}("");
         require(sent, "withdrawal to msg.sender failed");
     }
 

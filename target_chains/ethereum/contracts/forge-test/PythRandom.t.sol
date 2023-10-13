@@ -38,8 +38,7 @@ contract PythRandomTest is Test, RandTestUtils {
     bytes32 ALL_ZEROS = bytes32(uint256(0));
 
     function setUp() public {
-        random = new PythRandom();
-        random.initialize(7);
+        random = new PythRandom(pythFeeInWei);
 
         bytes32[] memory hashChain1 = generateHashChain(
             provider1,
@@ -70,7 +69,7 @@ contract PythRandomTest is Test, RandTestUtils {
         address provider,
         uint64 startSequenceNumber,
         uint64 size
-    ) public view returns (bytes32[] memory hashChain) {
+    ) public pure returns (bytes32[] memory hashChain) {
         bytes32 initialValue = keccak256(abi.encodePacked(startSequenceNumber));
         hashChain = new bytes32[](size);
         for (uint64 i = 0; i < size; i++) {
@@ -127,7 +126,7 @@ contract PythRandomTest is Test, RandTestUtils {
                 random.constructUserCommitment(bytes32(uint256(randomNumber))),
                 useBlockhash
             )
-        returns (uint64 sequenceNumber) {
+        {
             requestSucceeds = true;
         } catch {
             requestSucceeds = false;
