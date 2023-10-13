@@ -12,7 +12,6 @@ import {
   MultisigParser,
   PythMultisigInstruction,
   MessageBufferMultisigInstruction,
-  UnrecognizedProgram,
   WormholeMultisigInstruction,
   getManyProposalsInstructions,
   getProgramName,
@@ -567,8 +566,7 @@ const Proposal = ({
                 </div>
               </>
             ) : null}
-            {instruction instanceof WormholeMultisigInstruction ||
-            instruction instanceof UnrecognizedProgram ? null : (
+            {instruction instanceof WormholeMultisigInstruction ? null : (
               <div
                 key={`${index}_arguments`}
                 className="grid grid-cols-4 justify-between"
