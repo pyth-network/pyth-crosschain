@@ -5,6 +5,9 @@ edition = "2021"
 
 [dependencies]
 anyhow      = "1.0.75"
+axum        = { version = "0.6.20", features = ["json", "ws", "macros"] }
+axum-macros        = { version = "0.3.8" }
+base64             = { version = "0.21.0" }
 byteorder   = "1.5.0"
 clap        = { version = "4.4.6", features = ["derive", "cargo", "env"] }
 ethabi      = "18.0.0"
@@ -14,6 +17,9 @@ pythnet-sdk = { git = "https://github.com/pyth-network/pyth-crosschain", version
 rand        = "0.8.5"
 reqwest     = { version = "0.11.22", features = ["json", "blocking"] }
 serde       = { version = "1.0.188", features = ["derive"] }
+serde_qs           = { version = "0.12.0", features = ["axum"] }
 serde_json  = "1.0.107"
 sha3        = "0.10.8"
 tokio       = { version = "1.33.0", features = ["full"] }
+utoipa             = { version = "3.4.0", features = ["axum_extras"] }
+utoipa-swagger-ui  = { version = "3.1.4", features = ["axum"] }

@@ -22,7 +22,7 @@ pub async fn request_randomness(opts: &RequestRandomnessOptions) -> Result<(), B
     let mut secret: [u8; 32] = [0u8; 32];
     secret.copy_from_slice(&hex::decode(opts.secret.clone())?[0..32]);
     let secret: [u8; 32] = Keccak256::digest([random, secret].flatten()).into();
-    let chain = PebbleHashChain::<32>::new(secret);
+    let chain = PebbleHashChain::new(secret, 32);
 
     // TODO Hash result.
     let user_randomness = rand::random::<[u8; 32]>();

@@ -19,7 +19,7 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<(), Box
     let mut secret: [u8; 32] = [0u8; 32];
     secret.copy_from_slice(&hex::decode(opts.secret.clone())?[0..32]);
     let secret: [u8; 32] = Keccak256::digest([random, secret].flatten()).into();
-    let mut chain = PebbleHashChain::<32>::new(secret);
+    let mut chain = PebbleHashChain::new(secret, 32);
 
     // Arguments to the contract to register our new provider.
     let fee_in_wei = U256::from(opts.fee);

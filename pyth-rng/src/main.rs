@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 async fn run() -> Result<(), Box<dyn Error>> {
     // Try a PebbleChain.
-    let mut chain = PebbleHashChain::<32>::new(SECRET);
+    let mut chain = PebbleHashChain::new(SECRET, 32);
     println!("Next: {:?}", chain.reveal());
     println!("Next: {:?}", chain.reveal());
     println!("Next: {:?}", chain.reveal());
