@@ -12,8 +12,12 @@ Arc,
 
 mod get_randomness_proof;
 
-pub use get_randomness_proof::get_random_value;
 use crate::PebbleHashChain;
+
+pub use {
+    get_randomness_proof::*,
+};
+
 
 #[derive(Clone)]
 pub struct ApiState {
