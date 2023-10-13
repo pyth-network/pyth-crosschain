@@ -1,20 +1,19 @@
 use super::provider;
-use crate::config::RegisterProviderOptions;
+use crate::config::GetRequestOptions;
 use crate::state::PebbleHashChain;
 use ethers::core::types::U256;
+use ethers::types::H160;
 use sha3::Digest;
 use sha3::Keccak256;
 use std::error::Error;
 use std::sync::Arc;
 
 
-// TODO: Don't use hardcoded 32.
-// TODO: Return to use rand::random instead of hardcoded randomness.
-pub async fn check_request(opts: &RegisterProviderOptions, provider: String, sequence: u64) -> Result<(), Box<dyn Error>> {
+pub async fn get_request(opts: &GetRequestOptions) -> Result<(), Box<dyn Error>> {
     // Initialize a Provider to interface with the EVM contract.
     let contract = Arc::new(provider(&opts.provider_key, &opts.contract_addr).await?);
 
-    if let Some(r) = contract.get_request(provider, sequence).send().await?.await? {
+    if let r = contract.get_request(opts.provider.parse::<H160>()?, opts.sequence).call().await? {
         println!("Found request: {:?}", r);
     }
 

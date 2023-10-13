@@ -11,10 +11,11 @@ use std::sync::Arc;
 
 mod register_provider;
 mod request_randomness;
-mod check_request;
+mod get_request;
 
 pub use register_provider::register_provider;
 pub use request_randomness::request_randomness;
+pub use get_request::get_request;
 
 // TODO: Programatically generate this so we don't have to keep committed ABI in sync with the
 // contract in the same repo.

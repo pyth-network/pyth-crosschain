@@ -7,9 +7,11 @@ use clap::Parser;
 mod register_provider;
 mod request_randomness;
 mod run;
+mod get_request;
 
 pub use register_provider::RegisterProviderOptions;
 pub use request_randomness::RequestRandomnessOptions;
+pub use get_request::GetRequestOptions;
 pub use run::RunOptions;
 
 #[derive(Parser, Debug)]
@@ -27,4 +29,6 @@ pub enum Options {
 
     /// Request a random number from the contract.
     RequestRandomness(RequestRandomnessOptions),
+
+    GetRequest(GetRequestOptions),
 }

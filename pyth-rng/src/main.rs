@@ -28,6 +28,7 @@ use {
 };
 use ethereum::register_provider;
 use ethereum::request_randomness;
+use ethereum::get_request;
 
 use crate::api::{ApiState, get_random_value};
 use crate::state::PebbleHashChain;
@@ -42,6 +43,7 @@ const SECRET: [u8; 32] = [0u8; 32];
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     match config::Options::parse() {
+        config::Options::GetRequest(opts) => get_request(&opts).await,
         config::Options::Run(opts) => run(&opts).await,
         config::Options::RegisterProvider(opts) => register_provider(&opts).await,
         config::Options::RequestRandomness(opts) => request_randomness(&opts).await,
