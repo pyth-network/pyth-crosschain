@@ -1,22 +1,18 @@
 import {
   AptosAuthorizeUpgradeContract,
   AuthorizeGovernanceDataSourceTransfer,
-  BpfUpgradableLoaderInstruction,
   CosmosUpgradeContract,
   EvmSetWormholeAddress,
   EvmUpgradeContract,
   ExecutePostedVaa,
-  MessageBufferMultisigInstruction,
   MultisigParser,
   PythGovernanceAction,
-  PythMultisigInstruction,
   RequestGovernanceDataSourceTransfer,
   SetDataSources,
   SetFee,
   SetValidPeriod,
-  SystemProgramMultisigInstruction,
-  UnrecognizedProgram,
   WormholeMultisigInstruction,
+  getProgramName,
 } from 'xc_admin_common'
 import { AccountMeta, PublicKey } from '@solana/web3.js'
 import CopyPubkey from '../common/CopyPubkey'
@@ -85,133 +81,96 @@ export const WormholeInstructionView = ({
             <>
               <div key={`${index}_program`} className="flex justify-between">
                 <div>Program</div>
-                <div>
-                  {parsedInstruction instanceof PythMultisigInstruction
-                    ? 'Pyth Oracle'
-                    : parsedInstruction instanceof WormholeMultisigInstruction
-                    ? 'Wormhole'
-                    : parsedInstruction instanceof
-                      MessageBufferMultisigInstruction
-                    ? 'Message Buffer'
-                    : parsedInstruction instanceof
-                      SystemProgramMultisigInstruction
-                    ? 'System Program'
-                    : parsedInstruction instanceof
-                      BpfUpgradableLoaderInstruction
-                    ? 'BPF Upgradable Loader'
-                    : 'Unknown'}
-                </div>
+                <div>{getProgramName(parsedInstruction.program)}</div>
               </div>
               <div
                 key={`${index}_instructionName`}
                 className="flex justify-between"
               >
                 <div>Instruction Name</div>
-                <div>
-                  {parsedInstruction instanceof PythMultisigInstruction ||
-                  parsedInstruction instanceof WormholeMultisigInstruction ||
-                  parsedInstruction instanceof
-                    MessageBufferMultisigInstruction ||
-                  parsedInstruction instanceof
-                    SystemProgramMultisigInstruction ||
-                  parsedInstruction instanceof BpfUpgradableLoaderInstruction
-                    ? parsedInstruction.name
-                    : 'Unknown'}
-                </div>
+                <div>{parsedInstruction.name}</div>
               </div>
               <div
                 key={`${index}_arguments`}
                 className="grid grid-cols-4 justify-between"
               >
                 <div>Arguments</div>
-                {parsedInstruction instanceof PythMultisigInstruction ||
-                parsedInstruction instanceof WormholeMultisigInstruction ||
-                parsedInstruction instanceof MessageBufferMultisigInstruction ||
-                parsedInstruction instanceof SystemProgramMultisigInstruction ||
-                parsedInstruction instanceof BpfUpgradableLoaderInstruction ? (
-                  Object.keys(parsedInstruction.args).length > 0 ? (
-                    <div className="col-span-4 mt-2 bg-[#444157] p-4 lg:col-span-3 lg:mt-0">
-                      <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
-                        <div>Key</div>
-                        <div>Value</div>
-                      </div>
-                      {Object.keys(parsedInstruction.args).map((key, index) => (
-                        <>
-                          <div
-                            key={index}
-                            className="flex justify-between border-t border-beige-300 py-3"
-                          >
-                            {key === 'lamports' &&
-                            typeof parsedInstruction.args[key] === 'bigint' ? (
-                              <>
-                                <div>{'◎'}</div>
-                                <div>
-                                  {lamportsToSol(parsedInstruction.args[key])}
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <div>{key}</div>
-                                {parsedInstruction.args[key] instanceof
-                                PublicKey ? (
-                                  <CopyPubkey
-                                    pubkey={parsedInstruction.args[
-                                      key
-                                    ].toBase58()}
-                                  />
-                                ) : typeof instruction.args[key] === 'string' &&
-                                  isPubkey(instruction.args[key]) ? (
-                                  <CopyPubkey
-                                    pubkey={parsedInstruction.args[key]}
-                                  />
-                                ) : (
-                                  <div className="max-w-sm break-all">
-                                    {typeof parsedInstruction.args[key] ===
-                                    'string'
-                                      ? parsedInstruction.args[key]
-                                      : parsedInstruction.args[key] instanceof
-                                        Uint8Array
-                                      ? parsedInstruction.args[key].toString(
-                                          'hex'
-                                        )
-                                      : typeof parsedInstruction.args[key] ===
-                                        'bigint'
-                                      ? parsedInstruction.args[key].toString()
-                                      : JSON.stringify(
-                                          parsedInstruction.args[key]
-                                        )}
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </div>
-                          {key === 'pub' &&
-                          parsedInstruction.args[key].toBase58() in
-                            publisherKeyToNameMappingCluster ? (
-                            <ParsedAccountPubkeyRow
-                              key={`${index}_${parsedInstruction.args[
-                                key
-                              ].toBase58()}`}
-                              mapping={publisherKeyToNameMappingCluster}
-                              title="publisher"
-                              pubkey={parsedInstruction.args[key].toBase58()}
-                            />
-                          ) : null}
-                        </>
-                      ))}
+                {Object.keys(parsedInstruction.args).length > 0 ? (
+                  <div className="col-span-4 mt-2 bg-[#444157] p-4 lg:col-span-3 lg:mt-0">
+                    <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
+                      <div>Key</div>
+                      <div>Value</div>
                     </div>
-                  ) : (
-                    <div className="col-span-3 text-right">No arguments</div>
-                  )
+                    {Object.keys(parsedInstruction.args).map((key, index) => (
+                      <>
+                        <div
+                          key={index}
+                          className="flex justify-between border-t border-beige-300 py-3"
+                        >
+                          {key === 'lamports' &&
+                          typeof parsedInstruction.args[key] === 'bigint' ? (
+                            <>
+                              <div>{'◎'}</div>
+                              <div>
+                                {lamportsToSol(parsedInstruction.args[key])}
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div>{key}</div>
+                              {parsedInstruction.args[key] instanceof
+                              PublicKey ? (
+                                <CopyPubkey
+                                  pubkey={parsedInstruction.args[
+                                    key
+                                  ].toBase58()}
+                                />
+                              ) : typeof instruction.args[key] === 'string' &&
+                                isPubkey(instruction.args[key]) ? (
+                                <CopyPubkey
+                                  pubkey={parsedInstruction.args[key]}
+                                />
+                              ) : (
+                                <div className="max-w-sm break-all">
+                                  {typeof parsedInstruction.args[key] ===
+                                  'string'
+                                    ? parsedInstruction.args[key]
+                                    : parsedInstruction.args[key] instanceof
+                                      Uint8Array
+                                    ? parsedInstruction.args[key].toString(
+                                        'hex'
+                                      )
+                                    : typeof parsedInstruction.args[key] ===
+                                      'bigint'
+                                    ? parsedInstruction.args[key].toString()
+                                    : JSON.stringify(
+                                        parsedInstruction.args[key]
+                                      )}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        {key === 'pub' &&
+                        parsedInstruction.args[key].toBase58() in
+                          publisherKeyToNameMappingCluster ? (
+                          <ParsedAccountPubkeyRow
+                            key={`${index}_${parsedInstruction.args[
+                              key
+                            ].toBase58()}`}
+                            mapping={publisherKeyToNameMappingCluster}
+                            title="publisher"
+                            pubkey={parsedInstruction.args[key].toBase58()}
+                          />
+                        ) : null}
+                      </>
+                    ))}
+                  </div>
                 ) : (
-                  <div className="col-span-3 text-right">Unknown</div>
+                  <div className="col-span-3 text-right">No arguments</div>
                 )}
               </div>
-              {parsedInstruction instanceof PythMultisigInstruction ||
-              parsedInstruction instanceof WormholeMultisigInstruction ||
-              parsedInstruction instanceof MessageBufferMultisigInstruction ||
-              parsedInstruction instanceof SystemProgramMultisigInstruction ||
-              parsedInstruction instanceof BpfUpgradableLoaderInstruction ? (
+              {
                 <div
                   key={`${index}_accounts`}
                   className="grid grid-cols-4 justify-between"
@@ -311,54 +270,7 @@ export const WormholeInstructionView = ({
                     <div>No accounts</div>
                   )}
                 </div>
-              ) : parsedInstruction instanceof UnrecognizedProgram ? (
-                <>
-                  <div
-                    key={`${index}_programId`}
-                    className="flex justify-between"
-                  >
-                    <div>Program ID</div>
-                    <div>
-                      {parsedInstruction.instruction.programId.toBase58()}
-                    </div>
-                  </div>
-                  <div key={`${index}_data`} className="flex justify-between">
-                    <div>Data</div>
-                    <div>
-                      {parsedInstruction.instruction.data.length > 0
-                        ? parsedInstruction.instruction.data.toString('hex')
-                        : 'No data'}
-                    </div>
-                  </div>
-                  <div
-                    key={`${index}_keys`}
-                    className="grid grid-cols-4 justify-between"
-                  >
-                    <div>Keys</div>
-                    <div className="col-span-4 mt-2 bg-darkGray4 p-4 lg:col-span-3 lg:mt-0">
-                      <div className="base16 flex justify-between pt-2 pb-6 font-semibold opacity-60">
-                        <div>Key #</div>
-                        <div>Pubkey</div>
-                      </div>
-                      {parsedInstruction.instruction.keys.map((key, index) => (
-                        <>
-                          <div
-                            key={index}
-                            className="flex justify-between border-t border-beige-300 py-3"
-                          >
-                            <div>Key {index + 1}</div>
-                            <div className="flex space-x-2">
-                              {key.isSigner ? <SignerTag /> : null}
-                              {key.isWritable ? <WritableTag /> : null}
-                              <CopyPubkey pubkey={key.pubkey.toBase58()} />
-                            </div>
-                          </div>
-                        </>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              ) : null}
+              }
             </>
           )
         })}
