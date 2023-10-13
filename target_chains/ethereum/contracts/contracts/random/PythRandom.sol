@@ -80,7 +80,7 @@ import "../libraries/MerkleTree.sol";
 // - need to increment pyth fees if someone transfers funds to the contract via another method
 contract PythRandom is PythRandomState, PythRandomEvents {
     // TODO: Use an upgradeable proxy
-    function initialize(uint pythFeeInWei) public {
+    constructor(uint pythFeeInWei) public {
         _state.accruedPythFeesInWei = 0;
         _state.pythFeeInWei = pythFeeInWei;
     }
@@ -271,7 +271,11 @@ contract PythRandom is PythRandomState, PythRandomEvents {
         return _state.providers[provider].feeInWei + _state.pythFeeInWei;
     }
 
-    function getAccruedPythFees() public view returns (uint accruedPythFeesInWei) {
+    function getAccruedPythFees()
+        public
+        view
+        returns (uint accruedPythFeesInWei)
+    {
         return _state.accruedPythFeesInWei;
     }
 

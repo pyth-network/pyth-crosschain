@@ -34,14 +34,18 @@ contract PythRandomTest is Test, RandTestUtils {
     address public user2 = address(4);
 
     address public unregisteredProvider = address(7);
-    uint256 MAX_UINT256 = 2**256 - 1;
+    uint256 MAX_UINT256 = 2 ** 256 - 1;
     bytes32 ALL_ZEROS = bytes32(uint256(0));
 
     function setUp() public {
         random = new PythRandom();
         random.initialize(7);
 
-        bytes32[] memory hashChain1 = generateHashChain(provider1, 0, provider1ChainLength);
+        bytes32[] memory hashChain1 = generateHashChain(
+            provider1,
+            0,
+            provider1ChainLength
+        );
         provider1Proofs = hashChain1;
         vm.prank(provider1);
         random.register(
@@ -76,24 +80,54 @@ contract PythRandomTest is Test, RandTestUtils {
     }
 
     // Test helper method for requesting a random value as user from provider.
-    function request(address user, address provider, uint randomNumber, bool useBlockhash) public returns (uint64 sequenceNumber) {
-        sequenceNumber = requestWithFee(user, random.getFee(provider), provider, randomNumber, useBlockhash);
+    function request(
+        address user,
+        address provider,
+        uint randomNumber,
+        bool useBlockhash
+    ) public returns (uint64 sequenceNumber) {
+        sequenceNumber = requestWithFee(
+            user,
+            random.getFee(provider),
+            provider,
+            randomNumber,
+            useBlockhash
+        );
     }
 
-    function requestWithFee(address user, uint fee, address provider, uint randomNumber, bool useBlockhash) public returns (uint64 sequenceNumber) {
+    function requestWithFee(
+        address user,
+        uint fee,
+        address provider,
+        uint randomNumber,
+        bool useBlockhash
+    ) public returns (uint64 sequenceNumber) {
         vm.deal(user, fee);
         vm.prank(user);
-        sequenceNumber = random.request{
-        value: fee
-        }(provider, random.constructUserCommitment(bytes32(randomNumber)), useBlockhash);
+        sequenceNumber = random.request{value: fee}(
+            provider,
+            random.constructUserCommitment(bytes32(randomNumber)),
+            useBlockhash
+        );
     }
 
-    function assertRequestReverts(uint fee, address provider, uint randomNumber, bool useBlockhash) public {
+    function assertRequestReverts(
+        uint fee,
+        address provider,
+        uint randomNumber,
+        bool useBlockhash
+    ) public {
         // Note: for some reason vm.expectRevert() won't catch errors from the request function (?!),
         // even though they definitely revert. Use a try/catch instead for the moment, though the try/catch
         // doesn't let you simulate the msg.sender. However, it's fine if the msg.sender is the test contract.
         bool requestSucceeds = false;
-        try random.request{value: fee}(provider, random.constructUserCommitment(bytes32(uint256(randomNumber))), useBlockhash) returns (uint64 sequenceNumber) {
+        try
+            random.request{value: fee}(
+                provider,
+                random.constructUserCommitment(bytes32(uint256(randomNumber))),
+                useBlockhash
+            )
+        returns (uint64 sequenceNumber) {
             requestSucceeds = true;
         } catch {
             requestSucceeds = false;
@@ -141,13 +175,21 @@ contract PythRandomTest is Test, RandTestUtils {
     }
 
     function assertInvariants() public {
-        uint expectedBalance = random.getProviderInfo(provider1).accruedFeesInWei + random.getProviderInfo(provider2).accruedFeesInWei + random.getAccruedPythFees();
+        uint expectedBalance = random
+            .getProviderInfo(provider1)
+            .accruedFeesInWei +
+            random.getProviderInfo(provider2).accruedFeesInWei +
+            random.getAccruedPythFees();
         assertEq(address(random).balance, expectedBalance);
 
-        PythRandomStructs.ProviderInfo memory info1 = random.getProviderInfo(provider1);
+        PythRandomStructs.ProviderInfo memory info1 = random.getProviderInfo(
+            provider1
+        );
         assert(info1.currentCommitmentSequenceNumber < info1.sequenceNumber);
         assert(info1.sequenceNumber <= info1.endSequenceNumber);
-        PythRandomStructs.ProviderInfo memory info2 = random.getProviderInfo(provider2);
+        PythRandomStructs.ProviderInfo memory info2 = random.getProviderInfo(
+            provider2
+        );
         assert(info2.sequenceNumber > info2.currentCommitmentSequenceNumber);
         assert(info2.sequenceNumber <= info2.endSequenceNumber);
     }
@@ -197,13 +239,13 @@ contract PythRandomTest is Test, RandTestUtils {
         for (uint256 i = 0; i < 42; i++) {
             assertRevealReverts(
                 provider1,
-                    sequenceNumber,
-                    i,
-                    provider1Proofs[sequenceNumber]
-                );
+                sequenceNumber,
+                i,
+                provider1Proofs[sequenceNumber]
+            );
         }
 
-
+        // test revealing sequence numbers that haven't been requested yet.
         for (uint64 i = sequenceNumber + 1; i < sequenceNumber + 3; i++) {
             assertRevealReverts(
                 provider1,
@@ -212,12 +254,7 @@ contract PythRandomTest is Test, RandTestUtils {
                 provider1Proofs[sequenceNumber]
             );
 
-           assertRevealReverts(
-              provider1,
-              i,
-              42,
-              provider1Proofs[i]
-           );
+            assertRevealReverts(provider1, i, 42, provider1Proofs[i]);
         }
     }
 
@@ -227,51 +264,21 @@ contract PythRandomTest is Test, RandTestUtils {
         uint64 s3 = request(user1, provider1, 3, false);
         uint64 s4 = request(user1, provider1, 4, false);
 
-        assertRevealSucceeds(
-            provider1,
-            s3,
-            3,
-            provider1Proofs[s3],
-            ALL_ZEROS
-        );
+        assertRevealSucceeds(provider1, s3, 3, provider1Proofs[s3], ALL_ZEROS);
         assertInvariants();
 
         uint64 s5 = request(user1, provider1, 5, false);
 
-        assertRevealSucceeds(
-            provider1,
-            s4,
-            4,
-            provider1Proofs[s4],
-            ALL_ZEROS
-        );
+        assertRevealSucceeds(provider1, s4, 4, provider1Proofs[s4], ALL_ZEROS);
         assertInvariants();
 
-        assertRevealSucceeds(
-            provider1,
-            s1,
-            1,
-            provider1Proofs[s1],
-            ALL_ZEROS
-        );
+        assertRevealSucceeds(provider1, s1, 1, provider1Proofs[s1], ALL_ZEROS);
         assertInvariants();
 
-        assertRevealSucceeds(
-            provider1,
-            s2,
-            2,
-            provider1Proofs[s2],
-            ALL_ZEROS
-        );
+        assertRevealSucceeds(provider1, s2, 2, provider1Proofs[s2], ALL_ZEROS);
         assertInvariants();
 
-        assertRevealSucceeds(
-            provider1,
-            s5,
-            5,
-            provider1Proofs[s5],
-            ALL_ZEROS
-        );
+        assertRevealSucceeds(provider1, s5, 5, provider1Proofs[s5], ALL_ZEROS);
         assertInvariants();
     }
 
@@ -279,7 +286,10 @@ contract PythRandomTest is Test, RandTestUtils {
         vm.roll(1234);
         uint64 sequenceNumber = request(user2, provider1, 42, true);
 
-        assertEq(random.getRequest(provider1, sequenceNumber).blockNumber, 1234);
+        assertEq(
+            random.getRequest(provider1, sequenceNumber).blockNumber,
+            1234
+        );
 
         assertRevealSucceeds(
             provider1,
@@ -299,12 +309,11 @@ contract PythRandomTest is Test, RandTestUtils {
         );
     }
 
-    function testRotate() public {
+    function testProviderCommitmentRotation() public {
         uint userRandom = 42;
         uint64 sequenceNumber1 = request(user2, provider1, userRandom, false);
         uint64 sequenceNumber2 = request(user2, provider1, userRandom, false);
         assertInvariants();
-
 
         uint64 newHashChainOffset = sequenceNumber2 + 1;
         bytes32[] memory newHashChain = generateHashChain(
@@ -366,7 +375,12 @@ contract PythRandomTest is Test, RandTestUtils {
             request(user1, provider1, i, false);
         }
 
-        assertRequestReverts(random.getFee(provider1), provider1, provider1ChainLength - 1, false);
+        assertRequestReverts(
+            random.getFee(provider1),
+            provider1,
+            provider1ChainLength - 1,
+            false
+        );
     }
 
     function testGetFee() public {
@@ -391,9 +405,19 @@ contract PythRandomTest is Test, RandTestUtils {
     function testFees() public {
         // Insufficient fees causes a revert
         assertRequestReverts(0, provider1, 42, false);
-        assertRequestReverts(pythFeeInWei + provider1FeeInWei - 1, provider1, 42, false);
+        assertRequestReverts(
+            pythFeeInWei + provider1FeeInWei - 1,
+            provider1,
+            42,
+            false
+        );
         assertRequestReverts(0, provider2, 42, false);
-        assertRequestReverts(pythFeeInWei + provider2FeeInWei - 1, provider2, 42, false);
+        assertRequestReverts(
+            pythFeeInWei + provider2FeeInWei - 1,
+            provider2,
+            42,
+            false
+        );
 
         // Accrue some fees for both providers
         for (uint i = 0; i < 3; i++) {
@@ -402,10 +426,22 @@ contract PythRandomTest is Test, RandTestUtils {
 
         request(user2, provider2, 42, false);
         // this call overpays for the random number
-        requestWithFee(user2, pythFeeInWei + provider2FeeInWei + 10000, provider2, 42, false);
+        requestWithFee(
+            user2,
+            pythFeeInWei + provider2FeeInWei + 10000,
+            provider2,
+            42,
+            false
+        );
 
-        assertEq(random.getProviderInfo(provider1).accruedFeesInWei, provider1FeeInWei * 3);
-        assertEq(random.getProviderInfo(provider2).accruedFeesInWei, provider2FeeInWei * 2);
+        assertEq(
+            random.getProviderInfo(provider1).accruedFeesInWei,
+            provider1FeeInWei * 3
+        );
+        assertEq(
+            random.getProviderInfo(provider2).accruedFeesInWei,
+            provider2FeeInWei * 2
+        );
         assertEq(random.getAccruedPythFees(), pythFeeInWei * 5 + 10000);
         assertInvariants();
 
@@ -422,7 +458,10 @@ contract PythRandomTest is Test, RandTestUtils {
         requestWithFee(user2, pythFeeInWei + 12345, provider1, 42, false);
 
         uint providerOneBalance = provider1FeeInWei * 3 + 12345;
-        assertEq(random.getProviderInfo(provider1).accruedFeesInWei, providerOneBalance);
+        assertEq(
+            random.getProviderInfo(provider1).accruedFeesInWei,
+            providerOneBalance
+        );
         assertInvariants();
 
         vm.prank(unregisteredProvider);
@@ -432,7 +471,10 @@ contract PythRandomTest is Test, RandTestUtils {
         vm.prank(provider1);
         random.withdraw(1000);
 
-        assertEq(random.getProviderInfo(provider1).accruedFeesInWei, providerOneBalance - 1000);
+        assertEq(
+            random.getProviderInfo(provider1).accruedFeesInWei,
+            providerOneBalance - 1000
+        );
         assertInvariants();
 
         vm.prank(provider1);
