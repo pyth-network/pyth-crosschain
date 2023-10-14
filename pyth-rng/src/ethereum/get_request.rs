@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 pub async fn get_request(opts: &GetRequestOptions) -> Result<(), Box<dyn Error>> {
     // Initialize a Provider to interface with the EVM contract.
-    let contract = Arc::new(provider(&opts.provider_key, &opts.contract_addr).await?);
+    let contract = Arc::new(provider(&opts.ethereum).await?);
 
     if let r = contract.get_request(opts.provider.parse::<H160>()?, opts.sequence).call().await? {
         println!("Found request: {:?}", r);

@@ -5,6 +5,7 @@ use clap::crate_version;
 use clap::Parser;
 use clap::Args;
 
+
 mod register_provider;
 mod request_randomness;
 mod run;
@@ -14,6 +15,7 @@ pub use register_provider::RegisterProviderOptions;
 pub use request_randomness::RequestRandomnessOptions;
 pub use get_request::GetRequestOptions;
 pub use run::RunOptions;
+use crate::ethereum::PythProvider;
 
 #[derive(Parser, Debug)]
 #[command(name = crate_name!())]

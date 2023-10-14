@@ -2,6 +2,9 @@ use anyhow::ensure;
 use anyhow::Result;
 use sha3::Digest;
 use sha3::Keccak256;
+use std::error::Error;
+
+use crate::config::RandomnessOptions;
 
 /// A HashChain.
 pub struct PebbleHashChain {
@@ -22,6 +25,14 @@ impl PebbleHashChain {
         hash.reverse();
 
         Self { hash, next: 0 }
+    }
+
+    pub fn from_config(opts: &RandomnessOptions, random: [u8; 32]) -> Result<Self, Box<dyn Error>> {
+        let mut secret: [u8; 32] = [0u8; 32];
+        secret.copy_from_slice(&hex::decode(opts.secret.clone())?[0..32]);
+        let secret: [u8; 32] = Keccak256::digest([random, secret].flatten()).into();
+
+        Ok(Self::new(secret, opts.chain_length.try_into()?))
     }
 
     /// Reveal the next hash in the chain using the previous proof.

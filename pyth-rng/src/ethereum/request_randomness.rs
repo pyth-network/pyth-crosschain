@@ -10,24 +10,18 @@ use sha3::Keccak256;
 use std::error::Error;
 use std::sync::Arc;
 
-
-// TODO: Don't use hardcoded 32.
 // TODO: Use State to access existing random chain, don't regenerate.
 pub async fn request_randomness(opts: &RequestRandomnessOptions) -> Result<(), Box<dyn Error>> {
     // Initialize a Provider to interface with the EVM contract.
-    let contract = Arc::new(provider(&opts.key, &opts.contract_addr).await?);
+    let contract = Arc::new(provider(&opts.ethereum).await?);
 
     // Create new HashChain. We need a real random number to seed this.
     let random = [0u8; 32];
-    let mut secret: [u8; 32] = [0u8; 32];
-    secret.copy_from_slice(&hex::decode(opts.secret.clone())?[0..32]);
-    let secret: [u8; 32] = Keccak256::digest([random, secret].flatten()).into();
-    let chain = PebbleHashChain::new(secret, 32);
+    let chain = PebbleHashChain::from_config(&opts.randomness, random)?;
 
-    // TODO Hash result.
     let user_randomness = rand::random::<[u8; 32]>();
     let hashed_randomness: [u8; 32] = Keccak256::digest(user_randomness).into();
-    let provider = opts.addr.parse::<Address>()?;
+    let provider = opts.provider.parse::<Address>()?;
 
     if let Some(r) = contract
         .request(provider, hashed_randomness, false)
