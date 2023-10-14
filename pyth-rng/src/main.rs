@@ -67,9 +67,10 @@ async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     )]
     struct ApiDoc;
 
-    // Try a PebbleChain.
-    let mut chain = PebbleHashChain::new(SECRET, 32);
-    let mut state = ApiState{ state: Arc::new(chain)};
+    let random = [0u8; 32]; // rand::random::<[u8; 32]>();
+    let mut chain = PebbleHashChain::from_config(&opts.randomness, random);
+    let contract = Arc::new(provider(&opts.ethereum).await?);
+    let mut state = ApiState{ state: Arc::new(chain), provider: contract};
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
