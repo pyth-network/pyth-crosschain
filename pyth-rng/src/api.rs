@@ -12,6 +12,9 @@ pub use {
     get_randomness_proof::*,
 };
 
+use crate::ethereum::PythProvider;
+use crate::ethereum::provider;
+
 use crate::PebbleHashChain;
 
 mod get_randomness_proof;

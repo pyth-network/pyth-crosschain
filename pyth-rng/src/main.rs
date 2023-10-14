@@ -32,6 +32,7 @@ use ethereum::get_request;
 
 use crate::api::{ApiState, get_random_value};
 use crate::state::PebbleHashChain;
+use crate::ethereum::provider;
 
 pub mod api;
 pub mod config;
@@ -68,7 +69,7 @@ async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     struct ApiDoc;
 
     let random = [0u8; 32]; // rand::random::<[u8; 32]>();
-    let mut chain = PebbleHashChain::from_config(&opts.randomness, random);
+    let mut chain = PebbleHashChain::from_config(&opts.randomness, random)?;
     let contract = Arc::new(provider(&opts.ethereum).await?);
     let mut state = ApiState{ state: Arc::new(chain), provider: contract};
 
