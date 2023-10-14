@@ -7,6 +7,7 @@ use axum::{
         Response,
     },
 };
+use ethers::core::types::Address;
 
 pub use {
     get_randomness_proof::*,
@@ -14,7 +15,6 @@ pub use {
 
 use crate::ethereum::PythProvider;
 use crate::ethereum::provider;
-
 use crate::PebbleHashChain;
 
 mod get_randomness_proof;
@@ -22,8 +22,8 @@ mod get_randomness_proof;
 #[derive(Clone)]
 pub struct ApiState {
     pub state: Arc<PebbleHashChain>,
-    pub provider: Arc<PythProvider>,
-    pub provider_addr: Address,
+    pub contract: Arc<PythProvider>,
+    pub provider: Address,
 }
 
 // FIXME: real errors

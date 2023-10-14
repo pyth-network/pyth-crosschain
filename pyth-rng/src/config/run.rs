@@ -17,4 +17,10 @@ pub struct RunOptions {
     #[arg(default_value = DEFAULT_RPC_ADDR)]
     #[arg(env = "RPC_ADDR")]
     pub addr: SocketAddr,
+
+    /// The public key of the provider whose requests the server will respond to.
+    #[arg(long = "provider")]
+    #[arg(env = "PYTH_PROVIDER")]
+    #[arg(default_value = "0x368397bDc956b4F23847bE244f350Bde4615F25E")]
+    pub provider: String,
 }

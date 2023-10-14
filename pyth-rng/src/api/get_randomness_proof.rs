@@ -41,10 +41,19 @@ pub async fn get_random_value(
     State(state): State<crate::api::ApiState>,
     QsQuery(params): QsQuery<GetRandomValueQueryParams>,
 ) -> Result<Json<GetRandomValueResponse>, RestError> {
-    // TODO: check on-chain sequence number here
-    let value = &state.state.reveal_ith(params.sequence.try_into().map_err(|_| RestError::TestError)?).map_err(|_| RestError::TestError)?;
+    let sequence: u64 = params.sequence.try_into().map_err(|_| RestError::TestError)?;
+    let sequence_usize: usize = sequence.try_into().map_err(|_| RestError::TestError)?;
 
-    Ok(Json(GetRandomValueResponse { value: (*value).clone() } ))
+    let r = state.contract.get_request(state.provider, sequence).call().await.map_err(|_| RestError::TestError)?;
+
+    if r.sequence_number != 0 {
+        println!("Found request: {:?}", r);
+        let value = &state.state.reveal_ith(sequence_usize).map_err(|_| RestError::TestError)?;
+        Ok(Json(GetRandomValueResponse { value: (*value).clone() }))
+    } else {
+        println!("No request for sequence number: {:?}", sequence);
+        Err(RestError::TestError)
+    }
 }
 
 #[derive(Debug, serde::Deserialize, IntoParams)]

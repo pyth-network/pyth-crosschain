@@ -29,6 +29,7 @@ use {
 use ethereum::register_provider;
 use ethereum::request_randomness;
 use ethereum::get_request;
+use ethers::core::types::Address;
 
 use crate::api::{ApiState, get_random_value};
 use crate::state::PebbleHashChain;
@@ -71,8 +72,8 @@ async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     let random = [0u8; 32]; // rand::random::<[u8; 32]>();
     let mut chain = PebbleHashChain::from_config(&opts.randomness, random)?;
     let contract = Arc::new(provider(&opts.ethereum).await?);
-    let provider = opts.provider_address.parse::<Address>()?;
-    let mut state = ApiState{ state: Arc::new(chain), provider: contract, provider_address: provider};
+    let provider_addr = opts.provider.parse::<Address>()?;
+    let mut state = ApiState{ state: Arc::new(chain), contract, provider: provider_addr };
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
@@ -84,6 +85,8 @@ async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
         // Permissive CORS layer to allow all origins
         .layer(CorsLayer::permissive());
 
+
+    println!("Starting server on: {:?}", &opts.addr);
     // Binds the axum's server to the configured address and port. This is a blocking call and will
     // not return until the server is shutdown.
     axum::Server::try_bind(&opts.addr)?
