@@ -23,6 +23,7 @@ mod get_randomness_proof;
 pub struct ApiState {
     pub state: Arc<PebbleHashChain>,
     pub provider: Arc<PythProvider>,
+    pub provider_addr: Address,
 }
 
 // FIXME: real errors
