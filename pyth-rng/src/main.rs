@@ -73,6 +73,9 @@ async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     let mut chain = PebbleHashChain::from_config(&opts.randomness, random)?;
     let contract = Arc::new(provider(&opts.ethereum).await?);
     let provider_addr = opts.provider.parse::<Address>()?;
+    let provider_info = contract.get_provider_info(provider_addr).call().await?;
+    println!("Provider info: {:?}", provider_info);
+
     let mut state = ApiState{ state: Arc::new(chain), contract, provider: provider_addr };
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the

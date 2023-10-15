@@ -8,14 +8,13 @@ use std::error::Error;
 use std::sync::Arc;
 
 
-// TODO: Don't use hardcoded 32.
 // TODO: Return to use rand::random instead of hardcoded randomness.
 pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<(), Box<dyn Error>> {
     // Initialize a Provider to interface with the EVM contract.
     let contract = Arc::new(provider(&opts.ethereum).await?);
 
     // Create new HashChain. We need a real random number to seed this.
-    let random = [0u8; 32]; // rand::random::<[u8; 32]>();
+    let random = rand::random::<[u8; 32]>();
     let mut chain = PebbleHashChain::from_config(&opts.randomness, random)?;
 
     // Arguments to the contract to register our new provider.

@@ -27,6 +27,7 @@ impl PebbleHashChain {
         Self { hash, next: 0 }
     }
 
+    // TODO: possibly take the chain id here to ensure different hash chains on every blockchain
     pub fn from_config(opts: &RandomnessOptions, random: [u8; 32]) -> Result<Self, Box<dyn Error>> {
         let mut secret: [u8; 32] = [0u8; 32];
         secret.copy_from_slice(&hex::decode(opts.secret.clone())?[0..32]);
