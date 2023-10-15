@@ -108,6 +108,8 @@ contract PythRandom is PythRandomState, PythRandomEvents {
 
         provider.feeInWei = feeInWei;
 
+        provider.originalCommitment = commitment;
+        provider.originalCommitmentSequenceNumber = provider.sequenceNumber;
         provider.currentCommitment = commitment;
         provider.currentCommitmentSequenceNumber = provider.sequenceNumber;
         provider.commitmentMetadata = commitmentMetadata;

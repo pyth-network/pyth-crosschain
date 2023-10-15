@@ -184,11 +184,13 @@ contract PythRandomTest is Test, RandTestUtils {
         PythRandomStructs.ProviderInfo memory info1 = random.getProviderInfo(
             provider1
         );
+        assert(info1.originalCommitmentSequenceNumber <= info1.currentCommitmentSequenceNumber);
         assert(info1.currentCommitmentSequenceNumber < info1.sequenceNumber);
         assert(info1.sequenceNumber <= info1.endSequenceNumber);
         PythRandomStructs.ProviderInfo memory info2 = random.getProviderInfo(
             provider2
         );
+        assert(info2.originalCommitmentSequenceNumber <= info2.currentCommitmentSequenceNumber);
         assert(info2.sequenceNumber > info2.currentCommitmentSequenceNumber);
         assert(info2.sequenceNumber <= info2.endSequenceNumber);
     }
