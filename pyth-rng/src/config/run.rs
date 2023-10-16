@@ -4,6 +4,7 @@ use crate::config::{EthereumOptions, RandomnessOptions};
 
 const DEFAULT_RPC_ADDR: &str = "127.0.0.1:34000";
 
+/// Run the webservice
 #[derive(Args, Clone, Debug)]
 pub struct RunOptions {
     #[command(flatten)]

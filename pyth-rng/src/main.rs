@@ -24,9 +24,9 @@ use ethereum::request_randomness;
 use ethereum::get_request;
 use ethers::core::types::Address;
 
-use crate::api::{ApiState, get_random_value};
+use crate::api::{ApiState, revelation};
 use crate::state::{HashChainState, PebbleHashChain};
-use crate::ethereum::provider;
+use crate::ethereum::instantiate_contract_from_opts;
 
 pub mod api;
 pub mod config;
@@ -47,7 +47,7 @@ async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     #[derive(OpenApi)]
     #[openapi(
     paths(
-      api::get_random_value,
+      api::revelation,
     ),
     components(
     schemas(
@@ -60,7 +60,7 @@ async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     )]
     struct ApiDoc;
 
-    let contract = Arc::new(provider(&opts.ethereum).await?);
+    let contract = Arc::new(instantiate_contract_from_opts(&opts.ethereum).await?);
     let provider_addr = opts.provider.parse::<Address>()?;
     let provider_info = contract.get_provider_info(provider_addr).call().await?;
 
@@ -81,14 +81,14 @@ async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
         println!("Root of chain matches commitment");
     }
 
-    let mut state = ApiState { state: Arc::new(chain_state), contract, provider: provider_addr };
+    let mut state = ApiState { state: Arc::new(chain_state), contract, provider_address: provider_addr };
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
     let app = Router::new();
     let app = app
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
-        .route("/api/get_random_value", get(get_random_value))
+        .route("/v1/revelation", get(revelation))
         .with_state(state.clone())
         // Permissive CORS layer to allow all origins
         .layer(CorsLayer::permissive());

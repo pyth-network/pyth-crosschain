@@ -10,35 +10,55 @@ use axum::{
 use ethers::core::types::Address;
 
 pub use {
-    get_randomness_proof::*,
+    revelation::*,
 };
 
-use crate::ethereum::PythProvider;
+use crate::ethereum::PythContract;
 use crate::PebbleHashChain;
 use crate::state::HashChainState;
 
-mod get_randomness_proof;
+mod revelation;
 
-// TODO: need to consider what happens if we've committed to multiple chains
-// due to rotations. The older chains need to stick around too.
+/// The state of the randomness service for a single blockchain.
 #[derive(Clone)]
 pub struct ApiState {
+    /// The hash chain(s) required to serve random numbers for this blockchain
     pub state: Arc<HashChainState>,
-    pub contract: Arc<PythProvider>,
-    pub provider: Address,
+    /// The EVM contract where the protocol is running.
+    pub contract: Arc<PythContract>,
+    /// The EVM address of the provider that this server is operating for.
+    pub provider_address: Address,
 }
 
-// FIXME: real errors
+
 pub enum RestError {
-    TestError,
+    /// The caller passed a sequence number that isn't within the supported range
+    InvalidSequenceNumber,
+    /// The caller requested a random value that can't currently be revealed (because it
+    /// hasn't been committed to on-chain)
+    NoPendingRequest,
+    /// The server cannot currently communicate with the blockchain, so is not able to verify
+    /// which random values have been requested.
+    TemporarilyUnavailable,
+    /// A catch-all error for all other types of errors that could occur during processing.
+    Unknown,
 }
 
 impl IntoResponse for RestError {
     fn into_response(self) -> Response {
         match self {
-            RestError::TestError => {
-                (StatusCode::NOT_FOUND, "Update data not found").into_response()
+            RestError::InvalidSequenceNumber => {
+                (StatusCode::BAD_REQUEST, "The sequence number is out of the permitted range").into_response()
             }
+            RestError::NoPendingRequest => {
+                (StatusCode::FORBIDDEN, "The random value cannot currently be retrieved").into_response()
+            }
+            RestError::TemporarilyUnavailable => {
+                (StatusCode::SERVICE_UNAVAILABLE, "This service is temporarily unavailable").into_response()
+            }
+            RestError::Unknown => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "An unknown error occurred processing the request").into_response()
+            },
         }
     }
 }
