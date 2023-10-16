@@ -1,20 +1,17 @@
 #![allow(clippy::just_underscores_and_digits)]
 #![feature(slice_flatten)]
 
-use std::error::Error;
-
-use clap::Parser;
-
 use {
+    crate::state::PebbleHashChain,
     anyhow::Result,
+    clap::Parser,
+    std::error::Error,
     utoipa::OpenApi,
 };
 
-use crate::state::PebbleHashChain;
-
 pub mod api;
-pub mod config;
 pub mod command;
+pub mod config;
 pub mod ethereum;
 pub mod state;
 

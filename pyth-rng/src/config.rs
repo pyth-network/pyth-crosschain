@@ -1,22 +1,26 @@
-use clap::crate_authors;
-use clap::crate_description;
-use clap::crate_name;
-use clap::crate_version;
-use clap::Parser;
-use clap::Args;
+use clap::{
+    crate_authors,
+    crate_description,
+    crate_name,
+    crate_version,
+    Args,
+    Parser,
+};
 
 
+mod generate;
+mod get_request;
 mod register_provider;
 mod request_randomness;
 mod run;
-mod get_request;
-mod generate;
 
-pub use register_provider::RegisterProviderOptions;
-pub use request_randomness::RequestRandomnessOptions;
-pub use get_request::GetRequestOptions;
-pub use run::RunOptions;
-pub use generate::GenerateOptions;
+pub use {
+    generate::GenerateOptions,
+    get_request::GetRequestOptions,
+    register_provider::RegisterProviderOptions,
+    request_randomness::RequestRandomnessOptions,
+    run::RunOptions,
+};
 
 const DEFAULT_RPC_ADDR: &str = "127.0.0.1:34000";
 const DEFAULT_HTTP_ADDR: &str = "http://127.0.0.1:34000";

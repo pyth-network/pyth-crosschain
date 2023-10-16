@@ -1,6 +1,10 @@
-use clap::Args;
-
-use crate::config::{EthereumOptions, RandomnessOptions};
+use {
+    crate::config::{
+        EthereumOptions,
+        RandomnessOptions,
+    },
+    clap::Args,
+};
 
 #[derive(Args, Clone, Debug)]
 #[command(next_help_heading = "Request Randomness Options")]

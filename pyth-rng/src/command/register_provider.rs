@@ -1,9 +1,15 @@
-use crate::ethereum::PythContract;
-use crate::config::RegisterProviderOptions;
-use crate::state::PebbleHashChain;
-use ethers::core::types::U256;
-use std::error::Error;
-use std::sync::Arc;
+use {
+    crate::{
+        config::RegisterProviderOptions,
+        ethereum::PythContract,
+        state::PebbleHashChain,
+    },
+    ethers::core::types::U256,
+    std::{
+        error::Error,
+        sync::Arc,
+    },
+};
 
 /// Register as a randomness provider. This method will generate and commit to a new random
 /// hash chain from the configured secret & a newly generated random value.
@@ -24,7 +30,12 @@ pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<(), Box
     let commitment_length = opts.randomness.chain_length;
 
     if let Some(r) = contract
-        .register(fee_in_wei, commitment, commitment_metadata, commitment_length)
+        .register(
+            fee_in_wei,
+            commitment,
+            commitment_metadata,
+            commitment_length,
+        )
         .send()
         .await?
         .await?

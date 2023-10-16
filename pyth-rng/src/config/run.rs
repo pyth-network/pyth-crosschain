@@ -1,6 +1,11 @@
-use clap::Args;
-use std::net::SocketAddr;
-use crate::config::{EthereumOptions, RandomnessOptions};
+use {
+    crate::config::{
+        EthereumOptions,
+        RandomnessOptions,
+    },
+    clap::Args,
+    std::net::SocketAddr,
+};
 
 /// Run the webservice
 #[derive(Args, Clone, Debug)]

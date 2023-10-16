@@ -1,5 +1,7 @@
-use clap::Args;
-use crate::config::EthereumOptions;
+use {
+    crate::config::EthereumOptions,
+    clap::Args,
+};
 
 #[derive(Args, Clone, Debug)]
 #[command(next_help_heading = "Get Request Options")]

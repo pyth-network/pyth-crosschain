@@ -1,27 +1,31 @@
-use anyhow::anyhow;
-use std::error::Error;
-
-use clap::Parser;
-
 use {
-    anyhow::Result,
-    axum::{
-        Router,
-        routing::get,
+    crate::{
+        api,
+        config::RunOptions,
+        ethereum::PythContract,
+        state::{
+            HashChainState,
+            PebbleHashChain,
+        },
     },
-    crate::config::RunOptions,
-    std::sync::{
-        Arc,
+    anyhow::{
+        anyhow,
+        Result,
+    },
+    axum::{
+        routing::get,
+        Router,
+    },
+    clap::Parser,
+    ethers::core::types::Address,
+    std::{
+        error::Error,
+        sync::Arc,
     },
     tower_http::cors::CorsLayer,
     utoipa::OpenApi,
     utoipa_swagger_ui::SwaggerUi,
 };
-use ethers::core::types::Address;
-
-use crate::api;
-use crate::state::{HashChainState, PebbleHashChain};
-use crate::ethereum::PythContract;
 
 pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     #[derive(OpenApi)]
@@ -51,17 +55,25 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     let random: [u8; 32] = provider_info.commitment_metadata;
     let mut chain = PebbleHashChain::from_config(&opts.randomness, random)?;
     let chain_state = HashChainState {
-        offsets: vec![provider_info.original_commitment_sequence_number.try_into()?],
+        offsets:     vec![provider_info
+            .original_commitment_sequence_number
+            .try_into()?],
         hash_chains: vec![chain],
     };
 
-    if chain_state.reveal(provider_info.original_commitment_sequence_number)? != provider_info.original_commitment {
+    if chain_state.reveal(provider_info.original_commitment_sequence_number)?
+        != provider_info.original_commitment
+    {
         return Err(anyhow!("The root of the generated hash chain does not match the commitment. Is the secret configured correctly?").into());
     } else {
         println!("Root of chain matches commitment");
     }
 
-    let mut state = api::ApiState { state: Arc::new(chain_state), contract, provider_address: provider_addr };
+    let mut state = api::ApiState {
+        state: Arc::new(chain_state),
+        contract,
+        provider_address: provider_addr,
+    };
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.

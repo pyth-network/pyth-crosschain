@@ -1,10 +1,15 @@
-use anyhow::ensure;
-use anyhow::Result;
-use sha3::Digest;
-use sha3::Keccak256;
-use std::error::Error;
-
-use crate::config::RandomnessOptions;
+use {
+    crate::config::RandomnessOptions,
+    anyhow::{
+        ensure,
+        Result,
+    },
+    sha3::{
+        Digest,
+        Keccak256,
+    },
+    std::error::Error,
+};
 
 /// A HashChain.
 pub struct PebbleHashChain {
@@ -59,7 +64,7 @@ impl PebbleHashChain {
 /// which requires tracking multiple hash chains here.
 pub struct HashChainState {
     // The sequence number where the hash chain starts. Must be stored in sorted order.
-    pub offsets: Vec<usize>,
+    pub offsets:     Vec<usize>,
     pub hash_chains: Vec<PebbleHashChain>,
 }
 
