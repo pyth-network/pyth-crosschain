@@ -2,11 +2,9 @@
 #![feature(slice_flatten)]
 
 use {
-    crate::state::PebbleHashChain,
     anyhow::Result,
     clap::Parser,
     std::error::Error,
-    utoipa::OpenApi,
 };
 
 pub mod api;

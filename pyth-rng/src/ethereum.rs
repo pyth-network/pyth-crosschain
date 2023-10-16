@@ -36,6 +36,8 @@ abigen!(PythRandom, "src/abi.json");
 pub type PythContract = PythRandom<SignerMiddleware<Provider<Http>, LocalWallet>>;
 
 impl PythContract {
+    // TODO: this method requires a private key to instantiate the contract. This key
+    // shouldn't be required for read-only uses (e.g., when the server is running).
     pub async fn from_opts(opts: &EthereumOptions) -> Result<PythContract, Box<dyn Error>> {
         let provider = Provider::<Http>::try_from(&opts.geth_rpc_addr)?;
         let chain_id = provider.get_chainid().await?;
@@ -52,6 +54,10 @@ impl PythContract {
         ))
     }
 
+    /// Submit a request for a random number to the contract.
+    ///
+    /// This method is a version of the autogenned `request` method that parses the emitted logs
+    /// to return the sequence number of the created Request.
     pub async fn request_wrapper(
         &self,
         provider: &Address,
@@ -79,6 +85,10 @@ impl PythContract {
         }
     }
 
+    /// Reveal the generated random number to the contract.
+    ///
+    /// This method is a version of the autogenned `reveal` method that parses the emitted logs
+    /// to return the generated random number.
     pub async fn reveal_wrapper(
         &self,
         provider: &Address,

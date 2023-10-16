@@ -45,6 +45,7 @@ pub async fn revelation(
         .await
         .map_err(|e| RestError::TemporarilyUnavailable)?;
 
+    // sequence_number == 0 means the request does not exist.
     if r.sequence_number != 0 {
         let value = &state
             .state
