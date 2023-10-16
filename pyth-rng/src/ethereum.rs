@@ -66,4 +66,29 @@ impl PythContract {
             Err(anyhow!("Request failed").into())
         }
     }
+
+    pub async fn reveal_wrapper(&self, provider: &Address, sequence_number: u64, user_randomness: &[u8; 32], provider_randomness: &[u8; 32]) -> Result<[u8;32], Box<dyn Error>> {
+        if let Some(r) = self.
+            .reveal(
+                provider,
+                sequence_number,
+                user_randomness,
+                provider_randomness,
+            )
+            .send()
+            .await?
+            .await?
+        {
+            if let PythRandomEvents::RevealedFilter(r) =
+                super::PythRandomEvents::decode_log(&r.logs[0].clone().into())?
+            {
+                Ok(r.random_number)
+            } else {
+                Err(anyhow!("No log with randomnumber").into())
+            }
+        } else {
+            Err(anyhow!("Request failed").into())
+        }
+
+    }
 }

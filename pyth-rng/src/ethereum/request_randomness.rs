@@ -18,38 +18,5 @@ pub async fn request_randomness(opts: &RequestRandomnessOptions) -> Result<(), B
 
     println!("sequence number: {:#?}", sequence_number);
 
-    /*
-    if let Some(r) = contract
-        .request(provider, hashed_randomness, false)
-        .value(200)
-        .send()
-        .await?
-        .await?
-    {
-        // Extract Log from TransactionReceipt.
-        let l: RawLog = r.logs[0].clone().into();
-        if let PythRandomEvents::RequestedFilter(r) = super::PythRandomEvents::decode_log(&l)? {
-            let sequence_number = r.request.sequence_number;
-            if let Some(r) = contract
-                .reveal(
-                    provider,
-                    sequence_number,
-                    user_randomness,
-                    chain.reveal_ith(sequence_number as usize)?,
-                )
-                .send()
-                .await?
-                .await?
-            {
-                if let PythRandomEvents::RevealedFilter(r) =
-                    super::PythRandomEvents::decode_log(&r.logs[0].clone().into())?
-                {
-                    println!("Random number: {:#?}", r);
-                }
-            }
-        }
-    }
-     */
-
     Ok(())
 }

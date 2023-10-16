@@ -10,11 +10,13 @@ mod register_provider;
 mod request_randomness;
 mod run;
 mod get_request;
+mod generate;
 
 pub use register_provider::RegisterProviderOptions;
 pub use request_randomness::RequestRandomnessOptions;
 pub use get_request::GetRequestOptions;
 pub use run::RunOptions;
+use crate::config::generate::GenerateOptions;
 
 #[derive(Parser, Debug)]
 #[command(name = crate_name!())]
@@ -31,6 +33,9 @@ pub enum Options {
 
     /// Request a random number from the contract.
     RequestRandomness(RequestRandomnessOptions),
+
+    /// Generate a random number by running the entire protocol end-to-end
+    Generate(GenerateOptions),
 
     GetRequest(GetRequestOptions),
 }
