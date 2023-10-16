@@ -10,6 +10,7 @@ use axum::{
 use ethers::core::types::Address;
 
 pub use {
+    index::*,
     revelation::*,
 };
 
@@ -17,6 +18,7 @@ use crate::ethereum::PythContract;
 use crate::state::HashChainState;
 
 mod revelation;
+mod index;
 
 /// The state of the randomness service for a single blockchain.
 #[derive(Clone)]

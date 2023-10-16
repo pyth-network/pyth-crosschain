@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use std::error::Error;
 
 use clap::Parser;
@@ -18,7 +19,7 @@ use {
 };
 use ethers::core::types::Address;
 
-use crate::api::{ApiState, revelation};
+use crate::api;
 use crate::state::{HashChainState, PebbleHashChain};
 use crate::ethereum::PythContract;
 
@@ -34,7 +35,7 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     )
     ),
     tags(
-    (name = "hermes", description = "Pyth Real-Time Pricing API")
+    (name = "pyth-rng", description = "Pyth Random Number Service")
     )
     )]
     struct ApiDoc;
@@ -55,19 +56,20 @@ pub async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     };
 
     if chain_state.reveal(provider_info.original_commitment_sequence_number)? != provider_info.original_commitment {
-        println!("warning: root of chain does not match commitment!");
+        return Err(anyhow!("The root of the generated hash chain does not match the commitment. Is the secret configured correctly?").into());
     } else {
         println!("Root of chain matches commitment");
     }
 
-    let mut state = ApiState { state: Arc::new(chain_state), contract, provider_address: provider_addr };
+    let mut state = api::ApiState { state: Arc::new(chain_state), contract, provider_address: provider_addr };
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
     let app = Router::new();
     let app = app
         .merge(SwaggerUi::new("/docs").url("/docs/openapi.json", ApiDoc::openapi()))
-        .route("/v1/revelation", get(revelation))
+        .route("/", get(api::index))
+        .route("/v1/revelation", get(api::revelation))
         .with_state(state.clone())
         // Permissive CORS layer to allow all origins
         .layer(CorsLayer::permissive());
