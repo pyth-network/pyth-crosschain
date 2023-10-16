@@ -310,6 +310,12 @@
   rpcUrl: https://sepolia-rpc.scroll.io/
   networkId: 534351
   type: EvmChain
+- id: scroll
+  wormholeChainName: scroll
+  mainnet: true
+  rpcUrl: https://rpc.scroll.io
+  networkId: 534352
+  type: EvmChain
 - id: saigon
   wormholeChainName: ronin
   mainnet: false
@@ -381,4 +387,16 @@
   mainnet: false
   rpcUrl: https://sepolia.optimism.io
   networkId: 11155420
+  type: EvmChain
+- id: chiliz_spicy
+  wormholeChainName: chiliz
+  mainnet: false
+  rpcUrl: https://spicy-rpc.chiliz.com
+  networkId: 88882
+  type: EvmChain
+- id: chiliz
+  wormholeChainName: chiliz
+  mainnet: true
+  rpcUrl: https://rpc.ankr.com/chiliz
+  networkId: 88888
   type: EvmChain
