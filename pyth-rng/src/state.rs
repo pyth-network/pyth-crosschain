@@ -53,3 +53,20 @@ impl PebbleHashChain {
         self.hash.len()
     }
 }
+
+/// `HashChainState` tracks the mapping between on-chain sequence numbers to hash chains.
+/// This struct is required to handle the case where the provider rotates their commitment,
+/// which requires tracking multiple hash chains here.
+pub struct HashChainState {
+    // The sequence number where the hash chain starts. Must be stored in sorted order.
+    pub offsets: Vec<usize>,
+    pub hash_chains: Vec<PebbleHashChain>,
+}
+
+impl HashChainState {
+    pub fn reveal(&self, sequence_number: u64) -> Result<[u8; 32]> {
+        let sequence_number: usize = sequence_number.try_into()?;
+        let chain_index = self.offsets.partition_point(|x| x < &sequence_number);
+        self.hash_chains[chain_index].reveal_ith(sequence_number - self.offsets[chain_index])
+    }
+}

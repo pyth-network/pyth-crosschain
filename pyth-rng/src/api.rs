@@ -15,6 +15,7 @@ pub use {
 
 use crate::ethereum::PythProvider;
 use crate::PebbleHashChain;
+use crate::state::HashChainState;
 
 mod get_randomness_proof;
 
@@ -22,7 +23,7 @@ mod get_randomness_proof;
 // due to rotations. The older chains need to stick around too.
 #[derive(Clone)]
 pub struct ApiState {
-    pub state: Arc<PebbleHashChain>,
+    pub state: Arc<HashChainState>,
     pub contract: Arc<PythProvider>,
     pub provider: Address,
 }

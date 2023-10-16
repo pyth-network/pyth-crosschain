@@ -14,7 +14,7 @@ use {
 };
 use crate::api::RestError;
 
-// FIXME docs
+// FIXME docs & RESTFUL schema
 /// Get a VAA for a price feed with a specific timestamp
 ///
 /// Given a price feed id and timestamp, retrieve the Pyth price update closest to that timestamp.
@@ -34,13 +34,12 @@ pub async fn get_random_value(
     QsQuery(params): QsQuery<GetRandomValueQueryParams>,
 ) -> Result<Json<GetRandomValueResponse>, RestError> {
     let sequence: u64 = params.sequence.try_into().map_err(|_| RestError::TestError)?;
-    let sequence_usize: usize = sequence.try_into().map_err(|_| RestError::TestError)?;
 
     let r = state.contract.get_request(state.provider, sequence).call().await.map_err(|_| RestError::TestError)?;
 
     if r.sequence_number != 0 {
         println!("Found request: {:?}", r);
-        let value = &state.state.reveal_ith(sequence_usize).map_err(|_| RestError::TestError)?;
+        let value = &state.state.reveal(sequence).map_err(|_| RestError::TestError)?;
         Ok(Json(GetRandomValueResponse { value: (*value).clone() }))
     } else {
         println!("No request for sequence number: {:?}", sequence);

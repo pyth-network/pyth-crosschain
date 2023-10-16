@@ -25,7 +25,7 @@ use ethereum::get_request;
 use ethers::core::types::Address;
 
 use crate::api::{ApiState, get_random_value};
-use crate::state::PebbleHashChain;
+use crate::state::{HashChainState, PebbleHashChain};
 use crate::ethereum::provider;
 
 pub mod api;
@@ -65,15 +65,23 @@ async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     let provider_info = contract.get_provider_info(provider_addr).call().await?;
 
     // Reconstruct the hash chain based on the metadata and check that it matches the on-chain commitment.
+    // TODO: we should instantiate the state here with multiple hash chains.
+    // This approach works fine as long as we haven't rotated the commitment (i.e., all user requests
+    // are for the most recent chain).
     let random: [u8; 32] = provider_info.commitment_metadata;
     let mut chain = PebbleHashChain::from_config(&opts.randomness, random)?;
-    if chain.reveal_ith(0)? != provider_info.original_commitment {
+    let chain_state = HashChainState {
+        offsets: vec![provider_info.original_commitment_sequence_number.try_into()?],
+        hash_chains: vec![chain],
+    };
+
+    if chain_state.reveal(provider_info.original_commitment_sequence_number)? != provider_info.original_commitment {
         println!("warning: root of chain does not match commitment!");
     } else {
         println!("Root of chain matches commitment");
     }
 
-    let mut state = ApiState { state: Arc::new(chain), contract, provider: provider_addr };
+    let mut state = ApiState { state: Arc::new(chain_state), contract, provider: provider_addr };
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.
