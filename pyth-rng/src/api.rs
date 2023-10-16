@@ -14,7 +14,6 @@ pub use {
 };
 
 use crate::ethereum::PythContract;
-use crate::PebbleHashChain;
 use crate::state::HashChainState;
 
 mod revelation;

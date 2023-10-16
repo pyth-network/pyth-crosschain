@@ -1,4 +1,4 @@
-use super::instantiate_contract_from_opts;
+use crate::ethereum::PythContract;
 use crate::config::RegisterProviderOptions;
 use crate::state::PebbleHashChain;
 use ethers::core::types::U256;
@@ -9,7 +9,7 @@ use std::sync::Arc;
 /// hash chain from the configured secret & a newly generated random value.
 pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<(), Box<dyn Error>> {
     // Initialize a Provider to interface with the EVM contract.
-    let contract = Arc::new(instantiate_contract_from_opts(&opts.ethereum).await?);
+    let contract = Arc::new(PythContract::from_opts(&opts.ethereum).await?);
 
     // Create a new random hash chain.
     let random = rand::random::<[u8; 32]>();

@@ -1,14 +1,3 @@
-
-mod register_provider;
-mod request_randomness;
-mod get_request;
-mod generate;
-
-pub use register_provider::register_provider;
-pub use request_randomness::request_randomness;
-pub use get_request::get_request;
-pub use generate::generate;
-
 use ethers::contract::abigen;
 use ethers::core::types::Address;
 use ethers::middleware::SignerMiddleware;
@@ -32,19 +21,19 @@ abigen!(PythRandom, "src/abi.json");
 
 pub type PythContract = PythRandom<SignerMiddleware<Provider<Http>, LocalWallet>>;
 
-pub async fn instantiate_contract_from_opts(opts: &EthereumOptions) -> Result<PythContract, Box<dyn Error>> {
-    let provider = Provider::<Http>::try_from(&opts.geth_rpc_addr)?;
-    let chain_id = provider.get_chainid().await?;
-    let wallet__ = opts.private_key.clone().ok_or(anyhow!("No private key specified"))?.parse::<LocalWallet>()?.with_chain_id(chain_id.as_u64());
+impl PythContract {
 
-    Ok(PythRandom::new(
+    pub async fn from_opts(opts: &EthereumOptions) -> Result<PythContract, Box<dyn Error>> {
+        let provider = Provider::<Http>::try_from(&opts.geth_rpc_addr)?;
+        let chain_id = provider.get_chainid().await?;
+        let wallet__ = opts.private_key.clone().ok_or(anyhow!("No private key specified"))?.parse::<LocalWallet>()?.with_chain_id(chain_id.as_u64());
+
+        Ok(PythRandom::new(
             opts.contract_addr.parse::<Address>()?,
             Arc::new(SignerMiddleware::new(provider, wallet__)),
         )
-    )
-}
-
-impl PythContract {
+        )
+    }
 
     pub async fn request_wrapper(&self, provider: &Address, user_randomness: &[u8; 32], use_blockhash: bool) -> Result<u64, Box<dyn Error>> {
         let hashed_randomness: [u8; 32] = Keccak256::digest(user_randomness).into();
