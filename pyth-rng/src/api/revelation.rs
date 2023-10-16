@@ -46,15 +46,15 @@ pub async fn revelation(
     }
 }
 
-#[derive(Debug, serde::Deserialize, IntoParams)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, IntoParams)]
 #[into_params(parameter_in=Query)]
 pub struct GetRandomValueQueryParams {
-    sequence: u64,
+    pub sequence: u64,
 }
 
-#[derive(Debug, serde::Serialize, ToSchema)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, ToSchema)]
 pub struct GetRandomValueResponse {
     // TODO: choose serialization format
     #[serde(with = "array")]
-    value:      [u8; 32],
+    pub value:      [u8; 32],
 }

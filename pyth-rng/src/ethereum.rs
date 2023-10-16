@@ -7,6 +7,7 @@ mod generate;
 pub use register_provider::register_provider;
 pub use request_randomness::request_randomness;
 pub use get_request::get_request;
+pub use generate::generate;
 
 use ethers::contract::abigen;
 use ethers::core::types::Address;
@@ -68,19 +69,19 @@ impl PythContract {
     }
 
     pub async fn reveal_wrapper(&self, provider: &Address, sequence_number: u64, user_randomness: &[u8; 32], provider_randomness: &[u8; 32]) -> Result<[u8;32], Box<dyn Error>> {
-        if let Some(r) = self.
+        if let Some(r) = self
             .reveal(
-                provider,
+                *provider,
                 sequence_number,
-                user_randomness,
-                provider_randomness,
+                *user_randomness,
+                *provider_randomness,
             )
             .send()
             .await?
             .await?
         {
             if let PythRandomEvents::RevealedFilter(r) =
-                super::PythRandomEvents::decode_log(&r.logs[0].clone().into())?
+                PythRandomEvents::decode_log(&r.logs[0].clone().into())?
             {
                 Ok(r.random_number)
             } else {

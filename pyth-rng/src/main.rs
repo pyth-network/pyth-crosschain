@@ -22,6 +22,7 @@ use {
 use ethereum::register_provider;
 use ethereum::request_randomness;
 use ethereum::get_request;
+use ethereum::generate;
 use ethers::core::types::Address;
 
 use crate::api::{ApiState, revelation};
@@ -37,6 +38,7 @@ pub mod state;
 async fn main() -> Result<(), Box<dyn Error>> {
     match config::Options::parse() {
         config::Options::GetRequest(opts) => get_request(&opts).await,
+        config::Options::Generate(opts) => generate(&opts).await,
         config::Options::Run(opts) => run(&opts).await,
         config::Options::RegisterProvider(opts) => register_provider(&opts).await,
         config::Options::RequestRandomness(opts) => request_randomness(&opts).await,

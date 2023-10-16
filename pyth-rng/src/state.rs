@@ -66,7 +66,9 @@ pub struct HashChainState {
 impl HashChainState {
     pub fn reveal(&self, sequence_number: u64) -> Result<[u8; 32]> {
         let sequence_number: usize = sequence_number.try_into()?;
-        let chain_index = self.offsets.partition_point(|x| x < &sequence_number);
+        let chain_index = self.offsets.partition_point(|x| x <= &sequence_number) - 1;
+        println!("chain_index: {}", chain_index);
+
         self.hash_chains[chain_index].reveal_ith(sequence_number - self.offsets[chain_index])
     }
 }

@@ -16,7 +16,10 @@ pub use register_provider::RegisterProviderOptions;
 pub use request_randomness::RequestRandomnessOptions;
 pub use get_request::GetRequestOptions;
 pub use run::RunOptions;
-use crate::config::generate::GenerateOptions;
+pub use generate::GenerateOptions;
+
+const DEFAULT_RPC_ADDR: &str = "127.0.0.1:34000";
+const DEFAULT_HTTP_ADDR: &str = "http://127.0.0.1:34000";
 
 #[derive(Parser, Debug)]
 #[command(name = crate_name!())]

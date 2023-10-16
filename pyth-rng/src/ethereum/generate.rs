@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use ethers::core::types::Address;
 use sha3::Digest;
+use crate::api::GetRandomValueResponse;
 
 use crate::config::GenerateOptions;
 
@@ -15,16 +16,25 @@ pub async fn generate(opts: &GenerateOptions) -> Result<(), Box<dyn Error>> {
     let user_randomness = rand::random::<[u8; 32]>();
     let provider = opts.provider.parse::<Address>()?;
 
+    // FIXME: blockchas
     // Request a random number
     let sequence_number = contract.request_wrapper(&provider, &user_randomness, false).await?;
+    println!("Requested the random number with sequence number {:#?}", sequence_number);
 
     // Get the committed value from the hash chain
-    let provider_randomness = ???;
-    // chain.reveal_ith(sequence_number as usize)?
+    let client = reqwest::Client::new();
+    let request_url = client.get(format!("{}/v1/revelation", &opts.url)).query(&[("sequence", sequence_number)]).build()?;
+    let resp = client.execute(request_url)
+        .await?
+        .json::<GetRandomValueResponse>()
+        .await?;
+
+    println!("Retrieved the provider's random value. Server response: {:#?}", resp);
+    let provider_randomness = resp.value;
 
     let random_value = contract.reveal_wrapper(&provider, sequence_number, &user_randomness, &provider_randomness).await?;
 
-    println!("Random number: {:#?}", random_value);
+    println!("Generated random number: {:#?}", random_value);
 
     Ok(())
 }
