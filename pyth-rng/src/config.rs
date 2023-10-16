@@ -15,7 +15,6 @@ pub use register_provider::RegisterProviderOptions;
 pub use request_randomness::RequestRandomnessOptions;
 pub use get_request::GetRequestOptions;
 pub use run::RunOptions;
-use crate::ethereum::PythProvider;
 
 #[derive(Parser, Debug)]
 #[command(name = crate_name!())]
@@ -56,7 +55,7 @@ pub struct EthereumOptions {
     /// Address of a Pyth Randomness contract to interact with.
     #[arg(long = "pyth-contract-addr")]
     #[arg(env = "PYTH_CONTRACT_ADDR")]
-    #[arg(default_value = "0x604DB585A852f61bB42D7bD28F3595cBC86C5b6E")]
+    #[arg(default_value = "0x28F16Af4D87523910b843a801454AEde5F9B0459")]
     pub contract_addr: String,
 }
 

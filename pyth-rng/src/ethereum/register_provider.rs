@@ -2,13 +2,10 @@ use super::provider;
 use crate::config::RegisterProviderOptions;
 use crate::state::PebbleHashChain;
 use ethers::core::types::U256;
-use sha3::Digest;
-use sha3::Keccak256;
 use std::error::Error;
 use std::sync::Arc;
 
 
-// TODO: Return to use rand::random instead of hardcoded randomness.
 pub async fn register_provider(opts: &RegisterProviderOptions) -> Result<(), Box<dyn Error>> {
     // Initialize a Provider to interface with the EVM contract.
     let contract = Arc::new(provider(&opts.ethereum).await?);

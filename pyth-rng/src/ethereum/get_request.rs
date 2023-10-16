@@ -3,8 +3,6 @@ use crate::config::GetRequestOptions;
 use crate::state::PebbleHashChain;
 use ethers::core::types::U256;
 use ethers::types::H160;
-use sha3::Digest;
-use sha3::Keccak256;
 use std::error::Error;
 use std::sync::Arc;
 

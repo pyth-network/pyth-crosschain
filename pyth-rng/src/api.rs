@@ -14,11 +14,12 @@ pub use {
 };
 
 use crate::ethereum::PythProvider;
-use crate::ethereum::provider;
 use crate::PebbleHashChain;
 
 mod get_randomness_proof;
 
+// TODO: need to consider what happens if we've committed to multiple chains
+// due to rotations. The older chains need to stick around too.
 #[derive(Clone)]
 pub struct ApiState {
     pub state: Arc<PebbleHashChain>,

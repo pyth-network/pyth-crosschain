@@ -8,19 +8,12 @@ use clap::Parser;
 use {
     anyhow::Result,
     axum::{
-        extract::Extension,
         Router,
         routing::get,
     },
     crate::config::RunOptions,
-    serde_qs::axum::QsQueryConfig,
     std::sync::{
         Arc,
-        atomic::Ordering,
-    },
-    tokio::{
-        signal,
-        sync::mpsc::Receiver,
     },
     tower_http::cors::CorsLayer,
     utoipa::OpenApi,
@@ -39,8 +32,6 @@ pub mod api;
 pub mod config;
 pub mod ethereum;
 pub mod state;
-
-const SECRET: [u8; 32] = [0u8; 32];
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -69,14 +60,20 @@ async fn run(opts: &RunOptions) -> Result<(), Box<dyn Error>> {
     )]
     struct ApiDoc;
 
-    let random = [0u8; 32]; // rand::random::<[u8; 32]>();
-    let mut chain = PebbleHashChain::from_config(&opts.randomness, random)?;
     let contract = Arc::new(provider(&opts.ethereum).await?);
     let provider_addr = opts.provider.parse::<Address>()?;
     let provider_info = contract.get_provider_info(provider_addr).call().await?;
-    println!("Provider info: {:?}", provider_info);
 
-    let mut state = ApiState{ state: Arc::new(chain), contract, provider: provider_addr };
+    // Reconstruct the hash chain based on the metadata and check that it matches the on-chain commitment.
+    let random: [u8; 32] = provider_info.commitment_metadata;
+    let mut chain = PebbleHashChain::from_config(&opts.randomness, random)?;
+    if chain.reveal_ith(0)? != provider_info.original_commitment {
+        println!("warning: root of chain does not match commitment!");
+    } else {
+        println!("Root of chain matches commitment");
+    }
+
+    let mut state = ApiState { state: Arc::new(chain), contract, provider: provider_addr };
 
     // Initialize Axum Router. Note the type here is a `Router<State>` due to the use of the
     // `with_state` method which replaces `Body` with `State` in the type signature.

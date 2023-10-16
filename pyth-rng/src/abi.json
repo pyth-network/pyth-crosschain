@@ -1,5 +1,16 @@
 [
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "pythFeeInWei",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "inputs": [],
     "name": "AssertionFailure",
     "type": "error"
@@ -28,6 +39,66 @@
     "inputs": [],
     "name": "OutOfRandomness",
     "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "feeInWei",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedFeesInWei",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "originalCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "originalCommitmentSequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "commitmentMetadata",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "endSequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "currentCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "currentCommitmentSequenceNumber",
+            "type": "uint64"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct PythRandomStructs.ProviderInfo",
+        "name": "provider",
+        "type": "tuple"
+      }
+    ],
+    "name": "Registered",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -202,6 +273,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getAccruedPythFees",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "accruedPythFeesInWei",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -243,6 +327,26 @@
             "type": "uint256"
           },
           {
+            "internalType": "bytes32",
+            "name": "originalCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "originalCommitmentSequenceNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "commitmentMetadata",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "endSequenceNumber",
+            "type": "uint64"
+          },
+          {
             "internalType": "uint64",
             "name": "sequenceNumber",
             "type": "uint64"
@@ -255,16 +359,6 @@
           {
             "internalType": "uint64",
             "name": "currentCommitmentSequenceNumber",
-            "type": "uint64"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "commitmentMetadata",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "endSequenceNumber",
             "type": "uint64"
           }
         ],
@@ -332,38 +426,6 @@
         "internalType": "struct PythRandomStructs.Request",
         "name": "req",
         "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "pythFeeInWei",
-        "type": "uint256"
-      }
-    ],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "provider",
-        "type": "address"
-      }
-    ],
-    "name": "nextSequenceNumber",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "sequenceNumber",
-        "type": "uint64"
       }
     ],
     "stateMutability": "view",
@@ -457,6 +519,19 @@
         "type": "bytes32"
       }
     ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdraw",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   }

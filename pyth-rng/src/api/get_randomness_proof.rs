@@ -1,18 +1,10 @@
-use pythnet_sdk::accumulators::merkle::MerklePath;
-use pythnet_sdk::hashers::keccak256_160::Keccak160;
 use pythnet_sdk::wire::array;
-use serde::Deserialize;
-use serde::Serialize;
 
 use {
     anyhow::Result,
     axum::{
         extract::State,
         Json,
-    },
-    base64::{
-        engine::general_purpose::STANDARD as base64_standard_engine,
-        Engine as _,
     },
     serde_qs::axum::QsQuery,
     utoipa::{
